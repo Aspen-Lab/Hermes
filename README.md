@@ -1,80 +1,152 @@
-# Hermes
+<p align="center">
+  <img src="assets/logo.svg" alt="Hermes" width="180" />
+</p>
 
-Agent-powered personalized recommendations for PhD students: papers, academic events, and job opportunities. Delivered in a clean iOS app with a Discovery feed and Profile-based personalization.
+<h1 align="center">Hermes</h1>
 
-## Features
+<p align="center">
+  <em>Self-hosted information agent. Turns the RSS / Hacker News / arXiv / Reddit firehose into ten items you actually care about, delivered as markdown to your vault.</em>
+</p>
 
-- **Discovery feed** — Recommended Papers, Events, and Jobs in one place, with pull-to-refresh.
-- **Detail views** — Papers (title, authors, AI summary, links to paper/arXiv/Scholar/code), Events (type, date, location, deadline, links), Jobs (role, company, requirements, match reason, apply link).
-- **Feedback loop** — Save, Not Interested, and “More Like This” to improve future recommendations.
-- **Profile & interests** — Research topics, preferred venues, career stage, industry vs academia, location and method preferences (persisted locally; ready to feed into an agent backend).
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-141414?style=flat-square" />
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-F58414?style=flat-square" />
+  <img alt="Status: v0 MVP" src="https://img.shields.io/badge/status-v0%20MVP-F58414?style=flat-square" />
+  <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-141414?style=flat-square" />
+  <img alt="Self-hosted" src="https://img.shields.io/badge/self--hosted-%E2%9C%93-141414?style=flat-square" />
+</p>
 
-## Requirements
+Stop doom-scrolling five tabs every morning. Declare what you care about in a YAML file. Hermes fetches from your sources, scores each item 0–1 for relevance, deduplicates across feeds, and writes a daily digest you can read in two minutes.
 
-- Xcode 15+ (Swift 5.9+)
-- iOS 17+
+**Status:** v0 MVP. Tier 0 (TF-IDF, zero model dependencies) works today. Tier 1 (local models) and Tier 2 (cloud APIs) are on the roadmap.
 
-## Setup and run
+## Why Hermes
 
-1. **Open in Xcode**
-   - Open `Hermes.xcodeproj` in Xcode, or create a new iOS App (SwiftUI, Swift, minimum deployment iOS 17) and add the `Hermes` folder as the app’s source (ensure “Copy items if needed” and your app target are selected).
+- **Local-first.** YAML config + SQLite. No account, no server, no data leaves your machine.
+- **LLM-optional.** Runs entirely on rules and TF-IDF by default. Plug in Ollama or an API key only if you want richer summaries.
+- **File over app.** Output is plain markdown. If Hermes disappears tomorrow, your notes still work.
 
-2. **If you created a new project**
-   - Set the app’s entry point to the existing `HermesApp.swift` (delete the default `ContentView` entry if you prefer), or add the `Hermes` group to the project and set the target’s main interface to the SwiftUI App lifecycle with `HermesApp` as the app struct.
+## Quick start
 
-3. **Run**
-   - Select a simulator or device and press **Run** (⌘R).
+```bash
+git clone <this repo>
+cd hermes/python
+pip install -e .
 
-## Project structure
-
-```
-Hermes/
-├── App/
-│   └── HermesApp.swift           # App entry, env objects
-├── Models/
-│   ├── Paper.swift
-│   ├── Event.swift
-│   ├── Job.swift
-│   └── UserProfile.swift
-├── State/
-│   ├── FeedState.swift           # Feed data + feedback actions
-│   └── ProfileState.swift        # User profile persistence
-├── Services/
-│   └── RecommendationService.swift  # Mock API + feedback; replace with real agent/API
-├── Theme/
-│   └── Theme.swift               # Colors, card style, buttons
-├── Views/
-│   ├── MainTabView.swift         # Discovery | Profile tabs
-│   ├── Discovery/
-│   │   ├── DiscoveryView.swift   # Home feed + nav to details
-│   │   ├── FeedCardView.swift    # Card + action bar
-│   │   ├── PapersSectionView.swift
-│   │   ├── EventsSectionView.swift
-│   │   └── JobsSectionView.swift
-│   ├── Detail/
-│   │   ├── PaperDetailView.swift
-│   │   ├── EventDetailView.swift
-│   │   └── JobDetailView.swift
-│   └── Profile/
-│       └── ProfileView.swift     # Interests & career prefs
-└── Assets.xcassets               # App icon & accent (optional)
+hermes init                 # writes hermes.yml in the current directory
+# edit hermes.yml — add your keywords and sources
+hermes run --once
 ```
 
-## Backend / agent integration
+Your daily digest lands in `~/hermes-output/` as `YYYY-MM-DD.md`. Run it on cron (or launchd / systemd timer) for a morning briefing.
 
-The app is ready for an agent-backed API:
+## How it works
 
-1. **RecommendationService** — Replace `fetchRecommendations` with a call to your backend. The backend should use the **context layer** (user profile, saved/read papers, preferences, feedback) to return personalized papers, events, and jobs.
-2. **Feedback** — `submitFeedback(itemId:type:feedback:)` is called for Save, Not Interested, and More Like This; send these to your API so the agent can update the user’s interest model.
-3. **Profile** — Sync `UserProfile` (research topics, venues, career stage, industry preference, locations, methods) to your backend so recommendations can be personalized from day one.
-4. **Delivery** — For “twice daily (morning + night)” delivery, implement push notifications or a background refresh that triggers `loadFeed()` and/or have the backend send push payloads with new recommendation summaries.
+A five-stage pipeline:
 
-## Data sources (backend)
+1. **Collect** — parallel async fetching from configured sources
+2. **Score** — 0–1 relevance per item, based on your profile
+3. **Dedupe** — merge the same story across sources
+4. **Distill** — generate a per-item summary
+5. **Render** — write markdown (or push to email / Telegram / API)
 
-- **Papers:** arXiv, Semantic Scholar, CrossRef, conference proceedings (NeurIPS, ICLR, CHI, etc.).
-- **Events:** Conference sites, academic calendars, community listings.
-- **Jobs:** Company career pages, academic job boards, lab and startup listings.
+Three tiers of intelligence. Pick one; Hermes degrades gracefully between them.
 
----
+| Tier            | What it uses                                        | Dependencies   | RAM     |
+| --------------- | --------------------------------------------------- | -------------- | ------- |
+| **0** (default) | TF-IDF + keyword rules + MinHash dedup              | None           | ~50 MB  |
+| **1** (planned) | sentence-transformers + local LLM (Ollama, llama.cpp) | 1 model        | ~16 GB  |
+| **2** (planned) | Cloud LLMs (OpenAI, Anthropic) via BYOK             | API key        | —       |
 
-Built for PhD students and researchers in STEM (AI, ML, HCI, CS and related fields).
+If Tier 2 blows its daily token budget, Hermes falls back to Tier 1, then Tier 0. Nothing halts because the cloud is down.
+
+## Sources
+
+**Built today:** Hacker News, Reddit, arXiv, RSS / Atom.
+
+**Planned:** Semantic Scholar, PubMed, OpenAlex, Lobsters, V2EX, arbitrary URLs via Playwright.
+
+**Custom sources.** Drop a Python file into `sources/` that subclasses `BaseSource` and implements `fetch()` / `parse()`. Hermes auto-registers it on startup. No plugin manifest, no registration boilerplate.
+
+## Outputs
+
+**Built today:** markdown digest file, one per day.
+
+**Planned:**
+
+- **Obsidian** — frontmatter + `[[wikilinks]]` into your existing vault, auto-stubs for new concepts
+- **Email** — HTML + plain text via SMTP or SendGrid
+- **Telegram / Slack** — bot API with inline up/down feedback buttons
+- **Feeds** — private Atom feed for any RSS reader; JSON API at `GET /api/today`
+
+Feedback loop (planned): you mark items up or down in the output, the next run adjusts keyword weights and source priority via EMA — no over-correction from single signals.
+
+## Configuration
+
+Minimal `hermes.yml`:
+
+```yaml
+profile:
+  keywords: ["machine learning", "distributed systems"]
+
+sources:
+  - name: hn
+    type: hackernews
+    min_points: 20
+
+  - name: arxiv
+    type: arxiv
+    query: "cat:cs.AI OR cat:cs.LG"
+    max_results: 50
+
+engine:
+  weights:
+    tfidf: 0.50
+    keyword: 0.30
+    source: 0.20
+  min_score: 0.15
+  max_items: 50
+  dedup_window_days: 30
+
+output:
+  format: markdown
+  path: "~/hermes-output"
+
+storage:
+  path: "~/.hermes/hermes.db"
+```
+
+Full reference: [`python/config.example.yaml`](python/config.example.yaml).
+
+## Web dashboard (optional)
+
+A Next.js dashboard in `web/` gives you a browser view of the feed plus live academic search (OpenAlex-backed, no API key required).
+
+```bash
+cd web
+npm install
+npm run dev   # http://localhost:3000
+```
+
+## Project layout
+
+```
+python/   # CLI + pipeline (the core engine)
+web/      # Next.js dashboard (optional convenience UI)
+```
+
+## Roadmap
+
+- **v0 MVP (now)** — 5 sources + TF-IDF + markdown
+- **v0.5** — Obsidian plugin, feedback loop, Docker Compose
+- **v1.0** — community adapter contribution process, profile templates (researcher, VC, PM, trader, indie dev), Product Hunt launch
+
+Full plan and architecture notes: <https://hermes-admin-eta.vercel.app/>
+
+## Contributing
+
+Early days. Issues and PRs welcome — especially source adapters. Open an issue first for anything larger than a bugfix so we can align on fit.
+
+## License
+
+MIT.

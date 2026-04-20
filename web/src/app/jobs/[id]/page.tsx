@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { useFeedStore } from "@/store/feed";
 import { mockJobs } from "@/data/mock";
-import { Tag, DetailSection, ActionBar } from "@/components/ui";
+import { Tag, DetailSection, ActionBar, Relevance } from "@/components/ui";
 
 export default function JobDetailPage({
   params,
@@ -23,34 +23,40 @@ export default function JobDetailPage({
 
   if (!job) {
     return (
-      <article className="mx-auto max-w-[720px] px-6 py-16">
+      <article className="mx-auto max-w-[720px] px-6 py-20">
         <p className="text-text-muted italic">Job not found.</p>
-        <Link href="/" className="text-link text-sm mt-2 inline-block">← Back to feed</Link>
+        <Link href="/" className="text-link text-[14px] mt-3 inline-block">← Back to feed</Link>
       </article>
     );
   }
 
   return (
-    <article className="mx-auto max-w-[720px] px-6 py-12">
-      <Link href="/" className="text-sm text-text-faint hover:text-link transition-colors">
+    <article className="mx-auto max-w-[720px] px-6 py-14">
+      <Link
+        href="/"
+        className="text-[13px] text-text-faint hover:text-link transition-colors"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
         ← Back
       </Link>
 
-      <header className="mt-6">
-        <h1 className="text-2xl font-bold text-heading leading-tight">
+      <header className="mt-8">
+        <h1
+          className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
           {job.roleTitle}
         </h1>
-        <p className="text-text-muted mt-2">
+        <p
+          className="text-text-muted mt-3 text-[14.5px]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
           {job.companyOrLab} · {job.isRemote ? "Remote" : job.location}
         </p>
-        <div className="flex items-center flex-wrap gap-2 mt-3">
+        <div className="flex items-center flex-wrap gap-2.5 mt-4">
           {job.isRemote && <Tag>remote</Tag>}
           <Tag>{job.companyOrLab.toLowerCase().replace(/\s+/g, "-")}</Tag>
-          {job.relevanceScore && (
-            <span className="font-mono text-xs text-yellow">
-              {Math.round(job.relevanceScore * 100)}% match
-            </span>
-          )}
+          <Relevance score={job.relevanceScore} />
         </div>
       </header>
 
@@ -69,19 +75,21 @@ export default function JobDetailPage({
       </DetailSection>
 
       {job.linkPosting && (
-        <div className="mt-8">
+        <div className="mt-10">
           <a
             href={job.linkPosting}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-link hover:text-link/80 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-dim text-accent hover:bg-accent/20 transition-colors text-[14px]"
+            style={{ fontFamily: "var(--font-sans)" }}
           >
-            Apply for this role ↗
+            Apply for this role
+            <span className="text-[11px] opacity-70">↗</span>
           </a>
         </div>
       )}
 
-      <div className="mt-8 pt-4 border-t border-border">
+      <div className="mt-10 pt-5 border-t border-border">
         <ActionBar
           onSave={() => saveJob(job)}
           onDismiss={() => { notInterestedJob(job); window.history.back(); }}

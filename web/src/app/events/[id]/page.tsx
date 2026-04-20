@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { useFeedStore } from "@/store/feed";
 import { mockEvents } from "@/data/mock";
-import { Tag, DetailSection, LinkRow, ActionBar } from "@/components/ui";
+import { Tag, DetailSection, LinkRow, ActionBar, Relevance } from "@/components/ui";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", {
@@ -29,34 +29,40 @@ export default function EventDetailPage({
 
   if (!event) {
     return (
-      <article className="mx-auto max-w-[720px] px-6 py-16">
+      <article className="mx-auto max-w-[720px] px-6 py-20">
         <p className="text-text-muted italic">Event not found.</p>
-        <Link href="/" className="text-link text-sm mt-2 inline-block">← Back to feed</Link>
+        <Link href="/" className="text-link text-[14px] mt-3 inline-block">← Back to feed</Link>
       </article>
     );
   }
 
   return (
-    <article className="mx-auto max-w-[720px] px-6 py-12">
-      <Link href="/" className="text-sm text-text-faint hover:text-link transition-colors">
+    <article className="mx-auto max-w-[720px] px-6 py-14">
+      <Link
+        href="/"
+        className="text-[13px] text-text-faint hover:text-link transition-colors"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
         ← Back
       </Link>
 
-      <header className="mt-6">
-        <h1 className="text-2xl font-bold text-heading leading-tight">
+      <header className="mt-8">
+        <h1
+          className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
           {event.name}
         </h1>
-        <p className="text-text-muted mt-2">
+        <p
+          className="text-text-muted mt-3 text-[14.5px]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
           {fmtDate(event.date)} · {event.isOnline ? "Online" : event.location}
         </p>
-        <div className="flex items-center flex-wrap gap-2 mt-3">
+        <div className="flex items-center flex-wrap gap-2.5 mt-4">
           <Tag>{event.type}</Tag>
           {event.isOnline && <Tag>online</Tag>}
-          {event.relevanceScore && (
-            <span className="font-mono text-xs text-yellow">
-              {Math.round(event.relevanceScore * 100)}% match
-            </span>
-          )}
+          <Relevance score={event.relevanceScore} />
         </div>
       </header>
 
@@ -81,7 +87,7 @@ export default function EventDetailPage({
         </div>
       </DetailSection>
 
-      <div className="mt-8 pt-4 border-t border-border">
+      <div className="mt-10 pt-5 border-t border-border">
         <ActionBar
           onSave={() => saveEvent(event)}
           onDismiss={() => { notInterestedEvent(event); window.history.back(); }}

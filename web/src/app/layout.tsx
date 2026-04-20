@@ -5,19 +5,19 @@ import { Nav } from "@/components/nav";
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-jb-mono",
   display: "swap",
 });
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
-  variable: "--font-serif",
+  variable: "--font-source-serif",
   display: "swap",
 });
 
 const notoSansSC = Noto_Sans_SC({
   subsets: ["latin"],
-  variable: "--font-sans-sc",
+  variable: "--font-noto-sc",
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
@@ -36,6 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${jetbrains.variable} ${sourceSerif.variable} ${notoSansSC.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">

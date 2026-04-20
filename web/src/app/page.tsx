@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useFeedStore } from "@/store/feed";
+import { useProfileStore } from "@/store/profile";
 import { PaperCard } from "@/components/cards/paper-card";
 import { EventCard } from "@/components/cards/event-card";
 import { JobCard } from "@/components/cards/job-card";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
-import type { Paper, Event, Job } from "@/types";
 
 interface SearchResult {
   id: string;
@@ -22,39 +23,24 @@ interface SearchResult {
   source: string;
 }
 
+type FeedType = "all" | "papers" | "events" | "jobs";
+
 function matchesQuery(query: string, ...fields: (string | undefined)[]) {
   const q = query.toLowerCase();
   return fields.some((f) => f?.toLowerCase().includes(q));
 }
 
-function collectTags(papers: Paper[], events: Event[], jobs: Job[]) {
-  const tags = new Map<string, number>();
-  const bump = (t: string) => tags.set(t, (tags.get(t) || 0) + 1);
-  papers.forEach((p) => {
-    bump(p.source);
-    bump(p.venue.toLowerCase().replace(/\s+/g, "-"));
-  });
-  events.forEach((e) => {
-    bump(e.type);
-    if (e.isOnline) bump("online");
-  });
-  jobs.forEach((j) => {
-    if (j.isRemote) bump("remote");
-    bump(j.companyOrLab.toLowerCase().replace(/\s+/g, "-"));
-  });
-  return [...tags.entries()].sort((a, b) => b[1] - a[1]);
-}
-
 export default function DiscoveryPage() {
   const { papers, events, jobs, isLoading, lastRefresh, loadFeed } =
     useFeedStore();
+  const profile = useProfileStore((s) => s.profile);
 
   const [query, setQuery] = useState("");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<FeedType>("all");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchTotal, setSearchTotal] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (papers.length === 0 && !isLoading) loadFeed();
@@ -82,7 +68,6 @@ export default function DiscoveryPage() {
     }
   }, []);
 
-  // Debounced API search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (query.length >= 2) {
@@ -98,93 +83,83 @@ export default function DiscoveryPage() {
 
   const isSearchMode = query.length >= 2;
 
-  const allTags = useMemo(
-    () => collectTags(papers, events, jobs),
-    [papers, events, jobs]
-  );
-
   const filteredPapers = useMemo(() => {
-    let result = papers;
-    if (query && !isSearchMode) {
-      result = result.filter((p) =>
-        matchesQuery(query, p.title, p.authors.join(" "), p.venue, p.source, p.relevanceReason, p.summaryIntro)
-      );
-    }
-    if (activeTag) {
-      result = result.filter(
-        (p) =>
-          p.source === activeTag ||
-          p.venue.toLowerCase().replace(/\s+/g, "-") === activeTag
-      );
-    }
-    return result;
-  }, [papers, query, activeTag, isSearchMode]);
+    if (isSearchMode) return papers;
+    if (!query) return papers;
+    return papers.filter((p) =>
+      matchesQuery(query, p.title, p.authors.join(" "), p.venue, p.source, p.relevanceReason, p.summaryIntro)
+    );
+  }, [papers, query, isSearchMode]);
 
   const filteredEvents = useMemo(() => {
     if (isSearchMode) return [];
-    let result = events;
-    if (query) {
-      result = result.filter((e) =>
-        matchesQuery(query, e.name, e.type, e.location, e.shortDescription, e.relevanceReason)
-      );
-    }
-    if (activeTag) {
-      result = result.filter(
-        (e) =>
-          e.type === activeTag ||
-          (activeTag === "online" && e.isOnline)
-      );
-    }
-    return result;
-  }, [events, query, activeTag, isSearchMode]);
+    if (!query) return events;
+    return events.filter((e) =>
+      matchesQuery(query, e.name, e.type, e.location, e.shortDescription, e.relevanceReason)
+    );
+  }, [events, query, isSearchMode]);
 
   const filteredJobs = useMemo(() => {
     if (isSearchMode) return [];
-    let result = jobs;
-    if (query) {
-      result = result.filter((j) =>
-        matchesQuery(query, j.roleTitle, j.companyOrLab, j.location, j.matchReason, j.keyRequirements.join(" "))
-      );
-    }
-    if (activeTag) {
-      result = result.filter(
-        (j) =>
-          j.companyOrLab.toLowerCase().replace(/\s+/g, "-") === activeTag ||
-          (activeTag === "remote" && j.isRemote)
-      );
-    }
-    return result;
-  }, [jobs, query, activeTag, isSearchMode]);
+    if (!query) return jobs;
+    return jobs.filter((j) =>
+      matchesQuery(query, j.roleTitle, j.companyOrLab, j.location, j.matchReason, j.keyRequirements.join(" "))
+    );
+  }, [jobs, query, isSearchMode]);
 
-  const totalFiltered = filteredPapers.length + filteredEvents.length + filteredJobs.length;
+  const showPapers = activeType === "all" || activeType === "papers";
+  const showEvents = activeType === "all" || activeType === "events";
+  const showJobs = activeType === "all" || activeType === "jobs";
+
+  const visibleCount =
+    (showPapers ? filteredPapers.length : 0) +
+    (showEvents ? filteredEvents.length : 0) +
+    (showJobs ? filteredJobs.length : 0);
+
   const totalAll = papers.length + events.length + jobs.length;
   const isEmpty = !isLoading && totalAll === 0 && !isSearchMode;
 
+  const typeChips: { key: FeedType; label: string; count: number }[] = [
+    { key: "all", label: "All", count: filteredPapers.length + filteredEvents.length + filteredJobs.length },
+    { key: "papers", label: "Papers", count: filteredPapers.length },
+    { key: "events", label: "Events", count: filteredEvents.length },
+    { key: "jobs", label: "Jobs", count: filteredJobs.length },
+  ];
+
   return (
-    <article className="mx-auto max-w-[740px] lg:max-w-[880px] px-6 py-14">
-      <header className="mb-6">
-        <h1 className="font-mono text-2xl font-bold text-heading tracking-tight">
-          {isSearchMode ? "Search" : "Daily Briefing"}
+    <article className="mx-auto max-w-[740px] lg:max-w-[920px] px-6 py-16 lg:py-20">
+      <header className="mb-8">
+        <h1
+          className="text-[34px] lg:text-[38px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {isSearchMode ? "Search" : "Daily briefing"}
         </h1>
-        <p className="text-text-muted mt-2 text-[16px]" style={{ fontFamily: "var(--font-reading)" }}>
+        <p className="text-text-muted mt-3 text-[16.5px] leading-relaxed max-w-[56ch]">
           {isSearchMode
             ? "Search papers across OpenAlex \u2014 250M+ academic works."
             : "Personalized recommendations based on your research profile."}
         </p>
         {!isSearchMode && (
-          <p className="font-mono text-[12px] text-text-faint mt-3">
-            {lastRefresh
-              ? new Date(lastRefresh).toLocaleDateString("en-US", {
-                  weekday: "long", month: "long", day: "numeric",
-                  year: "numeric", hour: "2-digit", minute: "2-digit",
-                })
-              : "Not synced yet"}
-          </p>
+          <>
+            <p
+              className="text-[12px] text-text-faint mt-4 tracking-wide"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              {lastRefresh
+                ? new Date(lastRefresh).toLocaleDateString("en-US", {
+                    weekday: "long", month: "long", day: "numeric",
+                    year: "numeric", hour: "2-digit", minute: "2-digit",
+                  })
+                : "Not synced yet"}
+            </p>
+            <PersonalizationHint profile={profile} />
+          </>
         )}
       </header>
 
       {/* ── Search ── */}
-      <div className="mb-4">
+      <div className="mb-6">
         <div className="relative">
           <svg
             className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint"
@@ -197,12 +172,10 @@ export default function DiscoveryPage() {
           <input
             type="text"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setActiveTag(null);
-            }}
-            placeholder="Search papers, events, jobs..."
-            className="w-full bg-surface border border-border rounded-xl py-3 pl-11 pr-16 font-mono text-[14px] text-text placeholder:text-text-faint/60 focus:outline-none focus:border-accent/30 focus:ring-1 focus:ring-accent/15 transition-colors"
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search papers, events, jobs…"
+            className="w-full bg-surface shadow-card rounded-xl py-3 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
+            style={{ fontFamily: "var(--font-sans)" }}
           />
           {query && (
             <button
@@ -211,60 +184,67 @@ export default function DiscoveryPage() {
                 setSearchResults([]);
                 setSearchTotal(0);
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted font-mono text-[12px] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted text-[12px] transition-colors"
+              style={{ fontFamily: "var(--font-sans)" }}
             >
               clear
             </button>
           )}
         </div>
 
-        {/* ── Tag filters (feed mode only) ── */}
-        {!isSearchMode && allTags.length > 0 && (
-          <div className="flex items-center flex-wrap gap-2 mt-4">
-            <button
-              onClick={() => setActiveTag(null)}
-              className={`font-mono text-[12px] px-3 py-1.5 rounded-lg border transition-colors ${
-                !activeTag
-                  ? "bg-accent-dim border-accent/20 text-accent"
-                  : "border-border text-text-faint hover:text-text-muted hover:border-border-strong"
-              }`}
-            >
-              all
-            </button>
-            {allTags.map(([tag, count]) => (
-              <button
-                key={tag}
-                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                className={`font-mono text-[12px] px-3 py-1.5 rounded-lg border transition-colors ${
-                  activeTag === tag
-                    ? "bg-accent-dim border-accent/20 text-accent"
-                    : "border-border text-text-faint hover:text-text-muted hover:border-border-strong"
-                }`}
-              >
-                #{tag}
-                <span className="ml-1.5 opacity-40">{count}</span>
-              </button>
-            ))}
+        {/* ── Type chips (feed only) ── */}
+        {!isSearchMode && totalAll > 0 && (
+          <div
+            className="flex items-center gap-2 mt-5"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {typeChips.map(({ key, label, count }) => {
+              const active = activeType === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveType(key)}
+                  className={`inline-flex items-baseline gap-2 text-[13px] px-3.5 py-1.5 rounded-full transition-all duration-200 ease-out active:scale-[0.96] ${
+                    active
+                      ? "bg-heading text-bg scale-[1.02]"
+                      : "text-text-muted hover:text-heading bg-bg-secondary/60 hover:bg-bg-secondary"
+                  }`}
+                >
+                  <span>{label}</span>
+                  <span
+                    className={`text-[11.5px] tabular-nums ${
+                      active ? "text-bg/60" : "text-text-faint"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* ── Search status ── */}
         {isSearchMode && (
-          <p className="font-mono text-[12px] text-text-faint mt-3">
+          <p
+            className="text-[12px] text-text-faint mt-4"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
             {isSearching
-              ? "searching..."
+              ? "searching…"
               : searchResults.length > 0
                 ? `${searchResults.length} of ${searchTotal.toLocaleString()} results for \u201c${query}\u201d`
                 : `no results for \u201c${query}\u201d`}
           </p>
         )}
 
-        {/* ── Feed filter status ── */}
-        {!isSearchMode && (query || activeTag) && totalFiltered > 0 && (
-          <p className="font-mono text-[12px] text-text-faint mt-3">
-            {totalFiltered} of {totalAll} items
-            {query && <> matching &ldquo;{query}&rdquo;</>}
-            {activeTag && <> in #{activeTag}</>}
+        {/* ── Query filter status (feed mode) ── */}
+        {!isSearchMode && query && visibleCount > 0 && (
+          <p
+            className="text-[12px] text-text-faint mt-4"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {visibleCount} items matching &ldquo;{query}&rdquo;
           </p>
         )}
       </div>
@@ -276,7 +256,7 @@ export default function DiscoveryPage() {
           {searchResults.length > 0 && (
             <>
               <SectionHeading count={searchResults.length}>Papers</SectionHeading>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-5">
                 {searchResults.map((r) => (
                   <SearchResultCard key={r.id} result={r} />
                 ))}
@@ -304,42 +284,43 @@ export default function DiscoveryPage() {
             />
           )}
 
-          {totalFiltered > 0 && (
+          {visibleCount > 0 && (
             <>
-              {filteredPapers.length > 0 && (
+              {showPapers && filteredPapers.length > 0 && (
                 <>
                   <SectionHeading count={filteredPapers.length}>Papers</SectionHeading>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {filteredPapers.map((p) => <PaperCard key={p.id} paper={p} />)}
                   </div>
                 </>
               )}
 
-              {filteredEvents.length > 0 && (
+              {showEvents && filteredEvents.length > 0 && (
                 <>
                   <SectionHeading count={filteredEvents.length}>Events</SectionHeading>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {filteredEvents.map((e) => <EventCard key={e.id} event={e} />)}
                   </div>
                 </>
               )}
 
-              {filteredJobs.length > 0 && (
+              {showJobs && filteredJobs.length > 0 && (
                 <>
                   <SectionHeading count={filteredJobs.length}>Jobs</SectionHeading>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {filteredJobs.map((j) => <JobCard key={j.id} job={j} />)}
                   </div>
                 </>
               )}
 
-              <div className="mt-16 pt-5 border-t border-border">
+              <div className="mt-20 pt-6 border-t border-border">
                 <button
                   onClick={loadFeed}
                   disabled={isLoading}
-                  className="font-mono text-[12px] text-text-faint hover:text-accent transition-colors disabled:opacity-40"
+                  className="text-[12.5px] text-text-faint hover:text-accent transition-colors disabled:opacity-40"
+                  style={{ fontFamily: "var(--font-sans)" }}
                 >
-                  {isLoading ? "loading..." : "Refresh recommendations"}
+                  {isLoading ? "loading…" : "Refresh recommendations"}
                 </button>
               </div>
             </>
@@ -347,5 +328,54 @@ export default function DiscoveryPage() {
         </>
       )}
     </article>
+  );
+}
+
+function PersonalizationHint({
+  profile,
+}: {
+  profile: { researchTopics: string[]; preferredMethods: string[]; preferredVenues: string[] };
+}) {
+  const { researchTopics, preferredMethods, preferredVenues } = profile;
+  const signals = [
+    ...researchTopics.slice(0, 3),
+    ...preferredMethods.slice(0, 2),
+    ...preferredVenues.slice(0, 2),
+  ];
+
+  if (signals.length === 0) {
+    return (
+      <Link
+        href="/profile"
+        className="inline-flex items-center gap-1.5 mt-5 text-[13px] text-accent hover:text-accent/80 transition-colors"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
+        Set up your profile to personalize this feed
+        <span className="text-[11px] opacity-70">→</span>
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center flex-wrap gap-1.5 mt-5 text-[12.5px]"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      <span className="text-text-faint mr-0.5">Tuned for</span>
+      {signals.map((s) => (
+        <span
+          key={s}
+          className="text-text-muted bg-bg-secondary/70 px-2 py-[2px] rounded-md"
+        >
+          {s}
+        </span>
+      ))}
+      <Link
+        href="/profile"
+        className="text-text-faint hover:text-accent transition-colors ml-1"
+      >
+        edit
+      </Link>
+    </div>
   );
 }
