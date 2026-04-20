@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
@@ -40,17 +41,35 @@ function scoreOf(item: BriefingItem): number {
 
 const WORTH_YOUR_TIME_MAX = 6;
 
-export default function DiscoveryPage() {
+export default function DiscoveryPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <DiscoveryPage />
+    </Suspense>
+  );
+}
+
+function DiscoveryPage() {
   const { papers, events, jobs, isLoading, lastRefresh, loadFeed } =
     useFeedStore();
   const profile = useProfileStore((s) => s.profile);
 
-  const [query, setQuery] = useState("");
+  const searchParamsObj = useSearchParams();
+  const incomingQuery = searchParamsObj?.get("q") ?? "";
+
+  const [query, setQuery] = useState(incomingQuery);
   const [activeType, setActiveType] = useState<FeedType>("all");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchTotal, setSearchTotal] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Hydrate from ?q= on navigation (e.g. clicking an author / keyword / venue).
+  useEffect(() => {
+    if (incomingQuery && incomingQuery !== query) {
+      setQuery(incomingQuery);
+    }
+  }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (papers.length === 0 && !isLoading) loadFeed();
@@ -558,19 +577,16 @@ function MetaRow({
     return (
       <Link
         href="/profile"
-        className="group mt-6 flex items-center gap-3 rounded-2xl bg-surface shadow-card px-4 py-3.5 hover:shadow-card-hover hover:-translate-y-[1px] transition-[box-shadow,transform] duration-200 ease-out active:translate-y-0"
+        className="group mt-6 inline-flex items-center gap-2 rounded-full bg-bg-secondary/50 hover:bg-bg-secondary pl-2 pr-3.5 py-1.5 text-[12.5px] text-text-muted hover:text-heading transition-colors duration-200 ease-out active:scale-[0.98]"
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent text-bg shadow-card transition-transform duration-200 ease-out group-hover:rotate-90">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg transition-transform duration-200 ease-out group-hover:rotate-90">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
             <path d="M12 5v14M5 12h14" />
           </svg>
         </span>
-        <span className="flex-1">
-          <span className="block text-[13px] font-medium text-heading">Set up your profile</span>
-          <span className="block text-[11.5px] text-text-faint mt-0.5">Tell Hermes what to hunt for — sharper briefings by tomorrow.</span>
-        </span>
-        <span className="text-[12px] text-text-faint transition-transform duration-200 ease-out group-hover:translate-x-[3px]">→</span>
+        Set up your profile
+        <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
       </Link>
     );
   }
@@ -579,38 +595,34 @@ function MetaRow({
     <Link
       href="/profile"
       aria-label="Edit profile signals"
-      className="group mt-6 block rounded-2xl bg-surface/70 backdrop-blur-sm shadow-card px-4 pt-3 pb-3.5 hover:shadow-card-hover hover:bg-surface transition-[background-color,box-shadow] duration-200 ease-out"
+      className="group mt-6 flex items-center flex-wrap gap-x-2 gap-y-1.5 rounded-xl bg-bg-secondary/35 hover:bg-bg-secondary/60 px-3 py-2 transition-colors duration-200 ease-out"
       style={{ fontFamily: "var(--font-sans)" }}
     >
-      <div className="flex items-center justify-between mb-2.5">
-        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          Tuned for
-        </span>
-        <span className="inline-flex items-center gap-1 text-[11.5px] text-accent font-medium transition-colors group-hover:text-accent/80">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-out group-hover:-rotate-12" aria-hidden>
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-          Edit
-        </span>
-      </div>
-      <div className="flex items-center flex-wrap gap-1.5">
+      <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint/85">
+        Tuned for
+      </span>
+      <div className="flex items-center flex-wrap gap-1.5 flex-1 min-w-0">
         {typedSignals.map((s) => (
           <SignalBadge key={`${s.kind}:${s.label}`} kind={s.kind} label={s.label} />
         ))}
       </div>
+      <span
+        className="inline-flex items-center justify-center w-6 h-6 rounded-md text-text-faint/75 group-hover:text-accent group-hover:bg-accent-dim transition-all duration-200 ease-out active:scale-90"
+        aria-hidden
+        title="Edit signals"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-out group-hover:-rotate-12">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </span>
       {missingTopics && (
-        <div className="mt-3 pt-2.5 border-t border-border/70 flex items-center gap-1.5 text-[11.5px] text-text-faint">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent" aria-hidden>
+        <div className="basis-full flex items-center gap-1 text-[11px] text-text-faint/80 mt-0.5 pl-0.5">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="text-accent/80" aria-hidden>
             <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4M12 8h.01" />
           </svg>
-          Add research topics for sharper picks
-          <span className="text-accent ml-0.5 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+          <span>Add research topics for sharper picks</span>
+          <span className="text-accent/80 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
         </div>
       )}
     </Link>

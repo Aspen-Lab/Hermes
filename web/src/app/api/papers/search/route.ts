@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  reconstructAbstract,
+  normalizeOpenAlexId,
+} from "@/lib/utils/openalex";
 
 const OPENALEX_API = "https://api.openalex.org/works";
 
@@ -18,23 +22,6 @@ interface OpenAlexWork {
   abstract_inverted_index: Record<string, number[]> | null;
   cited_by_count: number;
   doi: string | null;
-}
-
-function reconstructAbstract(index: Record<string, number[]> | null): string {
-  if (!index) return "";
-  const words: [number, string][] = [];
-  for (const [word, positions] of Object.entries(index)) {
-    for (const pos of positions) {
-      words.push([pos, word]);
-    }
-  }
-  words.sort((a, b) => a[0] - b[0]);
-  return words.map(([, w]) => w).join(" ");
-}
-
-function normalizeId(openalexId: string): string {
-  // "https://openalex.org/W3151130473" → "openalex:W3151130473"
-  return "openalex:" + openalexId.split("/").pop();
 }
 
 export async function GET(req: NextRequest) {
@@ -74,7 +61,7 @@ export async function GET(req: NextRequest) {
   const works: OpenAlexWork[] = data.results || [];
 
   const papers = works.map((w) => ({
-    id: normalizeId(w.id),
+    id: normalizeOpenAlexId(w.id),
     title: w.title || "",
     authors: w.authorships
       .map((a) => a.author.display_name)
