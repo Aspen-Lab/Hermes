@@ -30,7 +30,7 @@ export default function SavedPage() {
       {isEmpty && (
         <EmptyState
           title="Nothing saved yet."
-          description="Bookmark items from your daily briefing and they'll appear here."
+          description="Tap the bookmark on anything from your briefing and it'll land here — your own reading shelf."
         />
       )}
 

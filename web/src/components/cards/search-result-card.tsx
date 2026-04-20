@@ -72,7 +72,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       </div>
 
       {result.abstract && (
-        <p className="text-[15.5px] text-text-muted mt-4 leading-[1.65] line-clamp-3">
+        <p className="text-[15.5px] text-text-muted mt-4 leading-[1.65] line-clamp-2">
           {result.abstract}
         </p>
       )}

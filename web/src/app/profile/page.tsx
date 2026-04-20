@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, type KeyboardEvent } from "react";
+import { useState, useRef, useMemo, useEffect, type KeyboardEvent } from "react";
 import { useProfileStore } from "@/store/profile";
 import { careerStages, industryPreferences, venueOptions } from "@/types";
 
@@ -15,6 +15,7 @@ const industryLabels: Record<string, string> = {
 export default function ProfilePage() {
   const {
     profile,
+    updateDisplayName,
     updateTopics,
     updateVenues,
     updateCareerStage,
@@ -24,7 +25,17 @@ export default function ProfilePage() {
     logOut,
   } = useProfileStore();
 
+  const defaultDisplayName = "Hermes Member";
+  const initialName =
+    profile.displayName === defaultDisplayName ? "" : profile.displayName;
+  const [name, setName] = useState(initialName);
   const [showLogout, setShowLogout] = useState(false);
+
+  useEffect(() => {
+    setName(
+      profile.displayName === defaultDisplayName ? "" : profile.displayName
+    );
+  }, [profile.displayName]);
 
   // Exclude "No preference" sentinel — empty array means no preference.
   const realVenues = useMemo(
@@ -81,6 +92,26 @@ export default function ProfilePage() {
           {done} / {total} signals set
         </span>
       </div>
+
+      {/* ── Group 0: You ── */}
+      <Group
+        title="You"
+        caption="How Hermes greets you on your briefing. First name works — no need for formality."
+      >
+        <Field label="Display name" help="This appears in 'Hello, ___' at the top of your briefing.">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              updateDisplayName(e.target.value);
+            }}
+            placeholder="Aspen"
+            className="w-full bg-surface shadow-card rounded-xl px-4 py-3 text-[15px] text-text placeholder-text-faint/60 outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
+            style={{ fontFamily: "var(--font-sans)" }}
+          />
+        </Field>
+      </Group>
 
       {/* ── Group 1: Research ── */}
       <Group

@@ -34,13 +34,14 @@ export default function JobDetailPage({
     <article className="mx-auto max-w-[720px] px-6 py-14">
       <Link
         href="/"
-        className="text-[13px] text-text-faint hover:text-link transition-colors"
+        className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        ← Back
+        <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">←</span>
+        Back
       </Link>
 
-      <header className="mt-8">
+      <header className="mt-8 animate-fade-in-up" style={{ "--i": 0 } as React.CSSProperties}>
         <h1
           className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
           style={{ fontFamily: "var(--font-sans)" }}
@@ -54,17 +55,15 @@ export default function JobDetailPage({
           {job.companyOrLab} · {job.isRemote ? "Remote" : job.location}
         </p>
         <div className="flex items-center flex-wrap gap-2.5 mt-4">
-          {job.isRemote && <Tag>remote</Tag>}
-          <Tag>{job.companyOrLab.toLowerCase().replace(/\s+/g, "-")}</Tag>
           <Relevance score={job.relevanceScore} />
         </div>
       </header>
 
-      <DetailSection title="Why this matches">
+      <DetailSection title="Why this matches" index={1}>
         {job.matchReason}
       </DetailSection>
 
-      <DetailSection title="Requirements">
+      <DetailSection title="Requirements" index={2}>
         <ul className="list-none space-y-1">
           {job.keyRequirements.map((req) => (
             <li key={req} className="before:content-['–_'] before:text-text-faint">
@@ -75,21 +74,27 @@ export default function JobDetailPage({
       </DetailSection>
 
       {job.linkPosting && (
-        <div className="mt-10">
+        <div
+          className="mt-10 animate-fade-in-up"
+          style={{ "--i": 3 } as React.CSSProperties}
+        >
           <a
             href={job.linkPosting}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-dim text-accent hover:bg-accent/20 transition-colors text-[14px]"
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-dim text-accent hover:bg-accent/20 transition-all duration-200 ease-out active:scale-[0.97] text-[14px]"
             style={{ fontFamily: "var(--font-sans)" }}
           >
             Apply for this role
-            <span className="text-[11px] opacity-70">↗</span>
+            <span className="text-[11px] opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[2px]">↗</span>
           </a>
         </div>
       )}
 
-      <div className="mt-10 pt-5 border-t border-border">
+      <div
+        className="mt-10 pt-5 border-t border-border animate-fade-in-up"
+        style={{ "--i": 4 } as React.CSSProperties}
+      >
         <ActionBar
           onSave={() => saveJob(job)}
           onDismiss={() => { notInterestedJob(job); window.history.back(); }}
