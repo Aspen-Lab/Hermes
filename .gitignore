@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Xcode user data
+*.xcuserdatad/
+xcuserdata/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Environment
+.env*
+!.env.example

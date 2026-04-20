@@ -1,0 +1,83 @@
+# hermes.yml — Hermes configuration
+# Docs: https://github.com/hermes-news/hermes
+
+profile:
+  name: "Aspen"
+  keywords:
+    - "machine learning"
+    - "natural language processing"
+    - "distributed systems"
+
+topics:
+  - name: "LLMs"
+    keywords:
+      - "large language model"
+      - "LLM"
+      - "GPT"
+      - "transformer"
+      - "fine-tuning"
+    patterns:
+      - "\\bLLM[s]?\\b"
+    match: any
+
+  - name: "Systems"
+    keywords:
+      - "distributed systems"
+      - "MLOps"
+      - "inference optimization"
+      - "GPU"
+      - "CUDA"
+
+  - name: "Open Source"
+    keywords:
+      - "open source"
+      - "MIT license"
+      - "Apache license"
+      - "self-hosted"
+
+sources:
+  - name: "hn-frontpage"
+    type: hackernews
+    max_items: 30
+    min_points: 20
+    priority: 7
+
+  - name: "ml-subreddit"
+    type: reddit
+    subreddit: "MachineLearning"
+    sort: hot
+    limit: 25
+    priority: 6
+
+  - name: "arxiv-cs-ai"
+    type: arxiv
+    query: "cat:cs.AI OR cat:cs.LG"
+    max_results: 50
+    priority: 9
+
+  - name: "lobsters"
+    type: rss
+    url: "https://lobste.rs/rss"
+    priority: 5
+
+engine:
+  weights:
+    tfidf: 0.50
+    keyword: 0.30
+    source: 0.20
+  min_score: 0.15
+  max_items: 50
+  dedup_window_days: 30
+
+output:
+  format: markdown           # "markdown" or "obsidian"
+  path: "~/hermes-output"
+  daily_note: true
+  frontmatter: true
+  wikilinks: true
+
+storage:
+  path: "~/.hermes/hermes.db"
+
+logging:
+  level: info
