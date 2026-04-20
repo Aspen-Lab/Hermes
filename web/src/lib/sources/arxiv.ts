@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 
-const ARXIV_API = "http://export.arxiv.org/api/query";
+const ARXIV_API = "https://export.arxiv.org/api/query";
 
 interface ArxivLink {
   "@_href": string;
