@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, Source_Serif_4, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
+import { UndoToast } from "@/components/undo-toast";
+import { KeyboardLayer } from "@/components/keyboard";
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -42,6 +44,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         <Nav />
         <main className="flex-1 pt-14 lg:pt-0 lg:pl-52">{children}</main>
+        <UndoToast />
+        <KeyboardLayer />
       </body>
     </html>
   );

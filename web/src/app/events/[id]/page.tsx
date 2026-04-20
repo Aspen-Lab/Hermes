@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useEffect } from "react";
 import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
@@ -109,12 +109,17 @@ export default function EventDetailPage({
   const { id } = use(params);
   const feedEvents = useFeedStore((s) => s.events);
   const savedEvents = useFeedStore((s) => s.savedEvents);
+  const markRead = useFeedStore((s) => s.markRead);
   const { saveEvent, notInterestedEvent } = useFeedStore();
 
   const event =
     feedEvents.find((e) => e.id === id) ??
     savedEvents.find((e) => e.id === id) ??
     mockEvents.find((e) => e.id === id);
+
+  useEffect(() => {
+    if (event) markRead(event.id);
+  }, [event, markRead]);
 
   const related = useMemo(() => {
     if (!event) return [];

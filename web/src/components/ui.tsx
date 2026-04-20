@@ -2,6 +2,143 @@
 
 import type { ReactNode } from "react";
 
+// ── Callout (Notion-style colored info box) ──
+
+type CalloutVariant = "accent" | "warm" | "ghost" | "success";
+
+const CALLOUT_STYLES: Record<CalloutVariant, string> = {
+  accent: "bg-accent-dim border-accent/25",
+  warm: "bg-bg-secondary/80 border-border-strong",
+  ghost: "bg-surface border-border-strong",
+  success: "bg-tag-dim border-tag/25",
+};
+
+export function Callout({
+  variant = "accent",
+  icon,
+  title,
+  children,
+}: {
+  variant?: CalloutVariant;
+  icon?: ReactNode;
+  title?: string;
+  children: ReactNode;
+}) {
+  return (
+    <aside
+      className={`rounded-2xl border px-5 py-4 ${CALLOUT_STYLES[variant]}`}
+      style={{ fontFamily: "var(--font-reading)" }}
+    >
+      {(title || icon) && (
+        <header
+          className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {icon}
+          {title}
+        </header>
+      )}
+      <div className="text-[16.5px] text-text leading-[1.7]">{children}</div>
+    </aside>
+  );
+}
+
+// ── Property strip (Notion DB property panel) ──
+
+export function PropertyStrip({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-4 py-4 border-y border-border"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function Property({
+  icon,
+  label,
+  children,
+  accent = false,
+}: {
+  icon?: ReactNode;
+  label: string;
+  children: ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <div
+        className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.14em] text-text-faint mb-1"
+      >
+        {icon}
+        {label}
+      </div>
+      <div
+        className={`text-[14px] font-medium truncate ${
+          accent ? "text-accent" : "text-heading"
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── Pull quote (key sentence, left accent bar) ──
+
+export function PullQuote({ children }: { children: ReactNode }) {
+  return (
+    <blockquote
+      className="relative pl-5 my-6 text-[18px] leading-[1.65] text-heading italic"
+      style={{ fontFamily: "var(--font-reading)" }}
+    >
+      <span
+        className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-accent/80"
+        aria-hidden
+      />
+      {children}
+    </blockquote>
+  );
+}
+
+// ── Signal chip (binary indicator: ✓ available / × missing) ──
+
+export function Signal({
+  ok,
+  children,
+}: {
+  ok: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full border transition-colors ${
+        ok
+          ? "bg-tag-dim text-tag border-tag/20"
+          : "bg-surface/70 text-text-faint border-border"
+      }`}
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      <svg
+        width="11"
+        height="11"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        {ok ? <path d="M5 12l5 5L20 7" /> : <path d="M18 6 6 18M6 6l12 12" />}
+      </svg>
+      {children}
+    </span>
+  );
+}
+
 // ── Section heading ──
 
 export function SectionHeading({
@@ -26,14 +163,59 @@ export function SectionHeading({
 
 // ── Inline tag ──
 
-export function Tag({ children }: { children: ReactNode }) {
+export function Tag({
+  children,
+  href,
+}: {
+  children: ReactNode;
+  href?: string;
+}) {
+  const classes =
+    "inline-block text-[11.5px] text-tag bg-tag-dim px-2 py-[3px] rounded-md tracking-wide transition-colors";
+  if (href) {
+    return (
+      <a
+        href={href}
+        className={`${classes} hover:text-heading hover:bg-tag-dim/70 active:scale-[0.96]`}
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
+        {children}
+      </a>
+    );
+  }
   return (
-    <span
-      className="inline-block text-[11.5px] text-tag bg-tag-dim px-2 py-[3px] rounded-md tracking-wide"
-      style={{ fontFamily: "var(--font-sans)" }}
-    >
+    <span className={classes} style={{ fontFamily: "var(--font-sans)" }}>
       {children}
     </span>
+  );
+}
+
+// ── Link chip (pill button for external links) ──
+
+export function LinkChip({
+  href,
+  label,
+  icon,
+}: {
+  href?: string;
+  label: string;
+  icon?: ReactNode;
+}) {
+  if (!href) return null;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-[12.5px] text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {icon}
+      {label}
+      <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+        ↗
+      </span>
+    </a>
   );
 }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { Relevance } from "@/components/ui";
+import { useFeedStore } from "@/store/feed";
 
 export type QuickHitItem =
   | { kind: "paper"; data: Paper }
@@ -20,6 +21,8 @@ const KIND_LABEL: Record<QuickHitItem["kind"], string> = {
 };
 
 export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
+  const isRead = useFeedStore((s) => !!s.readItems[item.data.id]);
+
   const detail =
     item.kind === "paper"
       ? `/papers/${item.data.id}`
@@ -51,24 +54,45 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
   return (
     <Link
       href={detail}
-      className="group flex items-center gap-4 py-3.5 px-2 -mx-2 rounded-lg transition-colors hover:bg-surface/70 active:bg-surface"
+      data-read={isRead || undefined}
+      className="group flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg transition-colors hover:bg-surface/70 active:bg-surface"
     >
+      {/* Read/unread dot */}
       <span
-        className="shrink-0 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint w-[46px]"
+        className="shrink-0 inline-flex items-center justify-center w-3.5 h-3.5"
+        aria-hidden
+      >
+        <span
+          className={`block w-[7px] h-[7px] rounded-full transition-colors ${
+            isRead ? "bg-transparent border border-border-strong" : "bg-accent"
+          }`}
+        />
+      </span>
+
+      <span
+        className={`shrink-0 text-[10.5px] font-semibold uppercase tracking-[0.14em] w-[46px] ${
+          isRead ? "text-text-faint/60" : "text-text-faint"
+        }`}
         style={{ fontFamily: "var(--font-sans)" }}
       >
         {KIND_LABEL[item.kind]}
       </span>
 
       <span
-        className="flex-1 min-w-0 text-[15.5px] text-heading truncate group-hover:text-accent transition-colors"
+        className={`flex-1 min-w-0 text-[15.5px] truncate transition-colors ${
+          isRead
+            ? "text-text-faint group-hover:text-text-muted"
+            : "text-heading group-hover:text-accent"
+        }`}
         style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </span>
 
       <span
-        className="hidden sm:inline text-[12.5px] text-text-faint truncate max-w-[38%]"
+        className={`hidden sm:inline text-[12.5px] truncate max-w-[38%] ${
+          isRead ? "text-text-faint/60" : "text-text-faint"
+        }`}
         style={{ fontFamily: "var(--font-sans)" }}
       >
         {meta}

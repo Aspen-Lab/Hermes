@@ -5,6 +5,15 @@ import { persist } from "zustand/middleware";
 import type { Paper, Event, Job, ItemFeedback } from "@/types";
 import { mockPapers, mockEvents, mockJobs } from "@/data/mock";
 
+type DismissalKind = "paper" | "event" | "job";
+
+interface PendingDismissal {
+  id: string;
+  kind: DismissalKind;
+  item: Paper | Event | Job;
+  expiresAt: number;
+}
+
 interface FeedState {
   papers: Paper[];
   events: Event[];
@@ -14,6 +23,8 @@ interface FeedState {
   savedJobs: Job[];
   isLoading: boolean;
   lastRefresh: string | null;
+  readItems: Record<string, true>;
+  pendingDismissal: PendingDismissal | null;
 
   loadFeed: () => void;
   savePaper: (paper: Paper) => void;
@@ -27,6 +38,10 @@ interface FeedState {
   unsaveEvent: (id: string) => void;
   unsaveJob: (id: string) => void;
   submitFeedback: (itemId: string, type: string, feedback: ItemFeedback) => void;
+  markRead: (id: string) => void;
+  markUnread: (id: string) => void;
+  undoDismiss: () => void;
+  commitDismiss: () => void;
 }
 
 export const useFeedStore = create<FeedState>()(
@@ -40,6 +55,8 @@ export const useFeedStore = create<FeedState>()(
       savedJobs: [],
       isLoading: false,
       lastRefresh: null,
+      readItems: {},
+      pendingDismissal: null,
 
       loadFeed: () => {
         set({ isLoading: true });
@@ -76,11 +93,20 @@ export const useFeedStore = create<FeedState>()(
       },
 
       notInterestedPaper: (paper) => {
+        // Commit any previous pending dismissal before starting a new one.
+        const prev = get().pendingDismissal;
+        if (prev) get().commitDismiss();
+
         set((s) => ({
           papers: s.papers.filter((p) => p.id !== paper.id),
           savedPapers: s.savedPapers.filter((p) => p.id !== paper.id),
+          pendingDismissal: {
+            id: paper.id,
+            kind: "paper",
+            item: paper,
+            expiresAt: Date.now() + 4000,
+          },
         }));
-        get().submitFeedback(paper.id, "paper", "notInterested");
       },
 
       moreLikePaper: (paper) => {
@@ -102,11 +128,19 @@ export const useFeedStore = create<FeedState>()(
       },
 
       notInterestedEvent: (event) => {
+        const prev = get().pendingDismissal;
+        if (prev) get().commitDismiss();
+
         set((s) => ({
           events: s.events.filter((e) => e.id !== event.id),
           savedEvents: s.savedEvents.filter((e) => e.id !== event.id),
+          pendingDismissal: {
+            id: event.id,
+            kind: "event",
+            item: event,
+            expiresAt: Date.now() + 4000,
+          },
         }));
-        get().submitFeedback(event.id, "event", "notInterested");
       },
 
       saveJob: (job) => {
@@ -119,11 +153,19 @@ export const useFeedStore = create<FeedState>()(
       },
 
       notInterestedJob: (job) => {
+        const prev = get().pendingDismissal;
+        if (prev) get().commitDismiss();
+
         set((s) => ({
           jobs: s.jobs.filter((j) => j.id !== job.id),
           savedJobs: s.savedJobs.filter((j) => j.id !== job.id),
+          pendingDismissal: {
+            id: job.id,
+            kind: "job",
+            item: job,
+            expiresAt: Date.now() + 4000,
+          },
         }));
-        get().submitFeedback(job.id, "job", "notInterested");
       },
 
       unsavePaper: (id) => {
@@ -150,6 +192,57 @@ export const useFeedStore = create<FeedState>()(
       submitFeedback: (itemId, type, feedback) => {
         console.log(`[Hermes] Feedback: ${type} ${itemId} → ${feedback}`);
       },
+
+      markRead: (id) => {
+        set((s) =>
+          s.readItems[id] ? s : { readItems: { ...s.readItems, [id]: true } },
+        );
+      },
+
+      markUnread: (id) => {
+        set((s) => {
+          if (!s.readItems[id]) return s;
+          const next = { ...s.readItems };
+          delete next[id];
+          return { readItems: next };
+        });
+      },
+
+      undoDismiss: () => {
+        const pending = get().pendingDismissal;
+        if (!pending) return;
+        set((s) => {
+          if (pending.kind === "paper") {
+            return {
+              papers: [pending.item as Paper, ...s.papers].sort(
+                (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+              ),
+              pendingDismissal: null,
+            };
+          }
+          if (pending.kind === "event") {
+            return {
+              events: [pending.item as Event, ...s.events].sort(
+                (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+              ),
+              pendingDismissal: null,
+            };
+          }
+          return {
+            jobs: [pending.item as Job, ...s.jobs].sort(
+              (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+            ),
+            pendingDismissal: null,
+          };
+        });
+      },
+
+      commitDismiss: () => {
+        const pending = get().pendingDismissal;
+        if (!pending) return;
+        get().submitFeedback(pending.id, pending.kind, "notInterested");
+        set({ pendingDismissal: null });
+      },
     }),
     {
       name: "hermes-feed",
@@ -157,6 +250,7 @@ export const useFeedStore = create<FeedState>()(
         savedPapers: state.savedPapers,
         savedEvents: state.savedEvents,
         savedJobs: state.savedJobs,
+        readItems: state.readItems,
       }),
     }
   )

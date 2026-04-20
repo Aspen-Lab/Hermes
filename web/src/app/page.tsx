@@ -52,6 +52,7 @@ export default function DiscoveryPageWrapper() {
 function DiscoveryPage() {
   const { papers, events, jobs, isLoading, lastRefresh, loadFeed } =
     useFeedStore();
+  const readItems = useFeedStore((s) => s.readItems);
   const profile = useProfileStore((s) => s.profile);
 
   const searchParamsObj = useSearchParams();
@@ -172,6 +173,9 @@ function DiscoveryPage() {
   const quickHits = briefingItems.slice(1 + WORTH_YOUR_TIME_MAX);
 
   const totalAll = papers.length + events.length + jobs.length;
+  const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
+  const briefingClosed =
+    !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
   const isEmpty = !isLoading && totalAll === 0 && !isSearchMode;
 
   const typeChips: { key: FeedType; label: string; count: number; icon: string }[] = [
@@ -197,6 +201,14 @@ function DiscoveryPage() {
         {!isSearchMode && (
           <MetaRow profile={profile} />
         )}
+        {!isSearchMode && briefingItems.length > 0 && (
+          <BriefingStatus
+            total={briefingItems.length}
+            unread={unreadCount}
+            lastRefresh={lastRefresh}
+            closed={briefingClosed}
+          />
+        )}
       </header>
 
       {/* ── Search ── */}
@@ -211,10 +223,11 @@ function DiscoveryPage() {
             <path d="m21 21-4.3-4.3" />
           </svg>
           <input
+            id="hermes-search"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search papers, events, jobs…"
+            placeholder="Search papers, events, jobs…  (press /)"
             className="w-full bg-surface shadow-card rounded-xl py-3 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
             style={{ fontFamily: "var(--font-sans)" }}
           />
@@ -507,6 +520,78 @@ function Greeting({
         <span className="text-[17px] lg:text-[18px] text-text-muted leading-none">{monthDay}</span>
       </div>
     </>
+  );
+}
+
+function formatSynced(lastRefresh: string | null): string {
+  if (!lastRefresh) return "not synced yet";
+  const diff = Date.now() - new Date(lastRefresh).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function BriefingStatus({
+  total,
+  unread,
+  lastRefresh,
+  closed,
+}: {
+  total: number;
+  unread: number;
+  lastRefresh: string | null;
+  closed: boolean;
+}) {
+  if (closed) {
+    return (
+      <div
+        className="mt-6 flex items-center gap-2.5 rounded-full bg-accent-dim border border-accent/20 px-4 py-2 text-[12.5px]"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-accent"
+          aria-hidden
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M8 12l3 3 5-6" />
+        </svg>
+        <span className="text-heading font-medium">Briefing closed</span>
+        <span className="text-text-faint">·</span>
+        <span className="text-text-muted">
+          All {total} item{total === 1 ? "" : "s"} reviewed. Back tomorrow with
+          a fresh one.
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="mt-6 flex items-center gap-2 text-[12.5px] text-text-faint"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      <span className="tabular-nums">
+        <span className="text-heading font-medium">{total}</span>{" "}
+        item{total === 1 ? "" : "s"}
+      </span>
+      <span className="text-border-strong">·</span>
+      <span className="tabular-nums">
+        <span className="text-accent font-medium">{unread}</span> unread
+      </span>
+      <span className="text-border-strong">·</span>
+      <span>synced {formatSynced(lastRefresh)}</span>
+    </div>
   );
 }
 
