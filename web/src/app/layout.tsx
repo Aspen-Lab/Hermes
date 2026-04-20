@@ -1,22 +1,47 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Source_Serif_4, Noto_Sans_SC } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Source_Serif_4,
+  Instrument_Serif,
+  Noto_Sans_SC,
+} from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { UndoToast } from "@/components/undo-toast";
 import { KeyboardLayer } from "@/components/keyboard";
 
-const jetbrains = JetBrains_Mono({
+// Primary UI sans — clean, modern, pairs with Source Serif 4
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-jb-mono",
+  variable: "--font-geist",
   display: "swap",
 });
 
+// Mono — for kbd, tabular metadata, technical strings
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
+// Reading body — long prose (intros, summaries, pull quotes)
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   variable: "--font-source-serif",
   display: "swap",
 });
 
+// Display italic — wordmark, greeting day-name accent
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+// CJK fallback
 const notoSansSC = Noto_Sans_SC({
   subsets: ["latin"],
   variable: "--font-noto-sc",
@@ -39,7 +64,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${jetbrains.variable} ${sourceSerif.variable} ${notoSansSC.variable} h-full`}
+      className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} ${instrumentSerif.variable} ${notoSansSC.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
         <Nav />

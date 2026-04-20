@@ -15,17 +15,28 @@
   --color-text-muted: #5c564c;
   --color-text-faint: #8a8275;
 
-  /* ── Hues (logo orange is the brand accent) ─────────── */
-  --color-accent: #f58414;          /* logo orange */
+  /* ── Hues — all derived from the warm logo family ───── */
+  --color-accent: #f58414;          /* logo orange — primary brand */
   --color-accent-dim: rgba(245, 132, 20, 0.10);
-  --color-link: #1d4ed8;            /* blue stays distinct from brand */
-  --color-link-dim: rgba(29, 78, 216, 0.08);
-  --color-tag: #0f766e;             /* teal: cool counterweight to orange */
-  --color-tag-dim: rgba(15, 118, 110, 0.08);
+
+  /* Links: deep umber, reads as warm "go somewhere" accent */
+  --color-link: #7a4412;
+  --color-link-dim: rgba(122, 68, 18, 0.09);
+
+  /* Tags: pumpkin amber, warm mid-tone for content metadata */
+  --color-tag: #c2630e;
+  --color-tag-dim: rgba(194, 99, 14, 0.09);
+
+  /* Peach: light warm, for secondary/locations */
+  --color-peach: #d97a30;
+  --color-peach-dim: rgba(217, 122, 48, 0.10);
+
+  /* Retained but rarely used — warning/yellow */
   --color-yellow: #a76a10;
   --color-yellow-dim: rgba(167, 106, 16, 0.10);
+
+  /* Red kept for destructive only (reset confirm, dismiss) */
   --color-red: #b91c1c;
-  --color-peach: #c2410c;
 
   /* ── Shadows ────────────────────────────────────────── */
   --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 1px 3px rgba(24, 24, 27, 0.06);
@@ -33,9 +44,10 @@
 
   /* ── Typography ─────────────────────────────────────── */
   --font-reading: var(--font-source-serif), "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --font-mono: var(--font-jb-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-               var(--font-noto-sc), "PingFang SC", "Helvetica Neue", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+               "Segoe UI", var(--font-noto-sc), "PingFang SC", "Helvetica Neue", sans-serif;
+  --font-display: var(--font-instrument-serif), var(--font-source-serif), Georgia, serif;
 }
 
 /* Light is unconditional — no OS-preference dark mode. Dark mode would be a

@@ -151,6 +151,13 @@ export function KeyboardLayer() {
     return () => window.removeEventListener("keydown", handler);
   }, [handler]);
 
+  // External trigger from UI (e.g. sidebar "?" button)
+  useEffect(() => {
+    const toggle = () => setHelpOpen((v) => !v);
+    window.addEventListener("hermes:toggle-help", toggle);
+    return () => window.removeEventListener("hermes:toggle-help", toggle);
+  }, []);
+
   return (
     <>
       {awaitingG && <ChordHint />}

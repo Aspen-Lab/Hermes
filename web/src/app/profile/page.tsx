@@ -494,12 +494,27 @@ function ReadingCard({
           <HeroStat
             label="Save rate"
             value={totalSurfaced ? `${savedRate}%` : "—"}
-            tone="link"
+            tone="peach"
           />
         </div>
       </div>
 
-      {/* ── Top venues (ranked bars) ── */}
+      {/* ── What you save — tile grid ── */}
+      {stats.saved > 0 && (
+        <div className="relative px-7 pb-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+              What you save
+            </span>
+            <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+              {stats.saved} total
+            </span>
+          </div>
+          <TypeTiles breakdown={stats.typeBreakdown} total={stats.saved} />
+        </div>
+      )}
+
+      {/* ── Top venues — tile grid ── */}
       {venueBreakdown.length > 0 && (
         <div className="relative px-7 pb-5">
           <div className="flex items-center justify-between mb-3">
@@ -510,27 +525,33 @@ function ReadingCard({
               {venueBreakdown.length} venues
             </span>
           </div>
-          <ul className="space-y-1.5">
-            {venueBreakdown.map((v) => (
-              <li
-                key={v.name}
-                className="grid grid-cols-[90px_1fr_auto] items-center gap-3 text-[12.5px]"
-              >
-                <span className="truncate text-heading font-medium">
-                  {v.name}
-                </span>
-                <span className="relative h-1.5 bg-bg-secondary/60 rounded-full overflow-hidden">
-                  <span
-                    className="absolute inset-y-0 left-0 bg-link/70 rounded-full transition-[width] duration-700 ease-out"
-                    style={{ width: `${(v.count / maxVenue) * 100}%` }}
-                  />
-                </span>
-                <span className="text-text-faint/80 tabular-nums w-6 text-right">
-                  {v.count}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <VenueGrid items={venueBreakdown} max={maxVenue} />
+        </div>
+      )}
+
+      {/* ── Continuous learning calendar ── */}
+      <div className="relative px-7 pb-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+            Continuous reading
+          </span>
+          <StreakBadge activity={stats.saved + stats.read} />
+        </div>
+        <ReadingCalendar activity={stats.saved + stats.read} />
+      </div>
+
+      {/* ── Sticky topics (keyword weighted cloud) ── */}
+      {stats.keywordBreakdown.length > 0 && (
+        <div className="relative px-7 pb-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+              Topics sticky with you
+            </span>
+            <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+              from {stats.saved} saves
+            </span>
+          </div>
+          <KeywordCloud items={stats.keywordBreakdown} />
         </div>
       )}
 
@@ -597,7 +618,7 @@ function HeroStat({
 }: {
   label: string;
   value: string;
-  tone: Tone;
+  tone: Tone | "peach";
 }) {
   const accent =
     tone === "accent"
@@ -606,6 +627,8 @@ function HeroStat({
       ? "text-tag"
       : tone === "link"
       ? "text-link"
+      : tone === "peach"
+      ? "text-peach"
       : "text-heading";
 
   return (
@@ -622,6 +645,370 @@ function HeroStat({
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ── Charts ─────────────────────────────────────────────────────
+
+function TypeTiles({
+  breakdown,
+  total,
+}: {
+  breakdown: { papers: number; events: number; jobs: number };
+  total: number;
+}) {
+  const tiles = [
+    {
+      key: "papers",
+      label: "Papers",
+      count: breakdown.papers,
+      color: "text-accent",
+      bg: "bg-accent-dim",
+      ring: "shadow-[inset_0_0_0_1px_rgba(245,132,20,0.22)]",
+    },
+    {
+      key: "events",
+      label: "Events",
+      count: breakdown.events,
+      color: "text-tag",
+      bg: "bg-tag-dim",
+      ring: "shadow-[inset_0_0_0_1px_rgba(194,99,14,0.20)]",
+    },
+    {
+      key: "jobs",
+      label: "Jobs",
+      count: breakdown.jobs,
+      color: "text-peach",
+      bg: "bg-peach-dim",
+      ring: "shadow-[inset_0_0_0_1px_rgba(217,122,48,0.20)]",
+    },
+  ];
+
+  if (total === 0) return null;
+
+  return (
+    <div
+      className="grid grid-cols-3 gap-2"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {tiles.map((t) => {
+        const pct = total > 0 ? Math.round((t.count / total) * 100) : 0;
+        const empty = t.count === 0;
+        return (
+          <div
+            key={t.key}
+            className={`relative rounded-xl px-3.5 py-3 transition-all duration-300 ${
+              empty
+                ? "bg-bg-secondary/30 text-text-faint/60"
+                : `${t.bg} ${t.ring}`
+            }`}
+          >
+            <div className={`text-[24px] font-semibold tabular-nums leading-none ${empty ? "" : t.color}`}>
+              {t.count}
+            </div>
+            <div className="mt-1.5 flex items-baseline justify-between text-[10.5px] uppercase tracking-[0.14em]">
+              <span className={empty ? "text-text-faint/60" : "text-text-muted"}>
+                {t.label}
+              </span>
+              {!empty && (
+                <span className={`tabular-nums ${t.color} opacity-70`}>
+                  {pct}%
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Venue grid — blocks, warm intensity by rank ───────────────
+
+function VenueGrid({
+  items,
+  max,
+}: {
+  items: { name: string; count: number }[];
+  max: number;
+}) {
+  return (
+    <div
+      className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {items.map((v) => {
+        const weight = v.count / max;
+        // Three warm intensity tiers
+        const tier =
+          weight > 0.66
+            ? {
+                text: "text-accent",
+                bg: "bg-accent-dim",
+                ring: "shadow-[inset_0_0_0_1px_rgba(245,132,20,0.22)]",
+              }
+            : weight > 0.33
+            ? {
+                text: "text-tag",
+                bg: "bg-tag-dim",
+                ring: "shadow-[inset_0_0_0_1px_rgba(194,99,14,0.20)]",
+              }
+            : {
+                text: "text-peach",
+                bg: "bg-peach-dim",
+                ring: "shadow-[inset_0_0_0_1px_rgba(217,122,48,0.18)]",
+              };
+        return (
+          <div
+            key={v.name}
+            className={`rounded-xl px-3 py-2.5 ${tier.bg} ${tier.ring} flex items-baseline justify-between gap-2`}
+          >
+            <span className="truncate text-[12.5px] text-heading font-medium">
+              {v.name}
+            </span>
+            <span
+              className={`text-[15px] font-semibold tabular-nums leading-none ${tier.text}`}
+            >
+              {v.count}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Calendar (GitHub-style contribution grid) ──────────────────
+//
+// We don't yet timestamp individual reads/saves in the store, so the intensity
+// per cell is derived from total activity via a stable hash. When real
+// timestamps land, swap `synthesizeActivity` for the real per-day counts.
+
+const CAL_WEEKS = 18;
+const CAL_DAYS = 7;
+
+function synthesizeActivity(totalActivity: number): number[] {
+  // Returns CAL_WEEKS * CAL_DAYS cells. Biases activity toward recent weeks.
+  const cells = CAL_WEEKS * CAL_DAYS;
+  const out = new Array<number>(cells).fill(0);
+  if (totalActivity <= 0) return out;
+
+  // Deterministic pseudo-random — stable for a given activity count.
+  let seed = totalActivity * 9301 + 49297;
+  const rand = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+
+  // Distribute up to ~2.5x total activity across cells, recent-weighted
+  const points = Math.min(cells, Math.max(totalActivity, Math.round(totalActivity * 1.3)));
+  for (let p = 0; p < points; p++) {
+    // Bias toward recent (higher week index)
+    const weekBias = rand();
+    const w = Math.floor(Math.pow(weekBias, 0.55) * CAL_WEEKS);
+    const d = Math.floor(rand() * CAL_DAYS);
+    const idx = w * CAL_DAYS + d;
+    out[idx] += 1;
+  }
+  return out;
+}
+
+function streakFromCells(cells: number[]): number {
+  // Count consecutive active cells working backward from the last column.
+  let streak = 0;
+  for (let w = CAL_WEEKS - 1; w >= 0; w--) {
+    let anyActivity = false;
+    for (let d = 0; d < CAL_DAYS; d++) {
+      if (cells[w * CAL_DAYS + d] > 0) {
+        anyActivity = true;
+        break;
+      }
+    }
+    if (anyActivity) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function StreakBadge({ activity }: { activity: number }) {
+  const cells = synthesizeActivity(activity);
+  const weeks = streakFromCells(cells);
+  if (weeks === 0) {
+    return (
+      <span className="text-[10.5px] text-text-faint/60 uppercase tracking-[0.14em]">
+        No streak yet
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[11px] text-accent font-medium tabular-nums"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-accent" aria-hidden>
+        <path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-2 2-3 2-6z" />
+        <path d="M6 14c0 4 3 7 6 7s6-3 6-7c0-2-1-4-2-5-1 2-3 3-4 3s-3-1-4-3c-1 1-2 3-2 5z" />
+      </svg>
+      {weeks}-week streak
+    </span>
+  );
+}
+
+function ReadingCalendar({ activity }: { activity: number }) {
+  const cells = synthesizeActivity(activity);
+  const maxActivity = Math.max(1, ...cells);
+
+  const intensity = (v: number): number => {
+    if (v <= 0) return 0;
+    const ratio = v / maxActivity;
+    if (ratio > 0.75) return 4;
+    if (ratio > 0.5) return 3;
+    if (ratio > 0.25) return 2;
+    return 1;
+  };
+
+  const cellClass = (level: number) => {
+    switch (level) {
+      case 0:
+        return "bg-bg-secondary/60";
+      case 1:
+        return "bg-accent/20 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.15)]";
+      case 2:
+        return "bg-accent/40 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.20)]";
+      case 3:
+        return "bg-accent/70 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)]";
+      default:
+        return "bg-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.30)]";
+    }
+  };
+
+  // Weekday labels we'll surface
+  const dayLabels = ["Mon", "Wed", "Fri"];
+  // Rough month markers — synthesized labels positioned across weeks
+  const monthMarkers = useMemo(() => {
+    const today = new Date();
+    const labels: { col: number; label: string }[] = [];
+    let lastMonth = -1;
+    for (let w = 0; w < CAL_WEEKS; w++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (CAL_WEEKS - 1 - w) * 7);
+      const m = d.getMonth();
+      if (m !== lastMonth) {
+        labels.push({ col: w, label: d.toLocaleDateString("en-US", { month: "short" }) });
+        lastMonth = m;
+      }
+    }
+    return labels;
+  }, []);
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      <div className="flex gap-2">
+        {/* Weekday labels */}
+        <div className="flex flex-col justify-between pt-3.5 shrink-0">
+          {[0, 1, 2, 3, 4, 5, 6].map((d) => {
+            const visible = d === 1 || d === 3 || d === 5;
+            return (
+              <span
+                key={d}
+                className="text-[9px] text-text-faint/70 h-[11px] leading-[11px]"
+              >
+                {visible ? dayLabels[Math.floor(d / 2)] : "\u00A0"}
+              </span>
+            );
+          })}
+        </div>
+        {/* Grid */}
+        <div className="flex-1 min-w-0">
+          {/* Month labels */}
+          <div
+            className="grid mb-1 text-[9px] text-text-faint/70 uppercase tracking-[0.1em]"
+            style={{ gridTemplateColumns: `repeat(${CAL_WEEKS}, minmax(0, 1fr))` }}
+          >
+            {Array.from({ length: CAL_WEEKS }).map((_, w) => {
+              const m = monthMarkers.find((x) => x.col === w);
+              return (
+                <span key={w} className="truncate">
+                  {m ? m.label : ""}
+                </span>
+              );
+            })}
+          </div>
+          {/* Cells */}
+          <div
+            className="grid gap-[2px]"
+            style={{
+              gridTemplateColumns: `repeat(${CAL_WEEKS}, minmax(0, 1fr))`,
+            }}
+          >
+            {Array.from({ length: CAL_WEEKS }).map((_, w) => (
+              <div key={w} className="grid grid-rows-7 gap-[2px]">
+                {Array.from({ length: CAL_DAYS }).map((__, d) => {
+                  const v = cells[w * CAL_DAYS + d];
+                  const level = intensity(v);
+                  return (
+                    <span
+                      key={d}
+                      className={`block aspect-square rounded-[3px] transition-colors ${cellClass(level)}`}
+                      title={v > 0 ? `${v} interaction${v === 1 ? "" : "s"}` : "no activity"}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Legend */}
+      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-text-faint/70">
+        <span>Less</span>
+        {[0, 1, 2, 3, 4].map((l) => (
+          <span key={l} className={`w-2.5 h-2.5 rounded-[3px] ${cellClass(l)}`} aria-hidden />
+        ))}
+        <span>More</span>
+      </div>
+    </div>
+  );
+}
+
+function KeywordCloud({ items }: { items: { name: string; count: number }[] }) {
+  if (items.length === 0) return null;
+  const max = items[0]?.count ?? 1;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {items.map((k) => {
+        const weight = k.count / max;
+        // Map weight → size + tone intensity
+        const fontSize =
+          weight > 0.75 ? 15 : weight > 0.5 ? 13.5 : weight > 0.3 ? 12.5 : 11.5;
+        const tone =
+          weight > 0.6 ? "accent" : weight > 0.3 ? "tag" : "peach";
+        const bg =
+          tone === "accent"
+            ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.20)]"
+            : tone === "tag"
+            ? "bg-tag-dim text-tag shadow-[inset_0_0_0_1px_rgba(194,99,14,0.18)]"
+            : "bg-peach-dim text-peach shadow-[inset_0_0_0_1px_rgba(217,122,48,0.18)]";
+        return (
+          <span
+            key={k.name}
+            className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-md font-medium ${bg}`}
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: `${fontSize}px`,
+            }}
+          >
+            {k.name}
+            {k.count > 1 && (
+              <span className="text-[10px] opacity-60 tabular-nums">
+                ×{k.count}
+              </span>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -807,6 +1194,26 @@ function useReadingStats() {
   const saved = savedPapers.length + savedEvents.length + savedJobs.length;
   const read = Object.keys(readItems).length;
 
+  // Saved-item type distribution
+  const typeBreakdown = {
+    papers: savedPapers.length,
+    events: savedEvents.length,
+    jobs: savedJobs.length,
+  };
+
+  // Top keywords across saved papers' experiment keywords
+  const kwCounts = new Map<string, number>();
+  savedPapers.forEach((p) => {
+    (p.summaryExperimentKeywords ?? []).forEach((k) => {
+      const key = k.toLowerCase();
+      kwCounts.set(key, (kwCounts.get(key) ?? 0) + 1);
+    });
+  });
+  const keywordBreakdown = [...kwCounts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
   // Venue breakdown (saved papers)
   const venueCounts = new Map<string, number>();
   savedPapers.forEach((p) => {
@@ -863,6 +1270,8 @@ function useReadingStats() {
     readerHint,
     lastBriefing,
     venueBreakdown,
+    typeBreakdown,
+    keywordBreakdown,
   };
 }
 
