@@ -2,8 +2,37 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Paper, Event, Job, ItemFeedback } from "@/types";
+import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
 import { mockPapers, mockEvents, mockJobs } from "@/data/mock";
+import { useProfileStore } from "@/store/profile";
+import { scoredItemToPaper } from "@/lib/feed/mapper";
+import type { FeedResponse } from "@/lib/feed/types";
+
+async function fetchRealFeed(profile: UserProfile): Promise<Paper[]> {
+  const topics = (profile.researchTopics ?? []).filter(Boolean);
+  if (topics.length === 0) return [];
+  try {
+    const res = await fetch("/api/feed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topics,
+        methods: profile.preferredMethods,
+        venues: profile.preferredVenues,
+        topN: 30,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[feed] /api/feed returned", res.status);
+      return [];
+    }
+    const data = (await res.json()) as FeedResponse;
+    return data.items.map(scoredItemToPaper);
+  } catch (err) {
+    console.error("[feed] fetch failed:", err);
+    return [];
+  }
+}
 
 type DismissalKind = "paper" | "event" | "job";
 
@@ -26,7 +55,7 @@ interface FeedState {
   readItems: Record<string, true>;
   pendingDismissal: PendingDismissal | null;
 
-  loadFeed: () => void;
+  loadFeed: () => Promise<void>;
   savePaper: (paper: Paper) => void;
   notInterestedPaper: (paper: Paper) => void;
   moreLikePaper: (paper: Paper) => void;
@@ -58,25 +87,26 @@ export const useFeedStore = create<FeedState>()(
       readItems: {},
       pendingDismissal: null,
 
-      loadFeed: () => {
+      loadFeed: async () => {
         set({ isLoading: true });
-        // Simulate network delay
-        setTimeout(() => {
-          const { savedPapers } = get();
-          const savedIds = new Set(savedPapers.map((p) => p.id));
-          const papers = mockPapers.map((p) =>
-            savedIds.has(p.id)
-              ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
-              : p
-          );
-          set({
-            papers,
-            events: mockEvents,
-            jobs: mockJobs,
-            isLoading: false,
-            lastRefresh: new Date().toISOString(),
-          });
-        }, 600);
+        const { savedPapers } = get();
+        const savedIds = new Set(savedPapers.map((p) => p.id));
+        const profile = useProfileStore.getState().profile;
+
+        const realPapers = await fetchRealFeed(profile);
+        const source = realPapers.length > 0 ? realPapers : mockPapers;
+        const papers = source.map((p) =>
+          savedIds.has(p.id)
+            ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
+            : p,
+        );
+        set({
+          papers,
+          events: mockEvents,
+          jobs: mockJobs,
+          isLoading: false,
+          lastRefresh: new Date().toISOString(),
+        });
       },
 
       savePaper: (paper) => {
