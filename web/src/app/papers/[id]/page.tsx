@@ -117,10 +117,28 @@ export default function PaperDetailPage({
   const markRead = useFeedStore((s) => s.markRead);
   const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
 
-  const paper =
+  const [fetchedPaper, setFetchedPaper] = useState<Paper | null>(null);
+  const [isFetchingById, setIsFetchingById] = useState(false);
+
+  const storePaper =
     feedPapers.find((p) => p.id === id) ??
     savedPapers.find((p) => p.id === id) ??
     mockPapers.find((p) => p.id === id);
+
+  const paper = storePaper ?? fetchedPaper ?? undefined;
+
+  useEffect(() => {
+    if (storePaper || fetchedPaper) return;
+    if (!id.startsWith("openalex:") && !id.startsWith("arxiv:")) return;
+    setIsFetchingById(true);
+    fetch(`/api/papers/${encodeURIComponent(id)}`)
+      .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
+      .then((p) => {
+        if (p) setFetchedPaper(p);
+      })
+      .catch(() => {})
+      .finally(() => setIsFetchingById(false));
+  }, [id, storePaper, fetchedPaper]);
 
   useEffect(() => {
     if (paper) markRead(paper.id);
@@ -135,10 +153,14 @@ export default function PaperDetailPage({
   if (!paper) {
     return (
       <article className="mx-auto max-w-[720px] px-6 py-20">
-        <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
-          ← Back to feed
-        </Link>
+        <p className="text-text-muted italic">
+          {isFetchingById ? "Loading briefing…" : "Paper not found."}
+        </p>
+        {!isFetchingById && (
+          <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+            ← Back to feed
+          </Link>
+        )}
       </article>
     );
   }

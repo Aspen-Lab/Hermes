@@ -1,3 +1,4 @@
+import type { RawItem } from "@/lib/sources/types";
 import type { ScoredItem } from "@/lib/scoring/types";
 import type { Paper, PaperSource } from "@/types";
 
@@ -23,25 +24,57 @@ function fallbackVenue(source: string): string {
   return "";
 }
 
-export function scoredItemToPaper(item: ScoredItem): Paper {
+function splitAbstractForBriefing(abstract: string | undefined): {
+  intro: string;
+  discussion: string;
+} {
+  if (!abstract) return { intro: "", discussion: "" };
+  const sentences = abstract.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) return { intro: abstract, discussion: "" };
+  const introSentenceCount = sentences[0].length < 80 ? 2 : 1;
+  const intro = sentences.slice(0, introSentenceCount).join(" ");
+  const discussion = sentences.slice(introSentenceCount).join(" ");
+  return { intro, discussion };
+}
+
+export interface RawItemToPaperOptions {
+  relevanceReason?: string;
+  relevanceScore?: number;
+  matchedKeywords?: string[];
+}
+
+export function rawItemToPaper(
+  item: RawItem,
+  options: RawItemToPaperOptions = {},
+): Paper {
+  const { intro, discussion } = splitAbstractForBriefing(item.abstract);
   const keywords = Array.from(
-    new Set([...(item.matchedKeywords ?? []), ...(item.tags ?? [])]),
+    new Set([...(options.matchedKeywords ?? []), ...(item.tags ?? [])]),
   ).slice(0, 6);
   const isArxiv = item.source === "arxiv";
+  const introText = intro || truncate(item.abstract, 400);
   return {
     id: item.id,
     title: item.title,
     authors: item.authors,
-    relevanceReason: item.relevanceReason,
+    relevanceReason: options.relevanceReason ?? "",
     venue: item.venue || fallbackVenue(item.source),
     source: mapSource(item.source, item.venue),
-    summaryIntro: truncate(item.abstract, 400),
+    summaryIntro: introText,
     summaryExperimentKeywords: keywords,
-    summaryResultDiscussion: "",
+    summaryResultDiscussion: discussion,
     linkPaper: item.url,
     linkArxiv: isArxiv ? item.url : undefined,
     publishedDate: item.publishedAt || undefined,
     isSaved: false,
-    relevanceScore: item.score,
+    relevanceScore: options.relevanceScore,
   };
+}
+
+export function scoredItemToPaper(item: ScoredItem): Paper {
+  return rawItemToPaper(item, {
+    relevanceReason: item.relevanceReason,
+    relevanceScore: item.score,
+    matchedKeywords: item.matchedKeywords,
+  });
 }
