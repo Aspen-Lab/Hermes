@@ -111,14 +111,24 @@ export default function PaperDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: rawId } = use(params);
+  const id = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
+  const isExternalId =
+    id.startsWith("openalex:") || id.startsWith("arxiv:");
+
   const feedPapers = useFeedStore((s) => s.papers);
   const savedPapers = useFeedStore((s) => s.savedPapers);
   const markRead = useFeedStore((s) => s.markRead);
   const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
 
   const [fetchedPaper, setFetchedPaper] = useState<Paper | null>(null);
-  const [isFetchingById, setIsFetchingById] = useState(false);
+  const [isFetchingById, setIsFetchingById] = useState(isExternalId);
 
   const storePaper =
     feedPapers.find((p) => p.id === id) ??
@@ -128,8 +138,14 @@ export default function PaperDetailPage({
   const paper = storePaper ?? fetchedPaper ?? undefined;
 
   useEffect(() => {
-    if (storePaper || fetchedPaper) return;
-    if (!id.startsWith("openalex:") && !id.startsWith("arxiv:")) return;
+    if (storePaper || fetchedPaper) {
+      setIsFetchingById(false);
+      return;
+    }
+    if (!isExternalId) {
+      setIsFetchingById(false);
+      return;
+    }
     setIsFetchingById(true);
     fetch(`/api/papers/${encodeURIComponent(id)}`)
       .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
@@ -138,7 +154,7 @@ export default function PaperDetailPage({
       })
       .catch(() => {})
       .finally(() => setIsFetchingById(false));
-  }, [id, storePaper, fetchedPaper]);
+  }, [id, isExternalId, storePaper, fetchedPaper]);
 
   useEffect(() => {
     if (paper) markRead(paper.id);
