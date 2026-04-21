@@ -13,6 +13,7 @@ import {
   Property,
   PullQuote,
   Signal,
+  FeedbackRow,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 
@@ -117,10 +118,28 @@ export default function PaperDetailPage({
   const markRead = useFeedStore((s) => s.markRead);
   const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
 
-  const paper =
+  const [fetchedPaper, setFetchedPaper] = useState<Paper | null>(null);
+  const [isFetchingById, setIsFetchingById] = useState(false);
+
+  const storePaper =
     feedPapers.find((p) => p.id === id) ??
     savedPapers.find((p) => p.id === id) ??
     mockPapers.find((p) => p.id === id);
+
+  const paper = storePaper ?? fetchedPaper ?? undefined;
+
+  useEffect(() => {
+    if (storePaper || fetchedPaper) return;
+    if (!id.startsWith("openalex:") && !id.startsWith("arxiv:")) return;
+    setIsFetchingById(true);
+    fetch(`/api/papers/${encodeURIComponent(id)}`)
+      .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
+      .then((p) => {
+        if (p) setFetchedPaper(p);
+      })
+      .catch(() => {})
+      .finally(() => setIsFetchingById(false));
+  }, [id, storePaper, fetchedPaper]);
 
   useEffect(() => {
     if (paper) markRead(paper.id);
@@ -135,10 +154,14 @@ export default function PaperDetailPage({
   if (!paper) {
     return (
       <article className="mx-auto max-w-[720px] px-6 py-20">
-        <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
-          ← Back to feed
-        </Link>
+        <p className="text-text-muted italic">
+          {isFetchingById ? "Loading briefing…" : "Paper not found."}
+        </p>
+        {!isFetchingById && (
+          <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+            ← Back to feed
+          </Link>
+        )}
       </article>
     );
   }
@@ -350,35 +373,12 @@ export default function PaperDetailPage({
           />
         </div>
 
-        {/* ── Train feed ── */}
-        <div
-          className="mt-12 pt-6 border-t border-border animate-fade-in-up"
-          style={{ "--i": 9 } as React.CSSProperties}
-        >
-          <button
-            type="button"
-            onClick={() => moreLikePaper(paper)}
-            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transition-transform duration-300 ease-out group-hover:rotate-12"
-              aria-hidden
-            >
-              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-              <path d="M19 3l.6 1.6L21 5l-1.4.4L19 7l-.6-1.6L17 5l1.4-.4z" />
-            </svg>
-            Train my feed on this
-          </button>
-        </div>
+        {/* ── Feedback: Like / Dislike (Tinder pattern) ── */}
+        <FeedbackRow
+          onLike={() => moreLikePaper(paper)}
+          onDislike={handleDismiss}
+          index={9}
+        />
 
         {/* ── Related ── */}
         {related.length > 0 && (
@@ -450,7 +450,8 @@ function ScrollProgress() {
   }, []);
   return (
     <div
-      className="fixed top-0 inset-x-0 z-[60] h-[2px] bg-transparent pointer-events-none lg:left-52"
+      className="fixed top-0 right-0 z-[60] h-[2px] bg-transparent pointer-events-none transition-[left] duration-[350ms] ease-out"
+      style={{ left: "var(--sidebar-offset, 0px)" }}
       aria-hidden
     >
       <div
