@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Tag } from "@/components/ui";
 
 interface SearchResult {
@@ -27,8 +26,10 @@ function fmtDate(d: string | null) {
 
 export function SearchResultCard({ result }: { result: SearchResult }) {
   return (
-    <Link
-      href={`/papers/${encodeURIComponent(result.id)}`}
+    <a
+      href={result.url}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
     >
       <div className="flex items-start justify-between gap-4">
@@ -75,6 +76,6 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           {result.abstract}
         </p>
       )}
-    </Link>
+    </a>
   );
 }
