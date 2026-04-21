@@ -167,16 +167,29 @@ export default function PaperDetailPage({
   }, [paper, feedPapers]);
 
   if (!paper) {
-    return (
-      <article className="mx-auto max-w-[720px] px-6 py-20">
-        <p className="text-text-muted italic">
-          {isFetchingById ? "Loading briefing…" : "Paper not found."}
-        </p>
-        {!isFetchingById && (
-          <Link href="/" className="text-link text-[14px] mt-3 inline-block">
-            ← Back to feed
+    if (isFetchingById) {
+      return (
+        <article className="mx-auto max-w-[760px] px-6 py-14">
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
+              ←
+            </span>
+            Back
           </Link>
-        )}
+          <BriefingSkeleton />
+        </article>
+      );
+    }
+    return (
+      <article className="mx-auto max-w-[720px] px-6 py-20 animate-fade-in-up">
+        <p className="text-text-muted italic">Paper not found.</p>
+        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+          ← Back to feed
+        </Link>
       </article>
     );
   }
@@ -736,5 +749,111 @@ function IconLink() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
     </svg>
+  );
+}
+
+// ── Briefing skeleton ──
+// Loading state that mirrors the real briefing's geometry so the page doesn't
+// jump when content arrives. Staggered fade-in + shimmering bars.
+
+function ShimmerBar({
+  width,
+  height = "h-4",
+  rounded = "rounded-md",
+}: {
+  width: string;
+  height?: string;
+  rounded?: string;
+}) {
+  return (
+    <div className={`${height} ${rounded} skeleton-shimmer`} style={{ width }} />
+  );
+}
+
+function BriefingSkeleton() {
+  return (
+    <div
+      className="mt-10"
+      aria-busy="true"
+      aria-label="Loading briefing"
+    >
+      {/* Title */}
+      <div
+        className="animate-fade-in-up space-y-3"
+        style={{ "--i": 0 } as React.CSSProperties}
+      >
+        <ShimmerBar width="88%" height="h-8" />
+        <ShimmerBar width="62%" height="h-8" />
+      </div>
+
+      {/* Authors */}
+      <div
+        className="mt-5 animate-fade-in-up"
+        style={{ "--i": 1 } as React.CSSProperties}
+      >
+        <ShimmerBar width="55%" height="h-4" />
+      </div>
+
+      {/* Property strip */}
+      <div
+        className="mt-8 grid grid-cols-4 gap-6 animate-fade-in-up"
+        style={{ "--i": 2 } as React.CSSProperties}
+      >
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="space-y-2">
+            <ShimmerBar width="55%" height="h-3" />
+            <ShimmerBar width="85%" height="h-5" />
+          </div>
+        ))}
+      </div>
+
+      {/* Callout */}
+      <div
+        className="mt-10 rounded-2xl bg-surface shadow-card p-6 space-y-3 animate-fade-in-up"
+        style={{ "--i": 3 } as React.CSSProperties}
+      >
+        <ShimmerBar width="22%" height="h-3" />
+        <ShimmerBar width="96%" />
+        <ShimmerBar width="80%" />
+      </div>
+
+      {/* Briefing body */}
+      <div
+        className="mt-10 space-y-3 animate-fade-in-up"
+        style={{ "--i": 4 } as React.CSSProperties}
+      >
+        <ShimmerBar width="100%" />
+        <ShimmerBar width="95%" />
+        <ShimmerBar width="98%" />
+        <ShimmerBar width="78%" />
+      </div>
+
+      {/* Discussion */}
+      <div
+        className="mt-10 space-y-3 animate-fade-in-up"
+        style={{ "--i": 5 } as React.CSSProperties}
+      >
+        <ShimmerBar width="28%" height="h-5" />
+        <ShimmerBar width="97%" />
+        <ShimmerBar width="92%" />
+        <ShimmerBar width="88%" />
+        <ShimmerBar width="72%" />
+      </div>
+
+      {/* Tags */}
+      <div
+        className="mt-10 flex gap-2 animate-fade-in-up"
+        style={{ "--i": 6 } as React.CSSProperties}
+      >
+        {[72, 56, 80, 48, 64].map((w, i) => (
+          <ShimmerBar
+            key={i}
+            width={`${w}px`}
+            height="h-6"
+            rounded="rounded-full"
+          />
+        ))}
+      </div>
+    </div>
   );
 }
