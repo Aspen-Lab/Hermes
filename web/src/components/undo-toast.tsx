@@ -49,7 +49,8 @@ export function UndoToast() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-6 flex justify-center pointer-events-none z-[70] px-4 lg:pl-52"
+      className="fixed right-0 bottom-6 flex justify-center pointer-events-none z-[70] px-4 transition-[left] duration-[350ms] ease-out"
+      style={{ left: "var(--sidebar-offset, 0px)" }}
       role="status"
       aria-live="polite"
     >

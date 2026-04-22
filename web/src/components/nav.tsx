@@ -1,17 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFeedStore } from "@/store/feed";
+import { useUIStore } from "@/store/ui";
+import { UserMenu } from "@/components/user-menu";
 
 type Tab = {
   href: string;
   label: string;
   shortcut: string;
-  icon: React.ReactNode;
 };
-
-// ── Stroke icons (feather-family, 16×16) ──
 
 function IconFeed({ active = false }: { active?: boolean }) {
   return (
@@ -70,9 +70,9 @@ function IconProfile({ active = false }: { active?: boolean }) {
 }
 
 const tabs: Tab[] = [
-  { href: "/", label: "Feed", shortcut: "g h", icon: <IconFeed /> },
-  { href: "/saved", label: "Saved", shortcut: "g s", icon: <IconSaved /> },
-  { href: "/profile", label: "Profile", shortcut: "g p", icon: <IconProfile /> },
+  { href: "/", label: "Feed", shortcut: "g h" },
+  { href: "/saved", label: "Saved", shortcut: "g s" },
+  { href: "/profile", label: "Profile", shortcut: "g p" },
 ];
 
 function iconFor(href: string, active: boolean): React.ReactNode {
@@ -94,6 +94,19 @@ function formatSynced(lastRefresh: string | null): string {
 
 export function Nav() {
   const pathname = usePathname();
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
+
+  // Sync CSS variable so <main> padding transitions in lockstep with the
+  // sidebar slide. Done in effect so SSR defaults to the CSS fallback.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.style.setProperty(
+      "--sidebar-offset",
+      sidebarOpen ? "13rem" : "0px",
+    );
+  }, [sidebarOpen]);
 
   const savedCount =
     useFeedStore((s) => s.savedPapers.length) +
@@ -164,21 +177,50 @@ export function Nav() {
                 </Link>
               );
             })}
+            <UserMenu compact />
           </div>
         </div>
       </nav>
 
-      {/* Desktop: sidebar */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-52 z-50 border-r border-border bg-bg-secondary/60 backdrop-blur-md flex-col">
-        <div className="px-6 pt-10 pb-10">
+      {/* Desktop: sidebar — translates off-screen when collapsed. */}
+      <aside
+        className={`hidden lg:flex fixed inset-y-0 left-0 w-52 z-50 border-r border-border bg-bg-secondary/60 backdrop-blur-md flex-col transition-transform duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-hidden={!sidebarOpen}
+      >
+        <div className="relative px-6 pt-10 pb-10">
           <Link
             href="/"
-            className="flex items-center gap-2.5 text-[26px] font-normal text-heading tracking-[-0.02em] italic leading-none"
+            className="flex items-center gap-3 text-[28px] font-normal text-heading tracking-[-0.02em] italic leading-none"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            <img src="/logo.svg" alt="" width={44} height={44} className="shrink-0" />
+            <img src="/logo.svg" alt="" width={60} height={60} className="shrink-0" />
             Hermes
           </Link>
+
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            title="Collapse sidebar (\)"
+            aria-label="Collapse sidebar"
+            className="absolute top-4 right-3 inline-flex items-center justify-center w-7 h-7 rounded-full text-text-faint hover:text-heading hover:bg-surface transition-colors active:scale-[0.92]"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M15 18l-6-6 6-6" />
+              <path d="M20 4v16" />
+            </svg>
+          </button>
         </div>
 
         <nav
@@ -192,6 +234,7 @@ export function Nav() {
               <Link
                 key={href}
                 href={href}
+                tabIndex={sidebarOpen ? 0 : -1}
                 className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13.5px] transition-all duration-200 ease-out active:scale-[0.98] ${
                   active
                     ? "text-heading bg-surface shadow-card"
@@ -230,6 +273,8 @@ export function Nav() {
           className="px-4 py-4 border-t border-border flex flex-col gap-3"
           style={{ fontFamily: "var(--font-sans)" }}
         >
+          <UserMenu />
+
           <div className="flex items-center gap-2 text-[11px] text-text-faint">
             <span
               className={`block w-[6px] h-[6px] rounded-full shrink-0 ${
@@ -252,6 +297,7 @@ export function Nav() {
             <button
               type="button"
               onClick={openHelp}
+              tabIndex={sidebarOpen ? 0 : -1}
               title="Keyboard shortcuts"
               className="group inline-flex items-center gap-1.5 text-[11px] text-text-faint hover:text-heading transition-colors active:scale-[0.95]"
             >
@@ -264,6 +310,59 @@ export function Nav() {
           </div>
         </div>
       </aside>
+
+      {/* Collapsed floating toggle — icon-only. Minimal footprint so the
+          reclaimed space actually feels reclaimed. Unread count surfaces as a
+          small badge so you don't need to open the sidebar to see it. */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label="Expand sidebar"
+        title="Expand sidebar (\)"
+        className={`group hidden lg:inline-flex fixed top-4 left-4 z-[55] items-center justify-center w-10 h-10 rounded-full bg-surface/95 backdrop-blur border border-border-strong shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[opacity,transform,box-shadow] duration-[300ms] ease-out active:scale-[0.94] ${
+          sidebarOpen
+            ? "opacity-0 -translate-x-2 pointer-events-none"
+            : "opacity-100 translate-x-0"
+        }`}
+      >
+        <img
+          src="/logo.svg"
+          alt=""
+          width={26}
+          height={26}
+          className="shrink-0 transition-transform duration-300 ease-out group-hover:scale-[1.06]"
+        />
+
+        {/* Expand affordance — appears on hover, nudges to indicate direction */}
+        <span
+          className="absolute -right-1 -bottom-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-heading text-bg opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-200 ease-out"
+          aria-hidden
+        >
+          <svg
+            width="8"
+            height="8"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </span>
+
+        {/* Unread badge — hidden when zero or sidebar is open */}
+        {unreadCount > 0 && (
+          <span
+            className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-bg text-[10.5px] font-semibold tabular-nums shadow-card border border-bg/20 group-hover:opacity-0 transition-opacity duration-200"
+            aria-label={`${unreadCount} unread`}
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
     </>
   );
 }

@@ -91,8 +91,19 @@ export interface UserProfile {
 
 export const defaultProfile: UserProfile = {
   displayName: "Hermes Member",
-  researchTopics: [],
-  preferredVenues: [],
+  researchTopics: [
+    "electroplating LCO",
+    "battery cathode materials",
+    "LCO cathode",
+  ],
+  preferredVenues: [
+    "J. Electrochem. Soc.",
+    "Adv. Energy Mater.",
+    "Electrochim. Acta",
+    "J. Power Sources",
+    "Nature Energy",
+    "Chem. Mater.",
+  ],
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],

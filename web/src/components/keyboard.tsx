@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFeedStore } from "@/store/feed";
+import { useUIStore } from "@/store/ui";
 
 // ── Global keyboard shortcut registry ──
 
@@ -32,6 +33,10 @@ const GROUPS: { title: string; items: Shortcut[] }[] = [
       { keys: "u", label: "Undo last dismiss (within 4s)" },
     ],
   },
+  {
+    title: "View",
+    items: [{ keys: "\\", label: "Toggle sidebar" }],
+  },
 ];
 
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -49,6 +54,7 @@ export function KeyboardLayer() {
   const loadFeed = useFeedStore((s) => s.loadFeed);
   const undoDismiss = useFeedStore((s) => s.undoDismiss);
   const pendingDismissal = useFeedStore((s) => s.pendingDismissal);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
 
   // Clear pending `g` chord after 1.5s
   useEffect(() => {
@@ -141,9 +147,22 @@ export function KeyboardLayer() {
           }
           return;
         }
+        case "\\": {
+          toggleSidebar();
+          e.preventDefault();
+          return;
+        }
       }
     },
-    [awaitingG, helpOpen, router, loadFeed, undoDismiss, pendingDismissal],
+    [
+      awaitingG,
+      helpOpen,
+      router,
+      loadFeed,
+      undoDismiss,
+      pendingDismissal,
+      toggleSidebar,
+    ],
   );
 
   useEffect(() => {

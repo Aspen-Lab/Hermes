@@ -12,6 +12,191 @@ const daysFromNow = (n: number) =>
   new Date(Date.now() + n * 86400_000).toISOString();
 
 export const mockPapers: Paper[] = [
+  // ── Electrochemistry / battery cathode papers ──
+  // Matched to the default profile (LCO cathode, electroplating LCO, cathode
+  // materials). Scores are hand-tuned so the feed tells a story in the UI.
+  {
+    id: "ec1",
+    title:
+      "Pulsed Electrodeposition of Epitaxial LiCoO₂ Thin Films for Solid-State Microbatteries",
+    authors: [
+      "Mei-Lin Chang",
+      "Daniel R. Kline",
+      "Shoji Tanaka",
+      "Priya Venkataraman",
+    ],
+    relevanceReason:
+      "Direct match on electroplating LCO — method you flagged as the core of your PhD.",
+    venue: "J. Electrochem. Soc.",
+    source: "other",
+    summaryIntro:
+      "Reports a three-step pulsed electrodeposition route that yields (104)-oriented LiCoO₂ films on stainless-steel current collectors at sub-5 mA/cm² current densities. In-situ XRD confirms the layered R-3m phase forms directly without a post-deposition anneal above 500 °C.",
+    summaryExperimentKeywords: [
+      "electroplating",
+      "LiCoO₂",
+      "pulsed deposition",
+      "thin film",
+      "XRD",
+      "solid-state battery",
+    ],
+    summaryResultDiscussion:
+      "Films retain 92% of initial capacity after 500 cycles at C/2 between 3.0–4.3 V. Pulsed current density is identified as the dominant parameter for suppressing Co-rich dendritic growth and preserving stoichiometry.",
+    linkPaper: "https://doi.org/10.1149/1945-7111/ac8f3d",
+    linkArxiv: undefined,
+    linkScholar:
+      "https://scholar.google.com/scholar?q=pulsed+electrodeposition+LiCoO2+thin+film",
+    publishedDate: daysAgo(2),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.96,
+  },
+  {
+    id: "ec2",
+    title:
+      "Surface Engineering of LCO Cathodes via Conformal Al₂O₃ Atomic Layer Deposition for 4.6 V Cycling",
+    authors: ["Haruki Mori", "Léa Dupont", "Carlos Moreno-Ayala", "Yuxi Zhao"],
+    relevanceReason:
+      "LCO cathode stability at high voltage — central topic for your research on cathode materials.",
+    venue: "Adv. Energy Mater.",
+    source: "other",
+    summaryIntro:
+      "Demonstrates a 0.8 nm Al₂O₃ coating applied by low-temperature ALD on commercial single-crystal LCO. Correlates coating thickness with H1–3 phase transition suppression using operando synchrotron XRD.",
+    summaryExperimentKeywords: [
+      "LCO cathode",
+      "ALD",
+      "Al2O3 coating",
+      "high voltage",
+      "H1-3 transition",
+      "synchrotron XRD",
+    ],
+    summaryResultDiscussion:
+      "Coated cells retain 83% capacity after 200 cycles at 4.6 V vs. Li/Li⁺, compared to 41% for uncoated controls. Coating stabilizes Co³⁺/Co⁴⁺ redox and cuts first-cycle irreversible capacity by 2.1%.",
+    linkPaper: "https://doi.org/10.1002/aenm.202300914",
+    linkScholar:
+      "https://scholar.google.com/scholar?q=LCO+cathode+ALD+Al2O3+4.6V",
+    publishedDate: daysAgo(5),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.93,
+  },
+  {
+    id: "ec3",
+    title:
+      "In-situ Raman Spectroscopy of Lithium Cobalt Oxide Phase Transitions During Fast Charging",
+    authors: ["Anjali Bhat", "Oleksandr Ivanov", "Sofia Melendez"],
+    relevanceReason:
+      "Phase-transition characterization on LCO — same material system as your work.",
+    venue: "Chem. Mater.",
+    source: "other",
+    summaryIntro:
+      "Uses a custom in-operando Raman cell to track LCO structural evolution under 5C charging. Identifies an intermediate staged phase at x ≈ 0.55 in Li_xCoO₂ that precedes the H1–3 transition and is absent in slower C/5 cycling.",
+    summaryExperimentKeywords: [
+      "LCO",
+      "in-situ Raman",
+      "fast charging",
+      "phase transition",
+      "Li_xCoO2",
+      "staging",
+    ],
+    summaryResultDiscussion:
+      "Kinetic asymmetry between charge and discharge scans reveals that the intermediate phase is metastable and collapses into H1–3 within 12 s at open circuit. Provides a direct mechanistic handle for fast-charge degradation.",
+    linkPaper: "https://doi.org/10.1021/acs.chemmater.3c00417",
+    publishedDate: daysAgo(9),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.9,
+  },
+  {
+    id: "ec4",
+    title:
+      "Gradient Electroplating of Ni-Doped LCO for Enhanced Structural Stability Above 4.5 V",
+    authors: [
+      "Takashi Yamada",
+      "Emeka Okonkwo",
+      "Chiara Bianchi",
+      "Rishabh Mehta",
+    ],
+    relevanceReason:
+      "Electroplating-based cathode fabrication with Ni doping — useful comparator for your LCO plating route.",
+    venue: "Nature Energy",
+    source: "other",
+    summaryIntro:
+      "Reports a gradient electrodeposition method producing Ni-concentrated surface layers on LCO core particles. Variable-anode composition during deposition yields a continuous Ni₀.₀₅→Ni₀.₂₅ gradient across the outer 200 nm.",
+    summaryExperimentKeywords: [
+      "electroplating",
+      "Ni doping",
+      "LCO",
+      "gradient",
+      "cathode stability",
+      "4.5 V",
+    ],
+    summaryResultDiscussion:
+      "Gradient material delivers 215 mAh/g at 4.55 V with 88% capacity retention after 300 cycles. Core LCO remains unmodified, preserving bulk capacity while the Ni-rich surface suppresses oxygen release.",
+    linkPaper: "https://doi.org/10.1038/s41560-024-01458-1",
+    publishedDate: daysAgo(1),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.95,
+  },
+  {
+    id: "ec5",
+    title:
+      "Operando Raman Tracking of LCO Cathode Degradation in Commercial 18650 Cells",
+    authors: ["Franz Steinbach", "Amira Hadid", "Lin Wei", "Diego Salamanca"],
+    relevanceReason:
+      "Commercial-cell validation of LCO degradation mechanisms — useful for translating your lab results.",
+    venue: "Electrochim. Acta",
+    source: "other",
+    summaryIntro:
+      "Builds a windowed 18650 cell enabling operando Raman through a sapphire cap. Maps cathode-level degradation across full-cell cycling at rates from C/10 to 3C.",
+    summaryExperimentKeywords: [
+      "operando Raman",
+      "LCO",
+      "18650",
+      "cathode degradation",
+      "full cell",
+    ],
+    summaryResultDiscussion:
+      "Shows a 4× acceleration of I₁ band broadening at 3C vs. C/10, consistent with localized Li depletion near the separator interface. Correlates directly with post-mortem TEM lattice strain maps.",
+    linkPaper: "https://doi.org/10.1016/j.electacta.2024.143828",
+    publishedDate: daysAgo(14),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.88,
+  },
+  {
+    id: "ec6",
+    title:
+      "Electrochemical Dissolution–Redeposition Pathway for Single-Crystal LCO Synthesis",
+    authors: [
+      "Yi-Chun Hsu",
+      "Marco Caruso",
+      "Priya Venkataraman",
+      "Elliot N. Rice",
+    ],
+    relevanceReason:
+      "Alternative electroplating-adjacent synthesis for single-crystal LCO — direct overlap with your method space.",
+    venue: "J. Power Sources",
+    source: "other",
+    summaryIntro:
+      "Exploits Co²⁺ dissolution from a sacrificial polycrystalline LCO anode into a LiOH melt, followed by galvanostatic redeposition onto a Pt cathode. Yields 3–8 µm single crystals with faceted (104) surfaces.",
+    summaryExperimentKeywords: [
+      "single-crystal LCO",
+      "molten salt",
+      "electrochemical synthesis",
+      "dissolution redeposition",
+      "cathode materials",
+    ],
+    summaryResultDiscussion:
+      "Single-crystal LCO shows 98% first-cycle Coulombic efficiency and 42% lower capacity fade than polycrystalline reference at 4.4 V. Method scales linearly with anode surface area without post-synthesis milling.",
+    linkPaper: "https://doi.org/10.1016/j.jpowsour.2024.234119",
+    publishedDate: daysAgo(11),
+    isSaved: false,
+    feedback: undefined,
+    relevanceScore: 0.91,
+  },
+
+  // ── LLM papers kept as "off-topic" demo: should score low for this profile ──
   {
     id: "p1",
     title: "Attention Is All You Need",
@@ -38,7 +223,7 @@ export const mockPapers: Paper[] = [
     publishedDate: daysAgo(1),
     isSaved: false,
     feedback: undefined,
-    relevanceScore: 0.94,
+    relevanceScore: 0.42,
   },
   {
     id: "p2",
@@ -63,7 +248,7 @@ export const mockPapers: Paper[] = [
     publishedDate: daysAgo(7),
     isSaved: false,
     feedback: undefined,
-    relevanceScore: 0.87,
+    relevanceScore: 0.38,
   },
   {
     id: "p3",
@@ -89,7 +274,7 @@ export const mockPapers: Paper[] = [
     publishedDate: daysAgo(2),
     isSaved: false,
     feedback: undefined,
-    relevanceScore: 0.91,
+    relevanceScore: 0.45,
   },
   {
     id: "p4",
@@ -114,7 +299,7 @@ export const mockPapers: Paper[] = [
     publishedDate: daysAgo(4),
     isSaved: false,
     feedback: undefined,
-    relevanceScore: 0.82,
+    relevanceScore: 0.35,
   },
 ];
 

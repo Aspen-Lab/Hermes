@@ -55,6 +55,19 @@
 
 html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
 
+/* Sidebar width is a CSS variable so the collapse animation can slide the main
+   content in sync without a JS layout thrash. Mobile stays 0 (sidebar is the
+   top bar there). */
+:root { --sidebar-offset: 0px; }
+
+@media (min-width: 1024px) {
+  :root { --sidebar-offset: 13rem; }
+  main {
+    padding-left: var(--sidebar-offset, 13rem);
+    transition: padding-left 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);

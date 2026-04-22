@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useProfileStore } from "@/store/profile";
 import { useFeedStore } from "@/store/feed";
-import { careerStages, industryPreferences, venueOptions } from "@/types";
+import { careerStages, industryPreferences } from "@/types";
 
 const industryLabels: Record<string, string> = {
   academia: "Academia",
@@ -125,20 +125,6 @@ export default function ProfilePage() {
     setName(profile.displayName === DEFAULT_NAME ? "" : profile.displayName);
   }, [profile.displayName]);
 
-  const realVenues = useMemo(
-    () => venueOptions.filter((v) => v !== "No preference"),
-    []
-  );
-
-  const toggleVenue = (v: string) => {
-    const active = profile.preferredVenues.includes(v);
-    updateVenues(
-      active
-        ? profile.preferredVenues.filter((x) => x !== v)
-        : [...profile.preferredVenues, v]
-    );
-  };
-
   const signals = [
     profile.researchTopics.length > 0,
     profile.preferredMethods.length > 0,
@@ -238,8 +224,7 @@ export default function ProfilePage() {
           updateDisplayName={updateDisplayName}
           updateTopics={updateTopics}
           updateMethods={updateMethods}
-          toggleVenue={toggleVenue}
-          realVenues={realVenues}
+          updateVenues={updateVenues}
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
           updateLocations={updateLocations}
@@ -1351,8 +1336,7 @@ function EditView({
   updateDisplayName,
   updateTopics,
   updateMethods,
-  toggleVenue,
-  realVenues,
+  updateVenues,
   updateCareerStage,
   updateIndustryPreference,
   updateLocations,
@@ -1363,8 +1347,7 @@ function EditView({
   updateDisplayName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateMethods: (v: string[]) => void;
-  toggleVenue: (v: string) => void;
-  realVenues: string[];
+  updateVenues: (v: string[]) => void;
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
   updateLocations: (v: string[]) => void;
@@ -1406,24 +1389,12 @@ function EditView({
       </EditRow>
 
       <EditRow icon={<IconBook />} tone="link" label="Venues">
-        <div className="flex flex-wrap gap-1.5">
-          {realVenues.map((v) => {
-            const active = profile.preferredVenues.includes(v);
-            return (
-              <button
-                key={v}
-                onClick={() => toggleVenue(v)}
-                className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
-                  active
-                    ? "bg-link-dim text-link shadow-[inset_0_0_0_1px_rgba(29,78,216,0.22)] scale-[1.03]"
-                    : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
-                }`}
-              >
-                {v}
-              </button>
-            );
-          })}
-        </div>
+        <ChipInput
+          values={profile.preferredVenues}
+          onChange={updateVenues}
+          placeholder="J. Power Sources, Nature Energy, Phys. Rev. B…"
+          tone="link"
+        />
       </EditRow>
 
       <EditRow icon={<IconPin />} tone="tag" label="Locations">

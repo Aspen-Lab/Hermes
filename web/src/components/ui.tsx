@@ -280,8 +280,9 @@ export function ActionBar({
           <button
             type="button"
             onClick={stop(onMore)}
-            aria-label="More like this"
-            className="group/more inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] text-text-faint hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.94]"
+            aria-label="Like — show me more like this"
+            title="Like — show me more like this"
+            className="group/like inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] text-text-faint hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.94]"
           >
             <svg
               width="13"
@@ -292,24 +293,74 @@ export function ActionBar({
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="transition-transform duration-300 ease-out group-hover/more:rotate-12"
+              className="transition-transform duration-300 ease-out group-hover/like:-translate-y-[1.5px]"
               aria-hidden
             >
-              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-              <path d="M19 3l.6 1.6L21 5l-1.4.4L19 7l-.6-1.6L17 5l1.4-.4z" />
+              <path d="M7 10v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h3zM7 10l4-7a2 2 0 0 1 2 2v3h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 19H7" />
             </svg>
-            More like this
+            Like
+          </button>
+        )}
+
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={stop(onDismiss)}
+            aria-label="Dislike — show me less like this"
+            title="Dislike — show me less like this"
+            className="group/dislike inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.94]"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-transform duration-300 ease-out group-hover/dislike:translate-y-[1.5px]"
+              aria-hidden
+            >
+              <path d="M17 14V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zM17 14l-4 7a2 2 0 0 1-2-2v-3H5.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 5H17" />
+            </svg>
+            Dislike
           </button>
         )}
       </div>
+    </div>
+  );
+}
 
-      {onDismiss && (
+// ── Feedback row: paired Like / Dislike for post-read taste signal ──
+// Intentionally symmetric — Tinder-style "tell me more / less of this".
+
+export function FeedbackRow({
+  onLike,
+  onDislike,
+  index,
+}: {
+  onLike: () => void;
+  onDislike: () => void;
+  index?: number;
+}) {
+  return (
+    <section
+      className="mt-12 pt-6 border-t border-border animate-fade-in-up"
+      style={{
+        "--i": index,
+        fontFamily: "var(--font-sans)",
+      } as React.CSSProperties}
+    >
+      <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-3">
+        Was this worth your time?
+      </p>
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
-          onClick={stop(onDismiss)}
-          aria-label="Dismiss"
-          title="Dismiss"
-          className="group/dismiss inline-flex items-center justify-center w-8 h-8 rounded-full text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.88]"
+          onClick={onLike}
+          aria-label="Like — show me more like this"
+          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
         >
           <svg
             width="14"
@@ -317,17 +368,41 @@ export function ActionBar({
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="transition-transform duration-300 ease-out group-hover/dismiss:rotate-90"
+            className="transition-transform duration-300 ease-out group-hover:-translate-y-[2px]"
             aria-hidden
           >
-            <path d="M18 6 6 18M6 6l12 12" />
+            <path d="M7 10v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h3zM7 10l4-7a2 2 0 0 1 2 2v3h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 19H7" />
           </svg>
+          More like this
         </button>
-      )}
-    </div>
+
+        <button
+          type="button"
+          onClick={onDislike}
+          aria-label="Dislike — show me less like this"
+          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-red hover:border-red/35 hover:bg-red/[0.06] transition-colors duration-200 ease-out active:scale-[0.96]"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-transform duration-300 ease-out group-hover:translate-y-[2px]"
+            aria-hidden
+          >
+            <path d="M17 14V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zM17 14l-4 7a2 2 0 0 1-2-2v-3H5.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 5H17" />
+          </svg>
+          Less like this
+        </button>
+      </div>
+    </section>
   );
 }
 
