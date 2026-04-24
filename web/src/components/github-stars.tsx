@@ -38,7 +38,7 @@ export async function GithubStars() {
         count !== null ? `Star Hermes on GitHub — ${count} stars` : "View Hermes on GitHub"
       }
       title={count !== null ? `${count} GitHub stars — click to star` : "View on GitHub"}
-      className="group fixed top-3 right-3 lg:top-4 lg:right-5 z-[55] inline-flex items-center gap-1.5 h-8 lg:h-9 pl-2 pr-3 rounded-full bg-surface/95 backdrop-blur shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-95"
+      className="group inline-flex items-center gap-1.5 h-8 lg:h-9 pl-2 pr-3 rounded-full bg-surface/95 backdrop-blur shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-95"
       style={{ fontFamily: "var(--font-sans)" }}
     >
       <span className="inline-flex items-center justify-center w-5 h-5 text-heading shrink-0 transition-transform duration-200 ease-out group-hover:rotate-[-6deg]">

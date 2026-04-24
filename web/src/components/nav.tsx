@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFeedStore } from "@/store/feed";
 import { useUIStore } from "@/store/ui";
-import { UserMenu } from "@/components/user-menu";
 
 type Tab = {
   href: string;
@@ -177,7 +176,6 @@ export function Nav() {
                 </Link>
               );
             })}
-            <UserMenu compact />
           </div>
         </div>
       </nav>
@@ -273,8 +271,6 @@ export function Nav() {
           className="px-4 py-4 border-t border-border flex flex-col gap-3"
           style={{ fontFamily: "var(--font-sans)" }}
         >
-          <UserMenu />
-
           <div className="flex items-center gap-2 text-[11px] text-text-faint">
             <span
               className={`block w-[6px] h-[6px] rounded-full shrink-0 ${

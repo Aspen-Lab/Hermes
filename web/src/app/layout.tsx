@@ -11,6 +11,8 @@ import { Nav } from "@/components/nav";
 import { UndoToast } from "@/components/undo-toast";
 import { KeyboardLayer } from "@/components/keyboard";
 import { GithubStars } from "@/components/github-stars";
+import { ProfileSync } from "@/components/profile-sync";
+import { UserMenu } from "@/components/user-menu";
 
 // Primary UI sans — clean, modern, pairs with Source Serif 4
 const geist = Geist({
@@ -70,9 +72,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         <Nav />
         <main className="flex-1 pt-14 lg:pt-0">{children}</main>
-        <GithubStars />
+        <div className="fixed top-3 right-3 lg:top-4 lg:right-5 z-[55] flex items-center gap-2">
+          <UserMenu />
+          <GithubStars />
+        </div>
         <UndoToast />
         <KeyboardLayer />
+        <ProfileSync />
       </body>
     </html>
   );

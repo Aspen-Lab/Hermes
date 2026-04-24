@@ -18,6 +18,8 @@ interface ProfileState {
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
   updateLocations: (locations: string[]) => void;
   updateMethods: (methods: string[]) => void;
+  /** Replace local state with a server snapshot. Undefined fields keep local values. */
+  hydrateFromRemote: (remote: Partial<UserProfile>) => void;
   logOut: () => void;
 }
 
@@ -55,6 +57,20 @@ export const useProfileStore = create<ProfileState>()(
         set((s) => ({
           profile: { ...s.profile, preferredMethods: methods },
         })),
+
+      hydrateFromRemote: (remote) =>
+        set((s) => {
+          const merged: UserProfile = { ...s.profile };
+          if (remote.displayName !== undefined) merged.displayName = remote.displayName;
+          if (remote.researchTopics !== undefined) merged.researchTopics = remote.researchTopics;
+          if (remote.preferredMethods !== undefined) merged.preferredMethods = remote.preferredMethods;
+          if (remote.preferredVenues !== undefined) merged.preferredVenues = remote.preferredVenues;
+          if (remote.locationPreferences !== undefined) merged.locationPreferences = remote.locationPreferences;
+          if (remote.careerStage !== undefined) merged.careerStage = remote.careerStage;
+          if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
+          if (remote.phdYear !== undefined) merged.phdYear = remote.phdYear;
+          return { profile: merged };
+        }),
 
       logOut: () => set({ profile: defaultProfile }),
     }),
