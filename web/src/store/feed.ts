@@ -8,6 +8,72 @@ import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
 
+// ── Cloud-sync helpers (fire-and-forget) ────────────────────────
+// All writes are optimistic: local state already changed before we call
+// these. Failures are logged but never block the UI.
+
+type ItemKind = "paper" | "event" | "job";
+
+async function cloudSave(itemId: string, itemKind: ItemKind, payload: unknown) {
+  try {
+    await fetch("/api/saved", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId, itemKind, payload }),
+    });
+  } catch (err) {
+    console.warn("[feed] cloudSave failed", err);
+  }
+}
+
+async function cloudUnsave(itemId: string) {
+  try {
+    await fetch(`/api/saved?itemId=${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+    });
+  } catch (err) {
+    console.warn("[feed] cloudUnsave failed", err);
+  }
+}
+
+async function cloudMarkRead(itemId: string) {
+  try {
+    await fetch("/api/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId }),
+    });
+  } catch (err) {
+    console.warn("[feed] cloudMarkRead failed", err);
+  }
+}
+
+async function cloudMarkUnread(itemId: string) {
+  try {
+    await fetch(`/api/read?itemId=${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+    });
+  } catch (err) {
+    console.warn("[feed] cloudMarkUnread failed", err);
+  }
+}
+
+async function cloudFeedback(
+  itemId: string,
+  itemKind: ItemKind,
+  feedback: ItemFeedback,
+) {
+  try {
+    await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId, itemKind, feedback }),
+    });
+  } catch (err) {
+    console.warn("[feed] cloudFeedback failed", err);
+  }
+}
+
 async function fetchRealFeed(profile: UserProfile): Promise<Paper[]> {
   const topics = (profile.researchTopics ?? []).filter(Boolean);
   if (topics.length === 0) return [];
@@ -71,6 +137,19 @@ interface FeedState {
   markUnread: (id: string) => void;
   undoDismiss: () => void;
   commitDismiss: () => void;
+  /**
+   * Replace saved lists and readItems with a server snapshot. Called by
+   * FeedSync on login. Local-only changes that haven't been flushed yet
+   * are merged in (see FeedSync for the merge pass).
+   */
+  hydrateFromRemote: (remote: {
+    savedPapers?: Paper[];
+    savedEvents?: Event[];
+    savedJobs?: Job[];
+    readItems?: Record<string, true>;
+  }) => void;
+  /** Reset local state — called on sign-out so the next user starts clean. */
+  resetLocal: () => void;
 }
 
 export const useFeedStore = create<FeedState>()(
@@ -119,6 +198,7 @@ export const useFeedStore = create<FeedState>()(
             ? s.savedPapers.map((p) => (p.id === paper.id ? saved : p))
             : [saved, ...s.savedPapers],
         }));
+        cloudSave(paper.id, "paper", saved);
         get().submitFeedback(paper.id, "paper", "saved");
       },
 
@@ -154,6 +234,7 @@ export const useFeedStore = create<FeedState>()(
             ? s.savedEvents
             : [event, ...s.savedEvents],
         }));
+        cloudSave(event.id, "event", event);
         get().submitFeedback(event.id, "event", "saved");
       },
 
@@ -179,6 +260,7 @@ export const useFeedStore = create<FeedState>()(
             ? s.savedJobs
             : [job, ...s.savedJobs],
         }));
+        cloudSave(job.id, "job", job);
         get().submitFeedback(job.id, "job", "saved");
       },
 
@@ -205,28 +287,37 @@ export const useFeedStore = create<FeedState>()(
           ),
           savedPapers: s.savedPapers.filter((p) => p.id !== id),
         }));
+        cloudUnsave(id);
       },
 
       unsaveEvent: (id) => {
         set((s) => ({
           savedEvents: s.savedEvents.filter((e) => e.id !== id),
         }));
+        cloudUnsave(id);
       },
 
       unsaveJob: (id) => {
         set((s) => ({
           savedJobs: s.savedJobs.filter((j) => j.id !== id),
         }));
+        cloudUnsave(id);
       },
 
       submitFeedback: (itemId, type, feedback) => {
         console.log(`[Hermes] Feedback: ${type} ${itemId} → ${feedback}`);
+        const kind =
+          type === "paper" || type === "event" || type === "job"
+            ? (type as ItemKind)
+            : null;
+        if (kind) cloudFeedback(itemId, kind, feedback);
       },
 
       markRead: (id) => {
         set((s) =>
           s.readItems[id] ? s : { readItems: { ...s.readItems, [id]: true } },
         );
+        cloudMarkRead(id);
       },
 
       markUnread: (id) => {
@@ -236,6 +327,7 @@ export const useFeedStore = create<FeedState>()(
           delete next[id];
           return { readItems: next };
         });
+        cloudMarkUnread(id);
       },
 
       undoDismiss: () => {
@@ -272,6 +364,25 @@ export const useFeedStore = create<FeedState>()(
         if (!pending) return;
         get().submitFeedback(pending.id, pending.kind, "notInterested");
         set({ pendingDismissal: null });
+      },
+
+      hydrateFromRemote: (remote) => {
+        set((s) => ({
+          savedPapers: remote.savedPapers ?? s.savedPapers,
+          savedEvents: remote.savedEvents ?? s.savedEvents,
+          savedJobs: remote.savedJobs ?? s.savedJobs,
+          readItems: remote.readItems ?? s.readItems,
+        }));
+      },
+
+      resetLocal: () => {
+        set({
+          savedPapers: [],
+          savedEvents: [],
+          savedJobs: [],
+          readItems: {},
+          pendingDismissal: null,
+        });
       },
     }),
     {

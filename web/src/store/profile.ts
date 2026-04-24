@@ -6,6 +6,8 @@ import type {
   UserProfile,
   CareerStage,
   IndustryAcademiaPreference,
+  DigestChannel,
+  DigestFrequency,
 } from "@/types";
 import { defaultProfile } from "@/types";
 
@@ -18,6 +20,11 @@ interface ProfileState {
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
   updateLocations: (locations: string[]) => void;
   updateMethods: (methods: string[]) => void;
+  updateDigestEnabled: (v: boolean) => void;
+  updateDigestHourLocal: (h: number) => void;
+  updateDigestTimezone: (tz: string) => void;
+  updateDigestChannel: (c: DigestChannel) => void;
+  updateDigestFrequency: (f: DigestFrequency) => void;
   /** Replace local state with a server snapshot. Undefined fields keep local values. */
   hydrateFromRemote: (remote: Partial<UserProfile>) => void;
   logOut: () => void;
@@ -58,6 +65,17 @@ export const useProfileStore = create<ProfileState>()(
           profile: { ...s.profile, preferredMethods: methods },
         })),
 
+      updateDigestEnabled: (v) =>
+        set((s) => ({ profile: { ...s.profile, digestEnabled: v } })),
+      updateDigestHourLocal: (h) =>
+        set((s) => ({ profile: { ...s.profile, digestHourLocal: h } })),
+      updateDigestTimezone: (tz) =>
+        set((s) => ({ profile: { ...s.profile, digestTimezone: tz } })),
+      updateDigestChannel: (c) =>
+        set((s) => ({ profile: { ...s.profile, digestChannel: c } })),
+      updateDigestFrequency: (f) =>
+        set((s) => ({ profile: { ...s.profile, digestFrequency: f } })),
+
       hydrateFromRemote: (remote) =>
         set((s) => {
           const merged: UserProfile = { ...s.profile };
@@ -69,6 +87,11 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.careerStage !== undefined) merged.careerStage = remote.careerStage;
           if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
           if (remote.phdYear !== undefined) merged.phdYear = remote.phdYear;
+          if (remote.digestEnabled !== undefined) merged.digestEnabled = remote.digestEnabled;
+          if (remote.digestHourLocal !== undefined) merged.digestHourLocal = remote.digestHourLocal;
+          if (remote.digestTimezone !== undefined) merged.digestTimezone = remote.digestTimezone;
+          if (remote.digestChannel !== undefined) merged.digestChannel = remote.digestChannel;
+          if (remote.digestFrequency !== undefined) merged.digestFrequency = remote.digestFrequency;
           return { profile: merged };
         }),
 

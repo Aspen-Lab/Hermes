@@ -79,6 +79,15 @@ function IconPencil() {
     </svg>
   );
 }
+function IconBell() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+}
+
 function IconCheck() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -101,6 +110,11 @@ export default function ProfilePage() {
     updateIndustryPreference,
     updateLocations,
     updateMethods,
+    updateDigestEnabled,
+    updateDigestHourLocal,
+    updateDigestTimezone,
+    updateDigestChannel,
+    updateDigestFrequency,
     logOut,
   } = useProfileStore();
 
@@ -215,6 +229,7 @@ export default function ProfilePage() {
             onEdit={() => setMode("edit")}
           />
           <ReadingCard profile={profile} />
+          <PastBriefings />
         </>
       ) : (
         <EditView
@@ -228,6 +243,11 @@ export default function ProfilePage() {
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
           updateLocations={updateLocations}
+          updateDigestEnabled={updateDigestEnabled}
+          updateDigestHourLocal={updateDigestHourLocal}
+          updateDigestTimezone={updateDigestTimezone}
+          updateDigestChannel={updateDigestChannel}
+          updateDigestFrequency={updateDigestFrequency}
         />
       )}
 
@@ -399,6 +419,7 @@ function ReadingCard({
   profile: ReturnType<typeof useProfileStore.getState>["profile"];
 }) {
   const stats = useReadingStats();
+  const realCells = useDailyActivityCells();
   const totalSurfaced = stats.saved + stats.read;
   const savedRate =
     totalSurfaced > 0 ? Math.round((stats.saved / totalSurfaced) * 100) : 0;
@@ -520,9 +541,9 @@ function ReadingCard({
           <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
             Continuous reading
           </span>
-          <StreakBadge activity={stats.saved + stats.read} />
+          <StreakBadge activity={stats.saved + stats.read} cells={realCells ?? undefined} />
         </div>
-        <ReadingCalendar activity={stats.saved + stats.read} />
+        <ReadingCalendar activity={stats.saved + stats.read} cells={realCells ?? undefined} />
       </div>
 
       {/* ── Sticky topics (keyword weighted cloud) ── */}
@@ -773,6 +794,47 @@ function VenueGrid({
 const CAL_WEEKS = 18;
 const CAL_DAYS = 7;
 
+// Fetches real per-day read counts and maps them into a cells grid
+// aligned with the calendar (CAL_WEEKS columns × CAL_DAYS rows,
+// newest column = today). Returns null while loading / when unauthenticated,
+// so callers can fall back to the synthesized shimmer.
+function useDailyActivityCells(): number[] | null {
+  const [cells, setCells] = useState<number[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/read?aggregate=daily", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { daily: { date: string; count: number }[] };
+        if (cancelled) return;
+        const byDate = new Map(data.daily.map((d) => [d.date, d.count]));
+        const out = new Array<number>(CAL_WEEKS * CAL_DAYS).fill(0);
+        // Fill grid newest-first: rightmost column = today.
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        for (let w = 0; w < CAL_WEEKS; w++) {
+          for (let d = 0; d < CAL_DAYS; d++) {
+            // cell at (w, d) represents (today - ((CAL_WEEKS-1-w) * 7 + (CAL_DAYS-1-d))) days
+            const daysAgo = (CAL_WEEKS - 1 - w) * 7 + (CAL_DAYS - 1 - d);
+            const dt = new Date(today);
+            dt.setDate(dt.getDate() - daysAgo);
+            const key = dt.toISOString().slice(0, 10);
+            out[w * CAL_DAYS + d] = byDate.get(key) ?? 0;
+          }
+        }
+        setCells(out);
+      } catch {
+        // swallow — fallback to synth
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return cells;
+}
+
 function synthesizeActivity(totalActivity: number): number[] {
   // Returns CAL_WEEKS * CAL_DAYS cells. Biases activity toward recent weeks.
   const cells = CAL_WEEKS * CAL_DAYS;
@@ -816,8 +878,8 @@ function streakFromCells(cells: number[]): number {
   return streak;
 }
 
-function StreakBadge({ activity }: { activity: number }) {
-  const cells = synthesizeActivity(activity);
+function StreakBadge({ activity, cells: realCells }: { activity: number; cells?: number[] }) {
+  const cells = realCells ?? synthesizeActivity(activity);
   const weeks = streakFromCells(cells);
   if (weeks === 0) {
     return (
@@ -840,8 +902,8 @@ function StreakBadge({ activity }: { activity: number }) {
   );
 }
 
-function ReadingCalendar({ activity }: { activity: number }) {
-  const cells = synthesizeActivity(activity);
+function ReadingCalendar({ activity, cells: realCells }: { activity: number; cells?: number[] }) {
+  const cells = realCells ?? synthesizeActivity(activity);
   const maxActivity = Math.max(1, ...cells);
 
   const intensity = (v: number): number => {
@@ -1260,6 +1322,102 @@ function useReadingStats() {
   };
 }
 
+interface PastBriefing {
+  id: number;
+  deliveredAt: string;
+  channel: "inapp" | "email" | "both";
+  itemIds: string[];
+  payload: { items?: { id: string; title?: string; summary?: string }[] } | null;
+  openedAt: string | null;
+}
+
+function PastBriefings() {
+  const [briefings, setBriefings] = useState<PastBriefing[] | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/briefings", { cache: "no-store" });
+        if (!res.ok) {
+          if (!cancelled) setLoaded(true);
+          return;
+        }
+        const data = (await res.json()) as { briefings: PastBriefing[] };
+        if (!cancelled) {
+          setBriefings(data.briefings ?? []);
+          setLoaded(true);
+        }
+      } catch {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!loaded) return null;
+  if (!briefings || briefings.length === 0) {
+    return (
+      <section
+        className="mt-8 rounded-2xl bg-surface shadow-card px-7 py-6"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-1.5">
+          Past briefings
+        </p>
+        <p className="text-[13px] text-text-faint/80">
+          Your first daily briefing will land here once the cron fires at your preferred hour.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className="mt-8 rounded-2xl bg-surface shadow-card overflow-hidden"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      <div className="px-7 pt-6 pb-3 flex items-center justify-between">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+          Past briefings
+        </p>
+        <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+          {briefings.length} delivered
+        </span>
+      </div>
+      <ul className="divide-y divide-border/70">
+        {briefings.slice(0, 20).map((b) => {
+          const items = b.payload?.items ?? [];
+          const preview = items.slice(0, 3).map((i) => i.title).filter(Boolean).join(" · ");
+          return (
+            <li key={b.id} className="px-7 py-3.5 flex items-start gap-4">
+              <div className="shrink-0 w-[84px] pt-0.5">
+                <p className="text-[11.5px] text-text-muted tabular-nums">
+                  {formatRelativeTime(b.deliveredAt)}
+                </p>
+                <p className="text-[10px] text-text-faint/60 uppercase tracking-[0.1em] mt-0.5">
+                  {b.channel}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] text-text truncate">
+                  {preview || `${items.length} items`}
+                </p>
+                <p className="text-[11px] text-text-faint mt-0.5 tabular-nums">
+                  {b.itemIds.length} items
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function formatRelativeTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
@@ -1340,6 +1498,11 @@ function EditView({
   updateCareerStage,
   updateIndustryPreference,
   updateLocations,
+  updateDigestEnabled,
+  updateDigestHourLocal,
+  updateDigestTimezone,
+  updateDigestChannel,
+  updateDigestFrequency,
 }: {
   profile: ReturnType<typeof useProfileStore.getState>["profile"];
   name: string;
@@ -1351,6 +1514,11 @@ function EditView({
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
   updateLocations: (v: string[]) => void;
+  updateDigestEnabled: (v: boolean) => void;
+  updateDigestHourLocal: (h: number) => void;
+  updateDigestTimezone: (tz: string) => void;
+  updateDigestChannel: (c: typeof profile.digestChannel) => void;
+  updateDigestFrequency: (f: typeof profile.digestFrequency) => void;
 }) {
   return (
     <div
@@ -1449,6 +1617,114 @@ function EditView({
                     }`}
                   >
                     {industryLabels[p] ?? p}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </EditRow>
+
+      <EditRow icon={<IconBell />} tone="accent" label="Digest">
+        <div className="space-y-3">
+          {/* Enable toggle */}
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={profile.digestEnabled}
+              onClick={() => updateDigestEnabled(!profile.digestEnabled)}
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-out ${
+                profile.digestEnabled ? "bg-accent" : "bg-bg-secondary"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
+                  profile.digestEnabled ? "translate-x-4" : ""
+                }`}
+              />
+            </button>
+            <span className="text-[13px] text-text-muted">
+              {profile.digestEnabled ? "Daily briefing on" : "Daily briefing off"}
+            </span>
+          </label>
+
+          {/* Frequency */}
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              Frequency
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {(["daily", "weekdays", "weekly", "off"] as const).map((f) => {
+                const active = profile.digestFrequency === f;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => updateDigestFrequency(f)}
+                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+                      active
+                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                        : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Time + timezone */}
+          <div className="flex items-end gap-3 flex-wrap">
+            <div className="shrink-0">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+                Time (local)
+              </p>
+              <select
+                value={profile.digestHourLocal}
+                onChange={(e) => updateDigestHourLocal(Number(e.target.value))}
+                className="bg-bg-secondary/40 rounded-lg px-2.5 py-1.5 text-[13px] text-text outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all tabular-nums"
+              >
+                {Array.from({ length: 24 }, (_, h) => (
+                  <option key={h} value={h}>
+                    {h.toString().padStart(2, "0")}:00
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+                Timezone
+              </p>
+              <input
+                type="text"
+                value={profile.digestTimezone}
+                onChange={(e) => updateDigestTimezone(e.target.value)}
+                placeholder="America/New_York"
+                className="w-full bg-bg-secondary/40 rounded-lg px-3 py-1.5 text-[13px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Channel */}
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              Channel
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {(["inapp", "email", "both"] as const).map((c) => {
+                const active = profile.digestChannel === c;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => updateDigestChannel(c)}
+                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+                      active
+                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                        : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
+                    }`}
+                  >
+                    {c === "inapp" ? "In-app" : c === "email" ? "Email" : "Both"}
                   </button>
                 );
               })}

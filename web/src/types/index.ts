@@ -78,6 +78,9 @@ export type IndustryAcademiaPreference =
   | "startups"
   | "bigTech";
 
+export type DigestChannel = "inapp" | "email" | "both";
+export type DigestFrequency = "daily" | "weekdays" | "weekly" | "off";
+
 export interface UserProfile {
   displayName: string;
   researchTopics: string[];
@@ -87,6 +90,13 @@ export interface UserProfile {
   locationPreferences: string[];
   preferredMethods: string[];
   phdYear?: number;
+  // Daily-digest preferences. `digestHourLocal` is interpreted in
+  // `digestTimezone` (IANA name) by the scheduling cron.
+  digestEnabled: boolean;
+  digestHourLocal: number;
+  digestTimezone: string;
+  digestChannel: DigestChannel;
+  digestFrequency: DigestFrequency;
 }
 
 export const defaultProfile: UserProfile = {
@@ -109,6 +119,14 @@ export const defaultProfile: UserProfile = {
   locationPreferences: [],
   preferredMethods: [],
   phdYear: 3,
+  digestEnabled: true,
+  digestHourLocal: 8,
+  digestTimezone:
+    typeof Intl !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+      : "UTC",
+  digestChannel: "inapp",
+  digestFrequency: "daily",
 };
 
 export const careerStages: CareerStage[] = [

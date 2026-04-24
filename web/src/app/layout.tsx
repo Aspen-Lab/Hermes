@@ -12,6 +12,7 @@ import { UndoToast } from "@/components/undo-toast";
 import { KeyboardLayer } from "@/components/keyboard";
 import { GithubStars } from "@/components/github-stars";
 import { ProfileSync } from "@/components/profile-sync";
+import { FeedSync } from "@/components/feed-sync";
 import { UserMenu } from "@/components/user-menu";
 
 // Primary UI sans — clean, modern, pairs with Source Serif 4
@@ -79,6 +80,7 @@ export default function RootLayout({
         <UndoToast />
         <KeyboardLayer />
         <ProfileSync />
+        <FeedSync />
       </body>
     </html>
   );

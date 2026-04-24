@@ -20,6 +20,11 @@ interface ProfileRow {
   career_stage: string | null;
   industry_vs_academia: string | null;
   phd_year: number | null;
+  digest_enabled: boolean;
+  digest_hour_local: number;
+  digest_timezone: string;
+  digest_channel: UserProfile["digestChannel"];
+  digest_frequency: UserProfile["digestFrequency"];
   updated_at: string;
 }
 
@@ -35,21 +40,33 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
       | UserProfile["industryVsAcademia"]
       | undefined,
     phdYear: row.phd_year ?? undefined,
+    digestEnabled: row.digest_enabled,
+    digestHourLocal: row.digest_hour_local,
+    digestTimezone: row.digest_timezone,
+    digestChannel: row.digest_channel,
+    digestFrequency: row.digest_frequency,
   };
 }
 
 function profileToRow(p: Partial<UserProfile>, userId: string) {
-  return {
-    user_id: userId,
-    display_name: p.displayName ?? null,
-    research_topics: p.researchTopics ?? [],
-    preferred_methods: p.preferredMethods ?? [],
-    preferred_venues: p.preferredVenues ?? [],
-    location_preferences: p.locationPreferences ?? [],
-    career_stage: p.careerStage ?? null,
-    industry_vs_academia: p.industryVsAcademia ?? null,
-    phd_year: p.phdYear ?? null,
-  };
+  // Only include columns the caller meant to set. `undefined` means "leave
+  // existing value alone" — important so sending a display-name update
+  // doesn't wipe digest prefs (and vice versa).
+  const row: Record<string, unknown> = { user_id: userId };
+  if (p.displayName !== undefined) row.display_name = p.displayName;
+  if (p.researchTopics !== undefined) row.research_topics = p.researchTopics;
+  if (p.preferredMethods !== undefined) row.preferred_methods = p.preferredMethods;
+  if (p.preferredVenues !== undefined) row.preferred_venues = p.preferredVenues;
+  if (p.locationPreferences !== undefined) row.location_preferences = p.locationPreferences;
+  if (p.careerStage !== undefined) row.career_stage = p.careerStage;
+  if (p.industryVsAcademia !== undefined) row.industry_vs_academia = p.industryVsAcademia;
+  if (p.phdYear !== undefined) row.phd_year = p.phdYear;
+  if (p.digestEnabled !== undefined) row.digest_enabled = p.digestEnabled;
+  if (p.digestHourLocal !== undefined) row.digest_hour_local = p.digestHourLocal;
+  if (p.digestTimezone !== undefined) row.digest_timezone = p.digestTimezone;
+  if (p.digestChannel !== undefined) row.digest_channel = p.digestChannel;
+  if (p.digestFrequency !== undefined) row.digest_frequency = p.digestFrequency;
+  return row;
 }
 
 // ── Handlers ────────────────────────────────────────────────────
