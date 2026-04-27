@@ -38,7 +38,7 @@ export function PaperFigure({
     let cancelled = false;
     (async () => {
       try {
-        const params = new URLSearchParams({ id: itemId });
+        const params = new URLSearchParams({ id: itemId, v: "2" });
         if (url) params.set("url", url);
         const res = await fetch(`/api/figure?${params.toString()}`, {
           // Browser cache mirror of the route's CDN cache.
