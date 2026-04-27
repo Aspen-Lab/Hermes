@@ -1,0 +1,41 @@
+name: Hourly digest dispatch
+
+on:
+  schedule:
+    # 5 past the hour — GitHub Actions cron is best-effort and often
+    # delays top-of-hour schedules. Off-hour timing gets us more
+    # predictable runs (still inside the same UTC hour, so the per-user
+    # `digest_hour_local` check remains accurate).
+    - cron: "5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: digest-cron
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: GET /api/jobs/dispatch-digests
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          ENDPOINT: https://hermes-flax-six.vercel.app/api/jobs/dispatch-digests
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret not set in repo Actions secrets"
+            exit 1
+          fi
+          status=$(curl -sS -o /tmp/body.json -w '%{http_code}' -m 360 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${ENDPOINT}")
+          echo "HTTP ${status}"
+          if [ -s /tmp/body.json ]; then
+            jq . /tmp/body.json 2>/dev/null || cat /tmp/body.json
+          fi
+          if [ "${status}" != "200" ]; then
+            echo "::error::dispatch returned HTTP ${status}"
+            exit 1
+          fi
