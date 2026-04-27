@@ -113,7 +113,6 @@ export default function ProfilePage() {
     updateDigestEnabled,
     updateDigestHourLocal,
     updateDigestTimezone,
-    updateDigestChannel,
     updateDigestFrequency,
     logOut,
   } = useProfileStore();
@@ -246,7 +245,6 @@ export default function ProfilePage() {
           updateDigestEnabled={updateDigestEnabled}
           updateDigestHourLocal={updateDigestHourLocal}
           updateDigestTimezone={updateDigestTimezone}
-          updateDigestChannel={updateDigestChannel}
           updateDigestFrequency={updateDigestFrequency}
         />
       )}
@@ -1501,7 +1499,6 @@ function EditView({
   updateDigestEnabled,
   updateDigestHourLocal,
   updateDigestTimezone,
-  updateDigestChannel,
   updateDigestFrequency,
 }: {
   profile: ReturnType<typeof useProfileStore.getState>["profile"];
@@ -1517,7 +1514,6 @@ function EditView({
   updateDigestEnabled: (v: boolean) => void;
   updateDigestHourLocal: (h: number) => void;
   updateDigestTimezone: (tz: string) => void;
-  updateDigestChannel: (c: typeof profile.digestChannel) => void;
   updateDigestFrequency: (f: typeof profile.digestFrequency) => void;
 }) {
   return (
@@ -1706,30 +1702,6 @@ function EditView({
             </div>
           </div>
 
-          {/* Channel */}
-          <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-              Channel
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {(["inapp", "email", "both"] as const).map((c) => {
-                const active = profile.digestChannel === c;
-                return (
-                  <button
-                    key={c}
-                    onClick={() => updateDigestChannel(c)}
-                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
-                      active
-                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
-                        : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
-                    }`}
-                  >
-                    {c === "inapp" ? "In-app" : c === "email" ? "Email" : "Both"}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </EditRow>
     </div>

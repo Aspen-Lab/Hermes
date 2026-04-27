@@ -15,6 +15,7 @@ import {
   Signal,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
+import { PaperFigure } from "@/components/paper-figure";
 
 const WORDS_PER_MINUTE = 220;
 
@@ -329,6 +330,14 @@ export default function PaperDetailPage({
             {paper.relevanceReason}
           </Callout>
         </div>
+
+        {/* ── Figure (if available) ── */}
+        <PaperFigure
+          itemId={paper.id}
+          url={paper.linkPaper ?? paper.linkArxiv}
+          alt={paper.title}
+          variant="hero"
+        />
 
         {/* ── Introduction ── */}
         <SectionTitle icon={<IconSparkle />} index={4}>

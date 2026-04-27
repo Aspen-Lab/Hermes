@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
+import { PaperFigure } from "@/components/paper-figure";
 
 export type HeroItem =
   | { kind: "paper"; data: Paper }
@@ -97,6 +98,12 @@ export function BriefingHero({ item }: { item: HeroItem }) {
             <Tag>Paper</Tag>
             <Tag>{item.data.venue}</Tag>
           </div>
+          <PaperFigure
+            itemId={item.data.id}
+            url={item.data.linkPaper ?? item.data.linkArxiv}
+            alt={item.data.title}
+            variant="hero"
+          />
           <p className="text-[17px] text-text mt-5 leading-[1.7]">
             {item.data.relevanceReason}
           </p>
