@@ -20,6 +20,7 @@ interface ProfileState {
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
   updateLocations: (locations: string[]) => void;
   updateMethods: (methods: string[]) => void;
+  updateSchool: (school: string) => void;
   updateDigestEnabled: (v: boolean) => void;
   updateDigestHourLocal: (h: number) => void;
   updateDigestTimezone: (tz: string) => void;
@@ -65,6 +66,11 @@ export const useProfileStore = create<ProfileState>()(
           profile: { ...s.profile, preferredMethods: methods },
         })),
 
+      updateSchool: (school) =>
+        set((s) => ({
+          profile: { ...s.profile, school: school.trim() || undefined },
+        })),
+
       updateDigestEnabled: (v) =>
         set((s) => ({ profile: { ...s.profile, digestEnabled: v } })),
       updateDigestHourLocal: (h) =>
@@ -87,6 +93,7 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.careerStage !== undefined) merged.careerStage = remote.careerStage;
           if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
           if (remote.phdYear !== undefined) merged.phdYear = remote.phdYear;
+          if (remote.school !== undefined) merged.school = remote.school;
           if (remote.digestEnabled !== undefined) merged.digestEnabled = remote.digestEnabled;
           if (remote.digestHourLocal !== undefined) merged.digestHourLocal = remote.digestHourLocal;
           if (remote.digestTimezone !== undefined) merged.digestTimezone = remote.digestTimezone;

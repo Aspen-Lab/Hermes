@@ -5,6 +5,16 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.6.14 — 2026-04-28
+**Profile editor: affiliation field + suggestion chips + cleaner first-run defaults**
+
+Adds an Affiliation field (school / lab / company) to the profile editor, persisted as a new `school` column on `profiles`. Improves first-run by stopping the editor from pre-seeding battery-research demo topics — `defaultProfile.researchTopics` and `preferredVenues` are now empty arrays so the profile-setup nudge in the header surfaces immediately. The Topics, Methods, and Venues ChipInputs gained quick-add suggestion rows ("Try: + transformers + RAG + diffusion models …") shown only when the field is empty, and Topics carries an inline hint reminding people specificity matters (a single word like "whatever" matches nothing useful — we just shipped a fix for that exact case in v0.6.12). Schema.sql + the /api/profile mapping updated together so the new column round-trips cleanly.
+
+## v0.6.13 — 2026-04-28
+**Paper detail: rework "At a glance" + "Explore further" + train-feed action**
+
+Three weak spots on the paper detail page got a pass. (1) "At a glance" Signal chips used a binary ✓/× toggle that read awkwardly — `Older paper ×` was double-negation, and `On arXiv ×` for a non-arXiv paper just wasted a slot. Replaced with a new `FactChip` that only surfaces facts when they're present: `Preprint on arXiv` (accent), `Code available` (tag), a relative-time chip (`23 days ago` / `2 years ago`), and a smarter team-size label (`Solo author` / `3 authors · small team` / `12 authors · large team`). (2) "Explore further" link chips now carry a leading icon per destination (document for publisher, mortarboard for Google Scholar, code-brackets for source/search code) so the row is scannable at a glance instead of three near-identical pills. (3) The lonely "Train my feed on this" button at the bottom got a clearer label (`More like this`) and a co-located one-line explainer so it reads as an action, not a stranded chip.
+
 ## v0.6.12 — 2026-04-28
 **Stop showing mock data as the user's feed**
 

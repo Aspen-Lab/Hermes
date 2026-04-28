@@ -13,6 +13,7 @@ create table if not exists public.profiles (
   career_stage         text,
   industry_vs_academia text,
   phd_year             integer,
+  school               text,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );

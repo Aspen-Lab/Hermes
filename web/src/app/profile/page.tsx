@@ -22,6 +22,43 @@ const industryLabels: Record<string, string> = {
 
 const DEFAULT_NAME = "Hermes Member";
 
+// Quick-add suggestion chips for the profile editor. Curated, not exhaustive
+// — the goal is to seed common research languages so first-run users don't
+// stare at an empty field and type "whatever". Order matters: most-popular
+// first, scannable left-to-right.
+const SUGGESTED_TOPICS: string[] = [
+  "transformers",
+  "large language models",
+  "diffusion models",
+  "RAG",
+  "vision-language models",
+  "reinforcement learning",
+  "human-computer interaction",
+  "accessibility",
+];
+
+const SUGGESTED_METHODS: string[] = [
+  "RLHF",
+  "contrastive learning",
+  "supervised fine-tuning",
+  "MoE",
+  "distillation",
+  "few-shot",
+  "qualitative study",
+];
+
+const SUGGESTED_VENUES: string[] = [
+  "NeurIPS",
+  "ICLR",
+  "ICML",
+  "ACL",
+  "EMNLP",
+  "CVPR",
+  "CHI",
+  "UIST",
+  "arXiv",
+];
+
 // ── Icons ───────────────────────────────────────────────────────
 
 function IconUser() {
@@ -71,6 +108,16 @@ function IconCareer() {
     </svg>
   );
 }
+function IconBuilding() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16" />
+      <path d="M16 9h3a2 2 0 0 1 2 2v10" />
+      <path d="M9 7h2M9 11h2M9 15h2M9 19h2" />
+    </svg>
+  );
+}
+
 function IconPencil() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -110,6 +157,7 @@ export default function ProfilePage() {
     updateIndustryPreference,
     updateLocations,
     updateMethods,
+    updateSchool,
     updateDigestEnabled,
     updateDigestHourLocal,
     updateDigestTimezone,
@@ -238,6 +286,7 @@ export default function ProfilePage() {
           updateDisplayName={updateDisplayName}
           updateTopics={updateTopics}
           updateMethods={updateMethods}
+          updateSchool={updateSchool}
           updateVenues={updateVenues}
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
@@ -373,6 +422,12 @@ function DashboardView({
           <span className="text-heading font-medium">{profile.careerStage}</span>
           <span className="text-text-faint/60" aria-hidden>·</span>
           <span className="text-text-muted">{industry}</span>
+          {profile.school && (
+            <>
+              <span className="text-text-faint/60" aria-hidden>·</span>
+              <span className="text-text-muted">{profile.school}</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -1492,6 +1547,7 @@ function EditView({
   updateDisplayName,
   updateTopics,
   updateMethods,
+  updateSchool,
   updateVenues,
   updateCareerStage,
   updateIndustryPreference,
@@ -1507,6 +1563,7 @@ function EditView({
   updateDisplayName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateMethods: (v: string[]) => void;
+  updateSchool: (s: string) => void;
   updateVenues: (v: string[]) => void;
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
@@ -1538,7 +1595,9 @@ function EditView({
         <ChipInput
           values={profile.researchTopics}
           onChange={updateTopics}
-          placeholder="RLHF, diffusion, attention…"
+          placeholder="transformers, diffusion models, RAG…"
+          hint="Be specific — single words like “whatever” match nothing useful."
+          suggestions={SUGGESTED_TOPICS}
           tone="accent"
         />
       </EditRow>
@@ -1547,7 +1606,8 @@ function EditView({
         <ChipInput
           values={profile.preferredMethods}
           onChange={updateMethods}
-          placeholder="MoE, RAG, contrastive…"
+          placeholder="contrastive learning, RLHF, MoE…"
+          suggestions={SUGGESTED_METHODS}
           tone="tag"
         />
       </EditRow>
@@ -1556,8 +1616,19 @@ function EditView({
         <ChipInput
           values={profile.preferredVenues}
           onChange={updateVenues}
-          placeholder="J. Power Sources, Nature Energy, Phys. Rev. B…"
+          placeholder="NeurIPS, ICLR, CHI…"
+          suggestions={SUGGESTED_VENUES}
           tone="link"
+        />
+      </EditRow>
+
+      <EditRow icon={<IconBuilding />} tone="neutral" label="Affiliation">
+        <input
+          type="text"
+          value={profile.school ?? ""}
+          onChange={(e) => updateSchool(e.target.value)}
+          placeholder="MIT Media Lab, Stanford HCI, DeepMind…"
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
       </EditRow>
 
@@ -1758,11 +1829,17 @@ function ChipInput({
   values,
   onChange,
   placeholder,
+  hint,
+  suggestions,
   tone = "tag",
 }: {
   values: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
+  /** One-line helper text shown below the input. */
+  hint?: string;
+  /** Quick-add chips shown only when no values are present yet. */
+  suggestions?: string[];
   tone?: Tone;
 }) {
   const [draft, setDraft] = useState("");
@@ -1796,11 +1873,12 @@ function ChipInput({
   const chipClass = toneBadge(tone);
 
   return (
-    <div
-      onClick={() => inputRef.current?.focus()}
-      className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-secondary/40 hover:bg-bg-secondary/55 focus-within:bg-bg-secondary/55 focus-within:ring-2 focus-within:ring-accent/20 transition-all cursor-text min-h-[38px]"
-    >
-      {values.map((v) => (
+    <>
+      <div
+        onClick={() => inputRef.current?.focus()}
+        className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-secondary/40 hover:bg-bg-secondary/55 focus-within:bg-bg-secondary/55 focus-within:ring-2 focus-within:ring-accent/20 transition-all cursor-text min-h-[38px]"
+      >
+        {values.map((v) => (
         <span
           key={v}
           className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
@@ -1832,6 +1910,38 @@ function ChipInput({
         className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
         style={{ fontFamily: "var(--font-sans)" }}
       />
-    </div>
+      </div>
+      {(suggestions && suggestions.length > 0 && values.length === 0) && (
+        <div className="flex flex-wrap items-center gap-1 mt-1.5 px-1">
+          <span className="text-[10.5px] text-text-faint/70 uppercase tracking-[0.14em] mr-1">
+            Try
+          </span>
+          {suggestions
+            .filter((s) => !values.includes(s))
+            .map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  commit(s);
+                }}
+                className="text-[11.5px] text-text-faint hover:text-accent px-1.5 py-0.5 rounded-md hover:bg-accent-dim/40 transition-colors active:scale-[0.95]"
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                + {s}
+              </button>
+            ))}
+        </div>
+      )}
+      {hint && (
+        <p
+          className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {hint}
+        </p>
+      )}
+    </>
   );
 }

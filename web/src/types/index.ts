@@ -90,6 +90,8 @@ export interface UserProfile {
   locationPreferences: string[];
   preferredMethods: string[];
   phdYear?: number;
+  /** Affiliation — university, lab, or company. Plain string for now. */
+  school?: string;
   // Daily-digest preferences. `digestHourLocal` is interpreted in
   // `digestTimezone` (IANA name) by the scheduling cron.
   digestEnabled: boolean;
@@ -101,19 +103,10 @@ export interface UserProfile {
 
 export const defaultProfile: UserProfile = {
   displayName: "Hermes Member",
-  researchTopics: [
-    "electroplating LCO",
-    "battery cathode materials",
-    "LCO cathode",
-  ],
-  preferredVenues: [
-    "J. Electrochem. Soc.",
-    "Adv. Energy Mater.",
-    "Electrochim. Acta",
-    "J. Power Sources",
-    "Nature Energy",
-    "Chem. Mater.",
-  ],
+  // Empty by design — first-run users see the profile-setup nudge in the
+  // header rather than a feed pre-tuned for someone else's PhD.
+  researchTopics: [],
+  preferredVenues: [],
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],
