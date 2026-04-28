@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.6.6 — 2026-04-28
+**Distinguish HN discussions from academic papers in the feed**
+
+HN posts share the `Paper` data model (and pipeline / "Papers" tab) with arXiv/OpenAlex items, which made a Show HN thread visually identical to a real paper. Now the FeedTile detects HN items by id prefix (`hn:*`) and renders a muted "Discussion" badge instead of the orange "Paper" badge — at-a-glance signal that the row is a discussion, not a publication. Same data, clearer label. (A separate Discussions tab is the obvious next step if this surface keeps growing.)
+
 ## v0.6.5 — 2026-04-28
 **Skip figure extraction for HN items**
 

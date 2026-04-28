@@ -34,19 +34,33 @@ function tileShellClass(isRead: boolean) {
   ].join(" ");
 }
 
-function KindBadge({
-  kind,
-}: {
-  kind: "paper" | "event" | "job";
-}) {
+type BadgeKind = "paper" | "event" | "job" | "discussion";
+
+function paperBadgeKind(paper: Paper): BadgeKind {
+  // HN posts come through the same Paper pipeline but they're not papers —
+  // surface them as "Discussion" so users don't think a Show HN thread is
+  // an academic paper.
+  if (paper.id.startsWith("hn:")) return "discussion";
+  return "paper";
+}
+
+function KindBadge({ kind }: { kind: BadgeKind }) {
   const tone =
     kind === "paper"
       ? "text-accent bg-accent-dim"
       : kind === "event"
         ? "text-tag bg-tag-dim"
-        : "text-link bg-link-dim";
+        : kind === "job"
+          ? "text-link bg-link-dim"
+          : "text-text-muted bg-bg-secondary/60";
   const label =
-    kind === "paper" ? "Paper" : kind === "event" ? "Event" : "Job";
+    kind === "paper"
+      ? "Paper"
+      : kind === "event"
+        ? "Event"
+        : kind === "job"
+          ? "Job"
+          : "Discussion";
   return (
     <span
       className={`inline-flex items-center text-[9.5px] font-semibold uppercase tracking-[0.16em] px-1.5 py-[3px] rounded ${tone}`}
@@ -121,7 +135,7 @@ function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
       style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-2 mb-2.5">
-        <KindBadge kind="paper" />
+        <KindBadge kind={paperBadgeKind(paper)} />
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={paper} />
       </div>
