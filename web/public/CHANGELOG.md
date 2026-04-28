@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.6.12 — 2026-04-28
+**Stop showing mock data as the user's feed**
+
+The feed store had a `realPapers.length > 0 ? realPapers : mockPapers` fallback that silently surfaced battery-research demo fixtures (with hardcoded "your PhD"-style relevance reasons) whenever the real API returned 0 results — for example when the user typed a topic with a typo like `transfomer`. Events and Jobs were even worse: always wired to `mockEvents` / `mockJobs` because no real adapters exist yet. Removed both fallbacks. Empty source = empty feed; the FeedMoreTile already shows a context-aware "Tune your signals" prompt when topics under-deliver, so a real empty state is more honest and more actionable than fake content.
+
 ## v0.6.11 — 2026-04-28
 **Per-category icons + richer metadata on feed tiles**
 

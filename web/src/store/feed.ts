@@ -3,7 +3,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
-import { mockPapers, mockEvents, mockJobs } from "@/data/mock";
+// Mock fixtures kept for use in unit tests / Storybook only — never wired
+// into the live feed. Pre-2026-04-28 the store used `mockPapers` as a
+// fallback when the real API returned 0 results, which silently surfaced
+// battery-research demo data as the user's feed. Removed.
 import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
@@ -173,16 +176,17 @@ export const useFeedStore = create<FeedState>()(
         const profile = useProfileStore.getState().profile;
 
         const realPapers = await fetchRealFeed(profile);
-        const source = realPapers.length > 0 ? realPapers : mockPapers;
-        const papers = source.map((p) =>
+        const papers = realPapers.map((p) =>
           savedIds.has(p.id)
             ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
             : p,
         );
         set({
           papers,
-          events: mockEvents,
-          jobs: mockJobs,
+          // No real Events / Jobs adapters yet — empty arrays beat
+          // mock fixtures masquerading as user data.
+          events: [],
+          jobs: [],
           isLoading: false,
           lastRefresh: new Date().toISOString(),
         });
