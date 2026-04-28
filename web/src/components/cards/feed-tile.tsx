@@ -36,12 +36,15 @@ function tileShellClass(isRead: boolean) {
 
 type BadgeKind = "paper" | "event" | "job" | "discussion";
 
+// "Paper" is reserved for items from academic APIs (arXiv, OpenAlex).
+// Anything else (HN today, future blog/social adapters) renders as
+// "Discussion" so users don't mistake a thread for a peer-reviewed work.
+// Allowlist by id prefix — strict on purpose.
+const ACADEMIC_ID_PREFIXES = ["arxiv:", "openalex:"];
+
 function paperBadgeKind(paper: Paper): BadgeKind {
-  // HN posts come through the same Paper pipeline but they're not papers —
-  // surface them as "Discussion" so users don't think a Show HN thread is
-  // an academic paper.
-  if (paper.id.startsWith("hn:")) return "discussion";
-  return "paper";
+  const isAcademic = ACADEMIC_ID_PREFIXES.some((p) => paper.id.startsWith(p));
+  return isAcademic ? "paper" : "discussion";
 }
 
 function KindBadge({ kind }: { kind: BadgeKind }) {
