@@ -24,6 +24,54 @@ function fallbackVenue(source: string): string {
   return "";
 }
 
+// Source feeds (notably HN's `story_text`) can return HTML-encoded
+// markup with `<p>` tags and entities like `&#x2F;` `&#x27;`. Render
+// surfaces are plain text — decode + strip before splitting.
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function stripHtml(s: string): string {
+  // Drop tags, collapse whitespace.
+  return s
+    .replace(/<\/?(p|br|div)\b[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{2,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+}
+
+function cleanProseText(s: string | undefined): string | undefined {
+  if (!s) return s;
+  return stripHtml(decodeHtmlEntities(s));
+}
+
+// HN `_tags` carries system markers (`story`, `front_page`, `show_hn`,
+// `author_<name>`, `story_<id>`) that aren't useful as "Methods &
+// techniques" chips. Filter them out — keep only plain words.
+function isUsefulKeyword(tag: string): boolean {
+  if (!tag) return false;
+  if (tag.includes("_")) return false;
+  const sys = new Set([
+    "story",
+    "front_page",
+    "show_hn",
+    "ask_hn",
+    "comment",
+    "poll",
+    "job",
+  ]);
+  return !sys.has(tag.toLowerCase());
+}
+
 function splitAbstractForBriefing(abstract: string | undefined): {
   intro: string;
   discussion: string;
@@ -47,12 +95,16 @@ export function rawItemToPaper(
   item: RawItem,
   options: RawItemToPaperOptions = {},
 ): Paper {
-  const { intro, discussion } = splitAbstractForBriefing(item.abstract);
+  const cleanedAbstract = cleanProseText(item.abstract);
+  const { intro, discussion } = splitAbstractForBriefing(cleanedAbstract);
   const keywords = Array.from(
-    new Set([...(options.matchedKeywords ?? []), ...(item.tags ?? [])]),
+    new Set([
+      ...(options.matchedKeywords ?? []),
+      ...(item.tags ?? []).filter(isUsefulKeyword),
+    ]),
   ).slice(0, 6);
   const isArxiv = item.source === "arxiv";
-  const introText = intro || truncate(item.abstract, 400);
+  const introText = intro || truncate(cleanedAbstract, 400);
   return {
     id: item.id,
     title: item.title,

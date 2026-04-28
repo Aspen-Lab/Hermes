@@ -203,6 +203,16 @@ export default function PaperDetailPage({
     paper.linkCode || `https://github.com/search?q=${q}&type=repositories`;
   const showPaperLink = paper.linkPaper && paper.linkPaper !== paper.linkArxiv;
 
+  // Source-aware primary CTA. arXiv → "Read on arXiv". HN/other with a
+  // direct paper link → "Read on <venue>". Otherwise fall back to arXiv
+  // search of the title.
+  const primaryUrl = paper.linkArxiv ?? paper.linkPaper ?? arxivUrl;
+  const primaryLabel = paper.linkArxiv
+    ? "Read on arXiv"
+    : paper.linkPaper
+      ? `Read on ${paper.venue || "source"}`
+      : "Search arXiv";
+
   const matchPct = paper.relevanceScore
     ? Math.round(Math.max(0, Math.min(1, paper.relevanceScore)) * 100)
     : null;
@@ -310,7 +320,8 @@ export default function PaperDetailPage({
 
         {/* ── Primary action row ── */}
         <ActionRow
-          arxivUrl={arxivUrl}
+          primaryUrl={primaryUrl}
+          primaryLabel={primaryLabel}
           paper={paper}
           onSave={() => savePaper(paper)}
           onDismiss={handleDismiss}
@@ -524,13 +535,15 @@ function ScrollProgress() {
 // ── Primary action row ──
 
 function ActionRow({
-  arxivUrl,
+  primaryUrl,
+  primaryLabel,
   paper,
   onSave,
   onDismiss,
   isSaved,
 }: {
-  arxivUrl: string;
+  primaryUrl: string;
+  primaryLabel: string;
   paper: Paper;
   onSave: () => void;
   onDismiss: () => void;
@@ -557,12 +570,12 @@ function ActionRow({
       } as React.CSSProperties}
     >
       <a
-        href={arxivUrl}
+        href={primaryUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="group inline-flex items-center gap-2 h-11 px-5 rounded-full bg-accent text-bg text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
       >
-        Read on arXiv
+        {primaryLabel}
         <span className="text-[11px] opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
           ↗
         </span>
