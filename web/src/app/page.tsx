@@ -8,7 +8,16 @@ import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
+import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
+import { FilterBar } from "@/components/search/filter-bar";
+import {
+  DEFAULT_FILTERS,
+  filtersFromUrlParams,
+  filtersToApiQuery,
+  filtersToUrlParams,
+  type Filters,
+} from "@/lib/search/filters";
 
 interface SearchResult {
   id: string;
@@ -57,6 +66,9 @@ function DiscoveryPage() {
 
   const [query, setQuery] = useState(incomingQuery);
   const [activeType, setActiveType] = useState<FeedType>("all");
+  const [filters, setFilters] = useState<Filters>(() =>
+    filtersFromUrlParams(searchParamsObj),
+  );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchTotal, setSearchTotal] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
@@ -73,7 +85,7 @@ function DiscoveryPage() {
     if (papers.length === 0 && !isLoading) loadFeed();
   }, [papers.length, isLoading, loadFeed]);
 
-  const searchPapers = useCallback(async (q: string) => {
+  const searchPapers = useCallback(async (q: string, f: Filters) => {
     if (q.length < 2) {
       setSearchResults([]);
       setSearchTotal(0);
@@ -81,9 +93,10 @@ function DiscoveryPage() {
     }
     setIsSearching(true);
     try {
-      const res = await fetch(
-        `/api/papers/search?q=${encodeURIComponent(q)}&per_page=12`
-      );
+      const apiParams = filtersToApiQuery(f);
+      apiParams.set("q", q);
+      apiParams.set("per_page", "12");
+      const res = await fetch(`/api/papers/search?${apiParams.toString()}`);
       const data = await res.json();
       setSearchResults(data.results || []);
       setSearchTotal(data.total || 0);
@@ -95,10 +108,30 @@ function DiscoveryPage() {
     }
   }, []);
 
+  // Sync URL with current query + filters (replaceState to avoid history pollution).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const next = filtersToUrlParams(filters);
+    if (query) next.set("q", query);
+    // Preserve any unrelated existing params (none today, but defensive).
+    const reserved = new Set([
+      "q", "year", "from", "to", "sort", "oa", "cites", "src", "venue",
+    ]);
+    url.searchParams.forEach((_, key) => {
+      if (reserved.has(key)) url.searchParams.delete(key);
+    });
+    next.forEach((v, k) => url.searchParams.set(k, v));
+    const target = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : "") + url.hash;
+    if (target !== window.location.pathname + window.location.search + window.location.hash) {
+      window.history.replaceState(null, "", target);
+    }
+  }, [query, filters]);
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (query.length >= 2) {
-      debounceRef.current = setTimeout(() => searchPapers(query), 400);
+      debounceRef.current = setTimeout(() => searchPapers(query, filters), 400);
     } else {
       setSearchResults([]);
       setSearchTotal(0);
@@ -106,7 +139,7 @@ function DiscoveryPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, searchPapers]);
+  }, [query, filters, searchPapers]);
 
   const isSearchMode = query.length >= 2;
 
@@ -239,6 +272,15 @@ function DiscoveryPage() {
             </button>
           )}
         </div>
+
+        {/* ── Filter bar (search mode only) ── */}
+        {isSearchMode && (
+          <FilterBar
+            filters={filters}
+            onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+            onReset={() => setFilters(DEFAULT_FILTERS)}
+          />
+        )}
 
         {/* ── Type tabs (feed only) ── */}
         {!isSearchMode && totalAll > 0 && (
@@ -387,17 +429,12 @@ function DiscoveryPage() {
                 {briefingItems.map((item) => (
                   <FeedTile key={item.data.id} item={item} />
                 ))}
-              </div>
-
-              <div className="mx-auto max-w-[820px] mt-16 pt-6 border-t border-border">
-                <button
-                  onClick={loadFeed}
-                  disabled={isLoading}
-                  className="text-[12.5px] text-text-faint hover:text-accent transition-colors disabled:opacity-40"
-                  style={{ fontFamily: "var(--font-sans)" }}
-                >
-                  {isLoading ? "loading…" : "Refresh recommendations"}
-                </button>
+                <FeedMoreTile
+                  itemCount={briefingItems.length}
+                  topics={profile.researchTopics}
+                  onRefresh={loadFeed}
+                  isLoading={isLoading}
+                />
               </div>
             </>
           )}

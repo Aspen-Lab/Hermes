@@ -5,6 +5,17 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.6.7 — 2026-04-28
+**"See more" tile at end of feed grid**
+
+Added a context-aware action tile to the last cell of the homepage grid. Detects three states and adapts copy:
+
+- **Profile under-tuned** (placeholder topics like `Whatever`, `idk`, or single short word) → "Tune your signals" + link to `/profile`. Short-circuits the most common reason for a sparse feed.
+- **Sparse but tuned** (< 4 items) → "Light today" + Refresh button.
+- **Plenty** → "More?" + Refresh button.
+
+Replaces the loose "Refresh recommendations" link below the grid; collapses two affordances into one tile that lives where the eye lands. Visual differentiation: dashed border, no shadow — reads as an action, not content.
+
 ## v0.6.6 — 2026-04-28
 **Distinguish HN discussions from academic papers in the feed**
 
