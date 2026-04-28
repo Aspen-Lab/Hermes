@@ -24,6 +24,33 @@ function fallbackVenue(source: string): string {
   return "";
 }
 
+// OpenAlex returns arXiv preprints with venue "arXiv (Cornell University)"
+// and url `https://doi.org/10.48550/arxiv.XXXX.YYYYY`. Both are technically
+// correct but ugly to surface in UI — strip to plain "arXiv" and a clean
+// arxiv.org URL. Returns the arXiv id when detected so callers can also
+// populate `linkArxiv`.
+function detectArxivDoi(url: string | undefined): {
+  arxivUrl: string;
+  arxivId: string;
+} | null {
+  if (!url) return null;
+  const m = url.match(
+    /doi\.org\/10\.48550\/arxiv\.(.+?)\/?(?:\?|#|$)/i,
+  );
+  if (!m) return null;
+  return {
+    arxivId: m[1],
+    arxivUrl: `https://arxiv.org/abs/${m[1]}`,
+  };
+}
+
+function cleanVenueLabel(venue: string | undefined): string | undefined {
+  if (!venue) return venue;
+  // OpenAlex's "arXiv (Cornell University)" → "arXiv"
+  if (/^\s*arxiv\b/i.test(venue)) return "arXiv";
+  return venue;
+}
+
 // Source feeds (notably HN's `story_text`) can return HTML-encoded
 // markup with `<p>` tags and entities like `&#x2F;` `&#x27;`. Render
 // surfaces are plain text — decode + strip before splitting.
@@ -103,20 +130,34 @@ export function rawItemToPaper(
       ...(item.tags ?? []).filter(isUsefulKeyword),
     ]),
   ).slice(0, 6);
-  const isArxiv = item.source === "arxiv";
   const introText = intro || truncate(cleanedAbstract, 400);
+
+  // Resolve arxiv links. The arxiv adapter sets item.source="arxiv" and
+  // item.url is the canonical arxiv URL. OpenAlex sometimes returns an
+  // arxiv preprint with a doi.org/10.48550/arxiv.* URL — detect and clean.
+  const arxivFromDoi = detectArxivDoi(item.url);
+  const isArxivSource = item.source === "arxiv";
+  const linkArxiv = isArxivSource
+    ? item.url
+    : arxivFromDoi?.arxivUrl;
+  const linkPaper = arxivFromDoi?.arxivUrl ?? item.url;
+  const rawVenue = item.venue || fallbackVenue(item.source);
+  const venue = arxivFromDoi
+    ? "arXiv"
+    : cleanVenueLabel(rawVenue) ?? rawVenue;
+
   return {
     id: item.id,
     title: item.title,
     authors: item.authors,
     relevanceReason: options.relevanceReason ?? "",
-    venue: item.venue || fallbackVenue(item.source),
-    source: mapSource(item.source, item.venue),
+    venue,
+    source: mapSource(item.source, venue),
     summaryIntro: introText,
     summaryExperimentKeywords: keywords,
     summaryResultDiscussion: discussion,
-    linkPaper: item.url,
-    linkArxiv: isArxiv ? item.url : undefined,
+    linkPaper,
+    linkArxiv,
     publishedDate: item.publishedAt || undefined,
     isSaved: false,
     relevanceScore: options.relevanceScore,

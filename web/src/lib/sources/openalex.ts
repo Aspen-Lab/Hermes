@@ -17,7 +17,7 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
     search: searchTerm,
     per_page: String(Math.min(limit, 50)),
     select:
-      "id,title,publication_date,authorships,primary_location,abstract_inverted_index,cited_by_count,doi,concepts",
+      "id,title,publication_date,authorships,primary_location,best_oa_location,open_access,abstract_inverted_index,cited_by_count,doi,concepts",
     sort: "relevance_score:desc",
     mailto: MAILTO,
   });

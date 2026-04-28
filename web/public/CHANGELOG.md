@@ -5,6 +5,26 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.6.11 — 2026-04-28
+**Per-category icons + richer metadata on feed tiles**
+
+Feed grid cards now carry a category-specific line icon next to the kind label (Paper / Discussion / Event / Job) and a thin colored stripe on the left edge for at-a-glance scanning. Inline mini-icons attach to metadata: author for papers, calendar + pin/globe for events, building + pin/globe for jobs. The redesign keeps the same density and serif/sans typography rhythm — purely a scannability pass, no content moved.
+
+## v0.6.10 — 2026-04-28
+**Search result card redesign + cleaner result count**
+
+Search cards now read more like Airbnb listings than a database dump. Each card gets a colored type badge (arXiv, Journal, Conference) and an Open Access badge with icons; venue and date sit on a single meta row with calendar/book glyphs; the citation count moves to a quiet footer separator with its own icon and is humanized (`12.4k cited` instead of `12,432 cited`). Title shifted to `line-clamp-3` so longer paper titles breathe; abstract switches to the editorial serif at 13.5px for scannable reading. Result counter at the top no longer surfaces the raw OpenAlex universe size — it just shows how many results are visible (e.g. `12 results for "transformer"`), which fits the triage use case far better than `12 of 4,567,890`. Search API now returns `sourceType` and `isOpenAccess` to drive the badges.
+
+## v0.6.9 — 2026-04-28
+**Better paper links: prefer open-access PDFs + clean arXiv URLs**
+
+Two fixes for the "many paper links are wrong" complaint. (1) The OpenAlex adapter now requests `best_oa_location` and `open_access` and prefers, in order: an OA PDF → an OA landing page → the DOI URL → the OpenAlex page itself. Result: papers with a free PDF on arXiv / institutional repository / publisher OA channel surface that link instead of a paywalled DOI redirect. (2) When OpenAlex returns an arXiv preprint via the `10.48550/arxiv.*` DOI prefix, the mapper detects it, swaps the URL to a clean `https://arxiv.org/abs/<id>`, populates `linkArxiv`, and renames the venue from "arXiv (Cornell University)" to plain "arXiv". The detail page CTA correctly says "Read on arXiv" again for these.
+
+## v0.6.8 — 2026-04-27
+**Search filters: year, sort, open access, citations, source, venue**
+
+OpenAlex search now exposes the dimensions that actually matter for relevance triage. A chip row appears under the search bar in search mode (year preset or custom range, sort by relevance/citations/date, open-access toggle, min-citations threshold), with source-type and venue search behind a "More filters" inline drawer. State syncs to the URL so a filtered search is shareable and back-button safe; opening a shared link rehydrates every filter. Reset link clears all non-default filters in one click. Daily feed unchanged — filters only render in search mode.
+
 ## v0.6.7 — 2026-04-28
 **"See more" tile at end of feed grid**
 
