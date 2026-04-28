@@ -6,12 +6,8 @@ import { useSearchParams } from "next/navigation";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
-import { PaperCard } from "@/components/cards/paper-card";
-import { EventCard } from "@/components/cards/event-card";
-import { JobCard } from "@/components/cards/job-card";
 import { SearchResultCard } from "@/components/cards/search-result-card";
-import { BriefingHero, type HeroItem } from "@/components/cards/briefing-hero";
-import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
+import { FeedTile } from "@/components/cards/feed-tile";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
 
 interface SearchResult {
@@ -28,7 +24,10 @@ interface SearchResult {
 }
 
 type FeedType = "all" | "papers" | "events" | "jobs";
-type BriefingItem = HeroItem;
+type BriefingItem =
+  | { kind: "paper"; data: Paper }
+  | { kind: "event"; data: Event }
+  | { kind: "job"; data: Job };
 
 function matchesQuery(query: string, ...fields: (string | undefined)[]) {
   const q = query.toLowerCase();
@@ -38,8 +37,6 @@ function matchesQuery(query: string, ...fields: (string | undefined)[]) {
 function scoreOf(item: BriefingItem): number {
   return item.data.relevanceScore ?? 0;
 }
-
-const WORTH_YOUR_TIME_MAX = 6;
 
 export default function DiscoveryPageWrapper() {
   return (
@@ -168,10 +165,6 @@ function DiscoveryPage() {
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
   }, [papers, events, jobs, query, activeType]);
 
-  const topPick = briefingItems[0];
-  const worthYourTime = briefingItems.slice(1, 1 + WORTH_YOUR_TIME_MAX);
-  const quickHits = briefingItems.slice(1 + WORTH_YOUR_TIME_MAX);
-
   const totalAll = papers.length + events.length + jobs.length;
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
@@ -191,7 +184,8 @@ function DiscoveryPage() {
   ];
 
   return (
-    <article className="mx-auto max-w-[740px] lg:max-w-[820px] px-6 py-16 lg:py-20">
+    <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
+      <div className="mx-auto max-w-[820px]">
       <header className="mb-8">
         <Greeting
           isSearchMode={isSearchMode}
@@ -330,15 +324,20 @@ function DiscoveryPage() {
           </p>
         )}
       </div>
+      </div>{/* /max-w-[820px] inner header wrapper */}
 
       {/* ── Search results ── */}
       {isSearchMode && (
         <>
-          {isSearching && searchResults.length === 0 && <LoadingSkeleton />}
+          {isSearching && searchResults.length === 0 && (
+            <div className="mx-auto max-w-[820px]"><LoadingSkeleton /></div>
+          )}
           {searchResults.length > 0 && (
             <>
-              <SectionHeading count={searchResults.length}>Papers</SectionHeading>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="mx-auto max-w-[820px]">
+                <SectionHeading count={searchResults.length}>Papers</SectionHeading>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {searchResults.map((r) => (
                   <SearchResultCard key={r.id} result={r} />
                 ))}
@@ -346,75 +345,51 @@ function DiscoveryPage() {
             </>
           )}
           {!isSearching && searchResults.length === 0 && query.length >= 2 && (
-            <EmptyState
-              title="Nothing turned up."
-              description="Try different keywords, or broaden the search to a field you're exploring."
-            />
+            <div className="mx-auto max-w-[820px]">
+              <EmptyState
+                title="Nothing turned up."
+                description="Try different keywords, or broaden the search to a field you're exploring."
+              />
+            </div>
           )}
         </>
       )}
 
-      {/* ── Feed mode: tiered briefing ── */}
+      {/* ── Feed mode: dense grid ── */}
       {!isSearchMode && (
         <>
-          {isLoading && briefingItems.length === 0 && <LoadingSkeleton />}
+          {isLoading && briefingItems.length === 0 && (
+            <div className="mx-auto max-w-[820px]"><LoadingSkeleton /></div>
+          )}
 
           {isEmpty && (
-            <EmptyState
-              title="Your briefing is still waking up."
-              description="Tell Hermes what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that."
-              action={
-                <Link
-                  href="/profile"
-                  className="group inline-flex items-center gap-1.5 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
-                  style={{ fontFamily: "var(--font-sans)" }}
-                >
-                  Set up profile
-                  <span className="text-[11px] opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
-                </Link>
-              }
-            />
+            <div className="mx-auto max-w-[820px]">
+              <EmptyState
+                title="Your briefing is still waking up."
+                description="Tell Hermes what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that."
+                action={
+                  <Link
+                    href="/profile"
+                    className="group inline-flex items-center gap-1.5 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
+                    style={{ fontFamily: "var(--font-sans)" }}
+                  >
+                    Set up profile
+                    <span className="text-[11px] opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+                  </Link>
+                }
+              />
+            </div>
           )}
 
           {briefingItems.length > 0 && (
             <>
-              {topPick && (
-                <div className="mt-4">
-                  <BriefingHero item={topPick} />
-                </div>
-              )}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {briefingItems.map((item) => (
+                  <FeedTile key={item.data.id} item={item} />
+                ))}
+              </div>
 
-              {worthYourTime.length > 0 && (
-                <>
-                  <SectionHeading count={worthYourTime.length}>
-                    Worth your time
-                  </SectionHeading>
-                  <div className="grid grid-cols-1 gap-5">
-                    {worthYourTime.map((item) =>
-                      item.kind === "paper" ? (
-                        <PaperCard key={item.data.id} paper={item.data} />
-                      ) : item.kind === "event" ? (
-                        <EventCard key={item.data.id} event={item.data} />
-                      ) : (
-                        <JobCard key={item.data.id} job={item.data} />
-                      ),
-                    )}
-                  </div>
-                </>
-              )}
-
-              {quickHits.length > 0 && (
-                <>
-                  <SectionHeading count={quickHits.length}>Quick hits</SectionHeading>
-                  <div className="divide-y divide-border">
-                    {quickHits.map((item) => (
-                      <BriefingQuickHit key={item.data.id} item={item} />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <div className="mt-20 pt-6 border-t border-border">
+              <div className="mx-auto max-w-[820px] mt-16 pt-6 border-t border-border">
                 <button
                   onClick={loadFeed}
                   disabled={isLoading}
