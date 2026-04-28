@@ -175,6 +175,16 @@ export async function extractFigure(input: ExtractInput): Promise<FigureResult> 
     return { imageUrl: null, source: null };
   }
 
+  // HN items: `url` points to whatever the submitter linked (GitHub repos,
+  // personal blogs, corporate sites). og:image on those is usually a
+  // generic social preview — repo cards, logo banners, default OG images —
+  // rarely something that represents the discussion. Better to show no
+  // image than a misleading one. Re-evaluate per-source if a future
+  // adapter (e.g. blog with reliable hero) wants opt-in figures.
+  if (input.itemId.startsWith("hn:")) {
+    return { imageUrl: null, source: null };
+  }
+
   // Generic path: fetch the item URL and read og:image.
   if (!input.url) return { imageUrl: null, source: null };
   const res = await timedFetch(input.url);
