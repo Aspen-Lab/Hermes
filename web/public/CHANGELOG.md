@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.3 — 2026-04-28
+**Persona: ship the whole feature + add MBTI-style "look" to result page**
+
+Two things in one. (1) The `/persona` quiz that v0.7.0 announced was never actually committed — `web/src/app/persona/`, `web/src/components/persona/`, and `web/src/lib/persona/` only existed locally and Vercel had no idea about them. Tracked all of them now (same fix shape as v0.7.1 — other agent's WIP wasn't `git add`ed). (2) Added a `look` field to every Persona — concrete MBTI-style appearance for all 10 curated PAIR_NAMES, all 10 SOLO_NAMES (with poles having distinct visuals: e.g. The Bench Operator gets "olive flannel, top-knot, dead-project sticker laptop, coffee, anti-glamour"), and the Polymath flat fallback. New "Spotted at the conference like" section on the result page renders the look as an italicized accent-bordered pull-quote between the blurb and the axes bars. Same data, more recognizable.
+
 ## v0.7.2 — 2026-04-28
 **Affiliation: school autocomplete + lab field**
 
