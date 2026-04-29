@@ -31,17 +31,26 @@ function PersonaArt({ name }: { name: string }) {
   if (errored) return null;
   const src = `/persona/${nameToSlug(name)}.png`;
   return (
-    <div className="flex justify-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={name}
-        onError={() => setErrored(true)}
-        className="max-h-[280px] w-auto rounded-2xl bg-bg-secondary/40 shadow-card"
-        loading="eager"
-        decoding="async"
-      />
-    </div>
+    <figure className="relative">
+      {/* Soft cream-on-surface card frames the polygon portrait */}
+      <div className="rounded-[28px] bg-gradient-to-b from-[color:var(--color-bg-secondary)]/60 to-[color:var(--color-bg-secondary)]/30 p-6 shadow-card">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={name}
+          onError={() => setErrored(true)}
+          className="block w-full h-auto object-contain max-h-[420px]"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+      <figcaption
+        className="mt-4 text-center text-[10.5px] uppercase tracking-[0.22em] text-text-faint"
+        style={{ fontFamily: "var(--font-sans)" }}
+      >
+        — Profile sketch —
+      </figcaption>
+    </figure>
   );
 }
 
@@ -52,77 +61,87 @@ export function PersonaResult({
 }: PersonaResultProps) {
   return (
     <div
-      className="flex flex-col gap-10 animate-fade-in-up"
+      className="grid lg:grid-cols-[minmax(280px,360px)_1fr] gap-10 lg:gap-16 items-start animate-fade-in-up"
       style={{ fontFamily: "var(--font-sans)" }}
     >
-      <PersonaArt name={persona.name} />
+      {/* ── Left: portrait, sticky on desktop ── */}
+      <aside className="lg:sticky lg:top-12 self-start">
+        <PersonaArt name={persona.name} />
+      </aside>
 
-      <div className="flex flex-col gap-3">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
-          Your academic persona
-        </span>
-        <h1
-          className="text-[36px] md:text-[44px] text-heading leading-[1.05] tracking-[-0.015em]"
-          style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
-        >
-          {persona.name}
-        </h1>
+      {/* ── Right: text, axes, retake ── */}
+      <div className="flex flex-col gap-10 max-w-[620px]">
+        <header className="flex flex-col gap-3">
+          <span className="text-[10.5px] uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
+            Your academic persona
+          </span>
+          <h1
+            className="text-[40px] md:text-[52px] text-heading leading-[1.02] tracking-[-0.018em]"
+            style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
+          >
+            {persona.name}
+          </h1>
+          <p
+            className="text-[18px] md:text-[19px] text-text-muted leading-[1.55] italic"
+            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          >
+            {persona.tagline}
+          </p>
+        </header>
+
         <p
-          className="text-[17px] text-text-muted leading-[1.55] max-w-[640px]"
+          className="text-[15.5px] text-text leading-[1.75]"
           style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
         >
-          {persona.tagline}
+          {persona.blurb}
         </p>
-      </div>
 
-      <p
-        className="text-[15px] text-text leading-[1.7] max-w-[640px]"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
-      >
-        {persona.blurb}
-      </p>
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-[color:var(--color-border)]" aria-hidden />
+            <h2 className="text-[10.5px] uppercase tracking-[0.22em] text-text-faint">
+              Spotted at the conference like
+            </h2>
+            <span className="h-px flex-1 bg-[color:var(--color-border)]" aria-hidden />
+          </div>
+          <p
+            className="text-[15px] text-text-muted leading-[1.7] italic"
+            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          >
+            {persona.look}
+          </p>
+        </section>
 
-      <div className="flex flex-col gap-3 max-w-[640px]">
-        <h2 className="text-[12px] uppercase tracking-[0.18em] text-text-faint">
-          Spotted at the conference like
-        </h2>
-        <p
-          className="text-[14.5px] text-text-muted leading-[1.65] italic border-l-2 border-[color:var(--color-accent)] pl-4"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
-        >
-          {persona.look}
-        </p>
-      </div>
+        <section className="flex flex-col gap-5">
+          <h2 className="text-[10.5px] uppercase tracking-[0.22em] text-text-faint">
+            Your axes
+          </h2>
+          <div className="flex flex-col gap-5">
+            {AXES.map((axis) => (
+              <AxisBar
+                key={axis.id}
+                id={axis.id}
+                negative={axis.negative}
+                positive={axis.positive}
+                blurb={axis.blurb}
+                score={scores[axis.id]}
+              />
+            ))}
+          </div>
+        </section>
 
-      <div className="flex flex-col gap-5">
-        <h2 className="text-[12px] uppercase tracking-[0.18em] text-text-faint">
-          Your axes
-        </h2>
-        <div className="flex flex-col gap-5">
-          {AXES.map((axis) => (
-            <AxisBar
-              key={axis.id}
-              id={axis.id}
-              negative={axis.negative}
-              positive={axis.positive}
-              blurb={axis.blurb}
-              score={scores[axis.id]}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 pt-4 border-t border-[color:var(--color-border)]">
-        <button
-          type="button"
-          onClick={onRestart}
-          className="h-10 px-4 rounded-full bg-surface shadow-card hover:shadow-card-hover transition-shadow text-[13px] text-text"
-        >
-          Retake
-        </button>
-        <span className="text-[12px] text-text-faint">
-          Saved locally only — not uploaded.
-        </span>
+        <footer className="flex items-center gap-3 pt-6 border-t border-[color:var(--color-border)]">
+          <button
+            type="button"
+            onClick={onRestart}
+            className="h-10 px-5 rounded-full bg-surface shadow-card hover:shadow-card-hover hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 ease-out text-[13px] text-text"
+          >
+            Retake quiz
+          </button>
+          <span className="text-[11.5px] text-text-faint italic">
+            Saved locally only — not uploaded.
+          </span>
+        </footer>
       </div>
     </div>
   );

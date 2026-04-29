@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.6 — 2026-04-29
+**Persona result: editorial side-by-side layout + 2 more portraits**
+
+Result page goes from a stacked column to a two-column editorial layout — portrait (with cream gradient frame, soft shadow, italic "Profile sketch" caption) sticks to the left on desktop, the title / tagline / blurb / look / axes flow on the right at a comfortable reading width. Title bumps to 52px Instrument Serif, tagline gets italic Source Serif, "Spotted at the conference like" header now sits between hairline rules — a touch more magazine, less form-result. Mobile collapses cleanly to a single column. Two additional portraits seeded: `lab-lead.png` and `synthesist.png`. Five remaining slots open.
+
 ## v0.7.5 — 2026-04-29
 **Persona: collapse to the canonical 10 + best-fit assignment**
 
