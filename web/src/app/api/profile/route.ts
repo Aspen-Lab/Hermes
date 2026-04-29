@@ -21,6 +21,7 @@ interface ProfileRow {
   industry_vs_academia: string | null;
   phd_year: number | null;
   school: string | null;
+  lab: string | null;
   digest_enabled: boolean;
   digest_hour_local: number;
   digest_timezone: string;
@@ -42,6 +43,7 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
       | undefined,
     phdYear: row.phd_year ?? undefined,
     school: row.school ?? undefined,
+    lab: row.lab ?? undefined,
     digestEnabled: row.digest_enabled,
     digestHourLocal: row.digest_hour_local,
     digestTimezone: row.digest_timezone,
@@ -64,6 +66,7 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.industryVsAcademia !== undefined) row.industry_vs_academia = p.industryVsAcademia;
   if (p.phdYear !== undefined) row.phd_year = p.phdYear;
   if (p.school !== undefined) row.school = p.school;
+  if (p.lab !== undefined) row.lab = p.lab;
   if (p.digestEnabled !== undefined) row.digest_enabled = p.digestEnabled;
   if (p.digestHourLocal !== undefined) row.digest_hour_local = p.digestHourLocal;
   if (p.digestTimezone !== undefined) row.digest_timezone = p.digestTimezone;

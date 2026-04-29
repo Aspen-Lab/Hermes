@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.2 — 2026-04-28
+**Affiliation: school autocomplete + lab field**
+
+The Affiliation row in the profile editor splits into two fields. **School / org** is now an autocomplete-backed input — type to filter ~150 curated entries (top global research universities, CMU/MIT/Oxford/Tsinghua/etc. + industry research labs like Anthropic, DeepMind, FAIR), with substring highlighting on the matched portion, ↑/↓/Enter/Tab keyboard nav, and free-text fallback for anything not in the list. **Lab / group** is a separate plain-text field below for the unit within the org (CSAIL, HCI Group, Vision Lab, your advisor's group). Both are persisted on the profiles row and surface in the read view as `MIT / CSAIL`. New `lab` column on profiles table; schema.sql + the /api/profile mapping updated to round-trip.
+
 ## v0.7.1 — 2026-04-28
 **Fix: ship the missing search filter modules**
 
