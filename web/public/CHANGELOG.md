@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.5 — 2026-04-29
+**Persona: collapse to the canonical 10 + best-fit assignment**
+
+Quiz results now always land on one of the 10 curated PAIR personas (or the flat-profile Polymath fallback). The 10 SOLO names — "The Bench Operator", "The Theorist", "The Polymath" (specialist-pole), "The Builder", "The Provocateur", etc. — were a mid-state fallback for users whose top-two combo wasn't in the curated set, but they had no portraits and felt like a "you're not really any of these" cul-de-sac. Removed. New pickPersona scores all 10 PAIRs by alignment with the user's axis values (sign-aware sum of the two pole projections) and picks the highest-fit one — so a Generalist+Solo profile, which previously fell to "The Polymath" SOLO, now lands on whichever curated PAIR best matches that direction (typically Synthesist or Field Crosser). 11 possible outcomes total (10 PAIRs + flat Polymath), every named result has a slot for a portrait. Renamed the misseeded `bench-operator.png` → `bench-builder.png` since the visual fits Bench Builder perfectly and Bench Operator no longer exists as a result.
+
 ## v0.7.4 — 2026-04-28
 **Persona art: portrait above each result**
 

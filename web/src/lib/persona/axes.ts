@@ -182,75 +182,21 @@ const PAIR_NAMES: Record<
   },
 };
 
-const SOLO_NAMES: Record<
-  AxisId,
-  {
-    neg: { name: string; look: string };
-    pos: { name: string; look: string };
-  }
-> = {
-  empirical_theoretical: {
-    neg: {
-      name: "The Bench Operator",
-      look: "Olive flannel with rolled sleeves, top-knot, wire-frame glasses. Laptop is a graveyard of dead projects (Dead Labs, CrashedTech, DataCorpse). Coffee + open sketchbook. Anti-glamour. Gets it done quietly.",
-    },
-    pos: {
-      name: "The Theorist",
-      look: "Tortoise-shell glasses, soft turtleneck, marker on the cuff. Always finds the chalk-friendly classroom. Says 'I don't know yet' more often than anyone in the room.",
-    },
-  },
-  specialist_generalist: {
-    neg: {
-      name: "The Specialist",
-      look: "One outfit, one question, one decade. Books on shelf are all in the same color family. Knows the literature so well they've stopped checking citations.",
-    },
-    pos: {
-      name: "The Polymath",
-      look: "Library bag is a bouquet — one book per discipline. Cold brew, three pens, an opened-and-closed magazine. The room they entered is now a different room.",
-    },
-  },
-  solo_collaborative: {
-    neg: {
-      name: "The Solo Author",
-      look: "Coat and headphones; you don't talk to them at a workshop. Late-night commits stronger than the coauthored papers. The byline is one name, and that's the point.",
-    },
-    pos: {
-      name: "The Convener",
-      look: "Clipboard or tablet calendar always in hand. Knows everyone's name and what they're working on. The Slack workspace was their idea, the channel naming convention is theirs too.",
-    },
-  },
-  builder_critic: {
-    neg: {
-      name: "The Builder",
-      look: "Cargo pants, hoodie, laptop bag with a USB drive on a lanyard. Says 'let me try' more often than 'let me check'. The repo is theirs and the wiki has no broken links.",
-    },
-    pos: {
-      name: "The Provocateur",
-      look: "Black sweater, opinions visible from across the room. Asks 'why this question?' before 'why this method?'. Their reading list is half retracted papers.",
-    },
-  },
-  formal_narrative: {
-    neg: {
-      name: "The Formalist",
-      look: "Buttoned-up shirt, fountain pen, single sheet of paper with one equation in pencil. Will not say 'roughly' if 'precisely' is available.",
-    },
-    pos: {
-      name: "The Essayist",
-      look: "Soft fabrics, a notebook in the side pocket of a tote bag, two unfinished books on the table. Speaks in clauses; writes in arcs.",
-    },
-  },
-};
+// SOLO_NAMES used to live here as a fallback when a user's top-two combo
+// wasn't in the curated PAIR_NAMES set, naming them e.g. "The Bench
+// Operator" or "The Polymath" by their dominant axis alone. That created
+// 10 ghost personas with no portraits and a confusing "I'm not really
+// any of these" feel. Removed: pickPersona now always lands on one of
+// the 10 curated PAIRs (best fit by score alignment) — see below — or
+// the flat Polymath when no axis is meaningfully off-center.
 
 export function pickPersona(scores: Scores): Persona {
   const ranked = (Object.keys(scores) as AxisId[])
     .map((id) => ({ id, score: scores[id], abs: Math.abs(scores[id]) }))
     .sort((a, b) => b.abs - a.abs);
 
-  const top = ranked[0];
-  const second = ranked[1];
-
   // Very flat profile: use Polymath fallback.
-  if (top.abs < 0.25) {
+  if (ranked[0].abs < 0.25) {
     return {
       name: "The Polymath",
       tagline: "Resists every box on offer.",
@@ -260,28 +206,25 @@ export function pickPersona(scores: Scores): Persona {
     };
   }
 
-  const topPole = top.score >= 0 ? POLE_LABEL[top.id].pos : POLE_LABEL[top.id].neg;
-  const secondPole =
-    second.score >= 0 ? POLE_LABEL[second.id].pos : POLE_LABEL[second.id].neg;
+  // Score each of the 10 curated PAIRs by how aligned the user's scores
+  // are with the pair's two poles. The winner is whichever PAIR's two
+  // signals point most in the same direction the user's profile points.
+  // This always returns one of the 10 — no SOLO fallback any more.
+  let bestKey: string | null = null;
+  let bestFit = -Infinity;
+  for (const key of Object.keys(PAIR_NAMES)) {
+    const [a, b] = key.split("+");
+    const [aAxis, aPole] = a.split(":") as [AxisId, string];
+    const [bAxis, bPole] = b.split(":") as [AxisId, string];
+    const aSign = aPole === POLE_LABEL[aAxis].pos ? 1 : -1;
+    const bSign = bPole === POLE_LABEL[bAxis].pos ? 1 : -1;
+    const fit = aSign * scores[aAxis] + bSign * scores[bAxis];
+    if (fit > bestFit) {
+      bestFit = fit;
+      bestKey = key;
+    }
+  }
 
-  const key = [
-    `${top.id}:${topPole}`,
-    `${second.id}:${secondPole}`,
-  ]
-    .sort()
-    .join("+");
-
-  if (PAIR_NAMES[key]) return PAIR_NAMES[key];
-
-  // Fallback: name from dominant axis pole only.
-  const solo = top.score >= 0 ? SOLO_NAMES[top.id].pos : SOLO_NAMES[top.id].neg;
-  const secondaryAdj =
-    second.score >= 0 ? POLE_LABEL[second.id].pos : POLE_LABEL[second.id].neg;
-
-  return {
-    name: solo.name,
-    tagline: `Leans ${secondaryAdj.toLowerCase()} on a second read.`,
-    blurb: `Your strongest signal is on the ${POLE_LABEL[top.id].neg}–${POLE_LABEL[top.id].pos} axis. The next loudest is ${POLE_LABEL[second.id].neg}–${POLE_LABEL[second.id].pos}. Together they describe most of how you work; the rest is fine-tuning.`,
-    look: solo.look,
-  };
+  // bestKey is non-null as long as PAIR_NAMES has entries (it does).
+  return PAIR_NAMES[bestKey as string];
 }
