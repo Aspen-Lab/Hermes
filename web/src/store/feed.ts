@@ -88,7 +88,7 @@ async function fetchRealFeed(profile: UserProfile): Promise<Paper[]> {
         topics,
         methods: profile.preferredMethods,
         venues: profile.preferredVenues,
-        topN: 30,
+        topN: 5,
       }),
     });
     if (!res.ok) {
