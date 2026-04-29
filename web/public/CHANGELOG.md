@@ -5,6 +5,21 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.1 — 2026-04-28
+**Fix: ship the missing search filter modules**
+
+Production deploys had been failing since v0.6.8 — the search filter feature committed `page.tsx` imports for `@/components/search/filter-bar`, `@/components/search/filter-chip`, `@/components/search/more-filters-panel`, and `@/lib/search/filters`, but the directories themselves were never `git add`ed. They existed locally and worked in dev but Vercel's clean checkout couldn't resolve the imports → every commit since v0.6.8 returned the old deploy. Added the four missing files (752 lines) so the production build succeeds and v0.6.9–v0.6.14 actually reach users.
+
+## v0.7.0 — 2026-04-28
+**Academic persona quiz at /persona**
+
+A short forced-choice quiz that maps a researcher across five continuous axes — Empirical ↔ Theoretical, Specialist ↔ Generalist, Solo ↔ Collaborative, Builder ↔ Critic, Formal ↔ Narrative — and names a persona from the two strongest signals (e.g. "The Theoretical Provocateur", "The Bench Specialist", "The Synthesist"). Jung-style multi-dimensional rather than MBTI's 16 boxes: every axis is a value in [-1, +1], not a category, and the persona name reflects a combination, not a verdict. 15 questions, 3 per axis, no Likert middle ground. Result card shows axis bars with score markers, a tagline, and a prose blurb in the editorial serif. Saved locally only — no upload. Accessible from the sidebar (or `g x`). First step toward the broader "input your paper, get an academic style profile" feature; URL/PDF analysis comes next, this seeds the framework.
+
+## v0.6.15 — 2026-04-28
+**Paper figure adopts the image's natural aspect ratio (no more cropping)**
+
+`PaperFigure` was forcing every figure into a fixed 16:8 (hero) or 16:9 (compact) frame with `object-cover`, which silently cropped portrait charts, square diagrams, and any landscape figure with a different ratio. The container now starts at the variant's default aspect (skeleton state only), then on `onLoad` reads `naturalWidth / naturalHeight` from the image and sets the container's `aspect-ratio` to match. Image switches to `object-contain` so it always fits, and a `transition: aspect-ratio 300ms` smooths the resize when the natural aspect arrives. A `max-h-[80vh]` cap prevents extreme portrait images from dominating the viewport. Net effect: every figure renders at its true proportions, nothing gets cropped.
+
 ## v0.6.14 — 2026-04-28
 **Profile editor: affiliation field + suggestion chips + cleaner first-run defaults**
 
