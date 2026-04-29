@@ -1,11 +1,48 @@
 "use client";
 
+import { useState } from "react";
 import { AXES, type AxisId, type Persona, type Scores } from "@/lib/persona/axes";
 
 interface PersonaResultProps {
   scores: Scores;
   persona: Persona;
   onRestart: () => void;
+}
+
+// Convention: drop a portrait at `web/public/persona/<slug>.png` and it
+// auto-renders above the title. Slug = persona name, lowercased, leading
+// "the " stripped, non-alphanumerics → dashes.
+//
+//   The Bench Operator       → bench-operator.png
+//   The Theoretical Provocateur → theoretical-provocateur.png
+//   The Polymath             → polymath.png
+//
+// If the file is missing, the <img> errors and the component renders null.
+function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/^the\s+/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function PersonaArt({ name }: { name: string }) {
+  const [errored, setErrored] = useState(false);
+  if (errored) return null;
+  const src = `/persona/${nameToSlug(name)}.png`;
+  return (
+    <div className="flex justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={name}
+        onError={() => setErrored(true)}
+        className="max-h-[280px] w-auto rounded-2xl bg-bg-secondary/40 shadow-card"
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+  );
 }
 
 export function PersonaResult({
@@ -18,6 +55,8 @@ export function PersonaResult({
       className="flex flex-col gap-10 animate-fade-in-up"
       style={{ fontFamily: "var(--font-sans)" }}
     >
+      <PersonaArt name={persona.name} />
+
       <div className="flex flex-col gap-3">
         <span className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
           Your academic persona
