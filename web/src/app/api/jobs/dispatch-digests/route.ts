@@ -11,6 +11,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runFeedPipeline } from "@/lib/feed/pipeline";
+import type { FeedControls } from "@/lib/feed/profile-compiler";
 import { sendDigestEmail } from "@/lib/email/send-digest";
 
 function originUrlFor(req: NextRequest): string {
@@ -33,6 +34,19 @@ interface ProfileRow {
   research_topics: string[];
   preferred_methods: string[];
   preferred_venues: string[];
+  current_project: string | null;
+  current_challenges: string | null;
+  disliked_topics: string[] | null;
+  feed_focus: FeedControls["focus"] | null;
+  feed_freshness: FeedControls["freshness"] | null;
+  paper_count: FeedControls["paperCount"] | null;
+  feed_source_mix: FeedControls["sourceMix"] | null;
+  feed_importance: FeedControls["importance"] | null;
+  feed_method_mode: FeedControls["methodMode"] | null;
+  feed_discovery_mode: FeedControls["discoveryMode"] | null;
+  feed_avoid_reviews: boolean | null;
+  feed_avoid_old_papers: boolean | null;
+  feed_avoid_broad_surveys: boolean | null;
   digest_enabled: boolean;
   digest_hour_local: number;
   digest_timezone: string;
@@ -81,6 +95,27 @@ function frequencyAdmitsToday(
   return false;
 }
 
+function seedTextsFromRow(row: ProfileRow): string[] {
+  return [row.current_project, row.current_challenges]
+    .map((text) => text?.trim())
+    .filter((text): text is string => Boolean(text));
+}
+
+function feedControlsFromRow(row: ProfileRow): FeedControls {
+  return {
+    focus: row.feed_focus ?? undefined,
+    freshness: row.feed_freshness ?? undefined,
+    paperCount: row.paper_count ?? undefined,
+    sourceMix: row.feed_source_mix ?? undefined,
+    importance: row.feed_importance ?? undefined,
+    methodMode: row.feed_method_mode ?? undefined,
+    discoveryMode: row.feed_discovery_mode ?? undefined,
+    avoidReviews: row.feed_avoid_reviews ?? undefined,
+    avoidOldPapers: row.feed_avoid_old_papers ?? undefined,
+    avoidBroadSurveys: row.feed_avoid_broad_surveys ?? undefined,
+  };
+}
+
 export async function GET(req: NextRequest) {
   // Auth: Vercel cron OR shared secret for manual invocation.
   const isVercelCron = req.headers.get("x-vercel-cron") !== null;
@@ -100,7 +135,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await admin
     .from("profiles")
     .select(
-      "user_id, display_name, research_topics, preferred_methods, preferred_venues, digest_enabled, digest_hour_local, digest_timezone, digest_channel, digest_frequency",
+      "user_id, display_name, research_topics, preferred_methods, preferred_venues, current_project, current_challenges, disliked_topics, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys, digest_enabled, digest_hour_local, digest_timezone, digest_channel, digest_frequency",
     )
     .eq("digest_enabled", true)
     .neq("digest_frequency", "off");
@@ -151,7 +186,10 @@ export async function GET(req: NextRequest) {
         topics: row.research_topics,
         methods: row.preferred_methods.length > 0 ? row.preferred_methods : undefined,
         venues: row.preferred_venues.length > 0 ? row.preferred_venues : undefined,
-        topN: 10,
+        seedTexts: seedTextsFromRow(row),
+        negativeTopics: row.disliked_topics ?? undefined,
+        topN: row.paper_count ?? 10,
+        controls: feedControlsFromRow(row),
       });
 
       const itemIds = feed.items.map((i) => i.id);

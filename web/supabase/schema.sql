@@ -74,6 +74,45 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- ── Project context (profiles extension) ─────────────────────
+-- Free-text describing the user's current project and the open challenges
+-- they want answers for. Used as scoring seed text and as LLM context for
+-- the daily digest.
+
+alter table public.profiles
+  add column if not exists current_project    text,
+  add column if not exists current_challenges text;
+
+-- ── Disliked topics (profiles extension) ─────────────────────
+-- Keywords from papers the user has explicitly disliked. Fed back into
+-- the TF-IDF scorer as a negative signal so matching papers rank lower.
+
+alter table public.profiles
+  add column if not exists disliked_topics text[] not null default '{}';
+
+-- Search controls (profiles extension)
+-- Human-readable knobs for the paper-finding plan. These map to query
+-- expansion, source mix, time window, and ranking policy.
+
+alter table public.profiles
+  add column if not exists feed_focus text not null default 'balanced'
+    check (feed_focus in ('tight','balanced','exploratory')),
+  add column if not exists feed_freshness text not null default 'week'
+    check (feed_freshness in ('today','week','month')),
+  add column if not exists paper_count smallint not null default 10
+    check (paper_count in (5,10)),
+  add column if not exists feed_source_mix text not null default 'balanced'
+    check (feed_source_mix in ('balanced','preprints','published','code','web')),
+  add column if not exists feed_importance text not null default 'new'
+    check (feed_importance in ('new','highlyCited','rising')),
+  add column if not exists feed_method_mode text not null default 'relatedOk'
+    check (feed_method_mode in ('mustMatch','relatedOk','any')),
+  add column if not exists feed_discovery_mode text not null default 'core'
+    check (feed_discovery_mode in ('core','adjacent','surprise')),
+  add column if not exists feed_avoid_reviews boolean not null default true,
+  add column if not exists feed_avoid_old_papers boolean not null default false,
+  add column if not exists feed_avoid_broad_surveys boolean not null default true;
+
 -- ── Notification / digest preferences (profiles extension) ────
 -- Runs idempotently on re-runs.
 
@@ -85,7 +124,9 @@ alter table public.profiles
   add column if not exists digest_channel    text     not null default 'inapp'
     check (digest_channel in ('inapp','email','both')),
   add column if not exists digest_frequency  text     not null default 'daily'
-    check (digest_frequency in ('daily','weekdays','weekly','off'));
+    check (digest_frequency in ('daily','weekdays','weekly','off')),
+  add column if not exists color_theme       text     not null default 'system'
+    check (color_theme in ('system','cream','white','black','pink','blue'));
 
 -- ── saved_items ────────────────────────────────────────────────
 -- Unified saved list for papers/events/jobs. `payload` is a full

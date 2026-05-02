@@ -3,6 +3,7 @@ import {
   reconstructAbstract,
   normalizeOpenAlexId,
 } from "@/lib/utils/openalex";
+import { cleanDisplayText } from "@/lib/text/clean";
 
 const OPENALEX_API = "https://api.openalex.org/works";
 
@@ -62,12 +63,13 @@ export async function GET(req: NextRequest) {
 
   const papers = works.map((w) => ({
     id: normalizeOpenAlexId(w.id),
-    title: w.title || "",
+    title: cleanDisplayText(w.title),
     authors: w.authorships
       .map((a) => a.author.display_name)
+      .map(cleanDisplayText)
       .filter(Boolean),
-    abstract: reconstructAbstract(w.abstract_inverted_index),
-    venue: w.primary_location?.source?.display_name || "",
+    abstract: cleanDisplayText(reconstructAbstract(w.abstract_inverted_index)),
+    venue: cleanDisplayText(w.primary_location?.source?.display_name),
     publishedDate: w.publication_date || null,
     citationCount: w.cited_by_count || 0,
     doi: w.doi || null,

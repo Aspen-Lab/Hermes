@@ -131,6 +131,17 @@ function SaveButton({
 
 function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
   const savePaper = useFeedStore((s) => s.savePaper);
+  const moreLikePaper = useFeedStore((s) => s.moreLikePaper);
+  const notInterestedPaper = useFeedStore((s) => s.notInterestedPaper);
+
+  const isLiked = paper.feedback === "moreLikeThis" || paper.feedback === "liked";
+
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    fn();
+  };
+
   return (
     <Link
       href={`/papers/${paper.id}`}
@@ -156,11 +167,44 @@ function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
       >
         {paper.relevanceReason}
       </p>
-      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-2">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate">
+      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
+        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {paper.source}
         </span>
         <span className="flex-1" aria-hidden />
+
+        {/* Like */}
+        <button
+          type="button"
+          onClick={stop(() => moreLikePaper(paper))}
+          aria-pressed={isLiked}
+          aria-label="Like — show more like this"
+          title="Like"
+          className={[
+            "p-1.5 rounded-md transition-colors active:scale-90",
+            isLiked
+              ? "text-accent bg-accent-dim/60"
+              : "text-text-faint hover:text-accent hover:bg-accent-dim/60",
+          ].join(" ")}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M7 10v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h3zM7 10l4-7a2 2 0 0 1 2 2v3h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 19H7" />
+          </svg>
+        </button>
+
+        {/* Dislike */}
+        <button
+          type="button"
+          onClick={stop(() => notInterestedPaper(paper))}
+          aria-label="Not interested — show less like this"
+          title="Not interested"
+          className="p-1.5 rounded-md text-text-faint hover:text-red hover:bg-red/10 transition-colors active:scale-90"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M17 14V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zM17 14l-4 7a2 2 0 0 1-2-2v-3H5.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 5H17" />
+          </svg>
+        </button>
+
         <SaveButton
           isSaved={!!paper.isSaved}
           onSave={() => savePaper(paper)}

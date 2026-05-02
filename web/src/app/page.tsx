@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Paper, Event, Job } from "@/types";
@@ -9,6 +10,7 @@ import { useProfileStore } from "@/store/profile";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
 import { FeedMoreTile } from "@/components/cards/feed-more-tile";
+import { DailyDigest } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
 import { FilterBar } from "@/components/search/filter-bar";
 import {
@@ -18,6 +20,13 @@ import {
   filtersToUrlParams,
   type Filters,
 } from "@/lib/search/filters";
+
+const FEED_AI_PROVIDER_OPTIONS = [
+  { value: "default", label: "Hermes default (site setup)" },
+  { value: "openai", label: "OpenAI / ChatGPT" },
+  { value: "gemini", label: "Google Gemini API" },
+  { value: "anthropic", label: "Anthropic / Claude" },
+] as const;
 
 interface SearchResult {
   id: string;
@@ -56,10 +65,22 @@ export default function DiscoveryPageWrapper() {
 }
 
 function DiscoveryPage() {
-  const { papers, events, jobs, isLoading, lastRefresh, loadFeed } =
-    useFeedStore();
+  const {
+    papers,
+    events,
+    jobs,
+    isLoading,
+    lastRefresh,
+    loadFeed,
+    aiPaperSearchEnabled,
+    setAiPaperSearchEnabled,
+  } = useFeedStore();
   const readItems = useFeedStore((s) => s.readItems);
   const profile = useProfileStore((s) => s.profile);
+  const updateTavilyEnabled = useProfileStore((s) => s.updateTavilyEnabled);
+  const updateTavilyApiKey = useProfileStore((s) => s.updateTavilyApiKey);
+  const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
+  const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
@@ -72,6 +93,8 @@ function DiscoveryPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchTotal, setSearchTotal] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
+  const [aiProviderOpen, setAiProviderOpen] = useState(false);
+  const [tavilyOpen, setTavilyOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Hydrate from ?q= on navigation (e.g. clicking an author / keyword / venue).
@@ -240,37 +263,209 @@ function DiscoveryPage() {
 
       {/* ── Search ── */}
       <div className="mb-6">
-        <div className="relative">
-          <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint"
-            width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            id="hermes-search"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search papers, events, jobs…  (press /)"
-            className="w-full bg-surface shadow-card rounded-xl py-3 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
-            style={{ fontFamily: "var(--font-sans)" }}
-          />
-          {query && (
+        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_248px] md:items-start">
+          <div className="relative min-w-0">
+            <svg
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint"
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              id="hermes-search"
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search papers, events, jobs…  (press /)"
+              className="w-full bg-surface shadow-card rounded-xl py-3 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
+              style={{ fontFamily: "var(--font-sans)" }}
+            />
+            {query && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setSearchResults([]);
+                  setSearchTotal(0);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted text-[12px] transition-colors"
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                clear
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
             <button
-              onClick={() => {
-                setQuery("");
-                setSearchResults([]);
-                setSearchTotal(0);
-              }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted text-[12px] transition-colors"
+              type="button"
+              onClick={() => setAiPaperSearchEnabled(!aiPaperSearchEnabled)}
+              disabled={isLoading}
+              aria-pressed={aiPaperSearchEnabled}
+              title={
+                aiPaperSearchEnabled
+                  ? "AI paper search is on: Hermes uses planning and reranking."
+                  : "Auto paper search is on: Hermes uses fixed scoring only."
+              }
+              className={`w-full rounded-xl px-3.5 py-2 text-left shadow-card transition-all duration-200 ease-out active:scale-[0.97] disabled:opacity-55 disabled:cursor-wait ${
+                aiPaperSearchEnabled
+                  ? "bg-heading text-bg hover:bg-heading/90"
+                  : "bg-surface text-text-muted hover:text-heading hover:shadow-card-hover"
+              }`}
               style={{ fontFamily: "var(--font-sans)" }}
             >
-              clear
+              <span className="block text-[11px] font-semibold uppercase tracking-[0.14em]">
+                {aiPaperSearchEnabled ? "AI search" : "Auto search"}
+              </span>
+              <span className={`block text-[10.5px] mt-0.5 ${aiPaperSearchEnabled ? "text-bg/65" : "text-text-faint"}`}>
+                {aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}
+              </span>
             </button>
-          )}
+            <div
+              className="rounded-xl bg-surface shadow-card overflow-hidden"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <button
+                type="button"
+                onClick={() => setAiProviderOpen((open) => !open)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-bg-secondary/30 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                    AI key hookup
+                  </span>
+                  {profile.feedAiProvider !== "default" && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  )}
+                </span>
+                <svg
+                  width="11" height="11" viewBox="0 0 12 12" fill="none"
+                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+                  className={`text-text-faint/60 transition-transform duration-200 ${aiProviderOpen ? "rotate-180" : ""}`}
+                >
+                  <path d="M2 4l4 4 4-4" />
+                </svg>
+              </button>
+
+              {aiProviderOpen && (
+                <div className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}>
+                  <p className="text-[11.5px] leading-relaxed text-text-muted">
+                    Use Hermes default or bring your own normal AI key for Tier 2 reranking.
+                  </p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                      AI company
+                    </label>
+                    <select
+                      value={profile.feedAiProvider}
+                      onChange={(e) => updateFeedAiProvider(e.target.value as typeof profile.feedAiProvider)}
+                      className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
+                    >
+                      {FEED_AI_PROVIDER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {profile.feedAiProvider !== "default" && (
+                    <div className="space-y-1.5">
+                      <label className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                        API key
+                      </label>
+                      <input
+                        type="password"
+                        value={profile.feedAiApiKey ?? ""}
+                        onChange={(e) => updateFeedAiApiKey(e.target.value)}
+                        placeholder={
+                          profile.feedAiProvider === "openai"
+                            ? "OpenAI API key"
+                            : profile.feedAiProvider === "gemini"
+                              ? "Gemini API key"
+                              : "Anthropic API key"
+                        }
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                      />
+                    </div>
+                  )}
+                  <p className="text-[10.5px] leading-relaxed text-text-faint">
+                    {aiPaperSearchEnabled
+                      ? profile.feedAiProvider === "default"
+                        ? "Uses the AI already connected to this Hermes site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
+                        : "When this is filled in, Hermes forces Tier 2 so your own key actually powers the AI rerank."
+                      : "Turn AI search on to use this. Tier 0 ignores both Hermes default AI and your own key."}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div
+              className="rounded-xl bg-surface shadow-card overflow-hidden"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <button
+                type="button"
+                onClick={() => setTavilyOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-bg-secondary/30 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                    Tavily hook
+                  </span>
+                  {profile.tavilyEnabled && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  )}
+                </span>
+                <svg
+                  width="11" height="11" viewBox="0 0 12 12" fill="none"
+                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+                  className={`text-text-faint/60 transition-transform duration-200 ${tavilyOpen ? "rotate-180" : ""}`}
+                >
+                  <path d="M2 4l4 4 4-4" />
+                </svg>
+              </button>
+
+              {tavilyOpen && (
+                <div className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-[11.5px] leading-relaxed text-text-muted">
+                      Extra web scouting for paper leads.
+                    </p>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={profile.tavilyEnabled}
+                      onClick={() => updateTavilyEnabled(!profile.tavilyEnabled)}
+                      className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out ${
+                        profile.tavilyEnabled ? "bg-accent" : "bg-bg-secondary"
+                      }`}
+                    >
+                      <span
+                        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
+                          profile.tavilyEnabled ? "translate-x-4" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <input
+                    type="password"
+                    value={profile.tavilyApiKey ?? ""}
+                    onChange={(e) => updateTavilyApiKey(e.target.value)}
+                    placeholder="Tavily API key"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  />
+                  <p className="text-[10.5px] leading-relaxed text-text-faint">
+                    {aiPaperSearchEnabled
+                      ? "Used only as a paper-discovery helper. Hermes still reruns academic sources before ranking."
+                      : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Filter bar (search mode only) ── */}
@@ -312,7 +507,7 @@ function DiscoveryPage() {
                         className="pointer-events-none absolute inset-0 rounded-full bg-accent/40 animate-tab-burst"
                       />
                     )}
-                    <img
+                    <Image
                       key={`icon-${key}-${active ? "on" : "off"}`}
                       src={icon}
                       alt=""
@@ -425,9 +620,31 @@ function DiscoveryPage() {
 
           {briefingItems.length > 0 && (
             <>
+              {/* One-paragraph synthesized digest. Hides itself if no LLM
+                  is configured, so the rest of the feed keeps working. */}
+              <div className="mx-auto max-w-[820px] mt-6">
+                <DailyDigest
+                  papers={briefingItems
+                    .filter((i) => i.kind === "paper")
+                    .map((i) => i.data as Paper)}
+                  contextHint={[
+                    profile.currentProject,
+                    profile.currentChallenges,
+                  ]
+                    .filter((s) => s && s.trim().length > 0)
+                    .join("\n\n")}
+                />
+              </div>
+
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {briefingItems.map((item) => (
-                  <FeedTile key={item.data.id} item={item} />
+                  <div
+                    key={item.data.id}
+                    id={item.kind === "paper" ? `paper-${item.data.id}` : undefined}
+                    className="rounded-3xl transition-shadow"
+                  >
+                    <FeedTile item={item} />
+                  </div>
                 ))}
                 <FeedMoreTile
                   itemCount={briefingItems.length}

@@ -4,7 +4,12 @@ import { use, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { useProfileStore } from "@/store/profile";
 import { mockPapers } from "@/data/mock";
+import {
+  buildFallbackPaperReport,
+  type PaperReport,
+} from "@/lib/papers/report";
 import {
   Tag,
   LinkChip,
@@ -12,10 +17,11 @@ import {
   PropertyStrip,
   Property,
   PullQuote,
-  Signal,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
-import { PaperFigure } from "@/components/paper-figure";
+import {
+  PaperFigure,
+} from "@/components/paper-figure";
 
 const WORDS_PER_MINUTE = 220;
 
@@ -26,6 +32,10 @@ function wordCount(...parts: (string | undefined)[]): number {
     .trim()
     .split(/\s+/)
     .filter(Boolean).length;
+}
+
+function figureQuery(...parts: (string | undefined)[]): string {
+  return parts.filter(Boolean).join(" ");
 }
 
 function readingTimeMinutes(paper: Paper): number {
@@ -49,12 +59,6 @@ function formatPublishedDate(d?: string): string | null {
   if (diffDays < 14) return `${diffDays}d ago`;
   if (diffDays < 60) return `${Math.floor(diffDays / 7)}w ago`;
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
-
-function splitFirstSentence(text: string): [string, string] {
-  const match = text.match(/^(.*?[.!?])\s+(.*)$/s);
-  if (!match) return [text, ""];
-  return [match[1], match[2]];
 }
 
 function pickRelated(current: Paper, pool: Paper[], limit = 3): Paper[] {
@@ -107,6 +111,32 @@ function buildBibTeX(paper: Paper): string {
 }`;
 }
 
+// Read per-paper AI extracts (headlineFinding, keyNumbers) from the
+// locally cached digest. Silently returns null if no cache or paper not found.
+function readPerPaperDigest(paperId: string): {
+    headlineFinding?: string;
+    keyNumbers?: { value: string; label: string }[];
+  } | null {
+  if (!paperId || typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("hermes-digest-cache");
+    if (!raw) return null;
+    const entry = JSON.parse(raw) as {
+      payload?: { perPaper?: Record<string, unknown> };
+    };
+    const perPaper = entry?.payload?.perPaper?.[paperId];
+    if (perPaper && typeof perPaper === "object") {
+      return perPaper as {
+        headlineFinding?: string;
+        keyNumbers?: { value: string; label: string }[];
+      };
+    }
+  } catch {
+    /* noop */
+  }
+  return null;
+}
+
 export default function PaperDetailPage({
   params,
 }: {
@@ -127,39 +157,120 @@ export default function PaperDetailPage({
   const savedPapers = useFeedStore((s) => s.savedPapers);
   const markRead = useFeedStore((s) => s.markRead);
   const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
+  const profile = useProfileStore((s) => s.profile);
 
-  const [fetchedPaper, setFetchedPaper] = useState<Paper | null>(null);
-  const [isFetchingById, setIsFetchingById] = useState(isExternalId);
+  const [fetchResult, setFetchResult] = useState<{
+    id: string;
+    paper: Paper | null;
+    done: boolean;
+  }>(() => ({ id, paper: null, done: false }));
+  const [reportResult, setReportResult] = useState<{
+    key: string;
+    report: PaperReport | null;
+    done: boolean;
+  }>(() => ({ key: "", report: null, done: false }));
 
   const storePaper =
     feedPapers.find((p) => p.id === id) ??
     savedPapers.find((p) => p.id === id) ??
     mockPapers.find((p) => p.id === id);
 
-  const paper = storePaper ?? fetchedPaper ?? undefined;
+  // Many publishers (Nature/Science/etc.) don't share abstracts with OpenAlex,
+  // so the storePaper may have an empty summaryIntro. In that case, prefer
+  // the API-fetched paper, which enriches missing abstracts via Semantic Scholar.
+  const storePaperIsEnriched = !!storePaper?.summaryIntro?.trim();
+  const fetchedPaperForId = fetchResult.id === id ? fetchResult.paper : null;
+  const fetchDoneForId = fetchResult.id === id && fetchResult.done;
+  const paper = storePaperIsEnriched
+    ? storePaper
+    : (fetchedPaperForId ?? storePaper ?? undefined);
+  const shouldFetchById = isExternalId && !storePaperIsEnriched && !fetchDoneForId;
+  const isFetchingById = shouldFetchById;
 
   useEffect(() => {
-    if (storePaper || fetchedPaper) {
-      setIsFetchingById(false);
-      return;
-    }
-    if (!isExternalId) {
-      setIsFetchingById(false);
-      return;
-    }
-    setIsFetchingById(true);
+    if (!shouldFetchById) return;
+    let cancelled = false;
     fetch(`/api/papers/${encodeURIComponent(id)}`)
       .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
       .then((p) => {
-        if (p) setFetchedPaper(p);
+        if (!cancelled) setFetchResult({ id, paper: p, done: true });
       })
-      .catch(() => {})
-      .finally(() => setIsFetchingById(false));
-  }, [id, isExternalId, storePaper, fetchedPaper]);
+      .catch(() => {
+        if (!cancelled) setFetchResult({ id, paper: null, done: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, shouldFetchById]);
 
   useEffect(() => {
     if (paper) markRead(paper.id);
   }, [paper, markRead]);
+
+  const perPaperDigest = useMemo(
+    () => readPerPaperDigest(paper?.id ?? ""),
+    [paper?.id],
+  );
+  const contextHint = useMemo(
+    () =>
+      [
+        profile.currentProject,
+        profile.currentChallenges,
+        profile.researchTopics.length > 0
+          ? `Topics: ${profile.researchTopics.join(", ")}`
+          : undefined,
+        profile.preferredMethods.length > 0
+          ? `Methods: ${profile.preferredMethods.join(", ")}`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    [
+      profile.currentProject,
+      profile.currentChallenges,
+      profile.researchTopics,
+      profile.preferredMethods,
+    ],
+  );
+  const reportKey = paper ? `${paper.id}|${contextHint}` : "";
+  const fallbackReport = useMemo(
+    () => (paper ? buildFallbackPaperReport(paper, contextHint) : null),
+    [paper, contextHint],
+  );
+  const reportDone = Boolean(
+    paper && reportResult.key === reportKey && reportResult.done,
+  );
+  const report =
+    reportDone && reportResult.report
+      ? reportResult.report
+      : reportDone
+        ? fallbackReport
+        : null;
+  const reportLoading = Boolean(paper && !reportDone);
+
+  useEffect(() => {
+    if (!paper || reportResult.key === reportKey) return;
+    let cancelled = false;
+    fetch("/api/papers/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paper, contextHint }),
+    })
+      .then((res) => (res.ok ? (res.json() as Promise<PaperReport>) : null))
+      .then((nextReport) => {
+        if (!cancelled) {
+          setReportResult({ key: reportKey, report: nextReport, done: true });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReportResult({ key: reportKey, report: null, done: true });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [paper, contextHint, reportKey, reportResult.key]);
 
   const related = useMemo(() => {
     if (!paper) return [];
@@ -203,30 +314,25 @@ export default function PaperDetailPage({
     paper.linkCode || `https://github.com/search?q=${q}&type=repositories`;
   const showPaperLink = paper.linkPaper && paper.linkPaper !== paper.linkArxiv;
 
-  // Source-aware primary CTA. arXiv → "Read on arXiv". HN/other with a
-  // direct paper link → "Read on <venue>". Otherwise fall back to arXiv
-  // search of the title.
   const primaryUrl = paper.linkArxiv ?? paper.linkPaper ?? arxivUrl;
   const primaryLabel = paper.linkArxiv
     ? "Read on arXiv"
     : paper.linkPaper
       ? `Read on ${paper.venue || "source"}`
       : "Search arXiv";
+  const figureSourceUrl = paper.linkArxiv ?? paper.linkPaper;
+  const methodFigureQuery = figureQuery(
+    report?.whatItProposes.summary,
+    report?.whatItProposes.methods.join(" "),
+  );
 
   const matchPct = paper.relevanceScore
     ? Math.round(Math.max(0, Math.min(1, paper.relevanceScore)) * 100)
     : null;
   const publishedLabel = formatPublishedDate(paper.publishedDate);
   const readMinutes = readingTimeMinutes(paper);
-  const daysOld = paper.publishedDate
-    ? Math.floor(
-        (Date.now() - new Date(paper.publishedDate).getTime()) / 86_400_000,
-      )
-    : null;
-  const isRecent = daysOld !== null && daysOld <= 90;
-  const [leadSentence, tailSentences] = splitFirstSentence(
-    paper.summaryResultDiscussion,
-  );
+  const isLiked =
+    paper.feedback === "moreLikeThis" || paper.feedback === "liked";
 
   const handleDismiss = () => {
     notInterestedPaper(paper);
@@ -237,6 +343,8 @@ export default function PaperDetailPage({
     <>
       <ScrollProgress />
       <article className="mx-auto max-w-[760px] px-6 py-14">
+
+        {/* ── Back ── */}
         <Link
           href="/"
           className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
@@ -248,7 +356,7 @@ export default function PaperDetailPage({
           Back
         </Link>
 
-        {/* ── Hero ── */}
+        {/* ── Title & Authors ── */}
         <header
           className="mt-8 animate-fade-in-up"
           style={{ "--i": 0 } as React.CSSProperties}
@@ -259,7 +367,6 @@ export default function PaperDetailPage({
           >
             {paper.title}
           </h1>
-
           <p
             className="text-text-muted mt-3 text-[14.5px] leading-[1.7]"
             style={{ fontFamily: "var(--font-sans)" }}
@@ -278,7 +385,7 @@ export default function PaperDetailPage({
           </p>
         </header>
 
-        {/* ── Property strip: dense decision facts ── */}
+        {/* ── Property strip ── */}
         <div
           className="mt-6 animate-fade-in-up"
           style={{ "--i": 1 } as React.CSSProperties}
@@ -289,7 +396,7 @@ export default function PaperDetailPage({
                 {matchPct}%
               </Property>
             )}
-            <Property icon={<IconBook />} label="Venue">
+            <Property icon={<IconBook />} label="Journal">
               <Link
                 href={`/?q=${encodeURIComponent(paper.venue)}`}
                 className="hover:text-accent transition-colors"
@@ -318,99 +425,132 @@ export default function PaperDetailPage({
           </PropertyStrip>
         </div>
 
-        {/* ── Primary action row ── */}
+        {/* ── Action row: Read · Save · Cite · Like · Not interested ── */}
         <ActionRow
           primaryUrl={primaryUrl}
           primaryLabel={primaryLabel}
           paper={paper}
           onSave={() => savePaper(paper)}
+          onLike={() => moreLikePaper(paper)}
           onDismiss={handleDismiss}
           isSaved={paper.isSaved}
+          isLiked={isLiked}
         />
 
-        {/* ── Why this fits you — accent callout ── */}
-        <div
-          className="mt-10 animate-fade-in-up"
-          style={{ "--i": 3 } as React.CSSProperties}
-        >
-          <Callout
-            variant="accent"
-            icon={<IconStar />}
-            title="Why this fits you"
-          >
-            {paper.relevanceReason}
-          </Callout>
-        </div>
-
-        {/* ── Figure (if available) ── */}
-        <PaperFigure
-          itemId={paper.id}
-          url={paper.linkPaper ?? paper.linkArxiv}
-          alt={paper.title}
-          variant="hero"
-        />
-
-        {/* ── Introduction ── */}
-        <SectionTitle icon={<IconSparkle />} index={4}>
+        {/* ════════════════════════════════════════
+            SECTION 1 — WHAT IT PROPOSES
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconSparkle />} index={3}>
           What it proposes
         </SectionTitle>
-        <p
-          className="text-[17px] text-text leading-[1.75]"
-          style={{ fontFamily: "var(--font-reading)" }}
-        >
-          {paper.summaryIntro}
-        </p>
 
-        {/* ── Experiment keywords ── */}
-        <SectionTitle icon={<IconFlask />} index={5}>
-          Methods & techniques
+        <ReportFigureRow
+          title="Method and proposal"
+          body={report?.whatItProposes.summary}
+          bullets={report?.whatItProposes.methods}
+          loading={reportLoading}
+          figure={
+            reportLoading ? (
+              <FigureLoadingFrame />
+            ) : (
+              <PaperFigure
+              itemId={paper.id}
+                url={figureSourceUrl}
+                doi={paper.doi}
+                query={methodFigureQuery}
+                paperTitle={paper.title}
+              alt={`${paper.title} — method figure`}
+                variant="compact"
+                figureIndex={0}
+                hideOnMiss={false}
+              />
+            )
+          }
+        />
+
+        {/* ════════════════════════════════════════
+            SECTION 2 — RESULTS & SIGNIFICANCE
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconChart />} index={4}>
+          Results & significance
         </SectionTitle>
-        <div className="flex flex-wrap gap-2">
-          {paper.summaryExperimentKeywords.map((kw) => (
-            <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
-              {kw}
-            </Tag>
+
+        <PullQuote>
+          {reportLoading
+            ? "Preparing the final report from the paper metadata and your profile."
+            : perPaperDigest?.headlineFinding ||
+            report?.resultsAndSignificance.summary ||
+            paper.relevanceReason}
+        </PullQuote>
+
+        <div className="mt-5 space-y-5">
+          {reportLoading && [1, 2].map((figureIndex) => (
+            <ReportFigureRow
+              key={`loading-result-${figureIndex}`}
+              title={`Key result ${figureIndex}`}
+              loading
+              figure={<FigureLoadingFrame />}
+            />
+          ))}
+          {!reportLoading && (report?.resultsAndSignificance.keyResults ?? []).map((result, index) => (
+            <ReportFigureRow
+              key={`${result.title}-${index}`}
+              title={result.title}
+              body={result.detail}
+              figure={
+                <PaperFigure
+                  itemId={paper.id}
+                  url={figureSourceUrl}
+                  doi={paper.doi}
+                  query={figureQuery(result.title, result.detail)}
+                  paperTitle={paper.title}
+                  alt={`${paper.title} — ${result.title}`}
+                  variant="compact"
+                  figureIndex={result.figureIndex}
+                  hideOnMiss={false}
+                />
+              }
+            />
           ))}
         </div>
 
-        {/* ── Results: lead sentence as pull quote ── */}
-        <SectionTitle icon={<IconChart />} index={6}>
-          Key result
+        {/* ════════════════════════════════════════
+            SECTION 3 — WHY IT FITS YOU
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconStar />} index={5}>
+          Why it fits you
         </SectionTitle>
-        <PullQuote>{leadSentence}</PullQuote>
-        {tailSentences && (
-          <p
-            className="text-[16px] text-text-muted leading-[1.7] mt-2"
-            style={{ fontFamily: "var(--font-reading)" }}
-          >
-            {tailSentences}
-          </p>
+
+        <Callout variant="accent" icon={<IconBullseye />} title="Relevance">
+          {reportLoading
+            ? "Preparing a relevance note that explains why this paper belongs in your report."
+            : report?.whyItFitsYou.summary ?? paper.relevanceReason}
+        </Callout>
+
+        {/* Keywords that correlate to the user's profile */}
+        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
+          paper.summaryExperimentKeywords.length > 0) && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(report?.whyItFitsYou.keywords.length
+              ? report.whyItFitsYou.keywords
+              : paper.summaryExperimentKeywords
+            ).slice(0, 8).map((kw) => (
+              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
+                {kw}
+              </Tag>
+            ))}
+          </div>
         )}
 
-        {/* ── Quick signals ── */}
-        <SectionTitle icon={<IconCheck />} index={7}>
-          At a glance
-        </SectionTitle>
-        <div className="flex flex-wrap gap-2">
-          <Signal ok={!!paper.linkArxiv}>On arXiv</Signal>
-          <Signal ok={!!paper.linkCode}>Code public</Signal>
-          <Signal ok={isRecent}>
-            {isRecent ? "Recent (≤90d)" : "Older paper"}
-          </Signal>
-          <Signal ok={paper.authors.length <= 10}>
-            {paper.authors.length <= 3
-              ? "Small team"
-              : paper.authors.length <= 10
-                ? "Medium team"
-                : "Large team"}
-          </Signal>
-        </div>
-
-        {/* ── Explore further ── */}
-        <SectionTitle icon={<IconLink />} index={8}>
+        {/* ════════════════════════════════════════
+            SECTION 4 — EXPLORE FURTHER
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconLink />} index={6}>
           Explore further
         </SectionTitle>
+
         <div className="flex flex-wrap gap-2">
+          <LinkChip label={primaryLabel} href={primaryUrl} />
           {showPaperLink && (
             <LinkChip label="Publisher site" href={paper.linkPaper} />
           )}
@@ -421,41 +561,20 @@ export default function PaperDetailPage({
           />
         </div>
 
-        {/* ── Train feed ── */}
-        <div
-          className="mt-12 pt-6 border-t border-border animate-fade-in-up"
-          style={{ "--i": 9 } as React.CSSProperties}
-        >
-          <button
-            type="button"
-            onClick={() => moreLikePaper(paper)}
-            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
+        {reportLoading && (
+          <p
+            className="mt-3 text-[12px] text-text-faint"
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transition-transform duration-300 ease-out group-hover:rotate-12"
-              aria-hidden
-            >
-              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-              <path d="M19 3l.6 1.6L21 5l-1.4.4L19 7l-.6-1.6L17 5l1.4-.4z" />
-            </svg>
-            Train my feed on this
-          </button>
-        </div>
+            Refining report with AI…
+          </p>
+        )}
 
-        {/* ── Related ── */}
+        {/* ── Related from your feed ── */}
         {related.length > 0 && (
           <section
             className="mt-14 animate-fade-in-up"
-            style={{ "--i": 10 } as React.CSSProperties}
+            style={{ "--i": 7 } as React.CSSProperties}
           >
             <h2
               className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
@@ -475,7 +594,7 @@ export default function PaperDetailPage({
   );
 }
 
-// ── Section title with icon + index fade-in ──
+// ── Section title ──────────────────────────────────────────────
 
 function SectionTitle({
   icon,
@@ -487,7 +606,7 @@ function SectionTitle({
   children: React.ReactNode;
 }) {
   return (
-    <h3
+    <h2
       className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
       style={{
         "--i": index,
@@ -496,11 +615,68 @@ function SectionTitle({
     >
       {icon}
       {children}
-    </h3>
+    </h2>
   );
 }
 
-// ── Scroll progress bar (fixed at top) ──
+function ReportFigureRow({
+  title,
+  body,
+  bullets,
+  figure,
+  loading = false,
+}: {
+  title: string;
+  body?: string;
+  bullets?: string[];
+  figure: React.ReactNode;
+  loading?: boolean;
+}) {
+  const visibleBullets = (bullets ?? []).filter(Boolean).slice(0, 5);
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(380px,42%)] xl:grid-cols-[minmax(0,1fr)_minmax(460px,46%)] lg:items-stretch has-[.figure-hidden]:lg:grid-cols-1">
+      <div className="min-h-[210px] rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card">
+        <p
+          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {title}
+        </p>
+        {loading ? (
+          <div className="space-y-3 pt-2" aria-busy="true">
+            <ShimmerBar width="96%" />
+            <ShimmerBar width="88%" />
+            <ShimmerBar width="74%" />
+            <div className="pt-3 space-y-2">
+              <ShimmerBar width="52%" height="h-3" />
+              <ShimmerBar width="44%" height="h-3" />
+            </div>
+          </div>
+        ) : (
+          <p
+            className="text-[16px] text-text leading-[1.72]"
+            style={{ fontFamily: "var(--font-reading)" }}
+          >
+            {body || "Hermes could not extract enough text from the available metadata. Open the paper link for the full report source."}
+          </p>
+        )}
+        {!loading && visibleBullets.length > 0 && (
+          <ol
+            className="mt-4 space-y-2 text-[14px] text-text-muted leading-[1.55] list-decimal list-inside"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {visibleBullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ol>
+        )}
+      </div>
+      <div className="min-h-[280px] lg:min-h-[420px] has-[.figure-hidden]:hidden">{figure}</div>
+    </div>
+  );
+}
+
+// ── Scroll progress bar ────────────────────────────────────────
 
 function ScrollProgress() {
   const [pct, setPct] = useState(0);
@@ -532,22 +708,27 @@ function ScrollProgress() {
   );
 }
 
-// ── Primary action row ──
+// ── Action row ─────────────────────────────────────────────────
+// Read · Save · Cite  |  Like · Not interested
 
 function ActionRow({
   primaryUrl,
   primaryLabel,
   paper,
   onSave,
+  onLike,
   onDismiss,
   isSaved,
+  isLiked,
 }: {
   primaryUrl: string;
   primaryLabel: string;
   paper: Paper;
   onSave: () => void;
+  onLike: () => void;
   onDismiss: () => void;
   isSaved: boolean;
+  isLiked: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -563,12 +744,13 @@ function ActionRow({
 
   return (
     <div
-      className="flex items-center flex-wrap gap-2.5 mt-6 animate-fade-in-up"
+      className="flex items-center flex-wrap gap-2 mt-6 animate-fade-in-up"
       style={{
         "--i": 2,
         fontFamily: "var(--font-sans)",
       } as React.CSSProperties}
     >
+      {/* Primary: read paper */}
       <a
         href={primaryUrl}
         target="_blank"
@@ -581,6 +763,7 @@ function ActionRow({
         </span>
       </a>
 
+      {/* Save */}
       <button
         type="button"
         onClick={onSave}
@@ -601,9 +784,6 @@ function ActionRow({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`transition-transform duration-300 ease-out ${
-            isSaved ? "scale-100" : "group-hover:-translate-y-[1px]"
-          }`}
           aria-hidden
         >
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
@@ -611,10 +791,11 @@ function ActionRow({
         {isSaved ? "Saved" : "Save"}
       </button>
 
+      {/* Cite (BibTeX) */}
       <button
         type="button"
         onClick={handleCopyCitation}
-        aria-label="Copy citation"
+        aria-label="Copy BibTeX citation"
         title="Copy BibTeX to clipboard"
         className="group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
@@ -627,7 +808,6 @@ function ActionRow({
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="transition-transform duration-300 ease-out group-hover:-translate-y-[1px]"
           aria-hidden
         >
           {copied ? (
@@ -642,33 +822,65 @@ function ActionRow({
         {copied ? "Copied" : "Cite"}
       </button>
 
+      {/* Spacer */}
+      <span className="flex-1" aria-hidden />
+
+      {/* Like */}
+      <button
+        type="button"
+        onClick={onLike}
+        aria-pressed={isLiked}
+        aria-label="Like — train feed on this"
+        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium border transition-all duration-200 ease-out active:scale-[0.96] ${
+          isLiked
+            ? "bg-accent/10 text-accent border-accent/40"
+            : "bg-transparent border-border-strong text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim"
+        }`}
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill={isLiked ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M7 10v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h3zM7 10l4-7a2 2 0 0 1 2 2v3h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 19H7" />
+        </svg>
+        {isLiked ? "Liked" : "Like"}
+      </button>
+
+      {/* Not interested */}
       <button
         type="button"
         onClick={onDismiss}
-        aria-label="Dismiss"
-        title="Not interested — hide this"
-        className="group inline-flex items-center justify-center w-11 h-11 rounded-full text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.9] ml-auto"
+        aria-label="Not interested — show less like this"
+        title="Not interested"
+        className="group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-red hover:border-red/40 hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
-          width="16"
-          height="16"
+          width="15"
+          height="15"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="transition-transform duration-300 ease-out group-hover:rotate-90"
           aria-hidden
         >
-          <path d="M18 6 6 18M6 6l12 12" />
+          <path d="M17 14V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zM17 14l-4 7a2 2 0 0 1-2-2v-3H5.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 5H17" />
         </svg>
+        Not interested
       </button>
     </div>
   );
 }
 
-// ── Icons (12×12 stroke) ──
+// ── Icons ──────────────────────────────────────────────────────
 
 function IconBullseye() {
   return (
@@ -741,27 +953,10 @@ function IconSparkle() {
   );
 }
 
-function IconFlask() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2l-5-9V3" />
-    </svg>
-  );
-}
-
 function IconChart() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 21V9M9 21V5M15 21v-8M21 21V3" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M8 12l3 3 5-6" />
     </svg>
   );
 }
@@ -774,9 +969,7 @@ function IconLink() {
   );
 }
 
-// ── Briefing skeleton ──
-// Loading state that mirrors the real briefing's geometry so the page doesn't
-// jump when content arrives. Staggered fade-in + shimmering bars.
+// ── Loading skeleton ───────────────────────────────────────────
 
 function ShimmerBar({
   width,
@@ -792,35 +985,32 @@ function ShimmerBar({
   );
 }
 
+function FigureLoadingFrame() {
+  return (
+    <div className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-bg-secondary/50 p-4">
+      <div className="h-full rounded-xl border border-border bg-surface px-4 py-4">
+        <div className="space-y-3">
+          <ShimmerBar width="38%" height="h-3" />
+          <ShimmerBar width="96%" height="h-4" />
+          <ShimmerBar width="84%" height="h-4" />
+          <ShimmerBar width="66%" height="h-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BriefingSkeleton() {
   return (
-    <div
-      className="mt-10"
-      aria-busy="true"
-      aria-label="Loading briefing"
-    >
-      {/* Title */}
-      <div
-        className="animate-fade-in-up space-y-3"
-        style={{ "--i": 0 } as React.CSSProperties}
-      >
+    <div className="mt-10" aria-busy="true" aria-label="Loading briefing">
+      <div className="animate-fade-in-up space-y-3" style={{ "--i": 0 } as React.CSSProperties}>
         <ShimmerBar width="88%" height="h-8" />
         <ShimmerBar width="62%" height="h-8" />
       </div>
-
-      {/* Authors */}
-      <div
-        className="mt-5 animate-fade-in-up"
-        style={{ "--i": 1 } as React.CSSProperties}
-      >
+      <div className="mt-5 animate-fade-in-up" style={{ "--i": 1 } as React.CSSProperties}>
         <ShimmerBar width="55%" height="h-4" />
       </div>
-
-      {/* Property strip */}
-      <div
-        className="mt-8 grid grid-cols-4 gap-6 animate-fade-in-up"
-        style={{ "--i": 2 } as React.CSSProperties}
-      >
+      <div className="mt-8 grid grid-cols-4 gap-6 animate-fade-in-up" style={{ "--i": 2 } as React.CSSProperties}>
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="space-y-2">
             <ShimmerBar width="55%" height="h-3" />
@@ -828,53 +1018,16 @@ function BriefingSkeleton() {
           </div>
         ))}
       </div>
-
-      {/* Callout */}
-      <div
-        className="mt-10 rounded-2xl bg-surface shadow-card p-6 space-y-3 animate-fade-in-up"
-        style={{ "--i": 3 } as React.CSSProperties}
-      >
+      <div className="mt-10 rounded-2xl bg-surface shadow-card p-6 space-y-3 animate-fade-in-up" style={{ "--i": 3 } as React.CSSProperties}>
         <ShimmerBar width="22%" height="h-3" />
         <ShimmerBar width="96%" />
         <ShimmerBar width="80%" />
       </div>
-
-      {/* Briefing body */}
-      <div
-        className="mt-10 space-y-3 animate-fade-in-up"
-        style={{ "--i": 4 } as React.CSSProperties}
-      >
+      <div className="mt-10 space-y-3 animate-fade-in-up" style={{ "--i": 4 } as React.CSSProperties}>
         <ShimmerBar width="100%" />
         <ShimmerBar width="95%" />
-        <ShimmerBar width="98%" />
-        <ShimmerBar width="78%" />
-      </div>
-
-      {/* Discussion */}
-      <div
-        className="mt-10 space-y-3 animate-fade-in-up"
-        style={{ "--i": 5 } as React.CSSProperties}
-      >
-        <ShimmerBar width="28%" height="h-5" />
-        <ShimmerBar width="97%" />
-        <ShimmerBar width="92%" />
         <ShimmerBar width="88%" />
-        <ShimmerBar width="72%" />
-      </div>
-
-      {/* Tags */}
-      <div
-        className="mt-10 flex gap-2 animate-fade-in-up"
-        style={{ "--i": 6 } as React.CSSProperties}
-      >
-        {[72, 56, 80, 48, 64].map((w, i) => (
-          <ShimmerBar
-            key={i}
-            width={`${w}px`}
-            height="h-6"
-            rounded="rounded-full"
-          />
-        ))}
+        <ShimmerBar width="78%" />
       </div>
     </div>
   );

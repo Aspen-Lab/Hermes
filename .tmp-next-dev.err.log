@@ -1,0 +1,8 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3001
+- PID:          59260
+- Dir:          C:\I\Personal\Github - start up project\Hermes\web
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 59260 /F to stop it.
