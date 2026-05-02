@@ -21,6 +21,7 @@ interface ProfileState {
   updateLocations: (locations: string[]) => void;
   updateMethods: (methods: string[]) => void;
   updateSchool: (school: string) => void;
+  updateLab: (lab: string) => void;
   updateDigestEnabled: (v: boolean) => void;
   updateDigestHourLocal: (h: number) => void;
   updateDigestTimezone: (tz: string) => void;
@@ -71,6 +72,11 @@ export const useProfileStore = create<ProfileState>()(
           profile: { ...s.profile, school: school.trim() || undefined },
         })),
 
+      updateLab: (lab) =>
+        set((s) => ({
+          profile: { ...s.profile, lab: lab.trim() || undefined },
+        })),
+
       updateDigestEnabled: (v) =>
         set((s) => ({ profile: { ...s.profile, digestEnabled: v } })),
       updateDigestHourLocal: (h) =>
@@ -94,6 +100,7 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
           if (remote.phdYear !== undefined) merged.phdYear = remote.phdYear;
           if (remote.school !== undefined) merged.school = remote.school;
+          if (remote.lab !== undefined) merged.lab = remote.lab;
           if (remote.digestEnabled !== undefined) merged.digestEnabled = remote.digestEnabled;
           if (remote.digestHourLocal !== undefined) merged.digestHourLocal = remote.digestHourLocal;
           if (remote.digestTimezone !== undefined) merged.digestTimezone = remote.digestTimezone;

@@ -5,6 +5,46 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.6 — 2026-04-29
+**Persona result: editorial side-by-side layout + 2 more portraits**
+
+Result page goes from a stacked column to a two-column editorial layout — portrait (with cream gradient frame, soft shadow, italic "Profile sketch" caption) sticks to the left on desktop, the title / tagline / blurb / look / axes flow on the right at a comfortable reading width. Title bumps to 52px Instrument Serif, tagline gets italic Source Serif, "Spotted at the conference like" header now sits between hairline rules — a touch more magazine, less form-result. Mobile collapses cleanly to a single column. Two additional portraits seeded: `lab-lead.png` and `synthesist.png`. Five remaining slots open.
+
+## v0.7.5 — 2026-04-29
+**Persona: collapse to the canonical 10 + best-fit assignment**
+
+Quiz results now always land on one of the 10 curated PAIR personas (or the flat-profile Polymath fallback). The 10 SOLO names — "The Bench Operator", "The Theorist", "The Polymath" (specialist-pole), "The Builder", "The Provocateur", etc. — were a mid-state fallback for users whose top-two combo wasn't in the curated set, but they had no portraits and felt like a "you're not really any of these" cul-de-sac. Removed. New pickPersona scores all 10 PAIRs by alignment with the user's axis values (sign-aware sum of the two pole projections) and picks the highest-fit one — so a Generalist+Solo profile, which previously fell to "The Polymath" SOLO, now lands on whichever curated PAIR best matches that direction (typically Synthesist or Field Crosser). 11 possible outcomes total (10 PAIRs + flat Polymath), every named result has a slot for a portrait. Renamed the misseeded `bench-operator.png` → `bench-builder.png` since the visual fits Bench Builder perfectly and Bench Operator no longer exists as a result.
+
+## v0.7.4 — 2026-04-28
+**Persona art: portrait above each result**
+
+The `/persona` result now renders a portrait above the persona title. Convention is purely file-system based — drop a PNG at `web/public/persona/<slug>.png` (slug = persona name, lowercased, leading "The" stripped, non-alphanumerics → dashes — so `bench-operator.png`, `theoretical-provocateur.png`, `group-builder.png`, etc.) and it appears next deploy. No code change needed per persona; missing images render nothing (the `<img>` errors silently). Seeded the first two from existing references — Bench Operator and Group Builder.
+
+## v0.7.3 — 2026-04-28
+**Persona: ship the whole feature + add MBTI-style "look" to result page**
+
+Two things in one. (1) The `/persona` quiz that v0.7.0 announced was never actually committed — `web/src/app/persona/`, `web/src/components/persona/`, and `web/src/lib/persona/` only existed locally and Vercel had no idea about them. Tracked all of them now (same fix shape as v0.7.1 — other agent's WIP wasn't `git add`ed). (2) Added a `look` field to every Persona — concrete MBTI-style appearance for all 10 curated PAIR_NAMES, all 10 SOLO_NAMES (with poles having distinct visuals: e.g. The Bench Operator gets "olive flannel, top-knot, dead-project sticker laptop, coffee, anti-glamour"), and the Polymath flat fallback. New "Spotted at the conference like" section on the result page renders the look as an italicized accent-bordered pull-quote between the blurb and the axes bars. Same data, more recognizable.
+
+## v0.7.2 — 2026-04-28
+**Affiliation: school autocomplete + lab field**
+
+The Affiliation row in the profile editor splits into two fields. **School / org** is now an autocomplete-backed input — type to filter ~150 curated entries (top global research universities, CMU/MIT/Oxford/Tsinghua/etc. + industry research labs like Anthropic, DeepMind, FAIR), with substring highlighting on the matched portion, ↑/↓/Enter/Tab keyboard nav, and free-text fallback for anything not in the list. **Lab / group** is a separate plain-text field below for the unit within the org (CSAIL, HCI Group, Vision Lab, your advisor's group). Both are persisted on the profiles row and surface in the read view as `MIT / CSAIL`. New `lab` column on profiles table; schema.sql + the /api/profile mapping updated to round-trip.
+
+## v0.7.1 — 2026-04-28
+**Fix: ship the missing search filter modules**
+
+Production deploys had been failing since v0.6.8 — the search filter feature committed `page.tsx` imports for `@/components/search/filter-bar`, `@/components/search/filter-chip`, `@/components/search/more-filters-panel`, and `@/lib/search/filters`, but the directories themselves were never `git add`ed. They existed locally and worked in dev but Vercel's clean checkout couldn't resolve the imports → every commit since v0.6.8 returned the old deploy. Added the four missing files (752 lines) so the production build succeeds and v0.6.9–v0.6.14 actually reach users.
+
+## v0.7.0 — 2026-04-28
+**Academic persona quiz at /persona**
+
+A short forced-choice quiz that maps a researcher across five continuous axes — Empirical ↔ Theoretical, Specialist ↔ Generalist, Solo ↔ Collaborative, Builder ↔ Critic, Formal ↔ Narrative — and names a persona from the two strongest signals (e.g. "The Theoretical Provocateur", "The Bench Specialist", "The Synthesist"). Jung-style multi-dimensional rather than MBTI's 16 boxes: every axis is a value in [-1, +1], not a category, and the persona name reflects a combination, not a verdict. 15 questions, 3 per axis, no Likert middle ground. Result card shows axis bars with score markers, a tagline, and a prose blurb in the editorial serif. Saved locally only — no upload. Accessible from the sidebar (or `g x`). First step toward the broader "input your paper, get an academic style profile" feature; URL/PDF analysis comes next, this seeds the framework.
+
+## v0.6.15 — 2026-04-28
+**Paper figure adopts the image's natural aspect ratio (no more cropping)**
+
+`PaperFigure` was forcing every figure into a fixed 16:8 (hero) or 16:9 (compact) frame with `object-cover`, which silently cropped portrait charts, square diagrams, and any landscape figure with a different ratio. The container now starts at the variant's default aspect (skeleton state only), then on `onLoad` reads `naturalWidth / naturalHeight` from the image and sets the container's `aspect-ratio` to match. Image switches to `object-contain` so it always fits, and a `transition: aspect-ratio 300ms` smooths the resize when the natural aspect arrives. A `max-h-[80vh]` cap prevents extreme portrait images from dominating the viewport. Net effect: every figure renders at its true proportions, nothing gets cropped.
+
 ## v0.6.14 — 2026-04-28
 **Profile editor: affiliation field + suggestion chips + cleaner first-run defaults**
 
