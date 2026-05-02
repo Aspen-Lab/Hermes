@@ -11,6 +11,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { runFeedPipeline } from "@/lib/feed/pipeline";
+import type { FeedControls } from "@/lib/feed/profile-compiler";
 import { sendDigestEmail } from "@/lib/email/send-digest";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,47 @@ function originUrlFor(req: NextRequest): string {
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
   if (host) return `${proto}://${host}`;
   return "https://hermes-flax-six.vercel.app";
+}
+
+interface TestProfileRow {
+  display_name: string | null;
+  research_topics: string[] | null;
+  preferred_methods: string[] | null;
+  preferred_venues: string[] | null;
+  current_project: string | null;
+  current_challenges: string | null;
+  disliked_topics: string[] | null;
+  feed_focus: FeedControls["focus"] | null;
+  feed_freshness: FeedControls["freshness"] | null;
+  paper_count: FeedControls["paperCount"] | null;
+  feed_source_mix: FeedControls["sourceMix"] | null;
+  feed_importance: FeedControls["importance"] | null;
+  feed_method_mode: FeedControls["methodMode"] | null;
+  feed_discovery_mode: FeedControls["discoveryMode"] | null;
+  feed_avoid_reviews: boolean | null;
+  feed_avoid_old_papers: boolean | null;
+  feed_avoid_broad_surveys: boolean | null;
+}
+
+function seedTextsFromProfile(profile: TestProfileRow | null): string[] {
+  return [profile?.current_project, profile?.current_challenges]
+    .map((text) => text?.trim())
+    .filter((text): text is string => Boolean(text));
+}
+
+function feedControlsFromProfile(profile: TestProfileRow | null): FeedControls {
+  return {
+    focus: profile?.feed_focus ?? undefined,
+    freshness: profile?.feed_freshness ?? undefined,
+    paperCount: profile?.paper_count ?? undefined,
+    sourceMix: profile?.feed_source_mix ?? undefined,
+    importance: profile?.feed_importance ?? undefined,
+    methodMode: profile?.feed_method_mode ?? undefined,
+    discoveryMode: profile?.feed_discovery_mode ?? undefined,
+    avoidReviews: profile?.feed_avoid_reviews ?? undefined,
+    avoidOldPapers: profile?.feed_avoid_old_papers ?? undefined,
+    avoidBroadSurveys: profile?.feed_avoid_broad_surveys ?? undefined,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -40,7 +82,7 @@ export async function POST(req: NextRequest) {
   const { data: profile, error: profErr } = await supabase
     .from("profiles")
     .select(
-      "display_name, research_topics, preferred_methods, preferred_venues",
+      "display_name, research_topics, preferred_methods, preferred_venues, current_project, current_challenges, disliked_topics, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -48,7 +90,8 @@ export async function POST(req: NextRequest) {
   if (profErr) {
     return NextResponse.json({ error: profErr.message }, { status: 500 });
   }
-  const topics = (profile?.research_topics ?? []) as string[];
+  const typedProfile = profile as TestProfileRow | null;
+  const topics = typedProfile?.research_topics ?? [];
   if (topics.length === 0) {
     return NextResponse.json(
       { error: "no research topics set on profile — add some first" },
@@ -58,17 +101,20 @@ export async function POST(req: NextRequest) {
 
   const feed = await runFeedPipeline({
     topics,
-    methods: profile?.preferred_methods?.length
-      ? (profile.preferred_methods as string[])
+    methods: typedProfile?.preferred_methods?.length
+      ? typedProfile.preferred_methods
       : undefined,
-    venues: profile?.preferred_venues?.length
-      ? (profile.preferred_venues as string[])
+    venues: typedProfile?.preferred_venues?.length
+      ? typedProfile.preferred_venues
       : undefined,
-    topN: 10,
+    seedTexts: seedTextsFromProfile(typedProfile),
+    negativeTopics: typedProfile?.disliked_topics ?? undefined,
+    topN: typedProfile?.paper_count ?? 10,
+    controls: feedControlsFromProfile(typedProfile),
   });
 
   const firstName =
-    (profile?.display_name as string | null)?.trim().split(/\s+/)[0] || undefined;
+    typedProfile?.display_name?.trim().split(/\s+/)[0] || undefined;
 
   const result = await sendDigestEmail({
     to: user.email,

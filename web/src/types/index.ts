@@ -18,6 +18,8 @@ export interface Paper {
   linkArxiv?: string;
   linkScholar?: string;
   linkCode?: string;
+  /** DOI (without the https://doi.org/ prefix). Used for Semantic Scholar lookups. */
+  doi?: string;
   publishedDate?: string;
   isSaved: boolean;
   feedback?: ItemFeedback;
@@ -80,6 +82,20 @@ export type IndustryAcademiaPreference =
 
 export type DigestChannel = "inapp" | "email" | "both";
 export type DigestFrequency = "daily" | "weekdays" | "weekly" | "off";
+export type FeedFocus = "tight" | "balanced" | "exploratory";
+export type FeedFreshness = "today" | "week" | "month";
+export type FeedSourceMix = "balanced" | "preprints" | "published" | "code" | "web";
+export type FeedImportance = "new" | "highlyCited" | "rising";
+export type FeedMethodMode = "mustMatch" | "relatedOk" | "any";
+export type FeedDiscoveryMode = "core" | "adjacent" | "surprise";
+export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic";
+export type ColorTheme =
+  | "system"
+  | "cream"
+  | "white"
+  | "black"
+  | "pink"
+  | "blue";
 
 export interface UserProfile {
   displayName: string;
@@ -92,6 +108,40 @@ export interface UserProfile {
   phdYear?: number;
   /** Affiliation — university, lab, or company. Plain string for now. */
   school?: string;
+  /**
+   * Free-text description of the specific project the user is currently
+   * working on. Fed verbatim into the scoring profile (TF-IDF) and into
+   * source queries as additional signal, so the briefing biases toward
+   * what the user is actively building, not just their generic field.
+   */
+  currentProject?: string;
+  /**
+   * The specific open problems / unknowns the user is hunting information
+   * about. Highest-leverage signal — papers that mention these challenges
+   * should rise to the top of the briefing.
+   */
+  currentChallenges?: string;
+  /**
+   * Keywords from papers the user has explicitly disliked. Fed into the
+   * scoring pipeline as negative signal so matching papers rank lower.
+   */
+  dislikedTopics?: string[];
+  /**
+   * "Nice to have" topics — papers that match these get a score boost but
+   * are not excluded when they don't match. Contrast with researchTopics
+   * which act as a hard required-relevance filter.
+   */
+  softTopics?: string[];
+  feedFocus: FeedFocus;
+  feedFreshness: FeedFreshness;
+  paperCount: 5 | 10;
+  feedSourceMix: FeedSourceMix;
+  feedImportance: FeedImportance;
+  feedMethodMode: FeedMethodMode;
+  feedDiscoveryMode: FeedDiscoveryMode;
+  feedAvoidReviews: boolean;
+  feedAvoidOldPapers: boolean;
+  feedAvoidBroadSurveys: boolean;
   // Daily-digest preferences. `digestHourLocal` is interpreted in
   // `digestTimezone` (IANA name) by the scheduling cron.
   digestEnabled: boolean;
@@ -99,6 +149,21 @@ export interface UserProfile {
   digestTimezone: string;
   digestChannel: DigestChannel;
   digestFrequency: DigestFrequency;
+  /**
+   * Optional per-user Tavily web-search hook. Kept in local browser state so
+   * users can bring their own key without writing it into the shared profile
+   * row by default.
+   */
+  tavilyEnabled: boolean;
+  tavilyApiKey?: string;
+  /**
+   * Optional per-user AI override for Tier 2 reranking. Also local-only so
+   * users can bring their own normal API key without syncing secrets to the
+   * shared profile row.
+   */
+  feedAiProvider: UserAiProvider;
+  feedAiApiKey?: string;
+  colorTheme: ColorTheme;
 }
 
 export const defaultProfile: UserProfile = {
@@ -112,6 +177,18 @@ export const defaultProfile: UserProfile = {
   locationPreferences: [],
   preferredMethods: [],
   phdYear: 3,
+  dislikedTopics: [],
+  softTopics: [],
+  feedFocus: "balanced",
+  feedFreshness: "week",
+  paperCount: 10,
+  feedSourceMix: "balanced",
+  feedImportance: "new",
+  feedMethodMode: "relatedOk",
+  feedDiscoveryMode: "core",
+  feedAvoidReviews: true,
+  feedAvoidOldPapers: false,
+  feedAvoidBroadSurveys: true,
   digestEnabled: true,
   digestHourLocal: 8,
   digestTimezone:
@@ -120,7 +197,21 @@ export const defaultProfile: UserProfile = {
       : "UTC",
   digestChannel: "inapp",
   digestFrequency: "daily",
+  tavilyEnabled: false,
+  tavilyApiKey: "",
+  feedAiProvider: "default",
+  feedAiApiKey: "",
+  colorTheme: "system",
 };
+
+export const colorThemeOptions: { value: ColorTheme; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "cream", label: "Cream" },
+  { value: "white", label: "White" },
+  { value: "black", label: "Black" },
+  { value: "pink", label: "Pink" },
+  { value: "blue", label: "Blue" },
+];
 
 export const careerStages: CareerStage[] = [
   "PhD Year 1",

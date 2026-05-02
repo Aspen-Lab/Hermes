@@ -21,10 +21,7 @@ export function UndoToast() {
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    if (!pending) {
-      setProgress(100);
-      return;
-    }
+    if (!pending) return;
     const start = Date.now();
     const total = Math.max(1, pending.expiresAt - start);
 

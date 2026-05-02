@@ -1,0 +1,306 @@
+import {
+  createPartFromBase64,
+  createPartFromText,
+  createUserContent,
+  GoogleGenAI,
+} from "@google/genai";
+import type {
+  DigestProvider,
+  DigestResult,
+  VisionImageInput,
+} from "./types";
+import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+
+type ModelTarget = {
+  id: string;
+  location: "regional" | "global";
+};
+
+const REGIONAL_MODEL_CHAIN = [
+  { id: "gemini-2.5-flash", location: "regional" },
+  { id: "gemini-2.5-pro", location: "regional" },
+] satisfies ModelTarget[];
+
+const GLOBAL_FALLBACK_CHAIN = [
+  { id: "gemini-3-flash-preview", location: "global" },
+  { id: "gemini-3.1-pro-preview", location: "global" },
+] satisfies ModelTarget[];
+
+const GEMINI_API_MODEL_CHAIN = [
+  { id: "gemini-2.5-flash", location: "global" },
+  { id: "gemini-2.5-pro", location: "global" },
+] satisfies ModelTarget[];
+
+const clients = new Map<string, GoogleGenAI>();
+const apiClients = new Map<string, GoogleGenAI>();
+
+function getModelChain(): ModelTarget[] {
+  if (process.env.GOOGLE_VERTEX_ALLOW_GLOBAL_FALLBACK === "true") {
+    return [...REGIONAL_MODEL_CHAIN, ...GLOBAL_FALLBACK_CHAIN];
+  }
+  return REGIONAL_MODEL_CHAIN;
+}
+
+function getClient(location: string): GoogleGenAI | null {
+  const project = process.env.GOOGLE_VERTEX_PROJECT;
+  if (!project) return null;
+
+  const cached = clients.get(location);
+  if (cached) return cached;
+
+  const client = new GoogleGenAI({
+    vertexai: true,
+    project,
+    location,
+  });
+  clients.set(location, client);
+  return client;
+}
+
+function getApiKeyClient(apiKey: string): GoogleGenAI {
+  const cached = apiClients.get(apiKey);
+  if (cached) return cached;
+
+  const client = new GoogleGenAI({ apiKey });
+  apiClients.set(apiKey, client);
+  return client;
+}
+
+async function callModel(
+  location: string,
+  modelId: string,
+  prompt: string,
+  systemInstruction = DIGEST_SYSTEM_PROMPT,
+): Promise<string> {
+  const client = getClient(location);
+  if (!client) throw new Error("GOOGLE_VERTEX_PROJECT not set");
+
+  const result = await client.models.generateContent({
+    model: modelId,
+    contents: prompt,
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+    },
+  });
+
+  return result.text ?? "";
+}
+
+async function callVisionModel(
+  location: string,
+  modelId: string,
+  systemInstruction: string,
+  userPrompt: string,
+  images: VisionImageInput[],
+): Promise<string> {
+  const client = getClient(location);
+  if (!client) throw new Error("GOOGLE_VERTEX_PROJECT not set");
+
+  const result = await client.models.generateContent({
+    model: modelId,
+    contents: createUserContent([
+      createPartFromText(userPrompt),
+      ...images.map((image) =>
+        createPartFromBase64(image.dataBase64, image.mimeType),
+      ),
+    ]),
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+    },
+  });
+
+  return result.text ?? "";
+}
+
+export const geminiProvider: DigestProvider = {
+  id: "gemini",
+
+  async generateDigest({ papers, contextHint }): Promise<DigestResult> {
+    const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+    const prompt = buildUserPrompt(papers, contextHint);
+
+    let text = "";
+    for (const { id, location } of getModelChain()) {
+      const resolvedLocation = location === "global" ? "global" : regionalLocation;
+      try {
+        text = await callModel(resolvedLocation, id, prompt);
+        if (text.trim()) break;
+      } catch (err) {
+        console.warn(`[gemini] ${id} @ ${resolvedLocation} failed:`, err);
+      }
+    }
+
+    if (!text.trim()) throw new Error("All Gemini models returned empty response");
+    const parsed = safeParseDigest(text);
+    if (!parsed) throw new Error("Failed to parse digest JSON from Gemini");
+    return parsed;
+  },
+
+  async generateJsonText({ systemPrompt, userPrompt }): Promise<string> {
+    const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+
+    for (const { id, location } of getModelChain()) {
+      const resolvedLocation = location === "global" ? "global" : regionalLocation;
+      try {
+        const text = await callModel(resolvedLocation, id, userPrompt, systemPrompt);
+        if (text.trim()) return text.trim();
+      } catch (err) {
+        console.warn(`[gemini] ${id} @ ${resolvedLocation} failed:`, err);
+      }
+    }
+
+    throw new Error("All Gemini models returned empty response");
+  },
+
+  async generateVisionJsonText({ systemPrompt, userPrompt, images }): Promise<string> {
+    if (images.length === 0) throw new Error("No images supplied");
+
+    const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+
+    for (const { id, location } of getModelChain()) {
+      const resolvedLocation = location === "global" ? "global" : regionalLocation;
+      try {
+        const text = await callVisionModel(
+          resolvedLocation,
+          id,
+          systemPrompt,
+          userPrompt,
+          images,
+        );
+        if (text.trim()) return text.trim();
+      } catch (err) {
+        console.warn(`[gemini-vision] ${id} @ ${resolvedLocation} failed:`, err);
+      }
+    }
+
+    throw new Error("All Gemini vision-capable calls returned empty response");
+  },
+
+  async testConnection(): Promise<{ ok: boolean; error?: string }> {
+    const project = process.env.GOOGLE_VERTEX_PROJECT;
+    if (!project) return { ok: false, error: "GOOGLE_VERTEX_PROJECT not set" };
+
+    const [{ id, location }] = getModelChain();
+    const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+    const resolvedLocation = location === "global" ? "global" : regionalLocation;
+
+    try {
+      await callModel(resolvedLocation, id, "ping");
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: String(err) };
+    }
+  },
+};
+
+export function createGeminiApiProvider(
+  apiKey: string,
+  modelChain: ModelTarget[] = GEMINI_API_MODEL_CHAIN,
+): DigestProvider {
+  const getClientForApiKey = () => {
+    if (!apiKey) throw new Error("GOOGLE_API_KEY not set");
+    return getApiKeyClient(apiKey);
+  };
+
+  const callApiModel = async (
+    modelId: string,
+    prompt: string,
+    systemInstruction = DIGEST_SYSTEM_PROMPT,
+  ) => {
+    const client = getClientForApiKey();
+    const result = await client.models.generateContent({
+      model: modelId,
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+      },
+    });
+    return result.text ?? "";
+  };
+
+  const callApiVisionModel = async (
+    modelId: string,
+    systemInstruction: string,
+    userPrompt: string,
+    images: VisionImageInput[],
+  ) => {
+    const client = getClientForApiKey();
+    const result = await client.models.generateContent({
+      model: modelId,
+      contents: createUserContent([
+        createPartFromText(userPrompt),
+        ...images.map((image) =>
+          createPartFromBase64(image.dataBase64, image.mimeType),
+        ),
+      ]),
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+      },
+    });
+    return result.text ?? "";
+  };
+
+  return {
+    id: "gemini",
+
+    async generateDigest({ papers, contextHint }): Promise<DigestResult> {
+      const prompt = buildUserPrompt(papers, contextHint);
+      let text = "";
+
+      for (const { id } of modelChain) {
+        try {
+          text = await callApiModel(id, prompt);
+          if (text.trim()) break;
+        } catch (err) {
+          console.warn(`[gemini-api] ${id} failed:`, err);
+        }
+      }
+
+      if (!text.trim()) throw new Error("All Gemini API models returned empty response");
+      const parsed = safeParseDigest(text);
+      if (!parsed) throw new Error("Failed to parse digest JSON from Gemini API");
+      return parsed;
+    },
+
+    async generateJsonText({ systemPrompt, userPrompt }): Promise<string> {
+      for (const { id } of modelChain) {
+        try {
+          const text = await callApiModel(id, userPrompt, systemPrompt);
+          if (text.trim()) return text.trim();
+        } catch (err) {
+          console.warn(`[gemini-api] ${id} failed:`, err);
+        }
+      }
+      throw new Error("All Gemini API models returned empty response");
+    },
+
+    async generateVisionJsonText({ systemPrompt, userPrompt, images }): Promise<string> {
+      if (images.length === 0) throw new Error("No images supplied");
+
+      for (const { id } of modelChain) {
+        try {
+          const text = await callApiVisionModel(id, systemPrompt, userPrompt, images);
+          if (text.trim()) return text.trim();
+        } catch (err) {
+          console.warn(`[gemini-api-vision] ${id} failed:`, err);
+        }
+      }
+
+      throw new Error("All Gemini API vision calls returned empty response");
+    },
+
+    async testConnection(): Promise<{ ok: boolean; error?: string }> {
+      if (!apiKey) return { ok: false, error: "GOOGLE_API_KEY not set" };
+      try {
+        await callApiModel(modelChain[0].id, "ping");
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: String(err) };
+      }
+    },
+  };
+}

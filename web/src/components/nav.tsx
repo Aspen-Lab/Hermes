@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFeedStore } from "@/store/feed";
@@ -148,7 +149,7 @@ export function Nav() {
             className="flex items-center gap-2 text-[20px] font-normal text-heading tracking-[-0.01em] italic"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            <img src="/logo.svg" alt="" width={32} height={32} className="shrink-0" />
+            <Image src="/logo.svg" alt="" width={32} height={32} className="shrink-0" />
             Hermes
           </Link>
           <div
@@ -193,7 +194,7 @@ export function Nav() {
             className="flex items-center gap-3 text-[28px] font-normal text-heading tracking-[-0.02em] italic leading-none"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            <img src="/logo.svg" alt="" width={60} height={60} className="shrink-0" />
+            <Image src="/logo.svg" alt="" width={60} height={60} className="shrink-0" />
             Hermes
           </Link>
 
@@ -321,7 +322,7 @@ export function Nav() {
             : "opacity-100 translate-x-0"
         }`}
       >
-        <img
+        <Image
           src="/logo.svg"
           alt=""
           width={26}
