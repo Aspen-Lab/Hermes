@@ -96,6 +96,7 @@ function DiscoveryPage() {
   const [aiProviderOpen, setAiProviderOpen] = useState(false);
   const [tavilyOpen, setTavilyOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const attemptedAutoLoadKeyRef = useRef<string | null>(null);
 
   // Hydrate from ?q= on navigation (e.g. clicking an author / keyword / venue).
   useEffect(() => {
@@ -104,9 +105,28 @@ function DiscoveryPage() {
     }
   }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const feedAutoLoadKey = useMemo(
+    () =>
+      profile.researchTopics
+        .map((topic) => topic.trim())
+        .filter(Boolean)
+        .join("\n"),
+    [profile.researchTopics],
+  );
+
   useEffect(() => {
-    if (papers.length === 0 && !isLoading) loadFeed();
-  }, [papers.length, isLoading, loadFeed]);
+    if (
+      !feedAutoLoadKey ||
+      papers.length > 0 ||
+      isLoading ||
+      attemptedAutoLoadKeyRef.current === feedAutoLoadKey
+    ) {
+      return;
+    }
+
+    attemptedAutoLoadKeyRef.current = feedAutoLoadKey;
+    void loadFeed();
+  }, [feedAutoLoadKey, papers.length, isLoading, loadFeed]);
 
   const searchPapers = useCallback(async (q: string, f: Filters) => {
     if (q.length < 2) {
