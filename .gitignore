@@ -21,5 +21,8 @@ dist/
 .env*
 !.env.example
 
+# Local verification artifacts
+.tmp*
+
 # MCP / local tooling config
 .mcp.json
