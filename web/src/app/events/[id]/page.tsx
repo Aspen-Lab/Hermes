@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useEffect } from "react";
+import { use, useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
@@ -25,8 +25,8 @@ function fmtShortDate(d: string) {
   });
 }
 
-function daysBetween(target: string): number {
-  const ms = new Date(target).getTime() - Date.now();
+function daysBetween(target: string, now: number): number {
+  const ms = new Date(target).getTime() - now;
   return Math.round(ms / 86_400_000);
 }
 
@@ -111,6 +111,7 @@ export default function EventDetailPage({
   const savedEvents = useFeedStore((s) => s.savedEvents);
   const markRead = useFeedStore((s) => s.markRead);
   const { saveEvent, notInterestedEvent } = useFeedStore();
+  const [now] = useState(Date.now);
 
   const event =
     feedEvents.find((e) => e.id === id) ??
@@ -139,8 +140,8 @@ export default function EventDetailPage({
   }
 
   const isSaved = savedEvents.some((e) => e.id === event.id);
-  const daysToEvent = daysBetween(event.date);
-  const daysToDeadline = event.deadline ? daysBetween(event.deadline) : null;
+  const daysToEvent = daysBetween(event.date, now);
+  const daysToDeadline = event.deadline ? daysBetween(event.deadline, now) : null;
   const deadlineStyle =
     daysToDeadline !== null ? urgencyColor(daysToDeadline) : null;
   const eventUrgency = urgencyColor(daysToEvent);
@@ -425,9 +426,9 @@ function Timeline({
   deadline: string;
   eventDate: string;
 }) {
+  const [now] = useState(Date.now);
   const start = new Date(deadline).getTime();
   const end = new Date(eventDate).getTime();
-  const now = Date.now();
   const total = end - start;
   if (total <= 0) return null;
   const pct = Math.max(0, Math.min(100, ((now - start) / total) * 100));

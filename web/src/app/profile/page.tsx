@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useState,
@@ -8,9 +8,10 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { applyColorTheme } from "@/lib/theme";
 import { useProfileStore } from "@/store/profile";
 import { useFeedStore } from "@/store/feed";
-import { careerStages, industryPreferences } from "@/types";
+import { careerStages, colorThemeOptions, industryPreferences, type ColorTheme } from "@/types";
 
 const industryLabels: Record<string, string> = {
   academia: "Academia",
@@ -58,6 +59,48 @@ const SUGGESTED_VENUES: string[] = [
   "UIST",
   "arXiv",
 ];
+
+const PAPER_FOCUS_OPTIONS = [
+  { value: "tight", label: "Tight", help: "Stay close to my project." },
+  { value: "balanced", label: "Balanced", help: "Mix close matches and useful neighbors." },
+  { value: "exploratory", label: "Exploratory", help: "Look wider for ideas I might miss." },
+] as const;
+
+const PAPER_FRESHNESS_OPTIONS = [
+  { value: "today", label: "Today", help: "Only very new work." },
+  { value: "week", label: "This week", help: "Recent without being too narrow." },
+  { value: "month", label: "This month", help: "A wider recent window." },
+] as const;
+
+const PAPER_COUNT_OPTIONS = [
+  { value: 5, label: "5", help: "Shortest briefing." },
+  { value: 10, label: "10", help: "Default daily forecast." },
+] as const;
+
+const PAPER_SOURCE_OPTIONS = [
+  { value: "balanced", label: "Balanced", help: "Use every source evenly." },
+  { value: "preprints", label: "Preprints", help: "Favor arXiv and early papers." },
+  { value: "published", label: "Published", help: "Favor journal and venue records." },
+  { value: "code", label: "Code", help: "Favor work with code or datasets." },
+] as const;
+
+const PAPER_IMPORTANCE_OPTIONS = [
+  { value: "new", label: "New", help: "Prefer fresh work." },
+  { value: "highlyCited", label: "Highly cited", help: "Prefer proven papers." },
+  { value: "rising", label: "Rising fast", help: "Prefer recent papers gaining attention." },
+] as const;
+
+const PAPER_METHOD_OPTIONS = [
+  { value: "mustMatch", label: "Must match", help: "Only close method matches." },
+  { value: "relatedOk", label: "Related OK", help: "Allow nearby methods." },
+  { value: "any", label: "Any method", help: "Do not filter by method." },
+] as const;
+
+const PAPER_DISCOVERY_OPTIONS = [
+  { value: "core", label: "Core field", help: "Stay inside my main area." },
+  { value: "adjacent", label: "Adjacent fields", help: "Bring in nearby areas." },
+  { value: "surprise", label: "Surprise me", help: "Include a few unusual finds." },
+] as const;
 
 // ── Icons ───────────────────────────────────────────────────────
 
@@ -134,6 +177,17 @@ function IconBell() {
     </svg>
   );
 }
+function IconPalette() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3a9 9 0 0 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-.5a1.8 1.8 0 0 1 0-3.6H15a6 6 0 0 0 0-12h-3Z" />
+      <circle cx="7.5" cy="10" r="1" />
+      <circle cx="9.5" cy="7" r="1" />
+      <circle cx="14.5" cy="7" r="1" />
+      <circle cx="16.5" cy="10" r="1" />
+    </svg>
+  );
+}
 
 function IconCheck() {
   return (
@@ -147,47 +201,53 @@ function IconCheck() {
 
 type Tone = "accent" | "tag" | "link" | "neutral";
 
+function previewColorTheme(theme: ColorTheme) {
+  applyColorTheme(theme);
+}
+
 export default function ProfilePage() {
   const {
     profile,
     updateDisplayName,
     updateTopics,
+    updateSoftTopics,
     updateVenues,
     updateCareerStage,
     updateIndustryPreference,
     updateLocations,
     updateMethods,
     updateSchool,
+    updateCurrentProject,
+    updateCurrentChallenges,
+    updateFeedFocus,
+    updateFeedFreshness,
+    updatePaperCount,
+    updateFeedSourceMix,
+    updateFeedImportance,
+    updateFeedMethodMode,
+    updateFeedDiscoveryMode,
+    updateFeedAvoidReviews,
+    updateFeedAvoidOldPapers,
+    updateFeedAvoidBroadSurveys,
     updateDigestEnabled,
     updateDigestHourLocal,
     updateDigestTimezone,
     updateDigestFrequency,
+    updateColorTheme,
     logOut,
   } = useProfileStore();
 
-  const initialName =
-    profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
-  const [name, setName] = useState(initialName);
+  const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
+  const setName = updateDisplayName;
   const [showLogout, setShowLogout] = useState(false);
 
   const firstName = name.trim().split(/\s+/)[0];
 
-  const signalsSet =
-    profile.researchTopics.length +
-    profile.preferredMethods.length +
-    profile.preferredVenues.length +
-    profile.locationPreferences.length;
-  const freshUser = signalsSet === 0 && !firstName;
-
-  // View by default when anything is set; edit by default for a fresh user.
-  const [mode, setMode] = useState<"view" | "edit">(freshUser ? "edit" : "view");
-
-  useEffect(() => {
-    setName(profile.displayName === DEFAULT_NAME ? "" : profile.displayName);
-  }, [profile.displayName]);
+  const [mode, setMode] = useState<"view" | "edit">("view");
 
   const signals = [
     profile.researchTopics.length > 0,
+    (profile.softTopics ?? []).length > 0,
     profile.preferredMethods.length > 0,
     profile.preferredVenues.length > 0,
     profile.locationPreferences.length > 0,
@@ -275,6 +335,10 @@ export default function ProfilePage() {
             displayName={name}
             onEdit={() => setMode("edit")}
           />
+          <AppearanceCard
+            colorTheme={profile.colorTheme}
+            onConfirm={updateColorTheme}
+          />
           <ReadingCard profile={profile} />
           <PastBriefings />
         </>
@@ -283,10 +347,22 @@ export default function ProfilePage() {
           profile={profile}
           name={name}
           setName={setName}
-          updateDisplayName={updateDisplayName}
           updateTopics={updateTopics}
+          updateSoftTopics={updateSoftTopics}
           updateMethods={updateMethods}
           updateSchool={updateSchool}
+          updateCurrentProject={updateCurrentProject}
+          updateCurrentChallenges={updateCurrentChallenges}
+          updateFeedFocus={updateFeedFocus}
+          updateFeedFreshness={updateFeedFreshness}
+          updatePaperCount={updatePaperCount}
+          updateFeedSourceMix={updateFeedSourceMix}
+          updateFeedImportance={updateFeedImportance}
+          updateFeedMethodMode={updateFeedMethodMode}
+          updateFeedDiscoveryMode={updateFeedDiscoveryMode}
+          updateFeedAvoidReviews={updateFeedAvoidReviews}
+          updateFeedAvoidOldPapers={updateFeedAvoidOldPapers}
+          updateFeedAvoidBroadSurveys={updateFeedAvoidBroadSurveys}
           updateVenues={updateVenues}
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
@@ -323,7 +399,7 @@ export default function ProfilePage() {
                 onClick={() => {
                   logOut();
                   setShowLogout(false);
-                  setMode("edit");
+                  setMode("view");
                 }}
                 className="text-red hover:text-red/80 font-medium transition-colors active:scale-95"
               >
@@ -357,7 +433,6 @@ function DashboardView({
   const avatarLetter = displayName ? displayName[0].toUpperCase() : "";
   const industry =
     industryLabels[profile.industryVsAcademia] ?? profile.industryVsAcademia;
-  const stats = useReadingStats();
 
   return (
     <div
@@ -437,7 +512,8 @@ function DashboardView({
       <div className="px-7 py-5">
         <SectionHeader label="Signals" onAdjust={onEdit} />
         <div className="mt-3 space-y-2">
-          <SignalRow tone="accent" icon={<IconHash />} label="Topics" items={profile.researchTopics} />
+          <SignalRow tone="accent" icon={<IconHash />} label="Required" items={profile.researchTopics} />
+          <SignalRow tone="tag" icon={<IconHash />} label="Explore" items={profile.softTopics ?? []} />
           <SignalRow tone="tag" icon={<IconFlask />} label="Methods" items={profile.preferredMethods} />
           <SignalRow tone="link" icon={<IconBook />} label="Venues" items={profile.preferredVenues} />
           <SignalRow tone="tag" icon={<IconPin />} label="Locations" items={profile.locationPreferences} />
@@ -1485,56 +1561,85 @@ function formatRelativeTime(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function StatTile({
-  big,
-  small,
-  tone,
-}: {
-  big: number | string;
-  small: string;
-  tone: Tone;
-}) {
-  const accent =
-    tone === "accent"
-      ? "text-accent"
-      : tone === "tag"
-      ? "text-tag"
-      : tone === "link"
-      ? "text-link"
-      : "text-heading";
+type ChoiceValue = string | number;
+type ChoiceOption = {
+  value: ChoiceValue;
+  label: string;
+  help?: string;
+};
 
+function ChoiceGroup({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: ChoiceValue;
+  options: readonly ChoiceOption[];
+  onChange: (value: ChoiceValue) => void;
+}) {
   return (
-    <div
-      className="rounded-xl bg-bg-secondary/35 px-3.5 py-3 flex flex-col items-start"
-      style={{ fontFamily: "var(--font-sans)" }}
-    >
-      <span className={`text-[24px] font-semibold tabular-nums leading-none ${accent}`}>
-        {big}
-      </span>
-      <span className="text-[10.5px] uppercase tracking-[0.14em] text-text-faint mt-1.5">
-        {small}
-      </span>
+    <div>
+      <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <button
+              key={String(option.value)}
+              type="button"
+              onClick={() => onChange(option.value)}
+              title={option.help}
+              className={`group text-left text-[12px] px-2.5 py-1.5 rounded-xl transition-all duration-200 ease-out active:scale-[0.94] ${
+                active
+                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.02]"
+                  : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
+              }`}
+            >
+              <span className="block font-medium">{option.label}</span>
+              {option.help && (
+                <span className={`block text-[10.5px] leading-snug mt-0.5 ${active ? "text-accent/75" : "text-text-faint/75"}`}>
+                  {option.help}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function StatRow({
+function TogglePill({
   label,
-  value,
-  hint,
+  active,
+  onToggle,
 }: {
   label: string;
-  value: string;
-  hint?: string;
+  active: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <div className="flex items-baseline justify-between py-1.5 border-b border-border/50 last:border-b-0">
-      <dt className="text-text-faint">{label}</dt>
-      <dd className="flex items-baseline gap-1.5">
-        <span className="text-heading font-medium">{value}</span>
-        {hint && <span className="text-text-faint/70 text-[11.5px]">{hint}</span>}
-      </dd>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      onClick={onToggle}
+      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[12px] transition-all duration-200 ease-out active:scale-[0.94] ${
+        active
+          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]"
+          : "bg-bg-secondary/40 text-text-faint hover:bg-bg-secondary/70 hover:text-text-muted"
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-accent" : "bg-text-faint/45"}`}
+      />
+      {label}
+    </button>
   );
 }
 
@@ -1544,10 +1649,22 @@ function EditView({
   profile,
   name,
   setName,
-  updateDisplayName,
   updateTopics,
+  updateSoftTopics,
   updateMethods,
   updateSchool,
+  updateCurrentProject,
+  updateCurrentChallenges,
+  updateFeedFocus,
+  updateFeedFreshness,
+  updatePaperCount,
+  updateFeedSourceMix,
+  updateFeedImportance,
+  updateFeedMethodMode,
+  updateFeedDiscoveryMode,
+  updateFeedAvoidReviews,
+  updateFeedAvoidOldPapers,
+  updateFeedAvoidBroadSurveys,
   updateVenues,
   updateCareerStage,
   updateIndustryPreference,
@@ -1560,10 +1677,22 @@ function EditView({
   profile: ReturnType<typeof useProfileStore.getState>["profile"];
   name: string;
   setName: (s: string) => void;
-  updateDisplayName: (s: string) => void;
   updateTopics: (v: string[]) => void;
+  updateSoftTopics: (v: string[]) => void;
   updateMethods: (v: string[]) => void;
   updateSchool: (s: string) => void;
+  updateCurrentProject: (s: string) => void;
+  updateCurrentChallenges: (s: string) => void;
+  updateFeedFocus: ReturnType<typeof useProfileStore.getState>["updateFeedFocus"];
+  updateFeedFreshness: ReturnType<typeof useProfileStore.getState>["updateFeedFreshness"];
+  updatePaperCount: ReturnType<typeof useProfileStore.getState>["updatePaperCount"];
+  updateFeedSourceMix: ReturnType<typeof useProfileStore.getState>["updateFeedSourceMix"];
+  updateFeedImportance: ReturnType<typeof useProfileStore.getState>["updateFeedImportance"];
+  updateFeedMethodMode: ReturnType<typeof useProfileStore.getState>["updateFeedMethodMode"];
+  updateFeedDiscoveryMode: ReturnType<typeof useProfileStore.getState>["updateFeedDiscoveryMode"];
+  updateFeedAvoidReviews: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidReviews"];
+  updateFeedAvoidOldPapers: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidOldPapers"];
+  updateFeedAvoidBroadSurveys: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidBroadSurveys"];
   updateVenues: (v: string[]) => void;
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
@@ -1584,29 +1713,67 @@ function EditView({
           value={name}
           onChange={(e) => {
             setName(e.target.value);
-            updateDisplayName(e.target.value);
           }}
           placeholder="Aspen"
           className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
       </EditRow>
-
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
-        <ChipInput
-          values={profile.researchTopics}
-          onChange={updateTopics}
-          placeholder="transformers, diffusion models, RAG…"
-          hint="Be specific — single words like “whatever” match nothing useful."
-          suggestions={SUGGESTED_TOPICS}
-          tone="accent"
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0">
+            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent/80">
+              Required
+            </p>
+            <ChipInput
+              values={profile.researchTopics}
+              onChange={updateTopics}
+              placeholder="LCO, solid-state battery..."
+              suggestions={SUGGESTED_TOPICS}
+              tone="accent"
+              dragId="required"
+              onChipDrop={(value) => {
+                if (!profile.researchTopics.includes(value)) {
+                  updateTopics([...profile.researchTopics, value]);
+                }
+                updateSoftTopics((profile.softTopics ?? []).filter((v) => v !== value));
+              }}
+            />
+            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
+              Paper <strong>must</strong> be related to at least one of these. Type both the
+              full name and abbreviation if you use acronyms (for example, add both
+              &ldquo;LCO&rdquo; and &ldquo;lithium cobalt oxide&rdquo;).
+            </p>
+          </div>
+          <div className="min-w-0">
+            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-tag/80">
+              Nice to have
+            </p>
+            <ChipInput
+              values={profile.softTopics ?? []}
+              onChange={updateSoftTopics}
+              placeholder="thin films, dendrites..."
+              tone="tag"
+              dragId="soft"
+              onChipDrop={(value) => {
+                if (!(profile.softTopics ?? []).includes(value)) {
+                  updateSoftTopics([...(profile.softTopics ?? []), value]);
+                }
+                updateTopics(profile.researchTopics.filter((v) => v !== value));
+              }}
+            />
+            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
+              Papers that match these score higher, but papers without them can still
+              appear in your feed.
+            </p>
+          </div>
+        </div>
       </EditRow>
 
       <EditRow icon={<IconFlask />} tone="tag" label="Methods">
         <ChipInput
           values={profile.preferredMethods}
           onChange={updateMethods}
-          placeholder="contrastive learning, RLHF, MoE…"
+          placeholder="contrastive learning, RLHF, MoE..."
           suggestions={SUGGESTED_METHODS}
           tone="tag"
         />
@@ -1616,7 +1783,7 @@ function EditView({
         <ChipInput
           values={profile.preferredVenues}
           onChange={updateVenues}
-          placeholder="NeurIPS, ICLR, CHI…"
+          placeholder="NeurIPS, ICLR, CHI..."
           suggestions={SUGGESTED_VENUES}
           tone="link"
         />
@@ -1627,9 +1794,35 @@ function EditView({
           type="text"
           value={profile.school ?? ""}
           onChange={(e) => updateSchool(e.target.value)}
-          placeholder="MIT Media Lab, Stanford HCI, DeepMind…"
+          placeholder="MIT Media Lab, Stanford HCI, DeepMind..."
           className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
+      </EditRow>
+
+      <EditRow icon={<IconFlask />} tone="accent" label="Project">
+        <textarea
+          value={profile.currentProject ?? ""}
+          onChange={(e) => updateCurrentProject(e.target.value)}
+          placeholder="What specific project are you working on right now? e.g. 'Pulsed-current electroplating of single-crystal LCO thin films for solid-state microbatteries.'"
+          rows={3}
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+        />
+        <p className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed">
+          Describe your project in 1–3 sentences. Hermes uses this to bias the briefing toward your actual work, not just your generic field.
+        </p>
+      </EditRow>
+
+      <EditRow icon={<IconHash />} tone="tag" label="Challenges">
+        <textarea
+          value={profile.currentChallenges ?? ""}
+          onChange={(e) => updateCurrentChallenges(e.target.value)}
+          placeholder="What open problems are you hunting information for? e.g. 'Suppressing dendritic Co growth at high current densities. Characterizing the H1–3 transition under fast charging.'"
+          rows={3}
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+        />
+        <p className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed">
+          The unknowns you wish someone would solve for you. Highest-leverage signal — papers that mention these will rise to the top.
+        </p>
       </EditRow>
 
       <EditRow icon={<IconPin />} tone="tag" label="Locations">
@@ -1687,6 +1880,78 @@ function EditView({
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      </EditRow>
+
+      <EditRow icon={<IconBook />} tone="link" label="Paper radar">
+        <div className="space-y-4">
+          <p className="text-[12.5px] text-text-faint/85 leading-relaxed">
+            Tell Hermes how widely to look before it chooses your final daily papers.
+          </p>
+          <ChoiceGroup
+            label="Focus"
+            value={profile.feedFocus}
+            options={PAPER_FOCUS_OPTIONS}
+            onChange={(value) => updateFeedFocus(value as typeof profile.feedFocus)}
+          />
+          <ChoiceGroup
+            label="Freshness"
+            value={profile.feedFreshness}
+            options={PAPER_FRESHNESS_OPTIONS}
+            onChange={(value) => updateFeedFreshness(value as typeof profile.feedFreshness)}
+          />
+          <ChoiceGroup
+            label="Papers shown"
+            value={profile.paperCount}
+            options={PAPER_COUNT_OPTIONS}
+            onChange={(value) => updatePaperCount(value as typeof profile.paperCount)}
+          />
+          <ChoiceGroup
+            label="Sources"
+            value={profile.feedSourceMix}
+            options={PAPER_SOURCE_OPTIONS}
+            onChange={(value) => updateFeedSourceMix(value as typeof profile.feedSourceMix)}
+          />
+          <ChoiceGroup
+            label="Importance"
+            value={profile.feedImportance}
+            options={PAPER_IMPORTANCE_OPTIONS}
+            onChange={(value) => updateFeedImportance(value as typeof profile.feedImportance)}
+          />
+          <ChoiceGroup
+            label="Methods"
+            value={profile.feedMethodMode}
+            options={PAPER_METHOD_OPTIONS}
+            onChange={(value) => updateFeedMethodMode(value as typeof profile.feedMethodMode)}
+          />
+          <ChoiceGroup
+            label="Discovery"
+            value={profile.feedDiscoveryMode}
+            options={PAPER_DISCOVERY_OPTIONS}
+            onChange={(value) => updateFeedDiscoveryMode(value as typeof profile.feedDiscoveryMode)}
+          />
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              Avoid
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <TogglePill
+                label="Review papers"
+                active={profile.feedAvoidReviews}
+                onToggle={() => updateFeedAvoidReviews(!profile.feedAvoidReviews)}
+              />
+              <TogglePill
+                label="Old papers"
+                active={profile.feedAvoidOldPapers}
+                onToggle={() => updateFeedAvoidOldPapers(!profile.feedAvoidOldPapers)}
+              />
+              <TogglePill
+                label="Broad surveys"
+                active={profile.feedAvoidBroadSurveys}
+                onToggle={() => updateFeedAvoidBroadSurveys(!profile.feedAvoidBroadSurveys)}
+              />
             </div>
           </div>
         </div>
@@ -1775,8 +2040,187 @@ function EditView({
 
         </div>
       </EditRow>
+
     </div>
   );
+}
+
+function AppearanceCard({
+  colorTheme,
+  onConfirm,
+}: {
+  colorTheme: ColorTheme;
+  onConfirm: (theme: ColorTheme) => void;
+}) {
+  const [draftTheme, setDraftTheme] = useState(colorTheme);
+
+  useEffect(() => {
+    setDraftTheme(colorTheme);
+    previewColorTheme(colorTheme);
+  }, [colorTheme]);
+
+  useEffect(() => {
+    return () => {
+      previewColorTheme(colorTheme);
+    };
+  }, [colorTheme]);
+
+  const changed = draftTheme !== colorTheme;
+
+  return (
+    <section
+      className="mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
+      style={{ fontFamily: "var(--font-sans)", animationDelay: "40ms" }}
+    >
+      <div className="px-7 py-6 border-b border-border/70 flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+            Appearance
+          </p>
+          <h2 className="mt-1 text-[20px] text-heading font-medium tracking-[-0.01em]">
+            Color theme
+          </h2>
+          <p className="mt-1 text-[12.5px] text-text-muted">
+            Switch palettes directly here. No edit mode required.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-secondary/45 px-3 py-1 text-[12px] text-text-faint">
+          <IconPalette />
+          {colorThemeOptions.find((option) => option.value === draftTheme)?.label ?? "System"}
+        </span>
+      </div>
+      <div className="px-7 py-5 space-y-4">
+        <ColorThemePicker
+          value={draftTheme}
+          onChange={(theme) => {
+            setDraftTheme(theme);
+            previewColorTheme(theme);
+          }}
+        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => onConfirm(draftTheme)}
+            disabled={!changed}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 ease-out ${
+              changed
+                ? "bg-heading text-bg hover:bg-heading/90 active:scale-[0.97]"
+                : "bg-bg-secondary/55 text-text-faint cursor-not-allowed"
+            }`}
+          >
+            <IconCheck />
+            Select color
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraftTheme(colorTheme);
+              previewColorTheme(colorTheme);
+            }}
+            disabled={!changed}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] transition-all duration-200 ease-out ${
+              changed
+                ? "bg-bg-secondary/45 text-text-muted hover:bg-bg-secondary/70 active:scale-[0.97]"
+                : "bg-bg-secondary/30 text-text-faint cursor-not-allowed"
+            }`}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ColorThemePicker({
+  value,
+  onChange,
+}: {
+  value: ColorTheme;
+  onChange: (theme: ColorTheme) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      {colorThemeOptions.map((option) => (
+        <ColorThemeCard
+          key={option.value}
+          value={option.value}
+          label={option.label}
+          selected={value === option.value}
+          onSelect={onChange}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ColorThemeCard({
+  value,
+  label,
+  selected,
+  onSelect,
+}: {
+  value: ColorTheme;
+  label: string;
+  selected: boolean;
+  onSelect: (theme: ColorTheme) => void;
+}) {
+  const swatches = themePreview(value);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      aria-pressed={selected}
+      className={`group relative cursor-pointer rounded-2xl p-3 transition-all duration-200 ease-out active:scale-[0.98] ${
+        selected
+          ? "bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+          : "bg-bg-secondary/35 hover:bg-bg-secondary/55 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-medium text-heading">{label}</p>
+          <p className="text-[11px] text-text-faint mt-0.5">
+            {value === "system" ? "Follows your OS" : `${label} palette`}
+          </p>
+        </div>
+        <span
+          className={`inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors ${
+            selected ? "bg-accent text-bg" : "bg-surface text-text-faint shadow-[inset_0_0_0_1px_rgba(20,20,20,0.08)]"
+          }`}
+        >
+          <IconCheck />
+        </span>
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        {swatches.map((swatch) => (
+          <span
+            key={swatch}
+            className="block h-6 flex-1 rounded-full shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
+            style={{ background: swatch }}
+          />
+        ))}
+      </div>
+    </button>
+  );
+}
+
+function themePreview(theme: ColorTheme): string[] {
+  switch (theme) {
+    case "system":
+      return ["linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #09090b 50%, #16181d 100%)", "#f59e0b", "#7dd3fc"];
+    case "cream":
+      return ["#faf5e8", "#f58414", "#7a4412"];
+    case "white":
+      return ["#f8fafc", "#2563eb", "#0f766e"];
+    case "black":
+      return ["#09090b", "#f59e0b", "#34d399"];
+    case "pink":
+      return ["#fff3f8", "#ec4899", "#be185d"];
+    case "blue":
+      return ["#eff6ff", "#2563eb", "#0f766e"];
+  }
 }
 
 function EditRow({
@@ -1825,6 +2269,10 @@ function toneBadge(tone: Tone = "neutral") {
   }
 }
 
+// Module-level drag state — avoids relying on dataTransfer.getData() which
+// Firefox can fail to return in drop handlers when custom MIME types are used.
+let _chipDrag: { value: string; source: string } | null = null;
+
 function ChipInput({
   values,
   onChange,
@@ -1832,6 +2280,8 @@ function ChipInput({
   hint,
   suggestions,
   tone = "tag",
+  dragId,
+  onChipDrop,
 }: {
   values: string[];
   onChange: (next: string[]) => void;
@@ -1841,8 +2291,13 @@ function ChipInput({
   /** Quick-add chips shown only when no values are present yet. */
   suggestions?: string[];
   tone?: Tone;
+  /** When set, chips are draggable and carry this ID in the drag payload. */
+  dragId?: string;
+  /** Called with the chip value when a chip from a different dragId is dropped here. */
+  onChipDrop?: (value: string) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const commit = (raw: string) => {
@@ -1871,45 +2326,125 @@ function ChipInput({
   };
 
   const chipClass = toneBadge(tone);
+  const isDraggable = !!dragId;
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Keep a stable ref to onChipDrop so the native listener always calls the
+  // latest version without needing to re-register on every render.
+  const onChipDropRef = useRef(onChipDrop);
+  useEffect(() => { onChipDropRef.current = onChipDrop; }, [onChipDrop]);
+
+  // ── Native drag listeners (bypass React synthetic events, matches the HTML
+  //    test that confirmed working in Firefox) ──────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Source-side: dragstart / dragend (delegated from chip spans)
+    const onDragStart = (e: DragEvent) => {
+      const chip = (e.target as Element).closest("[data-chip-value]") as HTMLElement | null;
+      if (!chip) return;
+      const value = chip.dataset.chipValue;
+      if (!value || !dragId) return;
+      _chipDrag = { value, source: dragId };
+      try {
+        e.dataTransfer!.setData("text/plain", JSON.stringify({ kind: "chip", value, source: dragId }));
+        e.dataTransfer!.effectAllowed = "move";
+      } catch { /* ok */ }
+    };
+    const onDragEnd = () => { _chipDrag = null; };
+
+    // Drop-target-side
+    const onDragEnter = (e: DragEvent) => { e.preventDefault(); setIsDragOver(true); };
+    const onDragLeave = (e: DragEvent) => {
+      if (!el.contains(e.relatedTarget as Node)) setIsDragOver(false);
+    };
+    const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    };
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      if (_chipDrag && _chipDrag.source !== dragId) {
+        onChipDropRef.current?.(_chipDrag.value);
+        _chipDrag = null;
+      }
+    };
+
+    el.addEventListener("dragstart", onDragStart);
+    el.addEventListener("dragend", onDragEnd);
+    if (onChipDropRef.current) {
+      el.addEventListener("dragenter", onDragEnter);
+      el.addEventListener("dragleave", onDragLeave);
+      el.addEventListener("dragover", onDragOver);
+      el.addEventListener("drop", onDrop);
+    }
+    return () => {
+      el.removeEventListener("dragstart", onDragStart);
+      el.removeEventListener("dragend", onDragEnd);
+      el.removeEventListener("dragenter", onDragEnter);
+      el.removeEventListener("dragleave", onDragLeave);
+      el.removeEventListener("dragover", onDragOver);
+      el.removeEventListener("drop", onDrop);
+    };
+  }, [dragId, isDraggable]);
+
+  const dropRingClass = isDragOver
+    ? tone === "accent"
+      ? "bg-accent-dim/50 ring-2 ring-accent/50"
+      : "bg-tag-dim/50 ring-2 ring-tag/50"
+    : "bg-bg-secondary/40 hover:bg-bg-secondary/55 focus-within:bg-bg-secondary/55 focus-within:ring-2 focus-within:ring-accent/20";
 
   return (
     <>
       <div
+        ref={containerRef}
         onClick={() => inputRef.current?.focus()}
-        className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-secondary/40 hover:bg-bg-secondary/55 focus-within:bg-bg-secondary/55 focus-within:ring-2 focus-within:ring-accent/20 transition-all cursor-text min-h-[38px]"
+        className={`flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all min-h-[38px] ${dropRingClass}`}
+        style={{ cursor: "text" }}
       >
         {values.map((v) => (
-        <span
-          key={v}
-          className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          {v}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              remove(v);
+          <span
+            key={v}
+            draggable={isDraggable}
+            data-chip-value={isDraggable ? v : undefined}
+            className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
+            style={{
+              fontFamily: "var(--font-sans)",
+              cursor: isDraggable ? "grab" : undefined,
+              userSelect: isDraggable ? "none" : undefined,
             }}
-            aria-label={`Remove ${v}`}
-            className="inline-flex items-center justify-center w-4 h-4 rounded hover:bg-black/5 opacity-60 hover:opacity-100 transition-all"
           >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </span>
-      ))}
-      <input
-        ref={inputRef}
-        type="text"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={handleKey}
-        onBlur={() => draft && commit(draft)}
-        placeholder={values.length === 0 ? placeholder : ""}
-        className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
-        style={{ fontFamily: "var(--font-sans)" }}
-      />
+            {v}
+            <button
+              type="button"
+              draggable={false}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                remove(v);
+              }}
+              aria-label={`Remove ${v}`}
+              className="inline-flex items-center justify-center w-4 h-4 rounded hover:bg-black/5 opacity-60 hover:opacity-100 transition-all"
+              style={{ cursor: "pointer" }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ pointerEvents: "none" }}>
+                <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKey}
+          onBlur={() => draft && commit(draft)}
+          placeholder={values.length === 0 ? placeholder : ""}
+          className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
+          style={{ fontFamily: "var(--font-sans)" }}
+        />
       </div>
       {(suggestions && suggestions.length > 0 && values.length === 0) && (
         <div className="flex flex-wrap items-center gap-1 mt-1.5 px-1">

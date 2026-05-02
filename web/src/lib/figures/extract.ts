@@ -1,62 +1,122 @@
-// Figure extraction for paper briefings.
-//
-// Two strategies:
-//   - arxiv items → fetch ar5iv (LaTeX→HTML rendering) and pull the first
-//     <figure><img>. ar5iv hosts images on its own CDN, so the URL is
-//     stable and embeddable.
-//   - everything else → fetch the item URL and parse <meta property="og:image">.
-//
-// Caching: relies on Next.js's fetch cache (`next.revalidate`) — each
-// upstream URL is hit at most once per `REVALIDATE_S`. Vercel's CDN handles
-// the inflight dedup. We deliberately do NOT cache to Supabase here; if we
-// outgrow fetch cache we add a `paper_figures` table later.
+import { tryPdfCandidates } from "./pdf-extract";
+import { matchFigureSemantically } from "./semantic-match";
+import { matchFigureVisually } from "./vision-match";
 
-const REVALIDATE_S = 86_400; // 24h
-const FETCH_TIMEOUT_MS = 4_000;
-const MAX_BODY_BYTES = 2_000_000;
+const FETCH_TIMEOUT_MS = 7_000;
+const MAX_BODY_BYTES = 2_500_000;
+const FETCH_VERSION = "2026-05-01-pdf-vision";
 
 interface ExtractInput {
   itemId: string;
   url?: string;
+  doi?: string;
+  query?: string;
+  figureIndex?: number;
+  paperTitle?: string;
 }
+
+export type FigureStatus =
+  | "found"
+  | "paywalled"
+  | "caption_mismatch"
+  | "no_figures"
+  | "source_unavailable";
 
 export interface FigureResult {
   imageUrl: string | null;
-  source?: "ar5iv" | "og" | null;
+  caption?: string | null;
+  source?: "semantic-scholar" | "ar5iv" | "publisher" | "open-access" | "og" | null;
+  status: FigureStatus;
+  reason?: string | null;
+  hideFigure?: boolean;
+  matchedBy?: "keyword" | "semantic" | "vision" | "fallback" | null;
+}
+
+interface FigureCandidate {
+  imageUrl: string;
+  caption?: string | null;
+  source: NonNullable<FigureResult["source"]>;
+  ordinal: number;
+}
+
+interface AttemptResult {
+  status: "candidates" | "paywalled" | "no_figures" | "source_unavailable";
+  candidates: FigureCandidate[];
+  reason?: string;
+}
+
+interface CandidateSelection {
+  candidate: FigureCandidate | null;
+  status: "found" | "caption_mismatch";
+  reason?: string;
+  matchedBy?: NonNullable<FigureResult["matchedBy"]>;
+}
+
+interface SourceLink {
+  url: string;
+  kind: "html" | "pdf";
+  label: "input" | "doi" | "unpaywall" | "europepmc" | "derived";
+}
+
+interface EuropePmcResult {
+  pmcid?: string;
+  fullTextUrlList?: {
+    fullTextUrl?:
+      | {
+          availability?: string;
+          availabilityCode?: string;
+          documentStyle?: string;
+          url?: string;
+        }
+      | {
+          availability?: string;
+          availabilityCode?: string;
+          documentStyle?: string;
+          url?: string;
+        }[];
+  };
+}
+
+interface UnpaywallLocation {
+  url?: string | null;
+  url_for_pdf?: string | null;
+  url_for_landing_page?: string | null;
+}
+
+interface UnpaywallRecord {
+  best_oa_location?: UnpaywallLocation | null;
+  oa_locations?: UnpaywallLocation[] | null;
 }
 
 async function timedFetch(url: string, init?: RequestInit): Promise<Response | null> {
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
+    return await fetch(url, {
       ...init,
       signal: controller.signal,
-      // Browsers / Vercel will dedup + cache identical requests.
-      next: { revalidate: REVALIDATE_S },
+      cache: "no-store",
       headers: {
-        // Some hosts serve different markup (or 403) without a UA.
-        "User-Agent":
-          "Mozilla/5.0 (compatible; HermesBot/0.1; +https://hermes-flax-six.vercel.app)",
-        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "X-Hermes-Figure-Version": FETCH_VERSION,
+        Accept: "text/html,application/xhtml+xml,application/json",
         ...(init?.headers ?? {}),
       },
     });
-    return res;
   } catch {
     return null;
   } finally {
-    clearTimeout(t);
+    clearTimeout(timer);
   }
 }
 
 async function readBoundedText(res: Response): Promise<string> {
-  // Stream-read with a hard byte cap so we don't load whole 10MB ar5iv pages.
   const reader = res.body?.getReader();
-  if (!reader) return await res.text();
+  if (!reader) return res.text();
   const decoder = new TextDecoder("utf-8");
   let bytes = 0;
   let out = "";
+
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
@@ -66,27 +126,49 @@ async function readBoundedText(res: Response): Promise<string> {
       try {
         await reader.cancel();
       } catch {
-        // ignore
+        // ignore cancellation failures
       }
       break;
     }
   }
+
   out += decoder.decode();
   return out;
 }
 
-function absolutize(src: string, baseUrl: string): string {
-  try {
-    return new URL(src, baseUrl).toString();
-  } catch {
-    return src;
-  }
+function asArray<T>(value: T | T[] | null | undefined): T[] {
+  if (value == null) return [];
+  return Array.isArray(value) ? value : [value];
 }
 
-// Reject hits that look like site logos / social-card placeholders rather
-// than actual paper figures. Common offender: arXiv abs pages set
-// og:image to "static.arxiv.org/icons/...arxiv-logo...png", which is the
-// site logo, not the paper. Same idea for Semantic Scholar, NeurIPS, etc.
+function bareArxivId(itemId: string): string | null {
+  const match = itemId.match(/^arxiv:(.+)$/i);
+  return match ? match[1].replace(/^abs\//, "") : null;
+}
+
+function bareOpenAlexId(itemId: string): string | null {
+  const match = itemId.match(/^openalex:(.+)$/i);
+  return match ? match[1] : null;
+}
+
+function cleanDoi(doi: string): string {
+  return doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "").trim();
+}
+
+function doiUrl(doi: string): string {
+  return `https://doi.org/${cleanDoi(doi)}`;
+}
+
+function arxivIdFromUrl(url: string): string | null {
+  const match = url.match(/arxiv\.org\/(?:abs|pdf)\/([0-9]{4}\.[0-9]+(?:v\d+)?)/i);
+  return match ? match[1] : null;
+}
+
+function arxivIdFromDoi(doi: string): string | null {
+  const match = cleanDoi(doi).match(/^10\.48550\/arxiv\.([0-9]{4}\.[0-9]+(?:v\d+)?)/i);
+  return match ? match[1] : null;
+}
+
 const BAD_URL_PATTERNS: RegExp[] = [
   /static\.arxiv\.org/i,
   /\barxiv-logo\b/i,
@@ -97,99 +179,886 @@ const BAD_URL_PATTERNS: RegExp[] = [
   /twitter[-_]?(?:card|image)[-_]?default/i,
   /opengraph[-_]?default/i,
 ];
+const OPEN_ACCESS_HOST_PATTERNS = [
+  /(^|\.)pmc\.ncbi\.nlm\.nih\.gov$/i,
+  /(^|\.)arxiv\.org$/i,
+  /(^|\.)ar5iv\.labs\.arxiv\.org$/i,
+  /(^|\.)biorxiv\.org$/i,
+  /(^|\.)medrxiv\.org$/i,
+];
 
 function looksLikeLogo(url: string): boolean {
-  return BAD_URL_PATTERNS.some((re) => re.test(url));
+  return BAD_URL_PATTERNS.some((pattern) => pattern.test(url));
 }
 
-// Walks every <figure> in order and returns the first <img src> that
-// passes the logo-rejection filter. Returns null only if none qualify.
-function firstFigureImg(html: string, baseUrl: string): string | null {
-  const figRe = /<figure\b[^>]*>([\s\S]*?)<\/figure>/gi;
-  for (const figMatch of html.matchAll(figRe)) {
-    const imgMatch = figMatch[1].match(/<img\b[^>]*\bsrc=["']([^"']+)["']/i);
-    if (!imgMatch) continue;
-    const src = imgMatch[1].trim();
-    if (!src || src.startsWith("data:")) continue;
-    const abs = absolutize(src, baseUrl);
-    if (looksLikeLogo(abs)) continue;
-    return abs;
+function hostLooksOpenAccess(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return OPEN_ACCESS_HOST_PATTERNS.some((pattern) => pattern.test(host));
+  } catch {
+    return false;
   }
-  return null;
 }
 
-// Heuristic: ar5iv returns a 200 page with an error placeholder when the
-// LaTeX source failed to render. Detect those and treat as a miss so we
-// don't surface boilerplate logos.
+function absolutize(src: string, baseUrl: string): string {
+  try {
+    return new URL(src, baseUrl).toString();
+  } catch {
+    return src;
+  }
+}
+
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;|&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_, code: string) =>
+      String.fromCodePoint(Number.parseInt(code, 10)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCodePoint(Number.parseInt(code, 16)),
+    );
+}
+
+function stripTags(html: string): string {
+  return decodeHtmlEntities(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " "),
+  )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function readAttr(markup: string, attr: string): string | null {
+  const pattern = new RegExp(
+    `\\b${attr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>]+))`,
+    "i",
+  );
+  const match = markup.match(pattern);
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
+}
+
+function srcFromSrcset(srcset: string): string | null {
+  const candidates = srcset
+    .split(",")
+    .map((part) => part.trim().split(/\s+/)[0])
+    .filter(Boolean);
+  return candidates.at(-1) ?? null;
+}
+
+function firstImageSrc(markup: string, baseUrl: string): string | null {
+  const img = markup.match(/<img\b[^>]*>/i)?.[0];
+  const source = markup.match(/<source\b[^>]*>/i)?.[0];
+  const src =
+    (img &&
+      (readAttr(img, "src") ??
+        readAttr(img, "data-src") ??
+        readAttr(img, "data-original"))) ??
+    (img && readAttr(img, "srcset")
+      ? srcFromSrcset(readAttr(img, "srcset") ?? "")
+      : null) ??
+    (source && readAttr(source, "srcset")
+      ? srcFromSrcset(readAttr(source, "srcset") ?? "")
+      : null);
+
+  if (!src || src.startsWith("data:")) return null;
+  const absolute = absolutize(src, baseUrl);
+  return looksLikeLogo(absolute) ? null : absolute;
+}
+
+function captionFromFigure(markup: string): string | null {
+  const figcaption =
+    markup.match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i)?.[1] ??
+    markup.match(/<[^>]*class=["'][^"']*(?:fig-caption|caption)[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i)?.[1];
+  if (figcaption) return stripTags(figcaption);
+  const img = markup.match(/<img\b[^>]*>/i)?.[0];
+  const alt = img ? readAttr(img, "alt") : null;
+  return alt ? stripTags(alt) : null;
+}
+
+function blockCandidates(html: string): string[] {
+  const blocks: string[] = [];
+  const figureRe = /<figure\b[^>]*>[\s\S]*?<\/figure>/gi;
+  for (const match of html.matchAll(figureRe)) blocks.push(match[0]);
+  const highwireFigRe =
+    /<div\b[^>]*class=["'][^"']*\bfig(?:ure)?\b[^"']*["'][^>]*>[\s\S]*?<\/div>\s*<\/div>?/gi;
+  for (const match of html.matchAll(highwireFigRe)) blocks.push(match[0]);
+  return blocks;
+}
+
+function htmlFigureCandidates(
+  html: string,
+  baseUrl: string,
+  source: FigureCandidate["source"],
+): FigureCandidate[] {
+  const blocks = blockCandidates(html);
+  if (blocks.length === 0) return [];
+
+  const candidates: FigureCandidate[] = [];
+  for (const block of blocks) {
+    const imageUrl = firstImageSrc(block, baseUrl);
+    if (!imageUrl) continue;
+    candidates.push({
+      imageUrl,
+      caption: captionFromFigure(block),
+      source,
+      ordinal: candidates.length,
+    });
+  }
+
+  return candidates;
+}
+
+const STOP_WORDS = new Set([
+  "about",
+  "after",
+  "also",
+  "analysis",
+  "and",
+  "are",
+  "based",
+  "can",
+  "cell",
+  "data",
+  "does",
+  "figure",
+  "from",
+  "has",
+  "into",
+  "its",
+  "key",
+  "main",
+  "method",
+  "new",
+  "paper",
+  "rechargeable",
+  "result",
+  "results",
+  "show",
+  "shows",
+  "study",
+  "system",
+  "that",
+  "the",
+  "their",
+  "this",
+  "using",
+  "was",
+  "were",
+  "what",
+  "when",
+  "where",
+  "which",
+  "with",
+]);
+
+function normalizeToken(token: string): string {
+  if (token === "li") return "lithium";
+  if (token.endsWith("ies") && token.length > 4) return `${token.slice(0, -3)}y`;
+  if (token.endsWith("s") && token.length > 4) return token.slice(0, -1);
+  return token;
+}
+
+function tokenize(text?: string | null): string[] {
+  if (!text) return [];
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .map(normalizeToken)
+    .filter((token) => token.length >= 2 && !STOP_WORDS.has(token));
+}
+
+function figureScore(candidate: FigureCandidate, query: string): number {
+  const queryTokens = new Set(tokenize(query));
+  if (queryTokens.size === 0) return 0;
+  const captionTokens = new Set(tokenize(candidate.caption ?? ""));
+  let score = 0;
+
+  for (const token of queryTokens) {
+    if (captionTokens.has(token)) score += token.length >= 6 ? 2 : 1;
+  }
+
+  return score;
+}
+
+function visionShortlist(
+  candidates: FigureCandidate[],
+  scored: Array<{ candidate: FigureCandidate; score: number }>,
+): FigureCandidate[] {
+  const ordered = scored.length > 0 ? scored.map((entry) => entry.candidate) : candidates;
+  return ordered.slice(0, 3);
+}
+
+async function chooseCandidate(
+  candidates: FigureCandidate[],
+  n: number,
+  query?: string,
+  paperTitle?: string,
+): Promise<CandidateSelection> {
+  const valid = candidates.filter((candidate) => !looksLikeLogo(candidate.imageUrl));
+  if (valid.length === 0) {
+    return {
+      candidate: null,
+      status: "caption_mismatch",
+      reason: "The source exposed figure slots, but Hermes could not extract a usable figure image.",
+    };
+  }
+
+  if (!query?.trim()) {
+    return {
+      candidate: valid[n] ?? valid[0] ?? null,
+      status: "found",
+      matchedBy: "fallback",
+    };
+  }
+
+  const scored = valid
+    .map((candidate) => ({
+      candidate,
+      score: figureScore(candidate, query),
+    }))
+    .sort((a, b) => b.score - a.score || a.candidate.ordinal - b.candidate.ordinal);
+
+  const queryTokens = tokenize(query);
+  const best = scored[0];
+  const threshold = queryTokens.length <= 3 ? 1 : 2;
+  if (best && best.score >= threshold) {
+    return {
+      candidate: best.candidate,
+      status: "found",
+      matchedBy: "keyword",
+    };
+  }
+
+  const semantic = await matchFigureSemantically({
+    paperTitle,
+    query,
+    candidates: valid
+      .filter((candidate) => candidate.caption?.trim())
+      .slice(0, 8)
+      .map((candidate) => ({
+        ordinal: candidate.ordinal,
+        caption: candidate.caption ?? "",
+      })),
+  });
+
+  if (semantic?.ordinal != null && semantic.confidence !== "low") {
+    const semanticCandidate =
+      valid.find((candidate) => candidate.ordinal === semantic.ordinal) ?? null;
+    if (semanticCandidate) {
+      return {
+        candidate: semanticCandidate,
+        status: "found",
+        reason: semantic.reason,
+        matchedBy: "semantic",
+      };
+    }
+  }
+
+  const visual = await matchFigureVisually({
+    paperTitle,
+    query,
+    candidates: visionShortlist(valid, scored).map((candidate) => ({
+      ordinal: candidate.ordinal,
+      imageUrl: candidate.imageUrl,
+      caption: candidate.caption ?? null,
+    })),
+  });
+
+  if (visual?.ordinal != null && visual.confidence !== "low") {
+    const visualCandidate =
+      valid.find((candidate) => candidate.ordinal === visual.ordinal) ?? null;
+    if (visualCandidate) {
+      return {
+        candidate: visualCandidate,
+        status: "found",
+        reason: visual.reason,
+        matchedBy: "vision",
+      };
+    }
+  }
+
+  // Last resort: when no high-confidence match was found, fall back to the
+  // requested figure index (n) from the actual paper. The report section
+  // assigned this index intentionally, so showing it — even with a "fallback"
+  // tag — is far more useful than a "no match" placeholder. The user has been
+  // explicit: prefer showing a real figure from the paper over hiding it.
+  const fallbackCandidate = valid[n] ?? valid[0] ?? null;
+  if (fallbackCandidate) {
+    return {
+      candidate: fallbackCandidate,
+      status: "found",
+      matchedBy: "fallback",
+    };
+  }
+
+  return {
+    candidate: null,
+    status: "caption_mismatch",
+    reason: "The source exposed figure slots, but Hermes could not extract a usable figure image.",
+  };
+}
+
+function candidateResult(
+  selection: CandidateSelection,
+  fallbackReason?: string,
+): FigureResult {
+  if (!selection.candidate) {
+    return {
+      imageUrl: null,
+      source: null,
+      status: "caption_mismatch",
+      reason: selection.reason ?? fallbackReason ?? null,
+      hideFigure: false,
+      matchedBy: null,
+    };
+  }
+
+  return {
+    imageUrl: selection.candidate.imageUrl,
+    caption: selection.candidate.caption ?? null,
+    source: selection.candidate.source,
+    status: "found",
+    reason: selection.reason ?? fallbackReason ?? null,
+    hideFigure: false,
+    matchedBy: selection.matchedBy ?? null,
+  };
+}
+
+interface SSFigure {
+  caption?: string;
+  url?: string;
+}
+
+async function trySemanticScholarCandidates(ssPaperId: string): Promise<AttemptResult> {
+  const apiUrl =
+    `https://api.semanticscholar.org/graph/v1/paper/${encodeURIComponent(ssPaperId)}` +
+    "?fields=figures,title";
+  const res = await timedFetch(apiUrl, {
+    headers: {
+      Accept: "application/json",
+      ...(process.env.SEMANTIC_SCHOLAR_API_KEY
+        ? { "x-api-key": process.env.SEMANTIC_SCHOLAR_API_KEY }
+        : {}),
+    },
+  });
+  if (!res || !res.ok) return { status: "source_unavailable", candidates: [] };
+
+  try {
+    const data = (await res.json()) as { figures?: SSFigure[] };
+    const candidates = (data.figures ?? [])
+      .map((figure, ordinal): FigureCandidate | null => {
+        if (!figure.url || looksLikeLogo(figure.url)) return null;
+        return {
+          imageUrl: figure.url,
+          caption: figure.caption ?? null,
+          source: "semantic-scholar",
+          ordinal,
+        };
+      })
+      .filter((candidate): candidate is FigureCandidate => candidate !== null);
+    return candidates.length > 0
+      ? { status: "candidates", candidates }
+      : { status: "no_figures", candidates: [], reason: "Semantic Scholar did not expose any paper figures for this record." };
+  } catch {
+    return { status: "source_unavailable", candidates: [] };
+  }
+}
+
 function isAr5ivErrorPage(html: string): boolean {
   return (
     /ar5iv\s+could\s+not\s+(?:generate|render|process)/i.test(html) ||
     /failed\s+to\s+(?:convert|render|process)\s+the\s+source/i.test(html) ||
-    /no\s+ar5iv\s+rendering\s+available/i.test(html)
+    /no\s+ar5iv\s+rendering\s+available/i.test(html) ||
+    /conversion\s+to\s+html\s+had\s+a\s+fatal\s+error/i.test(html)
   );
 }
 
+async function tryAr5ivCandidates(arxivId: string): Promise<AttemptResult> {
+  const ar5ivUrl = `https://ar5iv.labs.arxiv.org/html/${encodeURIComponent(arxivId)}`;
+  const res = await timedFetch(ar5ivUrl);
+  if (!res || !res.ok) return { status: "source_unavailable", candidates: [] };
+  const html = await readBoundedText(res);
+  if (isAr5ivErrorPage(html)) {
+    return {
+      status: "source_unavailable",
+      candidates: [],
+      reason: "ar5iv could not render this arXiv paper into a figure-readable HTML page.",
+    };
+  }
+  const candidates = htmlFigureCandidates(html, ar5ivUrl, "ar5iv");
+  return candidates.length > 0
+    ? { status: "candidates", candidates }
+    : { status: "no_figures", candidates: [], reason: "The arXiv HTML view was reachable, but Hermes did not find extractable figures." };
+}
+
+function inferLinkKind(url: string): "html" | "pdf" {
+  return /\.pdf(?:$|[?#])/i.test(url) ? "pdf" : "html";
+}
+
+function deriveHtmlAlternatives(url: string): string[] {
+  const alternatives: string[] = [];
+
+  const arxivPdf = url.match(/https?:\/\/arxiv\.org\/pdf\/([^?#]+?)(?:\.pdf)?(?:[?#].*)?$/i);
+  if (arxivPdf?.[1]) alternatives.push(`https://arxiv.org/abs/${arxivPdf[1]}`);
+
+  if (/https?:\/\/(?:www\.)?(?:bio|med)rxiv\.org\//i.test(url) && /\.pdf(?:$|[?#])/i.test(url)) {
+    alternatives.push(url.replace(/\.pdf(?:$|[?#].*)/i, ""));
+  }
+
+  const pmcMatch = url.match(/PMC\d+/i);
+  if (pmcMatch) alternatives.push(`https://pmc.ncbi.nlm.nih.gov/articles/${pmcMatch[0].toUpperCase()}/`);
+
+  return Array.from(new Set(alternatives));
+}
+
+function validApiEmail(): string | null {
+  const email = (process.env.UNPAYWALL_EMAIL ?? process.env.OPENALEX_EMAIL ?? "").trim();
+  if (!email || !/@/.test(email) || /example\.com$/i.test(email)) return null;
+  return email;
+}
+
+async function lookupUnpaywallLinks(doi: string): Promise<SourceLink[]> {
+  const email = validApiEmail();
+  if (!email) return [];
+
+  const apiUrl = `https://api.unpaywall.org/v2/${encodeURIComponent(cleanDoi(doi))}?email=${encodeURIComponent(email)}`;
+  const res = await timedFetch(apiUrl, { headers: { Accept: "application/json" } });
+  if (!res || !res.ok) return [];
+
+  try {
+    const data = (await res.json()) as UnpaywallRecord;
+    const rawLinks = [
+      data.best_oa_location,
+      ...asArray(data.oa_locations),
+    ]
+      .flatMap((location) => [
+        location?.url_for_landing_page ?? null,
+        location?.url_for_pdf ?? null,
+        location?.url ?? null,
+      ])
+      .filter((value): value is string => Boolean(value));
+
+    return rawLinks.flatMap((url) => [
+      { url, kind: inferLinkKind(url), label: "unpaywall" as const },
+      ...deriveHtmlAlternatives(url).map((derivedUrl) => ({
+        url: derivedUrl,
+        kind: "html" as const,
+        label: "derived" as const,
+      })),
+    ]);
+  } catch {
+    return [];
+  }
+}
+
+async function lookupEuropePmcLinks(doi: string): Promise<SourceLink[]> {
+  const apiUrl =
+    "https://www.ebi.ac.uk/europepmc/webservices/rest/search" +
+    `?query=DOI:${encodeURIComponent(cleanDoi(doi))}&resultType=core&format=json`;
+  const res = await timedFetch(apiUrl, { headers: { Accept: "application/json" } });
+  if (!res || !res.ok) return [];
+
+  try {
+    const data = (await res.json()) as {
+      resultList?: { result?: EuropePmcResult[] };
+    };
+    const result = data.resultList?.result?.[0];
+    if (!result) return [];
+
+    const links = asArray(result.fullTextUrlList?.fullTextUrl)
+      .map((entry) => entry.url)
+      .filter((value): value is string => Boolean(value))
+      .flatMap((url) => [
+        { url, kind: inferLinkKind(url), label: "europepmc" as const },
+        ...deriveHtmlAlternatives(url).map((derivedUrl) => ({
+          url: derivedUrl,
+          kind: "html" as const,
+          label: "derived" as const,
+        })),
+      ]);
+
+    if (result.pmcid) {
+      links.push({
+        url: `https://pmc.ncbi.nlm.nih.gov/articles/${result.pmcid}/`,
+        kind: "html",
+        label: "europepmc",
+      });
+    }
+
+    return links;
+  } catch {
+    return [];
+  }
+}
+
+function paywallReason(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return `Hermes reached ${host}, but that source appears to require paid or institutional access for figures.`;
+  } catch {
+    return "Hermes reached the source, but it appears to require paid or institutional access for figures.";
+  }
+}
+
+function appearsPaywalled(url: string, res: Response, html: string): boolean {
+  if (hostLooksOpenAccess(url)) return false;
+  if ([401, 402, 403, 451].includes(res.status)) return true;
+  if (/captcha/i.test(html)) return true;
+  const lowered = html.toLowerCase();
+  const phrases = [
+    "purchase access",
+    "buy this article",
+    "access through your institution",
+    "institutional access",
+    "sign in to access",
+    "log in to access",
+    "subscribe to continue",
+    "subscription required",
+    "preview of subscription content",
+    "rent this article",
+    "subscribe for full access",
+  ];
+  return phrases.some((phrase) => lowered.includes(phrase)) && !/creative commons|cc-by|free full text|open access/i.test(html);
+}
+
+async function tryHtmlCandidates(
+  url: string,
+  source: FigureCandidate["source"],
+): Promise<AttemptResult> {
+  const res = await timedFetch(url);
+  if (!res || !res.ok) {
+    return {
+      status: "source_unavailable",
+      candidates: [],
+      reason: `Hermes could not reach ${url}.`,
+    };
+  }
+
+  const contentType = res.headers.get("content-type") ?? "";
+  if (/pdf/i.test(contentType)) {
+    return tryPdfCandidates(res.url || url, source);
+  }
+
+  if (contentType && !/html|xml/i.test(contentType)) {
+    return {
+      status: "source_unavailable",
+      candidates: [],
+      reason: "The source response was not a figure-readable HTML page.",
+    };
+  }
+
+  const finalUrl = res.url || url;
+  const html = await readBoundedText(res);
+  if (appearsPaywalled(finalUrl, res, html)) {
+    return {
+      status: "paywalled",
+      candidates: [],
+      reason: paywallReason(finalUrl),
+    };
+  }
+
+  const candidates = htmlFigureCandidates(html, finalUrl, source);
+  if (candidates.length === 0) {
+    return {
+      status: "no_figures",
+      candidates: [],
+      reason: "Hermes reached the source page, but it did not expose extractable figures.",
+    };
+  }
+
+  return {
+    status: "candidates",
+    candidates,
+  };
+}
+
+function addSourceLink(target: Map<string, SourceLink>, link: SourceLink) {
+  const normalized = link.url.trim();
+  if (!normalized) return;
+  if (!target.has(normalized)) target.set(normalized, link);
+}
+
+async function collectSourceLinks(input: ExtractInput): Promise<SourceLink[]> {
+  const links = new Map<string, SourceLink>();
+  const inputUrlWasPdf = input.url ? inferLinkKind(input.url) === "pdf" : false;
+
+  if (input.url) {
+    addSourceLink(links, {
+      url: input.url,
+      kind: inferLinkKind(input.url),
+      label: "input",
+    });
+    for (const alt of deriveHtmlAlternatives(input.url)) {
+      addSourceLink(links, { url: alt, kind: "html", label: "derived" });
+    }
+  }
+
+  if (input.doi) {
+    addSourceLink(links, {
+      url: doiUrl(input.doi),
+      kind: "html",
+      label: "doi",
+    });
+
+    const cleaned = cleanDoi(input.doi);
+    if (/^10\.1101\//i.test(cleaned)) {
+      for (const host of ["biorxiv.org", "medrxiv.org"]) {
+        addSourceLink(links, {
+          url: `https://www.${host}/content/${cleaned}v1.full`,
+          kind: "html",
+          label: "derived",
+        });
+      }
+    }
+
+    for (const link of await lookupUnpaywallLinks(input.doi)) addSourceLink(links, link);
+    for (const link of await lookupEuropePmcLinks(input.doi)) addSourceLink(links, link);
+  }
+
+  return Array.from(links.values()).sort((a, b) => {
+    const rank = (link: SourceLink) =>
+      inputUrlWasPdf && link.label === "derived" && link.kind === "html"
+        ? -1
+        : link.label === "input"
+          ? 0
+          : link.label === "unpaywall"
+            ? 1
+            : link.label === "europepmc"
+              ? 2
+              : link.label === "doi"
+                ? 3
+                : 4;
+    return rank(a) - rank(b);
+  });
+}
+
+function finalDiagnostic(
+  attempts: AttemptResult[],
+  mismatchReason?: string,
+): FigureResult {
+  if (mismatchReason) {
+    return {
+      imageUrl: null,
+      source: null,
+      status: "caption_mismatch",
+      reason: mismatchReason,
+      hideFigure: false,
+      matchedBy: null,
+    };
+  }
+
+  const paywalled = attempts.find((attempt) => attempt.status === "paywalled");
+  if (paywalled) {
+    return {
+      imageUrl: null,
+      source: null,
+      status: "paywalled",
+      reason: paywalled.reason ?? "The figure source appears paywalled.",
+      hideFigure: true,
+      matchedBy: null,
+    };
+  }
+
+  const noFigures = attempts.find((attempt) => attempt.status === "no_figures");
+  if (noFigures) {
+    return {
+      imageUrl: null,
+      source: null,
+      status: "no_figures",
+      reason: noFigures.reason ?? "Hermes reached the source page, but did not find extractable figures.",
+      hideFigure: false,
+      matchedBy: null,
+    };
+  }
+
+  return {
+    imageUrl: null,
+    source: null,
+    status: "source_unavailable",
+    reason:
+      attempts.find((attempt) => attempt.reason)?.reason ??
+      "Hermes could not reach a usable full-text source for this paper's figures.",
+    hideFigure: false,
+    matchedBy: null,
+  };
+}
+
+// ── Per-paper candidate-pool cache ──────────────────────────────────────
+// Different report sections each call /api/figure with the same paper but
+// different (figureIndex, query). Without caching, each call independently
+// re-fetches ar5iv + downloads the PDF + spawns Python. Random network hiccups
+// then cause one section to "find figures" while another shows "no extractable
+// figures" for the SAME paper. This cache fetches the unified candidate pool
+// ONCE per paper, then every section picks from it deterministically.
+interface CachedPool {
+  candidates: FigureCandidate[];
+  attempts: AttemptResult[];
+  ts: number;
+}
+const CANDIDATE_CACHE_TTL_MS = 30 * 60 * 1000;
+const candidatePoolCache = new Map<string, CachedPool | Promise<CachedPool>>();
+
+function poolCacheKey(input: ExtractInput): string {
+  return [input.itemId, input.url ?? "", input.doi ?? ""].join("|");
+}
+
+async function buildCandidatePool(input: ExtractInput): Promise<CachedPool> {
+  const attempts: AttemptResult[] = [];
+  const candidates: FigureCandidate[] = [];
+
+  // Run independent sources in parallel where possible to fill the pool.
+  const arxivId =
+    bareArxivId(input.itemId) ??
+    (input.doi ? arxivIdFromDoi(input.doi) : null) ??
+    (input.url ? arxivIdFromUrl(input.url) : null);
+  const openAlexId = bareOpenAlexId(input.itemId);
+
+  const tasks: Promise<AttemptResult>[] = [];
+  if (arxivId) {
+    tasks.push(tryAr5ivCandidates(arxivId));
+    tasks.push(tryPdfCandidates(`https://arxiv.org/pdf/${arxivId}`, "open-access"));
+    tasks.push(trySemanticScholarCandidates(`arXiv:${arxivId}`));
+  }
+  if (openAlexId) {
+    tasks.push(trySemanticScholarCandidates(`OpenAlex:${openAlexId}`));
+  }
+  if (input.doi) {
+    tasks.push(trySemanticScholarCandidates(`DOI:${cleanDoi(input.doi)}`));
+  }
+
+  const settled = await Promise.allSettled(tasks);
+  for (const r of settled) {
+    if (r.status !== "fulfilled") continue;
+    attempts.push(r.value);
+    if (r.value.status === "candidates") candidates.push(...r.value.candidates);
+  }
+
+  // For non-arxiv papers (or arxiv papers where above produced nothing), walk
+  // publisher/open-access source links — PDFs first, HTML last — and add their
+  // candidates to the pool too. This runs sequentially to respect external rate
+  // limits on publisher sites.
+  if (candidates.length === 0 && !arxivId) {
+    const sourceLinks = await collectSourceLinks(input);
+    for (const link of sourceLinks) {
+      const attempt =
+        link.kind === "pdf"
+          ? await tryPdfCandidates(
+              link.url,
+              link.label === "input" || link.label === "doi" ? "publisher" : "open-access",
+            )
+          : await tryHtmlCandidates(
+              link.url,
+              link.label === "input" || link.label === "doi" ? "publisher" : "open-access",
+            );
+      attempts.push(attempt);
+      if (attempt.status === "candidates") {
+        candidates.push(...attempt.candidates);
+        // Once we've got a healthy pool, stop hitting more publisher links.
+        if (candidates.length >= 4) break;
+      }
+    }
+  }
+
+  // Re-ordinalize so figure indices in the unified pool are stable 0..N-1.
+  const reordered: FigureCandidate[] = candidates
+    .filter((c) => !looksLikeLogo(c.imageUrl))
+    .map((c, i) => ({ ...c, ordinal: i }));
+
+  return { candidates: reordered, attempts, ts: Date.now() };
+}
+
+async function getCandidatePool(input: ExtractInput): Promise<CachedPool> {
+  const key = poolCacheKey(input);
+  const existing = candidatePoolCache.get(key);
+  if (existing) {
+    const resolved = existing instanceof Promise ? await existing : existing;
+    if (Date.now() - resolved.ts <= CANDIDATE_CACHE_TTL_MS && resolved.candidates.length > 0) {
+      return resolved;
+    }
+    // Expired or empty — fall through to rebuild.
+    candidatePoolCache.delete(key);
+  }
+  const pending = buildCandidatePool(input);
+  candidatePoolCache.set(key, pending);
+  try {
+    const pool = await pending;
+    candidatePoolCache.set(key, pool);
+    return pool;
+  } catch (err) {
+    candidatePoolCache.delete(key);
+    throw err;
+  }
+}
+
+export async function extractFigure(input: ExtractInput): Promise<FigureResult> {
+  const n = input.figureIndex ?? 0;
+  const paperTitle = input.paperTitle;
+  const query = input.query;
+
+  const pool = await getCandidatePool(input);
+
+  if (pool.candidates.length > 0) {
+    const selection = await chooseCandidate(pool.candidates, n, query, paperTitle);
+    if (selection.status === "found") {
+      return candidateResult(selection);
+    }
+    // Hard guarantee: if we have ANY candidates, never return a placeholder.
+    // The user explicitly asked for a real figure in every section.
+    const fallback = pool.candidates[n] ?? pool.candidates[0];
+    if (fallback) {
+      return candidateResult({
+        candidate: fallback,
+        status: "found",
+        matchedBy: "fallback",
+      });
+    }
+  }
+
+  // Truly nothing available anywhere — preserve original OG-image fallback.
+  if (!query?.trim() && input.url) {
+    const res = await timedFetch(input.url);
+    if (res?.ok) {
+      const html = await readBoundedText(res);
+      const imageUrl = metaOgImage(html, res.url || input.url);
+      if (imageUrl) {
+        return {
+          imageUrl,
+          source: "og",
+          status: "found",
+          hideFigure: false,
+          matchedBy: "fallback",
+        };
+      }
+    }
+  }
+
+  return finalDiagnostic(pool.attempts);
+}
+
 function metaOgImage(html: string, baseUrl: string): string | null {
-  // og:image OR twitter:image — both commonly set.
   const patterns = [
     /<meta[^>]+property=["']og:image(?::secure_url|:url)?["'][^>]+content=["']([^"']+)["']/i,
     /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url|:url)?["']/i,
     /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i,
   ];
-  for (const re of patterns) {
-    const m = html.match(re);
-    if (m && m[1]) {
-      const src = m[1].trim();
-      if (src.startsWith("data:")) continue;
-      const abs = absolutize(src, baseUrl);
-      if (looksLikeLogo(abs)) continue;
-      return abs;
-    }
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (!match?.[1]) continue;
+    const src = match[1].trim();
+    if (src.startsWith("data:")) continue;
+    const absolute = absolutize(src, baseUrl);
+    if (looksLikeLogo(absolute)) continue;
+    return absolute;
   }
+
   return null;
-}
-
-// Strips a source prefix like "arxiv:2401.12345" → "2401.12345".
-function bareArxivId(itemId: string): string | null {
-  const m = itemId.match(/^arxiv:(.+)$/);
-  if (!m) return null;
-  // ar5iv accepts both v-suffixed and bare; strip any leading "abs/".
-  return m[1].replace(/^abs\//, "");
-}
-
-export async function extractFigure(input: ExtractInput): Promise<FigureResult> {
-  const arxivId = bareArxivId(input.itemId);
-  if (arxivId) {
-    const ar5ivUrl = `https://ar5iv.labs.arxiv.org/html/${encodeURIComponent(arxivId)}`;
-    const res = await timedFetch(ar5ivUrl);
-    if (res && res.ok) {
-      const html = await readBoundedText(res);
-      if (!isAr5ivErrorPage(html)) {
-        const img = firstFigureImg(html, ar5ivUrl);
-        if (img) return { imageUrl: img, source: "ar5iv" };
-      }
-    }
-    // ar5iv miss — DO NOT fall through to arxiv abs og:image; that's the
-    // arxiv site logo, not a figure. We'd rather show no image than a
-    // misleading one. Keeping the metaOgImage filter is belt-and-braces.
-    return { imageUrl: null, source: null };
-  }
-
-  // HN items: `url` points to whatever the submitter linked (GitHub repos,
-  // personal blogs, corporate sites). og:image on those is usually a
-  // generic social preview — repo cards, logo banners, default OG images —
-  // rarely something that represents the discussion. Better to show no
-  // image than a misleading one. Re-evaluate per-source if a future
-  // adapter (e.g. blog with reliable hero) wants opt-in figures.
-  if (input.itemId.startsWith("hn:")) {
-    return { imageUrl: null, source: null };
-  }
-
-  // Generic path: fetch the item URL and read og:image.
-  if (!input.url) return { imageUrl: null, source: null };
-  const res = await timedFetch(input.url);
-  if (!res || !res.ok) return { imageUrl: null, source: null };
-  const html = await readBoundedText(res);
-  const og = metaOgImage(html, input.url);
-  return { imageUrl: og, source: og ? "og" : null };
 }

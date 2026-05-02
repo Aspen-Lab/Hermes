@@ -37,12 +37,27 @@ async function fetchRemote(): Promise<Partial<UserProfile> | null> {
   }
 }
 
+function remoteProfilePayload(profile: UserProfile): Partial<UserProfile> {
+  const {
+    tavilyEnabled,
+    tavilyApiKey,
+    feedAiProvider,
+    feedAiApiKey,
+    ...rest
+  } = profile;
+  void tavilyEnabled;
+  void tavilyApiKey;
+  void feedAiProvider;
+  void feedAiApiKey;
+  return rest;
+}
+
 async function pushRemote(p: UserProfile): Promise<void> {
   try {
     const res = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(p),
+      body: JSON.stringify(remoteProfilePayload(p)),
       cache: "no-store",
     });
     const body = await res.json().catch(() => null);

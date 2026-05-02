@@ -1,8 +1,12 @@
 import type { RawItem, SourceId } from "@/lib/sources/types";
 
 const SOURCE_PRIORITY: Record<SourceId, number> = {
+  semantic_scholar: 5,
+  arxiv: 4,
   openalex: 3,
-  arxiv: 2,
+  pubmed: 2,
+  dblp: 2,
+  web: 1,
   hn: 1,
 };
 

@@ -1,4 +1,5 @@
 import type { RawItem } from "@/lib/sources/types";
+import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
 
 export function reconstructAbstract(
   index: Record<string, number[]> | null | undefined,
@@ -44,6 +45,7 @@ export interface OpenAlexWork {
   cited_by_count: number;
   doi: string | null;
   concepts?: OpenAlexConcept[];
+  type_crossref?: string | null;
 }
 
 // Pick the most useful URL for a paper. Order of preference:
@@ -64,26 +66,29 @@ function bestUrl(w: OpenAlexWork): string {
 }
 
 export function openAlexWorkToRawItem(w: OpenAlexWork): RawItem {
-  const abstract = reconstructAbstract(w.abstract_inverted_index);
+  const abstract = cleanDisplayText(reconstructAbstract(w.abstract_inverted_index));
   const doi = w.doi ?? undefined;
   const tags = (w.concepts ?? [])
     .filter((c) => c.level >= 1 && c.level <= 3)
-    .map((c) => c.display_name);
+    .map((c) => cleanDisplayText(c.display_name))
+    .filter(Boolean);
   return {
     id: normalizeOpenAlexId(w.id),
     source: "openalex",
-    title: w.title || "",
+    title: cleanDisplayText(w.title),
     authors: (w.authorships ?? [])
       .map((a) => a.author?.display_name)
+      .map(cleanDisplayText)
       .filter((n): n is string => Boolean(n)),
     abstract: abstract || undefined,
     url: bestUrl(w),
     publishedAt: w.publication_date || "",
-    venue: w.primary_location?.source?.display_name,
+    venue: cleanDisplayTextOrUndefined(w.primary_location?.source?.display_name),
     tags: tags.length > 0 ? tags : undefined,
     metadata: {
       citationCount: w.cited_by_count,
       doi,
+      workType: cleanDisplayTextOrUndefined(w.type_crossref),
     },
   };
 }

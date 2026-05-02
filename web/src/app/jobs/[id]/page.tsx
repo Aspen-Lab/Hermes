@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
@@ -14,11 +14,11 @@ import {
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 
-function formatPosted(d?: string): string | null {
+function formatPosted(d: string | undefined, now: number): string | null {
   if (!d) return null;
   const date = new Date(d);
   if (Number.isNaN(date.getTime())) return null;
-  const diff = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+  const diff = Math.floor((now - date.getTime()) / 86_400_000);
   if (diff < 1) return "Today";
   if (diff < 2) return "Yesterday";
   if (diff < 14) return `${diff}d ago`;
@@ -57,6 +57,7 @@ export default function JobDetailPage({
   const savedJobs = useFeedStore((s) => s.savedJobs);
   const markRead = useFeedStore((s) => s.markRead);
   const { saveJob, notInterestedJob } = useFeedStore();
+  const [now] = useState(Date.now);
 
   const job =
     feedJobs.find((j) => j.id === id) ??
@@ -88,9 +89,9 @@ export default function JobDetailPage({
   const matchPct = job.relevanceScore
     ? Math.round(Math.max(0, Math.min(1, job.relevanceScore)) * 100)
     : null;
-  const postedLabel = formatPosted(job.postedDate);
+  const postedLabel = formatPosted(job.postedDate, now);
   const daysOld = job.postedDate
-    ? Math.floor((Date.now() - new Date(job.postedDate).getTime()) / 86_400_000)
+    ? Math.floor((now - new Date(job.postedDate).getTime()) / 86_400_000)
     : null;
   const isFresh = daysOld !== null && daysOld <= 30;
 

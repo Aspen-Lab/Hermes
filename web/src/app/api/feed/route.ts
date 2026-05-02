@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runFeedPipeline } from "@/lib/feed/pipeline";
-import type { FeedRequest } from "@/lib/feed/types";
+import type { FeedRequest, SearchConnectors } from "@/lib/feed/types";
+import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SourceId } from "@/lib/sources/types";
 
 const CACHE_HEADERS = {
@@ -16,11 +17,72 @@ function cleanStringArray(input: unknown): string[] {
 
 function parseSources(input: unknown): SourceId[] | undefined {
   if (!Array.isArray(input)) return undefined;
-  const valid: SourceId[] = ["openalex", "arxiv", "hn"];
+  const valid: SourceId[] = [
+    "openalex",
+    "semantic_scholar",
+    "arxiv",
+    "dblp",
+    "pubmed",
+    "web",
+    "hn",
+  ];
   const out = input.filter((s): s is SourceId =>
     valid.includes(s as SourceId),
   );
   return out.length > 0 ? out : undefined;
+}
+
+function parseAiTier(input: unknown): 0 | 1 | 2 | undefined {
+  const n = typeof input === "number" ? input : Number(input);
+  if (!Number.isFinite(n)) return undefined;
+  if (n >= 2) return 2;
+  if (n <= 0) return 0;
+  return 1;
+}
+
+function cleanOptionalString(input: unknown): string | undefined {
+  return typeof input === "string" && input.trim().length > 0
+    ? input.trim()
+    : undefined;
+}
+
+function parseSearchConnectors(input: unknown): SearchConnectors | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const maybeObject = input as Record<string, unknown>;
+  const tavilyRaw =
+    maybeObject.tavily && typeof maybeObject.tavily === "object"
+      ? (maybeObject.tavily as Record<string, unknown>)
+      : null;
+  if (!tavilyRaw) return undefined;
+
+  const enabled =
+    typeof tavilyRaw.enabled === "boolean" ? tavilyRaw.enabled : undefined;
+  const apiKey = cleanOptionalString(tavilyRaw.apiKey);
+  if (enabled === undefined && apiKey === undefined) return undefined;
+
+  return {
+    tavily: {
+      enabled,
+      apiKey,
+    },
+  };
+}
+
+function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const value = input as Record<string, unknown>;
+  const provider = cleanOptionalString(value.provider);
+  const apiKey = cleanOptionalString(value.apiKey);
+  const model = cleanOptionalString(value.model);
+
+  if (!provider || !apiKey) return undefined;
+  if (!["openai", "gemini", "anthropic"].includes(provider)) return undefined;
+
+  return {
+    provider: provider as ProviderOverrideConfig["provider"],
+    apiKey,
+    model,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -39,20 +101,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const softTopics = cleanStringArray(body.softTopics);
   const methods = cleanStringArray(body.methods);
   const venues = cleanStringArray(body.venues);
   const seedTexts = cleanStringArray(body.seedTexts);
+  const negativeTopics = cleanStringArray(body.negativeTopics);
 
   const result = await runFeedPipeline({
     topics,
+    softTopics: softTopics.length > 0 ? softTopics : undefined,
     methods: methods.length > 0 ? methods : undefined,
     venues: venues.length > 0 ? venues : undefined,
     seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+    negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
     sources: parseSources(body.sources),
     perSourceLimit: body.perSourceLimit,
     topN: body.topN,
     weights: body.weights,
     sourceWeights: body.sourceWeights,
+    controls: body.controls,
+    aiTier: parseAiTier(body.aiTier),
+    searchConnectors: parseSearchConnectors(body.searchConnectors),
+    llmOverride: parseLlmOverride(body.llmOverride),
   });
 
   return NextResponse.json(result, { headers: CACHE_HEADERS });
