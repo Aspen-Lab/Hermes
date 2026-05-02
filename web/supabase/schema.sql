@@ -14,6 +14,7 @@ create table if not exists public.profiles (
   industry_vs_academia text,
   phd_year             integer,
   school               text,
+  lab                  text,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );

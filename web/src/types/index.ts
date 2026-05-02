@@ -106,7 +106,7 @@ export interface UserProfile {
   locationPreferences: string[];
   preferredMethods: string[];
   phdYear?: number;
-  /** Affiliation — university, lab, or company. Plain string for now. */
+  /** Affiliation — university or company. */
   school?: string;
   /**
    * Free-text description of the specific project the user is currently
@@ -142,6 +142,8 @@ export interface UserProfile {
   feedAvoidReviews: boolean;
   feedAvoidOldPapers: boolean;
   feedAvoidBroadSurveys: boolean;
+  /** Lab / group / team within `school`. */
+  lab?: string;
   // Daily-digest preferences. `digestHourLocal` is interpreted in
   // `digestTimezone` (IANA name) by the scheduling cron.
   digestEnabled: boolean;

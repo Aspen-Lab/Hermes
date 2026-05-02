@@ -43,6 +43,7 @@ interface ProfileState {
   updateFeedAvoidReviews: (value: boolean) => void;
   updateFeedAvoidOldPapers: (value: boolean) => void;
   updateFeedAvoidBroadSurveys: (value: boolean) => void;
+  updateLab: (lab: string) => void;
   updateDigestEnabled: (v: boolean) => void;
   updateDigestHourLocal: (h: number) => void;
   updateDigestTimezone: (tz: string) => void;
@@ -139,6 +140,11 @@ export const useProfileStore = create<ProfileState>()(
       updateFeedAvoidBroadSurveys: (value) =>
         set((s) => ({ profile: { ...s.profile, feedAvoidBroadSurveys: value } })),
 
+      updateLab: (lab) =>
+        set((s) => ({
+          profile: { ...s.profile, lab: lab.trim() || undefined },
+        })),
+
       updateDigestEnabled: (v) =>
         set((s) => ({ profile: { ...s.profile, digestEnabled: v } })),
       updateDigestHourLocal: (h) =>
@@ -199,6 +205,7 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.feedAvoidReviews !== undefined) merged.feedAvoidReviews = remote.feedAvoidReviews;
           if (remote.feedAvoidOldPapers !== undefined) merged.feedAvoidOldPapers = remote.feedAvoidOldPapers;
           if (remote.feedAvoidBroadSurveys !== undefined) merged.feedAvoidBroadSurveys = remote.feedAvoidBroadSurveys;
+          if (remote.lab !== undefined) merged.lab = remote.lab;
           if (remote.digestEnabled !== undefined) merged.digestEnabled = remote.digestEnabled;
           if (remote.digestHourLocal !== undefined) merged.digestHourLocal = remote.digestHourLocal;
           if (remote.digestTimezone !== undefined) merged.digestTimezone = remote.digestTimezone;

@@ -12,6 +12,7 @@ import { applyColorTheme } from "@/lib/theme";
 import { useProfileStore } from "@/store/profile";
 import { useFeedStore } from "@/store/feed";
 import { careerStages, colorThemeOptions, industryPreferences, type ColorTheme } from "@/types";
+import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 
 const industryLabels: Record<string, string> = {
   academia: "Academia",
@@ -229,6 +230,7 @@ export default function ProfilePage() {
     updateFeedAvoidReviews,
     updateFeedAvoidOldPapers,
     updateFeedAvoidBroadSurveys,
+    updateLab,
     updateDigestEnabled,
     updateDigestHourLocal,
     updateDigestTimezone,
@@ -363,6 +365,7 @@ export default function ProfilePage() {
           updateFeedAvoidReviews={updateFeedAvoidReviews}
           updateFeedAvoidOldPapers={updateFeedAvoidOldPapers}
           updateFeedAvoidBroadSurveys={updateFeedAvoidBroadSurveys}
+          updateLab={updateLab}
           updateVenues={updateVenues}
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
@@ -500,7 +503,12 @@ function DashboardView({
           {profile.school && (
             <>
               <span className="text-text-faint/60" aria-hidden>·</span>
-              <span className="text-text-muted">{profile.school}</span>
+              <span className="text-text-muted">
+                {profile.school}
+                {profile.lab && (
+                  <span className="text-text-faint/80">{" / "}{profile.lab}</span>
+                )}
+              </span>
             </>
           )}
         </div>
@@ -1665,6 +1673,7 @@ function EditView({
   updateFeedAvoidReviews,
   updateFeedAvoidOldPapers,
   updateFeedAvoidBroadSurveys,
+  updateLab,
   updateVenues,
   updateCareerStage,
   updateIndustryPreference,
@@ -1693,6 +1702,7 @@ function EditView({
   updateFeedAvoidReviews: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidReviews"];
   updateFeedAvoidOldPapers: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidOldPapers"];
   updateFeedAvoidBroadSurveys: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidBroadSurveys"];
+  updateLab: (s: string) => void;
   updateVenues: (v: string[]) => void;
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
@@ -1790,13 +1800,36 @@ function EditView({
       </EditRow>
 
       <EditRow icon={<IconBuilding />} tone="neutral" label="Affiliation">
-        <input
-          type="text"
-          value={profile.school ?? ""}
-          onChange={(e) => updateSchool(e.target.value)}
-          placeholder="MIT Media Lab, Stanford HCI, DeepMind..."
-          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
-        />
+        <div className="space-y-2">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              School / org
+            </p>
+            <SchoolAutocomplete
+              value={profile.school ?? ""}
+              onChange={updateSchool}
+              placeholder="MIT, Stanford, DeepMind…"
+            />
+          </div>
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              Lab / group
+            </p>
+            <input
+              type="text"
+              value={profile.lab ?? ""}
+              onChange={(e) => updateLab(e.target.value)}
+              placeholder="CSAIL, HCI Group, Vision Lab…"
+              className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+            />
+            <p
+              className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              Free text — your group, advisor&apos;s lab, or team within the org.
+            </p>
+          </div>
+        </div>
       </EditRow>
 
       <EditRow icon={<IconFlask />} tone="accent" label="Project">

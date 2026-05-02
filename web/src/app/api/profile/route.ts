@@ -34,6 +34,7 @@ interface ProfileRow {
   feed_avoid_reviews: boolean;
   feed_avoid_old_papers: boolean;
   feed_avoid_broad_surveys: boolean;
+  lab: string | null;
   digest_enabled: boolean;
   digest_hour_local: number;
   digest_timezone: string;
@@ -69,6 +70,7 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
     feedAvoidReviews: row.feed_avoid_reviews,
     feedAvoidOldPapers: row.feed_avoid_old_papers,
     feedAvoidBroadSurveys: row.feed_avoid_broad_surveys,
+    lab: row.lab ?? undefined,
     digestEnabled: row.digest_enabled,
     digestHourLocal: row.digest_hour_local,
     digestTimezone: row.digest_timezone,
@@ -105,6 +107,7 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.feedAvoidReviews !== undefined) row.feed_avoid_reviews = p.feedAvoidReviews;
   if (p.feedAvoidOldPapers !== undefined) row.feed_avoid_old_papers = p.feedAvoidOldPapers;
   if (p.feedAvoidBroadSurveys !== undefined) row.feed_avoid_broad_surveys = p.feedAvoidBroadSurveys;
+  if (p.lab !== undefined) row.lab = p.lab;
   if (p.digestEnabled !== undefined) row.digest_enabled = p.digestEnabled;
   if (p.digestHourLocal !== undefined) row.digest_hour_local = p.digestHourLocal;
   if (p.digestTimezone !== undefined) row.digest_timezone = p.digestTimezone;
