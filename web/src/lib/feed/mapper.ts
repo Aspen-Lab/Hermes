@@ -1,6 +1,7 @@
 import type { RawItem } from "@/lib/sources/types";
 import type { ScoredItem } from "@/lib/scoring/types";
 import type { Paper, PaperSource } from "@/types";
+import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
 
 function mapSource(source: string, venue?: string): PaperSource {
   if (source === "arxiv") return "arxiv";
@@ -21,6 +22,9 @@ function truncate(s: string | undefined, n: number): string {
 function fallbackVenue(source: string): string {
   if (source === "arxiv") return "arXiv";
   if (source === "hn") return "Hacker News";
+  if (source === "dblp") return "DBLP";
+  if (source === "pubmed") return "PubMed";
+  if (source === "web") return "Web";
   return "";
 }
 
@@ -49,36 +53,6 @@ function cleanVenueLabel(venue: string | undefined): string | undefined {
   // OpenAlex's "arXiv (Cornell University)" → "arXiv"
   if (/^\s*arxiv\b/i.test(venue)) return "arXiv";
   return venue;
-}
-
-// Source feeds (notably HN's `story_text`) can return HTML-encoded
-// markup with `<p>` tags and entities like `&#x2F;` `&#x27;`. Render
-// surfaces are plain text — decode + strip before splitting.
-function decodeHtmlEntities(s: string): string {
-  return s
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, " ");
-}
-
-function stripHtml(s: string): string {
-  // Drop tags, collapse whitespace.
-  return s
-    .replace(/<\/?(p|br|div)\b[^>]*>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{2,}/g, "\n\n")
-    .replace(/[ \t]+/g, " ")
-    .trim();
-}
-
-function cleanProseText(s: string | undefined): string | undefined {
-  if (!s) return s;
-  return stripHtml(decodeHtmlEntities(s));
 }
 
 // HN `_tags` carries system markers (`story`, `front_page`, `show_hn`,
@@ -122,14 +96,15 @@ export function rawItemToPaper(
   item: RawItem,
   options: RawItemToPaperOptions = {},
 ): Paper {
-  const cleanedAbstract = cleanProseText(item.abstract);
+  const cleanedTitle = cleanDisplayText(item.title);
+  const cleanedAbstract = cleanDisplayTextOrUndefined(item.abstract);
   const { intro, discussion } = splitAbstractForBriefing(cleanedAbstract);
   const keywords = Array.from(
     new Set([
-      ...(options.matchedKeywords ?? []),
-      ...(item.tags ?? []).filter(isUsefulKeyword),
+      ...(options.matchedKeywords ?? []).map(cleanDisplayText),
+      ...(item.tags ?? []).filter(isUsefulKeyword).map(cleanDisplayText),
     ]),
-  ).slice(0, 6);
+  ).filter(Boolean).slice(0, 6);
   const introText = intro || truncate(cleanedAbstract, 400);
 
   // Resolve arxiv links. The arxiv adapter sets item.source="arxiv" and
@@ -141,16 +116,16 @@ export function rawItemToPaper(
     ? item.url
     : arxivFromDoi?.arxivUrl;
   const linkPaper = arxivFromDoi?.arxivUrl ?? item.url;
-  const rawVenue = item.venue || fallbackVenue(item.source);
+  const rawVenue = cleanDisplayText(item.venue || fallbackVenue(item.source));
   const venue = arxivFromDoi
     ? "arXiv"
     : cleanVenueLabel(rawVenue) ?? rawVenue;
 
   return {
     id: item.id,
-    title: item.title,
-    authors: item.authors,
-    relevanceReason: options.relevanceReason ?? "",
+    title: cleanedTitle,
+    authors: item.authors.map(cleanDisplayText).filter(Boolean),
+    relevanceReason: cleanDisplayText(options.relevanceReason),
     venue,
     source: mapSource(item.source, venue),
     summaryIntro: introText,
@@ -158,6 +133,9 @@ export function rawItemToPaper(
     summaryResultDiscussion: discussion,
     linkPaper,
     linkArxiv,
+    doi: item.metadata?.doi
+      ? item.metadata.doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "")
+      : undefined,
     publishedDate: item.publishedAt || undefined,
     isSaved: false,
     relevanceScore: options.relevanceScore,

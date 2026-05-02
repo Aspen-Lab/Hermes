@@ -43,11 +43,6 @@ export function SchoolAutocomplete({
     [value, limit],
   );
 
-  // Reset highlight when the match list changes.
-  useEffect(() => {
-    setHighlighted(0);
-  }, [value]);
-
   // Click outside closes the dropdown.
   useEffect(() => {
     if (!open) return;
@@ -64,6 +59,9 @@ export function SchoolAutocomplete({
     inputRef.current?.blur();
   };
 
+  const activeIndex =
+    matches.length > 0 ? Math.min(highlighted, matches.length - 1) : 0;
+
   const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
     if (e.key === "ArrowDown") {
@@ -79,7 +77,7 @@ export function SchoolAutocomplete({
       const exact = matches[0]?.toLowerCase() === value.trim().toLowerCase();
       if (exact || highlighted > 0) {
         e.preventDefault();
-        commit(matches[highlighted]);
+        commit(matches[activeIndex]);
       } else {
         setOpen(false);
       }
@@ -96,6 +94,7 @@ export function SchoolAutocomplete({
         value={value}
         onChange={(e) => {
           onChange(e.target.value);
+          setHighlighted(0);
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
@@ -113,7 +112,7 @@ export function SchoolAutocomplete({
           style={{ fontFamily: "var(--font-sans)" }}
         >
           {matches.map((m, i) => {
-            const active = i === highlighted;
+            const active = i === activeIndex;
             const lower = value.trim().toLowerCase();
             const idx = lower ? m.toLowerCase().indexOf(lower) : -1;
             return (

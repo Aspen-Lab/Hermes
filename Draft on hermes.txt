@@ -1,0 +1,12 @@
+需要改进的点—日期：4-28
+1.	UI
+    a.	缺乏like/dislike function
+2.	后端
+    a.	推荐算法
+        i.	每日推荐的数量太多了，需要筛检
+        ii.	筛检的质量太差了，不是我真正想要的paper
+            1.	需要更好的profile制作思路
+                a.	比如：research方面，提出目前在做什么项目，遇到了什么难题，然后让ai去理解，根据这个结合关键题词来确认到底应该找什么样的文章
+            2.	需要制作寻找conference和job event的东西
+                a.	这点，先把research
+

@@ -77,18 +77,77 @@ async function cloudFeedback(
   }
 }
 
-async function fetchRealFeed(profile: UserProfile): Promise<Paper[]> {
+async function fetchRealFeed(
+  profile: UserProfile,
+  savedPapers: Paper[] = [],
+  aiPaperSearchEnabled = true,
+): Promise<Paper[]> {
   const topics = (profile.researchTopics ?? []).filter(Boolean);
   if (topics.length === 0) return [];
+  // Promote project description + open challenges into seedTexts. These get
+  // concatenated into the TF-IDF profile string, so papers that mention the
+  // user's specific work or the challenges they're hunting bias up the rank.
+  const savedSignals = savedPapers.slice(0, 8).map((paper) =>
+    [
+      paper.title,
+      paper.summaryIntro,
+      paper.summaryExperimentKeywords.join(" "),
+    ].filter(Boolean).join(" "),
+  );
+  const seedTexts = [
+    profile.currentProject,
+    profile.currentChallenges,
+    ...savedSignals,
+  ].filter((s): s is string => Boolean(s && s.trim().length > 0));
+  const negativeTopics = (profile.dislikedTopics ?? []).filter((s) => s.trim().length > 0);
+  const softTopics = (profile.softTopics ?? []).filter(Boolean);
+  const tavilyApiKey = profile.tavilyApiKey?.trim();
+  const feedAiApiKey = profile.feedAiApiKey?.trim();
+  const hasUserLlmOverride =
+    aiPaperSearchEnabled &&
+    profile.feedAiProvider !== "default" &&
+    Boolean(feedAiApiKey);
   try {
     const res = await fetch("/api/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         topics,
+        softTopics: softTopics.length > 0 ? softTopics : undefined,
         methods: profile.preferredMethods,
         venues: profile.preferredVenues,
-        topN: 30,
+        seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+        negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
+        topN: profile.paperCount,
+        aiTier: aiPaperSearchEnabled
+          ? (hasUserLlmOverride ? 2 : undefined)
+          : 0,
+        searchConnectors: profile.tavilyEnabled
+          ? {
+              tavily: {
+                enabled: true,
+                apiKey: tavilyApiKey || undefined,
+              },
+            }
+          : undefined,
+        llmOverride: hasUserLlmOverride
+          ? {
+              provider: profile.feedAiProvider,
+              apiKey: feedAiApiKey,
+            }
+          : undefined,
+        controls: {
+          focus: profile.feedFocus,
+          freshness: profile.feedFreshness,
+          paperCount: profile.paperCount,
+          sourceMix: profile.feedSourceMix,
+          importance: profile.feedImportance,
+          methodMode: profile.feedMethodMode,
+          discoveryMode: profile.feedDiscoveryMode,
+          avoidReviews: profile.feedAvoidReviews,
+          avoidOldPapers: profile.feedAvoidOldPapers,
+          avoidBroadSurveys: profile.feedAvoidBroadSurveys,
+        },
       }),
     });
     if (!res.ok) {
@@ -121,10 +180,12 @@ interface FeedState {
   savedJobs: Job[];
   isLoading: boolean;
   lastRefresh: string | null;
+  aiPaperSearchEnabled: boolean;
   readItems: Record<string, true>;
   pendingDismissal: PendingDismissal | null;
 
   loadFeed: () => Promise<void>;
+  setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
   savePaper: (paper: Paper) => void;
   notInterestedPaper: (paper: Paper) => void;
   moreLikePaper: (paper: Paper) => void;
@@ -166,6 +227,7 @@ export const useFeedStore = create<FeedState>()(
       savedJobs: [],
       isLoading: false,
       lastRefresh: null,
+      aiPaperSearchEnabled: true,
       readItems: {},
       pendingDismissal: null,
 
@@ -173,9 +235,14 @@ export const useFeedStore = create<FeedState>()(
         set({ isLoading: true });
         const { savedPapers } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
+        const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
 
-        const realPapers = await fetchRealFeed(profile);
+        const realPapers = await fetchRealFeed(
+          profile,
+          savedPapers,
+          aiPaperSearchEnabled,
+        );
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
             ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
@@ -190,6 +257,11 @@ export const useFeedStore = create<FeedState>()(
           isLoading: false,
           lastRefresh: new Date().toISOString(),
         });
+      },
+
+      setAiPaperSearchEnabled: async (enabled) => {
+        set({ aiPaperSearchEnabled: enabled });
+        await get().loadFeed();
       },
 
       savePaper: (paper) => {
@@ -207,6 +279,11 @@ export const useFeedStore = create<FeedState>()(
       },
 
       notInterestedPaper: (paper) => {
+        // Persist disliked keywords to profile for long-term negative signal.
+        if (paper.summaryExperimentKeywords.length > 0) {
+          useProfileStore.getState().addDislikedTopics(paper.summaryExperimentKeywords);
+        }
+
         // Commit any previous pending dismissal before starting a new one.
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
@@ -386,6 +463,7 @@ export const useFeedStore = create<FeedState>()(
           savedJobs: [],
           readItems: {},
           pendingDismissal: null,
+          aiPaperSearchEnabled: true,
         });
       },
     }),
@@ -396,6 +474,7 @@ export const useFeedStore = create<FeedState>()(
         savedEvents: state.savedEvents,
         savedJobs: state.savedJobs,
         readItems: state.readItems,
+        aiPaperSearchEnabled: state.aiPaperSearchEnabled,
       }),
     }
   )

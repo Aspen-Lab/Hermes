@@ -1,11 +1,17 @@
+// Search filter model. Lives in the URL so deep-links restore state.
+//
+// Reserved URL params (see page.tsx): q, year, from, to, sort, oa, cites, src, venue
+
 export type YearPreset = "any" | "1y" | "5y" | "custom";
 export type SortKey = "relevance" | "cited" | "newest";
-export type SourceType = "journal" | "conference" | "arxiv";
 export type MinCites = 0 | 10 | 50 | 100;
+export type SourceType = "arxiv" | "journal" | "conference";
 
 export interface YearFilter {
   preset: YearPreset;
+  /** Inclusive lower bound, only meaningful when preset === "custom". */
   from?: number;
+  /** Inclusive upper bound, only meaningful when preset === "custom". */
   to?: number;
 }
 
@@ -15,6 +21,7 @@ export interface Filters {
   oa: boolean;
   minCites: MinCites;
   sources: SourceType[];
+  /** Free-text "venue contains" query. Empty string when unset. */
   venue: string;
 }
 
@@ -27,124 +34,130 @@ export const DEFAULT_FILTERS: Filters = {
   venue: "",
 };
 
-const VALID_SORT: ReadonlySet<SortKey> = new Set(["relevance", "cited", "newest"]);
-const VALID_PRESET: ReadonlySet<YearPreset> = new Set([
-  "any",
-  "1y",
-  "5y",
-  "custom",
-]);
-const VALID_SOURCE: ReadonlySet<SourceType> = new Set([
-  "journal",
-  "conference",
-  "arxiv",
-]);
-const VALID_CITES: ReadonlySet<number> = new Set([0, 10, 50, 100]);
+const VALID_YEAR_PRESETS: YearPreset[] = ["any", "1y", "5y", "custom"];
+const VALID_SORTS: SortKey[] = ["relevance", "cited", "newest"];
+const VALID_CITES: MinCites[] = [0, 10, 50, 100];
+const VALID_SOURCES: SourceType[] = ["arxiv", "journal", "conference"];
+
+function parseYear(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const n = parseInt(value, 10);
+  if (!Number.isFinite(n) || n < 1900 || n > 2100) return undefined;
+  return n;
+}
+
+export function filtersFromUrlParams(
+  params: URLSearchParams | null,
+): Filters {
+  if (!params) return cloneDefaults();
+  const yearRaw = params.get("year") as YearPreset | null;
+  const yearPreset =
+    yearRaw && VALID_YEAR_PRESETS.includes(yearRaw) ? yearRaw : "any";
+
+  const sortRaw = params.get("sort") as SortKey | null;
+  const sort =
+    sortRaw && VALID_SORTS.includes(sortRaw) ? sortRaw : "relevance";
+
+  const citesRaw = parseInt(params.get("cites") ?? "0", 10);
+  const minCites = (VALID_CITES.includes(citesRaw as MinCites)
+    ? citesRaw
+    : 0) as MinCites;
+
+  const srcRaw = (params.get("src") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s): s is SourceType => VALID_SOURCES.includes(s as SourceType));
+
+  return {
+    year: {
+      preset: yearPreset,
+      from: parseYear(params.get("from")),
+      to: parseYear(params.get("to")),
+    },
+    sort,
+    oa: params.get("oa") === "1",
+    minCites,
+    sources: srcRaw,
+    venue: params.get("venue") ?? "",
+  };
+}
+
+export function filtersToUrlParams(f: Filters): URLSearchParams {
+  const p = new URLSearchParams();
+  if (f.year.preset !== "any") p.set("year", f.year.preset);
+  if (f.year.preset === "custom") {
+    if (f.year.from != null) p.set("from", String(f.year.from));
+    if (f.year.to != null) p.set("to", String(f.year.to));
+  }
+  if (f.sort !== "relevance") p.set("sort", f.sort);
+  if (f.oa) p.set("oa", "1");
+  if (f.minCites > 0) p.set("cites", String(f.minCites));
+  if (f.sources.length > 0) p.set("src", f.sources.join(","));
+  if (f.venue.trim()) p.set("venue", f.venue.trim());
+  return p;
+}
+
+/**
+ * Translates the filter state into OpenAlex-friendly query params.
+ * Today the search API doesn't honor most of these — it's a forward-
+ * compatible hook so we can wire each filter through one at a time.
+ */
+export function filtersToApiQuery(f: Filters): URLSearchParams {
+  const p = new URLSearchParams();
+  if (f.sort === "cited") p.set("sort", "cited_by_count:desc");
+  if (f.sort === "newest") p.set("sort", "publication_date:desc");
+
+  const filterParts: string[] = [];
+  const yearRange = resolveYearRange(f.year);
+  if (yearRange) {
+    filterParts.push(`publication_year:${yearRange.from}-${yearRange.to}`);
+  }
+  if (f.oa) filterParts.push("open_access.is_oa:true");
+  if (f.minCites > 0) filterParts.push(`cited_by_count:>${f.minCites}`);
+  if (filterParts.length > 0) p.set("filter", filterParts.join(","));
+  return p;
+}
 
 export function isDefaultFilters(f: Filters): boolean {
   return (
     f.year.preset === "any" &&
+    f.year.from == null &&
+    f.year.to == null &&
     f.sort === "relevance" &&
-    f.oa === false &&
+    !f.oa &&
     f.minCites === 0 &&
     f.sources.length === 0 &&
     f.venue.trim() === ""
   );
 }
 
-export function filtersFromUrlParams(p: URLSearchParams | null): Filters {
-  if (!p) return { ...DEFAULT_FILTERS, year: { ...DEFAULT_FILTERS.year } };
-
-  const yearRaw = p.get("year") ?? "any";
-  const preset: YearPreset = (VALID_PRESET.has(yearRaw as YearPreset)
-    ? yearRaw
-    : "any") as YearPreset;
-  const fromNum = parseYear(p.get("from"));
-  const toNum = parseYear(p.get("to"));
-
-  const sortRaw = p.get("sort") ?? "relevance";
-  const sort: SortKey = (VALID_SORT.has(sortRaw as SortKey)
-    ? sortRaw
-    : "relevance") as SortKey;
-
-  const oa = p.get("oa") === "1";
-
-  const citesRaw = parseInt(p.get("cites") ?? "0", 10);
-  const minCites: MinCites = (VALID_CITES.has(citesRaw)
-    ? citesRaw
-    : 0) as MinCites;
-
-  const srcRaw = (p.get("src") ?? "").split(",").filter(Boolean);
-  const sources = srcRaw.filter((s): s is SourceType =>
-    VALID_SOURCE.has(s as SourceType),
-  );
-
-  const venue = (p.get("venue") ?? "").trim();
-
+function cloneDefaults(): Filters {
   return {
-    year: { preset, from: fromNum, to: toNum },
-    sort,
-    oa,
-    minCites,
-    sources,
-    venue,
+    year: { preset: "any" },
+    sort: "relevance",
+    oa: false,
+    minCites: 0,
+    sources: [],
+    venue: "",
   };
 }
 
-function parseYear(raw: string | null): number | undefined {
-  if (!raw) return undefined;
-  const n = parseInt(raw, 10);
-  if (!Number.isFinite(n)) return undefined;
-  if (n < 1900 || n > 2100) return undefined;
-  return n;
-}
-
-export function filtersToUrlParams(f: Filters): URLSearchParams {
-  const out = new URLSearchParams();
-  if (f.year.preset !== "any") out.set("year", f.year.preset);
-  if (f.year.preset === "custom") {
-    if (f.year.from) out.set("from", String(f.year.from));
-    if (f.year.to) out.set("to", String(f.year.to));
-  }
-  if (f.sort !== "relevance") out.set("sort", f.sort);
-  if (f.oa) out.set("oa", "1");
-  if (f.minCites > 0) out.set("cites", String(f.minCites));
-  if (f.sources.length > 0) out.set("src", f.sources.join(","));
-  if (f.venue.trim()) out.set("venue", f.venue.trim());
-  return out;
-}
-
-export interface ResolvedYearRange {
-  from?: number;
-  to?: number;
-}
-
-export function resolveYearRange(
-  year: YearFilter,
-  now: Date = new Date(),
-): ResolvedYearRange {
-  const currentYear = now.getUTCFullYear();
-  switch (year.preset) {
+function resolveYearRange(
+  y: YearFilter,
+): { from: number; to: number } | null {
+  const now = new Date().getFullYear();
+  switch (y.preset) {
     case "any":
-      return {};
+      return null;
     case "1y":
-      return { from: currentYear - 1 };
+      return { from: now - 1, to: now };
     case "5y":
-      return { from: currentYear - 4 };
-    case "custom":
-      return { from: year.from, to: year.to };
+      return { from: now - 5, to: now };
+    case "custom": {
+      const from = y.from ?? 1900;
+      const to = y.to ?? now;
+      if (from > to) return null;
+      return { from, to };
+    }
   }
-}
-
-export function filtersToApiQuery(f: Filters): URLSearchParams {
-  const out = new URLSearchParams();
-  const range = resolveYearRange(f.year);
-  if (range.from) out.set("from", String(range.from));
-  if (range.to) out.set("to", String(range.to));
-  if (f.sort !== "relevance") out.set("sort", f.sort);
-  if (f.oa) out.set("oa", "1");
-  if (f.minCites > 0) out.set("cites", String(f.minCites));
-  if (f.sources.length > 0) out.set("src", f.sources.join(","));
-  if (f.venue.trim()) out.set("venue", f.venue.trim());
-  return out;
 }

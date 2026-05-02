@@ -13,10 +13,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+    if (!supabase) return;
 
     let mounted = true;
     supabase.auth.getUser().then(({ data }) => {

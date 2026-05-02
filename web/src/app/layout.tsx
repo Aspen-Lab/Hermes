@@ -14,6 +14,7 @@ import { GithubStars } from "@/components/github-stars";
 import { ProfileSync } from "@/components/profile-sync";
 import { FeedSync } from "@/components/feed-sync";
 import { UserMenu } from "@/components/user-menu";
+import { ThemeSync } from "@/components/theme-sync";
 
 // Primary UI sans — clean, modern, pairs with Source Serif 4
 const geist = Geist({
@@ -68,6 +69,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
+      data-color-theme="system"
       className={`${geist.variable} ${geistMono.variable} ${sourceSerif.variable} ${instrumentSerif.variable} ${notoSansSC.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
@@ -79,6 +81,7 @@ export default function RootLayout({
         </div>
         <UndoToast />
         <KeyboardLayer />
+        <ThemeSync />
         <ProfileSync />
         <FeedSync />
       </body>

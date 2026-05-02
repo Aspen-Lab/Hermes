@@ -1,0 +1,109 @@
+import type { SourceAdapter, SourceQuery, RawItem } from "./types";
+import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+
+const S2_API = "https://api.semanticscholar.org/graph/v1/paper/search";
+
+interface S2Author {
+  name?: string | null;
+}
+
+interface S2Paper {
+  paperId: string;
+  corpusId?: number;
+  title?: string | null;
+  abstract?: string | null;
+  authors?: S2Author[];
+  year?: number | null;
+  publicationDate?: string | null;
+  venue?: string | null;
+  citationCount?: number;
+  url?: string | null;
+  externalIds?: {
+    DOI?: string;
+    ArXiv?: string;
+    PubMed?: string;
+  };
+  openAccessPdf?: {
+    url?: string | null;
+  } | null;
+  fieldsOfStudy?: string[];
+}
+
+async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
+  const { topics = [], queries = [], limit = 30 } = query;
+  const searchQueries = buildSearchQueries(topics, queries);
+  if (searchQueries.length === 0) return [];
+
+  const perQuery = Math.max(5, Math.ceil(Math.min(limit, 50) / searchQueries.length));
+  const all: RawItem[] = [];
+
+  for (const searchQuery of searchQueries) {
+    const params = new URLSearchParams({
+      query: searchQuery,
+      limit: String(perQuery),
+      fields:
+        "paperId,corpusId,title,abstract,authors,year,publicationDate,venue,citationCount,url,externalIds,openAccessPdf,fieldsOfStudy",
+    });
+
+    try {
+      const res = await fetch(`${S2_API}?${params}`, {
+        signal: AbortSignal.timeout(8000),
+        next: { revalidate: 300 },
+      });
+      if (!res.ok) {
+        console.error("[semantic-scholar] non-ok response:", res.status);
+        continue;
+      }
+      const data = (await res.json()) as { data?: S2Paper[] };
+      all.push(...(data.data ?? []).map(paperToRawItem));
+    } catch (err) {
+      console.error("[semantic-scholar] fetch error:", err);
+    }
+  }
+
+  return uniqueById(all).slice(0, limit);
+}
+
+function paperToRawItem(paper: S2Paper): RawItem {
+  const arxivId = paper.externalIds?.ArXiv;
+  const doi = paper.externalIds?.DOI;
+  const url =
+    paper.openAccessPdf?.url ||
+    (arxivId ? `https://arxiv.org/abs/${arxivId}` : undefined) ||
+    (doi ? `https://doi.org/${doi}` : undefined) ||
+    paper.url ||
+    `https://www.semanticscholar.org/paper/${paper.paperId}`;
+
+  return {
+    id: `semantic_scholar:${paper.paperId}`,
+    source: "semantic_scholar",
+    title: cleanDisplayText(paper.title),
+    authors: (paper.authors ?? [])
+      .map((author) => cleanDisplayText(author.name))
+      .filter(Boolean),
+    abstract: cleanDisplayTextOrUndefined(paper.abstract),
+    url,
+    publishedAt: paper.publicationDate || (paper.year ? `${paper.year}-01-01` : ""),
+    venue: cleanDisplayTextOrUndefined(paper.venue),
+    tags: (paper.fieldsOfStudy ?? []).map(cleanDisplayText).filter(Boolean),
+    metadata: {
+      citationCount: paper.citationCount ?? 0,
+      doi,
+      semanticScholarId: paper.paperId,
+    },
+  };
+}
+
+function buildSearchQueries(topics: string[], queries: string[]): string[] {
+  const source = queries.length > 0 ? queries : topics;
+  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 6);
+}
+
+function uniqueById(items: RawItem[]): RawItem[] {
+  return Array.from(new Map(items.map((item) => [item.id, item])).values());
+}
+
+export const semanticScholar: SourceAdapter = {
+  id: "semantic_scholar",
+  fetch: fetchImpl,
+};

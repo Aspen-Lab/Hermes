@@ -4,6 +4,8 @@ import {
   openAlexWorkToRawItem,
   type OpenAlexWork,
 } from "@/lib/utils/openalex";
+import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import { fetchAbstractFromSS } from "./enrich";
 
 const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
 
@@ -16,7 +18,24 @@ async function fetchOpenAlexPaper(workId: string): Promise<RawItem | null> {
     });
     if (!res.ok) return null;
     const work = (await res.json()) as OpenAlexWork;
-    return openAlexWorkToRawItem(work);
+    const item = openAlexWorkToRawItem(work);
+
+    // Publishers like Nature / Science don't license abstracts to OpenAlex.
+    // Fill in via Semantic Scholar — try OpenAlex ID first, then DOI.
+    if (!item.abstract) {
+      const fromOA = await fetchAbstractFromSS(`OpenAlex:${workId}`);
+      if (fromOA) {
+        item.abstract = fromOA;
+      } else if (item.metadata.doi) {
+        const cleanedDoi = item.metadata.doi.replace(
+          /^https?:\/\/(?:dx\.)?doi\.org\//i,
+          "",
+        );
+        const fromDoi = await fetchAbstractFromSS(`DOI:${cleanedDoi}`);
+        if (fromDoi) item.abstract = fromDoi;
+      }
+    }
+    return item;
   } catch (err) {
     console.error("[papers/by-id] openalex error:", err);
     return null;
@@ -41,11 +60,6 @@ function asArray<T>(v: T | T[] | undefined | null): T[] {
   return Array.isArray(v) ? v : [v];
 }
 
-function cleanWhitespace(s: string | undefined): string | undefined {
-  if (!s) return undefined;
-  return s.trim().replace(/\s+/g, " ");
-}
-
 async function fetchArxivPaper(arxivId: string): Promise<RawItem | null> {
   const url = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}`;
   try {
@@ -63,23 +77,23 @@ async function fetchArxivPaper(arxivId: string): Promise<RawItem | null> {
     const entries: ArxivEntry[] = asArray(parsed?.feed?.entry);
     if (entries.length === 0) return null;
     const e = entries[0];
-    const authors = asArray(e.author).map((a) => a.name);
-    const categories = asArray(e.category).map((c) => c["@_term"]);
+    const authors = asArray(e.author).map((a) => cleanDisplayText(a.name)).filter(Boolean);
+    const categories = asArray(e.category).map((c) => cleanDisplayText(c["@_term"])).filter(Boolean);
     const links = asArray(e.link);
     const absLink =
       links.find((l) => l["@_rel"] === "alternate")?.["@_href"] ?? e.id;
     return {
       id: `arxiv:${arxivId}`,
       source: "arxiv",
-      title: cleanWhitespace(e.title) || "",
+      title: cleanDisplayText(e.title),
       authors,
-      abstract: cleanWhitespace(e.summary),
+      abstract: cleanDisplayTextOrUndefined(e.summary),
       url: absLink,
       publishedAt: e.published,
       venue: "arXiv",
       tags: categories.length > 0 ? categories : undefined,
       metadata: {
-        arxivCategory: e["arxiv:primary_category"]?.["@_term"],
+        arxivCategory: cleanDisplayTextOrUndefined(e["arxiv:primary_category"]?.["@_term"]),
       },
     };
   } catch (err) {
