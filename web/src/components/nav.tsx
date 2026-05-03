@@ -69,15 +69,36 @@ function IconProfile({ active = false }: { active?: boolean }) {
   );
 }
 
+function IconPersona({ active = false }: { active?: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={active ? 2 : 1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v18M3 12h18" />
+    </svg>
+  );
+}
+
 const tabs: Tab[] = [
   { href: "/", label: "Feed", shortcut: "g h" },
   { href: "/saved", label: "Saved", shortcut: "g s" },
+  { href: "/persona", label: "Persona", shortcut: "g x" },
   { href: "/profile", label: "Profile", shortcut: "g p" },
 ];
 
 function iconFor(href: string, active: boolean): React.ReactNode {
   if (href === "/") return <IconFeed active={active} />;
   if (href === "/saved") return <IconSaved active={active} />;
+  if (href === "/persona") return <IconPersona active={active} />;
   return <IconProfile active={active} />;
 }
 

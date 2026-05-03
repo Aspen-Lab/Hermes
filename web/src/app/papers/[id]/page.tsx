@@ -17,6 +17,7 @@ import {
   PropertyStrip,
   Property,
   PullQuote,
+  FactChip,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 import {
@@ -76,6 +77,24 @@ function pickRelated(current: Paper, pool: Paper[], limit = 3): Paper[] {
     .slice(0, limit)
     .map((x) => x.p);
   return scored;
+}
+
+function relativeTimeFromDays(days: number): string {
+  if (days < 1) return "today";
+  if (days < 2) return "yesterday";
+  if (days < 30) return `${days} days ago`;
+  if (days < 60) return "1 month ago";
+  if (days < 365) return `${Math.round(days / 30)} months ago`;
+  const years = days / 365;
+  if (years < 1.5) return "1 year ago";
+  return `${years.toFixed(1).replace(/\.0$/, "")} years ago`;
+}
+
+function teamSizeLabel(n: number): string {
+  if (n === 1) return "Solo author";
+  if (n <= 3) return `${n} authors · small team`;
+  if (n <= 10) return `${n} authors`;
+  return `${n} authors · large team`;
 }
 
 function extractYear(paper: Paper): number | null {
@@ -331,6 +350,16 @@ export default function PaperDetailPage({
     : null;
   const publishedLabel = formatPublishedDate(paper.publishedDate);
   const readMinutes = readingTimeMinutes(paper);
+  const daysOld = paper.publishedDate
+    ? Math.max(
+        0,
+        Math.floor(
+          (Date.now() - new Date(paper.publishedDate).getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      )
+    : null;
+  const isRecent = daysOld !== null && daysOld < 30;
   const isLiked =
     paper.feedback === "moreLikeThis" || paper.feedback === "liked";
 
@@ -542,20 +571,48 @@ export default function PaperDetailPage({
           </div>
         )}
 
-        {/* ════════════════════════════════════════
-            SECTION 4 — EXPLORE FURTHER
-            ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconLink />} index={6}>
+        {/* ── Quick signals ── */}
+        <SectionTitle icon={<IconCheck />} index={7}>
+          At a glance
+        </SectionTitle>
+        <div className="flex flex-wrap gap-2">
+          {paper.linkArxiv && (
+            <FactChip icon={<IconArxivDoc />} tone="accent">Preprint on arXiv</FactChip>
+          )}
+          {paper.linkCode && (
+            <FactChip icon={<IconCode />} tone="tag">Code available</FactChip>
+          )}
+          {daysOld !== null && (
+            <FactChip icon={<IconClock />} tone={isRecent ? "tag" : "muted"}>
+              {relativeTimeFromDays(daysOld)}
+            </FactChip>
+          )}
+          <FactChip icon={<IconUsers />} tone="neutral">
+            {teamSizeLabel(paper.authors.length)}
+          </FactChip>
+        </div>
+
+        {/* ── Explore further ── */}
+        <SectionTitle icon={<IconLink />} index={8}>
           Explore further
         </SectionTitle>
 
         <div className="flex flex-wrap gap-2">
           <LinkChip label={primaryLabel} href={primaryUrl} />
           {showPaperLink && (
-            <LinkChip label="Publisher site" href={paper.linkPaper} />
+            <LinkChip
+              icon={<IconDoc />}
+              label="Publisher site"
+              href={paper.linkPaper}
+            />
           )}
-          <LinkChip label="Google Scholar" href={scholarUrl} />
           <LinkChip
+            icon={<IconScholar />}
+            label="Google Scholar"
+            href={scholarUrl}
+          />
+          <LinkChip
+            icon={<IconCode />}
             label={paper.linkCode ? "Source code" : "Search code"}
             href={codeUrl}
           />
@@ -569,6 +626,42 @@ export default function PaperDetailPage({
             Refining report with AI…
           </p>
         )}
+
+        {/* ── Train feed ── */}
+        <div
+          className="mt-12 pt-6 border-t border-border animate-fade-in-up flex items-center gap-3 flex-wrap"
+          style={{ "--i": 9 } as React.CSSProperties}
+        >
+          <button
+            type="button"
+            onClick={() => moreLikePaper(paper)}
+            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-transform duration-300 ease-out group-hover:rotate-12"
+              aria-hidden
+            >
+              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+              <path d="M19 3l.6 1.6L21 5l-1.4.4L19 7l-.6-1.6L17 5l1.4-.4z" />
+            </svg>
+            More like this
+          </button>
+          <span
+            className="text-[12.5px] text-text-faint"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            Tomorrow&rsquo;s briefing leans toward this paper&rsquo;s topics, methods, and venue.
+          </span>
+        </div>
 
         {/* ── Related from your feed ── */}
         {related.length > 0 && (
@@ -969,7 +1062,46 @@ function IconLink() {
   );
 }
 
-// ── Loading skeleton ───────────────────────────────────────────
+function IconArxivDoc() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+
+function IconDoc() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+      <path d="M14 2v6h6" />
+    </svg>
+  );
+}
+
+function IconScholar() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M2 10l10-5 10 5-10 5L2 10z" />
+      <path d="M6 12v5a6 6 0 0 0 12 0v-5" />
+      <path d="M22 10v6" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 12l5 5L20 7" />
+    </svg>
+  );
+}
+
+// ── Briefing skeleton ──
+// Loading state that mirrors the real briefing's geometry so the page doesn't
+// jump when content arrives. Staggered fade-in + shimmering bars.
 
 function ShimmerBar({
   width,

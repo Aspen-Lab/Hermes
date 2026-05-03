@@ -23,6 +23,7 @@ const GROUPS: { title: string; items: Shortcut[] }[] = [
     items: [
       { keys: "g h", label: "Go to briefing" },
       { keys: "g s", label: "Go to saved" },
+      { keys: "g x", label: "Go to persona" },
       { keys: "g p", label: "Go to profile" },
     ],
   },
@@ -103,6 +104,12 @@ export function KeyboardLayer() {
         }
         if (e.key === "p") {
           router.push("/profile");
+          setAwaitingG(false);
+          e.preventDefault();
+          return;
+        }
+        if (e.key === "x") {
+          router.push("/persona");
           setAwaitingG(false);
           e.preventDefault();
           return;

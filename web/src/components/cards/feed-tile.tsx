@@ -26,7 +26,7 @@ function fmtDate(d: string) {
 
 function tileShellClass(isRead: boolean) {
   return [
-    "group block rounded-xl bg-surface shadow-card p-4",
+    "group relative block rounded-xl bg-surface shadow-card p-4",
     "animate-fade-in-up",
     "transition-[box-shadow,transform] duration-200 ease-out",
     "hover:shadow-card-hover hover:-translate-y-[1px]",
@@ -47,30 +47,147 @@ function paperBadgeKind(paper: Paper): BadgeKind {
   return isAcademic ? "paper" : "discussion";
 }
 
+// ── Category icons (12px line, currentColor) ──────────────────
+
+function PaperIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+
+function DiscussionIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z" />
+      <circle cx="9" cy="12" r="0.6" fill="currentColor" />
+      <circle cx="13" cy="12" r="0.6" fill="currentColor" />
+      <circle cx="17" cy="12" r="0.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function EventIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+function JobIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+      <path d="M3 13h18" />
+    </svg>
+  );
+}
+
+// ── Inline metadata icons (10px) ──────────────────────────────
+
+function CalendarMini() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+function PinMini() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+      <circle cx="12" cy="10" r="2.6" />
+    </svg>
+  );
+}
+
+function GlobeMini() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </svg>
+  );
+}
+
+function BuildingMini() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16" />
+      <path d="M16 9h3a2 2 0 0 1 2 2v10" />
+      <path d="M9 7h2M9 11h2M9 15h2" />
+    </svg>
+  );
+}
+
+function AuthorMini() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 21a7 7 0 0 1 14 0" />
+    </svg>
+  );
+}
+
+// ── Badge / chip ──────────────────────────────────────────────
+
+const KIND_ICON: Record<BadgeKind, () => React.ReactElement> = {
+  paper: PaperIcon,
+  event: EventIcon,
+  job: JobIcon,
+  discussion: DiscussionIcon,
+};
+
+const KIND_LABEL: Record<BadgeKind, string> = {
+  paper: "Paper",
+  event: "Event",
+  job: "Job",
+  discussion: "Discussion",
+};
+
+const KIND_TONE: Record<BadgeKind, string> = {
+  paper: "text-accent bg-accent-dim",
+  event: "text-tag bg-tag-dim",
+  job: "text-link bg-link-dim",
+  discussion: "text-text-muted bg-bg-secondary/70",
+};
+
+// Vertical accent stripe on the left edge — at-a-glance category cue.
+const KIND_STRIPE: Record<BadgeKind, string> = {
+  paper: "bg-accent/55",
+  event: "bg-tag/55",
+  job: "bg-link/55",
+  discussion: "bg-text-faint/40",
+};
+
 function KindBadge({ kind }: { kind: BadgeKind }) {
-  const tone =
-    kind === "paper"
-      ? "text-accent bg-accent-dim"
-      : kind === "event"
-        ? "text-tag bg-tag-dim"
-        : kind === "job"
-          ? "text-link bg-link-dim"
-          : "text-text-muted bg-bg-secondary/60";
-  const label =
-    kind === "paper"
-      ? "Paper"
-      : kind === "event"
-        ? "Event"
-        : kind === "job"
-          ? "Job"
-          : "Discussion";
+  const Icon = KIND_ICON[kind];
   return (
     <span
-      className={`inline-flex items-center text-[9.5px] font-semibold uppercase tracking-[0.16em] px-1.5 py-[3px] rounded ${tone}`}
+      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
       style={{ fontFamily: "var(--font-sans)" }}
     >
-      {label}
+      <Icon />
+      {KIND_LABEL[kind]}
     </span>
+  );
+}
+
+function KindStripe({ kind }: { kind: BadgeKind }) {
+  return (
+    <span
+      aria-hidden
+      className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r ${KIND_STRIPE[kind]}`}
+    />
   );
 }
 
@@ -83,6 +200,17 @@ function ScoreChip({ scored }: { scored: RelevanceScored }) {
       style={{ fontFamily: "var(--font-sans)" }}
     >
       {pct}%
+    </span>
+  );
+}
+
+function MetaItem({ icon: Icon, children }: { icon: () => React.ReactElement; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 min-w-0">
+      <span className="text-text-faint/80 shrink-0">
+        <Icon />
+      </span>
+      <span className="truncate">{children}</span>
     </span>
   );
 }
@@ -142,25 +270,30 @@ function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
     fn();
   };
 
+  const kind = paperBadgeKind(paper);
+  const authorLine =
+    paper.authors.slice(0, 2).join(", ") +
+    (paper.authors.length > 2 ? ` +${paper.authors.length - 2}` : "") +
+    (paper.venue ? ` · ${paper.venue}` : "");
+
   return (
     <Link
       href={`/papers/${paper.id}`}
       className={tileShellClass(isRead)}
       style={{ fontFamily: "var(--font-sans)" }}
     >
+      <KindStripe kind={kind} />
       <div className="flex items-center gap-2 mb-2.5">
-        <KindBadge kind={paperBadgeKind(paper)} />
+        <KindBadge kind={kind} />
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={paper} />
       </div>
       <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {paper.title}
       </h3>
-      <p className="text-[11.5px] text-text-faint mt-2 line-clamp-1">
-        {paper.authors.slice(0, 2).join(", ")}
-        {paper.authors.length > 2 ? ` +${paper.authors.length - 2}` : ""}
-        {paper.venue ? ` · ${paper.venue}` : ""}
-      </p>
+      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-1 min-w-0">
+        <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
+      </div>
       <p
         className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
@@ -227,6 +360,7 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       className={tileShellClass(isRead)}
       style={{ fontFamily: "var(--font-sans)" }}
     >
+      <KindStripe kind="event" />
       <div className="flex items-center gap-2 mb-2.5">
         <KindBadge kind="event" />
         <span className="flex-1" aria-hidden />
@@ -235,10 +369,14 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {event.name}
       </h3>
-      <p className="text-[11.5px] text-text-faint mt-2 line-clamp-1">
-        {fmtDate(event.date)}
-        {event.isOnline ? " · Online" : event.location ? ` · ${event.location}` : ""}
-      </p>
+      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+        <MetaItem icon={CalendarMini}>{fmtDate(event.date)}</MetaItem>
+        {(event.isOnline || event.location) && (
+          <MetaItem icon={event.isOnline ? GlobeMini : PinMini}>
+            {event.isOnline ? "Online" : event.location}
+          </MetaItem>
+        )}
+      </div>
       <p
         className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
@@ -269,6 +407,7 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       className={tileShellClass(isRead)}
       style={{ fontFamily: "var(--font-sans)" }}
     >
+      <KindStripe kind="job" />
       <div className="flex items-center gap-2 mb-2.5">
         <KindBadge kind="job" />
         <span className="flex-1" aria-hidden />
@@ -277,10 +416,14 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {job.roleTitle}
       </h3>
-      <p className="text-[11.5px] text-text-faint mt-2 line-clamp-1">
-        {job.companyOrLab}
-        {job.isRemote ? " · Remote" : job.location ? ` · ${job.location}` : ""}
-      </p>
+      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+        <MetaItem icon={BuildingMini}>{job.companyOrLab}</MetaItem>
+        {(job.isRemote || job.location) && (
+          <MetaItem icon={job.isRemote ? GlobeMini : PinMini}>
+            {job.isRemote ? "Remote" : job.location}
+          </MetaItem>
+        )}
+      </div>
       <p
         className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
