@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.7 — 2026-05-04
+**Hotfix: prod page-load crash + read-tracking 500s**
+
+Two unrelated bugs were taking the production deploy down. (1) `applyColorTheme` was calling `Object.entries(themeVars[theme])` without guarding for the case where `theme` is `undefined` — which it was for every existing user, because the `profiles.color_theme` column declared in `schema.sql` had never actually been applied to the live DB. The throw bubbled up through React render and Chrome surfaced "This page couldn't load". Added a defensive `if (!vars) return` so unknown / missing themes silently fall back to the CSS defaults instead of crashing the tree. (2) `/api/read` was upserting into `read_items` to refresh `read_at` on repeat reads, but the table had no `UPDATE` RLS policy — so the conflict-resolution path always failed with "new row violates row-level security policy". Added the missing `users update own reads` policy (USING + WITH CHECK on `auth.uid() = user_id`), matching the pattern already used by `saved_items`. Schema source-of-truth in `web/supabase/schema.sql` updated to keep parity. The `profiles.color_theme` schema drift remains — that's a separate auth/Supabase-track follow-up; the defensive code makes it non-blocking.
+
 ## v0.7.6 — 2026-04-29
 **Persona result: editorial side-by-side layout + 2 more portraits**
 

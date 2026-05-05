@@ -140,6 +140,7 @@ export function applyColorTheme(theme: ColorTheme) {
   if (theme === "system") return;
 
   const vars = themeVars[theme];
+  if (!vars) return;
   for (const [key, value] of Object.entries(vars)) {
     root.style.setProperty(key, value);
   }

@@ -181,6 +181,7 @@ alter table public.read_items enable row level security;
 drop policy if exists "users read own reads"   on public.read_items;
 drop policy if exists "users insert own reads" on public.read_items;
 drop policy if exists "users delete own reads" on public.read_items;
+drop policy if exists "users update own reads" on public.read_items;
 
 create policy "users read own reads"
   on public.read_items for select using (auth.uid() = user_id);
@@ -188,6 +189,10 @@ create policy "users insert own reads"
   on public.read_items for insert with check (auth.uid() = user_id);
 create policy "users delete own reads"
   on public.read_items for delete using (auth.uid() = user_id);
+create policy "users update own reads"
+  on public.read_items for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- ── feedback_events ───────────────────────────────────────────
 -- Append-only signal stream. Feeds future Tier 1/2 re-ranking.
