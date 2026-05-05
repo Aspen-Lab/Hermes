@@ -891,16 +891,16 @@ type SignalKind = "topic" | "method" | "venue";
 function SignalBadge({ kind, label }: { kind: SignalKind; label: string }) {
   const tone =
     kind === "topic"
-      ? "text-accent bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.18)]"
+      ? "text-accent bg-accent-dim/70 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.16)]"
       : kind === "method"
-      ? "text-tag bg-tag-dim shadow-[inset_0_0_0_1px_rgba(15,118,110,0.18)]"
-      : "text-link bg-link-dim shadow-[inset_0_0_0_1px_rgba(29,78,216,0.15)]";
+      ? "text-tag bg-tag-dim/70 shadow-[inset_0_0_0_1px_rgba(15,118,110,0.16)]"
+      : "text-link bg-link-dim/70 shadow-[inset_0_0_0_1px_rgba(29,78,216,0.14)]";
 
   const Icon = kind === "topic" ? TopicIcon : kind === "method" ? MethodIcon : VenueIcon;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 h-6 pl-2 pr-2.5 rounded-md text-[11.5px] font-medium tracking-[0.005em] ${tone}`}
+      className={`inline-flex items-center gap-1 h-5 pl-1.5 pr-2 rounded text-[11px] font-medium tracking-[0.005em] ${tone}`}
       style={{ fontFamily: "var(--font-sans)" }}
     >
       <Icon />
@@ -941,34 +941,42 @@ function MetaRow({
     );
   }
 
+  // Only show first 5 chips inline; rest become "+N more" so the row
+  // stays single-line on most viewports without sacrificing context.
+  const VISIBLE = 5;
+  const overflow = Math.max(0, typedSignals.length - VISIBLE);
+
   return (
     <Link
       href="/profile"
       aria-label="Edit profile signals"
-      className="group mt-6 flex items-center flex-wrap gap-x-2 gap-y-1.5 rounded-xl bg-bg-secondary/35 hover:bg-bg-secondary/60 px-3 py-2 transition-colors duration-200 ease-out"
+      className="group mt-4 inline-flex items-center flex-wrap gap-x-1.5 gap-y-1 transition-colors"
       style={{ fontFamily: "var(--font-sans)" }}
     >
-      <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint/85">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint/80 mr-1">
         Tuned for
       </span>
-      <div className="flex items-center flex-wrap gap-1.5 flex-1 min-w-0">
-        {typedSignals.map((s) => (
-          <SignalBadge key={`${s.kind}:${s.label}`} kind={s.kind} label={s.label} />
-        ))}
-      </div>
+      {typedSignals.slice(0, VISIBLE).map((s) => (
+        <SignalBadge key={`${s.kind}:${s.label}`} kind={s.kind} label={s.label} />
+      ))}
+      {overflow > 0 && (
+        <span className="text-[11px] text-text-faint/80 tabular-nums">
+          +{overflow}
+        </span>
+      )}
       <span
-        className="inline-flex items-center justify-center w-6 h-6 rounded-md text-text-faint/75 group-hover:text-accent group-hover:bg-accent-dim transition-all duration-200 ease-out active:scale-90"
+        className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded text-text-faint/60 group-hover:text-accent group-hover:bg-accent-dim transition-all duration-200 ease-out active:scale-90"
         aria-hidden
         title="Edit signals"
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-out group-hover:-rotate-12">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-out group-hover:-rotate-12">
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       </span>
       {missingTopics && (
-        <div className="basis-full flex items-center gap-1 text-[11px] text-text-faint/80 mt-0.5 pl-0.5">
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="text-accent/80" aria-hidden>
+        <div className="basis-full flex items-center gap-1 text-[10.5px] text-text-faint/70 mt-0.5">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="text-accent/80" aria-hidden>
             <circle cx="12" cy="12" r="10" />
           </svg>
           <span>Add research topics for sharper picks</span>

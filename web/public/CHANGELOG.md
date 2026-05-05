@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.14 — 2026-05-05
+**Discovery: lighter "Tuned for" row**
+
+`MetaRow` was sitting in its own beige-ish card (`bg-bg-secondary/35` rounded-xl) and rendering up to seven topic / method / venue chips, which on most profiles wrapped onto two lines and added a third visual block under the greeting. Dropped the card surface entirely so the row reads as inline text — `Tuned for` label + chips + a smaller pencil edit affordance — and capped visible chips at five with a quiet `+N` overflow indicator. Chip dimensions trimmed (h-6 → h-5, 11.5px → 11px, tighter padding) so five fit on one row at typical viewport widths. Tone alphas eased from `/100` to `/70` so chips read as soft signals rather than hard tags. The row's role unchanged — clicking it still goes to `/profile` and the empty-state CTA still surfaces when no topics are set.
+
 ## v0.7.13 — 2026-05-05
 **Discovery header: ChatGPT-style command bar + lighter greeting**
 
