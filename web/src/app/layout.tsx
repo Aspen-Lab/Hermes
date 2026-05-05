@@ -75,7 +75,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         <Nav />
         <main className="flex-1 pt-12 lg:pt-0">{children}</main>
-        <div className="fixed top-3 right-3 lg:top-4 lg:right-5 z-[55] flex items-center gap-2">
+        {/* Floating account + GitHub star — desktop only. On mobile the
+            UserMenu lives inside the top nav (Nav handles it) and the
+            GitHub star CTA is desktop-focused. */}
+        <div className="fixed top-4 right-5 z-[55] hidden lg:flex items-center gap-2">
           <UserMenu />
           <GithubStars />
         </div>

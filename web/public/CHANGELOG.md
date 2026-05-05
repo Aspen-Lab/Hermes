@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.11 — 2026-05-05
+**Hotfix: mobile nav tabs were hidden under the floating account menu**
+
+The fixed `top-3 right-3 z-[55]` UserMenu / GithubStars wrapper in `app/layout.tsx` lived above (z-wise) the mobile top bar (z-50), so on narrow viewports the right-side `Saved / Persona / Profile` tabs sat directly underneath the "Aspen Labs" pill + GitHub-star pill and were unreachable — only `Feed` was visible. The previous mobile-polish pass (v0.7.10) tightened the nav padding which reduced the unintended margin and made the collision suddenly very obvious. Fix: scope the floating wrapper to `hidden lg:flex` so it only renders on desktop, and inline `<UserMenu compact />` inside the mobile nav at the right edge so signed-in users still get the avatar + sign-out, signed-out users still get the GitHub sign-in CTA. Layout on mobile now: `[Logo] [Tabs justified to the right of the logo] [UserMenu]`. Tab font dropped one notch (13 → 12.5px) and active-underline geometry tightened to keep all four tabs comfortable next to the avatar on a 375px viewport.
+
 ## v0.7.10 — 2026-05-05
 **Mobile polish: top bar + feed summaries**
 
