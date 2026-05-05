@@ -45,6 +45,7 @@ export interface RawItem {
     hnScore?: number;
     hnComments?: number;
     workType?: string;
+    isOpenAccess?: boolean;
   };
 }
 

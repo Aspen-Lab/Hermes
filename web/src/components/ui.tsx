@@ -139,6 +139,42 @@ export function Signal({
   );
 }
 
+// ── Fact chip (neutral fact with icon, no ok/missing toggle) ──
+
+// Use this when surfacing a property as a labeled fact ("Preprint",
+// "23 days ago", "3 authors") — i.e. when the chip is only meaningful
+// when the fact is present. Use Signal when ok/missing is itself the signal.
+
+type FactChipTone = "neutral" | "accent" | "tag" | "link" | "muted";
+
+const FACT_CHIP_TONE: Record<FactChipTone, string> = {
+  neutral: "bg-bg-secondary/55 text-text border-border",
+  accent: "bg-accent-dim text-accent border-accent/15",
+  tag: "bg-tag-dim text-tag border-tag/15",
+  link: "bg-link-dim text-link border-link/15",
+  muted: "bg-surface/70 text-text-faint border-border",
+};
+
+export function FactChip({
+  icon,
+  children,
+  tone = "neutral",
+}: {
+  icon?: ReactNode;
+  children: ReactNode;
+  tone?: FactChipTone;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full border ${FACT_CHIP_TONE[tone]}`}
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {icon && <span className="opacity-90 shrink-0">{icon}</span>}
+      {children}
+    </span>
+  );
+}
+
 // ── Section heading ──
 
 export function SectionHeading({

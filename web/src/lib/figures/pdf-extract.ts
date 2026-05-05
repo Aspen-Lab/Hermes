@@ -55,8 +55,17 @@ interface PdfExtractorOutput {
 
 function resolveHelperScript(): string | null {
   const candidates = [
-    path.resolve(process.cwd(), "scripts", "extract_pdf_figures.py"),
-    path.resolve(process.cwd(), "web", "scripts", "extract_pdf_figures.py"),
+    path.join(
+      /*turbopackIgnore: true*/ process.cwd(),
+      "scripts",
+      "extract_pdf_figures.py",
+    ),
+    path.join(
+      /*turbopackIgnore: true*/ process.cwd(),
+      "web",
+      "scripts",
+      "extract_pdf_figures.py",
+    ),
   ];
 
   for (const candidate of candidates) {

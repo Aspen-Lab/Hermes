@@ -34,6 +34,8 @@ interface SearchResult {
   authors: string[];
   abstract: string;
   venue: string;
+  sourceType: "journal" | "conference" | "arxiv" | "repository" | null;
+  isOpenAccess: boolean;
   publishedDate: string | null;
   citationCount: number;
   doi: string | null;
@@ -91,11 +93,11 @@ function DiscoveryPage() {
     filtersFromUrlParams(searchParamsObj),
   );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [searchTotal, setSearchTotal] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [aiProviderOpen, setAiProviderOpen] = useState(false);
   const [tavilyOpen, setTavilyOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const attemptedAutoLoadKeyRef = useRef<string | null>(null);
 
   // Hydrate from ?q= on navigation (e.g. clicking an author / keyword / venue).
   useEffect(() => {
@@ -104,14 +106,32 @@ function DiscoveryPage() {
     }
   }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const feedAutoLoadKey = useMemo(
+    () =>
+      profile.researchTopics
+        .map((topic) => topic.trim())
+        .filter(Boolean)
+        .join("\n"),
+    [profile.researchTopics],
+  );
+
   useEffect(() => {
-    if (papers.length === 0 && !isLoading) loadFeed();
-  }, [papers.length, isLoading, loadFeed]);
+    if (
+      !feedAutoLoadKey ||
+      papers.length > 0 ||
+      isLoading ||
+      attemptedAutoLoadKeyRef.current === feedAutoLoadKey
+    ) {
+      return;
+    }
+
+    attemptedAutoLoadKeyRef.current = feedAutoLoadKey;
+    void loadFeed();
+  }, [feedAutoLoadKey, papers.length, isLoading, loadFeed]);
 
   const searchPapers = useCallback(async (q: string, f: Filters) => {
     if (q.length < 2) {
       setSearchResults([]);
-      setSearchTotal(0);
       return;
     }
     setIsSearching(true);
@@ -122,10 +142,8 @@ function DiscoveryPage() {
       const res = await fetch(`/api/papers/search?${apiParams.toString()}`);
       const data = await res.json();
       setSearchResults(data.results || []);
-      setSearchTotal(data.total || 0);
     } catch {
       setSearchResults([]);
-      setSearchTotal(0);
     } finally {
       setIsSearching(false);
     }
@@ -157,7 +175,6 @@ function DiscoveryPage() {
       debounceRef.current = setTimeout(() => searchPapers(query, filters), 400);
     } else {
       setSearchResults([]);
-      setSearchTotal(0);
     }
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -287,7 +304,6 @@ function DiscoveryPage() {
                 onClick={() => {
                   setQuery("");
                   setSearchResults([]);
-                  setSearchTotal(0);
                 }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted text-[12px] transition-colors"
                 style={{ fontFamily: "var(--font-sans)" }}
@@ -546,7 +562,7 @@ function DiscoveryPage() {
             {isSearching
               ? "searching…"
               : searchResults.length > 0
-                ? `${searchResults.length} of ${searchTotal.toLocaleString()} results for \u201c${query}\u201d`
+                ? `${searchResults.length} ${searchResults.length === 1 ? "result" : "results"} for \u201c${query}\u201d`
                 : `no results for \u201c${query}\u201d`}
           </p>
         )}

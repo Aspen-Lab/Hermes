@@ -1,6 +1,6 @@
 // Middleware helper: refreshes the Supabase session on every request so
 // server components always see up-to-date auth state. Call from the root
-// `middleware.ts` for every matched route.
+// `proxy.ts` for every matched route.
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
