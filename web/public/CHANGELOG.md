@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.15 — 2026-05-05
+**Mobile: hard-stop sideways scroll + break-word in paper body**
+
+Some paper-detail summaries contained long unbreakable tokens (concatenated DOIs, sequence IDs, undbroken acronyms) that pushed the right edge of the body card past the viewport on phones, clipping the last word and giving the impression that the page itself was scrolling sideways. Two-layer fix: `overflow-x: hidden` on `body` so no descendant ever drags the page wider than the viewport, and `break-words` on the report-row body paragraph so within the card the text wraps even at unbreakable strings instead of being clipped at a flush right edge.
+
 ## v0.7.14 — 2026-05-05
 **Discovery: lighter "Tuned for" row**
 

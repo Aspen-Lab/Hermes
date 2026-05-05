@@ -224,6 +224,10 @@ body {
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Hard-stop sideways scroll on phones — any descendant wider than the
+     viewport (long unbreakable strings, raw figure HTML) gets clipped
+     instead of pushing the page out. */
+  overflow-x: hidden;
   /* Faint paper grain — reads as texture, not noise. Fixed attachment so it
      sits under scroll content like real paper. */
   background-image:

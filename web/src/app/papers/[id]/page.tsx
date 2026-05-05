@@ -747,7 +747,7 @@ function ReportFigureRow({
           </div>
         ) : (
           <p
-            className="text-[16px] text-text leading-[1.72]"
+            className="text-[16px] text-text leading-[1.72] break-words"
             style={{ fontFamily: "var(--font-reading)" }}
           >
             {body || "Hermes could not extract enough text from the available metadata. Open the paper link for the full report source."}
