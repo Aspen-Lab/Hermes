@@ -98,23 +98,27 @@ export function filtersToUrlParams(f: Filters): URLSearchParams {
 }
 
 /**
- * Translates the filter state into OpenAlex-friendly query params.
- * Today the search API doesn't honor most of these — it's a forward-
- * compatible hook so we can wire each filter through one at a time.
+ * Translates the filter state into the *app-level* query params that
+ * `/api/papers/search` reads directly (`sort` / `from` / `to` / `oa` /
+ * `cites` / `src` / `venue`). The server then composes those into the
+ * OpenAlex `filter=` clause itself — the client must NOT pre-bake the
+ * OpenAlex format here, or the server's `sp.get(...)` lookups all miss
+ * and the request goes through unfiltered.
  */
 export function filtersToApiQuery(f: Filters): URLSearchParams {
   const p = new URLSearchParams();
-  if (f.sort === "cited") p.set("sort", "cited_by_count:desc");
-  if (f.sort === "newest") p.set("sort", "publication_date:desc");
+  if (f.sort !== "relevance") p.set("sort", f.sort);
 
-  const filterParts: string[] = [];
   const yearRange = resolveYearRange(f.year);
   if (yearRange) {
-    filterParts.push(`publication_year:${yearRange.from}-${yearRange.to}`);
+    p.set("from", String(yearRange.from));
+    p.set("to", String(yearRange.to));
   }
-  if (f.oa) filterParts.push("open_access.is_oa:true");
-  if (f.minCites > 0) filterParts.push(`cited_by_count:>${f.minCites}`);
-  if (filterParts.length > 0) p.set("filter", filterParts.join(","));
+
+  if (f.oa) p.set("oa", "1");
+  if (f.minCites > 0) p.set("cites", String(f.minCites));
+  if (f.sources.length > 0) p.set("src", f.sources.join(","));
+  if (f.venue.trim()) p.set("venue", f.venue.trim());
   return p;
 }
 

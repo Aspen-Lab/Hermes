@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.16 — 2026-05-05
+**Hotfix: search filters were silently ignored**
+
+`filtersToApiQuery` was emitting OpenAlex-native params directly (`sort=cited_by_count:desc`, `filter=open_access.is_oa:true,cited_by_count:>10`), but `/api/papers/search` reads app-level keys (`sort` ∈ `relevance|cited|newest`, plus `oa`, `cites`, `from`, `to`, `src`, `venue`) and composes the OpenAlex `filter=` clause server-side. The mismatch meant every chip in the FilterBar updated state and the URL fine, but the request that left the browser carried params the server didn't recognize — results came back identical to an unfiltered search. Rewired the helper to emit the app-level keys the route actually reads. End-to-end verified: `sort=cited&cites=100&oa=1` now returns highly-cited open-access works (75k+ citations vs. the relevance baseline's 29k).
+
 ## v0.7.15 — 2026-05-05
 **Mobile: hard-stop sideways scroll + break-word in paper body**
 
