@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.13 — 2026-05-05
+**Discovery header: ChatGPT-style command bar + lighter greeting**
+
+Reworked the top of the Discovery page from a heavy stack — big editorial greeting + a search input + three side-by-side `AUTO SEARCH` / `AI KEY HOOKUP` / `TAVILY HOOK` cards — into one cohesive command bar that mirrors how a chat-style input organizes its modal tools. The search input and three controls now share a single rounded surface: input on top, a row of compact tool pills below (`Auto/AI search`, `AI key`, `Tavily`), and an inline expanded settings panel that reveals only when a pill is clicked. Single-tool-open semantics (one shared `openTool` state) replaced the two independent `aiProviderOpen` / `tavilyOpen` booleans, so toggling between AI key and Tavily settings no longer leaves both expanded at once. Active state on each pill keeps a subtle accent tint when a non-default value is set so users can see at a glance which tools are customized. Greeting headline drops from 36/44px to 26/32px and the date row from 21/24px to 14/15px — the page now opens with a confident statement of state rather than a banner that dominates the first viewport. Same applies to the Search-mode title (34/38px → 24/28px). All wiring (loadFeed gating, profile updates, Tier display, helper copy, gating-by-aiPaperSearchEnabled) preserved.
+
 ## v0.7.12 — 2026-05-05
 **Mobile polish: paper detail page (action row, stats, figure, padding)**
 

@@ -94,8 +94,7 @@ function DiscoveryPage() {
   );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [aiProviderOpen, setAiProviderOpen] = useState(false);
-  const [tavilyOpen, setTavilyOpen] = useState(false);
+  const [openTool, setOpenTool] = useState<"ai" | "tavily" | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
 
@@ -280,12 +279,18 @@ function DiscoveryPage() {
 
       {/* ── Search ── */}
       <div className="mb-6">
-        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_248px] md:items-start">
-          <div className="relative min-w-0">
+        {/* Composite command bar — input on top, inline tool pills
+            below, optional expanded settings panel underneath. Mirrors
+            ChatGPT-style "rich input" patterns: one cohesive surface
+            instead of an input plus three stacked side cards. */}
+        <div className="rounded-2xl bg-surface shadow-card focus-within:shadow-card-hover transition-shadow">
+          {/* Input row */}
+          <div className="relative">
             <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none"
               width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              aria-hidden
             >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
@@ -296,7 +301,7 @@ function DiscoveryPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search papers, events, jobs…  (press /)"
-              className="w-full bg-surface shadow-card rounded-xl py-3 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:shadow-card-hover focus:ring-2 focus:ring-accent/20 transition-shadow"
+              className="w-full bg-transparent rounded-t-2xl py-3.5 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none"
               style={{ fontFamily: "var(--font-sans)" }}
             />
             {query && (
@@ -312,7 +317,13 @@ function DiscoveryPage() {
               </button>
             )}
           </div>
-          <div className="space-y-2">
+
+          {/* Tools row — compact pills */}
+          <div
+            className="flex items-center flex-wrap gap-1.5 px-2.5 pb-2.5 pt-0.5"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {/* Auto / AI search toggle */}
             <button
               type="button"
               onClick={() => setAiPaperSearchEnabled(!aiPaperSearchEnabled)}
@@ -320,168 +331,177 @@ function DiscoveryPage() {
               aria-pressed={aiPaperSearchEnabled}
               title={
                 aiPaperSearchEnabled
-                  ? "AI paper search is on: Hermes uses planning and reranking."
-                  : "Auto paper search is on: Hermes uses fixed scoring only."
+                  ? "AI paper search: Hermes uses planning and reranking."
+                  : "Auto search: Hermes uses fixed scoring only."
               }
-              className={`w-full rounded-xl px-3.5 py-2 text-left shadow-card transition-all duration-200 ease-out active:scale-[0.97] disabled:opacity-55 disabled:cursor-wait ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] disabled:opacity-55 disabled:cursor-wait ${
                 aiPaperSearchEnabled
-                  ? "bg-heading text-bg hover:bg-heading/90"
-                  : "bg-surface text-text-muted hover:text-heading hover:shadow-card-hover"
+                  ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                  : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
-              style={{ fontFamily: "var(--font-sans)" }}
             >
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.14em]">
-                {aiPaperSearchEnabled ? "AI search" : "Auto search"}
-              </span>
-              <span className={`block text-[10.5px] mt-0.5 ${aiPaperSearchEnabled ? "text-bg/65" : "text-text-faint"}`}>
-                {aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}
-              </span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 2l1.5 5L19 8.5 14.5 11 13 16l-2.5-4.5L6 10l4.5-1.5z" />
+              </svg>
+              <span className="font-medium">{aiPaperSearchEnabled ? "AI search" : "Auto"}</span>
+              <span className="opacity-60 text-[10.5px]">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
             </button>
+
+            {/* AI key hookup */}
+            <button
+              type="button"
+              onClick={() => setOpenTool((cur) => (cur === "ai" ? null : "ai"))}
+              aria-expanded={openTool === "ai"}
+              title="Configure your own AI provider key"
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+                openTool === "ai"
+                  ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
+                  : profile.feedAiProvider !== "default"
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
+              }`}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="8" cy="14" r="4" />
+                <path d="M11 11l7-7M16 6l3 3M14 8l3 3" />
+              </svg>
+              <span className="font-medium">
+                {profile.feedAiProvider === "openai"
+                  ? "OpenAI"
+                  : profile.feedAiProvider === "gemini"
+                    ? "Gemini"
+                    : profile.feedAiProvider === "anthropic"
+                      ? "Claude"
+                      : "AI key"}
+              </span>
+              <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "ai" ? "rotate-180" : ""}`} aria-hidden>
+                <path d="M2 4l4 4 4-4" />
+              </svg>
+            </button>
+
+            {/* Tavily hook */}
+            <button
+              type="button"
+              onClick={() => setOpenTool((cur) => (cur === "tavily" ? null : "tavily"))}
+              aria-expanded={openTool === "tavily"}
+              title="Tavily web scouting"
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+                openTool === "tavily"
+                  ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
+                  : profile.tavilyEnabled
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
+              }`}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+              </svg>
+              <span className="font-medium">{profile.tavilyEnabled ? "Tavily on" : "Tavily"}</span>
+              <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "tavily" ? "rotate-180" : ""}`} aria-hidden>
+                <path d="M2 4l4 4 4-4" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Expanded panel — only one tool at a time */}
+          {openTool === "ai" && (
             <div
-              className="rounded-xl bg-surface shadow-card overflow-hidden"
+              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
               style={{ fontFamily: "var(--font-sans)" }}
             >
-              <button
-                type="button"
-                onClick={() => setAiProviderOpen((open) => !open)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-bg-secondary/30 transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    AI key hookup
-                  </span>
-                  {profile.feedAiProvider !== "default" && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  )}
-                </span>
-                <svg
-                  width="11" height="11" viewBox="0 0 12 12" fill="none"
-                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-                  className={`text-text-faint/60 transition-transform duration-200 ${aiProviderOpen ? "rotate-180" : ""}`}
+              <p className="text-[11.5px] leading-relaxed text-text-muted">
+                Use Hermes default or bring your own normal AI key for Tier 2 reranking.
+              </p>
+              <div className="space-y-1.5">
+                <label className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                  AI company
+                </label>
+                <select
+                  value={profile.feedAiProvider}
+                  onChange={(e) => updateFeedAiProvider(e.target.value as typeof profile.feedAiProvider)}
+                  className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
                 >
-                  <path d="M2 4l4 4 4-4" />
-                </svg>
-              </button>
-
-              {aiProviderOpen && (
-                <div className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}>
-                  <p className="text-[11.5px] leading-relaxed text-text-muted">
-                    Use Hermes default or bring your own normal AI key for Tier 2 reranking.
-                  </p>
-                  <div className="space-y-1.5">
-                    <label className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                      AI company
-                    </label>
-                    <select
-                      value={profile.feedAiProvider}
-                      onChange={(e) => updateFeedAiProvider(e.target.value as typeof profile.feedAiProvider)}
-                      className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
-                    >
-                      {FEED_AI_PROVIDER_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {profile.feedAiProvider !== "default" && (
-                    <div className="space-y-1.5">
-                      <label className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                        API key
-                      </label>
-                      <input
-                        type="password"
-                        value={profile.feedAiApiKey ?? ""}
-                        onChange={(e) => updateFeedAiApiKey(e.target.value)}
-                        placeholder={
-                          profile.feedAiProvider === "openai"
-                            ? "OpenAI API key"
-                            : profile.feedAiProvider === "gemini"
-                              ? "Gemini API key"
-                              : "Anthropic API key"
-                        }
-                        autoComplete="off"
-                        spellCheck={false}
-                        className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
-                      />
-                    </div>
-                  )}
-                  <p className="text-[10.5px] leading-relaxed text-text-faint">
-                    {aiPaperSearchEnabled
-                      ? profile.feedAiProvider === "default"
-                        ? "Uses the AI already connected to this Hermes site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
-                        : "When this is filled in, Hermes forces Tier 2 so your own key actually powers the AI rerank."
-                      : "Turn AI search on to use this. Tier 0 ignores both Hermes default AI and your own key."}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div
-              className="rounded-xl bg-surface shadow-card overflow-hidden"
-              style={{ fontFamily: "var(--font-sans)" }}
-            >
-              <button
-                type="button"
-                onClick={() => setTavilyOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-bg-secondary/30 transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    Tavily hook
-                  </span>
-                  {profile.tavilyEnabled && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  )}
-                </span>
-                <svg
-                  width="11" height="11" viewBox="0 0 12 12" fill="none"
-                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-                  className={`text-text-faint/60 transition-transform duration-200 ${tavilyOpen ? "rotate-180" : ""}`}
-                >
-                  <path d="M2 4l4 4 4-4" />
-                </svg>
-              </button>
-
-              {tavilyOpen && (
-                <div className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-[11.5px] leading-relaxed text-text-muted">
-                      Extra web scouting for paper leads.
-                    </p>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={profile.tavilyEnabled}
-                      onClick={() => updateTavilyEnabled(!profile.tavilyEnabled)}
-                      className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out ${
-                        profile.tavilyEnabled ? "bg-accent" : "bg-bg-secondary"
-                      }`}
-                    >
-                      <span
-                        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                          profile.tavilyEnabled ? "translate-x-4" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
+                  {FEED_AI_PROVIDER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {profile.feedAiProvider !== "default" && (
+                <div className="space-y-1.5">
+                  <label className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                    API key
+                  </label>
                   <input
                     type="password"
-                    value={profile.tavilyApiKey ?? ""}
-                    onChange={(e) => updateTavilyApiKey(e.target.value)}
-                    placeholder="Tavily API key"
+                    value={profile.feedAiApiKey ?? ""}
+                    onChange={(e) => updateFeedAiApiKey(e.target.value)}
+                    placeholder={
+                      profile.feedAiProvider === "openai"
+                        ? "OpenAI API key"
+                        : profile.feedAiProvider === "gemini"
+                          ? "Gemini API key"
+                          : "Anthropic API key"
+                    }
                     autoComplete="off"
                     spellCheck={false}
                     className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
                   />
-                  <p className="text-[10.5px] leading-relaxed text-text-faint">
-                    {aiPaperSearchEnabled
-                      ? "Used only as a paper-discovery helper. Hermes still reruns academic sources before ranking."
-                      : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
-                  </p>
                 </div>
               )}
+              <p className="text-[10.5px] leading-relaxed text-text-faint">
+                {aiPaperSearchEnabled
+                  ? profile.feedAiProvider === "default"
+                    ? "Uses the AI already connected to this Hermes site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
+                    : "When this is filled in, Hermes forces Tier 2 so your own key actually powers the AI rerank."
+                  : "Turn AI search on to use this. Tier 0 ignores both Hermes default AI and your own key."}
+              </p>
             </div>
-          </div>
+          )}
+
+          {openTool === "tavily" && (
+            <div
+              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                  Extra web scouting for paper leads.
+                </p>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={profile.tavilyEnabled}
+                  onClick={() => updateTavilyEnabled(!profile.tavilyEnabled)}
+                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out ${
+                    profile.tavilyEnabled ? "bg-accent" : "bg-bg-secondary"
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
+                      profile.tavilyEnabled ? "translate-x-4" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+              <input
+                type="password"
+                value={profile.tavilyApiKey ?? ""}
+                onChange={(e) => updateTavilyApiKey(e.target.value)}
+                placeholder="Tavily API key"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
+              />
+              <p className="text-[10.5px] leading-relaxed text-text-faint">
+                {aiPaperSearchEnabled
+                  ? "Used only as a paper-discovery helper. Hermes still reruns academic sources before ranking."
+                  : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ── Filter bar (search mode only) ── */}
@@ -690,12 +710,12 @@ function Greeting({
     return (
       <>
         <h1
-          className="text-[34px] lg:text-[38px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
+          className="text-[24px] lg:text-[28px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
           style={{ fontFamily: "var(--font-sans)" }}
         >
           Search
         </h1>
-        <p className="text-text-muted mt-3 text-[16.5px] leading-relaxed max-w-[56ch]">
+        <p className="text-text-muted mt-2 text-[14px] leading-relaxed max-w-[56ch]">
           Search papers across OpenAlex — 250M+ academic works.
         </p>
       </>
@@ -729,14 +749,14 @@ function Greeting({
   return (
     <>
       <p
-        className="text-[11.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-3"
+        className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2"
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        <span className="inline-block w-5 h-[1.5px] bg-accent/70 align-middle mr-2.5" />
+        <span className="inline-block w-4 h-[1.5px] bg-accent/70 align-middle mr-2" />
         Daily briefing
       </p>
       <h1
-        className="text-[36px] lg:text-[44px] font-semibold text-heading tracking-[-0.02em] leading-[1.05]"
+        className="text-[26px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
         style={{ fontFamily: "var(--font-sans)" }}
       >
         {firstName ? (
@@ -755,14 +775,14 @@ function Greeting({
         )}
       </h1>
       <div
-        className="mt-3.5 flex items-baseline gap-2.5"
+        className="mt-2 flex items-baseline gap-2 text-text-muted"
         style={{ fontFamily: "var(--font-reading)" }}
       >
-        <span className="text-[21px] lg:text-[24px] italic text-heading/85 tracking-tight leading-none">
+        <span className="text-[14px] lg:text-[15px] italic text-heading/80 tracking-tight leading-none">
           {weekday}
         </span>
-        <span className="text-border-strong text-[16px] leading-none" aria-hidden>·</span>
-        <span className="text-[17px] lg:text-[18px] text-text-muted leading-none">{monthDay}</span>
+        <span className="text-border-strong text-[12px] leading-none" aria-hidden>·</span>
+        <span className="text-[13px] lg:text-[14px] leading-none">{monthDay}</span>
       </div>
     </>
   );
