@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AXES,
   ZERO_SCORES,
@@ -21,12 +21,47 @@ interface QuizState {
   answers: Answers;
 }
 
+// Bumped if Scores shape or AxisId set changes — old blobs are silently
+// dropped on hydrate.
+const STORAGE_KEY = "hermes:persona:v1";
+
 export function PersonaQuiz() {
   const [state, setState] = useState<QuizState>({ step: 0, answers: {} });
   const [result, setResult] = useState<{
     scores: Scores;
     persona: Persona;
   } | null>(null);
+
+  // Hydrate last result from localStorage on mount. We persist only scores;
+  // persona is re-derived via pickPersona so persona-definition tweaks
+  // automatically reflect on next visit instead of getting frozen.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { scores?: Scores };
+      if (!parsed?.scores) return;
+      const persona = pickPersona(parsed.scores);
+      setResult({ scores: parsed.scores, persona });
+    } catch {
+      // bad blob / quota / private mode — fall through to fresh quiz
+    }
+  }, []);
+
+  // Persist scores whenever a result lands.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!result) return;
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ scores: result.scores }),
+      );
+    } catch {
+      // ignore — localStorage may be full or disabled
+    }
+  }, [result]);
 
   const current = QUESTIONS[state.step];
   const total = QUESTIONS.length;
@@ -54,6 +89,13 @@ export function PersonaQuiz() {
   const restart = () => {
     setResult(null);
     setState({ step: 0, answers: {} });
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+    }
   };
 
   if (result) {
