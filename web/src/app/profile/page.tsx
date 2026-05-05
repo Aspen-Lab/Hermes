@@ -947,15 +947,15 @@ function useDailyActivityCells(): number[] | null {
         if (cancelled) return;
         const byDate = new Map(data.daily.map((d) => [d.date, d.count]));
         const out = new Array<number>(CAL_WEEKS * CAL_DAYS).fill(0);
-        // Fill grid newest-first: rightmost column = today.
+        // Fill grid newest-first: rightmost column = today (UTC, to
+        // match the server's UTC bucketing in /api/read?aggregate=daily).
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setUTCHours(0, 0, 0, 0);
         for (let w = 0; w < CAL_WEEKS; w++) {
           for (let d = 0; d < CAL_DAYS; d++) {
             // cell at (w, d) represents (today - ((CAL_WEEKS-1-w) * 7 + (CAL_DAYS-1-d))) days
             const daysAgo = (CAL_WEEKS - 1 - w) * 7 + (CAL_DAYS - 1 - d);
-            const dt = new Date(today);
-            dt.setDate(dt.getDate() - daysAgo);
+            const dt = new Date(today.getTime() - daysAgo * 86_400_000);
             const key = dt.toISOString().slice(0, 10);
             out[w * CAL_DAYS + d] = byDate.get(key) ?? 0;
           }

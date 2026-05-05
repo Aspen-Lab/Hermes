@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.8 — 2026-05-04
+**Profile reading calendar: align client bucketing to server's UTC days**
+
+The contribution-style calendar on `/profile` was always rendering blank cells even when `read_items` had data. `/api/read?aggregate=daily` groups reads by `toISOString().slice(0,10)` (UTC YYYY-MM-DD), but `useDailyActivityCells` was building its lookup keys from a `Date` set to *local* midnight then formatted via `toISOString()` — which yields the UTC string of local-midnight, off by a day for any non-UTC user. Reads timestamped late local-evening (= early next-UTC-day) bucketed under tomorrow's key on the server but were looked up under today's key on the client — every cell missed, calendar stayed empty. Switched the client to `setUTCHours(0,0,0,0)` and millisecond-arithmetic day stepping so both sides agree on day boundaries.
+
 ## v0.7.7 — 2026-05-04
 **Hotfix: prod page-load crash + read-tracking 500s**
 
