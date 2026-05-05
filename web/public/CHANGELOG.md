@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.10 — 2026-05-05
+**Mobile polish: top bar + feed summaries**
+
+Mobile top bar tightened — height drops from 56px to 48px, horizontal padding from 24px to 16px, the brand wordmark hides on the narrowest phones (logo alone serves as home), and the active tab now gets a 2px accent underline so the current section is obvious at a glance instead of relying purely on weight/color shifts. Tab gap shrunk so all four tabs fit comfortably alongside the brand on a 375px viewport with breathing room left over. `<main>` top padding adjusted to match the new bar height. Daily-digest header buttons collapse to icon-only on mobile (Regenerate / Listen labels reappear at sm+) and the section's horizontal padding eases from 28px → 20px on small screens, reclaiming text width without crowding content. Feed tile summaries (paper / event / job) bumped from 12.5px → 13.5px on mobile with slightly looser line-height for single-column readability; desktop sizing unchanged so dense grid stays dense.
+
 ## v0.7.9 — 2026-05-04
 **Persona: actually persist the quiz result**
 

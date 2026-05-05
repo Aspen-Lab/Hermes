@@ -125,22 +125,23 @@ export function DailyDigest({ papers, contextHint }: DailyDigestProps) {
 
   return (
     <section
-      className="mb-8 rounded-2xl bg-surface shadow-card px-7 py-6 animate-fade-in-up"
+      className="mb-8 rounded-2xl bg-surface shadow-card px-5 py-5 sm:px-7 sm:py-6 animate-fade-in-up"
       style={{ fontFamily: "var(--font-sans)" }}
       aria-label="Daily briefing digest"
     >
-      <header className="flex items-center justify-between mb-4">
-        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent/90">
-          <span className="inline-block w-3.5 h-[1.5px] bg-accent/70" />
-          Today&rsquo;s highlights
+      <header className="flex items-center justify-between gap-2 mb-4">
+        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent/90 min-w-0">
+          <span className="inline-block w-3.5 h-[1.5px] bg-accent/70 shrink-0" />
+          <span className="truncate">Today&rsquo;s highlights</span>
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleRegenerate}
             disabled={loading}
             title="Regenerate digest"
-            className="group inline-flex items-center gap-1.5 h-7 pl-2 pr-3 rounded-full bg-bg-secondary/60 text-text-faint hover:text-heading hover:bg-bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Regenerate digest"
+            className="group inline-flex items-center gap-1.5 h-7 px-2 sm:pl-2 sm:pr-3 rounded-full bg-bg-secondary/60 text-text-faint hover:text-heading hover:bg-bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <svg
               width="11"
@@ -157,7 +158,7 @@ export function DailyDigest({ papers, contextHint }: DailyDigestProps) {
               <path d="M23 4v6h-6" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
-            <span className="text-[11.5px] font-medium">Regenerate</span>
+            <span className="text-[11.5px] font-medium hidden sm:inline">Regenerate</span>
           </button>
           <AudioButton />
         </div>
@@ -206,7 +207,8 @@ function AudioButton() {
       type="button"
       disabled
       title="Audio briefing — coming soon"
-      className="group inline-flex items-center gap-1.5 h-7 pl-2 pr-3 rounded-full bg-bg-secondary/60 text-text-faint cursor-not-allowed transition-all"
+      aria-label="Listen — coming soon"
+      className="group inline-flex items-center gap-1.5 h-7 px-2 sm:pl-2 sm:pr-3 rounded-full bg-bg-secondary/60 text-text-faint cursor-not-allowed transition-all"
       style={{ fontFamily: "var(--font-sans)" }}
     >
       <svg
@@ -218,8 +220,8 @@ function AudioButton() {
       >
         <path d="M8 5v14l11-7z" />
       </svg>
-      <span className="text-[11.5px] font-medium">Listen</span>
-      <span className="text-[9.5px] opacity-70 uppercase tracking-[0.1em] ml-0.5">
+      <span className="text-[11.5px] font-medium hidden sm:inline">Listen</span>
+      <span className="text-[9.5px] opacity-70 uppercase tracking-[0.1em] ml-0.5 hidden sm:inline">
         soon
       </span>
     </button>

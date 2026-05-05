@@ -74,7 +74,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         <Nav />
-        <main className="flex-1 pt-14 lg:pt-0">{children}</main>
+        <main className="flex-1 pt-12 lg:pt-0">{children}</main>
         <div className="fixed top-3 right-3 lg:top-4 lg:right-5 z-[55] flex items-center gap-2">
           <UserMenu />
           <GithubStars />

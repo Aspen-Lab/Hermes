@@ -164,36 +164,48 @@ export function Nav() {
     <>
       {/* Mobile: top bar */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-bg-secondary/85 backdrop-blur-md lg:hidden">
-        <div className="h-14 px-6 flex items-center justify-between">
+        <div className="h-12 px-4 flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 text-[20px] font-normal text-heading tracking-[-0.01em] italic"
+            className="flex items-center gap-1.5 text-heading shrink-0"
             style={{ fontFamily: "var(--font-display)" }}
+            aria-label="Hermes home"
           >
-            <Image src="/logo.svg" alt="" width={32} height={32} className="shrink-0" />
-            Hermes
+            <Image src="/logo.svg" alt="" width={26} height={26} className="shrink-0" />
+            {/* Brand wordmark hides on the narrowest phones to give the
+                tab row breathing room; reappears at sm (≥640px). */}
+            <span className="text-[18px] font-normal italic tracking-[-0.01em] hidden sm:inline">
+              Hermes
+            </span>
           </Link>
           <div
-            className="flex items-center gap-5"
+            className="flex items-center gap-1"
             style={{ fontFamily: "var(--font-sans)" }}
           >
             {tabs.map(({ href, label }) => {
               const n = countFor(href);
+              const active = isActive(href);
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`text-[13.5px] transition-all duration-200 ease-out active:scale-95 ${
-                    isActive(href)
+                  className={`relative px-2.5 py-1.5 text-[13px] transition-colors duration-200 ease-out active:scale-95 ${
+                    active
                       ? "text-heading font-medium"
                       : "text-text-faint hover:text-text-muted"
                   }`}
                 >
                   {label}
                   {n > 0 && (
-                    <span className="ml-1.5 text-[11px] tabular-nums text-accent">
+                    <span className="ml-1 text-[10.5px] tabular-nums text-accent">
                       {n}
                     </span>
+                  )}
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute left-2.5 right-2.5 -bottom-[7px] h-[2px] rounded-full bg-accent"
+                    />
                   )}
                 </Link>
               );

@@ -295,7 +295,7 @@ function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
         <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
       </div>
       <p
-        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
       >
         {paper.relevanceReason}
@@ -378,7 +378,7 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
       >
         {event.relevanceReason}
@@ -425,7 +425,7 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] line-clamp-3"
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
         style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
       >
         {job.matchReason}
