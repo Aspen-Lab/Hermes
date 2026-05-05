@@ -300,7 +300,7 @@ export default function PaperDetailPage({
   if (!paper) {
     if (isFetchingById) {
       return (
-        <article className="mx-auto max-w-[760px] px-6 py-14">
+        <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
           <Link
             href="/"
             className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
@@ -371,7 +371,7 @@ export default function PaperDetailPage({
   return (
     <>
       <ScrollProgress />
-      <article className="mx-auto max-w-[760px] px-6 py-14">
+      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
         <Link
@@ -848,7 +848,7 @@ function ActionRow({
         href={primaryUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center gap-2 h-11 px-5 rounded-full bg-accent text-bg text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+        className="group inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-accent text-bg text-[13.5px] sm:text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
       >
         {primaryLabel}
         <span className="text-[11px] opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
@@ -862,7 +862,7 @@ function ActionRow({
         onClick={onSave}
         aria-pressed={isSaved}
         aria-label={isSaved ? "Saved" : "Save"}
-        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isSaved
             ? "bg-accent/10 text-accent border border-accent/40"
             : "bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover"
@@ -890,7 +890,7 @@ function ActionRow({
         onClick={handleCopyCitation}
         aria-label="Copy BibTeX citation"
         title="Copy BibTeX to clipboard"
-        className="group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -924,7 +924,7 @@ function ActionRow({
         onClick={onLike}
         aria-pressed={isLiked}
         aria-label="Like — train feed on this"
-        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium border transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium border transition-all duration-200 ease-out active:scale-[0.96] ${
           isLiked
             ? "bg-accent/10 text-accent border-accent/40"
             : "bg-transparent border-border-strong text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim"
@@ -952,7 +952,7 @@ function ActionRow({
         onClick={onDismiss}
         aria-label="Not interested — show less like this"
         title="Not interested"
-        className="group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-red hover:border-red/40 hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-red hover:border-red/40 hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"

@@ -48,7 +48,7 @@ export function Callout({
 export function PropertyStrip({ children }: { children: ReactNode }) {
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-4 py-4 border-y border-border"
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-4 py-4 border-y border-border"
       style={{ fontFamily: "var(--font-sans)" }}
     >
       {children}

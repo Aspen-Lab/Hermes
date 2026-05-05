@@ -5,6 +5,11 @@ Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
 
+## v0.7.12 — 2026-05-05
+**Mobile polish: paper detail page (action row, stats, figure, padding)**
+
+Paper detail (`/papers/[id]`) tightened up on phone-sized viewports across four fronts. (1) **Action row** — `Read paper` plus `Save / Cite / Like / Not interested` previously stacked into 2–3 wrapped rows because every pill was h-11 with `pl-3.5 pr-4 text-[13.5px]`; now they collapse to h-9 / `px-3` / 12.5px on mobile and the primary CTA drops a half-step too (h-10 / px-4 / 13.5px), so the whole action set sits two rows max on a 375px screen. Desktop sizing unchanged. (2) **Stats strip** — `PropertyStrip` keeps its 2-col mobile grid but the gap shrinks (gap-x-3 gap-y-3 vs 5 / 4) so the six properties feel less marooned. (3) **Method/result figures** — `compact` and `hero` `PaperFigureFrame` variants now cap height on mobile (`max-h-[300px]` / `max-h-[360px]`) and lower the min-h floor a notch, so a square pie chart no longer eats half the viewport. `object-contain` keeps proportions; `sm:max-h-none` drops the cap above mobile. (4) **Article container** — `px-6 py-14` becomes `px-4 sm:px-6 py-10 sm:py-14`, reclaiming 16px of horizontal space and trimming an extra 32px of empty top padding on phones. Reading flow gets noticeably calmer below the fold; nothing changes on tablet/desktop.
+
 ## v0.7.11 — 2026-05-05
 **Hotfix: mobile nav tabs were hidden under the floating account menu**
 

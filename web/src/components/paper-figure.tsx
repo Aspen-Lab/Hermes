@@ -29,10 +29,11 @@ export interface ResolveFigureArgs {
 }
 
 // Default image box sizing. Compact report figures now get much more height
-// and then switch to the real image ratio after load.
+// and then switch to the real image ratio after load. On mobile we also
+// cap the height so square / portrait charts don't dominate the screen.
 const frameClassByVariant: Record<Variant, string> = {
-  hero: "min-h-[320px] sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[520px]",
-  compact: "min-h-[280px] sm:min-h-[340px] lg:min-h-[420px] xl:min-h-[500px]",
+  hero: "min-h-[260px] sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[520px] max-h-[360px] sm:max-h-none",
+  compact: "min-h-[220px] sm:min-h-[340px] lg:min-h-[420px] xl:min-h-[500px] max-h-[300px] sm:max-h-none",
 };
 
 const defaultAspectByVariant: Record<Variant, number> = {
