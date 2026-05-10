@@ -26,7 +26,8 @@ export interface PaperReport {
     sections: PaperReportReviewSection[];
   };
   whyItFitsYou: {
-    summary: string;
+    /** Each item is one concise reason (≤2 sentences) why this paper was recommended. */
+    reasons: string[];
     keywords: string[];
   };
   noLlm?: boolean;
@@ -97,7 +98,7 @@ function fallbackKeywords(paper: Paper): string[] {
   ).slice(0, 8);
 }
 
-function isWeakFitText(text?: string): boolean {
+function isWeakReason(text?: string): boolean {
   const value = cleanDisplayText(text).toLowerCase();
   return (
     !value ||
@@ -109,6 +110,10 @@ function isWeakFitText(text?: string): boolean {
   );
 }
 
+function isWeakReasons(reasons: string[]): boolean {
+  return reasons.length === 0 || reasons.every(isWeakReason);
+}
+
 function summarizeContext(contextHint?: string): string {
   return cleanDisplayText(contextHint)
     .replace(/\s+/g, " ")
@@ -116,14 +121,21 @@ function summarizeContext(contextHint?: string): string {
     .replace(/[,:;]\s*$/, "");
 }
 
-function buildFitSummary(paper: Paper, contextHint?: string): string {
+function buildFitReasons(paper: Paper, contextHint?: string): string[] {
   const keywords = fallbackKeywords(paper).slice(0, 3);
   const keywordText = keywords.length > 0 ? keywords.join(", ") : paper.title;
   const context = summarizeContext(contextHint);
+  const reasons: string[] = [];
   if (context) {
-    return `This paper fits your profile because it connects to your stated focus on ${context}. Its closest matching signals are ${keywordText}, making it useful for deciding whether the method, result, or background should influence your current research direction.`;
+    reasons.push(`Connects to your stated focus on ${context}.`);
   }
-  return `This paper fits the current research brief because it centers on ${keywordText}${paper.venue ? ` and appears in ${paper.venue}` : ""}. It is worth reviewing for the method, evidence, and research direction it adds to this topic.`;
+  reasons.push(
+    `Centers on ${keywordText}${paper.venue ? `, published in ${paper.venue}` : ""}.`,
+  );
+  if (!context && paper.relevanceReason && !isWeakReason(paper.relevanceReason)) {
+    reasons.push(paper.relevanceReason.slice(0, 180).replace(/[,:;]\s*$/, "") + (paper.relevanceReason.length > 180 ? "…" : ""));
+  }
+  return reasons;
 }
 
 function fallbackKeyResults(paper: Paper): PaperReportKeyResult[] {
@@ -172,9 +184,9 @@ export function buildFallbackPaperReport(
 ): PaperReport {
   const summary = fallbackSummary(paper);
   const keywords = fallbackKeywords(paper);
-  const fitSummary = isWeakFitText(paper.relevanceReason)
-    ? buildFitSummary(paper, contextHint)
-    : paper.relevanceReason;
+  const fitReasons = isWeakReason(paper.relevanceReason)
+    ? buildFitReasons(paper, contextHint)
+    : [paper.relevanceReason];
   const isReview = isPaperReviewLike(paper);
 
   return {
@@ -189,7 +201,7 @@ export function buildFallbackPaperReport(
       ? { sections: fallbackReviewSections(paper) }
       : undefined,
     whyItFitsYou: {
-      summary: fitSummary,
+      reasons: fitReasons,
       keywords,
     },
     noLlm: true,
@@ -201,12 +213,12 @@ export function improvePaperReportFit(
   paper: Paper,
   contextHint?: string,
 ): PaperReport {
-  if (!isWeakFitText(report.whyItFitsYou.summary)) return report;
+  if (!isWeakReasons(report.whyItFitsYou.reasons)) return report;
   return {
     ...report,
     whyItFitsYou: {
       ...report.whyItFitsYou,
-      summary: buildFitSummary(paper, contextHint),
+      reasons: buildFitReasons(paper, contextHint),
       keywords:
         report.whyItFitsYou.keywords.length > 0
           ? report.whyItFitsYou.keywords
@@ -246,6 +258,10 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
         .slice(0, 4)
     : fallback.resultsAndSignificance.keyResults;
 
+  const reasons = Array.isArray(report.whyItFitsYou?.reasons)
+    ? report.whyItFitsYou.reasons.map(cleanDisplayText).filter(Boolean).slice(0, 6)
+    : fallback.whyItFitsYou.reasons;
+
   const keywords = Array.isArray(report.whyItFitsYou?.keywords)
     ? report.whyItFitsYou.keywords.map(cleanDisplayText).filter(Boolean).slice(0, 10)
     : [];
@@ -271,7 +287,7 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
     },
     reviewContents: reviewSections ? { sections: reviewSections } : undefined,
     whyItFitsYou: {
-      summary: cleanDisplayText(report.whyItFitsYou?.summary) || fallback.whyItFitsYou.summary,
+      reasons,
       keywords,
     },
     noLlm: report.noLlm,

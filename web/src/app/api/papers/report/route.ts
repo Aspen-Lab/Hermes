@@ -79,7 +79,9 @@ function buildPrompt({ paper, contextHint }: PaperReportRequest): string {
       },
       ...secondSection,
       whyItFitsYou: {
-        summary: "2 sentences explaining why this paper fits the user's current profile/context.",
+        reasons: [
+          "One specific reason per item, max 2 sentences. Mention the concrete method, topic, finding, or venue that ties to the user's context. Aim for 2-4 items. Never be vague ('this is relevant') — always name the specific link.",
+        ],
         keywords: ["keywords from paper that overlap with user interests"],
       },
     },

@@ -99,6 +99,55 @@ function teamSizeLabel(n: number): string {
   return `${n} authors · large team`;
 }
 
+// Wraps occurrences of `required` and `soft` keywords in colored pill spans.
+// Longest keywords are matched first to avoid partial-word collisions.
+function highlightKeywords(
+  text: string,
+  required: string[],
+  soft: string[],
+): React.ReactNode[] {
+  type Hit = { start: number; end: number; tone: "required" | "soft" };
+  const candidates = [
+    ...required.filter((k) => k.trim().length >= 3).map((k) => ({ kw: k.trim(), tone: "required" as const })),
+    ...soft.filter((k) => k.trim().length >= 3).map((k) => ({ kw: k.trim(), tone: "soft" as const })),
+  ].sort((a, b) => b.kw.length - a.kw.length);
+
+  const lower = text.toLowerCase();
+  const hits: Hit[] = [];
+  for (const { kw, tone } of candidates) {
+    const kl = kw.toLowerCase();
+    let i = 0;
+    while (i <= lower.length - kl.length) {
+      const pos = lower.indexOf(kl, i);
+      if (pos === -1) break;
+      if (!hits.some((h) => pos < h.end && pos + kl.length > h.start)) {
+        hits.push({ start: pos, end: pos + kl.length, tone });
+      }
+      i = pos + 1;
+    }
+  }
+  if (hits.length === 0) return [text];
+
+  hits.sort((a, b) => a.start - b.start);
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  for (const { start, end, tone } of hits) {
+    if (cursor < start) nodes.push(text.slice(cursor, start));
+    const cls =
+      tone === "required"
+        ? "inline-block px-1.5 py-0.5 rounded bg-accent-dim text-accent text-[0.875em] font-medium border border-accent/20 mx-0.5 leading-normal"
+        : "inline-block px-1.5 py-0.5 rounded bg-tag-dim text-tag text-[0.875em] font-medium border border-tag/20 mx-0.5 leading-normal";
+    nodes.push(
+      <span key={`kw-${start}`} className={cls}>
+        {text.slice(start, end)}
+      </span>,
+    );
+    cursor = end;
+  }
+  if (cursor < text.length) nodes.push(text.slice(cursor));
+  return nodes;
+}
+
 function extractYear(paper: Paper): number | null {
   if (paper.publishedDate) {
     const y = new Date(paper.publishedDate).getFullYear();
@@ -601,11 +650,35 @@ export default function PaperDetailPage({
           Why it fits you
         </SectionTitle>
 
-        <Callout variant="accent" icon={<IconBullseye />} title="Relevance">
-          {reportLoading
-            ? "Preparing a relevance note that explains why this paper belongs in your report."
-            : report?.whyItFitsYou.summary ?? paper.relevanceReason}
-        </Callout>
+        <div className="rounded-2xl border border-accent/20 bg-accent-dim px-5 py-4">
+          <p
+            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <IconBullseye />
+            Relevance
+          </p>
+          {reportLoading ? (
+            <div className="space-y-2.5" aria-busy="true">
+              <ShimmerBar width="90%" />
+              <ShimmerBar width="76%" />
+              <ShimmerBar width="82%" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-[15px] text-text leading-[1.65]"
+                  style={{ fontFamily: "var(--font-reading)" }}
+                >
+                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
+                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {/* Keywords that correlate to the user's profile */}
         {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
