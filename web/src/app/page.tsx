@@ -95,6 +95,7 @@ function DiscoveryPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [openTool, setOpenTool] = useState<"ai" | "tavily" | null>(null);
+  const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
 
@@ -669,6 +670,8 @@ function DiscoveryPage() {
                   ]
                     .filter((s) => s && s.trim().length > 0)
                     .join("\n\n")}
+                  selectedPaperId={selectedPaperId}
+                  onSelectPaper={setSelectedPaperId}
                 />
               </div>
 
@@ -679,7 +682,10 @@ function DiscoveryPage() {
                     id={item.kind === "paper" ? `paper-${item.data.id}` : undefined}
                     className="rounded-3xl transition-shadow"
                   >
-                    <FeedTile item={item} />
+                    <FeedTile
+                      item={item}
+                      selected={item.kind === "paper" && item.data.id === selectedPaperId}
+                    />
                   </div>
                 ))}
                 <FeedMoreTile

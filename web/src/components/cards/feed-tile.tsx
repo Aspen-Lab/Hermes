@@ -257,7 +257,9 @@ function SaveButton({
 
 // ── Paper tile ────────────────────────────────────────────────
 
-function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
+const SELECTED_BG = "color-mix(in srgb, var(--color-accent) 15%, var(--color-surface))";
+
+function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean; selected?: boolean }) {
   const savePaper = useFeedStore((s) => s.savePaper);
   const moreLikePaper = useFeedStore((s) => s.moreLikePaper);
   const notInterestedPaper = useFeedStore((s) => s.notInterestedPaper);
@@ -280,7 +282,10 @@ function PaperTile({ paper, isRead }: { paper: Paper; isRead: boolean }) {
     <Link
       href={`/papers/${paper.id}`}
       className={tileShellClass(isRead)}
-      style={{ fontFamily: "var(--font-sans)" }}
+      style={{
+        fontFamily: "var(--font-sans)",
+        ...(selected ? { background: SELECTED_BG, transition: "background 0.3s" } : { transition: "background 0.3s" }),
+      }}
     >
       <KindStripe kind={kind} />
       <div className="flex items-center gap-2 mb-2.5">
@@ -443,9 +448,9 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
 
 // ── Public ────────────────────────────────────────────────────
 
-export function FeedTile({ item }: { item: FeedItem }) {
+export function FeedTile({ item, selected }: { item: FeedItem; selected?: boolean }) {
   const isRead = useFeedStore((s) => !!s.readItems[item.data.id]);
-  if (item.kind === "paper") return <PaperTile paper={item.data} isRead={isRead} />;
+  if (item.kind === "paper") return <PaperTile paper={item.data} isRead={isRead} selected={selected} />;
   if (item.kind === "event") return <EventTile event={item.data} isRead={isRead} />;
   return <JobTile job={item.data} isRead={isRead} />;
 }

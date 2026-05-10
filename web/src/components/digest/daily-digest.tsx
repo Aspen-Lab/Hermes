@@ -4,12 +4,10 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import type { Paper } from "@/types";
 
 interface DailyDigestProps {
-  /** Papers in the order they appear in the feed. Citation [n] in the
-   *  digest paragraph maps to the n-th paper (1-indexed). */
   papers: Paper[];
-  /** User's current project + challenges, concatenated. Sent to the LLM
-   *  as context so the digest speaks to their actual work. */
   contextHint?: string;
+  selectedPaperId?: string | null;
+  onSelectPaper?: (paperId: string) => void;
 }
 
 interface DigestPayload {
@@ -68,7 +66,7 @@ function clearCache() {
  * the cached paragraph is shown immediately without a new LLM call.
  * The user can click "Regenerate" to force a fresh generation.
  */
-export function DailyDigest({ papers, contextHint }: DailyDigestProps) {
+export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPaper }: DailyDigestProps) {
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -166,23 +164,28 @@ export function DailyDigest({ papers, contextHint }: DailyDigestProps) {
 
       <ol className="space-y-3 list-none m-0 p-0">
         {data.bullets.map((bullet, i) => {
-          const paper = papers.find((p) => p.id === bullet.paperId);
+          // LLM sometimes returns a slightly different paperId than what was sent.
+          // Fall back to index-based paper (the prompt guarantees same order as input).
+          const paper = papers.find((p) => p.id === bullet.paperId) ?? papers[i];
+          const actualPaperId = paper?.id ?? bullet.paperId;
+          const isSelected = selectedPaperId === actualPaperId;
           const scrollTo = (e: React.MouseEvent) => {
             e.preventDefault();
-            const el = document.getElementById(`paper-${bullet.paperId}`);
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-              el.classList.add("ring-2", "ring-accent/40");
-              setTimeout(() => el.classList.remove("ring-2", "ring-accent/40"), 1500);
-            }
+            onSelectPaper?.(actualPaperId);
+            const el = document.getElementById(`paper-${actualPaperId}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
           };
           return (
-            <li key={bullet.paperId} className="flex items-start gap-3">
+            <li key={actualPaperId} className="flex items-start gap-3">
               <a
-                href={`#paper-${bullet.paperId}`}
+                href={`#paper-${actualPaperId}`}
                 onClick={scrollTo}
                 title={paper?.title ?? "Jump to paper"}
-                className="flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full bg-accent/15 text-accent text-[11px] font-semibold flex items-center justify-center hover:bg-accent hover:text-bg transition-colors no-underline"
+                className={`flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full text-[11px] font-semibold flex items-center justify-center transition-colors no-underline ${
+                  isSelected
+                    ? "bg-accent text-bg"
+                    : "bg-accent/15 text-accent hover:bg-accent hover:text-bg"
+                }`}
               >
                 {i + 1}
               </a>
