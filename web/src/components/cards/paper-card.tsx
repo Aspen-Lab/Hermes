@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
+import { reviewPaperLabel } from "@/lib/papers/report";
 
 const WORDS_PER_MINUTE = 220;
 function readMinutes(p: Paper): number {
@@ -19,12 +20,21 @@ function readMinutes(p: Paper): number {
 export function PaperCard({ paper }: { paper: Paper }) {
   const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
   const minutes = readMinutes(paper);
+  const typeLabel = reviewPaperLabel(paper);
 
   return (
     <Link
       href={`/papers/${paper.id}`}
       className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
     >
+      {typeLabel && (
+        <span
+          className="inline-block mb-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded-md bg-tag-dim text-tag border border-tag/20"
+          style={{ fontFamily: "var(--font-sans)" }}
+        >
+          {typeLabel}
+        </span>
+      )}
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"

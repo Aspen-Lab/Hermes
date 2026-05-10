@@ -7,6 +7,11 @@ export interface PaperReportKeyResult {
   figureIndex: number;
 }
 
+export interface PaperReportReviewSection {
+  heading: string;
+  summary: string;
+}
+
 export interface PaperReport {
   whatItProposes: {
     summary: string;
@@ -16,11 +21,43 @@ export interface PaperReport {
     summary: string;
     keyResults: PaperReportKeyResult[];
   };
+  /** Populated instead of resultsAndSignificance for review/survey papers. */
+  reviewContents?: {
+    sections: PaperReportReviewSection[];
+  };
   whyItFitsYou: {
     summary: string;
     keywords: string[];
   };
   noLlm?: boolean;
+}
+
+const REVIEW_PATTERNS = [
+  /\breview\b/i,
+  /\bsurvey\b/i,
+  /\boverview\b/i,
+  /\btutorial\b/i,
+  /\bperspective\b/i,
+  /\broadmap\b/i,
+  /\bmeta-analysis\b/i,
+  /\bminireview\b/i,
+  /\bliterature review\b/i,
+  /\bsystematic review\b/i,
+  /\bstate[- ]of[- ]the[- ]art\b/i,
+];
+
+export function isPaperReviewLike(paper: Paper): boolean {
+  const haystack = [paper.title, paper.summaryIntro, ...paper.summaryExperimentKeywords]
+    .filter(Boolean)
+    .join(" ");
+  return REVIEW_PATTERNS.some((p) => p.test(haystack));
+}
+
+/** Returns the display label for a review/survey paper, or null for regular papers. */
+export function reviewPaperLabel(paper: Paper): "Review" | "Survey" | null {
+  if (!isPaperReviewLike(paper)) return null;
+  const haystack = [paper.title, paper.summaryIntro].filter(Boolean).join(" ");
+  return /\bsurvey\b/i.test(haystack) ? "Survey" : "Review";
 }
 
 export interface PaperReportRequest {
@@ -110,6 +147,25 @@ function fallbackKeyResults(paper: Paper): PaperReportKeyResult[] {
   }));
 }
 
+function fallbackReviewSections(paper: Paper): PaperReportReviewSection[] {
+  const sentences = splitSentences(
+    paper.summaryIntro || paper.summaryResultDiscussion || paper.relevanceReason,
+    5,
+  );
+  if (sentences.length === 0) {
+    return [
+      {
+        heading: "Overview",
+        summary: "Hermes could not extract section-level details from the available metadata. Open the paper link for the full contents.",
+      },
+    ];
+  }
+  return sentences.slice(0, 5).map((sentence, index) => ({
+    heading: index === 0 ? "Overview" : `Section ${index + 1}`,
+    summary: sentence,
+  }));
+}
+
 export function buildFallbackPaperReport(
   paper: Paper,
   contextHint?: string,
@@ -119,16 +175,19 @@ export function buildFallbackPaperReport(
   const fitSummary = isWeakFitText(paper.relevanceReason)
     ? buildFitSummary(paper, contextHint)
     : paper.relevanceReason;
+  const isReview = isPaperReviewLike(paper);
 
   return {
     whatItProposes: {
       summary,
       methods: fallbackMethods(paper),
     },
-    resultsAndSignificance: {
-      summary: paper.relevanceReason || summary,
-      keyResults: fallbackKeyResults(paper),
-    },
+    resultsAndSignificance: isReview
+      ? { summary: "", keyResults: [] }
+      : { summary: paper.relevanceReason || summary, keyResults: fallbackKeyResults(paper) },
+    reviewContents: isReview
+      ? { sections: fallbackReviewSections(paper) }
+      : undefined,
     whyItFitsYou: {
       summary: fitSummary,
       keywords,
@@ -191,6 +250,16 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
     ? report.whyItFitsYou.keywords.map(cleanDisplayText).filter(Boolean).slice(0, 10)
     : [];
 
+  const reviewSections = Array.isArray(report.reviewContents?.sections)
+    ? report.reviewContents.sections
+        .map((s) => ({
+          heading: cleanDisplayText(s.heading),
+          summary: cleanDisplayText(s.summary),
+        }))
+        .filter((s) => s.heading && s.summary)
+        .slice(0, 10)
+    : undefined;
+
   return {
     whatItProposes: {
       summary: cleanDisplayText(report.whatItProposes?.summary) || fallback.whatItProposes.summary,
@@ -200,6 +269,7 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
       summary: cleanDisplayText(report.resultsAndSignificance?.summary) || fallback.resultsAndSignificance.summary,
       keyResults,
     },
+    reviewContents: reviewSections ? { sections: reviewSections } : undefined,
     whyItFitsYou: {
       summary: cleanDisplayText(report.whyItFitsYou?.summary) || fallback.whyItFitsYou.summary,
       keywords,

@@ -182,24 +182,39 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      // Collect paper IDs delivered to this user in the past 30 days so we
+      // can exclude them from today's recommendations.
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: pastDeliveries } = await admin
+        .from("briefing_deliveries")
+        .select("item_ids")
+        .eq("user_id", row.user_id)
+        .gte("delivered_at", thirtyDaysAgo);
+      const seenIds = new Set<string>(
+        (pastDeliveries ?? []).flatMap((d) => (d.item_ids as string[] | null) ?? []),
+      );
+
+      const targetCount = row.paper_count ?? 10;
+      // Fetch more than needed so we have candidates left after de-duping seen.
       const feed = await runFeedPipeline({
         topics: row.research_topics,
         methods: row.preferred_methods.length > 0 ? row.preferred_methods : undefined,
         venues: row.preferred_venues.length > 0 ? row.preferred_venues : undefined,
         seedTexts: seedTextsFromRow(row),
         negativeTopics: row.disliked_topics ?? undefined,
-        topN: row.paper_count ?? 10,
+        topN: Math.min(targetCount * 3, 60),
         controls: feedControlsFromRow(row),
       });
 
-      const itemIds = feed.items.map((i) => i.id);
+      const freshItems = feed.items.filter((i) => !seenIds.has(i.id)).slice(0, targetCount);
+      const itemIds = freshItems.map((i) => i.id);
       const { error: insertErr } = await admin
         .from("briefing_deliveries")
         .insert({
           user_id: row.user_id,
           channel: row.digest_channel,
           item_ids: itemIds,
-          payload: { items: feed.items },
+          payload: { items: freshItems },
         });
 
       if (insertErr) {
@@ -222,7 +237,7 @@ export async function GET(req: NextRequest) {
           const result = await sendDigestEmail({
             to,
             firstName,
-            items: feed.items,
+            items: freshItems,
             originUrl,
           });
           if (result.sent) {

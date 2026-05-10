@@ -8,6 +8,8 @@ import { useProfileStore } from "@/store/profile";
 import { mockPapers } from "@/data/mock";
 import {
   buildFallbackPaperReport,
+  isPaperReviewLike,
+  reviewPaperLabel,
   type PaperReport,
 } from "@/lib/papers/report";
 import {
@@ -362,6 +364,8 @@ export default function PaperDetailPage({
   const isRecent = daysOld !== null && daysOld < 30;
   const isLiked =
     paper.feedback === "moreLikeThis" || paper.feedback === "liked";
+  const isReviewPaper = isPaperReviewLike(paper);
+  const reviewLabel = reviewPaperLabel(paper);
 
   const handleDismiss = () => {
     notInterestedPaper(paper);
@@ -390,6 +394,14 @@ export default function PaperDetailPage({
           className="mt-8 animate-fade-in-up"
           style={{ "--i": 0 } as React.CSSProperties}
         >
+          {reviewLabel && (
+            <span
+              className="inline-block mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md bg-tag-dim text-tag border border-tag/20"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              {reviewLabel}
+            </span>
+          )}
           <h1
             className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
             style={{ fontFamily: "var(--font-sans)" }}
@@ -498,50 +510,89 @@ export default function PaperDetailPage({
         />
 
         {/* ════════════════════════════════════════
-            SECTION 2 — RESULTS & SIGNIFICANCE
+            SECTION 2 — RESULTS & SIGNIFICANCE  /  PAPER CONTENTS & HIGHLIGHT
             ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconChart />} index={4}>
-          Results & significance
-        </SectionTitle>
+        {isReviewPaper ? (
+          <>
+            <SectionTitle icon={<IconBook />} index={4}>
+              Paper contents &amp; highlight
+            </SectionTitle>
 
-        <PullQuote>
-          {reportLoading
-            ? "Preparing the final report from the paper metadata and your profile."
-            : perPaperDigest?.headlineFinding ||
-            report?.resultsAndSignificance.summary ||
-            paper.relevanceReason}
-        </PullQuote>
+            <div className="mt-5 space-y-3">
+              {reportLoading && [1, 2, 3].map((i) => (
+                <div key={`loading-review-${i}`} className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card space-y-3">
+                  <ShimmerBar width="40%" height="h-3" />
+                  <ShimmerBar width="92%" />
+                  <ShimmerBar width="78%" />
+                </div>
+              ))}
+              {!reportLoading && (report?.reviewContents?.sections ?? []).map((section, index) => (
+                <div
+                  key={`${section.heading}-${index}`}
+                  className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card"
+                >
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-1"
+                    style={{ fontFamily: "var(--font-sans)" }}
+                  >
+                    {section.heading}
+                  </p>
+                  <p
+                    className="text-[15px] text-text leading-[1.68] break-words"
+                    style={{ fontFamily: "var(--font-reading)" }}
+                  >
+                    {section.summary}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <SectionTitle icon={<IconChart />} index={4}>
+              Results & significance
+            </SectionTitle>
 
-        <div className="mt-5 space-y-5">
-          {reportLoading && [1, 2].map((figureIndex) => (
-            <ReportFigureRow
-              key={`loading-result-${figureIndex}`}
-              title={`Key result ${figureIndex}`}
-              loading
-              figure={<FigureLoadingFrame />}
-            />
-          ))}
-          {!reportLoading && (report?.resultsAndSignificance.keyResults ?? []).map((result, index) => (
-            <ReportFigureRow
-              key={`${result.title}-${index}`}
-              title={result.title}
-              body={result.detail}
-              figure={
-                <PaperFigure
-                  itemId={paper.id}
-                  url={figureSourceUrl}
-                  doi={paper.doi}
-                  query={figureQuery(result.title, result.detail)}
-                  paperTitle={paper.title}
-                  alt={`${paper.title} — ${result.title}`}
-                  variant="compact"
-                  figureIndex={result.figureIndex}
-                  hideOnMiss={false}
+            <PullQuote>
+              {reportLoading
+                ? "Preparing the final report from the paper metadata and your profile."
+                : perPaperDigest?.headlineFinding ||
+                report?.resultsAndSignificance.summary ||
+                paper.relevanceReason}
+            </PullQuote>
+
+            <div className="mt-5 space-y-5">
+              {reportLoading && [1, 2].map((figureIndex) => (
+                <ReportFigureRow
+                  key={`loading-result-${figureIndex}`}
+                  title={`Key result ${figureIndex}`}
+                  loading
+                  figure={<FigureLoadingFrame />}
                 />
-              }
-            />
-          ))}
-        </div>
+              ))}
+              {!reportLoading && (report?.resultsAndSignificance.keyResults ?? []).map((result, index) => (
+                <ReportFigureRow
+                  key={`${result.title}-${index}`}
+                  title={result.title}
+                  body={result.detail}
+                  figure={
+                    <PaperFigure
+                      itemId={paper.id}
+                      url={figureSourceUrl}
+                      doi={paper.doi}
+                      query={figureQuery(result.title, result.detail)}
+                      paperTitle={paper.title}
+                      alt={`${paper.title} — ${result.title}`}
+                      variant="compact"
+                      figureIndex={result.figureIndex}
+                      hideOnMiss={false}
+                    />
+                  }
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ════════════════════════════════════════
             SECTION 3 — WHY IT FITS YOU
@@ -727,8 +778,8 @@ function ReportFigureRow({
 }) {
   const visibleBullets = (bullets ?? []).filter(Boolean).slice(0, 5);
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(380px,42%)] xl:grid-cols-[minmax(0,1fr)_minmax(460px,46%)] lg:items-stretch has-[.figure-hidden]:lg:grid-cols-1">
-      <div className="min-h-[210px] rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card">
+    <div className="flex flex-col gap-5">
+      <div className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card">
         <p
           className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
           style={{ fontFamily: "var(--font-sans)" }}
@@ -764,7 +815,7 @@ function ReportFigureRow({
           </ol>
         )}
       </div>
-      <div className="min-h-[280px] lg:min-h-[420px] has-[.figure-hidden]:hidden">{figure}</div>
+      <div className="has-[.figure-hidden]:hidden">{figure}</div>
     </div>
   );
 }
