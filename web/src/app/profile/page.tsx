@@ -91,12 +91,6 @@ const PAPER_IMPORTANCE_OPTIONS = [
   { value: "rising", label: "Rising fast", help: "Prefer recent papers gaining attention." },
 ] as const;
 
-const PAPER_METHOD_OPTIONS = [
-  { value: "mustMatch", label: "Must match", help: "Only close method matches." },
-  { value: "relatedOk", label: "Related OK", help: "Allow nearby methods." },
-  { value: "any", label: "Any method", help: "Do not filter by method." },
-] as const;
-
 const PAPER_DISCOVERY_OPTIONS = [
   { value: "core", label: "Core field", help: "Stay inside my main area." },
   { value: "adjacent", label: "Adjacent fields", help: "Bring in nearby areas." },
@@ -216,7 +210,6 @@ export default function ProfilePage() {
     updateCareerStage,
     updateIndustryPreference,
     updateLocations,
-    updateMethods,
     updateSchool,
     updateCurrentProject,
     updateCurrentChallenges,
@@ -225,7 +218,6 @@ export default function ProfilePage() {
     updatePaperCount,
     updateFeedSourceMix,
     updateFeedImportance,
-    updateFeedMethodMode,
     updateFeedDiscoveryMode,
     updateFeedAvoidReviews,
     updateFeedAvoidOldPapers,
@@ -351,7 +343,6 @@ export default function ProfilePage() {
           setName={setName}
           updateTopics={updateTopics}
           updateSoftTopics={updateSoftTopics}
-          updateMethods={updateMethods}
           updateSchool={updateSchool}
           updateCurrentProject={updateCurrentProject}
           updateCurrentChallenges={updateCurrentChallenges}
@@ -360,7 +351,6 @@ export default function ProfilePage() {
           updatePaperCount={updatePaperCount}
           updateFeedSourceMix={updateFeedSourceMix}
           updateFeedImportance={updateFeedImportance}
-          updateFeedMethodMode={updateFeedMethodMode}
           updateFeedDiscoveryMode={updateFeedDiscoveryMode}
           updateFeedAvoidReviews={updateFeedAvoidReviews}
           updateFeedAvoidOldPapers={updateFeedAvoidOldPapers}
@@ -522,7 +512,6 @@ function DashboardView({
         <div className="mt-3 space-y-2">
           <SignalRow tone="accent" icon={<IconHash />} label="Required" items={profile.researchTopics} />
           <SignalRow tone="tag" icon={<IconHash />} label="Explore" items={profile.softTopics ?? []} />
-          <SignalRow tone="tag" icon={<IconFlask />} label="Methods" items={profile.preferredMethods} />
           <SignalRow tone="link" icon={<IconBook />} label="Venues" items={profile.preferredVenues} />
           <SignalRow tone="tag" icon={<IconPin />} label="Locations" items={profile.locationPreferences} />
         </div>
@@ -1659,7 +1648,6 @@ function EditView({
   setName,
   updateTopics,
   updateSoftTopics,
-  updateMethods,
   updateSchool,
   updateCurrentProject,
   updateCurrentChallenges,
@@ -1668,7 +1656,6 @@ function EditView({
   updatePaperCount,
   updateFeedSourceMix,
   updateFeedImportance,
-  updateFeedMethodMode,
   updateFeedDiscoveryMode,
   updateFeedAvoidReviews,
   updateFeedAvoidOldPapers,
@@ -1688,7 +1675,6 @@ function EditView({
   setName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateSoftTopics: (v: string[]) => void;
-  updateMethods: (v: string[]) => void;
   updateSchool: (s: string) => void;
   updateCurrentProject: (s: string) => void;
   updateCurrentChallenges: (s: string) => void;
@@ -1697,7 +1683,6 @@ function EditView({
   updatePaperCount: ReturnType<typeof useProfileStore.getState>["updatePaperCount"];
   updateFeedSourceMix: ReturnType<typeof useProfileStore.getState>["updateFeedSourceMix"];
   updateFeedImportance: ReturnType<typeof useProfileStore.getState>["updateFeedImportance"];
-  updateFeedMethodMode: ReturnType<typeof useProfileStore.getState>["updateFeedMethodMode"];
   updateFeedDiscoveryMode: ReturnType<typeof useProfileStore.getState>["updateFeedDiscoveryMode"];
   updateFeedAvoidReviews: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidReviews"];
   updateFeedAvoidOldPapers: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidOldPapers"];
@@ -1777,16 +1762,6 @@ function EditView({
             </p>
           </div>
         </div>
-      </EditRow>
-
-      <EditRow icon={<IconFlask />} tone="tag" label="Methods">
-        <ChipInput
-          values={profile.preferredMethods}
-          onChange={updateMethods}
-          placeholder="contrastive learning, RLHF, MoE..."
-          suggestions={SUGGESTED_METHODS}
-          tone="tag"
-        />
       </EditRow>
 
       <EditRow icon={<IconBook />} tone="link" label="Venues">
@@ -1952,12 +1927,6 @@ function EditView({
             value={profile.feedImportance}
             options={PAPER_IMPORTANCE_OPTIONS}
             onChange={(value) => updateFeedImportance(value as typeof profile.feedImportance)}
-          />
-          <ChoiceGroup
-            label="Methods"
-            value={profile.feedMethodMode}
-            options={PAPER_METHOD_OPTIONS}
-            onChange={(value) => updateFeedMethodMode(value as typeof profile.feedMethodMode)}
           />
           <ChoiceGroup
             label="Discovery"
