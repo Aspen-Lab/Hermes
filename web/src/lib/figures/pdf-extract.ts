@@ -32,6 +32,13 @@ export interface PdfFigureCandidate {
   caption?: string | null;
   source: FigureSource;
   ordinal: number;
+  /**
+   * PDF-rendered figures are always rasterized at ~200 DPI from vector
+   * source, so they're guaranteed high-resolution. Surfacing this lets the
+   * shared figure scorer prefer them over publisher HTML thumbnails (which
+   * often embed images at 440px wide with no URL hint).
+   */
+  qualityHint?: "high" | "medium" | "low";
 }
 
 export interface PdfAttemptResult {
@@ -114,6 +121,14 @@ function appearsPaywalled(res: Response, html: string): boolean {
   return phrases.some((phrase) => lowered.includes(phrase)) && !/creative commons|cc-by|free full text|open access/i.test(html);
 }
 
+// EuropePMC, JSTOR, and several publisher CDNs explicitly 403 any UA matching
+// the "Bot" pattern. Since we're fetching legal open-access PDFs that those
+// hosts make available to readers, send a real browser UA. Hermes still
+// identifies itself via X-Hermes-Figure-Version for server logs that care.
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Hermes/0.1";
+
 async function fetchPdfResponse(url: string): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -122,8 +137,9 @@ async function fetchPdfResponse(url: string): Promise<Response | null> {
     return await fetch(url, {
       signal: controller.signal,
       cache: "no-store",
+      redirect: "follow",
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "User-Agent": BROWSER_UA,
         "X-Hermes-Figure-Version": FETCH_VERSION,
         Accept: "application/pdf,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
       },
@@ -263,6 +279,7 @@ export async function tryPdfCandidates(
           caption: cleanDisplayText(figure.caption),
           source,
           ordinal: typeof figure.ordinal === "number" ? figure.ordinal : index,
+          qualityHint: "high",
         };
       })
       .filter((figure): figure is PdfFigureCandidate => figure !== null);

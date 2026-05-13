@@ -25,7 +25,12 @@ CLIP_PADDING = 10
 MAX_CAPTION_DISTANCE_BELOW = 220
 MAX_CAPTION_DISTANCE_ABOVE = 110
 MAX_FIGURE_TEXT_CHARS = 500
-MAX_PIXELS = 2_000_000
+# Higher pixel ceiling — keeps figure resolution high on modern screens.
+MAX_PIXELS = 4_500_000
+# Default render scale. PyMuPDF's base resolution is 72 DPI; scale=2.8 gives
+# ~200 DPI, which is visibly sharp on retina displays without ballooning size.
+DEFAULT_SCALE = 2.8
+MIN_SCALE = 1.6
 
 
 @dataclass
@@ -219,9 +224,12 @@ def clip_png_base64(page: fitz.Page, rect: fitz.Rect) -> str | None:
     if clip.is_empty or clip.width <= 1 or clip.height <= 1:
         return None
 
-    scale = 2.0
-    if clip.width * clip.height * (scale**2) > MAX_PIXELS:
-        scale = 1.35
+    # Start at the high-DPI default; drop only when the area would exceed the
+    # safety ceiling. Most figures clear DEFAULT_SCALE comfortably.
+    scale = DEFAULT_SCALE
+    while clip.width * clip.height * (scale**2) > MAX_PIXELS and scale > MIN_SCALE:
+        scale -= 0.2
+    scale = max(MIN_SCALE, scale)
 
     pix = page.get_pixmap(clip=clip, matrix=fitz.Matrix(scale, scale), alpha=False)
     png_bytes = pix.tobytes("png")

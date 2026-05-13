@@ -6,11 +6,13 @@ import type {
 import { anthropicProvider, createAnthropicProvider } from "./anthropic";
 import { geminiProvider, createGeminiApiProvider } from "./gemini";
 import { openaiProvider, createOpenAIProvider } from "./openai";
+import { qwenProvider, createQwenProvider } from "./qwen";
 
 const providers: Record<ProviderId, DigestProvider> = {
   anthropic: anthropicProvider,
   gemini: geminiProvider,
   openai: openaiProvider,
+  qwen: qwenProvider,
   ollama: geminiProvider, // placeholder until an Ollama provider exists
 };
 
@@ -34,6 +36,8 @@ export function resolveProvider(
         return createGeminiApiProvider(apiKey);
       case "openai":
         return createOpenAIProvider(apiKey, override.model);
+      case "qwen":
+        return createQwenProvider(apiKey, override.model);
       default:
         break;
     }
@@ -50,5 +54,6 @@ export function resolveProvider(
   }
   if (process.env.ANTHROPIC_API_KEY) return anthropicProvider;
   if (process.env.OPENAI_API_KEY) return openaiProvider;
+  if (process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY) return qwenProvider;
   return null;
 }

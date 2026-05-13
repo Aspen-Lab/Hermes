@@ -1,6 +1,14 @@
 import { cleanDisplayText } from "@/lib/text/clean";
 
-export type ProviderId = "anthropic" | "gemini" | "openai" | "ollama";
+export type ProviderId = "anthropic" | "gemini" | "openai" | "qwen" | "ollama";
+
+/**
+ * Model intelligence tier. `small` = cheap/fast (classification, simple JSON
+ * extraction); `large` = strong (deep paper reading, multi-step reasoning).
+ * Each provider maps these to its own small/large model id — see provider
+ * implementations. Callers pass a tier; the provider handles the mapping.
+ */
+export type ModelTier = "small" | "large";
 
 export interface ProviderOverrideConfig {
   provider: Exclude<ProviderId, "ollama">;
@@ -46,12 +54,20 @@ export interface DigestProvider {
     systemPrompt: string;
     userPrompt: string;
     maxTokens?: number;
+    /**
+     * Optional intelligence tier. `small` -> cheap classifier (Haiku / gpt-mini
+     * / gemini-flash / qwen-turbo). `large` -> strong reasoner (Sonnet / gpt /
+     * gemini-pro / qwen-max). If omitted, providers fall back to their default
+     * model so legacy call sites keep working unchanged.
+     */
+    tier?: ModelTier;
   }): Promise<string>;
   generateVisionJsonText?(args: {
     systemPrompt: string;
     userPrompt: string;
     images: VisionImageInput[];
     maxTokens?: number;
+    tier?: ModelTier;
   }): Promise<string>;
   testConnection(): Promise<{ ok: boolean; error?: string }>;
 }

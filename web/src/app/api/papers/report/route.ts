@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveProvider } from "@/lib/llm/providers/registry";
+import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   buildFallbackPaperReport,
   improvePaperReportFit,
@@ -8,9 +9,23 @@ import {
   type PaperReport,
   type PaperReportRequest,
 } from "@/lib/papers/report";
+import { generateDeepReport, buildPaywalledFallback } from "@/lib/papers/deep-report";
+import { bindFiguresToReport } from "@/lib/papers/figure-binding";
+import { getFullText } from "@/lib/papers/full-text";
+import { getFigurePool } from "@/lib/figures/extract";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 90;
+
+// ── Request shape ────────────────────────────────────────────────────
+
+interface ExtendedRequest extends PaperReportRequest {
+  /** When true, attempt full-text deep reading. Requires `llmOverride` with key. */
+  deepReport?: boolean;
+  llmOverride?: ProviderOverrideConfig;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────
 
 function parseJsonObject(text: string): Partial<PaperReport> | null {
   const candidates = [
@@ -30,7 +45,7 @@ function parseJsonObject(text: string): Partial<PaperReport> | null {
   return null;
 }
 
-function buildPrompt({ paper, contextHint }: PaperReportRequest): string {
+function buildShallowPrompt({ paper, contextHint }: PaperReportRequest): string {
   const isReview = isPaperReviewLike(paper);
   const secondSection = isReview
     ? {
@@ -74,8 +89,13 @@ function buildPrompt({ paper, contextHint }: PaperReportRequest): string {
     },
     outputSchema: {
       whatItProposes: {
-        summary: "2-3 plain-English sentences describing the paper's proposal or scope.",
-        methods: ["short method/topic/scope phrases"],
+        summary: "2-3 plain-English sentences describing the paper's proposal or scope. Do not include the method list here.",
+        methods: [
+          "Concrete method or experiment sentences from the abstract/result text. Name actual experiments, datasets, instruments, measurements, simulations, or evaluations when present. If the abstract does not specify the method, say that directly.",
+        ],
+        novelty: [
+          "exactly one concise sentence explaining what is new about this paper vs prior work, based only on the supplied metadata",
+        ],
       },
       ...secondSection,
       whyItFitsYou: {
@@ -88,10 +108,66 @@ function buildPrompt({ paper, contextHint }: PaperReportRequest): string {
   });
 }
 
-export async function POST(req: NextRequest) {
-  let body: PaperReportRequest;
+const SHALLOW_SYSTEM = [
+  "You are Hermes, a careful research assistant.",
+  "Write concise paper reports for researchers.",
+  "Use only the supplied title, abstract, result text, keywords, and user context.",
+  "Keep proposal, method, and novelty separate: proposal says what the paper tries to do; methods say what experiments or evaluations were actually used; novelty is exactly one concise sentence.",
+  "Do not fabricate experimental values, claims, or figures.",
+  "Do not mention missing user context, missing profile data, or that the paper was pulled from search.",
+  "Return only valid JSON.",
+].join(" ");
+
+async function generateShallowReport(
+  body: PaperReportRequest,
+  override?: ProviderOverrideConfig,
+): Promise<PaperReport> {
+  const provider = resolveProvider(override ?? null);
+  const fallback = buildFallbackPaperReport(body.paper, body.contextHint);
+  if (!provider?.generateJsonText) {
+    return { ...fallback, depth: "fallback" };
+  }
   try {
-    body = await req.json();
+    const raw = await provider.generateJsonText({
+      systemPrompt: SHALLOW_SYSTEM,
+      userPrompt: buildShallowPrompt(body),
+      maxTokens: 1800,
+    });
+    const parsed = parseJsonObject(raw);
+    if (!parsed) return { ...fallback, depth: "abstract" };
+    return improvePaperReportFit(
+      { ...sanitizePaperReport(parsed), depth: "abstract" },
+      body.paper,
+      body.contextHint,
+    );
+  } catch (err) {
+    console.error("[papers/report] shallow generation failed:", err);
+    return { ...fallback, depth: "fallback" };
+  }
+}
+
+// ── Identifier extraction ────────────────────────────────────────────
+
+function arxivIdFromPaper(paper: PaperReportRequest["paper"]): string | null {
+  if (paper.id?.startsWith("arxiv:")) return paper.id.slice("arxiv:".length);
+  return null;
+}
+
+function openAlexIdFromPaper(paper: PaperReportRequest["paper"]): string | null {
+  if (paper.id?.startsWith("openalex:")) return paper.id.slice("openalex:".length);
+  return null;
+}
+
+function bestPaperUrl(paper: PaperReportRequest["paper"]): string | null {
+  return paper.linkPaper ?? paper.linkArxiv ?? null;
+}
+
+// ── POST handler ─────────────────────────────────────────────────────
+
+export async function POST(req: NextRequest) {
+  let body: ExtendedRequest;
+  try {
+    body = (await req.json()) as ExtendedRequest;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -100,36 +176,103 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "paper is required" }, { status: 400 });
   }
 
-  const fallback = buildFallbackPaperReport(body.paper, body.contextHint);
-  const provider = resolveProvider();
-  if (!provider?.generateJsonText) {
-    return NextResponse.json(fallback);
+  // ── Deep path ────────────────────────────────────────────────────
+  // Runs when the client asks for deep reading AND a provider is available
+  // — either via a user-supplied override (Tier 2 BYOK) OR via the site's
+  // own configured default (Vertex Gemini / Anthropic / OpenAI / Qwen).
+  // Without ANY provider, fall through to the shallow path.
+  if (body.deepReport) {
+    const provider = resolveProvider(body.llmOverride ?? null);
+    if (!provider?.generateJsonText) {
+      // No provider available — site has no default and user didn't supply
+      // a key. Fall back to deterministic shallow report.
+      return NextResponse.json(await generateShallowReport(body, body.llmOverride));
+    }
+
+    try {
+      const fullText = await getFullText({
+        paperId: body.paper.id,
+        url: bestPaperUrl(body.paper),
+        doi: body.paper.doi ?? null,
+        arxivId: arxivIdFromPaper(body.paper),
+        openAlexId: openAlexIdFromPaper(body.paper),
+      });
+
+      if (fullText.status === "paywalled" && fullText.reason) {
+        // Try the LLM-backed shallow path first; on LLM failure
+        // buildPaywalledFallback gives a deterministic abstract-only report.
+        const shallow = await generateShallowReport(body, body.llmOverride);
+        const tagged: PaperReport = {
+          ...shallow,
+          paywallNotice: fullText.reason,
+          depth: shallow.depth ?? "abstract",
+        };
+        return NextResponse.json(
+          shallow.noLlm
+            ? buildPaywalledFallback(body.paper, body.contextHint, fullText.reason)
+            : tagged,
+        );
+      }
+
+      if (fullText.status !== "ok" || !fullText.doc) {
+        const shallow = await generateShallowReport(body, body.llmOverride);
+        return NextResponse.json({
+          ...shallow,
+          paywallNotice:
+            fullText.reason ??
+            "Hermes could not find a legal full-text source for this paper. Showing an abstract-only report instead.",
+        });
+      }
+
+      const deep = await generateDeepReport({
+        paper: body.paper,
+        contextHint: body.contextHint,
+        doc: fullText.doc,
+        provider,
+      });
+
+      if (!deep) {
+        const shallow = await generateShallowReport(body, body.llmOverride);
+        return NextResponse.json({
+          ...shallow,
+          paywallNotice:
+            "Hermes downloaded the paper but the deep-read step failed. Showing an abstract-only report instead.",
+        });
+      }
+
+      // Phase 5: bind figures. Two parallel inputs:
+      //   1. captions from the same fetched full-text doc (for label/text
+      //      matching and explicit-figure-N alignment)
+      //   2. the figures pipeline candidate pool (for the actual high-quality
+      //      image URLs — PDF-rendered when available, HTML otherwise)
+      // With both, the binding can attach the bound image URL directly to
+      // each report section, eliminating the second-extractor handoff
+      // problem that previously dropped explicit-figure matches.
+      const figurePool = await getFigurePool({
+        itemId: body.paper.id,
+        url: bestPaperUrl(body.paper) ?? undefined,
+        doi: body.paper.doi ?? undefined,
+        paperTitle: body.paper.title,
+      }).catch((err) => {
+        console.warn("[papers/report] figure pool fetch failed:", err);
+        return null;
+      });
+
+      const bound = await bindFiguresToReport({
+        paper: { title: body.paper.title },
+        report: deep,
+        captions: fullText.doc.figureCaptions,
+        provider,
+        figurePool,
+      });
+
+      return NextResponse.json(bound);
+    } catch (err) {
+      console.error("[papers/report] deep flow failed:", err);
+      return NextResponse.json(await generateShallowReport(body, body.llmOverride));
+    }
   }
 
-  try {
-    const raw = await provider.generateJsonText({
-      systemPrompt: [
-        "You are Hermes, a careful research assistant.",
-        "Write concise paper reports for researchers.",
-      "Use only the supplied title, abstract, result text, keywords, and user context.",
-      "Do not fabricate experimental values, claims, or figures.",
-      "Do not mention missing user context, missing profile data, or that the paper was pulled from search.",
-      "Return only valid JSON.",
-      ].join(" "),
-      userPrompt: buildPrompt(body),
-      maxTokens: 1800,
-    });
-    const parsed = parseJsonObject(raw);
-    if (!parsed) return NextResponse.json(fallback);
-    return NextResponse.json(
-      improvePaperReportFit(
-        sanitizePaperReport(parsed),
-        body.paper,
-        body.contextHint,
-      ),
-    );
-  } catch (err) {
-    console.error("[papers/report] generation failed:", err);
-    return NextResponse.json(fallback);
-  }
+  // ── Shallow path (default) ──────────────────────────────────────
+  return NextResponse.json(await generateShallowReport(body, body.llmOverride));
 }

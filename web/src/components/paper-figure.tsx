@@ -79,7 +79,7 @@ export function useResolvedFigure({
 
     (async () => {
       try {
-        const params = new URLSearchParams({ id: itemId, v: "9" });
+        const params = new URLSearchParams({ id: itemId, v: "11" });
         if (url) params.set("url", url);
         if (doi) params.set("doi", doi);
         if (query?.trim()) params.set("query", query.trim());
@@ -171,8 +171,13 @@ export function PaperFigureFrame({
       ? loadedImage.aspect
       : null;
 
+  // Whenever we have nothing usable to show, emit the `.figure-hidden`
+  // marker. The parent uses `has-[.figure-hidden]:hidden` so the entire
+  // figure column collapses (removing both the placeholder AND the flex
+  // gap). Returning `null` here leaves an empty flex item that still
+  // reserves space, so we always render the marker instead.
   if (!figure.imageUrl && figure.hideFigure) {
-    return hideOnMiss ? null : <div className="figure-hidden" aria-hidden />;
+    return <div className="figure-hidden" aria-hidden />;
   }
 
   if (
@@ -181,7 +186,7 @@ export function PaperFigureFrame({
     !figure.imageUrl &&
     figure.status !== "found"
   ) {
-    return null;
+    return <div className="figure-hidden" aria-hidden />;
   }
   return (
     <figure className="mt-5 w-full">
