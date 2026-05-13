@@ -195,15 +195,19 @@ export async function GET(req: NextRequest) {
       );
 
       const targetCount = row.paper_count ?? 10;
-      // Fetch more than needed so we have candidates left after de-duping seen.
+      // Push the dedup down into the pipeline: it now filters seen IDs after
+      // ranking but BEFORE topN slicing, so we get a full set of fresh items
+      // without over-fetching 3x. The post-filter below is kept as a defensive
+      // belt-and-suspenders in case the pipeline returns extra items.
       const feed = await runFeedPipeline({
         topics: row.research_topics,
         methods: row.preferred_methods.length > 0 ? row.preferred_methods : undefined,
         venues: row.preferred_venues.length > 0 ? row.preferred_venues : undefined,
         seedTexts: seedTextsFromRow(row),
         negativeTopics: row.disliked_topics ?? undefined,
-        topN: Math.min(targetCount * 3, 60),
+        topN: targetCount,
         controls: feedControlsFromRow(row),
+        excludeIds: Array.from(seenIds),
       });
 
       const freshItems = feed.items.filter((i) => !seenIds.has(i.id)).slice(0, targetCount);

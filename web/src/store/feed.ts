@@ -77,10 +77,43 @@ async function cloudFeedback(
   }
 }
 
+// Recently-shown tracking.
+//
+// Rule: a paper that's already been surfaced in this user's feed shouldn't
+// re-appear in subsequent loads for a while. We persist a {id -> timestamp}
+// map in localStorage (via zustand persist), expire entries after 14 days,
+// and pass the active IDs as `excludeIds` to the API. The pipeline filters
+// those out AFTER scoring so we always return a full topN of fresh items.
+//
+// 14 days keeps the next two weeks of daily digests free of repeats while
+// still allowing genuinely relevant older papers to surface eventually if
+// the user's interests shift.
+const RECENTLY_SHOWN_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+const RECENTLY_SHOWN_CAP = 1000;
+
+function pruneRecentlyShown(
+  map: Record<string, number>,
+): Record<string, number> {
+  const cutoff = Date.now() - RECENTLY_SHOWN_TTL_MS;
+  const entries = Object.entries(map).filter(([, ts]) => ts >= cutoff);
+  if (entries.length <= RECENTLY_SHOWN_CAP) return Object.fromEntries(entries);
+  // Trim oldest first when we're over cap.
+  entries.sort((a, b) => b[1] - a[1]);
+  return Object.fromEntries(entries.slice(0, RECENTLY_SHOWN_CAP));
+}
+
+function activeRecentlyShownIds(map: Record<string, number>): string[] {
+  const cutoff = Date.now() - RECENTLY_SHOWN_TTL_MS;
+  return Object.entries(map)
+    .filter(([, ts]) => ts >= cutoff)
+    .map(([id]) => id);
+}
+
 async function fetchRealFeed(
   profile: UserProfile,
   savedPapers: Paper[] = [],
   aiPaperSearchEnabled = true,
+  excludeIds: string[] = [],
 ): Promise<Paper[]> {
   const topics = (profile.researchTopics ?? []).filter(Boolean);
   if (topics.length === 0) return [];
@@ -148,6 +181,7 @@ async function fetchRealFeed(
           avoidOldPapers: profile.feedAvoidOldPapers,
           avoidBroadSurveys: profile.feedAvoidBroadSurveys,
         },
+        excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
       }),
     });
     if (!res.ok) {
@@ -182,6 +216,8 @@ interface FeedState {
   lastRefresh: string | null;
   aiPaperSearchEnabled: boolean;
   readItems: Record<string, true>;
+  /** id -> ms timestamp. Drives the "don't repeat papers" exclude list. */
+  recentlyShownIds: Record<string, number>;
   pendingDismissal: PendingDismissal | null;
 
   loadFeed: () => Promise<void>;
@@ -229,25 +265,38 @@ export const useFeedStore = create<FeedState>()(
       lastRefresh: null,
       aiPaperSearchEnabled: true,
       readItems: {},
+      recentlyShownIds: {},
       pendingDismissal: null,
 
       loadFeed: async () => {
         set({ isLoading: true });
-        const { savedPapers } = get();
+        const { savedPapers, recentlyShownIds } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
+
+        // Only exclude active (within TTL) IDs. Saved papers are intentionally
+        // allowed to re-surface — the user explicitly bookmarked them and may
+        // want to revisit.
+        const excludeIds = activeRecentlyShownIds(recentlyShownIds).filter(
+          (id) => !savedIds.has(id),
+        );
 
         const realPapers = await fetchRealFeed(
           profile,
           savedPapers,
           aiPaperSearchEnabled,
+          excludeIds,
         );
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
             ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
             : p,
         );
+        // Record what we're about to show so the next load skips them.
+        const now = Date.now();
+        const nextShown: Record<string, number> = { ...recentlyShownIds };
+        for (const paper of papers) nextShown[paper.id] = now;
         set({
           papers,
           // No real Events / Jobs adapters yet — empty arrays beat
@@ -256,6 +305,7 @@ export const useFeedStore = create<FeedState>()(
           jobs: [],
           isLoading: false,
           lastRefresh: new Date().toISOString(),
+          recentlyShownIds: pruneRecentlyShown(nextShown),
         });
       },
 
@@ -462,6 +512,7 @@ export const useFeedStore = create<FeedState>()(
           savedEvents: [],
           savedJobs: [],
           readItems: {},
+          recentlyShownIds: {},
           pendingDismissal: null,
           aiPaperSearchEnabled: true,
         });
@@ -475,6 +526,7 @@ export const useFeedStore = create<FeedState>()(
         savedJobs: state.savedJobs,
         readItems: state.readItems,
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
+        recentlyShownIds: state.recentlyShownIds,
       }),
     }
   )
