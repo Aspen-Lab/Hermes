@@ -4,7 +4,7 @@ import { matchFigureVisually } from "./vision-match";
 
 const FETCH_TIMEOUT_MS = 7_000;
 const MAX_BODY_BYTES = 2_500_000;
-const FETCH_VERSION = "2026-05-01-pdf-vision";
+const FETCH_VERSION = "2026-05-12-source-quality";
 
 interface ExtractInput {
   itemId: string;
@@ -37,6 +37,7 @@ interface FigureCandidate {
   caption?: string | null;
   source: NonNullable<FigureResult["source"]>;
   ordinal: number;
+  qualityHint?: "high" | "medium" | "low";
 }
 
 interface AttemptResult {
@@ -88,6 +89,13 @@ interface UnpaywallRecord {
   oa_locations?: UnpaywallLocation[] | null;
 }
 
+// EuropePMC, JSTOR, and several publisher CDNs explicitly 403 any UA
+// matching the "Bot" pattern. Send a real browser UA — we identify
+// ourselves via X-Hermes-Figure-Version for server logs that care.
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Hermes/0.1";
+
 async function timedFetch(url: string, init?: RequestInit): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -96,8 +104,9 @@ async function timedFetch(url: string, init?: RequestInit): Promise<Response | n
       ...init,
       signal: controller.signal,
       cache: "no-store",
+      redirect: "follow",
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "User-Agent": BROWSER_UA,
         "X-Hermes-Figure-Version": FETCH_VERSION,
         Accept: "text/html,application/xhtml+xml,application/json",
         ...(init?.headers ?? {}),
@@ -179,6 +188,22 @@ const BAD_URL_PATTERNS: RegExp[] = [
   /twitter[-_]?(?:card|image)[-_]?default/i,
   /opengraph[-_]?default/i,
 ];
+const LOW_RES_URL_PATTERNS: RegExp[] = [
+  /\bthumb(?:nail)?s?\b/i,
+  /(?:^|[-_./])small(?:[-_./]|$)/i,
+  /(?:^|[-_./])low(?:res|resolution)?(?:[-_./]|$)/i,
+  /(?:^|[-_./])preview(?:[-_./]|$)/i,
+  /(?:^|[-_./])tiny(?:[-_./]|$)/i,
+  /\/(?:thumb|thumbnail|small|preview)\//i,
+  /[?&](?:width|w)=([1-5]?\d{1,2})(?:&|$)/i,
+  /[?&](?:height|h)=([1-5]?\d{1,2})(?:&|$)/i,
+];
+const HIGH_RES_URL_PATTERNS: RegExp[] = [
+  /\b(?:full|large|hi[-_]?res|high[-_]?res|original|download)\b/i,
+  /\/(?:full|large|hires|original)\//i,
+  /[?&](?:width|w)=([8-9]\d{2}|\d{4,})(?:&|$)/i,
+  /[?&](?:height|h)=([8-9]\d{2}|\d{4,})(?:&|$)/i,
+];
 const OPEN_ACCESS_HOST_PATTERNS = [
   /(^|\.)pmc\.ncbi\.nlm\.nih\.gov$/i,
   /(^|\.)arxiv\.org$/i,
@@ -189,6 +214,14 @@ const OPEN_ACCESS_HOST_PATTERNS = [
 
 function looksLikeLogo(url: string): boolean {
   return BAD_URL_PATTERNS.some((pattern) => pattern.test(url));
+}
+
+function looksLowResUrl(url: string): boolean {
+  return LOW_RES_URL_PATTERNS.some((pattern) => pattern.test(url));
+}
+
+function looksHighResUrl(url: string): boolean {
+  return HIGH_RES_URL_PATTERNS.some((pattern) => pattern.test(url));
 }
 
 function hostLooksOpenAccess(url: string): boolean {
@@ -247,29 +280,87 @@ function readAttr(markup: string, attr: string): string | null {
 function srcFromSrcset(srcset: string): string | null {
   const candidates = srcset
     .split(",")
-    .map((part) => part.trim().split(/\s+/)[0])
-    .filter(Boolean);
-  return candidates.at(-1) ?? null;
+    .map((part, order) => {
+      const [url, descriptor] = part.trim().split(/\s+/);
+      if (!url) return null;
+      const width = descriptor?.match(/^(\d+)w$/i);
+      const density = descriptor?.match(/^([0-9.]+)x$/i);
+      const score = width
+        ? Number.parseInt(width[1], 10)
+        : density
+          ? Number.parseFloat(density[1]) * 1000
+          : order;
+      return { url, score };
+    })
+    .filter((candidate): candidate is { url: string; score: number } => candidate !== null)
+    .sort((a, b) => b.score - a.score);
+  return candidates[0]?.url ?? null;
 }
 
-function firstImageSrc(markup: string, baseUrl: string): string | null {
+function candidateLooksImageUrl(url: string): boolean {
+  if (/\.(?:png|jpe?g|webp|gif|tiff?|svg)(?:[?#]|$)/i.test(url)) return true;
+  if (/\b(?:fig|figure|image|graphic|media|download|hires|large|full|original)\b/i.test(url)) {
+    return !/\.(?:html?|pdf|xml)(?:[?#]|$)/i.test(url);
+  }
+  return false;
+}
+
+function htmlImageUrlScore(url: string): number {
+  let score = 0;
+  if (looksHighResUrl(url)) score += 10;
+  if (looksLowResUrl(url)) score -= 12;
+  if (/\.(?:png|jpe?g|webp|tiff?)(?:[?#]|$)/i.test(url)) score += 3;
+  if (/\.svg(?:[?#]|$)/i.test(url)) score -= 2;
+  if (/\b(?:logo|icon|sprite)\b/i.test(url)) score -= 20;
+  return score;
+}
+
+function addImageCandidate(
+  target: Map<string, string>,
+  value: string | null,
+  baseUrl: string,
+  requireImageLike = false,
+) {
+  if (!value || value.startsWith("data:")) return;
+  const absolute = absolutize(value, baseUrl);
+  if (looksLikeLogo(absolute)) return;
+  if (requireImageLike && !candidateLooksImageUrl(absolute)) return;
+  target.set(absolute, absolute);
+}
+
+function bestImageSrc(markup: string, baseUrl: string): string | null {
   const img = markup.match(/<img\b[^>]*>/i)?.[0];
   const source = markup.match(/<source\b[^>]*>/i)?.[0];
-  const src =
-    (img &&
-      (readAttr(img, "src") ??
-        readAttr(img, "data-src") ??
-        readAttr(img, "data-original"))) ??
-    (img && readAttr(img, "srcset")
-      ? srcFromSrcset(readAttr(img, "srcset") ?? "")
-      : null) ??
-    (source && readAttr(source, "srcset")
-      ? srcFromSrcset(readAttr(source, "srcset") ?? "")
-      : null);
+  const urls = new Map<string, string>();
 
-  if (!src || src.startsWith("data:")) return null;
-  const absolute = absolutize(src, baseUrl);
-  return looksLikeLogo(absolute) ? null : absolute;
+  if (source) addImageCandidate(urls, srcFromSrcset(readAttr(source, "srcset") ?? ""), baseUrl);
+  if (img) addImageCandidate(urls, srcFromSrcset(readAttr(img, "srcset") ?? ""), baseUrl);
+
+  const highResAttrs = [
+    "data-hires",
+    "data-high-res-src",
+    "data-full",
+    "data-full-src",
+    "data-original",
+    "data-large",
+    "data-download-url",
+  ];
+  for (const attr of highResAttrs) {
+    if (img) addImageCandidate(urls, readAttr(img, attr), baseUrl);
+    addImageCandidate(urls, readAttr(markup, attr), baseUrl);
+  }
+
+  if (img) {
+    addImageCandidate(urls, readAttr(img, "data-src"), baseUrl);
+    addImageCandidate(urls, readAttr(img, "src"), baseUrl);
+  }
+  addImageCandidate(urls, readAttr(markup, "href"), baseUrl, true);
+
+  const ranked = Array.from(urls.values())
+    .filter((url) => !looksLikeLogo(url))
+    .sort((a, b) => htmlImageUrlScore(b) - htmlImageUrlScore(a));
+
+  return ranked[0] ?? null;
 }
 
 function captionFromFigure(markup: string): string | null {
@@ -302,13 +393,14 @@ function htmlFigureCandidates(
 
   const candidates: FigureCandidate[] = [];
   for (const block of blocks) {
-    const imageUrl = firstImageSrc(block, baseUrl);
+    const imageUrl = bestImageSrc(block, baseUrl);
     if (!imageUrl) continue;
     candidates.push({
       imageUrl,
       caption: captionFromFigure(block),
       source,
       ordinal: candidates.length,
+      qualityHint: looksLowResUrl(imageUrl) ? "low" : looksHighResUrl(imageUrl) ? "high" : "medium",
     });
   }
 
@@ -375,6 +467,22 @@ function tokenize(text?: string | null): string[] {
     .filter((token) => token.length >= 2 && !STOP_WORDS.has(token));
 }
 
+function explicitFigureNumber(text?: string | null): string | null {
+  if (!text) return null;
+  const match = text.match(/\bfig(?:ure)?\.?\s*(\d+)([a-z]?)/i);
+  if (!match) return null;
+  return `${match[1]}${(match[2] ?? "").toLowerCase()}`;
+}
+
+function candidateMatchesFigureNumber(
+  candidate: FigureCandidate,
+  wanted: string,
+): boolean {
+  const caption = candidate.caption ?? "";
+  const found = explicitFigureNumber(caption);
+  return found === wanted;
+}
+
 function figureScore(candidate: FigureCandidate, query: string): number {
   const queryTokens = new Set(tokenize(query));
   if (queryTokens.size === 0) return 0;
@@ -386,6 +494,66 @@ function figureScore(candidate: FigureCandidate, query: string): number {
   }
 
   return score;
+}
+
+function sourcePriority(source: FigureCandidate["source"]): number {
+  if (source === "open-access") return 60;
+  if (source === "ar5iv") return 56;
+  if (source === "publisher") return 52;
+  if (source === "semantic-scholar") return 18;
+  if (source === "og") return 0;
+  return 0;
+}
+
+function candidateQualityScore(candidate: FigureCandidate): number {
+  let score = sourcePriority(candidate.source);
+  if (candidate.imageUrl.startsWith("data:image/")) score += 18;
+  if (candidate.qualityHint === "high") score += 12;
+  if (candidate.qualityHint === "low") score -= 16;
+  if (looksHighResUrl(candidate.imageUrl)) score += 10;
+  if (looksLowResUrl(candidate.imageUrl)) score -= 18;
+  if (candidate.caption?.trim()) score += 2;
+  return score;
+}
+
+function candidateMatchScore(candidate: FigureCandidate, textScore: number): number {
+  return textScore * 30 + candidateQualityScore(candidate);
+}
+
+function compareCandidateQuality(a: FigureCandidate, b: FigureCandidate): number {
+  return (
+    candidateQualityScore(b) - candidateQualityScore(a) ||
+    a.ordinal - b.ordinal
+  );
+}
+
+function bestQualityCandidate(candidates: FigureCandidate[]): FigureCandidate | null {
+  return [...candidates].sort(compareCandidateQuality)[0] ?? null;
+}
+
+function normalizedCaptionKey(text?: string | null): string | null {
+  const tokens = tokenize(text).slice(0, 24);
+  return tokens.length >= 4 ? tokens.join(" ") : null;
+}
+
+function sameFigureCandidate(a: FigureCandidate, b: FigureCandidate): boolean {
+  const aFigure = explicitFigureNumber(a.caption);
+  const bFigure = explicitFigureNumber(b.caption);
+  if (aFigure && bFigure && aFigure === bFigure) return true;
+
+  const aKey = normalizedCaptionKey(a.caption);
+  const bKey = normalizedCaptionKey(b.caption);
+  return Boolean(aKey && bKey && aKey === bKey);
+}
+
+function upgradeCandidateQuality(
+  selected: FigureCandidate,
+  candidates: FigureCandidate[],
+): FigureCandidate {
+  const related = candidates.filter((candidate) =>
+    candidate === selected ? true : sameFigureCandidate(candidate, selected),
+  );
+  return bestQualityCandidate(related) ?? selected;
 }
 
 function visionShortlist(
@@ -412,11 +580,28 @@ async function chooseCandidate(
   }
 
   if (!query?.trim()) {
+    const fallback = valid[n] ?? bestQualityCandidate(valid) ?? valid[0] ?? null;
     return {
-      candidate: valid[n] ?? valid[0] ?? null,
+      candidate: fallback ? upgradeCandidateQuality(fallback, valid) : null,
       status: "found",
       matchedBy: "fallback",
     };
+  }
+
+  const requestedFigure = explicitFigureNumber(query);
+  if (requestedFigure) {
+    const explicitCandidate = bestQualityCandidate(
+      valid.filter((candidate) =>
+        candidateMatchesFigureNumber(candidate, requestedFigure),
+      ),
+    );
+    if (explicitCandidate) {
+      return {
+        candidate: explicitCandidate,
+        status: "found",
+        matchedBy: "keyword",
+      };
+    }
   }
 
   const scored = valid
@@ -424,14 +609,19 @@ async function chooseCandidate(
       candidate,
       score: figureScore(candidate, query),
     }))
-    .sort((a, b) => b.score - a.score || a.candidate.ordinal - b.candidate.ordinal);
+    .sort(
+      (a, b) =>
+        candidateMatchScore(b.candidate, b.score) -
+          candidateMatchScore(a.candidate, a.score) ||
+        a.candidate.ordinal - b.candidate.ordinal,
+    );
 
   const queryTokens = tokenize(query);
-  const best = scored[0];
   const threshold = queryTokens.length <= 3 ? 1 : 2;
-  if (best && best.score >= threshold) {
+  const best = scored.find((entry) => entry.score >= threshold);
+  if (best) {
     return {
-      candidate: best.candidate,
+      candidate: upgradeCandidateQuality(best.candidate, valid),
       status: "found",
       matchedBy: "keyword",
     };
@@ -440,7 +630,8 @@ async function chooseCandidate(
   const semantic = await matchFigureSemantically({
     paperTitle,
     query,
-    candidates: valid
+    candidates: scored
+      .map((entry) => entry.candidate)
       .filter((candidate) => candidate.caption?.trim())
       .slice(0, 8)
       .map((candidate) => ({
@@ -454,7 +645,7 @@ async function chooseCandidate(
       valid.find((candidate) => candidate.ordinal === semantic.ordinal) ?? null;
     if (semanticCandidate) {
       return {
-        candidate: semanticCandidate,
+        candidate: upgradeCandidateQuality(semanticCandidate, valid),
         status: "found",
         reason: semantic.reason,
         matchedBy: "semantic",
@@ -477,7 +668,7 @@ async function chooseCandidate(
       valid.find((candidate) => candidate.ordinal === visual.ordinal) ?? null;
     if (visualCandidate) {
       return {
-        candidate: visualCandidate,
+        candidate: upgradeCandidateQuality(visualCandidate, valid),
         status: "found",
         reason: visual.reason,
         matchedBy: "vision",
@@ -490,10 +681,10 @@ async function chooseCandidate(
   // assigned this index intentionally, so showing it — even with a "fallback"
   // tag — is far more useful than a "no match" placeholder. The user has been
   // explicit: prefer showing a real figure from the paper over hiding it.
-  const fallbackCandidate = valid[n] ?? valid[0] ?? null;
+  const fallbackCandidate = valid[n] ?? bestQualityCandidate(valid) ?? valid[0] ?? null;
   if (fallbackCandidate) {
     return {
-      candidate: fallbackCandidate,
+      candidate: upgradeCandidateQuality(fallbackCandidate, valid),
       status: "found",
       matchedBy: "fallback",
     };
@@ -561,6 +752,7 @@ async function trySemanticScholarCandidates(ssPaperId: string): Promise<AttemptR
           caption: figure.caption ?? null,
           source: "semantic-scholar",
           ordinal,
+          qualityHint: looksLowResUrl(figure.url) ? "low" : looksHighResUrl(figure.url) ? "high" : "medium",
         };
       })
       .filter((candidate): candidate is FigureCandidate => candidate !== null);
@@ -619,6 +811,15 @@ function deriveHtmlAlternatives(url: string): string[] {
   return Array.from(new Set(alternatives));
 }
 
+function derivePdfAlternatives(url: string): string[] {
+  const alternatives: string[] = [];
+  const pmcMatch = url.match(/PMC\d+/i);
+  if (pmcMatch) {
+    alternatives.push(`https://europepmc.org/articles/${pmcMatch[0].toUpperCase()}?pdf=render`);
+  }
+  return Array.from(new Set(alternatives));
+}
+
 function validApiEmail(): string | null {
   const email = (process.env.UNPAYWALL_EMAIL ?? process.env.OPENALEX_EMAIL ?? "").trim();
   if (!email || !/@/.test(email) || /example\.com$/i.test(email)) return null;
@@ -648,6 +849,11 @@ async function lookupUnpaywallLinks(doi: string): Promise<SourceLink[]> {
 
     return rawLinks.flatMap((url) => [
       { url, kind: inferLinkKind(url), label: "unpaywall" as const },
+      ...derivePdfAlternatives(url).map((derivedUrl) => ({
+        url: derivedUrl,
+        kind: "pdf" as const,
+        label: "derived" as const,
+      })),
       ...deriveHtmlAlternatives(url).map((derivedUrl) => ({
         url: derivedUrl,
         kind: "html" as const,
@@ -689,6 +895,11 @@ async function lookupEuropePmcLinks(doi: string): Promise<SourceLink[]> {
       links.push({
         url: `https://pmc.ncbi.nlm.nih.gov/articles/${result.pmcid}/`,
         kind: "html",
+        label: "europepmc",
+      });
+      links.push({
+        url: `https://europepmc.org/articles/${result.pmcid}?pdf=render`,
+        kind: "pdf",
         label: "europepmc",
       });
     }
@@ -799,6 +1010,9 @@ async function collectSourceLinks(input: ExtractInput): Promise<SourceLink[]> {
     for (const alt of deriveHtmlAlternatives(input.url)) {
       addSourceLink(links, { url: alt, kind: "html", label: "derived" });
     }
+    for (const alt of derivePdfAlternatives(input.url)) {
+      addSourceLink(links, { url: alt, kind: "pdf", label: "derived" });
+    }
   }
 
   if (input.doi) {
@@ -907,35 +1121,38 @@ const CANDIDATE_CACHE_TTL_MS = 30 * 60 * 1000;
 const candidatePoolCache = new Map<string, CachedPool | Promise<CachedPool>>();
 
 function poolCacheKey(input: ExtractInput): string {
-  return [input.itemId, input.url ?? "", input.doi ?? ""].join("|");
+  return [FETCH_VERSION, input.itemId, input.url ?? "", input.doi ?? ""].join("|");
 }
 
 async function buildCandidatePool(input: ExtractInput): Promise<CachedPool> {
   const attempts: AttemptResult[] = [];
   const candidates: FigureCandidate[] = [];
 
-  // Run independent sources in parallel where possible to fill the pool.
+  // Prefer original paper sources first. Semantic Scholar is useful, but its
+  // figure URLs are often thumbnails, so it should enrich the pool rather than
+  // short-circuit HTML/PDF extraction.
   const arxivId =
     bareArxivId(input.itemId) ??
     (input.doi ? arxivIdFromDoi(input.doi) : null) ??
     (input.url ? arxivIdFromUrl(input.url) : null);
   const openAlexId = bareOpenAlexId(input.itemId);
 
-  const tasks: Promise<AttemptResult>[] = [];
+  const originalTasks: Promise<AttemptResult>[] = [];
+  const semanticTasks: Promise<AttemptResult>[] = [];
   if (arxivId) {
-    tasks.push(tryAr5ivCandidates(arxivId));
-    tasks.push(tryPdfCandidates(`https://arxiv.org/pdf/${arxivId}`, "open-access"));
-    tasks.push(trySemanticScholarCandidates(`arXiv:${arxivId}`));
+    originalTasks.push(tryAr5ivCandidates(arxivId));
+    originalTasks.push(tryPdfCandidates(`https://arxiv.org/pdf/${arxivId}`, "open-access"));
+    semanticTasks.push(trySemanticScholarCandidates(`arXiv:${arxivId}`));
   }
   if (openAlexId) {
-    tasks.push(trySemanticScholarCandidates(`OpenAlex:${openAlexId}`));
+    semanticTasks.push(trySemanticScholarCandidates(`OpenAlex:${openAlexId}`));
   }
   if (input.doi) {
-    tasks.push(trySemanticScholarCandidates(`DOI:${cleanDoi(input.doi)}`));
+    semanticTasks.push(trySemanticScholarCandidates(`DOI:${cleanDoi(input.doi)}`));
   }
 
-  const settled = await Promise.allSettled(tasks);
-  for (const r of settled) {
+  const originalSettled = await Promise.allSettled(originalTasks);
+  for (const r of originalSettled) {
     if (r.status !== "fulfilled") continue;
     attempts.push(r.value);
     if (r.value.status === "candidates") candidates.push(...r.value.candidates);
@@ -945,7 +1162,7 @@ async function buildCandidatePool(input: ExtractInput): Promise<CachedPool> {
   // publisher/open-access source links — PDFs first, HTML last — and add their
   // candidates to the pool too. This runs sequentially to respect external rate
   // limits on publisher sites.
-  if (candidates.length === 0 && !arxivId) {
+  if (!arxivId) {
     const sourceLinks = await collectSourceLinks(input);
     for (const link of sourceLinks) {
       const attempt =
@@ -961,10 +1178,22 @@ async function buildCandidatePool(input: ExtractInput): Promise<CachedPool> {
       attempts.push(attempt);
       if (attempt.status === "candidates") {
         candidates.push(...attempt.candidates);
-        // Once we've got a healthy pool, stop hitting more publisher links.
-        if (candidates.length >= 4) break;
+        const originalCount = candidates.filter(
+          (candidate) => candidate.source !== "semantic-scholar",
+        ).length;
+        const hasPdfCandidates = candidates.some((candidate) =>
+          candidate.imageUrl.startsWith("data:image/"),
+        );
+        if (originalCount >= 12 && hasPdfCandidates) break;
       }
     }
+  }
+
+  const semanticSettled = await Promise.allSettled(semanticTasks);
+  for (const r of semanticSettled) {
+    if (r.status !== "fulfilled") continue;
+    attempts.push(r.value);
+    if (r.value.status === "candidates") candidates.push(...r.value.candidates);
   }
 
   // Re-ordinalize so figure indices in the unified pool are stable 0..N-1.
@@ -998,6 +1227,96 @@ async function getCandidatePool(input: ExtractInput): Promise<CachedPool> {
   }
 }
 
+/**
+ * Public, cached snapshot of the figure candidate pool for one paper. Used
+ * by the deep-report binding flow so it can attach the actual high-quality
+ * image URL (and source label) to each report section directly — no second
+ * round-trip through `/api/figure` is needed once binding picks a winner.
+ *
+ * The shape mirrors the internal `FigureCandidate` so the binding can apply
+ * the same caption/quality scoring without re-implementing it.
+ */
+export interface FigurePoolEntry {
+  imageUrl: string;
+  caption: string | null;
+  source: NonNullable<FigureResult["source"]>;
+  ordinal: number;
+  qualityHint?: "high" | "medium" | "low";
+}
+
+export interface FigurePool {
+  entries: FigurePoolEntry[];
+  /** True when at least one extractor attempt completed (regardless of result). */
+  attempted: boolean;
+}
+
+export async function getFigurePool(input: ExtractInput): Promise<FigurePool> {
+  const pool = await getCandidatePool(input);
+  return {
+    entries: pool.candidates.map((c) => ({
+      imageUrl: c.imageUrl,
+      caption: c.caption ?? null,
+      source: c.source,
+      ordinal: c.ordinal,
+      qualityHint: c.qualityHint,
+    })),
+    attempted: pool.attempts.length > 0,
+  };
+}
+
+/**
+ * Caption-aware best-of helpers for the binding path. Mirrors the scoring
+ * used by `chooseCandidate` so the bound figure stays consistent with what
+ * `extractFigure` would have picked for the same query — but lets the deep
+ * report ship the URL/caption/source straight to the client, skipping the
+ * second-extractor handoff that previously dropped explicit-figure matches.
+ */
+export function pickFigureForCaption(
+  pool: FigurePool,
+  matchedCaption: string,
+  matchedFigureLabel?: string | null,
+): FigurePoolEntry | null {
+  if (pool.entries.length === 0) return null;
+  const wantedNumber = explicitFigureNumber(
+    matchedFigureLabel ?? matchedCaption,
+  );
+
+  // Phase 1: when we know the explicit figure number ("Figure 3"), keep only
+  // candidates whose caption matches that same number, then pick the highest
+  // quality. This survives even when one extractor labels captions and the
+  // other strips the prefix — we filter by the binding's chosen number.
+  if (wantedNumber) {
+    const matched = pool.entries.filter((entry) =>
+      candidateMatchesFigureNumber(
+        { caption: entry.caption } as FigureCandidate,
+        wantedNumber,
+      ),
+    );
+    if (matched.length > 0) {
+      return matched.slice().sort((a, b) =>
+        candidateQualityScore(b as FigureCandidate) -
+          candidateQualityScore(a as FigureCandidate),
+      )[0];
+    }
+  }
+
+  // Phase 2: caption-token similarity. Pick the entry whose caption shares
+  // the most tokens with the matched caption, weighted by quality.
+  const queryTokens = new Set(tokenize(matchedCaption));
+  let best: { entry: FigurePoolEntry; score: number } | null = null;
+  for (const entry of pool.entries) {
+    const captionTokens = new Set(tokenize(entry.caption ?? ""));
+    let textScore = 0;
+    for (const token of queryTokens) {
+      if (captionTokens.has(token)) textScore += 1;
+    }
+    const composite =
+      textScore * 30 + candidateQualityScore(entry as FigureCandidate);
+    if (!best || composite > best.score) best = { entry, score: composite };
+  }
+  return best?.entry ?? null;
+}
+
 export async function extractFigure(input: ExtractInput): Promise<FigureResult> {
   const n = input.figureIndex ?? 0;
   const paperTitle = input.paperTitle;
@@ -1012,10 +1331,13 @@ export async function extractFigure(input: ExtractInput): Promise<FigureResult> 
     }
     // Hard guarantee: if we have ANY candidates, never return a placeholder.
     // The user explicitly asked for a real figure in every section.
-    const fallback = pool.candidates[n] ?? pool.candidates[0];
+    const fallback =
+      pool.candidates[n] ??
+      bestQualityCandidate(pool.candidates) ??
+      pool.candidates[0];
     if (fallback) {
       return candidateResult({
-        candidate: fallback,
+        candidate: upgradeCandidateQuality(fallback, pool.candidates),
         status: "found",
         matchedBy: "fallback",
       });

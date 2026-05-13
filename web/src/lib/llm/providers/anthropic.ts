@@ -2,11 +2,22 @@ import Anthropic from "@anthropic-ai/sdk";
 import type {
   DigestProvider,
   DigestResult,
+  ModelTier,
   VisionImageInput,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 
+// Default model = the cheap tier. Existing call sites (digest) stay cheap.
+// `large` tier maps to Sonnet for deep paper-reading workflows.
 const MODEL = "claude-haiku-4-5-20251001";
+const SMALL_MODEL = "claude-haiku-4-5-20251001";
+const LARGE_MODEL = "claude-sonnet-4-6";
+
+function modelForTier(defaultModel: string, tier?: ModelTier): string {
+  if (tier === "large") return LARGE_MODEL;
+  if (tier === "small") return SMALL_MODEL;
+  return defaultModel;
+}
 
 function getClient(apiKey?: string): Anthropic | null {
   const key = apiKey ?? process.env.ANTHROPIC_API_KEY;
@@ -39,12 +50,12 @@ export function createAnthropicProvider(
       return parsed;
     },
 
-    async generateJsonText({ systemPrompt, userPrompt, maxTokens = 1500 }): Promise<string> {
+    async generateJsonText({ systemPrompt, userPrompt, maxTokens = 1500, tier }): Promise<string> {
       const client = getClient(apiKey);
       if (!client) throw new Error("ANTHROPIC_API_KEY not set");
 
       const response = await client.messages.create({
-        model,
+        model: modelForTier(model, tier),
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
@@ -60,13 +71,14 @@ export function createAnthropicProvider(
       userPrompt,
       images,
       maxTokens = 1200,
+      tier,
     }): Promise<string> {
       const client = getClient(apiKey);
       if (!client) throw new Error("ANTHROPIC_API_KEY not set");
       if (images.length === 0) throw new Error("No images supplied");
 
       const response = await client.messages.create({
-        model,
+        model: modelForTier(model, tier),
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [

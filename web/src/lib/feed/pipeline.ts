@@ -107,7 +107,16 @@ export async function runFeedPipeline(
   const ranked = requestedTier >= 2
     ? await applyTier2Rerank(tier1Ranked, brief, req.llmOverride)
     : tier1Ranked;
-  const returned = ranked.slice(0, topN);
+  // Don't show items the caller already showed this user recently. Run
+  // AFTER ranking so the score reflects the full candidate pool, but BEFORE
+  // slicing so we still return `topN` fresh items.
+  const excludeIds = req.excludeIds && req.excludeIds.length > 0
+    ? new Set(req.excludeIds)
+    : null;
+  const fresh = excludeIds
+    ? ranked.filter((item) => !excludeIds.has(item.id))
+    : ranked;
+  const returned = fresh.slice(0, topN);
 
   return {
     items: returned,

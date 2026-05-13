@@ -11,11 +11,11 @@ import {
   isPaperReviewLike,
   reviewPaperLabel,
   type PaperReport,
+  type PaperReportKeyResult,
 } from "@/lib/papers/report";
 import {
   Tag,
   LinkChip,
-  Callout,
   PropertyStrip,
   Property,
   PullQuote,
@@ -23,10 +23,21 @@ import {
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 import {
-  PaperFigure,
+  PaperFigureFrame,
+  useResolvedFigure,
+  type FigureState,
+  type ResolveFigureArgs,
 } from "@/components/paper-figure";
 
 const WORDS_PER_MINUTE = 220;
+const PAPER_REPORT_CACHE_STORAGE_KEY = "hermes-paper-report-cache-v3";
+const PAPER_REPORT_CACHE_MAX_ENTRIES = 40;
+// TTL keeps deep-mode cache fresh enough that a transient failure (network
+// blip, paywall flap, LLM hiccup) self-heals on the next open. Successful
+// deep reports stay cached well past a typical session. Aborted/abstract
+// fallbacks expire faster so the user gets a retry without manual action.
+const PAPER_REPORT_CACHE_DEEP_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const PAPER_REPORT_CACHE_FALLBACK_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 function wordCount(...parts: (string | undefined)[]): number {
   return parts
@@ -41,6 +52,233 @@ function figureQuery(...parts: (string | undefined)[]): string {
   return parts.filter(Boolean).join(" ");
 }
 
+interface ResultFigureGroup {
+  key: string;
+  figureLabel?: string | null;
+  firstIndex: number;
+  results: PaperReportKeyResult[];
+}
+
+function normalizeReportFigureLabel(label: string): string {
+  return label.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function buildResultFigureGroups(
+  results: PaperReportKeyResult[],
+): ResultFigureGroup[] {
+  const labelCounts = new Map<string, number>();
+  for (const result of results) {
+    if (!result.figureLabel) continue;
+    const key = normalizeReportFigureLabel(result.figureLabel);
+    labelCounts.set(key, (labelCounts.get(key) ?? 0) + 1);
+  }
+
+  const groups: ResultFigureGroup[] = [];
+  const groupedByLabel = new Map<string, ResultFigureGroup>();
+
+  results.forEach((result, index) => {
+    const normalizedLabel = result.figureLabel
+      ? normalizeReportFigureLabel(result.figureLabel)
+      : null;
+    const shouldGroup =
+      normalizedLabel !== null && (labelCounts.get(normalizedLabel) ?? 0) > 1;
+
+    if (!shouldGroup || normalizedLabel === null) {
+      groups.push({
+        key: `result-${index}`,
+        figureLabel: result.figureLabel,
+        firstIndex: index,
+        results: [result],
+      });
+      return;
+    }
+
+    const existing = groupedByLabel.get(normalizedLabel);
+    if (existing) {
+      existing.results.push(result);
+      return;
+    }
+
+    const group: ResultFigureGroup = {
+      key: `figure-${normalizedLabel}`,
+      figureLabel: result.figureLabel,
+      firstIndex: index,
+      results: [result],
+    };
+    groupedByLabel.set(normalizedLabel, group);
+    groups.push(group);
+  });
+
+  return groups;
+}
+
+function resultGroupTitle(group: ResultFigureGroup): string {
+  if (group.results.length <= 1) return "Key result";
+  return group.figureLabel
+    ? `${group.figureLabel} findings`
+    : "Shared figure findings";
+}
+
+function resultGroupQuery(group: ResultFigureGroup): string {
+  return figureQuery(
+    group.figureLabel ?? undefined,
+    ...group.results.flatMap((result) => [
+      result.title,
+      result.detail,
+      result.evidence,
+    ]),
+  );
+}
+
+function reportNoveltySentence(report?: PaperReport | null): string | null {
+  return (
+    report?.whatItProposes.novelty?.[0] ??
+    report?.resultsAndSignificance.keyResults.find((result) =>
+      Boolean(result.novelty),
+    )?.novelty ??
+    null
+  );
+}
+
+interface FigureOwner {
+  slotId: string;
+  priority: number;
+}
+
+type FigureOwners = Record<string, FigureOwner>;
+
+interface DedupePaperFigureProps extends ResolveFigureArgs {
+  slotId: string;
+  ownerScope: string;
+  priority: number;
+  owners: FigureOwners;
+  setOwners: React.Dispatch<React.SetStateAction<FigureOwners>>;
+}
+
+function hiddenDuplicateFigure(figure: FigureState): FigureState {
+  return {
+    ...figure,
+    imageUrl: null,
+    caption: null,
+    status: "caption_mismatch",
+    reason: "This figure is already shown earlier in the report.",
+    hideFigure: true,
+  };
+}
+
+function DedupePaperFigure({
+  slotId,
+  ownerScope,
+  priority,
+  owners,
+  setOwners,
+  alt,
+  variant,
+  hideOnMiss,
+  ...resolveArgs
+}: DedupePaperFigureProps) {
+  const figure = useResolvedFigure(resolveArgs);
+  const ownerKey = figure.imageUrl
+    ? `${ownerScope}\u001f${figure.imageUrl}`
+    : null;
+
+  useEffect(() => {
+    if (!ownerKey) return;
+    setOwners((current) => {
+      const existing = current[ownerKey];
+      if (existing && existing.priority <= priority) return current;
+      return {
+        ...current,
+        [ownerKey]: { slotId, priority },
+      };
+    });
+  }, [ownerKey, priority, setOwners, slotId]);
+
+  const owner = ownerKey ? owners[ownerKey] : undefined;
+  const isDuplicate =
+    Boolean(figure.imageUrl) &&
+    Boolean(owner) &&
+    owner?.slotId !== slotId &&
+    (owner?.priority ?? Number.POSITIVE_INFINITY) <= priority;
+
+  return (
+    <PaperFigureFrame
+      figure={isDuplicate ? hiddenDuplicateFigure(figure) : figure}
+      alt={alt}
+      variant={variant}
+      hideOnMiss={hideOnMiss}
+    />
+  );
+}
+
+interface BoundFigureViewProps {
+  slotId: string;
+  ownerScope: string;
+  priority: number;
+  owners: FigureOwners;
+  setOwners: React.Dispatch<React.SetStateAction<FigureOwners>>;
+  imageUrl: string;
+  caption?: string | null;
+  source?: string | null;
+  alt?: string;
+  variant?: "hero" | "compact";
+}
+
+/**
+ * Render a figure URL chosen server-side by the deep-report figure binding.
+ * Skips the `/api/figure` round-trip entirely — the binding already picked
+ * the best-quality candidate from the shared pool, so we just display it
+ * with the same dedup ownership rules as `DedupePaperFigure`.
+ */
+function BoundFigureView({
+  slotId,
+  ownerScope,
+  priority,
+  owners,
+  setOwners,
+  imageUrl,
+  caption,
+  source,
+  alt,
+  variant,
+}: BoundFigureViewProps) {
+  const ownerKey = `${ownerScope}${imageUrl}`;
+  useEffect(() => {
+    setOwners((current) => {
+      const existing = current[ownerKey];
+      if (existing && existing.priority <= priority) return current;
+      return { ...current, [ownerKey]: { slotId, priority } };
+    });
+  }, [ownerKey, priority, setOwners, slotId]);
+
+  const owner = owners[ownerKey];
+  const isDuplicate =
+    Boolean(owner) &&
+    owner?.slotId !== slotId &&
+    (owner?.priority ?? Number.POSITIVE_INFINITY) <= priority;
+  if (isDuplicate) {
+    return <div className="figure-hidden" aria-hidden />;
+  }
+
+  return (
+    <PaperFigureFrame
+      figure={{
+        key: ownerKey,
+        imageUrl,
+        caption: caption ?? null,
+        source: source ?? "open-access",
+        status: "found",
+        reason: null,
+        hideFigure: false,
+        matchedBy: "semantic",
+      }}
+      alt={alt}
+      variant={variant}
+      hideOnMiss={true}
+    />
+  );
+}
+
 function readingTimeMinutes(paper: Paper): number {
   const words = wordCount(
     paper.summaryIntro,
@@ -50,11 +288,11 @@ function readingTimeMinutes(paper: Paper): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
-function formatPublishedDate(d?: string): string | null {
+function formatPublishedDate(d: string | undefined, nowMs: number): string | null {
   if (!d) return null;
   const date = new Date(d);
   if (Number.isNaN(date.getTime())) return null;
-  const diffMs = Date.now() - date.getTime();
+  const diffMs = nowMs - date.getTime();
   const day = 86_400_000;
   const diffDays = Math.floor(diffMs / day);
   if (diffDays < 1) return "Today";
@@ -207,6 +445,66 @@ function readPerPaperDigest(paperId: string): {
   return null;
 }
 
+interface CachedPaperReport {
+  report: PaperReport;
+  savedAt: number;
+}
+
+type PaperReportCache = Record<string, CachedPaperReport>;
+
+function readPaperReportCache(): PaperReportCache {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(PAPER_REPORT_CACHE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as PaperReportCache;
+  } catch {
+    return {};
+  }
+}
+
+function isReportCacheFresh(entry: CachedPaperReport): boolean {
+  const age = Date.now() - (entry.savedAt ?? 0);
+  // Deep reports get the long TTL; everything else (abstract/fallback,
+  // including paywalled retries) gets the short TTL so transient errors
+  // self-heal on next open.
+  const ttl =
+    entry.report.depth === "deep"
+      ? PAPER_REPORT_CACHE_DEEP_TTL_MS
+      : PAPER_REPORT_CACHE_FALLBACK_TTL_MS;
+  return age < ttl;
+}
+
+function readCachedPaperReport(reportKey: string): PaperReport | null {
+  if (!reportKey) return null;
+  const entry = readPaperReportCache()[reportKey];
+  if (!entry?.report || typeof entry.report !== "object") return null;
+  if (!isReportCacheFresh(entry)) return null;
+  return entry.report;
+}
+
+function writeCachedPaperReport(reportKey: string, report: PaperReport | null) {
+  if (!reportKey || !report || typeof window === "undefined") return;
+  try {
+    const cache = readPaperReportCache();
+    cache[reportKey] = {
+      report,
+      savedAt: Date.now(),
+    };
+
+    const pruned = Object.fromEntries(
+      Object.entries(cache)
+        .sort((a, b) => (b[1].savedAt ?? 0) - (a[1].savedAt ?? 0))
+        .slice(0, PAPER_REPORT_CACHE_MAX_ENTRIES),
+    );
+    localStorage.setItem(PAPER_REPORT_CACHE_STORAGE_KEY, JSON.stringify(pruned));
+  } catch {
+    // Cache failures should never block reading the report.
+  }
+}
+
 export default function PaperDetailPage({
   params,
 }: {
@@ -239,6 +537,8 @@ export default function PaperDetailPage({
     report: PaperReport | null;
     done: boolean;
   }>(() => ({ key: "", report: null, done: false }));
+  const [figureOwners, setFigureOwners] = useState<FigureOwners>({});
+  const [reportNow] = useState(() => Date.now());
 
   const storePaper =
     feedPapers.find((p) => p.id === id) ??
@@ -302,33 +602,74 @@ export default function PaperDetailPage({
       profile.preferredMethods,
     ],
   );
-  const reportKey = paper ? `${paper.id}|${contextHint}` : "";
+  // Deep-report is opt-in (toggle on home page). Two valid paths:
+  //   1. `feedAiProvider === "default"` — site's own provider serves it
+  //      (Vertex Gemini / Anthropic / OpenAI / Qwen depending on server env).
+  //   2. `feedAiProvider !== "default"` — user's own API key must be filled.
+  // The provider id is included in the cache key so flipping toggles
+  // invalidates the cached report and triggers a re-fetch.
+  const deepReportRequested =
+    Boolean(profile.deepReportEnabled) &&
+    (profile.feedAiProvider === "default" ||
+      Boolean(profile.feedAiApiKey?.trim()));
+  const reportKey = paper
+    ? `${paper.id}|${contextHint}|deep=${deepReportRequested}|p=${profile.feedAiProvider}`
+    : "";
+  const cachedReport = useMemo(
+    () => readCachedPaperReport(reportKey),
+    [reportKey],
+  );
   const fallbackReport = useMemo(
     () => (paper ? buildFallbackPaperReport(paper, contextHint) : null),
     [paper, contextHint],
   );
-  const reportDone = Boolean(
-    paper && reportResult.key === reportKey && reportResult.done,
-  );
-  const report =
-    reportDone && reportResult.report
-      ? reportResult.report
+  const hasFetchedReport =
+    reportResult.key === reportKey && reportResult.done;
+  const reportDone = Boolean(paper && (cachedReport || hasFetchedReport));
+  // Pick the report in priority order: fresh fetch > fresh cache >
+  // deterministic fallback (only after fetch completed) > null while loading.
+  const report = hasFetchedReport && reportResult.report
+    ? reportResult.report
+    : cachedReport
+      ? cachedReport
       : reportDone
         ? fallbackReport
         : null;
   const reportLoading = Boolean(paper && !reportDone);
 
   useEffect(() => {
-    if (!paper || reportResult.key === reportKey) return;
+    if (!paper || cachedReport || reportResult.key === reportKey) return;
     let cancelled = false;
+    // Only build an LLM override when the user picked a specific provider
+    // and supplied a key. With `feedAiProvider === "default"` we send no
+    // override — the server resolves to whatever the site is set up with.
+    const llmOverride =
+      deepReportRequested &&
+      profile.feedAiProvider !== "default" &&
+      profile.feedAiApiKey?.trim()
+        ? {
+            provider: profile.feedAiProvider as
+              | "anthropic"
+              | "openai"
+              | "gemini"
+              | "qwen",
+            apiKey: profile.feedAiApiKey.trim(),
+          }
+        : undefined;
     fetch("/api/papers/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paper, contextHint }),
+      body: JSON.stringify({
+        paper,
+        contextHint,
+        deepReport: deepReportRequested,
+        llmOverride,
+      }),
     })
       .then((res) => (res.ok ? (res.json() as Promise<PaperReport>) : null))
       .then((nextReport) => {
         if (!cancelled) {
+          writeCachedPaperReport(reportKey, nextReport);
           setReportResult({ key: reportKey, report: nextReport, done: true });
         }
       })
@@ -340,13 +681,29 @@ export default function PaperDetailPage({
     return () => {
       cancelled = true;
     };
-  }, [paper, contextHint, reportKey, reportResult.key]);
+  }, [
+    paper,
+    contextHint,
+    reportKey,
+    cachedReport,
+    reportResult.key,
+    deepReportRequested,
+    profile.feedAiProvider,
+    profile.feedAiApiKey,
+  ]);
 
   const related = useMemo(() => {
     if (!paper) return [];
     const pool = feedPapers.length > 0 ? feedPapers : mockPapers;
     return pickRelated(paper, pool, 3);
   }, [paper, feedPapers]);
+  const resultGroups = useMemo(
+    () =>
+      buildResultFigureGroups(
+        report?.resultsAndSignificance.keyResults ?? [],
+      ),
+    [report?.resultsAndSignificance.keyResults],
+  );
 
   if (!paper) {
     if (isFetchingById) {
@@ -391,7 +748,18 @@ export default function PaperDetailPage({
       ? `Read on ${paper.venue || "source"}`
       : "Search arXiv";
   const figureSourceUrl = paper.linkArxiv ?? paper.linkPaper;
-  const methodFigureQuery = figureQuery(
+  const noveltySentence = reportNoveltySentence(report);
+  // Rule: never show a section that just says "this is not in the paper".
+  // The Novelty section renders only when we actually have a novelty
+  // sentence (deep-mode success or a key-result's novelty field).
+  const showNoveltySection = Boolean(noveltySentence) || reportLoading;
+  const methodBullets = (report?.whatItProposes.methods ?? []).filter(Boolean);
+  const showMethodSection = methodBullets.length > 0 || reportLoading;
+  const proposalSummary = report?.whatItProposes.summary?.trim() ?? "";
+  const showProposalSection = proposalSummary.length > 0 || reportLoading;
+  const proposalFigureQuery = figureQuery(
+    report?.whatItProposes.figureLabel ?? undefined,
+    noveltySentence ?? undefined,
     report?.whatItProposes.summary,
     report?.whatItProposes.methods.join(" "),
   );
@@ -399,13 +767,13 @@ export default function PaperDetailPage({
   const matchPct = paper.relevanceScore
     ? Math.round(Math.max(0, Math.min(1, paper.relevanceScore)) * 100)
     : null;
-  const publishedLabel = formatPublishedDate(paper.publishedDate);
+  const publishedLabel = formatPublishedDate(paper.publishedDate, reportNow);
   const readMinutes = readingTimeMinutes(paper);
   const daysOld = paper.publishedDate
     ? Math.max(
         0,
         Math.floor(
-          (Date.now() - new Date(paper.publishedDate).getTime()) /
+          (reportNow - new Date(paper.publishedDate).getTime()) /
             (1000 * 60 * 60 * 24),
         ),
       )
@@ -527,43 +895,134 @@ export default function PaperDetailPage({
           isLiked={isLiked}
         />
 
-        {/* ════════════════════════════════════════
-            SECTION 1 — WHAT IT PROPOSES
-            ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconSparkle />} index={3}>
-          What it proposes
-        </SectionTitle>
+        {/* Deep-report banner: shown when the user asked for a deep report
+            but the paper was paywalled / no legal full text, so we fell
+            back to an abstract-only report. Tells the user *why* the
+            report looks shallower than they expected. */}
+        {report?.paywallNotice && (
+          <div
+            className="mt-6 rounded-xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/30 px-4 py-3 text-[13px] leading-relaxed text-amber-900 dark:text-amber-100"
+            style={{ fontFamily: "var(--font-sans)" }}
+            role="status"
+          >
+            <span className="font-semibold">Deep report unavailable —</span>{" "}
+            {report.paywallNotice}
+          </div>
+        )}
 
-        <ReportFigureRow
-          title="Method and proposal"
-          body={report?.whatItProposes.summary}
-          bullets={report?.whatItProposes.methods}
-          loading={reportLoading}
-          figure={
-            reportLoading ? (
-              <FigureLoadingFrame />
-            ) : (
-              <PaperFigure
-              itemId={paper.id}
-                url={figureSourceUrl}
-                doi={paper.doi}
-                query={methodFigureQuery}
-                paperTitle={paper.title}
-              alt={`${paper.title} — method figure`}
-                variant="compact"
-                figureIndex={0}
-                hideOnMiss={false}
-              />
-            )
-          }
-        />
+        {/* Deep-report success badge: confirms the report came from full
+            text and tells the user which source served it. */}
+        {report?.depth === "deep" && (
+          <div
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-[11.5px] font-medium text-accent"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            Deep report — read from {report.sourceKind === "pdf" ? "PDF" : "full-text HTML"}
+          </div>
+        )}
 
         {/* ════════════════════════════════════════
-            SECTION 2 — RESULTS & SIGNIFICANCE  /  PAPER CONTENTS & HIGHLIGHT
+            SECTION 1 - NOVELTY (only when there is a real novelty sentence)
             ════════════════════════════════════════ */}
+        {showNoveltySection && (
+          <>
+            <SectionTitle icon={<IconSparkle />} index={3}>
+              Novelty
+            </SectionTitle>
+
+            <ReportFigureRow
+              title="Core novelty"
+              body={noveltySentence ?? undefined}
+              emphasis
+              loading={reportLoading}
+              figure={
+                reportLoading ? (
+                  <FigureLoadingFrame />
+                ) : report?.whatItProposes.figureImageUrl ? (
+                  // Deep-report bound a specific image — render directly.
+                  <BoundFigureView
+                    slotId="proposal-novelty"
+                    ownerScope={paper.id}
+                    priority={0}
+                    owners={figureOwners}
+                    setOwners={setFigureOwners}
+                    imageUrl={report.whatItProposes.figureImageUrl}
+                    caption={report.whatItProposes.figureCaption ?? undefined}
+                    source={report.whatItProposes.figureSource ?? undefined}
+                    alt={`${paper.title} — proposal figure`}
+                    variant="compact"
+                  />
+                ) : (
+                  <DedupePaperFigure
+                    slotId="proposal-novelty"
+                    ownerScope={paper.id}
+                    priority={0}
+                    owners={figureOwners}
+                    setOwners={setFigureOwners}
+                    itemId={paper.id}
+                    url={figureSourceUrl}
+                    doi={paper.doi}
+                    query={proposalFigureQuery}
+                    paperTitle={paper.title}
+                    alt={`${paper.title} — proposal figure`}
+                    variant="compact"
+                    figureIndex={0}
+                    // Rule: never render a blank "no figure available" placeholder.
+                    // If the resolver can't find a usable image, the component
+                    // returns null and the parent `has-[.figure-hidden]:hidden`
+                    // collapses the column entirely.
+                    hideOnMiss={true}
+                  />
+                )
+              }
+            />
+          </>
+        )}
+
+        {/* ════════════════════════════════════════
+            SECTION 2 - PROPOSAL / METHOD / RESULTS
+            Each subsection hides itself when its data isn't present, so
+            we never render a "Hermes could not extract …" placeholder
+            card. The loading shimmer still shows while the report is
+            being fetched.
+            ════════════════════════════════════════ */}
+        {showProposalSection && (
+          <>
+            <SectionTitle icon={<IconDoc />} index={4}>
+              Proposal
+            </SectionTitle>
+
+            <ReportFigureRow
+              title="Proposal"
+              body={report?.whatItProposes.summary}
+              loading={reportLoading}
+              figure={null}
+            />
+          </>
+        )}
+
+        {showMethodSection && (
+          <>
+            <SectionTitle icon={<IconChart />} index={5}>
+              Method
+            </SectionTitle>
+
+            <ReportFigureRow
+              title="Method"
+              bullets={methodBullets}
+              loading={reportLoading}
+              figure={null}
+            />
+          </>
+        )}
+
         {isReviewPaper ? (
           <>
-            <SectionTitle icon={<IconBook />} index={4}>
+            <SectionTitle icon={<IconBook />} index={6}>
               Paper contents &amp; highlight
             </SectionTitle>
 
@@ -598,7 +1057,7 @@ export default function PaperDetailPage({
           </>
         ) : (
           <>
-            <SectionTitle icon={<IconChart />} index={4}>
+            <SectionTitle icon={<IconChart />} index={6}>
               Results & significance
             </SectionTitle>
 
@@ -619,26 +1078,70 @@ export default function PaperDetailPage({
                   figure={<FigureLoadingFrame />}
                 />
               ))}
-              {!reportLoading && (report?.resultsAndSignificance.keyResults ?? []).map((result, index) => (
-                <ReportFigureRow
-                  key={`${result.title}-${index}`}
-                  title={result.title}
-                  body={result.detail}
-                  figure={
-                    <PaperFigure
-                      itemId={paper.id}
-                      url={figureSourceUrl}
-                      doi={paper.doi}
-                      query={figureQuery(result.title, result.detail)}
-                      paperTitle={paper.title}
-                      alt={`${paper.title} — ${result.title}`}
-                      variant="compact"
-                      figureIndex={result.figureIndex}
-                      hideOnMiss={false}
-                    />
-                  }
-                />
-              ))}
+              {!reportLoading && resultGroups.map((group) => {
+                // Null means no supporting figure; duplicate labels are kept
+                // together so one figure can support several result bullets.
+                const skipFigure = group.figureLabel === null;
+                const firstResult = group.results[0];
+                // Prefer the deep-report's bound image URL when present —
+                // it was picked from the same candidate pool the resolver
+                // would use, and it survived the "best caption + best
+                // quality" scoring server-side. Fall back to the legacy
+                // resolver only when no URL was bound (shallow report,
+                // legacy paper, or pool fetch failed).
+                const boundImageUrl = group.results
+                  .map((r) => r.figureImageUrl)
+                  .find((u): u is string => Boolean(u));
+                const boundCaption = group.results
+                  .map((r) => r.figureCaption)
+                  .find((c): c is string => Boolean(c));
+                const boundSource = group.results
+                  .map((r) => r.figureSource)
+                  .find((s): s is string => Boolean(s));
+                return (
+                  <ReportFigureRow
+                    key={group.key}
+                    title={resultGroupTitle(group)}
+                    content={<ResultClaimList results={group.results} />}
+                    figure={
+                      skipFigure ? null : boundImageUrl ? (
+                        <BoundFigureView
+                          slotId={group.key}
+                          ownerScope={paper.id}
+                          priority={10 + group.firstIndex}
+                          owners={figureOwners}
+                          setOwners={setFigureOwners}
+                          imageUrl={boundImageUrl}
+                          caption={boundCaption ?? undefined}
+                          source={boundSource ?? undefined}
+                          alt={`${paper.title} - ${firstResult?.title ?? "result figure"}`}
+                          variant="compact"
+                        />
+                      ) : (
+                        <DedupePaperFigure
+                          slotId={group.key}
+                          ownerScope={paper.id}
+                          priority={10 + group.firstIndex}
+                          owners={figureOwners}
+                          setOwners={setFigureOwners}
+                          itemId={paper.id}
+                          url={figureSourceUrl}
+                          doi={paper.doi}
+                          query={resultGroupQuery(group)}
+                          paperTitle={paper.title}
+                          alt={`${paper.title} - ${firstResult?.title ?? "result figure"}`}
+                          variant="compact"
+                          figureIndex={firstResult?.figureIndex ?? 0}
+                          // Rule: never render a blank "no figure" placeholder
+                          // in a result card. If no good figure exists, the
+                          // figure column collapses entirely.
+                          hideOnMiss={true}
+                        />
+                      )
+                    }
+                  />
+                );
+              })}
             </div>
           </>
         )}
@@ -646,7 +1149,7 @@ export default function PaperDetailPage({
         {/* ════════════════════════════════════════
             SECTION 3 — WHY IT FITS YOU
             ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconStar />} index={5}>
+        <SectionTitle icon={<IconStar />} index={7}>
           Why it fits you
         </SectionTitle>
 
@@ -696,7 +1199,7 @@ export default function PaperDetailPage({
         )}
 
         {/* ── Quick signals ── */}
-        <SectionTitle icon={<IconCheck />} index={7}>
+        <SectionTitle icon={<IconCheck />} index={8}>
           At a glance
         </SectionTitle>
         <div className="flex flex-wrap gap-2">
@@ -717,7 +1220,7 @@ export default function PaperDetailPage({
         </div>
 
         {/* ── Explore further ── */}
-        <SectionTitle icon={<IconLink />} index={8}>
+        <SectionTitle icon={<IconLink />} index={9}>
           Explore further
         </SectionTitle>
 
@@ -836,20 +1339,66 @@ function SectionTitle({
   );
 }
 
+function ResultClaimList({
+  results,
+}: {
+  results: PaperReportKeyResult[];
+}) {
+  return (
+    <div className="space-y-4">
+      {results.map((result, index) => (
+        <div
+          key={`${result.title}-${index}`}
+          className={index > 0 ? "border-t border-border pt-4" : undefined}
+        >
+          <h3
+            className="text-[17px] sm:text-[18px] font-semibold text-heading leading-snug break-words"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            {result.title}
+          </h3>
+          <p
+            className="mt-2 text-[15px] text-text leading-[1.68] break-words"
+            style={{ fontFamily: "var(--font-reading)" }}
+          >
+            {result.detail}
+          </p>
+          {result.novelty && (
+            <p
+              className="mt-2 text-[14px] text-text-muted leading-[1.55] break-words"
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <span className="font-semibold text-heading">
+                Why it&apos;s new:
+              </span>{" "}
+              {result.novelty}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ReportFigureRow({
   title,
   body,
   bullets,
+  content,
   figure,
   loading = false,
+  emphasis = false,
 }: {
   title: string;
   body?: string;
   bullets?: string[];
-  figure: React.ReactNode;
+  content?: React.ReactNode;
+  figure: React.ReactNode | null;
   loading?: boolean;
+  emphasis?: boolean;
 }) {
-  const visibleBullets = (bullets ?? []).filter(Boolean).slice(0, 5);
+  const visibleBullets = (bullets ?? []).filter(Boolean).slice(0, 6);
+  const hasBody = Boolean(body?.trim());
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card">
@@ -869,14 +1418,18 @@ function ReportFigureRow({
               <ShimmerBar width="44%" height="h-3" />
             </div>
           </div>
-        ) : (
+        ) : content ? (
+          content
+        ) : hasBody ? (
           <p
-            className="text-[16px] text-text leading-[1.72] break-words"
+            className={`text-[16px] leading-[1.72] break-words ${
+              emphasis ? "font-semibold text-heading" : "text-text"
+            }`}
             style={{ fontFamily: "var(--font-reading)" }}
           >
-            {body || "Hermes could not extract enough text from the available metadata. Open the paper link for the full report source."}
+            {body}
           </p>
-        )}
+        ) : null}
         {!loading && visibleBullets.length > 0 && (
           <ol
             className="mt-4 space-y-2 text-[14px] text-text-muted leading-[1.55] list-decimal list-inside"
@@ -888,7 +1441,9 @@ function ReportFigureRow({
           </ol>
         )}
       </div>
-      <div className="has-[.figure-hidden]:hidden">{figure}</div>
+      {figure !== null && figure !== undefined && (
+        <div className="has-[.figure-hidden]:hidden">{figure}</div>
+      )}
     </div>
   );
 }

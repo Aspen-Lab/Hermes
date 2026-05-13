@@ -5,6 +5,31 @@ export interface PaperReportKeyResult {
   title: string;
   detail: string;
   figureIndex: number;
+  /**
+   * Deep-report only: paper-grounded evidence sentence pulled from the body
+   * (results/discussion). Used so the reader can see the receipts behind the
+   * `detail` claim.
+   */
+  evidence?: string;
+  /** Deep-report only: what makes this result novel vs prior work. */
+  novelty?: string;
+  /**
+   * Deep-report only: figure label this result should reference (e.g.
+   * "Figure 3"), chosen by post-report figure binding. Null/absent when no
+   * good figure match was found — UI shows no figure in that case.
+   */
+  figureLabel?: string | null;
+  /**
+   * Deep-report only: directly bound image URL chosen by figure-binding from
+   * the candidate pool. When set, the UI renders this image directly without
+   * a second `/api/figure` round-trip. May be a `data:image/...;base64,...`
+   * URL (PDF-extracted) or a normal HTTP URL.
+   */
+  figureImageUrl?: string | null;
+  /** Deep-report only: caption that goes with `figureImageUrl`. */
+  figureCaption?: string | null;
+  /** Deep-report only: source label for the bound figure. */
+  figureSource?: string | null;
 }
 
 export interface PaperReportReviewSection {
@@ -12,10 +37,29 @@ export interface PaperReportReviewSection {
   summary: string;
 }
 
+/** Report-generation depth used for the current response. */
+export type PaperReportDepth = "deep" | "abstract" | "fallback";
+
 export interface PaperReport {
   whatItProposes: {
     summary: string;
+    /**
+     * Concrete experimental / computational methods used by the paper.
+     * These should be more specific than topic tags.
+     */
     methods: string[];
+    /** Deep-report only: one concise sentence naming the paper's novelty. */
+    novelty?: string[];
+    /**
+     * Deep-report only: figure label promoted to the proposal/novelty area.
+     * Used when a figure is reused by multiple result cards, or when the
+     * proposal itself has a strong figure match.
+     */
+    figureLabel?: string | null;
+    /** Deep-report only: directly bound image URL for the proposal section. */
+    figureImageUrl?: string | null;
+    figureCaption?: string | null;
+    figureSource?: string | null;
   };
   resultsAndSignificance: {
     summary: string;
@@ -31,6 +75,12 @@ export interface PaperReport {
     keywords: string[];
   };
   noLlm?: boolean;
+  /** Which depth was used to produce this report. */
+  depth?: PaperReportDepth;
+  /** Set when deep was requested but failed (paywall / no PDF / no HTML). */
+  paywallNotice?: string;
+  /** Set on deep success: which source served the full text. */
+  sourceKind?: string;
 }
 
 const REVIEW_PATTERNS = [
@@ -87,6 +137,36 @@ function fallbackMethods(paper: Paper): string[] {
   const keywords = paper.summaryExperimentKeywords.filter(Boolean).slice(0, 4);
   if (keywords.length > 0) return keywords;
   return ["Method details are not explicit in the available abstract."];
+}
+
+function toOneSentence(text: string, maxLen = 220): string {
+  const cleaned = cleanDisplayText(text);
+  if (!cleaned) return "";
+  const sentence = cleaned.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim() ?? cleaned;
+  if (sentence.length <= maxLen) return sentence;
+  return `${sentence.slice(0, maxLen - 1).trim().replace(/[,:;.-]+$/, "")}.`;
+}
+
+function normalizeNovelty(
+  rawNovelty: unknown,
+  keyResults: PaperReportKeyResult[],
+): string[] | undefined {
+  const direct =
+    Array.isArray(rawNovelty)
+      ? rawNovelty
+      : typeof rawNovelty === "string"
+        ? [rawNovelty]
+        : [];
+  const fallbackFromResults = keyResults
+    .map((result) => result.novelty)
+    .filter((value): value is string => Boolean(value));
+  const novelty = [...direct, ...fallbackFromResults]
+    .map(cleanDisplayText)
+    .filter(Boolean)
+    .map((line) => toOneSentence(line))
+    .filter(Boolean)
+    .slice(0, 1);
+  return novelty.length > 0 ? novelty : undefined;
 }
 
 function fallbackKeywords(paper: Paper): string[] {
@@ -253,6 +333,29 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
           figureIndex: Number.isFinite(result.figureIndex)
             ? Math.max(1, Math.min(5, Math.round(result.figureIndex)))
             : index + 1,
+          evidence: result.evidence ? cleanDisplayText(result.evidence) : undefined,
+          novelty: result.novelty ? cleanDisplayText(result.novelty) : undefined,
+          figureLabel:
+            typeof result.figureLabel === "string"
+              ? cleanDisplayText(result.figureLabel) || null
+              : result.figureLabel === null
+                ? null
+                : undefined,
+          // figureImageUrl is allowed to be a data: URL (potentially long),
+          // so don't run it through cleanDisplayText (which collapses
+          // whitespace and could mangle base64).
+          figureImageUrl:
+            typeof result.figureImageUrl === "string" && result.figureImageUrl.trim()
+              ? result.figureImageUrl
+              : result.figureImageUrl === null
+                ? null
+                : undefined,
+          figureCaption: result.figureCaption
+            ? cleanDisplayText(result.figureCaption)
+            : undefined,
+          figureSource: result.figureSource
+            ? cleanDisplayText(result.figureSource)
+            : undefined,
         }))
         .filter((result) => result.detail)
         .slice(0, 4)
@@ -276,10 +379,38 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
         .slice(0, 10)
     : undefined;
 
+  const novelty = normalizeNovelty(
+    (report.whatItProposes as { novelty?: unknown } | undefined)?.novelty,
+    keyResults,
+  );
+
+  const proposalFigureLabel =
+    typeof report.whatItProposes?.figureLabel === "string"
+      ? cleanDisplayText(report.whatItProposes.figureLabel) || null
+      : report.whatItProposes?.figureLabel === null
+        ? null
+        : undefined;
+  const proposalFigureImageUrl =
+    typeof report.whatItProposes?.figureImageUrl === "string" &&
+    report.whatItProposes.figureImageUrl.trim()
+      ? report.whatItProposes.figureImageUrl
+      : report.whatItProposes?.figureImageUrl === null
+        ? null
+        : undefined;
+
   return {
     whatItProposes: {
       summary: cleanDisplayText(report.whatItProposes?.summary) || fallback.whatItProposes.summary,
       methods,
+      novelty,
+      figureLabel: proposalFigureLabel,
+      figureImageUrl: proposalFigureImageUrl,
+      figureCaption: report.whatItProposes?.figureCaption
+        ? cleanDisplayText(report.whatItProposes.figureCaption)
+        : undefined,
+      figureSource: report.whatItProposes?.figureSource
+        ? cleanDisplayText(report.whatItProposes.figureSource)
+        : undefined,
     },
     resultsAndSignificance: {
       summary: cleanDisplayText(report.resultsAndSignificance?.summary) || fallback.resultsAndSignificance.summary,
@@ -291,5 +422,12 @@ export function sanitizePaperReport(report: Partial<PaperReport>): PaperReport {
       keywords,
     },
     noLlm: report.noLlm,
+    depth: report.depth,
+    paywallNotice: report.paywallNotice
+      ? cleanDisplayText(report.paywallNotice)
+      : undefined,
+    sourceKind: report.sourceKind
+      ? cleanDisplayText(report.sourceKind)
+      : undefined,
   };
 }

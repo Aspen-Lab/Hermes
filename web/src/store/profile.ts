@@ -53,6 +53,7 @@ interface ProfileState {
   updateTavilyApiKey: (value: string) => void;
   updateFeedAiProvider: (value: UserProfile["feedAiProvider"]) => void;
   updateFeedAiApiKey: (value: string) => void;
+  updateDeepReportEnabled: (value: boolean) => void;
   updateColorTheme: (theme: ColorTheme) => void;
   /** Replace local state with a server snapshot. Undefined fields keep local values. */
   hydrateFromRemote: (remote: Partial<UserProfile>) => void;
@@ -174,6 +175,8 @@ export const useProfileStore = create<ProfileState>()(
         set((s) => ({
           profile: { ...s.profile, feedAiApiKey: value.trim() || undefined },
         })),
+      updateDeepReportEnabled: (value) =>
+        set((s) => ({ profile: { ...s.profile, deepReportEnabled: value } })),
       updateColorTheme: (theme) => {
         applyColorTheme(theme);
         set((s) => ({ profile: { ...s.profile, colorTheme: theme } }));
@@ -215,6 +218,7 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.tavilyApiKey !== undefined) merged.tavilyApiKey = remote.tavilyApiKey;
           if (remote.feedAiProvider !== undefined) merged.feedAiProvider = remote.feedAiProvider;
           if (remote.feedAiApiKey !== undefined) merged.feedAiApiKey = remote.feedAiApiKey;
+          if (remote.deepReportEnabled !== undefined) merged.deepReportEnabled = remote.deepReportEnabled;
           if (remote.colorTheme !== undefined) {
             merged.colorTheme = remote.colorTheme;
             applyColorTheme(remote.colorTheme);

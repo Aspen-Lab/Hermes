@@ -88,7 +88,7 @@ export type FeedSourceMix = "balanced" | "preprints" | "published" | "code" | "w
 export type FeedImportance = "new" | "highlyCited" | "rising";
 export type FeedMethodMode = "mustMatch" | "relatedOk" | "any";
 export type FeedDiscoveryMode = "core" | "adjacent" | "surprise";
-export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic";
+export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic" | "qwen";
 export type ColorTheme =
   | "system"
   | "cream"
@@ -165,6 +165,14 @@ export interface UserProfile {
    */
   feedAiProvider: UserAiProvider;
   feedAiApiKey?: string;
+  /**
+   * Per-user toggle for deep paper reports. When ON, opening a paper triggers
+   * full HTML/PDF fetch + two-pass LLM analysis (classify -> extract) using
+   * `feedAiProvider`/`feedAiApiKey`. When OFF, the legacy abstract-only report
+   * path is used. Burns more tokens per paper but produces specific,
+   * paper-grounded reports instead of summarizing the abstract.
+   */
+  deepReportEnabled: boolean;
   colorTheme: ColorTheme;
 }
 
@@ -203,6 +211,7 @@ export const defaultProfile: UserProfile = {
   tavilyApiKey: "",
   feedAiProvider: "default",
   feedAiApiKey: "",
+  deepReportEnabled: false,
   colorTheme: "system",
 };
 

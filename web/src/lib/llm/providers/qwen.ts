@@ -1,3 +1,7 @@
+// Alibaba Qwen via DashScope's OpenAI-compatible endpoint. The wire format is
+// identical to OpenAI Chat Completions, so we share the call shape and only
+// vary the base URL and the model id table.
+
 import type {
   DigestProvider,
   DigestResult,
@@ -6,10 +10,11 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 
-const OPENAI_CHAT_API = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_MODEL = "gpt-5.4-mini";
-const SMALL_MODEL = "gpt-5.4-mini";
-const LARGE_MODEL = "gpt-5.4";
+const QWEN_CHAT_API =
+  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+const DEFAULT_MODEL = "qwen-plus";
+const SMALL_MODEL = "qwen-turbo";
+const LARGE_MODEL = "qwen-max";
 
 function modelForTier(defaultModel: string, tier?: ModelTier): string {
   if (tier === "large") return LARGE_MODEL;
@@ -17,7 +22,7 @@ function modelForTier(defaultModel: string, tier?: ModelTier): string {
   return defaultModel;
 }
 
-interface OpenAIChatResponse {
+interface QwenChatResponse {
   choices?: Array<{
     message?: {
       content?: string | null;
@@ -26,24 +31,26 @@ interface OpenAIChatResponse {
 }
 
 function apiKeyFromEnv(): string | undefined {
-  return process.env.OPENAI_API_KEY?.trim() || undefined;
+  return process.env.QWEN_API_KEY?.trim() || process.env.DASHSCOPE_API_KEY?.trim() || undefined;
 }
 
-async function callOpenAIChat(args: {
+async function callQwenChat(args: {
   apiKey: string;
-  model?: string;
+  model: string;
   systemPrompt: string;
   userPrompt: string;
   maxTokens?: number;
   images?: VisionImageInput[];
+  jsonMode?: boolean;
 }): Promise<string> {
   const {
     apiKey,
-    model = DEFAULT_MODEL,
+    model,
     systemPrompt,
     userPrompt,
     maxTokens = 1500,
     images = [],
+    jsonMode = true,
   } = args;
 
   const textContent =
@@ -59,7 +66,7 @@ async function callOpenAIChat(args: {
           })),
         ];
 
-  const res = await fetch(OPENAI_CHAT_API, {
+  const res = await fetch(QWEN_CHAT_API, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -71,50 +78,50 @@ async function callOpenAIChat(args: {
         { role: "system", content: systemPrompt },
         { role: "user", content: textContent },
       ],
-      max_completion_tokens: maxTokens,
-      response_format: { type: "json_object" },
+      max_tokens: maxTokens,
+      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(20000),
     cache: "no-store",
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`OpenAI API error ${res.status}: ${detail.slice(0, 400)}`);
+    throw new Error(`Qwen API error ${res.status}: ${detail.slice(0, 400)}`);
   }
 
-  const data = (await res.json()) as OpenAIChatResponse;
+  const data = (await res.json()) as QwenChatResponse;
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenAI returned empty content");
+  if (!content) throw new Error("Qwen returned empty content");
   return content.trim();
 }
 
-export function createOpenAIProvider(
+export function createQwenProvider(
   apiKey = apiKeyFromEnv(),
-  model = DEFAULT_MODEL,
+  defaultModel = DEFAULT_MODEL,
 ): DigestProvider {
   return {
-    id: "openai",
+    id: "qwen",
 
     async generateDigest({ papers, contextHint }): Promise<DigestResult> {
-      if (!apiKey) throw new Error("OPENAI_API_KEY not set");
-      const text = await callOpenAIChat({
+      if (!apiKey) throw new Error("QWEN_API_KEY not set");
+      const text = await callQwenChat({
         apiKey,
-        model,
+        model: defaultModel,
         systemPrompt: DIGEST_SYSTEM_PROMPT,
         userPrompt: buildUserPrompt(papers, contextHint),
         maxTokens: 1800,
       });
       const parsed = safeParseDigest(text);
-      if (!parsed) throw new Error("Failed to parse digest JSON from OpenAI");
+      if (!parsed) throw new Error("Failed to parse digest JSON from Qwen");
       return parsed;
     },
 
     async generateJsonText({ systemPrompt, userPrompt, maxTokens = 1500, tier }): Promise<string> {
-      if (!apiKey) throw new Error("OPENAI_API_KEY not set");
-      return callOpenAIChat({
+      if (!apiKey) throw new Error("QWEN_API_KEY not set");
+      return callQwenChat({
         apiKey,
-        model: modelForTier(model, tier),
+        model: modelForTier(defaultModel, tier),
         systemPrompt,
         userPrompt,
         maxTokens,
@@ -128,11 +135,13 @@ export function createOpenAIProvider(
       maxTokens = 1200,
       tier,
     }): Promise<string> {
-      if (!apiKey) throw new Error("OPENAI_API_KEY not set");
+      if (!apiKey) throw new Error("QWEN_API_KEY not set");
       if (images.length === 0) throw new Error("No images supplied");
-      return callOpenAIChat({
+      // Vision-capable Qwen variant.
+      const visionModel = tier === "small" ? "qwen-vl-plus" : "qwen-vl-max";
+      return callQwenChat({
         apiKey,
-        model: modelForTier(model, tier),
+        model: visionModel,
         systemPrompt,
         userPrompt,
         maxTokens,
@@ -141,11 +150,11 @@ export function createOpenAIProvider(
     },
 
     async testConnection(): Promise<{ ok: boolean; error?: string }> {
-      if (!apiKey) return { ok: false, error: "OPENAI_API_KEY not set" };
+      if (!apiKey) return { ok: false, error: "QWEN_API_KEY not set" };
       try {
-        await callOpenAIChat({
+        await callQwenChat({
           apiKey,
-          model,
+          model: SMALL_MODEL,
           systemPrompt: "Reply with JSON.",
           userPrompt: '{"ping":true}',
           maxTokens: 32,
@@ -158,4 +167,4 @@ export function createOpenAIProvider(
   };
 }
 
-export const openaiProvider: DigestProvider = createOpenAIProvider();
+export const qwenProvider: DigestProvider = createQwenProvider();

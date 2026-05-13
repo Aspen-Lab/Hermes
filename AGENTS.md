@@ -7,6 +7,12 @@ For product, UX, retrieval, ranking, architecture, and output-design work, read 
 
 Hard rule: Hermes is a calm daily forecast for career, work, research, and knowledge. Favor precise, portable, user-declared, progressively enhanced information delivery over generic agent-platform complexity.
 
+## Git & PR Workflow Rules
+
+- **Never create a new branch without explicit user approval.** Always confirm the branch name with the user before creating one. Default to committing on whatever branch is currently checked out.
+- **PR workflow order:** make changes → commit → push branch → create PR. Only push and open a PR when the user explicitly asks.
+- **Always state the current branch** at the start of any coding session so the user knows where changes will land.
+
 Decision priorities:
 
 - Time efficiency over information volume.

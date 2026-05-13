@@ -26,6 +26,7 @@ const FEED_AI_PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI / ChatGPT" },
   { value: "gemini", label: "Google Gemini API" },
   { value: "anthropic", label: "Anthropic / Claude" },
+  { value: "qwen", label: "Alibaba Qwen / DashScope" },
 ] as const;
 
 interface SearchResult {
@@ -83,6 +84,7 @@ function DiscoveryPage() {
   const updateTavilyApiKey = useProfileStore((s) => s.updateTavilyApiKey);
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
+  const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
@@ -94,7 +96,7 @@ function DiscoveryPage() {
   );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [openTool, setOpenTool] = useState<"ai" | "tavily" | null>(null);
+  const [openTool, setOpenTool] = useState<"ai" | "tavily" | "deep" | null>(null);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
@@ -373,9 +375,35 @@ function DiscoveryPage() {
                     ? "Gemini"
                     : profile.feedAiProvider === "anthropic"
                       ? "Claude"
-                      : "AI key"}
+                      : profile.feedAiProvider === "qwen"
+                        ? "Qwen"
+                        : "AI key"}
               </span>
               <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "ai" ? "rotate-180" : ""}`} aria-hidden>
+                <path d="M2 4l4 4 4-4" />
+              </svg>
+            </button>
+
+            {/* Deep Report toggle — requires user AI key to be filled in */}
+            <button
+              type="button"
+              onClick={() => setOpenTool((cur) => (cur === "deep" ? null : "deep"))}
+              aria-expanded={openTool === "deep"}
+              title="Deep report — read each paper's full text before writing the report (uses your own AI key)."
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+                openTool === "deep"
+                  ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
+                  : profile.deepReportEnabled
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
+              }`}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+              <span className="font-medium">{profile.deepReportEnabled ? "Deep report on" : "Deep report"}</span>
+              <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "deep" ? "rotate-180" : ""}`} aria-hidden>
                 <path d="M2 4l4 4 4-4" />
               </svg>
             </button>
@@ -444,7 +472,9 @@ function DiscoveryPage() {
                         ? "OpenAI API key"
                         : profile.feedAiProvider === "gemini"
                           ? "Gemini API key"
-                          : "Anthropic API key"
+                          : profile.feedAiProvider === "qwen"
+                            ? "Qwen / DashScope API key"
+                            : "Anthropic API key"
                     }
                     autoComplete="off"
                     spellCheck={false}
@@ -458,6 +488,49 @@ function DiscoveryPage() {
                     ? "Uses the AI already connected to this Hermes site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
                     : "When this is filled in, Hermes forces Tier 2 so your own key actually powers the AI rerank."
                   : "Turn AI search on to use this. Tier 0 ignores both Hermes default AI and your own key."}
+              </p>
+            </div>
+          )}
+
+          {openTool === "deep" && (
+            <div
+              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
+              style={{ fontFamily: "var(--font-sans)" }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                  Read each paper&apos;s full text (HTML when available, PDF as fallback) before writing the report. Burns more tokens per paper but produces specific, paper-grounded reports instead of summarizing the abstract.
+                </p>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={profile.deepReportEnabled}
+                  // Disabled only when the user explicitly picked a non-default
+                  // provider but hasn't typed a key. With "default" selected we
+                  // let the toggle through — the server resolves to whatever
+                  // the site is configured with (Vertex Gemini / Anthropic /
+                  // OpenAI / Qwen via env vars). If the site has no default
+                  // configured the API gracefully falls back to a shallow
+                  // report with an explanatory banner.
+                  disabled={profile.feedAiProvider !== "default" && !profile.feedAiApiKey?.trim()}
+                  onClick={() => updateDeepReportEnabled(!profile.deepReportEnabled)}
+                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out disabled:opacity-40 disabled:cursor-not-allowed ${
+                    profile.deepReportEnabled ? "bg-accent" : "bg-bg-secondary"
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
+                      profile.deepReportEnabled ? "translate-x-4" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className="text-[10.5px] leading-relaxed text-text-faint">
+                {profile.feedAiProvider === "default"
+                  ? "Using the AI connected to this Hermes site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
+                  : !profile.feedAiApiKey?.trim()
+                  ? "Set your own AI provider and key in the AI key panel first. Deep report uses your key — both a cheap model (classify) and a smart model (extract) get called per paper."
+                  : "When on, Hermes downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}
               </p>
             </div>
           )}

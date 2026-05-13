@@ -76,13 +76,23 @@ function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {
   const model = cleanOptionalString(value.model);
 
   if (!provider || !apiKey) return undefined;
-  if (!["openai", "gemini", "anthropic"].includes(provider)) return undefined;
+  if (!["openai", "gemini", "anthropic", "qwen"].includes(provider)) return undefined;
 
   return {
     provider: provider as ProviderOverrideConfig["provider"],
     apiKey,
     model,
   };
+}
+
+function parseExcludeIds(input: unknown): string[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const out = input
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter((v) => v.length > 0);
+  // Cap to a reasonable size so a runaway client can't ship a huge payload.
+  // 800 covers ~14 days of daily 10-paper digests with a wide margin.
+  return out.length > 0 ? out.slice(0, 800) : undefined;
 }
 
 export async function POST(req: NextRequest) {
@@ -123,6 +133,7 @@ export async function POST(req: NextRequest) {
     aiTier: parseAiTier(body.aiTier),
     searchConnectors: parseSearchConnectors(body.searchConnectors),
     llmOverride: parseLlmOverride(body.llmOverride),
+    excludeIds: parseExcludeIds(body.excludeIds),
   });
 
   return NextResponse.json(result, { headers: CACHE_HEADERS });

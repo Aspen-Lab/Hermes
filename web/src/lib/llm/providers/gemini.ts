@@ -7,6 +7,7 @@ import {
 import type {
   DigestProvider,
   DigestResult,
+  ModelTier,
   VisionImageInput,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
@@ -30,6 +31,17 @@ const GEMINI_API_MODEL_CHAIN = [
   { id: "gemini-2.5-flash", location: "global" },
   { id: "gemini-2.5-pro", location: "global" },
 ] satisfies ModelTarget[];
+
+// For tier-aware calls, narrow the chain to a single appropriate model. The
+// default chain stays "flash first, fall back to pro" — that's the cheap path
+// for digest. `small`/`large` are explicit choices used by deep-report.
+function chainForTier(chain: ModelTarget[], tier?: ModelTier): ModelTarget[] {
+  if (!tier) return chain;
+  if (tier === "large") {
+    return chain.filter((target) => /pro/i.test(target.id));
+  }
+  return chain.filter((target) => /flash/i.test(target.id));
+}
 
 const clients = new Map<string, GoogleGenAI>();
 const apiClients = new Map<string, GoogleGenAI>();
@@ -138,10 +150,12 @@ export const geminiProvider: DigestProvider = {
     return parsed;
   },
 
-  async generateJsonText({ systemPrompt, userPrompt }): Promise<string> {
+  async generateJsonText({ systemPrompt, userPrompt, tier }): Promise<string> {
     const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+    const chain = chainForTier(getModelChain(), tier);
+    const fallback = chain.length > 0 ? chain : getModelChain();
 
-    for (const { id, location } of getModelChain()) {
+    for (const { id, location } of fallback) {
       const resolvedLocation = location === "global" ? "global" : regionalLocation;
       try {
         const text = await callModel(resolvedLocation, id, userPrompt, systemPrompt);
@@ -154,12 +168,14 @@ export const geminiProvider: DigestProvider = {
     throw new Error("All Gemini models returned empty response");
   },
 
-  async generateVisionJsonText({ systemPrompt, userPrompt, images }): Promise<string> {
+  async generateVisionJsonText({ systemPrompt, userPrompt, images, tier }): Promise<string> {
     if (images.length === 0) throw new Error("No images supplied");
 
     const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+    const chain = chainForTier(getModelChain(), tier);
+    const fallback = chain.length > 0 ? chain : getModelChain();
 
-    for (const { id, location } of getModelChain()) {
+    for (const { id, location } of fallback) {
       const resolvedLocation = location === "global" ? "global" : regionalLocation;
       try {
         const text = await callVisionModel(
@@ -266,8 +282,10 @@ export function createGeminiApiProvider(
       return parsed;
     },
 
-    async generateJsonText({ systemPrompt, userPrompt }): Promise<string> {
-      for (const { id } of modelChain) {
+    async generateJsonText({ systemPrompt, userPrompt, tier }): Promise<string> {
+      const chain = chainForTier(modelChain, tier);
+      const fallback = chain.length > 0 ? chain : modelChain;
+      for (const { id } of fallback) {
         try {
           const text = await callApiModel(id, userPrompt, systemPrompt);
           if (text.trim()) return text.trim();
@@ -278,10 +296,12 @@ export function createGeminiApiProvider(
       throw new Error("All Gemini API models returned empty response");
     },
 
-    async generateVisionJsonText({ systemPrompt, userPrompt, images }): Promise<string> {
+    async generateVisionJsonText({ systemPrompt, userPrompt, images, tier }): Promise<string> {
       if (images.length === 0) throw new Error("No images supplied");
+      const chain = chainForTier(modelChain, tier);
+      const fallback = chain.length > 0 ? chain : modelChain;
 
-      for (const { id } of modelChain) {
+      for (const { id } of fallback) {
         try {
           const text = await callApiVisionModel(id, systemPrompt, userPrompt, images);
           if (text.trim()) return text.trim();
