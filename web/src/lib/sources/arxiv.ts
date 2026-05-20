@@ -1,8 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import { sourceFetch } from "./_fetch";
 
 const ARXIV_API = "https://export.arxiv.org/api/query";
+const MAX_QUERIES = 3;
 
 interface ArxivLink {
   "@_href": string;
@@ -50,67 +52,79 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   if (searchQueries.length === 0) return [];
 
   const perQuery = Math.max(5, Math.ceil(Math.min(limit, 50) / searchQueries.length));
+
+  const results = await Promise.allSettled(
+    searchQueries.map((searchQuery) => fetchOne(query, searchQuery, perQuery)),
+  );
+
   const all: RawItem[] = [];
-
-  for (const searchQuery of searchQueries) {
-    const params = new URLSearchParams({
-      search_query: buildQuery({ ...query, topics: [searchQuery] }),
-      start: "0",
-      max_results: String(perQuery),
-      sortBy: "submittedDate",
-      sortOrder: "descending",
-    });
-
-    try {
-      const res = await fetch(`${ARXIV_API}?${params}`, {
-        signal: AbortSignal.timeout(8000),
-        next: { revalidate: 300 },
-      });
-      if (!res.ok) {
-        console.error("[arxiv] non-ok response:", res.status);
-        continue;
-      }
-      const xml = await res.text();
-      const parser = new XMLParser({
-        ignoreAttributes: false,
-        attributeNamePrefix: "@_",
-      });
-      const parsed = parser.parse(xml);
-      const entries: ArxivEntry[] = asArray(parsed?.feed?.entry);
-
-      all.push(...entries.map((e): RawItem => {
-        const arxivId = extractArxivId(e.id);
-        const authors = asArray(e.author).map((a) => cleanDisplayText(a.name)).filter(Boolean);
-        const categories = asArray(e.category).map((c) => cleanDisplayText(c["@_term"])).filter(Boolean);
-        const links = asArray(e.link);
-        const absLink =
-          links.find((l) => l["@_rel"] === "alternate")?.["@_href"] ?? e.id;
-        return {
-          id: `arxiv:${arxivId}`,
-          source: "arxiv",
-          title: cleanDisplayText(e.title),
-          authors,
-          abstract: cleanDisplayTextOrUndefined(e.summary),
-          url: absLink,
-          publishedAt: e.published,
-          venue: "arXiv",
-          tags: categories.length > 0 ? categories : undefined,
-          metadata: {
-            arxivCategory: cleanDisplayTextOrUndefined(e["arxiv:primary_category"]?.["@_term"]),
-          },
-        };
-      }));
-    } catch (err) {
-      console.error("[arxiv] fetch error:", err);
-    }
+  for (const r of results) {
+    if (r.status === "fulfilled") all.push(...r.value);
   }
-
   return uniqueById(all).slice(0, limit);
+}
+
+async function fetchOne(
+  query: SourceQuery,
+  searchQuery: string,
+  perQuery: number,
+): Promise<RawItem[]> {
+  const params = new URLSearchParams({
+    search_query: buildQuery({ ...query, topics: [searchQuery] }),
+    start: "0",
+    max_results: String(perQuery),
+    sortBy: "submittedDate",
+    sortOrder: "descending",
+  });
+
+  try {
+    const res = await sourceFetch(`${ARXIV_API}?${params}`, {
+      timeoutMs: 6000,
+      revalidate: 300,
+    });
+    if (!res.ok) {
+      console.error("[arxiv] non-ok response:", res.status);
+      return [];
+    }
+    const xml = await res.text();
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+    });
+    const parsed = parser.parse(xml);
+    const entries: ArxivEntry[] = asArray(parsed?.feed?.entry);
+
+    return entries.map((e): RawItem => {
+      const arxivId = extractArxivId(e.id);
+      const authors = asArray(e.author).map((a) => cleanDisplayText(a.name)).filter(Boolean);
+      const categories = asArray(e.category).map((c) => cleanDisplayText(c["@_term"])).filter(Boolean);
+      const links = asArray(e.link);
+      const absLink =
+        links.find((l) => l["@_rel"] === "alternate")?.["@_href"] ?? e.id;
+      return {
+        id: `arxiv:${arxivId}`,
+        source: "arxiv",
+        title: cleanDisplayText(e.title),
+        authors,
+        abstract: cleanDisplayTextOrUndefined(e.summary),
+        url: absLink,
+        publishedAt: e.published,
+        venue: "arXiv",
+        tags: categories.length > 0 ? categories : undefined,
+        metadata: {
+          arxivCategory: cleanDisplayTextOrUndefined(e["arxiv:primary_category"]?.["@_term"]),
+        },
+      };
+    });
+  } catch (err) {
+    console.error("[arxiv] fetch error:", err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 function buildSearchQueries(topics: string[], queries: string[]): string[] {
   const source = queries.length > 0 ? queries : topics;
-  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 6);
+  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, MAX_QUERIES);
 }
 
 function uniqueById(items: RawItem[]): RawItem[] {

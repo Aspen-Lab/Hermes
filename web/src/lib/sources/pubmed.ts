@@ -1,7 +1,9 @@
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import { sourceFetch } from "./_fetch";
 
 const EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
+const MAX_QUERIES = 2;
 
 interface PubMedSearchResponse {
   esearchresult?: {
@@ -44,19 +46,31 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
 
   const limit = query.limit ?? 30;
   const perQuery = Math.max(5, Math.ceil(Math.min(limit, 40) / searchQueries.length));
+
+  const results = await Promise.allSettled(
+    searchQueries.map((q) => fetchOne(q, perQuery, query.timeWindow)),
+  );
+
   const all: RawItem[] = [];
-
-  for (const searchQuery of searchQueries) {
-    try {
-      const ids = await searchIds(searchQuery, perQuery, query.timeWindow);
-      if (ids.length === 0) continue;
-      all.push(...(await fetchSummaries(ids)));
-    } catch (err) {
-      console.error("[pubmed] fetch error:", err);
-    }
+  for (const r of results) {
+    if (r.status === "fulfilled") all.push(...r.value);
   }
-
   return uniqueById(all).slice(0, limit);
+}
+
+async function fetchOne(
+  searchQuery: string,
+  perQuery: number,
+  timeWindow: SourceQuery["timeWindow"],
+): Promise<RawItem[]> {
+  try {
+    const ids = await searchIds(searchQuery, perQuery, timeWindow);
+    if (ids.length === 0) return [];
+    return await fetchSummaries(ids);
+  } catch (err) {
+    console.error("[pubmed] fetch error:", err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 async function searchIds(
@@ -72,9 +86,9 @@ async function searchIds(
     term: dateScopedQuery(searchQuery, timeWindow),
   });
 
-  const res = await fetch(`${EUTILS}/esearch.fcgi?${params}`, {
-    signal: AbortSignal.timeout(7000),
-    next: { revalidate: 900 },
+  const res = await sourceFetch(`${EUTILS}/esearch.fcgi?${params}`, {
+    timeoutMs: 6000,
+    revalidate: 900,
   });
   if (!res.ok) {
     console.error("[pubmed] search non-ok response:", res.status);
@@ -91,9 +105,9 @@ async function fetchSummaries(ids: string[]): Promise<RawItem[]> {
     id: ids.join(","),
   });
 
-  const res = await fetch(`${EUTILS}/esummary.fcgi?${params}`, {
-    signal: AbortSignal.timeout(7000),
-    next: { revalidate: 900 },
+  const res = await sourceFetch(`${EUTILS}/esummary.fcgi?${params}`, {
+    timeoutMs: 6000,
+    revalidate: 900,
   });
   if (!res.ok) {
     console.error("[pubmed] summary non-ok response:", res.status);
@@ -144,7 +158,7 @@ function findDoi(ids: PubMedArticleId[] | undefined): string | undefined {
 
 function buildSearchQueries(query: SourceQuery): string[] {
   const source = query.queries?.length ? query.queries : query.topics;
-  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 3);
+  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, MAX_QUERIES);
 }
 
 function dateScopedQuery(searchQuery: string, timeWindow: SourceQuery["timeWindow"]): string {

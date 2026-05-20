@@ -532,22 +532,72 @@ export function EmptyState({
 // ── Loading ──
 
 export function LoadingSkeleton() {
+  // Per-card line widths so each placeholder reads as a distinct paper
+  // rather than three identical bars. Small variation makes the stack
+  // feel alive while the real fetch is in flight.
+  const cards: Array<{
+    titleA: string;
+    titleB: string;
+    author: string;
+    body: [string, string, string];
+  }> = [
+    { titleA: "86%", titleB: "62%", author: "44%", body: ["100%", "96%", "70%"] },
+    { titleA: "72%", titleB: "48%", author: "38%", body: ["98%",  "88%", "55%"] },
+    { titleA: "92%", titleB: "70%", author: "52%", body: ["100%", "93%", "78%"] },
+  ];
+
   return (
     <div
-      className="space-y-4 py-10"
+      className="space-y-3.5 py-6 sm:py-8"
       aria-busy="true"
       aria-label="Loading recommendations"
     >
-      {[1, 2, 3].map((i) => (
+      <div className="flex items-center gap-2 text-[11px] text-text-faint tracking-[0.16em] uppercase">
+        <span className="relative inline-flex h-1.5 w-1.5">
+          <span className="absolute inset-0 rounded-full bg-accent/70 animate-pulse" />
+          <span className="absolute inset-0 rounded-full bg-accent/30 motion-safe:animate-ping" />
+        </span>
+        <span>Brewing your daily briefing</span>
+      </div>
+
+      {cards.map((card, i) => (
         <div
           key={i}
-          className="rounded-2xl bg-surface shadow-card p-7 overflow-hidden"
-          style={{ "--i": i - 1 } as React.CSSProperties}
+          className="relative rounded-2xl bg-surface border border-border shadow-card p-5 sm:p-6 overflow-hidden animate-fade-in-up"
+          style={{ "--i": i, animationDelay: `${i * 90}ms` } as React.CSSProperties}
         >
-          <div className="h-5 skeleton-shimmer w-3/4 mb-3" />
-          <div className="h-4 skeleton-shimmer w-1/2 mb-5" />
-          <div className="h-3 skeleton-shimmer w-full mb-2" />
-          <div className="h-3 skeleton-shimmer w-5/6" />
+          {/* Kind stripe — matches PaperTile's left-edge accent */}
+          <div className="absolute top-0 left-0 h-full w-[3px] bg-accent/15" />
+
+          {/* Header: kind badge + score chip */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-5 w-16 rounded-full skeleton-shimmer" />
+            <span className="flex-1" aria-hidden />
+            <div className="h-5 w-12 rounded-full skeleton-shimmer" />
+          </div>
+
+          {/* Title — 2 lines */}
+          <div className="h-[18px] rounded-md skeleton-shimmer mb-2" style={{ width: card.titleA }} />
+          <div className="h-[18px] rounded-md skeleton-shimmer mb-3.5" style={{ width: card.titleB }} />
+
+          {/* Author / venue line */}
+          <div className="h-3 rounded-md skeleton-shimmer mb-4" style={{ width: card.author }} />
+
+          {/* Relevance reason — 3 lines */}
+          <div className="space-y-2">
+            <div className="h-3 rounded-md skeleton-shimmer" style={{ width: card.body[0] }} />
+            <div className="h-3 rounded-md skeleton-shimmer" style={{ width: card.body[1] }} />
+            <div className="h-3 rounded-md skeleton-shimmer" style={{ width: card.body[2] }} />
+          </div>
+
+          {/* Footer — source label + action icons */}
+          <div className="mt-4 pt-3 border-t border-border/60 flex items-center gap-1.5">
+            <div className="h-2.5 w-14 rounded skeleton-shimmer" />
+            <span className="flex-1" aria-hidden />
+            <div className="h-6 w-6 rounded-md skeleton-shimmer" />
+            <div className="h-6 w-6 rounded-md skeleton-shimmer" />
+            <div className="h-6 w-6 rounded-md skeleton-shimmer" />
+          </div>
         </div>
       ))}
     </div>

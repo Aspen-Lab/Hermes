@@ -887,6 +887,7 @@ export default function PaperDetailPage({
         <ActionRow
           primaryUrl={primaryUrl}
           primaryLabel={primaryLabel}
+          surfaceHref={`/papers/${encodeURIComponent(paper.id)}/surface`}
           paper={paper}
           onSave={() => savePaper(paper)}
           onLike={() => moreLikePaper(paper)}
@@ -1486,6 +1487,7 @@ function ScrollProgress() {
 function ActionRow({
   primaryUrl,
   primaryLabel,
+  surfaceHref,
   paper,
   onSave,
   onLike,
@@ -1495,6 +1497,7 @@ function ActionRow({
 }: {
   primaryUrl: string;
   primaryLabel: string;
+  surfaceHref: string;
   paper: Paper;
   onSave: () => void;
   onLike: () => void;
@@ -1593,6 +1596,31 @@ function ActionRow({
         </svg>
         {copied ? "Copied" : "Cite"}
       </button>
+
+      {/* Surface */}
+      <Link
+        href={surfaceHref}
+        aria-label="Open thinking surface"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M4 5h16" />
+          <path d="M4 12h7" />
+          <path d="M13 12h7" />
+          <path d="M4 19h16" />
+        </svg>
+        Surface
+      </Link>
 
       {/* Spacer */}
       <span className="flex-1" aria-hidden />

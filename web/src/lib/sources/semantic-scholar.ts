@@ -1,7 +1,9 @@
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import { sourceFetch } from "./_fetch";
 
 const S2_API = "https://api.semanticscholar.org/graph/v1/paper/search";
+const MAX_QUERIES = 3;
 
 interface S2Author {
   name?: string | null;
@@ -35,33 +37,41 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   if (searchQueries.length === 0) return [];
 
   const perQuery = Math.max(5, Math.ceil(Math.min(limit, 50) / searchQueries.length));
+
+  const results = await Promise.allSettled(
+    searchQueries.map((q) => fetchOne(q, perQuery)),
+  );
+
   const all: RawItem[] = [];
-
-  for (const searchQuery of searchQueries) {
-    const params = new URLSearchParams({
-      query: searchQuery,
-      limit: String(perQuery),
-      fields:
-        "paperId,corpusId,title,abstract,authors,year,publicationDate,venue,citationCount,url,externalIds,openAccessPdf,fieldsOfStudy",
-    });
-
-    try {
-      const res = await fetch(`${S2_API}?${params}`, {
-        signal: AbortSignal.timeout(8000),
-        next: { revalidate: 300 },
-      });
-      if (!res.ok) {
-        console.error("[semantic-scholar] non-ok response:", res.status);
-        continue;
-      }
-      const data = (await res.json()) as { data?: S2Paper[] };
-      all.push(...(data.data ?? []).map(paperToRawItem));
-    } catch (err) {
-      console.error("[semantic-scholar] fetch error:", err);
-    }
+  for (const r of results) {
+    if (r.status === "fulfilled") all.push(...r.value);
   }
-
   return uniqueById(all).slice(0, limit);
+}
+
+async function fetchOne(searchQuery: string, perQuery: number): Promise<RawItem[]> {
+  const params = new URLSearchParams({
+    query: searchQuery,
+    limit: String(perQuery),
+    fields:
+      "paperId,corpusId,title,abstract,authors,year,publicationDate,venue,citationCount,url,externalIds,openAccessPdf,fieldsOfStudy",
+  });
+
+  try {
+    const res = await sourceFetch(`${S2_API}?${params}`, {
+      timeoutMs: 6000,
+      revalidate: 300,
+    });
+    if (!res.ok) {
+      console.error("[semantic-scholar] non-ok response:", res.status);
+      return [];
+    }
+    const data = (await res.json()) as { data?: S2Paper[] };
+    return (data.data ?? []).map(paperToRawItem);
+  } catch (err) {
+    console.error("[semantic-scholar] fetch error:", err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 function paperToRawItem(paper: S2Paper): RawItem {
@@ -96,7 +106,7 @@ function paperToRawItem(paper: S2Paper): RawItem {
 
 function buildSearchQueries(topics: string[], queries: string[]): string[] {
   const source = queries.length > 0 ? queries : topics;
-  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 6);
+  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, MAX_QUERIES);
 }
 
 function uniqueById(items: RawItem[]): RawItem[] {

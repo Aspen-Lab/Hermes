@@ -8,7 +8,6 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { applyColorTheme } from "@/lib/theme";
 import { useProfileStore } from "@/store/profile";
 import { useFeedStore } from "@/store/feed";
 import { careerStages, colorThemeOptions, industryPreferences, type ColorTheme } from "@/types";
@@ -17,7 +16,7 @@ import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 const industryLabels: Record<string, string> = {
   academia: "Academia",
   industry: "Industry",
-  both: "Either — surprise me",
+  both: "Either",
   startups: "Startups",
   bigTech: "Big tech",
 };
@@ -172,18 +171,6 @@ function IconBell() {
     </svg>
   );
 }
-function IconPalette() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 3a9 9 0 0 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-.5a1.8 1.8 0 0 1 0-3.6H15a6 6 0 0 0 0-12h-3Z" />
-      <circle cx="7.5" cy="10" r="1" />
-      <circle cx="9.5" cy="7" r="1" />
-      <circle cx="14.5" cy="7" r="1" />
-      <circle cx="16.5" cy="10" r="1" />
-    </svg>
-  );
-}
-
 function IconCheck() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -195,10 +182,6 @@ function IconCheck() {
 // ── Page ────────────────────────────────────────────────────────
 
 type Tone = "accent" | "tag" | "link" | "neutral";
-
-function previewColorTheme(theme: ColorTheme) {
-  applyColorTheme(theme);
-}
 
 export default function ProfilePage() {
   const {
@@ -242,7 +225,6 @@ export default function ProfilePage() {
   const signals = [
     profile.researchTopics.length > 0,
     (profile.softTopics ?? []).length > 0,
-    profile.preferredMethods.length > 0,
     profile.preferredVenues.length > 0,
     profile.locationPreferences.length > 0,
   ];
@@ -331,7 +313,7 @@ export default function ProfilePage() {
           />
           <AppearanceCard
             colorTheme={profile.colorTheme}
-            onConfirm={updateColorTheme}
+            onChange={updateColorTheme}
           />
           <ReadingCard profile={profile} />
           <PastBriefings />
@@ -464,18 +446,15 @@ function DashboardView({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[10.5px] uppercase tracking-[0.18em] text-text-faint/80 font-semibold">
-              Reader
-            </p>
             {displayName ? (
               <p
-                className="text-[26px] italic font-medium text-heading tracking-tight leading-tight mt-0.5"
+                className="text-[26px] italic font-medium text-heading tracking-tight leading-tight"
                 style={{ fontFamily: "var(--font-reading)" }}
               >
                 {displayName}
               </p>
             ) : (
-              <p className="text-[17px] text-text-faint mt-1 italic" style={{ fontFamily: "var(--font-reading)" }}>
+              <p className="text-[17px] text-text-faint italic" style={{ fontFamily: "var(--font-reading)" }}>
                 Unnamed — tap edit to introduce yourself
               </p>
             )}
@@ -517,22 +496,6 @@ function DashboardView({
         </div>
       </div>
 
-      {/* ── Footer action ── */}
-      <div className="px-7 py-3.5 bg-bg-secondary/30 border-t border-border/70 flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint/70 font-semibold">
-          Tuning any time
-        </span>
-        <button
-          onClick={onEdit}
-          className="group inline-flex items-center gap-1.5 text-[12.5px] text-accent hover:text-accent/80 transition-colors active:scale-95"
-        >
-          <span className="transition-transform duration-200 ease-out group-hover:-rotate-12">
-            <IconPencil />
-          </span>
-          Adjust signals
-          <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
-        </button>
-      </div>
     </div>
   );
 }
@@ -708,37 +671,6 @@ function ReadingCard({
         </div>
       </div>
 
-      {/* ── Footer: share (placeholder, distribution path) ── */}
-      <div className="relative px-7 py-3.5 bg-bg-secondary/30 border-t border-border/70 flex items-center justify-between flex-wrap gap-y-2">
-        <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint/70 font-semibold">
-          Shareable reader card
-        </span>
-        <div className="flex items-center gap-2 text-[12px]" style={{ fontFamily: "var(--font-sans)" }}>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="group inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-surface shadow-card text-text-muted/80 transition-all cursor-not-allowed opacity-80"
-            title="Coming soon"
-          >
-            <IconShare />
-            Copy card
-          </button>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="group inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-surface shadow-card text-text-muted/80 transition-all cursor-not-allowed opacity-80"
-            title="Coming soon"
-          >
-            <IconDownload />
-            PNG
-          </button>
-          <span className="text-[10.5px] uppercase tracking-[0.14em] text-text-faint/60">
-            Coming soon
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1252,27 +1184,6 @@ function computeArchetype({
     description: "You move quickly and keep little. Great for keeping the briefing tight — Hermes will trim more.",
     glyph: "◆",
   };
-}
-
-function IconShare() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="18" cy="5" r="3" />
-      <circle cx="6" cy="12" r="3" />
-      <circle cx="18" cy="19" r="3" />
-      <path d="M8.59 13.51l6.83 3.98M15.41 6.51 8.59 10.49" />
-    </svg>
-  );
-}
-
-function IconDownload() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
 }
 
 // ── Section header (reused for Signals / Reading) ──────────────
@@ -2049,86 +1960,26 @@ function EditView({
 
 function AppearanceCard({
   colorTheme,
-  onConfirm,
+  onChange,
 }: {
   colorTheme: ColorTheme;
-  onConfirm: (theme: ColorTheme) => void;
+  onChange: (theme: ColorTheme) => void;
 }) {
-  const [draftTheme, setDraftTheme] = useState(colorTheme);
-
-  useEffect(() => {
-    setDraftTheme(colorTheme);
-    previewColorTheme(colorTheme);
-  }, [colorTheme]);
-
-  useEffect(() => {
-    return () => {
-      previewColorTheme(colorTheme);
-    };
-  }, [colorTheme]);
-
-  const changed = draftTheme !== colorTheme;
-
   return (
     <section
       className="mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
       style={{ fontFamily: "var(--font-sans)", animationDelay: "40ms" }}
     >
-      <div className="px-7 py-6 border-b border-border/70 flex items-center justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
-            Appearance
-          </p>
-          <h2 className="mt-1 text-[20px] text-heading font-medium tracking-[-0.01em]">
-            Color theme
-          </h2>
-          <p className="mt-1 text-[12.5px] text-text-muted">
-            Switch palettes directly here. No edit mode required.
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-secondary/45 px-3 py-1 text-[12px] text-text-faint">
-          <IconPalette />
-          {colorThemeOptions.find((option) => option.value === draftTheme)?.label ?? "System"}
-        </span>
+      <div className="px-7 pt-6 pb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+          Appearance
+        </p>
+        <h2 className="mt-1 text-[20px] text-heading font-medium tracking-[-0.01em]">
+          Color theme
+        </h2>
       </div>
-      <div className="px-7 py-5 space-y-4">
-        <ColorThemePicker
-          value={draftTheme}
-          onChange={(theme) => {
-            setDraftTheme(theme);
-            previewColorTheme(theme);
-          }}
-        />
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => onConfirm(draftTheme)}
-            disabled={!changed}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 ease-out ${
-              changed
-                ? "bg-heading text-bg hover:bg-heading/90 active:scale-[0.97]"
-                : "bg-bg-secondary/55 text-text-faint cursor-not-allowed"
-            }`}
-          >
-            <IconCheck />
-            Select color
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setDraftTheme(colorTheme);
-              previewColorTheme(colorTheme);
-            }}
-            disabled={!changed}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] transition-all duration-200 ease-out ${
-              changed
-                ? "bg-bg-secondary/45 text-text-muted hover:bg-bg-secondary/70 active:scale-[0.97]"
-                : "bg-bg-secondary/30 text-text-faint cursor-not-allowed"
-            }`}
-          >
-            Cancel
-          </button>
-        </div>
+      <div className="px-7 pb-6">
+        <ColorThemePicker value={colorTheme} onChange={onChange} />
       </div>
     </section>
   );
@@ -2141,17 +1992,61 @@ function ColorThemePicker({
   value: ColorTheme;
   onChange: (theme: ColorTheme) => void;
 }) {
+  const auto = colorThemeOptions.filter((o) => o.mode === "auto");
+  const light = colorThemeOptions.filter((o) => o.mode === "light");
+  const dark = colorThemeOptions.filter((o) => o.mode === "dark");
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-      {colorThemeOptions.map((option) => (
-        <ColorThemeCard
-          key={option.value}
-          value={option.value}
-          label={option.label}
-          selected={value === option.value}
-          onSelect={onChange}
-        />
-      ))}
+    <div className="space-y-5">
+      <ColorThemeGroup
+        label="Auto"
+        options={auto}
+        value={value}
+        onChange={onChange}
+      />
+      <ColorThemeGroup
+        label="Light"
+        options={light}
+        value={value}
+        onChange={onChange}
+      />
+      <ColorThemeGroup
+        label="Dark"
+        options={dark}
+        value={value}
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
+function ColorThemeGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: ColorTheme; label: string }[];
+  value: ColorTheme;
+  onChange: (theme: ColorTheme) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+        {label}
+      </p>
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
+        {options.map((option) => (
+          <ColorThemeCard
+            key={option.value}
+            value={option.value}
+            label={option.label}
+            selected={value === option.value}
+            onSelect={onChange}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -2174,32 +2069,26 @@ function ColorThemeCard({
       type="button"
       onClick={() => onSelect(value)}
       aria-pressed={selected}
-      className={`group relative cursor-pointer rounded-2xl p-3 transition-all duration-200 ease-out active:scale-[0.98] ${
+      className={`group relative cursor-pointer rounded-2xl px-3 py-2.5 transition-all duration-200 ease-out active:scale-[0.97] ${
         selected
-          ? "bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+          ? "bg-accent-dim shadow-[inset_0_0_0_1.5px_rgba(245,132,20,0.45)]"
           : "bg-bg-secondary/35 hover:bg-bg-secondary/55 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[13px] font-medium text-heading">{label}</p>
-          <p className="text-[11px] text-text-faint mt-0.5">
-            {value === "system" ? "Follows your OS" : `${label} palette`}
-          </p>
-        </div>
+      {selected && (
         <span
-          className={`inline-flex h-5 w-5 items-center justify-center rounded-full transition-colors ${
-            selected ? "bg-accent text-bg" : "bg-surface text-text-faint shadow-[inset_0_0_0_1px_rgba(20,20,20,0.08)]"
-          }`}
+          aria-hidden
+          className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-bg"
         >
           <IconCheck />
         </span>
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        {swatches.map((swatch) => (
+      )}
+      <p className="text-left text-[12.5px] font-medium text-heading">{label}</p>
+      <div className="mt-2 flex items-center gap-1.5">
+        {swatches.map((swatch, i) => (
           <span
-            key={swatch}
-            className="block h-6 flex-1 rounded-full shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
+            key={i}
+            className="block h-5 flex-1 rounded-full shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
             style={{ background: swatch }}
           />
         ))}
@@ -2216,12 +2105,20 @@ function themePreview(theme: ColorTheme): string[] {
       return ["#faf5e8", "#f58414", "#7a4412"];
     case "white":
       return ["#f8fafc", "#2563eb", "#0f766e"];
-    case "black":
-      return ["#09090b", "#f59e0b", "#34d399"];
     case "pink":
       return ["#fff3f8", "#ec4899", "#be185d"];
     case "blue":
       return ["#eff6ff", "#2563eb", "#0f766e"];
+    case "sage":
+      return ["#eff4ea", "#0f766e", "#65a30d"];
+    case "lavender":
+      return ["#f5f3fc", "#7c3aed", "#c026d3"];
+    case "black":
+      return ["#09090b", "#f59e0b", "#34d399"];
+    case "slate":
+      return ["#0d1117", "#58a6ff", "#56d364"];
+    case "plum":
+      return ["#1a0e1f", "#c084fc", "#f0abfc"];
   }
 }
 

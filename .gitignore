@@ -26,6 +26,7 @@ dist/
 
 # MCP / local tooling config
 .mcp.json
+.codex/
 
 # Dev-server / debug temp files (logs, screenshots, scratch HTML, browser
 # profile dirs left behind by debug scripts). These are local-only and

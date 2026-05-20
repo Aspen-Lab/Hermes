@@ -38,34 +38,48 @@ export async function runFeedPipeline(
   const topN = req.topN ?? brief.controls.paperCount;
   const requestedTier = req.aiTier ?? feedTierFromEnv();
   const includeNonPaperResults = shouldIncludeNonPaperResults(req);
-  const tavilyDiscovery = requestedTier >= 1
-    ? await runTavilyDiscovery(req, brief)
-    : { queryBoosts: [], resultCount: 0 };
-  const retrievalQueries = mergeRetrievalQueries(
-    brief.generatedQueries,
-    tavilyDiscovery.queryBoosts,
-  );
 
-  const fetchResults = await Promise.allSettled(
+  // Tavily discovery used to gate source fetch on its boost queries, but
+  // that added a serial 1-2s before sources even started. Run both in
+  // parallel — sources use the base generated queries, Tavily only feeds
+  // connectorStats. Boost re-injection can come back as a 2nd wave if we
+  // need it for relevance.
+  const tavilyPromise: Promise<{ queryBoosts: string[]; resultCount: number }> =
+    requestedTier >= 1
+      ? runTavilyDiscovery(req, brief).catch(() => ({
+          queryBoosts: [],
+          resultCount: 0,
+        }))
+      : Promise.resolve({ queryBoosts: [], resultCount: 0 });
+
+  const fetchPromise = Promise.allSettled(
     sources.map((s) =>
-      bySourceId[s].fetch({
-        topics: req.topics,
-        queries: retrievalQueries,
-        methods: req.methods,
-        venues: req.venues,
-        avoid: brief.avoid,
-        timeWindow: brief.timeWindow,
-        limit: perSourceLimit,
-        webSearch:
-          s === "web" && req.searchConnectors?.tavily?.enabled
-            ? {
-                provider: "tavily",
-                tavilyApiKey: req.searchConnectors.tavily.apiKey,
-              }
-            : undefined,
-      }),
+      withSourceTimeout(
+        s,
+        bySourceId[s].fetch({
+          topics: req.topics,
+          queries: brief.generatedQueries,
+          methods: req.methods,
+          venues: req.venues,
+          avoid: brief.avoid,
+          timeWindow: brief.timeWindow,
+          limit: perSourceLimit,
+          webSearch:
+            s === "web" && req.searchConnectors?.tavily?.enabled
+              ? {
+                  provider: "tavily",
+                  tavilyApiKey: req.searchConnectors.tavily.apiKey,
+                }
+              : undefined,
+        }),
+      ),
     ),
   );
+
+  const [tavilyDiscovery, fetchResults] = await Promise.all([
+    tavilyPromise,
+    fetchPromise,
+  ]);
 
   const fetched: Partial<Record<SourceId, number>> = {};
   const errors: Partial<Record<SourceId, string>> = {};
@@ -147,14 +161,27 @@ export async function runFeedPipeline(
   };
 }
 
-function mergeRetrievalQueries(baseQueries: string[], boostedQueries: string[]): string[] {
-  return Array.from(
-    new Set(
-      [...boostedQueries, ...baseQueries]
-        .map((query) => query.trim())
-        .filter(Boolean),
-    ),
-  ).slice(0, 12);
+// Hard wall on a single source's fetch. Internal per-call timeouts (6s)
+// usually catch hung requests, but with up to 3 parallel queries inside a
+// source the worst case can still be ~6s — this guarantees one slow source
+// never drags Promise.allSettled past 8s on the critical path.
+async function withSourceTimeout<T>(
+  sourceId: string,
+  promise: Promise<T>,
+): Promise<T> {
+  const TIMEOUT_MS = 8000;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`[${sourceId}] source-timeout after ${TIMEOUT_MS}ms`)),
+      TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 function feedTierFromEnv(): 0 | 1 | 2 {

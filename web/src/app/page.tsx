@@ -151,6 +151,13 @@ function DiscoveryPage() {
     }
   }, []);
 
+  // Explicit submit: bypass the 400ms debounce. Fired by the send button
+  // and by Enter inside the input.
+  const handleSearchSubmit = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.length >= 2) void searchPapers(query, filters);
+  }, [query, filters, searchPapers]);
+
   // Sync URL with current query + filters (replaceState to avoid history pollution).
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -270,23 +277,25 @@ function DiscoveryPage() {
         {!isSearchMode && (
           <MetaRow profile={profile} />
         )}
+      </header>
+
+      {/* ── Search ── */}
+      <div className="mb-6">
         {!isSearchMode && briefingItems.length > 0 && (
           <BriefingStatus
             total={briefingItems.length}
             unread={unreadCount}
             lastRefresh={lastRefresh}
             closed={briefingClosed}
+            onRefresh={loadFeed}
+            isRefreshing={isLoading}
           />
         )}
-      </header>
-
-      {/* ── Search ── */}
-      <div className="mb-6">
         {/* Composite command bar — input on top, inline tool pills
             below, optional expanded settings panel underneath. Mirrors
             ChatGPT-style "rich input" patterns: one cohesive surface
             instead of an input plus three stacked side cards. */}
-        <div className="rounded-2xl bg-surface shadow-card focus-within:shadow-card-hover transition-shadow">
+        <div className="rounded-3xl bg-surface border border-border shadow-[0_1px_3px_rgba(20,20,20,0.04),0_8px_24px_rgba(20,20,20,0.04)] focus-within:border-border-strong focus-within:shadow-[0_2px_4px_rgba(20,20,20,0.05),0_14px_36px_rgba(20,20,20,0.07)] transition-[box-shadow,border-color] duration-200">
           {/* Input row */}
           <div className="relative">
             <svg
@@ -303,29 +312,39 @@ function DiscoveryPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }
+              }}
               placeholder="Search papers, events, jobs…  (press /)"
-              className="w-full bg-transparent rounded-t-2xl py-3.5 pl-11 pr-16 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none"
+              className="w-full bg-transparent py-4 pl-11 pr-12 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none"
               style={{ fontFamily: "var(--font-sans)" }}
             />
             {query && (
               <button
+                type="button"
                 onClick={() => {
                   setQuery("");
                   setSearchResults([]);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted text-[12px] transition-colors"
-                style={{ fontFamily: "var(--font-sans)" }}
+                aria-label="Clear search"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-faint/70 hover:bg-bg-secondary hover:text-text transition-colors"
               >
-                clear
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+                  <path d="M3 3l6 6M9 3l-6 6" />
+                </svg>
               </button>
             )}
           </div>
 
-          {/* Tools row — compact pills */}
+          {/* Tools row — left: modes pills · right: send action */}
           <div
-            className="flex items-center flex-wrap gap-1.5 px-2.5 pb-2.5 pt-0.5"
+            className="flex items-center justify-between gap-2 px-2.5 pb-2.5 pt-0.5"
             style={{ fontFamily: "var(--font-sans)" }}
           >
+            <div className="flex items-center flex-wrap gap-1.5 min-w-0">
             {/* Auto / AI search toggle */}
             <button
               type="button"
@@ -431,6 +450,33 @@ function DiscoveryPage() {
                 <path d="M2 4l4 4 4-4" />
               </svg>
             </button>
+            </div>
+
+            {/* Right zone — send action */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleSearchSubmit}
+                disabled={query.length < 2 || isSearching}
+                aria-label="Search"
+                title="Search now (Enter)"
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-[background-color,opacity,box-shadow] active:scale-[0.94] ${
+                  query.length >= 2 && !isSearching
+                    ? "bg-accent text-white shadow-[inset_0_-1px_0_rgba(0,0,0,0.12),0_1px_2px_rgba(245,132,20,0.25)] hover:bg-accent/90"
+                    : "bg-bg-secondary text-text-faint/70 cursor-not-allowed"
+                }`}
+              >
+                {isSearching ? (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden className="animate-spin">
+                    <path d="M21 12a9 9 0 1 1-6.2-8.55" />
+                  </svg>
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Expanded panel — only one tool at a time */}
@@ -884,57 +930,82 @@ function BriefingStatus({
   unread,
   lastRefresh,
   closed,
+  onRefresh,
+  isRefreshing,
 }: {
   total: number;
   unread: number;
   lastRefresh: string | null;
   closed: boolean;
+  onRefresh: () => void;
+  isRefreshing: boolean;
 }) {
+  // Sits as a context pill directly above the search box: rounded-full to read
+  // as a tab attached to the input below, with a live accent dot on the left
+  // and a refresh affordance on the right. Mirrors the Codex pattern of a
+  // contextual status chip docked above the command input.
+  const wrapper =
+    "mb-2 flex items-center gap-2.5 rounded-full border pl-3.5 pr-1.5 py-1.5 text-[12px] backdrop-blur-sm";
+  const refreshBtn = (
+    <button
+      type="button"
+      onClick={onRefresh}
+      disabled={isRefreshing}
+      aria-label="Refresh briefing"
+      title="Refresh briefing"
+      className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-text-faint hover:bg-bg hover:text-text-muted transition-colors disabled:opacity-50 disabled:cursor-wait"
+    >
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+        className={isRefreshing ? "animate-spin" : ""}
+      >
+        <path d="M21 12a9 9 0 1 1-3-6.7" />
+        <path d="M21 4v6h-6" />
+      </svg>
+    </button>
+  );
   if (closed) {
     return (
       <div
-        className="mt-6 flex items-center gap-2.5 rounded-full bg-accent-dim border border-accent/20 px-4 py-2 text-[12.5px]"
+        className={`${wrapper} bg-accent/8 border-accent/20`}
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-accent"
-          aria-hidden
-        >
-          <circle cx="12" cy="12" r="9" />
-          <path d="M8 12l3 3 5-6" />
-        </svg>
-        <span className="text-heading font-medium">Briefing closed</span>
-        <span className="text-text-faint">·</span>
-        <span className="text-text-muted">
-          All {total} item{total === 1 ? "" : "s"} reviewed. Back tomorrow with
-          a fresh one.
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+        <span className="text-heading font-medium whitespace-nowrap">Briefing closed</span>
+        <span className="text-text-faint hidden sm:inline">·</span>
+        <span className="text-text-muted truncate hidden sm:inline">
+          all {total} reviewed · back tomorrow
         </span>
+        {refreshBtn}
       </div>
     );
   }
   return (
     <div
-      className="mt-6 flex items-center gap-2 text-[12.5px] text-text-faint"
+      className={`${wrapper} bg-bg-secondary/55 border-border`}
       style={{ fontFamily: "var(--font-sans)" }}
     >
-      <span className="tabular-nums">
-        <span className="text-heading font-medium">{total}</span>{" "}
-        item{total === 1 ? "" : "s"}
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+      <span className="tabular-nums text-text-muted whitespace-nowrap">
+        <span className="text-heading font-medium">{total}</span> item{total === 1 ? "" : "s"}
       </span>
       <span className="text-border-strong">·</span>
-      <span className="tabular-nums">
+      <span className="tabular-nums text-text-muted whitespace-nowrap">
         <span className="text-accent font-medium">{unread}</span> unread
       </span>
-      <span className="text-border-strong">·</span>
-      <span>synced {formatSynced(lastRefresh)}</span>
+      <span className="text-border-strong hidden sm:inline">·</span>
+      <span className="text-text-faint truncate hidden sm:inline">
+        synced {formatSynced(lastRefresh)}
+      </span>
+      {refreshBtn}
     </div>
   );
 }

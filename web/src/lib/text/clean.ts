@@ -177,11 +177,12 @@ function normalizeChemistryAndOperators(text: string): string {
     .replace(/\s+([)\]}])/g, "$1");
 }
 
-export function cleanDisplayText(text: string | null | undefined): string {
-  if (!text) return "";
+export function cleanDisplayText(text: string | null | undefined | number): string {
+  if (text == null || text === "") return "";
+  const str = typeof text === "string" ? text : String(text);
   return normalizeChemistryAndOperators(
     normalizeUnicodeSymbols(
-      normalizeLatex(stripHtmlTags(decodeHtmlEntities(stripHtmlTags(repairCommonMojibake(text))))),
+      normalizeLatex(stripHtmlTags(decodeHtmlEntities(stripHtmlTags(repairCommonMojibake(str))))),
     ),
   )
     .replace(/[ \t]+/g, " ")
@@ -192,7 +193,7 @@ export function cleanDisplayText(text: string | null | undefined): string {
 }
 
 export function cleanDisplayTextOrUndefined(
-  text: string | null | undefined,
+  text: string | null | undefined | number,
 ): string | undefined {
   const cleaned = cleanDisplayText(text);
   return cleaned || undefined;

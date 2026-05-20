@@ -131,19 +131,19 @@ function sourceBadge(
       return {
         label: "arXiv",
         Icon: FileIcon,
-        className: "text-[#b32f2f] bg-[#b32f2f]/10",
+        className: "text-accent bg-accent-dim",
       };
     case "journal":
       return {
         label: "Journal",
         Icon: JournalIcon,
-        className: "text-[#2d6a8a] bg-[#2d6a8a]/10",
+        className: "text-link bg-link-dim",
       };
     case "conference":
       return {
         label: "Conference",
         Icon: MicIcon,
-        className: "text-[#7a4ec1] bg-[#7a4ec1]/10",
+        className: "text-tag bg-tag-dim",
       };
     case "repository":
       return {
@@ -182,7 +182,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
             </span>
           )}
           {result.isOpenAccess && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1f7a4d] bg-[#1f7a4d]/10">
+            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em] text-peach bg-peach-dim">
               <LockOpenIcon />
               Open access
             </span>

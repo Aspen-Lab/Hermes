@@ -1,7 +1,9 @@
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import { sourceFetch } from "./_fetch";
 
 const DBLP_API = "https://dblp.org/search/publ/api";
+const MAX_QUERIES = 2;
 
 interface DblpAuthor {
   text?: string;
@@ -37,36 +39,42 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
 
   const limit = query.limit ?? 30;
   const perQuery = Math.max(5, Math.ceil(Math.min(limit, 40) / searchQueries.length));
+
+  const results = await Promise.allSettled(
+    searchQueries.map((q) => fetchOne(q, perQuery)),
+  );
+
   const all: RawItem[] = [];
-
-  for (const searchQuery of searchQueries) {
-    const params = new URLSearchParams({
-      q: searchQuery,
-      format: "json",
-      h: String(perQuery),
-    });
-
-    try {
-      const res = await fetch(`${DBLP_API}?${params}`, {
-        signal: AbortSignal.timeout(7000),
-        next: { revalidate: 900 },
-      });
-      if (!res.ok) {
-        console.error("[dblp] non-ok response:", res.status);
-        continue;
-      }
-      const data = (await res.json()) as DblpResponse;
-      all.push(
-        ...toArray(data.result?.hits?.hit)
-          .map(hitToRawItem)
-          .filter((item): item is RawItem => item !== null),
-      );
-    } catch (err) {
-      console.error("[dblp] fetch error:", err);
-    }
+  for (const r of results) {
+    if (r.status === "fulfilled") all.push(...r.value);
   }
-
   return uniqueById(all).slice(0, limit);
+}
+
+async function fetchOne(searchQuery: string, perQuery: number): Promise<RawItem[]> {
+  const params = new URLSearchParams({
+    q: searchQuery,
+    format: "json",
+    h: String(perQuery),
+  });
+
+  try {
+    const res = await sourceFetch(`${DBLP_API}?${params}`, {
+      timeoutMs: 6000,
+      revalidate: 900,
+    });
+    if (!res.ok) {
+      console.error("[dblp] non-ok response:", res.status);
+      return [];
+    }
+    const data = (await res.json()) as DblpResponse;
+    return toArray(data.result?.hits?.hit)
+      .map(hitToRawItem)
+      .filter((item): item is RawItem => item !== null);
+  } catch (err) {
+    console.error("[dblp] fetch error:", err instanceof Error ? err.message : err);
+    return [];
+  }
 }
 
 function hitToRawItem(hit: DblpHit): RawItem | null {
@@ -99,7 +107,7 @@ function hitToRawItem(hit: DblpHit): RawItem | null {
 
 function buildSearchQueries(query: SourceQuery): string[] {
   const source = query.queries?.length ? query.queries : query.topics;
-  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 4);
+  return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, MAX_QUERIES);
 }
 
 function toArray<T>(value: T | T[] | undefined): T[] {

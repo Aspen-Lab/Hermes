@@ -93,9 +93,15 @@ export type ColorTheme =
   | "system"
   | "cream"
   | "white"
-  | "black"
   | "pink"
-  | "blue";
+  | "blue"
+  | "sage"
+  | "lavender"
+  | "black"
+  | "slate"
+  | "plum";
+
+export type ColorThemeMode = "auto" | "light" | "dark";
 
 export interface UserProfile {
   displayName: string;
@@ -215,13 +221,21 @@ export const defaultProfile: UserProfile = {
   colorTheme: "system",
 };
 
-export const colorThemeOptions: { value: ColorTheme; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "cream", label: "Cream" },
-  { value: "white", label: "White" },
-  { value: "black", label: "Black" },
-  { value: "pink", label: "Pink" },
-  { value: "blue", label: "Blue" },
+export const colorThemeOptions: {
+  value: ColorTheme;
+  label: string;
+  mode: ColorThemeMode;
+}[] = [
+  { value: "system", label: "System", mode: "auto" },
+  { value: "cream", label: "Cream", mode: "light" },
+  { value: "white", label: "White", mode: "light" },
+  { value: "pink", label: "Pink", mode: "light" },
+  { value: "blue", label: "Blue", mode: "light" },
+  { value: "sage", label: "Sage", mode: "light" },
+  { value: "lavender", label: "Lavender", mode: "light" },
+  { value: "black", label: "Black", mode: "dark" },
+  { value: "slate", label: "Slate", mode: "dark" },
+  { value: "plum", label: "Plum", mode: "dark" },
 ];
 
 export const careerStages: CareerStage[] = [
