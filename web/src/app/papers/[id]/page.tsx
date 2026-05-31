@@ -523,8 +523,9 @@ export default function PaperDetailPage({
 
   const feedPapers = useFeedStore((s) => s.papers);
   const savedPapers = useFeedStore((s) => s.savedPapers);
+  const feedbackForId = useFeedStore((s) => s.paperFeedback[id]);
   const markRead = useFeedStore((s) => s.markRead);
-  const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
+  const { savePaper, unsavePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
   const profile = useProfileStore((s) => s.profile);
 
   const [fetchResult, setFetchResult] = useState<{
@@ -551,9 +552,28 @@ export default function PaperDetailPage({
   const storePaperIsEnriched = !!storePaper?.summaryIntro?.trim();
   const fetchedPaperForId = fetchResult.id === id ? fetchResult.paper : null;
   const fetchDoneForId = fetchResult.id === id && fetchResult.done;
-  const paper = storePaperIsEnriched
+  const baseContent = storePaperIsEnriched
     ? storePaper
     : (fetchedPaperForId ?? storePaper ?? undefined);
+  // Merge live state from the store (save flag + feedback) onto the resolved
+  // content. Without this, searched papers — which are fetched, not in the
+  // feed — would never reflect save/like clicks because their state lives in
+  // `paperFeedback` / `savedPapers`, not in the fetched object.
+  // Memoised so the resulting `paper` reference is stable when nothing
+  // material changed — otherwise effects with `paper` in their deps would
+  // refire every render.
+  const isSavedInStore = savedPapers.some((p) => p.id === id);
+  const paper = useMemo(
+    () =>
+      baseContent
+        ? {
+            ...baseContent,
+            isSaved: isSavedInStore || baseContent.isSaved,
+            feedback: feedbackForId ?? baseContent.feedback,
+          }
+        : undefined,
+    [baseContent, isSavedInStore, feedbackForId],
+  );
   const shouldFetchById = isExternalId && !storePaperIsEnriched && !fetchDoneForId;
   const isFetchingById = shouldFetchById;
 
@@ -889,6 +909,7 @@ export default function PaperDetailPage({
           primaryLabel={primaryLabel}
           paper={paper}
           onSave={() => savePaper(paper)}
+          onUnsave={() => unsavePaper(paper.id)}
           onLike={() => moreLikePaper(paper)}
           onDismiss={handleDismiss}
           isSaved={paper.isSaved}
@@ -1488,6 +1509,7 @@ function ActionRow({
   primaryLabel,
   paper,
   onSave,
+  onUnsave,
   onLike,
   onDismiss,
   isSaved,
@@ -1497,6 +1519,7 @@ function ActionRow({
   primaryLabel: string;
   paper: Paper;
   onSave: () => void;
+  onUnsave: () => void;
   onLike: () => void;
   onDismiss: () => void;
   isSaved: boolean;
@@ -1538,9 +1561,9 @@ function ActionRow({
       {/* Save */}
       <button
         type="button"
-        onClick={onSave}
+        onClick={isSaved ? onUnsave : onSave}
         aria-pressed={isSaved}
-        aria-label={isSaved ? "Saved" : "Save"}
+        aria-label={isSaved ? "Remove from saved" : "Save"}
         className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isSaved
             ? "bg-accent/10 text-accent border border-accent/40"
@@ -1560,7 +1583,28 @@ function ActionRow({
         >
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
         </svg>
-        {isSaved ? "Saved" : "Save"}
+        {isSaved ? (
+          <>
+            Saved
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="opacity-70 group-hover:opacity-100 transition-opacity duration-150"
+              aria-hidden
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </>
+        ) : (
+          "Save"
+        )}
       </button>
 
       {/* Cite (BibTeX) */}

@@ -259,11 +259,13 @@ export function LinkChip({
 
 export function ActionBar({
   onSave,
+  onUnsave,
   onDismiss,
   onMore,
   isSaved,
 }: {
   onSave?: () => void;
+  onUnsave?: () => void;
   onDismiss?: () => void;
   onMore?: () => void;
   isSaved?: boolean;
@@ -283,9 +285,9 @@ export function ActionBar({
         {onSave && (
           <button
             type="button"
-            onClick={stop(onSave)}
+            onClick={isSaved ? stop(onUnsave) : stop(onSave)}
             aria-pressed={isSaved}
-            aria-label={isSaved ? "Saved" : "Save"}
+            aria-label={isSaved ? "Remove from saved" : "Save"}
             className={`group/save inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3.5 rounded-full text-[12.5px] font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out active:scale-[0.94] ${
               isSaved
                 ? "bg-accent text-bg shadow-card hover:bg-accent/90"
@@ -308,7 +310,28 @@ export function ActionBar({
             >
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
-            {isSaved ? "Saved" : "Save"}
+            {isSaved ? (
+              <>
+                Saved
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="opacity-70 group-hover/save:opacity-100 transition-opacity duration-150"
+                  aria-hidden
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </>
+            ) : (
+              "Save"
+            )}
           </button>
         )}
 
