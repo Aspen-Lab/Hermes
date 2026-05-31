@@ -18,7 +18,7 @@ function readMinutes(p: Paper): number {
 }
 
 export function PaperCard({ paper }: { paper: Paper }) {
-  const { savePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
+  const { savePaper, unsavePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
   const minutes = readMinutes(paper);
   const typeLabel = reviewPaperLabel(paper);
 
@@ -74,6 +74,7 @@ export function PaperCard({ paper }: { paper: Paper }) {
 
       <ActionBar
         onSave={() => savePaper(paper)}
+        onUnsave={() => unsavePaper(paper.id)}
         onDismiss={() => notInterestedPaper(paper)}
         onMore={() => moreLikePaper(paper)}
         isSaved={paper.isSaved}

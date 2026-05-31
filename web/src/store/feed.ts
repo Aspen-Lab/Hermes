@@ -219,6 +219,9 @@ interface FeedState {
   /** id -> ms timestamp. Drives the "don't repeat papers" exclude list. */
   recentlyShownIds: Record<string, number>;
   pendingDismissal: PendingDismissal | null;
+  /** id -> feedback. Tracks save/like/dismiss state for any paper the user
+   * has interacted with, even ones not in the current feed (e.g. searched). */
+  paperFeedback: Record<string, ItemFeedback>;
 
   loadFeed: () => Promise<void>;
   setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
@@ -267,6 +270,7 @@ export const useFeedStore = create<FeedState>()(
       readItems: {},
       recentlyShownIds: {},
       pendingDismissal: null,
+      paperFeedback: {},
 
       loadFeed: async () => {
         set({ isLoading: true });
@@ -323,6 +327,7 @@ export const useFeedStore = create<FeedState>()(
           savedPapers: s.savedPapers.some((p) => p.id === paper.id)
             ? s.savedPapers.map((p) => (p.id === paper.id ? saved : p))
             : [saved, ...s.savedPapers],
+          paperFeedback: { ...s.paperFeedback, [paper.id]: "saved" },
         }));
         cloudSave(paper.id, "paper", saved);
         get().submitFeedback(paper.id, "paper", "saved");
@@ -341,6 +346,7 @@ export const useFeedStore = create<FeedState>()(
         set((s) => ({
           papers: s.papers.filter((p) => p.id !== paper.id),
           savedPapers: s.savedPapers.filter((p) => p.id !== paper.id),
+          paperFeedback: { ...s.paperFeedback, [paper.id]: "notInterested" },
           pendingDismissal: {
             id: paper.id,
             kind: "paper",
@@ -355,6 +361,7 @@ export const useFeedStore = create<FeedState>()(
           papers: s.papers.map((p) =>
             p.id === paper.id ? { ...p, feedback: "moreLikeThis" as ItemFeedback } : p
           ),
+          paperFeedback: { ...s.paperFeedback, [paper.id]: "moreLikeThis" },
         }));
         get().submitFeedback(paper.id, "paper", "moreLikeThis");
       },
@@ -412,12 +419,17 @@ export const useFeedStore = create<FeedState>()(
       },
 
       unsavePaper: (id) => {
-        set((s) => ({
-          papers: s.papers.map((p) =>
-            p.id === id ? { ...p, isSaved: false, feedback: undefined } : p
-          ),
-          savedPapers: s.savedPapers.filter((p) => p.id !== id),
-        }));
+        set((s) => {
+          const nextFeedback = { ...s.paperFeedback };
+          delete nextFeedback[id];
+          return {
+            papers: s.papers.map((p) =>
+              p.id === id ? { ...p, isSaved: false, feedback: undefined } : p
+            ),
+            savedPapers: s.savedPapers.filter((p) => p.id !== id),
+            paperFeedback: nextFeedback,
+          };
+        });
         cloudUnsave(id);
       },
 
@@ -514,6 +526,7 @@ export const useFeedStore = create<FeedState>()(
           readItems: {},
           recentlyShownIds: {},
           pendingDismissal: null,
+          paperFeedback: {},
           aiPaperSearchEnabled: true,
         });
       },
@@ -527,6 +540,7 @@ export const useFeedStore = create<FeedState>()(
         readItems: state.readItems,
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
         recentlyShownIds: state.recentlyShownIds,
+        paperFeedback: state.paperFeedback,
       }),
     }
   )
