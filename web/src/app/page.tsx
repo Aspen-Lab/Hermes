@@ -20,14 +20,8 @@ import {
   filtersToUrlParams,
   type Filters,
 } from "@/lib/search/filters";
-
-const FEED_AI_PROVIDER_OPTIONS = [
-  { value: "default", label: "Hermes default (site setup)" },
-  { value: "openai", label: "OpenAI / ChatGPT" },
-  { value: "gemini", label: "Google Gemini API" },
-  { value: "anthropic", label: "Anthropic / Claude" },
-  { value: "qwen", label: "Alibaba Qwen / DashScope" },
-] as const;
+import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
+import { OnboardingTour } from "@/components/onboarding-tour";
 
 interface SearchResult {
   id: string;
@@ -79,6 +73,7 @@ function DiscoveryPage() {
     setAiPaperSearchEnabled,
   } = useFeedStore();
   const readItems = useFeedStore((s) => s.readItems);
+  const feedTopicsKey = useFeedStore((s) => s.feedTopicsKey);
   const profile = useProfileStore((s) => s.profile);
   const updateTavilyEnabled = useProfileStore((s) => s.updateTavilyEnabled);
   const updateTavilyApiKey = useProfileStore((s) => s.updateTavilyApiKey);
@@ -118,18 +113,17 @@ function DiscoveryPage() {
   );
 
   useEffect(() => {
-    if (
-      !feedAutoLoadKey ||
-      papers.length > 0 ||
-      isLoading ||
-      attemptedAutoLoadKeyRef.current === feedAutoLoadKey
-    ) {
-      return;
-    }
+    if (!feedAutoLoadKey || isLoading) return;
+    // Reload when the loaded feed's topics differ from the current required
+    // topics — i.e. on first load (key null) AND whenever the user edits topics
+    // after papers were already loaded. The attempted-ref guards against
+    // re-firing for the same key (e.g. on a transient empty result).
+    if (feedTopicsKey === feedAutoLoadKey) return;
+    if (attemptedAutoLoadKeyRef.current === feedAutoLoadKey) return;
 
     attemptedAutoLoadKeyRef.current = feedAutoLoadKey;
     void loadFeed();
-  }, [feedAutoLoadKey, papers.length, isLoading, loadFeed]);
+  }, [feedAutoLoadKey, feedTopicsKey, isLoading, loadFeed]);
 
   const searchPapers = useCallback(async (q: string, f: Filters) => {
     if (q.length < 2) {
@@ -247,6 +241,7 @@ function DiscoveryPage() {
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
   }, [papers, events, jobs, query, activeType]);
 
+  const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
   const totalAll = papers.length + events.length + jobs.length;
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
@@ -295,7 +290,7 @@ function DiscoveryPage() {
             below, optional expanded settings panel underneath. Mirrors
             ChatGPT-style "rich input" patterns: one cohesive surface
             instead of an input plus three stacked side cards. */}
-        <div className="rounded-3xl bg-surface border border-border shadow-[0_1px_3px_rgba(20,20,20,0.04),0_8px_24px_rgba(20,20,20,0.04)] focus-within:border-border-strong focus-within:shadow-[0_2px_4px_rgba(20,20,20,0.05),0_14px_36px_rgba(20,20,20,0.07)] transition-[box-shadow,border-color] duration-200">
+        <div data-tour="search" className="rounded-3xl bg-surface border border-border shadow-[0_1px_3px_rgba(20,20,20,0.04),0_8px_24px_rgba(20,20,20,0.04)] focus-within:border-border-strong focus-within:shadow-[0_2px_4px_rgba(20,20,20,0.05),0_14px_36px_rgba(20,20,20,0.07)] transition-[box-shadow,border-color] duration-200">
           {/* Input row */}
           <div className="relative">
             <svg
@@ -344,7 +339,7 @@ function DiscoveryPage() {
             className="flex items-center justify-between gap-2 px-2.5 pb-2.5 pt-0.5"
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            <div className="flex items-center flex-wrap gap-1.5 min-w-0">
+            <div data-tour="ai-tools" className="flex items-center flex-wrap gap-1.5 min-w-0">
             {/* Auto / AI search toggle */}
             <button
               type="button"
@@ -388,15 +383,7 @@ function DiscoveryPage() {
                 <path d="M11 11l7-7M16 6l3 3M14 8l3 3" />
               </svg>
               <span className="font-medium">
-                {profile.feedAiProvider === "openai"
-                  ? "OpenAI"
-                  : profile.feedAiProvider === "gemini"
-                    ? "Gemini"
-                    : profile.feedAiProvider === "anthropic"
-                      ? "Claude"
-                      : profile.feedAiProvider === "qwen"
-                        ? "Qwen"
-                        : "AI key"}
+                {providerShortLabel(profile.feedAiProvider)}
               </span>
               <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "ai" ? "rotate-180" : ""}`} aria-hidden>
                 <path d="M2 4l4 4 4-4" />
@@ -488,46 +475,13 @@ function DiscoveryPage() {
               <p className="text-[11.5px] leading-relaxed text-text-muted">
                 Use Hermes default or bring your own normal AI key for Tier 2 reranking.
               </p>
-              <div className="space-y-1.5">
-                <label className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                  AI company
-                </label>
-                <select
-                  value={profile.feedAiProvider}
-                  onChange={(e) => updateFeedAiProvider(e.target.value as typeof profile.feedAiProvider)}
-                  className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
-                >
-                  {FEED_AI_PROVIDER_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {profile.feedAiProvider !== "default" && (
-                <div className="space-y-1.5">
-                  <label className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    API key
-                  </label>
-                  <input
-                    type="password"
-                    value={profile.feedAiApiKey ?? ""}
-                    onChange={(e) => updateFeedAiApiKey(e.target.value)}
-                    placeholder={
-                      profile.feedAiProvider === "openai"
-                        ? "OpenAI API key"
-                        : profile.feedAiProvider === "gemini"
-                          ? "Gemini API key"
-                          : profile.feedAiProvider === "qwen"
-                            ? "Qwen / DashScope API key"
-                            : "Anthropic API key"
-                    }
-                    autoComplete="off"
-                    spellCheck={false}
-                    className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
-                  />
-                </div>
-              )}
+              <AiKeyFields
+                provider={profile.feedAiProvider}
+                apiKey={profile.feedAiApiKey ?? ""}
+                onProviderChange={updateFeedAiProvider}
+                onApiKeyChange={updateFeedAiApiKey}
+                idPrefix="feed-ai"
+              />
               <p className="text-[10.5px] leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? profile.feedAiProvider === "default"
@@ -778,12 +732,15 @@ function DiscoveryPage() {
             <>
               {/* One-paragraph synthesized digest. Hides itself if no LLM
                   is configured, so the rest of the feed keeps working. */}
-              <div className="mx-auto max-w-[820px] mt-6">
+              <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
                 <DailyDigest
                   papers={briefingItems
                     .filter((i) => i.kind === "paper")
                     .map((i) => i.data as Paper)}
                   contextHint={[
+                    profile.researchTopics.length > 0
+                      ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+                      : "",
                     profile.currentProject,
                     profile.currentChallenges,
                   ]
@@ -799,6 +756,7 @@ function DiscoveryPage() {
                   <div
                     key={item.data.id}
                     id={item.kind === "paper" ? `paper-${item.data.id}` : undefined}
+                    data-tour={item.data.id === firstPaperId ? "paper-card" : undefined}
                     className="rounded-3xl transition-shadow"
                   >
                     <FeedTile
@@ -818,6 +776,7 @@ function DiscoveryPage() {
           )}
         </>
       )}
+      <OnboardingTour />
     </article>
   );
 }
@@ -1062,13 +1021,12 @@ function SignalBadge({ kind, label }: { kind: SignalKind; label: string }) {
 function MetaRow({
   profile,
 }: {
-  profile: { researchTopics: string[]; preferredMethods: string[]; preferredVenues: string[] };
+  profile: { researchTopics: string[]; preferredMethods: string[] };
 }) {
-  const { researchTopics, preferredMethods, preferredVenues } = profile;
+  const { researchTopics, preferredMethods } = profile;
   const typedSignals: { kind: SignalKind; label: string }[] = [
     ...researchTopics.slice(0, 3).map((label) => ({ kind: "topic" as const, label })),
     ...preferredMethods.slice(0, 2).map((label) => ({ kind: "method" as const, label })),
-    ...preferredVenues.slice(0, 2).map((label) => ({ kind: "venue" as const, label })),
   ];
   const hasAny = typedSignals.length > 0;
   const missingTopics = researchTopics.length === 0;

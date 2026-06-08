@@ -1,0 +1,139 @@
+// DeepSeek via its OpenAI-compatible Chat Completions endpoint. The wire format
+// matches OpenAI exactly, so this mirrors the Qwen provider and only varies the
+// base URL and the model id table.
+//
+// DeepSeek has no public vision model on this endpoint, so `generateVisionJsonText`
+// is intentionally omitted — capability-checking callers (figure extraction) will
+// skip the vision path and degrade gracefully. `deepseek-chat` (DeepSeek-V3) is
+// used for every tier: it's cheap, strong, and reliably supports JSON mode.
+// (`deepseek-reasoner` exists but rejects `response_format`/`temperature`, so we
+// keep to the chat model for predictable structured output.)
+
+import type {
+  DigestProvider,
+  DigestResult,
+  ModelTier,
+} from "./types";
+import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+
+const DEEPSEEK_CHAT_API = "https://api.deepseek.com/chat/completions";
+const DEFAULT_MODEL = "deepseek-chat";
+const SMALL_MODEL = "deepseek-chat";
+const LARGE_MODEL = "deepseek-chat";
+
+function modelForTier(defaultModel: string, tier?: ModelTier): string {
+  if (tier === "large") return LARGE_MODEL;
+  if (tier === "small") return SMALL_MODEL;
+  return defaultModel;
+}
+
+interface DeepseekChatResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | null;
+    };
+  }>;
+}
+
+function apiKeyFromEnv(): string | undefined {
+  return process.env.DEEPSEEK_API_KEY?.trim() || undefined;
+}
+
+async function callDeepseekChat(args: {
+  apiKey: string;
+  model: string;
+  systemPrompt: string;
+  userPrompt: string;
+  maxTokens?: number;
+  jsonMode?: boolean;
+}): Promise<string> {
+  const {
+    apiKey,
+    model,
+    systemPrompt,
+    userPrompt,
+    maxTokens = 1500,
+    jsonMode = true,
+  } = args;
+
+  const res = await fetch(DEEPSEEK_CHAT_API, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: maxTokens,
+      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+    }),
+    signal: AbortSignal.timeout(20000),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`DeepSeek API error ${res.status}: ${detail.slice(0, 400)}`);
+  }
+
+  const data = (await res.json()) as DeepseekChatResponse;
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("DeepSeek returned empty content");
+  return content.trim();
+}
+
+export function createDeepseekProvider(
+  apiKey = apiKeyFromEnv(),
+  defaultModel = DEFAULT_MODEL,
+): DigestProvider {
+  return {
+    id: "deepseek",
+
+    async generateDigest({ papers, contextHint }): Promise<DigestResult> {
+      if (!apiKey) throw new Error("DEEPSEEK_API_KEY not set");
+      const text = await callDeepseekChat({
+        apiKey,
+        model: defaultModel,
+        systemPrompt: DIGEST_SYSTEM_PROMPT,
+        userPrompt: buildUserPrompt(papers, contextHint),
+        maxTokens: 1800,
+      });
+      const parsed = safeParseDigest(text);
+      if (!parsed) throw new Error("Failed to parse digest JSON from DeepSeek");
+      return parsed;
+    },
+
+    async generateJsonText({ systemPrompt, userPrompt, maxTokens = 1500, tier }): Promise<string> {
+      if (!apiKey) throw new Error("DEEPSEEK_API_KEY not set");
+      return callDeepseekChat({
+        apiKey,
+        model: modelForTier(defaultModel, tier),
+        systemPrompt,
+        userPrompt,
+        maxTokens,
+      });
+    },
+
+    async testConnection(): Promise<{ ok: boolean; error?: string }> {
+      if (!apiKey) return { ok: false, error: "DEEPSEEK_API_KEY not set" };
+      try {
+        await callDeepseekChat({
+          apiKey,
+          model: SMALL_MODEL,
+          systemPrompt: "Reply with JSON.",
+          userPrompt: '{"ping":true}',
+          maxTokens: 32,
+        });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: String(err) };
+      }
+    },
+  };
+}
+
+export const deepseekProvider: DigestProvider = createDeepseekProvider();

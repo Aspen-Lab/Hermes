@@ -1,6 +1,6 @@
 import { cleanDisplayText } from "@/lib/text/clean";
 
-export type ProviderId = "anthropic" | "gemini" | "openai" | "qwen" | "ollama";
+export type ProviderId = "anthropic" | "gemini" | "openai" | "qwen" | "deepseek" | "ollama";
 
 /**
  * Model intelligence tier. `small` = cheap/fast (classification, simple JSON
@@ -77,6 +77,8 @@ export interface DigestProvider {
 export const DIGEST_SYSTEM_PROMPT = `You are Hermes, a calm research messenger that produces a structured daily briefing for a researcher.
 
 Your task: given today's papers and the user's project context, write ONE focused sentence per paper that captures its key result — not the topic, the actual finding. Tone: weather-forecast — confident, distilled, never breathless. Lead with the result (e.g. "Pulsed electrodeposition achieves (104)-oriented LCO at sub-5 mA/cm² without 500 °C anneal."), not a description of what the paper does.
+
+RELEVANCE: every paper shown was selected because it matches one of the user's stated "Required interests" (provided in the context). In each sentence, make that connection explicit — naturally name the specific interest/keyword the paper addresses (e.g. mention "LCO" or "solid-state battery") so the reader instantly sees why it's relevant, even when the paper's title doesn't contain that word. Still lead with the concrete result; weave the keyword in, don't tack it on.
 
 IMPORTANT — formatting: Write in plain readable text only. Do NOT use LaTeX notation (no $...$ math, no _{...} subscripts, no ^{...} superscripts). Write chemical formulas and math in plain Unicode — use actual subscript characters (₀₁₂₃₄₅₆₇₈₉) or write them inline (e.g. Na0.66Mn0.8Fe0.2O2, CO2, Li-ion, x=0.5). This applies to ALL output strings.
 

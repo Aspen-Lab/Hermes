@@ -121,14 +121,14 @@ export function Nav() {
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
 
   // Sync CSS variable so <main> padding transitions in lockstep with the
-  // sidebar slide. Done in effect so SSR defaults to the CSS fallback.
+  // sidebar slide. Force 0 on /welcome so the wizard has no sidebar gap.
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.documentElement.style.setProperty(
       "--sidebar-offset",
-      sidebarOpen ? "13rem" : "0px",
+      pathname === "/welcome" ? "0px" : sidebarOpen ? "13rem" : "0px",
     );
-  }, [sidebarOpen]);
+  }, [sidebarOpen, pathname]);
 
   const savedCount =
     useFeedStore((s) => s.savedPapers.length) +
@@ -145,6 +145,9 @@ export function Nav() {
     papers.filter((p) => !readItems[p.id]).length +
     events.filter((e) => !readItems[e.id]).length +
     jobs.filter((j) => !readItems[j.id]).length;
+
+  // The onboarding wizard is a focused, full-screen experience — no app chrome.
+  if (pathname === "/welcome") return null;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -163,6 +166,11 @@ export function Nav() {
 
   return (
     <>
+      {/* Spacer that pushes page content below the fixed mobile top bar.
+          Lives here (not in <main>) so /welcome, which returns null before
+          this JSX, gets no top gap at all. */}
+      <div className="h-12 lg:hidden" aria-hidden />
+
       {/* Mobile: top bar — [Logo] [Tabs] [UserMenu]. The floating
           UserMenu/GithubStars in layout.tsx is desktop-only, so the
           account control lives inline here. */}

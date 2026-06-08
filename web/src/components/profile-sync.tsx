@@ -19,7 +19,6 @@ function hasAnySignal(p: UserProfile): boolean {
   return (
     p.researchTopics.length > 0 ||
     p.preferredMethods.length > 0 ||
-    p.preferredVenues.length > 0 ||
     p.locationPreferences.length > 0
   );
 }

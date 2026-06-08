@@ -90,6 +90,11 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists disliked_topics text[] not null default '{}';
 
+-- Concept-keyed feedback ledger. Like and Save add equal positive evidence;
+-- Not interested adds negative evidence only after its undo window commits.
+alter table public.profiles
+  add column if not exists preference_ledger jsonb not null default '{}'::jsonb;
+
 -- Search controls (profiles extension)
 -- Human-readable knobs for the paper-finding plan. These map to query
 -- expansion, source mix, time window, and ranking policy.
@@ -125,6 +130,9 @@ alter table public.profiles
     check (digest_channel in ('inapp','email','both')),
   add column if not exists digest_frequency  text     not null default 'daily'
     check (digest_frequency in ('daily','weekdays','weekly','off')),
+  -- Optional custom recipient for the email digest. When null/blank, the cron
+  -- falls back to the user's auth (OAuth) email.
+  add column if not exists digest_email      text,
   add column if not exists color_theme       text     not null default 'system'
     check (color_theme in ('system','cream','white','black','pink','blue'));
 
@@ -203,8 +211,12 @@ create table if not exists public.feedback_events (
   item_id    text not null,
   item_kind  text not null check (item_kind in ('paper','event','job')),
   feedback   text not null check (feedback in ('liked','saved','notInterested','moreLikeThis')),
+  payload    jsonb,
   created_at timestamptz not null default now()
 );
+
+alter table public.feedback_events
+  add column if not exists payload jsonb;
 
 create index if not exists feedback_events_user_time_idx
   on public.feedback_events (user_id, created_at desc);

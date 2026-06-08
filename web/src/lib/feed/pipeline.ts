@@ -1,12 +1,14 @@
 import { bySourceId } from "@/lib/sources";
 import type { SourceId, RawItem } from "@/lib/sources/types";
 import { scoreItems } from "@/lib/scoring";
+import type { ScoredItem } from "@/lib/scoring/types";
 import { dedupItems } from "./dedup";
 import { applyTier1Rerank } from "./rerank";
 import { applyTier2Rerank } from "./tier2-rerank";
 import { briefToSeedTexts, compileSearchBrief } from "./profile-compiler";
 import type { FeedRequest, FeedResponse } from "./types";
 import { runTavilyDiscovery } from "./tavily-discovery";
+import { fetchCitationNeighborhood } from "@/lib/affiliation/openalex";
 
 const ACADEMIC_PAPER_SOURCES: SourceId[] = [
   "openalex",
@@ -76,9 +78,22 @@ export async function runFeedPipeline(
     ),
   );
 
-  const [tavilyDiscovery, fetchResults] = await Promise.all([
+  // Advisor citation-neighborhood discovery, in parallel with the sources.
+  // Always degrades to [] on any error (the helper is fully guarded).
+  if (req.affiliation?.authorId) {
+    console.log(
+      `[affiliation] feed request includes advisor ${req.affiliation.authorId}, ${req.affiliation.seedWorkIds?.length ?? 0} seed work ids`,
+    );
+  }
+  const affiliationPromise: Promise<RawItem[]> =
+    req.affiliation?.authorId && (req.affiliation.seedWorkIds?.length ?? 0) > 0
+      ? fetchCitationNeighborhood(req.affiliation.seedWorkIds!).catch(() => [])
+      : Promise.resolve([]);
+
+  const [tavilyDiscovery, fetchResults, affiliationItems] = await Promise.all([
     tavilyPromise,
     fetchPromise,
+    affiliationPromise,
   ]);
 
   const fetched: Partial<Record<SourceId, number>> = {};
@@ -96,6 +111,14 @@ export async function runFeedPipeline(
     }
   });
 
+  // Merge advisor neighborhood papers into the candidate pool. They're OpenAlex
+  // works, so they flow through dedup + scoring like any other source, and the
+  // advisor seed-text bias (passed in seedTexts) floats the relevant ones up.
+  if (affiliationItems.length > 0) {
+    console.log(`[affiliation] +${affiliationItems.length} citation-neighborhood candidates merged`);
+    allItems.push(...affiliationItems);
+  }
+
   const beforeDedup = allItems.length;
   const paperItems = includeNonPaperResults
     ? allItems
@@ -104,6 +127,10 @@ export async function runFeedPipeline(
   const afterDedup = deduped.length;
 
   const seedTexts = briefToSeedTexts(req, brief);
+  const userNegativeTopics = req.negativeTopics ?? [];
+  const policyAvoidTopics = brief.avoid.filter(
+    (topic) => !userNegativeTopics.includes(topic),
+  );
   const scored = scoreItems(
     deduped,
     {
@@ -111,7 +138,9 @@ export async function runFeedPipeline(
       methods: req.methods,
       venues: req.venues,
       seedTexts,
-      negativeTopics: [...(req.negativeTopics ?? []), ...brief.avoid],
+      preferenceLedger: req.preferenceLedger,
+      negativeTopics: policyAvoidTopics,
+      legacyNegativeTopics: userNegativeTopics,
       sourceWeights: req.sourceWeights,
     },
     req.weights,
@@ -121,6 +150,10 @@ export async function runFeedPipeline(
   const ranked = requestedTier >= 2
     ? await applyTier2Rerank(tier1Ranked, brief, req.llmOverride)
     : tier1Ranked;
+  // Preferred-journal boost: applied LAST (after every rerank) so a paper
+  // published in one of the user's preferred journals reliably floats up,
+  // while an exceptionally strong non-journal match can still outrank it.
+  const journalRanked = applyJournalBoost(ranked, req.venues ?? []);
   // Don't show items the caller already showed this user recently. Run
   // AFTER ranking so the score reflects the full candidate pool, but BEFORE
   // slicing so we still return `topN` fresh items.
@@ -128,8 +161,8 @@ export async function runFeedPipeline(
     ? new Set(req.excludeIds)
     : null;
   const fresh = excludeIds
-    ? ranked.filter((item) => !excludeIds.has(item.id))
-    : ranked;
+    ? journalRanked.filter((item) => !excludeIds.has(item.id))
+    : journalRanked;
   const returned = fresh.slice(0, topN);
 
   return {
@@ -182,6 +215,45 @@ async function withSourceTimeout<T>(
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+// Papers from a preferred journal get +1/3 of their own relevance score.
+const JOURNAL_BOOST_FACTOR = 4 / 3;
+
+function normalizeVenue(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[.\-_/&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Multiply the relevance score of items whose venue matches one of the user's
+// preferred journals. Clamped to 1.0 to keep the 0–1 score contract; across the
+// normal score range this still lets a much stronger non-journal match win.
+function applyJournalBoost(items: ScoredItem[], journals: string[]): ScoredItem[] {
+  const needles = journals.map(normalizeVenue).filter(Boolean);
+  if (needles.length === 0) return items;
+
+  let changed = false;
+  const boosted = items.map((item) => {
+    const venue = normalizeVenue(item.venue ?? "");
+    if (!venue) return item;
+    const isPreferred = needles.some(
+      (n) => venue.includes(n) || n.includes(venue),
+    );
+    if (!isPreferred) return item;
+    changed = true;
+    const score = Math.min(1, item.score * JOURNAL_BOOST_FACTOR);
+    return {
+      ...item,
+      score,
+      scoreBreakdown: { ...item.scoreBreakdown, combined: score },
+    };
+  });
+
+  // Only re-sort if at least one item actually moved.
+  return changed ? boosted.sort((a, b) => b.score - a.score) : items;
 }
 
 function feedTierFromEnv(): 0 | 1 | 2 {

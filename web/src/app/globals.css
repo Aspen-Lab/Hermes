@@ -329,13 +329,17 @@ html[data-scroll-behavior="smooth"] { scroll-behavior: smooth; }
    top bar there). */
 :root { --sidebar-offset: 0px; }
 
+/* Sidebar offset — controlled by JS via --sidebar-offset.
+   The /welcome wizard zeroes the variable (in Nav's useEffect), so no
+   gap appears there even though the rule applies to the same <main>. */
 @media (min-width: 1024px) {
   :root { --sidebar-offset: 13rem; }
-  main {
+  main.hermes-main-content {
     padding-left: var(--sidebar-offset, 13rem);
     transition: padding-left 350ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
+
 
 body {
   background: var(--color-bg);

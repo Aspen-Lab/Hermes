@@ -7,6 +7,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { UserProfile } from "@/types";
+import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
 
 // ── DB ↔ client type mapping ────────────────────────────────────
 
@@ -15,7 +16,6 @@ interface ProfileRow {
   display_name: string | null;
   research_topics: string[];
   preferred_methods: string[];
-  preferred_venues: string[];
   location_preferences: string[];
   career_stage: string | null;
   industry_vs_academia: string | null;
@@ -24,6 +24,7 @@ interface ProfileRow {
   current_project: string | null;
   current_challenges: string | null;
   disliked_topics: string[];
+  preference_ledger?: unknown;
   feed_focus: UserProfile["feedFocus"];
   feed_freshness: UserProfile["feedFreshness"];
   paper_count: UserProfile["paperCount"];
@@ -40,6 +41,7 @@ interface ProfileRow {
   digest_timezone: string;
   digest_channel: UserProfile["digestChannel"];
   digest_frequency: UserProfile["digestFrequency"];
+  digest_email: string | null;
   color_theme: UserProfile["colorTheme"];
   updated_at: string;
 }
@@ -49,7 +51,6 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
     displayName: row.display_name ?? undefined,
     researchTopics: row.research_topics,
     preferredMethods: row.preferred_methods,
-    preferredVenues: row.preferred_venues,
     locationPreferences: row.location_preferences,
     careerStage: (row.career_stage ?? undefined) as UserProfile["careerStage"] | undefined,
     industryVsAcademia: (row.industry_vs_academia ?? undefined) as
@@ -60,6 +61,9 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
     currentProject: row.current_project ?? undefined,
     currentChallenges: row.current_challenges ?? undefined,
     dislikedTopics: row.disliked_topics ?? [],
+    preferenceLedger: cleanPreferenceLedger(
+      row.preference_ledger as UserProfile["preferenceLedger"],
+    ),
     feedFocus: row.feed_focus,
     feedFreshness: row.feed_freshness,
     paperCount: row.paper_count,
@@ -70,11 +74,12 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
     feedAvoidReviews: row.feed_avoid_reviews,
     feedAvoidOldPapers: row.feed_avoid_old_papers,
     feedAvoidBroadSurveys: row.feed_avoid_broad_surveys,
-    lab: row.lab ?? undefined,
+    advisorName: row.lab ?? undefined,
     digestEnabled: row.digest_enabled,
     digestHourLocal: row.digest_hour_local,
     digestTimezone: row.digest_timezone,
     digestChannel: row.digest_channel,
+    digestEmail: row.digest_email ?? undefined,
     digestFrequency: row.digest_frequency,
     colorTheme: row.color_theme,
   };
@@ -88,7 +93,6 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.displayName !== undefined) row.display_name = p.displayName;
   if (p.researchTopics !== undefined) row.research_topics = p.researchTopics;
   if (p.preferredMethods !== undefined) row.preferred_methods = p.preferredMethods;
-  if (p.preferredVenues !== undefined) row.preferred_venues = p.preferredVenues;
   if (p.locationPreferences !== undefined) row.location_preferences = p.locationPreferences;
   if (p.careerStage !== undefined) row.career_stage = p.careerStage;
   if (p.industryVsAcademia !== undefined) row.industry_vs_academia = p.industryVsAcademia;
@@ -97,6 +101,9 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.currentProject !== undefined) row.current_project = p.currentProject;
   if (p.currentChallenges !== undefined) row.current_challenges = p.currentChallenges;
   if (p.dislikedTopics !== undefined) row.disliked_topics = p.dislikedTopics;
+  if (p.preferenceLedger !== undefined) {
+    row.preference_ledger = cleanPreferenceLedger(p.preferenceLedger);
+  }
   if (p.feedFocus !== undefined) row.feed_focus = p.feedFocus;
   if (p.feedFreshness !== undefined) row.feed_freshness = p.feedFreshness;
   if (p.paperCount !== undefined) row.paper_count = p.paperCount;
@@ -107,11 +114,13 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.feedAvoidReviews !== undefined) row.feed_avoid_reviews = p.feedAvoidReviews;
   if (p.feedAvoidOldPapers !== undefined) row.feed_avoid_old_papers = p.feedAvoidOldPapers;
   if (p.feedAvoidBroadSurveys !== undefined) row.feed_avoid_broad_surveys = p.feedAvoidBroadSurveys;
-  if (p.lab !== undefined) row.lab = p.lab;
+  // advisorName persists in the legacy `lab` column (no DB migration needed).
+  if (p.advisorName !== undefined) row.lab = p.advisorName;
   if (p.digestEnabled !== undefined) row.digest_enabled = p.digestEnabled;
   if (p.digestHourLocal !== undefined) row.digest_hour_local = p.digestHourLocal;
   if (p.digestTimezone !== undefined) row.digest_timezone = p.digestTimezone;
   if (p.digestChannel !== undefined) row.digest_channel = p.digestChannel;
+  if (p.digestEmail !== undefined) row.digest_email = p.digestEmail;
   if (p.digestFrequency !== undefined) row.digest_frequency = p.digestFrequency;
   if (p.colorTheme !== undefined) row.color_theme = p.colorTheme;
   return row;
@@ -155,11 +164,32 @@ export async function PUT(request: NextRequest) {
   const body = (await request.json()) as Partial<UserProfile>;
   const row = profileToRow(body, user.id);
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("profiles")
     .upsert(row, { onConflict: "user_id" })
     .select()
     .single();
+
+  // Graceful fallback: if the optional digest_email column hasn't been added to
+  // the DB yet (migration not run), drop it and retry so the rest of the profile
+  // still syncs. The email simply won't persist server-side until migrated.
+  if (error && "digest_email" in row && /digest_email/.test(error.message)) {
+    delete row.digest_email;
+    ({ data, error } = await supabase
+      .from("profiles")
+      .upsert(row, { onConflict: "user_id" })
+      .select()
+      .single());
+  }
+
+  if (error && "preference_ledger" in row && /preference_ledger/.test(error.message)) {
+    delete row.preference_ledger;
+    ({ data, error } = await supabase
+      .from("profiles")
+      .upsert(row, { onConflict: "user_id" })
+      .select()
+      .single());
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -13,6 +13,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { runFeedPipeline } from "@/lib/feed/pipeline";
 import type { FeedControls } from "@/lib/feed/profile-compiler";
 import { sendDigestEmail } from "@/lib/email/send-digest";
+import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
+import type { PreferenceLedger } from "@/types";
 
 function originUrlFor(req: NextRequest): string {
   // Prefer explicit override; fall back to the request origin (Vercel sets
@@ -33,10 +35,10 @@ interface ProfileRow {
   display_name: string | null;
   research_topics: string[];
   preferred_methods: string[];
-  preferred_venues: string[];
   current_project: string | null;
   current_challenges: string | null;
   disliked_topics: string[] | null;
+  preference_ledger?: PreferenceLedger | null;
   feed_focus: FeedControls["focus"] | null;
   feed_freshness: FeedControls["freshness"] | null;
   paper_count: FeedControls["paperCount"] | null;
@@ -52,6 +54,7 @@ interface ProfileRow {
   digest_timezone: string;
   digest_channel: "inapp" | "email" | "both";
   digest_frequency: "daily" | "weekdays" | "weekly" | "off";
+  digest_email: string | null;
 }
 
 // Returns the hour (0–23) of the given instant in the given IANA timezone.
@@ -135,7 +138,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await admin
     .from("profiles")
     .select(
-      "user_id, display_name, research_topics, preferred_methods, preferred_venues, current_project, current_challenges, disliked_topics, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys, digest_enabled, digest_hour_local, digest_timezone, digest_channel, digest_frequency",
+      "user_id, display_name, research_topics, preferred_methods, current_project, current_challenges, disliked_topics, preference_ledger, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys, digest_enabled, digest_hour_local, digest_timezone, digest_channel, digest_frequency, digest_email",
     )
     .eq("digest_enabled", true)
     .neq("digest_frequency", "off");
@@ -202,8 +205,8 @@ export async function GET(req: NextRequest) {
       const feed = await runFeedPipeline({
         topics: row.research_topics,
         methods: row.preferred_methods.length > 0 ? row.preferred_methods : undefined,
-        venues: row.preferred_venues.length > 0 ? row.preferred_venues : undefined,
         seedTexts: seedTextsFromRow(row),
+        preferenceLedger: cleanPreferenceLedger(row.preference_ledger),
         negativeTopics: row.disliked_topics ?? undefined,
         topN: targetCount,
         controls: feedControlsFromRow(row),
@@ -232,8 +235,13 @@ export async function GET(req: NextRequest) {
       // Never block the cron loop on mail failures; they're reported out
       // alongside the per-user result.
       if (row.digest_channel === "email" || row.digest_channel === "both") {
-        const { data: userData } = await admin.auth.admin.getUserById(row.user_id);
-        const to = userData?.user?.email ?? null;
+        // Prefer the user's custom digest address; fall back to their OAuth email.
+        const customEmail = row.digest_email?.trim();
+        let to = customEmail || null;
+        if (!to) {
+          const { data: userData } = await admin.auth.admin.getUserById(row.user_id);
+          to = userData?.user?.email ?? null;
+        }
         if (!to) {
           emailsFailed.push({ user_id: row.user_id, error: "no email on auth user" });
         } else {

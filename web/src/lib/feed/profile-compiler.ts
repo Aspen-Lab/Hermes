@@ -29,7 +29,6 @@ export interface SearchBrief {
   avoid: string[];
   methods: string[];
   materialsOrDatasets: string[];
-  preferredVenues: string[];
   timeWindow: FeedFreshness;
   generatedQueries: string[];
   sourceMix: {
@@ -170,7 +169,6 @@ export function compileSearchBrief(req: FeedRequest): SearchBrief {
     avoid,
     methods,
     materialsOrDatasets: activeQuestions.filter((q) => /data|dataset|material|cathode|anode|electrolyte|benchmark/i.test(q)),
-    preferredVenues: cleanList(req.venues ?? []),
     timeWindow: controls.freshness,
     generatedQueries,
     sourceMix: SOURCE_MIX_WEIGHTS[controls.sourceMix],

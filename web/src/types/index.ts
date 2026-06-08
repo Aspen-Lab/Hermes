@@ -4,6 +4,30 @@ export type PaperSource = "arxiv" | "neurIPS" | "iclr" | "icml" | "chi" | "other
 
 export type ItemFeedback = "liked" | "saved" | "notInterested" | "moreLikeThis";
 
+export type PreferenceConceptSource =
+  | "openalex_topic"
+  | "openalex_keyword"
+  | "openalex_concept"
+  | "paper_keyword"
+  | "legacy_disliked_topic";
+
+export interface PreferenceConcept {
+  key: string;
+  label: string;
+  source: PreferenceConceptSource;
+  confidence?: number;
+}
+
+export interface PreferenceLedgerEntry extends PreferenceConcept {
+  positive: number;
+  negative: number;
+  lastPositiveAt?: string;
+  lastNegativeAt?: string;
+  lastSeenAt: string;
+}
+
+export type PreferenceLedger = Record<string, PreferenceLedgerEntry>;
+
 export interface Paper {
   id: string;
   title: string;
@@ -24,6 +48,7 @@ export interface Paper {
   isSaved: boolean;
   feedback?: ItemFeedback;
   relevanceScore?: number;
+  preferenceSignals?: PreferenceConcept[];
 }
 
 // ── Event ──
@@ -88,7 +113,7 @@ export type FeedSourceMix = "balanced" | "preprints" | "published" | "code" | "w
 export type FeedImportance = "new" | "highlyCited" | "rising";
 export type FeedMethodMode = "mustMatch" | "relatedOk" | "any";
 export type FeedDiscoveryMode = "core" | "adjacent" | "surprise";
-export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic" | "qwen";
+export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic" | "qwen" | "deepseek";
 export type ColorTheme =
   | "system"
   | "cream"
@@ -106,7 +131,6 @@ export type ColorThemeMode = "auto" | "light" | "dark";
 export interface UserProfile {
   displayName: string;
   researchTopics: string[];
-  preferredVenues: string[];
   careerStage: CareerStage;
   industryVsAcademia: IndustryAcademiaPreference;
   locationPreferences: string[];
@@ -129,15 +153,32 @@ export interface UserProfile {
   currentChallenges?: string;
   /**
    * Keywords from papers the user has explicitly disliked. Fed into the
-   * scoring pipeline as negative signal so matching papers rank lower.
+   * scoring pipeline as a legacy negative signal so matching papers rank lower.
+   * New feedback uses `preferenceLedger`, which tracks positive and negative
+   * evidence per concept instead of treating every disliked keyword as a hard
+   * blacklist.
    */
   dislikedTopics?: string[];
+  /**
+   * Time-decayed, concept-keyed feedback ledger. Like and Save add equal
+   * positive evidence; Not interested adds negative evidence after its undo
+   * window commits.
+   */
+  preferenceLedger?: PreferenceLedger;
   /**
    * "Nice to have" topics — papers that match these get a score boost but
    * are not excluded when they don't match. Contrast with researchTopics
    * which act as a hard required-relevance filter.
    */
   softTopics?: string[];
+  /**
+   * Journals the user prefers (e.g. "Advanced Materials", "Nature Materials",
+   * "Science", "JACS"). These are used as a primary paper source AND given a
+   * scoring boost: a paper published in one of these journals has its relevance
+   * score multiplied by 4/3 (+1/3 of its own score). A non-preferred paper that
+   * is a much stronger match can still outrank a preferred-journal paper.
+   */
+  preferredJournals?: string[];
   feedFocus: FeedFocus;
   feedFreshness: FeedFreshness;
   paperCount: 5 | 10;
@@ -148,8 +189,29 @@ export interface UserProfile {
   feedAvoidReviews: boolean;
   feedAvoidOldPapers: boolean;
   feedAvoidBroadSurveys: boolean;
-  /** Lab / group / team within `school`. */
-  lab?: string;
+  /**
+   * The user's advisor / principal investigator (a person's name). Anchors the
+   * affiliation feature. Persisted in the legacy `lab` DB column (no migration).
+   */
+  advisorName?: string;
+  /**
+   * Resolved + user-confirmed OpenAlex author ID for the advisor (e.g.
+   * "A5012345678"). Confirmed once, then permanent. Local-only. When set, the
+   * feed seeds discovery from this author's work.
+   */
+  advisorAuthorId?: string;
+  /** Confirmed human-readable identity, e.g. "Paul V. Braun · Materials Science, University of Illinois". Local-only. */
+  advisorAuthorLabel?: string;
+  /**
+   * Cached discovery seeds derived from the advisor's recent, project-relevant
+   * work. `advisorSeedTexts` (title + short abstract) bias TF-IDF scoring;
+   * `advisorSeedWorkIds` (OpenAlex IDs) anchor the citation-neighborhood pull.
+   * Recomputed monthly (see `advisorSeedsRefreshedAt`). Local-only.
+   */
+  advisorSeedWorkIds?: string[];
+  advisorSeedTexts?: string[];
+  /** ISO timestamp of the last monthly seed recompute. Local-only. */
+  advisorSeedsRefreshedAt?: string | null;
   // Daily-digest preferences. `digestHourLocal` is interpreted in
   // `digestTimezone` (IANA name) by the scheduling cron.
   digestEnabled: boolean;
@@ -157,6 +219,12 @@ export interface UserProfile {
   digestTimezone: string;
   digestChannel: DigestChannel;
   digestFrequency: DigestFrequency;
+  /**
+   * Address the daily email digest is sent to. When blank, the cron falls back
+   * to the user's account (OAuth) email. Synced to the `digest_email` DB column
+   * so the server-side cron can read it.
+   */
+  digestEmail?: string;
   /**
    * Optional per-user Tavily web-search hook. Kept in local browser state so
    * users can bring their own key without writing it into the shared profile
@@ -180,6 +248,16 @@ export interface UserProfile {
    */
   deepReportEnabled: boolean;
   colorTheme: ColorTheme;
+  /**
+   * ISO timestamp of when the user completed (or skipped) the first-run
+   * onboarding wizard. `null` means they have never been through it, which is
+   * what gates the welcome flow. Local-only for now (persisted to localStorage
+   * via the zustand store, NOT synced to the Supabase profile row), so a fresh
+   * browser re-shows onboarding — and clearing localStorage fully resets it,
+   * which keeps local dev testing simple. See `web/supabase/` for the optional
+   * migration to make this cross-device later.
+   */
+  onboardedAt?: string | null;
 }
 
 export const defaultProfile: UserProfile = {
@@ -187,14 +265,15 @@ export const defaultProfile: UserProfile = {
   // Empty by design — first-run users see the profile-setup nudge in the
   // header rather than a feed pre-tuned for someone else's PhD.
   researchTopics: [],
-  preferredVenues: [],
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],
   preferredMethods: [],
   phdYear: 3,
   dislikedTopics: [],
+  preferenceLedger: {},
   softTopics: [],
+  preferredJournals: [],
   feedFocus: "balanced",
   feedFreshness: "week",
   paperCount: 10,
@@ -213,12 +292,14 @@ export const defaultProfile: UserProfile = {
       : "UTC",
   digestChannel: "inapp",
   digestFrequency: "daily",
+  digestEmail: "",
   tavilyEnabled: false,
   tavilyApiKey: "",
   feedAiProvider: "default",
   feedAiApiKey: "",
   deepReportEnabled: false,
   colorTheme: "system",
+  onboardedAt: null,
 };
 
 export const colorThemeOptions: {
@@ -257,17 +338,3 @@ export const industryPreferences: IndustryAcademiaPreference[] = [
   "bigTech",
 ];
 
-export const venueOptions = [
-  "No preference",
-  "NeurIPS",
-  "ICLR",
-  "ICML",
-  "CVPR",
-  "ACL",
-  "EMNLP",
-  "NAACL",
-  "CHI",
-  "KDD",
-  "AAAI",
-  "arXiv",
-];

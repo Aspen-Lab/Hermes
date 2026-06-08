@@ -1,4 +1,5 @@
 import type { RawItem, SourceId } from "@/lib/sources/types";
+import type { PreferenceLedger } from "@/types";
 
 export interface ScoringProfile {
   topics: string[];
@@ -7,7 +8,9 @@ export interface ScoringProfile {
   methods?: string[];
   venues?: string[];
   seedTexts?: string[];
+  preferenceLedger?: PreferenceLedger;
   negativeTopics?: string[];
+  legacyNegativeTopics?: string[];
   sourceWeights?: Partial<Record<SourceId, number>>;
 }
 

@@ -10,6 +10,7 @@ import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
 import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
+import { feedbackSnapshotForPaper } from "@/lib/preferences/ledger";
 
 // ── Cloud-sync helpers (fire-and-forget) ────────────────────────
 // All writes are optimistic: local state already changed before we call
@@ -65,12 +66,13 @@ async function cloudFeedback(
   itemId: string,
   itemKind: ItemKind,
   feedback: ItemFeedback,
+  payload?: unknown,
 ) {
   try {
     await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId, itemKind, feedback }),
+      body: JSON.stringify({ itemId, itemKind, feedback, payload }),
     });
   } catch (err) {
     console.warn("[feed] cloudFeedback failed", err);
@@ -109,30 +111,67 @@ function activeRecentlyShownIds(map: Record<string, number>): string[] {
     .map(([id]) => id);
 }
 
+const SEED_REFRESH_MS = 30 * 24 * 60 * 60 * 1000; // monthly
+
+// Ensure advisor discovery seeds are present and fresh (recomputed at most
+// monthly). Returns the seeds to use for this request; persists fresh ones to
+// the profile store so the next load reuses them.
+async function ensureAdvisorSeeds(
+  profile: UserProfile,
+): Promise<{ seedTexts: string[]; seedWorkIds: string[] }> {
+  const authorId = profile.advisorAuthorId;
+  if (!authorId) return { seedTexts: [], seedWorkIds: [] };
+
+  const cachedTexts = profile.advisorSeedTexts ?? [];
+  const cachedIds = profile.advisorSeedWorkIds ?? [];
+  const refreshedAt = profile.advisorSeedsRefreshedAt
+    ? new Date(profile.advisorSeedsRefreshedAt).getTime()
+    : 0;
+  const fresh = cachedTexts.length > 0 && Date.now() - refreshedAt < SEED_REFRESH_MS;
+  if (fresh) return { seedTexts: cachedTexts, seedWorkIds: cachedIds };
+
+  try {
+    const params = new URLSearchParams({ authorId });
+    const projectText = [profile.currentProject, profile.currentChallenges]
+      .filter(Boolean)
+      .join("\n");
+    if (projectText) params.set("project", projectText);
+    const res = await fetch(`/api/affiliation/seeds?${params}`, { cache: "no-store" });
+    const data = (await res.json()) as { workIds?: string[]; texts?: string[] };
+    if (data.texts && data.texts.length > 0) {
+      useProfileStore.getState().setAdvisorSeeds({
+        workIds: data.workIds ?? [],
+        texts: data.texts,
+      });
+      return { seedTexts: data.texts, seedWorkIds: data.workIds ?? [] };
+    }
+  } catch {
+    // Network/API hiccup — fall back to whatever's cached (possibly empty).
+  }
+  return { seedTexts: cachedTexts, seedWorkIds: cachedIds };
+}
+
 async function fetchRealFeed(
   profile: UserProfile,
-  savedPapers: Paper[] = [],
   aiPaperSearchEnabled = true,
   excludeIds: string[] = [],
 ): Promise<Paper[]> {
   const topics = (profile.researchTopics ?? []).filter(Boolean);
   if (topics.length === 0) return [];
+
+  // Advisor / PI discovery seeds (recomputed monthly). Their text biases TF-IDF
+  // scoring; their work IDs anchor the citation-neighborhood pull in the pipeline.
+  const advisorSeeds = await ensureAdvisorSeeds(profile);
   // Promote project description + open challenges into seedTexts. These get
   // concatenated into the TF-IDF profile string, so papers that mention the
   // user's specific work or the challenges they're hunting bias up the rank.
-  const savedSignals = savedPapers.slice(0, 8).map((paper) =>
-    [
-      paper.title,
-      paper.summaryIntro,
-      paper.summaryExperimentKeywords.join(" "),
-    ].filter(Boolean).join(" "),
-  );
   const seedTexts = [
     profile.currentProject,
     profile.currentChallenges,
-    ...savedSignals,
+    ...advisorSeeds.seedTexts,
   ].filter((s): s is string => Boolean(s && s.trim().length > 0));
   const negativeTopics = (profile.dislikedTopics ?? []).filter((s) => s.trim().length > 0);
+  const preferenceLedger = profile.preferenceLedger ?? {};
   const softTopics = (profile.softTopics ?? []).filter(Boolean);
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
@@ -148,9 +187,25 @@ async function fetchRealFeed(
         topics,
         softTopics: softTopics.length > 0 ? softTopics : undefined,
         methods: profile.preferredMethods,
-        venues: profile.preferredVenues,
+        // Preferred journals double as a primary source filter (venue search)
+        // and earn a relevance boost in the pipeline (see applyJournalBoost).
+        venues:
+          (profile.preferredJournals ?? []).length > 0
+            ? profile.preferredJournals
+            : undefined,
         seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+        preferenceLedger:
+          Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
         negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
+        // Advisor citation-neighborhood discovery (new external work building on
+        // the advisor's seeds). Only sent once an advisor has been confirmed.
+        affiliation:
+          profile.advisorAuthorId && advisorSeeds.seedWorkIds.length > 0
+            ? {
+                authorId: profile.advisorAuthorId,
+                seedWorkIds: advisorSeeds.seedWorkIds,
+              }
+            : undefined,
         topN: profile.paperCount,
         aiTier: aiPaperSearchEnabled
           ? (hasUserLlmOverride ? 2 : undefined)
@@ -202,6 +257,7 @@ interface PendingDismissal {
   id: string;
   kind: DismissalKind;
   item: Paper | Event | Job;
+  previousFeedback?: ItemFeedback;
   expiresAt: number;
 }
 
@@ -214,6 +270,9 @@ interface FeedState {
   savedJobs: Job[];
   isLoading: boolean;
   lastRefresh: string | null;
+  /** The required-topics signature the current `papers` were built from. When
+   *  it diverges from the profile's topics, the feed page reloads automatically. */
+  feedTopicsKey: string | null;
   aiPaperSearchEnabled: boolean;
   readItems: Record<string, true>;
   /** id -> ms timestamp. Drives the "don't repeat papers" exclude list. */
@@ -235,7 +294,12 @@ interface FeedState {
   unsavePaper: (id: string) => void;
   unsaveEvent: (id: string) => void;
   unsaveJob: (id: string) => void;
-  submitFeedback: (itemId: string, type: string, feedback: ItemFeedback) => void;
+  submitFeedback: (
+    itemId: string,
+    type: string,
+    feedback: ItemFeedback,
+    payload?: unknown,
+  ) => void;
   markRead: (id: string) => void;
   markUnread: (id: string) => void;
   undoDismiss: () => void;
@@ -266,6 +330,7 @@ export const useFeedStore = create<FeedState>()(
       savedJobs: [],
       isLoading: false,
       lastRefresh: null,
+      feedTopicsKey: null,
       aiPaperSearchEnabled: true,
       readItems: {},
       recentlyShownIds: {},
@@ -274,10 +339,16 @@ export const useFeedStore = create<FeedState>()(
 
       loadFeed: async () => {
         set({ isLoading: true });
-        const { savedPapers, recentlyShownIds } = get();
+        const { savedPapers, recentlyShownIds, paperFeedback } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
+        // Signature of the required topics this load is built from — must match
+        // the feed page's auto-load key so the page knows the feed is current.
+        const topicsKey = (profile.researchTopics ?? [])
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .join("\n");
 
         // Only exclude active (within TTL) IDs. Saved papers are intentionally
         // allowed to re-surface — the user explicitly bookmarked them and may
@@ -288,14 +359,20 @@ export const useFeedStore = create<FeedState>()(
 
         const realPapers = await fetchRealFeed(
           profile,
-          savedPapers,
           aiPaperSearchEnabled,
           excludeIds,
         );
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
-            ? { ...p, isSaved: true, feedback: "saved" as ItemFeedback }
-            : p,
+            ? {
+                ...p,
+                isSaved: true,
+                feedback: paperFeedback[p.id] ?? ("saved" as ItemFeedback),
+              }
+            : {
+                ...p,
+                feedback: paperFeedback[p.id] ?? p.feedback,
+              },
         );
         // Record what we're about to show so the next load skips them.
         const now = Date.now();
@@ -309,6 +386,7 @@ export const useFeedStore = create<FeedState>()(
           jobs: [],
           isLoading: false,
           lastRefresh: new Date().toISOString(),
+          feedTopicsKey: topicsKey,
           recentlyShownIds: pruneRecentlyShown(nextShown),
         });
       },
@@ -319,7 +397,13 @@ export const useFeedStore = create<FeedState>()(
       },
 
       savePaper: (paper) => {
-        const saved = { ...paper, isSaved: true, feedback: "saved" as ItemFeedback };
+        const alreadySaved = get().savedPapers.some((p) => p.id === paper.id);
+        const previousFeedback = get().paperFeedback[paper.id] ?? paper.feedback;
+        const savedFeedback =
+          previousFeedback === "moreLikeThis" || previousFeedback === "liked"
+            ? previousFeedback
+            : ("saved" as ItemFeedback);
+        const saved = { ...paper, isSaved: true, feedback: savedFeedback };
         set((s) => ({
           papers: s.papers.map((p) =>
             p.id === paper.id ? saved : p
@@ -327,21 +411,25 @@ export const useFeedStore = create<FeedState>()(
           savedPapers: s.savedPapers.some((p) => p.id === paper.id)
             ? s.savedPapers.map((p) => (p.id === paper.id ? saved : p))
             : [saved, ...s.savedPapers],
-          paperFeedback: { ...s.paperFeedback, [paper.id]: "saved" },
+          paperFeedback: { ...s.paperFeedback, [paper.id]: savedFeedback },
         }));
+        if (!alreadySaved) {
+          useProfileStore.getState().recordPaperPreference(saved, "positive");
+        }
         cloudSave(paper.id, "paper", saved);
-        get().submitFeedback(paper.id, "paper", "saved");
+        get().submitFeedback(
+          paper.id,
+          "paper",
+          "saved",
+          feedbackSnapshotForPaper(saved),
+        );
       },
 
       notInterestedPaper: (paper) => {
-        // Persist disliked keywords to profile for long-term negative signal.
-        if (paper.summaryExperimentKeywords.length > 0) {
-          useProfileStore.getState().addDislikedTopics(paper.summaryExperimentKeywords);
-        }
-
         // Commit any previous pending dismissal before starting a new one.
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
+        const previousFeedback = get().paperFeedback[paper.id] ?? paper.feedback;
 
         set((s) => ({
           papers: s.papers.filter((p) => p.id !== paper.id),
@@ -351,19 +439,30 @@ export const useFeedStore = create<FeedState>()(
             id: paper.id,
             kind: "paper",
             item: paper,
+            previousFeedback,
             expiresAt: Date.now() + 4000,
           },
         }));
       },
 
       moreLikePaper: (paper) => {
+        const previous = get().paperFeedback[paper.id] ?? paper.feedback;
+        const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
           papers: s.papers.map((p) =>
             p.id === paper.id ? { ...p, feedback: "moreLikeThis" as ItemFeedback } : p
           ),
           paperFeedback: { ...s.paperFeedback, [paper.id]: "moreLikeThis" },
         }));
-        get().submitFeedback(paper.id, "paper", "moreLikeThis");
+        if (!alreadyLiked) {
+          useProfileStore.getState().recordPaperPreference(paper, "positive");
+        }
+        get().submitFeedback(
+          paper.id,
+          "paper",
+          "moreLikeThis",
+          feedbackSnapshotForPaper(paper),
+        );
       },
 
       saveEvent: (event) => {
@@ -421,10 +520,18 @@ export const useFeedStore = create<FeedState>()(
       unsavePaper: (id) => {
         set((s) => {
           const nextFeedback = { ...s.paperFeedback };
-          delete nextFeedback[id];
+          const currentFeedback = nextFeedback[id];
+          if (currentFeedback === "saved") delete nextFeedback[id];
           return {
             papers: s.papers.map((p) =>
-              p.id === id ? { ...p, isSaved: false, feedback: undefined } : p
+              p.id === id
+                ? {
+                    ...p,
+                    isSaved: false,
+                    feedback:
+                      currentFeedback === "saved" ? undefined : currentFeedback,
+                  }
+                : p
             ),
             savedPapers: s.savedPapers.filter((p) => p.id !== id),
             paperFeedback: nextFeedback,
@@ -447,13 +554,13 @@ export const useFeedStore = create<FeedState>()(
         cloudUnsave(id);
       },
 
-      submitFeedback: (itemId, type, feedback) => {
+      submitFeedback: (itemId, type, feedback, payload) => {
         console.log(`[Hermes] Feedback: ${type} ${itemId} → ${feedback}`);
         const kind =
           type === "paper" || type === "event" || type === "job"
             ? (type as ItemKind)
             : null;
-        if (kind) cloudFeedback(itemId, kind, feedback);
+        if (kind) cloudFeedback(itemId, kind, feedback, payload);
       },
 
       markRead: (id) => {
@@ -478,10 +585,17 @@ export const useFeedStore = create<FeedState>()(
         if (!pending) return;
         set((s) => {
           if (pending.kind === "paper") {
+            const nextFeedback = { ...s.paperFeedback };
+            if (pending.previousFeedback) {
+              nextFeedback[pending.id] = pending.previousFeedback;
+            } else {
+              delete nextFeedback[pending.id];
+            }
             return {
               papers: [pending.item as Paper, ...s.papers].sort(
                 (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
               ),
+              paperFeedback: nextFeedback,
               pendingDismissal: null,
             };
           }
@@ -505,7 +619,18 @@ export const useFeedStore = create<FeedState>()(
       commitDismiss: () => {
         const pending = get().pendingDismissal;
         if (!pending) return;
-        get().submitFeedback(pending.id, pending.kind, "notInterested");
+        if (pending.kind === "paper") {
+          const paper = pending.item as Paper;
+          useProfileStore.getState().recordPaperPreference(paper, "negative");
+          get().submitFeedback(
+            pending.id,
+            pending.kind,
+            "notInterested",
+            feedbackSnapshotForPaper(paper),
+          );
+        } else {
+          get().submitFeedback(pending.id, pending.kind, "notInterested");
+        }
         set({ pendingDismissal: null });
       },
 

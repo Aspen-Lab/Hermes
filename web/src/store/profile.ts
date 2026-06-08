@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import { applyColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
+  Paper,
   CareerStage,
   IndustryAcademiaPreference,
   DigestChannel,
@@ -18,13 +19,17 @@ import type {
   FeedDiscoveryMode,
 } from "@/types";
 import { defaultProfile } from "@/types";
+import {
+  applyPreferenceSignal,
+  conceptsFromPaper,
+} from "@/lib/preferences/ledger";
 
 interface ProfileState {
   profile: UserProfile;
   updateDisplayName: (name: string) => void;
   updateTopics: (topics: string[]) => void;
   updateSoftTopics: (topics: string[]) => void;
-  updateVenues: (venues: string[]) => void;
+  updatePreferredJournals: (journals: string[]) => void;
   updateCareerStage: (stage: CareerStage) => void;
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
   updateLocations: (locations: string[]) => void;
@@ -32,7 +37,13 @@ interface ProfileState {
   updateSchool: (school: string) => void;
   updateCurrentProject: (text: string) => void;
   updateCurrentChallenges: (text: string) => void;
-  addDislikedTopics: (keywords: string[]) => void;
+  recordPaperPreference: (
+    paper: Paper,
+    signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Wipe everything Hermes has learned from likes/saves/dismissals. */
+  resetPreferenceLedger: () => void;
   updateFeedFocus: (value: FeedFocus) => void;
   updateFeedFreshness: (value: FeedFreshness) => void;
   updatePaperCount: (value: 5 | 10) => void;
@@ -43,18 +54,29 @@ interface ProfileState {
   updateFeedAvoidReviews: (value: boolean) => void;
   updateFeedAvoidOldPapers: (value: boolean) => void;
   updateFeedAvoidBroadSurveys: (value: boolean) => void;
-  updateLab: (lab: string) => void;
+  updateAdvisorName: (name: string) => void;
+  /** Lock in the user-confirmed OpenAlex author identity for the advisor. */
+  confirmAdvisorAuthor: (authorId: string, label: string) => void;
+  /** Clear the confirmed advisor identity + its cached seeds (e.g. on "change"). */
+  clearAdvisorAuthor: () => void;
+  /** Store freshly recomputed advisor discovery seeds and stamp the refresh time. */
+  setAdvisorSeeds: (seeds: { workIds: string[]; texts: string[] }) => void;
   updateDigestEnabled: (v: boolean) => void;
   updateDigestHourLocal: (h: number) => void;
   updateDigestTimezone: (tz: string) => void;
   updateDigestChannel: (c: DigestChannel) => void;
   updateDigestFrequency: (f: DigestFrequency) => void;
+  updateDigestEmail: (email: string) => void;
   updateTavilyEnabled: (value: boolean) => void;
   updateTavilyApiKey: (value: string) => void;
   updateFeedAiProvider: (value: UserProfile["feedAiProvider"]) => void;
   updateFeedAiApiKey: (value: string) => void;
   updateDeepReportEnabled: (value: boolean) => void;
   updateColorTheme: (theme: ColorTheme) => void;
+  /** Mark first-run onboarding complete (defaults to now). */
+  completeOnboarding: (at?: string) => void;
+  /** Clear the onboarding flag so the welcome flow shows again (replay / dev). */
+  resetOnboarding: () => void;
   /** Replace local state with a server snapshot. Undefined fields keep local values. */
   hydrateFromRemote: (remote: Partial<UserProfile>) => void;
   logOut: () => void;
@@ -79,8 +101,9 @@ export const useProfileStore = create<ProfileState>()(
       updateSoftTopics: (topics) =>
         set((s) => ({ profile: { ...s.profile, softTopics: topics } })),
 
-      updateVenues: (venues) =>
-        set((s) => ({ profile: { ...s.profile, preferredVenues: venues } })),
+      updatePreferredJournals: (journals) =>
+        set((s) => ({ profile: { ...s.profile, preferredJournals: journals } })),
+
 
       updateCareerStage: (stage) =>
         set((s) => ({ profile: { ...s.profile, careerStage: stage } })),
@@ -113,12 +136,24 @@ export const useProfileStore = create<ProfileState>()(
           profile: { ...s.profile, currentChallenges: text || undefined },
         })),
 
-      addDislikedTopics: (keywords) =>
-        set((s) => {
-          const existing = new Set(s.profile.dislikedTopics ?? []);
-          keywords.forEach((k) => { if (k.trim()) existing.add(k.trim()); });
-          return { profile: { ...s.profile, dislikedTopics: Array.from(existing) } };
-        }),
+      recordPaperPreference: (paper, signal, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyPreferenceSignal(
+              s.profile.preferenceLedger,
+              conceptsFromPaper(paper),
+              signal,
+              {
+                at,
+                requiredTopics: s.profile.researchTopics,
+              },
+            ),
+          },
+        })),
+
+      resetPreferenceLedger: () =>
+        set((s) => ({ profile: { ...s.profile, preferenceLedger: {} } })),
 
       updateFeedFocus: (value) =>
         set((s) => ({ profile: { ...s.profile, feedFocus: value } })),
@@ -141,9 +176,52 @@ export const useProfileStore = create<ProfileState>()(
       updateFeedAvoidBroadSurveys: (value) =>
         set((s) => ({ profile: { ...s.profile, feedAvoidBroadSurveys: value } })),
 
-      updateLab: (lab) =>
+      updateAdvisorName: (name) =>
+        set((s) => {
+          // Do NOT trim here — trimming on every keystroke eats spaces while
+          // the user is still typing. The find() call in AdvisorField trims
+          // before it actually searches.
+          return {
+            profile: {
+              ...s.profile,
+              advisorName: name || undefined,
+              advisorAuthorId: undefined,
+              advisorAuthorLabel: undefined,
+              advisorSeedWorkIds: undefined,
+              advisorSeedTexts: undefined,
+              advisorSeedsRefreshedAt: null,
+            },
+          };
+        }),
+      confirmAdvisorAuthor: (authorId, label) =>
         set((s) => ({
-          profile: { ...s.profile, lab: lab.trim() || undefined },
+          profile: {
+            ...s.profile,
+            advisorAuthorId: authorId,
+            advisorAuthorLabel: label,
+            // Force a seed recompute on next feed load.
+            advisorSeedsRefreshedAt: null,
+          },
+        })),
+      clearAdvisorAuthor: () =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            advisorAuthorId: undefined,
+            advisorAuthorLabel: undefined,
+            advisorSeedWorkIds: undefined,
+            advisorSeedTexts: undefined,
+            advisorSeedsRefreshedAt: null,
+          },
+        })),
+      setAdvisorSeeds: ({ workIds, texts }) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            advisorSeedWorkIds: workIds,
+            advisorSeedTexts: texts,
+            advisorSeedsRefreshedAt: new Date().toISOString(),
+          },
         })),
 
       updateDigestEnabled: (v) =>
@@ -156,6 +234,8 @@ export const useProfileStore = create<ProfileState>()(
         set((s) => ({ profile: { ...s.profile, digestChannel: c } })),
       updateDigestFrequency: (f) =>
         set((s) => ({ profile: { ...s.profile, digestFrequency: f } })),
+      updateDigestEmail: (email) =>
+        set((s) => ({ profile: { ...s.profile, digestEmail: email } })),
       updateTavilyEnabled: (value) =>
         set((s) => ({ profile: { ...s.profile, tavilyEnabled: value } })),
       updateTavilyApiKey: (value) =>
@@ -182,13 +262,19 @@ export const useProfileStore = create<ProfileState>()(
         set((s) => ({ profile: { ...s.profile, colorTheme: theme } }));
       },
 
+      completeOnboarding: (at) =>
+        set((s) => ({
+          profile: { ...s.profile, onboardedAt: at ?? new Date().toISOString() },
+        })),
+      resetOnboarding: () =>
+        set((s) => ({ profile: { ...s.profile, onboardedAt: null } })),
+
       hydrateFromRemote: (remote) =>
         set((s) => {
           const merged: UserProfile = { ...s.profile };
           if (remote.displayName !== undefined) merged.displayName = remote.displayName;
           if (remote.researchTopics !== undefined) merged.researchTopics = remote.researchTopics;
           if (remote.preferredMethods !== undefined) merged.preferredMethods = remote.preferredMethods;
-          if (remote.preferredVenues !== undefined) merged.preferredVenues = remote.preferredVenues;
           if (remote.locationPreferences !== undefined) merged.locationPreferences = remote.locationPreferences;
           if (remote.careerStage !== undefined) merged.careerStage = remote.careerStage;
           if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
@@ -197,7 +283,9 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.currentProject !== undefined) merged.currentProject = remote.currentProject;
           if (remote.currentChallenges !== undefined) merged.currentChallenges = remote.currentChallenges;
           if (remote.dislikedTopics !== undefined) merged.dislikedTopics = remote.dislikedTopics;
+          if (remote.preferenceLedger !== undefined) merged.preferenceLedger = remote.preferenceLedger;
           if (remote.softTopics !== undefined) merged.softTopics = remote.softTopics;
+          if (remote.preferredJournals !== undefined) merged.preferredJournals = remote.preferredJournals;
           if (remote.feedFocus !== undefined) merged.feedFocus = remote.feedFocus;
           if (remote.feedFreshness !== undefined) merged.feedFreshness = remote.feedFreshness;
           if (remote.paperCount !== undefined) merged.paperCount = remote.paperCount;
@@ -208,11 +296,12 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.feedAvoidReviews !== undefined) merged.feedAvoidReviews = remote.feedAvoidReviews;
           if (remote.feedAvoidOldPapers !== undefined) merged.feedAvoidOldPapers = remote.feedAvoidOldPapers;
           if (remote.feedAvoidBroadSurveys !== undefined) merged.feedAvoidBroadSurveys = remote.feedAvoidBroadSurveys;
-          if (remote.lab !== undefined) merged.lab = remote.lab;
+          if (remote.advisorName !== undefined) merged.advisorName = remote.advisorName;
           if (remote.digestEnabled !== undefined) merged.digestEnabled = remote.digestEnabled;
           if (remote.digestHourLocal !== undefined) merged.digestHourLocal = remote.digestHourLocal;
           if (remote.digestTimezone !== undefined) merged.digestTimezone = remote.digestTimezone;
           if (remote.digestChannel !== undefined) merged.digestChannel = remote.digestChannel;
+          if (remote.digestEmail !== undefined) merged.digestEmail = remote.digestEmail;
           if (remote.digestFrequency !== undefined) merged.digestFrequency = remote.digestFrequency;
           if (remote.tavilyEnabled !== undefined) merged.tavilyEnabled = remote.tavilyEnabled;
           if (remote.tavilyApiKey !== undefined) merged.tavilyApiKey = remote.tavilyApiKey;

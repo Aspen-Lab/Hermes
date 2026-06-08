@@ -139,6 +139,7 @@ export function rawItemToPaper(
     publishedDate: item.publishedAt || undefined,
     isSaved: false,
     relevanceScore: options.relevanceScore,
+    preferenceSignals: item.metadata.preferenceSignals,
   };
 }
 
