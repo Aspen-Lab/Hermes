@@ -253,7 +253,7 @@ function DiscoveryPage() {
       key: "all",
       label: "All",
       count: papers.length + events.length + jobs.length,
-      icon: "/logo.png",
+      icon: "/logo-mark.png",
     },
     { key: "papers", label: "Papers", count: papers.length, icon: "/icon-papers.svg" },
     { key: "events", label: "Events", count: events.length, icon: "/icon-events.svg" },
@@ -263,14 +263,29 @@ function DiscoveryPage() {
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
       <div className="mx-auto max-w-[820px]">
-      <header className="mb-8">
-        <Greeting
-          isSearchMode={isSearchMode}
-          displayName={profile.displayName}
-          lastRefresh={lastRefresh}
-        />
+      <header className="mb-8 flex items-center gap-3 sm:gap-5">
+        <div className="min-w-0">
+          <Greeting
+            isSearchMode={isSearchMode}
+            displayName={profile.displayName}
+            lastRefresh={lastRefresh}
+          />
+          {!isSearchMode && (
+            <MetaRow profile={profile} />
+          )}
+        </div>
+        {/* Brand mark — hands + pear, transparent bg so it sits on any
+            theme. Hidden on phones where the greeting needs the room. */}
         {!isSearchMode && (
-          <MetaRow profile={profile} />
+          <Image
+            src="/logo.png"
+            alt=""
+            width={1254}
+            height={356}
+            priority
+            aria-hidden
+            className="hidden sm:block shrink-0 w-[280px] lg:w-[380px] h-auto select-none pointer-events-none"
+          />
         )}
       </header>
 

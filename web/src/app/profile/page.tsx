@@ -383,7 +383,7 @@ function DashboardView({
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src="/logo.png"
+                src="/logo-mark.png"
                 alt=""
                 width={40}
                 height={40}
