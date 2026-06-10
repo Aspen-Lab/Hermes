@@ -55,7 +55,7 @@ export async function matchFigureSemantically(args: {
   if (!args.query.trim() || args.candidates.length === 0) return null;
 
   const systemPrompt = [
-    "You are Hermes, a careful research assistant.",
+    "You are Peer, a careful research assistant.",
     "Match a paper report section to the most relevant figure caption by meaning, not by exact word overlap.",
     "Choose a figure only when the caption clearly supports the section goal.",
     "If none of the captions are a defensible match, return ordinal null.",

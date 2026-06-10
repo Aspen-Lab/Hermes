@@ -2,7 +2,7 @@
 """Extract structured text from a legal PDF.
 
 Returns sectioned body text (Introduction / Methods / Results / Discussion / ...)
-plus a flat list of figure captions. The Hermes deep-report pipeline uses this
+plus a flat list of figure captions. The Peer deep-report pipeline uses this
 output to feed a two-pass LLM workflow (classify -> extract) without needing to
 download the PDF more than once.
 

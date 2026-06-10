@@ -59,9 +59,9 @@ export function renderDigestSubject(items: ScoredItem[]): string {
     month: "short",
     day: "numeric",
   });
-  if (items.length === 0) return `Your Hermes briefing · ${dateStr}`;
+  if (items.length === 0) return `Your Peer briefing · ${dateStr}`;
   const lead = truncate(items[0].title, 50);
-  return `${lead} · Hermes briefing ${dateStr}`;
+  return `${lead} · Peer briefing ${dateStr}`;
 }
 
 export function renderDigestPlaintext(input: DigestTemplateInput): string {
@@ -69,7 +69,7 @@ export function renderDigestPlaintext(input: DigestTemplateInput): string {
   const greet = firstName ? `Hi ${firstName},` : "Hi,";
   const today = formatDate(new Date());
   const lines: string[] = [
-    `HERMES BRIEFING — ${today}`,
+    `PEER BRIEFING — ${today}`,
     "",
     greet,
     "",
@@ -153,12 +153,12 @@ export function renderDigestHtml(input: DigestTemplateInput): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hermes briefing</title>
+<title>Peer briefing</title>
 </head>
 <body style="margin: 0; padding: 0; background: ${BRAND.bg};">
 <!-- Preheader (hidden, shown in inbox preview) -->
 <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
-${esc(items[0]?.title ?? "Your daily Hermes briefing")} — ${items.length} items picked for you
+${esc(items[0]?.title ?? "Your daily Peer briefing")} — ${items.length} items picked for you
 </div>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: ${BRAND.bg};">
@@ -171,7 +171,7 @@ ${esc(items[0]?.title ?? "Your daily Hermes briefing")} — ${items.length} item
         <tr>
           <td style="padding: 28px 24px 20px;">
             <div style="font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; color: ${BRAND.accent}; text-transform: uppercase; margin-bottom: 8px;">
-              HERMES · ${esc(today.toUpperCase())}
+              PEER · ${esc(today.toUpperCase())}
             </div>
             <div style="font-family: Georgia, 'Instrument Serif', serif; font-size: 28px; line-height: 1.15; color: ${BRAND.ink}; font-weight: 600; letter-spacing: -0.01em;">
               ${greet} <span style="font-style: italic; color: ${BRAND.muted};">here's what you missed</span>.
@@ -198,7 +198,7 @@ ${esc(items[0]?.title ?? "Your daily Hermes briefing")} — ${items.length} item
               <a href="${originUrl}/profile" style="color: ${BRAND.ink}; text-decoration: underline;">Edit signals or pause digest</a>
             </div>
             <div style="font-family: -apple-system, sans-serif; font-size: 11px; color: ${BRAND.faint}; margin-top: 12px; line-height: 1.5;">
-              You're receiving this because you enabled daily digests in Hermes. Change preferences or unsubscribe at <a href="${originUrl}/profile" style="color: ${BRAND.faint};">${originUrl}/profile</a>.
+              You're receiving this because you enabled daily digests in Peer. Change preferences or unsubscribe at <a href="${originUrl}/profile" style="color: ${BRAND.faint};">${originUrl}/profile</a>.
             </div>
           </td>
         </tr>

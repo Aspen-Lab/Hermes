@@ -555,7 +555,7 @@ export const useFeedStore = create<FeedState>()(
       },
 
       submitFeedback: (itemId, type, feedback, payload) => {
-        console.log(`[Hermes] Feedback: ${type} ${itemId} → ${feedback}`);
+        console.log(`[Peer] Feedback: ${type} ${itemId} → ${feedback}`);
         const kind =
           type === "paper" || type === "event" || type === "job"
             ? (type as ItemKind)
@@ -657,7 +657,7 @@ export const useFeedStore = create<FeedState>()(
       },
     }),
     {
-      name: "hermes-feed",
+      name: "peer-feed",
       partialize: (state) => ({
         savedPapers: state.savedPapers,
         savedEvents: state.savedEvents,

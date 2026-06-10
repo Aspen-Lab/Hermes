@@ -74,7 +74,7 @@ async function timedFetch(url: string, headers: HeadersInit = {}): Promise<Respo
       signal: controller.signal,
       cache: "no-store",
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "User-Agent": "PeerBot/0.1 (+https://peer.research)",
         Accept: "application/json,text/html;q=0.9,*/*;q=0.8",
         ...headers,
       },

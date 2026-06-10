@@ -8,6 +8,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Skip static assets / images / favicon — auth cookies don't matter there.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|logo.svg|icon-.*\\.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|logo.png|icon-.*\\.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)",
   ],
 };

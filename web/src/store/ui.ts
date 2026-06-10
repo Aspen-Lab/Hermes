@@ -16,6 +16,6 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
     }),
-    { name: "hermes-ui" },
+    { name: "peer-ui" },
   ),
 );

@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     select:
       "id,title,publication_date,authorships,primary_location,open_access,abstract_inverted_index,cited_by_count,doi",
     sort,
-    mailto: "hermes@example.com",
+    mailto: "peer@example.com",
   });
   if (clauses.length > 0) params.set("filter", clauses.join(","));
 

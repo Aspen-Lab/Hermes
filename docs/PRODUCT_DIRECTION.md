@@ -1,15 +1,15 @@
-# Hermes Product Direction
+# Peer Product Direction
 
 Source: https://hermes-admin-eta.vercel.app/
 Captured: 2026-04-30
 
-This document is the durable project guideline for Hermes product and architecture decisions. When future work touches product direction, information architecture, ranking, retrieval, UX, or output design, use this document as the decision filter.
+This document is the durable project guideline for Peer product and architecture decisions. When future work touches product direction, information architecture, ranking, retrieval, UX, or output design, use this document as the decision filter.
 
 If this document conflicts with the live admin site, the live admin site wins.
 
 ## Core Product Idea
 
-Hermes is a calm information agent for career, work, research, and knowledge. It should feel like a daily forecast: concise, precise, and useful enough to check every morning.
+Peer is a calm information agent for career, work, research, and knowledge. It should feel like a daily forecast: concise, precise, and useful enough to check every morning.
 
 The product is not trying to maximize reading volume. It is trying to save the user time.
 
@@ -21,15 +21,15 @@ Hard rule:
 
 1. Time efficiency over information volume
 
-Hermes should reduce noise. The user should receive a small number of high-signal items with clear reasons, not a large pile of generic recommendations.
+Peer should reduce noise. The user should receive a small number of high-signal items with clear reasons, not a large pile of generic recommendations.
 
 2. User-declared intent
 
-The user explicitly declares who they are, what they care about, what project they are working on, and what problems they are trying to solve. Hermes should optimize from that stated intent instead of guessing from scratch.
+The user explicitly declares who they are, what they care about, what project they are working on, and what problems they are trying to solve. Peer should optimize from that stated intent instead of guessing from scratch.
 
 3. File over app
 
-Hermes output should remain portable. Markdown, frontmatter, wikilinks, email, feeds, and JSON are preferred over proprietary lock-in. If Hermes disappears, the user should still own the information.
+Peer output should remain portable. Markdown, frontmatter, wikilinks, email, feeds, and JSON are preferred over proprietary lock-in. If Peer disappears, the user should still own the information.
 
 4. Progressive complexity
 
@@ -37,7 +37,7 @@ A new user should be able to start quickly with a few interests. Power users sho
 
 5. Reliability through degradation
 
-Hermes must remain useful without external LLMs. Cloud APIs improve quality, but the core system should keep working when keys are missing, budgets are exhausted, or external services fail.
+Peer must remain useful without external LLMs. Cloud APIs improve quality, but the core system should keep working when keys are missing, budgets are exhausted, or external services fail.
 
 ## Five-Stage Pipeline
 
@@ -65,7 +65,7 @@ Render to the selected output surface: app feed, Markdown, Obsidian, email, RSS,
 
 ## Three-Tier Intelligence Model
 
-Hermes should use progressive enhancement, not all-or-nothing AI.
+Peer should use progressive enhancement, not all-or-nothing AI.
 
 ### Tier 0: Rule Engine
 
@@ -114,7 +114,7 @@ Design implication: cloud LLMs should add judgment and synthesis, not become a h
 
 ## Source Adapter Direction
 
-Hermes should grow retrieval through adapters, not one-off code paths.
+Peer should grow retrieval through adapters, not one-off code paths.
 
 Target source families:
 
@@ -196,15 +196,15 @@ Before adding or changing a feature, ask:
 5. Can it degrade gracefully when a source, model, or provider fails?
 6. Does it keep output portable where possible?
 7. Does it strengthen the feedback loop?
-8. Does it keep daily Hermes calm and concise?
+8. Does it keep daily Peer calm and concise?
 
-If the answer is mostly no, the feature probably belongs in a later deep-dive mode, a power-user setting, or not in Hermes.
+If the answer is mostly no, the feature probably belongs in a later deep-dive mode, a power-user setting, or not in Peer.
 
 ## Daily Mode vs Deep-Dive Mode
 
-Daily Hermes is passive, concise, and ritual-like. It should provide a small forecast of what matters today.
+Daily Peer is passive, concise, and ritual-like. It should provide a small forecast of what matters today.
 
-Deep-dive Hermes is active, investigative, and more expensive. It may use a planner, sub-agents, human plan review, web crawling, and long-form reports.
+Deep-dive Peer is active, investigative, and more expensive. It may use a planner, sub-agents, human plan review, web crawling, and long-form reports.
 
 Hard boundary:
 

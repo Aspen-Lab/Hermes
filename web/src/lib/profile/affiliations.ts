@@ -1,5 +1,5 @@
 // Curated list of common research affiliations — universities, plus the
-// industry research labs Hermes users tend to come from. Used by the
+// industry research labs Peer users tend to come from. Used by the
 // SchoolAutocomplete dropdown in /profile. Not exhaustive on purpose:
 // the goal is fast match-on-typing for the obvious 80%, with free-text
 // fallback for anything not in the list. ~200 entries is a fine ceiling

@@ -253,7 +253,7 @@ function DiscoveryPage() {
       key: "all",
       label: "All",
       count: papers.length + events.length + jobs.length,
-      icon: "/logo.svg",
+      icon: "/logo.png",
     },
     { key: "papers", label: "Papers", count: papers.length, icon: "/icon-papers.svg" },
     { key: "events", label: "Events", count: events.length, icon: "/icon-events.svg" },
@@ -303,7 +303,7 @@ function DiscoveryPage() {
               <path d="m21 21-4.3-4.3" />
             </svg>
             <input
-              id="hermes-search"
+              id="peer-search"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -348,8 +348,8 @@ function DiscoveryPage() {
               aria-pressed={aiPaperSearchEnabled}
               title={
                 aiPaperSearchEnabled
-                  ? "AI paper search: Hermes uses planning and reranking."
-                  : "Auto search: Hermes uses fixed scoring only."
+                  ? "AI paper search: Peer uses planning and reranking."
+                  : "Auto search: Peer uses fixed scoring only."
               }
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] disabled:opacity-55 disabled:cursor-wait ${
                 aiPaperSearchEnabled
@@ -473,7 +473,7 @@ function DiscoveryPage() {
               style={{ fontFamily: "var(--font-sans)" }}
             >
               <p className="text-[11.5px] leading-relaxed text-text-muted">
-                Use Hermes default or bring your own normal AI key for Tier 2 reranking.
+                Use Peer default or bring your own normal AI key for Tier 2 reranking.
               </p>
               <AiKeyFields
                 provider={profile.feedAiProvider}
@@ -485,9 +485,9 @@ function DiscoveryPage() {
               <p className="text-[10.5px] leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? profile.feedAiProvider === "default"
-                    ? "Uses the AI already connected to this Hermes site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
-                    : "When this is filled in, Hermes forces Tier 2 so your own key actually powers the AI rerank."
-                  : "Turn AI search on to use this. Tier 0 ignores both Hermes default AI and your own key."}
+                    ? "Uses the AI already connected to this Peer site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
+                    : "When this is filled in, Peer forces Tier 2 so your own key actually powers the AI rerank."
+                  : "Turn AI search on to use this. Tier 0 ignores both Peer default AI and your own key."}
               </p>
             </div>
           )}
@@ -527,10 +527,10 @@ function DiscoveryPage() {
               </div>
               <p className="text-[10.5px] leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
-                  ? "Using the AI connected to this Hermes site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
+                  ? "Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
                   : !profile.feedAiApiKey?.trim()
                   ? "Set your own AI provider and key in the AI key panel first. Deep report uses your key — both a cheap model (classify) and a smart model (extract) get called per paper."
-                  : "When on, Hermes downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}
+                  : "When on, Peer downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}
               </p>
             </div>
           )}
@@ -571,7 +571,7 @@ function DiscoveryPage() {
               />
               <p className="text-[10.5px] leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
-                  ? "Used only as a paper-discovery helper. Hermes still reruns academic sources before ranking."
+                  ? "Used only as a paper-discovery helper. Peer still reruns academic sources before ranking."
                   : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
               </p>
             </div>
@@ -713,7 +713,7 @@ function DiscoveryPage() {
             <div className="mx-auto max-w-[820px]">
               <EmptyState
                 title="Your briefing is still waking up."
-                description="Tell Hermes what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that."
+                description="Tell Peer what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that."
                 action={
                   <Link
                     href="/profile"
@@ -807,7 +807,7 @@ function Greeting({
   }
 
   const firstName =
-    displayName && displayName !== "Hermes Member"
+    displayName && displayName !== "Peer Member"
       ? displayName.trim().split(/\s+/)[0]
       : "";
 

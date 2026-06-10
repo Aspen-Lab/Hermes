@@ -66,8 +66,8 @@ async function downloadPdf(url: string): Promise<{ bytes: Buffer; finalUrl: stri
       signal: controller.signal,
       cache: "no-store",
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
-        "X-Hermes-Text-Version": FETCH_VERSION,
+        "User-Agent": "PeerBot/0.1 (+https://peer.research)",
+        "X-Peer-Text-Version": FETCH_VERSION,
         Accept: "application/pdf,*/*;q=0.8",
       },
     });
@@ -161,7 +161,7 @@ export async function tryExtractPdfText(url: string): Promise<PdfTextResult> {
     return { ok: false, reason: download.error };
   }
 
-  const tempDir = await mkdtemp(path.join(tmpdir(), "hermes-pdftext-"));
+  const tempDir = await mkdtemp(path.join(tmpdir(), "peer-pdftext-"));
   const pdfPath = path.join(tempDir, "paper.pdf");
 
   try {

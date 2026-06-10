@@ -97,7 +97,7 @@ export function useResolvedFigure({
               caption: null,
               source: null,
               status: "source_unavailable",
-              reason: "Hermes could not load the figure service response.",
+              reason: "Peer could not load the figure service response.",
               hideFigure: false,
               matchedBy: null,
             });
@@ -134,7 +134,7 @@ export function useResolvedFigure({
             caption: null,
             source: null,
             status: "source_unavailable",
-            reason: "Hermes could not reach a usable figure source.",
+            reason: "Peer could not reach a usable figure source.",
             hideFigure: false,
             matchedBy: null,
           });
@@ -279,15 +279,15 @@ function noticeTitle(status: FigureState["status"]): string {
 
 function defaultReason(status: FigureState["status"]): string {
   if (status === "caption_mismatch") {
-    return "Hermes reached a real figure source, but it could not confidently match a figure to this report section.";
+    return "Peer reached a real figure source, but it could not confidently match a figure to this report section.";
   }
   if (status === "no_figures") {
-    return "Hermes reached the source page, but it did not expose extractable figures.";
+    return "Peer reached the source page, but it did not expose extractable figures.";
   }
   if (status === "paywalled") {
-    return "Hermes reached the source, but figure access appears restricted.";
+    return "Peer reached the source, but figure access appears restricted.";
   }
-  return "Hermes could not reach a usable figure source.";
+  return "Peer could not reach a usable figure source.";
 }
 
 function sourceLabel(source: string | null): string {

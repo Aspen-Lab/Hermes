@@ -121,7 +121,7 @@ export function KeyboardLayer() {
       switch (e.key) {
         case "/": {
           const input = document.getElementById(
-            "hermes-search",
+            "peer-search",
           ) as HTMLInputElement | null;
           if (input) {
             input.focus();
@@ -180,8 +180,8 @@ export function KeyboardLayer() {
   // External trigger from UI (e.g. sidebar "?" button)
   useEffect(() => {
     const toggle = () => setHelpOpen((v) => !v);
-    window.addEventListener("hermes:toggle-help", toggle);
-    return () => window.removeEventListener("hermes:toggle-help", toggle);
+    window.addEventListener("peer:toggle-help", toggle);
+    return () => window.removeEventListener("peer:toggle-help", toggle);
   }, []);
 
   return (

@@ -1,6 +1,6 @@
 # Gemini Vertex AI — Local Setup
 
-For developers running Hermes locally with a Google Cloud Vertex AI service-account JSON key. Once the BYOK UI ships (see [BLUEPRINT_byok_and_providers.md](BLUEPRINT_byok_and_providers.md)), end users won't need this — they'll paste their key into the app instead. This walkthrough is for the operator-mode env-var path.
+For developers running Peer locally with a Google Cloud Vertex AI service-account JSON key. Once the BYOK UI ships (see [BLUEPRINT_byok_and_providers.md](BLUEPRINT_byok_and_providers.md)), end users won't need this — they'll paste their key into the app instead. This walkthrough is for the operator-mode env-var path.
 
 ## What you have
 
@@ -24,10 +24,10 @@ A `.json` service-account key file from GCP. It looks like:
 Pick a location your dev machine controls but git doesn't see. On Windows:
 
 ```
-C:\Users\wbc13\.gcp\hermes-vertex-key.json
+C:\Users\wbc13\.gcp\peer-vertex-key.json
 ```
 
-Copy your downloaded `.json` file there. **Do not put it inside the `Hermes/` folder.**
+Copy your downloaded `.json` file there. **Do not put it inside the `Peer/` folder.**
 
 ## Step 2 — Verify the service account has Vertex AI access
 
@@ -63,15 +63,15 @@ npm install @google-cloud/vertexai
 Create or edit `web/.env.local`:
 
 ```
-GOOGLE_APPLICATION_CREDENTIALS=C:\Users\wbc13\.gcp\hermes-vertex-key.json
+GOOGLE_APPLICATION_CREDENTIALS=C:\Users\wbc13\.gcp\peer-vertex-key.json
 GOOGLE_VERTEX_PROJECT=your-project-id-from-the-json
 GOOGLE_VERTEX_LOCATION=us-central1
-HERMES_DIGEST_PROVIDER=gemini
+PEER_DIGEST_PROVIDER=gemini
 ```
 
 Notes:
 - `GOOGLE_APPLICATION_CREDENTIALS` is the standard env var the Google SDK looks for. It must be an **absolute path** to the JSON file.
-- `HERMES_DIGEST_PROVIDER` is the new switch — when set to `gemini`, `/api/digest` will route through the Gemini provider instead of Anthropic. (This switch ships in Step 2 of the BYOK migration plan.)
+- `PEER_DIGEST_PROVIDER` is the new switch — when set to `gemini`, `/api/digest` will route through the Gemini provider instead of Anthropic. (This switch ships in Step 2 of the BYOK migration plan.)
 
 ⚠️ Make sure `web/.env.local` is in `.gitignore`. Confirm with:
 ```bash
@@ -106,11 +106,11 @@ The digest paragraph should populate within a few seconds of the feed loading, s
 In `web/.env.local`:
 ```
 # To use Anthropic instead
-HERMES_DIGEST_PROVIDER=anthropic
+PEER_DIGEST_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-...
 
 # Or to disable LLM features (Tier 0)
-# (just remove or comment out HERMES_DIGEST_PROVIDER and the API keys)
+# (just remove or comment out PEER_DIGEST_PROVIDER and the API keys)
 ```
 
 The app gracefully drops the digest when no provider is configured.

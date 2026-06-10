@@ -531,7 +531,7 @@ export function EmptyState({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo.svg"
+          src="/logo.png"
           alt=""
           width={48}
           height={48}

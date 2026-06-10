@@ -34,7 +34,7 @@ export interface FeedRequest extends ScoringProfile {
   /**
    * Paper IDs the caller has already shown to this user recently. The
    * pipeline filters these out AFTER scoring/reranking so a user opening
-   * Hermes twice in a day (or two days in a row) doesn't see the same
+   * Peer twice in a day (or two days in a row) doesn't see the same
    * papers repeated. The live feed populates this from a localStorage-backed
    * "recently shown" map; the cron digest populates it from
    * briefing_deliveries.

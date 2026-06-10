@@ -29,7 +29,7 @@ import {
   PAPER_DISCOVERY_OPTIONS,
 } from "@/components/profile/field-kit";
 
-const DEFAULT_NAME = "Hermes Member";
+const DEFAULT_NAME = "Peer Member";
 
 // Field option data, suggestion chips, and the interactive primitives
 // (ChipInput, ChoiceGroup, TogglePill, TopicsField) now live in
@@ -383,7 +383,7 @@ function DashboardView({
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src="/logo.svg"
+                src="/logo.png"
                 alt=""
                 width={40}
                 height={40}
@@ -515,7 +515,7 @@ function ReadingCard({
           <span className="italic font-medium tabular-nums">
             {totalSurfaced}
           </span>{" "}
-          Hermes surfaced<span className="text-text-faint/70">.</span>
+          Peer surfaced<span className="text-text-faint/70">.</span>
         </p>
         {stats.saved > 0 && (
           <p
@@ -1074,10 +1074,10 @@ function composePullQuote({
   savedRate: number;
 }): string {
   if (read === 0) return "Signal-to-noise pending — come back after a few briefings.";
-  if (saved === 0) return "You've read through your briefings but not bookmarked. Hermes is still learning your filter.";
+  if (saved === 0) return "You've read through your briefings but not bookmarked. Peer is still learning your filter.";
   if (savedRate >= 40) return `A ${savedRate}% save rate — you don't waste taps. The filter is trusting.`;
   if (savedRate >= 20) return `Roughly one in ${Math.round(100 / savedRate)} survives the scroll. A considered reader.`;
-  return `Selective — you keep fewer than one in five. The bar is high, and Hermes is learning it.`;
+  return `Selective — you keep fewer than one in five. The bar is high, and Peer is learning it.`;
 }
 
 type Archetype = {
@@ -1107,7 +1107,7 @@ function computeArchetype({
   if (savedRate >= 40) {
     return {
       label: "Editorial Curator",
-      description: "High trust in the filter. You save what you mean to return to, and Hermes is already converging on your taste.",
+      description: "High trust in the filter. You save what you mean to return to, and Peer is already converging on your taste.",
       glyph: "✎",
     };
   }
@@ -1121,13 +1121,13 @@ function computeArchetype({
   if (profile.researchTopics.length >= 3) {
     return {
       label: "Deep Specialist",
-      description: "Narrow topics, high standards. You want depth, not volume — Hermes should lean niche.",
+      description: "Narrow topics, high standards. You want depth, not volume — Peer should lean niche.",
       glyph: "◉",
     };
   }
   return {
     label: "Selective Reader",
-    description: "You move quickly and keep little. Great for keeping the briefing tight — Hermes will trim more.",
+    description: "You move quickly and keep little. Great for keeping the briefing tight — Peer will trim more.",
     glyph: "◆",
   };
 }
@@ -1665,7 +1665,7 @@ function EditView({
           className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
         />
         <p className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed">
-          Describe your project in 1–3 sentences. Hermes uses this to bias the briefing toward your actual work, not just your generic field.
+          Describe your project in 1–3 sentences. Peer uses this to bias the briefing toward your actual work, not just your generic field.
         </p>
       </EditRow>
 
@@ -1745,7 +1745,7 @@ function EditView({
       <EditRow icon={<IconBook />} tone="link" label="Paper radar">
         <div className="space-y-4">
           <p className="text-[12.5px] text-text-faint/85 leading-relaxed">
-            Tell Hermes how widely to look before it chooses your final daily papers.
+            Tell Peer how widely to look before it chooses your final daily papers.
           </p>
           <ChoiceGroup
             label="Focus"

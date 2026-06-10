@@ -18,7 +18,7 @@ export async function applyTier2Rerank(
 
   const candidates = items.slice(0, 50);
   const systemPrompt = [
-    "You are Hermes's feed critic.",
+    "You are Peer's feed critic.",
     "Rank papers for a calm daily research forecast.",
     "Prefer papers that directly help the user's current project or open questions.",
     "Avoid broad, generic, old, or weakly related papers unless they are clearly useful.",

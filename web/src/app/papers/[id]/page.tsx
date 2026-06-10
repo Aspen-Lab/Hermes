@@ -30,7 +30,7 @@ import {
 } from "@/components/paper-figure";
 
 const WORDS_PER_MINUTE = 220;
-const PAPER_REPORT_CACHE_STORAGE_KEY = "hermes-paper-report-cache-v3";
+const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
 const PAPER_REPORT_CACHE_MAX_ENTRIES = 40;
 // TTL keeps deep-mode cache fresh enough that a transient failure (network
 // blip, paywall flap, LLM hiccup) self-heals on the next open. Successful
@@ -427,7 +427,7 @@ function readPerPaperDigest(paperId: string): {
   } | null {
   if (!paperId || typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem("hermes-digest-cache");
+    const raw = localStorage.getItem("peer-digest-cache");
     if (!raw) return null;
     const entry = JSON.parse(raw) as {
       payload?: { perPaper?: Record<string, unknown> };
@@ -1061,7 +1061,7 @@ export default function PaperDetailPage({
         {/* ════════════════════════════════════════
             SECTION 2 - PROPOSAL / METHOD / RESULTS
             Each subsection hides itself when its data isn't present, so
-            we never render a "Hermes could not extract …" placeholder
+            we never render a "Peer could not extract …" placeholder
             card. The loading shimmer still shows while the report is
             being fetched.
             ════════════════════════════════════════ */}

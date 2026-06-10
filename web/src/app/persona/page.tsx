@@ -1,7 +1,7 @@
 import { PersonaQuiz } from "@/components/persona/quiz";
 
 export const metadata = {
-  title: "Persona — Hermes",
+  title: "Persona — Peer",
   description:
     "A short forced-choice quiz that maps your academic working style across five axes.",
 };

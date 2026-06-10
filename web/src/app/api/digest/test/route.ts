@@ -55,7 +55,7 @@ export async function GET() {
           configuredLocation: regionalLocation,
           globalFallbackEnabled: allowGlobalFallback,
           allResults: results,
-          note: "Hermes now prefers the configured regional Vertex endpoint for local processing.",
+          note: "Peer now prefers the configured regional Vertex endpoint for local processing.",
         });
       }
       results[key] = "Empty response";

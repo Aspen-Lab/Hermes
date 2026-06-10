@@ -70,7 +70,7 @@ Per [docs/BLUEPRINT_byok_and_providers.md §6](BLUEPRINT_byok_and_providers.md),
   - `npm install @google-cloud/vertexai`
   - Implement `web/src/lib/llm/providers/gemini.ts`
   - Read env vars: `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS`
-  - Add `HERMES_DIGEST_PROVIDER` env switch (`anthropic` | `gemini`)
+  - Add `PEER_DIGEST_PROVIDER` env switch (`anthropic` | `gemini`)
   - Smoke test with your .json key
 
 ---

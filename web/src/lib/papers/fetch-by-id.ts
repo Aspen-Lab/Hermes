@@ -7,7 +7,7 @@ import {
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
 import { fetchAbstractFromSS } from "./enrich";
 
-const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
+const MAILTO = process.env.OPENALEX_EMAIL ?? "peer@example.com";
 
 async function fetchOpenAlexPaper(workId: string): Promise<RawItem | null> {
   const url = `https://api.openalex.org/works/${encodeURIComponent(workId)}?mailto=${encodeURIComponent(MAILTO)}`;

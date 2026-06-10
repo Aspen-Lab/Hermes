@@ -91,7 +91,7 @@ export const useProfileStore = create<ProfileState>()(
         set((s) => ({
           profile: {
             ...s.profile,
-            displayName: name.trim() || "Hermes Member",
+            displayName: name.trim() || "Peer Member",
           },
         })),
 
@@ -320,6 +320,6 @@ export const useProfileStore = create<ProfileState>()(
         set({ profile: defaultProfile });
       },
     }),
-    { name: "hermes-profile" }
+    { name: "peer-profile" }
   )
 );

@@ -85,9 +85,9 @@ function resolveHelperScript(): string | null {
 function paywallReason(url: string): string {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
-    return `Hermes reached ${host}, but that source appears to require paid or institutional access for figures.`;
+    return `Peer reached ${host}, but that source appears to require paid or institutional access for figures.`;
   } catch {
-    return "Hermes reached the source, but it appears to require paid or institutional access for figures.";
+    return "Peer reached the source, but it appears to require paid or institutional access for figures.";
   }
 }
 
@@ -123,11 +123,11 @@ function appearsPaywalled(res: Response, html: string): boolean {
 
 // EuropePMC, JSTOR, and several publisher CDNs explicitly 403 any UA matching
 // the "Bot" pattern. Since we're fetching legal open-access PDFs that those
-// hosts make available to readers, send a real browser UA. Hermes still
-// identifies itself via X-Hermes-Figure-Version for server logs that care.
+// hosts make available to readers, send a real browser UA. Peer still
+// identifies itself via X-Peer-Figure-Version for server logs that care.
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Hermes/0.1";
+  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Peer/0.1";
 
 async function fetchPdfResponse(url: string): Promise<Response | null> {
   const controller = new AbortController();
@@ -140,7 +140,7 @@ async function fetchPdfResponse(url: string): Promise<Response | null> {
       redirect: "follow",
       headers: {
         "User-Agent": BROWSER_UA,
-        "X-Hermes-Figure-Version": FETCH_VERSION,
+        "X-Peer-Figure-Version": FETCH_VERSION,
         Accept: "application/pdf,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
       },
     });
@@ -209,7 +209,7 @@ export async function tryPdfCandidates(
     return {
       status: "source_unavailable",
       candidates: [],
-      reason: `Hermes could not reach ${url}.`,
+      reason: `Peer could not reach ${url}.`,
     };
   }
 
@@ -218,7 +218,7 @@ export async function tryPdfCandidates(
     return {
       status: "source_unavailable",
       candidates: [],
-      reason: "The legal PDF source was reachable, but the file was too large for Hermes to extract safely.",
+      reason: "The legal PDF source was reachable, but the file was too large for Peer to extract safely.",
     };
   }
 
@@ -234,7 +234,7 @@ export async function tryPdfCandidates(
     return {
       status: "source_unavailable",
       candidates: [],
-      reason: "The legal PDF source was reachable, but the file was too large for Hermes to extract safely.",
+      reason: "The legal PDF source was reachable, but the file was too large for Peer to extract safely.",
     };
   }
 
@@ -257,7 +257,7 @@ export async function tryPdfCandidates(
     };
   }
 
-  const tempDir = await mkdtemp(path.join(tmpdir(), "hermes-pdf-"));
+  const tempDir = await mkdtemp(path.join(tmpdir(), "peer-pdf-"));
   const pdfPath = path.join(tempDir, "paper.pdf");
 
   try {
@@ -267,7 +267,7 @@ export async function tryPdfCandidates(
       return {
         status: "source_unavailable",
         candidates: [],
-        reason: "Hermes found a legal PDF, but the server PDF figure extractor is unavailable here.",
+        reason: "Peer found a legal PDF, but the server PDF figure extractor is unavailable here.",
       };
     }
 
@@ -290,7 +290,7 @@ export async function tryPdfCandidates(
         candidates: [],
         reason:
           cleanDisplayText(extracted.reason) ||
-          "Hermes opened a legal PDF for this paper, but did not extract any usable figures from it.",
+          "Peer opened a legal PDF for this paper, but did not extract any usable figures from it.",
       };
     }
 
@@ -304,7 +304,7 @@ export async function tryPdfCandidates(
     return {
       status: "source_unavailable",
       candidates: [],
-      reason: "Hermes found a legal PDF, but could not finish extracting its figures.",
+      reason: "Peer found a legal PDF, but could not finish extracting its figures.",
     };
   } finally {
     await rm(tempDir, { recursive: true, force: true }).catch(() => undefined);

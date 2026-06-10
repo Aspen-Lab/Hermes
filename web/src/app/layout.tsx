@@ -56,7 +56,7 @@ const notoSansSC = Noto_Sans_SC({
 });
 
 export const metadata: Metadata = {
-  title: "Hermes — AI News Agent",
+  title: "Peer — AI News Agent",
   description:
     "A self-hosted AI agent that reads the internet for you and only tells you what matters.",
 };

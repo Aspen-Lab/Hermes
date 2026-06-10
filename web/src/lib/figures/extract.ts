@@ -91,10 +91,10 @@ interface UnpaywallRecord {
 
 // EuropePMC, JSTOR, and several publisher CDNs explicitly 403 any UA
 // matching the "Bot" pattern. Send a real browser UA — we identify
-// ourselves via X-Hermes-Figure-Version for server logs that care.
+// ourselves via X-Peer-Figure-Version for server logs that care.
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Hermes/0.1";
+  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Peer/0.1";
 
 async function timedFetch(url: string, init?: RequestInit): Promise<Response | null> {
   const controller = new AbortController();
@@ -107,7 +107,7 @@ async function timedFetch(url: string, init?: RequestInit): Promise<Response | n
       redirect: "follow",
       headers: {
         "User-Agent": BROWSER_UA,
-        "X-Hermes-Figure-Version": FETCH_VERSION,
+        "X-Peer-Figure-Version": FETCH_VERSION,
         Accept: "text/html,application/xhtml+xml,application/json",
         ...(init?.headers ?? {}),
       },
@@ -575,7 +575,7 @@ async function chooseCandidate(
     return {
       candidate: null,
       status: "caption_mismatch",
-      reason: "The source exposed figure slots, but Hermes could not extract a usable figure image.",
+      reason: "The source exposed figure slots, but Peer could not extract a usable figure image.",
     };
   }
 
@@ -693,7 +693,7 @@ async function chooseCandidate(
   return {
     candidate: null,
     status: "caption_mismatch",
-    reason: "The source exposed figure slots, but Hermes could not extract a usable figure image.",
+    reason: "The source exposed figure slots, but Peer could not extract a usable figure image.",
   };
 }
 
@@ -788,7 +788,7 @@ async function tryAr5ivCandidates(arxivId: string): Promise<AttemptResult> {
   const candidates = htmlFigureCandidates(html, ar5ivUrl, "ar5iv");
   return candidates.length > 0
     ? { status: "candidates", candidates }
-    : { status: "no_figures", candidates: [], reason: "The arXiv HTML view was reachable, but Hermes did not find extractable figures." };
+    : { status: "no_figures", candidates: [], reason: "The arXiv HTML view was reachable, but Peer did not find extractable figures." };
 }
 
 function inferLinkKind(url: string): "html" | "pdf" {
@@ -913,9 +913,9 @@ async function lookupEuropePmcLinks(doi: string): Promise<SourceLink[]> {
 function paywallReason(url: string): string {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
-    return `Hermes reached ${host}, but that source appears to require paid or institutional access for figures.`;
+    return `Peer reached ${host}, but that source appears to require paid or institutional access for figures.`;
   } catch {
-    return "Hermes reached the source, but it appears to require paid or institutional access for figures.";
+    return "Peer reached the source, but it appears to require paid or institutional access for figures.";
   }
 }
 
@@ -949,7 +949,7 @@ async function tryHtmlCandidates(
     return {
       status: "source_unavailable",
       candidates: [],
-      reason: `Hermes could not reach ${url}.`,
+      reason: `Peer could not reach ${url}.`,
     };
   }
 
@@ -981,7 +981,7 @@ async function tryHtmlCandidates(
     return {
       status: "no_figures",
       candidates: [],
-      reason: "Hermes reached the source page, but it did not expose extractable figures.",
+      reason: "Peer reached the source page, but it did not expose extractable figures.",
     };
   }
 
@@ -1087,7 +1087,7 @@ function finalDiagnostic(
       imageUrl: null,
       source: null,
       status: "no_figures",
-      reason: noFigures.reason ?? "Hermes reached the source page, but did not find extractable figures.",
+      reason: noFigures.reason ?? "Peer reached the source page, but did not find extractable figures.",
       hideFigure: false,
       matchedBy: null,
     };
@@ -1099,7 +1099,7 @@ function finalDiagnostic(
     status: "source_unavailable",
     reason:
       attempts.find((attempt) => attempt.reason)?.reason ??
-      "Hermes could not reach a usable full-text source for this paper's figures.",
+      "Peer could not reach a usable full-text source for this paper's figures.",
     hideFigure: false,
     matchedBy: null,
   };

@@ -245,11 +245,11 @@ function YearPanel({ filters, onChange, close }: YearPanelProps) {
       />
       {isCustom && (
         <div className="flex items-center gap-2 pt-1 border-t border-[color:var(--color-border)]">
-          <label className="sr-only" htmlFor="hermes-year-from">
+          <label className="sr-only" htmlFor="peer-year-from">
             From year
           </label>
           <input
-            id="hermes-year-from"
+            id="peer-year-from"
             type="number"
             min={1900}
             max={2100}
@@ -259,11 +259,11 @@ function YearPanel({ filters, onChange, close }: YearPanelProps) {
             className="w-20 bg-[color:var(--color-bg-secondary)] rounded-md py-1.5 px-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <span className="text-text-faint">–</span>
-          <label className="sr-only" htmlFor="hermes-year-to">
+          <label className="sr-only" htmlFor="peer-year-to">
             To year
           </label>
           <input
-            id="hermes-year-to"
+            id="peer-year-to"
             type="number"
             min={1900}
             max={2100}

@@ -1,5 +1,5 @@
-# hermes.yml — Hermes configuration
-# Docs: https://github.com/hermes-news/hermes
+# peer.yml — Peer configuration
+# Docs: https://github.com/peer-news/peer
 
 profile:
   name: "Aspen"
@@ -71,13 +71,13 @@ engine:
 
 output:
   format: markdown           # "markdown" or "obsidian"
-  path: "~/hermes-output"
+  path: "~/peer-output"
   daily_note: true
   frontmatter: true
   wikilinks: true
 
 storage:
-  path: "~/.hermes/hermes.db"
+  path: "~/.peer/peer.db"
 
 logging:
   level: info

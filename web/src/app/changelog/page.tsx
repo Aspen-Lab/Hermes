@@ -8,8 +8,8 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Changelog · Hermes",
-  description: "What we shipped, and when. Hermes development log.",
+  title: "Changelog · Peer",
+  description: "What we shipped, and when. Peer development log.",
 };
 
 // 1-min revalidate so a CHANGELOG push is reflected without redeploy.
@@ -141,7 +141,7 @@ export default async function ChangelogPage() {
     >
       <header className="mb-14 animate-fade-in-up">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent mb-3">
-          Hermes · Changelog
+          Peer · Changelog
         </p>
         <h1
           className="text-[44px] leading-[1.02] text-text-heading font-semibold tracking-[-0.01em]"
@@ -194,7 +194,7 @@ export default async function ChangelogPage() {
       <footer className="mt-16 pt-6 border-t border-text-faint/15 text-[12px] text-text-faint leading-relaxed">
         Source of truth:{" "}
         <a
-          href="https://github.com/Aspen-Lab/Hermes/blob/main/web/public/CHANGELOG.md"
+          href="https://github.com/Aspen-Lab/Peer/blob/main/web/public/CHANGELOG.md"
           target="_blank"
           rel="noopener noreferrer"
           className="underline decoration-text-faint/40 underline-offset-2 hover:decoration-accent hover:text-accent transition-colors"

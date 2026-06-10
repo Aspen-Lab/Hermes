@@ -1,11 +1,11 @@
-# Hermes Project Rules
+# Peer Project Rules
 
 For product, UX, retrieval, ranking, architecture, and output-design work, read and follow:
 
 - `docs/PRODUCT_DIRECTION.md`
 - Source of truth: https://hermes-admin-eta.vercel.app/
 
-Hard rule: Hermes is a calm daily forecast for career, work, research, and knowledge. Favor precise, portable, user-declared, progressively enhanced information delivery over generic agent-platform complexity.
+Hard rule: Peer is a calm daily forecast for career, work, research, and knowledge. Favor precise, portable, user-declared, progressively enhanced information delivery over generic agent-platform complexity.
 
 ## Git & PR Workflow Rules
 

@@ -15,8 +15,8 @@ A new **Settings → AI Provider** surface in the web app, with three states the
 │  AI features                              [● Tier 0]    │
 │  ─────────────────────────────────────────────────────  │
 │  ○ Off — rules only (no LLM)                            │
-│      Hermes works fully. Digest paragraph and headline  │
-│      extraction are hidden. No data leaves Hermes.      │
+│      Peer works fully. Digest paragraph and headline  │
+│      extraction are hidden. No data leaves Peer.      │
 │                                                         │
 │  ○ Use my own key (BYOK)                                │
 │      • Provider:  [ Anthropic │ Gemini │ OpenAI │ ... ] │
@@ -24,7 +24,7 @@ A new **Settings → AI Provider** surface in the web app, with three states the
 │      • Daily budget: [ $1 / 100k tokens ]               │
 │      • [Test connection]   [Save]                       │
 │                                                         │
-│  ○ Use Hermes-hosted (when available)                   │
+│  ○ Use Peer-hosted (when available)                   │
 │      Operator-funded, may have queue / rate limits.     │
 │      [Status: configured | unconfigured]                │
 │                                                         │

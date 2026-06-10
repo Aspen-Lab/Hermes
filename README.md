@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Hermes" width="160" />
+  <img src="assets/logo.png" alt="Peer" width="160" />
 </p>
 
-<h1 align="center">Hermes</h1>
+<h1 align="center">Peer</h1>
 
 <p align="center">
-  <em>A calm daily forecast for your field. Hermes does the searching so you don't —
+  <em>A calm daily forecast for your field. Peer does the searching so you don't —
   it fetches papers from academic sources, scores them against what you actually
   care about, and hands you a small, precise morning briefing.</em>
 </p>
@@ -21,7 +21,7 @@
 
 ## Table of contents
 
-- [What Hermes is](#what-hermes-is)
+- [What Peer is](#what-peer-is)
 - [The non-negotiable principles](#the-non-negotiable-principles)
 - [Repository layout](#repository-layout)
 - [The web app (primary surface)](#the-web-app-primary-surface)
@@ -49,11 +49,11 @@
 
 ---
 
-## What Hermes is
+## What Peer is
 
-Hermes is a self-hosted **information agent**. The user declares who they are and what
+Peer is a self-hosted **information agent**. The user declares who they are and what
 they care about (topics, current project, open challenges, advisor, preferred journals),
-and Hermes fetches from academic sources, scores every candidate against that profile,
+and Peer fetches from academic sources, scores every candidate against that profile,
 removes duplicates, and surfaces a short daily briefing of the most relevant papers
 (plus events and jobs). Named after the Greek messenger god — it is the user's personal
 messenger for their field.
@@ -64,8 +64,8 @@ idea*, not shared code:
 | Surface | Path | Status | What it is |
 | --- | --- | --- | --- |
 | **Web app** | [`web/`](web/) | **Most active — start here** | Next.js dashboard deployed on Vercel. Full pipeline + onboarding + personalization + email digests. |
-| **Python CLI** | [`python/`](python/) | Original MVP, stable | Local-first CLI (`hermes init`, `hermes run --once`). Pure Tier 0. Markdown output. |
-| **iOS app** | [`Hermes/`](Hermes/), `Hermes.xcodeproj` | UI scaffolding | SwiftUI app. Not yet wired to the backend. |
+| **Python CLI** | [`python/`](python/) | Original MVP, stable | Local-first CLI (`peer init`, `peer run --once`). Pure Tier 0. Markdown output. |
+| **iOS app** | [`Peer/`](Peer/), `Peer.xcodeproj` | UI scaffolding | SwiftUI app. Not yet wired to the backend. |
 
 > ⚠️ **The Python and TypeScript pipelines are separate codebases.** Fixing scoring in
 > one does **not** fix it in the other. When someone says "the pipeline," confirm which
@@ -87,7 +87,7 @@ Every change is judged against these. Reject anything that violates them.
 5. **Reliability through graceful degradation.** When a source, model, or budget fails,
    drop a tier — never block the user.
 6. **Calm, weather-forecast tone.** Distilled and precise, never busy. The goal is "checking
-   Hermes is the first thing I do every morning."
+   Peer is the first thing I do every morning."
 
 Full detail: [`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md) and [`VISION.md`](VISION.md).
 
@@ -102,8 +102,8 @@ Full detail: [`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md) and [`VISI
 ├── docs/                ← architecture & product blueprints (see below)
 ├── python/              ← Python CLI surface
 ├── web/                 ← Next.js web app surface (primary)
-├── Hermes/              ← SwiftUI iOS sources
-└── Hermes.xcodeproj/    ← Xcode project
+├── Peer/              ← SwiftUI iOS sources
+└── Peer.xcodeproj/    ← Xcode project
 ```
 
 Key docs in [`docs/`](docs/):
@@ -179,7 +179,7 @@ and **stage 5 (rerank/distillation)** — the UI shape stays identical across ti
 | **1 — Local / lightweight** | Tier 0 + heuristic rerank + Tavily discovery | None (Tavily optional) | `rerank.ts`, `tavily-discovery.ts` |
 | **2 — Cloud LLM** | LLM rerank + AI-written digest + deep reports | API key (server or BYOK) | `tier2-rerank.ts`, `lib/llm/`, `lib/papers/` |
 
-The feed's default tier comes from `HERMES_FEED_AI_TIER` (default **1**). A user who pastes
+The feed's default tier comes from `PEER_FEED_AI_TIER` (default **1**). A user who pastes
 their own key in the UI forces Tier 2 with their key. If no key resolves, the LLM features
 **hide themselves** and the feed keeps working on Tier 0/1 — that is the correct pattern.
 **Never make a feature that hard-crashes when a key is missing.**
@@ -259,7 +259,7 @@ Code against the `DigestProvider` interface — **never against a single SDK dir
   placeholder in the registry.)
 - Resolution order ([`registry.ts`](web/src/lib/llm/providers/registry.ts) → `resolveProvider`):
   1. per-request **BYOK** override (user's own key + provider), then
-  2. `HERMES_DIGEST_PROVIDER`, then
+  2. `PEER_DIGEST_PROVIDER`, then
   3. first configured server env key (Vertex → Google API → Anthropic → OpenAI → Qwen → DeepSeek), then
   4. `null` → Tier 0 fallback.
 - The digest model default is `claude-haiku-4-5-20251001` ([`llm/client.ts`](web/src/lib/llm/client.ts)).
@@ -323,7 +323,7 @@ and fire-and-forget cloud sync:
 
 - [`profile.ts`](web/src/store/profile.ts) — the user profile (topics, knobs, keys, ledger,
   digest prefs, theme, onboarding flag). `hydrateFromRemote` merges a server snapshot
-  (undefined fields keep local values). Persisted under `hermes-profile`.
+  (undefined fields keep local values). Persisted under `peer-profile`.
 - [`feed.ts`](web/src/store/feed.ts) — papers/events/jobs, loading, read items, AI-search toggle.
 - [`ui.ts`](web/src/store/ui.ts) — transient UI state.
 
@@ -386,7 +386,7 @@ None are required for Tier 0 to function. Grouped by purpose:
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`),
 `SUPABASE_SERVICE_ROLE_KEY` (server/cron only).
 
-**Feed / tiers:** `HERMES_FEED_AI_TIER` (0/1/2, default 1), `HERMES_DIGEST_PROVIDER`.
+**Feed / tiers:** `PEER_FEED_AI_TIER` (0/1/2, default 1), `PEER_DIGEST_PROVIDER`.
 
 **LLM provider keys (any one enables Tier 2 server-side):**
 `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`,
@@ -420,14 +420,14 @@ profile persistence; add an LLM key for Tier 2 features.
 
 The original local-first MVP, in [`python/`](python/). Pure Tier 0 (TF-IDF + keyword +
 source priority, scikit-learn), SQLite state, Markdown/Obsidian output. Entry point:
-`hermes_news.cli:main`.
+`peer_news.cli:main`.
 
 ```bash
 cd python
 pip install -e .
-hermes init          # writes hermes.yml in the current directory
-# edit hermes.yml — add keywords, topics, sources
-hermes run --once
+peer init          # writes peer.yml in the current directory
+# edit peer.yml — add keywords, topics, sources
+peer run --once
 ```
 
 Output lands as `YYYY-MM-DD.md` (path from config). Pipeline mirrors the web stages:
@@ -437,8 +437,8 @@ collect → tag → score → filter → render. Config reference:
 Layout:
 
 ```
-python/src/hermes_news/
-├── cli.py              # `hermes` entry point
+python/src/peer_news/
+├── cli.py              # `peer` entry point
 ├── pipeline.py         # orchestration
 ├── config.py, models.py
 ├── sources/            # arxiv, hackernews, reddit, rss
@@ -453,7 +453,7 @@ python/src/hermes_news/
 
 ## The iOS app
 
-SwiftUI sources in [`Hermes/`](Hermes/), project in `Hermes.xcodeproj`. Currently **UI
+SwiftUI sources in [`Peer/`](Peer/), project in `Peer.xcodeproj`. Currently **UI
 scaffolding** — Models (`Paper`, `Event`, `Job`, `UserProfile`), state (`FeedState`,
 `ProfileState`), discovery/detail/profile views, a theme, and a `RecommendationService`.
 It is **not yet wired to the web backend**; treat it as a design prototype until that
@@ -502,11 +502,11 @@ MIT.
 
 ### In plain English (for a middle schooler)
 
-Hermes is like a smart newspaper that only prints the stuff *you* care about. You tell it
+Peer is like a smart newspaper that only prints the stuff *you* care about. You tell it
 what you're studying, and every morning it digs through tons of science articles, picks the
 few best ones, and explains why they matter — so you don't have to search yourself. This
-README is the instruction manual: it tells anyone who wants to fix or add to Hermes how all
+README is the instruction manual: it tells anyone who wants to fix or add to Peer how all
 the parts fit together, and lists the rules they must not break (like: it always has to work
 even without any paid AI, and it should never get spammy or noisy). There are three versions
-of Hermes — a website (the main one), a command-line tool, and a phone app — and they each do
+of Peer — a website (the main one), a command-line tool, and a phone app — and they each do
 the same job in their own way.

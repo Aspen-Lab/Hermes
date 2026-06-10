@@ -55,7 +55,7 @@ export function FeedMoreTile({
   if (underTuned) {
     title = "Tune your signals";
     body = topics.length === 0
-      ? "Set research topics in your profile so Hermes knows what to fetch."
+      ? "Set research topics in your profile so Peer knows what to fetch."
       : `Your only topic is "${topics[0]}". Add real terms (e.g. "transformers", "human-computer interaction") to get richer picks.`;
     primary = { kind: "link", label: "Edit profile", href: "/profile" };
   } else if (sparse) {

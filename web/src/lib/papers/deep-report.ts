@@ -138,7 +138,7 @@ function buildPass1Prompt(paper: Paper, doc: ExtractedDocument): string {
 }
 
 const PASS1_SYSTEM = [
-  "You are Hermes, a careful research assistant.",
+  "You are Peer, a careful research assistant.",
   "Your job: read a paper's body sections and extract verbatim signal sentences.",
   "Do not paraphrase. Do not invent. Return only valid JSON.",
 ].join(" ");
@@ -229,8 +229,8 @@ function buildPass2Prompt(args: {
 
   return JSON.stringify({
     task: isReview
-      ? "Create a structured Hermes deep paper report for a REVIEW or SURVEY. List the body sections in reviewContents.sections, using actual section names from the paper. Do not invent."
-      : "Create a structured Hermes DEEP paper report. Use the supplied paper body (or compressed signal). Every key result must include a verbatim `evidence` sentence and a `novelty` line explaining what is new about THIS result compared to prior approaches. Do not fabricate numbers; if a number is not in the supplied body, omit it.",
+      ? "Create a structured Peer deep paper report for a REVIEW or SURVEY. List the body sections in reviewContents.sections, using actual section names from the paper. Do not invent."
+      : "Create a structured Peer DEEP paper report. Use the supplied paper body (or compressed signal). Every key result must include a verbatim `evidence` sentence and a `novelty` line explaining what is new about THIS result compared to prior approaches. Do not fabricate numbers; if a number is not in the supplied body, omit it.",
     userContext: contextHint || "",
     paper: {
       id: paper.id,
@@ -263,7 +263,7 @@ function buildPass2Prompt(args: {
 }
 
 const PASS2_SYSTEM = [
-  "You are Hermes, a careful research assistant.",
+  "You are Peer, a careful research assistant.",
   "Write a structured deep paper report grounded in the supplied body text.",
   "Every claim must be traceable to a supplied sentence — quote in `evidence` when present.",
   "Be specific: name the actual technique, finding, or comparison rather than generic phrases.",
