@@ -10,7 +10,7 @@ const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
 const MAX_QUERIES = 3;
 
 async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
-  const { topics = [], queries = [], venues, limit = 30 } = query;
+  const { topics = [], queries = [], limit = 30 } = query;
   const searchQueries = buildSearchQueries(topics, queries);
   if (searchQueries.length === 0) return [];
 
@@ -18,7 +18,7 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
 
   const results = await Promise.allSettled(
     searchQueries.map((searchTerm) =>
-      fetchOne(searchTerm, perQuery, venues, query.timeWindow),
+      fetchOne(searchTerm, perQuery, query.timeWindow),
     ),
   );
 
@@ -32,29 +32,24 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
 async function fetchOne(
   searchTerm: string,
   perQuery: number,
-  venues: string[] | undefined,
   timeWindow: SourceQuery["timeWindow"],
 ): Promise<RawItem[]> {
   const params = new URLSearchParams({
     search: quoteImportantTerms(searchTerm),
     per_page: String(perQuery),
     select:
-      "id,title,publication_date,authorships,primary_location,best_oa_location,open_access,abstract_inverted_index,cited_by_count,doi,concepts,type_crossref",
+      "id,title,publication_date,authorships,primary_location,best_oa_location,open_access,abstract_inverted_index,cited_by_count,doi,topics,primary_topic,keywords,concepts,type_crossref",
     sort: "relevance_score:desc",
     mailto: MAILTO,
   });
 
+  // NOTE: we used to filter by venue via
+  // `primary_location.source.display_name.search`, but OpenAlex rejects that
+  // field (HTTP 400), which broke EVERY query whenever preferred journals were
+  // set. Preferred journals are honored via the post-scoring journal boost
+  // instead (see applyJournalBoost in the pipeline). Filtering by journal at
+  // fetch time would require resolving names → OpenAlex source IDs first.
   const filters: string[] = [];
-  if (venues && venues.length > 0) {
-    const cleanVenues = venues
-      .map((v) => v.trim())
-      .filter((v) => v.length > 0 && !/[,|:]/.test(v));
-    if (cleanVenues.length > 0) {
-      filters.push(
-        `primary_location.source.display_name.search:${cleanVenues.join("|")}`,
-      );
-    }
-  }
   const fromDate = publicationStartDate(timeWindow);
   if (fromDate) filters.push(`from_publication_date:${fromDate}`);
   if (filters.length > 0) params.append("filter", filters.join(","));

@@ -26,6 +26,12 @@ export interface FeedRequest extends ScoringProfile {
   searchConnectors?: SearchConnectors;
   llmOverride?: ProviderOverrideConfig;
   /**
+   * Advisor / PI affiliation discovery. When present, the pipeline pulls the
+   * citation neighborhood of the advisor's seed works (recent papers citing
+   * them) into the candidate pool as fresh external discovery.
+   */
+  affiliation?: { authorId: string; seedWorkIds?: string[] };
+  /**
    * Paper IDs the caller has already shown to this user recently. The
    * pipeline filters these out AFTER scoring/reranking so a user opening
    * Hermes twice in a day (or two days in a row) doesn't see the same

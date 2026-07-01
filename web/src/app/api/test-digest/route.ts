@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/server";
 import { runFeedPipeline } from "@/lib/feed/pipeline";
 import type { FeedControls } from "@/lib/feed/profile-compiler";
 import { sendDigestEmail } from "@/lib/email/send-digest";
+import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
+import type { PreferenceLedger } from "@/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -30,10 +32,10 @@ interface TestProfileRow {
   display_name: string | null;
   research_topics: string[] | null;
   preferred_methods: string[] | null;
-  preferred_venues: string[] | null;
   current_project: string | null;
   current_challenges: string | null;
   disliked_topics: string[] | null;
+  preference_ledger?: PreferenceLedger | null;
   feed_focus: FeedControls["focus"] | null;
   feed_freshness: FeedControls["freshness"] | null;
   paper_count: FeedControls["paperCount"] | null;
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
   const { data: profile, error: profErr } = await supabase
     .from("profiles")
     .select(
-      "display_name, research_topics, preferred_methods, preferred_venues, current_project, current_challenges, disliked_topics, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys",
+      "display_name, research_topics, preferred_methods, current_project, current_challenges, disliked_topics, preference_ledger, feed_focus, feed_freshness, paper_count, feed_source_mix, feed_importance, feed_method_mode, feed_discovery_mode, feed_avoid_reviews, feed_avoid_old_papers, feed_avoid_broad_surveys",
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -104,10 +106,8 @@ export async function POST(req: NextRequest) {
     methods: typedProfile?.preferred_methods?.length
       ? typedProfile.preferred_methods
       : undefined,
-    venues: typedProfile?.preferred_venues?.length
-      ? typedProfile.preferred_venues
-      : undefined,
     seedTexts: seedTextsFromProfile(typedProfile),
+    preferenceLedger: cleanPreferenceLedger(typedProfile?.preference_ledger),
     negativeTopics: typedProfile?.disliked_topics ?? undefined,
     topN: typedProfile?.paper_count ?? 10,
     controls: feedControlsFromProfile(typedProfile),

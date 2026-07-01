@@ -3,6 +3,7 @@ import { runFeedPipeline } from "@/lib/feed/pipeline";
 import type { FeedRequest, SearchConnectors } from "@/lib/feed/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SourceId } from "@/lib/sources/types";
+import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
@@ -76,13 +77,26 @@ function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {
   const model = cleanOptionalString(value.model);
 
   if (!provider || !apiKey) return undefined;
-  if (!["openai", "gemini", "anthropic", "qwen"].includes(provider)) return undefined;
+  if (!["openai", "gemini", "anthropic", "qwen", "deepseek"].includes(provider)) return undefined;
 
   return {
     provider: provider as ProviderOverrideConfig["provider"],
     apiKey,
     model,
   };
+}
+
+function parseAffiliation(
+  input: unknown,
+): { authorId: string; seedWorkIds?: string[] } | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const value = input as Record<string, unknown>;
+  const authorId = typeof value.authorId === "string" ? value.authorId.trim() : "";
+  if (!/^A\d+/.test(authorId)) return undefined;
+  const seedWorkIds = Array.isArray(value.seedWorkIds)
+    ? value.seedWorkIds.filter((x): x is string => typeof x === "string")
+    : undefined;
+  return { authorId, seedWorkIds };
 }
 
 function parseExcludeIds(input: unknown): string[] | undefined {
@@ -116,6 +130,7 @@ export async function POST(req: NextRequest) {
   const venues = cleanStringArray(body.venues);
   const seedTexts = cleanStringArray(body.seedTexts);
   const negativeTopics = cleanStringArray(body.negativeTopics);
+  const preferenceLedger = cleanPreferenceLedger(body.preferenceLedger);
 
   const result = await runFeedPipeline({
     topics,
@@ -123,6 +138,8 @@ export async function POST(req: NextRequest) {
     methods: methods.length > 0 ? methods : undefined,
     venues: venues.length > 0 ? venues : undefined,
     seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+    preferenceLedger:
+      Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
     negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
     sources: parseSources(body.sources),
     perSourceLimit: body.perSourceLimit,
@@ -133,6 +150,7 @@ export async function POST(req: NextRequest) {
     aiTier: parseAiTier(body.aiTier),
     searchConnectors: parseSearchConnectors(body.searchConnectors),
     llmOverride: parseLlmOverride(body.llmOverride),
+    affiliation: parseAffiliation(body.affiliation),
     excludeIds: parseExcludeIds(body.excludeIds),
   });
 

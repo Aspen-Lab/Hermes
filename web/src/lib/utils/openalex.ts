@@ -1,5 +1,9 @@
 import type { RawItem } from "@/lib/sources/types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import {
+  normalizePreferenceConcepts,
+  preferenceKey,
+} from "@/lib/preferences/ledger";
 
 export function reconstructAbstract(
   index: Record<string, number[]> | null | undefined,
@@ -23,8 +27,22 @@ interface OpenAlexAuthorship {
 }
 
 interface OpenAlexConcept {
+  id?: string;
   display_name: string;
   level: number;
+  score?: number;
+}
+
+interface OpenAlexTopic {
+  id: string;
+  display_name: string;
+  score?: number;
+}
+
+interface OpenAlexKeyword {
+  id: string;
+  display_name: string;
+  score?: number;
 }
 
 interface OpenAlexLocation {
@@ -45,6 +63,9 @@ export interface OpenAlexWork {
   cited_by_count: number;
   doi: string | null;
   concepts?: OpenAlexConcept[];
+  topics?: OpenAlexTopic[];
+  primary_topic?: OpenAlexTopic | null;
+  keywords?: OpenAlexKeyword[];
   type_crossref?: string | null;
 }
 
@@ -68,10 +89,63 @@ function bestUrl(w: OpenAlexWork): string {
 export function openAlexWorkToRawItem(w: OpenAlexWork): RawItem {
   const abstract = cleanDisplayText(reconstructAbstract(w.abstract_inverted_index));
   const doi = w.doi ?? undefined;
-  const tags = (w.concepts ?? [])
+  const topicTags = [
+    ...(w.primary_topic ? [w.primary_topic.display_name] : []),
+    ...(w.topics ?? []).map((topic) => topic.display_name),
+  ]
+    .map(cleanDisplayText)
+    .filter(Boolean);
+  const keywordTags = (w.keywords ?? [])
+    .filter((keyword) => (keyword.score ?? 0) >= 0.2)
+    .map((keyword) => cleanDisplayText(keyword.display_name))
+    .filter(Boolean);
+  const legacyConceptTags = (w.concepts ?? [])
     .filter((c) => c.level >= 1 && c.level <= 3)
     .map((c) => cleanDisplayText(c.display_name))
     .filter(Boolean);
+  const tags = Array.from(
+    new Set([...keywordTags, ...topicTags, ...legacyConceptTags]),
+  ).slice(0, 10);
+  const preferenceSignals = normalizePreferenceConcepts([
+    ...(w.primary_topic
+      ? [
+          {
+            key: preferenceKey(
+              w.primary_topic.display_name,
+              "openalex_topic",
+              w.primary_topic.id,
+            ),
+            label: cleanDisplayText(w.primary_topic.display_name),
+            source: "openalex_topic" as const,
+            confidence: w.primary_topic.score,
+          },
+        ]
+      : []),
+    ...(w.topics ?? []).map((topic) => ({
+      key: preferenceKey(topic.display_name, "openalex_topic", topic.id),
+      label: cleanDisplayText(topic.display_name),
+      source: "openalex_topic" as const,
+      confidence: topic.score,
+    })),
+    ...(w.keywords ?? []).map((keyword) => ({
+      key: preferenceKey(keyword.display_name, "openalex_keyword", keyword.id),
+      label: cleanDisplayText(keyword.display_name),
+      source: "openalex_keyword" as const,
+      confidence: keyword.score,
+    })),
+    ...(w.concepts ?? [])
+      .filter((concept) => concept.level >= 1 && concept.level <= 5)
+      .map((concept) => ({
+        key: preferenceKey(
+          concept.display_name,
+          "openalex_concept",
+          concept.id,
+        ),
+        label: cleanDisplayText(concept.display_name),
+        source: "openalex_concept" as const,
+        confidence: concept.score,
+      })),
+  ]);
   return {
     id: normalizeOpenAlexId(w.id),
     source: "openalex",
@@ -89,6 +163,7 @@ export function openAlexWorkToRawItem(w: OpenAlexWork): RawItem {
       citationCount: w.cited_by_count,
       doi,
       workType: cleanDisplayTextOrUndefined(w.type_crossref),
+      preferenceSignals,
     },
   };
 }

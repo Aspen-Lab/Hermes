@@ -1,4 +1,5 @@
 import type { SearchBrief } from "@/lib/feed/profile-compiler";
+import type { PreferenceConcept } from "@/types";
 
 export type SourceId =
   | "openalex"
@@ -46,6 +47,7 @@ export interface RawItem {
     hnComments?: number;
     workType?: string;
     isOpenAccess?: boolean;
+    preferenceSignals?: PreferenceConcept[];
   };
 }
 

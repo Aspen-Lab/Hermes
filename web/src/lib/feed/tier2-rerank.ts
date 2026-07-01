@@ -33,7 +33,6 @@ export async function applyTier2Rerank(
       niceToHave: brief.niceToHave,
       avoid: brief.avoid,
       methods: brief.methods,
-      venues: brief.preferredVenues,
       controls: brief.controls,
     },
     candidates: candidates.map((item) => ({

@@ -2,99 +2,39 @@
 
 import {
   useState,
-  useRef,
   useMemo,
   useEffect,
-  type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profile";
 import { useFeedStore } from "@/store/feed";
 import { careerStages, colorThemeOptions, industryPreferences, type ColorTheme } from "@/types";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
-
-const industryLabels: Record<string, string> = {
-  academia: "Academia",
-  industry: "Industry",
-  both: "Either",
-  startups: "Startups",
-  bigTech: "Big tech",
-};
+import { AdvisorField } from "@/components/profile/advisor-field";
+import { summarizePreferenceLedger } from "@/lib/preferences/ledger";
+import {
+  type Tone,
+  toneBadge,
+  ChipInput,
+  ChoiceGroup,
+  TogglePill,
+  TopicsField,
+  industryLabels,
+  PAPER_FOCUS_OPTIONS,
+  PAPER_FRESHNESS_OPTIONS,
+  PAPER_COUNT_OPTIONS,
+  PAPER_SOURCE_OPTIONS,
+  PAPER_IMPORTANCE_OPTIONS,
+  PAPER_DISCOVERY_OPTIONS,
+} from "@/components/profile/field-kit";
 
 const DEFAULT_NAME = "Hermes Member";
 
-// Quick-add suggestion chips for the profile editor. Curated, not exhaustive
-// — the goal is to seed common research languages so first-run users don't
-// stare at an empty field and type "whatever". Order matters: most-popular
-// first, scannable left-to-right.
-const SUGGESTED_TOPICS: string[] = [
-  "transformers",
-  "large language models",
-  "diffusion models",
-  "RAG",
-  "vision-language models",
-  "reinforcement learning",
-  "human-computer interaction",
-  "accessibility",
-];
-
-const SUGGESTED_METHODS: string[] = [
-  "RLHF",
-  "contrastive learning",
-  "supervised fine-tuning",
-  "MoE",
-  "distillation",
-  "few-shot",
-  "qualitative study",
-];
-
-const SUGGESTED_VENUES: string[] = [
-  "NeurIPS",
-  "ICLR",
-  "ICML",
-  "ACL",
-  "EMNLP",
-  "CVPR",
-  "CHI",
-  "UIST",
-  "arXiv",
-];
-
-const PAPER_FOCUS_OPTIONS = [
-  { value: "tight", label: "Tight", help: "Stay close to my project." },
-  { value: "balanced", label: "Balanced", help: "Mix close matches and useful neighbors." },
-  { value: "exploratory", label: "Exploratory", help: "Look wider for ideas I might miss." },
-] as const;
-
-const PAPER_FRESHNESS_OPTIONS = [
-  { value: "today", label: "Today", help: "Only very new work." },
-  { value: "week", label: "This week", help: "Recent without being too narrow." },
-  { value: "month", label: "This month", help: "A wider recent window." },
-] as const;
-
-const PAPER_COUNT_OPTIONS = [
-  { value: 5, label: "5", help: "Shortest briefing." },
-  { value: 10, label: "10", help: "Default daily forecast." },
-] as const;
-
-const PAPER_SOURCE_OPTIONS = [
-  { value: "balanced", label: "Balanced", help: "Use every source evenly." },
-  { value: "preprints", label: "Preprints", help: "Favor arXiv and early papers." },
-  { value: "published", label: "Published", help: "Favor journal and venue records." },
-  { value: "code", label: "Code", help: "Favor work with code or datasets." },
-] as const;
-
-const PAPER_IMPORTANCE_OPTIONS = [
-  { value: "new", label: "New", help: "Prefer fresh work." },
-  { value: "highlyCited", label: "Highly cited", help: "Prefer proven papers." },
-  { value: "rising", label: "Rising fast", help: "Prefer recent papers gaining attention." },
-] as const;
-
-const PAPER_DISCOVERY_OPTIONS = [
-  { value: "core", label: "Core field", help: "Stay inside my main area." },
-  { value: "adjacent", label: "Adjacent fields", help: "Bring in nearby areas." },
-  { value: "surprise", label: "Surprise me", help: "Include a few unusual finds." },
-] as const;
+// Field option data, suggestion chips, and the interactive primitives
+// (ChipInput, ChoiceGroup, TogglePill, TopicsField) now live in
+// components/profile/field-kit.tsx so the profile editor and the onboarding
+// wizard share one source of truth.
 
 // ── Icons ───────────────────────────────────────────────────────
 
@@ -163,14 +103,6 @@ function IconPencil() {
     </svg>
   );
 }
-function IconBell() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  );
-}
 function IconCheck() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -181,15 +113,13 @@ function IconCheck() {
 
 // ── Page ────────────────────────────────────────────────────────
 
-type Tone = "accent" | "tag" | "link" | "neutral";
-
 export default function ProfilePage() {
   const {
     profile,
     updateDisplayName,
     updateTopics,
     updateSoftTopics,
-    updateVenues,
+    updatePreferredJournals,
     updateCareerStage,
     updateIndustryPreference,
     updateLocations,
@@ -205,14 +135,15 @@ export default function ProfilePage() {
     updateFeedAvoidReviews,
     updateFeedAvoidOldPapers,
     updateFeedAvoidBroadSurveys,
-    updateLab,
-    updateDigestEnabled,
-    updateDigestHourLocal,
-    updateDigestTimezone,
-    updateDigestFrequency,
+    updateAdvisorName,
+    confirmAdvisorAuthor,
+    clearAdvisorAuthor,
     updateColorTheme,
+    resetPreferenceLedger,
+    resetOnboarding,
     logOut,
   } = useProfileStore();
+  const router = useRouter();
 
   const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
   const setName = updateDisplayName;
@@ -225,7 +156,6 @@ export default function ProfilePage() {
   const signals = [
     profile.researchTopics.length > 0,
     (profile.softTopics ?? []).length > 0,
-    profile.preferredVenues.length > 0,
     profile.locationPreferences.length > 0,
   ];
   const doneCount = signals.filter(Boolean).length;
@@ -316,6 +246,10 @@ export default function ProfilePage() {
             onChange={updateColorTheme}
           />
           <ReadingCard profile={profile} />
+          <LearnedPreferences
+            profile={profile}
+            onReset={resetPreferenceLedger}
+          />
           <PastBriefings />
         </>
       ) : (
@@ -325,6 +259,7 @@ export default function ProfilePage() {
           setName={setName}
           updateTopics={updateTopics}
           updateSoftTopics={updateSoftTopics}
+          updatePreferredJournals={updatePreferredJournals}
           updateSchool={updateSchool}
           updateCurrentProject={updateCurrentProject}
           updateCurrentChallenges={updateCurrentChallenges}
@@ -337,23 +272,34 @@ export default function ProfilePage() {
           updateFeedAvoidReviews={updateFeedAvoidReviews}
           updateFeedAvoidOldPapers={updateFeedAvoidOldPapers}
           updateFeedAvoidBroadSurveys={updateFeedAvoidBroadSurveys}
-          updateLab={updateLab}
-          updateVenues={updateVenues}
+          updateAdvisorName={updateAdvisorName}
+          confirmAdvisorAuthor={confirmAdvisorAuthor}
+          clearAdvisorAuthor={clearAdvisorAuthor}
           updateCareerStage={updateCareerStage}
           updateIndustryPreference={updateIndustryPreference}
           updateLocations={updateLocations}
-          updateDigestEnabled={updateDigestEnabled}
-          updateDigestHourLocal={updateDigestHourLocal}
-          updateDigestTimezone={updateDigestTimezone}
-          updateDigestFrequency={updateDigestFrequency}
         />
       )}
 
       {/* ── Reset ── */}
       <section
-        className="mt-14 pt-6 border-t border-border"
+        className="mt-14 pt-6 border-t border-border flex flex-col items-start gap-3"
         style={{ fontFamily: "var(--font-sans)" }}
       >
+        <button
+          type="button"
+          onClick={() => {
+            resetOnboarding();
+            router.push("/welcome");
+          }}
+          className="inline-flex items-center gap-1.5 text-[12px] text-text-faint hover:text-accent transition-colors"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 3v6h6" />
+          </svg>
+          Replay walkthrough
+        </button>
         {!showLogout ? (
           <button
             onClick={() => setShowLogout(true)}
@@ -474,8 +420,8 @@ function DashboardView({
               <span className="text-text-faint/60" aria-hidden>·</span>
               <span className="text-text-muted">
                 {profile.school}
-                {profile.lab && (
-                  <span className="text-text-faint/80">{" / "}{profile.lab}</span>
+                {profile.advisorName && (
+                  <span className="text-text-faint/80">{" · "}{profile.advisorName}</span>
                 )}
               </span>
             </>
@@ -491,7 +437,7 @@ function DashboardView({
         <div className="mt-3 space-y-2">
           <SignalRow tone="accent" icon={<IconHash />} label="Required" items={profile.researchTopics} />
           <SignalRow tone="tag" icon={<IconHash />} label="Explore" items={profile.softTopics ?? []} />
-          <SignalRow tone="link" icon={<IconBook />} label="Venues" items={profile.preferredVenues} />
+          <SignalRow tone="link" icon={<IconBook />} label="Journals" items={profile.preferredJournals ?? []} />
           <SignalRow tone="tag" icon={<IconPin />} label="Locations" items={profile.locationPreferences} />
         </div>
       </div>
@@ -1368,6 +1314,140 @@ interface PastBriefing {
   openedAt: string | null;
 }
 
+// ── Learned preferences (the live ledger, human-readable + resettable) ──
+
+function PreferenceChip({
+  label,
+  weight,
+  tone,
+}: {
+  label: string;
+  weight: number;
+  tone: "accent" | "muted";
+}) {
+  // Decayed net strength → a subtle 1–3 intensity tier.
+  const tier = weight >= 3 ? 2 : weight >= 1.5 ? 1 : 0;
+  const cls =
+    tone === "accent"
+      ? [
+          "bg-accent-dim/40 text-accent/80",
+          "bg-accent-dim/70 text-accent",
+          "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]",
+        ][tier]
+      : [
+          "bg-bg-secondary/50 text-text-faint",
+          "bg-bg-secondary/70 text-text-muted",
+          "bg-red/10 text-red/90 shadow-[inset_0_0_0_1px_rgba(185,28,28,0.15)]",
+        ][tier];
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[12px] ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function LearnedPreferences({
+  profile,
+  onReset,
+}: {
+  profile: ReturnType<typeof useProfileStore.getState>["profile"];
+  onReset: () => void;
+}) {
+  const [confirmReset, setConfirmReset] = useState(false);
+  const { liked, disliked } = useMemo(
+    // `now` is left to the lib default (Date.now) so we don't call an impure
+    // function directly during render; the summary only recomputes on ledger
+    // change, and sub-render time drift is irrelevant for a decayed display.
+    () => summarizePreferenceLedger(profile.preferenceLedger, undefined, 8),
+    [profile.preferenceLedger],
+  );
+  const hasAny = liked.length > 0 || disliked.length > 0;
+
+  return (
+    <section
+      className="mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
+      style={{ fontFamily: "var(--font-sans)", animationDelay: "120ms" }}
+    >
+      <div className="px-7 pt-6 pb-4 flex items-baseline justify-between gap-4">
+        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90">
+          <span className="inline-block w-4 h-[1.5px] bg-accent/70" />
+          What Hermes has learned
+        </span>
+        {hasAny &&
+          (confirmReset ? (
+            <span className="text-[11.5px] flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  onReset();
+                  setConfirmReset(false);
+                }}
+                className="text-red hover:text-red/80 font-medium transition-colors active:scale-95"
+              >
+                Reset all
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmReset(false)}
+                className="text-text-faint hover:text-text-muted transition-colors active:scale-95"
+              >
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmReset(true)}
+              className="text-[11px] text-text-faint/80 hover:text-accent transition-colors shrink-0"
+            >
+              Reset
+            </button>
+          ))}
+      </div>
+      <div className="px-7 pb-6">
+        {!hasAny ? (
+          <p className="text-[13px] text-text-faint/80 leading-relaxed max-w-[60ch]">
+            Nothing learned yet. As you like, save, or dismiss papers, Hermes builds a private
+            taste profile here — quietly boosting topics you favor and easing off ones you skip.
+            Like and Save count equally; dismissing eases a topic down.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {liked.length > 0 && (
+              <div>
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
+                  Leaning toward
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {liked.map((row) => (
+                    <PreferenceChip key={`like-${row.label}`} label={row.label} weight={row.weight} tone="accent" />
+                  ))}
+                </div>
+              </div>
+            )}
+            {disliked.length > 0 && (
+              <div>
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
+                  Easing off
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {disliked.map((row) => (
+                    <PreferenceChip key={`dis-${row.label}`} label={row.label} weight={row.weight} tone="muted" />
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-[11px] text-text-faint/70 leading-relaxed pt-1">
+              Learned from your likes, saves, and dismissals. Weights fade over ~2 months, and your
+              required topics are never eased off.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function PastBriefings() {
   const [briefings, setBriefings] = useState<PastBriefing[] | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -1469,88 +1549,6 @@ function formatRelativeTime(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-type ChoiceValue = string | number;
-type ChoiceOption = {
-  value: ChoiceValue;
-  label: string;
-  help?: string;
-};
-
-function ChoiceGroup({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: ChoiceValue;
-  options: readonly ChoiceOption[];
-  onChange: (value: ChoiceValue) => void;
-}) {
-  return (
-    <div>
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((option) => {
-          const active = option.value === value;
-          return (
-            <button
-              key={String(option.value)}
-              type="button"
-              onClick={() => onChange(option.value)}
-              title={option.help}
-              className={`group text-left text-[12px] px-2.5 py-1.5 rounded-xl transition-all duration-200 ease-out active:scale-[0.94] ${
-                active
-                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.02]"
-                  : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
-              }`}
-            >
-              <span className="block font-medium">{option.label}</span>
-              {option.help && (
-                <span className={`block text-[10.5px] leading-snug mt-0.5 ${active ? "text-accent/75" : "text-text-faint/75"}`}>
-                  {option.help}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function TogglePill({
-  label,
-  active,
-  onToggle,
-}: {
-  label: string;
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={active}
-      onClick={onToggle}
-      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[12px] transition-all duration-200 ease-out active:scale-[0.94] ${
-        active
-          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]"
-          : "bg-bg-secondary/40 text-text-faint hover:bg-bg-secondary/70 hover:text-text-muted"
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`h-1.5 w-1.5 rounded-full ${active ? "bg-accent" : "bg-text-faint/45"}`}
-      />
-      {label}
-    </button>
-  );
-}
-
 // ── Edit mode: inline editor ───────────────────────────────────
 
 function EditView({
@@ -1559,6 +1557,7 @@ function EditView({
   setName,
   updateTopics,
   updateSoftTopics,
+  updatePreferredJournals,
   updateSchool,
   updateCurrentProject,
   updateCurrentChallenges,
@@ -1571,21 +1570,19 @@ function EditView({
   updateFeedAvoidReviews,
   updateFeedAvoidOldPapers,
   updateFeedAvoidBroadSurveys,
-  updateLab,
-  updateVenues,
+  updateAdvisorName,
+  confirmAdvisorAuthor,
+  clearAdvisorAuthor,
   updateCareerStage,
   updateIndustryPreference,
   updateLocations,
-  updateDigestEnabled,
-  updateDigestHourLocal,
-  updateDigestTimezone,
-  updateDigestFrequency,
 }: {
   profile: ReturnType<typeof useProfileStore.getState>["profile"];
   name: string;
   setName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateSoftTopics: (v: string[]) => void;
+  updatePreferredJournals: (v: string[]) => void;
   updateSchool: (s: string) => void;
   updateCurrentProject: (s: string) => void;
   updateCurrentChallenges: (s: string) => void;
@@ -1598,15 +1595,12 @@ function EditView({
   updateFeedAvoidReviews: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidReviews"];
   updateFeedAvoidOldPapers: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidOldPapers"];
   updateFeedAvoidBroadSurveys: ReturnType<typeof useProfileStore.getState>["updateFeedAvoidBroadSurveys"];
-  updateLab: (s: string) => void;
-  updateVenues: (v: string[]) => void;
+  updateAdvisorName: (s: string) => void;
+  confirmAdvisorAuthor: (authorId: string, label: string) => void;
+  clearAdvisorAuthor: () => void;
   updateCareerStage: (s: typeof profile.careerStage) => void;
   updateIndustryPreference: (s: typeof profile.industryVsAcademia) => void;
   updateLocations: (v: string[]) => void;
-  updateDigestEnabled: (v: boolean) => void;
-  updateDigestHourLocal: (h: number) => void;
-  updateDigestTimezone: (tz: string) => void;
-  updateDigestFrequency: (f: typeof profile.digestFrequency) => void;
 }) {
   return (
     <div
@@ -1625,63 +1619,11 @@ function EditView({
         />
       </EditRow>
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="min-w-0">
-            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent/80">
-              Required
-            </p>
-            <ChipInput
-              values={profile.researchTopics}
-              onChange={updateTopics}
-              placeholder="LCO, solid-state battery..."
-              suggestions={SUGGESTED_TOPICS}
-              tone="accent"
-              dragId="required"
-              onChipDrop={(value) => {
-                if (!profile.researchTopics.includes(value)) {
-                  updateTopics([...profile.researchTopics, value]);
-                }
-                updateSoftTopics((profile.softTopics ?? []).filter((v) => v !== value));
-              }}
-            />
-            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
-              Paper <strong>must</strong> be related to at least one of these. Type both the
-              full name and abbreviation if you use acronyms (for example, add both
-              &ldquo;LCO&rdquo; and &ldquo;lithium cobalt oxide&rdquo;).
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-tag/80">
-              Nice to have
-            </p>
-            <ChipInput
-              values={profile.softTopics ?? []}
-              onChange={updateSoftTopics}
-              placeholder="thin films, dendrites..."
-              tone="tag"
-              dragId="soft"
-              onChipDrop={(value) => {
-                if (!(profile.softTopics ?? []).includes(value)) {
-                  updateSoftTopics([...(profile.softTopics ?? []), value]);
-                }
-                updateTopics(profile.researchTopics.filter((v) => v !== value));
-              }}
-            />
-            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
-              Papers that match these score higher, but papers without them can still
-              appear in your feed.
-            </p>
-          </div>
-        </div>
-      </EditRow>
-
-      <EditRow icon={<IconBook />} tone="link" label="Venues">
-        <ChipInput
-          values={profile.preferredVenues}
-          onChange={updateVenues}
-          placeholder="NeurIPS, ICLR, CHI..."
-          suggestions={SUGGESTED_VENUES}
-          tone="link"
+        <TopicsField
+          required={profile.researchTopics}
+          soft={profile.softTopics ?? []}
+          onChangeRequired={updateTopics}
+          onChangeSoft={updateSoftTopics}
         />
       </EditRow>
 
@@ -1699,21 +1641,17 @@ function EditView({
           </div>
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-              Lab / group
+              Advisor / PI
             </p>
-            <input
-              type="text"
-              value={profile.lab ?? ""}
-              onChange={(e) => updateLab(e.target.value)}
-              placeholder="CSAIL, HCI Group, Vision Lab…"
-              className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+            <AdvisorField
+              advisorName={profile.advisorName ?? ""}
+              school={profile.school ?? ""}
+              advisorAuthorId={profile.advisorAuthorId}
+              advisorAuthorLabel={profile.advisorAuthorLabel}
+              onChangeName={updateAdvisorName}
+              onConfirm={confirmAdvisorAuthor}
+              onClear={clearAdvisorAuthor}
             />
-            <p
-              className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
-              style={{ fontFamily: "var(--font-sans)" }}
-            >
-              Free text — your group, advisor&apos;s lab, or team within the org.
-            </p>
           </div>
         </div>
       </EditRow>
@@ -1833,6 +1771,22 @@ function EditView({
             options={PAPER_SOURCE_OPTIONS}
             onChange={(value) => updateFeedSourceMix(value as typeof profile.feedSourceMix)}
           />
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+              Preferred journals
+            </p>
+            <ChipInput
+              values={profile.preferredJournals ?? []}
+              onChange={updatePreferredJournals}
+              placeholder="Advanced Materials, Nature Materials, Science, JACS…"
+              tone="link"
+            />
+            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
+              Journals you trust most. Hermes treats these as a primary source and boosts their
+              papers (+1/3 of the score) so they rise to the top — though an exceptionally
+              on-target paper from elsewhere can still win.
+            </p>
+          </div>
           <ChoiceGroup
             label="Importance"
             value={profile.feedImportance}
@@ -1870,89 +1824,6 @@ function EditView({
         </div>
       </EditRow>
 
-      <EditRow icon={<IconBell />} tone="accent" label="Digest">
-        <div className="space-y-3">
-          {/* Enable toggle */}
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={profile.digestEnabled}
-              onClick={() => updateDigestEnabled(!profile.digestEnabled)}
-              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-out ${
-                profile.digestEnabled ? "bg-accent" : "bg-bg-secondary"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                  profile.digestEnabled ? "translate-x-4" : ""
-                }`}
-              />
-            </button>
-            <span className="text-[13px] text-text-muted">
-              {profile.digestEnabled ? "Daily briefing on" : "Daily briefing off"}
-            </span>
-          </label>
-
-          {/* Frequency */}
-          <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-              Frequency
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {(["daily", "weekdays", "weekly", "off"] as const).map((f) => {
-                const active = profile.digestFrequency === f;
-                return (
-                  <button
-                    key={f}
-                    onClick={() => updateDigestFrequency(f)}
-                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
-                      active
-                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
-                        : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Time + timezone */}
-          <div className="flex items-end gap-3 flex-wrap">
-            <div className="shrink-0">
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-                Time (local)
-              </p>
-              <select
-                value={profile.digestHourLocal}
-                onChange={(e) => updateDigestHourLocal(Number(e.target.value))}
-                className="bg-bg-secondary/40 rounded-lg px-2.5 py-1.5 text-[13px] text-text outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all tabular-nums"
-              >
-                {Array.from({ length: 24 }, (_, h) => (
-                  <option key={h} value={h}>
-                    {h.toString().padStart(2, "0")}:00
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 min-w-[180px]">
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
-                Timezone
-              </p>
-              <input
-                type="text"
-                value={profile.digestTimezone}
-                onChange={(e) => updateDigestTimezone(e.target.value)}
-                placeholder="America/New_York"
-                className="w-full bg-bg-secondary/40 rounded-lg px-3 py-1.5 text-[13px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
-              />
-            </div>
-          </div>
-
-        </div>
-      </EditRow>
 
     </div>
   );
@@ -2153,229 +2024,5 @@ function EditRow({
   );
 }
 
-// ── Shared ─────────────────────────────────────────────────────
-
-function toneBadge(tone: Tone = "neutral") {
-  switch (tone) {
-    case "accent":
-      return "text-accent bg-accent-dim";
-    case "tag":
-      return "text-tag bg-tag-dim";
-    case "link":
-      return "text-link bg-link-dim";
-    default:
-      return "text-text-muted bg-bg-secondary/70";
-  }
-}
-
-// Module-level drag state — avoids relying on dataTransfer.getData() which
-// Firefox can fail to return in drop handlers when custom MIME types are used.
-let _chipDrag: { value: string; source: string } | null = null;
-
-function ChipInput({
-  values,
-  onChange,
-  placeholder,
-  hint,
-  suggestions,
-  tone = "tag",
-  dragId,
-  onChipDrop,
-}: {
-  values: string[];
-  onChange: (next: string[]) => void;
-  placeholder?: string;
-  /** One-line helper text shown below the input. */
-  hint?: string;
-  /** Quick-add chips shown only when no values are present yet. */
-  suggestions?: string[];
-  tone?: Tone;
-  /** When set, chips are draggable and carry this ID in the drag payload. */
-  dragId?: string;
-  /** Called with the chip value when a chip from a different dragId is dropped here. */
-  onChipDrop?: (value: string) => void;
-}) {
-  const [draft, setDraft] = useState("");
-  const [isDragOver, setIsDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const commit = (raw: string) => {
-    const cleaned = raw.trim().replace(/,$/, "").trim();
-    if (!cleaned) return;
-    if (values.includes(cleaned)) {
-      setDraft("");
-      return;
-    }
-    onChange([...values, cleaned]);
-    setDraft("");
-  };
-
-  const remove = (v: string) => onChange(values.filter((x) => x !== v));
-
-  const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      commit(draft);
-    } else if (e.key === "Backspace" && draft === "" && values.length) {
-      onChange(values.slice(0, -1));
-    } else if (e.key === "Tab" && draft !== "") {
-      e.preventDefault();
-      commit(draft);
-    }
-  };
-
-  const chipClass = toneBadge(tone);
-  const isDraggable = !!dragId;
-  const containerRef = useRef<HTMLDivElement>(null);
-  // Keep a stable ref to onChipDrop so the native listener always calls the
-  // latest version without needing to re-register on every render.
-  const onChipDropRef = useRef(onChipDrop);
-  useEffect(() => { onChipDropRef.current = onChipDrop; }, [onChipDrop]);
-
-  // ── Native drag listeners (bypass React synthetic events, matches the HTML
-  //    test that confirmed working in Firefox) ──────────────────────────────
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    // Source-side: dragstart / dragend (delegated from chip spans)
-    const onDragStart = (e: DragEvent) => {
-      const chip = (e.target as Element).closest("[data-chip-value]") as HTMLElement | null;
-      if (!chip) return;
-      const value = chip.dataset.chipValue;
-      if (!value || !dragId) return;
-      _chipDrag = { value, source: dragId };
-      try {
-        e.dataTransfer!.setData("text/plain", JSON.stringify({ kind: "chip", value, source: dragId }));
-        e.dataTransfer!.effectAllowed = "move";
-      } catch { /* ok */ }
-    };
-    const onDragEnd = () => { _chipDrag = null; };
-
-    // Drop-target-side
-    const onDragEnter = (e: DragEvent) => { e.preventDefault(); setIsDragOver(true); };
-    const onDragLeave = (e: DragEvent) => {
-      if (!el.contains(e.relatedTarget as Node)) setIsDragOver(false);
-    };
-    const onDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    };
-    const onDrop = (e: DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      if (_chipDrag && _chipDrag.source !== dragId) {
-        onChipDropRef.current?.(_chipDrag.value);
-        _chipDrag = null;
-      }
-    };
-
-    el.addEventListener("dragstart", onDragStart);
-    el.addEventListener("dragend", onDragEnd);
-    if (onChipDropRef.current) {
-      el.addEventListener("dragenter", onDragEnter);
-      el.addEventListener("dragleave", onDragLeave);
-      el.addEventListener("dragover", onDragOver);
-      el.addEventListener("drop", onDrop);
-    }
-    return () => {
-      el.removeEventListener("dragstart", onDragStart);
-      el.removeEventListener("dragend", onDragEnd);
-      el.removeEventListener("dragenter", onDragEnter);
-      el.removeEventListener("dragleave", onDragLeave);
-      el.removeEventListener("dragover", onDragOver);
-      el.removeEventListener("drop", onDrop);
-    };
-  }, [dragId, isDraggable]);
-
-  const dropRingClass = isDragOver
-    ? tone === "accent"
-      ? "bg-accent-dim/50 ring-2 ring-accent/50"
-      : "bg-tag-dim/50 ring-2 ring-tag/50"
-    : "bg-bg-secondary/40 hover:bg-bg-secondary/55 focus-within:bg-bg-secondary/55 focus-within:ring-2 focus-within:ring-accent/20";
-
-  return (
-    <>
-      <div
-        ref={containerRef}
-        onClick={() => inputRef.current?.focus()}
-        className={`flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all min-h-[38px] ${dropRingClass}`}
-        style={{ cursor: "text" }}
-      >
-        {values.map((v) => (
-          <span
-            key={v}
-            draggable={isDraggable}
-            data-chip-value={isDraggable ? v : undefined}
-            className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
-            style={{
-              fontFamily: "var(--font-sans)",
-              cursor: isDraggable ? "grab" : undefined,
-              userSelect: isDraggable ? "none" : undefined,
-            }}
-          >
-            {v}
-            <button
-              type="button"
-              draggable={false}
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                remove(v);
-              }}
-              aria-label={`Remove ${v}`}
-              className="inline-flex items-center justify-center w-4 h-4 rounded hover:bg-black/5 opacity-60 hover:opacity-100 transition-all"
-              style={{ cursor: "pointer" }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ pointerEvents: "none" }}>
-                <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
-          </span>
-        ))}
-        <input
-          ref={inputRef}
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKey}
-          onBlur={() => draft && commit(draft)}
-          placeholder={values.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
-          style={{ fontFamily: "var(--font-sans)" }}
-        />
-      </div>
-      {(suggestions && suggestions.length > 0 && values.length === 0) && (
-        <div className="flex flex-wrap items-center gap-1 mt-1.5 px-1">
-          <span className="text-[10.5px] text-text-faint/70 uppercase tracking-[0.14em] mr-1">
-            Try
-          </span>
-          {suggestions
-            .filter((s) => !values.includes(s))
-            .map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  commit(s);
-                }}
-                className="text-[11.5px] text-text-faint hover:text-accent px-1.5 py-0.5 rounded-md hover:bg-accent-dim/40 transition-colors active:scale-[0.95]"
-                style={{ fontFamily: "var(--font-sans)" }}
-              >
-                + {s}
-              </button>
-            ))}
-        </div>
-      )}
-      {hint && (
-        <p
-          className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          {hint}
-        </p>
-      )}
-    </>
-  );
-}
+// toneBadge, ChipInput, and the module-level drag state now live in
+// components/profile/field-kit.tsx (imported at the top of this file).

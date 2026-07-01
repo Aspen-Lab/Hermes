@@ -672,7 +672,8 @@ export default function PaperDetailPage({
               | "anthropic"
               | "openai"
               | "gemini"
-              | "qwen",
+              | "qwen"
+              | "deepseek",
             apiKey: profile.feedAiApiKey.trim(),
           }
         : undefined;
@@ -948,6 +949,58 @@ export default function PaperDetailPage({
         )}
 
         {/* ════════════════════════════════════════
+            SECTION 0 — WHY IT FITS YOU (lead section)
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconStar />} index={1}>
+          Why it fits you
+        </SectionTitle>
+
+        <div className="rounded-2xl border border-accent/20 bg-accent-dim px-5 py-4">
+          <p
+            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
+            style={{ fontFamily: "var(--font-sans)" }}
+          >
+            <IconBullseye />
+            Relevance
+          </p>
+          {reportLoading ? (
+            <div className="space-y-2.5" aria-busy="true">
+              <ShimmerBar width="90%" />
+              <ShimmerBar width="76%" />
+              <ShimmerBar width="82%" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-[15px] text-text leading-[1.65]"
+                  style={{ fontFamily: "var(--font-reading)" }}
+                >
+                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
+                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Keywords that correlate to the user's profile */}
+        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
+          paper.summaryExperimentKeywords.length > 0) && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(report?.whyItFitsYou.keywords.length
+              ? report.whyItFitsYou.keywords
+              : paper.summaryExperimentKeywords
+            ).slice(0, 8).map((kw) => (
+              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
+                {kw}
+              </Tag>
+            ))}
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════
             SECTION 1 - NOVELTY (only when there is a real novelty sentence)
             ════════════════════════════════════════ */}
         {showNoveltySection && (
@@ -1166,58 +1219,6 @@ export default function PaperDetailPage({
               })}
             </div>
           </>
-        )}
-
-        {/* ════════════════════════════════════════
-            SECTION 3 — WHY IT FITS YOU
-            ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconStar />} index={7}>
-          Why it fits you
-        </SectionTitle>
-
-        <div className="rounded-2xl border border-accent/20 bg-accent-dim px-5 py-4">
-          <p
-            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            <IconBullseye />
-            Relevance
-          </p>
-          {reportLoading ? (
-            <div className="space-y-2.5" aria-busy="true">
-              <ShimmerBar width="90%" />
-              <ShimmerBar width="76%" />
-              <ShimmerBar width="82%" />
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2.5 text-[15px] text-text leading-[1.65]"
-                  style={{ fontFamily: "var(--font-reading)" }}
-                >
-                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
-                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Keywords that correlate to the user's profile */}
-        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
-          paper.summaryExperimentKeywords.length > 0) && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {(report?.whyItFitsYou.keywords.length
-              ? report.whyItFitsYou.keywords
-              : paper.summaryExperimentKeywords
-            ).slice(0, 8).map((kw) => (
-              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
-                {kw}
-              </Tag>
-            ))}
-          </div>
         )}
 
         {/* ── Quick signals ── */}

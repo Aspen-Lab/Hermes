@@ -21,17 +21,28 @@ export async function POST(request: NextRequest) {
     itemId?: string;
     itemKind?: ItemKind;
     feedback?: Feedback;
+    payload?: unknown;
   };
   if (!body.itemId || !body.itemKind || !body.feedback) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 
-  const { error } = await supabase.from("feedback_events").insert({
+  let { error } = await supabase.from("feedback_events").insert({
     user_id: user.id,
     item_id: body.itemId,
     item_kind: body.itemKind,
     feedback: body.feedback,
+    payload: body.payload ?? null,
   });
+
+  if (error && /payload/.test(error.message)) {
+    ({ error } = await supabase.from("feedback_events").insert({
+      user_id: user.id,
+      item_id: body.itemId,
+      item_kind: body.itemKind,
+      feedback: body.feedback,
+    }));
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
