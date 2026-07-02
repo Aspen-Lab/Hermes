@@ -857,6 +857,9 @@ function Greeting({
       <h1
         className="text-[26px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
         style={{ fontFamily: "var(--font-sans)" }}
+        // The greeting word is derived from the current clock, which can differ
+        // between the server render and the browser (timezone / hour boundary).
+        suppressHydrationWarning
       >
         {firstName ? (
           <>
@@ -877,11 +880,14 @@ function Greeting({
         className="mt-2 flex items-baseline gap-2 text-text-muted"
         style={{ fontFamily: "var(--font-reading)" }}
       >
-        <span className="text-[14px] lg:text-[15px] italic text-heading/80 tracking-tight leading-none">
+        <span
+          className="text-[14px] lg:text-[15px] italic text-heading/80 tracking-tight leading-none"
+          suppressHydrationWarning
+        >
           {weekday}
         </span>
         <span className="text-border-strong text-[12px] leading-none" aria-hidden>·</span>
-        <span className="text-[13px] lg:text-[14px] leading-none">{monthDay}</span>
+        <span className="text-[13px] lg:text-[14px] leading-none" suppressHydrationWarning>{monthDay}</span>
       </div>
     </>
   );

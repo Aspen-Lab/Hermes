@@ -658,6 +658,10 @@ export const useFeedStore = create<FeedState>()(
     }),
     {
       name: "peer-feed",
+      // skipHydration: rehydrated after mount via <StoreHydrator/> so the
+      // first client render matches SSR defaults (empty feed / no saves) and
+      // doesn't mismatch the server markup. See store/ui.ts for rationale.
+      skipHydration: true,
       partialize: (state) => ({
         savedPapers: state.savedPapers,
         savedEvents: state.savedEvents,

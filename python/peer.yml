@@ -1,0 +1,35 @@
+# peer.yml ¡ª Peer configuration
+# Docs: https://github.com/peer-news/peer
+
+profile:
+  name: "Your Name"
+  keywords:
+    - "your interest here"
+
+topics:
+  - name: "Example Topic"
+    keywords:
+      - "keyword1"
+      - "keyword2"
+
+sources:
+  - name: "example-feed"
+    type: rss
+    url: "https://example.com/rss"
+    priority: 5
+
+engine:
+  weights:
+    tfidf: 0.50
+    keyword: 0.30
+    source: 0.20
+  min_score: 0.15
+  max_items: 50
+  dedup_window_days: 30
+
+output:
+  format: markdown
+  path: "~/peer-output"
+
+storage:
+  path: "~/.peer/peer.db"

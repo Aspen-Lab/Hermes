@@ -16,6 +16,7 @@ import { ThemeSync } from "@/components/theme-sync";
 import { GithubStars } from "@/components/github-stars";
 import { UserMenu } from "@/components/user-menu";
 import { FirstRunGate, DesktopAccountControls } from "@/components/first-run";
+import { StoreHydrator } from "@/components/store-hydrator";
 
 // Primary UI sans — clean, modern, pairs with Source Serif 4
 const geist = Geist({
@@ -85,6 +86,7 @@ export default function RootLayout({
         </DesktopAccountControls>
         <UndoToast />
         <KeyboardLayer />
+        <StoreHydrator />
         <ThemeSync />
         <ProfileSync />
         <FeedSync />

@@ -320,6 +320,9 @@ export const useProfileStore = create<ProfileState>()(
         set({ profile: defaultProfile });
       },
     }),
-    { name: "peer-profile" }
+    // skipHydration: persisted state is rehydrated after mount via
+    // <StoreHydrator/> so the first client render matches SSR defaults and
+    // avoids a hydration mismatch. See store/ui.ts for the full rationale.
+    { name: "peer-profile", skipHydration: true }
   )
 );
