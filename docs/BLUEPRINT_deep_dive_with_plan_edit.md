@@ -2,15 +2,15 @@
 
 **Status:** Parked. Not on the active roadmap. Revisit when daily-flow features (synthesized digest, audio briefing, sub-agents) are stable and users start asking "can I dig deeper into X?"
 
-**Why parked:** Deep-dive is a *power-user* feature. The core Hermes vision is the calm daily weather forecast; deep-dive is a different cognitive mode (active research, not passive reading) and risks pulling product attention away from the morning-ritual goal. Build the daily ritual first; let user demand pull deep-dive into existence.
+**Why parked:** Deep-dive is a *power-user* feature. The core Peer vision is the calm daily weather forecast; deep-dive is a different cognitive mode (active research, not passive reading) and risks pulling product attention away from the morning-ritual goal. Build the daily ritual first; let user demand pull deep-dive into existence.
 
 ---
 
 ## 1. The user story
 
-> "Hermes, give me everything notable in **LCO cathode degradation research** over the past month. I want to read for 30 minutes and come out caught up."
+> "Peer, give me everything notable in **LCO cathode degradation research** over the past month. I want to read for 30 minutes and come out caught up."
 
-Hermes today can't answer this. The daily briefing is fixed at 10 papers, scoped to "today," and uses a single flat pipeline. A deep dive needs:
+Peer today can't answer this. The daily briefing is fixed at 10 papers, scoped to "today," and uses a single flat pipeline. A deep dive needs:
 
 - **Wider net** — search across more sources, more results per source, more time horizons
 - **Iterative refinement** — first pass surfaces gaps; second pass fills them
@@ -74,11 +74,11 @@ The plan card list must:
 - Have a **"trust the plan"** quick-confirm path for users who don't want to edit
 - Never make plan editing *required* — for repeat queries, last edited plan should be the default
 
-Inspiration from deer-flow: their planner outputs plans as structured markdown with checkable items. Hermes should do the same but render it editorially, not as a JSON tree.
+Inspiration from deer-flow: their planner outputs plans as structured markdown with checkable items. Peer should do the same but render it editorially, not as a JSON tree.
 
 ## 5. Output format — the report
 
-Default format: **multi-section markdown report** rendered in Hermes's editorial style.
+Default format: **multi-section markdown report** rendered in Peer's editorial style.
 
 Sections (template):
 1. **Executive summary** — 3 sentences max
@@ -90,7 +90,7 @@ Sections (template):
 Stretch outputs (later):
 - PDF export (researchers love PDFs)
 - Audio version (ties into daily-flow audio briefing infrastructure)
-- Slide deck (only if users ask — deer-flow has it, may not fit Hermes)
+- Slide deck (only if users ask — deer-flow has it, may not fit Peer)
 
 ## 6. Engineering scope (rough)
 
@@ -106,7 +106,7 @@ Stretch outputs (later):
 - **Cost.** A single deep-dive run could be 10–30× the cost of a daily briefing. Need rate limits per user from day one.
 - **Quality vs. depth tradeoff.** Longer reports aren't automatically better. Resist the urge to make reports *long*; make them *dense*.
 - **Plan-editing fatigue.** If we make users edit a plan every time, adoption dies. Default to "trust the plan" with edit-as-escape-hatch.
-- **Scope creep into "agent platform."** Deer-flow is an agent harness. Hermes is not. Deep-dive is one feature, not the new product identity.
+- **Scope creep into "agent platform."** Deer-flow is an agent harness. Peer is not. Deep-dive is one feature, not the new product identity.
 
 ## 8. Open questions to revisit at design time
 

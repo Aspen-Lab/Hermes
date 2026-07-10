@@ -23,7 +23,7 @@ interface QuizState {
 
 // Bumped if Scores shape or AxisId set changes — old blobs are silently
 // dropped on hydrate.
-const STORAGE_KEY = "hermes:persona:v1";
+const STORAGE_KEY = "peer:persona:v1";
 
 export function PersonaQuiz() {
   const [state, setState] = useState<QuizState>({ step: 0, answers: {} });

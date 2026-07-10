@@ -25,7 +25,7 @@ async function timedFetchText(url: string, headers: HeadersInit = {}): Promise<s
       signal: controller.signal,
       next: { revalidate: REVALIDATE_S },
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; HermesBot/0.1)",
+        "User-Agent": "Mozilla/5.0 (compatible; PeerBot/0.1)",
         Accept: "text/html,application/xhtml+xml,application/json",
         ...headers,
       },

@@ -257,7 +257,7 @@ function applyJournalBoost(items: ScoredItem[], journals: string[]): ScoredItem[
 }
 
 function feedTierFromEnv(): 0 | 1 | 2 {
-  const raw = Number(process.env.HERMES_FEED_AI_TIER ?? "1");
+  const raw = Number(process.env.PEER_FEED_AI_TIER ?? "1");
   if (raw >= 2) return 2;
   if (raw <= 0) return 0;
   return 1;

@@ -22,7 +22,7 @@ const providers: Record<ProviderId, DigestProvider> = {
  * Resolves the active provider from either a per-request override or env vars.
  * Resolution order:
  *   1. Explicit per-request override
- *   2. HERMES_DIGEST_PROVIDER env var
+ *   2. PEER_DIGEST_PROVIDER env var
  *   3. First configured server-side provider
  *   4. null (no LLM - Tier 0 fallback)
  */
@@ -47,7 +47,7 @@ export function resolveProvider(
     }
   }
 
-  const explicit = process.env.HERMES_DIGEST_PROVIDER as ProviderId | undefined;
+  const explicit = process.env.PEER_DIGEST_PROVIDER as ProviderId | undefined;
   if (explicit && explicit in providers) {
     return providers[explicit];
   }

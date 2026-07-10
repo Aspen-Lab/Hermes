@@ -2,7 +2,7 @@
 
 ## DeerFlow
 
-Hermes now includes code and implementation patterns adapted from the
+Peer now includes code and implementation patterns adapted from the
 MIT-licensed DeerFlow project:
 
 - Repository: https://github.com/bytedance/deer-flow
@@ -11,7 +11,7 @@ MIT-licensed DeerFlow project:
   - `backend/packages/harness/deerflow/tools/builtins/view_image_tool.py`
   - `backend/packages/harness/deerflow/agents/middlewares/view_image_middleware.py`
 
-Adapted areas in Hermes include:
+Adapted areas in Peer include:
 
 - Legal PDF-first figure retrieval flow
 - Server-side figure extraction from accessible PDFs

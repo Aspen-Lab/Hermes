@@ -74,8 +74,8 @@ function buildShallowPrompt({ paper, contextHint }: PaperReportRequest): string 
 
   return JSON.stringify({
     task: isReview
-      ? "Create a structured Hermes paper report for a REVIEW or SURVEY paper. Do not invent numbers. Map the body sections of the review into reviewContents.sections with their headings and 1-2 sentence summaries. Never say that user context is missing."
-      : "Create a structured Hermes paper report from the available paper metadata. Do not invent numbers. If the abstract does not contain a result, say what is known from the abstract. Never say that user context is missing; if userContext is sparse, infer a useful fit from the paper title, venue, abstract, and keywords.",
+      ? "Create a structured Peer paper report for a REVIEW or SURVEY paper. Do not invent numbers. Map the body sections of the review into reviewContents.sections with their headings and 1-2 sentence summaries. Never say that user context is missing."
+      : "Create a structured Peer paper report from the available paper metadata. Do not invent numbers. If the abstract does not contain a result, say what is known from the abstract. Never say that user context is missing; if userContext is sparse, infer a useful fit from the paper title, venue, abstract, and keywords.",
     userContext: contextHint || "",
     paper: {
       id: paper.id,
@@ -109,7 +109,7 @@ function buildShallowPrompt({ paper, contextHint }: PaperReportRequest): string 
 }
 
 const SHALLOW_SYSTEM = [
-  "You are Hermes, a careful research assistant.",
+  "You are Peer, a careful research assistant.",
   "Write concise paper reports for researchers.",
   "Use only the supplied title, abstract, result text, keywords, and user context.",
   "Keep proposal, method, and novelty separate: proposal says what the paper tries to do; methods say what experiments or evaluations were actually used; novelty is exactly one concise sentence.",
@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
           ...shallow,
           paywallNotice:
             fullText.reason ??
-            "Hermes could not find a legal full-text source for this paper. Showing an abstract-only report instead.",
+            "Peer could not find a legal full-text source for this paper. Showing an abstract-only report instead.",
         });
       }
 
@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           ...shallow,
           paywallNotice:
-            "Hermes downloaded the paper but the deep-read step failed. Showing an abstract-only report instead.",
+            "Peer downloaded the paper but the deep-read step failed. Showing an abstract-only report instead.",
         });
       }
 

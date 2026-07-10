@@ -525,19 +525,6 @@ export function EmptyState({
 }) {
   return (
     <div className="py-20 text-center flex flex-col items-center">
-      <span
-        className="inline-flex w-16 h-16 rounded-full items-center justify-center bg-surface shadow-card mb-5"
-        aria-hidden
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo.svg"
-          alt=""
-          width={48}
-          height={48}
-          className="w-[48px] h-[48px] object-contain opacity-80"
-        />
-      </span>
       <p
         className="text-heading text-[18px] font-medium tracking-[-0.01em]"
         style={{ fontFamily: "var(--font-sans)" }}

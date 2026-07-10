@@ -16,6 +16,10 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
     }),
-    { name: "hermes-ui" },
+    // skipHydration: the persisted value is loaded after mount (see
+    // <StoreHydrator/>), so the first client render matches the server's
+    // default state. Without this, persist rehydrates synchronously before
+    // React hydrates and the saved sidebar state mismatches the SSR markup.
+    { name: "peer-ui", skipHydration: true },
   ),
 );

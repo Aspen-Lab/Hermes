@@ -1,6 +1,6 @@
 # Changelog
 
-All notable user-facing or infrastructure changes to Hermes. Newest at the top.
+All notable user-facing or infrastructure changes to Peer. Newest at the top.
 Versioning is `0.x.y` until v1; `y` for fixes/chore, `x` for features.
 
 ---
@@ -87,7 +87,7 @@ Mobile top bar tightened — height drops from 56px to 48px, horizontal padding 
 ## v0.7.9 — 2026-05-04
 **Persona: actually persist the quiz result**
 
-`/persona` already advertised "Saved locally only — not uploaded" in the result footer, but the quiz result lived in component `useState` only — close the tab or refresh and it was gone, so the footer's promise was a lie. Persist now: on completion the scores are written to `localStorage` under `hermes:persona:v1`, on next mount the page hydrates from there and re-derives the persona via `pickPersona` (rather than caching the persona blob, so future tweaks to persona names / blurbs / portraits surface automatically). Retake clears the storage. SSR-safe (`typeof window` guards), tolerant of quota/private-mode failures (silent fall-through to a fresh quiz). Sync to the server profile is a separate follow-up tied to the auth track.
+`/persona` already advertised "Saved locally only — not uploaded" in the result footer, but the quiz result lived in component `useState` only — close the tab or refresh and it was gone, so the footer's promise was a lie. Persist now: on completion the scores are written to `localStorage` under `peer:persona:v1`, on next mount the page hydrates from there and re-derives the persona via `pickPersona` (rather than caching the persona blob, so future tweaks to persona names / blurbs / portraits surface automatically). Retake clears the storage. SSR-safe (`typeof window` guards), tolerant of quota/private-mode failures (silent fall-through to a fresh quiz). Sync to the server profile is a separate follow-up tied to the auth track.
 
 ## v0.7.8 — 2026-05-04
 **Profile reading calendar: align client bucketing to server's UTC days**

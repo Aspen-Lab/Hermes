@@ -1,7 +1,7 @@
 // GitHub star counter — server component, cached for 1h via revalidate.
 // Placed fixed top-right on desktop as a social-proof affordance.
 
-const REPO = "Aspen-Lab/Hermes";
+const REPO = "Aspen-Lab/Peer";
 const URL = `https://github.com/${REPO}`;
 
 async function fetchStars(): Promise<number | null> {
@@ -35,7 +35,7 @@ export async function GithubStars() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={
-        count !== null ? `Star Hermes on GitHub — ${count} stars` : "View Hermes on GitHub"
+        count !== null ? `Star Peer on GitHub — ${count} stars` : "View Peer on GitHub"
       }
       title={count !== null ? `${count} GitHub stars — click to star` : "View on GitHub"}
       className="group inline-flex items-center gap-1.5 h-8 lg:h-9 pl-2 pr-3 rounded-full bg-surface/95 backdrop-blur shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-95"

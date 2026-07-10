@@ -344,7 +344,7 @@ export function buildPaperThinkingSurface(
   const matches = profileMatches(profile, haystack);
   const proposalBody = firstSentence(
     paper.summaryIntro,
-    `${paper.title} matched your Hermes profile.`,
+    `${paper.title} matched your Peer profile.`,
   );
   const resultBody = firstSentence(
     paper.summaryResultDiscussion || paper.relevanceReason,
@@ -376,7 +376,7 @@ export function buildPaperThinkingSurface(
       {
         label: "Why",
         title: allMatches.length > 0 ? `${allMatches.length} profile hits` : "Reason-based match",
-        body: fitBody || "Hermes ranked this from the available profile and paper metadata.",
+        body: fitBody || "Peer ranked this from the available profile and paper metadata.",
         tone: allMatches.length > 0 ? "accent" : "plain",
       },
       {

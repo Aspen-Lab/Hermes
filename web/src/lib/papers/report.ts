@@ -130,7 +130,7 @@ function fallbackSummary(paper: Paper): string {
     3,
   );
   if (sentences.length > 0) return sentences.join(" ");
-  return `${paper.title} is an academic paper from ${paper.venue || "the literature"} that matched your Hermes profile. Open the paper link for the full source text.`;
+  return `${paper.title} is an academic paper from ${paper.venue || "the literature"} that matched your Peer profile. Open the paper link for the full source text.`;
 }
 
 function fallbackMethods(paper: Paper): string[] {
@@ -227,7 +227,7 @@ function fallbackKeyResults(paper: Paper): PaperReportKeyResult[] {
     return [
       {
         title: "Main result",
-        detail: "Hermes could not extract a specific result sentence from the available metadata. Use the linked paper for the full results section.",
+        detail: "Peer could not extract a specific result sentence from the available metadata. Use the linked paper for the full results section.",
         figureIndex: 1,
       },
     ];
@@ -248,7 +248,7 @@ function fallbackReviewSections(paper: Paper): PaperReportReviewSection[] {
     return [
       {
         heading: "Overview",
-        summary: "Hermes could not extract section-level details from the available metadata. Open the paper link for the full contents.",
+        summary: "Peer could not extract section-level details from the available metadata. Open the paper link for the full contents.",
       },
     ];
   }

@@ -261,7 +261,7 @@ export interface UserProfile {
 }
 
 export const defaultProfile: UserProfile = {
-  displayName: "Hermes Member",
+  displayName: "Peer Member",
   // Empty by design — first-run users see the profile-setup nudge in the
   // header rather than a feed pre-tuned for someone else's PhD.
   researchTopics: [],

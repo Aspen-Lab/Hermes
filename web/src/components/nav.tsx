@@ -160,7 +160,7 @@ export function Nav() {
 
   const openHelp = () => {
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("hermes:toggle-help"));
+      window.dispatchEvent(new CustomEvent("peer:toggle-help"));
     }
   };
 
@@ -180,13 +180,13 @@ export function Nav() {
             href="/"
             className="flex items-center gap-1.5 text-heading shrink-0"
             style={{ fontFamily: "var(--font-display)" }}
-            aria-label="Hermes home"
+            aria-label="Peer home"
           >
-            <Image src="/logo.svg" alt="" width={26} height={26} className="shrink-0" />
+            <Image src="/logo-mark.png" alt="" width={26} height={26} className="shrink-0" />
             {/* Brand wordmark hides on the narrowest phones to leave room
                 for tabs + account; reappears at sm (≥640px). */}
             <span className="text-[18px] font-normal italic tracking-[-0.01em] hidden sm:inline">
-              Hermes
+              Peer
             </span>
           </Link>
 
@@ -243,8 +243,7 @@ export function Nav() {
             className="flex items-center gap-3 text-[28px] font-normal text-heading tracking-[-0.02em] italic leading-none"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            <Image src="/logo.svg" alt="" width={60} height={60} className="shrink-0" />
-            Hermes
+            Peer
           </Link>
 
           <button
@@ -372,7 +371,7 @@ export function Nav() {
         }`}
       >
         <Image
-          src="/logo.svg"
+          src="/logo-mark.png"
           alt=""
           width={26}
           height={26}

@@ -6,7 +6,7 @@ import {
 import { sourceFetch } from "./_fetch";
 
 const OPENALEX_API = "https://api.openalex.org/works";
-const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
+const MAILTO = process.env.OPENALEX_EMAIL ?? "peer@example.com";
 const MAX_QUERIES = 3;
 
 async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {

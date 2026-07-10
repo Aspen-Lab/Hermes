@@ -2,7 +2,7 @@
 """Extract likely figure regions from a legal PDF.
 
 This helper adapts the PDF-first retrieval idea from DeerFlow's MIT-licensed
-file conversion utilities, but focuses on figure-region extraction for Hermes.
+file conversion utilities, but focuses on figure-region extraction for Peer.
 See docs/THIRD_PARTY_NOTICES.md for attribution details.
 """
 
@@ -271,7 +271,7 @@ def extract_figures(pdf_path: str, max_pages: int, max_figures: int) -> dict:
 
         if not figures:
             reason = (
-                "Hermes opened the PDF, but did not find any figure regions with a real chart, diagram, or image plus a usable caption."
+                "Peer opened the PDF, but did not find any figure regions with a real chart, diagram, or image plus a usable caption."
             )
 
         return {"figures": figures, "reason": reason}

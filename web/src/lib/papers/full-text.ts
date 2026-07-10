@@ -84,7 +84,7 @@ async function fetchHtml(url: string): Promise<{ ok: true; html: string; finalUr
       signal: controller.signal,
       cache: "no-store",
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "User-Agent": "PeerBot/0.1 (+https://peer.research)",
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
@@ -165,9 +165,9 @@ async function tryPdfLink(link: SourceLink): Promise<{ status: FullTextStatus; d
 function paywallReason(url: string): string {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
-    return `${host} requires paid or institutional access — Hermes could not read the full paper, so the report falls back to the abstract.`;
+    return `${host} requires paid or institutional access — Peer could not read the full paper, so the report falls back to the abstract.`;
   } catch {
-    return "The publisher requires paid or institutional access — Hermes could not read the full paper, so the report falls back to the abstract.";
+    return "The publisher requires paid or institutional access — Peer could not read the full paper, so the report falls back to the abstract.";
   }
 }
 

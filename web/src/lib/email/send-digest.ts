@@ -33,7 +33,7 @@ function getClient(): Resend | null {
 function fromAddress(): string {
   // Resend allows this sender with zero domain setup — great for demo/
   // pre-launch. Swap to your verified domain once DNS is ready.
-  return process.env.DIGEST_FROM_EMAIL || "Hermes <onboarding@resend.dev>";
+  return process.env.DIGEST_FROM_EMAIL || "Peer <onboarding@resend.dev>";
 }
 
 export async function sendDigestEmail(

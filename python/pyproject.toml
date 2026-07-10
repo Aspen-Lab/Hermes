@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hermes-news"
+name = "peer-news"
 version = "0.1.0"
 description = "Self-hosted information agent — fetches, tags, scores, and filters internet content"
 requires-python = ">=3.11"
@@ -24,10 +24,10 @@ dev = [
 ]
 
 [project.scripts]
-hermes = "hermes_news.cli:main"
+peer = "peer_news.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hermes_news"]
+packages = ["src/peer_news"]
 
 [tool.ruff]
 target-version = "py311"

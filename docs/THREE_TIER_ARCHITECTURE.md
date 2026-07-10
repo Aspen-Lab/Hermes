@@ -1,8 +1,8 @@
-# 三层渐进增强架构 — Hermes Three-Tier Architecture
+# 三层渐进增强架构 — Peer Three-Tier Architecture
 
 > **Source of truth:** https://hermes-admin-eta.vercel.app — the founders' own blueprint site. This doc mirrors it for in-repo reference. If the two ever diverge, the admin site wins.
 
-Every LLM-using feature in Hermes must respect this doctrine. The app must work end-to-end with **zero API keys**, and tier up gracefully when keys are added.
+Every LLM-using feature in Peer must respect this doctrine. The app must work end-to-end with **zero API keys**, and tier up gracefully when keys are added.
 
 ---
 
@@ -16,7 +16,7 @@ Each tier works standalone. Higher tiers add capability without removing the flo
 - Pure algorithms: TF-IDF vectorization, regex rules, MinHash deduplication
 - Runs in milliseconds, minimal hardware
 - This is what `web/src/lib/scoring/` already implements
-- **Hermes must function fully on Tier 0 — no API keys, no local models, no cloud dependencies**
+- **Peer must function fully on Tier 0 — no API keys, no local models, no cloud dependencies**
 
 ### Tier 1 — Local Models *(privacy + offline)*
 
@@ -78,7 +78,7 @@ When building any feature that uses an LLM or external API, the rules are non-ne
 
 ---
 
-## Where Hermes is on the tier ladder today
+## Where Peer is on the tier ladder today
 
 - **Tier 0:** Working. Card grid, scoring, dedupe, search. No keys required.
 - **Tier 2 (Anthropic only):** Operator-mode only — set `ANTHROPIC_API_KEY` server-side and the digest appears. No per-user key UI yet. No Gemini, no OpenAI.

@@ -89,7 +89,7 @@ async function fetchImageInput(url: string): Promise<VisionImageInput | null> {
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "HermesBot/0.1 (+https://hermes.research)",
+        "User-Agent": "PeerBot/0.1 (+https://peer.research)",
         Accept: "image/png,image/jpeg,image/webp,image/gif,*/*;q=0.8",
       },
       cache: "force-cache",
@@ -136,7 +136,7 @@ export async function matchFigureVisually(args: {
   if (!args.query.trim() || args.candidates.length === 0) return null;
 
   const systemPrompt = [
-    "You are Hermes, a careful research assistant.",
+    "You are Peer, a careful research assistant.",
     "Inspect the actual paper figure image and decide whether it supports the report section by meaning.",
     "Use both the visible figure content and the caption when available.",
     "Only approve a figure when the match is defensible.",
@@ -196,7 +196,7 @@ export async function matchFigureVisually(args: {
       ordinal: null,
       confidence: "low",
       reason:
-        "Hermes inspected the available real figure images, but none clearly supported this report section.",
+        "Peer inspected the available real figure images, but none clearly supported this report section.",
     }
   );
 }

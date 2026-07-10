@@ -25,7 +25,7 @@ export default function AuthErrorPage() {
         className="inline-flex items-center gap-1.5 mt-6 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
         style={{ fontFamily: "var(--font-sans)" }}
       >
-        Back to Hermes
+        Back to Peer
         <span className="text-[11px] opacity-70">→</span>
       </Link>
     </article>

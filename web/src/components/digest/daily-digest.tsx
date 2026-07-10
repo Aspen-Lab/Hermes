@@ -25,7 +25,7 @@ interface DigestCache {
   fetchedAt: number;
 }
 
-const CACHE_KEY = "hermes-digest-cache";
+const CACHE_KEY = "peer-digest-cache";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 function readCache(paperKey: string): DigestPayload | null {

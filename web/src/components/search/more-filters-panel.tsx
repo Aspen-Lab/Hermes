@@ -92,13 +92,13 @@ export function MoreFiltersPanel({
 
           <div className="flex flex-col gap-2">
             <label
-              htmlFor="hermes-filter-venue"
+              htmlFor="peer-filter-venue"
               className="text-[12px] text-text-faint uppercase tracking-wider"
             >
               Venue contains
             </label>
             <input
-              id="hermes-filter-venue"
+              id="peer-filter-venue"
               type="text"
               value={venueDraft}
               onChange={(e) => setVenueDraft(e.target.value)}
