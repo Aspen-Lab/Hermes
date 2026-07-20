@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
-import { mockJobs } from "@/data/mock";
 import {
   Tag,
   Callout,
@@ -52,7 +51,16 @@ export default function JobDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: rawId } = use(params);
+  // Job ids are source-namespaced ("remotive:123") — the colon arrives
+  // URL-encoded in the route param. Same decode guard as the papers page.
+  const id = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
   const feedJobs = useFeedStore((s) => s.jobs);
   const savedJobs = useFeedStore((s) => s.savedJobs);
   const markRead = useFeedStore((s) => s.markRead);
@@ -60,9 +68,7 @@ export default function JobDetailPage({
   const [now] = useState(Date.now);
 
   const job =
-    feedJobs.find((j) => j.id === id) ??
-    savedJobs.find((j) => j.id === id) ??
-    mockJobs.find((j) => j.id === id);
+    feedJobs.find((j) => j.id === id) ?? savedJobs.find((j) => j.id === id);
 
   useEffect(() => {
     if (job) markRead(job.id);
@@ -70,8 +76,7 @@ export default function JobDetailPage({
 
   const related = useMemo(() => {
     if (!job) return [];
-    const pool = feedJobs.length > 0 ? feedJobs : mockJobs;
-    return pickRelatedJobs(job, pool, 3);
+    return pickRelatedJobs(job, feedJobs, 3);
   }, [job, feedJobs]);
 
   if (!job) {

@@ -10,7 +10,13 @@ import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
 import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
-import { feedbackSnapshotForPaper } from "@/lib/preferences/ledger";
+import type { EventsFeedResponse } from "@/lib/events/types";
+import type { JobsFeedResponse } from "@/lib/jobs/types";
+import {
+  feedbackSnapshotForEvent,
+  feedbackSnapshotForJob,
+  feedbackSnapshotForPaper,
+} from "@/lib/preferences/ledger";
 
 // ── Cloud-sync helpers (fire-and-forget) ────────────────────────
 // All writes are optimistic: local state already changed before we call
@@ -251,6 +257,90 @@ async function fetchRealFeed(
   }
 }
 
+// Shared request-shaping for the jobs/events feeds: both routes take the
+// same profile projection.
+function opportunityRequestBody(
+  profile: UserProfile,
+  excludeIds: string[],
+): Record<string, unknown> {
+  const topics = (profile.researchTopics ?? []).filter(Boolean);
+  const softTopics = (profile.softTopics ?? []).filter(Boolean);
+  const preferenceLedger = profile.preferenceLedger ?? {};
+  const tavilyApiKey = profile.tavilyApiKey?.trim();
+  const feedAiApiKey = profile.feedAiApiKey?.trim();
+  const hasUserLlmOverride =
+    profile.feedAiProvider !== "default" && Boolean(feedAiApiKey);
+  return {
+    topics,
+    softTopics: softTopics.length > 0 ? softTopics : undefined,
+    methods: profile.preferredMethods,
+    seedTexts: [profile.currentProject, profile.currentChallenges].filter(
+      (s): s is string => Boolean(s && s.trim().length > 0),
+    ),
+    preferenceLedger:
+      Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
+    careerStage: profile.careerStage,
+    industryVsAcademia: profile.industryVsAcademia,
+    locationPreferences: profile.locationPreferences,
+    currentProject: profile.currentProject,
+    topN: 5,
+    aiTier: hasUserLlmOverride ? 2 : undefined,
+    searchConnectors: profile.tavilyEnabled
+      ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
+      : undefined,
+    llmOverride: hasUserLlmOverride
+      ? { provider: profile.feedAiProvider, apiKey: feedAiApiKey }
+      : undefined,
+    excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+  };
+}
+
+async function fetchRealEvents(
+  profile: UserProfile,
+  excludeIds: string[] = [],
+): Promise<Event[]> {
+  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) return [];
+  try {
+    const res = await fetch("/api/events/feed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+    });
+    if (!res.ok) {
+      console.error("[feed] /api/events/feed returned", res.status);
+      return [];
+    }
+    const data = (await res.json()) as EventsFeedResponse;
+    return data.items;
+  } catch (err) {
+    console.error("[feed] events fetch failed:", err);
+    return [];
+  }
+}
+
+async function fetchRealJobs(
+  profile: UserProfile,
+  excludeIds: string[] = [],
+): Promise<Job[]> {
+  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) return [];
+  try {
+    const res = await fetch("/api/jobs/feed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+    });
+    if (!res.ok) {
+      console.error("[feed] /api/jobs/feed returned", res.status);
+      return [];
+    }
+    const data = (await res.json()) as JobsFeedResponse;
+    return data.items;
+  } catch (err) {
+    console.error("[feed] jobs fetch failed:", err);
+    return [];
+  }
+}
+
 type DismissalKind = "paper" | "event" | "job";
 
 interface PendingDismissal {
@@ -281,6 +371,9 @@ interface FeedState {
   /** id -> feedback. Tracks save/like/dismiss state for any paper the user
    * has interacted with, even ones not in the current feed (e.g. searched). */
   paperFeedback: Record<string, ItemFeedback>;
+  /** id -> feedback for events and jobs (ids are source-namespaced, so one
+   * map covers both kinds without collisions). */
+  oppFeedback: Record<string, ItemFeedback>;
 
   loadFeed: () => Promise<void>;
   setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
@@ -289,8 +382,10 @@ interface FeedState {
   moreLikePaper: (paper: Paper) => void;
   saveEvent: (event: Event) => void;
   notInterestedEvent: (event: Event) => void;
+  moreLikeEvent: (event: Event) => void;
   saveJob: (job: Job) => void;
   notInterestedJob: (job: Job) => void;
+  moreLikeJob: (job: Job) => void;
   unsavePaper: (id: string) => void;
   unsaveEvent: (id: string) => void;
   unsaveJob: (id: string) => void;
@@ -336,11 +431,21 @@ export const useFeedStore = create<FeedState>()(
       recentlyShownIds: {},
       pendingDismissal: null,
       paperFeedback: {},
+      oppFeedback: {},
 
       loadFeed: async () => {
         set({ isLoading: true });
-        const { savedPapers, recentlyShownIds, paperFeedback } = get();
+        const {
+          savedPapers,
+          savedEvents,
+          savedJobs,
+          recentlyShownIds,
+          paperFeedback,
+          oppFeedback,
+        } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
+        const savedEventIds = new Set(savedEvents.map((e) => e.id));
+        const savedJobIds = new Set(savedJobs.map((j) => j.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
         // Signature of the required topics this load is built from — must match
@@ -350,18 +455,21 @@ export const useFeedStore = create<FeedState>()(
           .filter(Boolean)
           .join("\n");
 
-        // Only exclude active (within TTL) IDs. Saved papers are intentionally
+        // Only exclude active (within TTL) IDs. Saved items are intentionally
         // allowed to re-surface — the user explicitly bookmarked them and may
         // want to revisit.
+        const allSaved = new Set([...savedIds, ...savedEventIds, ...savedJobIds]);
         const excludeIds = activeRecentlyShownIds(recentlyShownIds).filter(
-          (id) => !savedIds.has(id),
+          (id) => !allSaved.has(id),
         );
 
-        const realPapers = await fetchRealFeed(
-          profile,
-          aiPaperSearchEnabled,
-          excludeIds,
-        );
+        // Three parallel pipelines; each helper degrades to [] on failure so
+        // one surface never blanks the others.
+        const [realPapers, realEvents, realJobs] = await Promise.all([
+          fetchRealFeed(profile, aiPaperSearchEnabled, excludeIds),
+          fetchRealEvents(profile, excludeIds),
+          fetchRealJobs(profile, excludeIds),
+        ]);
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
             ? {
@@ -374,16 +482,30 @@ export const useFeedStore = create<FeedState>()(
                 feedback: paperFeedback[p.id] ?? p.feedback,
               },
         );
+        const events = realEvents.map((e) => ({
+          ...e,
+          isSaved: savedEventIds.has(e.id),
+          feedback:
+            oppFeedback[e.id] ??
+            (savedEventIds.has(e.id) ? ("saved" as ItemFeedback) : undefined),
+        }));
+        const jobs = realJobs.map((j) => ({
+          ...j,
+          isSaved: savedJobIds.has(j.id),
+          feedback:
+            oppFeedback[j.id] ??
+            (savedJobIds.has(j.id) ? ("saved" as ItemFeedback) : undefined),
+        }));
         // Record what we're about to show so the next load skips them.
         const now = Date.now();
         const nextShown: Record<string, number> = { ...recentlyShownIds };
-        for (const paper of papers) nextShown[paper.id] = now;
+        for (const item of [...papers, ...events, ...jobs]) {
+          nextShown[item.id] = now;
+        }
         set({
           papers,
-          // No real Events / Jobs adapters yet — empty arrays beat
-          // mock fixtures masquerading as user data.
-          events: [],
-          jobs: [],
+          events,
+          jobs,
           isLoading: false,
           lastRefresh: new Date().toISOString(),
           feedTopicsKey: topicsKey,
@@ -466,55 +588,134 @@ export const useFeedStore = create<FeedState>()(
       },
 
       saveEvent: (event) => {
+        const alreadySaved = get().savedEvents.some((e) => e.id === event.id);
+        const previousFeedback = get().oppFeedback[event.id] ?? event.feedback;
+        const savedFeedback =
+          previousFeedback === "moreLikeThis" || previousFeedback === "liked"
+            ? previousFeedback
+            : ("saved" as ItemFeedback);
+        const saved = { ...event, isSaved: true, feedback: savedFeedback };
         set((s) => ({
-          savedEvents: s.savedEvents.some((e) => e.id === event.id)
-            ? s.savedEvents
-            : [event, ...s.savedEvents],
+          events: s.events.map((e) => (e.id === event.id ? saved : e)),
+          savedEvents: alreadySaved
+            ? s.savedEvents.map((e) => (e.id === event.id ? saved : e))
+            : [saved, ...s.savedEvents],
+          oppFeedback: { ...s.oppFeedback, [event.id]: savedFeedback },
         }));
-        cloudSave(event.id, "event", event);
-        get().submitFeedback(event.id, "event", "saved");
+        if (!alreadySaved) {
+          useProfileStore.getState().recordEventPreference(saved, "positive");
+        }
+        cloudSave(event.id, "event", saved);
+        get().submitFeedback(
+          event.id,
+          "event",
+          "saved",
+          feedbackSnapshotForEvent(saved),
+        );
       },
 
       notInterestedEvent: (event) => {
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
+        const previousFeedback = get().oppFeedback[event.id] ?? event.feedback;
 
         set((s) => ({
           events: s.events.filter((e) => e.id !== event.id),
           savedEvents: s.savedEvents.filter((e) => e.id !== event.id),
+          oppFeedback: { ...s.oppFeedback, [event.id]: "notInterested" },
           pendingDismissal: {
             id: event.id,
             kind: "event",
             item: event,
+            previousFeedback,
             expiresAt: Date.now() + 4000,
           },
         }));
       },
 
-      saveJob: (job) => {
+      moreLikeEvent: (event) => {
+        const previous = get().oppFeedback[event.id] ?? event.feedback;
+        const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
-          savedJobs: s.savedJobs.some((j) => j.id === job.id)
-            ? s.savedJobs
-            : [job, ...s.savedJobs],
+          events: s.events.map((e) =>
+            e.id === event.id
+              ? { ...e, feedback: "moreLikeThis" as ItemFeedback }
+              : e,
+          ),
+          oppFeedback: { ...s.oppFeedback, [event.id]: "moreLikeThis" },
         }));
-        cloudSave(job.id, "job", job);
-        get().submitFeedback(job.id, "job", "saved");
+        if (!alreadyLiked) {
+          useProfileStore.getState().recordEventPreference(event, "positive");
+        }
+        get().submitFeedback(
+          event.id,
+          "event",
+          "moreLikeThis",
+          feedbackSnapshotForEvent(event),
+        );
+      },
+
+      saveJob: (job) => {
+        const alreadySaved = get().savedJobs.some((j) => j.id === job.id);
+        const previousFeedback = get().oppFeedback[job.id] ?? job.feedback;
+        const savedFeedback =
+          previousFeedback === "moreLikeThis" || previousFeedback === "liked"
+            ? previousFeedback
+            : ("saved" as ItemFeedback);
+        const saved = { ...job, isSaved: true, feedback: savedFeedback };
+        set((s) => ({
+          jobs: s.jobs.map((j) => (j.id === job.id ? saved : j)),
+          savedJobs: alreadySaved
+            ? s.savedJobs.map((j) => (j.id === job.id ? saved : j))
+            : [saved, ...s.savedJobs],
+          oppFeedback: { ...s.oppFeedback, [job.id]: savedFeedback },
+        }));
+        if (!alreadySaved) {
+          useProfileStore.getState().recordJobPreference(saved, "positive");
+        }
+        cloudSave(job.id, "job", saved);
+        get().submitFeedback(job.id, "job", "saved", feedbackSnapshotForJob(saved));
       },
 
       notInterestedJob: (job) => {
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
+        const previousFeedback = get().oppFeedback[job.id] ?? job.feedback;
 
         set((s) => ({
           jobs: s.jobs.filter((j) => j.id !== job.id),
           savedJobs: s.savedJobs.filter((j) => j.id !== job.id),
+          oppFeedback: { ...s.oppFeedback, [job.id]: "notInterested" },
           pendingDismissal: {
             id: job.id,
             kind: "job",
             item: job,
+            previousFeedback,
             expiresAt: Date.now() + 4000,
           },
         }));
+      },
+
+      moreLikeJob: (job) => {
+        const previous = get().oppFeedback[job.id] ?? job.feedback;
+        const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
+        set((s) => ({
+          jobs: s.jobs.map((j) =>
+            j.id === job.id
+              ? { ...j, feedback: "moreLikeThis" as ItemFeedback }
+              : j,
+          ),
+          oppFeedback: { ...s.oppFeedback, [job.id]: "moreLikeThis" },
+        }));
+        if (!alreadyLiked) {
+          useProfileStore.getState().recordJobPreference(job, "positive");
+        }
+        get().submitFeedback(
+          job.id,
+          "job",
+          "moreLikeThis",
+          feedbackSnapshotForJob(job),
+        );
       },
 
       unsavePaper: (id) => {
@@ -541,16 +742,48 @@ export const useFeedStore = create<FeedState>()(
       },
 
       unsaveEvent: (id) => {
-        set((s) => ({
-          savedEvents: s.savedEvents.filter((e) => e.id !== id),
-        }));
+        set((s) => {
+          const nextFeedback = { ...s.oppFeedback };
+          const currentFeedback = nextFeedback[id];
+          if (currentFeedback === "saved") delete nextFeedback[id];
+          return {
+            events: s.events.map((e) =>
+              e.id === id
+                ? {
+                    ...e,
+                    isSaved: false,
+                    feedback:
+                      currentFeedback === "saved" ? undefined : currentFeedback,
+                  }
+                : e,
+            ),
+            savedEvents: s.savedEvents.filter((e) => e.id !== id),
+            oppFeedback: nextFeedback,
+          };
+        });
         cloudUnsave(id);
       },
 
       unsaveJob: (id) => {
-        set((s) => ({
-          savedJobs: s.savedJobs.filter((j) => j.id !== id),
-        }));
+        set((s) => {
+          const nextFeedback = { ...s.oppFeedback };
+          const currentFeedback = nextFeedback[id];
+          if (currentFeedback === "saved") delete nextFeedback[id];
+          return {
+            jobs: s.jobs.map((j) =>
+              j.id === id
+                ? {
+                    ...j,
+                    isSaved: false,
+                    feedback:
+                      currentFeedback === "saved" ? undefined : currentFeedback,
+                  }
+                : j,
+            ),
+            savedJobs: s.savedJobs.filter((j) => j.id !== id),
+            oppFeedback: nextFeedback,
+          };
+        });
         cloudUnsave(id);
       },
 
@@ -599,11 +832,18 @@ export const useFeedStore = create<FeedState>()(
               pendingDismissal: null,
             };
           }
+          const nextOppFeedback = { ...s.oppFeedback };
+          if (pending.previousFeedback) {
+            nextOppFeedback[pending.id] = pending.previousFeedback;
+          } else {
+            delete nextOppFeedback[pending.id];
+          }
           if (pending.kind === "event") {
             return {
               events: [pending.item as Event, ...s.events].sort(
                 (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
               ),
+              oppFeedback: nextOppFeedback,
               pendingDismissal: null,
             };
           }
@@ -611,6 +851,7 @@ export const useFeedStore = create<FeedState>()(
             jobs: [pending.item as Job, ...s.jobs].sort(
               (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
             ),
+            oppFeedback: nextOppFeedback,
             pendingDismissal: null,
           };
         });
@@ -628,8 +869,24 @@ export const useFeedStore = create<FeedState>()(
             "notInterested",
             feedbackSnapshotForPaper(paper),
           );
+        } else if (pending.kind === "event") {
+          const event = pending.item as Event;
+          useProfileStore.getState().recordEventPreference(event, "negative");
+          get().submitFeedback(
+            pending.id,
+            pending.kind,
+            "notInterested",
+            feedbackSnapshotForEvent(event),
+          );
         } else {
-          get().submitFeedback(pending.id, pending.kind, "notInterested");
+          const job = pending.item as Job;
+          useProfileStore.getState().recordJobPreference(job, "negative");
+          get().submitFeedback(
+            pending.id,
+            pending.kind,
+            "notInterested",
+            feedbackSnapshotForJob(job),
+          );
         }
         set({ pendingDismissal: null });
       },
@@ -652,6 +909,7 @@ export const useFeedStore = create<FeedState>()(
           recentlyShownIds: {},
           pendingDismissal: null,
           paperFeedback: {},
+          oppFeedback: {},
           aiPaperSearchEnabled: true,
         });
       },
@@ -670,6 +928,7 @@ export const useFeedStore = create<FeedState>()(
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
         recentlyShownIds: state.recentlyShownIds,
         paperFeedback: state.paperFeedback,
+        oppFeedback: state.oppFeedback,
       }),
     }
   )

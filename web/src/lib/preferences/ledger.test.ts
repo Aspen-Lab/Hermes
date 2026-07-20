@@ -171,3 +171,103 @@ describe("cleanPreferenceLedger", () => {
     expect(clean.missingLabel).toBeUndefined();
   });
 });
+
+// ── Directional origin influence (papers → events → jobs) ──────
+
+describe("origin-aware ledger", () => {
+  const ml = concept("machine learning");
+
+  it("namespaces job/event entries so they never collide with paper entries", () => {
+    let ledger = applyPreferenceSignal({}, [ml], "positive", { at: T0 });
+    ledger = applyPreferenceSignal(ledger, [ml], "negative", {
+      at: T0,
+      origin: "job",
+    });
+    expect(Object.keys(ledger).sort()).toEqual([
+      `job|${ml.key}`,
+      ml.key,
+    ].sort());
+    expect(ledger[ml.key].positive).toBe(1);
+    expect(ledger[ml.key].negative).toBe(0);
+    expect(ledger[`job|${ml.key}`].negative).toBe(1);
+    expect(ledger[`job|${ml.key}`].origin).toBe("job");
+  });
+
+  it("job feedback never affects paper scoring", () => {
+    const ledger = applyPreferenceSignal({}, [ml], "negative", {
+      at: T0,
+      origin: "job",
+    });
+    const score = scorePreferenceMatch(itemWith([ml]), prepareLedger(ledger), [], {
+      now: T0_MS,
+    });
+    expect(score.penalty).toBe(1);
+    expect(score.matchedNegative).toEqual([]);
+  });
+
+  it("paper feedback flows into event scoring more strongly than job scoring", () => {
+    const ledger = applyPreferenceSignal({}, [ml], "positive", { at: T0 });
+    const prepared = prepareLedger(ledger);
+    const eventScore = scorePreferenceMatch(itemWith([ml]), prepared, [], {
+      now: T0_MS,
+      targetKind: "event",
+    });
+    const jobScore = scorePreferenceMatch(itemWith([ml]), prepared, [], {
+      now: T0_MS,
+      targetKind: "job",
+    });
+    const paperScore = scorePreferenceMatch(itemWith([ml]), prepared, [], {
+      now: T0_MS,
+    });
+    expect(eventScore.boost).toBeGreaterThan(0);
+    expect(jobScore.boost).toBeGreaterThan(0);
+    expect(paperScore.boost).toBeGreaterThan(eventScore.boost);
+    expect(eventScore.boost).toBeGreaterThan(jobScore.boost);
+  });
+
+  it("event feedback leaks weakly into jobs but not into events from jobs", () => {
+    const fromEvent = applyPreferenceSignal({}, [ml], "positive", {
+      at: T0,
+      origin: "event",
+    });
+    const fromJob = applyPreferenceSignal({}, [ml], "positive", {
+      at: T0,
+      origin: "job",
+    });
+    const jobScore = scorePreferenceMatch(itemWith([ml]), prepareLedger(fromEvent), [], {
+      now: T0_MS,
+      targetKind: "job",
+    });
+    const eventScore = scorePreferenceMatch(itemWith([ml]), prepareLedger(fromJob), [], {
+      now: T0_MS,
+      targetKind: "event",
+    });
+    expect(jobScore.boost).toBeGreaterThan(0);
+    expect(eventScore.boost).toBe(0);
+  });
+
+  it("allows negative evidence on required topics for job origin (protection is paper-only)", () => {
+    const ledger = applyPreferenceSignal({}, [ml], "negative", {
+      at: T0,
+      origin: "job",
+      requiredTopics: ["machine learning"],
+    });
+    expect(ledger[`job|${ml.key}`].negative).toBe(1);
+    const jobScore = scorePreferenceMatch(
+      itemWith([ml]),
+      prepareLedger(ledger),
+      ["machine learning"],
+      { now: T0_MS, targetKind: "job" },
+    );
+    expect(jobScore.penalty).toBeLessThan(1);
+  });
+
+  it("cleanPreferenceLedger preserves origin and survives roundtrip", () => {
+    const ledger = applyPreferenceSignal({}, [ml], "positive", {
+      at: T0,
+      origin: "event",
+    });
+    const cleaned = cleanPreferenceLedger(JSON.parse(JSON.stringify(ledger)));
+    expect(cleaned[`event|${ml.key}`].origin).toBe("event");
+  });
+});

@@ -6,6 +6,8 @@ import { applyColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
   Paper,
+  Event,
+  Job,
   CareerStage,
   IndustryAcademiaPreference,
   DigestChannel,
@@ -21,6 +23,8 @@ import type {
 import { defaultProfile } from "@/types";
 import {
   applyPreferenceSignal,
+  conceptsFromEvent,
+  conceptsFromJob,
   conceptsFromPaper,
 } from "@/lib/preferences/ledger";
 
@@ -39,6 +43,19 @@ interface ProfileState {
   updateCurrentChallenges: (text: string) => void;
   recordPaperPreference: (
     paper: Paper,
+    signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Event feedback: recorded under the `event` origin namespace — flows
+   * weakly into job scoring, never back into papers. */
+  recordEventPreference: (
+    event: Event,
+    signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Job feedback: recorded under the `job` origin namespace — job-only. */
+  recordJobPreference: (
+    job: Job,
     signal: "positive" | "negative",
     at?: string,
   ) => void;
@@ -148,6 +165,32 @@ export const useProfileStore = create<ProfileState>()(
                 at,
                 requiredTopics: s.profile.researchTopics,
               },
+            ),
+          },
+        })),
+
+      recordEventPreference: (event, signal, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyPreferenceSignal(
+              s.profile.preferenceLedger,
+              conceptsFromEvent(event),
+              signal,
+              { at, origin: "event" },
+            ),
+          },
+        })),
+
+      recordJobPreference: (job, signal, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyPreferenceSignal(
+              s.profile.preferenceLedger,
+              conceptsFromJob(job),
+              signal,
+              { at, origin: "job" },
             ),
           },
         })),

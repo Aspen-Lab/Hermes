@@ -18,7 +18,9 @@ interface RelevanceScored {
 }
 
 function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", {
+  const ms = Date.parse(d);
+  if (!Number.isFinite(ms)) return "Date TBA";
+  return new Date(ms).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
@@ -255,6 +257,56 @@ function SaveButton({
   );
 }
 
+// Like + Not-interested pair shared by the event/job tiles (papers keep
+// their original inline markup).
+function FeedbackButtons({
+  isLiked,
+  onLike,
+  onDismiss,
+}: {
+  isLiked: boolean;
+  onLike: () => void;
+  onDismiss: () => void;
+}) {
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    fn();
+  };
+  return (
+    <>
+      <button
+        type="button"
+        onClick={stop(onLike)}
+        aria-pressed={isLiked}
+        aria-label="Like — show more like this"
+        title="Like"
+        className={[
+          "p-1.5 rounded-md transition-colors active:scale-90",
+          isLiked
+            ? "text-accent bg-accent-dim/60"
+            : "text-text-faint hover:text-accent hover:bg-accent-dim/60",
+        ].join(" ")}
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M7 10v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V11a1 1 0 0 1 1-1h3zM7 10l4-7a2 2 0 0 1 2 2v3h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 19H7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={stop(onDismiss)}
+        aria-label="Not interested — show less like this"
+        title="Not interested"
+        className="p-1.5 rounded-md text-text-faint hover:text-red hover:bg-red/10 transition-colors active:scale-90"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M17 14V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zM17 14l-4 7a2 2 0 0 1-2-2v-3H5.5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.7 5H17" />
+        </svg>
+      </button>
+    </>
+  );
+}
+
 // ── Paper tile ────────────────────────────────────────────────
 
 const SELECTED_BG = "color-mix(in srgb, var(--color-accent) 15%, var(--color-surface))";
@@ -356,9 +408,13 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
 
 function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
   const saveEvent = useFeedStore((s) => s.saveEvent);
+  const moreLikeEvent = useFeedStore((s) => s.moreLikeEvent);
+  const notInterestedEvent = useFeedStore((s) => s.notInterestedEvent);
   const isSaved = useFeedStore((s) =>
     s.savedEvents.some((e) => e.id === event.id),
   );
+  const feedback = useFeedStore((s) => s.oppFeedback[event.id] ?? event.feedback);
+  const isLiked = feedback === "moreLikeThis" || feedback === "liked";
   return (
     <Link
       href={`/events/${event.id}`}
@@ -388,11 +444,16 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       >
         {event.relevanceReason}
       </p>
-      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-2">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate">
+      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
+        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {event.type}
         </span>
         <span className="flex-1" aria-hidden />
+        <FeedbackButtons
+          isLiked={isLiked}
+          onLike={() => moreLikeEvent(event)}
+          onDismiss={() => notInterestedEvent(event)}
+        />
         <SaveButton isSaved={isSaved} onSave={() => saveEvent(event)} />
       </div>
     </Link>
@@ -403,9 +464,13 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
 
 function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
   const saveJob = useFeedStore((s) => s.saveJob);
+  const moreLikeJob = useFeedStore((s) => s.moreLikeJob);
+  const notInterestedJob = useFeedStore((s) => s.notInterestedJob);
   const isSaved = useFeedStore((s) =>
     s.savedJobs.some((j) => j.id === job.id),
   );
+  const feedback = useFeedStore((s) => s.oppFeedback[job.id] ?? job.feedback);
+  const isLiked = feedback === "moreLikeThis" || feedback === "liked";
   return (
     <Link
       href={`/jobs/${job.id}`}
@@ -435,11 +500,16 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       >
         {job.matchReason}
       </p>
-      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-2">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate">
+      <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
+        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {job.keyRequirements[0] || "Role"}
         </span>
         <span className="flex-1" aria-hidden />
+        <FeedbackButtons
+          isLiked={isLiked}
+          onLike={() => moreLikeJob(job)}
+          onDismiss={() => notInterestedJob(job)}
+        />
         <SaveButton isSaved={isSaved} onSave={() => saveJob(job)} />
       </div>
     </Link>

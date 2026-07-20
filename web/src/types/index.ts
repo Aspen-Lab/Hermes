@@ -9,6 +9,8 @@ export type PreferenceConceptSource =
   | "openalex_keyword"
   | "openalex_concept"
   | "paper_keyword"
+  | "job_tag"
+  | "event_topic"
   | "legacy_disliked_topic";
 
 export interface PreferenceConcept {
@@ -18,12 +20,23 @@ export interface PreferenceConcept {
   confidence?: number;
 }
 
+/** Which feed surface a piece of feedback came from. */
+export type FeedItemKind = "paper" | "event" | "job";
+
 export interface PreferenceLedgerEntry extends PreferenceConcept {
   positive: number;
   negative: number;
   lastPositiveAt?: string;
   lastNegativeAt?: string;
   lastSeenAt: string;
+  /**
+   * The surface the feedback was recorded from. Ledger influence is
+   * directional: paper feedback informs events (strongly) and jobs
+   * (moderately), event feedback informs jobs (weakly), and job/event
+   * feedback never flows back into paper scoring. Entries without an
+   * origin are legacy paper entries.
+   */
+  origin?: FeedItemKind;
 }
 
 export type PreferenceLedger = Record<string, PreferenceLedgerEntry>;
@@ -69,6 +82,9 @@ export interface Event {
   linkRegistration?: string;
   linkOfficial?: string;
   relevanceScore?: number;
+  isSaved?: boolean;
+  feedback?: ItemFeedback;
+  preferenceSignals?: PreferenceConcept[];
 }
 
 // ── Job ──
@@ -84,6 +100,9 @@ export interface Job {
   linkPosting?: string;
   postedDate?: string;
   relevanceScore?: number;
+  isSaved?: boolean;
+  feedback?: ItemFeedback;
+  preferenceSignals?: PreferenceConcept[];
 }
 
 // ── User Profile ──

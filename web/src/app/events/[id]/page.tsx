@@ -4,11 +4,11 @@ import { use, useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
-import { mockEvents } from "@/data/mock";
 import { Tag, DetailSection } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 
 function fmtFullDate(d: string) {
+  if (!Number.isFinite(Date.parse(d))) return "Date to be announced";
   return new Date(d).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -18,6 +18,7 @@ function fmtFullDate(d: string) {
 }
 
 function fmtShortDate(d: string) {
+  if (!Number.isFinite(Date.parse(d))) return "TBA";
   return new Date(d).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -31,6 +32,7 @@ function daysBetween(target: string, now: number): number {
 }
 
 function formatRelative(days: number): string {
+  if (!Number.isFinite(days)) return "date TBA";
   if (days === 0) return "today";
   if (days === 1) return "tomorrow";
   if (days === -1) return "yesterday";
@@ -106,7 +108,16 @@ export default function EventDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: rawId } = use(params);
+  // Event ids are source-namespaced ("ccfddl:aaai27") — the colon arrives
+  // URL-encoded in the route param. Same decode guard as the papers page.
+  const id = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
   const feedEvents = useFeedStore((s) => s.events);
   const savedEvents = useFeedStore((s) => s.savedEvents);
   const markRead = useFeedStore((s) => s.markRead);
@@ -114,9 +125,7 @@ export default function EventDetailPage({
   const [now] = useState(Date.now);
 
   const event =
-    feedEvents.find((e) => e.id === id) ??
-    savedEvents.find((e) => e.id === id) ??
-    mockEvents.find((e) => e.id === id);
+    feedEvents.find((e) => e.id === id) ?? savedEvents.find((e) => e.id === id);
 
   useEffect(() => {
     if (event) markRead(event.id);
@@ -124,8 +133,7 @@ export default function EventDetailPage({
 
   const related = useMemo(() => {
     if (!event) return [];
-    const pool = feedEvents.length > 0 ? feedEvents : mockEvents;
-    return pickRelatedEvents(event, pool, 3);
+    return pickRelatedEvents(event, feedEvents, 3);
   }, [event, feedEvents]);
 
   if (!event) {
@@ -430,7 +438,7 @@ function Timeline({
   const start = new Date(deadline).getTime();
   const end = new Date(eventDate).getTime();
   const total = end - start;
-  if (total <= 0) return null;
+  if (!Number.isFinite(total) || total <= 0) return null;
   const pct = Math.max(0, Math.min(100, ((now - start) / total) * 100));
 
   return (
