@@ -1,5 +1,5 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
-import { stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Arbeitnow's free job-board API (EU/DACH-heavy, no auth, no search param) —
@@ -28,7 +28,7 @@ export function arbeitnowJobToRawItem(job: ArbeitnowJob): RawJobItem | null {
   const url = job.url?.trim();
   if (!title || !url || !job.slug) return null;
   return {
-    id: `arbeitnow:${job.slug}`,
+    id: `arbeitnow:${routeSafeId(String(job.slug))}`,
     source: "arbeitnow",
     title,
     company: job.company_name?.trim() || "Unknown company",

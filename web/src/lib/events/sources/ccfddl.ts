@@ -1,5 +1,6 @@
 import { load } from "js-yaml";
 import { sourceFetch } from "@/lib/sources/_fetch";
+import { routeSafeId } from "@/lib/opportunities/shared";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 
 // ccfddl/ccf-deadlines: community-maintained YAML of CS conference deadlines
@@ -135,7 +136,7 @@ export function ccfConfToRawItem(conf: CcfConf, now: number): RawEventItem | nul
     const place = edition.place?.trim() ?? "";
     const isOnline = /\b(online|virtual)\b/i.test(place);
     return {
-      id: `ccfddl:${edition.id ?? `${title}-${edition.year}`}`,
+      id: `ccfddl:${routeSafeId(edition.id ?? `${title}-${edition.year}`)}`,
       source: "ccfddl",
       name: `${title} ${edition.year ?? ""}`.trim(),
       type: "conference",

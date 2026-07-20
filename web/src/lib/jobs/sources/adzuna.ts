@@ -1,5 +1,5 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
-import { stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Adzuna aggregates postings across 19 countries — the strongest industry-side
@@ -52,7 +52,7 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
   const url = job.redirect_url?.trim();
   if (!title || !url || job.id === undefined) return null;
   return {
-    id: `adzuna:${job.id}`,
+    id: `adzuna:${routeSafeId(String(job.id))}`,
     source: "adzuna",
     title: stripHtml(title),
     company: job.company?.display_name?.trim() || "Unknown company",

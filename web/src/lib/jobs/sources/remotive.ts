@@ -1,5 +1,5 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
-import { stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Remotive ToS: attribute + link back to the Remotive URL (we do — linkPosting
@@ -29,7 +29,7 @@ export function remotiveJobToRawItem(job: RemotiveJob): RawJobItem | null {
   const url = job.url?.trim();
   if (!title || !url || !job.id) return null;
   return {
-    id: `remotive:${job.id}`,
+    id: `remotive:${routeSafeId(String(job.id))}`,
     source: "remotive",
     title,
     company: job.company_name?.trim() || "Unknown company",

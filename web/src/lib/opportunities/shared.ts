@@ -44,6 +44,25 @@ export function urlHashId(url: string): string {
   return (h >>> 0).toString(36);
 }
 
+/**
+ * Make an id suffix safe for the single-segment `/events/[id]` and
+ * `/jobs/[id]` routes. Any slash (or other route-breaking char) in an id
+ * turns the detail page into a 404, so EVERY adapter must run its raw id
+ * through this. URLs collapse to a stable hash; everything else keeps a
+ * readable, deterministic slug. The result is used as the item's id
+ * everywhere (dedup, scoring, dismissals, routing), so it must be stable for
+ * the same input across fetches — no Date/Math.random.
+ */
+export function routeSafeId(raw: string): string {
+  if (raw.includes("://")) return urlHashId(raw);
+  const slug = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || urlHashId(raw);
+}
+
 /** Strip HTML tags/entities from source-provided rich text (job descriptions). */
 export function stripHtml(html: string | null | undefined): string {
   if (!html) return "";

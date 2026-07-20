@@ -1,4 +1,5 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
+import { routeSafeId } from "@/lib/opportunities/shared";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 
 // confs.tech community data: JSON files per topic per year on GitHub. Tech
@@ -56,7 +57,7 @@ export function confsTechConfToRawItem(
   const deadlineMs = conf.cfpEndDate ? Date.parse(conf.cfpEndDate) : NaN;
   const location = [conf.city, conf.country].filter(Boolean).join(", ");
   return {
-    id: `confstech:${name}-${startDate}`,
+    id: `confstech:${routeSafeId(`${name}-${startDate}`)}`,
     source: "confstech",
     name,
     type: "conference",

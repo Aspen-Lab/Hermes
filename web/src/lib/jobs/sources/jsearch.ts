@@ -1,4 +1,4 @@
-import { stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // JSearch (OpenWeb Ninja via RapidAPI) aggregates Google for Jobs — the widest
@@ -35,7 +35,7 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
     .filter((part): part is string => Boolean(part && part.trim()))
     .join(", ");
   return {
-    id: `jsearch:${id}`,
+    id: `jsearch:${routeSafeId(String(id))}`,
     source: "jsearch",
     title,
     company: job.employer_name?.trim() || "Unknown company",

@@ -1,4 +1,5 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
+import { routeSafeId } from "@/lib/opportunities/shared";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 
 // researchseminars.org: cross-discipline registry of research seminars and
@@ -72,7 +73,7 @@ export function rsTalkToRawItem(talk: RsTalk): RawEventItem | null {
     .filter(Boolean)
     .join(", ");
   return {
-    id: `researchseminars:${seminarId}/${talk.seminar_ctr}`,
+    id: `researchseminars:${routeSafeId(`${seminarId}-${talk.seminar_ctr}`)}`,
     source: "researchseminars",
     name: title,
     type: "seminar",

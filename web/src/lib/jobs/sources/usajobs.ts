@@ -1,4 +1,4 @@
-import { stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // USAJobs: US federal research positions (NIH, NSF, national labs). Free key
@@ -35,7 +35,7 @@ export function usaJobsDescriptorToRawItem(
     .filter(Boolean)
     .join("\n");
   return {
-    id: `usajobs:${id}`,
+    id: `usajobs:${routeSafeId(String(id))}`,
     source: "usajobs",
     title,
     company: descriptor.OrganizationName?.trim() || "U.S. Federal Government",
