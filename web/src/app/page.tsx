@@ -8,6 +8,7 @@ import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { apiFetch } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format";
+import { DotMatrixImage } from "@/components/dot-matrix-image";
 import { useProfileStore } from "@/store/profile";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
@@ -282,18 +283,16 @@ function DiscoveryPage() {
             <MetaRow profile={profile} />
           )}
         </div>
-        {/* Brand mark — hands + pear, transparent bg so it sits on any
-            theme. Hidden on phones where the greeting needs the room. */}
+        {/* Brand mark — hands + pear as a colored dot matrix (aspenlab.io
+            halftone treatment, in the artwork's own colors). Hidden on
+            phones where the greeting needs the room. */}
         {!isSearchMode && (
-          <Image
-            src="/logo.png"
-            alt=""
-            width={1254}
-            height={356}
-            priority
+          <div
             aria-hidden
-            className="hidden sm:block shrink-0 w-[250px] lg:w-[330px] h-auto select-none pointer-events-none translate-y-[4px]"
-          />
+            className="hidden sm:block shrink-0 w-[250px] lg:w-[330px] translate-y-[4px]"
+          >
+            <DotMatrixImage src="/logo.png" aspectRatio={1254 / 356} pitch={4} />
+          </div>
         )}
       </header>
 

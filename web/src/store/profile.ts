@@ -309,8 +309,12 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.feedAiApiKey !== undefined) merged.feedAiApiKey = remote.feedAiApiKey;
           if (remote.deepReportEnabled !== undefined) merged.deepReportEnabled = remote.deepReportEnabled;
           if (remote.colorTheme !== undefined) {
-            merged.colorTheme = remote.colorTheme;
-            applyColorTheme(remote.colorTheme);
+            // The server may still hold a pre-v2 single-name theme
+            // ("black", "lavender", …) — normalize BEFORE storing, or the
+            // picker's mode/accent split chokes on the legacy value.
+            const normalized = normalizeColorTheme(remote.colorTheme);
+            merged.colorTheme = normalized;
+            applyColorTheme(normalized);
           }
           return { profile: merged };
         }),
