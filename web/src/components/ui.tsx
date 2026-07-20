@@ -1,6 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { chipTones } from "@/components/ui/chip";
+import { sectionLabel } from "@/components/ui/section-label";
+import { cn } from "@/lib/cn";
 
 // ── Callout (Notion-style colored info box) ──
 
@@ -30,7 +33,7 @@ export function Callout({
     >
       {(title || icon) && (
         <header
-          className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
+          className={cn(sectionLabel({ size: "caption" }), "flex items-center gap-2 mb-2")}
         >
           {icon}
           {title}
@@ -143,11 +146,11 @@ export function Signal({
 type FactChipTone = "neutral" | "accent" | "tag" | "link" | "muted";
 
 const FACT_CHIP_TONE: Record<FactChipTone, string> = {
-  neutral: "bg-bg-secondary/55 text-text",
-  accent: "bg-accent-dim text-accent",
-  tag: "bg-tag-dim text-tag",
-  link: "bg-link-dim text-link",
-  muted: "bg-surface/70 text-text-faint",
+  neutral: chipTones.neutral,
+  accent: chipTones.accent,
+  tag: chipTones.tag,
+  link: chipTones.link,
+  muted: chipTones.muted,
 };
 
 export function FactChip({
@@ -180,7 +183,7 @@ export function SectionHeading({
 }) {
   return (
     <h2
-      className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mt-14 mb-5 flex items-baseline justify-between"
+      className={cn(sectionLabel({ size: "caption", tracking: "wide" }), "mt-14 mb-5 flex items-baseline justify-between")}
     >
       <span>{children}</span>
       {count !== undefined && (

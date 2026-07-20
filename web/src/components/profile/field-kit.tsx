@@ -15,6 +15,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { apiFetch } from "@/lib/api";
+import { chipTones } from "@/components/ui/chip";
 
 // ── Tone ────────────────────────────────────────────────────────
 
@@ -23,11 +24,11 @@ export type Tone = "accent" | "tag" | "link" | "neutral";
 export function toneBadge(tone: Tone = "neutral") {
   switch (tone) {
     case "accent":
-      return "text-accent bg-accent-dim";
+      return chipTones.accent;
     case "tag":
-      return "text-tag bg-tag-dim";
+      return chipTones.tag;
     case "link":
-      return "text-link bg-link-dim";
+      return chipTones.link;
     default:
       return "text-text-muted bg-bg-secondary/70";
   }

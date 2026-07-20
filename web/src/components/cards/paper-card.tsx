@@ -5,6 +5,7 @@ import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
 import { reviewPaperLabel } from "@/lib/papers/report";
+import { cardShell } from "@/components/ui/card-shell";
 
 const WORDS_PER_MINUTE = 220;
 function readMinutes(p: Paper): number {
@@ -25,7 +26,7 @@ export function PaperCard({ paper }: { paper: Paper }) {
   return (
     <Link
       href={`/papers/${paper.id}`}
-      className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
+      className={cardShell()}
     >
       {typeLabel && (
         <span

@@ -5,6 +5,7 @@ import { PaperCard } from "@/components/cards/paper-card";
 import { EventCard } from "@/components/cards/event-card";
 import { JobCard } from "@/components/cards/job-card";
 import { SectionHeading, EmptyState } from "@/components/ui";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function SavedPage() {
   const savedPapers = useFeedStore((s) => s.savedPapers);
@@ -14,7 +15,7 @@ export default function SavedPage() {
     savedPapers.length === 0 && savedEvents.length === 0 && savedJobs.length === 0;
 
   return (
-    <article className="mx-auto max-w-[740px] lg:max-w-[920px] px-6 py-16 lg:py-20">
+    <PageContainer width="wideResponsive" className="px-6 py-16 lg:py-20">
       <header className="mb-8">
         <h1
           className="text-[34px] lg:text-[38px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
@@ -61,6 +62,6 @@ export default function SavedPage() {
           )}
         </>
       )}
-    </article>
+    </PageContainer>
   );
 }

@@ -16,6 +16,7 @@ import { AdvisorField } from "@/components/profile/advisor-field";
 import { summarizePreferenceLedger } from "@/lib/preferences/ledger";
 import { apiFetch } from "@/lib/api";
 import { IconBook, IconBuilding, IconCheck, IconPin } from "@/components/icons";
+import { PageContainer } from "@/components/ui/page-container";
 import {
   type Tone,
   toneBadge,
@@ -133,7 +134,7 @@ export default function ProfilePage() {
   const total = signals.length;
 
   return (
-    <article className="mx-auto max-w-[740px] lg:max-w-[820px] px-6 py-16 lg:py-20">
+    <PageContainer width="contentResponsive" className="px-6 py-16 lg:py-20">
       {/* ── Header ── */}
       <header className="mb-8">
         <p
@@ -301,7 +302,7 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
-    </article>
+    </PageContainer>
   );
 }
 

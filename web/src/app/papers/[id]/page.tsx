@@ -36,6 +36,9 @@ import {
   type FigureState,
   type ResolveFigureArgs,
 } from "@/components/paper-figure";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+import { PageContainer } from "@/components/ui/page-container";
 
 const WORDS_PER_MINUTE = 220;
 const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
@@ -706,7 +709,7 @@ export default function PaperDetailPage({
   if (!paper) {
     if (isFetchingById) {
       return (
-        <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
+        <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
           <Link
             href="/"
             className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
@@ -717,16 +720,16 @@ export default function PaperDetailPage({
             Back
           </Link>
           <BriefingSkeleton />
-        </article>
+        </PageContainer>
       );
     }
     return (
-      <article className="mx-auto max-w-[720px] px-6 py-20 animate-fade-in-up">
+      <PageContainer width="narrow" className="px-6 py-20 animate-fade-in-up">
         <p className="text-text-muted italic">Paper not found.</p>
         <Link href="/" className="text-link text-body mt-3 inline-block">
           ← Back to feed
         </Link>
-      </article>
+      </PageContainer>
     );
   }
 
@@ -787,7 +790,7 @@ export default function PaperDetailPage({
   return (
     <>
       <ScrollProgress />
-      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
+      <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
         <Link
@@ -1292,7 +1295,7 @@ export default function PaperDetailPage({
             </div>
           </section>
         )}
-      </article>
+      </PageContainer>
     </>
   );
 }
@@ -1506,7 +1509,7 @@ function ActionRow({
         href={primaryUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-accent text-bg text-body-sm sm:text-body font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+        className={cn(buttonVariants({ tone: "primary" }), "group h-10 sm:h-11 px-4 sm:px-5 text-body-sm sm:text-body font-semibold hover:shadow-card-hover")}
       >
         {primaryLabel}
         <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">

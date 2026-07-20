@@ -1,0 +1,39 @@
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/cn";
+
+// One page column instead of seven hand-typed max-w values. Vertical
+// rhythm stays per-page (pass py-* via className).
+
+export const pageContainer = cva("mx-auto w-full px-6", {
+  variants: {
+    width: {
+      narrow: "max-w-[720px]",   // event detail, not-found
+      detail: "max-w-[760px]",   // paper/job detail
+      content: "max-w-[820px]",  // home column
+      wide: "max-w-[920px]",     // saved grid (lg)
+      board: "max-w-[1280px]",   // full-bleed feed board
+      // Pages that narrow on small screens, widen at lg
+      contentResponsive: "max-w-[740px] lg:max-w-[820px]", // profile
+      wideResponsive: "max-w-[740px] lg:max-w-[920px]",    // saved
+    },
+  },
+  defaultVariants: {
+    width: "content",
+  },
+});
+
+type PageContainerProps = React.HTMLAttributes<HTMLElement> &
+  VariantProps<typeof pageContainer> & {
+    as?: "div" | "article" | "main" | "section";
+  };
+
+export function PageContainer({
+  className,
+  width,
+  as: Tag = "article",
+  ...props
+}: PageContainerProps) {
+  return (
+    <Tag className={cn(pageContainer({ width }), className)} {...props} />
+  );
+}

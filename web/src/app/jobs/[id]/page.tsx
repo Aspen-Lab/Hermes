@@ -21,6 +21,9 @@ import {
   IconPin,
   IconStar,
 } from "@/components/icons";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+import { PageContainer } from "@/components/ui/page-container";
 
 function pickRelatedJobs(current: Job, pool: Job[], limit = 3): Job[] {
   const others = pool.filter((j) => j.id !== current.id);
@@ -69,12 +72,12 @@ export default function JobDetailPage({
 
   if (!job) {
     return (
-      <article className="mx-auto max-w-[720px] px-6 py-20">
+      <PageContainer width="narrow" className="px-6 py-20">
         <p className="text-text-muted italic">Job not found.</p>
         <Link href="/" className="text-link text-body mt-3 inline-block">
           ← Back to feed
         </Link>
-      </article>
+      </PageContainer>
     );
   }
 
@@ -92,7 +95,7 @@ export default function JobDetailPage({
   };
 
   return (
-    <article className="mx-auto max-w-[760px] px-6 py-14">
+    <PageContainer width="detail" className="px-6 py-14">
       <Link
         href="/"
         className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
@@ -233,7 +236,7 @@ export default function JobDetailPage({
           </div>
         </section>
       )}
-    </article>
+    </PageContainer>
   );
 }
 
@@ -284,7 +287,7 @@ function ActionRow({
           href={applyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2 h-11 px-5 rounded-full bg-accent text-bg text-body font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+          className={cn(buttonVariants({ tone: "primary" }), "group h-11 px-5 text-body font-semibold hover:shadow-card-hover")}
         >
           Apply for this role
           <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">

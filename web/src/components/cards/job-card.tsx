@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Relevance, ActionBar } from "@/components/ui";
+import { cardShell } from "@/components/ui/card-shell";
 
 export function JobCard({ job }: { job: Job }) {
   const { saveJob, notInterestedJob } = useFeedStore();
@@ -11,7 +12,7 @@ export function JobCard({ job }: { job: Job }) {
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
+      className={cardShell()}
     >
       <div className="flex items-start justify-between gap-4">
         <h3

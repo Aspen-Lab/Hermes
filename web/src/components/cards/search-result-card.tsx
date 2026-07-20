@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { formatCount, formatDate } from "@/lib/format";
+import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
 
 interface SearchResult {
   id: string;
@@ -150,7 +152,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
   return (
     <Link
       href={`/papers/${encodeURIComponent(result.id)}`}
-      className="group flex flex-col rounded-2xl bg-surface shadow-card p-5 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
+      className={cn(cardShell({ padding: "md" }), "flex flex-col")}
     >
       {/* Top: type + OA badges */}
       {(badge || result.isOpenAccess) && (

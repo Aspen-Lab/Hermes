@@ -8,6 +8,9 @@ import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { formatDate, formatMatchPct } from "@/lib/format";
+import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
+import { chipTones } from "@/components/ui/chip";
 
 type FeedItem =
   | { kind: "paper"; data: Paper }
@@ -19,13 +22,11 @@ interface RelevanceScored {
 }
 
 function tileShellClass(isRead: boolean) {
-  return [
-    "group relative block rounded-xl bg-surface shadow-card p-4",
-    "animate-fade-in-up",
-    "transition-[box-shadow,transform] duration-200 ease-out",
-    "hover:shadow-card-hover hover:-translate-y-[1px]",
-    isRead ? "opacity-70 hover:opacity-100" : "",
-  ].join(" ");
+  return cn(
+    cardShell({ radius: "xl", padding: "sm" }),
+    "relative hover:-translate-y-[1px]",
+    isRead && "opacity-70 hover:opacity-100",
+  );
 }
 
 type BadgeKind = "paper" | "event" | "job" | "discussion";
@@ -149,9 +150,9 @@ const KIND_LABEL: Record<BadgeKind, string> = {
 };
 
 const KIND_TONE: Record<BadgeKind, string> = {
-  paper: "text-accent bg-accent-dim",
-  event: "text-tag bg-tag-dim",
-  job: "text-link bg-link-dim",
+  paper: chipTones.accent,
+  event: chipTones.tag,
+  job: chipTones.link,
   discussion: "text-text-muted bg-bg-secondary/70",
 };
 

@@ -25,6 +25,9 @@ import {
 } from "@/lib/search/filters";
 import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { iconButtonVariants } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { cn } from "@/lib/cn";
 
 interface SearchResult {
   id: string;
@@ -465,11 +468,12 @@ function DiscoveryPage() {
                 disabled={query.length < 2 || isSearching}
                 aria-label="Search"
                 title="Search now (Enter)"
-                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-[background-color,opacity,box-shadow] active:scale-[0.94] ${
+                className={cn(
+                  iconButtonVariants({ size: "lg" }),
                   query.length >= 2 && !isSearching
-                    ? "bg-accent text-white shadow-[inset_0_-1px_0_rgba(0,0,0,0.12),0_1px_2px_color-mix(in_srgb,var(--color-accent)_25%,transparent)] hover:bg-accent/90"
-                    : "bg-bg-secondary text-text-faint/70 cursor-not-allowed"
-                }`}
+                    ? "bg-accent text-bg shadow-card hover:bg-accent/90"
+                    : "bg-bg-secondary text-text-faint/70 cursor-not-allowed",
+                )}
               >
                 {isSearching ? (
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden className="animate-spin">
@@ -517,29 +521,18 @@ function DiscoveryPage() {
                 <p className="text-caption leading-relaxed text-text-muted">
                   Read each paper&apos;s full text (HTML when available, PDF as fallback) before writing the report. Burns more tokens per paper but produces specific, paper-grounded reports instead of summarizing the abstract.
                 </p>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.deepReportEnabled}
-                  // Disabled only when the user explicitly picked a non-default
-                  // provider but hasn't typed a key. With "default" selected we
-                  // let the toggle through — the server resolves to whatever
-                  // the site is configured with (Vertex Gemini / Anthropic /
-                  // OpenAI / Qwen via env vars). If the site has no default
-                  // configured the API gracefully falls back to a shallow
-                  // report with an explanatory banner.
+                {/* Disabled only when the user explicitly picked a non-default
+                    provider but hasn't typed a key. With "default" selected we
+                    let the toggle through — the server resolves to whatever
+                    the site is configured with; with none configured the API
+                    falls back to a shallow report with a banner. */}
+                <Toggle
+                  checked={profile.deepReportEnabled}
+                  onChange={(next) => updateDeepReportEnabled(next)}
                   disabled={profile.feedAiProvider !== "default" && !profile.feedAiApiKey?.trim()}
-                  onClick={() => updateDeepReportEnabled(!profile.deepReportEnabled)}
-                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out disabled:opacity-40 disabled:cursor-not-allowed ${
-                    profile.deepReportEnabled ? "bg-accent" : "bg-bg-secondary"
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                      profile.deepReportEnabled ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
+                  className="mt-0.5"
+                  aria-label="Deep report"
+                />
               </div>
               <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
@@ -559,21 +552,12 @@ function DiscoveryPage() {
                 <p className="text-caption leading-relaxed text-text-muted">
                   Extra web scouting for paper leads.
                 </p>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.tavilyEnabled}
-                  onClick={() => updateTavilyEnabled(!profile.tavilyEnabled)}
-                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out ${
-                    profile.tavilyEnabled ? "bg-accent" : "bg-bg-secondary"
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                      profile.tavilyEnabled ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
+                <Toggle
+                  checked={profile.tavilyEnabled}
+                  onChange={(next) => updateTavilyEnabled(next)}
+                  className="mt-0.5"
+                  aria-label="Tavily web scouting"
+                />
               </div>
               <input
                 type="password"

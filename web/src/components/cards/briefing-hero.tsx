@@ -6,6 +6,8 @@ import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { PaperFigure } from "@/components/paper-figure";
+import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
 
 export type HeroItem =
   | { kind: "paper"; data: Paper }
@@ -54,7 +56,7 @@ export function BriefingHero({ item }: { item: HeroItem }) {
   return (
     <Link
       href={detail}
-      className="group relative block rounded-3xl bg-surface shadow-card p-8 lg:p-10 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card overflow-hidden"
+      className={cn(cardShell({ radius: "3xl", padding: "xl" }), "relative lg:p-10 overflow-hidden")}
     >
       <span
         className="absolute left-0 top-8 bottom-8 w-[3px] rounded-r-full bg-accent/80"
