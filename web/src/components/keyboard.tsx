@@ -200,7 +200,7 @@ function ChordHint() {
       className="fixed bottom-6 right-6 z-[65] pointer-events-none animate-fade-in-up"
       style={{ "--i": 0} as React.CSSProperties}
     >
-      <div className="flex items-center gap-2 bg-heading text-bg rounded-full px-3.5 py-2 text-[12px] shadow-card-hover">
+      <div className="flex items-center gap-2 bg-heading text-bg rounded-full px-3.5 py-2 text-meta shadow-card-hover">
         <Kbd>g</Kbd>
         <span className="text-bg/60">then</span>
         <Kbd>h</Kbd>
@@ -243,7 +243,7 @@ function HelpOverlay({
         style={{ "--i": 0} as React.CSSProperties}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+          <h2 className="text-body-sm font-semibold uppercase tracking-[0.18em] text-text-faint">
             Keyboard shortcuts
           </h2>
           <button
@@ -271,14 +271,14 @@ function HelpOverlay({
         <div className="space-y-5">
           {GROUPS.map((group) => (
             <section key={group.title}>
-              <h3 className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint/80 mb-2">
+              <h3 className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint/80 mb-2">
                 {group.title}
               </h3>
               <ul className="space-y-1.5">
                 {group.items.map((s) => (
                   <li
                     key={s.keys}
-                    className="flex items-center justify-between gap-4 text-[13.5px]"
+                    className="flex items-center justify-between gap-4 text-body-sm"
                   >
                     <span className="text-text">{s.label}</span>
                     <span className="flex items-center gap-1">
@@ -286,7 +286,7 @@ function HelpOverlay({
                         <span key={i} className="flex items-center gap-1">
                           <Kbd>{k}</Kbd>
                           {i < arr.length - 1 && (
-                            <span className="text-text-faint text-[11px]">then</span>
+                            <span className="text-text-faint text-caption">then</span>
                           )}
                         </span>
                       ))}
@@ -298,7 +298,7 @@ function HelpOverlay({
           ))}
         </div>
 
-        <p className="mt-5 pt-4 border-t border-border text-[11.5px] text-text-faint">
+        <p className="mt-5 pt-4 border-t border-border text-caption text-text-faint">
           Press <Kbd>?</Kbd> anywhere to open this again.
         </p>
       </div>
@@ -309,7 +309,7 @@ function HelpOverlay({
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd
-      className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md bg-bg-secondary shadow-well text-[11.5px] text-heading font-medium tabular-nums font-mono"
+      className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md bg-bg-secondary shadow-well text-caption text-heading font-medium tabular-nums font-mono"
     >
       {children}
     </kbd>

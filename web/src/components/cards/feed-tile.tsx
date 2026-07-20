@@ -167,7 +167,7 @@ function KindBadge({ kind }: { kind: BadgeKind }) {
   const Icon = KIND_ICON[kind];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
+      className={`inline-flex items-center gap-1.5 text-micro font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
     >
       <Icon />
       {KIND_LABEL[kind]}
@@ -189,7 +189,7 @@ function ScoreChip({ scored }: { scored: RelevanceScored }) {
   if (pct == null) return null;
   return (
     <span
-      className="text-[10.5px] tabular-nums text-text-faint shrink-0"
+      className="text-micro tabular-nums text-text-faint shrink-0"
     >
       {pct}%
     </span>
@@ -284,19 +284,19 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={paper} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {paper.title}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-1 min-w-0">
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-1 min-w-0">
         <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {paper.relevanceReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {paper.source}
         </span>
         <span className="flex-1" aria-hidden />
@@ -360,10 +360,10 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={event} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {event.name}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
         <MetaItem icon={CalendarMini}>{formatDate(event.date, "short")}</MetaItem>
         {(event.isOnline || event.location) && (
           <MetaItem icon={event.isOnline ? GlobeMini : PinMini}>
@@ -372,12 +372,12 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {event.relevanceReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-2">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate">
           {event.type}
         </span>
         <span className="flex-1" aria-hidden />
@@ -405,10 +405,10 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={job} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {job.roleTitle}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
         <MetaItem icon={BuildingMini}>{job.companyOrLab}</MetaItem>
         {(job.isRemote || job.location) && (
           <MetaItem icon={job.isRemote ? GlobeMini : PinMini}>
@@ -417,12 +417,12 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {job.matchReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-2">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate">
           {job.keyRequirements[0] || "Role"}
         </span>
         <span className="flex-1" aria-hidden />

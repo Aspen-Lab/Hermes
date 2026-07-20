@@ -16,7 +16,7 @@ export default function PersonaPage() {
           Academic persona
         </h1>
         <p
-          className="text-text-muted mt-3 text-[16px] leading-[1.6] max-w-[520px] font-reading"
+          className="text-text-muted mt-3 text-lead leading-[1.6] max-w-[520px] font-reading"
         >
           Fifteen forced-choice questions across five working-style axes. Not a
           test, not a label — a description of how you tend to operate, useful

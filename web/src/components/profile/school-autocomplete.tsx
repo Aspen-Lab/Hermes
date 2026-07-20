@@ -100,7 +100,7 @@ export function SchoolAutocomplete({
         onFocus={() => setOpen(true)}
         onKeyDown={handleKey}
         placeholder={placeholder}
-        className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+        className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         autoComplete="off"
         spellCheck={false}
       />
@@ -126,7 +126,7 @@ export function SchoolAutocomplete({
                 }}
                 onMouseEnter={() => setHighlighted(i)}
                 className={[
-                  "px-3 py-1.5 text-[13.5px] cursor-pointer transition-colors",
+                  "px-3 py-1.5 text-body-sm cursor-pointer transition-colors",
                   active
                     ? "bg-accent-dim/70 text-heading"
                     : "text-text hover:bg-bg-secondary/60",

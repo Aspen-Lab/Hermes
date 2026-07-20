@@ -119,17 +119,17 @@ export function PersonaQuiz() {
             style={{ width: `${progress * 100}%` }}
           />
         </div>
-        <span className="text-[12px] text-text-faint tabular-nums shrink-0">
+        <span className="text-meta text-text-faint tabular-nums shrink-0">
           {state.step + 1} / {total}
         </span>
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
+        <span className="text-caption uppercase tracking-[0.16em] text-text-faint">
           {axisLabel(current.axis)}
         </span>
         <h2
-          className="text-[20px] text-heading leading-snug font-reading"
+          className="text-title-lg text-heading leading-snug font-reading"
         >
           Which is more you?
         </h2>
@@ -140,7 +140,7 @@ export function PersonaQuiz() {
         <ChoiceButton text={current.b} onClick={() => choose(1)} />
       </div>
 
-      <div className="flex items-center justify-between text-[12px] text-text-faint">
+      <div className="flex items-center justify-between text-meta text-text-faint">
         <button
           type="button"
           onClick={back}
@@ -166,7 +166,7 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className="text-left p-5 rounded-2xl bg-surface shadow-card hover:shadow-card-hover hover:-translate-y-[1px] active:translate-y-0 active:shadow-card transition-[box-shadow,transform] duration-200 text-[15px] text-text leading-[1.5]"
+      className="text-left p-5 rounded-2xl bg-surface shadow-card hover:shadow-card-hover hover:-translate-y-[1px] active:translate-y-0 active:shadow-card transition-[box-shadow,transform] duration-200 text-body-lg text-text leading-[1.5]"
     >
       {text}
     </button>

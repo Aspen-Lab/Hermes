@@ -136,7 +136,7 @@ export function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
           aria-expanded={moreOpen}
           className={[
             "group inline-flex items-center h-10 rounded-full px-4 gap-1.5",
-            "text-[13.5px] font-medium tracking-[-0.005em]",
+            "text-body-sm font-medium tracking-[-0.005em]",
             "transition-all duration-200 ease-out active:scale-[0.97]",
             moreActive
               ? "bg-[color:var(--color-accent-dim)] text-[color:var(--color-accent)] shadow-card hover:shadow-card-hover"
@@ -147,7 +147,7 @@ export function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
           <span
             aria-hidden
             className={[
-              "inline-block text-[10px] transition-transform duration-200",
+              "inline-block text-micro transition-transform duration-200",
               moreOpen ? "rotate-180" : "",
               moreActive ? "opacity-70" : "opacity-50",
             ].join(" ")}
@@ -163,7 +163,7 @@ export function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
               onReset();
               setMoreOpen(false);
             }}
-            className="ml-1 text-[12px] text-text-faint hover:text-[color:var(--color-accent)] transition-colors"
+            className="ml-1 text-meta text-text-faint hover:text-[color:var(--color-accent)] transition-colors"
           >
             Reset
           </button>
@@ -255,7 +255,7 @@ function YearPanel({ filters, onChange, close }: YearPanelProps) {
             placeholder="From"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="w-20 bg-[color:var(--color-bg-secondary)] rounded-md py-1.5 px-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-20 bg-[color:var(--color-bg-secondary)] rounded-md py-1.5 px-2 text-body-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <span className="text-text-faint">–</span>
           <label className="sr-only" htmlFor="peer-year-to">
@@ -269,12 +269,12 @@ function YearPanel({ filters, onChange, close }: YearPanelProps) {
             placeholder="To"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-20 bg-[color:var(--color-bg-secondary)] rounded-md py-1.5 px-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-20 bg-[color:var(--color-bg-secondary)] rounded-md py-1.5 px-2 text-body-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <button
             type="button"
             onClick={applyCustom}
-            className="ml-auto h-7 px-3 rounded-full bg-[color:var(--color-accent)] text-white text-[12.5px] font-medium hover:opacity-90"
+            className="ml-auto h-7 px-3 rounded-full bg-[color:var(--color-accent)] text-white text-meta font-medium hover:opacity-90"
           >
             Apply
           </button>

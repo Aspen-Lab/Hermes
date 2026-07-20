@@ -178,7 +178,7 @@ export function Nav() {
             <Image src="/logo-mark.png" alt="" width={26} height={26} className="shrink-0" />
             {/* Brand wordmark hides on the narrowest phones to leave room
                 for tabs + account; reappears at sm (≥640px). */}
-            <span className="text-[18px] font-normal italic tracking-[-0.01em] hidden sm:inline">
+            <span className="text-title font-normal italic tracking-[-0.01em] hidden sm:inline">
               Peer
             </span>
           </Link>
@@ -193,7 +193,7 @@ export function Nav() {
                 <Link
                   key={href}
                   href={href}
-                  className={`relative px-2 py-1.5 text-[12.5px] transition-colors duration-200 ease-out active:scale-95 ${
+                  className={`relative px-2 py-1.5 text-meta transition-colors duration-200 ease-out active:scale-95 ${
                     active
                       ? "text-heading font-medium"
                       : "text-text-faint hover:text-text-muted"
@@ -201,7 +201,7 @@ export function Nav() {
                 >
                   {label}
                   {n > 0 && (
-                    <span className="ml-1 text-[10.5px] tabular-nums text-accent">
+                    <span className="ml-1 text-micro tabular-nums text-accent">
                       {n}
                     </span>
                   )}
@@ -272,7 +272,7 @@ export function Nav() {
                 key={href}
                 href={href}
                 tabIndex={sidebarOpen ? 0 : -1}
-                className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13.5px] transition-all duration-200 ease-out active:scale-[0.98] ${
+                className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-body-sm transition-all duration-200 ease-out active:scale-[0.98] ${
                   active
                     ? "text-heading bg-surface shadow-card"
                     : "text-text-faint hover:text-heading hover:bg-surface/50"
@@ -288,7 +288,7 @@ export function Nav() {
                   </span>
                   <span className="truncate">{label}</span>
                   {n > 0 && (
-                    <span className="inline-flex items-center gap-1 text-accent text-[11.5px] tabular-nums">
+                    <span className="inline-flex items-center gap-1 text-accent text-caption tabular-nums">
                       {href === "/" && (
                         <span
                           className="block w-[5px] h-[5px] rounded-full bg-accent"
@@ -309,7 +309,7 @@ export function Nav() {
         <div
           className="px-4 py-4 border-t border-border flex flex-col gap-3"
         >
-          <div className="flex items-center gap-2 text-[11px] text-text-faint">
+          <div className="flex items-center gap-2 text-caption text-text-faint">
             <span
               className={`block w-[6px] h-[6px] rounded-full shrink-0 ${
                 lastRefresh ? "bg-accent" : "bg-border-strong"
@@ -333,12 +333,12 @@ export function Nav() {
               onClick={openHelp}
               tabIndex={sidebarOpen ? 0 : -1}
               title="Keyboard shortcuts"
-              className="group inline-flex items-center gap-1.5 text-[11px] text-text-faint hover:text-heading transition-colors active:scale-[0.95]"
+              className="group inline-flex items-center gap-1.5 text-caption text-text-faint hover:text-heading transition-colors active:scale-[0.95]"
             >
               <NavKbd>?</NavKbd>
               Shortcuts
             </button>
-            <span className="text-[10px] text-text-faint/70 tracking-wider uppercase">
+            <span className="text-micro text-text-faint/70 tracking-wider uppercase">
               v0.1.0
             </span>
           </div>
@@ -389,7 +389,7 @@ export function Nav() {
         {/* Unread badge — hidden when zero or sidebar is open */}
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-bg text-[10.5px] font-semibold tabular-nums shadow-card border border-bg/20 group-hover:opacity-0 transition-opacity duration-200"
+            className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-bg text-micro font-semibold tabular-nums shadow-card border border-bg/20 group-hover:opacity-0 transition-opacity duration-200"
             aria-label={`${unreadCount} unread`}
           >
             {unreadCount > 99 ? "99+" : unreadCount}

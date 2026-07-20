@@ -158,7 +158,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           {badge && (
             <span
               className={[
-                "inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em]",
+                "inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-micro font-semibold uppercase tracking-[0.12em]",
                 badge.className,
               ].join(" ")}
             >
@@ -167,7 +167,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
             </span>
           )}
           {result.isOpenAccess && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em] text-peach bg-peach-dim">
+            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-micro font-semibold uppercase tracking-[0.12em] text-peach bg-peach-dim">
               <LockOpenIcon />
               Open access
             </span>
@@ -176,13 +176,13 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       )}
 
       {/* Title */}
-      <h3 className="text-[16.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-3 group-hover:text-[color:var(--color-accent)] transition-colors">
+      <h3 className="text-lead font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-3 group-hover:text-[color:var(--color-accent)] transition-colors">
         {result.title}
       </h3>
 
       {/* Authors */}
       {result.authors.length > 0 && (
-        <p className="text-[12px] text-text-muted mt-2 line-clamp-1">
+        <p className="text-meta text-text-muted mt-2 line-clamp-1">
           {result.authors.slice(0, 3).join(", ")}
           {result.authors.length > 3 && ` +${result.authors.length - 3}`}
         </p>
@@ -190,7 +190,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
 
       {/* Meta row: venue + date */}
       {(result.venue || result.publishedDate) && (
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2.5 text-[11.5px] text-text-faint">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2.5 text-caption text-text-faint">
           {result.venue && (
             <span className="inline-flex items-center gap-1 min-w-0">
               <BookIcon />
@@ -211,7 +211,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       {/* Abstract */}
       {result.abstract && (
         <p
-          className="text-[13.5px] text-text-muted mt-3 leading-[1.55] line-clamp-3 font-reading"
+          className="text-body-sm text-text-muted mt-3 leading-[1.55] line-clamp-3 font-reading"
         >
           {result.abstract}
         </p>
@@ -222,7 +222,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       {/* Footer metric */}
       {result.citationCount > 0 && (
         <div className="mt-4 pt-3 border-t border-[color:var(--color-border)] flex items-center justify-end">
-          <span className="inline-flex items-center gap-1 text-[11.5px] text-text-faint tabular-nums">
+          <span className="inline-flex items-center gap-1 text-caption text-text-faint tabular-nums">
             <CitationIcon />
             <span className="font-medium text-text-muted">
               {formatCount(result.citationCount)}

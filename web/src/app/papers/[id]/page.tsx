@@ -709,7 +709,7 @@ export default function PaperDetailPage({
         <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
           <Link
             href="/"
-            className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
+            className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
           >
             <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
               ←
@@ -723,7 +723,7 @@ export default function PaperDetailPage({
     return (
       <article className="mx-auto max-w-[720px] px-6 py-20 animate-fade-in-up">
         <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+        <Link href="/" className="text-link text-body mt-3 inline-block">
           ← Back to feed
         </Link>
       </article>
@@ -792,7 +792,7 @@ export default function PaperDetailPage({
         {/* ── Back ── */}
         <Link
           href="/"
-          className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
+          className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
         >
           <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
             ←
@@ -807,7 +807,7 @@ export default function PaperDetailPage({
         >
           {reviewLabel && (
             <span
-              className="inline-block mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md bg-tag-dim text-tag"
+              className="inline-block mb-3 text-caption font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md bg-tag-dim text-tag"
             >
               {reviewLabel}
             </span>
@@ -818,7 +818,7 @@ export default function PaperDetailPage({
             {paper.title}
           </h1>
           <p
-            className="text-text-muted mt-3 text-[14.5px] leading-[1.7]"
+            className="text-text-muted mt-3 text-body leading-[1.7]"
           >
             {paper.authors.map((author, i) => (
               <span key={author}>
@@ -894,7 +894,7 @@ export default function PaperDetailPage({
             report looks shallower than they expected. */}
         {report?.paywallNotice && (
           <div
-            className="mt-6 rounded-xl bg-yellow-dim px-4 py-3 text-[13px] leading-relaxed text-yellow"
+            className="mt-6 rounded-xl bg-yellow-dim px-4 py-3 text-body-sm leading-relaxed text-yellow"
             role="status"
           >
             <span className="font-semibold">Deep report unavailable —</span>{" "}
@@ -906,7 +906,7 @@ export default function PaperDetailPage({
             text and tells the user which source served it. */}
         {report?.depth === "deep" && (
           <div
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-[11.5px] font-medium text-accent"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-caption font-medium text-accent"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -925,7 +925,7 @@ export default function PaperDetailPage({
 
         <div className="rounded-2xl bg-accent-dim px-5 py-4">
           <p
-            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
+            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
           >
             <IconBullseye />
             Relevance
@@ -941,7 +941,7 @@ export default function PaperDetailPage({
               {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
                 <li
                   key={i}
-                  className="flex gap-2.5 text-[15px] text-text leading-[1.65] font-reading"
+                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
                 >
                   <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
                   <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
@@ -1081,12 +1081,12 @@ export default function PaperDetailPage({
                   className="rounded-2xl bg-surface px-5 py-4 shadow-card"
                 >
                   <p
-                    className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-1"
+                    className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-1"
                   >
                     {section.heading}
                   </p>
                   <p
-                    className="text-[15px] text-text leading-[1.68] break-words font-reading"
+                    className="text-body-lg text-text leading-[1.68] break-words font-reading"
                   >
                     {section.summary}
                   </p>
@@ -1234,7 +1234,7 @@ export default function PaperDetailPage({
 
         {reportLoading && (
           <p
-            className="mt-3 text-[12px] text-text-faint"
+            className="mt-3 text-meta text-text-faint"
           >
             Refining report with AI…
           </p>
@@ -1248,7 +1248,7 @@ export default function PaperDetailPage({
           <button
             type="button"
             onClick={() => moreLikePaper(paper)}
-            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface shadow-card text-[13.5px] text-text-muted hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
+            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface shadow-card text-body-sm text-text-muted hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
           >
             <svg
               width="14"
@@ -1268,7 +1268,7 @@ export default function PaperDetailPage({
             More like this
           </button>
           <span
-            className="text-[12.5px] text-text-faint"
+            className="text-meta text-text-faint"
           >
             Tomorrow&rsquo;s briefing leans toward this paper&rsquo;s topics, methods, and venue.
           </span>
@@ -1281,7 +1281,7 @@ export default function PaperDetailPage({
             style={{ "--i": 7 } as React.CSSProperties}
           >
             <h2
-              className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
+              className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
             >
               Related from your feed
             </h2>
@@ -1310,7 +1310,7 @@ function SectionTitle({
 }) {
   return (
     <h2
-      className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
+      className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
       style={{
         "--i": index,
         } as React.CSSProperties}
@@ -1334,18 +1334,18 @@ function ResultClaimList({
           className={index > 0 ? "border-t border-border pt-4" : undefined}
         >
           <h3
-            className="text-[17px] sm:text-[18px] font-semibold text-heading leading-snug break-words"
+            className="text-title sm:text-title font-semibold text-heading leading-snug break-words"
           >
             {result.title}
           </h3>
           <p
-            className="mt-2 text-[15px] text-text leading-[1.68] break-words font-reading"
+            className="mt-2 text-body-lg text-text leading-[1.68] break-words font-reading"
           >
             {result.detail}
           </p>
           {result.novelty && (
             <p
-              className="mt-2 text-[14px] text-text-muted leading-[1.55] break-words"
+              className="mt-2 text-body text-text-muted leading-[1.55] break-words"
             >
               <span className="font-semibold text-heading">
                 Why it&apos;s new:
@@ -1382,7 +1382,7 @@ function ReportFigureRow({
     <div className="flex flex-col gap-5">
       <div className="rounded-2xl bg-surface px-5 py-4 shadow-card">
         <p
-          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
+          className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
         >
           {title}
         </p>
@@ -1400,7 +1400,7 @@ function ReportFigureRow({
           content
         ) : hasBody ? (
           <p
-            className={`text-[16px] leading-[1.72] break-words font-reading ${
+            className={`text-lead leading-[1.72] break-words font-reading ${
               emphasis ? "font-semibold text-heading" : "text-text"
             }`}
           >
@@ -1409,7 +1409,7 @@ function ReportFigureRow({
         ) : null}
         {!loading && visibleBullets.length > 0 && (
           <ol
-            className="mt-4 space-y-2 text-[14px] text-text-muted leading-[1.55] list-decimal list-inside"
+            className="mt-4 space-y-2 text-body text-text-muted leading-[1.55] list-decimal list-inside"
           >
             {visibleBullets.map((bullet) => (
               <li key={bullet}>{bullet}</li>
@@ -1506,10 +1506,10 @@ function ActionRow({
         href={primaryUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-accent text-bg text-[13.5px] sm:text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+        className="group inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-accent text-bg text-body-sm sm:text-body font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
       >
         {primaryLabel}
-        <span className="text-[11px] opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+        <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
           ↗
         </span>
       </a>
@@ -1520,7 +1520,7 @@ function ActionRow({
         onClick={isSaved ? onUnsave : onSave}
         aria-pressed={isSaved}
         aria-label={isSaved ? "Remove from saved" : "Save"}
-        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isSaved
             ? "bg-accent-dim text-accent shadow-card"
             : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover"
@@ -1569,7 +1569,7 @@ function ActionRow({
         onClick={handleCopyCitation}
         aria-label="Copy BibTeX citation"
         title="Copy BibTeX to clipboard"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -1598,7 +1598,7 @@ function ActionRow({
       <Link
         href={surfaceHref}
         aria-label="Open thinking surface"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -1628,7 +1628,7 @@ function ActionRow({
         onClick={onLike}
         aria-pressed={isLiked}
         aria-label="Like — train feed on this"
-        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isLiked
             ? "bg-accent-dim text-accent shadow-card"
             : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-accent hover:bg-accent-dim"
@@ -1656,7 +1656,7 @@ function ActionRow({
         onClick={onDismiss}
         aria-label="Not interested — show less like this"
         title="Not interested"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-red hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-red hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"

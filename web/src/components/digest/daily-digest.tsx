@@ -125,7 +125,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
       aria-label="Daily briefing digest"
     >
       <header className="flex items-center justify-between gap-2 mb-4">
-        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent/90 min-w-0">
+        <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.18em] text-accent/90 min-w-0">
           <span className="inline-block w-3.5 h-[1.5px] bg-accent/70 shrink-0" />
           <span className="truncate">Today&rsquo;s highlights</span>
         </span>
@@ -153,7 +153,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
               <path d="M23 4v6h-6" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
-            <span className="text-[11.5px] font-medium hidden sm:inline">Regenerate</span>
+            <span className="text-caption font-medium hidden sm:inline">Regenerate</span>
           </button>
           <AudioButton />
         </div>
@@ -178,7 +178,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
                 href={`#paper-${actualPaperId}`}
                 onClick={scrollTo}
                 title={paper?.title ?? "Jump to paper"}
-                className={`flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full text-[11px] font-semibold flex items-center justify-center transition-colors no-underline ${
+                className={`flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full text-caption font-semibold flex items-center justify-center transition-colors no-underline ${
                   isSelected
                     ? "bg-accent text-bg"
                     : "bg-accent/15 text-accent hover:bg-accent hover:text-bg"
@@ -187,7 +187,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
                 {i + 1}
               </a>
               <p
-                className="text-[15.5px] lg:text-[16.5px] text-heading leading-[1.65] font-reading"
+                className="text-body-lg lg:text-lead text-heading leading-[1.65] font-reading"
               >
                 {bullet.text}
               </p>
@@ -218,7 +218,7 @@ function AudioButton() {
       >
         <path d="M8 5v14l11-7z" />
       </svg>
-      <span className="text-[11.5px] font-medium hidden sm:inline">Listen</span>
+      <span className="text-caption font-medium hidden sm:inline">Listen</span>
       <span className="text-[9.5px] opacity-70 uppercase tracking-[0.1em] ml-0.5 hidden sm:inline">
         soon
       </span>

@@ -16,7 +16,7 @@ export function EventCard({ event }: { event: Event }) {
     >
       <div className="flex items-start justify-between gap-4">
         <h3
-          className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
+          className="text-title-lg font-semibold text-heading leading-snug tracking-[-0.01em]"
         >
           {event.name}
         </h3>
@@ -24,7 +24,7 @@ export function EventCard({ event }: { event: Event }) {
       </div>
 
       <p
-        className="text-[13.5px] text-text-muted mt-2.5"
+        className="text-body-sm text-text-muted mt-2.5"
       >
         {formatDate(event.date)} · {event.isOnline ? "Online" : event.location}
       </p>
@@ -33,7 +33,7 @@ export function EventCard({ event }: { event: Event }) {
         <Tag>{event.type}</Tag>
       </div>
 
-      <p className="text-[15.5px] text-text-muted mt-4 leading-[1.65] line-clamp-2">
+      <p className="text-body-lg text-text-muted mt-4 leading-[1.65] line-clamp-2">
         {event.relevanceReason}
       </p>
 

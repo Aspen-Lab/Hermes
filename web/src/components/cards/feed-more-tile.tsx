@@ -82,26 +82,26 @@ export function FeedMoreTile({
           {underTuned ? "Setup" : "More"}
         </span>
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em]">
         {title}
       </h3>
       <p
-        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] font-reading"
+        className="text-meta text-text-muted mt-2.5 leading-[1.55] font-reading"
       >
         {body}
       </p>
 
       <div className="mt-4 pt-3 border-t border-text-faint/15 flex items-center justify-between">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em]">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em]">
           {itemCount} item{itemCount === 1 ? "" : "s"} now
         </span>
         {primary.kind === "link" ? (
           <Link
             href={primary.href}
-            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-accent hover:text-accent/80 transition-colors active:scale-[0.97]"
+            className="inline-flex items-center gap-1 text-meta font-medium text-accent hover:text-accent/80 transition-colors active:scale-[0.97]"
           >
             {primary.label}
-            <span className="text-[11px] opacity-80 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">
+            <span className="text-caption opacity-80 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">
               →
             </span>
           </Link>
@@ -110,11 +110,11 @@ export function FeedMoreTile({
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-accent hover:text-accent/80 transition-colors disabled:opacity-50 active:scale-[0.97]"
+            className="inline-flex items-center gap-1 text-meta font-medium text-accent hover:text-accent/80 transition-colors disabled:opacity-50 active:scale-[0.97]"
           >
             {primary.label}
             {!isLoading && (
-              <span className="text-[11px] opacity-80 transition-transform duration-200 ease-out group-hover:rotate-90">
+              <span className="text-caption opacity-80 transition-transform duration-200 ease-out group-hover:rotate-90">
                 ↻
               </span>
             )}

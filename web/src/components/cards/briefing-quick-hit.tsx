@@ -67,7 +67,7 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
       </span>
 
       <span
-        className={`shrink-0 text-[10.5px] font-semibold uppercase tracking-[0.14em] w-[46px] ${
+        className={`shrink-0 text-micro font-semibold uppercase tracking-[0.14em] w-[46px] ${
           isRead ? "text-text-faint/60" : "text-text-faint"
         }`}
       >
@@ -75,7 +75,7 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
       </span>
 
       <span
-        className={`flex-1 min-w-0 text-[15.5px] truncate transition-colors ${
+        className={`flex-1 min-w-0 text-body-lg truncate transition-colors ${
           isRead
             ? "text-text-faint group-hover:text-text-muted"
             : "text-heading group-hover:text-accent"
@@ -85,7 +85,7 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
       </span>
 
       <span
-        className={`hidden sm:inline text-[12.5px] truncate max-w-[38%] ${
+        className={`hidden sm:inline text-meta truncate max-w-[38%] ${
           isRead ? "text-text-faint/60" : "text-text-faint"
         }`}
       >

@@ -93,7 +93,7 @@ export default function EventDetailPage({
     return (
       <article className="mx-auto max-w-[720px] px-6 py-20">
         <p className="text-text-muted italic">Event not found.</p>
-        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+        <Link href="/" className="text-link text-body mt-3 inline-block">
           ← Back to feed
         </Link>
       </article>
@@ -120,7 +120,7 @@ export default function EventDetailPage({
     <article className="mx-auto max-w-[720px] px-6 py-14">
       <Link
         href="/"
-        className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
+        className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
       >
         <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
           ←
@@ -134,7 +134,7 @@ export default function EventDetailPage({
         style={{ "--i": 0 } as React.CSSProperties}
       >
         <div
-          className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 text-[12px] uppercase tracking-[0.14em] text-text-faint mb-3"
+          className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 text-meta uppercase tracking-[0.14em] text-text-faint mb-3"
         >
           <span className={`inline-flex items-center gap-1.5 ${eventUrgency.text}`}>
             <span className={`block w-[6px] h-[6px] rounded-full ${eventUrgency.dot}`} />
@@ -163,7 +163,7 @@ export default function EventDetailPage({
         </h1>
 
         <div
-          className="mt-5 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[14px]"
+          className="mt-5 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-body"
         >
           <FactRow icon="calendar" label="When">
             <span className="text-heading font-medium">
@@ -176,7 +176,7 @@ export default function EventDetailPage({
             <span className="text-heading font-medium">
               {event.isOnline ? "Online" : event.location}
             </span>
-            <span className="ml-2 text-text-faint text-[12.5px]">
+            <span className="ml-2 text-text-faint text-meta">
               {event.isOnline ? "Remote participation" : "In person"}
             </span>
           </FactRow>
@@ -201,11 +201,11 @@ export default function EventDetailPage({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p
-                className={`text-[10.5px] font-semibold uppercase tracking-[0.18em] ${deadlineStyle.text}`}
+                className={`text-micro font-semibold uppercase tracking-[0.18em] ${deadlineStyle.text}`}
               >
                 Submission deadline · {deadlineStyle.label}
               </p>
-              <p className="mt-1.5 text-[17px] text-heading font-semibold">
+              <p className="mt-1.5 text-title text-heading font-semibold">
                 {formatDate(event.deadline, "full")}
               </p>
             </div>
@@ -217,7 +217,7 @@ export default function EventDetailPage({
                     ? Math.abs(daysToDeadline)
                     : "—"}
               </p>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-text-faint mt-0.5">
+              <p className="text-caption uppercase tracking-[0.14em] text-text-faint mt-0.5">
                 {daysToDeadline !== null && daysToDeadline >= 0
                   ? "days left"
                   : "days ago"}
@@ -237,12 +237,12 @@ export default function EventDetailPage({
 
       {/* ── About ── */}
       <DetailSection title="About" index={3}>
-        <p className="text-[17px] leading-[1.75]">{event.shortDescription}</p>
+        <p className="text-title leading-[1.75]">{event.shortDescription}</p>
       </DetailSection>
 
       {/* ── Why this fits you ── */}
       <DetailSection title="Why this fits you" index={4}>
-        <p className="text-[17px] leading-[1.75]">{event.relevanceReason}</p>
+        <p className="text-title leading-[1.75]">{event.relevanceReason}</p>
       </DetailSection>
 
       {/* ── Quick facts ── */}
@@ -274,7 +274,7 @@ export default function EventDetailPage({
           style={{ "--i": 7 } as React.CSSProperties}
         >
           <h2
-            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
+            className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
           >
             Related from your feed
           </h2>
@@ -304,7 +304,7 @@ function FactRow({
     <>
       <div className="flex items-center gap-2 text-text-faint">
         <Icon name={icon} />
-        <span className="text-[11px] uppercase tracking-[0.16em]">{label}</span>
+        <span className="text-caption uppercase tracking-[0.16em]">{label}</span>
       </div>
       <div className="text-text">{children}</div>
     </>
@@ -359,10 +359,10 @@ function LinkChip({ href, label }: { href?: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-[12.5px] text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
+      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-meta text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
     >
       {label}
-      <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+      <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
         ↗
       </span>
     </a>
@@ -399,7 +399,7 @@ function Timeline({
         />
       </div>
       <div
-        className="flex items-center justify-between mt-2 text-[10.5px] uppercase tracking-[0.14em] text-text-faint"
+        className="flex items-center justify-between mt-2 text-micro uppercase tracking-[0.14em] text-text-faint"
       >
         <span>Deadline · {formatDate(deadline, "medium")}</span>
         <span>Event · {formatDate(eventDate, "medium")}</span>
@@ -433,10 +433,10 @@ function ActionRow({
           href={primaryHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2 h-11 px-5 rounded-full bg-accent text-bg text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+          className="group inline-flex items-center gap-2 h-11 px-5 rounded-full bg-accent text-bg text-body font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
         >
           {primaryLabel}
-          <span className="text-[11px] opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+          <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
             ↗
           </span>
         </a>
@@ -447,7 +447,7 @@ function ActionRow({
         onClick={onSave}
         aria-pressed={isSaved}
         aria-label={isSaved ? "Saved" : "Save"}
-        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isSaved
             ? "bg-accent/10 text-accent border border-accent/40"
             : "bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover"

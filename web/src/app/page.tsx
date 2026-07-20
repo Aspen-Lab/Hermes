@@ -335,7 +335,7 @@ function DiscoveryPage() {
                 }
               }}
               placeholder="Search papers, events, jobs…  (press /)"
-              className="w-full bg-transparent py-4 pl-11 pr-12 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none"
+              className="w-full bg-transparent py-4 pl-11 pr-12 text-body text-text placeholder:text-text-faint/70 focus:outline-none"
             />
             {query && (
               <button
@@ -370,7 +370,7 @@ function DiscoveryPage() {
                   ? "AI paper search: Peer uses planning and reranking."
                   : "Auto search: Peer uses fixed scoring only."
               }
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-[color,background-color,box-shadow,transform] duration-150 ease-snap active:scale-[0.94] disabled:opacity-55 disabled:cursor-wait ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-[color,background-color,box-shadow,transform] duration-150 ease-snap active:scale-[0.94] disabled:opacity-55 disabled:cursor-wait ${
                 aiPaperSearchEnabled
                   ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                   : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
@@ -380,7 +380,7 @@ function DiscoveryPage() {
                 <path d="M12 2l1.5 5L19 8.5 14.5 11 13 16l-2.5-4.5L6 10l4.5-1.5z" />
               </svg>
               <span className="font-medium">{aiPaperSearchEnabled ? "AI search" : "Auto"}</span>
-              <span className="opacity-60 text-[10.5px]">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
+              <span className="opacity-60 text-micro">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
             </button>
 
             {/* AI key hookup */}
@@ -389,7 +389,7 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "ai" ? null : "ai"))}
               aria-expanded={openTool === "ai"}
               title="Configure your own AI provider key"
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "ai"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.feedAiProvider !== "default"
@@ -415,7 +415,7 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "deep" ? null : "deep"))}
               aria-expanded={openTool === "deep"}
               title="Deep report — read each paper's full text before writing the report (uses your own AI key)."
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "deep"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.deepReportEnabled
@@ -439,7 +439,7 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "tavily" ? null : "tavily"))}
               aria-expanded={openTool === "tavily"}
               title="Tavily web scouting"
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "tavily"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.tavilyEnabled
@@ -490,7 +490,7 @@ function DiscoveryPage() {
             <div
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
             >
-              <p className="text-[11.5px] leading-relaxed text-text-muted">
+              <p className="text-caption leading-relaxed text-text-muted">
                 Use Peer default or bring your own normal AI key for Tier 2 reranking.
               </p>
               <AiKeyFields
@@ -500,7 +500,7 @@ function DiscoveryPage() {
                 onApiKeyChange={updateFeedAiApiKey}
                 idPrefix="feed-ai"
               />
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? profile.feedAiProvider === "default"
                     ? "Uses the AI already connected to this Peer site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
@@ -515,7 +515,7 @@ function DiscoveryPage() {
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                <p className="text-caption leading-relaxed text-text-muted">
                   Read each paper&apos;s full text (HTML when available, PDF as fallback) before writing the report. Burns more tokens per paper but produces specific, paper-grounded reports instead of summarizing the abstract.
                 </p>
                 <button
@@ -542,7 +542,7 @@ function DiscoveryPage() {
                   />
                 </button>
               </div>
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
                   ? "Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
                   : !profile.feedAiApiKey?.trim()
@@ -557,7 +557,7 @@ function DiscoveryPage() {
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                <p className="text-caption leading-relaxed text-text-muted">
                   Extra web scouting for paper leads.
                 </p>
                 <button
@@ -583,9 +583,9 @@ function DiscoveryPage() {
                 placeholder="Tavily API key"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-meta text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? "Used only as a paper-discovery helper. Peer still reruns academic sources before ranking."
                   : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
@@ -646,11 +646,11 @@ function DiscoveryPage() {
                       ].join(" ")}
                     />
                   </span>
-                  <span className="text-[14.5px] font-medium tracking-[-0.005em]">
+                  <span className="text-body font-medium tracking-[-0.005em]">
                     {label}
                   </span>
                   <span
-                    className={`text-[12px] tabular-nums transition-colors ${
+                    className={`text-meta tabular-nums transition-colors ${
                       active ? "text-bg/55" : "text-text-faint"
                     }`}
                   >
@@ -665,7 +665,7 @@ function DiscoveryPage() {
         {/* ── Search status ── */}
         {isSearchMode && (
           <p
-            className="text-[12px] text-text-faint mt-4"
+            className="text-meta text-text-faint mt-4"
           >
             {isSearching
               ? "searching…"
@@ -678,7 +678,7 @@ function DiscoveryPage() {
         {/* ── Query filter status (feed mode) ── */}
         {!isSearchMode && query && briefingItems.length > 0 && (
           <p
-            className="text-[12px] text-text-faint mt-4"
+            className="text-meta text-text-faint mt-4"
           >
             {briefingItems.length} items matching &ldquo;{query}&rdquo;
           </p>
@@ -730,10 +730,10 @@ function DiscoveryPage() {
                 action={
                   <Link
                     href="/profile"
-                    className="group inline-flex items-center gap-1.5 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
+                    className="group inline-flex items-center gap-1.5 text-body-sm text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
                   >
                     Set up profile
-                    <span className="text-[11px] opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+                    <span className="text-caption opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
                   </Link>
                 }
               />
@@ -810,7 +810,7 @@ function Greeting({
         >
           Search
         </h1>
-        <p className="text-text-muted mt-2 text-[14px] leading-relaxed max-w-[56ch]">
+        <p className="text-text-muted mt-2 text-body leading-relaxed max-w-[56ch]">
           Search papers across OpenAlex — 250M+ academic works.
         </p>
       </>
@@ -844,7 +844,7 @@ function Greeting({
   return (
     <>
       <p
-        className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2"
+        className="text-micro font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2"
       >
         <span className="inline-block w-4 h-[1.5px] bg-accent/70 align-middle mr-2" />
         Daily briefing
@@ -874,13 +874,13 @@ function Greeting({
         className="mt-2 flex items-baseline gap-2 text-text-muted font-reading"
       >
         <span
-          className="text-[14px] lg:text-[15px] italic text-heading/80 tracking-tight leading-none"
+          className="text-body lg:text-body-lg italic text-heading/80 tracking-tight leading-none"
           suppressHydrationWarning
         >
           {weekday}
         </span>
-        <span className="text-border-strong text-[12px] leading-none" aria-hidden>·</span>
-        <span className="text-[13px] lg:text-[14px] leading-none" suppressHydrationWarning>{monthDay}</span>
+        <span className="text-border-strong text-meta leading-none" aria-hidden>·</span>
+        <span className="text-body-sm lg:text-body leading-none" suppressHydrationWarning>{monthDay}</span>
       </div>
     </>
   );
@@ -908,7 +908,7 @@ function BriefingStatus({
   // First row INSIDE the glass console — plain text on the shared surface,
   // separated from the input by spacing alone (no pill, no hairline).
   const wrapper =
-    "flex items-center gap-2.5 pl-4.5 pr-2.5 pt-3 -mb-1 text-[12px]";
+    "flex items-center gap-2.5 pl-4.5 pr-2.5 pt-3 -mb-1 text-meta";
   const refreshBtn = (
     <button
       type="button"
@@ -1010,7 +1010,7 @@ function SignalBadge({ kind, label }: { kind: SignalKind; label: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 h-5 pl-1.5 pr-2 rounded text-[11px] font-medium tracking-[0.005em] ${tone}`}
+      className={`inline-flex items-center gap-1 h-5 pl-1.5 pr-2 rounded text-caption font-medium tracking-[0.005em] ${tone}`}
     >
       <Icon />
       {label}
@@ -1035,7 +1035,7 @@ function MetaRow({
     return (
       <Link
         href="/profile"
-        className="group mt-6 inline-flex items-center gap-2 rounded-full bg-bg-secondary/50 hover:bg-bg-secondary pl-2 pr-3.5 py-1.5 text-[12.5px] text-text-muted hover:text-heading transition-colors duration-200 ease-out active:scale-[0.98]"
+        className="group mt-6 inline-flex items-center gap-2 rounded-full bg-bg-secondary/50 hover:bg-bg-secondary pl-2 pr-3.5 py-1.5 text-meta text-text-muted hover:text-heading transition-colors duration-200 ease-out active:scale-[0.98]"
       >
         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg transition-transform duration-200 ease-out group-hover:rotate-90">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
@@ -1043,7 +1043,7 @@ function MetaRow({
           </svg>
         </span>
         Set up your profile
-        <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+        <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
       </Link>
     );
   }
@@ -1059,14 +1059,14 @@ function MetaRow({
       aria-label="Edit profile signals"
       className="group mt-4 inline-flex items-center flex-wrap gap-x-1.5 gap-y-1 transition-colors"
     >
-      <span className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint/80 mr-1">
+      <span className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint/80 mr-1">
         Tuned for
       </span>
       {typedSignals.slice(0, VISIBLE).map((s) => (
         <SignalBadge key={`${s.kind}:${s.label}`} kind={s.kind} label={s.label} />
       ))}
       {overflow > 0 && (
-        <span className="text-[11px] text-text-faint/80 tabular-nums">
+        <span className="text-caption text-text-faint/80 tabular-nums">
           +{overflow}
         </span>
       )}
@@ -1081,7 +1081,7 @@ function MetaRow({
         </svg>
       </span>
       {missingTopics && (
-        <div className="basis-full flex items-center gap-1 text-[10.5px] text-text-faint/70 mt-0.5">
+        <div className="basis-full flex items-center gap-1 text-micro text-text-faint/70 mt-0.5">
           <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="text-accent/80" aria-hidden>
             <circle cx="12" cy="12" r="10" />
           </svg>

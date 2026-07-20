@@ -21,7 +21,7 @@ export default function SavedPage() {
         >
           Saved
         </h1>
-        <p className="text-text-muted mt-3 text-[16.5px] leading-relaxed">
+        <p className="text-text-muted mt-3 text-lead leading-relaxed">
           Bookmarked papers, events, and jobs.
         </p>
       </header>

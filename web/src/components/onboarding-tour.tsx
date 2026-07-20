@@ -206,7 +206,7 @@ export function OnboardingTour() {
     if (!step.wait) return null;
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45">
-        <div className="rounded-2xl bg-surface shadow-card px-5 py-4 text-[13px] text-text-muted flex items-center gap-3">
+        <div className="rounded-2xl bg-surface shadow-card px-5 py-4 text-body-sm text-text-muted flex items-center gap-3">
           <span className="h-3.5 w-3.5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-hidden />
           Building your first briefing…
         </div>
@@ -252,25 +252,25 @@ export function OnboardingTour() {
         style={{ top: popTop, bottom: popBottom, left: popLeft, width: POP_W }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-accent/90">
+          <span className="text-micro font-semibold uppercase tracking-[0.2em] text-accent/90">
             {idx + 1} / {STEPS.length}
           </span>
           <button
             type="button"
             onClick={end}
-            className="text-[11.5px] text-text-faint hover:text-text-muted transition-colors"
+            className="text-caption text-text-faint hover:text-text-muted transition-colors"
           >
             Skip tour
           </button>
         </div>
-        <h3 className="text-[16px] font-semibold text-heading tracking-[-0.01em]">{step.title}</h3>
-        <div className="text-[13px] text-text-muted leading-[1.55] mt-1.5">{step.body}</div>
+        <h3 className="text-lead font-semibold text-heading tracking-[-0.01em]">{step.title}</h3>
+        <div className="text-body-sm text-text-muted leading-[1.55] mt-1.5">{step.body}</div>
         <div className="mt-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => move(-1)}
             disabled={idx === 0}
-            className="text-[12.5px] text-text-faint hover:text-text-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="text-meta text-text-faint hover:text-text-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             ← Back
           </button>
@@ -278,7 +278,7 @@ export function OnboardingTour() {
             ref={nextBtnRef}
             type="button"
             onClick={() => (isLast ? end() : move(1))}
-            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-accent text-white text-[13px] font-medium shadow-card hover:bg-accent/90 transition-colors active:scale-[0.97]"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-accent text-white text-body-sm font-medium shadow-card hover:bg-accent/90 transition-colors active:scale-[0.97]"
           >
             {isLast ? "Done" : "Next"}
             {!isLast && <span aria-hidden>→</span>}

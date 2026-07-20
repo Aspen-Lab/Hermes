@@ -69,7 +69,7 @@ export default function PaperSurfacePage({
     return (
       <div className="min-h-screen bg-[#08080a] text-white">
         <article className="mx-auto max-w-[760px] px-6 py-16">
-          <Link href="/" className="text-[13px] text-white/40 hover:text-white">
+          <Link href="/" className="text-body-sm text-white/40 hover:text-white">
             Back
           </Link>
           <div className="mt-10 space-y-3" aria-busy="true">
@@ -87,7 +87,7 @@ export default function PaperSurfacePage({
       <div className="min-h-screen bg-[#08080a] text-white">
         <article className="mx-auto max-w-[720px] px-6 py-20">
           <p className="text-white/60 italic">Paper not found.</p>
-          <Link href="/" className="mt-3 inline-block text-[14px] text-white/80 hover:text-white">
+          <Link href="/" className="mt-3 inline-block text-body text-white/80 hover:text-white">
             Back to feed
           </Link>
         </article>

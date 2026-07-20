@@ -215,7 +215,7 @@ export function PaperFigureFrame({
       {/* Caption block — separate row below the image so it never covers it. */}
       {figure.imageUrl && figure.caption && (
         <figcaption
-          className="mt-2 rounded-xl bg-bg-secondary/40 px-3.5 py-2.5 text-[14px] leading-relaxed text-text-muted"
+          className="mt-2 rounded-xl bg-bg-secondary/40 px-3.5 py-2.5 text-body leading-relaxed text-text-muted"
         >
           <span className="font-semibold text-heading">
             {sourceLabel(figure.source)}:
@@ -244,10 +244,10 @@ function MissingFigureNotice({ figure }: { figure: FigureState }) {
     <div
       className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface px-5 text-center"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint">
+      <p className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint">
         {noticeTitle(figure.status)}
       </p>
-      <p className="max-w-[260px] text-[12px] leading-relaxed text-text-muted">
+      <p className="max-w-[260px] text-meta leading-relaxed text-text-muted">
         {figure.reason ?? defaultReason(figure.status)}
       </p>
     </div>

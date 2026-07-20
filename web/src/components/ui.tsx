@@ -30,13 +30,13 @@ export function Callout({
     >
       {(title || icon) && (
         <header
-          className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
+          className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
         >
           {icon}
           {title}
         </header>
       )}
-      <div className="text-[16.5px] text-text leading-[1.7]">{children}</div>
+      <div className="text-lead text-text leading-[1.7]">{children}</div>
     </aside>
   );
 }
@@ -67,13 +67,13 @@ export function Property({
   return (
     <div className="min-w-0">
       <div
-        className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.14em] text-text-faint mb-1"
+        className="flex items-center gap-1.5 text-micro font-medium uppercase tracking-[0.14em] text-text-faint mb-1"
       >
         {icon}
         {label}
       </div>
       <div
-        className={`text-[14px] font-medium truncate ${
+        className={`text-body font-medium truncate ${
           accent ? "text-accent" : "text-heading"
         }`}
       >
@@ -88,7 +88,7 @@ export function Property({
 export function PullQuote({ children }: { children: ReactNode }) {
   return (
     <blockquote
-      className="relative pl-5 my-6 text-[18px] leading-[1.65] text-heading italic font-reading"
+      className="relative pl-5 my-6 text-title leading-[1.65] text-heading italic font-reading"
     >
       <span
         className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-accent/80"
@@ -110,7 +110,7 @@ export function Signal({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full transition-colors ${
+      className={`inline-flex items-center gap-1.5 text-meta h-7 px-3 rounded-full transition-colors ${
         ok
           ? "bg-tag-dim text-tag"
           : "bg-surface/70 text-text-faint"
@@ -161,7 +161,7 @@ export function FactChip({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full ${FACT_CHIP_TONE[tone]}`}
+      className={`inline-flex items-center gap-1.5 text-meta h-7 px-3 rounded-full ${FACT_CHIP_TONE[tone]}`}
     >
       {icon && <span className="opacity-90 shrink-0">{icon}</span>}
       {children}
@@ -180,7 +180,7 @@ export function SectionHeading({
 }) {
   return (
     <h2
-      className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-14 mb-5 flex items-baseline justify-between"
+      className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mt-14 mb-5 flex items-baseline justify-between"
     >
       <span>{children}</span>
       {count !== undefined && (
@@ -200,7 +200,7 @@ export function Tag({
   href?: string;
 }) {
   const classes =
-    "inline-block text-[11.5px] text-tag bg-tag-dim px-2 py-[3px] rounded-md tracking-wide transition-colors";
+    "inline-block text-caption text-tag bg-tag-dim px-2 py-[3px] rounded-md tracking-wide transition-colors";
   if (href) {
     return (
       <a
@@ -235,11 +235,11 @@ export function LinkChip({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface shadow-card text-[12.5px] text-text-muted hover:text-heading hover:shadow-card-hover hover:bg-surface-hover transition-[color,background-color,box-shadow] duration-200 ease-out active:scale-[0.96]"
+      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface shadow-card text-meta text-text-muted hover:text-heading hover:shadow-card-hover hover:bg-surface-hover transition-[color,background-color,box-shadow] duration-200 ease-out active:scale-[0.96]"
     >
       {icon}
       {label}
-      <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+      <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
         ↗
       </span>
     </a>
@@ -278,7 +278,7 @@ export function ActionBar({
             onClick={isSaved ? stop(onUnsave) : stop(onSave)}
             aria-pressed={isSaved}
             aria-label={isSaved ? "Remove from saved" : "Save"}
-            className={`group/save inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3.5 rounded-full text-[12.5px] font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out active:scale-[0.94] ${
+            className={`group/save inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3.5 rounded-full text-meta font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out active:scale-[0.94] ${
               isSaved
                 ? "bg-accent text-bg shadow-card hover:bg-accent/90"
                 : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover"
@@ -331,7 +331,7 @@ export function ActionBar({
             onClick={stop(onMore)}
             aria-label="Like — show me more like this"
             title="Like — show me more like this"
-            className="group/like inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] text-text-faint hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.94]"
+            className="group/like inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta text-text-faint hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.94]"
           >
             <svg
               width="13"
@@ -357,7 +357,7 @@ export function ActionBar({
             onClick={stop(onDismiss)}
             aria-label="Dislike — show me less like this"
             title="Dislike — show me less like this"
-            className="group/dislike inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12.5px] text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.94]"
+            className="group/dislike inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.94]"
           >
             <svg
               width="13"
@@ -400,7 +400,7 @@ export function FeedbackRow({
         "--i": index,
         } as React.CSSProperties}
     >
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-3">
+      <p className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint mb-3">
         Was this worth your time?
       </p>
       <div className="flex items-center gap-2.5">
@@ -408,7 +408,7 @@ export function FeedbackRow({
           type="button"
           onClick={onLike}
           aria-label="Like — show me more like this"
-          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
+          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-body-sm text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
         >
           <svg
             width="14"
@@ -431,7 +431,7 @@ export function FeedbackRow({
           type="button"
           onClick={onDislike}
           aria-label="Dislike — show me less like this"
-          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-red hover:border-red/35 hover:bg-red/[0.06] transition-colors duration-200 ease-out active:scale-[0.96]"
+          className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-body-sm text-text-muted hover:text-red hover:border-red/35 hover:bg-red/[0.06] transition-colors duration-200 ease-out active:scale-[0.96]"
         >
           <svg
             width="14"
@@ -473,7 +473,7 @@ export function DetailSection({
   return (
     <section className="mt-10 animate-fade-in-up" style={style}>
       <h3
-        className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-3"
+        className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mb-3"
       >
         {title}
       </h3>
@@ -491,10 +491,10 @@ export function LinkRow({ label, href }: { label: string; href?: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group inline-flex items-center gap-1.5 text-link hover:text-link/75 underline decoration-link/25 hover:decoration-link/60 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97] mr-5 text-[15px]"
+      className="group inline-flex items-center gap-1.5 text-link hover:text-link/75 underline decoration-link/25 hover:decoration-link/60 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97] mr-5 text-body-lg"
     >
       {label}
-      <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[2px]">↗</span>
+      <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[2px]">↗</span>
     </a>
   );
 }
@@ -514,11 +514,11 @@ export function EmptyState({
   return (
     <div className="py-20 text-center flex flex-col items-center">
       <p
-        className="text-heading text-[18px] font-medium tracking-[-0.01em]"
+        className="text-heading text-title font-medium tracking-[-0.01em]"
       >
         {title}
       </p>
-      <p className="text-text-muted text-[14.5px] mt-2 leading-relaxed max-w-[40ch]">
+      <p className="text-text-muted text-body mt-2 leading-relaxed max-w-[40ch]">
         {description}
       </p>
       {action && <div className="mt-5">{action}</div>}
@@ -549,7 +549,7 @@ export function LoadingSkeleton() {
       aria-busy="true"
       aria-label="Loading recommendations"
     >
-      <div className="flex items-center gap-2 text-[11px] text-text-faint tracking-[0.16em] uppercase">
+      <div className="flex items-center gap-2 text-caption text-text-faint tracking-[0.16em] uppercase">
         <span className="relative inline-flex h-1.5 w-1.5">
           <span className="absolute inset-0 rounded-full bg-accent/70 animate-pulse" />
           <span className="absolute inset-0 rounded-full bg-accent/30 motion-safe:animate-ping" />

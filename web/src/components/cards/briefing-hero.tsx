@@ -62,7 +62,7 @@ export function BriefingHero({ item }: { item: HeroItem }) {
       />
 
       <p
-        className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent mb-4"
+        className="text-micro font-semibold uppercase tracking-[0.22em] text-accent mb-4"
       >
         Top pick today
       </p>
@@ -79,7 +79,7 @@ export function BriefingHero({ item }: { item: HeroItem }) {
       {item.kind === "paper" && (
         <>
           <p
-            className="text-[14px] text-text-muted mt-3"
+            className="text-body text-text-muted mt-3"
           >
             {item.data.authors.slice(0, 3).join(", ")}
             {item.data.authors.length > 3 && ` +${item.data.authors.length - 3}`}
@@ -94,10 +94,10 @@ export function BriefingHero({ item }: { item: HeroItem }) {
             alt={item.data.title}
             variant="hero"
           />
-          <p className="text-[17px] text-text mt-5 leading-[1.7]">
+          <p className="text-title text-text mt-5 leading-[1.7]">
             {item.data.relevanceReason}
           </p>
-          <p className="text-[15.5px] text-text-muted mt-3 leading-[1.65] line-clamp-3">
+          <p className="text-body-lg text-text-muted mt-3 leading-[1.65] line-clamp-3">
             {item.data.summaryIntro}
           </p>
         </>
@@ -106,7 +106,7 @@ export function BriefingHero({ item }: { item: HeroItem }) {
       {item.kind === "event" && (
         <>
           <p
-            className="text-[14px] text-text-muted mt-3"
+            className="text-body text-text-muted mt-3"
           >
             {formatDate(item.data.date)} · {item.data.isOnline ? "Online" : item.data.location}
           </p>
@@ -114,10 +114,10 @@ export function BriefingHero({ item }: { item: HeroItem }) {
             <Tag>Event</Tag>
             <Tag>{item.data.type}</Tag>
           </div>
-          <p className="text-[17px] text-text mt-5 leading-[1.7]">
+          <p className="text-title text-text mt-5 leading-[1.7]">
             {item.data.relevanceReason}
           </p>
-          <p className="text-[15.5px] text-text-muted mt-3 leading-[1.65] line-clamp-2">
+          <p className="text-body-lg text-text-muted mt-3 leading-[1.65] line-clamp-2">
             {item.data.shortDescription}
           </p>
         </>
@@ -126,7 +126,7 @@ export function BriefingHero({ item }: { item: HeroItem }) {
       {item.kind === "job" && (
         <>
           <p
-            className="text-[14px] text-text-muted mt-3"
+            className="text-body text-text-muted mt-3"
           >
             {item.data.companyOrLab} · {item.data.isRemote ? "Remote" : item.data.location}
           </p>
@@ -135,13 +135,13 @@ export function BriefingHero({ item }: { item: HeroItem }) {
             {item.data.keyRequirements.slice(0, 3).map((req) => (
               <span
                 key={req}
-                className="text-[11.5px] text-text-muted bg-bg-secondary/70 px-2 py-[3px] rounded-md"
+                className="text-caption text-text-muted bg-bg-secondary/70 px-2 py-[3px] rounded-md"
               >
                 {req}
               </span>
             ))}
           </div>
-          <p className="text-[17px] text-text mt-5 leading-[1.7]">
+          <p className="text-title text-text mt-5 leading-[1.7]">
             {relevanceReason}
           </p>
         </>

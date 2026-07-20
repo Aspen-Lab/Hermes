@@ -65,6 +65,30 @@
   --shadow-well: inset 2px 2px 6px var(--nm-shade),
                  inset -2px -2px 5px var(--nm-highlight);
 
+  /* ── Type scale — 9 steps covering the 10–20px working range.
+     Changing the app's type system = editing THIS block. Display sizes
+     (>20px) stay per-composition; explicit leading-* still overrides
+     the paired line-height. Steps sit on half-pixels because they were
+     snapped (±0.5px max) from the organically-grown sizes. */
+  --text-micro: 10.5px;      /* kickers, eyebrow labels */
+  --text-micro--line-height: 1.35;
+  --text-caption: 11.5px;    /* labels, kbd, badges */
+  --text-caption--line-height: 1.4;
+  --text-meta: 12.5px;       /* chips, meta rows, secondary UI */
+  --text-meta--line-height: 1.45;
+  --text-body-sm: 13.5px;    /* dense body, descriptions */
+  --text-body-sm--line-height: 1.5;
+  --text-body: 14.5px;       /* controls, standard body */
+  --text-body--line-height: 1.55;
+  --text-body-lg: 15.5px;    /* emphasized body, tile titles */
+  --text-body-lg--line-height: 1.55;
+  --text-lead: 16.5px;       /* lede paragraphs, card titles */
+  --text-lead--line-height: 1.6;
+  --text-title: 17.5px;      /* section titles */
+  --text-title--line-height: 1.4;
+  --text-title-lg: 19.5px;   /* page-level subtitles */
+  --text-title-lg--line-height: 1.3;
+
   /* ── Typography — Inter UI + Newsreader serif (Martina Plantijn's
         closest open relative), one serif family for display AND prose ── */
   --font-reading: var(--font-newsreader), "Iowan Old Style", Georgia, "Times New Roman", serif;

@@ -58,10 +58,10 @@ export function UndoToast() {
         } as React.CSSProperties}
       >
         <div className="flex items-center gap-3 pl-5 pr-3 py-2.5">
-          <span className="text-[10.5px] uppercase tracking-[0.16em] text-bg/55">
+          <span className="text-micro uppercase tracking-[0.16em] text-bg/55">
             Dismissed
           </span>
-          <span className="text-[13px] max-w-[260px] truncate">
+          <span className="text-body-sm max-w-[260px] truncate">
             {shortTitle}
           </span>
         </div>
@@ -91,7 +91,7 @@ export function UndoToast() {
             <path d="M3 12h13a5 5 0 0 1 0 10h-3" />
             <path d="m7 8-4 4 4 4" />
           </svg>
-          <span className="text-[13px] font-medium">Undo</span>
+          <span className="text-body-sm font-medium">Undo</span>
         </button>
       </div>
     </div>

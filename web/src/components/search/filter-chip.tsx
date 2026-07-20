@@ -91,7 +91,7 @@ export function FilterChip({
         aria-label={ariaLabel}
         className={[
           "group relative inline-flex items-center h-10 rounded-full px-4 gap-1.5",
-          "text-[13.5px] font-medium tracking-[-0.005em]",
+          "text-body-sm font-medium tracking-[-0.005em]",
           "transition-all duration-200 ease-out active:scale-[0.97]",
           active
             ? "bg-[color:var(--color-accent-dim)] text-[color:var(--color-accent)] shadow-card hover:shadow-card-hover"
@@ -108,7 +108,7 @@ export function FilterChip({
                 e.stopPropagation();
                 onClear?.();
               }}
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[12px] hover:bg-[color:var(--color-accent)]/20"
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full text-meta hover:bg-[color:var(--color-accent)]/20"
               aria-label={`Clear ${label}`}
             >
               ×
@@ -117,7 +117,7 @@ export function FilterChip({
             <span
               aria-hidden
               className={[
-                "inline-block text-[10px] transition-transform duration-200",
+                "inline-block text-micro transition-transform duration-200",
                 open ? "rotate-180" : "",
                 active ? "opacity-70" : "opacity-50",
               ].join(" ")}
@@ -133,7 +133,7 @@ export function FilterChip({
               e.stopPropagation();
               onClear?.();
             }}
-            className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[12px] hover:bg-[color:var(--color-accent)]/20"
+            className="inline-flex items-center justify-center w-4 h-4 rounded-full text-meta hover:bg-[color:var(--color-accent)]/20"
             aria-label={`Clear ${label}`}
           >
             ×
@@ -178,7 +178,7 @@ export function RadioList<T extends string | number>({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={[
-              "flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-[13.5px] text-left",
+              "flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-body-sm text-left",
               "transition-colors duration-150",
               active
                 ? "bg-[color:var(--color-accent-dim)] text-[color:var(--color-accent)]"
