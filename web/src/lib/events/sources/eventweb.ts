@@ -1,5 +1,6 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
+import { urlHashId } from "@/lib/opportunities/shared";
 
 // Web discovery for academic events. The curated feeds (ccfddl, confs.tech)
 // are CS-heavy; this adapter is what finds a materials-science symposium or a
@@ -103,7 +104,7 @@ export function webResultToRawEventItem(
   const isOnline = /\b(online|virtual|hybrid)\b/i.test(text);
   const name = title.split(/\s+[|·]\s+/)[0].trim() || title;
   return {
-    id: `eventweb:${url}`,
+    id: `eventweb:${urlHashId(url)}`,
     source: "eventweb",
     name,
     type: guessEventType(text),

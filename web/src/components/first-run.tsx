@@ -10,25 +10,40 @@
 // Onboarding state is local (see UserProfile.onboardedAt), so this works for
 // signed-out visitors too and resets cleanly when localStorage is cleared.
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profile";
 
 export function FirstRunGate() {
   const router = useRouter();
   const pathname = usePathname();
-  // The profile store persists to localStorage and hydrates synchronously on
-  // the client (same as everywhere else the store is read), so by the time this
-  // effect runs `onboardedAt` reflects the real value — no hydration guard
-  // needed, and no false redirect for a returning user.
   const onboardedAt = useProfileStore((s) => s.profile.onboardedAt);
+  // The profile store uses `skipHydration` and is rehydrated after mount by
+  // <StoreHydrator/>. Until that finishes, `onboardedAt` reads as its default
+  // (null) even for a returning user — redirecting on that stale value bounced
+  // every full page load to /welcome. Wait for hydration before deciding.
+  const [hydrated, setHydrated] = useState(() =>
+    useProfileStore.persist.hasHydrated(),
+  );
 
   useEffect(() => {
+    if (hydrated) return;
+    // Cover both orderings: the listener for the normal case, and an immediate
+    // check in case hydration completed between render and this effect.
+    const unsub = useProfileStore.persist.onFinishHydration(() =>
+      setHydrated(true),
+    );
+    if (useProfileStore.persist.hasHydrated()) setHydrated(true);
+    return unsub;
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
     if (!pathname) return;
     if (pathname === "/welcome" || pathname.startsWith("/auth")) return;
     if (onboardedAt) return;
     router.replace("/welcome");
-  }, [pathname, onboardedAt, router]);
+  }, [hydrated, pathname, onboardedAt, router]);
 
   return null;
 }

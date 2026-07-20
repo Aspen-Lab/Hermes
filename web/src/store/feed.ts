@@ -455,20 +455,28 @@ export const useFeedStore = create<FeedState>()(
           .filter(Boolean)
           .join("\n");
 
-        // Only exclude active (within TTL) IDs. Saved items are intentionally
-        // allowed to re-surface — the user explicitly bookmarked them and may
-        // want to revisit.
-        const allSaved = new Set([...savedIds, ...savedEventIds, ...savedJobIds]);
-        const excludeIds = activeRecentlyShownIds(recentlyShownIds).filter(
-          (id) => !allSaved.has(id),
+        // Papers are consume-once: exclude any already shown recently (within
+        // TTL) so the briefing brings fresh reading each load. Saved papers are
+        // allowed back — the user bookmarked them.
+        const paperExcludeIds = activeRecentlyShownIds(recentlyShownIds).filter(
+          (id) => !savedIds.has(id),
         );
+
+        // Events and jobs are STANDING opportunities, not consume-once items: a
+        // conference is relevant every day until its deadline passes, so it
+        // should keep surfacing rather than being suppressed after one view.
+        // Exclude only the ones the user explicitly dismissed (persisted in
+        // oppFeedback) so dismissals stick without starving the small pool.
+        const dismissedOppIds = Object.entries(oppFeedback)
+          .filter(([, f]) => f === "notInterested")
+          .map(([id]) => id);
 
         // Three parallel pipelines; each helper degrades to [] on failure so
         // one surface never blanks the others.
         const [realPapers, realEvents, realJobs] = await Promise.all([
-          fetchRealFeed(profile, aiPaperSearchEnabled, excludeIds),
-          fetchRealEvents(profile, excludeIds),
-          fetchRealJobs(profile, excludeIds),
+          fetchRealFeed(profile, aiPaperSearchEnabled, paperExcludeIds),
+          fetchRealEvents(profile, dismissedOppIds),
+          fetchRealJobs(profile, dismissedOppIds),
         ]);
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
@@ -496,11 +504,13 @@ export const useFeedStore = create<FeedState>()(
             oppFeedback[j.id] ??
             (savedJobIds.has(j.id) ? ("saved" as ItemFeedback) : undefined),
         }));
-        // Record what we're about to show so the next load skips them.
+        // Record shown PAPERS so the next load skips them. Events/jobs are
+        // deliberately NOT recorded here — they're standing opportunities that
+        // should keep appearing until their deadline passes or the user acts.
         const now = Date.now();
         const nextShown: Record<string, number> = { ...recentlyShownIds };
-        for (const item of [...papers, ...events, ...jobs]) {
-          nextShown[item.id] = now;
+        for (const paper of papers) {
+          nextShown[paper.id] = now;
         }
         set({
           papers,

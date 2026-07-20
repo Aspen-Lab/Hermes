@@ -28,6 +28,22 @@ export async function withSourceTimeout<T>(
   }
 }
 
+/**
+ * Stable, slash-free id suffix derived from a URL. Web-discovered items key on
+ * their source URL, but embedding the raw URL in an id (`eventweb:https://…`)
+ * breaks the single-segment `/events/[id]` route — the slashes make it a 404.
+ * A short hash keeps ids unique and route-safe; the real URL lives in the
+ * item's `url` field for outbound links. Deterministic (no Date/Math.random)
+ * so the same posting dedups to the same id across fetches.
+ */
+export function urlHashId(url: string): string {
+  let h = 5381;
+  for (let i = 0; i < url.length; i++) {
+    h = ((h << 5) + h + url.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
 /** Strip HTML tags/entities from source-provided rich text (job descriptions). */
 export function stripHtml(html: string | null | undefined): string {
   if (!html) return "";

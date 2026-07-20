@@ -1,4 +1,5 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
+import { urlHashId } from "@/lib/opportunities/shared";
 
 // Web discovery for academic positions. The classic academic boards
 // (HigherEdJobs, jobs.ac.uk, Nature Careers, EURAXESS) all block direct
@@ -54,7 +55,7 @@ export function webResultToRawJobItem(result: {
     host;
   const text = `${title} ${result.snippet ?? ""}`;
   return {
-    id: `jobweb:${url}`,
+    id: `jobweb:${urlHashId(url)}`,
     source: "jobweb",
     title: roleTitle,
     company,
