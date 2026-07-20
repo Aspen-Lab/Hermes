@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { apiFetch } from "@/lib/api";
+import { formatTimeAgo } from "@/lib/format";
+import { DotMatrixImage } from "@/components/dot-matrix-image";
 import { useProfileStore } from "@/store/profile";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
@@ -22,6 +25,9 @@ import {
 } from "@/lib/search/filters";
 import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { iconButtonVariants } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { cn } from "@/lib/cn";
 
 interface SearchResult {
   id: string;
@@ -125,23 +131,29 @@ function DiscoveryPage() {
     void loadFeed();
   }, [feedAutoLoadKey, feedTopicsKey, isLoading, loadFeed]);
 
+  // Monotonic token: a slow older response must never overwrite a newer one.
+  const searchSeqRef = useRef(0);
   const searchPapers = useCallback(async (q: string, f: Filters) => {
     if (q.length < 2) {
+      searchSeqRef.current++;
       setSearchResults([]);
       return;
     }
+    const requestId = ++searchSeqRef.current;
     setIsSearching(true);
     try {
       const apiParams = filtersToApiQuery(f);
       apiParams.set("q", q);
       apiParams.set("per_page", "12");
-      const res = await fetch(`/api/papers/search?${apiParams.toString()}`);
-      const data = await res.json();
-      setSearchResults(data.results || []);
+      const data = await apiFetch<{ results?: unknown[] }>(
+        `/api/papers/search?${apiParams.toString()}`,
+      );
+      if (requestId !== searchSeqRef.current) return;
+      setSearchResults((data.results as never[]) || []);
     } catch {
-      setSearchResults([]);
+      if (requestId === searchSeqRef.current) setSearchResults([]);
     } finally {
-      setIsSearching(false);
+      if (requestId === searchSeqRef.current) setIsSearching(false);
     }
   }, []);
 
@@ -263,7 +275,7 @@ function DiscoveryPage() {
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
       <div className="mx-auto max-w-[820px]">
-      <header className="mb-8 flex items-center gap-3 sm:gap-5">
+      <header className="mb-8 flex items-end gap-3 sm:gap-6">
         <div className="min-w-0">
           <Greeting
             isSearchMode={isSearchMode}
@@ -274,38 +286,34 @@ function DiscoveryPage() {
             <MetaRow profile={profile} />
           )}
         </div>
-        {/* Brand mark — hands + pear, transparent bg so it sits on any
-            theme. Hidden on phones where the greeting needs the room. */}
+        {/* Brand mark — hands + pear as a colored dot matrix (aspenlab.io
+            halftone treatment, in the artwork's own colors). Hidden on
+            phones where the greeting needs the room. */}
         {!isSearchMode && (
-          <Image
-            src="/logo.png"
-            alt=""
-            width={1254}
-            height={356}
-            priority
+          <div
             aria-hidden
-            className="hidden sm:block shrink-0 w-[280px] lg:w-[380px] h-auto select-none pointer-events-none"
-          />
+            className="hidden sm:block shrink-0 w-[250px] lg:w-[330px] translate-y-[4px]"
+          >
+            <DotMatrixImage src="/logo.png" aspectRatio={1254 / 356} pitch={4} />
+          </div>
         )}
       </header>
 
       {/* ── Search ── */}
       <div className="mb-6">
-        {!isSearchMode && briefingItems.length > 0 && (
-          <BriefingStatus
-            total={briefingItems.length}
-            unread={unreadCount}
-            lastRefresh={lastRefresh}
-            closed={briefingClosed}
-            onRefresh={loadFeed}
-            isRefreshing={isLoading}
-          />
-        )}
-        {/* Composite command bar — input on top, inline tool pills
-            below, optional expanded settings panel underneath. Mirrors
-            ChatGPT-style "rich input" patterns: one cohesive surface
-            instead of an input plus three stacked side cards. */}
-        <div data-tour="search" className="rounded-3xl bg-surface border border-border shadow-[0_1px_3px_rgba(20,20,20,0.04),0_8px_24px_rgba(20,20,20,0.04)] focus-within:border-border-strong focus-within:shadow-[0_2px_4px_rgba(20,20,20,0.05),0_14px_36px_rgba(20,20,20,0.07)] transition-[box-shadow,border-color] duration-200">
+        {/* One glass console: status row + input + tool pills live on a
+            single surface — no stacked bars, no hairlines between rows. */}
+        <div data-tour="search" className="rounded-3xl glass shadow-card focus-within:shadow-card-hover transition-[box-shadow] duration-200">
+          {!isSearchMode && briefingItems.length > 0 && (
+            <BriefingStatus
+              total={briefingItems.length}
+              unread={unreadCount}
+              lastRefresh={lastRefresh}
+              closed={briefingClosed}
+              onRefresh={loadFeed}
+              isRefreshing={isLoading}
+            />
+          )}
           {/* Input row */}
           <div className="relative">
             <svg
@@ -329,8 +337,7 @@ function DiscoveryPage() {
                 }
               }}
               placeholder="Search papers, events, jobs…  (press /)"
-              className="w-full bg-transparent py-4 pl-11 pr-12 text-[14.5px] text-text placeholder:text-text-faint/70 focus:outline-none"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="w-full bg-transparent py-4 pl-11 pr-12 text-body text-text placeholder:text-text-faint/70 focus:outline-none"
             />
             {query && (
               <button
@@ -352,7 +359,6 @@ function DiscoveryPage() {
           {/* Tools row — left: modes pills · right: send action */}
           <div
             className="flex items-center justify-between gap-2 px-2.5 pb-2.5 pt-0.5"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             <div data-tour="ai-tools" className="flex items-center flex-wrap gap-1.5 min-w-0">
             {/* Auto / AI search toggle */}
@@ -366,9 +372,9 @@ function DiscoveryPage() {
                   ? "AI paper search: Peer uses planning and reranking."
                   : "Auto search: Peer uses fixed scoring only."
               }
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] disabled:opacity-55 disabled:cursor-wait ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-[color,background-color,box-shadow,transform] duration-150 ease-snap active:scale-[0.94] disabled:opacity-55 disabled:cursor-wait ${
                 aiPaperSearchEnabled
-                  ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                  ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                   : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
             >
@@ -376,7 +382,7 @@ function DiscoveryPage() {
                 <path d="M12 2l1.5 5L19 8.5 14.5 11 13 16l-2.5-4.5L6 10l4.5-1.5z" />
               </svg>
               <span className="font-medium">{aiPaperSearchEnabled ? "AI search" : "Auto"}</span>
-              <span className="opacity-60 text-[10.5px]">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
+              <span className="opacity-60 text-micro">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
             </button>
 
             {/* AI key hookup */}
@@ -385,11 +391,11 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "ai" ? null : "ai"))}
               aria-expanded={openTool === "ai"}
               title="Configure your own AI provider key"
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "ai"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.feedAiProvider !== "default"
-                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                     : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
             >
@@ -411,11 +417,11 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "deep" ? null : "deep"))}
               aria-expanded={openTool === "deep"}
               title="Deep report — read each paper's full text before writing the report (uses your own AI key)."
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "deep"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.deepReportEnabled
-                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                     : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
             >
@@ -435,11 +441,11 @@ function DiscoveryPage() {
               onClick={() => setOpenTool((cur) => (cur === "tavily" ? null : "tavily"))}
               aria-expanded={openTool === "tavily"}
               title="Tavily web scouting"
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] transition-colors active:scale-[0.96] ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
                 openTool === "tavily"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
                   : profile.tavilyEnabled
-                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]"
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                     : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
             >
@@ -462,11 +468,12 @@ function DiscoveryPage() {
                 disabled={query.length < 2 || isSearching}
                 aria-label="Search"
                 title="Search now (Enter)"
-                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-[background-color,opacity,box-shadow] active:scale-[0.94] ${
+                className={cn(
+                  iconButtonVariants({ size: "lg" }),
                   query.length >= 2 && !isSearching
-                    ? "bg-accent text-white shadow-[inset_0_-1px_0_rgba(0,0,0,0.12),0_1px_2px_rgba(245,132,20,0.25)] hover:bg-accent/90"
-                    : "bg-bg-secondary text-text-faint/70 cursor-not-allowed"
-                }`}
+                    ? "bg-accent text-bg shadow-card hover:bg-accent/90"
+                    : "bg-bg-secondary text-text-faint/70 cursor-not-allowed",
+                )}
               >
                 {isSearching ? (
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden className="animate-spin">
@@ -485,9 +492,8 @@ function DiscoveryPage() {
           {openTool === "ai" && (
             <div
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
-              style={{ fontFamily: "var(--font-sans)" }}
             >
-              <p className="text-[11.5px] leading-relaxed text-text-muted">
+              <p className="text-caption leading-relaxed text-text-muted">
                 Use Peer default or bring your own normal AI key for Tier 2 reranking.
               </p>
               <AiKeyFields
@@ -497,7 +503,7 @@ function DiscoveryPage() {
                 onApiKeyChange={updateFeedAiApiKey}
                 idPrefix="feed-ai"
               />
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? profile.feedAiProvider === "default"
                     ? "Uses the AI already connected to this Peer site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
@@ -510,37 +516,25 @@ function DiscoveryPage() {
           {openTool === "deep" && (
             <div
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
-              style={{ fontFamily: "var(--font-sans)" }}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                <p className="text-caption leading-relaxed text-text-muted">
                   Read each paper&apos;s full text (HTML when available, PDF as fallback) before writing the report. Burns more tokens per paper but produces specific, paper-grounded reports instead of summarizing the abstract.
                 </p>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.deepReportEnabled}
-                  // Disabled only when the user explicitly picked a non-default
-                  // provider but hasn't typed a key. With "default" selected we
-                  // let the toggle through — the server resolves to whatever
-                  // the site is configured with (Vertex Gemini / Anthropic /
-                  // OpenAI / Qwen via env vars). If the site has no default
-                  // configured the API gracefully falls back to a shallow
-                  // report with an explanatory banner.
+                {/* Disabled only when the user explicitly picked a non-default
+                    provider but hasn't typed a key. With "default" selected we
+                    let the toggle through — the server resolves to whatever
+                    the site is configured with; with none configured the API
+                    falls back to a shallow report with a banner. */}
+                <Toggle
+                  checked={profile.deepReportEnabled}
+                  onChange={(next) => updateDeepReportEnabled(next)}
                   disabled={profile.feedAiProvider !== "default" && !profile.feedAiApiKey?.trim()}
-                  onClick={() => updateDeepReportEnabled(!profile.deepReportEnabled)}
-                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out disabled:opacity-40 disabled:cursor-not-allowed ${
-                    profile.deepReportEnabled ? "bg-accent" : "bg-bg-secondary"
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                      profile.deepReportEnabled ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
+                  className="mt-0.5"
+                  aria-label="Deep report"
+                />
               </div>
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
                   ? "Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
                   : !profile.feedAiApiKey?.trim()
@@ -553,27 +547,17 @@ function DiscoveryPage() {
           {openTool === "tavily" && (
             <div
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
-              style={{ fontFamily: "var(--font-sans)" }}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[11.5px] leading-relaxed text-text-muted">
+                <p className="text-caption leading-relaxed text-text-muted">
                   Extra web scouting for paper leads.
                 </p>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={profile.tavilyEnabled}
-                  onClick={() => updateTavilyEnabled(!profile.tavilyEnabled)}
-                  className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-out ${
-                    profile.tavilyEnabled ? "bg-accent" : "bg-bg-secondary"
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-bg shadow transition-transform duration-200 ease-out ${
-                      profile.tavilyEnabled ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
+                <Toggle
+                  checked={profile.tavilyEnabled}
+                  onChange={(next) => updateTavilyEnabled(next)}
+                  className="mt-0.5"
+                  aria-label="Tavily web scouting"
+                />
               </div>
               <input
                 type="password"
@@ -582,9 +566,9 @@ function DiscoveryPage() {
                 placeholder="Tavily API key"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-meta text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
-              <p className="text-[10.5px] leading-relaxed text-text-faint">
+              <p className="text-micro leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled
                   ? "Used only as a paper-discovery helper. Peer still reruns academic sources before ranking."
                   : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
@@ -606,7 +590,6 @@ function DiscoveryPage() {
         {!isSearchMode && totalAll > 0 && (
           <div
             className="flex items-center flex-wrap gap-2.5 mt-6"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {typeChips.map(({ key, label, count, icon }) => {
               const active = activeType === key;
@@ -641,16 +624,16 @@ function DiscoveryPage() {
                       className={[
                         "relative w-full h-full object-contain",
                         active
-                          ? "animate-stamp drop-shadow-[0_2px_6px_rgba(245,132,20,0.45)]"
+                          ? "animate-stamp drop-shadow-[0_2px_6px_color-mix(in_srgb,var(--color-accent)_45%,transparent)]"
                           : "transition-transform duration-300 ease-out group-hover:scale-[1.08] group-hover:-rotate-3 group-active:scale-95",
                       ].join(" ")}
                     />
                   </span>
-                  <span className="text-[14.5px] font-medium tracking-[-0.005em]">
+                  <span className="text-body font-medium tracking-[-0.005em]">
                     {label}
                   </span>
                   <span
-                    className={`text-[12px] tabular-nums transition-colors ${
+                    className={`text-meta tabular-nums transition-colors ${
                       active ? "text-bg/55" : "text-text-faint"
                     }`}
                   >
@@ -665,8 +648,7 @@ function DiscoveryPage() {
         {/* ── Search status ── */}
         {isSearchMode && (
           <p
-            className="text-[12px] text-text-faint mt-4"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-meta text-text-faint mt-4"
           >
             {isSearching
               ? "searching…"
@@ -679,8 +661,7 @@ function DiscoveryPage() {
         {/* ── Query filter status (feed mode) ── */}
         {!isSearchMode && query && briefingItems.length > 0 && (
           <p
-            className="text-[12px] text-text-faint mt-4"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-meta text-text-faint mt-4"
           >
             {briefingItems.length} items matching &ldquo;{query}&rdquo;
           </p>
@@ -732,11 +713,10 @@ function DiscoveryPage() {
                 action={
                   <Link
                     href="/profile"
-                    className="group inline-flex items-center gap-1.5 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
-                    style={{ fontFamily: "var(--font-sans)" }}
+                    className="group inline-flex items-center gap-1.5 text-body-sm text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
                   >
                     Set up profile
-                    <span className="text-[11px] opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+                    <span className="text-caption opacity-70 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
                   </Link>
                 }
               />
@@ -810,11 +790,10 @@ function Greeting({
       <>
         <h1
           className="text-[24px] lg:text-[28px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           Search
         </h1>
-        <p className="text-text-muted mt-2 text-[14px] leading-relaxed max-w-[56ch]">
+        <p className="text-text-muted mt-2 text-body leading-relaxed max-w-[56ch]">
           Search papers across OpenAlex — 250M+ academic works.
         </p>
       </>
@@ -848,15 +827,13 @@ function Greeting({
   return (
     <>
       <p
-        className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="text-micro font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2"
       >
         <span className="inline-block w-4 h-[1.5px] bg-accent/70 align-middle mr-2" />
         Daily briefing
       </p>
       <h1
-        className="text-[26px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="text-[34px] lg:text-[42px] font-display font-light text-heading tracking-[-0.01em] leading-[1.05]"
         // The greeting word is derived from the current clock, which can differ
         // between the server render and the browser (timezone / hour boundary).
         suppressHydrationWarning
@@ -864,7 +841,7 @@ function Greeting({
         {firstName ? (
           <>
             {greet},{" "}
-            <span className="italic font-medium" style={{ fontFamily: "var(--font-reading)" }}>
+            <span className="italic font-medium font-reading">
               {firstName}
             </span>
             <span className="text-text-faint/70">.</span>
@@ -877,32 +854,23 @@ function Greeting({
         )}
       </h1>
       <div
-        className="mt-2 flex items-baseline gap-2 text-text-muted"
-        style={{ fontFamily: "var(--font-reading)" }}
+        className="mt-2 flex items-baseline gap-2 text-text-muted font-reading"
       >
         <span
-          className="text-[14px] lg:text-[15px] italic text-heading/80 tracking-tight leading-none"
+          className="text-body lg:text-body-lg italic text-heading/80 tracking-tight leading-none"
           suppressHydrationWarning
         >
           {weekday}
         </span>
-        <span className="text-border-strong text-[12px] leading-none" aria-hidden>·</span>
-        <span className="text-[13px] lg:text-[14px] leading-none" suppressHydrationWarning>{monthDay}</span>
+        <span className="text-border-strong text-meta leading-none" aria-hidden>·</span>
+        <span className="text-body-sm lg:text-body leading-none" suppressHydrationWarning>{monthDay}</span>
       </div>
     </>
   );
 }
 
 function formatSynced(lastRefresh: string | null): string {
-  if (!lastRefresh) return "not synced yet";
-  const diff = Date.now() - new Date(lastRefresh).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return formatTimeAgo(lastRefresh) ?? "not synced yet";
 }
 
 function BriefingStatus({
@@ -920,12 +888,10 @@ function BriefingStatus({
   onRefresh: () => void;
   isRefreshing: boolean;
 }) {
-  // Sits as a context pill directly above the search box: rounded-full to read
-  // as a tab attached to the input below, with a live accent dot on the left
-  // and a refresh affordance on the right. Mirrors the Codex pattern of a
-  // contextual status chip docked above the command input.
+  // First row INSIDE the glass console — plain text on the shared surface,
+  // separated from the input by spacing alone (no pill, no hairline).
   const wrapper =
-    "mb-2 flex items-center gap-2.5 rounded-full border pl-3.5 pr-1.5 py-1.5 text-[12px] backdrop-blur-sm";
+    "flex items-center gap-2.5 pl-4.5 pr-2.5 pt-3 -mb-1 text-meta";
   const refreshBtn = (
     <button
       type="button"
@@ -933,7 +899,7 @@ function BriefingStatus({
       disabled={isRefreshing}
       aria-label="Refresh briefing"
       title="Refresh briefing"
-      className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-text-faint hover:bg-bg hover:text-text-muted transition-colors disabled:opacity-50 disabled:cursor-wait"
+      className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-text-faint hover:bg-bg-secondary/80 hover:text-text transition-[color,background-color,transform] duration-150 ease-snap active:scale-90 disabled:opacity-50 disabled:cursor-wait"
     >
       <svg
         width="13"
@@ -954,10 +920,7 @@ function BriefingStatus({
   );
   if (closed) {
     return (
-      <div
-        className={`${wrapper} bg-accent/8 border-accent/20`}
-        style={{ fontFamily: "var(--font-sans)" }}
-      >
+      <div className={wrapper}>
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
         <span className="text-heading font-medium whitespace-nowrap">Briefing closed</span>
         <span className="text-text-faint hidden sm:inline">·</span>
@@ -969,11 +932,11 @@ function BriefingStatus({
     );
   }
   return (
-    <div
-      className={`${wrapper} bg-bg-secondary/55 border-border`}
-      style={{ fontFamily: "var(--font-sans)" }}
-    >
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+    <div className={wrapper}>
+      <span className="relative h-1.5 w-1.5 shrink-0" aria-hidden>
+        <span className="absolute inset-0 rounded-full bg-accent" />
+        <span className="absolute inset-0 rounded-full bg-accent/40 motion-safe:animate-ping [animation-duration:2.4s]" />
+      </span>
       <span className="tabular-nums text-text-muted whitespace-nowrap">
         <span className="text-heading font-medium">{total}</span> item{total === 1 ? "" : "s"}
       </span>
@@ -1021,17 +984,16 @@ type SignalKind = "topic" | "method" | "venue";
 function SignalBadge({ kind, label }: { kind: SignalKind; label: string }) {
   const tone =
     kind === "topic"
-      ? "text-accent bg-accent-dim/70 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.16)]"
+      ? "text-accent bg-accent-dim"
       : kind === "method"
-      ? "text-tag bg-tag-dim/70 shadow-[inset_0_0_0_1px_rgba(15,118,110,0.16)]"
-      : "text-link bg-link-dim/70 shadow-[inset_0_0_0_1px_rgba(29,78,216,0.14)]";
+        ? "text-tag bg-tag-dim"
+        : "text-link bg-link-dim";
 
   const Icon = kind === "topic" ? TopicIcon : kind === "method" ? MethodIcon : VenueIcon;
 
   return (
     <span
-      className={`inline-flex items-center gap-1 h-5 pl-1.5 pr-2 rounded text-[11px] font-medium tracking-[0.005em] ${tone}`}
-      style={{ fontFamily: "var(--font-sans)" }}
+      className={`inline-flex items-center gap-1 h-5 pl-1.5 pr-2 rounded text-caption font-medium tracking-[0.005em] ${tone}`}
     >
       <Icon />
       {label}
@@ -1056,8 +1018,7 @@ function MetaRow({
     return (
       <Link
         href="/profile"
-        className="group mt-6 inline-flex items-center gap-2 rounded-full bg-bg-secondary/50 hover:bg-bg-secondary pl-2 pr-3.5 py-1.5 text-[12.5px] text-text-muted hover:text-heading transition-colors duration-200 ease-out active:scale-[0.98]"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="group mt-6 inline-flex items-center gap-2 rounded-full bg-bg-secondary/50 hover:bg-bg-secondary pl-2 pr-3.5 py-1.5 text-meta text-text-muted hover:text-heading transition-colors duration-200 ease-out active:scale-[0.98]"
       >
         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg transition-transform duration-200 ease-out group-hover:rotate-90">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
@@ -1065,7 +1026,7 @@ function MetaRow({
           </svg>
         </span>
         Set up your profile
-        <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
+        <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px]">→</span>
       </Link>
     );
   }
@@ -1080,16 +1041,15 @@ function MetaRow({
       href="/profile"
       aria-label="Edit profile signals"
       className="group mt-4 inline-flex items-center flex-wrap gap-x-1.5 gap-y-1 transition-colors"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
-      <span className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint/80 mr-1">
+      <span className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint/80 mr-1">
         Tuned for
       </span>
       {typedSignals.slice(0, VISIBLE).map((s) => (
         <SignalBadge key={`${s.kind}:${s.label}`} kind={s.kind} label={s.label} />
       ))}
       {overflow > 0 && (
-        <span className="text-[11px] text-text-faint/80 tabular-nums">
+        <span className="text-caption text-text-faint/80 tabular-nums">
           +{overflow}
         </span>
       )}
@@ -1104,7 +1064,7 @@ function MetaRow({
         </svg>
       </span>
       {missingTopics && (
-        <div className="basis-full flex items-center gap-1 text-[10.5px] text-text-faint/70 mt-0.5">
+        <div className="basis-full flex items-center gap-1 text-micro text-text-faint/70 mt-0.5">
           <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="text-accent/80" aria-hidden>
             <circle cx="12" cy="12" r="10" />
           </svg>

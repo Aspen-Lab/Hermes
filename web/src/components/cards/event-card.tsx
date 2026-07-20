@@ -4,10 +4,8 @@ import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatDate } from "@/lib/format";
+import { cardShell } from "@/components/ui/card-shell";
 
 export function EventCard({ event }: { event: Event }) {
   const { saveEvent, notInterestedEvent } = useFeedStore();
@@ -15,12 +13,11 @@ export function EventCard({ event }: { event: Event }) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
+      className={cardShell()}
     >
       <div className="flex items-start justify-between gap-4">
         <h3
-          className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="text-title-lg font-semibold text-heading leading-snug tracking-[-0.01em]"
         >
           {event.name}
         </h3>
@@ -28,17 +25,16 @@ export function EventCard({ event }: { event: Event }) {
       </div>
 
       <p
-        className="text-[13.5px] text-text-muted mt-2.5"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="text-body-sm text-text-muted mt-2.5"
       >
-        {fmtDate(event.date)} · {event.isOnline ? "Online" : event.location}
+        {formatDate(event.date)} · {event.isOnline ? "Online" : event.location}
       </p>
 
       <div className="flex items-center flex-wrap gap-2 mt-3.5">
         <Tag>{event.type}</Tag>
       </div>
 
-      <p className="text-[15.5px] text-text-muted mt-4 leading-[1.65] line-clamp-2">
+      <p className="text-body-lg text-text-muted mt-4 leading-[1.65] line-clamp-2">
         {event.relevanceReason}
       </p>
 

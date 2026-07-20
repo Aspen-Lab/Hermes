@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFeedStore } from "@/store/feed";
 import { useUIStore } from "@/store/ui";
+import { formatTimeAgo } from "@/lib/format";
 import { UserMenu } from "@/components/user-menu";
 
 type Tab = {
@@ -104,14 +105,7 @@ function iconFor(href: string, active: boolean): React.ReactNode {
 }
 
 function formatSynced(lastRefresh: string | null): string {
-  if (!lastRefresh) return "not synced";
-  const diff = Date.now() - new Date(lastRefresh).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  return formatTimeAgo(lastRefresh) ?? "not synced";
 }
 
 export function Nav() {
@@ -174,25 +168,23 @@ export function Nav() {
       {/* Mobile: top bar — [Logo] [Tabs] [UserMenu]. The floating
           UserMenu/GithubStars in layout.tsx is desktop-only, so the
           account control lives inline here. */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-bg-secondary/85 backdrop-blur-md lg:hidden">
+      <nav className="fixed top-0 inset-x-0 z-50 glass-bar lg:hidden">
         <div className="h-12 px-3 flex items-center gap-2">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-heading shrink-0"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="flex items-center gap-1.5 text-heading shrink-0 font-display"
             aria-label="Peer home"
           >
             <Image src="/logo-mark.png" alt="" width={26} height={26} className="shrink-0" />
             {/* Brand wordmark hides on the narrowest phones to leave room
                 for tabs + account; reappears at sm (≥640px). */}
-            <span className="text-[18px] font-normal italic tracking-[-0.01em] hidden sm:inline">
+            <span className="text-title font-normal italic tracking-[-0.01em] hidden sm:inline">
               Peer
             </span>
           </Link>
 
           <div
             className="flex-1 flex items-center justify-end gap-0.5 min-w-0"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {tabs.map(({ href, label }) => {
               const n = countFor(href);
@@ -201,7 +193,7 @@ export function Nav() {
                 <Link
                   key={href}
                   href={href}
-                  className={`relative px-2 py-1.5 text-[12.5px] transition-colors duration-200 ease-out active:scale-95 ${
+                  className={`relative px-2 py-1.5 text-meta transition-colors duration-200 ease-out active:scale-95 ${
                     active
                       ? "text-heading font-medium"
                       : "text-text-faint hover:text-text-muted"
@@ -209,7 +201,7 @@ export function Nav() {
                 >
                   {label}
                   {n > 0 && (
-                    <span className="ml-1 text-[10.5px] tabular-nums text-accent">
+                    <span className="ml-1 text-micro tabular-nums text-accent">
                       {n}
                     </span>
                   )}
@@ -232,7 +224,7 @@ export function Nav() {
 
       {/* Desktop: sidebar — translates off-screen when collapsed. */}
       <aside
-        className={`hidden lg:flex fixed inset-y-0 left-0 w-52 z-50 border-r border-border bg-bg-secondary/60 backdrop-blur-md flex-col transition-transform duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform ${
+        className={`hidden lg:flex fixed inset-y-0 left-0 w-52 z-50 glass-bar flex-col transition-transform duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!sidebarOpen}
@@ -240,8 +232,7 @@ export function Nav() {
         <div className="relative px-6 pt-10 pb-10">
           <Link
             href="/"
-            className="flex items-center gap-3 text-[28px] font-normal text-heading tracking-[-0.02em] italic leading-none"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="flex items-center gap-3 text-[28px] font-light text-heading tracking-[-0.02em] italic leading-none font-display"
           >
             Peer
           </Link>
@@ -272,7 +263,6 @@ export function Nav() {
 
         <nav
           className="flex-1 px-3 space-y-0.5"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {tabs.map(({ href, label, shortcut }) => {
             const active = isActive(href);
@@ -282,7 +272,7 @@ export function Nav() {
                 key={href}
                 href={href}
                 tabIndex={sidebarOpen ? 0 : -1}
-                className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13.5px] transition-all duration-200 ease-out active:scale-[0.98] ${
+                className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-body-sm transition-all duration-200 ease-out active:scale-[0.98] ${
                   active
                     ? "text-heading bg-surface shadow-card"
                     : "text-text-faint hover:text-heading hover:bg-surface/50"
@@ -298,7 +288,7 @@ export function Nav() {
                   </span>
                   <span className="truncate">{label}</span>
                   {n > 0 && (
-                    <span className="inline-flex items-center gap-1 text-accent text-[11.5px] tabular-nums">
+                    <span className="inline-flex items-center gap-1 text-accent text-caption tabular-nums">
                       {href === "/" && (
                         <span
                           className="block w-[5px] h-[5px] rounded-full bg-accent"
@@ -318,9 +308,8 @@ export function Nav() {
         {/* ── Status + shortcuts footer ── */}
         <div
           className="px-4 py-4 border-t border-border flex flex-col gap-3"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
-          <div className="flex items-center gap-2 text-[11px] text-text-faint">
+          <div className="flex items-center gap-2 text-caption text-text-faint">
             <span
               className={`block w-[6px] h-[6px] rounded-full shrink-0 ${
                 lastRefresh ? "bg-accent" : "bg-border-strong"
@@ -344,12 +333,12 @@ export function Nav() {
               onClick={openHelp}
               tabIndex={sidebarOpen ? 0 : -1}
               title="Keyboard shortcuts"
-              className="group inline-flex items-center gap-1.5 text-[11px] text-text-faint hover:text-heading transition-colors active:scale-[0.95]"
+              className="group inline-flex items-center gap-1.5 text-caption text-text-faint hover:text-heading transition-colors active:scale-[0.95]"
             >
               <NavKbd>?</NavKbd>
               Shortcuts
             </button>
-            <span className="text-[10px] text-text-faint/70 tracking-wider uppercase">
+            <span className="text-micro text-text-faint/70 tracking-wider uppercase">
               v0.1.0
             </span>
           </div>
@@ -364,7 +353,7 @@ export function Nav() {
         onClick={toggleSidebar}
         aria-label="Expand sidebar"
         title="Expand sidebar (\)"
-        className={`group hidden lg:inline-flex fixed top-4 left-4 z-[55] items-center justify-center w-10 h-10 rounded-full bg-surface/95 backdrop-blur border border-border-strong shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[opacity,transform,box-shadow] duration-[300ms] ease-out active:scale-[0.94] ${
+        className={`group hidden lg:inline-flex fixed top-4 left-4 z-[55] items-center justify-center w-10 h-10 rounded-full glass shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[opacity,transform,box-shadow] duration-[300ms] ease-out active:scale-[0.94] ${
           sidebarOpen
             ? "opacity-0 -translate-x-2 pointer-events-none"
             : "opacity-100 translate-x-0"
@@ -400,9 +389,8 @@ export function Nav() {
         {/* Unread badge — hidden when zero or sidebar is open */}
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-bg text-[10.5px] font-semibold tabular-nums shadow-card border border-bg/20 group-hover:opacity-0 transition-opacity duration-200"
+            className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-bg text-micro font-semibold tabular-nums shadow-card border border-bg/20 group-hover:opacity-0 transition-opacity duration-200"
             aria-label={`${unreadCount} unread`}
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
@@ -431,8 +419,7 @@ function NavShortcut({ value, dimmed }: { value: string; dimmed: boolean }) {
 function NavKbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd
-      className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded bg-bg-secondary/80 border border-border-strong text-[9.5px] text-text-muted leading-none"
-      style={{ fontFamily: "var(--font-mono)" }}
+      className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded bg-bg-secondary/80 shadow-well text-[9.5px] text-text-muted leading-none font-mono"
     >
       {children}
     </kbd>

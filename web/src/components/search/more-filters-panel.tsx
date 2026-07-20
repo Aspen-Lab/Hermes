@@ -59,10 +59,9 @@ export function MoreFiltersPanel({
       <div className="overflow-hidden">
         <div
           className="bg-surface shadow-card rounded-xl p-4 flex flex-col gap-4"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <div className="flex flex-col gap-2">
-            <label className="text-[12px] text-text-faint uppercase tracking-wider">
+            <label className="text-meta text-text-faint uppercase tracking-wider">
               Source type
             </label>
             <div className="flex flex-wrap gap-2">
@@ -76,7 +75,7 @@ export function MoreFiltersPanel({
                     aria-checked={active}
                     onClick={() => toggleSource(value)}
                     className={[
-                      "h-8 px-3.5 rounded-full text-[13px] font-medium transition-colors",
+                      "h-8 px-3.5 rounded-full text-body-sm font-medium transition-colors",
                       active
                         ? "bg-[color:var(--color-accent-dim)] text-[color:var(--color-accent)]"
                         : "bg-[color:var(--color-bg-secondary)] text-text hover:bg-surface-hover",
@@ -93,7 +92,7 @@ export function MoreFiltersPanel({
           <div className="flex flex-col gap-2">
             <label
               htmlFor="peer-filter-venue"
-              className="text-[12px] text-text-faint uppercase tracking-wider"
+              className="text-meta text-text-faint uppercase tracking-wider"
             >
               Venue contains
             </label>
@@ -105,8 +104,7 @@ export function MoreFiltersPanel({
               placeholder="e.g. nature, neurips, jmlr…"
               maxLength={80}
               tabIndex={open ? 0 : -1}
-              className="w-full bg-[color:var(--color-bg-secondary)] rounded-lg py-2 px-3 text-[13.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:ring-2 focus:ring-accent/20"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="w-full bg-[color:var(--color-bg-secondary)] rounded-lg py-2 px-3 text-body-sm text-text placeholder:text-text-faint/70 focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
         </div>

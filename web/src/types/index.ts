@@ -114,19 +114,16 @@ export type FeedImportance = "new" | "highlyCited" | "rising";
 export type FeedMethodMode = "mustMatch" | "relatedOk" | "any";
 export type FeedDiscoveryMode = "core" | "adjacent" | "surprise";
 export type UserAiProvider = "default" | "openai" | "gemini" | "anthropic" | "qwen" | "deepseek";
-export type ColorTheme =
-  | "system"
-  | "cream"
-  | "white"
-  | "pink"
-  | "blue"
+export type ThemeMode = "system" | "light" | "dark";
+export type ThemeAccent =
+  | "ember"
+  | "rose"
+  | "marigold"
   | "sage"
-  | "lavender"
-  | "black"
-  | "slate"
-  | "plum";
-
-export type ColorThemeMode = "auto" | "light" | "dark";
+  | "indigo"
+  | "violet";
+/** Stored as one composite string so the sync pipeline stays single-field. */
+export type ColorTheme = `${ThemeMode}:${ThemeAccent}`;
 
 export interface UserProfile {
   displayName: string;
@@ -298,25 +295,30 @@ export const defaultProfile: UserProfile = {
   feedAiProvider: "default",
   feedAiApiKey: "",
   deepReportEnabled: false,
-  colorTheme: "system",
+  colorTheme: "system:ember",
   onboardedAt: null,
 };
 
-export const colorThemeOptions: {
-  value: ColorTheme;
+export const themeModeOptions: { value: ThemeMode; label: string }[] = [
+  { value: "system", label: "Auto" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
+/** Accent presets. `seed` drives the light palette, `seedDark` the dark one —
+ *  every other color (secondaries, tinted gray ramp) derives in CSS. */
+export const themeAccentOptions: {
+  value: ThemeAccent;
   label: string;
-  mode: ColorThemeMode;
+  seed: string;
+  seedDark: string;
 }[] = [
-  { value: "system", label: "System", mode: "auto" },
-  { value: "cream", label: "Cream", mode: "light" },
-  { value: "white", label: "White", mode: "light" },
-  { value: "pink", label: "Pink", mode: "light" },
-  { value: "blue", label: "Blue", mode: "light" },
-  { value: "sage", label: "Sage", mode: "light" },
-  { value: "lavender", label: "Lavender", mode: "light" },
-  { value: "black", label: "Black", mode: "dark" },
-  { value: "slate", label: "Slate", mode: "dark" },
-  { value: "plum", label: "Plum", mode: "dark" },
+  { value: "ember", label: "Ember", seed: "#ff520d", seedDark: "#ff6a2b" },
+  { value: "rose", label: "Rose", seed: "#e0347c", seedDark: "#f0559a" },
+  { value: "marigold", label: "Marigold", seed: "#d98e04", seedDark: "#eaa61e" },
+  { value: "sage", label: "Sage", seed: "#2e7d5b", seedDark: "#4aa87d" },
+  { value: "indigo", label: "Indigo", seed: "#3f5bd9", seedDark: "#7a90f2" },
+  { value: "violet", label: "Violet", seed: "#7a3fd9", seedDark: "#a078f0" },
 ];
 
 export const careerStages: CareerStage[] = [

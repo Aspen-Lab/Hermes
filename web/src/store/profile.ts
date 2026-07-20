@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { applyColorTheme } from "@/lib/theme";
+import { applyColorTheme, normalizeColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
   Paper,
@@ -42,7 +42,7 @@ interface ProfileState {
     signal: "positive" | "negative",
     at?: string,
   ) => void;
-  /** Wipe everything Hermes has learned from likes/saves/dismissals. */
+  /** Wipe everything Peer has learned from likes/saves/dismissals. */
   resetPreferenceLedger: () => void;
   updateFeedFocus: (value: FeedFocus) => void;
   updateFeedFreshness: (value: FeedFreshness) => void;
@@ -309,8 +309,12 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.feedAiApiKey !== undefined) merged.feedAiApiKey = remote.feedAiApiKey;
           if (remote.deepReportEnabled !== undefined) merged.deepReportEnabled = remote.deepReportEnabled;
           if (remote.colorTheme !== undefined) {
-            merged.colorTheme = remote.colorTheme;
-            applyColorTheme(remote.colorTheme);
+            // The server may still hold a pre-v2 single-name theme
+            // ("black", "lavender", …) — normalize BEFORE storing, or the
+            // picker's mode/accent split chokes on the legacy value.
+            const normalized = normalizeColorTheme(remote.colorTheme);
+            merged.colorTheme = normalized;
+            applyColorTheme(normalized);
           }
           return { profile: merged };
         }),
@@ -323,6 +327,19 @@ export const useProfileStore = create<ProfileState>()(
     // skipHydration: persisted state is rehydrated after mount via
     // <StoreHydrator/> so the first client render matches SSR defaults and
     // avoids a hydration mismatch. See store/ui.ts for the full rationale.
-    { name: "peer-profile", skipHydration: true }
+    {
+      name: "peer-profile",
+      skipHydration: true,
+      // v2: colorTheme became a "mode:accent" composite; migrate any
+      // persisted legacy single-name value (normalize is a no-op on v2).
+      version: 2,
+      migrate: (persisted) => {
+        const state = persisted as { profile?: { colorTheme?: string } };
+        if (state?.profile?.colorTheme !== undefined) {
+          state.profile.colorTheme = normalizeColorTheme(state.profile.colorTheme);
+        }
+        return persisted;
+      },
+    }
   )
 );

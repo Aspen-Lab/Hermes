@@ -11,14 +11,12 @@ export default function PersonaPage() {
     <article className="mx-auto max-w-[640px] px-6 py-16 lg:py-20">
       <header className="mb-10">
         <h1
-          className="text-[34px] lg:text-[40px] font-semibold text-heading tracking-[-0.02em] leading-[1.05]"
-          style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
+          className="text-[34px] lg:text-[40px] font-light text-heading tracking-[-0.02em] leading-[1.05] font-display"
         >
           Academic persona
         </h1>
         <p
-          className="text-text-muted mt-3 text-[16px] leading-[1.6] max-w-[520px]"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-text-muted mt-3 text-lead leading-[1.6] max-w-[520px] font-reading"
         >
           Fifteen forced-choice questions across five working-style axes. Not a
           test, not a label — a description of how you tend to operate, useful

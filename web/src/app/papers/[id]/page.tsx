@@ -4,8 +4,8 @@ import { use, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { formatAgeInWords, formatDayAge, formatMatchPct } from "@/lib/format";
 import { useProfileStore } from "@/store/profile";
-import { mockPapers } from "@/data/mock";
 import {
   buildFallbackPaperReport,
   isPaperReviewLike,
@@ -22,12 +22,23 @@ import {
   FactChip,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
+import { apiFetch } from "@/lib/api";
+import {
+  IconBook,
+  IconBullseye,
+  IconCalendar,
+  IconCheck,
+  IconStar,
+} from "@/components/icons";
 import {
   PaperFigureFrame,
   useResolvedFigure,
   type FigureState,
   type ResolveFigureArgs,
 } from "@/components/paper-figure";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+import { PageContainer } from "@/components/ui/page-container";
 
 const WORDS_PER_MINUTE = 220;
 const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
@@ -288,20 +299,6 @@ function readingTimeMinutes(paper: Paper): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
-function formatPublishedDate(d: string | undefined, nowMs: number): string | null {
-  if (!d) return null;
-  const date = new Date(d);
-  if (Number.isNaN(date.getTime())) return null;
-  const diffMs = nowMs - date.getTime();
-  const day = 86_400_000;
-  const diffDays = Math.floor(diffMs / day);
-  if (diffDays < 1) return "Today";
-  if (diffDays < 2) return "Yesterday";
-  if (diffDays < 14) return `${diffDays}d ago`;
-  if (diffDays < 60) return `${Math.floor(diffDays / 7)}w ago`;
-  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
-
 function pickRelated(current: Paper, pool: Paper[], limit = 3): Paper[] {
   const others = pool.filter((p) => p.id !== current.id);
   const kw = new Set(current.summaryExperimentKeywords.map((k) => k.toLowerCase()));
@@ -317,17 +314,6 @@ function pickRelated(current: Paper, pool: Paper[], limit = 3): Paper[] {
     .slice(0, limit)
     .map((x) => x.p);
   return scored;
-}
-
-function relativeTimeFromDays(days: number): string {
-  if (days < 1) return "today";
-  if (days < 2) return "yesterday";
-  if (days < 30) return `${days} days ago`;
-  if (days < 60) return "1 month ago";
-  if (days < 365) return `${Math.round(days / 30)} months ago`;
-  const years = days / 365;
-  if (years < 1.5) return "1 year ago";
-  return `${years.toFixed(1).replace(/\.0$/, "")} years ago`;
 }
 
 function teamSizeLabel(n: number): string {
@@ -373,8 +359,8 @@ function highlightKeywords(
     if (cursor < start) nodes.push(text.slice(cursor, start));
     const cls =
       tone === "required"
-        ? "inline-block px-1.5 py-0.5 rounded bg-accent-dim text-accent text-[0.875em] font-medium border border-accent/20 mx-0.5 leading-normal"
-        : "inline-block px-1.5 py-0.5 rounded bg-tag-dim text-tag text-[0.875em] font-medium border border-tag/20 mx-0.5 leading-normal";
+        ? "inline-block px-1.5 py-0.5 rounded bg-accent-dim text-accent text-[0.875em] font-medium mx-0.5 leading-normal"
+        : "inline-block px-1.5 py-0.5 rounded bg-tag-dim text-tag text-[0.875em] font-medium mx-0.5 leading-normal";
     nodes.push(
       <span key={`kw-${start}`} className={cls}>
         {text.slice(start, end)}
@@ -542,9 +528,7 @@ export default function PaperDetailPage({
   const [reportNow] = useState(() => Date.now());
 
   const storePaper =
-    feedPapers.find((p) => p.id === id) ??
-    savedPapers.find((p) => p.id === id) ??
-    mockPapers.find((p) => p.id === id);
+    feedPapers.find((p) => p.id === id) ?? savedPapers.find((p) => p.id === id);
 
   // Many publishers (Nature/Science/etc.) don't share abstracts with OpenAlex,
   // so the storePaper may have an empty summaryIntro. In that case, prefer
@@ -580,8 +564,7 @@ export default function PaperDetailPage({
   useEffect(() => {
     if (!shouldFetchById) return;
     let cancelled = false;
-    fetch(`/api/papers/${encodeURIComponent(id)}`)
-      .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
+    apiFetch<Paper>(`/api/papers/${encodeURIComponent(id)}`)
       .then((p) => {
         if (!cancelled) setFetchResult({ id, paper: p, done: true });
       })
@@ -677,9 +660,8 @@ export default function PaperDetailPage({
             apiKey: profile.feedAiApiKey.trim(),
           }
         : undefined;
-    fetch("/api/papers/report", {
+    apiFetch<PaperReport>("/api/papers/report", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         paper,
         contextHint,
@@ -687,7 +669,6 @@ export default function PaperDetailPage({
         llmOverride,
       }),
     })
-      .then((res) => (res.ok ? (res.json() as Promise<PaperReport>) : null))
       .then((nextReport) => {
         if (!cancelled) {
           writeCachedPaperReport(reportKey, nextReport);
@@ -715,8 +696,7 @@ export default function PaperDetailPage({
 
   const related = useMemo(() => {
     if (!paper) return [];
-    const pool = feedPapers.length > 0 ? feedPapers : mockPapers;
-    return pickRelated(paper, pool, 3);
+    return pickRelated(paper, feedPapers, 3);
   }, [paper, feedPapers]);
   const resultGroups = useMemo(
     () =>
@@ -729,11 +709,10 @@ export default function PaperDetailPage({
   if (!paper) {
     if (isFetchingById) {
       return (
-        <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
+        <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
           <Link
             href="/"
-            className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
           >
             <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
               ←
@@ -741,16 +720,16 @@ export default function PaperDetailPage({
             Back
           </Link>
           <BriefingSkeleton />
-        </article>
+        </PageContainer>
       );
     }
     return (
-      <article className="mx-auto max-w-[720px] px-6 py-20 animate-fade-in-up">
+      <PageContainer width="narrow" className="px-6 py-20 animate-fade-in-up">
         <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-[14px] mt-3 inline-block">
+        <Link href="/" className="text-link text-body mt-3 inline-block">
           ← Back to feed
         </Link>
-      </article>
+      </PageContainer>
     );
   }
 
@@ -785,10 +764,8 @@ export default function PaperDetailPage({
     report?.whatItProposes.methods.join(" "),
   );
 
-  const matchPct = paper.relevanceScore
-    ? Math.round(Math.max(0, Math.min(1, paper.relevanceScore)) * 100)
-    : null;
-  const publishedLabel = formatPublishedDate(paper.publishedDate, reportNow);
+  const matchPct = formatMatchPct(paper.relevanceScore);
+  const publishedLabel = formatDayAge(paper.publishedDate, reportNow);
   const readMinutes = readingTimeMinutes(paper);
   const daysOld = paper.publishedDate
     ? Math.max(
@@ -813,13 +790,12 @@ export default function PaperDetailPage({
   return (
     <>
       <ScrollProgress />
-      <article className="mx-auto max-w-[760px] px-4 sm:px-6 py-10 sm:py-14">
+      <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
         <Link
           href="/"
-          className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
         >
           <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
             ←
@@ -834,21 +810,18 @@ export default function PaperDetailPage({
         >
           {reviewLabel && (
             <span
-              className="inline-block mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md bg-tag-dim text-tag border border-tag/20"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="inline-block mb-3 text-caption font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md bg-tag-dim text-tag"
             >
               {reviewLabel}
             </span>
           )}
           <h1
             className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {paper.title}
           </h1>
           <p
-            className="text-text-muted mt-3 text-[14.5px] leading-[1.7]"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-text-muted mt-3 text-body leading-[1.7]"
           >
             {paper.authors.map((author, i) => (
               <span key={author}>
@@ -924,8 +897,7 @@ export default function PaperDetailPage({
             report looks shallower than they expected. */}
         {report?.paywallNotice && (
           <div
-            className="mt-6 rounded-xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/30 px-4 py-3 text-[13px] leading-relaxed text-amber-900 dark:text-amber-100"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="mt-6 rounded-xl bg-yellow-dim px-4 py-3 text-body-sm leading-relaxed text-yellow"
             role="status"
           >
             <span className="font-semibold">Deep report unavailable —</span>{" "}
@@ -937,8 +909,7 @@ export default function PaperDetailPage({
             text and tells the user which source served it. */}
         {report?.depth === "deep" && (
           <div
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-[11.5px] font-medium text-accent"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-caption font-medium text-accent"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -955,10 +926,9 @@ export default function PaperDetailPage({
           Why it fits you
         </SectionTitle>
 
-        <div className="rounded-2xl border border-accent/20 bg-accent-dim px-5 py-4">
+        <div className="rounded-2xl bg-accent-dim px-5 py-4">
           <p
-            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
           >
             <IconBullseye />
             Relevance
@@ -974,8 +944,7 @@ export default function PaperDetailPage({
               {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
                 <li
                   key={i}
-                  className="flex gap-2.5 text-[15px] text-text leading-[1.65]"
-                  style={{ fontFamily: "var(--font-reading)" }}
+                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
                 >
                   <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
                   <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
@@ -1103,7 +1072,7 @@ export default function PaperDetailPage({
 
             <div className="mt-5 space-y-3">
               {reportLoading && [1, 2, 3].map((i) => (
-                <div key={`loading-review-${i}`} className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card space-y-3">
+                <div key={`loading-review-${i}`} className="rounded-2xl bg-surface px-5 py-4 shadow-card space-y-3">
                   <ShimmerBar width="40%" height="h-3" />
                   <ShimmerBar width="92%" />
                   <ShimmerBar width="78%" />
@@ -1112,17 +1081,15 @@ export default function PaperDetailPage({
               {!reportLoading && (report?.reviewContents?.sections ?? []).map((section, index) => (
                 <div
                   key={`${section.heading}-${index}`}
-                  className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card"
+                  className="rounded-2xl bg-surface px-5 py-4 shadow-card"
                 >
                   <p
-                    className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-1"
-                    style={{ fontFamily: "var(--font-sans)" }}
+                    className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-1"
                   >
                     {section.heading}
                   </p>
                   <p
-                    className="text-[15px] text-text leading-[1.68] break-words"
-                    style={{ fontFamily: "var(--font-reading)" }}
+                    className="text-body-lg text-text leading-[1.68] break-words font-reading"
                   >
                     {section.summary}
                   </p>
@@ -1222,7 +1189,7 @@ export default function PaperDetailPage({
         )}
 
         {/* ── Quick signals ── */}
-        <SectionTitle icon={<IconCheck />} index={8}>
+        <SectionTitle icon={<IconCheck strokeWidth={2} />} index={8}>
           At a glance
         </SectionTitle>
         <div className="flex flex-wrap gap-2">
@@ -1234,7 +1201,7 @@ export default function PaperDetailPage({
           )}
           {daysOld !== null && (
             <FactChip icon={<IconClock />} tone={isRecent ? "tag" : "muted"}>
-              {relativeTimeFromDays(daysOld)}
+              {formatAgeInWords(daysOld)}
             </FactChip>
           )}
           <FactChip icon={<IconUsers />} tone="neutral">
@@ -1270,8 +1237,7 @@ export default function PaperDetailPage({
 
         {reportLoading && (
           <p
-            className="mt-3 text-[12px] text-text-faint"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="mt-3 text-meta text-text-faint"
           >
             Refining report with AI…
           </p>
@@ -1285,8 +1251,7 @@ export default function PaperDetailPage({
           <button
             type="button"
             onClick={() => moreLikePaper(paper)}
-            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface border border-border-strong text-[13.5px] text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="group inline-flex items-center gap-2 h-10 px-4 rounded-full bg-surface shadow-card text-body-sm text-text-muted hover:text-accent hover:bg-accent-dim transition-colors duration-200 ease-out active:scale-[0.96]"
           >
             <svg
               width="14"
@@ -1306,8 +1271,7 @@ export default function PaperDetailPage({
             More like this
           </button>
           <span
-            className="text-[12.5px] text-text-faint"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-meta text-text-faint"
           >
             Tomorrow&rsquo;s briefing leans toward this paper&rsquo;s topics, methods, and venue.
           </span>
@@ -1320,8 +1284,7 @@ export default function PaperDetailPage({
             style={{ "--i": 7 } as React.CSSProperties}
           >
             <h2
-              className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
             >
               Related from your feed
             </h2>
@@ -1332,7 +1295,7 @@ export default function PaperDetailPage({
             </div>
           </section>
         )}
-      </article>
+      </PageContainer>
     </>
   );
 }
@@ -1350,11 +1313,10 @@ function SectionTitle({
 }) {
   return (
     <h2
-      className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
+      className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
       style={{
         "--i": index,
-        fontFamily: "var(--font-sans)",
-      } as React.CSSProperties}
+        } as React.CSSProperties}
     >
       {icon}
       {children}
@@ -1375,21 +1337,18 @@ function ResultClaimList({
           className={index > 0 ? "border-t border-border pt-4" : undefined}
         >
           <h3
-            className="text-[17px] sm:text-[18px] font-semibold text-heading leading-snug break-words"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-title sm:text-title font-semibold text-heading leading-snug break-words"
           >
             {result.title}
           </h3>
           <p
-            className="mt-2 text-[15px] text-text leading-[1.68] break-words"
-            style={{ fontFamily: "var(--font-reading)" }}
+            className="mt-2 text-body-lg text-text leading-[1.68] break-words font-reading"
           >
             {result.detail}
           </p>
           {result.novelty && (
             <p
-              className="mt-2 text-[14px] text-text-muted leading-[1.55] break-words"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="mt-2 text-body text-text-muted leading-[1.55] break-words"
             >
               <span className="font-semibold text-heading">
                 Why it&apos;s new:
@@ -1424,10 +1383,9 @@ function ReportFigureRow({
   const hasBody = Boolean(body?.trim());
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-2xl border border-border-strong bg-surface px-5 py-4 shadow-card">
+      <div className="rounded-2xl bg-surface px-5 py-4 shadow-card">
         <p
-          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
         >
           {title}
         </p>
@@ -1445,18 +1403,16 @@ function ReportFigureRow({
           content
         ) : hasBody ? (
           <p
-            className={`text-[16px] leading-[1.72] break-words ${
+            className={`text-lead leading-[1.72] break-words font-reading ${
               emphasis ? "font-semibold text-heading" : "text-text"
             }`}
-            style={{ fontFamily: "var(--font-reading)" }}
           >
             {body}
           </p>
         ) : null}
         {!loading && visibleBullets.length > 0 && (
           <ol
-            className="mt-4 space-y-2 text-[14px] text-text-muted leading-[1.55] list-decimal list-inside"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="mt-4 space-y-2 text-body text-text-muted leading-[1.55] list-decimal list-inside"
           >
             {visibleBullets.map((bullet) => (
               <li key={bullet}>{bullet}</li>
@@ -1546,18 +1502,17 @@ function ActionRow({
       className="flex items-center flex-wrap gap-2 mt-6 animate-fade-in-up"
       style={{
         "--i": 2,
-        fontFamily: "var(--font-sans)",
-      } as React.CSSProperties}
+        } as React.CSSProperties}
     >
       {/* Primary: read paper */}
       <a
         href={primaryUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center gap-2 h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-accent text-bg text-[13.5px] sm:text-[14px] font-semibold shadow-card hover:shadow-card-hover hover:bg-accent/90 transition-all duration-200 ease-out active:scale-[0.97]"
+        className={cn(buttonVariants({ tone: "primary" }), "group h-10 sm:h-11 px-4 sm:px-5 text-body-sm sm:text-body font-semibold hover:shadow-card-hover")}
       >
         {primaryLabel}
-        <span className="text-[11px] opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
+        <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
           ↗
         </span>
       </a>
@@ -1568,10 +1523,10 @@ function ActionRow({
         onClick={isSaved ? onUnsave : onSave}
         aria-pressed={isSaved}
         aria-label={isSaved ? "Remove from saved" : "Save"}
-        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isSaved
-            ? "bg-accent/10 text-accent border border-accent/40"
-            : "bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover"
+            ? "bg-accent-dim text-accent shadow-card"
+            : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover"
         }`}
       >
         <svg
@@ -1617,7 +1572,7 @@ function ActionRow({
         onClick={handleCopyCitation}
         aria-label="Copy BibTeX citation"
         title="Copy BibTeX to clipboard"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -1646,7 +1601,7 @@ function ActionRow({
       <Link
         href={surfaceHref}
         aria-label="Open thinking surface"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -1676,10 +1631,10 @@ function ActionRow({
         onClick={onLike}
         aria-pressed={isLiked}
         aria-label="Like — train feed on this"
-        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium border transition-all duration-200 ease-out active:scale-[0.96] ${
+        className={`group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
           isLiked
-            ? "bg-accent/10 text-accent border-accent/40"
-            : "bg-transparent border-border-strong text-text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-dim"
+            ? "bg-accent-dim text-accent shadow-card"
+            : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-accent hover:bg-accent-dim"
         }`}
       >
         <svg
@@ -1704,7 +1659,7 @@ function ActionRow({
         onClick={onDismiss}
         aria-label="Not interested — show less like this"
         title="Not interested"
-        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-[12.5px] sm:text-[13.5px] font-medium bg-transparent border border-border-strong text-text-muted hover:text-red hover:border-red/40 hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
+        className="group inline-flex items-center gap-1.5 h-9 sm:h-11 pl-3 pr-3.5 sm:pl-3.5 sm:pr-4 rounded-full text-meta sm:text-body-sm font-medium bg-bg-secondary/60 shadow-card text-text-muted hover:text-red hover:bg-red/5 transition-all duration-200 ease-out active:scale-[0.96]"
       >
         <svg
           width="15"
@@ -1727,33 +1682,8 @@ function ActionRow({
 
 // ── Icons ──────────────────────────────────────────────────────
 
-function IconBullseye() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="5" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
 
-function IconBook() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z" />
-      <path d="M4 19.5V21h16" />
-    </svg>
-  );
-}
 
-function IconCalendar() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
-    </svg>
-  );
-}
 
 function IconClock() {
   return (
@@ -1782,13 +1712,6 @@ function IconCode() {
   );
 }
 
-function IconStar() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden>
-      <path d="M12 3l2.5 6.5L21 10l-5.2 4 1.7 7L12 17.5 6.5 21l1.7-7L3 10l6.5-.5z" />
-    </svg>
-  );
-}
 
 function IconSparkle() {
   return (
@@ -1843,13 +1766,6 @@ function IconScholar() {
   );
 }
 
-function IconCheck() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M5 12l5 5L20 7" />
-    </svg>
-  );
-}
 
 // ── Briefing skeleton ──
 // Loading state that mirrors the real briefing's geometry so the page doesn't
@@ -1872,7 +1788,7 @@ function ShimmerBar({
 function FigureLoadingFrame() {
   return (
     <div className="mt-5 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-bg-secondary/50 p-4">
-      <div className="h-full rounded-xl border border-border bg-surface px-4 py-4">
+      <div className="h-full rounded-xl bg-surface shadow-card px-4 py-4">
         <div className="space-y-3">
           <ShimmerBar width="38%" height="h-3" />
           <ShimmerBar width="96%" height="h-4" />

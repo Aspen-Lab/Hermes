@@ -14,6 +14,8 @@ import {
   useEffect,
   type KeyboardEvent,
 } from "react";
+import { apiFetch } from "@/lib/api";
+import { chipTones } from "@/components/ui/chip";
 
 // ── Tone ────────────────────────────────────────────────────────
 
@@ -22,11 +24,11 @@ export type Tone = "accent" | "tag" | "link" | "neutral";
 export function toneBadge(tone: Tone = "neutral") {
   switch (tone) {
     case "accent":
-      return "text-accent bg-accent-dim";
+      return chipTones.accent;
     case "tag":
-      return "text-tag bg-tag-dim";
+      return chipTones.tag;
     case "link":
-      return "text-link bg-link-dim";
+      return chipTones.link;
     default:
       return "text-text-muted bg-bg-secondary/70";
   }
@@ -137,7 +139,7 @@ export function ChoiceGroup({
 }) {
   return (
     <div>
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+      <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
         {label}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -149,15 +151,15 @@ export function ChoiceGroup({
               type="button"
               onClick={() => onChange(option.value)}
               title={option.help}
-              className={`group text-left text-[12px] px-2.5 py-1.5 rounded-xl transition-all duration-200 ease-out active:scale-[0.94] ${
+              className={`group text-left text-meta px-2.5 py-1.5 rounded-xl transition-all duration-200 ease-out active:scale-[0.94] ${
                 active
-                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.02]"
+                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.02]"
                   : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
               }`}
             >
               <span className="block font-medium">{option.label}</span>
               {option.help && (
-                <span className={`block text-[10.5px] leading-snug mt-0.5 ${active ? "text-accent/75" : "text-text-faint/75"}`}>
+                <span className={`block text-micro leading-snug mt-0.5 ${active ? "text-accent/75" : "text-text-faint/75"}`}>
                   {option.help}
                 </span>
               )}
@@ -193,7 +195,7 @@ export function RadioGroup({
             onClick={() => onChange(option.value)}
             className={`flex items-start gap-3 w-full text-left rounded-xl px-3.5 py-3 transition-all duration-200 ease-out active:scale-[0.99] ${
               active
-                ? "bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.4)]"
+                ? "bg-accent-dim shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_40%,transparent)]"
                 : "bg-bg-secondary/40 hover:bg-bg-secondary/65 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.05)]"
             }`}
           >
@@ -209,11 +211,11 @@ export function RadioGroup({
               {active && <span className="w-2.5 h-2.5 rounded-full bg-accent" />}
             </span>
             <span className="min-w-0">
-              <span className={`block text-[13.5px] font-medium ${active ? "text-accent" : "text-heading"}`}>
+              <span className={`block text-body-sm font-medium ${active ? "text-accent" : "text-heading"}`}>
                 {option.label}
               </span>
               {option.help && (
-                <span className={`block text-[12px] leading-[1.5] mt-0.5 ${active ? "text-accent/80" : "text-text-muted"}`}>
+                <span className={`block text-meta leading-[1.5] mt-0.5 ${active ? "text-accent/80" : "text-text-muted"}`}>
                   {option.help}
                 </span>
               )}
@@ -242,9 +244,9 @@ export function TogglePill({
       role="switch"
       aria-checked={active}
       onClick={onToggle}
-      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[12px] transition-all duration-200 ease-out active:scale-[0.94] ${
+      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-meta transition-all duration-200 ease-out active:scale-[0.94] ${
         active
-          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]"
+          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)]"
           : "bg-bg-secondary/40 text-text-faint hover:bg-bg-secondary/70 hover:text-text-muted"
       }`}
     >
@@ -312,10 +314,10 @@ export function ChipInput({
     if (!suggestConcepts || !looksAmbiguous(value)) return;
     const reqId = ++suggestReqRef.current;
     try {
-      const res = await fetch(`/api/topics/suggest?q=${encodeURIComponent(value)}`, {
-        cache: "no-store",
-      });
-      const data = (await res.json()) as { suggestions?: ConceptSuggestion[] };
+      const data = await apiFetch<{ suggestions?: ConceptSuggestion[] }>(
+        `/api/topics/suggest?q=${encodeURIComponent(value)}`,
+        { cache: "no-store" },
+      );
       if (reqId !== suggestReqRef.current) return; // a newer entry superseded this
       const candidates = (data.suggestions ?? [])
         .filter((s) => s.name.toLowerCase() !== value.trim().toLowerCase())
@@ -448,9 +450,8 @@ export function ChipInput({
             key={v}
             draggable={isDraggable}
             data-chip-value={isDraggable ? v : undefined}
-            className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
+            className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-meta ${chipClass}`}
             style={{
-              fontFamily: "var(--font-sans)",
               cursor: isDraggable ? "grab" : undefined,
               userSelect: isDraggable ? "none" : undefined,
             }}
@@ -482,16 +483,14 @@ export function ChipInput({
           onKeyDown={handleKey}
           onBlur={() => draft && commit(draft)}
           placeholder={values.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-body-sm py-0.5"
         />
       </div>
       {suggestion && (
         <div
           className="mt-1.5 rounded-lg bg-bg-secondary/45 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.05)] px-3 py-2"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+          <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
             Did you mean…?
           </p>
           <div className="space-y-1">
@@ -505,9 +504,9 @@ export function ChipInput({
                 }}
                 className="block w-full text-left rounded-md px-2 py-1.5 hover:bg-accent-dim/40 transition-colors active:scale-[0.99]"
               >
-                <span className="text-[12.5px] font-medium text-accent">{c.name}</span>
+                <span className="text-meta font-medium text-accent">{c.name}</span>
                 {c.hint && (
-                  <span className="block text-[11px] text-text-muted leading-snug mt-0.5">
+                  <span className="block text-caption text-text-muted leading-snug mt-0.5">
                     {c.hint}
                   </span>
                 )}
@@ -520,7 +519,7 @@ export function ChipInput({
               e.stopPropagation();
               setSuggestion(null);
             }}
-            className="mt-1 text-[11px] text-text-faint hover:text-text-muted transition-colors px-2"
+            className="mt-1 text-caption text-text-faint hover:text-text-muted transition-colors px-2"
           >
             No, keep &ldquo;{suggestion.forValue}&rdquo;
           </button>
@@ -528,7 +527,7 @@ export function ChipInput({
       )}
       {(suggestions && suggestions.length > 0 && values.length === 0) && (
         <div className="flex flex-wrap items-center gap-1 mt-1.5 px-1">
-          <span className="text-[10.5px] text-text-faint/70 uppercase tracking-[0.14em] mr-1">
+          <span className="text-micro text-text-faint/70 uppercase tracking-[0.14em] mr-1">
             Try
           </span>
           {suggestions
@@ -541,8 +540,7 @@ export function ChipInput({
                   e.stopPropagation();
                   commit(s);
                 }}
-                className="text-[11.5px] text-text-faint hover:text-accent px-1.5 py-0.5 rounded-md hover:bg-accent-dim/40 transition-colors active:scale-[0.95]"
-                style={{ fontFamily: "var(--font-sans)" }}
+                className="text-caption text-text-faint hover:text-accent px-1.5 py-0.5 rounded-md hover:bg-accent-dim/40 transition-colors active:scale-[0.95]"
               >
                 + {s}
               </button>
@@ -551,8 +549,7 @@ export function ChipInput({
       )}
       {hint && (
         <p
-          className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="text-caption text-text-faint/75 mt-1.5 px-1 leading-relaxed"
         >
           {hint}
         </p>
@@ -577,7 +574,7 @@ export function TopicsField({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="min-w-0">
-        <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent/80">
+        <p className="mb-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-accent/80">
           Required
         </p>
         <ChipInput
@@ -595,7 +592,7 @@ export function TopicsField({
             onChangeSoft(soft.filter((v) => v !== value));
           }}
         />
-        <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
+        <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
           Paper <strong>must</strong> be related to at least one of these.{" "}
           <strong>Prefer full terms over acronyms</strong> — short acronyms can be
           ambiguous and match unrelated fields. For example, write
@@ -603,7 +600,7 @@ export function TopicsField({
         </p>
       </div>
       <div className="min-w-0">
-        <p className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-tag/80">
+        <p className="mb-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-tag/80">
           Nice to have
         </p>
         <ChipInput
@@ -620,7 +617,7 @@ export function TopicsField({
             onChangeRequired(required.filter((v) => v !== value));
           }}
         />
-        <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
+        <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
           Papers that match these score higher, but papers without them can still
           appear in your feed.
         </p>

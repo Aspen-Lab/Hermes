@@ -7,6 +7,7 @@ import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
 // into the live feed. Pre-2026-04-28 the store used `mockPapers` as a
 // fallback when the real API returned 0 results, which silently surfaced
 // battery-research demo data as the user's feed. Removed.
+import { apiFetch } from "@/lib/api";
 import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
@@ -20,9 +21,8 @@ type ItemKind = "paper" | "event" | "job";
 
 async function cloudSave(itemId: string, itemKind: ItemKind, payload: unknown) {
   try {
-    await fetch("/api/saved", {
+    await apiFetch("/api/saved", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, itemKind, payload }),
     });
   } catch (err) {
@@ -32,7 +32,7 @@ async function cloudSave(itemId: string, itemKind: ItemKind, payload: unknown) {
 
 async function cloudUnsave(itemId: string) {
   try {
-    await fetch(`/api/saved?itemId=${encodeURIComponent(itemId)}`, {
+    await apiFetch(`/api/saved?itemId=${encodeURIComponent(itemId)}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -42,9 +42,8 @@ async function cloudUnsave(itemId: string) {
 
 async function cloudMarkRead(itemId: string) {
   try {
-    await fetch("/api/read", {
+    await apiFetch("/api/read", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId }),
     });
   } catch (err) {
@@ -54,7 +53,7 @@ async function cloudMarkRead(itemId: string) {
 
 async function cloudMarkUnread(itemId: string) {
   try {
-    await fetch(`/api/read?itemId=${encodeURIComponent(itemId)}`, {
+    await apiFetch(`/api/read?itemId=${encodeURIComponent(itemId)}`, {
       method: "DELETE",
     });
   } catch (err) {
@@ -69,9 +68,8 @@ async function cloudFeedback(
   payload?: unknown,
 ) {
   try {
-    await fetch("/api/feedback", {
+    await apiFetch("/api/feedback", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, itemKind, feedback, payload }),
     });
   } catch (err) {
@@ -136,8 +134,10 @@ async function ensureAdvisorSeeds(
       .filter(Boolean)
       .join("\n");
     if (projectText) params.set("project", projectText);
-    const res = await fetch(`/api/affiliation/seeds?${params}`, { cache: "no-store" });
-    const data = (await res.json()) as { workIds?: string[]; texts?: string[] };
+    const data = await apiFetch<{ workIds?: string[]; texts?: string[] }>(
+      `/api/affiliation/seeds?${params}`,
+      { cache: "no-store" },
+    );
     if (data.texts && data.texts.length > 0) {
       useProfileStore.getState().setAdvisorSeeds({
         workIds: data.workIds ?? [],
@@ -180,9 +180,8 @@ async function fetchRealFeed(
     profile.feedAiProvider !== "default" &&
     Boolean(feedAiApiKey);
   try {
-    const res = await fetch("/api/feed", {
+    const data = await apiFetch<FeedResponse>("/api/feed", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         topics,
         softTopics: softTopics.length > 0 ? softTopics : undefined,
@@ -239,11 +238,6 @@ async function fetchRealFeed(
         excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
       }),
     });
-    if (!res.ok) {
-      console.error("[feed] /api/feed returned", res.status);
-      return [];
-    }
-    const data = (await res.json()) as FeedResponse;
     return data.items.map(scoredItemToPaper);
   } catch (err) {
     console.error("[feed] fetch failed:", err);
@@ -319,6 +313,10 @@ interface FeedState {
   resetLocal: () => void;
 }
 
+// Monotonic token so overlapping loadFeed calls (refresh + topics auto-load +
+// AI-toggle) can't interleave: only the newest request commits its result.
+let feedLoadSeq = 0;
+
 export const useFeedStore = create<FeedState>()(
   persist(
     (set, get) => ({
@@ -338,6 +336,7 @@ export const useFeedStore = create<FeedState>()(
       paperFeedback: {},
 
       loadFeed: async () => {
+        const requestId = ++feedLoadSeq;
         set({ isLoading: true });
         const { savedPapers, recentlyShownIds, paperFeedback } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
@@ -362,6 +361,8 @@ export const useFeedStore = create<FeedState>()(
           aiPaperSearchEnabled,
           excludeIds,
         );
+        // A newer load started while this one was in flight — drop it.
+        if (requestId !== feedLoadSeq) return;
         const papers = realPapers.map((p) =>
           savedIds.has(p.id)
             ? {

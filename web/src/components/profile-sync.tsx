@@ -4,11 +4,21 @@
 //
 //   signed-out  — localStorage only (unchanged)
 //   signed-in   — on login: pull server → if server empty, push local up
-//                 on update: debounced PUT to /api/profile
+//                 on update: debounced PUT of the CHANGED FIELDS ONLY
+//
+// Ordering guarantees (the old version got these wrong):
+//   • didInitialPull flips only AFTER the pull + hydrate settle, so edits
+//     made while the GET is in flight are not silently reverted.
+//   • Pushes send a diff against the last-acknowledged server state — the
+//     PUT handler honors partial updates, so two devices editing different
+//     fields no longer clobber each other whole-object.
+//   • Hydrating from remote primes the diff baseline, so the pull itself
+//     never echoes a redundant PUT back at the server.
 //
 // Mount once, near the root, alongside <UserMenu />.
 
 import { useEffect, useRef } from "react";
+import { apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase/client";
 import { useProfileStore } from "@/store/profile";
 import type { UserProfile } from "@/types";
@@ -25,10 +35,10 @@ function hasAnySignal(p: UserProfile): boolean {
 
 async function fetchRemote(): Promise<Partial<UserProfile> | null> {
   try {
-    const res = await fetch("/api/profile", { cache: "no-store" });
-    console.info("[ProfileSync] GET /api/profile", res.status);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { profile: Partial<UserProfile> | null };
+    const data = await apiFetch<{ profile: Partial<UserProfile> | null }>(
+      "/api/profile",
+      { cache: "no-store" },
+    );
     return data.profile;
   } catch (err) {
     console.warn("[ProfileSync] GET failed", err);
@@ -36,6 +46,7 @@ async function fetchRemote(): Promise<Partial<UserProfile> | null> {
   }
 }
 
+/** Local keys (BYOK API keys, Tavily) never leave the device. */
 function remoteProfilePayload(profile: UserProfile): Partial<UserProfile> {
   const {
     tavilyEnabled,
@@ -51,18 +62,34 @@ function remoteProfilePayload(profile: UserProfile): Partial<UserProfile> {
   return rest;
 }
 
-async function pushRemote(p: UserProfile): Promise<void> {
+/** Fields in `next` whose serialized value differs from the baseline. */
+function diffPayload(
+  next: Partial<UserProfile>,
+  baseline: Partial<UserProfile> | null,
+): Partial<UserProfile> {
+  if (!baseline) return next;
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(next) as (keyof UserProfile)[]) {
+    const a = next[key];
+    const b = baseline[key];
+    if (JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)) {
+      out[key as string] = a;
+    }
+  }
+  return out as Partial<UserProfile>;
+}
+
+async function pushRemote(patch: Partial<UserProfile>): Promise<boolean> {
   try {
-    const res = await fetch("/api/profile", {
+    await apiFetch("/api/profile", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(remoteProfilePayload(p)),
+      body: JSON.stringify(patch),
       cache: "no-store",
     });
-    const body = await res.json().catch(() => null);
-    console.info("[ProfileSync] PUT /api/profile", res.status, body);
+    return true;
   } catch (err) {
     console.warn("[ProfileSync] PUT failed", err);
+    return false;
   }
 }
 
@@ -71,6 +98,9 @@ export function ProfileSync() {
   const hydrateFromRemote = useProfileStore((s) => s.hydrateFromRemote);
   const isSignedInRef = useRef(false);
   const didInitialPullRef = useRef(false);
+  const pullInFlightRef = useRef(false);
+  // Last payload the server is known to have — the diff baseline.
+  const lastPushedRef = useRef<Partial<UserProfile> | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -80,26 +110,38 @@ export function ProfileSync() {
     if (!supabase) return;
 
     const onSession = async (signedIn: boolean) => {
-      console.info("[ProfileSync] auth state:", signedIn ? "signed-in" : "signed-out");
       isSignedInRef.current = signedIn;
       if (!signedIn) {
         didInitialPullRef.current = false;
+        lastPushedRef.current = null;
         return;
       }
-      if (didInitialPullRef.current) return;
-      didInitialPullRef.current = true;
+      if (didInitialPullRef.current || pullInFlightRef.current) return;
+      pullInFlightRef.current = true;
 
-      const remote = await fetchRemote();
-      const local = useProfileStore.getState().profile;
+      try {
+        const remote = await fetchRemote();
+        const local = useProfileStore.getState().profile;
 
-      // Server empty? Push local up so the first device keeps its signals.
-      if (!remote || !hasAnySignal({ ...local, ...remote } as UserProfile)) {
-        if (hasAnySignal(local)) pushRemote(local);
-        return;
+        if (!remote || !hasAnySignal({ ...local, ...remote } as UserProfile)) {
+          // Server empty? Push local up so the first device keeps its signals.
+          if (hasAnySignal(local)) {
+            const payload = remoteProfilePayload(local);
+            if (await pushRemote(payload)) lastPushedRef.current = payload;
+          }
+        } else {
+          // Server has data — hydrate local with it (server wins on the
+          // fields it defines), then prime the baseline from the MERGED
+          // result so the hydrate itself doesn't echo a PUT.
+          hydrateFromRemote(remote);
+          lastPushedRef.current = remoteProfilePayload(
+            useProfileStore.getState().profile,
+          );
+        }
+        didInitialPullRef.current = true;
+      } finally {
+        pullInFlightRef.current = false;
       }
-
-      // Server has data — hydrate local with it (server wins).
-      hydrateFromRemote(remote);
     };
 
     supabase.auth.getUser().then(({ data }) => onSession(!!data.user));
@@ -112,12 +154,19 @@ export function ProfileSync() {
     return () => sub.subscription.unsubscribe();
   }, [hydrateFromRemote]);
 
-  // 2. Push local changes to server, debounced. Only when signed in and after
-  //    the initial pull has completed.
+  // 2. Push local changes to server, debounced and diffed. Only when signed
+  //    in and after the initial pull has settled.
   useEffect(() => {
     if (!isSignedInRef.current || !didInitialPullRef.current) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => pushRemote(profile), DEBOUNCE_MS);
+    debounceRef.current = setTimeout(async () => {
+      const payload = remoteProfilePayload(profile);
+      const patch = diffPayload(payload, lastPushedRef.current);
+      if (Object.keys(patch).length === 0) return;
+      if (await pushRemote(patch)) {
+        lastPushedRef.current = { ...lastPushedRef.current, ...patch };
+      }
+    }, DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };

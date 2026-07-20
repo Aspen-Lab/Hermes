@@ -6,6 +6,7 @@
 // Once locked, the resolved OpenAlex author identity anchors feed discovery.
 
 import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 interface ResolvedAuthor {
   authorId: string;
@@ -47,8 +48,10 @@ export function AdvisorField({
     try {
       const params = new URLSearchParams({ name });
       if (school.trim()) params.set("institution", school.trim());
-      const res = await fetch(`/api/affiliation/resolve?${params}`, { cache: "no-store" });
-      const data = (await res.json()) as { author: ResolvedAuthor | null };
+      const data = await apiFetch<{ author: ResolvedAuthor | null }>(
+        `/api/affiliation/resolve?${params}`,
+        { cache: "no-store" },
+      );
       if (data.author) {
         setCandidate(data.author);
         setStatus("found");
@@ -63,21 +66,21 @@ export function AdvisorField({
   // ── Locked / confirmed state ──────────────────────────────────
   if (confirmed) {
     return (
-      <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] px-3.5 py-3 flex items-start gap-3">
+      <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] px-3.5 py-3 flex items-start gap-3">
         <span className="mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg shrink-0">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-accent/90">
+          <p className="text-micro font-semibold uppercase tracking-[0.14em] text-accent/90">
             Advisor confirmed
           </p>
-          <p className="text-[13.5px] text-heading font-medium mt-0.5 leading-snug">
+          <p className="text-body-sm text-heading font-medium mt-0.5 leading-snug">
             {advisorAuthorLabel ?? advisorName}
           </p>
-          <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-            Hermes seeds discovery from their recent work, refreshed monthly.
+          <p className="text-caption text-text-muted mt-1 leading-relaxed">
+            Peer seeds discovery from their recent work, refreshed monthly.
           </p>
         </div>
         <button
@@ -87,7 +90,7 @@ export function AdvisorField({
             setStatus("idle");
             setCandidate(null);
           }}
-          className="text-[11.5px] text-text-faint hover:text-accent transition-colors shrink-0"
+          className="text-caption text-text-faint hover:text-accent transition-colors shrink-0"
         >
           Change
         </button>
@@ -116,13 +119,13 @@ export function AdvisorField({
             }
           }}
           placeholder="First Last, e.g. Paul Braun"
-          className="flex-1 min-w-0 bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+          className="flex-1 min-w-0 bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
         <button
           type="button"
           onClick={() => void find()}
           disabled={advisorName.trim().length < 2 || status === "searching"}
-          className={`shrink-0 h-[42px] px-3.5 rounded-lg text-[12.5px] font-medium transition-colors active:scale-[0.97] ${
+          className={`shrink-0 h-[42px] px-3.5 rounded-lg text-meta font-medium transition-colors active:scale-[0.97] ${
             advisorName.trim().length >= 2 && status !== "searching"
               ? "bg-heading text-bg hover:bg-heading/90"
               : "bg-bg-secondary text-text-faint/70 cursor-not-allowed"
@@ -134,7 +137,7 @@ export function AdvisorField({
 
       {status === "found" && candidate && (
         <div className="rounded-xl bg-surface shadow-card px-3.5 py-3 animate-fade-in-up">
-          <p className="text-[12.5px] text-text-muted leading-relaxed">
+          <p className="text-meta text-text-muted leading-relaxed">
             Did you mean{" "}
             <span className="text-heading font-medium">{candidate.label}</span>
             <span className="text-text-faint">
@@ -151,7 +154,7 @@ export function AdvisorField({
                 setStatus("idle");
                 setCandidate(null);
               }}
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-accent text-white text-[12.5px] font-medium hover:bg-accent/90 transition-colors active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-accent text-white text-meta font-medium hover:bg-accent/90 transition-colors active:scale-[0.97]"
             >
               Yes, that&rsquo;s my advisor
             </button>
@@ -161,7 +164,7 @@ export function AdvisorField({
                 setStatus("idle");
                 setCandidate(null);
               }}
-              className="text-[12.5px] text-text-faint hover:text-text-muted transition-colors"
+              className="text-meta text-text-faint hover:text-text-muted transition-colors"
             >
               No, edit name
             </button>
@@ -170,15 +173,15 @@ export function AdvisorField({
       )}
 
       {status === "notfound" && (
-        <p className="text-[11.5px] text-text-faint/85 leading-relaxed px-0.5">
+        <p className="text-caption text-text-faint/85 leading-relaxed px-0.5">
           Couldn&rsquo;t find that author on OpenAlex. Check the spelling and your School/Org,
-          or leave it — Hermes will just skip advisor-based discovery.
+          or leave it — Peer will just skip advisor-based discovery.
         </p>
       )}
 
       {status === "idle" && (
-        <p className="text-[11px] text-text-faint/75 leading-relaxed px-0.5">
-          Your advisor / PI. Hermes finds their work and uses it as a compass to surface
+        <p className="text-caption text-text-faint/75 leading-relaxed px-0.5">
+          Your advisor / PI. Peer finds their work and uses it as a compass to surface
           related papers you&rsquo;d care about. Add your School/Org above for an accurate match.
         </p>
       )}
