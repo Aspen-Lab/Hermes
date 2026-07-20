@@ -61,6 +61,17 @@ export function guessEventType(text: string): EventType {
   return "conference";
 }
 
+// Signals that a web result is actually an event page (a conference, CFP,
+// meeting, symposium…) rather than an arbitrary article. Used to keep
+// date-less results that still clearly describe an event, since conference
+// pages routinely omit a parseable date from their search snippet.
+const EVENT_SIGNAL_RE =
+  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
+
+export function looksLikeEvent(text: string): boolean {
+  return EVENT_SIGNAL_RE.test(text);
+}
+
 export function webResultToRawEventItem(
   result: WebResult,
   now: number,
@@ -71,12 +82,23 @@ export function webResultToRawEventItem(
   const text = `${title} ${result.snippet ?? ""}`;
   const startDate = extractEventDate(text);
   const deadline = extractDeadline(text);
-  // Without at least one anchoring future date this is just a web page, not
-  // a recommendable event card.
   const anchor = [startDate, deadline]
     .filter((d): d is string => Boolean(d))
     .map((d) => Date.parse(d));
-  if (anchor.length === 0 || Math.max(...anchor) < now) return null;
+  // A parsed date that's already in the past means the page describes a
+  // finished event — drop it.
+  if (anchor.length > 0 && Math.max(...anchor) < now) return null;
+  if (anchor.length === 0) {
+    // No parseable date is common for conference pages (the date lives in a
+    // table the snippet doesn't capture). Keep the result only if it clearly
+    // reads as an event; the card shows "date TBA" until opened.
+    if (!looksLikeEvent(text)) return null;
+    // Guard against past events that mention only a bare year ("held in 2019"):
+    // if every year token in the text is in the past, treat it as finished.
+    const years = [...text.matchAll(/\b(20\d{2})\b/g)].map((m) => Number(m[1]));
+    const currentYear = new Date(now).getUTCFullYear();
+    if (years.length > 0 && years.every((y) => y < currentYear)) return null;
+  }
 
   const isOnline = /\b(online|virtual|hybrid)\b/i.test(text);
   const name = title.split(/\s+[|·]\s+/)[0].trim() || title;

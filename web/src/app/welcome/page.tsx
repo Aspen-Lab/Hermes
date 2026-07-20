@@ -117,7 +117,7 @@ export default function WelcomePage() {
                   type="text"
                   value={name}
                   onChange={(e) => store.updateDisplayName(e.target.value)}
-                  placeholder="Aspen"
+                  placeholder="Your name"
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
                 />
               </Field>
@@ -172,7 +172,7 @@ export default function WelcomePage() {
                   value={profile.currentProject ?? ""}
                   onChange={(e) => store.updateCurrentProject(e.target.value)}
                   rows={3}
-                  placeholder="e.g. Pulsed-current electroplating of single-crystal LCO thin films for solid-state microbatteries."
+                  placeholder="Describe the specific project you're working on right now."
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
@@ -181,7 +181,7 @@ export default function WelcomePage() {
                   value={profile.currentChallenges ?? ""}
                   onChange={(e) => store.updateCurrentChallenges(e.target.value)}
                   rows={3}
-                  placeholder="e.g. Suppressing dendritic Co growth at high current densities. Characterizing the H1–3 transition under fast charging."
+                  placeholder="The open problems you want your briefing to help with."
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
@@ -191,7 +191,7 @@ export default function WelcomePage() {
                   <SchoolAutocomplete
                     value={profile.school ?? ""}
                     onChange={store.updateSchool}
-                    placeholder="MIT, Stanford, UIUC…"
+                    placeholder="University or company"
                   />
                 </Field>
                 <div>
@@ -237,7 +237,7 @@ export default function WelcomePage() {
                   <ChipInput
                     values={profile.preferredJournals ?? []}
                     onChange={store.updatePreferredJournals}
-                    placeholder="Advanced Materials, Nature Materials, Science, JACS…"
+                    placeholder="Add a journal, press Enter"
                     tone="link"
                   />
                   <p className="mt-1.5 px-0.5 text-[11px] leading-relaxed text-text-faint/75">

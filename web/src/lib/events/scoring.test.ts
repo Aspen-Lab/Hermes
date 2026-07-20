@@ -176,13 +176,25 @@ describe("eventweb extraction", () => {
     expect(guessEventType("Annual Meeting")).toBe("conference");
   });
 
-  it("rejects results without any future date anchor", () => {
+  it("drops event pages whose only year token is in the past", () => {
     expect(
       webResultToRawEventItem(
         { title: "Some Conference", url: "https://x.test", snippet: "held in 2019" },
         NOW,
       ),
     ).toBeNull();
+  });
+
+  it("drops non-event pages that carry no date", () => {
+    expect(
+      webResultToRawEventItem(
+        { title: "A blog post about batteries", url: "https://x.test", snippet: "some article text" },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it("keeps a dated future event", () => {
     expect(
       webResultToRawEventItem(
         {
@@ -193,5 +205,18 @@ describe("eventweb extraction", () => {
         NOW,
       ),
     ).not.toBeNull();
+  });
+
+  it("keeps a date-less event page that reads as a conference (shown as TBA)", () => {
+    const item = webResultToRawEventItem(
+      {
+        title: "International Battery Symposium",
+        url: "https://x.test",
+        snippet: "Annual call for papers — abstract submission now open",
+      },
+      NOW,
+    );
+    expect(item).not.toBeNull();
+    expect(item?.startDate).toBe("");
   });
 });

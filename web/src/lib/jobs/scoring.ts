@@ -223,9 +223,17 @@ export function scoreJobs(
 
   const scored: ScoredJobItem[] = [];
   for (const item of items) {
+    // Web-discovered postings came from a topic-targeted search query, so the
+    // search engine already filtered for relevance. Keyless board sources
+    // (remotive/arbeitnow/himalayas) return their whole catalog, so they still
+    // need the strict exact-phrase gate below.
+    const searchPrefiltered = item.source === "jobweb";
     const facade = facades.get(item.id)!;
     const kw = scoreKeyword(facade, gateTopics);
-    if (gateTopics.length > 0 && kw.score === 0) continue;
+    // Research topics are precise ("solid state battery") but postings use
+    // field-level wording ("battery R&D scientist"), so the exact-phrase gate
+    // would wrongly drop relevant web hits — enforce it on board sources only.
+    if (!searchPrefiltered && gateTopics.length > 0 && kw.score === 0) continue;
 
     const softKw = scoreKeyword(facade, softTopics);
     const tf = clamp01(scoreTfidf(item.id, profileText, index));

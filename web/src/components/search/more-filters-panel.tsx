@@ -102,7 +102,7 @@ export function MoreFiltersPanel({
               type="text"
               value={venueDraft}
               onChange={(e) => setVenueDraft(e.target.value)}
-              placeholder="e.g. nature, neurips, jmlr…"
+              placeholder="Filter by venue name"
               maxLength={80}
               tabIndex={open ? 0 : -1}
               className="w-full bg-[color:var(--color-bg-secondary)] rounded-lg py-2 px-3 text-[13.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:ring-2 focus:ring-accent/20"

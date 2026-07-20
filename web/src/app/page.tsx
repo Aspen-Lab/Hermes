@@ -11,7 +11,7 @@ import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
 import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { DailyDigest } from "@/components/digest/daily-digest";
-import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
+import { SectionHeading, EmptyState, LoadingSkeleton, SecretInput } from "@/components/ui";
 import { FilterBar } from "@/components/search/filter-bar";
 import {
   DEFAULT_FILTERS,
@@ -575,14 +575,10 @@ function DiscoveryPage() {
                   />
                 </button>
               </div>
-              <input
-                type="password"
+              <SecretInput
                 value={profile.tavilyApiKey ?? ""}
-                onChange={(e) => updateTavilyApiKey(e.target.value)}
+                onChange={updateTavilyApiKey}
                 placeholder="Tavily API key"
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
               <p className="text-[10.5px] leading-relaxed text-text-faint">
                 {aiPaperSearchEnabled

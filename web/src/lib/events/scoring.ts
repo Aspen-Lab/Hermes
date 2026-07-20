@@ -158,18 +158,33 @@ export function scoreEvents(
 
   const scored: ScoredEventItem[] = [];
   for (const item of items) {
-    // Skip events that are entirely over.
+    // Web-discovered items were retrieved by a topic-targeted search query, so
+    // the search engine already did the relevance filtering. Curated sources
+    // (ccfddl/confstech/researchseminars) return their whole catalog regardless
+    // of topic, so they still need the strict local gates below.
+    const searchPrefiltered = item.source === "eventweb";
+
+    // Skip events that are entirely over. Web items often carry no parseable
+    // date (shown as "date TBA"); trust the dated-future search query rather
+    // than dropping them.
     const startMs = item.startDate ? Date.parse(item.startDate) : NaN;
     const deadlineMs = item.deadline ? Date.parse(item.deadline) : NaN;
     const endMs = item.endDate ? Date.parse(item.endDate) : startMs;
+    const hasParsedDate =
+      Number.isFinite(endMs) || Number.isFinite(deadlineMs);
     const hasFuture =
       (Number.isFinite(endMs) && endMs >= now) ||
       (Number.isFinite(deadlineMs) && deadlineMs >= now);
-    if (!hasFuture) continue;
+    if (hasParsedDate && !hasFuture) continue;
+    if (!hasParsedDate && !searchPrefiltered) continue;
 
     const facade = facades.get(item.id)!;
     const kw = scoreKeyword(facade, gateTopics);
-    if (gateTopics.length > 0 && kw.score === 0) continue;
+    // Exact-phrase gate: research topics are precise ("solid state battery"),
+    // but event pages use field-level wording ("battery congress"), so the
+    // gate would wrongly drop relevant web hits. Only enforce it on curated
+    // sources; web results lean on their search provenance instead.
+    if (!searchPrefiltered && gateTopics.length > 0 && kw.score === 0) continue;
 
     const softKw = scoreKeyword(facade, softTopics);
     const tf = clamp01(scoreTfidf(item.id, profileText, index));

@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import type { UserAiProvider } from "@/types";
+import { SecretInput } from "@/components/ui";
 
 export const FEED_AI_PROVIDER_OPTIONS: { value: UserAiProvider; label: string }[] = [
   { value: "default", label: "Hermes default (site setup) — no API key" },
@@ -98,15 +99,11 @@ export function AiKeyFields({
           >
             API key
           </label>
-          <input
+          <SecretInput
             id={`${idPrefix}-key`}
-            type="password"
             value={apiKey}
-            onChange={(e) => onApiKeyChange(e.target.value)}
+            onChange={onApiKeyChange}
             placeholder={providerKeyPlaceholder(provider)}
-            autoComplete="off"
-            spellCheck={false}
-            className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
       )}
