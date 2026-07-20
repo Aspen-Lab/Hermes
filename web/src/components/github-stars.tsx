@@ -1,6 +1,8 @@
 // GitHub star counter — server component, cached for 1h via revalidate.
 // Placed fixed top-right on desktop as a social-proof affordance.
 
+import { formatCount } from "@/lib/format";
+
 const REPO = "Aspen-Lab/Peer";
 const URL = `https://github.com/${REPO}`;
 
@@ -20,12 +22,6 @@ async function fetchStars(): Promise<number | null> {
   }
 }
 
-function formatCount(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 10_000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  return Math.round(n / 1000) + "k";
-}
-
 export async function GithubStars() {
   const count = await fetchStars();
 
@@ -39,7 +35,6 @@ export async function GithubStars() {
       }
       title={count !== null ? `${count} GitHub stars — click to star` : "View on GitHub"}
       className="group inline-flex items-center gap-1.5 h-8 lg:h-9 pl-2 pr-3 rounded-full bg-surface/95 backdrop-blur shadow-card hover:shadow-card-hover hover:-translate-y-[1px] transition-[transform,box-shadow,background-color] duration-200 ease-out active:scale-95"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <span className="inline-flex items-center justify-center w-5 h-5 text-heading shrink-0 transition-transform duration-200 ease-out group-hover:rotate-[-6deg]">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

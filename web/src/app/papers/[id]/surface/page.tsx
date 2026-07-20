@@ -3,10 +3,10 @@
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Paper } from "@/types";
-import { mockPapers } from "@/data/mock";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { PaperThinkingSurface } from "@/components/papers/paper-thinking-surface";
+import { apiFetch } from "@/lib/api";
 
 export default function PaperSurfacePage({
   params,
@@ -37,9 +37,7 @@ export default function PaperSurfacePage({
   }>(() => ({ id, paper: null, done: false }));
 
   const storePaper =
-    feedPapers.find((p) => p.id === id) ??
-    savedPapers.find((p) => p.id === id) ??
-    mockPapers.find((p) => p.id === id);
+    feedPapers.find((p) => p.id === id) ?? savedPapers.find((p) => p.id === id);
   const storePaperIsEnriched = !!storePaper?.summaryIntro?.trim();
   const fetchedPaperForId = fetchResult.id === id ? fetchResult.paper : null;
   const fetchDoneForId = fetchResult.id === id && fetchResult.done;
@@ -51,8 +49,7 @@ export default function PaperSurfacePage({
   useEffect(() => {
     if (!shouldFetchById) return;
     let cancelled = false;
-    fetch(`/api/papers/${encodeURIComponent(id)}`)
-      .then((res) => (res.ok ? (res.json() as Promise<Paper>) : null))
+    apiFetch<Paper>(`/api/papers/${encodeURIComponent(id)}`)
       .then((nextPaper) => {
         if (!cancelled) setFetchResult({ id, paper: nextPaper, done: true });
       })

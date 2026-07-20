@@ -111,7 +111,6 @@ export function PersonaQuiz() {
   return (
     <div
       className="flex flex-col gap-8"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-4">
         <div className="flex-1 h-1 bg-[color:var(--color-bg-secondary)] rounded-full overflow-hidden">
@@ -130,8 +129,7 @@ export function PersonaQuiz() {
           {axisLabel(current.axis)}
         </span>
         <h2
-          className="text-[20px] text-heading leading-snug"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-[20px] text-heading leading-snug font-reading"
         >
           Which is more you?
         </h2>

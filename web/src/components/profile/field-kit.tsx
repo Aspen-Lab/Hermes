@@ -14,6 +14,7 @@ import {
   useEffect,
   type KeyboardEvent,
 } from "react";
+import { apiFetch } from "@/lib/api";
 
 // ── Tone ────────────────────────────────────────────────────────
 
@@ -151,7 +152,7 @@ export function ChoiceGroup({
               title={option.help}
               className={`group text-left text-[12px] px-2.5 py-1.5 rounded-xl transition-all duration-200 ease-out active:scale-[0.94] ${
                 active
-                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.02]"
+                  ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.02]"
                   : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
               }`}
             >
@@ -193,7 +194,7 @@ export function RadioGroup({
             onClick={() => onChange(option.value)}
             className={`flex items-start gap-3 w-full text-left rounded-xl px-3.5 py-3 transition-all duration-200 ease-out active:scale-[0.99] ${
               active
-                ? "bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.4)]"
+                ? "bg-accent-dim shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_40%,transparent)]"
                 : "bg-bg-secondary/40 hover:bg-bg-secondary/65 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.05)]"
             }`}
           >
@@ -244,7 +245,7 @@ export function TogglePill({
       onClick={onToggle}
       className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[12px] transition-all duration-200 ease-out active:scale-[0.94] ${
         active
-          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]"
+          ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)]"
           : "bg-bg-secondary/40 text-text-faint hover:bg-bg-secondary/70 hover:text-text-muted"
       }`}
     >
@@ -312,10 +313,10 @@ export function ChipInput({
     if (!suggestConcepts || !looksAmbiguous(value)) return;
     const reqId = ++suggestReqRef.current;
     try {
-      const res = await fetch(`/api/topics/suggest?q=${encodeURIComponent(value)}`, {
-        cache: "no-store",
-      });
-      const data = (await res.json()) as { suggestions?: ConceptSuggestion[] };
+      const data = await apiFetch<{ suggestions?: ConceptSuggestion[] }>(
+        `/api/topics/suggest?q=${encodeURIComponent(value)}`,
+        { cache: "no-store" },
+      );
       if (reqId !== suggestReqRef.current) return; // a newer entry superseded this
       const candidates = (data.suggestions ?? [])
         .filter((s) => s.name.toLowerCase() !== value.trim().toLowerCase())
@@ -450,7 +451,6 @@ export function ChipInput({
             data-chip-value={isDraggable ? v : undefined}
             className={`inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md text-[12px] ${chipClass}`}
             style={{
-              fontFamily: "var(--font-sans)",
               cursor: isDraggable ? "grab" : undefined,
               userSelect: isDraggable ? "none" : undefined,
             }}
@@ -483,13 +483,11 @@ export function ChipInput({
           onBlur={() => draft && commit(draft)}
           placeholder={values.length === 0 ? placeholder : ""}
           className="flex-1 min-w-[8ch] bg-transparent text-text placeholder-text-faint/60 outline-none text-[13.5px] py-0.5"
-          style={{ fontFamily: "var(--font-sans)" }}
         />
       </div>
       {suggestion && (
         <div
           className="mt-1.5 rounded-lg bg-bg-secondary/45 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.05)] px-3 py-2"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
             Did you mean…?
@@ -542,7 +540,6 @@ export function ChipInput({
                   commit(s);
                 }}
                 className="text-[11.5px] text-text-faint hover:text-accent px-1.5 py-0.5 rounded-md hover:bg-accent-dim/40 transition-colors active:scale-[0.95]"
-                style={{ fontFamily: "var(--font-sans)" }}
               >
                 + {s}
               </button>
@@ -552,7 +549,6 @@ export function ChipInput({
       {hint && (
         <p
           className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {hint}
         </p>

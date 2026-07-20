@@ -30,7 +30,6 @@ export function PaperCard({ paper }: { paper: Paper }) {
       {typeLabel && (
         <span
           className="inline-block mb-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded-md bg-tag-dim text-tag border border-tag/20"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {typeLabel}
         </span>
@@ -38,7 +37,6 @@ export function PaperCard({ paper }: { paper: Paper }) {
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {paper.title}
         </h3>
@@ -47,7 +45,6 @@ export function PaperCard({ paper }: { paper: Paper }) {
 
       <p
         className="text-[13.5px] text-text-muted mt-2.5"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {paper.authors.slice(0, 3).join(", ")}
         {paper.authors.length > 3 && ` +${paper.authors.length - 3}`}
@@ -55,7 +52,6 @@ export function PaperCard({ paper }: { paper: Paper }) {
 
       <div
         className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 mt-3.5 text-[12px] text-text-faint"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         <Tag>{paper.venue}</Tag>
         <span className="text-border-strong" aria-hidden>·</span>

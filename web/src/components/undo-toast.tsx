@@ -54,7 +54,6 @@ export function UndoToast() {
       <div
         className="pointer-events-auto flex items-stretch gap-0 rounded-full bg-heading text-bg shadow-card-hover overflow-hidden animate-fade-in-up"
         style={{
-          fontFamily: "var(--font-sans)",
           "--i": 0,
         } as React.CSSProperties}
       >

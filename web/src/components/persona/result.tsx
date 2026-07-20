@@ -46,7 +46,6 @@ function PersonaArt({ name }: { name: string }) {
       </div>
       <figcaption
         className="mt-4 text-center text-[10.5px] uppercase tracking-[0.22em] text-text-faint"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         — Profile sketch —
       </figcaption>
@@ -62,7 +61,6 @@ export function PersonaResult({
   return (
     <div
       className="grid lg:grid-cols-[minmax(280px,360px)_1fr] gap-10 lg:gap-16 items-start animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* ── Left: portrait, sticky on desktop ── */}
       <aside className="lg:sticky lg:top-12 self-start">
@@ -76,22 +74,19 @@ export function PersonaResult({
             Your academic persona
           </span>
           <h1
-            className="text-[40px] md:text-[52px] text-heading leading-[1.02] tracking-[-0.018em]"
-            style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
+            className="text-[40px] md:text-[52px] font-light text-heading leading-[1.02] tracking-[-0.018em] font-display"
           >
             {persona.name}
           </h1>
           <p
-            className="text-[18px] md:text-[19px] text-text-muted leading-[1.55] italic"
-            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+            className="text-[18px] md:text-[19px] text-text-muted leading-[1.55] italic font-reading"
           >
             {persona.tagline}
           </p>
         </header>
 
         <p
-          className="text-[15.5px] text-text leading-[1.75]"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-[15.5px] text-text leading-[1.75] font-reading"
         >
           {persona.blurb}
         </p>
@@ -105,8 +100,7 @@ export function PersonaResult({
             <span className="h-px flex-1 bg-[color:var(--color-border)]" aria-hidden />
           </div>
           <p
-            className="text-[15px] text-text-muted leading-[1.7] italic"
-            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+            className="text-[15px] text-text-muted leading-[1.7] italic font-reading"
           >
             {persona.look}
           </p>

@@ -4,10 +4,7 @@ import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatDate } from "@/lib/format";
 
 export function EventCard({ event }: { event: Event }) {
   const { saveEvent, notInterestedEvent } = useFeedStore();
@@ -20,7 +17,6 @@ export function EventCard({ event }: { event: Event }) {
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {event.name}
         </h3>
@@ -29,9 +25,8 @@ export function EventCard({ event }: { event: Event }) {
 
       <p
         className="text-[13.5px] text-text-muted mt-2.5"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
-        {fmtDate(event.date)} · {event.isOnline ? "Online" : event.location}
+        {formatDate(event.date)} · {event.isOnline ? "Online" : event.location}
       </p>
 
       <div className="flex items-center flex-wrap gap-2 mt-3.5">

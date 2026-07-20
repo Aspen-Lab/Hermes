@@ -3,16 +3,13 @@
 import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { Relevance } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 import { useFeedStore } from "@/store/feed";
 
 export type QuickHitItem =
   | { kind: "paper"; data: Paper }
   | { kind: "event"; data: Event }
   | { kind: "job"; data: Job };
-
-function fmtShortDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 const KIND_LABEL: Record<QuickHitItem["kind"], string> = {
   paper: "Paper",
@@ -48,7 +45,7 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
     item.kind === "paper"
       ? item.data.venue
       : item.kind === "event"
-        ? `${fmtShortDate(item.data.date)} · ${item.data.isOnline ? "Online" : item.data.location}`
+        ? `${formatDate(item.data.date, "short")} · ${item.data.isOnline ? "Online" : item.data.location}`
         : `${item.data.companyOrLab}${item.data.isRemote ? " · Remote" : ""}`;
 
   return (
@@ -73,7 +70,6 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
         className={`shrink-0 text-[10.5px] font-semibold uppercase tracking-[0.14em] w-[46px] ${
           isRead ? "text-text-faint/60" : "text-text-faint"
         }`}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {KIND_LABEL[item.kind]}
       </span>
@@ -84,7 +80,6 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
             ? "text-text-faint group-hover:text-text-muted"
             : "text-heading group-hover:text-accent"
         }`}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </span>
@@ -93,7 +88,6 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
         className={`hidden sm:inline text-[12.5px] truncate max-w-[38%] ${
           isRead ? "text-text-faint/60" : "text-text-faint"
         }`}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {meta}
       </span>

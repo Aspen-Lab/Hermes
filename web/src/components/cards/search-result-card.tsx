@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatCount, formatDate } from "@/lib/format";
 
 interface SearchResult {
   id: string;
@@ -15,21 +16,6 @@ interface SearchResult {
   doi: string | null;
   url: string;
   source: string;
-}
-
-function fmtDate(d: string | null) {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function fmtCites(n: number) {
-  if (n < 1000) return n.toString();
-  if (n < 10_000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  if (n < 1_000_000) return Math.round(n / 1000) + "k";
-  return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
 }
 
 function truncateVenue(v: string, max = 40) {
@@ -165,7 +151,6 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
     <Link
       href={`/papers/${encodeURIComponent(result.id)}`}
       className="group flex flex-col rounded-2xl bg-surface shadow-card p-5 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* Top: type + OA badges */}
       {(badge || result.isOpenAccess) && (
@@ -217,7 +202,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           {result.publishedDate && (
             <span className="inline-flex items-center gap-1 tabular-nums">
               <CalendarIcon />
-              {fmtDate(result.publishedDate)}
+              {formatDate(result.publishedDate, "monthYear")}
             </span>
           )}
         </div>
@@ -226,8 +211,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       {/* Abstract */}
       {result.abstract && (
         <p
-          className="text-[13.5px] text-text-muted mt-3 leading-[1.55] line-clamp-3"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-[13.5px] text-text-muted mt-3 leading-[1.55] line-clamp-3 font-reading"
         >
           {result.abstract}
         </p>
@@ -241,7 +225,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           <span className="inline-flex items-center gap-1 text-[11.5px] text-text-faint tabular-nums">
             <CitationIcon />
             <span className="font-medium text-text-muted">
-              {fmtCites(result.citationCount)}
+              {formatCount(result.citationCount)}
             </span>
             <span>{result.citationCount === 1 ? "citation" : "citations"}</span>
           </span>

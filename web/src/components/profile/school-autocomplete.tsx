@@ -109,7 +109,6 @@ export function SchoolAutocomplete({
         <ul
           role="listbox"
           className="absolute z-20 mt-1 left-0 right-0 max-h-60 overflow-y-auto rounded-lg bg-surface shadow-card-hover border border-border/60 py-1"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {matches.map((m, i) => {
             const active = i === activeIndex;

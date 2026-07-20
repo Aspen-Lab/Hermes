@@ -4,20 +4,13 @@ import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
+import { formatDate } from "@/lib/format";
 import { PaperFigure } from "@/components/paper-figure";
 
 export type HeroItem =
   | { kind: "paper"; data: Paper }
   | { kind: "event"; data: Event }
   | { kind: "job"; data: Job };
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export function BriefingHero({ item }: { item: HeroItem }) {
   const {
@@ -70,7 +63,6 @@ export function BriefingHero({ item }: { item: HeroItem }) {
 
       <p
         className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent mb-4"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         Top pick today
       </p>
@@ -78,7 +70,6 @@ export function BriefingHero({ item }: { item: HeroItem }) {
       <div className="flex items-start justify-between gap-5">
         <h2
           className="text-[26px] lg:text-[30px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {title}
         </h2>
@@ -89,7 +80,6 @@ export function BriefingHero({ item }: { item: HeroItem }) {
         <>
           <p
             className="text-[14px] text-text-muted mt-3"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {item.data.authors.slice(0, 3).join(", ")}
             {item.data.authors.length > 3 && ` +${item.data.authors.length - 3}`}
@@ -117,9 +107,8 @@ export function BriefingHero({ item }: { item: HeroItem }) {
         <>
           <p
             className="text-[14px] text-text-muted mt-3"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
-            {fmtDate(item.data.date)} · {item.data.isOnline ? "Online" : item.data.location}
+            {formatDate(item.data.date)} · {item.data.isOnline ? "Online" : item.data.location}
           </p>
           <div className="flex items-center flex-wrap gap-2 mt-4">
             <Tag>Event</Tag>
@@ -138,7 +127,6 @@ export function BriefingHero({ item }: { item: HeroItem }) {
         <>
           <p
             className="text-[14px] text-text-muted mt-3"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {item.data.companyOrLab} · {item.data.isRemote ? "Remote" : item.data.location}
           </p>
@@ -148,7 +136,6 @@ export function BriefingHero({ item }: { item: HeroItem }) {
               <span
                 key={req}
                 className="text-[11.5px] text-text-muted bg-bg-secondary/70 px-2 py-[3px] rounded-md"
-                style={{ fontFamily: "var(--font-sans)" }}
               >
                 {req}
               </span>

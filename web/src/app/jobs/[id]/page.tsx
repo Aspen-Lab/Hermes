@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
-import { mockJobs } from "@/data/mock";
 import {
   Tag,
   Callout,
@@ -13,18 +12,15 @@ import {
   Signal,
 } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
-
-function formatPosted(d: string | undefined, now: number): string | null {
-  if (!d) return null;
-  const date = new Date(d);
-  if (Number.isNaN(date.getTime())) return null;
-  const diff = Math.floor((now - date.getTime()) / 86_400_000);
-  if (diff < 1) return "Today";
-  if (diff < 2) return "Yesterday";
-  if (diff < 14) return `${diff}d ago`;
-  if (diff < 60) return `${Math.floor(diff / 7)}w ago`;
-  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
+import { formatDayAge, formatMatchPct } from "@/lib/format";
+import {
+  IconBuilding,
+  IconBullseye,
+  IconCalendar,
+  IconCheckCircle,
+  IconPin,
+  IconStar,
+} from "@/components/icons";
 
 function pickRelatedJobs(current: Job, pool: Job[], limit = 3): Job[] {
   const others = pool.filter((j) => j.id !== current.id);
@@ -60,9 +56,7 @@ export default function JobDetailPage({
   const [now] = useState(Date.now);
 
   const job =
-    feedJobs.find((j) => j.id === id) ??
-    savedJobs.find((j) => j.id === id) ??
-    mockJobs.find((j) => j.id === id);
+    feedJobs.find((j) => j.id === id) ?? savedJobs.find((j) => j.id === id);
 
   useEffect(() => {
     if (job) markRead(job.id);
@@ -70,8 +64,7 @@ export default function JobDetailPage({
 
   const related = useMemo(() => {
     if (!job) return [];
-    const pool = feedJobs.length > 0 ? feedJobs : mockJobs;
-    return pickRelatedJobs(job, pool, 3);
+    return pickRelatedJobs(job, feedJobs, 3);
   }, [job, feedJobs]);
 
   if (!job) {
@@ -86,10 +79,8 @@ export default function JobDetailPage({
   }
 
   const isSaved = savedJobs.some((j) => j.id === job.id);
-  const matchPct = job.relevanceScore
-    ? Math.round(Math.max(0, Math.min(1, job.relevanceScore)) * 100)
-    : null;
-  const postedLabel = formatPosted(job.postedDate, now);
+  const matchPct = formatMatchPct(job.relevanceScore);
+  const postedLabel = formatDayAge(job.postedDate, now);
   const daysOld = job.postedDate
     ? Math.floor((now - new Date(job.postedDate).getTime()) / 86_400_000)
     : null;
@@ -105,7 +96,6 @@ export default function JobDetailPage({
       <Link
         href="/"
         className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
           ←
@@ -120,13 +110,11 @@ export default function JobDetailPage({
       >
         <h1
           className="text-[30px] lg:text-[34px] font-semibold text-heading leading-[1.15] tracking-[-0.015em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {job.roleTitle}
         </h1>
         <p
           className="text-text-muted mt-3 text-[14.5px]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <Link
             href={`/?q=${encodeURIComponent(job.companyOrLab)}`}
@@ -205,7 +193,7 @@ export default function JobDetailPage({
       </div>
 
       {/* ── Signals ── */}
-      <SectionTitle icon={<IconCheck />} index={5}>
+      <SectionTitle icon={<IconCheckCircle />} index={5}>
         At a glance
       </SectionTitle>
       <div className="flex flex-wrap gap-2">
@@ -235,7 +223,6 @@ export default function JobDetailPage({
         >
           <h2
             className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             Related roles
           </h2>
@@ -266,8 +253,7 @@ function SectionTitle({
       className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-10 mb-3 animate-fade-in-up"
       style={{
         "--i": index,
-        fontFamily: "var(--font-sans)",
-      } as React.CSSProperties}
+        } as React.CSSProperties}
     >
       {icon}
       {children}
@@ -291,7 +277,7 @@ function ActionRow({
   return (
     <div
       className="flex items-center flex-wrap gap-2.5 mt-6 animate-fade-in-up"
-      style={{ "--i": 2, fontFamily: "var(--font-sans)" } as React.CSSProperties}
+      style={{ "--i": 2} as React.CSSProperties}
     >
       {applyUrl && (
         <a
@@ -365,44 +351,11 @@ function ActionRow({
 
 // ── Icons ──
 
-function IconBullseye() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="5" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-function IconBuilding() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="4" y="3" width="16" height="18" rx="1.5" />
-      <path d="M8 7h2M14 7h2M8 12h2M14 12h2M8 17h2M14 17h2" />
-    </svg>
-  );
-}
-function IconPin() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z" />
-      <circle cx="12" cy="9" r="2.5" />
-    </svg>
-  );
-}
 function IconGlobe() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-    </svg>
-  );
-}
-function IconCalendar() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" />
     </svg>
   );
 }
@@ -413,21 +366,6 @@ function IconList() {
       <circle cx="4.5" cy="6" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="4.5" cy="18" r="1.2" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-function IconStar() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden>
-      <path d="M12 3l2.5 6.5L21 10l-5.2 4 1.7 7L12 17.5 6.5 21l1.7-7L3 10l6.5-.5z" />
-    </svg>
-  );
-}
-function IconCheck() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M8 12l3 3 5-6" />
     </svg>
   );
 }

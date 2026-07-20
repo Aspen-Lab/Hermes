@@ -18,7 +18,6 @@ export default function SavedPage() {
       <header className="mb-8">
         <h1
           className="text-[34px] lg:text-[38px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           Saved
         </h1>

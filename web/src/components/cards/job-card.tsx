@@ -16,7 +16,6 @@ export function JobCard({ job }: { job: Job }) {
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {job.roleTitle}
         </h3>
@@ -25,7 +24,6 @@ export function JobCard({ job }: { job: Job }) {
 
       <p
         className="text-[13.5px] text-text-muted mt-2.5"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {job.companyOrLab} · {job.isRemote ? "Remote" : job.location}
       </p>
@@ -36,7 +34,6 @@ export function JobCard({ job }: { job: Job }) {
             <span
               key={req}
               className="text-[11.5px] text-text-muted bg-bg-secondary/70 px-2 py-[3px] rounded-md"
-              style={{ fontFamily: "var(--font-sans)" }}
             >
               {req}
             </span>
@@ -44,7 +41,6 @@ export function JobCard({ job }: { job: Job }) {
           {job.keyRequirements.length > 3 && (
             <span
               className="text-[11.5px] text-text-faint px-1 py-[3px]"
-              style={{ fontFamily: "var(--font-sans)" }}
             >
               +{job.keyRequirements.length - 3}
             </span>

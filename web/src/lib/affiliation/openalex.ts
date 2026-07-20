@@ -11,7 +11,7 @@ import { openAlexWorkToRawItem, type OpenAlexWork } from "@/lib/utils/openalex";
 import type { RawItem } from "@/lib/sources/types";
 
 const OPENALEX = "https://api.openalex.org";
-const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
+const MAILTO = process.env.OPENALEX_EMAIL ?? "peer@example.com";
 
 const WORK_SELECT =
   "id,title,publication_date,authorships,primary_location,best_oa_location,open_access,abstract_inverted_index,cited_by_count,doi,topics,primary_topic,keywords,concepts,type_crossref";

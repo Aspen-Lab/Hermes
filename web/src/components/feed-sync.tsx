@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useFeedStore } from "@/store/feed";
 import type { Paper, Event, Job } from "@/types";
+import { apiFetch } from "@/lib/api";
 
 interface SavedApiRow {
   itemId: string;
@@ -27,9 +28,9 @@ interface ReadApiRow {
 
 async function fetchSaved(): Promise<SavedApiRow[] | null> {
   try {
-    const res = await fetch("/api/saved", { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { items: SavedApiRow[] };
+    const data = await apiFetch<{ items: SavedApiRow[] }>("/api/saved", {
+      cache: "no-store",
+    });
     return data.items ?? [];
   } catch (err) {
     console.warn("[FeedSync] GET /api/saved failed", err);
@@ -39,9 +40,9 @@ async function fetchSaved(): Promise<SavedApiRow[] | null> {
 
 async function fetchRead(): Promise<ReadApiRow[] | null> {
   try {
-    const res = await fetch("/api/read", { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { items: ReadApiRow[] };
+    const data = await apiFetch<{ items: ReadApiRow[] }>("/api/read", {
+      cache: "no-store",
+    });
     return data.items ?? [];
   } catch (err) {
     console.warn("[FeedSync] GET /api/read failed", err);
@@ -55,9 +56,8 @@ async function pushSaved(
   payload: unknown,
 ) {
   try {
-    await fetch("/api/saved", {
+    await apiFetch("/api/saved", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, itemKind, payload }),
     });
   } catch (err) {
@@ -67,9 +67,8 @@ async function pushSaved(
 
 async function pushRead(itemId: string) {
   try {
-    await fetch("/api/read", {
+    await apiFetch("/api/read", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId }),
     });
   } catch (err) {

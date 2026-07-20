@@ -6,6 +6,7 @@
 // Once locked, the resolved OpenAlex author identity anchors feed discovery.
 
 import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 interface ResolvedAuthor {
   authorId: string;
@@ -47,8 +48,10 @@ export function AdvisorField({
     try {
       const params = new URLSearchParams({ name });
       if (school.trim()) params.set("institution", school.trim());
-      const res = await fetch(`/api/affiliation/resolve?${params}`, { cache: "no-store" });
-      const data = (await res.json()) as { author: ResolvedAuthor | null };
+      const data = await apiFetch<{ author: ResolvedAuthor | null }>(
+        `/api/affiliation/resolve?${params}`,
+        { cache: "no-store" },
+      );
       if (data.author) {
         setCandidate(data.author);
         setStatus("found");
@@ -63,7 +66,7 @@ export function AdvisorField({
   // ── Locked / confirmed state ──────────────────────────────────
   if (confirmed) {
     return (
-      <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] px-3.5 py-3 flex items-start gap-3">
+      <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] px-3.5 py-3 flex items-start gap-3">
         <span className="mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-bg shrink-0">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="20 6 9 17 4 12" />
@@ -77,7 +80,7 @@ export function AdvisorField({
             {advisorAuthorLabel ?? advisorName}
           </p>
           <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-            Hermes seeds discovery from their recent work, refreshed monthly.
+            Peer seeds discovery from their recent work, refreshed monthly.
           </p>
         </div>
         <button
@@ -172,13 +175,13 @@ export function AdvisorField({
       {status === "notfound" && (
         <p className="text-[11.5px] text-text-faint/85 leading-relaxed px-0.5">
           Couldn&rsquo;t find that author on OpenAlex. Check the spelling and your School/Org,
-          or leave it — Hermes will just skip advisor-based discovery.
+          or leave it — Peer will just skip advisor-based discovery.
         </p>
       )}
 
       {status === "idle" && (
         <p className="text-[11px] text-text-faint/75 leading-relaxed px-0.5">
-          Your advisor / PI. Hermes finds their work and uses it as a compass to surface
+          Your advisor / PI. Peer finds their work and uses it as a compass to surface
           related papers you&rsquo;d care about. Add your School/Org above for an accurate match.
         </p>
       )}

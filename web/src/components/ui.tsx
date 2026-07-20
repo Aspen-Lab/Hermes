@@ -7,10 +7,10 @@ import type { ReactNode } from "react";
 type CalloutVariant = "accent" | "warm" | "ghost" | "success";
 
 const CALLOUT_STYLES: Record<CalloutVariant, string> = {
-  accent: "bg-accent-dim border-accent/25",
-  warm: "bg-bg-secondary/80 border-border-strong",
-  ghost: "bg-surface border-border-strong",
-  success: "bg-tag-dim border-tag/25",
+  accent: "bg-accent-dim",
+  warm: "bg-bg-secondary/80",
+  ghost: "bg-surface shadow-well",
+  success: "bg-tag-dim",
 };
 
 export function Callout({
@@ -26,13 +26,11 @@ export function Callout({
 }) {
   return (
     <aside
-      className={`rounded-2xl border px-5 py-4 ${CALLOUT_STYLES[variant]}`}
-      style={{ fontFamily: "var(--font-reading)" }}
+      className={`rounded-2xl px-5 py-4 font-reading ${CALLOUT_STYLES[variant]}`}
     >
       {(title || icon) && (
         <header
           className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {icon}
           {title}
@@ -49,7 +47,6 @@ export function PropertyStrip({ children }: { children: ReactNode }) {
   return (
     <div
       className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-4 py-4 border-y border-border"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {children}
     </div>
@@ -91,8 +88,7 @@ export function Property({
 export function PullQuote({ children }: { children: ReactNode }) {
   return (
     <blockquote
-      className="relative pl-5 my-6 text-[18px] leading-[1.65] text-heading italic"
-      style={{ fontFamily: "var(--font-reading)" }}
+      className="relative pl-5 my-6 text-[18px] leading-[1.65] text-heading italic font-reading"
     >
       <span
         className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-accent/80"
@@ -114,12 +110,11 @@ export function Signal({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full border transition-colors ${
+      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full transition-colors ${
         ok
-          ? "bg-tag-dim text-tag border-tag/20"
-          : "bg-surface/70 text-text-faint border-border"
+          ? "bg-tag-dim text-tag"
+          : "bg-surface/70 text-text-faint"
       }`}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <svg
         width="11"
@@ -148,11 +143,11 @@ export function Signal({
 type FactChipTone = "neutral" | "accent" | "tag" | "link" | "muted";
 
 const FACT_CHIP_TONE: Record<FactChipTone, string> = {
-  neutral: "bg-bg-secondary/55 text-text border-border",
-  accent: "bg-accent-dim text-accent border-accent/15",
-  tag: "bg-tag-dim text-tag border-tag/15",
-  link: "bg-link-dim text-link border-link/15",
-  muted: "bg-surface/70 text-text-faint border-border",
+  neutral: "bg-bg-secondary/55 text-text",
+  accent: "bg-accent-dim text-accent",
+  tag: "bg-tag-dim text-tag",
+  link: "bg-link-dim text-link",
+  muted: "bg-surface/70 text-text-faint",
 };
 
 export function FactChip({
@@ -166,8 +161,7 @@ export function FactChip({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full border ${FACT_CHIP_TONE[tone]}`}
-      style={{ fontFamily: "var(--font-sans)" }}
+      className={`inline-flex items-center gap-1.5 text-[12px] h-7 px-3 rounded-full ${FACT_CHIP_TONE[tone]}`}
     >
       {icon && <span className="opacity-90 shrink-0">{icon}</span>}
       {children}
@@ -187,7 +181,6 @@ export function SectionHeading({
   return (
     <h2
       className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mt-14 mb-5 flex items-baseline justify-between"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <span>{children}</span>
       {count !== undefined && (
@@ -213,14 +206,13 @@ export function Tag({
       <a
         href={href}
         className={`${classes} hover:text-heading hover:bg-tag-dim/70 active:scale-[0.96]`}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {children}
       </a>
     );
   }
   return (
-    <span className={classes} style={{ fontFamily: "var(--font-sans)" }}>
+    <span className={classes}>
       {children}
     </span>
   );
@@ -243,8 +235,7 @@ export function LinkChip({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-[12.5px] text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface shadow-card text-[12.5px] text-text-muted hover:text-heading hover:shadow-card-hover hover:bg-surface-hover transition-[color,background-color,box-shadow] duration-200 ease-out active:scale-[0.96]"
     >
       {icon}
       {label}
@@ -279,7 +270,6 @@ export function ActionBar({
   return (
     <div
       className="flex items-center justify-between mt-5 pt-4 border-t border-border"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-1.5">
         {onSave && (
@@ -291,7 +281,7 @@ export function ActionBar({
             className={`group/save inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3.5 rounded-full text-[12.5px] font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out active:scale-[0.94] ${
               isSaved
                 ? "bg-accent text-bg shadow-card hover:bg-accent/90"
-                : "bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover"
+                : "bg-bg-secondary/60 shadow-card text-text-muted hover:text-heading hover:bg-surface-hover"
             }`}
           >
             <svg
@@ -408,8 +398,7 @@ export function FeedbackRow({
       className="mt-12 pt-6 border-t border-border animate-fade-in-up"
       style={{
         "--i": index,
-        fontFamily: "var(--font-sans)",
-      } as React.CSSProperties}
+        } as React.CSSProperties}
     >
       <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-3">
         Was this worth your time?
@@ -485,7 +474,6 @@ export function DetailSection({
     <section className="mt-10 animate-fade-in-up" style={style}>
       <h3
         className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-3"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </h3>
@@ -527,7 +515,6 @@ export function EmptyState({
     <div className="py-20 text-center flex flex-col items-center">
       <p
         className="text-heading text-[18px] font-medium tracking-[-0.01em]"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </p>

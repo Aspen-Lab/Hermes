@@ -7,6 +7,7 @@
 import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { formatDate, formatMatchPct } from "@/lib/format";
 
 type FeedItem =
   | { kind: "paper"; data: Paper }
@@ -15,13 +16,6 @@ type FeedItem =
 
 interface RelevanceScored {
   relevanceScore?: number;
-}
-
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 function tileShellClass(isRead: boolean) {
@@ -174,7 +168,6 @@ function KindBadge({ kind }: { kind: BadgeKind }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <Icon />
       {KIND_LABEL[kind]}
@@ -192,12 +185,11 @@ function KindStripe({ kind }: { kind: BadgeKind }) {
 }
 
 function ScoreChip({ scored }: { scored: RelevanceScored }) {
-  if (scored.relevanceScore == null) return null;
-  const pct = Math.round(scored.relevanceScore * 100);
+  const pct = formatMatchPct(scored.relevanceScore);
+  if (pct == null) return null;
   return (
     <span
       className="text-[10.5px] tabular-nums text-text-faint shrink-0"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {pct}%
     </span>
@@ -283,7 +275,6 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
       href={`/papers/${paper.id}`}
       className={tileShellClass(isRead)}
       style={{
-        fontFamily: "var(--font-sans)",
         ...(selected ? { background: SELECTED_BG, transition: "background 0.3s" } : { transition: "background 0.3s" }),
       }}
     >
@@ -300,8 +291,7 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
         <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {paper.relevanceReason}
       </p>
@@ -363,7 +353,6 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
     <Link
       href={`/events/${event.id}`}
       className={tileShellClass(isRead)}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <KindStripe kind="event" />
       <div className="flex items-center gap-2 mb-2.5">
@@ -375,7 +364,7 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         {event.name}
       </h3>
       <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
-        <MetaItem icon={CalendarMini}>{fmtDate(event.date)}</MetaItem>
+        <MetaItem icon={CalendarMini}>{formatDate(event.date, "short")}</MetaItem>
         {(event.isOnline || event.location) && (
           <MetaItem icon={event.isOnline ? GlobeMini : PinMini}>
             {event.isOnline ? "Online" : event.location}
@@ -383,8 +372,7 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {event.relevanceReason}
       </p>
@@ -410,7 +398,6 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
     <Link
       href={`/jobs/${job.id}`}
       className={tileShellClass(isRead)}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <KindStripe kind="job" />
       <div className="flex items-center gap-2 mb-2.5">
@@ -430,8 +417,7 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {job.matchReason}
       </p>

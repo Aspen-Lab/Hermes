@@ -42,7 +42,7 @@ const STEPS: TourStep[] = [
     key: "highlights",
     sel: '[data-tour="highlights"]',
     title: "Today's highlights",
-    body: "A two-to-three sentence read on each paper Hermes picked. Click any line to jump straight to that paper.",
+    body: "A two-to-three sentence read on each paper Peer picked. Click any line to jump straight to that paper.",
     minHeight: 12,
   },
   {
@@ -205,7 +205,7 @@ export function OnboardingTour() {
   if (!rect) {
     if (!step.wait) return null;
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" style={{ fontFamily: "var(--font-sans)" }}>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45">
         <div className="rounded-2xl bg-surface shadow-card px-5 py-4 text-[13px] text-text-muted flex items-center gap-3">
           <span className="h-3.5 w-3.5 rounded-full border-2 border-accent border-t-transparent animate-spin" aria-hidden />
           Building your first briefing…
@@ -225,7 +225,7 @@ export function OnboardingTour() {
   );
 
   return (
-    <div className="fixed inset-0 z-[100]" style={{ fontFamily: "var(--font-sans)" }} aria-live="polite">
+    <div className="fixed inset-0 z-[100]" aria-live="polite">
       {/* Transparent click-blocker so the app underneath is non-interactive. */}
       <div className="absolute inset-0" aria-hidden />
 
@@ -294,7 +294,7 @@ export function OnboardingTour() {
 function PaperCardBody() {
   return (
     <div className="space-y-2.5">
-      <p>This is one of your briefing papers. Teach Hermes what you like:</p>
+      <p>This is one of your briefing papers. Teach Peer what you like:</p>
       <ul className="space-y-1.5">
         <li className="flex items-center gap-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-md text-accent bg-accent-dim/60 shrink-0">

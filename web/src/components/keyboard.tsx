@@ -198,7 +198,7 @@ function ChordHint() {
   return (
     <div
       className="fixed bottom-6 right-6 z-[65] pointer-events-none animate-fade-in-up"
-      style={{ "--i": 0, fontFamily: "var(--font-sans)" } as React.CSSProperties}
+      style={{ "--i": 0} as React.CSSProperties}
     >
       <div className="flex items-center gap-2 bg-heading text-bg rounded-full px-3.5 py-2 text-[12px] shadow-card-hover">
         <Kbd>g</Kbd>
@@ -239,8 +239,8 @@ function HelpOverlay({
       />
 
       <div
-        className="relative w-full max-w-[440px] rounded-2xl bg-surface shadow-card-hover border border-border-strong p-6 animate-fade-in-up"
-        style={{ "--i": 0, fontFamily: "var(--font-sans)" } as React.CSSProperties}
+        className="relative w-full max-w-[440px] rounded-2xl glass shadow-card-hover p-6 animate-fade-in-up"
+        style={{ "--i": 0} as React.CSSProperties}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[13px] font-semibold uppercase tracking-[0.18em] text-text-faint">
@@ -309,8 +309,7 @@ function HelpOverlay({
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd
-      className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md bg-bg-secondary border border-border-strong text-[11.5px] text-heading font-medium tabular-nums"
-      style={{ fontFamily: "var(--font-mono)" }}
+      className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md bg-bg-secondary shadow-well text-[11.5px] text-heading font-medium tabular-nums font-mono"
     >
       {children}
     </kbd>

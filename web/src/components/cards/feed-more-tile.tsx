@@ -76,7 +76,6 @@ export function FeedMoreTile({
         "transition-colors duration-200 ease-out",
         "hover:bg-bg-secondary/55 hover:border-accent/40",
       ].join(" ")}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-2 mb-2.5">
         <span className="inline-flex items-center text-[9.5px] font-semibold uppercase tracking-[0.16em] px-1.5 py-[3px] rounded text-accent bg-accent-dim/70">
@@ -87,8 +86,7 @@ export function FeedMoreTile({
         {title}
       </h3>
       <p
-        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55]"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-[12.5px] text-text-muted mt-2.5 leading-[1.55] font-reading"
       >
         {body}
       </p>

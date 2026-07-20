@@ -34,7 +34,7 @@ import { AiKeyFields, ApiKeyHelp } from "@/components/profile/ai-setup";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
 
-const DEFAULT_NAME = "Hermes Member";
+const DEFAULT_NAME = "Peer Member";
 
 type StepKey = "basics" | "topics" | "work" | "radar" | "ai" | "persona";
 
@@ -74,13 +74,13 @@ export default function WelcomePage() {
   const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
 
   return (
-    <div className="min-h-[100dvh] bg-bg flex flex-col items-center" style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="min-h-[100dvh] bg-bg flex flex-col items-center">
       <div className="w-full max-w-[640px] px-6 py-12 lg:py-16">
         {/* Header / brand + skip */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.svg" alt="Hermes" width={28} height={28} className="opacity-90" />
-            <span className="text-[13px] font-semibold tracking-[-0.01em] text-heading">Hermes</span>
+            <Image src="/logo-mark.png" alt="Peer" width={28} height={28} className="opacity-90" />
+            <span className="text-[13px] font-semibold tracking-[-0.01em] text-heading">Peer</span>
           </div>
           <button
             type="button"
@@ -110,7 +110,7 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Welcome"
               title="Let's get you set up."
-              subtitle="A few quick details so Hermes knows who it's briefing. All optional — change anything later in your profile."
+              subtitle="A few quick details so Peer knows who it's briefing. All optional — change anything later in your profile."
             >
               <Field label="Your name">
                 <input
@@ -141,7 +141,7 @@ export default function WelcomePage() {
           {key === "topics" && (
             <StepFrame
               kicker="The one that matters"
-              title="What should Hermes track for you?"
+              title="What should Peer track for you?"
               subtitle="This is the heart of your briefing. Add at least one Required topic — every paper in your feed must match one of these. Type a topic and press comma or Enter to turn it into a tag; drag a tag between columns to re-rank it."
             >
               <TopicsField
@@ -165,7 +165,7 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Your work"
               title="What are you working on, and with whom?"
-              subtitle="Optional, but the single biggest lever on quality. Hermes biases your briefing toward your real project, open problems, and your advisor's research lineage."
+              subtitle="Optional, but the single biggest lever on quality. Peer biases your briefing toward your real project, open problems, and your advisor's research lineage."
             >
               <Field label="Current project" hint="1–3 sentences about what you're building right now.">
                 <textarea
@@ -241,7 +241,7 @@ export default function WelcomePage() {
                     tone="link"
                   />
                   <p className="mt-1.5 px-0.5 text-[11px] leading-relaxed text-text-faint/75">
-                    List the journals you trust most. Hermes treats these as a primary source and
+                    List the journals you trust most. Peer treats these as a primary source and
                     gives papers from them a relevance boost (+1/3 of their score), so they rise to
                     the top — though an exceptionally on-target paper from elsewhere can still win.
                   </p>
@@ -266,11 +266,11 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Optional power-up"
               title="Connect an AI key (optional)."
-              subtitle="Hermes works fully free with zero setup. Adding a key unlocks sharper, AI-written briefings and Deep report — and you can always do this later."
+              subtitle="Peer works fully free with zero setup. Adding a key unlocks sharper, AI-written briefings and Deep report — and you can always do this later."
             >
-              <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)] px-4 py-3">
+              <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_25%,transparent)] px-4 py-3">
                 <p className="text-[12.5px] leading-relaxed text-heading">
-                  <strong>Hermes runs significantly better with an API key.</strong>{" "}
+                  <strong>Peer runs significantly better with an API key.</strong>{" "}
                   A key powers the smarter Tier 1/2 ranking and the full-text Deep report.
                   Without one, you still get a complete free briefing.
                 </p>
@@ -295,7 +295,7 @@ export default function WelcomePage() {
           {key === "persona" && (
             <StepFrame
               kicker="One more thing"
-              title="Want Hermes to learn your reading style?"
+              title="Want Peer to learn your reading style?"
               subtitle="An optional 2-minute quiz that maps how you tend to work across five axes. It helps shape your feed — but you can absolutely skip it and just explore."
             >
               <div className="rounded-2xl bg-surface shadow-card p-6 flex items-start gap-4">
@@ -343,7 +343,7 @@ export default function WelcomePage() {
               onClick={finishToTour}
               className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-accent text-white text-[13.5px] font-medium shadow-card hover:bg-accent/90 transition-colors active:scale-[0.97]"
             >
-              Enter Hermes
+              Enter Peer
               <span aria-hidden>→</span>
             </button>
           ) : (
@@ -388,7 +388,6 @@ function StepFrame({
       </p>
       <h1
         className="text-[28px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </h1>
@@ -442,7 +441,7 @@ function PillGroup({
             onClick={() => onChange(o.value)}
             className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
               active
-                ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.03]"
                 : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
             }`}
           >

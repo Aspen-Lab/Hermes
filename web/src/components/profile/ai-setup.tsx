@@ -8,7 +8,7 @@ import { useState } from "react";
 import type { UserAiProvider } from "@/types";
 
 export const FEED_AI_PROVIDER_OPTIONS: { value: UserAiProvider; label: string }[] = [
-  { value: "default", label: "Hermes default (site setup) — no API key" },
+  { value: "default", label: "Peer default (site setup) — no API key" },
   { value: "openai", label: "OpenAI / ChatGPT" },
   { value: "gemini", label: "Google Gemini API" },
   { value: "anthropic", label: "Anthropic / Claude" },
@@ -156,7 +156,7 @@ export function ApiKeyHelp() {
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
           <p className="text-[12.5px] leading-relaxed text-text-muted">
-            An API key is like a credit card from an AI company that lets Hermes
+            An API key is like a credit card from an AI company that lets Peer
             use their AI on your behalf — you pay only for what you use, measured
             in &ldquo;tokens&rdquo; (chunks of text). It usually costs a few cents
             for a day of briefings.

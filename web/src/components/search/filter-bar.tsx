@@ -67,7 +67,6 @@ export function FilterBar({ filters, onChange, onReset }: FilterBarProps) {
   return (
     <div
       className="mt-4"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center flex-wrap gap-2">
         <FilterChip

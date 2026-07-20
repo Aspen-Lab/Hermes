@@ -48,7 +48,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
   const avatar = user.user_metadata?.avatar_url as string | undefined;
 
   return (
-    <div className="relative" style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -95,7 +95,7 @@ export function UserMenu({ compact = false }: { compact?: boolean }) {
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[180px] rounded-xl bg-surface shadow-card-hover overflow-hidden animate-fade-in-up">
+          <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[180px] rounded-xl glass shadow-card-hover overflow-hidden animate-fade-in-up">
             <div className="px-3 py-2.5 border-b border-border/70">
               <div className="text-[12.5px] text-heading font-medium truncate">
                 {name}
@@ -142,7 +142,6 @@ function SignInButton({ compact }: { compact: boolean }) {
       onClick={onClick}
       disabled={busy}
       className="group inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-heading text-bg hover:bg-heading/90 transition-all duration-200 ease-out active:scale-[0.96] disabled:opacity-60 text-[12.5px] font-medium shadow-card"
-      style={{ fontFamily: "var(--font-sans)" }}
       aria-label="Sign in with GitHub"
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

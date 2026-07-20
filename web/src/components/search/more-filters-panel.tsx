@@ -59,7 +59,6 @@ export function MoreFiltersPanel({
       <div className="overflow-hidden">
         <div
           className="bg-surface shadow-card rounded-xl p-4 flex flex-col gap-4"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <div className="flex flex-col gap-2">
             <label className="text-[12px] text-text-faint uppercase tracking-wider">
@@ -106,7 +105,6 @@ export function MoreFiltersPanel({
               maxLength={80}
               tabIndex={open ? 0 : -1}
               className="w-full bg-[color:var(--color-bg-secondary)] rounded-lg py-2 px-3 text-[13.5px] text-text placeholder:text-text-faint/70 focus:outline-none focus:ring-2 focus:ring-accent/20"
-              style={{ fontFamily: "var(--font-sans)" }}
             />
           </div>
         </div>

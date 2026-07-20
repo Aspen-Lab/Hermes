@@ -237,7 +237,7 @@ const surfaceCss = `
   min-height: calc(100vh - 3rem);
   background: var(--bg);
   color: var(--text-1);
-  font-family: 'DM Sans', var(--font-geist), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'DM Sans', var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .paper-surface * {
@@ -265,7 +265,7 @@ const surfaceCss = `
   gap: 14px;
   margin-bottom: 34px;
   color: var(--text-3);
-  font: 500 10px/1 'DM Mono', var(--font-geist-mono), monospace;
+  font: 500 10px/1 'DM Mono', var(--font-roboto-mono), monospace;
   letter-spacing: 0.7px;
   text-transform: uppercase;
 }
@@ -312,7 +312,7 @@ const surfaceCss = `
   background: var(--mute);
   padding: 0 9px;
   color: var(--text-3);
-  font: 500 10px/1 'DM Mono', var(--font-geist-mono), monospace;
+  font: 500 10px/1 'DM Mono', var(--font-roboto-mono), monospace;
   letter-spacing: 0.7px;
   text-transform: uppercase;
 }
@@ -355,7 +355,7 @@ const surfaceCss = `
   background: var(--mute);
   padding: 0 12px;
   color: var(--text-2);
-  font: 600 12px/1 'DM Sans', var(--font-geist), sans-serif;
+  font: 600 12px/1 'DM Sans', var(--font-inter), sans-serif;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
 }
@@ -436,7 +436,7 @@ const surfaceCss = `
 .fit-list span {
   margin: 0;
   color: var(--text-3);
-  font: 500 10px/1.2 'DM Mono', var(--font-geist-mono), monospace;
+  font: 500 10px/1.2 'DM Mono', var(--font-roboto-mono), monospace;
   letter-spacing: 0.7px;
   text-transform: uppercase;
 }

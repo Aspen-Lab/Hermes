@@ -4,50 +4,18 @@ import { use, useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Event } from "@/types";
 import { useFeedStore } from "@/store/feed";
-import { mockEvents } from "@/data/mock";
 import { Tag, DetailSection } from "@/components/ui";
 import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
-
-function fmtFullDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function fmtShortDate(d: string) {
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function daysBetween(target: string, now: number): number {
-  const ms = new Date(target).getTime() - now;
-  return Math.round(ms / 86_400_000);
-}
-
-function formatRelative(days: number): string {
-  if (days === 0) return "today";
-  if (days === 1) return "tomorrow";
-  if (days === -1) return "yesterday";
-  if (days > 0 && days < 14) return `in ${days} days`;
-  if (days < 0 && days > -14) return `${Math.abs(days)} days ago`;
-  if (days >= 14 && days < 60) return `in ${Math.floor(days / 7)} weeks`;
-  if (days <= -14 && days > -60) return `${Math.floor(Math.abs(days) / 7)} weeks ago`;
-  if (days >= 60 && days < 365) return `in ${Math.floor(days / 30)} months`;
-  if (days <= -60 && days > -365) return `${Math.floor(Math.abs(days) / 30)} months ago`;
-  if (days >= 365) return `in ${Math.floor(days / 365)} years`;
-  return `${Math.floor(Math.abs(days) / 365)} years ago`;
-}
+import {
+  daysUntil,
+  formatDate,
+  formatDayDistance,
+  formatMatchPct,
+} from "@/lib/format";
 
 function urgencyColor(days: number): {
   text: string;
   bg: string;
-  border: string;
   dot: string;
   label: string;
 } {
@@ -55,7 +23,6 @@ function urgencyColor(days: number): {
     return {
       text: "text-text-faint",
       bg: "bg-surface/80",
-      border: "border-border",
       dot: "bg-text-faint/50",
       label: "Closed",
     };
@@ -64,7 +31,6 @@ function urgencyColor(days: number): {
     return {
       text: "text-red",
       bg: "bg-red/[0.06]",
-      border: "border-red/25",
       dot: "bg-red",
       label: "Soon",
     };
@@ -73,7 +39,6 @@ function urgencyColor(days: number): {
     return {
       text: "text-accent",
       bg: "bg-accent-dim",
-      border: "border-accent/30",
       dot: "bg-accent",
       label: "Coming up",
     };
@@ -81,7 +46,6 @@ function urgencyColor(days: number): {
   return {
     text: "text-text-muted",
     bg: "bg-surface",
-    border: "border-border-strong",
     dot: "bg-text-muted",
     label: "Upcoming",
   };
@@ -114,9 +78,7 @@ export default function EventDetailPage({
   const [now] = useState(Date.now);
 
   const event =
-    feedEvents.find((e) => e.id === id) ??
-    savedEvents.find((e) => e.id === id) ??
-    mockEvents.find((e) => e.id === id);
+    feedEvents.find((e) => e.id === id) ?? savedEvents.find((e) => e.id === id);
 
   useEffect(() => {
     if (event) markRead(event.id);
@@ -124,8 +86,7 @@ export default function EventDetailPage({
 
   const related = useMemo(() => {
     if (!event) return [];
-    const pool = feedEvents.length > 0 ? feedEvents : mockEvents;
-    return pickRelatedEvents(event, pool, 3);
+    return pickRelatedEvents(event, feedEvents, 3);
   }, [event, feedEvents]);
 
   if (!event) {
@@ -140,15 +101,13 @@ export default function EventDetailPage({
   }
 
   const isSaved = savedEvents.some((e) => e.id === event.id);
-  const daysToEvent = daysBetween(event.date, now);
-  const daysToDeadline = event.deadline ? daysBetween(event.deadline, now) : null;
+  const daysToEvent = daysUntil(event.date, now);
+  const daysToDeadline = event.deadline ? daysUntil(event.deadline, now) : null;
   const deadlineStyle =
     daysToDeadline !== null ? urgencyColor(daysToDeadline) : null;
   const eventUrgency = urgencyColor(daysToEvent);
 
-  const matchPct = event.relevanceScore
-    ? Math.round(Math.max(0, Math.min(1, event.relevanceScore)) * 100)
-    : null;
+  const matchPct = formatMatchPct(event.relevanceScore);
   const primaryUrl = event.linkRegistration || event.linkOfficial;
   const primaryLabel = event.linkRegistration ? "Register" : "Visit site";
 
@@ -162,7 +121,6 @@ export default function EventDetailPage({
       <Link
         href="/"
         className="group inline-flex items-center gap-1 text-[13px] text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
           ←
@@ -177,14 +135,13 @@ export default function EventDetailPage({
       >
         <div
           className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 text-[12px] uppercase tracking-[0.14em] text-text-faint mb-3"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <span className={`inline-flex items-center gap-1.5 ${eventUrgency.text}`}>
             <span className={`block w-[6px] h-[6px] rounded-full ${eventUrgency.dot}`} />
             {event.type}
           </span>
           <span className="text-border-strong">·</span>
-          <span>{formatRelative(daysToEvent)}</span>
+          <span>{formatDayDistance(daysToEvent)}</span>
           {matchPct !== null && (
             <>
               <span className="text-border-strong">·</span>
@@ -201,19 +158,17 @@ export default function EventDetailPage({
 
         <h1
           className="text-[32px] lg:text-[38px] font-semibold text-heading leading-[1.1] tracking-[-0.02em]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           {event.name}
         </h1>
 
         <div
           className="mt-5 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[14px]"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <FactRow icon="calendar" label="When">
             <span className="text-heading font-medium">
-              {fmtFullDate(event.date)}
-              {event.endDate ? ` – ${fmtShortDate(event.endDate)}` : ""}
+              {formatDate(event.date, "full")}
+              {event.endDate ? ` – ${formatDate(event.endDate, "medium")}` : ""}
             </span>
           </FactRow>
 
@@ -240,8 +195,8 @@ export default function EventDetailPage({
       {/* ── Deadline callout ── */}
       {event.deadline && deadlineStyle && (
         <section
-          className={`mt-8 rounded-2xl border px-5 py-4 animate-fade-in-up ${deadlineStyle.bg} ${deadlineStyle.border}`}
-          style={{ "--i": 2, fontFamily: "var(--font-sans)" } as React.CSSProperties}
+          className={`mt-8 rounded-2xl px-5 py-4 animate-fade-in-up ${deadlineStyle.bg}`}
+          style={{ "--i": 2} as React.CSSProperties}
         >
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -251,7 +206,7 @@ export default function EventDetailPage({
                 Submission deadline · {deadlineStyle.label}
               </p>
               <p className="mt-1.5 text-[17px] text-heading font-semibold">
-                {fmtFullDate(event.deadline)}
+                {formatDate(event.deadline, "full")}
               </p>
             </div>
             <div className="text-right">
@@ -294,7 +249,6 @@ export default function EventDetailPage({
       <DetailSection title="Quick facts" index={5}>
         <div
           className="flex flex-wrap gap-2"
-          style={{ fontFamily: "var(--font-sans)" }}
         >
           <Tag>{event.type}</Tag>
           <Tag>{event.isOnline ? "Online" : "In person"}</Tag>
@@ -321,7 +275,6 @@ export default function EventDetailPage({
         >
           <h2
             className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             Related from your feed
           </h2>
@@ -407,7 +360,6 @@ function LinkChip({ href, label }: { href?: string; label: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-[12.5px] text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {label}
       <span className="text-[10px] opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
@@ -448,10 +400,9 @@ function Timeline({
       </div>
       <div
         className="flex items-center justify-between mt-2 text-[10.5px] uppercase tracking-[0.14em] text-text-faint"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
-        <span>Deadline · {fmtShortDate(deadline)}</span>
-        <span>Event · {fmtShortDate(eventDate)}</span>
+        <span>Deadline · {formatDate(deadline, "medium")}</span>
+        <span>Event · {formatDate(eventDate, "medium")}</span>
       </div>
     </div>
   );
@@ -475,7 +426,7 @@ function ActionRow({
   return (
     <div
       className="flex items-center flex-wrap gap-2.5 mt-7 animate-fade-in-up"
-      style={{ "--i": 1, fontFamily: "var(--font-sans)" } as React.CSSProperties}
+      style={{ "--i": 1} as React.CSSProperties}
     >
       {primaryHref && (
         <a

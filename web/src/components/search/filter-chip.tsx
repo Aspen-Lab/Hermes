@@ -97,7 +97,6 @@ export function FilterChip({
             ? "bg-[color:var(--color-accent-dim)] text-[color:var(--color-accent)] shadow-card hover:shadow-card-hover"
             : "bg-surface text-text shadow-card hover:shadow-card-hover hover:-translate-y-[0.5px] hover:text-heading",
         ].join(" ")}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         <span>{displayValue ?? label}</span>
         {children &&
@@ -145,8 +144,7 @@ export function FilterChip({
         <div
           id={panelId}
           role="dialog"
-          className="absolute top-full mt-2 left-0 z-30 bg-surface shadow-card-hover rounded-xl p-3 min-w-[220px] border border-[color:var(--color-border)]"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="absolute top-full mt-2 left-0 z-30 glass shadow-card-hover rounded-xl p-3 min-w-[220px]"
         >
           {children(close)}
         </div>

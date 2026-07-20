@@ -1,239 +1,48 @@
-"use client";
+import type { ColorTheme, ThemeAccent, ThemeMode } from "@/types";
 
-import type { ColorTheme } from "@/types";
+// Theme = mode x accent, stored as one "mode:accent" string. CSS derives the
+// full palette from the accent seed via color-mix (see globals.css) — setting
+// the two data attributes is the whole mechanism. A pre-paint boot script in
+// app/layout.tsx applies the persisted value before first paint.
 
-type ThemeVars = Record<string, string>;
+const MODES: readonly ThemeMode[] = ["system", "light", "dark"];
+const ACCENTS: readonly ThemeAccent[] = [
+  "ember",
+  "rose",
+  "marigold",
+  "sage",
+  "indigo",
+  "violet",
+];
 
-const themeVars: Record<Exclude<ColorTheme, "system">, ThemeVars> = {
-  cream: {
-    "--color-bg": "#faf5e8",
-    "--color-bg-secondary": "#f1e8d0",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#fffcf2",
-    "--color-border": "rgba(20, 20, 20, 0.07)",
-    "--color-border-strong": "rgba(20, 20, 20, 0.14)",
-    "--color-heading": "#141414",
-    "--color-text": "#2a2620",
-    "--color-text-muted": "#5c564c",
-    "--color-text-faint": "#8a8275",
-    "--color-accent": "#f58414",
-    "--color-accent-dim": "rgba(245, 132, 20, 0.10)",
-    "--color-link": "#7a4412",
-    "--color-link-dim": "rgba(122, 68, 18, 0.09)",
-    "--color-tag": "#c2630e",
-    "--color-tag-dim": "rgba(194, 99, 14, 0.09)",
-    "--color-peach": "#d97a30",
-    "--color-peach-dim": "rgba(217, 122, 48, 0.10)",
-    "--color-yellow": "#a76a10",
-    "--color-yellow-dim": "rgba(167, 106, 16, 0.10)",
-    "--color-red": "#b91c1c",
-  },
-  white: {
-    "--color-bg": "#f8fafc",
-    "--color-bg-secondary": "#eef2f7",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#f8fbff",
-    "--color-border": "rgba(15, 23, 42, 0.08)",
-    "--color-border-strong": "rgba(15, 23, 42, 0.16)",
-    "--color-heading": "#0f172a",
-    "--color-text": "#1e293b",
-    "--color-text-muted": "#475569",
-    "--color-text-faint": "#7c8aa0",
-    "--color-accent": "#2563eb",
-    "--color-accent-dim": "rgba(37, 99, 235, 0.10)",
-    "--color-link": "#1d4ed8",
-    "--color-link-dim": "rgba(29, 78, 216, 0.10)",
-    "--color-tag": "#0f766e",
-    "--color-tag-dim": "rgba(15, 118, 110, 0.10)",
-    "--color-peach": "#db2777",
-    "--color-peach-dim": "rgba(219, 39, 119, 0.10)",
-    "--color-yellow": "#a16207",
-    "--color-yellow-dim": "rgba(161, 98, 7, 0.10)",
-    "--color-red": "#b91c1c",
-  },
-  black: {
-    "--color-bg": "#09090b",
-    "--color-bg-secondary": "#111217",
-    "--color-surface": "#16181d",
-    "--color-surface-hover": "#1c2027",
-    "--color-border": "rgba(255, 255, 255, 0.08)",
-    "--color-border-strong": "rgba(255, 255, 255, 0.16)",
-    "--color-heading": "#f8fafc",
-    "--color-text": "#e5e7eb",
-    "--color-text-muted": "#b4bbc7",
-    "--color-text-faint": "#8f98a8",
-    "--color-accent": "#f59e0b",
-    "--color-accent-dim": "rgba(245, 158, 11, 0.14)",
-    "--color-link": "#7dd3fc",
-    "--color-link-dim": "rgba(125, 211, 252, 0.12)",
-    "--color-tag": "#34d399",
-    "--color-tag-dim": "rgba(52, 211, 153, 0.12)",
-    "--color-peach": "#f472b6",
-    "--color-peach-dim": "rgba(244, 114, 182, 0.12)",
-    "--color-yellow": "#facc15",
-    "--color-yellow-dim": "rgba(250, 204, 21, 0.12)",
-    "--color-red": "#ef4444",
-  },
-  pink: {
-    "--color-bg": "#fff3f8",
-    "--color-bg-secondary": "#ffe5f0",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#fff8fb",
-    "--color-border": "rgba(131, 24, 67, 0.08)",
-    "--color-border-strong": "rgba(131, 24, 67, 0.15)",
-    "--color-heading": "#4a1530",
-    "--color-text": "#6b2148",
-    "--color-text-muted": "#8a4466",
-    "--color-text-faint": "#ad6f8c",
-    "--color-accent": "#ec4899",
-    "--color-accent-dim": "rgba(236, 72, 153, 0.12)",
-    "--color-link": "#be185d",
-    "--color-link-dim": "rgba(190, 24, 93, 0.10)",
-    "--color-tag": "#db2777",
-    "--color-tag-dim": "rgba(219, 39, 119, 0.10)",
-    "--color-peach": "#fb7185",
-    "--color-peach-dim": "rgba(251, 113, 133, 0.10)",
-    "--color-yellow": "#c2410c",
-    "--color-yellow-dim": "rgba(194, 65, 12, 0.10)",
-    "--color-red": "#be123c",
-  },
-  blue: {
-    "--color-bg": "#eff6ff",
-    "--color-bg-secondary": "#dbeafe",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#f7fbff",
-    "--color-border": "rgba(30, 64, 175, 0.08)",
-    "--color-border-strong": "rgba(30, 64, 175, 0.15)",
-    "--color-heading": "#0f2747",
-    "--color-text": "#16345d",
-    "--color-text-muted": "#42658e",
-    "--color-text-faint": "#708cb1",
-    "--color-accent": "#2563eb",
-    "--color-accent-dim": "rgba(37, 99, 235, 0.11)",
-    "--color-link": "#1d4ed8",
-    "--color-link-dim": "rgba(29, 78, 216, 0.10)",
-    "--color-tag": "#0f766e",
-    "--color-tag-dim": "rgba(15, 118, 110, 0.10)",
-    "--color-peach": "#7c3aed",
-    "--color-peach-dim": "rgba(124, 58, 237, 0.10)",
-    "--color-yellow": "#ca8a04",
-    "--color-yellow-dim": "rgba(202, 138, 4, 0.10)",
-    "--color-red": "#dc2626",
-  },
-  sage: {
-    "--color-bg": "#eff4ea",
-    "--color-bg-secondary": "#dee8d4",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#f5faf0",
-    "--color-border": "rgba(20, 60, 20, 0.08)",
-    "--color-border-strong": "rgba(20, 60, 20, 0.16)",
-    "--color-heading": "#1b2a1a",
-    "--color-text": "#233324",
-    "--color-text-muted": "#4e5a4c",
-    "--color-text-faint": "#7e8a7d",
-    "--color-accent": "#0f766e",
-    "--color-accent-dim": "rgba(15, 118, 110, 0.10)",
-    "--color-link": "#047857",
-    "--color-link-dim": "rgba(4, 120, 87, 0.10)",
-    "--color-tag": "#65a30d",
-    "--color-tag-dim": "rgba(101, 163, 13, 0.10)",
-    "--color-peach": "#ca8a04",
-    "--color-peach-dim": "rgba(202, 138, 4, 0.10)",
-    "--color-yellow": "#a16207",
-    "--color-yellow-dim": "rgba(161, 98, 7, 0.10)",
-    "--color-red": "#b91c1c",
-  },
-  lavender: {
-    "--color-bg": "#f5f3fc",
-    "--color-bg-secondary": "#ebe6f7",
-    "--color-surface": "#ffffff",
-    "--color-surface-hover": "#faf8ff",
-    "--color-border": "rgba(60, 30, 100, 0.08)",
-    "--color-border-strong": "rgba(60, 30, 100, 0.16)",
-    "--color-heading": "#2a1a4a",
-    "--color-text": "#3a2658",
-    "--color-text-muted": "#5b4880",
-    "--color-text-faint": "#8a7aa8",
-    "--color-accent": "#7c3aed",
-    "--color-accent-dim": "rgba(124, 58, 237, 0.10)",
-    "--color-link": "#6d28d9",
-    "--color-link-dim": "rgba(109, 40, 217, 0.10)",
-    "--color-tag": "#9333ea",
-    "--color-tag-dim": "rgba(147, 51, 234, 0.10)",
-    "--color-peach": "#c026d3",
-    "--color-peach-dim": "rgba(192, 38, 211, 0.10)",
-    "--color-yellow": "#a16207",
-    "--color-yellow-dim": "rgba(161, 98, 7, 0.10)",
-    "--color-red": "#be123c",
-  },
-  slate: {
-    "--color-bg": "#0d1117",
-    "--color-bg-secondary": "#161b22",
-    "--color-surface": "#1c2128",
-    "--color-surface-hover": "#22272e",
-    "--color-border": "rgba(255, 255, 255, 0.08)",
-    "--color-border-strong": "rgba(255, 255, 255, 0.16)",
-    "--color-heading": "#e6edf3",
-    "--color-text": "#c9d1d9",
-    "--color-text-muted": "#8b949e",
-    "--color-text-faint": "#6e7681",
-    "--color-accent": "#58a6ff",
-    "--color-accent-dim": "rgba(88, 166, 255, 0.14)",
-    "--color-link": "#7dd3fc",
-    "--color-link-dim": "rgba(125, 211, 252, 0.12)",
-    "--color-tag": "#56d364",
-    "--color-tag-dim": "rgba(86, 211, 100, 0.12)",
-    "--color-peach": "#ffa657",
-    "--color-peach-dim": "rgba(255, 166, 87, 0.12)",
-    "--color-yellow": "#d29922",
-    "--color-yellow-dim": "rgba(210, 153, 34, 0.12)",
-    "--color-red": "#f85149",
-  },
-  plum: {
-    "--color-bg": "#1a0e1f",
-    "--color-bg-secondary": "#261527",
-    "--color-surface": "#2a182c",
-    "--color-surface-hover": "#311c33",
-    "--color-border": "rgba(255, 255, 255, 0.08)",
-    "--color-border-strong": "rgba(255, 255, 255, 0.16)",
-    "--color-heading": "#f5ebf7",
-    "--color-text": "#e3d4e8",
-    "--color-text-muted": "#b89bbf",
-    "--color-text-faint": "#8c7491",
-    "--color-accent": "#c084fc",
-    "--color-accent-dim": "rgba(192, 132, 252, 0.16)",
-    "--color-link": "#d8b4fe",
-    "--color-link-dim": "rgba(216, 180, 254, 0.12)",
-    "--color-tag": "#f0abfc",
-    "--color-tag-dim": "rgba(240, 171, 252, 0.12)",
-    "--color-peach": "#fb923c",
-    "--color-peach-dim": "rgba(251, 146, 60, 0.12)",
-    "--color-yellow": "#fcd34d",
-    "--color-yellow-dim": "rgba(252, 211, 77, 0.12)",
-    "--color-red": "#fb7185",
-  },
+/** Pre-v2 single-name themes map onto the nearest mode x accent pair. */
+const LEGACY: Record<string, ColorTheme> = {
+  system: "system:ember",
+  cream: "light:ember",
+  white: "light:indigo",
+  pink: "light:rose",
+  blue: "light:indigo",
+  sage: "light:sage",
+  lavender: "light:violet",
+  black: "dark:ember",
+  slate: "dark:indigo",
+  plum: "dark:violet",
 };
 
-function clearThemeOverrides(root: HTMLElement) {
-  for (const vars of Object.values(themeVars)) {
-    for (const key of Object.keys(vars)) {
-      root.style.removeProperty(key);
-    }
+export function normalizeColorTheme(value: string | null | undefined): ColorTheme {
+  if (!value) return "system:ember";
+  if (LEGACY[value]) return LEGACY[value];
+  const [mode, accent] = value.split(":");
+  if (MODES.includes(mode as ThemeMode) && ACCENTS.includes(accent as ThemeAccent)) {
+    return value as ColorTheme;
   }
+  return "system:ember";
 }
 
-export function applyColorTheme(theme: ColorTheme) {
+export function applyColorTheme(theme: ColorTheme | string) {
   if (typeof document === "undefined") return;
-
+  const [mode, accent] = normalizeColorTheme(theme).split(":");
   const root = document.documentElement;
-  root.setAttribute("data-color-theme", theme);
-  clearThemeOverrides(root);
-
-  if (theme === "system") return;
-
-  const vars = themeVars[theme];
-  if (!vars) return;
-  for (const [key, value] of Object.entries(vars)) {
-    root.style.setProperty(key, value);
-  }
+  root.setAttribute("data-mode", mode);
+  root.setAttribute("data-accent", accent);
 }
