@@ -288,6 +288,14 @@ function opportunityRequestBody(
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
       : undefined,
+    // Bring-your-own job-source keys (ignored by the events route). Adzuna and
+    // USAJobs unlock industry + US-federal research postings.
+    apiKeys: {
+      adzunaAppId: profile.adzunaAppId?.trim() || undefined,
+      adzunaAppKey: profile.adzunaAppKey?.trim() || undefined,
+      usajobsApiKey: profile.usajobsApiKey?.trim() || undefined,
+      usajobsUserAgent: profile.usajobsUserAgent?.trim() || undefined,
+    },
     llmOverride: hasUserLlmOverride
       ? { provider: profile.feedAiProvider, apiKey: feedAiApiKey }
       : undefined,

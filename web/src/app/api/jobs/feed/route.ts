@@ -6,6 +6,7 @@ import { careerStages, industryPreferences } from "@/types";
 import type { CareerStage, IndustryAcademiaPreference } from "@/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SearchConnectors } from "@/lib/feed/types";
+import type { JobApiCredentials } from "@/lib/jobs/types";
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
@@ -75,6 +76,19 @@ function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {
   };
 }
 
+function parseApiKeys(input: unknown): JobApiCredentials | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const v = input as Record<string, unknown>;
+  const creds: JobApiCredentials = {
+    adzunaAppId: cleanOptionalString(v.adzunaAppId),
+    adzunaAppKey: cleanOptionalString(v.adzunaAppKey),
+    usajobsApiKey: cleanOptionalString(v.usajobsApiKey),
+    usajobsUserAgent: cleanOptionalString(v.usajobsUserAgent),
+    jsearchApiKey: cleanOptionalString(v.jsearchApiKey),
+  };
+  return Object.values(creds).some(Boolean) ? creds : undefined;
+}
+
 function parseExcludeIds(input: unknown): string[] | undefined {
   if (!Array.isArray(input)) return undefined;
   const out = input
@@ -127,6 +141,7 @@ export async function POST(req: NextRequest) {
     excludeIds: parseExcludeIds(body.excludeIds),
     aiTier: parseAiTier(body.aiTier),
     searchConnectors: parseSearchConnectors(body.searchConnectors),
+    apiKeys: parseApiKeys(body.apiKeys),
     llmOverride: parseLlmOverride(body.llmOverride),
   });
 

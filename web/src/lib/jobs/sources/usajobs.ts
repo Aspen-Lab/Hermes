@@ -51,9 +51,16 @@ export function usaJobsDescriptorToRawItem(
   };
 }
 
+function usajobsCreds(query: JobsQuery): { apiKey?: string; userAgent?: string } {
+  return {
+    apiKey: query.apiKeys?.usajobsApiKey?.trim() || process.env.USAJOBS_API_KEY,
+    userAgent:
+      query.apiKeys?.usajobsUserAgent?.trim() || process.env.USAJOBS_USER_AGENT,
+  };
+}
+
 async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
-  const apiKey = process.env.USAJOBS_API_KEY;
-  const userAgent = process.env.USAJOBS_USER_AGENT;
+  const { apiKey, userAgent } = usajobsCreds(query);
   if (!apiKey || !userAgent) return [];
 
   const keyword = query.queries[0] ?? query.topics[0] ?? "";
@@ -93,7 +100,9 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
 export const usajobs: JobSourceAdapter = {
   id: "usajobs",
-  enabled: () =>
-    Boolean(process.env.USAJOBS_API_KEY && process.env.USAJOBS_USER_AGENT),
+  enabled: (query) => {
+    const { apiKey, userAgent } = usajobsCreds(query);
+    return Boolean(apiKey && userAgent);
+  },
   fetch: fetchImpl,
 };

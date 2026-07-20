@@ -66,9 +66,15 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
   };
 }
 
+function adzunaCreds(query: JobsQuery): { appId?: string; appKey?: string } {
+  return {
+    appId: query.apiKeys?.adzunaAppId?.trim() || process.env.ADZUNA_APP_ID,
+    appKey: query.apiKeys?.adzunaAppKey?.trim() || process.env.ADZUNA_APP_KEY,
+  };
+}
+
 async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
-  const appId = process.env.ADZUNA_APP_ID;
-  const appKey = process.env.ADZUNA_APP_KEY;
+  const { appId, appKey } = adzunaCreds(query);
   if (!appId || !appKey) return [];
 
   const countries = adzunaCountries(query.locations);
@@ -108,6 +114,9 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
 export const adzuna: JobSourceAdapter = {
   id: "adzuna",
-  enabled: () => Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY),
+  enabled: (query) => {
+    const { appId, appKey } = adzunaCreds(query);
+    return Boolean(appId && appKey);
+  },
   fetch: fetchImpl,
 };

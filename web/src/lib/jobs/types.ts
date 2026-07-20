@@ -35,6 +35,19 @@ export interface RawJobItem {
   preferenceSignals?: PreferenceConcept[];
 }
 
+/**
+ * Per-request, bring-your-own data-source keys. Every adapter reads these
+ * first and falls back to the matching env var, so a user can supply keys from
+ * the browser without anything being stored server-side.
+ */
+export interface JobApiCredentials {
+  adzunaAppId?: string;
+  adzunaAppKey?: string;
+  usajobsApiKey?: string;
+  usajobsUserAgent?: string;
+  jsearchApiKey?: string;
+}
+
 export interface JobsQuery {
   topics: string[];
   /** Search strings for API-backed sources, built from profile + stage. */
@@ -46,6 +59,7 @@ export interface JobsQuery {
   webSearch?: {
     tavilyApiKey?: string;
   };
+  apiKeys?: JobApiCredentials;
 }
 
 export interface JobSourceAdapter {
@@ -70,6 +84,7 @@ export interface JobsFeedRequest {
   excludeIds?: string[];
   aiTier?: 0 | 1 | 2;
   searchConnectors?: SearchConnectors;
+  apiKeys?: JobApiCredentials;
   llmOverride?: ProviderOverrideConfig;
 }
 

@@ -86,6 +86,8 @@ interface ProfileState {
   updateDigestEmail: (email: string) => void;
   updateTavilyEnabled: (value: boolean) => void;
   updateTavilyApiKey: (value: string) => void;
+  updateAdzunaKeys: (appId: string, appKey: string) => void;
+  updateUsajobsKeys: (apiKey: string, userAgent: string) => void;
   updateFeedAiProvider: (value: UserProfile["feedAiProvider"]) => void;
   updateFeedAiApiKey: (value: string) => void;
   updateDeepReportEnabled: (value: boolean) => void;
@@ -284,6 +286,22 @@ export const useProfileStore = create<ProfileState>()(
       updateTavilyApiKey: (value) =>
         set((s) => ({
           profile: { ...s.profile, tavilyApiKey: value.trim() || undefined },
+        })),
+      updateAdzunaKeys: (appId, appKey) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            adzunaAppId: appId.trim() || undefined,
+            adzunaAppKey: appKey.trim() || undefined,
+          },
+        })),
+      updateUsajobsKeys: (apiKey, userAgent) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            usajobsApiKey: apiKey.trim() || undefined,
+            usajobsUserAgent: userAgent.trim() || undefined,
+          },
         })),
       updateFeedAiProvider: (value) =>
         set((s) => ({

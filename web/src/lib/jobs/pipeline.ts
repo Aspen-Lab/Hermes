@@ -50,6 +50,7 @@ export async function runJobsPipeline(
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
       : undefined,
+    apiKeys: req.apiKeys,
   };
 
   const active = jobSources.filter((source) => source.enabled(query));

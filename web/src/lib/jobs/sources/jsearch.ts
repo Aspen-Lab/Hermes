@@ -49,8 +49,12 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
   };
 }
 
+function jsearchKey(query: JobsQuery): string | undefined {
+  return query.apiKeys?.jsearchApiKey?.trim() || process.env.JSEARCH_API_KEY;
+}
+
 async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
-  const apiKey = process.env.JSEARCH_API_KEY;
+  const apiKey = jsearchKey(query);
   if (!apiKey) return [];
 
   const q = query.queries[0] ?? query.topics[0] ?? "";
@@ -82,6 +86,6 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
 export const jsearch: JobSourceAdapter = {
   id: "jsearch",
-  enabled: () => Boolean(process.env.JSEARCH_API_KEY),
+  enabled: (query) => Boolean(jsearchKey(query)),
   fetch: fetchImpl,
 };
