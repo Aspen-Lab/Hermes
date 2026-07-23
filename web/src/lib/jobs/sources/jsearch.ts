@@ -1,0 +1,91 @@
+import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
+
+// JSearch (OpenWeb Ninja via RapidAPI) aggregates Google for Jobs — the widest
+// coverage (LinkedIn/Indeed/Glassdoor) but a tiny free quota, so it is BYOK:
+// set JSEARCH_API_KEY (RapidAPI key) to enable. Long revalidate to conserve
+// the quota.
+const REVALIDATE_SECONDS = 12 * 60 * 60;
+
+interface JSearchJob {
+  job_id?: string;
+  job_title?: string;
+  employer_name?: string;
+  job_city?: string;
+  job_state?: string;
+  job_country?: string;
+  job_is_remote?: boolean;
+  job_description?: string;
+  job_apply_link?: string;
+  job_posted_at_datetime_utc?: string;
+  job_employment_type?: string;
+  job_highlights?: { Qualifications?: string[] };
+}
+
+interface JSearchResponse {
+  data?: JSearchJob[];
+}
+
+export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
+  const title = job.job_title?.trim();
+  const url = job.job_apply_link?.trim();
+  const id = job.job_id?.trim();
+  if (!title || !url || !id) return null;
+  const location = [job.job_city, job.job_state, job.job_country]
+    .filter((part): part is string => Boolean(part && part.trim()))
+    .join(", ");
+  return {
+    id: `jsearch:${routeSafeId(String(id))}`,
+    source: "jsearch",
+    title,
+    company: job.employer_name?.trim() || "Unknown company",
+    location: location || (job.job_is_remote ? "Remote" : ""),
+    isRemote: Boolean(job.job_is_remote),
+    description: truncateText(stripHtml(job.job_description)),
+    url,
+    postedAt: job.job_posted_at_datetime_utc,
+    employmentType: job.job_employment_type,
+    tags: (job.job_highlights?.Qualifications ?? []).slice(0, 6),
+  };
+}
+
+function jsearchKey(query: JobsQuery): string | undefined {
+  return query.apiKeys?.jsearchApiKey?.trim() || process.env.JSEARCH_API_KEY;
+}
+
+async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
+  const apiKey = jsearchKey(query);
+  if (!apiKey) return [];
+
+  const q = query.queries[0] ?? query.topics[0] ?? "";
+  if (!q) return [];
+  const params = new URLSearchParams({ query: q, num_pages: "1" });
+  try {
+    const res = await fetch(`https://jsearch.p.rapidapi.com/search?${params}`, {
+      headers: {
+        "X-RapidAPI-Key": apiKey,
+        "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
+      },
+      signal: AbortSignal.timeout(7000),
+      next: { revalidate: REVALIDATE_SECONDS },
+    });
+    if (!res.ok) {
+      console.error("[jobs/jsearch] non-ok response:", res.status);
+      return [];
+    }
+    const data = (await res.json()) as JSearchResponse;
+    return (data.data ?? [])
+      .map(jsearchJobToRawItem)
+      .filter((item): item is RawJobItem => item !== null)
+      .slice(0, query.limit);
+  } catch (err) {
+    console.error("[jobs/jsearch] fetch error:", err);
+    return [];
+  }
+}
+
+export const jsearch: JobSourceAdapter = {
+  id: "jsearch",
+  enabled: (query) => Boolean(jsearchKey(query)),
+  fetch: fetchImpl,
+};

@@ -118,7 +118,7 @@ export function AdvisorField({
               void find();
             }
           }}
-          placeholder="First Last, e.g. Paul Braun"
+          placeholder="First Last"
           className="flex-1 min-w-0 bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
         <button

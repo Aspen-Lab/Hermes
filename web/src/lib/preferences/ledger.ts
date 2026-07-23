@@ -1,4 +1,7 @@
 import type {
+  Event,
+  FeedItemKind,
+  Job,
   Paper,
   PreferenceConcept,
   PreferenceConceptSource,
@@ -20,6 +23,43 @@ type PreferenceSignalKind = "positive" | "negative";
 interface ApplyPreferenceSignalOptions {
   at?: string;
   requiredTopics?: string[];
+  /**
+   * Surface the feedback came from. Non-paper origins are stored under
+   * namespaced keys (`job|…` / `event|…`) so the same concept can carry
+   * independent evidence per surface. Defaults to "paper" (legacy shape,
+   * un-namespaced keys).
+   */
+  origin?: FeedItemKind;
+}
+
+/**
+ * Directional influence matrix: how strongly an entry recorded on `origin`
+ * counts when scoring items of `target`. Papers are the ground truth of the
+ * user's research identity, so paper feedback flows into events (strongly —
+ * same academic sphere) and jobs (moderately). Academic-event feedback leaks
+ * weakly into jobs. Nothing flows back into papers, and job feedback stays
+ * job-only, per product decision (2026-07).
+ */
+const ORIGIN_INFLUENCE: Record<FeedItemKind, Record<FeedItemKind, number>> = {
+  paper: { paper: 1, event: 0, job: 0 },
+  event: { paper: 0.8, event: 1, job: 0 },
+  job: { paper: 0.5, event: 0.25, job: 1 },
+};
+
+/** Influence of an entry with `origin` on items of kind `target`. */
+export function originInfluence(
+  target: FeedItemKind,
+  origin: FeedItemKind | undefined,
+): number {
+  return ORIGIN_INFLUENCE[target][origin ?? "paper"];
+}
+
+function entryOrigin(entry: PreferenceLedgerEntry): FeedItemKind {
+  return entry.origin ?? "paper";
+}
+
+function namespacedKey(key: string, origin: FeedItemKind): string {
+  return origin === "paper" ? key : `${origin}|${key}`;
 }
 
 export interface PreferenceMatchScore {
@@ -127,6 +167,32 @@ export function conceptsFromPaper(paper: Paper): PreferenceConcept[] {
   return fallbackConceptsFromKeywords(paper.summaryExperimentKeywords ?? []);
 }
 
+export function conceptsFromJob(job: Job): PreferenceConcept[] {
+  const direct = normalizePreferenceConcepts(job.preferenceSignals ?? []);
+  if (direct.length > 0) return direct;
+  return normalizePreferenceConcepts(
+    (job.keyRequirements ?? []).map((label) => ({
+      key: preferenceKey(label, "job_tag"),
+      label,
+      source: "job_tag" as const,
+    })),
+  );
+}
+
+export function conceptsFromEvent(event: Event): PreferenceConcept[] {
+  const direct = normalizePreferenceConcepts(event.preferenceSignals ?? []);
+  if (direct.length > 0) return direct;
+  // Fallback: the event name itself. Too specific to generalize much, but a
+  // dismissal of "NeurIPS 2026" should at least suppress re-surfacing it.
+  return normalizePreferenceConcepts([
+    {
+      key: preferenceKey(event.name, "event_topic"),
+      label: event.name,
+      source: "event_topic" as const,
+    },
+  ]);
+}
+
 export function conceptsFromRawItem(item: RawItem): PreferenceConcept[] {
   const direct = normalizePreferenceConcepts(item.metadata.preferenceSignals ?? []);
   if (direct.length > 0) return direct;
@@ -209,6 +275,10 @@ export function cleanPreferenceLedger(
         typeof entry.lastSeenAt === "string"
           ? entry.lastSeenAt
           : new Date().toISOString(),
+      origin:
+        entry.origin === "event" || entry.origin === "job"
+          ? entry.origin
+          : undefined,
     };
   }
 
@@ -224,14 +294,23 @@ export function applyPreferenceSignal(
   const nowIso = options.at ?? new Date().toISOString();
   const nowMs = Date.parse(nowIso);
   const safeNowMs = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const origin = options.origin ?? "paper";
   const clean = cleanPreferenceLedger(ledger);
   const next: PreferenceLedger = { ...clean };
 
   for (const concept of normalizePreferenceConcepts(concepts)) {
-    if (signal === "negative" && conceptMatchesRequired(concept, options.requiredTopics)) {
+    // Required-topic protection only guards the paper surface: dismissing ML
+    // *jobs* must be allowed to suppress ML jobs even when ML is a required
+    // research topic (job entries never flow back into paper scoring anyway).
+    if (
+      signal === "negative" &&
+      origin === "paper" &&
+      conceptMatchesRequired(concept, options.requiredTopics)
+    ) {
       continue;
     }
-    const current = next[concept.key];
+    const storageKey = namespacedKey(concept.key, origin);
+    const current = next[storageKey];
     const base: PreferenceLedgerEntry = current
       ? decayedEntry(current, nowIso, safeNowMs)
       : {
@@ -241,11 +320,13 @@ export function applyPreferenceSignal(
           lastSeenAt: nowIso,
         };
 
-    next[concept.key] =
+    next[storageKey] =
       signal === "positive"
         ? {
             ...base,
             ...concept,
+            key: storageKey,
+            origin: origin === "paper" ? undefined : origin,
             positive: base.positive + 1,
             lastPositiveAt: nowIso,
             lastSeenAt: nowIso,
@@ -253,6 +334,8 @@ export function applyPreferenceSignal(
         : {
             ...base,
             ...concept,
+            key: storageKey,
+            origin: origin === "paper" ? undefined : origin,
             negative: base.negative + 1,
             lastNegativeAt: nowIso,
             lastSeenAt: nowIso,
@@ -312,14 +395,28 @@ function lookupLedgerEntries(
   prepared: PreparedLedger,
   concept: PreferenceConcept,
 ): PreferenceLedgerEntry[] {
-  const exact = prepared.byKey[concept.key];
-  const matches: PreferenceLedgerEntry[] = exact ? [exact] : [];
+  const matches: PreferenceLedgerEntry[] = [];
+  const seen = new Set<string>();
+  // Exact key hits across every origin namespace (paper entries are stored
+  // un-namespaced; event/job entries under `event|…` / `job|…`).
+  for (const key of [
+    concept.key,
+    namespacedKey(concept.key, "event"),
+    namespacedKey(concept.key, "job"),
+  ]) {
+    const entry = prepared.byKey[key];
+    if (entry && !seen.has(entry.key)) {
+      seen.add(entry.key);
+      matches.push(entry);
+    }
+  }
   // Also match by normalized label so a text-keyed entry and an OpenAlex-keyed
   // entry for the same concept name bridge across sources.
   const labelMatches = prepared.byLabel.get(normalizePreferenceLabel(concept.label));
   if (labelMatches) {
     for (const entry of labelMatches) {
-      if (exact && entry.key === exact.key) continue;
+      if (seen.has(entry.key)) continue;
+      seen.add(entry.key);
       matches.push(entry);
     }
   }
@@ -357,6 +454,12 @@ export function scorePreferenceMatch(
     now?: number;
     documentFrequency?: PreferenceDocumentFrequency;
     corpusSize?: number;
+    /**
+     * The surface being scored. Controls how much each ledger entry counts
+     * via the directional influence matrix. Defaults to "paper", which zeroes
+     * out event/job entries — existing paper scoring is unaffected.
+     */
+    targetKind?: FeedItemKind;
   } = {},
 ): PreferenceMatchScore {
   if (!prepared || prepared.size === 0) {
@@ -364,6 +467,7 @@ export function scorePreferenceMatch(
   }
 
   const now = options.now ?? Date.now();
+  const targetKind = options.targetKind ?? "paper";
   let boost = 0;
   let penaltyLoss = 0;
   const matchedPositive = new Set<string>();
@@ -379,15 +483,22 @@ export function scorePreferenceMatch(
     );
 
     for (const entry of entries) {
+      const influence = originInfluence(targetKind, entryOrigin(entry));
+      if (influence <= 0) continue;
       const { positive, negative } = decayedCounts(entry, now);
       const net = positive - negative;
       if (net > 0.05) {
         const magnitude = 1 - Math.exp(-net / 2);
-        boost += POSITIVE_BOOST_MAX * magnitude * specificity;
+        boost += POSITIVE_BOOST_MAX * magnitude * specificity * influence;
         matchedPositive.add(entry.label);
-      } else if (net < -0.05 && !conceptMatchesRequired(concept, requiredTopics)) {
+      } else if (
+        net < -0.05 &&
+        // Required-topic protection guards the paper feed only; on job/event
+        // surfaces a repeatedly-dismissed core topic should genuinely sink.
+        (targetKind !== "paper" || !conceptMatchesRequired(concept, requiredTopics))
+      ) {
         const magnitude = 1 - Math.exp(-Math.abs(net) / 2);
-        penaltyLoss += NEGATIVE_PENALTY_MAX * magnitude * specificity;
+        penaltyLoss += NEGATIVE_PENALTY_MAX * magnitude * specificity * influence;
         matchedNegative.add(entry.label);
       }
     }
@@ -405,6 +516,20 @@ export function feedbackSnapshotForPaper(paper: Paper) {
   return {
     title: paper.title,
     concepts: conceptsFromPaper(paper),
+  };
+}
+
+export function feedbackSnapshotForJob(job: Job) {
+  return {
+    title: `${job.roleTitle} — ${job.companyOrLab}`,
+    concepts: conceptsFromJob(job),
+  };
+}
+
+export function feedbackSnapshotForEvent(event: Event) {
+  return {
+    title: event.name,
+    concepts: conceptsFromEvent(event),
   };
 }
 

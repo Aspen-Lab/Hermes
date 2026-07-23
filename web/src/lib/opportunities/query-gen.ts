@@ -1,0 +1,136 @@
+// Profile-driven search-query generation for the jobs & events web-discovery
+// adapters. Tier 0 builds template queries from the profile; when an LLM
+// provider is available (Tier 2 / BYOK) it rewrites them into sharper,
+// persona-aware queries. Always degrades to the templates — never throws.
+
+import { resolveProvider } from "@/lib/llm/providers/registry";
+import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
+import type { CareerStage, IndustryAcademiaPreference } from "@/types";
+
+export interface QueryGenProfile {
+  topics: string[];
+  careerStage?: CareerStage;
+  industryVsAcademia?: IndustryAcademiaPreference;
+  locationPreferences?: string[];
+  currentProject?: string;
+}
+
+const MAX_QUERIES = 5;
+
+export function stageRoleTerms(stage: CareerStage | undefined): string[] {
+  switch (stage) {
+    case "PhD Year 1":
+    case "PhD Year 2":
+    case "PhD Year 3":
+      return ["research intern", "PhD internship"];
+    case "PhD Year 4":
+    case "PhD Year 5":
+    case "PhD Year 6":
+      return ["research scientist", "research intern", "postdoc"];
+    case "Postdoc":
+      return ["postdoc", "research fellow", "research scientist"];
+    case "Research Scientist":
+      return ["research scientist", "senior research scientist"];
+    default:
+      return ["research scientist", "postdoc"];
+  }
+}
+
+export function templateJobQueries(profile: QueryGenProfile): string[] {
+  const topics = profile.topics.slice(0, 3);
+  const roles = stageRoleTerms(profile.careerStage);
+  const queries: string[] = [];
+  for (const topic of topics) {
+    for (const role of roles) {
+      queries.push(`${topic} ${role}`);
+      if (queries.length >= MAX_QUERIES) return queries;
+    }
+  }
+  return queries;
+}
+
+export function templateEventQueries(profile: QueryGenProfile): string[] {
+  const year = new Date().getFullYear();
+  const topics = profile.topics.slice(0, 3);
+  const queries: string[] = [];
+  for (const topic of topics) {
+    queries.push(`${topic} conference ${year} call for papers`);
+    queries.push(`${topic} workshop symposium ${year}`);
+    if (queries.length >= MAX_QUERIES) break;
+  }
+  return queries.slice(0, MAX_QUERIES);
+}
+
+function parseQueryArray(raw: string): string[] {
+  const unfenced = raw.replace(/```(?:json)?/gi, "").trim();
+  const start = unfenced.indexOf("[");
+  const end = unfenced.lastIndexOf("]");
+  if (start === -1 || end === -1 || end <= start) return [];
+  try {
+    const parsed = JSON.parse(unfenced.slice(start, end + 1));
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((q): q is string => typeof q === "string")
+      .map((q) => q.trim())
+      .filter((q) => q.length > 3 && q.length < 120)
+      .slice(0, MAX_QUERIES);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * LLM-refined queries for a surface. `kind` shapes the prompt; the result is
+ * a plain string[] of web-search queries. Returns the template queries when
+ * no provider resolves, the provider lacks generateJsonText, or output is
+ * unparseable.
+ */
+export async function generateSearchQueries(
+  kind: "jobs" | "events",
+  profile: QueryGenProfile,
+  llmOverride?: ProviderOverrideConfig,
+): Promise<string[]> {
+  const fallback =
+    kind === "jobs" ? templateJobQueries(profile) : templateEventQueries(profile);
+
+  let provider;
+  try {
+    provider = resolveProvider(llmOverride);
+  } catch {
+    return fallback;
+  }
+  if (!provider?.generateJsonText) return fallback;
+
+  const persona = [
+    `Research topics: ${profile.topics.join(", ") || "unknown"}`,
+    profile.careerStage ? `Career stage: ${profile.careerStage}` : "",
+    profile.industryVsAcademia
+      ? `Career direction: ${profile.industryVsAcademia}`
+      : "",
+    (profile.locationPreferences ?? []).length > 0
+      ? `Preferred locations: ${profile.locationPreferences!.join(", ")}`
+      : "",
+    profile.currentProject ? `Current project: ${profile.currentProject}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const target =
+    kind === "jobs"
+      ? "job openings this researcher would apply to (matching their seniority and academia/industry direction)"
+      : "academic conferences, workshops, summer schools, and seminars this researcher would want to submit to or attend (any discipline, not just computer science)";
+
+  try {
+    const raw = await provider.generateJsonText({
+      systemPrompt:
+        "You write web search queries. Reply with ONLY a JSON array of query strings, no prose.",
+      userPrompt: `Researcher profile:\n${persona}\n\nWrite ${MAX_QUERIES} diverse, specific web search queries to find ${target}. Include the current year where useful. JSON array only.`,
+      maxTokens: 300,
+      tier: "small",
+    });
+    const queries = parseQueryArray(raw);
+    return queries.length > 0 ? queries : fallback;
+  } catch {
+    return fallback;
+  }
+}

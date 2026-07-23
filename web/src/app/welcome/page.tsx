@@ -33,12 +33,13 @@ import {
 import { AiKeyFields, ApiKeyHelp } from "@/components/profile/ai-setup";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
+import { ConnectorPanel } from "@/components/profile/connector-panel";
 
 const DEFAULT_NAME = "Peer Member";
 
-type StepKey = "basics" | "topics" | "work" | "radar" | "ai" | "persona";
+type StepKey = "basics" | "topics" | "work" | "radar" | "ai" | "connectors" | "persona";
 
-const STEP_ORDER: StepKey[] = ["basics", "topics", "work", "radar", "ai", "persona"];
+const STEP_ORDER: StepKey[] = ["basics", "topics", "work", "radar", "ai", "connectors", "persona"];
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -117,7 +118,7 @@ export default function WelcomePage() {
                   type="text"
                   value={name}
                   onChange={(e) => store.updateDisplayName(e.target.value)}
-                  placeholder="Aspen"
+                  placeholder="Your name"
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
                 />
               </Field>
@@ -172,7 +173,7 @@ export default function WelcomePage() {
                   value={profile.currentProject ?? ""}
                   onChange={(e) => store.updateCurrentProject(e.target.value)}
                   rows={3}
-                  placeholder="e.g. Pulsed-current electroplating of single-crystal LCO thin films for solid-state microbatteries."
+                  placeholder="Describe the specific project you're working on right now."
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
@@ -181,7 +182,7 @@ export default function WelcomePage() {
                   value={profile.currentChallenges ?? ""}
                   onChange={(e) => store.updateCurrentChallenges(e.target.value)}
                   rows={3}
-                  placeholder="e.g. Suppressing dendritic Co growth at high current densities. Characterizing the H1–3 transition under fast charging."
+                  placeholder="The open problems you want your briefing to help with."
                   className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
@@ -191,7 +192,7 @@ export default function WelcomePage() {
                   <SchoolAutocomplete
                     value={profile.school ?? ""}
                     onChange={store.updateSchool}
-                    placeholder="MIT, Stanford, UIUC…"
+                    placeholder="University or company"
                   />
                 </Field>
                 <div>
@@ -237,7 +238,7 @@ export default function WelcomePage() {
                   <ChipInput
                     values={profile.preferredJournals ?? []}
                     onChange={store.updatePreferredJournals}
-                    placeholder="Advanced Materials, Nature Materials, Science, JACS…"
+                    placeholder="Add a journal, press Enter"
                     tone="link"
                   />
                   <p className="mt-1.5 px-0.5 text-caption leading-relaxed text-text-faint/75">
@@ -289,6 +290,55 @@ export default function WelcomePage() {
                   search bar once a key is set. Your key is stored only in your browser.
                 </p>
               </div>
+            </StepFrame>
+          )}
+
+          {key === "connectors" && (
+            <StepFrame
+              kicker="Optional power-up"
+              title="Turn on Events & Jobs for your field."
+              subtitle="Papers work out of the box. Events and jobs need a data source — the free curated feeds only cover CS/AI, so for every other field these three free keys are what make your Events and Jobs tabs fill up."
+            >
+              <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)] px-4 py-3 mb-4">
+                <p className="text-[12.5px] leading-relaxed text-heading">
+                  <strong>Why this matters:</strong> a materials-science conference or a
+                  battery-lab postdoc never appears in a CS-only feed. These sources search
+                  the whole web and every major job board for <em>your</em> topics — all free,
+                  all stored only in your browser.
+                </p>
+              </div>
+
+              <div className="space-y-2.5 mb-4">
+                <ApiIntro
+                  name="Tavily"
+                  tag="Events + academic jobs · all fields"
+                  why="Discovers conferences, CFPs, and postings on sites that have no API (HigherEdJobs, jobs.ac.uk, Nature Careers). This is the single biggest unlock for non-CS fields."
+                  how="Free — 1,000 searches/month. Sign up, copy the key from your dashboard."
+                  href="https://tavily.com"
+                />
+                <ApiIntro
+                  name="Adzuna"
+                  tag="Industry jobs · 19 countries"
+                  why="Aggregates company R&D and lab roles across major job boards — the best source of industry positions for researchers eyeing the private sector."
+                  how="Free tier. Register an app at developer.adzuna.com for an App ID + App Key."
+                  href="https://developer.adzuna.com"
+                />
+                <ApiIntro
+                  name="USAJobs"
+                  tag="US federal & national labs"
+                  why="Every US government research posting — NIH, NSF, and DOE national labs (Argonne, NREL, Berkeley Lab). Nowhere else lists these as cleanly."
+                  how="Free, instant. Request a key with your email at developer.usajobs.gov."
+                  href="https://developer.usajobs.gov/apirequest"
+                />
+              </div>
+
+              <div className="rounded-xl bg-surface shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)] overflow-hidden">
+                <ConnectorPanel />
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-text-faint">
+                Add any or none now — you can paste keys later from the “Data APIs” button in
+                the search bar. Keys never leave your browser.
+              </p>
             </StepFrame>
           )}
 
@@ -368,6 +418,45 @@ export default function WelcomePage() {
 }
 
 // ── Small layout helpers ───────────────────────────────────────
+
+// Compact "what this API is and why it's worth 2 minutes" card, used in the
+// connectors onboarding step.
+function ApiIntro({
+  name,
+  tag,
+  why,
+  how,
+  href,
+}: {
+  name: string;
+  tag: string;
+  why: string;
+  how: string;
+  href: string;
+}) {
+  return (
+    <div className="rounded-xl bg-bg-secondary/40 px-4 py-3">
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <span className="text-[13.5px] font-semibold text-heading">{name}</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-accent/90 text-right">
+          {tag}
+        </span>
+      </div>
+      <p className="text-[12px] leading-relaxed text-text-muted">{why}</p>
+      <p className="text-[11px] leading-relaxed text-text-faint mt-1.5">
+        {how}{" "}
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent hover:underline"
+        >
+          Get a key ↗
+        </a>
+      </p>
+    </div>
+  );
+}
 
 function StepFrame({
   kicker,

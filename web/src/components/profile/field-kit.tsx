@@ -38,16 +38,9 @@ export function toneBadge(tone: Tone = "neutral") {
 
 // Quick-add suggestion chips. Curated, not exhaustive — the goal is to seed
 // common research languages so first-run users don't stare at an empty field.
-export const SUGGESTED_TOPICS: string[] = [
-  "transformers",
-  "large language models",
-  "diffusion models",
-  "RAG",
-  "vision-language models",
-  "reinforcement learning",
-  "human-computer interaction",
-  "accessibility",
-];
+// Intentionally empty: no pre-seeded example topics. A user's briefing
+// should be built only from what they type, not from someone else's field.
+export const SUGGESTED_TOPICS: string[] = [];
 
 export const PAPER_FOCUS_OPTIONS = [
   { value: "tight", label: "Tight", help: "Stay close to my project." },
@@ -580,7 +573,7 @@ export function TopicsField({
         <ChipInput
           values={required}
           onChange={onChangeRequired}
-          placeholder="LCO, solid-state battery..."
+          placeholder="Add a topic, press Enter"
           suggestions={SUGGESTED_TOPICS}
           tone="accent"
           dragId="required"
@@ -595,8 +588,8 @@ export function TopicsField({
         <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
           Paper <strong>must</strong> be related to at least one of these.{" "}
           <strong>Prefer full terms over acronyms</strong> — short acronyms can be
-          ambiguous and match unrelated fields. For example, write
-          &ldquo;lithium cobalt oxide&rdquo; (you can add &ldquo;LCO&rdquo; too).
+          ambiguous and match unrelated fields, so spell the term out (you can add
+          the acronym too).
         </p>
       </div>
       <div className="min-w-0">
@@ -606,7 +599,7 @@ export function TopicsField({
         <ChipInput
           values={soft}
           onChange={onChangeSoft}
-          placeholder="thin films, dendrites..."
+          placeholder="Add a topic, press Enter"
           tone="tag"
           dragId="soft"
           suggestConcepts

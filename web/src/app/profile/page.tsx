@@ -1570,7 +1570,7 @@ function EditView({
             <SchoolAutocomplete
               value={profile.school ?? ""}
               onChange={updateSchool}
-              placeholder="MIT, Stanford, DeepMind…"
+              placeholder="University or company"
             />
           </div>
           <div>
@@ -1594,7 +1594,7 @@ function EditView({
         <textarea
           value={profile.currentProject ?? ""}
           onChange={(e) => updateCurrentProject(e.target.value)}
-          placeholder="What specific project are you working on right now? e.g. 'Pulsed-current electroplating of single-crystal LCO thin films for solid-state microbatteries.'"
+          placeholder="What specific project are you working on right now?"
           rows={3}
           className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
         />
@@ -1607,7 +1607,7 @@ function EditView({
         <textarea
           value={profile.currentChallenges ?? ""}
           onChange={(e) => updateCurrentChallenges(e.target.value)}
-          placeholder="What open problems are you hunting information for? e.g. 'Suppressing dendritic Co growth at high current densities. Characterizing the H1–3 transition under fast charging.'"
+          placeholder="What open problems are you hunting information for?"
           rows={3}
           className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
         />
@@ -1620,7 +1620,7 @@ function EditView({
         <ChipInput
           values={profile.locationPreferences}
           onChange={updateLocations}
-          placeholder="Remote, Bay Area, London…"
+          placeholder="Add a location or Remote, press Enter"
           tone="tag"
         />
       </EditRow>
@@ -1712,7 +1712,7 @@ function EditView({
             <ChipInput
               values={profile.preferredJournals ?? []}
               onChange={updatePreferredJournals}
-              placeholder="Advanced Materials, Nature Materials, Science, JACS…"
+              placeholder="Add a journal, press Enter"
               tone="link"
             />
             <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">

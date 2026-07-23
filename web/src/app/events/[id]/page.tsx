@@ -73,7 +73,16 @@ export default function EventDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: rawId } = use(params);
+  // Event ids are source-namespaced ("ccfddl:aaai27") — the colon arrives
+  // URL-encoded in the route param. Same decode guard as the papers page.
+  const id = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
   const feedEvents = useFeedStore((s) => s.events);
   const savedEvents = useFeedStore((s) => s.savedEvents);
   const markRead = useFeedStore((s) => s.markRead);
@@ -385,7 +394,7 @@ function Timeline({
   const start = new Date(deadline).getTime();
   const end = new Date(eventDate).getTime();
   const total = end - start;
-  if (total <= 0) return null;
+  if (!Number.isFinite(total) || total <= 0) return null;
   const pct = Math.max(0, Math.min(100, ((now - start) / total) * 100));
 
   return (

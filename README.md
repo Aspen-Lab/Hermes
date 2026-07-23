@@ -396,6 +396,19 @@ None are required for Tier 0 to function. Grouped by purpose:
 **Search / enrichment:** `TAVILY_API_KEY`, `BRAVE_SEARCH_API_KEY`,
 `SEMANTIC_SCHOLAR_API_KEY`, `OPENALEX_EMAIL`, `UNPAYWALL_EMAIL` (polite-pool emails).
 
+**Jobs feed (all optional — Remotive/Arbeitnow/Himalayas run keyless):**
+`ADZUNA_APP_ID` + `ADZUNA_APP_KEY` (free at developer.adzuna.com; best industry
+coverage), `USAJOBS_API_KEY` + `USAJOBS_USER_AGENT` (your email; US federal research
+posts), `JSEARCH_API_KEY` (or `RAPIDAPI_KEY`; Google-for-Jobs aggregate via RapidAPI,
+paid beyond a small free tier). `TAVILY_API_KEY` / `BRAVE_SEARCH_API_KEY` above also
+unlock web discovery of academic job boards (HigherEdJobs, jobs.ac.uk, Nature Careers —
+none expose usable feeds directly).
+
+**Events feed:** fully keyless (ccfddl, confs.tech, researchseminars.org).
+`TAVILY_API_KEY` / `BRAVE_SEARCH_API_KEY` add profile-driven web discovery for
+non-CS fields; an LLM key upgrades its query generation from templates to
+profile-aware prompts.
+
 **Email digest:** `RESEND_API_KEY`, `DIGEST_FROM_EMAIL`.
 
 **Misc:** `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `PYTHON_BIN` (for PDF extraction shell-out).

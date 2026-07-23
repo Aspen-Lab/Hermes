@@ -6,6 +6,8 @@ import { applyColorTheme, normalizeColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
   Paper,
+  Event,
+  Job,
   CareerStage,
   IndustryAcademiaPreference,
   DigestChannel,
@@ -21,6 +23,8 @@ import type {
 import { defaultProfile } from "@/types";
 import {
   applyPreferenceSignal,
+  conceptsFromEvent,
+  conceptsFromJob,
   conceptsFromPaper,
 } from "@/lib/preferences/ledger";
 
@@ -39,6 +43,19 @@ interface ProfileState {
   updateCurrentChallenges: (text: string) => void;
   recordPaperPreference: (
     paper: Paper,
+    signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Event feedback: recorded under the `event` origin namespace — flows
+   * weakly into job scoring, never back into papers. */
+  recordEventPreference: (
+    event: Event,
+    signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Job feedback: recorded under the `job` origin namespace — job-only. */
+  recordJobPreference: (
+    job: Job,
     signal: "positive" | "negative",
     at?: string,
   ) => void;
@@ -69,6 +86,8 @@ interface ProfileState {
   updateDigestEmail: (email: string) => void;
   updateTavilyEnabled: (value: boolean) => void;
   updateTavilyApiKey: (value: string) => void;
+  updateAdzunaKeys: (appId: string, appKey: string) => void;
+  updateUsajobsKeys: (apiKey: string, userAgent: string) => void;
   updateFeedAiProvider: (value: UserProfile["feedAiProvider"]) => void;
   updateFeedAiApiKey: (value: string) => void;
   updateDeepReportEnabled: (value: boolean) => void;
@@ -148,6 +167,32 @@ export const useProfileStore = create<ProfileState>()(
                 at,
                 requiredTopics: s.profile.researchTopics,
               },
+            ),
+          },
+        })),
+
+      recordEventPreference: (event, signal, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyPreferenceSignal(
+              s.profile.preferenceLedger,
+              conceptsFromEvent(event),
+              signal,
+              { at, origin: "event" },
+            ),
+          },
+        })),
+
+      recordJobPreference: (job, signal, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyPreferenceSignal(
+              s.profile.preferenceLedger,
+              conceptsFromJob(job),
+              signal,
+              { at, origin: "job" },
             ),
           },
         })),
@@ -241,6 +286,22 @@ export const useProfileStore = create<ProfileState>()(
       updateTavilyApiKey: (value) =>
         set((s) => ({
           profile: { ...s.profile, tavilyApiKey: value.trim() || undefined },
+        })),
+      updateAdzunaKeys: (appId, appKey) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            adzunaAppId: appId.trim() || undefined,
+            adzunaAppKey: appKey.trim() || undefined,
+          },
+        })),
+      updateUsajobsKeys: (apiKey, userAgent) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            usajobsApiKey: apiKey.trim() || undefined,
+            usajobsUserAgent: userAgent.trim() || undefined,
+          },
         })),
       updateFeedAiProvider: (value) =>
         set((s) => ({

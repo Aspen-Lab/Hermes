@@ -51,7 +51,16 @@ export default function JobDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: rawId } = use(params);
+  // Job ids are source-namespaced ("remotive:123") — the colon arrives
+  // URL-encoded in the route param. Same decode guard as the papers page.
+  const id = (() => {
+    try {
+      return decodeURIComponent(rawId);
+    } catch {
+      return rawId;
+    }
+  })();
   const feedJobs = useFeedStore((s) => s.jobs);
   const savedJobs = useFeedStore((s) => s.savedJobs);
   const markRead = useFeedStore((s) => s.markRead);

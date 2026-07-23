@@ -15,6 +15,7 @@ import { FeedTile } from "@/components/cards/feed-tile";
 import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { DailyDigest } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
+import { ConnectorPanel, connectedCount } from "@/components/profile/connector-panel";
 import { FilterBar } from "@/components/search/filter-bar";
 import {
   DEFAULT_FILTERS,
@@ -81,8 +82,7 @@ function DiscoveryPage() {
   const readItems = useFeedStore((s) => s.readItems);
   const feedTopicsKey = useFeedStore((s) => s.feedTopicsKey);
   const profile = useProfileStore((s) => s.profile);
-  const updateTavilyEnabled = useProfileStore((s) => s.updateTavilyEnabled);
-  const updateTavilyApiKey = useProfileStore((s) => s.updateTavilyApiKey);
+  const apiConnectorCount = connectedCount(profile);
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
   const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
@@ -97,7 +97,7 @@ function DiscoveryPage() {
   );
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [openTool, setOpenTool] = useState<"ai" | "tavily" | "deep" | null>(null);
+  const [openTool, setOpenTool] = useState<"ai" | "apis" | "deep" | null>(null);
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
@@ -435,16 +435,16 @@ function DiscoveryPage() {
               </svg>
             </button>
 
-            {/* Tavily hook */}
+            {/* Data APIs (Tavily / Adzuna / USAJobs) */}
             <button
               type="button"
-              onClick={() => setOpenTool((cur) => (cur === "tavily" ? null : "tavily"))}
-              aria-expanded={openTool === "tavily"}
-              title="Tavily web scouting"
+              onClick={() => setOpenTool((cur) => (cur === "apis" ? null : "apis"))}
+              aria-expanded={openTool === "apis"}
+              title="Data APIs — widen events & jobs coverage"
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-colors active:scale-[0.96] ${
-                openTool === "tavily"
+                openTool === "apis"
                   ? "bg-bg-secondary text-heading shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]"
-                  : profile.tavilyEnabled
+                  : apiConnectorCount > 0
                     ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                     : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
@@ -453,8 +453,10 @@ function DiscoveryPage() {
                 <circle cx="12" cy="12" r="9" />
                 <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
               </svg>
-              <span className="font-medium">{profile.tavilyEnabled ? "Tavily on" : "Tavily"}</span>
-              <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "tavily" ? "rotate-180" : ""}`} aria-hidden>
+              <span className="font-medium">
+                {apiConnectorCount > 0 ? `Data APIs · ${apiConnectorCount}` : "Data APIs"}
+              </span>
+              <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={`opacity-60 transition-transform duration-200 ${openTool === "apis" ? "rotate-180" : ""}`} aria-hidden>
                 <path d="M2 4l4 4 4-4" />
               </svg>
             </button>
@@ -544,37 +546,7 @@ function DiscoveryPage() {
             </div>
           )}
 
-          {openTool === "tavily" && (
-            <div
-              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-caption leading-relaxed text-text-muted">
-                  Extra web scouting for paper leads.
-                </p>
-                <Toggle
-                  checked={profile.tavilyEnabled}
-                  onChange={(next) => updateTavilyEnabled(next)}
-                  className="mt-0.5"
-                  aria-label="Tavily web scouting"
-                />
-              </div>
-              <input
-                type="password"
-                value={profile.tavilyApiKey ?? ""}
-                onChange={(e) => updateTavilyApiKey(e.target.value)}
-                placeholder="Tavily API key"
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-meta text-text placeholder:text-text-faint/65 focus:outline-none focus:ring-2 focus:ring-accent/20"
-              />
-              <p className="text-micro leading-relaxed text-text-faint">
-                {aiPaperSearchEnabled
-                  ? "Used only as a paper-discovery helper. Peer still reruns academic sources before ranking."
-                  : "Turn AI search on to use Tavily. Tier 0 ignores this hook."}
-              </p>
-            </div>
-          )}
+          {openTool === "apis" && <ConnectorPanel />}
         </div>
 
         {/* ── Filter bar (search mode only) ── */}

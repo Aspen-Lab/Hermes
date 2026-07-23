@@ -9,6 +9,8 @@ export type PreferenceConceptSource =
   | "openalex_keyword"
   | "openalex_concept"
   | "paper_keyword"
+  | "job_tag"
+  | "event_topic"
   | "legacy_disliked_topic";
 
 export interface PreferenceConcept {
@@ -18,12 +20,23 @@ export interface PreferenceConcept {
   confidence?: number;
 }
 
+/** Which feed surface a piece of feedback came from. */
+export type FeedItemKind = "paper" | "event" | "job";
+
 export interface PreferenceLedgerEntry extends PreferenceConcept {
   positive: number;
   negative: number;
   lastPositiveAt?: string;
   lastNegativeAt?: string;
   lastSeenAt: string;
+  /**
+   * The surface the feedback was recorded from. Ledger influence is
+   * directional: paper feedback informs events (strongly) and jobs
+   * (moderately), event feedback informs jobs (weakly), and job/event
+   * feedback never flows back into paper scoring. Entries without an
+   * origin are legacy paper entries.
+   */
+  origin?: FeedItemKind;
 }
 
 export type PreferenceLedger = Record<string, PreferenceLedgerEntry>;
@@ -69,6 +82,9 @@ export interface Event {
   linkRegistration?: string;
   linkOfficial?: string;
   relevanceScore?: number;
+  isSaved?: boolean;
+  feedback?: ItemFeedback;
+  preferenceSignals?: PreferenceConcept[];
 }
 
 // ── Job ──
@@ -84,6 +100,9 @@ export interface Job {
   linkPosting?: string;
   postedDate?: string;
   relevanceScore?: number;
+  isSaved?: boolean;
+  feedback?: ItemFeedback;
+  preferenceSignals?: PreferenceConcept[];
 }
 
 // ── User Profile ──
@@ -223,12 +242,20 @@ export interface UserProfile {
    */
   digestEmail?: string;
   /**
-   * Optional per-user Tavily web-search hook. Kept in local browser state so
-   * users can bring their own key without writing it into the shared profile
-   * row by default.
+   * Optional per-user data-source API keys for the jobs & events feeds. All
+   * kept in local browser state (never synced to the shared profile row) so
+   * users can bring their own keys without writing secrets server-side. Each
+   * unlocks broader coverage:
+   *   • Tavily   — web discovery of conferences + academic job boards (all fields)
+   *   • Adzuna   — industry job aggregator across 19 countries (app_id + app_key)
+   *   • USAJobs  — US federal / national-lab research posts (key + contact email)
    */
   tavilyEnabled: boolean;
   tavilyApiKey?: string;
+  adzunaAppId?: string;
+  adzunaAppKey?: string;
+  usajobsApiKey?: string;
+  usajobsUserAgent?: string;
   /**
    * Optional per-user AI override for Tier 2 reranking. Also local-only so
    * users can bring their own normal API key without syncing secrets to the
@@ -292,6 +319,10 @@ export const defaultProfile: UserProfile = {
   digestEmail: "",
   tavilyEnabled: false,
   tavilyApiKey: "",
+  adzunaAppId: "",
+  adzunaAppKey: "",
+  usajobsApiKey: "",
+  usajobsUserAgent: "",
   feedAiProvider: "default",
   feedAiApiKey: "",
   deepReportEnabled: false,
