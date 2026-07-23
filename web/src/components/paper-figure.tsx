@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { FigureStatus } from "@/lib/figures/extract";
+import { ApiError, apiFetch } from "@/lib/api";
 
 type Variant = "hero" | "compact";
 
@@ -86,26 +87,9 @@ export function useResolvedFigure({
         if (paperTitle?.trim()) params.set("paperTitle", paperTitle.trim());
         if (figureIndex > 0) params.set("idx", String(figureIndex));
 
-        const res = await fetch(`/api/figure?${params.toString()}`, {
+        const data = (await apiFetch(`/api/figure?${params.toString()}`, {
           cache: "no-store",
-        });
-        if (!res.ok) {
-          if (!cancelled) {
-            setFigure({
-              key: requestKey,
-              imageUrl: null,
-              caption: null,
-              source: null,
-              status: "source_unavailable",
-              reason: "Peer could not load the figure service response.",
-              hideFigure: false,
-              matchedBy: null,
-            });
-          }
-          return;
-        }
-
-        const data = (await res.json()) as Omit<FigureState, "key"> & {
+        })) as Omit<FigureState, "key"> & {
           imageUrl: string | null;
           caption?: string | null;
           source?: string | null;
@@ -126,7 +110,7 @@ export function useResolvedFigure({
           hideFigure: Boolean(data.hideFigure),
           matchedBy: data.matchedBy ?? null,
         });
-      } catch {
+      } catch (err) {
         if (!cancelled) {
           setFigure({
             key: requestKey,
@@ -134,7 +118,10 @@ export function useResolvedFigure({
             caption: null,
             source: null,
             status: "source_unavailable",
-            reason: "Peer could not reach a usable figure source.",
+            reason:
+              err instanceof ApiError
+                ? "Peer could not load the figure service response."
+                : "Peer could not reach a usable figure source.",
             hideFigure: false,
             matchedBy: null,
           });
@@ -228,8 +215,7 @@ export function PaperFigureFrame({
       {/* Caption block — separate row below the image so it never covers it. */}
       {figure.imageUrl && figure.caption && (
         <figcaption
-          className="mt-2 rounded-xl bg-bg-secondary/40 px-3.5 py-2.5 text-[14px] leading-relaxed text-text-muted"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="mt-2 rounded-xl bg-bg-secondary/40 px-3.5 py-2.5 text-body leading-relaxed text-text-muted"
         >
           <span className="font-semibold text-heading">
             {sourceLabel(figure.source)}:
@@ -257,12 +243,11 @@ function MissingFigureNotice({ figure }: { figure: FigureState }) {
   return (
     <div
       className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface px-5 text-center"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-faint">
+      <p className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint">
         {noticeTitle(figure.status)}
       </p>
-      <p className="max-w-[260px] text-[12px] leading-relaxed text-text-muted">
+      <p className="max-w-[260px] text-meta leading-relaxed text-text-muted">
         {figure.reason ?? defaultReason(figure.status)}
       </p>
     </div>

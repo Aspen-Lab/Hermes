@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { formatCount, formatDate } from "@/lib/format";
+import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
 
 interface SearchResult {
   id: string;
@@ -15,21 +18,6 @@ interface SearchResult {
   doi: string | null;
   url: string;
   source: string;
-}
-
-function fmtDate(d: string | null) {
-  if (!d) return null;
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function fmtCites(n: number) {
-  if (n < 1000) return n.toString();
-  if (n < 10_000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  if (n < 1_000_000) return Math.round(n / 1000) + "k";
-  return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
 }
 
 function truncateVenue(v: string, max = 40) {
@@ -164,8 +152,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
   return (
     <Link
       href={`/papers/${encodeURIComponent(result.id)}`}
-      className="group flex flex-col rounded-2xl bg-surface shadow-card p-5 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className={cn(cardShell({ padding: "md" }), "flex flex-col")}
     >
       {/* Top: type + OA badges */}
       {(badge || result.isOpenAccess) && (
@@ -173,7 +160,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           {badge && (
             <span
               className={[
-                "inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em]",
+                "inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-micro font-semibold uppercase tracking-[0.12em]",
                 badge.className,
               ].join(" ")}
             >
@@ -182,7 +169,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
             </span>
           )}
           {result.isOpenAccess && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-[10px] font-semibold uppercase tracking-[0.12em] text-peach bg-peach-dim">
+            <span className="inline-flex items-center gap-1 px-1.5 py-[3px] rounded text-micro font-semibold uppercase tracking-[0.12em] text-peach bg-peach-dim">
               <LockOpenIcon />
               Open access
             </span>
@@ -191,13 +178,13 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       )}
 
       {/* Title */}
-      <h3 className="text-[16.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-3 group-hover:text-[color:var(--color-accent)] transition-colors">
+      <h3 className="text-lead font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-3 group-hover:text-[color:var(--color-accent)] transition-colors">
         {result.title}
       </h3>
 
       {/* Authors */}
       {result.authors.length > 0 && (
-        <p className="text-[12px] text-text-muted mt-2 line-clamp-1">
+        <p className="text-meta text-text-muted mt-2 line-clamp-1">
           {result.authors.slice(0, 3).join(", ")}
           {result.authors.length > 3 && ` +${result.authors.length - 3}`}
         </p>
@@ -205,7 +192,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
 
       {/* Meta row: venue + date */}
       {(result.venue || result.publishedDate) && (
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2.5 text-[11.5px] text-text-faint">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2.5 text-caption text-text-faint">
           {result.venue && (
             <span className="inline-flex items-center gap-1 min-w-0">
               <BookIcon />
@@ -217,7 +204,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
           {result.publishedDate && (
             <span className="inline-flex items-center gap-1 tabular-nums">
               <CalendarIcon />
-              {fmtDate(result.publishedDate)}
+              {formatDate(result.publishedDate, "monthYear")}
             </span>
           )}
         </div>
@@ -226,8 +213,7 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       {/* Abstract */}
       {result.abstract && (
         <p
-          className="text-[13.5px] text-text-muted mt-3 leading-[1.55] line-clamp-3"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-body-sm text-text-muted mt-3 leading-[1.55] line-clamp-3 font-reading"
         >
           {result.abstract}
         </p>
@@ -238,10 +224,10 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
       {/* Footer metric */}
       {result.citationCount > 0 && (
         <div className="mt-4 pt-3 border-t border-[color:var(--color-border)] flex items-center justify-end">
-          <span className="inline-flex items-center gap-1 text-[11.5px] text-text-faint tabular-nums">
+          <span className="inline-flex items-center gap-1 text-caption text-text-faint tabular-nums">
             <CitationIcon />
             <span className="font-medium text-text-muted">
-              {fmtCites(result.citationCount)}
+              {formatCount(result.citationCount)}
             </span>
             <span>{result.citationCount === 1 ? "citation" : "citations"}</span>
           </span>

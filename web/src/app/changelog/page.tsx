@@ -90,7 +90,7 @@ function renderInline(text: string): ReactNode[] {
       out.push(
         <code
           key={key++}
-          className="px-1.5 py-0.5 rounded bg-bg-secondary/60 text-[12.5px] font-mono text-text-heading"
+          className="px-1.5 py-0.5 rounded bg-bg-secondary/60 text-meta font-mono text-text-heading"
         >
           {tok.slice(1, -1)}
         </code>,
@@ -124,8 +124,7 @@ function renderBody(body: string): ReactNode {
   return paragraphs.map((p, i) => (
     <p
       key={i}
-      className="text-[14.5px] leading-[1.65] text-text-body"
-      style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+      className="text-body leading-[1.65] text-text-body font-reading"
     >
       {renderInline(p.replace(/\n/g, " "))}
     </p>
@@ -136,26 +135,18 @@ export default async function ChangelogPage() {
   const { intro, entries } = await loadChangelog();
   return (
     <main
-      className="mx-auto max-w-2xl px-6 pt-20 pb-24"
-      style={{ fontFamily: "var(--font-geist), system-ui, sans-serif" }}
+      className="mx-auto max-w-2xl px-6 pt-20 pb-24 font-sans"
     >
       <header className="mb-14 animate-fade-in-up">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent mb-3">
+        <p className="text-micro font-semibold uppercase tracking-[0.22em] text-accent mb-3">
           Peer · Changelog
         </p>
-        <h1
-          className="text-[44px] leading-[1.02] text-text-heading font-semibold tracking-[-0.01em]"
-          style={{
-            fontFamily:
-              "var(--font-instrument-serif), Georgia, var(--font-source-serif), serif",
-          }}
-        >
+        <h1 className="text-[44px] leading-[1.02] text-text-heading font-light tracking-[-0.01em] font-display">
           What we shipped.
         </h1>
         {intro && (
           <p
-            className="mt-5 text-[15px] leading-[1.6] text-text-muted max-w-prose"
-            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+            className="mt-5 text-body-lg leading-[1.6] text-text-muted max-w-prose font-reading"
           >
             {intro}
           </p>
@@ -170,19 +161,15 @@ export default async function ChangelogPage() {
             style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
           >
             <div className="flex items-baseline gap-3 mb-3">
-              <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-accent tabular-nums">
+              <span className="text-micro font-semibold uppercase tracking-[0.18em] text-accent tabular-nums">
                 v{e.version}
               </span>
-              <span className="text-[10.5px] text-text-faint tabular-nums">
+              <span className="text-micro text-text-faint tabular-nums">
                 {e.date}
               </span>
             </div>
             <h2
-              className="text-[22px] leading-[1.18] text-text-heading font-semibold mb-3 tracking-[-0.005em]"
-              style={{
-                fontFamily:
-                  "var(--font-instrument-serif), Georgia, serif",
-              }}
+              className="text-[22px] leading-[1.18] text-text-heading font-light mb-3 tracking-[-0.005em] font-display"
             >
               {e.title}
             </h2>
@@ -191,7 +178,7 @@ export default async function ChangelogPage() {
         ))}
       </ol>
 
-      <footer className="mt-16 pt-6 border-t border-text-faint/15 text-[12px] text-text-faint leading-relaxed">
+      <footer className="mt-16 pt-6 border-t border-text-faint/15 text-meta text-text-faint leading-relaxed">
         Source of truth:{" "}
         <a
           href="https://github.com/Aspen-Lab/Peer/blob/main/web/public/CHANGELOG.md"

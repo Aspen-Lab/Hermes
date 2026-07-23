@@ -8,11 +8,15 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useProfileStore } from "@/store/profile";
+import { formatTimeAgo } from "@/lib/format";
 import { useFeedStore } from "@/store/feed";
-import { careerStages, colorThemeOptions, industryPreferences, type ColorTheme } from "@/types";
+import { careerStages, industryPreferences, themeAccentOptions, themeModeOptions, type ColorTheme, type ThemeAccent, type ThemeMode } from "@/types";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
 import { summarizePreferenceLedger } from "@/lib/preferences/ledger";
+import { apiFetch } from "@/lib/api";
+import { IconBook, IconBuilding, IconCheck, IconPin } from "@/components/icons";
+import { PageContainer } from "@/components/ui/page-container";
 import {
   type Tone,
   toneBadge,
@@ -61,36 +65,11 @@ function IconFlask() {
     </svg>
   );
 }
-function IconBook() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5V4.5A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  );
-}
-function IconPin() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M20 10c0 7-8 12-8 12s-8-5-8-12a8 8 0 0 1 16 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
 function IconCareer() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <rect x="3" y="7" width="18" height="14" rx="2" />
       <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
-}
-function IconBuilding() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M5 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16" />
-      <path d="M16 9h3a2 2 0 0 1 2 2v10" />
-      <path d="M9 7h2M9 11h2M9 15h2M9 19h2" />
     </svg>
   );
 }
@@ -100,13 +79,6 @@ function IconPencil() {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
-  );
-}
-function IconCheck() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }
@@ -162,12 +134,11 @@ export default function ProfilePage() {
   const total = signals.length;
 
   return (
-    <article className="mx-auto max-w-[740px] lg:max-w-[820px] px-6 py-16 lg:py-20">
+    <PageContainer width="contentResponsive" className="px-6 py-16 lg:py-20">
       {/* ── Header ── */}
       <header className="mb-8">
         <p
-          className="text-[11.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-3"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="text-caption font-semibold uppercase tracking-[0.22em] text-accent/90 mb-3"
         >
           <span className="inline-block w-5 h-[1.5px] bg-accent/70 align-middle mr-2.5" />
           Your profile
@@ -175,13 +146,11 @@ export default function ProfilePage() {
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <h1
             className="text-[36px] lg:text-[44px] font-semibold text-heading tracking-[-0.02em] leading-[1.05]"
-            style={{ fontFamily: "var(--font-sans)" }}
           >
             {firstName ? (
               <>
                 <span
-                  className="italic font-medium"
-                  style={{ fontFamily: "var(--font-reading)" }}
+                  className="italic font-medium font-reading"
                 >
                   {firstName}
                 </span>
@@ -198,8 +167,7 @@ export default function ProfilePage() {
           {mode === "view" ? (
             <button
               onClick={() => setMode("edit")}
-              className="group inline-flex items-center gap-1.5 h-9 pl-3 pr-4 rounded-full bg-accent-dim text-accent hover:bg-accent/15 transition-all duration-200 ease-out active:scale-[0.96] shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)] text-[13px] font-medium"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="group inline-flex items-center gap-1.5 h-9 pl-3 pr-4 rounded-full bg-accent-dim text-accent hover:bg-accent/15 transition-all duration-200 ease-out active:scale-[0.96] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_25%,transparent)] text-body-sm font-medium"
             >
               <span className="transition-transform duration-200 ease-out group-hover:-rotate-12">
                 <IconPencil />
@@ -209,15 +177,14 @@ export default function ProfilePage() {
           ) : (
             <button
               onClick={() => setMode("view")}
-              className="group inline-flex items-center gap-1.5 h-9 pl-3 pr-4 rounded-full bg-heading text-bg hover:bg-heading/90 transition-all duration-200 ease-out active:scale-[0.96] text-[13px] font-medium shadow-card"
-              style={{ fontFamily: "var(--font-sans)" }}
+              className="group inline-flex items-center gap-1.5 h-9 pl-3 pr-4 rounded-full bg-heading text-bg hover:bg-heading/90 transition-all duration-200 ease-out active:scale-[0.96] text-body-sm font-medium shadow-card"
             >
               <IconCheck />
               Done
             </button>
           )}
         </div>
-        <div className="mt-3.5 flex items-center gap-2.5" style={{ fontFamily: "var(--font-sans)" }}>
+        <div className="mt-3.5 flex items-center gap-2.5">
           <div className="flex items-center gap-1">
             {signals.map((done, i) => (
               <span
@@ -228,7 +195,7 @@ export default function ProfilePage() {
               />
             ))}
           </div>
-          <span className="text-[12px] text-text-faint tabular-nums">
+          <span className="text-meta text-text-faint tabular-nums">
             <span className="text-text-muted font-medium">{doneCount}</span> of {total} signals set
           </span>
         </div>
@@ -284,7 +251,6 @@ export default function ProfilePage() {
       {/* ── Reset ── */}
       <section
         className="mt-14 pt-6 border-t border-border flex flex-col items-start gap-3"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         <button
           type="button"
@@ -292,7 +258,7 @@ export default function ProfilePage() {
             resetOnboarding();
             router.push("/welcome");
           }}
-          className="inline-flex items-center gap-1.5 text-[12px] text-text-faint hover:text-accent transition-colors"
+          className="inline-flex items-center gap-1.5 text-meta text-text-faint hover:text-accent transition-colors"
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M3 12a9 9 0 1 0 3-6.7" />
@@ -303,7 +269,7 @@ export default function ProfilePage() {
         {!showLogout ? (
           <button
             onClick={() => setShowLogout(true)}
-            className="inline-flex items-center gap-1.5 text-[12px] text-text-faint hover:text-red transition-colors"
+            className="inline-flex items-center gap-1.5 text-meta text-text-faint hover:text-red transition-colors"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M3 6h18" />
@@ -313,7 +279,7 @@ export default function ProfilePage() {
             Reset profile to defaults
           </button>
         ) : (
-          <div className="rounded-xl bg-red/[0.05] shadow-[inset_0_0_0_1px_rgba(185,28,28,0.15)] px-4 py-3 text-[12.5px] flex items-center flex-wrap gap-x-5 gap-y-2">
+          <div className="rounded-xl bg-red/[0.05] shadow-[inset_0_0_0_1px_rgba(185,28,28,0.15)] px-4 py-3 text-meta flex items-center flex-wrap gap-x-5 gap-y-2">
             <span className="text-text-muted">Reset all signals to defaults?</span>
             <div className="flex items-center gap-3 ml-auto">
               <button
@@ -336,7 +302,7 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
-    </article>
+    </PageContainer>
   );
 }
 
@@ -358,7 +324,6 @@ function DashboardView({
   return (
     <div
       className="relative rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* ── Identity band ── */}
       <div className="relative px-7 pt-7 pb-6">
@@ -368,15 +333,14 @@ function DashboardView({
           className="pointer-events-none absolute inset-0 opacity-70"
           style={{
             backgroundImage:
-              "radial-gradient(520px 200px at 90% -30%, rgba(245,132,20,0.12), transparent 60%), radial-gradient(420px 180px at 0% 120%, rgba(15,118,110,0.07), transparent 60%)",
+              "radial-gradient(520px 200px at 90% -30%, color-mix(in_srgb,var(--color-accent)_12%,transparent), transparent 60%), radial-gradient(420px 180px at 0% 120%, color-mix(in srgb, var(--color-tag) 7%, transparent), transparent 60%)",
           }}
         />
         <div className="relative flex items-center gap-4">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-dim shadow-[inset_0_0_0_1px_rgba(245,132,20,0.28)]">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-dim shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]">
             {avatarLetter ? (
               <span
-                className="text-accent text-[26px] font-medium italic leading-none"
-                style={{ fontFamily: "var(--font-reading)" }}
+                className="text-accent text-[26px] font-medium italic leading-none font-reading"
               >
                 {avatarLetter}
               </span>
@@ -394,13 +358,12 @@ function DashboardView({
           <div className="min-w-0">
             {displayName ? (
               <p
-                className="text-[26px] italic font-medium text-heading tracking-tight leading-tight"
-                style={{ fontFamily: "var(--font-reading)" }}
+                className="text-[26px] italic font-medium text-heading tracking-tight leading-tight font-reading"
               >
                 {displayName}
               </p>
             ) : (
-              <p className="text-[17px] text-text-faint italic" style={{ fontFamily: "var(--font-reading)" }}>
+              <p className="text-title text-text-faint italic font-reading">
                 Unnamed — tap edit to introduce yourself
               </p>
             )}
@@ -408,7 +371,7 @@ function DashboardView({
         </div>
 
         {/* Career caption */}
-        <div className="relative mt-5 flex items-center gap-2 text-[12.5px] text-text-muted">
+        <div className="relative mt-5 flex items-center gap-2 text-meta text-text-muted">
           <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${toneBadge("neutral")}`}>
             <IconCareer />
           </span>
@@ -437,8 +400,8 @@ function DashboardView({
         <div className="mt-3 space-y-2">
           <SignalRow tone="accent" icon={<IconHash />} label="Required" items={profile.researchTopics} />
           <SignalRow tone="tag" icon={<IconHash />} label="Explore" items={profile.softTopics ?? []} />
-          <SignalRow tone="link" icon={<IconBook />} label="Journals" items={profile.preferredJournals ?? []} />
-          <SignalRow tone="tag" icon={<IconPin />} label="Locations" items={profile.locationPreferences} />
+          <SignalRow tone="link" icon={<IconBook size={13} strokeWidth={1.9} />} label="Journals" items={profile.preferredJournals ?? []} />
+          <SignalRow tone="tag" icon={<IconPin size={13} strokeWidth={1.9} />} label="Locations" items={profile.locationPreferences} />
         </div>
       </div>
 
@@ -478,7 +441,7 @@ function ReadingCard({
   return (
     <div
       className="relative mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)", animationDelay: "80ms" }}
+      style={{ animationDelay: "80ms" }}
     >
       {/* Ambient gradient wash — Anthropic-style warm backdrop */}
       <div
@@ -486,17 +449,17 @@ function ReadingCard({
         className="pointer-events-none absolute inset-0 opacity-90"
         style={{
           backgroundImage:
-            "radial-gradient(680px 260px at 10% -10%, rgba(245,132,20,0.10), transparent 60%), radial-gradient(520px 220px at 100% 120%, rgba(180,83,9,0.07), transparent 65%)",
+            "radial-gradient(680px 260px at 10% -10%, color-mix(in_srgb,var(--color-accent)_10%,transparent), transparent 60%), radial-gradient(520px 220px at 100% 120%, color-mix(in srgb, var(--color-tag) 7%, transparent), transparent 65%)",
         }}
       />
 
       {/* ── Header kicker ── */}
       <div className="relative px-7 pt-7 pb-4 flex items-baseline justify-between">
-        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90">
+        <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.22em] text-accent/90">
           <span className="inline-block w-4 h-[1.5px] bg-accent/70" />
           Reading · your rhythm
         </span>
-        <span className="text-[10.5px] uppercase tracking-[0.16em] text-text-faint/70">
+        <span className="text-micro uppercase tracking-[0.16em] text-text-faint/70">
           Since day one
         </span>
       </div>
@@ -504,8 +467,7 @@ function ReadingCard({
       {/* ── Hero line ── */}
       <div className="relative px-7 pb-5">
         <p
-          className="text-heading leading-[1.15] tracking-[-0.01em] text-[26px] lg:text-[30px]"
-          style={{ fontFamily: "var(--font-reading)" }}
+          className="text-heading leading-[1.15] tracking-[-0.01em] text-[26px] lg:text-[30px] font-reading"
         >
           You&apos;ve kept{" "}
           <span className="italic font-medium text-accent tabular-nums">
@@ -519,8 +481,7 @@ function ReadingCard({
         </p>
         {stats.saved > 0 && (
           <p
-            className="mt-3 text-[14px] text-text-muted max-w-[56ch] leading-[1.55] italic"
-            style={{ fontFamily: "var(--font-reading)" }}
+            className="mt-3 text-body text-text-muted max-w-[56ch] leading-[1.55] italic font-reading"
           >
             {pullQuote}
           </p>
@@ -544,10 +505,10 @@ function ReadingCard({
       {stats.saved > 0 && (
         <div className="relative px-7 pb-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+            <span className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
               What you save
             </span>
-            <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+            <span className="text-micro text-text-faint/60 tabular-nums">
               {stats.saved} total
             </span>
           </div>
@@ -559,10 +520,10 @@ function ReadingCard({
       {venueBreakdown.length > 0 && (
         <div className="relative px-7 pb-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+            <span className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
               Where you read most
             </span>
-            <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+            <span className="text-micro text-text-faint/60 tabular-nums">
               {venueBreakdown.length} venues
             </span>
           </div>
@@ -573,7 +534,7 @@ function ReadingCard({
       {/* ── Continuous learning calendar ── */}
       <div className="relative px-7 pb-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+          <span className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
             Continuous reading
           </span>
           <StreakBadge activity={stats.saved + stats.read} cells={realCells ?? undefined} />
@@ -585,10 +546,10 @@ function ReadingCard({
       {stats.keywordBreakdown.length > 0 && (
         <div className="relative px-7 pb-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+            <span className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
               Topics sticky with you
             </span>
-            <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+            <span className="text-micro text-text-faint/60 tabular-nums">
               from {stats.saved} saves
             </span>
           </div>
@@ -598,20 +559,19 @@ function ReadingCard({
 
       {/* ── Archetype pull ── */}
       <div className="relative mx-7 mb-6 rounded-2xl bg-bg-secondary/40 px-5 py-4 flex items-start gap-4">
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent text-bg shrink-0 shadow-card text-[16px]">
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent text-bg shrink-0 shadow-card text-lead">
           {archetype.glyph}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+          <p className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
             Reader archetype
           </p>
           <p
-            className="text-[20px] lg:text-[22px] italic text-heading leading-tight mt-0.5 tracking-tight"
-            style={{ fontFamily: "var(--font-reading)" }}
+            className="text-title-lg lg:text-[22px] italic text-heading leading-tight mt-0.5 tracking-tight font-reading"
           >
             {archetype.label}
           </p>
-          <p className="text-[12.5px] text-text-muted leading-[1.55] mt-1 max-w-[48ch]">
+          <p className="text-meta text-text-muted leading-[1.55] mt-1 max-w-[48ch]">
             {archetype.description}
           </p>
         </div>
@@ -644,14 +604,12 @@ function HeroStat({
   return (
     <div
       className="bg-surface px-4 py-4 flex flex-col items-start"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
-      <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
+      <span className="text-caption uppercase tracking-[0.16em] text-text-faint">
         {label}
       </span>
       <span
         className={`mt-2 text-[30px] lg:text-[34px] font-semibold tabular-nums leading-none ${accent}`}
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {value}
       </span>
@@ -675,7 +633,7 @@ function TypeTiles({
       count: breakdown.papers,
       color: "text-accent",
       bg: "bg-accent-dim",
-      ring: "shadow-[inset_0_0_0_1px_rgba(245,132,20,0.22)]",
+      ring: "shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_22%,transparent)]",
     },
     {
       key: "events",
@@ -700,7 +658,6 @@ function TypeTiles({
   return (
     <div
       className="grid grid-cols-3 gap-2"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {tiles.map((t) => {
         const pct = total > 0 ? Math.round((t.count / total) * 100) : 0;
@@ -717,7 +674,7 @@ function TypeTiles({
             <div className={`text-[24px] font-semibold tabular-nums leading-none ${empty ? "" : t.color}`}>
               {t.count}
             </div>
-            <div className="mt-1.5 flex items-baseline justify-between text-[10.5px] uppercase tracking-[0.14em]">
+            <div className="mt-1.5 flex items-baseline justify-between text-micro uppercase tracking-[0.14em]">
               <span className={empty ? "text-text-faint/60" : "text-text-muted"}>
                 {t.label}
               </span>
@@ -746,7 +703,6 @@ function VenueGrid({
   return (
     <div
       className="grid grid-cols-2 sm:grid-cols-3 gap-2"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {items.map((v) => {
         const weight = v.count / max;
@@ -756,7 +712,7 @@ function VenueGrid({
             ? {
                 text: "text-accent",
                 bg: "bg-accent-dim",
-                ring: "shadow-[inset_0_0_0_1px_rgba(245,132,20,0.22)]",
+                ring: "shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_22%,transparent)]",
               }
             : weight > 0.33
             ? {
@@ -774,11 +730,11 @@ function VenueGrid({
             key={v.name}
             className={`rounded-xl px-3 py-2.5 ${tier.bg} ${tier.ring} flex items-baseline justify-between gap-2`}
           >
-            <span className="truncate text-[12.5px] text-heading font-medium">
+            <span className="truncate text-meta text-heading font-medium">
               {v.name}
             </span>
             <span
-              className={`text-[15px] font-semibold tabular-nums leading-none ${tier.text}`}
+              className={`text-body-lg font-semibold tabular-nums leading-none ${tier.text}`}
             >
               {v.count}
             </span>
@@ -808,9 +764,10 @@ function useDailyActivityCells(): number[] | null {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/read?aggregate=daily", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { daily: { date: string; count: number }[] };
+        const data = await apiFetch<{ daily: { date: string; count: number }[] }>(
+          "/api/read?aggregate=daily",
+          { cache: "no-store" },
+        );
         if (cancelled) return;
         const byDate = new Map(data.daily.map((d) => [d.date, d.count]));
         const out = new Array<number>(CAL_WEEKS * CAL_DAYS).fill(0);
@@ -887,15 +844,14 @@ function StreakBadge({ activity, cells: realCells }: { activity: number; cells?:
   const weeks = streakFromCells(cells);
   if (weeks === 0) {
     return (
-      <span className="text-[10.5px] text-text-faint/60 uppercase tracking-[0.14em]">
+      <span className="text-micro text-text-faint/60 uppercase tracking-[0.14em]">
         No streak yet
       </span>
     );
   }
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[11px] text-accent font-medium tabular-nums"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className="inline-flex items-center gap-1.5 text-caption text-accent font-medium tabular-nums"
     >
       <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-accent" aria-hidden>
         <path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-2 2-3 2-6z" />
@@ -924,13 +880,13 @@ function ReadingCalendar({ activity, cells: realCells }: { activity: number; cel
       case 0:
         return "bg-bg-secondary/60";
       case 1:
-        return "bg-accent/20 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.15)]";
+        return "bg-accent/20 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_15%,transparent)]";
       case 2:
-        return "bg-accent/40 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.20)]";
+        return "bg-accent/40 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_20%,transparent)]";
       case 3:
-        return "bg-accent/70 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)]";
+        return "bg-accent/70 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_25%,transparent)]";
       default:
-        return "bg-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.30)]";
+        return "bg-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)]";
     }
   };
 
@@ -954,7 +910,7 @@ function ReadingCalendar({ activity, cells: realCells }: { activity: number; cel
   }, []);
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
+    <div>
       <div className="flex gap-2">
         {/* Weekday labels */}
         <div className="flex flex-col justify-between pt-3.5 shrink-0">
@@ -1012,7 +968,7 @@ function ReadingCalendar({ activity, cells: realCells }: { activity: number; cel
         </div>
       </div>
       {/* Legend */}
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-text-faint/70">
+      <div className="mt-3 flex items-center justify-end gap-1.5 text-micro text-text-faint/70">
         <span>Less</span>
         {[0, 1, 2, 3, 4].map((l) => (
           <span key={l} className={`w-2.5 h-2.5 rounded-[3px] ${cellClass(l)}`} aria-hidden />
@@ -1038,7 +994,7 @@ function KeywordCloud({ items }: { items: { name: string; count: number }[] }) {
           weight > 0.6 ? "accent" : weight > 0.3 ? "tag" : "peach";
         const bg =
           tone === "accent"
-            ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.20)]"
+            ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_20%,transparent)]"
             : tone === "tag"
             ? "bg-tag-dim text-tag shadow-[inset_0_0_0_1px_rgba(194,99,14,0.18)]"
             : "bg-peach-dim text-peach shadow-[inset_0_0_0_1px_rgba(217,122,48,0.18)]";
@@ -1047,13 +1003,12 @@ function KeywordCloud({ items }: { items: { name: string; count: number }[] }) {
             key={k.name}
             className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-md font-medium ${bg}`}
             style={{
-              fontFamily: "var(--font-sans)",
               fontSize: `${fontSize}px`,
             }}
           >
             {k.name}
             {k.count > 1 && (
-              <span className="text-[10px] opacity-60 tabular-nums">
+              <span className="text-micro opacity-60 tabular-nums">
                 ×{k.count}
               </span>
             )}
@@ -1144,16 +1099,15 @@ function SectionHeader({
   return (
     <div
       className="flex items-center justify-between"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
-      <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+      <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
         <span className="inline-block w-3.5 h-[1.5px] bg-accent/70" aria-hidden />
         {label}
       </span>
       {onAdjust && (
         <button
           onClick={onAdjust}
-          className="text-[11px] text-text-faint/80 hover:text-accent transition-colors active:scale-95"
+          className="text-caption text-text-faint/80 hover:text-accent transition-colors active:scale-95"
         >
           adjust
         </button>
@@ -1181,13 +1135,12 @@ function SignalRow({
   return (
     <div
       className="flex items-center gap-3"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-1.5 shrink-0 w-[92px]">
         <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${toneBadge(tone)}`}>
           {icon}
         </span>
-        <span className="text-[11.5px] font-medium text-text-muted">
+        <span className="text-caption font-medium text-text-muted">
           {label}
         </span>
       </div>
@@ -1196,16 +1149,16 @@ function SignalRow({
           items.map((it) => (
             <span
               key={it}
-              className={`inline-block px-2 py-[2px] rounded-md text-[11.5px] ${chipClass}`}
+              className={`inline-block px-2 py-[2px] rounded-md text-caption ${chipClass}`}
             >
               {it}
             </span>
           ))
         ) : (
-          <span className="text-[11.5px] text-text-faint/60">—</span>
+          <span className="text-caption text-text-faint/60">—</span>
         )}
       </div>
-      <span className="text-[11px] text-text-faint/50 tabular-nums w-5 text-right shrink-0">
+      <span className="text-caption text-text-faint/50 tabular-nums w-5 text-right shrink-0">
         {hasAny ? items.length : ""}
       </span>
     </div>
@@ -1288,7 +1241,7 @@ function useReadingStats() {
     readerHint = `${activity} interactions`;
   }
 
-  const lastBriefing = lastRefresh ? formatRelativeTime(lastRefresh) : null;
+  const lastBriefing = lastRefresh ? (formatTimeAgo(lastRefresh) ?? "—") : null;
 
   return {
     saved,
@@ -1332,7 +1285,7 @@ function PreferenceChip({
       ? [
           "bg-accent-dim/40 text-accent/80",
           "bg-accent-dim/70 text-accent",
-          "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)]",
+          "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)]",
         ][tier]
       : [
           "bg-bg-secondary/50 text-text-faint",
@@ -1340,7 +1293,7 @@ function PreferenceChip({
           "bg-red/10 text-red/90 shadow-[inset_0_0_0_1px_rgba(185,28,28,0.15)]",
         ][tier];
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[12px] ${cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-meta ${cls}`}>
       {label}
     </span>
   );
@@ -1366,16 +1319,16 @@ function LearnedPreferences({
   return (
     <section
       className="mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)", animationDelay: "120ms" }}
+      style={{ animationDelay: "120ms" }}
     >
       <div className="px-7 pt-6 pb-4 flex items-baseline justify-between gap-4">
-        <span className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90">
+        <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.22em] text-accent/90">
           <span className="inline-block w-4 h-[1.5px] bg-accent/70" />
-          What Hermes has learned
+          What Peer has learned
         </span>
         {hasAny &&
           (confirmReset ? (
-            <span className="text-[11.5px] flex items-center gap-3 shrink-0">
+            <span className="text-caption flex items-center gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -1398,7 +1351,7 @@ function LearnedPreferences({
             <button
               type="button"
               onClick={() => setConfirmReset(true)}
-              className="text-[11px] text-text-faint/80 hover:text-accent transition-colors shrink-0"
+              className="text-caption text-text-faint/80 hover:text-accent transition-colors shrink-0"
             >
               Reset
             </button>
@@ -1406,8 +1359,8 @@ function LearnedPreferences({
       </div>
       <div className="px-7 pb-6">
         {!hasAny ? (
-          <p className="text-[13px] text-text-faint/80 leading-relaxed max-w-[60ch]">
-            Nothing learned yet. As you like, save, or dismiss papers, Hermes builds a private
+          <p className="text-body-sm text-text-faint/80 leading-relaxed max-w-[60ch]">
+            Nothing learned yet. As you like, save, or dismiss papers, Peer builds a private
             taste profile here — quietly boosting topics you favor and easing off ones you skip.
             Like and Save count equally; dismissing eases a topic down.
           </p>
@@ -1415,7 +1368,7 @@ function LearnedPreferences({
           <div className="space-y-4">
             {liked.length > 0 && (
               <div>
-                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
+                <p className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
                   Leaning toward
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -1427,7 +1380,7 @@ function LearnedPreferences({
             )}
             {disliked.length > 0 && (
               <div>
-                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
+                <p className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint mb-2">
                   Easing off
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -1437,7 +1390,7 @@ function LearnedPreferences({
                 </div>
               </div>
             )}
-            <p className="text-[11px] text-text-faint/70 leading-relaxed pt-1">
+            <p className="text-caption text-text-faint/70 leading-relaxed pt-1">
               Learned from your likes, saves, and dismissals. Weights fade over ~2 months, and your
               required topics are never eased off.
             </p>
@@ -1456,12 +1409,10 @@ function PastBriefings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/briefings", { cache: "no-store" });
-        if (!res.ok) {
-          if (!cancelled) setLoaded(true);
-          return;
-        }
-        const data = (await res.json()) as { briefings: PastBriefing[] };
+        const data = await apiFetch<{ briefings: PastBriefing[] }>(
+          "/api/briefings",
+          { cache: "no-store" },
+        );
         if (!cancelled) {
           setBriefings(data.briefings ?? []);
           setLoaded(true);
@@ -1480,12 +1431,11 @@ function PastBriefings() {
     return (
       <section
         className="mt-8 rounded-2xl bg-surface shadow-card px-7 py-6"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint mb-1.5">
+        <p className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint mb-1.5">
           Past briefings
         </p>
-        <p className="text-[13px] text-text-faint/80">
+        <p className="text-body-sm text-text-faint/80">
           Your first daily briefing will land here once the cron fires at your preferred hour.
         </p>
       </section>
@@ -1495,13 +1445,12 @@ function PastBriefings() {
   return (
     <section
       className="mt-8 rounded-2xl bg-surface shadow-card overflow-hidden"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="px-7 pt-6 pb-3 flex items-center justify-between">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint">
+        <p className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
           Past briefings
         </p>
-        <span className="text-[10.5px] text-text-faint/60 tabular-nums">
+        <span className="text-micro text-text-faint/60 tabular-nums">
           {briefings.length} delivered
         </span>
       </div>
@@ -1512,18 +1461,18 @@ function PastBriefings() {
           return (
             <li key={b.id} className="px-7 py-3.5 flex items-start gap-4">
               <div className="shrink-0 w-[84px] pt-0.5">
-                <p className="text-[11.5px] text-text-muted tabular-nums">
-                  {formatRelativeTime(b.deliveredAt)}
+                <p className="text-caption text-text-muted tabular-nums">
+                  {(formatTimeAgo(b.deliveredAt) ?? "—")}
                 </p>
-                <p className="text-[10px] text-text-faint/60 uppercase tracking-[0.1em] mt-0.5">
+                <p className="text-micro text-text-faint/60 uppercase tracking-[0.1em] mt-0.5">
                   {b.channel}
                 </p>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-text truncate">
+                <p className="text-body-sm text-text truncate">
                   {preview || `${items.length} items`}
                 </p>
-                <p className="text-[11px] text-text-faint mt-0.5 tabular-nums">
+                <p className="text-caption text-text-faint mt-0.5 tabular-nums">
                   {b.itemIds.length} items
                 </p>
               </div>
@@ -1533,20 +1482,6 @@ function PastBriefings() {
       </ul>
     </section>
   );
-}
-
-function formatRelativeTime(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const diffMs = Date.now() - d.getTime();
-  const mins = Math.floor(diffMs / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 // ── Edit mode: inline editor ───────────────────────────────────
@@ -1605,7 +1540,6 @@ function EditView({
   return (
     <div
       className="rounded-2xl bg-surface shadow-card divide-y divide-border/70 animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <EditRow icon={<IconUser />} tone="neutral" label="Name">
         <input
@@ -1615,7 +1549,7 @@ function EditView({
             setName(e.target.value);
           }}
           placeholder="Aspen"
-          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
         />
       </EditRow>
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
@@ -1627,10 +1561,10 @@ function EditView({
         />
       </EditRow>
 
-      <EditRow icon={<IconBuilding />} tone="neutral" label="Affiliation">
+      <EditRow icon={<IconBuilding size={13} strokeWidth={1.9} />} tone="neutral" label="Affiliation">
         <div className="space-y-2">
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               School / org
             </p>
             <SchoolAutocomplete
@@ -1640,7 +1574,7 @@ function EditView({
             />
           </div>
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               Advisor / PI
             </p>
             <AdvisorField
@@ -1662,9 +1596,9 @@ function EditView({
           onChange={(e) => updateCurrentProject(e.target.value)}
           placeholder="What specific project are you working on right now?"
           rows={3}
-          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
         />
-        <p className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed">
+        <p className="text-caption text-text-faint/75 mt-1.5 px-1 leading-relaxed">
           Describe your project in 1–3 sentences. Peer uses this to bias the briefing toward your actual work, not just your generic field.
         </p>
       </EditRow>
@@ -1675,14 +1609,14 @@ function EditView({
           onChange={(e) => updateCurrentChallenges(e.target.value)}
           placeholder="What open problems are you hunting information for?"
           rows={3}
-          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+          className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
         />
-        <p className="text-[11px] text-text-faint/75 mt-1.5 px-1 leading-relaxed">
+        <p className="text-caption text-text-faint/75 mt-1.5 px-1 leading-relaxed">
           The unknowns you wish someone would solve for you. Highest-leverage signal — papers that mention these will rise to the top.
         </p>
       </EditRow>
 
-      <EditRow icon={<IconPin />} tone="tag" label="Locations">
+      <EditRow icon={<IconPin size={13} strokeWidth={1.9} />} tone="tag" label="Locations">
         <ChipInput
           values={profile.locationPreferences}
           onChange={updateLocations}
@@ -1694,7 +1628,7 @@ function EditView({
       <EditRow icon={<IconCareer />} tone="neutral" label="Career">
         <div className="space-y-3">
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               Stage
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -1704,9 +1638,9 @@ function EditView({
                   <button
                     key={s}
                     onClick={() => updateCareerStage(s)}
-                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+                    className={`text-meta px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
                       active
-                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.03]"
                         : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
                     }`}
                   >
@@ -1717,7 +1651,7 @@ function EditView({
             </div>
           </div>
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               Looking toward
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -1727,9 +1661,9 @@ function EditView({
                   <button
                     key={p}
                     onClick={() => updateIndustryPreference(p)}
-                    className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+                    className={`text-meta px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
                       active
-                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                        ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.03]"
                         : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
                     }`}
                   >
@@ -1742,9 +1676,9 @@ function EditView({
         </div>
       </EditRow>
 
-      <EditRow icon={<IconBook />} tone="link" label="Paper radar">
+      <EditRow icon={<IconBook size={13} strokeWidth={1.9} />} tone="link" label="Paper radar">
         <div className="space-y-4">
-          <p className="text-[12.5px] text-text-faint/85 leading-relaxed">
+          <p className="text-meta text-text-faint/85 leading-relaxed">
             Tell Peer how widely to look before it chooses your final daily papers.
           </p>
           <ChoiceGroup
@@ -1772,7 +1706,7 @@ function EditView({
             onChange={(value) => updateFeedSourceMix(value as typeof profile.feedSourceMix)}
           />
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               Preferred journals
             </p>
             <ChipInput
@@ -1781,8 +1715,8 @@ function EditView({
               placeholder="Add a journal, press Enter"
               tone="link"
             />
-            <p className="mt-1.5 px-0.5 text-[10.5px] leading-snug text-text-faint/70">
-              Journals you trust most. Hermes treats these as a primary source and boosts their
+            <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
+              Journals you trust most. Peer treats these as a primary source and boosts their
               papers (+1/3 of the score) so they rise to the top — though an exceptionally
               on-target paper from elsewhere can still win.
             </p>
@@ -1800,7 +1734,7 @@ function EditView({
             onChange={(value) => updateFeedDiscoveryMode(value as typeof profile.feedDiscoveryMode)}
           />
           <div>
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+            <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
               Avoid
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -1839,13 +1773,13 @@ function AppearanceCard({
   return (
     <section
       className="mt-5 rounded-3xl bg-surface shadow-card overflow-hidden animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)", animationDelay: "40ms" }}
+      style={{ animationDelay: "40ms" }}
     >
       <div className="px-7 pt-6 pb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+        <p className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint/80">
           Appearance
         </p>
-        <h2 className="mt-1 text-[20px] text-heading font-medium tracking-[-0.01em]">
+        <h2 className="mt-1 text-title-lg text-heading font-medium tracking-[-0.01em]">
           Color theme
         </h2>
       </div>
@@ -1863,134 +1797,75 @@ function ColorThemePicker({
   value: ColorTheme;
   onChange: (theme: ColorTheme) => void;
 }) {
-  const auto = colorThemeOptions.filter((o) => o.mode === "auto");
-  const light = colorThemeOptions.filter((o) => o.mode === "light");
-  const dark = colorThemeOptions.filter((o) => o.mode === "dark");
+  const [mode, accent] = value.split(":") as [ThemeMode, ThemeAccent];
 
   return (
-    <div className="space-y-5">
-      <ColorThemeGroup
-        label="Auto"
-        options={auto}
-        value={value}
-        onChange={onChange}
-      />
-      <ColorThemeGroup
-        label="Light"
-        options={light}
-        value={value}
-        onChange={onChange}
-      />
-      <ColorThemeGroup
-        label="Dark"
-        options={dark}
-        value={value}
-        onChange={onChange}
-      />
-    </div>
-  );
-}
+    <div className="space-y-6">
+      {/* Mode: auto / light / dark */}
+      <div>
+        <p className="mb-2 text-micro font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+          Mode
+        </p>
+        <div className="inline-flex items-center gap-1 rounded-full bg-bg-secondary/70 shadow-well p-1">
+          {themeModeOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={mode === option.value}
+              onClick={() => onChange(`${option.value}:${accent}` as ColorTheme)}
+              className={`h-8 px-4 rounded-full text-meta font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
+                mode === option.value
+                  ? "bg-surface text-heading shadow-card"
+                  : "text-text-muted hover:text-heading"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-function ColorThemeGroup({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: { value: ColorTheme; label: string }[];
-  value: ColorTheme;
-  onChange: (theme: ColorTheme) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-text-faint/80">
-        {label}
-      </p>
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
-        {options.map((option) => (
-          <ColorThemeCard
-            key={option.value}
-            value={option.value}
-            label={option.label}
-            selected={value === option.value}
-            onSelect={onChange}
-          />
-        ))}
+      {/* Accent palette: one color drives the whole palette */}
+      <div>
+        <p className="mb-1 text-micro font-semibold uppercase tracking-[0.18em] text-text-faint/80">
+          Color
+        </p>
+        <p className="mb-3 text-meta text-text-muted">
+          One pick tunes the accent, secondaries, and the neutral cast together.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          {themeAccentOptions.map((option) => {
+            const selected = accent === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={selected}
+                title={option.label}
+                onClick={() => onChange(`${mode}:${option.value}` as ColorTheme)}
+                className={`group relative inline-flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+                  selected ? "shadow-card-hover scale-[1.06]" : "shadow-card hover:scale-[1.04]"
+                }`}
+                style={{
+                  background: `linear-gradient(135deg, ${option.seed} 0%, ${option.seed} 55%, ${option.seedDark} 100%)`,
+                }}
+              >
+                {selected && (
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-bg/90 text-heading shadow-card">
+                    <IconCheck />
+                  </span>
+                )}
+                <span className="sr-only">{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-meta text-text-faint">
+          {themeAccentOptions.find((o) => o.value === accent)?.label}
+        </p>
       </div>
     </div>
   );
-}
-
-function ColorThemeCard({
-  value,
-  label,
-  selected,
-  onSelect,
-}: {
-  value: ColorTheme;
-  label: string;
-  selected: boolean;
-  onSelect: (theme: ColorTheme) => void;
-}) {
-  const swatches = themePreview(value);
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(value)}
-      aria-pressed={selected}
-      className={`group relative cursor-pointer rounded-2xl px-3 py-2.5 transition-all duration-200 ease-out active:scale-[0.97] ${
-        selected
-          ? "bg-accent-dim shadow-[inset_0_0_0_1.5px_rgba(245,132,20,0.45)]"
-          : "bg-bg-secondary/35 hover:bg-bg-secondary/55 shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
-      }`}
-    >
-      {selected && (
-        <span
-          aria-hidden
-          className="absolute top-1.5 right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-bg"
-        >
-          <IconCheck />
-        </span>
-      )}
-      <p className="text-left text-[12.5px] font-medium text-heading">{label}</p>
-      <div className="mt-2 flex items-center gap-1.5">
-        {swatches.map((swatch, i) => (
-          <span
-            key={i}
-            className="block h-5 flex-1 rounded-full shadow-[inset_0_0_0_1px_rgba(20,20,20,0.06)]"
-            style={{ background: swatch }}
-          />
-        ))}
-      </div>
-    </button>
-  );
-}
-
-function themePreview(theme: ColorTheme): string[] {
-  switch (theme) {
-    case "system":
-      return ["linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #09090b 50%, #16181d 100%)", "#f59e0b", "#7dd3fc"];
-    case "cream":
-      return ["#faf5e8", "#f58414", "#7a4412"];
-    case "white":
-      return ["#f8fafc", "#2563eb", "#0f766e"];
-    case "pink":
-      return ["#fff3f8", "#ec4899", "#be185d"];
-    case "blue":
-      return ["#eff6ff", "#2563eb", "#0f766e"];
-    case "sage":
-      return ["#eff4ea", "#0f766e", "#65a30d"];
-    case "lavender":
-      return ["#f5f3fc", "#7c3aed", "#c026d3"];
-    case "black":
-      return ["#09090b", "#f59e0b", "#34d399"];
-    case "slate":
-      return ["#0d1117", "#58a6ff", "#56d364"];
-    case "plum":
-      return ["#1a0e1f", "#c084fc", "#f0abfc"];
-  }
 }
 
 function EditRow({
@@ -2007,7 +1882,6 @@ function EditRow({
   return (
     <div
       className="flex items-start gap-4 px-5 py-4"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <div className="flex items-center gap-2.5 shrink-0 w-[108px] pt-1">
         <span
@@ -2015,7 +1889,7 @@ function EditRow({
         >
           {icon}
         </span>
-        <span className="text-[12px] font-medium text-text-faint uppercase tracking-[0.1em]">
+        <span className="text-meta font-medium text-text-faint uppercase tracking-[0.1em]">
           {label}
         </span>
       </div>

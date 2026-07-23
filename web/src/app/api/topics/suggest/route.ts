@@ -6,7 +6,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sourceFetch } from "@/lib/sources/_fetch";
 
-const MAILTO = process.env.OPENALEX_EMAIL ?? "hermes@example.com";
+const MAILTO = process.env.OPENALEX_EMAIL ?? "peer@example.com";
 
 interface OpenAlexConcept {
   display_name: string;

@@ -35,7 +35,7 @@ import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
 import { ConnectorPanel } from "@/components/profile/connector-panel";
 
-const DEFAULT_NAME = "Hermes Member";
+const DEFAULT_NAME = "Peer Member";
 
 type StepKey = "basics" | "topics" | "work" | "radar" | "ai" | "connectors" | "persona";
 
@@ -75,18 +75,18 @@ export default function WelcomePage() {
   const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
 
   return (
-    <div className="min-h-[100dvh] bg-bg flex flex-col items-center" style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="min-h-[100dvh] bg-bg flex flex-col items-center">
       <div className="w-full max-w-[640px] px-6 py-12 lg:py-16">
         {/* Header / brand + skip */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.svg" alt="Hermes" width={28} height={28} className="opacity-90" />
-            <span className="text-[13px] font-semibold tracking-[-0.01em] text-heading">Hermes</span>
+            <Image src="/logo-mark.png" alt="Peer" width={28} height={28} className="opacity-90" />
+            <span className="text-body-sm font-semibold tracking-[-0.01em] text-heading">Peer</span>
           </div>
           <button
             type="button"
             onClick={skipEverything}
-            className="text-[12px] text-text-faint hover:text-text-muted transition-colors"
+            className="text-meta text-text-faint hover:text-text-muted transition-colors"
           >
             Skip setup →
           </button>
@@ -100,7 +100,7 @@ export default function WelcomePage() {
               style={{ width: `${((step + 1) / total) * 100}%` }}
             />
           </div>
-          <span className="text-[12px] text-text-faint tabular-nums shrink-0">
+          <span className="text-meta text-text-faint tabular-nums shrink-0">
             {step + 1} / {total}
           </span>
         </div>
@@ -111,7 +111,7 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Welcome"
               title="Let's get you set up."
-              subtitle="A few quick details so Hermes knows who it's briefing. All optional — change anything later in your profile."
+              subtitle="A few quick details so Peer knows who it's briefing. All optional — change anything later in your profile."
             >
               <Field label="Your name">
                 <input
@@ -119,7 +119,7 @@ export default function WelcomePage() {
                   value={name}
                   onChange={(e) => store.updateDisplayName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
+                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all"
                 />
               </Field>
               <Field label="Career stage">
@@ -142,7 +142,7 @@ export default function WelcomePage() {
           {key === "topics" && (
             <StepFrame
               kicker="The one that matters"
-              title="What should Hermes track for you?"
+              title="What should Peer track for you?"
               subtitle="This is the heart of your briefing. Add at least one Required topic — every paper in your feed must match one of these. Type a topic and press comma or Enter to turn it into a tag; drag a tag between columns to re-rank it."
             >
               <TopicsField
@@ -152,7 +152,7 @@ export default function WelcomePage() {
                 onChangeSoft={store.updateSoftTopics}
               />
               {!topicsSatisfied && (
-                <p className="mt-4 text-[12px] text-accent/90 flex items-center gap-1.5">
+                <p className="mt-4 text-meta text-accent/90 flex items-center gap-1.5">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
                   </svg>
@@ -166,7 +166,7 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Your work"
               title="What are you working on, and with whom?"
-              subtitle="Optional, but the single biggest lever on quality. Hermes biases your briefing toward your real project, open problems, and your advisor's research lineage."
+              subtitle="Optional, but the single biggest lever on quality. Peer biases your briefing toward your real project, open problems, and your advisor's research lineage."
             >
               <Field label="Current project" hint="1–3 sentences about what you're building right now.">
                 <textarea
@@ -174,7 +174,7 @@ export default function WelcomePage() {
                   onChange={(e) => store.updateCurrentProject(e.target.value)}
                   rows={3}
                   placeholder="Describe the specific project you're working on right now."
-                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
               <Field label="Open challenges" hint="The unknowns you wish someone would solve. Papers that mention these rise to the top.">
@@ -183,7 +183,7 @@ export default function WelcomePage() {
                   onChange={(e) => store.updateCurrentChallenges(e.target.value)}
                   rows={3}
                   placeholder="The open problems you want your briefing to help with."
-                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-[14px] text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
+                  className="w-full bg-bg-secondary/40 rounded-lg px-3 py-2.5 text-body text-text placeholder-text-faint/60 outline-none focus:bg-bg-secondary/60 focus:ring-2 focus:ring-accent/20 transition-all resize-y leading-relaxed"
                 />
               </Field>
 
@@ -196,7 +196,7 @@ export default function WelcomePage() {
                   />
                 </Field>
                 <div>
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
                     Advisor / PI
                   </p>
                   <AdvisorField
@@ -225,7 +225,7 @@ export default function WelcomePage() {
                 <ChoiceGroup label="Papers shown" value={profile.paperCount} options={PAPER_COUNT_OPTIONS} onChange={(v) => store.updatePaperCount(v as typeof profile.paperCount)} />
 
                 <div>
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Sources</p>
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Sources</p>
                   <RadioGroup
                     value={profile.feedSourceMix}
                     options={PAPER_SOURCE_OPTIONS_DETAILED}
@@ -234,15 +234,15 @@ export default function WelcomePage() {
                 </div>
 
                 <div>
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Preferred journals</p>
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Preferred journals</p>
                   <ChipInput
                     values={profile.preferredJournals ?? []}
                     onChange={store.updatePreferredJournals}
                     placeholder="Add a journal, press Enter"
                     tone="link"
                   />
-                  <p className="mt-1.5 px-0.5 text-[11px] leading-relaxed text-text-faint/75">
-                    List the journals you trust most. Hermes treats these as a primary source and
+                  <p className="mt-1.5 px-0.5 text-caption leading-relaxed text-text-faint/75">
+                    List the journals you trust most. Peer treats these as a primary source and
                     gives papers from them a relevance boost (+1/3 of their score), so they rise to
                     the top — though an exceptionally on-target paper from elsewhere can still win.
                   </p>
@@ -251,7 +251,7 @@ export default function WelcomePage() {
                 <ChoiceGroup label="Importance" value={profile.feedImportance} options={PAPER_IMPORTANCE_OPTIONS} onChange={(v) => store.updateFeedImportance(v as typeof profile.feedImportance)} />
                 <ChoiceGroup label="Discovery" value={profile.feedDiscoveryMode} options={PAPER_DISCOVERY_OPTIONS} onChange={(v) => store.updateFeedDiscoveryMode(v as typeof profile.feedDiscoveryMode)} />
                 <div>
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Avoid</p>
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">Avoid</p>
                   <div className="flex flex-wrap gap-1.5">
                     <TogglePill label="Review papers" active={profile.feedAvoidReviews} onToggle={() => store.updateFeedAvoidReviews(!profile.feedAvoidReviews)} />
                     <TogglePill label="Old papers" active={profile.feedAvoidOldPapers} onToggle={() => store.updateFeedAvoidOldPapers(!profile.feedAvoidOldPapers)} />
@@ -267,11 +267,11 @@ export default function WelcomePage() {
             <StepFrame
               kicker="Optional power-up"
               title="Connect an AI key (optional)."
-              subtitle="Hermes works fully free with zero setup. Adding a key unlocks sharper, AI-written briefings and Deep report — and you can always do this later."
+              subtitle="Peer works fully free with zero setup. Adding a key unlocks sharper, AI-written briefings and Deep report — and you can always do this later."
             >
-              <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_rgba(245,132,20,0.25)] px-4 py-3">
-                <p className="text-[12.5px] leading-relaxed text-heading">
-                  <strong>Hermes runs significantly better with an API key.</strong>{" "}
+              <div className="rounded-xl bg-accent-dim/60 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_25%,transparent)] px-4 py-3">
+                <p className="text-meta leading-relaxed text-heading">
+                  <strong>Peer runs significantly better with an API key.</strong>{" "}
                   A key powers the smarter Tier 1/2 ranking and the full-text Deep report.
                   Without one, you still get a complete free briefing.
                 </p>
@@ -285,7 +285,7 @@ export default function WelcomePage() {
                   idPrefix="welcome-ai"
                 />
                 <ApiKeyHelp />
-                <p className="text-[11px] leading-relaxed text-text-faint">
+                <p className="text-caption leading-relaxed text-text-faint">
                   Deep report and Tavily web scouting can be switched on anytime from the
                   search bar once a key is set. Your key is stored only in your browser.
                 </p>
@@ -345,23 +345,23 @@ export default function WelcomePage() {
           {key === "persona" && (
             <StepFrame
               kicker="One more thing"
-              title="Want Hermes to learn your reading style?"
+              title="Want Peer to learn your reading style?"
               subtitle="An optional 2-minute quiz that maps how you tend to work across five axes. It helps shape your feed — but you can absolutely skip it and just explore."
             >
               <div className="rounded-2xl bg-surface shadow-card p-6 flex items-start gap-4">
-                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-accent-dim text-accent shrink-0 text-[18px]">
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-accent-dim text-accent shrink-0 text-title">
                   ◎
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[15px] font-medium text-heading">Academic persona quiz</p>
-                  <p className="text-[13px] text-text-muted mt-1 leading-relaxed">
+                  <p className="text-body-lg font-medium text-heading">Academic persona quiz</p>
+                  <p className="text-body-sm text-text-muted mt-1 leading-relaxed">
                     Fifteen forced-choice questions. Not a test — a description of your
                     defaults, useful for tuning what you see.
                   </p>
                   <Link
                     href="/persona"
                     onClick={() => completeOnboarding()}
-                    className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-accent hover:text-accent/80 font-medium transition-colors"
+                    className="mt-3 inline-flex items-center gap-1.5 text-body-sm text-accent hover:text-accent/80 font-medium transition-colors"
                   >
                     Take the quiz
                     <span aria-hidden>→</span>
@@ -378,7 +378,7 @@ export default function WelcomePage() {
             type="button"
             onClick={back}
             aria-disabled={step === 0}
-            className={`text-[13px] transition-colors ${
+            className={`text-body-sm transition-colors ${
               step === 0
                 ? "text-text-faint/30 cursor-default pointer-events-none"
                 : "text-text-faint hover:text-text-muted"
@@ -391,9 +391,9 @@ export default function WelcomePage() {
             <button
               type="button"
               onClick={finishToTour}
-              className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-accent text-white text-[13.5px] font-medium shadow-card hover:bg-accent/90 transition-colors active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-accent text-white text-body-sm font-medium shadow-card hover:bg-accent/90 transition-colors active:scale-[0.97]"
             >
-              Enter Hermes
+              Enter Peer
               <span aria-hidden>→</span>
             </button>
           ) : (
@@ -401,7 +401,7 @@ export default function WelcomePage() {
               type="button"
               onClick={canContinue ? next : undefined}
               aria-disabled={!canContinue}
-              className={`inline-flex items-center gap-1.5 h-10 px-5 rounded-full text-[13.5px] font-medium transition-colors active:scale-[0.97] ${
+              className={`inline-flex items-center gap-1.5 h-10 px-5 rounded-full text-body-sm font-medium transition-colors active:scale-[0.97] ${
                 canContinue
                   ? "bg-heading text-bg shadow-card hover:bg-heading/90"
                   : "bg-bg-secondary text-text-faint/70 cursor-default pointer-events-none"
@@ -471,17 +471,16 @@ function StepFrame({
 }) {
   return (
     <div>
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2.5">
+      <p className="text-micro font-semibold uppercase tracking-[0.22em] text-accent/90 mb-2.5">
         <span className="inline-block w-4 h-[1.5px] bg-accent/70 align-middle mr-2" />
         {kicker}
       </p>
       <h1
         className="text-[28px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         {title}
       </h1>
-      <p className="text-text-muted mt-3 text-[14px] leading-[1.6] max-w-[56ch]">
+      <p className="text-text-muted mt-3 text-body leading-[1.6] max-w-[56ch]">
         {subtitle}
       </p>
       <div className="mt-7 space-y-4">{children}</div>
@@ -500,12 +499,12 @@ function Field({
 }) {
   return (
     <div>
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
+      <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint/80 mb-1.5">
         {label}
       </p>
       {children}
       {hint && (
-        <p className="text-[11px] text-text-faint/75 mt-1.5 px-0.5 leading-relaxed">{hint}</p>
+        <p className="text-caption text-text-faint/75 mt-1.5 px-0.5 leading-relaxed">{hint}</p>
       )}
     </div>
   );
@@ -529,9 +528,9 @@ function PillGroup({
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`text-[12px] px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
+            className={`text-meta px-2.5 py-1 rounded-full transition-all duration-200 ease-out active:scale-[0.94] ${
               active
-                ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_rgba(245,132,20,0.3)] scale-[1.03]"
+                ? "bg-accent-dim text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] scale-[1.03]"
                 : "text-text-faint hover:text-text-muted bg-bg-secondary/40 hover:bg-bg-secondary/70"
             }`}
           >

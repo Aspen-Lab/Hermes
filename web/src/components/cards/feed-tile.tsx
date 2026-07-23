@@ -7,6 +7,10 @@
 import Link from "next/link";
 import type { Paper, Event, Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { formatDate, formatMatchPct } from "@/lib/format";
+import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
+import { chipTones } from "@/components/ui/chip";
 
 type FeedItem =
   | { kind: "paper"; data: Paper }
@@ -17,23 +21,12 @@ interface RelevanceScored {
   relevanceScore?: number;
 }
 
-function fmtDate(d: string) {
-  const ms = Date.parse(d);
-  if (!Number.isFinite(ms)) return "Date TBA";
-  return new Date(ms).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 function tileShellClass(isRead: boolean) {
-  return [
-    "group relative block rounded-xl bg-surface shadow-card p-4",
-    "animate-fade-in-up",
-    "transition-[box-shadow,transform] duration-200 ease-out",
-    "hover:shadow-card-hover hover:-translate-y-[1px]",
-    isRead ? "opacity-70 hover:opacity-100" : "",
-  ].join(" ");
+  return cn(
+    cardShell({ radius: "xl", padding: "sm" }),
+    "relative hover:-translate-y-[1px]",
+    isRead && "opacity-70 hover:opacity-100",
+  );
 }
 
 type BadgeKind = "paper" | "event" | "job" | "discussion";
@@ -157,9 +150,9 @@ const KIND_LABEL: Record<BadgeKind, string> = {
 };
 
 const KIND_TONE: Record<BadgeKind, string> = {
-  paper: "text-accent bg-accent-dim",
-  event: "text-tag bg-tag-dim",
-  job: "text-link bg-link-dim",
+  paper: chipTones.accent,
+  event: chipTones.tag,
+  job: chipTones.link,
   discussion: "text-text-muted bg-bg-secondary/70",
 };
 
@@ -175,8 +168,7 @@ function KindBadge({ kind }: { kind: BadgeKind }) {
   const Icon = KIND_ICON[kind];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
-      style={{ fontFamily: "var(--font-sans)" }}
+      className={`inline-flex items-center gap-1.5 text-micro font-semibold uppercase tracking-[0.14em] pl-1.5 pr-2 py-[3px] rounded-md ${KIND_TONE[kind]}`}
     >
       <Icon />
       {KIND_LABEL[kind]}
@@ -194,12 +186,11 @@ function KindStripe({ kind }: { kind: BadgeKind }) {
 }
 
 function ScoreChip({ scored }: { scored: RelevanceScored }) {
-  if (scored.relevanceScore == null) return null;
-  const pct = Math.round(scored.relevanceScore * 100);
+  const pct = formatMatchPct(scored.relevanceScore);
+  if (pct == null) return null;
   return (
     <span
-      className="text-[10.5px] tabular-nums text-text-faint shrink-0"
-      style={{ fontFamily: "var(--font-sans)" }}
+      className="text-micro tabular-nums text-text-faint shrink-0"
     >
       {pct}%
     </span>
@@ -335,7 +326,6 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
       href={`/papers/${paper.id}`}
       className={tileShellClass(isRead)}
       style={{
-        fontFamily: "var(--font-sans)",
         ...(selected ? { background: SELECTED_BG, transition: "background 0.3s" } : { transition: "background 0.3s" }),
       }}
     >
@@ -345,20 +335,19 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={paper} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {paper.title}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-1 min-w-0">
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-1 min-w-0">
         <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {paper.relevanceReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {paper.source}
         </span>
         <span className="flex-1" aria-hidden />
@@ -419,7 +408,6 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
     <Link
       href={`/events/${event.id}`}
       className={tileShellClass(isRead)}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <KindStripe kind="event" />
       <div className="flex items-center gap-2 mb-2.5">
@@ -427,11 +415,11 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={event} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {event.name}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
-        <MetaItem icon={CalendarMini}>{fmtDate(event.date)}</MetaItem>
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+        <MetaItem icon={CalendarMini}>{formatDate(event.date, "short")}</MetaItem>
         {(event.isOnline || event.location) && (
           <MetaItem icon={event.isOnline ? GlobeMini : PinMini}>
             {event.isOnline ? "Online" : event.location}
@@ -439,13 +427,12 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {event.relevanceReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {event.type}
         </span>
         <span className="flex-1" aria-hidden />
@@ -475,7 +462,6 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
     <Link
       href={`/jobs/${job.id}`}
       className={tileShellClass(isRead)}
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       <KindStripe kind="job" />
       <div className="flex items-center gap-2 mb-2.5">
@@ -483,10 +469,10 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         <span className="flex-1" aria-hidden />
         <ScoreChip scored={job} />
       </div>
-      <h3 className="text-[15.5px] font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
+      <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
         {job.roleTitle}
       </h3>
-      <div className="text-[11.5px] text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
+      <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
         <MetaItem icon={BuildingMini}>{job.companyOrLab}</MetaItem>
         {(job.isRemote || job.location) && (
           <MetaItem icon={job.isRemote ? GlobeMini : PinMini}>
@@ -495,13 +481,12 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         )}
       </div>
       <p
-        className="text-[13.5px] sm:text-[12.5px] text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3"
-        style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+        className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
         {job.matchReason}
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
-        <span className="text-[10px] text-text-faint uppercase tracking-[0.14em] truncate mr-1">
+        <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {job.keyRequirements[0] || "Role"}
         </span>
         <span className="flex-1" aria-hidden />

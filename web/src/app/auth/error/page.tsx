@@ -4,15 +4,13 @@ export default function AuthErrorPage() {
   return (
     <article className="mx-auto max-w-[520px] px-6 py-24 text-center">
       <p
-        className="text-[11.5px] font-semibold uppercase tracking-[0.22em] text-accent/90 mb-3"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="text-caption font-semibold uppercase tracking-[0.22em] text-accent/90 mb-3"
       >
         <span className="inline-block w-5 h-[1.5px] bg-accent/70 align-middle mr-2.5" />
         Sign-in hiccup
       </p>
       <h1
         className="text-[28px] lg:text-[32px] font-semibold text-heading tracking-[-0.02em] leading-[1.1]"
-        style={{ fontFamily: "var(--font-sans)" }}
       >
         That didn&rsquo;t go through.
       </h1>
@@ -22,11 +20,10 @@ export default function AuthErrorPage() {
       </p>
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 mt-6 text-[13.5px] text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="inline-flex items-center gap-1.5 mt-6 text-body-sm text-accent hover:text-accent/80 underline decoration-accent/30 hover:decoration-accent/70 underline-offset-4 transition-all duration-200 ease-out active:scale-[0.97]"
       >
         Back to Peer
-        <span className="text-[11px] opacity-70">→</span>
+        <span className="text-caption opacity-70">→</span>
       </Link>
     </article>
   );

@@ -45,8 +45,7 @@ function PersonaArt({ name }: { name: string }) {
         />
       </div>
       <figcaption
-        className="mt-4 text-center text-[10.5px] uppercase tracking-[0.22em] text-text-faint"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="mt-4 text-center text-micro uppercase tracking-[0.22em] text-text-faint"
       >
         — Profile sketch —
       </figcaption>
@@ -62,7 +61,6 @@ export function PersonaResult({
   return (
     <div
       className="grid lg:grid-cols-[minmax(280px,360px)_1fr] gap-10 lg:gap-16 items-start animate-fade-in-up"
-      style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* ── Left: portrait, sticky on desktop ── */}
       <aside className="lg:sticky lg:top-12 self-start">
@@ -72,26 +70,23 @@ export function PersonaResult({
       {/* ── Right: text, axes, retake ── */}
       <div className="flex flex-col gap-10 max-w-[620px]">
         <header className="flex flex-col gap-3">
-          <span className="text-[10.5px] uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
+          <span className="text-micro uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
             Your academic persona
           </span>
           <h1
-            className="text-[40px] md:text-[52px] text-heading leading-[1.02] tracking-[-0.018em]"
-            style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif" }}
+            className="text-[40px] md:text-[52px] font-light text-heading leading-[1.02] tracking-[-0.018em] font-display"
           >
             {persona.name}
           </h1>
           <p
-            className="text-[18px] md:text-[19px] text-text-muted leading-[1.55] italic"
-            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+            className="text-title md:text-title-lg text-text-muted leading-[1.55] italic font-reading"
           >
             {persona.tagline}
           </p>
         </header>
 
         <p
-          className="text-[15.5px] text-text leading-[1.75]"
-          style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+          className="text-body-lg text-text leading-[1.75] font-reading"
         >
           {persona.blurb}
         </p>
@@ -99,21 +94,20 @@ export function PersonaResult({
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <span className="h-px flex-1 bg-[color:var(--color-border)]" aria-hidden />
-            <h2 className="text-[10.5px] uppercase tracking-[0.22em] text-text-faint">
+            <h2 className="text-micro uppercase tracking-[0.22em] text-text-faint">
               Spotted at the conference like
             </h2>
             <span className="h-px flex-1 bg-[color:var(--color-border)]" aria-hidden />
           </div>
           <p
-            className="text-[15px] text-text-muted leading-[1.7] italic"
-            style={{ fontFamily: "var(--font-source-serif), Georgia, serif" }}
+            className="text-body-lg text-text-muted leading-[1.7] italic font-reading"
           >
             {persona.look}
           </p>
         </section>
 
         <section className="flex flex-col gap-5">
-          <h2 className="text-[10.5px] uppercase tracking-[0.22em] text-text-faint">
+          <h2 className="text-micro uppercase tracking-[0.22em] text-text-faint">
             Your axes
           </h2>
           <div className="flex flex-col gap-5">
@@ -134,11 +128,11 @@ export function PersonaResult({
           <button
             type="button"
             onClick={onRestart}
-            className="h-10 px-5 rounded-full bg-surface shadow-card hover:shadow-card-hover hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 ease-out text-[13px] text-text"
+            className="h-10 px-5 rounded-full bg-surface shadow-card hover:shadow-card-hover hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 ease-out text-body-sm text-text"
           >
             Retake quiz
           </button>
-          <span className="text-[11.5px] text-text-faint italic">
+          <span className="text-caption text-text-faint italic">
             Saved locally only — not uploaded.
           </span>
         </footer>
@@ -167,7 +161,7 @@ function AxisBar({ negative, positive, blurb, score }: AxisBarProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between text-[13.5px]">
+      <div className="flex items-baseline justify-between text-body-sm">
         <span
           className={[
             "transition-colors",
@@ -202,7 +196,7 @@ function AxisBar({ negative, positive, blurb, score }: AxisBarProps) {
           aria-label={`Score ${score.toFixed(2)}`}
         />
       </div>
-      <p className="text-[12px] text-text-faint">{blurb}</p>
+      <p className="text-meta text-text-faint">{blurb}</p>
     </div>
   );
 }

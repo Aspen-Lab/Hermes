@@ -11,18 +11,19 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
-    "@google-cloud/vertexai": "^1.12.0",
     "@google/genai": "^1.50.1",
-    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.0",
     "@types/js-yaml": "^4.0.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "fast-xml-parser": "^5.7.1",
     "js-yaml": "^5.2.1",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.2",
+    "tailwind-merge": "^3.6.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ import type { UserAiProvider } from "@/types";
 import { SecretInput } from "@/components/ui";
 
 export const FEED_AI_PROVIDER_OPTIONS: { value: UserAiProvider; label: string }[] = [
-  { value: "default", label: "Hermes default (site setup) — no API key" },
+  { value: "default", label: "Peer default (site setup) — no API key" },
   { value: "openai", label: "OpenAI / ChatGPT" },
   { value: "gemini", label: "Google Gemini API" },
   { value: "anthropic", label: "Anthropic / Claude" },
@@ -74,7 +74,7 @@ export function AiKeyFields({
       <div className="space-y-1.5">
         <label
           htmlFor={`${idPrefix}-provider`}
-          className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint"
+          className="block text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
         >
           AI company
         </label>
@@ -82,7 +82,7 @@ export function AiKeyFields({
           id={`${idPrefix}-provider`}
           value={provider}
           onChange={(e) => onProviderChange(e.target.value as UserAiProvider)}
-          className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-[12.5px] text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
+          className="w-full rounded-lg bg-bg-secondary/45 px-3 py-2 text-meta text-text focus:outline-none focus:ring-2 focus:ring-accent/20"
         >
           {FEED_AI_PROVIDER_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -95,7 +95,7 @@ export function AiKeyFields({
         <div className="space-y-1.5">
           <label
             htmlFor={`${idPrefix}-key`}
-            className="block text-[10.5px] font-semibold uppercase tracking-[0.14em] text-text-faint"
+            className="block text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
           >
             API key
           </label>
@@ -125,7 +125,7 @@ export function ApiKeyHelp() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-[12.5px] font-medium text-text-muted hover:text-heading transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-meta font-medium text-text-muted hover:text-heading transition-colors"
       >
         <span className="inline-flex items-center gap-2">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -152,13 +152,13 @@ export function ApiKeyHelp() {
 
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
-          <p className="text-[12.5px] leading-relaxed text-text-muted">
-            An API key is like a credit card from an AI company that lets Hermes
+          <p className="text-meta leading-relaxed text-text-muted">
+            An API key is like a credit card from an AI company that lets Peer
             use their AI on your behalf — you pay only for what you use, measured
             in &ldquo;tokens&rdquo; (chunks of text). It usually costs a few cents
             for a day of briefings.
           </p>
-          <p className="text-[12.5px] leading-relaxed text-text-muted">
+          <p className="text-meta leading-relaxed text-text-muted">
             Cheap, capable options to start with:{" "}
             <span className="text-heading font-medium">GPT-4o mini</span>,{" "}
             <span className="text-heading font-medium">Gemini 2.5 Flash</span>,{" "}
@@ -180,7 +180,7 @@ export function ApiKeyHelp() {
             />
           </div>
 
-          <p className="text-[11px] leading-relaxed text-text-faint">
+          <p className="text-caption leading-relaxed text-text-faint">
             You can skip this for now and add a key anytime in your profile.
           </p>
         </div>

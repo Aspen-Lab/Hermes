@@ -5,6 +5,7 @@ import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
 import { reviewPaperLabel } from "@/lib/papers/report";
+import { cardShell } from "@/components/ui/card-shell";
 
 const WORDS_PER_MINUTE = 220;
 function readMinutes(p: Paper): number {
@@ -25,20 +26,18 @@ export function PaperCard({ paper }: { paper: Paper }) {
   return (
     <Link
       href={`/papers/${paper.id}`}
-      className="group block rounded-2xl bg-surface shadow-card p-7 animate-fade-in-up transition-[box-shadow,transform] duration-200 ease-out hover:shadow-card-hover hover:-translate-y-[2px] active:translate-y-0 active:shadow-card"
+      className={cardShell()}
     >
       {typeLabel && (
         <span
-          className="inline-block mb-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded-md bg-tag-dim text-tag border border-tag/20"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="inline-block mb-2 text-micro font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded-md bg-tag-dim text-tag border border-tag/20"
         >
           {typeLabel}
         </span>
       )}
       <div className="flex items-start justify-between gap-4">
         <h3
-          className="text-[19px] font-semibold text-heading leading-snug tracking-[-0.01em]"
-          style={{ fontFamily: "var(--font-sans)" }}
+          className="text-title-lg font-semibold text-heading leading-snug tracking-[-0.01em]"
         >
           {paper.title}
         </h3>
@@ -46,16 +45,14 @@ export function PaperCard({ paper }: { paper: Paper }) {
       </div>
 
       <p
-        className="text-[13.5px] text-text-muted mt-2.5"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="text-body-sm text-text-muted mt-2.5"
       >
         {paper.authors.slice(0, 3).join(", ")}
         {paper.authors.length > 3 && ` +${paper.authors.length - 3}`}
       </p>
 
       <div
-        className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 mt-3.5 text-[12px] text-text-faint"
-        style={{ fontFamily: "var(--font-sans)" }}
+        className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 mt-3.5 text-meta text-text-faint"
       >
         <Tag>{paper.venue}</Tag>
         <span className="text-border-strong" aria-hidden>·</span>
@@ -68,7 +65,7 @@ export function PaperCard({ paper }: { paper: Paper }) {
         </span>
       </div>
 
-      <p className="text-[15.5px] text-text-muted mt-4 leading-[1.65] line-clamp-2">
+      <p className="text-body-lg text-text-muted mt-4 leading-[1.65] line-clamp-2">
         {paper.relevanceReason}
       </p>
 
