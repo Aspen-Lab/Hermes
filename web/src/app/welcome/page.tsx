@@ -328,7 +328,7 @@ export default function WelcomePage() {
                   tag="US federal & national labs"
                   why="Every US government research posting — NIH, NSF, and DOE national labs (Argonne, NREL, Berkeley Lab). Nowhere else lists these as cleanly."
                   how="Free, instant. Request a key with your email at developer.usajobs.gov."
-                  href="https://developer.usajobs.gov/apirequest"
+                  href="https://developer.usajobs.gov/apirequest/"
                 />
               </div>
 
