@@ -9,6 +9,28 @@
 import { useState } from "react";
 import { useProfileStore } from "@/store/profile";
 import { SecretInput } from "@/components/ui";
+import { buttonVariants } from "@/components/ui/button";
+
+// Small external-link glyph shown inside the "Get a key" button.
+function ExternalLinkIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  );
+}
 
 type Connector = "tavily" | "adzuna" | "usajobs";
 
@@ -35,7 +57,7 @@ const CONNECTORS: { id: Connector; label: string; blurb: string; guide: string; 
     blurb:
       "Every US federal & national-lab research posting (NIH, NSF, DOE labs). Free, government-run, no rate limits.",
     guide: "Request a key with your email at developer.usajobs.gov (instant).",
-    href: "https://developer.usajobs.gov/apirequest",
+    href: "https://developer.usajobs.gov/apirequest/",
   },
 ];
 
@@ -168,17 +190,18 @@ export function ConnectorPanel() {
         </div>
       )}
 
-      <p className="text-[10.5px] leading-relaxed text-text-faint">
-        {meta.guide}{" "}
+      <div className="space-y-2 pt-0.5">
+        <p className="text-[10.5px] leading-relaxed text-text-faint">{meta.guide}</p>
         <a
           href={meta.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-accent hover:underline"
+          className={`${buttonVariants({ tone: "accentSoft", size: "sm" })} w-full`}
         >
-          Get a key ↗
+          Get a {meta.label} key
+          <ExternalLinkIcon />
         </a>
-      </p>
+      </div>
     </div>
   );
 }

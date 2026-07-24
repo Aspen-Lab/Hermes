@@ -322,13 +322,11 @@ export function ChipInput({
   };
 
   const applySuggestion = (name: string) => {
-    setSuggestion((cur) => {
-      if (cur) {
-        const next = values.map((v) => (v === cur.forValue ? name : v));
-        onChange(Array.from(new Set(next)));
-      }
-      return null;
-    });
+    if (suggestion) {
+      const next = values.map((v) => (v === suggestion.forValue ? name : v));
+      onChange(Array.from(new Set(next)));
+    }
+    setSuggestion(null);
   };
 
   const commit = (raw: string) => {
