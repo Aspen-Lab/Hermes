@@ -405,26 +405,20 @@ function buildBibTeX(paper: Paper): string {
 }`;
 }
 
-// Read per-paper AI extracts (headlineFinding, keyNumbers) from the
-// locally cached digest. Silently returns null if no cache or paper not found.
-function readPerPaperDigest(paperId: string): {
-    headlineFinding?: string;
-    keyNumbers?: { value: string; label: string }[];
-  } | null {
+// Read this paper's one-sentence briefing bullet from the locally cached
+// digest, to use as an instant "results" pull-quote before the full report
+// lands. Reuses the same sentence the digest already generated (matched by
+// paperId) — no separate per-paper AI extract needed. Null if not cached.
+function readDigestBullet(paperId: string): string | null {
   if (!paperId || typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("peer-digest-cache");
     if (!raw) return null;
     const entry = JSON.parse(raw) as {
-      payload?: { perPaper?: Record<string, unknown> };
+      payload?: { bullets?: { paperId: string; text: string }[] };
     };
-    const perPaper = entry?.payload?.perPaper?.[paperId];
-    if (perPaper && typeof perPaper === "object") {
-      return perPaper as {
-        headlineFinding?: string;
-        keyNumbers?: { value: string; label: string }[];
-      };
-    }
+    const bullet = entry?.payload?.bullets?.find((b) => b.paperId === paperId);
+    return bullet?.text?.trim() || null;
   } catch {
     /* noop */
   }
@@ -580,8 +574,8 @@ export default function PaperDetailPage({
     if (paper) markRead(paper.id);
   }, [paper, markRead]);
 
-  const perPaperDigest = useMemo(
-    () => readPerPaperDigest(paper?.id ?? ""),
+  const digestBullet = useMemo(
+    () => readDigestBullet(paper?.id ?? ""),
     [paper?.id],
   );
   const contextHint = useMemo(
@@ -1106,7 +1100,7 @@ export default function PaperDetailPage({
             <PullQuote>
               {reportLoading
                 ? "Preparing the final report from the paper metadata and your profile."
-                : perPaperDigest?.headlineFinding ||
+                : digestBullet ||
                 report?.resultsAndSignificance.summary ||
                 paper.relevanceReason}
             </PullQuote>

@@ -77,6 +77,7 @@ export function useResolvedFigure({
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     (async () => {
       try {
@@ -89,6 +90,7 @@ export function useResolvedFigure({
 
         const data = (await apiFetch(`/api/figure?${params.toString()}`, {
           cache: "no-store",
+          signal: controller.signal,
         })) as Omit<FigureState, "key"> & {
           imageUrl: string | null;
           caption?: string | null;
@@ -131,6 +133,9 @@ export function useResolvedFigure({
 
     return () => {
       cancelled = true;
+      // Cancel the in-flight request when the figure is superseded/unmounted so
+      // an abandoned tab/scroll doesn't keep a figure request running.
+      controller.abort();
     };
   }, [itemId, url, doi, query, paperTitle, figureIndex, requestKey]);
 

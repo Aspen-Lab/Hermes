@@ -24,11 +24,6 @@ export interface PaperLite {
   abstract?: string;
 }
 
-export interface PerPaperExtract {
-  headlineFinding?: string;
-  keyNumbers?: { value: string; label: string }[];
-}
-
 export interface DigestBullet {
   paperId: string;
   text: string;
@@ -36,7 +31,6 @@ export interface DigestBullet {
 
 export interface DigestResult {
   bullets: DigestBullet[];
-  perPaper: Record<string, PerPaperExtract>;
 }
 
 export interface VisionImageInput {
@@ -82,24 +76,14 @@ RELEVANCE: every paper shown was selected because it matches one of the user's s
 
 IMPORTANT — formatting: Write in plain readable text only. Do NOT use LaTeX notation (no $...$ math, no _{...} subscripts, no ^{...} superscripts). Write chemical formulas and math in plain Unicode — use actual subscript characters (₀₁₂₃₄₅₆₇₈₉) or write them inline (e.g. Na0.66Mn0.8Fe0.2O2, CO2, Li-ion, x=0.5). This applies to ALL output strings.
 
-After the bullet summaries, extract for each paper:
-- a single-sentence headline finding (the result, not the topic)
-- 2-3 key numerical results, each as { value, label } (e.g. {"value":"92%","label":"capacity after 500 cycles"})
-
 Return ONLY valid JSON matching this schema exactly:
 {
   "bullets": [
     { "paperId": "<exact paper id from input>", "text": "One-sentence finding." }
-  ],
-  "perPaper": {
-    "<paper_id>": {
-      "headlineFinding": "string",
-      "keyNumbers": [{"value":"...", "label":"..."}]
-    }
-  }
+  ]
 }
 
-Include one bullet per paper, in the same order as the input list. If a paper has no clear numerical result, omit keyNumbers for it. Never fabricate numbers.`;
+Include one bullet per paper, in the same order as the input list. Never fabricate numbers.`;
 
 export function buildUserPrompt(papers: PaperLite[], contextHint?: string): string {
   const contextSection = contextHint
@@ -132,30 +116,10 @@ export function safeParseDigest(text: string): DigestResult | null {
     try {
       const obj = JSON.parse(candidate) as Partial<DigestResult>;
       if (!Array.isArray(obj.bullets) || obj.bullets.length === 0) continue;
-      const perPaper = (obj.perPaper && typeof obj.perPaper === "object")
-        ? Object.fromEntries(
-            Object.entries(obj.perPaper).map(([paperId, extract]) => {
-              const value = extract as PerPaperExtract;
-              return [
-                paperId,
-                {
-                  headlineFinding: cleanDisplayText(value.headlineFinding),
-                  keyNumbers: Array.isArray(value.keyNumbers)
-                    ? value.keyNumbers.map((n) => ({
-                        value: cleanDisplayText(n.value),
-                        label: cleanDisplayText(n.label),
-                      })).filter((n) => n.value || n.label)
-                    : undefined,
-                },
-              ];
-            }),
-          )
-        : {};
       return {
         bullets: obj.bullets.filter(
           (b) => typeof b.paperId === "string" && typeof b.text === "string"
         ).map((b) => ({ paperId: b.paperId, text: cleanDisplayText(b.text) })),
-        perPaper,
       };
     } catch {
       // try next candidate

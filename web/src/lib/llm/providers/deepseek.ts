@@ -15,6 +15,7 @@ import type {
   ModelTier,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+import { logLlmUsage, now } from "../usage-log";
 
 const DEEPSEEK_CHAT_API = "https://api.deepseek.com/chat/completions";
 const DEFAULT_MODEL = "deepseek-chat";
@@ -33,6 +34,7 @@ interface DeepseekChatResponse {
       content?: string | null;
     };
   }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
 }
 
 function apiKeyFromEnv(): string | undefined {
@@ -56,6 +58,7 @@ async function callDeepseekChat(args: {
     jsonMode = true,
   } = args;
 
+  const started = now();
   const res = await fetch(DEEPSEEK_CHAT_API, {
     method: "POST",
     headers: {
@@ -76,11 +79,20 @@ async function callDeepseekChat(args: {
   });
 
   if (!res.ok) {
+    logLlmUsage({ provider: "deepseek", model, latencyMs: now() - started, ok: false });
     const detail = await res.text().catch(() => "");
     throw new Error(`DeepSeek API error ${res.status}: ${detail.slice(0, 400)}`);
   }
 
   const data = (await res.json()) as DeepseekChatResponse;
+  logLlmUsage({
+    provider: "deepseek",
+    model,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    latencyMs: now() - started,
+    ok: true,
+  });
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("DeepSeek returned empty content");
   return content.trim();

@@ -170,6 +170,9 @@ export async function matchFigureVisually(args: {
         userPrompt,
         images: [image],
         maxTokens: 300,
+        // Figure verification is a small vision classification — pin the cheap
+        // vision model rather than letting a flash miss escalate to pro.
+        tier: "small",
       });
       const verdict = parseVerdict(text);
       if (!verdict?.supports || verdict.confidence === "low") continue;

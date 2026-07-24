@@ -13,10 +13,6 @@ interface DailyDigestProps {
 
 interface DigestPayload {
   bullets: { paperId: string; text: string }[];
-  perPaper: Record<string, {
-    headlineFinding?: string;
-    keyNumbers?: { value: string; label: string }[];
-  }>;
   noLlm?: boolean;
 }
 
@@ -28,6 +24,16 @@ interface DigestCache {
 
 const CACHE_KEY = "peer-digest-cache";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+// Tiny, stable string hash — only used to bound the cache-key length for the
+// context blurb; correctness comes from the id list + length, not the hash.
+function simpleHash(text: string): string {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) {
+    h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
 
 function readCache(paperKey: string): DigestPayload | null {
   try {
@@ -71,7 +77,15 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const paperKey = useMemo(() => papers.map((p) => p.id).join("|"), [papers]);
+  // Order-insensitive (a pure re-shuffle of the same papers must still hit the
+  // cache) and context-aware (a profile-context change must invalidate a stale
+  // digest). Bullets are matched to papers by paperId downstream, so sorting the
+  // ids here has no display effect.
+  const paperKey = useMemo(() => {
+    const ids = papers.map((p) => p.id).sort().join("|");
+    const ctx = contextHint ?? "";
+    return `${ids}::${ctx.length}:${simpleHash(ctx)}`;
+  }, [papers, contextHint]);
 
   const fetchDigest = useCallback(async (key: string, force = false) => {
     if (papers.length === 0) { setData(null); return; }

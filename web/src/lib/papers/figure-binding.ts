@@ -319,17 +319,17 @@ export async function bindFiguresToReport(
   ]
     .filter(Boolean)
     .join(" ");
-  const proposalFigureLabel = await pickFigureLabelForQuery(
-    proposalQuery,
-    captions,
-    provider,
-    paper.title,
-  );
-
-  const boundResults: PaperReportKeyResult[] = [];
-  for (const result of report.resultsAndSignificance.keyResults) {
-    boundResults.push(await bindOneResult(result, captions, provider, paper.title));
-  }
+  // The proposal-figure pick and each key-result binding are independent LLM
+  // calls, so run them concurrently instead of in a sequential await-loop.
+  // Promise.all preserves array order, which allocateUniqueFigures relies on.
+  const [proposalFigureLabel, boundResults] = await Promise.all([
+    pickFigureLabelForQuery(proposalQuery, captions, provider, paper.title),
+    Promise.all(
+      report.resultsAndSignificance.keyResults.map((result) =>
+        bindOneResult(result, captions, provider, paper.title),
+      ),
+    ),
+  ]);
 
   const allocated = allocateUniqueFigures(
     proposalFigureLabel,

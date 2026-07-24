@@ -15,7 +15,10 @@ import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 90;
+// Deep reports (full-text fetch + two model passes + figure binding) have been
+// observed to run ~85-100s; the old 90s ceiling silently killed the slowest
+// ones and downgraded them to an abstract-only report. Give real headroom.
+export const maxDuration = 180;
 
 // ── Request shape ────────────────────────────────────────────────────
 
@@ -224,12 +227,28 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const deep = await generateDeepReport({
-        paper: body.paper,
-        contextHint: body.contextHint,
-        doc: fullText.doc,
-        provider,
-      });
+      // The deep report and the figure pool are independent — both derive from
+      // the already-fetched full-text doc / paper metadata — so fetch the
+      // figure pool concurrently with report generation instead of after it.
+      // (captions come from the same fetched doc; the pool supplies the actual
+      // high-quality image URLs — PDF-rendered when available, HTML otherwise.)
+      const [deep, figurePool] = await Promise.all([
+        generateDeepReport({
+          paper: body.paper,
+          contextHint: body.contextHint,
+          doc: fullText.doc,
+          provider,
+        }),
+        getFigurePool({
+          itemId: body.paper.id,
+          url: bestPaperUrl(body.paper) ?? undefined,
+          doi: body.paper.doi ?? undefined,
+          paperTitle: body.paper.title,
+        }).catch((err) => {
+          console.warn("[papers/report] figure pool fetch failed:", err);
+          return null;
+        }),
+      ]);
 
       if (!deep) {
         const shallow = await generateShallowReport(body, body.llmOverride);
@@ -239,24 +258,6 @@ export async function POST(req: NextRequest) {
             "Peer downloaded the paper but the deep-read step failed. Showing an abstract-only report instead.",
         });
       }
-
-      // Phase 5: bind figures. Two parallel inputs:
-      //   1. captions from the same fetched full-text doc (for label/text
-      //      matching and explicit-figure-N alignment)
-      //   2. the figures pipeline candidate pool (for the actual high-quality
-      //      image URLs — PDF-rendered when available, HTML otherwise)
-      // With both, the binding can attach the bound image URL directly to
-      // each report section, eliminating the second-extractor handoff
-      // problem that previously dropped explicit-figure matches.
-      const figurePool = await getFigurePool({
-        itemId: body.paper.id,
-        url: bestPaperUrl(body.paper) ?? undefined,
-        doi: body.paper.doi ?? undefined,
-        paperTitle: body.paper.title,
-      }).catch((err) => {
-        console.warn("[papers/report] figure pool fetch failed:", err);
-        return null;
-      });
 
       const bound = await bindFiguresToReport({
         paper: { title: body.paper.title },

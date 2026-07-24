@@ -5,6 +5,7 @@
 
 import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
+import { truncateText } from "@/lib/opportunities/shared";
 import type { CareerStage, IndustryAcademiaPreference } from "@/types";
 
 export interface QueryGenProfile {
@@ -16,6 +17,26 @@ export interface QueryGenProfile {
 }
 
 const MAX_QUERIES = 5;
+
+// Best-effort in-process cache of LLM-generated queries. The two query-gen
+// calls fire on every feed build; the profile inputs rarely change between
+// loads, so caching avoids re-billing the model for identical output. Keyed by
+// kind + current year + exactly the profile fields the prompt reads, so it
+// invalidates automatically when any of them (or the year) changes.
+const QUERY_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+const queryCache = new Map<string, { queries: string[]; ts: number }>();
+
+function queryCacheKey(kind: string, profile: QueryGenProfile): string {
+  return JSON.stringify({
+    kind,
+    year: new Date().getFullYear(),
+    topics: profile.topics,
+    stage: profile.careerStage ?? "",
+    dir: profile.industryVsAcademia ?? "",
+    loc: profile.locationPreferences ?? [],
+    proj: (profile.currentProject ?? "").slice(0, 500),
+  });
+}
 
 export function stageRoleTerms(stage: CareerStage | undefined): string[] {
   switch (stage) {
@@ -101,6 +122,10 @@ export async function generateSearchQueries(
   }
   if (!provider?.generateJsonText) return fallback;
 
+  const cacheKey = queryCacheKey(kind, profile);
+  const cached = queryCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < QUERY_CACHE_TTL_MS) return cached.queries;
+
   const persona = [
     `Research topics: ${profile.topics.join(", ") || "unknown"}`,
     profile.careerStage ? `Career stage: ${profile.careerStage}` : "",
@@ -110,7 +135,11 @@ export async function generateSearchQueries(
     (profile.locationPreferences ?? []).length > 0
       ? `Preferred locations: ${profile.locationPreferences!.join(", ")}`
       : "",
-    profile.currentProject ? `Current project: ${profile.currentProject}` : "",
+    // Cap the project blurb so a long paste can't bloat the prompt; query
+    // quality is driven by topics + role terms, not the full description.
+    profile.currentProject
+      ? `Current project: ${truncateText(profile.currentProject, 500)}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -129,7 +158,9 @@ export async function generateSearchQueries(
       tier: "small",
     });
     const queries = parseQueryArray(raw);
-    return queries.length > 0 ? queries : fallback;
+    const result = queries.length > 0 ? queries : fallback;
+    queryCache.set(cacheKey, { queries: result, ts: Date.now() });
+    return result;
   } catch {
     return fallback;
   }
