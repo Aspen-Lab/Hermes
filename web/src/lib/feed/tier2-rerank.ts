@@ -17,11 +17,16 @@ export async function applyTier2Rerank(
   if (!provider?.generateJsonText || items.length === 0) return items;
 
   const candidates = items.slice(0, 50);
+  // Only the leading items are ever shown, so we only need written reasons for
+  // those — generating a reason for all 50 is the bulk of the output tokens and
+  // the main latency driver. Rank all 50, but explain only the top ~20.
+  const REASON_LIMIT = 20;
   const systemPrompt = [
     "You are Peer's feed critic.",
     "Rank papers for a calm daily research forecast.",
     "Prefer papers that directly help the user's current project or open questions.",
     "Avoid broad, generic, old, or weakly related papers unless they are clearly useful.",
+    `Return orderedIds for ALL candidates, but include reasons for ONLY the top ${REASON_LIMIT}.`,
     "Return only JSON.",
   ].join(" ");
 
@@ -45,8 +50,8 @@ export async function applyTier2Rerank(
       citations: item.metadata.citationCount ?? 0,
     })),
     outputSchema: {
-      orderedIds: ["paper id in best-to-worst order"],
-      reasons: { "paper id": "short plain-English reason" },
+      orderedIds: ["every candidate id, best-to-worst order"],
+      reasons: { "paper id": `short plain-English reason — top ${REASON_LIMIT} ids only` },
     },
   });
 
@@ -55,6 +60,7 @@ export async function applyTier2Rerank(
       systemPrompt,
       userPrompt,
       maxTokens: 2200,
+      tier: "small",
     });
     const parsed = parseRerankResponse(raw);
     if (!Array.isArray(parsed.orderedIds)) return items;

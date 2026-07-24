@@ -83,6 +83,9 @@ export async function matchFigureSemantically(args: {
       systemPrompt,
       userPrompt,
       maxTokens: 400,
+      // Caption matching is a cheap classification — pin the small model so a
+      // flash miss can't escalate to an expensive large-model call.
+      tier: "small",
     });
     return parseMatch(text);
   } catch (err) {

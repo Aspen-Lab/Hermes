@@ -9,6 +9,7 @@ import type {
   VisionImageInput,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+import { logLlmUsage, now } from "../usage-log";
 
 const QWEN_CHAT_API =
   "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
@@ -28,6 +29,7 @@ interface QwenChatResponse {
       content?: string | null;
     };
   }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
 }
 
 function apiKeyFromEnv(): string | undefined {
@@ -66,6 +68,7 @@ async function callQwenChat(args: {
           })),
         ];
 
+  const started = now();
   const res = await fetch(QWEN_CHAT_API, {
     method: "POST",
     headers: {
@@ -86,11 +89,20 @@ async function callQwenChat(args: {
   });
 
   if (!res.ok) {
+    logLlmUsage({ provider: "qwen", model, latencyMs: now() - started, ok: false });
     const detail = await res.text().catch(() => "");
     throw new Error(`Qwen API error ${res.status}: ${detail.slice(0, 400)}`);
   }
 
   const data = (await res.json()) as QwenChatResponse;
+  logLlmUsage({
+    provider: "qwen",
+    model,
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+    latencyMs: now() - started,
+    ok: true,
+  });
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("Qwen returned empty content");
   return content.trim();

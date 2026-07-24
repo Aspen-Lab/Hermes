@@ -6,6 +6,11 @@ import type {
   VisionImageInput,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+import { logLlmUsage, now } from "../usage-log";
+
+// Generous per-request hang guard so a stuck call can't pin a serverless
+// invocation open. Above p95 for a normal Haiku/Sonnet completion.
+const REQUEST_TIMEOUT_MS = 60_000;
 
 // Default model = the cheap tier. Existing call sites (digest) stay cheap.
 // `large` tier maps to Sonnet for deep paper-reading workflows.
@@ -22,7 +27,27 @@ function modelForTier(defaultModel: string, tier?: ModelTier): string {
 function getClient(apiKey?: string): Anthropic | null {
   const key = apiKey ?? process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
-  return new Anthropic({ apiKey: key });
+  return new Anthropic({ apiKey: key, timeout: REQUEST_TIMEOUT_MS });
+}
+
+type AnthropicUsage = { input_tokens?: number; output_tokens?: number };
+
+function logAnthropic(
+  model: string,
+  path: string,
+  usage: AnthropicUsage | undefined,
+  started: number,
+  ok: boolean,
+): void {
+  logLlmUsage({
+    provider: "anthropic",
+    model,
+    path,
+    inputTokens: usage?.input_tokens,
+    outputTokens: usage?.output_tokens,
+    latencyMs: now() - started,
+    ok,
+  });
 }
 
 export function createAnthropicProvider(
@@ -36,12 +61,14 @@ export function createAnthropicProvider(
       const client = getClient(apiKey);
       if (!client) throw new Error("ANTHROPIC_API_KEY not set");
 
+      const started = now();
       const response = await client.messages.create({
         model,
         max_tokens: 1500,
         system: DIGEST_SYSTEM_PROMPT,
         messages: [{ role: "user", content: buildUserPrompt(papers, contextHint) }],
       });
+      logAnthropic(model, "digest", response.usage, started, true);
 
       const block = response.content[0];
       if (!block || block.type !== "text") throw new Error("Unexpected response shape");
@@ -54,12 +81,15 @@ export function createAnthropicProvider(
       const client = getClient(apiKey);
       if (!client) throw new Error("ANTHROPIC_API_KEY not set");
 
+      const chosen = modelForTier(model, tier);
+      const started = now();
       const response = await client.messages.create({
-        model: modelForTier(model, tier),
+        model: chosen,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       });
+      logAnthropic(chosen, "json", response.usage, started, true);
 
       const block = response.content[0];
       if (!block || block.type !== "text") throw new Error("Unexpected response shape");
@@ -77,8 +107,10 @@ export function createAnthropicProvider(
       if (!client) throw new Error("ANTHROPIC_API_KEY not set");
       if (images.length === 0) throw new Error("No images supplied");
 
+      const chosen = modelForTier(model, tier);
+      const started = now();
       const response = await client.messages.create({
-        model: modelForTier(model, tier),
+        model: chosen,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: [
@@ -98,6 +130,7 @@ export function createAnthropicProvider(
           },
         ],
       });
+      logAnthropic(chosen, "vision", response.usage, started, true);
 
       const block = response.content[0];
       if (!block || block.type !== "text") throw new Error("Unexpected response shape");

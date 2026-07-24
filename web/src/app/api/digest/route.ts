@@ -9,15 +9,11 @@ interface DigestRequest {
 
 interface DigestResponse {
   bullets: { paperId: string; text: string }[];
-  perPaper: Record<string, {
-    headlineFinding?: string;
-    keyNumbers?: { value: string; label: string }[];
-  }>;
   noLlm?: boolean;
 }
 
 function emptyResponse(noLlm = false): DigestResponse {
-  return { bullets: [], perPaper: {}, noLlm };
+  return { bullets: [], noLlm };
 }
 
 export async function POST(req: NextRequest) {
@@ -43,10 +39,9 @@ export async function POST(req: NextRequest) {
       papers: body.papers,
       contextHint: body.contextHint,
     });
-    console.log(`[digest] ${provider.id} OK — bullets: ${result.bullets.length}, papers extracted: ${Object.keys(result.perPaper).length}`);
+    console.log(`[digest] ${provider.id} OK — bullets: ${result.bullets.length}`);
     return NextResponse.json({
       bullets: result.bullets,
-      perPaper: result.perPaper,
     } satisfies DigestResponse);
   } catch (err) {
     console.error(`[digest] ${provider.id} error:`, err);

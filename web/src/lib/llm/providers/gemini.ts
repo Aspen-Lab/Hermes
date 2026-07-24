@@ -11,6 +11,7 @@ import type {
   VisionImageInput,
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
+import { logLlmUsage, now } from "../usage-log";
 
 type ModelTarget = {
   id: string;
@@ -41,6 +42,74 @@ function chainForTier(chain: ModelTarget[], tier?: ModelTier): ModelTarget[] {
     return chain.filter((target) => /pro/i.test(target.id));
   }
   return chain.filter((target) => /flash/i.test(target.id));
+}
+
+// ── Generation-config policy (the fix) ──────────────────────────────
+//
+// Two Gemini-specific gotchas the old code ignored:
+//   1. It never forwarded the caller's `maxTokens`, so every call ran with an
+//      unbounded output cap.
+//   2. It set no `thinkingConfig`, so every 2.5 model ran default "dynamic
+//      thinking" — hidden reasoning tokens billed + latency on every call,
+//      even for bounded JSON extraction/ranking/classification.
+// This must be MODEL-AWARE: only 2.5-flash can (and should) disable thinking;
+// 2.5-pro cannot (min budget 128, needs its reasoning for deep reports); and
+// Gemini 3 previews use a different control (thinkingLevel), so we leave them
+// alone. On 2.5/3, maxOutputTokens counts thinking tokens too, so we add
+// headroom for any model that still thinks — never truncate mid-reasoning.
+
+const GEN_TIMEOUT_MS = 120_000; // generous per-attempt hang guard, not a latency cap
+const THINKING_HEADROOM = 4096;
+
+/** Only gemini-2.5-flash runs our bounded JSON tasks well with thinking off. */
+function disableThinking(modelId: string): boolean {
+  return /gemini-2\.5-flash/.test(modelId);
+}
+
+/** Output cap including thinking headroom where the model still thinks. */
+function outputCap(modelId: string, maxTokens?: number): number | undefined {
+  if (maxTokens == null) return undefined;
+  return disableThinking(modelId) ? maxTokens : maxTokens + THINKING_HEADROOM;
+}
+
+function genConfig(modelId: string, systemInstruction: string, maxTokens?: number) {
+  const cap = outputCap(modelId, maxTokens);
+  return {
+    systemInstruction,
+    responseMimeType: "application/json" as const,
+    httpOptions: { timeout: GEN_TIMEOUT_MS },
+    ...(disableThinking(modelId) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+    ...(cap ? { maxOutputTokens: cap } : {}),
+  };
+}
+
+type GeminiResult = {
+  text?: string;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    thoughtsTokenCount?: number;
+  };
+};
+
+function logGemini(
+  modelId: string,
+  path: string | undefined,
+  result: GeminiResult | undefined,
+  started: number,
+  ok: boolean,
+): void {
+  const u = result?.usageMetadata;
+  logLlmUsage({
+    provider: "gemini",
+    model: modelId,
+    path,
+    inputTokens: u?.promptTokenCount,
+    outputTokens: u?.candidatesTokenCount,
+    thinkingTokens: u?.thoughtsTokenCount,
+    latencyMs: now() - started,
+    ok,
+  });
 }
 
 const clients = new Map<string, GoogleGenAI>();
@@ -78,25 +147,31 @@ function getApiKeyClient(apiKey: string): GoogleGenAI {
   return client;
 }
 
+type CallOpts = { maxTokens?: number; path?: string };
+
 async function callModel(
   location: string,
   modelId: string,
   prompt: string,
   systemInstruction = DIGEST_SYSTEM_PROMPT,
+  opts: CallOpts = {},
 ): Promise<string> {
   const client = getClient(location);
   if (!client) throw new Error("GOOGLE_VERTEX_PROJECT not set");
 
-  const result = await client.models.generateContent({
-    model: modelId,
-    contents: prompt,
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-    },
-  });
-
-  return result.text ?? "";
+  const started = now();
+  try {
+    const result = (await client.models.generateContent({
+      model: modelId,
+      contents: prompt,
+      config: genConfig(modelId, systemInstruction, opts.maxTokens),
+    })) as GeminiResult;
+    logGemini(modelId, opts.path, result, started, true);
+    return result.text ?? "";
+  } catch (err) {
+    logGemini(modelId, opts.path, undefined, started, false);
+    throw err;
+  }
 }
 
 async function callVisionModel(
@@ -105,25 +180,29 @@ async function callVisionModel(
   systemInstruction: string,
   userPrompt: string,
   images: VisionImageInput[],
+  opts: CallOpts = {},
 ): Promise<string> {
   const client = getClient(location);
   if (!client) throw new Error("GOOGLE_VERTEX_PROJECT not set");
 
-  const result = await client.models.generateContent({
-    model: modelId,
-    contents: createUserContent([
-      createPartFromText(userPrompt),
-      ...images.map((image) =>
-        createPartFromBase64(image.dataBase64, image.mimeType),
-      ),
-    ]),
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-    },
-  });
-
-  return result.text ?? "";
+  const started = now();
+  try {
+    const result = (await client.models.generateContent({
+      model: modelId,
+      contents: createUserContent([
+        createPartFromText(userPrompt),
+        ...images.map((image) =>
+          createPartFromBase64(image.dataBase64, image.mimeType),
+        ),
+      ]),
+      config: genConfig(modelId, systemInstruction, opts.maxTokens),
+    })) as GeminiResult;
+    logGemini(modelId, opts.path, result, started, true);
+    return result.text ?? "";
+  } catch (err) {
+    logGemini(modelId, opts.path, undefined, started, false);
+    throw err;
+  }
 }
 
 export const geminiProvider: DigestProvider = {
@@ -137,7 +216,10 @@ export const geminiProvider: DigestProvider = {
     for (const { id, location } of getModelChain()) {
       const resolvedLocation = location === "global" ? "global" : regionalLocation;
       try {
-        text = await callModel(resolvedLocation, id, prompt);
+        text = await callModel(resolvedLocation, id, prompt, DIGEST_SYSTEM_PROMPT, {
+          maxTokens: 1500,
+          path: "digest",
+        });
         if (text.trim()) break;
       } catch (err) {
         console.warn(`[gemini] ${id} @ ${resolvedLocation} failed:`, err);
@@ -150,7 +232,7 @@ export const geminiProvider: DigestProvider = {
     return parsed;
   },
 
-  async generateJsonText({ systemPrompt, userPrompt, tier }): Promise<string> {
+  async generateJsonText({ systemPrompt, userPrompt, maxTokens, tier }): Promise<string> {
     const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
     const chain = chainForTier(getModelChain(), tier);
     const fallback = chain.length > 0 ? chain : getModelChain();
@@ -158,7 +240,10 @@ export const geminiProvider: DigestProvider = {
     for (const { id, location } of fallback) {
       const resolvedLocation = location === "global" ? "global" : regionalLocation;
       try {
-        const text = await callModel(resolvedLocation, id, userPrompt, systemPrompt);
+        const text = await callModel(resolvedLocation, id, userPrompt, systemPrompt, {
+          maxTokens,
+          path: "json",
+        });
         if (text.trim()) return text.trim();
       } catch (err) {
         console.warn(`[gemini] ${id} @ ${resolvedLocation} failed:`, err);
@@ -168,7 +253,7 @@ export const geminiProvider: DigestProvider = {
     throw new Error("All Gemini models returned empty response");
   },
 
-  async generateVisionJsonText({ systemPrompt, userPrompt, images, tier }): Promise<string> {
+  async generateVisionJsonText({ systemPrompt, userPrompt, images, maxTokens, tier }): Promise<string> {
     if (images.length === 0) throw new Error("No images supplied");
 
     const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
@@ -184,6 +269,7 @@ export const geminiProvider: DigestProvider = {
           systemPrompt,
           userPrompt,
           images,
+          { maxTokens, path: "vision" },
         );
         if (text.trim()) return text.trim();
       } catch (err) {
@@ -203,7 +289,7 @@ export const geminiProvider: DigestProvider = {
     const resolvedLocation = location === "global" ? "global" : regionalLocation;
 
     try {
-      await callModel(resolvedLocation, id, "ping");
+      await callModel(resolvedLocation, id, "ping", DIGEST_SYSTEM_PROMPT, { path: "test" });
       return { ok: true };
     } catch (err) {
       return { ok: false, error: String(err) };
@@ -224,17 +310,22 @@ export function createGeminiApiProvider(
     modelId: string,
     prompt: string,
     systemInstruction = DIGEST_SYSTEM_PROMPT,
+    opts: CallOpts = {},
   ) => {
     const client = getClientForApiKey();
-    const result = await client.models.generateContent({
-      model: modelId,
-      contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-    return result.text ?? "";
+    const started = now();
+    try {
+      const result = (await client.models.generateContent({
+        model: modelId,
+        contents: prompt,
+        config: genConfig(modelId, systemInstruction, opts.maxTokens),
+      })) as GeminiResult;
+      logGemini(modelId, opts.path, result, started, true);
+      return result.text ?? "";
+    } catch (err) {
+      logGemini(modelId, opts.path, undefined, started, false);
+      throw err;
+    }
   };
 
   const callApiVisionModel = async (
@@ -242,22 +333,27 @@ export function createGeminiApiProvider(
     systemInstruction: string,
     userPrompt: string,
     images: VisionImageInput[],
+    opts: CallOpts = {},
   ) => {
     const client = getClientForApiKey();
-    const result = await client.models.generateContent({
-      model: modelId,
-      contents: createUserContent([
-        createPartFromText(userPrompt),
-        ...images.map((image) =>
-          createPartFromBase64(image.dataBase64, image.mimeType),
-        ),
-      ]),
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-      },
-    });
-    return result.text ?? "";
+    const started = now();
+    try {
+      const result = (await client.models.generateContent({
+        model: modelId,
+        contents: createUserContent([
+          createPartFromText(userPrompt),
+          ...images.map((image) =>
+            createPartFromBase64(image.dataBase64, image.mimeType),
+          ),
+        ]),
+        config: genConfig(modelId, systemInstruction, opts.maxTokens),
+      })) as GeminiResult;
+      logGemini(modelId, opts.path, result, started, true);
+      return result.text ?? "";
+    } catch (err) {
+      logGemini(modelId, opts.path, undefined, started, false);
+      throw err;
+    }
   };
 
   return {
@@ -269,7 +365,10 @@ export function createGeminiApiProvider(
 
       for (const { id } of modelChain) {
         try {
-          text = await callApiModel(id, prompt);
+          text = await callApiModel(id, prompt, DIGEST_SYSTEM_PROMPT, {
+            maxTokens: 1500,
+            path: "digest",
+          });
           if (text.trim()) break;
         } catch (err) {
           console.warn(`[gemini-api] ${id} failed:`, err);
@@ -282,12 +381,15 @@ export function createGeminiApiProvider(
       return parsed;
     },
 
-    async generateJsonText({ systemPrompt, userPrompt, tier }): Promise<string> {
+    async generateJsonText({ systemPrompt, userPrompt, maxTokens, tier }): Promise<string> {
       const chain = chainForTier(modelChain, tier);
       const fallback = chain.length > 0 ? chain : modelChain;
       for (const { id } of fallback) {
         try {
-          const text = await callApiModel(id, userPrompt, systemPrompt);
+          const text = await callApiModel(id, userPrompt, systemPrompt, {
+            maxTokens,
+            path: "json",
+          });
           if (text.trim()) return text.trim();
         } catch (err) {
           console.warn(`[gemini-api] ${id} failed:`, err);
@@ -296,14 +398,17 @@ export function createGeminiApiProvider(
       throw new Error("All Gemini API models returned empty response");
     },
 
-    async generateVisionJsonText({ systemPrompt, userPrompt, images, tier }): Promise<string> {
+    async generateVisionJsonText({ systemPrompt, userPrompt, images, maxTokens, tier }): Promise<string> {
       if (images.length === 0) throw new Error("No images supplied");
       const chain = chainForTier(modelChain, tier);
       const fallback = chain.length > 0 ? chain : modelChain;
 
       for (const { id } of fallback) {
         try {
-          const text = await callApiVisionModel(id, systemPrompt, userPrompt, images);
+          const text = await callApiVisionModel(id, systemPrompt, userPrompt, images, {
+            maxTokens,
+            path: "vision",
+          });
           if (text.trim()) return text.trim();
         } catch (err) {
           console.warn(`[gemini-api-vision] ${id} failed:`, err);
@@ -316,7 +421,7 @@ export function createGeminiApiProvider(
     async testConnection(): Promise<{ ok: boolean; error?: string }> {
       if (!apiKey) return { ok: false, error: "GOOGLE_API_KEY not set" };
       try {
-        await callApiModel(modelChain[0].id, "ping");
+        await callApiModel(modelChain[0].id, "ping", DIGEST_SYSTEM_PROMPT, { path: "test" });
         return { ok: true };
       } catch (err) {
         return { ok: false, error: String(err) };

@@ -46,12 +46,21 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   });
   if (!provider) return [];
 
-  for (const searchQuery of searchQueries) {
-    const paperQuery = `${searchQuery} paper OR preprint OR arxiv`;
-    const items = provider === "brave"
-      ? await fetchBrave(paperQuery, perQuery, braveKey!)
-      : await fetchTavily(paperQuery, perQuery, tavilyKey, query.webSearch);
-    all.push(...items);
+  // Fan the per-query fetches out concurrently (like the other source
+  // adapters) instead of awaiting them one at a time. Promise.allSettled
+  // preserves input order and isolates a single slow/failed query, so the
+  // whole source no longer blocks on the slowest one — and one query timing
+  // out no longer drops the rest.
+  const settled = await Promise.allSettled(
+    searchQueries.map((searchQuery) => {
+      const paperQuery = `${searchQuery} paper OR preprint OR arxiv`;
+      return provider === "brave"
+        ? fetchBrave(paperQuery, perQuery, braveKey!)
+        : fetchTavily(paperQuery, perQuery, tavilyKey, query.webSearch);
+    }),
+  );
+  for (const result of settled) {
+    if (result.status === "fulfilled") all.push(...result.value);
   }
 
   return uniqueById(all).slice(0, limit);
