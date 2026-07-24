@@ -18,10 +18,22 @@
 // Mount once, near the root, alongside <UserMenu />.
 
 import { useEffect, useRef } from "react";
+import { create } from "zustand";
 import { apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase/client";
 import { useProfileStore } from "@/store/profile";
 import type { UserProfile } from "@/types";
+
+// Signals that the INITIAL remote pull has settled — success, failure, or
+// nothing-to-pull (signed out / no Supabase configured). FirstRunGate and the
+// onboarding wizard wait on this before making profile-based decisions, so a
+// returning user's synced topics land before any redirect or resume-position
+// choice. Never flips back to false: later auth changes re-sync data but the
+// first-load decision window is over.
+export const useSyncGate = create<{ settled: boolean }>(() => ({
+  settled: false,
+}));
+const markSyncSettled = () => useSyncGate.setState({ settled: true });
 
 const DEBOUNCE_MS = 700;
 
@@ -107,13 +119,19 @@ export function ProfileSync() {
 
   // 1. React to auth changes — pull on sign-in, reset state on sign-out.
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      // No auth configured — local-only deployment, nothing will ever pull.
+      markSyncSettled();
+      return;
+    }
 
     const onSession = async (signedIn: boolean) => {
       isSignedInRef.current = signedIn;
       if (!signedIn) {
         didInitialPullRef.current = false;
         lastPushedRef.current = null;
+        // Signed out: there is no remote profile to wait for.
+        markSyncSettled();
         return;
       }
       if (didInitialPullRef.current || pullInFlightRef.current) return;
@@ -141,10 +159,16 @@ export function ProfileSync() {
         didInitialPullRef.current = true;
       } finally {
         pullInFlightRef.current = false;
+        // Every exit path settles the gate — success, empty-server push, or
+        // a thrown fetch.
+        markSyncSettled();
       }
     };
 
-    supabase.auth.getUser().then(({ data }) => onSession(!!data.user));
+    supabase.auth
+      .getUser()
+      .then(({ data }) => onSession(!!data.user))
+      .catch(() => markSyncSettled());
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") onSession(false);
