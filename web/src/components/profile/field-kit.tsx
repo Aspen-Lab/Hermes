@@ -564,8 +564,10 @@ export function TopicsField({
   onChangeRequired: (next: string[]) => void;
   onChangeSoft: (next: string[]) => void;
 }) {
+  // Single column on phones — two 155px columns at 375px made the one
+  // REQUIRED onboarding field nearly unusable.
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="min-w-0">
         <p className="mb-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-accent/80">
           Required
