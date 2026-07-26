@@ -253,6 +253,12 @@ function DiscoveryPage() {
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
   }, [papers, events, jobs, query, activeType]);
 
+  // Today's highlights only ever summarizes papers, so it belongs to the paper
+  // lanes (All / Papers) alone. Gating the render — not just its paper input —
+  // keeps it from flashing stale bullets for a frame when the user switches to
+  // Events or Jobs, since the component clears itself in an effect (post-paint).
+  const showDigest = activeType === "all" || activeType === "papers";
+
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
   const totalAll = papers.length + events.length + jobs.length;
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
@@ -697,26 +703,30 @@ function DiscoveryPage() {
 
           {briefingItems.length > 0 && (
             <>
-              {/* One-paragraph synthesized digest. Hides itself if no LLM
-                  is configured, so the rest of the feed keeps working. */}
-              <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
-                <DailyDigest
-                  papers={briefingItems
-                    .filter((i) => i.kind === "paper")
-                    .map((i) => i.data as Paper)}
-                  contextHint={[
-                    profile.researchTopics.length > 0
-                      ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
-                      : "",
-                    profile.currentProject,
-                    profile.currentChallenges,
-                  ]
-                    .filter((s) => s && s.trim().length > 0)
-                    .join("\n\n")}
-                  selectedPaperId={selectedPaperId}
-                  onSelectPaper={setSelectedPaperId}
-                />
-              </div>
+              {/* One-paragraph synthesized digest. Papers-only content, so it
+                  renders on the All / Papers lanes and nowhere else. Hides
+                  itself if no LLM is configured, so the rest of the feed keeps
+                  working. */}
+              {showDigest && (
+                <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
+                  <DailyDigest
+                    papers={briefingItems
+                      .filter((i) => i.kind === "paper")
+                      .map((i) => i.data as Paper)}
+                    contextHint={[
+                      profile.researchTopics.length > 0
+                        ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+                        : "",
+                      profile.currentProject,
+                      profile.currentChallenges,
+                    ]
+                      .filter((s) => s && s.trim().length > 0)
+                      .join("\n\n")}
+                    selectedPaperId={selectedPaperId}
+                    onSelectPaper={setSelectedPaperId}
+                  />
+                </div>
+              )}
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {briefingItems.map((item) => (
