@@ -11,7 +11,7 @@ import {
 } from "@/lib/opportunities/query-gen";
 import { eventSources } from "./sources";
 import { dedupEvents } from "./dedup";
-import { scoreEvents } from "./scoring";
+import { MIN_SCORE, scoreEvents } from "./scoring";
 import { scoredEventToEvent } from "./mapper";
 import type {
   EventsFeedRequest,
@@ -32,6 +32,7 @@ export async function runEventsPipeline(
 
   const queryProfile = {
     topics: req.topics,
+    softTopics: req.softTopics,
     careerStage: req.careerStage,
     industryVsAcademia: req.industryVsAcademia,
     locationPreferences: req.locationPreferences,
@@ -73,20 +74,28 @@ export async function runEventsPipeline(
   const beforeDedup = allItems.length;
   const deduped = dedupEvents(allItems);
 
-  const scored = scoreEvents(deduped, {
-    topics: req.topics,
-    softTopics: req.softTopics,
-    methods: req.methods,
-    seedTexts: req.seedTexts,
-    preferenceLedger: req.preferenceLedger,
-    locations: req.locationPreferences,
-  });
+  const scored = scoreEvents(
+    deduped,
+    {
+      topics: req.topics,
+      softTopics: req.softTopics,
+      methods: req.methods,
+      seedTexts: req.seedTexts,
+      preferenceLedger: req.preferenceLedger,
+      locations: req.locationPreferences,
+    },
+    startedAt,
+    { applyFloor: false },
+  );
+  const beforeScoreFloor = scored.length;
+  const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
+  const afterScoreFloor = aboveScoreFloor.length;
 
   const excludeIds =
     req.excludeIds && req.excludeIds.length > 0 ? new Set(req.excludeIds) : null;
   const fresh = excludeIds
-    ? scored.filter((item) => !excludeIds.has(item.id))
-    : scored;
+    ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
+    : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
 
   return {
@@ -96,6 +105,8 @@ export async function runEventsPipeline(
       errors,
       beforeDedup,
       afterDedup: deduped.length,
+      beforeScoreFloor,
+      afterScoreFloor,
       returned: returned.length,
       latencyMs: Date.now() - startedAt,
       generatedAt: new Date().toISOString(),

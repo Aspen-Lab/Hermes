@@ -77,6 +77,8 @@ export interface EventsFeedMeta {
   errors: Partial<Record<EventSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
+  beforeScoreFloor: number;
+  afterScoreFloor: number;
   returned: number;
   latencyMs: number;
   generatedAt: string;

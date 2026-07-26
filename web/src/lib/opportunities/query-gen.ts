@@ -10,13 +10,14 @@ import type { CareerStage, IndustryAcademiaPreference } from "@/types";
 
 export interface QueryGenProfile {
   topics: string[];
+  softTopics?: string[];
   careerStage?: CareerStage;
   industryVsAcademia?: IndustryAcademiaPreference;
   locationPreferences?: string[];
   currentProject?: string;
 }
 
-const MAX_QUERIES = 5;
+const MAX_QUERIES = 12;
 
 // Best-effort in-process cache of LLM-generated queries. The two query-gen
 // calls fire on every feed build; the profile inputs rarely change between
@@ -31,11 +32,92 @@ function queryCacheKey(kind: string, profile: QueryGenProfile): string {
     kind,
     year: new Date().getFullYear(),
     topics: profile.topics,
+    softTopics: profile.softTopics ?? [],
     stage: profile.careerStage ?? "",
     dir: profile.industryVsAcademia ?? "",
     loc: profile.locationPreferences ?? [],
     proj: (profile.currentProject ?? "").slice(0, 500),
   });
+}
+
+function queryTerm(text: string): string {
+  return text.trim().replace(/\s+/g, " ");
+}
+
+function canonicalQueryTerm(text: string): string {
+  return queryTerm(text)
+    .toLocaleLowerCase()
+    .replace(/[-_/–—]+/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function specificTopicsFirst(topics: string[]): string[] {
+  return Array.from(new Set(topics.map(queryTerm).filter(Boolean))).sort(
+    (a, b) => {
+      const aWords = canonicalQueryTerm(a).split(" ").filter(Boolean).length;
+      const bWords = canonicalQueryTerm(b).split(" ").filter(Boolean).length;
+      const aMultiword = aWords > 1 ? 1 : 0;
+      const bMultiword = bWords > 1 ? 1 : 0;
+      return (
+        bMultiword - aMultiword ||
+        canonicalQueryTerm(b).length - canonicalQueryTerm(a).length ||
+        a.localeCompare(b)
+      );
+    },
+  );
+}
+
+function appendUnique(queries: string[], query: string): void {
+  const normalized = queryTerm(query);
+  if (
+    normalized &&
+    !queries.some(
+      (existing) =>
+        existing.toLocaleLowerCase() === normalized.toLocaleLowerCase(),
+    )
+  ) {
+    queries.push(normalized);
+  }
+}
+
+function eventPairQueries(
+  topics: string[],
+  softTopics: string[],
+  year: number,
+): string[] {
+  if (topics.length === 0) return [];
+  const candidates = specificTopicsFirst(softTopics).map((softTopic) => {
+    const softCanonical = canonicalQueryTerm(softTopic);
+    const relatedTopic = topics.find((topic) => {
+      const topicCanonical = canonicalQueryTerm(topic);
+      return (
+        topicCanonical.length > 0 &&
+        new RegExp(
+          `(?:^|\\s)${topicCanonical.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:$|\\s)`,
+          "u",
+        ).test(softCanonical)
+      );
+    });
+    return {
+      query: `${relatedTopic ?? topics[0] ?? ""} ${softTopic} summit ${year}`,
+      related: Boolean(relatedTopic),
+      specificity: softCanonical.split(" ").filter(Boolean).length,
+      length: softCanonical.length,
+    };
+  });
+
+  return candidates
+    .sort(
+      (a, b) =>
+        Number(b.related) - Number(a.related) ||
+        b.specificity - a.specificity ||
+        b.length - a.length ||
+        a.query.localeCompare(b.query),
+    )
+    .slice(0, 3)
+    .map((candidate) => queryTerm(candidate.query));
 }
 
 export function stageRoleTerms(stage: CareerStage | undefined): string[] {
@@ -58,12 +140,14 @@ export function stageRoleTerms(stage: CareerStage | undefined): string[] {
 }
 
 export function templateJobQueries(profile: QueryGenProfile): string[] {
-  const topics = profile.topics.slice(0, 3);
+  const topics = specificTopicsFirst(profile.topics);
   const roles = stageRoleTerms(profile.careerStage);
   const queries: string[] = [];
-  for (const topic of topics) {
-    for (const role of roles) {
-      queries.push(`${topic} ${role}`);
+  // Iterate roles first so every declared topic reaches web search before a
+  // second role for the first topic consumes the query budget.
+  for (const role of roles) {
+    for (const topic of topics) {
+      appendUnique(queries, `${topic} ${role}`);
       if (queries.length >= MAX_QUERIES) return queries;
     }
   }
@@ -72,13 +156,42 @@ export function templateJobQueries(profile: QueryGenProfile): string[] {
 
 export function templateEventQueries(profile: QueryGenProfile): string[] {
   const year = new Date().getFullYear();
-  const topics = profile.topics.slice(0, 3);
+  const topics = specificTopicsFirst(profile.topics);
   const queries: string[] = [];
+
+  // Give every required topic one broad query before spending more of the
+  // budget on variants. This prevents a short acronym at the start of the
+  // stored profile from crowding stronger terms out of web discovery.
   for (const topic of topics) {
-    queries.push(`${topic} conference ${year} call for papers`);
-    queries.push(`${topic} workshop symposium ${year}`);
-    if (queries.length >= MAX_QUERIES) break;
+    appendUnique(queries, `${topic} conference ${year}`);
+    if (queries.length >= MAX_QUERIES) return queries;
   }
+
+  // Related required/explore pairs are the most useful industry-discovery
+  // queries. Place them before the adapter's first-eight cutoff.
+  for (const pairQuery of eventPairQueries(
+    topics,
+    profile.softTopics ?? [],
+    year,
+  )) {
+    appendUnique(queries, pairQuery);
+    if (queries.length >= MAX_QUERIES) return queries;
+  }
+
+  const variants = [
+    (topic: string) => `${topic} summit ${year}`,
+    (topic: string) => `${topic} symposium ${year} call for papers`,
+    (topic: string) => `${topic} expo forum congress ${year}`,
+  ];
+  for (let round = 0; round < variants.length; round += 1) {
+    for (let topicIndex = 0; topicIndex < topics.length; topicIndex += 1) {
+      const topic = topics[topicIndex];
+      const variant = variants[(round + topicIndex) % variants.length];
+      appendUnique(queries, variant(topic));
+      if (queries.length >= MAX_QUERIES) return queries;
+    }
+  }
+
   return queries.slice(0, MAX_QUERIES);
 }
 
@@ -126,8 +239,12 @@ export async function generateSearchQueries(
   const cached = queryCache.get(cacheKey);
   if (cached && Date.now() - cached.ts < QUERY_CACHE_TTL_MS) return cached.queries;
 
+  const exploreTopics = profile.softTopics ?? [];
   const persona = [
     `Research topics: ${profile.topics.join(", ") || "unknown"}`,
+    exploreTopics.length > 0
+      ? `Explore topics: ${exploreTopics.join(", ")}`
+      : "",
     profile.careerStage ? `Career stage: ${profile.careerStage}` : "",
     profile.industryVsAcademia
       ? `Career direction: ${profile.industryVsAcademia}`
@@ -147,7 +264,7 @@ export async function generateSearchQueries(
   const target =
     kind === "jobs"
       ? "job openings this researcher would apply to (matching their seniority and academia/industry direction)"
-      : "academic conferences, workshops, summer schools, and seminars this researcher would want to submit to or attend (any discipline, not just computer science)";
+      : "industry summits, expos, forums, congresses, academic conferences, workshops, summer schools, and seminars this researcher would want to attend (any discipline, not just computer science)";
 
   try {
     const raw = await provider.generateJsonText({

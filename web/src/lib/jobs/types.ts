@@ -93,6 +93,8 @@ export interface JobsFeedMeta {
   errors: Partial<Record<JobSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
+  beforeScoreFloor: number;
+  afterScoreFloor: number;
   returned: number;
   latencyMs: number;
   generatedAt: string;

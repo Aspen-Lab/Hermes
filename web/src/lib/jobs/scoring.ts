@@ -32,14 +32,16 @@ export interface JobScoringProfile {
 }
 
 const WEIGHTS = {
-  keyword: 0.26,
+  keyword: 0.4,
   tfidf: 0.15,
-  career: 0.2,
-  industry: 0.1,
-  location: 0.1,
-  recency: 0.12,
+  career: 0.15,
+  industry: 0.08,
+  location: 0.07,
+  recency: 0.08,
   source: 0.07,
 };
+
+export const MIN_SCORE = 0.35;
 
 const SOURCE_WEIGHTS: Record<JobSourceId, number> = {
   usajobs: 0.85,
@@ -141,7 +143,7 @@ export function scoreIndustryFit(
   preference: IndustryAcademiaPreference | undefined,
 ): number {
   const text = `${item.title} ${item.company} ${item.description.slice(0, 400)}`;
-  const isAcademic = ACADEMIC_RE.test(text) || item.source === "jobweb";
+  const isAcademic = ACADEMIC_RE.test(text);
   const isBigTech = BIG_TECH_RE.test(item.company) || BIG_TECH_RE.test(item.title);
   const isStartup = STARTUP_RE.test(text);
 
@@ -178,7 +180,11 @@ function reasonFor(
   }
   if (careerFit >= 0.85 && stage) parts.push(`fits a ${stage} profile`);
   if (item.isRemote) parts.push("remote-friendly");
-  if (parts.length === 0) parts.push("Related to your research area");
+  if (parts.length === 0) {
+    parts.push(
+      item.source === "jobweb" ? "Matched by web search" : "Meets your job filters",
+    );
+  }
   const sentence = parts.join(" · ");
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
@@ -187,6 +193,7 @@ export function scoreJobs(
   items: RawJobItem[],
   profile: JobScoringProfile,
   now = Date.now(),
+  options: { applyFloor?: boolean } = {},
 ): ScoredJobItem[] {
   if (items.length === 0) return [];
 
@@ -199,6 +206,7 @@ export function scoreJobs(
         id: item.id,
         title: item.title,
         text: `${item.company}\n${item.description}`,
+        summary: `${item.title} ${item.description.slice(0, 300)}`,
         tags: item.tags,
         publishedAt: item.postedAt,
         url: item.url,
@@ -216,26 +224,37 @@ export function scoreJobs(
   const preparedLedger = prepareLedger(profile.preferenceLedger);
   const documentFrequency = buildPreferenceDocumentFrequency(facadeList);
 
-  // Gate topics: research topics plus methods — a posting matching either is
-  // plausibly relevant; matching neither is dropped when topics are set.
-  const gateTopics = [...profile.topics, ...(profile.methods ?? [])];
+  const rankingTopics = [...profile.topics, ...(profile.methods ?? [])];
   const softTopics = profile.softTopics ?? [];
 
   const scored: ScoredJobItem[] = [];
   for (const item of items) {
-    // Web-discovered postings came from a topic-targeted search query, so the
-    // search engine already filtered for relevance. Keyless board sources
-    // (remotive/arbeitnow/himalayas) return their whole catalog, so they still
-    // need the strict exact-phrase gate below.
-    const searchPrefiltered = item.source === "jobweb";
     const facade = facades.get(item.id)!;
-    const kw = scoreKeyword(facade, gateTopics);
-    // Research topics are precise ("solid state battery") but postings use
-    // field-level wording ("battery R&D scientist"), so the exact-phrase gate
-    // would wrongly drop relevant web hits — enforce it on board sources only.
-    if (!searchPrefiltered && gateTopics.length > 0 && kw.score === 0) continue;
+    const requiredScoped = scoreKeyword(facade, profile.topics, {
+      scope: "titleAndSummary",
+    });
+    const requiredAnywhere = scoreKeyword(facade, profile.topics);
+    const passesRequiredGate =
+      profile.topics.length === 0 ||
+      requiredScoped.matched.length >= 1 ||
+      new Set(requiredAnywhere.matched.map((topic) => topic.toLocaleLowerCase()))
+        .size >= 2;
+    if (!passesRequiredGate) continue;
 
-    const softKw = scoreKeyword(facade, softTopics);
+    const kw = scoreKeyword(facade, rankingTopics, {
+      scope: "titleAndSummary",
+    });
+    const requiredMatches =
+      requiredScoped.matched.length > 0
+        ? requiredScoped.matched
+        : requiredAnywhere.matched;
+    const reasonMatches = Array.from(
+      new Set([...requiredMatches, ...kw.matched]),
+    );
+
+    const softKw = scoreKeyword(facade, softTopics, {
+      scope: "titleAndSummary",
+    });
     const tf = clamp01(scoreTfidf(item.id, profileText, index));
     const career = scoreCareerFit(item, profile.careerStage);
     const industry = scoreIndustryFit(item, profile.industryPreference);
@@ -263,10 +282,18 @@ export function scoreJobs(
     scored.push({
       ...item,
       score,
-      matchedKeywords: kw.matched,
-      matchReason: reasonFor(item, kw.matched, career, profile.careerStage),
+      matchedKeywords: reasonMatches,
+      matchReason: reasonFor(
+        item,
+        reasonMatches,
+        career,
+        profile.careerStage,
+      ),
     });
   }
 
-  return scored.sort((a, b) => b.score - a.score);
+  const ranked = scored.sort((a, b) => b.score - a.score);
+  return options.applyFloor === false
+    ? ranked
+    : ranked.filter((item) => item.score >= MIN_SCORE);
 }

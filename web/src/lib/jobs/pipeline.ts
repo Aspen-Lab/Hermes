@@ -7,7 +7,7 @@ import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
 import { jobSources } from "./sources";
 import { dedupJobs } from "./dedup";
-import { scoreJobs } from "./scoring";
+import { MIN_SCORE, scoreJobs } from "./scoring";
 import { scoredJobToJob } from "./mapper";
 import type {
   JobsFeedRequest,
@@ -28,6 +28,7 @@ export async function runJobsPipeline(
 
   const queryProfile = {
     topics: req.topics,
+    softTopics: req.softTopics,
     careerStage: req.careerStage,
     industryVsAcademia: req.industryVsAcademia,
     locationPreferences: req.locationPreferences,
@@ -75,22 +76,30 @@ export async function runJobsPipeline(
   const beforeDedup = allItems.length;
   const deduped = dedupJobs(allItems);
 
-  const scored = scoreJobs(deduped, {
-    topics: req.topics,
-    softTopics: req.softTopics,
-    methods: req.methods,
-    seedTexts: req.seedTexts,
-    preferenceLedger: req.preferenceLedger,
-    careerStage: req.careerStage,
-    industryPreference: req.industryVsAcademia,
-    locations: req.locationPreferences,
-  });
+  const scored = scoreJobs(
+    deduped,
+    {
+      topics: req.topics,
+      softTopics: req.softTopics,
+      methods: req.methods,
+      seedTexts: req.seedTexts,
+      preferenceLedger: req.preferenceLedger,
+      careerStage: req.careerStage,
+      industryPreference: req.industryVsAcademia,
+      locations: req.locationPreferences,
+    },
+    startedAt,
+    { applyFloor: false },
+  );
+  const beforeScoreFloor = scored.length;
+  const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
+  const afterScoreFloor = aboveScoreFloor.length;
 
   const excludeIds =
     req.excludeIds && req.excludeIds.length > 0 ? new Set(req.excludeIds) : null;
   const fresh = excludeIds
-    ? scored.filter((item) => !excludeIds.has(item.id))
-    : scored;
+    ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
+    : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
 
   return {
@@ -100,6 +109,8 @@ export async function runJobsPipeline(
       errors,
       beforeDedup,
       afterDedup: deduped.length,
+      beforeScoreFloor,
+      afterScoreFloor,
       returned: returned.length,
       latencyMs: Date.now() - startedAt,
       generatedAt: new Date().toISOString(),

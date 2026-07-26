@@ -100,11 +100,16 @@ export function toScoringItem(input: {
   id: string;
   title: string;
   text: string;
+  summary?: string;
   tags: string[];
   publishedAt?: string;
   url?: string;
   preferenceSignals?: PreferenceConcept[];
 }): RawItem {
+  const metadata: RawItem["metadata"] & { gateText?: string } = {
+    preferenceSignals: input.preferenceSignals,
+    gateText: input.summary,
+  };
   return {
     id: input.id,
     source: "web",
@@ -114,7 +119,7 @@ export function toScoringItem(input: {
     url: input.url ?? "",
     publishedAt: input.publishedAt ?? "",
     tags: input.tags,
-    metadata: { preferenceSignals: input.preferenceSignals },
+    metadata,
   };
 }
 

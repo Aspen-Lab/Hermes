@@ -1,13 +1,11 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 import { urlHashId } from "@/lib/opportunities/shared";
 
-// Web discovery for academic positions. The classic academic boards
-// (HigherEdJobs, jobs.ac.uk, Nature Careers, EURAXESS) all block direct
-// server-side fetches, so we reach their public listings through a search
-// provider instead: Tavily (BYOK or TAVILY_API_KEY) or Brave
-// (BRAVE_SEARCH_API_KEY). Disabled when neither key is present.
+// Web discovery for research and R&D positions across academic and industry
+// employers. Search providers reach public listings that frequently block
+// direct server-side crawling. Disabled when neither key is present.
 
-const ACADEMIC_JOB_DOMAINS = [
+const KNOWN_JOB_BOARD_DOMAINS = [
   "higheredjobs.com",
   "jobs.ac.uk",
   "academicpositions.com",
@@ -17,6 +15,13 @@ const ACADEMIC_JOB_DOMAINS = [
   "academicjobsonline.org",
   "science.org",
 ];
+
+export const JOB_PATH_RE =
+  /\/(?:job|jobs|career|careers|position|positions|vacancy|vacancies|opportunity|opportunities|job-search|jobsearch)(?:\/|$)/i;
+export const NON_JOB_PATH_RE =
+  /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts)(?:\/|$)/i;
+const JOB_TEXT_RE =
+  /\b(job opening|job posting|open position|position available|vacanc(?:y|ies)|now hiring|we(?:'re| are) hiring|apply (?:now|today|for)|applications? (?:are )?(?:open|invited)|research (?:scientist|engineer|intern)|postdoc(?:toral)?|internship|r&d (?:scientist|engineer))\b/i;
 
 interface TavilyResult {
   title?: string;
@@ -38,12 +43,19 @@ export function webResultToRawJobItem(result: {
   const title = result.title?.trim();
   const url = result.url?.trim();
   if (!title || !url) return null;
+  let parsed: URL;
   let host = "";
   try {
-    host = new URL(url).hostname.replace(/^www\./, "");
+    parsed = new URL(url);
+    host = parsed.hostname.replace(/^www\./, "");
   } catch {
     return null;
   }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  const text = `${title} ${result.snippet ?? ""}`;
+  if (NON_JOB_PATH_RE.test(parsed.pathname)) return null;
+  if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;
+
   // Split "Postdoc in X - University of Y | board.com" style titles.
   const parts = title.split(/\s+[-–—|·]\s+/);
   const roleTitle = parts[0]?.trim() || title;
@@ -51,9 +63,8 @@ export function webResultToRawJobItem(result: {
     parts
       .slice(1)
       .map((p) => p.trim())
-      .find((p) => p && !ACADEMIC_JOB_DOMAINS.some((d) => p.toLowerCase().includes(d))) ||
+      .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d))) ||
     host;
-  const text = `${title} ${result.snippet ?? ""}`;
   return {
     id: `jobweb:${urlHashId(url)}`,
     source: "jobweb",
@@ -63,7 +74,7 @@ export function webResultToRawJobItem(result: {
     isRemote: /\bremote\b/i.test(text),
     description: (result.snippet ?? "").trim(),
     url,
-    tags: ["academic listing", host],
+    tags: ["web job listing", host],
   };
 }
 
@@ -82,7 +93,6 @@ async function searchTavily(
         search_depth: "basic",
         max_results: limit,
         include_answer: false,
-        include_domains: ACADEMIC_JOB_DOMAINS,
       }),
       signal: AbortSignal.timeout(7000),
       next: { revalidate: 3 * 60 * 60 },
@@ -103,9 +113,8 @@ async function searchBrave(
   apiKey: string,
   limit: number,
 ): Promise<RawJobItem[]> {
-  const siteFilter = ACADEMIC_JOB_DOMAINS.map((d) => `site:${d}`).join(" OR ");
   const params = new URLSearchParams({
-    q: `${query} (${siteFilter})`,
+    q: query,
     count: String(limit),
     freshness: "pm",
   });
@@ -142,16 +151,20 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
   const keys = resolveKeys(query);
   if (!keys.tavily && !keys.brave) return [];
 
-  const searches = query.queries.slice(0, 3);
+  const searches = query.queries.slice(0, 8);
   if (searches.length === 0) return [];
   const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
 
+  const resultSets = await Promise.all(
+    searches.map((q) => {
+      const jobQuery = `${q} position opening apply`;
+      return keys.tavily
+        ? searchTavily(jobQuery, keys.tavily, perQuery)
+        : searchBrave(jobQuery, keys.brave!, perQuery);
+    }),
+  );
   const all: RawJobItem[] = [];
-  for (const q of searches) {
-    const jobQuery = `${q} position opening apply`;
-    const items = keys.tavily
-      ? await searchTavily(jobQuery, keys.tavily, perQuery)
-      : await searchBrave(jobQuery, keys.brave!, perQuery);
+  for (const items of resultSets) {
     all.push(...items);
   }
   return Array.from(new Map(all.map((item) => [item.id, item])).values()).slice(

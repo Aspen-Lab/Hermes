@@ -67,10 +67,59 @@ export function guessEventType(text: string): EventType {
 // date-less results that still clearly describe an event, since conference
 // pages routinely omit a parseable date from their search snippet.
 const EVENT_SIGNAL_RE =
-  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
+  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|forum|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
 
 export function looksLikeEvent(text: string): boolean {
   return EVENT_SIGNAL_RE.test(text);
+}
+
+export const DENY_HOSTS = [
+  "instagram.com",
+  "facebook.com",
+  "twitter.com",
+  "x.com",
+  "tiktok.com",
+  "youtube.com",
+  "reddit.com",
+  "pinterest.com",
+  "iopscience.iop.org",
+  "sciencedirect.com",
+  "link.springer.com",
+  "onlinelibrary.wiley.com",
+  "nature.com",
+  "pubs.acs.org",
+  "pubs.rsc.org",
+  "arxiv.org",
+  "researchgate.net",
+  "semanticscholar.org",
+  "doi.org",
+  "waset.org",
+  "conferenceseries.com",
+  "omicsonline.org",
+  "alliedacademies.org",
+  "iaras.org",
+  "scitechseries.com",
+] as const;
+
+export const DENY_PATH_RE = /\/(?:article|doi|abs|reel|posts|p)(?:\/|$)/i;
+
+function isDeniedUrl(rawUrl: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return true;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return true;
+  const host = parsed.hostname.toLocaleLowerCase().replace(/^www\./, "");
+  if (
+    DENY_HOSTS.some(
+      (denied) => host === denied || host.endsWith(`.${denied}`),
+    )
+  ) {
+    return true;
+  }
+  return DENY_PATH_RE.test(parsed.pathname);
 }
 
 export function webResultToRawEventItem(
@@ -80,7 +129,9 @@ export function webResultToRawEventItem(
   const title = result.title?.trim();
   const url = result.url?.trim();
   if (!title || !url) return null;
+  if (isDeniedUrl(url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
+  if (!looksLikeEvent(text)) return null;
   const startDate = extractEventDate(text);
   const deadline = extractDeadline(text);
   const anchor = [startDate, deadline]
@@ -93,7 +144,6 @@ export function webResultToRawEventItem(
     // No parseable date is common for conference pages (the date lives in a
     // table the snippet doesn't capture). Keep the result only if it clearly
     // reads as an event; the card shows "date TBA" until opened.
-    if (!looksLikeEvent(text)) return null;
     // Guard against past events that mention only a bare year ("held in 2019"):
     // if every year token in the text is in the past, treat it as finished.
     const years = [...text.matchAll(/\b(20\d{2})\b/g)].map((m) => Number(m[1]));
@@ -194,16 +244,23 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
   const keys = resolveKeys(query);
   if (!keys.tavily && !keys.brave) return [];
 
-  const searches = query.queries.slice(0, 3);
+  const searches = query.queries.slice(0, 8);
   if (searches.length === 0) return [];
   const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
 
   const now = Date.now();
   const all: RawEventItem[] = [];
-  for (const q of searches) {
-    const results = keys.tavily
-      ? await searchTavily(q, keys.tavily, perQuery)
-      : await searchBrave(q, keys.brave!, perQuery);
+  // The pipeline gives each source an eight-second wall clock. Run these
+  // independent searches together so the expanded query set cannot time out
+  // before its later, more specific queries execute.
+  const resultSets = await Promise.all(
+    searches.map((q) =>
+      keys.tavily
+        ? searchTavily(q, keys.tavily, perQuery)
+        : searchBrave(q, keys.brave!, perQuery),
+    ),
+  );
+  for (const results of resultSets) {
     for (const result of results) {
       const item = webResultToRawEventItem(result, now);
       if (item) all.push(item);

@@ -24,13 +24,15 @@ export interface EventScoringProfile {
 }
 
 const WEIGHTS = {
-  keyword: 0.3,
-  tfidf: 0.13,
-  urgency: 0.25,
-  rank: 0.12,
-  location: 0.08,
-  source: 0.12,
+  keyword: 0.45,
+  tfidf: 0.2,
+  urgency: 0.12,
+  rank: 0.08,
+  location: 0.05,
+  source: 0.1,
 };
+
+export const MIN_SCORE = 0.35;
 
 const SOURCE_WEIGHTS: Record<EventSourceId, number> = {
   ccfddl: 1.0,
@@ -94,7 +96,11 @@ function reasonFor(item: RawEventItem, matched: string[], now: number): string {
     if (days >= 0 && days <= 60) parts.push(`starts in ${days} days`);
   }
   if (item.rank) parts.push(item.rank);
-  if (parts.length === 0) parts.push("Upcoming in your field");
+  if (parts.length === 0) {
+    parts.push(
+      item.source === "eventweb" ? "Matched by web search" : "Meets your event filters",
+    );
+  }
   const sentence = parts.join(" · ");
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
@@ -126,6 +132,7 @@ export function scoreEvents(
   items: RawEventItem[],
   profile: EventScoringProfile,
   now = Date.now(),
+  options: { applyFloor?: boolean } = {},
 ): ScoredEventItem[] {
   if (items.length === 0) return [];
 
@@ -136,6 +143,7 @@ export function scoreEvents(
         id: item.id,
         title: item.name,
         text: item.description,
+        summary: item.description.slice(0, 300),
         tags: item.tags,
         publishedAt: item.startDate,
         url: item.url,
@@ -153,16 +161,12 @@ export function scoreEvents(
   const preparedLedger = prepareLedger(profile.preferenceLedger);
   const documentFrequency = buildPreferenceDocumentFrequency(facadeList);
 
-  const gateTopics = [...profile.topics, ...(profile.methods ?? [])];
+  const rankingTopics = [...profile.topics, ...(profile.methods ?? [])];
   const softTopics = profile.softTopics ?? [];
 
   const scored: ScoredEventItem[] = [];
   for (const item of items) {
-    // Web-discovered items were retrieved by a topic-targeted search query, so
-    // the search engine already did the relevance filtering. Curated sources
-    // (ccfddl/confstech/researchseminars) return their whole catalog regardless
-    // of topic, so they still need the strict local gates below.
-    const searchPrefiltered = item.source === "eventweb";
+    const isWebDiscovered = item.source === "eventweb";
 
     // Skip events that are entirely over. Web items often carry no parseable
     // date (shown as "date TBA"); trust the dated-future search query rather
@@ -176,17 +180,34 @@ export function scoreEvents(
       (Number.isFinite(endMs) && endMs >= now) ||
       (Number.isFinite(deadlineMs) && deadlineMs >= now);
     if (hasParsedDate && !hasFuture) continue;
-    if (!hasParsedDate && !searchPrefiltered) continue;
+    if (!hasParsedDate && !isWebDiscovered) continue;
 
     const facade = facades.get(item.id)!;
-    const kw = scoreKeyword(facade, gateTopics);
-    // Exact-phrase gate: research topics are precise ("solid state battery"),
-    // but event pages use field-level wording ("battery congress"), so the
-    // gate would wrongly drop relevant web hits. Only enforce it on curated
-    // sources; web results lean on their search provenance instead.
-    if (!searchPrefiltered && gateTopics.length > 0 && kw.score === 0) continue;
+    const requiredScoped = scoreKeyword(facade, profile.topics, {
+      scope: "titleAndSummary",
+    });
+    const requiredAnywhere = scoreKeyword(facade, profile.topics);
+    const passesRequiredGate =
+      profile.topics.length === 0 ||
+      requiredScoped.matched.length >= 1 ||
+      new Set(requiredAnywhere.matched.map((topic) => topic.toLocaleLowerCase()))
+        .size >= 2;
+    if (!passesRequiredGate) continue;
 
-    const softKw = scoreKeyword(facade, softTopics);
+    const kw = scoreKeyword(facade, rankingTopics, {
+      scope: "titleAndSummary",
+    });
+    const requiredMatches =
+      requiredScoped.matched.length > 0
+        ? requiredScoped.matched
+        : requiredAnywhere.matched;
+    const reasonMatches = Array.from(
+      new Set([...requiredMatches, ...kw.matched]),
+    );
+
+    const softKw = scoreKeyword(facade, softTopics, {
+      scope: "titleAndSummary",
+    });
     const tf = clamp01(scoreTfidf(item.id, profileText, index));
     const urgency = scoreUrgency(item, now);
     const rank = scoreRank(item.rank);
@@ -212,10 +233,13 @@ export function scoreEvents(
     scored.push({
       ...item,
       score,
-      matchedKeywords: kw.matched,
-      relevanceReason: reasonFor(item, kw.matched, now),
+      matchedKeywords: reasonMatches,
+      relevanceReason: reasonFor(item, reasonMatches, now),
     });
   }
 
-  return diversifyByType(scored.sort((a, b) => b.score - a.score));
+  const ranked = diversifyByType(scored.sort((a, b) => b.score - a.score));
+  return options.applyFloor === false
+    ? ranked
+    : ranked.filter((item) => item.score >= MIN_SCORE);
 }
