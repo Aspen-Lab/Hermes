@@ -253,11 +253,12 @@ function DiscoveryPage() {
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
   }, [papers, events, jobs, query, activeType]);
 
-  // Today's highlights only ever summarizes papers, so it belongs to the paper
-  // lanes (All / Papers) alone. Gating the render — not just its paper input —
-  // keeps it from flashing stale bullets for a frame when the user switches to
-  // Events or Jobs, since the component clears itself in an effect (post-paint).
-  const showDigest = activeType === "all" || activeType === "papers";
+  // Today's highlights only ever summarizes papers, so it belongs to the
+  // Papers lane alone — not All, Events, or Jobs. Gating the render — not
+  // just its paper input — keeps it from flashing stale bullets for a frame
+  // when the user switches tabs, since the component clears itself in an
+  // effect (post-paint).
+  const showDigest = activeType === "papers";
 
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
   const totalAll = papers.length + events.length + jobs.length;
@@ -704,9 +705,8 @@ function DiscoveryPage() {
           {briefingItems.length > 0 && (
             <>
               {/* One-paragraph synthesized digest. Papers-only content, so it
-                  renders on the All / Papers lanes and nowhere else. Hides
-                  itself if no LLM is configured, so the rest of the feed keeps
-                  working. */}
+                  renders on the Papers lane and nowhere else. Hides itself if
+                  no LLM is configured, so the rest of the feed keeps working. */}
               {showDigest && (
                 <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
                   <DailyDigest
