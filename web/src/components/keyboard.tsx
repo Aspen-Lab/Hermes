@@ -142,7 +142,7 @@ export function KeyboardLayer() {
         }
         case "r": {
           if (window.location.pathname === "/") {
-            loadFeed();
+            void loadFeed({ advanceHistory: true });
             e.preventDefault();
           }
           return;

@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import type { Paper } from "@/types";
 import { apiFetch } from "@/lib/api";
+import { ScrambleText } from "@/components/scramble-text";
+import { ProgressBar } from "@/components/ui/progress-bar";
 
 interface DailyDigestProps {
   papers: Paper[];
@@ -22,8 +24,20 @@ interface DigestCache {
   fetchedAt: number;
 }
 
+interface DigestProgressStep {
+  afterMs: number;
+  pct: number;
+  label: string;
+}
+
 const CACHE_KEY = "peer-digest-cache";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+export const DIGEST_PROGRESS_STEPS = [
+  { afterMs: 0, pct: 10, label: "Reviewing today\u2019s papers" },
+  { afterMs: 900, pct: 35, label: "Reading the strongest matches" },
+  { afterMs: 2_400, pct: 70, label: "Writing today\u2019s highlights" },
+  { afterMs: 4_800, pct: 90, label: "Finishing the briefing" },
+] as const satisfies readonly DigestProgressStep[];
 
 // Tiny, stable string hash — only used to bound the cache-key length for the
 // context blurb; correctness comes from the id list + length, not the hash.
@@ -76,6 +90,10 @@ function clearCache() {
 export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPaper }: DailyDigestProps) {
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
+  const [revealBullets, setRevealBullets] = useState(false);
+  const [progress, setProgress] = useState<DigestProgressStep>(
+    DIGEST_PROGRESS_STEPS[0],
+  );
 
   // Order-insensitive (a pure re-shuffle of the same papers must still hit the
   // cache) and context-aware (a profile-context change must invalidate a stale
@@ -88,13 +106,23 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
   }, [papers, contextHint]);
 
   const fetchDigest = useCallback(async (key: string, force = false) => {
-    if (papers.length === 0) { setData(null); return; }
+    if (papers.length === 0) {
+      setData(null);
+      setRevealBullets(false);
+      return;
+    }
 
     if (!force) {
       const cached = readCache(key);
-      if (cached) { setData(cached); return; }
+      if (cached) {
+        setData(cached);
+        setRevealBullets(false);
+        return;
+      }
     }
 
+    setProgress(DIGEST_PROGRESS_STEPS[0]);
+    setRevealBullets(false);
     setLoading(true);
     try {
       const json = await apiFetch<DigestPayload>("/api/digest", {
@@ -111,13 +139,29 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
         }),
       });
       setData(json);
+      setRevealBullets(Boolean(json.bullets?.length && !json.noLlm));
       if (json.bullets?.length && !json.noLlm) writeCache(key, json);
     } catch {
       setData(null);
+      setRevealBullets(false);
     } finally {
       setLoading(false);
     }
   }, [papers, contextHint]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const timers = DIGEST_PROGRESS_STEPS.slice(1).map((step) =>
+      window.setTimeout(() => {
+        setProgress((current) => current.pct < step.pct ? step : current);
+      }, step.afterMs),
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [loading]);
 
   useEffect(() => {
     fetchDigest(paperKey);
@@ -128,88 +172,107 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
     fetchDigest(paperKey, true);
   };
 
+  const progressBar = loading ? (
+    <ProgressBar pct={progress.pct} label={progress.label} />
+  ) : null;
+
   if (!data || data.noLlm || !data.bullets?.length) {
-    if (loading) return <DigestSkeleton />;
+    if (loading) {
+      return (
+        <>
+          {progressBar}
+          <DigestSkeleton />
+        </>
+      );
+    }
     return null;
   }
 
   return (
-    <section
-      className="mb-8 rounded-2xl bg-surface shadow-card px-5 py-5 sm:px-7 sm:py-6 animate-fade-in-up"
-      aria-label="Daily briefing digest"
-    >
-      <header className="flex items-center justify-between gap-2 mb-4">
-        <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.18em] text-accent/90 min-w-0">
-          <span className="inline-block w-3.5 h-[1.5px] bg-accent/70 shrink-0" />
-          <span className="truncate">Today&rsquo;s highlights</span>
-        </span>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleRegenerate}
-            disabled={loading}
-            title="Regenerate digest"
-            aria-label="Regenerate digest"
-            className="group inline-flex items-center gap-1.5 h-7 px-2 sm:pl-2 sm:pr-3 rounded-full bg-bg-secondary/60 text-text-faint hover:text-heading hover:bg-bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-300"}
-              aria-hidden
+    <>
+      {progressBar}
+      <section
+        className="mb-8 rounded-2xl bg-surface shadow-card px-5 py-5 sm:px-7 sm:py-6 animate-fade-in-up"
+        aria-label="Daily briefing digest"
+        aria-busy={loading}
+      >
+        <header className="flex items-center justify-between gap-2 mb-4">
+          <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-[0.18em] text-accent/90 min-w-0">
+            <span className="inline-block w-3.5 h-[1.5px] bg-accent/70 shrink-0" />
+            <span className="truncate">Today&rsquo;s highlights</span>
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              disabled={loading}
+              title="Regenerate digest"
+              aria-label="Regenerate digest"
+              className="group inline-flex items-center gap-1.5 h-7 px-2 sm:pl-2 sm:pr-3 rounded-full bg-bg-secondary/60 text-text-faint hover:text-heading hover:bg-bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <path d="M23 4v6h-6" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-            <span className="text-caption font-medium hidden sm:inline">Regenerate</span>
-          </button>
-          <AudioButton />
-        </div>
-      </header>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-300"}
+                aria-hidden
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+              <span className="text-caption font-medium hidden sm:inline">Regenerate</span>
+            </button>
+            <AudioButton />
+          </div>
+        </header>
 
-      <ol className="space-y-3 list-none m-0 p-0">
-        {data.bullets.map((bullet, i) => {
-          // LLM sometimes returns a slightly different paperId than what was sent.
-          // Fall back to index-based paper (the prompt guarantees same order as input).
-          const paper = papers.find((p) => p.id === bullet.paperId) ?? papers[i];
-          const actualPaperId = paper?.id ?? bullet.paperId;
-          const isSelected = selectedPaperId === actualPaperId;
-          const scrollTo = (e: React.MouseEvent) => {
-            e.preventDefault();
-            onSelectPaper?.(actualPaperId);
-            const el = document.getElementById(`paper-${actualPaperId}`);
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-          };
-          return (
-            <li key={actualPaperId} className="flex items-start gap-3">
-              <a
-                href={`#paper-${actualPaperId}`}
-                onClick={scrollTo}
-                title={paper?.title ?? "Jump to paper"}
-                className={`flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full text-caption font-semibold flex items-center justify-center transition-colors no-underline ${
-                  isSelected
-                    ? "bg-accent text-bg"
-                    : "bg-accent/15 text-accent hover:bg-accent hover:text-bg"
-                }`}
-              >
-                {i + 1}
-              </a>
-              <p
-                className="text-body-lg lg:text-lead text-heading leading-[1.65] font-reading"
-              >
-                {bullet.text}
-              </p>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
+        <ol className="space-y-3 list-none m-0 p-0">
+          {data.bullets.map((bullet, i) => {
+            // LLM sometimes returns a slightly different paperId than what was sent.
+            // Fall back to index-based paper (the prompt guarantees same order as input).
+            const paper = papers.find((p) => p.id === bullet.paperId) ?? papers[i];
+            const actualPaperId = paper?.id ?? bullet.paperId;
+            const isSelected = selectedPaperId === actualPaperId;
+            const scrollTo = (e: React.MouseEvent) => {
+              e.preventDefault();
+              onSelectPaper?.(actualPaperId);
+              const el = document.getElementById(`paper-${actualPaperId}`);
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            };
+            return (
+              <li key={actualPaperId} className="flex items-start gap-3">
+                <a
+                  href={`#paper-${actualPaperId}`}
+                  onClick={scrollTo}
+                  title={paper?.title ?? "Jump to paper"}
+                  className={`flex-shrink-0 mt-[3px] w-[22px] h-[22px] rounded-full text-caption font-semibold flex items-center justify-center transition-colors no-underline ${
+                    isSelected
+                      ? "bg-accent text-bg"
+                      : "bg-accent/15 text-accent hover:bg-accent hover:text-bg"
+                  }`}
+                >
+                  {i + 1}
+                </a>
+                <p
+                  className="text-body-lg lg:text-lead text-heading leading-[1.65] font-reading"
+                >
+                  {revealBullets ? (
+                    <ScrambleText text={bullet.text} />
+                  ) : (
+                    bullet.text
+                  )}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    </>
   );
 }
 

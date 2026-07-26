@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState, useEffect } from "react";
+import { use, useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
@@ -39,6 +39,12 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { ScrambleText } from "@/components/scramble-text";
+import {
+  streamPaperReport,
+  type StageId,
+} from "@/lib/papers/report-stream";
 
 const WORDS_PER_MINUTE = 220;
 const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
@@ -485,6 +491,45 @@ function writeCachedPaperReport(reportKey: string, report: PaperReport | null) {
   }
 }
 
+/**
+ * Smooths the streamed progress value for display.
+ *
+ * Server stages are sparse and some are long — the deep read can hold
+ * "Writing the report" for a minute — which strands the bar at one value and
+ * makes it look stuck. This eases the shown value forward between milestones
+ * so progress always reads as alive, while keeping the guarantees that matter:
+ * the authoritative server value is always the floor, the bar never moves
+ * backwards, and easing alone never reaches 100 (only a real `done` stage
+ * does). `runKey` resets the easing when a different report starts.
+ */
+function useEasedProgress(target: number | null, runKey: string): number {
+  const [eased, setEased] = useState(0);
+  const [seenKey, setSeenKey] = useState(runKey);
+
+  // Reset during render when the run changes (React's documented pattern —
+  // keeps this out of an effect, which would cause a cascading render).
+  if (seenKey !== runKey) {
+    setSeenKey(runKey);
+    setEased(0);
+  }
+
+  useEffect(() => {
+    if (target === null || target >= 100) return;
+    // Creep toward a ceiling partway to the next milestone, decelerating so it
+    // never implies more progress than has actually happened.
+    const ceiling = Math.min(99, target + (100 - target) * 0.45);
+    const id = window.setInterval(() => {
+      setEased((current) => {
+        const base = Math.max(current, target);
+        return base >= ceiling ? base : base + (ceiling - base) * 0.06;
+      });
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [target]);
+
+  return target === null ? 0 : Math.max(eased, target);
+}
+
 export default function PaperDetailPage({
   params,
 }: {
@@ -518,6 +563,20 @@ export default function PaperDetailPage({
     report: PaperReport | null;
     done: boolean;
   }>(() => ({ key: "", report: null, done: false }));
+  const [buildup, setBuildup] = useState<{
+    key: string;
+    stage: StageId;
+    label: string;
+    pct: number;
+  } | null>(null);
+  const [aiMode, setAiMode] = useState<{
+    key: string;
+    mode: "tier0" | "tier1" | "tier2";
+  } | null>(null);
+  const [revealingReportKey, setRevealingReportKey] = useState<string | null>(
+    null,
+  );
+  const reportRequestId = useRef(0);
   const [figureOwners, setFigureOwners] = useState<FigureOwners>({});
   const [reportNow] = useState(() => Date.now());
 
@@ -633,10 +692,40 @@ export default function PaperDetailPage({
         ? fallbackReport
         : null;
   const reportLoading = Boolean(paper && !reportDone);
+  const activeBuildup =
+    buildup?.key === reportKey
+      ? {
+          stage: buildup.stage,
+          label: buildup.label,
+          pct: buildup.pct,
+        }
+      : null;
+  const activeAiMode = aiMode?.key === reportKey ? aiMode.mode : null;
+  const showBuildup =
+    activeAiMode !== "tier0" &&
+    reportLoading &&
+    activeBuildup !== null;
+  const showReportSkeletons = reportLoading && !showBuildup;
+  const shouldScrambleReport =
+    revealingReportKey === reportKey &&
+    hasFetchedReport &&
+    reportResult.report !== null;
+  const showGenerationProgress =
+    activeBuildup !== null && (showBuildup || shouldScrambleReport);
+  const easedProgressPct = useEasedProgress(
+    activeBuildup ? activeBuildup.pct : null,
+    reportKey,
+  );
 
   useEffect(() => {
     if (!paper || cachedReport || reportResult.key === reportKey) return;
+    const controller = new AbortController();
+    const requestId = ++reportRequestId.current;
     let cancelled = false;
+    const isActive = () =>
+      !cancelled &&
+      !controller.signal.aborted &&
+      reportRequestId.current === requestId;
     // Only build an LLM override when the user picked a specific provider
     // and supplied a key. With `feedAiProvider === "default"` we send no
     // override — the server resolves to whatever the site is set up with.
@@ -654,28 +743,124 @@ export default function PaperDetailPage({
             apiKey: profile.feedAiApiKey.trim(),
           }
         : undefined;
-    apiFetch<PaperReport>("/api/papers/report", {
-      method: "POST",
-      body: JSON.stringify({
-        paper,
-        contextHint,
-        deepReport: deepReportRequested,
-        llmOverride,
-      }),
-    })
-      .then((nextReport) => {
-        if (!cancelled) {
-          writeCachedPaperReport(reportKey, nextReport);
-          setReportResult({ key: reportKey, report: nextReport, done: true });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
+    const requestBody = {
+      paper,
+      contextHint,
+      deepReport: deepReportRequested,
+      llmOverride,
+    };
+
+    const finishWithReport = (
+      nextReport: PaperReport,
+      reveal: boolean,
+    ) => {
+      if (!isActive()) return;
+      writeCachedPaperReport(reportKey, nextReport);
+      setBuildup({
+        key: reportKey,
+        stage: "done",
+        label: "Report ready",
+        pct: 100,
+      });
+      setRevealingReportKey(reveal ? reportKey : null);
+      setReportResult({ key: reportKey, report: nextReport, done: true });
+    };
+
+    const fetchJsonFallback = async () => {
+      try {
+        const nextReport = await apiFetch<PaperReport>("/api/papers/report", {
+          method: "POST",
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        finishWithReport(nextReport, nextReport.noLlm !== true);
+      } catch {
+        if (isActive()) {
+          setBuildup(null);
+          setRevealingReportKey(null);
           setReportResult({ key: reportKey, report: null, done: true });
         }
-      });
+      }
+    };
+
+    const loadReport = async () => {
+      let settled = false;
+      let modeSeen = false;
+      await Promise.resolve();
+      if (!isActive()) return;
+      try {
+        for await (const event of streamPaperReport(
+          requestBody,
+          controller.signal,
+        )) {
+          if (!isActive()) return;
+
+          if (event.type === "mode") {
+            if (modeSeen) {
+              throw new Error("Report stream sent more than one mode event.");
+            }
+            modeSeen = true;
+            setAiMode({ key: reportKey, mode: event.aiMode });
+            if (event.aiMode === "tier0") {
+              settled = true;
+              setBuildup(null);
+              setRevealingReportKey(null);
+              setReportResult({
+                key: reportKey,
+                report: null,
+                done: true,
+              });
+              return;
+            }
+            continue;
+          }
+
+          if (!modeSeen) {
+            throw new Error("Report stream did not begin with a mode event.");
+          }
+
+          if (event.type === "stage") {
+            const nextPct = Number.isFinite(event.pct)
+              ? Math.max(0, Math.min(100, event.pct))
+              : 0;
+            setBuildup((current) =>
+              current &&
+              current.key === reportKey &&
+              nextPct < current.pct
+                ? current
+                : {
+                    key: reportKey,
+                    stage: event.stage,
+                    label: event.label,
+                    pct: nextPct,
+                  },
+            );
+            continue;
+          }
+
+          if (event.type === "report") {
+            settled = true;
+            finishWithReport(event.report, true);
+            return;
+          }
+
+          throw new Error(event.message);
+        }
+
+        if (!settled) {
+          throw new Error("Report stream ended before a report arrived.");
+        }
+      } catch {
+        if (!settled && isActive()) {
+          await fetchJsonFallback();
+        }
+      }
+    };
+
+    void loadReport();
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [
     paper,
@@ -687,6 +872,21 @@ export default function PaperDetailPage({
     profile.feedAiProvider,
     profile.feedAiApiKey,
   ]);
+
+  useEffect(() => {
+    if (!revealingReportKey) return;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const timeout = window.setTimeout(
+      () =>
+        setRevealingReportKey((current) =>
+          current === revealingReportKey ? null : current,
+        ),
+      reducedMotion ? 0 : 900,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [revealingReportKey]);
 
   const related = useMemo(() => {
     if (!paper) return [];
@@ -746,11 +946,13 @@ export default function PaperDetailPage({
   // Rule: never show a section that just says "this is not in the paper".
   // The Novelty section renders only when we actually have a novelty
   // sentence (deep-mode success or a key-result's novelty field).
-  const showNoveltySection = Boolean(noveltySentence) || reportLoading;
+  const showNoveltySection =
+    Boolean(noveltySentence) || showReportSkeletons;
   const methodBullets = (report?.whatItProposes.methods ?? []).filter(Boolean);
-  const showMethodSection = methodBullets.length > 0 || reportLoading;
+  const showMethodSection = methodBullets.length > 0 || showReportSkeletons;
   const proposalSummary = report?.whatItProposes.summary?.trim() ?? "";
-  const showProposalSection = proposalSummary.length > 0 || reportLoading;
+  const showProposalSection =
+    proposalSummary.length > 0 || showReportSkeletons;
   const proposalFigureQuery = figureQuery(
     report?.whatItProposes.figureLabel ?? undefined,
     noveltySentence ?? undefined,
@@ -783,7 +985,14 @@ export default function PaperDetailPage({
 
   return (
     <>
-      <ScrollProgress />
+      {showGenerationProgress && activeBuildup ? (
+        <ProgressBar
+          pct={easedProgressPct}
+          label={activeBuildup.label}
+        />
+      ) : (
+        <ScrollProgress />
+      )}
       <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
@@ -927,7 +1136,16 @@ export default function PaperDetailPage({
             <IconBullseye />
             Relevance
           </p>
-          {reportLoading ? (
+          {showBuildup && activeBuildup ? (
+            <div role="status" aria-live="polite" aria-busy="true">
+              <p className="text-body-lg font-medium text-heading">
+                {activeBuildup.label}
+              </p>
+              <p className="mt-1 text-body text-text-muted leading-relaxed">
+                Peer is building the report from the paper and your profile.
+              </p>
+            </div>
+          ) : showReportSkeletons ? (
             <div className="space-y-2.5" aria-busy="true">
               <ShimmerBar width="90%" />
               <ShimmerBar width="76%" />
@@ -976,9 +1194,10 @@ export default function PaperDetailPage({
               title="Core novelty"
               body={noveltySentence ?? undefined}
               emphasis
-              loading={reportLoading}
+              loading={showReportSkeletons}
+              scramble={shouldScrambleReport}
               figure={
-                reportLoading ? (
+                showReportSkeletons ? (
                   <FigureLoadingFrame />
                 ) : report?.whatItProposes.figureImageUrl ? (
                   // Deep-report bound a specific image — render directly.
@@ -1037,7 +1256,8 @@ export default function PaperDetailPage({
             <ReportFigureRow
               title="Proposal"
               body={report?.whatItProposes.summary}
-              loading={reportLoading}
+              loading={showReportSkeletons}
+              scramble={shouldScrambleReport}
               figure={null}
             />
           </>
@@ -1052,20 +1272,21 @@ export default function PaperDetailPage({
             <ReportFigureRow
               title="Method"
               bullets={methodBullets}
-              loading={reportLoading}
+              loading={showReportSkeletons}
+              scramble={shouldScrambleReport}
               figure={null}
             />
           </>
         )}
 
-        {isReviewPaper ? (
+        {!showBuildup && (isReviewPaper ? (
           <>
             <SectionTitle icon={<IconBook />} index={6}>
               Paper contents &amp; highlight
             </SectionTitle>
 
             <div className="mt-5 space-y-3">
-              {reportLoading && [1, 2, 3].map((i) => (
+              {showReportSkeletons && [1, 2, 3].map((i) => (
                 <div key={`loading-review-${i}`} className="rounded-2xl bg-surface px-5 py-4 shadow-card space-y-3">
                   <ShimmerBar width="40%" height="h-3" />
                   <ShimmerBar width="92%" />
@@ -1082,10 +1303,12 @@ export default function PaperDetailPage({
                   >
                     {section.heading}
                   </p>
-                  <p
-                    className="text-body-lg text-text leading-[1.68] break-words font-reading"
-                  >
-                    {section.summary}
+                  <p className="text-body-lg text-text leading-[1.68] break-words font-reading">
+                    {shouldScrambleReport ? (
+                      <ScrambleText text={section.summary} />
+                    ) : (
+                      section.summary
+                    )}
                   </p>
                 </div>
               ))}
@@ -1098,15 +1321,23 @@ export default function PaperDetailPage({
             </SectionTitle>
 
             <PullQuote>
-              {reportLoading
+              {showReportSkeletons
                 ? "Preparing the final report from the paper metadata and your profile."
-                : digestBullet ||
-                report?.resultsAndSignificance.summary ||
-                paper.relevanceReason}
+                : shouldScrambleReport &&
+                    !digestBullet &&
+                    report?.resultsAndSignificance.summary ? (
+                  <ScrambleText
+                    text={report.resultsAndSignificance.summary}
+                  />
+                ) : (
+                  digestBullet ||
+                  report?.resultsAndSignificance.summary ||
+                  paper.relevanceReason
+                )}
             </PullQuote>
 
             <div className="mt-5 space-y-5">
-              {reportLoading && [1, 2].map((figureIndex) => (
+              {showReportSkeletons && [1, 2].map((figureIndex) => (
                 <ReportFigureRow
                   key={`loading-result-${figureIndex}`}
                   title={`Key result ${figureIndex}`}
@@ -1138,7 +1369,12 @@ export default function PaperDetailPage({
                   <ReportFigureRow
                     key={group.key}
                     title={resultGroupTitle(group)}
-                    content={<ResultClaimList results={group.results} />}
+                    content={
+                      <ResultClaimList
+                        results={group.results}
+                        scramble={shouldScrambleReport}
+                      />
+                    }
                     figure={
                       skipFigure ? null : boundImageUrl ? (
                         <BoundFigureView
@@ -1180,7 +1416,7 @@ export default function PaperDetailPage({
               })}
             </div>
           </>
-        )}
+        ))}
 
         {/* ── Quick signals ── */}
         <SectionTitle icon={<IconCheck strokeWidth={2} />} index={8}>
@@ -1228,14 +1464,6 @@ export default function PaperDetailPage({
             href={codeUrl}
           />
         </div>
-
-        {reportLoading && (
-          <p
-            className="mt-3 text-meta text-text-faint"
-          >
-            Refining report with AI…
-          </p>
-        )}
 
         {/* ── Train feed ── */}
         <div
@@ -1320,8 +1548,10 @@ function SectionTitle({
 
 function ResultClaimList({
   results,
+  scramble = false,
 }: {
   results: PaperReportKeyResult[];
+  scramble?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -1333,12 +1563,20 @@ function ResultClaimList({
           <h3
             className="text-title sm:text-title font-semibold text-heading leading-snug break-words"
           >
-            {result.title}
+            {scramble ? (
+              <ScrambleText text={result.title} />
+            ) : (
+              result.title
+            )}
           </h3>
           <p
             className="mt-2 text-body-lg text-text leading-[1.68] break-words font-reading"
           >
-            {result.detail}
+            {scramble ? (
+              <ScrambleText text={result.detail} />
+            ) : (
+              result.detail
+            )}
           </p>
           {result.novelty && (
             <p
@@ -1347,7 +1585,11 @@ function ResultClaimList({
               <span className="font-semibold text-heading">
                 Why it&apos;s new:
               </span>{" "}
-              {result.novelty}
+              {scramble ? (
+                <ScrambleText text={result.novelty} />
+              ) : (
+                result.novelty
+              )}
             </p>
           )}
         </div>
@@ -1364,6 +1606,7 @@ function ReportFigureRow({
   figure,
   loading = false,
   emphasis = false,
+  scramble = false,
 }: {
   title: string;
   body?: string;
@@ -1372,6 +1615,7 @@ function ReportFigureRow({
   figure: React.ReactNode | null;
   loading?: boolean;
   emphasis?: boolean;
+  scramble?: boolean;
 }) {
   const visibleBullets = (bullets ?? []).filter(Boolean).slice(0, 6);
   const hasBody = Boolean(body?.trim());
@@ -1401,7 +1645,7 @@ function ReportFigureRow({
               emphasis ? "font-semibold text-heading" : "text-text"
             }`}
           >
-            {body}
+            {scramble && body ? <ScrambleText text={body} /> : body}
           </p>
         ) : null}
         {!loading && visibleBullets.length > 0 && (
@@ -1409,7 +1653,9 @@ function ReportFigureRow({
             className="mt-4 space-y-2 text-body text-text-muted leading-[1.55] list-decimal list-inside"
           >
             {visibleBullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
+              <li key={bullet}>
+                {scramble ? <ScrambleText text={bullet} /> : bullet}
+              </li>
             ))}
           </ol>
         )}

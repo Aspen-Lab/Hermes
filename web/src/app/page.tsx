@@ -28,6 +28,7 @@ import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
 
 interface SearchResult {
@@ -74,6 +75,9 @@ function DiscoveryPage() {
     events,
     jobs,
     isLoading,
+    papersLoading,
+    eventsLoading,
+    jobsLoading,
     lastRefresh,
     loadFeed,
     aiPaperSearchEnabled,
@@ -86,6 +90,9 @@ function DiscoveryPage() {
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
   const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
+  const refreshFeed = useCallback(() => {
+    void loadFeed({ advanceHistory: true });
+  }, [loadFeed]);
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
@@ -253,12 +260,43 @@ function DiscoveryPage() {
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
   }, [papers, events, jobs, query, activeType]);
 
+  // Today's highlights only ever summarizes papers, so it belongs to the paper
+  // lanes (All / Papers) alone. Gating the render — not just the input array —
+  // keeps it from flashing stale bullets for a frame when the user switches to
+  // Events or Jobs, since the component clears itself in an effect (post-paint).
+  const showDigest = activeType === "all" || activeType === "papers";
+
+  // Keep this array independent from event/job lane commits. DailyDigest uses
+  // its paper input to guard its single request, so opportunity arrivals must
+  // not manufacture a new array and restart an in-flight digest.
+  const digestPapers = useMemo(() => {
+    if (activeType !== "all" && activeType !== "papers") return [];
+    const visiblePapers = query
+      ? papers.filter((paper) =>
+          matchesQuery(
+            query,
+            paper.title,
+            paper.authors.join(" "),
+            paper.venue,
+            paper.source,
+            paper.relevanceReason,
+            paper.summaryIntro,
+          ),
+        )
+      : [...papers];
+    return visiblePapers.sort(
+      (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+    );
+  }, [papers, query, activeType]);
+
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
   const totalAll = papers.length + events.length + jobs.length;
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
     !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
   const isEmpty = !isLoading && totalAll === 0 && !isSearchMode;
+  const feedProgressPct =
+    35 + (eventsLoading ? 0 : 15) + (jobsLoading ? 0 : 15);
 
   const typeChips: { key: FeedType; label: string; count: number; icon: string }[] = [
     {
@@ -274,6 +312,12 @@ function DiscoveryPage() {
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
+      {!isSearchMode && papersLoading && (
+        <ProgressBar
+          pct={feedProgressPct}
+          label="Finding today’s papers"
+        />
+      )}
       <div className="mx-auto max-w-[820px]">
       <header className="mb-8 flex items-end gap-3 sm:gap-6">
         <div className="min-w-0">
@@ -310,7 +354,7 @@ function DiscoveryPage() {
               unread={unreadCount}
               lastRefresh={lastRefresh}
               closed={briefingClosed}
-              onRefresh={loadFeed}
+              onRefresh={refreshFeed}
               isRefreshing={isLoading}
             />
           )}
@@ -697,26 +741,28 @@ function DiscoveryPage() {
 
           {briefingItems.length > 0 && (
             <>
-              {/* One-paragraph synthesized digest. Hides itself if no LLM
-                  is configured, so the rest of the feed keeps working. */}
-              <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
-                <DailyDigest
-                  papers={briefingItems
-                    .filter((i) => i.kind === "paper")
-                    .map((i) => i.data as Paper)}
-                  contextHint={[
-                    profile.researchTopics.length > 0
-                      ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
-                      : "",
-                    profile.currentProject,
-                    profile.currentChallenges,
-                  ]
-                    .filter((s) => s && s.trim().length > 0)
-                    .join("\n\n")}
-                  selectedPaperId={selectedPaperId}
-                  onSelectPaper={setSelectedPaperId}
-                />
-              </div>
+              {/* One-paragraph synthesized digest. Papers-only content, so it
+                  renders on the All / Papers lanes and nowhere else. Hides
+                  itself if no LLM is configured, so the rest of the feed keeps
+                  working. */}
+              {showDigest && (
+                <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
+                  <DailyDigest
+                    papers={digestPapers}
+                    contextHint={[
+                      profile.researchTopics.length > 0
+                        ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+                        : "",
+                      profile.currentProject,
+                      profile.currentChallenges,
+                    ]
+                      .filter((s) => s && s.trim().length > 0)
+                      .join("\n\n")}
+                    selectedPaperId={selectedPaperId}
+                    onSelectPaper={setSelectedPaperId}
+                  />
+                </div>
+              )}
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {briefingItems.map((item) => (
@@ -735,7 +781,7 @@ function DiscoveryPage() {
                 <FeedMoreTile
                   itemCount={briefingItems.length}
                   topics={profile.researchTopics}
-                  onRefresh={loadFeed}
+                  onRefresh={refreshFeed}
                   isLoading={isLoading}
                 />
               </div>

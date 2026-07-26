@@ -11,6 +11,7 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
 import { chipTones } from "@/components/ui/chip";
+import { ScrambleText } from "@/components/scramble-text";
 
 type FeedItem =
   | { kind: "paper"; data: Paper }
@@ -336,7 +337,7 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
         <ScoreChip scored={paper} />
       </div>
       <h3 className="text-body-lg font-semibold text-heading leading-[1.3] tracking-[-0.005em] line-clamp-2 min-h-[40px]">
-        {paper.title}
+        <ScrambleText text={paper.title} />
       </h3>
       <div className="text-caption text-text-faint mt-2 flex items-center gap-1 min-w-0">
         <MetaItem icon={AuthorMini}>{authorLine}</MetaItem>
@@ -344,7 +345,7 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
       <p
         className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
-        {paper.relevanceReason}
+        <ScrambleText text={paper.relevanceReason} />
       </p>
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">

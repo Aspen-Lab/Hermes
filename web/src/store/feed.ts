@@ -353,6 +353,14 @@ interface PendingDismissal {
   expiresAt: number;
 }
 
+export interface FeedLoadOptions {
+  /**
+   * Advance novelty only for an explicit refresh/load-more action. A plain
+   * page open reads a feed without mutating the recently-shown clock.
+   */
+  advanceHistory?: boolean;
+}
+
 interface FeedState {
   papers: Paper[];
   events: Event[];
@@ -361,6 +369,11 @@ interface FeedState {
   savedEvents: Event[];
   savedJobs: Job[];
   isLoading: boolean;
+  /** Per-lane flags let papers render (and the digest start) without waiting
+   * for the slower standing-opportunity lanes. */
+  papersLoading: boolean;
+  eventsLoading: boolean;
+  jobsLoading: boolean;
   lastRefresh: string | null;
   /** The required-topics signature the current `papers` were built from. When
    *  it diverges from the profile's topics, the feed page reloads automatically. */
@@ -377,7 +390,7 @@ interface FeedState {
    * map covers both kinds without collisions). */
   oppFeedback: Record<string, ItemFeedback>;
 
-  loadFeed: () => Promise<void>;
+  loadFeed: (options?: FeedLoadOptions) => Promise<void>;
   setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
   savePaper: (paper: Paper) => void;
   notInterestedPaper: (paper: Paper) => void;
@@ -430,6 +443,9 @@ export const useFeedStore = create<FeedState>()(
       savedEvents: [],
       savedJobs: [],
       isLoading: false,
+      papersLoading: false,
+      eventsLoading: false,
+      jobsLoading: false,
       lastRefresh: null,
       feedTopicsKey: null,
       aiPaperSearchEnabled: true,
@@ -439,20 +455,22 @@ export const useFeedStore = create<FeedState>()(
       paperFeedback: {},
       oppFeedback: {},
 
-      loadFeed: async () => {
+      loadFeed: async (options) => {
         const requestId = ++feedLoadSeq;
-        set({ isLoading: true });
+        const advanceHistory = options?.advanceHistory === true;
+        set({
+          isLoading: true,
+          papersLoading: true,
+          eventsLoading: true,
+          jobsLoading: true,
+        });
         const {
+          papers: displayedPapers,
           savedPapers,
-          savedEvents,
-          savedJobs,
           recentlyShownIds,
-          paperFeedback,
           oppFeedback,
         } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
-        const savedEventIds = new Set(savedEvents.map((e) => e.id));
-        const savedJobIds = new Set(savedJobs.map((j) => j.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
         // Signature of the required topics this load is built from — must match
@@ -465,9 +483,14 @@ export const useFeedStore = create<FeedState>()(
         // Papers are consume-once: exclude any already shown recently (within
         // TTL) so the briefing brings fresh reading each load. Saved papers are
         // allowed back — the user bookmarked them.
-        const paperExcludeIds = activeRecentlyShownIds(recentlyShownIds).filter(
-          (id) => !savedIds.has(id),
-        );
+        const paperExcludeIds = Array.from(
+          new Set([
+            ...activeRecentlyShownIds(recentlyShownIds),
+            ...(advanceHistory
+              ? displayedPapers.map((paper) => paper.id)
+              : []),
+          ]),
+        ).filter((id) => !savedIds.has(id));
 
         // Events and jobs are STANDING opportunities, not consume-once items: a
         // conference is relevant every day until its deadline passes, so it
@@ -478,63 +501,139 @@ export const useFeedStore = create<FeedState>()(
           .filter(([, f]) => f === "notInterested")
           .map(([id]) => id);
 
-        // Three parallel pipelines; each helper degrades to [] on failure so
-        // one surface never blanks the others.
-        const [realPapers, realEvents, realJobs] = await Promise.all([
-          fetchRealFeed(profile, aiPaperSearchEnabled, paperExcludeIds),
-          fetchRealEvents(profile, dismissedOppIds),
-          fetchRealJobs(profile, dismissedOppIds),
-        ]);
-        // A newer load started while this one was in flight — drop it.
-        if (requestId !== feedLoadSeq) return;
-        const papers = realPapers.map((p) =>
-          savedIds.has(p.id)
-            ? {
-                ...p,
-                isSaved: true,
-                feedback: paperFeedback[p.id] ?? ("saved" as ItemFeedback),
+        // Start all three pipelines together, but let each lane publish as
+        // soon as it settles. allSettled below coordinates only the shared
+        // refresh lifecycle; it is not a render barrier.
+        const papersLane = (async () => {
+          try {
+            const realPapers = await fetchRealFeed(
+              profile,
+              aiPaperSearchEnabled,
+              paperExcludeIds,
+            );
+            // A newer load started while this lane was in flight — drop it.
+            if (requestId !== feedLoadSeq) return;
+            set((state) => {
+              const currentSavedIds = new Set(
+                state.savedPapers.map((paper) => paper.id),
+              );
+              const papers = realPapers.map((paper) =>
+                currentSavedIds.has(paper.id)
+                  ? {
+                      ...paper,
+                      isSaved: true,
+                      feedback:
+                        state.paperFeedback[paper.id] ??
+                        ("saved" as ItemFeedback),
+                    }
+                  : {
+                      ...paper,
+                      feedback:
+                        state.paperFeedback[paper.id] ?? paper.feedback,
+                    },
+              );
+
+              const paperUpdate: Partial<FeedState> = {
+                papers,
+                papersLoading: false,
+                feedTopicsKey: topicsKey,
+              };
+              if (advanceHistory) {
+                // Only deliberate refresh/load-more actions advance novelty.
+                // Opening today's feed must not extend timestamps or change
+                // the next cached briefing's exclusion set.
+                const now = Date.now();
+                const nextShown: Record<string, number> = {
+                  ...state.recentlyShownIds,
+                };
+                for (const paper of [...state.papers, ...papers]) {
+                  nextShown[paper.id] = now;
+                }
+                paperUpdate.recentlyShownIds =
+                  pruneRecentlyShown(nextShown);
               }
-            : {
-                ...p,
-                feedback: paperFeedback[p.id] ?? p.feedback,
-              },
-        );
-        const events = realEvents.map((e) => ({
-          ...e,
-          isSaved: savedEventIds.has(e.id),
-          feedback:
-            oppFeedback[e.id] ??
-            (savedEventIds.has(e.id) ? ("saved" as ItemFeedback) : undefined),
-        }));
-        const jobs = realJobs.map((j) => ({
-          ...j,
-          isSaved: savedJobIds.has(j.id),
-          feedback:
-            oppFeedback[j.id] ??
-            (savedJobIds.has(j.id) ? ("saved" as ItemFeedback) : undefined),
-        }));
-        // Record shown PAPERS so the next load skips them. Events/jobs are
-        // deliberately NOT recorded here — they're standing opportunities that
-        // should keep appearing until their deadline passes or the user acts.
-        const now = Date.now();
-        const nextShown: Record<string, number> = { ...recentlyShownIds };
-        for (const paper of papers) {
-          nextShown[paper.id] = now;
-        }
+              return paperUpdate;
+            });
+          } finally {
+            // Never let a stale lane clear a newer load's progress flag.
+            if (requestId === feedLoadSeq && get().papersLoading) {
+              set({ papersLoading: false });
+            }
+          }
+        })();
+
+        const eventsLane = (async () => {
+          try {
+            const realEvents = await fetchRealEvents(
+              profile,
+              dismissedOppIds,
+            );
+            if (requestId !== feedLoadSeq) return;
+            set((state) => {
+              const currentSavedIds = new Set(
+                state.savedEvents.map((event) => event.id),
+              );
+              const events = realEvents.map((event) => ({
+                ...event,
+                isSaved: currentSavedIds.has(event.id),
+                feedback:
+                  state.oppFeedback[event.id] ??
+                  (currentSavedIds.has(event.id)
+                    ? ("saved" as ItemFeedback)
+                    : undefined),
+              }));
+              return { events, eventsLoading: false };
+            });
+          } finally {
+            if (requestId === feedLoadSeq && get().eventsLoading) {
+              set({ eventsLoading: false });
+            }
+          }
+        })();
+
+        const jobsLane = (async () => {
+          try {
+            const realJobs = await fetchRealJobs(
+              profile,
+              dismissedOppIds,
+            );
+            if (requestId !== feedLoadSeq) return;
+            set((state) => {
+              const currentSavedIds = new Set(
+                state.savedJobs.map((job) => job.id),
+              );
+              const jobs = realJobs.map((job) => ({
+                ...job,
+                isSaved: currentSavedIds.has(job.id),
+                feedback:
+                  state.oppFeedback[job.id] ??
+                  (currentSavedIds.has(job.id)
+                    ? ("saved" as ItemFeedback)
+                    : undefined),
+              }));
+              return { jobs, jobsLoading: false };
+            });
+          } finally {
+            if (requestId === feedLoadSeq && get().jobsLoading) {
+              set({ jobsLoading: false });
+            }
+          }
+        })();
+
+        await Promise.allSettled([papersLane, eventsLane, jobsLane]);
+        if (requestId !== feedLoadSeq) return;
         set({
-          papers,
-          events,
-          jobs,
           isLoading: false,
+          papersLoading: false,
+          eventsLoading: false,
+          jobsLoading: false,
           lastRefresh: new Date().toISOString(),
-          feedTopicsKey: topicsKey,
-          recentlyShownIds: pruneRecentlyShown(nextShown),
         });
       },
 
       setAiPaperSearchEnabled: async (enabled) => {
         set({ aiPaperSearchEnabled: enabled });
-        await get().loadFeed();
+        await get().loadFeed({ advanceHistory: true });
       },
 
       savePaper: (paper) => {
