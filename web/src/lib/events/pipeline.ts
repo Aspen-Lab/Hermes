@@ -7,6 +7,16 @@
 import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { enrichEventCandidates } from "@/lib/opportunities/enrich";
 import {
+  derivePoolCacheKey,
+  emptyOpportunityFacetCounts,
+  getOrBuildCachedPool,
+  isCachedEventPool,
+  localCalendarDate,
+  type OpportunityFacetCounts,
+  type PoolCache,
+} from "@/lib/opportunities/pool-cache";
+import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
+import {
   generateSearchQueries,
   templateEventQueries,
 } from "@/lib/opportunities/query-gen";
@@ -35,13 +45,22 @@ export interface EventsPipelineOptions {
   enrichDetails?: boolean;
 }
 
+export interface DailyEventPoolOptions {
+  cache?: PoolCache;
+  now?: Date;
+}
+
 export interface BuiltEventPool {
   items: ScoredEventItem[];
+  facetCounts: OpportunityFacetCounts;
   fetched: Partial<Record<EventSourceId, number>>;
   errors: Partial<Record<EventSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
   startedAt: number;
+  generatedAt: string;
+  localDate: string;
+  cacheHit: boolean;
 }
 
 export async function scoreEventPoolCandidates(
@@ -74,8 +93,9 @@ export async function scoreEventPoolCandidates(
 async function buildEventPool(
   req: EventsFeedRequest,
   options: EventsPipelineOptions,
+  now = new Date(),
+  startedAt = Date.now(),
 ): Promise<BuiltEventPool> {
-  const startedAt = Date.now();
   const queryProfile = {
     topics: req.topics,
     softTopics: req.softTopics,
@@ -130,34 +150,87 @@ async function buildEventPool(
   const items = await scoreEventPoolCandidates(
     deduped,
     scoringProfile,
-    startedAt,
+    now.getTime(),
     options,
   );
 
   return {
     items,
+    facetCounts: emptyOpportunityFacetCounts(),
     fetched,
     errors,
     beforeDedup,
     afterDedup: deduped.length,
     startedAt,
+    generatedAt: now.toISOString(),
+    localDate: localCalendarDate(now),
+    cacheHit: false,
   };
 }
 
-/** The only Phase-1 entry point that performs detail-page fetching. */
+/** Read or build the complete scored/enriched pool for this local day. */
 export async function buildDailyEventPool(
   req: EventsFeedRequest,
+  options: DailyEventPoolOptions = {},
 ): Promise<BuiltEventPool> {
-  return buildEventPool(req, { enrichDetails: true });
+  const now = options.now ?? new Date();
+  const startedAt = Date.now();
+  const cache = options.cache ?? getDefaultOpportunityPoolCache();
+  const key = derivePoolCacheKey({
+    surface: "events",
+    requiredTopics: req.topics,
+    exploreTopics: req.softTopics,
+    careerStage: req.careerStage,
+    locationPreferences: req.locationPreferences,
+    now,
+  });
+  let fresh: BuiltEventPool | undefined;
+
+  const loaded = await getOrBuildCachedPool(
+    cache,
+    key,
+    isCachedEventPool,
+    async () => {
+      fresh = await buildEventPool(
+        req,
+        { enrichDetails: true },
+        now,
+        startedAt,
+      );
+      return {
+        surface: "events",
+        items: fresh.items,
+        facetCounts: fresh.facetCounts,
+        generatedAt: fresh.generatedAt,
+        localDate: fresh.localDate,
+      };
+    },
+  );
+
+  if (fresh && !loaded.cacheHit) return fresh;
+
+  return {
+    items: loaded.pool.items,
+    facetCounts: loaded.pool.facetCounts,
+    // Source diagnostics are not part of the durable pool. On a hit, report
+    // the retained pool size without pretending that sources ran again.
+    fetched: {},
+    errors: {},
+    beforeDedup: loaded.pool.items.length,
+    afterDedup: loaded.pool.items.length,
+    startedAt,
+    generatedAt: loaded.pool.generatedAt,
+    localDate: loaded.pool.localDate,
+    cacheHit: true,
+  };
 }
 
 export async function runEventsPipeline(
   req: EventsFeedRequest,
+  options: DailyEventPoolOptions = {},
 ): Promise<EventsFeedResponse> {
   const topN = req.topN ?? DEFAULT_TOP_N;
-  // Ordinary requests remain enrichment-free. Phase 2 calls
-  // buildDailyEventPool only on a once-per-day cache miss.
-  const pool = await buildEventPool(req, { enrichDetails: false });
+  const pool = await buildDailyEventPool(req, options);
   const scored = pool.items;
   const beforeScoreFloor = scored.length;
   const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
@@ -181,7 +254,7 @@ export async function runEventsPipeline(
       afterScoreFloor,
       returned: returned.length,
       latencyMs: Date.now() - pool.startedAt,
-      generatedAt: new Date().toISOString(),
+      generatedAt: pool.generatedAt,
     },
   };
 }

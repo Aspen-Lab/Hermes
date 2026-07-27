@@ -5,6 +5,16 @@
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { enrichJobCandidates } from "@/lib/opportunities/enrich";
+import {
+  derivePoolCacheKey,
+  emptyOpportunityFacetCounts,
+  getOrBuildCachedPool,
+  isCachedJobPool,
+  localCalendarDate,
+  type OpportunityFacetCounts,
+  type PoolCache,
+} from "@/lib/opportunities/pool-cache";
+import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
 import { jobSources } from "./sources";
 import { dedupJobs } from "./dedup";
@@ -28,13 +38,22 @@ export interface JobsPipelineOptions {
   enrichDetails?: boolean;
 }
 
+export interface DailyJobPoolOptions {
+  cache?: PoolCache;
+  now?: Date;
+}
+
 export interface BuiltJobPool {
   items: ScoredJobItem[];
+  facetCounts: OpportunityFacetCounts;
   fetched: Partial<Record<JobSourceId, number>>;
   errors: Partial<Record<JobSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
   startedAt: number;
+  generatedAt: string;
+  localDate: string;
+  cacheHit: boolean;
 }
 
 export async function scoreJobPoolCandidates(
@@ -65,8 +84,9 @@ export async function scoreJobPoolCandidates(
 async function buildJobPool(
   req: JobsFeedRequest,
   options: JobsPipelineOptions,
+  now = new Date(),
+  startedAt = Date.now(),
 ): Promise<BuiltJobPool> {
-  const startedAt = Date.now();
   const queryProfile = {
     topics: req.topics,
     softTopics: req.softTopics,
@@ -129,32 +149,85 @@ async function buildJobPool(
   const items = await scoreJobPoolCandidates(
     deduped,
     scoringProfile,
-    startedAt,
+    now.getTime(),
     options,
   );
 
   return {
     items,
+    facetCounts: emptyOpportunityFacetCounts(),
     fetched,
     errors,
     beforeDedup,
     afterDedup: deduped.length,
     startedAt,
+    generatedAt: now.toISOString(),
+    localDate: localCalendarDate(now),
+    cacheHit: false,
   };
 }
 
-/** The only Phase-1 jobs entry point that performs detail-page fetching. */
+/** Read or build the complete scored/enriched pool for this local day. */
 export async function buildDailyJobPool(
   req: JobsFeedRequest,
+  options: DailyJobPoolOptions = {},
 ): Promise<BuiltJobPool> {
-  return buildJobPool(req, { enrichDetails: true });
+  const now = options.now ?? new Date();
+  const startedAt = Date.now();
+  const cache = options.cache ?? getDefaultOpportunityPoolCache();
+  const key = derivePoolCacheKey({
+    surface: "jobs",
+    requiredTopics: req.topics,
+    exploreTopics: req.softTopics,
+    careerStage: req.careerStage,
+    locationPreferences: req.locationPreferences,
+    now,
+  });
+  let fresh: BuiltJobPool | undefined;
+
+  const loaded = await getOrBuildCachedPool(
+    cache,
+    key,
+    isCachedJobPool,
+    async () => {
+      fresh = await buildJobPool(
+        req,
+        { enrichDetails: true },
+        now,
+        startedAt,
+      );
+      return {
+        surface: "jobs",
+        items: fresh.items,
+        facetCounts: fresh.facetCounts,
+        generatedAt: fresh.generatedAt,
+        localDate: fresh.localDate,
+      };
+    },
+  );
+
+  if (fresh && !loaded.cacheHit) return fresh;
+
+  return {
+    items: loaded.pool.items,
+    facetCounts: loaded.pool.facetCounts,
+    fetched: {},
+    errors: {},
+    beforeDedup: loaded.pool.items.length,
+    afterDedup: loaded.pool.items.length,
+    startedAt,
+    generatedAt: loaded.pool.generatedAt,
+    localDate: loaded.pool.localDate,
+    cacheHit: true,
+  };
 }
 
 export async function runJobsPipeline(
   req: JobsFeedRequest,
+  options: DailyJobPoolOptions = {},
 ): Promise<JobsFeedResponse> {
   const topN = req.topN ?? DEFAULT_TOP_N;
-  const pool = await buildJobPool(req, { enrichDetails: false });
+  const pool = await buildDailyJobPool(req, options);
   const scored = pool.items;
   const beforeScoreFloor = scored.length;
   const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
@@ -178,7 +251,7 @@ export async function runJobsPipeline(
       afterScoreFloor,
       returned: returned.length,
       latencyMs: Date.now() - pool.startedAt,
-      generatedAt: new Date().toISOString(),
+      generatedAt: pool.generatedAt,
     },
   };
 }
