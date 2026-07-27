@@ -4,7 +4,12 @@ import { useEffect, useState, useMemo, useCallback, useRef, Suspense } from "rea
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { Paper, Event, Job } from "@/types";
+import type {
+  Paper,
+  Event,
+  Job,
+  OpportunityFacetSelection,
+} from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { apiFetch } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format";
@@ -29,6 +34,13 @@ import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/cn";
+import { OpportunityFacetPanel } from "@/components/opportunities/opportunity-facet-panel";
+import {
+  DEFAULT_OPPORTUNITY_TOP_N,
+  filterOpportunitiesByFacets,
+  hasActiveOpportunityFacets,
+  mergeOpportunityFacetCounts,
+} from "@/lib/opportunities/facets";
 
 interface SearchResult {
   id: string;
@@ -73,6 +85,10 @@ function DiscoveryPage() {
     papers,
     events,
     jobs,
+    eventPool,
+    jobPool,
+    eventFacetCounts,
+    jobFacetCounts,
     isLoading,
     lastRefresh,
     loadFeed,
@@ -92,6 +108,8 @@ function DiscoveryPage() {
 
   const [query, setQuery] = useState(incomingQuery);
   const [activeType, setActiveType] = useState<FeedType>("all");
+  const [opportunityFacets, setOpportunityFacets] =
+    useState<OpportunityFacetSelection>({});
   const [filters, setFilters] = useState<Filters>(() =>
     filtersFromUrlParams(searchParamsObj),
   );
@@ -197,6 +215,50 @@ function DiscoveryPage() {
   }, [query, filters, searchPapers]);
 
   const isSearchMode = query.length >= 2;
+  const hasOpportunityFacets = hasActiveOpportunityFacets(opportunityFacets);
+  const visibleEvents = useMemo(
+    () =>
+      hasOpportunityFacets
+        ? filterOpportunitiesByFacets(
+            "events",
+            eventPool,
+            opportunityFacets,
+          ).slice(0, DEFAULT_OPPORTUNITY_TOP_N)
+        : events,
+    [eventPool, events, hasOpportunityFacets, opportunityFacets],
+  );
+  const visibleJobs = useMemo(
+    () =>
+      hasOpportunityFacets
+        ? filterOpportunitiesByFacets(
+            "jobs",
+            jobPool,
+            opportunityFacets,
+          ).slice(0, DEFAULT_OPPORTUNITY_TOP_N)
+        : jobs,
+    [hasOpportunityFacets, jobPool, jobs, opportunityFacets],
+  );
+  const opportunityFacetCounts = useMemo(() => {
+    if (activeType === "events") return eventFacetCounts;
+    if (activeType === "jobs") return jobFacetCounts;
+    return mergeOpportunityFacetCounts(eventFacetCounts, jobFacetCounts);
+  }, [activeType, eventFacetCounts, jobFacetCounts]);
+  const opportunityFacetScope =
+    activeType === "events"
+      ? "活动"
+      : activeType === "jobs"
+        ? "职位"
+        : "活动与职位";
+  const opportunityPoolCount =
+    activeType === "events"
+      ? eventPool.length
+      : activeType === "jobs"
+        ? jobPool.length
+        : eventPool.length + jobPool.length;
+  const showOpportunityFacets =
+    !isSearchMode &&
+    activeType !== "papers" &&
+    opportunityPoolCount > 0;
 
   const briefingItems = useMemo<BriefingItem[]>(() => {
     const paperItems: BriefingItem[] =
@@ -205,11 +267,11 @@ function DiscoveryPage() {
         : [];
     const eventItems: BriefingItem[] =
       activeType === "all" || activeType === "events"
-        ? events.map((e) => ({ kind: "event", data: e }))
+        ? visibleEvents.map((e) => ({ kind: "event", data: e }))
         : [];
     const jobItems: BriefingItem[] =
       activeType === "all" || activeType === "jobs"
-        ? jobs.map((j) => ({ kind: "job", data: j }))
+        ? visibleJobs.map((j) => ({ kind: "job", data: j }))
         : [];
     const all = [...paperItems, ...eventItems, ...jobItems];
 
@@ -251,10 +313,10 @@ function DiscoveryPage() {
       : all;
 
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
-  }, [papers, events, jobs, query, activeType]);
+  }, [papers, visibleEvents, visibleJobs, query, activeType]);
 
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
-  const totalAll = papers.length + events.length + jobs.length;
+  const totalAll = papers.length + eventPool.length + jobPool.length;
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
     !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
@@ -264,12 +326,12 @@ function DiscoveryPage() {
     {
       key: "all",
       label: "All",
-      count: papers.length + events.length + jobs.length,
+      count: totalAll,
       icon: "/logo-mark.png",
     },
     { key: "papers", label: "Papers", count: papers.length, icon: "/icon-papers.svg" },
-    { key: "events", label: "Events", count: events.length, icon: "/icon-events.svg" },
-    { key: "jobs", label: "Jobs", count: jobs.length, icon: "/icon-jobs.svg" },
+    { key: "events", label: "Events", count: eventPool.length, icon: "/icon-events.svg" },
+    { key: "jobs", label: "Jobs", count: jobPool.length, icon: "/icon-jobs.svg" },
   ];
 
   return (
@@ -618,6 +680,15 @@ function DiscoveryPage() {
         )}
 
         {/* ── Search status ── */}
+        {showOpportunityFacets && (
+          <OpportunityFacetPanel
+            counts={opportunityFacetCounts}
+            selection={opportunityFacets}
+            onChange={setOpportunityFacets}
+            scopeLabel={opportunityFacetScope}
+          />
+        )}
+
         {isSearchMode && (
           <p
             className="text-meta text-text-faint mt-4"

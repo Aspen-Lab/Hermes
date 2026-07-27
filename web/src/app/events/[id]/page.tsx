@@ -84,13 +84,16 @@ export default function EventDetailPage({
     }
   })();
   const feedEvents = useFeedStore((s) => s.events);
+  const eventPool = useFeedStore((s) => s.eventPool);
   const savedEvents = useFeedStore((s) => s.savedEvents);
   const markRead = useFeedStore((s) => s.markRead);
   const { saveEvent, notInterestedEvent } = useFeedStore();
   const [now] = useState(Date.now);
 
   const event =
-    feedEvents.find((e) => e.id === id) ?? savedEvents.find((e) => e.id === id);
+    feedEvents.find((e) => e.id === id) ??
+    eventPool.find((e) => e.id === id) ??
+    savedEvents.find((e) => e.id === id);
 
   useEffect(() => {
     if (event) markRead(event.id);
@@ -98,8 +101,8 @@ export default function EventDetailPage({
 
   const related = useMemo(() => {
     if (!event) return [];
-    return pickRelatedEvents(event, feedEvents, 3);
-  }, [event, feedEvents]);
+    return pickRelatedEvents(event, eventPool, 3);
+  }, [event, eventPool]);
 
   if (!event) {
     return (

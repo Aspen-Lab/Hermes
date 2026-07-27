@@ -61,14 +61,6 @@ export function isCachedJobPool(pool: CachedPool): pool is CachedJobPool {
   return pool.surface === "jobs";
 }
 
-export function emptyOpportunityFacetCounts(): OpportunityFacetCounts {
-  return {
-    location: {},
-    month: {},
-    format: { "in-person": 0, online: 0, hybrid: 0 },
-  };
-}
-
 export interface PoolCacheKeyInput {
   surface: OpportunitySurface;
   requiredTopics: string[];

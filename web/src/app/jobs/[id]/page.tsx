@@ -62,13 +62,16 @@ export default function JobDetailPage({
     }
   })();
   const feedJobs = useFeedStore((s) => s.jobs);
+  const jobPool = useFeedStore((s) => s.jobPool);
   const savedJobs = useFeedStore((s) => s.savedJobs);
   const markRead = useFeedStore((s) => s.markRead);
   const { saveJob, notInterestedJob } = useFeedStore();
   const [now] = useState(Date.now);
 
   const job =
-    feedJobs.find((j) => j.id === id) ?? savedJobs.find((j) => j.id === id);
+    feedJobs.find((j) => j.id === id) ??
+    jobPool.find((j) => j.id === id) ??
+    savedJobs.find((j) => j.id === id);
 
   useEffect(() => {
     if (job) markRead(job.id);
@@ -76,8 +79,8 @@ export default function JobDetailPage({
 
   const related = useMemo(() => {
     if (!job) return [];
-    return pickRelatedJobs(job, feedJobs, 3);
-  }, [job, feedJobs]);
+    return pickRelatedJobs(job, jobPool, 3);
+  }, [job, jobPool]);
 
   if (!job) {
     return (

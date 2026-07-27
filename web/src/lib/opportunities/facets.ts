@@ -8,6 +8,14 @@ import type {
 export const MAX_OPPORTUNITY_POOL_ITEMS = 200;
 export const DEFAULT_OPPORTUNITY_TOP_N = 10;
 
+export function emptyOpportunityFacetCounts(): OpportunityFacetCounts {
+  return {
+    location: {},
+    month: {},
+    format: { "in-person": 0, online: 0, hybrid: 0 },
+  };
+}
+
 export interface FacetableOpportunity {
   location: string;
   place?: OpportunityPlace;
@@ -138,6 +146,24 @@ export function countOpportunityFacets(
     ),
     format,
   };
+}
+
+export function mergeOpportunityFacetCounts(
+  ...sources: OpportunityFacetCounts[]
+): OpportunityFacetCounts {
+  const merged = emptyOpportunityFacetCounts();
+  for (const source of sources) {
+    for (const [label, count] of Object.entries(source.location)) {
+      merged.location[label] = (merged.location[label] ?? 0) + count;
+    }
+    for (const [label, count] of Object.entries(source.month)) {
+      merged.month[label] = (merged.month[label] ?? 0) + count;
+    }
+    for (const format of OPPORTUNITY_FORMATS) {
+      merged.format[format] += source.format[format] ?? 0;
+    }
+  }
+  return merged;
 }
 
 function cleanStringSelection(input: unknown, limit = 50): string[] {
