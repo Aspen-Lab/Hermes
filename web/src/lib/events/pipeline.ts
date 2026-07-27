@@ -5,6 +5,7 @@
 // available, with LLM-refined queries when a provider resolves.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import { enrichEventCandidates } from "@/lib/opportunities/enrich";
 import {
   generateSearchQueries,
   templateEventQueries,
@@ -12,6 +13,7 @@ import {
 import { eventSources } from "./sources";
 import { dedupEvents } from "./dedup";
 import { MIN_SCORE, scoreEvents } from "./scoring";
+import type { EventScoringProfile } from "./scoring";
 import { scoredEventToEvent } from "./mapper";
 import type {
   EventsFeedRequest,
@@ -19,17 +21,61 @@ import type {
   EventsQuery,
   EventSourceId,
   RawEventItem,
+  ScoredEventItem,
 } from "./types";
 
 const DEFAULT_TOP_N = 5;
 const DEFAULT_PER_SOURCE_LIMIT = 80;
 
-export async function runEventsPipeline(
-  req: EventsFeedRequest,
-): Promise<EventsFeedResponse> {
-  const startedAt = Date.now();
-  const topN = req.topN ?? DEFAULT_TOP_N;
+export interface EventsPipelineOptions {
+  /**
+   * Detail fetching belongs to the once-daily pool build, never the ordinary
+   * request path. Phase 2 enables this only on a cache miss.
+   */
+  enrichDetails?: boolean;
+}
 
+export interface BuiltEventPool {
+  items: ScoredEventItem[];
+  fetched: Partial<Record<EventSourceId, number>>;
+  errors: Partial<Record<EventSourceId, string>>;
+  beforeDedup: number;
+  afterDedup: number;
+  startedAt: number;
+}
+
+export async function scoreEventPoolCandidates(
+  deduped: RawEventItem[],
+  scoringProfile: EventScoringProfile,
+  now: number,
+  options: EventsPipelineOptions = {},
+): Promise<ScoredEventItem[]> {
+  let scored = scoreEvents(deduped, scoringProfile, now, {
+    applyFloor: false,
+  });
+
+  if (!options.enrichDetails || scored.length === 0) return scored;
+
+  // `scored` already contains only candidates that passed the required-topic
+  // gate and expiry checks. Enrich at most the top 40 of those survivors,
+  // merge them back by id, then score the full deduped corpus again so dates
+  // and locations affect ranking without changing the TF-IDF corpus.
+  const enriched = await enrichEventCandidates(scored);
+  const enrichedById = new Map(enriched.map((item) => [item.id, item]));
+  scored = scoreEvents(
+    deduped.map((item) => enrichedById.get(item.id) ?? item),
+    scoringProfile,
+    now,
+    { applyFloor: false },
+  );
+  return scored;
+}
+
+async function buildEventPool(
+  req: EventsFeedRequest,
+  options: EventsPipelineOptions,
+): Promise<BuiltEventPool> {
+  const startedAt = Date.now();
   const queryProfile = {
     topics: req.topics,
     softTopics: req.softTopics,
@@ -73,20 +119,46 @@ export async function runEventsPipeline(
 
   const beforeDedup = allItems.length;
   const deduped = dedupEvents(allItems);
-
-  const scored = scoreEvents(
+  const scoringProfile = {
+    topics: req.topics,
+    softTopics: req.softTopics,
+    methods: req.methods,
+    seedTexts: req.seedTexts,
+    preferenceLedger: req.preferenceLedger,
+    locations: req.locationPreferences,
+  };
+  const items = await scoreEventPoolCandidates(
     deduped,
-    {
-      topics: req.topics,
-      softTopics: req.softTopics,
-      methods: req.methods,
-      seedTexts: req.seedTexts,
-      preferenceLedger: req.preferenceLedger,
-      locations: req.locationPreferences,
-    },
+    scoringProfile,
     startedAt,
-    { applyFloor: false },
+    options,
   );
+
+  return {
+    items,
+    fetched,
+    errors,
+    beforeDedup,
+    afterDedup: deduped.length,
+    startedAt,
+  };
+}
+
+/** The only Phase-1 entry point that performs detail-page fetching. */
+export async function buildDailyEventPool(
+  req: EventsFeedRequest,
+): Promise<BuiltEventPool> {
+  return buildEventPool(req, { enrichDetails: true });
+}
+
+export async function runEventsPipeline(
+  req: EventsFeedRequest,
+): Promise<EventsFeedResponse> {
+  const topN = req.topN ?? DEFAULT_TOP_N;
+  // Ordinary requests remain enrichment-free. Phase 2 calls
+  // buildDailyEventPool only on a once-per-day cache miss.
+  const pool = await buildEventPool(req, { enrichDetails: false });
+  const scored = pool.items;
   const beforeScoreFloor = scored.length;
   const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
   const afterScoreFloor = aboveScoreFloor.length;
@@ -101,14 +173,14 @@ export async function runEventsPipeline(
   return {
     items: returned.map(scoredEventToEvent),
     meta: {
-      fetched,
-      errors,
-      beforeDedup,
-      afterDedup: deduped.length,
+      fetched: pool.fetched,
+      errors: pool.errors,
+      beforeDedup: pool.beforeDedup,
+      afterDedup: pool.afterDedup,
       beforeScoreFloor,
       afterScoreFloor,
       returned: returned.length,
-      latencyMs: Date.now() - startedAt,
+      latencyMs: Date.now() - pool.startedAt,
       generatedAt: new Date().toISOString(),
     },
   };

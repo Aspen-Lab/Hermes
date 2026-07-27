@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { PreferenceLedger } from "@/types";
-import { runEventsPipeline } from "./pipeline";
+import { buildDailyEventPool } from "./pipeline";
+import { scoredEventToEvent } from "./mapper";
+import { MIN_SCORE } from "./scoring";
 import type { EventsFeedRequest } from "./types";
 import { DENY_HOSTS } from "./sources/eventweb";
 
@@ -51,9 +53,9 @@ function isDeniedHost(host: string): boolean {
 
 describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
   it(
-    "surfaces the Solid-State Battery Summit without denied hosts",
+    "enriches at least half the pool and resolves the Solid-State Battery Summit",
     async () => {
-      const response = await runEventsPipeline({
+      const pool = await buildDailyEventPool({
         topics: profile?.researchTopics ?? [],
         softTopics: profile?.softTopics ?? [],
         methods: profile?.preferredMethods ?? [],
@@ -72,26 +74,53 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
           },
         },
       });
+      const survivors = pool.items;
+      const topFive = survivors
+        .filter((item) => item.score >= MIN_SCORE)
+        .slice(0, 5)
+        .map(scoredEventToEvent);
+      const withCity = survivors.filter((item) => item.place?.city);
+      const cityCoverage =
+        survivors.length > 0 ? withCity.length / survivors.length : 0;
 
       console.info(
         "EVENT_BENCHMARK_TOP5",
-        response.items.map((item) => ({
+        topFive.map((item) => ({
           name: item.name,
           host: hostname(item.linkOfficial),
+          city: item.place?.city,
+          date: item.date,
         })),
       );
+      console.info("EVENT_BENCHMARK_CITY_COVERAGE", {
+        withCity: withCity.length,
+        survivors: survivors.length,
+        ratio: cityCoverage,
+      });
 
+      expect(survivors.length).toBeGreaterThan(0);
+      expect(cityCoverage).toBeGreaterThanOrEqual(0.5);
       expect(
-        response.items.some(
+        topFive.some(
           (item) =>
             hostname(item.linkOfficial).endsWith("cambridgeenertech.com") ||
             /solid[-\s]?state battery summit/i.test(item.name),
         ),
       ).toBe(true);
-      for (const item of response.items) {
+      const summit =
+        survivors.find((item) =>
+          hostname(item.url).endsWith("cambridgeenertech.com"),
+        ) ??
+        survivors.find(
+          (item) =>
+            /solid[-\s]?state battery summit/i.test(item.name) &&
+            item.place?.city === "Chicago",
+        );
+      expect(summit?.place?.city).toBe("Chicago");
+      for (const item of topFive) {
         expect(isDeniedHost(hostname(item.linkOfficial))).toBe(false);
       }
     },
-    30_000,
+    90_000,
   );
 });
