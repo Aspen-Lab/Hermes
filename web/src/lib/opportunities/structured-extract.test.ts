@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { extractJsonLdOpportunities } from "./structured-extract";
+import {
+  extractJsonLdOpportunities,
+  extractMetaOpportunityDetails,
+  extractOpenGraphTags,
+} from "./structured-extract";
 
 describe("extractJsonLdOpportunities", () => {
   it("extracts the measured DLR event location and date", () => {
@@ -101,5 +105,47 @@ describe("extractJsonLdOpportunities", () => {
         eventAttendanceMode: undefined,
       },
     ]);
+  });
+});
+
+describe("Open Graph opportunity metadata", () => {
+  it("extracts the measured Cambridge date, place, and hybrid format", () => {
+    const fixture = readFileSync(
+      new URL(
+        "./__fixtures__/cambridge-solid-state-battery-summit.html",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+
+    expect(extractOpenGraphTags(fixture)).toEqual({
+      title:
+        "Solid-State Battery Summit | August 11-12, 2026 | Chicago, IL + Virtual",
+      description:
+        "Join the leading solid-state battery event in Chicago & online.",
+      siteName: "Cambridge EnerTech",
+    });
+    expect(extractMetaOpportunityDetails(fixture)).toEqual({
+      start: "2026-08-11",
+      end: "2026-08-12",
+      city: "Chicago",
+      region: "IL",
+      isOnline: true,
+    });
+  });
+
+  it("keeps a city when Hybrid is the format marker", () => {
+    const html = `
+      <meta content="Battery Workshop | September 3, 2026 | Berlin, Germany — Hybrid"
+            property="og:title">
+    `;
+
+    expect(extractMetaOpportunityDetails(html)).toEqual({
+      start: "2026-09-03",
+      end: undefined,
+      city: "Berlin",
+      region: "Germany",
+      isOnline: true,
+    });
   });
 });

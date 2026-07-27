@@ -13,7 +13,56 @@ export interface JsonLdOpportunity {
   eventAttendanceMode?: string;
 }
 
+export interface OpenGraphTags {
+  title?: string;
+  description?: string;
+  siteName?: string;
+}
+
+export interface MetaOpportunityDetails {
+  start?: string;
+  end?: string;
+  city?: string;
+  region?: string;
+  isOnline: boolean;
+}
+
 type JsonRecord = Record<string, unknown>;
+
+const MONTHS: Record<string, number> = {
+  jan: 0,
+  january: 0,
+  feb: 1,
+  february: 1,
+  mar: 2,
+  march: 2,
+  apr: 3,
+  april: 3,
+  may: 4,
+  jun: 5,
+  june: 5,
+  jul: 6,
+  july: 6,
+  aug: 7,
+  august: 7,
+  sep: 8,
+  sept: 8,
+  september: 8,
+  oct: 9,
+  october: 9,
+  nov: 10,
+  november: 10,
+  dec: 11,
+  december: 11,
+};
+
+const MONTH_PATTERN =
+  "January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec";
+
+const DATE_RANGE_PATTERN = new RegExp(
+  `\\b(${MONTH_PATTERN})\\s+(\\d{1,2})(?:\\s*[-–—]\\s*(?:(${MONTH_PATTERN})\\s+)?(\\d{1,2}))?,?\\s+(\\d{4})\\b`,
+  "i",
+);
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -110,6 +159,80 @@ function attributeValue(attributes: string, name: string): string | undefined {
   return match?.[1] ?? match?.[2] ?? match?.[3];
 }
 
+function decodeHtmlEntities(value: string): string {
+  const named: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    lt: "<",
+    quot: '"',
+  };
+  return value
+    .replace(/&([a-z]+);/gi, (match, entity: string) => {
+      return named[entity.toLowerCase()] ?? match;
+    })
+    .replace(/&#(x?[0-9a-f]+);/gi, (match, code: string) => {
+      const radix = code[0]?.toLowerCase() === "x" ? 16 : 10;
+      const digits = radix === 16 ? code.slice(1) : code;
+      const point = Number.parseInt(digits, radix);
+      return Number.isFinite(point) ? String.fromCodePoint(point) : match;
+    });
+}
+
+function isoDate(year: number, month: number, day: number): string | undefined {
+  const value = new Date(Date.UTC(year, month, day));
+  if (
+    value.getUTCFullYear() !== year ||
+    value.getUTCMonth() !== month ||
+    value.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+  return value.toISOString().slice(0, 10);
+}
+
+function parseDateRange(text: string): Pick<MetaOpportunityDetails, "start" | "end"> {
+  const match = text.match(DATE_RANGE_PATTERN);
+  if (!match) return {};
+
+  const startMonth = MONTHS[match[1].toLowerCase()];
+  const startDay = Number.parseInt(match[2], 10);
+  const endMonth = match[3]
+    ? MONTHS[match[3].toLowerCase()]
+    : startMonth;
+  const endDay = match[4] ? Number.parseInt(match[4], 10) : undefined;
+  const year = Number.parseInt(match[5], 10);
+  const start = isoDate(year, startMonth, startDay);
+  if (!start) return {};
+
+  const end = endDay === undefined ? undefined : isoDate(year, endMonth, endDay);
+  return { start, end };
+}
+
+function parseCityRegion(
+  text: string,
+): Pick<MetaOpportunityDetails, "city" | "region"> {
+  const segments = text
+    .split("|")
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  for (const segment of segments) {
+    const withoutFormat = segment
+      .replace(/\s*(?:\+|&)\s*(?:virtual|online)\s*$/i, "")
+      .replace(/\s*[-–—]?\s*hybrid\s*$/i, "")
+      .trim();
+    const match = withoutFormat.match(
+      /^([\p{L}][\p{L}\p{M} .'-]*?)\s*,\s*([\p{L}][\p{L}\p{M} .'-]*)$/u,
+    );
+    if (!match) continue;
+    const city = match[1].trim();
+    const region = match[2].trim();
+    if (city && region) return { city, region };
+  }
+  return {};
+}
+
 function jsonLdBlocks(html: string): string[] {
   const blocks: string[] = [];
   const scriptPattern = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
@@ -136,4 +259,44 @@ export function extractJsonLdOpportunities(html: string): JsonLdOpportunity[] {
   }
 
   return opportunities;
+}
+
+export function extractOpenGraphTags(html: string): OpenGraphTags {
+  const tags: OpenGraphTags = {};
+  const metaPattern = /<meta\b([^>]*)\/?>/gi;
+
+  for (const match of html.matchAll(metaPattern)) {
+    const attributes = match[1] ?? "";
+    const key = (
+      attributeValue(attributes, "property") ??
+      attributeValue(attributes, "name")
+    )?.toLowerCase();
+    const content = attributeValue(attributes, "content");
+    if (!key || content === undefined) continue;
+
+    const value = decodeHtmlEntities(content).trim();
+    if (!value) continue;
+    if (key === "og:title" && !tags.title) tags.title = value;
+    if (key === "og:description" && !tags.description) {
+      tags.description = value;
+    }
+    if (key === "og:site_name" && !tags.siteName) tags.siteName = value;
+  }
+
+  return tags;
+}
+
+export function extractMetaOpportunityDetails(
+  html: string,
+): MetaOpportunityDetails {
+  const tags = extractOpenGraphTags(html);
+  const text = [tags.title, tags.description, tags.siteName]
+    .filter((value): value is string => Boolean(value))
+    .join(" | ");
+
+  return {
+    ...parseDateRange(text),
+    ...parseCityRegion(text),
+    isOnline: /\b(?:virtual|online|hybrid)\b/i.test(text),
+  };
 }

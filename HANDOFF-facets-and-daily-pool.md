@@ -38,7 +38,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P1.1 | HTML page fetcher with timeout, UA, concurrency cap, never-throws | DONE | `npx vitest run src/lib/opportunities/page-fetch.test.ts` — 1 file, 7 tests passed |
 | P1.2 | JSON-LD (schema.org Event / JobPosting) extractor | DONE | `npx vitest run src/lib/opportunities/structured-extract.test.ts` — 1 file, 3 tests passed |
-| P1.3 | og:/meta tag extractor + date+city parsing from og:title | IN_PROGRESS | |
+| P1.3 | og:/meta tag extractor + date+city parsing from og:title | DONE | `npx vitest run src/lib/opportunities/structured-extract.test.ts` — 1 file, 5 tests passed |
 | P1.4 | Body-text city fallback with gazetteer | TODO | |
 | P1.5 | Structured `place` field on events + jobs; hybrid keeps city AND isOnline | TODO | |
 | P1.6 | Wire enrichment into the events pipeline | TODO | |
