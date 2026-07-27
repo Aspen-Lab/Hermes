@@ -58,7 +58,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P3.1 | Return full scored pool + facet counts | TODO | |
+| P3.1 | Return full scored pool + facet counts | IN_PROGRESS | |
 | P3.2 | topN 5→10; `diversifyByType` cap 3→5 | TODO | |
 | P3.3 | Bypass `MIN_SCORE` when any facet filter is active | TODO | |
 
