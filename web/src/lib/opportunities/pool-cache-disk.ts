@@ -8,26 +8,17 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import type { CachedPool, PoolCache } from "./pool-cache";
+import {
+  isCachedPool,
+  type CachedPool,
+  type PoolCache,
+} from "./pool-cache";
 
 const SAFE_CACHE_KEY = /^[a-z0-9][a-z0-9-]{0,199}$/;
 
 export interface DiskPoolCacheOptions {
   directory?: string;
   enabled?: boolean;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isCachedPool(value: unknown): value is CachedPool {
-  if (!isRecord(value)) return false;
-  if (value.surface !== "events" && value.surface !== "jobs") return false;
-  if (!Array.isArray(value.items)) return false;
-  if (typeof value.generatedAt !== "string") return false;
-  if (typeof value.localDate !== "string") return false;
-  return isRecord(value.facetCounts);
 }
 
 async function fileExists(filePath: string): Promise<boolean> {

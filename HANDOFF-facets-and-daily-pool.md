@@ -50,7 +50,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P2.1 | Pool cache interface + cache-key derivation | DONE | `npx vitest run src/lib/opportunities/pool-cache.test.ts` — 1 file, 3 tests passed; `npx tsc --noEmit` — clean |
 | P2.2 | Disk cache adapter (local dev only) | DONE | `npx vitest run src/lib/opportunities/pool-cache-disk.test.ts` — 1 file, 3 tests passed; `npx tsc --noEmit` — clean |
-| P2.3 | Supabase cache adapter (production; no-op when unconfigured) | IN_PROGRESS | |
+| P2.3 | Supabase cache adapter (production; no-op when unconfigured) | DONE | `npx vitest run src/lib/opportunities/pool-cache-supabase.test.ts src/lib/opportunities/pool-cache-disk.test.ts` — 2 files, 6 tests passed; `npx tsc --noEmit` and targeted ESLint — clean |
 | P2.4 | Wire both pipelines to build-once-per-day | TODO | |
 | P2.5 | Query budget: 18 event queries / 12 job queries | TODO | |
 

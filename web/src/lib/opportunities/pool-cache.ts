@@ -37,6 +37,19 @@ export interface PoolCache {
   set(key: string, pool: CachedPool): Promise<void>;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isCachedPool(value: unknown): value is CachedPool {
+  if (!isRecord(value)) return false;
+  if (value.surface !== "events" && value.surface !== "jobs") return false;
+  if (!Array.isArray(value.items)) return false;
+  if (typeof value.generatedAt !== "string") return false;
+  if (typeof value.localDate !== "string") return false;
+  return isRecord(value.facetCounts);
+}
+
 export interface PoolCacheKeyInput {
   surface: OpportunitySurface;
   requiredTopics: string[];
