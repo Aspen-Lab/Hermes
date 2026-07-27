@@ -75,7 +75,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P5.1 | Record facet selections as weak preference signals | TODO | |
+| P5.1 | Record facet selections as weak preference signals | IN_PROGRESS | |
 | P5.2 | Boost cap + faster decay than explicit signals | TODO | |
 | P5.3 | Surface the reason on the card ("because you often view Chicago") | TODO | |
 
