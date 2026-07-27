@@ -76,7 +76,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P5.1 | Record facet selections as weak preference signals | DONE | `npx vitest run src/lib/preferences/ledger.test.ts src/components/opportunities/opportunity-facet-panel.test.ts` — 2 files, 24 tests passed; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` — clean; facet selections persist as separate `facetPositive` evidence under the existing event/job ledger namespaces while deselection and clear do not record |
-| P5.2 | Boost cap + faster decay than explicit signals | TODO | |
+| P5.2 | Boost cap + faster decay than explicit signals | IN_PROGRESS | |
 | P5.3 | Surface the reason on the card ("because you often view Chicago") | TODO | |
 
 ---
