@@ -41,7 +41,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.3 | og:/meta tag extractor + date+city parsing from og:title | DONE | `npx vitest run src/lib/opportunities/structured-extract.test.ts` — 1 file, 5 tests passed |
 | P1.4 | Body-text city fallback with gazetteer | DONE | `npx vitest run src/lib/opportunities/structured-extract.test.ts` — 1 file, 9 tests passed |
 | P1.5 | Structured `place` field on events + jobs; hybrid keeps city AND isOnline | DONE | `npx vitest run src/lib/opportunities/place-flow.test.ts` — 1 file, 2 tests passed; `npx tsc --noEmit` — clean |
-| P1.6 | Wire enrichment into the events pipeline | TODO | |
+| P1.6 | Wire enrichment into the events pipeline | IN_PROGRESS | |
 | P1.7 | Wire enrichment into the jobs pipeline | TODO | |
 
 ### Phase 2 — Daily pool build + cache (fixes credit budget)
