@@ -192,6 +192,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SEASON_YEAR_RE =
   /\b(?:spring|summer|fall|autumn|winter)\s+(20\d{2})\b/gi;
 
+// A bare leading year is the other common way postings label their cycle:
+// "2025 Battery Research Scientist Graduate Intern" was still being surfaced
+// in mid-2026 because only season+year was recognised.
+const LEADING_YEAR_RE = /^\s*(20\d{2})\b/;
+
 /**
  * True when a posting is too old to be actionable. Two independent signals:
  * an explicit `postedAt` older than MAX_POSTING_AGE_DAYS, or a season+year
@@ -209,10 +214,12 @@ export function isExpiredPosting(item: RawJobItem, now = Date.now()): boolean {
   }
 
   const currentYear = new Date(now).getUTCFullYear();
-  const seasonYears = [...item.title.matchAll(SEASON_YEAR_RE)].map((m) =>
+  const labelledYears = [...item.title.matchAll(SEASON_YEAR_RE)].map((m) =>
     Number(m[1]),
   );
-  if (seasonYears.length > 0 && seasonYears.every((y) => y < currentYear)) {
+  const leadingYear = item.title.match(LEADING_YEAR_RE)?.[1];
+  if (leadingYear) labelledYears.push(Number(leadingYear));
+  if (labelledYears.length > 0 && labelledYears.every((y) => y < currentYear)) {
     return true;
   }
 

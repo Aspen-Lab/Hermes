@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CONFERENCE_CITIES,
   extractBodyTextPlace,
+  extractPlaceFromText,
   extractJsonLdOpportunities,
   extractMetaOpportunityDetails,
   extractOpenGraphTags,
@@ -233,5 +234,43 @@ describe("body-text place fallback", () => {
       city: "Paris",
       region: "France",
     });
+  });
+});
+
+describe("country must belong to the city", () => {
+  it("does not pair a city with an unrelated country mentioned elsewhere", () => {
+    // The real failure: a titanium round table held in Cologne whose abstract
+    // discusses production in China came out as "Cologne / China".
+    const html =
+      "<html><body><h1>2026 International Round Table on Titanium Production" +
+      " in Molten Salts</h1><p>The meeting takes place in Cologne.</p>" +
+      "<p>Titanium sponge production in China has grown rapidly.</p></body></html>";
+    const place = extractBodyTextPlace(html);
+    expect(place?.city).toBe("Cologne");
+    expect(place?.country).toBeUndefined();
+  });
+
+  it("keeps a country that directly follows the city", () => {
+    const html = "<html><body><p>Venue: Cologne, Germany</p></body></html>";
+    const place = extractBodyTextPlace(html);
+    expect(place?.city).toBe("Cologne");
+    expect(place?.country).toBe("Germany");
+  });
+
+  it("still resolves US cities to United States via the state code", () => {
+    const html = "<html><body><p>August 11-12, 2026 in Chicago, IL</p></body></html>";
+    const place = extractBodyTextPlace(html);
+    expect(place?.city).toBe("Chicago");
+    expect(place?.region).toBe("IL");
+    expect(place?.country).toBe("United States");
+  });
+
+  it("ignores a bare country with no venue cue", () => {
+    expect(extractPlaceFromText("Titanium production in China is growing.")).toBeUndefined();
+  });
+
+  it("accepts a bare country when the page says it is the venue", () => {
+    const place = extractPlaceFromText("The workshop will be held in Germany.");
+    expect(place?.country).toBe("Germany");
   });
 });

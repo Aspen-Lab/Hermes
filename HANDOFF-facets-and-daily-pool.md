@@ -336,6 +336,18 @@ Every agent appends an entry here before ending its session. Never edit someone 
 - Anything I changed that was NOT in the plan, and why: personalized event/job API responses changed from public caching to `private, no-store`, and the daily pool moved to preference-neutral cache v3, so facet learning cannot leak one user's ranking to another. During early P4 browser QA, opening `/` once triggered the real daily endpoints; all later UI QA used fixed local fixtures. The requested `dataviz` skill was unavailable for P4.3, so I used fixed token-based green tiers and verified light/dark rendering in-browser.
 - What the next agent should watch out for: v3 intentionally invalidates v2 daily pools, so the first request after deployment rebuilds once before later same-day requests become zero-network. Do not repeat the paid live benchmark again on 2026-07-27; use the persisted evidence in `HANDOFF-FACETS-COMPLETE.md`. The cached live snapshot still contains missing-city and article/store-shaped entries that merit a separate retrieval-quality review.
 
+### Session 2 — Claude (reviewer) — 2026-07-27
+- Tasks completed this session: none new; all 22 ledger rows were already DONE and verified independently.
+- Post-review defect fixes applied on top of the completed work (see commit "Fix retrieval quality defects found in review"):
+  - Per-search result count was derived by dividing a fixed cap across the query set, so 18 queries yielded 4 results each. Providers bill per search, not per result, so this discarded most of the pool for free. Now a constant `RESULTS_PER_SEARCH = 10`. **Event pool 11 -> 24, job pool 6 -> 15.**
+  - Body-text country was matched anywhere on the page, pairing a Cologne event with "China" from an unrelated sentence. Country now must follow the city; a bare country needs a venue cue.
+  - Place values are sanitized before becoming facet buttons (a marketing tagline had become a "city").
+  - Storefront paths, news/editorial titles, and paper/abstract hosts are rejected for events.
+  - Jobs: listing-page test now also runs on the first title segment ("CAREER | Acme" rendered as "CAREER"); expired-posting test now recognises a bare leading year ("2025 ... Intern").
+- Test/typecheck status at stop time: 287 passed / 1 key-gated live benchmark skipped; tsc clean; eslint clean on src/lib.
+- What the next agent should watch out for: still-open retrieval-quality items, in rough priority order — a company name ("Quintus Technologies") can still land in the location facet; a stray paper title and a markdown-artifact title still reach the events pool; the jobs month facet is empty because job postings carry no parseable dates; job location strings are inconsistently shaped ("California, USA" vs "Columbia, SC, United States" vs "USA") and should be normalised before they are used as facet buttons.
+
+
 ---
 
 ## §9. WHEN ALL PHASES ARE DONE

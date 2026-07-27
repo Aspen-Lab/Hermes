@@ -13,6 +13,7 @@ import {
   DENY_PATH_RE,
   eventNameFrom,
   isEventIndexPage,
+  isNewsArticleTitle,
   extractDeadline,
   extractEventDate,
   guessEventType,
@@ -545,5 +546,37 @@ describe("site-chrome titles", () => {
         "https://www.cambridgeenertech.com/solid-state-batteries",
       ),
     ).toBe("Solid-State Battery Summit");
+  });
+});
+
+describe("commerce and news pages", () => {
+  it.each([
+    ["https://batteriesinaflash.com/shop/chargers", "Batteries, Charger & More"],
+    ["https://example.test/store/battery-packs", "Battery Packs Conference Store"],
+    ["https://example.test/products/cells", "Battery Cells Symposium"],
+  ])("rejects storefront URL %s", (url, title) => {
+    expect(
+      webResultToRawEventItem(
+        { title, url, snippet: "Conference registration and pricing" },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    "The Year Ahead: Key Events at the IAEA in 2026",
+    "Top 10 Battery Conferences to Watch",
+    "What to Expect at the 2026 Summit",
+    "Highlights from the 2026 Battery Congress",
+  ])("rejects news/editorial title: %s", (title) => {
+    expect(isNewsArticleTitle(title)).toBe(true);
+  });
+
+  it.each([
+    "Solid-State Battery Summit",
+    "6th Annual Battery Safety Summit",
+    "International Meeting on Lithium Batteries",
+  ])("keeps a real event title: %s", (title) => {
+    expect(isNewsArticleTitle(title)).toBe(false);
   });
 });

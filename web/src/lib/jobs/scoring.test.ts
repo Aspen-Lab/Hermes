@@ -406,3 +406,22 @@ describe("expired postings", () => {
     expect(isExpiredPosting(job(), NOW)).toBe(false);
   });
 });
+
+describe("bare leading year cycles", () => {
+  const NOW2 = Date.parse("2026-07-27T00:00:00Z");
+  function j(title: string): RawJobItem {
+    return {
+      id: "jobweb:y", source: "jobweb", title, company: "Lab", location: "",
+      isRemote: false, description: "", url: "https://x.test/job/1", tags: [],
+    };
+  }
+  it("drops a posting labelled with a past year", () => {
+    expect(isExpiredPosting(j("2025 Battery Research Scientist Graduate Intern"), NOW2)).toBe(true);
+  });
+  it("keeps the current year", () => {
+    expect(isExpiredPosting(j("2026 Battery Research Scientist Graduate Intern"), NOW2)).toBe(false);
+  });
+  it("ignores a year that is not the cycle label", () => {
+    expect(isExpiredPosting(j("Research Scientist, Batteries since 2025"), NOW2)).toBe(false);
+  });
+});

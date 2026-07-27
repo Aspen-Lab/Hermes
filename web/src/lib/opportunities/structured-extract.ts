@@ -846,18 +846,52 @@ function countryName(value: unknown): string | undefined {
   return nonEmptyString(value.name);
 }
 
+/**
+ * Real place names are short. Pages routinely put a tagline or a whole
+ * sentence where a locality belongs, and one live pool ended up with a facet
+ * reading "Quintus Technologies / The Global Leader in isostatic pressing
+ * technologies is your partner of choice." Because these values become
+ * user-facing filter buttons, an implausible one is worse than none.
+ */
+const MAX_PLACE_WORDS = 4;
+const MAX_PLACE_CHARS = 40;
+const SENTENCE_PUNCTUATION_RE = /[.!?;:|]|\s-\s/;
+
+export function plausiblePlaceName(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim().replace(/\s+/g, " ");
+  if (!trimmed || trimmed.length > MAX_PLACE_CHARS) return undefined;
+  if (trimmed.split(" ").length > MAX_PLACE_WORDS) return undefined;
+  if (SENTENCE_PUNCTUATION_RE.test(trimmed)) return undefined;
+  // Needs at least one letter; "2026" or "—" is not a place.
+  if (!/\p{L}/u.test(trimmed)) return undefined;
+  return trimmed;
+}
+
+/** Drop implausible components so a bad value never reaches a facet button. */
+export function sanitizePlace(
+  place: ExtractedPlace | undefined,
+): ExtractedPlace | undefined {
+  if (!place) return undefined;
+  const cleaned: ExtractedPlace = {
+    city: plausiblePlaceName(place.city),
+    region: plausiblePlaceName(place.region),
+    country: plausiblePlaceName(place.country),
+  };
+  return cleaned.city || cleaned.region || cleaned.country ? cleaned : undefined;
+}
+
 function extractPlace(location: unknown): ExtractedPlace | undefined {
   const locationRecord = firstRecord(location);
   if (!locationRecord) return undefined;
   const address = firstRecord(locationRecord.address);
   if (!address) return undefined;
 
-  const place: ExtractedPlace = {
+  return sanitizePlace({
     city: nonEmptyString(address.addressLocality),
     region: nonEmptyString(address.addressRegion),
     country: countryName(address.addressCountry),
-  };
-  return place.city || place.region || place.country ? place : undefined;
+  });
 }
 
 function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
@@ -1022,15 +1056,40 @@ function stateCodeAfterCity(text: string, city: string): string | undefined {
   return code;
 }
 
+/**
+ * Country named immediately after the city, as in "Cologne, Germany" or
+ * "Oldenburg (Germany)".
+ *
+ * Scanning the whole page for any country name pairs a city with whatever
+ * country happens to be mentioned elsewhere: a titanium conference held in
+ * Cologne whose abstract discusses production in China came out as
+ * "Cologne / China". A wrong country is worse than no country, because the
+ * user filters on it — so proximity is required, and an unmatched city simply
+ * carries no country.
+ */
+function countryAfterCity(text: string, city: string): string | undefined {
+  const flexibleCity = escapeRegExp(city).replace(/\s+/g, "\\s+");
+  // Allow an intervening region/state token: "Cologne, NRW, Germany".
+  const pattern = new RegExp(
+    `\\b${flexibleCity}\\s*[,(\\-–]\\s*(?:[A-Za-z.\\s]{2,24}?\\s*[,(\\-–]\\s*)?(${COUNTRY_NAMES.map(
+      (c) => escapeRegExp(c).replace(/\s+/g, "\\s+"),
+    ).join("|")})\\b`,
+    "i",
+  );
+  const matched = text.match(pattern)?.[1];
+  if (!matched) return undefined;
+  // Return the gazetteer's canonical spelling rather than the page's casing.
+  const canonicalMatch = canonicalize(matched);
+  return COUNTRY_NAMES.find((c) => canonicalize(c) === canonicalMatch);
+}
+
 export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
   const text = bodyText(html);
   const city = findGazetteerMatch(text, CONFERENCE_CITIES);
   if (!city) return undefined;
 
   const region = stateCodeAfterCity(text, city);
-  const country = region
-    ? "United States"
-    : findGazetteerMatch(text, COUNTRY_NAMES);
+  const country = region ? "United States" : countryAfterCity(text, city);
   return {
     city,
     region,
@@ -1038,11 +1097,24 @@ export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
   };
 }
 
+// A country is only trustworthy on its own when the page says it is the venue.
+// Without a cue, "China" in a discussion of titanium production becomes the
+// event's location.
+const VENUE_CUE_RE =
+  /\b(?:held|hosted|takes? place|taking place|venue|location|located)\b[^.]{0,40}$/i;
+
 export function extractPlaceFromText(text: string): ExtractedPlace | undefined {
   const cityPlace = extractBodyTextPlace(text);
   if (cityPlace) return cityPlace;
-  const country = findGazetteerMatch(bodyText(text), COUNTRY_NAMES);
-  return country ? { country } : undefined;
+
+  const body = bodyText(text);
+  const country = findGazetteerMatch(body, COUNTRY_NAMES);
+  if (!country) return undefined;
+
+  const index = canonicalize(body).indexOf(canonicalize(country));
+  if (index < 0) return undefined;
+  const preceding = canonicalize(body).slice(Math.max(0, index - 60), index);
+  return VENUE_CUE_RE.test(preceding) ? { country } : undefined;
 }
 
 function jsonLdBlocks(html: string): string[] {
@@ -1133,7 +1205,13 @@ export function extractOpportunityPageDetails(
     name: structured?.name ?? openGraph.title,
     startDate: structured?.startDate ?? meta.start,
     endDate: structured?.endDate ?? meta.end,
-    place: structured?.place ?? metaPlace ?? extractBodyTextPlace(html),
+    // Sanitize at the boundary so every layer — JSON-LD, meta tags, body text
+    // — is held to the same "is this actually a place name" standard before it
+    // can become a facet button.
+    place:
+      sanitizePlace(structured?.place) ??
+      sanitizePlace(metaPlace) ??
+      sanitizePlace(extractBodyTextPlace(html)),
     isOnline:
       meta.isOnline ||
       attendanceMode.includes("online") ||

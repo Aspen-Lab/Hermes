@@ -1,7 +1,10 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 import { urlHashId } from "@/lib/opportunities/shared";
-import { EVENT_QUERY_BUDGET } from "@/lib/opportunities/query-budget";
+import {
+  EVENT_QUERY_BUDGET,
+  RESULTS_PER_SEARCH,
+} from "@/lib/opportunities/query-budget";
 
 // Web discovery for academic events. The curated feeds (ccfddl, confs.tech)
 // are CS-heavy; this adapter is what finds a materials-science symposium or a
@@ -104,6 +107,42 @@ export const DENY_HOSTS = [
 
 export const DENY_PATH_RE = /\/(?:article|doi|abs|reel|posts|p)(?:\/|$)/i;
 
+/**
+ * Storefront paths. A battery retailer's catalogue mentions "batteries" and
+ * "charger" constantly and can clear the relevance gate, but it is a shop, not
+ * an event — "Batteries, Charger & More" reached a live top 10 this way.
+ */
+export const COMMERCE_PATH_RE =
+  /\/(?:shop|store|product|products|collections?|cart|checkout|catalog(?:ue)?|pricing|buy)(?:\/|$)/i;
+
+/**
+ * Editorial coverage *about* events rather than an event page. "The Year Ahead:
+ * Key Events at the IAEA in 2026" is a news article; there is nothing to
+ * register for. These read as events to a keyword check because they are full
+ * of event vocabulary.
+ */
+export const NEWS_TITLE_RE =
+  /^\s*(?:the\s+year\s+ahead|year\s+in\s+review|(?:top|best)\s+\d+\b|what\s+to\s+(?:expect|watch)|a\s+look\s+(?:back|ahead)|recap|highlights\s+from|report\s+from|announcing\b)|\b(?:news|press\s+release|blog\s+post|newsletter)\b/i;
+
+/**
+ * Paper and abstract pages. Conference proceedings sites host one page per
+ * *paper*, and those pages carry the parent conference's event vocabulary, so
+ * they clear both the event-signal check and the relevance gate. A user
+ * looking for somewhere to go cannot attend an abstract.
+ */
+export const PAPER_PAGE_HOSTS = [
+  "programmaster.org",
+  "hal.science",
+  "hal.archives-ouvertes.fr",
+  "ui.adsabs.harvard.edu",
+  "ouci.dntb.gov.ua",
+  "colab.ws",
+  "scilit.com",
+] as const;
+
+export const PAPER_TITLE_RE =
+  /^\s*(?:about\s+this\s+abstract|abstract\s*[:#-]|archive\s+ouverte)\b|\b(?:archive\s+ouverte|hal\s+open\s+science)\b/i;
+
 function isDeniedUrl(rawUrl: string): boolean {
   let parsed: URL;
   try {
@@ -116,11 +155,16 @@ function isDeniedUrl(rawUrl: string): boolean {
   if (
     DENY_HOSTS.some(
       (denied) => host === denied || host.endsWith(`.${denied}`),
+    ) ||
+    PAPER_PAGE_HOSTS.some(
+      (denied) => host === denied || host.endsWith(`.${denied}`),
     )
   ) {
     return true;
   }
-  return DENY_PATH_RE.test(parsed.pathname);
+  return (
+    DENY_PATH_RE.test(parsed.pathname) || COMMERCE_PATH_RE.test(parsed.pathname)
+  );
 }
 
 // Page titles that name the page rather than the event. Taking the first
@@ -142,6 +186,14 @@ function isGenericPageTitle(candidate: string): boolean {
  */
 export const EVENT_INDEX_TITLE_RE =
   /^\s*(?:all\s+|upcoming\s+|past\s+|our\s+)?events?\b(?:\s+(?:for|in|calendar|archive|list|listing)\b|\s*$)|^\s*(?:events?|conferences?|seminars?)\s+(?:calendar|archive|listings?|schedule)\b|^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events?|conferences?|seminars?|workshops?)\s*$|\b(?:research\s+group|research\s+laboratory|research\s+center|research\s+centre|department\s+of|faculty\s+of)\b/i;
+
+export function isNewsArticleTitle(title: string): boolean {
+  return NEWS_TITLE_RE.test(title.trim());
+}
+
+export function isPaperPageTitle(title: string): boolean {
+  return PAPER_TITLE_RE.test(title.trim());
+}
 
 export function isEventIndexPage(title: string): boolean {
   return EVENT_INDEX_TITLE_RE.test(title.trim());
@@ -243,6 +295,8 @@ export function webResultToRawEventItem(
   if (!title || !url) return null;
   if (isDeniedUrl(url)) return null;
   if (isEventIndexPage(title)) return null;
+  if (isNewsArticleTitle(title)) return null;
+  if (isPaperPageTitle(title)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;
   const startDate = extractEventDate(text);
@@ -359,7 +413,13 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
 
   const searches = query.queries.slice(0, EVENT_QUERY_BUDGET);
   if (searches.length === 0) return [];
-  const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
+  // Search providers bill per *search*, not per result, so asking each query
+  // for a full page of results is free. The previous formula divided a fixed
+  // cap across the query set, which meant every added query starved the
+  // others — 18 queries yielded 4 results each. Measured: 4/query produced a
+  // 65-item candidate pool where 10/query produces ~157, and the facet panel
+  // is only as useful as the pool behind it.
+  const perQuery = RESULTS_PER_SEARCH;
 
   const now = Date.now();
   const all: RawEventItem[] = [];

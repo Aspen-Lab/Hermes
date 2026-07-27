@@ -87,3 +87,25 @@ describe("careers index and aggregator category pages", () => {
     ).toBe(false);
   });
 });
+
+describe("listing titles hidden behind site chrome", () => {
+  it("rejects a careers index whose label is only the first title segment", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "CAREER | Acme Materials",
+        url: "https://acme.test/careers",
+        snippet: "Research scientist openings. Apply now.",
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps a real role that carries site chrome", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist | Acme Materials",
+      url: "https://acme.test/careers/job/9912",
+      snippet: "Open position in battery R&D. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.title).toBe("Battery Research Scientist");
+  });
+});

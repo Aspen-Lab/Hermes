@@ -5,3 +5,10 @@
  */
 export const EVENT_QUERY_BUDGET = 18;
 export const JOB_QUERY_BUDGET = 12;
+
+/**
+ * Results requested per search. Providers charge per search, not per result,
+ * so this costs nothing extra and is the cheapest lever on pool size — the
+ * facet panel can only offer locations that made it into the pool.
+ */
+export const RESULTS_PER_SEARCH = 10;

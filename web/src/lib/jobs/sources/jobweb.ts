@@ -1,6 +1,9 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 import { urlHashId } from "@/lib/opportunities/shared";
-import { JOB_QUERY_BUDGET } from "@/lib/opportunities/query-budget";
+import {
+  JOB_QUERY_BUDGET,
+  RESULTS_PER_SEARCH,
+} from "@/lib/opportunities/query-budget";
 
 // Web discovery for research and R&D positions across academic and industry
 // employers. Search providers reach public listings that frequently block
@@ -125,6 +128,12 @@ export function webResultToRawJobItem(result: {
   // Split "Postdoc in X - University of Y | board.com" style titles.
   const parts = title.split(/\s+[-–—|·]\s+/);
   const roleTitle = parts[0]?.trim() || title;
+  // The check above saw the full title; the card shows only this first
+  // segment. "CAREER | Acme Corp" clears a whole-title test and then renders
+  // as the bare word "CAREER", so the segment needs the same test.
+  if (isListingPage(roleTitle, host, `${parsed.pathname}${parsed.search}`)) {
+    return null;
+  }
   const company =
     parts
       .slice(1)
@@ -219,7 +228,8 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
   const searches = query.queries.slice(0, JOB_QUERY_BUDGET);
   if (searches.length === 0) return [];
-  const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
+  // Providers bill per search, not per result — see RESULTS_PER_SEARCH.
+  const perQuery = RESULTS_PER_SEARCH;
 
   const resultSets = await Promise.all(
     searches.map((q) => {
