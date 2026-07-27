@@ -2,6 +2,7 @@ import type {
   CareerStage,
   IndustryAcademiaPreference,
   Job,
+  OpportunityFacetCounts,
   OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
@@ -104,6 +105,9 @@ export interface JobsFeedMeta {
 
 export interface JobsFeedResponse {
   items: Job[];
+  /** Complete scored pool for client-side facets and progressive reveal. */
+  pool: Job[];
+  facetCounts: OpportunityFacetCounts;
   meta: JobsFeedMeta;
 }
 

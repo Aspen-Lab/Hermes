@@ -28,7 +28,7 @@ describe("daily opportunity pool cache key", () => {
 
     expect(reordered).toBe(first);
     expect(first).toMatch(
-      /^peer-pool-v1-events-2026-07-27-[a-f0-9]{32}$/,
+      /^peer-pool-v2-events-2026-07-27-[a-f0-9]{32}$/,
     );
   });
 

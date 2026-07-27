@@ -7,7 +7,6 @@ import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { enrichJobCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
-  emptyOpportunityFacetCounts,
   getOrBuildCachedPool,
   isCachedJobPool,
   localCalendarDate,
@@ -15,6 +14,10 @@ import {
   type PoolCache,
 } from "@/lib/opportunities/pool-cache";
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
+import {
+  countOpportunityFacets,
+  MAX_OPPORTUNITY_POOL_ITEMS,
+} from "@/lib/opportunities/facets";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
 import { jobSources } from "./sources";
 import { dedupJobs } from "./dedup";
@@ -146,16 +149,17 @@ async function buildJobPool(
     industryPreference: req.industryVsAcademia,
     locations: req.locationPreferences,
   };
-  const items = await scoreJobPoolCandidates(
+  const scoredItems = await scoreJobPoolCandidates(
     deduped,
     scoringProfile,
     now.getTime(),
     options,
   );
+  const items = scoredItems.slice(0, MAX_OPPORTUNITY_POOL_ITEMS);
 
   return {
     items,
-    facetCounts: emptyOpportunityFacetCounts(),
+    facetCounts: countOpportunityFacets("jobs", items),
     fetched,
     errors,
     beforeDedup,
@@ -239,9 +243,12 @@ export async function runJobsPipeline(
     ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
     : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
+  const mappedPool = scored.map(scoredJobToJob);
 
   return {
     items: returned.map(scoredJobToJob),
+    pool: mappedPool,
+    facetCounts: pool.facetCounts,
     meta: {
       fetched: pool.fetched,
       errors: pool.errors,

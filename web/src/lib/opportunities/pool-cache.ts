@@ -1,17 +1,14 @@
 import { createHash } from "node:crypto";
-import type { CareerStage } from "@/types";
+import type {
+  CareerStage,
+  OpportunityFacetCounts,
+} from "@/types";
 import type { ScoredEventItem } from "@/lib/events/types";
 import type { ScoredJobItem } from "@/lib/jobs/types";
 import { canonicalize } from "@/lib/scoring/term-expand";
 
 export type OpportunitySurface = "events" | "jobs";
-export type OpportunityFormat = "in-person" | "online" | "hybrid";
-
-export interface OpportunityFacetCounts {
-  location: Record<string, number>;
-  month: Record<string, number>;
-  format: Record<OpportunityFormat, number>;
-}
+export type { OpportunityFacetCounts, OpportunityFormat } from "@/types";
 
 interface CachedPoolBase {
   generatedAt: string;
@@ -81,7 +78,9 @@ export interface PoolCacheKeyInput {
   now?: Date;
 }
 
-const CACHE_KEY_VERSION = 1;
+// Bump whenever the durable pool payload semantics change. v2 adds the
+// 200-item cap and real whole-pool facet counts.
+const CACHE_KEY_VERSION = 2;
 
 function normalizeSet(values: string[] | undefined): string[] {
   return Array.from(

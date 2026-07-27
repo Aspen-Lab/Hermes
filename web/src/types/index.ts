@@ -74,6 +74,14 @@ export interface OpportunityPlace {
   country?: string;
 }
 
+export type OpportunityFormat = "in-person" | "online" | "hybrid";
+
+export interface OpportunityFacetCounts {
+  location: Record<string, number>;
+  month: Record<string, number>;
+  format: Record<OpportunityFormat, number>;
+}
+
 export interface Event {
   id: string;
   name: string;

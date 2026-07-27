@@ -8,7 +8,6 @@ import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { enrichEventCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
-  emptyOpportunityFacetCounts,
   getOrBuildCachedPool,
   isCachedEventPool,
   localCalendarDate,
@@ -16,6 +15,10 @@ import {
   type PoolCache,
 } from "@/lib/opportunities/pool-cache";
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
+import {
+  countOpportunityFacets,
+  MAX_OPPORTUNITY_POOL_ITEMS,
+} from "@/lib/opportunities/facets";
 import {
   generateSearchQueries,
   templateEventQueries,
@@ -147,16 +150,17 @@ async function buildEventPool(
     preferenceLedger: req.preferenceLedger,
     locations: req.locationPreferences,
   };
-  const items = await scoreEventPoolCandidates(
+  const scoredItems = await scoreEventPoolCandidates(
     deduped,
     scoringProfile,
     now.getTime(),
     options,
   );
+  const items = scoredItems.slice(0, MAX_OPPORTUNITY_POOL_ITEMS);
 
   return {
     items,
-    facetCounts: emptyOpportunityFacetCounts(),
+    facetCounts: countOpportunityFacets("events", items),
     fetched,
     errors,
     beforeDedup,
@@ -242,9 +246,12 @@ export async function runEventsPipeline(
     ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
     : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
+  const mappedPool = scored.map(scoredEventToEvent);
 
   return {
     items: returned.map(scoredEventToEvent),
+    pool: mappedPool,
+    facetCounts: pool.facetCounts,
     meta: {
       fetched: pool.fetched,
       errors: pool.errors,

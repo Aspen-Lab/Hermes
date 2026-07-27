@@ -3,6 +3,7 @@ import type {
   Event,
   EventType,
   IndustryAcademiaPreference,
+  OpportunityFacetCounts,
   OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
@@ -88,6 +89,9 @@ export interface EventsFeedMeta {
 
 export interface EventsFeedResponse {
   items: Event[];
+  /** Complete scored pool for client-side facets and progressive reveal. */
+  pool: Event[];
+  facetCounts: OpportunityFacetCounts;
   meta: EventsFeedMeta;
 }
 
