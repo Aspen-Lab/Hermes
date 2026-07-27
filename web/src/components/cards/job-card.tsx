@@ -59,6 +59,11 @@ export function JobCard({ job }: { job: Job }) {
       <p className="text-body-lg text-text-muted mt-4 leading-[1.65] line-clamp-2">
         {job.matchReason}
       </p>
+      {job.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {job.facetPreferenceReason}
+        </p>
+      )}
 
       <ActionBar
         onSave={() => saveJob(job)}

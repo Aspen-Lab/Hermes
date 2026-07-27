@@ -4,6 +4,8 @@ import {
   applyPreferenceSignal,
   cleanPreferenceLedger,
   FACET_PREFERENCE_BOOST_MAX,
+  facetPreferenceReason,
+  materiallyChangedByFacetPreference,
   opportunityFacetPreferenceConcept,
   opportunityFacetPreferenceConcepts,
   prepareLedger,
@@ -346,6 +348,23 @@ describe("scorePreferenceMatch", () => {
 });
 
 // ── summarizePreferenceLedger ───────────────────────────────────
+
+describe("facet preference explanations", () => {
+  it("only treats a two-place rise or a top-10 crossing as material", () => {
+    expect(materiallyChangedByFacetPreference(4, 2)).toBe(true);
+    expect(materiallyChangedByFacetPreference(10, 9)).toBe(true);
+    expect(materiallyChangedByFacetPreference(4, 3)).toBe(false);
+    expect(materiallyChangedByFacetPreference(2, 2)).toBe(false);
+    expect(materiallyChangedByFacetPreference(2, 3)).toBe(false);
+  });
+
+  it("uses the first auditable matched facet in the card reason", () => {
+    expect(facetPreferenceReason([" Chicago ", "hybrid"])).toBe(
+      "Because you often view Chicago",
+    );
+    expect(facetPreferenceReason([])).toBeUndefined();
+  });
+});
 
 describe("summarizePreferenceLedger", () => {
   it("splits and sorts liked vs disliked by decayed net", () => {

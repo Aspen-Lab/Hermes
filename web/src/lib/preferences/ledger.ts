@@ -669,6 +669,27 @@ export function scorePreferenceMatch(
   };
 }
 
+export function materiallyChangedByFacetPreference(
+  baselineIndex: number,
+  finalIndex: number,
+  topN = 10,
+): boolean {
+  if (baselineIndex < 0 || finalIndex < 0 || finalIndex >= baselineIndex) {
+    return false;
+  }
+  return (
+    baselineIndex - finalIndex >= 2 ||
+    (baselineIndex >= topN && finalIndex < topN)
+  );
+}
+
+export function facetPreferenceReason(
+  matchedLabels: string[],
+): string | undefined {
+  const label = matchedLabels.find((value) => value.trim())?.trim();
+  return label ? `Because you often view ${label}` : undefined;
+}
+
 export function feedbackSnapshotForPaper(paper: Paper) {
   return {
     title: paper.title,

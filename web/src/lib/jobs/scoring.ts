@@ -9,6 +9,8 @@ import { scoreRecency } from "@/lib/scoring/recency";
 import {
   buildPreferenceDocumentFrequency,
   conceptsFromRawItem,
+  facetPreferenceReason,
+  materiallyChangedByFacetPreference,
   normalizePreferenceConcepts,
   opportunityFacetPreferenceConcepts,
   prepareLedger,
@@ -37,6 +39,11 @@ export interface JobScoringProfile {
   careerStage?: CareerStage;
   industryPreference?: IndustryAcademiaPreference;
   locations?: string[];
+}
+
+interface FacetRankedJobItem extends ScoredJobItem {
+  scoreWithoutFacetPreference: number;
+  facetPreferenceLabels: string[];
 }
 
 const WEIGHTS = {
@@ -277,7 +284,7 @@ export function scoreJobs(
   const rankingTopics = [...profile.topics, ...(profile.methods ?? [])];
   const softTopics = profile.softTopics ?? [];
 
-  const scored: ScoredJobItem[] = [];
+  const scored: FacetRankedJobItem[] = [];
   for (const item of items) {
     const facade = facades.get(item.id)!;
     // Drop postings that have clearly aged out. A posting the user cannot
@@ -328,11 +335,19 @@ export function scoreJobs(
       WEIGHTS.recency * recency +
       WEIGHTS.source * source;
     const softBonus = softTopics.length > 0 ? softKw.score * 0.12 : 0;
+    const scoreWithoutFacetPreference = clamp01(
+      base * preference.penalty +
+        softBonus +
+        preference.boost -
+        preference.facetBoost,
+    );
     const score = clamp01(base * preference.penalty + softBonus + preference.boost);
 
     scored.push({
       ...item,
       score,
+      scoreWithoutFacetPreference,
+      facetPreferenceLabels: preference.matchedFacetPositive,
       matchedKeywords: reasonMatches,
       matchReason: reasonFor(
         item,
@@ -343,7 +358,38 @@ export function scoreJobs(
     });
   }
 
-  const ranked = scored.sort((a, b) => b.score - a.score);
+  const baselineIndexById = new Map(
+    [...scored]
+      .sort(
+        (left, right) =>
+          right.scoreWithoutFacetPreference -
+          left.scoreWithoutFacetPreference,
+      )
+      .map((item, index) => [item.id, index]),
+  );
+  const ranked: ScoredJobItem[] = [...scored]
+    .sort((left, right) => right.score - left.score)
+    .map(
+      (
+        {
+          scoreWithoutFacetPreference,
+          facetPreferenceLabels,
+          ...item
+        },
+        finalIndex,
+      ) => {
+        const baselineIndex = baselineIndexById.get(item.id) ?? -1;
+        const explanation =
+          item.score > scoreWithoutFacetPreference &&
+          materiallyChangedByFacetPreference(baselineIndex, finalIndex)
+            ? facetPreferenceReason(facetPreferenceLabels)
+            : undefined;
+        return {
+          ...item,
+          facetPreferenceReason: explanation,
+        };
+      },
+    );
   return options.applyFloor === false
     ? ranked
     : ranked.filter((item) => item.score >= MIN_SCORE);

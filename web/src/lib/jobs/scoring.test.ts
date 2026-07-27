@@ -227,6 +227,46 @@ describe("scoreJobs", () => {
 
     expect(ranked[0].id).toBe("chicago");
     expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
+    expect(ranked[0].facetPreferenceReason).toBeUndefined();
+  });
+
+  it("explains a facet boost only when it materially changes job rank", () => {
+    const candidates = [
+      ["berlin", "Berlin"],
+      ["boston", "Boston"],
+      ["austin", "Austin"],
+      ["chicago", "Chicago"],
+    ].map(([id, city]) =>
+      job({
+        id,
+        location: `${city}, Test`,
+        place: { city },
+        isRemote: false,
+      }),
+    );
+    const at = "2026-07-19T00:00:00.000Z";
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at, origin: "job" },
+    );
+    const ranked = scoreJobs(
+      candidates,
+      { topics: ["machine learning"], preferenceLedger },
+      Date.parse(at),
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].facetPreferenceReason).toBe(
+      "Because you often view Chicago",
+    );
+    expect(
+      ranked.slice(1).every(
+        (item) => item.facetPreferenceReason === undefined,
+      ),
+    ).toBe(true);
   });
 });
 

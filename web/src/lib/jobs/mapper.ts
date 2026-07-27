@@ -70,6 +70,7 @@ export function scoredJobToJob(item: ScoredJobItem): Job {
     isRemote: item.isRemote,
     keyRequirements: keyRequirements(item),
     matchReason: item.matchReason,
+    facetPreferenceReason: item.facetPreferenceReason,
     linkPosting: item.url,
     postedDate: item.postedAt,
     relevanceScore: item.score,

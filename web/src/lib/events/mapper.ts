@@ -59,6 +59,7 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     deadline: item.deadline,
     shortDescription: description.slice(0, 280),
     relevanceReason: item.relevanceReason,
+    facetPreferenceReason: item.facetPreferenceReason,
     linkOfficial: item.url,
     linkRegistration: item.registrationUrl ?? item.url,
     relevanceScore: item.score,

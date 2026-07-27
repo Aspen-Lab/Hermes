@@ -108,6 +108,8 @@ export interface Event {
   deadline?: string;
   shortDescription: string;
   relevanceReason: string;
+  /** Shown separately when weak facet history materially changed rank. */
+  facetPreferenceReason?: string;
   linkRegistration?: string;
   linkOfficial?: string;
   relevanceScore?: number;
@@ -127,6 +129,8 @@ export interface Job {
   isRemote: boolean;
   keyRequirements: string[];
   matchReason: string;
+  /** Shown separately when weak facet history materially changed rank. */
+  facetPreferenceReason?: string;
   linkPosting?: string;
   postedDate?: string;
   relevanceScore?: number;

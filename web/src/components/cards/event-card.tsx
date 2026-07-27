@@ -44,6 +44,11 @@ export function EventCard({ event }: { event: Event }) {
       <p className="text-body-lg text-text-muted mt-4 leading-[1.65] line-clamp-2">
         {event.relevanceReason}
       </p>
+      {event.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {event.facetPreferenceReason}
+        </p>
+      )}
 
       <ActionBar
         onSave={() => saveEvent(event)}

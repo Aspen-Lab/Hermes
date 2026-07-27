@@ -440,6 +440,11 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       >
         {event.relevanceReason}
       </p>
+      {event.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {event.facetPreferenceReason}
+        </p>
+      )}
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {event.type}
@@ -499,6 +504,11 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       >
         {job.matchReason}
       </p>
+      {job.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {job.facetPreferenceReason}
+        </p>
+      )}
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {job.keyRequirements[0] || "Role"}

@@ -7,6 +7,8 @@ import { buildIndex, scoreTfidf } from "@/lib/scoring/tfidf";
 import {
   buildPreferenceDocumentFrequency,
   conceptsFromRawItem,
+  facetPreferenceReason,
+  materiallyChangedByFacetPreference,
   normalizePreferenceConcepts,
   opportunityFacetPreferenceConcepts,
   prepareLedger,
@@ -29,6 +31,11 @@ export interface EventScoringProfile {
   seedTexts?: string[];
   preferenceLedger?: PreferenceLedger;
   locations?: string[];
+}
+
+interface FacetRankedEventItem extends ScoredEventItem {
+  scoreWithoutFacetPreference: number;
+  facetPreferenceLabels: string[];
 }
 
 const WEIGHTS = {
@@ -117,13 +124,13 @@ function reasonFor(item: RawEventItem, matched: string[], now: number): string {
  * Keep the daily 10 from becoming ten conferences (or ten seminars): cap
  * each event type at `cap` while preserving score order.
  */
-export function diversifyByType(
-  items: ScoredEventItem[],
+export function diversifyByType<TItem extends ScoredEventItem>(
+  items: TItem[],
   cap = 5,
-): ScoredEventItem[] {
+): TItem[] {
   const counts = new Map<EventType, number>();
-  const kept: ScoredEventItem[] = [];
-  const overflow: ScoredEventItem[] = [];
+  const kept: TItem[] = [];
+  const overflow: TItem[] = [];
   for (const item of items) {
     const count = counts.get(item.type) ?? 0;
     if (count < cap) {
@@ -176,7 +183,7 @@ export function scoreEvents(
   const rankingTopics = [...profile.topics, ...(profile.methods ?? [])];
   const softTopics = profile.softTopics ?? [];
 
-  const scored: ScoredEventItem[] = [];
+  const scored: FacetRankedEventItem[] = [];
   for (const item of items) {
     const isWebDiscovered = item.source === "eventweb";
 
@@ -237,17 +244,58 @@ export function scoreEvents(
       WEIGHTS.location * location +
       WEIGHTS.source * source;
     const softBonus = softTopics.length > 0 ? softKw.score * 0.12 : 0;
+    const scoreWithoutFacetPreference = clamp01(
+      base * preference.penalty +
+        softBonus +
+        preference.boost -
+        preference.facetBoost,
+    );
     const score = clamp01(base * preference.penalty + softBonus + preference.boost);
 
     scored.push({
       ...item,
       score,
+      scoreWithoutFacetPreference,
+      facetPreferenceLabels: preference.matchedFacetPositive,
       matchedKeywords: reasonMatches,
       relevanceReason: reasonFor(item, reasonMatches, now),
     });
   }
 
-  const ranked = diversifyByType(scored.sort((a, b) => b.score - a.score));
+  const baselineRanked = diversifyByType(
+    [...scored].sort(
+      (left, right) =>
+        right.scoreWithoutFacetPreference -
+        left.scoreWithoutFacetPreference,
+    ),
+  );
+  const baselineIndexById = new Map(
+    baselineRanked.map((item, index) => [item.id, index]),
+  );
+  const rankedWithContext = diversifyByType(
+    [...scored].sort((left, right) => right.score - left.score),
+  );
+  const ranked: ScoredEventItem[] = rankedWithContext.map(
+    (
+      {
+        scoreWithoutFacetPreference,
+        facetPreferenceLabels,
+        ...item
+      },
+      finalIndex,
+    ) => {
+      const baselineIndex = baselineIndexById.get(item.id) ?? -1;
+      const explanation =
+        item.score > scoreWithoutFacetPreference &&
+        materiallyChangedByFacetPreference(baselineIndex, finalIndex)
+          ? facetPreferenceReason(facetPreferenceLabels)
+          : undefined;
+      return {
+        ...item,
+        facetPreferenceReason: explanation,
+      };
+    },
+  );
   return options.applyFloor === false
     ? ranked
     : ranked.filter((item) => item.score >= MIN_SCORE);

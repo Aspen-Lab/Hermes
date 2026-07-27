@@ -118,4 +118,5 @@ export interface ScoredJobItem extends RawJobItem {
   score: number;
   matchedKeywords: string[];
   matchReason: string;
+  facetPreferenceReason?: string;
 }

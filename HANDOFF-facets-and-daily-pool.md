@@ -77,7 +77,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P5.1 | Record facet selections as weak preference signals | DONE | `npx vitest run src/lib/preferences/ledger.test.ts src/components/opportunities/opportunity-facet-panel.test.ts` — 2 files, 24 tests passed; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` — clean; facet selections persist as separate `facetPositive` evidence under the existing event/job ledger namespaces while deselection and clear do not record |
 | P5.2 | Boost cap + faster decay than explicit signals | DONE | `npx vitest run src/lib/preferences/ledger.test.ts src/lib/events/scoring.test.ts src/lib/jobs/scoring.test.ts src/lib/opportunities/facets.test.ts src/lib/opportunities/pool-cache.test.ts src/lib/opportunities/daily-pool-cache.test.ts` — 6 files, 113 tests passed; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` — clean; facet history is capped at 0.04 with a 14-day half-life, explicit negatives zero the weak boost, and v3 neutral daily pools re-rank locally with zero added source/network calls |
-| P5.3 | Surface the reason on the card ("because you often view Chicago") | IN_PROGRESS | |
+| P5.3 | Surface the reason on the card ("because you often view Chicago") | DONE | `npx vitest run src/lib/preferences/ledger.test.ts src/lib/events/scoring.test.ts src/lib/jobs/scoring.test.ts src/lib/opportunities/daily-pool-cache.test.ts` — 4 files, 108 tests passed; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` — clean; explanations require a ≥2-place rise or crossing into the top 10, and browser QA verified a separate untruncated reason on event/job FeedTile and Saved cards |
 
 ---
 

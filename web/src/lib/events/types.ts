@@ -102,4 +102,5 @@ export interface ScoredEventItem extends RawEventItem {
   score: number;
   matchedKeywords: string[];
   relevanceReason: string;
+  facetPreferenceReason?: string;
 }
