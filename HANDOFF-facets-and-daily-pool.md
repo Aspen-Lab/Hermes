@@ -66,7 +66,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P4.1 | Always-visible facet panel (counts + clickable, merged summary/control) | TODO | |
+| P4.1 | Always-visible facet panel (counts + clickable, merged summary/control) | IN_PROGRESS | |
 | P4.2 | Pagination: 10 at a time, "show 10 more" | TODO | |
 | P4.3 | Green 3-tier relevance colour on the whole card | TODO | |
 | P4.4 | Wire the tab search box to filter events/jobs | TODO | |
