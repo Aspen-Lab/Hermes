@@ -348,6 +348,14 @@ Every agent appends an entry here before ending its session. Never edit someone 
 - What the next agent should watch out for: still-open retrieval-quality items, in rough priority order — a company name ("Quintus Technologies") can still land in the location facet; a stray paper title and a markdown-artifact title still reach the events pool; the jobs month facet is empty because job postings carry no parseable dates; job location strings are inconsistently shaped ("California, USA" vs "Columbia, SC, United States" vs "USA") and should be normalised before they are used as facet buttons.
 
 
+### Session 3 — Claude (reviewer) — 2026-07-27
+- Closed the two functional gaps left open in Session 2:
+  - **Jobs had no dates at all**, so the month facet was permanently empty. Web-discovered postings never set `postedAt`, and schema.org `JobPosting.datePosted` was not being read. Now extracted and applied during enrichment. Live: month facet went from `{}` to `{2025-12:1, 2026-06:1, 2026-07:4}`.
+  - **Job location strings were being stored whole.** Board feeds hand over already-delimited strings ("Columbia, SC, United States", "California, USA"), which the free-text extractor left sitting in `city`, so the facet showed full addresses next to bare city names. Added `parseStructuredLocation` for delimited strings and taught `sanitizePlace` to split a composite `addressLocality` and collapse country spellings (US / USA / United States of America -> United States). A leading token that is a state rather than a city is no longer promoted to `city`.
+- Test/typecheck status at stop time: 296 passed / 1 key-gated live benchmark skipped; tsc clean; eslint clean on src/lib.
+- Still open, in priority order: a company name can occasionally land in the location facet ("Quintus Technologies"); a stray paper title and a markdown-artifact title still reach the events pool; `Careers Open application` still appears as a job title when the whole page is a careers index with no better label.
+
+
 ---
 
 ## §9. WHEN ALL PHASES ARE DONE

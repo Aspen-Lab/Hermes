@@ -1,6 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
-import { extractPlaceFromText } from "@/lib/opportunities/structured-extract";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Adzuna aggregates postings across 19 countries — the strongest industry-side
@@ -66,7 +66,7 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
   const url = job.redirect_url?.trim();
   if (!title || !url || job.id === undefined) return null;
   const location = job.location?.display_name?.trim() || country.toUpperCase();
-  const extractedPlace = extractPlaceFromText(location);
+  const extractedPlace = parseStructuredLocation(location);
   const countryName = COUNTRY_NAMES_BY_SLUG[country.toLowerCase()];
   return {
     id: `adzuna:${routeSafeId(String(job.id))}`,

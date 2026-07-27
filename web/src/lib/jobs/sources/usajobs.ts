@@ -1,5 +1,5 @@
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
-import { extractPlaceFromText } from "@/lib/opportunities/structured-extract";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // USAJobs: US federal research positions (NIH, NSF, national labs). Free key
@@ -43,7 +43,7 @@ export function usaJobsDescriptorToRawItem(
     title,
     company: descriptor.OrganizationName?.trim() || "U.S. Federal Government",
     location,
-    place: extractPlaceFromText(location),
+    place: parseStructuredLocation(location),
     isRemote: /\bremote\b/i.test(descriptor.PositionLocationDisplay ?? ""),
     description: truncateText(stripHtml(summary)),
     url,

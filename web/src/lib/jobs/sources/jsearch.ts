@@ -1,3 +1,4 @@
+import { sanitizePlace } from "@/lib/opportunities/structured-extract";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
@@ -42,11 +43,11 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
     location: location || (job.job_is_remote ? "Remote" : ""),
     place:
       job.job_city || job.job_state || job.job_country
-        ? {
+        ? sanitizePlace({
             city: job.job_city?.trim() || undefined,
             region: job.job_state?.trim() || undefined,
             country: job.job_country?.trim() || undefined,
-          }
+          })
         : undefined,
     isRemote: Boolean(job.job_is_remote),
     description: truncateText(stripHtml(job.job_description)),

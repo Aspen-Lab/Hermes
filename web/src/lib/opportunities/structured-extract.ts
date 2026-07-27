@@ -8,6 +8,8 @@ export interface JsonLdOpportunity {
   name?: string;
   startDate?: string;
   endDate?: string;
+  /** schema.org JobPosting.datePosted — a job's equivalent of a start date. */
+  datePosted?: string;
   place?: ExtractedPlace;
   eventAttendanceMode?: string;
 }
@@ -30,6 +32,8 @@ export interface OpportunityPageDetails {
   name?: string;
   startDate?: string;
   endDate?: string;
+  /** When the posting went up. Jobs carry this instead of a start date. */
+  datePosted?: string;
   place?: ExtractedPlace;
   isOnline: boolean;
 }
@@ -868,15 +872,48 @@ export function plausiblePlaceName(value: string | undefined): string | undefine
   return trimmed;
 }
 
-/** Drop implausible components so a bad value never reaches a facet button. */
+/**
+ * Drop implausible components so a bad value never reaches a facet button, and
+ * make equivalent places produce identical labels.
+ *
+ * Two normalizations matter for faceting specifically. A `city` that still
+ * carries a comma is a whole address, not a locality — some feeds put
+ * "Columbia, SC, United States" in `addressLocality`, which produced a facet
+ * button of that exact string sitting beside a plain "Aiken". And country
+ * spellings vary by source ("US", "USA", "United States of America"), which
+ * would otherwise split one country across several buttons.
+ */
 export function sanitizePlace(
   place: ExtractedPlace | undefined,
 ): ExtractedPlace | undefined {
   if (!place) return undefined;
+
+  let city = place.city?.trim();
+  let region = place.region;
+  let country = place.country;
+
+  if (city?.includes(",")) {
+    const segments = city.split(",").map((s) => s.trim()).filter(Boolean);
+    city = segments[0];
+    for (const segment of segments.slice(1)) {
+      const asCountry = matchCountryToken(segment);
+      if (asCountry) {
+        country ??= asCountry;
+        continue;
+      }
+      if ((US_STATE_CODES as readonly string[]).includes(segment.toUpperCase())) {
+        region ??= segment.toUpperCase();
+      }
+    }
+  }
+
   const cleaned: ExtractedPlace = {
-    city: plausiblePlaceName(place.city),
-    region: plausiblePlaceName(place.region),
-    country: plausiblePlaceName(place.country),
+    city: plausiblePlaceName(city),
+    region: plausiblePlaceName(region),
+    // Canonical spelling so "US"/"USA"/"United States of America" collapse.
+    country:
+      (country ? matchCountryToken(country) : undefined) ??
+      plausiblePlaceName(country),
   };
   return cleaned.city || cleaned.region || cleaned.country ? cleaned : undefined;
 }
@@ -903,6 +940,7 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     name: nonEmptyString(node.name) ?? nonEmptyString(node.title),
     startDate: nonEmptyString(node.startDate),
     endDate: nonEmptyString(node.endDate),
+    datePosted: nonEmptyString(node.datePosted),
     place: extractPlace(node.location ?? node.jobLocation),
     eventAttendanceMode: nonEmptyString(node.eventAttendanceMode),
   };
@@ -1083,6 +1121,89 @@ function countryAfterCity(text: string, city: string): string | undefined {
   return COUNTRY_NAMES.find((c) => canonicalize(c) === canonicalMatch);
 }
 
+// Common country spellings job boards use that the gazetteer lists formally.
+const COUNTRY_ALIASES: Readonly<Record<string, string>> = {
+  usa: "United States",
+  us: "United States",
+  "u s a": "United States",
+  america: "United States",
+  "united states of america": "United States",
+  uk: "United Kingdom",
+  "u k": "United Kingdom",
+  england: "United Kingdom",
+  uae: "United Arab Emirates",
+  "south korea": "Korea",
+  "republic of korea": "Korea",
+};
+
+function matchCountryToken(token: string): string | undefined {
+  const key = canonicalize(token);
+  if (!key) return undefined;
+  if (COUNTRY_ALIASES[key]) return COUNTRY_ALIASES[key];
+  return COUNTRY_NAMES.find((c) => canonicalize(c) === key);
+}
+
+/**
+ * Parse a job board's structured location string.
+ *
+ * These arrive already comma-delimited — "Columbia, SC, United States",
+ * "California, USA", "Mumbai" — so they should be split rather than scanned
+ * as prose. Handing them to the free-text extractor left the whole string
+ * sitting in `city`, which turned the location facet into buttons reading
+ * "Columbia, SC, United States" next to "USA". Facet buttons are only useful
+ * when the same place always produces the same label.
+ *
+ * Anything that cannot be classified is dropped rather than guessed: a wrong
+ * city is worse than an absent one when the user filters on it.
+ */
+export function parseStructuredLocation(
+  value: string | undefined,
+): ExtractedPlace | undefined {
+  if (!value) return undefined;
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return undefined;
+
+  let country: string | undefined;
+  let region: string | undefined;
+
+  // Trailing country, if present.
+  const maybeCountry = matchCountryToken(parts[parts.length - 1]);
+  if (maybeCountry) {
+    country = maybeCountry;
+    parts.pop();
+  }
+
+  // Trailing US state code ("SC"), which also implies the country.
+  if (parts.length > 0) {
+    const tail = parts[parts.length - 1];
+    if ((US_STATE_CODES as readonly string[]).includes(tail.toUpperCase())) {
+      region = tail.toUpperCase();
+      country ??= "United States";
+      parts.pop();
+    }
+  }
+
+  // Whatever remains at the front is the city — but only when it reads like
+  // one. "California" alone is a region, not a city, and must not become a
+  // city button.
+  const head = parts.length > 0 ? plausiblePlaceName(parts[0]) : undefined;
+  const city =
+    head && CONFERENCE_CITIES.some((c) => canonicalize(c) === canonicalize(head))
+      ? head
+      : undefined;
+  if (!city && head && !region && parts.length === 1 && country) {
+    // "California, USA" — the leading token is a region we cannot verify as a
+    // city. Keep it as the region so the country still counts, without
+    // claiming it is a city.
+    region = head;
+  }
+
+  return sanitizePlace({ city, region, country });
+}
+
 export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
   const text = bodyText(html);
   const city = findGazetteerMatch(text, CONFERENCE_CITIES);
@@ -1205,6 +1326,7 @@ export function extractOpportunityPageDetails(
     name: structured?.name ?? openGraph.title,
     startDate: structured?.startDate ?? meta.start,
     endDate: structured?.endDate ?? meta.end,
+    datePosted: structured?.datePosted,
     // Sanitize at the boundary so every layer — JSON-LD, meta tags, body text
     // — is held to the same "is this actually a place name" standard before it
     // can become a facet button.

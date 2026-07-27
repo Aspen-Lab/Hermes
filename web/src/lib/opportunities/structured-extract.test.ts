@@ -4,6 +4,9 @@ import {
   CONFERENCE_CITIES,
   extractBodyTextPlace,
   extractPlaceFromText,
+  parseStructuredLocation,
+  plausiblePlaceName,
+  sanitizePlace,
   extractJsonLdOpportunities,
   extractMetaOpportunityDetails,
   extractOpenGraphTags,
@@ -272,5 +275,76 @@ describe("country must belong to the city", () => {
   it("accepts a bare country when the page says it is the venue", () => {
     const place = extractPlaceFromText("The workshop will be held in Germany.");
     expect(place?.country).toBe("Germany");
+  });
+});
+
+describe("parseStructuredLocation", () => {
+  it("splits City, ST, Country into components", () => {
+    expect(parseStructuredLocation("Columbia, SC, United States")).toEqual({
+      city: undefined,
+      region: "SC",
+      country: "United States",
+    });
+  });
+
+  it("keeps a known city with its state and infers the country", () => {
+    expect(parseStructuredLocation("Chicago, IL")).toEqual({
+      city: "Chicago",
+      region: "IL",
+      country: "United States",
+    });
+  });
+
+  it("does not turn a state name into a city", () => {
+    const place = parseStructuredLocation("California, USA");
+    expect(place?.city).toBeUndefined();
+    expect(place?.country).toBe("United States");
+  });
+
+  it("normalizes country aliases", () => {
+    expect(parseStructuredLocation("USA")?.country).toBe("United States");
+    expect(parseStructuredLocation("Mumbai, India")).toEqual({
+      city: "Mumbai",
+      region: undefined,
+      country: "India",
+    });
+  });
+
+  it("returns undefined for junk rather than guessing", () => {
+    expect(parseStructuredLocation("")).toBeUndefined();
+    expect(parseStructuredLocation("Remote")).toBeUndefined();
+  });
+});
+
+describe("place sanitization", () => {
+  it("rejects a marketing sentence masquerading as a city", () => {
+    expect(
+      plausiblePlaceName(
+        "The Global Leader in isostatic pressing technologies is your partner of choice.",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("keeps real multi-word place names", () => {
+    expect(plausiblePlaceName("Salt Lake City")).toBe("Salt Lake City");
+    expect(plausiblePlaceName("New York")).toBe("New York");
+  });
+});
+
+describe("facet label consistency", () => {
+  it("splits a composite addressLocality instead of using it as a city", () => {
+    expect(sanitizePlace({ city: "Columbia, SC, United States" })).toEqual({
+      city: "Columbia",
+      region: "SC",
+      country: "United States",
+    });
+  });
+
+  it("collapses country spellings to one label", () => {
+    for (const raw of ["US", "USA", "United States of America", "United States"]) {
+      expect(sanitizePlace({ city: "Aiken", country: raw })?.country).toBe(
+        "United States",
+      );
+    }
   });
 });

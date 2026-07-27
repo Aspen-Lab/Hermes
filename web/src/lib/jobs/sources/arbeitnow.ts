@@ -1,6 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
-import { extractPlaceFromText } from "@/lib/opportunities/structured-extract";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Arbeitnow's free job-board API (EU/DACH-heavy, no auth, no search param) —
@@ -35,7 +35,7 @@ export function arbeitnowJobToRawItem(job: ArbeitnowJob): RawJobItem | null {
     title,
     company: job.company_name?.trim() || "Unknown company",
     location,
-    place: extractPlaceFromText(location),
+    place: parseStructuredLocation(location),
     isRemote: Boolean(job.remote),
     description: truncateText(stripHtml(job.description)),
     url,

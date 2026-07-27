@@ -106,6 +106,10 @@ export async function enrichJobCandidates(
         ...item,
         place,
         location: formatOpportunityPlace(place) || item.location,
+        // Web-discovered postings arrive with no date at all, which left the
+        // jobs month facet permanently empty. schema.org JobPosting carries
+        // datePosted; use it when the source gave us nothing.
+        postedAt: item.postedAt || details.datePosted,
         // A web page being "online" does not prove that a job is remote.
         isRemote: item.isRemote,
       };
