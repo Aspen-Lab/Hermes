@@ -26,7 +26,10 @@ export interface CachedJobPool extends CachedPoolBase {
   items: ScoredJobItem[];
 }
 
-/** Scored and enriched daily data, never raw source results or a top-N slice. */
+/**
+ * Enriched daily candidates with a neutral baseline score. Request-time
+ * preference scoring may reorder them locally without rebuilding this pool.
+ */
 export type CachedPool = CachedEventPool | CachedJobPool;
 
 export interface PoolCache {
@@ -70,9 +73,9 @@ export interface PoolCacheKeyInput {
   now?: Date;
 }
 
-// Bump whenever the durable pool payload semantics change. v2 adds the
-// 200-item cap and real whole-pool facet counts.
-const CACHE_KEY_VERSION = 2;
+// Bump whenever the durable pool payload semantics change. v3 makes cached
+// scores preference-neutral so one daily pool can be safely re-ranked locally.
+const CACHE_KEY_VERSION = 3;
 
 function normalizeSet(values: string[] | undefined): string[] {
   return Array.from(

@@ -31,6 +31,12 @@ export interface FacetableOpportunity {
 
 export type FacetSurface = "events" | "jobs";
 
+export interface OpportunityFacetValues {
+  location?: string;
+  month?: string;
+  format: OpportunityFormat;
+}
+
 const OPPORTUNITY_FORMATS = [
   "in-person",
   "online",
@@ -92,6 +98,17 @@ export function opportunityFormat(
   return item.isRemote ? "online" : "in-person";
 }
 
+export function opportunityFacetValues(
+  surface: FacetSurface,
+  item: FacetableOpportunity,
+): OpportunityFacetValues {
+  return {
+    location: locationLabel(item),
+    month: monthLabel(item),
+    format: opportunityFormat(surface, item),
+  };
+}
+
 function incrementLabel(
   counts: Map<string, { label: string; count: number }>,
   label: string | undefined,
@@ -133,9 +150,10 @@ export function countOpportunityFacets(
   };
 
   for (const item of items) {
-    incrementLabel(locations, locationLabel(item));
-    incrementLabel(months, monthLabel(item));
-    format[opportunityFormat(surface, item)] += 1;
+    const values = opportunityFacetValues(surface, item);
+    incrementLabel(locations, values.location);
+    incrementLabel(months, values.month);
+    format[values.format] += 1;
   }
 
   return {
@@ -255,7 +273,8 @@ export function filterOpportunitiesByFacets<
   );
 
   return items.filter((item) => {
-    const location = locationLabel(item);
+    const values = opportunityFacetValues(surface, item);
+    const location = values.location;
     if (
       locations.size > 0 &&
       (!location || !locations.has(normalizedLabel(location)))
@@ -263,14 +282,14 @@ export function filterOpportunitiesByFacets<
       return false;
     }
 
-    const month = monthLabel(item);
+    const month = values.month;
     if (months.size > 0 && (!month || !months.has(normalizedLabel(month)))) {
       return false;
     }
 
     return (
       formats.size === 0 ||
-      matchesSelectedFormat(opportunityFormat(surface, item), formats)
+      matchesSelectedFormat(values.format, formats)
     );
   });
 }

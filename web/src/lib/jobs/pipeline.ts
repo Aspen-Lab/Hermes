@@ -61,6 +61,24 @@ export interface BuiltJobPool {
   cacheHit: boolean;
 }
 
+function jobScoringProfile(
+  req: JobsFeedRequest,
+  includePreferenceLedger = true,
+): JobScoringProfile {
+  return {
+    topics: req.topics,
+    softTopics: req.softTopics,
+    methods: req.methods,
+    seedTexts: req.seedTexts,
+    preferenceLedger: includePreferenceLedger
+      ? req.preferenceLedger
+      : undefined,
+    careerStage: req.careerStage,
+    industryPreference: req.industryVsAcademia,
+    locations: req.locationPreferences,
+  };
+}
+
 export async function scoreJobPoolCandidates(
   deduped: RawJobItem[],
   scoringProfile: JobScoringProfile,
@@ -141,19 +159,9 @@ async function buildJobPool(
 
   const beforeDedup = allItems.length;
   const deduped = dedupJobs(allItems);
-  const scoringProfile = {
-    topics: req.topics,
-    softTopics: req.softTopics,
-    methods: req.methods,
-    seedTexts: req.seedTexts,
-    preferenceLedger: req.preferenceLedger,
-    careerStage: req.careerStage,
-    industryPreference: req.industryVsAcademia,
-    locations: req.locationPreferences,
-  };
   const scoredItems = await scoreJobPoolCandidates(
     deduped,
-    scoringProfile,
+    jobScoringProfile(req, false),
     now.getTime(),
     options,
   );
@@ -212,19 +220,27 @@ export async function buildDailyJobPool(
     },
   );
 
-  if (fresh && !loaded.cacheHit) return fresh;
+  const rescored = scoreJobs(
+    loaded.pool.items,
+    jobScoringProfile(req),
+    now.getTime(),
+    { applyFloor: false },
+  ).slice(0, MAX_OPPORTUNITY_POOL_ITEMS);
+  const freshDiagnostics = fresh && !loaded.cacheHit ? fresh : undefined;
 
   return {
-    items: loaded.pool.items,
-    facetCounts: loaded.pool.facetCounts,
-    fetched: {},
-    errors: {},
-    beforeDedup: loaded.pool.items.length,
-    afterDedup: loaded.pool.items.length,
+    items: rescored,
+    facetCounts: countOpportunityFacets("jobs", rescored),
+    fetched: freshDiagnostics?.fetched ?? {},
+    errors: freshDiagnostics?.errors ?? {},
+    beforeDedup:
+      freshDiagnostics?.beforeDedup ?? loaded.pool.items.length,
+    afterDedup:
+      freshDiagnostics?.afterDedup ?? loaded.pool.items.length,
     startedAt,
     generatedAt: loaded.pool.generatedAt,
     localDate: loaded.pool.localDate,
-    cacheHit: true,
+    cacheHit: loaded.cacheHit,
   };
 }
 

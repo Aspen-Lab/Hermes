@@ -8,6 +8,7 @@ import type { EventSourceAdapter, RawEventItem } from "@/lib/events/types";
 import { buildDailyJobPool } from "@/lib/jobs/pipeline";
 import { jobSources } from "@/lib/jobs/sources";
 import type { JobSourceAdapter, RawJobItem } from "@/lib/jobs/types";
+import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
 import type { CachedPool, PoolCache } from "./pool-cache";
 
 class MemoryPoolCache implements PoolCache {
@@ -112,6 +113,70 @@ describe("daily opportunity pool wiring", () => {
     expect(displayed.items).toHaveLength(0);
     expect(Array.from(cache.values.values())[0]?.items).toHaveLength(1);
     expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
+  });
+
+  it("reorders a same-day event cache locally from a Chicago facet signal", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(new Response("{}"));
+    vi.stubGlobal("fetch", fetchSpy);
+    const berlinEvent: RawEventItem = {
+      ...eventItem,
+      id: "eventweb:daily-cache-berlin",
+      name: "Solid-State Battery Research Forum Berlin",
+      startDate: "2026-09-09",
+      location: "Berlin, Germany",
+      place: { city: "Berlin", country: "Germany" },
+      url: "https://10times.com/daily-cache-berlin",
+    };
+    const chicagoEvent: RawEventItem = {
+      ...eventItem,
+      id: "eventweb:daily-cache-chicago",
+      name: "Solid-State Battery Research Forum Chicago",
+      startDate: "2026-09-10",
+      url: "https://10times.com/daily-cache-chicago",
+    };
+    const sourceFetch = vi.fn(async () => {
+      await fetch("https://network.test/events");
+      return [berlinEvent, chicagoEvent];
+    });
+    const source: EventSourceAdapter = {
+      id: "eventweb",
+      enabled: () => true,
+      fetch: sourceFetch,
+    };
+    eventSources.splice(0, eventSources.length, source);
+    const cache = new MemoryPoolCache();
+    const request = {
+      topics: ["solid-state battery"],
+      aiTier: 0 as const,
+    };
+
+    const neutral = await runEventsPipeline(request, { cache, now });
+    const callsAfterBuild = fetchSpy.mock.calls.length;
+    const chicagoLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { origin: "event", at: now.toISOString() },
+    );
+    const personalized = await runEventsPipeline(
+      { ...request, preferenceLedger: chicagoLedger },
+      { cache, now },
+    );
+
+    expect(neutral.pool.map(({ id }) => id)).toEqual([
+      berlinEvent.id,
+      chicagoEvent.id,
+    ]);
+    expect(personalized.pool.map(({ id }) => id)).toEqual([
+      chicagoEvent.id,
+      berlinEvent.id,
+    ]);
+    expect(Array.from(cache.values.values())[0]?.items.map(({ id }) => id)).toEqual([
+      berlinEvent.id,
+      chicagoEvent.id,
+    ]);
+    expect(sourceFetch).toHaveBeenCalledOnce();
+    expect(fetchSpy).toHaveBeenCalledTimes(callsAfterBuild);
   });
 
   it("does zero network work on a same-day job-pool hit", async () => {

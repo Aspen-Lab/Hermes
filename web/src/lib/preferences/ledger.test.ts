@@ -3,7 +3,9 @@ import {
   applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
   cleanPreferenceLedger,
+  FACET_PREFERENCE_BOOST_MAX,
   opportunityFacetPreferenceConcept,
+  opportunityFacetPreferenceConcepts,
   prepareLedger,
   preferenceKey,
   scorePreferenceMatch,
@@ -16,6 +18,7 @@ import type { RawItem } from "@/lib/sources/types";
 
 const T0 = "2026-01-01T00:00:00.000Z";
 const T0_MS = Date.parse(T0);
+const T14_MS = Date.parse("2026-01-15T00:00:00.000Z");
 // Two 60-day half-lives after T0.
 const T120 = "2026-05-01T00:00:00.000Z";
 
@@ -138,6 +141,23 @@ describe("applyOpportunityFacetPreferenceSignal", () => {
       }),
     ).toEqual({});
   });
+
+  it("gives hybrid events all format concepts used by facet filtering", () => {
+    expect(
+      opportunityFacetPreferenceConcepts("events", {
+        location: "Chicago, IL + Virtual",
+        place: { city: "Chicago", region: "IL" },
+        startDate: "2026-08-11",
+        isOnline: true,
+      }).map(({ key }) => key),
+    ).toEqual([
+      "facet:location:chicago",
+      "facet:month:2026-08",
+      "facet:format:hybrid",
+      "facet:format:online",
+      "facet:format:in-person",
+    ]);
+  });
 });
 
 // ── scorePreferenceMatch ────────────────────────────────────────
@@ -190,6 +210,138 @@ describe("scorePreferenceMatch", () => {
     const r = scorePreferenceMatch(itemWith([c]), prepareLedger(ledger), [], { now: T0_MS });
     expect(r.penalty).toBe(1);
     expect(r.boost).toBeGreaterThan(0);
+  });
+
+  it("caps the combined contribution of all facet history", () => {
+    const facetConcepts = [
+      opportunityFacetPreferenceConcept("location", "Chicago")!,
+      opportunityFacetPreferenceConcept("month", "2026-08")!,
+      opportunityFacetPreferenceConcept("format", "hybrid")!,
+    ];
+    let ledger = {};
+    for (let count = 0; count < 20; count += 1) {
+      for (const [group, value] of [
+        ["location", "Chicago"],
+        ["month", "2026-08"],
+        ["format", "hybrid"],
+      ] as const) {
+        ledger = applyOpportunityFacetPreferenceSignal(
+          ledger,
+          group,
+          value,
+          { at: T0, origin: "event" },
+        );
+      }
+    }
+
+    const result = scorePreferenceMatch(
+      itemWith(facetConcepts),
+      prepareLedger(ledger),
+      [],
+      { now: T0_MS, targetKind: "event" },
+    );
+    expect(result.facetBoost).toBe(FACET_PREFERENCE_BOOST_MAX);
+    expect(result.boost).toBe(FACET_PREFERENCE_BOOST_MAX);
+  });
+
+  it("decays facet evidence faster than explicit positive evidence", () => {
+    const explicitConcept = concept("Chicago");
+    const facetConcept = opportunityFacetPreferenceConcept(
+      "location",
+      "Chicago",
+    )!;
+    const explicitLedger = applyPreferenceSignal(
+      undefined,
+      [explicitConcept],
+      "positive",
+      { at: T0, origin: "event" },
+    );
+    const facetLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at: T0, origin: "event" },
+    );
+
+    const explicitNow = scorePreferenceMatch(
+      itemWith([explicitConcept]),
+      prepareLedger(explicitLedger),
+      [],
+      { now: T0_MS, targetKind: "event" },
+    ).boost;
+    const explicitLater = scorePreferenceMatch(
+      itemWith([explicitConcept]),
+      prepareLedger(explicitLedger),
+      [],
+      { now: T14_MS, targetKind: "event" },
+    ).boost;
+    const facetNow = scorePreferenceMatch(
+      itemWith([facetConcept]),
+      prepareLedger(facetLedger),
+      [],
+      { now: T0_MS, targetKind: "event" },
+    ).facetBoost;
+    const facetLater = scorePreferenceMatch(
+      itemWith([facetConcept]),
+      prepareLedger(facetLedger),
+      [],
+      { now: T14_MS, targetKind: "event" },
+    ).facetBoost;
+
+    expect(facetLater).toBeLessThan(facetNow);
+    expect(facetLater / facetNow).toBeLessThan(
+      explicitLater / explicitNow,
+    );
+  });
+
+  it("never lets one facet click counteract an explicit dismissal", () => {
+    const dismissed = concept("solid-state battery");
+    const chicago = opportunityFacetPreferenceConcept(
+      "location",
+      "Chicago",
+    )!;
+    let ledger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at: T0, origin: "event" },
+    );
+    ledger = applyPreferenceSignal(ledger, [dismissed], "negative", {
+      at: T0,
+      origin: "event",
+    });
+
+    const result = scorePreferenceMatch(
+      itemWith([dismissed, chicago]),
+      prepareLedger(ledger),
+      [],
+      { now: T0_MS, targetKind: "event" },
+    );
+    expect(result.penalty).toBeLessThan(1);
+    expect(result.facetBoost).toBe(0);
+    expect(result.boost).toBe(0);
+    expect(result.matchedFacetPositive).toEqual([]);
+  });
+
+  it("does not leak facet evidence across opportunity origins", () => {
+    const chicago = opportunityFacetPreferenceConcept(
+      "location",
+      "Chicago",
+    )!;
+    const eventLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at: T0, origin: "event" },
+    );
+    const jobResult = scorePreferenceMatch(
+      itemWith([chicago]),
+      prepareLedger(eventLedger),
+      [],
+      { now: T0_MS, targetKind: "job" },
+    );
+
+    expect(jobResult.facetBoost).toBe(0);
   });
 });
 

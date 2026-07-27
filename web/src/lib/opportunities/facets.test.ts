@@ -211,7 +211,7 @@ describe("opportunity feed facet contract", () => {
     };
     const key = derivePoolCacheKey({
       surface: "events",
-      requiredTopics: ["battery"],
+      requiredTopics: [],
       now: testNow,
     });
     await cache.set(key, {
@@ -223,12 +223,12 @@ describe("opportunity feed facet contract", () => {
     });
 
     const unfiltered = await runEventsPipeline(
-      { topics: ["battery"], aiTier: 0 },
+      { topics: [], aiTier: 0 },
       { cache, now: testNow },
     );
     const filtered = await runEventsPipeline(
       {
-        topics: ["battery"],
+        topics: [],
         facets: { location: ["Chicago"] },
         aiTier: 0,
       },
@@ -250,22 +250,23 @@ describe("opportunity feed facet contract", () => {
     const lowScoreItem: ScoredJobItem = {
       id: "jobweb:below-floor-berlin",
       source: "jobweb",
-      title: "Battery Lab Assistant",
-      company: "Example Lab",
+      title: "Senior Staff Lab Assistant",
+      company: "Example Corp",
       location: "Berlin, Germany",
       place: { city: "Berlin", country: "Germany" },
       isRemote: false,
       description: "Assist a battery research team.",
       url: "https://10times.com/below-floor-berlin-job",
-      postedAt: "2026-07-20",
-      tags: ["battery"],
+      postedAt: "2026-01-01",
+      tags: [],
       score: JOB_MIN_SCORE - 0.1,
       matchedKeywords: ["battery"],
       matchReason: "Matches the selected Berlin facet",
     };
     const key = derivePoolCacheKey({
       surface: "jobs",
-      requiredTopics: ["battery"],
+      requiredTopics: [],
+      careerStage: "PhD Year 2",
       now: testNow,
     });
     await cache.set(key, {
@@ -277,12 +278,19 @@ describe("opportunity feed facet contract", () => {
     });
 
     const unfiltered = await runJobsPipeline(
-      { topics: ["battery"], aiTier: 0 },
+      {
+        topics: [],
+        careerStage: "PhD Year 2",
+        industryVsAcademia: "academia",
+        aiTier: 0,
+      },
       { cache, now: testNow },
     );
     const filtered = await runJobsPipeline(
       {
-        topics: ["battery"],
+        topics: [],
+        careerStage: "PhD Year 2",
+        industryVsAcademia: "academia",
         facets: { location: ["Berlin"] },
         aiTier: 0,
       },

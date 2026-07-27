@@ -14,6 +14,7 @@ import {
   webResultToRawJobItem,
 } from "./sources/jobweb";
 import type { RawJobItem } from "./types";
+import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
 
 function job(overrides: Partial<RawJobItem>): RawJobItem {
   return {
@@ -191,6 +192,41 @@ describe("scoreJobs", () => {
       }),
     ).toEqual([]);
     expect(scoreJobs([marketing], { topics: ["materials"] })).toEqual([]);
+  });
+
+  it("applies a weak location-facet boost to the matching job", () => {
+    const berlin = job({
+      id: "berlin",
+      location: "Berlin, Germany",
+      place: { city: "Berlin", country: "Germany" },
+      isRemote: false,
+    });
+    const chicago = job({
+      id: "chicago",
+      location: "Chicago, IL",
+      place: {
+        city: "Chicago",
+        region: "IL",
+        country: "United States",
+      },
+      isRemote: false,
+    });
+    const at = "2026-07-19T00:00:00.000Z";
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at, origin: "job" },
+    );
+    const ranked = scoreJobs(
+      [berlin, chicago],
+      { topics: ["machine learning"], preferenceLedger },
+      Date.parse(at),
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
   });
 });
 

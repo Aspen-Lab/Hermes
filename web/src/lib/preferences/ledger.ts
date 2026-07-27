@@ -10,10 +10,17 @@ import type {
   PreferenceLedgerEntry,
 } from "@/types";
 import type { RawItem } from "@/lib/sources/types";
+import {
+  opportunityFacetValues,
+  type FacetableOpportunity,
+  type FacetSurface,
+} from "@/lib/opportunities/facets";
 
 const HALF_LIFE_DAYS = 60;
+export const FACET_PREFERENCE_HALF_LIFE_DAYS = 14;
 const MAX_CONCEPTS_PER_ITEM = 16;
 const POSITIVE_BOOST_MAX = 0.18;
+export const FACET_PREFERENCE_BOOST_MAX = 0.04;
 // Heavier than the original 0.45: a concept you've repeatedly rejected drops to
 // ×0.40 of base, so persistent dislikes are genuinely suppressed. A single
 // dislike stays gentle thanks to the saturating curve below. Tunable.
@@ -72,8 +79,10 @@ function namespacedKey(key: string, origin: FeedItemKind): string {
 
 export interface PreferenceMatchScore {
   boost: number;
+  facetBoost: number;
   penalty: number;
   matchedPositive: string[];
+  matchedFacetPositive: string[];
   matchedNegative: string[];
 }
 
@@ -86,10 +95,14 @@ function daysBetween(fromIso: string | undefined, toMs: number): number {
   return Math.max(0, (toMs - from) / 86_400_000);
 }
 
-function decayFactor(fromIso: string | undefined, toMs: number): number {
+function decayFactor(
+  fromIso: string | undefined,
+  toMs: number,
+  halfLifeDays = HALF_LIFE_DAYS,
+): number {
   const days = daysBetween(fromIso, toMs);
   if (days <= 0) return 1;
-  return Math.pow(0.5, days / HALF_LIFE_DAYS);
+  return Math.pow(0.5, days / halfLifeDays);
 }
 
 function clamp01(n: number): number {
@@ -141,6 +154,24 @@ export function opportunityFacetPreferenceConcept(
     label,
     source: "opportunity_facet",
   };
+}
+
+export function opportunityFacetPreferenceConcepts(
+  surface: FacetSurface,
+  item: FacetableOpportunity,
+): PreferenceConcept[] {
+  const values = opportunityFacetValues(surface, item);
+  const formats =
+    values.format === "hybrid"
+      ? ["hybrid", "online", "in-person"]
+      : [values.format];
+  return normalizePreferenceConcepts([
+    opportunityFacetPreferenceConcept("location", values.location ?? ""),
+    opportunityFacetPreferenceConcept("month", values.month ?? ""),
+    ...formats.map((format) =>
+      opportunityFacetPreferenceConcept("format", format),
+    ),
+  ]);
 }
 
 export function normalizePreferenceConcepts(
@@ -244,11 +275,22 @@ function decayedEntry(
   nowMs: number,
 ): PreferenceLedgerEntry {
   const factor = decayFactor(entry.lastSeenAt, nowMs);
-  if (factor === 1) return { ...entry, lastSeenAt: nowIso };
+  const facetFactor = decayFactor(
+    entry.lastFacetAt,
+    nowMs,
+    FACET_PREFERENCE_HALF_LIFE_DAYS,
+  );
+  if (factor === 1 && facetFactor === 1) {
+    return { ...entry, lastSeenAt: nowIso };
+  }
   return {
     ...entry,
     positive: entry.positive * factor,
     negative: entry.negative * factor,
+    facetPositive:
+      entry.facetPositive === undefined
+        ? undefined
+        : entry.facetPositive * facetFactor,
     lastSeenAt: nowIso,
   };
 }
@@ -518,6 +560,20 @@ function decayedCounts(
   };
 }
 
+function decayedFacetPositive(
+  entry: PreferenceLedgerEntry,
+  nowMs: number,
+): number {
+  return (
+    (entry.facetPositive ?? 0) *
+    decayFactor(
+      entry.lastFacetAt,
+      nowMs,
+      FACET_PREFERENCE_HALF_LIFE_DAYS,
+    )
+  );
+}
+
 export function scorePreferenceMatch(
   item: RawItem,
   prepared: PreparedLedger | undefined,
@@ -535,14 +591,23 @@ export function scorePreferenceMatch(
   } = {},
 ): PreferenceMatchScore {
   if (!prepared || prepared.size === 0) {
-    return { boost: 0, penalty: 1, matchedPositive: [], matchedNegative: [] };
+    return {
+      boost: 0,
+      facetBoost: 0,
+      penalty: 1,
+      matchedPositive: [],
+      matchedFacetPositive: [],
+      matchedNegative: [],
+    };
   }
 
   const now = options.now ?? Date.now();
   const targetKind = options.targetKind ?? "paper";
   let boost = 0;
+  let facetBoost = 0;
   let penaltyLoss = 0;
   const matchedPositive = new Set<string>();
+  const matchedFacetPositive = new Set<string>();
   const matchedNegative = new Set<string>();
 
   for (const concept of conceptsFromRawItem(item)) {
@@ -573,13 +638,33 @@ export function scorePreferenceMatch(
         penaltyLoss += NEGATIVE_PENALTY_MAX * magnitude * specificity * influence;
         matchedNegative.add(entry.label);
       }
+
+      const facetPositive = decayedFacetPositive(entry, now);
+      const facetInfluence =
+        targetKind !== "paper" && entryOrigin(entry) === targetKind ? 1 : 0;
+      if (facetPositive > 0.05 && facetInfluence > 0) {
+        const magnitude = 1 - Math.exp(-facetPositive / 2);
+        facetBoost +=
+          FACET_PREFERENCE_BOOST_MAX *
+          magnitude *
+          specificity *
+          facetInfluence;
+        matchedFacetPositive.add(entry.label);
+      }
     }
   }
 
+  const cappedFacetBoost =
+    matchedNegative.size > 0
+      ? 0
+      : Math.min(FACET_PREFERENCE_BOOST_MAX, facetBoost);
   return {
-    boost: Math.min(POSITIVE_BOOST_MAX, boost),
+    boost: Math.min(POSITIVE_BOOST_MAX, boost) + cappedFacetBoost,
+    facetBoost: cappedFacetBoost,
     penalty: Math.max(1 - NEGATIVE_PENALTY_MAX, 1 - Math.min(NEGATIVE_PENALTY_MAX, penaltyLoss)),
     matchedPositive: Array.from(matchedPositive),
+    matchedFacetPositive:
+      cappedFacetBoost > 0 ? Array.from(matchedFacetPositive) : [],
     matchedNegative: Array.from(matchedNegative),
   };
 }

@@ -10,7 +10,7 @@ import type { JobApiCredentials } from "@/lib/jobs/types";
 import { parseOpportunityFacetSelection } from "@/lib/opportunities/facets";
 
 const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+  "Cache-Control": "private, no-store",
 };
 
 function cleanStringArray(input: unknown): string[] {

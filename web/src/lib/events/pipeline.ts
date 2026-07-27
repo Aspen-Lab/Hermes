@@ -68,6 +68,22 @@ export interface BuiltEventPool {
   cacheHit: boolean;
 }
 
+function eventScoringProfile(
+  req: EventsFeedRequest,
+  includePreferenceLedger = true,
+): EventScoringProfile {
+  return {
+    topics: req.topics,
+    softTopics: req.softTopics,
+    methods: req.methods,
+    seedTexts: req.seedTexts,
+    preferenceLedger: includePreferenceLedger
+      ? req.preferenceLedger
+      : undefined,
+    locations: req.locationPreferences,
+  };
+}
+
 export async function scoreEventPoolCandidates(
   deduped: RawEventItem[],
   scoringProfile: EventScoringProfile,
@@ -144,17 +160,9 @@ async function buildEventPool(
 
   const beforeDedup = allItems.length;
   const deduped = dedupEvents(allItems);
-  const scoringProfile = {
-    topics: req.topics,
-    softTopics: req.softTopics,
-    methods: req.methods,
-    seedTexts: req.seedTexts,
-    preferenceLedger: req.preferenceLedger,
-    locations: req.locationPreferences,
-  };
   const scoredItems = await scoreEventPoolCandidates(
     deduped,
-    scoringProfile,
+    eventScoringProfile(req, false),
     now.getTime(),
     options,
   );
@@ -213,21 +221,33 @@ export async function buildDailyEventPool(
     },
   );
 
-  if (fresh && !loaded.cacheHit) return fresh;
+  // The daily cache owns source collection/enrichment, not the user's mutable
+  // preference score. Re-score the retained candidates locally so a facet
+  // signal can affect ranking without changing the cache key or doing network
+  // work again.
+  const rescored = scoreEvents(
+    loaded.pool.items,
+    eventScoringProfile(req),
+    now.getTime(),
+    { applyFloor: false },
+  ).slice(0, MAX_OPPORTUNITY_POOL_ITEMS);
+  const freshDiagnostics = fresh && !loaded.cacheHit ? fresh : undefined;
 
   return {
-    items: loaded.pool.items,
-    facetCounts: loaded.pool.facetCounts,
+    items: rescored,
+    facetCounts: countOpportunityFacets("events", rescored),
     // Source diagnostics are not part of the durable pool. On a hit, report
     // the retained pool size without pretending that sources ran again.
-    fetched: {},
-    errors: {},
-    beforeDedup: loaded.pool.items.length,
-    afterDedup: loaded.pool.items.length,
+    fetched: freshDiagnostics?.fetched ?? {},
+    errors: freshDiagnostics?.errors ?? {},
+    beforeDedup:
+      freshDiagnostics?.beforeDedup ?? loaded.pool.items.length,
+    afterDedup:
+      freshDiagnostics?.afterDedup ?? loaded.pool.items.length,
     startedAt,
     generatedAt: loaded.pool.generatedAt,
     localDate: loaded.pool.localDate,
-    cacheHit: true,
+    cacheHit: loaded.cacheHit,
   };
 }
 

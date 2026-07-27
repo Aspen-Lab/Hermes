@@ -8,6 +8,9 @@ import { buildIndex, scoreTfidf } from "@/lib/scoring/tfidf";
 import { scoreRecency } from "@/lib/scoring/recency";
 import {
   buildPreferenceDocumentFrequency,
+  conceptsFromRawItem,
+  normalizePreferenceConcepts,
+  opportunityFacetPreferenceConcepts,
   prepareLedger,
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
@@ -243,9 +246,8 @@ export function scoreJobs(
   // Facades let the paper-scoring primitives (keyword/TF-IDF/ledger) run
   // unchanged over job candidates.
   const facades = new Map<string, RawItem>(
-    items.map((item) => [
-      item.id,
-      toScoringItem({
+    items.map((item) => {
+      const facade = toScoringItem({
         id: item.id,
         title: item.title,
         text: `${item.company}\n${item.description}`,
@@ -254,8 +256,13 @@ export function scoreJobs(
         publishedAt: item.postedAt,
         url: item.url,
         preferenceSignals: item.preferenceSignals,
-      }),
-    ]),
+      });
+      facade.metadata.preferenceSignals = normalizePreferenceConcepts([
+        ...opportunityFacetPreferenceConcepts("jobs", item),
+        ...conceptsFromRawItem(facade),
+      ]);
+      return [item.id, facade] as const;
+    }),
   );
   const facadeList = Array.from(facades.values());
   const index = buildIndex(facadeList);
