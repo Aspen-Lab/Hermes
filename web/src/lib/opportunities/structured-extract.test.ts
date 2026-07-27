@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  CONFERENCE_CITIES,
+  extractBodyTextPlace,
   extractJsonLdOpportunities,
   extractMetaOpportunityDetails,
   extractOpenGraphTags,
+  extractOpportunityPageDetails,
 } from "./structured-extract";
 
 describe("extractJsonLdOpportunities", () => {
@@ -146,6 +149,89 @@ describe("Open Graph opportunity metadata", () => {
       city: "Berlin",
       region: "Germany",
       isOnline: true,
+    });
+  });
+});
+
+describe("body-text place fallback", () => {
+  it("finds Chicago in the measured BlueCurrent body-only case", () => {
+    const fixture = readFileSync(
+      new URL(
+        "./__fixtures__/bluecurrent-solid-state-battery-summit.html",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+
+    expect(CONFERENCE_CITIES.length).toBeGreaterThanOrEqual(300);
+    expect(extractBodyTextPlace(fixture)).toEqual({
+      city: "Chicago",
+      region: undefined,
+      country: undefined,
+    });
+  });
+
+  it("returns undefined when body text names no gazetteer city", () => {
+    const html = `
+      <html>
+        <head>
+          <meta property="og:title" content="Chicago is metadata, not body">
+          <script>const venue = "Berlin";</script>
+        </head>
+        <body>
+          <h1>Advanced Battery Materials Workshop</h1>
+          <p>Review the program and electrochemistry research agenda.</p>
+        </body>
+      </html>
+    `;
+
+    expect(extractBodyTextPlace(html)).toBeUndefined();
+    expect(
+      extractBodyTextPlace("<body>A Parisian research program is accepting papers.</body>"),
+    ).toBeUndefined();
+  });
+
+  it("adds an uppercase US state code and country without matching prose", () => {
+    expect(
+      extractBodyTextPlace(
+        "<body>The meeting venue is Chicago, IL, United States.</body>",
+      ),
+    ).toEqual({
+      city: "Chicago",
+      region: "IL",
+      country: "United States",
+    });
+  });
+
+  it("uses structured and Open Graph places before the body fallback", () => {
+    const jsonLdFirst = `
+      <script type="application/ld+json">
+        {
+          "@type": "Event",
+          "location": {
+            "address": {
+              "addressLocality": "Berlin",
+              "addressCountry": "Germany"
+            }
+          }
+        }
+      </script>
+      <meta property="og:title" content="Workshop | May 1, 2027 | Paris, France">
+      <body>Join us in Chicago.</body>
+    `;
+    expect(extractOpportunityPageDetails(jsonLdFirst, "event").place).toEqual({
+      city: "Berlin",
+      region: undefined,
+      country: "Germany",
+    });
+
+    const metaFirst = `
+      <meta property="og:title" content="Workshop | May 1, 2027 | Paris, France">
+      <body>Join us in Chicago.</body>
+    `;
+    expect(extractOpportunityPageDetails(metaFirst, "event").place).toEqual({
+      city: "Paris",
+      region: "France",
     });
   });
 });
