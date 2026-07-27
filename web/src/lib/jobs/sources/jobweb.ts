@@ -20,6 +20,70 @@ export const JOB_PATH_RE =
   /\/(?:job|jobs|career|careers|position|positions|vacancy|vacancies|opportunity|opportunities|job-search|jobsearch)(?:\/|$)/i;
 export const NON_JOB_PATH_RE =
   /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts)(?:\/|$)/i;
+
+/**
+ * Search-results and category pages on job aggregators. These match every
+ * job-shaped heuristic (job-ish URL, hiring language, a role in the title) but
+ * are not postings — you cannot apply to "60 Molten Salt Jobs". They are the
+ * jobs-side equivalent of the social-media noise the events adapter denies.
+ */
+export const LISTING_TITLE_RE =
+  /(?:^|\s)\d{1,5}[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|\b(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
+
+/** Query-string or path shapes that mean "this is a search result listing". */
+export const LISTING_URL_RE =
+  /\/(?:job-search|jobsearch|search|browse|listings?|q-[\w-]*jobs?)(?:\/|$|\.)|[?&](?:q|query|keywords?|search|k)=/i;
+
+/** Aggregators whose deep links are fine but whose listing pages are noise. */
+const AGGREGATOR_HOSTS = [
+  "indeed.com",
+  "glassdoor.com",
+  "ziprecruiter.com",
+  "simplyhired.com",
+  "monster.com",
+  "careerjet.com",
+  "jooble.org",
+  "neuvoo.com",
+  "talent.com",
+];
+
+/**
+ * Titles that name a careers section rather than a role. An employer's
+ * "/careers" index passes every job-shaped heuristic but is not something the
+ * user can apply to.
+ */
+export const CAREERS_INDEX_TITLE_RE =
+  /^\s*(?:careers?|jobs?|vacancies|open(?:ings?)?|open positions?|current openings?|job openings?|work (?:with|for) us|join (?:us|our team)|employment|opportunities)\s*$/i;
+
+/** A posting URL almost always carries a numeric or long opaque identifier. */
+const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
+
+/**
+ * True when the result is an aggregate listing or a careers index rather than
+ * a single posting.
+ *
+ * Title shape is authoritative ("60 Molten Salt Jobs, Employment ...",
+ * "CAREERS"). On known aggregator hosts we additionally require a posting
+ * identifier in the URL, because their category pages
+ * ("/Jobs/Battery-Research-Scientist/-in-San-Jose,CA") are indistinguishable
+ * from postings by path shape alone. Employer sites are left alone so a real
+ * posting at `/careers/internship-battery-research` still gets through.
+ */
+export function isListingPage(
+  title: string,
+  host: string,
+  pathAndQuery: string,
+): boolean {
+  if (LISTING_TITLE_RE.test(title)) return true;
+  if (CAREERS_INDEX_TITLE_RE.test(title)) return true;
+
+  const isAggregator = AGGREGATOR_HOSTS.some(
+    (h) => host === h || host.endsWith(`.${h}`),
+  );
+  if (!isAggregator) return false;
+  if (LISTING_URL_RE.test(pathAndQuery)) return true;
+  return !POSTING_ID_RE.test(pathAndQuery);
+}
 const JOB_TEXT_RE =
   /\b(job opening|job posting|open position|position available|vacanc(?:y|ies)|now hiring|we(?:'re| are) hiring|apply (?:now|today|for)|applications? (?:are )?(?:open|invited)|research (?:scientist|engineer|intern)|postdoc(?:toral)?|internship|r&d (?:scientist|engineer))\b/i;
 
@@ -55,6 +119,7 @@ export function webResultToRawJobItem(result: {
   const text = `${title} ${result.snippet ?? ""}`;
   if (NON_JOB_PATH_RE.test(parsed.pathname)) return null;
   if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;
+  if (isListingPage(title, host, `${parsed.pathname}${parsed.search}`)) return null;
 
   // Split "Postdoc in X - University of Y | board.com" style titles.
   const parts = title.split(/\s+[-–—|·]\s+/);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawItem } from "@/lib/sources/types";
-import { toScoringItem } from "@/lib/opportunities/shared";
+import { passesRequiredGate, toScoringItem } from "@/lib/opportunities/shared";
 import { scoreKeyword } from "./keyword";
 import {
   ABBREVIATION_GROUPS,
@@ -50,10 +50,46 @@ describe("canonicalize and termMatches", () => {
     ).toBe(true);
   });
 
-  it.each(["prepare marketing materials for the launch", "course materials will be provided"])(
-    "does not treat generic materials context as research relevance: %s",
-    (text) => {
-      expect(termMatches(canonicalize(text), "materials")).toBe(false);
+  // A generic word DOES match literally — termMatches is context-free on
+  // purpose. What must not happen is a lone generic match being accepted as
+  // proof of relevance, which is the gate's job, not the matcher's.
+  it.each([
+    "prepare marketing materials for the launch",
+    "course materials will be provided",
+    "training materials and onboarding docs",
+  ])("a lone generic match never opens the relevance gate: %s", (text) => {
+    const scoped = scoreKeyword(
+      toScoringItem({
+        id: "x",
+        title: text,
+        text,
+        summary: text,
+        tags: [],
+      }),
+      ["materials"],
+      { scope: "titleAndSummary" },
+    );
+    expect(scoped.matched).toEqual(["materials"]);
+    expect(passesRequiredGate(["materials"], scoped, scoped)).toBe(false);
+  });
+
+  it("a specific term does open the gate", () => {
+    const text = "Solid-State Battery Summit 2026";
+    const scoped = scoreKeyword(
+      toScoringItem({ id: "y", title: text, text, summary: text, tags: [] }),
+      ["solid state battery"],
+      { scope: "titleAndSummary" },
+    );
+    expect(passesRequiredGate(["solid state battery"], scoped, scoped)).toBe(true);
+  });
+
+  it.each([
+    ["solid electrolyte", "IEEE SE 2026: Conference on Software Engineering"],
+    ["cyclic voltammetry", "Research Scientist — please send your CV to apply"],
+  ])(
+    "two-letter acronyms are not aliases, so %s does not match unrelated prose",
+    (term, text) => {
+      expect(termMatches(canonicalize(text), term)).toBe(false);
     },
   );
 

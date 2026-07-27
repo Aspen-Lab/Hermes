@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { scoreCareerFit, scoreIndustryFit, scoreJobs } from "./scoring";
+import {
+  isExpiredPosting,
+  scoreCareerFit,
+  scoreIndustryFit,
+  scoreJobs,
+} from "./scoring";
 import { dedupJobs } from "./dedup";
 import { remotiveJobToRawItem } from "./sources/remotive";
 import { himalayasJobToRawItem } from "./sources/himalayas";
@@ -280,5 +285,48 @@ describe("source mappers", () => {
   it("returns null for postings without a link", () => {
     expect(remotiveJobToRawItem({ id: 1, title: "X" })).toBeNull();
     expect(himalayasJobToRawItem({ title: "X" })).toBeNull();
+  });
+});
+
+describe("expired postings", () => {
+  const NOW = Date.parse("2026-07-26T00:00:00Z");
+
+  function job(overrides: Partial<RawJobItem> = {}): RawJobItem {
+    return {
+      id: "jobweb:x",
+      source: "jobweb",
+      title: "Research Scientist",
+      company: "Lab",
+      location: "",
+      isRemote: false,
+      description: "",
+      url: "https://example.test/job/1",
+      tags: [],
+      ...overrides,
+    };
+  }
+
+  it("drops a posting whose season+year cycle has passed", () => {
+    expect(
+      isExpiredPosting(job({ title: "Molten Salt Chemistry Summer 2025 Internship" }), NOW),
+    ).toBe(true);
+  });
+
+  it("keeps the current cycle", () => {
+    expect(
+      isExpiredPosting(job({ title: "Molten Salt Chemistry Summer 2026 Internship" }), NOW),
+    ).toBe(false);
+  });
+
+  it("drops a posting older than the age limit", () => {
+    expect(isExpiredPosting(job({ postedAt: "2025-01-01T00:00:00Z" }), NOW)).toBe(true);
+  });
+
+  it("keeps a recent posting", () => {
+    expect(isExpiredPosting(job({ postedAt: "2026-07-01T00:00:00Z" }), NOW)).toBe(false);
+  });
+
+  it("keeps a posting with no date signal at all", () => {
+    expect(isExpiredPosting(job(), NOW)).toBe(false);
   });
 });

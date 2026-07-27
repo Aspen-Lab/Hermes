@@ -67,7 +67,7 @@ export function guessEventType(text: string): EventType {
 // date-less results that still clearly describe an event, since conference
 // pages routinely omit a parseable date from their search snippet.
 const EVENT_SIGNAL_RE =
-  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|forum|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
+  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exhibition|forum|round ?table|convention|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
 
 export function looksLikeEvent(text: string): boolean {
   return EVENT_SIGNAL_RE.test(text);
@@ -122,6 +122,117 @@ function isDeniedUrl(rawUrl: string): boolean {
   return DENY_PATH_RE.test(parsed.pathname);
 }
 
+// Page titles that name the page rather than the event. Taking the first
+// title segment blindly produced cards reading "Meeting Summary" or "Home",
+// which tell the user nothing about what the event is.
+const GENERIC_PAGE_TITLE_RE =
+  /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?)$/i;
+
+function isGenericPageTitle(candidate: string): boolean {
+  return GENERIC_PAGE_TITLE_RE.test(candidate.trim());
+}
+
+/**
+ * Calendar indexes, archives, and organisation homepages. These pass the
+ * event-signal check (they are full of the word "events") but are not a single
+ * event you can attend — the events-side equivalent of a job-board search
+ * page. "Events for July 2026" and "Nuclear and Applied Materials Research
+ * Group" both reached a live top-5 before this filter existed.
+ */
+export const EVENT_INDEX_TITLE_RE =
+  /^\s*(?:all\s+|upcoming\s+|past\s+|our\s+)?events?\b(?:\s+(?:for|in|calendar|archive|list|listing)\b|\s*$)|^\s*(?:events?|conferences?|seminars?)\s+(?:calendar|archive|listings?|schedule)\b|^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events?|conferences?|seminars?|workshops?)\s*$|\b(?:research\s+group|research\s+laboratory|research\s+center|research\s+centre|department\s+of|faculty\s+of)\b/i;
+
+export function isEventIndexPage(title: string): boolean {
+  return EVENT_INDEX_TITLE_RE.test(title.trim());
+}
+
+/**
+ * Best available human-readable event name from a search result.
+ *
+ * Page titles arrive in three shapes: a clean event name, an event name with
+ * site chrome appended ("… | Cambridge EnerTech"), or a generic page label
+ * ("Meeting Summary"). Prefer the most informative segment of the title, and
+ * when the whole title is generic, recover the event name from the snippet
+ * rather than showing the user a meaningless card.
+ */
+/**
+ * Site chrome: a title segment that names the website or a calendar view
+ * rather than an event ("DLR Events", "Events for July 2026"). Real listings
+ * routinely wrap a good event page in two of these, as in
+ * "DLR Events | Events for July 2026" — whose URL is a specific workshop.
+ */
+function isChromeSegment(segment: string): boolean {
+  const trimmed = segment.trim();
+  return (
+    isGenericPageTitle(trimmed) ||
+    isEventIndexPage(trimmed) ||
+    /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed)
+  );
+}
+
+/** Human-readable event name recovered from a deep event URL's slug. */
+function nameFromUrlSlug(url: string): string | undefined {
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return undefined;
+  }
+  const slug = path
+    .split("/")
+    .filter(Boolean)
+    .reverse()
+    .find((part) => /[a-z]/i.test(part) && part.replace(/[^a-z]/gi, "").length >= 8);
+  if (!slug) return undefined;
+  const words = slug
+    .replace(/\.\w{2,5}$/, "")
+    .replace(/[-_+]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (words.split(" ").length < 3) return undefined;
+  return words.charAt(0).toLocaleUpperCase() + words.slice(1);
+}
+
+export function eventNameFrom(
+  title: string,
+  snippet: string,
+  url?: string,
+): string {
+  const segments = title
+    .split(/\s+[|·–—]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const informative = segments.filter((part) => !isChromeSegment(part));
+  if (informative.length > 0) {
+    // Prefer a segment that actually reads as an event, else the longest one:
+    // site chrome is normally shorter than the event name.
+    const eventLike = informative.filter((part) => looksLikeEvent(part));
+    const pool = eventLike.length > 0 ? eventLike : informative;
+    return pool.reduce((best, part) => (part.length > best.length ? part : best));
+  }
+
+  // Every title segment is chrome. A deep event URL's slug is the most
+  // reliable remaining source of the actual event name — try it before the
+  // snippet, whose longest sentence is often prose ("Networking: An opening
+  // get-together...") rather than a name.
+  const fromSlug = url ? nameFromUrlSlug(url) : undefined;
+  if (fromSlug) return fromSlug;
+
+  // Otherwise mine the snippet for its most informative event-like phrase.
+  const substantial = snippet
+    .split(/(?<=[.!?])\s+|\s+[|·–—]\s+|\n/)
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 20 && part.length <= 120);
+  const eventLike = substantial.filter((part) => looksLikeEvent(part));
+  const pool = eventLike.length > 0 ? eventLike : substantial;
+  if (pool.length > 0) {
+    return pool.reduce((best, part) => (part.length > best.length ? part : best));
+  }
+
+  return segments[0] ?? title.trim();
+}
+
 export function webResultToRawEventItem(
   result: WebResult,
   now: number,
@@ -130,6 +241,7 @@ export function webResultToRawEventItem(
   const url = result.url?.trim();
   if (!title || !url) return null;
   if (isDeniedUrl(url)) return null;
+  if (isEventIndexPage(title)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;
   const startDate = extractEventDate(text);
@@ -152,7 +264,7 @@ export function webResultToRawEventItem(
   }
 
   const isOnline = /\b(online|virtual|hybrid)\b/i.test(text);
-  const name = title.split(/\s+[|·]\s+/)[0].trim() || title;
+  const name = eventNameFrom(title, result.snippet ?? "", url);
   return {
     id: `eventweb:${urlHashId(url)}`,
     source: "eventweb",

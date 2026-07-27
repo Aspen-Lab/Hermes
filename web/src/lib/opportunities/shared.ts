@@ -2,6 +2,7 @@
 // pipeline's conventions (8s per-source wall, RawItem scoring facade) without
 // importing from lib/feed, so the three surfaces stay parallel implementations.
 
+import { isGenericTerm } from "@/lib/scoring/term-expand";
 import type { RawItem } from "@/lib/sources/types";
 import type { PreferenceConcept } from "@/types";
 
@@ -154,6 +155,38 @@ export function locationFit(
   }
   if (isRemote) return 0.85;
   return 0.4;
+}
+
+/**
+ * Shared relevance gate for the events and jobs scorers.
+ *
+ * A candidate is relevant enough to rank when it either names a *specific*
+ * required topic where it counts (title + short summary), or corroborates a
+ * weaker signal by matching two distinct required topics anywhere.
+ *
+ * The generic-term rule is the important part: a lone match on a word like
+ * "materials" or "energy" never opens the gate, because those words appear in
+ * unrelated postings constantly ("marketing materials", "training materials",
+ * "energy drinks"). Such a term still contributes to ranking via
+ * `termSpecificity` — it just cannot be the sole reason an item is shown.
+ */
+export function passesRequiredGate(
+  requiredTopics: string[],
+  scoped: { matched: string[] },
+  anywhere: { matched: string[] },
+): boolean {
+  if (requiredTopics.length === 0) return true;
+
+  const specificScoped = scoped.matched.filter((t) => !isGenericTerm(t));
+  if (specificScoped.length >= 1) return true;
+
+  const distinctAnywhere = new Set(
+    anywhere.matched.map((t) => t.toLocaleLowerCase()),
+  );
+  if (distinctAnywhere.size >= 2) return true;
+
+  // Only generic matches, and only one of them — not enough to prove relevance.
+  return false;
 }
 
 /** Case-insensitive containment against a list of phrases. */

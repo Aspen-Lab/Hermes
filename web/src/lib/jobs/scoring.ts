@@ -11,7 +11,11 @@ import {
   prepareLedger,
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
-import { locationFit, toScoringItem } from "@/lib/opportunities/shared";
+import {
+  locationFit,
+  passesRequiredGate,
+  toScoringItem,
+} from "@/lib/opportunities/shared";
 import type { RawItem } from "@/lib/sources/types";
 import type {
   CareerStage,
@@ -166,6 +170,44 @@ export function scoreIndustryFit(
   }
 }
 
+// ── Staleness ────────────────────────────────────────────────────
+
+/** Postings older than this are assumed filled or withdrawn. */
+const MAX_POSTING_AGE_DAYS = 270;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// "Summer 2025 Internship", "Fall 2024 Co-op" — a season+year in the title is
+// the posting's own statement of which cycle it belongs to.
+const SEASON_YEAR_RE =
+  /\b(?:spring|summer|fall|autumn|winter)\s+(20\d{2})\b/gi;
+
+/**
+ * True when a posting is too old to be actionable. Two independent signals:
+ * an explicit `postedAt` older than MAX_POSTING_AGE_DAYS, or a season+year
+ * label in the title naming a cycle that has already passed.
+ *
+ * The events pipeline has always dropped finished events; jobs had no
+ * equivalent, which surfaced a "Summer 2025 Internship" in mid-2026.
+ */
+export function isExpiredPosting(item: RawJobItem, now = Date.now()): boolean {
+  if (item.postedAt) {
+    const posted = Date.parse(item.postedAt);
+    if (Number.isFinite(posted) && now - posted > MAX_POSTING_AGE_DAYS * DAY_MS) {
+      return true;
+    }
+  }
+
+  const currentYear = new Date(now).getUTCFullYear();
+  const seasonYears = [...item.title.matchAll(SEASON_YEAR_RE)].map((m) =>
+    Number(m[1]),
+  );
+  if (seasonYears.length > 0 && seasonYears.every((y) => y < currentYear)) {
+    return true;
+  }
+
+  return false;
+}
+
 // ── Combined score ───────────────────────────────────────────────
 
 function reasonFor(
@@ -230,16 +272,17 @@ export function scoreJobs(
   const scored: ScoredJobItem[] = [];
   for (const item of items) {
     const facade = facades.get(item.id)!;
+    // Drop postings that have clearly aged out. A posting the user cannot
+    // apply to is worse than no posting: it burns a slot and reads as staleness.
+    if (isExpiredPosting(item, now)) continue;
+
     const requiredScoped = scoreKeyword(facade, profile.topics, {
       scope: "titleAndSummary",
     });
     const requiredAnywhere = scoreKeyword(facade, profile.topics);
-    const passesRequiredGate =
-      profile.topics.length === 0 ||
-      requiredScoped.matched.length >= 1 ||
-      new Set(requiredAnywhere.matched.map((topic) => topic.toLocaleLowerCase()))
-        .size >= 2;
-    if (!passesRequiredGate) continue;
+    if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
 
     const kw = scoreKeyword(facade, rankingTopics, {
       scope: "titleAndSummary",

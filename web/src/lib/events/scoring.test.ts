@@ -11,6 +11,8 @@ import { ccfConfToRawItem, parseCcfDateRange, parseCcfDeadline } from "./sources
 import {
   DENY_HOSTS,
   DENY_PATH_RE,
+  eventNameFrom,
+  isEventIndexPage,
   extractDeadline,
   extractEventDate,
   guessEventType,
@@ -374,4 +376,76 @@ describe("eventweb extraction", () => {
       ).not.toBeNull();
     },
   );
+});
+
+describe("event name extraction", () => {
+  it("recovers a real event name when the page title is generic", () => {
+    expect(
+      eventNameFrom(
+        "Meeting Summary",
+        "2026 International Round Table on Titanium Production in Molten Salts. Registration is open.",
+      ),
+    ).toBe("2026 International Round Table on Titanium Production in Molten Salts.");
+  });
+
+  it("prefers the event-like segment over site chrome", () => {
+    expect(
+      eventNameFrom("Solid-State Battery Summit | Cambridge EnerTech", ""),
+    ).toBe("Solid-State Battery Summit");
+  });
+
+  it("keeps a clean title unchanged", () => {
+    expect(eventNameFrom("6th Annual Solid-State Battery Summit", "")).toBe(
+      "6th Annual Solid-State Battery Summit",
+    );
+  });
+
+  it("falls back to the raw title when nothing better exists", () => {
+    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Home");
+  });
+});
+
+describe("event index and org pages", () => {
+  it.each([
+    "Events for July 2026",
+    "Upcoming Events",
+    "Events Calendar",
+    "All Events",
+    "Nuclear and Applied Materials Research Group",
+    "Department of Materials Science",
+    "Upcoming Energy Storage Conferences",
+  ])("rejects non-event page: %s", (title) => {
+    expect(isEventIndexPage(title)).toBe(true);
+  });
+
+  it.each([
+    "Solid-State Battery Summit",
+    "6th Annual Solid-State Battery Summit",
+    "2026 International Round Table on Titanium Production in Molten Salts",
+    "EMEA2026: Workshop on Ion Exchange Membranes for Energy Applications",
+  ])("keeps a real event: %s", (title) => {
+    expect(isEventIndexPage(title)).toBe(false);
+  });
+});
+
+describe("site-chrome titles", () => {
+  it("recovers the event name from the URL slug when every title segment is chrome", () => {
+    expect(
+      eventNameFrom(
+        "DLR Events | Events for July 2026",
+        "",
+        "https://event.dlr.de/en/event/emea2026-workshop-on-ion-exchange-membranes-for-energy-applications",
+      ),
+    ).toBe("Emea2026 workshop on ion exchange membranes for energy applications");
+  });
+
+  it("still prefers a real title segment over the slug", () => {
+    expect(
+      eventNameFrom(
+        "Solid-State Battery Summit | Cambridge EnerTech Events",
+        "",
+        "https://www.cambridgeenertech.com/solid-state-batteries",
+      ),
+    ).toBe("Solid-State Battery Summit");
+  });
 });

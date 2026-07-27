@@ -9,7 +9,11 @@ import {
   prepareLedger,
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
-import { locationFit, toScoringItem } from "@/lib/opportunities/shared";
+import {
+  locationFit,
+  passesRequiredGate,
+  toScoringItem,
+} from "@/lib/opportunities/shared";
 import type { RawItem } from "@/lib/sources/types";
 import type { EventType, PreferenceLedger } from "@/types";
 import type { EventSourceId, RawEventItem, ScoredEventItem } from "./types";
@@ -187,12 +191,9 @@ export function scoreEvents(
       scope: "titleAndSummary",
     });
     const requiredAnywhere = scoreKeyword(facade, profile.topics);
-    const passesRequiredGate =
-      profile.topics.length === 0 ||
-      requiredScoped.matched.length >= 1 ||
-      new Set(requiredAnywhere.matched.map((topic) => topic.toLocaleLowerCase()))
-        .size >= 2;
-    if (!passesRequiredGate) continue;
+    if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
 
     const kw = scoreKeyword(facade, rankingTopics, {
       scope: "titleAndSummary",
