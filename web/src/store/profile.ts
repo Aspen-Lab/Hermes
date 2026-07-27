@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { applyColorTheme, normalizeColorTheme } from "@/lib/theme";
@@ -98,6 +99,11 @@ interface ProfileState {
   resetOnboarding: () => void;
   /** Replace local state with a server snapshot. Undefined fields keep local values. */
   hydrateFromRemote: (remote: Partial<UserProfile>) => void;
+  /** Replace local state with a full local-disk snapshot (see
+   * components/local-profile-sync.tsx). Unlike hydrateFromRemote, which
+   * merges field-by-field for cross-device conflict safety, a disk snapshot
+   * is a complete profile and fully replaces local state. */
+  loadFromLocalSnapshot: (snapshot: UserProfile) => void;
   logOut: () => void;
 }
 
@@ -380,6 +386,13 @@ export const useProfileStore = create<ProfileState>()(
           return { profile: merged };
         }),
 
+      loadFromLocalSnapshot: (snapshot) =>
+        set(() => {
+          const normalized = normalizeColorTheme(snapshot.colorTheme);
+          applyColorTheme(normalized);
+          return { profile: { ...snapshot, colorTheme: normalized } };
+        }),
+
       logOut: () => {
         applyColorTheme(defaultProfile.colorTheme);
         set({ profile: defaultProfile });
@@ -404,3 +417,18 @@ export const useProfileStore = create<ProfileState>()(
     }
   )
 );
+
+// True once the profile store has rehydrated from localStorage. The store
+// uses `skipHydration` and is rehydrated after mount by <StoreHydrator/>, so
+// before that finishes, reads of `profile` see its pre-hydration default
+// even for a returning user. useSyncExternalStore gives a prerender-safe
+// read: the server snapshot is always false, and the client re-reads when
+// hydration finishes. Shared by <FirstRunGate/> and <LocalProfileSync/>,
+// which both need to know when it's safe to act on `profile.onboardedAt`.
+export function useProfileHydrated(): boolean {
+  return useSyncExternalStore(
+    (onChange) => useProfileStore.persist.onFinishHydration(onChange),
+    () => useProfileStore.persist.hasHydrated(),
+    () => false,
+  );
+}

@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# dev-only local profile snapshot (components/local-profile-sync.tsx)
+/.local-data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

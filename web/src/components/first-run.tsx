@@ -12,18 +12,22 @@
 
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useProfileStore } from "@/store/profile";
+import { useProfileStore, useProfileHydrated } from "@/store/profile";
+import {
+  isLocalProfileRestoreReady,
+  subscribeLocalProfileRestore,
+} from "@/lib/local-profile-restore";
 
-// True once the profile store has rehydrated from localStorage. The store uses
-// `skipHydration` and is rehydrated after mount by <StoreHydrator/>, so before
-// that finishes `onboardedAt` reads as its default (null) even for a returning
-// user. useSyncExternalStore gives a prerender-safe read: the server snapshot
-// is always false, and the client re-reads when hydration finishes.
-function useProfileHydrated(): boolean {
+// True once <LocalProfileSync/>'s dev-only disk-restore attempt has settled
+// (or immediately true outside development, where it never runs at all).
+// Without this, a returning user with empty localStorage but a valid disk
+// snapshot (fresh port, different browser) would get bounced to /welcome by
+// the redirect below before the async disk read resolves.
+function useLocalProfileRestoreReady(): boolean {
   return useSyncExternalStore(
-    (onChange) => useProfileStore.persist.onFinishHydration(onChange),
-    () => useProfileStore.persist.hasHydrated(),
-    () => false,
+    subscribeLocalProfileRestore,
+    isLocalProfileRestoreReady,
+    isLocalProfileRestoreReady,
   );
 }
 
@@ -32,17 +36,18 @@ export function FirstRunGate() {
   const pathname = usePathname();
   const onboardedAt = useProfileStore((s) => s.profile.onboardedAt);
   const hydrated = useProfileHydrated();
+  const localRestoreReady = useLocalProfileRestoreReady();
 
   useEffect(() => {
     // Redirect only once we know the real onboardedAt — never on the stale
     // pre-hydration default, which used to bounce every full page load to
-    // /welcome.
-    if (!hydrated) return;
+    // /welcome — and only once a possible local-disk restore has settled.
+    if (!hydrated || !localRestoreReady) return;
     if (!pathname) return;
     if (pathname === "/welcome" || pathname.startsWith("/auth")) return;
     if (onboardedAt) return;
     router.replace("/welcome");
-  }, [hydrated, pathname, onboardedAt, router]);
+  }, [hydrated, localRestoreReady, pathname, onboardedAt, router]);
 
   return null;
 }

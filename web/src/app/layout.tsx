@@ -16,6 +16,7 @@ import { GithubStars } from "@/components/github-stars";
 import { UserMenu } from "@/components/user-menu";
 import { FirstRunGate, DesktopAccountControls } from "@/components/first-run";
 import { StoreHydrator } from "@/components/store-hydrator";
+import { LocalProfileSync } from "@/components/local-profile-sync";
 
 // Primary UI sans — Delphi-style interface text
 const inter = Inter({
@@ -95,6 +96,7 @@ export default function RootLayout({
         <StoreHydrator />
         <ThemeSync />
         <ProfileSync />
+        <LocalProfileSync />
         <FeedSync />
         <FirstRunGate />
       </body>
