@@ -42,7 +42,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.4 | Body-text city fallback with gazetteer | DONE | `npx vitest run src/lib/opportunities/structured-extract.test.ts` — 1 file, 9 tests passed |
 | P1.5 | Structured `place` field on events + jobs; hybrid keeps city AND isOnline | DONE | `npx vitest run src/lib/opportunities/place-flow.test.ts` — 1 file, 2 tests passed; `npx tsc --noEmit` — clean |
 | P1.6 | Wire enrichment into the events pipeline | DONE | `npx vitest run src/lib/opportunities/enrich.test.ts` — 1 file, 3 tests passed; key-gated `npx vitest run src/lib/events/benchmark.test.ts` — 1 passed, 4/8 cities (50%), Cambridge = Chicago |
-| P1.7 | Wire enrichment into the jobs pipeline | TODO | |
+| P1.7 | Wire enrichment into the jobs pipeline | IN_PROGRESS | |
 
 ### Phase 2 — Daily pool build + cache (fixes credit budget)
 
