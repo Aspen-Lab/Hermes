@@ -5,6 +5,7 @@ import type {
 } from "@/types";
 
 export const MAX_OPPORTUNITY_POOL_ITEMS = 200;
+export const DEFAULT_OPPORTUNITY_TOP_N = 10;
 
 export interface FacetableOpportunity {
   location: string;

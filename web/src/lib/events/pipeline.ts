@@ -17,6 +17,7 @@ import {
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
 import {
   countOpportunityFacets,
+  DEFAULT_OPPORTUNITY_TOP_N,
   MAX_OPPORTUNITY_POOL_ITEMS,
 } from "@/lib/opportunities/facets";
 import {
@@ -37,7 +38,6 @@ import type {
   ScoredEventItem,
 } from "./types";
 
-const DEFAULT_TOP_N = 5;
 const DEFAULT_PER_SOURCE_LIMIT = 80;
 
 export interface EventsPipelineOptions {
@@ -233,7 +233,7 @@ export async function runEventsPipeline(
   req: EventsFeedRequest,
   options: DailyEventPoolOptions = {},
 ): Promise<EventsFeedResponse> {
-  const topN = req.topN ?? DEFAULT_TOP_N;
+  const topN = req.topN ?? DEFAULT_OPPORTUNITY_TOP_N;
   const pool = await buildDailyEventPool(req, options);
   const scored = pool.items;
   const beforeScoreFloor = scored.length;

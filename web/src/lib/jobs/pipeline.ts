@@ -16,6 +16,7 @@ import {
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
 import {
   countOpportunityFacets,
+  DEFAULT_OPPORTUNITY_TOP_N,
   MAX_OPPORTUNITY_POOL_ITEMS,
 } from "@/lib/opportunities/facets";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
@@ -33,7 +34,6 @@ import type {
   ScoredJobItem,
 } from "./types";
 
-const DEFAULT_TOP_N = 5;
 const DEFAULT_PER_SOURCE_LIMIT = 60;
 
 export interface JobsPipelineOptions {
@@ -230,7 +230,7 @@ export async function runJobsPipeline(
   req: JobsFeedRequest,
   options: DailyJobPoolOptions = {},
 ): Promise<JobsFeedResponse> {
-  const topN = req.topN ?? DEFAULT_TOP_N;
+  const topN = req.topN ?? DEFAULT_OPPORTUNITY_TOP_N;
   const pool = await buildDailyJobPool(req, options);
   const scored = pool.items;
   const beforeScoreFloor = scored.length;

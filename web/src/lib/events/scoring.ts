@@ -110,12 +110,12 @@ function reasonFor(item: RawEventItem, matched: string[], now: number): string {
 }
 
 /**
- * Keep the daily 5 from becoming five conferences (or five seminars): cap
+ * Keep the daily 10 from becoming ten conferences (or ten seminars): cap
  * each event type at `cap` while preserving score order.
  */
 export function diversifyByType(
   items: ScoredEventItem[],
-  cap = 3,
+  cap = 5,
 ): ScoredEventItem[] {
   const counts = new Map<EventType, number>();
   const kept: ScoredEventItem[] = [];

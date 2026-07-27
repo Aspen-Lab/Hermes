@@ -188,6 +188,33 @@ describe("diversifyByType", () => {
     const out = diversifyByType(items, 3);
     expect(out.slice(0, 4).map((o) => o.id)).toEqual(["c1", "c2", "c3", "s1"]);
   });
+
+  it("uses a default cap of five for the ten-item daily slice", () => {
+    const items = [
+      ...[1, 2, 3, 4, 5, 6].map((i) => ({
+        ...event({ id: `c${i}` }),
+        score: 1 - i * 0.05,
+      })),
+      { ...event({ id: "s1", type: "seminar" as const }), score: 0.5 },
+    ].map(
+      (item) =>
+        ({
+          ...item,
+          matchedKeywords: [],
+          relevanceReason: "",
+        }) as ScoredEventItem,
+    );
+
+    expect(diversifyByType(items).map((item) => item.id)).toEqual([
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "s1",
+      "c6",
+    ]);
+  });
 });
 
 describe("dedupEvents", () => {

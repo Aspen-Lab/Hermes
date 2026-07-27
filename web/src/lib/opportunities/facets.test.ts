@@ -8,6 +8,7 @@ import type {
 import type { CachedPool, PoolCache } from "./pool-cache";
 import {
   countOpportunityFacets,
+  DEFAULT_OPPORTUNITY_TOP_N,
   MAX_OPPORTUNITY_POOL_ITEMS,
   opportunityFormat,
 } from "./facets";
@@ -126,7 +127,6 @@ describe("opportunity feed facet contract", () => {
     const response = await runEventsPipeline(
       {
         topics: ["solid-state battery"],
-        topN: 1,
         aiTier: 0,
       },
       {
@@ -135,7 +135,7 @@ describe("opportunity feed facet contract", () => {
       },
     );
 
-    expect(response.items).toHaveLength(1);
+    expect(response.items).toHaveLength(DEFAULT_OPPORTUNITY_TOP_N);
     expect(response.pool).toHaveLength(MAX_OPPORTUNITY_POOL_ITEMS);
     expect(response.facetCounts).toEqual({
       location: { Chicago: 100, Germany: 100 },

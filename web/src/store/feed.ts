@@ -13,6 +13,7 @@ import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
 import type { EventsFeedResponse } from "@/lib/events/types";
 import type { JobsFeedResponse } from "@/lib/jobs/types";
+import { DEFAULT_OPPORTUNITY_TOP_N } from "@/lib/opportunities/facets";
 import {
   feedbackSnapshotForEvent,
   feedbackSnapshotForJob,
@@ -277,7 +278,7 @@ function opportunityRequestBody(
     industryVsAcademia: profile.industryVsAcademia,
     locationPreferences: profile.locationPreferences,
     currentProject: profile.currentProject,
-    topN: 5,
+    topN: DEFAULT_OPPORTUNITY_TOP_N,
     aiTier: hasUserLlmOverride ? 2 : undefined,
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
