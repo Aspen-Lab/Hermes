@@ -48,7 +48,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P2.1 | Pool cache interface + cache-key derivation | TODO | |
+| P2.1 | Pool cache interface + cache-key derivation | IN_PROGRESS | |
 | P2.2 | Disk cache adapter (local dev only) | TODO | |
 | P2.3 | Supabase cache adapter (production; no-op when unconfigured) | TODO | |
 | P2.4 | Wire both pipelines to build-once-per-day | TODO | |
