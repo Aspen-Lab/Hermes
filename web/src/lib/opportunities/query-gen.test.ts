@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { templateEventQueries, templateJobQueries } from "./query-gen";
+import {
+  EVENT_QUERY_BUDGET,
+  JOB_QUERY_BUDGET,
+} from "./query-budget";
 
 const PROFILE = {
   topics: ["LCO", "topochemical", "ion exchange", "molten salt", "battery"],
@@ -18,9 +22,9 @@ describe("templateEventQueries", () => {
   it("puts specific required topics and a benchmark pair inside the adapter budget", () => {
     const year = new Date().getFullYear();
     const queries = templateEventQueries(PROFILE);
-    const searched = queries.slice(0, 8);
+    const searched = queries.slice(0, EVENT_QUERY_BUDGET);
 
-    expect(queries).toHaveLength(12);
+    expect(queries).toHaveLength(EVENT_QUERY_BUDGET);
     expect(queries[0]).not.toMatch(/^LCO\b/);
     expect(searched).toContain(`battery conference ${year}`);
     expect(searched).toContain(
@@ -60,15 +64,15 @@ describe("templateEventQueries", () => {
 
   it("never exceeds the query cap for a long topic list", () => {
     const topics = Array.from({ length: 20 }, (_, index) => `topic ${index}`);
-    expect(templateEventQueries({ topics })).toHaveLength(12);
-    expect(templateJobQueries({ topics })).toHaveLength(12);
+    expect(templateEventQueries({ topics })).toHaveLength(EVENT_QUERY_BUDGET);
+    expect(templateJobQueries({ topics })).toHaveLength(JOB_QUERY_BUDGET);
   });
 });
 
 describe("templateJobQueries", () => {
   it("uses every required topic and keeps role terms within the expanded budget", () => {
     const queries = templateJobQueries(PROFILE);
-    expect(queries.length).toBeLessThanOrEqual(12);
+    expect(queries.length).toBeLessThanOrEqual(JOB_QUERY_BUDGET);
     for (const topic of PROFILE.topics) {
       expect(
         queries.some((query) =>

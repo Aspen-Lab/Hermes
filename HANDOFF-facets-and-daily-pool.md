@@ -52,7 +52,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.2 | Disk cache adapter (local dev only) | DONE | `npx vitest run src/lib/opportunities/pool-cache-disk.test.ts` — 1 file, 3 tests passed; `npx tsc --noEmit` — clean |
 | P2.3 | Supabase cache adapter (production; no-op when unconfigured) | DONE | `npx vitest run src/lib/opportunities/pool-cache-supabase.test.ts src/lib/opportunities/pool-cache-disk.test.ts` — 2 files, 6 tests passed; `npx tsc --noEmit` and targeted ESLint — clean |
 | P2.4 | Wire both pipelines to build-once-per-day | DONE | `npx vitest run src/lib/opportunities/daily-pool-cache.test.ts src/lib/opportunities/pool-cache.test.ts src/lib/opportunities/pool-cache-disk.test.ts src/lib/opportunities/pool-cache-supabase.test.ts` — 4 files, 12 tests passed, including zero-network second builds and concurrent single-flight; `npx tsc --noEmit` and targeted ESLint — clean |
-| P2.5 | Query budget: 18 event queries / 12 job queries | IN_PROGRESS | |
+| P2.5 | Query budget: 18 event queries / 12 job queries | DONE | `npx vitest run src/lib/opportunities/query-gen.test.ts src/lib/opportunities/query-budget.test.ts src/lib/jobs/sources/jobweb.test.ts` — 3 files, 28 tests passed; adapter fetch spies enforce 18 event / 12 job searches; `npx tsc --noEmit` and targeted ESLint — clean |
 
 ### Phase 3 — API contract
 

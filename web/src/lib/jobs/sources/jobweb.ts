@@ -1,5 +1,6 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 import { urlHashId } from "@/lib/opportunities/shared";
+import { JOB_QUERY_BUDGET } from "@/lib/opportunities/query-budget";
 
 // Web discovery for research and R&D positions across academic and industry
 // employers. Search providers reach public listings that frequently block
@@ -216,7 +217,7 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
   const keys = resolveKeys(query);
   if (!keys.tavily && !keys.brave) return [];
 
-  const searches = query.queries.slice(0, 8);
+  const searches = query.queries.slice(0, JOB_QUERY_BUDGET);
   if (searches.length === 0) return [];
   const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
 

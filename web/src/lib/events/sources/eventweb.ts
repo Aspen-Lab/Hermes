@@ -1,6 +1,7 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 import { urlHashId } from "@/lib/opportunities/shared";
+import { EVENT_QUERY_BUDGET } from "@/lib/opportunities/query-budget";
 
 // Web discovery for academic events. The curated feeds (ccfddl, confs.tech)
 // are CS-heavy; this adapter is what finds a materials-science symposium or a
@@ -356,15 +357,14 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
   const keys = resolveKeys(query);
   if (!keys.tavily && !keys.brave) return [];
 
-  const searches = query.queries.slice(0, 8);
+  const searches = query.queries.slice(0, EVENT_QUERY_BUDGET);
   if (searches.length === 0) return [];
   const perQuery = Math.max(4, Math.ceil(Math.min(query.limit, 20) / searches.length));
 
   const now = Date.now();
   const all: RawEventItem[] = [];
-  // The pipeline gives each source an eight-second wall clock. Run these
-  // independent searches together so the expanded query set cannot time out
-  // before its later, more specific queries execute.
+  // Run the daily allocation concurrently so the source's wall-clock timeout
+  // cannot strand later, more specific queries.
   const resultSets = await Promise.all(
     searches.map((q) =>
       keys.tavily

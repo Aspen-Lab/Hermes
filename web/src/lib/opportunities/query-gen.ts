@@ -6,6 +6,10 @@
 import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import { truncateText } from "@/lib/opportunities/shared";
+import {
+  EVENT_QUERY_BUDGET,
+  JOB_QUERY_BUDGET,
+} from "@/lib/opportunities/query-budget";
 import type { CareerStage, IndustryAcademiaPreference } from "@/types";
 
 export interface QueryGenProfile {
@@ -16,8 +20,6 @@ export interface QueryGenProfile {
   locationPreferences?: string[];
   currentProject?: string;
 }
-
-const MAX_QUERIES = 12;
 
 // Best-effort in-process cache of LLM-generated queries. The two query-gen
 // calls fire on every feed build; the profile inputs rarely change between
@@ -148,7 +150,7 @@ export function templateJobQueries(profile: QueryGenProfile): string[] {
   for (const role of roles) {
     for (const topic of topics) {
       appendUnique(queries, `${topic} ${role}`);
-      if (queries.length >= MAX_QUERIES) return queries;
+      if (queries.length >= JOB_QUERY_BUDGET) return queries;
     }
   }
   return queries;
@@ -164,7 +166,7 @@ export function templateEventQueries(profile: QueryGenProfile): string[] {
   // stored profile from crowding stronger terms out of web discovery.
   for (const topic of topics) {
     appendUnique(queries, `${topic} conference ${year}`);
-    if (queries.length >= MAX_QUERIES) return queries;
+    if (queries.length >= EVENT_QUERY_BUDGET) return queries;
   }
 
   // Related required/explore pairs are the most useful industry-discovery
@@ -175,7 +177,7 @@ export function templateEventQueries(profile: QueryGenProfile): string[] {
     year,
   )) {
     appendUnique(queries, pairQuery);
-    if (queries.length >= MAX_QUERIES) return queries;
+    if (queries.length >= EVENT_QUERY_BUDGET) return queries;
   }
 
   const variants = [
@@ -188,14 +190,14 @@ export function templateEventQueries(profile: QueryGenProfile): string[] {
       const topic = topics[topicIndex];
       const variant = variants[(round + topicIndex) % variants.length];
       appendUnique(queries, variant(topic));
-      if (queries.length >= MAX_QUERIES) return queries;
+      if (queries.length >= EVENT_QUERY_BUDGET) return queries;
     }
   }
 
-  return queries.slice(0, MAX_QUERIES);
+  return queries.slice(0, EVENT_QUERY_BUDGET);
 }
 
-function parseQueryArray(raw: string): string[] {
+function parseQueryArray(raw: string, limit: number): string[] {
   const unfenced = raw.replace(/```(?:json)?/gi, "").trim();
   const start = unfenced.indexOf("[");
   const end = unfenced.lastIndexOf("]");
@@ -207,7 +209,7 @@ function parseQueryArray(raw: string): string[] {
       .filter((q): q is string => typeof q === "string")
       .map((q) => q.trim())
       .filter((q) => q.length > 3 && q.length < 120)
-      .slice(0, MAX_QUERIES);
+      .slice(0, limit);
   } catch {
     return [];
   }
@@ -224,6 +226,8 @@ export async function generateSearchQueries(
   profile: QueryGenProfile,
   llmOverride?: ProviderOverrideConfig,
 ): Promise<string[]> {
+  const queryBudget =
+    kind === "events" ? EVENT_QUERY_BUDGET : JOB_QUERY_BUDGET;
   const fallback =
     kind === "jobs" ? templateJobQueries(profile) : templateEventQueries(profile);
 
@@ -237,7 +241,9 @@ export async function generateSearchQueries(
 
   const cacheKey = queryCacheKey(kind, profile);
   const cached = queryCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < QUERY_CACHE_TTL_MS) return cached.queries;
+  if (cached && Date.now() - cached.ts < QUERY_CACHE_TTL_MS) {
+    return cached.queries.slice(0, queryBudget);
+  }
 
   const exploreTopics = profile.softTopics ?? [];
   const persona = [
@@ -270,11 +276,11 @@ export async function generateSearchQueries(
     const raw = await provider.generateJsonText({
       systemPrompt:
         "You write web search queries. Reply with ONLY a JSON array of query strings, no prose.",
-      userPrompt: `Researcher profile:\n${persona}\n\nWrite ${MAX_QUERIES} diverse, specific web search queries to find ${target}. Include the current year where useful. JSON array only.`,
+      userPrompt: `Researcher profile:\n${persona}\n\nWrite ${queryBudget} diverse, specific web search queries to find ${target}. Include the current year where useful. JSON array only.`,
       maxTokens: 300,
       tier: "small",
     });
-    const queries = parseQueryArray(raw);
+    const queries = parseQueryArray(raw, queryBudget);
     const result = queries.length > 0 ? queries : fallback;
     queryCache.set(cacheKey, { queries: result, ts: Date.now() });
     return result;
