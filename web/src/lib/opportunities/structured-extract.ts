@@ -1,10 +1,7 @@
 import { canonicalize } from "@/lib/scoring/term-expand";
+import type { OpportunityPlace } from "@/types";
 
-export interface ExtractedPlace {
-  city?: string;
-  region?: string;
-  country?: string;
-}
+export type ExtractedPlace = OpportunityPlace;
 
 export interface JsonLdOpportunity {
   kind: "event" | "job";
@@ -1039,6 +1036,13 @@ export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
     region,
     country,
   };
+}
+
+export function extractPlaceFromText(text: string): ExtractedPlace | undefined {
+  const cityPlace = extractBodyTextPlace(text);
+  if (cityPlace) return cityPlace;
+  const country = findGazetteerMatch(bodyText(text), COUNTRY_NAMES);
+  return country ? { country } : undefined;
 }
 
 function jsonLdBlocks(html: string): string[] {

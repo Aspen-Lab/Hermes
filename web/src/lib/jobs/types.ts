@@ -2,6 +2,7 @@ import type {
   CareerStage,
   IndustryAcademiaPreference,
   Job,
+  OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
 } from "@/types";
@@ -25,6 +26,7 @@ export interface RawJobItem {
   title: string;
   company: string;
   location: string;
+  place?: OpportunityPlace;
   isRemote: boolean;
   /** Plain text (HTML stripped), truncated. */
   description: string;

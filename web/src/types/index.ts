@@ -68,6 +68,12 @@ export interface Paper {
 
 export type EventType = "conference" | "workshop" | "seminar" | "meetup";
 
+export interface OpportunityPlace {
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -75,6 +81,7 @@ export interface Event {
   date: string;
   endDate?: string;
   location: string;
+  place?: OpportunityPlace;
   isOnline: boolean;
   deadline?: string;
   shortDescription: string;
@@ -94,6 +101,7 @@ export interface Job {
   roleTitle: string;
   companyOrLab: string;
   location: string;
+  place?: OpportunityPlace;
   isRemote: boolean;
   keyRequirements: string[];
   matchReason: string;

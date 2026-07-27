@@ -54,6 +54,7 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     date: item.startDate,
     endDate: item.endDate,
     location: item.location || (item.isOnline ? "Online" : "See event page"),
+    place: item.place,
     isOnline: item.isOnline,
     deadline: item.deadline,
     shortDescription: description.slice(0, 280),

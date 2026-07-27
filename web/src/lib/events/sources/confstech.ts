@@ -55,7 +55,9 @@ export function confsTechConfToRawItem(
   const startMs = Date.parse(startDate);
   if (!Number.isFinite(startMs) || startMs < now) return null;
   const deadlineMs = conf.cfpEndDate ? Date.parse(conf.cfpEndDate) : NaN;
-  const location = [conf.city, conf.country].filter(Boolean).join(", ");
+  const city = conf.city?.trim() || undefined;
+  const country = conf.country?.trim() || undefined;
+  const location = [city, country].filter(Boolean).join(", ");
   return {
     id: `confstech:${routeSafeId(`${name}-${startDate}`)}`,
     source: "confstech",
@@ -64,6 +66,7 @@ export function confsTechConfToRawItem(
     startDate: new Date(startMs).toISOString(),
     endDate: conf.endDate,
     location: conf.online && !location ? "Online" : location,
+    place: city || country ? { city, country } : undefined,
     isOnline: Boolean(conf.online),
     deadline:
       Number.isFinite(deadlineMs) && deadlineMs > now

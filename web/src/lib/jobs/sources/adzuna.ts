@@ -1,5 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { extractPlaceFromText } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Adzuna aggregates postings across 19 countries — the strongest industry-side
@@ -36,6 +37,19 @@ const COUNTRY_SLUGS: Array<[RegExp, string]> = [
   [/\b(india|bangalore|bengaluru|delhi|mumbai)\b/i, "in"],
 ];
 
+const COUNTRY_NAMES_BY_SLUG: Record<string, string> = {
+  au: "Australia",
+  ca: "Canada",
+  ch: "Switzerland",
+  de: "Germany",
+  fr: "France",
+  gb: "United Kingdom",
+  in: "India",
+  nl: "Netherlands",
+  sg: "Singapore",
+  us: "United States",
+};
+
 export function adzunaCountries(locations: string[]): string[] {
   const matched = new Set<string>();
   for (const location of locations) {
@@ -51,12 +65,22 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
   const title = job.title?.trim();
   const url = job.redirect_url?.trim();
   if (!title || !url || job.id === undefined) return null;
+  const location = job.location?.display_name?.trim() || country.toUpperCase();
+  const extractedPlace = extractPlaceFromText(location);
+  const countryName = COUNTRY_NAMES_BY_SLUG[country.toLowerCase()];
   return {
     id: `adzuna:${routeSafeId(String(job.id))}`,
     source: "adzuna",
     title: stripHtml(title),
     company: job.company?.display_name?.trim() || "Unknown company",
-    location: job.location?.display_name?.trim() || country.toUpperCase(),
+    location,
+    place:
+      extractedPlace || countryName
+        ? {
+            ...extractedPlace,
+            country: extractedPlace?.country ?? countryName,
+          }
+        : undefined,
     isRemote: /\bremote\b/i.test(`${job.title} ${job.description ?? ""}`),
     description: truncateText(stripHtml(job.description)),
     url,

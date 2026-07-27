@@ -3,6 +3,7 @@ import type {
   Event,
   EventType,
   IndustryAcademiaPreference,
+  OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
 } from "@/types";
@@ -26,6 +27,7 @@ export interface RawEventItem {
   startDate: string;
   endDate?: string;
   location: string;
+  place?: OpportunityPlace;
   isOnline: boolean;
   /** Submission (CFP) deadline, ISO. */
   deadline?: string;

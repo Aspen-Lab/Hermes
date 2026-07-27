@@ -66,6 +66,7 @@ export function scoredJobToJob(item: ScoredJobItem): Job {
     roleTitle: item.title,
     companyOrLab: item.company,
     location: item.location || (item.isRemote ? "Remote" : "See posting"),
+    place: item.place,
     isRemote: item.isRemote,
     keyRequirements: keyRequirements(item),
     matchReason: item.matchReason,
