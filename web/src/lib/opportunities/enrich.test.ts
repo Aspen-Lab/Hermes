@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RawEventItem } from "@/lib/events/types";
+import type { RawJobItem } from "@/lib/jobs/types";
 import {
   enrichEventCandidates,
+  enrichJobCandidates,
   MAX_ENRICHMENT_CANDIDATES,
 } from "./enrich";
 import { scoreEventPoolCandidates } from "@/lib/events/pipeline";
+import { scoreJobPoolCandidates } from "@/lib/jobs/pipeline";
 
 function event(index: number): RawEventItem {
   return {
@@ -17,6 +20,21 @@ function event(index: number): RawEventItem {
     isOnline: false,
     description: "Solid-state battery materials conference",
     url: `https://events.example.com/${index}`,
+    tags: ["solid-state battery"],
+  };
+}
+
+function job(index: number, isRemote = false): RawJobItem {
+  return {
+    id: `jobweb:${index}`,
+    source: "jobweb",
+    title: `Solid-State Battery Research Scientist ${index}`,
+    company: "Example Lab",
+    location: isRemote ? "Remote" : "",
+    isRemote,
+    description: "Research solid-state battery materials and electrochemistry",
+    url: `https://jobs.example.com/${index}`,
+    postedAt: "2026-07-20",
     tags: ["solid-state battery"],
   };
 }
@@ -140,6 +158,120 @@ describe("event detail enrichment", () => {
       now,
     );
     const enriched = await scoreEventPoolCandidates(
+      [...relevant, irrelevant],
+      profile,
+      now,
+      { enrichDetails: true },
+    );
+
+    expect(baseline).toHaveLength(relevant.length);
+    expect(enriched).toHaveLength(relevant.length);
+    expect(fetchMock).toHaveBeenCalledTimes(MAX_ENRICHMENT_CANDIDATES);
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith("/999")),
+    ).toBe(false);
+
+    const firstBefore = baseline.find((item) => item.id === relevant[0].id)!;
+    const firstAfter = enriched.find((item) => item.id === relevant[0].id)!;
+    expect(firstAfter.place?.city).toBe("Chicago");
+    expect(firstAfter.score).toBeGreaterThan(firstBefore.score);
+    expect(
+      enriched.find(
+        (item) => item.id === relevant[MAX_ENRICHMENT_CANDIDATES].id,
+      )?.place,
+    ).toBeUndefined();
+  });
+});
+
+describe("job detail enrichment", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps fetch failures unchanged and never derives remote from page format", async () => {
+    const failedOriginal = job(1, true);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("Forbidden", { status: 403 }))
+      .mockResolvedValueOnce(
+        new Response(
+          `<script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "title": "Battery Scientist",
+              "jobLocation": {
+                "address": {
+                  "addressLocality": "Chicago",
+                  "addressRegion": "IL",
+                  "addressCountry": "United States"
+                }
+              }
+            }
+          </script>`,
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [failed, enriched] = await enrichJobCandidates([
+      failedOriginal,
+      job(2, false),
+    ]);
+
+    expect(failed).toBe(failedOriginal);
+    expect(enriched).toMatchObject({
+      location: "Chicago, IL, United States",
+      place: {
+        city: "Chicago",
+        region: "IL",
+        country: "United States",
+      },
+      isRemote: false,
+    });
+  });
+
+  it("fetches only job gate survivors, caps at 40, and re-scores location", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        `<script type="application/ld+json">
+          {
+            "@type": "JobPosting",
+            "jobLocation": {
+              "address": {
+                "addressLocality": "Chicago",
+                "addressRegion": "IL",
+                "addressCountry": "United States"
+              }
+            }
+          }
+        </script>`,
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const relevant = Array.from(
+      { length: MAX_ENRICHMENT_CANDIDATES + 2 },
+      (_, index) => job(index),
+    );
+    const irrelevant = {
+      ...job(999),
+      title: "General Marketing Manager",
+      description: "Brand strategy and advertising",
+      tags: ["marketing"],
+    };
+    const profile = {
+      topics: ["solid-state battery"],
+      locations: ["Chicago"],
+    };
+    const now = Date.UTC(2026, 6, 27);
+    const baseline = await scoreJobPoolCandidates(
+      [...relevant, irrelevant],
+      profile,
+      now,
+    );
+    const enriched = await scoreJobPoolCandidates(
       [...relevant, irrelevant],
       profile,
       now,

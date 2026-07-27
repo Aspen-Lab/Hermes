@@ -83,8 +83,8 @@ describe("extractJsonLdOpportunities", () => {
           { "@type": "Organization", "name": "Example Lab" },
           {
             "@type": "https://schema.org/JobPosting",
-            "name": "Battery Researcher",
-            "location": {
+            "title": "Battery Researcher",
+            "jobLocation": {
               "address": {
                 "addressLocality": "Berlin",
                 "addressCountry": "Germany"

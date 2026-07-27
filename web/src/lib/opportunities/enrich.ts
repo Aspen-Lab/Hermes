@@ -1,5 +1,6 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
+import type { RawJobItem } from "@/lib/jobs/types";
 import { fetchPagesConcurrently } from "./page-fetch";
 import { extractOpportunityPageDetails } from "./structured-extract";
 
@@ -64,6 +65,49 @@ export async function enrichEventCandidates(
         place,
         location,
         isOnline: item.isOnline || details.isOnline,
+      };
+    } catch {
+      return item;
+    }
+  });
+
+  return [...enriched, ...items.slice(cappedLength)];
+}
+
+export async function enrichJobCandidates(
+  items: RawJobItem[],
+  limit = MAX_ENRICHMENT_CANDIDATES,
+): Promise<RawJobItem[]> {
+  if (items.length === 0) return [];
+  const cappedLength = Math.min(
+    items.length,
+    Number.isFinite(limit) && limit > 0
+      ? Math.floor(limit)
+      : MAX_ENRICHMENT_CANDIDATES,
+  );
+  const candidates = items.slice(0, cappedLength);
+
+  let pages: Array<string | null>;
+  try {
+    pages = await fetchPagesConcurrently(
+      candidates.map((item) => item.url),
+    );
+  } catch {
+    return items;
+  }
+
+  const enriched = candidates.map((item, index) => {
+    const html = pages[index];
+    if (!html) return item;
+    try {
+      const details = extractOpportunityPageDetails(html, "job");
+      const place = mergeOpportunityPlace(item.place, details.place);
+      return {
+        ...item,
+        place,
+        location: formatOpportunityPlace(place) || item.location,
+        // A web page being "online" does not prove that a job is remote.
+        isRemote: item.isRemote,
       };
     } catch {
       return item;

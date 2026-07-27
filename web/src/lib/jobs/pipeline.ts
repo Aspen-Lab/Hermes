@@ -4,10 +4,12 @@
 // keyed sources and LLM query generation enable themselves via env/BYOK.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import { enrichJobCandidates } from "@/lib/opportunities/enrich";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
 import { jobSources } from "./sources";
 import { dedupJobs } from "./dedup";
 import { MIN_SCORE, scoreJobs } from "./scoring";
+import type { JobScoringProfile } from "./scoring";
 import { scoredJobToJob } from "./mapper";
 import type {
   JobsFeedRequest,
@@ -15,17 +17,56 @@ import type {
   JobsQuery,
   JobSourceId,
   RawJobItem,
+  ScoredJobItem,
 } from "./types";
 
 const DEFAULT_TOP_N = 5;
 const DEFAULT_PER_SOURCE_LIMIT = 60;
 
-export async function runJobsPipeline(
-  req: JobsFeedRequest,
-): Promise<JobsFeedResponse> {
-  const startedAt = Date.now();
-  const topN = req.topN ?? DEFAULT_TOP_N;
+export interface JobsPipelineOptions {
+  /** Enabled only by the once-daily cache-miss build in Phase 2. */
+  enrichDetails?: boolean;
+}
 
+export interface BuiltJobPool {
+  items: ScoredJobItem[];
+  fetched: Partial<Record<JobSourceId, number>>;
+  errors: Partial<Record<JobSourceId, string>>;
+  beforeDedup: number;
+  afterDedup: number;
+  startedAt: number;
+}
+
+export async function scoreJobPoolCandidates(
+  deduped: RawJobItem[],
+  scoringProfile: JobScoringProfile,
+  now: number,
+  options: JobsPipelineOptions = {},
+): Promise<ScoredJobItem[]> {
+  let scored = scoreJobs(deduped, scoringProfile, now, {
+    applyFloor: false,
+  });
+  if (!options.enrichDetails || scored.length === 0) return scored;
+
+  // The first score pass supplies relevance-gate survivors and an initial
+  // order. Detail fetches are capped at 40, then the complete deduped corpus
+  // is scored again so enriched location affects ranking.
+  const enriched = await enrichJobCandidates(scored);
+  const enrichedById = new Map(enriched.map((item) => [item.id, item]));
+  scored = scoreJobs(
+    deduped.map((item) => enrichedById.get(item.id) ?? item),
+    scoringProfile,
+    now,
+    { applyFloor: false },
+  );
+  return scored;
+}
+
+async function buildJobPool(
+  req: JobsFeedRequest,
+  options: JobsPipelineOptions,
+): Promise<BuiltJobPool> {
+  const startedAt = Date.now();
   const queryProfile = {
     topics: req.topics,
     softTopics: req.softTopics,
@@ -75,22 +116,46 @@ export async function runJobsPipeline(
 
   const beforeDedup = allItems.length;
   const deduped = dedupJobs(allItems);
-
-  const scored = scoreJobs(
+  const scoringProfile = {
+    topics: req.topics,
+    softTopics: req.softTopics,
+    methods: req.methods,
+    seedTexts: req.seedTexts,
+    preferenceLedger: req.preferenceLedger,
+    careerStage: req.careerStage,
+    industryPreference: req.industryVsAcademia,
+    locations: req.locationPreferences,
+  };
+  const items = await scoreJobPoolCandidates(
     deduped,
-    {
-      topics: req.topics,
-      softTopics: req.softTopics,
-      methods: req.methods,
-      seedTexts: req.seedTexts,
-      preferenceLedger: req.preferenceLedger,
-      careerStage: req.careerStage,
-      industryPreference: req.industryVsAcademia,
-      locations: req.locationPreferences,
-    },
+    scoringProfile,
     startedAt,
-    { applyFloor: false },
+    options,
   );
+
+  return {
+    items,
+    fetched,
+    errors,
+    beforeDedup,
+    afterDedup: deduped.length,
+    startedAt,
+  };
+}
+
+/** The only Phase-1 jobs entry point that performs detail-page fetching. */
+export async function buildDailyJobPool(
+  req: JobsFeedRequest,
+): Promise<BuiltJobPool> {
+  return buildJobPool(req, { enrichDetails: true });
+}
+
+export async function runJobsPipeline(
+  req: JobsFeedRequest,
+): Promise<JobsFeedResponse> {
+  const topN = req.topN ?? DEFAULT_TOP_N;
+  const pool = await buildJobPool(req, { enrichDetails: false });
+  const scored = pool.items;
   const beforeScoreFloor = scored.length;
   const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
   const afterScoreFloor = aboveScoreFloor.length;
@@ -105,14 +170,14 @@ export async function runJobsPipeline(
   return {
     items: returned.map(scoredJobToJob),
     meta: {
-      fetched,
-      errors,
-      beforeDedup,
-      afterDedup: deduped.length,
+      fetched: pool.fetched,
+      errors: pool.errors,
+      beforeDedup: pool.beforeDedup,
+      afterDedup: pool.afterDedup,
       beforeScoreFloor,
       afterScoreFloor,
       returned: returned.length,
-      latencyMs: Date.now() - startedAt,
+      latencyMs: Date.now() - pool.startedAt,
       generatedAt: new Date().toISOString(),
     },
   };

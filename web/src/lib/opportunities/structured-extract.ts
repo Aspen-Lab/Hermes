@@ -866,10 +866,10 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
 
   return {
     kind,
-    name: nonEmptyString(node.name),
+    name: nonEmptyString(node.name) ?? nonEmptyString(node.title),
     startDate: nonEmptyString(node.startDate),
     endDate: nonEmptyString(node.endDate),
-    place: extractPlace(node.location),
+    place: extractPlace(node.location ?? node.jobLocation),
     eventAttendanceMode: nonEmptyString(node.eventAttendanceMode),
   };
 }
