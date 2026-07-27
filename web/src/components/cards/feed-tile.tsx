@@ -414,7 +414,7 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       className={tileShellClass(isRead)}
       {...opportunityRelevanceCardProps(event.relevanceScore)}
     >
-      {event.relevanceScore === undefined ? (
+      {!Number.isFinite(event.relevanceScore) ? (
         <KindStripe kind="event" />
       ) : (
         <OpportunityRelevanceBar score={event.relevanceScore} />
@@ -473,7 +473,7 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       className={tileShellClass(isRead)}
       {...opportunityRelevanceCardProps(job.relevanceScore)}
     >
-      {job.relevanceScore === undefined ? (
+      {!Number.isFinite(job.relevanceScore) ? (
         <KindStripe kind="job" />
       ) : (
         <OpportunityRelevanceBar score={job.relevanceScore} />
