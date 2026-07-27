@@ -109,6 +109,9 @@ function DiscoveryPage() {
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
   const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
+  const recordOpportunityFacetPreference = useProfileStore(
+    (s) => s.recordOpportunityFacetPreference,
+  );
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
@@ -363,6 +366,36 @@ function DiscoveryPage() {
       };
     });
   }, [opportunityPage.total, opportunityPageKey]);
+
+  const handleOpportunityFacetChange = useCallback(
+    (next: OpportunityFacetSelection) => {
+      const origins: Array<"event" | "job"> =
+        activeType === "events"
+          ? ["event"]
+          : activeType === "jobs"
+            ? ["job"]
+            : activeType === "all"
+              ? ["event", "job"]
+              : [];
+      const groups = ["location", "month", "format"] as const;
+
+      for (const group of groups) {
+        const previous = new Set(
+          (opportunityFacets[group] ?? []).map((value) =>
+            value.trim().toLocaleLowerCase(),
+          ),
+        );
+        for (const value of next[group] ?? []) {
+          if (previous.has(value.trim().toLocaleLowerCase())) continue;
+          for (const origin of origins) {
+            recordOpportunityFacetPreference(origin, group, value);
+          }
+        }
+      }
+      setOpportunityFacets(next);
+    },
+    [activeType, opportunityFacets, recordOpportunityFacetPreference],
+  );
 
   const briefingItems = useMemo<BriefingItem[]>(() => {
     const paperItems: BriefingItem[] =
@@ -772,7 +805,7 @@ function DiscoveryPage() {
           <OpportunityFacetPanel
             counts={opportunityFacetCounts}
             selection={opportunityFacets}
-            onChange={setOpportunityFacets}
+            onChange={handleOpportunityFacetChange}
             scopeLabel={opportunityFacetScope}
           />
         )}

@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
   cleanPreferenceLedger,
+  opportunityFacetPreferenceConcept,
   prepareLedger,
   preferenceKey,
   scorePreferenceMatch,
@@ -80,6 +82,61 @@ describe("applyPreferenceSignal", () => {
     // 120 days later = 2 half-lives → 1 * 0.25 = 0.25, then +1 = 1.25
     ledger = applyPreferenceSignal(ledger, [c], "positive", { at: T120 });
     expect(ledger[c.key].positive).toBeCloseTo(1.25, 2);
+  });
+});
+
+describe("applyOpportunityFacetPreferenceSignal", () => {
+  it("records a facet click as separate weak evidence under the event origin", () => {
+    const ledger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      " Chicago ",
+      { at: T0, origin: "event" },
+    );
+    const entry = ledger["event|facet:location:chicago"];
+
+    expect(entry).toMatchObject({
+      label: "Chicago",
+      source: "opportunity_facet",
+      origin: "event",
+      positive: 0,
+      negative: 0,
+      facetPositive: 1,
+      lastFacetAt: T0,
+    });
+  });
+
+  it("keeps event and job facet evidence in their existing origin namespaces", () => {
+    let ledger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "format",
+      "online",
+      { at: T0, origin: "event" },
+    );
+    ledger = applyOpportunityFacetPreferenceSignal(
+      ledger,
+      "format",
+      "online",
+      { at: T0, origin: "job" },
+    );
+
+    expect(ledger["event|facet:format:online"].facetPositive).toBe(1);
+    expect(ledger["job|facet:format:online"].facetPositive).toBe(1);
+  });
+
+  it("normalizes facet keys and ignores empty values", () => {
+    expect(
+      opportunityFacetPreferenceConcept("month", " 2026-08 "),
+    ).toMatchObject({
+      key: "facet:month:2026-08",
+      label: "2026-08",
+    });
+    expect(
+      applyOpportunityFacetPreferenceSignal(undefined, "location", "   ", {
+        at: T0,
+        origin: "job",
+      }),
+    ).toEqual({});
   });
 });
 

@@ -11,6 +11,7 @@ export type PreferenceConceptSource =
   | "paper_keyword"
   | "job_tag"
   | "event_topic"
+  | "opportunity_facet"
   | "legacy_disliked_topic";
 
 export interface PreferenceConcept {
@@ -28,6 +29,12 @@ export interface PreferenceLedgerEntry extends PreferenceConcept {
   negative: number;
   lastPositiveAt?: string;
   lastNegativeAt?: string;
+  /**
+   * Positive evidence inferred from a facet selection. Kept separate from
+   * explicit save/like evidence so scoring can cap and decay it independently.
+   */
+  facetPositive?: number;
+  lastFacetAt?: string;
   lastSeenAt: string;
   /**
    * The surface the feedback was recorded from. Ledger influence is

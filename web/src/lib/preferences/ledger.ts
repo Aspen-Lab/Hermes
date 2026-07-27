@@ -2,6 +2,7 @@ import type {
   Event,
   FeedItemKind,
   Job,
+  OpportunityFacetSelection,
   Paper,
   PreferenceConcept,
   PreferenceConceptSource,
@@ -31,6 +32,13 @@ interface ApplyPreferenceSignalOptions {
    */
   origin?: FeedItemKind;
 }
+
+interface ApplyOpportunityFacetSignalOptions {
+  at?: string;
+  origin: Exclude<FeedItemKind, "paper">;
+}
+
+export type OpportunityFacetGroup = keyof OpportunityFacetSelection;
 
 /**
  * Directional influence matrix: how strongly an entry recorded on `origin`
@@ -119,6 +127,20 @@ export function preferenceKey(
     return `${source}:${id.trim().toLowerCase()}`;
   }
   return `text:${normalizePreferenceLabel(label)}`;
+}
+
+export function opportunityFacetPreferenceConcept(
+  group: OpportunityFacetGroup,
+  value: string,
+): PreferenceConcept | undefined {
+  const label = value.trim().replace(/\s+/g, " ");
+  const normalized = normalizePreferenceLabel(label);
+  if (!normalized) return undefined;
+  return {
+    key: `facet:${group}:${normalized}`,
+    label,
+    source: "opportunity_facet",
+  };
 }
 
 export function normalizePreferenceConcepts(
@@ -271,6 +293,15 @@ export function cleanPreferenceLedger(
         typeof entry.lastNegativeAt === "string"
           ? entry.lastNegativeAt
           : undefined,
+      facetPositive:
+        typeof entry.facetPositive === "number" &&
+        Number.isFinite(entry.facetPositive)
+          ? Math.max(0, entry.facetPositive)
+          : undefined,
+      lastFacetAt:
+        typeof entry.lastFacetAt === "string"
+          ? entry.lastFacetAt
+          : undefined,
       lastSeenAt:
         typeof entry.lastSeenAt === "string"
           ? entry.lastSeenAt
@@ -342,6 +373,47 @@ export function applyPreferenceSignal(
           };
   }
 
+  return next;
+}
+
+/**
+ * Store a facet click in the existing preference ledger without promoting it
+ * to explicit save/like evidence. Event and job namespaces stay independent.
+ */
+export function applyOpportunityFacetPreferenceSignal(
+  ledger: PreferenceLedger | undefined,
+  group: OpportunityFacetGroup,
+  value: string,
+  options: ApplyOpportunityFacetSignalOptions,
+): PreferenceLedger {
+  const concept = opportunityFacetPreferenceConcept(group, value);
+  if (!concept) return cleanPreferenceLedger(ledger);
+
+  const nowIso = options.at ?? new Date().toISOString();
+  const nowMs = Date.parse(nowIso);
+  const safeNowMs = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const clean = cleanPreferenceLedger(ledger);
+  const next: PreferenceLedger = { ...clean };
+  const storageKey = namespacedKey(concept.key, options.origin);
+  const current = next[storageKey];
+  const base: PreferenceLedgerEntry = current
+    ? decayedEntry(current, nowIso, safeNowMs)
+    : {
+        ...concept,
+        positive: 0,
+        negative: 0,
+        lastSeenAt: nowIso,
+      };
+
+  next[storageKey] = {
+    ...base,
+    ...concept,
+    key: storageKey,
+    origin: options.origin,
+    facetPositive: (base.facetPositive ?? 0) + 1,
+    lastFacetAt: nowIso,
+    lastSeenAt: nowIso,
+  };
   return next;
 }
 

@@ -22,10 +22,12 @@ import type {
 } from "@/types";
 import { defaultProfile } from "@/types";
 import {
+  applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
   conceptsFromEvent,
   conceptsFromJob,
   conceptsFromPaper,
+  type OpportunityFacetGroup,
 } from "@/lib/preferences/ledger";
 
 interface ProfileState {
@@ -57,6 +59,13 @@ interface ProfileState {
   recordJobPreference: (
     job: Job,
     signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Facet clicks are weak, positive-only evidence under event/job origins. */
+  recordOpportunityFacetPreference: (
+    origin: "event" | "job",
+    group: OpportunityFacetGroup,
+    value: string,
     at?: string,
   ) => void;
   /** Wipe everything Peer has learned from likes/saves/dismissals. */
@@ -193,6 +202,19 @@ export const useProfileStore = create<ProfileState>()(
               conceptsFromJob(job),
               signal,
               { at, origin: "job" },
+            ),
+          },
+        })),
+
+      recordOpportunityFacetPreference: (origin, group, value, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyOpportunityFacetPreferenceSignal(
+              s.profile.preferenceLedger,
+              group,
+              value,
+              { at, origin },
             ),
           },
         })),
