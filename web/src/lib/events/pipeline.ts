@@ -18,6 +18,8 @@ import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-r
 import {
   countOpportunityFacets,
   DEFAULT_OPPORTUNITY_TOP_N,
+  filterOpportunitiesByFacets,
+  hasActiveOpportunityFacets,
   MAX_OPPORTUNITY_POOL_ITEMS,
 } from "@/lib/opportunities/facets";
 import {
@@ -236,8 +238,15 @@ export async function runEventsPipeline(
   const topN = req.topN ?? DEFAULT_OPPORTUNITY_TOP_N;
   const pool = await buildDailyEventPool(req, options);
   const scored = pool.items;
-  const beforeScoreFloor = scored.length;
-  const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
+  const facetFiltered = filterOpportunitiesByFacets(
+    "events",
+    scored,
+    req.facets,
+  );
+  const beforeScoreFloor = facetFiltered.length;
+  const aboveScoreFloor = hasActiveOpportunityFacets(req.facets)
+    ? facetFiltered
+    : facetFiltered.filter((item) => item.score >= MIN_SCORE);
   const afterScoreFloor = aboveScoreFloor.length;
 
   const excludeIds =

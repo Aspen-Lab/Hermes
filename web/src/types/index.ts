@@ -82,6 +82,13 @@ export interface OpportunityFacetCounts {
   format: Record<OpportunityFormat, number>;
 }
 
+export interface OpportunityFacetSelection {
+  /** OR within a group; different groups combine with AND. */
+  location?: string[];
+  month?: string[];
+  format?: OpportunityFormat[];
+}
+
 export interface Event {
   id: string;
   name: string;

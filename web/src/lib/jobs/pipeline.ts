@@ -17,6 +17,8 @@ import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-r
 import {
   countOpportunityFacets,
   DEFAULT_OPPORTUNITY_TOP_N,
+  filterOpportunitiesByFacets,
+  hasActiveOpportunityFacets,
   MAX_OPPORTUNITY_POOL_ITEMS,
 } from "@/lib/opportunities/facets";
 import { generateSearchQueries, templateJobQueries } from "@/lib/opportunities/query-gen";
@@ -233,8 +235,15 @@ export async function runJobsPipeline(
   const topN = req.topN ?? DEFAULT_OPPORTUNITY_TOP_N;
   const pool = await buildDailyJobPool(req, options);
   const scored = pool.items;
-  const beforeScoreFloor = scored.length;
-  const aboveScoreFloor = scored.filter((item) => item.score >= MIN_SCORE);
+  const facetFiltered = filterOpportunitiesByFacets(
+    "jobs",
+    scored,
+    req.facets,
+  );
+  const beforeScoreFloor = facetFiltered.length;
+  const aboveScoreFloor = hasActiveOpportunityFacets(req.facets)
+    ? facetFiltered
+    : facetFiltered.filter((item) => item.score >= MIN_SCORE);
   const afterScoreFloor = aboveScoreFloor.length;
 
   const excludeIds =

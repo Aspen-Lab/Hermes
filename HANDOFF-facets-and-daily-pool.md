@@ -60,7 +60,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P3.1 | Return full scored pool + facet counts | DONE | `npx vitest run src/lib/opportunities/facets.test.ts src/lib/opportunities/daily-pool-cache.test.ts src/lib/opportunities/pool-cache.test.ts src/lib/opportunities/pool-cache-disk.test.ts src/lib/opportunities/pool-cache-supabase.test.ts` — 5 files, 15 tests passed; full pool capped at 200 and whole-pool location/month/format counts verified; `npx tsc --noEmit` and targeted ESLint — clean |
 | P3.2 | topN 5→10; `diversifyByType` cap 3→5 | DONE | `npx vitest run src/lib/opportunities/facets.test.ts src/lib/events/scoring.test.ts` — 2 files, 52 tests passed; shared default topN=10 and default event-type cap=5 verified; `npx tsc --noEmit` and targeted ESLint — clean |
-| P3.3 | Bypass `MIN_SCORE` when any facet filter is active | IN_PROGRESS | |
+| P3.3 | Bypass `MIN_SCORE` when any facet filter is active | DONE | `npx vitest run src/lib/opportunities/facets.test.ts src/lib/opportunities/daily-pool-cache.test.ts` — 2 files, 9 tests passed; both event and job fixtures below `MIN_SCORE` return only with an active facet, while full pools/counts stay unchanged; `npx tsc --noEmit` and targeted ESLint — clean |
 
 ### Phase 4 — UI
 

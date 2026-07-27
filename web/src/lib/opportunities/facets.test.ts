@@ -1,16 +1,27 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { runEventsPipeline } from "@/lib/events/pipeline";
 import { eventSources } from "@/lib/events/sources";
+import { MIN_SCORE } from "@/lib/events/scoring";
 import type {
   EventSourceAdapter,
   RawEventItem,
+  ScoredEventItem,
 } from "@/lib/events/types";
-import type { CachedPool, PoolCache } from "./pool-cache";
+import { runJobsPipeline } from "@/lib/jobs/pipeline";
+import { MIN_SCORE as JOB_MIN_SCORE } from "@/lib/jobs/scoring";
+import type { ScoredJobItem } from "@/lib/jobs/types";
+import {
+  derivePoolCacheKey,
+  type CachedPool,
+  type PoolCache,
+} from "./pool-cache";
 import {
   countOpportunityFacets,
   DEFAULT_OPPORTUNITY_TOP_N,
+  filterOpportunitiesByFacets,
   MAX_OPPORTUNITY_POOL_ITEMS,
   opportunityFormat,
+  parseOpportunityFacetSelection,
 } from "./facets";
 
 class MemoryPoolCache implements PoolCache {
@@ -89,6 +100,40 @@ describe("opportunity facet counting", () => {
       }),
     ).toBe("hybrid");
   });
+
+  it("sanitizes selections and lets hybrid events match online and city", () => {
+    expect(
+      parseOpportunityFacetSelection({
+        location: [" Chicago ", "chicago", 42],
+        month: ["2026-09"],
+        format: ["online", "invalid"],
+      }),
+    ).toEqual({
+      location: ["Chicago"],
+      month: ["2026-09"],
+      format: ["online"],
+    });
+
+    const hybrid = {
+      location: "Chicago, IL + Virtual",
+      place: { city: "Chicago", region: "IL" },
+      date: "2026-09-10",
+      isOnline: true,
+    };
+    expect(
+      filterOpportunitiesByFacets("events", [hybrid], {
+        location: ["Chicago"],
+        month: ["2026-09"],
+        format: ["online"],
+      }),
+    ).toEqual([hybrid]);
+    expect(
+      filterOpportunitiesByFacets("events", [hybrid], {
+        location: ["Berlin"],
+        format: ["online"],
+      }),
+    ).toEqual([]);
+  });
 });
 
 describe("opportunity feed facet contract", () => {
@@ -143,5 +188,111 @@ describe("opportunity feed facet contract", () => {
       format: { "in-person": 100, online: 0, hybrid: 100 },
     });
     expect(response.meta.beforeScoreFloor).toBe(MAX_OPPORTUNITY_POOL_ITEMS);
+  });
+
+  it("bypasses MIN_SCORE for an explicit facet without filtering the pool", async () => {
+    const cache = new MemoryPoolCache();
+    const testNow = new Date(2026, 6, 27, 12, 0, 0);
+    const lowScoreItem: ScoredEventItem = {
+      id: "eventweb:below-floor-chicago",
+      source: "eventweb",
+      name: "Battery Community Meetup",
+      type: "meetup",
+      startDate: "2026-09-20",
+      location: "Chicago, IL",
+      place: { city: "Chicago", region: "IL", country: "United States" },
+      isOnline: false,
+      description: "A small battery community meetup.",
+      url: "https://10times.com/below-floor-chicago",
+      tags: ["battery"],
+      score: MIN_SCORE - 0.1,
+      matchedKeywords: ["battery"],
+      relevanceReason: "Matches the selected Chicago facet",
+    };
+    const key = derivePoolCacheKey({
+      surface: "events",
+      requiredTopics: ["battery"],
+      now: testNow,
+    });
+    await cache.set(key, {
+      surface: "events",
+      items: [lowScoreItem],
+      facetCounts: countOpportunityFacets("events", [lowScoreItem]),
+      generatedAt: testNow.toISOString(),
+      localDate: "2026-07-27",
+    });
+
+    const unfiltered = await runEventsPipeline(
+      { topics: ["battery"], aiTier: 0 },
+      { cache, now: testNow },
+    );
+    const filtered = await runEventsPipeline(
+      {
+        topics: ["battery"],
+        facets: { location: ["Chicago"] },
+        aiTier: 0,
+      },
+      { cache, now: testNow },
+    );
+
+    expect(unfiltered.items).toHaveLength(0);
+    expect(filtered.items).toHaveLength(1);
+    expect(filtered.items[0].relevanceScore).toBeLessThan(MIN_SCORE);
+    expect(filtered.pool).toHaveLength(1);
+    expect(filtered.facetCounts.location).toEqual({ Chicago: 1 });
+    expect(filtered.meta.beforeScoreFloor).toBe(1);
+    expect(filtered.meta.afterScoreFloor).toBe(1);
+  });
+
+  it("applies the same explicit-facet floor bypass to jobs", async () => {
+    const cache = new MemoryPoolCache();
+    const testNow = new Date(2026, 6, 27, 12, 0, 0);
+    const lowScoreItem: ScoredJobItem = {
+      id: "jobweb:below-floor-berlin",
+      source: "jobweb",
+      title: "Battery Lab Assistant",
+      company: "Example Lab",
+      location: "Berlin, Germany",
+      place: { city: "Berlin", country: "Germany" },
+      isRemote: false,
+      description: "Assist a battery research team.",
+      url: "https://10times.com/below-floor-berlin-job",
+      postedAt: "2026-07-20",
+      tags: ["battery"],
+      score: JOB_MIN_SCORE - 0.1,
+      matchedKeywords: ["battery"],
+      matchReason: "Matches the selected Berlin facet",
+    };
+    const key = derivePoolCacheKey({
+      surface: "jobs",
+      requiredTopics: ["battery"],
+      now: testNow,
+    });
+    await cache.set(key, {
+      surface: "jobs",
+      items: [lowScoreItem],
+      facetCounts: countOpportunityFacets("jobs", [lowScoreItem]),
+      generatedAt: testNow.toISOString(),
+      localDate: "2026-07-27",
+    });
+
+    const unfiltered = await runJobsPipeline(
+      { topics: ["battery"], aiTier: 0 },
+      { cache, now: testNow },
+    );
+    const filtered = await runJobsPipeline(
+      {
+        topics: ["battery"],
+        facets: { location: ["Berlin"] },
+        aiTier: 0,
+      },
+      { cache, now: testNow },
+    );
+
+    expect(unfiltered.items).toHaveLength(0);
+    expect(filtered.items).toHaveLength(1);
+    expect(filtered.items[0].relevanceScore).toBeLessThan(JOB_MIN_SCORE);
+    expect(filtered.pool).toHaveLength(1);
+    expect(filtered.facetCounts.location).toEqual({ Berlin: 1 });
   });
 });

@@ -4,6 +4,7 @@ import type {
   EventType,
   IndustryAcademiaPreference,
   OpportunityFacetCounts,
+  OpportunityFacetSelection,
   OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
@@ -70,6 +71,7 @@ export interface EventsFeedRequest {
   topN?: number;
   perSourceLimit?: number;
   excludeIds?: string[];
+  facets?: OpportunityFacetSelection;
   aiTier?: 0 | 1 | 2;
   searchConnectors?: SearchConnectors;
   llmOverride?: ProviderOverrideConfig;

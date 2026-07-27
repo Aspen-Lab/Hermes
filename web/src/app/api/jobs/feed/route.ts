@@ -7,6 +7,7 @@ import type { CareerStage, IndustryAcademiaPreference } from "@/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SearchConnectors } from "@/lib/feed/types";
 import type { JobApiCredentials } from "@/lib/jobs/types";
+import { parseOpportunityFacetSelection } from "@/lib/opportunities/facets";
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
@@ -139,6 +140,7 @@ export async function POST(req: NextRequest) {
     currentProject: cleanOptionalString(body.currentProject),
     topN: parseTopN(body.topN),
     excludeIds: parseExcludeIds(body.excludeIds),
+    facets: parseOpportunityFacetSelection(body.facets),
     aiTier: parseAiTier(body.aiTier),
     searchConnectors: parseSearchConnectors(body.searchConnectors),
     apiKeys: parseApiKeys(body.apiKeys),

@@ -3,6 +3,7 @@ import type {
   IndustryAcademiaPreference,
   Job,
   OpportunityFacetCounts,
+  OpportunityFacetSelection,
   OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
@@ -85,6 +86,7 @@ export interface JobsFeedRequest {
   topN?: number;
   perSourceLimit?: number;
   excludeIds?: string[];
+  facets?: OpportunityFacetSelection;
   aiTier?: 0 | 1 | 2;
   searchConnectors?: SearchConnectors;
   apiKeys?: JobApiCredentials;
