@@ -35,12 +35,18 @@ import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/cn";
 import { OpportunityFacetPanel } from "@/components/opportunities/opportunity-facet-panel";
+import { OpportunityShowMore } from "@/components/opportunities/opportunity-show-more";
 import {
-  DEFAULT_OPPORTUNITY_TOP_N,
   filterOpportunitiesByFacets,
   hasActiveOpportunityFacets,
   mergeOpportunityFacetCounts,
+  OPPORTUNITY_MIN_SCORE,
 } from "@/lib/opportunities/facets";
+import {
+  nextOpportunityPageSize,
+  OPPORTUNITY_PAGE_SIZE,
+  paginateOpportunities,
+} from "@/lib/opportunities/pagination";
 
 interface SearchResult {
   id: string;
@@ -110,6 +116,10 @@ function DiscoveryPage() {
   const [activeType, setActiveType] = useState<FeedType>("all");
   const [opportunityFacets, setOpportunityFacets] =
     useState<OpportunityFacetSelection>({});
+  const [opportunityPagination, setOpportunityPagination] = useState({
+    key: "",
+    visibleCount: OPPORTUNITY_PAGE_SIZE,
+  });
   const [filters, setFilters] = useState<Filters>(() =>
     filtersFromUrlParams(searchParamsObj),
   );
@@ -216,28 +226,33 @@ function DiscoveryPage() {
 
   const isSearchMode = query.length >= 2;
   const hasOpportunityFacets = hasActiveOpportunityFacets(opportunityFacets);
-  const visibleEvents = useMemo(
-    () =>
-      hasOpportunityFacets
-        ? filterOpportunitiesByFacets(
-            "events",
-            eventPool,
-            opportunityFacets,
-          ).slice(0, DEFAULT_OPPORTUNITY_TOP_N)
-        : events,
-    [eventPool, events, hasOpportunityFacets, opportunityFacets],
-  );
-  const visibleJobs = useMemo(
-    () =>
-      hasOpportunityFacets
-        ? filterOpportunitiesByFacets(
-            "jobs",
-            jobPool,
-            opportunityFacets,
-          ).slice(0, DEFAULT_OPPORTUNITY_TOP_N)
-        : jobs,
-    [hasOpportunityFacets, jobPool, jobs, opportunityFacets],
-  );
+  const eligibleEvents = useMemo(() => {
+    const pool = eventPool.length > 0 ? eventPool : events;
+    const filtered = filterOpportunitiesByFacets(
+      "events",
+      pool,
+      opportunityFacets,
+    );
+    return hasOpportunityFacets
+      ? filtered
+      : filtered.filter(
+          (event) =>
+            (event.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
+        );
+  }, [eventPool, events, hasOpportunityFacets, opportunityFacets]);
+  const eligibleJobs = useMemo(() => {
+    const pool = jobPool.length > 0 ? jobPool : jobs;
+    const filtered = filterOpportunitiesByFacets(
+      "jobs",
+      pool,
+      opportunityFacets,
+    );
+    return hasOpportunityFacets
+      ? filtered
+      : filtered.filter(
+          (job) => (job.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
+        );
+  }, [hasOpportunityFacets, jobPool, jobs, opportunityFacets]);
   const opportunityFacetCounts = useMemo(() => {
     if (activeType === "events") return eventFacetCounts;
     if (activeType === "jobs") return jobFacetCounts;
@@ -260,20 +275,63 @@ function DiscoveryPage() {
     activeType !== "papers" &&
     opportunityPoolCount > 0;
 
+  const opportunityItems = useMemo<BriefingItem[]>(() => {
+    const eventItems: BriefingItem[] =
+      activeType === "all" || activeType === "events"
+        ? eligibleEvents.map((event) => ({ kind: "event", data: event }))
+        : [];
+    const jobItems: BriefingItem[] =
+      activeType === "all" || activeType === "jobs"
+        ? eligibleJobs.map((job) => ({ kind: "job", data: job }))
+        : [];
+    return [...eventItems, ...jobItems];
+  }, [activeType, eligibleEvents, eligibleJobs]);
+  const opportunityPageKey = useMemo(
+    () =>
+      JSON.stringify([
+        activeType,
+        opportunityFacets.location ?? [],
+        opportunityFacets.month ?? [],
+        opportunityFacets.format ?? [],
+        lastRefresh,
+      ]),
+    [activeType, lastRefresh, opportunityFacets],
+  );
+  const visibleOpportunityCount =
+    opportunityPagination.key === opportunityPageKey
+      ? opportunityPagination.visibleCount
+      : OPPORTUNITY_PAGE_SIZE;
+  const opportunityPage = useMemo(
+    () =>
+      paginateOpportunities(
+        opportunityItems,
+        visibleOpportunityCount,
+        scoreOf,
+      ),
+    [opportunityItems, visibleOpportunityCount],
+  );
+  const showMoreOpportunities = useCallback(() => {
+    setOpportunityPagination((current) => {
+      const currentVisibleCount =
+        current.key === opportunityPageKey
+          ? current.visibleCount
+          : OPPORTUNITY_PAGE_SIZE;
+      return {
+        key: opportunityPageKey,
+        visibleCount: nextOpportunityPageSize(
+          currentVisibleCount,
+          opportunityPage.total,
+        ),
+      };
+    });
+  }, [opportunityPage.total, opportunityPageKey]);
+
   const briefingItems = useMemo<BriefingItem[]>(() => {
     const paperItems: BriefingItem[] =
       activeType === "all" || activeType === "papers"
         ? papers.map((p) => ({ kind: "paper", data: p }))
         : [];
-    const eventItems: BriefingItem[] =
-      activeType === "all" || activeType === "events"
-        ? visibleEvents.map((e) => ({ kind: "event", data: e }))
-        : [];
-    const jobItems: BriefingItem[] =
-      activeType === "all" || activeType === "jobs"
-        ? visibleJobs.map((j) => ({ kind: "job", data: j }))
-        : [];
-    const all = [...paperItems, ...eventItems, ...jobItems];
+    const all = [...paperItems, ...opportunityPage.items];
 
     const filtered = query
       ? all.filter((item) => {
@@ -313,7 +371,7 @@ function DiscoveryPage() {
       : all;
 
     return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
-  }, [papers, visibleEvents, visibleJobs, query, activeType]);
+  }, [activeType, opportunityPage.items, papers, query]);
 
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
   const totalAll = papers.length + eventPool.length + jobPool.length;
@@ -803,12 +861,19 @@ function DiscoveryPage() {
                     />
                   </div>
                 ))}
-                <FeedMoreTile
-                  itemCount={briefingItems.length}
-                  topics={profile.researchTopics}
-                  onRefresh={loadFeed}
-                  isLoading={isLoading}
-                />
+                {opportunityPage.remaining > 0 ? (
+                  <OpportunityShowMore
+                    remaining={opportunityPage.remaining}
+                    onClick={showMoreOpportunities}
+                  />
+                ) : (
+                  <FeedMoreTile
+                    itemCount={briefingItems.length}
+                    topics={profile.researchTopics}
+                    onRefresh={loadFeed}
+                    isLoading={isLoading}
+                  />
+                )}
               </div>
             </>
           )}

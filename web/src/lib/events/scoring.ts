@@ -14,6 +14,7 @@ import {
   passesRequiredGate,
   toScoringItem,
 } from "@/lib/opportunities/shared";
+import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
 import type { RawItem } from "@/lib/sources/types";
 import type { EventType, PreferenceLedger } from "@/types";
 import type { EventSourceId, RawEventItem, ScoredEventItem } from "./types";
@@ -36,7 +37,7 @@ const WEIGHTS = {
   source: 0.1,
 };
 
-export const MIN_SCORE = 0.35;
+export const MIN_SCORE = OPPORTUNITY_MIN_SCORE;
 
 const SOURCE_WEIGHTS: Record<EventSourceId, number> = {
   ccfddl: 1.0,

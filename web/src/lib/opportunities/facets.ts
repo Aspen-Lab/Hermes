@@ -7,6 +7,7 @@ import type {
 
 export const MAX_OPPORTUNITY_POOL_ITEMS = 200;
 export const DEFAULT_OPPORTUNITY_TOP_N = 10;
+export const OPPORTUNITY_MIN_SCORE = 0.35;
 
 export function emptyOpportunityFacetCounts(): OpportunityFacetCounts {
   return {
