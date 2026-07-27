@@ -329,7 +329,12 @@ Every agent appends an entry here before ending its session. Never edit someone 
 - What the next agent should watch out for:
 ```
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-27
+- Tasks completed this session: P1.1–P5.3 (22 tasks; every ledger row).
+- Tasks left IN_PROGRESS or BLOCKED: None.
+- Test/typecheck status at stop time: full Vitest 267 passed / 1 key-gated live benchmark skipped; TypeScript clean; production build passed; all 70 changed TypeScript files pass ESLint. Full `eslint src` retains only the pre-existing `src/components/persona/quiz.tsx:46` baseline error.
+- Anything I changed that was NOT in the plan, and why: personalized event/job API responses changed from public caching to `private, no-store`, and the daily pool moved to preference-neutral cache v3, so facet learning cannot leak one user's ranking to another. During early P4 browser QA, opening `/` once triggered the real daily endpoints; all later UI QA used fixed local fixtures. The requested `dataviz` skill was unavailable for P4.3, so I used fixed token-based green tiers and verified light/dark rendering in-browser.
+- What the next agent should watch out for: v3 intentionally invalidates v2 daily pools, so the first request after deployment rebuilds once before later same-day requests become zero-network. Do not repeat the paid live benchmark again on 2026-07-27; use the persisted evidence in `HANDOFF-FACETS-COMPLETE.md`. The cached live snapshot still contains missing-city and article/store-shaped entries that merit a separate retrieval-quality review.
 
 ---
 
