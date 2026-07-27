@@ -68,7 +68,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P4.1 | Always-visible facet panel (counts + clickable, merged summary/control) | DONE | `npx vitest run src/components/opportunities/opportunity-facet-panel.test.ts src/store/feed-opportunity-pool.test.ts src/lib/opportunities/facets.test.ts` — 3 files, 16 tests passed; `npx tsc --noEmit` and targeted ESLint — clean; desktop + 390px browser QA — grouping, count chips, selection, clear, and “more” verified with no console errors |
 | P4.2 | Pagination: 10 at a time, "show 10 more" | DONE | `npx vitest run src/lib/opportunities/pagination.test.ts src/lib/events/scoring.test.ts src/lib/jobs/scoring.test.ts src/lib/opportunities/facets.test.ts` — 4 files, 80 tests passed; `npx tsc --noEmit` and targeted ESLint — clean; browser QA verified 10 → 20 → 25 sorted items, final control removal, and zero console errors |
-| P4.3 | Green 3-tier relevance colour on the whole card | IN_PROGRESS | |
+| P4.3 | Green 3-tier relevance colour on the whole card | DONE | `npx vitest run src/lib/opportunities/relevance-tier.test.ts src/lib/events/scoring.test.ts src/lib/jobs/scoring.test.ts` — 3 files, 75 tests passed; `npx tsc --noEmit` and targeted ESLint — clean; light + explicit-dark browser QA verified fixed low/medium/high tints and accent bars with unchanged text tokens and zero console errors |
 | P4.4 | Wire the tab search box to filter events/jobs | TODO | |
 
 ### Phase 5 — Facet preference learning

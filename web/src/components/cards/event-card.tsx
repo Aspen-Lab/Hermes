@@ -6,6 +6,11 @@ import { useFeedStore } from "@/store/feed";
 import { Tag, Relevance, ActionBar } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
+import {
+  OpportunityRelevanceBar,
+  opportunityRelevanceCardProps,
+} from "@/components/opportunities/opportunity-relevance-card";
 
 export function EventCard({ event }: { event: Event }) {
   const { saveEvent, notInterestedEvent } = useFeedStore();
@@ -13,8 +18,10 @@ export function EventCard({ event }: { event: Event }) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className={cardShell()}
+      className={cn(cardShell(), "relative")}
+      {...opportunityRelevanceCardProps(event.relevanceScore)}
     >
+      <OpportunityRelevanceBar score={event.relevanceScore} />
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-title-lg font-semibold text-heading leading-snug tracking-[-0.01em]"

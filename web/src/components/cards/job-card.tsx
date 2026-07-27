@@ -5,6 +5,11 @@ import type { Job } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { Relevance, ActionBar } from "@/components/ui";
 import { cardShell } from "@/components/ui/card-shell";
+import { cn } from "@/lib/cn";
+import {
+  OpportunityRelevanceBar,
+  opportunityRelevanceCardProps,
+} from "@/components/opportunities/opportunity-relevance-card";
 
 export function JobCard({ job }: { job: Job }) {
   const { saveJob, notInterestedJob } = useFeedStore();
@@ -12,8 +17,10 @@ export function JobCard({ job }: { job: Job }) {
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className={cardShell()}
+      className={cn(cardShell(), "relative")}
+      {...opportunityRelevanceCardProps(job.relevanceScore)}
     >
+      <OpportunityRelevanceBar score={job.relevanceScore} />
       <div className="flex items-start justify-between gap-4">
         <h3
           className="text-title-lg font-semibold text-heading leading-snug tracking-[-0.01em]"
