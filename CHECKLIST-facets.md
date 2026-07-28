@@ -12,9 +12,18 @@ Then open the Events tab and the Jobs tab. Tick as you go; anything that fails, 
 
 ---
 
+## 0. The three fixes from this round — check these first
+
+- [ ] **Papers tab shows the summary card again** (the one-paragraph digest above the cards).
+- [ ] **All tab shows only two things**: the opportunity pool panel and the paper summary card. No paper/event/job cards, no "show more".
+- [ ] The tab chips (All / Papers / Events / Jobs) are still there on All — you need them to navigate.
+- [ ] **Every word on the page is English.** Nothing in Chinese anywhere, especially the opportunity pool panel: "Today's opportunity pool", "Location", "When", "Format", "In person / Online / Hybrid", "Clear filters", "More +N" / "Show fewer", "August 2026" rather than a Chinese date.
+
+---
+
 ## 1. The panel is always there
 
-- [ ] On **All**, there is no search box and no facet panel — All is an overview only.
+- [ ] On **All**, there is no search box. The opportunity pool panel IS shown (it is the overview).
 - [ ] On **Papers**, **Events**, **Jobs**, the search box appears, roughly two-thirds width, centered.
 - [ ] Under the search box on Events and Jobs there is a facet panel that is **always visible** — no collapse or hide control.
 - [ ] Each tag shows a count, e.g. `Chicago (4)`.

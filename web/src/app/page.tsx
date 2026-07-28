@@ -295,10 +295,10 @@ function DiscoveryPage() {
   }, [activeType, eventFacetCounts, jobFacetCounts]);
   const opportunityFacetScope =
     activeType === "events"
-      ? "活动"
+      ? "events"
       : activeType === "jobs"
-        ? "职位"
-        : "活动与职位";
+        ? "jobs"
+        : "events & jobs";
   const opportunityPoolCount =
     activeType === "events"
       ? eventPool.length
@@ -308,6 +308,15 @@ function DiscoveryPage() {
   const showOpportunityFacets =
     activeType !== "papers" &&
     opportunityPoolCount > 0;
+
+  // All is an overview: the opportunity pool summary and the paper digest,
+  // with no individual cards. The per-surface tabs are where you browse and
+  // filter actual items.
+  const showFeedTiles = activeType !== "all";
+  const showPaperDigest =
+    !isSearchMode &&
+    (activeType === "all" || activeType === "papers") &&
+    papers.length > 0;
 
   const opportunityItems = useMemo<BriefingItem[]>(() => {
     const eventItems: BriefingItem[] =
@@ -874,31 +883,32 @@ function DiscoveryPage() {
             </div>
           )}
 
-          {briefingItems.length > 0 && (
-            <>
-              {/* One-paragraph synthesized digest. Hides itself if no LLM
-                  is configured, so the rest of the feed keeps working. */}
-              {!isSearchMode && (
-                <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
-                  <DailyDigest
-                    papers={briefingItems
-                      .filter((i) => i.kind === "paper")
-                      .map((i) => i.data as Paper)}
-                    contextHint={[
-                      profile.researchTopics.length > 0
-                        ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
-                        : "",
-                      profile.currentProject,
-                      profile.currentChallenges,
-                    ]
-                      .filter((s) => s && s.trim().length > 0)
-                      .join("\n\n")}
-                    selectedPaperId={selectedPaperId}
-                    onSelectPaper={setSelectedPaperId}
-                  />
-                </div>
-              )}
+          {/* One-paragraph synthesized paper digest. Rendered independently of
+              the card grid: All shows the digest and the opportunity pool as a
+              pure overview with no cards, so tying the digest to the grid
+              would make it disappear there. Hides itself if no LLM is
+              configured, so the rest of the feed keeps working. */}
+          {showPaperDigest && (
+            <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
+              <DailyDigest
+                papers={papers}
+                contextHint={[
+                  profile.researchTopics.length > 0
+                    ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+                    : "",
+                  profile.currentProject,
+                  profile.currentChallenges,
+                ]
+                  .filter((s) => s && s.trim().length > 0)
+                  .join("\n\n")}
+                selectedPaperId={selectedPaperId}
+                onSelectPaper={setSelectedPaperId}
+              />
+            </div>
+          )}
 
+          {showFeedTiles && briefingItems.length > 0 && (
+            <>
               {isOpportunitySearchMode && (
                 <div className="mx-auto max-w-[820px]">
                   <SectionHeading count={opportunitySearchResultCount}>

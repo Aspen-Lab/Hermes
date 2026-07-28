@@ -110,7 +110,7 @@ describe("firstIncompleteStep", () => {
     expect(firstIncompleteStep(defaultProfile, false)).toBe(0);
   });
 
-  it("skips completed leading steps — the core '做过的就不用做了' behavior", () => {
+  it("skips completed leading steps — a finished step is never asked for again", () => {
     const p = profileWith({
       displayName: "Peter",
       researchTopics: ["solid state battery"],

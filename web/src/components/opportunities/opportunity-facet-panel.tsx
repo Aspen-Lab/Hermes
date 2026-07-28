@@ -23,17 +23,22 @@ interface FacetOption {
   count: number;
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 const VISIBLE_OPTIONS = 6;
 const FORMAT_LABELS: Record<OpportunityFormat, string> = {
-  "in-person": "线下",
-  online: "线上",
-  hybrid: "混合",
+  "in-person": "In person",
+  online: "Online",
+  hybrid: "Hybrid",
 };
 
 const GROUP_LABELS: Record<FacetGroup, string> = {
-  location: "地点",
-  month: "时间",
-  format: "形式",
+  location: "Location",
+  month: "When",
+  format: "Format",
 };
 
 function normalized(value: string): string {
@@ -67,7 +72,8 @@ export function toggleOpportunityFacet(
 function formatMonth(value: string): string {
   const match = value.match(/^(\d{4})-(\d{2})$/);
   if (!match) return value;
-  return `${match[1]}年${Number(match[2])}月`;
+  const monthName = MONTH_NAMES[Number(match[2]) - 1];
+  return monthName ? `${monthName} ${match[1]}` : value;
 }
 
 function optionsFor(
@@ -129,16 +135,16 @@ export function OpportunityFacetPanel({
 
   return (
     <section
-      aria-label="机会筛选"
+      aria-label="Filter opportunities"
       className="mt-4 rounded-3xl glass shadow-card px-4 py-4 sm:px-5"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <p className="text-body-sm font-semibold tracking-[-0.01em] text-heading">
-            今日机会池
+            Today’s opportunity pool
           </p>
           <p className="mt-0.5 text-caption text-text-muted">
-            {scopeLabel}共 {total} 条 · 今天刷新仍是同一批结果
+            {total} {scopeLabel} found today · refreshing keeps the same set until tomorrow
           </p>
         </div>
         {activeCount > 0 && (
@@ -147,7 +153,7 @@ export function OpportunityFacetPanel({
             onClick={() => onChange({})}
             className="shrink-0 rounded-full px-3 py-1.5 text-caption font-medium text-accent transition-colors hover:bg-accent/10"
           >
-            清除筛选
+            Clear filters
           </button>
         )}
       </div>
@@ -174,7 +180,7 @@ export function OpportunityFacetPanel({
               <div className="flex min-w-0 flex-wrap gap-2">
                 {visible.length === 0 ? (
                   <span className="py-2 text-caption text-text-faint">
-                    暂无可用项
+                    Nothing to filter yet
                   </span>
                 ) : (
                   visible.map((option) => {
@@ -210,7 +216,7 @@ export function OpportunityFacetPanel({
                                 )
                             : undefined
                         }
-                        ariaLabel={`${active ? "取消" : "按"}${GROUP_LABELS[group]}${option.label}筛选，${option.count} 条`}
+                        ariaLabel={`${active ? "Remove" : "Apply"} ${GROUP_LABELS[group].toLocaleLowerCase()} filter ${option.label}, ${option.count} ${option.count === 1 ? "item" : "items"}`}
                       />
                     );
                   })
@@ -227,7 +233,7 @@ export function OpportunityFacetPanel({
                     aria-expanded={Boolean(expanded[group])}
                     className="h-10 rounded-full px-3 text-caption font-medium text-text-muted transition-colors hover:bg-bg-secondary hover:text-heading"
                   >
-                    {expanded[group] ? "收起" : `更多 +${hiddenCount}`}
+                    {expanded[group] ? "Show fewer" : `More +${hiddenCount}`}
                   </button>
                 )}
               </div>
