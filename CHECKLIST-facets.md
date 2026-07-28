@@ -8,6 +8,20 @@ Branch `facets-and-daily-pool`, in this worktree. Nothing is on a PR yet.
 cd "C:/I/Personal/Github - start up project/Peer-facets/web" && npm run dev
 ```
 
+**If the paper summary box is missing, check this first.** This directory is a
+git worktree, and `git worktree add` does not copy gitignored files — so
+`web/.env.local` (which holds the AI provider credentials) and
+`web/.local-data/` did not come across when it was created. Without the
+provider the digest endpoint returns `noLlm` and the summary box hides itself,
+which looks exactly like the feature being broken. Both files have now been
+copied in. If you ever create another worktree, copy them again:
+
+```bash
+cp "C:/I/Personal/Github - start up project/Peer/web/.env.local" web/.env.local
+```
+
+They stay gitignored in the worktree, so they will not be committed.
+
 Then open the Events tab and the Jobs tab. Tick as you go; anything that fails, note the item number and tell me.
 
 ---
