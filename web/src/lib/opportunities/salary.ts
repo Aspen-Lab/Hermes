@@ -7,6 +7,13 @@ export type NormalizedSalary = {
   period: SalaryPeriod;
 };
 
+export type StructuredSalaryInput = {
+  min?: number | null;
+  max?: number | null;
+  currency?: string | null;
+  period?: string | null;
+};
+
 const PERIODS: Record<string, SalaryPeriod> = {
   hr: "hour",
   hour: "hour",
@@ -48,6 +55,11 @@ function currencyCode(value: string): string {
   return CURRENCIES[value] ?? value.toUpperCase();
 }
 
+function normalizePeriod(value: string): SalaryPeriod | null {
+  const key = value.trim().toLowerCase().replace(/^per[\s_-]*/, "");
+  return PERIODS[key] ?? null;
+}
+
 export function parseSalaryText(input: string | null | undefined): NormalizedSalary | null {
   const text = input?.trim();
   if (!text) return null;
@@ -73,4 +85,40 @@ export function parseSalaryText(input: string | null | undefined): NormalizedSal
       : "hour";
 
   return { min, max, currency: firstCurrency, period };
+}
+
+export function normalizeSalary(input: StructuredSalaryInput): NormalizedSalary | null {
+  const providedMin = input.min;
+  const providedMax = input.max;
+  if (providedMin == null && providedMax == null) return null;
+
+  const min = providedMin ?? providedMax;
+  const max = providedMax ?? providedMin;
+  const currency = input.currency?.trim();
+  const period = input.period ? normalizePeriod(input.period) : null;
+
+  if (
+    min == null ||
+    max == null ||
+    !Number.isFinite(min) ||
+    !Number.isFinite(max) ||
+    min <= 0 ||
+    max < min ||
+    !currency ||
+    !period
+  ) {
+    return null;
+  }
+
+  const annualizationFactor = period === "hour" ? 2_080 : period === "month" ? 12 : 1;
+  const annualizedFloor = min * annualizationFactor;
+  const annualizedCeiling = max * annualizationFactor;
+  if (annualizedFloor < 5_000 || annualizedCeiling > 2_000_000) return null;
+
+  return {
+    min,
+    max,
+    currency: currencyCode(currency),
+    period,
+  };
 }

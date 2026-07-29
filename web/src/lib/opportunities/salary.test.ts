@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSalaryText, type NormalizedSalary } from "./salary";
+import { normalizeSalary, parseSalaryText, type NormalizedSalary } from "./salary";
 
 const usd = (
   min: number,
@@ -41,5 +41,65 @@ describe("parseSalaryText", () => {
 
   it("treats an unmarked small value as hourly", () => {
     expect(parseSalaryText("$14")).toEqual(usd(14, 14, "hour"));
+  });
+});
+
+describe("normalizeSalary", () => {
+  it.each([
+    [
+      { min: 800, max: 1_500, currency: "USD", period: "monthly" },
+      usd(800, 1_500, "month"),
+    ],
+    [
+      { min: 1_000, max: 2_000, currency: "USD", period: "monthly" },
+      usd(1_000, 2_000, "month"),
+    ],
+    [
+      { min: 210_000, max: 280_000, currency: "USD", period: "annual" },
+      usd(210_000, 280_000),
+    ],
+    [
+      { min: 22_000, max: 26_000, currency: "ZAR", period: "monthly" },
+      { min: 22_000, max: 26_000, currency: "ZAR", period: "month" },
+    ],
+    [
+      { min: 64_000, max: 125_000, currency: "EUR", period: "annual" },
+      { min: 64_000, max: 125_000, currency: "EUR", period: "year" },
+    ],
+  ])("normalizes the measured Himalayas row %#", (input, expected) => {
+    expect(normalizeSalary(input)).toEqual(expected);
+  });
+
+  it("rejects the measured garbage monthly range", () => {
+    expect(
+      normalizeSalary({ min: 50, max: 1_000, currency: "USD", period: "monthly" }),
+    ).toBeNull();
+  });
+
+  it("returns null when both values are missing even if a period is present", () => {
+    expect(
+      normalizeSalary({ min: null, max: null, currency: "USD", period: "annual" }),
+    ).toBeNull();
+  });
+
+  it("uses the present bound when only one side is provided", () => {
+    expect(normalizeSalary({ min: 75_000, currency: "USD", period: "year" })).toEqual(
+      usd(75_000, 75_000),
+    );
+    expect(normalizeSalary({ max: 80_000, currency: "USD", period: "year" })).toEqual(
+      usd(80_000, 80_000),
+    );
+  });
+
+  it("rejects reversed and implausible ranges", () => {
+    expect(
+      normalizeSalary({ min: 80_000, max: 70_000, currency: "USD", period: "year" }),
+    ).toBeNull();
+    expect(
+      normalizeSalary({ min: 4_999, max: 70_000, currency: "USD", period: "year" }),
+    ).toBeNull();
+    expect(
+      normalizeSalary({ min: 70_000, max: 2_000_001, currency: "USD", period: "year" }),
+    ).toBeNull();
   });
 });

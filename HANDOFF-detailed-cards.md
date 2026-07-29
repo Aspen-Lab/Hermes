@@ -45,7 +45,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P1.1 | `lib/opportunities/salary.ts` — `parseSalaryText()` for free-text salary strings (Remotive) | DONE | `npx vitest run src/lib/opportunities/salary.test.ts` → 1 file / 20 tests passed; all 18 measured Remotive strings have explicit assertions |
-| P1.2 | `lib/opportunities/salary.ts` — `normalizeSalary()` for structured min/max/currency/period inputs, with a sanity floor | IN_PROGRESS | |
+| P1.2 | `lib/opportunities/salary.ts` — `normalizeSalary()` for structured min/max/currency/period inputs, with a sanity floor | DONE | `npx vitest run src/lib/opportunities/salary.test.ts` → 1 file / 29 tests passed; all 6 measured Himalayas rows covered and garbage `50–1000 USD/monthly` rejected |
 | P1.3 | `lib/opportunities/salary.ts` — `formatSalary()` display strings | TODO | |
 | P1.4 | `lib/opportunities/prestige.ts` — `eventPrestige()` from a CCF/CORE rank string | TODO | |
 | P1.5 | `lib/opportunities/prestige.ts` — `jobPrestige()` from company + source + description | TODO | |
