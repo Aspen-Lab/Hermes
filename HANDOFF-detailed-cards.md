@@ -110,13 +110,30 @@ Everything in this section was measured on 2026-07-29 against the live APIs and
 the current `main` (commit `e8e8440`). **Trust it. Re-measuring is a waste of
 your session.**
 
-### 4.1 Baseline gate on `main`
+### 4.1 Baseline gate — MEASURED IN *THIS* WORKTREE, after `npm install`
 
 ```
-npx vitest run     →  6 test files, 73 tests, all passing, ~1.5s
+npx vitest run     →  6 test files, 73 tests, all passing        ✅
+npx tsc --noEmit   →  clean, exit 0                              ✅
+npx eslint .       →  1 PRE-EXISTING error (see below)           ⚠
 ```
 
-Your work must not reduce that count. It should raise it substantially.
+Your work must not reduce the test count. It should raise it substantially.
+
+**The one lint error already exists on `main` and is not yours:**
+
+```
+web/src/components/persona/quiz.tsx:46:7
+  react-hooks/set-state-in-effect — Calling setState synchronously within an effect
+```
+
+That file is unrelated to cards. **Do not fix it** — it would be an unreviewed
+change to someone else's feature buried in a card PR. Just make sure you do not
+add a *second* error. The bar for your work is: `npx eslint .` reports this one
+error and nothing else.
+
+Dependencies are already installed in this worktree, so P0.1 is a re-confirmation
+rather than a first run.
 
 ### 4.2 Salary availability per job source — PROBED LIVE
 
@@ -374,10 +391,14 @@ Run everything from `web/`.
 
 ```
 npx vitest run          # baseline: 6 files / 73 tests passing — must not regress
-npx tsc --noEmit        # must be clean
-npx eslint .            # must be clean on changed files
+npx tsc --noEmit        # must stay clean (exit 0)
+npx eslint .            # must stay at exactly 1 error — the pre-existing quiz.tsx
+                        # one from §4.1. Any second error is yours to fix.
 npm run build           # must succeed (final gate only)
 ```
+
+`node_modules` is already installed here. Do not delete it or re-run
+`npm install` unless something is actually broken.
 
 ### DO NOT
 
@@ -398,11 +419,15 @@ npm run build           # must succeed (final gate only)
 
 ### P0.1 — Baseline
 
-The worktree has no `node_modules`. Run `npm install` in `web/`, then run the
-three gate commands and record the numbers.
+Dependencies are **already installed** — the planner ran `npm install` and the
+full gate in this worktree (§4.1). This task is a 2-minute re-confirmation that
+your environment agrees, not a fresh setup.
 
-**Acceptance:** `npx vitest run` reports 73 passing; `npx tsc --noEmit` and
-`npx eslint .` both exit clean. Paste the counts into the Verified column.
+Run the three gate commands from `web/` and record the numbers.
+
+**Acceptance:** `npx vitest run` reports 73 passing; `npx tsc --noEmit` exits 0;
+`npx eslint .` reports exactly the one pre-existing `quiz.tsx` error from §4.1
+and nothing else. Paste the counts into the Verified column.
 
 ---
 
