@@ -48,7 +48,7 @@ describe("jobPrestige", () => {
       { tier: "unknown", label: "Employer type unknown" },
     ],
   ] as const)("classifies the employer signal %#", (args, expected) => {
-    expect(jobPrestige(...args)).toEqual(expected);
+    expect(jobPrestige(args[0], args[1], args[2])).toEqual(expected);
   });
 
   it("only inspects the first few hundred description characters", () => {
