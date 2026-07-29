@@ -58,7 +58,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P2.1 | Add optional salary fields to `RawJobItem` | IN_PROGRESS | |
+| P2.1 | Add optional salary fields to `RawJobItem` | DONE | `npx tsc --noEmit` → exit 0; `npx vitest run` → 11 files / 150 tests passed |
 | P2.2 | Wire salary through the two keyless adapters (remotive free-text, himalayas structured) | TODO | |
 | P2.3 | Wire salary through the three keyed adapters (adzuna, jsearch, usajobs) | TODO | |
 | P2.4 | Add optional display fields to the `Job` type (additive block only) | TODO | |

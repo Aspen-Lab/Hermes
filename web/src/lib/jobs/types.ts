@@ -7,6 +7,7 @@ import type {
 } from "@/types";
 import type { SearchConnectors } from "@/lib/feed/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
+import type { SalaryPeriod } from "@/lib/opportunities/salary";
 
 export type JobSourceId =
   | "remotive"
@@ -31,6 +32,11 @@ export interface RawJobItem {
   url: string;
   postedAt?: string;
   employmentType?: string;
+  salaryText?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: SalaryPeriod;
   tags: string[];
   preferenceSignals?: PreferenceConcept[];
 }
