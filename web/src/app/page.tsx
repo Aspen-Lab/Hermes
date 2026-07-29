@@ -21,6 +21,7 @@ import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { DailyDigest } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
 import { ConnectorPanel, connectedCount } from "@/components/profile/connector-panel";
+import { SurfaceTopicsPanel } from "@/components/profile/surface-topics-panel";
 import { FilterBar } from "@/components/search/filter-bar";
 import {
   DEFAULT_FILTERS,
@@ -109,6 +110,14 @@ function DiscoveryPage() {
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
   const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
+  const updateTopics = useProfileStore((s) => s.updateTopics);
+  const updateSoftTopics = useProfileStore((s) => s.updateSoftTopics);
+  const updateEventTopics = useProfileStore((s) => s.updateEventTopics);
+  const updateEventSoftTopics = useProfileStore(
+    (s) => s.updateEventSoftTopics,
+  );
+  const updateJobTopics = useProfileStore((s) => s.updateJobTopics);
+  const updateJobSoftTopics = useProfileStore((s) => s.updateJobSoftTopics);
   const recordOpportunityFacetPreference = useProfileStore(
     (s) => s.recordOpportunityFacetPreference,
   );
@@ -739,6 +748,42 @@ function DiscoveryPage() {
 
           {openTool === "apis" && <ConnectorPanel />}
         </div>
+
+        {activeType !== "all" && (
+          <SurfaceTopicsPanel
+            key={activeType}
+            surface={activeType}
+            required={
+              activeType === "papers"
+                ? profile.researchTopics
+                : activeType === "events"
+                  ? profile.eventRequiredTopics
+                  : profile.jobRequiredTopics
+            }
+            explore={
+              activeType === "papers"
+                ? (profile.softTopics ?? [])
+                : activeType === "events"
+                  ? profile.eventExploreTopics
+                  : profile.jobExploreTopics
+            }
+            onChangeRequired={
+              activeType === "papers"
+                ? updateTopics
+                : activeType === "events"
+                  ? updateEventTopics
+                  : updateJobTopics
+            }
+            onChangeExplore={
+              activeType === "papers"
+                ? updateSoftTopics
+                : activeType === "events"
+                  ? updateEventSoftTopics
+                  : updateJobSoftTopics
+            }
+            defaultExpanded={activeType === "papers"}
+          />
+        )}
 
         {/* ── Paper-only filters stay attached to the server search. ── */}
         {isPaperSearchMode && (
