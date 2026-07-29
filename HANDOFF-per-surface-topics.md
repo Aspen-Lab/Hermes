@@ -62,7 +62,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P4.1 | Topics step renders three `TopicsField` blocks (Papers / Events / Jobs) | TODO | |
+| P4.1 | Topics step renders three `TopicsField` blocks (Papers / Events / Jobs) | IN_PROGRESS | |
 | P4.2 | Events and Jobs prefill from Papers as the user types | TODO | |
 | P4.3 | One-line purpose description beside each of the three | TODO | |
 | P4.4 | Step gating still requires only Papers Required ≥ 1 | TODO | |
