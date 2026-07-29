@@ -84,4 +84,19 @@ describe("active feed request inputs", () => {
       activeProfile.activeSearchInputs?.papers.required,
     );
   });
+
+  it("routes only the active Papers topics to the paper request", () => {
+    const papers = paperFeedRequestBody(activeProfile, advisorSeeds);
+
+    expect(papers).toMatchObject({
+      topics: ["active-paper"],
+      softTopics: ["active-paper-explore"],
+    });
+    expect(papers.topics).not.toEqual(
+      activeProfile.activeSearchInputs?.events.required,
+    );
+    expect(papers.topics).not.toEqual(
+      activeProfile.activeSearchInputs?.jobs.required,
+    );
+  });
 });
