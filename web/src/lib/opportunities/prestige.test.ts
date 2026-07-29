@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { eventPrestige } from "./prestige";
+import { eventPrestige, jobPrestige } from "./prestige";
 
 describe("eventPrestige", () => {
   it.each([
@@ -22,5 +22,39 @@ describe("eventPrestige", () => {
     expect(eventPrestige(undefined)).toEqual({ tier: "unranked", label: "Unranked" });
     expect(eventPrestige("")).toEqual({ tier: "unranked", label: "Unranked" });
     expect(eventPrestige("other")).toEqual({ tier: "unranked", label: "Unranked" });
+  });
+});
+
+describe("jobPrestige", () => {
+  it.each([
+    [
+      ["Google DeepMind", "jsearch", "Research engineer working on foundation models"],
+      { tier: "bigTech", label: "Big tech" },
+    ],
+    [
+      ["Argonne National Laboratory", "usajobs", "Battery characterization scientist"],
+      { tier: "nationalLab", label: "National lab" },
+    ],
+    [
+      ["University of Illinois", "jobweb", "Postdoctoral researcher in materials science"],
+      { tier: "academic", label: "Academic" },
+    ],
+    [
+      ["Volt Forge", "himalayas", "Join our seed-stage battery startup as a founding scientist"],
+      { tier: "startup", label: "Startup" },
+    ],
+    [
+      ["Acme Industries", "remotive", "Support the product engineering organization"],
+      { tier: "unknown", label: "Employer type unknown" },
+    ],
+  ] as const)("classifies the employer signal %#", (args, expected) => {
+    expect(jobPrestige(...args)).toEqual(expected);
+  });
+
+  it("only inspects the first few hundred description characters", () => {
+    expect(jobPrestige("Acme", "remotive", `${"x".repeat(600)} startup`)).toEqual({
+      tier: "unknown",
+      label: "Employer type unknown",
+    });
   });
 });
