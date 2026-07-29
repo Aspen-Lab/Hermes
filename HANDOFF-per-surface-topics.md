@@ -56,7 +56,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P3.1 | Cache the paper-side web discovery layer once per local day | DONE | `npx vitest run src/lib/feed/paper-daily-cache.test.ts ...pool-cache*.test.ts` — 15 passed; `npx tsc --noEmit` — passed |
-| P3.2 | Repeat paper feed loads make zero additional search calls | IN_PROGRESS | |
+| P3.2 | Repeat paper feed loads make zero additional search calls | DONE | `npx vitest run src/lib/opportunities/daily-search-budget.test.ts` — 1 passed; measured 16 + 12 + 4 = 32, repeat +0; `npx tsc --noEmit` — passed |
 
 ### Phase 4 — Onboarding walkthrough
 
