@@ -5,10 +5,12 @@ import type {
 } from "@/types";
 import type { ScoredEventItem } from "@/lib/events/types";
 import type { ScoredJobItem } from "@/lib/jobs/types";
+import { localCalendarDate } from "@/lib/local-calendar-date";
 import { canonicalize } from "@/lib/scoring/term-expand";
 
 export type OpportunitySurface = "events" | "jobs";
 export type { OpportunityFacetCounts, OpportunityFormat } from "@/types";
+export { localCalendarDate } from "@/lib/local-calendar-date";
 
 interface CachedPoolBase {
   generatedAt: string;
@@ -85,13 +87,6 @@ function normalizeSet(values: string[] | undefined): string[] {
         .filter(Boolean),
     ),
   ).sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
-}
-
-export function localCalendarDate(now = new Date()): string {
-  const year = String(now.getFullYear()).padStart(4, "0");
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 export function derivePoolCacheKey(input: PoolCacheKeyInput): string {

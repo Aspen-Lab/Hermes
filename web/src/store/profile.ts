@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { localCalendarDate } from "@/lib/local-calendar-date";
 import { applyColorTheme, normalizeColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
@@ -170,6 +171,35 @@ export function migrateProfileStore(
   }
 
   return { ...state, profile };
+}
+
+export function promoteSearchInputs(
+  profile: UserProfile,
+  now: Date,
+): UserProfile {
+  const today = localCalendarDate(now);
+  if (profile.activeSearchInputs?.promotedOn === today) return profile;
+
+  return {
+    ...profile,
+    activeSearchInputs: {
+      papers: {
+        required: [...profile.researchTopics],
+        explore: [...(profile.softTopics ?? [])],
+      },
+      events: {
+        required: [...profile.eventRequiredTopics],
+        explore: [...profile.eventExploreTopics],
+      },
+      jobs: {
+        required: [...profile.jobRequiredTopics],
+        explore: [...profile.jobExploreTopics],
+      },
+      careerStage: profile.careerStage,
+      locationPreferences: [...profile.locationPreferences],
+      promotedOn: today,
+    },
+  };
 }
 
 export const useProfileStore = create<ProfileState>()(

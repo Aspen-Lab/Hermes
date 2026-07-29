@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { defaultProfile, type UserProfile } from "@/types";
-import { migrateProfileStore, useProfileStore } from "./profile";
+import {
+  migrateProfileStore,
+  promoteSearchInputs,
+  useProfileStore,
+} from "./profile";
 
 type SurfaceTopicField =
   | "eventRequiredTopics"
@@ -117,5 +121,88 @@ describe("profile persistence migration", () => {
     };
 
     expect(migrateProfileStore(editedV3, 3)).toEqual(editedV3);
+  });
+});
+
+describe("promoteSearchInputs", () => {
+  it("creates the active snapshot on first run", () => {
+    const promoted = promoteSearchInputs(
+      profileFixture,
+      new Date(2026, 6, 28, 8, 30),
+    );
+
+    expect(promoted.activeSearchInputs).toEqual({
+      papers: {
+        required: ["paper-required"],
+        explore: ["paper-explore"],
+      },
+      events: {
+        required: ["event-required"],
+        explore: ["event-explore"],
+      },
+      jobs: {
+        required: ["job-required"],
+        explore: ["job-explore"],
+      },
+      careerStage: profileFixture.careerStage,
+      locationPreferences: profileFixture.locationPreferences,
+      promotedOn: "2026-07-28",
+    });
+  });
+
+  it("returns the same profile object without refreshing on the same local day", () => {
+    const promoted = promoteSearchInputs(
+      profileFixture,
+      new Date(2026, 6, 28, 0, 1),
+    );
+    const pendingEdit = {
+      ...promoted,
+      researchTopics: ["pending-paper-edit"],
+      eventRequiredTopics: ["pending-event-edit"],
+      jobRequiredTopics: ["pending-job-edit"],
+    };
+
+    expect(
+      promoteSearchInputs(pendingEdit, new Date(2026, 6, 28, 23, 59)),
+    ).toBe(pendingEdit);
+  });
+
+  it("promotes the latest pending values on the next local day", () => {
+    const firstDay = promoteSearchInputs(
+      profileFixture,
+      new Date(2026, 6, 28, 23, 59),
+    );
+    const pendingEdit: UserProfile = {
+      ...firstDay,
+      researchTopics: ["next-paper"],
+      softTopics: ["next-paper-explore"],
+      eventRequiredTopics: ["next-event"],
+      eventExploreTopics: ["next-event-explore"],
+      jobRequiredTopics: ["next-job"],
+      jobExploreTopics: ["next-job-explore"],
+      careerStage: "Postdoc",
+      locationPreferences: ["Chicago"],
+    };
+
+    expect(
+      promoteSearchInputs(pendingEdit, new Date(2026, 6, 29, 0, 1))
+        .activeSearchInputs,
+    ).toEqual({
+      papers: {
+        required: ["next-paper"],
+        explore: ["next-paper-explore"],
+      },
+      events: {
+        required: ["next-event"],
+        explore: ["next-event-explore"],
+      },
+      jobs: {
+        required: ["next-job"],
+        explore: ["next-job-explore"],
+      },
+      careerStage: "Postdoc",
+      locationPreferences: ["Chicago"],
+      promotedOn: "2026-07-29",
+    });
   });
 });
