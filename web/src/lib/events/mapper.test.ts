@@ -24,7 +24,27 @@ describe("scoredEventToEvent", () => {
     const event = scoredEventToEvent(rankedEvent);
 
     expect(event.rank).toBe("CCF A");
+    expect(event.tags).toEqual(["battery", "materials"]);
+    expect(event.matchedTerms).toEqual(["battery"]);
     expect(event.shortDescription).toBe(rankedEvent.description);
     expect(event.shortDescription).not.toMatch(/^CCF A/);
+  });
+
+  it("leaves absent optional display values undefined", () => {
+    const event = scoredEventToEvent({
+      ...rankedEvent,
+      id: "eventweb:minimal",
+      source: "eventweb",
+      rank: undefined,
+      tags: [],
+      matchedKeywords: [],
+    });
+
+    expect(event).toMatchObject({
+      rank: undefined,
+      tags: undefined,
+      matchedTerms: undefined,
+      locationFit: undefined,
+    });
   });
 });

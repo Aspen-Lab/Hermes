@@ -61,5 +61,8 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     isSaved: false,
     preferenceSignals: eventPreferenceSignals(item),
     rank: item.rank,
+    tags: item.tags.length > 0 ? item.tags : undefined,
+    matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
+    locationFit: undefined,
   };
 }
