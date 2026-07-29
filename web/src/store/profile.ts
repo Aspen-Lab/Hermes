@@ -35,6 +35,10 @@ interface ProfileState {
   updateDisplayName: (name: string) => void;
   updateTopics: (topics: string[]) => void;
   updateSoftTopics: (topics: string[]) => void;
+  updateEventTopics: (topics: string[]) => void;
+  updateEventSoftTopics: (topics: string[]) => void;
+  updateJobTopics: (topics: string[]) => void;
+  updateJobSoftTopics: (topics: string[]) => void;
   updatePreferredJournals: (journals: string[]) => void;
   updateCareerStage: (stage: CareerStage) => void;
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
@@ -128,6 +132,26 @@ export const useProfileStore = create<ProfileState>()(
 
       updateSoftTopics: (topics) =>
         set((s) => ({ profile: { ...s.profile, softTopics: topics } })),
+
+      updateEventTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, eventRequiredTopics: topics },
+        })),
+
+      updateEventSoftTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, eventExploreTopics: topics },
+        })),
+
+      updateJobTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, jobRequiredTopics: topics },
+        })),
+
+      updateJobSoftTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, jobExploreTopics: topics },
+        })),
 
       updatePreferredJournals: (journals) =>
         set((s) => ({ profile: { ...s.profile, preferredJournals: journals } })),

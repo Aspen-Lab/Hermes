@@ -36,7 +36,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P1.1 | Add the four new per-surface topic fields + `activeSearchInputs` to `UserProfile` and `defaultProfile` | DONE | `npx tsc --noEmit` — passed (exit 0) |
-| P1.2 | Store setters for Events and Jobs Required/Explore | IN_PROGRESS | |
+| P1.2 | Store setters for Events and Jobs Required/Explore | DONE | `npx vitest run src/store/profile.test.ts` — 1 passed |
 | P1.3 | Persist migration v2 → v3: copy existing topics into all three surfaces | TODO | |
 | P1.4 | `promoteSearchInputs()` — pending → active, once per local day | TODO | |
 | P1.5 | Run promotion once on store hydration | TODO | |
