@@ -38,7 +38,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P0.1 | Install deps in the worktree and confirm the baseline gate is green (73 tests, clean typecheck, clean lint) | TODO | |
+| P0.1 | Install deps in the worktree and confirm the baseline gate is green (73 tests, clean typecheck, clean lint) | IN_PROGRESS | |
 
 ### Phase 1 — Pure logic in `lib/`, fully unit-tested
 
