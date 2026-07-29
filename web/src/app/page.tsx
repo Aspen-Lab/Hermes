@@ -466,6 +466,10 @@ function DiscoveryPage() {
     { key: "events", label: "Events", count: eventPool.length, icon: "/icon-events.svg" },
     { key: "jobs", label: "Jobs", count: jobPool.length, icon: "/icon-jobs.svg" },
   ];
+  const selectedActiveTopics =
+    activeType === "all"
+      ? undefined
+      : profile.activeSearchInputs?.[activeType];
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
@@ -753,6 +757,8 @@ function DiscoveryPage() {
           <SurfaceTopicsPanel
             key={activeType}
             surface={activeType}
+            activeRequired={selectedActiveTopics?.required ?? []}
+            activeExplore={selectedActiveTopics?.explore ?? []}
             required={
               activeType === "papers"
                 ? profile.researchTopics

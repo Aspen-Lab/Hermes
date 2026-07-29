@@ -79,7 +79,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P6.1 | Collapsible Required/Explore panel under the search box on Papers, Events, Jobs | DONE | `npx tsc --noEmit` and focused eslint — passed; manual inspection: Papers expanded, Events/Jobs collapsed, All hidden |
-| P6.2 | "Active now" / "Pending tomorrow" shown when they differ | IN_PROGRESS | |
+| P6.2 | "Active now" / "Pending tomorrow" shown when they differ | DONE | `npx vitest run src/lib/profile/surface-topic-status.test.ts` — 2 passed; tsc and focused eslint — passed |
 | P6.3 | "Changes take effect in tomorrow's search." line | TODO | |
 
 **Total tasks: 21**

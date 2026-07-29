@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TopicsField } from "./field-kit";
+import { surfaceTopicStatus } from "@/lib/profile/surface-topic-status";
 
 export type TopicSurface = "papers" | "events" | "jobs";
 
@@ -13,6 +14,8 @@ const SURFACE_LABELS: Record<TopicSurface, string> = {
 
 export function SurfaceTopicsPanel({
   surface,
+  activeRequired,
+  activeExplore,
   required,
   explore,
   onChangeRequired,
@@ -20,6 +23,8 @@ export function SurfaceTopicsPanel({
   defaultExpanded,
 }: {
   surface: TopicSurface;
+  activeRequired: string[];
+  activeExplore: string[];
   required: string[];
   explore: string[];
   onChangeRequired: (topics: string[]) => void;
@@ -28,6 +33,10 @@ export function SurfaceTopicsPanel({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const label = SURFACE_LABELS[surface];
+  const status = surfaceTopicStatus(
+    { required: activeRequired, explore: activeExplore },
+    { required, explore },
+  );
 
   return (
     <section className="mt-3 overflow-hidden rounded-2xl bg-surface shadow-card">
@@ -61,6 +70,19 @@ export function SurfaceTopicsPanel({
           <path d="M2 4l4 4 4-4" />
         </svg>
       </button>
+
+      {status.differs && (
+        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-border/50 px-4 py-3 text-micro leading-relaxed">
+          <span className="font-semibold text-text-muted">Active now</span>
+          <span className="min-w-0 text-text-faint">
+            {status.activeSummary}
+          </span>
+          <span className="font-semibold text-accent">Pending tomorrow</span>
+          <span className="min-w-0 text-text-muted">
+            {status.pendingSummary}
+          </span>
+        </div>
+      )}
 
       {expanded && (
         <div className="border-t border-border/50 px-4 pb-4 pt-3">
