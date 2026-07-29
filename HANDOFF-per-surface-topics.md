@@ -35,7 +35,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P1.1 | Add the four new per-surface topic fields + `activeSearchInputs` to `UserProfile` and `defaultProfile` | TODO | |
+| P1.1 | Add the four new per-surface topic fields + `activeSearchInputs` to `UserProfile` and `defaultProfile` | IN_PROGRESS | |
 | P1.2 | Store setters for Events and Jobs Required/Explore | TODO | |
 | P1.3 | Persist migration v2 → v3: copy existing topics into all three surfaces | TODO | |
 | P1.4 | `promoteSearchInputs()` — pending → active, once per local day | TODO | |
