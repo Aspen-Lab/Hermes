@@ -206,3 +206,44 @@ describe("promoteSearchInputs", () => {
     });
   });
 });
+
+describe("bootstrap promotion — first-time onboarding", () => {
+  const NOW = new Date("2026-07-29T12:00:00");
+  const TOMORROW = new Date("2026-07-30T12:00:00");
+
+  it("promotes topics entered after the day's promotion already ran on an empty profile", () => {
+    // Hydration promotes while the profile is still empty.
+    const firstOpen = promoteSearchInputs({ ...defaultProfile }, NOW);
+    expect(firstOpen.activeSearchInputs?.papers.required).toEqual([]);
+
+    // The user then completes onboarding the same day.
+    const afterOnboarding = promoteSearchInputs(
+      {
+        ...firstOpen,
+        researchTopics: ["battery"],
+        eventRequiredTopics: ["battery"],
+        jobRequiredTopics: ["battery"],
+      },
+      NOW,
+    );
+
+    expect(afterOnboarding.activeSearchInputs?.papers.required).toEqual(["battery"]);
+    expect(afterOnboarding.activeSearchInputs?.events.required).toEqual(["battery"]);
+  });
+
+  it("still refuses a same-day promotion once real inputs exist", () => {
+    const day1 = promoteSearchInputs(
+      { ...defaultProfile, researchTopics: ["battery"] },
+      NOW,
+    );
+    const edited = { ...day1, researchTopics: ["battery", "sodium-ion"] };
+    const sameDay = promoteSearchInputs(edited, NOW);
+    expect(sameDay.activeSearchInputs?.papers.required).toEqual(["battery"]);
+
+    const nextDay = promoteSearchInputs(edited, TOMORROW);
+    expect(nextDay.activeSearchInputs?.papers.required).toEqual([
+      "battery",
+      "sodium-ion",
+    ]);
+  });
+});

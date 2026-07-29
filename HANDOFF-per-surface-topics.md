@@ -340,6 +340,14 @@ Without this the edit looks like it did nothing, because today's feed still refl
 - Anything I changed that was NOT in the plan, and why: Extracted `localCalendarDate` to a client-safe module while re-exporting it from `pool-cache.ts` so the client store does not import `node:crypto`; generalized shared `TopicsField` copy for Events/Jobs and restored the locked `Explore` noun; aligned the feed auto-load signature to active Papers topics after final review found it still read pending values.
 - What the next agent should watch out for: Promotion is intentionally per-device and occurs during profile hydration. The production build also reports the pre-existing Turbopack NFT trace warning from the papers full-text path.
 
+### Session 2 — Claude (reviewer) — 2026-07-29
+- Reviewed all 21 tasks independently. Gates reproduced: 317 tests passing, tsc clean, live Events benchmark passing.
+- **Found and fixed one severe defect the ledger's acceptance commands could not catch.** Promotion ran only at store hydration, which for a first-time user happens *before* onboarding. The day's snapshot was stamped while the profile was still empty, so everything entered during onboarding sat unused until the next calendar day — a new user finished setup and got an empty feed with no explanation. Verified by driving the real store actions: paper/event/job request topics all came back `[]`.
+- Fix: `promoteSearchInputs` now also promotes when the active snapshot has never held real inputs (bootstrap case), and `completeOnboarding` runs promotion. Confirmed the day-lock is still intact — a later same-day edit still does not reach today's request.
+- Test/typecheck status at stop time: 319 passed; tsc clean; eslint clean on changed store files.
+- Known imperfection, not blocking: one live result ("IEX 2024 — Ion Exchange for a Sustainable Future") carries a 2026 date despite a 2024 title, so date extraction can still disagree with a year in the title.
+
+
 ---
 
 ## §9. WHEN ALL PHASES ARE DONE

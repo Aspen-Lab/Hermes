@@ -173,12 +173,46 @@ export function migrateProfileStore(
   return { ...state, profile };
 }
 
+/**
+ * True when the active snapshot has no usable topics on any surface but the
+ * pending fields do — i.e. we have never once locked in a real search input.
+ *
+ * This is the bootstrap case, and it has to bypass the once-a-day rule.
+ * Promotion normally runs at hydration, which for a brand-new user happens
+ * *before* they complete onboarding — so the day's snapshot gets stamped while
+ * the profile is still empty, and everything they then enter would sit unused
+ * until the next calendar day. A first-time user would finish setup and be
+ * shown an empty feed with no explanation.
+ *
+ * It cannot be used to sidestep the day-lock later: once a surface has active
+ * topics this is false, and editing pending values never empties the snapshot.
+ */
+function hasNoActiveInputsYet(profile: UserProfile): boolean {
+  const active = profile.activeSearchInputs;
+  if (!active) return true;
+  const activeCount =
+    active.papers.required.length +
+    active.events.required.length +
+    active.jobs.required.length;
+  if (activeCount > 0) return false;
+  const pendingCount =
+    profile.researchTopics.length +
+    profile.eventRequiredTopics.length +
+    profile.jobRequiredTopics.length;
+  return pendingCount > 0;
+}
+
 export function promoteSearchInputs(
   profile: UserProfile,
   now: Date,
 ): UserProfile {
   const today = localCalendarDate(now);
-  if (profile.activeSearchInputs?.promotedOn === today) return profile;
+  if (
+    profile.activeSearchInputs?.promotedOn === today &&
+    !hasNoActiveInputsYet(profile)
+  ) {
+    return profile;
+  }
 
   return {
     ...profile,
@@ -485,7 +519,16 @@ export const useProfileStore = create<ProfileState>()(
 
       completeOnboarding: (at) =>
         set((s) => ({
-          profile: { ...s.profile, onboardedAt: at ?? new Date().toISOString() },
+          // Promote here as well as at hydration. For a first-time user the
+          // hydration promotion happened before they had entered anything, so
+          // without this their brand-new topics would not reach a search until
+          // the next calendar day and their first feed would be empty.
+          // promoteSearchInputs only acts when the snapshot has never held real
+          // inputs, so this cannot bypass the day-lock for a returning user.
+          profile: promoteSearchInputs(
+            { ...s.profile, onboardedAt: at ?? new Date().toISOString() },
+            new Date(),
+          ),
         })),
       resetOnboarding: () =>
         set((s) => ({ profile: { ...s.profile, onboardedAt: null } })),
