@@ -45,7 +45,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P2.1 | Feed request builders send **active** (never pending) per-surface topics | TODO | |
+| P2.1 | Feed request builders send **active** (never pending) per-surface topics | IN_PROGRESS | |
 | P2.2 | Events pool uses Events topics; Jobs pool uses Jobs topics | TODO | |
 | P2.3 | Paper feed uses Papers topics | TODO | |
 | P2.4 | Editing topics today does **not** change today's cache key | TODO | |
