@@ -64,7 +64,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.4 | Add optional display fields to the `Job` type (additive block only) | DONE | `npx tsc --noEmit` → exit 0; `git diff -- src/types/index.ts` → one contiguous optional block inside `Job`, no other changes |
 | P2.5 | Add optional display fields to the `Event` type; stop prefixing rank into `shortDescription` | DONE | `npx tsc --noEmit` → exit 0; `npx vitest run` → 13 files / 163 tests passed; mapper test proves clean `shortDescription` and structured rank |
 | P2.6 | `jobs/mapper.ts` populates the new `Job` fields | DONE | `npx vitest run src/lib/jobs/mapper.test.ts` → 1 file / 2 tests passed; full and minimal scored jobs covered |
-| P2.7 | `events/mapper.ts` populates the new `Event` fields | TODO | |
+| P2.7 | `events/mapper.ts` populates the new `Event` fields | IN_PROGRESS | |
 | P2.8 | Thread the user's location preferences into both mappers so location fit survives to the UI | TODO | |
 
 ### Phase 3 — Card UI
