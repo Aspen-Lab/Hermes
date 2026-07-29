@@ -74,7 +74,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P3.1 | `components/ui/prestige-badge.tsx` | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
 | P3.2 | `components/ui/facts-strip.tsx` — the shared time / place / money row | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
 | P3.3 | `components/ui/urgency-bar.tsx` | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
-| P3.4 | `components/ui/matched-terms.tsx` + `components/ui/highlighted-text.tsx` | IN_PROGRESS | |
+| P3.4 | `components/ui/matched-terms.tsx` + `components/ui/highlighted-text.tsx` | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
 | P3.5 | Rebuild `cards/event-card.tsx` to the six-row structure | TODO | |
 | P3.6 | Rebuild `cards/job-card.tsx` to the six-row structure, including the summary | TODO | |
 | P3.7 | Final gate: full suite + typecheck + lint + production build, and a real browser check at three widths in both themes | TODO | |
