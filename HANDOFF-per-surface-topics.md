@@ -46,7 +46,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P2.1 | Feed request builders send **active** (never pending) per-surface topics | DONE | `npx vitest run src/store/feed-request-body.test.ts src/store/profile-hydration.test.ts` — 2 passed; `npx tsc --noEmit` — passed |
-| P2.2 | Events pool uses Events topics; Jobs pool uses Jobs topics | TODO | |
+| P2.2 | Events pool uses Events topics; Jobs pool uses Jobs topics | IN_PROGRESS | |
 | P2.3 | Paper feed uses Papers topics | TODO | |
 | P2.4 | Editing topics today does **not** change today's cache key | TODO | |
 | P2.5 | `EVENT_QUERY_BUDGET` 18 → 16 | TODO | |
