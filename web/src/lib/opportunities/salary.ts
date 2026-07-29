@@ -44,12 +44,38 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 const SALARY_TEXT_RE =
   /^(?:OTE\s+)?(?<currency>\$|€|£|[A-Z]{3})\s*(?<min>\d[\d,.]*\s*[kK]?)(?:\s*[-–—]\s*(?<rangeCurrency>\$|€|£|[A-Z]{3})?\s*(?<max>\d[\d,.]*\s*[kK]?))?\s*(?:\/|\bper\s+)?\s*(?<period>hr|hour|hourly|mo|month|monthly|yr|year|annual|annually)?$/i;
 
+// Annualized bounds a displayed salary must fall inside. A number outside them
+// is far more likely to be malformed source data than a real offer, and showing
+// it as fact is worse than showing nothing.
+const MIN_ANNUALIZED = 5_000;
+const MAX_ANNUALIZED = 2_000_000;
+
+const ANNUALIZATION: Record<SalaryPeriod, number> = {
+  hour: 2_080,
+  month: 12,
+  year: 1,
+};
+
+/**
+ * The single sanity gate for every salary we display, whichever path produced
+ * it. Both `parseSalaryText` and `normalizeSalary` must run through this —
+ * a free-text "$3k - $10k" is exactly as implausible as the structured
+ * equivalent, and Remotive really does return that string.
+ */
+function isPlausible(min: number, max: number, period: SalaryPeriod): boolean {
+  const factor = ANNUALIZATION[period];
+  return min * factor >= MIN_ANNUALIZED && max * factor <= MAX_ANNUALIZED;
+}
+
 function parseAmount(input: string): number | null {
   const compact = input.replace(/\s+/g, "");
   const hasThousandsSuffix = /k$/i.test(compact);
   let numeric = compact.replace(/k$/i, "");
 
-  if (hasThousandsSuffix && /^\d+,\d$/.test(numeric)) {
+  // European decimal comma, but only before a `k` suffix and only with one or
+  // two decimal places — "$31,2k" is 31 200 and "$31,25k" is 31 250, while
+  // "$1,000k" is a thousands separator and must not be re-read as a decimal.
+  if (hasThousandsSuffix && /^\d+,\d{1,2}$/.test(numeric)) {
     numeric = numeric.replace(",", ".");
   } else {
     numeric = numeric.replace(/,/g, "");
@@ -86,13 +112,25 @@ export function parseSalaryText(input: string | null | undefined): NormalizedSal
   if (firstCurrency !== secondCurrency) return null;
 
   const explicitPeriod = match.groups.period?.toLowerCase();
-  const period = explicitPeriod
-    ? PERIODS[explicitPeriod]
-    : Math.min(min, max) > 1_000
-      ? "year"
-      : "hour";
+  const period = explicitPeriod ? PERIODS[explicitPeriod] : inferPeriod(Math.min(min, max));
+  if (!period) return null;
 
-  return { min, max, currency: firstCurrency, period };
+  return isPlausible(min, max, period)
+    ? { min, max, currency: firstCurrency, period }
+    : null;
+}
+
+/**
+ * Period for a value carrying no `/hr`-style marker. Only the unambiguous ends
+ * of the scale get a guess: above 1 000 is an annual figure, and a real hourly
+ * rate is small. Between those lies a band where "$500" could plausibly be a
+ * daily rate, a stipend, or a typo — guessing there produces confident
+ * nonsense like "$500 / hr", so we decline instead.
+ */
+function inferPeriod(value: number): SalaryPeriod | null {
+  if (value > 1_000) return "year";
+  if (value <= 300) return "hour";
+  return null;
 }
 
 export function normalizeSalary(input: StructuredSalaryInput): NormalizedSalary | null {
@@ -118,10 +156,7 @@ export function normalizeSalary(input: StructuredSalaryInput): NormalizedSalary 
     return null;
   }
 
-  const annualizationFactor = period === "hour" ? 2_080 : period === "month" ? 12 : 1;
-  const annualizedFloor = min * annualizationFactor;
-  const annualizedCeiling = max * annualizationFactor;
-  if (annualizedFloor < 5_000 || annualizedCeiling > 2_000_000) return null;
+  if (!isPlausible(min, max, period)) return null;
 
   return {
     min,
@@ -132,10 +167,11 @@ export function normalizeSalary(input: StructuredSalaryInput): NormalizedSalary 
 }
 
 function compactAmount(value: number): string {
-  if (value < 1_000) return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
-
-  const thousands = value / 1_000;
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(thousands)}k`;
+  const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+  if (value < 1_000) return decimal.format(value);
+  // Past a million, "1,500k" reads as a mistake — step up a unit.
+  if (value >= 1_000_000) return `${decimal.format(value / 1_000_000)}M`;
+  return `${decimal.format(value / 1_000)}k`;
 }
 
 export function formatSalary(salary: NormalizedSalary): string {

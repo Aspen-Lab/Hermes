@@ -893,6 +893,48 @@ else's entry.
   - Keyed salary adapters were verified with local documented fixtures only; no keys or live API calls were used.
   - Full ESLint still has only the locked baseline `quiz.tsx:46` error; do not hide or fix it in this branch.
 
+### Session 2 — Claude (Opus 5), reviewer — 2026-07-29
+- Tasks completed this session: none — independent review of Session 1, plus fixes.
+- Left IN_PROGRESS or BLOCKED: None. All 25 rows remain `DONE`.
+- Test/typecheck status at stop time: 16 files / **175** tests passed (Session 1
+  left 172); TypeScript exit 0; full ESLint reports only the locked
+  `quiz.tsx:46` baseline error; production build succeeded, 27 static pages.
+- What the review verified independently, rather than trusting the report:
+  - Re-ran the whole gate from a clean checkout of the branch. All four
+    commands reproduce the reported results exactly.
+  - Confirmed the `app/page.tsx` wiring and the 4→3 column change are real and
+    committed, matching the completion report.
+  - Confirmed **D9** is honoured: `highlightSegments` regex-escapes every term
+    and no new `dangerouslySetInnerHTML` exists anywhere in the card tree.
+- Defects found and fixed (all in `lib/opportunities/salary.ts`):
+  1. **`parseSalaryText` bypassed the D6 sanity gate entirely.** The gate lived
+     only inside `normalizeSalary`, so the free-text path — Remotive, the
+     highest-coverage source at 78 % — displayed implausible values. Measured
+     proof: `normalizeSalary({min:3000,max:10000,USD,annual})` returned `null`
+     while `parseSalaryText("$3k - $10k")` rendered `$3k–10k / yr`, from a
+     string Remotive actually returns. Extracted a single `isPlausible()` gate
+     and routed **both** paths through it.
+  2. **Period inference produced confident nonsense in a middle band.** The rule
+     was `> 1000 → year, else hour`, so an unmarked `$500` displayed as
+     `$500 / hr` ($1.04 M/yr) and `$1k` as `$1k / hr`. Now only the unambiguous
+     ends are guessed (`> 1000 → year`, `≤ 300 → hour`); the band between
+     returns `null`. An explicit `/hr`-style marker still always wins.
+  3. **Two-place European decimal comma was off by 100×.** `/^\d+,\d$/` accepted
+     exactly one decimal place — matching the one example in §4.3 — so `$31,25k`
+     became 3 125 000 instead of 31 250. Widened to `\d{1,2}`, with an explicit
+     test that `$1,000k` is still read as a thousands separator.
+  4. Cosmetic: `compactAmount` rendered seven-figure values as `$1,500k`; it now
+     steps up to `$1.5M`.
+- Real-world re-verification: ran the fixed parser over the 28 live-captured
+  Remotive salary strings. 27 display correctly, 1 (`$3k - $10k`) is now
+  suppressed. No legitimate salary was lost.
+- What the next agent should watch out for:
+  - Defects 1–3 were all the same failure mode: the implementation satisfied the
+    exact fixtures in §4.3 rather than the class of input they represent. If you
+    extend salary parsing, test values that are *not* in the handoff.
+  - The prestige regex duplication flagged in Session 1 is real and still open.
+    It is deliberate and safe for now; reconcile once the sibling branches land.
+
 ---
 
 ## §9. WHEN ALL PHASES ARE DONE

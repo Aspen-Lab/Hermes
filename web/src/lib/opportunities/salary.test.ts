@@ -28,7 +28,8 @@ describe("parseSalaryText", () => {
     ["$80k - $100k", usd(80_000, 100_000)],
     ["$55k - $100k", usd(55_000, 100_000)],
     ["OTE $25k - $35k", usd(25_000, 35_000)],
-    ["$3k - $10k", usd(3_000, 10_000)],
+    // "$3k - $10k" is also a measured Remotive string, but it is asserted in
+    // the sanity-gate block below — it parses cleanly and is then rejected.
     ["$50-$75 /hour", usd(50, 75, "hour")],
     ["$20k -$35k", usd(20_000, 35_000)],
     ["$12K", usd(12_000, 12_000)],
@@ -47,6 +48,38 @@ describe("parseSalaryText", () => {
 
   it("treats an unmarked small value as hourly", () => {
     expect(parseSalaryText("$14")).toEqual(usd(14, 14, "hour"));
+  });
+
+  // The free-text path must enforce the same plausibility gate as the
+  // structured path. Before this, "$3k - $10k" — a real Remotive string —
+  // rendered as "$3k–10k / yr" while the identical structured input was
+  // rejected.
+  it("applies the sanity gate to free text, not just structured input", () => {
+    expect(parseSalaryText("$3k - $10k")).toBeNull();
+    expect(
+      normalizeSalary({ min: 3_000, max: 10_000, currency: "USD", period: "annual" }),
+    ).toBeNull();
+    expect(parseSalaryText("$4,999")).toBeNull();
+    expect(parseSalaryText("$2,500,000")).toBeNull();
+  });
+
+  it("declines to guess a period in the ambiguous band", () => {
+    // Above a real hourly rate, below a real annual salary — a confident
+    // "$500 / hr" ($1.04M a year) is worse than admitting we do not know.
+    expect(parseSalaryText("$500")).toBeNull();
+    expect(parseSalaryText("$1k")).toBeNull();
+    // Either side of the band still resolves.
+    expect(parseSalaryText("$300")).toEqual(usd(300, 300, "hour"));
+    expect(parseSalaryText("$36k")).toEqual(usd(36_000, 36_000));
+    // An explicit marker always wins over the heuristic.
+    expect(parseSalaryText("$500 / month")).toEqual(usd(500, 500, "month"));
+  });
+
+  it("reads a two-place decimal comma before a k suffix", () => {
+    expect(parseSalaryText("$31,25k")).toEqual(usd(31_250, 31_250));
+    expect(parseSalaryText("$31,2k")).toEqual(usd(31_200, 31_200));
+    // Three digits after the comma is a thousands separator, not a decimal.
+    expect(parseSalaryText("$1,000k")).toEqual(usd(1_000_000, 1_000_000));
   });
 });
 
@@ -117,6 +150,8 @@ describe("formatSalary", () => {
     [usd(18, 22, "hour"), "$18–22 / hr"],
     [{ min: 22_000, max: 26_000, currency: "ZAR", period: "month" }, "ZAR 22k–26k / mo"],
     [usd(36_000, 36_000), "$36k / yr"],
+    // Past a million, "1,500k" reads as a formatting mistake.
+    [usd(1_200_000, 1_800_000), "$1.2M–1.8M / yr"],
   ] satisfies Array<[NormalizedSalary, string]>)("formats %# as %s", (salary, expected) => {
     expect(formatSalary(salary)).toBe(expected);
   });
