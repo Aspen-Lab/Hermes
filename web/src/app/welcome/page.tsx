@@ -258,14 +258,36 @@ export default function WelcomePage() {
                   title="What should Peer track for you?"
                   subtitle="This is the heart of your briefing. Add at least one Required topic — every paper in your feed must match one of these. Type a topic and press comma or Enter to turn it into a tag; drag a tag between columns to re-rank it."
                 >
-                  <div data-enter-scope>
-                    <TopicsField
-                      required={profile.researchTopics}
-                      soft={profile.softTopics ?? []}
-                      onChangeRequired={store.updateTopics}
-                      onChangeSoft={store.updateSoftTopics}
-                    />
-                  </div>
+                  <Field label="Papers">
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.researchTopics}
+                        soft={profile.softTopics ?? []}
+                        onChangeRequired={store.updateTopics}
+                        onChangeSoft={store.updateSoftTopics}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Events">
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.eventRequiredTopics}
+                        soft={profile.eventExploreTopics}
+                        onChangeRequired={store.updateEventTopics}
+                        onChangeSoft={store.updateEventSoftTopics}
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Jobs">
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.jobRequiredTopics}
+                        soft={profile.jobExploreTopics}
+                        onChangeRequired={store.updateJobTopics}
+                        onChangeSoft={store.updateJobSoftTopics}
+                      />
+                    </div>
+                  </Field>
                   {!topicsSatisfied && (
                     <p id="topics-gate-note" className="mt-4 text-meta text-accent/90 flex items-center gap-1.5">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
