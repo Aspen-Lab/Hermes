@@ -14,6 +14,8 @@ export type StructuredSalaryInput = {
   period?: string | null;
 };
 
+export const SALARY_NOT_DISCLOSED = "Salary not disclosed";
+
 const PERIODS: Record<string, SalaryPeriod> = {
   hr: "hour",
   hour: "hour",
@@ -31,6 +33,12 @@ const CURRENCIES: Record<string, string> = {
   $: "USD",
   "€": "EUR",
   "£": "GBP",
+};
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
 };
 
 const SALARY_TEXT_RE =
@@ -121,4 +129,23 @@ export function normalizeSalary(input: StructuredSalaryInput): NormalizedSalary 
     currency: currencyCode(currency),
     period,
   };
+}
+
+function compactAmount(value: number): string {
+  if (value < 1_000) return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
+
+  const thousands = value / 1_000;
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(thousands)}k`;
+}
+
+export function formatSalary(salary: NormalizedSalary): string {
+  const symbol = CURRENCY_SYMBOLS[salary.currency.toUpperCase()];
+  const prefix = symbol ?? `${salary.currency.toUpperCase()} `;
+  const range =
+    salary.min === salary.max
+      ? compactAmount(salary.min)
+      : `${compactAmount(salary.min)}–${compactAmount(salary.max)}`;
+  const period = salary.period === "hour" ? "hr" : salary.period === "month" ? "mo" : "yr";
+
+  return `${prefix}${range} / ${period}`;
 }

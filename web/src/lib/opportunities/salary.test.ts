@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSalary, parseSalaryText, type NormalizedSalary } from "./salary";
+import {
+  formatSalary,
+  normalizeSalary,
+  parseSalaryText,
+  SALARY_NOT_DISCLOSED,
+  type NormalizedSalary,
+} from "./salary";
 
 const usd = (
   min: number,
@@ -101,5 +107,21 @@ describe("normalizeSalary", () => {
     expect(
       normalizeSalary({ min: 70_000, max: 2_000_001, currency: "USD", period: "year" }),
     ).toBeNull();
+  });
+});
+
+describe("formatSalary", () => {
+  it.each([
+    [usd(150_000, 230_000), "$150k–230k / yr"],
+    [{ min: 64_000, max: 125_000, currency: "EUR", period: "year" }, "€64k–125k / yr"],
+    [usd(18, 22, "hour"), "$18–22 / hr"],
+    [{ min: 22_000, max: 26_000, currency: "ZAR", period: "month" }, "ZAR 22k–26k / mo"],
+    [usd(36_000, 36_000), "$36k / yr"],
+  ] satisfies Array<[NormalizedSalary, string]>)("formats %# as %s", (salary, expected) => {
+    expect(formatSalary(salary)).toBe(expected);
+  });
+
+  it("exports one canonical missing-salary label", () => {
+    expect(SALARY_NOT_DISCLOSED).toBe("Salary not disclosed");
   });
 });
