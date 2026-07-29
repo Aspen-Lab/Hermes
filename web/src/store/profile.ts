@@ -30,6 +30,10 @@ import {
   type OpportunityFacetGroup,
 } from "@/lib/preferences/ledger";
 
+type PersistedUserProfile = Omit<Partial<UserProfile>, "colorTheme"> & {
+  colorTheme?: string;
+};
+
 interface ProfileState {
   profile: UserProfile;
   updateDisplayName: (name: string) => void;
@@ -112,6 +116,60 @@ interface ProfileState {
   /** Replace local state with a server snapshot. Undefined fields keep local values. */
   hydrateFromRemote: (remote: Partial<UserProfile>) => void;
   logOut: () => void;
+}
+
+export function migrateProfileStore(
+  persisted: unknown,
+  version: number,
+): unknown {
+  if (!persisted || typeof persisted !== "object") return persisted;
+
+  const state = persisted as {
+    profile?: PersistedUserProfile;
+    [key: string]: unknown;
+  };
+  if (!state.profile || typeof state.profile !== "object") return persisted;
+
+  const profile: PersistedUserProfile = { ...state.profile };
+  if (profile.colorTheme !== undefined) {
+    profile.colorTheme = normalizeColorTheme(profile.colorTheme);
+  }
+
+  if (version < 3) {
+    const requiredTopics = Array.isArray(profile.researchTopics)
+      ? profile.researchTopics
+      : [];
+    const exploreTopics = Array.isArray(profile.softTopics)
+      ? profile.softTopics
+      : [];
+
+    if (
+      !Array.isArray(profile.eventRequiredTopics) ||
+      profile.eventRequiredTopics.length === 0
+    ) {
+      profile.eventRequiredTopics = [...requiredTopics];
+    }
+    if (
+      !Array.isArray(profile.eventExploreTopics) ||
+      profile.eventExploreTopics.length === 0
+    ) {
+      profile.eventExploreTopics = [...exploreTopics];
+    }
+    if (
+      !Array.isArray(profile.jobRequiredTopics) ||
+      profile.jobRequiredTopics.length === 0
+    ) {
+      profile.jobRequiredTopics = [...requiredTopics];
+    }
+    if (
+      !Array.isArray(profile.jobExploreTopics) ||
+      profile.jobExploreTopics.length === 0
+    ) {
+      profile.jobExploreTopics = [...exploreTopics];
+    }
+  }
+
+  return { ...state, profile };
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -437,16 +495,11 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: "peer-profile",
       skipHydration: true,
-      // v2: colorTheme became a "mode:accent" composite; migrate any
-      // persisted legacy single-name value (normalize is a no-op on v2).
-      version: 2,
-      migrate: (persisted) => {
-        const state = persisted as { profile?: { colorTheme?: string } };
-        if (state?.profile?.colorTheme !== undefined) {
-          state.profile.colorTheme = normalizeColorTheme(state.profile.colorTheme);
-        }
-        return persisted;
-      },
+      // v2: colorTheme became a "mode:accent" composite.
+      // v3: Events and Jobs gained independent Required/Explore topic fields.
+      version: 3,
+      migrate: (persisted, version) =>
+        migrateProfileStore(persisted, version) as ProfileState,
     }
   )
 );
