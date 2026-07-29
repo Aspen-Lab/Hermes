@@ -44,9 +44,6 @@ export function eventPreferenceSignals(item: ScoredEventItem): PreferenceConcept
 }
 
 export function scoredEventToEvent(item: ScoredEventItem): Event {
-  const description = item.rank
-    ? `${item.rank} · ${item.description}`
-    : item.description;
   return {
     id: item.id,
     name: item.name,
@@ -56,12 +53,13 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     location: item.location || (item.isOnline ? "Online" : "See event page"),
     isOnline: item.isOnline,
     deadline: item.deadline,
-    shortDescription: description.slice(0, 280),
+    shortDescription: item.description.slice(0, 280),
     relevanceReason: item.relevanceReason,
     linkOfficial: item.url,
     linkRegistration: item.registrationUrl ?? item.url,
     relevanceScore: item.score,
     isSaved: false,
     preferenceSignals: eventPreferenceSignals(item),
+    rank: item.rank,
   };
 }

@@ -85,6 +85,11 @@ export interface Event {
   isSaved?: boolean;
   feedback?: ItemFeedback;
   preferenceSignals?: PreferenceConcept[];
+  // Detailed-card fields (additive for cross-branch merge safety).
+  rank?: string;
+  tags?: string[];
+  matchedTerms?: string[];
+  locationFit?: number;
 }
 
 // ── Job ──

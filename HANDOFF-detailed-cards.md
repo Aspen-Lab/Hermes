@@ -62,7 +62,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.2 | Wire salary through the two keyless adapters (remotive free-text, himalayas structured) | DONE | `npx vitest run src/lib/jobs/sources/` → 1 file / 6 tests passed; measured Remotive and Himalayas fixtures mapped, garbage range rejected |
 | P2.3 | Wire salary through the three keyed adapters (adzuna, jsearch, usajobs) | DONE | `npx vitest run src/lib/jobs/sources/` → 1 file / 12 tests passed; 2 local fixtures per keyed adapter, including absent/unknown salary; no live key calls |
 | P2.4 | Add optional display fields to the `Job` type (additive block only) | DONE | `npx tsc --noEmit` → exit 0; `git diff -- src/types/index.ts` → one contiguous optional block inside `Job`, no other changes |
-| P2.5 | Add optional display fields to the `Event` type; stop prefixing rank into `shortDescription` | IN_PROGRESS | |
+| P2.5 | Add optional display fields to the `Event` type; stop prefixing rank into `shortDescription` | DONE | `npx tsc --noEmit` → exit 0; `npx vitest run` → 13 files / 163 tests passed; mapper test proves clean `shortDescription` and structured rank |
 | P2.6 | `jobs/mapper.ts` populates the new `Job` fields | TODO | |
 | P2.7 | `events/mapper.ts` populates the new `Event` fields | TODO | |
 | P2.8 | Thread the user's location preferences into both mappers so location fit survives to the UI | TODO | |
