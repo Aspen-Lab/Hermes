@@ -1,5 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { normalizeSalary } from "@/lib/opportunities/salary";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Himalayas free remote-jobs API (no auth). The keyword param is not honored
@@ -19,6 +20,10 @@ interface HimalayasJob {
   pubDate?: number;
   applicationLink?: string;
   guid?: string;
+  minSalary?: number | null;
+  maxSalary?: number | null;
+  currency?: string | null;
+  salaryPeriod?: string | null;
 }
 
 interface HimalayasResponse {
@@ -30,6 +35,12 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
   const url = job.applicationLink?.trim() || job.guid?.trim();
   if (!title || !url) return null;
   const locations = (job.locationRestrictions ?? []).filter(Boolean);
+  const salary = normalizeSalary({
+    min: job.minSalary,
+    max: job.maxSalary,
+    currency: job.currency,
+    period: job.salaryPeriod,
+  });
   return {
     id: `himalayas:${routeSafeId(url)}`,
     source: "himalayas",
@@ -44,6 +55,10 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
         ? new Date(job.pubDate * 1000).toISOString()
         : undefined,
     employmentType: job.employmentType,
+    salaryMin: salary?.min,
+    salaryMax: salary?.max,
+    salaryCurrency: salary?.currency,
+    salaryPeriod: salary?.period,
     tags: [
       ...(job.categories ?? []).map((c) => c.replace(/-/g, " ")),
       ...(job.seniority ?? []),
