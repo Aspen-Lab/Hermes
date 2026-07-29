@@ -64,4 +64,24 @@ describe("active feed request inputs", () => {
 
     expect(buildSearchRequests(editedPending)).toEqual(before);
   });
+
+  it("routes Events and Jobs active topics only to their matching requests", () => {
+    const events = opportunityRequestBody(activeProfile, "events", []);
+    const jobs = opportunityRequestBody(activeProfile, "jobs", []);
+
+    expect(events).toMatchObject({
+      topics: ["active-event"],
+      softTopics: ["active-event-explore"],
+    });
+    expect(jobs).toMatchObject({
+      topics: ["active-job"],
+      softTopics: ["active-job-explore"],
+    });
+    expect(events.topics).not.toEqual(
+      activeProfile.activeSearchInputs?.papers.required,
+    );
+    expect(jobs.topics).not.toEqual(
+      activeProfile.activeSearchInputs?.papers.required,
+    );
+  });
 });
