@@ -72,7 +72,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P5.1 | Profile settings shows three `TopicsField` sets instead of one | DONE | `npx tsc --noEmit`, profile-page eslint, and `profile.test.ts` (6 passed); manual inspection: all three render and bind persisted store setters |
-| P5.2 | Same descriptions as onboarding | TODO | |
+| P5.2 | Same descriptions as onboarding | IN_PROGRESS | |
 
 ### Phase 6 — Tab panels
 
