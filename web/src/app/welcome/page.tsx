@@ -50,6 +50,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { sectionLabel } from "@/components/ui/section-label";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
+import { SURFACE_TOPIC_DESCRIPTIONS } from "@/lib/profile/topic-copy";
 import {
   STEP_META,
   type StepKey,
@@ -270,7 +271,10 @@ export default function WelcomePage() {
                   title="What should Peer track for you?"
                   subtitle="This is the heart of your briefing. Add at least one Required topic — every paper in your feed must match one of these. Type a topic and press comma or Enter to turn it into a tag; drag a tag between columns to re-rank it."
                 >
-                  <Field label="Papers">
+                  <Field
+                    label="Papers"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.papers}
+                  >
                     <div data-enter-scope>
                       <TopicsField
                         required={profile.researchTopics}
@@ -284,7 +288,10 @@ export default function WelcomePage() {
                       />
                     </div>
                   </Field>
-                  <Field label="Events">
+                  <Field
+                    label="Events"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.events}
+                  >
                     <div data-enter-scope>
                       <TopicsField
                         required={profile.eventRequiredTopics}
@@ -298,7 +305,10 @@ export default function WelcomePage() {
                       />
                     </div>
                   </Field>
-                  <Field label="Jobs">
+                  <Field
+                    label="Jobs"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.jobs}
+                  >
                     <div data-enter-scope>
                       <TopicsField
                         required={profile.jobRequiredTopics}
