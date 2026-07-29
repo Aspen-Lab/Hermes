@@ -71,7 +71,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P3.1 | `components/ui/prestige-badge.tsx` | TODO | |
+| P3.1 | `components/ui/prestige-badge.tsx` | IN_PROGRESS | |
 | P3.2 | `components/ui/facts-strip.tsx` — the shared time / place / money row | TODO | |
 | P3.3 | `components/ui/urgency-bar.tsx` | TODO | |
 | P3.4 | `components/ui/matched-terms.tsx` + `components/ui/highlighted-text.tsx` | TODO | |
