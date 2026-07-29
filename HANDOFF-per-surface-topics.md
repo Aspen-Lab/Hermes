@@ -55,7 +55,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P3.1 | Cache the paper-side web discovery layer once per local day | TODO | |
+| P3.1 | Cache the paper-side web discovery layer once per local day | IN_PROGRESS | |
 | P3.2 | Repeat paper feed loads make zero additional search calls | TODO | |
 
 ### Phase 4 — Onboarding walkthrough
