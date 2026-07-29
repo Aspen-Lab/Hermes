@@ -179,6 +179,13 @@ function activeSurfaceTopics(
   };
 }
 
+export function activePaperTopicsKey(profile: UserProfile): string {
+  return (profile.activeSearchInputs?.papers.required ?? [])
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function paperFeedRequestBody(
   profile: UserProfile,
   advisorSeeds: { seedTexts: string[]; seedWorkIds: string[] },
@@ -567,10 +574,7 @@ export const useFeedStore = create<FeedState>()(
         const profile = useProfileStore.getState().profile;
         // Signature of the required topics this load is built from — must match
         // the feed page's auto-load key so the page knows the feed is current.
-        const topicsKey = (profile.researchTopics ?? [])
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .join("\n");
+        const topicsKey = activePaperTopicsKey(profile);
 
         // Papers are consume-once: exclude any already shown recently (within
         // TTL) so the briefing brings fresh reading each load. Saved papers are

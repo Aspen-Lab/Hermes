@@ -10,7 +10,7 @@ import type {
   Job,
   OpportunityFacetSelection,
 } from "@/types";
-import { useFeedStore } from "@/store/feed";
+import { activePaperTopicsKey, useFeedStore } from "@/store/feed";
 import { apiFetch } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format";
 import { DotMatrixImage } from "@/components/dot-matrix-image";
@@ -161,20 +161,15 @@ function DiscoveryPage() {
   }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const feedAutoLoadKey = useMemo(
-    () =>
-      profile.researchTopics
-        .map((topic) => topic.trim())
-        .filter(Boolean)
-        .join("\n"),
-    [profile.researchTopics],
+    () => activePaperTopicsKey(profile),
+    [profile],
   );
 
   useEffect(() => {
     if (!feedAutoLoadKey || isLoading) return;
-    // Reload when the loaded feed's topics differ from the current required
-    // topics — i.e. on first load (key null) AND whenever the user edits topics
-    // after papers were already loaded. The attempted-ref guards against
-    // re-firing for the same key (e.g. on a transient empty result).
+    // Reload when the loaded feed's active day-locked Papers topics differ.
+    // Pending edits intentionally do not change this key until promotion on
+    // the next local day.
     if (feedTopicsKey === feedAutoLoadKey) return;
     if (attemptedAutoLoadKeyRef.current === feedAutoLoadKey) return;
 

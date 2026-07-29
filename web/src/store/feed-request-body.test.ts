@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultProfile, type UserProfile } from "@/types";
 import {
+  activePaperTopicsKey,
   opportunityRequestBody,
   paperFeedRequestBody,
 } from "./feed";
@@ -50,6 +51,7 @@ function buildSearchRequests(profile: UserProfile) {
 describe("active feed request inputs", () => {
   it("keeps every request body unchanged when pending search inputs mutate", () => {
     const before = buildSearchRequests(activeProfile);
+    const beforeAutoLoadKey = activePaperTopicsKey(activeProfile);
     const editedPending: UserProfile = {
       ...activeProfile,
       researchTopics: ["edited-pending-paper"],
@@ -63,6 +65,7 @@ describe("active feed request inputs", () => {
     };
 
     expect(buildSearchRequests(editedPending)).toEqual(before);
+    expect(activePaperTopicsKey(editedPending)).toBe(beforeAutoLoadKey);
   });
 
   it("routes Events and Jobs active topics only to their matching requests", () => {

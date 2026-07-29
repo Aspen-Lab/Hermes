@@ -45,7 +45,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P2.1 | Feed request builders send **active** (never pending) per-surface topics | DONE | `npx vitest run src/store/feed-request-body.test.ts src/store/profile-hydration.test.ts` — 2 passed; `npx tsc --noEmit` — passed |
+| P2.1 | Feed request builders send **active** (never pending) per-surface topics | DONE | `feed-request-body.test.ts` + hydration test — pending edits leave request bodies and auto-load key unchanged; tsc passed |
 | P2.2 | Events pool uses Events topics; Jobs pool uses Jobs topics | DONE | `npx vitest run src/store/feed-request-body.test.ts` — 2 passed |
 | P2.3 | Paper feed uses Papers topics | DONE | `npx vitest run src/store/feed-request-body.test.ts` — 3 passed |
 | P2.4 | Editing topics today does **not** change today's cache key | DONE | `npx vitest run src/lib/opportunities/daily-pool-cache.test.ts` — 5 passed; same key and zero second-build calls |
