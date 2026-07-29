@@ -61,7 +61,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.1 | Add optional salary fields to `RawJobItem` | DONE | `npx tsc --noEmit` → exit 0; `npx vitest run` → 11 files / 150 tests passed |
 | P2.2 | Wire salary through the two keyless adapters (remotive free-text, himalayas structured) | DONE | `npx vitest run src/lib/jobs/sources/` → 1 file / 6 tests passed; measured Remotive and Himalayas fixtures mapped, garbage range rejected |
 | P2.3 | Wire salary through the three keyed adapters (adzuna, jsearch, usajobs) | DONE | `npx vitest run src/lib/jobs/sources/` → 1 file / 12 tests passed; 2 local fixtures per keyed adapter, including absent/unknown salary; no live key calls |
-| P2.4 | Add optional display fields to the `Job` type (additive block only) | TODO | |
+| P2.4 | Add optional display fields to the `Job` type (additive block only) | IN_PROGRESS | |
 | P2.5 | Add optional display fields to the `Event` type; stop prefixing rank into `shortDescription` | TODO | |
 | P2.6 | `jobs/mapper.ts` populates the new `Job` fields | TODO | |
 | P2.7 | `events/mapper.ts` populates the new `Event` fields | TODO | |
