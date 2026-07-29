@@ -71,7 +71,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P5.1 | Profile settings shows three `TopicsField` sets instead of one | TODO | |
+| P5.1 | Profile settings shows three `TopicsField` sets instead of one | IN_PROGRESS | |
 | P5.2 | Same descriptions as onboarding | TODO | |
 
 ### Phase 6 — Tab panels
