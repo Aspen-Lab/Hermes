@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { summarizeJob } from "./summarize";
+import { highlightSegments, summarizeJob } from "./summarize";
 
 const REAL_POSTING_FIXTURES = [
   {
@@ -52,5 +52,48 @@ describe("summarizeJob", () => {
         ["battery"],
       ),
     ).toBe("");
+  });
+});
+
+describe("highlightSegments", () => {
+  it("round-trips the input exactly and matches longest terms first", () => {
+    const text = "Solid-state battery research improves the battery.";
+    const segments = highlightSegments(text, ["battery", "solid-state battery"]);
+
+    expect(segments.map((segment) => segment.text).join("")).toBe(text);
+    expect(segments[0]).toEqual({ text: "Solid-state battery", matched: true });
+    expect(segments.filter((segment) => segment.matched)).toHaveLength(2);
+  });
+
+  it("matches case-insensitively with whole-word-ish boundaries", () => {
+    const segments = highlightSegments("Battery work differs from batteries.", ["battery"]);
+
+    expect(segments.filter((segment) => segment.matched).map((segment) => segment.text)).toEqual([
+      "Battery",
+    ]);
+  });
+
+  it("escapes regex punctuation in topic terms", () => {
+    const text = "Use C++ for analysis (advanced), not C alone.";
+    const segments = highlightSegments(text, ["C++", "(advanced)"]);
+
+    expect(segments.map((segment) => segment.text).join("")).toBe(text);
+    expect(segments.filter((segment) => segment.matched).map((segment) => segment.text)).toEqual([
+      "C++",
+      "(advanced)",
+    ]);
+  });
+
+  it("merges overlapping matches", () => {
+    expect(highlightSegments("battery storage", ["battery", "battery storage"])).toEqual([
+      { text: "battery storage", matched: true },
+    ]);
+  });
+
+  it("returns one unmatched segment for empty terms or no matches", () => {
+    expect(highlightSegments("plain text", [])).toEqual([{ text: "plain text", matched: false }]);
+    expect(highlightSegments("plain text", ["battery"])).toEqual([
+      { text: "plain text", matched: false },
+    ]);
   });
 });

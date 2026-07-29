@@ -17,6 +17,11 @@ type ScoredSentence = {
   text: string;
 };
 
+export type HighlightSegment = {
+  text: string;
+  matched: boolean;
+};
+
 function splitSentences(description: string): string[] {
   return (description.match(/[^.!?]+(?:[.!?]+|$)/g) ?? [])
     .map((sentence) => sentence.replace(/^#+\s*/, "").replace(/\s+/g, " ").trim())
@@ -92,4 +97,63 @@ export function summarizeJob(
 
   const selected = bestCombination(scoreSentences(description, matchedKeywords));
   return selected.map((sentence) => sentence.text).join(" ");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isWordCharacter(value: string | undefined): boolean {
+  return value !== undefined && /[\p{L}\p{N}]/u.test(value);
+}
+
+export function highlightSegments(text: string, terms: string[]): HighlightSegment[] {
+  const normalizedTerms = [...new Set(terms.map((term) => term.trim()).filter(Boolean))].sort(
+    (a, b) => b.length - a.length,
+  );
+  if (!text || normalizedTerms.length === 0) return [{ text, matched: false }];
+
+  const intervals: Array<{ start: number; end: number }> = [];
+  for (const term of normalizedTerms) {
+    const pattern = new RegExp(escapeRegExp(term), "giu");
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(text)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+      const beginsWithWord = isWordCharacter(term[0]);
+      const endsWithWord = isWordCharacter(term.at(-1));
+      const hasLeftBoundary = !beginsWithWord || !isWordCharacter(text[start - 1]);
+      const hasRightBoundary = !endsWithWord || !isWordCharacter(text[end]);
+
+      if (hasLeftBoundary && hasRightBoundary) intervals.push({ start, end });
+      pattern.lastIndex = start + 1;
+    }
+  }
+
+  if (intervals.length === 0) return [{ text, matched: false }];
+
+  intervals.sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged: Array<{ start: number; end: number }> = [];
+  for (const interval of intervals) {
+    const previous = merged.at(-1);
+    if (previous && interval.start <= previous.end) {
+      previous.end = Math.max(previous.end, interval.end);
+    } else {
+      merged.push({ ...interval });
+    }
+  }
+
+  const segments: HighlightSegment[] = [];
+  let cursor = 0;
+  for (const interval of merged) {
+    if (cursor < interval.start) {
+      segments.push({ text: text.slice(cursor, interval.start), matched: false });
+    }
+    segments.push({ text: text.slice(interval.start, interval.end), matched: true });
+    cursor = interval.end;
+  }
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), matched: false });
+
+  return segments;
 }
