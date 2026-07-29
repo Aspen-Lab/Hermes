@@ -65,7 +65,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.5 | Add optional display fields to the `Event` type; stop prefixing rank into `shortDescription` | DONE | `npx tsc --noEmit` → exit 0; `npx vitest run` → 13 files / 163 tests passed; mapper test proves clean `shortDescription` and structured rank |
 | P2.6 | `jobs/mapper.ts` populates the new `Job` fields | DONE | `npx vitest run src/lib/jobs/mapper.test.ts` → 1 file / 2 tests passed; full and minimal scored jobs covered |
 | P2.7 | `events/mapper.ts` populates the new `Event` fields | DONE | `npx vitest run src/lib/events/mapper.test.ts` → 1 file / 2 tests passed; full and minimal mapped events covered |
-| P2.8 | Thread the user's location preferences into both mappers so location fit survives to the UI | TODO | |
+| P2.8 | Thread the user's location preferences into both mappers so location fit survives to the UI | IN_PROGRESS | |
 
 ### Phase 3 — Card UI
 
