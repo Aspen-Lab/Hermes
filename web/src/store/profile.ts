@@ -202,6 +202,32 @@ export function promoteSearchInputs(
   };
 }
 
+function mergeHydratedProfileState(
+  persisted: unknown,
+  current: ProfileState,
+): ProfileState {
+  const persistedState =
+    persisted && typeof persisted === "object"
+      ? (persisted as Partial<ProfileState>)
+      : {};
+  const persistedProfile =
+    persistedState.profile && typeof persistedState.profile === "object"
+      ? persistedState.profile
+      : {};
+
+  return {
+    ...current,
+    ...persistedState,
+    profile: promoteSearchInputs(
+      {
+        ...current.profile,
+        ...persistedProfile,
+      },
+      new Date(),
+    ),
+  };
+}
+
 export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
@@ -530,6 +556,10 @@ export const useProfileStore = create<ProfileState>()(
       version: 3,
       migrate: (persisted, version) =>
         migrateProfileStore(persisted, version) as ProfileState,
+      // Build the promoted snapshot as part of the state installed by
+      // hydration, so subscribers can never observe hydrated pending inputs
+      // without the corresponding active inputs.
+      merge: mergeHydratedProfileState,
     }
   )
 );

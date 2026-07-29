@@ -264,7 +264,7 @@ async function fetchRealFeed(
 
 // Shared request-shaping for the jobs/events feeds: both routes take the
 // same profile projection.
-function opportunityRequestBody(
+export function opportunityRequestBody(
   profile: UserProfile,
   excludeIds: string[],
 ): Record<string, unknown> {
