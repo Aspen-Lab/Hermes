@@ -3,6 +3,7 @@ import {
   normalizePreferenceConcepts,
   preferenceKey,
 } from "@/lib/preferences/ledger";
+import { locationFit } from "@/lib/opportunities/shared";
 import type { ScoredEventItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -43,7 +44,7 @@ export function eventPreferenceSignals(item: ScoredEventItem): PreferenceConcept
   ]).slice(0, MAX_SIGNALS);
 }
 
-export function scoredEventToEvent(item: ScoredEventItem): Event {
+export function scoredEventToEvent(item: ScoredEventItem, locationPreferences?: string[]): Event {
   return {
     id: item.id,
     name: item.name,
@@ -63,6 +64,8 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     rank: item.rank,
     tags: item.tags.length > 0 ? item.tags : undefined,
     matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
-    locationFit: undefined,
+    locationFit: locationPreferences
+      ? locationFit(item.location, item.isOnline, locationPreferences)
+      : undefined,
   };
 }

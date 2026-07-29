@@ -47,4 +47,8 @@ describe("scoredEventToEvent", () => {
       locationFit: undefined,
     });
   });
+
+  it("computes location fit when preferences are provided", () => {
+    expect(scoredEventToEvent(rankedEvent, ["Chicago"]).locationFit).toBe(1);
+  });
 });

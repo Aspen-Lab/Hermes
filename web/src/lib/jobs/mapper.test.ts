@@ -71,4 +71,11 @@ describe("scoredJobToJob", () => {
       locationFit: undefined,
     });
   });
+
+  it("preserves preferred and unrelated on-site location fit", () => {
+    expect(scoredJobToJob(fullJob, ["Chicago"]).locationFit).toBe(1);
+    expect(
+      scoredJobToJob({ ...fullJob, location: "San Francisco, CA" }, ["Chicago"]).locationFit,
+    ).toBe(0.4);
+  });
 });

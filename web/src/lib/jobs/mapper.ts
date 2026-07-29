@@ -4,6 +4,7 @@ import {
   preferenceKey,
 } from "@/lib/preferences/ledger";
 import { summarizeJob } from "@/lib/jobs/summarize";
+import { locationFit } from "@/lib/opportunities/shared";
 import type { ScoredJobItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -61,7 +62,7 @@ function keyRequirements(item: ScoredJobItem): string[] {
   return requirements;
 }
 
-export function scoredJobToJob(item: ScoredJobItem): Job {
+export function scoredJobToJob(item: ScoredJobItem, locationPreferences?: string[]): Job {
   const salary =
     item.salaryMin !== undefined &&
     item.salaryMax !== undefined &&
@@ -95,6 +96,8 @@ export function scoredJobToJob(item: ScoredJobItem): Job {
     sourceId: item.source,
     summary,
     matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
-    locationFit: undefined,
+    locationFit: locationPreferences
+      ? locationFit(item.location, item.isRemote, locationPreferences)
+      : undefined,
   };
 }

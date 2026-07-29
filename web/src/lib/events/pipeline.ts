@@ -90,7 +90,7 @@ export async function runEventsPipeline(
   const returned = fresh.slice(0, topN);
 
   return {
-    items: returned.map(scoredEventToEvent),
+    items: returned.map((item) => scoredEventToEvent(item, req.locationPreferences)),
     meta: {
       fetched,
       errors,

@@ -94,7 +94,7 @@ export async function runJobsPipeline(
   const returned = fresh.slice(0, topN);
 
   return {
-    items: returned.map(scoredJobToJob),
+    items: returned.map((item) => scoredJobToJob(item, req.locationPreferences)),
     meta: {
       fetched,
       errors,
