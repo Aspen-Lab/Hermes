@@ -15,6 +15,7 @@ import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
 import { summarizePreferenceLedger } from "@/lib/preferences/ledger";
 import { apiFetch } from "@/lib/api";
+import { SURFACE_TOPIC_DESCRIPTIONS } from "@/lib/profile/topic-copy";
 import { IconBook, IconBuilding, IconCheck, IconPin } from "@/components/icons";
 import { PageContainer } from "@/components/ui/page-container";
 import {
@@ -1571,7 +1572,10 @@ function EditView({
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
         <div className="space-y-6">
           <div>
-            <p className="mb-2 text-meta font-semibold text-heading">Papers</p>
+            <p className="text-meta font-semibold text-heading">Papers</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.papers}
+            </p>
             <TopicsField
               required={profile.researchTopics}
               soft={profile.softTopics ?? []}
@@ -1580,7 +1584,10 @@ function EditView({
             />
           </div>
           <div>
-            <p className="mb-2 text-meta font-semibold text-heading">Events</p>
+            <p className="text-meta font-semibold text-heading">Events</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.events}
+            </p>
             <TopicsField
               required={profile.eventRequiredTopics}
               soft={profile.eventExploreTopics}
@@ -1589,7 +1596,10 @@ function EditView({
             />
           </div>
           <div>
-            <p className="mb-2 text-meta font-semibold text-heading">Jobs</p>
+            <p className="text-meta font-semibold text-heading">Jobs</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.jobs}
+            </p>
             <TopicsField
               required={profile.jobRequiredTopics}
               soft={profile.jobExploreTopics}
