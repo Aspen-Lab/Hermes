@@ -121,7 +121,11 @@ describe("daily opportunity pool wiring", () => {
     );
     expect(visible.items).toHaveLength(1);
     expect(displayed.items).toHaveLength(0);
-    expect(Array.from(cache.values.values())[0]?.items).toHaveLength(1);
+    const cachedEventPool = Array.from(cache.values.values())[0];
+    expect(cachedEventPool?.surface).toBe("events");
+    expect(
+      cachedEventPool?.surface === "events" ? cachedEventPool.items : [],
+    ).toHaveLength(1);
     expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
   });
 
@@ -260,10 +264,13 @@ describe("daily opportunity pool wiring", () => {
       chicagoEvent.id,
       berlinEvent.id,
     ]);
-    expect(Array.from(cache.values.values())[0]?.items.map(({ id }) => id)).toEqual([
-      berlinEvent.id,
-      chicagoEvent.id,
-    ]);
+    const cachedEventPool = Array.from(cache.values.values())[0];
+    expect(cachedEventPool?.surface).toBe("events");
+    expect(
+      cachedEventPool?.surface === "events"
+        ? cachedEventPool.items.map(({ id }) => id)
+        : [],
+    ).toEqual([berlinEvent.id, chicagoEvent.id]);
     expect(sourceFetch).toHaveBeenCalledOnce();
     expect(fetchSpy).toHaveBeenCalledTimes(callsAfterBuild);
   });

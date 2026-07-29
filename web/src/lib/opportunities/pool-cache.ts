@@ -8,22 +8,31 @@ import type { ScoredJobItem } from "@/lib/jobs/types";
 import { localCalendarDate } from "@/lib/local-calendar-date";
 import { canonicalize } from "@/lib/scoring/term-expand";
 
-export type OpportunitySurface = "events" | "jobs";
+export type OpportunitySurface = "papers" | "events" | "jobs";
 export type { OpportunityFacetCounts, OpportunityFormat } from "@/types";
 export { localCalendarDate } from "@/lib/local-calendar-date";
 
 interface CachedPoolBase {
   generatedAt: string;
   localDate: string;
+}
+
+interface CachedOpportunityPoolBase extends CachedPoolBase {
   facetCounts: OpportunityFacetCounts;
 }
 
-export interface CachedEventPool extends CachedPoolBase {
+export interface CachedPaperDiscovery extends CachedPoolBase {
+  surface: "papers";
+  queryBoosts: string[];
+  resultCount: number;
+}
+
+export interface CachedEventPool extends CachedOpportunityPoolBase {
   surface: "events";
   items: ScoredEventItem[];
 }
 
-export interface CachedJobPool extends CachedPoolBase {
+export interface CachedJobPool extends CachedOpportunityPoolBase {
   surface: "jobs";
   items: ScoredJobItem[];
 }
@@ -32,7 +41,10 @@ export interface CachedJobPool extends CachedPoolBase {
  * Enriched daily candidates with a neutral baseline score. Request-time
  * preference scoring may reorder them locally without rebuilding this pool.
  */
-export type CachedPool = CachedEventPool | CachedJobPool;
+export type CachedPool =
+  | CachedPaperDiscovery
+  | CachedEventPool
+  | CachedJobPool;
 
 export interface PoolCache {
   get(key: string): Promise<CachedPool | null>;
@@ -51,11 +63,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function isCachedPool(value: unknown): value is CachedPool {
   if (!isRecord(value)) return false;
-  if (value.surface !== "events" && value.surface !== "jobs") return false;
-  if (!Array.isArray(value.items)) return false;
   if (typeof value.generatedAt !== "string") return false;
   if (typeof value.localDate !== "string") return false;
+
+  if (value.surface === "papers") {
+    return (
+      Array.isArray(value.queryBoosts) &&
+      value.queryBoosts.every((query) => typeof query === "string") &&
+      typeof value.resultCount === "number"
+    );
+  }
+
+  if (value.surface !== "events" && value.surface !== "jobs") return false;
+  if (!Array.isArray(value.items)) return false;
   return isRecord(value.facetCounts);
+}
+
+export function isCachedPaperDiscovery(
+  pool: CachedPool,
+): pool is CachedPaperDiscovery {
+  return pool.surface === "papers";
 }
 
 export function isCachedEventPool(pool: CachedPool): pool is CachedEventPool {
