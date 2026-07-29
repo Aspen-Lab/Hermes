@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe("daily opportunity search budgets", () => {
-  it("executes at most 18 event searches", async () => {
+  it("executes at most 16 event searches", async () => {
     const fetchSpy = vi.fn(async () =>
       new Response(JSON.stringify({ results: [] }), {
         headers: { "content-type": "application/json" },
@@ -26,7 +26,7 @@ describe("daily opportunity search budgets", () => {
       webSearch: { tavilyApiKey: "test-key" },
     });
 
-    expect(EVENT_QUERY_BUDGET).toBe(18);
+    expect(EVENT_QUERY_BUDGET).toBe(16);
     expect(fetchSpy).toHaveBeenCalledTimes(EVENT_QUERY_BUDGET);
   });
 

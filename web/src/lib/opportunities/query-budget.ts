@@ -1,9 +1,8 @@
 /**
- * Tavily's plan ceiling is roughly 33 searches/day across the whole product.
- * Daily opportunity pools allocate 18 to events and 12 to jobs (30 total),
- * leaving three searches/day, or about 100/month, as a safety reserve.
+ * Tavily's 1000-search monthly plan covers the whole product:
+ * 16 Events + 12 Jobs + 4 Papers = 32/day, or 992 in a 31-day month.
  */
-export const EVENT_QUERY_BUDGET = 18;
+export const EVENT_QUERY_BUDGET = 16;
 export const JOB_QUERY_BUDGET = 12;
 
 /**

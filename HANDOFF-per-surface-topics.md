@@ -49,7 +49,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.2 | Events pool uses Events topics; Jobs pool uses Jobs topics | DONE | `npx vitest run src/store/feed-request-body.test.ts` — 2 passed |
 | P2.3 | Paper feed uses Papers topics | DONE | `npx vitest run src/store/feed-request-body.test.ts` — 3 passed |
 | P2.4 | Editing topics today does **not** change today's cache key | DONE | `npx vitest run src/lib/opportunities/daily-pool-cache.test.ts` — 5 passed; same key and zero second-build calls |
-| P2.5 | `EVENT_QUERY_BUDGET` 18 → 16 | IN_PROGRESS | |
+| P2.5 | `EVENT_QUERY_BUDGET` 18 → 16 | DONE | `npx vitest run src/lib/opportunities/query-budget.test.ts` — 2 passed; `query-gen.test.ts` — 5 passed |
 
 ### Phase 3 — Papers daily cache
 
