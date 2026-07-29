@@ -45,7 +45,7 @@ describe("jobPrestige", () => {
     ],
     [
       ["Acme Industries", "remotive", "Support the product engineering organization"],
-      { tier: "unknown", label: "Employer type unknown" },
+      { tier: "unknown", label: "Type unknown" },
     ],
   ] as const)("classifies the employer signal %#", (args, expected) => {
     expect(jobPrestige(args[0], args[1], args[2])).toEqual(expected);
@@ -54,7 +54,7 @@ describe("jobPrestige", () => {
   it("only inspects the first few hundred description characters", () => {
     expect(jobPrestige("Acme", "remotive", `${"x".repeat(600)} startup`)).toEqual({
       tier: "unknown",
-      label: "Employer type unknown",
+      label: "Type unknown",
     });
   });
 });

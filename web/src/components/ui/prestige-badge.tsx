@@ -27,7 +27,7 @@ export function PrestigeBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-2 py-0.5 text-micro font-semibold uppercase tracking-[0.14em]",
+        "inline-flex shrink-0 items-center whitespace-nowrap rounded-md border px-2 py-0.5 text-micro font-semibold uppercase tracking-[0.14em]",
         TIER_STYLES[tier],
         className,
       )}

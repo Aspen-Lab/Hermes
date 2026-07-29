@@ -45,5 +45,5 @@ export function jobPrestige(
     return { tier: "academic", label: "Academic" };
   }
   if (STARTUP_RE.test(text)) return { tier: "startup", label: "Startup" };
-  return { tier: "unknown", label: "Employer type unknown" };
+  return { tier: "unknown", label: "Type unknown" };
 }

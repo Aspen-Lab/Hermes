@@ -32,7 +32,7 @@ This document is **resumable**. A previous agent may have completed part of the 
 
 Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
-**Total tasks: 24.**
+**Total tasks: 25.**
 
 ### Phase 0 — Baseline
 
@@ -77,7 +77,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P3.4 | `components/ui/matched-terms.tsx` + `components/ui/highlighted-text.tsx` | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
 | P3.5 | Rebuild `cards/event-card.tsx` to the six-row structure | DONE | `npx vitest run` → 15 files / 170 tests passed; `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; full ESLint → only pre-existing `quiz.tsx:46` error |
 | P3.6 | Rebuild `cards/job-card.tsx` to the six-row structure, including the summary | DONE | `npx vitest run` → 16 files / 172 tests passed; `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; full ESLint → only pre-existing `quiz.tsx:46` error |
-| P3.7 | Final gate: full suite + typecheck + lint + production build, and a real browser check at three widths in both themes | IN_PROGRESS | |
+| P3.7 | Final gate: full suite + typecheck + lint + production build, and a real browser check at three widths in both themes | DONE | `npx vitest run` → 16 files / 172 tests passed; `npx tsc --noEmit` → exit 0; changed-file ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others; `npm run build` → success. Browser: at 375 px, 768 px, and 1280 px in both light and dark, event and job cards stayed within the viewport with no horizontal overflow; missing and disclosed job salaries rendered; events had no salary row; highlighted summary spans were legible where present; event and job cards both opened their detail pages. |
 
 ---
 
@@ -879,7 +879,19 @@ else's entry.
 - What the next agent should watch out for:
 ```
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-29
+- Tasks completed this session: P0.1–P3.7
+- Left IN_PROGRESS or BLOCKED: None
+- Test/typecheck status at stop time: 16 files / 172 tests passed; TypeScript exit 0; changed-file ESLint exit 0; full ESLint reports exactly the pre-existing `persona/quiz.tsx:46` error and no others; production build succeeded.
+- Anything I changed that was NOT in the plan, and why:
+  - Wired `EventCard` and `JobCard` into `app/page.tsx`, because the real feed still rendered `FeedTile` and otherwise the rebuilt cards were only visible on Saved.
+  - Capped the feed at three desktop columns and shortened the unknown-employer label after browser QA showed four columns caused cramped cards and badge wrapping.
+  - Corrected a TypeScript-only prestige test spread issue exposed while running the P1.6 acceptance gate.
+  - Corrected the ledger's declared task total from 24 to 25; the table contains 25 task IDs.
+- What the next agent should watch out for:
+  - The job-category regexes in `prestige.ts` intentionally duplicate sibling-owned scoring knowledge because `jobs/scoring.ts` was off-limits; reconcile after the branches land.
+  - Keyed salary adapters were verified with local documented fixtures only; no keys or live API calls were used.
+  - Full ESLint still has only the locked baseline `quiz.tsx:46` error; do not hide or fix it in this branch.
 
 ---
 
