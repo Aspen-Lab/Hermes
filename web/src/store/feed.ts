@@ -168,92 +168,119 @@ async function ensureAdvisorSeeds(
   return { seedTexts: cachedTexts, seedWorkIds: cachedIds };
 }
 
-async function fetchRealFeed(
+function activeSurfaceTopics(
   profile: UserProfile,
+  surface: "papers" | "events" | "jobs",
+) {
+  const activeTopics = profile.activeSearchInputs?.[surface];
+  return {
+    topics: (activeTopics?.required ?? []).filter(Boolean),
+    softTopics: (activeTopics?.explore ?? []).filter(Boolean),
+  };
+}
+
+export function paperFeedRequestBody(
+  profile: UserProfile,
+  advisorSeeds: { seedTexts: string[]; seedWorkIds: string[] },
   aiPaperSearchEnabled = true,
   excludeIds: string[] = [],
-): Promise<Paper[]> {
-  const topics = (profile.researchTopics ?? []).filter(Boolean);
-  if (topics.length === 0) return [];
-
-  // Advisor / PI discovery seeds (recomputed monthly). Their text biases TF-IDF
-  // scoring; their work IDs anchor the citation-neighborhood pull in the pipeline.
-  const advisorSeeds = await ensureAdvisorSeeds(profile);
-  // Promote project description + open challenges into seedTexts. These get
-  // concatenated into the TF-IDF profile string, so papers that mention the
-  // user's specific work or the challenges they're hunting bias up the rank.
+): Record<string, unknown> {
+  const { topics, softTopics } = activeSurfaceTopics(profile, "papers");
   const seedTexts = [
     profile.currentProject,
     profile.currentChallenges,
     ...advisorSeeds.seedTexts,
   ].filter((s): s is string => Boolean(s && s.trim().length > 0));
-  const negativeTopics = (profile.dislikedTopics ?? []).filter((s) => s.trim().length > 0);
+  const negativeTopics = (profile.dislikedTopics ?? []).filter(
+    (s) => s.trim().length > 0,
+  );
   const preferenceLedger = profile.preferenceLedger ?? {};
-  const softTopics = (profile.softTopics ?? []).filter(Boolean);
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
   const hasUserLlmOverride =
     aiPaperSearchEnabled &&
     profile.feedAiProvider !== "default" &&
     Boolean(feedAiApiKey);
+
+  return {
+    topics,
+    softTopics: softTopics.length > 0 ? softTopics : undefined,
+    methods: profile.preferredMethods,
+    // Preferred journals double as a primary source filter (venue search)
+    // and earn a relevance boost in the pipeline (see applyJournalBoost).
+    venues:
+      (profile.preferredJournals ?? []).length > 0
+        ? profile.preferredJournals
+        : undefined,
+    seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+    preferenceLedger:
+      Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
+    negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
+    // Advisor citation-neighborhood discovery (new external work building on
+    // the advisor's seeds). Only sent once an advisor has been confirmed.
+    affiliation:
+      profile.advisorAuthorId && advisorSeeds.seedWorkIds.length > 0
+        ? {
+            authorId: profile.advisorAuthorId,
+            seedWorkIds: advisorSeeds.seedWorkIds,
+          }
+        : undefined,
+    topN: profile.paperCount,
+    aiTier: aiPaperSearchEnabled
+      ? (hasUserLlmOverride ? 2 : undefined)
+      : 0,
+    searchConnectors: profile.tavilyEnabled
+      ? {
+          tavily: {
+            enabled: true,
+            apiKey: tavilyApiKey || undefined,
+          },
+        }
+      : undefined,
+    llmOverride: hasUserLlmOverride
+      ? {
+          provider: profile.feedAiProvider,
+          apiKey: feedAiApiKey,
+        }
+      : undefined,
+    controls: {
+      focus: profile.feedFocus,
+      freshness: profile.feedFreshness,
+      paperCount: profile.paperCount,
+      sourceMix: profile.feedSourceMix,
+      importance: profile.feedImportance,
+      methodMode: profile.feedMethodMode,
+      discoveryMode: profile.feedDiscoveryMode,
+      avoidReviews: profile.feedAvoidReviews,
+      avoidOldPapers: profile.feedAvoidOldPapers,
+      avoidBroadSurveys: profile.feedAvoidBroadSurveys,
+    },
+    excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+  };
+}
+
+async function fetchRealFeed(
+  profile: UserProfile,
+  aiPaperSearchEnabled = true,
+  excludeIds: string[] = [],
+): Promise<Paper[]> {
+  const { topics } = activeSurfaceTopics(profile, "papers");
+  if (topics.length === 0) return [];
+
+  // Advisor / PI discovery seeds (recomputed monthly). Their text biases TF-IDF
+  // scoring; their work IDs anchor the citation-neighborhood pull in the pipeline.
+  const advisorSeeds = await ensureAdvisorSeeds(profile);
   try {
     const data = await apiFetch<FeedResponse>("/api/feed", {
       method: "POST",
-      body: JSON.stringify({
-        topics,
-        softTopics: softTopics.length > 0 ? softTopics : undefined,
-        methods: profile.preferredMethods,
-        // Preferred journals double as a primary source filter (venue search)
-        // and earn a relevance boost in the pipeline (see applyJournalBoost).
-        venues:
-          (profile.preferredJournals ?? []).length > 0
-            ? profile.preferredJournals
-            : undefined,
-        seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
-        preferenceLedger:
-          Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
-        negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
-        // Advisor citation-neighborhood discovery (new external work building on
-        // the advisor's seeds). Only sent once an advisor has been confirmed.
-        affiliation:
-          profile.advisorAuthorId && advisorSeeds.seedWorkIds.length > 0
-            ? {
-                authorId: profile.advisorAuthorId,
-                seedWorkIds: advisorSeeds.seedWorkIds,
-              }
-            : undefined,
-        topN: profile.paperCount,
-        aiTier: aiPaperSearchEnabled
-          ? (hasUserLlmOverride ? 2 : undefined)
-          : 0,
-        searchConnectors: profile.tavilyEnabled
-          ? {
-              tavily: {
-                enabled: true,
-                apiKey: tavilyApiKey || undefined,
-              },
-            }
-          : undefined,
-        llmOverride: hasUserLlmOverride
-          ? {
-              provider: profile.feedAiProvider,
-              apiKey: feedAiApiKey,
-            }
-          : undefined,
-        controls: {
-          focus: profile.feedFocus,
-          freshness: profile.feedFreshness,
-          paperCount: profile.paperCount,
-          sourceMix: profile.feedSourceMix,
-          importance: profile.feedImportance,
-          methodMode: profile.feedMethodMode,
-          discoveryMode: profile.feedDiscoveryMode,
-          avoidReviews: profile.feedAvoidReviews,
-          avoidOldPapers: profile.feedAvoidOldPapers,
-          avoidBroadSurveys: profile.feedAvoidBroadSurveys,
-        },
-        excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
-      }),
+      body: JSON.stringify(
+        paperFeedRequestBody(
+          profile,
+          advisorSeeds,
+          aiPaperSearchEnabled,
+          excludeIds,
+        ),
+      ),
     });
     return data.items.map(scoredItemToPaper);
   } catch (err) {
@@ -266,10 +293,11 @@ async function fetchRealFeed(
 // same profile projection.
 export function opportunityRequestBody(
   profile: UserProfile,
+  surface: "events" | "jobs",
   excludeIds: string[],
 ): Record<string, unknown> {
-  const topics = (profile.researchTopics ?? []).filter(Boolean);
-  const softTopics = (profile.softTopics ?? []).filter(Boolean);
+  const { topics, softTopics } = activeSurfaceTopics(profile, surface);
+  const activeInputs = profile.activeSearchInputs;
   const preferenceLedger = profile.preferenceLedger ?? {};
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
@@ -284,9 +312,9 @@ export function opportunityRequestBody(
     ),
     preferenceLedger:
       Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
-    careerStage: profile.careerStage,
+    careerStage: activeInputs?.careerStage,
     industryVsAcademia: profile.industryVsAcademia,
-    locationPreferences: profile.locationPreferences,
+    locationPreferences: activeInputs?.locationPreferences ?? [],
     currentProject: profile.currentProject,
     topN: DEFAULT_OPPORTUNITY_TOP_N,
     aiTier: hasUserLlmOverride ? 2 : undefined,
@@ -312,14 +340,16 @@ async function fetchRealEvents(
   profile: UserProfile,
   excludeIds: string[] = [],
 ): Promise<OpportunityClientPool<Event>> {
-  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) {
+  if (activeSurfaceTopics(profile, "events").topics.length === 0) {
     return emptyOpportunityClientPool<Event>();
   }
   try {
     const res = await fetch("/api/events/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+      body: JSON.stringify(
+        opportunityRequestBody(profile, "events", excludeIds),
+      ),
     });
     if (!res.ok) {
       console.error("[feed] /api/events/feed returned", res.status);
@@ -341,14 +371,14 @@ async function fetchRealJobs(
   profile: UserProfile,
   excludeIds: string[] = [],
 ): Promise<OpportunityClientPool<Job>> {
-  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) {
+  if (activeSurfaceTopics(profile, "jobs").topics.length === 0) {
     return emptyOpportunityClientPool<Job>();
   }
   try {
     const res = await fetch("/api/jobs/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+      body: JSON.stringify(opportunityRequestBody(profile, "jobs", excludeIds)),
     });
     if (!res.ok) {
       console.error("[feed] /api/jobs/feed returned", res.status);

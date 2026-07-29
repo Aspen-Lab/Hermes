@@ -54,12 +54,12 @@ describe("profile hydration", () => {
       promotedOn: localCalendarDate(),
     });
 
-    const request = opportunityRequestBody(hydrated, []);
+    const request = opportunityRequestBody(hydrated, "events", []);
     expect(request.topics).toEqual(
-      hydrated.activeSearchInputs?.papers.required,
+      hydrated.activeSearchInputs?.events.required,
     );
     expect(request.softTopics).toEqual(
-      hydrated.activeSearchInputs?.papers.explore,
+      hydrated.activeSearchInputs?.events.explore,
     );
     vi.unstubAllGlobals();
   });
