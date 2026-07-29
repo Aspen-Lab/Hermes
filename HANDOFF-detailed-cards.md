@@ -48,7 +48,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.2 | `lib/opportunities/salary.ts` — `normalizeSalary()` for structured min/max/currency/period inputs, with a sanity floor | DONE | `npx vitest run src/lib/opportunities/salary.test.ts` → 1 file / 29 tests passed; all 6 measured Himalayas rows covered and garbage `50–1000 USD/monthly` rejected |
 | P1.3 | `lib/opportunities/salary.ts` — `formatSalary()` display strings | DONE | `npx vitest run src/lib/opportunities/salary.test.ts` → 1 file / 35 tests passed; all periods, USD/EUR/ZAR, ranges, single values, and canonical missing label covered |
 | P1.4 | `lib/opportunities/prestige.ts` — `eventPrestige()` from a CCF/CORE rank string | DONE | `npx vitest run src/lib/opportunities/prestige.test.ts` → 1 file / 6 tests passed; A*, A, B, C, mixed, and absent ranks covered |
-| P1.5 | `lib/opportunities/prestige.ts` — `jobPrestige()` from company + source + description | TODO | |
+| P1.5 | `lib/opportunities/prestige.ts` — `jobPrestige()` from company + source + description | IN_PROGRESS | |
 | P1.6 | `lib/opportunities/urgency.ts` — shared deadline/date urgency buckets (extracted from the event detail page) | TODO | |
 | P1.7 | `lib/opportunities/match-quality.ts` — score → percentage + band label | TODO | |
 | P1.8 | `lib/jobs/summarize.ts` — `summarizeJob()`: 2–3 key sentences from a raw posting, no LLM | TODO | |
