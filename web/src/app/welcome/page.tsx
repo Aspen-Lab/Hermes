@@ -58,6 +58,10 @@ import {
   isStepDone,
   readPersonaDone,
 } from "./completeness";
+import {
+  createTopicMirroringController,
+  type TopicMirroringController,
+} from "./topic-mirroring";
 
 const DEFAULT_NAME = "Peer Member";
 const TOPICS_IDX = STEP_META.findIndex((m) => m.key === "topics");
@@ -71,6 +75,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
   const store = useProfileStore();
+  const topicMirroringRef = useRef<TopicMirroringController | null>(null);
   const completeOnboarding = useProfileStore((s) => s.completeOnboarding);
   // Wait for local hydration AND the initial remote sync before choosing the
   // resume position — otherwise a signed-in returning user's wizard freezes
@@ -192,6 +197,13 @@ export default function WelcomePage() {
   }, []);
 
   const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
+  const topicMirroring = () => {
+    topicMirroringRef.current ??= createTopicMirroringController(
+      profile,
+      store,
+    );
+    return topicMirroringRef.current;
+  };
 
   return (
     <div className="min-h-[100dvh] bg-bg flex flex-col items-center">
@@ -263,8 +275,12 @@ export default function WelcomePage() {
                       <TopicsField
                         required={profile.researchTopics}
                         soft={profile.softTopics ?? []}
-                        onChangeRequired={store.updateTopics}
-                        onChangeSoft={store.updateSoftTopics}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updatePaperRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updatePaperExplore(topics)
+                        }
                       />
                     </div>
                   </Field>
@@ -273,8 +289,12 @@ export default function WelcomePage() {
                       <TopicsField
                         required={profile.eventRequiredTopics}
                         soft={profile.eventExploreTopics}
-                        onChangeRequired={store.updateEventTopics}
-                        onChangeSoft={store.updateEventSoftTopics}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updateEventRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updateEventExplore(topics)
+                        }
                       />
                     </div>
                   </Field>
@@ -283,8 +303,12 @@ export default function WelcomePage() {
                       <TopicsField
                         required={profile.jobRequiredTopics}
                         soft={profile.jobExploreTopics}
-                        onChangeRequired={store.updateJobTopics}
-                        onChangeSoft={store.updateJobSoftTopics}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updateJobRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updateJobExplore(topics)
+                        }
                       />
                     </div>
                   </Field>
