@@ -65,7 +65,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P4.1 | Topics step renders three `TopicsField` blocks (Papers / Events / Jobs) | DONE | `npx tsc --noEmit` and `npx eslint src/app/welcome/page.tsx` — passed |
 | P4.2 | Events and Jobs prefill from Papers as the user types | DONE | `npx vitest run src/app/welcome/topic-mirroring.test.ts` — 2 passed; tsc and focused eslint — passed |
 | P4.3 | One-line purpose description beside each of the three | DONE | `npx tsc --noEmit` and focused eslint (welcome, field-kit, topic-copy) — passed |
-| P4.4 | Step gating still requires only Papers Required ≥ 1 | IN_PROGRESS | |
+| P4.4 | Step gating still requires only Papers Required ≥ 1 | DONE | `npx vitest run src/app/welcome/completeness.test.ts` — 13 passed |
 
 ### Phase 5 — Profile settings
 

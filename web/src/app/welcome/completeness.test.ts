@@ -33,6 +33,32 @@ describe("isStepDone", () => {
     ).toBe(true);
   });
 
+  it("topics: Events and Jobs never change the Papers Required gate", () => {
+    expect(
+      isStepDone(
+        "topics",
+        profileWith({
+          eventRequiredTopics: ["battery conferences"],
+          jobRequiredTopics: ["battery scientist"],
+        }),
+        false,
+      ),
+    ).toBe(false);
+    expect(
+      isStepDone(
+        "topics",
+        profileWith({
+          researchTopics: ["batteries"],
+          eventRequiredTopics: [],
+          eventExploreTopics: [],
+          jobRequiredTopics: [],
+          jobExploreTopics: [],
+        }),
+        false,
+      ),
+    ).toBe(true);
+  });
+
   it("work: any of project/challenges/school/advisor marks it done", () => {
     expect(isStepDone("work", profileWith({ currentProject: "p" }), false)).toBe(true);
     expect(isStepDone("work", profileWith({ school: "MIT" }), false)).toBe(true);
