@@ -4,12 +4,22 @@ import {
   runEventsPipeline,
 } from "@/lib/events/pipeline";
 import { eventSources } from "@/lib/events/sources";
-import type { EventSourceAdapter, RawEventItem } from "@/lib/events/types";
+import type {
+  EventsFeedRequest,
+  EventSourceAdapter,
+  RawEventItem,
+} from "@/lib/events/types";
 import { buildDailyJobPool } from "@/lib/jobs/pipeline";
 import { jobSources } from "@/lib/jobs/sources";
 import type { JobSourceAdapter, RawJobItem } from "@/lib/jobs/types";
 import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
-import type { CachedPool, PoolCache } from "./pool-cache";
+import { opportunityRequestBody } from "@/store/feed";
+import { defaultProfile, type UserProfile } from "@/types";
+import {
+  derivePoolCacheKey,
+  type CachedPool,
+  type PoolCache,
+} from "./pool-cache";
 
 class MemoryPoolCache implements PoolCache {
   readonly values = new Map<string, CachedPool>();
@@ -112,6 +122,85 @@ describe("daily opportunity pool wiring", () => {
     expect(visible.items).toHaveLength(1);
     expect(displayed.items).toHaveLength(0);
     expect(Array.from(cache.values.values())[0]?.items).toHaveLength(1);
+    expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
+  });
+
+  it("keeps today's event cache key and search count after a pending topic edit", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(new Response("{}"));
+    vi.stubGlobal("fetch", fetchSpy);
+    const source: EventSourceAdapter = {
+      id: "eventweb",
+      enabled: () => true,
+      fetch: async () => {
+        await fetch("https://network.test/events");
+        return [eventItem];
+      },
+    };
+    eventSources.splice(0, eventSources.length, source);
+    const cache = new MemoryPoolCache();
+    const profile: UserProfile = {
+      ...defaultProfile,
+      researchTopics: ["pending-paper"],
+      eventRequiredTopics: ["pending-event"],
+      eventExploreTopics: ["pending-event-explore"],
+      careerStage: "Postdoc",
+      locationPreferences: ["Pending location"],
+      activeSearchInputs: {
+        papers: { required: ["paper"], explore: [] },
+        events: {
+          required: ["solid-state battery"],
+          explore: ["electrochemistry"],
+        },
+        jobs: { required: ["battery scientist"], explore: [] },
+        careerStage: "Research Scientist",
+        locationPreferences: ["Chicago"],
+        promotedOn: "2026-07-27",
+      },
+    };
+    const firstRequest = opportunityRequestBody(
+      profile,
+      "events",
+      [],
+    ) as unknown as EventsFeedRequest;
+
+    const first = await buildDailyEventPool(firstRequest, { cache, now });
+    const callsAfterFirstBuild = fetchSpy.mock.calls.length;
+    const firstKey = derivePoolCacheKey({
+      surface: "events",
+      requiredTopics: firstRequest.topics,
+      exploreTopics: firstRequest.softTopics,
+      careerStage: firstRequest.careerStage,
+      locationPreferences: firstRequest.locationPreferences,
+      now,
+    });
+    const editedPending: UserProfile = {
+      ...profile,
+      researchTopics: ["edited-pending-paper"],
+      eventRequiredTopics: ["edited-pending-event"],
+      eventExploreTopics: ["edited-pending-event-explore"],
+      careerStage: "PhD Year 1",
+      locationPreferences: ["Edited pending location"],
+    };
+    const secondRequest = opportunityRequestBody(
+      editedPending,
+      "events",
+      [],
+    ) as unknown as EventsFeedRequest;
+
+    const second = await buildDailyEventPool(secondRequest, { cache, now });
+    const secondKey = derivePoolCacheKey({
+      surface: "events",
+      requiredTopics: secondRequest.topics,
+      exploreTopics: secondRequest.softTopics,
+      careerStage: secondRequest.careerStage,
+      locationPreferences: secondRequest.locationPreferences,
+      now,
+    });
+
+    expect(first.cacheHit).toBe(false);
+    expect(second.cacheHit).toBe(true);
+    expect(secondKey).toBe(firstKey);
+    expect(Array.from(cache.values.keys())).toEqual([firstKey]);
     expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
   });
 
