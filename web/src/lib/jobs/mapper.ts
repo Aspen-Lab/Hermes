@@ -3,6 +3,7 @@ import {
   normalizePreferenceConcepts,
   preferenceKey,
 } from "@/lib/preferences/ledger";
+import { summarizeJob } from "@/lib/jobs/summarize";
 import type { ScoredJobItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -61,6 +62,20 @@ function keyRequirements(item: ScoredJobItem): string[] {
 }
 
 export function scoredJobToJob(item: ScoredJobItem): Job {
+  const salary =
+    item.salaryMin !== undefined &&
+    item.salaryMax !== undefined &&
+    item.salaryCurrency !== undefined &&
+    item.salaryPeriod !== undefined
+      ? {
+          min: item.salaryMin,
+          max: item.salaryMax,
+          currency: item.salaryCurrency,
+          period: item.salaryPeriod,
+        }
+      : undefined;
+  const summary = summarizeJob(item.description, item.matchedKeywords) || undefined;
+
   return {
     id: item.id,
     roleTitle: item.title,
@@ -74,5 +89,12 @@ export function scoredJobToJob(item: ScoredJobItem): Job {
     relevanceScore: item.score,
     isSaved: false,
     preferenceSignals: jobPreferenceSignals(item),
+    salary,
+    salaryIsEstimated: salary ? item.salaryIsEstimated : undefined,
+    employmentType: item.employmentType,
+    sourceId: item.source,
+    summary,
+    matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
+    locationFit: undefined,
   };
 }
