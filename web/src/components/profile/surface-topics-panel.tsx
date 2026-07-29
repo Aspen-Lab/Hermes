@@ -94,6 +94,10 @@ export function SurfaceTopicsPanel({
           />
         </div>
       )}
+
+      <p className="border-t border-border/50 px-4 py-2.5 text-micro text-text-faint">
+        Changes take effect in tomorrow&apos;s search.
+      </p>
     </section>
   );
 }
