@@ -78,7 +78,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P6.1 | Collapsible Required/Explore panel under the search box on Papers, Events, Jobs | TODO | |
+| P6.1 | Collapsible Required/Explore panel under the search box on Papers, Events, Jobs | IN_PROGRESS | |
 | P6.2 | "Active now" / "Pending tomorrow" shown when they differ | TODO | |
 | P6.3 | "Changes take effect in tomorrow's search." line | TODO | |
 
