@@ -38,7 +38,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P0.1 | Install deps in the worktree and confirm the baseline gate is green (73 tests, clean typecheck, clean lint) | IN_PROGRESS | |
+| P0.1 | Install deps in the worktree and confirm the baseline gate is green (73 tests, clean typecheck, clean lint) | DONE | `npx vitest run` → 6 files / 73 tests passed; `npx tsc --noEmit` → exit 0; `npx eslint .` → exactly 1 pre-existing error at `persona/quiz.tsx:46`, 0 warnings |
 
 ### Phase 1 — Pure logic in `lib/`, fully unit-tested
 
