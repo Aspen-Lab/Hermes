@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { adzunaJobToRawItem } from "./adzuna";
 import { himalayasJobToRawItem } from "./himalayas";
+import { jsearchJobToRawItem } from "./jsearch";
 import { remotiveJobToRawItem } from "./remotive";
+import { usaJobsDescriptorToRawItem } from "./usajobs";
 
 const remotiveBase = {
   id: 42,
@@ -79,6 +82,113 @@ describe("Himalayas salary mapping", () => {
         maxSalary: 1_000,
         currency: "USD",
         salaryPeriod: "monthly",
+      }),
+    ).toMatchObject({
+      salaryMin: undefined,
+      salaryMax: undefined,
+      salaryCurrency: undefined,
+      salaryPeriod: undefined,
+    });
+  });
+});
+
+describe("Adzuna salary mapping", () => {
+  const base = {
+    id: "adzuna-1",
+    title: "Battery Scientist",
+    redirect_url: "https://www.adzuna.com/details/adzuna-1",
+  };
+
+  it("maps an annual estimate and labels it as estimated", () => {
+    expect(
+      adzunaJobToRawItem(
+        { ...base, salary_min: 90_000, salary_max: 120_000, salary_is_predicted: "1" },
+        "us",
+      ),
+    ).toMatchObject({
+      salaryMin: 90_000,
+      salaryMax: 120_000,
+      salaryCurrency: "USD",
+      salaryPeriod: "year",
+      salaryIsEstimated: true,
+    });
+  });
+
+  it("leaves salary fields empty when salary is absent", () => {
+    expect(adzunaJobToRawItem(base, "us")).toMatchObject({
+      salaryMin: undefined,
+      salaryMax: undefined,
+      salaryCurrency: undefined,
+      salaryPeriod: undefined,
+      salaryIsEstimated: undefined,
+    });
+  });
+});
+
+describe("JSearch salary mapping", () => {
+  const base = {
+    job_id: "jsearch-1",
+    job_title: "Research Engineer",
+    job_apply_link: "https://example.com/jsearch-1",
+  };
+
+  it("maps an hourly salary in its stated currency", () => {
+    expect(
+      jsearchJobToRawItem({
+        ...base,
+        job_min_salary: 45,
+        job_max_salary: 65,
+        job_salary_currency: "USD",
+        job_salary_period: "HOUR",
+      }),
+    ).toMatchObject({
+      salaryMin: 45,
+      salaryMax: 65,
+      salaryCurrency: "USD",
+      salaryPeriod: "hour",
+    });
+  });
+
+  it("leaves salary fields empty when salary is absent", () => {
+    expect(jsearchJobToRawItem(base)).toMatchObject({
+      salaryMin: undefined,
+      salaryMax: undefined,
+      salaryCurrency: undefined,
+      salaryPeriod: undefined,
+    });
+  });
+});
+
+describe("USAJobs salary mapping", () => {
+  const base = {
+    PositionID: "usajobs-1",
+    PositionTitle: "Physical Scientist",
+    PositionURI: "https://www.usajobs.gov/job/usajobs-1",
+  };
+
+  it("maps a documented per-annum remuneration range", () => {
+    expect(
+      usaJobsDescriptorToRawItem({
+        ...base,
+        PositionRemuneration: [
+          { MinimumRange: "98,496", MaximumRange: "151,308", RateIntervalCode: "PA" },
+        ],
+      }),
+    ).toMatchObject({
+      salaryMin: 98_496,
+      salaryMax: 151_308,
+      salaryCurrency: "USD",
+      salaryPeriod: "year",
+    });
+  });
+
+  it("suppresses salary for an unrecognized interval code", () => {
+    expect(
+      usaJobsDescriptorToRawItem({
+        ...base,
+        PositionRemuneration: [
+          { MinimumRange: "98,496", MaximumRange: "151,308", RateIntervalCode: "PX" },
+        ],
       }),
     ).toMatchObject({
       salaryMin: undefined,

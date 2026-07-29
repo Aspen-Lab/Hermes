@@ -37,6 +37,7 @@ export interface RawJobItem {
   salaryMax?: number;
   salaryCurrency?: string;
   salaryPeriod?: SalaryPeriod;
+  salaryIsEstimated?: boolean;
   tags: string[];
   preferenceSignals?: PreferenceConcept[];
 }
