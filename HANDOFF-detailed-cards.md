@@ -71,7 +71,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P3.1 | `components/ui/prestige-badge.tsx` | IN_PROGRESS | |
+| P3.1 | `components/ui/prestige-badge.tsx` | DONE | `npx tsc --noEmit` → exit 0; targeted ESLint → exit 0; `npx eslint .` → exactly the 1 pre-existing `quiz.tsx:46` error, no others |
 | P3.2 | `components/ui/facts-strip.tsx` — the shared time / place / money row | TODO | |
 | P3.3 | `components/ui/urgency-bar.tsx` | TODO | |
 | P3.4 | `components/ui/matched-terms.tsx` + `components/ui/highlighted-text.tsx` | TODO | |
