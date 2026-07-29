@@ -39,7 +39,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.2 | Store setters for Events and Jobs Required/Explore | DONE | `npx vitest run src/store/profile.test.ts` — 1 passed |
 | P1.3 | Persist migration v2 → v3: copy existing topics into all three surfaces | DONE | `npx vitest run src/store/profile.test.ts` — 3 passed |
 | P1.4 | `promoteSearchInputs()` — pending → active, once per local day | DONE | `npx vitest run src/store/profile.test.ts src/lib/opportunities/pool-cache.test.ts` — 9 passed |
-| P1.5 | Run promotion once on store hydration | TODO | |
+| P1.5 | Run promotion once on store hydration | IN_PROGRESS | |
 
 ### Phase 2 — Pipelines read the day-locked values
 
