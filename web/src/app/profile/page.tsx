@@ -91,6 +91,10 @@ export default function ProfilePage() {
     updateDisplayName,
     updateTopics,
     updateSoftTopics,
+    updateEventTopics,
+    updateEventSoftTopics,
+    updateJobTopics,
+    updateJobSoftTopics,
     updatePreferredJournals,
     updateCareerStage,
     updateIndustryPreference,
@@ -226,6 +230,10 @@ export default function ProfilePage() {
           setName={setName}
           updateTopics={updateTopics}
           updateSoftTopics={updateSoftTopics}
+          updateEventTopics={updateEventTopics}
+          updateEventSoftTopics={updateEventSoftTopics}
+          updateJobTopics={updateJobTopics}
+          updateJobSoftTopics={updateJobSoftTopics}
           updatePreferredJournals={updatePreferredJournals}
           updateSchool={updateSchool}
           updateCurrentProject={updateCurrentProject}
@@ -1492,6 +1500,10 @@ function EditView({
   setName,
   updateTopics,
   updateSoftTopics,
+  updateEventTopics,
+  updateEventSoftTopics,
+  updateJobTopics,
+  updateJobSoftTopics,
   updatePreferredJournals,
   updateSchool,
   updateCurrentProject,
@@ -1517,6 +1529,10 @@ function EditView({
   setName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateSoftTopics: (v: string[]) => void;
+  updateEventTopics: (v: string[]) => void;
+  updateEventSoftTopics: (v: string[]) => void;
+  updateJobTopics: (v: string[]) => void;
+  updateJobSoftTopics: (v: string[]) => void;
   updatePreferredJournals: (v: string[]) => void;
   updateSchool: (s: string) => void;
   updateCurrentProject: (s: string) => void;
@@ -1553,12 +1569,35 @@ function EditView({
         />
       </EditRow>
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
-        <TopicsField
-          required={profile.researchTopics}
-          soft={profile.softTopics ?? []}
-          onChangeRequired={updateTopics}
-          onChangeSoft={updateSoftTopics}
-        />
+        <div className="space-y-6">
+          <div>
+            <p className="mb-2 text-meta font-semibold text-heading">Papers</p>
+            <TopicsField
+              required={profile.researchTopics}
+              soft={profile.softTopics ?? []}
+              onChangeRequired={updateTopics}
+              onChangeSoft={updateSoftTopics}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-meta font-semibold text-heading">Events</p>
+            <TopicsField
+              required={profile.eventRequiredTopics}
+              soft={profile.eventExploreTopics}
+              onChangeRequired={updateEventTopics}
+              onChangeSoft={updateEventSoftTopics}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-meta font-semibold text-heading">Jobs</p>
+            <TopicsField
+              required={profile.jobRequiredTopics}
+              soft={profile.jobExploreTopics}
+              onChangeRequired={updateJobTopics}
+              onChangeSoft={updateJobSoftTopics}
+            />
+          </div>
+        </div>
       </EditRow>
 
       <EditRow icon={<IconBuilding size={13} strokeWidth={1.9} />} tone="neutral" label="Affiliation">
