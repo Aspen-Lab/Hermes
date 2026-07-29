@@ -151,6 +151,20 @@ export type CareerStage =
   | "Postdoc"
   | "Research Scientist";
 
+export interface SurfaceTopics {
+  required: string[];
+  explore: string[];
+}
+
+export interface ActiveSearchInputs {
+  papers: SurfaceTopics;
+  events: SurfaceTopics;
+  jobs: SurfaceTopics;
+  careerStage?: CareerStage;
+  locationPreferences: string[];
+  promotedOn: string;
+}
+
 export type IndustryAcademiaPreference =
   | "academia"
   | "industry"
@@ -181,6 +195,11 @@ export type ColorTheme = `${ThemeMode}:${ThemeAccent}`;
 export interface UserProfile {
   displayName: string;
   researchTopics: string[];
+  eventRequiredTopics: string[];
+  eventExploreTopics: string[];
+  jobRequiredTopics: string[];
+  jobExploreTopics: string[];
+  activeSearchInputs?: ActiveSearchInputs;
   careerStage: CareerStage;
   industryVsAcademia: IndustryAcademiaPreference;
   locationPreferences: string[];
@@ -323,6 +342,10 @@ export const defaultProfile: UserProfile = {
   // Empty by design — first-run users see the profile-setup nudge in the
   // header rather than a feed pre-tuned for someone else's PhD.
   researchTopics: [],
+  eventRequiredTopics: [],
+  eventExploreTopics: [],
+  jobRequiredTopics: [],
+  jobExploreTopics: [],
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],
