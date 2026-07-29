@@ -51,7 +51,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.5 | `lib/opportunities/prestige.ts` — `jobPrestige()` from company + source + description | DONE | `npx vitest run src/lib/opportunities/prestige.test.ts` → 1 file / 12 tests passed; every job tier covered |
 | P1.6 | `lib/opportunities/urgency.ts` — shared deadline/date urgency buckets (extracted from the event detail page) | DONE | `npx vitest run src/lib/opportunities/urgency.test.ts` → 1 file / 13 tests passed; `npx tsc --noEmit` → exit 0; event detail page consumes shared buckets |
 | P1.7 | `lib/opportunities/match-quality.ts` — score → percentage + band label | DONE | `npx vitest run src/lib/opportunities/match-quality.test.ts` → 1 file / 7 tests passed; 0.7, 0.89, 0.9, missing, dirty, and non-finite values covered |
-| P1.8 | `lib/jobs/summarize.ts` — `summarizeJob()`: 2–3 key sentences from a raw posting, no LLM | TODO | |
+| P1.8 | `lib/jobs/summarize.ts` — `summarizeJob()`: 2–3 key sentences from a raw posting, no LLM | IN_PROGRESS | |
 | P1.9 | `lib/jobs/summarize.ts` — `highlightSegments()`: split text into matched / unmatched spans | TODO | |
 
 ### Phase 2 — Data plumbing
