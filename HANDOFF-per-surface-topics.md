@@ -333,7 +333,12 @@ Without this the edit looks like it did nothing, because today's feed still refl
 - What the next agent should watch out for:
 ```
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-29T01:06:51.7670210-05:00
+- Tasks completed this session: P1.1–P6.3 (21/21)
+- Left IN_PROGRESS or BLOCKED: None
+- Test/typecheck status at stop time: `npx vitest run` — 33 files, 317 passed; `npx tsc --noEmit` — passed; changed-file eslint — passed; `npm run build` — passed (27 static pages); live Events benchmark — 1 passed, 55% city coverage, Cambridge EnerTech summit resolved to Chicago. Full `npx eslint src` retains the unchanged baseline error at `src/components/persona/quiz.tsx:46` (`react-hooks/set-state-in-effect`).
+- Anything I changed that was NOT in the plan, and why: Extracted `localCalendarDate` to a client-safe module while re-exporting it from `pool-cache.ts` so the client store does not import `node:crypto`; generalized shared `TopicsField` copy for Events/Jobs and restored the locked `Explore` noun; aligned the feed auto-load signature to active Papers topics after final review found it still read pending values.
+- What the next agent should watch out for: Promotion is intentionally per-device and occurs during profile hydration. The production build also reports the pre-existing Turbopack NFT trace warning from the papers full-text path.
 
 ---
 
