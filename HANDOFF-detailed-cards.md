@@ -50,7 +50,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P1.4 | `lib/opportunities/prestige.ts` — `eventPrestige()` from a CCF/CORE rank string | DONE | `npx vitest run src/lib/opportunities/prestige.test.ts` → 1 file / 6 tests passed; A*, A, B, C, mixed, and absent ranks covered |
 | P1.5 | `lib/opportunities/prestige.ts` — `jobPrestige()` from company + source + description | DONE | `npx vitest run src/lib/opportunities/prestige.test.ts` → 1 file / 12 tests passed; every job tier covered |
 | P1.6 | `lib/opportunities/urgency.ts` — shared deadline/date urgency buckets (extracted from the event detail page) | DONE | `npx vitest run src/lib/opportunities/urgency.test.ts` → 1 file / 13 tests passed; `npx tsc --noEmit` → exit 0; event detail page consumes shared buckets |
-| P1.7 | `lib/opportunities/match-quality.ts` — score → percentage + band label | TODO | |
+| P1.7 | `lib/opportunities/match-quality.ts` — score → percentage + band label | IN_PROGRESS | |
 | P1.8 | `lib/jobs/summarize.ts` — `summarizeJob()`: 2–3 key sentences from a raw posting, no LLM | TODO | |
 | P1.9 | `lib/jobs/summarize.ts` — `highlightSegments()`: split text into matched / unmatched spans | TODO | |
 
