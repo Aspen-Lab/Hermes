@@ -22,8 +22,27 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
+import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { reportProviderConfigured } from "@/components/reports/provider-configured";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
+const EVENT_TIER_UPGRADE_ITEMS = [
+  {
+    title: "Personal attendance plan",
+    description:
+      "Turn the programme, deadlines, and costs into a plan for your priorities.",
+  },
+  {
+    title: "People and organisations to meet",
+    description:
+      "Connect the full roster to your papers, saved roles, and declared interests.",
+  },
+  {
+    title: "Post-event follow-through",
+    description:
+      "Prepare specific follow-ups from the sessions and contacts that matter to you.",
+  },
+];
 
 export interface EventRosterContext {
   savedEmployers: string[];
@@ -610,6 +629,7 @@ export function EventReport({
   rosterContext,
   starredKeys = new Set<string>(),
   isSaved,
+  providerConfigured = false,
   onToggleStar,
   onToggleSave,
   onDismiss,
@@ -619,6 +639,7 @@ export function EventReport({
   rosterContext?: EventRosterContext;
   starredKeys?: ReadonlySet<string>;
   isSaved: boolean;
+  providerConfigured?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
   onDismiss: () => void;
@@ -778,6 +799,13 @@ export function EventReport({
           </ReportSection>
         </div>
       )}
+
+      <div className="mx-auto max-w-[720px]">
+        <TierUpgradeBlock
+          items={EVENT_TIER_UPGRADE_ITEMS}
+          providerConfigured={providerConfigured}
+        />
+      </div>
     </PageContainer>
   );
 }
@@ -864,6 +892,7 @@ export default function EventDetailPage({
       rosterContext={rosterContext}
       starredKeys={starredKeys}
       isSaved={isSaved}
+      providerConfigured={reportProviderConfigured(profile)}
       onToggleStar={toggleStar}
       onToggleSave={() =>
         isSaved ? unsaveEvent(event.id) : saveEvent(event)

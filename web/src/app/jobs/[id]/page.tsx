@@ -4,11 +4,32 @@ import { use, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { Job, RoleKind } from "@/types";
 import { useFeedStore } from "@/store/feed";
+import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
 import { formatSalary } from "@/lib/opportunities/salary";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
+import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { reportProviderConfigured } from "@/components/reports/provider-configured";
+
+const JOB_TIER_UPGRADE_ITEMS = [
+  {
+    title: "Tailored application strategy",
+    description:
+      "Turn the posting evidence into a focused plan for this specific role.",
+  },
+  {
+    title: "Requirement-by-requirement evidence",
+    description:
+      "Connect each stated requirement to examples from your profile and work.",
+  },
+  {
+    title: "Interview preparation",
+    description:
+      "Develop role-specific questions and preparation areas from the full posting.",
+  },
+];
 
 const ROLE_LABELS: Record<RoleKind, string> = {
   internship: "Internship",
@@ -299,12 +320,14 @@ export function JobReport({
   job,
   isSaved,
   nowMs,
+  providerConfigured = false,
   onToggleSave,
   onDismiss,
 }: {
   job: Job;
   isSaved: boolean;
   nowMs: number;
+  providerConfigured?: boolean;
   onToggleSave: () => void;
   onDismiss: () => void;
 }) {
@@ -513,6 +536,11 @@ export function JobReport({
           </div>
         </ReportSection>
       )}
+
+      <TierUpgradeBlock
+        items={JOB_TIER_UPGRADE_ITEMS}
+        providerConfigured={providerConfigured}
+      />
     </PageContainer>
   );
 }
@@ -537,6 +565,7 @@ export default function JobDetailPage({
   const saveJob = useFeedStore((state) => state.saveJob);
   const unsaveJob = useFeedStore((state) => state.unsaveJob);
   const notInterestedJob = useFeedStore((state) => state.notInterestedJob);
+  const profile = useProfileStore((state) => state.profile);
   const [nowMs] = useState(Date.now);
 
   const job =
@@ -565,6 +594,7 @@ export default function JobDetailPage({
       job={job}
       isSaved={isSaved}
       nowMs={nowMs}
+      providerConfigured={reportProviderConfigured(profile)}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onDismiss={() => {
         notInterestedJob(job);

@@ -45,8 +45,27 @@ import {
   streamPaperReport,
   type StageId,
 } from "@/lib/papers/report-stream";
+import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { reportProviderConfigured } from "@/components/reports/provider-configured";
 
 const WORDS_PER_MINUTE = 220;
+const PAPER_TIER_UPGRADE_ITEMS = [
+  {
+    title: "Implications for your current work",
+    description:
+      "Connect the paper's evidence to the project and challenges in your profile.",
+  },
+  {
+    title: "Full-text caveat review",
+    description:
+      "Inspect the complete methods, figures, and limitations beyond the abstract.",
+  },
+  {
+    title: "Concrete next experiments",
+    description:
+      "Turn the findings into testable follow-up ideas grounded in the paper.",
+  },
+];
 const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
 const PAPER_REPORT_CACHE_MAX_ENTRIES = 40;
 // TTL keeps deep-mode cache fresh enough that a transient failure (network
@@ -1517,6 +1536,11 @@ export default function PaperDetailPage({
             </div>
           </section>
         )}
+
+        <TierUpgradeBlock
+          items={PAPER_TIER_UPGRADE_ITEMS}
+          providerConfigured={reportProviderConfigured(profile)}
+        />
       </PageContainer>
     </>
   );

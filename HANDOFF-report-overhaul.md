@@ -62,7 +62,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P3.1 | Rebuild the job report | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 56 files, 498 tests passed; 1 live benchmark skipped per §4; sparse + rich job report component tests passed; typecheck clean |
 | P3.2 | Rebuild the event report | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 57 files, 500 tests passed; 1 live benchmark skipped per §4; 30-organisation component test passed; typecheck clean |
-| P3.3 | Shared "with an AI key" locked block, on all three reports | IN_PROGRESS | |
+| P3.3 | Shared "with an AI key" locked block, on all three reports | DONE | `cd web && npx vitest run src/components/reports/tier-upgrade-block.test.tsx` — 1 file, 2 tests passed |
 
 ### Phase 4 — Applied state and Saved (spec plates 05, 12)
 
