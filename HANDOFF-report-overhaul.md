@@ -42,7 +42,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P1.1 | Store per-paper digest sentences in the feed store, keyed by paper id | DONE | `cd web && npx vitest run src/store/feed.test.ts` — 1 file, 4 tests passed |
 | P1.2 | Paper tile renders the sentence, with an abstract-derived fallback | DONE | `cd web && npx vitest run src/components/cards` — 1 file, 4 tests passed |
-| P1.3 | Remove the "Today's highlights" block from the Papers tab | TODO | |
+| P1.3 | Remove the "Today's highlights" block from the Papers tab | IN_PROGRESS | |
 
 ### Phase 2 — Tier 0 extraction (spec plates 02, 03, 08, 10)
 
