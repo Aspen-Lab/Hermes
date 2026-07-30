@@ -17,6 +17,8 @@ import { DotMatrixImage } from "@/components/dot-matrix-image";
 import { useProfileStore } from "@/store/profile";
 import { SearchResultCard } from "@/components/cards/search-result-card";
 import { FeedTile } from "@/components/cards/feed-tile";
+import { EventCard } from "@/components/cards/event-card";
+import { JobCard } from "@/components/cards/job-card";
 import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { DailyDigest } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
@@ -963,7 +965,7 @@ function DiscoveryPage() {
                 </div>
               )}
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {briefingItems.map((item) => (
                   <div
                     key={item.data.id}
@@ -971,10 +973,16 @@ function DiscoveryPage() {
                     data-tour={item.data.id === firstPaperId ? "paper-card" : undefined}
                     className="rounded-3xl transition-shadow"
                   >
-                    <FeedTile
-                      item={item}
-                      selected={item.kind === "paper" && item.data.id === selectedPaperId}
-                    />
+                    {item.kind === "paper" ? (
+                      <FeedTile
+                        item={item}
+                        selected={item.data.id === selectedPaperId}
+                      />
+                    ) : item.kind === "event" ? (
+                      <EventCard event={item.data} />
+                    ) : (
+                      <JobCard job={item.data} />
+                    )}
                   </div>
                 ))}
                 {opportunityPage.remaining > 0 ? (

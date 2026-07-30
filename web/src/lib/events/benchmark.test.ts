@@ -78,7 +78,7 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
       const topFive = survivors
         .filter((item) => item.score >= MIN_SCORE)
         .slice(0, 5)
-        .map(scoredEventToEvent);
+        .map((item) => scoredEventToEvent(item));
       const withCity = survivors.filter((item) => item.place?.city);
       const cityCoverage =
         survivors.length > 0 ? withCity.length / survivors.length : 0;

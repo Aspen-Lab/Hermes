@@ -3,6 +3,7 @@ import {
   normalizePreferenceConcepts,
   preferenceKey,
 } from "@/lib/preferences/ledger";
+import { locationFit } from "@/lib/opportunities/shared";
 import type { ScoredEventItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -43,10 +44,7 @@ export function eventPreferenceSignals(item: ScoredEventItem): PreferenceConcept
   ]).slice(0, MAX_SIGNALS);
 }
 
-export function scoredEventToEvent(item: ScoredEventItem): Event {
-  const description = item.rank
-    ? `${item.rank} · ${item.description}`
-    : item.description;
+export function scoredEventToEvent(item: ScoredEventItem, locationPreferences?: string[]): Event {
   return {
     id: item.id,
     name: item.name,
@@ -57,7 +55,7 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     place: item.place,
     isOnline: item.isOnline,
     deadline: item.deadline,
-    shortDescription: description.slice(0, 280),
+    shortDescription: item.description.slice(0, 280),
     relevanceReason: item.relevanceReason,
     facetPreferenceReason: item.facetPreferenceReason,
     linkOfficial: item.url,
@@ -65,5 +63,11 @@ export function scoredEventToEvent(item: ScoredEventItem): Event {
     relevanceScore: item.score,
     isSaved: false,
     preferenceSignals: eventPreferenceSignals(item),
+    rank: item.rank,
+    tags: item.tags.length > 0 ? item.tags : undefined,
+    matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
+    locationFit: locationPreferences
+      ? locationFit(item.location, item.isOnline, locationPreferences)
+      : undefined,
   };
 }

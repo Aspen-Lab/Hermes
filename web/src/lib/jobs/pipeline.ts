@@ -268,10 +268,12 @@ export async function runJobsPipeline(
     ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
     : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
-  const mappedPool = scored.map(scoredJobToJob);
+  const mappedPool = scored.map((item) =>
+    scoredJobToJob(item, req.locationPreferences),
+  );
 
   return {
-    items: returned.map(scoredJobToJob),
+    items: returned.map((item) => scoredJobToJob(item, req.locationPreferences)),
     pool: mappedPool,
     facetCounts: pool.facetCounts,
     meta: {

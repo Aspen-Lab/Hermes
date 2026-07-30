@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git pull *)"
+    ]
+  },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/I/Personal/Github - start up project/Peer/web/scripts/kill-dev-orphans.mjs\" 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "Cleaning up leftover dev workers"
+          }
+        ]
+      }
+    ]
+  }
+}

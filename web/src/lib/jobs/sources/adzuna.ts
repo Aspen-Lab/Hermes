@@ -1,6 +1,7 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
+import { normalizeSalary } from "@/lib/opportunities/salary";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Adzuna aggregates postings across 19 countries — the strongest industry-side
@@ -17,6 +18,9 @@ interface AdzunaJob {
   created?: string;
   category?: { label?: string };
   contract_time?: string;
+  salary_min?: number;
+  salary_max?: number;
+  salary_is_predicted?: string | number;
 }
 
 interface AdzunaResponse {
@@ -50,6 +54,19 @@ const COUNTRY_NAMES_BY_SLUG: Record<string, string> = {
   us: "United States",
 };
 
+const COUNTRY_CURRENCIES: Record<string, string> = {
+  au: "AUD",
+  ca: "CAD",
+  ch: "CHF",
+  de: "EUR",
+  fr: "EUR",
+  gb: "GBP",
+  in: "INR",
+  nl: "EUR",
+  sg: "SGD",
+  us: "USD",
+};
+
 export function adzunaCountries(locations: string[]): string[] {
   const matched = new Set<string>();
   for (const location of locations) {
@@ -68,6 +85,12 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
   const location = job.location?.display_name?.trim() || country.toUpperCase();
   const extractedPlace = parseStructuredLocation(location);
   const countryName = COUNTRY_NAMES_BY_SLUG[country.toLowerCase()];
+  const salary = normalizeSalary({
+    min: job.salary_min,
+    max: job.salary_max,
+    currency: COUNTRY_CURRENCIES[country.toLowerCase()],
+    period: "year",
+  });
   return {
     id: `adzuna:${routeSafeId(String(job.id))}`,
     source: "adzuna",
@@ -86,6 +109,12 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
     url,
     postedAt: job.created,
     employmentType: job.contract_time,
+    salaryMin: salary?.min,
+    salaryMax: salary?.max,
+    salaryCurrency: salary?.currency,
+    salaryPeriod: salary?.period,
+    salaryIsEstimated:
+      salary === null ? undefined : job.salary_is_predicted === "1" || job.salary_is_predicted === 1,
     tags: [job.category?.label].filter((t): t is string => Boolean(t && t.trim())),
   };
 }

@@ -1,5 +1,6 @@
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
+import { normalizeSalary } from "@/lib/opportunities/salary";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // USAJobs: US federal research positions (NIH, NSF, national labs). Free key
@@ -16,12 +17,23 @@ interface UsaJobsDescriptor {
   UserArea?: { Details?: { JobSummary?: string; MajorDuties?: string[] } };
   PositionSchedule?: Array<{ Name?: string }>;
   JobCategory?: Array<{ Name?: string }>;
+  PositionRemuneration?: Array<{
+    MinimumRange?: string;
+    MaximumRange?: string;
+    RateIntervalCode?: string;
+  }>;
 }
 
 interface UsaJobsResponse {
   SearchResult?: {
     SearchResultItems?: Array<{ MatchedObjectDescriptor?: UsaJobsDescriptor }>;
   };
+}
+
+function usaJobsAmount(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const amount = Number(value.replace(/,/g, ""));
+  return Number.isFinite(amount) ? amount : undefined;
 }
 
 export function usaJobsDescriptorToRawItem(
@@ -37,6 +49,23 @@ export function usaJobsDescriptorToRawItem(
     .join("\n");
   const location =
     descriptor.PositionLocationDisplay?.trim() || "United States";
+  const remuneration = descriptor.PositionRemuneration?.[0];
+  const period =
+    remuneration?.RateIntervalCode === "PA"
+      ? "year"
+      : remuneration?.RateIntervalCode === "PH"
+        ? "hour"
+        : remuneration?.RateIntervalCode === "PM"
+          ? "month"
+          : undefined;
+  const salary = period
+    ? normalizeSalary({
+        min: usaJobsAmount(remuneration?.MinimumRange),
+        max: usaJobsAmount(remuneration?.MaximumRange),
+        currency: "USD",
+        period,
+      })
+    : null;
   return {
     id: `usajobs:${routeSafeId(String(id))}`,
     source: "usajobs",
@@ -49,6 +78,10 @@ export function usaJobsDescriptorToRawItem(
     url,
     postedAt: descriptor.PublicationStartDate,
     employmentType: descriptor.PositionSchedule?.[0]?.Name,
+    salaryMin: salary?.min,
+    salaryMax: salary?.max,
+    salaryCurrency: salary?.currency,
+    salaryPeriod: salary?.period,
     tags: (descriptor.JobCategory ?? [])
       .map((c) => c.Name)
       .filter((t): t is string => Boolean(t && t.trim())),

@@ -15,44 +15,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
-
-function urgencyColor(days: number): {
-  text: string;
-  bg: string;
-  dot: string;
-  label: string;
-} {
-  if (days < 0) {
-    return {
-      text: "text-text-faint",
-      bg: "bg-surface/80",
-      dot: "bg-text-faint/50",
-      label: "Closed",
-    };
-  }
-  if (days <= 14) {
-    return {
-      text: "text-red",
-      bg: "bg-red/[0.06]",
-      dot: "bg-red",
-      label: "Soon",
-    };
-  }
-  if (days <= 60) {
-    return {
-      text: "text-accent",
-      bg: "bg-accent-dim",
-      dot: "bg-accent",
-      label: "Coming up",
-    };
-  }
-  return {
-    text: "text-text-muted",
-    bg: "bg-surface",
-    dot: "bg-text-muted",
-    label: "Upcoming",
-  };
-}
+import { eventUrgency } from "@/lib/opportunities/urgency";
 
 function pickRelatedEvents(current: Event, pool: Event[], limit = 3): Event[] {
   const others = pool.filter((e) => e.id !== current.id);
@@ -119,8 +82,8 @@ export default function EventDetailPage({
   const daysToEvent = daysUntil(event.date, now);
   const daysToDeadline = event.deadline ? daysUntil(event.deadline, now) : null;
   const deadlineStyle =
-    daysToDeadline !== null ? urgencyColor(daysToDeadline) : null;
-  const eventUrgency = urgencyColor(daysToEvent);
+    daysToDeadline !== null ? eventUrgency(daysToDeadline) : null;
+  const eventUrgencyStyle = eventUrgency(daysToEvent);
 
   const matchPct = formatMatchPct(event.relevanceScore);
   const primaryUrl = event.linkRegistration || event.linkOfficial;
@@ -151,8 +114,8 @@ export default function EventDetailPage({
         <div
           className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 text-meta uppercase tracking-[0.14em] text-text-faint mb-3"
         >
-          <span className={`inline-flex items-center gap-1.5 ${eventUrgency.text}`}>
-            <span className={`block w-[6px] h-[6px] rounded-full ${eventUrgency.dot}`} />
+          <span className={`inline-flex items-center gap-1.5 ${eventUrgencyStyle.text}`}>
+            <span className={`block w-[6px] h-[6px] rounded-full ${eventUrgencyStyle.dot}`} />
             {event.type}
           </span>
           <span className="text-border-strong">·</span>

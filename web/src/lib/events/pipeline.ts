@@ -275,10 +275,14 @@ export async function runEventsPipeline(
     ? aboveScoreFloor.filter((item) => !excludeIds.has(item.id))
     : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
-  const mappedPool = scored.map(scoredEventToEvent);
+  const mappedPool = scored.map((item) =>
+    scoredEventToEvent(item, req.locationPreferences),
+  );
 
   return {
-    items: returned.map(scoredEventToEvent),
+    items: returned.map((item) =>
+      scoredEventToEvent(item, req.locationPreferences),
+    ),
     pool: mappedPool,
     facetCounts: pool.facetCounts,
     meta: {

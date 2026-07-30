@@ -1,6 +1,7 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
+import { parseSalaryText } from "@/lib/opportunities/salary";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Remotive ToS: attribute + link back to the Remotive URL (we do — linkPosting
@@ -19,6 +20,7 @@ interface RemotiveJob {
   publication_date?: string;
   candidate_required_location?: string;
   description?: string;
+  salary?: string;
 }
 
 interface RemotiveResponse {
@@ -30,6 +32,8 @@ export function remotiveJobToRawItem(job: RemotiveJob): RawJobItem | null {
   const url = job.url?.trim();
   if (!title || !url || !job.id) return null;
   const location = job.candidate_required_location?.trim() || "Remote";
+  const salaryText = job.salary?.trim() || undefined;
+  const salary = parseSalaryText(salaryText);
   return {
     id: `remotive:${routeSafeId(String(job.id))}`,
     source: "remotive",
@@ -42,6 +46,11 @@ export function remotiveJobToRawItem(job: RemotiveJob): RawJobItem | null {
     url,
     postedAt: job.publication_date,
     employmentType: job.job_type,
+    salaryText,
+    salaryMin: salary?.min,
+    salaryMax: salary?.max,
+    salaryCurrency: salary?.currency,
+    salaryPeriod: salary?.period,
     tags: [job.category, ...(job.tags ?? [])].filter(
       (t): t is string => Boolean(t && t.trim()),
     ),

@@ -116,6 +116,11 @@ export interface Event {
   isSaved?: boolean;
   feedback?: ItemFeedback;
   preferenceSignals?: PreferenceConcept[];
+  // Detailed-card fields (additive for cross-branch merge safety).
+  rank?: string;
+  tags?: string[];
+  matchedTerms?: string[];
+  locationFit?: number;
 }
 
 // ── Job ──
@@ -137,6 +142,19 @@ export interface Job {
   isSaved?: boolean;
   feedback?: ItemFeedback;
   preferenceSignals?: PreferenceConcept[];
+  // Detailed-card fields (additive for cross-branch merge safety).
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+    period: "hour" | "month" | "year";
+  };
+  salaryIsEstimated?: boolean;
+  employmentType?: string;
+  sourceId?: string;
+  summary?: string;
+  matchedTerms?: string[];
+  locationFit?: number;
 }
 
 // ── User Profile ──

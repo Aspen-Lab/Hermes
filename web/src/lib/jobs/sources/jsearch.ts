@@ -1,5 +1,6 @@
 import { sanitizePlace } from "@/lib/opportunities/structured-extract";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { normalizeSalary } from "@/lib/opportunities/salary";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // JSearch (OpenWeb Ninja via RapidAPI) aggregates Google for Jobs — the widest
@@ -20,6 +21,10 @@ interface JSearchJob {
   job_apply_link?: string;
   job_posted_at_datetime_utc?: string;
   job_employment_type?: string;
+  job_min_salary?: number | null;
+  job_max_salary?: number | null;
+  job_salary_period?: string | null;
+  job_salary_currency?: string | null;
   job_highlights?: { Qualifications?: string[] };
 }
 
@@ -35,6 +40,12 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
   const location = [job.job_city, job.job_state, job.job_country]
     .filter((part): part is string => Boolean(part && part.trim()))
     .join(", ");
+  const salary = normalizeSalary({
+    min: job.job_min_salary,
+    max: job.job_max_salary,
+    currency: job.job_salary_currency,
+    period: job.job_salary_period,
+  });
   return {
     id: `jsearch:${routeSafeId(String(id))}`,
     source: "jsearch",
@@ -54,6 +65,10 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
     url,
     postedAt: job.job_posted_at_datetime_utc,
     employmentType: job.job_employment_type,
+    salaryMin: salary?.min,
+    salaryMax: salary?.max,
+    salaryCurrency: salary?.currency,
+    salaryPeriod: salary?.period,
     tags: (job.job_highlights?.Qualifications ?? []).slice(0, 6),
   };
 }
