@@ -87,7 +87,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P6.1 | Widen events past conferences: kinds, classifier, queries | DONE | `cd web && npx vitest run src/lib/events/mapper.test.ts src/lib/opportunities/query-gen.test.ts` — 2 files, 15 tests passed; all five new kinds and recruiting queries covered |
 | P6.2 | Internship query lane with cycle-aware year | DONE | `cd web && npx vitest run src/lib/opportunities/query-gen.test.ts` — 1 file, 9 tests passed; five-phrase reserved lane, stage gate, Tier 2 retention, and July rollover covered |
-| P6.3 | Jobs filters: Where, When, Role type, Visa | TODO | |
+| P6.3 | Jobs filters: Where, When, Role type, Visa | IN_PROGRESS | |
 | P6.4 | Work authorisation country list, in Profile settings | TODO | |
 
 **Total: 24 tasks.**
