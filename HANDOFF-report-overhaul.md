@@ -70,7 +70,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P4.1 | Per-accent `--color-done` tokens, light and dark | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 58 files, 502 tests passed; 1 live benchmark skipped per §4; typecheck clean; grep confirmed light + both dark theme declarations |
 | P4.2 | Applied / registered / submitted state in the store, synced | DONE | `cd web && npx vitest run src/store/feed.test.ts` — 1 file, 7 tests passed; set/unset, persistence, implicit save and saved-payload round-trip covered |
-| P4.3 | Saved page: kind segmentation, done controls, tinted cards | IN_PROGRESS | |
+| P4.3 | Saved page: kind segmentation, done controls, tinted cards | DONE | `cd web && npx vitest run src/components/cards src/app/saved/page.test.tsx` — 3 files, 7 tests passed; applied + registered-only tint and red outstanding deadline covered; typecheck clean |
 | P4.4 | The same controls on the job and event reports | TODO | |
 
 ### Phase 5 — Dashboard (spec plate 06)
