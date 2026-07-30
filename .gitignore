@@ -27,6 +27,8 @@ dist/
 # MCP / local tooling config
 .mcp.json
 .codex/
+# Machine-specific Claude Code settings (contains absolute paths)
+.claude/settings.local.json
 
 # Dev-server / debug temp files (logs, screenshots, scratch HTML, browser
 # profile dirs left behind by debug scripts). These are local-only and
