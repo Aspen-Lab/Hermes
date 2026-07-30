@@ -77,7 +77,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P5.1 | Daily activity ledger with 90-day retention | TODO | |
+| P5.1 | Daily activity ledger with 90-day retention | IN_PROGRESS | |
 | P5.2 | Rename the All tab to Dashboard and build the layout | TODO | |
 | P5.3 | The deadlines board | TODO | |
 
