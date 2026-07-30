@@ -78,24 +78,22 @@ function clearCache() {
   try { localStorage.removeItem(CACHE_KEY); } catch { /* noop */ }
 }
 
-/**
- * The daily one-paragraph briefing. Sits above the card grid on the
- * Discovery page. Hidden entirely when no LLM is configured (the API
- * returns `noLlm: true`) so the rest of the app keeps working without
- * an Anthropic API key.
- *
- * The result is cached in localStorage (12-hour TTL). On page refresh
- * the cached paragraph is shown immediately without a new LLM call.
- * The user can click "Regenerate" to force a fresh generation.
- */
-export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPaper }: DailyDigestProps) {
+interface PaperDigestState {
+  data: DigestPayload | null;
+  loading: boolean;
+  revealBullets: boolean;
+  regenerate: () => void;
+}
+
+export function usePaperDigest(
+  papers: Paper[],
+  contextHint?: string,
+  enabled = true,
+): PaperDigestState {
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealBullets, setRevealBullets] = useState(false);
   const setPaperSummaries = useFeedStore((state) => state.setPaperSummaries);
-  const [progress, setProgress] = useState<DigestProgressStep>(
-    DIGEST_PROGRESS_STEPS[0],
-  );
 
   // Order-insensitive (a pure re-shuffle of the same papers must still hit the
   // cache) and context-aware (a profile-context change must invalidate a stale
@@ -122,7 +120,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
   }, [papers, setPaperSummaries]);
 
   const fetchDigest = useCallback(async (key: string, force = false) => {
-    if (papers.length === 0) {
+    if (!enabled || papers.length === 0) {
       setData(null);
       setRevealBullets(false);
       return;
@@ -138,7 +136,6 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
       }
     }
 
-    setProgress(DIGEST_PROGRESS_STEPS[0]);
     setRevealBullets(false);
     setLoading(true);
     try {
@@ -165,11 +162,35 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
     } finally {
       setLoading(false);
     }
-  }, [papers, contextHint, storePaperSummaries]);
+  }, [contextHint, enabled, papers, storePaperSummaries]);
 
   useEffect(() => {
-    if (!loading) return;
+    void fetchDigest(paperKey);
+  }, [fetchDigest, paperKey]);
 
+  const regenerate = useCallback(() => {
+    clearCache();
+    void fetchDigest(paperKey, true);
+  }, [fetchDigest, paperKey]);
+
+  return { data, loading, revealBullets, regenerate };
+}
+
+export function PaperDigestLoader({
+  papers,
+  contextHint,
+  enabled = true,
+}: Pick<DailyDigestProps, "papers" | "contextHint"> & { enabled?: boolean }) {
+  usePaperDigest(papers, contextHint, enabled);
+  return null;
+}
+
+function DigestLoadingProgress() {
+  const [progress, setProgress] = useState<DigestProgressStep>(
+    DIGEST_PROGRESS_STEPS[0],
+  );
+
+  useEffect(() => {
     const timers = DIGEST_PROGRESS_STEPS.slice(1).map((step) =>
       window.setTimeout(() => {
         setProgress((current) => current.pct < step.pct ? step : current);
@@ -179,19 +200,29 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
-  }, [loading]);
+  }, []);
 
-  useEffect(() => {
-    fetchDigest(paperKey);
-  }, [fetchDigest, paperKey]);
+  return <ProgressBar pct={progress.pct} label={progress.label} />;
+}
 
-  const handleRegenerate = () => {
-    clearCache();
-    fetchDigest(paperKey, true);
-  };
+/**
+ * The daily one-paragraph briefing. Sits above the card grid on the
+ * Discovery page. Hidden entirely when no LLM is configured (the API
+ * returns `noLlm: true`) so the rest of the app keeps working without
+ * an Anthropic API key.
+ *
+ * The result is cached in localStorage (12-hour TTL). On page refresh
+ * the cached paragraph is shown immediately without a new LLM call.
+ * The user can click "Regenerate" to force a fresh generation.
+ */
+export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPaper }: DailyDigestProps) {
+  const { data, loading, revealBullets, regenerate } = usePaperDigest(
+    papers,
+    contextHint,
+  );
 
   const progressBar = loading ? (
-    <ProgressBar pct={progress.pct} label={progress.label} />
+    <DigestLoadingProgress />
   ) : null;
 
   if (!data || data.noLlm || !data.bullets?.length) {
@@ -222,7 +253,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={handleRegenerate}
+              onClick={regenerate}
               disabled={loading}
               title="Regenerate digest"
               aria-label="Regenerate digest"

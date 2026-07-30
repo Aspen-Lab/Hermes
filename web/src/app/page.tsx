@@ -20,7 +20,7 @@ import { FeedTile } from "@/components/cards/feed-tile";
 import { EventCard } from "@/components/cards/event-card";
 import { JobCard } from "@/components/cards/job-card";
 import { FeedMoreTile } from "@/components/cards/feed-more-tile";
-import { DailyDigest } from "@/components/digest/daily-digest";
+import { PaperDigestLoader } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
 import { ConnectorPanel, connectedCount } from "@/components/profile/connector-panel";
 import { SurfaceTopicsPanel } from "@/components/profile/surface-topics-panel";
@@ -149,7 +149,6 @@ function DiscoveryPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [openTool, setOpenTool] = useState<"ai" | "apis" | "deep" | null>(null);
-  const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
   const normalizedQuery = query.trim();
@@ -323,14 +322,30 @@ function DiscoveryPage() {
     activeType !== "papers" &&
     opportunityPoolCount > 0;
 
-  // All is an overview: the opportunity pool summary and the paper digest,
-  // with no individual cards. The per-surface tabs are where you browse and
-  // filter actual items.
+  // All is an overview with no individual cards. The per-surface tabs are
+  // where you browse and filter actual items.
   const showFeedTiles = activeType !== "all";
-  const showPaperDigest =
+  const shouldLoadPaperDigest =
     !isSearchMode &&
     (activeType === "all" || activeType === "papers") &&
     papers.length > 0;
+  const digestContextHint = useMemo(
+    () =>
+      [
+        profile.researchTopics.length > 0
+          ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+          : "",
+        profile.currentProject,
+        profile.currentChallenges,
+      ]
+        .filter((value) => value && value.trim().length > 0)
+        .join("\n\n"),
+    [
+      profile.currentChallenges,
+      profile.currentProject,
+      profile.researchTopics,
+    ],
+  );
 
   const opportunityItems = useMemo<BriefingItem[]>(() => {
     const eventItems: BriefingItem[] =
@@ -480,6 +495,11 @@ function DiscoveryPage() {
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
+      <PaperDigestLoader
+        papers={papers}
+        contextHint={digestContextHint}
+        enabled={shouldLoadPaperDigest}
+      />
       {!isSearchMode && papersLoading && (
         <ProgressBar
           pct={feedProgressPct}
@@ -947,37 +967,6 @@ function DiscoveryPage() {
             </div>
           )}
 
-          {/* One-paragraph synthesized paper digest. Rendered independently of
-              the card grid: All shows the digest and the opportunity pool as a
-              pure overview with no cards, so tying the digest to the grid
-              would make it disappear there. Gating the render — not just its
-              paper input — keeps it from flashing stale bullets for a frame
-              when the user switches tabs, since the component clears itself in
-              an effect (post-paint). Passes the store's paper array as-is
-              rather than a derived one: DailyDigest guards its single request
-              on that input, so a freshly built array would restart an
-              in-flight digest every time the event or job lane commits. Hides
-              itself if no LLM is configured, so the rest of the feed keeps
-              working. */}
-          {showPaperDigest && (
-            <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
-              <DailyDigest
-                papers={papers}
-                contextHint={[
-                  profile.researchTopics.length > 0
-                    ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
-                    : "",
-                  profile.currentProject,
-                  profile.currentChallenges,
-                ]
-                  .filter((s) => s && s.trim().length > 0)
-                  .join("\n\n")}
-                selectedPaperId={selectedPaperId}
-                onSelectPaper={setSelectedPaperId}
-              />
-            </div>
-          )}
-
           {showFeedTiles && briefingItems.length > 0 && (
             <>
               {isOpportunitySearchMode && (
@@ -997,10 +986,7 @@ function DiscoveryPage() {
                     className="rounded-3xl transition-shadow"
                   >
                     {item.kind === "paper" ? (
-                      <FeedTile
-                        item={item}
-                        selected={item.data.id === selectedPaperId}
-                      />
+                      <FeedTile item={item} />
                     ) : item.kind === "event" ? (
                       <EventCard event={item.data} />
                     ) : (
