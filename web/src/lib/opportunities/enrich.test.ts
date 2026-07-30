@@ -39,6 +39,10 @@ function job(index: number, isRemote = false): RawJobItem {
   };
 }
 
+function usablePage(content: string): string {
+  return `${content}<main>${"Detailed opportunity information. ".repeat(800)}</main>`;
+}
+
 describe("event detail enrichment", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -49,7 +53,7 @@ describe("event detail enrichment", () => {
     const fetchMock = vi.fn(async (url: string) => {
       const index = new URL(url).pathname.slice(1);
       return new Response(
-        `<script type="application/ld+json">
+        usablePage(`<script type="application/ld+json">
           {
             "@type": "Event",
             "name": "Enriched Event ${index}",
@@ -61,7 +65,7 @@ describe("event detail enrichment", () => {
               }
             }
           }
-        </script>`,
+        </script>`),
         { status: 200 },
       );
     });
@@ -95,8 +99,8 @@ describe("event detail enrichment", () => {
       .mockResolvedValueOnce(new Response("Forbidden", { status: 403 }))
       .mockResolvedValueOnce(
         new Response(
-          `<meta property="og:title"
-             content="Solid-State Battery Summit | August 11-12, 2026 | Chicago, IL + Virtual">`,
+          usablePage(`<meta property="og:title"
+             content="Solid-State Battery Summit | August 11-12, 2026 | Chicago, IL + Virtual">`),
           { status: 200 },
         ),
       );
@@ -120,7 +124,7 @@ describe("event detail enrichment", () => {
   it("fetches only gate survivors, retains candidate 41, and re-scores enrichment", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        `<script type="application/ld+json">
+        usablePage(`<script type="application/ld+json">
           {
             "@type": "Event",
             "location": {
@@ -131,7 +135,7 @@ describe("event detail enrichment", () => {
               }
             }
           }
-        </script>`,
+        </script>`),
         { status: 200 },
       ),
     );
@@ -181,6 +185,60 @@ describe("event detail enrichment", () => {
       )?.place,
     ).toBeUndefined();
   });
+
+  it("wires event attendance details and complete rosters through enrichment", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            {
+              "@type": "Event",
+              "location": {
+                "address": {
+                  "addressLocality": "Munich",
+                  "addressCountry": "Germany"
+                }
+              }
+            }
+          </script>
+          <p>Registration closes: 15 June 2027.</p>
+          <p>Workshops and poster sessions are followed by networking.</p>
+          <p>Student travel grants are available for accepted presenters.</p>
+          <p>Registered attendees may request an invitation letter.</p>
+          <h2>Sponsors</h2>
+          <article class="sponsor-card">
+            <h3 class="sponsor-name">Battery Alliance</h3>
+          </article>
+          <h2>Speakers</h2>
+          <article class="speaker-card">
+            <h3 class="speaker-name">Maya Chen</h3>
+            <p class="role">Chief Scientist</p>
+            <p class="institution">Volta Institute</p>
+          </article>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichEventCandidates([event(7)]);
+
+    expect(enriched).toMatchObject({
+      registrationDeadline: "2027-06-15",
+      activities: ["workshop", "poster session", "networking"],
+      travelGrant:
+        "Student travel grants are available for accepted presenters.",
+      invitationLetter: true,
+      organisations: [{ name: "Battery Alliance" }],
+      people: [
+        {
+          name: "Maya Chen",
+          role: "Chief Scientist",
+          institution: "Volta Institute",
+        },
+      ],
+    });
+  });
 });
 
 describe("job detail enrichment", () => {
@@ -196,7 +254,7 @@ describe("job detail enrichment", () => {
       .mockResolvedValueOnce(new Response("Forbidden", { status: 403 }))
       .mockResolvedValueOnce(
         new Response(
-          `<script type="application/ld+json">
+          usablePage(`<script type="application/ld+json">
             {
               "@type": "JobPosting",
               "title": "Battery Scientist",
@@ -208,7 +266,7 @@ describe("job detail enrichment", () => {
                 }
               }
             }
-          </script>`,
+          </script>`),
           { status: 200 },
         ),
       );
@@ -231,10 +289,68 @@ describe("job detail enrichment", () => {
     });
   });
 
+  it("wires job application, role-kind, and visa details through enrichment", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "validThrough": "2027-04-30",
+              "jobLocation": {
+                "address": {
+                  "addressLocality": "Oak Ridge",
+                  "addressRegion": "TN",
+                  "addressCountry": "US"
+                }
+              }
+            }
+          </script>
+          <p>Expected start date: 15 June 2027.</p>
+          <p>This is a two-year fixed-term appointment.</p>
+          <p>Apply with a CV, cover letter, and research statement.</p>
+          <p>The laboratory will provide H-1B sponsorship for this role.</p>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([job(8)]);
+
+    expect(enriched).toMatchObject({
+      applicationDeadline: "2027-04-30",
+      startDate: "2027-06-15",
+      contractLength: "two-year fixed-term appointment",
+      applicationMaterials: [
+        "Curriculum vitae",
+        "Cover letter",
+        "Research statement",
+      ],
+      roleKind: "staff",
+      visa: {
+        state: "sponsors",
+        evidence:
+          "The laboratory will provide H-1B sponsorship for this role.",
+        country: "United States",
+      },
+    });
+  });
+
+  it("leaves a 6 KB JavaScript shell unchanged and does not throw", async () => {
+    const original = job(9);
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(`<main>${"x".repeat(6 * 1024)}</main>`, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(enrichJobCandidates([original])).resolves.toEqual([original]);
+  });
+
   it("fetches only job gate survivors, caps at 40, and re-scores location", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        `<script type="application/ld+json">
+        usablePage(`<script type="application/ld+json">
           {
             "@type": "JobPosting",
             "jobLocation": {
@@ -245,7 +361,7 @@ describe("job detail enrichment", () => {
               }
             }
           }
-        </script>`,
+        </script>`),
         { status: 200 },
       ),
     );

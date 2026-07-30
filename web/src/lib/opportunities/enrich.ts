@@ -1,10 +1,24 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
 import type { RawJobItem } from "@/lib/jobs/types";
+import { classifyRoleKind } from "@/lib/jobs/role-kind";
+import { extractEventDetails } from "./event-details";
+import { extractEventRoster } from "./event-roster";
+import { extractJobDetails } from "./job-details";
 import { fetchPagesConcurrently } from "./page-fetch";
+import { stripHtml } from "./shared";
 import { extractOpportunityPageDetails } from "./structured-extract";
+import { extractVisaState } from "./visa";
 
 export const MAX_ENRICHMENT_CANDIDATES = 40;
+
+function tryExtract<T>(extractor: () => T): T | undefined {
+  try {
+    return extractor();
+  } catch {
+    return undefined;
+  }
+}
 
 export function formatOpportunityPlace(
   place: OpportunityPlace | undefined,
@@ -54,21 +68,29 @@ export async function enrichEventCandidates(
   const enriched = candidates.map((item, index) => {
     const html = pages[index];
     if (!html) return item;
-    try {
-      const details = extractOpportunityPageDetails(html, "event");
-      const place = mergeOpportunityPlace(item.place, details.place);
-      const location = formatOpportunityPlace(place) || item.location;
-      return {
-        ...item,
-        startDate: item.startDate || details.startDate || "",
-        endDate: item.endDate || details.endDate,
-        place,
-        location,
-        isOnline: item.isOnline || details.isOnline,
-      };
-    } catch {
-      return item;
-    }
+    const structured = tryExtract(() =>
+      extractOpportunityPageDetails(html, "event"),
+    );
+    const details = tryExtract(() => extractEventDetails(html));
+    const roster = tryExtract(() => extractEventRoster(html));
+    const place = mergeOpportunityPlace(item.place, structured?.place);
+    const location = formatOpportunityPlace(place) || item.location;
+    return {
+      ...item,
+      startDate: item.startDate || structured?.startDate || "",
+      endDate: item.endDate || structured?.endDate,
+      place,
+      location,
+      isOnline: item.isOnline || structured?.isOnline || false,
+      registrationDeadline:
+        item.registrationDeadline ?? details?.registrationDeadline,
+      fees: item.fees ?? details?.fees,
+      activities: item.activities ?? details?.activities,
+      organisations: item.organisations ?? roster?.organisations,
+      people: item.people ?? roster?.people,
+      travelGrant: item.travelGrant ?? details?.travelGrant,
+      invitationLetter: item.invitationLetter ?? details?.invitationLetter,
+    };
   });
 
   return [...enriched, ...items.slice(cappedLength)];
@@ -99,23 +121,36 @@ export async function enrichJobCandidates(
   const enriched = candidates.map((item, index) => {
     const html = pages[index];
     if (!html) return item;
-    try {
-      const details = extractOpportunityPageDetails(html, "job");
-      const place = mergeOpportunityPlace(item.place, details.place);
-      return {
-        ...item,
-        place,
-        location: formatOpportunityPlace(place) || item.location,
-        // Web-discovered postings arrive with no date at all, which left the
-        // jobs month facet permanently empty. schema.org JobPosting carries
-        // datePosted; use it when the source gave us nothing.
-        postedAt: item.postedAt || details.datePosted,
-        // A web page being "online" does not prove that a job is remote.
-        isRemote: item.isRemote,
-      };
-    } catch {
-      return item;
-    }
+    const structured = tryExtract(() =>
+      extractOpportunityPageDetails(html, "job"),
+    );
+    const details = tryExtract(() => extractJobDetails(html));
+    const place = mergeOpportunityPlace(item.place, structured?.place);
+    const roleKind =
+      item.roleKind ??
+      tryExtract(() => classifyRoleKind(item.title, stripHtml(html)));
+    const visa =
+      item.visa ??
+      tryExtract(() => extractVisaState(html, place?.country));
+    return {
+      ...item,
+      place,
+      location: formatOpportunityPlace(place) || item.location,
+      // Web-discovered postings arrive with no date at all, which left the
+      // jobs month facet permanently empty. schema.org JobPosting carries
+      // datePosted; use it when the source gave us nothing.
+      postedAt: item.postedAt || structured?.datePosted,
+      applicationDeadline:
+        item.applicationDeadline ?? details?.applicationDeadline,
+      startDate: item.startDate ?? details?.startDate,
+      contractLength: item.contractLength ?? details?.contractLength,
+      applicationMaterials:
+        item.applicationMaterials ?? details?.applicationMaterials,
+      roleKind,
+      visa,
+      // A web page being "online" does not prove that a job is remote.
+      isRemote: item.isRemote,
+    };
   });
 
   return [...enriched, ...items.slice(cappedLength)];

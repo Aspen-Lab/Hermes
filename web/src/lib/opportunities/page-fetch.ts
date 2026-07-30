@@ -1,3 +1,5 @@
+import { stripHtml } from "./shared";
+
 const FETCH_TIMEOUT_MS = 12_000;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const DEFAULT_CONCURRENCY = 8;
@@ -9,6 +11,16 @@ export const UNFETCHABLE_HOSTS = [
   "10times.com",
   "battery-tech.net",
 ] as const;
+
+// The measured AcademicJobsOnline (6 KB) and ACS (0.2 KB) responses are
+// JavaScript shells, not usable posting pages. Count visible text rather than
+// response bytes so a large script bundle cannot masquerade as extractable
+// content.
+export const MIN_USABLE_PAGE_TEXT_CHARS = 20 * 1024;
+
+export function hasUsableOpportunityPageText(html: string): boolean {
+  return stripHtml(html).length >= MIN_USABLE_PAGE_TEXT_CHARS;
+}
 
 function isUnfetchableUrl(url: string): boolean {
   try {
@@ -73,7 +85,9 @@ export async function fetchPageHtml(url: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    return await readResponseWithinLimit(response);
+    const html = await readResponseWithinLimit(response);
+    if (!html || !hasUsableOpportunityPageText(html)) return null;
+    return html;
   } catch {
     return null;
   } finally {

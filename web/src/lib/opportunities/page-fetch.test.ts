@@ -9,8 +9,13 @@ import {
 import {
   fetchPageHtml,
   fetchPagesConcurrently,
+  MIN_USABLE_PAGE_TEXT_CHARS,
   UNFETCHABLE_HOSTS,
 } from "./page-fetch";
+
+function usableHtml(content: string): string {
+  return `${content}<main>${"Opportunity detail text. ".repeat(1_000)}</main>`;
+}
 
 describe("fetchPageHtml", () => {
   beforeEach(() => {
@@ -23,8 +28,9 @@ describe("fetchPageHtml", () => {
   });
 
   it("fetches HTML with the detail-page request contract", async () => {
+    const html = usableHtml("<html><title>Battery Summit</title></html>");
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response("<html><title>Battery Summit</title></html>", {
+      new Response(html, {
         status: 200,
         headers: { "content-type": "text/html" },
       }),
@@ -32,7 +38,7 @@ describe("fetchPageHtml", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchPageHtml("https://events.example.com/summit")).resolves.toBe(
-      "<html><title>Battery Summit</title></html>",
+      html,
     );
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -107,6 +113,18 @@ describe("fetchPageHtml", () => {
     ).resolves.toBeNull();
   });
 
+  it("rejects a JavaScript shell with less than 20 KB of visible text", async () => {
+    const shell = `<main>${"x".repeat(MIN_USABLE_PAGE_TEXT_CHARS - 1)}</main>`;
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(shell, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchPageHtml("https://jobs.example.com/shell"),
+    ).resolves.toBeNull();
+  });
+
   it("skips known-unfetchable hosts without making a request", async () => {
     expect(UNFETCHABLE_HOSTS).toContain("10times.com");
     expect(UNFETCHABLE_HOSTS).toContain("battery-tech.net");
@@ -135,7 +153,7 @@ describe("fetchPagesConcurrently", () => {
       peak = Math.max(peak, active);
       await new Promise((resolve) => setTimeout(resolve, 5));
       active -= 1;
-      return new Response(`<html>${url}</html>`, { status: 200 });
+      return new Response(usableHtml(`<html>${url}</html>`), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -147,6 +165,8 @@ describe("fetchPagesConcurrently", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(urls.length);
     expect(peak).toBe(2);
-    expect(pages).toEqual(urls.map((url) => `<html>${url}</html>`));
+    expect(pages).toEqual(
+      urls.map((url) => usableHtml(`<html>${url}</html>`)),
+    );
   });
 });

@@ -42,6 +42,12 @@ export interface RawJobItem {
   salaryCurrency?: string;
   salaryPeriod?: SalaryPeriod;
   salaryIsEstimated?: boolean;
+  applicationDeadline?: Job["applicationDeadline"];
+  startDate?: Job["startDate"];
+  contractLength?: Job["contractLength"];
+  applicationMaterials?: Job["applicationMaterials"];
+  roleKind?: Job["roleKind"];
+  visa?: Job["visa"];
   tags: string[];
   preferenceSignals?: PreferenceConcept[];
 }

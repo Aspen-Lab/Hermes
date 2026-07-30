@@ -33,6 +33,13 @@ export interface RawEventItem {
   isOnline: boolean;
   /** Submission (CFP) deadline, ISO. */
   deadline?: string;
+  registrationDeadline?: Event["registrationDeadline"];
+  fees?: Event["fees"];
+  activities?: Event["activities"];
+  organisations?: Event["organisations"];
+  people?: Event["people"];
+  travelGrant?: Event["travelGrant"];
+  invitationLetter?: Event["invitationLetter"];
   description: string;
   url: string;
   registrationUrl?: string;
