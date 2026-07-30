@@ -375,6 +375,9 @@ export function opportunityRequestBody(
     careerStage: activeInputs?.careerStage,
     industryVsAcademia: profile.industryVsAcademia,
     locationPreferences: activeInputs?.locationPreferences ?? [],
+    ...(surface === "jobs"
+      ? { authorisedCountries: profile.authorisedCountries }
+      : {}),
     currentProject: profile.currentProject,
     topN: DEFAULT_OPPORTUNITY_TOP_N,
     aiTier: hasUserLlmOverride ? 2 : undefined,

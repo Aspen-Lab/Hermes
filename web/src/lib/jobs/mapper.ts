@@ -5,6 +5,7 @@ import {
 } from "@/lib/preferences/ledger";
 import { summarizeJob } from "@/lib/jobs/summarize";
 import { locationFit } from "@/lib/opportunities/shared";
+import { normalizeVisaCountry } from "@/lib/opportunities/visa";
 import type { ScoredJobItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -62,7 +63,28 @@ function keyRequirements(item: ScoredJobItem): string[] {
   return requirements;
 }
 
-export function scoredJobToJob(item: ScoredJobItem, locationPreferences?: string[]): Job {
+function visaForAuthorisedCountries(
+  item: ScoredJobItem,
+  authorisedCountries: string[] | undefined,
+): Job["visa"] {
+  if (!item.visa || !authorisedCountries?.length) return item.visa;
+  const country = normalizeVisaCountry(
+    item.visa.country ?? item.place?.country,
+  );
+  if (!country) return item.visa;
+  const authorised = new Set(
+    authorisedCountries
+      .map((candidate) => normalizeVisaCountry(candidate))
+      .filter((candidate): candidate is string => Boolean(candidate)),
+  );
+  return authorised.has(country) ? undefined : item.visa;
+}
+
+export function scoredJobToJob(
+  item: ScoredJobItem,
+  locationPreferences?: string[],
+  authorisedCountries?: string[],
+): Job {
   const salary =
     item.salaryMin !== undefined &&
     item.salaryMax !== undefined &&
@@ -94,7 +116,7 @@ export function scoredJobToJob(item: ScoredJobItem, locationPreferences?: string
     contractLength: item.contractLength,
     applicationMaterials: item.applicationMaterials,
     roleKind: item.roleKind,
-    visa: item.visa,
+    visa: visaForAuthorisedCountries(item, authorisedCountries),
     relevanceScore: item.score,
     isSaved: false,
     preferenceSignals: jobPreferenceSignals(item),

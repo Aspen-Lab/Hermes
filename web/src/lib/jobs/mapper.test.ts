@@ -23,6 +23,12 @@ const fullJob: ScoredJobItem = {
   score: 0.94,
   matchedKeywords: ["solid-state battery", "electrochemical"],
   matchReason: "Matches your battery research focus.",
+  place: { city: "Chicago", region: "IL", country: "United States" },
+  visa: {
+    state: "wont-sponsor",
+    evidence: "Applicants must already be authorised to work in the US.",
+    country: "US",
+  },
 };
 
 describe("scoredJobToJob", () => {
@@ -77,5 +83,14 @@ describe("scoredJobToJob", () => {
     expect(
       scoredJobToJob({ ...fullJob, location: "San Francisco, CA" }, ["Chicago"]).locationFit,
     ).toBe(0.4);
+  });
+
+  it("suppresses visa state only when the job country is authorised", () => {
+    expect(
+      scoredJobToJob(fullJob, undefined, ["United States"]).visa,
+    ).toBeUndefined();
+    expect(
+      scoredJobToJob(fullJob, undefined, ["United Kingdom"]).visa,
+    ).toEqual(fullJob.visa);
   });
 });

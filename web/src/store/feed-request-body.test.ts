@@ -16,6 +16,7 @@ const activeProfile: UserProfile = {
   jobExploreTopics: ["pending-job-explore"],
   careerStage: "Postdoc",
   locationPreferences: ["Pending location"],
+  authorisedCountries: ["United States"],
   activeSearchInputs: {
     papers: {
       required: ["active-paper"],
@@ -79,7 +80,9 @@ describe("active feed request inputs", () => {
     expect(jobs).toMatchObject({
       topics: ["active-job"],
       softTopics: ["active-job-explore"],
+      authorisedCountries: ["United States"],
     });
+    expect(events).not.toHaveProperty("authorisedCountries");
     expect(events.topics).not.toEqual(
       activeProfile.activeSearchInputs?.papers.required,
     );

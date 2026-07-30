@@ -127,7 +127,9 @@ const CPT_OPT_ELIGIBILITY_RE =
 const NEGATED_CPT_OPT_RE =
   /\b(?:not|ineligible|cannot|can't|unavailable|no)\b[^.!?]{0,40}\b(?:CPT|OPT)\b|\b(?:CPT|OPT)\b[^.!?]{0,40}\b(?:not|ineligible|cannot|can't|unavailable)\b/i;
 
-function normalizeCountry(country: string | undefined): string | undefined {
+export function normalizeVisaCountry(
+  country: string | undefined,
+): string | undefined {
   const trimmed = country?.trim();
   if (!trimmed) return undefined;
   const key = trimmed
@@ -182,7 +184,7 @@ export function extractVisaState(
   postingText: string,
   jobCountry?: string,
 ): VisaAssessment {
-  const country = normalizeCountry(jobCountry);
+  const country = normalizeVisaCountry(jobCountry);
   const scope = visaScope(country);
   const sentences = sentencesFromPosting(postingText);
   const scoped = scope === "generic" ? undefined : COUNTRY_PHRASES[scope];

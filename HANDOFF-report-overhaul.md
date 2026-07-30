@@ -88,7 +88,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P6.1 | Widen events past conferences: kinds, classifier, queries | DONE | `cd web && npx vitest run src/lib/events/mapper.test.ts src/lib/opportunities/query-gen.test.ts` — 2 files, 15 tests passed; all five new kinds and recruiting queries covered |
 | P6.2 | Internship query lane with cycle-aware year | DONE | `cd web && npx vitest run src/lib/opportunities/query-gen.test.ts` — 1 file, 9 tests passed; five-phrase reserved lane, stage gate, Tier 2 retention, and July rollover covered |
 | P6.3 | Jobs filters: Where, When, Role type, Visa | DONE | `cd web && npx vitest run src/components/opportunities src/lib/opportunities/facets.test.ts` — 2 files, 15 tests passed; role, visa, recency, internship count, and zero-result location behavior covered |
-| P6.4 | Work authorisation country list, in Profile settings | DONE | `cd web && npx vitest run src/store/profile.test.ts` — 1 file, 11 tests passed; v3 empty default, setter, persisted write, and rehydrate round-trip covered |
+| P6.4 | Work authorisation country list, in Profile settings | DONE | `cd web && npx vitest run src/store/profile.test.ts` — 1 file, 11 tests passed; v3 empty default, setter, persisted write, and rehydrate round-trip covered. Integration: `cd web && npx vitest run src/lib/jobs/mapper.test.ts src/store/feed-request-body.test.ts src/lib/opportunities/daily-pool-cache.test.ts src/lib/opportunities/visa.test.ts src/store/profile.test.ts` — 5 files, 38 tests passed; request propagation, country-alias suppression, neutral cache reuse, and zero additional fetches covered |
 
 **Total: 24 tasks.**
 
@@ -808,7 +808,12 @@ else's entry.
     - Anything I changed that was NOT in the plan, and why:
     - What the next agent should watch out for:
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-30
+- Tasks completed this session: P1.1–P6.4 (all 24 ledger tasks), plus the final cache-safe P2.3/P6.4 work-authorisation integration.
+- Left IN_PROGRESS or BLOCKED: None.
+- Test/typecheck status at stop time: deterministic full gate passed 63 test files with 543 tests passed and 1 Section 4 live benchmark skipped; `npx tsc --noEmit` clean; `npm run build` passed; `npx eslint` reported exactly the documented pre-existing `web/src/components/persona/quiz.tsx:46` error (1 error, 0 warnings). Real Tier 0 browser checks passed for a job and an event report with no AI provider configured. An initial unguarded full-test run invoked the opt-in live benchmark and failed its city-coverage check at 2/26; no code changes or measurements were derived from that run, and the final deterministic gate skipped it as Section 4 instructs.
+- Anything I changed that was NOT in the plan, and why: widened the upstream `eventweb` positive-shape/type gate so the new fair and hackathon queries are not discarded before mapping; added a minimal `children` slot to `SurfaceTopicsPanel` so Jobs filters live in the required collapsible card; applied work-authorisation suppression at request mapping rather than mutating the neutral daily pool, preserving same-day cache reuse and zero additional paid searches.
+- What the next agent should watch out for: the welcome-wizard work-authorisation step is deliberately deferred until `web/src/app/welcome/**` is free. The neutral cache still computes visa evidence once on a cache miss and suppresses it only in the authorised user's mapped response; literally skipping extraction would make the durable pool user-specific or fragment the cache, so the reviewer should confirm this interpretation. The setting is locally persisted; the current profile API has no backing database field for cross-device sync.
 
 ---
 

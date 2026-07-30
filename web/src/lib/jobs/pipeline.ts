@@ -269,11 +269,21 @@ export async function runJobsPipeline(
     : aboveScoreFloor;
   const returned = fresh.slice(0, topN);
   const mappedPool = scored.map((item) =>
-    scoredJobToJob(item, req.locationPreferences),
+    scoredJobToJob(
+      item,
+      req.locationPreferences,
+      req.authorisedCountries,
+    ),
   );
 
   return {
-    items: returned.map((item) => scoredJobToJob(item, req.locationPreferences)),
+    items: returned.map((item) =>
+      scoredJobToJob(
+        item,
+        req.locationPreferences,
+        req.authorisedCountries,
+      ),
+    ),
     pool: mappedPool,
     facetCounts: pool.facetCounts,
     meta: {

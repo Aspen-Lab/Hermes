@@ -95,6 +95,7 @@ export interface JobsFeedRequest {
   careerStage?: CareerStage;
   industryVsAcademia?: IndustryAcademiaPreference;
   locationPreferences?: string[];
+  authorisedCountries?: string[];
   currentProject?: string;
   topN?: number;
   perSourceLimit?: number;

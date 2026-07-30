@@ -9,7 +9,10 @@ import type {
   EventSourceAdapter,
   RawEventItem,
 } from "@/lib/events/types";
-import { buildDailyJobPool } from "@/lib/jobs/pipeline";
+import {
+  buildDailyJobPool,
+  runJobsPipeline,
+} from "@/lib/jobs/pipeline";
 import { jobSources } from "@/lib/jobs/sources";
 import type { JobSourceAdapter, RawJobItem } from "@/lib/jobs/types";
 import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
@@ -66,6 +69,11 @@ const jobItem: RawJobItem = {
     "Lead solid-state battery research and electrochemistry experiments.",
   url: "https://example.test/jobs/solid-state-battery",
   postedAt: "2026-07-20",
+  visa: {
+    state: "wont-sponsor",
+    evidence: "Applicants must already be authorised to work in the US.",
+    country: "US",
+  },
   tags: ["solid-state battery", "electrochemistry"],
 };
 
@@ -307,6 +315,43 @@ describe("daily opportunity pool wiring", () => {
     expect(second.cacheHit).toBe(true);
     expect(second.items).toEqual(first.items);
     expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
+  });
+
+  it("applies work rights after a same-day cache hit without mutating the pool", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(new Response("{}"));
+    vi.stubGlobal("fetch", fetchSpy);
+    const source: JobSourceAdapter = {
+      id: "jobweb",
+      enabled: () => true,
+      fetch: async () => {
+        await fetch("https://network.test/jobs");
+        return [jobItem];
+      },
+    };
+    jobSources.splice(0, jobSources.length, source);
+    const cache = new MemoryPoolCache();
+    const request = {
+      topics: ["solid-state battery"],
+      careerStage: "Research Scientist" as const,
+      aiTier: 0 as const,
+    };
+
+    const first = await runJobsPipeline(request, { cache, now });
+    const callsAfterFirstBuild = fetchSpy.mock.calls.length;
+    const authorised = await runJobsPipeline(
+      { ...request, authorisedCountries: ["United States"] },
+      { cache, now },
+    );
+
+    expect(first.pool[0]?.visa).toEqual(jobItem.visa);
+    expect(authorised.pool[0]?.visa).toBeUndefined();
+    expect(fetchSpy).toHaveBeenCalledTimes(callsAfterFirstBuild);
+    expect(cache.values).toHaveLength(1);
+    const cachedPool = Array.from(cache.values.values())[0];
+    expect(cachedPool?.surface).toBe("jobs");
+    expect(
+      cachedPool?.surface === "jobs" ? cachedPool.items[0]?.visa : undefined,
+    ).toEqual(jobItem.visa);
   });
 
   it("single-flights concurrent same-key misses", async () => {

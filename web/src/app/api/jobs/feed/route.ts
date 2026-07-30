@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
   const methods = cleanStringArray(body.methods);
   const seedTexts = cleanStringArray(body.seedTexts);
   const locationPreferences = cleanStringArray(body.locationPreferences);
+  const authorisedCountries = cleanStringArray(body.authorisedCountries);
   const preferenceLedger = cleanPreferenceLedger(body.preferenceLedger);
 
   const result = await runJobsPipeline({
@@ -137,6 +138,8 @@ export async function POST(req: NextRequest) {
     industryVsAcademia: parseIndustryPreference(body.industryVsAcademia),
     locationPreferences:
       locationPreferences.length > 0 ? locationPreferences : undefined,
+    authorisedCountries:
+      authorisedCountries.length > 0 ? authorisedCountries : undefined,
     currentProject: cleanOptionalString(body.currentProject),
     topN: parseTopN(body.topN),
     excludeIds: parseExcludeIds(body.excludeIds),
