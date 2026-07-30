@@ -73,7 +73,16 @@ export interface Paper {
 
 // ── Event ──
 
-export type EventType = "conference" | "workshop" | "seminar" | "meetup";
+export type EventType =
+  | "conference"
+  | "workshop"
+  | "seminar"
+  | "meetup"
+  | "job-fair"
+  | "career-fair"
+  | "summit"
+  | "expo"
+  | "hackathon";
 
 export interface OpportunityPlace {
   city?: string;

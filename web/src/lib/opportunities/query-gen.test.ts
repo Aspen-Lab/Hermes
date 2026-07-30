@@ -35,6 +35,9 @@ describe("templateEventQueries", () => {
     expect(queries.some((query) => /\bexpo forum congress\b/i.test(query))).toBe(
       true,
     );
+    expect(queries.some((query) => /\bcareer fair\b/i.test(query))).toBe(true);
+    expect(queries.some((query) => /\bjob fair\b/i.test(query))).toBe(true);
+    expect(queries.some((query) => /\bhackathon\b/i.test(query))).toBe(true);
   });
 
   it("gives every required topic a query before adding lower-priority variants", () => {
@@ -53,13 +56,16 @@ describe("templateEventQueries", () => {
     const topics = ["solid state battery", "molten salt", "topochemical"];
     const queries = templateEventQueries({ topics });
 
-    expect(queries).toHaveLength(12);
+    expect(queries).toHaveLength(15);
     for (const topic of topics) {
       expect(queries).toContain(`${topic} conference ${year}`);
       expect(queries).toContain(`${topic} summit ${year}`);
       expect(queries).toContain(`${topic} symposium ${year} call for papers`);
       expect(queries).toContain(`${topic} expo forum congress ${year}`);
     }
+    expect(queries).toContain(`solid state battery career fair ${year}`);
+    expect(queries).toContain(`molten salt job fair recruiting expo ${year}`);
+    expect(queries).toContain(`topochemical hackathon ${year}`);
   });
 
   it("never exceeds the query cap for a long topic list", () => {

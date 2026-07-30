@@ -413,7 +413,22 @@ describe("eventweb extraction", () => {
   it("guesses event types", () => {
     expect(guessEventType("ICML Workshop on X")).toBe("workshop");
     expect(guessEventType("Weekly Colloquium")).toBe("seminar");
+    expect(guessEventType("Materials Career Fair")).toBe("career-fair");
+    expect(guessEventType("Climate Tech Hackathon")).toBe("hackathon");
     expect(guessEventType("Annual Meeting")).toBe("conference");
+  });
+
+  it("keeps recruiting events and classifies them from the title", () => {
+    expect(
+      webResultToRawEventItem(
+        {
+          title: "Advanced Materials Career Fair 2026",
+          url: "https://x.test/materials-career-fair",
+          snippet: "Meet research employers on September 14, 2026.",
+        },
+        NOW,
+      ),
+    ).toMatchObject({ type: "career-fair" });
   });
 
   it("drops event pages whose only year token is in the past", () => {

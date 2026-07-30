@@ -1,4 +1,4 @@
-import type { Event, PreferenceConcept } from "@/types";
+import type { Event, EventType, PreferenceConcept } from "@/types";
 import {
   normalizePreferenceConcepts,
   preferenceKey,
@@ -7,6 +7,46 @@ import { locationFit } from "@/lib/opportunities/shared";
 import type { ScoredEventItem } from "./types";
 
 const MAX_SIGNALS = 8;
+
+function eventKindIn(text: string): EventType | undefined {
+  if (/\b(?:career|student|graduate|campus) (?:fair|expo)\b/i.test(text)) {
+    return "career-fair";
+  }
+  if (
+    /\b(?:job|hiring|recruiting|recruitment) (?:fair|expo|event)\b/i.test(text)
+  ) {
+    return "job-fair";
+  }
+  if (/\b(?:hackathon|hack day)\b/i.test(text)) return "hackathon";
+  if (/\bsummit\b/i.test(text)) return "summit";
+  if (/\b(?:expo|exposition|trade show)\b/i.test(text)) return "expo";
+  if (/\bworkshop\b/i.test(text)) return "workshop";
+  if (/\b(?:seminar|colloquium|webinar|lecture series)\b/i.test(text)) {
+    return "seminar";
+  }
+  if (/\b(?:meetup|networking event)\b/i.test(text)) return "meetup";
+  if (
+    /\b(?:conference|symposium|congress|forum|convention|annual meeting)\b/i.test(
+      text,
+    )
+  ) {
+    return "conference";
+  }
+  return undefined;
+}
+
+/**
+ * Sources often default every result to "conference". Prefer the event's
+ * title, then its description, while preserving a trustworthy source label
+ * when neither contains an explicit event kind.
+ */
+export function classifyEventType(
+  title: string,
+  description: string,
+  fallback: EventType = "conference",
+): EventType {
+  return eventKindIn(title) ?? eventKindIn(description) ?? fallback;
+}
 
 /**
  * Concepts the ledger learns from when the user saves/dismisses this event.
@@ -48,7 +88,7 @@ export function scoredEventToEvent(item: ScoredEventItem, locationPreferences?: 
   return {
     id: item.id,
     name: item.name,
-    type: item.type,
+    type: classifyEventType(item.name, item.description, item.type),
     date: item.startDate,
     endDate: item.endDate,
     location: item.location || (item.isOnline ? "Online" : "See event page"),

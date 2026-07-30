@@ -180,6 +180,18 @@ export function templateEventQueries(profile: QueryGenProfile): string[] {
     if (queries.length >= EVENT_QUERY_BUDGET) return queries;
   }
 
+  const recruitingVariants = [
+    (topic: string) => `${topic} career fair ${year}`,
+    (topic: string) => `${topic} job fair recruiting expo ${year}`,
+    (topic: string) => `${topic} hackathon ${year}`,
+  ];
+  for (let index = 0; index < recruitingVariants.length; index += 1) {
+    const topic = topics[index % topics.length];
+    if (!topic) break;
+    appendUnique(queries, recruitingVariants[index](topic));
+    if (queries.length >= EVENT_QUERY_BUDGET) return queries;
+  }
+
   const variants = [
     (topic: string) => `${topic} summit ${year}`,
     (topic: string) => `${topic} symposium ${year} call for papers`,
@@ -270,7 +282,7 @@ export async function generateSearchQueries(
   const target =
     kind === "jobs"
       ? "job openings this researcher would apply to (matching their seniority and academia/industry direction)"
-      : "industry summits, expos, forums, congresses, academic conferences, workshops, summer schools, and seminars this researcher would want to attend (any discipline, not just computer science)";
+      : "industry summits, expos, career fairs, job fairs, recruiting events, hackathons, forums, congresses, academic conferences, workshops, summer schools, and seminars this researcher would want to attend (any discipline, not just computer science)";
 
   try {
     const raw = await provider.generateJsonText({

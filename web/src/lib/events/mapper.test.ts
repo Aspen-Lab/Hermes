@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoredEventToEvent } from "./mapper";
+import { classifyEventType, scoredEventToEvent } from "./mapper";
 import type { ScoredEventItem } from "./types";
 
 const rankedEvent: ScoredEventItem = {
@@ -50,5 +50,33 @@ describe("scoredEventToEvent", () => {
 
   it("computes location fit when preferences are provided", () => {
     expect(scoredEventToEvent(rankedEvent, ["Chicago"]).locationFit).toBe(1);
+  });
+
+  it.each([
+    ["National Laboratory Job Fair", "", "job-fair"],
+    ["Materials Career Fair", "", "career-fair"],
+    ["Future Energy Summit", "", "summit"],
+    ["Advanced Battery Expo", "", "expo"],
+    ["Climate Tech Hackathon", "", "hackathon"],
+  ] as const)("classifies %s as %s", (title, description, expected) => {
+    expect(classifyEventType(title, description)).toBe(expected);
+  });
+
+  it("uses description labels when the title is generic", () => {
+    expect(
+      classifyEventType(
+        "Energy Futures 2027",
+        "A recruiting event and job fair for energy researchers.",
+      ),
+    ).toBe("job-fair");
+  });
+
+  it("prefers the title kind over parent-event language in the description", () => {
+    expect(
+      classifyEventType(
+        "Electrochemistry Workshop",
+        "A focused session at the Future Energy Summit.",
+      ),
+    ).toBe("workshop");
   });
 });

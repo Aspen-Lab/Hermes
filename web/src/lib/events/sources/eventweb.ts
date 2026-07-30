@@ -5,6 +5,7 @@ import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
 } from "@/lib/opportunities/query-budget";
+import { classifyEventType } from "../mapper";
 
 // Web discovery for academic events. The curated feeds (ccfddl, confs.tech)
 // are CS-heavy; this adapter is what finds a materials-science symposium or a
@@ -60,10 +61,7 @@ export function extractDeadline(text: string): string | undefined {
 }
 
 export function guessEventType(text: string): EventType {
-  if (/\bworkshop\b/i.test(text)) return "workshop";
-  if (/\b(seminar|colloquium|webinar|lecture series)\b/i.test(text)) return "seminar";
-  if (/\b(meetup|networking event)\b/i.test(text)) return "meetup";
-  return "conference";
+  return classifyEventType(text, "");
 }
 
 // Signals that a web result is actually an event page (a conference, CFP,
@@ -71,7 +69,7 @@ export function guessEventType(text: string): EventType {
 // date-less results that still clearly describe an event, since conference
 // pages routinely omit a parseable date from their search snippet.
 const EVENT_SIGNAL_RE =
-  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exhibition|forum|round ?table|convention|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
+  /\b(conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exhibition|forum|round ?table|convention|career (?:fair|expo)|job fair|hiring fair|recruiting (?:fair|event)|hackathon|hack day|call for papers|cfp|abstract submission|registration|keynote|proceedings|society meeting|gordon research)\b/i;
 
 export function looksLikeEvent(text: string): boolean {
   return EVENT_SIGNAL_RE.test(text);
@@ -324,7 +322,7 @@ export function webResultToRawEventItem(
     id: `eventweb:${urlHashId(url)}`,
     source: "eventweb",
     name,
-    type: guessEventType(text),
+    type: classifyEventType(title, result.snippet ?? ""),
     startDate: startDate && Date.parse(startDate) > now ? startDate : "",
     location: isOnline ? "Online" : "See event page",
     isOnline,
