@@ -40,7 +40,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P1.1 | Store per-paper digest sentences in the feed store, keyed by paper id | TODO | |
+| P1.1 | Store per-paper digest sentences in the feed store, keyed by paper id | IN_PROGRESS | |
 | P1.2 | Paper tile renders the sentence, with an abstract-derived fallback | TODO | |
 | P1.3 | Remove the "Today's highlights" block from the Papers tab | TODO | |
 
