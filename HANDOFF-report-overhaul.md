@@ -54,7 +54,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.4 | Role-kind classifier: internship / phd / postdoc / staff / faculty | DONE | `cd web && npx vitest run src/lib/jobs/role-kind.test.ts src/lib/jobs/scoring.test.ts` — 2 files, 37 tests passed |
 | P2.5 | Event page extractor: fees, registration deadline, activities | DONE | `cd web && npx vitest run src/lib/opportunities/event-details.test.ts` — 1 file, 6 tests passed |
 | P2.6 | Event roster extractor: organisations and people with titles | DONE | `cd web && npx vitest run src/lib/opportunities/event-roster.test.ts` — 1 file, 5 tests passed |
-| P2.7 | Wire all extractors into the enrichment step, with a JS-shell guard | TODO | |
+| P2.7 | Wire all extractors into the enrichment step, with a JS-shell guard | IN_PROGRESS | |
 
 ### Phase 3 — The reports (spec plates 02, 03, 10)
 
