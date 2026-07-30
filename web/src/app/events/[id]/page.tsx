@@ -24,6 +24,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { reportProviderConfigured } from "@/components/reports/provider-configured";
+import { CompletionPill } from "@/components/opportunities/completion-pill";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
 const EVENT_TIER_UPGRADE_ITEMS = [
@@ -286,13 +287,21 @@ function EventActionRow({
   primaryHref,
   primaryLabel,
   isSaved,
+  isRegistered,
+  isSubmitted,
   onToggleSave,
+  onRegisteredChange,
+  onSubmittedChange,
   onDismiss,
 }: {
   primaryHref?: string;
   primaryLabel: string;
   isSaved: boolean;
+  isRegistered: boolean;
+  isSubmitted: boolean;
   onToggleSave: () => void;
+  onRegisteredChange: (next: boolean) => void;
+  onSubmittedChange: (next: boolean) => void;
   onDismiss: () => void;
 }) {
   return (
@@ -323,6 +332,20 @@ function EventActionRow({
       >
         {isSaved ? "Saved" : "Save"}
       </button>
+      <div className="flex flex-col items-start gap-1.5">
+        <CompletionPill
+          label="Registered"
+          checked={isRegistered}
+          onChange={onRegisteredChange}
+          className="h-11 px-4 text-body-sm"
+        />
+        <CompletionPill
+          label="Submitted"
+          checked={isSubmitted}
+          onChange={onSubmittedChange}
+          className="h-11 px-4 text-body-sm"
+        />
+      </div>
       <button
         type="button"
         onClick={onDismiss}
@@ -629,9 +652,13 @@ export function EventReport({
   rosterContext,
   starredKeys = new Set<string>(),
   isSaved,
+  isRegistered,
+  isSubmitted,
   providerConfigured = false,
   onToggleStar,
   onToggleSave,
+  onRegisteredChange,
+  onSubmittedChange,
   onDismiss,
 }: {
   event: Event;
@@ -639,9 +666,13 @@ export function EventReport({
   rosterContext?: EventRosterContext;
   starredKeys?: ReadonlySet<string>;
   isSaved: boolean;
+  isRegistered: boolean;
+  isSubmitted: boolean;
   providerConfigured?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
+  onRegisteredChange: (next: boolean) => void;
+  onSubmittedChange: (next: boolean) => void;
   onDismiss: () => void;
 }) {
   const context = rosterContext ?? {
@@ -728,7 +759,11 @@ export function EventReport({
             primaryHref={primaryHref}
             primaryLabel={primaryLabel}
             isSaved={isSaved}
+            isRegistered={isRegistered}
+            isSubmitted={isSubmitted}
             onToggleSave={onToggleSave}
+            onRegisteredChange={onRegisteredChange}
+            onSubmittedChange={onSubmittedChange}
             onDismiss={onDismiss}
           />
         </header>
@@ -826,12 +861,22 @@ export default function EventDetailPage({
   const feedEvents = useFeedStore((state) => state.events);
   const eventPool = useFeedStore((state) => state.eventPool);
   const savedEvents = useFeedStore((state) => state.savedEvents);
+  const isRegistered = useFeedStore((state) =>
+    Boolean(state.registeredAt[id]),
+  );
+  const isSubmitted = useFeedStore((state) =>
+    Boolean(state.submittedAt[id]),
+  );
   const papers = useFeedStore((state) => state.papers);
   const savedPapers = useFeedStore((state) => state.savedPapers);
   const savedJobs = useFeedStore((state) => state.savedJobs);
   const markRead = useFeedStore((state) => state.markRead);
   const saveEvent = useFeedStore((state) => state.saveEvent);
   const unsaveEvent = useFeedStore((state) => state.unsaveEvent);
+  const setEventRegistered = useFeedStore(
+    (state) => state.setEventRegistered,
+  );
+  const setEventSubmitted = useFeedStore((state) => state.setEventSubmitted);
   const notInterestedEvent = useFeedStore((state) => state.notInterestedEvent);
   const profile = useProfileStore((state) => state.profile);
   const [starredKeys, toggleStar] = useRosterStars();
@@ -892,11 +937,15 @@ export default function EventDetailPage({
       rosterContext={rosterContext}
       starredKeys={starredKeys}
       isSaved={isSaved}
+      isRegistered={isRegistered}
+      isSubmitted={isSubmitted}
       providerConfigured={reportProviderConfigured(profile)}
       onToggleStar={toggleStar}
       onToggleSave={() =>
         isSaved ? unsaveEvent(event.id) : saveEvent(event)
       }
+      onRegisteredChange={(next) => setEventRegistered(event, next)}
+      onSubmittedChange={(next) => setEventSubmitted(event, next)}
       onDismiss={() => {
         notInterestedEvent(event);
         window.history.back();

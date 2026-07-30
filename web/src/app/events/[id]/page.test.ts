@@ -18,15 +18,23 @@ function baseEvent(overrides: Partial<Event> = {}): Event {
   };
 }
 
-function renderReport(event: Event, careerStage = "PhD Year 3" as const): string {
+function renderReport(
+  event: Event,
+  careerStage = "PhD Year 3" as const,
+  completion = { registered: false, submitted: false },
+): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
       event,
       careerStage,
       isSaved: false,
+      isRegistered: completion.registered,
+      isSubmitted: completion.submitted,
       starredKeys: new Set<string>(),
       onToggleStar: () => undefined,
       onToggleSave: () => undefined,
+      onRegisteredChange: () => undefined,
+      onSubmittedChange: () => undefined,
       onDismiss: () => undefined,
     }),
   );
@@ -78,5 +86,24 @@ describe("EventReport", () => {
     expect(html.indexOf("Cheapest way in, for you")).toBeLessThan(
       html.indexOf("Submit by"),
     );
+  });
+
+  it("keeps Registered and Submitted independent", () => {
+    const html = renderReport(baseEvent(), "PhD Year 3", {
+      registered: true,
+      submitted: false,
+    });
+    const registeredButton = html.match(
+      /<button[^>]*data-completion-control="registered"[^>]*>/,
+    )?.[0];
+    const submittedButton = html.match(
+      /<button[^>]*data-completion-control="submitted"[^>]*>/,
+    )?.[0];
+
+    expect(registeredButton).toContain('aria-pressed="true"');
+    expect(registeredButton).toContain("bg-done-dim");
+    expect(submittedButton).toContain('aria-pressed="false"');
+    expect(html).toContain(">Registered<");
+    expect(html).toContain(">Submitted<");
   });
 });

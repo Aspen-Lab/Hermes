@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { reportProviderConfigured } from "@/components/reports/provider-configured";
+import { CompletionPill } from "@/components/opportunities/completion-pill";
 
 const JOB_TIER_UPGRADE_ITEMS = [
   {
@@ -269,12 +270,16 @@ function ReportSection({
 function JobActionRow({
   applyUrl,
   isSaved,
+  isApplied,
   onToggleSave,
+  onAppliedChange,
   onDismiss,
 }: {
   applyUrl?: string;
   isSaved: boolean;
+  isApplied: boolean;
   onToggleSave: () => void;
+  onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
 }) {
   return (
@@ -305,6 +310,12 @@ function JobActionRow({
       >
         {isSaved ? "Saved" : "Save"}
       </button>
+      <CompletionPill
+        label="Applied"
+        checked={isApplied}
+        onChange={onAppliedChange}
+        className="h-11 px-4 text-body-sm"
+      />
       <button
         type="button"
         onClick={onDismiss}
@@ -319,16 +330,20 @@ function JobActionRow({
 export function JobReport({
   job,
   isSaved,
+  isApplied,
   nowMs,
   providerConfigured = false,
   onToggleSave,
+  onAppliedChange,
   onDismiss,
 }: {
   job: Job;
   isSaved: boolean;
+  isApplied: boolean;
   nowMs: number;
   providerConfigured?: boolean;
   onToggleSave: () => void;
+  onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
 }) {
   const matchPct = formatMatchPct(job.relevanceScore);
@@ -388,7 +403,9 @@ export function JobReport({
         <JobActionRow
           applyUrl={clean(job.linkPosting)}
           isSaved={isSaved}
+          isApplied={isApplied}
           onToggleSave={onToggleSave}
+          onAppliedChange={onAppliedChange}
           onDismiss={onDismiss}
         />
       </header>
@@ -561,9 +578,11 @@ export default function JobDetailPage({
   const feedJobs = useFeedStore((state) => state.jobs);
   const jobPool = useFeedStore((state) => state.jobPool);
   const savedJobs = useFeedStore((state) => state.savedJobs);
+  const isApplied = useFeedStore((state) => Boolean(state.appliedAt[id]));
   const markRead = useFeedStore((state) => state.markRead);
   const saveJob = useFeedStore((state) => state.saveJob);
   const unsaveJob = useFeedStore((state) => state.unsaveJob);
+  const setJobApplied = useFeedStore((state) => state.setJobApplied);
   const notInterestedJob = useFeedStore((state) => state.notInterestedJob);
   const profile = useProfileStore((state) => state.profile);
   const [nowMs] = useState(Date.now);
@@ -593,9 +612,11 @@ export default function JobDetailPage({
     <JobReport
       job={job}
       isSaved={isSaved}
+      isApplied={isApplied}
       nowMs={nowMs}
       providerConfigured={reportProviderConfigured(profile)}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
+      onAppliedChange={(next) => setJobApplied(job, next)}
       onDismiss={() => {
         notInterestedJob(job);
         window.history.back();

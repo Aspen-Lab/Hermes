@@ -6,13 +6,15 @@ import { JobReport } from "./page";
 
 const NOW = Date.parse("2026-07-30T12:00:00Z");
 
-function renderReport(job: Job): string {
+function renderReport(job: Job, isApplied = false): string {
   return renderToStaticMarkup(
     createElement(JobReport, {
       job,
       isSaved: false,
+      isApplied,
       nowMs: NOW,
       onToggleSave: () => undefined,
+      onAppliedChange: () => undefined,
       onDismiss: () => undefined,
     }),
   );
@@ -114,5 +116,21 @@ describe("JobReport", () => {
     expect(skills).toBeLessThan(role);
     expect(role).toBeLessThan(materials);
     expect(materials).toBeLessThan(why);
+  });
+
+  it("renders the Applied control in both inactive and completed states", () => {
+    const pendingHtml = renderReport(baseJob(), false);
+    const appliedHtml = renderReport(baseJob(), true);
+    const pendingButton = pendingHtml.match(
+      /<button[^>]*data-completion-control="applied"[^>]*>/,
+    )?.[0];
+    const appliedButton = appliedHtml.match(
+      /<button[^>]*data-completion-control="applied"[^>]*>/,
+    )?.[0];
+
+    expect(pendingButton).toContain('aria-pressed="false"');
+    expect(appliedButton).toContain('aria-pressed="true"');
+    expect(appliedButton).toContain("bg-done-dim");
+    expect(appliedHtml).toContain(">Applied<");
   });
 });
