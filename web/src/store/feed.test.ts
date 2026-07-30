@@ -143,6 +143,8 @@ describe("feed lane loading", () => {
           papers: { required: ["materials"], explore: [] },
           events: { required: ["materials"], explore: [] },
           jobs: { required: ["materials"], explore: [] },
+          locationPreferences: [],
+          promotedOn: "2026-07-29",
         },
       },
     });
