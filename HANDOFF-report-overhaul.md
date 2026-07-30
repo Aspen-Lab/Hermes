@@ -52,7 +52,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P2.2 | Job posting-page extractor: deadline, start date, contract, materials | DONE | `cd web && npx vitest run src/lib/opportunities/job-details.test.ts` — 1 file, 8 tests passed |
 | P2.3 | Visa three-state extractor with country-scoped phrase sets | DONE | `cd web && npx vitest run src/lib/opportunities/visa.test.ts` — 1 file, 14 tests passed |
 | P2.4 | Role-kind classifier: internship / phd / postdoc / staff / faculty | DONE | `cd web && npx vitest run src/lib/jobs/role-kind.test.ts src/lib/jobs/scoring.test.ts` — 2 files, 37 tests passed |
-| P2.5 | Event page extractor: fees, registration deadline, activities | TODO | |
+| P2.5 | Event page extractor: fees, registration deadline, activities | IN_PROGRESS | |
 | P2.6 | Event roster extractor: organisations and people with titles | TODO | |
 | P2.7 | Wire all extractors into the enrichment step, with a JS-shell guard | TODO | |
 
