@@ -58,6 +58,14 @@ import {
   shouldSearchOpportunities,
   shouldSearchPapers,
 } from "@/lib/opportunities/search";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import {
+  aggregateActivity,
+  appendActivity,
+  buildActivitySnapshot,
+  type ActivityAggregate,
+} from "@/lib/dashboard/activity-ledger";
+import { localCalendarDate } from "@/lib/local-calendar-date";
 
 interface SearchResult {
   id: string;
@@ -74,7 +82,7 @@ interface SearchResult {
   source: string;
 }
 
-type FeedType = "all" | "papers" | "events" | "jobs";
+type FeedType = "dashboard" | "papers" | "events" | "jobs";
 type BriefingItem =
   | { kind: "paper"; data: Paper }
   | { kind: "event"; data: Event }
@@ -101,6 +109,12 @@ function DiscoveryPage() {
     jobPool,
     eventFacetCounts,
     jobFacetCounts,
+    savedPapers,
+    savedEvents,
+    savedJobs,
+    appliedAt,
+    registeredAt,
+    submittedAt,
     isLoading,
     papersLoading,
     eventsLoading,
@@ -136,7 +150,7 @@ function DiscoveryPage() {
   const incomingQuery = searchParamsObj?.get("q") ?? "";
 
   const [query, setQuery] = useState(incomingQuery);
-  const [activeType, setActiveType] = useState<FeedType>("all");
+  const [activeType, setActiveType] = useState<FeedType>("dashboard");
   const [opportunityFacets, setOpportunityFacets] =
     useState<OpportunityFacetSelection>({});
   const [opportunityPagination, setOpportunityPagination] = useState({
@@ -149,15 +163,23 @@ function DiscoveryPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [openTool, setOpenTool] = useState<"ai" | "apis" | "deep" | null>(null);
+  const [dashboardActivity, setDashboardActivity] =
+    useState<ActivityAggregate>({
+      days: [],
+      totals: { papers: 0, events: 0, jobs: 0 },
+      requiredTopicHits: {},
+      savedItems: [],
+    });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
   const normalizedQuery = query.trim();
   const hasSearchQuery = normalizedQuery.length >= 2;
+  const searchScope = activeType === "dashboard" ? "all" : activeType;
   const activeTabSearchesPapers =
-    activeType === "all" || activeType === "papers";
-  const isPaperSearchMode = shouldSearchPapers(activeType, normalizedQuery);
+    activeType === "dashboard" || activeType === "papers";
+  const isPaperSearchMode = shouldSearchPapers(searchScope, normalizedQuery);
   const isOpportunitySearchMode = shouldSearchOpportunities(
-    activeType,
+    searchScope,
     normalizedQuery,
   );
   const isSearchMode = hasSearchQuery;
@@ -173,6 +195,31 @@ function DiscoveryPage() {
     () => activePaperTopicsKey(profile),
     [profile],
   );
+  const activityRequiredTopics = useMemo(
+    () => ({
+      papers:
+        profile.activeSearchInputs?.papers.required ?? profile.researchTopics,
+      events:
+        profile.activeSearchInputs?.events.required ??
+        profile.eventRequiredTopics,
+      jobs:
+        profile.activeSearchInputs?.jobs.required ?? profile.jobRequiredTopics,
+    }),
+    [
+      profile.activeSearchInputs,
+      profile.eventRequiredTopics,
+      profile.jobRequiredTopics,
+      profile.researchTopics,
+    ],
+  );
+  const dashboardRequiredTopics = useMemo(
+    () => [
+      ...activityRequiredTopics.papers,
+      ...activityRequiredTopics.events,
+      ...activityRequiredTopics.jobs,
+    ],
+    [activityRequiredTopics],
+  );
 
   useEffect(() => {
     if (!feedAutoLoadKey || isLoading) return;
@@ -185,6 +232,49 @@ function DiscoveryPage() {
     attemptedAutoLoadKeyRef.current = feedAutoLoadKey;
     void loadFeed();
   }, [feedAutoLoadKey, feedTopicsKey, isLoading, loadFeed]);
+
+  useEffect(() => {
+    const now = new Date();
+    const snapshot = buildActivitySnapshot({
+      papers,
+      events,
+      jobs,
+      savedPapers,
+      savedEvents,
+      savedJobs,
+      readItems,
+      appliedAt,
+      registeredAt,
+      submittedAt,
+      requiredTopics: activityRequiredTopics,
+    });
+    appendActivity({ ...snapshot, now });
+
+    const fromDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 13,
+      12,
+    );
+    setDashboardActivity(
+      aggregateActivity({
+        from: localCalendarDate(fromDate),
+        through: localCalendarDate(now),
+      }),
+    );
+  }, [
+    activityRequiredTopics,
+    appliedAt,
+    events,
+    jobs,
+    papers,
+    readItems,
+    registeredAt,
+    savedEvents,
+    savedJobs,
+    savedPapers,
+    submittedAt,
+  ]);
 
   // Monotonic token: a slow older response must never overwrite a newer one.
   const searchSeqRef = useRef(0);
@@ -320,14 +410,14 @@ function DiscoveryPage() {
         : eventPool.length + jobPool.length;
   const showOpportunityFacets =
     activeType !== "papers" &&
+    (activeType !== "dashboard" || isSearchMode) &&
     opportunityPoolCount > 0;
 
-  // All is an overview with no individual cards. The per-surface tabs are
-  // where you browse and filter actual items.
-  const showFeedTiles = activeType !== "all";
+  // Dashboard is an overview until a query turns it into combined search.
+  const showFeedTiles = activeType !== "dashboard" || isSearchMode;
   const shouldLoadPaperDigest =
     !isSearchMode &&
-    (activeType === "all" || activeType === "papers") &&
+    activeType === "papers" &&
     papers.length > 0;
   const digestContextHint = useMemo(
     () =>
@@ -349,11 +439,11 @@ function DiscoveryPage() {
 
   const opportunityItems = useMemo<BriefingItem[]>(() => {
     const eventItems: BriefingItem[] =
-      activeType === "all" || activeType === "events"
+      activeType === "dashboard" || activeType === "events"
         ? searchedEvents.map((event) => ({ kind: "event", data: event }))
         : [];
     const jobItems: BriefingItem[] =
-      activeType === "all" || activeType === "jobs"
+      activeType === "dashboard" || activeType === "jobs"
         ? searchedJobs.map((job) => ({ kind: "job", data: job }))
         : [];
     return [...eventItems, ...jobItems];
@@ -412,7 +502,7 @@ function DiscoveryPage() {
           ? ["event"]
           : activeType === "jobs"
             ? ["job"]
-            : activeType === "all"
+            : activeType === "dashboard"
               ? ["event", "job"]
               : [];
       const groups = ["location", "month", "format"] as const;
@@ -438,7 +528,7 @@ function DiscoveryPage() {
   const briefingItems = useMemo<BriefingItem[]>(() => {
     const paperItems: BriefingItem[] =
       !hasSearchQuery &&
-      (activeType === "all" || activeType === "papers")
+      (activeType === "dashboard" || activeType === "papers")
         ? papers.map((p) => ({ kind: "paper", data: p }))
         : [];
     return [...paperItems, ...opportunityPage.items].sort(
@@ -447,7 +537,7 @@ function DiscoveryPage() {
   }, [activeType, hasSearchQuery, opportunityPage.items, papers]);
 
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
-  const totalAll = papers.length + eventPool.length + jobPool.length;
+  const totalItems = papers.length + eventPool.length + jobPool.length;
   const paperSearchResultCount = isPaperSearchMode
     ? searchResults.length
     : 0;
@@ -473,15 +563,19 @@ function DiscoveryPage() {
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
     !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
-  const isEmpty = !isLoading && totalAll === 0 && !isSearchMode;
+  const isEmpty =
+    activeType !== "dashboard" &&
+    !isLoading &&
+    totalItems === 0 &&
+    !isSearchMode;
   const feedProgressPct =
     35 + (eventsLoading ? 0 : 15) + (jobsLoading ? 0 : 15);
 
   const typeChips: { key: FeedType; label: string; count: number; icon: string }[] = [
     {
-      key: "all",
-      label: "All",
-      count: totalAll,
+      key: "dashboard",
+      label: "Dashboard",
+      count: totalItems,
       icon: "/logo-mark.png",
     },
     { key: "papers", label: "Papers", count: papers.length, icon: "/icon-papers.svg" },
@@ -489,9 +583,15 @@ function DiscoveryPage() {
     { key: "jobs", label: "Jobs", count: jobPool.length, icon: "/icon-jobs.svg" },
   ];
   const selectedActiveTopics =
-    activeType === "all"
+    activeType === "dashboard"
       ? undefined
       : profile.activeSearchInputs?.[activeType];
+  const dashboardToday =
+    dashboardActivity.days[dashboardActivity.days.length - 1]?.counts ?? {
+      papers: 0,
+      events: 0,
+      jobs: 0,
+    };
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
@@ -786,7 +886,7 @@ function DiscoveryPage() {
           {openTool === "apis" && <ConnectorPanel />}
         </div>
 
-        {activeType !== "all" && (
+        {activeType !== "dashboard" && (
           <SurfaceTopicsPanel
             key={activeType}
             surface={activeType}
@@ -835,7 +935,7 @@ function DiscoveryPage() {
 
         {/* Keep tabs available while searching so the same box can switch
             between server-side papers and client-side opportunity pools. */}
-        {(totalAll > 0 || isSearchMode) && (
+        {(totalItems > 0 || isSearchMode) && (
           <div
             className="flex items-center flex-wrap gap-2.5 mt-6"
           >
@@ -919,6 +1019,16 @@ function DiscoveryPage() {
       </div>
       </div>{/* /max-w-[820px] inner header wrapper */}
 
+      {activeType === "dashboard" && !isSearchMode && (
+        <DashboardOverview
+          today={dashboardToday}
+          days={dashboardActivity.days}
+          savedItems={dashboardActivity.savedItems}
+          requiredTopics={dashboardRequiredTopics}
+          requiredTopicHits={dashboardActivity.requiredTopicHits}
+        />
+      )}
+
       {/* Papers keep their existing server-side search. */}
       {isPaperSearchMode && (
         <>
@@ -945,7 +1055,10 @@ function DiscoveryPage() {
       {/* Daily feed, plus client-filtered event/job search results. */}
       {(!isSearchMode || isOpportunitySearchMode) && (
         <>
-          {!isSearchMode && isLoading && briefingItems.length === 0 && (
+          {!isSearchMode &&
+            activeType !== "dashboard" &&
+            isLoading &&
+            briefingItems.length === 0 && (
             <div className="mx-auto max-w-[820px]"><LoadingSkeleton /></div>
           )}
 
@@ -1189,7 +1302,7 @@ function BriefingStatus({
         <span className="text-heading font-medium whitespace-nowrap">Briefing closed</span>
         <span className="text-text-faint hidden sm:inline">·</span>
         <span className="text-text-muted truncate hidden sm:inline">
-          all {total} reviewed · back tomorrow
+          {total} reviewed · back tomorrow
         </span>
         {refreshBtn}
       </div>
