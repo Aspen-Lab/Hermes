@@ -50,6 +50,9 @@
   --color-red: #b91c1c;
   /* Fixed green relevance ramp; independent of the user-selected accent. */
   --color-relevance: #237a4b;
+  /* Cool completion state; themes below switch indigo to teal. */
+  --color-done: #2b5c8f;
+  --color-done-dim: rgba(43, 92, 143, 0.10);
 
   /* ── Shadows — soft-UI (light neumorphism) ──────────────
      Dual-source: a warm shade below-right plus a paper-light highlight
@@ -108,17 +111,19 @@
      data-accent: ember | rose | marigold | sage | indigo | violet
    Legacy single-name themes are mapped in lib/theme.ts. */
 
-html[data-accent="ember"]    { --seed: #ff520d; --seed-dark: #ff6a2b; }
-html[data-accent="rose"]     { --seed: #e0347c; --seed-dark: #f0559a; }
-html[data-accent="marigold"] { --seed: #d98e04; --seed-dark: #eaa61e; }
-html[data-accent="sage"]     { --seed: #2e7d5b; --seed-dark: #4aa87d; }
-html[data-accent="indigo"]   { --seed: #3f5bd9; --seed-dark: #7a90f2; }
-html[data-accent="violet"]   { --seed: #7a3fd9; --seed-dark: #a078f0; }
+html[data-accent="ember"]    { --seed: #ff520d; --seed-dark: #ff6a2b; --done-light: #2b5c8f; --done-dark: #7aaee0; }
+html[data-accent="rose"]     { --seed: #e0347c; --seed-dark: #f0559a; --done-light: #2b5c8f; --done-dark: #7aaee0; }
+html[data-accent="marigold"] { --seed: #d98e04; --seed-dark: #eaa61e; --done-light: #2b5c8f; --done-dark: #7aaee0; }
+html[data-accent="sage"]     { --seed: #2e7d5b; --seed-dark: #4aa87d; --done-light: #2b5c8f; --done-dark: #7aaee0; }
+html[data-accent="indigo"]   { --seed: #3f5bd9; --seed-dark: #7a90f2; --done-light: #0f6f6a; --done-dark: #4fb3ac; }
+html[data-accent="violet"]   { --seed: #7a3fd9; --seed-dark: #a078f0; --done-light: #2b5c8f; --done-dark: #7aaee0; }
 
 /* Light palette (default; also data-mode="light" and system-on-light-OS) */
 :root {
   --seed: #ff520d;
   --seed-dark: #ff6a2b;
+  --done-light: #2b5c8f;
+  --done-dark: #7aaee0;
   --color-bg: color-mix(in oklab, #fdfaf5 96%, var(--seed));
   --color-bg-secondary: color-mix(in oklab, #f6f1e8 95%, var(--seed));
   --color-surface: color-mix(in oklab, #f1eadb 94%, var(--seed));
@@ -139,6 +144,8 @@ html[data-accent="violet"]   { --seed: #7a3fd9; --seed-dark: #a078f0; }
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 10%, transparent);
   --color-red: #b91c1c;
   --color-relevance: #237a4b;
+  --color-done: var(--done-light);
+  --color-done-dim: color-mix(in srgb, var(--color-done) 10%, transparent);
   --color-border: color-mix(in srgb, var(--color-heading) 4%, transparent);
   --color-border-strong: color-mix(in srgb, var(--color-heading) 9%, transparent);
   --color-skeleton-base: color-mix(in srgb, var(--color-heading) 5%, transparent);
@@ -171,6 +178,8 @@ html[data-mode="dark"] {
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 12%, transparent);
   --color-red: #ef4444;
   --color-relevance: #69cc8c;
+  --color-done: var(--done-dark);
+  --color-done-dim: color-mix(in srgb, var(--color-done) 14%, transparent);
   --color-border: rgba(255, 244, 230, 0.08);
   --color-border-strong: rgba(255, 244, 230, 0.16);
   --color-skeleton-base: rgba(255, 255, 255, 0.05);
@@ -205,6 +214,8 @@ html[data-mode="dark"] {
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 12%, transparent);
   --color-red: #ef4444;
   --color-relevance: #69cc8c;
+  --color-done: var(--done-dark);
+  --color-done-dim: color-mix(in srgb, var(--color-done) 14%, transparent);
   --color-border: rgba(255, 244, 230, 0.08);
   --color-border-strong: rgba(255, 244, 230, 0.16);
   --color-skeleton-base: rgba(255, 255, 255, 0.05);
