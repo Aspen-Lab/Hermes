@@ -61,7 +61,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P3.1 | Rebuild the job report | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 56 files, 498 tests passed; 1 live benchmark skipped per §4; sparse + rich job report component tests passed; typecheck clean |
-| P3.2 | Rebuild the event report | TODO | |
+| P3.2 | Rebuild the event report | IN_PROGRESS | |
 | P3.3 | Shared "with an AI key" locked block, on all three reports | TODO | |
 
 ### Phase 4 — Applied state and Saved (spec plates 05, 12)
