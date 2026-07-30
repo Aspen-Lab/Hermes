@@ -88,7 +88,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P6.1 | Widen events past conferences: kinds, classifier, queries | TODO | |
 | P6.2 | Internship query lane with cycle-aware year | TODO | |
 | P6.3 | Jobs filters: Where, When, Role type, Visa | TODO | |
-| P6.4 | Welcome step: work authorisation as a country list | TODO | |
+| P6.4 | Work authorisation country list, in Profile settings | TODO | |
 
 **Total: 20 tasks.**
 
@@ -203,8 +203,12 @@ main    e47602b "Guide AI key setup and align provider models"
 That last commit landed **after** this plan was written and it touches
 `welcome/page.tsx`, `welcome/completeness.ts`, `components/profile/ai-setup.tsx`
 and the whole `lib/llm/providers/` tree, including a new `lib/llm/provider-models.ts`.
-Tasks P3.3, P6.4 and anything that asks "is a provider configured?" must build on
-that code, not on what you might remember from before it landed.
+Tasks P3.3 and anything that asks "is a provider configured?" must build on that
+code, not on what you might remember from before it landed.
+
+**That commit is another agent's live work, not settled history.** It is the
+reason for the off-limits list in §6. Your branch already contains it, so you
+need nothing further from `main` — do not pull again mid-run.
 
 ---
 
@@ -306,6 +310,36 @@ branch. Do not check out `main` or `local-profile-snapshot`.
 
 **This file lives at the repo root, and the ledger in §2 is the copy you edit.**
 Commit it alongside your code.
+
+### ANOTHER AGENT IS WORKING IN THIS REPO — FILES YOU MAY NOT EDIT
+
+A second agent is actively building in this same checkout and committing to
+`main`. Its most recent commit is `e47602b` (2026-07-30 15:22). It owns these
+paths and **you must not edit any file under them**:
+
+```
+web/src/app/welcome/**              onboarding wizard + completeness scoring
+web/src/components/profile/ai-setup.tsx
+web/src/lib/llm/**                  providers, provider-models, usage log
+```
+
+Read them freely — several tasks need to know what they export. Never change
+them. If a task seems to require an edit there, it does not: re-read the task
+spec, which has already been rewritten to route around them.
+
+`web/src/app/page.tsx` is **shared** — that agent touched it in `e47602b` and may
+again. Tasks P1.3 and P5.2 both change it. Keep those edits surgical and
+self-contained so a later merge is mechanical rather than a rewrite.
+
+Two more rules that follow from this:
+
+- **Do not commit to `main`, and do not merge or rebase `main` into your branch
+  mid-run.** It will move under you. Your branch is already based on `e47602b`,
+  which is everything you need. The reviewer does the final merge.
+- **Do not run the dev server** unless a task genuinely requires seeing something
+  render — the other agent may have one running, and this project leaves orphaned
+  Next.js workers on Windows. If you must, run `npm run kill-orphans` from `web/`
+  after and verify the processes are gone.
 
 ### Framework — your training data is probably wrong here
 
@@ -571,9 +605,14 @@ list of `{ title, description }`. Renders the eyebrow "Also in this report with
 an AI key", the rows with a lock glyph, grey bars standing in for text, and a
 "Connect a key" affordance that links to the existing AI setup panel.
 
-**It must not render at all when a provider is configured.** Use the current
-provider resolution — note `lib/llm/provider-models.ts` arrived in e47602b and is
-the current source of truth for what counts as configured.
+**It must not render at all when a provider is configured.**
+
+`lib/llm/` belongs to the other agent and is being changed right now, so do not
+import from it in three places. Create one thin adapter you own — e.g.
+`web/src/components/reports/provider-configured.ts` — that reads the current
+provider state and exports a single boolean helper. Every report imports the
+adapter. If the other agent reshapes `lib/llm/provider-models.ts`, exactly one
+file of yours needs fixing.
 
 Never fabricated sample content (decision 2).
 
@@ -729,21 +768,31 @@ Spec plate 07. Sits under the Jobs topics panel in the same collapsible card.
 — filtering by role kind and by visa state both narrow the pool correctly, and a
 zero-result typed location does not empty the list.
 
-### P6.4 — Welcome step
+### P6.4 — Work authorisation country list
 
-Files: `web/src/app/welcome/page.tsx`, `web/src/app/welcome/completeness.ts`,
-`web/src/types/index.ts`.
+Files: `web/src/app/profile/page.tsx`, `web/src/types/index.ts`,
+`web/src/store/profile.ts`.
 
-Spec plate 11. A step between career stage and locations: "Where can you already
-work without a sponsor?" — a multi-select country list, skippable. Store as
-`authorisedCountries: string[]` on the profile.
+**Scope changed on 2026-07-30 to avoid a collision.** Spec plate 11 shows this as
+a step in the welcome walkthrough. The walkthrough belongs to another agent right
+now (see §6), so build the setting itself and **not** the wizard step:
 
-`welcome/page.tsx` and `completeness.ts` **both changed in e47602b** — read them
-as they are now before adding a step, and update the step count and completeness
-scoring together or the wizard's progress bar will lie.
+Add `authorisedCountries: string[]` to the profile — the countries where the user
+can already work without a sponsor — with a multi-select field in Profile
+settings, near the existing location preferences. Default empty, which means
+"unknown" and shows everything labelled rather than hiding anything.
 
-**Acceptance:** `cd web && npx vitest run src/app/welcome/completeness.test.ts`
-— the new step counts toward completeness, and skipping it does not block finishing.
+This is the whole functional dependency: P6.3's visa filter reads
+`authorisedCountries`, and P2.3's extractor is skipped for jobs in those
+countries. The wizard step is only an onboarding entry point and is **deferred**
+— note it in your session log so the reviewer can schedule it once the welcome
+flow is free.
+
+Do not edit anything under `web/src/app/welcome/`.
+
+**Acceptance:** `cd web && npx vitest run src/store/profile.test.ts` — the field
+round-trips through the store and its persistence, and defaults to an empty array
+for an existing profile that has never seen it.
 
 ---
 
