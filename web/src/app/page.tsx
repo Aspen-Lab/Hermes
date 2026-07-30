@@ -59,6 +59,7 @@ import {
   shouldSearchPapers,
 } from "@/lib/opportunities/search";
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { DeadlinesBoard } from "@/components/dashboard/deadlines-board";
 import {
   aggregateActivity,
   appendActivity,
@@ -115,6 +116,9 @@ function DiscoveryPage() {
     appliedAt,
     registeredAt,
     submittedAt,
+    setJobApplied,
+    setEventRegistered,
+    setEventSubmitted,
     isLoading,
     papersLoading,
     eventsLoading,
@@ -592,6 +596,11 @@ function DiscoveryPage() {
       events: 0,
       jobs: 0,
     };
+  const dashboardDate =
+    dashboardActivity.days[dashboardActivity.days.length - 1]?.date;
+  const dashboardNowMs = dashboardDate
+    ? new Date(`${dashboardDate}T12:00:00`).getTime()
+    : undefined;
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
@@ -1026,7 +1035,19 @@ function DiscoveryPage() {
           savedItems={dashboardActivity.savedItems}
           requiredTopics={dashboardRequiredTopics}
           requiredTopicHits={dashboardActivity.requiredTopicHits}
-        />
+        >
+          <DeadlinesBoard
+            savedJobs={savedJobs}
+            savedEvents={savedEvents}
+            appliedAt={appliedAt}
+            registeredAt={registeredAt}
+            submittedAt={submittedAt}
+            onJobApplied={setJobApplied}
+            onEventRegistered={setEventRegistered}
+            onEventSubmitted={setEventSubmitted}
+            nowMs={dashboardNowMs}
+          />
+        </DashboardOverview>
       )}
 
       {/* Papers keep their existing server-side search. */}

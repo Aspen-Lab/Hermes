@@ -79,7 +79,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P5.1 | Daily activity ledger with 90-day retention | DONE | `cd web && npx vitest run src/lib/dashboard/activity-ledger.test.ts` — 1 file, 6 tests passed; append, zero-filled range aggregation, saved-state snapshot and 90-day pruning covered |
 | P5.2 | Rename the All tab to Dashboard and build the layout | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 62 files, 518 tests passed; 1 live benchmark skipped per §4; typecheck clean; banned-source-copy grep returned no matches |
-| P5.3 | The deadlines board | IN_PROGRESS | |
+| P5.3 | The deadlines board | DONE | `cd web && npx vitest run` — 63 files, 520 tests passed; 1 live benchmark skipped per §4; mixed overdue/two-done sort order covered |
 
 ### Phase 6 — Search and filters (spec plates 04, 07, 09, 11)
 
