@@ -85,7 +85,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P6.1 | Widen events past conferences: kinds, classifier, queries | TODO | |
+| P6.1 | Widen events past conferences: kinds, classifier, queries | IN_PROGRESS | |
 | P6.2 | Internship query lane with cycle-aware year | TODO | |
 | P6.3 | Jobs filters: Where, When, Role type, Visa | TODO | |
 | P6.4 | Work authorisation country list, in Profile settings | TODO | |
