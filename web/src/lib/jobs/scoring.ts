@@ -29,6 +29,13 @@ import type {
   PreferenceLedger,
 } from "@/types";
 import type { JobSourceId, RawJobItem, ScoredJobItem } from "./types";
+import {
+  FACULTY_RE,
+  INTERN_RE,
+  PHD_POSITION_RE,
+  POSTDOC_RE,
+  RESEARCH_SCIENTIST_RE,
+} from "./role-kind";
 
 export interface JobScoringProfile {
   topics: string[];
@@ -75,11 +82,6 @@ function clamp01(n: number): number {
 
 // ── Career-stage fit ─────────────────────────────────────────────
 
-const INTERN_RE = /\b(intern(ship)?|phd student|student researcher|working student)\b/i;
-const PHD_POSITION_RE = /\b(phd (position|candidate|fellowship)|doctoral)\b/i;
-const POSTDOC_RE = /\b(post[- ]?doc(toral)?|research fellow)\b/i;
-const RESEARCH_SCIENTIST_RE = /\b(research (scientist|engineer)|applied scientist|member of technical staff|researcher)\b/i;
-const FACULTY_RE = /\b(professor|faculty|lecturer|tenure[- ]track)\b/i;
 const SENIOR_RE = /\b(senior|staff|principal|lead|director|head of|manager|vp)\b/i;
 
 type StageBand = "earlyPhd" | "latePhd" | "postdoc" | "scientist";
