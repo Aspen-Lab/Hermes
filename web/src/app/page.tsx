@@ -934,8 +934,11 @@ function DiscoveryPage() {
           {/* One-paragraph synthesized paper digest. Rendered independently of
               the card grid: All shows the digest and the opportunity pool as a
               pure overview with no cards, so tying the digest to the grid
-              would make it disappear there. Hides itself if no LLM is
-              configured, so the rest of the feed keeps working. */}
+              would make it disappear there. Gating the render — not just its
+              paper input — keeps it from flashing stale bullets for a frame
+              when the user switches tabs, since the component clears itself in
+              an effect (post-paint). Hides itself if no LLM is configured, so
+              the rest of the feed keeps working. */}
           {showPaperDigest && (
             <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
               <DailyDigest
