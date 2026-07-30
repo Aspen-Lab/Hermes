@@ -78,7 +78,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P5.1 | Daily activity ledger with 90-day retention | DONE | `cd web && npx vitest run src/lib/dashboard/activity-ledger.test.ts` — 1 file, 6 tests passed; append, zero-filled range aggregation, saved-state snapshot and 90-day pruning covered |
-| P5.2 | Rename the All tab to Dashboard and build the layout | TODO | |
+| P5.2 | Rename the All tab to Dashboard and build the layout | IN_PROGRESS | |
 | P5.3 | The deadlines board | TODO | |
 
 ### Phase 6 — Search and filters (spec plates 04, 07, 09, 11)
