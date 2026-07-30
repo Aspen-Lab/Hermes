@@ -60,7 +60,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P3.1 | Rebuild the job report | TODO | |
+| P3.1 | Rebuild the job report | IN_PROGRESS | |
 | P3.2 | Rebuild the event report | TODO | |
 | P3.3 | Shared "with an AI key" locked block, on all three reports | TODO | |
 
