@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/kill-dev-orphans.mjs",
+    "kill-orphans": "node scripts/kill-dev-orphans.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
