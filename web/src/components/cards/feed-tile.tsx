@@ -307,12 +307,42 @@ function FeedbackButtons({
 
 const SELECTED_BG = "color-mix(in srgb, var(--color-accent) 15%, var(--color-surface))";
 
+export function resolvePaperTileSummary(
+  paper: Pick<Paper, "summaryIntro" | "relevanceReason">,
+  storedSummary?: string,
+): string {
+  const digestSentence = storedSummary?.trim();
+  if (digestSentence) return digestSentence;
+
+  const abstractSentences = paper.summaryIntro
+    .trim()
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" ");
+  if (abstractSentences) return abstractSentences;
+
+  return paper.relevanceReason.trim() || "Open this paper for details.";
+}
+
 function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean; selected?: boolean }) {
   const savePaper = useFeedStore((s) => s.savePaper);
   const moreLikePaper = useFeedStore((s) => s.moreLikePaper);
   const notInterestedPaper = useFeedStore((s) => s.notInterestedPaper);
+  const storedSummary = useFeedStore((s) => s.paperSummaries[paper.id]);
 
   const isLiked = paper.feedback === "moreLikeThis" || paper.feedback === "liked";
+  const summary = resolvePaperTileSummary(paper, storedSummary);
+  const matchedTopics = Array.from(
+    new Set(
+      paper.summaryExperimentKeywords
+        .map((topic) => topic.trim())
+        .filter(Boolean),
+    ),
+  )
+    .slice(0, 3)
+    .join(", ");
 
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -349,8 +379,13 @@ function PaperTile({ paper, isRead, selected }: { paper: Paper; isRead: boolean;
       <p
         className="text-body-sm sm:text-meta text-text-muted mt-2.5 leading-[1.6] sm:leading-[1.55] line-clamp-3 font-reading"
       >
-        <ScrambleText text={paper.relevanceReason} />
+        <ScrambleText text={summary} />
       </p>
+      {matchedTopics && (
+        <p className="mt-2 text-caption font-semibold text-accent line-clamp-2">
+          Why you · {matchedTopics}
+        </p>
+      )}
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {paper.source}
