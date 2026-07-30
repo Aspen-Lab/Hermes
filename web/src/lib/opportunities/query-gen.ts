@@ -8,6 +8,7 @@ import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import { truncateText } from "@/lib/opportunities/shared";
 import {
   EVENT_QUERY_BUDGET,
+  JOB_INTERNSHIP_QUERY_BUDGET,
   JOB_QUERY_BUDGET,
 } from "@/lib/opportunities/query-budget";
 import type { CareerStage, IndustryAcademiaPreference } from "@/types";
@@ -29,10 +30,20 @@ export interface QueryGenProfile {
 const QUERY_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 const queryCache = new Map<string, { queries: string[]; ts: number }>();
 
-function queryCacheKey(kind: string, profile: QueryGenProfile): string {
+function summerCycleYear(nowMs: number): number {
+  const now = new Date(nowMs);
+  return now.getFullYear() + (now.getMonth() >= 6 ? 1 : 0);
+}
+
+function queryCacheKey(
+  kind: string,
+  profile: QueryGenProfile,
+  nowMs: number,
+): string {
   return JSON.stringify({
     kind,
-    year: new Date().getFullYear(),
+    year: new Date(nowMs).getFullYear(),
+    summerCycle: kind === "jobs" ? summerCycleYear(nowMs) : undefined,
     topics: profile.topics,
     softTopics: profile.softTopics ?? [],
     stage: profile.careerStage ?? "",
@@ -141,19 +152,76 @@ export function stageRoleTerms(stage: CareerStage | undefined): string[] {
   }
 }
 
-export function templateJobQueries(profile: QueryGenProfile): string[] {
+const INTERNSHIP_TERMS = [
+  "research intern",
+  "PhD intern",
+  "co-op",
+  "summer placement",
+  "student researcher",
+] as const;
+
+function isPhdStage(stage: CareerStage | undefined): boolean {
+  return /^PhD Year [1-6]$/.test(stage ?? "");
+}
+
+function isInternshipQuery(query: string): boolean {
+  return /\b(?:intern(?:ship)?s?|co[\s-]?op|summer placement|student researcher)\b/i.test(
+    query,
+  );
+}
+
+function internshipQueries(
+  profile: QueryGenProfile,
+  nowMs: number,
+): string[] {
+  if (!isPhdStage(profile.careerStage)) return [];
+  const topics = specificTopicsFirst(profile.topics);
+  const cycleYear = summerCycleYear(nowMs);
+  return INTERNSHIP_TERMS.slice(0, JOB_INTERNSHIP_QUERY_BUDGET).map(
+    (term, index) => {
+      const topic = topics[index % topics.length];
+      return queryTerm(
+        `${topic ? `${topic} ` : ""}${term} Summer ${cycleYear}`,
+      );
+    },
+  );
+}
+
+function withInternshipLane(
+  generalQueries: string[],
+  profile: QueryGenProfile,
+  nowMs: number,
+): string[] {
+  const lane = internshipQueries(profile, nowMs);
+  const eligible = lane.length > 0;
+  const generalBudget = JOB_QUERY_BUDGET - lane.length;
+  const result: string[] = [];
+
+  for (const query of generalQueries) {
+    if (!eligible && isInternshipQuery(query)) continue;
+    appendUnique(result, query);
+    if (result.length >= generalBudget) break;
+  }
+  for (const query of lane) appendUnique(result, query);
+
+  return result.slice(0, JOB_QUERY_BUDGET);
+}
+
+export function templateJobQueries(
+  profile: QueryGenProfile,
+  nowMs = Date.now(),
+): string[] {
   const topics = specificTopicsFirst(profile.topics);
   const roles = stageRoleTerms(profile.careerStage);
-  const queries: string[] = [];
+  const generalQueries: string[] = [];
   // Iterate roles first so every declared topic reaches web search before a
   // second role for the first topic consumes the query budget.
   for (const role of roles) {
     for (const topic of topics) {
-      appendUnique(queries, `${topic} ${role}`);
-      if (queries.length >= JOB_QUERY_BUDGET) return queries;
+      appendUnique(generalQueries, `${topic} ${role}`);
     }
   }
-  return queries;
+  return withInternshipLane(generalQueries, profile, nowMs);
 }
 
 export function templateEventQueries(profile: QueryGenProfile): string[] {
@@ -238,10 +306,13 @@ export async function generateSearchQueries(
   profile: QueryGenProfile,
   llmOverride?: ProviderOverrideConfig,
 ): Promise<string[]> {
+  const nowMs = Date.now();
   const queryBudget =
     kind === "events" ? EVENT_QUERY_BUDGET : JOB_QUERY_BUDGET;
   const fallback =
-    kind === "jobs" ? templateJobQueries(profile) : templateEventQueries(profile);
+    kind === "jobs"
+      ? templateJobQueries(profile, nowMs)
+      : templateEventQueries(profile);
 
   let provider;
   try {
@@ -251,9 +322,9 @@ export async function generateSearchQueries(
   }
   if (!provider?.generateJsonText) return fallback;
 
-  const cacheKey = queryCacheKey(kind, profile);
+  const cacheKey = queryCacheKey(kind, profile, nowMs);
   const cached = queryCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < QUERY_CACHE_TTL_MS) {
+  if (cached && nowMs - cached.ts < QUERY_CACHE_TTL_MS) {
     return cached.queries.slice(0, queryBudget);
   }
 
@@ -293,8 +364,12 @@ export async function generateSearchQueries(
       tier: "small",
     });
     const queries = parseQueryArray(raw, queryBudget);
-    const result = queries.length > 0 ? queries : fallback;
-    queryCache.set(cacheKey, { queries: result, ts: Date.now() });
+    const generated = queries.length > 0 ? queries : fallback;
+    const result =
+      kind === "jobs"
+        ? withInternshipLane(generated, profile, nowMs)
+        : generated;
+    queryCache.set(cacheKey, { queries: result, ts: nowMs });
     return result;
   } catch {
     return fallback;

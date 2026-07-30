@@ -4,6 +4,7 @@
  */
 export const EVENT_QUERY_BUDGET = 16;
 export const JOB_QUERY_BUDGET = 12;
+export const JOB_INTERNSHIP_QUERY_BUDGET = 5;
 
 /**
  * Results requested per search. Providers charge per search, not per result,

@@ -1,9 +1,23 @@
-import { describe, expect, it } from "vitest";
-import { templateEventQueries, templateJobQueries } from "./query-gen";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { resolveProvider } from "@/lib/llm/providers/registry";
+import {
+  generateSearchQueries,
+  templateEventQueries,
+  templateJobQueries,
+} from "./query-gen";
 import {
   EVENT_QUERY_BUDGET,
+  JOB_INTERNSHIP_QUERY_BUDGET,
   JOB_QUERY_BUDGET,
 } from "./query-budget";
+
+vi.mock("@/lib/llm/providers/registry", () => ({
+  resolveProvider: vi.fn(),
+}));
+
+afterEach(() => {
+  vi.mocked(resolveProvider).mockReset();
+});
 
 const PROFILE = {
   topics: ["LCO", "topochemical", "ion exchange", "molten salt", "battery"],
@@ -76,9 +90,9 @@ describe("templateEventQueries", () => {
 });
 
 describe("templateJobQueries", () => {
-  it("uses every required topic and keeps role terms within the expanded budget", () => {
+  it("reserves all five internship phrasings for a PhD profile", () => {
     const queries = templateJobQueries(PROFILE);
-    expect(queries.length).toBeLessThanOrEqual(JOB_QUERY_BUDGET);
+    expect(queries).toHaveLength(JOB_QUERY_BUDGET);
     for (const topic of PROFILE.topics) {
       expect(
         queries.some((query) =>
@@ -86,8 +100,84 @@ describe("templateJobQueries", () => {
         ),
       ).toBe(true);
     }
-    expect(queries.every((query) => /research intern|PhD internship/.test(query))).toBe(
+    for (const phrase of [
+      "research intern",
+      "PhD intern",
+      "co-op",
+      "summer placement",
+      "student researcher",
+    ]) {
+      expect(queries.some((query) => query.includes(phrase))).toBe(true);
+    }
+    expect(
+      queries.filter((query) => /\bSummer \d{4}\b/.test(query)),
+    ).toHaveLength(JOB_INTERNSHIP_QUERY_BUDGET);
+  });
+
+  it("cannot crowd the internship lane out with a long PhD topic list", () => {
+    const queries = templateJobQueries({
+      topics: Array.from({ length: 20 }, (_, index) => `topic ${index}`),
+      careerStage: "PhD Year 6",
+    });
+
+    expect(queries).toHaveLength(JOB_QUERY_BUDGET);
+    expect(
+      queries.filter((query) => /\bSummer \d{4}\b/.test(query)),
+    ).toHaveLength(JOB_INTERNSHIP_QUERY_BUDGET);
+    expect(queries.some((query) => /\bco-op\b/i.test(query))).toBe(true);
+    expect(queries.some((query) => /\bstudent researcher\b/i.test(query))).toBe(
       true,
     );
+  });
+
+  it("omits internship queries for a research scientist", () => {
+    const queries = templateJobQueries({
+      topics: ["solid state batteries", "electrochemistry"],
+      careerStage: "Research Scientist",
+    });
+
+    expect(queries.join("\n")).not.toMatch(
+      /\b(?:intern(?:ship)?s?|co[\s-]?op|summer placement|student researcher)\b/i,
+    );
+  });
+
+  it("moves to the next summer cycle when the clock reaches July", () => {
+    const july2026 = new Date(2026, 6, 1, 12).getTime();
+    const queries = templateJobQueries(PROFILE, july2026).filter((query) =>
+      /\bSummer \d{4}\b/.test(query),
+    );
+
+    expect(queries).toHaveLength(JOB_INTERNSHIP_QUERY_BUDGET);
+    expect(queries.every((query) => query.endsWith("Summer 2027"))).toBe(true);
+  });
+
+  it("restores the reserved lane after Tier 2 query generation", async () => {
+    vi.mocked(resolveProvider).mockReturnValue({
+      id: "openai",
+      generateDigest: vi.fn(),
+      generateJsonText: vi.fn().mockResolvedValue(
+        JSON.stringify(
+          Array.from(
+            { length: JOB_QUERY_BUDGET },
+            (_, index) => `solid state battery scientist role ${index}`,
+          ),
+        ),
+      ),
+      testConnection: vi.fn(),
+    });
+
+    const queries = await generateSearchQueries(
+      "jobs",
+      {
+        topics: ["solid state battery tier two lane"],
+        careerStage: "PhD Year 2",
+      },
+      { provider: "openai", apiKey: "test-key" },
+    );
+
+    expect(queries).toHaveLength(JOB_QUERY_BUDGET);
+    expect(
+      queries.filter((query) => /\bSummer \d{4}\b/.test(query)),
+    ).toHaveLength(JOB_INTERNSHIP_QUERY_BUDGET);
   });
 });
