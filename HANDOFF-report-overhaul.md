@@ -48,7 +48,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P2.1 | Extend the Job and Event types with the new optional fields | TODO | |
+| P2.1 | Extend the Job and Event types with the new optional fields | IN_PROGRESS | |
 | P2.2 | Job posting-page extractor: deadline, start date, contract, materials | TODO | |
 | P2.3 | Visa three-state extractor with country-scoped phrase sets | TODO | |
 | P2.4 | Role-kind classifier: internship / phd / postdoc / staff / faculty | TODO | |
