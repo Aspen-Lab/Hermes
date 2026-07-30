@@ -96,6 +96,29 @@ export interface OpportunityFacetSelection {
   format?: OpportunityFormat[];
 }
 
+export interface EventFee {
+  label: string;
+  standard?: string;
+  student?: string;
+  online?: string;
+  deadline?: string;
+}
+
+export interface EventOrg {
+  name: string;
+  descriptor?: string;
+  relevance?: string;
+  atEvent?: string;
+}
+
+export interface EventPerson {
+  name: string;
+  role?: string;
+  institution?: string;
+  relevance?: string;
+  speaking?: string;
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -106,6 +129,14 @@ export interface Event {
   place?: OpportunityPlace;
   isOnline: boolean;
   deadline?: string;
+  registrationDeadline?: string;
+  fees?: EventFee[];
+  activities?: string[];
+  organisations?: EventOrg[];
+  people?: EventPerson[];
+  travelGrant?: string;
+  invitationLetter?: boolean;
+  expectedSize?: number;
   shortDescription: string;
   relevanceReason: string;
   /** Shown separately when weak facet history materially changed rank. */
@@ -125,6 +156,13 @@ export interface Event {
 
 // ── Job ──
 
+export type RoleKind =
+  | "internship"
+  | "phd-position"
+  | "postdoc"
+  | "staff"
+  | "faculty";
+
 export interface Job {
   id: string;
   roleTitle: string;
@@ -138,6 +176,16 @@ export interface Job {
   facetPreferenceReason?: string;
   linkPosting?: string;
   postedDate?: string;
+  applicationDeadline?: string;
+  startDate?: string;
+  contractLength?: string;
+  applicationMaterials?: string[];
+  roleKind?: RoleKind;
+  visa?: {
+    state: "sponsors" | "not-stated" | "wont-sponsor";
+    evidence?: string;
+    country?: string;
+  };
   relevanceScore?: number;
   isSaved?: boolean;
   feedback?: ItemFeedback;
