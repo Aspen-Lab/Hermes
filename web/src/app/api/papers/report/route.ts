@@ -13,6 +13,7 @@ import { generateDeepReport, buildPaywalledFallback } from "@/lib/papers/deep-re
 import { bindFiguresToReport } from "@/lib/papers/figure-binding";
 import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
+import type { ReportStreamEvent } from "@/lib/papers/report-stream";
 
 export const dynamic = "force-dynamic";
 // Deep reports (full-text fetch + two model passes + figure binding) have been
@@ -26,6 +27,8 @@ interface ExtendedRequest extends PaperReportRequest {
   /** When true, attempt full-text deep reading. Requires `llmOverride` with key. */
   deepReport?: boolean;
   llmOverride?: ProviderOverrideConfig;
+  /** Opt into the NDJSON response when setting an Accept header is impractical. */
+  stream?: boolean;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -165,6 +168,197 @@ function bestPaperUrl(paper: PaperReportRequest["paper"]): string | null {
   return paper.linkPaper ?? paper.linkArxiv ?? null;
 }
 
+function streamReport(body: ExtendedRequest): Response {
+  const readable = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      let closed = false;
+      const send = (event: ReportStreamEvent) => {
+        if (closed) return;
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+      };
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          // The reader may have disconnected while report generation ran.
+        }
+      };
+      const finish = (report: PaperReport) => {
+        send({ type: "report", report });
+        send({ type: "stage", stage: "done", label: "Report ready", pct: 100 });
+        close();
+      };
+
+      try {
+        const provider = resolveProvider(body.llmOverride ?? null);
+        if (!provider?.generateJsonText) {
+          send({ type: "mode", aiMode: "tier0" });
+          send({
+            type: "stage",
+            stage: "done",
+            label: "Basic report ready",
+            pct: 100,
+          });
+          close();
+          return;
+        }
+
+        const aiMode = body.deepReport ? "tier2" : "tier1";
+        send({ type: "mode", aiMode });
+
+        if (aiMode === "tier1") {
+          // The shallow path has exactly one real step (the model call), so
+          // emit one honest low-anchor stage. Firing a second stage at 75%
+          // immediately would slam the bar most of the way across before any
+          // work happened, then strand it there. The client eases it forward
+          // from here while the call is in flight.
+          send({
+            type: "stage",
+            stage: "writing",
+            label: "Writing the report",
+            pct: 20,
+          });
+          finish(await generateShallowReport(body, body.llmOverride));
+          return;
+        }
+
+        send({
+          type: "stage",
+          stage: "source",
+          label: "Finding the paper",
+          pct: 10,
+        });
+        const fullText = await getFullText({
+          paperId: body.paper.id,
+          url: bestPaperUrl(body.paper),
+          doi: body.paper.doi ?? null,
+          arxivId: arxivIdFromPaper(body.paper),
+          openAlexId: openAlexIdFromPaper(body.paper),
+        });
+
+        if (fullText.status === "paywalled" && fullText.reason) {
+          send({
+            type: "stage",
+            stage: "writing",
+            label: "Writing the report",
+            pct: 75,
+          });
+          const shallow = await generateShallowReport(body, body.llmOverride);
+          const tagged: PaperReport = {
+            ...shallow,
+            paywallNotice: fullText.reason,
+            depth: shallow.depth ?? "abstract",
+          };
+          finish(
+            shallow.noLlm
+              ? buildPaywalledFallback(
+                  body.paper,
+                  body.contextHint,
+                  fullText.reason,
+                )
+              : tagged,
+          );
+          return;
+        }
+
+        if (fullText.status !== "ok" || !fullText.doc) {
+          send({
+            type: "stage",
+            stage: "writing",
+            label: "Writing the report",
+            pct: 75,
+          });
+          const shallow = await generateShallowReport(body, body.llmOverride);
+          finish({
+            ...shallow,
+            paywallNotice:
+              fullText.reason ??
+              "Peer could not find a legal full-text source for this paper. Showing an abstract-only report instead.",
+          });
+          return;
+        }
+
+        send({
+          type: "stage",
+          stage: "reading",
+          label: "Reading it",
+          pct: 35,
+        });
+        const figurePoolPromise = getFigurePool({
+          itemId: body.paper.id,
+          url: bestPaperUrl(body.paper) ?? undefined,
+          doi: body.paper.doi ?? undefined,
+          paperTitle: body.paper.title,
+        }).catch((err) => {
+          console.warn("[papers/report] figure pool fetch failed:", err);
+          return null;
+        });
+
+        send({
+          type: "stage",
+          stage: "writing",
+          label: "Writing the report",
+          pct: 75,
+        });
+        const deep = await generateDeepReport({
+          paper: body.paper,
+          contextHint: body.contextHint,
+          doc: fullText.doc,
+          provider,
+        });
+
+        if (!deep) {
+          const shallow = await generateShallowReport(body, body.llmOverride);
+          finish({
+            ...shallow,
+            paywallNotice:
+              "Peer downloaded the paper but the deep-read step failed. Showing an abstract-only report instead.",
+          });
+          return;
+        }
+
+        send({
+          type: "stage",
+          stage: "figures",
+          label: "Adding figures",
+          pct: 92,
+        });
+        const figurePool = await figurePoolPromise;
+        const bound = await bindFiguresToReport({
+          paper: { title: body.paper.title },
+          report: deep,
+          captions: fullText.doc.figureCaptions,
+          provider,
+          figurePool,
+        });
+
+        finish(bound);
+      } catch (err) {
+        console.error("[papers/report] streaming flow failed:", err);
+        try {
+          send({
+            type: "error",
+            message: "Peer could not finish the report stream.",
+          });
+        } catch {
+          // The reader may have disconnected; there is nothing left to send.
+        }
+        close();
+      }
+    },
+  });
+
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store, no-transform",
+    },
+  });
+}
+
 // ── POST handler ─────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -177,6 +371,13 @@ export async function POST(req: NextRequest) {
 
   if (!body.paper?.id || !body.paper.title) {
     return NextResponse.json({ error: "paper is required" }, { status: 400 });
+  }
+
+  const wantsStream =
+    req.headers.get("accept")?.includes("application/x-ndjson") === true ||
+    body.stream === true;
+  if (wantsStream) {
+    return streamReport(body);
   }
 
   // ── Deep path ────────────────────────────────────────────────────

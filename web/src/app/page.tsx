@@ -36,6 +36,7 @@ import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
 import { OpportunityFacetPanel } from "@/components/opportunities/opportunity-facet-panel";
 import { OpportunityShowMore } from "@/components/opportunities/opportunity-show-more";
@@ -100,6 +101,9 @@ function DiscoveryPage() {
     eventFacetCounts,
     jobFacetCounts,
     isLoading,
+    papersLoading,
+    eventsLoading,
+    jobsLoading,
     lastRefresh,
     loadFeed,
     aiPaperSearchEnabled,
@@ -123,6 +127,9 @@ function DiscoveryPage() {
   const recordOpportunityFacetPreference = useProfileStore(
     (s) => s.recordOpportunityFacetPreference,
   );
+  const refreshFeed = useCallback(() => {
+    void loadFeed({ advanceHistory: true });
+  }, [loadFeed]);
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
@@ -451,6 +458,8 @@ function DiscoveryPage() {
   const briefingClosed =
     !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
   const isEmpty = !isLoading && totalAll === 0 && !isSearchMode;
+  const feedProgressPct =
+    35 + (eventsLoading ? 0 : 15) + (jobsLoading ? 0 : 15);
 
   const typeChips: { key: FeedType; label: string; count: number; icon: string }[] = [
     {
@@ -470,6 +479,12 @@ function DiscoveryPage() {
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
+      {!isSearchMode && papersLoading && (
+        <ProgressBar
+          pct={feedProgressPct}
+          label="Finding today’s papers"
+        />
+      )}
       <div className="mx-auto max-w-[820px]">
       <header className="mb-8 flex items-end gap-3 sm:gap-6">
         <div className="min-w-0">
@@ -507,7 +522,7 @@ function DiscoveryPage() {
               unread={unreadCount}
               lastRefresh={lastRefresh}
               closed={briefingClosed}
-              onRefresh={loadFeed}
+              onRefresh={refreshFeed}
               isRefreshing={isLoading}
             />
           )}
@@ -937,8 +952,12 @@ function DiscoveryPage() {
               would make it disappear there. Gating the render — not just its
               paper input — keeps it from flashing stale bullets for a frame
               when the user switches tabs, since the component clears itself in
-              an effect (post-paint). Hides itself if no LLM is configured, so
-              the rest of the feed keeps working. */}
+              an effect (post-paint). Passes the store's paper array as-is
+              rather than a derived one: DailyDigest guards its single request
+              on that input, so a freshly built array would restart an
+              in-flight digest every time the event or job lane commits. Hides
+              itself if no LLM is configured, so the rest of the feed keeps
+              working. */}
           {showPaperDigest && (
             <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
               <DailyDigest
@@ -997,7 +1016,7 @@ function DiscoveryPage() {
                   <FeedMoreTile
                     itemCount={briefingItems.length}
                     topics={profile.researchTopics}
-                    onRefresh={loadFeed}
+                    onRefresh={refreshFeed}
                     isLoading={isLoading}
                   />
                 ) : null}
