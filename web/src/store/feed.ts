@@ -2,7 +2,14 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Paper, Event, Job, ItemFeedback, UserProfile } from "@/types";
+import type {
+  Paper,
+  Event,
+  Job,
+  ItemFeedback,
+  OpportunityFacetCounts,
+  UserProfile,
+} from "@/types";
 // Mock fixtures kept for use in unit tests / Storybook only — never wired
 // into the live feed. Pre-2026-04-28 the store used `mockPapers` as a
 // fallback when the real API returned 0 results, which silently surfaced
@@ -13,6 +20,10 @@ import { scoredItemToPaper } from "@/lib/feed/mapper";
 import type { FeedResponse } from "@/lib/feed/types";
 import type { EventsFeedResponse } from "@/lib/events/types";
 import type { JobsFeedResponse } from "@/lib/jobs/types";
+import {
+  DEFAULT_OPPORTUNITY_TOP_N,
+  emptyOpportunityFacetCounts,
+} from "@/lib/opportunities/facets";
 import {
   feedbackSnapshotForEvent,
   feedbackSnapshotForJob,
@@ -157,92 +168,126 @@ async function ensureAdvisorSeeds(
   return { seedTexts: cachedTexts, seedWorkIds: cachedIds };
 }
 
-async function fetchRealFeed(
+function activeSurfaceTopics(
   profile: UserProfile,
+  surface: "papers" | "events" | "jobs",
+) {
+  const activeTopics = profile.activeSearchInputs?.[surface];
+  return {
+    topics: (activeTopics?.required ?? []).filter(Boolean),
+    softTopics: (activeTopics?.explore ?? []).filter(Boolean),
+  };
+}
+
+export function activePaperTopicsKey(profile: UserProfile): string {
+  return (profile.activeSearchInputs?.papers.required ?? [])
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function paperFeedRequestBody(
+  profile: UserProfile,
+  advisorSeeds: { seedTexts: string[]; seedWorkIds: string[] },
   aiPaperSearchEnabled = true,
   excludeIds: string[] = [],
-): Promise<Paper[]> {
-  const topics = (profile.researchTopics ?? []).filter(Boolean);
-  if (topics.length === 0) return [];
-
-  // Advisor / PI discovery seeds (recomputed monthly). Their text biases TF-IDF
-  // scoring; their work IDs anchor the citation-neighborhood pull in the pipeline.
-  const advisorSeeds = await ensureAdvisorSeeds(profile);
-  // Promote project description + open challenges into seedTexts. These get
-  // concatenated into the TF-IDF profile string, so papers that mention the
-  // user's specific work or the challenges they're hunting bias up the rank.
+): Record<string, unknown> {
+  const { topics, softTopics } = activeSurfaceTopics(profile, "papers");
   const seedTexts = [
     profile.currentProject,
     profile.currentChallenges,
     ...advisorSeeds.seedTexts,
   ].filter((s): s is string => Boolean(s && s.trim().length > 0));
-  const negativeTopics = (profile.dislikedTopics ?? []).filter((s) => s.trim().length > 0);
+  const negativeTopics = (profile.dislikedTopics ?? []).filter(
+    (s) => s.trim().length > 0,
+  );
   const preferenceLedger = profile.preferenceLedger ?? {};
-  const softTopics = (profile.softTopics ?? []).filter(Boolean);
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
   const hasUserLlmOverride =
     aiPaperSearchEnabled &&
     profile.feedAiProvider !== "default" &&
     Boolean(feedAiApiKey);
+
+  return {
+    topics,
+    softTopics: softTopics.length > 0 ? softTopics : undefined,
+    methods: profile.preferredMethods,
+    // Preferred journals double as a primary source filter (venue search)
+    // and earn a relevance boost in the pipeline (see applyJournalBoost).
+    venues:
+      (profile.preferredJournals ?? []).length > 0
+        ? profile.preferredJournals
+        : undefined,
+    seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
+    preferenceLedger:
+      Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
+    negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
+    // Advisor citation-neighborhood discovery (new external work building on
+    // the advisor's seeds). Only sent once an advisor has been confirmed.
+    affiliation:
+      profile.advisorAuthorId && advisorSeeds.seedWorkIds.length > 0
+        ? {
+            authorId: profile.advisorAuthorId,
+            seedWorkIds: advisorSeeds.seedWorkIds,
+          }
+        : undefined,
+    topN: profile.paperCount,
+    aiTier: aiPaperSearchEnabled
+      ? (hasUserLlmOverride ? 2 : undefined)
+      : 0,
+    searchConnectors: profile.tavilyEnabled
+      ? {
+          tavily: {
+            enabled: true,
+            apiKey: tavilyApiKey || undefined,
+          },
+        }
+      : undefined,
+    llmOverride: hasUserLlmOverride
+      ? {
+          provider: profile.feedAiProvider,
+          apiKey: feedAiApiKey,
+        }
+      : undefined,
+    controls: {
+      focus: profile.feedFocus,
+      freshness: profile.feedFreshness,
+      paperCount: profile.paperCount,
+      sourceMix: profile.feedSourceMix,
+      importance: profile.feedImportance,
+      methodMode: profile.feedMethodMode,
+      discoveryMode: profile.feedDiscoveryMode,
+      avoidReviews: profile.feedAvoidReviews,
+      avoidOldPapers: profile.feedAvoidOldPapers,
+      avoidBroadSurveys: profile.feedAvoidBroadSurveys,
+    },
+    excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+  };
+}
+
+async function fetchRealFeed(
+  profile: UserProfile,
+  aiPaperSearchEnabled = true,
+  excludeIds: string[] = [],
+): Promise<Paper[]> {
+  const { topics } = activeSurfaceTopics(profile, "papers");
+  if (topics.length === 0) return [];
+
+  // Advisor / PI discovery seeds (recomputed monthly). Their text biases TF-IDF
+  // scoring; their work IDs anchor the citation-neighborhood pull in the pipeline.
+  const advisorSeeds = await ensureAdvisorSeeds(profile);
   try {
     const data = await apiFetch<FeedResponse>("/api/feed", {
       method: "POST",
-      body: JSON.stringify({
-        topics,
-        softTopics: softTopics.length > 0 ? softTopics : undefined,
-        methods: profile.preferredMethods,
-        // Preferred journals double as a primary source filter (venue search)
-        // and earn a relevance boost in the pipeline (see applyJournalBoost).
-        venues:
-          (profile.preferredJournals ?? []).length > 0
-            ? profile.preferredJournals
-            : undefined,
-        seedTexts: seedTexts.length > 0 ? seedTexts : undefined,
-        preferenceLedger:
-          Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
-        negativeTopics: negativeTopics.length > 0 ? negativeTopics : undefined,
-        // Advisor citation-neighborhood discovery (new external work building on
-        // the advisor's seeds). Only sent once an advisor has been confirmed.
-        affiliation:
-          profile.advisorAuthorId && advisorSeeds.seedWorkIds.length > 0
-            ? {
-                authorId: profile.advisorAuthorId,
-                seedWorkIds: advisorSeeds.seedWorkIds,
-              }
-            : undefined,
-        topN: profile.paperCount,
-        aiTier: aiPaperSearchEnabled
-          ? (hasUserLlmOverride ? 2 : undefined)
-          : 0,
-        searchConnectors: profile.tavilyEnabled
-          ? {
-              tavily: {
-                enabled: true,
-                apiKey: tavilyApiKey || undefined,
-              },
-            }
-          : undefined,
-        llmOverride: hasUserLlmOverride
-          ? {
-              provider: profile.feedAiProvider,
-              apiKey: feedAiApiKey,
-            }
-          : undefined,
-        controls: {
-          focus: profile.feedFocus,
-          freshness: profile.feedFreshness,
-          paperCount: profile.paperCount,
-          sourceMix: profile.feedSourceMix,
-          importance: profile.feedImportance,
-          methodMode: profile.feedMethodMode,
-          discoveryMode: profile.feedDiscoveryMode,
-          avoidReviews: profile.feedAvoidReviews,
-          avoidOldPapers: profile.feedAvoidOldPapers,
-          avoidBroadSurveys: profile.feedAvoidBroadSurveys,
-        },
-        excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
-      }),
+      body: JSON.stringify(
+        paperFeedRequestBody(
+          profile,
+          advisorSeeds,
+          aiPaperSearchEnabled,
+          excludeIds,
+        ),
+      ),
     });
     return data.items.map(scoredItemToPaper);
   } catch (err) {
@@ -253,12 +298,13 @@ async function fetchRealFeed(
 
 // Shared request-shaping for the jobs/events feeds: both routes take the
 // same profile projection.
-function opportunityRequestBody(
+export function opportunityRequestBody(
   profile: UserProfile,
+  surface: "events" | "jobs",
   excludeIds: string[],
 ): Record<string, unknown> {
-  const topics = (profile.researchTopics ?? []).filter(Boolean);
-  const softTopics = (profile.softTopics ?? []).filter(Boolean);
+  const { topics, softTopics } = activeSurfaceTopics(profile, surface);
+  const activeInputs = profile.activeSearchInputs;
   const preferenceLedger = profile.preferenceLedger ?? {};
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
@@ -273,11 +319,11 @@ function opportunityRequestBody(
     ),
     preferenceLedger:
       Object.keys(preferenceLedger).length > 0 ? preferenceLedger : undefined,
-    careerStage: profile.careerStage,
+    careerStage: activeInputs?.careerStage,
     industryVsAcademia: profile.industryVsAcademia,
-    locationPreferences: profile.locationPreferences,
+    locationPreferences: activeInputs?.locationPreferences ?? [],
     currentProject: profile.currentProject,
-    topN: 5,
+    topN: DEFAULT_OPPORTUNITY_TOP_N,
     aiTier: hasUserLlmOverride ? 2 : undefined,
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
@@ -300,47 +346,75 @@ function opportunityRequestBody(
 async function fetchRealEvents(
   profile: UserProfile,
   excludeIds: string[] = [],
-): Promise<Event[]> {
-  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) return [];
+): Promise<OpportunityClientPool<Event>> {
+  if (activeSurfaceTopics(profile, "events").topics.length === 0) {
+    return emptyOpportunityClientPool<Event>();
+  }
   try {
     const res = await fetch("/api/events/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+      body: JSON.stringify(
+        opportunityRequestBody(profile, "events", excludeIds),
+      ),
     });
     if (!res.ok) {
       console.error("[feed] /api/events/feed returned", res.status);
-      return [];
+      return emptyOpportunityClientPool<Event>();
     }
     const data = (await res.json()) as EventsFeedResponse;
-    return data.items;
+    return {
+      items: data.items ?? [],
+      pool: data.pool ?? data.items ?? [],
+      facetCounts: data.facetCounts ?? emptyOpportunityFacetCounts(),
+    };
   } catch (err) {
     console.error("[feed] events fetch failed:", err);
-    return [];
+    return emptyOpportunityClientPool<Event>();
   }
 }
 
 async function fetchRealJobs(
   profile: UserProfile,
   excludeIds: string[] = [],
-): Promise<Job[]> {
-  if ((profile.researchTopics ?? []).filter(Boolean).length === 0) return [];
+): Promise<OpportunityClientPool<Job>> {
+  if (activeSurfaceTopics(profile, "jobs").topics.length === 0) {
+    return emptyOpportunityClientPool<Job>();
+  }
   try {
     const res = await fetch("/api/jobs/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(opportunityRequestBody(profile, excludeIds)),
+      body: JSON.stringify(opportunityRequestBody(profile, "jobs", excludeIds)),
     });
     if (!res.ok) {
       console.error("[feed] /api/jobs/feed returned", res.status);
-      return [];
+      return emptyOpportunityClientPool<Job>();
     }
     const data = (await res.json()) as JobsFeedResponse;
-    return data.items;
+    return {
+      items: data.items ?? [],
+      pool: data.pool ?? data.items ?? [],
+      facetCounts: data.facetCounts ?? emptyOpportunityFacetCounts(),
+    };
   } catch (err) {
     console.error("[feed] jobs fetch failed:", err);
-    return [];
+    return emptyOpportunityClientPool<Job>();
   }
+}
+
+interface OpportunityClientPool<TItem> {
+  items: TItem[];
+  pool: TItem[];
+  facetCounts: OpportunityFacetCounts;
+}
+
+function emptyOpportunityClientPool<TItem>(): OpportunityClientPool<TItem> {
+  return {
+    items: [],
+    pool: [],
+    facetCounts: emptyOpportunityFacetCounts(),
+  };
 }
 
 type DismissalKind = "paper" | "event" | "job";
@@ -350,13 +424,57 @@ interface PendingDismissal {
   kind: DismissalKind;
   item: Paper | Event | Job;
   previousFeedback?: ItemFeedback;
+  wasInDisplay: boolean;
+  wasInPool: boolean;
+  wasSaved: boolean;
   expiresAt: number;
+}
+
+function restoreByScore<TItem extends { id: string; relevanceScore?: number }>(
+  items: TItem[],
+  item: TItem,
+  shouldRestore: boolean,
+): TItem[] {
+  if (!shouldRestore || items.some((candidate) => candidate.id === item.id)) {
+    return items;
+  }
+  return [item, ...items].sort(
+    (left, right) =>
+      (right.relevanceScore ?? 0) - (left.relevanceScore ?? 0),
+  );
+}
+
+function syncSavedState<
+  TItem extends { id: string; isSaved?: boolean; feedback?: ItemFeedback },
+>(
+  items: TItem[],
+  savedIds: Set<string>,
+  feedbackById: Record<string, ItemFeedback>,
+): TItem[] {
+  return items.map((item) => {
+    const isSaved = savedIds.has(item.id);
+    const currentFeedback = feedbackById[item.id] ?? item.feedback;
+    return {
+      ...item,
+      isSaved,
+      feedback: isSaved
+        ? currentFeedback ?? ("saved" as ItemFeedback)
+        : currentFeedback === "saved"
+          ? undefined
+          : currentFeedback,
+    };
+  });
 }
 
 interface FeedState {
   papers: Paper[];
   events: Event[];
   jobs: Job[];
+  /** Full daily pools power facets without expanding the default feed slice. */
+  eventPool: Event[];
+  jobPool: Job[];
+  eventFacetCounts: OpportunityFacetCounts;
+  jobFacetCounts: OpportunityFacetCounts;
   savedPapers: Paper[];
   savedEvents: Event[];
   savedJobs: Job[];
@@ -426,6 +544,10 @@ export const useFeedStore = create<FeedState>()(
       papers: [],
       events: [],
       jobs: [],
+      eventPool: [],
+      jobPool: [],
+      eventFacetCounts: emptyOpportunityFacetCounts(),
+      jobFacetCounts: emptyOpportunityFacetCounts(),
       savedPapers: [],
       savedEvents: [],
       savedJobs: [],
@@ -444,23 +566,15 @@ export const useFeedStore = create<FeedState>()(
         set({ isLoading: true });
         const {
           savedPapers,
-          savedEvents,
-          savedJobs,
           recentlyShownIds,
-          paperFeedback,
           oppFeedback,
         } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
-        const savedEventIds = new Set(savedEvents.map((e) => e.id));
-        const savedJobIds = new Set(savedJobs.map((j) => j.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
         const profile = useProfileStore.getState().profile;
         // Signature of the required topics this load is built from — must match
         // the feed page's auto-load key so the page knows the feed is current.
-        const topicsKey = (profile.researchTopics ?? [])
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .join("\n");
+        const topicsKey = activePaperTopicsKey(profile);
 
         // Papers are consume-once: exclude any already shown recently (within
         // TTL) so the briefing brings fresh reading each load. Saved papers are
@@ -487,37 +601,72 @@ export const useFeedStore = create<FeedState>()(
         ]);
         // A newer load started while this one was in flight — drop it.
         if (requestId !== feedLoadSeq) return;
+        // User actions and remote hydration can happen while sources are in
+        // flight. Use the latest state so an old response cannot resurrect a
+        // dismissal or overwrite a new save.
+        const latest = get();
+        const latestSavedIds = new Set(latest.savedPapers.map((p) => p.id));
+        const latestSavedEventIds = new Set(
+          latest.savedEvents.map((event) => event.id),
+        );
+        const latestSavedJobIds = new Set(
+          latest.savedJobs.map((job) => job.id),
+        );
+        const latestDismissedOppIds = new Set(
+          Object.entries(latest.oppFeedback)
+            .filter(([, feedback]) => feedback === "notInterested")
+            .map(([id]) => id),
+        );
         const papers = realPapers.map((p) =>
-          savedIds.has(p.id)
+          latestSavedIds.has(p.id)
             ? {
                 ...p,
                 isSaved: true,
-                feedback: paperFeedback[p.id] ?? ("saved" as ItemFeedback),
+                feedback:
+                  latest.paperFeedback[p.id] ?? ("saved" as ItemFeedback),
               }
             : {
                 ...p,
-                feedback: paperFeedback[p.id] ?? p.feedback,
+                feedback: latest.paperFeedback[p.id] ?? p.feedback,
               },
         );
-        const events = realEvents.map((e) => ({
-          ...e,
-          isSaved: savedEventIds.has(e.id),
+        const decorateEvent = (event: Event): Event => ({
+          ...event,
+          isSaved: latestSavedEventIds.has(event.id),
           feedback:
-            oppFeedback[e.id] ??
-            (savedEventIds.has(e.id) ? ("saved" as ItemFeedback) : undefined),
-        }));
-        const jobs = realJobs.map((j) => ({
-          ...j,
-          isSaved: savedJobIds.has(j.id),
+            latest.oppFeedback[event.id] ??
+            (latestSavedEventIds.has(event.id)
+              ? ("saved" as ItemFeedback)
+              : undefined),
+        });
+        const decorateJob = (job: Job): Job => ({
+          ...job,
+          isSaved: latestSavedJobIds.has(job.id),
           feedback:
-            oppFeedback[j.id] ??
-            (savedJobIds.has(j.id) ? ("saved" as ItemFeedback) : undefined),
-        }));
+            latest.oppFeedback[job.id] ??
+            (latestSavedJobIds.has(job.id)
+              ? ("saved" as ItemFeedback)
+              : undefined),
+        });
+        const events = realEvents.items
+          .filter((event) => !latestDismissedOppIds.has(event.id))
+          .map(decorateEvent);
+        const jobs = realJobs.items
+          .filter((job) => !latestDismissedOppIds.has(job.id))
+          .map(decorateJob);
+        const eventPool = realEvents.pool
+          .filter((event) => !latestDismissedOppIds.has(event.id))
+          .map(decorateEvent);
+        const jobPool = realJobs.pool
+          .filter((job) => !latestDismissedOppIds.has(job.id))
+          .map(decorateJob);
         // Record shown PAPERS so the next load skips them. Events/jobs are
         // deliberately NOT recorded here — they're standing opportunities that
         // should keep appearing until their deadline passes or the user acts.
         const now = Date.now();
-        const nextShown: Record<string, number> = { ...recentlyShownIds };
+        const nextShown: Record<string, number> = {
+          ...latest.recentlyShownIds,
+        };
         for (const paper of papers) {
           nextShown[paper.id] = now;
         }
@@ -525,6 +674,10 @@ export const useFeedStore = create<FeedState>()(
           papers,
           events,
           jobs,
+          eventPool,
+          jobPool,
+          eventFacetCounts: realEvents.facetCounts,
+          jobFacetCounts: realJobs.facetCounts,
           isLoading: false,
           lastRefresh: new Date().toISOString(),
           feedTopicsKey: topicsKey,
@@ -581,6 +734,9 @@ export const useFeedStore = create<FeedState>()(
             kind: "paper",
             item: paper,
             previousFeedback,
+            wasInDisplay: s.papers.some((item) => item.id === paper.id),
+            wasInPool: false,
+            wasSaved: s.savedPapers.some((item) => item.id === paper.id),
             expiresAt: Date.now() + 4000,
           },
         }));
@@ -592,6 +748,11 @@ export const useFeedStore = create<FeedState>()(
         set((s) => ({
           papers: s.papers.map((p) =>
             p.id === paper.id ? { ...p, feedback: "moreLikeThis" as ItemFeedback } : p
+          ),
+          savedPapers: s.savedPapers.map((p) =>
+            p.id === paper.id
+              ? { ...p, feedback: "moreLikeThis" as ItemFeedback }
+              : p,
           ),
           paperFeedback: { ...s.paperFeedback, [paper.id]: "moreLikeThis" },
         }));
@@ -616,6 +777,9 @@ export const useFeedStore = create<FeedState>()(
         const saved = { ...event, isSaved: true, feedback: savedFeedback };
         set((s) => ({
           events: s.events.map((e) => (e.id === event.id ? saved : e)),
+          eventPool: s.eventPool.map((e) =>
+            e.id === event.id ? saved : e,
+          ),
           savedEvents: alreadySaved
             ? s.savedEvents.map((e) => (e.id === event.id ? saved : e))
             : [saved, ...s.savedEvents],
@@ -640,6 +804,7 @@ export const useFeedStore = create<FeedState>()(
 
         set((s) => ({
           events: s.events.filter((e) => e.id !== event.id),
+          eventPool: s.eventPool.filter((e) => e.id !== event.id),
           savedEvents: s.savedEvents.filter((e) => e.id !== event.id),
           oppFeedback: { ...s.oppFeedback, [event.id]: "notInterested" },
           pendingDismissal: {
@@ -647,6 +812,9 @@ export const useFeedStore = create<FeedState>()(
             kind: "event",
             item: event,
             previousFeedback,
+            wasInDisplay: s.events.some((item) => item.id === event.id),
+            wasInPool: s.eventPool.some((item) => item.id === event.id),
+            wasSaved: s.savedEvents.some((item) => item.id === event.id),
             expiresAt: Date.now() + 4000,
           },
         }));
@@ -657,6 +825,16 @@ export const useFeedStore = create<FeedState>()(
         const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
           events: s.events.map((e) =>
+            e.id === event.id
+              ? { ...e, feedback: "moreLikeThis" as ItemFeedback }
+              : e,
+          ),
+          savedEvents: s.savedEvents.map((e) =>
+            e.id === event.id
+              ? { ...e, feedback: "moreLikeThis" as ItemFeedback }
+              : e,
+          ),
+          eventPool: s.eventPool.map((e) =>
             e.id === event.id
               ? { ...e, feedback: "moreLikeThis" as ItemFeedback }
               : e,
@@ -684,6 +862,7 @@ export const useFeedStore = create<FeedState>()(
         const saved = { ...job, isSaved: true, feedback: savedFeedback };
         set((s) => ({
           jobs: s.jobs.map((j) => (j.id === job.id ? saved : j)),
+          jobPool: s.jobPool.map((j) => (j.id === job.id ? saved : j)),
           savedJobs: alreadySaved
             ? s.savedJobs.map((j) => (j.id === job.id ? saved : j))
             : [saved, ...s.savedJobs],
@@ -703,6 +882,7 @@ export const useFeedStore = create<FeedState>()(
 
         set((s) => ({
           jobs: s.jobs.filter((j) => j.id !== job.id),
+          jobPool: s.jobPool.filter((j) => j.id !== job.id),
           savedJobs: s.savedJobs.filter((j) => j.id !== job.id),
           oppFeedback: { ...s.oppFeedback, [job.id]: "notInterested" },
           pendingDismissal: {
@@ -710,6 +890,9 @@ export const useFeedStore = create<FeedState>()(
             kind: "job",
             item: job,
             previousFeedback,
+            wasInDisplay: s.jobs.some((item) => item.id === job.id),
+            wasInPool: s.jobPool.some((item) => item.id === job.id),
+            wasSaved: s.savedJobs.some((item) => item.id === job.id),
             expiresAt: Date.now() + 4000,
           },
         }));
@@ -720,6 +903,16 @@ export const useFeedStore = create<FeedState>()(
         const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
           jobs: s.jobs.map((j) =>
+            j.id === job.id
+              ? { ...j, feedback: "moreLikeThis" as ItemFeedback }
+              : j,
+          ),
+          jobPool: s.jobPool.map((j) =>
+            j.id === job.id
+              ? { ...j, feedback: "moreLikeThis" as ItemFeedback }
+              : j,
+          ),
+          savedJobs: s.savedJobs.map((j) =>
             j.id === job.id
               ? { ...j, feedback: "moreLikeThis" as ItemFeedback }
               : j,
@@ -776,6 +969,18 @@ export const useFeedStore = create<FeedState>()(
                   }
                 : e,
             ),
+            eventPool: s.eventPool.map((e) =>
+              e.id === id
+                ? {
+                    ...e,
+                    isSaved: false,
+                    feedback:
+                      currentFeedback === "saved"
+                        ? undefined
+                        : currentFeedback,
+                  }
+                : e,
+            ),
             savedEvents: s.savedEvents.filter((e) => e.id !== id),
             oppFeedback: nextFeedback,
           };
@@ -796,6 +1001,18 @@ export const useFeedStore = create<FeedState>()(
                     isSaved: false,
                     feedback:
                       currentFeedback === "saved" ? undefined : currentFeedback,
+                  }
+                : j,
+            ),
+            jobPool: s.jobPool.map((j) =>
+              j.id === id
+                ? {
+                    ...j,
+                    isSaved: false,
+                    feedback:
+                      currentFeedback === "saved"
+                        ? undefined
+                        : currentFeedback,
                   }
                 : j,
             ),
@@ -837,6 +1054,7 @@ export const useFeedStore = create<FeedState>()(
         if (!pending) return;
         set((s) => {
           if (pending.kind === "paper") {
+            const paper = pending.item as Paper;
             const nextFeedback = { ...s.paperFeedback };
             if (pending.previousFeedback) {
               nextFeedback[pending.id] = pending.previousFeedback;
@@ -844,8 +1062,15 @@ export const useFeedStore = create<FeedState>()(
               delete nextFeedback[pending.id];
             }
             return {
-              papers: [pending.item as Paper, ...s.papers].sort(
-                (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+              papers: restoreByScore(
+                s.papers,
+                paper,
+                pending.wasInDisplay,
+              ),
+              savedPapers: restoreByScore(
+                s.savedPapers,
+                paper,
+                pending.wasSaved,
               ),
               paperFeedback: nextFeedback,
               pendingDismissal: null,
@@ -858,17 +1083,43 @@ export const useFeedStore = create<FeedState>()(
             delete nextOppFeedback[pending.id];
           }
           if (pending.kind === "event") {
+            const event = pending.item as Event;
             return {
-              events: [pending.item as Event, ...s.events].sort(
-                (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+              events: restoreByScore(
+                s.events,
+                event,
+                pending.wasInDisplay,
+              ),
+              eventPool: restoreByScore(
+                s.eventPool,
+                event,
+                pending.wasInPool,
+              ),
+              savedEvents: restoreByScore(
+                s.savedEvents,
+                event,
+                pending.wasSaved,
               ),
               oppFeedback: nextOppFeedback,
               pendingDismissal: null,
             };
           }
+          const job = pending.item as Job;
           return {
-            jobs: [pending.item as Job, ...s.jobs].sort(
-              (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+            jobs: restoreByScore(
+              s.jobs,
+              job,
+              pending.wasInDisplay,
+            ),
+            jobPool: restoreByScore(
+              s.jobPool,
+              job,
+              pending.wasInPool,
+            ),
+            savedJobs: restoreByScore(
+              s.savedJobs,
+              job,
+              pending.wasSaved,
             ),
             oppFeedback: nextOppFeedback,
             pendingDismissal: null,
@@ -907,20 +1158,97 @@ export const useFeedStore = create<FeedState>()(
             feedbackSnapshotForJob(job),
           );
         }
+        if (pending.wasSaved) cloudUnsave(pending.id);
         set({ pendingDismissal: null });
       },
 
       hydrateFromRemote: (remote) => {
-        set((s) => ({
-          savedPapers: remote.savedPapers ?? s.savedPapers,
-          savedEvents: remote.savedEvents ?? s.savedEvents,
-          savedJobs: remote.savedJobs ?? s.savedJobs,
-          readItems: remote.readItems ?? s.readItems,
-        }));
+        set((s) => {
+          const nextSavedPapers = remote.savedPapers ?? s.savedPapers;
+          const nextSavedEvents = remote.savedEvents ?? s.savedEvents;
+          const nextSavedJobs = remote.savedJobs ?? s.savedJobs;
+          const savedPaperIds = new Set(
+            nextSavedPapers.map((paper) => paper.id),
+          );
+          const savedEventIds = new Set(
+            nextSavedEvents.map((event) => event.id),
+          );
+          const savedJobIds = new Set(nextSavedJobs.map((job) => job.id));
+          const nextPaperFeedback = { ...s.paperFeedback };
+          const nextOppFeedback = { ...s.oppFeedback };
+
+          for (const [id, feedback] of Object.entries(nextPaperFeedback)) {
+            if (feedback === "saved" && !savedPaperIds.has(id)) {
+              delete nextPaperFeedback[id];
+            }
+          }
+          for (const [id, feedback] of Object.entries(nextOppFeedback)) {
+            if (
+              feedback === "saved" &&
+              !savedEventIds.has(id) &&
+              !savedJobIds.has(id)
+            ) {
+              delete nextOppFeedback[id];
+            }
+          }
+
+          return {
+            papers: syncSavedState(
+              s.papers,
+              savedPaperIds,
+              nextPaperFeedback,
+            ),
+            events: syncSavedState(
+              s.events,
+              savedEventIds,
+              nextOppFeedback,
+            ),
+            eventPool: syncSavedState(
+              s.eventPool,
+              savedEventIds,
+              nextOppFeedback,
+            ),
+            jobs: syncSavedState(s.jobs, savedJobIds, nextOppFeedback),
+            jobPool: syncSavedState(
+              s.jobPool,
+              savedJobIds,
+              nextOppFeedback,
+            ),
+            savedPapers: syncSavedState(
+              nextSavedPapers,
+              savedPaperIds,
+              nextPaperFeedback,
+            ),
+            savedEvents: syncSavedState(
+              nextSavedEvents,
+              savedEventIds,
+              nextOppFeedback,
+            ),
+            savedJobs: syncSavedState(
+              nextSavedJobs,
+              savedJobIds,
+              nextOppFeedback,
+            ),
+            paperFeedback: nextPaperFeedback,
+            oppFeedback: nextOppFeedback,
+            readItems: remote.readItems ?? s.readItems,
+          };
+        });
       },
 
       resetLocal: () => {
+        feedLoadSeq += 1;
         set({
+          papers: [],
+          events: [],
+          jobs: [],
+          eventPool: [],
+          jobPool: [],
+          eventFacetCounts: emptyOpportunityFacetCounts(),
+          jobFacetCounts: emptyOpportunityFacetCounts(),
+          isLoading: false,
+          lastRefresh: null,
+          feedTopicsKey: null,
           savedPapers: [],
           savedEvents: [],
           savedJobs: [],

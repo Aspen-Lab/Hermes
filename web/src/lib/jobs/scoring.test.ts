@@ -1,9 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { scoreCareerFit, scoreIndustryFit, scoreJobs } from "./scoring";
+import {
+  isExpiredPosting,
+  scoreCareerFit,
+  scoreIndustryFit,
+  scoreJobs,
+} from "./scoring";
 import { dedupJobs } from "./dedup";
 import { remotiveJobToRawItem } from "./sources/remotive";
 import { himalayasJobToRawItem } from "./sources/himalayas";
+import {
+  JOB_PATH_RE,
+  NON_JOB_PATH_RE,
+  webResultToRawJobItem,
+} from "./sources/jobweb";
 import type { RawJobItem } from "./types";
+import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
 
 function job(overrides: Partial<RawJobItem>): RawJobItem {
   return {
@@ -60,6 +71,23 @@ describe("scoreIndustryFit", () => {
       scoreIndustryFit(other, "bigTech"),
     );
   });
+
+  it("does not classify every web-discovered job as academic", () => {
+    const industryWebRole = job({
+      source: "jobweb",
+      title: "Battery R&D Scientist",
+      company: "QuantumScape",
+      description: "Develop commercial solid-state cells.",
+    });
+    const academicWebRole = job({
+      source: "jobweb",
+      title: "Postdoctoral Researcher",
+      company: "State University",
+    });
+    expect(scoreIndustryFit(industryWebRole, "industry")).toBeGreaterThan(
+      scoreIndustryFit(academicWebRole, "industry"),
+    );
+  });
 });
 
 describe("scoreJobs", () => {
@@ -90,6 +118,156 @@ describe("scoreJobs", () => {
     const scored = scoreJobs([job({})], { topics: ["machine learning"] });
     expect(scored[0].matchReason.toLowerCase()).toContain("machine learning");
   });
+
+  it("does not let a method-only web posting pass a battery required-topic gate", () => {
+    const aiRole = job({
+      id: "jobweb:ai",
+      source: "jobweb",
+      title: "Machine Learning Engineer",
+      description: "Build AI systems.",
+      tags: ["machine learning"],
+    });
+    expect(
+      scoreJobs([aiRole], {
+        topics: ["battery"],
+        methods: ["machine learning"],
+      }),
+    ).toEqual([]);
+  });
+
+  it("keeps one scoped required match and uses an honest reason", () => {
+    const batteryRole = job({
+      id: "jobweb:battery",
+      source: "jobweb",
+      title: "Battery R&D Scientist",
+      description: "Develop cells for electric vehicles.",
+      tags: [],
+    });
+    const scored = scoreJobs([batteryRole], { topics: ["battery"] });
+    expect(scored).toHaveLength(1);
+    expect(scored[0].matchReason.toLowerCase()).toContain("battery");
+    expect(scored[0].matchReason).not.toContain("Related to your research area");
+  });
+
+  it("requires two distinct full-text matches outside title and summary", () => {
+    const prefix = "x".repeat(320);
+    const oneBroadMatch = job({
+      id: "jobweb:one",
+      source: "jobweb",
+      title: "Research Scientist",
+      description: `${prefix} battery`,
+      tags: [],
+    });
+    const twoBroadMatches = job({
+      id: "jobweb:two",
+      source: "jobweb",
+      title: "Research Scientist",
+      description: `${prefix} battery and molten salt`,
+      tags: [],
+    });
+    const profile = { topics: ["battery", "molten salt"] };
+    expect(scoreJobs([oneBroadMatch], profile)).toEqual([]);
+    expect(scoreJobs([twoBroadMatches], profile)).toHaveLength(1);
+  });
+
+  it("does not allow explore-only or marketing-materials matches through", () => {
+    const exploreOnly = job({
+      id: "jobweb:explore",
+      source: "jobweb",
+      title: "Electroplating Specialist",
+      description: "Run plating processes.",
+      tags: [],
+    });
+    const marketing = job({
+      id: "jobweb:marketing",
+      source: "jobweb",
+      title: "Marketing Coordinator",
+      description: "Prepare marketing materials for product launches.",
+      tags: [],
+    });
+    expect(
+      scoreJobs([exploreOnly], {
+        topics: ["battery"],
+        softTopics: ["electroplating"],
+      }),
+    ).toEqual([]);
+    expect(scoreJobs([marketing], { topics: ["materials"] })).toEqual([]);
+  });
+
+  it("applies a weak location-facet boost to the matching job", () => {
+    const berlin = job({
+      id: "berlin",
+      location: "Berlin, Germany",
+      place: { city: "Berlin", country: "Germany" },
+      isRemote: false,
+    });
+    const chicago = job({
+      id: "chicago",
+      location: "Chicago, IL",
+      place: {
+        city: "Chicago",
+        region: "IL",
+        country: "United States",
+      },
+      isRemote: false,
+    });
+    const at = "2026-07-19T00:00:00.000Z";
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at, origin: "job" },
+    );
+    const ranked = scoreJobs(
+      [berlin, chicago],
+      { topics: ["machine learning"], preferenceLedger },
+      Date.parse(at),
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
+    expect(ranked[0].facetPreferenceReason).toBeUndefined();
+  });
+
+  it("explains a facet boost only when it materially changes job rank", () => {
+    const candidates = [
+      ["berlin", "Berlin"],
+      ["boston", "Boston"],
+      ["austin", "Austin"],
+      ["chicago", "Chicago"],
+    ].map(([id, city]) =>
+      job({
+        id,
+        location: `${city}, Test`,
+        place: { city },
+        isRemote: false,
+      }),
+    );
+    const at = "2026-07-19T00:00:00.000Z";
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at, origin: "job" },
+    );
+    const ranked = scoreJobs(
+      candidates,
+      { topics: ["machine learning"], preferenceLedger },
+      Date.parse(at),
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].facetPreferenceReason).toBe(
+      "Because you often view Chicago",
+    );
+    expect(
+      ranked.slice(1).every(
+        (item) => item.facetPreferenceReason === undefined,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("dedupJobs", () => {
@@ -113,6 +291,39 @@ describe("dedupJobs", () => {
 });
 
 describe("source mappers", () => {
+  it("keeps real industry job pages and rejects article-shaped search results", () => {
+    expect(JOB_PATH_RE.test("/careers/jobs/battery-rd-scientist")).toBe(true);
+    expect(NON_JOB_PATH_RE.test("/articles/molten-salt-study")).toBe(true);
+
+    expect(
+      webResultToRawJobItem({
+        title: "Battery R&D Scientist - QuantumScape",
+        url: "https://careers.quantumscape.com/jobs/battery-rd-scientist",
+        snippet: "Apply now to develop commercial solid-state cells.",
+      }),
+    ).toMatchObject({
+      title: "Battery R&D Scientist",
+      company: "QuantumScape",
+    });
+    expect(
+      webResultToRawJobItem({
+        title: "Evolution of micro-pores via molten salt dealloying",
+        url: "https://www.nature.com/articles/example",
+        snippet: "A Scientific Reports research article.",
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects a generic web page with neither a job URL nor hiring language", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Molten Salt Research Overview",
+        url: "https://example.org/research/molten-salts",
+        snippet: "A survey of recent scientific findings.",
+      }),
+    ).toBeNull();
+  });
+
   it("maps a Remotive job and strips HTML", () => {
     const item = remotiveJobToRawItem({
       id: 42,
@@ -150,5 +361,67 @@ describe("source mappers", () => {
   it("returns null for postings without a link", () => {
     expect(remotiveJobToRawItem({ id: 1, title: "X" })).toBeNull();
     expect(himalayasJobToRawItem({ title: "X" })).toBeNull();
+  });
+});
+
+describe("expired postings", () => {
+  const NOW = Date.parse("2026-07-26T00:00:00Z");
+
+  function job(overrides: Partial<RawJobItem> = {}): RawJobItem {
+    return {
+      id: "jobweb:x",
+      source: "jobweb",
+      title: "Research Scientist",
+      company: "Lab",
+      location: "",
+      isRemote: false,
+      description: "",
+      url: "https://example.test/job/1",
+      tags: [],
+      ...overrides,
+    };
+  }
+
+  it("drops a posting whose season+year cycle has passed", () => {
+    expect(
+      isExpiredPosting(job({ title: "Molten Salt Chemistry Summer 2025 Internship" }), NOW),
+    ).toBe(true);
+  });
+
+  it("keeps the current cycle", () => {
+    expect(
+      isExpiredPosting(job({ title: "Molten Salt Chemistry Summer 2026 Internship" }), NOW),
+    ).toBe(false);
+  });
+
+  it("drops a posting older than the age limit", () => {
+    expect(isExpiredPosting(job({ postedAt: "2025-01-01T00:00:00Z" }), NOW)).toBe(true);
+  });
+
+  it("keeps a recent posting", () => {
+    expect(isExpiredPosting(job({ postedAt: "2026-07-01T00:00:00Z" }), NOW)).toBe(false);
+  });
+
+  it("keeps a posting with no date signal at all", () => {
+    expect(isExpiredPosting(job(), NOW)).toBe(false);
+  });
+});
+
+describe("bare leading year cycles", () => {
+  const NOW2 = Date.parse("2026-07-27T00:00:00Z");
+  function j(title: string): RawJobItem {
+    return {
+      id: "jobweb:y", source: "jobweb", title, company: "Lab", location: "",
+      isRemote: false, description: "", url: "https://x.test/job/1", tags: [],
+    };
+  }
+  it("drops a posting labelled with a past year", () => {
+    expect(isExpiredPosting(j("2025 Battery Research Scientist Graduate Intern"), NOW2)).toBe(true);
+  });
+  it("keeps the current year", () => {
+    expect(isExpiredPosting(j("2026 Battery Research Scientist Graduate Intern"), NOW2)).toBe(false);
+  });
+  it("ignores a year that is not the cycle label", () => {
+    expect(isExpiredPosting(j("Research Scientist, Batteries since 2025"), NOW2)).toBe(false);
   });
 });

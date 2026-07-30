@@ -11,6 +11,10 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
 import { chipTones } from "@/components/ui/chip";
+import {
+  OpportunityRelevanceBar,
+  opportunityRelevanceCardProps,
+} from "@/components/opportunities/opportunity-relevance-card";
 
 type FeedItem =
   | { kind: "paper"; data: Paper }
@@ -408,8 +412,13 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
     <Link
       href={`/events/${event.id}`}
       className={tileShellClass(isRead)}
+      {...opportunityRelevanceCardProps(event.relevanceScore)}
     >
-      <KindStripe kind="event" />
+      {!Number.isFinite(event.relevanceScore) ? (
+        <KindStripe kind="event" />
+      ) : (
+        <OpportunityRelevanceBar score={event.relevanceScore} />
+      )}
       <div className="flex items-center gap-2 mb-2.5">
         <KindBadge kind="event" />
         <span className="flex-1" aria-hidden />
@@ -431,6 +440,11 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       >
         {event.relevanceReason}
       </p>
+      {event.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {event.facetPreferenceReason}
+        </p>
+      )}
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {event.type}
@@ -462,8 +476,13 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
     <Link
       href={`/jobs/${job.id}`}
       className={tileShellClass(isRead)}
+      {...opportunityRelevanceCardProps(job.relevanceScore)}
     >
-      <KindStripe kind="job" />
+      {!Number.isFinite(job.relevanceScore) ? (
+        <KindStripe kind="job" />
+      ) : (
+        <OpportunityRelevanceBar score={job.relevanceScore} />
+      )}
       <div className="flex items-center gap-2 mb-2.5">
         <KindBadge kind="job" />
         <span className="flex-1" aria-hidden />
@@ -485,6 +504,11 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
       >
         {job.matchReason}
       </p>
+      {job.facetPreferenceReason && (
+        <p className="mt-2 text-caption font-semibold text-accent">
+          {job.facetPreferenceReason}
+        </p>
+      )}
       <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center gap-1">
         <span className="text-micro text-text-faint uppercase tracking-[0.14em] truncate mr-1">
           {job.keyRequirements[0] || "Role"}

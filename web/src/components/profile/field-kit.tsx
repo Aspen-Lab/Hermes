@@ -586,7 +586,7 @@ export function TopicsField({
           }}
         />
         <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
-          Paper <strong>must</strong> be related to at least one of these.{" "}
+          Each result <strong>must</strong> be related to at least one of these.{" "}
           <strong>Prefer full terms over acronyms</strong> — short acronyms can be
           ambiguous and match unrelated fields, so spell the term out (you can add
           the acronym too).
@@ -594,7 +594,7 @@ export function TopicsField({
       </div>
       <div className="min-w-0">
         <p className="mb-1.5 text-micro font-semibold uppercase tracking-[0.14em] text-tag/80">
-          Nice to have
+          Explore
         </p>
         <ChipInput
           values={soft}
@@ -611,8 +611,8 @@ export function TopicsField({
           }}
         />
         <p className="mt-1.5 px-0.5 text-micro leading-snug text-text-faint/70">
-          Papers that match these score higher, but papers without them can still
-          appear in your feed.
+          Matches on these topics score higher, but results without them can still
+          appear.
         </p>
       </div>
     </div>

@@ -50,6 +50,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { sectionLabel } from "@/components/ui/section-label";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
+import { SURFACE_TOPIC_DESCRIPTIONS } from "@/lib/profile/topic-copy";
 import {
   STEP_META,
   type StepKey,
@@ -58,6 +59,10 @@ import {
   isStepDone,
   readPersonaDone,
 } from "./completeness";
+import {
+  createTopicMirroringController,
+  type TopicMirroringController,
+} from "./topic-mirroring";
 
 const DEFAULT_NAME = "Peer Member";
 const TOPICS_IDX = STEP_META.findIndex((m) => m.key === "topics");
@@ -71,6 +76,7 @@ export default function WelcomePage() {
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
   const store = useProfileStore();
+  const topicMirroringRef = useRef<TopicMirroringController | null>(null);
   const completeOnboarding = useProfileStore((s) => s.completeOnboarding);
   // Wait for local hydration AND the initial remote sync before choosing the
   // resume position — otherwise a signed-in returning user's wizard freezes
@@ -192,6 +198,13 @@ export default function WelcomePage() {
   }, []);
 
   const name = profile.displayName === DEFAULT_NAME ? "" : profile.displayName;
+  const topicMirroring = () => {
+    topicMirroringRef.current ??= createTopicMirroringController(
+      profile,
+      store,
+    );
+    return topicMirroringRef.current;
+  };
 
   return (
     <div className="min-h-[100dvh] bg-bg flex flex-col items-center">
@@ -258,14 +271,57 @@ export default function WelcomePage() {
                   title="What should Peer track for you?"
                   subtitle="This is the heart of your briefing. Add at least one Required topic — every paper in your feed must match one of these. Type a topic and press comma or Enter to turn it into a tag; drag a tag between columns to re-rank it."
                 >
-                  <div data-enter-scope>
-                    <TopicsField
-                      required={profile.researchTopics}
-                      soft={profile.softTopics ?? []}
-                      onChangeRequired={store.updateTopics}
-                      onChangeSoft={store.updateSoftTopics}
-                    />
-                  </div>
+                  <Field
+                    label="Papers"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.papers}
+                  >
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.researchTopics}
+                        soft={profile.softTopics ?? []}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updatePaperRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updatePaperExplore(topics)
+                        }
+                      />
+                    </div>
+                  </Field>
+                  <Field
+                    label="Events"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.events}
+                  >
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.eventRequiredTopics}
+                        soft={profile.eventExploreTopics}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updateEventRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updateEventExplore(topics)
+                        }
+                      />
+                    </div>
+                  </Field>
+                  <Field
+                    label="Jobs"
+                    hint={SURFACE_TOPIC_DESCRIPTIONS.jobs}
+                  >
+                    <div data-enter-scope>
+                      <TopicsField
+                        required={profile.jobRequiredTopics}
+                        soft={profile.jobExploreTopics}
+                        onChangeRequired={(topics) =>
+                          topicMirroring().updateJobRequired(topics)
+                        }
+                        onChangeSoft={(topics) =>
+                          topicMirroring().updateJobExplore(topics)
+                        }
+                      />
+                    </div>
+                  </Field>
                   {!topicsSatisfied && (
                     <p id="topics-gate-note" className="mt-4 text-meta text-accent/90 flex items-center gap-1.5">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

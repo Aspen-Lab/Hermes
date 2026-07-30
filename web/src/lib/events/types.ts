@@ -3,6 +3,9 @@ import type {
   Event,
   EventType,
   IndustryAcademiaPreference,
+  OpportunityFacetCounts,
+  OpportunityFacetSelection,
+  OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
 } from "@/types";
@@ -26,6 +29,7 @@ export interface RawEventItem {
   startDate: string;
   endDate?: string;
   location: string;
+  place?: OpportunityPlace;
   isOnline: boolean;
   /** Submission (CFP) deadline, ISO. */
   deadline?: string;
@@ -67,6 +71,7 @@ export interface EventsFeedRequest {
   topN?: number;
   perSourceLimit?: number;
   excludeIds?: string[];
+  facets?: OpportunityFacetSelection;
   aiTier?: 0 | 1 | 2;
   searchConnectors?: SearchConnectors;
   llmOverride?: ProviderOverrideConfig;
@@ -77,6 +82,8 @@ export interface EventsFeedMeta {
   errors: Partial<Record<EventSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
+  beforeScoreFloor: number;
+  afterScoreFloor: number;
   returned: number;
   latencyMs: number;
   generatedAt: string;
@@ -84,6 +91,9 @@ export interface EventsFeedMeta {
 
 export interface EventsFeedResponse {
   items: Event[];
+  /** Complete scored pool for client-side facets and progressive reveal. */
+  pool: Event[];
+  facetCounts: OpportunityFacetCounts;
   meta: EventsFeedMeta;
 }
 
@@ -92,4 +102,5 @@ export interface ScoredEventItem extends RawEventItem {
   score: number;
   matchedKeywords: string[];
   relevanceReason: string;
+  facetPreferenceReason?: string;
 }

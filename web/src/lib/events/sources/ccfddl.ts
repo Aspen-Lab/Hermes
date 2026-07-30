@@ -1,6 +1,7 @@
 import { load } from "js-yaml";
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId } from "@/lib/opportunities/shared";
+import { extractPlaceFromText } from "@/lib/opportunities/structured-extract";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 
 // ccfddl/ccf-deadlines: community-maintained YAML of CS conference deadlines
@@ -134,7 +135,7 @@ export function ccfConfToRawItem(conf: CcfConf, now: number): RawEventItem | nul
       .filter(Boolean)
       .join(" · ");
     const place = edition.place?.trim() ?? "";
-    const isOnline = /\b(online|virtual)\b/i.test(place);
+    const isOnline = /\b(online|virtual|hybrid)\b/i.test(place);
     return {
       id: `ccfddl:${routeSafeId(edition.id ?? `${title}-${edition.year}`)}`,
       source: "ccfddl",
@@ -143,6 +144,7 @@ export function ccfConfToRawItem(conf: CcfConf, now: number): RawEventItem | nul
       startDate: start ?? "",
       endDate: end,
       location: isOnline ? "Online" : place,
+      place: extractPlaceFromText(place),
       isOnline,
       deadline: futureDeadlines[0],
       description: conf.description?.trim() ?? title,

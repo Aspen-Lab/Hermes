@@ -15,6 +15,7 @@ import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
 import { summarizePreferenceLedger } from "@/lib/preferences/ledger";
 import { apiFetch } from "@/lib/api";
+import { SURFACE_TOPIC_DESCRIPTIONS } from "@/lib/profile/topic-copy";
 import { IconBook, IconBuilding, IconCheck, IconPin } from "@/components/icons";
 import { PageContainer } from "@/components/ui/page-container";
 import {
@@ -91,6 +92,10 @@ export default function ProfilePage() {
     updateDisplayName,
     updateTopics,
     updateSoftTopics,
+    updateEventTopics,
+    updateEventSoftTopics,
+    updateJobTopics,
+    updateJobSoftTopics,
     updatePreferredJournals,
     updateCareerStage,
     updateIndustryPreference,
@@ -226,6 +231,10 @@ export default function ProfilePage() {
           setName={setName}
           updateTopics={updateTopics}
           updateSoftTopics={updateSoftTopics}
+          updateEventTopics={updateEventTopics}
+          updateEventSoftTopics={updateEventSoftTopics}
+          updateJobTopics={updateJobTopics}
+          updateJobSoftTopics={updateJobSoftTopics}
           updatePreferredJournals={updatePreferredJournals}
           updateSchool={updateSchool}
           updateCurrentProject={updateCurrentProject}
@@ -1492,6 +1501,10 @@ function EditView({
   setName,
   updateTopics,
   updateSoftTopics,
+  updateEventTopics,
+  updateEventSoftTopics,
+  updateJobTopics,
+  updateJobSoftTopics,
   updatePreferredJournals,
   updateSchool,
   updateCurrentProject,
@@ -1517,6 +1530,10 @@ function EditView({
   setName: (s: string) => void;
   updateTopics: (v: string[]) => void;
   updateSoftTopics: (v: string[]) => void;
+  updateEventTopics: (v: string[]) => void;
+  updateEventSoftTopics: (v: string[]) => void;
+  updateJobTopics: (v: string[]) => void;
+  updateJobSoftTopics: (v: string[]) => void;
   updatePreferredJournals: (v: string[]) => void;
   updateSchool: (s: string) => void;
   updateCurrentProject: (s: string) => void;
@@ -1553,12 +1570,44 @@ function EditView({
         />
       </EditRow>
       <EditRow icon={<IconHash />} tone="accent" label="Topics">
-        <TopicsField
-          required={profile.researchTopics}
-          soft={profile.softTopics ?? []}
-          onChangeRequired={updateTopics}
-          onChangeSoft={updateSoftTopics}
-        />
+        <div className="space-y-6">
+          <div>
+            <p className="text-meta font-semibold text-heading">Papers</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.papers}
+            </p>
+            <TopicsField
+              required={profile.researchTopics}
+              soft={profile.softTopics ?? []}
+              onChangeRequired={updateTopics}
+              onChangeSoft={updateSoftTopics}
+            />
+          </div>
+          <div>
+            <p className="text-meta font-semibold text-heading">Events</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.events}
+            </p>
+            <TopicsField
+              required={profile.eventRequiredTopics}
+              soft={profile.eventExploreTopics}
+              onChangeRequired={updateEventTopics}
+              onChangeSoft={updateEventSoftTopics}
+            />
+          </div>
+          <div>
+            <p className="text-meta font-semibold text-heading">Jobs</p>
+            <p className="mb-3 mt-1 text-caption text-text-faint">
+              {SURFACE_TOPIC_DESCRIPTIONS.jobs}
+            </p>
+            <TopicsField
+              required={profile.jobRequiredTopics}
+              soft={profile.jobExploreTopics}
+              onChangeRequired={updateJobTopics}
+              onChangeSoft={updateJobSoftTopics}
+            />
+          </div>
+        </div>
       </EditRow>
 
       <EditRow icon={<IconBuilding size={13} strokeWidth={1.9} />} tone="neutral" label="Affiliation">

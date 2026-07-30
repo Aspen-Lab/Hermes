@@ -1,14 +1,26 @@
 import { describe, it, expect } from "vitest";
-import { diversifyByType, scoreEvents, scoreRank, scoreUrgency } from "./scoring";
+import {
+  diversifyByType,
+  MIN_SCORE,
+  scoreEvents,
+  scoreRank,
+  scoreUrgency,
+} from "./scoring";
 import { dedupEvents } from "./dedup";
 import { ccfConfToRawItem, parseCcfDateRange, parseCcfDeadline } from "./sources/ccfddl";
 import {
+  DENY_HOSTS,
+  DENY_PATH_RE,
+  eventNameFrom,
+  isEventIndexPage,
+  isNewsArticleTitle,
   extractDeadline,
   extractEventDate,
   guessEventType,
   webResultToRawEventItem,
 } from "./sources/eventweb";
 import type { RawEventItem, ScoredEventItem } from "./types";
+import { applyOpportunityFacetPreferenceSignal } from "@/lib/preferences/ledger";
 
 const NOW = Date.parse("2026-07-19T00:00:00Z");
 const DAY = 24 * 60 * 60 * 1000;
@@ -75,6 +87,168 @@ describe("scoreEvents", () => {
     const scored = scoreEvents([attendOnly], { topics: ["machine learning"] });
     expect(scored).toHaveLength(1);
   });
+
+  it("does not let a method-only AI conference pass a battery required-topic gate", () => {
+    const aiConference = event({
+      id: "eventweb:ai",
+      source: "eventweb",
+      name: "Artificial Intelligence Conference",
+      startDate: "",
+      description: "A machine learning research conference.",
+      tags: ["machine learning"],
+    });
+    expect(
+      scoreEvents([aiConference], {
+        topics: ["battery"],
+        methods: ["machine learning"],
+      }),
+    ).toEqual([]);
+  });
+
+  it("keeps a relevant date-less web event with one scoped required match", () => {
+    const summit = event({
+      id: "eventweb:battery",
+      source: "eventweb",
+      name: "Solid-State Battery Summit",
+      startDate: "",
+      description: "An industry conference in Chicago.",
+      tags: [],
+    });
+    const scored = scoreEvents([summit], { topics: ["battery"] });
+    expect(scored).toHaveLength(1);
+    expect(scored[0].relevanceReason.toLowerCase()).toContain("battery");
+    expect(scored[0].relevanceReason).not.toContain("Upcoming in your field");
+  });
+
+  it("requires two distinct full-text matches when title and summary do not match", () => {
+    const prefix = "x".repeat(320);
+    const oneBroadMatch = event({
+      id: "eventweb:one",
+      source: "eventweb",
+      name: "Research Conference",
+      startDate: "",
+      description: `${prefix} battery`,
+      tags: [],
+    });
+    const twoBroadMatches = event({
+      id: "eventweb:two",
+      source: "eventweb",
+      name: "Research Conference",
+      startDate: "",
+      description: `${prefix} battery and molten salt`,
+      tags: [],
+    });
+    const profile = { topics: ["battery", "molten salt"] };
+    expect(scoreEvents([oneBroadMatch], profile)).toEqual([]);
+    expect(scoreEvents([twoBroadMatches], profile)).toHaveLength(1);
+  });
+
+  it("does not allow an explore-only match through the required gate", () => {
+    const exploreOnly = event({
+      id: "eventweb:explore",
+      source: "eventweb",
+      name: "Electroplating Symposium",
+      startDate: "",
+      description: "A conference about electroplating.",
+      tags: [],
+    });
+    expect(
+      scoreEvents([exploreOnly], {
+        topics: ["battery"],
+        softTopics: ["electroplating"],
+      }),
+    ).toEqual([]);
+  });
+
+  it("applies the score floor after ranking", () => {
+    const lowSignal = event({
+      id: "low",
+      source: "confstech",
+      name: "General Conference",
+      startDate: iso(300),
+      description: "",
+      tags: [],
+    });
+    const unfiltered = scoreEvents(
+      [lowSignal],
+      { topics: [] },
+      NOW,
+      { applyFloor: false },
+    );
+    expect(unfiltered).toHaveLength(1);
+    expect(unfiltered[0].score).toBeLessThan(MIN_SCORE);
+    expect(scoreEvents([lowSignal], { topics: [] }, NOW)).toEqual([]);
+  });
+
+  it("applies a weak location-facet boost to the matching event", () => {
+    const berlin = event({
+      id: "berlin",
+      location: "Berlin, Germany",
+      place: { city: "Berlin", country: "Germany" },
+    });
+    const chicago = event({
+      id: "chicago",
+      location: "Chicago, IL",
+      place: {
+        city: "Chicago",
+        region: "IL",
+        country: "United States",
+      },
+    });
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at: new Date(NOW).toISOString(), origin: "event" },
+    );
+    const ranked = scoreEvents(
+      [berlin, chicago],
+      { topics: ["machine learning"], preferenceLedger },
+      NOW,
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].score).toBeGreaterThan(ranked[1].score);
+    expect(ranked[0].facetPreferenceReason).toBeUndefined();
+  });
+
+  it("explains a facet boost only when it materially changes event rank", () => {
+    const candidates = [
+      ["berlin", "Berlin"],
+      ["boston", "Boston"],
+      ["austin", "Austin"],
+      ["chicago", "Chicago"],
+    ].map(([id, city]) =>
+      event({
+        id,
+        location: `${city}, Test`,
+        place: { city },
+      }),
+    );
+    const preferenceLedger = applyOpportunityFacetPreferenceSignal(
+      undefined,
+      "location",
+      "Chicago",
+      { at: new Date(NOW).toISOString(), origin: "event" },
+    );
+    const ranked = scoreEvents(
+      candidates,
+      { topics: ["machine learning"], preferenceLedger },
+      NOW,
+      { applyFloor: false },
+    );
+
+    expect(ranked[0].id).toBe("chicago");
+    expect(ranked[0].facetPreferenceReason).toBe(
+      "Because you often view Chicago",
+    );
+    expect(
+      ranked.slice(1).every(
+        (item) => item.facetPreferenceReason === undefined,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("diversifyByType", () => {
@@ -85,6 +259,33 @@ describe("diversifyByType", () => {
     ].map((e) => ({ ...e, matchedKeywords: [], relevanceReason: "" }) as ScoredEventItem);
     const out = diversifyByType(items, 3);
     expect(out.slice(0, 4).map((o) => o.id)).toEqual(["c1", "c2", "c3", "s1"]);
+  });
+
+  it("uses a default cap of five for the ten-item daily slice", () => {
+    const items = [
+      ...[1, 2, 3, 4, 5, 6].map((i) => ({
+        ...event({ id: `c${i}` }),
+        score: 1 - i * 0.05,
+      })),
+      { ...event({ id: "s1", type: "seminar" as const }), score: 0.5 },
+    ].map(
+      (item) =>
+        ({
+          ...item,
+          matchedKeywords: [],
+          relevanceReason: "",
+        }) as ScoredEventItem,
+    );
+
+    expect(diversifyByType(items).map((item) => item.id)).toEqual([
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "c5",
+      "s1",
+      "c6",
+    ]);
   });
 });
 
@@ -158,6 +359,45 @@ describe("ccfddl parsing", () => {
 });
 
 describe("eventweb extraction", () => {
+  it("exports the documented quality deny signals", () => {
+    expect(DENY_HOSTS).toContain("instagram.com");
+    expect(DENY_HOSTS).toContain("iopscience.iop.org");
+    expect(DENY_HOSTS).toContain("waset.org");
+    expect(DENY_PATH_RE.test("/article/example")).toBe(true);
+    expect(DENY_PATH_RE.test("/events/example")).toBe(false);
+  });
+
+  it.each([
+    "https://instagram.com/reel/example",
+    "https://iopscience.iop.org/article/example",
+    "https://subdomain.waset.org/conference/example",
+    "https://example.org/doi/10.1000/example",
+  ])("drops denied web result URL %s", (url) => {
+    expect(
+      webResultToRawEventItem(
+        {
+          title: "Solid-State Battery Summit 2026",
+          url,
+          snippet: "Conference on August 11, 2026 in Chicago",
+        },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it("drops a dated result that does not have positive event shape", () => {
+    expect(
+      webResultToRawEventItem(
+        {
+          title: "Plasma-assisted surface modification of LCO cathodes",
+          url: "https://example.org/research",
+          snippet: "Published August 11, 2026",
+        },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
   it("extracts month-day-year event dates", () => {
     expect(
       extractEventDate("MRS Fall Meeting, November 29 - December 4, 2026, Boston")!.slice(0, 10),
@@ -218,5 +458,125 @@ describe("eventweb extraction", () => {
     );
     expect(item).not.toBeNull();
     expect(item?.startDate).toBe("");
+  });
+
+  it.each(["Battery Materials Expo", "Energy Storage Industry Forum"])(
+    "keeps a date-less industry event shape: %s",
+    (title) => {
+      expect(
+        webResultToRawEventItem(
+          {
+            title,
+            url: "https://example.test/events/2026",
+            snippet: "Registration and speakers announced",
+          },
+          NOW,
+        ),
+      ).not.toBeNull();
+    },
+  );
+});
+
+describe("event name extraction", () => {
+  it("recovers a real event name when the page title is generic", () => {
+    expect(
+      eventNameFrom(
+        "Meeting Summary",
+        "2026 International Round Table on Titanium Production in Molten Salts. Registration is open.",
+      ),
+    ).toBe("2026 International Round Table on Titanium Production in Molten Salts.");
+  });
+
+  it("prefers the event-like segment over site chrome", () => {
+    expect(
+      eventNameFrom("Solid-State Battery Summit | Cambridge EnerTech", ""),
+    ).toBe("Solid-State Battery Summit");
+  });
+
+  it("keeps a clean title unchanged", () => {
+    expect(eventNameFrom("6th Annual Solid-State Battery Summit", "")).toBe(
+      "6th Annual Solid-State Battery Summit",
+    );
+  });
+
+  it("falls back to the raw title when nothing better exists", () => {
+    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Home");
+  });
+});
+
+describe("event index and org pages", () => {
+  it.each([
+    "Events for July 2026",
+    "Upcoming Events",
+    "Events Calendar",
+    "All Events",
+    "Nuclear and Applied Materials Research Group",
+    "Department of Materials Science",
+    "Upcoming Energy Storage Conferences",
+  ])("rejects non-event page: %s", (title) => {
+    expect(isEventIndexPage(title)).toBe(true);
+  });
+
+  it.each([
+    "Solid-State Battery Summit",
+    "6th Annual Solid-State Battery Summit",
+    "2026 International Round Table on Titanium Production in Molten Salts",
+    "EMEA2026: Workshop on Ion Exchange Membranes for Energy Applications",
+  ])("keeps a real event: %s", (title) => {
+    expect(isEventIndexPage(title)).toBe(false);
+  });
+});
+
+describe("site-chrome titles", () => {
+  it("recovers the event name from the URL slug when every title segment is chrome", () => {
+    expect(
+      eventNameFrom(
+        "DLR Events | Events for July 2026",
+        "",
+        "https://event.dlr.de/en/event/emea2026-workshop-on-ion-exchange-membranes-for-energy-applications",
+      ),
+    ).toBe("Emea2026 workshop on ion exchange membranes for energy applications");
+  });
+
+  it("still prefers a real title segment over the slug", () => {
+    expect(
+      eventNameFrom(
+        "Solid-State Battery Summit | Cambridge EnerTech Events",
+        "",
+        "https://www.cambridgeenertech.com/solid-state-batteries",
+      ),
+    ).toBe("Solid-State Battery Summit");
+  });
+});
+
+describe("commerce and news pages", () => {
+  it.each([
+    ["https://batteriesinaflash.com/shop/chargers", "Batteries, Charger & More"],
+    ["https://example.test/store/battery-packs", "Battery Packs Conference Store"],
+    ["https://example.test/products/cells", "Battery Cells Symposium"],
+  ])("rejects storefront URL %s", (url, title) => {
+    expect(
+      webResultToRawEventItem(
+        { title, url, snippet: "Conference registration and pricing" },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    "The Year Ahead: Key Events at the IAEA in 2026",
+    "Top 10 Battery Conferences to Watch",
+    "What to Expect at the 2026 Summit",
+    "Highlights from the 2026 Battery Congress",
+  ])("rejects news/editorial title: %s", (title) => {
+    expect(isNewsArticleTitle(title)).toBe(true);
+  });
+
+  it.each([
+    "Solid-State Battery Summit",
+    "6th Annual Battery Safety Summit",
+    "International Meeting on Lithium Batteries",
+  ])("keeps a real event title: %s", (title) => {
+    expect(isNewsArticleTitle(title)).toBe(false);
   });
 });

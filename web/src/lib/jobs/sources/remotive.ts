@@ -1,5 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Remotive ToS: attribute + link back to the Remotive URL (we do — linkPosting
@@ -28,12 +29,14 @@ export function remotiveJobToRawItem(job: RemotiveJob): RawJobItem | null {
   const title = job.title?.trim();
   const url = job.url?.trim();
   if (!title || !url || !job.id) return null;
+  const location = job.candidate_required_location?.trim() || "Remote";
   return {
     id: `remotive:${routeSafeId(String(job.id))}`,
     source: "remotive",
     title,
     company: job.company_name?.trim() || "Unknown company",
-    location: job.candidate_required_location?.trim() || "Remote",
+    location,
+    place: parseStructuredLocation(location),
     isRemote: true,
     description: truncateText(stripHtml(job.description)),
     url,

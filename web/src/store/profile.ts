@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { localCalendarDate } from "@/lib/local-calendar-date";
 import { applyColorTheme, normalizeColorTheme } from "@/lib/theme";
 import type {
   UserProfile,
@@ -22,17 +23,27 @@ import type {
 } from "@/types";
 import { defaultProfile } from "@/types";
 import {
+  applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
   conceptsFromEvent,
   conceptsFromJob,
   conceptsFromPaper,
+  type OpportunityFacetGroup,
 } from "@/lib/preferences/ledger";
+
+type PersistedUserProfile = Omit<Partial<UserProfile>, "colorTheme"> & {
+  colorTheme?: string;
+};
 
 interface ProfileState {
   profile: UserProfile;
   updateDisplayName: (name: string) => void;
   updateTopics: (topics: string[]) => void;
   updateSoftTopics: (topics: string[]) => void;
+  updateEventTopics: (topics: string[]) => void;
+  updateEventSoftTopics: (topics: string[]) => void;
+  updateJobTopics: (topics: string[]) => void;
+  updateJobSoftTopics: (topics: string[]) => void;
   updatePreferredJournals: (journals: string[]) => void;
   updateCareerStage: (stage: CareerStage) => void;
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
@@ -57,6 +68,13 @@ interface ProfileState {
   recordJobPreference: (
     job: Job,
     signal: "positive" | "negative",
+    at?: string,
+  ) => void;
+  /** Facet clicks are weak, positive-only evidence under event/job origins. */
+  recordOpportunityFacetPreference: (
+    origin: "event" | "job",
+    group: OpportunityFacetGroup,
+    value: string,
     at?: string,
   ) => void;
   /** Wipe everything Peer has learned from likes/saves/dismissals. */
@@ -101,6 +119,149 @@ interface ProfileState {
   logOut: () => void;
 }
 
+export function migrateProfileStore(
+  persisted: unknown,
+  version: number,
+): unknown {
+  if (!persisted || typeof persisted !== "object") return persisted;
+
+  const state = persisted as {
+    profile?: PersistedUserProfile;
+    [key: string]: unknown;
+  };
+  if (!state.profile || typeof state.profile !== "object") return persisted;
+
+  const profile: PersistedUserProfile = { ...state.profile };
+  if (profile.colorTheme !== undefined) {
+    profile.colorTheme = normalizeColorTheme(profile.colorTheme);
+  }
+
+  if (version < 3) {
+    const requiredTopics = Array.isArray(profile.researchTopics)
+      ? profile.researchTopics
+      : [];
+    const exploreTopics = Array.isArray(profile.softTopics)
+      ? profile.softTopics
+      : [];
+
+    if (
+      !Array.isArray(profile.eventRequiredTopics) ||
+      profile.eventRequiredTopics.length === 0
+    ) {
+      profile.eventRequiredTopics = [...requiredTopics];
+    }
+    if (
+      !Array.isArray(profile.eventExploreTopics) ||
+      profile.eventExploreTopics.length === 0
+    ) {
+      profile.eventExploreTopics = [...exploreTopics];
+    }
+    if (
+      !Array.isArray(profile.jobRequiredTopics) ||
+      profile.jobRequiredTopics.length === 0
+    ) {
+      profile.jobRequiredTopics = [...requiredTopics];
+    }
+    if (
+      !Array.isArray(profile.jobExploreTopics) ||
+      profile.jobExploreTopics.length === 0
+    ) {
+      profile.jobExploreTopics = [...exploreTopics];
+    }
+  }
+
+  return { ...state, profile };
+}
+
+/**
+ * True when the active snapshot has no usable topics on any surface but the
+ * pending fields do — i.e. we have never once locked in a real search input.
+ *
+ * This is the bootstrap case, and it has to bypass the once-a-day rule.
+ * Promotion normally runs at hydration, which for a brand-new user happens
+ * *before* they complete onboarding — so the day's snapshot gets stamped while
+ * the profile is still empty, and everything they then enter would sit unused
+ * until the next calendar day. A first-time user would finish setup and be
+ * shown an empty feed with no explanation.
+ *
+ * It cannot be used to sidestep the day-lock later: once a surface has active
+ * topics this is false, and editing pending values never empties the snapshot.
+ */
+function hasNoActiveInputsYet(profile: UserProfile): boolean {
+  const active = profile.activeSearchInputs;
+  if (!active) return true;
+  const activeCount =
+    active.papers.required.length +
+    active.events.required.length +
+    active.jobs.required.length;
+  if (activeCount > 0) return false;
+  const pendingCount =
+    profile.researchTopics.length +
+    profile.eventRequiredTopics.length +
+    profile.jobRequiredTopics.length;
+  return pendingCount > 0;
+}
+
+export function promoteSearchInputs(
+  profile: UserProfile,
+  now: Date,
+): UserProfile {
+  const today = localCalendarDate(now);
+  if (
+    profile.activeSearchInputs?.promotedOn === today &&
+    !hasNoActiveInputsYet(profile)
+  ) {
+    return profile;
+  }
+
+  return {
+    ...profile,
+    activeSearchInputs: {
+      papers: {
+        required: [...profile.researchTopics],
+        explore: [...(profile.softTopics ?? [])],
+      },
+      events: {
+        required: [...profile.eventRequiredTopics],
+        explore: [...profile.eventExploreTopics],
+      },
+      jobs: {
+        required: [...profile.jobRequiredTopics],
+        explore: [...profile.jobExploreTopics],
+      },
+      careerStage: profile.careerStage,
+      locationPreferences: [...profile.locationPreferences],
+      promotedOn: today,
+    },
+  };
+}
+
+function mergeHydratedProfileState(
+  persisted: unknown,
+  current: ProfileState,
+): ProfileState {
+  const persistedState =
+    persisted && typeof persisted === "object"
+      ? (persisted as Partial<ProfileState>)
+      : {};
+  const persistedProfile =
+    persistedState.profile && typeof persistedState.profile === "object"
+      ? persistedState.profile
+      : {};
+
+  return {
+    ...current,
+    ...persistedState,
+    profile: promoteSearchInputs(
+      {
+        ...current.profile,
+        ...persistedProfile,
+      },
+      new Date(),
+    ),
+  };
+}
+
 export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
@@ -119,6 +280,26 @@ export const useProfileStore = create<ProfileState>()(
 
       updateSoftTopics: (topics) =>
         set((s) => ({ profile: { ...s.profile, softTopics: topics } })),
+
+      updateEventTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, eventRequiredTopics: topics },
+        })),
+
+      updateEventSoftTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, eventExploreTopics: topics },
+        })),
+
+      updateJobTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, jobRequiredTopics: topics },
+        })),
+
+      updateJobSoftTopics: (topics) =>
+        set((s) => ({
+          profile: { ...s.profile, jobExploreTopics: topics },
+        })),
 
       updatePreferredJournals: (journals) =>
         set((s) => ({ profile: { ...s.profile, preferredJournals: journals } })),
@@ -193,6 +374,19 @@ export const useProfileStore = create<ProfileState>()(
               conceptsFromJob(job),
               signal,
               { at, origin: "job" },
+            ),
+          },
+        })),
+
+      recordOpportunityFacetPreference: (origin, group, value, at) =>
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            preferenceLedger: applyOpportunityFacetPreferenceSignal(
+              s.profile.preferenceLedger,
+              group,
+              value,
+              { at, origin },
             ),
           },
         })),
@@ -325,7 +519,16 @@ export const useProfileStore = create<ProfileState>()(
 
       completeOnboarding: (at) =>
         set((s) => ({
-          profile: { ...s.profile, onboardedAt: at ?? new Date().toISOString() },
+          // Promote here as well as at hydration. For a first-time user the
+          // hydration promotion happened before they had entered anything, so
+          // without this their brand-new topics would not reach a search until
+          // the next calendar day and their first feed would be empty.
+          // promoteSearchInputs only acts when the snapshot has never held real
+          // inputs, so this cannot bypass the day-lock for a returning user.
+          profile: promoteSearchInputs(
+            { ...s.profile, onboardedAt: at ?? new Date().toISOString() },
+            new Date(),
+          ),
         })),
       resetOnboarding: () =>
         set((s) => ({ profile: { ...s.profile, onboardedAt: null } })),
@@ -391,16 +594,15 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: "peer-profile",
       skipHydration: true,
-      // v2: colorTheme became a "mode:accent" composite; migrate any
-      // persisted legacy single-name value (normalize is a no-op on v2).
-      version: 2,
-      migrate: (persisted) => {
-        const state = persisted as { profile?: { colorTheme?: string } };
-        if (state?.profile?.colorTheme !== undefined) {
-          state.profile.colorTheme = normalizeColorTheme(state.profile.colorTheme);
-        }
-        return persisted;
-      },
+      // v2: colorTheme became a "mode:accent" composite.
+      // v3: Events and Jobs gained independent Required/Explore topic fields.
+      version: 3,
+      migrate: (persisted, version) =>
+        migrateProfileStore(persisted, version) as ProfileState,
+      // Build the promoted snapshot as part of the state installed by
+      // hydration, so subscribers can never observe hydrated pending inputs
+      // without the corresponding active inputs.
+      merge: mergeHydratedProfileState,
     }
   )
 );

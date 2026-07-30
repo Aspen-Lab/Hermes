@@ -11,6 +11,7 @@ export type PreferenceConceptSource =
   | "paper_keyword"
   | "job_tag"
   | "event_topic"
+  | "opportunity_facet"
   | "legacy_disliked_topic";
 
 export interface PreferenceConcept {
@@ -28,6 +29,12 @@ export interface PreferenceLedgerEntry extends PreferenceConcept {
   negative: number;
   lastPositiveAt?: string;
   lastNegativeAt?: string;
+  /**
+   * Positive evidence inferred from a facet selection. Kept separate from
+   * explicit save/like evidence so scoring can cap and decay it independently.
+   */
+  facetPositive?: number;
+  lastFacetAt?: string;
   lastSeenAt: string;
   /**
    * The surface the feedback was recorded from. Ledger influence is
@@ -68,6 +75,27 @@ export interface Paper {
 
 export type EventType = "conference" | "workshop" | "seminar" | "meetup";
 
+export interface OpportunityPlace {
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
+export type OpportunityFormat = "in-person" | "online" | "hybrid";
+
+export interface OpportunityFacetCounts {
+  location: Record<string, number>;
+  month: Record<string, number>;
+  format: Record<OpportunityFormat, number>;
+}
+
+export interface OpportunityFacetSelection {
+  /** OR within a group; different groups combine with AND. */
+  location?: string[];
+  month?: string[];
+  format?: OpportunityFormat[];
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -75,10 +103,13 @@ export interface Event {
   date: string;
   endDate?: string;
   location: string;
+  place?: OpportunityPlace;
   isOnline: boolean;
   deadline?: string;
   shortDescription: string;
   relevanceReason: string;
+  /** Shown separately when weak facet history materially changed rank. */
+  facetPreferenceReason?: string;
   linkRegistration?: string;
   linkOfficial?: string;
   relevanceScore?: number;
@@ -94,9 +125,12 @@ export interface Job {
   roleTitle: string;
   companyOrLab: string;
   location: string;
+  place?: OpportunityPlace;
   isRemote: boolean;
   keyRequirements: string[];
   matchReason: string;
+  /** Shown separately when weak facet history materially changed rank. */
+  facetPreferenceReason?: string;
   linkPosting?: string;
   postedDate?: string;
   relevanceScore?: number;
@@ -116,6 +150,20 @@ export type CareerStage =
   | "PhD Year 6"
   | "Postdoc"
   | "Research Scientist";
+
+export interface SurfaceTopics {
+  required: string[];
+  explore: string[];
+}
+
+export interface ActiveSearchInputs {
+  papers: SurfaceTopics;
+  events: SurfaceTopics;
+  jobs: SurfaceTopics;
+  careerStage?: CareerStage;
+  locationPreferences: string[];
+  promotedOn: string;
+}
 
 export type IndustryAcademiaPreference =
   | "academia"
@@ -147,6 +195,11 @@ export type ColorTheme = `${ThemeMode}:${ThemeAccent}`;
 export interface UserProfile {
   displayName: string;
   researchTopics: string[];
+  eventRequiredTopics: string[];
+  eventExploreTopics: string[];
+  jobRequiredTopics: string[];
+  jobExploreTopics: string[];
+  activeSearchInputs?: ActiveSearchInputs;
   careerStage: CareerStage;
   industryVsAcademia: IndustryAcademiaPreference;
   locationPreferences: string[];
@@ -289,6 +342,10 @@ export const defaultProfile: UserProfile = {
   // Empty by design — first-run users see the profile-setup nudge in the
   // header rather than a feed pre-tuned for someone else's PhD.
   researchTopics: [],
+  eventRequiredTopics: [],
+  eventExploreTopics: [],
+  jobRequiredTopics: [],
+  jobExploreTopics: [],
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],

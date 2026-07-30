@@ -48,6 +48,8 @@
 
   /* Red kept for destructive only (reset confirm, dismiss) */
   --color-red: #b91c1c;
+  /* Fixed green relevance ramp; independent of the user-selected accent. */
+  --color-relevance: #237a4b;
 
   /* ── Shadows — soft-UI (light neumorphism) ──────────────
      Dual-source: a warm shade below-right plus a paper-light highlight
@@ -136,6 +138,7 @@ html[data-accent="violet"]   { --seed: #7a3fd9; --seed-dark: #a078f0; }
   --color-yellow: color-mix(in oklab, var(--seed) 25%, #a8792c);
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 10%, transparent);
   --color-red: #b91c1c;
+  --color-relevance: #237a4b;
   --color-border: color-mix(in srgb, var(--color-heading) 4%, transparent);
   --color-border-strong: color-mix(in srgb, var(--color-heading) 9%, transparent);
   --color-skeleton-base: color-mix(in srgb, var(--color-heading) 5%, transparent);
@@ -167,6 +170,7 @@ html[data-mode="dark"] {
   --color-yellow: color-mix(in oklab, var(--seed-dark) 25%, #d9a441);
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 12%, transparent);
   --color-red: #ef4444;
+  --color-relevance: #69cc8c;
   --color-border: rgba(255, 244, 230, 0.08);
   --color-border-strong: rgba(255, 244, 230, 0.16);
   --color-skeleton-base: rgba(255, 255, 255, 0.05);
@@ -200,6 +204,7 @@ html[data-mode="dark"] {
   --color-yellow: color-mix(in oklab, var(--seed-dark) 25%, #d9a441);
   --color-yellow-dim: color-mix(in srgb, var(--color-yellow) 12%, transparent);
   --color-red: #ef4444;
+  --color-relevance: #69cc8c;
   --color-border: rgba(255, 244, 230, 0.08);
   --color-border-strong: rgba(255, 244, 230, 0.16);
   --color-skeleton-base: rgba(255, 255, 255, 0.05);

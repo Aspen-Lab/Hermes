@@ -37,20 +37,20 @@ export interface TavilyDiscoveryResult {
   resultCount: number;
 }
 
+export function canRunTavilyDiscovery(req: FeedRequest): boolean {
+  const connector = req.searchConnectors?.tavily;
+  if (!connector?.enabled) return false;
+  return Boolean(connector.apiKey?.trim() || process.env.TAVILY_API_KEY);
+}
+
 export async function runTavilyDiscovery(
   req: FeedRequest,
   brief: SearchBrief,
 ): Promise<TavilyDiscoveryResult> {
-  const connector = req.searchConnectors?.tavily;
-  if (!connector?.enabled) {
+  if (!canRunTavilyDiscovery(req)) {
     return { queryBoosts: [], resultCount: 0 };
   }
-
-  const hasRequestKey = Boolean(connector.apiKey?.trim());
-  const hasEnvKey = Boolean(process.env.TAVILY_API_KEY);
-  if (!hasRequestKey && !hasEnvKey) {
-    return { queryBoosts: [], resultCount: 0 };
-  }
+  const connector = req.searchConnectors!.tavily!;
 
   const limit = brief.controls.sourceMix === "web" ? 12 : 8;
   const rawResults = await webSearch.fetch({

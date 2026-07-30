@@ -1,4 +1,5 @@
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // USAJobs: US federal research positions (NIH, NSF, national labs). Free key
@@ -34,12 +35,15 @@ export function usaJobsDescriptorToRawItem(
   const summary = [details?.JobSummary, ...(details?.MajorDuties ?? [])]
     .filter(Boolean)
     .join("\n");
+  const location =
+    descriptor.PositionLocationDisplay?.trim() || "United States";
   return {
     id: `usajobs:${routeSafeId(String(id))}`,
     source: "usajobs",
     title,
     company: descriptor.OrganizationName?.trim() || "U.S. Federal Government",
-    location: descriptor.PositionLocationDisplay?.trim() || "United States",
+    location,
+    place: parseStructuredLocation(location),
     isRemote: /\bremote\b/i.test(descriptor.PositionLocationDisplay ?? ""),
     description: truncateText(stripHtml(summary)),
     url,

@@ -7,8 +7,20 @@ import { applyTier1Rerank } from "./rerank";
 import { applyTier2Rerank } from "./tier2-rerank";
 import { briefToSeedTexts, compileSearchBrief } from "./profile-compiler";
 import type { FeedRequest, FeedResponse } from "./types";
-import { runTavilyDiscovery } from "./tavily-discovery";
+import {
+  canRunTavilyDiscovery,
+  runTavilyDiscovery,
+  type TavilyDiscoveryResult,
+} from "./tavily-discovery";
 import { fetchCitationNeighborhood } from "@/lib/affiliation/openalex";
+import {
+  derivePoolCacheKey,
+  getOrBuildCachedPool,
+  isCachedPaperDiscovery,
+  localCalendarDate,
+  type PoolCache,
+} from "@/lib/opportunities/pool-cache";
+import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
 
 const ACADEMIC_PAPER_SOURCES: SourceId[] = [
   "openalex",
@@ -30,8 +42,49 @@ function shouldIncludeNonPaperResults(req: FeedRequest): boolean {
   );
 }
 
+export interface FeedPipelineOptions {
+  cache?: PoolCache;
+  now?: Date;
+}
+
+async function runDailyTavilyDiscovery(
+  req: FeedRequest,
+  brief: ReturnType<typeof compileSearchBrief>,
+  options: FeedPipelineOptions,
+): Promise<TavilyDiscoveryResult> {
+  const now = options.now ?? new Date();
+  const cache = options.cache ?? getDefaultOpportunityPoolCache();
+  const key = derivePoolCacheKey({
+    surface: "papers",
+    requiredTopics: req.topics,
+    exploreTopics: req.softTopics,
+    now,
+  });
+  const loaded = await getOrBuildCachedPool(
+    cache,
+    key,
+    isCachedPaperDiscovery,
+    async () => {
+      const discovery = await runTavilyDiscovery(req, brief);
+      return {
+        surface: "papers",
+        queryBoosts: discovery.queryBoosts,
+        resultCount: discovery.resultCount,
+        generatedAt: now.toISOString(),
+        localDate: localCalendarDate(now),
+      };
+    },
+  );
+
+  return {
+    queryBoosts: loaded.pool.queryBoosts,
+    resultCount: loaded.pool.resultCount,
+  };
+}
+
 export async function runFeedPipeline(
   req: FeedRequest,
+  options: FeedPipelineOptions = {},
 ): Promise<FeedResponse> {
   const startedAt = Date.now();
   const sources = req.sources ?? defaultSources();
@@ -46,9 +99,9 @@ export async function runFeedPipeline(
   // parallel — sources use the base generated queries, Tavily only feeds
   // connectorStats. Boost re-injection can come back as a 2nd wave if we
   // need it for relevance.
-  const tavilyPromise: Promise<{ queryBoosts: string[]; resultCount: number }> =
-    requestedTier >= 1
-      ? runTavilyDiscovery(req, brief).catch(() => ({
+  const tavilyPromise: Promise<TavilyDiscoveryResult> =
+    requestedTier >= 1 && canRunTavilyDiscovery(req)
+      ? runDailyTavilyDiscovery(req, brief, options).catch(() => ({
           queryBoosts: [],
           resultCount: 0,
         }))

@@ -4,8 +4,13 @@ import { useEffect, useState, useMemo, useCallback, useRef, Suspense } from "rea
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { Paper, Event, Job } from "@/types";
-import { useFeedStore } from "@/store/feed";
+import type {
+  Paper,
+  Event,
+  Job,
+  OpportunityFacetSelection,
+} from "@/types";
+import { activePaperTopicsKey, useFeedStore } from "@/store/feed";
 import { apiFetch } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format";
 import { DotMatrixImage } from "@/components/dot-matrix-image";
@@ -16,6 +21,7 @@ import { FeedMoreTile } from "@/components/cards/feed-more-tile";
 import { DailyDigest } from "@/components/digest/daily-digest";
 import { SectionHeading, EmptyState, LoadingSkeleton } from "@/components/ui";
 import { ConnectorPanel, connectedCount } from "@/components/profile/connector-panel";
+import { SurfaceTopicsPanel } from "@/components/profile/surface-topics-panel";
 import { FilterBar } from "@/components/search/filter-bar";
 import {
   DEFAULT_FILTERS,
@@ -29,6 +35,25 @@ import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/cn";
+import { OpportunityFacetPanel } from "@/components/opportunities/opportunity-facet-panel";
+import { OpportunityShowMore } from "@/components/opportunities/opportunity-show-more";
+import {
+  filterOpportunitiesByFacets,
+  hasActiveOpportunityFacets,
+  mergeOpportunityFacetCounts,
+  OPPORTUNITY_MIN_SCORE,
+} from "@/lib/opportunities/facets";
+import {
+  nextOpportunityPageSize,
+  OPPORTUNITY_PAGE_SIZE,
+  paginateOpportunities,
+} from "@/lib/opportunities/pagination";
+import {
+  filterEventsByOpportunityQuery,
+  filterJobsByOpportunityQuery,
+  shouldSearchOpportunities,
+  shouldSearchPapers,
+} from "@/lib/opportunities/search";
 
 interface SearchResult {
   id: string;
@@ -51,11 +76,6 @@ type BriefingItem =
   | { kind: "event"; data: Event }
   | { kind: "job"; data: Job };
 
-function matchesQuery(query: string, ...fields: (string | undefined)[]) {
-  const q = query.toLowerCase();
-  return fields.some((f) => f?.toLowerCase().includes(q));
-}
-
 function scoreOf(item: BriefingItem): number {
   return item.data.relevanceScore ?? 0;
 }
@@ -73,6 +93,10 @@ function DiscoveryPage() {
     papers,
     events,
     jobs,
+    eventPool,
+    jobPool,
+    eventFacetCounts,
+    jobFacetCounts,
     isLoading,
     lastRefresh,
     loadFeed,
@@ -86,12 +110,29 @@ function DiscoveryPage() {
   const updateFeedAiProvider = useProfileStore((s) => s.updateFeedAiProvider);
   const updateFeedAiApiKey = useProfileStore((s) => s.updateFeedAiApiKey);
   const updateDeepReportEnabled = useProfileStore((s) => s.updateDeepReportEnabled);
+  const updateTopics = useProfileStore((s) => s.updateTopics);
+  const updateSoftTopics = useProfileStore((s) => s.updateSoftTopics);
+  const updateEventTopics = useProfileStore((s) => s.updateEventTopics);
+  const updateEventSoftTopics = useProfileStore(
+    (s) => s.updateEventSoftTopics,
+  );
+  const updateJobTopics = useProfileStore((s) => s.updateJobTopics);
+  const updateJobSoftTopics = useProfileStore((s) => s.updateJobSoftTopics);
+  const recordOpportunityFacetPreference = useProfileStore(
+    (s) => s.recordOpportunityFacetPreference,
+  );
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
 
   const [query, setQuery] = useState(incomingQuery);
   const [activeType, setActiveType] = useState<FeedType>("all");
+  const [opportunityFacets, setOpportunityFacets] =
+    useState<OpportunityFacetSelection>({});
+  const [opportunityPagination, setOpportunityPagination] = useState({
+    key: "",
+    visibleCount: OPPORTUNITY_PAGE_SIZE,
+  });
   const [filters, setFilters] = useState<Filters>(() =>
     filtersFromUrlParams(searchParamsObj),
   );
@@ -101,6 +142,16 @@ function DiscoveryPage() {
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const attemptedAutoLoadKeyRef = useRef<string | null>(null);
+  const normalizedQuery = query.trim();
+  const hasSearchQuery = normalizedQuery.length >= 2;
+  const activeTabSearchesPapers =
+    activeType === "all" || activeType === "papers";
+  const isPaperSearchMode = shouldSearchPapers(activeType, normalizedQuery);
+  const isOpportunitySearchMode = shouldSearchOpportunities(
+    activeType,
+    normalizedQuery,
+  );
+  const isSearchMode = hasSearchQuery;
 
   // Hydrate from ?q= on navigation (e.g. clicking an author / keyword / venue).
   useEffect(() => {
@@ -110,20 +161,15 @@ function DiscoveryPage() {
   }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const feedAutoLoadKey = useMemo(
-    () =>
-      profile.researchTopics
-        .map((topic) => topic.trim())
-        .filter(Boolean)
-        .join("\n"),
-    [profile.researchTopics],
+    () => activePaperTopicsKey(profile),
+    [profile],
   );
 
   useEffect(() => {
     if (!feedAutoLoadKey || isLoading) return;
-    // Reload when the loaded feed's topics differ from the current required
-    // topics — i.e. on first load (key null) AND whenever the user edits topics
-    // after papers were already loaded. The attempted-ref guards against
-    // re-firing for the same key (e.g. on a transient empty result).
+    // Reload when the loaded feed's active day-locked Papers topics differ.
+    // Pending edits intentionally do not change this key until promotion on
+    // the next local day.
     if (feedTopicsKey === feedAutoLoadKey) return;
     if (attemptedAutoLoadKeyRef.current === feedAutoLoadKey) return;
 
@@ -141,6 +187,7 @@ function DiscoveryPage() {
     }
     const requestId = ++searchSeqRef.current;
     setIsSearching(true);
+    setSearchResults([]);
     try {
       const apiParams = filtersToApiQuery(f);
       apiParams.set("q", q);
@@ -161,8 +208,8 @@ function DiscoveryPage() {
   // and by Enter inside the input.
   const handleSearchSubmit = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (query.length >= 2) void searchPapers(query, filters);
-  }, [query, filters, searchPapers]);
+    if (isPaperSearchMode) void searchPapers(normalizedQuery, filters);
+  }, [filters, isPaperSearchMode, normalizedQuery, searchPapers]);
 
   // Sync URL with current query + filters (replaceState to avoid history pollution).
   useEffect(() => {
@@ -186,75 +233,218 @@ function DiscoveryPage() {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (query.length >= 2) {
-      debounceRef.current = setTimeout(() => searchPapers(query, filters), 400);
+    if (isPaperSearchMode) {
+      debounceRef.current = setTimeout(
+        () => searchPapers(normalizedQuery, filters),
+        400,
+      );
     } else {
+      searchSeqRef.current++;
       setSearchResults([]);
+      setIsSearching(false);
     }
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, filters, searchPapers]);
+  }, [filters, isPaperSearchMode, normalizedQuery, searchPapers]);
 
-  const isSearchMode = query.length >= 2;
+  const hasOpportunityFacets = hasActiveOpportunityFacets(opportunityFacets);
+  const eligibleEvents = useMemo(() => {
+    const pool = eventPool.length > 0 ? eventPool : events;
+    const filtered = filterOpportunitiesByFacets(
+      "events",
+      pool,
+      opportunityFacets,
+    );
+    return hasOpportunityFacets
+      ? filtered
+      : filtered.filter(
+          (event) =>
+            (event.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
+        );
+  }, [eventPool, events, hasOpportunityFacets, opportunityFacets]);
+  const eligibleJobs = useMemo(() => {
+    const pool = jobPool.length > 0 ? jobPool : jobs;
+    const filtered = filterOpportunitiesByFacets(
+      "jobs",
+      pool,
+      opportunityFacets,
+    );
+    return hasOpportunityFacets
+      ? filtered
+      : filtered.filter(
+          (job) => (job.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
+        );
+  }, [hasOpportunityFacets, jobPool, jobs, opportunityFacets]);
+  const searchedEvents = useMemo(
+    () =>
+      filterEventsByOpportunityQuery(
+        eligibleEvents,
+        isOpportunitySearchMode ? normalizedQuery : "",
+      ),
+    [eligibleEvents, isOpportunitySearchMode, normalizedQuery],
+  );
+  const searchedJobs = useMemo(
+    () =>
+      filterJobsByOpportunityQuery(
+        eligibleJobs,
+        isOpportunitySearchMode ? normalizedQuery : "",
+      ),
+    [eligibleJobs, isOpportunitySearchMode, normalizedQuery],
+  );
+  const opportunityFacetCounts = useMemo(() => {
+    if (activeType === "events") return eventFacetCounts;
+    if (activeType === "jobs") return jobFacetCounts;
+    return mergeOpportunityFacetCounts(eventFacetCounts, jobFacetCounts);
+  }, [activeType, eventFacetCounts, jobFacetCounts]);
+  const opportunityFacetScope =
+    activeType === "events"
+      ? "events"
+      : activeType === "jobs"
+        ? "jobs"
+        : "events & jobs";
+  const opportunityPoolCount =
+    activeType === "events"
+      ? eventPool.length
+      : activeType === "jobs"
+        ? jobPool.length
+        : eventPool.length + jobPool.length;
+  const showOpportunityFacets =
+    activeType !== "papers" &&
+    opportunityPoolCount > 0;
 
-  const briefingItems = useMemo<BriefingItem[]>(() => {
-    const paperItems: BriefingItem[] =
-      activeType === "all" || activeType === "papers"
-        ? papers.map((p) => ({ kind: "paper", data: p }))
-        : [];
+  // All is an overview: the opportunity pool summary and the paper digest,
+  // with no individual cards. The per-surface tabs are where you browse and
+  // filter actual items.
+  const showFeedTiles = activeType !== "all";
+  const showPaperDigest =
+    !isSearchMode &&
+    (activeType === "all" || activeType === "papers") &&
+    papers.length > 0;
+
+  const opportunityItems = useMemo<BriefingItem[]>(() => {
     const eventItems: BriefingItem[] =
       activeType === "all" || activeType === "events"
-        ? events.map((e) => ({ kind: "event", data: e }))
+        ? searchedEvents.map((event) => ({ kind: "event", data: event }))
         : [];
     const jobItems: BriefingItem[] =
       activeType === "all" || activeType === "jobs"
-        ? jobs.map((j) => ({ kind: "job", data: j }))
+        ? searchedJobs.map((job) => ({ kind: "job", data: job }))
         : [];
-    const all = [...paperItems, ...eventItems, ...jobItems];
+    return [...eventItems, ...jobItems];
+  }, [activeType, searchedEvents, searchedJobs]);
+  const opportunityPageKey = useMemo(
+    () =>
+      JSON.stringify([
+        activeType,
+        opportunityFacets.location ?? [],
+        opportunityFacets.month ?? [],
+        opportunityFacets.format ?? [],
+        isOpportunitySearchMode ? normalizedQuery.toLocaleLowerCase() : "",
+        lastRefresh,
+      ]),
+    [
+      activeType,
+      isOpportunitySearchMode,
+      lastRefresh,
+      normalizedQuery,
+      opportunityFacets,
+    ],
+  );
+  const visibleOpportunityCount =
+    opportunityPagination.key === opportunityPageKey
+      ? opportunityPagination.visibleCount
+      : OPPORTUNITY_PAGE_SIZE;
+  const opportunityPage = useMemo(
+    () =>
+      paginateOpportunities(
+        opportunityItems,
+        visibleOpportunityCount,
+        scoreOf,
+      ),
+    [opportunityItems, visibleOpportunityCount],
+  );
+  const showMoreOpportunities = useCallback(() => {
+    setOpportunityPagination((current) => {
+      const currentVisibleCount =
+        current.key === opportunityPageKey
+          ? current.visibleCount
+          : OPPORTUNITY_PAGE_SIZE;
+      return {
+        key: opportunityPageKey,
+        visibleCount: nextOpportunityPageSize(
+          currentVisibleCount,
+          opportunityPage.total,
+        ),
+      };
+    });
+  }, [opportunityPage.total, opportunityPageKey]);
 
-    const filtered = query
-      ? all.filter((item) => {
-          if (item.kind === "paper") {
-            const p = item.data as Paper;
-            return matchesQuery(
-              query,
-              p.title,
-              p.authors.join(" "),
-              p.venue,
-              p.source,
-              p.relevanceReason,
-              p.summaryIntro,
-            );
-          }
-          if (item.kind === "event") {
-            const e = item.data as Event;
-            return matchesQuery(
-              query,
-              e.name,
-              e.type,
-              e.location,
-              e.shortDescription,
-              e.relevanceReason,
-            );
-          }
-          const j = item.data as Job;
-          return matchesQuery(
-            query,
-            j.roleTitle,
-            j.companyOrLab,
-            j.location,
-            j.matchReason,
-            j.keyRequirements.join(" "),
-          );
-        })
-      : all;
+  const handleOpportunityFacetChange = useCallback(
+    (next: OpportunityFacetSelection) => {
+      const origins: Array<"event" | "job"> =
+        activeType === "events"
+          ? ["event"]
+          : activeType === "jobs"
+            ? ["job"]
+            : activeType === "all"
+              ? ["event", "job"]
+              : [];
+      const groups = ["location", "month", "format"] as const;
 
-    return filtered.sort((a, b) => scoreOf(b) - scoreOf(a));
-  }, [papers, events, jobs, query, activeType]);
+      for (const group of groups) {
+        const previous = new Set(
+          (opportunityFacets[group] ?? []).map((value) =>
+            value.trim().toLocaleLowerCase(),
+          ),
+        );
+        for (const value of next[group] ?? []) {
+          if (previous.has(value.trim().toLocaleLowerCase())) continue;
+          for (const origin of origins) {
+            recordOpportunityFacetPreference(origin, group, value);
+          }
+        }
+      }
+      setOpportunityFacets(next);
+    },
+    [activeType, opportunityFacets, recordOpportunityFacetPreference],
+  );
+
+  const briefingItems = useMemo<BriefingItem[]>(() => {
+    const paperItems: BriefingItem[] =
+      !hasSearchQuery &&
+      (activeType === "all" || activeType === "papers")
+        ? papers.map((p) => ({ kind: "paper", data: p }))
+        : [];
+    return [...paperItems, ...opportunityPage.items].sort(
+      (left, right) => scoreOf(right) - scoreOf(left),
+    );
+  }, [activeType, hasSearchQuery, opportunityPage.items, papers]);
 
   const firstPaperId = briefingItems.find((i) => i.kind === "paper")?.data.id;
-  const totalAll = papers.length + events.length + jobs.length;
+  const totalAll = papers.length + eventPool.length + jobPool.length;
+  const paperSearchResultCount = isPaperSearchMode
+    ? searchResults.length
+    : 0;
+  const opportunitySearchResultCount = isOpportunitySearchMode
+    ? opportunityPage.total
+    : 0;
+  const searchResultCount =
+    paperSearchResultCount + opportunitySearchResultCount;
+  const opportunitySearchLabel =
+    activeType === "events"
+      ? "Events"
+      : activeType === "jobs"
+        ? "Jobs"
+        : "Opportunities";
+  const searchPlaceholder =
+    activeType === "events"
+      ? "Filter today’s events by title, place, or tag…"
+      : activeType === "jobs"
+        ? "Filter today’s jobs by title, place, or skill…"
+        : activeType === "papers"
+          ? "Search papers across OpenAlex…"
+          : "Search papers, events, jobs…";
   const unreadCount = briefingItems.filter((i) => !readItems[i.data.id]).length;
   const briefingClosed =
     !isSearchMode && briefingItems.length > 0 && unreadCount === 0;
@@ -264,13 +454,17 @@ function DiscoveryPage() {
     {
       key: "all",
       label: "All",
-      count: papers.length + events.length + jobs.length,
+      count: totalAll,
       icon: "/logo-mark.png",
     },
     { key: "papers", label: "Papers", count: papers.length, icon: "/icon-papers.svg" },
-    { key: "events", label: "Events", count: events.length, icon: "/icon-events.svg" },
-    { key: "jobs", label: "Jobs", count: jobs.length, icon: "/icon-jobs.svg" },
+    { key: "events", label: "Events", count: eventPool.length, icon: "/icon-events.svg" },
+    { key: "jobs", label: "Jobs", count: jobPool.length, icon: "/icon-jobs.svg" },
   ];
+  const selectedActiveTopics =
+    activeType === "all"
+      ? undefined
+      : profile.activeSearchInputs?.[activeType];
 
   return (
     <article className="mx-auto max-w-[1280px] px-6 py-16 lg:py-20">
@@ -279,6 +473,7 @@ function DiscoveryPage() {
         <div className="min-w-0">
           <Greeting
             isSearchMode={isSearchMode}
+            searchScope={activeType}
             displayName={profile.displayName}
             lastRefresh={lastRefresh}
           />
@@ -336,7 +531,7 @@ function DiscoveryPage() {
                   handleSearchSubmit();
                 }
               }}
-              placeholder="Search papers, events, jobs…  (press /)"
+              placeholder={searchPlaceholder}
               className="w-full bg-transparent py-4 pl-11 pr-12 text-body text-text placeholder:text-text-faint/70 focus:outline-none"
             />
             {query && (
@@ -467,12 +662,16 @@ function DiscoveryPage() {
               <button
                 type="button"
                 onClick={handleSearchSubmit}
-                disabled={query.length < 2 || isSearching}
+                disabled={normalizedQuery.length < 2 || isSearching}
                 aria-label="Search"
-                title="Search now (Enter)"
+                title={
+                  activeTabSearchesPapers
+                    ? "Search now (Enter)"
+                    : "Opportunity results filter as you type"
+                }
                 className={cn(
                   iconButtonVariants({ size: "lg" }),
-                  query.length >= 2 && !isSearching
+                  normalizedQuery.length >= 2 && !isSearching
                     ? "bg-accent text-bg shadow-card hover:bg-accent/90"
                     : "bg-bg-secondary text-text-faint/70 cursor-not-allowed",
                 )}
@@ -549,8 +748,46 @@ function DiscoveryPage() {
           {openTool === "apis" && <ConnectorPanel />}
         </div>
 
-        {/* ── Filter bar (search mode only) ── */}
-        {isSearchMode && (
+        {activeType !== "all" && (
+          <SurfaceTopicsPanel
+            key={activeType}
+            surface={activeType}
+            activeRequired={selectedActiveTopics?.required ?? []}
+            activeExplore={selectedActiveTopics?.explore ?? []}
+            required={
+              activeType === "papers"
+                ? profile.researchTopics
+                : activeType === "events"
+                  ? profile.eventRequiredTopics
+                  : profile.jobRequiredTopics
+            }
+            explore={
+              activeType === "papers"
+                ? (profile.softTopics ?? [])
+                : activeType === "events"
+                  ? profile.eventExploreTopics
+                  : profile.jobExploreTopics
+            }
+            onChangeRequired={
+              activeType === "papers"
+                ? updateTopics
+                : activeType === "events"
+                  ? updateEventTopics
+                  : updateJobTopics
+            }
+            onChangeExplore={
+              activeType === "papers"
+                ? updateSoftTopics
+                : activeType === "events"
+                  ? updateEventSoftTopics
+                  : updateJobSoftTopics
+            }
+            defaultExpanded={activeType === "papers"}
+          />
+        )}
+
+        {/* ── Paper-only filters stay attached to the server search. ── */}
+        {isPaperSearchMode && (
           <FilterBar
             filters={filters}
             onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
@@ -558,8 +795,9 @@ function DiscoveryPage() {
           />
         )}
 
-        {/* ── Type tabs (feed only) ── */}
-        {!isSearchMode && totalAll > 0 && (
+        {/* Keep tabs available while searching so the same box can switch
+            between server-side papers and client-side opportunity pools. */}
+        {(totalAll > 0 || isSearchMode) && (
           <div
             className="flex items-center flex-wrap gap-2.5 mt-6"
           >
@@ -618,33 +856,37 @@ function DiscoveryPage() {
         )}
 
         {/* ── Search status ── */}
+        {showOpportunityFacets && (
+          <OpportunityFacetPanel
+            counts={opportunityFacetCounts}
+            selection={opportunityFacets}
+            onChange={handleOpportunityFacetChange}
+            scopeLabel={opportunityFacetScope}
+          />
+        )}
+
         {isSearchMode && (
           <p
             className="text-meta text-text-faint mt-4"
           >
-            {isSearching
-              ? "searching…"
-              : searchResults.length > 0
-                ? `${searchResults.length} ${searchResults.length === 1 ? "result" : "results"} for \u201c${query}\u201d`
-                : `no results for \u201c${query}\u201d`}
-          </p>
-        )}
-
-        {/* ── Query filter status (feed mode) ── */}
-        {!isSearchMode && query && briefingItems.length > 0 && (
-          <p
-            className="text-meta text-text-faint mt-4"
-          >
-            {briefingItems.length} items matching &ldquo;{query}&rdquo;
+            {isSearching && searchResultCount === 0
+              ? "searching papers…"
+              : isSearching
+                ? `${opportunitySearchResultCount} opportunity ${opportunitySearchResultCount === 1 ? "result" : "results"} · searching papers…`
+                : searchResultCount > 0
+                  ? `${searchResultCount} ${searchResultCount === 1 ? "result" : "results"} for \u201c${normalizedQuery}\u201d`
+                  : `no results for \u201c${normalizedQuery}\u201d`}
           </p>
         )}
       </div>
       </div>{/* /max-w-[820px] inner header wrapper */}
 
-      {/* ── Search results ── */}
-      {isSearchMode && (
+      {/* Papers keep their existing server-side search. */}
+      {isPaperSearchMode && (
         <>
-          {isSearching && searchResults.length === 0 && (
+          {isSearching &&
+            searchResults.length === 0 &&
+            opportunitySearchResultCount === 0 && (
             <div className="mx-auto max-w-[820px]"><LoadingSkeleton /></div>
           )}
           {searchResults.length > 0 && (
@@ -659,21 +901,13 @@ function DiscoveryPage() {
               </div>
             </>
           )}
-          {!isSearching && searchResults.length === 0 && query.length >= 2 && (
-            <div className="mx-auto max-w-[820px]">
-              <EmptyState
-                title="Nothing turned up."
-                description="Try different keywords, or broaden the search to a field you're exploring."
-              />
-            </div>
-          )}
         </>
       )}
 
-      {/* ── Feed mode: dense grid ── */}
-      {!isSearchMode && (
+      {/* Daily feed, plus client-filtered event/job search results. */}
+      {(!isSearchMode || isOpportunitySearchMode) && (
         <>
-          {isLoading && briefingItems.length === 0 && (
+          {!isSearchMode && isLoading && briefingItems.length === 0 && (
             <div className="mx-auto max-w-[820px]"><LoadingSkeleton /></div>
           )}
 
@@ -695,28 +929,39 @@ function DiscoveryPage() {
             </div>
           )}
 
-          {briefingItems.length > 0 && (
+          {/* One-paragraph synthesized paper digest. Rendered independently of
+              the card grid: All shows the digest and the opportunity pool as a
+              pure overview with no cards, so tying the digest to the grid
+              would make it disappear there. Hides itself if no LLM is
+              configured, so the rest of the feed keeps working. */}
+          {showPaperDigest && (
+            <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
+              <DailyDigest
+                papers={papers}
+                contextHint={[
+                  profile.researchTopics.length > 0
+                    ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
+                    : "",
+                  profile.currentProject,
+                  profile.currentChallenges,
+                ]
+                  .filter((s) => s && s.trim().length > 0)
+                  .join("\n\n")}
+                selectedPaperId={selectedPaperId}
+                onSelectPaper={setSelectedPaperId}
+              />
+            </div>
+          )}
+
+          {showFeedTiles && briefingItems.length > 0 && (
             <>
-              {/* One-paragraph synthesized digest. Hides itself if no LLM
-                  is configured, so the rest of the feed keeps working. */}
-              <div data-tour="highlights" className="mx-auto max-w-[820px] mt-6">
-                <DailyDigest
-                  papers={briefingItems
-                    .filter((i) => i.kind === "paper")
-                    .map((i) => i.data as Paper)}
-                  contextHint={[
-                    profile.researchTopics.length > 0
-                      ? `Required interests (every paper below matches at least one — name the matching one in your sentence): ${profile.researchTopics.join(", ")}`
-                      : "",
-                    profile.currentProject,
-                    profile.currentChallenges,
-                  ]
-                    .filter((s) => s && s.trim().length > 0)
-                    .join("\n\n")}
-                  selectedPaperId={selectedPaperId}
-                  onSelectPaper={setSelectedPaperId}
-                />
-              </div>
+              {isOpportunitySearchMode && (
+                <div className="mx-auto max-w-[820px]">
+                  <SectionHeading count={opportunitySearchResultCount}>
+                    {opportunitySearchLabel}
+                  </SectionHeading>
+                </div>
+              )}
 
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {briefingItems.map((item) => (
@@ -732,16 +977,36 @@ function DiscoveryPage() {
                     />
                   </div>
                 ))}
-                <FeedMoreTile
-                  itemCount={briefingItems.length}
-                  topics={profile.researchTopics}
-                  onRefresh={loadFeed}
-                  isLoading={isLoading}
-                />
+                {opportunityPage.remaining > 0 ? (
+                  <OpportunityShowMore
+                    remaining={opportunityPage.remaining}
+                    onClick={showMoreOpportunities}
+                  />
+                ) : !isSearchMode ? (
+                  <FeedMoreTile
+                    itemCount={briefingItems.length}
+                    topics={profile.researchTopics}
+                    onRefresh={loadFeed}
+                    isLoading={isLoading}
+                  />
+                ) : null}
               </div>
             </>
           )}
         </>
+      )}
+
+      {isSearchMode && !isSearching && searchResultCount === 0 && (
+        <div className="mx-auto max-w-[820px]">
+          <EmptyState
+            title="Nothing turned up."
+            description={
+              isOpportunitySearchMode
+                ? "Try a title, place, company, event type, or skill from today’s opportunity pool."
+                : "Try different keywords, or broaden the paper search."
+            }
+          />
+        </div>
       )}
       <OnboardingTour />
     </article>
@@ -750,14 +1015,24 @@ function DiscoveryPage() {
 
 function Greeting({
   isSearchMode,
+  searchScope,
   displayName,
   lastRefresh,
 }: {
   isSearchMode: boolean;
+  searchScope: FeedType;
   displayName: string;
   lastRefresh: string | null;
 }) {
   if (isSearchMode) {
+    const description =
+      searchScope === "events"
+        ? "Filter today’s event pool by title, description, place, or type."
+        : searchScope === "jobs"
+          ? "Filter today’s job pool by title, company, place, or skill."
+          : searchScope === "papers"
+            ? "Search papers across OpenAlex — 250M+ academic works."
+            : "Search papers and filter today’s event and job pools together.";
     return (
       <>
         <h1
@@ -766,7 +1041,7 @@ function Greeting({
           Search
         </h1>
         <p className="text-text-muted mt-2 text-body leading-relaxed max-w-[56ch]">
-          Search papers across OpenAlex — 250M+ academic works.
+          {description}
         </p>
       </>
     );

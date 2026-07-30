@@ -1,5 +1,6 @@
 import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
+import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Himalayas free remote-jobs API (no auth). The keyword param is not honored
@@ -30,12 +31,15 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
   const url = job.applicationLink?.trim() || job.guid?.trim();
   if (!title || !url) return null;
   const locations = (job.locationRestrictions ?? []).filter(Boolean);
+  const location =
+    locations.length > 0 ? `Remote (${locations.join(", ")})` : "Remote";
   return {
     id: `himalayas:${routeSafeId(url)}`,
     source: "himalayas",
     title,
     company: job.companyName?.trim() || "Unknown company",
-    location: locations.length > 0 ? `Remote (${locations.join(", ")})` : "Remote",
+    location,
+    place: parseStructuredLocation(locations.join(", ")),
     isRemote: true,
     description: truncateText(stripHtml(job.description || job.excerpt)),
     url,

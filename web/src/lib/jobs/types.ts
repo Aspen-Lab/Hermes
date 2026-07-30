@@ -2,6 +2,9 @@ import type {
   CareerStage,
   IndustryAcademiaPreference,
   Job,
+  OpportunityFacetCounts,
+  OpportunityFacetSelection,
+  OpportunityPlace,
   PreferenceConcept,
   PreferenceLedger,
 } from "@/types";
@@ -25,6 +28,7 @@ export interface RawJobItem {
   title: string;
   company: string;
   location: string;
+  place?: OpportunityPlace;
   isRemote: boolean;
   /** Plain text (HTML stripped), truncated. */
   description: string;
@@ -82,6 +86,7 @@ export interface JobsFeedRequest {
   topN?: number;
   perSourceLimit?: number;
   excludeIds?: string[];
+  facets?: OpportunityFacetSelection;
   aiTier?: 0 | 1 | 2;
   searchConnectors?: SearchConnectors;
   apiKeys?: JobApiCredentials;
@@ -93,6 +98,8 @@ export interface JobsFeedMeta {
   errors: Partial<Record<JobSourceId, string>>;
   beforeDedup: number;
   afterDedup: number;
+  beforeScoreFloor: number;
+  afterScoreFloor: number;
   returned: number;
   latencyMs: number;
   generatedAt: string;
@@ -100,6 +107,9 @@ export interface JobsFeedMeta {
 
 export interface JobsFeedResponse {
   items: Job[];
+  /** Complete scored pool for client-side facets and progressive reveal. */
+  pool: Job[];
+  facetCounts: OpportunityFacetCounts;
   meta: JobsFeedMeta;
 }
 
@@ -108,4 +118,5 @@ export interface ScoredJobItem extends RawJobItem {
   score: number;
   matchedKeywords: string[];
   matchReason: string;
+  facetPreferenceReason?: string;
 }

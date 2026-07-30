@@ -8,10 +8,20 @@ import { buildIndex, scoreTfidf } from "@/lib/scoring/tfidf";
 import { scoreRecency } from "@/lib/scoring/recency";
 import {
   buildPreferenceDocumentFrequency,
+  conceptsFromRawItem,
+  facetPreferenceReason,
+  materiallyChangedByFacetPreference,
+  normalizePreferenceConcepts,
+  opportunityFacetPreferenceConcepts,
   prepareLedger,
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
-import { locationFit, toScoringItem } from "@/lib/opportunities/shared";
+import {
+  locationFit,
+  passesRequiredGate,
+  toScoringItem,
+} from "@/lib/opportunities/shared";
+import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
 import type { RawItem } from "@/lib/sources/types";
 import type {
   CareerStage,
@@ -31,15 +41,22 @@ export interface JobScoringProfile {
   locations?: string[];
 }
 
+interface FacetRankedJobItem extends ScoredJobItem {
+  scoreWithoutFacetPreference: number;
+  facetPreferenceLabels: string[];
+}
+
 const WEIGHTS = {
-  keyword: 0.26,
+  keyword: 0.4,
   tfidf: 0.15,
-  career: 0.2,
-  industry: 0.1,
-  location: 0.1,
-  recency: 0.12,
+  career: 0.15,
+  industry: 0.08,
+  location: 0.07,
+  recency: 0.08,
   source: 0.07,
 };
+
+export const MIN_SCORE = OPPORTUNITY_MIN_SCORE;
 
 const SOURCE_WEIGHTS: Record<JobSourceId, number> = {
   usajobs: 0.85,
@@ -141,7 +158,7 @@ export function scoreIndustryFit(
   preference: IndustryAcademiaPreference | undefined,
 ): number {
   const text = `${item.title} ${item.company} ${item.description.slice(0, 400)}`;
-  const isAcademic = ACADEMIC_RE.test(text) || item.source === "jobweb";
+  const isAcademic = ACADEMIC_RE.test(text);
   const isBigTech = BIG_TECH_RE.test(item.company) || BIG_TECH_RE.test(item.title);
   const isStartup = STARTUP_RE.test(text);
 
@@ -164,6 +181,51 @@ export function scoreIndustryFit(
   }
 }
 
+// ── Staleness ────────────────────────────────────────────────────
+
+/** Postings older than this are assumed filled or withdrawn. */
+const MAX_POSTING_AGE_DAYS = 270;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// "Summer 2025 Internship", "Fall 2024 Co-op" — a season+year in the title is
+// the posting's own statement of which cycle it belongs to.
+const SEASON_YEAR_RE =
+  /\b(?:spring|summer|fall|autumn|winter)\s+(20\d{2})\b/gi;
+
+// A bare leading year is the other common way postings label their cycle:
+// "2025 Battery Research Scientist Graduate Intern" was still being surfaced
+// in mid-2026 because only season+year was recognised.
+const LEADING_YEAR_RE = /^\s*(20\d{2})\b/;
+
+/**
+ * True when a posting is too old to be actionable. Two independent signals:
+ * an explicit `postedAt` older than MAX_POSTING_AGE_DAYS, or a season+year
+ * label in the title naming a cycle that has already passed.
+ *
+ * The events pipeline has always dropped finished events; jobs had no
+ * equivalent, which surfaced a "Summer 2025 Internship" in mid-2026.
+ */
+export function isExpiredPosting(item: RawJobItem, now = Date.now()): boolean {
+  if (item.postedAt) {
+    const posted = Date.parse(item.postedAt);
+    if (Number.isFinite(posted) && now - posted > MAX_POSTING_AGE_DAYS * DAY_MS) {
+      return true;
+    }
+  }
+
+  const currentYear = new Date(now).getUTCFullYear();
+  const labelledYears = [...item.title.matchAll(SEASON_YEAR_RE)].map((m) =>
+    Number(m[1]),
+  );
+  const leadingYear = item.title.match(LEADING_YEAR_RE)?.[1];
+  if (leadingYear) labelledYears.push(Number(leadingYear));
+  if (labelledYears.length > 0 && labelledYears.every((y) => y < currentYear)) {
+    return true;
+  }
+
+  return false;
+}
+
 // ── Combined score ───────────────────────────────────────────────
 
 function reasonFor(
@@ -178,7 +240,11 @@ function reasonFor(
   }
   if (careerFit >= 0.85 && stage) parts.push(`fits a ${stage} profile`);
   if (item.isRemote) parts.push("remote-friendly");
-  if (parts.length === 0) parts.push("Related to your research area");
+  if (parts.length === 0) {
+    parts.push(
+      item.source === "jobweb" ? "Matched by web search" : "Meets your job filters",
+    );
+  }
   const sentence = parts.join(" · ");
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
@@ -187,24 +253,30 @@ export function scoreJobs(
   items: RawJobItem[],
   profile: JobScoringProfile,
   now = Date.now(),
+  options: { applyFloor?: boolean } = {},
 ): ScoredJobItem[] {
   if (items.length === 0) return [];
 
   // Facades let the paper-scoring primitives (keyword/TF-IDF/ledger) run
   // unchanged over job candidates.
   const facades = new Map<string, RawItem>(
-    items.map((item) => [
-      item.id,
-      toScoringItem({
+    items.map((item) => {
+      const facade = toScoringItem({
         id: item.id,
         title: item.title,
         text: `${item.company}\n${item.description}`,
+        summary: `${item.title} ${item.description.slice(0, 300)}`,
         tags: item.tags,
         publishedAt: item.postedAt,
         url: item.url,
         preferenceSignals: item.preferenceSignals,
-      }),
-    ]),
+      });
+      facade.metadata.preferenceSignals = normalizePreferenceConcepts([
+        ...opportunityFacetPreferenceConcepts("jobs", item),
+        ...conceptsFromRawItem(facade),
+      ]);
+      return [item.id, facade] as const;
+    }),
   );
   const facadeList = Array.from(facades.values());
   const index = buildIndex(facadeList);
@@ -216,26 +288,38 @@ export function scoreJobs(
   const preparedLedger = prepareLedger(profile.preferenceLedger);
   const documentFrequency = buildPreferenceDocumentFrequency(facadeList);
 
-  // Gate topics: research topics plus methods — a posting matching either is
-  // plausibly relevant; matching neither is dropped when topics are set.
-  const gateTopics = [...profile.topics, ...(profile.methods ?? [])];
+  const rankingTopics = [...profile.topics, ...(profile.methods ?? [])];
   const softTopics = profile.softTopics ?? [];
 
-  const scored: ScoredJobItem[] = [];
+  const scored: FacetRankedJobItem[] = [];
   for (const item of items) {
-    // Web-discovered postings came from a topic-targeted search query, so the
-    // search engine already filtered for relevance. Keyless board sources
-    // (remotive/arbeitnow/himalayas) return their whole catalog, so they still
-    // need the strict exact-phrase gate below.
-    const searchPrefiltered = item.source === "jobweb";
     const facade = facades.get(item.id)!;
-    const kw = scoreKeyword(facade, gateTopics);
-    // Research topics are precise ("solid state battery") but postings use
-    // field-level wording ("battery R&D scientist"), so the exact-phrase gate
-    // would wrongly drop relevant web hits — enforce it on board sources only.
-    if (!searchPrefiltered && gateTopics.length > 0 && kw.score === 0) continue;
+    // Drop postings that have clearly aged out. A posting the user cannot
+    // apply to is worse than no posting: it burns a slot and reads as staleness.
+    if (isExpiredPosting(item, now)) continue;
 
-    const softKw = scoreKeyword(facade, softTopics);
+    const requiredScoped = scoreKeyword(facade, profile.topics, {
+      scope: "titleAndSummary",
+    });
+    const requiredAnywhere = scoreKeyword(facade, profile.topics);
+    if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
+
+    const kw = scoreKeyword(facade, rankingTopics, {
+      scope: "titleAndSummary",
+    });
+    const requiredMatches =
+      requiredScoped.matched.length > 0
+        ? requiredScoped.matched
+        : requiredAnywhere.matched;
+    const reasonMatches = Array.from(
+      new Set([...requiredMatches, ...kw.matched]),
+    );
+
+    const softKw = scoreKeyword(facade, softTopics, {
+      scope: "titleAndSummary",
+    });
     const tf = clamp01(scoreTfidf(item.id, profileText, index));
     const career = scoreCareerFit(item, profile.careerStage);
     const industry = scoreIndustryFit(item, profile.industryPreference);
@@ -258,15 +342,62 @@ export function scoreJobs(
       WEIGHTS.recency * recency +
       WEIGHTS.source * source;
     const softBonus = softTopics.length > 0 ? softKw.score * 0.12 : 0;
+    const scoreWithoutFacetPreference = clamp01(
+      base * preference.penalty +
+        softBonus +
+        preference.boost -
+        preference.facetBoost,
+    );
     const score = clamp01(base * preference.penalty + softBonus + preference.boost);
 
     scored.push({
       ...item,
       score,
-      matchedKeywords: kw.matched,
-      matchReason: reasonFor(item, kw.matched, career, profile.careerStage),
+      scoreWithoutFacetPreference,
+      facetPreferenceLabels: preference.matchedFacetPositive,
+      matchedKeywords: reasonMatches,
+      matchReason: reasonFor(
+        item,
+        reasonMatches,
+        career,
+        profile.careerStage,
+      ),
     });
   }
 
-  return scored.sort((a, b) => b.score - a.score);
+  const baselineIndexById = new Map(
+    [...scored]
+      .sort(
+        (left, right) =>
+          right.scoreWithoutFacetPreference -
+          left.scoreWithoutFacetPreference,
+      )
+      .map((item, index) => [item.id, index]),
+  );
+  const ranked: ScoredJobItem[] = [...scored]
+    .sort((left, right) => right.score - left.score)
+    .map(
+      (
+        {
+          scoreWithoutFacetPreference,
+          facetPreferenceLabels,
+          ...item
+        },
+        finalIndex,
+      ) => {
+        const baselineIndex = baselineIndexById.get(item.id) ?? -1;
+        const explanation =
+          item.score > scoreWithoutFacetPreference &&
+          materiallyChangedByFacetPreference(baselineIndex, finalIndex)
+            ? facetPreferenceReason(facetPreferenceLabels)
+            : undefined;
+        return {
+          ...item,
+          facetPreferenceReason: explanation,
+        };
+      },
+    );
+  return options.applyFloor === false
+    ? ranked
+    : ranked.filter((item) => item.score >= MIN_SCORE);
 }
