@@ -5,6 +5,7 @@ import type { Paper } from "@/types";
 import { apiFetch } from "@/lib/api";
 import { ScrambleText } from "@/components/scramble-text";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { useFeedStore } from "@/store/feed";
 
 interface DailyDigestProps {
   papers: Paper[];
@@ -91,6 +92,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [revealBullets, setRevealBullets] = useState(false);
+  const setPaperSummaries = useFeedStore((state) => state.setPaperSummaries);
   const [progress, setProgress] = useState<DigestProgressStep>(
     DIGEST_PROGRESS_STEPS[0],
   );
@@ -105,6 +107,20 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
     return `${ids}::${ctx.length}:${simpleHash(ctx)}`;
   }, [papers, contextHint]);
 
+  const storePaperSummaries = useCallback((payload: DigestPayload) => {
+    if (payload.noLlm || !payload.bullets?.length) return;
+
+    setPaperSummaries(
+      payload.bullets.map((bullet, index) => ({
+        paperId:
+          papers.find((paper) => paper.id === bullet.paperId)?.id ??
+          papers[index]?.id ??
+          bullet.paperId,
+        text: bullet.text,
+      })),
+    );
+  }, [papers, setPaperSummaries]);
+
   const fetchDigest = useCallback(async (key: string, force = false) => {
     if (papers.length === 0) {
       setData(null);
@@ -116,6 +132,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
       const cached = readCache(key);
       if (cached) {
         setData(cached);
+        storePaperSummaries(cached);
         setRevealBullets(false);
         return;
       }
@@ -139,6 +156,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
         }),
       });
       setData(json);
+      storePaperSummaries(json);
       setRevealBullets(Boolean(json.bullets?.length && !json.noLlm));
       if (json.bullets?.length && !json.noLlm) writeCache(key, json);
     } catch {
@@ -147,7 +165,7 @@ export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPape
     } finally {
       setLoading(false);
     }
-  }, [papers, contextHint]);
+  }, [papers, contextHint, storePaperSummaries]);
 
   useEffect(() => {
     if (!loading) return;

@@ -508,6 +508,7 @@ interface FeedState {
   feedTopicsKey: string | null;
   aiPaperSearchEnabled: boolean;
   readItems: Record<string, true>;
+  paperSummaries: Record<string, string>;
   /** id -> ms timestamp. Drives the "don't repeat papers" exclude list. */
   recentlyShownIds: Record<string, number>;
   pendingDismissal: PendingDismissal | null;
@@ -520,6 +521,9 @@ interface FeedState {
 
   loadFeed: (options?: FeedLoadOptions) => Promise<void>;
   setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
+  setPaperSummaries: (
+    bullets: { paperId: string; text: string }[],
+  ) => void;
   savePaper: (paper: Paper) => void;
   notInterestedPaper: (paper: Paper) => void;
   moreLikePaper: (paper: Paper) => void;
@@ -582,6 +586,7 @@ export const useFeedStore = create<FeedState>()(
       feedTopicsKey: null,
       aiPaperSearchEnabled: true,
       readItems: {},
+      paperSummaries: {},
       recentlyShownIds: {},
       pendingDismissal: null,
       paperFeedback: {},
@@ -782,6 +787,17 @@ export const useFeedStore = create<FeedState>()(
       setAiPaperSearchEnabled: async (enabled) => {
         set({ aiPaperSearchEnabled: enabled });
         await get().loadFeed({ advanceHistory: true });
+      },
+
+      setPaperSummaries: (bullets) => {
+        set((state) => ({
+          paperSummaries: {
+            ...state.paperSummaries,
+            ...Object.fromEntries(
+              bullets.map(({ paperId, text }) => [paperId, text]),
+            ),
+          },
+        }));
       },
 
       savePaper: (paper) => {
@@ -1347,6 +1363,7 @@ export const useFeedStore = create<FeedState>()(
           savedEvents: [],
           savedJobs: [],
           readItems: {},
+          paperSummaries: {},
           recentlyShownIds: {},
           pendingDismissal: null,
           paperFeedback: {},
@@ -1366,6 +1383,7 @@ export const useFeedStore = create<FeedState>()(
         savedEvents: state.savedEvents,
         savedJobs: state.savedJobs,
         readItems: state.readItems,
+        paperSummaries: state.paperSummaries,
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
         recentlyShownIds: state.recentlyShownIds,
         paperFeedback: state.paperFeedback,

@@ -163,6 +163,7 @@ describe("feed lane loading", () => {
       feedTopicsKey: null,
       aiPaperSearchEnabled: true,
       readItems: {},
+      paperSummaries: {},
       recentlyShownIds: {},
       pendingDismissal: null,
       paperFeedback: {},
@@ -361,5 +362,17 @@ describe("feed lane loading", () => {
     expect(useFeedStore.getState().events[0]?.id).toBe("event-current");
     expect(useFeedStore.getState().jobs[0]?.id).toBe("job-current");
     expect(fetchMock).toHaveBeenCalledTimes(6);
+  });
+
+  it("stores digest bullets as paper summaries keyed by paper id", () => {
+    useFeedStore.getState().setPaperSummaries([
+      { paperId: "paper-a", text: "Sentence for paper A." },
+      { paperId: "paper-b", text: "Sentence for paper B." },
+    ]);
+
+    expect(useFeedStore.getState().paperSummaries).toEqual({
+      "paper-a": "Sentence for paper A.",
+      "paper-b": "Sentence for paper B.",
+    });
   });
 });
