@@ -1,8 +1,10 @@
 import type {
+  Job,
   OpportunityFacetCounts,
   OpportunityFacetSelection,
   OpportunityFormat,
   OpportunityPlace,
+  RoleKind,
 } from "@/types";
 
 export const MAX_OPPORTUNITY_POOL_ITEMS = 200;
@@ -29,6 +31,40 @@ export interface FacetableOpportunity {
   isRemote?: boolean;
 }
 
+export type JobLocationMode = "anywhere" | "prefer" | "only";
+export type JobWhen = "any" | "24h" | "7d" | "30d";
+export type JobVisaState = NonNullable<Job["visa"]>["state"];
+
+export interface JobFacetSelection {
+  locations: string[];
+  locationMode: JobLocationMode;
+  roleKinds: RoleKind[];
+  visaStates: JobVisaState[];
+  when: JobWhen;
+  includeVisaMismatch: boolean;
+}
+
+export interface JobFacetCounts {
+  locations: Record<string, number>;
+  roleKinds: Record<RoleKind, number>;
+  visaStates: Record<JobVisaState, number>;
+  when: Record<JobWhen, number>;
+}
+
+export interface FacetableJob extends FacetableOpportunity {
+  roleKind?: RoleKind;
+  visa?: Job["visa"];
+}
+
+export const DEFAULT_JOB_FACET_SELECTION: JobFacetSelection = {
+  locations: [],
+  locationMode: "anywhere",
+  roleKinds: [],
+  visaStates: [],
+  when: "any",
+  includeVisaMismatch: false,
+};
+
 export type FacetSurface = "events" | "jobs";
 
 export interface OpportunityFacetValues {
@@ -54,6 +90,183 @@ function locationLabel(item: FacetableOpportunity): string | undefined {
 
 function normalizedLabel(value: string): string {
   return cleanLabel(value)?.toLocaleLowerCase() ?? "";
+}
+
+function jobLocationLabels(item: FacetableJob): string[] {
+  const labels = [item.place?.city, item.place?.country]
+    .map(cleanLabel)
+    .filter((value): value is string => Boolean(value));
+  return Array.from(
+    new Map(labels.map((label) => [normalizedLabel(label), label])).values(),
+  );
+}
+
+function matchesJobLocation(
+  item: FacetableJob,
+  selectedLocations: Set<string>,
+): boolean {
+  if (
+    jobLocationLabels(item).some((label) =>
+      selectedLocations.has(normalizedLabel(label)),
+    )
+  ) {
+    return true;
+  }
+
+  const rawLocation = normalizedLabel(item.location);
+  return Array.from(selectedLocations).some(
+    (selected) =>
+      rawLocation === selected ||
+      rawLocation.startsWith(`${selected},`) ||
+      rawLocation.includes(`, ${selected}`),
+  );
+}
+
+function withinDays(
+  postedDate: string | undefined,
+  days: number,
+  nowMs: number,
+): boolean {
+  if (!postedDate) return false;
+  const postedMs = Date.parse(postedDate);
+  if (!Number.isFinite(postedMs)) return false;
+  const ageMs = nowMs - postedMs;
+  return ageMs >= 0 && ageMs <= days * 86_400_000;
+}
+
+export function countJobFacets(
+  items: FacetableJob[],
+  nowMs = Date.now(),
+): JobFacetCounts {
+  const locations = new Map<string, { label: string; count: number }>();
+  const roleKinds: JobFacetCounts["roleKinds"] = {
+    internship: 0,
+    "phd-position": 0,
+    postdoc: 0,
+    staff: 0,
+    faculty: 0,
+  };
+  const visaStates: JobFacetCounts["visaStates"] = {
+    sponsors: 0,
+    "not-stated": 0,
+    "wont-sponsor": 0,
+  };
+  const when: JobFacetCounts["when"] = {
+    any: items.length,
+    "24h": 0,
+    "7d": 0,
+    "30d": 0,
+  };
+
+  for (const item of items) {
+    for (const label of jobLocationLabels(item)) {
+      incrementLabel(locations, label);
+    }
+    if (item.roleKind) roleKinds[item.roleKind] += 1;
+    visaStates[item.visa?.state ?? "not-stated"] += 1;
+    if (withinDays(item.postedDate ?? item.postedAt, 1, nowMs)) {
+      when["24h"] += 1;
+    }
+    if (withinDays(item.postedDate ?? item.postedAt, 7, nowMs)) {
+      when["7d"] += 1;
+    }
+    if (withinDays(item.postedDate ?? item.postedAt, 30, nowMs)) {
+      when["30d"] += 1;
+    }
+  }
+
+  return {
+    locations: rankedRecord(locations),
+    roleKinds,
+    visaStates,
+    when,
+  };
+}
+
+export function hasActiveJobFacets(selection: JobFacetSelection): boolean {
+  return Boolean(
+    selection.roleKinds.length > 0 ||
+      selection.visaStates.length > 0 ||
+      selection.when !== "any" ||
+      selection.includeVisaMismatch ||
+      (selection.locationMode !== "anywhere" &&
+        selection.locations.some((location) => normalizedLabel(location))),
+  );
+}
+
+export function filterJobsByFacets<TItem extends FacetableJob>(
+  items: TItem[],
+  selection: JobFacetSelection,
+  {
+    authorisedCountries = [],
+    nowMs = Date.now(),
+  }: {
+    authorisedCountries?: string[];
+    nowMs?: number;
+  } = {},
+): TItem[] {
+  const roles = new Set(selection.roleKinds);
+  const visaStates = new Set(selection.visaStates);
+  const authorised = new Set(
+    authorisedCountries.map(normalizedLabel).filter(Boolean),
+  );
+  const explicitlyShowsNoSponsor =
+    selection.includeVisaMismatch || visaStates.has("wont-sponsor");
+  const whenDays =
+    selection.when === "24h"
+      ? 1
+      : selection.when === "7d"
+        ? 7
+        : selection.when === "30d"
+          ? 30
+          : undefined;
+
+  const filtered = items.filter((item) => {
+    if (roles.size > 0 && (!item.roleKind || !roles.has(item.roleKind))) {
+      return false;
+    }
+
+    const visaState = item.visa?.state ?? "not-stated";
+    if (visaStates.size > 0 && !visaStates.has(visaState)) return false;
+
+    if (
+      authorised.size > 0 &&
+      !explicitlyShowsNoSponsor &&
+      visaState === "wont-sponsor"
+    ) {
+      const country = normalizedLabel(
+        item.place?.country ?? item.visa?.country ?? "",
+      );
+      if (!country || !authorised.has(country)) return false;
+    }
+
+    return (
+      whenDays === undefined ||
+      withinDays(item.postedDate ?? item.postedAt, whenDays, nowMs)
+    );
+  });
+
+  const selectedLocations = new Set(
+    selection.locations.map(normalizedLabel).filter(Boolean),
+  );
+  if (
+    selectedLocations.size === 0 ||
+    selection.locationMode === "anywhere"
+  ) {
+    return filtered;
+  }
+
+  const matching: TItem[] = [];
+  const remaining: TItem[] = [];
+  for (const item of filtered) {
+    (matchesJobLocation(item, selectedLocations) ? matching : remaining).push(
+      item,
+    );
+  }
+  if (matching.length === 0) return filtered;
+  return selection.locationMode === "only"
+    ? matching
+    : [...matching, ...remaining];
 }
 
 function monthLabel(item: FacetableOpportunity): string | undefined {

@@ -10,19 +10,147 @@ import type {
 import { runJobsPipeline } from "@/lib/jobs/pipeline";
 import { MIN_SCORE as JOB_MIN_SCORE } from "@/lib/jobs/scoring";
 import type { ScoredJobItem } from "@/lib/jobs/types";
+import type { Job } from "@/types";
 import {
   derivePoolCacheKey,
   type CachedPool,
   type PoolCache,
 } from "./pool-cache";
 import {
+  countJobFacets,
   countOpportunityFacets,
+  DEFAULT_JOB_FACET_SELECTION,
   DEFAULT_OPPORTUNITY_TOP_N,
+  filterJobsByFacets,
   filterOpportunitiesByFacets,
   MAX_OPPORTUNITY_POOL_ITEMS,
   opportunityFormat,
   parseOpportunityFacetSelection,
 } from "./facets";
+
+const FACET_JOBS: Job[] = [
+  {
+    id: "intern-chicago",
+    roleTitle: "Battery Research Intern",
+    companyOrLab: "Peer Lab",
+    location: "Chicago, IL",
+    place: { city: "Chicago", country: "United States" },
+    isRemote: false,
+    keyRequirements: [],
+    matchReason: "Match",
+    postedDate: "2026-07-29T12:00:00.000Z",
+    roleKind: "internship",
+    visa: { state: "sponsors", country: "United States" },
+  },
+  {
+    id: "staff-berlin",
+    roleTitle: "Battery Scientist",
+    companyOrLab: "Peer Lab",
+    location: "Berlin, Germany",
+    place: { city: "Berlin", country: "Germany" },
+    isRemote: false,
+    keyRequirements: [],
+    matchReason: "Match",
+    postedDate: "2026-07-20T12:00:00.000Z",
+    roleKind: "staff",
+    visa: { state: "wont-sponsor", country: "Germany" },
+  },
+  {
+    id: "postdoc-remote",
+    roleTitle: "Electrochemistry Postdoc",
+    companyOrLab: "Peer Lab",
+    location: "Remote",
+    isRemote: true,
+    keyRequirements: [],
+    matchReason: "Match",
+    postedDate: "2026-06-01T12:00:00.000Z",
+    roleKind: "postdoc",
+  },
+];
+
+describe("job opportunity facets", () => {
+  const nowMs = new Date("2026-07-30T12:00:00.000Z").getTime();
+
+  it("narrows the pool by role kind", () => {
+    expect(
+      filterJobsByFacets(FACET_JOBS, {
+        ...DEFAULT_JOB_FACET_SELECTION,
+        roleKinds: ["internship"],
+      }).map((job) => job.id),
+    ).toEqual(["intern-chicago"]);
+  });
+
+  it("narrows the pool by visa state", () => {
+    expect(
+      filterJobsByFacets(FACET_JOBS, {
+        ...DEFAULT_JOB_FACET_SELECTION,
+        visaStates: ["wont-sponsor"],
+      }).map((job) => job.id),
+    ).toEqual(["staff-berlin"]);
+  });
+
+  it("keeps the pool when an only-location has zero results today", () => {
+    expect(
+      filterJobsByFacets(FACET_JOBS, {
+        ...DEFAULT_JOB_FACET_SELECTION,
+        locations: ["Tokyo"],
+        locationMode: "only",
+      }),
+    ).toEqual(FACET_JOBS);
+  });
+
+  it("counts internships separately and counts both city and country", () => {
+    const counts = countJobFacets(FACET_JOBS, nowMs);
+
+    expect(counts.roleKinds.internship).toBe(1);
+    expect(counts.locations).toMatchObject({
+      Chicago: 1,
+      "United States": 1,
+      Berlin: 1,
+      Germany: 1,
+    });
+    expect(counts.when).toEqual({
+      any: 3,
+      "24h": 1,
+      "7d": 1,
+      "30d": 2,
+    });
+  });
+
+  it("uses authorised countries as a safe default with an override", () => {
+    const selection = { ...DEFAULT_JOB_FACET_SELECTION };
+
+    expect(
+      filterJobsByFacets(FACET_JOBS, selection, {
+        authorisedCountries: [],
+      }),
+    ).toEqual(FACET_JOBS);
+    expect(
+      filterJobsByFacets(FACET_JOBS, selection, {
+        authorisedCountries: ["United States"],
+      }).map((job) => job.id),
+    ).toEqual(["intern-chicago", "postdoc-remote"]);
+    expect(
+      filterJobsByFacets(
+        FACET_JOBS,
+        { ...selection, includeVisaMismatch: true },
+        { authorisedCountries: ["United States"] },
+      ),
+    ).toEqual(FACET_JOBS);
+
+    const visaCountryOnly = {
+      ...FACET_JOBS[1],
+      id: "staff-visa-country-only",
+      place: undefined,
+      location: "Remote",
+    };
+    expect(
+      filterJobsByFacets([visaCountryOnly], selection, {
+        authorisedCountries: ["United States"],
+      }),
+    ).toEqual([]);
+  });
+});
 
 class MemoryPoolCache implements PoolCache {
   readonly values = new Map<string, CachedPool>();

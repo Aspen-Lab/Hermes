@@ -39,13 +39,21 @@ import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
-import { OpportunityFacetPanel } from "@/components/opportunities/opportunity-facet-panel";
+import {
+  JobFacetPanel,
+  OpportunityFacetPanel,
+} from "@/components/opportunities/opportunity-facet-panel";
 import { OpportunityShowMore } from "@/components/opportunities/opportunity-show-more";
 import {
+  countJobFacets,
+  DEFAULT_JOB_FACET_SELECTION,
   filterOpportunitiesByFacets,
+  filterJobsByFacets,
+  hasActiveJobFacets,
   hasActiveOpportunityFacets,
   mergeOpportunityFacetCounts,
   OPPORTUNITY_MIN_SCORE,
+  type JobFacetSelection,
 } from "@/lib/opportunities/facets";
 import {
   nextOpportunityPageSize,
@@ -109,7 +117,7 @@ function DiscoveryPage() {
     eventPool,
     jobPool,
     eventFacetCounts,
-    jobFacetCounts,
+    jobFacetCounts: opportunityJobFacetCounts,
     savedPapers,
     savedEvents,
     savedJobs,
@@ -143,6 +151,7 @@ function DiscoveryPage() {
   );
   const updateJobTopics = useProfileStore((s) => s.updateJobTopics);
   const updateJobSoftTopics = useProfileStore((s) => s.updateJobSoftTopics);
+  const updateLocations = useProfileStore((s) => s.updateLocations);
   const recordOpportunityFacetPreference = useProfileStore(
     (s) => s.recordOpportunityFacetPreference,
   );
@@ -157,6 +166,13 @@ function DiscoveryPage() {
   const [activeType, setActiveType] = useState<FeedType>("dashboard");
   const [opportunityFacets, setOpportunityFacets] =
     useState<OpportunityFacetSelection>({});
+  const [jobFacets, setJobFacets] = useState<JobFacetSelection>(() => ({
+    ...DEFAULT_JOB_FACET_SELECTION,
+    locations: [],
+    roleKinds: [],
+    visaStates: [],
+  }));
+  const [pageNowMs] = useState(Date.now);
   const [opportunityPagination, setOpportunityPagination] = useState({
     key: "",
     visibleCount: OPPORTUNITY_PAGE_SIZE,
@@ -352,6 +368,21 @@ function DiscoveryPage() {
   }, [filters, isPaperSearchMode, normalizedQuery, searchPapers]);
 
   const hasOpportunityFacets = hasActiveOpportunityFacets(opportunityFacets);
+  const hasJobFacets = hasActiveJobFacets(jobFacets);
+  const authorisedCountries = useMemo(
+    () =>
+      (
+        profile as typeof profile & {
+          authorisedCountries?: string[];
+        }
+      ).authorisedCountries ?? [],
+    [profile],
+  );
+  const jobFilterPool = jobPool.length > 0 ? jobPool : jobs;
+  const jobFilterCounts = useMemo(
+    () => countJobFacets(jobFilterPool, pageNowMs),
+    [jobFilterPool, pageNowMs],
+  );
   const eligibleEvents = useMemo(() => {
     const pool = eventPool.length > 0 ? eventPool : events;
     const filtered = filterOpportunitiesByFacets(
@@ -367,10 +398,21 @@ function DiscoveryPage() {
         );
   }, [eventPool, events, hasOpportunityFacets, opportunityFacets]);
   const eligibleJobs = useMemo(() => {
-    const pool = jobPool.length > 0 ? jobPool : jobs;
+    if (activeType === "jobs") {
+      const filtered = filterJobsByFacets(jobFilterPool, jobFacets, {
+        authorisedCountries,
+        nowMs: pageNowMs,
+      });
+      return hasJobFacets
+        ? filtered
+        : filtered.filter(
+            (job) => (job.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
+          );
+    }
+
     const filtered = filterOpportunitiesByFacets(
       "jobs",
-      pool,
+      jobFilterPool,
       opportunityFacets,
     );
     return hasOpportunityFacets
@@ -378,7 +420,16 @@ function DiscoveryPage() {
       : filtered.filter(
           (job) => (job.relevanceScore ?? 0) >= OPPORTUNITY_MIN_SCORE,
         );
-  }, [hasOpportunityFacets, jobPool, jobs, opportunityFacets]);
+  }, [
+    activeType,
+    authorisedCountries,
+    hasJobFacets,
+    hasOpportunityFacets,
+    jobFacets,
+    jobFilterPool,
+    opportunityFacets,
+    pageNowMs,
+  ]);
   const searchedEvents = useMemo(
     () =>
       filterEventsByOpportunityQuery(
@@ -397,9 +448,12 @@ function DiscoveryPage() {
   );
   const opportunityFacetCounts = useMemo(() => {
     if (activeType === "events") return eventFacetCounts;
-    if (activeType === "jobs") return jobFacetCounts;
-    return mergeOpportunityFacetCounts(eventFacetCounts, jobFacetCounts);
-  }, [activeType, eventFacetCounts, jobFacetCounts]);
+    if (activeType === "jobs") return opportunityJobFacetCounts;
+    return mergeOpportunityFacetCounts(
+      eventFacetCounts,
+      opportunityJobFacetCounts,
+    );
+  }, [activeType, eventFacetCounts, opportunityJobFacetCounts]);
   const opportunityFacetScope =
     activeType === "events"
       ? "events"
@@ -413,8 +467,8 @@ function DiscoveryPage() {
         ? jobPool.length
         : eventPool.length + jobPool.length;
   const showOpportunityFacets =
-    activeType !== "papers" &&
-    (activeType !== "dashboard" || isSearchMode) &&
+    (activeType === "events" ||
+      (activeType === "dashboard" && isSearchMode)) &&
     opportunityPoolCount > 0;
 
   // Dashboard is an overview until a query turns it into combined search.
@@ -459,12 +513,14 @@ function DiscoveryPage() {
         opportunityFacets.location ?? [],
         opportunityFacets.month ?? [],
         opportunityFacets.format ?? [],
+        activeType === "jobs" ? jobFacets : undefined,
         isOpportunitySearchMode ? normalizedQuery.toLocaleLowerCase() : "",
         lastRefresh,
       ]),
     [
       activeType,
       isOpportunitySearchMode,
+      jobFacets,
       lastRefresh,
       normalizedQuery,
       opportunityFacets,
@@ -527,6 +583,20 @@ function DiscoveryPage() {
       setOpportunityFacets(next);
     },
     [activeType, opportunityFacets, recordOpportunityFacetPreference],
+  );
+  const handleJobLocationAdded = useCallback(
+    (location: string) => {
+      const key = location.trim().toLocaleLowerCase();
+      if (
+        profile.locationPreferences.some(
+          (candidate) => candidate.trim().toLocaleLowerCase() === key,
+        )
+      ) {
+        return;
+      }
+      updateLocations([...profile.locationPreferences, location]);
+    },
+    [profile.locationPreferences, updateLocations],
   );
 
   const briefingItems = useMemo<BriefingItem[]>(() => {
@@ -930,7 +1000,17 @@ function DiscoveryPage() {
                   : updateJobSoftTopics
             }
             defaultExpanded={activeType === "papers"}
-          />
+          >
+            {activeType === "jobs" && (
+              <JobFacetPanel
+                counts={jobFilterCounts}
+                selection={jobFacets}
+                onChange={setJobFacets}
+                onLocationAdded={handleJobLocationAdded}
+                usesAuthorisationDefault={authorisedCountries.length > 0}
+              />
+            )}
+          </SurfaceTopicsPanel>
         )}
 
         {/* ── Paper-only filters stay attached to the server search. ── */}

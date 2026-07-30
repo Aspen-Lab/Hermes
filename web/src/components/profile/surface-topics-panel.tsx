@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { TopicsField } from "./field-kit";
 import { surfaceTopicStatus } from "@/lib/profile/surface-topic-status";
 
@@ -21,6 +21,7 @@ export function SurfaceTopicsPanel({
   onChangeRequired,
   onChangeExplore,
   defaultExpanded,
+  children,
 }: {
   surface: TopicSurface;
   activeRequired: string[];
@@ -30,6 +31,7 @@ export function SurfaceTopicsPanel({
   onChangeRequired: (topics: string[]) => void;
   onChangeExplore: (topics: string[]) => void;
   defaultExpanded: boolean;
+  children?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const label = SURFACE_LABELS[surface];
@@ -92,6 +94,7 @@ export function SurfaceTopicsPanel({
             onChangeRequired={onChangeRequired}
             onChangeSoft={onChangeExplore}
           />
+          {children}
         </div>
       )}
 

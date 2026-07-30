@@ -1,12 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type {
   OpportunityFacetCounts,
   OpportunityFacetSelection,
   OpportunityFormat,
+  RoleKind,
 } from "@/types";
 import { FilterChip } from "@/components/search/filter-chip";
+import {
+  COUNTRY_NAMES,
+  CONFERENCE_CITIES,
+} from "@/lib/opportunities/structured-extract";
+import {
+  DEFAULT_JOB_FACET_SELECTION,
+  type JobFacetCounts,
+  type JobFacetSelection,
+  type JobLocationMode,
+  type JobVisaState,
+  type JobWhen,
+} from "@/lib/opportunities/facets";
 
 type FacetGroup = keyof OpportunityFacetSelection;
 
@@ -240,6 +253,322 @@ export function OpportunityFacetPanel({
             </div>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+const JOB_LOCATION_OPTIONS = Array.from(
+  new Map(
+    [...CONFERENCE_CITIES, ...COUNTRY_NAMES].map((location) => [
+      normalized(location),
+      location,
+    ]),
+  ).values(),
+).sort((left, right) => left.localeCompare(right));
+
+const ROLE_LABELS: Record<RoleKind, string> = {
+  internship: "Internship",
+  "phd-position": "PhD position",
+  postdoc: "Postdoc",
+  staff: "Staff",
+  faculty: "Faculty",
+};
+
+const VISA_LABELS: Record<JobVisaState, string> = {
+  sponsors: "Sponsors",
+  "not-stated": "Not stated",
+  "wont-sponsor": "Won't sponsor",
+};
+
+const WHEN_LABELS: Record<JobWhen, string> = {
+  any: "Any time",
+  "24h": "24 hours",
+  "7d": "7 days",
+  "30d": "30 days",
+};
+
+const LOCATION_MODE_LABELS: Record<JobLocationMode, string> = {
+  anywhere: "Anywhere",
+  prefer: "Prefer",
+  only: "Only these",
+};
+
+function toggleValue<TValue extends string>(
+  values: TValue[],
+  value: TValue,
+): TValue[] {
+  return values.includes(value)
+    ? values.filter((candidate) => candidate !== value)
+    : [...values, value];
+}
+
+export function jobLocationSuggestions(
+  query: string,
+  selected: string[],
+  limit = 8,
+): string[] {
+  const key = normalized(query);
+  if (!key) return [];
+  const selectedKeys = new Set(selected.map(normalized));
+  return JOB_LOCATION_OPTIONS.filter(
+    (location) =>
+      !selectedKeys.has(normalized(location)) &&
+      normalized(location).includes(key),
+  ).slice(0, limit);
+}
+
+function JobFilterRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid min-w-0 gap-2 sm:grid-cols-[72px_minmax(0,1fr)] sm:items-start">
+      <span className="text-caption font-medium text-text-muted sm:pt-2.5">
+        {label}
+      </span>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+export function JobFacetPanel({
+  counts,
+  selection,
+  onChange,
+  onLocationAdded,
+  usesAuthorisationDefault,
+}: {
+  counts: JobFacetCounts;
+  selection: JobFacetSelection;
+  onChange: (selection: JobFacetSelection) => void;
+  onLocationAdded: (location: string) => void;
+  usesAuthorisationDefault: boolean;
+}) {
+  const [locationQuery, setLocationQuery] = useState("");
+  const suggestions = jobLocationSuggestions(
+    locationQuery,
+    selection.locations,
+  );
+  const activeCount =
+    selection.locations.length +
+    selection.roleKinds.length +
+    selection.visaStates.length +
+    Number(selection.when !== "any") +
+    Number(selection.includeVisaMismatch);
+
+  const addLocation = (location: string) => {
+    onChange({
+      ...selection,
+      locations: [...selection.locations, location],
+      locationMode:
+        selection.locationMode === "anywhere"
+          ? "prefer"
+          : selection.locationMode,
+    });
+    onLocationAdded(location);
+    setLocationQuery("");
+  };
+
+  return (
+    <section aria-label="Filter jobs" className="mt-5 border-t border-border/50 pt-4">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-body-sm font-semibold text-heading">Job filters</p>
+          <p className="mt-0.5 text-caption text-text-muted">
+            Refine today without changing tomorrow&apos;s saved pool.
+          </p>
+        </div>
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...DEFAULT_JOB_FACET_SELECTION,
+                locations: [],
+                roleKinds: [],
+                visaStates: [],
+              })
+            }
+            className="shrink-0 rounded-full px-3 py-1.5 text-caption font-medium text-accent transition-colors hover:bg-accent/10"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <JobFilterRow label="Where">
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(LOCATION_MODE_LABELS) as JobLocationMode[]).map(
+              (mode) => (
+                <FilterChip
+                  key={mode}
+                  label={LOCATION_MODE_LABELS[mode]}
+                  active={selection.locationMode === mode}
+                  onClick={() =>
+                    onChange({ ...selection, locationMode: mode })
+                  }
+                />
+              ),
+            )}
+          </div>
+
+          {selection.locations.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selection.locations.map((location) => {
+                const count = counts.locations[location] ?? 0;
+                return (
+                  <button
+                    key={location}
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        ...selection,
+                        locations: selection.locations.filter(
+                          (candidate) =>
+                            normalized(candidate) !== normalized(location),
+                        ),
+                      })
+                    }
+                    className="rounded-xl bg-accent-dim px-3 py-2 text-left text-caption text-accent"
+                    aria-label={`Remove location ${location}`}
+                  >
+                    <span className="block font-medium">{location} ×</span>
+                    <span className="mt-0.5 block text-micro opacity-75">
+                      {count > 0
+                        ? `${count} today`
+                        : "nothing today, added to tomorrow's search"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="relative mt-2">
+            <label className="sr-only" htmlFor="job-location-filter">
+              Add a city or country
+            </label>
+            <input
+              id="job-location-filter"
+              value={locationQuery}
+              onChange={(event) => setLocationQuery(event.target.value)}
+              placeholder="Add a city or country"
+              autoComplete="off"
+              className="h-10 w-full rounded-xl border border-border bg-bg px-3 text-body-sm text-text outline-none transition-colors placeholder:text-text-faint focus:border-accent"
+            />
+            {locationQuery.trim() && (
+              <div
+                role="listbox"
+                aria-label="Location suggestions"
+                className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-border bg-surface p-1 shadow-card-hover"
+              >
+                {suggestions.length > 0 ? (
+                  suggestions.map((location) => {
+                    const count = counts.locations[location] ?? 0;
+                    return (
+                      <button
+                        key={location}
+                        type="button"
+                        role="option"
+                        aria-selected={false}
+                        onClick={() => addLocation(location)}
+                        className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-body-sm text-text hover:bg-bg-secondary"
+                      >
+                        <span>{location}</span>
+                        <span className="text-caption text-text-faint">
+                          {count > 0 ? `${count} today` : "nothing today"}
+                        </span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="px-3 py-2 text-caption text-text-faint">
+                    Keep typing a city or country from the list.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </JobFilterRow>
+
+        <JobFilterRow label="Role type">
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(ROLE_LABELS) as RoleKind[]).map((roleKind) => (
+              <FilterChip
+                key={roleKind}
+                label={ROLE_LABELS[roleKind]}
+                displayValue={`${ROLE_LABELS[roleKind]} ${counts.roleKinds[roleKind]}`}
+                active={selection.roleKinds.includes(roleKind)}
+                onClick={() =>
+                  onChange({
+                    ...selection,
+                    roleKinds: toggleValue(selection.roleKinds, roleKind),
+                  })
+                }
+              />
+            ))}
+          </div>
+        </JobFilterRow>
+
+        <JobFilterRow label="Visa">
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(VISA_LABELS) as JobVisaState[]).map((visaState) => (
+              <FilterChip
+                key={visaState}
+                label={VISA_LABELS[visaState]}
+                displayValue={`${VISA_LABELS[visaState]} ${counts.visaStates[visaState]}`}
+                active={selection.visaStates.includes(visaState)}
+                onClick={() =>
+                  onChange({
+                    ...selection,
+                    visaStates: toggleValue(
+                      selection.visaStates,
+                      visaState,
+                    ),
+                  })
+                }
+              />
+            ))}
+          </div>
+          {usesAuthorisationDefault && (
+            <div className="mt-2 flex items-center gap-2 text-caption text-text-faint">
+              <span>
+                No-sponsor roles outside your authorised countries are hidden.
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    ...selection,
+                    includeVisaMismatch: !selection.includeVisaMismatch,
+                  })
+                }
+                className="shrink-0 font-medium text-accent hover:underline"
+              >
+                {selection.includeVisaMismatch ? "Use default" : "Show anyway"}
+              </button>
+            </div>
+          )}
+        </JobFilterRow>
+
+        <JobFilterRow label="When">
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(WHEN_LABELS) as JobWhen[]).map((when) => (
+              <FilterChip
+                key={when}
+                label={WHEN_LABELS[when]}
+                displayValue={`${WHEN_LABELS[when]} ${counts.when[when]}`}
+                active={selection.when === when}
+                onClick={() => onChange({ ...selection, when })}
+              />
+            ))}
+          </div>
+        </JobFilterRow>
       </div>
     </section>
   );
