@@ -90,7 +90,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P6.3 | Jobs filters: Where, When, Role type, Visa | TODO | |
 | P6.4 | Work authorisation country list, in Profile settings | TODO | |
 
-**Total: 20 tasks.**
+**Total: 24 tasks.**
 
 ---
 
