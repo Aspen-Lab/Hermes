@@ -69,7 +69,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P4.1 | Per-accent `--color-done` tokens, light and dark | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 58 files, 502 tests passed; 1 live benchmark skipped per §4; typecheck clean; grep confirmed light + both dark theme declarations |
-| P4.2 | Applied / registered / submitted state in the store, synced | TODO | |
+| P4.2 | Applied / registered / submitted state in the store, synced | IN_PROGRESS | |
 | P4.3 | Saved page: kind segmentation, done controls, tinted cards | TODO | |
 | P4.4 | The same controls on the job and event reports | TODO | |
 
