@@ -49,7 +49,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P2.1 | Extend the Job and Event types with the new optional fields | DONE | `cd web && npx tsc --noEmit && npx vitest run` — typecheck clean; 51 files, 451 tests passed |
-| P2.2 | Job posting-page extractor: deadline, start date, contract, materials | IN_PROGRESS | |
+| P2.2 | Job posting-page extractor: deadline, start date, contract, materials | DONE | `cd web && npx vitest run src/lib/opportunities/job-details.test.ts` — 1 file, 8 tests passed |
 | P2.3 | Visa three-state extractor with country-scoped phrase sets | TODO | |
 | P2.4 | Role-kind classifier: internship / phd / postdoc / staff / faculty | TODO | |
 | P2.5 | Event page extractor: fees, registration deadline, activities | TODO | |

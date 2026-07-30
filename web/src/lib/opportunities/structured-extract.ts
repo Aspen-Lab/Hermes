@@ -10,6 +10,8 @@ export interface JsonLdOpportunity {
   endDate?: string;
   /** schema.org JobPosting.datePosted — a job's equivalent of a start date. */
   datePosted?: string;
+  /** schema.org JobPosting.validThrough — the application deadline. */
+  validThrough?: string;
   place?: ExtractedPlace;
   eventAttendanceMode?: string;
 }
@@ -934,6 +936,7 @@ function extractPlace(location: unknown): ExtractedPlace | undefined {
 function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   const kind = opportunityKind(node["@type"]);
   if (!kind) return null;
+  const validThrough = nonEmptyString(node.validThrough);
 
   return {
     kind,
@@ -941,6 +944,7 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     startDate: nonEmptyString(node.startDate),
     endDate: nonEmptyString(node.endDate),
     datePosted: nonEmptyString(node.datePosted),
+    ...(validThrough ? { validThrough } : {}),
     place: extractPlace(node.location ?? node.jobLocation),
     eventAttendanceMode: nonEmptyString(node.eventAttendanceMode),
   };
