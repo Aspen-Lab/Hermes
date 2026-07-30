@@ -369,15 +369,7 @@ function DiscoveryPage() {
 
   const hasOpportunityFacets = hasActiveOpportunityFacets(opportunityFacets);
   const hasJobFacets = hasActiveJobFacets(jobFacets);
-  const authorisedCountries = useMemo(
-    () =>
-      (
-        profile as typeof profile & {
-          authorisedCountries?: string[];
-        }
-      ).authorisedCountries ?? [],
-    [profile],
-  );
+  const authorisedCountries = profile.authorisedCountries;
   const jobFilterPool = jobPool.length > 0 ? jobPool : jobs;
   const jobFilterCounts = useMemo(
     () => countJobFacets(jobFilterPool, pageNowMs),

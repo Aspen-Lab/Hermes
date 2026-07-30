@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { StateStorage } from "zustand/middleware";
 import { defaultProfile, type UserProfile } from "@/types";
 import {
   migrateProfileStore,
@@ -68,6 +69,30 @@ describe("profile per-surface topic setters", () => {
   });
 });
 
+describe("work authorisation countries", () => {
+  beforeEach(() => {
+    useProfileStore.setState({
+      profile: {
+        ...profileFixture,
+        authorisedCountries: [],
+      },
+    });
+  });
+
+  it("defaults empty and updates multiple countries", () => {
+    expect(defaultProfile.authorisedCountries).toEqual([]);
+
+    useProfileStore
+      .getState()
+      .updateAuthorisedCountries(["Canada", "Germany"]);
+
+    expect(useProfileStore.getState().profile.authorisedCountries).toEqual([
+      "Canada",
+      "Germany",
+    ]);
+  });
+});
+
 describe("profile persistence migration", () => {
   it("seeds empty per-surface fields from the v2 Papers topics", () => {
     const persistedV2 = {
@@ -121,6 +146,23 @@ describe("profile persistence migration", () => {
     };
 
     expect(migrateProfileStore(editedV3, 3)).toEqual(editedV3);
+  });
+
+  it("defaults a v3 profile with no work-authorisation field to empty", () => {
+    expect(
+      migrateProfileStore(
+        {
+          profile: {
+            displayName: "Existing member",
+          },
+        },
+        3,
+      ),
+    ).toMatchObject({
+      profile: {
+        authorisedCountries: [],
+      },
+    });
   });
 });
 
@@ -245,5 +287,58 @@ describe("bootstrap promotion — first-time onboarding", () => {
       "battery",
       "sodium-ion",
     ]);
+  });
+});
+
+describe("work authorisation persistence", () => {
+  it("defaults a v3 profile and round-trips selected countries", async () => {
+    let stored = JSON.stringify({
+      state: {
+        profile: {
+          ...defaultProfile,
+          authorisedCountries: undefined,
+        },
+      },
+      version: 3,
+    });
+    const storage: StateStorage = {
+      getItem: () => stored,
+      setItem: (_name, value) => {
+        stored = value;
+      },
+      removeItem: () => {
+        stored = "";
+      },
+    };
+    vi.stubGlobal("window", { localStorage: storage });
+
+    try {
+      vi.resetModules();
+      const firstModule = await import("./profile");
+      await firstModule.useProfileStore.persist.rehydrate();
+      expect(
+        firstModule.useProfileStore.getState().profile.authorisedCountries,
+      ).toEqual([]);
+
+      firstModule.useProfileStore
+        .getState()
+        .updateAuthorisedCountries(["Canada", "Germany"]);
+      expect(
+        (
+          JSON.parse(stored) as {
+            state: { profile: UserProfile };
+          }
+        ).state.profile.authorisedCountries,
+      ).toEqual(["Canada", "Germany"]);
+
+      vi.resetModules();
+      const secondModule = await import("./profile");
+      await secondModule.useProfileStore.persist.rehydrate();
+      expect(
+        secondModule.useProfileStore.getState().profile.authorisedCountries,
+      ).toEqual(["Canada", "Germany"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

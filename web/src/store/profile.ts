@@ -48,6 +48,7 @@ interface ProfileState {
   updateCareerStage: (stage: CareerStage) => void;
   updateIndustryPreference: (pref: IndustryAcademiaPreference) => void;
   updateLocations: (locations: string[]) => void;
+  updateAuthorisedCountries: (countries: string[]) => void;
   updateMethods: (methods: string[]) => void;
   updateSchool: (school: string) => void;
   updateCurrentProject: (text: string) => void;
@@ -169,6 +170,23 @@ export function migrateProfileStore(
       profile.jobExploreTopics = [...exploreTopics];
     }
   }
+
+  const authorisedCountries = (
+    profile as PersistedUserProfile & {
+      authorisedCountries?: unknown;
+    }
+  ).authorisedCountries;
+  profile.authorisedCountries = Array.isArray(authorisedCountries)
+    ? Array.from(
+        new Map(
+          authorisedCountries
+            .filter((country): country is string => typeof country === "string")
+            .map((country) => country.trim())
+            .filter(Boolean)
+            .map((country) => [country.toLocaleLowerCase(), country]),
+        ).values(),
+      )
+    : [];
 
   return { ...state, profile };
 }
@@ -314,6 +332,11 @@ export const useProfileStore = create<ProfileState>()(
       updateLocations: (locations) =>
         set((s) => ({
           profile: { ...s.profile, locationPreferences: locations },
+        })),
+
+      updateAuthorisedCountries: (countries) =>
+        set((s) => ({
+          profile: { ...s.profile, authorisedCountries: countries },
         })),
 
       updateMethods: (methods) =>
@@ -540,6 +563,7 @@ export const useProfileStore = create<ProfileState>()(
           if (remote.researchTopics !== undefined) merged.researchTopics = remote.researchTopics;
           if (remote.preferredMethods !== undefined) merged.preferredMethods = remote.preferredMethods;
           if (remote.locationPreferences !== undefined) merged.locationPreferences = remote.locationPreferences;
+          if (remote.authorisedCountries !== undefined) merged.authorisedCountries = remote.authorisedCountries;
           if (remote.careerStage !== undefined) merged.careerStage = remote.careerStage;
           if (remote.industryVsAcademia !== undefined) merged.industryVsAcademia = remote.industryVsAcademia;
           if (remote.phdYear !== undefined) merged.phdYear = remote.phdYear;
@@ -596,7 +620,8 @@ export const useProfileStore = create<ProfileState>()(
       skipHydration: true,
       // v2: colorTheme became a "mode:accent" composite.
       // v3: Events and Jobs gained independent Required/Explore topic fields.
-      version: 3,
+      // v4: work-authorisation countries became a persisted profile signal.
+      version: 4,
       migrate: (persisted, version) =>
         migrateProfileStore(persisted, version) as ProfileState,
       // Build the promoted snapshot as part of the state installed by

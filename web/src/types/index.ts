@@ -278,6 +278,8 @@ export interface UserProfile {
   careerStage: CareerStage;
   industryVsAcademia: IndustryAcademiaPreference;
   locationPreferences: string[];
+  /** Countries where the user can work without employer sponsorship. */
+  authorisedCountries: string[];
   preferredMethods: string[];
   phdYear?: number;
   /** Affiliation — university or company. */
@@ -424,6 +426,7 @@ export const defaultProfile: UserProfile = {
   careerStage: "PhD Year 3",
   industryVsAcademia: "both",
   locationPreferences: [],
+  authorisedCountries: [],
   preferredMethods: [],
   phdYear: 3,
   dislikedTopics: [],
