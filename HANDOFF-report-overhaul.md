@@ -86,7 +86,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P6.1 | Widen events past conferences: kinds, classifier, queries | DONE | `cd web && npx vitest run src/lib/events/mapper.test.ts src/lib/opportunities/query-gen.test.ts` — 2 files, 15 tests passed; all five new kinds and recruiting queries covered |
-| P6.2 | Internship query lane with cycle-aware year | TODO | |
+| P6.2 | Internship query lane with cycle-aware year | IN_PROGRESS | |
 | P6.3 | Jobs filters: Where, When, Role type, Visa | TODO | |
 | P6.4 | Work authorisation country list, in Profile settings | TODO | |
 
