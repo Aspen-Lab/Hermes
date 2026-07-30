@@ -35,6 +35,49 @@ import {
 // these. Failures are logged but never block the UI.
 
 type ItemKind = "paper" | "event" | "job";
+type CompletionKey = "appliedAt" | "registeredAt" | "submittedAt";
+
+const COMPLETION_KEYS: CompletionKey[] = [
+  "appliedAt",
+  "registeredAt",
+  "submittedAt",
+];
+
+function payloadTimestamp(
+  payload: unknown,
+  key: CompletionKey,
+): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const value = (payload as Record<string, unknown>)[key];
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  return Number.isFinite(Date.parse(value)) ? value : undefined;
+}
+
+function withCompletionPayload<T extends object>(
+  item: T,
+  completion: Partial<Record<CompletionKey, string | undefined>>,
+): T {
+  const payload = { ...item } as T & Partial<Record<CompletionKey, string>>;
+  for (const key of COMPLETION_KEYS) {
+    if (!(key in completion)) continue;
+    const value = completion[key];
+    if (value) payload[key] = value;
+    else delete payload[key];
+  }
+  return payload;
+}
+
+function completionMap<TItem extends { id: string }>(
+  items: TItem[],
+  key: CompletionKey,
+): Record<string, string> {
+  const entries: Record<string, string> = {};
+  for (const item of items) {
+    const timestamp = payloadTimestamp(item, key);
+    if (timestamp) entries[item.id] = timestamp;
+  }
+  return entries;
+}
 
 async function cloudSave(itemId: string, itemKind: ItemKind, payload: unknown) {
   try {
@@ -508,6 +551,9 @@ interface FeedState {
   feedTopicsKey: string | null;
   aiPaperSearchEnabled: boolean;
   readItems: Record<string, true>;
+  appliedAt: Record<string, string>;
+  registeredAt: Record<string, string>;
+  submittedAt: Record<string, string>;
   paperSummaries: Record<string, string>;
   /** id -> ms timestamp. Drives the "don't repeat papers" exclude list. */
   recentlyShownIds: Record<string, number>;
@@ -544,6 +590,13 @@ interface FeedState {
   ) => void;
   markRead: (id: string) => void;
   markUnread: (id: string) => void;
+  setJobApplied: (job: Job, applied: boolean, at?: string) => void;
+  setEventRegistered: (
+    event: Event,
+    registered: boolean,
+    at?: string,
+  ) => void;
+  setEventSubmitted: (event: Event, submitted: boolean, at?: string) => void;
   undoDismiss: () => void;
   commitDismiss: () => void;
   /**
@@ -586,6 +639,9 @@ export const useFeedStore = create<FeedState>()(
       feedTopicsKey: null,
       aiPaperSearchEnabled: true,
       readItems: {},
+      appliedAt: {},
+      registeredAt: {},
+      submittedAt: {},
       paperSummaries: {},
       recentlyShownIds: {},
       pendingDismissal: null,
@@ -884,7 +940,13 @@ export const useFeedStore = create<FeedState>()(
           previousFeedback === "moreLikeThis" || previousFeedback === "liked"
             ? previousFeedback
             : ("saved" as ItemFeedback);
-        const saved = { ...event, isSaved: true, feedback: savedFeedback };
+        const saved = withCompletionPayload(
+          { ...event, isSaved: true, feedback: savedFeedback },
+          {
+            registeredAt: get().registeredAt[event.id],
+            submittedAt: get().submittedAt[event.id],
+          },
+        );
         set((s) => ({
           events: s.events.map((e) => (e.id === event.id ? saved : e)),
           eventPool: s.eventPool.map((e) =>
@@ -920,7 +982,10 @@ export const useFeedStore = create<FeedState>()(
           pendingDismissal: {
             id: event.id,
             kind: "event",
-            item: event,
+            item: withCompletionPayload(event, {
+              registeredAt: s.registeredAt[event.id],
+              submittedAt: s.submittedAt[event.id],
+            }),
             previousFeedback,
             wasInDisplay: s.events.some((item) => item.id === event.id),
             wasInPool: s.eventPool.some((item) => item.id === event.id),
@@ -969,7 +1034,10 @@ export const useFeedStore = create<FeedState>()(
           previousFeedback === "moreLikeThis" || previousFeedback === "liked"
             ? previousFeedback
             : ("saved" as ItemFeedback);
-        const saved = { ...job, isSaved: true, feedback: savedFeedback };
+        const saved = withCompletionPayload(
+          { ...job, isSaved: true, feedback: savedFeedback },
+          { appliedAt: get().appliedAt[job.id] },
+        );
         set((s) => ({
           jobs: s.jobs.map((j) => (j.id === job.id ? saved : j)),
           jobPool: s.jobPool.map((j) => (j.id === job.id ? saved : j)),
@@ -998,7 +1066,9 @@ export const useFeedStore = create<FeedState>()(
           pendingDismissal: {
             id: job.id,
             kind: "job",
-            item: job,
+            item: withCompletionPayload(job, {
+              appliedAt: s.appliedAt[job.id],
+            }),
             previousFeedback,
             wasInDisplay: s.jobs.some((item) => item.id === job.id),
             wasInPool: s.jobPool.some((item) => item.id === job.id),
@@ -1066,8 +1136,12 @@ export const useFeedStore = create<FeedState>()(
       unsaveEvent: (id) => {
         set((s) => {
           const nextFeedback = { ...s.oppFeedback };
+          const nextRegisteredAt = { ...s.registeredAt };
+          const nextSubmittedAt = { ...s.submittedAt };
           const currentFeedback = nextFeedback[id];
           if (currentFeedback === "saved") delete nextFeedback[id];
+          delete nextRegisteredAt[id];
+          delete nextSubmittedAt[id];
           return {
             events: s.events.map((e) =>
               e.id === id
@@ -1093,6 +1167,8 @@ export const useFeedStore = create<FeedState>()(
             ),
             savedEvents: s.savedEvents.filter((e) => e.id !== id),
             oppFeedback: nextFeedback,
+            registeredAt: nextRegisteredAt,
+            submittedAt: nextSubmittedAt,
           };
         });
         cloudUnsave(id);
@@ -1101,8 +1177,10 @@ export const useFeedStore = create<FeedState>()(
       unsaveJob: (id) => {
         set((s) => {
           const nextFeedback = { ...s.oppFeedback };
+          const nextAppliedAt = { ...s.appliedAt };
           const currentFeedback = nextFeedback[id];
           if (currentFeedback === "saved") delete nextFeedback[id];
+          delete nextAppliedAt[id];
           return {
             jobs: s.jobs.map((j) =>
               j.id === id
@@ -1128,6 +1206,7 @@ export const useFeedStore = create<FeedState>()(
             ),
             savedJobs: s.savedJobs.filter((j) => j.id !== id),
             oppFeedback: nextFeedback,
+            appliedAt: nextAppliedAt,
           };
         });
         cloudUnsave(id);
@@ -1157,6 +1236,79 @@ export const useFeedStore = create<FeedState>()(
           return { readItems: next };
         });
         cloudMarkUnread(id);
+      },
+
+      setJobApplied: (job, applied, at) => {
+        const timestamp = applied
+          ? get().appliedAt[job.id] ?? at ?? new Date().toISOString()
+          : undefined;
+        set((s) => {
+          const nextAppliedAt = { ...s.appliedAt };
+          if (timestamp) nextAppliedAt[job.id] = timestamp;
+          else delete nextAppliedAt[job.id];
+          return {
+            appliedAt: nextAppliedAt,
+            savedJobs: s.savedJobs.map((savedJob) =>
+              savedJob.id === job.id
+                ? withCompletionPayload(savedJob, { appliedAt: timestamp })
+                : savedJob,
+            ),
+          };
+        });
+
+        const saved = get().savedJobs.find(({ id }) => id === job.id);
+        if (saved) cloudSave(job.id, "job", saved);
+        else if (applied) get().saveJob(job);
+      },
+
+      setEventRegistered: (event, registered, at) => {
+        const timestamp = registered
+          ? get().registeredAt[event.id] ?? at ?? new Date().toISOString()
+          : undefined;
+        set((s) => {
+          const nextRegisteredAt = { ...s.registeredAt };
+          if (timestamp) nextRegisteredAt[event.id] = timestamp;
+          else delete nextRegisteredAt[event.id];
+          return {
+            registeredAt: nextRegisteredAt,
+            savedEvents: s.savedEvents.map((savedEvent) =>
+              savedEvent.id === event.id
+                ? withCompletionPayload(savedEvent, {
+                    registeredAt: timestamp,
+                  })
+                : savedEvent,
+            ),
+          };
+        });
+
+        const saved = get().savedEvents.find(({ id }) => id === event.id);
+        if (saved) cloudSave(event.id, "event", saved);
+        else if (registered) get().saveEvent(event);
+      },
+
+      setEventSubmitted: (event, submitted, at) => {
+        const timestamp = submitted
+          ? get().submittedAt[event.id] ?? at ?? new Date().toISOString()
+          : undefined;
+        set((s) => {
+          const nextSubmittedAt = { ...s.submittedAt };
+          if (timestamp) nextSubmittedAt[event.id] = timestamp;
+          else delete nextSubmittedAt[event.id];
+          return {
+            submittedAt: nextSubmittedAt,
+            savedEvents: s.savedEvents.map((savedEvent) =>
+              savedEvent.id === event.id
+                ? withCompletionPayload(savedEvent, {
+                    submittedAt: timestamp,
+                  })
+                : savedEvent,
+            ),
+          };
+        });
+
+        const saved = get().savedEvents.find(({ id }) => id === event.id);
+        if (saved) cloudSave(event.id, "event", saved);
+        else if (submitted) get().saveEvent(event);
       },
 
       undoDismiss: () => {
@@ -1269,7 +1421,28 @@ export const useFeedStore = create<FeedState>()(
           );
         }
         if (pending.wasSaved) cloudUnsave(pending.id);
-        set({ pendingDismissal: null });
+        set((s) => {
+          if (pending.kind === "event") {
+            const nextRegisteredAt = { ...s.registeredAt };
+            const nextSubmittedAt = { ...s.submittedAt };
+            delete nextRegisteredAt[pending.id];
+            delete nextSubmittedAt[pending.id];
+            return {
+              registeredAt: nextRegisteredAt,
+              submittedAt: nextSubmittedAt,
+              pendingDismissal: null,
+            };
+          }
+          if (pending.kind === "job") {
+            const nextAppliedAt = { ...s.appliedAt };
+            delete nextAppliedAt[pending.id];
+            return {
+              appliedAt: nextAppliedAt,
+              pendingDismissal: null,
+            };
+          }
+          return { pendingDismissal: null };
+        });
       },
 
       hydrateFromRemote: (remote) => {
@@ -1342,6 +1515,18 @@ export const useFeedStore = create<FeedState>()(
             paperFeedback: nextPaperFeedback,
             oppFeedback: nextOppFeedback,
             readItems: remote.readItems ?? s.readItems,
+            appliedAt:
+              remote.savedJobs === undefined
+                ? s.appliedAt
+                : completionMap(nextSavedJobs, "appliedAt"),
+            registeredAt:
+              remote.savedEvents === undefined
+                ? s.registeredAt
+                : completionMap(nextSavedEvents, "registeredAt"),
+            submittedAt:
+              remote.savedEvents === undefined
+                ? s.submittedAt
+                : completionMap(nextSavedEvents, "submittedAt"),
           };
         });
       },
@@ -1363,6 +1548,9 @@ export const useFeedStore = create<FeedState>()(
           savedEvents: [],
           savedJobs: [],
           readItems: {},
+          appliedAt: {},
+          registeredAt: {},
+          submittedAt: {},
           paperSummaries: {},
           recentlyShownIds: {},
           pendingDismissal: null,
@@ -1383,6 +1571,9 @@ export const useFeedStore = create<FeedState>()(
         savedEvents: state.savedEvents,
         savedJobs: state.savedJobs,
         readItems: state.readItems,
+        appliedAt: state.appliedAt,
+        registeredAt: state.registeredAt,
+        submittedAt: state.submittedAt,
         paperSummaries: state.paperSummaries,
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
         recentlyShownIds: state.recentlyShownIds,
