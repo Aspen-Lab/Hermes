@@ -12,36 +12,43 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 import { logLlmUsage, now } from "../usage-log";
+import { PROVIDER_MODELS } from "../provider-models";
 
 type ModelTarget = {
   id: string;
   location: "regional" | "global";
+  tier: ModelTier;
 };
 
 const REGIONAL_MODEL_CHAIN = [
-  { id: "gemini-2.5-flash", location: "regional" },
-  { id: "gemini-2.5-pro", location: "regional" },
+  {
+    id: PROVIDER_MODELS.gemini.small,
+    location: "regional",
+    tier: "small",
+  },
+  {
+    id: PROVIDER_MODELS.gemini.large,
+    location: "regional",
+    tier: "large",
+  },
 ] satisfies ModelTarget[];
 
 const GLOBAL_FALLBACK_CHAIN = [
-  { id: "gemini-3-flash-preview", location: "global" },
-  { id: "gemini-3.1-pro-preview", location: "global" },
+  { id: "gemini-3.5-flash-lite", location: "global", tier: "small" },
+  { id: "gemini-3.6-flash", location: "global", tier: "large" },
 ] satisfies ModelTarget[];
 
 const GEMINI_API_MODEL_CHAIN = [
-  { id: "gemini-2.5-flash", location: "global" },
-  { id: "gemini-2.5-pro", location: "global" },
+  { id: PROVIDER_MODELS.gemini.small, location: "global", tier: "small" },
+  { id: PROVIDER_MODELS.gemini.large, location: "global", tier: "large" },
 ] satisfies ModelTarget[];
 
 // For tier-aware calls, narrow the chain to a single appropriate model. The
-// default chain stays "flash first, fall back to pro" — that's the cheap path
-// for digest. `small`/`large` are explicit choices used by deep-report.
+// default chain stays economical-first for digests. `small`/`large` are
+// explicit roles rather than guesses from model-name suffixes.
 function chainForTier(chain: ModelTarget[], tier?: ModelTier): ModelTarget[] {
   if (!tier) return chain;
-  if (tier === "large") {
-    return chain.filter((target) => /pro/i.test(target.id));
-  }
-  return chain.filter((target) => /flash/i.test(target.id));
+  return chain.filter((target) => target.tier === tier);
 }
 
 // ── Generation-config policy (the fix) ──────────────────────────────
@@ -52,16 +59,14 @@ function chainForTier(chain: ModelTarget[], tier?: ModelTier): ModelTarget[] {
 //   2. It set no `thinkingConfig`, so every 2.5 model ran default "dynamic
 //      thinking" — hidden reasoning tokens billed + latency on every call,
 //      even for bounded JSON extraction/ranking/classification.
-// This must be MODEL-AWARE: only 2.5-flash can (and should) disable thinking;
-// 2.5-pro cannot (min budget 128, needs its reasoning for deep reports); and
-// Gemini 3 previews use a different control (thinkingLevel), so we leave them
-// alone. On 2.5/3, maxOutputTokens counts thinking tokens too, so we add
-// headroom for any model that still thinks — never truncate mid-reasoning.
+// This stays model-aware: the cost-optimized 2.5 Flash-Lite / Flash pair runs
+// bounded JSON work with thinking disabled. Gemini 3 fallbacks use a different
+// control, so we leave them alone and reserve headroom for their thinking.
 
 const GEN_TIMEOUT_MS = 120_000; // generous per-attempt hang guard, not a latency cap
 const THINKING_HEADROOM = 4096;
 
-/** Only gemini-2.5-flash runs our bounded JSON tasks well with thinking off. */
+/** The cost-optimized Gemini 2.5 Flash family runs bounded JSON with thinking off. */
 function disableThinking(modelId: string): boolean {
   return /gemini-2\.5-flash/.test(modelId);
 }

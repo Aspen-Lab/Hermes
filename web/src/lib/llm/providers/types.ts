@@ -49,10 +49,10 @@ export interface DigestProvider {
     userPrompt: string;
     maxTokens?: number;
     /**
-     * Optional intelligence tier. `small` -> cheap classifier (Haiku / gpt-mini
-     * / gemini-flash / qwen-turbo). `large` -> strong reasoner (Sonnet / gpt /
-     * gemini-pro / qwen-max). If omitted, providers fall back to their default
-     * model so legacy call sites keep working unchanged.
+     * Optional intelligence tier. `small` routes economical daily work;
+     * `large` routes stronger deep-report reading. Exact IDs live in the shared
+     * provider-model catalog. If omitted, providers use their default model so
+     * legacy call sites keep working unchanged.
      */
     tier?: ModelTier;
   }): Promise<string>;

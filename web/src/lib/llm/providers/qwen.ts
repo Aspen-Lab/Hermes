@@ -10,12 +10,13 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 import { logLlmUsage, now } from "../usage-log";
+import { PROVIDER_MODELS } from "../provider-models";
 
 const QWEN_CHAT_API =
   "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
-const DEFAULT_MODEL = "qwen-plus";
-const SMALL_MODEL = "qwen-turbo";
-const LARGE_MODEL = "qwen-max";
+const DEFAULT_MODEL = PROVIDER_MODELS.qwen.small;
+const SMALL_MODEL = PROVIDER_MODELS.qwen.small;
+const LARGE_MODEL = PROVIDER_MODELS.qwen.large;
 
 function modelForTier(defaultModel: string, tier?: ModelTier): string {
   if (tier === "large") return LARGE_MODEL;
@@ -82,6 +83,7 @@ async function callQwenChat(args: {
         { role: "user", content: textContent },
       ],
       max_tokens: maxTokens,
+      enable_thinking: false,
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),
     signal: AbortSignal.timeout(20000),
@@ -110,7 +112,7 @@ async function callQwenChat(args: {
 
 export function createQwenProvider(
   apiKey = apiKeyFromEnv(),
-  defaultModel = DEFAULT_MODEL,
+  defaultModel: string = DEFAULT_MODEL,
 ): DigestProvider {
   return {
     id: "qwen",
@@ -149,8 +151,7 @@ export function createQwenProvider(
     }): Promise<string> {
       if (!apiKey) throw new Error("QWEN_API_KEY not set");
       if (images.length === 0) throw new Error("No images supplied");
-      // Vision-capable Qwen variant.
-      const visionModel = tier === "small" ? "qwen-vl-plus" : "qwen-vl-max";
+      const visionModel = modelForTier(defaultModel, tier);
       return callQwenChat({
         apiKey,
         model: visionModel,

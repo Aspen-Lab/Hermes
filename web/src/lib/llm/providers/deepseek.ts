@@ -2,12 +2,10 @@
 // matches OpenAI exactly, so this mirrors the Qwen provider and only varies the
 // base URL and the model id table.
 //
-// DeepSeek has no public vision model on this endpoint, so `generateVisionJsonText`
-// is intentionally omitted — capability-checking callers (figure extraction) will
-// skip the vision path and degrade gracefully. `deepseek-chat` (DeepSeek-V3) is
-// used for every tier: it's cheap, strong, and reliably supports JSON mode.
-// (`deepseek-reasoner` exists but rejects `response_format`/`temperature`, so we
-// keep to the chat model for predictable structured output.)
+// Peer intentionally omits `generateVisionJsonText` for DeepSeek, so
+// capability-checking figure callers skip image analysis and degrade
+// gracefully. Text work uses V4 Flash for frequent tasks and V4 Pro for deep
+// extraction, with thinking disabled for predictable budgeted JSON output.
 
 import type {
   DigestProvider,
@@ -16,11 +14,12 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 import { logLlmUsage, now } from "../usage-log";
+import { PROVIDER_MODELS } from "../provider-models";
 
 const DEEPSEEK_CHAT_API = "https://api.deepseek.com/chat/completions";
-const DEFAULT_MODEL = "deepseek-chat";
-const SMALL_MODEL = "deepseek-chat";
-const LARGE_MODEL = "deepseek-chat";
+const DEFAULT_MODEL = PROVIDER_MODELS.deepseek.small;
+const SMALL_MODEL = PROVIDER_MODELS.deepseek.small;
+const LARGE_MODEL = PROVIDER_MODELS.deepseek.large;
 
 function modelForTier(defaultModel: string, tier?: ModelTier): string {
   if (tier === "large") return LARGE_MODEL;
@@ -72,6 +71,7 @@ async function callDeepseekChat(args: {
         { role: "user", content: userPrompt },
       ],
       max_tokens: maxTokens,
+      thinking: { type: "disabled" },
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),
     signal: AbortSignal.timeout(20000),
@@ -100,7 +100,7 @@ async function callDeepseekChat(args: {
 
 export function createDeepseekProvider(
   apiKey = apiKeyFromEnv(),
-  defaultModel = DEFAULT_MODEL,
+  defaultModel: string = DEFAULT_MODEL,
 ): DigestProvider {
   return {
     id: "deepseek",

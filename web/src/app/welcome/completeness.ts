@@ -27,6 +27,13 @@ export const STEP_META: { key: StepKey; label: string }[] = [
   { key: "persona", label: "Persona" },
 ];
 
+/** Resolve a shareable walkthrough query such as `/welcome?step=ai`. */
+export function stepIndexFromKey(key: string | null): number | null {
+  if (!key) return null;
+  const index = STEP_META.findIndex((step) => step.key === key);
+  return index === -1 ? null : index;
+}
+
 // Radar fields the wizard actually renders — deviation from any default (or a
 // journal added) counts as "tuned". feedMethodMode isn't rendered, so it's
 // deliberately excluded.

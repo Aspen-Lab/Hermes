@@ -6,11 +6,12 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 import { logLlmUsage, now } from "../usage-log";
+import { PROVIDER_MODELS } from "../provider-models";
 
 const OPENAI_CHAT_API = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_MODEL = "gpt-5.4-mini";
-const SMALL_MODEL = "gpt-5.4-mini";
-const LARGE_MODEL = "gpt-5.4";
+const DEFAULT_MODEL = PROVIDER_MODELS.openai.small;
+const SMALL_MODEL = PROVIDER_MODELS.openai.small;
+const LARGE_MODEL = PROVIDER_MODELS.openai.large;
 
 function modelForTier(defaultModel: string, tier?: ModelTier): string {
   if (tier === "large") return LARGE_MODEL;
@@ -79,6 +80,7 @@ async function callOpenAIChat(args: {
         { role: "user", content: textContent },
       ],
       max_completion_tokens: maxTokens,
+      reasoning_effort: "none",
       response_format: { type: "json_object" },
     }),
     signal: AbortSignal.timeout(15000),
@@ -108,7 +110,7 @@ async function callOpenAIChat(args: {
 
 export function createOpenAIProvider(
   apiKey = apiKeyFromEnv(),
-  model = DEFAULT_MODEL,
+  model: string = DEFAULT_MODEL,
 ): DigestProvider {
   return {
     id: "openai",

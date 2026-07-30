@@ -39,6 +39,8 @@ import {
 import {
   AiKeyFields,
   ApiKeyHelp,
+  AiProviderGuide,
+  AiProviderRecommendation,
   providerShortLabel,
 } from "@/components/profile/ai-setup";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
@@ -58,6 +60,7 @@ import {
   firstIncompleteStep,
   isStepDone,
   readPersonaDone,
+  stepIndexFromKey,
 } from "./completeness";
 import {
   createTopicMirroringController,
@@ -71,6 +74,11 @@ const TOPICS_IDX = STEP_META.findIndex((m) => m.key === "topics");
 // is mounted (the quiz is its own route) — a no-op subscription is enough.
 const subscribeNoop = () => () => {};
 const personaServerSnapshot = () => false;
+const requestedStepServerSnapshot = () => null;
+const readRequestedStep = () => {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("step");
+};
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -91,6 +99,11 @@ export default function WelcomePage() {
     readPersonaDone,
     personaServerSnapshot,
   );
+  const requestedStep = useSyncExternalStore(
+    subscribeNoop,
+    readRequestedStep,
+    requestedStepServerSnapshot,
+  );
 
   // The wizard opens at the first incomplete step (a returning visitor
   // resumes; a fully set-up profile lands on the final step where "Enter
@@ -101,7 +114,10 @@ export default function WelcomePage() {
   const [manualStep, setManualStep] = useState<number | null>(null);
   const [autoStart, setAutoStart] = useState<number | null>(null);
   if (settled && autoStart === null) {
-    setAutoStart(firstIncompleteStep(profile, readPersonaDone()));
+    setAutoStart(
+      stepIndexFromKey(requestedStep) ??
+        firstIncompleteStep(profile, readPersonaDone()),
+    );
   }
   const step = manualStep ?? autoStart;
   const setStep = setManualStep;
@@ -439,21 +455,30 @@ export default function WelcomePage() {
                 >
                   <Callout variant="accent">
                     <strong>Peer runs significantly better with an API key.</strong>{" "}
-                    A key powers the smarter Tier 1/2 ranking and the full-text Deep report.
-                    Without one, you still get a complete free briefing.
+                    One key powers smarter Tier 1/2 ranking and full Deep reports
+                    across Papers, Events, and Jobs. Without one, you still get a
+                    complete free Tier 0 briefing.
                   </Callout>
                   <div className="mt-4 space-y-3">
+                    <ApiKeyHelp provider={profile.feedAiProvider} />
+                    <AiProviderRecommendation />
                     <AiKeyFields
                       provider={profile.feedAiProvider}
                       apiKey={profile.feedAiApiKey ?? ""}
                       onProviderChange={store.updateFeedAiProvider}
                       onApiKeyChange={store.updateFeedAiApiKey}
                       idPrefix="welcome-ai"
+                      emphasized
+                      showRegistrationLink
                     />
-                    <ApiKeyHelp />
+                    <AiProviderGuide
+                      key={profile.feedAiProvider}
+                      provider={profile.feedAiProvider}
+                    />
                     <p className="text-caption leading-relaxed text-text-faint">
-                      Deep report and Tavily web scouting can be switched on anytime from the
-                      search bar once a key is set. Your key is stored only in your browser.
+                      AI keys power ranking, summaries, and Deep reports. Tavily
+                      web scouting uses its own separate search key and remains
+                      limited by Peer&apos;s daily search schedule.
                     </p>
                   </div>
                 </StepFrame>

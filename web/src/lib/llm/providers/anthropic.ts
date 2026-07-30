@@ -7,6 +7,7 @@ import type {
 } from "./types";
 import { DIGEST_SYSTEM_PROMPT, buildUserPrompt, safeParseDigest } from "./types";
 import { logLlmUsage, now } from "../usage-log";
+import { PROVIDER_MODELS } from "../provider-models";
 
 // Generous per-request hang guard so a stuck call can't pin a serverless
 // invocation open. Above p95 for a normal Haiku/Sonnet completion.
@@ -14,9 +15,9 @@ const REQUEST_TIMEOUT_MS = 60_000;
 
 // Default model = the cheap tier. Existing call sites (digest) stay cheap.
 // `large` tier maps to Sonnet for deep paper-reading workflows.
-const MODEL = "claude-haiku-4-5-20251001";
-const SMALL_MODEL = "claude-haiku-4-5-20251001";
-const LARGE_MODEL = "claude-sonnet-4-6";
+const MODEL = PROVIDER_MODELS.anthropic.small;
+const SMALL_MODEL = PROVIDER_MODELS.anthropic.small;
+const LARGE_MODEL = PROVIDER_MODELS.anthropic.large;
 
 function modelForTier(defaultModel: string, tier?: ModelTier): string {
   if (tier === "large") return LARGE_MODEL;
@@ -52,7 +53,7 @@ function logAnthropic(
 
 export function createAnthropicProvider(
   apiKey?: string,
-  model = MODEL,
+  model: string = MODEL,
 ): DigestProvider {
   return {
     id: "anthropic",
@@ -86,6 +87,7 @@ export function createAnthropicProvider(
       const response = await client.messages.create({
         model: chosen,
         max_tokens: maxTokens,
+        thinking: { type: "disabled" },
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       });
@@ -112,6 +114,7 @@ export function createAnthropicProvider(
       const response = await client.messages.create({
         model: chosen,
         max_tokens: maxTokens,
+        thinking: { type: "disabled" },
         system: systemPrompt,
         messages: [
           {

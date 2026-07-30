@@ -1,11 +1,11 @@
 // Two-pass deep report generator.
 //
-// Pass 1 (small model — Haiku / gpt-mini / gemini-flash / qwen-turbo):
+// Pass 1 (the selected provider's economical model):
 //   COMPRESS — read the long paper body, return tightly-relevant sentences
 //   (novelty claims, key results, method highlights, comparisons to prior
 //   work). This trims a 30k-token paper into ~1.5k tokens of signal.
 //
-// Pass 2 (large model — Sonnet / gpt / gemini-pro / qwen-max):
+// Pass 2 (the selected provider's stronger model):
 //   EXTRACT — using the compressed signal + abstract + metadata, produce
 //   the structured PaperReport with grounded evidence and explicit novelty
 //   per result.

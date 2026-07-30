@@ -5,11 +5,20 @@ import {
   connectorCount,
   firstIncompleteStep,
   isStepDone,
+  stepIndexFromKey,
 } from "./completeness";
 
 function profileWith(patch: Partial<UserProfile>): UserProfile {
   return { ...defaultProfile, ...patch };
 }
+
+describe("stepIndexFromKey", () => {
+  it("resolves the direct walkthrough step and ignores invalid values", () => {
+    expect(stepIndexFromKey("ai")).toBe(STEP_META.findIndex((m) => m.key === "ai"));
+    expect(stepIndexFromKey("unknown")).toBeNull();
+    expect(stepIndexFromKey(null)).toBeNull();
+  });
+});
 
 describe("isStepDone", () => {
   it("a fresh default profile has every step un-done", () => {

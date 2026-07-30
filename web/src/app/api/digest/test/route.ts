@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { PROVIDER_MODELS } from "@/lib/llm/provider-models";
 
-const REGIONAL_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro"];
-const GLOBAL_MODELS = ["gemini-3-flash-preview", "gemini-3.1-pro-preview"];
+const REGIONAL_MODELS = [
+  PROVIDER_MODELS.gemini.small,
+  PROVIDER_MODELS.gemini.large,
+];
+const GLOBAL_MODELS = ["gemini-3.5-flash-lite", "gemini-3.6-flash"];
 
 async function testModel(project: string, location: string, modelId: string): Promise<string> {
   const ai = new GoogleGenAI({
@@ -76,7 +80,7 @@ export async function GET() {
           configuredLocation: regionalLocation,
           globalFallbackEnabled: allowGlobalFallback,
           allResults: results,
-          note: "Regional models failed, but the same credentials work against the global Gemini preview endpoint.",
+          note: "Regional models failed, but the same credentials work against a stable global Gemini endpoint.",
         });
       }
       results[key] = "Empty response";
@@ -91,6 +95,6 @@ export async function GET() {
     configuredLocation: regionalLocation,
     globalFallbackEnabled: allowGlobalFallback,
     allResults: results,
-    suggestion: "No working model found. Check that Vertex AI API is enabled, the service account has Vertex AI User, and the configured region supports Gemini 2.5 models.",
+    suggestion: "No working model found. Check that Vertex AI API is enabled, the service account has Vertex AI User, and the configured region supports Peer’s Gemini model pair.",
   });
 }

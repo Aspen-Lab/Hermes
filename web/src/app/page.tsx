@@ -33,6 +33,7 @@ import {
   type Filters,
 } from "@/lib/search/filters";
 import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
+import { PROVIDER_MODELS } from "@/lib/llm/provider-models";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -754,7 +755,7 @@ function DiscoveryPage() {
               </div>
               <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
-                  ? "Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls a cheap model (classify) and a smart model (extract) per paper — for Gemini, that's gemini-2.5-flash and gemini-2.5-pro. If the site has no AI configured, deep falls back to abstract-only."
+                  ? `Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls an economical model (classify) and a stronger model (extract) per item — Peer’s Gemini route uses ${PROVIDER_MODELS.gemini.small} and ${PROVIDER_MODELS.gemini.large}. If the site has no AI configured, deep falls back to abstract-only.`
                   : !profile.feedAiApiKey?.trim()
                   ? "Set your own AI provider and key in the AI key panel first. Deep report uses your key — both a cheap model (classify) and a smart model (extract) get called per paper."
                   : "When on, Peer downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}
