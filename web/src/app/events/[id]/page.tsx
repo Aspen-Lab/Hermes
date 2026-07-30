@@ -1,34 +1,785 @@
 "use client";
 
-import { use, useMemo, useEffect, useState } from "react";
-import Link from "next/link";
-import type { Event } from "@/types";
-import { useFeedStore } from "@/store/feed";
-import { Tag, DetailSection } from "@/components/ui";
-import { BriefingQuickHit } from "@/components/cards/briefing-quick-hit";
 import {
-  daysUntil,
-  formatDate,
-  formatDayDistance,
-  formatMatchPct,
-} from "@/lib/format";
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import Link from "next/link";
+import type {
+  CareerStage,
+  Event,
+  EventFee,
+  EventOrg,
+  EventPerson,
+} from "@/types";
+import { useFeedStore } from "@/store/feed";
+import { useProfileStore } from "@/store/profile";
+import { formatDate, formatMatchPct } from "@/lib/format";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
-import { eventUrgency } from "@/lib/opportunities/urgency";
 
-function pickRelatedEvents(current: Event, pool: Event[], limit = 3): Event[] {
-  const others = pool.filter((e) => e.id !== current.id);
-  return others
-    .map((e) => ({
-      e,
-      score:
-        (e.type === current.type ? 1 : 0) +
-        (e.relevanceScore ?? 0),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((x) => x.e);
+const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
+
+export interface EventRosterContext {
+  savedEmployers: string[];
+  paperAuthors: string[];
+  declaredTopics: string[];
+  positiveLedgerLabels: string[];
+}
+
+interface CheapestWay {
+  text: string;
+  value: string;
+  tier: "standard" | "student" | "online";
+}
+
+interface DeadlineMilestone {
+  key: "submission" | "registration" | "event";
+  label: string;
+  value: string;
+  accent?: boolean;
+}
+
+function clean(value: string | null | undefined): string | undefined {
+  const trimmed = value?.replace(/\s+/g, " ").trim();
+  return trimmed || undefined;
+}
+
+function normalized(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function formatEventType(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatFeeDeadline(value: string | undefined): string | undefined {
+  return formatDate(value) ?? clean(value);
+}
+
+function parsePrice(value: string): { currency: string; amount: number } | null {
+  if (/^\s*free\s*$/i.test(value)) return { currency: "free", amount: 0 };
+  const amount = Number.parseFloat(value.replace(/[^\d.]/g, ""));
+  if (!Number.isFinite(amount)) return null;
+  const currency =
+    value.match(/\b(?:USD|EUR|GBP|CAD|AUD|NZD)\b/i)?.[0].toUpperCase() ??
+    value.match(/€|£|(?:US|C|A|CA|AU|NZ)?\$/i)?.[0].toUpperCase();
+  return currency ? { currency, amount } : null;
+}
+
+function preferredFeeTier(
+  event: Event,
+  careerStage: CareerStage | undefined,
+): "standard" | "student" | "online" {
+  if (/^PhD Year /.test(careerStage ?? "")) return "student";
+  if (event.isOnline) return "online";
+  return "standard";
+}
+
+export function cheapestWayIn(
+  event: Event,
+  careerStage?: CareerStage,
+): CheapestWay | null {
+  const fees = event.fees ?? [];
+  if (fees.length === 0) return null;
+  const preferred = preferredFeeTier(event, careerStage);
+  const tierOrder = [
+    preferred,
+    ..."student,online,standard"
+      .split(",")
+      .filter((tier) => tier !== preferred),
+  ] as Array<"standard" | "student" | "online">;
+
+  for (const tier of tierOrder) {
+    const candidates = fees.flatMap((fee, index) => {
+      const value = clean(fee[tier]);
+      return value ? [{ fee, value, index, parsed: parsePrice(value) }] : [];
+    });
+    if (candidates.length === 0) continue;
+    const comparable =
+      candidates.every((candidate) => candidate.parsed) &&
+      new Set(candidates.map((candidate) => candidate.parsed!.currency)).size ===
+        1;
+    const selected = comparable
+      ? [...candidates].sort(
+          (left, right) =>
+            left.parsed!.amount - right.parsed!.amount ||
+            left.index - right.index,
+        )[0]
+      : candidates[0];
+    const cutoff = formatFeeDeadline(selected.fee.deadline);
+    const tierLabel =
+      tier === "student"
+        ? "student rate"
+        : tier === "online"
+          ? "online rate"
+          : "standard rate";
+    return {
+      value: selected.value,
+      tier,
+      text: `${selected.value} ${tierLabel} · ${selected.fee.label}${
+        cutoff ? ` · by ${cutoff}` : ""
+      }`,
+    };
+  }
+  return null;
+}
+
+function deadlineMilestones(event: Event): DeadlineMilestone[] {
+  const submission = formatDate(event.deadline);
+  const registration = formatDate(event.registrationDeadline);
+  const eventDate = formatDate(event.date);
+  const milestones: DeadlineMilestone[] = [];
+  if (submission) {
+    milestones.push({
+      key: "submission",
+      label: "Submit by",
+      value: submission,
+    });
+  }
+  if (registration) {
+    milestones.push({
+      key: "registration",
+      label: "Register by",
+      value: registration,
+    });
+  }
+  if (eventDate) {
+    milestones.push({
+      key: "event",
+      label: "Event",
+      value: eventDate,
+      accent: true,
+    });
+  }
+  return milestones;
+}
+
+export function organisationStarKey(item: EventOrg): string {
+  return `organisation:${normalized(item.name)}`;
+}
+
+export function personStarKey(item: EventPerson): string {
+  return `person:${normalized(item.name)}:${normalized(item.institution ?? "")}`;
+}
+
+function organisationReason(
+  item: EventOrg,
+  context: EventRosterContext,
+): string | undefined {
+  if (clean(item.relevance)) return clean(item.relevance);
+  const name = normalized(item.name);
+  const saved = context.savedEmployers.find(
+    (employer) => normalized(employer) === name,
+  );
+  if (saved) return `You saved a role at ${saved}.`;
+  const ledger = context.positiveLedgerLabels.find(
+    (label) => normalized(label) === name,
+  );
+  return ledger ? `${ledger} appears in your positive preference history.` : undefined;
+}
+
+function personReason(
+  item: EventPerson,
+  context: EventRosterContext,
+): string | undefined {
+  if (clean(item.relevance)) return clean(item.relevance);
+  const name = normalized(item.name);
+  if (context.paperAuthors.some((author) => normalized(author) === name)) {
+    return "They authored a paper in your feed.";
+  }
+  if (context.declaredTopics.some((topic) => normalized(topic).includes(name))) {
+    return "Their name appears in a topic you declared.";
+  }
+  return undefined;
+}
+
+function useRosterStars(): [Set<string>, (key: string) => void] {
+  const [stars, setStars] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const parsed = JSON.parse(
+        window.localStorage.getItem(ROSTER_STARS_KEY) ?? "[]",
+      );
+      return new Set(
+        Array.isArray(parsed)
+          ? parsed.filter((value): value is string => typeof value === "string")
+          : [],
+      );
+    } catch {
+      return new Set();
+    }
+  });
+
+  const toggle = useCallback((key: string) => {
+    setStars((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      try {
+        window.localStorage.setItem(
+          ROSTER_STARS_KEY,
+          JSON.stringify([...next]),
+        );
+      } catch {
+        // The report still works when storage is unavailable.
+      }
+      return next;
+    });
+  }, []);
+
+  return [stars, toggle];
+}
+
+function HeaderChip({
+  children,
+  accent = false,
+}: {
+  children: ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-meta font-medium",
+        accent
+          ? "border-accent/25 bg-accent/10 text-accent"
+          : "border-border bg-surface text-text-muted",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function EventActionRow({
+  primaryHref,
+  primaryLabel,
+  isSaved,
+  onToggleSave,
+  onDismiss,
+}: {
+  primaryHref?: string;
+  primaryLabel: string;
+  isSaved: boolean;
+  onToggleSave: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="mt-7 flex flex-wrap items-center gap-2.5">
+      {primaryHref && (
+        <a
+          href={primaryHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            buttonVariants({ tone: "primary" }),
+            "h-11 px-5 text-body font-semibold",
+          )}
+        >
+          {primaryLabel}
+          <span aria-hidden>↗</span>
+        </a>
+      )}
+      <button
+        type="button"
+        onClick={onToggleSave}
+        aria-pressed={isSaved}
+        className={cn(
+          buttonVariants({ tone: "soft" }),
+          "h-11 px-4 text-body-sm",
+          isSaved && "border-accent/35 bg-accent/10 text-accent",
+        )}
+      >
+        {isSaved ? "Saved" : "Save"}
+      </button>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="h-11 rounded-full px-4 text-body-sm font-medium text-text-muted transition-colors hover:bg-red/10 hover:text-red"
+      >
+        Not interested
+      </button>
+    </div>
+  );
+}
+
+function ReportSection({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={cn("mt-12", className)}>
+      <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
+        {title}
+      </h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function CheapestCallout({ cheapest }: { cheapest: CheapestWay }) {
+  return (
+    <aside className="mt-10 rounded-2xl border border-accent/20 bg-accent/8 px-5 py-4">
+      <p className="text-micro font-semibold uppercase tracking-[0.16em] text-accent">
+        Cheapest way in, for you
+      </p>
+      <p className="mt-1.5 text-title font-semibold text-heading">
+        {cheapest.text}
+      </p>
+    </aside>
+  );
+}
+
+function DeadlineTimeline({
+  milestones,
+}: {
+  milestones: DeadlineMilestone[];
+}) {
+  if (milestones.length === 0) return null;
+  return (
+    <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+      {milestones.map((milestone, index) => (
+        <li
+          key={milestone.key}
+          className="relative rounded-xl border border-border bg-surface px-4 py-3"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "h-2.5 w-2.5 rounded-full bg-text-faint/40",
+                milestone.accent && "bg-accent",
+              )}
+              aria-hidden
+            />
+            <span className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
+              {milestone.label}
+            </span>
+          </div>
+          <p className="mt-2 text-body-sm font-semibold text-heading">
+            {milestone.value}
+          </p>
+          {index < milestones.length - 1 && (
+            <span
+              className="absolute -right-3 top-1/2 hidden w-3 border-t border-border sm:block"
+              aria-hidden
+            />
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function CostsTable({
+  fees,
+  cheapest,
+}: {
+  fees: EventFee[];
+  cheapest: CheapestWay | null;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border">
+      {cheapest && (
+        <p className="border-b border-border bg-accent/5 px-4 py-3 text-body-sm text-heading">
+          <strong>Cheapest way in, for you:</strong> {cheapest.text}
+        </p>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px] border-collapse text-left">
+          <thead className="bg-bg-secondary/70">
+            <tr>
+              {["Item", "Standard", "Student", "Deadline"].map((header) => (
+                <th
+                  key={header}
+                  scope="col"
+                  className="border-b border-border px-4 py-3 text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {fees.map((fee, index) => (
+              <tr key={`${fee.label}-${index}`} className="border-b border-border last:border-0">
+                <th
+                  scope="row"
+                  className="px-4 py-3 text-body-sm font-semibold text-heading"
+                >
+                  {fee.label}
+                  {clean(fee.online) && (
+                    <span className="mt-1 block text-caption font-normal text-text-faint">
+                      Online · {fee.online}
+                    </span>
+                  )}
+                </th>
+                <td className="px-4 py-3 text-body-sm text-text-muted">
+                  {clean(fee.standard)}
+                </td>
+                <td className="px-4 py-3 text-body-sm text-text-muted">
+                  {clean(fee.student)}
+                </td>
+                <td className="px-4 py-3 text-body-sm text-text-muted">
+                  {formatFeeDeadline(fee.deadline)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StarButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={`${active ? "Unstar" : "Star"} ${label}`}
+      title={active ? "Marked as important" : "Tell Peer this matters"}
+      className={cn(
+        "shrink-0 rounded-full px-2 py-1 text-title transition-colors",
+        active
+          ? "bg-accent/10 text-accent"
+          : "text-text-faint hover:bg-accent/10 hover:text-accent",
+      )}
+    >
+      {active ? "★" : "☆"}
+    </button>
+  );
+}
+
+function RosterSection({
+  event,
+  context,
+  starredKeys,
+  onToggleStar,
+}: {
+  event: Event;
+  context: EventRosterContext;
+  starredKeys: ReadonlySet<string>;
+  onToggleStar: (key: string) => void;
+}) {
+  const organisations = (event.organisations ?? []).map((item, index) => {
+    const key = organisationStarKey(item);
+    const reason = organisationReason(item, context);
+    return { item, index, key, reason, starred: starredKeys.has(key) };
+  });
+  const people = (event.people ?? []).map((item, index) => {
+    const key = personStarKey(item);
+    const reason = personReason(item, context);
+    return { item, index, key, reason, starred: starredKeys.has(key) };
+  });
+  const byPriority = <T extends { index: number; reason?: string; starred: boolean }>(
+    left: T,
+    right: T,
+  ) =>
+    Number(right.starred) - Number(left.starred) ||
+    Number(Boolean(right.reason)) - Number(Boolean(left.reason)) ||
+    left.index - right.index;
+  organisations.sort(byPriority);
+  people.sort(byPriority);
+
+  if (organisations.length === 0 && people.length === 0) return null;
+
+  return (
+    <ReportSection title="Who'll be in the room" className="mt-14">
+      <div className="grid gap-10 lg:grid-cols-2">
+        {organisations.length > 0 && (
+          <div>
+            <h3 className="text-title font-semibold text-heading">
+              Organisations
+            </h3>
+            <div className="mt-3 grid gap-2">
+              {organisations.map(({ item, key, reason, starred }) => (
+                <article
+                  key={key}
+                  data-roster-row="organisation"
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3",
+                    (reason || starred) && "border-accent/25 bg-accent/5",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-heading">{item.name}</p>
+                    {clean(item.descriptor) && (
+                      <p className="mt-0.5 text-body-sm text-text-muted">
+                        {item.descriptor}
+                      </p>
+                    )}
+                    {(reason || starred) && (
+                      <p className="mt-2 text-caption font-medium text-accent">
+                        {reason ?? "You marked this organisation as important."}
+                      </p>
+                    )}
+                    {clean(item.atEvent) && (
+                      <p className="mt-1 text-caption text-text-faint">
+                        At this event · {item.atEvent}
+                      </p>
+                    )}
+                  </div>
+                  <StarButton
+                    active={starred}
+                    label={item.name}
+                    onClick={() => onToggleStar(key)}
+                  />
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {people.length > 0 && (
+          <div>
+            <h3 className="text-title font-semibold text-heading">People</h3>
+            <div className="mt-3 grid gap-2">
+              {people.map(({ item, key, reason, starred }) => (
+                <article
+                  key={key}
+                  data-roster-row="person"
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3",
+                    (reason || starred) && "border-accent/25 bg-accent/5",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-heading">{item.name}</p>
+                    {(clean(item.role) || clean(item.institution)) && (
+                      <p className="mt-0.5 text-body-sm text-text-muted">
+                        {[clean(item.role), clean(item.institution)]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
+                    {(reason || starred) && (
+                      <p className="mt-2 text-caption font-medium text-accent">
+                        {reason ?? "You marked this person as important."}
+                      </p>
+                    )}
+                    {clean(item.speaking) && (
+                      <p className="mt-1 text-caption text-text-faint">
+                        Speaking · {item.speaking}
+                      </p>
+                    )}
+                  </div>
+                  <StarButton
+                    active={starred}
+                    label={item.name}
+                    onClick={() => onToggleStar(key)}
+                  />
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </ReportSection>
+  );
+}
+
+export function EventReport({
+  event,
+  careerStage,
+  rosterContext,
+  starredKeys = new Set<string>(),
+  isSaved,
+  onToggleStar,
+  onToggleSave,
+  onDismiss,
+}: {
+  event: Event;
+  careerStage?: CareerStage;
+  rosterContext?: EventRosterContext;
+  starredKeys?: ReadonlySet<string>;
+  isSaved: boolean;
+  onToggleStar: (key: string) => void;
+  onToggleSave: () => void;
+  onDismiss: () => void;
+}) {
+  const context = rosterContext ?? {
+    savedEmployers: [],
+    paperAuthors: [],
+    declaredTopics: [],
+    positiveLedgerLabels: [],
+  };
+  const matchPct = formatMatchPct(event.relevanceScore);
+  const eventDate = formatDate(event.date, "full");
+  const endDate = formatDate(event.endDate);
+  const location =
+    event.isOnline
+      ? "Online"
+      : clean(event.location)?.toLowerCase() === "see event page"
+        ? undefined
+        : clean(event.location);
+  const primaryHref = clean(event.linkRegistration) ?? clean(event.linkOfficial);
+  const primaryLabel =
+    event.linkRegistration &&
+    (!event.linkOfficial || event.linkRegistration !== event.linkOfficial)
+      ? "Register"
+      : "Official site";
+  const cheapest = cheapestWayIn(event, careerStage);
+  const milestones = deadlineMilestones(event);
+  const fees = event.fees ?? [];
+  const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
+  const description = clean(event.shortDescription);
+  const travelGrant = clean(event.travelGrant);
+  const relevanceReason = clean(event.relevanceReason);
+  const facetReason = clean(event.facetPreferenceReason);
+  const hasHappenings =
+    activities.length > 0 ||
+    Boolean(description) ||
+    Boolean(travelGrant) ||
+    event.invitationLetter !== undefined;
+
+  return (
+    <PageContainer width="wide" className="px-6 py-14">
+      <div className="mx-auto max-w-[720px]">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-body-sm text-text-faint transition-colors hover:text-link"
+        >
+          <span aria-hidden>←</span>
+          Back
+        </Link>
+
+        <header className="mt-8">
+          <div className="mb-4 flex flex-wrap gap-2">
+            <HeaderChip>{formatEventType(event.type)}</HeaderChip>
+            <HeaderChip>{event.isOnline ? "Online" : "In person"}</HeaderChip>
+            {matchPct !== null && (
+              <HeaderChip accent>{matchPct}% match</HeaderChip>
+            )}
+          </div>
+          <h1 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]">
+            {event.name}
+          </h1>
+          {(eventDate || location) && (
+            <div className="mt-5 grid gap-3 text-body sm:grid-cols-2">
+              {eventDate && (
+                <div>
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
+                    When
+                  </p>
+                  <p className="mt-1 font-medium text-heading">
+                    {eventDate}
+                    {endDate ? ` · ${endDate}` : ""}
+                  </p>
+                </div>
+              )}
+              {location && (
+                <div>
+                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
+                    Where
+                  </p>
+                  <p className="mt-1 font-medium text-heading">{location}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <EventActionRow
+            primaryHref={primaryHref}
+            primaryLabel={primaryLabel}
+            isSaved={isSaved}
+            onToggleSave={onToggleSave}
+            onDismiss={onDismiss}
+          />
+        </header>
+
+        {cheapest && <CheapestCallout cheapest={cheapest} />}
+        <DeadlineTimeline milestones={milestones} />
+
+        {fees.length > 0 && (
+          <ReportSection title="What it costs you">
+            <CostsTable fees={fees} cheapest={cheapest} />
+          </ReportSection>
+        )}
+
+        {hasHappenings && (
+          <ReportSection title="What actually happens there">
+            {description && (
+              <p className="text-body-lg leading-8 text-text">{description}</p>
+            )}
+            {activities.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {activities.map((activity) => (
+                  <span
+                    key={activity}
+                    className="rounded-full border border-tag/20 bg-tag-dim px-3 py-1 text-meta text-tag"
+                  >
+                    {formatEventType(activity)}
+                  </span>
+                ))}
+              </div>
+            )}
+            {travelGrant && (
+              <p className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-body-sm text-heading">
+                <strong>Travel grant:</strong> {travelGrant}
+              </p>
+            )}
+            {event.invitationLetter !== undefined && (
+              <p className="mt-3 text-body-sm text-text-muted">
+                Invitation letters{" "}
+                {event.invitationLetter
+                  ? "are available."
+                  : "are explicitly not provided."}
+              </p>
+            )}
+          </ReportSection>
+        )}
+      </div>
+
+      <RosterSection
+        event={event}
+        context={context}
+        starredKeys={starredKeys}
+        onToggleStar={onToggleStar}
+      />
+
+      {(relevanceReason || facetReason) && (
+        <div className="mx-auto max-w-[720px]">
+          <ReportSection title="Why Peer sent it">
+            <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
+              {relevanceReason && (
+                <p className="text-body-lg leading-7 text-heading">
+                  {relevanceReason}
+                </p>
+              )}
+              {facetReason && (
+                <p className="mt-2 text-body-sm text-accent">{facetReason}</p>
+              )}
+            </div>
+          </ReportSection>
+        </div>
+      )}
+    </PageContainer>
+  );
 }
 
 export default function EventDetailPage({
@@ -37,8 +788,6 @@ export default function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: rawId } = use(params);
-  // Event ids are source-namespaced ("ccfddl:aaai27") — the colon arrives
-  // URL-encoded in the route param. Same decode guard as the papers page.
   const id = (() => {
     try {
       return decodeURIComponent(rawId);
@@ -46,432 +795,83 @@ export default function EventDetailPage({
       return rawId;
     }
   })();
-  const feedEvents = useFeedStore((s) => s.events);
-  const eventPool = useFeedStore((s) => s.eventPool);
-  const savedEvents = useFeedStore((s) => s.savedEvents);
-  const markRead = useFeedStore((s) => s.markRead);
-  const { saveEvent, notInterestedEvent } = useFeedStore();
-  const [now] = useState(Date.now);
+  const feedEvents = useFeedStore((state) => state.events);
+  const eventPool = useFeedStore((state) => state.eventPool);
+  const savedEvents = useFeedStore((state) => state.savedEvents);
+  const papers = useFeedStore((state) => state.papers);
+  const savedPapers = useFeedStore((state) => state.savedPapers);
+  const savedJobs = useFeedStore((state) => state.savedJobs);
+  const markRead = useFeedStore((state) => state.markRead);
+  const saveEvent = useFeedStore((state) => state.saveEvent);
+  const unsaveEvent = useFeedStore((state) => state.unsaveEvent);
+  const notInterestedEvent = useFeedStore((state) => state.notInterestedEvent);
+  const profile = useProfileStore((state) => state.profile);
+  const [starredKeys, toggleStar] = useRosterStars();
 
   const event =
-    feedEvents.find((e) => e.id === id) ??
-    eventPool.find((e) => e.id === id) ??
-    savedEvents.find((e) => e.id === id);
+    feedEvents.find((candidate) => candidate.id === id) ??
+    eventPool.find((candidate) => candidate.id === id) ??
+    savedEvents.find((candidate) => candidate.id === id);
+  const isSaved = savedEvents.some((candidate) => candidate.id === id);
 
   useEffect(() => {
     if (event) markRead(event.id);
   }, [event, markRead]);
 
-  const related = useMemo(() => {
-    if (!event) return [];
-    return pickRelatedEvents(event, eventPool, 3);
-  }, [event, eventPool]);
+  const rosterContext = useMemo<EventRosterContext>(
+    () => ({
+      savedEmployers: savedJobs.map((job) => job.companyOrLab),
+      paperAuthors: [...papers, ...savedPapers].flatMap((paper) => paper.authors),
+      declaredTopics: [
+        ...profile.researchTopics,
+        ...profile.eventRequiredTopics,
+        ...profile.eventExploreTopics,
+      ],
+      positiveLedgerLabels: Object.values(
+        profile.preferenceLedger ?? {},
+      ).flatMap((entry) =>
+        entry.positive + (entry.facetPositive ?? 0) > entry.negative
+          ? [entry.label]
+          : [],
+      ),
+    }),
+    [
+      papers,
+      profile.eventExploreTopics,
+      profile.eventRequiredTopics,
+      profile.preferenceLedger,
+      profile.researchTopics,
+      savedJobs,
+      savedPapers,
+    ],
+  );
 
   if (!event) {
     return (
       <PageContainer width="narrow" className="px-6 py-20">
-        <p className="text-text-muted italic">Event not found.</p>
-        <Link href="/" className="text-link text-body mt-3 inline-block">
+        <p className="italic text-text-muted">Event not found.</p>
+        <Link href="/" className="mt-3 inline-block text-body text-link">
           ← Back to feed
         </Link>
       </PageContainer>
     );
   }
 
-  const isSaved = savedEvents.some((e) => e.id === event.id);
-  const daysToEvent = daysUntil(event.date, now);
-  const daysToDeadline = event.deadline ? daysUntil(event.deadline, now) : null;
-  const deadlineStyle =
-    daysToDeadline !== null ? eventUrgency(daysToDeadline) : null;
-  const eventUrgencyStyle = eventUrgency(daysToEvent);
-
-  const matchPct = formatMatchPct(event.relevanceScore);
-  const primaryUrl = event.linkRegistration || event.linkOfficial;
-  const primaryLabel = event.linkRegistration ? "Register" : "Visit site";
-
-  const handleDismiss = () => {
-    notInterestedEvent(event);
-    window.history.back();
-  };
-
   return (
-    <PageContainer width="narrow" className="px-6 py-14">
-      <Link
-        href="/"
-        className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
-      >
-        <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
-          ←
-        </span>
-        Back
-      </Link>
-
-      {/* ── Hero ── */}
-      <header
-        className="mt-8 animate-fade-in-up"
-        style={{ "--i": 0 } as React.CSSProperties}
-      >
-        <div
-          className="flex items-center flex-wrap gap-x-2.5 gap-y-1.5 text-meta uppercase tracking-[0.14em] text-text-faint mb-3"
-        >
-          <span className={`inline-flex items-center gap-1.5 ${eventUrgencyStyle.text}`}>
-            <span className={`block w-[6px] h-[6px] rounded-full ${eventUrgencyStyle.dot}`} />
-            {event.type}
-          </span>
-          <span className="text-border-strong">·</span>
-          <span>{formatDayDistance(daysToEvent)}</span>
-          {matchPct !== null && (
-            <>
-              <span className="text-border-strong">·</span>
-              <span
-                className="inline-flex items-center gap-1.5 text-accent normal-case tracking-normal"
-                title="Algorithmic match based on your profile"
-              >
-                <span className="block w-[6px] h-[6px] rounded-full bg-accent" />
-                {matchPct}% match
-              </span>
-            </>
-          )}
-        </div>
-
-        <h1
-          className="text-[32px] lg:text-[38px] font-semibold text-heading leading-[1.1] tracking-[-0.02em]"
-        >
-          {event.name}
-        </h1>
-
-        <div
-          className="mt-5 grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-body"
-        >
-          <FactRow icon="calendar" label="When">
-            <span className="text-heading font-medium">
-              {formatDate(event.date, "full")}
-              {event.endDate ? ` – ${formatDate(event.endDate, "medium")}` : ""}
-            </span>
-          </FactRow>
-
-          <FactRow icon="pin" label="Where">
-            <span className="text-heading font-medium">
-              {event.isOnline ? "Online" : event.location}
-            </span>
-            <span className="ml-2 text-text-faint text-meta">
-              {event.isOnline ? "Remote participation" : "In person"}
-            </span>
-          </FactRow>
-        </div>
-      </header>
-
-      {/* ── Primary action row ── */}
-      <ActionRow
-        primaryHref={primaryUrl}
-        primaryLabel={primaryLabel}
-        isSaved={isSaved}
-        onSave={() => saveEvent(event)}
-        onDismiss={handleDismiss}
-      />
-
-      {/* ── Deadline callout ── */}
-      {event.deadline && deadlineStyle && (
-        <section
-          className={`mt-8 rounded-2xl px-5 py-4 animate-fade-in-up ${deadlineStyle.bg}`}
-          style={{ "--i": 2} as React.CSSProperties}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p
-                className={`text-micro font-semibold uppercase tracking-[0.18em] ${deadlineStyle.text}`}
-              >
-                Submission deadline · {deadlineStyle.label}
-              </p>
-              <p className="mt-1.5 text-title text-heading font-semibold">
-                {formatDate(event.deadline, "full")}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className={`text-[22px] font-semibold tabular-nums ${deadlineStyle.text}`}>
-                {daysToDeadline !== null && daysToDeadline >= 0
-                  ? daysToDeadline
-                  : daysToDeadline !== null
-                    ? Math.abs(daysToDeadline)
-                    : "—"}
-              </p>
-              <p className="text-caption uppercase tracking-[0.14em] text-text-faint mt-0.5">
-                {daysToDeadline !== null && daysToDeadline >= 0
-                  ? "days left"
-                  : "days ago"}
-              </p>
-            </div>
-          </div>
-
-          {/* Timeline bar: deadline → event */}
-          {daysToDeadline !== null && daysToDeadline >= 0 && (
-            <Timeline
-              deadline={event.deadline}
-              eventDate={event.date}
-            />
-          )}
-        </section>
-      )}
-
-      {/* ── About ── */}
-      <DetailSection title="About" index={3}>
-        <p className="text-title leading-[1.75]">{event.shortDescription}</p>
-      </DetailSection>
-
-      {/* ── Why this fits you ── */}
-      <DetailSection title="Why this fits you" index={4}>
-        <p className="text-title leading-[1.75]">{event.relevanceReason}</p>
-      </DetailSection>
-
-      {/* ── Quick facts ── */}
-      <DetailSection title="Quick facts" index={5}>
-        <div
-          className="flex flex-wrap gap-2"
-        >
-          <Tag>{event.type}</Tag>
-          <Tag>{event.isOnline ? "Online" : "In person"}</Tag>
-          {!event.isOnline && <Tag>{event.location}</Tag>}
-          {event.endDate && <Tag>Multi-day</Tag>}
-        </div>
-      </DetailSection>
-
-      {/* ── Links as pill chips (not underlined blue) ── */}
-      {(event.linkOfficial || event.linkRegistration) && (
-        <DetailSection title="Links" index={6}>
-          <div className="flex flex-wrap gap-2">
-            <LinkChip href={event.linkOfficial} label="Official site" />
-            <LinkChip href={event.linkRegistration} label="Registration" />
-          </div>
-        </DetailSection>
-      )}
-
-      {/* ── Related events ── */}
-      {related.length > 0 && (
-        <section
-          className="mt-16 animate-fade-in-up"
-          style={{ "--i": 7 } as React.CSSProperties}
-        >
-          <h2
-            className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint mb-2"
-          >
-            Related from your feed
-          </h2>
-          <div className="divide-y divide-border">
-            {related.map((e) => (
-              <BriefingQuickHit key={e.id} item={{ kind: "event", data: e }} />
-            ))}
-          </div>
-        </section>
-      )}
-    </PageContainer>
-  );
-}
-
-// ── Fact row: icon + label + value ──
-
-function FactRow({
-  icon,
-  label,
-  children,
-}: {
-  icon: "calendar" | "pin";
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <div className="flex items-center gap-2 text-text-faint">
-        <Icon name={icon} />
-        <span className="text-caption uppercase tracking-[0.16em]">{label}</span>
-      </div>
-      <div className="text-text">{children}</div>
-    </>
-  );
-}
-
-// ── Inline icons ──
-
-function Icon({ name }: { name: "calendar" | "pin" }) {
-  if (name === "calendar") {
-    return (
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M3 10h18M8 3v4M16 3v4" />
-      </svg>
-    );
-  }
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z" />
-      <circle cx="12" cy="9" r="2.5" />
-    </svg>
-  );
-}
-
-// ── Link chip (pill style, not underlined blue) ──
-
-function LinkChip({ href, label }: { href?: string; label: string }) {
-  if (!href) return null;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-surface border border-border-strong text-meta text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover transition-colors duration-200 ease-out active:scale-[0.96]"
-    >
-      {label}
-      <span className="text-micro opacity-60 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
-        ↗
-      </span>
-    </a>
-  );
-}
-
-// ── Timeline bar ──
-
-function Timeline({
-  deadline,
-  eventDate,
-}: {
-  deadline: string;
-  eventDate: string;
-}) {
-  const [now] = useState(Date.now);
-  const start = new Date(deadline).getTime();
-  const end = new Date(eventDate).getTime();
-  const total = end - start;
-  if (!Number.isFinite(total) || total <= 0) return null;
-  const pct = Math.max(0, Math.min(100, ((now - start) / total) * 100));
-
-  return (
-    <div className="mt-4">
-      <div className="relative h-[6px] rounded-full bg-border">
-        <span
-          className="absolute inset-y-0 left-0 rounded-full bg-accent/60"
-          style={{ width: `${pct}%` }}
-        />
-        <span
-          className="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full bg-accent border-2 border-bg shadow-card"
-          style={{ left: `calc(${pct}% - 5px)` }}
-          aria-hidden
-        />
-      </div>
-      <div
-        className="flex items-center justify-between mt-2 text-micro uppercase tracking-[0.14em] text-text-faint"
-      >
-        <span>Deadline · {formatDate(deadline, "medium")}</span>
-        <span>Event · {formatDate(eventDate, "medium")}</span>
-      </div>
-    </div>
-  );
-}
-
-// ── Prominent action row ──
-
-function ActionRow({
-  primaryHref,
-  primaryLabel,
-  isSaved,
-  onSave,
-  onDismiss,
-}: {
-  primaryHref?: string;
-  primaryLabel: string;
-  isSaved: boolean;
-  onSave: () => void;
-  onDismiss: () => void;
-}) {
-  return (
-    <div
-      className="flex items-center flex-wrap gap-2.5 mt-7 animate-fade-in-up"
-      style={{ "--i": 1} as React.CSSProperties}
-    >
-      {primaryHref && (
-        <a
-          href={primaryHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ tone: "primary" }), "group h-11 px-5 text-body font-semibold hover:shadow-card-hover")}
-        >
-          {primaryLabel}
-          <span className="text-caption opacity-90 transition-transform duration-200 ease-out group-hover:translate-x-[2px] group-hover:-translate-y-[1px]">
-            ↗
-          </span>
-        </a>
-      )}
-
-      <button
-        type="button"
-        onClick={onSave}
-        aria-pressed={isSaved}
-        aria-label={isSaved ? "Saved" : "Save"}
-        className={`group inline-flex items-center gap-1.5 h-11 pl-3.5 pr-4 rounded-full text-body-sm font-medium transition-all duration-200 ease-out active:scale-[0.96] ${
-          isSaved
-            ? "bg-accent/10 text-accent border border-accent/40"
-            : "bg-transparent border border-border-strong text-text-muted hover:text-heading hover:border-heading/35 hover:bg-surface-hover"
-        }`}
-      >
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill={isSaved ? "currentColor" : "none"}
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`transition-transform duration-300 ease-out ${
-            isSaved ? "scale-100" : "group-hover:-translate-y-[1px]"
-          }`}
-          aria-hidden
-        >
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-        </svg>
-        {isSaved ? "Saved" : "Save"}
-      </button>
-
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label="Dismiss"
-        title="Not interested — hide this"
-        className="group inline-flex items-center justify-center w-11 h-11 rounded-full text-text-faint hover:text-red hover:bg-red/10 transition-colors duration-200 ease-out active:scale-[0.9] ml-auto"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-transform duration-300 ease-out group-hover:rotate-90"
-          aria-hidden
-        >
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+    <EventReport
+      event={event}
+      careerStage={profile.careerStage}
+      rosterContext={rosterContext}
+      starredKeys={starredKeys}
+      isSaved={isSaved}
+      onToggleStar={toggleStar}
+      onToggleSave={() =>
+        isSaved ? unsaveEvent(event.id) : saveEvent(event)
+      }
+      onDismiss={() => {
+        notInterestedEvent(event);
+        window.history.back();
+      }}
+    />
   );
 }
