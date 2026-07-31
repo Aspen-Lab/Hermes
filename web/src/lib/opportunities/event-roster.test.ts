@@ -10,6 +10,13 @@ const proseFixture = readFileSync(
   new URL("./__fixtures__/prose-event-roster.html", import.meta.url),
   "utf8",
 );
+const aabcPageFurnitureFixture = readFileSync(
+  new URL(
+    "./__fixtures__/aabc-roster-page-furniture.html",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 describe("extractEventRoster", () => {
   it("returns every structured organisation and full speaker triple", () => {
@@ -87,6 +94,35 @@ describe("extractEventRoster", () => {
         <p><strong>Committee enquiries</strong></p>
       `),
     ).toEqual({});
+  });
+
+  it("drops conference navigation, footer, aside, and stop-list furniture", () => {
+    const roster = extractEventRoster(aabcPageFurnitureFixture);
+    const names = [
+      ...(roster.organisations ?? []).map(({ name }) => name),
+      ...(roster.people ?? []).map(({ name }) => name),
+    ];
+
+    expect(roster).toEqual({
+      organisations: [
+        { name: "Battery Power Online" },
+        { name: "Lithium Battery Power" },
+        { name: "Battery Safety" },
+      ],
+    });
+    for (const furniture of [
+      "Download Brochure",
+      "Companies A-K",
+      "Executive Team",
+      "Mailing List",
+      "Request Information",
+      "Privacy Policy",
+      "Contact Us",
+      "Terms",
+      "Sitemap",
+    ]) {
+      expect(names).not.toContain(furniture);
+    }
   });
 
   it("returns an empty object for malformed or unrelated pages", () => {
