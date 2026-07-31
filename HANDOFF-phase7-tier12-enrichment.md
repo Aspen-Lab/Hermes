@@ -66,7 +66,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P7.9 | Hard cost ceiling: one call per item, token caps, zero calls without a provider | DONE | `cd web && npx vitest run src/app/api/jobs/report/route.test.ts src/app/api/events/report/route.test.ts && npx tsc --noEmit` - 2 files, 10 tests passed; client request counts 1/1/0 for both report types; typecheck clean |
+| P7.9 | Hard cost ceiling: one call per item, token caps, zero calls without a provider | DONE | `cd web && npx vitest run src/app/api/jobs/report/route.test.ts src/app/api/events/report/route.test.ts && npx tsc --noEmit` - 2 files, 12 tests passed; production default 0 requests, local default Vertex allowed, BYOK cache 1 call |
 | P7.10 | Provider vision capability: one source of truth instead of two | BLOCKED | Active concurrent ownership and uncommitted edits under `web/src/lib/llm/**`; unrelated to Vertex/default report routing |
 
 **Total: 10 tasks.**

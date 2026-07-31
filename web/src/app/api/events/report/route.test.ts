@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { defaultProfile, type Event } from "@/types";
 
@@ -48,6 +48,10 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("POST /api/events/report", () => {
   it("returns a graceful Tier 0 response and makes no provider call when none resolves", async () => {
     mocks.resolveProvider.mockReturnValue(null);
@@ -72,6 +76,25 @@ describe("POST /api/events/report", () => {
 
     expect(result).toBeNull();
     expect(requestReport).not.toHaveBeenCalled();
+  });
+
+  it("lets local development resolve the default server Vertex provider", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const requestReport = vi.fn().mockResolvedValue({
+      posterFit: { fits: true, reasoning: "The supplied scope overlaps." },
+    });
+
+    const result = await loadConfiguredOpportunityEnrichment(
+      defaultProfile,
+      "event:local-default",
+      requestReport,
+      Date.UTC(2026, 6, 31),
+      new MemoryStorage(),
+    );
+
+    expect(result).not.toBeNull();
+    expect(requestReport).toHaveBeenCalledTimes(1);
+    expect(requestReport).toHaveBeenCalledWith(undefined);
   });
 
   it("uses one large-tier call and returns parsed enrichment", async () => {
