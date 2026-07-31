@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import { defaultProfile } from "@/types";
 import {
   buildEnrichmentContext,
+  buildJobEnrichmentPrompt,
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
   opportunityEnrichmentCacheKey,
+  parseJobEnrichment,
   readCachedOpportunityEnrichment,
   writeCachedOpportunityEnrichment,
   type JobEnrichment,
 } from "./enrichment";
+import type { Job } from "@/types";
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -123,7 +126,7 @@ describe("opportunity report enrichment cache", () => {
 
 describe("buildEnrichmentContext", () => {
   it("uses only declared profile context and never includes a key", () => {
-    const context = buildEnrichmentContext({
+    const profile = {
       ...defaultProfile,
       researchTopics: ["solid-state batteries"],
       preferredMethods: ["electrochemical impedance spectroscopy"],
@@ -131,7 +134,8 @@ describe("buildEnrichmentContext", () => {
       currentChallenges: "Interface resistance",
       authorisedCountries: ["United States"],
       feedAiApiKey: "must-not-appear",
-    });
+    };
+    const context = buildEnrichmentContext(profile);
 
     expect(context).toContain("Career stage: PhD Year 3");
     expect(context).toContain("Topics: solid-state batteries");
@@ -140,5 +144,80 @@ describe("buildEnrichmentContext", () => {
     expect(context).toContain("Current challenges: Interface resistance");
     expect(context).toContain("Can work without sponsorship in: United States");
     expect(context).not.toContain("must-not-appear");
+  });
+});
+
+describe("job enrichment prompt and parser", () => {
+  const job: Job = {
+    id: "job:parser",
+    roleTitle: "Battery Research Scientist",
+    companyOrLab: "Volta Lab",
+    location: "Chicago, IL",
+    isRemote: false,
+    keyRequirements: ["PhD", "Electrochemistry"],
+    matchReason: "Matches the declared topic.",
+    summary: "Lead interface-stability experiments.",
+    matchedTerms: ["solid-state battery"],
+    roleKind: "staff",
+    employmentType: "full-time",
+    salary: { min: 120_000, max: 150_000, currency: "USD", period: "year" },
+    visa: { state: "not-stated", country: "United States" },
+  };
+
+  it("builds the prompt from the bounded posting fields and profile context", () => {
+    const prompt = JSON.parse(
+      buildJobEnrichmentPrompt(job, "Topics: solid-state batteries"),
+    ) as Record<string, unknown>;
+
+    expect(prompt.userContext).toBe("Topics: solid-state batteries");
+    expect(prompt.job).toMatchObject({
+      roleTitle: job.roleTitle,
+      companyOrLab: job.companyOrLab,
+      summary: job.summary,
+      keyRequirements: job.keyRequirements,
+      matchedTerms: job.matchedTerms,
+      roleKind: job.roleKind,
+      employmentType: job.employmentType,
+      salary: job.salary,
+      visaState: "not-stated",
+    });
+  });
+
+  it("drops a sponsorship judgment when the posting already states its position", () => {
+    const parsed = parseJobEnrichment(
+      JSON.stringify({
+        sponsorshipRead: {
+          likelihood: "Likely",
+          basis: "The employer has sponsored similar roles.",
+        },
+      }),
+      { visa: { state: "sponsors", evidence: "We sponsor this position." } },
+    );
+
+    expect(parsed).toEqual({});
+  });
+
+  it("drops a four-entry role summary rather than truncating it", () => {
+    const parsed = parseJobEnrichment(
+      JSON.stringify({ roleSummary: ["One.", "Two.", "Three.", "Four."] }),
+      job,
+    );
+
+    expect(parsed).toEqual({});
+  });
+
+  it("returns an empty enrichment when every field is missing", () => {
+    expect(parseJobEnrichment("{}", job)).toEqual({});
+  });
+
+  it("keeps all four valid sections for a silent-visa posting", () => {
+    const raw = {
+      competitiveness: { verdict: "Strong", reasoning: "Methods align." },
+      sponsorshipRead: { likelihood: "Plausible", basis: "Inferred from role history." },
+      roleSummary: ["One.", "Two.", "Three."],
+      emphasise: ["Battery methods", "Interface work"],
+    };
+
+    expect(parseJobEnrichment(JSON.stringify(raw), job)).toEqual(raw);
   });
 });

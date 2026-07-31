@@ -1,4 +1,4 @@
-import type { UserAiProvider, UserProfile } from "@/types";
+import type { Job, UserAiProvider, UserProfile } from "@/types";
 
 export interface JobEnrichment {
   competitiveness?: {
@@ -72,6 +72,134 @@ function cleanList(values: readonly string[]): string[] {
     const cleaned = clean(value);
     return cleaned ? [cleaned] : [];
   });
+}
+
+function parseJsonRecord(text: string): Record<string, unknown> | null {
+  const candidates = [
+    text.trim(),
+    text.replace(/^```json\s*/i, "").replace(/```\s*$/g, "").trim(),
+  ];
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) candidates.push(match[0]);
+
+  for (const candidate of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      // Try the next candidate.
+    }
+  }
+  return null;
+}
+
+function stringPair(
+  value: unknown,
+  firstKey: string,
+  secondKey: string,
+): Record<string, string> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const record = value as Record<string, unknown>;
+  const first = typeof record[firstKey] === "string" ? clean(record[firstKey]) : undefined;
+  const second = typeof record[secondKey] === "string" ? clean(record[secondKey]) : undefined;
+  return first && second ? { [firstKey]: first, [secondKey]: second } : undefined;
+}
+
+function boundedStringList(
+  value: unknown,
+  minimum: number,
+  maximum: number,
+): string[] | undefined {
+  if (!Array.isArray(value) || value.length < minimum || value.length > maximum) {
+    return undefined;
+  }
+  const cleaned = value.flatMap((item) => {
+    if (typeof item !== "string") return [];
+    const text = clean(item);
+    return text ? [text] : [];
+  });
+  return cleaned.length === value.length ? cleaned : undefined;
+}
+
+export function buildJobEnrichmentPrompt(
+  job: Job,
+  contextHint: string,
+): string {
+  return JSON.stringify({
+    task: [
+      "Add four concise, personalized judgment sections to this job report.",
+      "Use only the supplied posting data and user-declared context.",
+      "Omit a field when the evidence is insufficient.",
+      "Return only the output object as valid JSON.",
+    ].join(" "),
+    userContext: contextHint,
+    job: {
+      roleTitle: job.roleTitle,
+      companyOrLab: job.companyOrLab,
+      summary: job.summary,
+      keyRequirements: job.keyRequirements,
+      matchedTerms: job.matchedTerms,
+      roleKind: job.roleKind,
+      employmentType: job.employmentType,
+      salary: job.salary,
+      visaState: job.visa?.state,
+      visaCountry: job.visa?.country,
+    },
+    rules: {
+      competitiveness: "Compare requirements with the declared profile; do not advise whether to apply.",
+      sponsorshipRead:
+        job.visa?.state === "not-stated"
+          ? "Infer cautiously because the posting is silent; label the basis as judgment, not fact."
+          : "Omit this field because the posting already states the sponsorship position.",
+      roleSummary: "Exactly three clean sentences, one string per sentence.",
+      emphasise: "Two to four concrete profile-grounded application points.",
+    },
+    outputSchema: {
+      competitiveness: { verdict: "string", reasoning: "string" },
+      sponsorshipRead: { likelihood: "string", basis: "string" },
+      roleSummary: ["sentence 1", "sentence 2", "sentence 3"],
+      emphasise: ["application point", "application point"],
+    },
+  });
+}
+
+export function parseJobEnrichment(
+  text: string,
+  job: Pick<Job, "visa">,
+): JobEnrichment | null {
+  const parsed = parseJsonRecord(text);
+  if (!parsed) return null;
+  const enrichment: JobEnrichment = {};
+
+  const competitiveness = stringPair(
+    parsed.competitiveness,
+    "verdict",
+    "reasoning",
+  );
+  if (competitiveness) {
+    enrichment.competitiveness = competitiveness as JobEnrichment["competitiveness"];
+  }
+
+  if (job.visa?.state === "not-stated") {
+    const sponsorshipRead = stringPair(
+      parsed.sponsorshipRead,
+      "likelihood",
+      "basis",
+    );
+    if (sponsorshipRead) {
+      enrichment.sponsorshipRead = sponsorshipRead as JobEnrichment["sponsorshipRead"];
+    }
+  }
+
+  const roleSummary = boundedStringList(parsed.roleSummary, 3, 3);
+  if (roleSummary) enrichment.roleSummary = roleSummary;
+
+  const emphasise = boundedStringList(parsed.emphasise, 2, 4);
+  if (emphasise) enrichment.emphasise = emphasise;
+
+  return enrichment;
 }
 
 /** Build the user-declared context that is safe to send to report prompts. */
