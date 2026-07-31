@@ -22,9 +22,8 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import {
   buildEnrichmentContext,
   hasEventEnrichment,
+  loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
-  readCachedOpportunityEnrichment,
-  writeCachedOpportunityEnrichment,
   type EventEnrichment,
 } from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
@@ -1062,16 +1061,6 @@ export default function EventDetailPage({
   useEffect(() => {
     if (!event || !enrichmentKey) return;
 
-    const cached = readCachedOpportunityEnrichment<EventEnrichment>(enrichmentKey);
-    if (cached.hit) {
-      setEnrichmentResult({
-        key: enrichmentKey,
-        enrichment: cached.enrichment,
-        done: true,
-      });
-      return;
-    }
-
     const apiKey = profile.feedAiApiKey?.trim();
     if (profile.feedAiProvider !== "default" && !apiKey) {
       setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
@@ -1079,39 +1068,27 @@ export default function EventDetailPage({
     }
 
     let cancelled = false;
-    const controller = new AbortController();
     const llmOverride =
       profile.feedAiProvider !== "default" && apiKey
         ? { provider: profile.feedAiProvider, apiKey }
         : undefined;
 
-    void fetch("/api/events/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, contextHint, llmOverride }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Event report failed: ${response.status}`);
-        return (await response.json()) as { enrichment: EventEnrichment | null };
-      })
-      .then((result) => {
+    void loadOpportunityEnrichment<EventEnrichment>(enrichmentKey, async () => {
+      const response = await fetch("/api/events/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event, contextHint, llmOverride }),
+      });
+      if (!response.ok) throw new Error(`Event report failed: ${response.status}`);
+      const result = (await response.json()) as { enrichment: EventEnrichment | null };
+      return result.enrichment ?? null;
+    }).then((enrichment) => {
         if (cancelled) return;
-        const enrichment = result.enrichment ?? null;
-        writeCachedOpportunityEnrichment(enrichmentKey, enrichment);
         setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
-      })
-      .catch((error: unknown) => {
-        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
-          return;
-        }
-        writeCachedOpportunityEnrichment(enrichmentKey, null);
-        setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
       });
 
     return () => {
       cancelled = true;
-      controller.abort();
     };
   }, [
     event,

@@ -10,9 +10,8 @@ import { formatSalary } from "@/lib/opportunities/salary";
 import {
   buildEnrichmentContext,
   hasJobEnrichment,
+  loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
-  readCachedOpportunityEnrichment,
-  writeCachedOpportunityEnrichment,
   type JobEnrichment,
 } from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
@@ -697,16 +696,6 @@ export default function JobDetailPage({
   useEffect(() => {
     if (!job || !enrichmentKey) return;
 
-    const cached = readCachedOpportunityEnrichment<JobEnrichment>(enrichmentKey);
-    if (cached.hit) {
-      setEnrichmentResult({
-        key: enrichmentKey,
-        enrichment: cached.enrichment,
-        done: true,
-      });
-      return;
-    }
-
     const apiKey = profile.feedAiApiKey?.trim();
     if (profile.feedAiProvider !== "default" && !apiKey) {
       setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
@@ -714,39 +703,27 @@ export default function JobDetailPage({
     }
 
     let cancelled = false;
-    const controller = new AbortController();
     const llmOverride =
       profile.feedAiProvider !== "default" && apiKey
         ? { provider: profile.feedAiProvider, apiKey }
         : undefined;
 
-    void fetch("/api/jobs/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job, contextHint, llmOverride }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Job report failed: ${response.status}`);
-        return (await response.json()) as { enrichment: JobEnrichment | null };
-      })
-      .then((result) => {
+    void loadOpportunityEnrichment<JobEnrichment>(enrichmentKey, async () => {
+      const response = await fetch("/api/jobs/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job, contextHint, llmOverride }),
+      });
+      if (!response.ok) throw new Error(`Job report failed: ${response.status}`);
+      const result = (await response.json()) as { enrichment: JobEnrichment | null };
+      return result.enrichment ?? null;
+    }).then((enrichment) => {
         if (cancelled) return;
-        const enrichment = result.enrichment ?? null;
-        writeCachedOpportunityEnrichment(enrichmentKey, enrichment);
         setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
-      })
-      .catch((error: unknown) => {
-        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
-          return;
-        }
-        writeCachedOpportunityEnrichment(enrichmentKey, null);
-        setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
       });
 
     return () => {
       cancelled = true;
-      controller.abort();
     };
   }, [
     job,

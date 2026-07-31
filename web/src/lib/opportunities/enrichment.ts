@@ -61,6 +61,7 @@ const ENRICHMENT_CACHE_STORAGE_KEY = "peer-opportunity-report-cache-v1";
 const ENRICHMENT_CACHE_MAX_ENTRIES = 80;
 export const ENRICHMENT_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ENRICHMENT_FAILURE_TTL_MS = 6 * 60 * 60 * 1000;
+const enrichmentInFlight = new Map<string, Promise<unknown | null>>();
 
 function clean(value: string | null | undefined): string | undefined {
   const trimmed = value?.replace(/\s+/g, " ").trim();
@@ -488,4 +489,37 @@ export function writeCachedOpportunityEnrichment<T>(
   } catch {
     // Cache failure must never make a Tier 0 report unreadable.
   }
+}
+
+/**
+ * Cache-aware single-flight loader. React development remounts and concurrent
+ * consumers share one promise, so one opened item can never multiply model
+ * calls while still allowing the completed result to outlive the component.
+ */
+export function loadOpportunityEnrichment<T>(
+  cacheKey: string,
+  loader: () => Promise<T | null>,
+  nowMs = Date.now(),
+  storage: Storage | undefined = browserStorage(),
+): Promise<T | null> {
+  if (!cacheKey) return Promise.resolve(null);
+  const cached = readCachedOpportunityEnrichment<T>(cacheKey, nowMs, storage);
+  if (cached.hit) return Promise.resolve(cached.enrichment);
+
+  const existing = enrichmentInFlight.get(cacheKey);
+  if (existing) return existing as Promise<T | null>;
+
+  const request = loader()
+    .catch(() => null)
+    .then((enrichment) => {
+      writeCachedOpportunityEnrichment(cacheKey, enrichment, nowMs, storage);
+      return enrichment;
+    })
+    .finally(() => {
+      if (enrichmentInFlight.get(cacheKey) === request) {
+        enrichmentInFlight.delete(cacheKey);
+      }
+    });
+  enrichmentInFlight.set(cacheKey, request);
+  return request;
 }

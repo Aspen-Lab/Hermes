@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { defaultProfile } from "@/types";
 import {
   buildEnrichmentContext,
@@ -6,6 +6,7 @@ import {
   buildJobEnrichmentPrompt,
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
+  loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   parseEventEnrichment,
   parseJobEnrichment,
@@ -123,6 +124,27 @@ describe("opportunity report enrichment cache", () => {
     );
 
     expect(defaultKey).not.toBe(geminiKey);
+  });
+
+  it("shares one loader call across concurrent opens and then serves the cache", async () => {
+    const storage = new MemoryStorage();
+    const loader = vi.fn().mockResolvedValue(enrichment);
+
+    const [first, second] = await Promise.all([
+      loadOpportunityEnrichment("job:single-flight", loader, now, storage),
+      loadOpportunityEnrichment("job:single-flight", loader, now, storage),
+    ]);
+    const third = await loadOpportunityEnrichment(
+      "job:single-flight",
+      loader,
+      now + 1,
+      storage,
+    );
+
+    expect(first).toEqual(enrichment);
+    expect(second).toEqual(enrichment);
+    expect(third).toEqual(enrichment);
+    expect(loader).toHaveBeenCalledTimes(1);
   });
 });
 
