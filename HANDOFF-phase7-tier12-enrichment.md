@@ -45,7 +45,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P7.1 | Enrichment types, prompt builder, and the 7-day client cache | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` - 1 file, 6 tests passed |
 | P7.2 | `/api/jobs/report` — Tier gate, BYOK override, graceful null | DONE | `cd web && npx vitest run src/app/api/jobs/report/route.test.ts` - 1 file, 3 tests passed |
-| P7.3 | `/api/events/report` — same shape | IN_PROGRESS | |
+| P7.3 | `/api/events/report` — same shape | DONE | `cd web && npx vitest run src/app/api/events/report/route.test.ts` - 1 file, 3 tests passed |
 
 ### Phase 7B — Job report enrichment (spec plate 02)
 
