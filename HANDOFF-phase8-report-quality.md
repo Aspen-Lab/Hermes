@@ -58,7 +58,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.3 | Page furniture must never enter the attendee roster | TODO | |
+| P8.3 | Page furniture must never enter the attendee roster | IN_PROGRESS | |
 | P8.4 | Judged rows the model rejects are dropped, not rendered | TODO | |
 | P8.5 | "What each talk is about" takes real talks or renders nothing | TODO | |
 | P8.6 | The description must start at a sentence boundary | TODO | |
