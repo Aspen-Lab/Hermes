@@ -60,7 +60,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P7.6 | Event enrichment prompt + strict parser for the four promised sections | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` - 1 file, 14 tests passed |
 | P7.7 | Judged attendees merge back into the existing roster without duplicating rows | DONE | `cd web && npx vitest run` - 70 files, 580 tests passed; 5 cards + 25 plain rows verified |
-| P7.8 | Event report renders the four sections and hides the locked block only when they render | TODO | |
+| P7.8 | Event report renders the four sections and hides the locked block only when they render | IN_PROGRESS | |
 
 ### Phase 7D — Cost control and honesty
 
