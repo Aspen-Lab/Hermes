@@ -91,6 +91,21 @@ describe("work authorisation countries", () => {
       "Germany",
     ]);
   });
+
+  it("hydrates work rights from another signed-in device without clearing local data when absent", () => {
+    const store = useProfileStore.getState();
+    store.updateAuthorisedCountries(["Canada"]);
+
+    store.hydrateFromRemote({ authorisedCountries: ["Germany"] });
+    expect(useProfileStore.getState().profile.authorisedCountries).toEqual([
+      "Germany",
+    ]);
+
+    useProfileStore.getState().hydrateFromRemote({ authorisedCountries: undefined });
+    expect(useProfileStore.getState().profile.authorisedCountries).toEqual([
+      "Germany",
+    ]);
+  });
 });
 
 describe("profile persistence migration", () => {

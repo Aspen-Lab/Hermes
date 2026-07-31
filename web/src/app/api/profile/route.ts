@@ -17,6 +17,7 @@ interface ProfileRow {
   research_topics: string[];
   preferred_methods: string[];
   location_preferences: string[];
+  authorised_countries?: string[];
   career_stage: string | null;
   industry_vs_academia: string | null;
   phd_year: number | null;
@@ -46,12 +47,13 @@ interface ProfileRow {
   updated_at: string;
 }
 
-function rowToProfile(row: ProfileRow): Partial<UserProfile> {
+export function profileRowToProfile(row: ProfileRow): Partial<UserProfile> {
   return {
     displayName: row.display_name ?? undefined,
     researchTopics: row.research_topics,
     preferredMethods: row.preferred_methods,
     locationPreferences: row.location_preferences,
+    authorisedCountries: row.authorised_countries ?? [],
     careerStage: (row.career_stage ?? undefined) as UserProfile["careerStage"] | undefined,
     industryVsAcademia: (row.industry_vs_academia ?? undefined) as
       | UserProfile["industryVsAcademia"]
@@ -85,7 +87,7 @@ function rowToProfile(row: ProfileRow): Partial<UserProfile> {
   };
 }
 
-function profileToRow(p: Partial<UserProfile>, userId: string) {
+export function profilePatchToRow(p: Partial<UserProfile>, userId: string) {
   // Only include columns the caller meant to set. `undefined` means "leave
   // existing value alone" — important so sending a display-name update
   // doesn't wipe digest prefs (and vice versa).
@@ -94,6 +96,7 @@ function profileToRow(p: Partial<UserProfile>, userId: string) {
   if (p.researchTopics !== undefined) row.research_topics = p.researchTopics;
   if (p.preferredMethods !== undefined) row.preferred_methods = p.preferredMethods;
   if (p.locationPreferences !== undefined) row.location_preferences = p.locationPreferences;
+  if (p.authorisedCountries !== undefined) row.authorised_countries = p.authorisedCountries;
   if (p.careerStage !== undefined) row.career_stage = p.careerStage;
   if (p.industryVsAcademia !== undefined) row.industry_vs_academia = p.industryVsAcademia;
   if (p.phdYear !== undefined) row.phd_year = p.phdYear;
@@ -148,7 +151,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    profile: data ? rowToProfile(data as ProfileRow) : null,
+    profile: data ? profileRowToProfile(data as ProfileRow) : null,
   });
 }
 
@@ -162,7 +165,7 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = (await request.json()) as Partial<UserProfile>;
-  const row = profileToRow(body, user.id);
+  const row = profilePatchToRow(body, user.id);
 
   let { data, error } = await supabase
     .from("profiles")
@@ -195,5 +198,5 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ profile: rowToProfile(data as ProfileRow) });
+  return NextResponse.json({ profile: profileRowToProfile(data as ProfileRow) });
 }

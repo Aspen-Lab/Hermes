@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   preferred_methods    text[] not null default '{}',
   preferred_venues     text[] not null default '{}',
   location_preferences text[] not null default '{}',
+  authorised_countries text[] not null default '{}',
   career_stage         text,
   industry_vs_academia text,
   phd_year             integer,
