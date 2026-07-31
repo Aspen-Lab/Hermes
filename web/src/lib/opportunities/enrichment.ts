@@ -202,6 +202,17 @@ export function parseJobEnrichment(
   return enrichment;
 }
 
+export function hasJobEnrichment(
+  enrichment: JobEnrichment | null | undefined,
+): boolean {
+  return Boolean(
+    enrichment?.competitiveness ||
+      enrichment?.sponsorshipRead ||
+      enrichment?.roleSummary?.length ||
+      enrichment?.emphasise?.length,
+  );
+}
+
 /** Build the user-declared context that is safe to send to report prompts. */
 export function buildEnrichmentContext(profile: EnrichmentProfile): string {
   const lines = [

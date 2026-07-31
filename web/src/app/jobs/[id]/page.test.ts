@@ -2,17 +2,25 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Job } from "@/types";
+import type { JobEnrichment } from "@/lib/opportunities/enrichment";
 import { JobReport } from "./page";
 
 const NOW = Date.parse("2026-07-30T12:00:00Z");
 
-function renderReport(job: Job, isApplied = false): string {
+function renderReport(
+  job: Job,
+  isApplied = false,
+  enrichment: JobEnrichment | null = null,
+  providerConfigured = false,
+): string {
   return renderToStaticMarkup(
     createElement(JobReport, {
       job,
       isSaved: false,
       isApplied,
       nowMs: NOW,
+      enrichment,
+      providerConfigured,
       onToggleSave: () => undefined,
       onAppliedChange: () => undefined,
       onDismiss: () => undefined,
@@ -132,5 +140,41 @@ describe("JobReport", () => {
     expect(appliedButton).toContain('aria-pressed="true"');
     expect(appliedButton).toContain("bg-done-dim");
     expect(appliedHtml).toContain(">Applied<");
+  });
+
+  it("renders all four AI sections in order and hides the locked block", () => {
+    const html = renderReport(
+      baseJob({
+        visa: { state: "not-stated", evidence: "Sponsorship is not mentioned." },
+      }),
+      false,
+      {
+        competitiveness: { verdict: "Strong match", reasoning: "Methods align." },
+        sponsorshipRead: {
+          likelihood: "Plausible",
+          basis: "This is an inference from comparable roles.",
+        },
+        roleSummary: ["First sentence.", "Second sentence.", "Third sentence."],
+        emphasise: ["Lead with interface work.", "Name the impedance method."],
+      },
+    );
+
+    const competitiveness = html.indexOf("How competitive this actually is");
+    const sponsorship = html.indexOf("Sponsorship read");
+    const summary = html.indexOf("The role in three clean sentences");
+    const emphasise = html.indexOf("What to emphasise in your application");
+    expect(competitiveness).toBeGreaterThan(-1);
+    expect(competitiveness).toBeLessThan(sponsorship);
+    expect(sponsorship).toBeLessThan(summary);
+    expect(summary).toBeLessThan(emphasise);
+    expect(html).toContain("Posting evidence");
+    expect(html).toContain("Peer inference — verify with the employer");
+    expect(html).not.toContain("Also in this report with an AI key");
+  });
+
+  it("keeps the locked block when provider availability produced no enrichment", () => {
+    const html = renderReport(baseJob(), false, null, true);
+
+    expect(html).toContain("Also in this report with an AI key");
   });
 });

@@ -7,28 +7,40 @@ import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
 import { formatSalary } from "@/lib/opportunities/salary";
+import {
+  buildEnrichmentContext,
+  hasJobEnrichment,
+  opportunityEnrichmentCacheKey,
+  readCachedOpportunityEnrichment,
+  writeCachedOpportunityEnrichment,
+  type JobEnrichment,
+} from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
-import { reportProviderConfigured } from "@/components/reports/provider-configured";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 
 const JOB_TIER_UPGRADE_ITEMS = [
   {
-    title: "Tailored application strategy",
+    title: "How competitive this actually is",
     description:
-      "Turn the posting evidence into a focused plan for this specific role.",
+      "Read the requirements against your profile and show where you would stand.",
   },
   {
-    title: "Requirement-by-requirement evidence",
+    title: "Sponsorship read when the posting is silent",
     description:
-      "Connect each stated requirement to examples from your profile and work.",
+      "Judge the employer's likely position without confusing inference with posting evidence.",
   },
   {
-    title: "Interview preparation",
+    title: "The role in three clean sentences",
     description:
-      "Develop role-specific questions and preparation areas from the full posting.",
+      "Rewrite the role clearly instead of repeating the posting's best sentences.",
+  },
+  {
+    title: "What to emphasise in your application",
+    description:
+      "Identify which parts of your declared work and methods should lead.",
   },
 ];
 
@@ -332,7 +344,8 @@ export function JobReport({
   isSaved,
   isApplied,
   nowMs,
-  providerConfigured = false,
+  enrichment = null,
+  providerConfigured: _providerConfigured = false,
   onToggleSave,
   onAppliedChange,
   onDismiss,
@@ -341,6 +354,8 @@ export function JobReport({
   isSaved: boolean;
   isApplied: boolean;
   nowMs: number;
+  enrichment?: JobEnrichment | null;
+  /** Legacy test seam: provider availability alone must not hide the locked block. */
   providerConfigured?: boolean;
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
@@ -357,6 +372,7 @@ export function JobReport({
   const visaEvidence = clean(job.visa?.evidence);
   const company = clean(job.companyOrLab);
   const location = clean(job.isRemote ? "Remote" : job.location);
+  const hasEnrichment = hasJobEnrichment(enrichment);
 
   return (
     <PageContainer width="detail" className="px-6 py-14">
@@ -418,7 +434,7 @@ export function JobReport({
         </dl>
       )}
 
-      {visaEvidence && (
+      {visaEvidence && !enrichment?.sponsorshipRead && (
         <blockquote className="mt-4 border-l-2 border-accent/50 pl-4 text-body leading-7 text-text-muted">
           “{visaEvidence}”
         </blockquote>
@@ -518,6 +534,73 @@ export function JobReport({
         </ReportSection>
       )}
 
+      {enrichment?.competitiveness && (
+        <ReportSection title="How competitive this actually is">
+          <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
+            <p className="text-title font-semibold text-heading">
+              {enrichment.competitiveness.verdict}
+            </p>
+            <p className="mt-2 text-body leading-7 text-text-muted">
+              {enrichment.competitiveness.reasoning}
+            </p>
+          </div>
+        </ReportSection>
+      )}
+
+      {enrichment?.sponsorshipRead && (
+        <ReportSection title="Sponsorship read">
+          <div className="grid gap-3 md:grid-cols-2">
+            {visaEvidence && (
+              <blockquote className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted">
+                <span className="mb-2 block text-micro font-semibold uppercase tracking-[0.14em] text-accent">
+                  Posting evidence
+                </span>
+                “{visaEvidence}”
+              </blockquote>
+            )}
+            <div className="rounded-xl border border-border bg-bg-secondary/50 px-5 py-4">
+              <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
+                Peer inference — verify with the employer
+              </p>
+              <p className="mt-2 text-title font-semibold text-heading">
+                {enrichment.sponsorshipRead.likelihood}
+              </p>
+              <p className="mt-2 text-body leading-7 text-text-muted">
+                {enrichment.sponsorshipRead.basis}
+              </p>
+            </div>
+          </div>
+        </ReportSection>
+      )}
+
+      {enrichment?.roleSummary && (
+        <ReportSection title="The role in three clean sentences">
+          <ol className="space-y-3">
+            {enrichment.roleSummary.map((sentence, index) => (
+              <li key={`${index}-${sentence}`} className="flex gap-3 text-body-lg leading-8 text-text">
+                <span className="font-semibold text-accent">{index + 1}</span>
+                <span>{sentence}</span>
+              </li>
+            ))}
+          </ol>
+        </ReportSection>
+      )}
+
+      {enrichment?.emphasise && (
+        <ReportSection title="What to emphasise in your application">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {enrichment.emphasise.map((point) => (
+              <li
+                key={point}
+                className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 text-body-sm text-heading"
+              >
+                {point}
+              </li>
+            ))}
+          </ul>
+        </ReportSection>
+      )}
+
       {roleSummary && (
         <ReportSection title="What the role is">
           <p className="max-w-3xl text-body-lg leading-8 text-text">
@@ -556,7 +639,7 @@ export function JobReport({
 
       <TierUpgradeBlock
         items={JOB_TIER_UPGRADE_ITEMS}
-        providerConfigured={providerConfigured}
+        providerConfigured={hasEnrichment}
       />
     </PageContainer>
   );
@@ -586,16 +669,92 @@ export default function JobDetailPage({
   const notInterestedJob = useFeedStore((state) => state.notInterestedJob);
   const profile = useProfileStore((state) => state.profile);
   const [nowMs] = useState(Date.now);
+  const [enrichmentResult, setEnrichmentResult] = useState<{
+    key: string;
+    enrichment: JobEnrichment | null;
+    done: boolean;
+  }>({ key: "", enrichment: null, done: false });
 
   const job =
     feedJobs.find((candidate) => candidate.id === id) ??
     jobPool.find((candidate) => candidate.id === id) ??
     savedJobs.find((candidate) => candidate.id === id);
   const isSaved = savedJobs.some((candidate) => candidate.id === id);
+  const contextHint = buildEnrichmentContext(profile);
+  const enrichmentKey = job
+    ? opportunityEnrichmentCacheKey(
+        "job",
+        job.id,
+        contextHint,
+        profile.feedAiProvider,
+      )
+    : "";
 
   useEffect(() => {
     if (job) markRead(job.id);
   }, [job, markRead]);
+
+  useEffect(() => {
+    if (!job || !enrichmentKey) return;
+
+    const cached = readCachedOpportunityEnrichment<JobEnrichment>(enrichmentKey);
+    if (cached.hit) {
+      setEnrichmentResult({
+        key: enrichmentKey,
+        enrichment: cached.enrichment,
+        done: true,
+      });
+      return;
+    }
+
+    const apiKey = profile.feedAiApiKey?.trim();
+    if (profile.feedAiProvider !== "default" && !apiKey) {
+      setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+    const llmOverride =
+      profile.feedAiProvider !== "default" && apiKey
+        ? { provider: profile.feedAiProvider, apiKey }
+        : undefined;
+
+    void fetch("/api/jobs/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job, contextHint, llmOverride }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Job report failed: ${response.status}`);
+        return (await response.json()) as { enrichment: JobEnrichment | null };
+      })
+      .then((result) => {
+        if (cancelled) return;
+        const enrichment = result.enrichment ?? null;
+        writeCachedOpportunityEnrichment(enrichmentKey, enrichment);
+        setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
+      })
+      .catch((error: unknown) => {
+        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
+          return;
+        }
+        writeCachedOpportunityEnrichment(enrichmentKey, null);
+        setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    job,
+    contextHint,
+    enrichmentKey,
+    profile.feedAiProvider,
+    profile.feedAiApiKey,
+  ]);
 
   if (!job) {
     return (
@@ -614,7 +773,11 @@ export default function JobDetailPage({
       isSaved={isSaved}
       isApplied={isApplied}
       nowMs={nowMs}
-      providerConfigured={reportProviderConfigured(profile)}
+      enrichment={
+        enrichmentResult.key === enrichmentKey && enrichmentResult.done
+          ? enrichmentResult.enrichment
+          : null
+      }
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onDismiss={() => {
