@@ -8,6 +8,8 @@ import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SearchConnectors } from "@/lib/feed/types";
 import type { JobApiCredentials } from "@/lib/jobs/types";
 import { parseOpportunityFacetSelection } from "@/lib/opportunities/facets";
+import { resolveProvider } from "@/lib/llm/providers/registry";
+import { protectAiRequest } from "@/lib/security/ai-request";
 
 const CACHE_HEADERS = {
   "Cache-Control": "private, no-store",
@@ -126,6 +128,16 @@ export async function POST(req: NextRequest) {
   const locationPreferences = cleanStringArray(body.locationPreferences);
   const authorisedCountries = cleanStringArray(body.authorisedCountries);
   const preferenceLedger = cleanPreferenceLedger(body.preferenceLedger);
+  const requestedAiTier = parseAiTier(body.aiTier) ?? 0;
+  const llmOverride = parseLlmOverride(body.llmOverride);
+  const aiProvider =
+    requestedAiTier >= 2 ? resolveProvider(llmOverride) : null;
+  const aiTier = requestedAiTier >= 2 && !aiProvider ? 0 : requestedAiTier;
+
+  if (aiTier >= 2 && aiProvider) {
+    const denied = await protectAiRequest("job-feed", 60);
+    if (denied) return denied;
+  }
 
   const result = await runJobsPipeline({
     topics,
@@ -144,10 +156,10 @@ export async function POST(req: NextRequest) {
     topN: parseTopN(body.topN),
     excludeIds: parseExcludeIds(body.excludeIds),
     facets: parseOpportunityFacetSelection(body.facets),
-    aiTier: parseAiTier(body.aiTier),
+    aiTier,
     searchConnectors: parseSearchConnectors(body.searchConnectors),
     apiKeys: parseApiKeys(body.apiKeys),
-    llmOverride: parseLlmOverride(body.llmOverride),
+    llmOverride,
   });
 
   return NextResponse.json(result, { headers: CACHE_HEADERS });

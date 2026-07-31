@@ -6,6 +6,7 @@ import {
   parseJobEnrichment,
 } from "@/lib/opportunities/enrichment";
 import type { Job } from "@/types";
+import { protectAiRequest } from "@/lib/security/ai-request";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
+
+  const denied = await protectAiRequest("job-report", 20);
+  if (denied) return denied;
 
   try {
     const raw = await provider.generateJsonText({

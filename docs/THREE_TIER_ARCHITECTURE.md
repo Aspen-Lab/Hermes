@@ -70,7 +70,7 @@ When building any feature that uses an LLM or external API, the rules are non-ne
 
 2. **Provider must be swappable.** Code against a thin abstraction — never directly against a single SDK in the request path. Today: Anthropic. Tomorrow: Gemini Vertex, OpenAI, Ollama. Adding a provider should mean writing one new file, not editing many.
 
-3. **Per-user keys override server keys.** A user who pastes their own Anthropic / Gemini / OpenAI key takes precedence over the operator's `ANTHROPIC_API_KEY` env var. Stored RLS-scoped in Supabase, never in localStorage.
+3. **Deployed AI is BYOK-only.** A hosted user must supply their own Anthropic / Gemini / OpenAI / Qwen / DeepSeek key. Preview and production never fall back to an operator model account. Server model credentials are allowed only for local `next dev` testing.
 
 4. **Token budgets enforced.** Per-user daily budget; when exhausted, drop to Tier 1 (local) or Tier 0 (rules) — never block the user, never silently overspend their key.
 
@@ -80,7 +80,7 @@ When building any feature that uses an LLM or external API, the rules are non-ne
 
 ## Where Peer is on the tier ladder today
 
-- **Tier 0:** Working. Card grid, scoring, dedupe, search. No keys required.
-- **Tier 2 (Anthropic only):** Operator-mode only — set `ANTHROPIC_API_KEY` server-side and the digest appears. No per-user key UI yet. No Gemini, no OpenAI.
-- **Tier 1:** Not implemented.
-- **BYOK UI:** Not implemented. Planned next — see `docs/BLUEPRINT_byok_and_providers.md`.
+- **Tier 0:** Working and the deployed default. Card grid, scoring, dedupe, search, and deterministic reports need no model key.
+- **Tier 1:** Working as local/deterministic heuristic reranking; optional user-owned search connectors can broaden discovery.
+- **Tier 2:** Working through user BYOK for Anthropic, Gemini, OpenAI, Qwen, and DeepSeek.
+- **Local developer provider:** Vertex and other server env credentials work only under local `next dev`; deployed builds reject them.

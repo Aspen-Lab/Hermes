@@ -1,6 +1,8 @@
 # Gemini Vertex AI — Local Setup
 
-For developers running Peer locally with a Google Cloud Vertex AI service-account JSON key. Once the BYOK UI ships (see [BLUEPRINT_byok_and_providers.md](BLUEPRINT_byok_and_providers.md)), end users won't need this — they'll paste their key into the app instead. This walkthrough is for the operator-mode env-var path.
+For developers running Peer locally with a Google Cloud Vertex AI service-account JSON key. End users use their own normal provider API key through Peer’s BYOK UI. This walkthrough is only for local `next dev` testing.
+
+> **Hard boundary:** never copy these variables or the service-account file into Vercel. Preview and production ignore operator model credentials, and the deployment build intentionally fails if they are present.
 
 ## What you have
 
@@ -71,7 +73,7 @@ PEER_DIGEST_PROVIDER=gemini
 
 Notes:
 - `GOOGLE_APPLICATION_CREDENTIALS` is the standard env var the Google SDK looks for. It must be an **absolute path** to the JSON file.
-- `PEER_DIGEST_PROVIDER` is the new switch — when set to `gemini`, `/api/digest` will route through the Gemini provider instead of Anthropic. (This switch ships in Step 2 of the BYOK migration plan.)
+- `PEER_DIGEST_PROVIDER=gemini` selects Vertex only while running local `next dev`.
 
 ⚠️ Make sure `web/.env.local` is in `.gitignore`. Confirm with:
 ```bash
@@ -115,13 +117,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 The app gracefully drops the digest when no provider is configured.
 
-## When the BYOK UI ships
+## Online users
 
-End users will not touch env vars. They'll go to **Settings → AI Provider**, pick **Gemini Vertex**, and paste:
-- `project_id`
-- `client_email`
-- `private_key`
+End users do not touch these env vars and never receive your service-account details. They
+choose Gemini, OpenAI, Claude, Qwen, or DeepSeek in Peer and paste their own provider API
+key. If they do not add a key, Peer remains on Tier 0 and makes no model call.
 
-(The full `.json` will be parsed in the browser, only the three fields above will be sent to the server, and they'll be stored encrypted in Supabase. See the BYOK blueprint for the security model.)
-
-This dev-mode env-var setup is just the on-ramp until that UI exists.
+This Vertex setup is a permanent local-development convenience, not a hosted billing path.

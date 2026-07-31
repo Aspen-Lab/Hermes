@@ -121,7 +121,7 @@ async function buildJobPool(
   // LLM-refined queries when a provider is available (Tier 2 / BYOK);
   // template queries otherwise. Never throws.
   const queries =
-    (req.aiTier ?? 1) >= 2
+    (req.aiTier ?? 0) >= 2
       ? await generateSearchQueries("jobs", queryProfile, req.llmOverride)
       : templateJobQueries(queryProfile);
 

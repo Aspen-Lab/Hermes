@@ -242,7 +242,7 @@ export function activePaperTopicsKey(profile: UserProfile): string {
 export function paperFeedRequestBody(
   profile: UserProfile,
   advisorSeeds: { seedTexts: string[]; seedWorkIds: string[] },
-  aiPaperSearchEnabled = true,
+  aiPaperSearchEnabled = false,
   excludeIds: string[] = [],
 ): Record<string, unknown> {
   const { topics, softTopics } = activeSurfaceTopics(profile, "papers");
@@ -261,6 +261,10 @@ export function paperFeedRequestBody(
     aiPaperSearchEnabled &&
     profile.feedAiProvider !== "default" &&
     Boolean(feedAiApiKey);
+  const hasLocalDeveloperProvider =
+    aiPaperSearchEnabled &&
+    process.env.NODE_ENV === "development" &&
+    profile.feedAiProvider === "default";
 
   return {
     topics,
@@ -286,9 +290,7 @@ export function paperFeedRequestBody(
           }
         : undefined,
     topN: profile.paperCount,
-    aiTier: aiPaperSearchEnabled
-      ? (hasUserLlmOverride ? 2 : undefined)
-      : 0,
+    aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0,
     searchConnectors: profile.tavilyEnabled
       ? {
           tavily: {
@@ -321,7 +323,7 @@ export function paperFeedRequestBody(
 
 async function fetchRealFeed(
   profile: UserProfile,
-  aiPaperSearchEnabled = true,
+  aiPaperSearchEnabled = false,
   excludeIds: string[] = [],
 ): Promise<Paper[]> {
   const { topics } = activeSurfaceTopics(profile, "papers");
@@ -363,6 +365,9 @@ export function opportunityRequestBody(
   const feedAiApiKey = profile.feedAiApiKey?.trim();
   const hasUserLlmOverride =
     profile.feedAiProvider !== "default" && Boolean(feedAiApiKey);
+  const hasLocalDeveloperProvider =
+    process.env.NODE_ENV === "development" &&
+    profile.feedAiProvider === "default";
   return {
     topics,
     softTopics: softTopics.length > 0 ? softTopics : undefined,
@@ -380,7 +385,7 @@ export function opportunityRequestBody(
       : {}),
     currentProject: profile.currentProject,
     topN: DEFAULT_OPPORTUNITY_TOP_N,
-    aiTier: hasUserLlmOverride ? 2 : undefined,
+    aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0,
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
       : undefined,
@@ -640,7 +645,7 @@ export const useFeedStore = create<FeedState>()(
       jobsLoading: false,
       lastRefresh: null,
       feedTopicsKey: null,
-      aiPaperSearchEnabled: true,
+      aiPaperSearchEnabled: false,
       readItems: {},
       appliedAt: {},
       registeredAt: {},
@@ -1559,7 +1564,7 @@ export const useFeedStore = create<FeedState>()(
           pendingDismissal: null,
           paperFeedback: {},
           oppFeedback: {},
-          aiPaperSearchEnabled: true,
+          aiPaperSearchEnabled: false,
         });
       },
     }),

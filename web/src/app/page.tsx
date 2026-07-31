@@ -33,7 +33,6 @@ import {
   type Filters,
 } from "@/lib/search/filters";
 import { AiKeyFields, providerShortLabel } from "@/components/profile/ai-setup";
-import { PROVIDER_MODELS } from "@/lib/llm/provider-models";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { iconButtonVariants } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -465,10 +464,29 @@ function DiscoveryPage() {
 
   // Dashboard is an overview until a query turns it into combined search.
   const showFeedTiles = activeType !== "dashboard" || isSearchMode;
+  const canUseLocalDeveloperAi =
+    process.env.NODE_ENV === "development" &&
+    profile.feedAiProvider === "default";
+  const canUseAiTools =
+    canUseLocalDeveloperAi ||
+    (profile.feedAiProvider !== "default" &&
+      Boolean(profile.feedAiApiKey?.trim()));
+  const aiSearchActive = aiPaperSearchEnabled && canUseAiTools;
   const shouldLoadPaperDigest =
     !isSearchMode &&
     activeType === "papers" &&
-    papers.length > 0;
+    papers.length > 0 &&
+    canUseAiTools;
+  const digestLlmOverride = useMemo(
+    () =>
+      profile.feedAiProvider !== "default" && profile.feedAiApiKey?.trim()
+        ? {
+            provider: profile.feedAiProvider,
+            apiKey: profile.feedAiApiKey.trim(),
+          }
+        : undefined,
+    [profile.feedAiApiKey, profile.feedAiProvider],
+  );
   const digestContextHint = useMemo(
     () =>
       [
@@ -670,6 +688,7 @@ function DiscoveryPage() {
         papers={papers}
         contextHint={digestContextHint}
         enabled={shouldLoadPaperDigest}
+        llmOverride={digestLlmOverride}
       />
       {!isSearchMode && papersLoading && (
         <ProgressBar
@@ -768,16 +787,18 @@ function DiscoveryPage() {
             {/* Auto / AI search toggle */}
             <button
               type="button"
-              onClick={() => setAiPaperSearchEnabled(!aiPaperSearchEnabled)}
-              disabled={isLoading}
-              aria-pressed={aiPaperSearchEnabled}
+              onClick={() => setAiPaperSearchEnabled(!aiSearchActive)}
+              disabled={isLoading || !canUseAiTools}
+              aria-pressed={aiSearchActive}
               title={
-                aiPaperSearchEnabled
-                  ? "AI paper search: Peer uses planning and reranking."
-                  : "Auto search: Peer uses fixed scoring only."
+                !canUseAiTools
+                  ? "Add your own AI key to enable AI search."
+                  : aiSearchActive
+                    ? "AI paper search uses your own key for planning and reranking."
+                    : "Auto search uses Tier 0 fixed scoring and no AI API."
               }
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-[color,background-color,box-shadow,transform] duration-150 ease-snap active:scale-[0.94] disabled:opacity-55 disabled:cursor-wait ${
-                aiPaperSearchEnabled
+                aiSearchActive
                   ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
                   : "bg-bg-secondary/55 text-text-muted hover:text-heading hover:bg-bg-secondary"
               }`}
@@ -785,8 +806,8 @@ function DiscoveryPage() {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M12 2l1.5 5L19 8.5 14.5 11 13 16l-2.5-4.5L6 10l4.5-1.5z" />
               </svg>
-              <span className="font-medium">{aiPaperSearchEnabled ? "AI search" : "Auto"}</span>
-              <span className="opacity-60 text-micro">{aiPaperSearchEnabled ? "Tier 1/2" : "Tier 0"}</span>
+              <span className="font-medium">{aiSearchActive ? "AI search" : "Auto"}</span>
+              <span className="opacity-60 text-micro">{aiSearchActive ? "Tier 2" : "Tier 0"}</span>
             </button>
 
             {/* AI key hookup */}
@@ -901,10 +922,10 @@ function DiscoveryPage() {
           {/* Expanded panel — only one tool at a time */}
           {openTool === "ai" && (
             <div
-              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
+              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiSearchActive ? "" : "opacity-60"}`}
             >
               <p className="text-caption leading-relaxed text-text-muted">
-                Use Peer default or bring your own normal AI key for Tier 2 reranking.
+                Tier 0 uses no AI API. To turn on Tier 2 reranking, choose an AI company and add your own key.
               </p>
               <AiKeyFields
                 provider={profile.feedAiProvider}
@@ -914,39 +935,38 @@ function DiscoveryPage() {
                 idPrefix="feed-ai"
               />
               <p className="text-micro leading-relaxed text-text-faint">
-                {aiPaperSearchEnabled
+                {aiSearchActive
                   ? profile.feedAiProvider === "default"
-                    ? "Uses the AI already connected to this Peer site. It does not use your own device, and if this site has no AI connected, the advanced rerank step stays off."
-                    : "When this is filled in, Peer forces Tier 2 so your own key actually powers the AI rerank."
-                  : "Turn AI search on to use this. Tier 0 ignores both Peer default AI and your own key."}
+                    ? process.env.NODE_ENV === "development"
+                      ? "Local development may use the Vertex account in your .env.local file. Deployed copies cannot use it."
+                      : "No user key is connected, so Peer stays on Tier 0 and makes no AI model call."
+                    : "Peer sends Tier 2 model calls only to the AI key you entered here."
+                  : "Tier 0 is active. It does not call an AI model or spend any AI account."}
               </p>
             </div>
           )}
 
           {openTool === "deep" && (
             <div
-              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiPaperSearchEnabled ? "" : "opacity-60"}`}
+              className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${canUseAiTools ? "" : "opacity-60"}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <p className="text-caption leading-relaxed text-text-muted">
                   Read each paper&apos;s full text (HTML when available, PDF as fallback) before writing the report. Burns more tokens per paper but produces specific, paper-grounded reports instead of summarizing the abstract.
                 </p>
-                {/* Disabled only when the user explicitly picked a non-default
-                    provider but hasn't typed a key. With "default" selected we
-                    let the toggle through — the server resolves to whatever
-                    the site is configured with; with none configured the API
-                    falls back to a shallow report with a banner. */}
                 <Toggle
                   checked={profile.deepReportEnabled}
                   onChange={(next) => updateDeepReportEnabled(next)}
-                  disabled={profile.feedAiProvider !== "default" && !profile.feedAiApiKey?.trim()}
+                  disabled={!canUseAiTools}
                   className="mt-0.5"
                   aria-label="Deep report"
                 />
               </div>
               <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
-                  ? `Using the AI connected to this Peer site (Vertex Gemini / Anthropic / OpenAI / Qwen, depending on server setup). Deep report calls an economical model (classify) and a stronger model (extract) per item — Peer’s Gemini route uses ${PROVIDER_MODELS.gemini.small} and ${PROVIDER_MODELS.gemini.large}. If the site has no AI configured, deep falls back to abstract-only.`
+                  ? process.env.NODE_ENV === "development"
+                    ? "Local development may use the Vertex account in .env.local. Preview and production deployments always ignore that account."
+                    : "Add your own AI provider and key first. Without one, Peer shows the Tier 0 report and makes no AI model call."
                   : !profile.feedAiApiKey?.trim()
                   ? "Set your own AI provider and key in the AI key panel first. Deep report uses your key — both a cheap model (classify) and a smart model (extract) get called per paper."
                   : "When on, Peer downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}

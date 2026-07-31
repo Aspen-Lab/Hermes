@@ -677,18 +677,19 @@ export default function PaperDetailPage({
       profile.preferredMethods,
     ],
   );
-  // Deep-report is opt-in (toggle on home page). Two valid paths:
-  //   1. `feedAiProvider === "default"` — site's own provider serves it
-  //      (Vertex Gemini / Anthropic / OpenAI / Qwen depending on server env).
-  //   2. `feedAiProvider !== "default"` — user's own API key must be filled.
+  const userProviderConfigured = reportProviderConfigured(profile);
+  const localDeveloperProvider =
+    process.env.NODE_ENV === "development" &&
+    profile.feedAiProvider === "default";
+  // Deep-report is opt-in. Deployed copies require the user's own key; local
+  // next dev may use the developer's explicit Vertex configuration.
   // The provider id is included in the cache key so flipping toggles
   // invalidates the cached report and triggers a re-fetch.
   const deepReportRequested =
     Boolean(profile.deepReportEnabled) &&
-    (profile.feedAiProvider === "default" ||
-      Boolean(profile.feedAiApiKey?.trim()));
+    (userProviderConfigured || localDeveloperProvider);
   const reportKey = paper
-    ? `${paper.id}|${contextHint}|deep=${deepReportRequested}|p=${profile.feedAiProvider}`
+    ? `${paper.id}|${contextHint}|deep=${deepReportRequested}|p=${profile.feedAiProvider}|byok=${userProviderConfigured}`
     : "";
   const cachedReport = useMemo(
     () => readCachedPaperReport(reportKey),
@@ -745,12 +746,10 @@ export default function PaperDetailPage({
       !cancelled &&
       !controller.signal.aborted &&
       reportRequestId.current === requestId;
-    // Only build an LLM override when the user picked a specific provider
-    // and supplied a key. With `feedAiProvider === "default"` we send no
-    // override — the server resolves to whatever the site is set up with.
+    // Build an override for both shallow and deep reports whenever the user
+    // supplied a key. In deployed Peer this is the only path to a model call.
     const llmOverride =
-      deepReportRequested &&
-      profile.feedAiProvider !== "default" &&
+      userProviderConfigured &&
       profile.feedAiApiKey?.trim()
         ? {
             provider: profile.feedAiProvider as
@@ -888,6 +887,7 @@ export default function PaperDetailPage({
     cachedReport,
     reportResult.key,
     deepReportRequested,
+    userProviderConfigured,
     profile.feedAiProvider,
     profile.feedAiApiKey,
   ]);

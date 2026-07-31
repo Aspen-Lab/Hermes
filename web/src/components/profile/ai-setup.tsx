@@ -13,7 +13,7 @@ import {
 } from "@/lib/llm/provider-models";
 
 export const FEED_AI_PROVIDER_OPTIONS: { value: UserAiProvider; label: string }[] = [
-  { value: "default", label: "Peer default — no API key" },
+  { value: "default", label: "Tier 0 — no AI API" },
   { value: "gemini", label: "Google Gemini — recommended: best value" },
   { value: "openai", label: "OpenAI (ChatGPT models) — recommended: easiest" },
   { value: "qwen", label: "Alibaba Qwen — low-cost alternative" },

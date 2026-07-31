@@ -4,9 +4,8 @@
 // the current hour in their timezone (and whose frequency rule admits
 // today), runs the feed pipeline and writes a `briefing_deliveries` row.
 //
-// Triggered by Vercel Cron per vercel.json. Vercel sends a special
-// `x-vercel-cron` header; we also accept `Authorization: Bearer <CRON_SECRET>`
-// for manual/local runs.
+// Triggered by Vercel Cron per vercel.json. Every invocation must carry the
+// shared CRON_SECRET. Merely claiming to be a cron request is not trusted.
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -120,13 +119,11 @@ function feedControlsFromRow(row: ProfileRow): FeedControls {
 }
 
 export async function GET(req: NextRequest) {
-  // Auth: Vercel cron OR shared secret for manual invocation.
-  const isVercelCron = req.headers.get("x-vercel-cron") !== null;
+  // Auth: require the shared secret for both Vercel and manual invocations.
   const secret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization") ?? "";
-  const hasSecret =
-    secret && authHeader === `Bearer ${secret}`;
-  if (!isVercelCron && !hasSecret) {
+  const hasSecret = Boolean(secret && authHeader === `Bearer ${secret}`);
+  if (!hasSecret) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -211,6 +208,9 @@ export async function GET(req: NextRequest) {
         topN: targetCount,
         controls: feedControlsFromRow(row),
         excludeIds: Array.from(seenIds),
+        // Scheduled jobs cannot safely access a browser user's private BYOK
+        // key, so email/in-app digests are always deterministic Tier 0.
+        aiTier: 0,
       });
 
       const freshItems = feed.items.filter((i) => !seenIds.has(i.id)).slice(0, targetCount);

@@ -50,6 +50,38 @@ function buildSearchRequests(profile: UserProfile) {
 }
 
 describe("active feed request inputs", () => {
+  it("defaults every surface to Tier 0 with no model override", () => {
+    const requests = buildSearchRequests(activeProfile);
+
+    expect(requests.papers.aiTier).toBe(0);
+    expect(requests.events.aiTier).toBe(0);
+    expect(requests.jobs.aiTier).toBe(0);
+    expect(requests.papers.llmOverride).toBeUndefined();
+    expect(requests.events.llmOverride).toBeUndefined();
+    expect(requests.jobs.llmOverride).toBeUndefined();
+  });
+
+  it("uses Tier 2 only with the user's selected provider and key", () => {
+    const byokProfile: UserProfile = {
+      ...activeProfile,
+      feedAiProvider: "openai",
+      feedAiApiKey: "user-owned-key",
+    };
+    const papers = paperFeedRequestBody(byokProfile, advisorSeeds, true);
+    const events = opportunityRequestBody(byokProfile, "events", []);
+
+    expect(papers.aiTier).toBe(2);
+    expect(papers.llmOverride).toEqual({
+      provider: "openai",
+      apiKey: "user-owned-key",
+    });
+    expect(events.aiTier).toBe(2);
+    expect(events.llmOverride).toEqual({
+      provider: "openai",
+      apiKey: "user-owned-key",
+    });
+  });
+
   it("keeps every request body unchanged when pending search inputs mutate", () => {
     const before = buildSearchRequests(activeProfile);
     const beforeAutoLoadKey = activePaperTopicsKey(activeProfile);

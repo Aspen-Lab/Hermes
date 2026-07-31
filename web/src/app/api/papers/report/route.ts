@@ -14,6 +14,7 @@ import { bindFiguresToReport } from "@/lib/papers/figure-binding";
 import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
 import type { ReportStreamEvent } from "@/lib/papers/report-stream";
+import { protectAiRequest } from "@/lib/security/ai-request";
 
 export const dynamic = "force-dynamic";
 // Deep reports (full-text fetch + two model passes + figure binding) have been
@@ -373,6 +374,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "paper is required" }, { status: 400 });
   }
 
+  const provider = resolveProvider(body.llmOverride ?? null);
+  if (provider?.generateJsonText) {
+    const denied = await protectAiRequest("paper-report", 20);
+    if (denied) return denied;
+  }
+
   const wantsStream =
     req.headers.get("accept")?.includes("application/x-ndjson") === true ||
     body.stream === true;
@@ -381,15 +388,13 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Deep path ────────────────────────────────────────────────────
-  // Runs when the client asks for deep reading AND a provider is available
-  // — either via a user-supplied override (Tier 2 BYOK) OR via the site's
-  // own configured default (Vertex Gemini / Anthropic / OpenAI / Qwen).
-  // Without ANY provider, fall through to the shallow path.
+  // Runs when the client asks for deep reading and a provider is available:
+  // user BYOK in deployments, or the explicit developer provider in local dev.
+  // Without a provider, fall through to the deterministic shallow path.
   if (body.deepReport) {
     const provider = resolveProvider(body.llmOverride ?? null);
     if (!provider?.generateJsonText) {
-      // No provider available — site has no default and user didn't supply
-      // a key. Fall back to deterministic shallow report.
+      // No user key (and no local developer provider): deterministic report.
       return NextResponse.json(await generateShallowReport(body, body.llmOverride));
     }
 

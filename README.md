@@ -177,11 +177,12 @@ and **stage 5 (rerank/distillation)** — the UI shape stays identical across ti
 | --- | --- | --- | --- |
 | **0 — Rule engine** (the floor) | Keyword + TF-IDF + recency + source weight + preference ledger | **None** | `web/src/lib/scoring/` — fully implemented |
 | **1 — Local / lightweight** | Tier 0 + heuristic rerank + Tavily discovery | None (Tavily optional) | `rerank.ts`, `tavily-discovery.ts` |
-| **2 — Cloud LLM** | LLM rerank + AI-written digest + deep reports | API key (server or BYOK) | `tier2-rerank.ts`, `lib/llm/`, `lib/papers/` |
+| **2 — Cloud LLM** | LLM rerank + AI-written digest + deep reports | **User BYOK key** | `tier2-rerank.ts`, `lib/llm/`, `lib/papers/` |
 
-The feed's default tier comes from `PEER_FEED_AI_TIER` (default **1**). A user who pastes
-their own key in the UI forces Tier 2 with their key. If no key resolves, the LLM features
-**hide themselves** and the feed keeps working on Tier 0/1 — that is the correct pattern.
+The deployed feed defaults to **Tier 0**. A user who pastes their own key in the UI can
+turn on Tier 2 with that key. Deployed preview/production code never falls back to an
+operator-funded model account. If no user key resolves, the LLM features **hide themselves**
+and the feed keeps working on Tier 0 — that is the correct pattern.
 **Never make a feature that hard-crashes when a key is missing.**
 
 ### Sources
@@ -259,16 +260,17 @@ Code against the `DigestProvider` interface — **never against a single SDK dir
   placeholder in the registry.)
 - Resolution order ([`registry.ts`](web/src/lib/llm/providers/registry.ts) → `resolveProvider`):
   1. per-request **BYOK** override (user's own key + provider), then
-  2. `PEER_DIGEST_PROVIDER`, then
-  3. first configured server env key (Vertex → Google API → Anthropic → OpenAI → Qwen → DeepSeek), then
-  4. `null` → Tier 0 fallback.
+  2. only during local `next dev`, an explicit developer env provider, then
+  3. `null` → Tier 0 fallback.
+- Vercel preview and production ignore operator model credentials even if someone adds
+  them by mistake. The build guard also rejects that deployment configuration.
 - The digest model default is `claude-haiku-4-5-20251001` ([`llm/client.ts`](web/src/lib/llm/client.ts)).
 - Two model sizes per provider: a **small** model (classify/compress) and a **large** model
   (extract/synthesize) — used by deep reports below.
 
 > When you add a provider: implement `DigestProvider` (incl. `generateJsonText` with
-> `tier: "small" | "large"`), register it in `registry.ts`, and add its env key to the
-> resolution chain. Keep BYOK working.
+> `tier: "small" | "large"`) and register its user-supplied override. Do not add a
+> deployed server-key fallback. Keep local developer credentials local-only.
 
 ### Deep paper reports & figures
 
@@ -386,12 +388,15 @@ None are required for Tier 0 to function. Grouped by purpose:
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`),
 `SUPABASE_SERVICE_ROLE_KEY` (server/cron only).
 
-**Feed / tiers:** `PEER_FEED_AI_TIER` (0/1/2, default 1), `PEER_DIGEST_PROVIDER`.
+**Feed / tiers:** `PEER_FEED_AI_TIER` (0/1/2, default 0). `PEER_DIGEST_PROVIDER` is
+accepted only by local `next dev`.
 
-**LLM provider keys (any one enables Tier 2 server-side):**
+**Local-development-only LLM provider keys:**
 `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`,
 `GOOGLE_VERTEX_PROJECT` / `GOOGLE_VERTEX_LOCATION` / `GOOGLE_APPLICATION_CREDENTIALS` /
 `GOOGLE_VERTEX_ALLOW_GLOBAL_FALLBACK`, `QWEN_API_KEY` (or `DASHSCOPE_API_KEY`), `DEEPSEEK_API_KEY`.
+Do not add these to Vercel. Preview/production builds fail when operator-funded model
+credentials are present; online users must supply their own key through the BYOK UI.
 
 **Search / enrichment:** `TAVILY_API_KEY`, `BRAVE_SEARCH_API_KEY`,
 `SEMANTIC_SCHOLAR_API_KEY`, `OPENALEX_EMAIL`, `UNPAYWALL_EMAIL` (polite-pool emails).
@@ -487,7 +492,7 @@ A checklist before you merge. Each maps to a principle above.
 - [ ] **Scoring stays inspectable** — `scoreBreakdown` + `relevanceReason` populated.
 - [ ] **Preference learning stays gradual** — decay + saturating caps; no single-click overreaction.
 - [ ] **Provider abstraction respected** — no direct SDK calls outside `lib/llm/providers/`;
-      BYOK still overrides server keys.
+      deployed AI calls use user BYOK only; server keys remain local-development-only.
 - [ ] **Supabase RLS intact** and schema migrations idempotent.
 - [ ] **Themeable** — semantic CSS variables, no hard-coded colors.
 - [ ] **Pipeline `meta` populated** for the UI/debugging.

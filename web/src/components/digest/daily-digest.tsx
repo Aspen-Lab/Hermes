@@ -6,12 +6,14 @@ import { apiFetch } from "@/lib/api";
 import { ScrambleText } from "@/components/scramble-text";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useFeedStore } from "@/store/feed";
+import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 
 interface DailyDigestProps {
   papers: Paper[];
   contextHint?: string;
   selectedPaperId?: string | null;
   onSelectPaper?: (paperId: string) => void;
+  llmOverride?: ProviderOverrideConfig;
 }
 
 interface DigestPayload {
@@ -89,6 +91,7 @@ export function usePaperDigest(
   papers: Paper[],
   contextHint?: string,
   enabled = true,
+  llmOverride?: ProviderOverrideConfig,
 ): PaperDigestState {
   const [data, setData] = useState<DigestPayload | null>(null);
   const [loading, setLoading] = useState(false);
@@ -102,8 +105,8 @@ export function usePaperDigest(
   const paperKey = useMemo(() => {
     const ids = papers.map((p) => p.id).sort().join("|");
     const ctx = contextHint ?? "";
-    return `${ids}::${ctx.length}:${simpleHash(ctx)}`;
-  }, [papers, contextHint]);
+    return `${ids}::${ctx.length}:${simpleHash(ctx)}::${llmOverride?.provider ?? "tier0"}`;
+  }, [papers, contextHint, llmOverride?.provider]);
 
   const storePaperSummaries = useCallback((payload: DigestPayload) => {
     if (payload.noLlm || !payload.bullets?.length) return;
@@ -150,6 +153,7 @@ export function usePaperDigest(
             abstract: p.summaryIntro,
           })),
           contextHint,
+          llmOverride,
         }),
       });
       setData(json);
@@ -162,7 +166,7 @@ export function usePaperDigest(
     } finally {
       setLoading(false);
     }
-  }, [contextHint, enabled, papers, storePaperSummaries]);
+  }, [contextHint, enabled, llmOverride, papers, storePaperSummaries]);
 
   useEffect(() => {
     void fetchDigest(paperKey);
@@ -180,8 +184,11 @@ export function PaperDigestLoader({
   papers,
   contextHint,
   enabled = true,
-}: Pick<DailyDigestProps, "papers" | "contextHint"> & { enabled?: boolean }) {
-  usePaperDigest(papers, contextHint, enabled);
+  llmOverride,
+}: Pick<DailyDigestProps, "papers" | "contextHint" | "llmOverride"> & {
+  enabled?: boolean;
+}) {
+  usePaperDigest(papers, contextHint, enabled, llmOverride);
   return null;
 }
 
@@ -215,10 +222,18 @@ function DigestLoadingProgress() {
  * the cached paragraph is shown immediately without a new LLM call.
  * The user can click "Regenerate" to force a fresh generation.
  */
-export function DailyDigest({ papers, contextHint, selectedPaperId, onSelectPaper }: DailyDigestProps) {
+export function DailyDigest({
+  papers,
+  contextHint,
+  selectedPaperId,
+  onSelectPaper,
+  llmOverride,
+}: DailyDigestProps) {
   const { data, loading, revealBullets, regenerate } = usePaperDigest(
     papers,
     contextHint,
+    true,
+    llmOverride,
   );
 
   const progressBar = loading ? (

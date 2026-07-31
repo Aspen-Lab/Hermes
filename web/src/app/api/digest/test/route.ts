@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { PROVIDER_MODELS } from "@/lib/llm/provider-models";
+import { canUseLocalServerProvider } from "@/lib/llm/providers/registry";
 
 const REGIONAL_MODELS = [
   PROVIDER_MODELS.gemini.small,
@@ -36,6 +37,12 @@ function classifyError(error: unknown): string {
 }
 
 export async function GET() {
+  if (!canUseLocalServerProvider()) {
+    // This diagnostic uses the developer's Vertex account directly. It must
+    // never exist as a callable production/preview endpoint.
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const project = process.env.GOOGLE_VERTEX_PROJECT;
   const creds = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   const regionalLocation = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";

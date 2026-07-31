@@ -126,7 +126,7 @@ async function buildEventPool(
     currentProject: req.currentProject,
   };
   const queries =
-    (req.aiTier ?? 1) >= 2
+    (req.aiTier ?? 0) >= 2
       ? await generateSearchQueries("events", queryProfile, req.llmOverride)
       : templateEventQueries(queryProfile);
 

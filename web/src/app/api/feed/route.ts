@@ -4,9 +4,11 @@ import type { FeedRequest, SearchConnectors } from "@/lib/feed/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import type { SourceId } from "@/lib/sources/types";
 import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
+import { resolveProvider } from "@/lib/llm/providers/registry";
+import { protectAiRequest } from "@/lib/security/ai-request";
 
 const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
+  "Cache-Control": "private, no-store",
 };
 
 function cleanStringArray(input: unknown): string[] {
@@ -131,6 +133,16 @@ export async function POST(req: NextRequest) {
   const seedTexts = cleanStringArray(body.seedTexts);
   const negativeTopics = cleanStringArray(body.negativeTopics);
   const preferenceLedger = cleanPreferenceLedger(body.preferenceLedger);
+  const requestedAiTier = parseAiTier(body.aiTier) ?? 0;
+  const llmOverride = parseLlmOverride(body.llmOverride);
+  const aiProvider =
+    requestedAiTier >= 2 ? resolveProvider(llmOverride) : null;
+  const aiTier = requestedAiTier >= 2 && !aiProvider ? 0 : requestedAiTier;
+
+  if (aiTier >= 2 && aiProvider) {
+    const denied = await protectAiRequest("paper-feed", 60);
+    if (denied) return denied;
+  }
 
   const result = await runFeedPipeline({
     topics,
@@ -147,9 +159,9 @@ export async function POST(req: NextRequest) {
     weights: body.weights,
     sourceWeights: body.sourceWeights,
     controls: body.controls,
-    aiTier: parseAiTier(body.aiTier),
+    aiTier,
     searchConnectors: parseSearchConnectors(body.searchConnectors),
-    llmOverride: parseLlmOverride(body.llmOverride),
+    llmOverride,
     affiliation: parseAffiliation(body.affiliation),
     excludeIds: parseExcludeIds(body.excludeIds),
   });
