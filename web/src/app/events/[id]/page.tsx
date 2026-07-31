@@ -19,6 +19,7 @@ import type {
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
+import type { EventEnrichment } from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
@@ -521,23 +522,39 @@ function StarButton({
 function RosterSection({
   event,
   context,
+  enrichment,
   starredKeys,
   onToggleStar,
 }: {
   event: Event;
   context: EventRosterContext;
+  enrichment?: EventEnrichment | null;
   starredKeys: ReadonlySet<string>;
   onToggleStar: (key: string) => void;
 }) {
+  const judgments = new Map(
+    (enrichment?.judgedAttendees ?? []).map((item) => [item.name, item]),
+  );
+  const usedJudgments = new Set<string>();
+  const takeJudgment = (name: string, hasTier0Reason: boolean) => {
+    if (hasTier0Reason || usedJudgments.has(name)) return undefined;
+    const judgment = judgments.get(name);
+    if (judgment) usedJudgments.add(name);
+    return judgment;
+  };
   const organisations = (event.organisations ?? []).map((item, index) => {
     const key = organisationStarKey(item);
-    const reason = organisationReason(item, context);
-    return { item, index, key, reason, starred: starredKeys.has(key) };
+    const tier0Reason = organisationReason(item, context);
+    const judgment = takeJudgment(item.name, Boolean(tier0Reason));
+    const reason = tier0Reason ?? judgment?.why;
+    return { item, index, key, reason, judgment, starred: starredKeys.has(key) };
   });
   const people = (event.people ?? []).map((item, index) => {
     const key = personStarKey(item);
-    const reason = personReason(item, context);
-    return { item, index, key, reason, starred: starredKeys.has(key) };
+    const tier0Reason = personReason(item, context);
+    const judgment = takeJudgment(item.name, Boolean(tier0Reason));
+    const reason = tier0Reason ?? judgment?.why;
+    return { item, index, key, reason, judgment, starred: starredKeys.has(key) };
   });
   const byPriority = <T extends { index: number; reason?: string; starred: boolean }>(
     left: T,
@@ -560,40 +577,68 @@ function RosterSection({
               Organisations
             </h3>
             <div className="mt-3 grid gap-2">
-              {organisations.map(({ item, key, reason, starred }) => (
-                <article
-                  key={key}
-                  data-roster-row="organisation"
-                  className={cn(
-                    "flex items-start justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3",
-                    (reason || starred) && "border-accent/25 bg-accent/5",
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-heading">{item.name}</p>
-                    {clean(item.descriptor) && (
-                      <p className="mt-0.5 text-body-sm text-text-muted">
-                        {item.descriptor}
-                      </p>
+              {organisations
+                .filter(({ reason, starred }) => reason || starred)
+                .map(({ item, key, reason, judgment, starred }) => (
+                  <article
+                    key={key}
+                    data-roster-row="organisation"
+                    data-roster-card="true"
+                    className={cn(
+                      "flex items-start justify-between gap-3 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3",
+                      judgment && !judgment.worthIt && "border-border bg-bg-secondary/50",
                     )}
-                    {(reason || starred) && (
-                      <p className="mt-2 text-caption font-medium text-accent">
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-heading">{item.name}</p>
+                      {clean(item.descriptor) && (
+                        <p className="mt-0.5 text-body-sm text-text-muted">
+                          {item.descriptor}
+                        </p>
+                      )}
+                      <p
+                        className={cn(
+                          "mt-2 text-caption font-medium text-accent",
+                          judgment && !judgment.worthIt && "text-text-muted",
+                        )}
+                      >
                         {reason ?? "You marked this organisation as important."}
                       </p>
-                    )}
-                    {clean(item.atEvent) && (
-                      <p className="mt-1 text-caption text-text-faint">
-                        At this event · {item.atEvent}
-                      </p>
-                    )}
+                      {clean(item.atEvent) && (
+                        <p className="mt-1 text-caption text-text-faint">
+                          At this event · {item.atEvent}
+                        </p>
+                      )}
+                    </div>
+                    <StarButton
+                      active={starred}
+                      label={item.name}
+                      onClick={() => onToggleStar(key)}
+                    />
+                  </article>
+                ))}
+              {organisations
+                .filter(({ reason, starred }) => !reason && !starred)
+                .map(({ item, key, starred }) => (
+                  <div
+                    key={key}
+                    data-roster-row="organisation"
+                    data-roster-plain="true"
+                    className="flex items-start justify-between gap-3 border-b border-border px-1 py-3 last:border-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-body-sm font-medium text-heading">{item.name}</p>
+                      {clean(item.descriptor) && (
+                        <p className="mt-0.5 text-caption text-text-faint">{item.descriptor}</p>
+                      )}
+                    </div>
+                    <StarButton
+                      active={starred}
+                      label={item.name}
+                      onClick={() => onToggleStar(key)}
+                    />
                   </div>
-                  <StarButton
-                    active={starred}
-                    label={item.name}
-                    onClick={() => onToggleStar(key)}
-                  />
-                </article>
-              ))}
+                ))}
             </div>
           </div>
         )}
@@ -602,42 +647,74 @@ function RosterSection({
           <div>
             <h3 className="text-title font-semibold text-heading">People</h3>
             <div className="mt-3 grid gap-2">
-              {people.map(({ item, key, reason, starred }) => (
-                <article
-                  key={key}
-                  data-roster-row="person"
-                  className={cn(
-                    "flex items-start justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3",
-                    (reason || starred) && "border-accent/25 bg-accent/5",
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-heading">{item.name}</p>
-                    {(clean(item.role) || clean(item.institution)) && (
-                      <p className="mt-0.5 text-body-sm text-text-muted">
-                        {[clean(item.role), clean(item.institution)]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
+              {people
+                .filter(({ reason, starred }) => reason || starred)
+                .map(({ item, key, reason, judgment, starred }) => (
+                  <article
+                    key={key}
+                    data-roster-row="person"
+                    data-roster-card="true"
+                    className={cn(
+                      "flex items-start justify-between gap-3 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3",
+                      judgment && !judgment.worthIt && "border-border bg-bg-secondary/50",
                     )}
-                    {(reason || starred) && (
-                      <p className="mt-2 text-caption font-medium text-accent">
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-heading">{item.name}</p>
+                      {(clean(item.role) || clean(item.institution)) && (
+                        <p className="mt-0.5 text-body-sm text-text-muted">
+                          {[clean(item.role), clean(item.institution)]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+                      <p
+                        className={cn(
+                          "mt-2 text-caption font-medium text-accent",
+                          judgment && !judgment.worthIt && "text-text-muted",
+                        )}
+                      >
                         {reason ?? "You marked this person as important."}
                       </p>
-                    )}
-                    {clean(item.speaking) && (
-                      <p className="mt-1 text-caption text-text-faint">
-                        Speaking · {item.speaking}
-                      </p>
-                    )}
+                      {clean(item.speaking) && (
+                        <p className="mt-1 text-caption text-text-faint">
+                          Speaking · {item.speaking}
+                        </p>
+                      )}
+                    </div>
+                    <StarButton
+                      active={starred}
+                      label={item.name}
+                      onClick={() => onToggleStar(key)}
+                    />
+                  </article>
+                ))}
+              {people
+                .filter(({ reason, starred }) => !reason && !starred)
+                .map(({ item, key, starred }) => (
+                  <div
+                    key={key}
+                    data-roster-row="person"
+                    data-roster-plain="true"
+                    className="flex items-start justify-between gap-3 border-b border-border px-1 py-3 last:border-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-body-sm font-medium text-heading">{item.name}</p>
+                      {(clean(item.role) || clean(item.institution)) && (
+                        <p className="mt-0.5 text-caption text-text-faint">
+                          {[clean(item.role), clean(item.institution)]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                    <StarButton
+                      active={starred}
+                      label={item.name}
+                      onClick={() => onToggleStar(key)}
+                    />
                   </div>
-                  <StarButton
-                    active={starred}
-                    label={item.name}
-                    onClick={() => onToggleStar(key)}
-                  />
-                </article>
-              ))}
+                ))}
             </div>
           </div>
         )}
@@ -650,6 +727,7 @@ export function EventReport({
   event,
   careerStage,
   rosterContext,
+  enrichment = null,
   starredKeys = new Set<string>(),
   isSaved,
   isRegistered,
@@ -664,6 +742,7 @@ export function EventReport({
   event: Event;
   careerStage?: CareerStage;
   rosterContext?: EventRosterContext;
+  enrichment?: EventEnrichment | null;
   starredKeys?: ReadonlySet<string>;
   isSaved: boolean;
   isRegistered: boolean;
@@ -814,6 +893,7 @@ export function EventReport({
       <RosterSection
         event={event}
         context={context}
+        enrichment={enrichment}
         starredKeys={starredKeys}
         onToggleStar={onToggleStar}
       />

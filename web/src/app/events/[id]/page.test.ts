@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Event } from "@/types";
+import type { EventEnrichment } from "@/lib/opportunities/enrichment";
 import { EventReport } from "./page";
 
 function baseEvent(overrides: Partial<Event> = {}): Event {
@@ -22,11 +23,13 @@ function renderReport(
   event: Event,
   careerStage = "PhD Year 3" as const,
   completion = { registered: false, submitted: false },
+  enrichment: EventEnrichment | null = null,
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
       event,
       careerStage,
+      enrichment,
       isSaved: false,
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
@@ -105,5 +108,32 @@ describe("EventReport", () => {
     expect(submittedButton).toContain('aria-pressed="false"');
     expect(html).toContain(">Registered<");
     expect(html).toContain(">Submitted<");
+  });
+
+  it("moves five judged attendees into cards and leaves the other 25 as plain rows", () => {
+    const organisations = Array.from({ length: 30 }, (_, index) => ({
+      name: `Battery Organisation ${index + 1}`,
+      descriptor: "Exhibitor",
+    }));
+    const enrichment: EventEnrichment = {
+      judgedAttendees: organisations.slice(0, 5).map((item, index) => ({
+        name: item.name,
+        worthIt: index < 3,
+        why: `Judgment ${index + 1}`,
+      })),
+    };
+    const html = renderReport(
+      baseEvent({ organisations }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      enrichment,
+    );
+
+    expect(html.match(/data-roster-row="organisation"/g)).toHaveLength(30);
+    expect(html.match(/data-roster-card="true"/g)).toHaveLength(5);
+    expect(html.match(/data-roster-plain="true"/g)).toHaveLength(25);
+    for (let index = 1; index <= 30; index += 1) {
+      expect(html.match(new RegExp(`Battery Organisation ${index}(?!\\d)`, "g"))).toHaveLength(2);
+    }
   });
 });
