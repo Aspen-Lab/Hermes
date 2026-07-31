@@ -15,6 +15,7 @@ function profileWith(patch: Partial<UserProfile>): UserProfile {
 describe("stepIndexFromKey", () => {
   it("resolves the direct walkthrough step and ignores invalid values", () => {
     expect(stepIndexFromKey("ai")).toBe(STEP_META.findIndex((m) => m.key === "ai"));
+    expect(stepIndexFromKey("visa")).toBe(STEP_META.findIndex((m) => m.key === "visa"));
     expect(stepIndexFromKey("unknown")).toBeNull();
     expect(stepIndexFromKey(null)).toBeNull();
   });
@@ -32,6 +33,17 @@ describe("isStepDone", () => {
     expect(isStepDone("basics", profileWith({ careerStage: "Postdoc" }), false)).toBe(true);
     expect(
       isStepDone("basics", profileWith({ industryVsAcademia: "academia" }), false),
+    ).toBe(true);
+  });
+
+  it("work rights: done only after at least one authorised country is set", () => {
+    expect(isStepDone("visa", defaultProfile, false)).toBe(false);
+    expect(
+      isStepDone(
+        "visa",
+        profileWith({ authorisedCountries: ["United States"] }),
+        false,
+      ),
     ).toBe(true);
   });
 
@@ -148,16 +160,18 @@ describe("firstIncompleteStep", () => {
   it("skips completed leading steps — a finished step is never asked for again", () => {
     const p = profileWith({
       displayName: "Peter",
+      authorisedCountries: ["United States"],
       researchTopics: ["solid state battery"],
       currentProject: "electrolyte modelling",
     });
-    // basics, topics, work done → open on radar (index 3).
-    expect(firstIncompleteStep(p, false)).toBe(3);
+    // basics, work rights, topics, work done → open on radar (index 4).
+    expect(firstIncompleteStep(p, false)).toBe(4);
   });
 
   it("a fully set-up profile lands on the last step, not past the end", () => {
     const p = profileWith({
       displayName: "Peter",
+      authorisedCountries: ["United States"],
       researchTopics: ["x"],
       school: "MIT",
       feedFocus: "tight",

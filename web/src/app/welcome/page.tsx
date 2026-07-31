@@ -45,6 +45,7 @@ import {
 } from "@/components/profile/ai-setup";
 import { SchoolAutocomplete } from "@/components/profile/school-autocomplete";
 import { AdvisorField } from "@/components/profile/advisor-field";
+import { CountryMultiSelect } from "@/components/profile/country-multi-select";
 import { ConnectorPanel } from "@/components/profile/connector-panel";
 import { useProfileSettled } from "@/components/first-run";
 import { Callout } from "@/components/ui";
@@ -278,6 +279,28 @@ export default function WelcomePage() {
                       onChange={(v) => store.updateIndustryPreference(v as typeof profile.industryVsAcademia)}
                     />
                   </Field>
+                </StepFrame>
+              )}
+
+              {key === "visa" && (
+                <StepFrame
+                  kicker="Work rights"
+                  title="Where can you already work?"
+                  subtitle="Add countries where you can work without employer sponsorship. Peer uses this only to hide visa warnings that do not apply to you. You can skip this and keep every visa label visible."
+                >
+                  <Field label="Countries where you do not need sponsorship">
+                    <div data-enter-scope>
+                      <CountryMultiSelect
+                        values={profile.authorisedCountries}
+                        onChange={store.updateAuthorisedCountries}
+                        idPrefix="welcome-authorised-country"
+                      />
+                    </div>
+                  </Field>
+                  <p className="text-caption leading-relaxed text-text-faint">
+                    When you sign in, this setting follows you to your other
+                    devices.
+                  </p>
                 </StepFrame>
               )}
 
@@ -763,6 +786,10 @@ function summarizeStep(key: StepKey, profile: UserProfile): string {
         .filter(Boolean)
         .join(" · ");
     }
+    case "visa":
+      return profile.authorisedCountries.length > 0
+        ? profile.authorisedCountries.join(" · ")
+        : "Not set — all visa labels stay visible";
     case "topics": {
       const req = profile.researchTopics.length;
       const soft = profile.softTopics?.length ?? 0;

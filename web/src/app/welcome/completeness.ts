@@ -8,6 +8,7 @@ import { defaultProfile } from "@/types";
 
 export type StepKey =
   | "basics"
+  | "visa"
   | "topics"
   | "work"
   | "radar"
@@ -17,6 +18,7 @@ export type StepKey =
 
 export const STEP_META: { key: StepKey; label: string }[] = [
   { key: "basics", label: "Basics" },
+  { key: "visa", label: "Work rights" },
   { key: "topics", label: "Topics" },
   { key: "work", label: "Work" },
   { key: "radar", label: "Radar" },
@@ -73,6 +75,8 @@ export function isStepDone(
         profile.careerStage !== defaultProfile.careerStage ||
         profile.industryVsAcademia !== defaultProfile.industryVsAcademia
       );
+    case "visa":
+      return profile.authorisedCountries.length > 0;
     case "topics":
       return profile.researchTopics.length > 0;
     case "work":
