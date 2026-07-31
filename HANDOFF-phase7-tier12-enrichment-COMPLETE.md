@@ -8,8 +8,10 @@
 ## Evidence
 
 - `cd web && npx vitest run` — 73 files, 596 tests passed.
+- `PEER_PROFILE_SNAPSHOT_PATH` was unset and `web/.local-data/profile.json` existed. `npx vitest run src/lib/events/benchmark.test.ts --reporter verbose` executed the live benchmark (not skipped): 14/18 survivors had a city (77.8%), and the Cambridge EnerTech result resolved to Chicago.
 - `cd web && npx tsc --noEmit` — clean, exit 0.
 - `cd web && npx eslint .` — exactly one pre-existing error at `src/components/persona/quiz.tsx:46`; no new errors or warnings.
+- `cd web && npm run build` — production build completed successfully; the existing broad PDF tracing warning remains.
 - Local `next dev`, profile provider `default`, no BYOK override: `POST /api/jobs/report` returned `noLlm: false` with `competitiveness`, `sponsorshipRead`, `roleSummary`, and `emphasise`.
 - Local `next dev`, profile provider `default`, no BYOK override: `POST /api/events/report` returned `noLlm: false` with real attendee, talk, and poster enrichment. Optional `dayPlan` was honestly omitted by the model.
 - Offline tests prove no-provider Tier 0 responses, the locked-block-on-null contract, strict parsers, one model call per opened item, seven-day success cache, six-hour failure cache, production default zero client requests, and local-development default Vertex access.
