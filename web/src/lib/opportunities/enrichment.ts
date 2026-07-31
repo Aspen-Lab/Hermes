@@ -68,6 +68,10 @@ const ENRICHMENT_CACHE_MAX_ENTRIES = 80;
 export const ENRICHMENT_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ENRICHMENT_FAILURE_TTL_MS = 6 * 60 * 60 * 1000;
 const enrichmentInFlight = new Map<string, Promise<unknown | null>>();
+const GENERIC_SESSION_TYPE_RE =
+  /^(?:tutorial|panel|keynote|workshop|poster\s+session|reception)$/i;
+const SUBMISSION_SCOPE_RE =
+  /\b(?:poster|abstract|submission|submit|call\s+for\s+(?:papers?|posters?))\b/i;
 
 function clean(value: string | null | undefined): string | undefined {
   const trimmed = value?.replace(/\s+/g, " ").trim();
@@ -83,6 +87,12 @@ function cleanList(values: readonly string[]): string[] {
 
 function isAttendeeRejection(value: string): boolean {
   return /\bnot\s+(?:an?\s+)?(?:individual\s+)?attendee\b/i.test(value);
+}
+
+function eventTalkTitles(event: Pick<Event, "activities">): string[] {
+  return cleanList(event.activities ?? []).filter(
+    (title) => !GENERIC_SESSION_TYPE_RE.test(title),
+  );
 }
 
 function parseJsonRecord(text: string): Record<string, unknown> | null {
@@ -259,6 +269,20 @@ function unjudgedAttendees(event: Event): Array<{
   ];
 }
 
+export function hasEventEnrichmentCandidates(
+  event: Event,
+  contextHint: string,
+): boolean {
+  const hasPosterScope =
+    /(?:^|\n)Current project:\s*\S/i.test(contextHint) &&
+    SUBMISSION_SCOPE_RE.test(event.shortDescription);
+  return Boolean(
+    eventTalkTitles(event).length ||
+      unjudgedAttendees(event).length ||
+      hasPosterScope,
+  );
+}
+
 export function buildEventEnrichmentPrompt(
   event: Event,
   contextHint: string,
@@ -280,7 +304,7 @@ export function buildEventEnrichmentPrompt(
       location: event.location,
       deadline: event.deadline,
       registrationDeadline: event.registrationDeadline,
-      activities: event.activities,
+      activities: eventTalkTitles(event),
       unjudgedAttendees: unjudgedAttendees(event),
       fees: event.fees,
       travelGrant: event.travelGrant,
@@ -338,7 +362,7 @@ export function parseEventEnrichment(
   }
 
   if (Array.isArray(parsed.talkSummaries)) {
-    const activityTitles = new Set(cleanList(event.activities ?? []));
+    const activityTitles = new Set(eventTalkTitles(event));
     const returnedTitles = new Set<string>();
     const talkSummaries = parsed.talkSummaries.flatMap((value) => {
       if (!value || typeof value !== "object" || Array.isArray(value)) return [];

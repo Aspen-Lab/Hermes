@@ -63,6 +63,27 @@ describe("POST /api/events/report", () => {
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
   });
 
+  it("makes no provider call when only generic session types are available", async () => {
+    const generateJsonText = vi.fn();
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+
+    const response = await POST(
+      request({
+        event: {
+          ...event,
+          shortDescription: "A professional gathering.",
+          activities: ["tutorial", "panel", "keynote"],
+          organisations: [],
+        },
+        contextHint: "Topics: batteries",
+      }),
+    );
+
+    expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
+    expect(mocks.resolveProvider).not.toHaveBeenCalled();
+    expect(generateJsonText).not.toHaveBeenCalled();
+  });
+
   it("makes zero client network requests when the user has no provider", async () => {
     const requestReport = vi.fn();
 

@@ -3,6 +3,7 @@ import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   buildEventEnrichmentPrompt,
+  hasEventEnrichmentCandidates,
   parseEventEnrichment,
 } from "@/lib/opportunities/enrichment";
 import type { Event } from "@/types";
@@ -33,6 +34,13 @@ export async function POST(req: NextRequest) {
 
   if (!body.event?.id || !body.event.name) {
     return NextResponse.json({ error: "event is required" }, { status: 400 });
+  }
+
+  if (!hasEventEnrichmentCandidates(body.event, body.contextHint ?? "")) {
+    return NextResponse.json(
+      { enrichment: null, noLlm: true },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 
   const provider = resolveProvider(body.llmOverride ?? null);

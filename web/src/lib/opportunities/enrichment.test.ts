@@ -7,6 +7,7 @@ import {
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
   hasEventEnrichment,
+  hasEventEnrichmentCandidates,
   loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   parseEventEnrichment,
@@ -319,6 +320,56 @@ describe("event enrichment prompt and parser", () => {
       "New Speaker",
     ]);
     expect(JSON.stringify(prompt)).not.toContain("You saved a role there.");
+  });
+
+  it("skips the provider and section when activities are only session types", async () => {
+    const sessionTypesOnly: Event = {
+      ...event,
+      shortDescription: "A professional gathering.",
+      activities: ["tutorial", "panel", "keynote"],
+      organisations: [],
+      people: [],
+    };
+    const provider = vi.fn();
+
+    if (hasEventEnrichmentCandidates(sessionTypesOnly, "Topics: batteries")) {
+      await provider();
+    }
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        talkSummaries: [
+          { title: "tutorial", about: "A guided learning experience." },
+          { title: "panel", about: "A group discussion." },
+          { title: "keynote", about: "A featured presentation." },
+        ],
+      }),
+      sessionTypesOnly,
+    );
+
+    expect(provider).not.toHaveBeenCalled();
+    expect(parsed).toEqual({});
+    expect(hasEventEnrichment(parsed)).toBe(false);
+  });
+
+  it("sends only plausible titles from a mixed activity list", () => {
+    const mixed: Event = {
+      ...event,
+      activities: [
+        "tutorial",
+        "Panel",
+        "Interface stability session",
+        "Fast-charging anode design",
+        "poster session",
+      ],
+    };
+    const prompt = JSON.parse(
+      buildEventEnrichmentPrompt(mixed, "Topics: batteries"),
+    ) as { event: { activities: string[] } };
+
+    expect(prompt.event.activities).toEqual([
+      "Interface stability session",
+      "Fast-charging anode design",
+    ]);
   });
 
   it("drops a hallucinated attendee and never overwrites a Tier 0 judgment", () => {
