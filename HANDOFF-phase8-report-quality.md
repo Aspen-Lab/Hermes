@@ -52,7 +52,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.2 | One row, and the same Interested / Not interested pair the paper report uses | TODO | |
+| P8.2 | One row, and the same Interested / Not interested pair the paper report uses | IN_PROGRESS | |
 
 ### Phase 8C — Event report
 
