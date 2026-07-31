@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
-import type { EventEnrichment } from "@/lib/opportunities/enrichment";
+import {
+  buildEventEnrichmentPrompt,
+  parseEventEnrichment,
+} from "@/lib/opportunities/enrichment";
 import type { Event } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -18,41 +21,6 @@ const EVENT_REPORT_SYSTEM = [
   "Never invent an attendee, organisation, speaker, talk, or deadline.",
   "Return only valid JSON.",
 ].join(" ");
-
-function buildEventPrompt(body: EventReportRequest): string {
-  return JSON.stringify({
-    task: "Add concise, personalized judgment to this event report.",
-    userContext: body.contextHint ?? "",
-    event: body.event,
-    outputSchema: {
-      judgedAttendees: [{ name: "exact supplied name", worthIt: true, why: "string" }],
-      talkSummaries: [{ title: "exact supplied activity title", about: "string" }],
-      dayPlan: [{ day: "string", items: ["string"] }],
-      posterFit: { fits: true, reasoning: "string" },
-    },
-  });
-}
-
-function parseJsonObject(text: string): EventEnrichment | null {
-  const candidates = [
-    text.trim(),
-    text.replace(/^```json\s*/i, "").replace(/```\s*$/g, "").trim(),
-  ];
-  const match = text.match(/\{[\s\S]*\}/);
-  if (match) candidates.push(match[0]);
-
-  for (const candidate of candidates) {
-    try {
-      const parsed: unknown = JSON.parse(candidate);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as EventEnrichment;
-      }
-    } catch {
-      // Try the next candidate.
-    }
-  }
-  return null;
-}
 
 export async function POST(req: NextRequest) {
   let body: EventReportRequest;
@@ -77,12 +45,12 @@ export async function POST(req: NextRequest) {
   try {
     const raw = await provider.generateJsonText({
       systemPrompt: EVENT_REPORT_SYSTEM,
-      userPrompt: buildEventPrompt(body),
+      userPrompt: buildEventEnrichmentPrompt(body.event, body.contextHint ?? ""),
       tier: "large",
       maxTokens: 1600,
     });
     return NextResponse.json(
-      { enrichment: parseJsonObject(raw), noLlm: false },
+      { enrichment: parseEventEnrichment(raw, body.event), noLlm: false },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {

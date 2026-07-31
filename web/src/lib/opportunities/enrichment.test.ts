@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 import { defaultProfile } from "@/types";
 import {
   buildEnrichmentContext,
+  buildEventEnrichmentPrompt,
   buildJobEnrichmentPrompt,
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
   opportunityEnrichmentCacheKey,
+  parseEventEnrichment,
   parseJobEnrichment,
   readCachedOpportunityEnrichment,
   writeCachedOpportunityEnrichment,
   type JobEnrichment,
 } from "./enrichment";
-import type { Job } from "@/types";
+import type { Event, Job } from "@/types";
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -219,5 +221,79 @@ describe("job enrichment prompt and parser", () => {
     };
 
     expect(parseJobEnrichment(JSON.stringify(raw), job)).toEqual(raw);
+  });
+});
+
+describe("event enrichment prompt and parser", () => {
+  const event: Event = {
+    id: "event:parser",
+    name: "Solid-State Battery Summit",
+    type: "conference",
+    date: "2026-09-10",
+    endDate: "2026-09-11",
+    location: "Chicago, IL",
+    isOnline: false,
+    deadline: "2026-08-01",
+    shortDescription: "Research sessions and a poster call.",
+    relevanceReason: "Matches the declared topic.",
+    activities: ["Interface stability session", "Poster session"],
+    organisations: [
+      { name: "Known Lab", relevance: "You saved a role there." },
+      { name: "New Company", descriptor: "Exhibitor" },
+    ],
+    people: [{ name: "New Speaker", role: "Professor", institution: "Peer U" }],
+  };
+
+  it("sends only roster rows that do not already have a Tier 0 judgment", () => {
+    const prompt = JSON.parse(
+      buildEventEnrichmentPrompt(event, "Topics: solid-state batteries"),
+    ) as { event: { unjudgedAttendees: Array<{ name: string }> } };
+
+    expect(prompt.event.unjudgedAttendees.map((item) => item.name)).toEqual([
+      "New Company",
+      "New Speaker",
+    ]);
+    expect(JSON.stringify(prompt)).not.toContain("You saved a role there.");
+  });
+
+  it("drops a hallucinated attendee and never overwrites a Tier 0 judgment", () => {
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: [
+          { name: "Imaginary Person", worthIt: true, why: "Invented." },
+          { name: "Known Lab", worthIt: false, why: "Would overwrite Tier 0." },
+          { name: "New Company", worthIt: true, why: "Relevant interface work." },
+        ],
+      }),
+      event,
+    );
+
+    expect(parsed).toEqual({
+      judgedAttendees: [
+        { name: "New Company", worthIt: true, why: "Relevant interface work." },
+      ],
+    });
+  });
+
+  it("keeps valid talk, plan, and poster judgments and drops unknown talks", () => {
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        talkSummaries: [
+          { title: "Interface stability session", about: "A session on interfaces." },
+          { title: "Invented keynote", about: "Not on the programme." },
+        ],
+        dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
+        posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
+      }),
+      event,
+    );
+
+    expect(parsed).toEqual({
+      talkSummaries: [
+        { title: "Interface stability session", about: "A session on interfaces." },
+      ],
+      dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
+      posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
+    });
   });
 });

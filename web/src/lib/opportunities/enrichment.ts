@@ -1,4 +1,4 @@
-import type { Job, UserAiProvider, UserProfile } from "@/types";
+import type { Event, Job, UserAiProvider, UserProfile } from "@/types";
 
 export interface JobEnrichment {
   competitiveness?: {
@@ -210,6 +210,178 @@ export function hasJobEnrichment(
       enrichment?.sponsorshipRead ||
       enrichment?.roleSummary?.length ||
       enrichment?.emphasise?.length,
+  );
+}
+
+function unjudgedAttendees(event: Event): Array<{
+  name: string;
+  descriptor?: string;
+  kind: "organisation" | "person";
+}> {
+  const alreadyJudgedNames = new Set(
+    [
+      ...(event.organisations ?? []),
+      ...(event.people ?? []),
+    ].flatMap((item) =>
+      clean(item.relevance) && clean(item.name) ? [clean(item.name)!] : [],
+    ),
+  );
+  return [
+    ...(event.organisations ?? []).flatMap((item) => {
+      const name = clean(item.name);
+      if (!name || clean(item.relevance) || alreadyJudgedNames.has(name)) return [];
+      return [{ name, descriptor: clean(item.descriptor), kind: "organisation" as const }];
+    }),
+    ...(event.people ?? []).flatMap((item) => {
+      const name = clean(item.name);
+      if (!name || clean(item.relevance) || alreadyJudgedNames.has(name)) return [];
+      return [
+        {
+          name,
+          descriptor: [clean(item.role), clean(item.institution)]
+            .filter(Boolean)
+            .join(" at ") || undefined,
+          kind: "person" as const,
+        },
+      ];
+    }),
+  ];
+}
+
+export function buildEventEnrichmentPrompt(
+  event: Event,
+  contextHint: string,
+): string {
+  return JSON.stringify({
+    task: [
+      "Add four concise, personalized judgment sections to this event report.",
+      "Use only the supplied event data and user-declared context.",
+      "Judge only attendee names in unjudgedAttendees and copy every name exactly.",
+      "Omit a field when the evidence is insufficient.",
+      "Return only the output object as valid JSON.",
+    ].join(" "),
+    userContext: contextHint,
+    event: {
+      name: event.name,
+      type: event.type,
+      date: event.date,
+      endDate: event.endDate,
+      location: event.location,
+      deadline: event.deadline,
+      registrationDeadline: event.registrationDeadline,
+      activities: event.activities,
+      unjudgedAttendees: unjudgedAttendees(event),
+      fees: event.fees,
+      travelGrant: event.travelGrant,
+      invitationLetter: event.invitationLetter,
+      shortDescription: event.shortDescription,
+    },
+    rules: {
+      judgedAttendees:
+        "Return only exact names from unjudgedAttendees. Never add or rename a person or organisation.",
+      talkSummaries:
+        "Return only exact titles from activities and explain what each supplied activity is about.",
+      dayPlan: "Order concrete supplied sessions and attendee names by event day.",
+      posterFit:
+        "Compare the supplied event or submission scope with the user's current project; do not invent a call.",
+    },
+    outputSchema: {
+      judgedAttendees: [{ name: "exact supplied name", worthIt: true, why: "string" }],
+      talkSummaries: [{ title: "exact supplied activity title", about: "string" }],
+      dayPlan: [{ day: "string", items: ["string"] }],
+      posterFit: { fits: true, reasoning: "string" },
+    },
+  });
+}
+
+export function parseEventEnrichment(
+  text: string,
+  event: Event,
+): EventEnrichment | null {
+  const parsed = parseJsonRecord(text);
+  if (!parsed) return null;
+  const enrichment: EventEnrichment = {};
+
+  if (Array.isArray(parsed.judgedAttendees)) {
+    const allowedNames = new Set(unjudgedAttendees(event).map((item) => item.name));
+    const returnedNames = new Set<string>();
+    const judgedAttendees = parsed.judgedAttendees.flatMap((value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+      const record = value as Record<string, unknown>;
+      const name = typeof record.name === "string" ? clean(record.name) : undefined;
+      const why = typeof record.why === "string" ? clean(record.why) : undefined;
+      if (
+        !name ||
+        !why ||
+        !allowedNames.has(name) ||
+        returnedNames.has(name) ||
+        typeof record.worthIt !== "boolean"
+      ) {
+        return [];
+      }
+      returnedNames.add(name);
+      return [{ name, worthIt: record.worthIt, why }];
+    });
+    if (judgedAttendees.length > 0) enrichment.judgedAttendees = judgedAttendees;
+  }
+
+  if (Array.isArray(parsed.talkSummaries)) {
+    const activityTitles = new Set(cleanList(event.activities ?? []));
+    const returnedTitles = new Set<string>();
+    const talkSummaries = parsed.talkSummaries.flatMap((value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+      const record = value as Record<string, unknown>;
+      const title = typeof record.title === "string" ? clean(record.title) : undefined;
+      const about = typeof record.about === "string" ? clean(record.about) : undefined;
+      if (
+        !title ||
+        !about ||
+        !activityTitles.has(title) ||
+        returnedTitles.has(title)
+      ) {
+        return [];
+      }
+      returnedTitles.add(title);
+      return [{ title, about }];
+    });
+    if (talkSummaries.length > 0) enrichment.talkSummaries = talkSummaries;
+  }
+
+  if (Array.isArray(parsed.dayPlan)) {
+    const dayPlan = parsed.dayPlan.flatMap((value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+      const record = value as Record<string, unknown>;
+      const day = typeof record.day === "string" ? clean(record.day) : undefined;
+      const items = boundedStringList(record.items, 1, 12);
+      return day && items ? [{ day, items }] : [];
+    });
+    if (dayPlan.length > 0) enrichment.dayPlan = dayPlan;
+  }
+
+  if (
+    parsed.posterFit &&
+    typeof parsed.posterFit === "object" &&
+    !Array.isArray(parsed.posterFit)
+  ) {
+    const record = parsed.posterFit as Record<string, unknown>;
+    const reasoning =
+      typeof record.reasoning === "string" ? clean(record.reasoning) : undefined;
+    if (typeof record.fits === "boolean" && reasoning) {
+      enrichment.posterFit = { fits: record.fits, reasoning };
+    }
+  }
+
+  return enrichment;
+}
+
+export function hasEventEnrichment(
+  enrichment: EventEnrichment | null | undefined,
+): boolean {
+  return Boolean(
+    enrichment?.judgedAttendees?.length ||
+      enrichment?.talkSummaries?.length ||
+      enrichment?.dayPlan?.length ||
+      enrichment?.posterFit,
   );
 }
 
