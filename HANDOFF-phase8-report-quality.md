@@ -46,7 +46,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.1 | Back returns to the tab the user came from, not Dashboard | TODO | |
+| P8.1 | Back returns to the tab the user came from, not Dashboard | IN_PROGRESS | |
 
 ### Phase 8B — The action row (both reports)
 
