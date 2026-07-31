@@ -9,7 +9,7 @@ import {
 import {
   fetchPageHtml,
   fetchPagesConcurrently,
-  MIN_USABLE_PAGE_TEXT_CHARS,
+  MIN_USABLE_PAGE_BYTES,
   UNFETCHABLE_HOSTS,
 } from "./page-fetch";
 
@@ -113,8 +113,11 @@ describe("fetchPageHtml", () => {
     ).resolves.toBeNull();
   });
 
-  it("rejects a JavaScript shell with less than 20 KB of visible text", async () => {
-    const shell = `<main>${"x".repeat(MIN_USABLE_PAGE_TEXT_CHARS - 1)}</main>`;
+  it("rejects a JavaScript shell smaller than 20 KB", async () => {
+    // Shaped like the measured AcademicJobsOnline response: ~6 KB, almost all
+    // of it a script tag, with no server-rendered posting content.
+    const shell = `<html><head><script>${"a".repeat(6 * 1024)}</script></head><body><div id="root"></div></body></html>`;
+    expect(shell.length).toBeLessThan(MIN_USABLE_PAGE_BYTES);
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(shell, { status: 200 }),
     );
@@ -123,6 +126,27 @@ describe("fetchPageHtml", () => {
     await expect(
       fetchPageHtml("https://jobs.example.com/shell"),
     ).resolves.toBeNull();
+  });
+
+  it("keeps a real page whose visible text is small but whose markup is not", async () => {
+    // Regression guard. careers.ornl.gov is a genuine, extractable posting page
+    // that measures 47 KB of markup but strips to only ~2 KB of visible text.
+    // A visible-text floor rejected it — and every other real page — which
+    // silently disabled deadline, visa, fee and roster extraction everywhere.
+    const realPage =
+      `<html><head><script>${"b".repeat(40 * 1024)}</script></head>` +
+      `<body><main><h1>Postdoctoral Researcher</h1>` +
+      `<p>Application deadline: 15 September. Oak Ridge, TN.</p></main></body></html>`;
+    expect(realPage.length).toBeGreaterThanOrEqual(MIN_USABLE_PAGE_BYTES);
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(realPage, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchPageHtml("https://careers.example.gov/posting"),
+    ).resolves.toBe(realPage);
   });
 
   it("skips known-unfetchable hosts without making a request", async () => {

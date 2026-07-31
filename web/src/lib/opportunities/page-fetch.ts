@@ -1,5 +1,3 @@
-import { stripHtml } from "./shared";
-
 const FETCH_TIMEOUT_MS = 12_000;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const DEFAULT_CONCURRENCY = 8;
@@ -13,13 +11,23 @@ export const UNFETCHABLE_HOSTS = [
 ] as const;
 
 // The measured AcademicJobsOnline (6 KB) and ACS (0.2 KB) responses are
-// JavaScript shells, not usable posting pages. Count visible text rather than
-// response bytes so a large script bundle cannot masquerade as extractable
-// content.
-export const MIN_USABLE_PAGE_TEXT_CHARS = 20 * 1024;
+// JavaScript shells, not usable posting pages.
+//
+// Measure the RAW response, not the visible text. Visible-text length cannot
+// separate the two populations: careers.ornl.gov — a real, extractable posting
+// page — strips to ~2 KB, exactly like the AcademicJobsOnline shell. Every real
+// page measured (icml.cc, neurips.cc, electrochem.org, euraxess, ornl,
+// nature.com, jobs.ac.uk) strips to 2–19 KB, so a 20 KB visible-text floor
+// discarded all of them and silently disabled the whole extraction layer.
+//
+// Raw size does separate them cleanly: the two shells are 6 KB and 0.2 KB,
+// while every real page is 47 KB or larger. A script bundle inflating a shell
+// past 20 KB would slip through, but it then yields nothing and the extractors
+// simply return empty — the failure mode is a wasted parse, not lost data.
+export const MIN_USABLE_PAGE_BYTES = 20 * 1024;
 
 export function hasUsableOpportunityPageText(html: string): boolean {
-  return stripHtml(html).length >= MIN_USABLE_PAGE_TEXT_CHARS;
+  return html.length >= MIN_USABLE_PAGE_BYTES;
 }
 
 function isUnfetchableUrl(url: string): boolean {
