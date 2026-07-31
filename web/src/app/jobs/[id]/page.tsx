@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
+import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const JOB_TIER_UPGRADE_ITEMS = [
@@ -283,19 +284,26 @@ function JobActionRow({
   applyUrl,
   isSaved,
   isApplied,
+  isInterested,
   onToggleSave,
   onAppliedChange,
+  onInterested,
   onDismiss,
 }: {
   applyUrl?: string;
   isSaved: boolean;
   isApplied: boolean;
+  isInterested: boolean;
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
+  onInterested: () => void;
   onDismiss: () => void;
 }) {
   return (
-    <div className="mt-7 flex flex-wrap items-center gap-2.5">
+    <div
+      data-report-action-row="job"
+      className="mt-7 flex flex-wrap items-center gap-2"
+    >
       {applyUrl && (
         <a
           href={applyUrl}
@@ -303,7 +311,7 @@ function JobActionRow({
           rel="noopener noreferrer"
           className={cn(
             buttonVariants({ tone: "primary" }),
-            "h-11 px-5 text-body font-semibold",
+            "h-11 px-4 text-body font-semibold",
           )}
         >
           Apply
@@ -316,7 +324,7 @@ function JobActionRow({
         aria-pressed={isSaved}
         className={cn(
           buttonVariants({ tone: "soft" }),
-          "h-11 px-4 text-body-sm",
+          "h-11 px-3 text-body-sm",
           isSaved && "border-accent/35 bg-accent/10 text-accent",
         )}
       >
@@ -326,15 +334,13 @@ function JobActionRow({
         label="Applied"
         checked={isApplied}
         onChange={onAppliedChange}
-        className="h-11 px-4 text-body-sm"
+        className="h-11 px-3 text-body-sm"
       />
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="h-11 rounded-full px-4 text-body-sm font-medium text-text-muted transition-colors hover:bg-red/10 hover:text-red"
-      >
-        Not interested
-      </button>
+      <OpportunityFeedbackPair
+        isInterested={isInterested}
+        onInterested={onInterested}
+        onNotInterested={onDismiss}
+      />
     </div>
   );
 }
@@ -343,17 +349,20 @@ export function JobReport({
   job,
   isSaved,
   isApplied,
+  isInterested = false,
   nowMs,
   enrichment = null,
   providerConfigured: _providerConfigured = false,
   onToggleSave,
   onAppliedChange,
   onDismiss,
+  onInterested = () => undefined,
   onBack,
 }: {
   job: Job;
   isSaved: boolean;
   isApplied: boolean;
+  isInterested?: boolean;
   nowMs: number;
   enrichment?: JobEnrichment | null;
   /** Legacy test seam: provider availability alone must not hide the locked block. */
@@ -361,6 +370,7 @@ export function JobReport({
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
+  onInterested?: () => void;
   onBack?: () => void;
 }) {
   // Provider availability is intentionally not a rendering signal. Only real
@@ -425,8 +435,10 @@ export function JobReport({
           applyUrl={clean(job.linkPosting)}
           isSaved={isSaved}
           isApplied={isApplied}
+          isInterested={isInterested}
           onToggleSave={onToggleSave}
           onAppliedChange={onAppliedChange}
+          onInterested={onInterested}
           onDismiss={onDismiss}
         />
       </header>
@@ -673,6 +685,8 @@ export default function JobDetailPage({
   const unsaveJob = useFeedStore((state) => state.unsaveJob);
   const setJobApplied = useFeedStore((state) => state.setJobApplied);
   const notInterestedJob = useFeedStore((state) => state.notInterestedJob);
+  const moreLikeJob = useFeedStore((state) => state.moreLikeJob);
+  const feedback = useFeedStore((state) => state.jobFeedback[id]);
   const profile = useProfileStore((state) => state.profile);
   const [nowMs] = useState(Date.now);
   const [enrichmentResult, setEnrichmentResult] = useState<{
@@ -758,6 +772,10 @@ export default function JobDetailPage({
       job={job}
       isSaved={isSaved}
       isApplied={isApplied}
+      isInterested={
+        (feedback ?? job.feedback) === "moreLikeThis" ||
+        (feedback ?? job.feedback) === "liked"
+      }
       nowMs={nowMs}
       enrichment={
         enrichmentResult.key === enrichmentKey && enrichmentResult.done
@@ -766,6 +784,7 @@ export default function JobDetailPage({
       }
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
+      onInterested={() => moreLikeJob(job)}
       onDismiss={() => {
         notInterestedJob(job);
         window.history.back();

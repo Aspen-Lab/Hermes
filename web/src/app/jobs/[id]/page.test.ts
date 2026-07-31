@@ -12,12 +12,14 @@ function renderReport(
   isApplied = false,
   enrichment: JobEnrichment | null = null,
   providerConfigured = false,
+  isInterested = false,
 ): string {
   return renderToStaticMarkup(
     createElement(JobReport, {
       job,
       isSaved: false,
       isApplied,
+      isInterested,
       nowMs: NOW,
       enrichment,
       providerConfigured,
@@ -42,6 +44,29 @@ function baseJob(overrides: Partial<Job> = {}): Job {
 }
 
 describe("JobReport", () => {
+  it("renders one wrapping action row with the paired feedback controls", () => {
+    const html = renderReport(
+      baseJob({ linkPosting: "https://jobs.example.test" }),
+      false,
+      null,
+      false,
+      true,
+    );
+    const actionRows = html.match(
+      /<div[^>]*data-report-action-row="job"[^>]*>/g,
+    );
+    const interested = html.match(
+      /<button[^>]*data-feedback-control="interested"[^>]*>/,
+    )?.[0];
+
+    expect(actionRows).toHaveLength(1);
+    expect(actionRows?.[0]).toContain("flex flex-wrap items-center");
+    expect(html.match(/data-opportunity-feedback-pair="true"/g)).toHaveLength(1);
+    expect(interested).toContain('aria-pressed="true"');
+    expect(html).toContain("Interested");
+    expect(html).toContain("Not interested");
+  });
+
   it("renders a sparse aggregator job without empty facts or placeholders", () => {
     const html = renderReport(
       baseJob({

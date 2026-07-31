@@ -52,7 +52,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.2 | One row, and the same Interested / Not interested pair the paper report uses | IN_PROGRESS | |
+| P8.2 | One row, and the same Interested / Not interested pair the paper report uses | DONE | `cd web && npx vitest run` — 76 files / 605 tests passed; store transition and single-row component tests passed. Visual: event + job at 375 px and 1280 px, no overflow; desktop rows stayed on one line and mobile kept the feedback pair together. |
 
 ### Phase 8C — Event report
 

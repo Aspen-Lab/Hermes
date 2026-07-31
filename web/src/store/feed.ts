@@ -163,10 +163,10 @@ function pruneRecentlyShown(
 }
 
 function dismissedOpportunityIds(
-  oppFeedback: Record<string, ItemFeedback>,
+  feedbackById: Record<string, ItemFeedback>,
 ): Set<string> {
   return new Set(
-    Object.entries(oppFeedback)
+    Object.entries(feedbackById)
       .filter(([, feedback]) => feedback === "notInterested")
       .map(([id]) => id),
   );
@@ -569,9 +569,10 @@ interface FeedState {
   /** id -> feedback. Tracks save/like/dismiss state for any paper the user
    * has interacted with, even ones not in the current feed (e.g. searched). */
   paperFeedback: Record<string, ItemFeedback>;
-  /** id -> feedback for events and jobs (ids are source-namespaced, so one
-   * map covers both kinds without collisions). */
-  oppFeedback: Record<string, ItemFeedback>;
+  /** id -> feedback for events the user has interacted with. */
+  eventFeedback: Record<string, ItemFeedback>;
+  /** id -> feedback for jobs the user has interacted with. */
+  jobFeedback: Record<string, ItemFeedback>;
 
   loadFeed: (options?: FeedLoadOptions) => Promise<void>;
   setAiPaperSearchEnabled: (enabled: boolean) => Promise<void>;
@@ -654,7 +655,8 @@ export const useFeedStore = create<FeedState>()(
       recentlyShownIds: {},
       pendingDismissal: null,
       paperFeedback: {},
-      oppFeedback: {},
+      eventFeedback: {},
+      jobFeedback: {},
 
       loadFeed: async (options) => {
         const requestId = ++feedLoadSeq;
@@ -669,7 +671,8 @@ export const useFeedStore = create<FeedState>()(
           papers: displayedPapers,
           savedPapers,
           recentlyShownIds,
-          oppFeedback,
+          eventFeedback,
+          jobFeedback,
         } = get();
         const savedIds = new Set(savedPapers.map((p) => p.id));
         const aiPaperSearchEnabled = get().aiPaperSearchEnabled;
@@ -693,10 +696,13 @@ export const useFeedStore = create<FeedState>()(
         // Events and jobs are STANDING opportunities, not consume-once items: a
         // conference is relevant every day until its deadline passes, so it
         // should keep surfacing rather than being suppressed after one view.
-        // Exclude only the ones the user explicitly dismissed (persisted in
-        // oppFeedback) so dismissals stick without starving the small pool.
-        const dismissedOppIds = Array.from(
-          dismissedOpportunityIds(oppFeedback),
+        // Exclude only the ones the user explicitly dismissed so dismissals
+        // stick without starving either small opportunity pool.
+        const dismissedEventIds = Array.from(
+          dismissedOpportunityIds(eventFeedback),
+        );
+        const dismissedJobIds = Array.from(
+          dismissedOpportunityIds(jobFeedback),
         );
 
         // Start all three pipelines together, but let each lane publish as
@@ -765,7 +771,7 @@ export const useFeedStore = create<FeedState>()(
 
         const eventsLane = (async () => {
           try {
-            const realEvents = await fetchRealEvents(profile, dismissedOppIds);
+            const realEvents = await fetchRealEvents(profile, dismissedEventIds);
             if (requestId !== feedLoadSeq) return;
             set((state) => {
               const currentSavedIds = new Set(
@@ -776,13 +782,13 @@ export const useFeedStore = create<FeedState>()(
               // while this lane was in flight, and a stale response must not
               // resurrect it.
               const currentDismissedIds = dismissedOpportunityIds(
-                state.oppFeedback,
+                state.eventFeedback,
               );
               const decorate = (event: Event): Event => ({
                 ...event,
                 isSaved: currentSavedIds.has(event.id),
                 feedback:
-                  state.oppFeedback[event.id] ??
+                  state.eventFeedback[event.id] ??
                   (currentSavedIds.has(event.id)
                     ? ("saved" as ItemFeedback)
                     : undefined),
@@ -804,20 +810,20 @@ export const useFeedStore = create<FeedState>()(
 
         const jobsLane = (async () => {
           try {
-            const realJobs = await fetchRealJobs(profile, dismissedOppIds);
+            const realJobs = await fetchRealJobs(profile, dismissedJobIds);
             if (requestId !== feedLoadSeq) return;
             set((state) => {
               const currentSavedIds = new Set(
                 state.savedJobs.map((job) => job.id),
               );
               const currentDismissedIds = dismissedOpportunityIds(
-                state.oppFeedback,
+                state.jobFeedback,
               );
               const decorate = (job: Job): Job => ({
                 ...job,
                 isSaved: currentSavedIds.has(job.id),
                 feedback:
-                  state.oppFeedback[job.id] ??
+                  state.jobFeedback[job.id] ??
                   (currentSavedIds.has(job.id)
                     ? ("saved" as ItemFeedback)
                     : undefined),
@@ -943,7 +949,7 @@ export const useFeedStore = create<FeedState>()(
 
       saveEvent: (event) => {
         const alreadySaved = get().savedEvents.some((e) => e.id === event.id);
-        const previousFeedback = get().oppFeedback[event.id] ?? event.feedback;
+        const previousFeedback = get().eventFeedback[event.id] ?? event.feedback;
         const savedFeedback =
           previousFeedback === "moreLikeThis" || previousFeedback === "liked"
             ? previousFeedback
@@ -963,7 +969,7 @@ export const useFeedStore = create<FeedState>()(
           savedEvents: alreadySaved
             ? s.savedEvents.map((e) => (e.id === event.id ? saved : e))
             : [saved, ...s.savedEvents],
-          oppFeedback: { ...s.oppFeedback, [event.id]: savedFeedback },
+          eventFeedback: { ...s.eventFeedback, [event.id]: savedFeedback },
         }));
         if (!alreadySaved) {
           useProfileStore.getState().recordEventPreference(saved, "positive");
@@ -980,13 +986,13 @@ export const useFeedStore = create<FeedState>()(
       notInterestedEvent: (event) => {
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
-        const previousFeedback = get().oppFeedback[event.id] ?? event.feedback;
+        const previousFeedback = get().eventFeedback[event.id] ?? event.feedback;
 
         set((s) => ({
           events: s.events.filter((e) => e.id !== event.id),
           eventPool: s.eventPool.filter((e) => e.id !== event.id),
           savedEvents: s.savedEvents.filter((e) => e.id !== event.id),
-          oppFeedback: { ...s.oppFeedback, [event.id]: "notInterested" },
+          eventFeedback: { ...s.eventFeedback, [event.id]: "notInterested" },
           pendingDismissal: {
             id: event.id,
             kind: "event",
@@ -1004,7 +1010,7 @@ export const useFeedStore = create<FeedState>()(
       },
 
       moreLikeEvent: (event) => {
-        const previous = get().oppFeedback[event.id] ?? event.feedback;
+        const previous = get().eventFeedback[event.id] ?? event.feedback;
         const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
           events: s.events.map((e) =>
@@ -1022,7 +1028,7 @@ export const useFeedStore = create<FeedState>()(
               ? { ...e, feedback: "moreLikeThis" as ItemFeedback }
               : e,
           ),
-          oppFeedback: { ...s.oppFeedback, [event.id]: "moreLikeThis" },
+          eventFeedback: { ...s.eventFeedback, [event.id]: "moreLikeThis" },
         }));
         if (!alreadyLiked) {
           useProfileStore.getState().recordEventPreference(event, "positive");
@@ -1037,7 +1043,7 @@ export const useFeedStore = create<FeedState>()(
 
       saveJob: (job) => {
         const alreadySaved = get().savedJobs.some((j) => j.id === job.id);
-        const previousFeedback = get().oppFeedback[job.id] ?? job.feedback;
+        const previousFeedback = get().jobFeedback[job.id] ?? job.feedback;
         const savedFeedback =
           previousFeedback === "moreLikeThis" || previousFeedback === "liked"
             ? previousFeedback
@@ -1052,7 +1058,7 @@ export const useFeedStore = create<FeedState>()(
           savedJobs: alreadySaved
             ? s.savedJobs.map((j) => (j.id === job.id ? saved : j))
             : [saved, ...s.savedJobs],
-          oppFeedback: { ...s.oppFeedback, [job.id]: savedFeedback },
+          jobFeedback: { ...s.jobFeedback, [job.id]: savedFeedback },
         }));
         if (!alreadySaved) {
           useProfileStore.getState().recordJobPreference(saved, "positive");
@@ -1064,13 +1070,13 @@ export const useFeedStore = create<FeedState>()(
       notInterestedJob: (job) => {
         const prev = get().pendingDismissal;
         if (prev) get().commitDismiss();
-        const previousFeedback = get().oppFeedback[job.id] ?? job.feedback;
+        const previousFeedback = get().jobFeedback[job.id] ?? job.feedback;
 
         set((s) => ({
           jobs: s.jobs.filter((j) => j.id !== job.id),
           jobPool: s.jobPool.filter((j) => j.id !== job.id),
           savedJobs: s.savedJobs.filter((j) => j.id !== job.id),
-          oppFeedback: { ...s.oppFeedback, [job.id]: "notInterested" },
+          jobFeedback: { ...s.jobFeedback, [job.id]: "notInterested" },
           pendingDismissal: {
             id: job.id,
             kind: "job",
@@ -1087,7 +1093,7 @@ export const useFeedStore = create<FeedState>()(
       },
 
       moreLikeJob: (job) => {
-        const previous = get().oppFeedback[job.id] ?? job.feedback;
+        const previous = get().jobFeedback[job.id] ?? job.feedback;
         const alreadyLiked = previous === "moreLikeThis" || previous === "liked";
         set((s) => ({
           jobs: s.jobs.map((j) =>
@@ -1105,7 +1111,7 @@ export const useFeedStore = create<FeedState>()(
               ? { ...j, feedback: "moreLikeThis" as ItemFeedback }
               : j,
           ),
-          oppFeedback: { ...s.oppFeedback, [job.id]: "moreLikeThis" },
+          jobFeedback: { ...s.jobFeedback, [job.id]: "moreLikeThis" },
         }));
         if (!alreadyLiked) {
           useProfileStore.getState().recordJobPreference(job, "positive");
@@ -1143,7 +1149,7 @@ export const useFeedStore = create<FeedState>()(
 
       unsaveEvent: (id) => {
         set((s) => {
-          const nextFeedback = { ...s.oppFeedback };
+          const nextFeedback = { ...s.eventFeedback };
           const nextRegisteredAt = { ...s.registeredAt };
           const nextSubmittedAt = { ...s.submittedAt };
           const currentFeedback = nextFeedback[id];
@@ -1174,7 +1180,7 @@ export const useFeedStore = create<FeedState>()(
                 : e,
             ),
             savedEvents: s.savedEvents.filter((e) => e.id !== id),
-            oppFeedback: nextFeedback,
+            eventFeedback: nextFeedback,
             registeredAt: nextRegisteredAt,
             submittedAt: nextSubmittedAt,
           };
@@ -1184,7 +1190,7 @@ export const useFeedStore = create<FeedState>()(
 
       unsaveJob: (id) => {
         set((s) => {
-          const nextFeedback = { ...s.oppFeedback };
+          const nextFeedback = { ...s.jobFeedback };
           const nextAppliedAt = { ...s.appliedAt };
           const currentFeedback = nextFeedback[id];
           if (currentFeedback === "saved") delete nextFeedback[id];
@@ -1213,7 +1219,7 @@ export const useFeedStore = create<FeedState>()(
                 : j,
             ),
             savedJobs: s.savedJobs.filter((j) => j.id !== id),
-            oppFeedback: nextFeedback,
+            jobFeedback: nextFeedback,
             appliedAt: nextAppliedAt,
           };
         });
@@ -1346,14 +1352,14 @@ export const useFeedStore = create<FeedState>()(
               pendingDismissal: null,
             };
           }
-          const nextOppFeedback = { ...s.oppFeedback };
-          if (pending.previousFeedback) {
-            nextOppFeedback[pending.id] = pending.previousFeedback;
-          } else {
-            delete nextOppFeedback[pending.id];
-          }
           if (pending.kind === "event") {
             const event = pending.item as Event;
+            const nextEventFeedback = { ...s.eventFeedback };
+            if (pending.previousFeedback) {
+              nextEventFeedback[pending.id] = pending.previousFeedback;
+            } else {
+              delete nextEventFeedback[pending.id];
+            }
             return {
               events: restoreByScore(
                 s.events,
@@ -1370,11 +1376,17 @@ export const useFeedStore = create<FeedState>()(
                 event,
                 pending.wasSaved,
               ),
-              oppFeedback: nextOppFeedback,
+              eventFeedback: nextEventFeedback,
               pendingDismissal: null,
             };
           }
           const job = pending.item as Job;
+          const nextJobFeedback = { ...s.jobFeedback };
+          if (pending.previousFeedback) {
+            nextJobFeedback[pending.id] = pending.previousFeedback;
+          } else {
+            delete nextJobFeedback[pending.id];
+          }
           return {
             jobs: restoreByScore(
               s.jobs,
@@ -1391,7 +1403,7 @@ export const useFeedStore = create<FeedState>()(
               job,
               pending.wasSaved,
             ),
-            oppFeedback: nextOppFeedback,
+            jobFeedback: nextJobFeedback,
             pendingDismissal: null,
           };
         });
@@ -1466,20 +1478,22 @@ export const useFeedStore = create<FeedState>()(
           );
           const savedJobIds = new Set(nextSavedJobs.map((job) => job.id));
           const nextPaperFeedback = { ...s.paperFeedback };
-          const nextOppFeedback = { ...s.oppFeedback };
+          const nextEventFeedback = { ...s.eventFeedback };
+          const nextJobFeedback = { ...s.jobFeedback };
 
           for (const [id, feedback] of Object.entries(nextPaperFeedback)) {
             if (feedback === "saved" && !savedPaperIds.has(id)) {
               delete nextPaperFeedback[id];
             }
           }
-          for (const [id, feedback] of Object.entries(nextOppFeedback)) {
-            if (
-              feedback === "saved" &&
-              !savedEventIds.has(id) &&
-              !savedJobIds.has(id)
-            ) {
-              delete nextOppFeedback[id];
+          for (const [id, feedback] of Object.entries(nextEventFeedback)) {
+            if (feedback === "saved" && !savedEventIds.has(id)) {
+              delete nextEventFeedback[id];
+            }
+          }
+          for (const [id, feedback] of Object.entries(nextJobFeedback)) {
+            if (feedback === "saved" && !savedJobIds.has(id)) {
+              delete nextJobFeedback[id];
             }
           }
 
@@ -1492,18 +1506,18 @@ export const useFeedStore = create<FeedState>()(
             events: syncSavedState(
               s.events,
               savedEventIds,
-              nextOppFeedback,
+              nextEventFeedback,
             ),
             eventPool: syncSavedState(
               s.eventPool,
               savedEventIds,
-              nextOppFeedback,
+              nextEventFeedback,
             ),
-            jobs: syncSavedState(s.jobs, savedJobIds, nextOppFeedback),
+            jobs: syncSavedState(s.jobs, savedJobIds, nextJobFeedback),
             jobPool: syncSavedState(
               s.jobPool,
               savedJobIds,
-              nextOppFeedback,
+              nextJobFeedback,
             ),
             savedPapers: syncSavedState(
               nextSavedPapers,
@@ -1513,15 +1527,16 @@ export const useFeedStore = create<FeedState>()(
             savedEvents: syncSavedState(
               nextSavedEvents,
               savedEventIds,
-              nextOppFeedback,
+              nextEventFeedback,
             ),
             savedJobs: syncSavedState(
               nextSavedJobs,
               savedJobIds,
-              nextOppFeedback,
+              nextJobFeedback,
             ),
             paperFeedback: nextPaperFeedback,
-            oppFeedback: nextOppFeedback,
+            eventFeedback: nextEventFeedback,
+            jobFeedback: nextJobFeedback,
             readItems: remote.readItems ?? s.readItems,
             appliedAt:
               remote.savedJobs === undefined
@@ -1563,13 +1578,15 @@ export const useFeedStore = create<FeedState>()(
           recentlyShownIds: {},
           pendingDismissal: null,
           paperFeedback: {},
-          oppFeedback: {},
+          eventFeedback: {},
+          jobFeedback: {},
           aiPaperSearchEnabled: false,
         });
       },
     }),
     {
       name: "peer-feed",
+      version: 1,
       // skipHydration: rehydrated after mount via <StoreHydrator/> so the
       // first client render matches SSR defaults (empty feed / no saves) and
       // doesn't mismatch the server markup. See store/ui.ts for rationale.
@@ -1586,8 +1603,25 @@ export const useFeedStore = create<FeedState>()(
         aiPaperSearchEnabled: state.aiPaperSearchEnabled,
         recentlyShownIds: state.recentlyShownIds,
         paperFeedback: state.paperFeedback,
-        oppFeedback: state.oppFeedback,
+        eventFeedback: state.eventFeedback,
+        jobFeedback: state.jobFeedback,
       }),
+      migrate: (persistedState, version) => {
+        const persisted = persistedState as Partial<FeedState> & {
+          oppFeedback?: Record<string, ItemFeedback>;
+        };
+        if (version >= 1 || !persisted.oppFeedback) return persisted as FeedState;
+
+        const { oppFeedback, ...current } = persisted;
+        return {
+          ...current,
+          // Older builds shared one source-namespaced map. Copying it into
+          // both typed maps preserves every dismissal without guessing an
+          // adapter's id prefix; ids cannot collide across opportunity kinds.
+          eventFeedback: { ...oppFeedback, ...current.eventFeedback },
+          jobFeedback: { ...oppFeedback, ...current.jobFeedback },
+        } as FeedState;
+      },
     }
   )
 );

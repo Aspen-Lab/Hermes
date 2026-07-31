@@ -25,6 +25,7 @@ function renderReport(
   completion = { registered: false, submitted: false },
   enrichment: EventEnrichment | null = null,
   providerConfigured = false,
+  isInterested = false,
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
@@ -35,6 +36,7 @@ function renderReport(
       isSaved: false,
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
+      isInterested,
       starredKeys: new Set<string>(),
       onToggleStar: () => undefined,
       onToggleSave: () => undefined,
@@ -46,6 +48,31 @@ function renderReport(
 }
 
 describe("EventReport", () => {
+  it("renders one wrapping action row with the paired feedback controls", () => {
+    const html = renderReport(
+      baseEvent({ linkOfficial: "https://events.example.test" }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      null,
+      false,
+      true,
+    );
+    const actionRows = html.match(
+      /<div[^>]*data-report-action-row="event"[^>]*>/g,
+    );
+    const interested = html.match(
+      /<button[^>]*data-feedback-control="interested"[^>]*>/,
+    )?.[0];
+
+    expect(actionRows).toHaveLength(1);
+    expect(actionRows?.[0]).toContain("flex flex-wrap items-center");
+    expect(html).not.toContain("flex flex-col items-start");
+    expect(html.match(/data-opportunity-feedback-pair="true"/g)).toHaveLength(1);
+    expect(interested).toContain('aria-pressed="true"');
+    expect(html).toContain("Interested");
+    expect(html).toContain("Not interested");
+  });
+
   it("renders every organisation in a 30-entry roster", () => {
     const organisations = Array.from({ length: 30 }, (_, index) => ({
       name: `Battery Organisation ${index + 1}`,

@@ -442,7 +442,9 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
   const isSaved = useFeedStore((s) =>
     s.savedEvents.some((e) => e.id === event.id),
   );
-  const feedback = useFeedStore((s) => s.oppFeedback[event.id] ?? event.feedback);
+  const feedback = useFeedStore(
+    (s) => s.eventFeedback[event.id] ?? event.feedback,
+  );
   const isLiked = feedback === "moreLikeThis" || feedback === "liked";
   return (
     <Link
@@ -506,7 +508,9 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
   const isSaved = useFeedStore((s) =>
     s.savedJobs.some((j) => j.id === job.id),
   );
-  const feedback = useFeedStore((s) => s.oppFeedback[job.id] ?? job.feedback);
+  const feedback = useFeedStore(
+    (s) => s.jobFeedback[job.id] ?? job.feedback,
+  );
   const isLiked = feedback === "moreLikeThis" || feedback === "liked";
   return (
     <Link

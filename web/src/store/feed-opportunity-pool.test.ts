@@ -51,7 +51,8 @@ function resetOpportunityState() {
     jobs: [],
     jobPool: [],
     savedJobs: [],
-    oppFeedback: {},
+    eventFeedback: {},
+    jobFeedback: {},
     pendingDismissal: null,
   });
 }
@@ -84,7 +85,7 @@ describe("feed opportunity pools", () => {
       displayed.id,
       poolOnly.id,
     ]);
-    expect(restored.oppFeedback[poolOnly.id]).toBeUndefined();
+    expect(restored.eventFeedback[poolOnly.id]).toBeUndefined();
   });
 
   it("restores a pool-only job without injecting it into the displayed jobs", () => {
@@ -110,7 +111,7 @@ describe("feed opportunity pools", () => {
       displayed.id,
       poolOnly.id,
     ]);
-    expect(restored.oppFeedback[poolOnly.id]).toBeUndefined();
+    expect(restored.jobFeedback[poolOnly.id]).toBeUndefined();
   });
 
   it("restores a dismissed saved event only to its original collections", () => {
@@ -122,7 +123,7 @@ describe("feed opportunity pools", () => {
     useFeedStore.setState({
       eventPool: [saved],
       savedEvents: [saved],
-      oppFeedback: { [saved.id]: "saved" },
+      eventFeedback: { [saved.id]: "saved" },
     });
 
     useFeedStore.getState().notInterestedEvent(saved);
@@ -134,7 +135,7 @@ describe("feed opportunity pools", () => {
     expect(restored.events).toEqual([]);
     expect(restored.eventPool.map(({ id }) => id)).toEqual([saved.id]);
     expect(restored.savedEvents.map(({ id }) => id)).toEqual([saved.id]);
-    expect(restored.oppFeedback[saved.id]).toBe("saved");
+    expect(restored.eventFeedback[saved.id]).toBe("saved");
   });
 
   it("restores a dismissed saved job only to its original collections", () => {
@@ -146,7 +147,7 @@ describe("feed opportunity pools", () => {
     useFeedStore.setState({
       jobPool: [saved],
       savedJobs: [saved],
-      oppFeedback: { [saved.id]: "saved" },
+      jobFeedback: { [saved.id]: "saved" },
     });
 
     useFeedStore.getState().notInterestedJob(saved);
@@ -158,7 +159,7 @@ describe("feed opportunity pools", () => {
     expect(restored.jobs).toEqual([]);
     expect(restored.jobPool.map(({ id }) => id)).toEqual([saved.id]);
     expect(restored.savedJobs.map(({ id }) => id)).toEqual([saved.id]);
-    expect(restored.oppFeedback[saved.id]).toBe("saved");
+    expect(restored.jobFeedback[saved.id]).toBe("saved");
   });
 
   it("keeps save, more-like, and unsave state aligned across event collections", () => {
@@ -201,7 +202,7 @@ describe("feed opportunity pools", () => {
       feedback: "moreLikeThis",
     });
     expect(state.savedEvents).toEqual([]);
-    expect(state.oppFeedback[event.id]).toBe("moreLikeThis");
+    expect(state.eventFeedback[event.id]).toBe("moreLikeThis");
   });
 
   it("keeps save, more-like, and unsave state aligned across job collections", () => {
@@ -244,7 +245,35 @@ describe("feed opportunity pools", () => {
       feedback: "moreLikeThis",
     });
     expect(state.savedJobs).toEqual([]);
-    expect(state.oppFeedback[job.id]).toBe("moreLikeThis");
+    expect(state.jobFeedback[job.id]).toBe("moreLikeThis");
+  });
+
+  it("persists and clears independent interested states for events and jobs", () => {
+    const event = eventFixture("event:feedback", 82);
+    const job = jobFixture("job:feedback", 81);
+    useFeedStore.setState({
+      events: [event],
+      eventPool: [event],
+      jobs: [job],
+      jobPool: [job],
+    });
+
+    useFeedStore.getState().moreLikeEvent(event);
+    useFeedStore.getState().moreLikeJob(job);
+    let state = useFeedStore.getState();
+    expect(state.eventFeedback[event.id]).toBe("moreLikeThis");
+    expect(state.jobFeedback[job.id]).toBe("moreLikeThis");
+
+    useFeedStore.getState().notInterestedEvent(event);
+    useFeedStore.getState().notInterestedJob(job);
+    state = useFeedStore.getState();
+    expect(state.eventFeedback[event.id]).toBe("notInterested");
+    expect(state.jobFeedback[job.id]).toBe("notInterested");
+
+    useFeedStore.getState().resetLocal();
+    state = useFeedStore.getState();
+    expect(state.eventFeedback).toEqual({});
+    expect(state.jobFeedback).toEqual({});
   });
 
   it("hydrates remote save state into the displayed slice and full pool", () => {

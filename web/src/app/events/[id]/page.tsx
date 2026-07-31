@@ -31,6 +31,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
+import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
@@ -301,9 +302,11 @@ function EventActionRow({
   isSaved,
   isRegistered,
   isSubmitted,
+  isInterested,
   onToggleSave,
   onRegisteredChange,
   onSubmittedChange,
+  onInterested,
   onDismiss,
 }: {
   primaryHref?: string;
@@ -311,13 +314,18 @@ function EventActionRow({
   isSaved: boolean;
   isRegistered: boolean;
   isSubmitted: boolean;
+  isInterested: boolean;
   onToggleSave: () => void;
   onRegisteredChange: (next: boolean) => void;
   onSubmittedChange: (next: boolean) => void;
+  onInterested: () => void;
   onDismiss: () => void;
 }) {
   return (
-    <div className="mt-7 flex flex-wrap items-center gap-2.5">
+    <div
+      data-report-action-row="event"
+      className="mt-7 flex flex-wrap items-center gap-2"
+    >
       {primaryHref && (
         <a
           href={primaryHref}
@@ -325,7 +333,7 @@ function EventActionRow({
           rel="noopener noreferrer"
           className={cn(
             buttonVariants({ tone: "primary" }),
-            "h-11 px-5 text-body font-semibold",
+            "h-11 px-4 text-body font-semibold",
           )}
         >
           {primaryLabel}
@@ -338,33 +346,29 @@ function EventActionRow({
         aria-pressed={isSaved}
         className={cn(
           buttonVariants({ tone: "soft" }),
-          "h-11 px-4 text-body-sm",
+          "h-11 px-3 text-body-sm",
           isSaved && "border-accent/35 bg-accent/10 text-accent",
         )}
       >
         {isSaved ? "Saved" : "Save"}
       </button>
-      <div className="flex flex-col items-start gap-1.5">
-        <CompletionPill
-          label="Registered"
-          checked={isRegistered}
-          onChange={onRegisteredChange}
-          className="h-11 px-4 text-body-sm"
-        />
-        <CompletionPill
-          label="Submitted"
-          checked={isSubmitted}
-          onChange={onSubmittedChange}
-          className="h-11 px-4 text-body-sm"
-        />
-      </div>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="h-11 rounded-full px-4 text-body-sm font-medium text-text-muted transition-colors hover:bg-red/10 hover:text-red"
-      >
-        Not interested
-      </button>
+      <CompletionPill
+        label="Registered"
+        checked={isRegistered}
+        onChange={onRegisteredChange}
+        className="h-11 px-3 text-body-sm"
+      />
+      <CompletionPill
+        label="Submitted"
+        checked={isSubmitted}
+        onChange={onSubmittedChange}
+        className="h-11 px-3 text-body-sm"
+      />
+      <OpportunityFeedbackPair
+        isInterested={isInterested}
+        onInterested={onInterested}
+        onNotInterested={onDismiss}
+      />
     </div>
   );
 }
@@ -751,12 +755,14 @@ export function EventReport({
   isSaved,
   isRegistered,
   isSubmitted,
+  isInterested = false,
   providerConfigured: _providerConfigured = false,
   onToggleStar,
   onToggleSave,
   onRegisteredChange,
   onSubmittedChange,
   onDismiss,
+  onInterested = () => undefined,
   onBack,
 }: {
   event: Event;
@@ -767,12 +773,14 @@ export function EventReport({
   isSaved: boolean;
   isRegistered: boolean;
   isSubmitted: boolean;
+  isInterested?: boolean;
   providerConfigured?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
   onRegisteredChange: (next: boolean) => void;
   onSubmittedChange: (next: boolean) => void;
   onDismiss: () => void;
+  onInterested?: () => void;
   onBack?: () => void;
 }) {
   // Provider availability is intentionally not a rendering signal. Only real
@@ -865,9 +873,11 @@ export function EventReport({
             isSaved={isSaved}
             isRegistered={isRegistered}
             isSubmitted={isSubmitted}
+            isInterested={isInterested}
             onToggleSave={onToggleSave}
             onRegisteredChange={onRegisteredChange}
             onSubmittedChange={onSubmittedChange}
+            onInterested={onInterested}
             onDismiss={onDismiss}
           />
         </header>
@@ -1038,6 +1048,8 @@ export default function EventDetailPage({
   );
   const setEventSubmitted = useFeedStore((state) => state.setEventSubmitted);
   const notInterestedEvent = useFeedStore((state) => state.notInterestedEvent);
+  const moreLikeEvent = useFeedStore((state) => state.moreLikeEvent);
+  const feedback = useFeedStore((state) => state.eventFeedback[id]);
   const profile = useProfileStore((state) => state.profile);
   const [starredKeys, toggleStar] = useRosterStars();
   const [enrichmentResult, setEnrichmentResult] = useState<{
@@ -1160,12 +1172,17 @@ export default function EventDetailPage({
       isSaved={isSaved}
       isRegistered={isRegistered}
       isSubmitted={isSubmitted}
+      isInterested={
+        (feedback ?? event.feedback) === "moreLikeThis" ||
+        (feedback ?? event.feedback) === "liked"
+      }
       onToggleStar={toggleStar}
       onToggleSave={() =>
         isSaved ? unsaveEvent(event.id) : saveEvent(event)
       }
       onRegisteredChange={(next) => setEventRegistered(event, next)}
       onSubmittedChange={(next) => setEventSubmitted(event, next)}
+      onInterested={() => moreLikeEvent(event)}
       onDismiss={() => {
         notInterestedEvent(event);
         window.history.back();
