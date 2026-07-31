@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Job, RoleKind } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
+import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const JOB_TIER_UPGRADE_ITEMS = [
   {
@@ -348,6 +349,7 @@ export function JobReport({
   onToggleSave,
   onAppliedChange,
   onDismiss,
+  onBack,
 }: {
   job: Job;
   isSaved: boolean;
@@ -359,6 +361,7 @@ export function JobReport({
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
+  onBack?: () => void;
 }) {
   // Provider availability is intentionally not a rendering signal. Only real
   // enrichment may hide the locked block.
@@ -378,13 +381,13 @@ export function JobReport({
 
   return (
     <PageContainer width="detail" className="px-6 py-14">
-      <Link
-        href="/"
+      <BackToFeedLink
+        onBack={onBack}
         className="inline-flex items-center gap-1 text-body-sm text-text-faint transition-colors hover:text-link"
       >
         <span aria-hidden>←</span>
         Back
-      </Link>
+      </BackToFeedLink>
 
       <header className="mt-8 animate-fade-in-up">
         {(job.roleKind ||
@@ -652,6 +655,7 @@ export default function JobDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id: rawId } = use(params);
   const id = (() => {
     try {
@@ -739,9 +743,12 @@ export default function JobDetailPage({
     return (
       <PageContainer width="narrow" className="px-6 py-20">
         <p className="italic text-text-muted">Job not found.</p>
-        <Link href="/" className="mt-3 inline-block text-body text-link">
+        <BackToFeedLink
+          onBack={() => router.back()}
+          className="mt-3 inline-block text-body text-link"
+        >
           ← Back to feed
-        </Link>
+        </BackToFeedLink>
       </PageContainer>
     );
   }
@@ -763,6 +770,7 @@ export default function JobDetailPage({
         notInterestedJob(job);
         window.history.back();
       }}
+      onBack={() => router.back()}
     />
   );
 }

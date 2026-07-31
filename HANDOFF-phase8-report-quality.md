@@ -46,7 +46,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.1 | Back returns to the tab the user came from, not Dashboard | IN_PROGRESS | |
+| P8.1 | Back returns to the tab the user came from, not Dashboard | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 76 files / 602 tests passed; typecheck exit 0. Runtime: `/jobs/jobweb:dkc7hq` Back restored `/?tab=jobs`; unknown tab normalised to Dashboard. |
 
 ### Phase 8B — The action row (both reports)
 

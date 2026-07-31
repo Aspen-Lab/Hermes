@@ -74,6 +74,11 @@ import {
   type ActivityAggregate,
 } from "@/lib/dashboard/activity-ledger";
 import { localCalendarDate } from "@/lib/local-calendar-date";
+import {
+  feedTypeFromSearchParams,
+  type FeedType,
+} from "@/lib/navigation/feed-tab";
+import { rememberFeedHistoryEntry } from "@/lib/navigation/feed-history";
 
 interface SearchResult {
   id: string;
@@ -90,7 +95,6 @@ interface SearchResult {
   source: string;
 }
 
-type FeedType = "dashboard" | "papers" | "events" | "jobs";
 type BriefingItem =
   | { kind: "paper"; data: Paper }
   | { kind: "event"; data: Event }
@@ -160,9 +164,10 @@ function DiscoveryPage() {
 
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
+  const incomingType = feedTypeFromSearchParams(searchParamsObj);
 
   const [query, setQuery] = useState(incomingQuery);
-  const [activeType, setActiveType] = useState<FeedType>("dashboard");
+  const [activeType, setActiveType] = useState<FeedType>(incomingType);
   const [opportunityFacets, setOpportunityFacets] =
     useState<OpportunityFacetSelection>({});
   const [jobFacets, setJobFacets] = useState<JobFacetSelection>(() => ({
@@ -209,6 +214,12 @@ function DiscoveryPage() {
       setQuery(incomingQuery);
     }
   }, [incomingQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (incomingType !== activeType) {
+      setActiveType(incomingType);
+    }
+  }, [incomingType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const feedAutoLoadKey = useMemo(
     () => activePaperTopicsKey(profile),
@@ -335,9 +346,10 @@ function DiscoveryPage() {
     const url = new URL(window.location.href);
     const next = filtersToUrlParams(filters);
     if (query) next.set("q", query);
+    next.set("tab", activeType);
     // Preserve any unrelated existing params (none today, but defensive).
     const reserved = new Set([
-      "q", "year", "from", "to", "sort", "oa", "cites", "src", "venue",
+      "q", "tab", "year", "from", "to", "sort", "oa", "cites", "src", "venue",
     ]);
     url.searchParams.forEach((_, key) => {
       if (reserved.has(key)) url.searchParams.delete(key);
@@ -347,7 +359,8 @@ function DiscoveryPage() {
     if (target !== window.location.pathname + window.location.search + window.location.hash) {
       window.history.replaceState(null, "", target);
     }
-  }, [query, filters]);
+    rememberFeedHistoryEntry(window);
+  }, [activeType, query, filters]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);

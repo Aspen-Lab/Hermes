@@ -2,6 +2,7 @@
 
 import { use, useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { formatAgeInWords, formatDayAge, formatMatchPct } from "@/lib/format";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ScrambleText } from "@/components/scramble-text";
+import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 import {
   streamPaperReport,
   type StageId,
@@ -554,6 +556,7 @@ export default function PaperDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id: rawId } = use(params);
   const id = (() => {
     try {
@@ -923,15 +926,15 @@ export default function PaperDetailPage({
     if (isFetchingById) {
       return (
         <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
-          <Link
-            href="/"
+          <BackToFeedLink
+            onBack={() => router.back()}
             className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
           >
             <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
               ←
             </span>
             Back
-          </Link>
+          </BackToFeedLink>
           <BriefingSkeleton />
         </PageContainer>
       );
@@ -939,9 +942,12 @@ export default function PaperDetailPage({
     return (
       <PageContainer width="narrow" className="px-6 py-20 animate-fade-in-up">
         <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-body mt-3 inline-block">
+        <BackToFeedLink
+          onBack={() => router.back()}
+          className="text-link text-body mt-3 inline-block"
+        >
           ← Back to feed
-        </Link>
+        </BackToFeedLink>
       </PageContainer>
     );
   }
@@ -1015,15 +1021,15 @@ export default function PaperDetailPage({
       <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
-        <Link
-          href="/"
+        <BackToFeedLink
+          onBack={() => router.back()}
           className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
         >
           <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
             ←
           </span>
           Back
-        </Link>
+        </BackToFeedLink>
 
         {/* ── Title & Authors ── */}
         <header

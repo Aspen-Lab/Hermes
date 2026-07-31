@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type {
   CareerStage,
   Event,
@@ -31,6 +31,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
+import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
 const EVENT_TIER_UPGRADE_ITEMS = [
@@ -756,6 +757,7 @@ export function EventReport({
   onRegisteredChange,
   onSubmittedChange,
   onDismiss,
+  onBack,
 }: {
   event: Event;
   careerStage?: CareerStage;
@@ -771,6 +773,7 @@ export function EventReport({
   onRegisteredChange: (next: boolean) => void;
   onSubmittedChange: (next: boolean) => void;
   onDismiss: () => void;
+  onBack?: () => void;
 }) {
   // Provider availability is intentionally not a rendering signal. Only real
   // enrichment may hide the locked block.
@@ -814,13 +817,13 @@ export function EventReport({
   return (
     <PageContainer width="wide" className="px-6 py-14">
       <div className="mx-auto max-w-[720px]">
-        <Link
-          href="/"
+        <BackToFeedLink
+          onBack={onBack}
           className="inline-flex items-center gap-1 text-body-sm text-text-faint transition-colors hover:text-link"
         >
           <span aria-hidden>←</span>
           Back
-        </Link>
+        </BackToFeedLink>
 
         <header className="mt-8">
           <div className="mb-4 flex flex-wrap gap-2">
@@ -1006,6 +1009,7 @@ export default function EventDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id: rawId } = use(params);
   const id = (() => {
     try {
@@ -1132,9 +1136,12 @@ export default function EventDetailPage({
     return (
       <PageContainer width="narrow" className="px-6 py-20">
         <p className="italic text-text-muted">Event not found.</p>
-        <Link href="/" className="mt-3 inline-block text-body text-link">
+        <BackToFeedLink
+          onBack={() => router.back()}
+          className="mt-3 inline-block text-body text-link"
+        >
           ← Back to feed
-        </Link>
+        </BackToFeedLink>
       </PageContainer>
     );
   }
@@ -1163,6 +1170,7 @@ export default function EventDetailPage({
         notInterestedEvent(event);
         window.history.back();
       }}
+      onBack={() => router.back()}
     />
   );
 }
