@@ -24,12 +24,14 @@ function renderReport(
   careerStage = "PhD Year 3" as const,
   completion = { registered: false, submitted: false },
   enrichment: EventEnrichment | null = null,
+  providerConfigured = false,
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
       event,
       careerStage,
       enrichment,
+      providerConfigured,
       isSaved: false,
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
@@ -135,5 +137,56 @@ describe("EventReport", () => {
     for (let index = 1; index <= 30; index += 1) {
       expect(html.match(new RegExp(`Battery Organisation ${index}(?!\\d)`, "g"))).toHaveLength(2);
     }
+  });
+
+  it("renders all four AI sections in order and hides the locked block", () => {
+    const html = renderReport(
+      baseEvent({
+        activities: ["Interface stability session"],
+        organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }],
+      }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Volta Lab", worthIt: true, why: "Relevant interface work." },
+        ],
+        talkSummaries: [
+          {
+            title: "Interface stability session",
+            about: "A focused session on interphase stability.",
+          },
+        ],
+        dayPlan: [
+          { day: "Day 1", items: ["Attend the interface stability session."] },
+        ],
+        posterFit: {
+          fits: true,
+          reasoning: "The supplied scope overlaps with the current project.",
+        },
+      },
+    );
+
+    const attendees = html.indexOf("The other 1 attendees, judged");
+    const talks = html.indexOf("What each talk is actually about");
+    const plan = html.indexOf("A day-by-day plan");
+    const poster = html.indexOf("Is your work a fit for the poster call");
+    expect(attendees).toBeGreaterThan(-1);
+    expect(attendees).toBeLessThan(talks);
+    expect(talks).toBeLessThan(plan);
+    expect(plan).toBeLessThan(poster);
+    expect(html).not.toContain("Also in this report with an AI key");
+  });
+
+  it("keeps the locked block when provider availability produced no enrichment", () => {
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      null,
+      true,
+    );
+
+    expect(html).toContain("Also in this report with an AI key");
   });
 });

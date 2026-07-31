@@ -19,30 +19,41 @@ import type {
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
-import type { EventEnrichment } from "@/lib/opportunities/enrichment";
+import {
+  buildEnrichmentContext,
+  hasEventEnrichment,
+  opportunityEnrichmentCacheKey,
+  readCachedOpportunityEnrichment,
+  writeCachedOpportunityEnrichment,
+  type EventEnrichment,
+} from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
-import { reportProviderConfigured } from "@/components/reports/provider-configured";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
 const EVENT_TIER_UPGRADE_ITEMS = [
   {
-    title: "Personal attendance plan",
+    title: "The other attendees, judged",
     description:
-      "Turn the programme, deadlines, and costs into a plan for your priorities.",
+      "Show which unfamiliar people and organisations are worth your time.",
   },
   {
-    title: "People and organisations to meet",
+    title: "What each talk is actually about",
     description:
-      "Connect the full roster to your papers, saved roles, and declared interests.",
+      "Read the supplied programme details instead of repeating session titles.",
   },
   {
-    title: "Post-event follow-through",
+    title: "A day-by-day plan",
     description:
-      "Prepare specific follow-ups from the sessions and contacts that matter to you.",
+      "Order the sessions and people that best match your declared priorities.",
+  },
+  {
+    title: "Is your work a fit for the poster call",
+    description:
+      "Compare the event's supplied scope with your current project.",
   },
 ];
 
@@ -567,9 +578,17 @@ function RosterSection({
   people.sort(byPriority);
 
   if (organisations.length === 0 && people.length === 0) return null;
+  const judgedCount = enrichment?.judgedAttendees?.length ?? 0;
 
   return (
-    <ReportSection title="Who'll be in the room" className="mt-14">
+    <ReportSection
+      title={
+        judgedCount > 0
+          ? `The other ${judgedCount} attendees, judged`
+          : "Who'll be in the room"
+      }
+      className="mt-14"
+    >
       <div className="grid gap-10 lg:grid-cols-2">
         {organisations.length > 0 && (
           <div>
@@ -732,7 +751,7 @@ export function EventReport({
   isSaved,
   isRegistered,
   isSubmitted,
-  providerConfigured = false,
+  providerConfigured: _providerConfigured = false,
   onToggleStar,
   onToggleSave,
   onRegisteredChange,
@@ -788,6 +807,7 @@ export function EventReport({
     Boolean(description) ||
     Boolean(travelGrant) ||
     event.invitationLetter !== undefined;
+  const hasEnrichment = hasEventEnrichment(enrichment);
 
   return (
     <PageContainer width="wide" className="px-6 py-14">
@@ -898,6 +918,60 @@ export function EventReport({
         onToggleStar={onToggleStar}
       />
 
+      <div className="mx-auto max-w-[720px]">
+        {enrichment?.talkSummaries && (
+          <ReportSection title="What each talk is actually about">
+            <div className="space-y-3">
+              {enrichment.talkSummaries.map((talk) => (
+                <article
+                  key={talk.title}
+                  className="rounded-xl border border-border bg-surface px-5 py-4"
+                >
+                  <h3 className="text-title font-semibold text-heading">{talk.title}</h3>
+                  <p className="mt-2 text-body leading-7 text-text-muted">{talk.about}</p>
+                </article>
+              ))}
+            </div>
+          </ReportSection>
+        )}
+
+        {enrichment?.dayPlan && (
+          <ReportSection title="A day-by-day plan">
+            <div className="space-y-4">
+              {enrichment.dayPlan.map((day) => (
+                <section
+                  key={day.day}
+                  className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4"
+                >
+                  <h3 className="text-title font-semibold text-heading">{day.day}</h3>
+                  <ol className="mt-3 space-y-2">
+                    {day.items.map((item, index) => (
+                      <li key={`${index}-${item}`} className="flex gap-3 text-body text-text-muted">
+                        <span className="font-semibold text-accent">{index + 1}</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ))}
+            </div>
+          </ReportSection>
+        )}
+
+        {enrichment?.posterFit && (
+          <ReportSection title="Is your work a fit for the poster call">
+            <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
+              <p className="text-title font-semibold text-heading">
+                {enrichment.posterFit.fits ? "Likely fit" : "Probably not a fit"}
+              </p>
+              <p className="mt-2 text-body leading-7 text-text-muted">
+                {enrichment.posterFit.reasoning}
+              </p>
+            </div>
+          </ReportSection>
+        )}
+      </div>
+
       {(relevanceReason || facetReason) && (
         <div className="mx-auto max-w-[720px]">
           <ReportSection title="Why Peer sent it">
@@ -918,7 +992,7 @@ export function EventReport({
       <div className="mx-auto max-w-[720px]">
         <TierUpgradeBlock
           items={EVENT_TIER_UPGRADE_ITEMS}
-          providerConfigured={providerConfigured}
+          providerConfigured={hasEnrichment}
         />
       </div>
     </PageContainer>
@@ -960,16 +1034,92 @@ export default function EventDetailPage({
   const notInterestedEvent = useFeedStore((state) => state.notInterestedEvent);
   const profile = useProfileStore((state) => state.profile);
   const [starredKeys, toggleStar] = useRosterStars();
+  const [enrichmentResult, setEnrichmentResult] = useState<{
+    key: string;
+    enrichment: EventEnrichment | null;
+    done: boolean;
+  }>({ key: "", enrichment: null, done: false });
 
   const event =
     feedEvents.find((candidate) => candidate.id === id) ??
     eventPool.find((candidate) => candidate.id === id) ??
     savedEvents.find((candidate) => candidate.id === id);
   const isSaved = savedEvents.some((candidate) => candidate.id === id);
+  const contextHint = buildEnrichmentContext(profile);
+  const enrichmentKey = event
+    ? opportunityEnrichmentCacheKey(
+        "event",
+        event.id,
+        contextHint,
+        profile.feedAiProvider,
+      )
+    : "";
 
   useEffect(() => {
     if (event) markRead(event.id);
   }, [event, markRead]);
+
+  useEffect(() => {
+    if (!event || !enrichmentKey) return;
+
+    const cached = readCachedOpportunityEnrichment<EventEnrichment>(enrichmentKey);
+    if (cached.hit) {
+      setEnrichmentResult({
+        key: enrichmentKey,
+        enrichment: cached.enrichment,
+        done: true,
+      });
+      return;
+    }
+
+    const apiKey = profile.feedAiApiKey?.trim();
+    if (profile.feedAiProvider !== "default" && !apiKey) {
+      setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+    const llmOverride =
+      profile.feedAiProvider !== "default" && apiKey
+        ? { provider: profile.feedAiProvider, apiKey }
+        : undefined;
+
+    void fetch("/api/events/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, contextHint, llmOverride }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Event report failed: ${response.status}`);
+        return (await response.json()) as { enrichment: EventEnrichment | null };
+      })
+      .then((result) => {
+        if (cancelled) return;
+        const enrichment = result.enrichment ?? null;
+        writeCachedOpportunityEnrichment(enrichmentKey, enrichment);
+        setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
+      })
+      .catch((error: unknown) => {
+        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
+          return;
+        }
+        writeCachedOpportunityEnrichment(enrichmentKey, null);
+        setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [
+    event,
+    contextHint,
+    enrichmentKey,
+    profile.feedAiProvider,
+    profile.feedAiApiKey,
+  ]);
 
   const rosterContext = useMemo<EventRosterContext>(
     () => ({
@@ -1015,11 +1165,15 @@ export default function EventDetailPage({
       event={event}
       careerStage={profile.careerStage}
       rosterContext={rosterContext}
+      enrichment={
+        enrichmentResult.key === enrichmentKey && enrichmentResult.done
+          ? enrichmentResult.enrichment
+          : null
+      }
       starredKeys={starredKeys}
       isSaved={isSaved}
       isRegistered={isRegistered}
       isSubmitted={isSubmitted}
-      providerConfigured={reportProviderConfigured(profile)}
       onToggleStar={toggleStar}
       onToggleSave={() =>
         isSaved ? unsaveEvent(event.id) : saveEvent(event)
