@@ -20,6 +20,43 @@ function tryExtract<T>(extractor: () => T): T | undefined {
   }
 }
 
+function hasExtractedEventSignal(
+  structured: ReturnType<typeof extractOpportunityPageDetails> | undefined,
+  details: ReturnType<typeof extractEventDetails> | undefined,
+  roster: ReturnType<typeof extractEventRoster> | undefined,
+): boolean {
+  return Boolean(
+    structured?.startDate ||
+      structured?.endDate ||
+      structured?.place ||
+      structured?.isOnline ||
+      details?.registrationDeadline ||
+      details?.fees?.length ||
+      details?.activities?.length ||
+      details?.travelGrant ||
+      details?.invitationLetter ||
+      roster?.organisations?.length ||
+      roster?.people?.length,
+  );
+}
+
+function hasExtractedJobSignal(
+  structured: ReturnType<typeof extractOpportunityPageDetails> | undefined,
+  details: ReturnType<typeof extractJobDetails> | undefined,
+  visa: RawJobItem["visa"] | undefined,
+): boolean {
+  return Boolean(
+    structured?.datePosted ||
+      structured?.place ||
+      details?.applicationDeadline ||
+      details?.startDate ||
+      details?.contractLength ||
+      details?.applicationMaterials?.length ||
+      (visa &&
+        (visa.state !== "not-stated" || visa.evidence || visa.country)),
+  );
+}
+
 export function formatOpportunityPlace(
   place: OpportunityPlace | undefined,
 ): string {
@@ -73,6 +110,7 @@ export async function enrichEventCandidates(
     );
     const details = tryExtract(() => extractEventDetails(html));
     const roster = tryExtract(() => extractEventRoster(html));
+    if (!hasExtractedEventSignal(structured, details, roster)) return item;
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const location = formatOpportunityPlace(place) || item.location;
     return {
@@ -132,6 +170,7 @@ export async function enrichJobCandidates(
     const visa =
       item.visa ??
       tryExtract(() => extractVisaState(html, place?.country));
+    if (!hasExtractedJobSignal(structured, details, visa)) return item;
     return {
       ...item,
       place,

@@ -9,7 +9,6 @@ import {
 import {
   fetchPageHtml,
   fetchPagesConcurrently,
-  MIN_USABLE_PAGE_BYTES,
   UNFETCHABLE_HOSTS,
 } from "./page-fetch";
 
@@ -113,11 +112,8 @@ describe("fetchPageHtml", () => {
     ).resolves.toBeNull();
   });
 
-  it("rejects a JavaScript shell smaller than 20 KB", async () => {
-    // Shaped like the measured AcademicJobsOnline response: ~6 KB, almost all
-    // of it a script tag, with no server-rendered posting content.
+  it("keeps a nonempty JavaScript shell for tolerant downstream extractors", async () => {
     const shell = `<html><head><script>${"a".repeat(6 * 1024)}</script></head><body><div id="root"></div></body></html>`;
-    expect(shell.length).toBeLessThan(MIN_USABLE_PAGE_BYTES);
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(shell, { status: 200 }),
     );
@@ -125,19 +121,18 @@ describe("fetchPageHtml", () => {
 
     await expect(
       fetchPageHtml("https://jobs.example.com/shell"),
-    ).resolves.toBeNull();
+    ).resolves.toBe(shell);
   });
 
-  it("keeps a real page whose visible text is small but whose markup is not", async () => {
-    // Regression guard. careers.ornl.gov is a genuine, extractable posting page
-    // that measures 47 KB of markup but strips to only ~2 KB of visible text.
-    // A visible-text floor rejected it — and every other real page — which
-    // silently disabled deadline, visa, fee and roster extraction everywhere.
+  it("keeps a real extractable page smaller than the former 20 KB floor", async () => {
+    // Regression guard: opportunity usefulness is not correlated with page
+    // size. This lean page contains the exact structured data the pipeline
+    // needs and must reach the extractor unchanged.
     const realPage =
-      `<html><head><script>${"b".repeat(40 * 1024)}</script></head>` +
-      `<body><main><h1>Postdoctoral Researcher</h1>` +
-      `<p>Application deadline: 15 September. Oak Ridge, TN.</p></main></body></html>`;
-    expect(realPage.length).toBeGreaterThanOrEqual(MIN_USABLE_PAGE_BYTES);
+      `<script type="application/ld+json">` +
+      `{"@type":"Event","location":{"address":{"addressLocality":"Chicago"}}}` +
+      `</script><h1>Solid-State Battery Summit</h1>`;
+    expect(realPage.length).toBeLessThan(20 * 1024);
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(realPage, { status: 200 }),

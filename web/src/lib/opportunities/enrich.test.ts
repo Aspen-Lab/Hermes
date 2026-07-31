@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RawEventItem } from "@/lib/events/types";
 import type { RawJobItem } from "@/lib/jobs/types";
@@ -116,6 +117,33 @@ describe("event detail enrichment", () => {
       startDate: "2026-08-11",
       endDate: "2026-08-12",
       location: "Chicago, IL",
+      place: { city: "Chicago", region: "IL" },
+      isOnline: true,
+    });
+  });
+
+  it("keeps city coverage above 50% for lean representative event pages", async () => {
+    const pages = [
+      "cambridge-solid-state-battery-summit.html",
+      "dlr-emea2026-workshop.html",
+      "icml-event-details.html",
+    ].map((name) =>
+      readFileSync(new URL(`./__fixtures__/${name}`, import.meta.url), "utf8"),
+    );
+    expect(pages.every((html) => html.length < 20 * 1024)).toBe(true);
+
+    const fetchMock = vi.fn(async (url: string) => {
+      const index = Number(new URL(url).pathname.slice(1));
+      return new Response(pages[index], { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const enriched = await enrichEventCandidates(pages.map((_, index) => event(index)));
+    const withCity = enriched.filter((item) => item.place?.city);
+
+    expect(withCity).toHaveLength(2);
+    expect(withCity.length / enriched.length).toBeGreaterThanOrEqual(0.5);
+    expect(enriched[0]).toMatchObject({
       place: { city: "Chicago", region: "IL" },
       isOnline: true,
     });
@@ -340,7 +368,11 @@ describe("job detail enrichment", () => {
   it("leaves a 6 KB JavaScript shell unchanged and does not throw", async () => {
     const original = job(9);
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(`<main>${"x".repeat(6 * 1024)}</main>`, { status: 200 }),
+      new Response(
+        `<html><head><script>${"a".repeat(6 * 1024)}</script></head>` +
+          `<body><div id="root"></div></body></html>`,
+        { status: 200 },
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
