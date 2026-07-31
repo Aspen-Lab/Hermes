@@ -81,6 +81,10 @@ function cleanList(values: readonly string[]): string[] {
   });
 }
 
+function isAttendeeRejection(value: string): boolean {
+  return /\bnot\s+(?:an?\s+)?(?:individual\s+)?attendee\b/i.test(value);
+}
+
 function parseJsonRecord(text: string): Record<string, unknown> | null {
   const candidates = [
     text.trim(),
@@ -320,6 +324,7 @@ export function parseEventEnrichment(
       if (
         !name ||
         !why ||
+        isAttendeeRejection(why) ||
         !allowedNames.has(name) ||
         returnedNames.has(name) ||
         typeof record.worthIt !== "boolean"

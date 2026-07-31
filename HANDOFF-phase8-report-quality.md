@@ -59,7 +59,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P8.3 | Page furniture must never enter the attendee roster | DONE | `cd web && npx vitest run src/lib/opportunities/` — 25 files / 231 tests passed; AABC fixture retained 3 genuine entries and rejected all 9 page-furniture labels |
-| P8.4 | Judged rows the model rejects are dropped, not rendered | IN_PROGRESS | |
+| P8.4 | Judged rows the model rejects are dropped, not rendered | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file / 17 tests passed; all 6 quoted rejections produced no rows and mixed output retained exactly 3 |
 | P8.5 | "What each talk is about" takes real talks or renders nothing | TODO | |
 | P8.6 | The description must start at a sentence boundary | TODO | |
 | P8.7 | Poster-fit answer is capped and leads with the verdict | TODO | |

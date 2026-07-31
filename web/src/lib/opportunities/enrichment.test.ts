@@ -6,6 +6,7 @@ import {
   buildJobEnrichmentPrompt,
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
+  hasEventEnrichment,
   loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   parseEventEnrichment,
@@ -265,6 +266,48 @@ describe("event enrichment prompt and parser", () => {
     ],
     people: [{ name: "New Speaker", role: "Professor", institution: "Peer U" }],
   };
+  const rejectedJudgments = [
+    {
+      name: "Download Brochure",
+      worthIt: false,
+      why: "This appears to be a document or action, not an attendee.",
+    },
+    {
+      name: "Companies A-K",
+      worthIt: false,
+      why: "This appears to be a category or group, not an individual attendee.",
+    },
+    {
+      name: "Executive Team",
+      worthIt: false,
+      why: "This appears to be a group within an organization, not an individual attendee.",
+    },
+    {
+      name: "Mailing List",
+      worthIt: false,
+      why: "This appears to be a communication channel, not an attendee.",
+    },
+    {
+      name: "Request Information",
+      worthIt: false,
+      why: "This appears to be an action, not an attendee.",
+    },
+    {
+      name: "Privacy Policy",
+      worthIt: false,
+      why: "This appears to be a document or legal statement, not an attendee.",
+    },
+  ];
+  const rejectionEvent: Event = {
+    ...event,
+    organisations: [
+      ...rejectedJudgments.map(({ name }) => ({ name })),
+      { name: "Battery Power Online" },
+      { name: "Lithium Battery Power" },
+      { name: "Battery Safety" },
+    ],
+    people: [],
+  };
 
   it("sends only roster rows that do not already have a Tier 0 judgment", () => {
     const prompt = JSON.parse(
@@ -295,6 +338,44 @@ describe("event enrichment prompt and parser", () => {
         { name: "New Company", worthIt: true, why: "Relevant interface work." },
       ],
     });
+  });
+
+  it("drops all six measured attendee-rejection judgments", () => {
+    const parsed = parseEventEnrichment(
+      JSON.stringify({ judgedAttendees: rejectedJudgments }),
+      rejectionEvent,
+    );
+
+    expect(parsed).toEqual({});
+    expect(hasEventEnrichment(parsed)).toBe(false);
+  });
+
+  it("keeps only the three real rows from mixed measured output", () => {
+    const realJudgments = [
+      {
+        name: "Battery Power Online",
+        worthIt: true,
+        why: "Covers battery-industry reporting.",
+      },
+      {
+        name: "Lithium Battery Power",
+        worthIt: true,
+        why: "Tracks lithium battery developments.",
+      },
+      {
+        name: "Battery Safety",
+        worthIt: true,
+        why: "Directly overlaps safety research.",
+      },
+    ];
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: [...rejectedJudgments, ...realJudgments],
+      }),
+      rejectionEvent,
+    );
+
+    expect(parsed?.judgedAttendees).toEqual(realJudgments);
   });
 
   it("keeps valid talk, plan, and poster judgments and drops unknown talks", () => {
