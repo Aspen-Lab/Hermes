@@ -52,7 +52,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P7.4 | Job enrichment prompt + strict parser for the four promised sections | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` - 1 file, 11 tests passed |
-| P7.5 | Job report renders the four sections and hides the locked block only when they render | TODO | |
+| P7.5 | Job report renders the four sections and hides the locked block only when they render | IN_PROGRESS | |
 
 ### Phase 7C — Event report enrichment (spec plate 03)
 
