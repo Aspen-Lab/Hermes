@@ -21,6 +21,7 @@ import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
 import {
   buildEnrichmentContext,
+  capGeneratedReasoning,
   hasEventEnrichment,
   loadConfiguredOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
@@ -980,7 +981,7 @@ export function EventReport({
                 {enrichment.posterFit.fits ? "Likely fit" : "Probably not a fit"}
               </p>
               <p className="mt-2 text-body leading-7 text-text-muted">
-                {enrichment.posterFit.reasoning}
+                {capGeneratedReasoning(enrichment.posterFit.reasoning)}
               </p>
             </div>
           </ReportSection>

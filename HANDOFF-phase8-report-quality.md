@@ -62,7 +62,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P8.4 | Judged rows the model rejects are dropped, not rendered | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file / 17 tests passed; all 6 quoted rejections produced no rows and mixed output retained exactly 3 |
 | P8.5 | "What each talk is about" takes real talks or renders nothing | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file / 19 tests passed; generic-only input produced no section and 0 provider calls, mixed input sent only real titles |
 | P8.6 | The description must start at a sentence boundary | DONE | `cd web && npx vitest run && npx tsc --noEmit` — 76 files / 612 tests passed with benchmark override unset; TypeScript clean; §4 text starts `It will review`, removes `[...]`, and ends with an ellipsis at a word boundary |
-| P8.7 | Poster-fit answer is capped and leads with the verdict | IN_PROGRESS | |
+| P8.7 | Poster-fit answer is capped and leads with the verdict | DONE | `cd web && npx vitest run` — 76 files / 614 tests passed with benchmark override unset; a 180-word reason was capped to 60 words and the verdict remained first |
 | P8.8 | Attendee list layout — full width, no squashed column | TODO | |
 
 ### Phase 8D — Job report

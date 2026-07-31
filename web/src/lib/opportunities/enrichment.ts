@@ -72,6 +72,7 @@ const GENERIC_SESSION_TYPE_RE =
   /^(?:tutorial|panel|keynote|workshop|poster\s+session|reception)$/i;
 const SUBMISSION_SCOPE_RE =
   /\b(?:poster|abstract|submission|submit|call\s+for\s+(?:papers?|posters?))\b/i;
+export const MAX_GENERATED_REASONING_WORDS = 60;
 
 function clean(value: string | null | undefined): string | undefined {
   const trimmed = value?.replace(/\s+/g, " ").trim();
@@ -83,6 +84,13 @@ function cleanList(values: readonly string[]): string[] {
     const cleaned = clean(value);
     return cleaned ? [cleaned] : [];
   });
+}
+
+export function capGeneratedReasoning(value: string): string {
+  const text = clean(value) ?? "";
+  const words = text.split(" ");
+  if (words.length <= MAX_GENERATED_REASONING_WORDS) return text;
+  return `${words.slice(0, MAX_GENERATED_REASONING_WORDS).join(" ")}\u2026`;
 }
 
 function isAttendeeRejection(value: string): boolean {
@@ -318,7 +326,7 @@ export function buildEventEnrichmentPrompt(
         "Return only exact titles from activities and explain what each supplied activity is about.",
       dayPlan: "Order concrete supplied sessions and attendee names by event day.",
       posterFit:
-        "Compare the supplied event or submission scope with the user's current project; do not invent a call.",
+        "Compare the supplied event or submission scope with the user's current project; do not invent a call. Keep reasoning to at most 60 words.",
     },
     outputSchema: {
       judgedAttendees: [{ name: "exact supplied name", worthIt: true, why: "string" }],
@@ -401,7 +409,9 @@ export function parseEventEnrichment(
   ) {
     const record = parsed.posterFit as Record<string, unknown>;
     const reasoning =
-      typeof record.reasoning === "string" ? clean(record.reasoning) : undefined;
+      typeof record.reasoning === "string"
+        ? capGeneratedReasoning(record.reasoning)
+        : undefined;
     if (typeof record.fits === "boolean" && reasoning) {
       enrichment.posterFit = { fits: record.fits, reasoning };
     }

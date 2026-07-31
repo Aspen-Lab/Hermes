@@ -4,6 +4,7 @@ import {
   buildEnrichmentContext,
   buildEventEnrichmentPrompt,
   buildJobEnrichmentPrompt,
+  capGeneratedReasoning,
   ENRICHMENT_FAILURE_TTL_MS,
   ENRICHMENT_SUCCESS_TTL_MS,
   hasEventEnrichment,
@@ -449,5 +450,22 @@ describe("event enrichment prompt and parser", () => {
       dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
       posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
     });
+  });
+
+  it("caps a 180-word poster explanation without dropping its verdict", () => {
+    const reasoning = Array.from(
+      { length: 180 },
+      (_, index) => `reason${index + 1}`,
+    ).join(" ");
+    const parsed = parseEventEnrichment(
+      JSON.stringify({ posterFit: { fits: true, reasoning } }),
+      event,
+    );
+
+    expect(parsed?.posterFit?.fits).toBe(true);
+    expect(parsed?.posterFit?.reasoning).toBe(capGeneratedReasoning(reasoning));
+    expect(parsed?.posterFit?.reasoning.split(/\s+/)).toHaveLength(60);
+    expect(parsed?.posterFit?.reasoning).toMatch(/reason60\u2026$/);
+    expect(parsed?.posterFit?.reasoning).not.toContain("reason61");
   });
 });

@@ -216,4 +216,22 @@ describe("EventReport", () => {
 
     expect(html).toContain("Also in this report with an AI key");
   });
+
+  it("leads poster fit with the verdict and caps cached long reasoning", () => {
+    const reasoning = Array.from(
+      { length: 180 },
+      (_, index) => `reason${index + 1}`,
+    ).join(" ");
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      { posterFit: { fits: true, reasoning } },
+    );
+
+    expect(html).toContain("Likely fit");
+    expect(html.indexOf("Likely fit")).toBeLessThan(html.indexOf("reason1"));
+    expect(html).toContain("reason60\u2026");
+    expect(html).not.toContain("reason61");
+  });
 });
