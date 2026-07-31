@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import type { Job } from "@/types";
+import { defaultProfile, type Job } from "@/types";
 
 const mocks = vi.hoisted(() => ({
   resolveProvider: vi.fn(),
@@ -11,7 +11,7 @@ vi.mock("@/lib/llm/providers/registry", () => ({
 }));
 
 import { POST } from "./route";
-import { loadOpportunityEnrichment } from "@/lib/opportunities/enrichment";
+import { loadConfiguredOpportunityEnrichment } from "@/lib/opportunities/enrichment";
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -46,22 +46,30 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
 describe("POST /api/jobs/report", () => {
   it("returns a graceful Tier 0 response and makes no provider call when none resolves", async () => {
     mocks.resolveProvider.mockReturnValue(null);
-    const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
 
     const response = await POST(request({ job, contextHint: "Topics: batteries" }));
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
-    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("makes zero client network requests when the user has no provider", async () => {
+    const requestReport = vi.fn();
+
+    const result = await loadConfiguredOpportunityEnrichment(
+      defaultProfile,
+      "job:no-provider",
+      requestReport,
+      Date.UTC(2026, 6, 31),
+      new MemoryStorage(),
+    );
+
+    expect(result).toBeNull();
+    expect(requestReport).not.toHaveBeenCalled();
   });
 
   it("uses one large-tier call and returns parsed enrichment", async () => {
@@ -105,14 +113,21 @@ describe("POST /api/jobs/report", () => {
     );
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
     const storage = new MemoryStorage();
+    const profile = {
+      ...defaultProfile,
+      feedAiProvider: "gemini" as const,
+      feedAiApiKey: "test-key",
+    };
+    const requestReport = vi.fn(async (llmOverride) => {
+      const response = await POST(request({ job, llmOverride }));
+      const result = (await response.json()) as { enrichment: unknown | null };
+      return result.enrichment;
+    });
     const load = () =>
-      loadOpportunityEnrichment(
+      loadConfiguredOpportunityEnrichment(
+        profile,
         "job:route-cache",
-        async () => {
-          const response = await POST(request({ job }));
-          const result = (await response.json()) as { enrichment: unknown | null };
-          return result.enrichment;
-        },
+        requestReport,
         Date.UTC(2026, 6, 31),
         storage,
       );
@@ -120,6 +135,7 @@ describe("POST /api/jobs/report", () => {
     await load();
     await load();
 
+    expect(requestReport).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
   });
 });

@@ -22,7 +22,7 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import {
   buildEnrichmentContext,
   hasEventEnrichment,
-  loadOpportunityEnrichment,
+  loadConfiguredOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   type EventEnrichment,
 } from "@/lib/opportunities/enrichment";
@@ -1064,30 +1064,31 @@ export default function EventDetailPage({
   useEffect(() => {
     if (!event || !enrichmentKey) return;
 
-    const apiKey = profile.feedAiApiKey?.trim();
-    if (profile.feedAiProvider !== "default" && !apiKey) {
-      return;
-    }
-
     let cancelled = false;
-    const llmOverride =
-      profile.feedAiProvider !== "default" && apiKey
-        ? { provider: profile.feedAiProvider, apiKey }
-        : undefined;
-
-    void loadOpportunityEnrichment<EventEnrichment>(enrichmentKey, async () => {
-      const response = await fetch("/api/events/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event, contextHint, llmOverride }),
-      });
-      if (!response.ok) throw new Error(`Event report failed: ${response.status}`);
-      const result = (await response.json()) as { enrichment: EventEnrichment | null };
-      return result.enrichment ?? null;
-    }).then((enrichment) => {
+    void loadConfiguredOpportunityEnrichment<EventEnrichment>(
+      {
+        feedAiProvider: profile.feedAiProvider,
+        feedAiApiKey: profile.feedAiApiKey,
+      },
+      enrichmentKey,
+      async (llmOverride) => {
+        const response = await fetch("/api/events/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event, contextHint, llmOverride }),
+        });
+        if (!response.ok) {
+          throw new Error(`Event report failed: ${response.status}`);
+        }
+        const result = (await response.json()) as {
+          enrichment: EventEnrichment | null;
+        };
+        return result.enrichment ?? null;
+      },
+    ).then((enrichment) => {
         if (cancelled) return;
         setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
-      });
+    });
 
     return () => {
       cancelled = true;
@@ -1096,8 +1097,7 @@ export default function EventDetailPage({
     event,
     contextHint,
     enrichmentKey,
-    profile.feedAiProvider,
-    profile.feedAiApiKey,
+    profile,
   ]);
 
   const rosterContext = useMemo<EventRosterContext>(

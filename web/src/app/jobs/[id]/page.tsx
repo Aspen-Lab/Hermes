@@ -10,7 +10,7 @@ import { formatSalary } from "@/lib/opportunities/salary";
 import {
   buildEnrichmentContext,
   hasJobEnrichment,
-  loadOpportunityEnrichment,
+  loadConfiguredOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   type JobEnrichment,
 } from "@/lib/opportunities/enrichment";
@@ -699,30 +699,31 @@ export default function JobDetailPage({
   useEffect(() => {
     if (!job || !enrichmentKey) return;
 
-    const apiKey = profile.feedAiApiKey?.trim();
-    if (profile.feedAiProvider !== "default" && !apiKey) {
-      return;
-    }
-
     let cancelled = false;
-    const llmOverride =
-      profile.feedAiProvider !== "default" && apiKey
-        ? { provider: profile.feedAiProvider, apiKey }
-        : undefined;
-
-    void loadOpportunityEnrichment<JobEnrichment>(enrichmentKey, async () => {
-      const response = await fetch("/api/jobs/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job, contextHint, llmOverride }),
-      });
-      if (!response.ok) throw new Error(`Job report failed: ${response.status}`);
-      const result = (await response.json()) as { enrichment: JobEnrichment | null };
-      return result.enrichment ?? null;
-    }).then((enrichment) => {
+    void loadConfiguredOpportunityEnrichment<JobEnrichment>(
+      {
+        feedAiProvider: profile.feedAiProvider,
+        feedAiApiKey: profile.feedAiApiKey,
+      },
+      enrichmentKey,
+      async (llmOverride) => {
+        const response = await fetch("/api/jobs/report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job, contextHint, llmOverride }),
+        });
+        if (!response.ok) {
+          throw new Error(`Job report failed: ${response.status}`);
+        }
+        const result = (await response.json()) as {
+          enrichment: JobEnrichment | null;
+        };
+        return result.enrichment ?? null;
+      },
+    ).then((enrichment) => {
         if (cancelled) return;
         setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
-      });
+    });
 
     return () => {
       cancelled = true;
@@ -731,8 +732,7 @@ export default function JobDetailPage({
     job,
     contextHint,
     enrichmentKey,
-    profile.feedAiProvider,
-    profile.feedAiApiKey,
+    profile,
   ]);
 
   if (!job) {

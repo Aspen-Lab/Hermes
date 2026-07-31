@@ -1,4 +1,5 @@
 import type { Event, Job, UserAiProvider, UserProfile } from "@/types";
+import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 
 export interface JobEnrichment {
   competitiveness?: {
@@ -41,6 +42,11 @@ type EnrichmentProfile = Pick<
   | "currentProject"
   | "currentChallenges"
   | "authorisedCountries"
+>;
+
+type OpportunityProviderProfile = Pick<
+  UserProfile,
+  "feedAiProvider" | "feedAiApiKey"
 >;
 
 export type OpportunityEnrichmentKind = "job" | "event";
@@ -522,4 +528,40 @@ export function loadOpportunityEnrichment<T>(
     });
   enrichmentInFlight.set(cacheKey, request);
   return request;
+}
+
+/**
+ * Client-side cost gate for opportunity reports. Production only calls the
+ * route for a concrete BYOK provider; local `next dev` may also call without
+ * an override so the server can resolve the developer's `.env.local` Vertex
+ * provider. The server registry independently fails closed outside local dev.
+ */
+export function loadConfiguredOpportunityEnrichment<T>(
+  profile: OpportunityProviderProfile,
+  cacheKey: string,
+  loader: (override?: ProviderOverrideConfig) => Promise<T | null>,
+  nowMs = Date.now(),
+  storage: Storage | undefined = browserStorage(),
+): Promise<T | null> {
+  const provider = profile.feedAiProvider;
+  const apiKey = profile.feedAiApiKey?.trim();
+  if (provider === "default") {
+    if (process.env.NODE_ENV !== "development") return Promise.resolve(null);
+    return loadOpportunityEnrichment(
+      cacheKey,
+      () => loader(undefined),
+      nowMs,
+      storage,
+    );
+  }
+  if (!apiKey) {
+    return Promise.resolve(null);
+  }
+
+  return loadOpportunityEnrichment(
+    cacheKey,
+    () => loader({ provider, apiKey }),
+    nowMs,
+    storage,
+  );
 }
