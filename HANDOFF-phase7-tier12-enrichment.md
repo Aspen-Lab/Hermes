@@ -469,7 +469,12 @@ fails.
     - Anything I changed that was NOT in the plan, and why:
     - What the next agent should watch out for:
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-31
+- Tasks completed this session: P7.1-P7.9
+- Left IN_PROGRESS or BLOCKED: P7.10 BLOCKED because another active checkout task owns and is editing `web/src/lib/llm/**`; no P7.10 code was started.
+- Test/typecheck status at stop time: `npx vitest run` 73 files / 596 tests passed; `npx tsc --noEmit` clean; `npx eslint .` has exactly the one pre-existing `src/components/persona/quiz.tsx:46` error.
+- Anything I changed that was NOT in the plan, and why: preserved production's zero-request default gate while explicitly allowing local `next dev` to resolve `.env.local` Vertex, because the local-tester default path was the reported bug.
+- What the next agent should watch out for: do not discard the user's pre-existing paper-page edit or the concurrent uncommitted security/docs work; P7.10 still requires ownership clearance.
 
 ---
 
