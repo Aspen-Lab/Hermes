@@ -360,6 +360,9 @@ export function JobReport({
   onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
 }) {
+  // Provider availability is intentionally not a rendering signal. Only real
+  // enrichment may hide the locked block.
+  void _providerConfigured;
   const matchPct = formatMatchPct(job.relevanceScore);
   const facts = buildJobFacts(job);
   const timeline = buildTimeline(job, nowMs);
@@ -698,7 +701,6 @@ export default function JobDetailPage({
 
     const apiKey = profile.feedAiApiKey?.trim();
     if (profile.feedAiProvider !== "default" && !apiKey) {
-      setEnrichmentResult({ key: enrichmentKey, enrichment: null, done: true });
       return;
     }
 
