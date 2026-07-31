@@ -58,7 +58,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P7.6 | Event enrichment prompt + strict parser for the four promised sections | TODO | |
+| P7.6 | Event enrichment prompt + strict parser for the four promised sections | IN_PROGRESS | |
 | P7.7 | Judged attendees merge back into the existing roster without duplicating rows | TODO | |
 | P7.8 | Event report renders the four sections and hides the locked block only when they render | TODO | |
 
