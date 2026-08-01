@@ -300,13 +300,32 @@ function isRosterStopLabel(value: string): boolean {
   return ROSTER_STOP_LABEL_RE.test(value.replace(/\s+/g, " ").trim());
 }
 
+// Sponsor walls are grids of logo images, and their alt text is very often the
+// asset filename. The North American Membrane Society page yielded a roster of
+// "NSFlogo.png", "gmbh.png", "Untitled.png", "generon logo.png" and a raw UUID
+// — none of which the earlier digit and punctuation checks reject. A name that
+// ends in an asset extension is a file reference, never an organisation.
+const ASSET_FILENAME_RE =
+  /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico|tiff?|pdf)$/i;
+const OPAQUE_IDENTIFIER_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isAssetReference(value: string): boolean {
+  const name = value.replace(/\s+/g, " ").trim();
+  return (
+    ASSET_FILENAME_RE.test(name) ||
+    OPAQUE_IDENTIFIER_RE.test(name.replace(ASSET_FILENAME_RE, ""))
+  );
+}
+
 function looksLikePersonName(value: string): boolean {
   const name = value.replace(/\s+/g, " ").trim();
   if (
     !name ||
     name.length > 100 ||
     /[@/:]|\d/.test(name) ||
-    isRosterStopLabel(name)
+    isRosterStopLabel(name) ||
+    isAssetReference(name)
   ) {
     return false;
   }
@@ -342,7 +361,8 @@ function looksLikeOrganisationName(value: string): boolean {
     !name ||
     name.length > 140 ||
     /https?:|@/.test(name) ||
-    isRosterStopLabel(name)
+    isRosterStopLabel(name) ||
+    isAssetReference(name)
   ) {
     return false;
   }

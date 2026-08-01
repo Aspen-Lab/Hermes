@@ -130,3 +130,41 @@ describe("extractEventRoster", () => {
     expect(extractEventRoster("<h1>About the conference")).toEqual({});
   });
 });
+
+describe("sponsor logo walls", () => {
+  // The North American Membrane Society page produced a roster made entirely of
+  // image filenames, because a logo grid's alt text is usually the asset name.
+  // None of the earlier checks rejected them: no digits, no @ or slash.
+  const logoWall = `
+    <main>
+      <h2>Sponsors</h2>
+      <div class="sponsor-grid">
+        <div class="sponsor-card"><strong>NSFlogo.png</strong></div>
+        <div class="sponsor-card"><strong>gmbh.png</strong></div>
+        <div class="sponsor-card"><strong>Untitled.png</strong></div>
+        <div class="sponsor-card"><strong>generon logo.png</strong></div>
+        <div class="sponsor-card"><strong>ChevronLogo.svg.png</strong></div>
+        <div class="sponsor-card"><strong>227ad51b-ab12-4d7f-989f-74e93304b1ea.png</strong></div>
+        <div class="sponsor-card"><strong>Air Products</strong></div>
+        <div class="sponsor-card"><strong>Eurodia Group</strong></div>
+      </div>
+    </main>`;
+
+  it("keeps the real sponsors and drops every asset filename", () => {
+    const names = (extractEventRoster(logoWall).organisations ?? []).map(
+      (org) => org.name,
+    );
+    expect(names).toContain("Air Products");
+    expect(names).toContain("Eurodia Group");
+    for (const filename of [
+      "NSFlogo.png",
+      "gmbh.png",
+      "Untitled.png",
+      "generon logo.png",
+      "ChevronLogo.svg.png",
+      "227ad51b-ab12-4d7f-989f-74e93304b1ea.png",
+    ]) {
+      expect(names).not.toContain(filename);
+    }
+  });
+});

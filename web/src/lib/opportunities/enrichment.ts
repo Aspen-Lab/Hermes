@@ -76,8 +76,13 @@ const enrichmentInFlight = new Map<string, Promise<unknown | null>>();
 // "Keynote Session", "Plenary", "Breakout", "Networking" and "Short Course" all
 // slipped past and got defined too. The reliable signal is not which word it is
 // but that it is a bare label: a real talk title is a phrase.
+// Measured against the whole local pool (81 events): the only values the
+// extractor ever produces are career fair, exhibition, keynote, networking,
+// panel, poster session, symposium, tutorial and workshop. Every one is a
+// session type. "career fair" is two words, so the bare-word rule below cannot
+// catch it — multi-word session types need naming explicitly.
 const GENERIC_SESSION_TYPE_RE =
-  /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?)$/i;
+  /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?|(?:career|careers|job|recruit(?:ing|ment))\s+fairs?|meet\s*(?:and|&)\s*greet|coffee\s+breaks?|opening\s+remarks?|closing\s+remarks?|welcome\s+receptions?)$/i;
 const SESSION_QUALIFIER_RE = /\s+(?:session|track|talk|day|programme|program)s?$/i;
 const SUBMISSION_SCOPE_RE =
   /\b(?:poster|abstract|submission|submit|call\s+for\s+(?:papers?|posters?))\b/i;
