@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   extractPageText,
+  findProgrammePageUrl,
   fetchPageText,
   MAX_PAGE_TEXT_CHARS,
 } from "./page-text";
@@ -97,5 +98,56 @@ describe("fetchPageText", () => {
     await expect(
       fetchPageText("https://events.example.com/programme"),
     ).resolves.toBeNull();
+  });
+});
+
+describe("findProgrammePageUrl", () => {
+  it("returns the best single same-host programme link", () => {
+    expect(
+      findProgrammePageUrl(
+        `
+          <a href="#programme">Programme on this page</a>
+          <a href="/2027/speakers">Speakers</a>
+          <a href="/news">Programme announcement</a>
+          <a href="../programme/full-schedule?view=all#day-one">
+            <strong>Full scientific programme</strong>
+          </a>
+          <a href="/2027/schedule">Schedule</a>
+        `,
+        "https://conference.example.org/2027/home",
+      ),
+    ).toBe(
+      "https://conference.example.org/programme/full-schedule?view=all",
+    );
+  });
+
+  it("returns null when the only programme link is off-host", () => {
+    expect(
+      findProgrammePageUrl(
+        `
+          <a href="https://programme.example.net/full">Programme</a>
+          <a href="//cdn.example.net/schedule">Schedule</a>
+        `,
+        "https://conference.example.org/2027/home",
+      ),
+    ).toBeNull();
+  });
+
+  it("returns null when there are no programme candidates", () => {
+    expect(
+      findProgrammePageUrl(
+        `
+          <!-- <a href="/programme">Hidden programme</a> -->
+          <script>const link = '<a href="/schedule">Schedule</a>';</script>
+          <template><a href="/agenda">Agenda</a></template>
+          <a href="/registration">Registration</a>
+          <a href="news">Programming committee update</a>
+          <a href="/programme.pdf">Download programme PDF</a>
+          <a href="mailto:team@example.org">Contact</a>
+          <a href="javascript:void(0)">Open menu</a>
+        `,
+        "https://conference.example.org/programme/2027/home",
+      ),
+    ).toBeNull();
   });
 });
