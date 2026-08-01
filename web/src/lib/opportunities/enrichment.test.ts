@@ -47,6 +47,88 @@ class MemoryStorage implements Storage {
   }
 }
 
+
+function eventWithUnjudged(names: string[]): Event {
+  return {
+    id: "eventweb:probe",
+    source: "eventweb",
+    name: "Probe Conference",
+    type: "conference",
+    date: "2026-09-09",
+    location: "Chicago, IL",
+    isOnline: false,
+    shortDescription: "A conference.",
+    relevanceReason: "Matches the declared topic.",
+    organisations: names.map((name) => ({ name, descriptor: "Exhibitor" })),
+  } as Event;
+}
+
+describe("rejection and generic-label filters resist rephrasing", () => {
+  // These filters were first written against the six rejection strings and the
+  // three session words that appeared in one real report. Equally common
+  // phrasings from the same model leaked straight through to the user.
+  const REJECTIONS = [
+    "This appears to be a document or action, not an attendee.",
+    "This appears to be a category or group, not an individual attendee.",
+    "This appears to be a navigation link rather than an attendee.",
+    "This is a website section, not a participant.",
+    "This looks like a page element rather than a person attending.",
+    "This seems to be a call-to-action button, not a real organisation.",
+    "This is a legal document and does not represent an exhibitor.",
+  ];
+
+  it("drops every rephrased refusal, not only the ones first observed", () => {
+    const event = eventWithUnjudged(["Download Brochure"]);
+    for (const why of REJECTIONS) {
+      const parsed = parseEventEnrichment(
+        JSON.stringify({
+          judgedAttendees: [
+            { name: "Download Brochure", worthIt: false, why },
+          ],
+        }),
+        event,
+      );
+      expect(parsed?.judgedAttendees ?? []).toEqual([]);
+    }
+  });
+
+  it("drops a row the model explicitly flags, whatever the prose says", () => {
+    const event = eventWithUnjudged(["Privacy Policy"]);
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: [
+          {
+            name: "Privacy Policy",
+            isAttendee: false,
+            worthIt: true,
+            why: "A genuinely useful sounding sentence with no refusal wording.",
+          },
+        ],
+      }),
+      event,
+    );
+    expect(parsed?.judgedAttendees ?? []).toEqual([]);
+  });
+
+  it("keeps a real judgement", () => {
+    const event = eventWithUnjudged(["Battery Power Online"]);
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: [
+          {
+            name: "Battery Power Online",
+            isAttendee: true,
+            worthIt: true,
+            why: "A battery publication whose coverage overlaps your LCO work.",
+          },
+        ],
+      }),
+      event,
+    );
+    expect(parsed?.judgedAttendees).toHaveLength(1);
+  });
+});
+
 describe("opportunity report enrichment cache", () => {
   const now = Date.UTC(2026, 6, 31, 12);
   const enrichment: JobEnrichment = {

@@ -68,8 +68,17 @@ const ENRICHMENT_CACHE_MAX_ENTRIES = 80;
 export const ENRICHMENT_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ENRICHMENT_FAILURE_TTL_MS = 6 * 60 * 60 * 1000;
 const enrichmentInFlight = new Map<string, Promise<unknown | null>>();
+// A programme that lists "tutorial", "panel", "keynote" is listing session
+// TYPES, not talks. Asked what such a "talk" is about, the model defines the
+// English word — the report shipped three dictionary entries.
+//
+// Matching those three exact lowercase words was too narrow: "Tutorials",
+// "Keynote Session", "Plenary", "Breakout", "Networking" and "Short Course" all
+// slipped past and got defined too. The reliable signal is not which word it is
+// but that it is a bare label: a real talk title is a phrase.
 const GENERIC_SESSION_TYPE_RE =
-  /^(?:tutorial|panel|keynote|workshop|poster\s+session|reception)$/i;
+  /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?)$/i;
+const SESSION_QUALIFIER_RE = /\s+(?:session|track|talk|day|programme|program)s?$/i;
 const SUBMISSION_SCOPE_RE =
   /\b(?:poster|abstract|submission|submit|call\s+for\s+(?:papers?|posters?))\b/i;
 export const MAX_GENERATED_REASONING_WORDS = 60;
@@ -93,13 +102,34 @@ export function capGeneratedReasoning(value: string): string {
   return `${words.slice(0, MAX_GENERATED_REASONING_WORDS).join(" ")}\u2026`;
 }
 
+// The model tells us an entry is page furniture rather than a person or
+// organisation, but it phrases that refusal freely — "not an attendee", "rather
+// than an attendee", "not a participant", "does not represent an exhibitor".
+// Matching one phrasing let six equally common ones through and rendered the
+// refusal as if it were a judgement.
+//
+// Ask for the answer as a field instead of reading it out of prose. The regex
+// stays as a backstop for models that fill the prose but forget the flag.
+const ATTENDEE_REJECTION_RE =
+  /\b(?:not|rather\s+than|instead\s+of|isn['’]t|does\s+not\s+(?:represent|appear))\b[^.]*?\b(?:attendee|participant|exhibitor|speaker|delegate|person\s+attending|organisation|organization|company)\b/i;
+
 function isAttendeeRejection(value: string): boolean {
-  return /\bnot\s+(?:an?\s+)?(?:individual\s+)?attendee\b/i.test(value);
+  return ATTENDEE_REJECTION_RE.test(value);
+}
+
+function isGenericSessionLabel(title: string): boolean {
+  const core = title.replace(SESSION_QUALIFIER_RE, "").trim();
+  if (!core) return true;
+  if (GENERIC_SESSION_TYPE_RE.test(core)) return true;
+  // A single bare word is a session label whatever the word is. Losing a real
+  // one-word talk title costs nothing — the section simply omits it — whereas
+  // keeping one buys a paid dictionary definition.
+  return !/\s/.test(core);
 }
 
 function eventTalkTitles(event: Pick<Event, "activities">): string[] {
   return cleanList(event.activities ?? []).filter(
-    (title) => !GENERIC_SESSION_TYPE_RE.test(title),
+    (title) => !isGenericSessionLabel(title),
   );
 }
 
@@ -321,7 +351,8 @@ export function buildEventEnrichmentPrompt(
     },
     rules: {
       judgedAttendees:
-        "Return only exact names from unjudgedAttendees. Never add or rename a person or organisation.",
+        "Return only exact names from unjudgedAttendees. Never add or rename a person or organisation. " +
+        "Some supplied names are website furniture rather than real attendees; set isAttendee false for those and they will be discarded.",
       talkSummaries:
         "Return only exact titles from activities and explain what each supplied activity is about.",
       dayPlan: "Order concrete supplied sessions and attendee names by event day.",
@@ -329,7 +360,9 @@ export function buildEventEnrichmentPrompt(
         "Compare the supplied event or submission scope with the user's current project; do not invent a call. Keep reasoning to at most 60 words.",
     },
     outputSchema: {
-      judgedAttendees: [{ name: "exact supplied name", worthIt: true, why: "string" }],
+      judgedAttendees: [
+        { name: "exact supplied name", isAttendee: true, worthIt: true, why: "string" },
+      ],
       talkSummaries: [{ title: "exact supplied activity title", about: "string" }],
       dayPlan: [{ day: "string", items: ["string"] }],
       posterFit: { fits: true, reasoning: "string" },
@@ -353,6 +386,8 @@ export function parseEventEnrichment(
       const record = value as Record<string, unknown>;
       const name = typeof record.name === "string" ? clean(record.name) : undefined;
       const why = typeof record.why === "string" ? clean(record.why) : undefined;
+      // An explicit false is authoritative; a missing flag falls back to prose.
+      if (record.isAttendee === false) return [];
       if (
         !name ||
         !why ||
