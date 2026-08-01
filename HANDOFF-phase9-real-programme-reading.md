@@ -42,13 +42,10 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P9.1 | Add the researched session types, with false-positive guards | TODO | |
+| P9.1 | Fix 3 mis-firing labels, drop `mixer`, add 14 researched types | TODO | |
 
-> **P9.1 is blocked on a research pass that is running now** — 50 real conference
-> sites worldwide, recording every session-type word they use. The findings land
-> in §4 under "Tier 0 vocabulary research" before this task starts. **Do not
-> invent the word list from memory.** If §4 still says PENDING, mark P9.1
-> `BLOCKED` and start at P9.2.
+> The research is **complete** — 53 conference sites, findings in §4. P9.1 is
+> ready to start. **Do not invent additional words from memory.**
 
 ### Phase 9B — Tier 1/2: fetch and read the real page
 
@@ -184,14 +181,121 @@ cap a matter of respect rather than of the operator's budget.
   7-day / 6-hour cache.
 - Output caps today: events `maxTokens: 1600`, jobs `maxTokens: 1200`.
 
-### Tier 0 vocabulary research
+### Tier 0 vocabulary research — COMPLETE, 53 conference sites read
 
-**PENDING** — a research pass over 50 conference sites worldwide is running. It
-will report a frequency table of every session-type word found, recommended
-additions that appeared on at least 3 of 50 sites, and a false-positive analysis
-(for example: a page containing "solar panel" or "panel data" must not be tagged
-as having a discussion panel). **P9.1 does not start until those findings replace
-this paragraph.**
+Sampled 2026-08-01 across North America 16, Europe 12, East Asia 4, South/SE Asia
+3, Australia 1, Africa 3, Middle East 3, Latin America 3, global/rotating 5;
+sizes from ESC/AACR/EGU-scale down to Gordon and Keystone. Counts are the number
+of the 53 sites on whose homepage or programme page the word appeared, so they
+are a **lower bound** — a conference that runs town halls but lists them only on
+a deep schedule page counts as a miss.
+
+**Two of the existing 12 labels are dead weight:**
+
+| Existing label | Sites | Verdict |
+|---|---:|---|
+| `mixer` | **0 / 53** | Remove. Zero recall, and it collides with RF mixer, static mixer, concrete mixer. |
+| `hackathon` | 1 / 53 | Keep — unambiguous and informative on a hit — but expect it to fire almost never outside CS. |
+
+**`plenary` is the single biggest gap: 21 of 53 sites, more than tutorial (20),
+keynote (18), panel (17) or symposium (16).** It is distinct from keynote, not a
+synonym: ICRA 2026 lists "Plenary Sessions", "Keynote Sessions" and "Industry
+Keynote Sessions" as three separate categories; DPG maps *Plenarvortrag* and
+*Hauptvortrag* to different talk classes; ComBio lists "Keynote Plenary" and
+"Plenary" separately. It is also near-zero risk as a bare word — it does not
+occur in ordinary technical prose.
+
+**Additions, all at or above the 3-of-53 bar, ranked by support:**
+
+| Word | Sites | Match as | Example |
+|---|---:|---|---|
+| plenary | 21 | bare word (safe) | ieee-icra.org |
+| awards ceremony | 15 | phrase only | ieeeigarss.org |
+| competition | 12 | phrase-guarded | ijcai.org |
+| short course | 9 | phrase only | electrochem.org/248 |
+| demo session | 8 | whole-word `demo`/`demos` or phrase | isscc.org |
+| doctoral consortium | 8 | phrase only | ieeevis.org |
+| banquet / gala dinner | 8 | bare `banquet` safe | africandatascienceconference.com |
+| social event | 6 | phrase only | icml.cc |
+| lightning talk | 5 | phrase only; fold in flash talk, short talk | embl.org |
+| field trip | 5 | phrase only; fold in excursion, technical tour | asiaoceania.org |
+| school | 4 | phrase only (`summer/winter/methods/doctoral school`) | european-mrs.com |
+| town hall | 3 | phrase, also `townhall` (EGU spells it closed) | iscb.org |
+| meet the expert | 3 | phrase only | escmid.org |
+| hands-on session | 3 | phrase only | bio2026.co.za |
+
+**Do NOT add** — these describe the default skeleton of nearly every conference
+and would put a chip on ~90% of events, destroying the checklist's information
+value: `oral session` (14), `invited talk` (13), `parallel session` (7),
+`special session` (6), `technical session`. Also do not add `forum` (8): the
+sample uses it for a whole conference, a plenary block, an industry session and a
+student track, so it carries no consistent meaning.
+
+**Below the bar, do not add on this evidence:** `birds of a feather` (2, both US
+computing), `roundtable` (2), `business meeting`/`AGM` (2), and the satellite /
+side meeting / splinter / ancillary / pre-conference family (7 sites but no
+single word reaching 3).
+
+### False positives — three EXISTING labels are already wrong
+
+This is a live defect, independent of any addition. The current patterns match
+research vocabulary, not programme items:
+
+| Label | Fires wrongly on | Required guard |
+|---|---|---|
+| `networking` | "networking protocols", "wireless networking", "network-on-chip" — **every communications conference trips on its own research topic** | require `networking event/session/break/lunch/reception/opportunities` |
+| `panel` | "solar panel", "panel data", "control panel", "flat-panel display" — constant on photovoltaics and materials pages | require `panel discussion/session`, `expert panel`, or `panels` as a heading |
+| `symposium` | the conference's **own name** (Keystone Symposia, "International Symposium on …"), which tells the reader nothing | require a programme context, not the event title |
+| `exhibition` | safe as written, but **never shorten to `exhibit`** — "the sample exhibits high conductivity" is among the most common verbs in materials prose | keep `exhibition`/`exhibitors`/`exhibit hall` |
+| `tutorial` | "tutorial paper", "tutorial review", website help pages | mild: prefer `tutorial session`/`tutorials` |
+
+**New words that must be phrase-matched or they will misfire badly:**
+
+| Word | Fires wrongly on |
+|---|---|
+| `school` | "School of Engineering", "graduate school", "high school" — on every page |
+| `challenge` | "challenges in energy storage", "grand challenges", "the key challenge is" |
+| `award` | "award-winning", "grant award", "NSF award number", "supported by award …" |
+| `reception` | "signal reception" (antennas), "reception studies" (classics/literature) |
+| `social` | "social sciences", "social media", "social determinants" — catastrophic alone |
+| `demo` | never match bare "demonstration"; "we demonstrate a novel …" is standard abstract phrasing |
+| `course` | "in the course of the reaction", "of course", "watercourse" |
+| `field` | "magnetic field", "field theory", "field-effect transistor", "in the field of" |
+| `tour` | "tour de force", "detour", "contour" |
+| `lightning` | "lightning strike", "lightning detection" — a real topic at atmospheric/climate meetings |
+| `flash` | "flash memory", "flash sintering", "flash point", "flash chromatography" |
+| `consortium` | "the ENCODE Consortium", "consortium partners" |
+| `excursion` | "temperature excursion", "pH excursion" |
+| `hands-on` | "hands-on experience" in generic marketing copy |
+| `seminar` | avoid entirely — "seminar series" is year-round departmental activity, not a conference feature |
+
+**Fold these into one tag each, do not emit separate chips:**
+`lightning talk` = flash talk = short talk · `field trip` = excursion = technical
+tour · `school` = summer/winter/methods school · `banquet` = gala dinner.
+
+### Where this research is thin — believe the gaps, not a padded list
+
+- **China: 1 site, reached only through a news page.** CNCC's schedule, the
+  Chinese Chemical Society and C-MRS were all JavaScript-only shells, TLS-broken,
+  or empty. The only Chinese evidence is the labels on that one page, and the
+  English labels Chinese conferences publish on their own English pages were
+  **not** verified. This needs a second pass with a JS-capable browser before
+  anyone claims coverage.
+- **Blocked outright (HTTP 403/418):** ACS — the largest chemistry meeting in the
+  world — plus MRS, AGU, ASCO, ASA, AERA, AMS, USENIX, FEBS, IEEE ICC/GLOBECOM.
+- **JavaScript-only, no readable programme:** Goldschmidt, AGU25, ESMO,
+  Pacifichem, MRS-Japan, JSAP English, NZIC and others.
+- **Earth/climate rests on 3 sites** (EGU, JpGU, AOGS) after losing AGU, GSA, AMS
+  and Goldschmidt. **Social sciences rests on 6** after losing ASA, AERA and the
+  American Anthropological Association — which is exactly why `roundtable` came
+  in at 2 and should be treated as *unmeasured*, not as *absent*.
+- **Africa is 3 sites, all South Africa. Korea, India: 1 each. New Zealand: 0
+  readable.**
+- Two non-English concepts have no clean English equivalent: DPG's *Hacky Hours*
+  (an informal coding drop-in listed as a programme item) and CNCC's catch-all
+  "special activities" bucket. Japanese sites render their symposium term as
+  "Symposium" but also run an "informal meetings" category with no standard
+  English name.
 
 ---
 
@@ -294,17 +398,36 @@ If you start the dev server, run `npm run kill-orphans` from `web/` afterwards
 
 ### P9.1 — Widen the Tier 0 session-type checklist
 
-**Blocked until the research in §4 lands.** Files:
-`web/src/lib/opportunities/event-details.ts` + test.
+Files: `web/src/lib/opportunities/event-details.ts` + test.
+**All data for this task is in §4 under "Tier 0 vocabulary research". Use it
+verbatim. Do not invent additional words from memory.**
 
-Add the recommended session types to `ACTIVITY_PATTERNS`. For each one, add a
-`rejectContext` guard where the research flagged a false-positive risk — the
-existing `panel` entry, which already rejects "data panel" and "survey panel", is
-the pattern to copy.
+Three separate changes, in this order:
+
+**(a) Fix the three existing labels that fire on research vocabulary.** This is a
+live defect and the most valuable part of the task: today a communications
+conference is tagged "networking" because its *papers* are about networking, and
+a photovoltaics conference is tagged "panel" because the page says "solar panel".
+Apply the guards in §4's false-positive table. The existing `panel` entry already
+carries a `rejectContext` for "data panel" and "survey panel" — extend that
+pattern rather than inventing a new mechanism.
+
+**(b) Remove `mixer`.** Zero hits across 53 sites, and it collides with RF mixer,
+static mixer and concrete mixer. Keep `hackathon` despite its single hit.
+
+**(c) Add the 14 researched types**, matching bare-word only where §4 marks it
+safe (`plenary`, `banquet`) and phrase-only everywhere else. Fold synonyms into
+one label as §4 specifies — lightning/flash/short talk emit one tag, not three.
 
 **Acceptance:** `cd web && npx vitest run src/lib/opportunities/event-details.test.ts`
-— every recommended word is detected in a realistic sentence, and every
-false-positive phrase from the research is **not** detected.
+— (1) every added type is detected in a realistic programme sentence; (2) **every
+false-positive phrase listed in §4 is NOT detected**, including "solar panel",
+"panel data", "wireless networking", "network-on-chip", "the sample exhibits high
+conductivity", "School of Engineering", "grand challenges", "NSF award number",
+"social sciences", "flash sintering", "lightning detection", "magnetic field",
+"in the course of the reaction", "temperature excursion", "the ENCODE Consortium";
+(3) `mixer` is gone; (4) a conference whose own title contains "Symposium" is not
+tagged from its title alone.
 
 ### P9.2 — Server-side page text pipeline
 
