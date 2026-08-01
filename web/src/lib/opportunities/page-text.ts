@@ -14,9 +14,9 @@ const PROGRAMME_LINK_KEYWORDS = [
   { pattern: /\bprogram(?:me)?\b/i, weight: 7 },
   { pattern: /\bschedule\b/i, weight: 6 },
   { pattern: /\bagenda\b/i, weight: 5 },
-  { pattern: /\bsessions?\b/i, weight: 4 },
-  { pattern: /\btalks?\b/i, weight: 3 },
-  { pattern: /\bspeakers?\b/i, weight: 2 },
+  { pattern: /\bsessions\b/i, weight: 4 },
+  { pattern: /\btalks\b/i, weight: 3 },
+  { pattern: /\bspeakers\b/i, weight: 2 },
 ] as const;
 
 function withoutHiddenContent(html: string): string {
@@ -159,14 +159,19 @@ export function findProgrammePageUrl(
     if (candidate.username || candidate.password) continue;
     if (/\.(?:ics|pdf|zip)$/i.test(candidate.pathname)) continue;
     candidate.hash = "";
-    if (candidate.toString() === baseUrl.toString()) continue;
+    if (
+      candidate.pathname === baseUrl.pathname &&
+      candidate.search === baseUrl.search
+    ) {
+      continue;
+    }
 
     const text = stripHtml(match[2] ?? "").replace(/\s+/g, " ").trim();
     let target = href;
     try {
       const explicitTarget = new URL(href, "https://peer.invalid/");
       target = decodeURIComponent(
-        `${explicitTarget.pathname} ${explicitTarget.search}`,
+        `${explicitTarget.pathname} ${explicitTarget.search} ${explicitTarget.hash}`,
       );
     } catch {
       // Keep the encoded target for scoring when a site has a malformed escape.

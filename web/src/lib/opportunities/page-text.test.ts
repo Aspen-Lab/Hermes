@@ -143,11 +143,26 @@ describe("findProgrammePageUrl", () => {
           <a href="/registration">Registration</a>
           <a href="news">Programming committee update</a>
           <a href="/programme.pdf">Download programme PDF</a>
+          <a href="/single-session">Session</a>
+          <a href="/invited-talk">Talk</a>
+          <a href="/keynote-speaker">Speaker</a>
           <a href="mailto:team@example.org">Contact</a>
           <a href="javascript:void(0)">Open menu</a>
         `,
         "https://conference.example.org/programme/2027/home",
       ),
     ).toBeNull();
+  });
+
+  it("uses explicit href fragments but never returns a same-document link", () => {
+    expect(
+      findProgrammePageUrl(
+        `
+          <a href="http://conference.example.org/2027/home#agenda">Agenda</a>
+          <a href="/2027/day-one#sessions"><span aria-label="Calendar"></span></a>
+        `,
+        "https://conference.example.org/2027/home",
+      ),
+    ).toBe("https://conference.example.org/2027/day-one");
   });
 });
