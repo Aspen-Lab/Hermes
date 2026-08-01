@@ -583,6 +583,42 @@ export function JobReport({
         </ReportSection>
       )}
 
+      {Boolean(enrichment?.specificRequirements?.length) && (
+        <ReportSection
+          title="What this employer actually asks for"
+          sectionKey="specific-requirements"
+        >
+          <ul className="space-y-2">
+            {enrichment?.specificRequirements?.map((requirement) => (
+              <li
+                key={requirement}
+                className="rounded-lg border border-border bg-surface px-4 py-3 text-body text-heading"
+              >
+                {requirement}
+              </li>
+            ))}
+          </ul>
+        </ReportSection>
+      )}
+
+      {Boolean(enrichment?.specificDuties?.length) && (
+        <ReportSection
+          title="What the person would actually do"
+          sectionKey="specific-duties"
+        >
+          <ul className="space-y-2">
+            {enrichment?.specificDuties?.map((duty) => (
+              <li
+                key={duty}
+                className="rounded-lg border border-border bg-surface px-4 py-3 text-body text-heading"
+              >
+                {duty}
+              </li>
+            ))}
+          </ul>
+        </ReportSection>
+      )}
+
       {enrichment?.competitiveness && (
         <ReportSection title="How competitive this actually is">
           <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">

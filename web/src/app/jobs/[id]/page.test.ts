@@ -227,7 +227,7 @@ describe("JobReport", () => {
     expect(html).toContain("Tasks: Run battery diagnostics");
   });
 
-  it("renders all four AI sections in order and hides the locked block", () => {
+  it("renders the two quoted specifics with all four AI sections and hides the locked block", () => {
     const html = renderReport(
       baseJob({
         summary: "The posting says this role leads battery interface experiments.",
@@ -235,6 +235,12 @@ describe("JobReport", () => {
       }),
       false,
       {
+        specificRequirements: [
+          "A PhD in electrochemistry or a related field is required.",
+        ],
+        specificDuties: [
+          "Design and run solid-state interface experiments.",
+        ],
         competitiveness: { verdict: "Strong match", reasoning: "Methods align." },
         sponsorshipRead: {
           likelihood: "Plausible",
@@ -245,6 +251,8 @@ describe("JobReport", () => {
       },
     );
 
+    const requirements = html.indexOf("What this employer actually asks for");
+    const duties = html.indexOf("What the person would actually do");
     const competitiveness = html.indexOf("How competitive this actually is");
     const sponsorship = html.indexOf("Sponsorship read");
     const summary = html.indexOf("The role in three clean sentences");
@@ -253,16 +261,58 @@ describe("JobReport", () => {
     const extractedDescription = html.indexOf(
       "The posting says this role leads battery interface experiments.",
     );
-    expect(competitiveness).toBeGreaterThan(-1);
+    expect(requirements).toBeGreaterThan(-1);
+    expect(requirements).toBeLessThan(duties);
+    expect(duties).toBeLessThan(competitiveness);
     expect(competitiveness).toBeLessThan(sponsorship);
     expect(sponsorship).toBeLessThan(summary);
     expect(summary).toBeLessThan(emphasise);
     expect(extracted).toBeGreaterThan(-1);
+    expect(extracted).toBeLessThan(requirements);
     expect(extracted).toBeLessThan(summary);
     expect(extractedDescription).toBeLessThan(html.indexOf("First sentence."));
     expect(html).toContain("Posting evidence");
+    expect(html).toContain(
+      "A PhD in electrochemistry or a related field is required.",
+    );
+    expect(html).toContain(
+      "Design and run solid-state interface experiments.",
+    );
     expect(html).toContain("Peer inference — verify with the employer");
     expect(html).not.toContain("Also in this report with an AI key");
+  });
+
+  it("does not render or unlock empty quoted-specific sections", () => {
+    const html = renderReport(
+      baseJob(),
+      false,
+      { specificRequirements: [], specificDuties: [] },
+      true,
+    );
+
+    expect(html).not.toContain('data-job-section="specific-requirements"');
+    expect(html).not.toContain('data-job-section="specific-duties"');
+    expect(html).toContain("Also in this report with an AI key");
+  });
+
+  it("renders and unlocks either quoted-specific section independently", () => {
+    const requirementsHtml = renderReport(baseJob(), false, {
+      specificRequirements: ["A doctorate in chemistry is required."],
+    });
+    const dutiesHtml = renderReport(baseJob(), false, {
+      specificDuties: ["Lead weekly cell-testing reviews."],
+    });
+
+    expect(requirementsHtml).toContain("What this employer actually asks for");
+    expect(requirementsHtml).toContain("A doctorate in chemistry is required.");
+    expect(requirementsHtml).not.toContain('data-job-section="specific-duties"');
+    expect(requirementsHtml).not.toContain("Also in this report with an AI key");
+    expect(dutiesHtml).toContain("What the person would actually do");
+    expect(dutiesHtml).toContain("Lead weekly cell-testing reviews.");
+    expect(dutiesHtml).not.toContain(
+      'data-job-section="specific-requirements"',
+    );
+    expect(dutiesHtml).not.toContain("Also in this report with an AI key");
   });
 
   it("keeps the locked block when provider availability produced no enrichment", () => {

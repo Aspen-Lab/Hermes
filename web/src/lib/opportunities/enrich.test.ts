@@ -230,7 +230,7 @@ describe("event detail enrichment", () => {
             }
           </script>
           <p>Registration closes: 15 June 2027.</p>
-          <p>Workshops and poster sessions are followed by networking.</p>
+          <p>Workshops and poster sessions are followed by a networking reception.</p>
           <p>Student travel grants are available for accepted presenters.</p>
           <p>Registered attendees may request an invitation letter.</p>
           <h2>Sponsors</h2>

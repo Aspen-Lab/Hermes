@@ -176,7 +176,7 @@ describe("EventReport", () => {
   it("renders all four AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseEvent({
-        activities: ["Interface stability session"],
+        activities: ["poster session"],
         organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }],
       }),
       "PhD Year 3",
@@ -187,7 +187,7 @@ describe("EventReport", () => {
         ],
         talkSummaries: [
           {
-            title: "Interface stability session",
+            title: "Interface Stability in Solid-State Cells",
             about: "A focused session on interphase stability.",
           },
         ],
@@ -207,6 +207,8 @@ describe("EventReport", () => {
     const poster = html.indexOf("Is your work a fit for the poster call");
     expect(attendees).toBeGreaterThan(-1);
     expect(attendees).toBeLessThan(talks);
+    expect(html).toContain("Interface Stability in Solid-State Cells");
+    expect(html).toContain("A focused session on interphase stability.");
     expect(talks).toBeLessThan(plan);
     expect(plan).toBeLessThan(poster);
     expect(html).not.toContain("Also in this report with an AI key");
@@ -270,6 +272,7 @@ describe("EventReport", () => {
     );
     expect(html).not.toContain("A guided learning experience");
     expect(html).not.toContain("Download Brochure");
+    expect(html).toContain("Also in this report with an AI key");
   });
 
   it("cleans a stale cached measured description before rendering", () => {
