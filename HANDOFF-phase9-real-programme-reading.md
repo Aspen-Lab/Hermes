@@ -51,7 +51,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P9.2 | Server-side page text pipeline: fetch, clean, cap | TODO | |
+| P9.2 | Server-side page text pipeline: fetch, clean, cap | IN_PROGRESS | |
 | P9.3 | Programme-page discovery for events (one extra page, never more) | TODO | |
 | P9.4 | Feed page text into the existing single call, both routes | TODO | |
 | P9.5 | Event talks: real titles, each quotable from the fetched text | TODO | |
