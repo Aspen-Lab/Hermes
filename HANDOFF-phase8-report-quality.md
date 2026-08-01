@@ -69,7 +69,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P8.9 | Skills section lists the requirements it is counting, or does not render | TODO | |
+| P8.9 | Skills section lists the requirements it is counting, or does not render | IN_PROGRESS | |
 | P8.10 | Section order: what the posting says before what the model inferred | TODO | |
 | P8.11 | Strip extraction artefacts from title, subtitle and description | TODO | |
 
