@@ -4,6 +4,11 @@ import {
   JOB_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
 } from "@/lib/opportunities/query-budget";
+import {
+  cleanJobDescription,
+  cleanJobSubtitlePart,
+  cleanJobTitle,
+} from "@/lib/opportunities/job-cleanup";
 
 // Web discovery for research and R&D positions across academic and industry
 // employers. Search providers reach public listings that frequently block
@@ -108,7 +113,7 @@ export function webResultToRawJobItem(result: {
   url?: string;
   snippet?: string;
 }): RawJobItem | null {
-  const title = result.title?.trim();
+  const title = cleanJobTitle(result.title);
   const url = result.url?.trim();
   if (!title || !url) return null;
   let parsed: URL;
@@ -137,7 +142,7 @@ export function webResultToRawJobItem(result: {
   const company =
     parts
       .slice(1)
-      .map((p) => p.trim())
+      .map(cleanJobSubtitlePart)
       .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d))) ||
     host;
   return {
@@ -147,7 +152,7 @@ export function webResultToRawJobItem(result: {
     company,
     location: "",
     isRemote: /\bremote\b/i.test(text),
-    description: (result.snippet ?? "").trim(),
+    description: cleanJobDescription(result.snippet),
     url,
     tags: ["web job listing", host],
   };

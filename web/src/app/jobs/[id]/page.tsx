@@ -109,7 +109,6 @@ export function buildJobFacts(job: Job): JobFact[] {
   const posted = formatDate(job.postedDate);
   const deadline = formatDate(job.applicationDeadline);
   const start = formatDate(job.startDate);
-  const visa = job.visa;
   const facts: Array<JobFact | undefined> = [
     job.salary
       ? {
@@ -138,14 +137,6 @@ export function buildJobFacts(job: Job): JobFact[] {
       : undefined,
     start
       ? { key: "start", label: "Starts", value: start }
-      : undefined,
-    visa
-      ? {
-          key: "visa",
-          label: "Visa",
-          value: VISA_LABELS[visa.state],
-          tone: visaTone(visa.state),
-        }
       : undefined,
   ];
   return facts.filter((fact): fact is JobFact => Boolean(fact?.value));

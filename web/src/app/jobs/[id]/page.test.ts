@@ -133,8 +133,9 @@ describe("JobReport", () => {
       }),
     );
 
-    expect(html.match(/data-job-fact=/g)).toHaveLength(7);
-    expect(html).toContain("Sponsorship available");
+    expect(html.match(/data-job-fact=/g)).toHaveLength(6);
+    expect(html.match(/Sponsorship available/g)).toHaveLength(1);
+    expect(html).not.toContain('data-job-fact="visa"');
     expect(html).toContain("The laboratory will provide H-1B sponsorship.");
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('aria-valuenow="67"');

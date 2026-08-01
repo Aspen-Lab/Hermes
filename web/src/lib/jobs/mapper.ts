@@ -6,6 +6,11 @@ import {
 import { summarizeJob } from "@/lib/jobs/summarize";
 import { locationFit } from "@/lib/opportunities/shared";
 import { normalizeVisaCountry } from "@/lib/opportunities/visa";
+import {
+  cleanJobDescription,
+  cleanJobSubtitlePart,
+  cleanJobTitle,
+} from "@/lib/opportunities/job-cleanup";
 import type { ScoredJobItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -17,7 +22,7 @@ const MAX_REQUIREMENTS = 4;
  * the posting's own tags.
  */
 export function jobPreferenceSignals(item: ScoredJobItem): PreferenceConcept[] {
-  const company = item.company.trim();
+  const company = cleanJobSubtitlePart(item.company) ?? "";
   return normalizePreferenceConcepts([
     // Employer identity first, so feedback tunes toward/away from specific
     // companies and labs, not just their topic tags.
@@ -97,13 +102,27 @@ export function scoredJobToJob(
           period: item.salaryPeriod,
         }
       : undefined;
-  const summary = summarizeJob(item.description, item.matchedKeywords) || undefined;
+  const summary =
+    summarizeJob(cleanJobDescription(item.description), item.matchedKeywords) ||
+    undefined;
+  const roleTitle = cleanJobTitle(item.title) || item.title.trim();
+  const fallbackCompany = (() => {
+    try {
+      return new URL(item.url).hostname.replace(/^www\./, "");
+    } catch {
+      return "Employer not stated";
+    }
+  })();
+  const company = cleanJobSubtitlePart(item.company) ?? fallbackCompany;
+  const location =
+    cleanJobSubtitlePart(item.location) ??
+    (item.isRemote ? "Remote" : "See posting");
 
   return {
     id: item.id,
-    roleTitle: item.title,
-    companyOrLab: item.company,
-    location: item.location || (item.isRemote ? "Remote" : "See posting"),
+    roleTitle,
+    companyOrLab: company,
+    location,
     place: item.place,
     isRemote: item.isRemote,
     keyRequirements: keyRequirements(item),
@@ -127,7 +146,7 @@ export function scoredJobToJob(
     summary,
     matchedTerms: item.matchedKeywords.length > 0 ? item.matchedKeywords : undefined,
     locationFit: locationPreferences
-      ? locationFit(item.location, item.isRemote, locationPreferences)
+      ? locationFit(location, item.isRemote, locationPreferences)
       : undefined,
   };
 }
