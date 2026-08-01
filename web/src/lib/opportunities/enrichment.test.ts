@@ -434,7 +434,7 @@ describe("event enrichment prompt and parser", () => {
     expect(hasEventEnrichment(parsed)).toBe(false);
   });
 
-  it("sends only plausible titles from a mixed activity list", () => {
+  it("keeps Tier 0 labels separate from fetched talk-title evidence", () => {
     const mixed: Event = {
       ...event,
       activities: [
@@ -446,13 +446,24 @@ describe("event enrichment prompt and parser", () => {
       ],
     };
     const prompt = JSON.parse(
-      buildEventEnrichmentPrompt(mixed, "Topics: batteries"),
-    ) as { event: { activities: string[] } };
+      buildEventEnrichmentPrompt(
+        mixed,
+        "Topics: batteries",
+        "Interface Stability in Solid-State Cells",
+      ),
+    ) as {
+      fetchedPageText: string;
+      event: { sessionTypes: string[]; activities?: string[] };
+      rules: { talkSummaries: string };
+    };
 
-    expect(prompt.event.activities).toEqual([
-      "Interface stability session",
-      "Fast-charging anode design",
-    ]);
+    expect(prompt.fetchedPageText).toBe(
+      "Interface Stability in Solid-State Cells",
+    );
+    expect(prompt.event.sessionTypes).toEqual(mixed.activities);
+    expect(prompt.event.activities).toBeUndefined();
+    expect(prompt.rules.talkSummaries).toContain("fetchedPageText");
+    expect(prompt.rules.talkSummaries).toContain("exactly");
   });
 
   it("drops a hallucinated attendee and never overwrites a Tier 0 judgment", () => {
@@ -512,26 +523,132 @@ describe("event enrichment prompt and parser", () => {
     expect(parsed?.judgedAttendees).toEqual(realJudgments);
   });
 
-  it("keeps valid talk, plan, and poster judgments and drops unknown talks", () => {
+  it("keeps a quotable talk title and drops one absent from the fetched text", () => {
     const parsed = parseEventEnrichment(
       JSON.stringify({
         talkSummaries: [
-          { title: "Interface stability session", about: "A session on interfaces." },
+          {
+            title: "Interface Stability in Solid-State Cells",
+            about: "A session on interfaces.",
+          },
+          {
+            title: "interface   stability in solid-state cells",
+            about: "A duplicate with different case and whitespace.",
+          },
           { title: "Invented keynote", about: "Not on the programme." },
         ],
         dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
         posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
       }),
       event,
+      "09:00 INTERFACE   STABILITY IN SOLID-STATE CELLS\n\nInterface stability session\n\n10:00 Lunch",
     );
 
     expect(parsed).toEqual({
       talkSummaries: [
-        { title: "Interface stability session", about: "A session on interfaces." },
+        {
+          title: "Interface Stability in Solid-State Cells",
+          about: "A session on interfaces.",
+        },
       ],
       dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
       posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
     });
+  });
+
+  it("never falls back to activities when fetched page text is absent", () => {
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: [
+            {
+              title: "Interface stability session",
+              about: "A session on interfaces.",
+            },
+          ],
+        }),
+        event,
+      ),
+    ).toEqual({});
+  });
+
+  it("drops invented day-plan entries and keeps quoted titles or supplied names", () => {
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          dayPlan: [
+            {
+              day: "Day 1",
+              items: [
+                "Interface Stability in Solid-State Cells",
+                "New Speaker",
+                "Invented Closing Keynote",
+              ],
+            },
+          ],
+        }),
+        event,
+        "09:00 Interface Stability in Solid-State Cells",
+      ),
+    ).toEqual({
+      dayPlan: [
+        {
+          day: "Day 1",
+          items: [
+            "Interface Stability in Solid-State Cells",
+            "New Speaker",
+          ],
+        },
+      ],
+    });
+  });
+
+  it("omits talk summaries when the response contains only generic labels", () => {
+    const genericLabels = [
+      "poster session",
+      "workshop",
+      "tutorial",
+      "panel",
+      "career fair",
+      "job fair",
+      "exhibition",
+      "networking",
+      "hackathon",
+      "symposium",
+      "keynote",
+      "plenary",
+      "awards ceremony",
+      "competition",
+      "short course",
+      "demo session",
+      "doctoral consortium",
+      "banquet",
+      "social event",
+      "lightning talk",
+      "field trip",
+      "school",
+      "town hall",
+      "meet the expert",
+      "hands-on session",
+      "gala dinner",
+      "technical tour",
+      "summer school",
+      "winter school",
+      "methods school",
+      "doctoral school",
+    ];
+    const talkSummaries = genericLabels.map((title) => ({
+      title,
+      about: "A generic programme category.",
+    }));
+
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({ talkSummaries }),
+        event,
+        genericLabels.join("\n"),
+      ),
+    ).toEqual({});
   });
 
   it("caps a 180-word poster explanation without dropping its verdict", () => {

@@ -172,6 +172,12 @@ describe("POST /api/events/report", () => {
 
   it("uses one large-tier call and returns parsed enrichment", async () => {
     const enrichment = {
+      talkSummaries: [
+        {
+          title: "Interface Stability in Solid-State Cells",
+          about: "A session on solid-state interfaces.",
+        },
+      ],
       posterFit: {
         fits: true,
         reasoning: "The call overlaps with the declared interface work.",

@@ -76,13 +76,11 @@ const enrichmentInFlight = new Map<string, Promise<unknown | null>>();
 // "Keynote Session", "Plenary", "Breakout", "Networking" and "Short Course" all
 // slipped past and got defined too. The reliable signal is not which word it is
 // but that it is a bare label: a real talk title is a phrase.
-// Measured against the whole local pool (81 events): the only values the
-// extractor ever produces are career fair, exhibition, keynote, networking,
-// panel, poster session, symposium, tutorial and workshop. Every one is a
-// session type. "career fair" is two words, so the bare-word rule below cannot
-// catch it — multi-word session types need naming explicitly.
+// Multi-word session types need naming explicitly because the one-word fallback
+// below cannot catch them. Keep this aligned with event-details.ts: these are
+// checklist labels, never real talk titles.
 const GENERIC_SESSION_TYPE_RE =
-  /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?|(?:career|careers|job|recruit(?:ing|ment))\s+fairs?|meet\s*(?:and|&)\s*greet|coffee\s+breaks?|opening\s+remarks?|closing\s+remarks?|welcome\s+receptions?)$/i;
+  /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?|awards?\s+ceremon(?:y|ies)|doctoral\s+consorti(?:um|a)|social\s+events?|lightning\s+talks?|field\s+trips?|technical\s+tours?|gala\s+dinners?|(?:summer|winter|methods|doctoral)\s+schools?|town\s*halls?|meet\s+the\s+experts?|hands-on\s+sessions?|(?:career|careers|job|recruit(?:ing|ment))\s+fairs?|meet\s*(?:and|&)\s*greet|coffee\s+breaks?|opening\s+remarks?|closing\s+remarks?|welcome\s+receptions?)$/i;
 const SESSION_QUALIFIER_RE = /\s+(?:session|track|talk|day|programme|program)s?$/i;
 const SUBMISSION_SCOPE_RE =
   /\b(?:poster|abstract|submission|submit|call\s+for\s+(?:papers?|posters?))\b/i;
@@ -136,6 +134,10 @@ function eventTalkTitles(event: Pick<Event, "activities">): string[] {
   return cleanList(event.activities ?? []).filter(
     (title) => !isGenericSessionLabel(title),
   );
+}
+
+function normalizeVerbatim(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 function parseJsonRecord(text: string): Record<string, unknown> | null {
@@ -315,6 +317,15 @@ function unjudgedAttendees(event: Event): Array<{
   ];
 }
 
+function eventAttendeeNames(event: Event): Set<string> {
+  return new Set(
+    [...(event.organisations ?? []), ...(event.people ?? [])].flatMap((item) => {
+      const name = clean(item.name);
+      return name ? [normalizeVerbatim(name)] : [];
+    }),
+  );
+}
+
 export function hasEventEnrichmentCandidates(
   event: Event,
   contextHint: string,
@@ -353,7 +364,7 @@ export function buildEventEnrichmentPrompt(
       location: event.location,
       deadline: event.deadline,
       registrationDeadline: event.registrationDeadline,
-      activities: eventTalkTitles(event),
+      sessionTypes: cleanList(event.activities ?? []),
       unjudgedAttendees: unjudgedAttendees(event),
       fees: event.fees,
       travelGrant: event.travelGrant,
@@ -364,9 +375,11 @@ export function buildEventEnrichmentPrompt(
       judgedAttendees:
         "Return only exact names from unjudgedAttendees. Never add or rename a person or organisation. " +
         "Some supplied names are website furniture rather than real attendees; set isAttendee false for those and they will be discarded.",
-      talkSummaries:
-        "Return only exact titles from activities and explain what each supplied activity is about.",
-      dayPlan: "Order concrete supplied sessions and attendee names by event day.",
+      talkSummaries: fetchedPageText?.trim()
+        ? "Find specific talk or session titles in fetchedPageText. Copy each title exactly from that text and explain what it is about. Never use a generic sessionTypes label as a title."
+        : "Omit this field because no fetched source-page text is available. Never fall back to sessionTypes.",
+      dayPlan:
+        "Order concrete supplied attendee names and source-page sessions by event day. Copy every talk or session title exactly from fetchedPageText; never invent one.",
       posterFit:
         "Compare the supplied event or submission scope with the user's current project; do not invent a call. Keep reasoning to at most 60 words.",
     },
@@ -374,8 +387,13 @@ export function buildEventEnrichmentPrompt(
       judgedAttendees: [
         { name: "exact supplied name", isAttendee: true, worthIt: true, why: "string" },
       ],
-      talkSummaries: [{ title: "exact supplied activity title", about: "string" }],
-      dayPlan: [{ day: "string", items: ["string"] }],
+      talkSummaries: [{ title: "exact title from fetchedPageText", about: "string" }],
+      dayPlan: [
+        {
+          day: "string",
+          items: ["exact fetched title or exact supplied attendee name"],
+        },
+      ],
       posterFit: { fits: true, reasoning: "string" },
     },
   });
@@ -384,6 +402,7 @@ export function buildEventEnrichmentPrompt(
 export function parseEventEnrichment(
   text: string,
   event: Event,
+  fetchedPageText?: string,
 ): EventEnrichment | null {
   const parsed = parseJsonRecord(text);
   if (!parsed) return null;
@@ -416,34 +435,44 @@ export function parseEventEnrichment(
   }
 
   if (Array.isArray(parsed.talkSummaries)) {
-    const activityTitles = new Set(eventTalkTitles(event));
+    const normalizedPageText = normalizeVerbatim(fetchedPageText ?? "");
     const returnedTitles = new Set<string>();
     const talkSummaries = parsed.talkSummaries.flatMap((value) => {
       if (!value || typeof value !== "object" || Array.isArray(value)) return [];
       const record = value as Record<string, unknown>;
       const title = typeof record.title === "string" ? clean(record.title) : undefined;
       const about = typeof record.about === "string" ? clean(record.about) : undefined;
+      const normalizedTitle = title ? normalizeVerbatim(title) : "";
       if (
         !title ||
         !about ||
-        !activityTitles.has(title) ||
-        returnedTitles.has(title)
+        isGenericSessionLabel(title) ||
+        !normalizedPageText.includes(normalizedTitle) ||
+        returnedTitles.has(normalizedTitle)
       ) {
         return [];
       }
-      returnedTitles.add(title);
+      returnedTitles.add(normalizedTitle);
       return [{ title, about }];
     });
     if (talkSummaries.length > 0) enrichment.talkSummaries = talkSummaries;
   }
 
   if (Array.isArray(parsed.dayPlan)) {
+    const normalizedPageText = normalizeVerbatim(fetchedPageText ?? "");
+    const attendeeNames = eventAttendeeNames(event);
     const dayPlan = parsed.dayPlan.flatMap((value) => {
       if (!value || typeof value !== "object" || Array.isArray(value)) return [];
       const record = value as Record<string, unknown>;
       const day = typeof record.day === "string" ? clean(record.day) : undefined;
-      const items = boundedStringList(record.items, 1, 12);
-      return day && items ? [{ day, items }] : [];
+      const items = boundedStringList(record.items, 1, 12)?.filter((item) => {
+        const normalizedItem = normalizeVerbatim(item);
+        return (
+          normalizedPageText.includes(normalizedItem) ||
+          attendeeNames.has(normalizedItem)
+        );
+      });
+      return day && items?.length ? [{ day, items }] : [];
     });
     if (dayPlan.length > 0) enrichment.dayPlan = dayPlan;
   }

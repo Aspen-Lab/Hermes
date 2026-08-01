@@ -118,7 +118,14 @@ export async function POST(req: NextRequest) {
       maxTokens: 2000,
     });
     return NextResponse.json(
-      { enrichment: parseEventEnrichment(raw, body.event), noLlm: false },
+      {
+        enrichment: parseEventEnrichment(
+          raw,
+          body.event,
+          pageText ?? undefined,
+        ),
+        noLlm: false,
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {
