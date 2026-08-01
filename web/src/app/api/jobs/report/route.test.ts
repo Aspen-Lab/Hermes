@@ -48,17 +48,26 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("POST /api/jobs/report", () => {
-  it("returns a graceful Tier 0 response and makes no provider call when none resolves", async () => {
+  it("makes no page fetch or model call when no provider resolves", async () => {
     mocks.resolveProvider.mockReturnValue(null);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
-    const response = await POST(request({ job, contextHint: "Topics: batteries" }));
+    const response = await POST(
+      request({
+        job: { ...job, linkPosting: "https://jobs.example.com/role" },
+        contextHint: "Topics: batteries",
+      }),
+    );
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("makes zero client network requests when the user has no provider", async () => {
@@ -105,16 +114,44 @@ describe("POST /api/jobs/report", () => {
     const generateJsonText = vi.fn().mockResolvedValue(JSON.stringify(enrichment));
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
     const llmOverride = { provider: "gemini", apiKey: "test-key" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        `<main><p>Design and run solid-state interface experiments.</p>` +
+          `<a href="/role/schedule">Schedule</a></main>`,
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      request({ job, contextHint: "Topics: batteries", llmOverride }),
+      request({
+        job: { ...job, linkPosting: "https://jobs.example.com/role" },
+        contextHint: "Topics: batteries",
+        llmOverride,
+      }),
     );
 
     expect(await response.json()).toEqual({ enrichment, noLlm: false });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(llmOverride);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://jobs.example.com/role",
+    ]);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledWith(
-      expect.objectContaining({ tier: "large", maxTokens: 1200 }),
+      expect.objectContaining({ tier: "large", maxTokens: 1600 }),
+    );
+    const modelRequest = generateJsonText.mock.calls[0][0] as {
+      userPrompt: string;
+    };
+    const prompt = JSON.parse(modelRequest.userPrompt) as {
+      fetchedPageText?: string;
+    };
+    expect(prompt.fetchedPageText).toContain(
+      "Design and run solid-state interface experiments.",
+    );
+    expect(mocks.resolveProvider.mock.invocationCallOrder[0]).toBeLessThan(
+      fetchMock.mock.invocationCallOrder[0],
     );
   });
 

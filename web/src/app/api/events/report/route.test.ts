@@ -50,20 +50,36 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("POST /api/events/report", () => {
-  it("returns a graceful Tier 0 response and makes no provider call when none resolves", async () => {
+  it("makes no page fetch or model call when no provider resolves", async () => {
     mocks.resolveProvider.mockReturnValue(null);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
-    const response = await POST(request({ event, contextHint: "Topics: batteries" }));
+    const response = await POST(
+      request({
+        event: {
+          ...event,
+          shortDescription: "A professional gathering.",
+          activities: ["tutorial", "panel", "keynote"],
+          organisations: [],
+          people: [],
+          linkOfficial: "https://events.example.com/summit",
+        },
+        contextHint: "Topics: batteries",
+      }),
+    );
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("makes no provider call when only generic session types are available", async () => {
+  it("skips the model after provider resolution when generic labels have no page", async () => {
     const generateJsonText = vi.fn();
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
 
@@ -80,8 +96,44 @@ describe("POST /api/events/report", () => {
     );
 
     expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
-    expect(mocks.resolveProvider).not.toHaveBeenCalled();
+    expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
     expect(generateJsonText).not.toHaveBeenCalled();
+  });
+
+  it("reads the page when Tier 0 found only generic session types", async () => {
+    const generateJsonText = vi.fn().mockResolvedValue("{}");
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        "<main><p>Programme: Interface Stability in Solid-State Cells.</p></main>",
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        event: {
+          ...event,
+          shortDescription: "A professional gathering.",
+          activities: ["tutorial", "panel", "keynote"],
+          organisations: [],
+          linkOfficial: "https://events.example.com/summit",
+        },
+        contextHint: "Topics: batteries",
+      }),
+    );
+
+    expect(await response.json()).toEqual({ enrichment: {}, noLlm: false });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(generateJsonText).toHaveBeenCalledTimes(1);
+    const modelRequest = generateJsonText.mock.calls[0][0] as {
+      userPrompt: string;
+    };
+    expect(JSON.parse(modelRequest.userPrompt)).toMatchObject({
+      fetchedPageText:
+        "Programme: Interface Stability in Solid-State Cells.",
+    });
   });
 
   it("makes zero client network requests when the user has no provider", async () => {
@@ -128,16 +180,61 @@ describe("POST /api/events/report", () => {
     const generateJsonText = vi.fn().mockResolvedValue(JSON.stringify(enrichment));
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
     const llmOverride = { provider: "gemini", apiKey: "test-key" };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "https://events.example.com/summit") {
+        return new Response(
+          `<main><p>Landing page details.</p>` +
+            `<a href="/summit/programme">Full programme</a></main>`,
+          { status: 200 },
+        );
+      }
+      return new Response(
+        `<main><p>Interface Stability in Solid-State Cells</p>` +
+          `<a href="/summit/programme/day-two">Programme day two</a></main>`,
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      request({ event, contextHint: "Topics: batteries", llmOverride }),
+      request({
+        event: {
+          ...event,
+          shortDescription: "A professional gathering.",
+          activities: ["tutorial", "panel", "keynote"],
+          organisations: [],
+          people: [],
+          linkOfficial: "https://events.example.com/summit",
+        },
+        contextHint: "Topics: batteries",
+        llmOverride,
+      }),
     );
 
     expect(await response.json()).toEqual({ enrichment, noLlm: false });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(llmOverride);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://events.example.com/summit",
+      "https://events.example.com/summit/programme",
+    ]);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledWith(
-      expect.objectContaining({ tier: "large", maxTokens: 1600 }),
+      expect.objectContaining({ tier: "large", maxTokens: 2000 }),
+    );
+    const modelRequest = generateJsonText.mock.calls[0][0] as {
+      userPrompt: string;
+    };
+    const prompt = JSON.parse(modelRequest.userPrompt) as {
+      fetchedPageText?: string;
+    };
+    expect(prompt.fetchedPageText).toContain("Landing page details.");
+    expect(prompt.fetchedPageText).toContain(
+      "Interface Stability in Solid-State Cells",
+    );
+    expect(mocks.resolveProvider.mock.invocationCallOrder[0]).toBeLessThan(
+      fetchMock.mock.invocationCallOrder[0],
     );
   });
 
