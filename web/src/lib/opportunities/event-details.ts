@@ -30,24 +30,78 @@ const ACTIVITY_PATTERNS: readonly {
 }[] = [
   { label: "poster session", pattern: /\bposter\s+sessions?\b/gi },
   { label: "workshop", pattern: /\bworkshops?\b/gi },
-  { label: "tutorial", pattern: /\btutorials?\b/gi },
+  {
+    label: "tutorial",
+    pattern: /\b(?:tutorials|tutorial\s+sessions?)\b/gi,
+  },
   {
     label: "panel",
-    pattern: /\bpanels?(?:\s+(?:discussion|session))?\b/gi,
-    rejectContext: /\b(?:data|dataset|regression|survey)\s+panel\b/i,
+    pattern:
+      /\b(?:panel\s+(?:discussions?|sessions?)|expert\s+panels?)\b|(?:^|\n)\s*panels\s*(?=\n|$)/gi,
+    rejectContext:
+      /\b(?:(?:data|dataset|regression|survey|solar|control)\s+panels?|flat[- ]panels?(?:\s+displays?)?|panels?\s+data)\b/i,
   },
   { label: "career fair", pattern: /\bcareer\s+fairs?\b/gi },
   { label: "job fair", pattern: /\bjob\s+fairs?\b/gi },
-  { label: "exhibition", pattern: /\bexhibitions?\b/gi },
-  { label: "networking", pattern: /\bnetworking\b/gi },
+  {
+    label: "exhibition",
+    pattern: /\b(?:exhibitions?|exhibitors?|exhibit\s+halls?)\b/gi,
+  },
+  {
+    label: "networking",
+    pattern:
+      /\bnetworking\s+(?:events?|sessions?|breaks?|lunch(?:es)?|receptions?|opportunit(?:y|ies))\b/gi,
+  },
   { label: "hackathon", pattern: /\bhackathons?\b/gi },
   {
-    label: "mixer",
-    pattern: /\bmixers?\b/gi,
-    rejectContext: /\b(?:frequency|circuit|signal|audio|rf)\s+mixers?\b/i,
+    label: "symposium",
+    pattern:
+      /(?:^|\n)\s*(?:symposiums|symposia)\s*(?=\n|$)|\b(?:symposium|symposia)\s+sessions?\b|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\b(?:symposiums?|symposia)\b/gi,
   },
-  { label: "symposium", pattern: /\b(?:symposiums?|symposia)\b/gi },
   { label: "keynote", pattern: /\bkeynotes?\b/gi },
+  { label: "plenary", pattern: /\bplenar(?:y|ies)\b/gi },
+  {
+    label: "awards ceremony",
+    pattern: /\bawards?\s+ceremon(?:y|ies)\b/gi,
+  },
+  {
+    label: "competition",
+    pattern:
+      /(?:^|\n)\s*competitions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bcompetitions?\b|\bcompetitions?\s+sessions?\b/gi,
+  },
+  { label: "short course", pattern: /\bshort\s+courses?\b/gi },
+  { label: "demo session", pattern: /\bdemos?\b/gi },
+  {
+    label: "doctoral consortium",
+    pattern: /\bdoctoral\s+consorti(?:um|a)\b/gi,
+  },
+  {
+    label: "banquet",
+    pattern: /\b(?:banquets?|gala\s+dinners?)\b/gi,
+  },
+  { label: "social event", pattern: /\bsocial\s+events?\b/gi },
+  {
+    label: "lightning talk",
+    pattern: /\b(?:lightning|flash|short)\s+talks?\b/gi,
+  },
+  {
+    label: "field trip",
+    pattern:
+      /\b(?:field\s+trips?|technical\s+tours?)\b|(?:^|\n)\s*excursions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bexcursions?\b/gi,
+  },
+  {
+    label: "school",
+    pattern: /\b(?:summer|winter|methods|doctoral)\s+schools?\b/gi,
+  },
+  { label: "town hall", pattern: /\btown(?:\s+)?halls?\b/gi },
+  {
+    label: "meet the expert",
+    pattern: /\bmeet\s+the\s+experts?\b/gi,
+  },
+  {
+    label: "hands-on session",
+    pattern: /\bhands-on\s+sessions?\b/gi,
+  },
 ];
 
 function textSegments(html: string): string[] {
@@ -256,7 +310,10 @@ function extractActivities(text: string): string[] {
     const pattern = new RegExp(activity.pattern.source, activity.pattern.flags);
     for (const match of text.matchAll(pattern)) {
       const index = match.index ?? Number.MAX_SAFE_INTEGER;
-      const context = text.slice(Math.max(0, index - 24), index + match[0].length);
+      const context = text.slice(
+        Math.max(0, index - 24),
+        index + match[0].length + 24,
+      );
       if (activity.rejectContext?.test(context)) continue;
       matches.push({ label: activity.label, index });
       break;

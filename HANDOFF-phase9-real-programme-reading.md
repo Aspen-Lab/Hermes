@@ -42,7 +42,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P9.1 | Fix 3 mis-firing labels, drop `mixer`, add 14 researched types | IN_PROGRESS | |
+| P9.1 | Fix 3 mis-firing labels, drop `mixer`, add 14 researched types | DONE | `cd web && npx vitest run src/lib/opportunities/event-details.test.ts` — PASS (1 file, 32 tests) |
 
 > The research is **complete** — 53 conference sites, findings in §4. P9.1 is
 > ready to start. **Do not invent additional words from memory.**

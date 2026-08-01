@@ -79,6 +79,91 @@ describe("extractEventDetails", () => {
     ).toEqual(["workshop", "exhibition", "panel"]);
   });
 
+  it.each([
+    ["plenary", "The plenary opens the scientific programme."],
+    ["awards ceremony", "The awards ceremony closes the final day."],
+    ["competition", "The programme includes a competition session for students."],
+    ["short course", "A short course runs before the main programme."],
+    ["demo session", "Live demos are scheduled after lunch."],
+    ["doctoral consortium", "The doctoral consortium meets on Monday."],
+    ["banquet", "The conference banquet begins at 19:00."],
+    ["social event", "A social event welcomes first-time attendees."],
+    ["lightning talk", "Lightning talks introduce emerging projects."],
+    ["field trip", "Field trips depart from the venue on Friday."],
+    ["school", "A summer school precedes the conference."],
+    ["town hall", "The community town hall is open to all attendees."],
+    ["meet the expert", "A meet the expert session follows the plenary."],
+    ["hands-on session", "The hands-on session uses the teaching lab."],
+  ])("detects the researched %s type", (label, sentence) => {
+    expect(extractEventDetails(`<p>${sentence}</p>`).activities).toContain(label);
+  });
+
+  it.each([
+    ["banquet", "The gala dinner begins at 19:00."],
+    ["lightning talk", "Flash talks introduce emerging projects."],
+    ["lightning talk", "Short talks introduce emerging projects."],
+    ["field trip", "The programme includes an afternoon excursion."],
+    ["field trip", "A technical tour visits the laboratory."],
+    ["school", "A winter school precedes the conference."],
+    ["school", "A methods school precedes the conference."],
+    ["school", "A doctoral school precedes the conference."],
+    ["town hall", "The community townhall is open to all attendees."],
+  ])("folds researched wording into the %s tag", (label, sentence) => {
+    expect(extractEventDetails(`<p>${sentence}</p>`).activities).toContain(label);
+  });
+
+  it("requires programme context for the three mis-firing existing labels", () => {
+    expect(
+      extractEventDetails(`
+        <h1>International Symposium on Photovoltaic Networking Protocols</h1>
+        <p>Research covers wireless networking, network-on-chip design, solar panels,
+        panel data, control panels, and flat-panel displays.</p>
+      `).activities,
+    ).toBeUndefined();
+
+    expect(
+      extractEventDetails(`
+        <h2>Panels</h2>
+        <p>An expert panel leads a panel discussion before the networking reception.</p>
+        <p>The programme includes two symposia.</p>
+      `).activities,
+    ).toEqual(["panel", "networking", "symposium"]);
+  });
+
+  it("rejects every false-positive phrase from the vocabulary study", () => {
+    expect(
+      extractEventDetails(`
+        <h1>Keystone Symposia: International Symposium on Materials</h1>
+        <p>RF mixer, static mixer, concrete mixer.</p>
+        <p>Networking protocols, wireless networking, network-on-chip.</p>
+        <p>Solar panel, panel data, control panel, flat-panel display.</p>
+        <p>The sample exhibits high conductivity.</p>
+        <p>A tutorial paper, a tutorial review, and a website help-page tutorial.</p>
+        <p>School of Engineering, graduate school, high school.</p>
+        <p>Challenges in energy storage, grand challenges, the key challenge is scale.</p>
+        <p>Award-winning, grant award, NSF award number, supported by award funding.</p>
+        <p>Signal reception and reception studies.</p>
+        <p>Social sciences, social media, social determinants.</p>
+        <p>We demonstrate a novel method in the course of the reaction; of course,
+        it also applies to a watercourse.</p>
+        <p>Magnetic field, field theory, field-effect transistor, in the field of optics.</p>
+        <p>Tour de force, detour, contour.</p>
+        <p>Lightning strike, lightning detection.</p>
+        <p>Flash memory, flash sintering, flash point, flash chromatography.</p>
+        <p>The ENCODE Consortium and consortium partners.</p>
+        <p>Temperature excursion and pH excursion.</p>
+        <p>Hands-on experience and a seminar series.</p>
+      `).activities,
+    ).toBeUndefined();
+  });
+
+  it("does not emit mixer even for a programme mixer", () => {
+    expect(
+      extractEventDetails("<p>The conference mixer starts after the final session.</p>")
+        .activities,
+    ).toBeUndefined();
+  });
+
   it("normalizes a yearless registration date relative to the supplied date", () => {
     expect(
       extractEventDetails(
