@@ -62,7 +62,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P9.8 | Cost ceiling: one call, one or two fetches, hard token cap, proven | TODO | |
+| P9.8 | Cost ceiling: one call, one or two fetches, hard token cap, proven | IN_PROGRESS | |
 | P9.9 | Say why a section is missing instead of showing nothing | TODO | |
 
 **Total: 9 tasks.**
