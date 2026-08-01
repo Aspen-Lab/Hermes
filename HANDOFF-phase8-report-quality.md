@@ -71,7 +71,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P8.9 | Skills section lists the requirements it is counting, or does not render | DONE | `cd web && npx vitest run` — 76 files / 616 tests passed with benchmark override unset; 2 unmatched requirements rendered as 2 rows and empty input rendered no section/header |
 | P8.10 | Section order: what the posting says before what the model inferred | DONE | Component test passed: extracted description precedes model rewrite and all 4 dates stay inside `timeline`; 3-page A4 PDF visually verified clean; `cd web && npx vitest run && npx tsc --noEmit` — 76 files / 616 tests passed, TypeScript clean |
-| P8.11 | Strip extraction artefacts from title, subtitle and description | TODO | |
+| P8.11 | Strip extraction artefacts from title, subtitle and description | IN_PROGRESS | |
 
 **Total: 11 tasks.**
 
