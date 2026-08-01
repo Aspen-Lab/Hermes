@@ -55,7 +55,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | P9.3 | Programme-page discovery for events (one extra page, never more) | DONE | `cd web && npx vitest run src/lib/opportunities/page-text.test.ts` — PASS (1 file, 9 tests) |
 | P9.4 | Feed page text into the existing single call, both routes | DONE | `cd web && npx vitest run src/app/api/events/report/route.test.ts src/app/api/jobs/report/route.test.ts` — PASS (2 files, 14 tests) |
 | P9.5 | Event talks: real titles, each quotable from the fetched text | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — PASS (1 file, 26 tests) |
-| P9.6 | Job specifics: real requirements and duties, each quotable | IN_PROGRESS | |
+| P9.6 | Job specifics: real requirements and duties, each quotable | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — PASS (1 file, 32 tests) |
 | P9.7 | Render the new sections; locked block hides only when they render | TODO | |
 
 ### Phase 9C — Honesty and cost

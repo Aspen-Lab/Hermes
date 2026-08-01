@@ -106,6 +106,8 @@ describe("POST /api/jobs/report", () => {
 
   it("uses one large-tier call and returns parsed enrichment", async () => {
     const enrichment = {
+      specificRequirements: ["A PhD in electrochemistry is required."],
+      specificDuties: ["Design and run solid-state interface experiments."],
       competitiveness: {
         verdict: "Strong match",
         reasoning: "The declared methods match the posting.",
@@ -116,7 +118,8 @@ describe("POST /api/jobs/report", () => {
     const llmOverride = { provider: "gemini", apiKey: "test-key" };
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        `<main><p>Design and run solid-state interface experiments.</p>` +
+        `<main><p>A PhD in electrochemistry is required.</p>` +
+          `<p>Design and run solid-state interface experiments.</p>` +
           `<a href="/role/schedule">Schedule</a></main>`,
         { status: 200 },
       ),

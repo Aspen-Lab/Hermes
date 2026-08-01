@@ -9,6 +9,7 @@ import {
   ENRICHMENT_SUCCESS_TTL_MS,
   hasEventEnrichment,
   hasEventEnrichmentCandidates,
+  hasJobEnrichment,
   loadOpportunityEnrichment,
   opportunityEnrichmentCacheKey,
   parseEventEnrichment,
@@ -292,6 +293,26 @@ describe("job enrichment prompt and parser", () => {
     });
   });
 
+  it("labels fetched job text as the only source for exact specifics", () => {
+    const sourceText =
+      "A PhD in electrochemistry is required.\n\nDesign and run interface experiments.";
+    const prompt = JSON.parse(
+      buildJobEnrichmentPrompt(
+        job,
+        "Topics: solid-state batteries",
+        sourceText,
+      ),
+    ) as {
+      fetchedPageText?: string;
+      rules: Record<string, string>;
+    };
+
+    expect(prompt.fetchedPageText).toBe(sourceText);
+    expect(prompt.rules.specificRequirements).toContain("exactly");
+    expect(prompt.rules.specificRequirements).toContain("bounded job fields");
+    expect(prompt.rules.specificDuties).toContain("exactly");
+  });
+
   it("drops a sponsorship judgment when the posting already states its position", () => {
     const parsed = parseJobEnrichment(
       JSON.stringify({
@@ -319,15 +340,80 @@ describe("job enrichment prompt and parser", () => {
     expect(parseJobEnrichment("{}", job)).toEqual({});
   });
 
-  it("keeps all four valid sections for a silent-visa posting", () => {
+  it("keeps quotable job specifics and drops invented or duplicate ones", () => {
+    const parsed = parseJobEnrichment(
+      JSON.stringify({
+        specificRequirements: [
+          "A PhD in electrochemistry is required.",
+          "a phd   in electrochemistry is required.",
+          "Five years of battery-industry experience is required.",
+        ],
+        specificDuties: [
+          "Design and run interface experiments.",
+          "design and run interface experiments.",
+          "Manage a team of twenty researchers.",
+        ],
+      }),
+      job,
+      "Requirements: A PHD   IN ELECTROCHEMISTRY IS REQUIRED.\n\nDuties: Design and run interface experiments.",
+    );
+
+    expect(parsed).toEqual({
+      specificRequirements: ["A PhD in electrochemistry is required."],
+      specificDuties: ["Design and run interface experiments."],
+    });
+    expect(hasJobEnrichment(parsed)).toBe(true);
+  });
+
+  it("omits both specifics when a fetched page quotes neither one", () => {
+    expect(
+      parseJobEnrichment(
+        JSON.stringify({
+          specificRequirements: ["Invented requirement"],
+          specificDuties: ["Invented duty"],
+        }),
+        job,
+        "This posting contains unrelated source text.",
+      ),
+    ).toEqual({});
+  });
+
+  it("never falls back to bounded job fields when no page text was fetched", () => {
+    expect(
+      parseJobEnrichment(
+        JSON.stringify({
+          specificRequirements: ["PhD", "Invented requirement"],
+          specificDuties: ["Invented duty"],
+        }),
+        job,
+      ),
+    ).toEqual({});
+  });
+
+  it.each([
+    { specificRequirements: ["Quoted requirement"] },
+    { specificDuties: ["Quoted duty"] },
+  ])("counts each quoted-specific section as job enrichment", (enrichment) => {
+    expect(hasJobEnrichment(enrichment)).toBe(true);
+  });
+
+  it("keeps the two quoted specifics alongside all four existing sections", () => {
     const raw = {
       competitiveness: { verdict: "Strong", reasoning: "Methods align." },
       sponsorshipRead: { likelihood: "Plausible", basis: "Inferred from role history." },
       roleSummary: ["One.", "Two.", "Three."],
       emphasise: ["Battery methods", "Interface work"],
+      specificRequirements: ["A PhD in electrochemistry is required."],
+      specificDuties: ["Design and run interface experiments."],
     };
 
-    expect(parseJobEnrichment(JSON.stringify(raw), job)).toEqual(raw);
+    expect(
+      parseJobEnrichment(
+        JSON.stringify(raw),
+        job,
+        "A PhD in electrochemistry is required.\n\nDesign and run interface experiments.",
+      ),
+    ).toEqual(raw);
   });
 });
 
