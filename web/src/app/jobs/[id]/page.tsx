@@ -8,6 +8,11 @@ import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
 import { formatSalary } from "@/lib/opportunities/salary";
 import {
+  cleanJobDescription,
+  cleanJobSubtitlePart,
+  cleanJobTitle,
+} from "@/lib/opportunities/job-cleanup";
+import {
   buildEnrichmentContext,
   hasJobEnrichment,
   loadConfiguredOpportunityEnrichment,
@@ -381,13 +386,16 @@ export function JobReport({
   const facts = buildJobFacts(job);
   const timeline = buildTimeline(job, nowMs);
   const skills = skillComparison(job);
-  const roleSummary = clean(job.summary);
+  const roleSummary = cleanJobDescription(job.summary) || undefined;
   const materials = distinct(job.applicationMaterials ?? []);
   const matchReason = clean(job.matchReason);
   const facetReason = clean(job.facetPreferenceReason);
   const visaEvidence = clean(job.visa?.evidence);
-  const company = clean(job.companyOrLab);
-  const location = clean(job.isRemote ? "Remote" : job.location);
+  const roleTitle = cleanJobTitle(job.roleTitle) || job.roleTitle;
+  const company = cleanJobSubtitlePart(job.companyOrLab);
+  const location = cleanJobSubtitlePart(
+    job.isRemote ? "Remote" : job.location,
+  );
   const hasEnrichment = hasJobEnrichment(enrichment);
 
   return (
@@ -425,7 +433,7 @@ export function JobReport({
         )}
 
         <h1 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.015em] text-heading lg:text-[36px]">
-          {job.roleTitle}
+          {roleTitle}
         </h1>
         {(company || location) && (
           <p className="mt-3 text-body text-text-muted">

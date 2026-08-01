@@ -210,6 +210,23 @@ describe("JobReport", () => {
     expect(html).not.toContain("data-skill-requirement");
   });
 
+  it("cleans stale cached title, subtitle, and description artifacts", () => {
+    const html = renderReport(
+      baseJob({
+        roleTitle: "…Battery Research Internship",
+        companyOrLab: "Apply now!",
+        summary:
+          "The lab values careful experiments. ] Tasks: Run battery diagnostics and document the results.",
+      }),
+    );
+
+    expect(html).toContain("Battery Research Internship");
+    expect(html).not.toContain("…Battery Research Internship");
+    expect(html).not.toContain("Apply now!");
+    expect(html).not.toContain("] Tasks");
+    expect(html).toContain("Tasks: Run battery diagnostics");
+  });
+
   it("renders all four AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseJob({

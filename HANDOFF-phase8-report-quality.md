@@ -502,7 +502,12 @@ carrying all three artefacts yields clean output.
     - Anything I changed that was NOT in the plan, and why:
     - What the next agent should watch out for:
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-07-31
+- Tasks completed this session: P8.1, P8.2, P8.3, P8.4, P8.5, P8.6, P8.7, P8.8, P8.9, P8.10, P8.11.
+- Left IN_PROGRESS or BLOCKED: None. Every ledger row is `DONE`.
+- Test/typecheck status at stop time: `npx vitest run` passed 77 files / 623 tests; `npx tsc --noEmit` passed; `npx eslint` reported exactly the one baseline error at `src/components/persona/quiz.tsx:46` and 0 warnings. The live event benchmark passed with 13 of 17 surviving events carrying a city (76.47%).
+- Anything I changed that was NOT in the plan, and why: added render-boundary cleanup and tests for stale saved event/job records, because source-layer cleanup cannot rewrite records already persisted in a browser. Temporary Section 4-derived print fixtures and diagnostic hooks were used only because the exact report ids were absent from the current persisted feed; all were removed after PDF review.
+- What the next agent should watch out for: `web/src/app/papers/[id]/page.tsx` remains modified by its concurrent owner and was not staged. Commit `80ac1f2` also arrived concurrently before the final gate; the full gate above includes it. The exact report ids were not present in today's persisted feed, so the final same-route PDFs used the handoff's quoted Section 4 inputs rather than claiming a live-record reproduction.
 
 ---
 

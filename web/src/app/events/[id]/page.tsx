@@ -19,6 +19,7 @@ import type {
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import { formatDate, formatMatchPct } from "@/lib/format";
+import { cleanEventDescription } from "@/lib/events/mapper";
 import {
   buildEnrichmentContext,
   capGeneratedReasoning,
@@ -82,6 +83,31 @@ interface DeadlineMilestone {
 function clean(value: string | null | undefined): string | undefined {
   const trimmed = value?.replace(/\s+/g, " ").trim();
   return trimmed || undefined;
+}
+
+function isCachedRosterRejection(value: string): boolean {
+  return /\b(?:not|rather\s+than|instead\s+of|isn['’]t|does\s+not\s+(?:represent|appear))\b[^.]*?\b(?:attendee|participant|exhibitor|speaker|delegate|person\s+attending|organisation|organization|company)\b/i.test(
+    value,
+  );
+}
+
+function isCachedRosterFurniture(value: string): boolean {
+  return /^(?:download\s+(?:the\s+)?brochure|companies?\s+[a-z]\s*(?:-|to)\s*[a-z]|executive\s+team|mailing\s+list|request\s+(?:more\s+)?information|privacy\s+policy|contact\s+us|terms(?:\s+(?:of\s+(?:use|service)|and\s+conditions))?|site\s*map)$/i.test(
+    value.replace(/\s+/g, " ").trim(),
+  );
+}
+
+function isCachedGenericSessionLabel(value: string): boolean {
+  const core = value
+    .replace(/\s+(?:session|track|talk|day|programme|program)s?$/i, "")
+    .trim();
+  return (
+    !core ||
+    !/\s/.test(core) ||
+    /^(?:tutorials?|panels?|keynotes?|workshops?|posters?|receptions?|plenar(?:y|ies)|breakouts?|networking|exhibitions?|symposi(?:um|a)|seminars?|round\s*tables?|short\s+courses?|demos?|registration|lunch(?:es)?|breaks?)$/i.test(
+      core,
+    )
+  );
 }
 
 function normalized(value: string): string {
@@ -384,7 +410,7 @@ function ReportSection({
   className?: string;
 }) {
   return (
-    <section className={cn("mt-12", className)}>
+    <section className={cn("mt-12 print:break-inside-avoid", className)}>
       <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
         {title}
       </h2>
@@ -558,20 +584,38 @@ function RosterSection({
     if (judgment) usedJudgments.add(name);
     return judgment;
   };
-  const organisations = (event.organisations ?? []).map((item, index) => {
-    const key = organisationStarKey(item);
-    const tier0Reason = organisationReason(item, context);
-    const judgment = takeJudgment(item.name, Boolean(tier0Reason));
-    const reason = tier0Reason ?? judgment?.why;
-    return { item, index, key, reason, judgment, starred: starredKeys.has(key) };
-  });
-  const people = (event.people ?? []).map((item, index) => {
-    const key = personStarKey(item);
-    const tier0Reason = personReason(item, context);
-    const judgment = takeJudgment(item.name, Boolean(tier0Reason));
-    const reason = tier0Reason ?? judgment?.why;
-    return { item, index, key, reason, judgment, starred: starredKeys.has(key) };
-  });
+  const organisations = (event.organisations ?? [])
+    .filter((item) => !isCachedRosterFurniture(item.name))
+    .map((item, index) => {
+      const key = organisationStarKey(item);
+      const tier0Reason = organisationReason(item, context);
+      const judgment = takeJudgment(item.name, Boolean(tier0Reason));
+      const reason = tier0Reason ?? judgment?.why;
+      return {
+        item,
+        index,
+        key,
+        reason,
+        judgment,
+        starred: starredKeys.has(key),
+      };
+    });
+  const people = (event.people ?? [])
+    .filter((item) => !isCachedRosterFurniture(item.name))
+    .map((item, index) => {
+      const key = personStarKey(item);
+      const tier0Reason = personReason(item, context);
+      const judgment = takeJudgment(item.name, Boolean(tier0Reason));
+      const reason = tier0Reason ?? judgment?.why;
+      return {
+        item,
+        index,
+        key,
+        reason,
+        judgment,
+        starred: starredKeys.has(key),
+      };
+    });
   const byPriority = <T extends { index: number; reason?: string; starred: boolean }>(
     left: T,
     right: T,
@@ -814,7 +858,7 @@ export function EventReport({
   const milestones = deadlineMilestones(event);
   const fees = event.fees ?? [];
   const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
-  const description = clean(event.shortDescription);
+  const description = cleanEventDescription(event.shortDescription) || undefined;
   const travelGrant = clean(event.travelGrant);
   const relevanceReason = clean(event.relevanceReason);
   const facetReason = clean(event.facetPreferenceReason);
@@ -823,10 +867,27 @@ export function EventReport({
     Boolean(description) ||
     Boolean(travelGrant) ||
     event.invitationLetter !== undefined;
-  const hasEnrichment = hasEventEnrichment(enrichment);
+  const displayedJudgments = (enrichment?.judgedAttendees ?? []).filter(
+    ({ why }) => !isCachedRosterRejection(why),
+  );
+  const displayedTalks = (enrichment?.talkSummaries ?? []).filter(
+    ({ title }) => !isCachedGenericSessionLabel(title),
+  );
+  const displayEnrichment: EventEnrichment | null = enrichment
+    ? {
+        ...enrichment,
+        judgedAttendees:
+          displayedJudgments.length > 0 ? displayedJudgments : undefined,
+        talkSummaries: displayedTalks.length > 0 ? displayedTalks : undefined,
+      }
+    : null;
+  const hasEnrichment = hasEventEnrichment(displayEnrichment);
 
   return (
-    <PageContainer width="wide" className="px-6 py-14">
+    <PageContainer
+      width="wide"
+      className="px-6 py-14 print:relative print:z-[60] print:bg-bg"
+    >
       <div className="mx-auto max-w-[720px]">
         <BackToFeedLink
           onBack={onBack}
@@ -931,16 +992,16 @@ export function EventReport({
       <RosterSection
         event={event}
         context={context}
-        enrichment={enrichment}
+        enrichment={displayEnrichment}
         starredKeys={starredKeys}
         onToggleStar={onToggleStar}
       />
 
       <div className="mx-auto max-w-[720px]">
-        {enrichment?.talkSummaries && (
+        {displayEnrichment?.talkSummaries && (
           <ReportSection title="What each talk is actually about">
             <div className="space-y-3">
-              {enrichment.talkSummaries.map((talk) => (
+              {displayEnrichment.talkSummaries.map((talk) => (
                 <article
                   key={talk.title}
                   className="rounded-xl border border-border bg-surface px-5 py-4"
@@ -953,10 +1014,10 @@ export function EventReport({
           </ReportSection>
         )}
 
-        {enrichment?.dayPlan && (
+        {displayEnrichment?.dayPlan && (
           <ReportSection title="A day-by-day plan">
             <div className="space-y-4">
-              {enrichment.dayPlan.map((day) => (
+              {displayEnrichment.dayPlan.map((day) => (
                 <section
                   key={day.day}
                   className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4"
@@ -976,14 +1037,16 @@ export function EventReport({
           </ReportSection>
         )}
 
-        {enrichment?.posterFit && (
+        {displayEnrichment?.posterFit && (
           <ReportSection title="Is your work a fit for the poster call">
             <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
               <p className="text-title font-semibold text-heading">
-                {enrichment.posterFit.fits ? "Likely fit" : "Probably not a fit"}
+                {displayEnrichment.posterFit.fits
+                  ? "Likely fit"
+                  : "Probably not a fit"}
               </p>
               <p className="mt-2 text-body leading-7 text-text-muted">
-                {capGeneratedReasoning(enrichment.posterFit.reasoning)}
+                {capGeneratedReasoning(displayEnrichment.posterFit.reasoning)}
               </p>
             </div>
           </ReportSection>

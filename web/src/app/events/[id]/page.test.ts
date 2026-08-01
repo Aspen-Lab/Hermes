@@ -241,4 +241,48 @@ describe("EventReport", () => {
     expect(html).toContain("reason60\u2026");
     expect(html).not.toContain("reason61");
   });
+
+  it("does not revive stale cached refusals or generic talk definitions", () => {
+    const html = renderReport(
+      baseEvent({
+        activities: ["tutorial"],
+        organisations: [{ name: "Download Brochure" }],
+      }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          {
+            name: "Download Brochure",
+            worthIt: false,
+            why: "This is a navigation link rather than an attendee.",
+          },
+        ],
+        talkSummaries: [
+          { title: "tutorial", about: "A guided learning experience." },
+        ],
+      },
+    );
+
+    expect(html).not.toContain("navigation link rather than an attendee");
+    expect(html).not.toMatch(
+      /<h2[^>]*>What each talk is actually about<\/h2>/,
+    );
+    expect(html).not.toContain("A guided learning experience");
+    expect(html).not.toContain("Download Brochure");
+  });
+
+  it("cleans a stale cached measured description before rendering", () => {
+    const html = renderReport(
+      baseEvent({
+        shortDescription:
+          "than a quarter of a century. It will review the criteria necessary to achieve such extended life in commercially manufactured Li-ion cells. [...] This work presents an in situ diagnosis system of large capacity lithium-ion battery based on a sponge-type battery swelling sensor, w",
+      }),
+    );
+
+    expect(html).toContain("It will review");
+    expect(html).not.toContain("than a quarter of a century");
+    expect(html).not.toContain("[...]");
+    expect(html).not.toMatch(/sensor, w/);
+  });
 });
