@@ -149,6 +149,19 @@ describe("JobReport", () => {
     expect(skills).toBeLessThan(role);
     expect(role).toBeLessThan(materials);
     expect(materials).toBeLessThan(why);
+
+    const timelineSection = html.match(
+      /<section[^>]*data-job-section="timeline"[^>]*>[\s\S]*?<\/section>/,
+    )?.[0];
+    expect(timelineSection).toContain("Posted");
+    expect(timelineSection).toContain("Jul 20, 2026");
+    expect(timelineSection).toContain("Today");
+    expect(timelineSection).toContain("Jul 30, 2026");
+    expect(timelineSection).toContain("Apply by");
+    expect(timelineSection).toContain("Aug 15, 2026");
+    expect(timelineSection).toContain("Starts");
+    expect(timelineSection).toContain("Oct 1, 2026");
+    expect(timelineSection).not.toContain("Skills and profile gaps");
   });
 
   it("renders the Applied control in both inactive and completed states", () => {
@@ -199,6 +212,7 @@ describe("JobReport", () => {
   it("renders all four AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseJob({
+        summary: "The posting says this role leads battery interface experiments.",
         visa: { state: "not-stated", evidence: "Sponsorship is not mentioned." },
       }),
       false,
@@ -217,10 +231,17 @@ describe("JobReport", () => {
     const sponsorship = html.indexOf("Sponsorship read");
     const summary = html.indexOf("The role in three clean sentences");
     const emphasise = html.indexOf("What to emphasise in your application");
+    const extracted = html.indexOf("What the role is");
+    const extractedDescription = html.indexOf(
+      "The posting says this role leads battery interface experiments.",
+    );
     expect(competitiveness).toBeGreaterThan(-1);
     expect(competitiveness).toBeLessThan(sponsorship);
     expect(sponsorship).toBeLessThan(summary);
     expect(summary).toBeLessThan(emphasise);
+    expect(extracted).toBeGreaterThan(-1);
+    expect(extracted).toBeLessThan(summary);
+    expect(extractedDescription).toBeLessThan(html.indexOf("First sentence."));
     expect(html).toContain("Posting evidence");
     expect(html).toContain("Peer inference — verify with the employer");
     expect(html).not.toContain("Also in this report with an AI key");

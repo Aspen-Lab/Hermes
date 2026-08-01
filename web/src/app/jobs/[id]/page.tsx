@@ -266,12 +266,22 @@ function FactTile({ fact }: { fact: JobFact }) {
 function ReportSection({
   title,
   children,
+  className,
+  sectionKey,
 }: {
   title: string;
   children: ReactNode;
+  className?: string;
+  sectionKey?: string;
 }) {
   return (
-    <section className="mt-12 animate-fade-in-up">
+    <section
+      data-job-section={sectionKey}
+      className={cn(
+        "mt-12 animate-fade-in-up print:break-inside-avoid",
+        className,
+      )}
+    >
       <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
         {title}
       </h2>
@@ -390,7 +400,10 @@ export function JobReport({
   const hasEnrichment = hasJobEnrichment(enrichment);
 
   return (
-    <PageContainer width="detail" className="px-6 py-14">
+    <PageContainer
+      width="detail"
+      className="px-6 py-14 print:relative print:z-[60] print:bg-bg"
+    >
       <BackToFeedLink
         onBack={onBack}
         className="inline-flex items-center gap-1 text-body-sm text-text-faint transition-colors hover:text-link"
@@ -458,7 +471,11 @@ export function JobReport({
       )}
 
       {timeline.length > 0 && (
-        <ReportSection title="Timeline">
+        <ReportSection
+          title="Timeline"
+          sectionKey="timeline"
+          className="break-inside-avoid"
+        >
           <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {timeline.map((point, index) => (
               <li
@@ -559,6 +576,14 @@ export function JobReport({
         </ReportSection>
       )}
 
+      {roleSummary && (
+        <ReportSection title="What the role is">
+          <p className="max-w-3xl text-body-lg leading-8 text-text">
+            {roleSummary}
+          </p>
+        </ReportSection>
+      )}
+
       {enrichment?.competitiveness && (
         <ReportSection title="How competitive this actually is">
           <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
@@ -623,14 +648,6 @@ export function JobReport({
               </li>
             ))}
           </ul>
-        </ReportSection>
-      )}
-
-      {roleSummary && (
-        <ReportSection title="What the role is">
-          <p className="max-w-3xl text-body-lg leading-8 text-text">
-            {roleSummary}
-          </p>
         </ReportSection>
       )}
 
