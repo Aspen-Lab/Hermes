@@ -254,13 +254,27 @@ describe("POST /api/events/report", () => {
     expect(generateJsonText).toHaveBeenCalledTimes(1);
   });
 
-  it("reopens the same cached report without a second provider call", async () => {
+  it("reopens within the cache TTL with zero fetches and zero model calls", async () => {
     const generateJsonText = vi.fn().mockResolvedValue(
       JSON.stringify({
         posterFit: { fits: true, reasoning: "The supplied scope overlaps." },
       }),
     );
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input) === "https://events.example.com/cached-summit") {
+        return new Response(
+          `<main><p>Landing page details.</p>` +
+            `<a href="/cached-summit/programme">Full programme</a></main>`,
+          { status: 200 },
+        );
+      }
+      return new Response(
+        "<main><p>Interface Stability in Solid-State Cells</p></main>",
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
     const storage = new MemoryStorage();
     const profile = {
       ...defaultProfile,
@@ -268,7 +282,15 @@ describe("POST /api/events/report", () => {
       feedAiApiKey: "test-key",
     };
     const requestReport = vi.fn(async (llmOverride) => {
-      const response = await POST(request({ event, llmOverride }));
+      const response = await POST(
+        request({
+          event: {
+            ...event,
+            linkOfficial: "https://events.example.com/cached-summit",
+          },
+          llmOverride,
+        }),
+      );
       const result = (await response.json()) as { enrichment: unknown | null };
       return result.enrichment;
     });
@@ -282,9 +304,19 @@ describe("POST /api/events/report", () => {
       );
 
     await load();
-    await load();
 
     expect(requestReport).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
+
+    requestReport.mockClear();
+    fetchMock.mockClear();
+    generateJsonText.mockClear();
+
+    await load();
+
+    expect(requestReport).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(generateJsonText).not.toHaveBeenCalled();
   });
 });

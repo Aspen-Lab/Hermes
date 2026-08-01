@@ -168,13 +168,19 @@ describe("POST /api/jobs/report", () => {
     expect(generateJsonText).toHaveBeenCalledTimes(1);
   });
 
-  it("reopens the same cached report without a second provider call", async () => {
+  it("reopens within the cache TTL with zero fetches and zero model calls", async () => {
     const generateJsonText = vi.fn().mockResolvedValue(
       JSON.stringify({
         competitiveness: { verdict: "Strong", reasoning: "Methods align." },
       }),
     );
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn(async () =>
+      new Response("<main><p>Source posting details.</p></main>", {
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
     const storage = new MemoryStorage();
     const profile = {
       ...defaultProfile,
@@ -182,7 +188,15 @@ describe("POST /api/jobs/report", () => {
       feedAiApiKey: "test-key",
     };
     const requestReport = vi.fn(async (llmOverride) => {
-      const response = await POST(request({ job, llmOverride }));
+      const response = await POST(
+        request({
+          job: {
+            ...job,
+            linkPosting: "https://jobs.example.com/cached-role",
+          },
+          llmOverride,
+        }),
+      );
       const result = (await response.json()) as { enrichment: unknown | null };
       return result.enrichment;
     });
@@ -196,9 +210,19 @@ describe("POST /api/jobs/report", () => {
       );
 
     await load();
-    await load();
 
     expect(requestReport).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
+
+    requestReport.mockClear();
+    fetchMock.mockClear();
+    generateJsonText.mockClear();
+
+    await load();
+
+    expect(requestReport).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(generateJsonText).not.toHaveBeenCalled();
   });
 });
