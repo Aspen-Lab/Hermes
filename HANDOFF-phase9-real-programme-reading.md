@@ -53,7 +53,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P9.2 | Server-side page text pipeline: fetch, clean, cap | DONE | `cd web && npx vitest run src/lib/opportunities/page-text.test.ts` — PASS (1 file, 5 tests) |
 | P9.3 | Programme-page discovery for events (one extra page, never more) | DONE | `cd web && npx vitest run src/lib/opportunities/page-text.test.ts` — PASS (1 file, 9 tests) |
-| P9.4 | Feed page text into the existing single call, both routes | TODO | |
+| P9.4 | Feed page text into the existing single call, both routes | IN_PROGRESS | |
 | P9.5 | Event talks: real titles, each quotable from the fetched text | TODO | |
 | P9.6 | Job specifics: real requirements and duties, each quotable | TODO | |
 | P9.7 | Render the new sections; locked block hides only when they render | TODO | |
