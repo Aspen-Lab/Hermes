@@ -1148,65 +1148,6 @@ export default function PaperDetailPage({
         )}
 
         {/* ════════════════════════════════════════
-            SECTION 0 — WHY IT FITS YOU (lead section)
-            ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconStar />} index={1}>
-          Why it fits you
-        </SectionTitle>
-
-        <div className="rounded-2xl bg-accent-dim px-5 py-4">
-          <p
-            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
-          >
-            <IconBullseye />
-            Relevance
-          </p>
-          {showBuildup && activeBuildup ? (
-            <div role="status" aria-live="polite" aria-busy="true">
-              <p className="text-body-lg font-medium text-heading">
-                {activeBuildup.label}
-              </p>
-              <p className="mt-1 text-body text-text-muted leading-relaxed">
-                Peer is building the report from the paper and your profile.
-              </p>
-            </div>
-          ) : showReportSkeletons ? (
-            <div className="space-y-2.5" aria-busy="true">
-              <ShimmerBar width="90%" />
-              <ShimmerBar width="76%" />
-              <ShimmerBar width="82%" />
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
-                >
-                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
-                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Keywords that correlate to the user's profile */}
-        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
-          paper.summaryExperimentKeywords.length > 0) && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {(report?.whyItFitsYou.keywords.length
-              ? report.whyItFitsYou.keywords
-              : paper.summaryExperimentKeywords
-            ).slice(0, 8).map((kw) => (
-              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
-                {kw}
-              </Tag>
-            ))}
-          </div>
-        )}
-
-        {/* ════════════════════════════════════════
             SECTION 1 - NOVELTY (only when there is a real novelty sentence)
             ════════════════════════════════════════ */}
         {showNoveltySection && (
@@ -1442,6 +1383,65 @@ export default function PaperDetailPage({
             </div>
           </>
         ))}
+
+        {/* ════════════════════════════════════════
+            SECTION 3 - WHY IT FITS YOU
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconStar />} index={7}>
+          Why it fits you
+        </SectionTitle>
+
+        <div className="rounded-2xl bg-accent-dim px-5 py-4">
+          <p
+            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
+          >
+            <IconBullseye />
+            Relevance
+          </p>
+          {showBuildup && activeBuildup ? (
+            <div role="status" aria-live="polite" aria-busy="true">
+              <p className="text-body-lg font-medium text-heading">
+                {activeBuildup.label}
+              </p>
+              <p className="mt-1 text-body text-text-muted leading-relaxed">
+                Peer is building the report from the paper and your profile.
+              </p>
+            </div>
+          ) : showReportSkeletons ? (
+            <div className="space-y-2.5" aria-busy="true">
+              <ShimmerBar width="90%" />
+              <ShimmerBar width="76%" />
+              <ShimmerBar width="82%" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
+                >
+                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
+                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Keywords that correlate to the user's profile */}
+        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
+          paper.summaryExperimentKeywords.length > 0) && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(report?.whyItFitsYou.keywords.length
+              ? report.whyItFitsYou.keywords
+              : paper.summaryExperimentKeywords
+            ).slice(0, 8).map((kw) => (
+              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
+                {kw}
+              </Tag>
+            ))}
+          </div>
+        )}
 
         {/* ── Quick signals ── */}
         <SectionTitle icon={<IconCheck strokeWidth={2} />} index={8}>
