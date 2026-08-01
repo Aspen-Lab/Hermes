@@ -547,7 +547,12 @@ line and never more than one.
     - Anything I changed that was NOT in the plan, and why:
     - What the next agent should watch out for:
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-08-01
+- Tasks completed this session: P9.1–P9.9
+- Left IN_PROGRESS or BLOCKED: None.
+- Test/typecheck status at stop time: full Vitest gate PASS (78 files, 697 tests); live event benchmark PASS with 16/22 city-resolved survivors (72.7%); TypeScript clean; ESLint remains at exactly the documented baseline of 1 error and 0 warnings in `src/components/persona/quiz.tsx:46`.
+- Anything I changed that was NOT in the plan, and why: added bounded response arrays after the real Gemini event response exhausted the locked 2,000-token ceiling; marked bounded HTML heading evidence inside the existing capped one-call text and preserved `session-header` content after the Cambridge live page showed that abstract paragraphs and speaker headings could otherwise masquerade as talk titles; tightened day-plan membership to rendered talks and accepted attendees; added route/cache read-state metadata so P9.9's three missing-section reasons remain accurate.
+- What the next agent should watch out for: programme title evidence deliberately fails soft when a page exposes no usable HTML headings. Keep the dominant-level heading filter, exact fetched-text match, one-call limit, 40,000-character page cap, and no-provider zero-fetch boundary together when changing this path.
 
 ---
 

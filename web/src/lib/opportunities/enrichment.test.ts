@@ -397,8 +397,10 @@ describe("job enrichment prompt and parser", () => {
 
     expect(prompt.fetchedPageText).toBe(sourceText);
     expect(prompt.rules.specificRequirements).toContain("exactly");
+    expect(prompt.rules.specificRequirements).toContain("at most 6");
     expect(prompt.rules.specificRequirements).toContain("bounded job fields");
     expect(prompt.rules.specificDuties).toContain("exactly");
+    expect(prompt.rules.specificDuties).toContain("at most 6");
   });
 
   it("drops a sponsorship judgment when the posting already states its position", () => {
@@ -451,6 +453,28 @@ describe("job enrichment prompt and parser", () => {
       specificDuties: ["Design and run interface experiments."],
     });
     expect(hasJobEnrichment(parsed)).toBe(true);
+  });
+
+  it("caps each quotable job-specific section at six items", () => {
+    const requirements = Array.from(
+      { length: 8 },
+      (_, index) => `Requirement ${index + 1} is required.`,
+    );
+    const duties = Array.from(
+      { length: 8 },
+      (_, index) => `Duty ${index + 1} must be completed.`,
+    );
+    const parsed = parseJobEnrichment(
+      JSON.stringify({
+        specificRequirements: requirements,
+        specificDuties: duties,
+      }),
+      job,
+      [...requirements, ...duties].join("\n\n"),
+    );
+
+    expect(parsed?.specificRequirements).toEqual(requirements.slice(0, 6));
+    expect(parsed?.specificDuties).toEqual(duties.slice(0, 6));
   });
 
   it("omits both specifics when a fetched page quotes neither one", () => {
@@ -623,21 +647,36 @@ describe("event enrichment prompt and parser", () => {
       buildEventEnrichmentPrompt(
         mixed,
         "Topics: batteries",
-        "Interface Stability in Solid-State Cells",
+        "[PROGRAMME HEADING LEVEL 3] Interface Stability in Solid-State Cells",
+        [{ level: 3, text: "Interface Stability in Solid-State Cells" }],
       ),
     ) as {
+      task: string;
       fetchedPageText: string;
       event: { sessionTypes: string[]; activities?: string[] };
-      rules: { talkSummaries: string };
+      rules: {
+        judgedAttendees: string;
+        talkSummaries: string;
+        dayPlan: string;
+      };
     };
 
     expect(prompt.fetchedPageText).toBe(
-      "Interface Stability in Solid-State Cells",
+      "[PROGRAMME HEADING LEVEL 3] Interface Stability in Solid-State Cells",
     );
     expect(prompt.event.sessionTypes).toEqual(mixed.activities);
     expect(prompt.event.activities).toBeUndefined();
     expect(prompt.rules.talkSummaries).toContain("fetchedPageText");
+    expect(prompt.rules.talkSummaries).toContain("PROGRAMME HEADING LEVEL");
     expect(prompt.rules.talkSummaries).toContain("exactly");
+    expect(prompt.rules.talkSummaries).toContain("at most 6");
+    expect(prompt.rules.talkSummaries).toContain("at most 30 words");
+    expect(prompt.rules.talkSummaries).toContain("never an abstract");
+    expect(prompt.rules.judgedAttendees).toContain("at most 8");
+    expect(prompt.rules.dayPlan).toContain("at most 3 event days");
+    expect(prompt.rules.dayPlan).toContain("at most 4 items per day");
+    expect(prompt.rules.dayPlan).toContain("also returned in talkSummaries");
+    expect(prompt.task).toContain("entire JSON closes");
   });
 
   it("drops a hallucinated attendee and never overwrites a Tier 0 judgment", () => {
@@ -711,11 +750,14 @@ describe("event enrichment prompt and parser", () => {
           },
           { title: "Invented keynote", about: "Not on the programme." },
         ],
-        dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
+        dayPlan: [
+          { day: "Day 1", items: ["Interface Stability in Solid-State Cells"] },
+        ],
         posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
       }),
       event,
       "09:00 INTERFACE   STABILITY IN SOLID-STATE CELLS\n\nInterface stability session\n\n10:00 Lunch",
+      [{ level: 3, text: "Interface Stability in Solid-State Cells" }],
     );
 
     expect(parsed).toEqual({
@@ -725,9 +767,71 @@ describe("event enrichment prompt and parser", () => {
           about: "A session on interfaces.",
         },
       ],
-      dayPlan: [{ day: "Day 1", items: ["Interface stability session"] }],
+      dayPlan: [
+        { day: "Day 1", items: ["Interface Stability in Solid-State Cells"] },
+      ],
       posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
     });
+  });
+
+  it("caps event arrays so the single response fits its token ceiling", () => {
+    const titles = Array.from(
+      { length: 9 },
+      (_, index) => `Interface Study ${index + 1}`,
+    );
+    const organisations = Array.from(
+      { length: 10 },
+      (_, index) => ({ name: `Battery Lab ${index + 1}` }),
+    );
+    const cappedEvent: Event = { ...event, organisations, people: [] };
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: organisations.map(({ name }) => ({
+          name,
+          isAttendee: true,
+          worthIt: true,
+          why: "Relevant battery work.",
+        })),
+        talkSummaries: titles.map((title) => ({
+          title,
+          about: "A concise explanation.",
+        })),
+        dayPlan: Array.from({ length: 5 }, (_, index) => ({
+          day: `Day ${index + 1}`,
+          items: titles.slice(0, 6),
+        })),
+      }),
+      cappedEvent,
+      titles.join("\n\n"),
+      titles.map((title) => ({ level: 3, text: title })),
+    );
+
+    expect(parsed?.judgedAttendees).toHaveLength(8);
+    expect(parsed?.talkSummaries).toHaveLength(6);
+    expect(parsed?.dayPlan).toHaveLength(3);
+    expect(parsed?.dayPlan?.every((day) => day.items.length === 4)).toBe(true);
+  });
+
+  it("does not plan a seventh title that was omitted by the summary cap", () => {
+    const titles = Array.from(
+      { length: 7 },
+      (_, index) => `Battery Interface Study ${index + 1}`,
+    );
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        talkSummaries: titles.map((title) => ({
+          title,
+          about: "A concise explanation.",
+        })),
+        dayPlan: [{ day: "Day 1", items: [titles[6]] }],
+      }),
+      event,
+      titles.join("\n\n"),
+      titles.map((text) => ({ level: 3, text })),
+    );
+
+    expect(parsed?.talkSummaries).toHaveLength(6);
+    expect(parsed?.dayPlan).toBeUndefined();
   });
 
   it("never falls back to activities when fetched page text is absent", () => {
@@ -750,6 +854,20 @@ describe("event enrichment prompt and parser", () => {
     expect(
       parseEventEnrichment(
         JSON.stringify({
+          judgedAttendees: [
+            {
+              name: "New Speaker",
+              isAttendee: true,
+              worthIt: true,
+              why: "Relevant interface work.",
+            },
+          ],
+          talkSummaries: [
+            {
+              title: "Interface Stability in Solid-State Cells",
+              about: "A session on interfaces.",
+            },
+          ],
           dayPlan: [
             {
               day: "Day 1",
@@ -763,8 +881,22 @@ describe("event enrichment prompt and parser", () => {
         }),
         event,
         "09:00 Interface Stability in Solid-State Cells",
+        [{ level: 3, text: "Interface Stability in Solid-State Cells" }],
       ),
     ).toEqual({
+      judgedAttendees: [
+        {
+          name: "New Speaker",
+          worthIt: true,
+          why: "Relevant interface work.",
+        },
+      ],
+      talkSummaries: [
+        {
+          title: "Interface Stability in Solid-State Cells",
+          about: "A session on interfaces.",
+        },
+      ],
       dayPlan: [
         {
           day: "Day 1",
@@ -775,6 +907,152 @@ describe("event enrichment prompt and parser", () => {
         },
       ],
     });
+  });
+
+  it("drops a verbatim abstract paragraph instead of presenting it as a talk title", () => {
+    const realTitle = "Materials Informatics-Guided Design of Battery Materials";
+    const abstract =
+      "This presentation explains how interface measurements reveal degradation in solid-state battery cells.";
+
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: [
+            { title: abstract, about: "The model mistook prose for a heading." },
+            { title: realTitle, about: "A focused materials-design talk." },
+          ],
+        }),
+        event,
+        `${realTitle}\n\n${abstract}`,
+        [{ level: 3, text: realTitle }],
+      ),
+    ).toEqual({
+      talkSummaries: [
+        { title: realTitle, about: "A focused materials-design talk." },
+      ],
+    });
+  });
+
+  it("does not present a supplied speaker heading as a talk title", () => {
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: [
+            { title: "New Speaker", about: "A person, not a talk." },
+          ],
+        }),
+        event,
+        "New Speaker",
+        [{ level: 4, text: "New Speaker" }],
+      ),
+    ).toEqual({});
+  });
+
+  it("rejects a different-level speaker heading when programme talks share a level", () => {
+    const speaker =
+      "Adrian Tylim, Head Business Development, Natrion, Head Business Development";
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: [{ title: speaker, about: "A person, not a talk." }],
+        }),
+        { ...event, organisations: [], people: [] },
+        `${speaker}\n\nMaterials Informatics-Guided Design\n\nInterface Stability in Solid-State Cells`,
+        [
+          { level: 4, text: speaker },
+          { level: 3, text: "Materials Informatics-Guided Design" },
+          { level: 3, text: "Interface Stability in Solid-State Cells" },
+        ],
+      ),
+    ).toEqual({});
+  });
+
+  it("excludes known roster names before choosing the programme-title heading level", () => {
+    const talks = [
+      "Materials Informatics-Guided Design",
+      "Interface Stability in Solid-State Cells",
+    ];
+    const speakers = ["Speaker Alpha", "Speaker Beta", "Speaker Gamma"];
+    const speakerDominantEvent: Event = {
+      ...event,
+      organisations: [],
+      people: speakers.map((name) => ({ name })),
+    };
+    const headings = [
+      ...speakers.map((text) => ({ level: 4, text })),
+      ...talks.map((text) => ({ level: 3, text })),
+    ];
+    const markedText = headings
+      .map(({ level, text }) => `[PROGRAMME HEADING LEVEL ${level}] ${text}`)
+      .join("\n\n");
+    const prompt = JSON.parse(
+      buildEventEnrichmentPrompt(
+        speakerDominantEvent,
+        "Topics: batteries",
+        markedText,
+        headings,
+      ),
+    ) as { fetchedPageText: string };
+
+    expect(prompt.fetchedPageText).toContain(
+      "[PROGRAMME HEADING LEVEL 3] Materials Informatics-Guided Design",
+    );
+    expect(prompt.fetchedPageText).not.toContain(
+      "[PROGRAMME HEADING LEVEL 4] Speaker Alpha",
+    );
+    expect(prompt.fetchedPageText).toContain("Speaker Alpha");
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: [
+            { title: talks[0], about: "A materials-design talk." },
+          ],
+        }),
+        speakerDominantEvent,
+        markedText,
+        headings,
+      ),
+    ).toEqual({
+      talkSummaries: [
+        { title: talks[0], about: "A materials-design talk." },
+      ],
+    });
+  });
+
+  it("drops a page speaker name from the plan unless it was supplied as an attendee", () => {
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          dayPlan: [{ day: "Day 1", items: ["Unlisted Page Speaker"] }],
+        }),
+        event,
+        "Unlisted Page Speaker",
+      ),
+    ).toEqual({});
+  });
+
+  it("does not plan a supplied roster row the same response rejects as furniture", () => {
+    const furnitureEvent: Event = {
+      ...event,
+      organisations: [{ name: "Download Brochure" }],
+      people: [],
+    };
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          judgedAttendees: [
+            {
+              name: "Download Brochure",
+              isAttendee: false,
+              worthIt: false,
+              why: "This is an action, not an attendee.",
+            },
+          ],
+          dayPlan: [{ day: "Day 1", items: ["Download Brochure"] }],
+        }),
+        furnitureEvent,
+      ),
+    ).toEqual({});
   });
 
   it("omits talk summaries when the response contains only generic labels", () => {
@@ -821,6 +1099,34 @@ describe("event enrichment prompt and parser", () => {
         JSON.stringify({ talkSummaries }),
         event,
         genericLabels.join("\n"),
+        genericLabels.map((text) => ({ level: 3, text })),
+      ),
+    ).toEqual({});
+  });
+
+  it("omits live programme logistics headings from talk summaries", () => {
+    const logistics = [
+      "Registration Open and Morning Coffee",
+      "Organizer's Opening Remarks",
+      "Chairperson's Remarks",
+      "Welcome Coffee Break in the Exhibit Hall with Poster Viewing",
+      "Refreshment Break in the Exhibit Hall with Poster Viewing",
+      "Welcome Reception in the Exhibit Hall with Poster Viewing",
+      "Evening Tutorial*",
+      "Enjoy Lunch on Your Own",
+      "Close of Day",
+    ];
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          talkSummaries: logistics.map((title) => ({
+            title,
+            about: "Schedule logistics, not a talk.",
+          })),
+        }),
+        event,
+        logistics.join("\n\n"),
+        logistics.map((text) => ({ level: 3, text })),
       ),
     ).toEqual({});
   });

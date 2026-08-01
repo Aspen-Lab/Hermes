@@ -2,6 +2,32 @@ import { fetchPageHtml } from "./page-fetch";
 import { stripHtml } from "./shared";
 
 export const MAX_PAGE_TEXT_CHARS = 40_000;
+export const MAX_PAGE_HEADING_TEXT_CHARS = 6_000;
+export const PAGE_HEADING_MARKER_PREFIX = "[PROGRAMME HEADING LEVEL ";
+
+export interface PageHeadingEvidence {
+  level: number;
+  text: string;
+}
+
+export function mergePageHeadings(
+  ...groups: ReadonlyArray<readonly PageHeadingEvidence[]>
+): PageHeadingEvidence[] {
+  const headings: PageHeadingEvidence[] = [];
+  const returned = new Set<string>();
+  let totalCharacters = 0;
+  for (const heading of groups.flat()) {
+    const normalized = heading.text.toLowerCase();
+    if (!heading.text || returned.has(normalized)) continue;
+    const nextLength =
+      totalCharacters + (headings.length > 0 ? 2 : 0) + heading.text.length;
+    if (nextLength > MAX_PAGE_HEADING_TEXT_CHARS) break;
+    headings.push(heading);
+    returned.add(normalized);
+    totalCharacters = nextLength;
+  }
+  return headings;
+}
 
 const PARAGRAPH_BREAK = "\uE000PEER_PARAGRAPH\uE001";
 const PAGE_FURNITURE_ROLE_RE =
@@ -64,11 +90,12 @@ function findElementEnd(
 }
 
 function isPageFurniture(tag: string, attributes: string): boolean {
-  if (["nav", "header", "footer", "aside"].includes(tag)) return true;
   const role = attributes.match(
     /\brole\s*=\s*(?:"([^"]*)"|'([^']*)')/i,
   );
   if (PAGE_FURNITURE_ROLE_RE.test(role?.[1] ?? role?.[2] ?? "")) return true;
+  if (/\bsession[-_\s]*header\b/i.test(attributes)) return false;
+  if (["nav", "header", "footer", "aside"].includes(tag)) return true;
   return PAGE_FURNITURE_NAME_RE.test(semanticValues(attributes).join(" "));
 }
 
@@ -111,6 +138,77 @@ function visibleParagraphText(html: string): string {
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .join("\n\n");
+}
+
+export function extractPageHeadings(html: string): PageHeadingEvidence[] {
+  const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
+  const headings: PageHeadingEvidence[] = [];
+
+  for (const match of visibleHtml.matchAll(
+    /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi,
+  )) {
+    const text = stripHtml(match[2] ?? "").replace(/\s+/g, " ").trim();
+    if (!text || text.length > 240) continue;
+    headings.push({ level: Number(match[1]), text });
+  }
+
+  return mergePageHeadings(headings);
+}
+
+export function annotatePageHeadings(
+  text: string,
+  headings: readonly PageHeadingEvidence[],
+  maxChars = MAX_PAGE_TEXT_CHARS,
+): { text: string | null; headings: PageHeadingEvidence[] } {
+  const remaining = new Map(
+    headings.map((heading) => [heading.text.toLowerCase(), heading]),
+  );
+  const annotatedParagraphs: string[] = [];
+  for (const paragraph of normalizedParagraphs(text)) {
+    const lowered = paragraph.toLowerCase();
+    const matches = [...remaining].flatMap(([normalized, heading]) => {
+      const index = lowered.indexOf(normalized);
+      return index >= 0 ? [{ index, normalized, heading }] : [];
+    }).sort(
+      (left, right) =>
+        left.index - right.index || right.normalized.length - left.normalized.length,
+    );
+    let cursor = 0;
+    for (const match of matches) {
+      if (match.index < cursor) continue;
+      const before = paragraph.slice(cursor, match.index).trim();
+      if (before) annotatedParagraphs.push(before);
+      const sourceTitle = paragraph.slice(
+        match.index,
+        match.index + match.normalized.length,
+      );
+      annotatedParagraphs.push(
+        `${PAGE_HEADING_MARKER_PREFIX}${match.heading.level}] ${sourceTitle}`,
+      );
+      cursor = match.index + match.normalized.length;
+      remaining.delete(match.normalized);
+    }
+    const after = paragraph.slice(cursor).trim();
+    if (after) annotatedParagraphs.push(after);
+  }
+  const annotated = annotatedParagraphs.join("\n\n");
+  const capped = capPageText(annotated, maxChars);
+  if (!capped) return { text: null, headings: [] };
+
+  const retained = new Set(
+    normalizedParagraphs(capped).flatMap((paragraph) => {
+      const match = paragraph.match(
+        /^\[PROGRAMME HEADING LEVEL ([1-6])\]\s+(.+)$/,
+      );
+      return match ? [`${match[1]}:${match[2].toLowerCase()}`] : [];
+    }),
+  );
+  return {
+    text: capped,
+    headings: headings.filter((heading) =>
+      retained.has(`${heading.level}:${heading.text.toLowerCase()}`),
+    ),
+  };
 }
 
 function linkKeywordScore(value: string): number {

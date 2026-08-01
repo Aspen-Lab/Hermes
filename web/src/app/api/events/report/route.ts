@@ -9,9 +9,12 @@ import {
 } from "@/lib/opportunities/enrichment";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
 import {
+  annotatePageHeadings,
   capPageText,
+  extractPageHeadings,
   extractPageText,
   findProgrammePageUrl,
+  mergePageHeadings,
   MAX_PAGE_TEXT_CHARS,
 } from "@/lib/opportunities/page-text";
 import type { Event } from "@/types";
@@ -39,19 +42,21 @@ function eventPageUrl(event: Event): string | null {
 
 interface EventPageRead {
   text: string | null;
+  headings: ReturnType<typeof extractPageHeadings>;
   sourceReadStatus: OpportunitySourceReadStatus;
 }
 
 async function fetchedEventPageText(event: Event): Promise<EventPageRead> {
   const pageUrl = eventPageUrl(event);
-  if (!pageUrl) return { text: null, sourceReadStatus: "failed" };
+  if (!pageUrl) return { text: null, headings: [], sourceReadStatus: "failed" };
 
   try {
     const html = await fetchPageHtml(pageUrl);
-    if (!html) return { text: null, sourceReadStatus: "failed" };
+    if (!html) return { text: null, headings: [], sourceReadStatus: "failed" };
     const texts = [extractPageText(html)].filter(
       (text): text is string => Boolean(text),
     );
+    const headings = extractPageHeadings(html);
     const programmeUrl = findProgrammePageUrl(html, pageUrl);
     const remainingChars =
       MAX_PAGE_TEXT_CHARS -
@@ -64,8 +69,13 @@ async function fetchedEventPageText(event: Event): Promise<EventPageRead> {
         const programmeText = programmeHtml
           ? extractPageText(programmeHtml, remainingChars)
           : null;
-        if (programmeText) {
+        if (programmeText && programmeHtml) {
           texts.push(programmeText);
+          headings.splice(
+            0,
+            headings.length,
+            ...mergePageHeadings(headings, extractPageHeadings(programmeHtml)),
+          );
         } else {
           programmeReadFailed = true;
         }
@@ -74,13 +84,17 @@ async function fetchedEventPageText(event: Event): Promise<EventPageRead> {
       }
     }
     const text = capPageText(texts.join("\n\n"));
+    const pageEvidence = text
+      ? annotatePageHeadings(text, headings)
+      : { text: null, headings: [] };
     return {
-      text,
+      text: pageEvidence.text,
+      headings: pageEvidence.headings,
       sourceReadStatus:
-        text && !programmeReadFailed ? "read" : "failed",
+        pageEvidence.text && !programmeReadFailed ? "read" : "failed",
     };
   } catch {
-    return { text: null, sourceReadStatus: "failed" };
+    return { text: null, headings: [], sourceReadStatus: "failed" };
   }
 }
 
@@ -138,6 +152,7 @@ export async function POST(req: NextRequest) {
         body.event,
         body.contextHint ?? "",
         pageText ?? undefined,
+        pageRead.headings,
       ),
       tier: "large",
       maxTokens: 2000,
@@ -146,6 +161,7 @@ export async function POST(req: NextRequest) {
       raw,
       body.event,
       pageText ?? undefined,
+      pageRead.headings,
     );
     return NextResponse.json(
       {

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  annotatePageHeadings,
+  extractPageHeadings,
   extractPageText,
   findProgrammePageUrl,
   fetchPageText,
@@ -64,6 +66,41 @@ describe("extractPageText", () => {
     );
   });
 
+  it("keeps programme content inside a session-header container", () => {
+    const html = `
+      <main>
+        <div class="site-header"><h2>Account Navigation</h2></div>
+        <header class="session-header">
+          <h3>Materials Informatics-Guided Design of Battery Materials</h3>
+        </header>
+        <div class="session-header">
+          <h3>Interface Stability in Solid-State Cells</h3>
+        </div>
+        <p>A source-backed abstract.</p>
+      </main>
+    `;
+
+    const text = extractPageText(html);
+    const headings = extractPageHeadings(html);
+    expect(text).toContain(
+      "Materials Informatics-Guided Design of Battery Materials",
+    );
+    expect(text).toContain("Interface Stability in Solid-State Cells");
+    expect(text).not.toContain("Account Navigation");
+    expect(headings).toContainEqual({
+      level: 3,
+      text: "Materials Informatics-Guided Design of Battery Materials",
+    });
+    expect(headings).toContainEqual({
+      level: 3,
+      text: "Interface Stability in Solid-State Cells",
+    });
+    expect(headings).not.toContainEqual({
+      level: 2,
+      text: "Account Navigation",
+    });
+  });
+
   it("returns null for JavaScript shells", () => {
     expect(
       extractPageText(
@@ -88,6 +125,56 @@ describe("extractPageText", () => {
         100_000,
       )!.length,
     ).toBeLessThanOrEqual(MAX_PAGE_TEXT_CHARS);
+  });
+});
+
+describe("extractPageHeadings", () => {
+  it("keeps exact visible heading text with level context and drops furniture", () => {
+    expect(
+      extractPageHeadings(`
+        <header><h2>Navigation heading</h2></header>
+        <main>
+          <h2>Battery Interfaces</h2>
+          <h3>Materials <em>Informatics-Guided</em> Design</h3>
+          <h3>Materials Informatics-Guided Design</h3>
+          <p>This abstract is not a heading.</p>
+        </main>
+        <footer><h3>Privacy</h3></footer>
+      `),
+    ).toEqual([
+      { level: 2, text: "Battery Interfaces" },
+      { level: 3, text: "Materials Informatics-Guided Design" },
+    ]);
+  });
+});
+
+describe("annotatePageHeadings", () => {
+  it("marks retained source headings inside the same 40,000-character text budget", () => {
+    const title = "Materials Informatics-Guided Design of Battery Materials";
+    const rawText = `09:00 ${title} Speaker Name\n\n${"source detail ".repeat(4_000)}`;
+    const result = annotatePageHeadings(rawText, [{ level: 3, text: title }]);
+
+    expect(result.text).not.toBeNull();
+    expect(result.text!.length).toBeLessThanOrEqual(MAX_PAGE_TEXT_CHARS);
+    expect(result.text).toContain(`[PROGRAMME HEADING LEVEL 3] ${title}`);
+    expect(result.text).toContain("09:00");
+    expect(result.text).toContain("Speaker Name");
+    expect(result.text!.match(new RegExp(title, "g"))).toHaveLength(1);
+    expect(result.headings).toEqual([{ level: 3, text: title }]);
+  });
+
+  it("does not advertise a heading beyond the retained source-text cap", () => {
+    const title = "Battery Interface Study";
+    const html = `<p>${"x".repeat(39_990)}</p><h3>${title}</h3>`;
+    const cappedText = extractPageText(html);
+    const result = annotatePageHeadings(
+      cappedText!,
+      extractPageHeadings(html),
+    );
+
+    expect(cappedText).not.toContain(title);
+    expect(result.text).toBe(cappedText);
+    expect(result.headings).toEqual([]);
   });
 });
 

@@ -148,6 +148,42 @@ describe("POST /api/events/report", () => {
     });
   });
 
+  it("keeps marked heading evidence inside the single 40,000-character source cap", async () => {
+    const generateJsonText = vi.fn().mockResolvedValue("{}");
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const paragraphs = Array.from(
+      { length: 180 },
+      (_, index) => `<p>Detail ${index} ${"evidence ".repeat(35)}</p>`,
+    ).join("");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          `<main><h3>Interface Stability in Solid-State Cells</h3>${paragraphs}</main>`,
+          { status: 200 },
+        ),
+      ),
+    );
+
+    await POST(
+      request({
+        event: {
+          ...event,
+          linkOfficial: "https://events.example.com/large-programme",
+        },
+      }),
+    );
+
+    const prompt = JSON.parse(
+      (generateJsonText.mock.calls[0][0] as { userPrompt: string }).userPrompt,
+    ) as { fetchedPageText: string };
+    expect(prompt.fetchedPageText.length).toBeLessThanOrEqual(40_000);
+    expect(prompt.fetchedPageText).toContain(
+      "[PROGRAMME HEADING LEVEL 3] Interface Stability in Solid-State Cells",
+    );
+    expect(prompt).not.toHaveProperty("programmeHeadingCandidates");
+  });
+
   it("makes zero client network requests when the user has no provider", async () => {
     const requestReport = vi.fn();
 
@@ -208,7 +244,7 @@ describe("POST /api/events/report", () => {
         );
       }
       return new Response(
-        `<main><p>Interface Stability in Solid-State Cells</p>` +
+        `<main><h3>Interface Stability in Solid-State Cells</h3>` +
           `<a href="/summit/programme/day-two">Programme day two</a></main>`,
         { status: 200 },
       );
@@ -255,6 +291,10 @@ describe("POST /api/events/report", () => {
     expect(prompt.fetchedPageText).toContain(
       "Interface Stability in Solid-State Cells",
     );
+    expect(prompt.fetchedPageText).toContain(
+      "[PROGRAMME HEADING LEVEL 3] Interface Stability in Solid-State Cells",
+    );
+    expect(prompt).not.toHaveProperty("programmeHeadingCandidates");
     expect(mocks.resolveProvider.mock.invocationCallOrder[0]).toBeLessThan(
       fetchMock.mock.invocationCallOrder[0],
     );
