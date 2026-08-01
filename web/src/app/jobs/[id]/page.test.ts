@@ -167,6 +167,35 @@ describe("JobReport", () => {
     expect(appliedHtml).toContain(">Applied<");
   });
 
+  it("lists both requirements behind a zero-of-two skills count", () => {
+    const html = renderReport(
+      baseJob({
+        keyRequirements: [
+          "Experience with battery cyclers",
+          "Statistical experiment design",
+        ],
+        matchedTerms: [],
+      }),
+    );
+
+    expect(html).toContain("Skills and profile gaps");
+    expect(html).toContain("0 of 2 requirements match terms in your profile");
+    expect(
+      html.match(/data-skill-requirement="unmatched"/g),
+    ).toHaveLength(2);
+    expect(html).toContain("Experience with battery cyclers");
+    expect(html).toContain("Statistical experiment design");
+  });
+
+  it("omits the skills section and header when no requirements exist", () => {
+    const html = renderReport(
+      baseJob({ keyRequirements: [" ", "\t"], matchedTerms: ["Python"] }),
+    );
+
+    expect(html).not.toContain("Skills and profile gaps");
+    expect(html).not.toContain("data-skill-requirement");
+  });
+
   it("renders all four AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseJob({

@@ -520,7 +520,11 @@ export function JobReport({
                 </h3>
                 <ul className="mt-2 space-y-2">
                   {skills.matched.map((skill) => (
-                    <li key={skill} className="text-body-sm text-text-muted">
+                    <li
+                      key={skill}
+                      data-skill-requirement="matched"
+                      className="text-body-sm text-text-muted"
+                    >
                       <span className="mr-2 text-accent" aria-hidden>
                         ✓
                       </span>
@@ -537,7 +541,11 @@ export function JobReport({
                 </h3>
                 <ul className="mt-2 space-y-2">
                   {skills.unmatched.map((skill) => (
-                    <li key={skill} className="text-body-sm text-text-muted">
+                    <li
+                      key={skill}
+                      data-skill-requirement="unmatched"
+                      className="text-body-sm text-text-muted"
+                    >
                       <span className="mr-2 text-text-faint" aria-hidden>
                         ○
                       </span>
