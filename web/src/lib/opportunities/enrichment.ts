@@ -36,6 +36,29 @@ export interface EventEnrichment {
   };
 }
 
+export type OpportunitySourceReadStatus = "read" | "failed" | "not-requested";
+
+export interface OpportunityEnrichmentLoadResult<T> {
+  enrichment: T | null;
+  sourceReadStatus: OpportunitySourceReadStatus;
+}
+
+export type OpportunityPageReadingReason =
+  | "no-provider"
+  | "no-quotable-details"
+  | "read-failed";
+
+export function opportunityPageReadingReason<T>(
+  result: OpportunityEnrichmentLoadResult<T> | null,
+  canAttempt: boolean,
+): OpportunityPageReadingReason {
+  if (!result) return canAttempt ? "read-failed" : "no-provider";
+  if (result.sourceReadStatus === "not-requested") return "no-provider";
+  return result.sourceReadStatus === "read" && result.enrichment !== null
+    ? "no-quotable-details"
+    : "read-failed";
+}
+
 type EnrichmentProfile = Pick<
   UserProfile,
   | "researchTopics"
@@ -65,7 +88,7 @@ interface CachedEnrichment {
 
 type EnrichmentCache = Record<string, CachedEnrichment>;
 
-const ENRICHMENT_CACHE_STORAGE_KEY = "peer-opportunity-report-cache-v2";
+const ENRICHMENT_CACHE_STORAGE_KEY = "peer-opportunity-report-cache-v3";
 const ENRICHMENT_CACHE_MAX_ENTRIES = 80;
 export const ENRICHMENT_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ENRICHMENT_FAILURE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -619,6 +642,15 @@ function readCache(storage: Storage | undefined): EnrichmentCache {
   }
 }
 
+function isFailedLoadResult(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.sourceReadStatus === "string" &&
+    (record.sourceReadStatus !== "read" || record.enrichment === null)
+  );
+}
+
 export function readCachedOpportunityEnrichment<T>(
   cacheKey: string,
   nowMs = Date.now(),
@@ -630,7 +662,7 @@ export function readCachedOpportunityEnrichment<T>(
     return { hit: false, enrichment: null };
   }
   const ttl =
-    entry.enrichment === null
+    entry.enrichment === null || isFailedLoadResult(entry.enrichment)
       ? ENRICHMENT_FAILURE_TTL_MS
       : ENRICHMENT_SUCCESS_TTL_MS;
   if (nowMs - entry.savedAt >= ttl || nowMs < entry.savedAt) {
@@ -708,8 +740,8 @@ export function loadConfiguredOpportunityEnrichment<T>(
 ): Promise<T | null> {
   const provider = profile.feedAiProvider;
   const apiKey = profile.feedAiApiKey?.trim();
+  if (!canAttemptOpportunityEnrichment(profile)) return Promise.resolve(null);
   if (provider === "default") {
-    if (process.env.NODE_ENV !== "development") return Promise.resolve(null);
     return loadOpportunityEnrichment(
       cacheKey,
       () => loader(undefined),
@@ -717,9 +749,7 @@ export function loadConfiguredOpportunityEnrichment<T>(
       storage,
     );
   }
-  if (!apiKey) {
-    return Promise.resolve(null);
-  }
+  if (!apiKey) return Promise.resolve(null);
 
   return loadOpportunityEnrichment(
     cacheKey,
@@ -727,4 +757,13 @@ export function loadConfiguredOpportunityEnrichment<T>(
     nowMs,
     storage,
   );
+}
+
+export function canAttemptOpportunityEnrichment(
+  profile: OpportunityProviderProfile,
+): boolean {
+  if (profile.feedAiProvider === "default") {
+    return process.env.NODE_ENV === "development";
+  }
+  return Boolean(profile.feedAiApiKey?.trim());
 }

@@ -2,7 +2,10 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Job } from "@/types";
-import type { JobEnrichment } from "@/lib/opportunities/enrichment";
+import type {
+  JobEnrichment,
+  OpportunityPageReadingReason,
+} from "@/lib/opportunities/enrichment";
 import { JobReport } from "./page";
 
 const NOW = Date.parse("2026-07-30T12:00:00Z");
@@ -13,6 +16,7 @@ function renderReport(
   enrichment: JobEnrichment | null = null,
   providerConfigured = false,
   isInterested = false,
+  pageReadingReason?: OpportunityPageReadingReason,
 ): string {
   return renderToStaticMarkup(
     createElement(JobReport, {
@@ -22,6 +26,7 @@ function renderReport(
       isInterested,
       nowMs: NOW,
       enrichment,
+      pageReadingReason,
       providerConfigured,
       onToggleSave: () => undefined,
       onAppliedChange: () => undefined,
@@ -293,31 +298,85 @@ describe("JobReport", () => {
     expect(html).not.toContain('data-job-section="specific-requirements"');
     expect(html).not.toContain('data-job-section="specific-duties"');
     expect(html).toContain("Also in this report with an AI key");
+    expect(html).not.toContain("data-page-reading-note");
   });
 
   it("renders and unlocks either quoted-specific section independently", () => {
-    const requirementsHtml = renderReport(baseJob(), false, {
-      specificRequirements: ["A doctorate in chemistry is required."],
-    });
-    const dutiesHtml = renderReport(baseJob(), false, {
-      specificDuties: ["Lead weekly cell-testing reviews."],
-    });
+    const requirementsHtml = renderReport(
+      baseJob(),
+      false,
+      { specificRequirements: ["A doctorate in chemistry is required."] },
+      false,
+      false,
+      "read-failed",
+    );
+    const dutiesHtml = renderReport(
+      baseJob(),
+      false,
+      { specificDuties: ["Lead weekly cell-testing reviews."] },
+      false,
+      false,
+      "read-failed",
+    );
 
     expect(requirementsHtml).toContain("What this employer actually asks for");
     expect(requirementsHtml).toContain("A doctorate in chemistry is required.");
     expect(requirementsHtml).not.toContain('data-job-section="specific-duties"');
     expect(requirementsHtml).not.toContain("Also in this report with an AI key");
+    expect(requirementsHtml).not.toContain("data-page-reading-note");
     expect(dutiesHtml).toContain("What the person would actually do");
     expect(dutiesHtml).toContain("Lead weekly cell-testing reviews.");
     expect(dutiesHtml).not.toContain(
       'data-job-section="specific-requirements"',
     );
     expect(dutiesHtml).not.toContain("Also in this report with an AI key");
+    expect(dutiesHtml).not.toContain("data-page-reading-note");
   });
 
   it("keeps the locked block when provider availability produced no enrichment", () => {
     const html = renderReport(baseJob(), false, null, true);
 
     expect(html).toContain("Also in this report with an AI key");
+    expect(html).not.toContain("data-page-reading-note");
   });
+
+  it.each([
+    ["no-provider", "Connect an AI key to let Peer read the job posting."],
+    [
+      "no-quotable-details",
+      "Peer read the job posting but found no requirements or duties it could quote.",
+    ],
+    [
+      "read-failed",
+      "Peer could not finish reading the job posting this time.",
+    ],
+  ] as const)(
+    "renders only the %s job-posting note",
+    (pageReadingReason, sentence) => {
+      const html = renderReport(
+        baseJob(),
+        false,
+        {
+          competitiveness: {
+            verdict: "Strong match",
+            reasoning: "The declared methods align.",
+          },
+        },
+        false,
+        false,
+        pageReadingReason,
+      );
+      const allSentences = [
+        "Connect an AI key to let Peer read the job posting.",
+        "Peer read the job posting but found no requirements or duties it could quote.",
+        "Peer could not finish reading the job posting this time.",
+      ];
+
+      expect(html.match(/data-page-reading-note="job"/g)).toHaveLength(1);
+      expect(html).toContain(sentence);
+      for (const other of allSentences.filter((item) => item !== sentence)) {
+        expect(html).not.toContain(other);
+      }
+    },
+  );
 });

@@ -5,6 +5,7 @@ import {
   buildEventEnrichmentPrompt,
   hasEventEnrichmentCandidates,
   parseEventEnrichment,
+  type OpportunitySourceReadStatus,
 } from "@/lib/opportunities/enrichment";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
 import {
@@ -36,13 +37,18 @@ function eventPageUrl(event: Event): string | null {
   return event.linkOfficial?.trim() || event.linkRegistration?.trim() || null;
 }
 
-async function fetchedEventPageText(event: Event): Promise<string | null> {
+interface EventPageRead {
+  text: string | null;
+  sourceReadStatus: OpportunitySourceReadStatus;
+}
+
+async function fetchedEventPageText(event: Event): Promise<EventPageRead> {
   const pageUrl = eventPageUrl(event);
-  if (!pageUrl) return null;
+  if (!pageUrl) return { text: null, sourceReadStatus: "failed" };
 
   try {
     const html = await fetchPageHtml(pageUrl);
-    if (!html) return null;
+    if (!html) return { text: null, sourceReadStatus: "failed" };
     const texts = [extractPageText(html)].filter(
       (text): text is string => Boolean(text),
     );
@@ -51,16 +57,30 @@ async function fetchedEventPageText(event: Event): Promise<string | null> {
       MAX_PAGE_TEXT_CHARS -
       (texts[0]?.length ?? 0) -
       (texts.length > 0 ? 2 : 0);
+    let programmeReadFailed = false;
     if (programmeUrl && remainingChars > 0) {
-      const programmeHtml = await fetchPageHtml(programmeUrl);
-      const programmeText = programmeHtml
-        ? extractPageText(programmeHtml, remainingChars)
-        : null;
-      if (programmeText) texts.push(programmeText);
+      try {
+        const programmeHtml = await fetchPageHtml(programmeUrl);
+        const programmeText = programmeHtml
+          ? extractPageText(programmeHtml, remainingChars)
+          : null;
+        if (programmeText) {
+          texts.push(programmeText);
+        } else {
+          programmeReadFailed = true;
+        }
+      } catch {
+        programmeReadFailed = true;
+      }
     }
-    return capPageText(texts.join("\n\n"));
+    const text = capPageText(texts.join("\n\n"));
+    return {
+      text,
+      sourceReadStatus:
+        text && !programmeReadFailed ? "read" : "failed",
+    };
   } catch {
-    return null;
+    return { text: null, sourceReadStatus: "failed" };
   }
 }
 
@@ -79,7 +99,11 @@ export async function POST(req: NextRequest) {
   const provider = resolveProvider(body.llmOverride ?? null);
   if (!provider?.generateJsonText) {
     return NextResponse.json(
-      { enrichment: null, noLlm: true },
+      {
+        enrichment: null,
+        noLlm: true,
+        sourceReadStatus: "not-requested",
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
@@ -90,7 +114,7 @@ export async function POST(req: NextRequest) {
   );
   if (!hasExistingCandidates && !eventPageUrl(body.event)) {
     return NextResponse.json(
-      { enrichment: null, noLlm: true },
+      { enrichment: null, noLlm: true, sourceReadStatus: "failed" },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
@@ -98,10 +122,11 @@ export async function POST(req: NextRequest) {
   const denied = await protectAiRequest("event-report", 20);
   if (denied) return denied;
 
-  const pageText = await fetchedEventPageText(body.event);
+  const pageRead = await fetchedEventPageText(body.event);
+  const pageText = pageRead.text;
   if (!hasExistingCandidates && !pageText) {
     return NextResponse.json(
-      { enrichment: null, noLlm: true },
+      { enrichment: null, noLlm: true, sourceReadStatus: "failed" },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
@@ -117,20 +142,26 @@ export async function POST(req: NextRequest) {
       tier: "large",
       maxTokens: 2000,
     });
+    const enrichment = parseEventEnrichment(
+      raw,
+      body.event,
+      pageText ?? undefined,
+    );
     return NextResponse.json(
       {
-        enrichment: parseEventEnrichment(
-          raw,
-          body.event,
-          pageText ?? undefined,
-        ),
+        enrichment,
         noLlm: false,
+        sourceReadStatus: pageRead.sourceReadStatus,
       },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {
     return NextResponse.json(
-      { enrichment: null, noLlm: false },
+      {
+        enrichment: null,
+        noLlm: false,
+        sourceReadStatus: pageRead.sourceReadStatus,
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }

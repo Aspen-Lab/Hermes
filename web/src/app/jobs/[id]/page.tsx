@@ -14,10 +14,14 @@ import {
 } from "@/lib/opportunities/job-cleanup";
 import {
   buildEnrichmentContext,
+  canAttemptOpportunityEnrichment,
   hasJobEnrichment,
   loadConfiguredOpportunityEnrichment,
+  opportunityPageReadingReason,
   opportunityEnrichmentCacheKey,
   type JobEnrichment,
+  type OpportunityEnrichmentLoadResult,
+  type OpportunityPageReadingReason,
 } from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -49,6 +53,13 @@ const JOB_TIER_UPGRADE_ITEMS = [
       "Identify which parts of your declared work and methods should lead.",
   },
 ];
+
+const JOB_PAGE_READING_NOTES: Record<OpportunityPageReadingReason, string> = {
+  "no-provider": "Connect an AI key to let Peer read the job posting.",
+  "no-quotable-details":
+    "Peer read the job posting but found no requirements or duties it could quote.",
+  "read-failed": "Peer could not finish reading the job posting this time.",
+};
 
 const ROLE_LABELS: Record<RoleKind, string> = {
   internship: "Internship",
@@ -358,6 +369,7 @@ export function JobReport({
   isInterested = false,
   nowMs,
   enrichment = null,
+  pageReadingReason,
   providerConfigured: _providerConfigured = false,
   onToggleSave,
   onAppliedChange,
@@ -371,6 +383,7 @@ export function JobReport({
   isInterested?: boolean;
   nowMs: number;
   enrichment?: JobEnrichment | null;
+  pageReadingReason?: OpportunityPageReadingReason;
   /** Legacy test seam: provider availability alone must not hide the locked block. */
   providerConfigured?: boolean;
   onToggleSave: () => void;
@@ -619,6 +632,17 @@ export function JobReport({
         </ReportSection>
       )}
 
+      {!enrichment?.specificRequirements?.length &&
+        !enrichment?.specificDuties?.length &&
+        pageReadingReason && (
+          <p
+            data-page-reading-note="job"
+            className="mt-8 text-body-sm text-text-faint"
+          >
+            {JOB_PAGE_READING_NOTES[pageReadingReason]}
+          </p>
+        )}
+
       {enrichment?.competitiveness && (
         <ReportSection title="How competitive this actually is">
           <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
@@ -751,9 +775,9 @@ export default function JobDetailPage({
   const [nowMs] = useState(Date.now);
   const [enrichmentResult, setEnrichmentResult] = useState<{
     key: string;
-    enrichment: JobEnrichment | null;
+    result: OpportunityEnrichmentLoadResult<JobEnrichment> | null;
     done: boolean;
-  }>({ key: "", enrichment: null, done: false });
+  }>({ key: "", result: null, done: false });
 
   const job =
     feedJobs.find((candidate) => candidate.id === id) ??
@@ -778,7 +802,9 @@ export default function JobDetailPage({
     if (!job || !enrichmentKey) return;
 
     let cancelled = false;
-    void loadConfiguredOpportunityEnrichment<JobEnrichment>(
+    void loadConfiguredOpportunityEnrichment<
+      OpportunityEnrichmentLoadResult<JobEnrichment>
+    >(
       {
         feedAiProvider: profile.feedAiProvider,
         feedAiApiKey: profile.feedAiApiKey,
@@ -795,12 +821,23 @@ export default function JobDetailPage({
         }
         const result = (await response.json()) as {
           enrichment: JobEnrichment | null;
+          sourceReadStatus?:
+            | "read"
+            | "failed"
+            | "not-requested";
         };
-        return result.enrichment ?? null;
+        return {
+          enrichment: result.enrichment ?? null,
+          sourceReadStatus:
+            result.sourceReadStatus === "read" ||
+            result.sourceReadStatus === "not-requested"
+              ? result.sourceReadStatus
+              : "failed",
+        };
       },
-    ).then((enrichment) => {
-        if (cancelled) return;
-        setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
+    ).then((result) => {
+      if (cancelled) return;
+      setEnrichmentResult({ key: enrichmentKey, result, done: true });
     });
 
     return () => {
@@ -827,6 +864,18 @@ export default function JobDetailPage({
     );
   }
 
+  const currentEnrichmentDone =
+    enrichmentResult.key === enrichmentKey && enrichmentResult.done;
+  const currentEnrichmentResult = currentEnrichmentDone
+    ? enrichmentResult.result
+    : null;
+  const pageReadingReason = currentEnrichmentDone
+    ? opportunityPageReadingReason(
+        currentEnrichmentResult,
+        canAttemptOpportunityEnrichment(profile),
+      )
+    : undefined;
+
   return (
     <JobReport
       job={job}
@@ -837,11 +886,8 @@ export default function JobDetailPage({
         (feedback ?? job.feedback) === "liked"
       }
       nowMs={nowMs}
-      enrichment={
-        enrichmentResult.key === enrichmentKey && enrichmentResult.done
-          ? enrichmentResult.enrichment
-          : null
-      }
+      enrichment={currentEnrichmentResult?.enrichment ?? null}
+      pageReadingReason={pageReadingReason}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onInterested={() => moreLikeJob(job)}

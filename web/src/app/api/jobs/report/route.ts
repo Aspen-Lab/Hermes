@@ -41,7 +41,11 @@ export async function POST(req: NextRequest) {
   const provider = resolveProvider(body.llmOverride ?? null);
   if (!provider?.generateJsonText) {
     return NextResponse.json(
-      { enrichment: null, noLlm: true },
+      {
+        enrichment: null,
+        noLlm: true,
+        sourceReadStatus: "not-requested",
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
@@ -64,20 +68,26 @@ export async function POST(req: NextRequest) {
       tier: "large",
       maxTokens: 1600,
     });
+    const enrichment = parseJobEnrichment(
+      raw,
+      body.job,
+      pageText ?? undefined,
+    );
     return NextResponse.json(
       {
-        enrichment: parseJobEnrichment(
-          raw,
-          body.job,
-          pageText ?? undefined,
-        ),
+        enrichment,
         noLlm: false,
+        sourceReadStatus: pageText ? "read" : "failed",
       },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch {
     return NextResponse.json(
-      { enrichment: null, noLlm: false },
+      {
+        enrichment: null,
+        noLlm: false,
+        sourceReadStatus: pageText ? "read" : "failed",
+      },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }

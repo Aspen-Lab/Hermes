@@ -65,7 +65,11 @@ describe("POST /api/jobs/report", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
+    expect(await response.json()).toEqual({
+      enrichment: null,
+      noLlm: true,
+      sourceReadStatus: "not-requested",
+    });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -134,7 +138,11 @@ describe("POST /api/jobs/report", () => {
       }),
     );
 
-    expect(await response.json()).toEqual({ enrichment, noLlm: false });
+    expect(await response.json()).toEqual({
+      enrichment,
+      noLlm: false,
+      sourceReadStatus: "read",
+    });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(llmOverride);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
@@ -158,13 +166,28 @@ describe("POST /api/jobs/report", () => {
     );
   });
 
-  it("returns null enrichment when the provider output is unparseable", async () => {
+  it("keeps a successful page read distinct from unparseable model output", async () => {
     const generateJsonText = vi.fn().mockResolvedValue("not json");
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("<main><p>Readable source posting details.</p></main>", {
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
-    const response = await POST(request({ job }));
+    const response = await POST(
+      request({
+        job: { ...job, linkPosting: "https://jobs.example.com/readable-role" },
+      }),
+    );
 
-    expect(await response.json()).toEqual({ enrichment: null, noLlm: false });
+    expect(await response.json()).toEqual({
+      enrichment: null,
+      noLlm: false,
+      sourceReadStatus: "read",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
   });
 
@@ -197,8 +220,14 @@ describe("POST /api/jobs/report", () => {
           llmOverride,
         }),
       );
-      const result = (await response.json()) as { enrichment: unknown | null };
-      return result.enrichment;
+      const result = (await response.json()) as {
+        enrichment: unknown | null;
+        sourceReadStatus: "read" | "failed" | "not-requested";
+      };
+      return {
+        enrichment: result.enrichment,
+        sourceReadStatus: result.sourceReadStatus,
+      };
     });
     const load = () =>
       loadConfiguredOpportunityEnrichment(
@@ -209,8 +238,9 @@ describe("POST /api/jobs/report", () => {
         storage,
       );
 
-    await load();
+    const first = await load();
 
+    expect(first).toMatchObject({ sourceReadStatus: "read" });
     expect(requestReport).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
@@ -219,8 +249,9 @@ describe("POST /api/jobs/report", () => {
     fetchMock.mockClear();
     generateJsonText.mockClear();
 
-    await load();
+    const second = await load();
 
+    expect(second).toEqual(first);
     expect(requestReport).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(generateJsonText).not.toHaveBeenCalled();

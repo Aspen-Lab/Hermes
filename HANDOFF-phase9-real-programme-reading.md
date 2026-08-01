@@ -63,7 +63,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P9.8 | Cost ceiling: one call, one or two fetches, hard token cap, proven | DONE | `cd web && npx vitest run src/app/api/events/report/route.test.ts src/app/api/jobs/report/route.test.ts` — PASS (2 files, 14 tests) |
-| P9.9 | Say why a section is missing instead of showing nothing | IN_PROGRESS | |
+| P9.9 | Say why a section is missing instead of showing nothing | DONE | `cd web && npx vitest run "src/app/events/[id]/page.test.ts" "src/app/jobs/[id]/page.test.ts"` — PASS (2 files, 28 tests) |
 
 **Total: 9 tasks.**
 

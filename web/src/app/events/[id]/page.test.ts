@@ -2,7 +2,10 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Event } from "@/types";
-import type { EventEnrichment } from "@/lib/opportunities/enrichment";
+import type {
+  EventEnrichment,
+  OpportunityPageReadingReason,
+} from "@/lib/opportunities/enrichment";
 import { EventReport } from "./page";
 
 function baseEvent(overrides: Partial<Event> = {}): Event {
@@ -26,12 +29,14 @@ function renderReport(
   enrichment: EventEnrichment | null = null,
   providerConfigured = false,
   isInterested = false,
+  pageReadingReason?: OpportunityPageReadingReason,
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
       event,
       careerStage,
       enrichment,
+      pageReadingReason,
       providerConfigured,
       isSaved: false,
       isRegistered: completion.registered,
@@ -224,6 +229,70 @@ describe("EventReport", () => {
     );
 
     expect(html).toContain("Also in this report with an AI key");
+    expect(html).not.toContain("data-page-reading-note");
+  });
+
+  it.each([
+    ["no-provider", "Connect an AI key to let Peer read the programme."],
+    [
+      "no-quotable-details",
+      "Peer read the page but found no talk titles it could quote.",
+    ],
+    [
+      "read-failed",
+      "Peer could not finish reading the programme page this time.",
+    ],
+  ] as const)(
+    "renders only the %s programme-reading note",
+    (pageReadingReason, sentence) => {
+      const html = renderReport(
+        baseEvent(),
+        "PhD Year 3",
+        { registered: false, submitted: false },
+        {
+          posterFit: {
+            fits: true,
+            reasoning: "The supplied scope overlaps.",
+          },
+        },
+        false,
+        false,
+        pageReadingReason,
+      );
+      const allSentences = [
+        "Connect an AI key to let Peer read the programme.",
+        "Peer read the page but found no talk titles it could quote.",
+        "Peer could not finish reading the programme page this time.",
+      ];
+
+      expect(html.match(/data-page-reading-note="event"/g)).toHaveLength(1);
+      expect(html).toContain(sentence);
+      for (const other of allSentences.filter((item) => item !== sentence)) {
+        expect(html).not.toContain(other);
+      }
+    },
+  );
+
+  it("hides the programme-reading note when a real talk renders", () => {
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        talkSummaries: [
+          {
+            title: "Interface Stability in Solid-State Cells",
+            about: "A focused session on interphase stability.",
+          },
+        ],
+      },
+      false,
+      false,
+      "read-failed",
+    );
+
+    expect(html).toContain("Interface Stability in Solid-State Cells");
+    expect(html).not.toContain("data-page-reading-note");
   });
 
   it("leads poster fit with the verdict and caps cached long reasoning", () => {
@@ -264,6 +333,9 @@ describe("EventReport", () => {
           { title: "tutorial", about: "A guided learning experience." },
         ],
       },
+      false,
+      false,
+      "read-failed",
     );
 
     expect(html).not.toContain("navigation link rather than an attendee");
@@ -273,6 +345,7 @@ describe("EventReport", () => {
     expect(html).not.toContain("A guided learning experience");
     expect(html).not.toContain("Download Brochure");
     expect(html).toContain("Also in this report with an AI key");
+    expect(html.match(/data-page-reading-note="event"/g)).toHaveLength(1);
   });
 
   it("cleans a stale cached measured description before rendering", () => {

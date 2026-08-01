@@ -74,7 +74,11 @@ describe("POST /api/events/report", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
+    expect(await response.json()).toEqual({
+      enrichment: null,
+      noLlm: true,
+      sourceReadStatus: "not-requested",
+    });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -95,7 +99,11 @@ describe("POST /api/events/report", () => {
       }),
     );
 
-    expect(await response.json()).toEqual({ enrichment: null, noLlm: true });
+    expect(await response.json()).toEqual({
+      enrichment: null,
+      noLlm: true,
+      sourceReadStatus: "failed",
+    });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
     expect(generateJsonText).not.toHaveBeenCalled();
   });
@@ -124,7 +132,11 @@ describe("POST /api/events/report", () => {
       }),
     );
 
-    expect(await response.json()).toEqual({ enrichment: {}, noLlm: false });
+    expect(await response.json()).toEqual({
+      enrichment: {},
+      noLlm: false,
+      sourceReadStatus: "read",
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
     const modelRequest = generateJsonText.mock.calls[0][0] as {
@@ -218,7 +230,11 @@ describe("POST /api/events/report", () => {
       }),
     );
 
-    expect(await response.json()).toEqual({ enrichment, noLlm: false });
+    expect(await response.json()).toEqual({
+      enrichment,
+      noLlm: false,
+      sourceReadStatus: "read",
+    });
     expect(mocks.resolveProvider).toHaveBeenCalledWith(llmOverride);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
@@ -250,8 +266,55 @@ describe("POST /api/events/report", () => {
 
     const response = await POST(request({ event }));
 
-    expect(await response.json()).toEqual({ enrichment: null, noLlm: false });
+    expect(await response.json()).toEqual({
+      enrichment: null,
+      noLlm: false,
+      sourceReadStatus: "failed",
+    });
     expect(generateJsonText).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a failed programme read while retaining usable landing text", async () => {
+    const generateJsonText = vi.fn().mockResolvedValue("{}");
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input) === "https://events.example.com/partial-summit") {
+        return new Response(
+          `<main><p>Readable landing details.</p>` +
+            `<a href="/partial-summit/programme">Full programme</a></main>`,
+          { status: 200 },
+        );
+      }
+      return new Response("<main>Please enable JavaScript.</main>", {
+        status: 200,
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      request({
+        event: {
+          ...event,
+          linkOfficial: "https://events.example.com/partial-summit",
+        },
+      }),
+    );
+
+    expect(await response.json()).toEqual({
+      enrichment: {},
+      noLlm: false,
+      sourceReadStatus: "failed",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(generateJsonText).toHaveBeenCalledTimes(1);
+    const modelRequest = generateJsonText.mock.calls[0][0] as {
+      userPrompt: string;
+    };
+    const prompt = JSON.parse(modelRequest.userPrompt) as {
+      fetchedPageText?: string;
+    };
+    expect(prompt.fetchedPageText).toContain("Readable landing details.");
+    expect(prompt.fetchedPageText).not.toContain("enable JavaScript");
   });
 
   it("reopens within the cache TTL with zero fetches and zero model calls", async () => {
@@ -291,8 +354,14 @@ describe("POST /api/events/report", () => {
           llmOverride,
         }),
       );
-      const result = (await response.json()) as { enrichment: unknown | null };
-      return result.enrichment;
+      const result = (await response.json()) as {
+        enrichment: unknown | null;
+        sourceReadStatus: "read" | "failed" | "not-requested";
+      };
+      return {
+        enrichment: result.enrichment,
+        sourceReadStatus: result.sourceReadStatus,
+      };
     });
     const load = () =>
       loadConfiguredOpportunityEnrichment(
@@ -303,8 +372,9 @@ describe("POST /api/events/report", () => {
         storage,
       );
 
-    await load();
+    const first = await load();
 
+    expect(first).toMatchObject({ sourceReadStatus: "read" });
     expect(requestReport).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(generateJsonText).toHaveBeenCalledTimes(1);
@@ -313,8 +383,9 @@ describe("POST /api/events/report", () => {
     fetchMock.mockClear();
     generateJsonText.mockClear();
 
-    await load();
+    const second = await load();
 
+    expect(second).toEqual(first);
     expect(requestReport).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
     expect(generateJsonText).not.toHaveBeenCalled();

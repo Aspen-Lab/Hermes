@@ -22,11 +22,15 @@ import { formatDate, formatMatchPct } from "@/lib/format";
 import { cleanEventDescription } from "@/lib/events/mapper";
 import {
   buildEnrichmentContext,
+  canAttemptOpportunityEnrichment,
   capGeneratedReasoning,
   hasEventEnrichment,
   loadConfiguredOpportunityEnrichment,
+  opportunityPageReadingReason,
   opportunityEnrichmentCacheKey,
   type EventEnrichment,
+  type OpportunityEnrichmentLoadResult,
+  type OpportunityPageReadingReason,
 } from "@/lib/opportunities/enrichment";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -59,6 +63,16 @@ const EVENT_TIER_UPGRADE_ITEMS = [
       "Compare the event's supplied scope with your current project.",
   },
 ];
+
+const EVENT_PAGE_READING_NOTES: Record<
+  OpportunityPageReadingReason,
+  string
+> = {
+  "no-provider": "Connect an AI key to let Peer read the programme.",
+  "no-quotable-details":
+    "Peer read the page but found no talk titles it could quote.",
+  "read-failed": "Peer could not finish reading the programme page this time.",
+};
 
 export interface EventRosterContext {
   savedEmployers: string[];
@@ -798,6 +812,7 @@ export function EventReport({
   careerStage,
   rosterContext,
   enrichment = null,
+  pageReadingReason,
   starredKeys = new Set<string>(),
   isSaved,
   isRegistered,
@@ -816,6 +831,7 @@ export function EventReport({
   careerStage?: CareerStage;
   rosterContext?: EventRosterContext;
   enrichment?: EventEnrichment | null;
+  pageReadingReason?: OpportunityPageReadingReason;
   starredKeys?: ReadonlySet<string>;
   isSaved: boolean;
   isRegistered: boolean;
@@ -1014,6 +1030,15 @@ export function EventReport({
           </ReportSection>
         )}
 
+        {!displayEnrichment?.talkSummaries && pageReadingReason && (
+          <p
+            data-page-reading-note="event"
+            className="mt-8 text-body-sm text-text-faint"
+          >
+            {EVENT_PAGE_READING_NOTES[pageReadingReason]}
+          </p>
+        )}
+
         {displayEnrichment?.dayPlan && (
           <ReportSection title="A day-by-day plan">
             <div className="space-y-4">
@@ -1120,9 +1145,9 @@ export default function EventDetailPage({
   const [starredKeys, toggleStar] = useRosterStars();
   const [enrichmentResult, setEnrichmentResult] = useState<{
     key: string;
-    enrichment: EventEnrichment | null;
+    result: OpportunityEnrichmentLoadResult<EventEnrichment> | null;
     done: boolean;
-  }>({ key: "", enrichment: null, done: false });
+  }>({ key: "", result: null, done: false });
 
   const event =
     feedEvents.find((candidate) => candidate.id === id) ??
@@ -1147,7 +1172,9 @@ export default function EventDetailPage({
     if (!event || !enrichmentKey) return;
 
     let cancelled = false;
-    void loadConfiguredOpportunityEnrichment<EventEnrichment>(
+    void loadConfiguredOpportunityEnrichment<
+      OpportunityEnrichmentLoadResult<EventEnrichment>
+    >(
       {
         feedAiProvider: profile.feedAiProvider,
         feedAiApiKey: profile.feedAiApiKey,
@@ -1164,12 +1191,23 @@ export default function EventDetailPage({
         }
         const result = (await response.json()) as {
           enrichment: EventEnrichment | null;
+          sourceReadStatus?:
+            | "read"
+            | "failed"
+            | "not-requested";
         };
-        return result.enrichment ?? null;
+        return {
+          enrichment: result.enrichment ?? null,
+          sourceReadStatus:
+            result.sourceReadStatus === "read" ||
+            result.sourceReadStatus === "not-requested"
+              ? result.sourceReadStatus
+              : "failed",
+        };
       },
-    ).then((enrichment) => {
-        if (cancelled) return;
-        setEnrichmentResult({ key: enrichmentKey, enrichment, done: true });
+    ).then((result) => {
+      if (cancelled) return;
+      setEnrichmentResult({ key: enrichmentKey, result, done: true });
     });
 
     return () => {
@@ -1224,16 +1262,25 @@ export default function EventDetailPage({
     );
   }
 
+  const currentEnrichmentDone =
+    enrichmentResult.key === enrichmentKey && enrichmentResult.done;
+  const currentEnrichmentResult = currentEnrichmentDone
+    ? enrichmentResult.result
+    : null;
+  const pageReadingReason = currentEnrichmentDone
+    ? opportunityPageReadingReason(
+        currentEnrichmentResult,
+        canAttemptOpportunityEnrichment(profile),
+      )
+    : undefined;
+
   return (
     <EventReport
       event={event}
       careerStage={profile.careerStage}
       rosterContext={rosterContext}
-      enrichment={
-        enrichmentResult.key === enrichmentKey && enrichmentResult.done
-          ? enrichmentResult.enrichment
-          : null
-      }
+      enrichment={currentEnrichmentResult?.enrichment ?? null}
+      pageReadingReason={pageReadingReason}
       starredKeys={starredKeys}
       isSaved={isSaved}
       isRegistered={isRegistered}

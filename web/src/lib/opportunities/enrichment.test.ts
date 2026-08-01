@@ -11,12 +11,14 @@ import {
   hasEventEnrichmentCandidates,
   hasJobEnrichment,
   loadOpportunityEnrichment,
+  opportunityPageReadingReason,
   opportunityEnrichmentCacheKey,
   parseEventEnrichment,
   parseJobEnrichment,
   readCachedOpportunityEnrichment,
   writeCachedOpportunityEnrichment,
   type JobEnrichment,
+  type OpportunityEnrichmentLoadResult,
 } from "./enrichment";
 import type { Event, Job } from "@/types";
 
@@ -193,6 +195,92 @@ describe("opportunity report enrichment cache", () => {
         storage,
       ),
     ).toEqual({ hit: false, enrichment: null });
+  });
+
+  it("uses the short failure TTL when a source read fails with legacy enrichment", () => {
+    const storage = new MemoryStorage();
+    const failedResult: OpportunityEnrichmentLoadResult<JobEnrichment> = {
+      enrichment,
+      sourceReadStatus: "failed",
+    };
+    writeCachedOpportunityEnrichment(
+      "job:source-failed",
+      failedResult,
+      now,
+      storage,
+    );
+
+    expect(
+      readCachedOpportunityEnrichment<
+        OpportunityEnrichmentLoadResult<JobEnrichment>
+      >(
+        "job:source-failed",
+        now + ENRICHMENT_FAILURE_TTL_MS - 1,
+        storage,
+      ),
+    ).toEqual({ hit: true, enrichment: failedResult });
+    expect(
+      readCachedOpportunityEnrichment<
+        OpportunityEnrichmentLoadResult<JobEnrichment>
+      >(
+        "job:source-failed",
+        now + ENRICHMENT_FAILURE_TTL_MS,
+        storage,
+      ),
+    ).toEqual({ hit: false, enrichment: null });
+  });
+
+  it("keeps a successful empty read outcome for the full success TTL", () => {
+    const storage = new MemoryStorage();
+    const readResult: OpportunityEnrichmentLoadResult<JobEnrichment> = {
+      enrichment: {},
+      sourceReadStatus: "read",
+    };
+    writeCachedOpportunityEnrichment(
+      "job:source-read",
+      readResult,
+      now,
+      storage,
+    );
+
+    expect(
+      readCachedOpportunityEnrichment<
+        OpportunityEnrichmentLoadResult<JobEnrichment>
+      >(
+        "job:source-read",
+        now + ENRICHMENT_SUCCESS_TTL_MS - 1,
+        storage,
+      ),
+    ).toEqual({ hit: true, enrichment: readResult });
+  });
+
+  it("derives one honest page-reading reason from the cached outcome", () => {
+    expect(opportunityPageReadingReason(null, false)).toBe("no-provider");
+    expect(opportunityPageReadingReason(null, true)).toBe("read-failed");
+    expect(
+      opportunityPageReadingReason(
+        { enrichment: {}, sourceReadStatus: "read" },
+        true,
+      ),
+    ).toBe("no-quotable-details");
+    expect(
+      opportunityPageReadingReason(
+        { enrichment: null, sourceReadStatus: "read" },
+        true,
+      ),
+    ).toBe("read-failed");
+    expect(
+      opportunityPageReadingReason(
+        { enrichment, sourceReadStatus: "failed" },
+        true,
+      ),
+    ).toBe("read-failed");
+    expect(
+      opportunityPageReadingReason(
+        { enrichment: null, sourceReadStatus: "not-requested" },
+        true,
+      ),
+    ).toBe("no-provider");
   });
 
   it("changes the key when the provider changes", () => {
