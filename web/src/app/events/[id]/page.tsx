@@ -38,7 +38,7 @@ import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
 const EVENT_TIER_UPGRADE_ITEMS = [
   {
-    title: "The other attendees, judged",
+    title: "Organisations and people, judged",
     description:
       "Show which unfamiliar people and organisations are worth your time.",
   },
@@ -584,17 +584,19 @@ function RosterSection({
 
   if (organisations.length === 0 && people.length === 0) return null;
   const judgedCount = enrichment?.judgedAttendees?.length ?? 0;
+  const rosterLabel =
+    organisations.length > 0 && people.length > 0
+      ? "Organisations and people at the event"
+      : organisations.length > 0
+        ? "Organisations at the event"
+        : "People at the event";
 
   return (
     <ReportSection
-      title={
-        judgedCount > 0
-          ? `The other ${judgedCount} attendees, judged`
-          : "Who'll be in the room"
-      }
+      title={`${rosterLabel}${judgedCount > 0 ? ` · ${judgedCount} judged` : ""}`}
       className="mt-14"
     >
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div data-roster-layout="full-width" className="w-full space-y-10">
         {organisations.length > 0 && (
           <div>
             <h3 className="text-title font-semibold text-heading">

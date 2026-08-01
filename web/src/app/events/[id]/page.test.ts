@@ -84,6 +84,13 @@ describe("EventReport", () => {
     expect(html).toContain("Battery Organisation 30");
     expect(html).not.toContain("+29");
     expect(html).not.toMatch(/show more|collapsed/i);
+    const layout = html.match(
+      /<div[^>]*data-roster-layout="full-width"[^>]*>/,
+    )?.[0];
+    expect(layout).toContain("w-full space-y-10");
+    expect(layout).not.toContain("grid-cols-2");
+    expect(html).toContain("Organisations at the event");
+    expect(html).not.toContain("attendees");
   });
 
   it("repeats the cheapest line and renders the required four-column cost table", () => {
@@ -194,7 +201,7 @@ describe("EventReport", () => {
       },
     );
 
-    const attendees = html.indexOf("The other 1 attendees, judged");
+    const attendees = html.indexOf("Organisations at the event · 1 judged");
     const talks = html.indexOf("What each talk is actually about");
     const plan = html.indexOf("A day-by-day plan");
     const poster = html.indexOf("Is your work a fit for the poster call");
