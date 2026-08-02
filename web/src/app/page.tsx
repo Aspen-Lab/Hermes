@@ -1192,7 +1192,7 @@ function DiscoveryPage() {
             <div className="mx-auto max-w-[820px]">
               <EmptyState
                 title="Your briefing is still waking up."
-                description="Tell Peer what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that."
+                description="Tell Peer what you're working on — topics, methods, venues — and tomorrow's briefing will be built around that. Peer keeps your settings in this browser only, so signing in is what carries them to another device."
                 action={
                   <Link
                     href="/profile"

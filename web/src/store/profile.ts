@@ -37,6 +37,8 @@ type PersistedUserProfile = Omit<Partial<UserProfile>, "colorTheme"> & {
 
 interface ProfileState {
   profile: UserProfile;
+  /** Replace the whole profile from an exported document. */
+  importProfile: (document: unknown) => boolean;
   updateDisplayName: (name: string) => void;
   updateTopics: (topics: string[]) => void;
   updateSoftTopics: (topics: string[]) => void;
@@ -278,6 +280,50 @@ function mergeHydratedProfileState(
       new Date(),
     ),
   };
+}
+
+export const PROFILE_EXPORT_FORMAT = "peer.profile/v1" as const;
+
+interface ExportedProfileDocument {
+  format: typeof PROFILE_EXPORT_FORMAT;
+  profile: UserProfile;
+}
+
+/**
+ * A signed-out profile lives in one browser's localStorage and nowhere else,
+ * so clearing site data or switching browsers loses it with no warning. Export
+ * and import let a local tester move settings without an account.
+ */
+export function exportProfileDocument(
+  profile: UserProfile,
+): ExportedProfileDocument {
+  return { format: PROFILE_EXPORT_FORMAT, profile };
+}
+
+/** Returns the profile from an exported document, or null if it is not one. */
+export function parseExportedProfile(
+  document: unknown,
+): Partial<UserProfile> | null {
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    return null;
+  }
+  const record = document as Record<string, unknown>;
+  if (record.format !== PROFILE_EXPORT_FORMAT) return null;
+  const profile = record.profile;
+  if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+    return null;
+  }
+  // Malformed input must leave the existing profile untouched, so only known
+  // keys survive and anything else in the file is ignored.
+  const known = Object.keys(defaultProfile) as Array<keyof UserProfile>;
+  const source = profile as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const key of known) {
+    if (key in source) result[key] = source[key];
+  }
+  return Object.keys(result).length > 0
+    ? (result as Partial<UserProfile>)
+    : null;
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -606,6 +652,14 @@ export const useProfileStore = create<ProfileState>()(
           }
           return { profile: merged };
         }),
+
+      importProfile: (document) => {
+        const parsed = parseExportedProfile(document);
+        if (!parsed) return false;
+        set((s) => ({ profile: { ...s.profile, ...parsed } }));
+        if (parsed.colorTheme) applyColorTheme(parsed.colorTheme);
+        return true;
+      },
 
       logOut: () => {
         applyColorTheme(defaultProfile.colorTheme);
