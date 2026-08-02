@@ -633,7 +633,14 @@ describe("event enrichment prompt and parser", () => {
     expect(JSON.stringify(prompt)).not.toContain("You saved a role there.");
   });
 
-  it("uses the description as an enrichment candidate without reviving generic session types", async () => {
+  it("does not spend a call on a description alone, and never revives generic session types", async () => {
+    // Reviewer change. A description was briefly treated as a reason to call the
+    // model. Almost every event has one, so the gate that keeps a report free
+    // when there is nothing worth asking about passed everything: across the
+    // local pool of 81 events only 13 have a roster or a real talk title.
+    // Condensing "A professional gathering." is not worth a paid call. The
+    // condensed description is still written whenever a call happens for a real
+    // reason; it just no longer summons one.
     const sessionTypesOnly: Event = {
       ...event,
       shortDescription: "A professional gathering.",
@@ -647,9 +654,11 @@ describe("event enrichment prompt and parser", () => {
       sessionTypesOnly,
       "Topics: batteries",
     );
+    expect(hasCandidates).toBe(false);
     if (hasCandidates) {
       await provider();
     }
+    expect(provider).not.toHaveBeenCalled();
     const parsed = parseEventEnrichment(
       JSON.stringify({
         talkSummaries: [
@@ -661,8 +670,6 @@ describe("event enrichment prompt and parser", () => {
       sessionTypesOnly,
     );
 
-    expect(hasCandidates).toBe(true);
-    expect(provider).toHaveBeenCalledOnce();
     expect(parsed).toEqual({});
     expect(hasEventEnrichment(parsed)).toBe(false);
   });

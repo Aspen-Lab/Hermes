@@ -180,8 +180,19 @@ function eventTalkTitles(event: Pick<Event, "activities">): string[] {
   );
 }
 
+// A full stop followed by a space is usually the end of a sentence, but not
+// after an initial or a common abbreviation. Academic prose is full of both:
+// "Organised by Y. Nakamura and L. Ferreira of the battery group." was being
+// cut to "Organised by Y. Nakamura and L." — a dangling initial, which is
+// exactly the mid-sentence cut this trimming exists to prevent.
+const NOT_A_SENTENCE_END_RE =
+  /(?:^|[\s("'[])(?:[A-Z]|[Ee]\.g|[Ii]\.e|U\.S|U\.K|Dr|Prof|Mr|Mrs|Ms|St|vs|etc|No|Fig|Vol|Jr|Sr|Ph\.D|cf|al)$/;
+
 function sentenceEndMatches(value: string): RegExpMatchArray[] {
-  return [...value.matchAll(/[.!?](?:["')\]]*)?(?=\s|$)/g)];
+  return [...value.matchAll(/[.!?](?:["')\]]*)?(?=\s|$)/g)].filter((match) => {
+    if (match.index === undefined || match[0][0] !== ".") return true;
+    return !NOT_A_SENTENCE_END_RE.test(value.slice(0, match.index));
+  });
 }
 
 function capGeneratedDescription(value: string): string | undefined {
@@ -514,9 +525,16 @@ export function hasEventEnrichmentCandidates(
   const hasPosterScope =
     /(?:^|\n)Current project:\s*\S/i.test(contextHint) &&
     SUBMISSION_SCOPE_RE.test(event.shortDescription);
+  // A description alone is NOT a reason to call the model. Almost every event
+  // has one, so listing it here turned this gate — the one thing keeping a
+  // report free when there is nothing worth asking about — into a pass for
+  // everything. Across the local pool of 81 events only 13 have a roster or a
+  // real talk title, so this was roughly a sixfold increase in paid calls.
+  //
+  // The condensed description still gets written whenever the model is called
+  // for one of the reasons below; it just no longer summons a call by itself.
   return Boolean(
-    clean(event.shortDescription) ||
-      eventTalkTitles(event).length ||
+    eventTalkTitles(event).length ||
       unjudgedAttendees(event).length ||
       hasPosterScope,
   );
