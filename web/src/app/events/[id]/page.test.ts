@@ -216,21 +216,40 @@ describe("EventReport", () => {
     expect(html).not.toContain("Also in this report with an AI key");
   });
 
-  it("keeps the locked block when provider availability produced no enrichment", () => {
-    const html = renderReport(
+  it("never sells a key to someone who already has one", () => {
+    // P10.9. Three states, three screens. A configured key that produced
+    // nothing gets an explanation, never an upgrade pitch — the old behaviour
+    // told the reader to connect a key on the exact screen where they were
+    // checking whether the key they had was working.
+    const withKeyNoResult = renderReport(
       baseEvent(),
       "PhD Year 3",
       { registered: false, submitted: false },
       null,
       true,
+      false,
+      "read-failed",
+    );
+    expect(withKeyNoResult).not.toContain("Also in this report with an AI key");
+    expect(withKeyNoResult).toContain(
+      "Peer could not finish reading the programme page this time.",
     );
 
-    expect(html).toContain("Also in this report with an AI key");
-    expect(html).not.toContain("data-page-reading-note");
+    const withoutKey = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      null,
+      false,
+      false,
+      "no-provider",
+    );
+    expect(withoutKey).toContain("Also in this report with an AI key");
+    // The block already says it. Do not say it twice.
+    expect(withoutKey).not.toContain("data-page-reading-note");
   });
 
   it.each([
-    ["no-provider", "Connect an AI key to let Peer read the programme."],
     [
       "no-quotable-details",
       "Peer read the page but found no talk titles it could quote.",
@@ -252,12 +271,11 @@ describe("EventReport", () => {
             points: ["The supplied scope overlaps."],
           },
         },
-        false,
+        true,
         false,
         pageReadingReason,
       );
       const allSentences = [
-        "Connect an AI key to let Peer read the programme.",
         "Peer read the page but found no talk titles it could quote.",
         "Peer could not finish reading the programme page this time.",
       ];
@@ -330,7 +348,7 @@ describe("EventReport", () => {
           { title: "tutorial", about: "A guided learning experience." },
         ],
       },
-      false,
+      true,
       false,
       "read-failed",
     );
@@ -341,7 +359,9 @@ describe("EventReport", () => {
     );
     expect(html).not.toContain("A guided learning experience");
     expect(html).not.toContain("Download Brochure");
-    expect(html).toContain("Also in this report with an AI key");
+    // P10.9: a configured key that produced nothing gets the explanation, not
+    // an upgrade pitch.
+    expect(html).not.toContain("Also in this report with an AI key");
     expect(html.match(/data-page-reading-note="event"/g)).toHaveLength(1);
   });
 

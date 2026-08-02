@@ -55,7 +55,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 |----|------|--------|------------------------------|
 | P10.3 | Delete the day-by-day plan entirely | DONE | `dayPlan` gone from type, prompt, schema, parser and render. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
 | P10.4 | Delete "Why Peer sent it" from both reports | DONE | Deleted from both reports; unused reason variables removed. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
-| P10.5 | Talk list carries its session time | TODO | |
+| P10.5 | Talk list carries its session time | DONE | `talkSummaries[].when` added, verbatim-checked against the fetched page and rendered above the description; an unquotable time is dropped while the row survives. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 786 tests passed; typecheck clean; lint at the single pre-existing error |
 
 ### Phase 10C — Present facts, do not deliver verdicts
 
@@ -69,7 +69,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P10.8 | Talk titles may come from lists and tables, not only `<h1>`–`<h6>` | TODO | |
-| P10.9 | Never offer "connect a key" to a user who already has one | TODO | |
+| P10.9 | Never offer "connect a key" to a user who already has one | DONE | Locked block renders only with no provider; a configured key that produced nothing gets the explanation line instead, and the note is suppressed when the block shows. Both locked blocks stopped promising the deleted day plan, competitiveness verdict and three-sentence rewrite. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 786 tests passed; typecheck clean; lint at the single pre-existing error |
 | P10.10 | Local testing keeps the profile: warn before it is silently lost | TODO | |
 
 **Total: 10 tasks.**

@@ -33,19 +33,14 @@ import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const JOB_TIER_UPGRADE_ITEMS = [
   {
-    title: "How competitive this actually is",
-    description:
-      "Read the requirements against your profile and show where you would stand.",
-  },
-  {
     title: "Sponsorship read when the posting is silent",
     description:
       "Judge the employer's likely position without confusing inference with posting evidence.",
   },
   {
-    title: "The role in three clean sentences",
+    title: "What this employer actually asks for",
     description:
-      "Rewrite the role clearly instead of repeating the posting's best sentences.",
+      "Quote the specific requirements and duties from the posting itself.",
   },
   {
     title: "What to emphasise in your application",
@@ -398,7 +393,7 @@ export function JobReport({
   nowMs,
   enrichment = null,
   pageReadingReason,
-  providerConfigured: _providerConfigured = false,
+  providerConfigured = false,
   onToggleSave,
   onAppliedChange,
   onDismiss,
@@ -420,9 +415,9 @@ export function JobReport({
   onInterested?: () => void;
   onBack?: () => void;
 }) {
-  // Provider availability is intentionally not a rendering signal. Only real
-  // enrichment may hide the locked block.
-  void _providerConfigured;
+  // Three states, three screens. Showing "connect a key" to somebody who has
+  // one — because their page fetch failed — was the report contradicting itself
+  // on the exact screen where they check whether their key works.
   const matchPct = formatMatchPct(job.relevanceScore);
   const facts = buildJobFacts(job);
   const timeline = buildTimeline(job, nowMs);
@@ -702,6 +697,7 @@ export function JobReport({
 
       {!enrichment?.specificRequirements?.length &&
         !enrichment?.specificDuties?.length &&
+        providerConfigured &&
         pageReadingReason && (
           <p
             data-page-reading-note="job"
@@ -754,7 +750,7 @@ export function JobReport({
 
       <TierUpgradeBlock
         items={JOB_TIER_UPGRADE_ITEMS}
-        providerConfigured={hasEnrichment}
+        providerConfigured={providerConfigured || hasEnrichment}
       />
     </PageContainer>
   );
@@ -902,6 +898,7 @@ export default function JobDetailPage({
       nowMs={nowMs}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
+      providerConfigured={canAttemptOpportunityEnrichment(profile)}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onInterested={() => moreLikeJob(job)}

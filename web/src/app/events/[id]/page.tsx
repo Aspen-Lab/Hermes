@@ -54,11 +54,6 @@ const EVENT_TIER_UPGRADE_ITEMS = [
       "Read the supplied programme details instead of repeating session titles.",
   },
   {
-    title: "A day-by-day plan",
-    description:
-      "Order the sessions and people that best match your declared priorities.",
-  },
-  {
     title: "Is your work a fit for the poster call",
     description:
       "Compare the event's supplied scope with your current project.",
@@ -819,7 +814,7 @@ export function EventReport({
   isRegistered,
   isSubmitted,
   isInterested = false,
-  providerConfigured: _providerConfigured = false,
+  providerConfigured = false,
   onToggleStar,
   onToggleSave,
   onRegisteredChange,
@@ -847,9 +842,9 @@ export function EventReport({
   onInterested?: () => void;
   onBack?: () => void;
 }) {
-  // Provider availability is intentionally not a rendering signal. Only real
-  // enrichment may hide the locked block.
-  void _providerConfigured;
+  // Three states, three screens. Showing "connect a key" to somebody who has
+  // one — because their page fetch failed — was the report contradicting itself
+  // on the exact screen where they check whether their key works.
   const context = rosterContext ?? {
     savedEmployers: [],
     paperAuthors: [],
@@ -1025,6 +1020,14 @@ export function EventReport({
                   className="rounded-xl border border-border bg-surface px-5 py-4"
                 >
                   <h3 className="text-title font-semibold text-heading">{talk.title}</h3>
+                  {talk.when && (
+                    <p
+                      data-talk-when
+                      className="mt-1 text-caption font-medium text-accent"
+                    >
+                      {talk.when}
+                    </p>
+                  )}
                   <p className="mt-2 text-body leading-7 text-text-muted">{talk.about}</p>
                 </article>
               ))}
@@ -1032,7 +1035,7 @@ export function EventReport({
           </ReportSection>
         )}
 
-        {!displayEnrichment?.talkSummaries && pageReadingReason && (
+        {!displayEnrichment?.talkSummaries && providerConfigured && pageReadingReason && (
           <p
             data-page-reading-note="event"
             className="mt-8 text-body-sm text-text-faint"
@@ -1073,7 +1076,7 @@ export function EventReport({
       <div className="mx-auto max-w-[720px]">
         <TierUpgradeBlock
           items={EVENT_TIER_UPGRADE_ITEMS}
-          providerConfigured={hasEnrichment}
+          providerConfigured={providerConfigured || hasEnrichment}
         />
       </div>
     </PageContainer>
@@ -1256,6 +1259,7 @@ export default function EventDetailPage({
       rosterContext={rosterContext}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
+      providerConfigured={canAttemptOpportunityEnrichment(profile)}
       starredKeys={starredKeys}
       isSaved={isSaved}
       isRegistered={isRegistered}

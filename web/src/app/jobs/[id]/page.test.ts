@@ -296,8 +296,8 @@ describe("JobReport", () => {
 
     expect(html).not.toContain('data-job-section="specific-requirements"');
     expect(html).not.toContain('data-job-section="specific-duties"');
-    expect(html).toContain("Also in this report with an AI key");
-    expect(html).not.toContain("data-page-reading-note");
+    // P10.9: the reader has a key, so no upgrade pitch — an explanation instead.
+    expect(html).not.toContain("Also in this report with an AI key");
   });
 
   it("renders and unlocks either quoted-specific section independently", () => {
@@ -332,15 +332,22 @@ describe("JobReport", () => {
     expect(dutiesHtml).not.toContain("data-page-reading-note");
   });
 
-  it("keeps the locked block when provider availability produced no enrichment", () => {
-    const html = renderReport(baseJob(), false, null, true);
+  it("never sells a key to someone who already has one", () => {
+    // P10.9. A configured key that produced nothing gets an explanation, never
+    // an upgrade pitch — the old screen told the reader to connect a key at the
+    // exact moment they were checking whether their key worked.
+    const withKey = renderReport(baseJob(), false, null, true, false, "read-failed");
+    expect(withKey).not.toContain("Also in this report with an AI key");
+    expect(withKey).toContain(
+      "Peer could not finish reading the job posting this time.",
+    );
 
-    expect(html).toContain("Also in this report with an AI key");
-    expect(html).not.toContain("data-page-reading-note");
+    const withoutKey = renderReport(baseJob(), false, null, false, false, "no-provider");
+    expect(withoutKey).toContain("Also in this report with an AI key");
+    expect(withoutKey).not.toContain("data-page-reading-note");
   });
 
   it.each([
-    ["no-provider", "Connect an AI key to let Peer read the job posting."],
     [
       "no-quotable-details",
       "Peer read the job posting but found no requirements or duties it could quote.",
@@ -355,18 +362,12 @@ describe("JobReport", () => {
       const html = renderReport(
         baseJob(),
         false,
-        {
-          competitiveness: {
-            verdict: "Strong match",
-            reasoning: "The declared methods align.",
-          },
-        },
-        false,
+        { emphasise: ["Lead with the interface work."] },
+        true,
         false,
         pageReadingReason,
       );
       const allSentences = [
-        "Connect an AI key to let Peer read the job posting.",
         "Peer read the job posting but found no requirements or duties it could quote.",
         "Peer could not finish reading the job posting this time.",
       ];
