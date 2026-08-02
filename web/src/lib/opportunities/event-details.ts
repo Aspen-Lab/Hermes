@@ -66,8 +66,13 @@ const ACTIVITY_PATTERNS: readonly {
   },
   {
     label: "competition",
+    // The bare word can never be matched: "competition between phases" and
+    // "market competition" are ordinary research prose. Match it as a heading,
+    // near a programme word, or in one of the named contest forms the 53-site
+    // study actually found — a student paper competition in running text was
+    // being missed entirely.
     pattern:
-      /(?:^|\n)\s*competitions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bcompetitions?\b|\bcompetitions?\s+sessions?\b/gi,
+      /(?:^|\n)\s*competitions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bcompetitions?\b|\bcompetitions?\s+(?:sessions?|tracks?)\b|\b(?:student|paper|poster|design|robot|robotics|startup|start-up|pitch|programming|benchmark|innovation)\s+(?:\w+\s+)?competitions?\b/gi,
   },
   { label: "short course", pattern: /\bshort\s+courses?\b/gi },
   { label: "demo session", pattern: /\bdemos?\b/gi },
