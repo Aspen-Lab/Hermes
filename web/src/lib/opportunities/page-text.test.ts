@@ -253,3 +253,55 @@ describe("findProgrammePageUrl", () => {
     ).toBe("https://conference.example.org/2027/day-one");
   });
 });
+
+describe("programme entries outside heading tags", () => {
+  // The IAEA record for "Ion exchange processes: advances and applications"
+  // lists its eight contributions as sidebar links. Searching only h1-h6 found
+  // none of them and the report said it could quote no talk titles at all.
+  const iaeaSidebar = `
+    <main>
+      <h2>Individual Papers/Chapters</h2>
+      <ul>
+        <li><a href="/1" title="The removal and solidification of radioactive waste">The removal and solidification of rad…</a></li>
+        <li><a href="/2">Ion exchange in the nuclear power industry</a></li>
+        <li><a href="/3">Fundamentals of ion exchange</a></li>
+        <li><a href="/4">Improving amine breakthrough predicti…</a></li>
+      </ul>
+    </main>`;
+
+  it("finds titles in a list, not only in headings", () => {
+    const texts = extractPageHeadings(iaeaSidebar).map((h) => h.text);
+    expect(texts).toContain("Ion exchange in the nuclear power industry");
+    expect(texts).toContain("Fundamentals of ion exchange");
+  });
+
+  it("recovers a truncated title from the markup rather than publishing half of one", () => {
+    const texts = extractPageHeadings(iaeaSidebar).map((h) => h.text);
+    expect(texts).toContain(
+      "The removal and solidification of radioactive waste",
+    );
+    expect(texts.some((t) => t.includes("…"))).toBe(false);
+  });
+
+  it("drops a truncated title with no recoverable full text", () => {
+    const texts = extractPageHeadings(iaeaSidebar).map((h) => h.text);
+    expect(texts.some((t) => t.startsWith("Improving amine"))).toBe(false);
+  });
+
+  it("finds session titles in a programme table", () => {
+    const texts = extractPageHeadings(`
+      <main><table><tr>
+        <td>09:00</td><td>Solid-state electrolytes for fast-charging cells</td>
+      </tr></table></main>`).map((h) => h.text);
+    expect(texts).toContain("Solid-state electrolytes for fast-charging cells");
+  });
+
+  it("ignores bare labels and nav rows", () => {
+    const texts = extractPageHeadings(`
+      <nav><ul><li><a href="/programme">Programme</a></li></ul></nav>
+      <main><ul><li>Sponsors</li><li>Home</li></ul></main>`).map((h) => h.text);
+    expect(texts).not.toContain("Programme");
+    expect(texts).not.toContain("Sponsors");
+    expect(texts).not.toContain("Home");
+  });
+});

@@ -140,6 +140,32 @@ function visibleParagraphText(html: string): string {
     .join("\n\n");
 }
 
+// A programme entry is very often NOT an <h1>–<h6>. The IAEA record for "Ion
+// exchange processes: advances and applications" lists its eight contributions
+// as <li><a> links in a sidebar, so searching only heading tags found nothing
+// and the report said it could quote no talk titles at all. Tables of sessions
+// are just as common.
+//
+// Widening WHERE a candidate may be found is safe. The verbatim check that a
+// title must survive is unchanged and stays as strict as it was.
+const CANDIDATE_LIST_ROW_RE = /<(li|td)\b[^>]*>([\s\S]*?)<\/\1\s*>/gi;
+// Link text is frequently cut short for layout ("Ion exchange in the nuclear
+// power indust…"). A truncated title can never match the page verbatim, so
+// prefer the full string the markup carries in title= or aria-label=.
+const TRUNCATION_RE = /(?:…|\.\.\.)\s*$/;
+const FULL_TEXT_ATTRIBUTE_RE =
+  /\b(?:title|aria-label)\s*=\s*(?:"([^"]*)"|'([^']*)')/i;
+const LIST_ROW_LEVEL = 7;
+
+function candidateText(rawHtml: string): string | undefined {
+  const text = stripHtml(rawHtml).replace(/\s+/g, " ").trim();
+  if (!TRUNCATION_RE.test(text)) return text || undefined;
+  const attribute = rawHtml.match(FULL_TEXT_ATTRIBUTE_RE);
+  const full = (attribute?.[1] ?? attribute?.[2] ?? "").replace(/\s+/g, " ").trim();
+  // No recoverable full text — drop it rather than publish half a title.
+  return full && !TRUNCATION_RE.test(full) ? full : undefined;
+}
+
 export function extractPageHeadings(html: string): PageHeadingEvidence[] {
   const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
   const headings: PageHeadingEvidence[] = [];
@@ -147,9 +173,19 @@ export function extractPageHeadings(html: string): PageHeadingEvidence[] {
   for (const match of visibleHtml.matchAll(
     /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi,
   )) {
-    const text = stripHtml(match[2] ?? "").replace(/\s+/g, " ").trim();
+    const text = candidateText(match[2] ?? "");
     if (!text || text.length > 240) continue;
     headings.push({ level: Number(match[1]), text });
+  }
+
+  for (const match of visibleHtml.matchAll(CANDIDATE_LIST_ROW_RE)) {
+    const body = match[2] ?? "";
+    // A row containing its own nested rows is a container, not an entry.
+    if (/<(?:li|td)\b/i.test(body)) continue;
+    const text = candidateText(body);
+    // A bare word is a label, and a paragraph is prose — neither is a title.
+    if (!text || text.length > 240 || !/\s/.test(text)) continue;
+    headings.push({ level: LIST_ROW_LEVEL, text });
   }
 
   return mergePageHeadings(headings);

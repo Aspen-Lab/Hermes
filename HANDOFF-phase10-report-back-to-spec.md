@@ -68,7 +68,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P10.8 | Talk titles may come from lists and tables, not only `<h1>`–`<h6>` | TODO | |
+| P10.8 | Talk titles may come from lists and tables, not only `<h1>`–`<h6>` | DONE | List items and table cells now supply candidates alongside headings; a title truncated with an ellipsis is recovered from title=/aria-label= or dropped, never published half-written. The verbatim check is unchanged. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 791 tests passed; typecheck clean; lint at the single pre-existing error |
 | P10.9 | Never offer "connect a key" to a user who already has one | DONE | Locked block renders only with no provider; a configured key that produced nothing gets the explanation line instead, and the note is suppressed when the block shows. Both locked blocks stopped promising the deleted day plan, competitiveness verdict and three-sentence rewrite. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 786 tests passed; typecheck clean; lint at the single pre-existing error |
 | P10.10 | Local testing keeps the profile: warn before it is silently lost | TODO | |
 
