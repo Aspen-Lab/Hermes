@@ -47,7 +47,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P10.1 | Event description: AI-condensed at Tier 1/2, extractive only at Tier 0 | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file, 48 tests passed |
-| P10.2 | Job: merge the two role sections into one bulleted summary, at the top | IN_PROGRESS | |
+| P10.2 | Job: merge the two role sections into one bulleted summary, at the top | BLOCKED | Written task says immediately below facts and before skills; plate 02 places the role block after visa evidence, timeline, and skills. Reviewer direction required by §5.7 before code changes. |
 
 ### Phase 10B — Cut what repeats itself
 
@@ -487,7 +487,12 @@ the first-load message.
     - Anything I changed that was NOT in the plan, and why:
     - What the next agent should watch out for:
 
-*(No sessions logged yet.)*
+### Session 1 — Codex — 2026-08-01
+- Tasks completed this session: P10.1
+- Left IN_PROGRESS or BLOCKED: P10.2 BLOCKED before implementation. The written task/acceptance requires the role block immediately below the facts grid and before skills, while plate 02 places it after visa evidence, timeline, and skills. Section 5.7 requires reviewer direction rather than choosing between them.
+- Test/typecheck status at stop time: `npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file, 48 tests passed; event report component test — 1 file, 15 tests passed; `npx tsc --noEmit` — clean, exit 0.
+- Anything I changed that was NOT in the plan, and why: None.
+- What the next agent should watch out for: Resolve the P10.2 placement conflict explicitly, then set P10.2 back to `IN_PROGRESS` before editing. P10.1 is committed at `d47f423`; its Tier 1/2 description uses the existing single enrichment call and Tier 0 trims incomplete tails to the last complete sentence.
 
 ---
 
