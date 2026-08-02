@@ -47,7 +47,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P10.1 | Event description: AI-condensed at Tier 1/2, extractive only at Tier 0 | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file, 48 tests passed |
-| P10.2 | Job: merge the two role sections into one bulleted summary, at the top | BLOCKED | Written task says immediately below facts and before skills; plate 02 places the role block after visa evidence, timeline, and skills. Reviewer direction required by §5.7 before code changes. |
+| P10.2 | Job: merge the two role sections into one bulleted summary | IN_PROGRESS | Blocker resolved by the reviewer 2026-08-02: **follow plate 02** — the role block sits AFTER Timeline and Skills, in a two-column grid beside "To apply, have ready". The earlier task text saying "immediately below facts, before skills" was the reviewer's error and is withdrawn. |
 
 ### Phase 10B — Cut what repeats itself
 
@@ -341,14 +341,29 @@ Files: `web/src/lib/opportunities/enrichment.ts`, `web/src/app/jobs/[id]/page.ts
 
 Delete `WHAT THE ROLE IS` and `THE ROLE IN THREE CLEAN SENTENCES` as separate
 sections. Replace with a single **"What the role is"** block of three to five
-bullets, placed immediately under the facts grid, matching spec plate 02.
+bullets.
+
+**Placement — decided by the reviewer 2026-08-02, follow plate 02 exactly:**
+
+```
+chips → title → subtitle → buttons → facts grid → visa quote
+     → Timeline
+     → Skills they ask for
+     → [ What the role is  |  To apply, have ready ]   ← two columns, side by side
+     → locked block
+```
+
+The role block is the LEFT column of a two-column grid whose right column is
+"To apply, have ready". An earlier version of this task said "immediately under
+the facts grid, before skills" — that was wrong, contradicted the plate, and is
+withdrawn.
 
 At Tier 1/2 the bullets are the model's. At Tier 0 they are the posting's own
 sentences, split into bullets, trimmed to whole sentences.
 
 **Acceptance:** `cd web && npx vitest run && npx tsc --noEmit` clean, plus a
 component test asserting exactly one role section exists, that it renders as a
-list, and that it appears before the skills section in DOM order.
+list, and that it appears AFTER the skills section in DOM order.
 
 ### P10.3 — Delete the day-by-day plan
 
