@@ -145,16 +145,18 @@ describe("JobReport", () => {
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('aria-valuenow="67"');
 
+    // Plate 02 order: Timeline, then Skills, then the two-column role block.
+    // "Why Peer sent it" was deleted in P10.4.
     const timeline = html.indexOf("Timeline");
     const skills = html.indexOf("Skills and profile gaps");
     const role = html.indexOf("What the role is");
-    const materials = html.indexOf("What to have ready");
-    const why = html.indexOf("Why Peer sent it");
+    const materials = html.indexOf("To apply, have ready");
     expect(timeline).toBeGreaterThan(-1);
     expect(timeline).toBeLessThan(skills);
     expect(skills).toBeLessThan(role);
     expect(role).toBeLessThan(materials);
-    expect(materials).toBeLessThan(why);
+    expect(html).not.toContain("Why Peer sent it");
+    expect(html).not.toContain("What to have ready");
 
     const timelineSection = html.match(
       /<section[^>]*data-job-section="timeline"[^>]*>[\s\S]*?<\/section>/,
@@ -256,26 +258,23 @@ describe("JobReport", () => {
       },
     );
 
+    // P10.2 merged the two role sections into one bulleted block, and P10.6
+    // deleted the competitiveness verdict outright — Peer presents, the user judges.
     const requirements = html.indexOf("What this employer actually asks for");
     const duties = html.indexOf("What the person would actually do");
-    const competitiveness = html.indexOf("How competitive this actually is");
     const sponsorship = html.indexOf("Sponsorship read");
-    const summary = html.indexOf("The role in three clean sentences");
     const emphasise = html.indexOf("What to emphasise in your application");
-    const extracted = html.indexOf("What the role is");
-    const extractedDescription = html.indexOf(
-      "The posting says this role leads battery interface experiments.",
-    );
-    expect(requirements).toBeGreaterThan(-1);
+    const role = html.indexOf("What the role is");
+    expect(role).toBeGreaterThan(-1);
+    expect(role).toBeLessThan(requirements);
     expect(requirements).toBeLessThan(duties);
-    expect(duties).toBeLessThan(competitiveness);
-    expect(competitiveness).toBeLessThan(sponsorship);
-    expect(sponsorship).toBeLessThan(summary);
-    expect(summary).toBeLessThan(emphasise);
-    expect(extracted).toBeGreaterThan(-1);
-    expect(extracted).toBeLessThan(requirements);
-    expect(extracted).toBeLessThan(summary);
-    expect(extractedDescription).toBeLessThan(html.indexOf("First sentence."));
+    expect(duties).toBeLessThan(sponsorship);
+    expect(sponsorship).toBeLessThan(emphasise);
+    expect(html).not.toContain("How competitive this actually is");
+    expect(html).not.toContain("The role in three clean sentences");
+    // The merged block prints the model's sentences as bullets, exactly once.
+    expect(html).toContain("First sentence.");
+    expect((html.match(/First sentence\./g) ?? []).length).toBe(1);
     expect(html).toContain("Posting evidence");
     expect(html).toContain(
       "A PhD in electrochemistry or a related field is required.",

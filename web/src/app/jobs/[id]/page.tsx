@@ -100,6 +100,34 @@ interface TimelinePoint {
   accent?: boolean;
 }
 
+// Full stops inside initials and abbreviations do not end a sentence — "Y. Chen"
+// and "e.g." would otherwise each start a new bullet.
+const NOT_A_BULLET_BREAK_RE =
+  /(?:^|[\s("'[])(?:[A-Z]|[Ee]\.g|[Ii]\.e|U\.S|U\.K|Dr|Prof|Mr|Mrs|Ms|St|vs|etc|No|Fig|Vol|Jr|Sr|Ph\.D|cf|al)$/;
+
+const MAX_ROLE_BULLETS = 5;
+
+/** Split the posting's own prose into whole-sentence bullets. Never mid-word. */
+export function splitIntoBullets(text: string | undefined): string[] {
+  const source = text?.replace(/\s+/g, " ").trim();
+  if (!source) return [];
+  const bullets: string[] = [];
+  let start = 0;
+  for (const match of source.matchAll(/[.!?](?:["')\]]*)?(?=\s|$)/g)) {
+    if (match.index === undefined) continue;
+    if (NOT_A_BULLET_BREAK_RE.test(source.slice(0, match.index))) continue;
+    const end = match.index + match[0].length;
+    const sentence = source.slice(start, end).trim();
+    if (sentence) bullets.push(sentence);
+    start = end;
+  }
+  const tail = source.slice(start).trim();
+  // A trailing fragment with no full stop is an unfinished sentence — drop it
+  // rather than print half a thought, unless it is all we have.
+  if (tail && bullets.length === 0) bullets.push(tail);
+  return bullets.slice(0, MAX_ROLE_BULLETS);
+}
+
 function clean(value: string | null | undefined): string | undefined {
   const trimmed = value?.replace(/\s+/g, " ").trim();
   return trimmed || undefined;
@@ -400,9 +428,13 @@ export function JobReport({
   const timeline = buildTimeline(job, nowMs);
   const skills = skillComparison(job);
   const roleSummary = cleanJobDescription(job.summary) || undefined;
+  // Plate 02 shows one role block of bullets, not a paragraph and not the same
+  // content three times. Tier 1/2 supplies its own sentences; Tier 0 splits the
+  // posting's own text on sentence boundaries so it is never a wall of prose.
+  const roleBullets = enrichment?.roleSummary?.length
+    ? enrichment.roleSummary
+    : splitIntoBullets(roleSummary);
   const materials = distinct(job.applicationMaterials ?? []);
-  const matchReason = clean(job.matchReason);
-  const facetReason = clean(job.facetPreferenceReason);
   const visaEvidence = clean(job.visa?.evidence);
   const roleTitle = cleanJobTitle(job.roleTitle) || job.roleTitle;
   const company = cleanJobSubtitlePart(job.companyOrLab);
@@ -588,12 +620,48 @@ export function JobReport({
         </ReportSection>
       )}
 
-      {roleSummary && (
-        <ReportSection title="What the role is">
-          <p className="max-w-3xl text-body-lg leading-8 text-text">
-            {roleSummary}
-          </p>
-        </ReportSection>
+      {(roleBullets.length > 0 || materials.length > 0) && (
+        <div className="mt-10 grid gap-8 md:grid-cols-2" data-role-and-materials>
+          {roleBullets.length > 0 && (
+            <section data-section="what-the-role-is">
+              <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
+                What the role is
+              </h2>
+              <ul className="mt-4 space-y-3">
+                {roleBullets.map((point) => (
+                  <li
+                    key={point}
+                    data-role-bullet
+                    className="relative pl-5 text-body-lg leading-8 text-text"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-[0.7em] h-1.5 w-1.5 rounded-full bg-accent/60"
+                    />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {materials.length > 0 && (
+            <section data-section="to-apply-have-ready">
+              <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
+                To apply, have ready
+              </h2>
+              <ul className="mt-4 space-y-2">
+                {materials.map((material) => (
+                  <li
+                    key={material}
+                    className="rounded-lg border border-border bg-surface px-4 py-3 text-body-sm text-heading"
+                  >
+                    {material}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       )}
 
       {Boolean(enrichment?.specificRequirements?.length) && (
@@ -643,19 +711,6 @@ export function JobReport({
           </p>
         )}
 
-      {enrichment?.competitiveness && (
-        <ReportSection title="How competitive this actually is">
-          <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
-            <p className="text-title font-semibold text-heading">
-              {enrichment.competitiveness.verdict}
-            </p>
-            <p className="mt-2 text-body leading-7 text-text-muted">
-              {enrichment.competitiveness.reasoning}
-            </p>
-          </div>
-        </ReportSection>
-      )}
-
       {enrichment?.sponsorshipRead && (
         <ReportSection title="Sponsorship read">
           <div className="grid gap-3 md:grid-cols-2">
@@ -682,19 +737,6 @@ export function JobReport({
         </ReportSection>
       )}
 
-      {enrichment?.roleSummary && (
-        <ReportSection title="The role in three clean sentences">
-          <ol className="space-y-3">
-            {enrichment.roleSummary.map((sentence, index) => (
-              <li key={`${index}-${sentence}`} className="flex gap-3 text-body-lg leading-8 text-text">
-                <span className="font-semibold text-accent">{index + 1}</span>
-                <span>{sentence}</span>
-              </li>
-            ))}
-          </ol>
-        </ReportSection>
-      )}
-
       {enrichment?.emphasise && (
         <ReportSection title="What to emphasise in your application">
           <ul className="grid gap-2 sm:grid-cols-2">
@@ -707,34 +749,6 @@ export function JobReport({
               </li>
             ))}
           </ul>
-        </ReportSection>
-      )}
-
-      {materials.length > 0 && (
-        <ReportSection title="What to have ready">
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {materials.map((material) => (
-              <li
-                key={material}
-                className="rounded-lg border border-border bg-surface px-4 py-3 text-body-sm text-heading"
-              >
-                {material}
-              </li>
-            ))}
-          </ul>
-        </ReportSection>
-      )}
-
-      {(matchReason || facetReason) && (
-        <ReportSection title="Why Peer sent it">
-          <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
-            {matchReason && (
-              <p className="text-body-lg leading-7 text-heading">{matchReason}</p>
-            )}
-            {facetReason && (
-              <p className="mt-2 text-body-sm text-accent">{facetReason}</p>
-            )}
-          </div>
         </ReportSection>
       )}
 

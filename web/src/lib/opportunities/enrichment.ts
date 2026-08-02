@@ -30,14 +30,12 @@ export interface EventEnrichment {
   talkSummaries?: Array<{
     title: string;
     about: string;
-  }>;
-  dayPlan?: Array<{
-    day: string;
-    items: string[];
+    /** Only when the page states it, quoted verbatim. */
+    when?: string;
   }>;
   posterFit?: {
     fits: boolean;
-    reasoning: string;
+    points: string[];
   };
 }
 
@@ -121,8 +119,6 @@ const MAX_EVENT_JUDGED_ATTENDEES = 8;
 const MAX_EVENT_TALK_SUMMARIES = 6;
 const MAX_EVENT_TALK_TITLE_WORDS = 30;
 const MAX_EVENT_TALK_TITLE_CHARACTERS = 240;
-const MAX_EVENT_PLAN_DAYS = 3;
-const MAX_EVENT_PLAN_ITEMS_PER_DAY = 4;
 export const MAX_GENERATED_REASONING_WORDS = 60;
 
 function clean(value: string | null | undefined): string | undefined {
@@ -589,10 +585,10 @@ export function buildEventEnrichmentPrompt(
       talkSummaries: fetchedPageText?.trim()
         ? `Return at most ${MAX_EVENT_TALK_SUMMARIES} specific talks or sessions most relevant to the user. Use only text after a ${PAGE_HEADING_MARKER_PREFIX}<n>] marker within fetchedPageText; copy that title exactly, without the marker or level. A title must be a concise programme heading of at most ${MAX_EVENT_TALK_TITLE_WORDS} words, never an abstract, description, speaker name, or paragraph. Explain it in at most 30 words. Never use a generic sessionTypes label as a title.`
         : "Omit this field because no fetched source-page text is available. Never fall back to sessionTypes.",
-      dayPlan:
-        `Return at most ${MAX_EVENT_PLAN_DAYS} event days with at most ${MAX_EVENT_PLAN_ITEMS_PER_DAY} items per day. Every item must be either an exact title also returned in talkSummaries or an exact name from unjudgedAttendees. Never use any other page speaker name, abstract, or description.`,
       posterFit:
-        "Compare the supplied event or submission scope with the user's current project; do not invent a call. Keep reasoning to at most 60 words.",
+        "State what the call covers relative to the user's declared topics. Do not judge the user's chances and do not invent a call. Two to four short points, one idea each.",
+      talkWhen:
+        "Only include a session time that appears verbatim in the fetched page text. Omit it otherwise.",
     },
     outputSchema: {
       condensedDescription: "string",
@@ -606,7 +602,7 @@ export function buildEventEnrichmentPrompt(
           items: ["exact fetched title or exact supplied attendee name"],
         },
       ],
-      posterFit: { fits: true, reasoning: "string" },
+      posterFit: { fits: true, points: ["short point", "short point"] },
     },
   });
 }
@@ -692,7 +688,14 @@ export function parseEventEnrichment(
         return [];
       }
       returnedTitles.add(normalizedTitle);
-      return [{ title, about }];
+      // A time the page does not state is a time the user could plan around and
+      // miss. Same verbatim rule as the title: quotable or absent.
+      const rawWhen = typeof record.when === "string" ? clean(record.when) : undefined;
+      const when =
+        rawWhen && normalizedPageText.includes(normalizeVerbatim(rawWhen))
+          ? rawWhen
+          : undefined;
+      return [when ? { title, about, when } : { title, about }];
     }).slice(0, MAX_EVENT_TALK_SUMMARIES);
     if (talkSummaries.length > 0) {
       enrichment.talkSummaries = talkSummaries;
@@ -702,37 +705,19 @@ export function parseEventEnrichment(
     }
   }
 
-  if (Array.isArray(parsed.dayPlan)) {
-    const dayPlan = parsed.dayPlan.flatMap((value) => {
-      if (!value || typeof value !== "object" || Array.isArray(value)) return [];
-      const record = value as Record<string, unknown>;
-      const day = typeof record.day === "string" ? clean(record.day) : undefined;
-      const items = boundedStringList(record.items, 1, 12)
-        ?.filter((item) => {
-          const normalizedItem = normalizeVerbatim(item);
-          return (
-            verifiedTalkTitles.has(normalizedItem) ||
-            acceptedPlanAttendeeNames.has(normalizedItem)
-          );
-        })
-        .slice(0, MAX_EVENT_PLAN_ITEMS_PER_DAY);
-      return day && items?.length ? [{ day, items }] : [];
-    }).slice(0, MAX_EVENT_PLAN_DAYS);
-    if (dayPlan.length > 0) enrichment.dayPlan = dayPlan;
-  }
-
   if (
     parsed.posterFit &&
     typeof parsed.posterFit === "object" &&
     !Array.isArray(parsed.posterFit)
   ) {
     const record = parsed.posterFit as Record<string, unknown>;
-    const reasoning =
-      typeof record.reasoning === "string"
-        ? capGeneratedReasoning(record.reasoning)
-        : undefined;
-    if (typeof record.fits === "boolean" && reasoning) {
-      enrichment.posterFit = { fits: record.fits, reasoning };
+    // A paragraph is rejected rather than rendered as one long bullet: the whole
+    // point of this shape is that the user can read it at a glance.
+    const points = boundedStringList(record.points, 2, 4)?.map((point) =>
+      capGeneratedReasoning(point),
+    );
+    if (typeof record.fits === "boolean" && points?.length) {
+      enrichment.posterFit = { fits: record.fits, points };
     }
   }
 
@@ -746,7 +731,6 @@ export function hasEventEnrichment(
     enrichment?.condensedDescription ||
       enrichment?.judgedAttendees?.length ||
       enrichment?.talkSummaries?.length ||
-      enrichment?.dayPlan?.length ||
       enrichment?.posterFit,
   );
 }

@@ -47,22 +47,22 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P10.1 | Event description: AI-condensed at Tier 1/2, extractive only at Tier 0 | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file, 48 tests passed |
-| P10.2 | Job: merge the two role sections into one bulleted summary | IN_PROGRESS | Blocker resolved by the reviewer 2026-08-02: **follow plate 02** — the role block sits AFTER Timeline and Skills, in a two-column grid beside "To apply, have ready". The earlier task text saying "immediately below facts, before skills" was the reviewer's error and is withdrawn. |
+| P10.2 | Job: merge the two role sections into one bulleted summary | DONE | Merged into one bulleted block placed after Skills, two columns beside "To apply, have ready" per plate 02. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
 
 ### Phase 10B — Cut what repeats itself
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P10.3 | Delete the day-by-day plan entirely | TODO | |
-| P10.4 | Delete "Why Peer sent it" from both reports | TODO | |
+| P10.3 | Delete the day-by-day plan entirely | DONE | `dayPlan` gone from type, prompt, schema, parser and render. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
+| P10.4 | Delete "Why Peer sent it" from both reports | DONE | Deleted from both reports; unused reason variables removed. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
 | P10.5 | Talk list carries its session time | TODO | |
 
 ### Phase 10C — Present facts, do not deliver verdicts
 
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
-| P10.6 | Skills becomes two plain columns: matched / not matched, no judgement | TODO | |
-| P10.7 | Poster fit becomes a short bulleted list | TODO | |
+| P10.6 | Skills becomes two plain columns: matched / not matched, no judgement | DONE | Competitiveness verdict deleted entirely; the skills section already rendered matched/unmatched as two labelled groups and now stands alone. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
+| P10.7 | Poster fit becomes a short bulleted list | DONE | `posterFit.reasoning` is now `points[]`, 2-4 bullets, capped at both parser and render; a single point is rejected. Verdict no longer judges the user. `cd web && npx vitest run && npx tsc --noEmit && npx eslint` — 81 files / 788 tests passed; typecheck clean; lint back to the single pre-existing error |
 
 ### Phase 10D — Fix what the review found broken
 

@@ -202,7 +202,7 @@ describe("POST /api/events/report", () => {
   it("lets local development resolve the default server Vertex provider", async () => {
     vi.stubEnv("NODE_ENV", "development");
     const requestReport = vi.fn().mockResolvedValue({
-      posterFit: { fits: true, reasoning: "The supplied scope overlaps." },
+      posterFit: { fits: true, points: ["The supplied scope overlaps.", "Second point."] },
     });
 
     const result = await loadConfiguredOpportunityEnrichment(
@@ -228,7 +228,7 @@ describe("POST /api/events/report", () => {
       ],
       posterFit: {
         fits: true,
-        reasoning: "The call overlaps with the declared interface work.",
+        points: ["The call overlaps with the declared interface work.", "Second point."],
       },
     };
     const generateJsonText = vi.fn().mockResolvedValue(JSON.stringify(enrichment));
@@ -360,7 +360,7 @@ describe("POST /api/events/report", () => {
   it("reopens within the cache TTL with zero fetches and zero model calls", async () => {
     const generateJsonText = vi.fn().mockResolvedValue(
       JSON.stringify({
-        posterFit: { fits: true, reasoning: "The supplied scope overlaps." },
+        posterFit: { fits: true, points: ["The supplied scope overlaps.", "Second point."] },
       }),
     );
     mocks.resolveProvider.mockReturnValue({ generateJsonText });

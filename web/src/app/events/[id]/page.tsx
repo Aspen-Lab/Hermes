@@ -880,8 +880,6 @@ export function EventReport({
     enrichment,
   );
   const travelGrant = clean(event.travelGrant);
-  const relevanceReason = clean(event.relevanceReason);
-  const facetReason = clean(event.facetPreferenceReason);
   const hasHappenings =
     activities.length > 0 ||
     Boolean(description) ||
@@ -1043,61 +1041,34 @@ export function EventReport({
           </p>
         )}
 
-        {displayEnrichment?.dayPlan && (
-          <ReportSection title="A day-by-day plan">
-            <div className="space-y-4">
-              {displayEnrichment.dayPlan.map((day) => (
-                <section
-                  key={day.day}
-                  className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4"
-                >
-                  <h3 className="text-title font-semibold text-heading">{day.day}</h3>
-                  <ol className="mt-3 space-y-2">
-                    {day.items.map((item, index) => (
-                      <li key={`${index}-${item}`} className="flex gap-3 text-body text-text-muted">
-                        <span className="font-semibold text-accent">{index + 1}</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              ))}
-            </div>
-          </ReportSection>
-        )}
-
         {displayEnrichment?.posterFit && (
           <ReportSection title="Is your work a fit for the poster call">
             <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
               <p className="text-title font-semibold text-heading">
                 {displayEnrichment.posterFit.fits
-                  ? "Likely fit"
-                  : "Probably not a fit"}
+                  ? "Overlaps your topics"
+                  : "Little overlap with your topics"}
               </p>
-              <p className="mt-2 text-body leading-7 text-text-muted">
-                {capGeneratedReasoning(displayEnrichment.posterFit.reasoning)}
-              </p>
+              <ul className="mt-3 space-y-2">
+                {displayEnrichment.posterFit.points.map((point) => (
+                  <li
+                    key={point}
+                    data-poster-fit-point
+                    className="relative pl-5 text-body leading-7 text-text-muted"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-[0.65em] h-1.5 w-1.5 rounded-full bg-accent/60"
+                    />
+                    {capGeneratedReasoning(point)}
+                  </li>
+                ))}
+              </ul>
             </div>
           </ReportSection>
         )}
       </div>
 
-      {(relevanceReason || facetReason) && (
-        <div className="mx-auto max-w-[720px]">
-          <ReportSection title="Why Peer sent it">
-            <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
-              {relevanceReason && (
-                <p className="text-body-lg leading-7 text-heading">
-                  {relevanceReason}
-                </p>
-              )}
-              {facetReason && (
-                <p className="mt-2 text-body-sm text-accent">{facetReason}</p>
-              )}
-            </div>
-          </ReportSection>
-        </div>
-      )}
 
       <div className="mx-auto max-w-[720px]">
         <TierUpgradeBlock

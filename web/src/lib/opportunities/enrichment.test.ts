@@ -699,7 +699,6 @@ describe("event enrichment prompt and parser", () => {
       rules: {
         judgedAttendees: string;
         talkSummaries: string;
-        dayPlan: string;
       };
     };
 
@@ -715,9 +714,8 @@ describe("event enrichment prompt and parser", () => {
     expect(prompt.rules.talkSummaries).toContain("at most 30 words");
     expect(prompt.rules.talkSummaries).toContain("never an abstract");
     expect(prompt.rules.judgedAttendees).toContain("at most 8");
-    expect(prompt.rules.dayPlan).toContain("at most 3 event days");
-    expect(prompt.rules.dayPlan).toContain("at most 4 items per day");
-    expect(prompt.rules.dayPlan).toContain("also returned in talkSummaries");
+    // P10.3 deleted the day-by-day plan: it only restated the talk list.
+    expect("dayPlan" in prompt.rules).toBe(false);
     expect(prompt.task).toContain("entire JSON closes");
   });
 
@@ -792,10 +790,7 @@ describe("event enrichment prompt and parser", () => {
           },
           { title: "Invented keynote", about: "Not on the programme." },
         ],
-        dayPlan: [
-          { day: "Day 1", items: ["Interface Stability in Solid-State Cells"] },
-        ],
-        posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
+        posterFit: { fits: true, points: ["The call overlaps with interface work.", "Second point."] },
       }),
       event,
       "09:00 INTERFACE   STABILITY IN SOLID-STATE CELLS\n\nInterface stability session\n\n10:00 Lunch",
@@ -809,10 +804,7 @@ describe("event enrichment prompt and parser", () => {
           about: "A session on interfaces.",
         },
       ],
-      dayPlan: [
-        { day: "Day 1", items: ["Interface Stability in Solid-State Cells"] },
-      ],
-      posterFit: { fits: true, reasoning: "The call overlaps with interface work." },
+      posterFit: { fits: true, points: ["The call overlaps with interface work.", "Second point."] },
     });
   });
 
@@ -838,10 +830,6 @@ describe("event enrichment prompt and parser", () => {
           title,
           about: "A concise explanation.",
         })),
-        dayPlan: Array.from({ length: 5 }, (_, index) => ({
-          day: `Day ${index + 1}`,
-          items: titles.slice(0, 6),
-        })),
       }),
       cappedEvent,
       titles.join("\n\n"),
@@ -850,8 +838,7 @@ describe("event enrichment prompt and parser", () => {
 
     expect(parsed?.judgedAttendees).toHaveLength(8);
     expect(parsed?.talkSummaries).toHaveLength(6);
-    expect(parsed?.dayPlan).toHaveLength(3);
-    expect(parsed?.dayPlan?.every((day) => day.items.length === 4)).toBe(true);
+    expect("dayPlan" in (parsed ?? {})).toBe(false);
   });
 
   it("does not plan a seventh title that was omitted by the summary cap", () => {
@@ -865,7 +852,6 @@ describe("event enrichment prompt and parser", () => {
           title,
           about: "A concise explanation.",
         })),
-        dayPlan: [{ day: "Day 1", items: [titles[6]] }],
       }),
       event,
       titles.join("\n\n"),
@@ -873,7 +859,7 @@ describe("event enrichment prompt and parser", () => {
     );
 
     expect(parsed?.talkSummaries).toHaveLength(6);
-    expect(parsed?.dayPlan).toBeUndefined();
+    expect("dayPlan" in (parsed ?? {})).toBe(false);
   });
 
   it("never falls back to activities when fetched page text is absent", () => {
@@ -892,7 +878,7 @@ describe("event enrichment prompt and parser", () => {
     ).toEqual({});
   });
 
-  it("drops invented day-plan entries and keeps quoted titles or supplied names", () => {
+  it("keeps quoted titles or supplied names and emits no day plan", () => {
     expect(
       parseEventEnrichment(
         JSON.stringify({
@@ -908,16 +894,6 @@ describe("event enrichment prompt and parser", () => {
             {
               title: "Interface Stability in Solid-State Cells",
               about: "A session on interfaces.",
-            },
-          ],
-          dayPlan: [
-            {
-              day: "Day 1",
-              items: [
-                "Interface Stability in Solid-State Cells",
-                "New Speaker",
-                "Invented Closing Keynote",
-              ],
             },
           ],
         }),
@@ -937,15 +913,6 @@ describe("event enrichment prompt and parser", () => {
         {
           title: "Interface Stability in Solid-State Cells",
           about: "A session on interfaces.",
-        },
-      ],
-      dayPlan: [
-        {
-          day: "Day 1",
-          items: [
-            "Interface Stability in Solid-State Cells",
-            "New Speaker",
-          ],
         },
       ],
     });
@@ -1065,7 +1032,6 @@ describe("event enrichment prompt and parser", () => {
     expect(
       parseEventEnrichment(
         JSON.stringify({
-          dayPlan: [{ day: "Day 1", items: ["Unlisted Page Speaker"] }],
         }),
         event,
         "Unlisted Page Speaker",
@@ -1090,7 +1056,6 @@ describe("event enrichment prompt and parser", () => {
               why: "This is an action, not an attendee.",
             },
           ],
-          dayPlan: [{ day: "Day 1", items: ["Download Brochure"] }],
         }),
         furnitureEvent,
       ),
@@ -1179,14 +1144,24 @@ describe("event enrichment prompt and parser", () => {
       (_, index) => `reason${index + 1}`,
     ).join(" ");
     const parsed = parseEventEnrichment(
-      JSON.stringify({ posterFit: { fits: true, reasoning } }),
+      JSON.stringify({
+        posterFit: { fits: true, points: [reasoning, "Second point."] },
+      }),
       event,
     );
 
     expect(parsed?.posterFit?.fits).toBe(true);
-    expect(parsed?.posterFit?.reasoning).toBe(capGeneratedReasoning(reasoning));
-    expect(parsed?.posterFit?.reasoning.split(/\s+/)).toHaveLength(60);
-    expect(parsed?.posterFit?.reasoning).toMatch(/reason60\u2026$/);
-    expect(parsed?.posterFit?.reasoning).not.toContain("reason61");
+    // P10.7: bullets, each capped. A single point is a paragraph in disguise
+    // and is rejected rather than rendered as one long bullet.
+    expect(parsed?.posterFit?.points).toHaveLength(2);
+    expect(parsed?.posterFit?.points[0]).toBe(capGeneratedReasoning(reasoning));
+    expect(parsed?.posterFit?.points[0]).toMatch(/reason60\u2026$/);
+    expect(parsed?.posterFit?.points[0]).not.toContain("reason61");
+
+    const singlePoint = parseEventEnrichment(
+      JSON.stringify({ posterFit: { fits: true, points: ["Only one point."] } }),
+      event,
+    );
+    expect(singlePoint?.posterFit).toBeUndefined();
   });
 });

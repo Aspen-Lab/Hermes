@@ -178,7 +178,7 @@ describe("EventReport", () => {
     }
   });
 
-  it("renders all four AI sections in order and hides the locked block", () => {
+  it("renders the AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseEvent({
         activities: ["poster session"],
@@ -196,26 +196,23 @@ describe("EventReport", () => {
             about: "A focused session on interphase stability.",
           },
         ],
-        dayPlan: [
-          { day: "Day 1", items: ["Attend the interface stability session."] },
-        ],
         posterFit: {
           fits: true,
-          reasoning: "The supplied scope overlaps with the current project.",
+          points: ["The supplied scope overlaps with the current project."],
         },
       },
     );
 
     const attendees = html.indexOf("Organisations at the event · 1 judged");
     const talks = html.indexOf("What each talk is actually about");
-    const plan = html.indexOf("A day-by-day plan");
     const poster = html.indexOf("Is your work a fit for the poster call");
     expect(attendees).toBeGreaterThan(-1);
     expect(attendees).toBeLessThan(talks);
     expect(html).toContain("Interface Stability in Solid-State Cells");
     expect(html).toContain("A focused session on interphase stability.");
-    expect(talks).toBeLessThan(plan);
-    expect(plan).toBeLessThan(poster);
+    // P10.3 deleted the day-by-day plan.
+    expect(talks).toBeLessThan(poster);
+    expect(html).not.toContain("A day-by-day plan");
     expect(html).not.toContain("Also in this report with an AI key");
   });
 
@@ -252,7 +249,7 @@ describe("EventReport", () => {
         {
           posterFit: {
             fits: true,
-            reasoning: "The supplied scope overlaps.",
+            points: ["The supplied scope overlaps."],
           },
         },
         false,
@@ -304,11 +301,11 @@ describe("EventReport", () => {
       baseEvent(),
       "PhD Year 3",
       { registered: false, submitted: false },
-      { posterFit: { fits: true, reasoning } },
+      { posterFit: { fits: true, points: [reasoning, "Second point."] } },
     );
 
-    expect(html).toContain("Likely fit");
-    expect(html.indexOf("Likely fit")).toBeLessThan(html.indexOf("reason1"));
+    expect(html).toContain("Overlaps your topics");
+    expect(html.indexOf("Overlaps your topics")).toBeLessThan(html.indexOf("reason1"));
     expect(html).toContain("reason60\u2026");
     expect(html).not.toContain("reason61");
   });
