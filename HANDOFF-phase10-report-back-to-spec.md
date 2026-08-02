@@ -47,7 +47,7 @@ Statuses: `TODO` · `IN_PROGRESS` · `DONE` · `BLOCKED` · `SKIPPED`
 | ID | Task | Status | Verified (command + result) |
 |----|------|--------|------------------------------|
 | P10.1 | Event description: AI-condensed at Tier 1/2, extractive only at Tier 0 | DONE | `cd web && npx vitest run src/lib/opportunities/enrichment.test.ts` — 1 file, 48 tests passed |
-| P10.2 | Job: merge the two role sections into one bulleted summary, at the top | TODO | |
+| P10.2 | Job: merge the two role sections into one bulleted summary, at the top | IN_PROGRESS | |
 
 ### Phase 10B — Cut what repeats itself
 
