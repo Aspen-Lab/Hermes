@@ -21,6 +21,7 @@ export interface JobEnrichment {
 }
 
 export interface EventEnrichment {
+  condensedDescription?: string;
   judgedAttendees?: Array<{
     name: string;
     worthIt: boolean;
@@ -177,6 +178,39 @@ function eventTalkTitles(event: Pick<Event, "activities">): string[] {
   return cleanList(event.activities ?? []).filter(
     (title) => !isGenericSessionLabel(title),
   );
+}
+
+function sentenceEndMatches(value: string): RegExpMatchArray[] {
+  return [...value.matchAll(/[.!?](?:["')\]]*)?(?=\s|$)/g)];
+}
+
+function capGeneratedDescription(value: string): string | undefined {
+  const text = clean(value);
+  if (!text) return undefined;
+  const sentenceEnds = sentenceEndMatches(text);
+  const secondEnd = sentenceEnds[1];
+  if (!secondEnd || secondEnd.index === undefined) return text;
+  return text.slice(0, secondEnd.index + secondEnd[0].length);
+}
+
+export function resolveEventReportDescription(
+  extractiveDescription: string | null | undefined,
+  enrichment?: EventEnrichment | null,
+): string | undefined {
+  const condensed = capGeneratedDescription(
+    enrichment?.condensedDescription ?? "",
+  );
+  if (condensed) return condensed;
+
+  const extractive = clean(extractiveDescription);
+  if (!extractive) return undefined;
+  if (/[.!?](?:["')\]]*)?$/.test(extractive)) return extractive;
+
+  const sentenceEnds = sentenceEndMatches(extractive);
+  const lastEnd = sentenceEnds.at(-1);
+  return lastEnd?.index === undefined
+    ? undefined
+    : extractive.slice(0, lastEnd.index + lastEnd[0].length);
 }
 
 function isPlausibleTalkTitle(title: string): boolean {
@@ -481,7 +515,8 @@ export function hasEventEnrichmentCandidates(
     /(?:^|\n)Current project:\s*\S/i.test(contextHint) &&
     SUBMISSION_SCOPE_RE.test(event.shortDescription);
   return Boolean(
-    eventTalkTitles(event).length ||
+    clean(event.shortDescription) ||
+      eventTalkTitles(event).length ||
       unjudgedAttendees(event).length ||
       hasPosterScope,
   );
@@ -528,6 +563,8 @@ export function buildEventEnrichmentPrompt(
       shortDescription: event.shortDescription,
     },
     rules: {
+      condensedDescription:
+        "State what happens at the event in at most two complete sentences. Condense only the supplied shortDescription and fetchedPageText; do not add facts or marketing language.",
       judgedAttendees:
         `Return at most ${MAX_EVENT_JUDGED_ATTENDEES} exact names from unjudgedAttendees, prioritised for the user. Keep why to at most 25 words. Never add or rename a person or organisation. ` +
         "Some supplied names are website furniture rather than real attendees; set isAttendee false for those and they will be discarded.",
@@ -540,6 +577,7 @@ export function buildEventEnrichmentPrompt(
         "Compare the supplied event or submission scope with the user's current project; do not invent a call. Keep reasoning to at most 60 words.",
     },
     outputSchema: {
+      condensedDescription: "string",
       judgedAttendees: [
         { name: "exact supplied name", isAttendee: true, worthIt: true, why: "string" },
       ],
@@ -566,6 +604,15 @@ export function parseEventEnrichment(
   const enrichment: EventEnrichment = {};
   const verifiedTalkTitles = new Set<string>();
   const acceptedPlanAttendeeNames = new Set<string>();
+
+  if (typeof parsed.condensedDescription === "string") {
+    const condensedDescription = capGeneratedDescription(
+      parsed.condensedDescription,
+    );
+    if (condensedDescription) {
+      enrichment.condensedDescription = condensedDescription;
+    }
+  }
 
   if (Array.isArray(parsed.judgedAttendees)) {
     const allowedNames = new Set(unjudgedAttendees(event).map((item) => item.name));
@@ -678,7 +725,8 @@ export function hasEventEnrichment(
   enrichment: EventEnrichment | null | undefined,
 ): boolean {
   return Boolean(
-    enrichment?.judgedAttendees?.length ||
+    enrichment?.condensedDescription ||
+      enrichment?.judgedAttendees?.length ||
       enrichment?.talkSummaries?.length ||
       enrichment?.dayPlan?.length ||
       enrichment?.posterFit,

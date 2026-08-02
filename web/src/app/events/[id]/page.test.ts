@@ -361,4 +361,23 @@ describe("EventReport", () => {
     expect(html).not.toContain("[...]");
     expect(html).not.toMatch(/sensor, w/);
   });
+
+  it("uses the condensed description when enrichment provides one", () => {
+    const html = renderReport(
+      baseEvent({
+        shortDescription:
+          "The source repeats a long marketing introduction. A second source sentence follows.",
+      }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        condensedDescription:
+          "Researchers present interface results. Workshops compare cell-design methods.",
+      },
+    );
+
+    expect(html).toContain("Researchers present interface results.");
+    expect(html).toContain("Workshops compare cell-design methods.");
+    expect(html).not.toContain("long marketing introduction");
+  });
 });

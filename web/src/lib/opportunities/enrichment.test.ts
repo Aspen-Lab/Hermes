@@ -16,6 +16,7 @@ import {
   parseEventEnrichment,
   parseJobEnrichment,
   readCachedOpportunityEnrichment,
+  resolveEventReportDescription,
   writeCachedOpportunityEnrichment,
   type JobEnrichment,
   type OpportunityEnrichmentLoadResult,
@@ -591,6 +592,35 @@ describe("event enrichment prompt and parser", () => {
     people: [],
   };
 
+  it("caps a generated event description at two sentences", () => {
+    expect(
+      parseEventEnrichment(
+        JSON.stringify({
+          condensedDescription:
+            "Researchers present interface studies. The programme includes applied workshops. A third sentence must not render.",
+        }),
+        event,
+      ),
+    ).toEqual({
+      condensedDescription:
+        "Researchers present interface studies. The programme includes applied workshops.",
+    });
+  });
+
+  it("leaves a complete extractive description untouched when no condensed field exists", () => {
+    const extractive = "Research sessions cover interfaces and cell design.";
+
+    expect(resolveEventReportDescription(extractive, {})).toBe(extractive);
+  });
+
+  it("trims a Tier 0 description back to its last complete sentence", () => {
+    expect(
+      resolveEventReportDescription(
+        "Research sessions cover interfaces. The programme also includes an unfinished",
+      ),
+    ).toBe("Research sessions cover interfaces.");
+  });
+
   it("sends only roster rows that do not already have a Tier 0 judgment", () => {
     const prompt = JSON.parse(
       buildEventEnrichmentPrompt(event, "Topics: solid-state batteries"),
@@ -603,7 +633,7 @@ describe("event enrichment prompt and parser", () => {
     expect(JSON.stringify(prompt)).not.toContain("You saved a role there.");
   });
 
-  it("skips the provider and section when activities are only session types", async () => {
+  it("uses the description as an enrichment candidate without reviving generic session types", async () => {
     const sessionTypesOnly: Event = {
       ...event,
       shortDescription: "A professional gathering.",
@@ -613,7 +643,11 @@ describe("event enrichment prompt and parser", () => {
     };
     const provider = vi.fn();
 
-    if (hasEventEnrichmentCandidates(sessionTypesOnly, "Topics: batteries")) {
+    const hasCandidates = hasEventEnrichmentCandidates(
+      sessionTypesOnly,
+      "Topics: batteries",
+    );
+    if (hasCandidates) {
       await provider();
     }
     const parsed = parseEventEnrichment(
@@ -627,7 +661,8 @@ describe("event enrichment prompt and parser", () => {
       sessionTypesOnly,
     );
 
-    expect(provider).not.toHaveBeenCalled();
+    expect(hasCandidates).toBe(true);
+    expect(provider).toHaveBeenCalledOnce();
     expect(parsed).toEqual({});
     expect(hasEventEnrichment(parsed)).toBe(false);
   });

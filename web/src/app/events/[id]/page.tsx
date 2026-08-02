@@ -28,6 +28,7 @@ import {
   loadConfiguredOpportunityEnrichment,
   opportunityPageReadingReason,
   opportunityEnrichmentCacheKey,
+  resolveEventReportDescription,
   type EventEnrichment,
   type OpportunityEnrichmentLoadResult,
   type OpportunityPageReadingReason,
@@ -874,7 +875,10 @@ export function EventReport({
   const milestones = deadlineMilestones(event);
   const fees = event.fees ?? [];
   const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
-  const description = cleanEventDescription(event.shortDescription) || undefined;
+  const description = resolveEventReportDescription(
+    cleanEventDescription(event.shortDescription),
+    enrichment,
+  );
   const travelGrant = clean(event.travelGrant);
   const relevanceReason = clean(event.relevanceReason);
   const facetReason = clean(event.facetPreferenceReason);
