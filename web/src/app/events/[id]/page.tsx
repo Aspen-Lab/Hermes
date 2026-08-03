@@ -84,7 +84,7 @@ interface CheapestWay {
 }
 
 interface DeadlineMilestone {
-  key: "submission" | "registration" | "event";
+  key: "today" | "submission" | "registration" | "event";
   label: string;
   value: string;
   accent?: boolean;
@@ -223,15 +223,27 @@ export function cheapestWayIn(
   return null;
 }
 
-function deadlineMilestones(event: Event): DeadlineMilestone[] {
+/**
+ * B-09. Four milestones, not three: plate 03 opens the strip with **Today** so
+ * the two deadlines can be read as distances rather than bare dates. Mirrors
+ * `buildTimeline` on the job report exactly, so the two reports agree.
+ */
+function deadlineMilestones(event: Event, nowMs: number): DeadlineMilestone[] {
   const submission = formatDate(event.deadline);
   const registration = formatDate(event.registrationDeadline);
   const eventDate = formatDate(event.date);
   const milestones: DeadlineMilestone[] = [];
+  if (!submission && !registration && !eventDate) return milestones;
+  const today = formatDate(new Date(nowMs).toISOString());
+  if (today) {
+    milestones.push({ key: "today", label: "Today", value: today, accent: true });
+  }
   if (submission) {
     milestones.push({
       key: "submission",
-      label: "Submit by",
+      // Plate 03 labels this "Abstract" — what the deadline is for, not what
+      // the reader must do about it.
+      label: "Abstract",
       value: submission,
     });
   }
@@ -243,12 +255,9 @@ function deadlineMilestones(event: Event): DeadlineMilestone[] {
     });
   }
   if (eventDate) {
-    milestones.push({
-      key: "event",
-      label: "Event",
-      value: eventDate,
-      accent: true,
-    });
+    // Accent stays on Today alone, as it does on the job report. Two accented
+    // points in a four-point strip is no accent at all.
+    milestones.push({ key: "event", label: "Event", value: eventDate });
   }
   return milestones;
 }
@@ -466,7 +475,7 @@ function DeadlineTimeline({
 }) {
   if (milestones.length === 0) return null;
   return (
-    <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {milestones.map((milestone, index) => (
         <li
           key={milestone.key}
@@ -831,6 +840,7 @@ export function EventReport({
   isRegistered,
   isSubmitted,
   isInterested = false,
+  nowMs,
   providerConfigured = false,
   enrichmentLoading = false,
   onToggleStar,
@@ -851,6 +861,13 @@ export function EventReport({
   isRegistered: boolean;
   isSubmitted: boolean;
   isInterested?: boolean;
+  /**
+   * B-02. Captured once by the page, never read from inside the component.
+   * Plate 03 needs "92 days left" under ABSTRACT DUE and a "Today" milestone,
+   * and every test here renders through renderToStaticMarkup against fixed
+   * fixtures — calling Date.now() in the body would make them time-dependent.
+   */
+  nowMs: number;
   providerConfigured?: boolean;
   enrichmentLoading?: boolean;
   onToggleStar: (key: string) => void;
@@ -886,7 +903,7 @@ export function EventReport({
       ? "Register"
       : "Official site";
   const cheapest = cheapestWayIn(event, careerStage);
-  const milestones = deadlineMilestones(event);
+  const milestones = deadlineMilestones(event, nowMs);
   const fees = event.fees ?? [];
   const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
   const description = resolveEventReportDescription(
@@ -979,7 +996,13 @@ export function EventReport({
         </header>
 
         {cheapest && <CheapestCallout cheapest={cheapest} />}
-        <DeadlineTimeline milestones={milestones} />
+        {/* B-09. Every other block on the page is wrapped in a ReportSection;
+            this one was rendered bare, so it emitted no heading at all. */}
+        {milestones.length > 0 && (
+          <ReportSection title="Two deadlines, one event">
+            <DeadlineTimeline milestones={milestones} />
+          </ReportSection>
+        )}
 
         {fees.length > 0 && (
           <ReportSection title="What it costs you">
@@ -1158,6 +1181,7 @@ export default function EventDetailPage({
   const feedback = useFeedStore((state) => state.eventFeedback[id]);
   const profile = useProfileStore((state) => state.profile);
   const [starredKeys, toggleStar] = useRosterStars();
+  const [nowMs] = useState(Date.now);
   const [enrichmentResult, setEnrichmentResult] = useState<{
     key: string;
     result: OpportunityEnrichmentLoadResult<EventEnrichment> | null;
@@ -1302,6 +1326,7 @@ export default function EventDetailPage({
       isSaved={isSaved}
       isRegistered={isRegistered}
       isSubmitted={isSubmitted}
+      nowMs={nowMs}
       isInterested={
         (feedback ?? event.feedback) === "moreLikeThis" ||
         (feedback ?? event.feedback) === "liked"

@@ -8,6 +8,10 @@ import type {
 } from "@/lib/opportunities/enrichment";
 import { EventReport } from "./page";
 
+// B-02. A fixed clock so the countdowns and the "Today" milestone render the
+// same string on every run. Mirrors the job report's own test constant.
+const NOW = Date.parse("2026-07-30T12:00:00Z");
+
 function baseEvent(overrides: Partial<Event> = {}): Event {
   return {
     id: "event:1",
@@ -44,6 +48,7 @@ function renderReport(
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
       isInterested,
+      nowMs: NOW,
       starredKeys: new Set<string>(),
       onToggleStar: () => undefined,
       onToggleSave: () => undefined,
@@ -129,9 +134,29 @@ describe("EventReport", () => {
       expect(html).toContain(`>${header}</th>`);
     }
     expect(html).toContain("Online · $150");
+    // B-09 relabelled "Submit by" to the plate's "Abstract" and gave the strip
+    // its missing heading, so the ordering anchors on the heading instead.
     expect(html.indexOf("Cheapest way in, for you")).toBeLessThan(
-      html.indexOf("Submit by"),
+      html.indexOf("Two deadlines, one event"),
     );
+  });
+
+  it("gives the deadline strip its heading and a Today milestone", () => {
+    // B-09. The strip was rendered bare — no ReportSection, so no heading —
+    // and had only three points. Plate 03 opens it with Today so the two
+    // deadlines read as distances, exactly as the job report's timeline does.
+    const html = renderReport(
+      baseEvent({ deadline: "2027-01-28", registrationDeadline: "2027-06-15" }),
+    );
+
+    const heading = html.indexOf("Two deadlines, one event");
+    expect(heading).toBeGreaterThan(-1);
+    expect(heading).toBeLessThan(html.indexOf("Today"));
+    expect(html.indexOf("Today")).toBeLessThan(html.indexOf("Abstract"));
+    expect(html.indexOf("Abstract")).toBeLessThan(html.indexOf("Register by"));
+    expect(html).not.toContain("Submit by");
+    // The clock is the injected one, never Date.now().
+    expect(html).toContain("Jul 30, 2026");
   });
 
   it("never invents a year for a free-text fee deadline", () => {
