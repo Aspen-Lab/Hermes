@@ -120,6 +120,33 @@ block.
 
 ---
 
+## §1d. MANAGER'S RULINGS ON B's SIX POLICY ITEMS — BINDING
+
+Decided 2026-08-03. **The plate is a mock made before several of these features
+existed, and the user has since given explicit instructions that override it.**
+Where the two conflict, the user's instruction wins and the plate loses.
+
+| # | Item | Ruling |
+|---|---|---|
+| 1 | Locked promise "How competitive this actually is" | **Stay deleted, and do NOT restore the promise.** The user's instruction was explicit: "peer 不应该用来评价，只摆事实……判断要交给用户自己来" — Peer presents facts, the reader judges. Advertising a feature we will not build is the exact dishonesty Phase 7 existed to remove. |
+| 2 | Locked promise "The role in three clean sentences" | **Stay merged, promise stays out.** The content is delivered under "What the role is". Listing it separately would promise a second copy of something already on the page. |
+| 3 | The two quoted-specifics job sections | **Keep.** Phase 9 built them, they quote the posting verbatim, and the user has seen them working. The plate predates the feature. Do not delete real content to match a mock. |
+| 4 | The event description paragraph | **Keep.** The user asked for it directly — their complaint was that it read like copy-paste, not that it should not exist. Improving it is P10.1's job, already done. |
+| 5 | The "Interested" button | **Keep.** The user asked for it in as many words: "也不存在 interested 这一选项。非常的糟糕。" |
+| 6 | Travel grant and invitation letter printed twice | **Follow the plate: move them into the cost table and delete the duplicate.** This is the only one of the six where the plate is right — it removes a repetition, which say-it-once already requires. |
+
+### Consequence for A's scoring — read this, A
+
+Items 1–5 are **settled**. They are differences from the plate that will never be
+closed. **A must exclude them from the percentage** — remove them from the
+denominator, do not count them as matched. Say in each round's log how many
+elements were excluded by ruling, so the number stays honest.
+
+Without this the loop can never reach 5%, because five of the differences are
+there on purpose.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
