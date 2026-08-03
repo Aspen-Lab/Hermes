@@ -159,6 +159,179 @@ This exclusion is what makes a 0% target reachable at all: five differences
 exist on purpose, and without dropping them from the denominator no build could
 ever score zero. **Nothing else may be excluded without a new manager ruling.**
 
+**§1e below is that new ruling.** It adds exclusions 7 and 8 and settles ten
+round-2 questions. Read it too.
+
+---
+
+## §1e. MANAGER'S RULINGS ON ROUND 2 — BINDING
+
+Decided 2026-08-03 after A's round-2 report (22% different). The manager
+re-extracted plates 02 and 03 from the PDF independently before ruling. Where a
+ruling says "verified", the manager read the raw PDF text, not A's or B's
+summary of it.
+
+### Ruling 7 — §1c is WRONG about plate 03's chip row. Corrected here.
+
+**Verified.** Plate 03's chip row is literally four chips:
+
+```
+Industry summit / + career fair / CCF-B / 88% match
+```
+
+There is **no online/in-person chip**. The format lives in the subtitle:
+`San Diego Convention Center · in person, streamed keynotes · 4 days`.
+§1c's line `chips (kind · online/in-person · CCF-B · match %)` is a
+transcription error made when §1c was written. **The corrected chip row is:
+primary kind · secondary kind · rank · match %.**
+
+A and B both flagged this independently and both were right. **This closes the
+`POLICY` item; it is no longer open.**
+
+**Consequence:** the build's `In person` chip is an extra the plate does not
+have, *and* the subtitle B-16 added already prints "in person" — so the build
+states the format twice. **Delete the chip. The subtitle keeps the fact.**
+
+### Ruling 8 — Date and countdown wording: the report gets the plate's vocabulary.
+
+**Verified from the PDF**, plate 02 and plate 03:
+
+```
+APPLY BY / Sep 15 / 47 days left        POSTED / Jul 22 / 8 days ago
+STARTS   / Jan 2027 / flexible          ABSTRACT DUE / Oct 30 / 92 days left
+```
+
+Three rules the build currently breaks:
+
+1. **No year** on a date inside the report's own horizon. `Sep 15`, not
+   `Sep 15, 2026`.
+2. **Days, not weeks or months.** 47 and 92 both stay in days. The current
+   helpers bucket past 14 days and lose the number the reader is deciding on.
+3. **The plate's phrasing:** `N days left` / `N days ago`, not `in N weeks` /
+   `Nd ago`.
+
+**Scope it to the report.** Do not change `web/src/lib/format.ts`'s shared
+helpers — the feed and the papers view use the app's own relative-time
+vocabulary and are not in this loop. Add report-scoped formatters, exactly the
+blast-radius reasoning B used for B-01.
+
+**One guard the plate cannot show you:** if a date is more than about twelve
+months out, the year **must** appear, or `Mar 8` is ambiguous between two years.
+Suppressing a year that is genuinely needed is a correctness bug, not parity.
+
+### Ruling 9 — The contract-length "structural conflict" is not one. Reproduce both.
+
+A wrote that the header chip (`Full-time · 3 years`) and the TYPE tile detail
+(`Full-time · 3-yr contract`) cannot both come from one field. **That is
+incorrect** — one field plus two formatters produces both. Both strings are
+verified present on the plate (the facts row wraps across PDF pages 2 and 3,
+which is why the TYPE sub-line looks absent if you only read page 2).
+
+**Reproduce both, verbatim.** Yes, the plate states the same two facts twice in
+two phrasings. Say-it-once is a manager principle; the plate is the contract the
+user chose. **Where the two collide and the user has given no instruction, the
+plate wins.** No type change, no field added.
+
+### Ruling 10 — REGISTER BY's sub-line: suppress it, do not substitute.
+
+Plate: `on-site registration available` — whether walk-in registration is open.
+Peer does not track that. The build currently fills the slot with a countdown
+(`in 6 months`).
+
+**Remove the countdown and leave the sub-line empty.** A countdown implies the
+deadline is hard; we do not know that it is. Filling an unavailable slot with a
+different fact is the exact quiet dishonesty Phase 7 existed to remove.
+**Excluded — see exclusion 7 below.**
+
+### Ruling 11 — `TIER 0` badges: close it.
+
+Plate prints a `TIER 0` badge on "Why Peer sent this to you" (both reports) and
+on "What it costs you". Build prints none. The badge component already works —
+the Skills section renders `New` + `Tier 0` correctly. Plain missing element.
+
+### Ruling 12 — "Why Peer sent this to you" as one sentence: close it.
+
+Plate shows one fused sentence; the build renders two paragraphs. B called this
+a scoring-layer change. **It is not** — the scoring layer already produces both
+clauses; joining them is a render decision. Fuse them.
+
+### Ruling 13 — People cards need the short descriptor. Close it.
+
+Plate's people cards carry five lines; the build carries four. The missing one
+is the short descriptor (`2 papers in your feed`, `Matches a topic you typed`).
+Organisations already have `descriptor` and it renders correctly, so the pattern
+exists. Both plate examples are computable from local data with no AI key — a
+count from the feed, and a string match against the profile. **Tier 0. Build it.**
+
+### Ruling 14 — The compound event kind: in scope, mechanism is B's to find.
+
+Plate: `Industry summit` + `+ career fair`. Build: `Summit`, and no second chip.
+`Event.type` is a single coarse enum.
+
+**In scope as one item.** B decides the mechanism. The activities list already
+carries `Recruiting fair, day 3`, so a secondary kind may be derivable from data
+already present. **If B finds no honest source for either half, say so and mark
+it `POLICY — manager decides` rather than inventing a label.** Do not hardcode
+"Industry".
+
+### Ruling 15 — Travel grant and invitation letter: real table rows, `—` for what is missing.
+
+Ruling 6 moved them into the cost table and that landed. But each renders as one
+merged cell where the plate gives three columns. **Render them as proper
+three-column rows.** Where a cell has no data, print `—` — the plate uses that
+glyph itself. The invitation letter's `Allow 3 weeks` turnaround has no field
+behind it; **leave that cell `—` and do not invent a number.**
+
+### Ruling 16 — Activity chip mangling: close it.
+
+`formatActivityLabel` still routes prose through the enum formatter, so
+`vendor exhibition` becomes `Vendor Exhibition` and `early-career mixer` loses
+its hyphen. Same bug class B-12 targeted, different trigger. B-12 narrowed the
+trigger instead of fixing the rule. **Fix the rule:** an activity label is prose
+unless it exactly matches a known enum value.
+
+---
+
+### The eight "no field exists" gaps — ruled as a category
+
+Eight plate details name a fact Peer's data model does not carry. **C cannot
+close these by editing a component**; they need extraction work, which is
+outside this loop. Listed by name so the exclusion stays auditable:
+
+| # | Plate detail | Where |
+|---|---|---|
+| a | `Hybrid · US` sub-line | job LOCATION tile |
+| b | `Hybrid (3 days on-site)` | job subtitle, 3rd segment |
+| c | `ELIGIBILITY` row | job "To apply, have ready" |
+| d | `TEAM` row | job "To apply, have ready" |
+| e | `· reposted from employer site` | job SEEN ON row |
+| f | `streamed keynotes` | event WHERE tile and subtitle |
+| g | venue name (`San Diego Convention Center`) | event subtitle |
+| h | `plus four nights` | event costs footnote |
+
+**Exception — (a) and (b) are the same missing fact, and it is worth building.**
+Work mode (on-site / hybrid / remote) appears three times on plate 02 and
+materially changes whether a person applies. `Job` carries only `isRemote`.
+**Add a work-mode field and populate it where the posting states it.** That is
+one item, in scope, and it closes (a) and (b) together.
+
+**(c) through (h) are excluded — see exclusion 8.**
+
+---
+
+### Exclusions added to §1d — A, apply these from round 3 onward
+
+**Exclusion 7 — REGISTER BY's sub-line** (Ruling 10). Permanently empty.
+
+**Exclusion 8 — the six data-model gaps (c) through (h) above.** Excluded as
+named items only. **Not** as a general licence to exclude anything labelled "no
+field exists" — anything new of that shape is a fresh `POLICY` item for the
+manager, not an automatic exclusion.
+
+**A: re-list exclusions 7 and 8 by name in every round's log.** They must stay
+visible. An exclusion that stops being mentioned quietly becomes permanent
+without anyone deciding it should be.
+
 ---
 
 ## §2. ROLES — DO ONLY YOUR OWN JOB
