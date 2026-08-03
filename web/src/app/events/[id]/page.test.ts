@@ -297,10 +297,64 @@ describe("EventReport", () => {
     expect(attendees).toBeLessThan(talks);
     expect(html).toContain("Interface Stability in Solid-State Cells");
     expect(html).toContain("A focused session on interphase stability.");
-    // P10.3 deleted the day-by-day plan.
+    // B-04 rewrote this. It asserted P10.3's deletion of the day-by-day plan;
+    // §1b Correction 1 reverses that — the plate does show it. The section now
+    // renders when the model returns a verified plan, and sits between the
+    // talks and the poster fit, matching the locked block's promise order.
+    // This fixture returns no plan, so nothing renders here.
     expect(talks).toBeLessThan(poster);
-    expect(html).not.toContain("A day-by-day plan");
+    expect(html).not.toContain("A day-by-day plan for you");
     expect(html).not.toContain("Also in this report with an AI key");
+  });
+
+  it("renders the day plan in order, between the talks and the poster fit", () => {
+    // B-04 / §1b Correction 1. Plate 03: "Which sessions to attend and who to
+    // find, in order." Ordering is the feature, so the rows render exactly as
+    // the parser accepted them — no day names anywhere.
+    const html = renderReport(
+      baseEvent({ organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }] }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        talkSummaries: [
+          { title: "Interface Stability", about: "On interphase stability." },
+        ],
+        plan: [
+          { kind: "session", label: "Interface Stability", when: "09:00" },
+          { kind: "person", label: "Volta Lab" },
+        ],
+        posterFit: { fits: true, points: ["Overlaps the current project."] },
+      },
+    );
+
+    const plan = html.indexOf("A day-by-day plan for you");
+    expect(plan).toBeGreaterThan(-1);
+    expect(html.indexOf("What each talk is actually about")).toBeLessThan(plan);
+    expect(plan).toBeLessThan(html.indexOf("Is your work a fit for the poster call"));
+    expect(html.match(/data-plan-entry="session"/g)).toHaveLength(1);
+    expect(html.match(/data-plan-entry="person"/g)).toHaveLength(1);
+    expect(html).toContain("Person to find");
+    expect(html).toContain("Session · 09:00");
+    expect(html).not.toMatch(/Day 1|Day 2/);
+  });
+
+  it("survives a cached enrichment written before the day plan existed", () => {
+    // B-04. The cache holds entries for seven days and is still at v4, so a
+    // report must tolerate an entry with no plan field rather than crash —
+    // the failure mode the v4 bump was made to fix.
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        talkSummaries: [
+          { title: "Interface Stability", about: "On interphase stability." },
+        ],
+      },
+    );
+
+    expect(html).toContain("Interface Stability");
+    expect(html).not.toContain("A day-by-day plan for you");
   });
 
   it("never sells a key to someone who already has one", () => {

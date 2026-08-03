@@ -33,6 +33,24 @@ export interface EventEnrichment {
     /** Only when the page states it, quoted verbatim. */
     when?: string;
   }>;
+  /**
+   * B-04 / §1b Correction 1. Plate 03: "A day-by-day plan for you — Which
+   * sessions to attend and who to find, in order."
+   *
+   * A flat ordered list, deliberately not the day-keyed map P10.3 deleted.
+   * Ordering IS the feature; a `day` field is what made the old version
+   * restate the day's own name ("Day 1: Fundamentals") and earned it the
+   * verdict that it was worthless.
+   *
+   * Every entry is a talk title or a person name already verified elsewhere
+   * in the same parse, so the plan cannot invent a session or a speaker.
+   */
+  plan?: Array<{
+    kind: "session" | "person";
+    label: string;
+    /** Carried over from the talk, which only keeps a page-verbatim time. */
+    when?: string;
+  }>;
   posterFit?: {
     fits: boolean;
     points: string[];
@@ -120,6 +138,8 @@ const SUBMISSION_SCOPE_RE =
 const MAX_JOB_SPECIFICS_PER_SECTION = 6;
 const MAX_EVENT_JUDGED_ATTENDEES = 8;
 const MAX_EVENT_TALK_SUMMARIES = 6;
+/** B-04. Long enough to be a route through the event, short enough to read. */
+const MAX_EVENT_PLAN_ENTRIES = 8;
 const MAX_EVENT_TALK_TITLE_WORDS = 30;
 const MAX_EVENT_TALK_TITLE_CHARACTERS = 240;
 export const MAX_GENERATED_REASONING_WORDS = 60;
@@ -592,6 +612,14 @@ export function buildEventEnrichmentPrompt(
         "State what the call covers relative to the user's declared topics. Do not judge the user's chances and do not invent a call. Two to four short points, one idea each.",
       talkWhen:
         "Only include a session time that appears verbatim in the fetched page text. Omit it otherwise.",
+      // B-04. The second sentence is the deleted P10.3 rule's verbatim clause,
+      // restored word for word — it is the Phase 9 §5.4 quoting rule and it is
+      // what makes the plan unable to invent a session or a person. Only the
+      // framing changed: an ordered walk-through, never a per-day grouping.
+      plan:
+        `Return an ordered walk-through of the event for this user: at most ${MAX_EVENT_PLAN_ENTRIES} entries, listed in the order the user should take them. ` +
+        "Every item must be either an exact title also returned in talkSummaries or an exact name from unjudgedAttendees. Never use any other page speaker name, abstract, or description. " +
+        'Set kind to "session" for a talk title and "person" for a name. Do not group by day and never invent a day label.',
     },
     outputSchema: {
       condensedDescription: "string",
@@ -599,10 +627,13 @@ export function buildEventEnrichmentPrompt(
         { name: "exact supplied name", isAttendee: true, worthIt: true, why: "string" },
       ],
       talkSummaries: [{ title: "exact title from fetchedPageText", about: "string" }],
-      dayPlan: [
+      // B-04. Replaces the stale `dayPlan` block P10.3 left behind: the model
+      // was still being asked for a field with no rule and no parser, and the
+      // answer was silently discarded.
+      plan: [
         {
-          day: "string",
-          items: ["exact fetched title or exact supplied attendee name"],
+          kind: "session",
+          label: "exact talkSummaries title or exact supplied attendee name",
         },
       ],
       posterFit: { fits: true, points: ["short point", "short point"] },
@@ -708,6 +739,44 @@ export function parseEventEnrichment(
     }
   }
 
+  // B-04. Must run after judgedAttendees and talkSummaries, because it accepts
+  // an entry only if it is already in one of the two sets those blocks fill.
+  // Those sets survived P10.3 fully populated with nothing reading them.
+  //
+  // Both sets are built from the CAPPED output, so a plan can never reference a
+  // talk the cap dropped — the behaviour the old tests protected. The model's
+  // own `kind` is ignored and derived from which set matched instead, so it
+  // cannot mislabel a person as a session.
+  if (Array.isArray(parsed.plan)) {
+    const planned = new Set<string>();
+    const plan = parsed.plan
+      .flatMap((value) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+        const record = value as Record<string, unknown>;
+        const label =
+          typeof record.label === "string" ? clean(record.label) : undefined;
+        if (!label) return [];
+        const normalizedLabel = normalizeVerbatim(label);
+        if (planned.has(normalizedLabel)) return [];
+        const isSession = verifiedTalkTitles.has(normalizedLabel);
+        const isPerson = acceptedPlanAttendeeNames.has(normalizedLabel);
+        if (!isSession && !isPerson) return [];
+        planned.add(normalizedLabel);
+        const when = isSession
+          ? enrichment.talkSummaries?.find(
+              (talk) => normalizeVerbatim(talk.title) === normalizedLabel,
+            )?.when
+          : undefined;
+        const entry = {
+          kind: (isSession ? "session" : "person") as "session" | "person",
+          label,
+        };
+        return [when ? { ...entry, when } : entry];
+      })
+      .slice(0, MAX_EVENT_PLAN_ENTRIES);
+    if (plan.length > 0) enrichment.plan = plan;
+  }
+
   if (
     parsed.posterFit &&
     typeof parsed.posterFit === "object" &&
@@ -734,6 +803,8 @@ export function hasEventEnrichment(
     enrichment?.condensedDescription ||
       enrichment?.judgedAttendees?.length ||
       enrichment?.talkSummaries?.length ||
+      // B-04 restored the day plan to the boolean P10.3 removed it from.
+      enrichment?.plan?.length ||
       enrichment?.posterFit,
   );
 }

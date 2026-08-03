@@ -697,6 +697,8 @@ describe("event enrichment prompt and parser", () => {
       fetchedPageText: string;
       event: { sessionTypes: string[]; activities?: string[] };
       rules: {
+        // B-04 restored the day plan, so the prompt carries a `plan` rule.
+        plan: string;
         judgedAttendees: string;
         talkSummaries: string;
       };
@@ -714,8 +716,19 @@ describe("event enrichment prompt and parser", () => {
     expect(prompt.rules.talkSummaries).toContain("at most 30 words");
     expect(prompt.rules.talkSummaries).toContain("never an abstract");
     expect(prompt.rules.judgedAttendees).toContain("at most 8");
-    // P10.3 deleted the day-by-day plan: it only restated the talk list.
+    // B-04 rewrote this. P10.3 deleted the day-by-day plan because it restated
+    // day names; §1b Correction 1 reverses that and rebuilds it to plate 03's
+    // definition — sessions and people, in order. The old dayPlan shape stays
+    // gone; the plan carries no day field at all.
     expect("dayPlan" in prompt.rules).toBe(false);
+    expect(prompt.rules.plan).toContain("ordered walk-through");
+    expect(prompt.rules.plan).toContain("at most 8");
+    expect(prompt.rules.plan).toContain("never invent a day label");
+    // The verbatim clause is the whole safety property — it must survive word
+    // for word, or the plan can name a session the event does not have.
+    expect(prompt.rules.plan).toContain(
+      "Every item must be either an exact title also returned in talkSummaries or an exact name from unjudgedAttendees.",
+    );
     expect(prompt.task).toContain("entire JSON closes");
   });
 
@@ -838,10 +851,19 @@ describe("event enrichment prompt and parser", () => {
 
     expect(parsed?.judgedAttendees).toHaveLength(8);
     expect(parsed?.talkSummaries).toHaveLength(6);
+    // B-04 rewrote this. The old shape stays gone, and a response that returns
+    // no plan still produces no plan — the field is emitted only when the model
+    // supplies one that survives verification.
     expect("dayPlan" in (parsed ?? {})).toBe(false);
+    expect("plan" in (parsed ?? {})).toBe(false);
   });
 
   it("does not plan a seventh title that was omitted by the summary cap", () => {
+    // B-04 rewrote this. It used to assert only that no plan existed at all,
+    // which the deleted feature made trivially true. Now the model DOES return
+    // a plan naming the dropped seventh title, and the parser must reject that
+    // entry: the plan is verified against the capped talk list, so it can never
+    // point the reader at a session the report does not carry.
     const titles = Array.from(
       { length: 7 },
       (_, index) => `Battery Interface Study ${index + 1}`,
@@ -852,6 +874,10 @@ describe("event enrichment prompt and parser", () => {
           title,
           about: "A concise explanation.",
         })),
+        plan: [
+          { kind: "session", label: titles[6] },
+          { kind: "session", label: titles[0] },
+        ],
       }),
       event,
       titles.join("\n\n"),
@@ -859,7 +885,57 @@ describe("event enrichment prompt and parser", () => {
     );
 
     expect(parsed?.talkSummaries).toHaveLength(6);
-    expect("dayPlan" in (parsed ?? {})).toBe(false);
+    expect(parsed?.plan).toEqual([{ kind: "session", label: titles[0] }]);
+    expect(JSON.stringify(parsed)).not.toContain(titles[6]);
+  });
+
+  it("orders the plan as returned and refuses an unverified entry", () => {
+    // B-04. Plate 03: "Which sessions to attend and who to find, in order."
+    // Order is the feature, so it is preserved exactly as returned. Every entry
+    // must already be a verified talk title or an accepted attendee name —
+    // the Phase 9 §5.4 verbatim rule, which is what stops the plan inventing a
+    // session or a person. `kind` is derived from which list matched, not
+    // trusted from the model.
+    const parsed = parseEventEnrichment(
+      JSON.stringify({
+        judgedAttendees: [
+          {
+            name: "New Speaker",
+            isAttendee: true,
+            worthIt: true,
+            why: "Relevant interface work.",
+          },
+        ],
+        talkSummaries: [
+          {
+            title: "Interface Stability in Solid-State Cells",
+            about: "A session on interfaces.",
+            when: "09:00",
+          },
+        ],
+        plan: [
+          // Mislabelled on purpose: the parser derives kind itself.
+          { kind: "person", label: "Interface Stability in Solid-State Cells" },
+          { kind: "person", label: "New Speaker" },
+          { kind: "session", label: "A Session Nobody Listed" },
+          { kind: "person", label: "Someone Who Is Not Attending" },
+          // A duplicate must not take a second slot.
+          { kind: "session", label: "Interface Stability in Solid-State Cells" },
+        ],
+      }),
+      event,
+      "09:00 Interface Stability in Solid-State Cells",
+      [{ level: 3, text: "Interface Stability in Solid-State Cells" }],
+    );
+
+    expect(parsed?.plan).toEqual([
+      {
+        kind: "session",
+        label: "Interface Stability in Solid-State Cells",
+        when: "09:00",
+      },
+      { kind: "person", label: "New Speaker" },
+    ]);
   });
 
   it("never falls back to activities when fetched page text is absent", () => {
@@ -878,7 +954,11 @@ describe("event enrichment prompt and parser", () => {
     ).toEqual({});
   });
 
-  it("keeps quoted titles or supplied names and emits no day plan", () => {
+  // B-04 renamed this. It used to be "…and emits no day plan", which pinned
+  // the deleted feature's absence. What it actually protects is that only
+  // quoted titles and supplied names survive — and that a response carrying no
+  // plan still yields no plan.
+  it("keeps quoted titles or supplied names and adds no plan unasked", () => {
     expect(
       parseEventEnrichment(
         JSON.stringify({

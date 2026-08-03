@@ -55,6 +55,12 @@ const EVENT_TIER_UPGRADE_ITEMS = [
       "Read the supplied programme details instead of repeating session titles.",
   },
   {
+    // B-04 / §1b Correction 1. Restored as item 3 of 4 with the plate's exact
+    // copy. P10.3 deleted the promise along with the feature.
+    title: "A day-by-day plan for you",
+    description: "Which sessions to attend and who to find, in order.",
+  },
+  {
     title: "Is your work a fit for the poster call",
     description:
       "Compare the event's supplied scope with your current project.",
@@ -1077,6 +1083,41 @@ export function EventReport({
             </div>
           </ReportSection>
         )}
+
+        {/* B-04 / §1b Correction 1. Plate 03: "Which sessions to attend and
+            who to find, in order." Every row was verified against the talk
+            list or the attendee list at parse time, so nothing here can be a
+            session or a person the event does not have. A cached entry from
+            before this shipped simply has no plan and renders nothing. */}
+        {displayEnrichment?.plan?.length ? (
+          <ReportSection title="A day-by-day plan for you">
+            <ol className="space-y-2">
+              {displayEnrichment.plan.map((entry, index) => (
+                <li
+                  key={`${entry.kind}-${entry.label}`}
+                  data-plan-entry={entry.kind}
+                  className="flex gap-3 rounded-xl border border-border bg-surface px-5 py-3"
+                >
+                  <span
+                    aria-hidden
+                    className="text-body-sm font-semibold tabular-nums text-accent"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-body-sm font-semibold text-heading">
+                      {entry.label}
+                    </span>
+                    <span className="mt-0.5 block text-caption text-text-faint">
+                      {entry.kind === "session" ? "Session" : "Person to find"}
+                      {entry.when ? ` · ${entry.when}` : ""}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </ReportSection>
+        ) : null}
 
         {enrichmentLoading && (
           <p
