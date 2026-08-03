@@ -134,8 +134,25 @@ function formatEventType(value: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+/** A whole machine date and nothing else — "2027-04-15", "2027-04-15T09:00Z". */
+const WHOLE_ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/;
+
+/**
+ * B-01. A fee deadline is source text, not a date value: plate 03's DEADLINE
+ * column is free prose ("Rate held until Feb 6", "Early bird ends Jan 9 · $620
+ * after", "Oct 30"). None of it carries a year, so none of it may print one.
+ *
+ * The old body was `formatDate(value) ?? clean(value)`, which handed every
+ * string to `new Date()`. V8's legacy parser skips tokens it does not
+ * recognise and **defaults a missing year to 2001**, so "Rate held until Feb 6"
+ * rendered as "Feb 6, 2001" — a fabricated year printed as fact. Only reformat
+ * when the whole string is a machine date; everything else prints verbatim.
+ */
 function formatFeeDeadline(value: string | undefined): string | undefined {
-  return formatDate(value) ?? clean(value);
+  const text = clean(value);
+  if (!text) return undefined;
+  if (!WHOLE_ISO_DATE.test(text)) return text;
+  return formatDate(text) ?? text;
 }
 
 function parsePrice(value: string): { currency: string; amount: number } | null {

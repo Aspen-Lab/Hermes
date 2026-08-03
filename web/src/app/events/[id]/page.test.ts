@@ -134,6 +134,40 @@ describe("EventReport", () => {
     );
   });
 
+  it("never invents a year for a free-text fee deadline", () => {
+    // B-01. Plate 03's DEADLINE column is prose and carries no year. The old
+    // formatFeeDeadline handed every string to `new Date()`, whose legacy
+    // parser defaults a missing year to 2001 — "Rate held until Feb 6" printed
+    // as "Feb 6, 2001", a fabricated fact. Free text now round-trips verbatim;
+    // only a whole ISO date is reformatted.
+    const html = renderReport(
+      baseEvent({
+        fees: [
+          {
+            label: "Hotel block",
+            standard: "$210 / night",
+            deadline: "Rate held until Feb 6",
+          },
+          { label: "Abstract", standard: "—", deadline: "Oct 30" },
+          { label: "Travel grant", standard: "—", deadline: "Allow 3 weeks" },
+          {
+            label: "Early bird",
+            standard: "$500",
+            student: "$250",
+            deadline: "2027-04-15",
+          },
+        ],
+      }),
+    );
+
+    expect(html).not.toContain("2001");
+    expect(html).toContain("Rate held until Feb 6");
+    expect(html).toContain(">Oct 30</td>");
+    expect(html).toContain("Allow 3 weeks");
+    // A whole machine date is still formatted for the reader.
+    expect(html).toContain("Apr 15, 2027");
+  });
+
   it("keeps Registered and Submitted independent", () => {
     const html = renderReport(baseEvent(), "PhD Year 3", {
       registered: true,
