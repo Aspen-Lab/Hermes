@@ -179,8 +179,13 @@ describe("EventReport", () => {
       }),
     );
 
+    // KEEP the count at 2. Both sites are on plate 03 — the written sentence
+    // up top and a compressed restatement at the head of the table — and
+    // HANDOFF-report-overhaul.md §P3.2 records the duplication as deliberate.
     expect(html.match(/Cheapest way in, for you/g)).toHaveLength(2);
-    expect(html).toContain("$250 student rate · Early bird · by Apr 15, 2027");
+    // B-11 rewrote this. The old assertion pinned a machine-assembled string,
+    // "$250 student rate · Early bird · by Apr 15, 2027". It is now a sentence.
+    expect(html).toContain("Student ticket in person before Apr 15, 2027 — $250.");
     for (const header of ["Item", "Standard", "Student", "Deadline"]) {
       expect(html).toContain(`>${header}</th>`);
     }
@@ -195,6 +200,68 @@ describe("EventReport", () => {
     // its missing heading, so the ordering anchors on the heading instead.
     expect(html.indexOf("Cheapest way in, for you")).toBeLessThan(
       html.indexOf("Two deadlines, one event"),
+    );
+  });
+
+  it("names the travel grant and never signs off with the higher price", () => {
+    // B-11. Three defects in the old generated string, all fixed here:
+    //   1. field-concatenation rather than a sentence;
+    //   2. it ended by quoting "$620 after" — the tail of the deadline text —
+    //      so the one line whose job is to name the CHEAPEST way in finished
+    //      with the most expensive number on the page;
+    //   3. it never mentioned the travel grant sitting in the same record.
+    const html = renderReport(
+      baseEvent({
+        deadline: "2026-10-30",
+        travelGrant: "30 grants available, apply with your abstract",
+        fees: [
+          {
+            label: "Early bird",
+            standard: "$620",
+            student: "$180",
+            deadline: "Early bird ends Jan 9 · $620 after",
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain(
+      "Student ticket in person before Jan 9, with a travel grant — $180, applied for alongside the abstract you were going to write anyway.",
+    );
+    // The compressed restatement in the table head drops only the tail clause.
+    expect(html).toContain(
+      "Student ticket in person before Jan 9, with a travel grant — $180.",
+    );
+    // The callout must not end on the higher price.
+    const callout = html.match(
+      /Cheapest way in, for you<\/p>[\s\S]{0,400}?<\/aside>/,
+    )?.[0];
+    expect(callout).not.toContain("$620");
+  });
+
+  it("puts the travel grant and invitation letter in the cost table only", () => {
+    // Manager's ruling 6. Both used to print as prose under "What actually
+    // happens there" AND as rows in the table — the same fact twice, which
+    // say-it-once forbids. Plate 03 has them in the table only.
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session"],
+        travelGrant: "30 grants available",
+        invitationLetter: true,
+        fees: [{ label: "Early bird", standard: "$620", student: "$180" }],
+      }),
+    );
+
+    expect(html.match(/data-cost-support-row/g)).toHaveLength(2);
+    expect(html.match(/30 grants available/g)).toHaveLength(1);
+    expect(html).toContain("Visa invitation letter");
+    expect(html).toContain("Available on request.");
+    expect(html).not.toContain("<strong>Travel grant:</strong>");
+    expect(html).not.toContain("Invitation letters are available.");
+    // B-13. The plate's closing footnote.
+    expect(html).toContain("Full price with no grant would be $620.");
+    expect(html).toContain(
+      "The gap between the two is the reason this line sits at the top of the report.",
     );
   });
 

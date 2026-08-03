@@ -98,9 +98,31 @@ export interface EventRosterContext {
 }
 
 interface CheapestWay {
+  /** B-11. The long written sentence, for the callout at the top. */
   text: string;
+  /** B-11. The compressed restatement, for the cost table's header row. */
+  short: string;
   value: string;
   tier: "standard" | "student" | "online";
+}
+
+/**
+ * B-11. Only the date-ish head of a compound deadline may enter the "before X"
+ * clause. "Early bird ends Jan 9 · $620 after" pasted whole is how the one line
+ * whose job is to name the CHEAPEST way in ended up finishing with the most
+ * expensive number on the page.
+ */
+function cutoffPhrase(value: string | undefined): string | undefined {
+  const text = formatFeeDeadline(value);
+  if (!text) return undefined;
+  const head = clean(text.split(/\s*[·|;]\s*/)[0]);
+  // A clause still carrying a price is a price, not a cutoff.
+  if (!head || /[$€£]|\b(?:USD|EUR|GBP|CAD|AUD|NZD)\b/i.test(head)) {
+    return undefined;
+  }
+  // "Early bird ends Jan 9" reads as "before Jan 9", not "before Early bird
+  // ends Jan 9".
+  return clean(/(?:ends?|until|closes?|by)\s+(.+)$/i.exec(head)?.[1]) ?? head;
 }
 
 interface DeadlineMilestone {
@@ -225,19 +247,32 @@ export function cheapestWayIn(
             left.index - right.index,
         )[0]
       : candidates[0];
-    const cutoff = formatFeeDeadline(selected.fee.deadline);
-    const tierLabel =
+    // B-11. A written sentence, not fields glued with dots. The old string
+    // read "$180 student rate · Registration, in person · by Early bird ends
+    // Jan 9 · $620 after" — machine assembly that never mentioned the travel
+    // grant sitting in the same record, and signed off with the higher price.
+    const cutoff = cutoffPhrase(selected.fee.deadline);
+    const ticket =
       tier === "student"
-        ? "student rate"
+        ? "Student ticket"
         : tier === "online"
-          ? "online rate"
-          : "standard rate";
+          ? "Online ticket"
+          : "Standard ticket";
+    const mode = tier === "online" || event.isOnline ? "online" : "in person";
+    const grant = clean(event.travelGrant);
+    const sentence =
+      `${ticket} ${mode}${cutoff ? ` before ${cutoff}` : ""}` +
+      `${grant ? ", with a travel grant" : ""} — ${selected.value}`;
     return {
       value: selected.value,
       tier,
-      text: `${selected.value} ${tierLabel} · ${selected.fee.label}${
-        cutoff ? ` · by ${cutoff}` : ""
-      }`,
+      short: `${sentence}.`,
+      // The long form adds why the grant is not extra work, which is the whole
+      // reason this line is worth acting on.
+      text:
+        grant && clean(event.deadline)
+          ? `${sentence}, applied for alongside the abstract you were going to write anyway.`
+          : `${sentence}.`,
     };
   }
   return null;
@@ -615,18 +650,60 @@ function DeadlineTimeline({
   );
 }
 
+/**
+ * B-13. Plate 03 closes the table with the gap between the cheapest route and
+ * full price, and says why that gap earns the cheapest line its place at the
+ * top of the report. Only renders when both numbers exist and actually differ.
+ *
+ * The plate's "plus four nights" clause is dropped: nights are not a field on
+ * `Event`, and inventing a hotel count to match a mock is exactly the kind of
+ * fabrication the rest of this work is removing.
+ */
+function costsFootnote(fees: EventFee[], cheapest: CheapestWay | null): string {
+  const closing =
+    "The gap between the two is the reason this line sits at the top of the report.";
+  const cheapestPrice = cheapest ? parsePrice(cheapest.value) : null;
+  const fullPrices = fees
+    .flatMap((fee) => {
+      const value = clean(fee.standard);
+      const parsed = value ? parsePrice(value) : null;
+      return parsed && value ? [{ value, parsed }] : [];
+    })
+    .filter(({ parsed }) => parsed.currency === cheapestPrice?.currency);
+  const full = fullPrices.sort(
+    (left, right) => right.parsed.amount - left.parsed.amount,
+  )[0];
+  if (!cheapestPrice || !full || full.parsed.amount <= cheapestPrice.amount) {
+    return closing;
+  }
+  return `Full price with no grant would be ${full.value}. ${closing}`;
+}
+
 function CostsTable({
   fees,
+  supportRows,
   cheapest,
 }: {
   fees: EventFee[];
+  /**
+   * Ruling 6. The travel grant and the invitation letter belong in this table
+   * and nowhere else — they used to print as prose under "What actually
+   * happens there" AND as table rows on the plate, which say-it-once forbids.
+   * Neither is an `EventFee`, and splitting one free-text string across
+   * STANDARD and STUDENT would be inventing structure, so each spans the
+   * value columns instead.
+   */
+  supportRows: Array<{ label: string; detail: string }>;
   cheapest: CheapestWay | null;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       {cheapest && (
         <p className="border-b border-border bg-accent/5 px-4 py-3 text-body-sm text-heading">
-          <strong>Cheapest way in, for you:</strong> {cheapest.text}
+          {/* B-11. Plate 03 prints the written sentence up top and a compressed
+              restatement here. Both sites are on the plate and deliberate; the
+              defect was that they printed the same machine-assembled string. */}
+          <strong>Cheapest way in, for you:</strong> {cheapest.short}
         </p>
       )}
       <div className="overflow-x-auto">
@@ -669,9 +746,35 @@ function CostsTable({
                 </td>
               </tr>
             ))}
+            {supportRows.map((row) => (
+              <tr
+                key={row.label}
+                data-cost-support-row
+                className="border-b border-border last:border-0"
+              >
+                <th
+                  scope="row"
+                  className="px-4 py-3 text-body-sm font-semibold text-heading"
+                >
+                  {row.label}
+                </th>
+                <td
+                  colSpan={3}
+                  className="px-4 py-3 text-body-sm text-text-muted"
+                >
+                  {row.detail}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
+      <p
+        data-costs-footnote
+        className="border-t border-border px-4 py-3 text-caption leading-5 text-text-faint"
+      >
+        {costsFootnote(fees, cheapest)}
+      </p>
     </div>
   );
 }
@@ -1129,11 +1232,20 @@ export function EventReport({
     enrichment,
   );
   const travelGrant = clean(event.travelGrant);
-  const hasHappenings =
-    activities.length > 0 ||
-    Boolean(description) ||
-    Boolean(travelGrant) ||
-    event.invitationLetter !== undefined;
+  // Ruling 6. Both facts moved out of the happenings prose and into the cost
+  // table, where the plate has them and where they are only stated once.
+  const supportRows = [
+    travelGrant ? { label: "Travel grant", detail: travelGrant } : undefined,
+    event.invitationLetter !== undefined
+      ? {
+          label: "Visa invitation letter",
+          detail: event.invitationLetter
+            ? "Available on request."
+            : "Explicitly not provided.",
+        }
+      : undefined,
+  ].filter(Boolean) as Array<{ label: string; detail: string }>;
+  const hasHappenings = activities.length > 0 || Boolean(description);
   const displayedJudgments = (enrichment?.judgedAttendees ?? []).filter(
     ({ why }) => !isCachedRosterRejection(why),
   );
@@ -1237,19 +1349,9 @@ export function EventReport({
                 ))}
               </div>
             )}
-            {travelGrant && (
-              <p className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-body-sm text-heading">
-                <strong>Travel grant:</strong> {travelGrant}
-              </p>
-            )}
-            {event.invitationLetter !== undefined && (
-              <p className="mt-3 text-body-sm text-text-muted">
-                Invitation letters{" "}
-                {event.invitationLetter
-                  ? "are available."
-                  : "are explicitly not provided."}
-              </p>
-            )}
+            {/* Ruling 6. The travel grant and the invitation letter used to
+                print here as prose AND as rows in the cost table below — the
+                same fact twice. The plate has them in the table only. */}
           </ReportSection>
         )}
       </div>
@@ -1382,9 +1484,13 @@ export function EventReport({
         {/* B-08. The cost table used to sit third from the top, ahead of both
             the programme and the roster. §1c puts it here — after "Who’ll be
             in the room" and immediately before "Why Peer sent this to you". */}
-        {fees.length > 0 && (
+        {(fees.length > 0 || supportRows.length > 0) && (
           <ReportSection title="What it costs you">
-            <CostsTable fees={fees} cheapest={cheapest} />
+            <CostsTable
+              fees={fees}
+              supportRows={supportRows}
+              cheapest={cheapest}
+            />
           </ReportSection>
         )}
 
