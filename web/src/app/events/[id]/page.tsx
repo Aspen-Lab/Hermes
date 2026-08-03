@@ -190,6 +190,26 @@ const WHOLE_ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/;
  * rendered as "Feb 6, 2001" — a fabricated year printed as fact. Only reformat
  * when the whole string is a machine date; everything else prints verbatim.
  */
+/**
+ * B-12. `formatEventType` is an enum humaniser: it strips hyphens and
+ * title-cases every word, which is right for `job-fair` and wrong for prose.
+ * Live activities are a fixed lowercase vocabulary ("poster session", "career
+ * fair") that title-cases correctly, but cached and model-supplied rows can
+ * carry a real session name — and the humaniser turned "Symposium:
+ * solid-state interfaces" into "Symposium: Solid State Interfaces".
+ *
+ * Anything longer or more punctuated than a vocabulary label keeps its own
+ * capitalisation.
+ */
+function formatActivityLabel(value: string): string {
+  const text = value.trim();
+  const isVocabularyLabel =
+    /^[a-z0-9][a-z0-9 _-]*$/i.test(text) && text.split(/\s+/).length <= 3;
+  return isVocabularyLabel
+    ? formatEventType(text)
+    : text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function formatFeeDeadline(value: string | undefined): string | undefined {
   const text = clean(value);
   if (!text) return undefined;
@@ -495,6 +515,7 @@ function HeaderChip({
 function EventActionRow({
   primaryHref,
   primaryLabel,
+  abstractHref,
   isSaved,
   isRegistered,
   isSubmitted,
@@ -507,6 +528,14 @@ function EventActionRow({
 }: {
   primaryHref?: string;
   primaryLabel: string;
+  /**
+   * B-16. Plate 03 has two primary links, "Register ↗" and "Submit abstract
+   * ↗". There is no abstract-specific URL on `Event` — only linkRegistration
+   * and linkOfficial — so this is set only when the event actually has an
+   * abstract deadline, and points at the official site. No second URL is
+   * fabricated.
+   */
+  abstractHref?: string;
   isSaved: boolean;
   isRegistered: boolean;
   isSubmitted: boolean;
@@ -533,6 +562,21 @@ function EventActionRow({
           )}
         >
           {primaryLabel}
+          <span aria-hidden>↗</span>
+        </a>
+      )}
+      {abstractHref && (
+        <a
+          href={abstractHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-event-abstract-link
+          className={cn(
+            buttonVariants({ tone: "soft" }),
+            "h-11 px-4 text-body font-semibold",
+          )}
+        >
+          Submit abstract
           <span aria-hidden>↗</span>
         </a>
       )}
@@ -1223,10 +1267,37 @@ export function EventReport({
     (!event.linkOfficial || event.linkRegistration !== event.linkOfficial)
       ? "Register"
       : "Official site";
+  // B-16. Only when there is an abstract to submit, and only ever pointed at a
+  // URL the event actually gave us.
+  const abstractHref = clean(event.deadline)
+    ? clean(event.linkOfficial) ?? clean(event.linkRegistration)
+    : undefined;
   const cheapest = cheapestWayIn(event, careerStage);
   const milestones = deadlineMilestones(event, nowMs);
   const fees = event.fees ?? [];
   const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
+  // B-12. Plate 03 marks three of six chips with a tick "because they line up
+  // with your topics". Every chip rendered identically before, so the "which of
+  // these matters to me" signal — the only reason to read the row — was gone.
+  // Needles under four characters are dropped: a two-letter topic matches
+  // almost any label and would highlight everything.
+  const highlightedActivities = new Set(
+    (() => {
+      const needles = [
+        ...new Set(
+          [...(event.matchedTerms ?? []), ...context.declaredTopics]
+            .map(normalized)
+            .filter((term) => term.length >= 4),
+        ),
+      ];
+      return activities.filter((activity) => {
+        const label = normalized(activity);
+        return needles.some(
+          (needle) => label.includes(needle) || needle.includes(label),
+        );
+      });
+    })(),
+  );
   const description = resolveEventReportDescription(
     cleanEventDescription(event.shortDescription),
     enrichment,
@@ -1280,6 +1351,10 @@ export function EventReport({
           <div className="mb-4 flex flex-wrap gap-2">
             <HeaderChip>{formatEventType(event.type)}</HeaderChip>
             <HeaderChip>{event.isOnline ? "Online" : "In person"}</HeaderChip>
+            {/* B-15. event.rank is written by the mapper and was read by
+                nothing. §1c puts it here, between the format chip and the
+                match chip. Most events have no rank, so it is guarded. */}
+            {clean(event.rank) && <HeaderChip>{clean(event.rank)}</HeaderChip>}
             {matchPct !== null && (
               <HeaderChip accent>{matchPct}% match</HeaderChip>
             )}
@@ -1298,6 +1373,7 @@ export function EventReport({
           <EventActionRow
             primaryHref={primaryHref}
             primaryLabel={primaryLabel}
+            abstractHref={abstractHref}
             isSaved={isSaved}
             isRegistered={isRegistered}
             isSubmitted={isSubmitted}
@@ -1339,15 +1415,38 @@ export function EventReport({
             )}
             {activities.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
-                {activities.map((activity) => (
-                  <span
-                    key={activity}
-                    className="rounded-full border border-tag/20 bg-tag-dim px-3 py-1 text-meta text-tag"
-                  >
-                    {formatEventType(activity)}
-                  </span>
-                ))}
+                {activities.map((activity) => {
+                  const highlighted = highlightedActivities.has(activity);
+                  return (
+                    <span
+                      key={activity}
+                      data-activity-chip={highlighted ? "matched" : "plain"}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-meta",
+                        highlighted
+                          ? "border-accent/25 bg-accent/10 font-medium text-accent"
+                          : "border-tag/20 bg-tag-dim text-tag",
+                      )}
+                    >
+                      {formatActivityLabel(activity)}
+                      {highlighted && <span aria-hidden>✓</span>}
+                    </span>
+                  );
+                })}
               </div>
+            )}
+            {/* B-12. The footnote only makes sense once something is
+                highlighted, so it is tied to that. The plate's career-stage
+                clause is generalised — it hardcoded "PhD 4". */}
+            {highlightedActivities.size > 0 && (
+              <p
+                data-happenings-footnote
+                className="mt-3 text-caption leading-5 text-text-faint"
+              >
+                Highlighted because they line up with your topics
+                {careerStage ? ` and with where you are — ${careerStage}` : ""}.
+                Those are the ones you’d be sorry to miss.
+              </p>
             )}
             {/* Ruling 6. The travel grant and the invitation letter used to
                 print here as prose AND as rows in the cost table below — the
