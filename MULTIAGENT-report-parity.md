@@ -33,14 +33,15 @@ before you stop, not after you finish.
 
 ```
 ROUND:            1
-WHOSE TURN:       C  (the manager is doing C's remaining work directly)
-STATUS:           C PARTIAL — 14 of B's 20 items done
-LAST DIFFERENCE:  50%   (not re-measured since; A runs next)
+WHOSE TURN:       A  (round 2 re-measure)
+STATUS:           C COMPLETE — all 20 of B's items done
+LAST DIFFERENCE:  50%   (round 1 figure; A re-measures now)
 GATE (0%):        NOT MET
 
-DONE:      B-01 B-02 B-03 B-04 B-05 B-06 B-07 B-08 B-09 B-10 B-11 B-12 B-15 B-16
-REMAINING: B-13 B-14 B-17 B-18 B-19 B-20
+DONE:      B-01 .. B-20, all twenty
 GATE NOW:  81 files / 815 tests passing, typecheck clean, lint 1 pre-existing
+NOTE:      B-01..B-16 by agent C; B-17..B-20 by the manager after C hit the
+           account spend limit. B-13 and B-14 turned out already done by C.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
