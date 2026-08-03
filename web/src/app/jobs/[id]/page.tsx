@@ -40,21 +40,32 @@ import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
+/**
+ * B-20. Plate 02's wording for the promises that survive.
+ *
+ * Two of the plate's four are deliberately absent under manager ruling §1d:
+ * "How competitive this actually is" (Peer presents, the reader judges) and
+ * "The role in three clean sentences" (merged into "What the role is"). A
+ * promise for a feature we will not build is the exact dishonesty this block
+ * was rewritten to remove, so neither is listed.
+ */
 const JOB_TIER_UPGRADE_ITEMS = [
   {
     title: "Sponsorship read when the posting is silent",
     description:
-      "Judge the employer's likely position without confusing inference with posting evidence.",
+      "Judges this employer's track record instead of leaving it at “not stated”.",
   },
   {
+    // Not on the plate. Ruling §1d keeps it: Phase 9 built it, it quotes the
+    // posting verbatim, and the plate predates the feature.
     title: "What this employer actually asks for",
     description:
-      "Quote the specific requirements and duties from the posting itself.",
+      "Quotes the specific requirements and duties from the posting itself.",
   },
   {
     title: "What to emphasise in your application",
     description:
-      "Identify which parts of your declared work and methods should lead.",
+      "Which of your papers and methods to lead with, given this team's work.",
   },
 ];
 
@@ -446,7 +457,9 @@ function JobActionRow({
             "h-11 px-4 text-body font-semibold",
           )}
         >
-          Apply
+          {/* B-18. Plate 02 says where the link goes. "Apply" alone reads like
+              Peer takes the application; it does not — it hands you off. */}
+          Apply on employer site
           <span aria-hidden>↗</span>
         </a>
       )}
@@ -463,7 +476,8 @@ function JobActionRow({
         {isSaved ? "Saved" : "Save"}
       </button>
       <CompletionPill
-        label="Applied"
+        label="Mark as applied"
+        controlKey="applied"
         checked={isApplied}
         onChange={onAppliedChange}
         className="h-11 px-3 text-body-sm"
@@ -527,9 +541,24 @@ export function JobReport({
   const visaEvidence = clean(job.visa?.evidence);
   const roleTitle = cleanJobTitle(job.roleTitle) || job.roleTitle;
   const company = cleanJobSubtitlePart(job.companyOrLab);
-  const location = cleanJobSubtitlePart(
-    job.isRemote ? "Remote" : job.location,
-  );
+  const location = cleanJobSubtitlePart(job.location);
+  /**
+   * B-18. Plate 02's subtitle has three segments — employer, place, work mode
+   * ("Toyota Research Institute · Los Altos, CA · Hybrid (3 days on-site)").
+   * `Job` has no work mode beyond `isRemote`, so the third segment is "Remote"
+   * or absent; nothing is invented. Remote used to *replace* the location,
+   * which threw away where the team actually sits.
+   */
+  const workMode = job.isRemote ? "Remote" : undefined;
+  // B-17. Plate 02's labelled rows, built only from fields that exist.
+  const applyRows: Array<{ label: string; value: string }> = [
+    materials.length > 0
+      ? { label: "Materials", value: materials.join(", ") }
+      : undefined,
+    clean(job.sourceId)
+      ? { label: "Seen on", value: clean(job.sourceId)! }
+      : undefined,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
   const hasEnrichment = hasJobEnrichment(enrichment);
 
   return (
@@ -569,11 +598,14 @@ export function JobReport({
         <h1 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.015em] text-heading lg:text-[36px]">
           {roleTitle}
         </h1>
-        {(company || location) && (
+        {(company || location || workMode) && (
           <p className="mt-3 text-body text-text-muted">
-            {company}
-            {company && location && <span aria-hidden> · </span>}
-            {location}
+            {[company, location, workMode].filter(Boolean).map((part, index) => (
+              <span key={part}>
+                {index > 0 && <span aria-hidden> · </span>}
+                {part}
+              </span>
+            ))}
           </p>
         )}
 
@@ -600,6 +632,15 @@ export function JobReport({
       {visaEvidence && !enrichment?.sponsorshipRead && (
         <blockquote className="mt-4 border-l-2 border-accent/50 pl-4 text-body leading-7 text-text-muted">
           “{visaEvidence}”
+          {/* B-19. Plate 02 closes the quote with its source. Without it the
+              sentence reads as Peer's own words, which is the one thing this
+              block exists to avoid: it is the posting's promise, not ours. */}
+          <cite
+            data-visa-attribution
+            className="mt-1 block not-italic text-caption text-text-faint"
+          >
+            — from the job description
+          </cite>
         </blockquote>
       )}
 
@@ -712,21 +753,32 @@ export function JobReport({
               </ul>
             </section>
           )}
-          {materials.length > 0 && (
+          {applyRows.length > 0 && (
             <section data-section="to-apply-have-ready">
               <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
                 To apply, have ready
               </h2>
-              <ul className="mt-4 space-y-2">
-                {materials.map((material) => (
-                  <li
-                    key={material}
-                    className="rounded-lg border border-border bg-surface px-4 py-3 text-body-sm text-heading"
-                  >
-                    {material}
-                  </li>
+              {/*
+                B-17. Plate 02 has labelled rows — MATERIALS / ELIGIBILITY /
+                TEAM / SEEN ON — not a bare list. Only MATERIALS and SEEN ON
+                have a field behind them today; ELIGIBILITY and TEAM would need
+                new extraction, and the plate's own rule is that an absent field
+                hides rather than prints empty. The shape is here so they can
+                slot in when the data exists.
+              */}
+              <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3">
+                {applyRows.map((row) => (
+                  <div key={row.label} className="contents">
+                    <dt
+                      data-apply-row={row.label.toLowerCase()}
+                      className="pt-0.5 text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
+                    >
+                      {row.label}
+                    </dt>
+                    <dd className="text-body-sm text-heading">{row.value}</dd>
+                  </div>
                 ))}
-              </ul>
+              </dl>
             </section>
           )}
         </div>

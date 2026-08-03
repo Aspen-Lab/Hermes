@@ -237,7 +237,10 @@ describe("JobReport", () => {
     expect(pendingButton).toContain('aria-pressed="false"');
     expect(appliedButton).toContain('aria-pressed="true"');
     expect(appliedButton).toContain("bg-done-dim");
-    expect(appliedHtml).toContain(">Applied<");
+    // B-18. Plate 02 labels this "Mark as applied" — the control is an action,
+    // not a status. The hook it is found by is `controlKey`, which no longer
+    // moves when the copy does.
+    expect(appliedHtml).toContain(">Mark as applied<");
   });
 
   it("lists both requirements behind a zero-of-two skills count", () => {

@@ -58,14 +58,16 @@ import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
 const EVENT_TIER_UPGRADE_ITEMS = [
   {
-    title: "Organisations and people, judged",
+    // B-20. Plate 03's wording. The plate hardcodes a count ("The other 29
+    // exhibitors, judged"); this block is static and cannot know it, so the
+    // count is left out rather than printed wrong.
+    title: "The other exhibitors, judged",
     description:
-      "Show which unfamiliar people and organisations are worth your time.",
+      "Reads the full list and tells you which strangers are worth your day.",
   },
   {
     title: "What each talk is actually about",
-    description:
-      "Read the supplied programme details instead of repeating session titles.",
+    description: "Reads the programme abstracts, not just the session titles.",
   },
   {
     // B-04 / §1b Correction 1. Restored as item 3 of 4 with the plate's exact
@@ -76,7 +78,7 @@ const EVENT_TIER_UPGRADE_ITEMS = [
   {
     title: "Is your work a fit for the poster call",
     description:
-      "Compare the event's supplied scope with your current project.",
+      "Compares the call's scope against your project and says yes or no.",
   },
 ];
 
