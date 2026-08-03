@@ -10,6 +10,7 @@
 // reveal (skipped under prefers-reduced-motion), then a static canvas.
 
 import { useEffect, useRef } from "react";
+import { cn } from "@/lib/cn";
 
 interface DotMatrixImageProps {
   src: string;
@@ -146,7 +147,10 @@ export function DotMatrixImage({
     <canvas
       ref={canvasRef}
       aria-hidden
-      className={`pointer-events-none select-none ${className ?? ""}`}
+      // Template-literal concatenation left a trailing space when no className
+      // was passed. The server trims it in the emitted attribute and the client
+      // keeps it, which React reports as a hydration mismatch on every load.
+      className={cn("pointer-events-none select-none", className)}
       style={{ aspectRatio: String(aspectRatio), width: "100%", height: "auto" }}
     />
   );
