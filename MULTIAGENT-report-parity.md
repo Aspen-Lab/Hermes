@@ -1,7 +1,7 @@
 # REPORT PARITY LOOP — shared state
 
-**Goal:** get Peer's live job and event reports to within **5%** of the design
-spec plates. **Manager:** the main Claude session. **Loop:** A → B → C → A …
+**Goal:** get Peer's live job and event reports to **0% different** from the
+design spec plates — every element the plate carries, in its shape and order. **Manager:** the main Claude session. **Loop:** A → B → C → A …
 
 **Template (the contract):**
 `template for web design/Peer-design-spec-original.pdf` — 21 pages.
@@ -36,7 +36,7 @@ ROUND:            1
 WHOSE TURN:       C
 STATUS:           B COMPLETE
 LAST DIFFERENCE:  50%
-GATE (<5%):       NOT MET
+GATE (0%):        NOT MET
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
@@ -142,8 +142,9 @@ closed. **A must exclude them from the percentage** — remove them from the
 denominator, do not count them as matched. Say in each round's log how many
 elements were excluded by ruling, so the number stays honest.
 
-Without this the loop can never reach 5%, because five of the differences are
-there on purpose.
+This exclusion is what makes a 0% target reachable at all: five differences
+exist on purpose, and without dropping them from the denominator no build could
+ever score zero. **Nothing else may be excluded without a new manager ruling.**
 
 ---
 
@@ -168,8 +169,19 @@ Compare the **live** job report and event report against plates 02 and 03.
 
 A does **not** change code. A does **not** investigate causes.
 
-**A's exit condition:** when the measured difference is **below 5%**, set
-`GATE (<5%): MET` in §1 and stop. The manager takes over.
+**A's exit condition — raised by the manager on 2026-08-03:** the target is now
+**0%, not 5%.** Every element plate 02 and plate 03 carry must be present, in the
+plate's shape and in the plate's order. Set `GATE (0%): MET` in §1 only when you
+find **zero** unexplained differences, then stop — the manager takes over.
+
+This is a strict bar and it is meant to be. Do not round down, do not call a
+difference cosmetic in order to clear the gate, and do not stop reporting
+something because it has already appeared in three rounds. If you believe a
+remaining difference genuinely cannot or should not be closed, do **not** quietly
+drop it — mark it `POLICY — manager decides`, leave the gate NOT MET, and let the
+manager rule. Deciding what may remain is the manager's job, not yours.
+
+The only elements excluded from the count are the ones already ruled on in §1d.
 
 ### Agent B — Investigator
 
