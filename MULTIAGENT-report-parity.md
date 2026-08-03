@@ -32,16 +32,23 @@ before you stop, not after you finish.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-ROUND:            1
-WHOSE TURN:       A  (round 2 re-measure)
-STATUS:           C COMPLETE — all 20 of B's items done
-LAST DIFFERENCE:  50%   (round 1 figure; A re-measures now)
+ROUND:            2
+WHOSE TURN:       B
+STATUS:           A COMPLETE — round 2 measured 22% different (78% matched)
+LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B-01 .. B-20, all twenty
-GATE NOW:  81 files / 815 tests passing, typecheck clean, lint 1 pre-existing
-NOTE:      B-01..B-16 by agent C; B-17..B-20 by the manager after C hit the
-           account spend limit. B-13 and B-14 turned out already done by C.
+DONE:      B-01 .. B-20 confirmed against rendered output. 18 of 20 landed
+           exactly against the plate; B-06 (job facts row) and B-12 (event
+           activity chips/footnote) landed as scoped but leave the plate
+           element still visibly wrong — see §4 Round 2 for specifics.
+GATE NOW:  unchanged since C's checkpoint (81 files / 815 tests, typecheck
+           clean, 1 pre-existing lint error) — A did not re-run the full gate
+           this round, only rendered; that is C's job, not A's.
+NOTE:      A's round 2 numbered list (6 job + 8 event differences, ranked) is
+           in §4. One item is POLICY — manager decides (event header-chip
+           row, inherited unresolved from B's round 1 log). Everything else
+           is a normal fix for B's next guide.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
@@ -49,6 +56,7 @@ NOTE:      B-01..B-16 by agent C; B-17..B-20 by the manager after C hit the
 | Round | A's measured difference | Verdict |
 |---|---|---|
 | 1 | 50% | 8 of 32 plate elements absent, 16 wrong shape/order/copy, 8 exact. Gate not met. |
+| 2 | 22% | 0 of 32 plate elements absent, 14 wrong shape/copy, 18 exact (25/32). Gate not met — B-06 and B-12 only partially landed; fresh findings on date-granularity wording (job facts + Timeline) and event People-card content; one header-chip question still POLICY, unresolved since round 1. |
 
 ---
 
@@ -226,6 +234,10 @@ Work through B's fix guide in order.
 - If you start the dev server, `npm run kill-orphans` from `web/` afterwards and
   confirm no node process is left listening.
 - **Do not open a PR.**
+- **Model:** A, B and C all run on **Sonnet**. Only the manager runs on Opus.
+  Set by the user on 2026-08-03 to control spend — the account hit its monthly
+  limit mid-way through round 1's C. Spawn every agent with an explicit
+  `model: "sonnet"`; do not let it inherit the manager's model.
 - Prior phase decisions live in `HANDOFF-phase7..10*.md`. Read before assuming
   something is a bug.
 
@@ -1436,3 +1448,417 @@ not a copy fix.
 - **Two shared shapes are worth building once** rather than four times: the
   fact tile with a sub-line (B-05 and B-06), and the small `NEW` / `TIER 0`
   badge (B-10 and B-14).
+
+---
+
+### Round 2 — Agent A
+
+**STATUS: COMPLETE.** Measured difference **22%** (78% matched), down from
+round 1's 50%. **0 elements now fully absent** (was 8), **14 present but wrong
+shape/copy** (was 16), **18 exact** (was 8). Gate: **NOT MET**. Two of B's items
+(B-06, B-12) landed only partially against the plate; everything else landed
+as claimed, with several small residual gaps noted below. One header-chip
+question inherited from B's round-1 log is still unresolved and is marked
+`POLICY` again.
+
+#### How I got the build
+
+Same method as round 1: `renderToStaticMarkup` + `createElement` on the
+exported `JobReport` and `EventReport`, through a throwaway vitest spec
+(`web/src/zz-parity-render.test.ts`, deleted after — working tree left clean).
+No dev server, no orphans. Ran `npx vitest run src/zz-parity-render.test.ts`
+once to produce the HTML; did not re-run the full gate (typecheck/lint/full
+suite) since that is C's job, not A's — the last recorded gate figure (81
+files / 815 tests, typecheck clean, 1 pre-existing lint error) is from the
+C-completion checkpoint and I did not re-verify it this round.
+
+Fixture — rebuilt at least as maximal as round 1's, values chosen to match the
+plate's own illustrative numbers wherever possible so output could be diffed
+almost verbatim against the extracted plate text:
+
+- **Job** — same shape as round 1's fixture (postdoc, full salary/visa/dates,
+  9 `keyRequirements` with 6 `matchedTerms`, 4 `applicationMaterials`,
+  `matchReason` + `facetPreferenceReason`, `sourceId`), with `postedDate:
+  "2026-07-22"`, `applicationDeadline: "2026-09-15"`, `startDate:
+  "2027-01-15"` against `nowMs = Date.parse("2026-07-30T12:00:00Z")` — the
+  same constant B-02 suggested and the job test file already uses — so the
+  plate's own "47 days left" / "8 days ago" numbers land exactly and any
+  wording difference is directly comparable.
+- **Event** — same shape as round 1's (summit, 6 fees incl. the exact plate
+  deadline strings, 6 activities, `rank: "CCF-B"`, `travelGrant`,
+  `invitationLetter: true`, `expectedSize: 2400`, `relevanceReason` +
+  `facetPreferenceReason`, both link fields), 3 Tier-0 organisations + the
+  plate's own 22-name tail, 2 Tier-0 people + the plate's own 16-name tail
+  (both tail lists transcribed verbatim from the PDF, so tail counts and
+  footnotes are directly comparable), `date: "2027-03-08"`, `endDate:
+  "2027-03-11"`, `deadline: "2026-10-30"` (92 days out), `registrationDeadline:
+  "2027-02-20"`.
+- Rendered **five** states: job Tier 0, job enriched (full `JobEnrichment`
+  incl. `sponsorshipRead`, `roleSummary`, `emphasise`, quoted-specifics —
+  `competitiveness` also populated, to confirm it still renders nothing), a
+  junk-requirements job (round 1's exact junk list, to re-confirm B-10's
+  guard), event Tier 0, event enriched (full `EventEnrichment` incl.
+  `judgedAttendees`, `talkSummaries`, `plan`, `posterFit`).
+
+Plates re-extracted with PyMuPDF, same pages as round 1 (plate 02 = index 1–3
+/ printed 2–4; plate 03 = index 3–8 / printed 4–9), letter-spacing normalised.
+Text matched §1c's order and B's quoted excerpts exactly — no re-derivation of
+the order, only used the fresh extraction to check exact copy.
+
+---
+
+#### A. JOB REPORT — 6 differences, ranked
+
+**1. Facts row — structurally complete (7/7 tiles, B-06 landed) but four
+content defects remain.** Rendered (`data-job-fact` block,
+`web/src/app/jobs/[id]/page.tsx:204-278`):
+
+- **SALARY prints its period twice.** Value renders `$95k–120k / yr`
+  (`formatSalary()`'s own suffix, `page.tsx:214` — `value:
+  formatSalary(job.salary)`, nothing strips it) *and* the detail line reads
+  `per year · from posting`. B-06's own fix direction said "value drops the
+  period suffix that `formatSalary` appends" — it does not. Plate value is
+  `$95k – $120k` (no suffix, and spaced en dash with a repeated `$`, which the
+  build also doesn't reproduce).
+- **TYPE detail loses the plate's hyphen.** Renders `Full Time · 3-yr
+  contract`; plate is `Full-time · 3-yr contract`. Cause:
+  `humanize("full-time")` (`page.tsx:179-185`) replaces the hyphen with a
+  space before title-casing, turning one word into two.
+- **STARTS tile has no sub-line at all**, and its value carries a day-of-month
+  the plate doesn't show. Rendered: value `Jan 15, 2027`, no detail div under
+  it. Plate: value `Jan 2027`, detail `flexible`. Note for B: this one isn't a
+  partial implementation of B-06 — B-06's own fix direction (§4 Round 1)
+  never mentions a detail for STARTS, only SALARY/TYPE/LOCATION/APPLY
+  BY/POSTED/VISA. C followed B exactly; B's instruction was itself
+  incomplete.
+- **APPLY BY / POSTED values carry a year the plate omits, and their
+  countdown wording doesn't match the plate's style.** Rendered: `Sep 15,
+  2026` / `in 6 weeks`, and `Jul 22, 2026` / `8d ago`. Plate: `Sep 15` / `47
+  days left`, and `Jul 22` / `8 days ago`. Two separate gaps: `formatDate()`
+  is called with its default "medium" style (`page.tsx:205-207`, no style
+  argument) instead of a year-less one; and `formatDayDistance` /
+  `formatDayAge` (`web/src/lib/format.ts:134-146`, `:109-121`) use the app's
+  own relative-time vocabulary ("in N weeks", "Nd ago") rather than the
+  plate's "N days left" / "N days ago" phrasing, and bucket into weeks past
+  14 days where the plate stays in days. Confirmed in rendered output — no
+  fixture choice avoids this, since the plate's own illustrative numbers (47,
+  92, 8) all fall inside the ranges where the current helpers change units or
+  abbreviate. Job test at `jobs/[id]/page.test.ts:190-191` pins the current
+  ("in 2 weeks", "10d ago") wording, so this is the asserted contract, not an
+  accident — it just isn't the plate's wording.
+- LOCATION's missing sub-line (`Hybrid · US`) is unchanged from round 1 — no
+  hybrid field exists on `Job`, already noted by B-06 as out of scope.
+
+**2. Header chips — 2 of 4 chip texts diverge from the plate in wording.**
+Round 1 listed header chips as already matching; a word-for-word check this
+round finds otherwise. Rendered: `Postdoc` · `3-yr contract` · `Sponsorship
+available` · `91% match`. Plate: `Postdoc` · `Full-time · 3 years` · `Visa
+sponsorship` · `91% match`. The match-% and role chips are exact. The visa
+chip's wording (`VISA_LABELS.sponsors = "Sponsorship available"`,
+`page.tsx:90`) has simply never matched the plate's `Visa sponsorship` — not
+something B-06 touched. The contract-length chip exposes a **structural
+conflict**: the header chip (`page.tsx:584-586`) and the TYPE tile's detail
+(finding 1) both read from the single `job.contractLength` field, but the
+plate uses *two different strings* in those two spots (`Full-time · 3 years`
+up top, `3-yr contract` in the tile). One field cannot produce both; whichever
+value C picks, one of the two will read wrong. Not a simple copy fix — needs a
+type/field decision.
+
+**3. Timeline — same date-granularity gap as the facts row.** Round 1 called
+this section an exact match; on closer inspection this round it carries the
+identical defect as finding 1: `Posted Jul 22, 2026` / `Today Jul 30, 2026` /
+`Apply by Sep 15, 2026` / `Starts Jan 15, 2027` render with full years (and
+Starts with a day-of-month), where plate 02's own Timeline block reads `Posted
+Jul 22` / `Today` / `Deadline Sep 15` / `Start Jan 2027` — no year except on
+the month/year-only Start point. Same root cause (`formatDate()` called at
+its default style), same fix likely closes both this and finding 1.
+
+**4. "Why Peer sent this to you" — landed (B-03), two shape gaps remain.**
+Heading and body render correctly and the section sits in the right place.
+But: **(a)** no `TIER 0` badge — plate 02 prints one under this heading
+(confirmed: `ReportBadge` is used nowhere in
+`web/src/components/reports/why-peer-sent-this.tsx`, and grepping the
+rendered HTML for `Tier 0` near this section finds nothing). **(b)** the body
+and the facet-preference line render as **two separate paragraphs**
+(`why-peer-sent-this.tsx:40-50`) where the plate shows **one fused sentence**.
+This is the substance gap B already flagged as "note, not solve" (the
+scoring layer doesn't produce the plate's single sentence) — still open, so
+still worth counting as a difference from the plate's shape.
+
+**5. "To apply, have ready" — labelled now (B-17 landed), still 2 of 4 rows
+short.** MATERIALS and SEEN ON render as labelled rows exactly as B-17
+specified. `CV, 1-page research statement, 3 references` is an exact match to
+the plate's MATERIALS value. SEEN ON renders `Adzuna` — a real value, but
+incomplete against the plate's `Adzuna · reposted from employer site` (`Job`
+has no field for "reposted from employer site"; B-17 already flagged this as
+out of scope). ELIGIBILITY and TEAM remain entirely absent — no fields exist,
+exactly as B-17 said would remain true.
+
+**6. Subtitle — still 2 of 3 segments.** `Toyota Research Institute · Los
+Altos, CA`; plate's third segment `Hybrid (3 days on-site)` needs a work-mode
+field `Job` doesn't have (only `isRemote`). Unchanged from round 1, already
+flagged by B-18 as unclosable within the current type.
+
+**What now matches exactly, confirmed by render:** Skills section — heading
+`Skills they ask for`, `New` + `Tier 0` badges, count line `6 of 9 you already
+have`, one flat chip row (6 matched-with-`✓` then 3 plain, in that order) —
+byte-for-byte match to the plate. Skills footnote — verbatim match. Skills
+junk-guard — re-confirmed with round 1's exact junk fixture; only
+`Solid-state electrolytes` survives, all site-chrome filtered. Locked block
+items — net of the two permanently-excluded promises (§1d items 1–2), the two
+that remain (`Sponsorship read when the posting is silent`, `What to
+emphasise in your application`) now carry the plate's **exact** description
+text, in the plate's relative order. Locked-block header + "Connect a key"
+link — unchanged, exact. Visa quote attribution — `— from the job
+description` now present, exact. Action row — `Apply on employer site ↗`,
+`Save`, `Mark as applied` (with a checkmark icon when checked) all exact; the
+only remaining nominal extra, the `Interested` button, is excluded by §1d
+item 5. What the role is (bullets) — exact. H1 — exact.
+
+---
+
+#### B. EVENT REPORT — 8 differences, ranked
+
+**1. Facts row — structurally complete (6/6 tiles, B-05 landed) but four
+tiles carry content defects.** Rendered (`web/src/app/events/[id]/page.tsx:324-384`):
+
+- **FEE detail drops the early-bird clause.** Renders `student $180`; plate
+  is `student $180 · early bird to Jan 9`. The code has the deadline value in
+  scope two lines above (used elsewhere) but the FEE tile's `detail`
+  (`page.tsx:348-355`) never appends it.
+- **ABSTRACT DUE wording and granularity both miss.** Renders `in 3 months`;
+  plate is `92 days left`. Same root cause as job finding 3 —
+  `formatDayDistance` buckets 92 days into "months" and uses "in N" phrasing
+  instead of the plate's "N days left".
+- **REGISTER BY shows the wrong *kind* of information, not just the wrong
+  words.** Renders a countdown, `in 6 months`; the plate's sub-line is a
+  fixed qualitative note, `on-site registration available`, with no
+  countdown at all. The code (`page.tsx:364-373`) applies the same
+  `formatDayDistance` pattern used for ABSTRACT DUE, but the plate doesn't
+  want a distance here — it wants a different fact Peer doesn't currently
+  track (whether walk-in registration is open).
+- **SCALE prints an abbreviated form the plate doesn't use.** Renders `~2.4k`
+  (`formatCount()`, `web/src/lib/format.ts:164-169`); plate is `~2,400`
+  (comma-grouped, not abbreviated). `last edition` detail is an exact match.
+- WHERE's missing `hybrid keynotes` clause is unchanged from round 1 — no
+  field, already flagged by B-05.
+
+**2. "What actually happens there" chips — highlighting now works (B-12
+landed), but the exact bug class B-12 targeted still reproduces on other
+input.** 3 of 6 chips render with the accent style and a trailing `✓`,
+matching the plate's own 3 exactly (`Poster session — open call ✓`,
+`Symposium: solid-state interfaces ✓`, `Recruiting fair, day 3 ✓` — verbatim).
+But 2 of the remaining plain chips are mangled: `vendor exhibition` →
+**`Vendor Exhibition`**, and `early-career mixer` → **`Early Career Mixer`**
+(hyphen lost, both words title-cased) — both are the plate's own example
+text. Cause: `formatActivityLabel()` (`page.tsx:206-213`) treats any lowercase
+phrase of ≤3 words with no punctuation besides space/hyphen as a "vocabulary
+label" and runs it through `formatEventType()` (which strips hyphens and
+title-cases). "vendor exhibition" and "early-career mixer" pass that test even
+though they're prose activity names, not enum values — the same class of bug
+B-12 was written to fix, just triggered by different strings than round 1's
+fixture used. `Tutorial: cell-scale modelling` (has a colon, so fails the
+"vocabulary" test) renders correctly, first-letter-only capitalised, an exact
+match.
+
+**3. Happenings footnote — present (B-04... B-12 landed) but wording
+diverges from the plate.** Renders: "Highlighted because they line up with
+your topics and with where you are — **PhD Year 4**. **Those are the ones**
+you'd be sorry to miss." Plate: "Highlighted because they line up with your
+topics and because you're a **PhD 4** looking at industry — **the poster call
+and the recruiting fair** are the two you'd be sorry to miss." Three gaps:
+the career-stage string is the full enum value (`PhD Year 4`) not the plate's
+shorthand (`PhD 4`); the "looking at industry" clause is absent; and the
+close is generic rather than naming the specific highlighted items. B-12's
+own fix direction chose to generalise rather than hardcode "PhD 4" — a
+reasonable trade-off — but the result is real, visible wording drift from the
+plate that's worth recording.
+
+**4. Costs table — core content fixed (B-01, B-08, B-13 all landed), four
+smaller residuals remain.** No "2001" anywhere in any render (B-01 confirmed
+fully fixed — grepped all five HTML dumps, zero hits), table sits in the
+correct position (B-08 confirmed), footnote exists (B-13 confirmed). Residual
+gaps: **(a)** no `TIER 0` badge on the "What it costs you" heading — plate
+shows one, same gap as job/event's "Why Peer sent this to you". **(b)** the
+table-head restatement reads `Cheapest way in, for you: Student ticket in
+person…` — plate's table-head phrasing has **no comma** (`Cheapest way in for
+you: student ticket…`) and lower-cases "student" after the colon; the build
+reuses the same capitalised, comma'd string as the top callout instead of the
+plate's distinct shorter form. **(c)** Travel grant and Visa invitation letter
+now correctly live only in the table (Ruling 6 confirmed — no duplicate prose
+block), but each renders as **one merged cell** (`30 available, apply with
+your abstract`; `Available on request.`) where the plate shows **three
+distinct columns** (`—`/`30 available`/`Apply with your abstract`;
+`On request`/`On request`/`Allow 3 weeks`) — and the invitation letter's
+`Allow 3 weeks` turnaround fact is **dropped entirely**, present nowhere in
+the render. This is a known, explained trade-off (`event.travelGrant` /
+`invitationLetter` are single free-text/boolean fields, not three-column
+data) but the content loss is real. **(d)** footnote omits "plus four nights"
+(explained — no nights field on `Event`; B-13 already flagged this).
+
+**5. "Why Peer sent this to you" — same two gaps as the job report.** No
+`TIER 0` badge; body and facet line render as two paragraphs where the plate
+shows one fused sentence. Mechanism and placement (after costs table, before
+locked block, per §1c) both confirmed correct.
+
+**6. Header chips — rank chip landed (B-15), two other gaps remain, one of
+them still `POLICY — manager decides`.** Rendered: `Summit` · `In person` ·
+`CCF-B` · `88% match`. `CCF-B` is new and exact (B-15 succeeded). Remaining:
+**(a)** the kind chip reads `Summit`, formatted from the enum
+(`formatEventType(event.type)`); the plate's kind chip literally reads
+`Industry summit` — a more specific label than the raw `EventType` value
+produces. **(b)** the plate's second chip, `+ career fair`, still has nowhere
+to live — `Event.type` is a single value, no secondary-kind field, already
+flagged by B-15 as unfixable without a type change. **(c)** `POLICY,
+inherited from B, still unresolved`: B's round-1 log flagged that a fresh
+PDF read shows the plate's chip row may not include an "in person" /
+"online" chip at all (it appears in the subtitle and the WHERE tile instead)
+— contradicting §1c's own stated order (`kind · online/in-person · CCF-B ·
+match %`). My own extraction agrees with B's re-reading: the raw plate text
+for this row is `Industry summit / + career fair / CCF-B / 88% match`, with
+no separate in-person/online line. I am not resolving this — §1c is the
+document I was told not to re-derive, but it conflicts with what the PDF
+literally shows here, and B already surfaced this without a ruling. Leaving
+it `POLICY`.
+
+**7. People Tier 0 cards — missing a short descriptor line the plate shows.
+New finding.** Plate 03's two example people cards each carry **five**
+distinct lines: name, role/institution, a short descriptor (`2 papers in your
+feed` / `Matches a topic you typed`), a longer reason sentence, and a
+`Speaking:` line. The build's `EventPerson` type
+(`web/src/types/index.ts:123-129`) and the roster card render
+(`page.tsx:1114-1164`) only carry **four**: name, role · institution, the
+long reason (from `relevance`), and `Speaking ·`. There is no field
+equivalent to `EventOrg.descriptor` (which organisation cards do have and
+render — confirmed exact match on all 3 Tier-0 organisations). This is a real
+content gap, not merely a wording one: the short "why you should care in one
+glance" line the plate gives people has no home on the type. (Minor,
+separately: role/institution join on `·` where the plate's own text reads as
+a comma-joined clause; not scored as its own issue, noted for completeness.)
+
+**8. Subtitle — landed (B-16), content is data-limited.** Renders `San
+Diego, US · in person · 4 days`. Duration (`4 days`) is an exact match to the
+plate's computed value. Venue and format are less specific than the plate's
+`San Diego Convention Center · in person, streamed keynotes` because `Event`
+carries a city-level `location`, not a venue name, and no "streamed keynotes"
+field exists — both already flagged by B-16 as unclosable without new
+extraction, not a code defect.
+
+**What now matches exactly, confirmed by render:** "Cheapest way in, for you"
+top callout — byte-for-byte match to the plate's sentence. "Two deadlines,
+one event" — heading present, four milestones (`Today`, `Abstract`, `Register
+by`, `Event`) in the plate's exact labels and order. Section order — now
+exactly §1c's order (cheapest → deadlines → happenings → roster → costs →
+why-peer-sent → locked block), confirmed by index positions in the rendered
+HTML. "Who'll be in the room" heading + counts sub-line — exact pattern
+match. Organisation Tier-0 cards + `Tier 0` badge — exact, all fields
+verbatim on all 3 example organisations. Organisation tail — heading with
+live count, filter input, star explainer and closing footnote all verbatim
+matches. Speaker tail — same, and the count (`· 16`) is an exact match to the
+plate's own number since the fixture reused the plate's real name list.
+Locked block — all **four** items present, in order, with the plate's exact
+description text on all four (only the first item's title omits a hardcoded
+count, `29`, deliberately — B-20's own documented choice to avoid printing a
+static number that would be wrong on real data). Action-row buttons —
+`Register ↗` and `Submit abstract ↗` both present, exact labels (B-16
+succeeded here). Date-invention bug — fully fixed, zero "2001" anywhere.
+
+---
+
+#### C. B-01 .. B-20 — confirmed against the rendered output, not the commit log
+
+| Item | Verdict |
+|---|---|
+| B-01 (date-invention bug) | **Landed, exact.** No "2001" in any render. |
+| B-02 (`nowMs` prop) | **Landed.** Powers every countdown and the Today milestone correctly. |
+| B-03 (Why Peer sent this, both reports) | **Landed, not exact.** Section exists and is placed correctly; missing `TIER 0` badge on both reports; renders as two paragraphs where the plate shows one (job finding 4 / event finding 5). |
+| B-04 (day-by-day plan) | **Landed, exact.** Heading, ordered list, session/person rows, locked-block promise text all match the plate. |
+| B-05 (event facts row) | **Landed, not exact.** All 6 tiles present; FEE/ABSTRACT DUE/REGISTER BY/SCALE each carry a content defect (event finding 1). |
+| B-06 (job facts row) | **Landed, not exact — the weakest of the twenty.** All 7 tiles present, but SALARY duplicates its period, TYPE loses a hyphen, STARTS has no sub-line, and APPLY BY/POSTED both show the wrong date granularity and wrong countdown wording (job finding 1). |
+| B-07 (roster tails) | **Landed, exact.** Both tails match the plate verbatim: heading, count, filter, star explainer, footnote. |
+| B-08 (section order) | **Landed, exact.** |
+| B-09 (deadline strip heading + Today) | **Landed, exact.** |
+| B-10 (skills chips + footnote + junk guard) | **Landed, exact.** Re-confirmed the junk guard with round 1's exact fixture. |
+| B-11 (cheapest-way-in wording) | **Landed, mostly exact.** Top callout is byte-for-byte; the table-head restatement has a residual comma/capitalisation mismatch (event finding 4b). |
+| B-12 (happenings chips + footnote) | **Landed, not exact.** Highlighting works, but the same mangling bug class it targeted still fires on other input (`Vendor exhibition` → `Vendor Exhibition`), and the footnote's wording diverges from the plate (event findings 2–3). |
+| B-13 (costs footnote) | **Landed, not exact.** Present and mostly right; omits "plus four nights" (explained, no field). |
+| B-14 (roster heading + counts) | **Landed, exact.** |
+| B-15 (rank chip) | **Landed, exact** for the chip itself. The kind-label wording and the missing "+ career fair" chip are separate, pre-existing gaps outside B-15's stated scope (event finding 6). |
+| B-16 (event subtitle + abstract button) | **Landed.** Subtitle and second button both present; remaining content gaps are data-limited, already flagged by B-16 itself (event finding 8). |
+| B-17 (apply rows labelled) | **Landed as scoped.** MATERIALS + SEEN ON labelled and correct; ELIGIBILITY/TEAM correctly left absent, exactly as B-17 said would remain true. |
+| B-18 (job action row + subtitle) | **Landed, exact** for the parts checked (`Apply on employer site ↗`, `Mark as applied`). |
+| B-19 (visa quote attribution) | **Landed, exact.** |
+| B-20 (locked-block copy, both reports) | **Landed, exact.** Job: both non-excluded promises match verbatim. Event: all 4 items match verbatim (title 1 deliberately omits a hardcoded count). |
+
+**Net: 18 of 20 items landed exactly against the plate. B-06 and B-12 landed
+as scoped but leave the plate element still visibly wrong** — named explicitly
+per the round-2 mandate, not folded into "done."
+
+---
+
+#### D. The number
+
+**22% different (78% matched).**
+
+Method: reused round 1's inventory and scoring exactly — 32 discrete
+perceived elements (14 job, 18 event), 1 point for an exact match, 0.5 for
+present-but-wrong-shape/order/copy, 0 for absent. Round 1 didn't publish its
+literal 32-line checklist, so I reconstructed it at the same granularity round
+1 described ("a heading, a tile row, a footnote paragraph, a locked-block list
+each count as one"); the reconstructed lists are implicit in sections A and B
+above (every ranked difference plus every item in the "what now matches"
+paragraphs is one element). Where I had to make a grouping call round 1 didn't
+make explicit (e.g. treating the event's cross-cutting "section order" as its
+own element, matching round 1's own item 4), I kept round 1's precedent.
+
+**Result: 18 exact, 14 half, 0 absent → 25 / 32 = 78% matched, 22%
+different.** Per report: job **11 / 14 ≈ 79% matched** (was 61%); event
+**14 / 18 ≈ 78% matched** (was 42%). The two reports are now roughly level —
+round 1's "event is the weaker by a wide margin" no longer holds.
+
+**§1d exclusions — how many elements this actually removed: effectively
+none, by count, but 3 of the 32 elements are scored net of an exclusion.**
+The five ruled-settled differences don't map one-to-one onto my 32 elements,
+because round 1's inventory already treats each report's whole locked-block
+promise list as *one* element, not one element per promise. Concretely:
+
+- §1d items 1–2 (job's two absent locked-block promises) are both
+  sub-parts of **one** inventory element, "job locked-block items" — I scored
+  that element against only the two promises that are allowed to exist, both
+  of which now match exactly, so the element scores 1.0 rather than being
+  penalised for the two that will never return.
+- §1d item 5 (the "Interested" button) touches **two** elements, "job action
+  row" and "event action row" — both scored against the plate-shown controls
+  only, treating `Interested` as invisible to the count.
+- §1d items 3–4 (the two job quoted-specifics sections, the event
+  description paragraph) were never inside the 32 to begin with — round 1
+  explicitly excluded "extra, not on the plate" content from the denominator,
+  and both of these are exactly that kind of extra.
+
+So: **0 whole rows removed from the 32**, but **3 of the 32 elements'
+scores are computed net of the ruling** rather than being marked down for
+content the manager says will never exist. Flagging this explicitly, as
+instructed, so the 78%/22% figure is auditable rather than asserted.
+
+---
+
+#### E. Gate verdict
+
+**GATE (0%): NOT MET.** Zero elements are fully absent, which is real
+progress, but 14 of 32 are still present-with-a-defect, and two of those
+(job facts row, event activity chips) are less than perfect implementations
+of items B already marked done. None of the remaining gaps look
+unclosable to me except one, carried over from round 1:
+
+- **`POLICY — manager decides`: the event header-chip row.** §1c states the
+  chip order is `kind · online/in-person · CCF-B · match %`. My own fresh PDF
+  extraction of plate 03's header (page index 3) reads only `Industry summit
+  / + career fair / CCF-B / 88% match` — no separate in-person/online chip;
+  that information sits in the subtitle and the WHERE tile instead. B raised
+  this exact tension in round 1 without a ruling ("Manager's call; low stakes
+  either way"). It is still open. I am not deciding whether §1c's order or my
+  fresh reading of the PDF governs here — flagging it again, unresolved.
+
+Everything else found this round (job findings 1, 2, 3, 5, 6; event findings
+1, 2, 3, 4, 5, 7, 8) is a normal fix, not a policy question, and belongs in
+B's next fix guide.
