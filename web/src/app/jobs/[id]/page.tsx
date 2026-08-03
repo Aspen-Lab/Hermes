@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import type { Job, RoleKind } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
-import { formatDate, formatMatchPct } from "@/lib/format";
+import {
+  daysUntil,
+  formatDate,
+  formatDayAge,
+  formatDayDistance,
+  formatMatchPct,
+} from "@/lib/format";
 import { formatSalary } from "@/lib/opportunities/salary";
 import {
   cleanJobDescription,
@@ -73,6 +79,28 @@ const VISA_LABELS: Record<VisaState, string> = {
   "wont-sponsor": "No sponsorship",
 };
 
+/**
+ * B-06. The VISA tile's short value, from plate 02. Deliberately different
+ * words from the header chip above it: the tile is labelled "VISA" already, so
+ * repeating "Sponsorship available" would print the same fact twice in the
+ * same eyeful.
+ */
+const VISA_TILE_LABELS: Record<VisaState, string> = {
+  sponsors: "Sponsors",
+  "not-stated": "Not stated",
+  "wont-sponsor": "No",
+};
+
+/** B-06. The SALARY tile's sub-line: "per year", not the value's "/ yr". */
+const SALARY_PERIODS: Record<
+  NonNullable<Job["salary"]>["period"],
+  string
+> = {
+  year: "per year",
+  month: "per month",
+  hour: "per hour",
+};
+
 type JobFactKey =
   | "salary"
   | "employment-type"
@@ -86,6 +114,12 @@ interface JobFact {
   key: JobFactKey;
   label: string;
   value: string;
+  /**
+   * B-06. Plate 02's second grey line under every tile. It carries the two
+   * highest-value numbers on the row — "47 days left" and "8 days ago" —
+   * which appeared nowhere in the report before.
+   */
+  detail?: string;
   tone?: "accent" | "danger";
 }
 
@@ -145,38 +179,86 @@ function visaTone(
   return undefined;
 }
 
-export function buildJobFacts(job: Job): JobFact[] {
+/**
+ * B-06. Plate 02's seven tiles, each with a label, a value and a grey
+ * sub-line. Two were missing entirely — LOCATION was built only for remote
+ * jobs, and VISA was in the key union but never pushed, so the visa state
+ * lived only as a header chip.
+ *
+ * `Job` has no hybrid work mode, so the plate's "Hybrid · US" cannot be
+ * reproduced. It prints what exists rather than guessing.
+ */
+export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
   const posted = formatDate(job.postedDate);
   const deadline = formatDate(job.applicationDeadline);
   const start = formatDate(job.startDate);
+  const location = clean(job.location);
   const facts: Array<JobFact | undefined> = [
     job.salary
       ? {
           key: "salary",
           label: "Salary",
-          value: `${formatSalary(job.salary)}${
-            job.salaryIsEstimated ? " · estimated" : ""
+          value: formatSalary(job.salary),
+          detail: `${SALARY_PERIODS[job.salary.period]} · ${
+            job.salaryIsEstimated ? "estimated" : "from posting"
           }`,
         }
       : undefined,
-    clean(job.employmentType)
+    job.roleKind || clean(job.employmentType)
       ? {
           key: "employment-type",
-          label: "Employment",
-          value: humanize(job.employmentType!),
+          label: "Type",
+          value: job.roleKind
+            ? ROLE_LABELS[job.roleKind]
+            : humanize(job.employmentType!),
+          detail:
+            [
+              job.roleKind && clean(job.employmentType)
+                ? humanize(job.employmentType!)
+                : undefined,
+              clean(job.contractLength),
+            ]
+              .filter(Boolean)
+              .join(" · ") || undefined,
         }
       : undefined,
-    job.isRemote
-      ? { key: "work-mode", label: "Work mode", value: "Remote" }
+    location
+      ? {
+          key: "work-mode",
+          label: "Location",
+          value: location,
+          detail: job.isRemote ? "Remote" : undefined,
+        }
+      : undefined,
+    start ? { key: "start", label: "Starts", value: start } : undefined,
+    deadline
+      ? {
+          key: "deadline",
+          label: "Apply by",
+          value: deadline,
+          detail: formatDayDistance(daysUntil(job.applicationDeadline!, nowMs)),
+        }
       : undefined,
     posted
-      ? { key: "posted", label: "Posted", value: posted }
+      ? {
+          key: "posted",
+          label: "Posted",
+          value: posted,
+          detail: formatDayAge(job.postedDate, nowMs) ?? undefined,
+        }
       : undefined,
-    deadline
-      ? { key: "deadline", label: "Apply by", value: deadline }
-      : undefined,
-    start
-      ? { key: "start", label: "Starts", value: start }
+    job.visa
+      ? {
+          key: "visa",
+          label: "Visa",
+          // The plate's short value. The header chip keeps the long one, so
+          // the two never print the same words twice.
+          value: VISA_TILE_LABELS[job.visa.state],
+          detail: clean(job.visa.evidence)
+            ? "stated in the posting"
+            : undefined,
+          tone: visaTone(job.visa.state),
+        }
       : undefined,
   ];
   return facts.filter((fact): fact is JobFact => Boolean(fact?.value));
@@ -290,6 +372,14 @@ function FactTile({ fact }: { fact: JobFact }) {
       >
         {fact.value}
       </dd>
+      {fact.detail && (
+        <dd
+          data-job-fact-detail
+          className="mt-0.5 break-words text-caption leading-5 text-text-faint"
+        >
+          {fact.detail}
+        </dd>
+      )}
     </div>
   );
 }
@@ -422,7 +512,7 @@ export function JobReport({
   // one — because their page fetch failed — was the report contradicting itself
   // on the exact screen where they check whether their key works.
   const matchPct = formatMatchPct(job.relevanceScore);
-  const facts = buildJobFacts(job);
+  const facts = buildJobFacts(job, nowMs);
   const timeline = buildTimeline(job, nowMs);
   const skills = skillComparison(job);
   const roleSummary = cleanJobDescription(job.summary) || undefined;

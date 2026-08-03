@@ -51,7 +51,11 @@ describe("measured job extraction artifacts", () => {
     expect(job.summary).not.toContain("]");
     expect(job.summary).toContain("Dive into hands-on research");
     expect(html).not.toContain("Apply now!");
+    // B-06 rewrote this. Plate 02 has a VISA tile, so the tile is no longer
+    // absent — but what this test actually protects is that the visa fact is
+    // not printed twice. It still holds: the header chip carries the long
+    // phrase, the tile carries the plate's short value ("Not stated").
     expect(html.match(/Visa not stated/g)).toHaveLength(1);
-    expect(html).not.toContain('data-job-fact="visa"');
+    expect(html).toContain('data-job-fact="visa"');
   });
 });

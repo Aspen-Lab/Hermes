@@ -90,9 +90,13 @@ describe("JobReport", () => {
     expect(html).toContain("Chicago, IL");
     expect(html).toContain("$120k / yr");
     expect(html).toContain("Jul 20, 2026");
-    expect(html.match(/data-job-fact=/g)).toHaveLength(2);
+    // B-06 changed this from 2 to 3. Plate 02 has a LOCATION tile, which the
+    // build only ever built for remote jobs; baseJob is in Chicago, so a
+    // sparse job now correctly shows where the work is.
+    expect(html.match(/data-job-fact=/g)).toHaveLength(3);
     expect(html).toContain('data-job-fact="salary"');
     expect(html).toContain('data-job-fact="posted"');
+    expect(html).toContain('data-job-fact="work-mode"');
     expect(html).not.toMatch(/<dd[^>]*>\s*<\/dd>/);
     expect(html).not.toContain("—");
     expect(html).not.toContain("undefined");
@@ -170,10 +174,23 @@ describe("JobReport", () => {
       }),
     );
 
-    expect(html.match(/data-job-fact=/g)).toHaveLength(6);
+    // B-06. This test has been named "all seven supported facts" while
+    // asserting six since it was written. Plate 02 has seven tiles and the
+    // build now renders all seven: the missing two were LOCATION (built only
+    // for remote jobs) and VISA (in the key union but never pushed).
+    expect(html.match(/data-job-fact=/g)).toHaveLength(7);
+    expect(html).toContain('data-job-fact="visa"');
+    expect(html).toContain('data-job-fact="work-mode"');
+    // The tile says "Sponsors", the header chip says "Sponsorship available".
+    // Different words on purpose, so the same fact is not printed twice.
     expect(html.match(/Sponsorship available/g)).toHaveLength(1);
-    expect(html).not.toContain('data-job-fact="visa"');
     expect(html).toContain("The laboratory will provide H-1B sponsorship.");
+    // The plate's two countdowns, which appeared nowhere in the report before.
+    expect(html).toContain("in 2 weeks");
+    expect(html).toContain("10d ago");
+    // The rest of the plate's sub-lines.
+    expect(html).toContain("per year · from posting");
+    expect(html).toContain("stated in the posting");
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('aria-valuenow="67"');
 
