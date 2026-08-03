@@ -42,6 +42,47 @@ export function formatDate(
 }
 
 /**
+ * B-05. Compact date range for an event's DATES tile — "Mar 8 – 11, 2027",
+ * "Mar 30 – Apr 2, 2027", "Dec 30, 2026 – Jan 2, 2027". Collapses whatever the
+ * two ends share. The event report used to print the start in "full" style and
+ * the end in "medium", joined by a dot: "Monday, March 8, 2027 · Mar 11, 2027".
+ */
+export function formatDateRange(
+  startIso: string | null | undefined,
+  endIso: string | null | undefined,
+): string | null {
+  const start = parseDate(startIso);
+  if (!start) return null;
+  const end = parseDate(endIso);
+  if (!end || end.getTime() <= start.getTime()) return formatDate(startIso);
+
+  const monthDay = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${formatDate(startIso)} – ${formatDate(endIso)}`;
+  }
+  const head =
+    start.getMonth() === end.getMonth()
+      ? `${monthDay(start)} – ${end.getDate()}`
+      : `${monthDay(start)} – ${monthDay(end)}`;
+  return `${head}, ${end.getFullYear()}`;
+}
+
+/** B-05. Weekday span beneath a date range — "Mon – Thu", or "Mon" for a day. */
+export function formatWeekdayRange(
+  startIso: string | null | undefined,
+  endIso: string | null | undefined,
+): string | null {
+  const start = parseDate(startIso);
+  if (!start) return null;
+  const weekday = (d: Date) =>
+    d.toLocaleDateString("en-US", { weekday: "short" });
+  const end = parseDate(endIso);
+  if (!end || end.getTime() <= start.getTime()) return weekday(start);
+  return `${weekday(start)} – ${weekday(end)}`;
+}
+
+/**
  * Clock-granularity past time for sync stamps and activity rows:
  * "just now", "12m ago", "3h ago", "5d ago", then the absolute date.
  */

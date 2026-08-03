@@ -34,6 +34,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
+import { ReportFactTile } from "@/components/reports/fact-tile";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -350,38 +351,9 @@ function HeaderChip({
   );
 }
 
+/** B-05/B-06 moved the tile body into a component both reports share. */
 function FactTile({ fact }: { fact: JobFact }) {
-  return (
-    <div
-      data-job-fact={fact.key}
-      className={cn(
-        "min-w-0 rounded-xl border border-border bg-surface px-4 py-3",
-        fact.tone === "accent" && "border-accent/25 bg-accent/5",
-        fact.tone === "danger" && "border-red/25 bg-red/5",
-      )}
-    >
-      <dt className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-        {fact.label}
-      </dt>
-      <dd
-        className={cn(
-          "mt-1 break-words text-body-sm font-semibold text-heading",
-          fact.tone === "accent" && "text-accent",
-          fact.tone === "danger" && "text-red",
-        )}
-      >
-        {fact.value}
-      </dd>
-      {fact.detail && (
-        <dd
-          data-job-fact-detail
-          className="mt-0.5 break-words text-caption leading-5 text-text-faint"
-        >
-          {fact.detail}
-        </dd>
-      )}
-    </div>
-  );
+  return <ReportFactTile fact={fact} attribute="data-job-fact" />;
 }
 
 function ReportSection({

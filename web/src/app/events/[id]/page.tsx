@@ -18,7 +18,15 @@ import type {
 } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
-import { formatDate, formatMatchPct } from "@/lib/format";
+import {
+  daysUntil,
+  formatCount,
+  formatDate,
+  formatDateRange,
+  formatDayDistance,
+  formatMatchPct,
+  formatWeekdayRange,
+} from "@/lib/format";
 import { cleanEventDescription } from "@/lib/events/mapper";
 import {
   buildEnrichmentContext,
@@ -38,6 +46,10 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
+import {
+  ReportFactTile,
+  type ReportFact,
+} from "@/components/reports/fact-tile";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -235,6 +247,84 @@ export function cheapestWayIn(
  * the two deadlines can be read as distances rather than bare dates. Mirrors
  * `buildTimeline` on the job report exactly, so the two reports agree.
  */
+/**
+ * B-05. Plate 03's six tiles. The build had no tile row at all — just a
+ * two-cell When/Where grid inside the header. FEE, ABSTRACT DUE and REGISTER BY
+ * survived further down the page but were gone from the top, and SCALE appeared
+ * nowhere in the report.
+ *
+ * **SCALE is dead on live data.** `event.expectedSize` is declared on the type
+ * but no mapper writes it, so the tile will never appear on a real event until
+ * extraction populates it. That is an `event-details.ts` change and out of
+ * scope here. The tile renders only when the field is set rather than printing
+ * a guessed crowd size.
+ *
+ * The plate's WHERE sub-line ("in person · hybrid keynotes") and REGISTER BY
+ * sub-line ("on-site registration available") have no field behind them; the
+ * tiles print the format Peer actually knows and stop.
+ */
+export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
+  const dates = formatDateRange(event.date, event.endDate);
+  const abstractDue = formatDate(event.deadline, "short");
+  const registerBy = formatDate(event.registrationDeadline, "short");
+  const location = event.isOnline ? "Online" : clean(event.location);
+  const headline = (event.fees ?? []).find((fee) => clean(fee.standard));
+  const student = clean(headline?.student);
+  const facts: Array<ReportFact | undefined> = [
+    dates
+      ? {
+          key: "dates",
+          label: "Dates",
+          value: dates,
+          detail: formatWeekdayRange(event.date, event.endDate) ?? undefined,
+        }
+      : undefined,
+    location && location.toLowerCase() !== "see event page"
+      ? {
+          key: "where",
+          label: "Where",
+          value: location,
+          detail: event.isOnline ? undefined : "in person",
+        }
+      : undefined,
+    headline
+      ? {
+          key: "fee",
+          label: "Fee",
+          value: clean(headline.standard)!,
+          detail: student ? `student ${student}` : undefined,
+        }
+      : undefined,
+    abstractDue
+      ? {
+          key: "abstract-due",
+          label: "Abstract due",
+          value: abstractDue,
+          detail: formatDayDistance(daysUntil(event.deadline!, nowMs)),
+        }
+      : undefined,
+    registerBy
+      ? {
+          key: "register-by",
+          label: "Register by",
+          value: registerBy,
+          detail: formatDayDistance(
+            daysUntil(event.registrationDeadline!, nowMs),
+          ),
+        }
+      : undefined,
+    event.expectedSize
+      ? {
+          key: "scale",
+          label: "Scale",
+          value: `~${formatCount(event.expectedSize)}`,
+          detail: "last edition",
+        }
+      : undefined,
+  ];
+  return facts.filter((fact): fact is ReportFact => Boolean(fact?.value));
+}
+
 function deadlineMilestones(event: Event, nowMs: number): DeadlineMilestone[] {
   const submission = formatDate(event.deadline);
   const registration = formatDate(event.registrationDeadline);
@@ -486,6 +576,7 @@ function DeadlineTimeline({
       {milestones.map((milestone, index) => (
         <li
           key={milestone.key}
+          data-deadline-milestone={milestone.key}
           className="relative rounded-xl border border-border bg-surface px-4 py-3"
         >
           <div className="flex items-center gap-2">
@@ -895,14 +986,26 @@ export function EventReport({
     positiveLedgerLabels: [],
   };
   const matchPct = formatMatchPct(event.relevanceScore);
-  const eventDate = formatDate(event.date, "full");
-  const endDate = formatDate(event.endDate);
+  const facts = buildEventFacts(event, nowMs);
   const location =
     event.isOnline
       ? "Online"
       : clean(event.location)?.toLowerCase() === "see event page"
         ? undefined
         : clean(event.location);
+  // B-16. Plate 03's subtitle: venue · format · duration. "streamed keynotes"
+  // is not a field, so the format segment says only what Peer knows. Duration
+  // is derived from the two dates rather than invented.
+  const eventDays = event.endDate
+    ? daysUntil(event.endDate, new Date(event.date).getTime()) + 1
+    : undefined;
+  const subtitle = [
+    location,
+    event.isOnline ? "online" : "in person",
+    eventDays && eventDays > 1 ? `${eventDays} days` : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const primaryHref = clean(event.linkRegistration) ?? clean(event.linkOfficial);
   const primaryLabel =
     event.linkRegistration &&
@@ -964,28 +1067,13 @@ export function EventReport({
           <h1 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]">
             {event.name}
           </h1>
-          {(eventDate || location) && (
-            <div className="mt-5 grid gap-3 text-body sm:grid-cols-2">
-              {eventDate && (
-                <div>
-                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    When
-                  </p>
-                  <p className="mt-1 font-medium text-heading">
-                    {eventDate}
-                    {endDate ? ` · ${endDate}` : ""}
-                  </p>
-                </div>
-              )}
-              {location && (
-                <div>
-                  <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    Where
-                  </p>
-                  <p className="mt-1 font-medium text-heading">{location}</p>
-                </div>
-              )}
-            </div>
+          {/* B-16. Plate 03's subtitle — venue · format · duration. The
+              When/Where grid used to sit here; B-05 moved both facts into the
+              tile row below, which is where the plate puts them. */}
+          {subtitle && (
+            <p data-event-subtitle className="mt-3 text-body text-text-muted">
+              {subtitle}
+            </p>
           )}
           <EventActionRow
             primaryHref={primaryHref}
@@ -1001,6 +1089,19 @@ export function EventReport({
             onDismiss={onDismiss}
           />
         </header>
+
+        {/* B-05. Plate 03's six-tile fact row, which the build did not have. */}
+        {facts.length > 0 && (
+          <dl className="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {facts.map((fact) => (
+              <ReportFactTile
+                key={fact.key}
+                fact={fact}
+                attribute="data-event-fact"
+              />
+            ))}
+          </dl>
+        )}
 
         {cheapest && <CheapestCallout cheapest={cheapest} />}
         {/* B-09. Every other block on the page is wrapped in a ReportSection;

@@ -141,6 +141,41 @@ describe("EventReport", () => {
     );
   });
 
+  it("renders the plate's fact tiles and a venue-format-duration subtitle", () => {
+    // B-05 + B-16. The build had no tile row at all — a two-cell When/Where
+    // grid in the header, and SCALE appeared nowhere in the report.
+    const html = renderReport(
+      baseEvent({
+        date: "2027-03-08",
+        endDate: "2027-03-11",
+        location: "San Diego, US",
+        deadline: "2026-10-30",
+        registrationDeadline: "2027-02-20",
+        expectedSize: 2400,
+        fees: [{ label: "Early bird", standard: "$480", student: "$180" }],
+      }),
+    );
+
+    expect(html.match(/data-event-fact=/g)).toHaveLength(6);
+    // The date range collapses what the two ends share; the old header printed
+    // "Monday, March 8, 2027 · Mar 11, 2027".
+    expect(html).toContain("Mar 8 – 11, 2027");
+    expect(html).toContain("Mon – Thu");
+    expect(html).toContain("student $180");
+    expect(html).toContain("~2.4k");
+    expect(html).toContain("last edition");
+    expect(html).toContain("San Diego, US · in person · 4 days");
+  });
+
+  it("hides the scale tile when no crowd size was extracted", () => {
+    // B-05. expectedSize is declared on the type but no mapper writes it, so
+    // on live data this tile never appears. It is left absent rather than
+    // filled with a guessed crowd size.
+    const html = renderReport(baseEvent());
+    expect(html).not.toContain('data-event-fact="scale"');
+    expect(html).not.toContain("last edition");
+  });
+
   it("gives the deadline strip its heading and a Today milestone", () => {
     // B-09. The strip was rendered bare — no ReportSection, so no heading —
     // and had only three points. Plate 03 opens it with Today so the two
@@ -149,11 +184,18 @@ describe("EventReport", () => {
       baseEvent({ deadline: "2027-01-28", registrationDeadline: "2027-06-15" }),
     );
 
-    const heading = html.indexOf("Two deadlines, one event");
-    expect(heading).toBeGreaterThan(-1);
-    expect(heading).toBeLessThan(html.indexOf("Today"));
-    expect(html.indexOf("Today")).toBeLessThan(html.indexOf("Abstract"));
-    expect(html.indexOf("Abstract")).toBeLessThan(html.indexOf("Register by"));
+    expect(html).toContain("Two deadlines, one event");
+    // Anchored on the milestone keys, not the visible words: B-05's fact row
+    // sits above the strip and legitimately repeats "Abstract" and
+    // "Register by", so a text search finds the tile first.
+    expect(
+      html.match(/data-deadline-milestone="[a-z]+"/g),
+    ).toEqual([
+      'data-deadline-milestone="today"',
+      'data-deadline-milestone="submission"',
+      'data-deadline-milestone="registration"',
+      'data-deadline-milestone="event"',
+    ]);
     expect(html).not.toContain("Submit by");
     // The clock is the injected one, never Date.now().
     expect(html).toContain("Jul 30, 2026");
