@@ -35,6 +35,7 @@ import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { ReportFactTile } from "@/components/reports/fact-tile";
+import { ReportBadge } from "@/components/reports/report-badge";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -301,12 +302,40 @@ function distinct(values: readonly string[]): string[] {
   });
 }
 
+/** B-10. Known site chrome that scraping picks up and files as a requirement. */
+const SITE_CHROME_RE =
+  /^(?:apply(?:\s+now)?|apply\s+for\s+this\s+job|sign\s*in|sign\s*up|log\s*in|login|register|submit|search|share|save(?:\s+job)?|view\s+job|view\s+details|more\s+details|back(?:\s+to\s+results)?|next|previous|home|menu|careers?(?:\s+page)?|jobs?(?:\s+page)?|job\s+(?:listing|description|alerts?)|web\s+job\s+listing|about\s+us|contact\s+us|cookies?|privacy(?:\s+policy)?|terms(?:\s+(?:of\s+(?:use|service)|and\s+conditions))?|newsletter|follow\s+us|read\s+more|learn\s+more|see\s+all|show\s+more|full\s+time|part\s+time|remote|hybrid|on\s*-?\s*site)$/i;
+
+/**
+ * B-10. A skill is something a person can have. "tesla.com" and "Sign in" are
+ * not, and the report was listing them under "Not matched in your profile" —
+ * telling the reader they were missing a skill called Sign in.
+ *
+ * The guard sits here, at the report layer, deliberately. Upstream,
+ * `keyRequirements` comes from `item.tags`, which also feeds cards, search and
+ * the preference ledger; tightening it there would change ranking. This filter
+ * changes only what the skills section is willing to print.
+ */
+function isPlausibleRequirement(value: string): boolean {
+  const text = value.replace(/\s+/g, " ").trim();
+  if (!text) return false;
+  // A URL or a bare domain is a link, not a skill.
+  if (/https?:\/\/|www\.|\S+\.(?:com|org|net|io|co|edu|gov|ai|jobs)\b/i.test(text)) {
+    return false;
+  }
+  return !SITE_CHROME_RE.test(text);
+}
+
 function skillComparison(job: Job): {
   matched: string[];
   unmatched: string[];
   pct: number;
 } | null {
-  const requirements = distinct(job.keyRequirements);
+  const requirements = distinct(job.keyRequirements).filter(
+    isPlausibleRequirement,
+  );
+  // Nothing survived the guard: hide the section rather than print an empty
+  // chip row under a heading promising skills.
   if (requirements.length === 0) return null;
   const terms = distinct(job.matchedTerms ?? []).map((term) =>
     term.toLowerCase(),
@@ -613,70 +642,49 @@ export function JobReport({
         </ReportSection>
       )}
 
+      {/* B-10. Plate 02: one heading with NEW and TIER 0 badges, the line
+          "6 of 9 you already have", ONE flat wrapping row of chips, then the
+          footnote. The build had a different heading, a progress bar the plate
+          does not have, and a two-column split into "Matched" and "Not matched"
+          lists — which turned a glance into a comparison exercise. The progress
+          bar is gone under say-it-once: the count line already states the
+          ratio. */}
       {skills && (
-        <ReportSection title="Skills and profile gaps">
-          <div
-            role="progressbar"
-            aria-label="Requirements matched in your profile"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={skills.pct}
-            className="h-2 overflow-hidden rounded-full bg-bg-secondary"
-          >
-            <div
-              className="h-full rounded-full bg-accent"
-              style={{ width: `${skills.pct}%` }}
-            />
-          </div>
-          <p className="mt-2 text-caption text-text-faint">
-            {skills.matched.length} of{" "}
-            {skills.matched.length + skills.unmatched.length} requirements match
-            terms in your profile
+        <ReportSection title="Skills they ask for" sectionKey="skills">
+          <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
+            <ReportBadge>New</ReportBadge>
+            <ReportBadge tone="accent">Tier 0</ReportBadge>
           </p>
-          <div className="mt-5 grid gap-6 md:grid-cols-2">
-            {skills.matched.length > 0 && (
-              <div>
-                <h3 className="text-body-sm font-semibold text-heading">
-                  Matched in your profile
-                </h3>
-                <ul className="mt-2 space-y-2">
-                  {skills.matched.map((skill) => (
-                    <li
-                      key={skill}
-                      data-skill-requirement="matched"
-                      className="text-body-sm text-text-muted"
-                    >
-                      <span className="mr-2 text-accent" aria-hidden>
-                        ✓
-                      </span>
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {skills.unmatched.length > 0 && (
-              <div>
-                <h3 className="text-body-sm font-semibold text-heading">
-                  Not matched in your profile
-                </h3>
-                <ul className="mt-2 space-y-2">
-                  {skills.unmatched.map((skill) => (
-                    <li
-                      key={skill}
-                      data-skill-requirement="unmatched"
-                      className="text-body-sm text-text-muted"
-                    >
-                      <span className="mr-2 text-text-faint" aria-hidden>
-                        ○
-                      </span>
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          <p className="text-caption text-text-faint">
+            {skills.matched.length} of{" "}
+            {skills.matched.length + skills.unmatched.length} you already have
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {skills.matched.map((skill) => (
+              <span
+                key={skill}
+                data-skill-requirement="matched"
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-body-sm font-medium text-accent"
+              >
+                {skill}
+                <span aria-hidden>✓</span>
+              </span>
+            ))}
+            {skills.unmatched.map((skill) => (
+              <span
+                key={skill}
+                data-skill-requirement="unmatched"
+                className="inline-flex items-center rounded-full border border-border bg-surface px-3 py-1 text-body-sm text-text-muted"
+              >
+                {skill}
+              </span>
+            ))}
           </div>
+          <p className="mt-4 text-caption leading-5 text-text-faint">
+            Highlighted chips come from your Required and Explore topics plus
+            your project text. The plain ones are the gaps — worth seeing before
+            you spend an evening on the application.
+          </p>
         </ReportSection>
       )}
 

@@ -102,7 +102,8 @@ describe("JobReport", () => {
     expect(html).not.toContain("undefined");
     expect(html).not.toContain("null");
     expect(html.toLowerCase()).not.toContain("not listed");
-    expect(html).not.toContain("Skills and profile gaps");
+    // B-10 renamed the heading to plate 02's "Skills they ask for".
+    expect(html).not.toContain("Skills they ask for");
     expect(html).not.toContain("What the role is");
     expect(html).not.toContain("What to have ready");
     expect(html).not.toContain("Why Peer sent it");
@@ -191,13 +192,15 @@ describe("JobReport", () => {
     // The rest of the plate's sub-lines.
     expect(html).toContain("per year · from posting");
     expect(html).toContain("stated in the posting");
-    expect(html).toContain('role="progressbar"');
-    expect(html).toContain('aria-valuenow="67"');
+    // B-10 removed the progress bar. Plate 02 does not have one, and
+    // say-it-once already gives the ratio in the count line below it.
+    expect(html).not.toContain('role="progressbar"');
+    expect(html).toContain("2 of 3 you already have");
 
     // Plate 02 order: Timeline, then Skills, then the two-column role block.
     // "Why Peer sent it" was deleted in P10.4.
     const timeline = html.indexOf("Timeline");
-    const skills = html.indexOf("Skills and profile gaps");
+    const skills = html.indexOf("Skills they ask for");
     const role = html.indexOf("What the role is");
     const materials = html.indexOf("To apply, have ready");
     expect(timeline).toBeGreaterThan(-1);
@@ -218,7 +221,7 @@ describe("JobReport", () => {
     expect(timelineSection).toContain("Aug 15, 2026");
     expect(timelineSection).toContain("Starts");
     expect(timelineSection).toContain("Oct 1, 2026");
-    expect(timelineSection).not.toContain("Skills and profile gaps");
+    expect(timelineSection).not.toContain("Skills they ask for");
   });
 
   it("renders the Applied control in both inactive and completed states", () => {
@@ -248,8 +251,9 @@ describe("JobReport", () => {
       }),
     );
 
-    expect(html).toContain("Skills and profile gaps");
-    expect(html).toContain("0 of 2 requirements match terms in your profile");
+    // B-10 rewrote the heading and the count copy to plate 02's wording.
+    expect(html).toContain("Skills they ask for");
+    expect(html).toContain("0 of 2 you already have");
     expect(
       html.match(/data-skill-requirement="unmatched"/g),
     ).toHaveLength(2);
@@ -257,12 +261,80 @@ describe("JobReport", () => {
     expect(html).toContain("Statistical experiment design");
   });
 
+  it("refuses to call site chrome a skill the reader is missing", () => {
+    // B-10. Scraped keyRequirements come from item.tags, which is filtered
+    // only by length upstream, so "tesla.com" and "Sign in" reached the field
+    // intact — and the report listed them under "Not matched in your profile",
+    // telling the reader they lacked a skill called Sign in.
+    //
+    // The guard sits at the report layer on purpose: item.tags also feeds
+    // cards, search and the preference ledger, and tightening it upstream
+    // would change ranking.
+    const html = renderReport(
+      baseJob({
+        keyRequirements: [
+          "web job listing",
+          "tesla.com",
+          "Apply now",
+          "Sign in",
+          "Solid-state electrolytes",
+          "careers page",
+        ],
+        matchedTerms: [],
+      }),
+    );
+
+    expect(html.match(/data-skill-requirement=/g)).toHaveLength(1);
+    expect(html).toContain("Solid-state electrolytes");
+    expect(html).toContain("0 of 1 you already have");
+    for (const junk of ["tesla.com", "Apply now", "Sign in", "careers page"]) {
+      expect(html).not.toContain(`>${junk}<`);
+    }
+  });
+
+  it("hides the skills section when only site chrome was scraped", () => {
+    // B-10. An empty chip row under a heading promising skills is worse than
+    // no section, so skillComparison returns null when nothing survives.
+    const html = renderReport(
+      baseJob({ keyRequirements: ["Apply now", "https://tesla.com/careers"] }),
+    );
+
+    expect(html).not.toContain("Skills they ask for");
+    expect(html).not.toContain("data-skill-requirement");
+  });
+
+  it("shows the chips in one row with the plate's footnote", () => {
+    // B-10. Plate 02 has ONE flat wrapping row — matched chips highlighted
+    // with a trailing tick, gaps plain, same row. The build split them into
+    // two columns under "Matched in your profile" / "Not matched in your
+    // profile", which turned a glance into a comparison exercise.
+    const html = renderReport(
+      baseJob({
+        keyRequirements: ["Electrochemistry", "Python", "Scale-up"],
+        matchedTerms: ["electrochemistry"],
+      }),
+    );
+
+    expect(html).not.toContain("Matched in your profile");
+    expect(html).not.toContain("Not matched in your profile");
+    expect(html.match(/data-skill-requirement="matched"/g)).toHaveLength(1);
+    expect(html.match(/data-skill-requirement="unmatched"/g)).toHaveLength(2);
+    // Matched chips come first, so the row reads as "what you have, then the
+    // gaps" rather than in scrape order.
+    expect(html.indexOf('data-skill-requirement="matched"')).toBeLessThan(
+      html.indexOf('data-skill-requirement="unmatched"'),
+    );
+    expect(html).toContain(
+      "Highlighted chips come from your Required and Explore topics plus your project text. The plain ones are the gaps — worth seeing before you spend an evening on the application.",
+    );
+  });
+
   it("omits the skills section and header when no requirements exist", () => {
     const html = renderReport(
       baseJob({ keyRequirements: [" ", "\t"], matchedTerms: ["Python"] }),
     );
 
-    expect(html).not.toContain("Skills and profile gaps");
+    expect(html).not.toContain("Skills they ask for");
     expect(html).not.toContain("data-skill-requirement");
   });
 
