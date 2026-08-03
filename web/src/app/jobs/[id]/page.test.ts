@@ -107,6 +107,38 @@ describe("JobReport", () => {
     expect(html).not.toContain("Starts");
   });
 
+  it("renders Why Peer sent this to you as the last block before the locked block", () => {
+    // B-03 / §1b Correction 2. P10.4 deleted this Tier 0 block from both
+    // reports on the grounds it was a one-line restatement; plate 02 shows a
+    // substantive paragraph. Restored at the plate's heading — note the old
+    // wording "Why Peer sent it" must stay gone, and two assertions above
+    // still pin its absence.
+    const html = renderReport(
+      baseJob({
+        matchReason:
+          "Matches your solid-state electrolytes focus · fits a postdoc profile",
+        facetPreferenceReason: "Because you often view California roles",
+      }),
+    );
+
+    const why = html.indexOf("Why Peer sent this to you");
+    expect(why).toBeGreaterThan(-1);
+    expect(html).not.toContain("Why Peer sent it");
+    expect(html).toContain(
+      "Matches your solid-state electrolytes focus · fits a postdoc profile",
+    );
+    expect(html).toContain("Because you often view California roles");
+    expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
+    expect(html.indexOf("To apply, have ready")).toBeLessThan(why);
+  });
+
+  it("hides Why Peer sent this to you when the scoring layer produced nothing", () => {
+    // B-03. The block prints what exists and stops — it is never padded with
+    // invented specifics to reach the plate's fuller sentence.
+    const html = renderReport(baseJob({ matchReason: "" }));
+    expect(html).not.toContain("Why Peer sent this to you");
+  });
+
   it("renders all seven supported facts and the rich report in order", () => {
     const html = renderReport(
       baseJob({

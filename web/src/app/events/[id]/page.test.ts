@@ -193,6 +193,32 @@ describe("EventReport", () => {
     expect(html).toContain("Apr 15, 2027");
   });
 
+  it("renders Why Peer sent this to you before the locked block", () => {
+    // B-03 / §1b Correction 2. Same Tier 0 block as the job report, restored
+    // after P10.4 deleted it. §1c puts it after the cost table and before the
+    // locked block.
+    const html = renderReport(
+      baseEvent({
+        relevanceReason:
+          "Matches 3 required topics and the abstract deadline is 92 days out",
+        facetPreferenceReason: "Because you often view battery summits",
+      }),
+    );
+
+    const why = html.indexOf("Why Peer sent this to you");
+    expect(why).toBeGreaterThan(-1);
+    expect(html).toContain(
+      "Matches 3 required topics and the abstract deadline is 92 days out",
+    );
+    expect(html).toContain("Because you often view battery summits");
+    expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
+  });
+
+  it("hides Why Peer sent this to you when there is no reason to show", () => {
+    // B-03. baseEvent leaves relevanceReason empty on purpose.
+    expect(renderReport(baseEvent())).not.toContain("Why Peer sent this to you");
+  });
+
   it("keeps Registered and Submitted independent", () => {
     const html = renderReport(baseEvent(), "PhD Year 3", {
       registered: true,

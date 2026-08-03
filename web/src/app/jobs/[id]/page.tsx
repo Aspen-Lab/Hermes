@@ -27,6 +27,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -764,6 +765,15 @@ export function JobReport({
           </ul>
         </ReportSection>
       )}
+
+      {/* B-03 / §1b Correction 2. Plate 02's last block before the locked
+          block. P10.4 deleted it on the grounds that it was a one-line
+          restatement; the plate shows a substantive Tier 0 paragraph. */}
+      <WhyPeerSentThis
+        reason={job.matchReason}
+        facetReason={job.facetPreferenceReason}
+        sectionKey="why-peer-sent-this"
+      />
 
       <TierUpgradeBlock
         items={JOB_TIER_UPGRADE_ITEMS}

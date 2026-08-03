@@ -37,6 +37,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -1134,6 +1135,13 @@ export function EventReport({
 
 
       <div className="mx-auto max-w-[720px]">
+        {/* B-03 / §1b Correction 2. Per §1c this sits after "What it costs
+            you" and before the locked block. */}
+        <WhyPeerSentThis
+          reason={event.relevanceReason}
+          facetReason={event.facetPreferenceReason}
+        />
+
         <TierUpgradeBlock
           items={EVENT_TIER_UPGRADE_ITEMS}
           providerConfigured={providerConfigured || hasEnrichment}
