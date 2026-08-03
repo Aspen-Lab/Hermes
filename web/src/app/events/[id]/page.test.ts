@@ -94,15 +94,66 @@ describe("EventReport", () => {
 
     expect(html.match(/data-roster-row="organisation"/g)).toHaveLength(30);
     expect(html).toContain("Battery Organisation 30");
-    expect(html).not.toContain("+29");
-    expect(html).not.toMatch(/show more|collapsed/i);
+    // B-07 rewrote the two assertions below. They used to forbid the strings
+    // "+29" and "collapsed" outright, but plate 03's own footnote uses both
+    // words to promise the reader that nothing is hidden. What they were
+    // protecting is that no row is actually hidden — asserted by the count
+    // above, which is every organisation in the roster.
+    expect(html).toContain(
+      "Nothing is collapsed behind a “+29” — Peer’s guess about what matters to you is not good enough to hide anything.",
+    );
+    expect(html).not.toMatch(/show more/i);
     const layout = html.match(
       /<div[^>]*data-roster-layout="full-width"[^>]*>/,
     )?.[0];
     expect(layout).toContain("w-full space-y-10");
     expect(layout).not.toContain("grid-cols-2");
-    expect(html).toContain("Organisations at the event");
+    // B-14 replaced "Organisations at the event" with plate 03's heading and
+    // its counts sub-line — how many of the room matter to YOU, not how many
+    // the model processed.
+    expect(html).toContain("Who’ll be in the room");
+    expect(html).toContain("0 of 30 exhibitors concern you");
     expect(html).not.toContain("attendees");
+    // B-07. The tail is its own titled block with a live count, a filter and
+    // the star explainer — none of which the build had.
+    expect(html).toContain("Every other organisation attending · 30");
+    expect(html).toContain('placeholder="Filter this list"');
+    expect(html).toContain(
+      "Star anyone Peer got wrong. It moves to the top here, and every future event highlights them automatically.",
+    );
+  });
+
+  it("moves a starred organisation out of the tail and shrinks its count", () => {
+    // B-07. The tail count is the plain-list length computed live, so starring
+    // someone visibly moves them from the tail into the Tier 0 cards.
+    const organisations = Array.from({ length: 4 }, (_, index) => ({
+      name: `Battery Organisation ${index + 1}`,
+      descriptor: "Exhibitor",
+    }));
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({ organisations }),
+        careerStage: "PhD Year 3" as const,
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set(["organisation:battery organisation 2"]),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Every other organisation attending · 3");
+    expect(html).toContain("1 of 4 exhibitors concern you");
+    expect(html.match(/data-roster-card="true"/g)).toHaveLength(1);
+    expect(html.match(/data-roster-row="organisation"/g)).toHaveLength(4);
   });
 
   it("repeats the cheapest line and renders the required four-column cost table", () => {
@@ -332,7 +383,9 @@ describe("EventReport", () => {
       },
     );
 
-    const attendees = html.indexOf("Organisations at the event · 1 judged");
+    // B-14 repointed this anchor: the roster heading is now plate 03's
+    // "Who'll be in the room", and the "· N judged" suffix is gone.
+    const attendees = html.indexOf("Who’ll be in the room");
     const talks = html.indexOf("What each talk is actually about");
     const poster = html.indexOf("Is your work a fit for the poster call");
     expect(attendees).toBeGreaterThan(-1);

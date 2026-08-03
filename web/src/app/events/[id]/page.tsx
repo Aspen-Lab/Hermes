@@ -50,6 +50,7 @@ import {
   ReportFactTile,
   type ReportFact,
 } from "@/components/reports/fact-tile";
+import { ReportBadge } from "@/components/reports/report-badge";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -535,10 +536,12 @@ function EventActionRow({
 
 function ReportSection({
   title,
+  subtitle,
   children,
   className,
 }: {
   title: string;
+  subtitle?: string;
   children: ReactNode;
   className?: string;
 }) {
@@ -547,6 +550,12 @@ function ReportSection({
       <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
         {title}
       </h2>
+      {/* B-14. Plate 03's roster carries a sub-line under its heading. */}
+      {subtitle && (
+        <p data-section-subtitle className="mt-1.5 text-body-sm text-text-muted">
+          {subtitle}
+        </p>
+      )}
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -695,6 +704,107 @@ function StarButton({
   );
 }
 
+/** B-07. The plate's `★` explainer, identical over both tails. */
+const ROSTER_STAR_EXPLAINER =
+  "Star anyone Peer got wrong. It moves to the top here, and every future event highlights them automatically.";
+
+/**
+ * B-07. Plate 03 gives each long tail its own titled block with a live count, a
+ * "Filter this list" input, a `★` column and a closing footnote. The build ran
+ * the plain rows straight on under the same heading as the Tier 0 cards, with
+ * no divider, no count, no filter and no explanation.
+ *
+ * The filter needs local state, so it lives in here and `EventReport` stays a
+ * pure render. The count is the plain-list length, computed live, so starring
+ * someone visibly moves them out of the tail.
+ */
+function RosterTail({
+  kind,
+  title,
+  footnote,
+  entries,
+  onToggleStar,
+}: {
+  kind: "organisation" | "person";
+  title: string;
+  footnote: string;
+  entries: Array<{
+    key: string;
+    name: string;
+    secondary?: string;
+    starred: boolean;
+  }>;
+  onToggleStar: (key: string) => void;
+}) {
+  const [filter, setFilter] = useState("");
+  if (entries.length === 0) return null;
+  const needle = filter.trim().toLowerCase();
+  const visible = needle
+    ? entries.filter(({ name, secondary }) =>
+        `${name} ${secondary ?? ""}`.toLowerCase().includes(needle),
+      )
+    : entries;
+  const inputId = `roster-filter-${kind}`;
+
+  return (
+    <div data-roster-tail={kind} className="mt-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint">
+          {title} · {entries.length}
+        </h3>
+        <div className="flex items-center gap-2">
+          <label htmlFor={inputId} className="sr-only">
+            Filter this list
+          </label>
+          <input
+            id={inputId}
+            type="search"
+            value={filter}
+            onChange={(clickEvent) => setFilter(clickEvent.target.value)}
+            placeholder="Filter this list"
+            className="w-44 rounded-lg border border-border bg-surface px-3 py-1.5 text-caption text-heading placeholder:text-text-faint focus:border-accent focus:outline-none"
+          />
+          <span
+            aria-hidden
+            title="Star anyone Peer got wrong"
+            className="px-1 text-title text-text-faint"
+          >
+            ★
+          </span>
+        </div>
+      </div>
+      <p className="mt-2 text-caption leading-5 text-text-faint">
+        {ROSTER_STAR_EXPLAINER}
+      </p>
+      <div className="mt-3 grid gap-2">
+        {visible.map(({ key, name, secondary, starred }) => (
+          <div
+            key={key}
+            data-roster-row={kind}
+            data-roster-plain="true"
+            className="flex items-start justify-between gap-3 border-b border-border px-1 py-3 last:border-0"
+          >
+            <div className="min-w-0">
+              <p className="text-body-sm font-medium text-heading">{name}</p>
+              {secondary && (
+                <p className="mt-0.5 text-caption text-text-faint">
+                  {secondary}
+                </p>
+              )}
+            </div>
+            <StarButton
+              active={starred}
+              label={name}
+              onClick={() => onToggleStar(key)}
+            />
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-caption leading-5 text-text-faint">{footnote}</p>
+    </div>
+  );
+}
+
 function RosterSection({
   event,
   context,
@@ -761,28 +871,43 @@ function RosterSection({
   people.sort(byPriority);
 
   if (organisations.length === 0 && people.length === 0) return null;
-  const judgedCount = enrichment?.judgedAttendees?.length ?? 0;
-  const rosterLabel =
-    organisations.length > 0 && people.length > 0
-      ? "Organisations and people at the event"
-      : organisations.length > 0
-        ? "Organisations at the event"
-        : "People at the event";
+  const concerns = ({ reason, starred }: { reason?: string; starred: boolean }) =>
+    Boolean(reason) || starred;
+  const organisationCards = organisations.filter(concerns);
+  const organisationTail = organisations.filter((row) => !concerns(row));
+  const peopleCards = people.filter(concerns);
+  const peopleTail = people.filter((row) => !concerns(row));
+
+  // B-14. Plate 03's sub-line counts how many of the room matter to YOU. The
+  // build printed "· N judged" — a count of what the model processed, which is
+  // Peer talking about its own machinery rather than about the reader.
+  const counts = [
+    organisations.length > 0
+      ? `${organisationCards.length} of ${organisations.length} exhibitors`
+      : undefined,
+    people.length > 0
+      ? `${peopleCards.length} of ${people.length} speakers`
+      : undefined,
+  ].filter(Boolean);
 
   return (
     <ReportSection
-      title={`${rosterLabel}${judgedCount > 0 ? ` · ${judgedCount} judged` : ""}`}
+      // B-14. Fixed heading from plate 03.
+      title="Who’ll be in the room"
+      subtitle={`${counts.join(" and ")} concern you`}
       className="mt-14"
     >
       <div data-roster-layout="full-width" className="w-full space-y-10">
         {organisations.length > 0 && (
           <div>
-            <h3 className="text-title font-semibold text-heading">
-              Organisations
-            </h3>
+            {organisationCards.length > 0 && (
+              <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
+                Organisations
+                <ReportBadge tone="accent">Tier 0</ReportBadge>
+              </h3>
+            )}
             <div className="mt-3 grid gap-2">
-              {organisations
-                .filter(({ reason, starred }) => reason || starred)
+              {organisationCards
                 .map(({ item, key, reason, judgment, starred }) => (
                   <article
                     key={key}
@@ -821,38 +946,32 @@ function RosterSection({
                     />
                   </article>
                 ))}
-              {organisations
-                .filter(({ reason, starred }) => !reason && !starred)
-                .map(({ item, key, starred }) => (
-                  <div
-                    key={key}
-                    data-roster-row="organisation"
-                    data-roster-plain="true"
-                    className="flex items-start justify-between gap-3 border-b border-border px-1 py-3 last:border-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-body-sm font-medium text-heading">{item.name}</p>
-                      {clean(item.descriptor) && (
-                        <p className="mt-0.5 text-caption text-text-faint">{item.descriptor}</p>
-                      )}
-                    </div>
-                    <StarButton
-                      active={starred}
-                      label={item.name}
-                      onClick={() => onToggleStar(key)}
-                    />
-                  </div>
-                ))}
             </div>
+            <RosterTail
+              kind="organisation"
+              title="Every other organisation attending"
+              footnote="Nothing is collapsed behind a “+29” — Peer’s guess about what matters to you is not good enough to hide anything."
+              entries={organisationTail.map(({ item, key, starred }) => ({
+                key,
+                name: item.name,
+                secondary: clean(item.descriptor),
+                starred,
+              }))}
+              onToggleStar={onToggleStar}
+            />
           </div>
         )}
 
         {people.length > 0 && (
           <div>
-            <h3 className="text-title font-semibold text-heading">People</h3>
+            {peopleCards.length > 0 && (
+              <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
+                People
+                <ReportBadge tone="accent">Tier 0</ReportBadge>
+              </h3>
+            )}
             <div className="mt-3 grid gap-2">
-              {people
-                .filter(({ reason, starred }) => reason || starred)
+              {peopleCards
                 .map(({ item, key, reason, judgment, starred }) => (
                   <article
                     key={key}
@@ -893,33 +1012,22 @@ function RosterSection({
                     />
                   </article>
                 ))}
-              {people
-                .filter(({ reason, starred }) => !reason && !starred)
-                .map(({ item, key, starred }) => (
-                  <div
-                    key={key}
-                    data-roster-row="person"
-                    data-roster-plain="true"
-                    className="flex items-start justify-between gap-3 border-b border-border px-1 py-3 last:border-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-body-sm font-medium text-heading">{item.name}</p>
-                      {(clean(item.role) || clean(item.institution)) && (
-                        <p className="mt-0.5 text-caption text-text-faint">
-                          {[clean(item.role), clean(item.institution)]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                      )}
-                    </div>
-                    <StarButton
-                      active={starred}
-                      label={item.name}
-                      onClick={() => onToggleStar(key)}
-                    />
-                  </div>
-                ))}
             </div>
+            <RosterTail
+              kind="person"
+              title="Every other speaker"
+              footnote="Full name, role and institution for everyone, pulled from the event’s own speaker page. Nobody is collapsed."
+              entries={peopleTail.map(({ item, key, starred }) => ({
+                key,
+                name: item.name,
+                secondary:
+                  [clean(item.role), clean(item.institution)]
+                    .filter(Boolean)
+                    .join(" · ") || undefined,
+                starred,
+              }))}
+              onToggleStar={onToggleStar}
+            />
           </div>
         )}
       </div>
