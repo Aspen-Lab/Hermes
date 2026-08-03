@@ -33,10 +33,14 @@ before you stop, not after you finish.
 
 ```
 ROUND:            1
-WHOSE TURN:       C
-STATUS:           B COMPLETE
-LAST DIFFERENCE:  50%
+WHOSE TURN:       C  (the manager is doing C's remaining work directly)
+STATUS:           C PARTIAL — 14 of B's 20 items done
+LAST DIFFERENCE:  50%   (not re-measured since; A runs next)
 GATE (0%):        NOT MET
+
+DONE:      B-01 B-02 B-03 B-04 B-05 B-06 B-07 B-08 B-09 B-10 B-11 B-12 B-15 B-16
+REMAINING: B-13 B-14 B-17 B-18 B-19 B-20
+GATE NOW:  81 files / 815 tests passing, typecheck clean, lint 1 pre-existing
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
