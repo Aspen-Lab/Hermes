@@ -1220,12 +1220,6 @@ export function EventReport({
           </ReportSection>
         )}
 
-        {fees.length > 0 && (
-          <ReportSection title="What it costs you">
-            <CostsTable fees={fees} cheapest={cheapest} />
-          </ReportSection>
-        )}
-
         {hasHappenings && (
           <ReportSection title="What actually happens there">
             {description && (
@@ -1385,6 +1379,15 @@ export function EventReport({
 
 
       <div className="mx-auto max-w-[720px]">
+        {/* B-08. The cost table used to sit third from the top, ahead of both
+            the programme and the roster. §1c puts it here — after "Who’ll be
+            in the room" and immediately before "Why Peer sent this to you". */}
+        {fees.length > 0 && (
+          <ReportSection title="What it costs you">
+            <CostsTable fees={fees} cheapest={cheapest} />
+          </ReportSection>
+        )}
+
         {/* B-03 / §1b Correction 2. Per §1c this sits after "What it costs
             you" and before the locked block. */}
         <WhyPeerSentThis

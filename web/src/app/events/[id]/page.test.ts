@@ -185,6 +185,12 @@ describe("EventReport", () => {
       expect(html).toContain(`>${header}</th>`);
     }
     expect(html).toContain("Online · $150");
+    // B-08. §1c's order: the cost table sits after the roster and immediately
+    // before "Why Peer sent this to you". It used to jump the queue ahead of
+    // both the programme and the roster.
+    expect(html.indexOf("Two deadlines, one event")).toBeLessThan(
+      html.indexOf("What it costs you"),
+    );
     // B-09 relabelled "Submit by" to the plate's "Abstract" and gave the strip
     // its missing heading, so the ordering anchors on the heading instead.
     expect(html.indexOf("Cheapest way in, for you")).toBeLessThan(
