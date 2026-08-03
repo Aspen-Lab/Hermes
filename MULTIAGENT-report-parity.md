@@ -47,6 +47,79 @@ GATE (<5%):       NOT MET
 
 ---
 
+## §1b. MANAGER'S CORRECTIONS — READ BEFORE JUDGING ANYTHING "DELIBERATE"
+
+The Phase 10 handoff recorded two decisions that were **based on a misreading of
+the plates**. The manager verified both against the PDF on 2026-08-03 and
+**reverses them**. Treat the plate as correct and the handoff as wrong here.
+
+### Correction 1 — the day-by-day plan must exist
+
+`HANDOFF-phase10-report-back-to-spec.md` claims "the spec's event report has no
+day-by-day plan at all" and task P10.3 deleted it. **That claim is false.** Plate
+03's locked block, verbatim from the PDF:
+
+> **A day-by-day plan for you** — Which sessions to attend and who to find, in order.
+
+The build's old version restated the day's own name ("Day 1: Fundamentals") and
+was rightly judged worthless — but the fix was to make it real, not to delete it.
+**Rebuild it to the plate's definition: specific sessions to attend and specific
+people to find, ordered.** It is a Tier 1/2 feature and belongs in the locked
+block's promise list.
+
+### Correction 2 — "Why Peer sent this to you" must exist
+
+Task P10.4 deleted it from both reports. Plate 02 has it as a **Tier 0** block,
+verbatim from the PDF:
+
+> **WHY PEER SENT THIS TO YOU** · TIER 0
+> "Matches 3 of your required topics — solid-state electrolytes, interfacial
+> resistance, operando imaging — at postdoc level, in California, which you
+> filtered toward 4 times this week."
+
+Plate 03 has the same block. What was deleted was a one-line restatement
+("Covers your molten salt focus"), which is not what the plate shows. **Restore
+it at the plate's level of substance: name which required topics matched, at what
+career level, and what filtering behaviour it reflects.**
+
+### Everything else in Phase 7–10 §5 still stands
+
+The competitiveness verdict stays deleted (the plate shows a count and two chip
+groups, no verdict). Say-it-once still governs. If any other "deliberate"
+decision looks wrong against the plate, mark it `POLICY — manager decides` and
+say so; do not reverse it yourself.
+
+---
+
+## §1c. PLATE 03 SECTION ORDER — EXTRACTED FROM THE PDF, DO NOT RE-DERIVE
+
+```
+chips (kind · online/in-person · CCF-B · match %) → title → subtitle → buttons
+  → facts: DATES / WHERE / FEE / ABSTRACT DUE / REGISTER BY / SCALE
+  → CHEAPEST WAY IN, FOR YOU
+  → TWO DEADLINES, ONE EVENT
+  → WHAT ACTUALLY HAPPENS THERE
+  → Who'll be in the room
+       ORGANISATIONS (Tier 0)
+       EVERY OTHER ORGANISATION ATTENDING · 31
+       PEOPLE (Tier 0)
+       EVERY OTHER SPEAKER · 16
+  → WHAT IT COSTS YOU (Tier 0) — table: ITEM / STANDARD / STUDENT / DEADLINE
+  → WHY PEER SENT THIS TO YOU (Tier 0)
+  → ALSO IN THIS REPORT WITH AN AI KEY — four items:
+       The other 29 exhibitors, judged
+       What each talk is actually about
+       A day-by-day plan for you
+       Is your work a fit for the poster call
+```
+
+Plate 02 (job) order was extracted in `HANDOFF-phase10-report-back-to-spec.md`
+§P10.2 and is still accurate: facts → visa quote → Timeline → Skills they ask for
+→ [What the role is | To apply, have ready] → Why Peer sent this to you → locked
+block.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
