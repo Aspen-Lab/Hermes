@@ -394,6 +394,7 @@ export function JobReport({
   enrichment = null,
   pageReadingReason,
   providerConfigured = false,
+  enrichmentLoading = false,
   onToggleSave,
   onAppliedChange,
   onDismiss,
@@ -409,6 +410,7 @@ export function JobReport({
   pageReadingReason?: OpportunityPageReadingReason;
   /** Legacy test seam: provider availability alone must not hide the locked block. */
   providerConfigured?: boolean;
+  enrichmentLoading?: boolean;
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
   onDismiss: () => void;
@@ -695,7 +697,22 @@ export function JobReport({
         </ReportSection>
       )}
 
-      {!enrichment?.specificRequirements?.length &&
+      {enrichmentLoading && (
+        <p
+          data-enrichment-loading="job"
+          role="status"
+          aria-live="polite"
+          className="mt-8 flex items-center gap-2 text-body-sm text-text-faint"
+        >
+          <span
+            aria-hidden
+            className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+          />
+          Peer is reading the job posting…
+        </p>
+      )}
+      {!enrichmentLoading &&
+        !enrichment?.specificRequirements?.length &&
         !enrichment?.specificDuties?.length &&
         providerConfigured &&
         pageReadingReason && (
@@ -898,6 +915,7 @@ export default function JobDetailPage({
       nowMs={nowMs}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
+      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile)}
       providerConfigured={canAttemptOpportunityEnrichment(profile)}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}

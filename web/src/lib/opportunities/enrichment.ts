@@ -91,7 +91,10 @@ interface CachedEnrichment {
 
 type EnrichmentCache = Record<string, CachedEnrichment>;
 
-const ENRICHMENT_CACHE_STORAGE_KEY = "peer-opportunity-report-cache-v3";
+// v4: posterFit.reasoning became posterFit.points[] and dayPlan was removed.
+// A cached v3 entry has no `points`, so rendering it crashed the whole report.
+// Bumping the key retires every old-shape entry instead of trying to read it.
+const ENRICHMENT_CACHE_STORAGE_KEY = "peer-opportunity-report-cache-v4";
 const ENRICHMENT_CACHE_MAX_ENTRIES = 80;
 export const ENRICHMENT_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const ENRICHMENT_FAILURE_TTL_MS = 6 * 60 * 60 * 1000;

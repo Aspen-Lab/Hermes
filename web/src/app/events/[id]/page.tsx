@@ -815,6 +815,7 @@ export function EventReport({
   isSubmitted,
   isInterested = false,
   providerConfigured = false,
+  enrichmentLoading = false,
   onToggleStar,
   onToggleSave,
   onRegisteredChange,
@@ -834,6 +835,7 @@ export function EventReport({
   isSubmitted: boolean;
   isInterested?: boolean;
   providerConfigured?: boolean;
+  enrichmentLoading?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
   onRegisteredChange: (next: boolean) => void;
@@ -1035,7 +1037,25 @@ export function EventReport({
           </ReportSection>
         )}
 
-        {!displayEnrichment?.talkSummaries && providerConfigured && pageReadingReason && (
+        {enrichmentLoading && (
+          <p
+            data-enrichment-loading="event"
+            role="status"
+            aria-live="polite"
+            className="mt-8 flex items-center gap-2 text-body-sm text-text-faint"
+          >
+            <span
+              aria-hidden
+              className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
+            />
+            Peer is reading the programme page…
+          </p>
+        )}
+
+        {!enrichmentLoading &&
+          !displayEnrichment?.talkSummaries &&
+          providerConfigured &&
+          pageReadingReason && (
           <p
             data-page-reading-note="event"
             className="mt-8 text-body-sm text-text-faint"
@@ -1044,7 +1064,7 @@ export function EventReport({
           </p>
         )}
 
-        {displayEnrichment?.posterFit && (
+        {displayEnrichment?.posterFit?.points?.length ? (
           <ReportSection title="Is your work a fit for the poster call">
             <div className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
               <p className="text-title font-semibold text-heading">
@@ -1053,7 +1073,7 @@ export function EventReport({
                   : "Little overlap with your topics"}
               </p>
               <ul className="mt-3 space-y-2">
-                {displayEnrichment.posterFit.points.map((point) => (
+                {displayEnrichment.posterFit!.points.map((point) => (
                   <li
                     key={point}
                     data-poster-fit-point
@@ -1069,7 +1089,7 @@ export function EventReport({
               </ul>
             </div>
           </ReportSection>
-        )}
+        ) : null}
       </div>
 
 
@@ -1259,6 +1279,7 @@ export default function EventDetailPage({
       rosterContext={rosterContext}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
+      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile)}
       providerConfigured={canAttemptOpportunityEnrichment(profile)}
       starredKeys={starredKeys}
       isSaved={isSaved}

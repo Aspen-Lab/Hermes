@@ -30,6 +30,7 @@ function renderReport(
   providerConfigured = false,
   isInterested = false,
   pageReadingReason?: OpportunityPageReadingReason,
+  enrichmentLoading = false,
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
@@ -37,6 +38,7 @@ function renderReport(
       careerStage,
       enrichment,
       pageReadingReason,
+      enrichmentLoading,
       providerConfigured,
       isSaved: false,
       isRegistered: completion.registered,
@@ -396,5 +398,58 @@ describe("EventReport", () => {
     expect(html).toContain("Researchers present interface results.");
     expect(html).toContain("Workshops compare cell-design methods.");
     expect(html).not.toContain("long marketing introduction");
+  });
+});
+
+describe("stale cached enrichment shapes", () => {
+  // A seven-day cache means a shape change ships alongside entries written by
+  // the previous shape. posterFit.reasoning became posterFit.points[], and the
+  // old entry had no `points` — the report crashed on `.map` and the reader got
+  // "This view hit a snag." The cache key is bumped, but the render must not
+  // trust the shape it is handed either.
+  it("renders instead of crashing when posterFit has no points", () => {
+    const legacy = {
+      posterFit: { fits: true, reasoning: "Written by the previous shape." },
+    } as unknown as EventEnrichment;
+
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      legacy,
+      true,
+    );
+
+    expect(html).toContain("Battery Interfaces Summit");
+    expect(html).not.toContain("Is your work a fit for the poster call");
+  });
+
+  it("survives an empty points array", () => {
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      { posterFit: { fits: true, points: [] } },
+      true,
+    );
+    expect(html).toContain("Battery Interfaces Summit");
+    expect(html).not.toContain("Is your work a fit for the poster call");
+  });
+
+  it("shows a reading indicator while the model is still working", () => {
+    const html = renderReport(
+      baseEvent(),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      null,
+      true,
+      false,
+      undefined,
+      true,
+    );
+    expect(html).toContain('data-enrichment-loading="event"');
+    expect(html).toContain("Peer is reading the programme page");
+    // The explanation line must not race the spinner.
+    expect(html).not.toContain("data-page-reading-note");
   });
 });
