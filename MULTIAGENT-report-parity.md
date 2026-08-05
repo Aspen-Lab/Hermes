@@ -38,15 +38,15 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-09, nine committed with per-item §4 logs. The first C
+DONE:      B2-01 .. B2-10, ten committed with per-item §4 logs. The first C
            stalled at 600s while committing B2-08; nothing was lost, because
            it had been committing per item. A second C (this one) resumed at
            B2-09. B's guide itself was written by the MANAGER after two B
            subagents died writing nothing.
-TODO:      B2-10 .. B2-18, nine items left, in order. C must NOT attempt the
+TODO:      B2-11 .. B2-18, eight items left, in order. C must NOT attempt the
            two POLICY halves: the `Industry` qualifier in B2-11, and `looking
            at industry` in B2-17 gap 3.
-GATE NOW:  82 files / 835 tests, **all 835 passing this run** (the live
+GATE NOW:  82 files / 836 tests, **all 836 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2846,5 +2846,18 @@ changed.
   behaviour, not a regression, and not named by this item. **Gate: 82 files /
   835 tests passing, typecheck clean, 1 pre-existing lint error.** Commit:
   `98da026`.
+
+- **B2-10 — LANDED.** Deleted the `<HeaderChip>{event.isOnline ? "Online" :
+  "In person"}</HeaderChip>` line from the event header
+  (`web/src/app/events/[id]/page.tsx`). Ruling 7 closed the round-1 `POLICY`
+  question this round's A log re-raised: the plate's chip row is kind ·
+  secondary kind · rank · match %, no format chip, and the subtitle (B-16)
+  already prints "in person" / "online" — the chip was a second statement of
+  the same fact. Left the subtitle and the WHERE tile alone; only the header
+  chip came out. No existing test asserted "In person" as a header chip or a
+  header chip count, so nothing needed rewriting — added a new test that
+  extracts just the header's chip-row `<div>` and asserts it, confirming the
+  subtitle still states the format. **Gate: 82 files / 836 tests passing,
+  typecheck clean, 1 pre-existing lint error.** Commit: `231122d`.
 
 ---
