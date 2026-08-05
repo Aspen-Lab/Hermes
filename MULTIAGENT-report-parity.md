@@ -33,36 +33,72 @@ before you stop, not after you finish.
 
 ```
 ROUND:            2
-WHOSE TURN:       C
-STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
-LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
-GATE (0%):        NOT MET
+WHOSE TURN:       A
+STATUS:           C COMPLETE — all 18 items (B2-01..B2-18) committed. A's
+                  round-3 measurement is the only thing left in round 2.
+LAST DIFFERENCE:  22%   (round 2 figure, now stale — every item in the guide
+                  that fixed it has landed; A must re-measure, not reuse this)
+GATE (0%):        NOT MET (unchanged from round 2 — only A sets this, by
+                  re-measuring against the plates. Not C's to judge.)
 
-DONE:      B2-01 .. B2-17, seventeen committed with per-item §4 logs. The
-           first C stalled at 600s while committing B2-08; nothing was lost,
-           because it had been committing per item. A second C (this one)
-           resumed at B2-09. B's guide itself was written by the MANAGER
-           after two B subagents died writing nothing. Both POLICY halves are
-           now resolved as `POLICY — manager decides` (not attempted, per
-           instruction): B2-11's `Industry` qualifier (no honest source
-           anywhere) and B2-17 gap 3 `looking at industry` (an honest source
-           DOES exist — `profile.industryVsAcademia` — but wiring it in was
-           still not this C's call to make; see the B2-17 log entry above).
-TODO:      B2-18, one item left — the last one in the guide.
-GATE NOW:  82 files / 848 tests, **all 848 passing this run** (the live
-           benchmark flake below did not fire this session), typecheck clean,
-           1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
-FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
-           Tavily-search integration test that only runs when a real API key
-           is present, and that asserts a specific real event still appears in
-           live search results. C verified it was already failing before any
-           B2 work (stashed everything, reran against the prior commit).
-           **MANAGER'S RULING: this is real-world data drift, not a
-           regression. It is not C's to fix and A must not count it against
-           the gate.** Treat 833/834 as green for this loop. Fixing the
-           benchmark's brittle assertion is a separate task.
-NOTE:      B2-06 landed all three layers including extraction, which the guide
-           had said to attempt only after committing the safe half.
+DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
+           §4 log entry. Split across two C's: the first did B2-01..B2-08 and
+           stalled at 600s committing B2-08 (nothing lost — it had committed
+           per item, exactly why that rule exists); this second C resumed at
+           B2-09 and finished B2-09..B2-18. B's guide itself was written by
+           the MANAGER after two B subagents died writing nothing — §1
+           stayed true through every one of those deaths, which is the only
+           reason any of this was resumable.
+
+           Both POLICY halves flagged in the guide are resolved as
+           `POLICY — manager decides` — investigated, neither attempted, per
+           direct instruction not to:
+             - B2-11's `Industry` qualifier (`"Summit"` → `"Industry
+               summit"`) — no honest source anywhere in the data model.
+             - B2-17 gap 3, `looking at industry` — a materially different
+               case: the profile DOES carry a sector preference
+               (`Profile.industryVsAcademia`, already read by both scoring
+               pipelines, never plumbed into `EventReport`). An honest source
+               exists here, unlike the first half. Left out anyway because
+               deciding whether to show it was named as the manager's call,
+               not this C's — see the B2-17 §4 entry for the full field name
+               and reasoning, so acting on it (if the manager says yes) is a
+               small follow-up, not a fresh investigation.
+TODO:      Nothing left for C in round 2. Next: **A re-measures the live job
+           and event reports against plates 02/03 from scratch** (round 3),
+           using the same method as rounds 1–2 (renderToStaticMarkup + a
+           maximal fixture, or the dev server — say which). Re-list
+           exclusions 7 and 8 by name, per §1e's standing instruction. Watch
+           in particular for: whether B2-04's contract-length
+           expand/abbreviate pair reads right on real (not just fixture)
+           data; whether B2-06's `workMode` inference from location text
+           ever mis-fires; and whether B2-15's travel-grant single-cell
+           choice reads acceptably against the plate now that the invitation
+           letter beside it is three real columns.
+GATE NOW:  82 files / 848 tests, **all 848 passing this run**, typecheck
+           clean, 1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
+           This is the number after every one of C's 18 commits — the gate
+           was re-run after each individual item, never batched.
+FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
+           integration test that only runs when a real API key is present in
+           `.local-data/profile.json`, asserting a specific real event still
+           appears in live search results. The first C verified it was
+           already failing before any B2 work (stashed everything, reran
+           against the prior commit). **This second C's session had a live
+           key configured and the test PASSED on every gate run this
+           session** — i.e. it is genuinely flaky run-to-run against live
+           search results, not simply "currently broken." **MANAGER'S
+           RULING stands regardless of which way it happens to fall on a
+           given run: this is real-world data drift, not a regression. It is
+           not C's to fix and A must not count it against the gate.** Fixing
+           the benchmark's brittle assertion is a separate task.
+NOTE:      B2-06 (round 2's first C) landed all three layers including
+           extraction, which the guide had said to attempt only after
+           committing the safe half. B2-18 (this C) caught two pre-existing
+           tests the item broke that the guide's own risk section had not
+           named — both rewritten, neither deleted, per §2/§3 — a reminder
+           that "risk" sections in a B guide are a starting point, not a
+           complete list; C must still watch the gate itself.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
@@ -3030,5 +3066,33 @@ changed.
   have silently used "PhD Year 3" rather than genuinely testing the
   no-stage case). **Gate: 82 files / 848 tests passing, typecheck clean, 1
   pre-existing lint error.** Commit: `02f4e6a`.
+
+- **B2-18 — LANDED. Last item in the guide.** `CostsTable`'s cheapest-way
+  restatement now has its own label text, `"Cheapest way in for you:"` (no
+  comma), and lower-cases the first letter of `cheapest.short` so it reads as
+  a continuation of that colon (`"…for you: student ticket in person…"`) —
+  added a small local `lowercaseFirst`. The top `CheapestCallout` is
+  untouched: it keeps its comma and its capital letter, exactly as A
+  confirmed byte-for-byte matched the plate. **Caught two pre-existing tests
+  this broke, both rewritten, neither deleted, per §2/§3:** (1) the
+  `toHaveLength(2)` count on `/Cheapest way in, for you/g` — the comma is no
+  longer common to both sites, so this would have silently dropped to 1;
+  repointed at `/Cheapest way in,? for you/g` (comma optional), exactly the
+  fix the item itself specified, and added a same-test assertion confirming
+  the two `<strong>` forms differ. (2) a second, older test ("names the
+  travel grant and never signs off with the higher price") asserted the
+  table-head's compressed form APPEARS CAPITALISED — that assertion is now
+  false by design, since B2-18 lower-cases it on purpose; rewrote it to the
+  lower-case form and added a `not.toContain` for the old capitalised
+  table-head phrasing, plus a check that the callout itself still reads
+  capitalised. Neither test had been named in the guide's own risk section
+  (which only anticipated the count), so this was a live catch from actually
+  running the gate, not something read off the plan. **Gate: 82 files / 848
+  tests passing, typecheck clean, 1 pre-existing lint error.** Commit:
+  `6eccd04`.
+
+**All ten of C's items — B2-09 .. B2-18 — are now landed.** Combined with
+the previous C's B2-01..B2-08, **all eighteen items in B's round-2 guide are
+committed.** Handing back to A for the round-3 measurement.
 
 ---
