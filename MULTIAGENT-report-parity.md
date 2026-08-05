@@ -38,16 +38,16 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-11, eleven committed with per-item §4 logs. The first C
+DONE:      B2-01 .. B2-12, twelve committed with per-item §4 logs. The first C
            stalled at 600s while committing B2-08; nothing was lost, because
            it had been committing per item. A second C (this one) resumed at
            B2-09. B's guide itself was written by the MANAGER after two B
            subagents died writing nothing. B2-11's `+ career fair` chip half
            landed; the `Industry` qualifier half was correctly left untouched
            (`POLICY — manager decides`, no honest source exists).
-TODO:      B2-12 .. B2-18, seven items left, in order. C must still NOT
-           attempt `looking at industry` in B2-17 gap 3 (the other POLICY
-           half, B2-11's `Industry` qualifier, is now resolved — see above).
+TODO:      B2-13 .. B2-18, six items left, in order. C must still NOT attempt
+           `looking at industry` in B2-17 gap 3 (the other POLICY half, B2-11's
+           `Industry` qualifier, is now resolved — see above).
 GATE NOW:  82 files / 839 tests, **all 839 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
@@ -2884,5 +2884,22 @@ changed.
   a career-fair event whose own activities also say "career fair" does not
   duplicate itself. **Gate: 82 files / 839 tests passing, typecheck clean, 1
   pre-existing lint error.** Commit: `f0c9405`.
+
+- **B2-12 — LANDED.** `buildEventFacts`'s FEE tile now appends an early-bird
+  clause to its detail line when the headline fee row carries a deadline —
+  `"student $180 · early bird to Jan 9"`, matching the plate. Reused
+  `cutoffPhrase` (B-11's own extraction, already used by `cheapestWayIn`)
+  rather than calling `formatFeeDeadline` directly: `cutoffPhrase` applies
+  B-01's ISO guard AND pulls only the date-ish head off a compound string
+  ("Early bird ends Jan 9 · $620 after" → "Jan 9"), so the detail line never
+  acquires a fabricated year and never drags the trailing price along —
+  exactly the two failure modes B-01 and B-11 already fixed elsewhere in this
+  same file. Extended the existing fact-tiles test with a deadline on its fee
+  fixture and two new assertions, scoped to just the FEE tile's own `<div>`
+  (the cost table further down the same page legitimately prints the full
+  compound deadline string, "$620" included, in its own DEADLINE column, so a
+  page-wide `not.toContain` would have been a false positive). **Gate: 82
+  files / 839 tests passing, typecheck clean, 1 pre-existing lint error.**
+  Commit: `58f20fe`.
 
 ---
