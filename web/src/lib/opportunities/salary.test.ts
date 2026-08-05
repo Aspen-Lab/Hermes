@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatSalary,
+  formatSalaryRange,
   normalizeSalary,
   parseSalaryText,
   SALARY_NOT_DISCLOSED,
@@ -158,5 +159,26 @@ describe("formatSalary", () => {
 
   it("exports one canonical missing-salary label", () => {
     expect(SALARY_NOT_DISCLOSED).toBe("Salary not disclosed");
+  });
+});
+
+describe("formatSalaryRange", () => {
+  // B2-02. Plate 02's SALARY tile value: no period suffix (the tile's own
+  // detail line states the period), a spaced en dash, and the currency symbol
+  // repeated on the upper bound. A separate function from formatSalary, which
+  // keeps its existing compact form for the feed and job cards.
+  it.each([
+    [usd(95_000, 120_000), "$95k – $120k"],
+    [{ min: 22_000, max: 26_000, currency: "ZAR", period: "month" as const }, "ZAR 22k – ZAR 26k"],
+    [usd(120_000, 120_000), "$120k"],
+  ] satisfies Array<[NormalizedSalary, string]>)("formats %# as %s", (salary, expected) => {
+    expect(formatSalaryRange(salary)).toBe(expected);
+  });
+
+  it("never changes formatSalary's own output", () => {
+    // The two are independent on purpose. If this ever fails, the split in
+    // B2-02 was done wrong — formatSalary must stay byte-identical for every
+    // caller outside the report (feed cards, search).
+    expect(formatSalary(usd(150_000, 230_000))).toBe("$150k–230k / yr");
   });
 });

@@ -13,7 +13,7 @@ import {
   formatMatchPct,
 } from "@/lib/format";
 import { reportShortDate } from "@/components/reports/report-date";
-import { formatSalary } from "@/lib/opportunities/salary";
+import { formatSalaryRange } from "@/lib/opportunities/salary";
 import {
   cleanJobDescription,
   cleanJobSubtitlePart,
@@ -216,7 +216,11 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
       ? {
           key: "salary",
           label: "Salary",
-          value: formatSalary(job.salary),
+          // B2-02. The period used to print twice — once inside this value
+          // (formatSalary's own "/ yr" suffix) and again in the detail line
+          // below. formatSalaryRange carries no period; the detail line below
+          // is the only place it appears now.
+          value: formatSalaryRange(job.salary),
           detail: `${SALARY_PERIODS[job.salary.period]} · ${
             job.salaryIsEstimated ? "estimated" : "from posting"
           }`,

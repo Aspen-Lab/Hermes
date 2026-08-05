@@ -88,7 +88,12 @@ describe("JobReport", () => {
     expect(html).toContain("Battery Research Scientist");
     expect(html).toContain("Example Energy");
     expect(html).toContain("Chicago, IL");
-    expect(html).toContain("$120k / yr");
+    // B2-02. The SALARY tile used to print the period twice — once in the
+    // value's own "/ yr" suffix, again in the detail line below. The tile
+    // value is now formatSalaryRange's plain range; "per year" lives only in
+    // the detail line (asserted further down as "per year · from posting").
+    expect(html).toContain("$120k");
+    expect(html).not.toContain("$120k / yr");
     // B2-01: report dates inside their own one-year horizon drop the year.
     expect(html).toContain("Jul 20");
     expect(html).not.toContain("Jul 20, 2026");
@@ -197,6 +202,11 @@ describe("JobReport", () => {
     // The rest of the plate's sub-lines.
     expect(html).toContain("per year · from posting");
     expect(html).toContain("stated in the posting");
+    // B2-02. Plate 02's SALARY value: spaced en dash, currency repeated on the
+    // upper bound, no period suffix — the period lives in the detail line above.
+    expect(html).toContain("$120k – $150k");
+    expect(html).not.toContain("$120k–150k");
+    expect(html).not.toContain("/ yr");
     // B-10 removed the progress bar. Plate 02 does not have one, and
     // say-it-once already gives the ratio in the count line below it.
     expect(html).not.toContain('role="progressbar"');
