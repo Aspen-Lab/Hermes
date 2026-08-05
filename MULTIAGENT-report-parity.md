@@ -38,17 +38,17 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-12, twelve committed with per-item §4 logs. The first C
-           stalled at 600s while committing B2-08; nothing was lost, because
+DONE:      B2-01 .. B2-13, thirteen committed with per-item §4 logs. The first
+           C stalled at 600s while committing B2-08; nothing was lost, because
            it had been committing per item. A second C (this one) resumed at
            B2-09. B's guide itself was written by the MANAGER after two B
            subagents died writing nothing. B2-11's `+ career fair` chip half
            landed; the `Industry` qualifier half was correctly left untouched
            (`POLICY — manager decides`, no honest source exists).
-TODO:      B2-13 .. B2-18, six items left, in order. C must still NOT attempt
+TODO:      B2-14 .. B2-18, five items left, in order. C must still NOT attempt
            `looking at industry` in B2-17 gap 3 (the other POLICY half, B2-11's
            `Industry` qualifier, is now resolved — see above).
-GATE NOW:  82 files / 839 tests, **all 839 passing this run** (the live
+GATE NOW:  82 files / 840 tests, **all 840 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2901,5 +2901,21 @@ changed.
   page-wide `not.toContain` would have been a false positive). **Gate: 82
   files / 839 tests passing, typecheck clean, 1 pre-existing lint error.**
   Commit: `58f20fe`.
+
+- **B2-13 — LANDED.** Implements Ruling 10. Deleted the `detail` field
+  entirely from the REGISTER BY fact — it was the same `formatDayDistance`
+  countdown pattern used for ABSTRACT DUE, but the plate's sub-line here is a
+  fixed qualitative note ("on-site registration available") stating whether
+  walk-in registration is still open, a fact Peer does not track. Printing a
+  countdown in its place would imply the deadline is hard, which is not
+  something we know — so the slot is left empty rather than filled with a
+  different fact. This is a permanent difference from the plate — **exclusion
+  7**, already named in §1e; re-listing it here per the standing instruction
+  that A must keep excluded items visible every round. `formatDayDistance`
+  became unused in this file as a result and was dropped from the import
+  list. No existing test asserted this tile's old countdown text, so nothing
+  needed rewriting — added a new test asserting the tile has no
+  `data-report-fact-detail` sibling at all. **Gate: 82 files / 840 tests
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: `ecc9109`.
 
 ---
