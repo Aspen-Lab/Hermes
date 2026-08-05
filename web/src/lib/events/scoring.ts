@@ -98,6 +98,20 @@ export function scoreRank(rank: string | undefined): number {
   return 0.6;
 }
 
+/**
+ * B2-08 / Ruling 12. Plate 03's "Why Peer sent this to you" reads as one
+ * flowing sentence, same as the job report's twin. Ordinary sentence
+ * conjunction instead of a " · " join — one clause stands alone, two join
+ * with "and", three or more become an Oxford-comma list ending "and <last>".
+ * No trailing punctuation: the render layer appends the facet-preference
+ * clause and closes the sentence itself.
+ */
+function joinReasonClauses(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
 function reasonFor(item: RawEventItem, matched: string[], now: number): string {
   const parts: string[] = [];
   if (matched.length > 0) {
@@ -116,7 +130,7 @@ function reasonFor(item: RawEventItem, matched: string[], now: number): string {
       item.source === "eventweb" ? "Matched by web search" : "Meets your event filters",
     );
   }
-  const sentence = parts.join(" · ");
+  const sentence = joinReasonClauses(parts);
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
 

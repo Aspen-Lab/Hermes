@@ -117,6 +117,14 @@ describe("scoreJobs", () => {
   it("produces a human-readable match reason", () => {
     const scored = scoreJobs([job({})], { topics: ["machine learning"] });
     expect(scored[0].matchReason.toLowerCase()).toContain("machine learning");
+    // B2-08 / Ruling 12. Plate 02's "Why Peer sent this to you" reads as one
+    // flowing sentence. job({}) matches the topic and is remote, so this
+    // fixture produces two clauses — enough to prove they join with "and",
+    // not the old " · ".
+    expect(scored[0].matchReason.toLowerCase()).toContain(
+      "focus and remote-friendly",
+    );
+    expect(scored[0].matchReason).not.toContain(" · ");
   });
 
   it("does not let a method-only web posting pass a battery required-topic gate", () => {

@@ -390,7 +390,10 @@ describe("EventReport", () => {
     expect(html).toContain(
       "Matches 3 required topics and the abstract deadline is 92 days out",
     );
-    expect(html).toContain("Because you often view battery summits");
+    // B2-08 / Ruling 12. Plate prints ONE sentence, not two paragraphs;
+    // facetReason's "Because ..." lower-cases into a trailing clause.
+    expect(html).toContain("because you often view battery summits.");
+    expect(html).not.toContain("Because you often view battery summits");
     expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
     // B2-07 / Ruling 11. Plate 03 badges this heading TIER 0, same as the job report.
     const whySection = html.match(

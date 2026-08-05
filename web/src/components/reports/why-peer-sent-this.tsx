@@ -14,6 +14,15 @@ import { ReportBadge } from "@/components/reports/report-badge";
  * paragraph also names a region and a filtering count that no field carries
  * today; padding the sentence with invented specifics is the exact dishonesty
  * Phase 7 existed to remove, so the block prints what exists and stops.
+ *
+ * B2-08 / Ruling 12. The plate shows ONE flowing sentence; `reason` and
+ * `facetReason` used to render as two separate paragraphs. Fusing them here
+ * is only half the fix — `reason` itself was dot-separated fragments from the
+ * scoring layer's own join, which Ruling 12 also authorised changing (see
+ * `joinReasonClauses` in `web/src/lib/jobs/scoring.ts` and
+ * `web/src/lib/events/scoring.ts`). `facetReason` already reads "Because you
+ * often view <label>" as its own sentence, so trailing it onto `reason`
+ * needs lower-casing its first word and a connector.
  */
 export function WhyPeerSentThis({
   reason,
@@ -28,6 +37,11 @@ export function WhyPeerSentThis({
   const body = reason?.replace(/\s+/g, " ").trim();
   const facet = facetReason?.replace(/\s+/g, " ").trim();
   if (!body && !facet) return null;
+
+  const sentence =
+    body && facet
+      ? `${body} — ${facet.charAt(0).toLowerCase()}${facet.slice(1)}.`
+      : `${(body ?? facet)!}.`;
 
   return (
     <section
@@ -45,17 +59,7 @@ export function WhyPeerSentThis({
         <ReportBadge tone="accent">Tier 0</ReportBadge>
       </p>
       <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
-        {body && (
-          <p className="text-body-lg leading-8 text-text">{body}</p>
-        )}
-        {facet && (
-          <p
-            data-why-facet-reason
-            className={`text-body leading-7 text-text-muted${body ? " mt-3" : ""}`}
-          >
-            {facet}
-          </p>
-        )}
+        <p className="text-body-lg leading-8 text-text">{sentence}</p>
       </div>
     </section>
   );

@@ -139,7 +139,11 @@ describe("JobReport", () => {
     expect(html).toContain(
       "Matches your solid-state electrolytes focus · fits a postdoc profile",
     );
-    expect(html).toContain("Because you often view California roles");
+    // B2-08 / Ruling 12. The plate prints ONE sentence, not two paragraphs.
+    // facetReason's own "Because ..." lower-cases to a trailing clause when
+    // it follows body text, rather than starting a fresh sentence.
+    expect(html).toContain("because you often view California roles.");
+    expect(html).not.toContain("Because you often view California roles");
     expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
     expect(html.indexOf("To apply, have ready")).toBeLessThan(why);
     // B2-07 / Ruling 11. Plate 02 badges this heading TIER 0.

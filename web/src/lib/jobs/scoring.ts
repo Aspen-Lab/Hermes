@@ -230,6 +230,21 @@ export function isExpiredPosting(item: RawJobItem, now = Date.now()): boolean {
 
 // ── Combined score ───────────────────────────────────────────────
 
+/**
+ * B2-08 / Ruling 12. Plate 02's "Why Peer sent this to you" reads as one
+ * flowing sentence; joining these clauses with " · " produced a paragraph of
+ * dot-separated fragments instead of prose. Ordinary sentence conjunction —
+ * one clause stands alone, two join with "and", three or more become an
+ * Oxford-comma list ending "and <last>". No trailing punctuation here: the
+ * render layer appends a further clause (the facet-preference reason) and
+ * closes the sentence itself.
+ */
+function joinReasonClauses(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
 function reasonFor(
   item: RawJobItem,
   matched: string[],
@@ -247,7 +262,7 @@ function reasonFor(
       item.source === "jobweb" ? "Matched by web search" : "Meets your job filters",
     );
   }
-  const sentence = parts.join(" · ");
+  const sentence = joinReasonClauses(parts);
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
 

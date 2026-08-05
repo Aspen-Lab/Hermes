@@ -120,6 +120,25 @@ describe("scoreEvents", () => {
     expect(scored[0].relevanceReason).not.toContain("Upcoming in your field");
   });
 
+  it("joins multiple match reasons as one sentence, not dot-separated fragments", () => {
+    // B2-08 / Ruling 12. Plate 03's "Why Peer sent this to you" reads as one
+    // flowing sentence. Adding a rank onto a matched-topic event produces two
+    // clauses — enough to prove they join with "and", not the old " · ".
+    const ranked = event({
+      id: "eventweb:battery-ranked",
+      source: "eventweb",
+      name: "Solid-State Battery Summit",
+      startDate: "",
+      description: "An industry conference in Chicago.",
+      tags: [],
+      rank: "CCF-B",
+    });
+    const scored = scoreEvents([ranked], { topics: ["battery"] });
+    expect(scored).toHaveLength(1);
+    expect(scored[0].relevanceReason.toLowerCase()).toContain("focus and ccf-b");
+    expect(scored[0].relevanceReason).not.toContain(" · ");
+  });
+
   it("requires two distinct full-text matches when title and summary do not match", () => {
     const prefix = "x".repeat(320);
     const oneBroadMatch = event({
