@@ -562,6 +562,38 @@ function personReason(
   return undefined;
 }
 
+/**
+ * B2-16 / Ruling 13. Plate 03's people cards carry a short descriptor line
+ * ("2 papers in your feed", "Matches a topic you typed") that organisation
+ * cards already have (`item.descriptor`, rendered) and people never did.
+ * Both plate examples are Tier 0 — computable with no AI key — so this lives
+ * beside `personReason` rather than coming from the model: sourcing it from
+ * enrichment would make it vanish for a reader with no AI key configured,
+ * which is backwards for a fact the plate treats as always shown.
+ *
+ * `context.paperAuthors` is a flat list of author names across every paper in
+ * the feed and saved papers (one entry per paper per author, from
+ * `EventDetailPage`'s `rosterContext`), so counting this person's normalised
+ * name in it IS counting how many of their papers are in the feed.
+ */
+function personDescriptor(
+  item: EventPerson,
+  context: EventRosterContext,
+): string | undefined {
+  if (clean(item.descriptor)) return clean(item.descriptor);
+  const name = normalized(item.name);
+  const paperCount = context.paperAuthors.filter(
+    (author) => normalized(author) === name,
+  ).length;
+  if (paperCount > 0) {
+    return `${paperCount} paper${paperCount === 1 ? "" : "s"} in your feed`;
+  }
+  if (context.declaredTopics.some((topic) => normalized(topic).includes(name))) {
+    return "Matches a topic you typed";
+  }
+  return undefined;
+}
+
 function useRosterStars(): [Set<string>, (key: string) => void] {
   const [stars, setStars] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
@@ -1128,6 +1160,9 @@ function RosterSection({
         key,
         reason,
         judgment,
+        // B2-16 / Ruling 13. Tier 0, computed locally — never from `judgment`
+        // (which is model output).
+        descriptor: personDescriptor(item, context),
         starred: starredKeys.has(key),
       };
     });
@@ -1243,7 +1278,7 @@ function RosterSection({
             )}
             <div className="mt-3 grid gap-2">
               {peopleCards
-                .map(({ item, key, reason, judgment, starred }) => (
+                .map(({ item, key, reason, judgment, descriptor, starred }) => (
                   <article
                     key={key}
                     data-roster-row="person"
@@ -1260,6 +1295,14 @@ function RosterSection({
                           {[clean(item.role), clean(item.institution)]
                             .filter(Boolean)
                             .join(" · ")}
+                        </p>
+                      )}
+                      {/* B2-16 / Ruling 13. Same slot the organisation card's
+                          own descriptor uses, so the two card types read
+                          alike. */}
+                      {descriptor && (
+                        <p className="mt-0.5 text-body-sm text-text-muted">
+                          {descriptor}
                         </p>
                       )}
                       <p

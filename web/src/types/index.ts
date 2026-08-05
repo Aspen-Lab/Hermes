@@ -139,6 +139,15 @@ export interface EventPerson {
   name: string;
   role?: string;
   institution?: string;
+  /**
+   * B2-16 / Ruling 13. The short "why glance at this one" line —
+   * `EventOrg.descriptor`'s equivalent. Plate 03's examples ("2 papers in
+   * your feed", "Matches a topic you typed") are both Tier 0, computed
+   * locally in `events/[id]/page.tsx` alongside `relevance`; this field lets
+   * a future extraction source it directly the same way org descriptors are,
+   * without a render-layer change.
+   */
+  descriptor?: string;
   relevance?: string;
   speaking?: string;
 }

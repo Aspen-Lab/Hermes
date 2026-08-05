@@ -616,6 +616,118 @@ describe("EventReport", () => {
     }
   });
 
+  it("computes a Tier 0 paper-count descriptor for a person card, from local data only", () => {
+    // B2-16 / Ruling 13. Plate 03's people cards carry a short descriptor
+    // ("2 papers in your feed") that organisation cards already have and
+    // people never did. Both plate examples are Tier 0 — computable with no
+    // AI key — so this comes from rosterContext, never from `enrichment`
+    // (the model), which would make it vanish for a reader with no AI key.
+    // paperAuthors is a flat list, one entry per paper per author, so
+    // counting a name in it IS counting how many of their papers are in the
+    // feed.
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({ people: [{ name: "Ada Lovelace" }] }),
+        careerStage: "PhD Year 3" as const,
+        rosterContext: {
+          savedEmployers: [],
+          paperAuthors: ["Ada Lovelace", "Ada Lovelace"],
+          declaredTopics: [],
+          positiveLedgerLabels: [],
+        },
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set<string>(),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("2 papers in your feed");
+  });
+
+  it("falls back to a topic-match descriptor when the person has no papers in the feed", () => {
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({ people: [{ name: "Grace Hopper" }] }),
+        careerStage: "PhD Year 3" as const,
+        rosterContext: {
+          savedEmployers: [],
+          paperAuthors: [],
+          declaredTopics: ["compilers, in the tradition of Grace Hopper"],
+          positiveLedgerLabels: [],
+        },
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set<string>(),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Matches a topic you typed");
+  });
+
+  it("prefers an already-populated descriptor over the computed ones", () => {
+    // Mirrors EventOrg.descriptor's own priority: an upstream-supplied value
+    // wins, and the local Tier 0 computation is only ever a fallback. Gives
+    // the paper-count signal a real match too, so this proves priority
+    // rather than merely that the fallback wasn't reachable.
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({
+          people: [
+            {
+              name: "Marie Curie",
+              relevance: "Runs the annual keynote track.",
+              descriptor: "Speaking twice this year",
+            },
+          ],
+        }),
+        careerStage: "PhD Year 3" as const,
+        rosterContext: {
+          savedEmployers: [],
+          paperAuthors: ["Marie Curie", "Marie Curie", "Marie Curie"],
+          declaredTopics: [],
+          positiveLedgerLabels: [],
+        },
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set<string>(),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Speaking twice this year");
+    expect(html).not.toContain("papers in your feed");
+    expect(html).not.toContain("Matches a topic you typed");
+  });
+
   it("renders the AI sections in order and hides the locked block", () => {
     const html = renderReport(
       baseEvent({
