@@ -1,5 +1,7 @@
 "use client";
 
+import { ReportBadge } from "@/components/reports/report-badge";
+
 /**
  * B-03. "Why Peer sent this to you" — a Tier 0 block on both plate 02 and
  * plate 03, restored after P10.4 deleted it from both reports.
@@ -36,6 +38,12 @@ export function WhyPeerSentThis({
       <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
         Why Peer sent this to you
       </h2>
+      {/* B2-07 / Ruling 11. Plate 02 and 03 both badge this heading TIER 0.
+          The badge component already existed and worked — the Skills section
+          used it correctly — it simply wasn't applied here. */}
+      <p className="mt-2 flex flex-wrap items-center gap-2">
+        <ReportBadge tone="accent">Tier 0</ReportBadge>
+      </p>
       <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
         {body && (
           <p className="text-body-lg leading-8 text-text">{body}</p>

@@ -201,6 +201,11 @@ describe("EventReport", () => {
     expect(html.indexOf("Cheapest way in, for you")).toBeLessThan(
       html.indexOf("Two deadlines, one event"),
     );
+    // B2-07 / Ruling 11. Plate 03 badges this heading TIER 0. The section has
+    // no data attribute of its own to anchor a regex on, so this checks a
+    // window right after the heading rather than the whole rest of the page.
+    const costsIndex = html.indexOf("What it costs you");
+    expect(html.slice(costsIndex, costsIndex + 500)).toContain("Tier 0");
   });
 
   it("names the travel grant and never signs off with the higher price", () => {
@@ -387,6 +392,11 @@ describe("EventReport", () => {
     );
     expect(html).toContain("Because you often view battery summits");
     expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
+    // B2-07 / Ruling 11. Plate 03 badges this heading TIER 0, same as the job report.
+    const whySection = html.match(
+      /<section[^>]*data-report-section="why-peer-sent-this"[^>]*>[\s\S]*?<\/section>/,
+    )?.[0];
+    expect(whySection).toContain("Tier 0");
   });
 
   it("hides Why Peer sent this to you when there is no reason to show", () => {

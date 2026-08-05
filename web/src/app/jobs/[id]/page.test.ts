@@ -142,6 +142,11 @@ describe("JobReport", () => {
     expect(html).toContain("Because you often view California roles");
     expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
     expect(html.indexOf("To apply, have ready")).toBeLessThan(why);
+    // B2-07 / Ruling 11. Plate 02 badges this heading TIER 0.
+    const whySection = html.match(
+      /<section[^>]*data-report-section="why-peer-sent-this"[^>]*>[\s\S]*?<\/section>/,
+    )?.[0];
+    expect(whySection).toContain("Tier 0");
   });
 
   it("hides Why Peer sent this to you when the scoring layer produced nothing", () => {

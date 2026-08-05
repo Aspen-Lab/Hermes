@@ -1597,6 +1597,11 @@ export function EventReport({
             in the room" and immediately before "Why Peer sent this to you". */}
         {(fees.length > 0 || supportRows.length > 0) && (
           <ReportSection title="What it costs you">
+            {/* B2-07 / Ruling 11. Plate 03 badges this heading TIER 0, same
+                as "Why Peer sent this to you". */}
+            <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
+              <ReportBadge tone="accent">Tier 0</ReportBadge>
+            </p>
             <CostsTable
               fees={fees}
               supportRows={supportRows}
