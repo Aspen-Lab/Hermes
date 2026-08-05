@@ -189,15 +189,22 @@ describe("JobReport", () => {
     expect(html.match(/data-job-fact=/g)).toHaveLength(7);
     expect(html).toContain('data-job-fact="visa"');
     expect(html).toContain('data-job-fact="work-mode"');
-    // The tile says "Sponsors", the header chip says "Sponsorship available".
-    // Different words on purpose, so the same fact is not printed twice.
-    expect(html.match(/Sponsorship available/g)).toHaveLength(1);
+    // B2-04. The tile says "Sponsors", the header chip says "Visa
+    // sponsorship" (renamed from "Sponsorship available", which never
+    // matched the plate). Different words on purpose, so the same fact is
+    // not printed twice.
+    expect(html.match(/Visa sponsorship/g)).toHaveLength(1);
+    expect(html).not.toContain("Sponsorship available");
     expect(html).toContain("The laboratory will provide H-1B sponsorship.");
-    // B2-03. humanize() used to strip the hyphen before title-casing, turning
-    // the single word "full-time" into two capitalised words, "Full Time".
-    // The TYPE tile's detail line is "<employment type> · <contract length>".
-    expect(html).toContain("Full-time · Two-year fixed-term appointment");
+    // B2-03 + B2-04. humanize() keeps "full-time" as one hyphenated word, and
+    // the header chip / TYPE tile detail now state the SAME expanded
+    // contract length ("Two-year fixed-term appointment" -> "2 years") in
+    // two phrasings — the chip states it in full, the tile abbreviates it —
+    // rather than each printing a different fragment of the raw scraped text.
+    expect(html).toContain("Full-time · 2 years"); // header chip
+    expect(html).toContain("Full-time · 2-yr contract"); // TYPE tile detail
     expect(html).not.toContain("Full Time");
+    expect(html).not.toContain("Two-year fixed-term appointment");
     // The plate's two countdowns, which appeared nowhere in the report before.
     // B2-01 rewrote these from the feed's vocabulary ("in 2 weeks", "10d ago")
     // to the plate's own ("16 days left", "10 days ago") — always days, never
@@ -266,6 +273,39 @@ describe("JobReport", () => {
       baseJob({ employmentType: "part_time" }),
     );
     expect(underscoreHtml).toContain("Part time");
+  });
+
+  it("expands a worded contract duration for the chip and abbreviates it for the tile", () => {
+    // B2-04 / Ruling 9. One field, two formatters. "3-year fixed-term
+    // position" expands to "3 years" for the header chip and abbreviates from
+    // that same value to "3-yr contract" for the TYPE tile — never two
+    // independent reads of the raw scraped text. roleKind is set so the tile's
+    // detail line states the employment type too, matching the header chip's
+    // shape exactly (without it, the tile's own value already says "Full-time"
+    // and the detail need not repeat it).
+    const html = renderReport(
+      baseJob({
+        roleKind: "staff",
+        employmentType: "full-time",
+        contractLength: "3-year fixed-term position",
+      }),
+    );
+    expect(html).toContain("Full-time · 3 years"); // header chip
+    expect(html).toContain("Full-time · 3-yr contract"); // TYPE tile detail
+    expect(html).not.toContain("fixed-term position");
+  });
+
+  it("never invents a duration when the contract length doesn't parse", () => {
+    // B2-04. Text with no "<number> year(s)/month(s)" anywhere prints back
+    // verbatim in both places rather than guessing at a duration.
+    const html = renderReport(
+      baseJob({
+        roleKind: "staff",
+        employmentType: "full-time",
+        contractLength: "Renewable annually",
+      }),
+    );
+    expect(html.match(/Renewable annually/g)).toHaveLength(2);
   });
 
   it("renders the Applied control in both inactive and completed states", () => {

@@ -88,7 +88,11 @@ const ROLE_LABELS: Record<RoleKind, string> = {
 type VisaState = NonNullable<Job["visa"]>["state"];
 
 const VISA_LABELS: Record<VisaState, string> = {
-  sponsors: "Sponsorship available",
+  // B2-04. Plate 02's header chip reads "Visa sponsorship", not
+  // "Sponsorship available" — this wording never matched the plate. The
+  // other two states have no plate example to check against, so they are
+  // left as they were rather than guessed at.
+  sponsors: "Visa sponsorship",
   "not-stated": "Visa not stated",
   "wont-sponsor": "No sponsorship",
 };
@@ -96,7 +100,7 @@ const VISA_LABELS: Record<VisaState, string> = {
 /**
  * B-06. The VISA tile's short value, from plate 02. Deliberately different
  * words from the header chip above it: the tile is labelled "VISA" already, so
- * repeating "Sponsorship available" would print the same fact twice in the
+ * repeating "Visa sponsorship" would print the same fact twice in the
  * same eyeful.
  */
 const VISA_TILE_LABELS: Record<VisaState, string> = {
@@ -192,6 +196,46 @@ function humanize(value: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * B2-04 / Ruling 9. The plate states the same contract length twice, in two
+ * phrasings — "3 years" in the header chip, "3-yr contract" in the TYPE
+ * tile's detail line. A's round-2 report called this a structural conflict
+ * (one field, two different strings); Ruling 9 overruled that: one field plus
+ * two formatters produces both.
+ *
+ * `job.contractLength` is scraped free text ("3-year fixed-term position",
+ * "fixed-term appointment for 3 years", or occasionally no duration at all)
+ * — it is not normalised at the source, and this does not change that.
+ * `expandContractLength` pulls a clean "N years" / "N months" out of that text
+ * when one is there; `abbreviateContractLength` then turns that into the
+ * tile's short form. Neither invents a duration: text that does not parse
+ * comes back verbatim, unabbreviated, in both places.
+ */
+const CONTRACT_WORD_NUMBERS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+};
+const CONTRACT_DURATION_RE =
+  /\b(\d+(?:\.\d+)?|one|two|three|four|five)[\s-]*(year|month)s?\b/i;
+
+function expandContractLength(value: string): string {
+  const match = CONTRACT_DURATION_RE.exec(value);
+  if (!match) return value;
+  const amount = CONTRACT_WORD_NUMBERS[match[1].toLowerCase()] ?? Number(match[1]);
+  const unit = match[2].toLowerCase();
+  return `${amount} ${unit}${amount === 1 ? "" : "s"}`;
+}
+
+function abbreviateContractLength(value: string): string {
+  const match = /^(\d+(?:\.\d+)?)\s+(year|month)s?$/i.exec(value);
+  if (!match) return value;
+  const unit = match[2].toLowerCase() === "year" ? "yr" : "mo";
+  return `${match[1]}-${unit} contract`;
+}
+
 function visaTone(
   state: VisaState,
 ): "accent" | "danger" | undefined {
@@ -218,6 +262,11 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
   const deadline = reportShortDate(job.applicationDeadline, nowMs);
   const start = formatDate(job.startDate, "monthYear");
   const location = clean(job.location);
+  // B2-04. Expand once, abbreviate for the tile; the header chip below uses
+  // the same expanded value unabbreviated.
+  const contractLengthExpanded = clean(job.contractLength)
+    ? expandContractLength(clean(job.contractLength)!)
+    : undefined;
   const facts: Array<JobFact | undefined> = [
     job.salary
       ? {
@@ -245,7 +294,11 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
               job.roleKind && clean(job.employmentType)
                 ? humanize(job.employmentType!)
                 : undefined,
-              clean(job.contractLength),
+              // B2-04. The plate's short form, "3-yr contract" — abbreviated
+              // from the same expanded value the header chip states in full.
+              contractLengthExpanded
+                ? abbreviateContractLength(contractLengthExpanded)
+                : undefined,
             ]
               .filter(Boolean)
               .join(" · ") || undefined,
@@ -550,6 +603,21 @@ export function JobReport({
   // on the exact screen where they check whether their key works.
   const matchPct = formatMatchPct(job.relevanceScore);
   const facts = buildJobFacts(job, nowMs);
+  /**
+   * B2-04 / Ruling 9. Plate 02 states employment type and contract length
+   * together in one header chip ("Full-time · 3 years") — the same expanded
+   * value the TYPE tile abbreviates into "3-yr contract" below. One field
+   * (`job.contractLength`), two formatters; neither invents a duration.
+   */
+  const contractChipText =
+    [
+      clean(job.employmentType) ? humanize(job.employmentType!) : undefined,
+      clean(job.contractLength)
+        ? expandContractLength(clean(job.contractLength)!)
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(" · ") || undefined;
   const timeline = buildTimeline(job, nowMs);
   const skills = skillComparison(job);
   const roleSummary = cleanJobDescription(job.summary) || undefined;
@@ -598,14 +666,12 @@ export function JobReport({
 
       <header className="mt-8 animate-fade-in-up">
         {(job.roleKind ||
-          clean(job.contractLength) ||
+          contractChipText ||
           job.visa ||
           matchPct !== null) && (
           <div className="mb-5 flex flex-wrap gap-2" aria-label="Job summary">
             {job.roleKind && <HeaderChip>{ROLE_LABELS[job.roleKind]}</HeaderChip>}
-            {clean(job.contractLength) && (
-              <HeaderChip>{clean(job.contractLength)}</HeaderChip>
-            )}
+            {contractChipText && <HeaderChip>{contractChipText}</HeaderChip>}
             {job.visa && (
               <HeaderChip tone={visaTone(job.visa.state)}>
                 {VISA_LABELS[job.visa.state]}
