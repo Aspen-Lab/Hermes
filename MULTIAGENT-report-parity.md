@@ -2042,3 +2042,240 @@ unclosable to me except one, carried over from round 1:
 Everything else found this round (job findings 1, 2, 3, 5, 6; event findings
 1, 2, 3, 4, 5, 7, 8) is a normal fix, not a policy question, and belongs in
 B's next fix guide.
+
+---
+
+### Round 2 — Agent B (done by the MANAGER, not a subagent)
+
+**STATUS: IN PROGRESS.** Job items B2-01..B2-06 written and verified against the
+code. Event items still to come.
+
+**Why the manager is doing B's job.** Two subagent B runs were launched and both
+died without writing anything: the first on the account's monthly spend limit
+with a near-complete investigation in its context, the second on a 600-second
+stall before it had written even its heading. Rather than burn a third attempt,
+the manager took the role. **§1 stayed true through both deaths** — it still
+read `WHOSE TURN: B`, so nothing had to be reconstructed.
+
+Items are numbered **B2-nn** so they never collide with round 1's B-01..B-20.
+
+---
+
+#### B2-01 — Report date granularity and countdown wording. `WRONG SHAPE`. **Do this first — three findings collapse into it.**
+
+Closes A's job findings 1 (APPLY BY / POSTED) and 3 (Timeline), and event
+finding 1b (ABSTRACT DUE). Implements **Ruling 8**.
+
+**Cause — two separate things, and the first is nearly free.**
+
+*(a) The year.* `buildJobFacts` (`web/src/app/jobs/[id]/page.tsx:205-207`) and
+`buildTimeline` (`:281-286`) both call `formatDate()` with **no style
+argument**, so they get the default `"medium"` = `{month:"short",
+day:"numeric", year:"numeric"}` → `"Jul 22, 2026"`.
+
+**The styles the plate wants already exist** in `web/src/lib/format.ts:27-32`:
+
+```
+short:     { month: "short", day: "numeric" }   -> "Jul 22"      (plate: APPLY BY, POSTED)
+monthYear: { month: "short", year: "numeric" }  -> "Jan 2027"    (plate: STARTS)
+```
+
+So (a) is a matter of passing the right style at four call sites. No new code.
+
+*(b) The countdown vocabulary.* `formatDayDistance` (`format.ts:134-146`)
+buckets `47` into `in ${Math.floor(47/7)} weeks` → `"in 6 weeks"`, and `92`
+into months → `"in 3 months"`. `formatDayAge` (`:109-121`) returns `"8d ago"`
+for a diff of 8. The plate wants `"47 days left"`, `"92 days left"`,
+`"8 days ago"`.
+
+**Fix direction — and a correction to Ruling 8's own wording.** Ruling 8 says
+"scope it to the report, do not change the shared helpers." That is right about
+the *blast radius* but wrong about the *location*. `format.ts`'s own header
+comment (`:1-6`) records why:
+
+> Before this module existed the app had five relative-time vocabularies
+> ("2d ago" vs "2 days ago" vs "in 2 days") drifting across adjacent surfaces.
+
+Hand-rolling a formatter inside a page is the exact thing that module exists to
+prevent. **So: add two NEW exported functions to `format.ts`, and do not touch
+the existing ones.** Something like `formatDaysLeft(days)` → `"47 days left"`
+and `formatDaysAgo(days)` → `"8 days ago"`. The feed and papers keep calling
+`formatDayDistance` / `formatDayAge` and are completely unaffected; the reports
+call the new pair. One module, two vocabularies, each documented as to which
+surface it serves.
+
+**The guard Ruling 8 asks for.** A date more than ~12 months out must keep its
+year, or `"Mar 8"` is ambiguous between two years. Put that test in the report's
+call site, not in `format.ts` — it is a report policy, not a formatting fact.
+
+**Risk.** `web/src/app/jobs/[id]/page.test.ts:190-191` pins the current
+wording (`"in 2 weeks"`, `"10d ago"`). That is the asserted contract, so
+**rewrite those assertions to the plate's wording and comment `B2-01`** — do not
+delete them. Search the whole test suite for `d ago`, `in \d+ weeks`, and any
+full-year date string asserted against a report render; A found two, there are
+likely more.
+
+---
+
+#### B2-02 — SALARY prints its period twice. `WRONG SHAPE`. (A: job 1)
+
+**Cause.** `formatSalary` (`web/src/lib/opportunities/salary.ts:177-187`) always
+appends the period: its last line is
+
+```ts
+return `${prefix}${range} / ${period}`;
+```
+
+so the tile value renders `"$95k–120k / yr"`, while the tile's own detail line
+(`jobs/[id]/page.tsx:215-217`) already reads `"per year · from posting"`. The
+period is stated twice, two lines apart, in two different notations.
+
+**Plate value:** `"$95k – $120k"` — no period suffix, **spaces around the en
+dash**, and the `$` repeated on the upper bound. The build has none of the three.
+
+**Fix direction.** Split the function rather than adding a flag: extract the
+range-only part as a new export (`formatSalaryRange`) returning
+`"$95k – $120k"`, and redefine `formatSalary` as that plus `" / ${period}"` so
+every existing caller is byte-identical. The report's SALARY tile then calls
+`formatSalaryRange`. Repeating the currency symbol on the upper bound and
+spacing the dash both live in the new function.
+
+**Risk.** `formatSalary` is used outside the report (cards / feed). Keeping it
+defined in terms of the new function is what makes this safe — **verify by
+grep that no caller's output changes**, and keep every existing salary
+assertion green without edits. If any salary test needs editing, the split was
+done wrong.
+
+---
+
+#### B2-03 — `humanize` destroys hyphenated compounds. `WRONG DATA`. (A: job 1)
+
+**Cause.** `humanize` (`jobs/[id]/page.tsx:179-185`):
+
+```ts
+.replace(/[_-]+/g, " ")            // "full-time" -> "full time"
+.replace(/\b\w/g, (l) => l.toUpperCase())   // -> "Full Time"
+```
+
+It strips the hyphen *then* title-cases every word. Plate: `"Full-time"`.
+
+This is the same bug class as B-12's activity mangling (see B2-1x, event side):
+a formatter written for enum slugs (`full_time`, `job-fair`) applied to values
+that are already human prose.
+
+**Fix direction.** `humanize` must keep hyphens that sit **inside a word** and
+capitalise only the first letter of the whole value, not of every word.
+`"full-time"` → `"Full-time"`; `"full_time"` → `"Full time"` (underscore is a
+slug separator, hyphen is not). Check the other `humanize` call sites in the
+file before changing it — if any depend on title-casing, give this one its own
+function rather than changing shared behaviour.
+
+**Risk.** Grep for `Full Time`, `Part Time` and any other title-cased
+two-word employment type in the test suite.
+
+---
+
+#### B2-04 — Header chips: the contract chip and the visa chip. `WRONG SHAPE` + `WRONG DATA`. (A: job 2)
+
+Implements **Ruling 9**.
+
+**Cause — two independent gaps at `jobs/[id]/page.tsx:584-590`.**
+
+*(a) The contract chip drops the employment type.* Line 584-585 renders
+`<HeaderChip>{clean(job.contractLength)}</HeaderChip>` — contract length only.
+Plate: `"Full-time · 3 years"`.
+
+*(b) The visa chip's wording has never matched.* Line 589 renders
+`VISA_LABELS[job.visa.state]` = `"Sponsorship available"` (`:89`). Plate:
+`"Visa sponsorship"`. Note `VISA_TILE_LABELS` (`:101`) already exists as a
+separate short-form map for the VISA tile (`"Sponsors"`), and the comment at
+`:267-268` records why the two differ — so **the pattern of two label maps is
+already established and correct.** Only the header map's wording is wrong.
+
+**On Ruling 9 and the "one field cannot produce both" claim.** A reported that
+the chip (`Full-time · 3 years`) and the TYPE tile detail (`Full-time · 3-yr
+contract`) cannot both come from `job.contractLength`. Ruling 9 already
+overruled that. Concretely, the cheap version:
+
+1. **Normalise `contractLength` to the expanded duration** (`"3 years"`,
+   `"18 months"`) wherever it is produced. Expanding is the reliable direction;
+   abbreviating a stored `"3-yr contract"` back into `"3 years"` is not.
+2. **Chip** renders `${employmentType} · ${contractLength}` verbatim.
+3. **Tile detail** renders `${employmentType} · ${abbreviate(contractLength)}`,
+   where `abbreviate` turns `"3 years"` into `"3-yr contract"` — a five-line
+   parse of `(\d+)\s*(year|month)s?`.
+4. **If it does not parse, print the value verbatim in both places.** Never
+   invent a duration.
+
+**If normalising at the source turns out to be unreliable on real postings, stop
+and say so** — mark it `POLICY — manager decides` rather than shipping a
+half-parsed duration. A wrong contract length is worse than an unabbreviated one.
+
+**Risk.** Any test asserting `"Sponsorship available"` as a header chip, and
+any asserting the header chip count.
+
+---
+
+#### B2-05 — STARTS tile: granularity, and one sub-line that cannot be built. `WRONG SHAPE`. (A: job 1)
+
+**Cause.** `jobs/[id]/page.tsx:246`:
+
+```ts
+start ? { key: "start", label: "Starts", value: start } : undefined,
+```
+
+Two gaps. The value comes from `formatDate(job.startDate)` at default style →
+`"Jan 15, 2027"`; plate shows `"Jan 2027"`. **Covered by B2-01** — pass
+`"monthYear"`. And the object has **no `detail` at all**, where the plate shows
+`"flexible"`.
+
+**The `flexible` sub-line is not buildable and is now excluded.** It states
+whether the start date is negotiable. `Job` carries no such field and nothing
+upstream extracts one. This is a ninth instance of the §1e "no field exists"
+category, which §1e explicitly says must come back to the manager rather than be
+auto-excluded. **Manager's ruling, made here: excluded, same category, item (i).
+A must list it alongside (c)–(h) from round 3 onward.**
+
+So B2-05 is only the granularity half. C should make the STARTS tile print
+`"Jan 2027"` with no sub-line.
+
+---
+
+#### B2-06 — Work mode on `Job`. `MISSING`. **The one item in this guide that touches extraction.**
+
+Implements §1e's exception to the "no field exists" category — the only one of
+the eight gaps ruled **in** scope, because it closes gaps (a) and (b) together
+and appears three times on plate 02.
+
+**Cause.** `Job` carries only `isRemote` (a boolean). Plate 02 needs a
+three-state work mode in two places:
+
+| Plate location | Plate text | Build today |
+|---|---|---|
+| LOCATION tile sub-line | `Hybrid · US` | `Remote` when `isRemote`, else nothing (`page.tsx:243`) |
+| Subtitle, 3rd segment | `Hybrid (3 days on-site)` | segment absent |
+
+**Fix direction — and an honest scope warning.** This is the largest item in the
+guide and it spans three layers:
+
+1. **Type** — add a work-mode field to `Job` in `web/src/types/index.ts`
+   (`"on-site" | "hybrid" | "remote"`). Keep `isRemote` for now; do not migrate
+   callers in this loop.
+2. **Mapper / extractor** — populate it where the posting states it. **Only
+   where the posting states it.** A posting that does not say must produce
+   `undefined`, not a guess — inferring "probably on-site" from silence is the
+   exact dishonesty Phase 7 removed.
+3. **Render** — LOCATION tile sub-line, and the subtitle's third segment.
+
+**C: do layers 1 and 3 first and commit them, then attempt layer 2.** If layer 2
+turns out to need real extraction work, stop there, commit what works, and
+report — a `Job` that carries the field with nothing populating it yet is a
+usable checkpoint, and the render code is already correct for when data arrives.
+The plate's `"(3 days on-site)"` detail is a **fourth** unbuildable fact; render
+just the mode word (`"Hybrid"`), not the parenthetical.
+
+**Risk.** `isRemote` is read in the feed, filters and scoring. **Do not change
+what `isRemote` means or who reads it.** Adding a field beside it is safe;
+replacing it is a different, larger change and is not in this loop.
+
+---
