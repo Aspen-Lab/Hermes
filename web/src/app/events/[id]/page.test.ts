@@ -281,7 +281,14 @@ describe("EventReport", () => {
         deadline: "2026-10-30",
         registrationDeadline: "2027-02-20",
         expectedSize: 2400,
-        fees: [{ label: "Early bird", standard: "$480", student: "$180" }],
+        fees: [
+          {
+            label: "Early bird",
+            standard: "$480",
+            student: "$180",
+            deadline: "Early bird ends Jan 9 · $620 after",
+          },
+        ],
       }),
     );
 
@@ -290,9 +297,19 @@ describe("EventReport", () => {
     // "Monday, March 8, 2027 · Mar 11, 2027".
     expect(html).toContain("Mar 8 – 11, 2027");
     expect(html).toContain("Mon – Thu");
-    expect(html).toContain("student $180");
     expect(html).toContain("~2.4k");
     expect(html).toContain("last edition");
+    // B2-12 (A: event 1a). The early-bird cutoff was two lines away in scope
+    // and simply never read; cutoffPhrase reuses B-01's ISO guard so the
+    // compound deadline string still yields a clean "Jan 9" with no invented
+    // year and no trailing "$620 after". Scoped to the FEE tile itself: the
+    // cost table further down legitimately prints the full deadline string,
+    // "$620" included, in its own DEADLINE column.
+    const feeTile = html.match(
+      /<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(feeTile).toContain("student $180 · early bird to Jan 9");
+    expect(feeTile).not.toContain("$620");
     expect(html).toContain("San Diego, US · in person · 4 days");
     // B2-01. ABSTRACT DUE: plate 03's own vocabulary is "92 days left", not
     // the feed's "in 3 months" — always days, never bucketed into months.

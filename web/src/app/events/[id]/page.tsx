@@ -377,6 +377,11 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
   const location = event.isOnline ? "Online" : clean(event.location);
   const headline = (event.fees ?? []).find((fee) => clean(fee.standard));
   const student = clean(headline?.student);
+  // B2-12. Reuses B-11's own extraction: cutoffPhrase already applies B-01's
+  // ISO guard and pulls only the date-ish head off a compound deadline
+  // string ("Early bird ends Jan 9 · $620 after" -> "Jan 9"), so this never
+  // acquires a fabricated year and never drags the trailing price along.
+  const feeCutoff = cutoffPhrase(headline?.deadline);
   const facts: Array<ReportFact | undefined> = [
     dates
       ? {
@@ -399,7 +404,17 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
           key: "fee",
           label: "Fee",
           value: clean(headline.standard)!,
-          detail: student ? `student ${student}` : undefined,
+          // B2-12 (A: event 1a). The plate's own sub-line names the
+          // early-bird cutoff too ("student $180 · early bird to Jan 9") —
+          // the deadline was already two lines away in scope and simply
+          // never read.
+          detail:
+            [
+              student ? `student ${student}` : undefined,
+              feeCutoff ? `early bird to ${feeCutoff}` : undefined,
+            ]
+              .filter(Boolean)
+              .join(" · ") || undefined,
         }
       : undefined,
     abstractDue
