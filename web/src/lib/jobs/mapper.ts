@@ -68,6 +68,22 @@ function keyRequirements(item: ScoredJobItem): string[] {
   return requirements;
 }
 
+/**
+ * B2-06, layer 2. Job carries only `isRemote`; the plate needs a three-state
+ * work mode. Only ever set from a signal the posting actually gave:
+ * `isRemote` is already a real extracted fact, and "hybrid" / "on-site" here
+ * come from the posting's own location text saying so — the same detection
+ * `opportunityFormat()` (`web/src/lib/opportunities/facets.ts`) already uses
+ * for the facet/filter system, reused rather than re-invented. A location
+ * that says neither returns `undefined`; inferring "probably on-site" from
+ * silence is the exact dishonesty Phase 7 removed.
+ */
+function jobWorkMode(location: string, isRemote: boolean): Job["workMode"] {
+  if (/\bhybrid\b/i.test(location)) return "hybrid";
+  if (/\bon[\s-]?site\b|\bin[\s-]?person\b/i.test(location)) return "on-site";
+  return isRemote ? "remote" : undefined;
+}
+
 function visaForAuthorisedCountries(
   item: ScoredJobItem,
   authorisedCountries: string[] | undefined,
@@ -125,6 +141,7 @@ export function scoredJobToJob(
     location,
     place: item.place,
     isRemote: item.isRemote,
+    workMode: jobWorkMode(item.location, item.isRemote),
     keyRequirements: keyRequirements(item),
     matchReason: item.matchReason,
     facetPreferenceReason: item.facetPreferenceReason,

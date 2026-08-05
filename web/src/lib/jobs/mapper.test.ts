@@ -93,4 +93,40 @@ describe("scoredJobToJob", () => {
       scoredJobToJob(fullJob, undefined, ["United Kingdom"]).visa,
     ).toEqual(fullJob.visa);
   });
+
+  describe("workMode", () => {
+    // B2-06, layer 2. Only ever set from a signal the posting actually gave —
+    // never a guessed "on-site" default when the location says nothing about
+    // work arrangement at all.
+    it("reads hybrid from the posting's own location text", () => {
+      expect(
+        scoredJobToJob({ ...fullJob, location: "Los Altos, CA (Hybrid)" })
+          .workMode,
+      ).toBe("hybrid");
+    });
+
+    it("reads on-site / in-person from the posting's own location text", () => {
+      expect(
+        scoredJobToJob({ ...fullJob, location: "On-site in Chicago, IL" })
+          .workMode,
+      ).toBe("on-site");
+      expect(
+        scoredJobToJob({ ...fullJob, location: "In-person, Chicago, IL" })
+          .workMode,
+      ).toBe("on-site");
+    });
+
+    it("falls back to remote from isRemote when the location says nothing", () => {
+      expect(
+        scoredJobToJob({ ...fullJob, location: "", isRemote: true }).workMode,
+      ).toBe("remote");
+    });
+
+    it("leaves workMode undefined rather than guessing on-site from silence", () => {
+      expect(
+        scoredJobToJob({ ...fullJob, location: "Chicago, IL", isRemote: false })
+          .workMode,
+      ).toBeUndefined();
+    });
+  });
 });
