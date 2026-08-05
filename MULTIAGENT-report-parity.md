@@ -38,18 +38,18 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-16, sixteen committed with per-item §4 logs. The
+DONE:      B2-01 .. B2-17, seventeen committed with per-item §4 logs. The
            first C stalled at 600s while committing B2-08; nothing was lost,
            because it had been committing per item. A second C (this one)
            resumed at B2-09. B's guide itself was written by the MANAGER
-           after two B subagents died writing nothing. B2-11's `+ career
-           fair` chip half landed; the `Industry` qualifier half was
-           correctly left untouched (`POLICY — manager decides`, no honest
-           source exists).
-TODO:      B2-17, B2-18, two items left. C must still NOT attempt `looking at
-           industry` in B2-17 gap 3 (the other POLICY half, B2-11's
-           `Industry` qualifier, is now resolved — see above).
-GATE NOW:  82 files / 844 tests, **all 844 passing this run** (the live
+           after two B subagents died writing nothing. Both POLICY halves are
+           now resolved as `POLICY — manager decides` (not attempted, per
+           instruction): B2-11's `Industry` qualifier (no honest source
+           anywhere) and B2-17 gap 3 `looking at industry` (an honest source
+           DOES exist — `profile.industryVsAcademia` — but wiring it in was
+           still not this C's call to make; see the B2-17 log entry above).
+TODO:      B2-18, one item left — the last one in the guide.
+GATE NOW:  82 files / 848 tests, **all 848 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2983,5 +2983,52 @@ changed.
   matching paper-count signal, confirming the explicit value wins rather than
   merely that the fallback was unreachable. **Gate: 82 files / 844 tests
   passing, typecheck clean, 1 pre-existing lint error.** Commit: `4ad3c8c`.
+
+- **B2-17 — LANDED, two of three gaps. The third is `POLICY — manager
+  decides`, per instruction — investigated, not built either way.** Added
+  `shortCareerStage` (checked `jobs/scoring.ts`'s and `events/scoring.ts`'s
+  own `reasonFor` first — neither has a short form, both print the full
+  `CareerStage` verbatim, so this is new, not a duplicate) and a local
+  `joinNaturally` (mirrors `joinReasonClauses` from B2-08, kept local rather
+  than imported since it joins chip labels, not scoring clauses — coupling a
+  report component to the scoring module for a two-line join wasn't worth
+  it). `happeningsFootnote(highlightedLabels, careerStage)` now builds a real
+  sentence naming the actual highlighted chips (whatever the count — singular
+  "is the one" vs plural "are the ones", Oxford comma at three or more)
+  instead of the old generic "Those are the ones", and shortens the career
+  stage to the plate's own form.
+
+  **Gap 3 — "looking at industry".** Investigated as instructed: the profile
+  DOES carry a sector preference — `Profile.industryVsAcademia:
+  IndustryAcademiaPreference` (`"academia" | "industry" | "both" |
+  "startups" | "bigTech"`, `web/src/types/index.ts`) — already read by both
+  scoring pipelines (`JobScoringProfile.industryPreference`,
+  `EventsFeedRequest["industryVsAcademia"]`) but never plumbed into
+  `EventReport`'s props at all. **This is a materially different situation
+  from B2-11's `Industry` qualifier**, which has no source anywhere. Here an
+  honest source exists. I did not wire it in anyway: I was explicitly told
+  this gap is one of two things not to attempt, the manager's to rule on —
+  investigating whether the data exists is not the same as deciding whether
+  showing it here is the right call (e.g. whether "both" or "bigTech" have a
+  sensible clause at all). Marking `POLICY — manager decides` per
+  instruction, with the field name on record so the manager's decision, if
+  yes, is a small follow-up rather than a fresh investigation.
+
+  Also **widened `page.test.ts`'s own `renderReport` helper**: its
+  `careerStage` parameter was declared `= "PhD Year 3" as const` with no
+  explicit annotation, so TypeScript inferred the parameter's type as the
+  narrow literal `"PhD Year 3"` itself — every existing call happened to
+  only ever pass that exact value or omit it, so this had never surfaced,
+  but it silently rejected any other real `CareerStage` and I hit it
+  immediately testing "PhD Year 4". Changed to an explicit `careerStage:
+  CareerStage = "PhD Year 3"` annotation; every existing call is unaffected.
+  Added four new tests: the full sentence with a shortened stage and two
+  named activities, singular grammar at one, Oxford comma at three, and the
+  career-stage clause fully absent when none is known (needed `createElement`
+  directly for that last one — a JS default parameter still applies when
+  `undefined` is passed explicitly, so `renderReport(event, undefined)` would
+  have silently used "PhD Year 3" rather than genuinely testing the
+  no-stage case). **Gate: 82 files / 848 tests passing, typecheck clean, 1
+  pre-existing lint error.** Commit: `02f4e6a`.
 
 ---
