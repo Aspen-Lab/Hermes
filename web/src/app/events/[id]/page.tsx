@@ -281,6 +281,61 @@ function secondaryEventKind(
   return undefined;
 }
 
+/**
+ * B2-17. The plate's own example shortens "PhD Year 4" to "PhD 4" in running
+ * prose. Neither `jobs/scoring.ts`'s nor `events/scoring.ts`'s own
+ * `reasonFor` has a short form — both print the full `CareerStage` value
+ * verbatim ("fits a PhD Year 4 profile") — so this is a report-display
+ * convention, not a duplicate of an existing mapping.
+ */
+function shortCareerStage(stage: CareerStage | undefined): string | undefined {
+  if (!stage) return undefined;
+  const match = /^PhD Year (\d+)$/.exec(stage);
+  return match ? `PhD ${match[1]}` : stage;
+}
+
+/** Ordinary sentence conjunction — mirrors `joinReasonClauses` in
+ * `jobs/scoring.ts` / `events/scoring.ts` (B2-08), kept local here rather
+ * than imported: this joins chip *labels*, not scoring reason clauses, and
+ * duplicating a two-line join is cheaper than coupling a report component to
+ * the scoring module for it. */
+function joinNaturally(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
+/**
+ * B2-17. Plate 03: "Highlighted because they line up with your topics and
+ * because you're a PhD 4 looking at industry — the poster call and the
+ * recruiting fair are the two you'd be sorry to miss." Three gaps, closed to
+ * different degrees:
+ *  - "PhD Year 4" now shortens to the plate's own "PhD 4" (`shortCareerStage`).
+ *  - the generic close ("Those are the ones") now names the actual
+ *    highlighted chips, whatever the count — the plate's own "the two" only
+ *    describes its own fixture.
+ *  - "looking at industry" is a sector-preference clause. The profile DOES
+ *    carry one (`industryVsAcademia`, `web/src/types/index.ts`) — this is
+ *    NOT the same situation as B2-11's `Industry` qualifier, which has no
+ *    source at all. But wiring a new preference field into this sentence is
+ *    `POLICY — manager decides` per the round-2 loop log (item B2-17) and is
+ *    deliberately not attempted here: left out rather than guessed at.
+ */
+function happeningsFootnote(
+  highlightedLabels: string[],
+  careerStage: CareerStage | undefined,
+): string | undefined {
+  if (highlightedLabels.length === 0) return undefined;
+  const stage = shortCareerStage(careerStage);
+  const named = joinNaturally(highlightedLabels);
+  const verb = highlightedLabels.length === 1 ? "is the one" : "are the ones";
+  return (
+    "Highlighted because they line up with your topics" +
+    (stage ? ` and because you’re a ${stage}` : "") +
+    ` — ${named} ${verb} you’d be sorry to miss.`
+  );
+}
+
 function formatFeeDeadline(value: string | undefined): string | undefined {
   const text = clean(value);
   if (!text) return undefined;
@@ -1469,6 +1524,13 @@ export function EventReport({
       });
     })(),
   );
+  // B2-17. Same labels the chips themselves show (`formatActivityLabel`), in
+  // the row's own order, so the footnote's list agrees with what the reader
+  // just saw highlighted above it.
+  const highlightedLabels = activities
+    .filter((activity) => highlightedActivities.has(activity))
+    .map(formatActivityLabel);
+  const happeningsNote = happeningsFootnote(highlightedLabels, careerStage);
   const description = resolveEventReportDescription(
     cleanEventDescription(event.shortDescription),
     enrichment,
@@ -1626,17 +1688,18 @@ export function EventReport({
                 })}
               </div>
             )}
-            {/* B-12. The footnote only makes sense once something is
-                highlighted, so it is tied to that. The plate's career-stage
-                clause is generalised — it hardcoded "PhD 4". */}
-            {highlightedActivities.size > 0 && (
+            {/* B2-17. The footnote only makes sense once something is
+                highlighted, so it is tied to that. Names the actual
+                highlighted chips (see `happeningsFootnote`) rather than the
+                old generic "Those are the ones". The plate's "looking at
+                industry" clause is left out on purpose — POLICY, see the
+                round-2 loop log. */}
+            {happeningsNote && (
               <p
                 data-happenings-footnote
                 className="mt-3 text-caption leading-5 text-text-faint"
               >
-                Highlighted because they line up with your topics
-                {careerStage ? ` and with where you are — ${careerStage}` : ""}.
-                Those are the ones you’d be sorry to miss.
+                {happeningsNote}
               </p>
             )}
             {/* Ruling 6. The travel grant and the invitation letter used to

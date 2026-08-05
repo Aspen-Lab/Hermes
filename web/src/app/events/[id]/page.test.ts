@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { Event } from "@/types";
+import type { CareerStage, Event } from "@/types";
 import type {
   EventEnrichment,
   OpportunityPageReadingReason,
@@ -28,7 +28,10 @@ function baseEvent(overrides: Partial<Event> = {}): Event {
 
 function renderReport(
   event: Event,
-  careerStage = "PhD Year 3" as const,
+  // B2-17. Was inferred from `"PhD Year 3" as const` — a narrow literal type
+  // that rejected any other real CareerStage value. Widened so a test can
+  // exercise a different career stage without dropping to createElement.
+  careerStage: CareerStage = "PhD Year 3",
   completion = { registered: false, submitted: false },
   enrichment: EventEnrichment | null = null,
   providerConfigured = false,
@@ -439,6 +442,92 @@ describe("EventReport", () => {
     expect(html).toContain(">Early-career mixer<");
     expect(html).not.toContain("Vendor Exhibition");
     expect(html).not.toContain("Early Career Mixer");
+  });
+
+  it("names the highlighted activities and shortens the career stage in the happenings footnote", () => {
+    // B2-17. Three gaps in the plate's own sentence: "PhD Year 4" now
+    // shortens to the plate's own "PhD 4"; the old generic close ("Those are
+    // the ones") now names the actual highlighted chips. "looking at
+    // industry" is left out on purpose — a sector preference the profile
+    // does carry (industryVsAcademia), but wiring it in is
+    // `POLICY — manager decides` per the round-2 loop log, item B2-17 — not
+    // the same situation as B2-11's Industry qualifier, which has no source
+    // at all.
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session", "career fair", "keynote"],
+        matchedTerms: ["poster", "career fair"],
+      }),
+      "PhD Year 4",
+    );
+
+    expect(html).toContain(
+      "Highlighted because they line up with your topics and because you’re a PhD 4 — Poster Session and Career Fair are the ones you’d be sorry to miss.",
+    );
+    expect(html).not.toContain("looking at industry");
+    expect(html).not.toContain("PhD Year 4");
+    expect(html).not.toContain("Those are the ones");
+  });
+
+  it("uses singular grammar when exactly one activity is highlighted", () => {
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session", "keynote"],
+        matchedTerms: ["poster"],
+      }),
+      "PhD Year 3",
+    );
+
+    expect(html).toContain(
+      "Poster Session is the one you’d be sorry to miss.",
+    );
+  });
+
+  it("Oxford-commas three or more highlighted activities", () => {
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session", "career fair", "workshop", "banquet"],
+        matchedTerms: ["poster", "career fair", "workshop"],
+      }),
+      "PhD Year 3",
+    );
+
+    expect(html).toContain(
+      "Poster Session, Career Fair, and Workshop are the ones you’d be sorry to miss.",
+    );
+  });
+
+  it("omits the career-stage clause entirely when no career stage is known", () => {
+    // renderReport's own `careerStage` parameter defaults to "PhD Year 3"
+    // even if undefined is passed explicitly (that's what a JS default
+    // parameter does) — createElement is the only way to genuinely leave the
+    // prop unset and exercise EventReport's own `careerStage?: CareerStage`.
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({
+          activities: ["poster session"],
+          matchedTerms: ["poster"],
+        }),
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set<string>(),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    expect(html).toContain(
+      "Highlighted because they line up with your topics — Poster Session is the one you’d be sorry to miss.",
+    );
+    expect(html).not.toContain("because you’re");
   });
 
   it("does not print a separate in-person/online header chip", () => {
