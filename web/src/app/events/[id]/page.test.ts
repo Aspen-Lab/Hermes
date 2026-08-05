@@ -195,7 +195,15 @@ describe("EventReport", () => {
     // KEEP the count at 2. Both sites are on plate 03 — the written sentence
     // up top and a compressed restatement at the head of the table — and
     // HANDOFF-report-overhaul.md §P3.2 records the duplication as deliberate.
-    expect(html.match(/Cheapest way in, for you/g)).toHaveLength(2);
+    // B2-18 gave the table head its own punctuation (no comma before "for
+    // you"), so the comma is no longer common to both forms — the pattern
+    // matches the substring that still is.
+    expect(html.match(/Cheapest way in,? for you/g)).toHaveLength(2);
+    // B2-18. The table head now reads "Cheapest way in for you:" (no comma)
+    // and its restatement continues in lower case; the callout above keeps
+    // its comma and capital letter.
+    expect(html).toContain("<strong>Cheapest way in for you:</strong>");
+    expect(html).not.toContain("<strong>Cheapest way in, for you:</strong>");
     // B-11 rewrote this. The old assertion pinned a machine-assembled string,
     // "$250 student rate · Early bird · by Apr 15, 2027". It is now a sentence.
     expect(html).toContain("Student ticket in person before Apr 15, 2027 — $250.");
@@ -246,15 +254,22 @@ describe("EventReport", () => {
     expect(html).toContain(
       "Student ticket in person before Jan 9, with a travel grant — $180, applied for alongside the abstract you were going to write anyway.",
     );
-    // The compressed restatement in the table head drops only the tail clause.
+    // The compressed restatement in the table head drops only the tail
+    // clause. B2-18 lower-cases its first letter so it reads as a
+    // continuation of the label's own colon ("Cheapest way in for you:
+    // student ticket…") — the callout above keeps the capital letter.
     expect(html).toContain(
-      "Student ticket in person before Jan 9, with a travel grant — $180.",
+      "student ticket in person before Jan 9, with a travel grant — $180.",
+    );
+    expect(html).not.toContain(
+      "Cheapest way in for you: Student ticket",
     );
     // The callout must not end on the higher price.
     const callout = html.match(
       /Cheapest way in, for you<\/p>[\s\S]{0,400}?<\/aside>/,
     )?.[0];
     expect(callout).not.toContain("$620");
+    expect(callout).toContain("Student ticket");
   });
 
   it("puts the travel grant and invitation letter in the cost table only", () => {

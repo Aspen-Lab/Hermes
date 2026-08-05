@@ -166,6 +166,12 @@ function clean(value: string | null | undefined): string | undefined {
   return trimmed || undefined;
 }
 
+/** B2-18. So the cost table's cheapest-way restatement reads as a
+ * continuation of its own label's colon, not a second capitalised sentence. */
+function lowercaseFirst(value: string): string {
+  return value.charAt(0).toLowerCase() + value.slice(1);
+}
+
 function isCachedRosterRejection(value: string): boolean {
   return /\b(?:not|rather\s+than|instead\s+of|isn['’]t|does\s+not\s+(?:represent|appear))\b[^.]*?\b(?:attendee|participant|exhibitor|speaker|delegate|person\s+attending|organisation|organization|company)\b/i.test(
     value,
@@ -939,8 +945,12 @@ function CostsTable({
         <p className="border-b border-border bg-accent/5 px-4 py-3 text-body-sm text-heading">
           {/* B-11. Plate 03 prints the written sentence up top and a compressed
               restatement here. Both sites are on the plate and deliberate; the
-              defect was that they printed the same machine-assembled string. */}
-          <strong>Cheapest way in, for you:</strong> {cheapest.short}
+              defect was that they printed the same machine-assembled string.
+              B2-18: this form has its own punctuation — no comma before "for
+              you", and the restatement continues in lower case — the top
+              callout above keeps its comma and capital letter unchanged. */}
+          <strong>Cheapest way in for you:</strong>{" "}
+          {lowercaseFirst(cheapest.short)}
         </p>
       )}
       <div className="overflow-x-auto">
