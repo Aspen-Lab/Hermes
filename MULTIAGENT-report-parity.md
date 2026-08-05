@@ -2770,4 +2770,15 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   this loop broke; it is not one of the 18 items and its assertion was not
   edited.
 
+- **B2-07 — LANDED.** Added `ReportBadge` (`Tier 0`) to
+  `web/src/components/reports/why-peer-sent-this.tsx` (shared by both
+  reports, so one edit fixes both) and to the event report's "What it costs
+  you" `ReportSection`, copying the Skills section's exact markup pattern (a
+  `<p>` of badges as the section's first child). Added three new assertions
+  (job + event "Why Peer sent this to you", event "What it costs you") — no
+  existing test needed rewriting, confirming B2-07's own low-risk read.
+  **Gate: 82 files / 833 tests, 832 passing (1 pre-existing live-benchmark
+  failure, see B2-06's note — unrelated, unchanged), typecheck clean, 1
+  pre-existing lint error.** Commit: `98299bd`.
+
 ---
