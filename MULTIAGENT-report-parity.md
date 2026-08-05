@@ -38,7 +38,7 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-15, fifteen committed with per-item §4 logs. The
+DONE:      B2-01 .. B2-16, sixteen committed with per-item §4 logs. The
            first C stalled at 600s while committing B2-08; nothing was lost,
            because it had been committing per item. A second C (this one)
            resumed at B2-09. B's guide itself was written by the MANAGER
@@ -46,10 +46,10 @@ DONE:      B2-01 .. B2-15, fifteen committed with per-item §4 logs. The
            fair` chip half landed; the `Industry` qualifier half was
            correctly left untouched (`POLICY — manager decides`, no honest
            source exists).
-TODO:      B2-16 .. B2-18, three items left, in order. C must still NOT
-           attempt `looking at industry` in B2-17 gap 3 (the other POLICY
-           half, B2-11's `Industry` qualifier, is now resolved — see above).
-GATE NOW:  82 files / 841 tests, **all 841 passing this run** (the live
+TODO:      B2-17, B2-18, two items left. C must still NOT attempt `looking at
+           industry` in B2-17 gap 3 (the other POLICY half, B2-11's
+           `Industry` qualifier, is now resolved — see above).
+GATE NOW:  82 files / 844 tests, **all 844 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2957,5 +2957,31 @@ changed.
   the assertion to match. Added a new test for `invitationLetter: false`.
   **Gate: 82 files / 841 tests passing, typecheck clean, 1 pre-existing lint
   error.** Commit: `078b594`.
+
+- **B2-16 — LANDED.** Added `EventPerson.descriptor?: string` to
+  `web/src/types/index.ts` (additive, mirrors `EventOrg.descriptor`'s shape
+  and doc comment). Added `personDescriptor(item, context)` beside the
+  existing `personReason` in `web/src/app/events/[id]/page.tsx`, same
+  priority order as the reason function: an already-populated
+  `item.descriptor` wins first, then a Tier 0 local computation — a count of
+  this person's papers already in the feed (`context.paperAuthors` is a flat
+  one-entry-per-paper-per-author list, so counting a normalised name in it
+  literally counts their papers in the feed), then a name-in-declared-topic
+  match, in that order, mirroring `personReason`'s own two fallbacks.
+  **Deliberately not sourced from `enrichment`/the model** — Ruling 13 is
+  explicit that this is a Tier 0 line, and pulling it from the model would
+  make it vanish for a reader with no AI key configured, which is backwards.
+  Rendered in the same slot the organisation card's own descriptor uses (same
+  classes, same position: right after role/institution, right before the
+  accent-coloured reason line), "so the two card types read alike" per the
+  item's own wording. No existing test touched people-card internals this
+  specifically, so nothing needed rewriting. Added three new tests, two using
+  `createElement` directly (the existing `renderReport` helper does not
+  expose a custom `rosterContext`, and this feature only fires with one): the
+  paper-count branch, the topic-match fallback, and — importantly — a
+  priority test that gives a person BOTH an explicit `descriptor` AND a
+  matching paper-count signal, confirming the explicit value wins rather than
+  merely that the fallback was unreachable. **Gate: 82 files / 844 tests
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: `4ad3c8c`.
 
 ---
