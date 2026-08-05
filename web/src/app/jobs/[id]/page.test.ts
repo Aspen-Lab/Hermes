@@ -193,6 +193,11 @@ describe("JobReport", () => {
     // Different words on purpose, so the same fact is not printed twice.
     expect(html.match(/Sponsorship available/g)).toHaveLength(1);
     expect(html).toContain("The laboratory will provide H-1B sponsorship.");
+    // B2-03. humanize() used to strip the hyphen before title-casing, turning
+    // the single word "full-time" into two capitalised words, "Full Time".
+    // The TYPE tile's detail line is "<employment type> · <contract length>".
+    expect(html).toContain("Full-time · Two-year fixed-term appointment");
+    expect(html).not.toContain("Full Time");
     // The plate's two countdowns, which appeared nowhere in the report before.
     // B2-01 rewrote these from the feed's vocabulary ("in 2 weeks", "10d ago")
     // to the plate's own ("16 days left", "10 days ago") — always days, never
@@ -244,6 +249,23 @@ describe("JobReport", () => {
     expect(timelineSection).toContain("Oct 2026");
     expect(timelineSection).not.toContain("Oct 1, 2026");
     expect(timelineSection).not.toContain("Skills they ask for");
+  });
+
+  it("keeps the hyphen inside a hyphenated employment type", () => {
+    // B2-03. Same bug class as B-12's activity-label mangling: a formatter
+    // written for slugs stripped every hyphen before title-casing, so
+    // "full-time" — one hyphenated word — split into two capitalised words,
+    // "Full Time". Underscores are a genuine slug separator and do become
+    // spaces; hyphens are not slugs and stay put.
+    const html = renderReport(baseJob({ employmentType: "full-time" }));
+    expect(html).toContain('data-job-fact="employment-type"');
+    expect(html).toContain(">Full-time<");
+    expect(html).not.toContain("Full Time");
+
+    const underscoreHtml = renderReport(
+      baseJob({ employmentType: "part_time" }),
+    );
+    expect(underscoreHtml).toContain("Part time");
   });
 
   it("renders the Applied control in both inactive and completed states", () => {

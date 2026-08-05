@@ -177,12 +177,19 @@ function clean(value: string | null | undefined): string | undefined {
   return trimmed || undefined;
 }
 
+/**
+ * B2-03. `job.employmentType` arrives as a slug ("full-time", "part_time")
+ * and the plate wants it capitalised as ONE phrase — "Full-time" — not every
+ * word capitalised. The old body stripped hyphens before capitalising, so a
+ * single hyphenated word lost its hyphen and became two separate capitalised
+ * words, "Full Time". Same bug class as B-12's activity-label mangling: a
+ * formatter meant for slugs applied to a value that already reads as prose.
+ * An underscore is a genuine slug separator and becomes a space; a hyphen is
+ * not and stays exactly where it is.
+ */
 function humanize(value: string): string {
-  return value
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const words = value.replace(/_+/g, " ").replace(/\s+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function visaTone(
