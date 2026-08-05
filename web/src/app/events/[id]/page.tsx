@@ -21,7 +21,6 @@ import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import {
   daysUntil,
-  formatCount,
   formatDate,
   formatDateRange,
   formatDaysLeft,
@@ -346,6 +345,16 @@ export function cheapestWayIn(
 }
 
 /**
+ * B2-14 (A: event 1d). `formatCount` (format.ts) is the app's *compact* count
+ * vocabulary ("2.4k") and other surfaces rely on it; the plate spells this one
+ * out with comma grouping ("~2,400"), so it gets its own formatter here
+ * instead of a change to the shared one.
+ */
+function formatScaleCount(value: number): string {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+/**
  * B-09. Four milestones, not three: plate 03 opens the strip with **Today** so
  * the two deadlines can be read as distances rather than bare dates. Mirrors
  * `buildTimeline` on the job report exactly, so the two reports agree.
@@ -444,7 +453,7 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
       ? {
           key: "scale",
           label: "Scale",
-          value: `~${formatCount(event.expectedSize)}`,
+          value: `~${formatScaleCount(event.expectedSize)}`,
           detail: "last edition",
         }
       : undefined,

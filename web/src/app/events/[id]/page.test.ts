@@ -297,7 +297,10 @@ describe("EventReport", () => {
     // "Monday, March 8, 2027 · Mar 11, 2027".
     expect(html).toContain("Mar 8 – 11, 2027");
     expect(html).toContain("Mon – Thu");
-    expect(html).toContain("~2.4k");
+    // B2-14 (A: event 1d). formatCount is the app's compact vocabulary
+    // ("2.4k"); the plate spells the number out with comma grouping.
+    expect(html).toContain("~2,400");
+    expect(html).not.toContain("~2.4k");
     expect(html).toContain("last edition");
     // B2-12 (A: event 1a). The early-bird cutoff was two lines away in scope
     // and simply never read; cutoffPhrase reuses B-01's ISO guard so the
