@@ -2726,4 +2726,15 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   handled earlier by B2-03). **Gate: 82 files / 827 tests passing, typecheck
   clean, 1 pre-existing lint error.** Commit: `2747850`.
 
+- **B2-05 — LANDED (via B2-01, verified here).** The granularity half (month +
+  year only, no day-of-month) landed as part of B2-01's `formatDate(...,
+  "monthYear")` change, and B2-01's commit already added the code comment
+  documenting the "flexible" sub-line's exclusion (item (i), same "no field
+  exists" category as (c)-(h)). No further code change was needed, but no
+  test locked either half of the contract in specifically for the STARTS
+  tile, so this item's commit adds one: asserts `"Oct 2026"` with no day, and
+  that the tile has no `data-report-fact-detail` sibling at all (nothing
+  invented for "flexible"). **Gate: 82 files / 828 tests passing, typecheck
+  clean, 1 pre-existing lint error.** Commit: `bb145ff`.
+
 ---
