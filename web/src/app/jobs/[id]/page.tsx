@@ -8,10 +8,11 @@ import { useProfileStore } from "@/store/profile";
 import {
   daysUntil,
   formatDate,
-  formatDayAge,
-  formatDayDistance,
+  formatDaysAgo,
+  formatDaysLeft,
   formatMatchPct,
 } from "@/lib/format";
+import { reportShortDate } from "@/components/reports/report-date";
 import { formatSalary } from "@/lib/opportunities/salary";
 import {
   cleanJobDescription,
@@ -202,9 +203,13 @@ function visaTone(
  * reproduced. It prints what exists rather than guessing.
  */
 export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
-  const posted = formatDate(job.postedDate);
-  const deadline = formatDate(job.applicationDeadline);
-  const start = formatDate(job.startDate);
+  // B2-01 / Ruling 8. Plate 02 shows dates without a year inside the report's
+  // own horizon ("Sep 15", not "Sep 15, 2026") and STARTS at month+year only
+  // ("Jan 2027") — never a day of month. `reportShortDate` also guards
+  // against a date more than ~12 months out silently losing its year.
+  const posted = reportShortDate(job.postedDate, nowMs);
+  const deadline = reportShortDate(job.applicationDeadline, nowMs);
+  const start = formatDate(job.startDate, "monthYear");
   const location = clean(job.location);
   const facts: Array<JobFact | undefined> = [
     job.salary
@@ -243,13 +248,17 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
           detail: job.isRemote ? "Remote" : undefined,
         }
       : undefined,
+    // B2-05. The plate's "flexible" sub-line states whether the start date is
+    // negotiable. `Job` has no such field and nothing upstream extracts one —
+    // excluded, same "no field exists" category as (c)-(h), item (i). No
+    // detail is invented to fill the slot.
     start ? { key: "start", label: "Starts", value: start } : undefined,
     deadline
       ? {
           key: "deadline",
           label: "Apply by",
           value: deadline,
-          detail: formatDayDistance(daysUntil(job.applicationDeadline!, nowMs)),
+          detail: formatDaysLeft(daysUntil(job.applicationDeadline!, nowMs)),
         }
       : undefined,
     posted
@@ -257,7 +266,7 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
           key: "posted",
           label: "Posted",
           value: posted,
-          detail: formatDayAge(job.postedDate, nowMs) ?? undefined,
+          detail: formatDaysAgo(-daysUntil(job.postedDate!, nowMs)),
         }
       : undefined,
     job.visa
@@ -278,12 +287,14 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
 }
 
 function buildTimeline(job: Job, nowMs: number): TimelinePoint[] {
-  const posted = formatDate(job.postedDate);
-  const deadline = formatDate(job.applicationDeadline);
-  const start = formatDate(job.startDate);
+  // B2-01. Mirrors buildJobFacts's date styling exactly, so the facts row and
+  // the Timeline never disagree about the same date.
+  const posted = reportShortDate(job.postedDate, nowMs);
+  const deadline = reportShortDate(job.applicationDeadline, nowMs);
+  const start = formatDate(job.startDate, "monthYear");
   if (!posted && !deadline && !start) return [];
 
-  const today = formatDate(new Date(nowMs).toISOString());
+  const today = reportShortDate(new Date(nowMs).toISOString(), nowMs);
   const points: TimelinePoint[] = [];
   if (posted) points.push({ key: "posted", label: "Posted", value: posted });
   if (today) {

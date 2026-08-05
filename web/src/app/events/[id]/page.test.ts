@@ -289,6 +289,12 @@ describe("EventReport", () => {
     expect(html).toContain("~2.4k");
     expect(html).toContain("last edition");
     expect(html).toContain("San Diego, US · in person · 4 days");
+    // B2-01. ABSTRACT DUE: plate 03's own vocabulary is "92 days left", not
+    // the feed's "in 3 months" — always days, never bucketed into months.
+    // This fixture's deadline is 92 days from the fixed clock, the plate's
+    // own illustrative number.
+    expect(html).toContain("Oct 30");
+    expect(html).toContain("92 days left");
   });
 
   it("hides the scale tile when no crowd size was extracted", () => {
@@ -321,8 +327,11 @@ describe("EventReport", () => {
       'data-deadline-milestone="event"',
     ]);
     expect(html).not.toContain("Submit by");
-    // The clock is the injected one, never Date.now().
-    expect(html).toContain("Jul 30, 2026");
+    // The clock is the injected one, never Date.now(). B2-01 dropped the year
+    // (Today sits inside the report's own horizon, same rule as the job
+    // report's Timeline), so the month/day pair is now the whole signal.
+    expect(html).toContain("Jul 30");
+    expect(html).not.toContain("Jul 30, 2026");
   });
 
   it("never invents a year for a free-text fee deadline", () => {

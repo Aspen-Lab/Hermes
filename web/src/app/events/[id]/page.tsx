@@ -24,9 +24,11 @@ import {
   formatDate,
   formatDateRange,
   formatDayDistance,
+  formatDaysLeft,
   formatMatchPct,
   formatWeekdayRange,
 } from "@/lib/format";
+import { reportShortDate } from "@/components/reports/report-date";
 import { cleanEventDescription } from "@/lib/events/mapper";
 import {
   buildEnrichmentContext,
@@ -323,8 +325,11 @@ export function cheapestWayIn(
  */
 export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
   const dates = formatDateRange(event.date, event.endDate);
-  const abstractDue = formatDate(event.deadline, "short");
-  const registerBy = formatDate(event.registrationDeadline, "short");
+  // B2-01 / Ruling 8. Both already dropped the year, but neither guarded
+  // against one that is more than ~12 months out — where a bare "Mar 8" would
+  // be ambiguous between two different years.
+  const abstractDue = reportShortDate(event.deadline, nowMs);
+  const registerBy = reportShortDate(event.registrationDeadline, nowMs);
   const location = event.isOnline ? "Online" : clean(event.location);
   const headline = (event.fees ?? []).find((fee) => clean(fee.standard));
   const student = clean(headline?.student);
@@ -358,7 +363,9 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
           key: "abstract-due",
           label: "Abstract due",
           value: abstractDue,
-          detail: formatDayDistance(daysUntil(event.deadline!, nowMs)),
+          // B2-01. Plate 03 reads "92 days left" — always days, never bucketed
+          // into weeks or months.
+          detail: formatDaysLeft(daysUntil(event.deadline!, nowMs)),
         }
       : undefined,
     registerBy
@@ -384,12 +391,15 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
 }
 
 function deadlineMilestones(event: Event, nowMs: number): DeadlineMilestone[] {
-  const submission = formatDate(event.deadline);
-  const registration = formatDate(event.registrationDeadline);
-  const eventDate = formatDate(event.date);
+  // B2-01. Mirrors buildEventFacts's date styling exactly, and buildTimeline
+  // on the job report, so no two sections on either report disagree about the
+  // same date.
+  const submission = reportShortDate(event.deadline, nowMs);
+  const registration = reportShortDate(event.registrationDeadline, nowMs);
+  const eventDate = reportShortDate(event.date, nowMs);
   const milestones: DeadlineMilestone[] = [];
   if (!submission && !registration && !eventDate) return milestones;
-  const today = formatDate(new Date(nowMs).toISOString());
+  const today = reportShortDate(new Date(nowMs).toISOString(), nowMs);
   if (today) {
     milestones.push({ key: "today", label: "Today", value: today, accent: true });
   }

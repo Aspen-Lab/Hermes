@@ -89,7 +89,9 @@ describe("JobReport", () => {
     expect(html).toContain("Example Energy");
     expect(html).toContain("Chicago, IL");
     expect(html).toContain("$120k / yr");
-    expect(html).toContain("Jul 20, 2026");
+    // B2-01: report dates inside their own one-year horizon drop the year.
+    expect(html).toContain("Jul 20");
+    expect(html).not.toContain("Jul 20, 2026");
     // B-06 changed this from 2 to 3. Plate 02 has a LOCATION tile, which the
     // build only ever built for remote jobs; baseJob is in Chicago, so a
     // sparse job now correctly shows where the work is.
@@ -187,8 +189,11 @@ describe("JobReport", () => {
     expect(html.match(/Sponsorship available/g)).toHaveLength(1);
     expect(html).toContain("The laboratory will provide H-1B sponsorship.");
     // The plate's two countdowns, which appeared nowhere in the report before.
-    expect(html).toContain("in 2 weeks");
-    expect(html).toContain("10d ago");
+    // B2-01 rewrote these from the feed's vocabulary ("in 2 weeks", "10d ago")
+    // to the plate's own ("16 days left", "10 days ago") — always days, never
+    // bucketed into weeks, never abbreviated.
+    expect(html).toContain("16 days left");
+    expect(html).toContain("10 days ago");
     // The rest of the plate's sub-lines.
     expect(html).toContain("per year · from posting");
     expect(html).toContain("stated in the posting");
@@ -213,14 +218,21 @@ describe("JobReport", () => {
     const timelineSection = html.match(
       /<section[^>]*data-job-section="timeline"[^>]*>[\s\S]*?<\/section>/,
     )?.[0];
+    // B2-01. Plate 02's own Timeline reads "Posted Jul 22" / "Today" /
+    // "Apply by Sep 15" / "Starts Jan 2027" — no year except on the
+    // month/year-only Starts point, and no day-of-month there either.
     expect(timelineSection).toContain("Posted");
-    expect(timelineSection).toContain("Jul 20, 2026");
+    expect(timelineSection).toContain("Jul 20");
+    expect(timelineSection).not.toContain("Jul 20, 2026");
     expect(timelineSection).toContain("Today");
-    expect(timelineSection).toContain("Jul 30, 2026");
+    expect(timelineSection).toContain("Jul 30");
+    expect(timelineSection).not.toContain("Jul 30, 2026");
     expect(timelineSection).toContain("Apply by");
-    expect(timelineSection).toContain("Aug 15, 2026");
+    expect(timelineSection).toContain("Aug 15");
+    expect(timelineSection).not.toContain("Aug 15, 2026");
     expect(timelineSection).toContain("Starts");
-    expect(timelineSection).toContain("Oct 1, 2026");
+    expect(timelineSection).toContain("Oct 2026");
+    expect(timelineSection).not.toContain("Oct 1, 2026");
     expect(timelineSection).not.toContain("Skills they ask for");
   });
 

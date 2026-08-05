@@ -5,6 +5,8 @@ import {
   formatDate,
   formatDayAge,
   formatDayDistance,
+  formatDaysAgo,
+  formatDaysLeft,
   formatMatchPct,
   formatTimeAgo,
   parseDate,
@@ -70,6 +72,26 @@ describe("formatDayDistance / daysUntil", () => {
     const now = new Date(2026, 6, 19, 12, 0, 0).getTime();
     expect(daysUntil("2026-07-24", now)).toBe(5);
     expect(daysUntil("2026-07-14", now)).toBe(-5);
+  });
+});
+
+describe("formatDaysLeft / formatDaysAgo", () => {
+  // B2-01 / Ruling 8. The report's own countdown vocabulary — always days,
+  // never bucketed into weeks or months, never abbreviated to "Nd". Distinct
+  // from formatDayDistance / formatDayAge above, which keep serving the feed
+  // and papers view unchanged.
+  it("counts down in the plate's words", () => {
+    expect(formatDaysLeft(47)).toBe("47 days left");
+    expect(formatDaysLeft(1)).toBe("1 day left");
+    expect(formatDaysLeft(0)).toBe("due today");
+    expect(formatDaysLeft(-3)).toBe("due today");
+  });
+
+  it("counts up in the plate's words", () => {
+    expect(formatDaysAgo(8)).toBe("8 days ago");
+    expect(formatDaysAgo(1)).toBe("1 day ago");
+    expect(formatDaysAgo(0)).toBe("today");
+    expect(formatDaysAgo(-3)).toBe("today");
   });
 });
 

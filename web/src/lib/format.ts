@@ -146,6 +146,27 @@ export function formatDayDistance(days: number): string {
 }
 
 /**
+ * B2-01. Report-only countdown vocabulary. Plate 02 and 03 always read
+ * "N days left" / "N days ago" — never bucketed into weeks or months, and
+ * never abbreviated to "Nd". `formatDayDistance` / `formatDayAge` above keep
+ * serving the feed, the papers view and job cards exactly as before; those
+ * surfaces have their own established relative-time vocabulary and are not
+ * part of this loop. These two exist only so the job and event reports stop
+ * needing to hand-roll a fourth vocabulary inline — the exact drift this
+ * module's header comment warns about.
+ */
+export function formatDaysLeft(days: number): string {
+  if (days <= 0) return "due today";
+  return `${days} day${days === 1 ? "" : "s"} left`;
+}
+
+/** B2-01. The past-tense half of the pair above — "8 days ago", not "8d ago". */
+export function formatDaysAgo(days: number): string {
+  if (days <= 0) return "today";
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+/**
  * Long-form past age in words for prose contexts:
  * "today", "yesterday", "12 days ago", "3 months ago", "1.5 years ago".
  */
