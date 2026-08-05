@@ -38,14 +38,15 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-13, thirteen committed with per-item §4 logs. The first
-           C stalled at 600s while committing B2-08; nothing was lost, because
-           it had been committing per item. A second C (this one) resumed at
-           B2-09. B's guide itself was written by the MANAGER after two B
-           subagents died writing nothing. B2-11's `+ career fair` chip half
-           landed; the `Industry` qualifier half was correctly left untouched
-           (`POLICY — manager decides`, no honest source exists).
-TODO:      B2-14 .. B2-18, five items left, in order. C must still NOT attempt
+DONE:      B2-01 .. B2-14, fourteen committed with per-item §4 logs. The
+           first C stalled at 600s while committing B2-08; nothing was lost,
+           because it had been committing per item. A second C (this one)
+           resumed at B2-09. B's guide itself was written by the MANAGER
+           after two B subagents died writing nothing. B2-11's `+ career
+           fair` chip half landed; the `Industry` qualifier half was
+           correctly left untouched (`POLICY — manager decides`, no honest
+           source exists).
+TODO:      B2-15 .. B2-18, four items left, in order. C must still NOT attempt
            `looking at industry` in B2-17 gap 3 (the other POLICY half, B2-11's
            `Industry` qualifier, is now resolved — see above).
 GATE NOW:  82 files / 840 tests, **all 840 passing this run** (the live
@@ -2917,5 +2918,18 @@ changed.
   needed rewriting — added a new test asserting the tile has no
   `data-report-fact-detail` sibling at all. **Gate: 82 files / 840 tests
   passing, typecheck clean, 1 pre-existing lint error.** Commit: `ecc9109`.
+
+- **B2-14 — LANDED.** SCALE tile's value now reads `~2,400` instead of
+  `~2.4k`. Added a small local `formatScaleCount` (comma grouping via
+  `Intl.NumberFormat`) rather than changing `formatCount` in `format.ts` —
+  that helper is the app's shared *compact* count vocabulary and other
+  surfaces rely on it, same reasoning B2-01 used for the two new date
+  formatters. `formatCount` became unused in this file and was dropped from
+  the import. Rewrote the one existing assertion that pinned `"~2.4k"`,
+  comment naming B2-14, and added a `not.toContain` for the old form. As
+  B-05 already noted and this item leaves unchanged: `event.expectedSize` is
+  still never populated by any mapper, so this tile does not appear on real
+  data yet regardless of its formatting. **Gate: 82 files / 840 tests
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: `1557c14`.
 
 ---
