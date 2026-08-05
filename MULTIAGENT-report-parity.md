@@ -38,15 +38,17 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-08, all eight committed with per-item §4 logs. The
-           first C stalled at 600s while committing B2-08; nothing was lost,
-           because it had been committing per item. B's guide itself was
-           written by the MANAGER after two B subagents died writing nothing.
-TODO:      B2-09 .. B2-18, ten items, in order. C must NOT attempt the two
-           POLICY halves: the `Industry` qualifier in B2-11, and `looking at
-           industry` in B2-17 gap 3.
-GATE NOW:  82 files / 834 tests, **833 passing**, typecheck clean, 1
-           pre-existing lint error (`src/components/persona/quiz.tsx:46`).
+DONE:      B2-01 .. B2-09, nine committed with per-item §4 logs. The first C
+           stalled at 600s while committing B2-08; nothing was lost, because
+           it had been committing per item. A second C (this one) resumed at
+           B2-09. B's guide itself was written by the MANAGER after two B
+           subagents died writing nothing.
+TODO:      B2-10 .. B2-18, nine items left, in order. C must NOT attempt the
+           two POLICY halves: the `Industry` qualifier in B2-11, and `looking
+           at industry` in B2-17 gap 3.
+GATE NOW:  82 files / 835 tests, **all 835 passing this run** (the live
+           benchmark flake below did not fire this session), typecheck clean,
+           1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
            Tavily-search integration test that only runs when a real API key
            is present, and that asserts a specific real event still appears in
@@ -2805,5 +2807,44 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   joins with "and". **Gate: 82 files / 834 tests, 833 passing (1
   pre-existing live-benchmark failure, unrelated, unchanged), typecheck
   clean, 1 pre-existing lint error.** Commit: `2f6db13`.
+
+**Continuation — a fresh C picks up at B2-09.** The C above stalled at 600s
+while committing B2-08; nothing was lost, since it had committed per item as
+§3 requires. Re-verified the baseline before touching anything: **82 files /
+834 tests, 833 passing, typecheck clean, 1 pre-existing lint error
+(`quiz.tsx:46`)** — matches §1 exactly. One note on the flaky benchmark: in
+this session `src/lib/events/benchmark.test.ts` actually ran and passed (a
+real Tavily key is configured in `.local-data/profile.json` here, and the
+live search happened to resolve the event this time) — full clean run reads
+**82 files / 834 tests passing**, i.e. the flake did not fire this round. Per
+§1's own ruling this test is excluded from the gate either way; noting the
+pass/fail is genuinely non-deterministic run to run, not something this round
+changed.
+
+- **B2-09 — LANDED.** `formatActivityLabel`
+  (`web/src/app/events/[id]/page.tsx`) now tests membership against the real
+  vocabulary instead of a shape heuristic. Exported `ACTIVITY_LABELS` from
+  `web/src/lib/opportunities/event-details.ts` — the extractor's own 25-label
+  list (`poster session`, `career fair`, `hands-on session`, …) — and added
+  `eventTypes: EventType[]` to `web/src/types/index.ts`, kept beside the union
+  the same way `careerStages` / `industryPreferences` already are (per B2-09's
+  own warning: `EventType` alone is not the whole vocabulary). A label now
+  goes through `formatEventType` only when it exactly matches, case-
+  insensitively, one of those two lists; everything else keeps its own words
+  and hyphens with only its first letter raised. The word-count test is gone
+  entirely — it never told vocabulary from prose apart, only from length.
+  **No existing test asserted the old heuristic's behaviour** — grepped the
+  whole file; there was no chip-label or activity-highlighting coverage at
+  all before this item — so nothing needed rewriting. Added one new test
+  covering both a real vocabulary label (`"poster session"` → title-cased,
+  unchanged) and the two prose strings this round's own A findings named
+  (`"vendor exhibition"`, `"early-career mixer"` → first-letter only, hyphen
+  intact). **Left `formatEventType` itself untouched**: a legitimately
+  hyphenated vocabulary label (`"hands-on session"`) still loses its hyphen
+  through it, exactly as it did before this item — the old heuristic already
+  classified it as vocabulary, so this is pre-existing `formatEventType`
+  behaviour, not a regression, and not named by this item. **Gate: 82 files /
+  835 tests passing, typecheck clean, 1 pre-existing lint error.** Commit:
+  `98da026`.
 
 ---
