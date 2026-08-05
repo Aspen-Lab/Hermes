@@ -50,20 +50,18 @@ DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
            stayed true through every one of those deaths, which is the only
            reason any of this was resumable.
 
-           Both POLICY halves flagged in the guide are resolved as
-           `POLICY — manager decides` — investigated, neither attempted, per
-           direct instruction not to:
+           **Both POLICY halves are now RULED — see §1f. C raised them
+           correctly and they went opposite ways:**
              - B2-11's `Industry` qualifier (`"Summit"` → `"Industry
                summit"`) — no honest source anywhere in the data model.
+               **RULED: permanently excluded, item (j). A must list it.**
              - B2-17 gap 3, `looking at industry` — a materially different
                case: the profile DOES carry a sector preference
-               (`Profile.industryVsAcademia`, already read by both scoring
-               pipelines, never plumbed into `EventReport`). An honest source
-               exists here, unlike the first half. Left out anyway because
-               deciding whether to show it was named as the manager's call,
-               not this C's — see the B2-17 §4 entry for the full field name
-               and reasoning, so acting on it (if the manager says yes) is a
-               small follow-up, not a fresh investigation.
+               (`Profile.industryVsAcademia`). C found this, refused to use
+               it without a ruling, and recorded the field name so acting on
+               it would be small. **RULED IN and BUILT as B2-19 by the
+               manager.** The reader set that value themselves; printing it
+               explains a highlight rather than guessing at one.
 TODO:      Nothing left for C in round 2. Next: **A re-measures the live job
            and event reports against plates 02/03 from scratch** (round 3),
            using the same method as rounds 1–2 (renderToStaticMarkup + a
@@ -75,10 +73,10 @@ TODO:      Nothing left for C in round 2. Next: **A re-measures the live job
            ever mis-fires; and whether B2-15's travel-grant single-cell
            choice reads acceptably against the plate now that the invitation
            letter beside it is three real columns.
-GATE NOW:  82 files / 848 tests, **all 848 passing this run**, typecheck
-           clean, 1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
-           This is the number after every one of C's 18 commits — the gate
-           was re-run after each individual item, never batched.
+GATE NOW:  82 files / **850 tests, all 850 passing**, typecheck clean, 1
+           pre-existing lint error (`src/components/persona/quiz.tsx:46`).
+           848 of those are C's figure after each of its 18 commits — the gate
+           was re-run per item, never batched. The last 2 are B2-19's.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -381,6 +379,59 @@ manager, not an automatic exclusion.
 **A: re-list exclusions 7 and 8 by name in every round's log.** They must stay
 visible. An exclusion that stops being mentioned quietly becomes permanent
 without anyone deciding it should be.
+
+---
+
+## §1f. MANAGER'S RULINGS ON C's TWO POLICY ITEMS — BINDING
+
+Decided 2026-08-05, after C investigated both and correctly declined to act on
+either. **They go opposite ways, and the reason is the same distinction §1e
+Ruling 14 was already drawing.**
+
+### Ruling 17 — `Summit` → `Industry summit`: EXCLUDED. New exclusion item (j).
+
+C searched the data model and found no industry/academic axis on `Event`.
+There is none. The only way to produce the qualifier is to infer it — from the
+exhibitor count, from the presence of a recruiting fair, from the organisations
+attending.
+
+**Peer does not do that.** The user's own instruction governs here:
+
+> peer 不应该用来评价，只摆事实……判断要交给用户自己来
+
+An event's character is a judgement. Labelling one "industry" from indirect
+signals is exactly the inference §1d Ruling 1 already forbade. **The kind chip
+prints `Summit`. This is a permanent difference from the plate.**
+
+**A: add this to the exclusion list as item (j) and re-list it every round**,
+alongside (c)–(i). If the manager ever funds an extraction change that
+classifies events on a stated industry/academic axis, this reopens — not before.
+
+### Ruling 18 — `looking at industry`: RULED IN. Built as B2-19.
+
+This is **not** the same situation, and C was right to say so rather than
+lumping the two together.
+
+`Profile.industryVsAcademia` exists, the reader sets it themselves in Profile
+settings, and both scoring pipelines already read it. Printing it back is not
+an inference about anything — it is repeating the reader's own stated
+preference in the sentence that explains why chips were highlighted.
+
+**Implemented by the manager as B2-19** (commit `c423f15`), because it was a
+small follow-up on C's own recorded findings rather than fresh work:
+
+- A clause per stated lean — `industry`, `academia`, `startups`, `bigTech`.
+- **`both` produces no clause.** It is the default every profile starts on, so
+  it states no lean at all. "looking at both" would put a sentence on the page
+  claiming a choice the reader never made.
+- The clause cannot stand without the career stage. The plate's phrasing is one
+  joined phrase ("because you're a PhD 4 looking at industry"); with no stage it
+  would read "because you're looking at industry", which is a different and
+  weaker claim.
+- Gate after: 82 files / 850 tests passing, typecheck clean, lint unchanged.
+
+**A: this was written by the manager, not by C. Scrutinise it like any other
+change** — the manager implementing something does not make it correct.
 
 ---
 
