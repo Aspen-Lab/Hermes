@@ -2694,4 +2694,14 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   (`"$120k – $150k"`). **Gate: 82 files / 824 tests passing, typecheck clean,
   1 pre-existing lint error.** Commit: `abd0786`.
 
+- **B2-03 — LANDED.** `humanize()` in `web/src/app/jobs/[id]/page.tsx` now
+  converts underscores to spaces but leaves hyphens alone, and capitalises
+  only the first letter of the whole phrase rather than every word —
+  `"full-time"` → `"Full-time"`, `"part_time"` → `"Part time"`. No existing
+  test asserted the old buggy output, so nothing needed rewriting; added two
+  new assertions (one on the existing seven-facts fixture's TYPE detail line,
+  one dedicated test covering both the hyphen and underscore paths). **Gate:
+  82 files / 825 tests passing, typecheck clean, 1 pre-existing lint error.**
+  Commit: `ed9b6e1`.
+
 ---
