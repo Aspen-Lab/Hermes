@@ -308,6 +308,21 @@ describe("JobReport", () => {
     expect(html.match(/Renewable annually/g)).toHaveLength(2);
   });
 
+  it("prints STARTS at month/year only, with no invented sub-line", () => {
+    // B2-05. The granularity half (no day-of-month) landed with B2-01. The
+    // plate's "flexible" sub-line states whether the start date is
+    // negotiable — Job has no such field, so this is excluded under the
+    // same "no field exists" category as (c)-(h), item (i): the tile stays
+    // silent rather than inventing a detail to fill the slot.
+    const html = renderReport(baseJob({ startDate: "2026-10-01" }));
+    const startTile = html.match(
+      /<div[^>]*data-job-fact="start"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(startTile).toContain("Oct 2026");
+    expect(startTile).not.toContain("Oct 1");
+    expect(startTile).not.toContain("data-report-fact-detail");
+  });
+
   it("renders the Applied control in both inactive and completed states", () => {
     const pendingHtml = renderReport(baseJob(), false);
     const appliedHtml = renderReport(baseJob(), true);
