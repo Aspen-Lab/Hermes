@@ -328,6 +328,24 @@ describe("EventReport", () => {
     expect(html).not.toContain("last edition");
   });
 
+  it("prints REGISTER BY with no invented sub-line", () => {
+    // B2-13 / Ruling 10 (A: event 1c). The plate's sub-line here is a fixed
+    // qualitative note ("on-site registration available") — whether walk-in
+    // registration stays open — not a countdown. Peer does not track that
+    // fact, and a countdown implies the deadline is hard, which we do not
+    // know. Suppressed rather than substituted; excluded from parity scoring
+    // (exclusion 7 in §1e).
+    const html = renderReport(
+      baseEvent({ registrationDeadline: "2027-02-20" }),
+    );
+    const registerTile = html.match(
+      /<div[^>]*data-event-fact="register-by"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+
+    expect(registerTile).toContain("Feb 20");
+    expect(registerTile).not.toContain("data-report-fact-detail");
+  });
+
   it("gives the deadline strip its heading and a Today milestone", () => {
     // B-09. The strip was rendered bare — no ReportSection, so no heading —
     // and had only three points. Plate 03 opens it with Today so the two

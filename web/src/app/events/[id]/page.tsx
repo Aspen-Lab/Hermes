@@ -24,7 +24,6 @@ import {
   formatCount,
   formatDate,
   formatDateRange,
-  formatDayDistance,
   formatDaysLeft,
   formatMatchPct,
   formatWeekdayRange,
@@ -432,9 +431,13 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
           key: "register-by",
           label: "Register by",
           value: registerBy,
-          detail: formatDayDistance(
-            daysUntil(event.registrationDeadline!, nowMs),
-          ),
+          // B2-13 / Ruling 10 (A: event 1c). The plate's sub-line here is a
+          // fixed qualitative note — "on-site registration available" —
+          // whether walk-in registration stays open, which Peer does not
+          // track. It is NOT a countdown: a countdown implies the deadline is
+          // hard, which we do not know. Suppressed rather than substituted
+          // with a different fact (the old `formatDayDistance` call). This
+          // slot is permanently excluded from parity scoring — exclusion 7.
         }
       : undefined,
     event.expectedSize
