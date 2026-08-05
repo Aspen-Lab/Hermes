@@ -1,7 +1,11 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { CareerStage, Event } from "@/types";
+import type {
+  CareerStage,
+  Event,
+  IndustryAcademiaPreference,
+} from "@/types";
 import type {
   EventEnrichment,
   OpportunityPageReadingReason,
@@ -51,6 +55,40 @@ function renderReport(
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
       isInterested,
+      nowMs: NOW,
+      starredKeys: new Set<string>(),
+      onToggleStar: () => undefined,
+      onToggleSave: () => undefined,
+      onRegisteredChange: () => undefined,
+      onSubmittedChange: () => undefined,
+      onDismiss: () => undefined,
+    }),
+  );
+}
+
+/**
+ * B2-19. The happenings footnote is the only consumer of the reader's sector
+ * lean, and `sector` would be the ninth positional argument to `renderReport`
+ * — six `undefined`s deep. A dedicated two-line helper is more readable than
+ * that, and leaves all 38 existing `renderReport` call sites untouched (they
+ * render with no sector, which is what their assertions already expect).
+ */
+function renderWithSector(
+  event: Event,
+  careerStage: CareerStage,
+  sector: IndustryAcademiaPreference | undefined,
+): string {
+  return renderToStaticMarkup(
+    createElement(EventReport, {
+      event,
+      careerStage,
+      sector,
+      enrichment: null,
+      providerConfigured: false,
+      isSaved: false,
+      isRegistered: false,
+      isSubmitted: false,
+      isInterested: false,
       nowMs: NOW,
       starredKeys: new Set<string>(),
       onToggleStar: () => undefined,
@@ -462,12 +500,13 @@ describe("EventReport", () => {
   it("names the highlighted activities and shortens the career stage in the happenings footnote", () => {
     // B2-17. Three gaps in the plate's own sentence: "PhD Year 4" now
     // shortens to the plate's own "PhD 4"; the old generic close ("Those are
-    // the ones") now names the actual highlighted chips. "looking at
-    // industry" is left out on purpose — a sector preference the profile
-    // does carry (industryVsAcademia), but wiring it in is
-    // `POLICY — manager decides` per the round-2 loop log, item B2-17 — not
-    // the same situation as B2-11's Industry qualifier, which has no source
-    // at all.
+    // the ones") now names the actual highlighted chips.
+    //
+    // B2-19 changed the third gap. The sector clause was left out under
+    // `POLICY — manager decides`; the manager then ruled it IN, because
+    // `industryVsAcademia` is a value the reader set themselves rather than
+    // one Peer inferred. With no sector supplied the sentence is unchanged,
+    // which is what this test now pins.
     const html = renderReport(
       baseEvent({
         activities: ["poster session", "career fair", "keynote"],
@@ -479,9 +518,42 @@ describe("EventReport", () => {
     expect(html).toContain(
       "Highlighted because they line up with your topics and because you’re a PhD 4 — Poster Session and Career Fair are the ones you’d be sorry to miss.",
     );
-    expect(html).not.toContain("looking at industry");
+    expect(html).not.toContain("looking at");
     expect(html).not.toContain("PhD Year 4");
     expect(html).not.toContain("Those are the ones");
+  });
+
+  it("names the reader's own sector lean in the happenings footnote", () => {
+    // B2-19. The plate's own clause, from the reader's stated preference.
+    const html = renderWithSector(
+      baseEvent({
+        activities: ["poster session", "career fair", "keynote"],
+        matchedTerms: ["poster", "career fair"],
+      }),
+      "PhD Year 4",
+      "industry",
+    );
+
+    expect(html).toContain(
+      "because you’re a PhD 4 looking at industry — Poster Session and Career Fair are the ones",
+    );
+  });
+
+  it("prints no sector clause when the reader has stated no lean", () => {
+    // B2-19. "both" is the default every profile starts on. It is the absence
+    // of a preference, not a preference, so it must not become a sentence on
+    // the page claiming the reader chose something.
+    const html = renderWithSector(
+      baseEvent({
+        activities: ["poster session", "career fair", "keynote"],
+        matchedTerms: ["poster", "career fair"],
+      }),
+      "PhD Year 4",
+      "both",
+    );
+
+    expect(html).toContain("because you’re a PhD 4 — Poster Session");
+    expect(html).not.toContain("looking at");
   });
 
   it("uses singular grammar when exactly one activity is highlighted", () => {

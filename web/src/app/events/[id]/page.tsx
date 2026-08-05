@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import type {
   CareerStage,
+  IndustryAcademiaPreference,
   Event,
   EventFee,
   EventOrg,
@@ -320,24 +321,44 @@ function joinNaturally(parts: string[]): string {
  *  - the generic close ("Those are the ones") now names the actual
  *    highlighted chips, whatever the count — the plate's own "the two" only
  *    describes its own fixture.
- *  - "looking at industry" is a sector-preference clause. The profile DOES
- *    carry one (`industryVsAcademia`, `web/src/types/index.ts`) — this is
- *    NOT the same situation as B2-11's `Industry` qualifier, which has no
- *    source at all. But wiring a new preference field into this sentence is
- *    `POLICY — manager decides` per the round-2 loop log (item B2-17) and is
- *    deliberately not attempted here: left out rather than guessed at.
+ *  - "looking at industry" is a sector-preference clause. B2-19 wires it in.
+ *    C found the profile already carries the preference and correctly refused
+ *    to use it without a ruling; the manager then ruled it in, because the
+ *    value is one the reader set themselves rather than one Peer inferred.
+ *    This is NOT the same situation as B2-11's `Industry` qualifier, which
+ *    describes the *event* and has no source at all.
  */
+const SECTOR_CLAUSES: Partial<Record<IndustryAcademiaPreference, string>> = {
+  industry: "looking at industry",
+  academia: "looking at academia",
+  startups: "looking at startups",
+  bigTech: "looking at big tech",
+  // B2-19. "both" is the default every profile starts on, so it states no
+  // lean at all. Printing "looking at both" would put a sentence on the page
+  // that the reader never chose — the clause is here to explain a highlight,
+  // and a non-preference explains nothing.
+};
+
 function happeningsFootnote(
   highlightedLabels: string[],
   careerStage: CareerStage | undefined,
+  sector: IndustryAcademiaPreference | undefined,
 ): string | undefined {
   if (highlightedLabels.length === 0) return undefined;
   const stage = shortCareerStage(careerStage);
+  const sectorClause = sector ? SECTOR_CLAUSES[sector] : undefined;
   const named = joinNaturally(highlightedLabels);
   const verb = highlightedLabels.length === 1 ? "is the one" : "are the ones";
+  // The plate reads "…because you're a PhD 4 looking at industry —". The two
+  // clauses are one phrase, so the sector cannot stand alone without the
+  // stage; with no stage it would read "because you're looking at industry",
+  // which is a different and weaker claim.
+  const about = stage
+    ? ` and because you’re a ${stage}${sectorClause ? ` ${sectorClause}` : ""}`
+    : "";
   return (
     "Highlighted because they line up with your topics" +
-    (stage ? ` and because you’re a ${stage}` : "") +
+    about +
     ` — ${named} ${verb} you’d be sorry to miss.`
   );
 }
@@ -1417,6 +1438,7 @@ function RosterSection({
 export function EventReport({
   event,
   careerStage,
+  sector,
   rosterContext,
   enrichment = null,
   pageReadingReason,
@@ -1438,6 +1460,8 @@ export function EventReport({
 }: {
   event: Event;
   careerStage?: CareerStage;
+  /** B2-19. The reader's own stated sector lean, for the happenings footnote. */
+  sector?: IndustryAcademiaPreference;
   rosterContext?: EventRosterContext;
   enrichment?: EventEnrichment | null;
   pageReadingReason?: OpportunityPageReadingReason;
@@ -1540,7 +1564,11 @@ export function EventReport({
   const highlightedLabels = activities
     .filter((activity) => highlightedActivities.has(activity))
     .map(formatActivityLabel);
-  const happeningsNote = happeningsFootnote(highlightedLabels, careerStage);
+  const happeningsNote = happeningsFootnote(
+    highlightedLabels,
+    careerStage,
+    sector,
+  );
   const description = resolveEventReportDescription(
     cleanEventDescription(event.shortDescription),
     enrichment,
@@ -2052,6 +2080,7 @@ export default function EventDetailPage({
     <EventReport
       event={event}
       careerStage={profile.careerStage}
+      sector={profile.industryVsAcademia}
       rosterContext={rosterContext}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
