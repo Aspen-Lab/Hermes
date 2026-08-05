@@ -2649,3 +2649,38 @@ sub-line (B2-05). No field, same category as (c)–(h).
 **STATUS: COMPLETE.**
 
 ---
+
+### Round 2 — Agent C
+
+**STATUS: IN PROGRESS.** Baseline re-established before the first change, as
+instructed: **81 files / 815 tests passing, typecheck clean, 1 pre-existing
+lint error (`quiz.tsx:46`).** Matches §1's recorded figure exactly. Working
+B2-01 → B2-18 in order, one commit per item, gate re-run after each.
+
+- **B2-01 — LANDED.** Added `formatDaysLeft` / `formatDaysAgo` to
+  `web/src/lib/format.ts` (report-only countdown vocabulary; `formatDayDistance`
+  / `formatDayAge` untouched, still serve the feed/papers/cards). Added a new
+  shared helper `web/src/components/reports/report-date.ts`
+  (`reportShortDate`) implementing Ruling 8's year-guard (>~12 months out keeps
+  the year), since that is report display policy, not a formatting fact, per
+  Ruling 8's own instruction not to put it in `format.ts`. Applied to job
+  `buildJobFacts` (posted/deadline/start) + `buildTimeline` (all 4 points) and
+  event `buildEventFacts` (abstractDue/registerBy values, abstractDue's detail)
+  + `deadlineMilestones` (all 4 points) — extended slightly beyond the item's
+  three named findings (job 1, job 3, event 1b) to also cover the event
+  report's deadline strip dates, since B-09 explicitly designed it to mirror
+  the job Timeline "so the two reports agree"; leaving one fixed and the other
+  on the old vocabulary would have broken that invariant again. Did **not**
+  touch REGISTER BY's detail (still `formatDayDistance`, left for B2-13) or
+  `formatFeeDeadline`'s cost-table date display (separate call site, not named
+  by this item, verbatim-source-text policy owned by B-01/B-11). Rewrote the
+  test assertions B2-01 named (job: sparse-job posted date, both countdown
+  strings, all four Timeline points; event: Today milestone) to the plate's
+  wording, each with a comment naming B2-01, per the never-delete-a-test rule.
+  Added new unit tests for the two format.ts functions, a new dedicated
+  `report-date.test.ts` for the year-guard, and a new assertion locking in the
+  event ABSTRACT DUE fix (fixture's deadline is 92 days out, the plate's own
+  number). **Gate: 82 files / 820 tests passing, typecheck clean, 1
+  pre-existing lint error.** Commit: `9d76513`.
+
+---
