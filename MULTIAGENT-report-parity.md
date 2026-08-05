@@ -38,21 +38,26 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      A measured 22%. B's guide written — by the MANAGER, not a subagent:
-           two B subagents were launched and both died writing nothing (one on
-           the account spend limit, one on a 600s stall). §1 stayed true
-           through both, so nothing had to be reconstructed.
-TODO:      C works B2-01 .. B2-18 in order. 9 WRONG SHAPE, 3 WRONG DATA,
-           4 MISSING, 1 EXTRA, 2 POLICY (C must NOT attempt the two POLICY
-           halves: the `Industry` qualifier in B2-11, and `looking at
-           industry` in B2-17 gap 3).
-GATE NOW:  81 files / 815 tests passing, typecheck clean, 1 pre-existing lint
-           error (`src/components/persona/quiz.tsx:46`). A did not re-run the
-           full gate in round 2, only rendered — C must re-establish it.
-NOTE:      B2-01 first: it closes three of A's findings at once and the date
-           styles it needs already exist in `format.ts`. B2-06 (work mode) is
-           the largest and is explicitly splittable — type + render first,
-           commit, then attempt extraction.
+DONE:      B2-01 .. B2-08, all eight committed with per-item §4 logs. The
+           first C stalled at 600s while committing B2-08; nothing was lost,
+           because it had been committing per item. B's guide itself was
+           written by the MANAGER after two B subagents died writing nothing.
+TODO:      B2-09 .. B2-18, ten items, in order. C must NOT attempt the two
+           POLICY halves: the `Industry` qualifier in B2-11, and `looking at
+           industry` in B2-17 gap 3.
+GATE NOW:  82 files / 834 tests, **833 passing**, typecheck clean, 1
+           pre-existing lint error (`src/components/persona/quiz.tsx:46`).
+FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
+           Tavily-search integration test that only runs when a real API key
+           is present, and that asserts a specific real event still appears in
+           live search results. C verified it was already failing before any
+           B2 work (stashed everything, reran against the prior commit).
+           **MANAGER'S RULING: this is real-world data drift, not a
+           regression. It is not C's to fix and A must not count it against
+           the gate.** Treat 833/834 as green for this loop. Fixing the
+           benchmark's brittle assertion is a separate task.
+NOTE:      B2-06 landed all three layers including extraction, which the guide
+           had said to attempt only after committing the safe half.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
