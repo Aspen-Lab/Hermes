@@ -223,6 +223,41 @@ function formatActivityLabel(value: string): string {
     : text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/**
+ * B2-11 / Ruling 14. `event.type` is one coarse enum value and cannot carry
+ * the plate's second, more specific kind chip ("+ career fair"). But
+ * `event.activities` sometimes names a fair-type session in plain prose
+ * ("Recruiting fair, day 3" is the plate's own example) — a fact the event
+ * page itself stated, not a guess. Matched against this fixed, short
+ * vocabulary only: a generic "any X fair" pattern would start guessing at
+ * genres the event never named. `event.type`'s own two fair-like values are
+ * spelled with a hyphen ("job-fair", "career-fair"); this list is the prose
+ * form activities actually use.
+ *
+ * The plate's "Industry" qualifier on the PRIMARY chip ("Summit" →
+ * "Industry summit") has no equivalent source anywhere in the data model and
+ * is deliberately NOT attempted here — see the round-2 loop log, item B2-11.
+ */
+const SECONDARY_KIND_TERMS = ["career fair", "job fair", "recruiting fair"];
+
+function secondaryEventKind(
+  activities: string[],
+  primaryKind: string,
+): string | undefined {
+  const primary = primaryKind.replace(/-/g, " ").toLowerCase();
+  for (const activity of activities) {
+    const label = activity.toLowerCase();
+    const term = SECONDARY_KIND_TERMS.find((candidate) =>
+      label.includes(candidate),
+    );
+    // Don't state the primary kind a second time as though it were a second
+    // fact — e.g. a career-fair event whose own activities also say
+    // "career fair" gets no "+ career fair" chip; it would just repeat chip 1.
+    if (term && term !== primary) return term;
+  }
+  return undefined;
+}
+
 function formatFeeDeadline(value: string | undefined): string | undefined {
   const text = clean(value);
   if (!text) return undefined;
@@ -1297,6 +1332,10 @@ export function EventReport({
   const milestones = deadlineMilestones(event, nowMs);
   const fees = event.fees ?? [];
   const activities = (event.activities ?? []).map(clean).filter(Boolean) as string[];
+  // B2-11 / Ruling 14. The plate's second, more specific kind chip
+  // ("+ career fair") — built only when the event's own activities actually
+  // name a fair-type session.
+  const secondaryKind = secondaryEventKind(activities, event.type);
   // B-12. Plate 03 marks three of six chips with a tick "because they line up
   // with your topics". Every chip rendered identically before, so the "which of
   // these matters to me" signal — the only reason to read the row — was gone.
@@ -1377,6 +1416,10 @@ export function EventReport({
                 lives in the subtitle below (and the WHERE tile), which
                 already prints "in person" / "online"; the chip stated it a
                 second time. */}
+            {/* B2-11 / Ruling 14. The plate's own text is lower-case ("+
+                career fair"), read as a continuation of the primary chip
+                rather than a second title. */}
+            {secondaryKind && <HeaderChip>+ {secondaryKind}</HeaderChip>}
             {/* B-15. event.rank is written by the mapper and was read by
                 nothing. §1c puts it here, between the format chip and the
                 match chip. Most events have no rank, so it is guarded. */}

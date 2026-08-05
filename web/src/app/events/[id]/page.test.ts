@@ -380,6 +380,51 @@ describe("EventReport", () => {
     expect(html).toContain("Chicago, IL · in person");
   });
 
+  it("builds a secondary kind chip from a recognised fair activity", () => {
+    // B2-11 / Ruling 14. event.type is one coarse enum value and cannot carry
+    // a second, more specific kind — but the activities list sometimes names
+    // one in plain prose. "Recruiting fair, day 3" is the plate's own example
+    // activity string.
+    const html = renderReport(
+      baseEvent({ type: "summit", activities: ["Recruiting fair, day 3"] }),
+    );
+    const header = html.match(
+      /<div class="mb-4 flex flex-wrap gap-2">[\s\S]*?<\/div>/,
+    )?.[0];
+
+    expect(header).toContain("+ recruiting fair");
+    // The "Industry" qualifier has no honest source anywhere in the data
+    // model (POLICY — manager decides, per the round-2 loop log) and is not
+    // invented here: the primary chip stays exactly what formatEventType
+    // produces from the raw enum value.
+    expect(header).toContain(">Summit<");
+    expect(header).not.toContain("Industry");
+  });
+
+  it("omits the secondary kind chip when no activity names a fair", () => {
+    const html = renderReport(
+      baseEvent({ activities: ["poster session", "keynote"] }),
+    );
+    const header = html.match(
+      /<div class="mb-4 flex flex-wrap gap-2">[\s\S]*?<\/div>/,
+    )?.[0];
+
+    expect(header).not.toContain("+ ");
+  });
+
+  it("does not restate the primary kind as its own secondary chip", () => {
+    // A career-fair event whose activities also say "career fair" would
+    // otherwise get "Career Fair · + career fair" — the same fact twice.
+    const html = renderReport(
+      baseEvent({ type: "career-fair", activities: ["career fair"] }),
+    );
+    const header = html.match(
+      /<div class="mb-4 flex flex-wrap gap-2">[\s\S]*?<\/div>/,
+    )?.[0];
+
+    expect(header).not.toContain("+ career fair");
+  });
+
   it("never invents a year for a free-text fee deadline", () => {
     // B-01. Plate 03's DEADLINE column is prose and carries no year. The old
     // formatFeeDeadline handed every string to `new Date()`, whose legacy
