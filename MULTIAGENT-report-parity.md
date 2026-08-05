@@ -2737,4 +2737,37 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   invented for "flexible"). **Gate: 82 files / 828 tests passing, typecheck
   clean, 1 pre-existing lint error.** Commit: `bb145ff`.
 
+- **B2-06 — LANDED, all three layers.** Split into two commits as instructed.
+  **Layer 1+3** (`edd5212`): added `Job.workMode?: "on-site" | "hybrid" |
+  "remote"` in `web/src/types/index.ts`, additive beside `isRemote` (nothing
+  that reads `isRemote` changed). Render layer: LOCATION tile's sub-line and
+  the subtitle's third segment both read a new `workModeLabel(job)` helper
+  that prefers `workMode` and falls back to the old `isRemote`-only "Remote"
+  behaviour, so every job scored before this field existed renders exactly as
+  before. **Layer 2** (`632bbea`): populated in
+  `web/src/lib/jobs/mapper.ts`'s `scoredJobToJob` via a new `jobWorkMode()` —
+  turned out not to need new extraction work at all. It reuses the same
+  hybrid-detection the facet/filter system already has
+  (`opportunityFormat()` in `web/src/lib/opportunities/facets.ts` tests
+  `/\bhybrid\b/i` against the location text) rather than inventing new logic:
+  "hybrid" / "on-site" only when the location text says so, "remote" from the
+  existing `isRemote` signal, `undefined` otherwise — never a guessed
+  "on-site" default from silence. Both layers have new dedicated tests
+  (`mapper.test.ts`'s new `workMode` describe block; a page-render test
+  covering hybrid, on-site and the isRemote fallback). **Gate: 82 files / 833
+  tests, 832 passing, typecheck clean, 1 pre-existing lint error.**
+
+  **Unrelated discovery while gating this item**:
+  `src/lib/events/benchmark.test.ts` (`describe.skipIf(!hasLiveKey)`, a live
+  Tavily-search integration test gated on a real API key in
+  `.local-data/profile.json`) started failing partway through this round —
+  it asserts a specific real event ("Solid-State Battery Summit") appears in
+  live search results, which is normal real-world data drift, not a code
+  regression. **Confirmed unrelated to any B2 work**: stashed every
+  uncommitted change and reran it in isolation against the last commit before
+  B2-06 — it failed identically. Did not touch it, per "do not skip the live
+  benchmark." Flagging for A/the manager so it isn't mistaken for something
+  this loop broke; it is not one of the 18 items and its assertion was not
+  edited.
+
 ---
