@@ -2704,4 +2704,26 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   82 files / 825 tests passing, typecheck clean, 1 pre-existing lint error.**
   Commit: `ed9b6e1`.
 
+- **B2-04 — LANDED, with one deliberate deviation from the guide's literal
+  step 1.** The guide's fix direction said to "normalise `contractLength` to
+  the expanded duration wherever it is produced" — read literally, that means
+  editing `extractContractLength` in `web/src/lib/opportunities/job-details.ts`.
+  I did **not** touch that file: its own test is named "extracts...
+  **a source-preserving** contract phrase" (`job-details.test.ts:59`), i.e.
+  keeping the raw scraped text verbatim is itself a recorded, deliberate
+  design choice, and §1e reserves extraction-layer changes for B2-06
+  specifically ("the one item in this guide that touches extraction"). I
+  implemented the expand/abbreviate pair as **render-layer** formatters in
+  `web/src/app/jobs/[id]/page.tsx` instead — `expandContractLength` /
+  `abbreviateContractLength`, both falling back to the verbatim input when no
+  `<number> year(s)/month(s)` parses. This satisfies Ruling 9 (one field, two
+  formatters, both plate strings reproduced) without reopening the
+  extraction layer or its deliberately-named test. Also renamed the visa
+  header chip `VISA_LABELS.sponsors` from "Sponsorship available" to "Visa
+  sponsorship" (the other two states have no plate example, left unchanged).
+  Rewrote the one test asserting the old wording, and added three new tests
+  (expand+abbreviate together, the unparseable-fallback case, hyphen/underscore
+  handled earlier by B2-03). **Gate: 82 files / 827 tests passing, typecheck
+  clean, 1 pre-existing lint error.** Commit: `2747850`.
+
 ---
