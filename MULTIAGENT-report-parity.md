@@ -38,15 +38,17 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-10, ten committed with per-item §4 logs. The first C
+DONE:      B2-01 .. B2-11, eleven committed with per-item §4 logs. The first C
            stalled at 600s while committing B2-08; nothing was lost, because
            it had been committing per item. A second C (this one) resumed at
            B2-09. B's guide itself was written by the MANAGER after two B
-           subagents died writing nothing.
-TODO:      B2-11 .. B2-18, eight items left, in order. C must NOT attempt the
-           two POLICY halves: the `Industry` qualifier in B2-11, and `looking
-           at industry` in B2-17 gap 3.
-GATE NOW:  82 files / 836 tests, **all 836 passing this run** (the live
+           subagents died writing nothing. B2-11's `+ career fair` chip half
+           landed; the `Industry` qualifier half was correctly left untouched
+           (`POLICY — manager decides`, no honest source exists).
+TODO:      B2-12 .. B2-18, seven items left, in order. C must still NOT
+           attempt `looking at industry` in B2-17 gap 3 (the other POLICY
+           half, B2-11's `Industry` qualifier, is now resolved — see above).
+GATE NOW:  82 files / 839 tests, **all 839 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2859,5 +2861,28 @@ changed.
   extracts just the header's chip-row `<div>` and asserts it, confirming the
   subtitle still states the format. **Gate: 82 files / 836 tests passing,
   typecheck clean, 1 pre-existing lint error.** Commit: `231122d`.
+
+- **B2-11 — LANDED, split exactly as Ruling 14 requires.** Built the
+  `+ career fair` half only. Added `secondaryEventKind(activities,
+  primaryKind)` to `web/src/app/events/[id]/page.tsx`: matches each activity
+  string (case-insensitively, substring) against a fixed three-term
+  vocabulary — `"career fair"`, `"job fair"`, `"recruiting fair"` — and
+  returns the first match verbatim (lower-case, as the plate prints it),
+  never a generic "any X fair" pattern. Guarded against restating the primary
+  kind a second time: a career-fair event whose own activities also say
+  "career fair" gets no secondary chip. Rendered as `+ {secondaryKind}`
+  between the primary kind chip and the rank chip, matching §1c's corrected
+  order (Ruling 7). **Did not touch the `Industry` qualifier** — no field
+  anywhere carries an industry/academic axis, Ruling 14 forbids hardcoding
+  it, and this is one of the two items I was explicitly told not to attempt.
+  Marking it `POLICY — manager decides` here, restating what B2-11 itself
+  already said: the primary chip stays exactly `formatEventType(event.type)`
+  with no qualifier. Added three new tests (no existing coverage of the
+  header chip row existed before B2-10): the fixture that names "Recruiting
+  fair, day 3" produces `+ recruiting fair` and leaves the primary chip as
+  plain `Summit`; an event with no fair-type activity gets no secondary chip;
+  a career-fair event whose own activities also say "career fair" does not
+  duplicate itself. **Gate: 82 files / 839 tests passing, typecheck clean, 1
+  pre-existing lint error.** Commit: `f0c9405`.
 
 ---
