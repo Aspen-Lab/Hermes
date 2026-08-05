@@ -38,7 +38,7 @@ STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B2-01 .. B2-14, fourteen committed with per-item §4 logs. The
+DONE:      B2-01 .. B2-15, fifteen committed with per-item §4 logs. The
            first C stalled at 600s while committing B2-08; nothing was lost,
            because it had been committing per item. A second C (this one)
            resumed at B2-09. B's guide itself was written by the MANAGER
@@ -46,10 +46,10 @@ DONE:      B2-01 .. B2-14, fourteen committed with per-item §4 logs. The
            fair` chip half landed; the `Industry` qualifier half was
            correctly left untouched (`POLICY — manager decides`, no honest
            source exists).
-TODO:      B2-15 .. B2-18, four items left, in order. C must still NOT attempt
-           `looking at industry` in B2-17 gap 3 (the other POLICY half, B2-11's
-           `Industry` qualifier, is now resolved — see above).
-GATE NOW:  82 files / 840 tests, **all 840 passing this run** (the live
+TODO:      B2-16 .. B2-18, three items left, in order. C must still NOT
+           attempt `looking at industry` in B2-17 gap 3 (the other POLICY
+           half, B2-11's `Industry` qualifier, is now resolved — see above).
+GATE NOW:  82 files / 841 tests, **all 841 passing this run** (the live
            benchmark flake below did not fire this session), typecheck clean,
            1 pre-existing lint error (`src/components/persona/quiz.tsx:46`).
 FLAKE:     The one failing test is `src/lib/events/benchmark.test.ts` — a live
@@ -2931,5 +2931,31 @@ changed.
   still never populated by any mapper, so this tile does not appear on real
   data yet regardless of its formatting. **Gate: 82 files / 840 tests
   passing, typecheck clean, 1 pre-existing lint error.** Commit: `1557c14`.
+
+- **B2-15 — LANDED, the two rows deliberately took different fixes, as the
+  item required.** Added a `CostSupportRow` discriminated union
+  (`{ kind: "span", detail }` | `{ kind: "columns", standard, student,
+  deadline }`) so `CostsTable`'s support rows can express both shapes without
+  forcing one through the other's code path. **Invitation letter** (a
+  boolean) now renders three real cells: STANDARD and STUDENT both read
+  `"On request"` (or `"Not provided"` when `invitationLetter === false`),
+  DEADLINE reads `"—"` — the plate's own `"Allow 3 weeks"` turnaround has no
+  field behind it, so that cell stays a dash rather than inventing a number,
+  exactly as Ruling 15 requires. **Travel grant** (one free-text string a
+  human wrote) still renders as a single cell spanning the value columns —
+  splitting it on punctuation would be guessing at structure a real string
+  might not share with the fixture's example. Rewrote the one test asserting
+  the old merged-cell text (`"Available on request."`); the rewrite needed a
+  small new helper, `costSupportRow(html, label)`, since a single regex
+  trying to bound one row's start AND end while two rows share the same
+  `data-cost-support-row` marker turned out fragile — splitting the HTML on
+  `</tr>` and finding the chunk containing the row's own label is simpler and
+  cannot cross into the neighbouring row. Also caught during testing: this
+  React build renders `colSpan` camelCase in the static HTML output, not
+  lowercase `colspan` — a real quirk of the non-standard Next.js/React
+  version this repo pins (`web/AGENTS.md`), not a bug in my code; adjusted
+  the assertion to match. Added a new test for `invitationLetter: false`.
+  **Gate: 82 files / 841 tests passing, typecheck clean, 1 pre-existing lint
+  error.** Commit: `078b594`.
 
 ---
