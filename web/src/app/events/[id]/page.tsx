@@ -16,6 +16,7 @@ import type {
   EventOrg,
   EventPerson,
 } from "@/types";
+import { eventTypes } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import {
@@ -30,6 +31,7 @@ import {
 } from "@/lib/format";
 import { reportShortDate } from "@/components/reports/report-date";
 import { cleanEventDescription } from "@/lib/events/mapper";
+import { ACTIVITY_LABELS } from "@/lib/opportunities/event-details";
 import {
   buildEnrichmentContext,
   canAttemptOpportunityEnrichment,
@@ -195,21 +197,28 @@ const WHOLE_ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/;
  * when the whole string is a machine date; everything else prints verbatim.
  */
 /**
- * B-12. `formatEventType` is an enum humaniser: it strips hyphens and
- * title-cases every word, which is right for `job-fair` and wrong for prose.
- * Live activities are a fixed lowercase vocabulary ("poster session", "career
- * fair") that title-cases correctly, but cached and model-supplied rows can
- * carry a real session name — and the humaniser turned "Symposium:
- * solid-state interfaces" into "Symposium: Solid State Interfaces".
+ * B2-09 / Ruling 16. `formatEventType` is an enum humaniser: it strips
+ * hyphens and title-cases every word, which is right for `job-fair` and wrong
+ * for prose. The old rule asked "does this look like a slug?" (short,
+ * lowercase, only spaces/hyphens) — but ordinary prose passes that test just
+ * as easily as a real vocabulary value does: "vendor exhibition" and
+ * "early-career mixer" both qualified, and both got title-cased and
+ * de-hyphenated ("Vendor Exhibition", "Early Career Mixer") — the same bug
+ * class B-12 targeted, just triggered by different strings than B-12's own
+ * fixture used.
  *
- * Anything longer or more punctuated than a vocabulary label keeps its own
- * capitalisation.
+ * A label is vocabulary only if it actually IS one: an `EventType` value, or
+ * one of the extractor's own fixed activity labels (`ACTIVITY_LABELS`,
+ * `event-details.ts`) — not "shaped like" either. Word count has nothing to
+ * do with whether a string is an enum, so that test is gone too.
  */
+const KNOWN_ACTIVITY_LABELS = new Set<string>(
+  [...eventTypes, ...ACTIVITY_LABELS].map((label) => label.toLowerCase()),
+);
+
 function formatActivityLabel(value: string): string {
   const text = value.trim();
-  const isVocabularyLabel =
-    /^[a-z0-9][a-z0-9 _-]*$/i.test(text) && text.split(/\s+/).length <= 3;
-  return isVocabularyLabel
+  return KNOWN_ACTIVITY_LABELS.has(text.toLowerCase())
     ? formatEventType(text)
     : text.charAt(0).toUpperCase() + text.slice(1);
 }

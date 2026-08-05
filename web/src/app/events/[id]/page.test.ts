@@ -339,6 +339,31 @@ describe("EventReport", () => {
     expect(html).not.toContain("Jul 30, 2026");
   });
 
+  it("keeps real activity vocabulary title-cased and leaves prose alone", () => {
+    // B2-09 / Ruling 16. The old rule asked "does this look like a slug?"
+    // (short, lowercase, only spaces/hyphens) and ordinary prose passed just
+    // as easily as a real vocabulary value: "vendor exhibition" and
+    // "early-career mixer" both qualified and both came out title-cased and
+    // de-hyphenated — the same bug class B-12 fixed, triggered by different
+    // strings than B-12's own fixture used. The fix is a membership test:
+    // only an actual EventType value or one of the extractor's own fixed
+    // activity labels goes through formatEventType; everything else keeps its
+    // own words and hyphens, with only its first letter raised.
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session", "vendor exhibition", "early-career mixer"],
+      }),
+    );
+
+    // Real vocabulary (from ACTIVITY_LABELS): title-cased, as before.
+    expect(html).toContain(">Poster Session<");
+    // Prose the extractor never emits: first letter only, hyphen intact.
+    expect(html).toContain(">Vendor exhibition<");
+    expect(html).toContain(">Early-career mixer<");
+    expect(html).not.toContain("Vendor Exhibition");
+    expect(html).not.toContain("Early Career Mixer");
+  });
+
   it("never invents a year for a free-text fee deadline", () => {
     // B-01. Plate 03's DEADLINE column is prose and carries no year. The old
     // formatFeeDeadline handed every string to `new Date()`, whose legacy

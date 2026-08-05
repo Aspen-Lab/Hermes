@@ -109,6 +109,17 @@ const ACTIVITY_PATTERNS: readonly {
   },
 ];
 
+/**
+ * B2-09. The event report used to guess whether an activity string was
+ * vocabulary or prose from its shape (short, lowercase, few words) — a test
+ * ordinary prose passes just as easily as a real label does. The report needs
+ * the actual fixed list to tell the two apart, so it is exported rather than
+ * re-derived.
+ */
+export const ACTIVITY_LABELS: readonly string[] = ACTIVITY_PATTERNS.map(
+  (activity) => activity.label,
+);
+
 function textSegments(html: string): string[] {
   return stripHtml(html)
     .split(/\r?\n+|(?<=[.!?])\s+/)

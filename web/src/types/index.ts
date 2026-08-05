@@ -84,6 +84,21 @@ export type EventType =
   | "expo"
   | "hackathon";
 
+// B2-09. Kept beside the union like `careerStages` / `industryPreferences`
+// below — the event report needs the actual runtime values to tell a real
+// EventType apart from prose that merely looks like one.
+export const eventTypes: EventType[] = [
+  "conference",
+  "workshop",
+  "seminar",
+  "meetup",
+  "job-fair",
+  "career-fair",
+  "summit",
+  "expo",
+  "hackathon",
+];
+
 export interface OpportunityPlace {
   city?: string;
   region?: string;
