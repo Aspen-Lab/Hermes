@@ -2683,4 +2683,15 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   number). **Gate: 82 files / 820 tests passing, typecheck clean, 1
   pre-existing lint error.** Commit: `9d76513`.
 
+- **B2-02 — LANDED.** Added `formatSalaryRange` to
+  `web/src/lib/opportunities/salary.ts` as an independent export (plate's
+  tile format: spaced en dash, currency repeated on the upper bound, no
+  period suffix); `formatSalary` itself untouched, verified byte-identical
+  via a new test asserting its exact old output. Job report's SALARY tile now
+  calls `formatSalaryRange`; the period lives only in the existing detail
+  line. Rewrote the one test asserting the old `"$120k / yr"` tile value, and
+  added a new assertion locking the non-equal-min/max case
+  (`"$120k – $150k"`). **Gate: 82 files / 824 tests passing, typecheck clean,
+  1 pre-existing lint error.** Commit: `abd0786`.
+
 ---
