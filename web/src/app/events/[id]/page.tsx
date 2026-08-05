@@ -1371,7 +1371,12 @@ export function EventReport({
         <header className="mt-8">
           <div className="mb-4 flex flex-wrap gap-2">
             <HeaderChip>{formatEventType(event.type)}</HeaderChip>
-            <HeaderChip>{event.isOnline ? "Online" : "In person"}</HeaderChip>
+            {/* B2-10 / Ruling 7. §1c's line for this row was a transcription
+                error — the plate's chip row is kind · secondary kind · rank ·
+                match %, with no separate online/in-person chip. The format
+                lives in the subtitle below (and the WHERE tile), which
+                already prints "in person" / "online"; the chip stated it a
+                second time. */}
             {/* B-15. event.rank is written by the mapper and was read by
                 nothing. §1c puts it here, between the format chip and the
                 match chip. Most events have no rank, so it is guarded. */}

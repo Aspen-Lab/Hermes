@@ -364,6 +364,22 @@ describe("EventReport", () => {
     expect(html).not.toContain("Early Career Mixer");
   });
 
+  it("does not print a separate in-person/online header chip", () => {
+    // B2-10 / Ruling 7. §1c's line for this row was a transcription error —
+    // the plate's chip row is kind · secondary kind · rank · match %, with no
+    // separate online/in-person chip. The subtitle (and the WHERE tile)
+    // already state the format; a header chip said it a second time.
+    const html = renderReport(baseEvent({ rank: "CCF-B", relevanceScore: 0.88 }));
+    const header = html.match(
+      /<div class="mb-4 flex flex-wrap gap-2">[\s\S]*?<\/div>/,
+    )?.[0];
+
+    expect(header).not.toContain("In person");
+    expect(header).not.toContain(">Online<");
+    // The subtitle keeps the fact — this is what B2-10 leaves alone.
+    expect(html).toContain("Chicago, IL · in person");
+  });
+
   it("never invents a year for a free-text fee deadline", () => {
     // B-01. Plate 03's DEADLINE column is prose and carries no year. The old
     // formatFeeDeadline handed every string to `new Date()`, whose legacy
