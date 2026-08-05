@@ -407,6 +407,13 @@ Work through B's fix guide in order.
 - If you start the dev server, `npm run kill-orphans` from `web/` afterwards and
   confirm no node process is left listening.
 - **Do not open a PR.**
+- **Write as you go. Do not batch your §4 write to the end.** Two agents have
+  now died on the account's monthly spend limit with no warning — round 1's C
+  (survived, because it had committed per item) and round 2's B (lost its entire
+  investigation, because it had written nothing yet). **Append each finished
+  item to §4 and commit it before starting the next one.** A partial guide in
+  the file beats a complete one in a dead agent's context. The commit cost is
+  trivial next to redoing the work.
 - **Model:** A, B and C all run on **Sonnet**. Only the manager runs on Opus.
   Set by the user on 2026-08-03 to control spend — the account hit its monthly
   limit mid-way through round 1's C. Spawn every agent with an explicit
