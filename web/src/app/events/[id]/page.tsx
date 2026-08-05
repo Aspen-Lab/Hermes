@@ -111,6 +111,31 @@ interface CheapestWay {
 }
 
 /**
+ * B2-15 / Ruling 15. Travel grant and invitation letter both live in the cost
+ * table (Ruling 6) but they are not the same shape of fact, and forcing them
+ * through one shared "one merged cell" render loses real content the plate
+ * shows in three columns.
+ *
+ * - `event.invitationLetter` is a boolean — "available on request" for both
+ *   ticket types, no per-tier difference — so it genuinely has three
+ *   separate cells: STANDARD, STUDENT, DEADLINE. `"columns"`.
+ * - `event.travelGrant` is one free-text string a human wrote
+ *   ("30 grants available, apply with your abstract"). The plate happens to
+ *   show it split across three columns, but splitting a blob on punctuation
+ *   is a guess that will mangle a real string differently shaped than the
+ *   example. It stays one cell spanning the value columns. `"span"`.
+ */
+type CostSupportRow =
+  | { label: string; kind: "span"; detail: string }
+  | {
+      label: string;
+      kind: "columns";
+      standard: string;
+      student: string;
+      deadline: string;
+    };
+
+/**
  * B-11. Only the date-ish head of a compound deadline may enter the "before X"
  * clause. "Early bird ends Jan 9 · $620 after" pasted whole is how the one line
  * whose job is to name the CHEAPEST way in ended up finishing with the most
@@ -816,11 +841,9 @@ function CostsTable({
    * Ruling 6. The travel grant and the invitation letter belong in this table
    * and nowhere else — they used to print as prose under "What actually
    * happens there" AND as table rows on the plate, which say-it-once forbids.
-   * Neither is an `EventFee`, and splitting one free-text string across
-   * STANDARD and STUDENT would be inventing structure, so each spans the
-   * value columns instead.
+   * See `CostSupportRow` for why the two rows do not share one shape.
    */
-  supportRows: Array<{ label: string; detail: string }>;
+  supportRows: CostSupportRow[];
   cheapest: CheapestWay | null;
 }) {
   return (
@@ -885,12 +908,30 @@ function CostsTable({
                 >
                   {row.label}
                 </th>
-                <td
-                  colSpan={3}
-                  className="px-4 py-3 text-body-sm text-text-muted"
-                >
-                  {row.detail}
-                </td>
+                {row.kind === "span" ? (
+                  // B2-15. One free-text string a human wrote — splitting it
+                  // on punctuation would be a guess. Spans the value columns.
+                  <td
+                    colSpan={3}
+                    className="px-4 py-3 text-body-sm text-text-muted"
+                  >
+                    {row.detail}
+                  </td>
+                ) : (
+                  // B2-15. A boolean genuinely has three separate cells here —
+                  // build them, rather than folding them into one merged cell.
+                  <>
+                    <td className="px-4 py-3 text-body-sm text-text-muted">
+                      {row.standard}
+                    </td>
+                    <td className="px-4 py-3 text-body-sm text-text-muted">
+                      {row.student}
+                    </td>
+                    <td className="px-4 py-3 text-body-sm text-text-muted">
+                      {row.deadline}
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
@@ -1392,17 +1433,28 @@ export function EventReport({
   const travelGrant = clean(event.travelGrant);
   // Ruling 6. Both facts moved out of the happenings prose and into the cost
   // table, where the plate has them and where they are only stated once.
-  const supportRows = [
-    travelGrant ? { label: "Travel grant", detail: travelGrant } : undefined,
+  // B2-15 / Ruling 15. The two rows get different treatments — see
+  // `CostSupportRow`. Invitation letter is a boolean with a real STANDARD /
+  // STUDENT / DEADLINE shape; travel grant is one free-text blob that stays
+  // in a single spanning cell rather than being guessed apart.
+  const supportRows: CostSupportRow[] = [
+    travelGrant
+      ? { label: "Travel grant", kind: "span", detail: travelGrant }
+      : undefined,
     event.invitationLetter !== undefined
       ? {
           label: "Visa invitation letter",
-          detail: event.invitationLetter
-            ? "Available on request."
-            : "Explicitly not provided.",
+          kind: "columns",
+          standard: event.invitationLetter ? "On request" : "Not provided",
+          student: event.invitationLetter ? "On request" : "Not provided",
+          // The plate's own "Allow 3 weeks" turnaround has no field behind
+          // it — invitationLetter is only a boolean. Printing the plate's
+          // own example number here would be inventing a fact this event
+          // never stated; the plate's own dash glyph goes here instead.
+          deadline: "—",
         }
       : undefined,
-  ].filter(Boolean) as Array<{ label: string; detail: string }>;
+  ].filter((row): row is CostSupportRow => Boolean(row));
   const hasHappenings = activities.length > 0 || Boolean(description);
   const displayedJudgments = (enrichment?.judgedAttendees ?? []).filter(
     ({ why }) => !isCachedRosterRejection(why),

@@ -59,6 +59,16 @@ function renderReport(
   );
 }
 
+/**
+ * B2-15. Cost-table rows never nest, so splitting on the closing tag isolates
+ * one row's own cells cleanly — simpler and less error-prone than a single
+ * regex trying to bound both a start and an end across two adjacent rows
+ * that share the same `data-cost-support-row` marker.
+ */
+function costSupportRow(html: string, label: string): string | undefined {
+  return html.split("</tr>").find((row) => row.includes(label));
+}
+
 describe("EventReport", () => {
   it("renders one wrapping action row with the paired feedback controls", () => {
     const html = renderReport(
@@ -260,14 +270,43 @@ describe("EventReport", () => {
     expect(html.match(/data-cost-support-row/g)).toHaveLength(2);
     expect(html.match(/30 grants available/g)).toHaveLength(1);
     expect(html).toContain("Visa invitation letter");
-    expect(html).toContain("Available on request.");
     expect(html).not.toContain("<strong>Travel grant:</strong>");
     expect(html).not.toContain("Invitation letters are available.");
+    // B2-15 / Ruling 15. The two support rows get different treatments. The
+    // invitation letter is a boolean with a genuine three-column shape —
+    // STANDARD / STUDENT both "On request", DEADLINE "—" because no field
+    // carries the plate's own "Allow 3 weeks" turnaround. Old assertion
+    // pinned the merged-cell text "Available on request." — the row is now
+    // three real cells, not one sentence.
+    const letterRow = costSupportRow(html, "Visa invitation letter");
+    expect(letterRow?.match(/>On request</g)).toHaveLength(2);
+    expect(letterRow).toMatch(/>—<\/td>/);
+    // The travel grant stays one cell spanning the value columns — splitting
+    // its free text on punctuation would be a guess, not an extraction.
+    const grantRow = costSupportRow(html, "Travel grant");
+    expect(grantRow).toContain('colSpan="3"');
+    expect(grantRow).toContain("30 grants available");
     // B-13. The plate's closing footnote.
     expect(html).toContain("Full price with no grant would be $620.");
     expect(html).toContain(
       "The gap between the two is the reason this line sits at the top of the report.",
     );
+  });
+
+  it("prints Not provided (not On request) when no invitation letter is offered", () => {
+    // B2-15. event.invitationLetter === false is an explicit negative, not
+    // silence — still a real three-column row, just the other value.
+    const html = renderReport(
+      baseEvent({
+        invitationLetter: false,
+        fees: [{ label: "Early bird", standard: "$620", student: "$180" }],
+      }),
+    );
+    const letterRow = costSupportRow(html, "Visa invitation letter");
+
+    expect(letterRow?.match(/>Not provided</g)).toHaveLength(2);
+    expect(letterRow).toMatch(/>—<\/td>/);
+    expect(letterRow).not.toContain("On request");
   });
 
   it("renders the plate's fact tiles and a venue-format-duration subtitle", () => {
