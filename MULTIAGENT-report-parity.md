@@ -32,14 +32,32 @@ before you stop, not after you finish.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-ROUND:            2
-WHOSE TURN:       A
-STATUS:           C COMPLETE — all 18 items (B2-01..B2-18) committed. A's
-                  round-3 measurement is the only thing left in round 2.
-LAST DIFFERENCE:  22%   (round 2 figure, now stale — every item in the guide
-                  that fixed it has landed; A must re-measure, not reuse this)
-GATE (0%):        NOT MET (unchanged from round 2 — only A sets this, by
-                  re-measuring against the plates. Not C's to judge.)
+ROUND:            3
+WHOSE TURN:       B  (round-3 fix guide, items B3-01 ..)
+STATUS:           ROUND-3 MEASUREMENT COMPLETE — 16% different (84% matched).
+                  Run by the MANAGER, not an A subagent: four agents in a row
+                  died on the account spend limit or a 600s stall. See §4
+                  "Round 3" for why that makes this round less independent.
+LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
+                  §4 under "Round 3")
+GATE (0%):        NOT MET
+
+NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
+                  withdrawn — `Summit` → `Industry summit` IS closable. Plate
+                  04 defines it as the spec's display label for the `summit`
+                  kind, the same way `Academic conference` labels `conference`.
+                  Three rounds missed it because every brief scoped the
+                  evidence to plates 02 and 03. **§1g adds two binding rules
+                  for round 4: A reads the whole PDF once per loop, and a "no
+                  honest source" claim must say where it looked.**
+
+OPEN POLICY:      Two, both needing a manager ruling before B guides them:
+                  (1) the STARTS tile's `flexible` sub-line — no field on
+                  `Job`, and not covered by exclusion 8's named list;
+                  (2) both reports' "Why Peer sent this to you" closing
+                  clauses — the plate's versions need a filtering count (job)
+                  and a cross-pool comparison (event), neither of which the
+                  report layer has. Scope call, not a code question.
 
 DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
            §4 log entry. Split across two C's: the first did B2-01..B2-08 and
@@ -50,29 +68,31 @@ DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
            stayed true through every one of those deaths, which is the only
            reason any of this was resumable.
 
-           **Both POLICY halves are now RULED — see §1f. C raised them
-           correctly and they went opposite ways:**
+           **Both POLICY halves C raised were ruled in §1f, and one of those
+           rulings has since been REVERSED:**
              - B2-11's `Industry` qualifier (`"Summit"` → `"Industry
-               summit"`) — no honest source anywhere in the data model.
-               **RULED: permanently excluded, item (j). A must list it.**
-             - B2-17 gap 3, `looking at industry` — a materially different
-               case: the profile DOES carry a sector preference
-               (`Profile.industryVsAcademia`). C found this, refused to use
-               it without a ruling, and recorded the field name so acting on
-               it would be small. **RULED IN and BUILT as B2-19 by the
-               manager.** The reader set that value themselves; printing it
-               explains a highlight rather than guessing at one.
-TODO:      Nothing left for C in round 2. Next: **A re-measures the live job
-           and event reports against plates 02/03 from scratch** (round 3),
-           using the same method as rounds 1–2 (renderToStaticMarkup + a
-           maximal fixture, or the dev server — say which). Re-list
-           exclusions 7 and 8 by name, per §1e's standing instruction. Watch
-           in particular for: whether B2-04's contract-length
-           expand/abbreviate pair reads right on real (not just fixture)
-           data; whether B2-06's `workMode` inference from location text
-           ever mis-fires; and whether B2-15's travel-grant single-cell
-           choice reads acceptably against the plate now that the invitation
-           letter beside it is three real columns.
+               summit"`) — §1f Ruling 17 excluded it as unsourceable.
+               **§1g Ruling 19 REVERSES that: it is the spec's own label for
+               the `summit` kind (plate 04). Exclusion (j) withdrawn.**
+             - B2-17 gap 3, `looking at industry` — the profile DOES carry
+               `Profile.industryVsAcademia`. C found it, refused to use it
+               without a ruling, and recorded the field name. **RULED IN and
+               BUILT as B2-19 by the manager.** The reader set that value
+               themselves; printing it explains a highlight rather than
+               guessing at one.
+TODO:      **B writes the round-3 fix guide, items B3-01 onward**, from the 13
+           differences in §4 "Round 3" (5 job, 8 event). Before starting,
+           read §1g — it withdraws an exclusion and adds two binding rules
+           about where evidence may be searched. Two items in the list are
+           `POLICY — manager decides` and must NOT be guided until ruled:
+           the STARTS `flexible` sub-line, and both "Why Peer sent this to
+           you" closing clauses.
+
+           Things round 3 could not check, for whoever picks them up: whether
+           B2-04's contract-length expand/abbreviate pair reads right on real
+           (not fixture) data, and whether B2-06's `workMode` inference from
+           location text ever mis-fires. Both were exercised only against a
+           hand-built fixture.
 GATE NOW:  82 files / **850 tests, all 850 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`).
            848 of those are C's figure after each of its 18 commits — the gate
@@ -105,6 +125,7 @@ NOTE:      B2-06 (round 2's first C) landed all three layers including
 |---|---|---|
 | 1 | 50% | 8 of 32 plate elements absent, 16 wrong shape/order/copy, 8 exact. Gate not met. |
 | 2 | 22% | 0 of 32 plate elements absent, 14 wrong shape/copy, 18 exact (25/32). Gate not met — B-06 and B-12 only partially landed; fresh findings on date-granularity wording (job facts + Timeline) and event People-card content; one header-chip question still POLICY, unresolved since round 1. |
+| 3 | 16% | 0 absent, 10 wrong shape/copy, 22 exact (27/32). Gate not met — 13 differences, 5 job and 8 event. **Measured by the MANAGER, not an A subagent** (four agents died on the spend limit or a stall), so this round is less independent than 1 and 2. Reversed §1f Ruling 17 after finding the kind label defined on plate 04; B2-15 landed for only one of its two table rows. Two open POLICY items. |
 
 ---
 
@@ -432,6 +453,57 @@ small follow-up on C's own recorded findings rather than fresh work:
 
 **A: this was written by the manager, not by C. Scrutinise it like any other
 change** — the manager implementing something does not make it correct.
+
+---
+
+## §1g. RULING 17 IS REVERSED — AND THE LESSON THAT MATTERS MORE
+
+Decided 2026-08-05, during round 3's measurement.
+
+### Ruling 19 — `Summit` → `Industry summit` is IN SCOPE. Exclusion (j) is withdrawn.
+
+**Ruling 17 was wrong.** It excluded the kind label on the grounds that
+producing "Industry summit" would mean inferring an event's character from
+indirect signals, which the user's "只摆事实" instruction forbids.
+
+That reasoning was sound. **The premise was false.** Plate **04** (PDF page 9)
+prints the Events tab's kind filter with the spec's whole vocabulary:
+
+```
+Academic conference · 18    Workshop · 11    Career fair · 6
+Industry summit · 5         Expo · 3         Seminar · 9      Hackathon · 2
+```
+
+`Industry summit` is simply the spec's **display label** for the `summit` kind,
+as `Academic conference` is its label for `conference`. Nothing is being
+inferred about any particular event. The build has no label map at all —
+`formatEventType()` mechanically de-hyphenates and title-cases, which is also
+why it prints `Career Fair` where the spec writes `Career fair`.
+
+**Build the label map.** It closes the kind chip, the secondary chip, and the
+casing everywhere a kind is printed.
+
+### The lesson — this is the part to carry forward
+
+**Three rounds and four agents missed this, because every brief said the same
+thing: "plate 02 = pages 2–4, plate 03 = pages 4–9, nothing else is in scope."**
+The answer was on page 9, in a plate nobody was asked to read.
+
+Two rules follow, binding from round 4:
+
+1. **A must read the WHOLE PDF once per loop, not only the two plates.** Skim
+   the rest for anything that defines vocabulary, labels, counts or states the
+   two plates use without defining. Report what you find even if it sits
+   outside plates 02 and 03. The scope of the *fix* is still those two plates;
+   the scope of the *evidence* is the whole document.
+2. **A "no honest source exists" claim needs a search, not an absence.** C
+   searched the data model and correctly found nothing; the manager accepted
+   that and stopped. Neither searched the spec. Before ruling something
+   unsourceable, say **where you looked** — and the spec is one of the places.
+
+The failure was the manager's, not C's. C reported what it found and refused to
+guess, which is exactly right. The manager ruled on a narrower search than the
+question deserved.
 
 ---
 
@@ -3147,3 +3219,251 @@ the previous C's B2-01..B2-08, **all eighteen items in B's round-2 guide are
 committed.** Handing back to A for the round-3 measurement.
 
 ---
+
+### Round 3 — the MANAGER, doing A's job
+
+**STATUS: COMPLETE.** Measured difference **16%** (84% matched), down from
+round 2's 22% and round 1's 50%. Gate: **NOT MET** — 13 differences remain.
+
+**Who ran this and why it matters.** Not an A subagent. Four agents in a row
+died on the account's monthly spend limit or a 600s stall; the fourth got two
+minutes in and wrote nothing. The manager ran the measurement directly rather
+than retry a known-failing spawn. **A future A should treat this round's list
+with the same suspicion it would give any other agent's** — and note that the
+manager also wrote B2-19 and the whole round-2 guide, so this round has less
+independence in it than rounds 1 and 2 did. That is a real weakness of this
+round, stated plainly rather than papered over.
+
+#### How I got the build
+
+Same method as rounds 1 and 2: `renderToStaticMarkup` + `createElement` on the
+exported `JobReport` and `EventReport` through a throwaway vitest spec
+(`web/src/zz-parity-render.test.ts`), dumping five states to disk, then
+stripping tags to plain text and diffing against the plate text. Spec and dumps
+deleted; working tree clean. No dev server, no orphans.
+
+Fixture: plate 02's and plate 03's own illustrative values throughout,
+including the plate's real 22-organisation and 16-speaker tails transcribed
+from the PDF, so counts and footnotes diff directly. `nowMs =
+Date.parse("2026-07-30T12:00:00Z")` so the plate's own "47 days left" /
+"8 days ago" / "92 days left" land exactly. New props supplied: `workMode:
+"hybrid"` (B2-06), `sector: "industry"` (B2-19).
+
+Plates re-extracted with PyMuPDF, pages 2-9, letter-spacing normalised.
+**Both pages of plate 02's facts row were read** — round 2's A nearly concluded
+the TYPE tile had no sub-line because the row wraps across pages 2 and 3.
+
+**Gate re-run this round** (round 2's A skipped it): **82 files / 850 tests,
+all 850 passing**, typecheck clean, exactly 1 pre-existing lint error
+(`src/components/persona/quiz.tsx:46`). The `benchmark.test.ts` flake did not
+fire this run.
+
+---
+
+#### THE FINDING THAT REVERSES A MANAGER RULING
+
+**§1f Ruling 17 is WRONG and is hereby reversed. See §1g.**
+
+Ruling 17 excluded `Summit` to `Industry summit` on the grounds that no honest
+source exists and producing it would mean inferring an event's character. C
+reported that, the manager accepted it, and **both were wrong** — because
+neither read plate **04**.
+
+Plate 04 (PDF page 9) is titled "Events widen past conferences" and prints the
+Events tab's kind filter with its full vocabulary:
+
+```
+Academic conference · 18    Workshop · 11    Career fair · 6
+Industry summit · 5         Expo · 3         Seminar · 9      Hackathon · 2
+```
+
+**`Industry summit` is the spec's display label for the `summit` kind**, exactly
+as `Academic conference` is its label for `conference`. It is not a judgement
+about a particular event. It is a label map, and the build has no label map at
+all — `formatEventType()` (`web/src/app/events/[id]/page.tsx:209-213`) just
+replaces hyphens with spaces and title-cases every word, which also produces
+`Career Fair` where the spec writes `Career fair`.
+
+This was in scope the whole time and three rounds missed it. The lesson for
+the next A is in §1g.
+
+---
+
+#### A. JOB REPORT — 5 differences, ranked
+
+**1. Timeline: three copy gaps and one extra line.** Plate: `Posted Jul 22` /
+`Today` / `Deadline Sep 15` / `Start Jan 2027`. Build: `Posted Jul 22` /
+`Today Jul 30` / `Apply by Sep 15` / `Starts Jan 2027`. (a) The build prints
+the date under "Today"; the plate prints the word alone — the reader knows
+what today is, and printing it makes the accented milestone read like just
+another date. (b) `Apply by` vs plate `Deadline`. (c) `Starts` vs plate
+`Start`. The same "Today" defect appears on the event report's deadline strip,
+so one fix closes both.
+
+**2. STARTS tile has no sub-line.** Plate: value `Jan 2027`, detail
+`flexible`. Build: value `Jan 2027`, no detail element at all. Every other
+tile on the row now carries one. `Job` has no field for start-date
+flexibility. **New `POLICY — manager decides`** — it is a data-model gap, but
+it was never listed in §1e's (a)-(i) table, so it cannot be auto-excluded
+under exclusion 8's own terms. Round 2's A flagged the same thing and
+correctly noted B-06's fix direction never mentioned it; the round-2 guide
+then did not cover it either.
+
+**3. LOCATION sub-line drops the country.** Plate: `Hybrid · US`. Build:
+`Hybrid`. `workModeLabel(job)` is the tile's whole detail
+(`web/src/app/jobs/[id]/page.tsx:334`) and never appends a country.
+`OpportunityPlace.country` exists on the type (`web/src/types/index.ts:105`)
+and `Job.place` is already optional-but-present. **Closable — the field
+exists**, unlike finding 2.
+
+**4. "Why Peer sent this to you" — the closing clause differs in substance.**
+Plate: `...at postdoc level, in California, which you filtered toward 4 times
+this week.` Build: `...at postdoc level — because you often view California.`
+The section, heading, `TIER 0` badge, placement and one-sentence fusion are all
+now exact (B2 closed those). What differs: the plate folds the region into the
+match itself and gives a **count** of the filtering behaviour; the build
+appends the facet reason as a trailing clause with no count. Round 1's B
+flagged this as a scoring-layer change and deliberately scoped it out; it has
+never been worked.
+
+**5. Subtitle's third segment lacks its parenthetical.** Plate: `Hybrid (3
+days on-site)`. Build: `Hybrid`. B2-06's `workMode` field closed the mode word
+itself; the day count has no field. **Residual of excluded gap (b)** — scored
+net of the exclusion, listed so it stays visible.
+
+**What now matches exactly, confirmed by render:** header chips —
+`Postdoc · Full-time · 3 years · Visa sponsorship · 91% match`, all four
+byte-for-byte, closing round 2's finding 2 including the contract-length pair
+that round 2's A believed impossible from one field (§1e Ruling 9 was right).
+Facts row — 7 of 7 tiles, `SALARY $95k - $120k` with no duplicated period,
+`TYPE Postdoc / Full-time · 3-yr contract` with the hyphen intact, `APPLY BY
+Sep 15 / 47 days left`, `POSTED Jul 22 / 8 days ago`, `VISA Sponsors / stated
+in the posting` — every year dropped and both countdowns in the plate's own
+words (§1e Ruling 8 fully landed). Visa quote + `— from the job description`.
+Skills section — heading, `New` + `Tier 0` badges, `6 of 9 you already have`,
+one flat chip row, 6 with a check then 3 plain. Skills footnote — verbatim.
+Junk guard — re-confirmed with round 1's junk fixture. What the role is. To
+apply, have ready — `MATERIALS` and `SEEN ON` labelled, net of (c)(d)(e).
+Locked block header + "Connect a key". Label casing is CSS `uppercase`, so
+`Salary` in the markup renders as the plate's `SALARY` — **not** a difference.
+
+---
+
+#### B. EVENT REPORT — 8 differences, ranked
+
+**1. Kind chip reads `Summit`; plate reads `Industry summit`.** See the
+reversal above. The build has no `EventType` to label map at all. Closable, and
+it also fixes `Career Fair` to `Career fair` casing wherever kinds are printed.
+
+**2. Second chip reads `+ recruiting fair`; plate reads `+ career fair`.** The
+build derives the secondary kind from the activity string
+(`recruiting fair, day 3`) and prints the activity's own words. The plate
+prints the canonical kind name from the same vocabulary as finding 1. With a
+label map in place this becomes a mapping, not an invention: an activity that
+resolves to the `career-fair` kind prints that kind's label.
+
+**3. Travel grant is still one merged cell; the invitation letter beside it is
+three columns.** Build renders `Travel grant | 30 available, apply with your
+abstract` spanning the row, and directly beneath it `Visa invitation letter |
+On request | On request | —`. Plate gives both three cells: travel grant is
+`—` / `30 available` / `Apply with your abstract`. **§1e Ruling 15 landed for
+one of the two rows and not the other.** The data is right there in
+`event.travelGrant` and already comma-split in the rendered string.
+
+**4. Costs footnote quotes the wrong price.** Build: `Full price with no grant
+would be $480.` Plate: `Full price with no grant would be $620 plus four
+nights.` `$620` is the after-early-bird price, which the table's own DEADLINE
+cell carries (`Early bird ends Jan 9 · $620 after`). The build uses the
+standard column instead, so the footnote **understates the gap it exists to
+dramatise** — the whole point of the line is the distance between $180 and the
+worst case. (`plus four nights` is excluded gap (h).)
+
+**5. Locked-block item 1 omits its count.** Plate: `The other 29 exhibitors,
+judged`. Build: `The other exhibitors, judged`. B2-20 dropped the number
+deliberately, to avoid printing a static count that would be wrong on real
+data — a sound instinct. But the count is **live** here: it is the untagged
+roster tail's length, already computed and already printed by the "Every other
+organisation attending · N" heading a few sections above. Print the real one.
+
+**6. "Why Peer sent this to you" — closing clause differs in substance.**
+Plate: `...the abstract deadline is 92 days out — the only event in your pool
+with all three.` Build: `...92 days out — because you often view San Diego.`
+The plate's close is a **comparative claim across the reader's pool**; the
+build appends the facet reason. Same shape of gap as job finding 4, different
+content, and the plate's version needs a cross-pool comparison the report
+layer does not currently have.
+
+**7. Deadline strip: the "Today" date and one label.** Build: `Today Jul 30`,
+`Register by Feb 20`. Plate: `Today`, `Register Feb 20`. Same "Today" defect
+as job finding 1(a) — one fix closes both reports.
+
+**8. Happenings footnote's close names every chip in full.** Build:
+`— Poster session — open call, Symposium: solid-state interfaces, and
+Recruiting fair, day 3 are the ones you'd be sorry to miss.` Plate:
+`— the poster call and the recruiting fair are the two you'd be sorry to
+miss.` The build names all three highlighted chips with their full titles; the
+plate names two in shorthand. **C's choice is defensible** — the plate's "the
+two" only describes the plate's own fixture — but the result reads long and
+repeats text the reader just saw three lines above, and the em-dash inside
+`Poster session — open call` collides with the sentence's own em-dash. Listing
+it as a difference, not asserting the plate is better.
+
+---
+
+#### C. B2-01 .. B2-19 — confirmed against rendered output
+
+All nineteen landed. **Two landed only partially and are named:**
+
+| Item | Verdict |
+|---|---|
+| B2-15 (travel grant / invitation letter as three columns) | **Half.** The invitation letter is three columns; the travel grant is still one merged cell. Event finding 3. |
+| B2-20 (locked-block copy) | **Landed, one residual.** Event item 1's count was dropped as static; it is live-computable. Event finding 5. |
+
+Everything else confirmed exact by render, including the two the manager wrote
+(B2-19's sector clause, and the round-2 guide's Ruling 8/9 date and
+contract-length work) — which does not make them independently reviewed.
+
+---
+
+#### D. The number
+
+**16% different (84% matched).**
+
+Method: same 32-element inventory and 1 / 0.5 / 0 scoring as rounds 1 and 2.
+**22 exact, 10 half, 0 absent → 27 / 32 = 84% matched.**
+Per report: job **12.5 / 14 ~ 89% matched**; event **14.5 / 18 ~ 81%**.
+
+| Round | Difference | Absent | Half | Exact |
+|---|---|---|---|---|
+| 1 | 50% | 8 | 16 | 8 |
+| 2 | 22% | 0 | 14 | 18 |
+| 3 | 16% | 0 | 10 | 22 |
+
+Every element scored net of the standing exclusions, per §1d/§1e.
+
+#### E. Exclusions re-listed by name, as §1e requires every round
+
+- **§1d 1-5** — locked promise "How competitive this actually is"; locked
+  promise "The role in three clean sentences"; the two quoted-specifics job
+  sections (and, as a corollary, their locked-block promise "What this employer
+  actually asks for"); the event description paragraph; the "Interested" button.
+- **Exclusion 7** — `REGISTER BY`'s sub-line. **Verified still empty this
+  round**, which is the ruled-correct behaviour.
+- **Exclusion 8** — (c) `ELIGIBILITY` row, (d) `TEAM` row, (e) `· reposted from
+  employer site`, (f) `streamed keynotes` / `hybrid keynotes`, (g) venue name,
+  (h) `plus four nights`. Gaps (a) and (b) were **not** excluded — B2-06 built
+  the work-mode field and closed the mode word on both; job finding 5 records
+  the parenthetical that remains.
+- **§1f (j)** — `Summit` to `Industry summit`. **THIS EXCLUSION IS WITHDRAWN.**
+  See §1g. It is a normal closable difference and is counted as one this round.
+
+#### F. Open POLICY items
+
+1. **STARTS tile's `flexible` sub-line** (job finding 2). No field on `Job`.
+   Not covered by exclusion 8's named list, so it needs its own ruling rather
+   than an automatic exclusion.
+2. **The two "Why Peer sent this to you" closing clauses** (job finding 4,
+   event finding 6). Both need work outside the report layer — a filtering
+   count for the job, a cross-pool comparison for the event. Neither has been
+   scoped. The manager should decide whether they are in scope for this loop or
+   are a separate piece of work.
