@@ -244,14 +244,33 @@ function visaTone(
   return undefined;
 }
 
+const WORK_MODE_LABELS: Record<NonNullable<Job["workMode"]>, string> = {
+  "on-site": "On-site",
+  hybrid: "Hybrid",
+  remote: "Remote",
+};
+
+/**
+ * B2-06. Prefers the new three-state field; falls back to the boolean so a
+ * job whose mapper hasn't populated `workMode` yet (or was scored before this
+ * field existed) still shows exactly what it showed before — "Remote" when
+ * `isRemote`, nothing otherwise.
+ */
+function workModeLabel(job: Job): string | undefined {
+  if (job.workMode) return WORK_MODE_LABELS[job.workMode];
+  return job.isRemote ? "Remote" : undefined;
+}
+
 /**
  * B-06. Plate 02's seven tiles, each with a label, a value and a grey
  * sub-line. Two were missing entirely — LOCATION was built only for remote
  * jobs, and VISA was in the key union but never pushed, so the visa state
  * lived only as a header chip.
  *
- * `Job` has no hybrid work mode, so the plate's "Hybrid · US" cannot be
- * reproduced. It prints what exists rather than guessing.
+ * B2-06 added a work-mode field, so the LOCATION sub-line can now show
+ * "Hybrid" or "On-site" when the posting says so, not only "Remote". The
+ * plate's parenthetical, "(3 days on-site)", has no field behind it and is
+ * not invented — just the mode word prints.
  */
 export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
   // B2-01 / Ruling 8. Plate 02 shows dates without a year inside the report's
@@ -309,7 +328,10 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
           key: "work-mode",
           label: "Location",
           value: location,
-          detail: job.isRemote ? "Remote" : undefined,
+          // B2-06. Plate's "Hybrid · US" sub-line — the "· US" half is a
+          // region field Job doesn't carry (§1e gap (a)), but the mode word
+          // itself now comes from job.workMode when the posting states it.
+          detail: workModeLabel(job),
         }
       : undefined,
     // B2-05. The plate's "flexible" sub-line states whether the start date is
@@ -633,13 +655,15 @@ export function JobReport({
   const company = cleanJobSubtitlePart(job.companyOrLab);
   const location = cleanJobSubtitlePart(job.location);
   /**
-   * B-18. Plate 02's subtitle has three segments — employer, place, work mode
-   * ("Toyota Research Institute · Los Altos, CA · Hybrid (3 days on-site)").
-   * `Job` has no work mode beyond `isRemote`, so the third segment is "Remote"
-   * or absent; nothing is invented. Remote used to *replace* the location,
-   * which threw away where the team actually sits.
+   * B-18 / B2-06. Plate 02's subtitle has three segments — employer, place,
+   * work mode ("Toyota Research Institute · Los Altos, CA · Hybrid (3 days
+   * on-site)"). The mode word now comes from `job.workMode` when the posting
+   * states it, falling back to "Remote" from `isRemote` alone. The plate's
+   * "(3 days on-site)" parenthetical has no field behind it and stays out —
+   * nothing is invented. Remote used to *replace* the location, which threw
+   * away where the team actually sits; it no longer does.
    */
-  const workMode = job.isRemote ? "Remote" : undefined;
+  const workMode = workModeLabel(job);
   // B-17. Plate 02's labelled rows, built only from fields that exist.
   const applyRows: Array<{ label: string; value: string }> = [
     materials.length > 0

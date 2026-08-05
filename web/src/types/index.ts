@@ -179,6 +179,15 @@ export interface Job {
   location: string;
   place?: OpportunityPlace;
   isRemote: boolean;
+  /**
+   * B2-06. Plate 02 needs a three-state work mode (LOCATION tile's sub-line,
+   * subtitle's third segment); `isRemote` alone cannot express "hybrid".
+   * Additive beside `isRemote` — every existing reader of `isRemote` (feed,
+   * filters, scoring) is unchanged. Only ever set from a signal the posting
+   * actually gives (an explicit "hybrid" / "on-site" mention, or `isRemote`
+   * itself); `undefined` when the posting states neither, never a guess.
+   */
+  workMode?: "on-site" | "hybrid" | "remote";
   keyRequirements: string[];
   matchReason: string;
   /** Shown separately when weak facet history materially changed rank. */

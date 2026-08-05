@@ -323,6 +323,33 @@ describe("JobReport", () => {
     expect(startTile).not.toContain("data-report-fact-detail");
   });
 
+  it("shows the posting's own work mode in the LOCATION tile and the subtitle", () => {
+    // B2-06. Job carried only isRemote, which cannot express "hybrid". The
+    // new workMode field is additive — set only from a signal the posting
+    // actually gave — and both plate locations (the LOCATION tile's sub-line,
+    // the subtitle's third segment) now read it, falling back to the old
+    // isRemote-only behaviour when it is unset.
+    const hybridHtml = renderReport(
+      baseJob({ location: "Los Altos, CA", workMode: "hybrid" }),
+    );
+    const locationTile = hybridHtml.match(
+      /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(locationTile).toContain("Hybrid");
+    const subtitle = hybridHtml.match(
+      /<p class="mt-3 text-body text-text-muted">[\s\S]*?<\/p>/,
+    )?.[0];
+    expect(subtitle).toContain("Los Altos, CA");
+    expect(subtitle).toContain(">Hybrid<");
+
+    const onSiteHtml = renderReport(baseJob({ workMode: "on-site" }));
+    expect(onSiteHtml).toContain("On-site");
+
+    // Unset workMode falls back to isRemote exactly as before B2-06.
+    const remoteFallbackHtml = renderReport(baseJob({ isRemote: true }));
+    expect(remoteFallbackHtml).toContain("Remote");
+  });
+
   it("renders the Applied control in both inactive and completed states", () => {
     const pendingHtml = renderReport(baseJob(), false);
     const appliedHtml = renderReport(baseJob(), true);
