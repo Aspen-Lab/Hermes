@@ -2781,4 +2781,24 @@ B2-01 → B2-18 in order, one commit per item, gate re-run after each.
   failure, see B2-06's note — unrelated, unchanged), typecheck clean, 1
   pre-existing lint error.** Commit: `98299bd`.
 
+- **B2-08 — LANDED, exactly as scoped, including the scoring-layer half
+  Ruling 12 authorised.** `web/src/components/reports/why-peer-sent-this.tsx`
+  now renders one `<p>` instead of two: `body` and `facet` are fused, with
+  `facet`'s leading "Because" lower-cased into a trailing clause and a single
+  closing period. That alone would still have read as machine-joined
+  fragments, since `reasonFor`'s own `" · "` join produced `body` in the
+  first place — added `joinReasonClauses` (ordinary sentence conjunction:
+  one clause stands alone, two join with "and", three or more become an
+  Oxford-comma list) to both `web/src/lib/jobs/scoring.ts` and
+  `web/src/lib/events/scoring.ts`, replacing their `" · "` joins. Nothing is
+  padded with the region/count specifics the plate's own paragraph names but
+  no field carries — same restraint the component's existing comment already
+  documented. Rewrote the two job/event report tests that asserted the
+  capitalised, un-fused `facetReason` string (the only assertions this
+  touched — confirmed by grep, no test anywhere asserted the old `" · "`
+  form), and added new scoring-layer tests proving a two-clause reason now
+  joins with "and". **Gate: 82 files / 834 tests, 833 passing (1
+  pre-existing live-benchmark failure, unrelated, unchanged), typecheck
+  clean, 1 pre-existing lint error.** Commit: `2f6db13`.
+
 ---
