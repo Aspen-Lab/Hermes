@@ -33,22 +33,26 @@ before you stop, not after you finish.
 
 ```
 ROUND:            2
-WHOSE TURN:       B
-STATUS:           A COMPLETE — round 2 measured 22% different (78% matched)
+WHOSE TURN:       C
+STATUS:           B COMPLETE — 18-item fix guide (B2-01..B2-18) ready in §4
 LAST DIFFERENCE:  22%   (round 2 figure; see §4 Round 2 — Agent A for the full list)
 GATE (0%):        NOT MET
 
-DONE:      B-01 .. B-20 confirmed against rendered output. 18 of 20 landed
-           exactly against the plate; B-06 (job facts row) and B-12 (event
-           activity chips/footnote) landed as scoped but leave the plate
-           element still visibly wrong — see §4 Round 2 for specifics.
-GATE NOW:  unchanged since C's checkpoint (81 files / 815 tests, typecheck
-           clean, 1 pre-existing lint error) — A did not re-run the full gate
-           this round, only rendered; that is C's job, not A's.
-NOTE:      A's round 2 numbered list (6 job + 8 event differences, ranked) is
-           in §4. One item is POLICY — manager decides (event header-chip
-           row, inherited unresolved from B's round 1 log). Everything else
-           is a normal fix for B's next guide.
+DONE:      A measured 22%. B's guide written — by the MANAGER, not a subagent:
+           two B subagents were launched and both died writing nothing (one on
+           the account spend limit, one on a 600s stall). §1 stayed true
+           through both, so nothing had to be reconstructed.
+TODO:      C works B2-01 .. B2-18 in order. 9 WRONG SHAPE, 3 WRONG DATA,
+           4 MISSING, 1 EXTRA, 2 POLICY (C must NOT attempt the two POLICY
+           halves: the `Industry` qualifier in B2-11, and `looking at
+           industry` in B2-17 gap 3).
+GATE NOW:  81 files / 815 tests passing, typecheck clean, 1 pre-existing lint
+           error (`src/components/persona/quiz.tsx:46`). A did not re-run the
+           full gate in round 2, only rendered — C must re-establish it.
+NOTE:      B2-01 first: it closes three of A's findings at once and the date
+           styles it needs already exist in `format.ts`. B2-06 (work mode) is
+           the largest and is explicitly splittable — type + render first,
+           commit, then attempt extraction.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
@@ -2277,5 +2281,371 @@ just the mode word (`"Hybrid"`), not the parenthetical.
 **Risk.** `isRemote` is read in the feed, filters and scoring. **Do not change
 what `isRemote` means or who reads it.** Adding a field beside it is safe;
 replacing it is a different, larger change and is not in this loop.
+
+---
+
+#### B2-07 — `TIER 0` badges on three headings. `MISSING`. (A: job 4a, event 4a, 5)
+
+Implements **Ruling 11**.
+
+**Cause.** The badge component exists and works —
+`web/src/components/reports/report-badge.tsx:14`, already used correctly by the
+Skills section, which renders `New` + `Tier 0` and matches the plate byte for
+byte. It is simply not applied to three headings the plate badges:
+
+| Heading | File |
+|---|---|
+| Why Peer sent this to you (both reports) | `web/src/components/reports/why-peer-sent-this.tsx:36-38` |
+| What it costs you | `web/src/app/events/[id]/page.tsx`, the costs `ReportSection` |
+
+The `<h2>` in `why-peer-sent-this.tsx` carries only text; `ReportBadge` is not
+imported in that file at all.
+
+**Fix direction.** Import and render `ReportBadge` beside each heading, copying
+the Skills section's markup so the three badges are visually identical. Because
+`WhyPeerSentThis` is shared, one edit there fixes both reports.
+
+**Risk.** Low. Grep for tests asserting the exact `<h2>` text of these sections —
+a badge sibling should not break a `toContain` on the heading string, but check.
+
+---
+
+#### B2-08 — "Why Peer sent this to you" prints two paragraphs, plate prints one sentence. `WRONG SHAPE`. (A: job 4b, event 5)
+
+Implements **Ruling 12**.
+
+**Cause.** `why-peer-sent-this.tsx:40-50` renders `body` and `facet` as two
+separate `<p>` elements. The plate shows a single flowing sentence.
+
+**One thing A did not raise, and C will hit it immediately.** Fusing the two
+paragraphs is not enough on its own, because `body` is **not a sentence**. The
+scoring layer assembles it dot-separated — `reasonFor`
+(`web/src/lib/jobs/scoring.ts`, and the event twin in
+`web/src/lib/events/scoring.ts`) joins its clauses with `" · "`. So fusing gives
+`"Matches your X focus · fits a Y profile — because you often view Z."`, which
+is one paragraph of the same machine-assembled fragments, not the plate's prose.
+
+**Fix direction, in this order:**
+
+1. Join `facet` onto `body` as a trailing clause rather than a second
+   paragraph. `facet` already reads `"Because you often view <label>"`, so it
+   needs lower-casing and a connector when it follows text.
+2. Change the scoring layer's own join from `" · "` to prose connectors, so the
+   body reads as a sentence. **This is a scoring-layer change and Ruling 12
+   authorises it** — B's round-1 note that it was out of scope was written
+   before the manager ruled.
+3. **Do not pad with specifics that do not exist.** The component's own comment
+   (`:11-14`) records that the plate's paragraph names a region and a filtering
+   count no field carries. That still holds. Print what exists as a sentence;
+   do not invent the count.
+
+**Risk.** Two job tests assert the *old* heading (`"Why Peer sent it"`) never
+returns — `jobs/[id]/page.test.ts:104` and `:158`. Neither is affected by body
+changes. Changing `reasonFor`'s join will break any scoring test asserting the
+`" · "` form — rewrite those assertions to the new contract and comment `B2-08`.
+
+---
+
+#### B2-09 — The activity-label rule is a heuristic where it should be a lookup. `WRONG DATA`. (A: event 2)
+
+Implements **Ruling 16**.
+
+**Cause.** `formatActivityLabel` (`web/src/app/events/[id]/page.tsx:206-213`):
+
+```ts
+const isVocabularyLabel =
+  /^[a-z0-9][a-z0-9 _-]*$/i.test(text) && text.split(/\s+/).length <= 3;
+return isVocabularyLabel ? formatEventType(text) : text.charAt(0).toUpperCase() + text.slice(1);
+```
+
+B-12 wrote this to stop `"Symposium: solid-state interfaces"` being mangled, and
+it works — because that string has a colon and fails the character-class test.
+But the test asks **"does this look like a slug?"**, and ordinary prose passes
+it: `"vendor exhibition"` and `"early-career mixer"` are both ≤3 words of
+letters, spaces and hyphens, so both go to `formatEventType`, which strips
+hyphens and title-cases → `"Vendor Exhibition"`, `"Early Career Mixer"`.
+
+**The rule should be a membership test, not a shape test.** `EventType` is
+declared at `web/src/types/index.ts:76`. A value is a vocabulary label **only if
+it exactly matches a known enum value** (case-insensitively). Everything else is
+prose and keeps its own capitalisation, with only the first letter raised.
+
+**Fix direction.** Replace the regex heuristic with a lookup against the
+`EventType` union (and whatever fixed activity vocabulary the extractor emits —
+find it before assuming `EventType` is the whole list). Delete the word-count
+test entirely; word count has nothing to do with whether a string is an enum.
+
+**Risk.** `events/[id]/page.test.ts` asserts several activity chip labels.
+Any that assert a title-cased prose activity are asserting the bug — rewrite to
+the prose form and comment `B2-09`. Check the seeded/live activity vocabulary
+too: if the extractor emits `"poster session"` and that is *not* in `EventType`,
+the lookup list must include it or those chips lose their capitalisation.
+
+---
+
+#### B2-10 — Delete the `In person` header chip. `EXTRA`. (A: event 6)
+
+Implements **Ruling 7**, which closed the `POLICY` item A left open.
+
+**Cause.** Plate 03's chip row is four chips and none of them is a format chip:
+`Industry summit / + career fair / CCF-B / 88% match`. The format lives in the
+subtitle. §1c's line recording an `online/in-person` chip was a transcription
+error and §1e corrects it.
+
+**Compounding it:** B-16 added the subtitle, which already prints `in person`.
+So the build now states the format **twice** — chip and subtitle.
+
+**Fix direction.** Remove the in-person/online chip from the event header. Leave
+the subtitle and the WHERE tile alone; both are on the plate.
+
+**Risk.** Any test asserting the event header chip count, or asserting
+`"In person"` appears in the header specifically. A test asserting `"in person"`
+appears *somewhere* in the report still passes via the subtitle.
+
+---
+
+#### B2-11 — The compound event kind. `MISSING` / possibly `POLICY`. (A: event 6a, 6b)
+
+Implements **Ruling 14**, which puts the mechanism in the investigator's hands
+and forbids hardcoding.
+
+**Cause.** The kind chip renders `formatEventType(event.type)` → `"Summit"`.
+Plate shows **two** chips: `"Industry summit"` and `"+ career fair"`.
+`Event.type` (`web/src/types/index.ts:76`) is a single coarse enum value.
+
+**What I found, and where I stopped.**
+
+- **The secondary kind looks derivable.** `event.activities` already carries
+  `"Recruiting fair, day 3"` in the plate's own example data. A second chip
+  built from a recognised activity — career fair, recruiting fair, job fair —
+  is honest: it is a fact the event page stated, not an inference.
+- **The `Industry` qualifier is NOT derivable and I found no source for it.**
+  `EventType` has no industry/academic axis, and nothing upstream extracts one.
+  Producing `"Industry summit"` would mean inventing the qualifier.
+
+**Verdict: split the item.**
+
+- **The `+ career fair` chip is a normal fix.** Build it from the activities
+  list, matched against a small explicit vocabulary. Show it only when an
+  activity actually matches; never guess.
+- **`Summit` → `Industry summit` is `POLICY — manager decides`.** There is no
+  honest source. **C must not attempt this half.** Manager: either accept
+  `"Summit"` as a permanent difference, or fund an extraction change to classify
+  events on an industry/academic axis.
+
+---
+
+#### B2-12 — FEE tile drops the early-bird clause. `WRONG SHAPE`. (A: event 1a)
+
+**Cause.** `buildEventFacts` (`web/src/app/events/[id]/page.tsx:348-355`):
+
+```ts
+detail: student ? `student ${student}` : undefined,
+```
+
+Plate: `student $180 · early bird to Jan 9`. The early-bird deadline is on the
+same `headline` fee row the tile already selected (`:329`) — the value is
+literally in scope and is simply not read.
+
+**Fix direction.** Append the deadline clause to the FEE detail when the
+headline row carries one, in the plate's phrasing (`early bird to <date>`).
+Reuse `formatFeeDeadline` (`:215-220`) so B-01's ISO guard still applies — **a
+free-text fee deadline must not acquire a year.** Omit the clause when there is
+no deadline; do not print an empty separator.
+
+**Risk.** Tests asserting the FEE tile detail string exactly.
+
+---
+
+#### B2-13 — REGISTER BY's sub-line prints a countdown where the plate prints a different fact. `WRONG DATA`. (A: event 1c)
+
+Implements **Ruling 10: suppress, do not substitute.**
+
+**Cause.** `buildEventFacts` (`:364-373`) applies the same `formatDayDistance`
+pattern it uses for ABSTRACT DUE, giving `"in 6 months"`. The plate's sub-line is
+`"on-site registration available"` — whether walk-in registration is open, which
+Peer does not track.
+
+**Fix direction.** **Delete the `detail` from the REGISTER BY tile.** Render the
+label and value only. Do not substitute the countdown: a countdown implies the
+deadline is hard, and we do not know that it is.
+
+**Excluded from parity scoring — exclusion 7.** A must keep listing it by name.
+
+**Risk.** Any test asserting a REGISTER BY sub-line.
+
+---
+
+#### B2-14 — SCALE abbreviates a number the plate spells out. `WRONG SHAPE`. (A: event 1d)
+
+**Cause.** `:378` — `value: \`~${formatCount(event.expectedSize)}\``.
+`formatCount` (`web/src/lib/format.ts:164-169`) returns `"2.4k"` for 2400.
+Plate: `~2,400`.
+
+**Fix direction.** Use comma grouping for this tile, not the compact form.
+`Intl.NumberFormat("en-US")` gives `"2,400"` directly. **Do not change
+`formatCount`** — it is the app's compact-count vocabulary and other surfaces
+rely on it.
+
+**Note carried forward from B-05:** `event.expectedSize` is still never
+populated by the mapper, so this tile does not appear on real events. The fix is
+still correct; it just will not be visible until extraction fills the field.
+
+**Risk.** Minimal — the tile only renders when `expectedSize` is set, which is
+fixture-only today.
+
+---
+
+#### B2-15 — Travel grant and invitation letter render as merged cells. `WRONG SHAPE`. (A: event 4c)
+
+Implements **Ruling 15**.
+
+**Cause.** `supportRows` (`web/src/app/events/[id]/page.tsx:1310-1320`) builds
+`{ label, detail }` — **two** fields — and renders each as one merged cell. The
+cost table around them has four columns (`ITEM` / `STANDARD` / `STUDENT` /
+`DEADLINE`), which the plate uses fully for these two rows.
+
+**The two rows do not have the same problem, and must not get the same fix.**
+
+- **Invitation letter — genuinely three columns.** `event.invitationLetter` is a
+  boolean (`types/index.ts:147`). `true` means available on request for both
+  ticket types, so `STANDARD` = `On request`, `STUDENT` = `On request`,
+  `DEADLINE` = `—`. That is three real cells from the data we have. Build it.
+  The plate's `Allow 3 weeks` turnaround has **no field**; Ruling 15 says leave
+  that cell `—` and invent nothing.
+- **Travel grant — one free-text blob.** `event.travelGrant`
+  (`types/index.ts:146`) is a single string like `"30 grants available, apply
+  with your abstract"`. The plate splits the equivalent across `—` /
+  `30 available` / `Apply with your abstract`, but that is three facts a human
+  separated. **Do not split the blob on a comma** — that is a guess that will
+  mangle real strings. **Render the travel-grant row as a single cell spanning
+  the value columns**, with the label in `ITEM`. The row stays aligned with the
+  table and the text stays intact.
+
+**Fix direction.** Give `supportRows` a shape that can express both: either
+per-column values or one spanning value. Do not force the boolean row into the
+blob's shape just to share one code path.
+
+**Risk.** `events/[id]/page.test.ts:216` and `:249-250` supply both fields;
+assertions on the merged-cell text will break. Rewrite them to the new column
+contract and comment `B2-15`.
+
+---
+
+#### B2-16 — People cards are missing the short descriptor line. `MISSING`. (A: event 7)
+
+Implements **Ruling 13**.
+
+**Cause.** Plate 03's people cards carry five lines; the build renders four.
+The missing one is the short descriptor — plate examples: `2 papers in your
+feed`, `Matches a topic you typed`. `EventOrg` has a `descriptor` field and the
+organisation cards render it correctly (A confirmed an exact match on all three
+Tier-0 organisations); `EventPerson` (`web/src/types/index.ts:123-129`) has no
+equivalent.
+
+**Fix direction.** Add the field to `EventPerson` and render it in the same slot
+the organisation card uses, so the two card types read alike. **Both plate
+examples are Tier 0 — computable with no AI key:** one is a count over the local
+feed (how many of this person's papers you already have), the other a string
+match of the person against the profile's own topics. Produce it in the same
+layer that already computes the long `relevance` sentence.
+
+**Do not fill it from the model.** It is a Tier 0 line on the plate; sourcing it
+from enrichment would make it disappear for users with no key, which is exactly
+backwards.
+
+**Risk.** Roster card snapshot/structure assertions in
+`events/[id]/page.test.ts`. Adding a line changes the card's line count.
+
+---
+
+#### B2-17 — Happenings footnote wording. `WRONG SHAPE`. (A: event 3)
+
+**Cause.** `web/src/app/events/[id]/page.tsx:1444-1451`:
+
+```
+Highlighted because they line up with your topics
+{careerStage ? ` and with where you are — ${careerStage}` : ""}.
+Those are the ones you’d be sorry to miss.
+```
+
+Plate: *"Highlighted because they line up with your topics and because you're a
+**PhD 4** looking at industry — **the poster call and the recruiting fair** are
+the two you'd be sorry to miss."*
+
+**Three gaps, and they are not equally closable:**
+
+1. **`PhD Year 4` vs `PhD 4`** — the build prints the full enum value.
+   Closable: add a short display form for career stage. Check whether one
+   already exists before adding a second mapping.
+2. **The close is generic.** `"Those are the ones"` where the plate names the
+   highlighted items (`"the poster call and the recruiting fair"`). **Closable
+   and worth it** — the component already knows which activities are
+   highlighted, so it can list them. This is the sentence's whole point: it
+   tells the reader *which* two, not *that* there are two.
+3. **`looking at industry` — investigate before building.** This is a sector
+   preference. Find whether the profile carries one. **If it does not, mark
+   `POLICY — manager decides` and leave the clause out — do not infer a sector
+   from a career stage.**
+
+**Risk.** `data-happenings-footnote` is asserted in
+`events/[id]/page.test.ts`; any exact-text assertion breaks. Rewrite to the new
+contract and comment `B2-17`.
+
+---
+
+#### B2-18 — The cost table's cheapest-way restatement reuses the top callout's string. `WRONG SHAPE`. (A: event 4b)
+
+**Cause.** `web/src/app/events/[id]/page.tsx:748-753`:
+
+```jsx
+<strong>Cheapest way in, for you:</strong> {cheapest.short}
+```
+
+Plate's table-head form is `Cheapest way in for you: student ticket in
+person…` — **no comma before "for you"**, and lower-case after the colon. The
+top callout (`:645-653`) keeps the comma, and that one is correct: A confirmed
+the top callout is a byte-for-byte match.
+
+B-11 already established (and the comment at `:749-751` records) that both
+sites are on the plate deliberately and that the defect was printing the *same*
+machine string in both. B-11 fixed the top one. The table-head form is still
+punctuated like the callout.
+
+**Fix direction.** Give the table head its own label string without the comma,
+and make `cheapest.short` start lower-case so it reads as a continuation of the
+colon. Keep the top callout exactly as it is.
+
+**Risk.** `events/[id]/page.test.ts` asserts the cheapest line appears **twice**
+(`toHaveLength(2)`) — that count must stay 2. If the assertion matches on the
+comma'd string it will drop to 1; repoint it at a substring common to both
+forms, or assert each form separately.
+
+---
+
+#### Summary — 18 items
+
+| Class | Count | Items |
+|---|---|---|
+| `WRONG SHAPE` | 9 | B2-01, B2-02, B2-05, B2-08, B2-12, B2-14, B2-15, B2-17, B2-18 |
+| `WRONG DATA` | 3 | B2-03, B2-09, B2-13 |
+| `MISSING` | 4 | B2-06, B2-07, B2-11 (part), B2-16 |
+| `EXTRA` | 1 | B2-10 |
+| `POLICY — manager decides` | 2 | B2-11 (the `Industry` qualifier), B2-17 gap 3 (`looking at industry`) |
+
+**Work order for C: top to bottom as numbered.** B2-01 first — it collapses
+three of A's findings and the styles it needs already exist. B2-02 and B2-03
+next because they are small and independent. B2-06 is the largest and is
+explicitly splittable; do the type and render layers first, commit, then attempt
+extraction.
+
+**One claim of A's was found incorrect** and is already overruled by Ruling 9:
+the contract-length "structural conflict" is not one — one field plus two
+formatters produces both plate strings (B2-04).
+
+**New exclusion added by this guide:** item (i), the STARTS tile's `flexible`
+sub-line (B2-05). No field, same category as (c)–(h).
+
+**STATUS: COMPLETE.**
 
 ---
