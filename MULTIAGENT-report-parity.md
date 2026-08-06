@@ -3930,3 +3930,91 @@ default-fixture type, `baseEvent`'s own default is `type: "conference"`,
 `conference` is in the same map) breaks nothing beyond the four sites above.
 
 ---
+
+##### B3-05 -- Second chip reads `+ recruiting fair`; plate reads `+ career fair`. `WRONG DATA`. (Event finding 2) **Needs B3-04's map.**
+
+**Cause.** `secondaryEventKind()` (`web/src/app/events/[id]/page.tsx:271-289`):
+
+```ts
+const SECONDARY_KIND_TERMS = ["career fair", "job fair", "recruiting fair"];
+
+function secondaryEventKind(activities: string[], primaryKind: string): string | undefined {
+  const primary = primaryKind.replace(/-/g, " ").toLowerCase();
+  for (const activity of activities) {
+    const label = activity.toLowerCase();
+    const term = SECONDARY_KIND_TERMS.find((candidate) => label.includes(candidate));
+    if (term && term !== primary) return term;
+  }
+  return undefined;
+}
+```
+
+It returns whichever raw phrase it matched, verbatim. For the round-3 fixture
+(`activities: ["Recruiting fair, day 3"]`, plate's own example), it matches
+`"recruiting fair"` and prints exactly that -- the activity's own words, not
+a kind label. The plate treats "recruiting fair" as a signal that a
+career-fair-shaped thing is happening and prints that kind's canonical label,
+`+ career fair` -- the same label B3-04's map gives `career-fair`.
+
+**Fix direction.** Once B3-04's map exists, make `SECONDARY_KIND_TERMS` a
+lookup from phrase to the `EventType` it's evidence for, and return the
+resolved kind instead of the raw phrase:
+
+```ts
+const SECONDARY_KIND_TERMS: Record<string, EventType> = {
+  "career fair": "career-fair",
+  "job fair": "job-fair",
+  "recruiting fair": "career-fair",
+};
+
+function secondaryEventKind(activities: string[], primaryKind: EventType): EventType | undefined {
+  for (const activity of activities) {
+    const label = activity.toLowerCase();
+    const match = Object.entries(SECONDARY_KIND_TERMS).find(([term]) => label.includes(term));
+    if (match && match[1] !== primaryKind) return match[1] as EventType;
+  }
+  return undefined;
+}
+```
+
+`"recruiting fair"` maps to `career-fair`, not a `job-fair`/`career-fair`
+distinction of its own -- there is no `EventType` for "recruiting fair," and a
+recruiting fair is the same kind of thing as a career fair in every source
+this app has. Render at the call site (`:1644`):
+
+```tsx
+{secondaryKind && <HeaderChip>+ {lowercaseFirst(eventTypeLabel(secondaryKind))}</HeaderChip>}
+```
+
+**`lowercaseFirst` already exists** (`page.tsx:172-174`, built by B2-18 for
+the cost-table restatement) -- reuse it rather than writing a second
+first-letter-lowercase helper. `eventTypeLabel("career-fair")` = `"Career
+fair"` -> `lowercaseFirst(...)` = `"career fair"` -> chip reads `+ career
+fair`, matching the plate exactly regardless of which of the three phrases
+triggered it.
+
+**The "don't restate the primary kind" guard changes shape, for the
+better.** The old guard compared normalised *strings* (`term !== primary`,
+both lower-cased/de-hyphenated); the new one compares `EventType` values
+directly (`match[1] !== primaryKind`) -- a cleaner equality that doesn't
+depend on the two representations staying in sync.
+
+**Risk.**
+- `web/src/app/events/[id]/page.test.ts:648`,
+  `expect(header).toContain("+ recruiting fair");` -- **this is the bug
+  itself, locked in by test.** Rewrite to `expect(header).toContain("+
+  career fair")`. This is the same test whose OTHER two assertions (`:653`,
+  `:654`) B3-04 already breaks for the primary chip -- all three edits land
+  in one test.
+- `:668-679`, "does not restate the primary kind as its own secondary chip"
+  -- `baseEvent({ type: "career-fair", activities: ["career fair"] })`,
+  asserts `header.not.toContain("+ career fair")`. Traced through the new
+  logic: `secondaryEventKind` matches `"career fair"` -> resolves to
+  `career-fair` -> compares to `primaryKind = "career-fair"` -> equal ->
+  suppressed. **Still passes, unchanged**, confirming the guard's intent
+  survives the redesign.
+- `:657-666`, "omits the secondary kind chip when no activity names a fair"
+  -- neither "poster session" nor "keynote" matches any term in
+  `SECONDARY_KIND_TERMS`. **Unaffected.**
+
+---
