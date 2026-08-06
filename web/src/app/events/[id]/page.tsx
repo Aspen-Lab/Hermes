@@ -177,6 +177,34 @@ function lowercaseFirst(value: string): string {
   return value.charAt(0).toLowerCase() + value.slice(1);
 }
 
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+/**
+ * B3-07. `event.travelGrant` is one free-text string a human wrote. B2-15's
+ * own comment explains why it stayed one spanning cell rather than being
+ * split on punctuation: "a guess that will mangle a real string differently
+ * shaped than the example." That caution still holds for any string that
+ * ISN'T shaped like the plate's own example -- this only converts to the
+ * plate's three-column shape when the text visibly has the plate's own
+ * two-clause shape (a count/availability clause, a comma, an
+ * application-method clause); anything else keeps the single spanning cell
+ * exactly as before. Verbatim, not trimmed -- "30 grants available" prints
+ * as "30 grants available," not stripped down to "30 available" to match
+ * the plate's own wording more closely than the split itself requires.
+ */
+function travelGrantColumns(
+  value: string,
+): { student: string; deadline: string } | undefined {
+  const parts = value
+    .split(",")
+    .map((part) => clean(part))
+    .filter((part): part is string => Boolean(part));
+  if (parts.length !== 2) return undefined;
+  return { student: parts[0], deadline: capitalizeFirst(parts[1]) };
+}
+
 function isCachedRosterRejection(value: string): boolean {
   return /\b(?:not|rather\s+than|instead\s+of|isn['’]t|does\s+not\s+(?:represent|appear))\b[^.]*?\b(?:attendee|participant|exhibitor|speaker|delegate|person\s+attending|organisation|organization|company)\b/i.test(
     value,
@@ -1697,11 +1725,28 @@ export function EventReport({
   // table, where the plate has them and where they are only stated once.
   // B2-15 / Ruling 15. The two rows get different treatments — see
   // `CostSupportRow`. Invitation letter is a boolean with a real STANDARD /
-  // STUDENT / DEADLINE shape; travel grant is one free-text blob that stays
-  // in a single spanning cell rather than being guessed apart.
+  // STUDENT / DEADLINE shape. Travel grant is one free-text blob; B3-07
+  // converts it to the plate's own three-column shape (— / count clause /
+  // application-method clause) only when the text visibly has that
+  // two-clause shape (see `travelGrantColumns`) — anything else stays a
+  // single spanning cell rather than being guessed apart.
+  const travelGrantSplit = travelGrant
+    ? travelGrantColumns(travelGrant)
+    : undefined;
   const supportRows: CostSupportRow[] = [
     travelGrant
-      ? { label: "Travel grant", kind: "span", detail: travelGrant }
+      ? travelGrantSplit
+        ? {
+            label: "Travel grant",
+            kind: "columns",
+            // Travel grants are student-targeted in every example this app
+            // has — cheapestWayIn always describes a grant alongside a
+            // student ticket — so STANDARD is the plate's own dash glyph.
+            standard: "—",
+            student: travelGrantSplit.student,
+            deadline: travelGrantSplit.deadline,
+          }
+        : { label: "Travel grant", kind: "span", detail: travelGrant }
       : undefined,
     event.invitationLetter !== undefined
       ? {

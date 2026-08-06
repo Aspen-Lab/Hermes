@@ -371,6 +371,44 @@ describe("EventReport", () => {
     expect(html).not.toContain("Full price with no grant would be $480.");
   });
 
+  it("splits the travel grant into three columns when its text has the plate's own two-clause shape", () => {
+    // B3-07 / Ruling 15's other half (B2-15 only closed the invitation
+    // letter row). The plate wants — / 30 available / Apply with your
+    // abstract; this is the round-3 fixture's own exact wording.
+    const html = renderReport(
+      baseEvent({
+        travelGrant: "30 available, apply with your abstract",
+        fees: [{ label: "Early bird", standard: "$620", student: "$180" }],
+      }),
+    );
+    const grantRow = costSupportRow(html, "Travel grant");
+
+    expect(grantRow).not.toContain('colSpan="3"');
+    expect(grantRow?.match(/<td[^>]*>[\s\S]*?<\/td>/g)).toEqual([
+      expect.stringContaining(">—<"),
+      expect.stringContaining(">30 available<"),
+      expect.stringContaining(">Apply with your abstract<"),
+    ]);
+  });
+
+  it("keeps the travel grant as one spanning cell when its text has no comma", () => {
+    // B3-07's own guard: only split text shaped like the plate's example.
+    // "30 grants available" (no comma) must fall through unchanged — this
+    // is the exact fixture the pre-existing "puts the travel grant..." test
+    // above uses, confirmed still green there; this test isolates the guard
+    // itself with a comment naming why it must stay a single cell.
+    const html = renderReport(
+      baseEvent({
+        travelGrant: "30 grants available",
+        fees: [{ label: "Early bird", standard: "$620", student: "$180" }],
+      }),
+    );
+    const grantRow = costSupportRow(html, "Travel grant");
+
+    expect(grantRow).toContain('colSpan="3"');
+    expect(grantRow).toContain("30 grants available");
+  });
+
   it("prints Not provided (not On request) when no invitation letter is offered", () => {
     // B2-15. event.invitationLetter === false is an explicit negative, not
     // silence — still a real three-column row, just the other value.

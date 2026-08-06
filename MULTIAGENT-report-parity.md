@@ -39,10 +39,10 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 .. B3-06 all
+                  bookkeeping note, no code to write). B3-01 .. B3-07 all
                   LANDED (B3-06 in its own two commits, safe half then
                   extraction, per B's instruction) — see §4 "Round 3 —
-                  Agent C" for detail. Gate after B3-06: 82 files / 858
+                  Agent C" for detail. Gate after B3-07: 82 files / 860
                   tests passing, typecheck clean, lint unchanged. The
                   measured 16% below will not move until this pass finishes
                   and a future A re-measures. **B3-06's extraction regex is
@@ -4832,7 +4832,7 @@ write), one commit per item, gate re-run after each.
   visa language) still comes back with `startDateFlexible: true` — this test
   would fail if the OR-chain addition above were reverted, which is the
   point of it. **Gate: 82 files / 858 tests passing, typecheck clean, 1
-  pre-existing lint error.** Commit: (recorded after commit, see below).
+  pre-existing lint error.** Commit: `66e0650`.
 
   **Note for A on real-data risk, per the handoff instruction to flag this
   explicitly:** this regex is untested against real posting text — it only
@@ -4845,5 +4845,43 @@ write), one commit per item, gate re-run after each.
   against real search results in round 4 per the new mandate**, specifically
   whether any real job's STARTS tile prints "flexible" and whether that
   matches what the posting actually says.
+
+- **B3-07 — LANDED.** Added `travelGrantColumns()` to
+  `web/src/app/events/[id]/page.tsx`, a guarded split: only converts
+  `event.travelGrant`'s free text to the plate's three-column shape when it
+  visibly has the plate's own two-clause shape (splits on `,`, requires
+  exactly two non-empty parts after `clean()`ing each) — anything else
+  (no comma, more than one comma) falls through to the pre-existing single
+  spanning cell unchanged, preserving B2-15's original caution for any real
+  `travelGrant` text that isn't shaped like the plate's example. Also added
+  a small `capitalizeFirst()` helper (the deadline clause's first letter:
+  `"apply..."` → `"Apply..."`) rather than reusing `formatActivityLabel`'s
+  inline `charAt(0).toUpperCase()...` expression a third time — left that
+  existing inline usage untouched since refactoring it was outside this
+  item's scope. Printed the split clauses verbatim, not further trimmed
+  (e.g. "30 grants available" stays "30 grants available," not shortened to
+  "30 available") per B's own instruction not to add a second, smaller guess
+  on top of the split itself. STANDARD is always the plate's own dash glyph
+  (U+2014, confirmed matching the existing invitation-letter row's own dash
+  character, not a different em/en-dash look-alike) since every travel
+  grant example this app has is student-targeted. No render-layer change —
+  `CostsTable`'s existing `row.kind === "columns"` branch already renders
+  any three-column row generically, confirmed by reading it directly.
+
+  Ran the gate before touching any test: both existing cost-table tests
+  stayed green unchanged, exactly as B predicted (`"puts the travel grant
+  and invitation letter..."` uses `travelGrant: "30 grants available"`, no
+  comma, so `travelGrantColumns` returns `undefined` and it still falls
+  through to the span branch; `"names the travel grant and never signs
+  off..."` never asserts anything about the cost-table support row at all).
+  Added two new tests: the round-3 fixture's exact wording (`"30 available,
+  apply with your abstract"`) splitting into `—` / `30 available` / `Apply
+  with your abstract`, and a dedicated no-comma guard test isolating why
+  `"30 grants available"` must stay one spanning cell (the existing test
+  already covers this fixture incidentally; this one names the guard
+  itself as its own thing, since B3-07 is exactly the item that could most
+  easily have regressed it). **Gate: 82 files / 860 tests passing,
+  typecheck clean, 1 pre-existing lint error.** Commit: (recorded after
+  commit, see below).
 
 ---
