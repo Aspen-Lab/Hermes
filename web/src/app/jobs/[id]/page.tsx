@@ -330,10 +330,18 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
           key: "work-mode",
           label: "Location",
           value: location,
-          // B2-06. Plate's "Hybrid · US" sub-line — the "· US" half is a
-          // region field Job doesn't carry (§1e gap (a)), but the mode word
-          // itself now comes from job.workMode when the posting states it.
-          detail: workModeLabel(job),
+          // B2-06 / B3-08. Plate's "Hybrid · US" sub-line — the mode word
+          // comes from job.workMode when the posting states it, and the
+          // country (when job.place carries one) now joins it here. Kept
+          // local to this tile rather than folded into workModeLabel()
+          // itself, which the subtitle's third segment also calls and whose
+          // own plate example ("Hybrid (3 days on-site)") never shows a
+          // country — appending it inside workModeLabel would leak it there
+          // too.
+          detail:
+            [workModeLabel(job), clean(job.place?.country)]
+              .filter(Boolean)
+              .join(" · ") || undefined,
         }
       : undefined,
     // B2-05 / B3-06 / Ruling 20. The plate's "flexible" sub-line states

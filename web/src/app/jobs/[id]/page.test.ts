@@ -385,6 +385,54 @@ describe("JobReport", () => {
     expect(remoteFallbackHtml).toContain("Remote");
   });
 
+  it("joins the country onto the LOCATION tile's sub-line, but never into the subtitle", () => {
+    // B3-08. Plate: "Hybrid · US". job.place.country exists on the type and
+    // is normalised upstream to a full country name ("United States"), not
+    // the plate's two-letter abbreviation — no such abbreviation table
+    // exists anywhere in the codebase yet (a named follow-up, not built
+    // here), so this prints the full name rather than inventing one.
+    const html = renderReport(
+      baseJob({
+        workMode: "hybrid",
+        place: { city: "Los Altos", region: "CA", country: "United States" },
+      }),
+    );
+    const locationTile = html.match(
+      /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(locationTile).toContain("Hybrid · United States");
+
+    // The subtitle's own third segment calls the same workModeLabel() but
+    // must never gain a country — its own plate example, "Hybrid (3 days
+    // on-site)", has no country in it. Appending it inside workModeLabel
+    // itself would have leaked it here too.
+    const subtitle = html.match(
+      /<p class="mt-3 text-body text-text-muted">[\s\S]*?<\/p>/,
+    )?.[0];
+    expect(subtitle).toContain(">Hybrid<");
+    expect(subtitle).not.toContain("United States");
+  });
+
+  it("shows only the half of LOCATION's sub-line it actually has, never a bare separator", () => {
+    // B3-08. A country with no workMode, or a workMode with no country,
+    // must never render an empty "· " left dangling.
+    const countryOnlyHtml = renderReport(
+      baseJob({ place: { country: "United States" } }),
+    );
+    const countryOnlyTile = countryOnlyHtml.match(
+      /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(countryOnlyTile).toContain("United States");
+    expect(countryOnlyTile).not.toContain(" · United States");
+
+    const modeOnlyHtml = renderReport(baseJob({ workMode: "on-site" }));
+    const modeOnlyTile = modeOnlyHtml.match(
+      /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(modeOnlyTile).toContain("On-site");
+    expect(modeOnlyTile).not.toContain("On-site ·");
+  });
+
   it("renders the Applied control in both inactive and completed states", () => {
     const pendingHtml = renderReport(baseJob(), false);
     const appliedHtml = renderReport(baseJob(), true);

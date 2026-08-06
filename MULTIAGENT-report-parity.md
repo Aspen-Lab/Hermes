@@ -39,16 +39,20 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 .. B3-07 all
+                  bookkeeping note, no code to write). B3-01 .. B3-08 all
                   LANDED (B3-06 in its own two commits, safe half then
                   extraction, per B's instruction) — see §4 "Round 3 —
-                  Agent C" for detail. Gate after B3-07: 82 files / 860
+                  Agent C" for detail. Gate after B3-08: 82 files / 862
                   tests passing, typecheck clean, lint unchanged. The
                   measured 16% below will not move until this pass finishes
                   and a future A re-measures. **B3-06's extraction regex is
                   untested against real posting text — flagged for A to
                   check in round 4's real-search-results pass (see NEW FOR
-                  A above and §4's B3-06 log entry).**
+                  A above and §4's B3-06 log entry).** **B3-08 remains
+                  non-byte-exact to the plate** (renders "United States",
+                  plate wants "US" — no abbreviation table exists yet, not
+                  built per B's own instruction; a named follow-up, not a
+                  regression).
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
@@ -4881,7 +4885,40 @@ write), one commit per item, gate re-run after each.
   already covers this fixture incidentally; this one names the guard
   itself as its own thing, since B3-07 is exactly the item that could most
   easily have regressed it). **Gate: 82 files / 860 tests passing,
-  typecheck clean, 1 pre-existing lint error.** Commit: (recorded after
-  commit, see below).
+  typecheck clean, 1 pre-existing lint error.** Commit: `718f43c`.
+
+- **B3-08 — LANDED, field wiring only (per B's own recommendation).**
+  `buildJobFacts`'s LOCATION tile (`web/src/app/jobs/[id]/page.tsx`) now
+  joins `clean(job.place?.country)` onto `workModeLabel(job)` with the
+  report's `" · "` separator, `.filter(Boolean)` guarding against a stray
+  separator when only one half is present. Kept local to this one tile's
+  construction, **not** folded into `workModeLabel()` itself — that
+  function has a second caller (the subtitle's third segment), whose own
+  plate example (`"Hybrid (3 days on-site)"`) never shows a country;
+  appending it inside `workModeLabel` would have leaked it into the
+  subtitle too. Confirmed by reading both call sites directly before
+  choosing where to put the join.
+
+  **Did not build a country abbreviation table**, per B's own explicit
+  instruction not to invent one silently: `job.place.country` is normalised
+  upstream to a full name (`"United States"`), not the plate's `"US"`, and
+  grepping the tree again confirms no such table exists anywhere. The tile
+  now renders `"Hybrid · United States"` — correct and a real improvement,
+  not yet byte-exact to the plate's `"US"`. **This remains a named,
+  visible, open follow-up** (already flagged in §1's TODO and repeated
+  here so it doesn't quietly drop out of view).
+
+  Ran the gate before touching any test: all 24 existing job-report tests
+  stayed green unchanged, exactly as B predicted (no test asserted
+  `workModeLabel`'s output string directly, only the tile's presence via
+  `data-job-fact="work-mode"`). Added two new tests: one confirming the
+  country joins the LOCATION tile's sub-line (`"Hybrid · United States"`)
+  while the subtitle stays untouched (`toContain(">Hybrid<")` +
+  `not.toContain("United States")`, proving the "kept local to this tile"
+  claim rather than just asserting it in a comment); one confirming neither
+  half ever renders a dangling separator when the other is missing
+  (country with no `workMode`, `workMode` with no country). **Gate: 82
+  files / 862 tests passing, typecheck clean, 1 pre-existing lint error.**
+  Commit: (recorded after commit, see below).
 
 ---
