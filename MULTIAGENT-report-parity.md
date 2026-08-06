@@ -5600,3 +5600,124 @@ separate fix, since inventing a finding nobody measured would be guessing.
   exact string the real TiRT7 page's own `<title>` contains is not** — C
   should treat "likely fixes R8" as a reasonable bet worth taking, not a
   guarantee, and re-check both real events once the guard lands.
+
+---
+
+##### B4-02 — A real event's WHERE tile contradicts its own description (R2). `WRONG DATA`.
+
+**Cause.** `extractOpportunityPageDetails()`
+(`web/src/lib/opportunities/structured-extract.ts:1313-1346`) resolves an
+event's place in three steps, in order: JSON-LD (`structured?.place`), Open
+Graph / meta tags (`metaPlace`), then falls back to
+`extractBodyTextPlace(html)` (`:1211-1223`) when neither found anything.
+That fallback calls `findGazetteerMatch(text, CONFERENCE_CITIES)`
+(`:1061-1084`): it scans the **entire page body** for the **first** (lowest
+text-index) occurrence of any city name in a fixed, roughly 300-entry gazetteer
+(`CONFERENCE_CITIES`, `:543`) and returns it — with **no check that this
+mention is actually the venue**. A country is only attached afterward if it
+sits immediately next to that city (`countryAfterCity`, `:1112-1126`), and the
+function's own comment (`:1101-1111`) explicitly documents why that adjacency
+check exists: *"a titanium conference held in Cologne whose abstract discusses
+production in China came out as 'Cologne / China'"* — **the exact failure
+class R2 is.** The safeguard that comment describes was applied to the
+COUNTRY half of the match only. The CITY half — which gazetteer city wins in
+the first place — has no equivalent check anywhere.
+
+**This is very likely the actual real event R2 describes, not just an
+analogous bug.** Grepped the gazetteer: `Cologne` is in
+`CONFERENCE_CITIES` (`structured-extract.ts:180`); `Lanzhou` is not, anywhere
+in the file. And `web/src/lib/opportunities/structured-extract.test.ts:243-254`,
+"does not pair a city with an unrelated country mentioned elsewhere," already
+uses almost exactly R2's shape as its fixture: *"2026 International Round
+Table on Titanium Production in Molten Salts... takes place in Cologne...
+Titanium sponge production in China has grown rapidly"* — a titanium round
+table (**TiRT** is very plausibly "Titanium Round Table," R1's own event 1 is
+literally `TiRT7`) whose test comment assumes Cologne is the true venue and
+China is an unrelated topic mention. R2's own evidence is stronger than that
+assumption: the real description says the event **"will be held in Lanzhou,
+Gansu Province, China"** — an explicit, venue-cue-qualified claim (it would
+match `VENUE_CUE_RE`, `:1228-1229`, if that check were ever applied to a city
+candidate). But `Lanzhou` cannot become a candidate at all — it is not in the
+gazetteer — so the algorithm never sees it, and whatever gazetteer city
+happens to be mentioned anywhere else on the page (here, `Cologne`, most
+plausibly a past edition's host city for a recurring round table) wins by
+default with no venue check at all. **I confirmed the gazetteer contents by
+grep, not by a fresh live fetch of the real page — I did not re-run the round-4
+search this round; see the risk note below.**
+
+**Fix direction.** Two different, complementary things, and they should not be
+conflated into one fix:
+1. **Require some minimal proximity cue before trusting a gazetteer city
+   match**, not just presence anywhere on the page — this is the closable
+   part. `VENUE_CUE_RE`'s own verb list (`held|hosted|takes? place|venue|
+   location|located`) is too strict to reuse verbatim: the existing, correct,
+   passing test `extractBodyTextPlace` "finds Chicago in the measured
+   BlueCurrent body-only case" (`:161-176`) has **no** such verb near
+   `Chicago` — its fixture reads only *"...the industry summit **in**
+   Chicago"*, a bare preposition. A rule needs to accept that minimal shape
+   (city immediately following `in`/`at`/`near`, or one of `VENUE_CUE_RE`'s
+   stronger verbs) while still rejecting a city that is merely present
+   somewhere in the page with no locational preposition anywhere near it (the
+   Cologne mention in both the test fixture and, plausibly, the real page, is
+   *also* preceded by "takes place in" — so a bare-preposition rule alone does
+   not separate the two candidates when only one gazetteer city is present in
+   the text at all; it mainly converts today's **wrong, confident** answer
+   into an **honest, absent** one for a page like the real one, where the true
+   venue's city was never a candidate to begin with. That is still real
+   progress against §1j's own standard — a silently-absent WHERE tile is
+   strictly better than one that states something false — but C should not
+   expect this alone to make Lanzhou appear.
+2. **Gazetteer coverage is a separate, open-ended limitation, not a one-round
+   fix.** `CONFERENCE_CITIES` already reaches beyond Western capitals (it
+   includes Accra, Addis Ababa, Bangalore, Bangkok, Bandung and more), but a
+   fixed list of ~300 cities will always have a long tail of real venues
+   (`Lanzhou`, a Gansu-province provincial capital of about four million
+   people, is a real gap, not an edge case) — no single addition closes this
+   class permanently. Naming it so it stays visible rather than treated as
+   solved after item 1 lands; whether to keep growing the list by hand is a
+   scope/maintenance question, closer to `POLICY` than a quick fix, and I am
+   not sizing it as its own guide item since nothing this round asked for a
+   specific bigger gazetteer.
+
+**Blast radius — this is not event-only.** `extractOpportunityPageDetails()`
+is called from **both** `enrichEventCandidates()` and `enrichJobCandidates()`
+(`web/src/lib/opportunities/enrich.ts:113` and `:167`, `"event"` vs `"job"`),
+so the same fallback produces a job's LOCATION tile and facet value too, via
+the identical `extractBodyTextPlace` path. And `CONFERENCE_CITIES` is read
+directly by `web/src/components/opportunities/opportunity-facet-panel.tsx:263`
+to build the location-filter buttons on **both** the events and jobs feeds —
+so a false-positive city match here can also seat a wrong filter button on the
+feed, not only a wrong WHERE tile on one report. Fixing the proximity check in
+`structured-extract.ts` fixes all of these call sites at once, which is the
+right level to fix it at rather than patching either report component.
+
+**Risk.**
+- `structured-extract.test.ts:243-254` (the Cologne/China test) — re-traced
+  under the proposed fix: "Cologne" is preceded by "takes place in," a bare
+  preposition, so it still passes a minimal proximity rule. **Unaffected**,
+  assuming the new rule accepts a bare preposition (see fix direction's own
+  calibration warning — this is the one to run first after any change, since
+  it is the fixture the current safeguard was built against).
+- `:161-176` ("finds Chicago...") — re-traced: "Chicago" is preceded by "in,"
+  also a bare preposition. **Unaffected** under the same minimal rule, but
+  this is exactly the fixture that would break if C reused `VENUE_CUE_RE`'s
+  stricter verb list wholesale instead of a broader preposition rule — flagged
+  explicitly so nobody picks the tighter, more "obviously correct-looking"
+  regex and silently regresses a real, currently-passing case.
+- `:198-208`, `:263-269` (state-code and other body-text cases) — all keep an
+  explicit preposition ("is Chicago, IL, United States" / "in Chicago, IL") in
+  their fixtures; traced through, all keep passing under a bare-preposition
+  rule.
+- `:271-278` (the country-only fallback pair) — untouched by this item; it
+  already has its own `VENUE_CUE_RE` gate and this fix does not change
+  `extractPlaceFromText`'s country-only branch.
+- **No test today exercises the actual failure shape** (two *different*
+  gazetteer cities on one page, only one of them true) — grepped for a second
+  city name inside any one `extractBodyTextPlace` fixture and found none.
+  **Add one**: two gazetteer cities in the same text, only one preceded by a
+  cue, asserting the cued one wins (or, if both are cued, that this remains a
+  known limitation rather than a silently-wrong guess — C should decide which
+  when writing the actual rule, and say which in the commit).
+- I did not re-run round 4's live search this round to confirm the real TiRT7
+  page's exact wording; this item's confidence rests on the gazetteer grep and
+  the pre-existing test's own near-identical fixture, not a fresh fetch.
