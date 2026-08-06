@@ -107,15 +107,24 @@ then re-runs A's job independently before anything is called done.
 
 ---
 
-## §0d. THE TURN LOCK — how three machines share one branch without diverging
+## §0d. THE TURN LOCK — two writers, one branch
 
-**Read this before §0b or §0c. It governs everyone: this laptop, the user's
-second computer, and the hourly cloud run.**
+**Read this before §0b or §0c.**
 
-There are now three possible writers on `feature/summary-report-revamp`. Without
-coordination each one pulls a snapshot, works from it, and produces a history
-the others cannot merge — and §1, the one thing that makes this loop
-restartable, stops being true.
+There are exactly **two** writers on `feature/summary-report-revamp`:
+
+1. **The user's own session**, on their laptop. It holds the API keys, so it is
+   the only one that can do Agent A's real-data pass. The user drives it from
+   the laptop, their phone, or another computer through **Claude Code Remote
+   Control** — but those are all *windows into the same session*, not separate
+   workers. **Remote Control adds no writer**, which is why there is no
+   per-machine identifier here.
+2. **The hourly cloud routine** (§0c), identifier `cloud-hourly`. It exists for
+   the hours the laptop is asleep or closed.
+
+Without coordination the cloud run pulls a snapshot mid-round, works from it,
+and produces a history the laptop cannot merge — and §1, the one thing that
+makes this loop restartable, stops being true.
 
 ### The two rules that make it work
 
@@ -151,11 +160,11 @@ die mid-task without releasing, the 2-hour staleness rule frees it for you.
 
 ### Identifiers
 
-Use something a human can read and recognise:
+Two, because there are two writers:
 
-- This laptop: `LAPTOP-3CL10CG5`
+- The user's session: `LAPTOP-3CL10CG5` — whichever device they happen to be
+  looking at it from
 - The cloud routine: `cloud-hourly`
-- The second computer: its own hostname
 
 ### Why a lock and not "just merge it later"
 
@@ -167,8 +176,9 @@ costs more than the occasional stood-down run.
 
 ### If you are the user, working interactively
 
-The same rules apply to the session you are talking to. **Tell it to claim the
-lock before starting a turn**, or just let it read this section — it will.
+The same rules apply to the session you are talking to, whether you are typing
+into the laptop, your phone, or a browser. **It is one session** — claim the
+lock once, at the start of a turn, not once per device.
 
 ---
 
