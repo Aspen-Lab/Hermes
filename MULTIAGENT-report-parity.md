@@ -34,12 +34,16 @@ before you stop, not after you finish.
 ```
 ROUND:            3
 WHOSE TURN:       C  (work B3-01 .. B3-11 in order, §4 "Round 3 — Agent B")
-STATUS:           ROUND-3 FIX GUIDE COMPLETE. B wrote and committed all 11
-                  items (B3-01..B3-11), one commit per item, per §4 "Round 3
-                  — Agent B". B did not run the gate and did not change any
-                  code (not B's job) — the measured 16% below is therefore
-                  still the pre-fix number; it will not move until C lands
-                  this guide and a future A re-measures.
+STATUS:           C IN PROGRESS. Baseline re-verified before touching
+                  anything (82 files / 850 tests passing, typecheck clean, 1
+                  pre-existing lint error) — matches §1's recorded figure
+                  exactly. Working B3-01 .. B3-11 in order, one commit per
+                  item, per §3's write-as-you-go rule; skipping B3-10 (a
+                  bookkeeping note, no code to write). B3-01 LANDED (see §4
+                  "Round 3 — Agent C" for detail) — gate after: 82 files /
+                  851 tests passing, typecheck clean, lint unchanged. The
+                  measured 16% below will not move until this pass finishes
+                  and a future A re-measures.
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
@@ -4647,5 +4651,38 @@ already. Flagged in B3-08 as a named follow-up, not built silently and not
 left unmentioned.
 
 **STATUS: COMPLETE.**
+
+---
+
+### Round 3 — Agent C
+
+**STATUS: IN PROGRESS.** Baseline re-established before the first change, as
+instructed: **82 files / 850 tests passing, typecheck clean, 1 pre-existing
+lint error (`quiz.tsx:46`).** Matches §1's recorded figure exactly. Working
+B3-01 → B3-11 in order (skipping B3-10, a bookkeeping note with no code to
+write), one commit per item, gate re-run after each.
+
+- **B3-01 — LANDED.** `costsFootnote()`
+  (`web/src/app/events/[id]/page.tsx`) previously took only `fee.standard`
+  as the "full price with no grant" candidate, which is the *discounted*
+  early-bird price when a row has one — the true worst-case price lives as
+  trailing text inside that same row's `deadline` string ("Early bird ends
+  Jan 9 · $620 after"). Added `priceCandidate()` and `priceAfterCutoff()`
+  (the latter reuses `formatFeeDeadline` and splits on the same `·`
+  delimiter `cutoffPhrase` already uses), plus a `PRICE_TOKEN_RE` to pull
+  just the bare price token out of the tail — the first implementation
+  accidentally rendered `"$620 after"` (the whole tail including the
+  trailing word) before this regex narrowed it to `"$620"` alone, caught by
+  the new test on the first gate run. Each fee row now contributes
+  `max(priceCandidate(fee.standard), priceAfterCutoff(fee.deadline))` to the
+  footnote's full-price search, rather than `fee.standard` alone. Confirmed
+  by re-reading B's cited risk: the one existing test that checks
+  `costsFootnote`'s text uses a fixture where `fee.standard` is already
+  `"$620"` with no `deadline` field, so `priceAfterCutoff` returns `null`
+  there and that test is unaffected, unchanged, exactly as B predicted.
+  Added a new test with the round-3 fixture shape (`standard: "$480"`,
+  `deadline: "Early bird ends Jan 9 · $620 after"`) asserting the footnote
+  quotes `$620`, not `$480`. **Gate: 82 files / 851 tests passing, typecheck
+  clean, 1 pre-existing lint error.** Commit: `pending`.
 
 ---

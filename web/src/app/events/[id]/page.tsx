@@ -916,6 +916,38 @@ function DeadlineTimeline({
   );
 }
 
+type PriceCandidate = {
+  value: string;
+  parsed: { currency: string; amount: number };
+};
+
+function priceCandidate(value: string | undefined): PriceCandidate | null {
+  const text = clean(value);
+  if (!text) return null;
+  const parsed = parsePrice(text);
+  return parsed ? { value: text, parsed } : null;
+}
+
+/** A bare price token -- "$620", "€45", "80 USD" -- and nothing else around it. */
+const PRICE_TOKEN_RE =
+  /(?:€|£|(?:US|C|A|CA|AU|NZ)?\$)\s?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s?(?:USD|EUR|GBP|CAD|AUD|NZD)\b/i;
+
+/**
+ * B3-01. The tail of a compound deadline string can carry a second, higher
+ * price -- "Early bird ends Jan 9 · $620 after" -- the true full price once
+ * the early-bird window closes. Split on the same "·" delimiter
+ * `cutoffPhrase` uses, then pull just the price token out of what's left --
+ * the tail can carry trailing words ("after") that are not part of the price
+ * itself and must not end up inside the rendered value.
+ */
+function priceAfterCutoff(value: string | undefined): PriceCandidate | null {
+  const text = formatFeeDeadline(value);
+  if (!text) return null;
+  const [, ...rest] = text.split(/\s*[·|;]\s*/);
+  const token = clean(PRICE_TOKEN_RE.exec(rest.join(" · "))?.[0]);
+  return priceCandidate(token);
+}
+
 /**
  * B-13. Plate 03 closes the table with the gap between the cheapest route and
  * full price, and says why that gap earns the cheapest line its place at the
@@ -924,6 +956,12 @@ function DeadlineTimeline({
  * The plate's "plus four nights" clause is dropped: nights are not a field on
  * `Event`, and inventing a hotel count to match a mock is exactly the kind of
  * fabrication the rest of this work is removing.
+ *
+ * B3-01. A fee row's `standard` cell can itself be the *discounted*
+ * early-bird price ($480), with the true worst case ($620) existing only as
+ * trailing text inside that same row's `deadline` string. Reading `standard`
+ * alone understated the exact gap this sentence exists to dramatise, so each
+ * row now contributes whichever of the two readings is higher.
  */
 function costsFootnote(fees: EventFee[], cheapest: CheapestWay | null): string {
   const closing =
@@ -931,9 +969,14 @@ function costsFootnote(fees: EventFee[], cheapest: CheapestWay | null): string {
   const cheapestPrice = cheapest ? parsePrice(cheapest.value) : null;
   const fullPrices = fees
     .flatMap((fee) => {
-      const value = clean(fee.standard);
-      const parsed = value ? parsePrice(value) : null;
-      return parsed && value ? [{ value, parsed }] : [];
+      const candidates = [
+        priceCandidate(fee.standard),
+        priceAfterCutoff(fee.deadline),
+      ].filter((candidate): candidate is PriceCandidate => candidate !== null);
+      if (candidates.length === 0) return [];
+      return [
+        candidates.sort((left, right) => right.parsed.amount - left.parsed.amount)[0],
+      ];
     })
     .filter(({ parsed }) => parsed.currency === cheapestPrice?.currency);
   const full = fullPrices.sort(

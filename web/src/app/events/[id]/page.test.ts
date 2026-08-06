@@ -349,6 +349,28 @@ describe("EventReport", () => {
     );
   });
 
+  it("costs footnote quotes the after-early-bird price, not the discounted standard price", () => {
+    // B3-01. The headline row's own `standard` cell can be the *discounted*
+    // early-bird price ($480) — the true worst case ($620) exists only as
+    // trailing text in that same row's `deadline` string. Reading `standard`
+    // alone understated the exact gap this sentence exists to dramatise.
+    const html = renderReport(
+      baseEvent({
+        fees: [
+          {
+            label: "Early bird",
+            standard: "$480",
+            student: "$180",
+            deadline: "Early bird ends Jan 9 · $620 after",
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("Full price with no grant would be $620.");
+    expect(html).not.toContain("Full price with no grant would be $480.");
+  });
+
   it("prints Not provided (not On request) when no invitation letter is offered", () => {
     // B2-15. event.invitationLetter === false is an explicit negative, not
     // silence — still a real three-column row, just the other value.
