@@ -6201,3 +6201,33 @@ now diverge**:
 - `web/src/components/reports/tier-upgrade-block.test.tsx` (confirmed by
   reading B3-09's own round-3 note) renders its own fixture items directly,
   not the page's constant — **unaffected**, no change needed there.
+
+---
+
+##### B4-09 — A real event's report renders almost nothing (R9). Synthesis — not its own mechanism.
+
+**This is the visible symptom of items already on this list, not a new code
+path.** Real event 3 is the *same* event R8 names (the ellipsis-truncated
+title, "The First European Conference on Molten Salt Reactor …") — so R8 and
+R9 are one real event, the way R4/R5/R6/R7 are very plausibly one real job.
+Breaking down what round 4 actually observed against what is already guided:
+
+- **Truncated title** — B4-01 (shared with R1).
+- **`date: ""`** — this event has no start date at all. Not a rendering bug:
+  `buildEventFacts()`'s facts row and `deadlineMilestones()` both correctly
+  produce nothing to show when there is no date, exactly as designed — round
+  4's own "what DID work" list confirms this class of hiding is working
+  everywhere except the three named exceptions (R3/R5/R10, already guided as
+  B4-06/07/08). The actual defect is upstream: **why does this event have no
+  date at all**, which is a coverage question, not a report question — folded
+  into B4-10 below rather than guided twice.
+- **Placeholder location suppressed correctly** — also confirmed working by
+  round 4 itself; not a defect.
+- **No programme, roster, or costs** — the same "0 of 3 real events carry
+  fees/organisations/people" coverage gap B4-10 covers; not a new mechanism
+  specific to this one event.
+
+**Nothing to fix here beyond what B4-01, B4-06, B4-07, B4-08 and B4-10
+already guide.** Naming it as its own item only so R9 is traceably accounted
+for, per this round's own instruction to address all ten findings — not
+because it needs a fifth mechanism.
