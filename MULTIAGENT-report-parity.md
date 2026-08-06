@@ -6231,3 +6231,92 @@ Breaking down what round 4 actually observed against what is already guided:
 already guide.** Naming it as its own item only so R9 is traceably accounted
 for, per this round's own instruction to address all ten findings — not
 because it needs a fifth mechanism.
+
+---
+
+##### B4-10 — Under-extraction, events: fees / organisations / people / registrationDeadline / travelGrant / expectedSize / rank. Mixed: `MISSING` (expectedSize), likely `POLICY`-adjacent (the rest), and one genuinely `NOT FIXABLE THIS ROUND` (rank).
+
+Round 4's coverage table says 0 of 3 real events carried `fees`,
+`organisations`, `people`, `deadline`/`registrationDeadline`, `expectedSize`,
+`rank`, or `travelGrant`. **These are not one problem** — I split them by
+whether an extractor exists at all, per the round's own instruction to check
+whether the code already tries and fails rather than assuming it never tried.
+
+**Fees, organisations, people, registrationDeadline, travelGrant — the
+extractors already exist and already run.** `extractEventDetails()`
+(`web/src/lib/opportunities/event-details.ts`) pulls `registrationDeadline`,
+`fees` (from HTML tables or free-text lines), `activities`, `travelGrant`, and
+`invitationLetter` from the fetched page's own text. `extractEventRoster()`
+(`web/src/lib/opportunities/event-roster.ts`, 530 lines — heading-scoped
+section detection, structured-card parsing, image-alt-text fallback, name-
+shape sanity checks) pulls `organisations`/`people`. Both are called, and both
+are wired into the merge, inside `enrichEventCandidates()`
+(`web/src/lib/opportunities/enrich.ts:87-139`) — confirmed by reading the
+function directly, not assuming. **These are not half-built; they are fully
+built and already running on every real event this round measured.** Zero of
+three still carrying any of them is not proof the code never tries. The most
+likely single explanation is architectural, not a missing regex — see B4-12,
+which this item defers to rather than duplicating: `enrichEventCandidates`
+only has a page to extract from when `fetchPageHtml()` gets real, server-
+rendered text back, and a large share of real event sites are JavaScript-
+rendered SPAs that a plain `fetch()` cannot see through. `enrich.test.ts:388-400`
+already has a passing test modelling exactly this shape (a 6 KB script tag and
+an empty `<div id="root">`) and asserting the item passes through completely
+unenriched — the codebase already knows this failure mode exists and already
+degrades gracefully rather than crashing; it has never been given anything
+better to fall back to. **I did not re-run round 4's live search to confirm
+this is what actually happened to these specific three events** — see the
+risk note below; this is the most likely explanation given the code, not a
+confirmed diagnosis.
+
+**expectedSize — genuinely never built at any layer, confirmed by an
+existing round-1 comment.** `web/src/app/events/[id]/page.tsx:596-606`
+already says so in its own words, from B-05: *"SCALE is dead on live data.
+`event.expectedSize` is declared on the type but no mapper writes it."*
+Checked further than that comment does: **`expectedSize` is not declared on
+`RawEventItem`/`ScoredEventItem` at all** (`web/src/lib/events/types.ts` —
+grepped, no hits), only on the report-facing `Event` type
+(`web/src/types/index.ts:172`). There is no extractor, no pipeline field, and
+no mapper passthrough at any of the three layers — this is a clean, additive,
+never-attempted gap, not a bug in an existing attempt. Building it is real
+new work, shaped like B2-06 (`workMode`) or B3-06 (`startDateFlexible`): (1)
+a free-text extractor in `event-details.ts`, in the same style as
+`extractTravelGrant`/`extractRegistrationDeadline` — phrases like "expected
+attendance," "N attendees," "past editions drew N," parsed to a number, never
+guessed when the page is silent; (2) add the field to `RawEventItem`
+(`events/types.ts`) and wire it into `hasExtractedEventSignal` and the merge
+in `enrichEventCandidates`; (3) pass it through in `scoredEventToEvent()`
+(`events/mapper.ts`). Test the phrase list against real conference-page
+wording before trusting it, same caveat B3-06 raised about its own new phrase
+list.
+
+**rank — not an extraction gap. This is a genuine, structural limitation of
+one curated data source, not a defect.** Grepped every assignment to `.rank`
+across the events pipeline: the **only** place any code ever sets
+`RawEventItem.rank` is `web/src/lib/events/sources/ccfddl.ts:152`
+(`rank: rank || undefined`, built from CCF/CORE — the Chinese Computer
+Federation's and a CS-specific committee's own conference-ranking datasets).
+No free-text extractor could honestly produce this: `CCF-B` is not a fact a
+conference's own page states in prose, it is a classification from a
+third-party CS-conference-ranking database that only covers computer-science
+venues. Round 4's three real events (a titanium round table, a molten-salt
+reactor conference, and a third whose title is truncated) are not
+computer-science conferences and structurally cannot appear in `ccfddl`'s
+dataset regardless of extraction quality. **Recommend this be logged as a
+confirmed, permanent, source-scoped limitation** (a fresh, narrow item, not
+folded into any existing exclusion, since it's data-under-extraction rather
+than a plate/data axis mismatch like exclusions (a)-(m)) — not guided as a
+fix, since there is nothing to build.
+
+**Risk / tests.** `expectedSize`: `web/src/app/events/[id]/page.test.ts:543-550`,
+"hides the scale tile when no crowd size was extracted," asserts the SCALE
+tile's absence with `baseEvent()` (no override) — **unaffected**, since this
+new extractor only ever adds the field when a real phrase is found; the
+default fixture states no attendance figure. Its own comment should be
+updated once the extractor exists, the same way B3-06's guide asked for a
+stale "cannot exist" comment to be rewritten once the field it described
+became buildable. `event-details.test.ts` and `enrich.test.ts` have no
+existing assertions to break for a wholly new field — add fresh cases there,
+not rewrite existing ones. For fees/organisations/people/registrationDeadline/
+travelGrant, no fix is being guided this item — see B4-12 for what a fix would
+actually require and why it is sized as `POLICY`, not a quick patch.
