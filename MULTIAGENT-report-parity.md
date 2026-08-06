@@ -750,9 +750,17 @@ fees present may collapse when a real event has one, or none.
 - Map results with `scoredEventToEvent()` (`web/src/lib/events/mapper.ts:121`)
   and `scoredJobToJob()` (`web/src/lib/jobs/mapper.ts:104`).
 - The real profile, including live API keys, is read from
-  `.local-data/profile.json`. **`web/src/lib/events/benchmark.test.ts:25-37` is
-  the working precedent — copy its profile-loading shape.** It also honours a
+  **`web/.local-data/profile.json`** — verified present on 2026-08-05. That is
+  `process.cwd()` + `.local-data/profile.json` when vitest runs from `web/`,
+  which is how `benchmark.test.ts` resolves it. **`web/src/lib/events/benchmark.test.ts:25-37`
+  is the working precedent — copy its profile-loading shape.** It also honours a
   `PEER_PROFILE_SNAPSHOT_PATH` override.
+- **Keys present as of 2026-08-05:** `tavilyApiKey` (event search),
+  `adzunaAppKey` + `usajobsApiKey` (job search). **`feedAiApiKey` is EMPTY** —
+  so a real-data run produces **Tier 0 only**, with no enrichment. That is
+  fine and expected: everything plate 02 and plate 03 show above the locked
+  block is Tier 0. Render real items at Tier 0, say so in your log, and keep
+  using the hand-built fixture for the enriched states.
 
 **Security, unchanged and absolute:** the key is read from that file at
 runtime and used. **Never print it, never echo it into a log, never write it
