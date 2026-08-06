@@ -130,6 +130,26 @@ The user's local machine picks it up from there. A half-measurement that looks
 complete is worse than no measurement — the whole reason round 4 exists is that
 a fixture score of 3% hid reports that did not work on real data.
 
+### 1b. Stand down if someone else is already working. Check this FIRST.
+
+The user's local machine runs its own resume loop, and it is the only one that
+can do A's live pass. **You must not step on an active local session** — two
+sessions working the same item produces conflicting commits and a state file
+that is no longer true.
+
+**The lock is the last commit's age.** Before doing anything else:
+
+```
+git log -1 --format=%cr
+```
+
+**If the last commit is less than 90 minutes old, someone is actively working.
+Change nothing, commit nothing, exit.** Do not "just check" — reading is fine,
+but writing is not.
+
+Only proceed when the branch has been quiet for 90+ minutes. That means the
+local session is asleep, out of budget, or finished — and picking up is safe.
+
 ### 2. A quiet no-op is the correct outcome most of the time.
 
 You fire every hour. Most hours there is nothing to do — the turn is finished,
