@@ -51,13 +51,17 @@ NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
                   for round 4: A reads the whole PDF once per loop, and a "no
                   honest source" claim must say where it looked.**
 
-OPEN POLICY:      Two, both needing a manager ruling before B guides them:
-                  (1) the STARTS tile's `flexible` sub-line — no field on
-                  `Job`, and not covered by exclusion 8's named list;
+OPEN POLICY:      **Both resolved — see §1h. Asked the user directly, and
+                  the two went opposite ways:**
+                  (1) STARTS tile's `flexible` sub-line — **RULED IN (Ruling
+                  20). B must guide it.** Follows the `workMode` (B2-06)
+                  pattern: additive, optional, never a guess when the posting
+                  is silent. Likely posting-text extraction, not an
+                  aggregator field — see §1h for the `visa.ts` vs `jobWorkMode`
+                  precedent comparison B should check first.
                   (2) both reports' "Why Peer sent this to you" closing
-                  clauses — the plate's versions need a filtering count (job)
-                  and a cross-pool comparison (event), neither of which the
-                  report layer has. Scope call, not a code question.
+                  clauses — **RULED OUT (Ruling 21), permanently excluded as
+                  items (k) and (l). B must NOT guide these.**
 
 DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
            §4 log entry. Split across two C's: the first did B2-01..B2-08 and
@@ -80,13 +84,15 @@ DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
                BUILT as B2-19 by the manager.** The reader set that value
                themselves; printing it explains a highlight rather than
                guessing at one.
-TODO:      **B writes the round-3 fix guide, items B3-01 onward**, from the 13
-           differences in §4 "Round 3" (5 job, 8 event). Before starting,
-           read §1g — it withdraws an exclusion and adds two binding rules
-           about where evidence may be searched. Two items in the list are
-           `POLICY — manager decides` and must NOT be guided until ruled:
-           the STARTS `flexible` sub-line, and both "Why Peer sent this to
-           you" closing clauses.
+TODO:      **B writes the round-3 fix guide, items B3-01 onward**, covering
+           **11 items**: the 10 already-closable differences in §4 "Round 3"
+           (job findings 1, 3, 5; event findings 1, 2, 3, 4, 5, 7, 8) plus
+           the newly-ruled-in STARTS `flexible` field (Ruling 20). **Do NOT
+           write a guide item for job finding 4 or event finding 6** — both
+           are permanently excluded as (k) and (l) per Ruling 21. Before
+           starting, read §1g (withdraws exclusion (j), adds two rules about
+           where evidence may be searched) and §1h (this round's two
+           rulings, in full, with the extraction precedent for Ruling 20).
 
            Things round 3 could not check, for whoever picks them up: whether
            B2-04's contract-length expand/abbreviate pair reads right on real
@@ -504,6 +510,66 @@ Two rules follow, binding from round 4:
 The failure was the manager's, not C's. C reported what it found and refused to
 guess, which is exactly right. The manager ruled on a narrower search than the
 question deserved.
+
+---
+
+## §1h. MANAGER'S RULINGS ON ROUND 3'S TWO POLICY ITEMS — BINDING
+
+Decided 2026-08-05, after asking the user directly. **The two items went
+opposite ways — read both, they are not a matched pair.**
+
+### Ruling 20 — STARTS tile's `flexible` sub-line: RULED IN. B must guide it.
+
+The user chose to build this. Follow the same shape as `workMode` (B2-06):
+**additive, optional, never a guess.** `job.startDateFlexible` (or similar) is
+`undefined` unless the posting itself says the start date can move; silence
+means the field stays empty and the sub-line does not render, exactly like
+every other optional detail on this row.
+
+**Precedent for where the signal comes from — read both before choosing:**
+
+- `jobWorkMode()` (`web/src/lib/jobs/mapper.ts:81-85`) derives `workMode` from
+  the aggregator's own **location string** with a two-line regex — cheap,
+  because the signal already arrives structured.
+- `visa.ts` (`web/src/lib/opportunities/visa.ts`) derives `visa.state` and its
+  evidence quote from the **posting page's free text** — heavier, because
+  no aggregator field states visa policy.
+
+**Start-date flexibility is almost certainly the second shape, not the
+first.** No aggregator API field says "start date negotiable"; it will be a
+sentence in the posting body, if it says anything. B should confirm this by
+checking what job data the mapper actually receives, then design the
+extraction accordingly — likely a small phrase-match list ("flexible start
+date", "start date negotiable", "start date is flexible") similar in spirit to
+`visa.ts`'s phrase sets, not copied verbatim.
+
+**Render:** the STARTS tile's `detail`, next to `SALARY`/`TYPE`/`APPLY BY`/
+`POSTED`/`VISA`, all of which already have one (`web/src/app/jobs/[id]/page.tsx`,
+the facts-row block B2-06 already extended).
+
+### Ruling 21 — Both "Why Peer sent this to you" closing clauses: RULED OUT. Permanently excluded.
+
+The user chose **not** to build the filtering-count clause (job) or the
+cross-pool comparison clause (event). Both needed new logic outside the report
+layer — counting behaviour over time for the job, comparing one event against
+every other tracked event for the event — and the user judged that scope not
+worth it for this loop.
+
+**Added to the exclusion list as items (k) and (l):**
+
+- **(k)** — job "Why Peer sent this to you": the plate's closing clause names
+  a region and a weekly filtering count (`"...in California, which you
+  filtered toward 4 times this week"`). Permanently render the shorter form
+  already in place (topics + career level, no region, no count).
+- **(l)** — event "Why Peer sent this to you": the plate's closing clause is a
+  comparative claim across the reader's whole pool (`"...the only event in
+  your pool with all three"`). Permanently render the shorter form already in
+  place (topics + count + deadline distance, no pool comparison).
+
+**B must NOT write a guide item for either.** They are closed, not open —
+treat them exactly like exclusions (a)–(j): re-list them by name every round
+so they stay visible, never guide them, never let them silently re-enter the
+active difference count.
 
 ---
 
