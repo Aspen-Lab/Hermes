@@ -4268,3 +4268,67 @@ branch the split takes for it. **Add a new test** with the round-3 shape
 three cells `--` / `30 available` / `Apply with your abstract`.
 
 ---
+
+##### B3-08 -- LOCATION tile's sub-line drops the country. `MISSING`. (Job finding 3)
+
+**Cause.** The LOCATION tile's `detail` is `workModeLabel(job)` alone
+(`web/src/app/jobs/[id]/page.tsx:326-336`, specifically `:334`), which only
+ever returns the mode word (`"Hybrid"`/`"On-site"`/`"Remote"`,
+`WORK_MODE_LABELS` at `:247-251`). Plate: `Hybrid . US`. The country half is
+simply never read here -- `OpportunityPlace.country`
+(`web/src/types/index.ts:102-106`) exists on the type and `job.place` is
+already populated when a source provides one (passed straight through in
+`scoredJobToJob`, `web/src/lib/jobs/mapper.ts:142`, `place: item.place,`).
+
+**Fix direction.** At the LOCATION tile's construction site only (`:326-336`
+in `buildJobFacts`), combine the mode word with the country:
+
+```ts
+location
+  ? {
+      key: "work-mode",
+      label: "Location",
+      value: location,
+      detail: [workModeLabel(job), clean(job.place?.country)]
+        .filter(Boolean)
+        .join(" . ") || undefined,
+    }
+  : undefined,
+```
+
+**Do not fold this into `workModeLabel()` itself** -- that function has a
+*second* caller, the subtitle's third segment (`:666`,
+`const workMode = workModeLabel(job);`), and the subtitle's plate example is
+`Hybrid (3 days on-site)` -- **no country there.** Appending the country
+inside `workModeLabel` would leak it into the subtitle too, which the plate
+never shows. Keep the country append local to the facts-row tile.
+
+**A residual worth flagging honestly, not silently working around.**
+`job.place.country` is normalised upstream to a full country name
+(`sanitizePlace` / `matchCountryToken`,
+`web/src/lib/opportunities/structured-extract.ts:1130-1134`: `us: "United
+States"`, etc.) -- never the two-letter form the plate literally shows
+(`US`). Wiring the field in as designed above will print `"Hybrid . United
+States"`, not the plate's `"Hybrid . US"`. Grepped the whole tree for an
+existing full-name-to-abbreviation map (the *reverse* direction of
+`COUNTRY_ALIASES`) and found none. Closing the gap byte-exactly needs a
+small new report-scoped abbreviation table (parallel to `reportShortDate`'s
+"the report gets its own vocabulary" precedent, B2-01) -- that's a real,
+separate, small addition, not something to build silently as a side effect
+of this item. **Recommendation: land the field wiring above first (a real,
+visible improvement even printing the full country name), then treat the
+US/UK-style abbreviation as its own small follow-up if byte-exact plate
+matching is wanted** -- don't block this item on it, and don't invent an
+abbreviation scheme without saying so.
+
+**Risk.** Grepped `web/src/app/jobs/[id]/page.test.ts` for the LOCATION
+tile's detail text -- no test asserts `workModeLabel`'s output string
+directly (only presence of the `data-job-fact="work-mode"` attribute, `:106`,
+`:200`), so adding the country when present breaks nothing existing. Add a
+new test: a job with `place: { country: "United States" }` and `workMode:
+"hybrid"` should show `"Hybrid . United States"` in the LOCATION tile
+(or the abbreviated form, if that follow-up lands first) -- and a job with
+`place` but no country, or country but no `workMode`, should still show
+just the one half it has, never an empty `.` separator.
+
+---
