@@ -6088,3 +6088,116 @@ string:
   exact shape this item closes. **Add one**: `baseJob({ sourceId: "adzuna" })`
   with no `applicationMaterials` must not render `"To apply, have ready"` at
   all (today's build renders it with only the `Seen on` row).
+
+---
+
+##### B4-08 — Locked block promises to judge exhibitors that do not exist (R10). `WRONG SHAPE` — report-layer, closable now, and it reverses a specific round-3 test on purpose.
+
+**Cause.** `buildEventTierUpgradeItems()`
+(`web/src/app/events/[id]/page.tsx:78-107`, built by B3-09):
+
+```ts
+function buildEventTierUpgradeItems(untaggedOrganisationCount: number): TierUpgradeItem[] {
+  return [
+    {
+      title: untaggedOrganisationCount > 0
+        ? `The other ${untaggedOrganisationCount} exhibitors, judged`
+        : "The other exhibitors, judged",
+      description: "Reads the full list and tells you which strangers are worth your day.",
+    },
+    // ...three more items, always present
+  ];
+}
+```
+
+called at `:2127` as `buildEventTierUpgradeItems(roster.organisationTail.length)`.
+This item is **always** one of the four rows `TierUpgradeBlock` renders — there
+is no gate anywhere checking whether `event.organisations` has any entries at
+all. B3-09 built the `> 0` branch specifically so the count would never read
+"The other 0 exhibitors" — a real, correct fix for the case where every
+organisation is already tagged (untagged count is 0 but organisations exist).
+**Round 4 found a different, uncovered case**: zero organisations at all. The
+generic fallback text — written for "nothing untagged" — also fires here,
+and it reads exactly the same either way: "Reads the full list and tells you
+which strangers are worth your day," when there is no list, full or
+otherwise, to read.
+
+**This directly reverses one specific existing test, and the reversal is the
+point, not an oversight.** `web/src/app/events/[id]/page.test.ts:254-260`,
+"locked block falls back to the generic phrasing when nothing is untagged":
+
+```ts
+const noOrgsHtml = renderReport(baseEvent({ organisations: [] }));
+expect(noOrgsHtml).toContain("The other exhibitors, judged");
+```
+
+This is B3-09's own test asserting exactly the behaviour round 4 now says is
+dishonest. **I am not silently reversing it** — the round-4 finding itself
+(R10, written by the manager, explicitly citing B3-09's reasoning as
+insufficient: "Round 3 made that count live precisely so it would tell the
+truth; with an empty roster it now advertises reading a list that is empty")
+already made this call; my job here is to guide the fix precisely, including
+which specific test must be rewritten, not to re-litigate whether it should
+change.
+
+**Fix direction.** `partitionEventRoster()`'s own return object
+(`:1448-1455`) already exposes `organisations` — the **total** (junk-filtered)
+list, not just the untagged tail. Pass that count in too, and only include
+item 1 in the array when it is non-zero:
+
+```ts
+function buildEventTierUpgradeItems(
+  organisationCount: number,
+  untaggedOrganisationCount: number,
+): TierUpgradeItem[] {
+  const items: TierUpgradeItem[] = [];
+  if (organisationCount > 0) {
+    items.push({
+      title: untaggedOrganisationCount > 0
+        ? `The other ${untaggedOrganisationCount} exhibitors, judged`
+        : "The other exhibitors, judged",
+      description: "Reads the full list and tells you which strangers are worth your day.",
+    });
+  }
+  items.push(/* the other three items, unconditional */);
+  return items;
+}
+```
+
+and update the call site to `buildEventTierUpgradeItems(roster.organisations.length,
+roster.organisationTail.length)`. `TierUpgradeBlock`
+(`web/src/components/reports/tier-upgrade-block.tsx:10-17`) already maps over
+`items` generically and already handles `items.length === 0` — dropping one
+of four items needs no change there.
+
+**Blast radius.** Contained to this one function and its one call site.
+`roster.organisations.length === 0` means genuinely zero real organisations
+after `isCachedRosterFurniture` filtering — the same standard `RosterSection`
+itself already uses to decide whether to render at all (`:1469`,
+`if (organisations.length === 0 && people.length === 0) return null;`), so
+this item's new gate is consistent with, not a new standard alongside, the
+one the roster section already applies to itself.
+
+**Risk.** `web/src/app/events/[id]/page.test.ts:254-271`, "locked block falls
+back to the generic phrasing when nothing is untagged" — **two cases, and they
+now diverge**:
+- `:258-260` (`organisations: []`) — **breaks by design.** Must be rewritten:
+  the locked block should **not** contain "The other exhibitors, judged" at
+  all for this fixture once the fix lands (`expect(noOrgsHtml).not.toContain(
+  "The other exhibitors, judged")`), and the test's own name/comment need
+  updating to explain why zero organisations now behaves differently from
+  zero untagged — say plainly in the rewritten comment that R10 changed the
+  intended contract, the way B3-04's guide rewrote a stale comment rather than
+  just changing an assertion silently.
+- `:262-270` (`organisations: [{ name: "Volta Lab", relevance: "..." }]`, one
+  organisation, fully tagged) — `organisationCount = 1 > 0`, so item 1 still
+  renders with the generic (no-count) phrasing. **Unaffected** — this is
+  exactly the case the `> 0`-on-untagged branch was built for, and it is
+  untouched by adding the new outer gate.
+- `web/src/app/events/[id]/page.test.ts:210-252`, "locked block's exhibitor
+  count agrees with the tail RosterSection shows..." — both its fixtures
+  (`unstarredHtml`, `starredHtml`) use a 5-organisation array
+  (`:216-222`). **Unaffected**, `organisationCount = 5 > 0` either way.
+- `web/src/components/reports/tier-upgrade-block.test.tsx` (confirmed by
+  reading B3-09's own round-3 note) renders its own fixture items directly,
+  not the page's constant — **unaffected**, no change needed there.
