@@ -365,6 +365,26 @@ describe("job detail enrichment", () => {
     });
   });
 
+  it("keeps a start-date-flexible signal even when it is the only new fact a page offers", async () => {
+    // B3-06. hasExtractedJobSignal must count startDateFlexible on its own —
+    // without that, a posting whose only new signal is flexibility would
+    // fail the gate and enrichJobCandidates would return the original item
+    // unchanged, silently discarding the extracted flag.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(
+          "<p>The start date is flexible for the right candidate.</p>",
+        ),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([job(20)]);
+
+    expect(enriched).toMatchObject({ startDateFlexible: true });
+  });
+
   it("leaves a 6 KB JavaScript shell unchanged and does not throw", async () => {
     const original = job(9);
     const fetchMock = vi.fn().mockResolvedValue(

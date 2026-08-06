@@ -39,13 +39,16 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 .. B3-05
-                  LANDED; B3-06's safe half (type + mapper + render, no
-                  extraction yet) LANDED (see §4 "Round 3 — Agent C" for
-                  detail) — gate after: 82 files / 853 tests passing,
-                  typecheck clean, lint unchanged. The measured 16% below
-                  will not move until this pass finishes and a future A
-                  re-measures.
+                  bookkeeping note, no code to write). B3-01 .. B3-06 all
+                  LANDED (B3-06 in its own two commits, safe half then
+                  extraction, per B's instruction) — see §4 "Round 3 —
+                  Agent C" for detail. Gate after B3-06: 82 files / 858
+                  tests passing, typecheck clean, lint unchanged. The
+                  measured 16% below will not move until this pass finishes
+                  and a future A re-measures. **B3-06's extraction regex is
+                  untested against real posting text — flagged for A to
+                  check in round 4's real-search-results pass (see NEW FOR
+                  A above and §4's B3-06 log entry).**
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
@@ -4790,7 +4793,57 @@ write), one commit per item, gate re-run after each.
   `"flexible"` inside the STARTS tile with a `data-report-fact-detail`
   sibling. **Extraction (the phrase-match list) is deliberately NOT in this
   commit** — that is the second half, next. **Gate: 82 files / 853 tests
-  passing, typecheck clean, 1 pre-existing lint error.** Commit: (recorded
-  after commit, see below).
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: `34adab7`.
+
+- **B3-06, extraction half — LANDED.** Second commit, per the same split.
+  `web/src/lib/opportunities/job-details.ts`: added `JobPageDetails.startDateFlexible?:
+  true`, a `START_DATE_FLEXIBLE_RE` phrase-match regex (three shapes: `"start
+  date is flexible"` / `"flexible start date"` / `"start date negotiable"` /
+  `"start date is open to discussion"` — the first three are Ruling 20's own
+  named examples, the fourth is B's own addition) and
+  `extractStartDateFlexible()`, called from `extractJobDetails` on the same
+  `visibleText` already in scope and spread conditionally like every other
+  field there — matches B's trace exactly: this is the right pipeline stage
+  (`extractJobDetails`/`enrichJobCandidates`), not the mapper, because the
+  mapper never has the posting's free text in scope by the time it runs.
+  `web/src/lib/opportunities/enrich.ts`: added `details?.startDateFlexible ||`
+  to `hasExtractedJobSignal`'s OR-chain (B's own flagged "easy to miss" — a
+  posting where flexibility is the *only* new signal would otherwise fail
+  the gate and have its whole enrichment discarded) and
+  `startDateFlexible: item.startDateFlexible ?? details?.startDateFlexible,`
+  in `enrichJobCandidates`'s returned object, beside `startDate`.
+
+  Confirmed by reading it first: none of `job-details.test.ts`'s existing
+  five `toEqual({...})` exact-object-match fixtures mention
+  "flexible"/"negotiable"/"open to discussion" anywhere (grepped to be
+  sure), so none of the five needed rewriting, exactly as B predicted. Added
+  four new tests there: one exercising the regex alongside a real
+  `startDate` in the same exact-object style as the existing five (Ruling
+  20's "start date is flexible" phrasing), two isolating the other two named
+  phrasings ("flexible start date", "start date negotiable") each on their
+  own with no other extractable field, and one explicit negative (a page
+  that says nothing about it extracts to `{}`, not a guessed field) — the
+  regex is the single riskiest piece of this item (a brand-new phrase list,
+  same caveat B raised about `workMode`'s location regex "ever mis-firing"),
+  so gave it direct coverage beyond just the one B named. Also added a
+  dedicated test in `enrich.test.ts` proving the `hasExtractedJobSignal` gate
+  fix actually matters: a fetched page whose *only* extractable detail is the
+  flexible-start phrase (no JSON-LD, no deadline, no contract length, no
+  visa language) still comes back with `startDateFlexible: true` — this test
+  would fail if the OR-chain addition above were reverted, which is the
+  point of it. **Gate: 82 files / 858 tests passing, typecheck clean, 1
+  pre-existing lint error.** Commit: (recorded after commit, see below).
+
+  **Note for A on real-data risk, per the handoff instruction to flag this
+  explicitly:** this regex is untested against real posting text — it only
+  knows the shapes this guide and Ruling 20 named. Real postings may phrase
+  start-date flexibility in ways the list misses (silent false negative,
+  which is the safe failure direction — the tile just stays quiet, same as
+  today) or, less likely but possible, phrase something superficially
+  similar that isn't actually about start-date flexibility (a false
+  positive, which would be a real correctness bug). **A should check this
+  against real search results in round 4 per the new mandate**, specifically
+  whether any real job's STARTS tile prints "flexible" and whether that
+  matches what the posting actually says.
 
 ---

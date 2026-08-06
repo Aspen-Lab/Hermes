@@ -50,6 +50,10 @@ function hasExtractedJobSignal(
       structured?.place ||
       details?.applicationDeadline ||
       details?.startDate ||
+      // B3-06. Without this, a posting where flexibility is the only new
+      // signal found would cause enrichJobCandidates to discard the whole
+      // enrichment below, silently throwing away the extracted flag.
+      details?.startDateFlexible ||
       details?.contractLength ||
       details?.applicationMaterials?.length ||
       (visa &&
@@ -182,6 +186,7 @@ export async function enrichJobCandidates(
       applicationDeadline:
         item.applicationDeadline ?? details?.applicationDeadline,
       startDate: item.startDate ?? details?.startDate,
+      startDateFlexible: item.startDateFlexible ?? details?.startDateFlexible,
       contractLength: item.contractLength ?? details?.contractLength,
       applicationMaterials:
         item.applicationMaterials ?? details?.applicationMaterials,

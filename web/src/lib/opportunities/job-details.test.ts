@@ -39,6 +39,50 @@ describe("extractJobDetails", () => {
     });
   });
 
+  it("extracts a start-date-flexible signal alongside a fixed start date", () => {
+    // B3-06 / Ruling 20. The posting states the start date can move; the
+    // signal is a small phrase match, not an inference from silence.
+    const html = `
+      <dl>
+        <dt>Closing date</dt><dd>15 September</dd>
+        <dt>Expected start</dt><dd>1 November 2027</dd>
+      </dl>
+      <p>The start date is flexible for the right candidate.</p>
+    `;
+
+    expect(extractJobDetails(html, new Date("2026-11-10T12:00:00Z"))).toEqual({
+      applicationDeadline: "2027-09-15",
+      startDate: "2027-11-01",
+      startDateFlexible: true,
+    });
+  });
+
+  it("recognises 'flexible start date' phrasing on its own", () => {
+    const html = "<p>We offer a flexible start date for the successful applicant.</p>";
+
+    expect(extractJobDetails(html, new Date("2026-11-10T12:00:00Z"))).toEqual({
+      startDateFlexible: true,
+    });
+  });
+
+  it("recognises 'start date negotiable' phrasing on its own", () => {
+    const html = "<p>Start date negotiable.</p>";
+
+    expect(extractJobDetails(html, new Date("2026-11-10T12:00:00Z"))).toEqual({
+      startDateFlexible: true,
+    });
+  });
+
+  it("never invents startDateFlexible when the posting says nothing about it", () => {
+    // Ruling 20's whole point: undefined unless the posting explicitly says
+    // the start date can move, never inferred from silence.
+    const html = "<p>Join our team as a research scientist.</p>";
+
+    expect(extractJobDetails(html, new Date("2026-11-10T12:00:00Z"))).toEqual(
+      {},
+    );
+  });
+
   it("extracts apply-by wording and application materials in source order", () => {
     const html = `
       <p>Apply by 1 December 2026.</p>

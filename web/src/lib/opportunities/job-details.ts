@@ -4,6 +4,12 @@ import { extractJsonLdOpportunities } from "./structured-extract";
 export interface JobPageDetails {
   applicationDeadline?: string;
   startDate?: string;
+  /**
+   * B3-06 / Ruling 20. Whether the posting itself says the start date can
+   * move. `true` only -- never inferred from a posting's silence, exactly
+   * like `startDate` above it never invents a date the posting doesn't state.
+   */
+  startDateFlexible?: true;
   contractLength?: string;
   applicationMaterials?: string[];
 }
@@ -45,6 +51,19 @@ const DEADLINE_LABEL_PATTERN =
   "(?:application\\s+deadline|closing\\s+date|apply\\s+by|applications?\\s+close(?:s)?|review\\s+of\\s+applications\\s+will\\s+begin)";
 const START_LABEL_PATTERN =
   "(?:(?:expected|anticipated|proposed)\\s+start(?:\\s+date)?|start\\s+date)";
+
+/**
+ * B3-06 / Ruling 20. A small phrase-match list, in the same spirit as
+ * `visa.ts`'s phrase sets but not copied from them -- there is no evidence
+ * quote to render here, only a boolean, so this stays a plain regex rather
+ * than that file's heavier country-scoped state machine.
+ */
+const START_DATE_FLEXIBLE_RE =
+  /\b(?:start\s*date|start)\s+(?:is\s+)?(?:flexible|negotiable)\b|\bflexible\s+start\s*date\b|\bstart\s*date\s+(?:is\s+)?open\s+to\s+discussion\b/i;
+
+function extractStartDateFlexible(text: string): true | undefined {
+  return START_DATE_FLEXIBLE_RE.test(text) ? true : undefined;
+}
 
 const CONTRACT_PATTERNS = [
   /\b(?:\d+(?:\.\d+)?|one|two|three|four|five)\s*[- ]\s*(?:year|month)s?\s+fixed\s*[- ]\s*term(?:\s+(?:contract|appointment|position|post|role))?\b/gi,
@@ -268,12 +287,14 @@ export function extractJobDetails(
     START_LABEL_PATTERN,
     now,
   );
+  const startDateFlexible = extractStartDateFlexible(visibleText);
   const contractLength = extractContractLength(visibleText);
   const applicationMaterials = extractApplicationMaterials(visibleText);
 
   return {
     ...(applicationDeadline ? { applicationDeadline } : {}),
     ...(startDate ? { startDate } : {}),
+    ...(startDateFlexible ? { startDateFlexible } : {}),
     ...(contractLength ? { contractLength } : {}),
     ...(applicationMaterials.length > 0 ? { applicationMaterials } : {}),
   };
