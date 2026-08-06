@@ -107,6 +107,50 @@ then re-runs A's job independently before anything is called done.
 
 ---
 
+## §0c. IF YOU ARE A SCHEDULED CLOUD RUN — three extra constraints
+
+You are running hourly in Anthropic's cloud, from a fresh checkout, with no
+memory. **§0b is your brief.** These three rules are additional and override
+anything in §0b that conflicts.
+
+### 1. You cannot do Agent A's real-data measurement. Do not fake it.
+
+A's real-search pass needs live API keys from `web/.local-data/profile.json` —
+**gitignored, and present only on the user's own machine.** You do not have it
+and will never have it.
+
+**If §1 says it is A's turn and the round needs a live pass:**
+
+- Do **not** run a fixture-only measurement and call it the round.
+- Do **not** skip ahead to another role's work.
+- **Append a short note to §4** saying a cloud run reached A's turn and cannot
+  do the live pass, **leave §1 pointing at A**, commit, and stop.
+
+The user's local machine picks it up from there. A half-measurement that looks
+complete is worse than no measurement — the whole reason round 4 exists is that
+a fixture score of 3% hid reports that did not work on real data.
+
+### 2. A quiet no-op is the correct outcome most of the time.
+
+You fire every hour. Most hours there is nothing to do — the turn is finished,
+or the local machine is mid-round. **If §1 shows nothing pending, change
+nothing, commit nothing, and exit.** Do not invent work to justify the run.
+
+### 3. Do the work yourself. Do not spawn subagents.
+
+§0b tells the local manager to spawn A/B/C on Sonnet. **That does not apply to
+you** — you are already a Sonnet session, and nested spawning in a scheduled run
+is what the account's spend limit keeps killing. Read the role's job in §2, read
+the work list in §4, and do it directly.
+
+### And always, before you stop
+
+**Commit and push.** `git push origin feature/summary-report-revamp`. An
+uncommitted cloud run leaves nothing behind — your checkout is discarded when
+the run ends. Committing per item (§3) matters more for you than for anyone.
+
+---
+
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
