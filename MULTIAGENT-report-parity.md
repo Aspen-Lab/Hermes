@@ -4462,3 +4462,85 @@ gap untouched. This is a paperwork correction, not a ruling request; no
 `POLICY` decision is needed since there is no candidate fix to rule on.
 
 ---
+
+##### B3-11 -- Happenings footnote names every highlighted chip in full; plate uses a two-item shorthand. `WRONG SHAPE` -- copy/judgment call, not a hard defect. (Event finding 8)
+
+**Cause.** `happeningsFootnote()` (`web/src/app/events/[id]/page.tsx:342-364`):
+
+```ts
+const named = joinNaturally(highlightedLabels);
+const verb = highlightedLabels.length === 1 ? "is the one" : "are the ones";
+...
+return (
+  "Highlighted because they line up with your topics" + about +
+  ` -- ${named} ${verb} you'd be sorry to miss.`
+);
+```
+
+For the round-3 fixture (three highlighted chips), this renders: "...--
+Poster session -- open call, Symposium: solid-state interfaces, and
+Recruiting fair, day 3 are the ones you'd be sorry to miss." Plate: "...--
+the poster call and the recruiting fair are the two you'd be sorry to
+miss." Two things going on, and they are not the same kind of gap:
+
+1. **Count/length.** The build names every highlighted chip; the plate's
+   own fixture happens to have exactly two, named in short paraphrase ("the
+   poster call," not "Poster session -- open call"). C's original choice
+   (B2-17) to generalise rather than hardcode "the two" was the right call
+   -- the plate's phrasing describes its own fixture, not a rule about
+   always naming exactly two things.
+2. **A real, concrete typographic bug.** When a highlighted label itself
+   contains an em-dash (`"Poster session -- open call"`, one of
+   `ACTIVITY_LABELS`' own real entries, `event-details.ts`), it collides
+   with the sentence's own trailing em-dash: "...your topics -- Poster
+   session -- open call, ... are the ones..." reads as if the dash before
+   "Poster session" and the dash inside its own name are the same kind of
+   break, when they aren't.
+
+**What I'd actually recommend: keep naming every highlighted chip; fix only
+the dash collision.** Shortening to match the plate's "the two" would mean
+inventing a per-activity short alias for every possible highlighted label
+("Poster session -- open call" -> "the poster call" is a genuine rewrite, not
+a truncation or a rule-based abbreviation) -- that's real, ongoing
+copy-authoring work with no natural stopping point, for a report whose
+guiding principle everywhere else in this loop has been "state the fact,
+don't curate it away." Naming all three (or four, or five) highlighted
+chips is longer than the plate's two-item example, but it is not
+*wrong* -- it tells the reader exactly which chips were highlighted and
+why, which is the sentence's entire job. Silently dropping one of three
+true reasons to match a fixture-specific "the two" would be a small
+step toward the exact kind of curation Peer has been built to avoid doing
+on the reader's behalf.
+
+The dash collision, though, is a concrete, fixable defect independent of
+that judgment call: don't lead the named list with the sentence's own
+em-dash when a name in that list already contains one.
+
+```ts
+const separator = named.includes("--") ? ":" : " --";
+return (
+  "Highlighted because they line up with your topics" + about +
+  `${separator} ${named} ${verb} you'd be sorry to miss.`
+);
+```
+
+(Substitute the actual em-dash character the file uses, not a literal
+double-hyphen -- this guide is typed in plain ASCII throughout, the source
+uses "--" as em-dash.) This is a minimal, self-contained change: swap the
+lead-in punctuation only when it would otherwise collide, leave every other
+case (one, two, or non-dash-containing labels) exactly as it renders today.
+
+**Risk.** Grepped `web/src/app/events/[id]/page.test.ts` for `"-- open
+call"` / `"Poster session --"` -- **zero hits.** No permanent test currently
+exercises an em-dash-containing highlighted label (round 3's own fixture,
+which surfaced this, was a throwaway measurement script, already deleted).
+So: no existing test breaks from either the "keep naming everything" choice
+or the dash-collision fix. **Add a new test**: `activities: ["poster
+session -- open call", "workshop"]` with both matched, asserting the
+footnote does not contain two consecutive em-dash-led clauses run together
+-- i.e. that the sentence's own separator visibly differs from the one
+inside the label. If A or the manager instead wants the shortened,
+plate-literal "the two" behaviour, that is a policy reversal of B2-17's own
+choice and belongs in a fresh ruling, not a quiet re-implementation here.
+
+---
