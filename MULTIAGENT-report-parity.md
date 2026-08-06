@@ -32,10 +32,45 @@ before you stop, not after you finish.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-ROUND:            3
-WHOSE TURN:       A  (measure round 4 — this is now the round-4 measurement
-                  §2's "NEW FOR A" mandate below applies to)
-STATUS:           ROUND-3 IMPLEMENTATION COMPLETE. C worked B3-01 .. B3-11 in
+ROUND:            4
+WHOSE TURN:       MANAGER — the user must rule before B can start. See
+                  "ROUND 4 CHANGED THE PROBLEM" below.
+STATUS:           ROUND-4 MEASUREMENT COMPLETE, run by the MANAGER (the fifth
+                  agent in a row died on the account spend limit). **Two
+                  measurements, and they disagree completely.**
+LAST DIFFERENCE:  3%  on the fixture (was 16%) — **but the fixture is no
+                  longer the honest number. See below.**
+GATE (0%):        NOT MET
+
+ROUND 4 CHANGED THE PROBLEM
+---------------------------
+The fixture score is **3% different — 31 of 32 plate elements exact**, one
+string away from the gate. The first real search says something else entirely:
+
+  - **0 of 3 real events** carry fees, organisations, people, deadlines,
+    `expectedSize`, `rank`, or a travel grant. The cost table, the whole
+    roster, and "Two deadlines, one event" have nothing to render.
+  - **0 of 3 real jobs** carry salary, employment type, contract length,
+    `workMode`, `startDateFlexible`, a start date, or application materials.
+  - **One real event's H1 is a stray sentence about the COVID-19 pandemic.**
+    Another's title ends in an ellipsis. A third has `date: ""` and renders
+    essentially nothing.
+  - **One real job prints scraped site chrome as its role description**, and
+    another puts `Summer 2027` where the employer's name goes.
+
+Full evidence, per-item coverage tables and ten numbered findings are in §4
+under "Round 4". **Three findings (R3, R5, R10) are report-layer defects this
+loop can close.** The rest are extraction quality, which this loop was never
+scoped to touch — and which now matter far more to a reader than the 3% of
+plate parity that remains.
+
+**Nothing goes to B until the user rules on §4's open POLICY items.** Writing a
+guide for the last 3% while a real report's title is a sentence about COVID-19
+would be optimising the wrong thing.
+
+PRIOR STATUS (round 3, kept for the record)
+-------------------------------------------
+ROUND-3 IMPLEMENTATION COMPLETE. C worked B3-01 .. B3-11 in
                   order, one commit per item (B3-06 split into two, safe half
                   then extraction, per B's own instruction), skipped B3-10 (no
                   code existed to write it — logged as intentionally skipped,
@@ -248,6 +283,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 1 | 50% | 8 of 32 plate elements absent, 16 wrong shape/order/copy, 8 exact. Gate not met. |
 | 2 | 22% | 0 of 32 plate elements absent, 14 wrong shape/copy, 18 exact (25/32). Gate not met — B-06 and B-12 only partially landed; fresh findings on date-granularity wording (job facts + Timeline) and event People-card content; one header-chip question still POLICY, unresolved since round 1. |
 | 3 | 16% | 0 absent, 10 wrong shape/copy, 22 exact (27/32). Gate not met — 13 differences, 5 job and 8 event. **Measured by the MANAGER, not an A subagent** (four agents died on the spend limit or a stall), so this round is less independent than 1 and 2. Reversed §1f Ruling 17 after finding the kind label defined on plate 04; B2-15 landed for only one of its two table rows. Two open POLICY items. |
+| 4 | **3% fixture / real data far worse** | 0 absent, 1 half, 31 exact (31/32) on the hand-built fixture — one string from the gate. **First real-search run says otherwise:** 0 of 3 real events carry fees, roster, or deadlines; 0 of 3 real jobs carry salary, work mode, or materials; one real event H1 is a stray COVID-19 sentence. Gate not met. Measured by the MANAGER (fifth agent died on the spend limit). |
 
 ---
 
@@ -705,6 +741,25 @@ worth it for this loop.
 treat them exactly like exclusions (a)–(j): re-list them by name every round
 so they stay visible, never guide them, never let them silently re-enter the
 active difference count.
+
+---
+
+## §1i. RULING 22 — the happenings footnote keeps naming every chip
+
+Decided 2026-08-05. B3-11 recommended keeping the build's version rather than
+compressing to the plate's two-item shorthand, and the manager agrees.
+
+Plate: `— the poster call and the recruiting fair are the two you'd be sorry to
+miss.` Build: names each highlighted chip by its full label.
+
+To produce the plate's version automatically you would need a short alias for
+every activity, invented by us, with no natural stopping point — and choosing
+which two of three to name is exactly the curation this project exists to
+refuse. **The build states which chips are highlighted. That is the fact.**
+
+**Added as exclusion (m).** Re-list it by name every round. The one concrete
+defect B3-11 did find — the sentence's em-dash colliding with an em-dash inside
+a chip label — was fixed, not excluded.
 
 ---
 
@@ -5073,3 +5128,217 @@ write), one commit per item, gate re-run after each.
 Round 3's fix guide is fully landed. STATUS: COMPLETE.**
 
 ---
+
+### Round 4 — the MANAGER, doing A's job
+
+**STATUS: COMPLETE.** Two measurements, as the round-4 mandate requires.
+
+- **Fixture score: 3% different (97% matched)** — down from round 3's 16%.
+- **Real search: the reports do not resemble the plates at all.** This is the
+  round's real result and it is not a percentage.
+
+**Gate: NOT MET**, and for a reason no previous round surfaced.
+
+**Who ran this.** Not an A subagent — the fifth agent in a row died on the
+account's monthly spend limit, two minutes in, having written nothing. Same
+independence caveat as round 3: the manager wrote much of what it is now
+grading. **Treat this list with the suspicion you would give any agent's.**
+
+**Gate re-run:** 82 files / **865 tests, all 865 passing**, typecheck clean,
+exactly 1 pre-existing lint error (`src/components/persona/quiz.tsx:46`). The
+`benchmark.test.ts` flake did not fire.
+
+---
+
+#### MEASUREMENT 1 — FIXTURE. 3% different.
+
+Method: unchanged from rounds 1-3 — `renderToStaticMarkup` on both exported
+report components through a throwaway vitest spec, plate values in the fixture,
+`nowMs = Date.parse("2026-07-30T12:00:00Z")`, same 32-element inventory,
+1 / 0.5 / 0 scoring. Spec and dumps deleted; tree clean.
+
+**Result: 31 exact, 1 half, 0 absent → 31 / 32 = 97% matched, 3% different.**
+
+| Round | Difference | Absent | Half | Exact |
+|---|---|---|---|---|
+| 1 | 50% | 8 | 16 | 8 |
+| 2 | 22% | 0 | 14 | 18 |
+| 3 | 16% | 0 | 10 | 22 |
+| 4 | **3%** | 0 | 1 | **31** |
+
+**Everything B3-01..B3-11 targeted landed and is confirmed by render**, including
+every item round 3 raised:
+
+- Job Timeline is now `Posted Jul 22 / Today / Deadline Sep 15 / Start Jan 2027`
+  — exact, no date under "Today".
+- STARTS tile renders `Jan 2027 / flexible` (Ruling 20 / B3-06).
+- Event kind chip renders **`Industry summit`** and the secondary chip renders
+  **`+ career fair`** — Ruling 19's label map landed, and it is confirmed working
+  on real data too (real events render `Academic conference`, not `Conference`).
+- Deadline strip is `Today / Abstract Oct 30 / Register Feb 20 / Event Mar 8`.
+- Travel grant is three real columns: `— / 30 available / Apply with your abstract`.
+- Costs footnote quotes **$620**, the after-early-bird price, not $480.
+- Locked block reads `The other 22 exhibitors, judged` — a live count.
+- Happenings footnote's em-dash collision is fixed (lead-in is now a colon).
+
+**The one remaining fixture difference:**
+
+**1. LOCATION sub-line prints the full country name.** Build: `Hybrid · United
+States`. Plate: `Hybrid · US`. C flagged this itself as a named open gap rather
+than claiming B3-08 fully landed, which was the right call. Everything else on
+that tile is exact.
+
+**Exclusions re-listed by name, as §1e requires every round:** §1d 1-5 (the two
+job locked-block promises, the two quoted-specifics sections and their locked
+promise, the event description paragraph, the "Interested" button); exclusion 7
+(`REGISTER BY` sub-line — **verified still correctly empty**); exclusion 8 gaps
+(c) `ELIGIBILITY`, (d) `TEAM`, (e) `· reposted from employer site`, (f)
+`streamed keynotes` / `hybrid keynotes`, (g) venue name, (h) `plus four
+nights`; **(b')** the `(3 days on-site)` day-count only — the mode word is
+closed; §1h (k) and (l), both "Why Peer sent this to you" closing clauses.
+**(j) remains withdrawn** (§1g) and was scored as a normal difference — it is
+now closed.
+
+**New this round: exclusion (m) is proposed, not taken.** The happenings
+footnote names every highlighted chip in full where the plate uses a
+fixture-specific two-item shorthand. B3-11 recommended keeping the build's
+version; the manager agrees and has ruled it (§1i Ruling 22). Listed so it stays
+visible.
+
+---
+
+#### MEASUREMENT 2 — REAL SEARCH. The finding that matters.
+
+**Method.** `buildDailyEventPool()` and `buildDailyJobPool()` at `aiTier: 0`,
+driven by the real profile at `web/.local-data/profile.json`, mapped through
+`scoredEventToEvent()` / `scoredJobToJob()`, each item rendered through the real
+report component. 15 events and 14 jobs came back; the top 3 of each were
+rendered. Live Tavily, Adzuna and USAJobs keys were used and **no key was
+printed, logged, or written anywhere**. Throwaway spec deleted.
+
+**Headline: the fixture was hiding almost everything.**
+
+##### Field coverage across 3 real events
+
+| Plate element | Real events carrying it |
+|---|---|
+| `fees` (the whole cost table) | **0 of 3** |
+| `organisations` (the whole roster) | **0 of 3** |
+| `people` (speakers) | **0 of 3** |
+| `deadline` / `registrationDeadline` | **0 of 3** |
+| `expectedSize` (SCALE tile) | **0 of 3** |
+| `rank` (CCF-B chip) | **0 of 3** |
+| `travelGrant` / `invitationLetter` | **0 of 3** |
+| `activities` | 1 of 3 had **one** generic chip |
+| a usable `location` | **1 of 3** — the other two are the literal string `See event page` |
+| a `date` at all | 2 of 3 — **event 3 has `date: ""`** |
+
+##### Field coverage across 3 real jobs
+
+| Plate element | Real jobs carrying it |
+|---|---|
+| `salary` (SALARY tile) | **0 of 3** |
+| `employmentType` / `contractLength` | **0 of 3** |
+| `workMode` (B2-06's field) | **0 of 3 — never fired** |
+| `startDateFlexible` (B3-06's new field) | **0 of 3 — never fired** |
+| `startDate` | **0 of 3** |
+| `applicationMaterials` | **0 of 3** |
+| `roleKind` (TYPE tile) | 1 of 3 |
+| `visa` | 1 of 3 |
+| a usable `location` | **1 of 3** — the other two are `See posting` |
+
+##### Numbered findings — real data only
+
+**R1. A real event's H1 is a stray sentence from the page, not its name.**
+Real event 1 renders as its title: `TiRT7 was originally planned for 2020 but
+was delayed due to the COVID-19 pandemic.` The actual conference name appears
+nowhere on the report. **The single most prominent element on the page is
+wrong.**
+
+**R2. A real event's own body contradicts its header.** The same report's WHERE
+tile says `Cologne, Germany`; its description says the event `will be held in
+Lanzhou, Gansu Province, China`. One of the two is false and the reader has no
+way to tell which.
+
+**R3. "Two deadlines, one event" renders with no deadlines.** Real event 1
+shows that heading above exactly two rows: `Today` and `Event Aug 9`. The
+section's name promises two deadlines; it delivers zero. **The heading should
+not render when neither deadline exists** — this is the say-what-is-true rule
+the whole Phase 7 cleanup was built on, and it fails on the first real event.
+
+**R4. "What the role is" prints scraped site chrome verbatim.** Real job 2:
+`Apply to job Employment type: Full time Experience required: Intermediate
+Salary … molten salt coolant in-house`. Navigation labels, a form field name,
+and a mid-sentence ellipsis, presented to the reader as the description of the
+role. **`keyRequirements` has a junk guard (B-10); `summary` has none.**
+
+**R5. "To apply, have ready" renders containing only where we found the job.**
+Real job 2's entire section is one row: `Seen on: jobweb`. A section whose
+purpose is telling you what to prepare, containing nothing you prepare.
+**It should not render when `applicationMaterials` is empty.**
+
+**R6. `SEEN ON` prints an internal source id.** Real jobs render `jobweb`. The
+plate prints `Adzuna` — a name a reader recognises. `jobweb` is a slug from our
+own code and means nothing outside it.
+
+**R7. A real job's subtitle puts the wrong thing in the company slot.** Real
+job 2 renders `Summer 2027 · Alameda, CA`. `Summer 2027` is in the
+`companyOrLab` position, so the report states a season where the employer
+should be.
+
+**R8. A real event's title is truncated with an ellipsis.** Real event 3:
+`The First European Conference on Molten Salt Reactor ...`.
+
+**R9. Real event 3 renders almost nothing.** With `date: ""` and a placeholder
+location, the whole report is: chips, a truncated title, `in person`, the
+buttons, one line of "Why Peer sent this to you", and the locked block. **No
+facts row, no deadlines, no programme, no roster, no costs.** Against a plate
+with eighteen elements, that is one.
+
+**R10. The locked block promises to judge exhibitors that do not exist.** All
+three real events carry zero organisations, and all three still print `The
+other exhibitors, judged — Reads the full list and tells you which strangers
+are worth your day.` Round 3 made that count live precisely so it would tell the
+truth; with an empty roster it now advertises reading a list that is empty.
+**Same class of dishonesty §1d Ruling 1 removed from the job report.**
+
+##### What DID work on real data
+
+The label map (Ruling 19) — real events render `Academic conference`, not
+`Conference`. Date formatting and countdowns — `Apply by Sep 11 / 36 days
+left`, `Posted Jul 23 / 13 days ago`, no years, plate wording (Ruling 8) — on
+real dates, not just fixture ones. The Timeline's `Deadline` / `Today` labels.
+`VISA Not stated` where the posting is silent. Placeholder suppression — the
+literal strings `See posting` and `See event page` are correctly **not** printed
+as locations. Every section with no data correctly hides rather than showing an
+empty shell — except the three cases in R3, R5 and R10.
+
+---
+
+#### C. Verdict
+
+**The fixture score is 3% and the real-data score cannot honestly be given as a
+percentage**, because the gap is not layout — it is that the data behind twelve
+of the plates' elements does not exist on real items at all.
+
+Three of the real-data findings (**R3, R5, R10**) are **report-layer defects**
+and are closable inside this loop: three sections render a promise their
+contents cannot keep. Those belong in B's next guide.
+
+The rest (**R1, R2, R4, R6, R7, R8**, and the whole coverage table) are
+**extraction-quality defects**. They are outside what a report component can
+fix, and outside the scope this loop was given. **They are also, on the evidence
+above, a far bigger obstacle to a reader getting a useful report than the 3%
+of plate parity that remains.** That is a judgement for the manager and the
+user, not for A.
+
+#### D. Open POLICY items
+
+1. **The extraction-quality findings (R1, R2, R4, R6, R7, R8).** In scope for
+   this loop, a separate piece of work, or not worth doing? The loop cannot
+   reach a meaningful 0% while a real report's title can be a sentence about
+   COVID-19.
+2. **Whether the fixture measurement should continue at all.** It is at 3% and
+   its remaining finding is one string. It has also, for four rounds, reported
+   near-success for reports that do not work on real data. Keeping it as a
+   regression check is cheap; treating it as the gate is what went wrong.
