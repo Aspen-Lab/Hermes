@@ -5950,3 +5950,81 @@ test assert its text; the one big fixture that exercises most of the page
 `sourceId: "adzuna"` should show `"Adzuna"`, not `"adzuna"`; a job with
 `sourceId: "jobweb"` should show the generic label, never the literal string
 `"jobweb"`.
+
+---
+
+##### B4-06 — "Two deadlines, one event" renders over zero deadlines (R3). `WRONG SHAPE` — report-layer, closable now.
+
+**Cause.** `deadlineMilestones()` (`web/src/app/events/[id]/page.tsx:698-736`):
+
+```ts
+const submission = reportShortDate(event.deadline, nowMs);
+const registration = reportShortDate(event.registrationDeadline, nowMs);
+const eventDate = reportShortDate(event.date, nowMs);
+const milestones: DeadlineMilestone[] = [];
+if (!submission && !registration && !eventDate) return milestones;
+milestones.push({ key: "today", label: "Today", accent: true });
+if (submission) milestones.push({ key: "submission", label: "Abstract", value: submission });
+if (registration) milestones.push({ key: "registration", label: "Register", value: registration });
+if (eventDate) milestones.push({ key: "event", label: "Event", value: eventDate });
+```
+
+The initial guard requires only **one of three** signals — `submission`,
+`registration`, or **`eventDate`, the event's own start date**, which almost
+every real event has even with zero actual deadlines. Once it passes, `Today`
+is pushed unconditionally and `Event` is pushed whenever the event has a
+date — neither is a deadline. The render gate,
+`{milestones.length > 0 && <ReportSection title="Two deadlines, one
+event">...}` (`:1928-1932`), checks only the array's length, not whether it
+contains anything the heading actually promises. For a real event with a
+known start date but no abstract deadline and no registration deadline,
+`milestones = [Today, Event]` — length 2, section renders, heading says "two
+deadlines," **zero are present.** This is exactly R3's own repro (`Today` /
+`Event Aug 9`).
+
+**Fix direction.** Gate the section on whether a **real deadline** exists, not
+on the milestones array's raw length — something like
+`const hasDeadline = Boolean(submission || registration);` computed alongside
+`milestones`, and render the section on `hasDeadline` (or equivalently,
+`milestones.some((m) => m.key === "submission" || m.key === "registration")`
+at the call site) rather than `milestones.length > 0`. `Today` and `Event` stay
+in the array either way when the section does render — they are the axis the
+deadlines are plotted against, not the promise being made. Only the
+**visibility gate** changes; `deadlineMilestones()`'s own construction does
+not need to change at all.
+
+**Risk.** Grepped `web/src/app/events/[id]/page.test.ts` for every occurrence
+of `"Two deadlines"` and `data-deadline-milestone` — exactly three assertion
+sites, and I checked each fixture directly rather than assuming:
+- `:274-293` (feeds "repeats the cheapest line and renders the required
+  four-column cost table," asserted at `:318-324`) sets `deadline:
+  "2027-01-28"` **and** `registrationDeadline: "2027-06-15"` explicitly.
+- `:574-588` ("gives the deadline strip its heading and a Today milestone")
+  sets both fields too (`deadline: "2027-01-28", registrationDeadline:
+  "2027-06-15"`).
+
+**Both real deadlines present in both fixtures — both tests stay green,
+unchanged, under the new gate.** No test anywhere in this file currently
+exercises the empty-deadline case at all. Worth noting for A/C: `baseEvent()`'s
+own base object (`:19-31`) sets neither `deadline` nor `registrationDeadline`
+by default — every test that touches this section happens to override both
+explicitly, which is exactly the "hand-built fixture always populates every
+field" blind spot §1j's mandate exists to catch; this section's current
+100%-of-tests-set-both pattern is what let the empty-promise case ship
+unnoticed for three rounds. **Add a new test**: `baseEvent({ date:
+"2027-07-20" })` with neither `deadline` nor `registrationDeadline` set must
+not render the "Two deadlines, one event" heading at all — today's build
+renders it with `Today` / `Event` only; this is the exact case this item
+closes.
+
+**A related, weaker case on the job side, not guided as its own item.**
+`buildTimeline()`'s job-report equivalent (`web/src/app/jobs/[id]/page.tsx`,
+per B3-02's own trace) has the same "Today" push behind an
+always-true-in-practice condition, gated the same loose way
+(`timeline.length > 0`, `:777`). It is not the same defect — the heading
+there is the generic word `"Timeline"`, not a specific count-based promise
+like `"Two deadlines, one event"` — so a lone "Today" point is not the same
+class of falsehood. Worth C's sanity check (does a job with neither a
+deadline nor a start date render a "Timeline" section containing only the
+word "Today" and nothing else?) but not sized as a guided fix here, since no
+R-item named it.
