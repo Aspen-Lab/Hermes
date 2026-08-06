@@ -4544,3 +4544,46 @@ plate-literal "the two" behaviour, that is a policy reversal of B2-17's own
 choice and belongs in a fresh ruling, not a quiet re-implementation here.
 
 ---
+
+#### Summary -- 11 items
+
+| Class | Count | Items |
+|---|---|---|
+| `WRONG DATA` | 3 | B3-01, B3-05, B3-08 |
+| `WRONG SHAPE` | 5 | B3-02, B3-03, B3-04, B3-07, B3-11 |
+| `MISSING` | 3 | B3-06, B3-09, and B3-08 is arguably both `MISSING` and `WRONG DATA` (a new fact is missing, and the existing detail line is incomplete without it) |
+| `NO FIX AVAILABLE THIS ROUND` | 1 | B3-10 -- genuinely blocked on a data-model gap this round doesn't unblock; recommend narrowing exclusion (b) rather than treating it as closed or as fully open |
+
+(Counts add to 11 with B3-08 counted once, under `WRONG DATA`, per the table
+above -- flagging the dual nature rather than picking one label silently.)
+
+**Work order for C: top to bottom as numbered.** B3-01 first (correctness).
+B3-02/B3-03 are one shared mechanism (the Timeline/deadline-strip "Today"
+fix) -- do B3-02's code changes to both files, then B3-03 is mostly
+verification plus its own small "Register by" -> "Register" label change.
+B3-04/B3-05 are the same shape of dependency -- B3-04 builds the
+`EventType` label map, B3-05 reuses it. B3-06 (Ruling 20) is the largest
+item and should itself be split into two commits exactly as its own text
+says, mirroring B2-06. B3-07, B3-08, B3-09 are independent of each other and
+of everything above once B3-01 through B3-06 land. B3-10 has no code for C
+to write -- it is a bookkeeping note for A, not a work item, and should be
+skipped over when C reaches it. B3-11 is independent and low-risk.
+
+**One correction to how I'd apply Sec1h's own framing, stated plainly so A
+doesn't have to re-derive it:** Sec1h poses the STARTS `flexible` sub-line as
+a choice between the `jobWorkMode()` shape and the `visa.ts` shape. Neither
+is exactly right -- see B3-06. The relevant precedent for *where the code
+goes* is `extractJobDetails()`/`enrich.ts`, not `visa.ts` itself; `visa.ts`
+is the right precedent only for "this needs free text, not a structured
+field," which Sec1h's own instinct about was correct.
+
+**One thing I did not find any evidence for, and did not invent:** a
+US/UK-style short-form country abbreviation table (needed to make B3-08
+byte-exact to the plate's `US`, not just correct with `United States`).
+Confirmed by grep that nothing like it exists anywhere in the codebase
+already. Flagged in B3-08 as a named follow-up, not built silently and not
+left unmentioned.
+
+**STATUS: COMPLETE.**
+
+---
