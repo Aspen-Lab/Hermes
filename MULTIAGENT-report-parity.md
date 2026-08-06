@@ -39,9 +39,10 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01, B3-02, B3-03,
-                  B3-04, B3-05 LANDED (see §4 "Round 3 — Agent C" for
-                  detail) — gate after: 82 files / 852 tests passing,
+                  bookkeeping note, no code to write). B3-01 .. B3-05
+                  LANDED; B3-06's safe half (type + mapper + render, no
+                  extraction yet) LANDED (see §4 "Round 3 — Agent C" for
+                  detail) — gate after: 82 files / 853 tests passing,
                   typecheck clean, lint unchanged. The measured 16% below
                   will not move until this pass finishes and a future A
                   re-measures.
@@ -4761,6 +4762,35 @@ write), one commit per item, gate re-run after each.
   `career-fair` type renders `>Career fair<` (not `>Career Fair<`) — B noted
   no existing test asserted the primary chip's text for the default type at
   all. **Gate: 82 files / 852 tests passing, typecheck clean, 1
-  pre-existing lint error.** Commit: (recorded after commit, see below).
+  pre-existing lint error.** Commit: `a143348`.
+
+- **B3-06, safe half (type + mapper passthrough + render) — LANDED.** Split
+  into two commits exactly as B's guide and the standing B2-06 precedent
+  both said. This commit: added `Job.startDateFlexible?: boolean`
+  (`web/src/types/index.ts`, beside `startDate`), `RawJobItem.startDateFlexible`
+  (`web/src/lib/jobs/types.ts`, same `Job["..."]`-referencing convention as
+  its neighbours — `ScoredJobItem` needed no change, it extends `RawJobItem`
+  additively), a plain passthrough in `scoredJobToJob`
+  (`web/src/lib/jobs/mapper.ts`, alongside `startDate`/`contractLength` — a
+  code comment there says explicitly this is passthrough, not a derived
+  field like `jobWorkMode` above it, because extraction will happen
+  upstream), and the STARTS tile's `detail` in `buildJobFacts`
+  (`web/src/app/jobs/[id]/page.tsx`: `job.startDateFlexible ? "flexible" :
+  undefined`). `JobFact.detail` was already optional and `ReportFactTile`
+  (`web/src/components/reports/fact-tile.tsx:51-58`) already renders it
+  conditionally — confirmed by reading that shared component directly, no
+  render-layer change needed beyond the one line, exactly as B said.
+  Rewrote the stale "Job has no such field" comment both in
+  `buildJobFacts` itself (right above the STARTS tile construction) and in
+  the test B named (`page.test.ts`, "prints STARTS at month/year only, with
+  no invented sub-line") — B only flagged the test comment, but the same
+  now-false claim was also sitting in the source file's own comment one
+  function up, so rewrote both rather than leaving one stale copy behind.
+  Added a new test: `startDate` + `startDateFlexible: true` renders
+  `"flexible"` inside the STARTS tile with a `data-report-fact-detail`
+  sibling. **Extraction (the phrase-match list) is deliberately NOT in this
+  commit** — that is the second half, next. **Gate: 82 files / 853 tests
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: (recorded
+  after commit, see below).
 
 ---

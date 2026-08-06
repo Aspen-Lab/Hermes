@@ -44,6 +44,8 @@ export interface RawJobItem {
   salaryIsEstimated?: boolean;
   applicationDeadline?: Job["applicationDeadline"];
   startDate?: Job["startDate"];
+  /** B3-06. Same convention as the other `Job["..."]`-typed fields above. */
+  startDateFlexible?: Job["startDateFlexible"];
   contractLength?: Job["contractLength"];
   applicationMaterials?: Job["applicationMaterials"];
   roleKind?: Job["roleKind"];

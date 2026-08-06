@@ -149,6 +149,11 @@ export function scoredJobToJob(
     postedDate: item.postedAt,
     applicationDeadline: item.applicationDeadline,
     startDate: item.startDate,
+    // B3-06. A plain passthrough, not a derived field like `workMode` above
+    // — by the time the mapper runs, extraction has already happened
+    // upstream (`extractJobDetails` / `enrichJobCandidates`); there is
+    // nothing left for the mapper itself to derive.
+    startDateFlexible: item.startDateFlexible,
     contractLength: item.contractLength,
     applicationMaterials: item.applicationMaterials,
     roleKind: item.roleKind,

@@ -336,11 +336,20 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
           detail: workModeLabel(job),
         }
       : undefined,
-    // B2-05. The plate's "flexible" sub-line states whether the start date is
-    // negotiable. `Job` has no such field and nothing upstream extracts one —
-    // excluded, same "no field exists" category as (c)-(h), item (i). No
-    // detail is invented to fill the slot.
-    start ? { key: "start", label: "Starts", value: start } : undefined,
+    // B2-05 / B3-06 / Ruling 20. The plate's "flexible" sub-line states
+    // whether the start date is negotiable. `job.startDateFlexible` is
+    // `undefined` unless the posting itself says so (extracted upstream in
+    // `extractJobDetails`, never inferred from silence, same convention as
+    // `workMode`) — the detail only ever prints the fixed word "flexible",
+    // never invented for a posting that doesn't say it.
+    start
+      ? {
+          key: "start",
+          label: "Starts",
+          value: start,
+          detail: job.startDateFlexible ? "flexible" : undefined,
+        }
+      : undefined,
     deadline
       ? {
           key: "deadline",

@@ -220,6 +220,13 @@ export interface Job {
   postedDate?: string;
   applicationDeadline?: string;
   startDate?: string;
+  /**
+   * B3-06 / Ruling 20. Plate 02's STARTS tile sub-line ("flexible") --
+   * whether the posting itself says the start date can move. Additive;
+   * `undefined` unless the posting states it explicitly, never inferred
+   * from silence, exactly like `workMode` (B2-06).
+   */
+  startDateFlexible?: boolean;
   contractLength?: string;
   applicationMaterials?: string[];
   roleKind?: RoleKind;

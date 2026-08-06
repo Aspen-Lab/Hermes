@@ -328,11 +328,13 @@ describe("JobReport", () => {
   });
 
   it("prints STARTS at month/year only, with no invented sub-line", () => {
-    // B2-05. The granularity half (no day-of-month) landed with B2-01. The
-    // plate's "flexible" sub-line states whether the start date is
-    // negotiable — Job has no such field, so this is excluded under the
-    // same "no field exists" category as (c)-(h), item (i): the tile stays
-    // silent rather than inventing a detail to fill the slot.
+    // B2-05. The granularity half (no day-of-month) landed with B2-01.
+    // B3-06 / Ruling 20 built the "flexible" sub-line itself (see the test
+    // below) — this fixture's posting never says the start date can move
+    // (`startDateFlexible` is left unset), so the tile correctly stays
+    // silent. Rewritten from the original comment, which said Job had no
+    // such field at all — true before B3-06, false after; the field exists
+    // now, this fixture just doesn't trigger it.
     const html = renderReport(baseJob({ startDate: "2026-10-01" }));
     const startTile = html.match(
       /<div[^>]*data-job-fact="start"[^>]*>[\s\S]*?<\/div>/,
@@ -340,6 +342,20 @@ describe("JobReport", () => {
     expect(startTile).toContain("Oct 2026");
     expect(startTile).not.toContain("Oct 1");
     expect(startTile).not.toContain("data-report-fact-detail");
+  });
+
+  it("prints STARTS's flexible sub-line when the posting says the start date can move", () => {
+    // B3-06 / Ruling 20. Additive and never a guess: only renders when
+    // job.startDateFlexible is explicitly true.
+    const html = renderReport(
+      baseJob({ startDate: "2026-10-01", startDateFlexible: true }),
+    );
+    const startTile = html.match(
+      /<div[^>]*data-job-fact="start"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(startTile).toContain("Oct 2026");
+    expect(startTile).toContain("flexible");
+    expect(startTile).toContain("data-report-fact-detail");
   });
 
   it("shows the posting's own work mode in the LOCATION tile and the subtitle", () => {
