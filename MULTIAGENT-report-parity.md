@@ -42,6 +42,15 @@ LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3")
 GATE (0%):        NOT MET
 
+NEW FOR A:        **From round 4, A must ALSO measure against real search
+                  results — at least 3 real events and 3 real jobs, run
+                  through the current build's own pipeline, each rendered and
+                  compared to the plate.** Set by the user on 2026-08-05:
+                  rounds 1–3 all measured one hand-built maximal fixture per
+                  report, so a fix can score perfectly there and still fail on
+                  most of what a reader actually sees. Full instructions and
+                  the exact pipeline entry points are in §2 under Agent A.
+
 NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
                   withdrawn — `Summit` → `Industry summit` IS closable. Plate
                   04 defines it as the spec's display label for the `summit`
@@ -580,10 +589,55 @@ active difference count.
 Compare the **live** job report and event report against plates 02 and 03.
 
 - Read the plates from the PDF (`pages: "3-6"` covers plate 02 and the start of
-  plate 03; read further as needed — find them, do not guess).
+  plate 03; read further as needed — find them, do not guess). **§1g also
+  requires you to skim the WHOLE PDF once per loop**, not only those two plates.
 - Get the live reports. Either render the components to static markup the way
   `web/src/app/jobs/[id]/page.test.ts` does, or drive the dev server. Say which
   you used.
+
+#### MANDATORY FROM ROUND 4 — measure against REAL search results, not only a fixture
+
+Set by the user on 2026-08-05. **Rounds 1–3 all measured against a single
+hand-built fixture per report, and that is not good enough.**
+
+A hand-built fixture is *perfect* data: every optional field populated, every
+string well-formed, every date parseable. Real events and jobs are not. A fix
+that scores 1.0 against a maximal fixture can still be wrong for most of what
+Peer actually shows a reader — a tile that renders beautifully with all six
+fees present may collapse when a real event has one, or none.
+
+**Every round, you must additionally:**
+
+1. **Run a real search through the current build** — the same pipeline the app
+   uses, not a stub.
+2. **Take at least 3 real events and at least 3 real jobs** (6 minimum).
+3. **Render each one** through `EventReport` / `JobReport` and compare against
+   the plate.
+4. **Report per-item results, not just an average.** Say how many of the 6
+   render each plate element correctly. An element that works on 1 of 3 real
+   events is a finding, even if the fixture renders it perfectly.
+
+**How to run the real search — the mechanism already exists:**
+
+- `buildDailyEventPool()` — `web/src/lib/events/pipeline.ts:186`
+- `buildDailyJobPool()` — `web/src/lib/jobs/pipeline.ts:185`
+- Map results with `scoredEventToEvent()` (`web/src/lib/events/mapper.ts:121`)
+  and `scoredJobToJob()` (`web/src/lib/jobs/mapper.ts:104`).
+- The real profile, including live API keys, is read from
+  `.local-data/profile.json`. **`web/src/lib/events/benchmark.test.ts:25-37` is
+  the working precedent — copy its profile-loading shape.** It also honours a
+  `PEER_PROFILE_SNAPSHOT_PATH` override.
+
+**Security, unchanged and absolute:** the key is read from that file at
+runtime and used. **Never print it, never echo it into a log, never write it
+into any file, never paste it into your report.** If a live key is not present,
+say so plainly in your log and report the fixture-only result — do **not**
+fabricate a live run, and do **not** go hunting for a key elsewhere.
+
+**Both measurements go in your log**: the fixture score (comparable to rounds
+1–3) and the real-data findings. The percentage stays keyed to the fixture
+inventory so the round-over-round trend remains meaningful; real-data failures
+are reported as their own numbered findings.
 - Produce a **numbered difference list**. For each: what the plate has, what the
   build has, and which one is missing or wrong. Be specific enough that B can
   find it without re-deriving your work.
