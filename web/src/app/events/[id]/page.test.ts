@@ -207,6 +207,69 @@ describe("EventReport", () => {
     expect(html.match(/data-roster-row="organisation"/g)).toHaveLength(4);
   });
 
+  it("locked block's exhibitor count agrees with the tail RosterSection shows, and both move together when starring changes it", () => {
+    // B3-09. The locked block's item 1 used to always read "The other
+    // exhibitors, judged" with no count — a static module-level constant
+    // with no access to per-event data. The count is the same live number
+    // as "Every other organisation attending · N": both now read one shared
+    // computation (partitionEventRoster), so they cannot disagree.
+    const organisations = [
+      { name: "Volta Lab", relevance: "Runs the annual keynote track." },
+      { name: "Amp Systems", relevance: "You saved a role here." },
+      { name: "Battery Org 1" },
+      { name: "Battery Org 2" },
+      { name: "Battery Org 3" },
+    ];
+
+    const unstarredHtml = renderReport(baseEvent({ organisations }));
+    expect(unstarredHtml).toContain("Every other organisation attending · 3");
+    expect(unstarredHtml).toContain("The other 3 exhibitors, judged");
+
+    // Starring one of the three untagged organisations moves it into the
+    // Tier 0 cards, shrinking the tail from 3 to 2 — the locked block's
+    // count must shrink with it, in the same render.
+    const starredHtml = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({ organisations }),
+        careerStage: "PhD Year 3" as const,
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set(["organisation:battery org 1"]),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+    expect(starredHtml).toContain("Every other organisation attending · 2");
+    expect(starredHtml).toContain("The other 2 exhibitors, judged");
+  });
+
+  it("locked block falls back to the generic phrasing when nothing is untagged", () => {
+    // B3-09. Never print "The other 0 exhibitors" — the old generic
+    // phrasing stays when the count is zero (including when there are no
+    // organisations at all).
+    const noOrgsHtml = renderReport(baseEvent({ organisations: [] }));
+    expect(noOrgsHtml).toContain("The other exhibitors, judged");
+    expect(noOrgsHtml).not.toContain("The other 0 exhibitors");
+
+    const allTaggedHtml = renderReport(
+      baseEvent({
+        organisations: [
+          { name: "Volta Lab", relevance: "Runs the annual keynote track." },
+        ],
+      }),
+    );
+    expect(allTaggedHtml).toContain("The other exhibitors, judged");
+    expect(allTaggedHtml).not.toContain("The other 0 exhibitors");
+  });
+
   it("repeats the cheapest line and renders the required four-column cost table", () => {
     const html = renderReport(
       baseEvent({

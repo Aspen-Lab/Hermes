@@ -39,10 +39,10 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 .. B3-08 all
+                  bookkeeping note, no code to write). B3-01 .. B3-09 all
                   LANDED (B3-06 in its own two commits, safe half then
                   extraction, per B's instruction) — see §4 "Round 3 —
-                  Agent C" for detail. Gate after B3-08: 82 files / 862
+                  Agent C" for detail. Gate after B3-09: 82 files / 864
                   tests passing, typecheck clean, lint unchanged. The
                   measured 16% below will not move until this pass finishes
                   and a future A re-measures. **B3-06's extraction regex is
@@ -4919,6 +4919,53 @@ write), one commit per item, gate re-run after each.
   half ever renders a dangling separator when the other is missing
   (country with no `workMode`, `workMode` with no country). **Gate: 82
   files / 862 tests passing, typecheck clean, 1 pre-existing lint error.**
-  Commit: (recorded after commit, see below).
+  Commit: `a453936`.
+
+- **B3-09 — LANDED, following B's recommended hoist rather than a second,
+  separate count function.** Extracted `partitionEventRoster()`
+  (`web/src/app/events/[id]/page.tsx`) out of `RosterSection` — identical
+  logic to what used to run inline at the top of that component (the
+  `judgments`/`takeJudgment` de-duplication, the `organisations`/`people`
+  mapping and `byPriority` sort, the `organisationCards`/`organisationTail`/
+  `peopleCards`/`peopleTail` split), moved verbatim into a standalone
+  function so `EventReport` can call it once and read the same numbers
+  `RosterSection` renders. `RosterSection`'s own signature changed from
+  `{event, context, enrichment, starredKeys, onToggleStar}` to
+  `ReturnType<typeof partitionEventRoster> & {onToggleStar}` — confirmed via
+  grep it is not exported or used/tested anywhere outside this file, so the
+  signature change is self-contained. `EventReport` now computes `const
+  roster = partitionEventRoster(event, context, displayEnrichment,
+  starredKeys)` once (right after `hasEnrichment`) and spreads it into
+  `<RosterSection {...roster} onToggleStar={onToggleStar} />`.
+
+  Turned `EVENT_TIER_UPGRADE_ITEMS` from a static module-level constant
+  into `buildEventTierUpgradeItems(untaggedOrganisationCount: number):
+  TierUpgradeItem[]` (imported the `TierUpgradeItem` type alongside the
+  existing `TierUpgradeBlock` import) — item 1's title is now
+  `` `The other ${count} exhibitors, judged` `` when the count is positive,
+  falling back to the old generic phrasing ("The other exhibitors, judged")
+  at zero or when there are no organisations at all, exactly as B specified
+  — never "The other 0 exhibitors." Call site now reads
+  `buildEventTierUpgradeItems(roster.organisationTail.length)` — the same
+  tail length `RosterSection`'s own "Every other organisation attending ·
+  N" heading renders, both from the one `roster` computation, per B's own
+  reasoning for hoisting rather than duplicating.
+
+  Ran the gate before touching any test: all existing tests stayed green
+  unchanged, confirming B's claim first-hand (grepped for "exhibitors,
+  judged", "The other", "EVENT_TIER_UPGRADE", "TierUpgradeBlock" myself —
+  zero hits, nothing was asserting this text or count before). Added three
+  new tests: one modelled directly on the existing "moves a starred
+  organisation out of the tail and shrinks its count" test (5 organisations,
+  2 with a Tier-0 `relevance` reason) asserting the locked block's "The
+  other 3 exhibitors, judged" agrees with the roster heading's "Every other
+  organisation attending · 3", then starring one of the untagged 3 and
+  confirming BOTH numbers drop to 2 **in the same render** — this is the
+  actual point of the hoist, not just that each number is individually
+  correct in isolation; and one confirming the zero-count fallback (no
+  organisations at all, and all-organisations-tagged) never prints "The
+  other 0 exhibitors." **Gate: 82 files / 864 tests passing, typecheck
+  clean, 1 pre-existing lint error.** Commit: (recorded after commit, see
+  below).
 
 ---

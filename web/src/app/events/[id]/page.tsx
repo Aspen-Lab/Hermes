@@ -48,7 +48,10 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
-import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import {
+  TierUpgradeBlock,
+  type TierUpgradeItem,
+} from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import {
   ReportFactTile,
@@ -60,31 +63,48 @@ import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pai
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 
 const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
-const EVENT_TIER_UPGRADE_ITEMS = [
-  {
-    // B-20. Plate 03's wording. The plate hardcodes a count ("The other 29
-    // exhibitors, judged"); this block is static and cannot know it, so the
-    // count is left out rather than printed wrong.
-    title: "The other exhibitors, judged",
-    description:
-      "Reads the full list and tells you which strangers are worth your day.",
-  },
-  {
-    title: "What each talk is actually about",
-    description: "Reads the programme abstracts, not just the session titles.",
-  },
-  {
-    // B-04 / §1b Correction 1. Restored as item 3 of 4 with the plate's exact
-    // copy. P10.3 deleted the promise along with the feature.
-    title: "A day-by-day plan for you",
-    description: "Which sessions to attend and who to find, in order.",
-  },
-  {
-    title: "Is your work a fit for the poster call",
-    description:
-      "Compares the call's scope against your project and says yes or no.",
-  },
-];
+
+/**
+ * B3-09. Item 1's count used to be hardcoded absent because this was a
+ * module-level constant with no access to any per-event data. It is
+ * genuinely live: the untagged organisation tail's own length, the same
+ * number `RosterSection`'s "Every other organisation attending" heading
+ * already prints a few sections above — both now read from the one
+ * computation `partitionEventRoster` does, rather than two separate counts
+ * that could drift apart. Falls back to the old generic phrasing when
+ * there is nothing untagged (or no organisations at all), rather than
+ * printing "The other 0 exhibitors."
+ */
+function buildEventTierUpgradeItems(
+  untaggedOrganisationCount: number,
+): TierUpgradeItem[] {
+  return [
+    {
+      // B-20. Plate 03's wording, "The other 29 exhibitors, judged".
+      title:
+        untaggedOrganisationCount > 0
+          ? `The other ${untaggedOrganisationCount} exhibitors, judged`
+          : "The other exhibitors, judged",
+      description:
+        "Reads the full list and tells you which strangers are worth your day.",
+    },
+    {
+      title: "What each talk is actually about",
+      description: "Reads the programme abstracts, not just the session titles.",
+    },
+    {
+      // B-04 / §1b Correction 1. Restored as item 3 of 4 with the plate's exact
+      // copy. P10.3 deleted the promise along with the feature.
+      title: "A day-by-day plan for you",
+      description: "Which sessions to attend and who to find, in order.",
+    },
+    {
+      title: "Is your work a fit for the poster call",
+      description:
+        "Compares the call's scope against your project and says yes or no.",
+    },
+  ];
+}
 
 const EVENT_PAGE_READING_NOTES: Record<
   OpportunityPageReadingReason,
@@ -1341,19 +1361,20 @@ function RosterTail({
   );
 }
 
-function RosterSection({
-  event,
-  context,
-  enrichment,
-  starredKeys,
-  onToggleStar,
-}: {
-  event: Event;
-  context: EventRosterContext;
-  enrichment?: EventEnrichment | null;
-  starredKeys: ReadonlySet<string>;
-  onToggleStar: (key: string) => void;
-}) {
+/**
+ * B3-09. Hoisted out of `RosterSection` so `EventReport` can also read the
+ * untagged organisation tail's own length for the locked block's item 1
+ * count — there should be exactly one place that decides "tagged vs.
+ * untagged," not two separate computations that could quietly drift apart.
+ * Everything here is unchanged from what used to run inline at the top of
+ * `RosterSection`.
+ */
+function partitionEventRoster(
+  event: Event,
+  context: EventRosterContext,
+  enrichment: EventEnrichment | null | undefined,
+  starredKeys: ReadonlySet<string>,
+) {
   const judgments = new Map(
     (enrichment?.judgedAttendees ?? []).map((item) => [item.name, item]),
   );
@@ -1409,13 +1430,35 @@ function RosterSection({
   organisations.sort(byPriority);
   people.sort(byPriority);
 
-  if (organisations.length === 0 && people.length === 0) return null;
   const concerns = ({ reason, starred }: { reason?: string; starred: boolean }) =>
     Boolean(reason) || starred;
   const organisationCards = organisations.filter(concerns);
   const organisationTail = organisations.filter((row) => !concerns(row));
   const peopleCards = people.filter(concerns);
   const peopleTail = people.filter((row) => !concerns(row));
+
+  return {
+    organisations,
+    people,
+    organisationCards,
+    organisationTail,
+    peopleCards,
+    peopleTail,
+  };
+}
+
+function RosterSection({
+  organisations,
+  people,
+  organisationCards,
+  organisationTail,
+  peopleCards,
+  peopleTail,
+  onToggleStar,
+}: ReturnType<typeof partitionEventRoster> & {
+  onToggleStar: (key: string) => void;
+}) {
+  if (organisations.length === 0 && people.length === 0) return null;
 
   // B-14. Plate 03's sub-line counts how many of the room matter to YOU. The
   // build printed "· N judged" — a count of what the model processed, which is
@@ -1778,6 +1821,16 @@ export function EventReport({
       }
     : null;
   const hasEnrichment = hasEventEnrichment(displayEnrichment);
+  // B3-09. Computed once, read by both RosterSection (the roster cards and
+  // the "Every other organisation attending · N" heading) and the locked
+  // block's item 1 count below — the same live number in both places,
+  // rather than two separate computations that could drift apart.
+  const roster = partitionEventRoster(
+    event,
+    context,
+    displayEnrichment,
+    starredKeys,
+  );
 
   return (
     <PageContainer
@@ -1918,13 +1971,7 @@ export function EventReport({
         )}
       </div>
 
-      <RosterSection
-        event={event}
-        context={context}
-        enrichment={displayEnrichment}
-        starredKeys={starredKeys}
-        onToggleStar={onToggleStar}
-      />
+      <RosterSection {...roster} onToggleStar={onToggleStar} />
 
       <div className="mx-auto max-w-[720px]">
         {displayEnrichment?.talkSummaries && (
@@ -2069,7 +2116,7 @@ export function EventReport({
         />
 
         <TierUpgradeBlock
-          items={EVENT_TIER_UPGRADE_ITEMS}
+          items={buildEventTierUpgradeItems(roster.organisationTail.length)}
           providerConfigured={providerConfigured || hasEnrichment}
         />
       </div>
