@@ -1208,9 +1208,86 @@ export function parseStructuredLocation(
   return sanitizePlace({ city, region, country });
 }
 
+/**
+ * Preposition or venue verb that must sit near a candidate city before the
+ * city is trusted as the venue — B4-02's own repro was "a titanium
+ * conference held in Cologne whose abstract discusses production in China,"
+ * where nothing checked that the mention of a gazetteer city was actually
+ * describing the venue rather than something merely mentioned on the page.
+ * The comment on `countryAfterCity` above already applies the same idea to
+ * the COUNTRY half of a match; this extends it to the CITY half, which had
+ * no equivalent check at all. Bare "in"/"at"/"near" count too — "the
+ * industry summit in Chicago" has no stronger verb nearby and is a real,
+ * already-passing case. Tested against the RAW (non-canonicalized) text so
+ * `[^.]` still means a real sentence boundary — canonicalizing first would
+ * strip every period, including ones from unrelated earlier sentences, and
+ * let a cue from a different sentence bleed through.
+ */
+const CITY_PROXIMITY_CUE_RE =
+  /\b(?:in|at|near|held|hosted|takes? place|taking place|venue|location|located)\b[^.]{0,40}$/i;
+
+/**
+ * A city immediately followed by ", ST" (a real, uppercase US state code) is
+ * its own strong, structural locational signal — an address shape, not
+ * prose — and should not additionally need a preposition or verb nearby.
+ * Without this, a source's own structured field ("Chicago, IL + Virtual",
+ * the shape ccfddl's `place` field actually takes) would wrongly lose its
+ * region/country under the new cue requirement even though nothing about it
+ * is ambiguous the way a bare prose mention is. Case matters: matching
+ * lowercase would confuse the word "in" with the state code "IN".
+ */
+function hasTrailingStateCode(following: string): boolean {
+  const match = following.match(
+    new RegExp(`^\\s*,\\s*(${US_STATE_CODES.join("|")})\\b`),
+  );
+  return Boolean(match && match[1] === match[1].toUpperCase());
+}
+
+/**
+ * Same ranking as findGazetteerMatch (earliest qualifying position, longest
+ * name on a tie) but a city only qualifies if some mention of it — not
+ * necessarily its first — is preceded by a locational cue or immediately
+ * followed by a state code. Checking every mention, not only the first, is
+ * what lets a real, later-mentioned, qualifying city beat an earlier,
+ * unqualified one: the first name on the page is not necessarily the one
+ * describing the venue. If no gazetteer city qualifies anywhere, this
+ * returns undefined — converting today's wrong, confident answer into an
+ * honest, absent one is real progress even when it falls short of finding
+ * the true venue (see B4-02's own note on gazetteer coverage, a separate,
+ * open-ended limitation this does not attempt to fix).
+ */
+function findVenueCity(
+  text: string,
+  cities: readonly string[],
+): string | undefined {
+  let best: { value: string; index: number; length: number } | undefined;
+
+  for (const value of cities) {
+    const flexible = escapeRegExp(value).replace(/\s+/g, "\\s+");
+    const pattern = new RegExp(`\\b${flexible}\\b`, "gi");
+    for (const match of text.matchAll(pattern)) {
+      const index = match.index ?? 0;
+      const end = index + match[0].length;
+      const preceding = text.slice(Math.max(0, index - 120), index);
+      const following = text.slice(end, end + 12);
+      if (CITY_PROXIMITY_CUE_RE.test(preceding) || hasTrailingStateCode(following)) {
+        if (
+          !best ||
+          index < best.index ||
+          (index === best.index && value.length > best.length)
+        ) {
+          best = { value, index, length: value.length };
+        }
+        break;
+      }
+    }
+  }
+  return best?.value;
+}
+
 export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
   const text = bodyText(html);
-  const city = findGazetteerMatch(text, CONFERENCE_CITIES);
+  const city = findVenueCity(text, CONFERENCE_CITIES);
   if (!city) return undefined;
 
   const region = stateCodeAfterCity(text, city);

@@ -301,6 +301,26 @@ describe("country must belong to the city", () => {
     const place = extractPlaceFromText("The workshop will be held in Germany.");
     expect(place?.country).toBe("Germany");
   });
+
+  // B4-02 (round 4): no test exercised two DIFFERENT gazetteer cities on one
+  // page where only one is the true venue — findGazetteerMatch picked
+  // whichever came first with no proximity check at all, which is R2's own
+  // real shape (the true venue's city was mentioned, but a different
+  // gazetteer city mentioned earlier or elsewhere on the page won instead).
+  it("prefers a cued city over an earlier, uncued mention of a different city", () => {
+    const html =
+      "<html><body><p>The workshop is proudly sponsored by our Berlin office.</p>" +
+      "<p>The event takes place in Chicago this year.</p></body></html>";
+    const place = extractBodyTextPlace(html);
+    expect(place?.city).toBe("Chicago");
+  });
+
+  it("returns absent, not a wrong city, when no gazetteer city has any cue", () => {
+    const html =
+      "<html><body><p>Our Berlin office and our Chicago office both contributed" +
+      " to this year's programme.</p></body></html>";
+    expect(extractBodyTextPlace(html)).toBeUndefined();
+  });
 });
 
 describe("parseStructuredLocation", () => {

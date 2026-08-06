@@ -33,11 +33,11 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01 landed,
-                  working B4-02 next; see §4 "Round 4 — Agent C" for detail
-                  per item. This is a restart of C — a prior C died to a
-                  content-filter error before committing any code; nothing
-                  was lost.)
+WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01, B4-02
+                  landed, working B4-03 next; see §4 "Round 4 — Agent C"
+                  for detail per item. This is a restart of C — a prior C
+                  died to a content-filter error before committing any
+                  code; nothing was lost.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -293,10 +293,10 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **879 tests, all 879 passing**, typecheck clean, 1
+GATE NOW:  83 files / **881 tests, all 881 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01 only; will keep rising as C
-           lands more items.** Not yet the final round-4 figure — see §4
+           **mid-round-4 figure, after B4-01/B4-02 only; will keep rising as
+           C lands more items.** Not yet the final round-4 figure — see §4
            "Round 4 — Agent C" for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
@@ -6817,4 +6817,63 @@ per item, gate re-run after each.
   report, so ran the whole suite rather than only the touched files —
   **83 files / 879 tests passing** (14 new: 12 in `eventweb.test.ts`, 2 in
   `structured-extract.test.ts`), nothing else broke. **Typecheck clean, 1
+  pre-existing lint error, unchanged.**
+
+- **B4-02 — LANDED, with one correction to my own first attempt at B's fix
+  direction, caught by the gate, not by inspection.** Added
+  `CITY_PROXIMITY_CUE_RE` (B's own two shapes: a bare "in"/"at"/"near", or a
+  stronger `held|hosted|takes place|taking place|venue|location|located`)
+  and a new `findVenueCity()` in `web/src/lib/opportunities/structured-extract.ts`,
+  used by `extractBodyTextPlace` in place of the uncued `findGazetteerMatch`
+  for the CITY half of the match (the country-only fallback in
+  `extractPlaceFromText` is untouched, per B's own note). Checks every
+  mention of every gazetteer city, not only the first, so a real,
+  later-mentioned, qualifying city can beat an earlier, unqualified one —
+  confirmed with a new test (two different gazetteer cities, only the later
+  one cued: the cued one wins) and a companion test (neither city cued:
+  absent, not a guess).
+
+  **My first attempt regressed a real, untested production caller, found by
+  running the FULL suite rather than just the touched test file — exactly
+  the check this round's brief asked for.** `place-flow.test.ts` (not named
+  anywhere in B's own risk list) feeds `ccfddl.ts`'s structured `place`
+  field (a short string like `"Chicago, IL + Virtual"`, not prose) through
+  this same code path via `extractPlaceFromText`. A pure prose-cue
+  requirement would have silently dropped its region/country, since
+  `", IL + Virtual"` has no preposition or venue verb anywhere near
+  "Chicago" — the state code alone is the only signal, and prose cues don't
+  apply to it. Rather than routing `ccfddl.ts` to a different parser (considered
+  `parseStructuredLocation`, the pattern every other structured job source
+  already uses, but its comma-splitting does not tolerate a compound tail
+  like `"IL + Virtual"` either — would have traded one gap for another),
+  added a second, independent qualifying signal: `hasTrailingStateCode()` —
+  a city immediately followed by `, ST` (a real, uppercase two-letter code)
+  is its own strong, structural locational signal and needs no prose cue at
+  all, the same way `stateCodeAfterCity` already trusted it for the region
+  field. Case matters here (checked against the raw, non-canonicalized text,
+  not lowercased) — the same reason `stateCodeAfterCity` itself checks
+  `code === code.toUpperCase()`: canonicalizing first would make the state
+  code "IN" indistinguishable from the word "in".
+
+  **A second, related correction in the same pass, also caught by re-tracing
+  rather than assumed correct.** My first draft tested the preceding-cue
+  regex against a *canonicalized* text slice. Canonicalizing strips every
+  period, including ones from an unrelated earlier sentence in the same
+  120-character window — which would have let a cue word from a previous,
+  different sentence satisfy the "same sentence" restriction
+  (`[^.]{0,40}$`) that the regex depends on to mean anything. Fixed by
+  testing the cue regex against the raw preceding text directly (the `/i`
+  flag already handles case; canonicalization was never needed for this
+  specific check and was actively wrong for it).
+
+  Re-traced all 7 pre-existing tests in `structured-extract.test.ts`'s
+  "body-text place fallback" and "country must belong to the city" describe
+  blocks by hand before running them, per B's own risk section, then
+  confirmed by running the suite: the BlueCurrent fixture ("industry summit
+  in Chicago"), both Cologne/China fixtures, both explicit-state-code
+  fixtures, and the JSON-LD/meta-precedence test are all unaffected — every
+  one either carries a bare preposition, a stronger venue verb, or an
+  explicit state code already. Added the two new tests described above.
+
+  **Gate: 83 files / 881 tests passing** (2 new), **typecheck clean, 1
   pre-existing lint error, unchanged.**
