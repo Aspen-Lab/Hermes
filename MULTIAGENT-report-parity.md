@@ -429,12 +429,19 @@ outside this loop. Listed by name so the exclusion stays auditable:
 |---|---|---|
 | a | `Hybrid · US` sub-line | job LOCATION tile |
 | b | `Hybrid (3 days on-site)` | job subtitle, 3rd segment |
+| b' | **SUPERSEDES (b) from round 3.** The `(3 days on-site)` **day-count parenthetical only** — the mode word `Hybrid` is CLOSED (B2-06 built `workMode`). See B3-10. | job subtitle, 3rd segment |
 | c | `ELIGIBILITY` row | job "To apply, have ready" |
 | d | `TEAM` row | job "To apply, have ready" |
 | e | `· reposted from employer site` | job SEEN ON row |
 | f | `streamed keynotes` | event WHERE tile and subtitle |
 | g | venue name (`San Diego Convention Center`) | event subtitle |
 | h | `plus four nights` | event costs footnote |
+
+**Round-3 correction to the paragraph below:** it said (a) and (b) were "the
+same missing fact". **They were not quite.** `workMode` (B2-06) closed (a) and
+the mode-word half of (b); the day-count parenthetical was never the same fact
+and `workMode` was never built to carry one. **Cite (b') from round 3 onward,
+not (b)** — B3-10 searched for a source and found none anywhere in the tree.
 
 **Exception — (a) and (b) are the same missing fact, and it is worth building.**
 Work mode (on-site / hybrid / remote) appears three times on plate 02 and
@@ -577,6 +584,18 @@ The user chose to build this. Follow the same shape as `workMode` (B2-06):
 `undefined` unless the posting itself says the start date can move; silence
 means the field stays empty and the sub-line does not render, exactly like
 every other optional detail on this row.
+
+**ROUND-3 CORRECTION — B3-06 found this framing undersells the real
+distinction, and it was right.** The difference between the two precedents
+below is not "structured field vs free text" but **which pipeline stage they
+run at**. `jobWorkMode()` runs *inside the mapper*, on data every job already
+carries. `extractVisaState()` runs *upstream*, in `enrichJobCandidates()`
+(`web/src/lib/opportunities/enrich.ts`), before the mapper ever sees the
+posting's page text. Start-date flexibility needs the posting body, so it must
+live upstream too — and **the better-fitting precedent turns out to be
+`extractJobDetails()` (`web/src/lib/opportunities/job-details.ts`), which
+already extracts `startDate` itself the same way**, not `visa.ts`'s heavier
+phrase-set machinery. Follow B3-06's trace, not the comparison below.
 
 **Precedent for where the signal comes from — read both before choosing:**
 
