@@ -5461,3 +5461,142 @@ prominence):
   `United States`, plate prints `US` (carried over from B3-08, still open).
 
 Committing after each item, per §3.
+
+---
+
+##### B4-01 — Event H1 is a stray sentence (R1); a different real event's title is truncated with an ellipsis (R8). `WRONG DATA`. **Shared mechanism — do both here.**
+
+**Cause, shared half — the better signal already exists and is thrown away.**
+`enrichEventCandidates()` (`web/src/lib/opportunities/enrich.ts:87-139`) fetches
+every candidate's real page and calls
+`extractOpportunityPageDetails(html, "event")` (`:113`). That function
+(`web/src/lib/opportunities/structured-extract.ts:1313-1346`) computes a
+`name` on every call — `structured?.name ?? openGraph.title` (`:1330`), i.e.
+the page's own JSON-LD `Event.name` or its `og:title` meta tag — and returns
+it as `structured.name`. **`enrichEventCandidates`'s merge (`:120-135`) never
+reads it.** The returned object copies `startDate`, `endDate`, `place`,
+`location`, `isOnline`, `registrationDeadline`, `fees`, `activities`,
+`organisations`, `people`, `travelGrant`, `invitationLetter` — never `name`.
+`event.name` is decided once, at ingestion, from whatever the *search result's*
+title/snippet looked like, and is never revisited even though the real page's
+own title is fetched and parsed moments later. Confirmed by reading the merge
+literally and by grep: `structured?.name`/`structured.name` appears nowhere in
+`enrich.ts` or `enrich.test.ts`, and `.name` appears nowhere in
+`structured-extract.test.ts` either — this field has been computed and
+silently discarded since it was written, with zero test ever exercising it.
+This is the "dead/half-built code" shape the round-4 brief asked me to look
+for: the extractor already tries; the merge just never asks it for the answer.
+
+**Cause, R1's own half.** `event.name` for a Tavily/Brave-discovered event is
+set once by `eventNameFrom()` (`web/src/lib/events/sources/eventweb.ts:247-285`)
+*before* the real page is ever fetched. It splits the search result's `title`
+on `| · – —`, discards segments that look like site chrome
+(`isChromeSegment`, `:215-222`: a generic page label, an events-index label, or
+a short "X events" tail), and returns the best surviving segment. **When the
+whole title is one segment with no separators, and that segment is not
+recognised as chrome, it is returned outright** — there is no check anywhere
+in this file for "does this read like a sentence, not a name." Real event 1's
+H1, `TiRT7 was originally planned for 2020 but was delayed due to the
+COVID-19 pandemic.`, is grammatically a complete narrative sentence (subject,
+two past-tense clauses, terminal punctuation) — nothing in `isChromeSegment`,
+`isGenericPageTitle`, or `EVENT_INDEX_TITLE_RE` is built to catch that shape,
+because none of them were written to. The conference's real short name
+(`TiRT7`, evidently the actual page's title) never reaches `RawEventItem.name`
+at ingestion; whatever fetched the real page later (`extractOpportunityPageDetails`)
+does compute the right one, but per the shared cause above, nobody asks it.
+
+**Cause, R8's own half.** No function in this file or `event-details.ts`
+truncates a string with an ellipsis — `cleanEventDescription()`
+(`web/src/lib/events/mapper.ts:12-43`) *does* add a trailing `…`
+deliberately, but only to `shortDescription`, never to `name` (`mapper.ts:124`,
+`name: item.name`, no processing at all). So a trailing `...` on a real
+event's **title** did not originate in this codebase — it was already in the
+raw search-result `title` Tavily returned (a website's own truncated
+`<title>` tag, or Tavily's own snippet truncation; either way, upstream of us).
+**I did not run a live search this round to confirm which** — see this item's
+own risk note below — but the mechanism above explains why it would survive
+today regardless of its origin: nothing downstream ever replaces a bad
+pre-fetch title with the real page's own, even though we fetch that real page
+and parse its title anyway.
+
+**Fix direction.**
+1. Add a "reads like a title, not a sentence" guard — same spirit as
+   `event-roster.ts`'s `looksLikePersonName`/`looksLikeOrganisationName` and
+   `structured-extract.ts`'s own `plausiblePlaceName`: reject a candidate that
+   contains sentence-terminal punctuation (`. ! ?`) followed by more letters
+   (i.e. it is more than one sentence), or that is implausibly long for a
+   title (a generous word-count ceiling, not the four-word ceiling
+   `plausiblePlaceName` uses for places — event names are longer than city
+   names). Apply it inside `eventNameFrom()` so a segment that clears
+   `isChromeSegment` but still reads as prose is not accepted just because it
+   wasn't recognised as chrome; if every segment fails both checks, fall
+   through to the function's own existing next steps (URL slug, then snippet
+   mining) exactly as it already does when every segment is chrome.
+2. **Wire `structured?.name` into `enrichEventCandidates`'s merge**, gated
+   behind the same new guard, preferring it over the pre-fetch guess when it
+   passes: something like
+   `name: (structured?.name && looksLikeEventTitle(structured.name)) ? structured.name : item.name`.
+   The real page's own JSON-LD/OG title is a more authoritative signal than a
+   search snippet once we have it — this is additive (never invents a name;
+   falls back to today's value when the new candidate is absent or fails the
+   guard), and directly parallels how `place`/`location` already get upgraded
+   during this same enrichment pass. This closes R1 whenever the real page's
+   own title is good even though the search result's wasn't, and very likely
+   closes R8 too, since a page's own `<title>`/JSON-LD name is much less
+   likely to be pre-truncated by a search engine's snippet logic than a
+   search result's title is — but say this as "likely," not confirmed (see risk).
+3. Guard order matters: if `structured.name` ALSO fails the new sentence
+   guard (a badly-built page's own title can be just as bad), keep `item.name`
+   — do not fall back to inventing anything a third way.
+
+**Blast radius.** `event.name` is not report-only: `scoredEventToEvent()`
+(`web/src/lib/events/mapper.ts:124`) passes it straight through to `Event.name`,
+which is what the **feed cards** (`web/src/lib/events/card.ts`) and the papers
+adjacency also read, not only `EventReport`'s `<h1>`
+(`web/src/app/events/[id]/page.tsx:1885-1887`, which prints `event.name` with
+no guard of its own — correctly so; a title is mandatory, so the report
+component has no honest way to hide a bad one, the fix has to happen upstream).
+Improving `name` here improves the feed too, not just the report — same
+direction as B-01's own reasoning, just the opposite conclusion (there,
+scoping to the report was right because the shared helper served other
+surfaces correctly; here, the shared field is wrong everywhere it is read, so
+fixing it upstream is the correct blast radius, not a report-local patch).
+
+**A related, same-shape gap I noticed but is not named by any R-item: jobs
+have this too.** `enrichJobCandidates()`'s merge (`enrich.ts:163-198`) never
+reads `structured?.name` either, and a job's `roleTitle` is similarly frozen
+at ingestion. No round-4 finding named a bad job title, so I have not sized
+this as its own item — flagging it for A/C to note, not guiding it as a
+separate fix, since inventing a finding nobody measured would be guessing.
+
+**Risk.**
+- `web/src/lib/opportunities/enrich.test.ts`, "wires event attendance details
+  and complete rosters through enrichment" (`:217-269`) asserts with
+  `toMatchObject`, which is non-exhaustive and does not mention `.name` — its
+  fixture has no JSON-LD `name`/`title` and no `og:title` either, so
+  `structured?.name` would be `undefined` for it and the new merge falls back
+  to `item.name` unchanged. **Unaffected.**
+- **No test file exists for `web/src/lib/events/sources/eventweb.ts` at all**
+  (confirmed: no `eventweb.test.ts` anywhere under `web/src/lib/events`) — so
+  the new sentence-guard has no existing assertion to break, but also no
+  existing coverage to lean on. **C should add foundational tests here**, not
+  only a test for the new guard: at minimum, a sentence-shaped candidate
+  (subject + past-tense clause + terminal punctuation) must be rejected where
+  a plain multi-word title is not, and the fallback chain (chrome segments →
+  URL slug → snippet mining) still resolves when every title segment fails
+  the new guard too.
+- `web/src/lib/opportunities/structured-extract.test.ts` has zero assertions
+  on `extractOpportunityPageDetails(...).name` today (grepped for `.name` —
+  no hits) — nothing here breaks, and nothing here currently protects the
+  field this item starts relying on. Add a case there too: a page with
+  `<script type="application/ld+json">{"@type":"Event","name":"Real Name"}</script>`
+  should return `name: "Real Name"`.
+- **I did not run a live search this round to confirm R1/R8 against the actual
+  TiRT7 page or the ellipsis-truncated event's page** — everything above is
+  derived from reading the code paths directly (`enrich.ts`, `eventweb.ts`,
+  `structured-extract.ts`) and from the existing gazetteer/test evidence used
+  in B4-02 below, not from a fresh fetch. The mechanism (a better signal
+  computed and discarded) is confirmed regardless of the specific page; **which
+  exact string the real TiRT7 page's own `<title>` contains is not** — C
+  should treat "likely fixes R8" as a reasonable bet worth taking, not a
+  guarantee, and re-check both real events once the guard lands.
