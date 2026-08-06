@@ -5892,3 +5892,61 @@ is its first line, so an empty string short-circuits to `[]`, not `[""]` —
 confirmed, not assumed. So a fully-chrome description already degrades to "no
 role bullets" rather than an empty-string bullet, consistent with §1j's
 "silently absent" standard, with no render-layer change needed.
+
+---
+
+##### B4-05 — `SEEN ON` prints the internal source slug `jobweb` (R6). `WRONG SHAPE`.
+
+**Cause.** `web/src/app/jobs/[id]/page.tsx:690-692`:
+
+```ts
+clean(job.sourceId)
+  ? { label: "Seen on", value: clean(job.sourceId)! }
+  : undefined,
+```
+
+`job.sourceId` (`Job.sourceId`, `web/src/types/index.ts:251`) is set verbatim
+from `item.source` in the mapper (`web/src/lib/jobs/mapper.ts:167`), which is
+one of the seven literal `JobSourceId` values
+(`web/src/lib/jobs/types.ts:15-22`): `remotive`, `arbeitnow`, `himalayas`,
+`adzuna`, `usajobs`, `jsearch`, `jobweb`. These are internal identifiers, not
+display copy — no source adapter carries a human-facing label anywhere; I
+grepped the tree for an existing `"Adzuna"`/`"Remotive"`-style display map for
+job sources and found none (there is a **different**, unrelated
+`sourceLabel()` for papers, `web/src/lib/papers/surface-model.ts:279-283`, not
+reusable here — different domain, different shape). The fact is real (the
+posting genuinely was found via `jobweb`); only its presentation is wrong.
+
+**Fix direction.** A small `JOB_SOURCE_LABELS: Record<JobSourceId, string>`
+(or equivalent), consumed **only** at this one render site, mapping each of
+the seven ids to a name a reader recognises: `adzuna → "Adzuna"`, `usajobs →
+"USAJOBS"`, `remotive → "Remotive"`, `arbeitnow → "Arbeitnow"`, `himalayas →
+"Himalayas"` — these five are real, named products a reader could look up.
+**`jobweb` and `jsearch` are not brand names** — `jobweb` is this app's own
+label for general Tavily/Brave web search, and `jsearch` is a RapidAPI
+aggregator wrapping Google for Jobs, neither of which a reader would
+recognise even correctly spelled out. Rather than inventing a brand that
+doesn't exist, give these two an honest, generic label instead — something
+like `jobweb → "Web search"` — consistent with "never a guess": stating
+plainly what kind of source it was, rather than dressing up an internal slug
+as if it were a company name.
+
+**Do not touch `job.sourceId` itself, or `item.source`/`RawJobItem.source`
+upstream — this must be presentation-only.** `web/src/lib/jobs/card.ts:85`
+reads `job.sourceId` directly into `jobPrestige()`
+(`web/src/lib/opportunities/prestige.ts:33-49`), which explicitly branches on
+`source === "jobweb"` (`:44`) as a prestige signal for the feed. Renaming or
+restructuring the underlying field would silently break that comparison. The
+new label map must live at the render site only (`page.tsx`), reading
+`job.sourceId` and translating it for display, leaving the field itself
+exactly as every other consumer expects it.
+
+**Risk.** Grepped `web/src/app/jobs/[id]/page.test.ts` for `"Seen on"` and for
+`sourceId` — **zero hits.** The row that B-17 (round 1) built has never had a
+test assert its text; the one big fixture that exercises most of the page
+("renders all seven supported facts...", `:163-198`) does not set
+`sourceId` at all, so the "Seen on" row does not even render in that test.
+**No existing assertion breaks either way.** Add the first one: a job with
+`sourceId: "adzuna"` should show `"Adzuna"`, not `"adzuna"`; a job with
+`sourceId: "jobweb"` should show the generic label, never the literal string
+`"jobweb"`.
