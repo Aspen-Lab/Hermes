@@ -5409,3 +5409,55 @@ user, not for A.
    its remaining finding is one string. It has also, for four rounds, reported
    near-success for reports that do not work on real data. Keeping it as a
    regression check is cheap; treating it as the gate is what went wrong.
+
+---
+
+### Round 4 — Agent B
+
+**STATUS: IN PROGRESS.**
+
+Read §0, §1 (current state) in full, §1b–§1i (every accumulated ruling and
+exclusion), **§1j twice** as instructed, §2 (my role and A's), §3 (ground
+rules), and Rounds 1–3's B guides (B-01..B-20, B2-01..B2-19, B3-01..B3-11) for
+format and the precedents this round leans on hardest: B-10's junk guard
+(`web/src/app/jobs/[id]/page.tsx`, `skillComparison`), B3-06's pipeline-stage
+tracing for where new extraction belongs, and B3-08/B3-09/B3-11's pattern of
+naming a real residual instead of silently declaring an item fully closed.
+
+I did not change code. Read the extraction pipeline directly — `event-details.ts`,
+`event-roster.ts`, `job-details.ts`, `enrich.ts`, `page-text.ts`,
+`structured-extract.ts`, `salary.ts`, `job-cleanup.ts`, both mappers, both
+pipelines, both source adapters that use Tavily web search (`jobweb.ts`,
+`eventweb.ts`), Adzuna's and USAJobs's source adapters, and both report
+components — rather than trusting round 4's log claims at face value, per this
+round's own instruction. Confirmed several things statically that I did not
+reproduce with a fresh live search this round (see each item's own evidence
+note); where I did not run a live search, I say so rather than presenting a
+static-code inference as a confirmed live finding.
+
+**Planned item order** (wrong data first, then promises we cannot keep, then
+under-extraction, then the fixture — per §1j's own priority, not visual
+prominence):
+
+- B4-01 — R1 (event H1 is a stray sentence) + R8 (event title truncated with
+  an ellipsis). Shared mechanism.
+- B4-02 — R2 (event WHERE tile contradicts the event's own description).
+- B4-03 — R7 (job subtitle prints `Summer 2027` in the employer slot).
+- B4-04 — R4 (job "What the role is" prints scraped site chrome).
+- B4-05 — R6 (`SEEN ON` prints the internal source slug `jobweb`).
+- B4-06 — R3 (`Two deadlines, one event` renders with zero deadlines).
+- B4-07 — R5 (`To apply, have ready` renders with nothing to prepare).
+- B4-08 — R10 (locked block promises to judge exhibitors that do not exist).
+- B4-09 — R9 (a real event's report renders almost nothing) — synthesis; this
+  is the visible symptom of other items on this list, not its own mechanism.
+- B4-10 — Under-extraction, events: fees / organisations / people /
+  registrationDeadline / travelGrant / expectedSize / rank.
+- B4-11 — Under-extraction, jobs: salary / employmentType / contractLength /
+  applicationMaterials / startDate / startDateFlexible / workMode.
+- B4-12 — The architectural root cause behind most of B4-10/B4-11: page
+  fetching never renders JavaScript, so a real SPA-shaped posting page yields
+  almost no extractable text no matter how good the regexes are. `POLICY`.
+- B4-13 — The one remaining fixture difference: LOCATION sub-line prints
+  `United States`, plate prints `US` (carried over from B3-08, still open).
+
+Committing after each item, per §3.
