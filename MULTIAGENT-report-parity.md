@@ -4332,3 +4332,94 @@ new test: a job with `place: { country: "United States" }` and `workMode:
 just the one half it has, never an empty `.` separator.
 
 ---
+
+##### B3-09 -- Locked-block item 1 omits a count that's actually live-computable. `MISSING`. (Event finding 5)
+
+**Cause.** `EVENT_TIER_UPGRADE_ITEMS` (`web/src/app/events/[id]/page.tsx:62-86`)
+is a **module-level constant array**, built once at load time with no access
+to any per-event data:
+
+```ts
+const EVENT_TIER_UPGRADE_ITEMS = [
+  {
+    // B-20. Plate 03's wording. The plate hardcodes a count ("The other 29
+    // exhibitors, judged"); this block is static and cannot know it, so the
+    // count is left out rather than printed wrong.
+    title: "The other exhibitors, judged",
+    description: "Reads the full list and tells you which strangers are worth your day.",
+  },
+  ...
+];
+```
+
+B-20's own instinct not to print an invented static number was right, but
+the round-3 finding is correct that the number isn't actually unknowable
+here: it's the untagged organisation tail's own length, and that same number
+already prints a few sections above, in `RosterSection`
+(`:1197-1444`), as `organisationTail = organisations.filter((row) =>
+!concerns(row))` (`:1269`) -- the same array whose length feeds the "Every
+other organisation attending . N" heading (B3-07 and earlier items don't
+touch this; B-07/B2-07 built that heading in round 1-2). **It is genuinely
+live** -- it changes as the reader stars organisations (`concerns = reason ||
+starred`), so whatever computes it for the locked block must use the same
+live inputs `RosterSection` does: `event.organisations`, `context`
+(`EventRosterContext`), the enrichment's `judgedAttendees`, and the current
+`starredKeys`.
+
+**The render call site** (`:1900-1903`) passes the static array straight
+through: `<TierUpgradeBlock items={EVENT_TIER_UPGRADE_ITEMS}
+providerConfigured={...} />`. To make item 1's title dynamic, this needs to
+become a value computed inside `EventReport` and passed in place of the
+constant.
+
+**Where NOT to get the number from: don't duplicate `RosterSection`'s whole
+partitioning pipeline.** That component's tail computation depends on
+`organisationReason`, `isCachedRosterFurniture`, and a `takeJudgment`
+de-duplication shared across both organisations and people (`:1210-1235`) --
+reimplementing all of that a second time, purely to get one number, risks
+the two counts drifting apart later if only one copy gets edited. **`EventReport`
+(`:1438-1489` for its signature) already has every input `RosterSection`
+needs, in scope, before it renders either section** -- `event`, `context`
+(built at `:1493-1498`), `displayEnrichment` (`:1608-1615`), and
+`starredKeys` (received as a prop, `:1445`, populated by
+`useRosterStars()` one level up in `EventDetailPage`, not inside
+`RosterSection` itself). The clean fix is to hoist the tail-partitioning
+logic itself out of `RosterSection` and up into `EventReport`, so both the
+roster heading and the locked-block count read from the same one
+computation -- not to write a second, separate count function that has to
+be kept in sync with the first by hand.
+
+**Fix direction.**
+1. Extract the "is this organisation tagged" predicate `RosterSection`
+   already computes inline (tier0 reason present, or a matching judgment, or
+   starred) into a small shared function both `RosterSection` and
+   `EventReport`'s own locked-block construction can call -- or, more
+   simply, lift the whole `organisations`/`organisationTail` partition
+   (`:1220-1271`) up into `EventReport` and pass the already-partitioned
+   lists down into `RosterSection` as props instead of `event` + `context` +
+   `enrichment`. Either way, there should be exactly one place that decides
+   "tagged vs. untagged," not two.
+2. Turn `EVENT_TIER_UPGRADE_ITEMS` into a function,
+   `buildEventTierUpgradeItems(untaggedOrganisationCount: number)`, and
+   build item 1's title from it: `count > 0 ? \`The other ${count}
+   exhibitors, judged\` : "The other exhibitors, judged"` -- falling back to
+   today's generic phrasing (not printing "The other 0 exhibitors") when the
+   count is zero or there are no organisations at all, so the sentence never
+   reads oddly for a small event where nothing is untagged.
+3. Call it at the render site with the value computed in step 1, in place
+   of the static import.
+
+**Risk.** Grepped `web/src/app/events/[id]/page.test.ts` for `"exhibitors,
+judged"`, `"The other"`, `"EVENT_TIER_UPGRADE"` and `"TierUpgradeBlock"` --
+**zero hits.** No existing test asserts this text or count at all; this is a
+pure addition. `web/src/components/reports/tier-upgrade-block.test.tsx`
+(confirmed by two prior rounds' logs) renders its own fixture items, not the
+page's constant, so it needs no change either. Add a new test: an event
+with, say, 5 organisations where 2 have a Tier-0 reason should render "The
+other 3 exhibitors, judged" in the locked block, and toggling a star on one
+of the 3 (via the same `starredKeys` prop `RosterSection` reads) should drop
+the count to 2 in both the roster heading and the locked-block title in the
+same render -- that agreement is the actual point of hoisting the
+computation instead of duplicating it.
+
+---
