@@ -3749,3 +3749,51 @@ supported facts and the rich report in order," the `timelineSection` block at
   "fixes" it by mistake.
 
 ---
+
+##### B3-03 — Deadline strip: same "Today" bug as B3-02, plus its own "Register by" → "Register" gap. `WRONG SHAPE`. (Event finding 7) **Depends on B3-02's shared change; do that one first.**
+
+**Cause, shared half.** Already fixed by B3-02 doing both files —
+`deadlineMilestones()` (`web/src/app/events/[id]/page.tsx:571-606`) prints an
+actual date under "Today" the same way `buildTimeline` did. Nothing further to
+do here for that half once B3-02 lands; do not re-implement it separately.
+
+**Cause, event-only half.** `deadlineMilestones` also pushes:
+
+```ts
+if (registration) {
+  milestones.push({
+    key: "registration",
+    label: "Register by",
+    value: registration,
+  });
+}
+```
+
+Plate 03's deadline strip reads bare `"Register"` (the *value*, e.g. `Feb 20`,
+stays — only the label word "by" drops). This label has no job-side
+counterpart to confuse it with; job's Timeline never had a registration point.
+
+**Fix direction.** Change `label: "Register by"` to `label: "Register"` at
+that one line. Nothing else about this milestone changes.
+
+**Risk.** Grepped `web/src/app/events/[id]/page.test.ts` for `"Register by"`
+and found only a *comment*, not an assertion — at `:456-458`, in "gives the
+deadline strip its heading and a Today milestone" (`:447-473`):
+
+> Anchored on the milestone keys, not the visible words: B-05's fact row sits
+> above the strip and legitimately repeats "Abstract" and "Register by," so a
+> text search finds the tile first.
+
+The test's own author already anticipated this exact tile/milestone label
+collision and deliberately asserts `data-deadline-milestone="[a-z]+"` **keys**
+(`:459-466`: today/submission/registration/event), never the label text — so
+relabelling the milestone to "Register" breaks **no** assertion in this test
+beyond the same "Jul 30" one B3-02 already covers (`:471`,
+`expect(html).toContain("Jul 30")` → `not.toContain("Jul 30")`). Confirmed by
+reading the whole test, not just the grep hit. This is a good pattern to
+recognise: the facts-row REGISTER BY tile (`data-event-fact="register-by"`,
+tested separately at `:429-445`, "prints REGISTER BY with no invented
+sub-line") keeps its own "Register by" label untouched — that tile is correct
+today and this item does not touch it.
+
+---
