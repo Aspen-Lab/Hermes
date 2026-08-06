@@ -3661,3 +3661,91 @@ must render `"Full price with no grant would be $620."`, not `"...$480."` —
 this is the exact shape that exposed the bug and nothing today asserts it.
 
 ---
+
+##### B3-02 — Timeline: "Today" prints a date, and two point labels don't match the plate's Timeline wording. `WRONG SHAPE`. (Job finding 1) **Shared mechanism with B3-03 (event finding 7) — do both files here.**
+
+**Cause.** `buildTimeline()` (`web/src/app/jobs/[id]/page.tsx:375-399`):
+
+```ts
+const today = reportShortDate(new Date(nowMs).toISOString(), nowMs);
+...
+if (today) {
+  points.push({ key: "today", label: "Today", value: today, accent: true });
+}
+...
+if (deadline) points.push({ key: "deadline", label: "Apply by", value: deadline });
+if (start) points.push({ key: "start", label: "Starts", value: start });
+```
+
+Three gaps: (a) the "Today" point computes and prints an actual short date
+(`reportShortDate` of `nowMs` itself) as its value, where the plate shows the
+bare word "Today" with nothing underneath — printing a date makes the one
+accented milestone look like just another date instead of the anchor the
+other three are measured against; (b) the deadline point is labelled `"Apply
+by"`, plate's Timeline reads `"Deadline"`; (c) the start point is labelled
+`"Starts"`, plate's Timeline reads `"Start"`.
+
+**Renderer has no way to omit the value line today.** `TimelinePoint.value`
+(`page.tsx:144-149`) is a *required* `string`, and the render
+(`page.tsx:766-793`, value printed at `:783-785`) does `<p>{point.value}</p>`
+unconditionally.
+
+**Do not confuse this with the facts row — same label text, different
+section, only one of them is wrong.** `buildJobFacts` (same file) uses the
+identical strings `"Starts"` (`:341`) and `"Apply by"` (`:345`) as *tile*
+labels for the STARTS and APPLY BY facts-row tiles, and those are already
+confirmed exact matches to the plate's facts row (round 3's "what now matches"
+list: `APPLY BY Sep 15 / 47 days left`, and the STARTS tile is untouched by
+this item — see B3-06). **A blind find-and-replace of `"Apply by"` →
+`"Deadline"` or `"Starts"` → `"Start"` across the file would break the
+already-correct tiles.** Change only the Timeline's own two pushes —
+`page.tsx:395` (`label: "Apply by"` → `label: "Deadline"`) and `page.tsx:397`
+(`label: "Starts"` → `label: "Start"`) — inside `buildTimeline`, not
+`buildJobFacts`.
+
+**Fix direction.**
+1. Make `TimelinePoint.value` optional (`value?: string`) and wrap the print
+   at `page.tsx:783-785` in a conditional
+   (`{point.value && <p ...>{point.value}</p>}`) — the same pattern already
+   used for every optional `detail` line elsewhere on this page.
+2. In `buildTimeline`, push the Today point with no `value` at all:
+   `{ key: "today", label: "Today", accent: true }`.
+3. Relabel the Timeline's deadline point to `"Deadline"` and its start point
+   to `"Start"` — the two lines named above, nowhere else.
+4. **This is one fix, not two — apply the identical change to
+   `deadlineMilestones()`** (`web/src/app/events/[id]/page.tsx:571-606`). Its
+   own Today line (`:580-583`) is the *same code, duplicated between files*:
+   `const today = reportShortDate(new Date(nowMs).toISOString(), nowMs); if
+   (today) { milestones.push({ key: "today", label: "Today", value: today,
+   accent: true }); }`. `DeadlineMilestone.value` (`page.tsx:158-163`) needs
+   the same optionality, and `DeadlineTimeline`'s render (`page.tsx:878-917`,
+   value printed at `:904-906`) needs the same conditional. B3-03 covers the
+   event report's *own* extra label gap on top of this shared piece — do not
+   treat that item as "nothing left to do here."
+
+**Risk — `web/src/app/jobs/[id]/page.test.ts:163-268`, "renders all seven
+supported facts and the rich report in order," the `timelineSection` block at
+`:249-267`:**
+- `:258-259` — `expect(timelineSection).toContain("Today");
+  expect(timelineSection).toContain("Jul 30");` — the second line **breaks**
+  (no date prints under Today any more) and must become
+  `expect(timelineSection).not.toContain("Jul 30")`.
+- `:261` — `expect(timelineSection).toContain("Apply by");` — **breaks**, →
+  `expect(timelineSection).toContain("Deadline")`. Any companion
+  `not.toContain("Apply by")` must stay scoped to `timelineSection` (it
+  already is, via the regex-matched section substring) — the facts-row tile
+  a few hundred lines above still legitimately prints "Apply by," so a
+  page-wide assertion would be a false failure.
+- `:264` — `expect(timelineSection).toContain("Starts");` — **breaks**, →
+  `expect(timelineSection).toContain("Start")`. **Careful:** `"Start"` is a
+  substring of `"Starts"`, so a naive `.toContain("Start")` rewrite would pass
+  whether or not the label actually changed and would prove nothing. Assert
+  something that distinguishes them — e.g. `not.toMatch(/Starts\b/)` alongside
+  it, or match the point's own label `<span>` exactly.
+- `:118-119` (the sparse-job test) — `expect(html).not.toContain("Apply
+  by"); expect(html).not.toContain("Starts");` — this fixture has no
+  `applicationDeadline`/`startDate` at all, so neither label renders anywhere
+  under any wording. **Unaffected**, no rewrite needed; noted so nobody
+  "fixes" it by mistake.
+
+---
