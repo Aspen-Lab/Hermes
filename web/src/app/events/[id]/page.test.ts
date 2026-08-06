@@ -557,9 +557,10 @@ describe("EventReport", () => {
   });
 
   it("hides the scale tile when no crowd size was extracted", () => {
-    // B-05. expectedSize is declared on the type but no mapper writes it, so
-    // on live data this tile never appears. It is left absent rather than
-    // filled with a guessed crowd size.
+    // B-05, updated by B4-10: expectedSize now has a real extractor
+    // (event-details.ts), but it only ever sets the field when the page
+    // states an explicit figure -- baseEvent()'s own default has none, and
+    // the tile is left absent here rather than filled with a guessed size.
     const html = renderReport(baseEvent());
     expect(html).not.toContain('data-event-fact="scale"');
     expect(html).not.toContain("last edition");

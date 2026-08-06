@@ -177,4 +177,42 @@ describe("extractEventDetails", () => {
     expect(extractEventDetails("")).toEqual({});
     expect(extractEventDetails("<html><body><p>Welcome.</p>")).toEqual({});
   });
+
+  // B4-10 (round 4). expectedSize (the SCALE tile) was declared on the
+  // type with no producer anywhere -- genuinely never attempted, confirmed
+  // by grep before writing this. Three independent phrasings.
+  describe("expected attendance (SCALE tile)", () => {
+    it("reads a labelled expected-attendance figure", () => {
+      expect(
+        extractEventDetails("<p>Expected attendance: 2,400 professionals.</p>")
+          .expectedSize,
+      ).toBe(2400);
+    });
+
+    it("reads a bare count next to the word itself", () => {
+      expect(
+        extractEventDetails("<p>Over 1,800 attendees are expected this year.</p>")
+          .expectedSize,
+      ).toBe(1800);
+    });
+
+    it("reads a past edition's own figure", () => {
+      // Phrased so only the history pattern can fire (no digit immediately
+      // adjacent to "attendees/participants/delegates/registrants"), rather
+      // than incidentally also matching the bare-count pattern above.
+      expect(
+        extractEventDetails(
+          "<p>The previous edition drew a crowd of 950 people from around the world.</p>",
+        ).expectedSize,
+      ).toBe(950);
+    });
+
+    it("stays absent when the page states no figure at all", () => {
+      expect(
+        extractEventDetails(
+          "<p>Registered attendees may request an invitation letter.</p>",
+        ).expectedSize,
+      ).toBeUndefined();
+    });
+  });
 });

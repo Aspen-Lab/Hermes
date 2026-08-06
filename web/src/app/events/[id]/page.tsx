@@ -611,11 +611,14 @@ function formatScaleCount(value: number): string {
  * survived further down the page but were gone from the top, and SCALE appeared
  * nowhere in the report.
  *
- * **SCALE is dead on live data.** `event.expectedSize` is declared on the type
- * but no mapper writes it, so the tile will never appear on a real event until
- * extraction populates it. That is an `event-details.ts` change and out of
- * scope here. The tile renders only when the field is set rather than printing
- * a guessed crowd size.
+ * **SCALE is no longer dead on live data as of B4-10 (round 4).**
+ * `event.expectedSize` used to be declared on the type with no mapper ever
+ * writing it; `extractEventDetails()` (`event-details.ts`) now looks for an
+ * explicit attendance figure in the page's own text ("expected attendance:
+ * 2,400", "1,800 attendees", "previous edition drew ..."). The tile still
+ * renders only when that figure was actually found rather than printing a
+ * guessed crowd size — most real pages will still say nothing, and the tile
+ * stays silent exactly as before for those.
  *
  * The plate's WHERE sub-line ("in person · hybrid keynotes") and REGISTER BY
  * sub-line ("on-site registration available") have no field behind them; the

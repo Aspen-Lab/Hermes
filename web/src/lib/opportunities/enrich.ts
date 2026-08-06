@@ -36,6 +36,7 @@ function hasExtractedEventSignal(
       details?.activities?.length ||
       details?.travelGrant ||
       details?.invitationLetter ||
+      details?.expectedSize ||
       roster?.organisations?.length ||
       roster?.people?.length,
   );
@@ -145,6 +146,7 @@ export async function enrichEventCandidates(
       people: item.people ?? roster?.people,
       travelGrant: item.travelGrant ?? details?.travelGrant,
       invitationLetter: item.invitationLetter ?? details?.invitationLetter,
+      expectedSize: item.expectedSize ?? details?.expectedSize,
     };
   });
 

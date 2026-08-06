@@ -271,6 +271,22 @@ describe("event detail enrichment", () => {
       ],
     });
   });
+
+  // B4-10 (round 4). expectedSize had no producer anywhere before this
+  // round; this locks in that it now reaches the merged item.
+  it("wires an explicit expected-attendance figure through enrichment", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage("<p>Expected attendance: 2,400 professionals.</p>"),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichEventCandidates([event(8)]);
+
+    expect(enriched).toMatchObject({ expectedSize: 2400 });
+  });
 });
 
 describe("job detail enrichment", () => {

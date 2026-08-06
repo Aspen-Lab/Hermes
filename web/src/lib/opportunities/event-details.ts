@@ -8,6 +8,7 @@ export interface EventPageDetails {
   activities?: string[];
   travelGrant?: string;
   invitationLetter?: boolean;
+  expectedSize?: number;
 }
 
 const MONTH_PATTERN =
@@ -379,6 +380,41 @@ function extractInvitationLetter(
   return undefined;
 }
 
+/**
+ * B4-10. `event.expectedSize` (the SCALE tile) was declared on the type
+ * with no producer anywhere — genuinely never attempted, not a half-built
+ * mechanism. Three phrasings, in the same spirit as
+ * `extractTravelGrant`/`extractRegistrationDeadline`: a labelled figure
+ * ("expected attendance: 2,400"), a bare count next to the word itself
+ * ("2,400 attendees"), or a past edition's own figure ("previous edition
+ * drew 1,800 attendees") — parsed to a number, never guessed when the page
+ * is silent about size.
+ */
+const EXPECTED_SIZE_LABEL_RE =
+  /\b(?:expected|anticipated)\s+(?:attendance|turnout|audience)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+const EXPECTED_SIZE_COUNT_RE =
+  /\b(\d[\d,]{2,7})\+?\s+(?:expected\s+)?(?:attendees|participants|delegates|registrants)\b/i;
+const EXPECTED_SIZE_HISTORY_RE =
+  /\b(?:past|previous)\s+edition[s]?\s+(?:drew|attracted|welcomed|had)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+
+function parseAttendanceCount(token: string): number | undefined {
+  const value = Number(token.replace(/,/g, ""));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function extractExpectedSize(text: string): number | undefined {
+  for (const pattern of [
+    EXPECTED_SIZE_LABEL_RE,
+    EXPECTED_SIZE_COUNT_RE,
+    EXPECTED_SIZE_HISTORY_RE,
+  ]) {
+    const token = text.match(pattern)?.[1];
+    const size = token ? parseAttendanceCount(token) : undefined;
+    if (size) return size;
+  }
+  return undefined;
+}
+
 export function extractEventDetails(
   html: string,
   now = new Date(),
@@ -393,6 +429,7 @@ export function extractEventDetails(
   const activities = extractActivities(visibleText);
   const travelGrant = extractTravelGrant(segments);
   const invitationLetter = extractInvitationLetter(segments);
+  const expectedSize = extractExpectedSize(visibleText);
 
   return {
     ...(registrationDeadline ? { registrationDeadline } : {}),
@@ -400,5 +437,6 @@ export function extractEventDetails(
     ...(activities.length > 0 ? { activities } : {}),
     ...(travelGrant ? { travelGrant } : {}),
     ...(invitationLetter !== undefined ? { invitationLetter } : {}),
+    ...(expectedSize !== undefined ? { expectedSize } : {}),
   };
 }

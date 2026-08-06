@@ -40,6 +40,8 @@ export interface RawEventItem {
   people?: Event["people"];
   travelGrant?: Event["travelGrant"];
   invitationLetter?: Event["invitationLetter"];
+  /** B4-10. The SCALE tile's field — genuinely never populated before. */
+  expectedSize?: Event["expectedSize"];
   description: string;
   url: string;
   registrationUrl?: string;

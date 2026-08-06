@@ -34,10 +34,11 @@ before you stop, not after you finish.
 ```
 ROUND:            4
 WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-08
-                  landed, working B4-09 (skip) then B4-10 next; see §4
-                  "Round 4 — Agent C" for detail per item. This is a
-                  restart of C — a prior C died to a content-filter error
-                  before committing any code; nothing was lost.)
+                  landed, B4-09 skipped intentionally, B4-10's additive
+                  piece landed, working B4-11 next; see §4 "Round 4 —
+                  Agent C" for detail per item. This is a restart of C — a
+                  prior C died to a content-filter error before committing
+                  any code; nothing was lost.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -293,11 +294,12 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **891 tests, all 891 passing**, typecheck clean, 1
+GATE NOW:  83 files / **896 tests, all 896 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01..B4-08 only; will keep rising
-           as C lands more items.** Not yet the final round-4 figure — see
-           §4 "Round 4 — Agent C" for the current per-item state.
+           **mid-round-4 figure, after B4-01..B4-10 (B4-09 skipped,
+           B4-10 additive-only); will keep rising as C lands more items.**
+           Not yet the final round-4 figure — see §4 "Round 4 — Agent C"
+           for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -7012,3 +7014,46 @@ per item, gate re-run after each.
   needed, matching B's own note. **Gate: 83 files / 891 tests passing** (net
   +1: the rewritten test split one `it` into two), **typecheck clean, 1
   pre-existing lint error, unchanged.**
+
+- **B4-09 — INTENTIONALLY SKIPPED, per B's own guide and §1's instruction.**
+  No code to write: B's own item said plainly this is the visible symptom
+  of B4-01/B4-06/B4-07/B4-08/B4-10, not its own mechanism, and re-reading it
+  after landing those confirms the same — nothing new needed. Logged as
+  intentionally skipped, not silently dropped, the same way B3-10 was
+  skipped in round 3.
+
+- **B4-10 — additive piece only, per §1k's scope: `expectedSize` LANDED.
+  The rest (fees/organisations/people/registrationDeadline/travelGrant
+  under-extraction, and `rank`) stays deferred to B4-12/exclusion (n), not
+  touched.** Confirmed B's own finding first — grepped every assignment to
+  `expectedSize`/`.rank` across the events pipeline before writing code:
+  `expectedSize` truly had no producer at any layer (declared on `Event`
+  only); `rank` is set only by `ccfddl.ts` from the CCF/CORE dataset, exactly
+  as B found, so left untouched and not re-guided here.
+
+  Added `extractExpectedSize()` to `web/src/lib/opportunities/event-details.ts`
+  — three independent phrasings (a labelled figure, "expected attendance:
+  2,400"; a bare count next to the word itself, "1,800 attendees"; a past
+  edition's own figure, "previous edition drew ... 950 people"), parsed to a
+  number, added to `EventPageDetails` and `extractEventDetails()`'s return
+  only when a real figure was found. Wired the new field through the whole
+  chain B named: `RawEventItem.expectedSize` (`events/types.ts`),
+  `hasExtractedEventSignal` and the merge in `enrichEventCandidates`
+  (`enrich.ts`), and `scoredEventToEvent()` (`events/mapper.ts`). Updated the
+  stale round-1 comment in `web/src/app/events/[id]/page.tsx` that said
+  "SCALE is dead on live data... that is out of scope here" — it no longer
+  is, per B3-06's own precedent for rewriting a claim once it stops being
+  true, though most real pages will still say nothing and the tile correctly
+  stays silent for those.
+
+  Checked every existing test fixture in `event-details.test.ts` and
+  `enrich.test.ts` for the new phrasings by grep before writing any test —
+  zero hits, so the new extractor has nothing to accidentally fire against
+  in an existing `.toEqual`-exhaustive fixture (the ICML fixture mentions
+  "attendees" twice, neither adjacent to a digit). Added 4 new cases in
+  `event-details.test.ts` (one per phrasing, one confirming silence stays
+  silence) and 1 in `enrich.test.ts` locking in the field reaching the
+  merged item. Updated the existing "hides the scale tile..." render test's
+  own comment to stop implying the field can never exist. **Gate: 83 files /
+  896 tests passing** (5 new), **typecheck clean, 1 pre-existing lint
+  error, unchanged.**
