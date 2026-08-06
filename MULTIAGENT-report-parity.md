@@ -39,11 +39,12 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01, B3-02, B3-03
-                  LANDED (see §4 "Round 3 — Agent C" for detail) — gate
-                  after: 82 files / 851 tests passing, typecheck clean, lint
-                  unchanged. The measured 16% below will not move until this
-                  pass finishes and a future A re-measures.
+                  bookkeeping note, no code to write). B3-01, B3-02, B3-03,
+                  B3-04, B3-05 LANDED (see §4 "Round 3 — Agent C" for
+                  detail) — gate after: 82 files / 852 tests passing,
+                  typecheck clean, lint unchanged. The measured 16% below
+                  will not move until this pass finishes and a future A
+                  re-measures.
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
@@ -4713,7 +4714,53 @@ write), one commit per item, gate re-run after each.
   risk list before running the gate; found nothing B had missed. **Gate: 82
   files / 851 tests passing** (no new tests added, only rewrites — B3-02/
   B3-03 are pure correctness fixes to existing labels, not new surface),
-  **typecheck clean, 1 pre-existing lint error.** Commit: (recorded after
-  commit, see below).
+  **typecheck clean, 1 pre-existing lint error.** Commit: `a7375f4`.
+
+- **B3-04/B3-05 — BOTH LANDED, in one commit (B3-05 needs B3-04's map, per
+  B's own instruction).** Added `EVENT_TYPE_LABELS: Record<EventType,
+  string>` and `eventTypeLabel()` to `web/src/app/events/[id]/page.tsx` —
+  the spec's own display-label dictionary from plate 04 (PDF page 9), seven
+  of nine entries sourced directly from its filter row, `job-fair` and
+  `meetup` flagged in the code comment as "consistent with the pattern, not
+  verified against the spec" per B's own honesty distinction. Added
+  `EVENT_TYPE_BY_TEXT`/`matchEventType()`, a case/hyphen-insensitive reverse
+  lookup so `formatActivityLabel` can detect when a candidate string names a
+  real `EventType` and route it through `eventTypeLabel` — falling through
+  to the existing `formatEventType`/first-letter-only branches for the rest
+  of `KNOWN_ACTIVITY_LABELS` (confirmed B2-09's `>Poster Session<` lock
+  stays green; that vocabulary is untouched). Primary chip now renders
+  `eventTypeLabel(event.type)` instead of `formatEventType(event.type)`.
+  `SECONDARY_KIND_TERMS` is now `Record<string, EventType>` (was
+  `string[]`), and `secondaryEventKind()`'s signature changed to
+  `(activities: string[], primaryKind: EventType): EventType | undefined` —
+  it returns the resolved kind, not the raw matched phrase, and the
+  "don't restate the primary kind" guard now compares `EventType` values
+  directly rather than normalised strings. Secondary chip renders
+  `lowercaseFirst(eventTypeLabel(secondaryKind))`, reusing B2-18's existing
+  helper rather than writing a second one. Confirmed by `tsc` that
+  `event.type`'s existing `EventType` type flows into the narrowed
+  `secondaryEventKind` signature with no call-site cast needed.
+
+  Ran the gate before touching any test and got exactly the 4 failures B
+  predicted, no more and no fewer: `builds a secondary kind chip from a
+  recognised fair activity` (rewrote `+ recruiting fair` → `+ career fair`,
+  `>Summit<` → `>Industry summit<`, deleted the stale `not.toContain
+  ("Industry")` and rewrote its comment to cite the §1g reversal instead of
+  the withdrawn Ruling 17) and the three `happeningsFootnote` tests
+  (`"...Poster Session and Career Fair..."` → `"...Career fair..."` in all
+  three, one of them inside an Oxford-comma list). Also updated a now-stale
+  illustrative comment in "does not restate the primary kind as its own
+  secondary chip" (`"Career Fair · + career fair"` → `"Career fair · +
+  career fair"`) — the test's own assertion was unaffected either way, only
+  its comment's example string was wrong. Confirmed the fourth
+  `happeningsFootnote` test ("prints no sector clause...") and the
+  "does not restate"/"omits the secondary kind chip" tests were correctly
+  unaffected, exactly as B predicted. Added a new test locking in the map
+  directly rather than only through activity-string collisions: default
+  `conference` type renders `>Academic conference<` (not `>Conference<`),
+  `career-fair` type renders `>Career fair<` (not `>Career Fair<`) — B noted
+  no existing test asserted the primary chip's text for the default type at
+  all. **Gate: 82 files / 852 tests passing, typecheck clean, 1
+  pre-existing lint error.** Commit: (recorded after commit, see below).
 
 ---

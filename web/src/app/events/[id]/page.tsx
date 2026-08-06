@@ -16,6 +16,7 @@ import type {
   EventFee,
   EventOrg,
   EventPerson,
+  EventType,
 } from "@/types";
 import { eventTypes } from "@/types";
 import { useFeedStore } from "@/store/feed";
@@ -215,6 +216,55 @@ function formatEventType(value: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+/**
+ * B3-04 / Ruling 19. Plate 04 (PDF page 9) prints the Events tab's kind
+ * filter with the spec's own vocabulary -- `Industry summit`, `Career fair`,
+ * `Academic conference` -- title-casing only the FIRST word of a multi-word
+ * label, not every word the way `formatEventType` mechanically does.
+ * `Industry summit` is this label map's entry for `summit`, not an inference
+ * about any particular event (§1g reversed §1f's exclusion on exactly this
+ * point).
+ *
+ * Seven of these nine come straight off plate 04's own filter row
+ * (`conference`, `workshop`, `career-fair`, `summit`, `expo`, `seminar`,
+ * `hackathon`). `job-fair` and `meetup` are NOT shown on plate 04's filter
+ * row at all -- they follow the same title-case-first-word-only convention
+ * the other seven use, so the risk of being wrong is low, but this half is
+ * "consistent with the pattern," not verified against the spec.
+ */
+const EVENT_TYPE_LABELS: Record<EventType, string> = {
+  conference: "Academic conference",
+  workshop: "Workshop",
+  seminar: "Seminar",
+  meetup: "Meetup",
+  "job-fair": "Job fair",
+  "career-fair": "Career fair",
+  summit: "Industry summit",
+  expo: "Expo",
+  hackathon: "Hackathon",
+};
+
+function eventTypeLabel(type: EventType): string {
+  return EVENT_TYPE_LABELS[type];
+}
+
+/**
+ * B3-04. Case/hyphen-insensitive reverse lookup from prose ("career fair")
+ * to the `EventType` it names ("career-fair"), so `formatActivityLabel` can
+ * route an activity string through `eventTypeLabel` when it names a real
+ * kind, and only fall through to the mechanical humaniser for the rest of
+ * `KNOWN_ACTIVITY_LABELS`.
+ */
+const EVENT_TYPE_BY_TEXT = new Map<string, EventType>(
+  eventTypes.map((type) => [type.replace(/-/g, " "), type]),
+);
+
+function matchEventType(value: string): EventType | undefined {
+  return EVENT_TYPE_BY_TEXT.get(
+    value.trim().toLowerCase().replace(/-/g, " "),
+  );
+}
+
 /** A whole machine date and nothing else — "2027-04-15", "2027-04-15T09:00Z". */
 const WHOLE_ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/;
 
@@ -251,6 +301,14 @@ const KNOWN_ACTIVITY_LABELS = new Set<string>(
 
 function formatActivityLabel(value: string): string {
   const text = value.trim();
+  // B3-04. An activity string that names a real EventType ("career fair")
+  // gets that kind's own spec label ("Career fair"), same as the primary
+  // chip. Only the broader ACTIVITY_LABELS vocabulary ("poster session",
+  // "keynote") still falls through to the all-words-title-cased humaniser --
+  // B2-09 already confirmed that behaviour is correct for those and left it
+  // alone; this does not touch it.
+  const matchedType = matchEventType(text);
+  if (matchedType) return eventTypeLabel(matchedType);
   return KNOWN_ACTIVITY_LABELS.has(text.toLowerCase())
     ? formatEventType(text)
     : text.charAt(0).toUpperCase() + text.slice(1);
@@ -268,25 +326,35 @@ function formatActivityLabel(value: string): string {
  * form activities actually use.
  *
  * The plate's "Industry" qualifier on the PRIMARY chip ("Summit" →
- * "Industry summit") has no equivalent source anywhere in the data model and
- * is deliberately NOT attempted here — see the round-2 loop log, item B2-11.
+ * "Industry summit") **was** ruled to have no honest source (round-2 loop
+ * log, item B2-11) -- that ruling is reversed, see B3-04/Ruling 19. This
+ * function is about the SECONDARY chip, always was, and is unaffected by
+ * that reversal beyond now returning a real `EventType` instead of raw
+ * activity prose (B3-05).
+ *
+ * B3-05. `"recruiting fair"` is not itself an `EventType` -- it maps to
+ * `career-fair`, the same kind of thing as a career fair in every source
+ * this app has. There is no separate `EventType` for "recruiting fair."
  */
-const SECONDARY_KIND_TERMS = ["career fair", "job fair", "recruiting fair"];
+const SECONDARY_KIND_TERMS: Record<string, EventType> = {
+  "career fair": "career-fair",
+  "job fair": "job-fair",
+  "recruiting fair": "career-fair",
+};
 
 function secondaryEventKind(
   activities: string[],
-  primaryKind: string,
-): string | undefined {
-  const primary = primaryKind.replace(/-/g, " ").toLowerCase();
+  primaryKind: EventType,
+): EventType | undefined {
   for (const activity of activities) {
     const label = activity.toLowerCase();
-    const term = SECONDARY_KIND_TERMS.find((candidate) =>
-      label.includes(candidate),
+    const match = Object.entries(SECONDARY_KIND_TERMS).find(([term]) =>
+      label.includes(term),
     );
     // Don't state the primary kind a second time as though it were a second
     // fact — e.g. a career-fair event whose own activities also say
     // "career fair" gets no "+ career fair" chip; it would just repeat chip 1.
-    if (term && term !== primary) return term;
+    if (match && match[1] !== primaryKind) return match[1];
   }
   return undefined;
 }
@@ -1682,7 +1750,10 @@ export function EventReport({
 
         <header className="mt-8">
           <div className="mb-4 flex flex-wrap gap-2">
-            <HeaderChip>{formatEventType(event.type)}</HeaderChip>
+            {/* B3-04 / Ruling 19. The spec's own display label for this
+                kind, not a mechanical humanisation of the raw enum value --
+                see EVENT_TYPE_LABELS. */}
+            <HeaderChip>{eventTypeLabel(event.type)}</HeaderChip>
             {/* B2-10 / Ruling 7. §1c's line for this row was a transcription
                 error — the plate's chip row is kind · secondary kind · rank ·
                 match %, with no separate online/in-person chip. The format
@@ -1691,8 +1762,12 @@ export function EventReport({
                 second time. */}
             {/* B2-11 / Ruling 14. The plate's own text is lower-case ("+
                 career fair"), read as a continuation of the primary chip
-                rather than a second title. */}
-            {secondaryKind && <HeaderChip>+ {secondaryKind}</HeaderChip>}
+                rather than a second title. B3-05: now the resolved kind's
+                own label, lower-cased, not the raw activity phrase that
+                happened to match. */}
+            {secondaryKind && (
+              <HeaderChip>+ {lowercaseFirst(eventTypeLabel(secondaryKind))}</HeaderChip>
+            )}
             {/* B-15. event.rank is written by the mapper and was read by
                 nothing. §1c puts it here, between the format chip and the
                 match chip. Most events have no rank, so it is guarded. */}

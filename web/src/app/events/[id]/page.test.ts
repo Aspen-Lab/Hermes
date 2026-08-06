@@ -538,8 +538,12 @@ describe("EventReport", () => {
       "PhD Year 4",
     );
 
+    // B3-04. "Career fair" (title-cased first word only, the spec's own
+    // EventType label), not "Career Fair" (formatEventType's old
+    // every-word title-casing) -- formatActivityLabel("career fair") now
+    // resolves to the career-fair EventType and prints that kind's label.
     expect(html).toContain(
-      "Highlighted because they line up with your topics and because you’re a PhD 4 — Poster Session and Career Fair are the ones you’d be sorry to miss.",
+      "Highlighted because they line up with your topics and because you’re a PhD 4 — Poster Session and Career fair are the ones you’d be sorry to miss.",
     );
     expect(html).not.toContain("looking at");
     expect(html).not.toContain("PhD Year 4");
@@ -557,8 +561,9 @@ describe("EventReport", () => {
       "industry",
     );
 
+    // B3-04. "Career fair", not "Career Fair" -- see the sibling test above.
     expect(html).toContain(
-      "because you’re a PhD 4 looking at industry — Poster Session and Career Fair are the ones",
+      "because you’re a PhD 4 looking at industry — Poster Session and Career fair are the ones",
     );
   });
 
@@ -602,8 +607,10 @@ describe("EventReport", () => {
       "PhD Year 3",
     );
 
+    // B3-04. "Career fair", not "Career Fair" -- see the earlier test in
+    // this file for why.
     expect(html).toContain(
-      "Poster Session, Career Fair, and Workshop are the ones you’d be sorry to miss.",
+      "Poster Session, Career fair, and Workshop are the ones you’d be sorry to miss.",
     );
   });
 
@@ -656,6 +663,23 @@ describe("EventReport", () => {
     expect(html).toContain("Chicago, IL · in person");
   });
 
+  it("labels the primary kind chip from plate 04's own vocabulary, not a mechanical humanisation", () => {
+    // B3-04 / Ruling 19. formatEventType used to title-case every word
+    // ("Career Fair"); the spec's own label map (plate 04, PDF page 9)
+    // title-cases only the first word of a multi-word label ("Career
+    // fair"), and the default fixture's type ("conference") gets a
+    // different word entirely ("Academic conference"), not just different
+    // casing -- no earlier test asserted the primary chip's text for the
+    // default type at all.
+    const conference = renderReport(baseEvent({ type: "conference" }));
+    expect(conference).toContain(">Academic conference<");
+    expect(conference).not.toContain(">Conference<");
+
+    const careerFair = renderReport(baseEvent({ type: "career-fair" }));
+    expect(careerFair).toContain(">Career fair<");
+    expect(careerFair).not.toContain(">Career Fair<");
+  });
+
   it("builds a secondary kind chip from a recognised fair activity", () => {
     // B2-11 / Ruling 14. event.type is one coarse enum value and cannot carry
     // a second, more specific kind — but the activities list sometimes names
@@ -668,13 +692,16 @@ describe("EventReport", () => {
       /<div class="mb-4 flex flex-wrap gap-2">[\s\S]*?<\/div>/,
     )?.[0];
 
-    expect(header).toContain("+ recruiting fair");
-    // The "Industry" qualifier has no honest source anywhere in the data
-    // model (POLICY — manager decides, per the round-2 loop log) and is not
-    // invented here: the primary chip stays exactly what formatEventType
-    // produces from the raw enum value.
-    expect(header).toContain(">Summit<");
-    expect(header).not.toContain("Industry");
+    // B3-05. "Recruiting fair" is evidence for the career-fair kind, so the
+    // chip prints that kind's own canonical label -- not the activity's raw
+    // words.
+    expect(header).toContain("+ career fair");
+    // B3-04 / Ruling 19 (reverses round-2's B2-11 / §1f Ruling 17). Plate 04
+    // (PDF page 9) prints "Industry summit" as the spec's own display label
+    // for the `summit` kind -- the same way "Academic conference" labels
+    // `conference`. It is a label map, not an inference about this
+    // particular event, so the primary chip now prints the spec's label.
+    expect(header).toContain(">Industry summit<");
   });
 
   it("omits the secondary kind chip when no activity names a fair", () => {
@@ -690,7 +717,7 @@ describe("EventReport", () => {
 
   it("does not restate the primary kind as its own secondary chip", () => {
     // A career-fair event whose activities also say "career fair" would
-    // otherwise get "Career Fair · + career fair" — the same fact twice.
+    // otherwise get "Career fair · + career fair" — the same fact twice.
     const html = renderReport(
       baseEvent({ type: "career-fair", activities: ["career fair"] }),
     );
