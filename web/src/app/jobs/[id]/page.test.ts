@@ -250,18 +250,28 @@ describe("JobReport", () => {
       /<section[^>]*data-job-section="timeline"[^>]*>[\s\S]*?<\/section>/,
     )?.[0];
     // B2-01. Plate 02's own Timeline reads "Posted Jul 22" / "Today" /
-    // "Apply by Sep 15" / "Starts Jan 2027" — no year except on the
-    // month/year-only Starts point, and no day-of-month there either.
+    // "Deadline Sep 15" / "Start Jan 2027" — no year except on the
+    // month/year-only Start point, and no day-of-month there either.
     expect(timelineSection).toContain("Posted");
     expect(timelineSection).toContain("Jul 20");
     expect(timelineSection).not.toContain("Jul 20, 2026");
+    // B3-02. The plate's Today point is the bare word with nothing
+    // underneath — it is the anchor the other three points are measured
+    // against, not a fourth date. No date renders under it any more.
     expect(timelineSection).toContain("Today");
-    expect(timelineSection).toContain("Jul 30");
-    expect(timelineSection).not.toContain("Jul 30, 2026");
-    expect(timelineSection).toContain("Apply by");
+    expect(timelineSection).not.toContain("Jul 30");
+    // B3-02. Timeline's own label reads "Deadline", not "Apply by" — the
+    // facts-row APPLY BY tile a few hundred lines above keeps its own label,
+    // this assertion is scoped to timelineSection so it cannot collide with it.
+    expect(timelineSection).toContain("Deadline");
+    expect(timelineSection).not.toContain("Apply by");
     expect(timelineSection).toContain("Aug 15");
     expect(timelineSection).not.toContain("Aug 15, 2026");
-    expect(timelineSection).toContain("Starts");
+    // B3-02. Timeline's own label reads "Start", not "Starts" — "Start" is a
+    // substring of "Starts", so also assert the old word is gone entirely
+    // rather than relying on a `.toContain("Start")` that would pass either way.
+    expect(timelineSection).toContain("Start");
+    expect(timelineSection).not.toMatch(/Starts\b/);
     expect(timelineSection).toContain("Oct 2026");
     expect(timelineSection).not.toContain("Oct 1, 2026");
     expect(timelineSection).not.toContain("Skills they ask for");

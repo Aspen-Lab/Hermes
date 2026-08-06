@@ -487,11 +487,12 @@ describe("EventReport", () => {
       'data-deadline-milestone="event"',
     ]);
     expect(html).not.toContain("Submit by");
-    // The clock is the injected one, never Date.now(). B2-01 dropped the year
-    // (Today sits inside the report's own horizon, same rule as the job
-    // report's Timeline), so the month/day pair is now the whole signal.
-    expect(html).toContain("Jul 30");
-    expect(html).not.toContain("Jul 30, 2026");
+    // B3-02. Plate 03's Today milestone is the bare word with nothing
+    // underneath — same fix, same shared cause, as the job report's
+    // Timeline. No date renders under it any more, and the fixture's other
+    // three dates (Jan 28 / Jun 15 / Jul 20) never coincide with Jul 30, so
+    // its total absence here is a clean signal that nothing prints under it.
+    expect(html).not.toContain("Jul 30");
   });
 
   it("keeps real activity vocabulary title-cased and leaves prose alone", () => {

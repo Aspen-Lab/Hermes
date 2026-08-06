@@ -144,7 +144,9 @@ interface JobFact {
 interface TimelinePoint {
   key: "posted" | "today" | "deadline" | "start";
   label: string;
-  value: string;
+  // B3-02. Optional: the "Today" point prints the bare word with nothing
+  // beneath it, on the plate. Every other point still has one.
+  value?: string;
   accent?: boolean;
 }
 
@@ -380,21 +382,20 @@ function buildTimeline(job: Job, nowMs: number): TimelinePoint[] {
   const start = formatDate(job.startDate, "monthYear");
   if (!posted && !deadline && !start) return [];
 
-  const today = reportShortDate(new Date(nowMs).toISOString(), nowMs);
   const points: TimelinePoint[] = [];
   if (posted) points.push({ key: "posted", label: "Posted", value: posted });
-  if (today) {
-    points.push({
-      key: "today",
-      label: "Today",
-      value: today,
-      accent: true,
-    });
-  }
+  // B3-02. The plate's Timeline shows the bare word "Today" with nothing
+  // underneath — it is the anchor the other three points are measured
+  // against, not a fourth date. Printing a date here (this milestone's own
+  // computed "now") made the one accented point read like just another
+  // date. No `today` variable is needed any more; the point always renders
+  // once there is at least one other point (guarded by the `!posted &&
+  // !deadline && !start` return above).
+  points.push({ key: "today", label: "Today", accent: true });
   if (deadline) {
-    points.push({ key: "deadline", label: "Apply by", value: deadline });
+    points.push({ key: "deadline", label: "Deadline", value: deadline });
   }
-  if (start) points.push({ key: "start", label: "Starts", value: start });
+  if (start) points.push({ key: "start", label: "Start", value: start });
   return points;
 }
 
@@ -780,9 +781,11 @@ export function JobReport({
                     {point.label}
                   </span>
                 </div>
-                <p className="mt-2 text-body-sm font-semibold text-heading">
-                  {point.value}
-                </p>
+                {point.value && (
+                  <p className="mt-2 text-body-sm font-semibold text-heading">
+                    {point.value}
+                  </p>
+                )}
                 {index < timeline.length - 1 && (
                   <span
                     className="absolute -right-3 top-1/2 hidden w-3 border-t border-border lg:block"

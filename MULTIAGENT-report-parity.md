@@ -39,11 +39,11 @@ STATUS:           C IN PROGRESS. Baseline re-verified before touching
                   pre-existing lint error) — matches §1's recorded figure
                   exactly. Working B3-01 .. B3-11 in order, one commit per
                   item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 LANDED (see §4
-                  "Round 3 — Agent C" for detail) — gate after: 82 files /
-                  851 tests passing, typecheck clean, lint unchanged. The
-                  measured 16% below will not move until this pass finishes
-                  and a future A re-measures.
+                  bookkeeping note, no code to write). B3-01, B3-02, B3-03
+                  LANDED (see §4 "Round 3 — Agent C" for detail) — gate
+                  after: 82 files / 851 tests passing, typecheck clean, lint
+                  unchanged. The measured 16% below will not move until this
+                  pass finishes and a future A re-measures.
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
                   §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
@@ -4683,6 +4683,37 @@ write), one commit per item, gate re-run after each.
   Added a new test with the round-3 fixture shape (`standard: "$480"`,
   `deadline: "Early bird ends Jan 9 · $620 after"`) asserting the footnote
   quotes `$620`, not `$480`. **Gate: 82 files / 851 tests passing, typecheck
-  clean, 1 pre-existing lint error.** Commit: `pending`.
+  clean, 1 pre-existing lint error.** Commit: `4dea465`.
+
+- **B3-02/B3-03 — BOTH LANDED, in one commit (shared mechanism, per B's own
+  instruction to do both files under B3-02).** `TimelinePoint.value`
+  (job report) and `DeadlineMilestone.value` (event report) are now both
+  optional; both renders wrap the value `<p>` in `{point.value && (...)}` /
+  `{milestone.value && (...)}`. `buildTimeline` and `deadlineMilestones` both
+  push their Today point unconditionally with no `value` at all (the
+  now-unused `today` local variable and its `reportShortDate(new
+  Date(nowMs)...)` computation removed from both — nothing else read it).
+  Relabelled only the Timeline's own two pushes (`"Apply by"` → `"Deadline"`,
+  `"Starts"` → `"Start"`) and only `deadlineMilestones`'s registration push
+  (`"Register by"` → `"Register"`) — left `buildJobFacts`'s APPLY BY/STARTS
+  tile labels and `buildEventFacts`'s REGISTER BY tile label untouched, all
+  three confirmed still correct against the plate's facts row per B's own
+  warning not to blind-find-and-replace across either file.
+  Rewrote the timeline/milestone assertions B named in both test files
+  (job `page.test.ts:249-267`: Today no longer prints "Jul 30", "Apply by" →
+  "Deadline" with an added `not.toContain("Apply by")` scoped to
+  `timelineSection`, "Starts" → "Start" with an added
+  `not.toMatch(/Starts\b/)` since "Start" is a substring of "Starts" and a
+  naive `.toContain("Start")` would have passed either way; event
+  `page.test.ts:469-495`: Today no longer prints "Jul 30"). The sparse-job
+  test (job `page.test.ts:118-119`) and the event deadline-strip's own
+  key-anchored assertions were confirmed unaffected, exactly as B predicted
+  — left unchanged. Grepped the whole `web/src` tree for `"Apply by"`,
+  `"Starts"`, `"Register by"`, and `toContain("Today")` beyond B's named
+  risk list before running the gate; found nothing B had missed. **Gate: 82
+  files / 851 tests passing** (no new tests added, only rewrites — B3-02/
+  B3-03 are pure correctness fixes to existing labels, not new surface),
+  **typecheck clean, 1 pre-existing lint error.** Commit: (recorded after
+  commit, see below).
 
 ---

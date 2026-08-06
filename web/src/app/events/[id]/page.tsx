@@ -158,7 +158,10 @@ function cutoffPhrase(value: string | undefined): string | undefined {
 interface DeadlineMilestone {
   key: "today" | "submission" | "registration" | "event";
   label: string;
-  value: string;
+  // B3-02/B3-03. Optional: the "Today" point prints the bare word with
+  // nothing beneath it, on the plate. Mirrors TimelinePoint on the job
+  // report -- same bug, same fix, duplicated across both files.
+  value?: string;
   accent?: boolean;
 }
 
@@ -577,10 +580,10 @@ function deadlineMilestones(event: Event, nowMs: number): DeadlineMilestone[] {
   const eventDate = reportShortDate(event.date, nowMs);
   const milestones: DeadlineMilestone[] = [];
   if (!submission && !registration && !eventDate) return milestones;
-  const today = reportShortDate(new Date(nowMs).toISOString(), nowMs);
-  if (today) {
-    milestones.push({ key: "today", label: "Today", value: today, accent: true });
-  }
+  // B3-02. Same fix as the job report's buildTimeline: the plate's Today
+  // point is the bare word, nothing underneath -- printing an actual date
+  // here made the one accented milestone read like just another date.
+  milestones.push({ key: "today", label: "Today", accent: true });
   if (submission) {
     milestones.push({
       key: "submission",
@@ -593,7 +596,10 @@ function deadlineMilestones(event: Event, nowMs: number): DeadlineMilestone[] {
   if (registration) {
     milestones.push({
       key: "registration",
-      label: "Register by",
+      // B3-03. Plate 03's deadline strip reads bare "Register" -- only the
+      // facts-row REGISTER BY tile keeps the "by" (untouched, see that tile
+      // a few sections above; this label has no job-side counterpart).
+      label: "Register",
       value: registration,
     });
   }
@@ -901,9 +907,11 @@ function DeadlineTimeline({
               {milestone.label}
             </span>
           </div>
-          <p className="mt-2 text-body-sm font-semibold text-heading">
-            {milestone.value}
-          </p>
+          {milestone.value && (
+            <p className="mt-2 text-body-sm font-semibold text-heading">
+              {milestone.value}
+            </p>
+          )}
           {index < milestones.length - 1 && (
             <span
               className="absolute -right-3 top-1/2 hidden w-3 border-t border-border sm:block"
