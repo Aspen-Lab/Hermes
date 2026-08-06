@@ -33,38 +33,81 @@ before you stop, not after you finish.
 
 ```
 ROUND:            3
-WHOSE TURN:       C  (work B3-01 .. B3-11 in order, §4 "Round 3 — Agent B")
-STATUS:           C IN PROGRESS. Baseline re-verified before touching
-                  anything (82 files / 850 tests passing, typecheck clean, 1
-                  pre-existing lint error) — matches §1's recorded figure
-                  exactly. Working B3-01 .. B3-11 in order, one commit per
-                  item, per §3's write-as-you-go rule; skipping B3-10 (a
-                  bookkeeping note, no code to write). B3-01 .. B3-09 all
-                  LANDED (B3-06 in its own two commits, safe half then
-                  extraction, per B's instruction) — see §4 "Round 3 —
-                  Agent C" for detail. Gate after B3-09: 82 files / 864
-                  tests passing, typecheck clean, lint unchanged. The
-                  measured 16% below will not move until this pass finishes
-                  and a future A re-measures. **B3-06's extraction regex is
-                  untested against real posting text — flagged for A to
-                  check in round 4's real-search-results pass (see NEW FOR
-                  A above and §4's B3-06 log entry).** **B3-08 remains
-                  non-byte-exact to the plate** (renders "United States",
-                  plate wants "US" — no abbreviation table exists yet, not
-                  built per B's own instruction; a named follow-up, not a
-                  regression).
-LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
-                  §4 under "Round 3"; unchanged by this round's B work)
-GATE (0%):        NOT MET
+WHOSE TURN:       A  (measure round 4 — this is now the round-4 measurement
+                  §2's "NEW FOR A" mandate below applies to)
+STATUS:           ROUND-3 IMPLEMENTATION COMPLETE. C worked B3-01 .. B3-11 in
+                  order, one commit per item (B3-06 split into two, safe half
+                  then extraction, per B's own instruction), skipped B3-10 (no
+                  code existed to write it — logged as intentionally skipped,
+                  not silently dropped). All 10 code-bearing items landed;
+                  full detail, file/line citations, and exactly what each
+                  gate run showed are in §4 "Round 3 — Agent C". C did not
+                  touch B3-10's recommendation to A (narrowing exclusion (b)
+                  into (b')) beyond re-confirming it — that edit is already
+                  live in §1e's own exclusion table from an earlier pass.
 
-NEW FOR A:        **From round 4, A must ALSO measure against real search
-                  results — at least 3 real events and 3 real jobs, run
-                  through the current build's own pipeline, each rendered and
-                  compared to the plate.** Set by the user on 2026-08-05:
-                  rounds 1–3 all measured one hand-built maximal fixture per
-                  report, so a fix can score perfectly there and still fail on
-                  most of what a reader actually sees. Full instructions and
-                  the exact pipeline entry points are in §2 under Agent A.
+                  **Baseline re-verified before touching anything**: 82 files
+                  / 850 tests passing, typecheck clean, 1 pre-existing lint
+                  error — matched §1's recorded figure exactly before any
+                  change.
+
+                  **Final gate, all 11 items done: 82 files / 865 tests, all
+                  865 passing, typecheck clean, exactly 1 pre-existing lint
+                  error (`src/components/persona/quiz.tsx:46`), unchanged.**
+                  15 new tests added across the round (851→865), zero tests
+                  deleted, several existing assertions rewritten in place
+                  where B's own risk sections said they would break (each
+                  rewrite comments which item changed it, per §3).
+
+                  **Commits, in landing order:** `4dea465` (B3-01),
+                  `a7375f4` (B3-02/B3-03), `a143348` (B3-04/B3-05),
+                  `34adab7` (B3-06 safe half), `66e0650` (B3-06 extraction),
+                  `718f43c` (B3-07), `a453936` (B3-08), `55da2b9` (B3-09),
+                  `c5f195a` (B3-11 + B3-10's skip note).
+
+                  **Two things A should specifically check against real
+                  data, not just the fixture, per the round-4 mandate below:**
+                  - **B3-06's extraction regex** (`START_DATE_FLEXIBLE_RE` in
+                    `web/src/lib/opportunities/job-details.ts`) is brand new
+                    this round and has only been tested against hand-written
+                    phrases matching the three shapes Ruling 20 named. It has
+                    never seen a real posting. Safe failure direction is a
+                    false negative (tile stays quiet, same as today); check
+                    whether any real job's STARTS tile ever prints "flexible"
+                    and whether the posting it came from actually supports
+                    that.
+                  - **B3-08's LOCATION country join** prints the full country
+                    name (`"Hybrid · United States"`), not the plate's
+                    two-letter form (`"Hybrid · US"`) — this is a known,
+                    named, open gap (no abbreviation table exists in the
+                    codebase), not a regression, and should be logged as a
+                    still-open finding, not a new one.
+
+                  Everything else this round (B3-01 through B3-05, B3-07,
+                  B3-09, B3-11) is render/logic-only and was exercised with
+                  both the fixture and reasoning about edge cases (empty
+                  strings, missing optional fields, zero counts) — lower risk
+                  against real data, but still worth A's normal spot-check.
+
+LAST DIFFERENCE:  16%   (measured BEFORE this round's implementation — see
+                  §4 "Round 3 — the MANAGER, doing A's job" for the ranked
+                  list). **This number is now stale.** It will not update
+                  until A completes the round-4 measurement described below;
+                  do not treat 16% as this round's result.
+GATE (0%):        NOT MET (unchanged from before — C does not set this; only
+                  A's own re-measurement can move it)
+
+NEW FOR A:        **From round 4 (this measurement), A must ALSO measure
+                  against real search results — at least 3 real events and 3
+                  real jobs, run through the current build's own pipeline,
+                  each rendered and compared to the plate.** Set by the user
+                  on 2026-08-05: rounds 1–3 all measured one hand-built
+                  maximal fixture per report, so a fix can score perfectly
+                  there and still fail on most of what a reader actually
+                  sees. Full instructions and the exact pipeline entry points
+                  are in §2 under Agent A. **See STATUS above for the two
+                  specific round-3 changes (B3-06, B3-08) most likely to
+                  behave differently on real data than on the fixture.**
 
 NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
                   withdrawn — `Summit` → `Industry summit` IS closable. Plate
@@ -74,120 +117,128 @@ NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
                   evidence to plates 02 and 03. **§1g adds two binding rules
                   for round 4: A reads the whole PDF once per loop, and a "no
                   honest source" claim must say where it looked.**
+                  **Implemented this round as B3-04/B3-05** — the label map
+                  is now built (`EVENT_TYPE_LABELS` in
+                  `web/src/app/events/[id]/page.tsx`); A should find this
+                  closed on re-measurement, not still open.
 
 OPEN POLICY:      Both resolved — see §1h. (1) STARTS tile's `flexible`
                   sub-line — Ruling 20, RULED IN, **guided this round as
-                  B3-06**. (2) both reports' "Why Peer sent this to you"
-                  closing clauses — Ruling 21, RULED OUT, permanently
-                  excluded as items (k) and (l); B did not write a guide item
-                  for either, per instruction.
+                  B3-06, and now implemented** (both the field and a first
+                  attempt at extraction — see the real-data caveat above).
+                  (2) both reports' "Why Peer sent this to you" closing
+                  clauses — Ruling 21, RULED OUT, permanently excluded as
+                  items (k) and (l); untouched this round, per instruction.
 
-DONE:      B2-01 .. B2-18 (round 2), unchanged from before, still all landed
-           and committed. **This round, B wrote and committed the round-3 fix
-           guide, B3-01 .. B3-11**, one commit per item, covering all 11
-           items §1's own TODO named (job findings 1, 3, 5; event findings 1,
-           2, 3, 4, 5, 7, 8; plus Ruling 20's STARTS `flexible` field). B did
-           not change any code. Full detail, file/line citations and test-risk
-           lists are in §4 "Round 3 — Agent B".
+DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
+           committed. **Round 3's fix guide, B3-01 .. B3-11, is now fully
+           landed**: B wrote and committed the guide (11 items, one commit
+           each, no code changes — see §4 "Round 3 — Agent B"), then this C
+           implemented all 10 code-bearing items and logged B3-10 as
+           intentionally skipped (see §4 "Round 3 — Agent C" for full detail
+           per item, including where C found B's guide incomplete or where
+           B's own precedent recommendation needed correcting).
 
-           Two things B found worth flagging beyond a plain "here's the fix":
-             - **B3-06** — Ruling 20's own text frames the choice as
-               `jobWorkMode()` vs `visa.ts`. Checking what data the mapper
-               actually receives shows neither is quite right: the two
-               precedents differ not just in what they read but in *which
-               pipeline stage they run at* — `jobWorkMode` runs inside the
-               mapper itself; `extractVisaState` runs upstream, in
-               `enrichJobCandidates()`, before the mapper ever sees the
-               posting's free text. Start-date flexibility belongs in that
-               same upstream stage (`extractJobDetails()`, which already
-               extracts `startDate` itself the same way) — not in the
-               mapper. See B3-06 for the full trace.
-             - **B3-08** — closing the LOCATION tile's country gap byte-exactly
-               needs a US/UK-style short-country-name table that does not
-               exist anywhere in the codebase today (confirmed by grep).
-               Flagged as a named follow-up in B3-08, not built silently and
-               not left unmentioned; the field wiring itself is not blocked
-               on it (it just won't be byte-exact to the plate's "US" until
-               that follow-up lands).
+           **Where this C's implementation departed from or extended B's
+           guide, worth A's attention:**
+             - **B3-06** followed B's own corrected trace exactly (upstream
+               in `extractJobDetails()`/`enrichJobCandidates()`, not the
+               mapper) — landed in two commits as instructed. Also rewrote a
+               stale code comment in `buildJobFacts` itself (not just the
+               test comment B named) that had claimed the field couldn't
+               exist.
+             - **B3-09** required a real refactor beyond a one-line fix —
+               hoisted the roster tail-partitioning logic out of
+               `RosterSection` into a new `partitionEventRoster()` function so
+               `EventReport` could compute the exhibitor count once and feed
+               it to both the roster heading and the locked block, per B's
+               own recommendation not to duplicate the computation. Added a
+               test proving both numbers move together when starring changes
+               the count, not just that each is independently correct.
+             - **B3-11**: B's own risk section didn't anticipate that a
+               naive whole-page regex assertion would produce a false
+               positive (the fixed activity label text legitimately appears
+               twice on the page — once in its own chip, once in the
+               footnote — so an unscoped "no two dashes nearby" check
+               matches across both). Caught on the first test run; rewrote to
+               scope the assertion to the footnote element specifically. A
+               reminder, per this loop's own recurring lesson, that risk
+               sections are a starting point and the gate is what actually
+               catches it.
+             - **B3-08** built exactly the field-wiring half B recommended
+               and deliberately did NOT build a country-abbreviation table —
+               that gap is still open and named, not silently resolved.
 
-           **B3-10 (job finding 5's subtitle parenthetical) has NO code for C
-           to write.** B found no newly-possible data source this round and
-           recommends A narrow old exclusion (b) — its mode-word half is
-           already closed by B2-06, only the day-count half is still open —
-           rather than continue treating (b) as either fully closed or fully
-           open. **C: skip B3-10 when working the list**, there is nothing to
-           implement.
+TODO:      **A: run the round-4 measurement.** Per the mandate above and the
+           full instructions in §2 under Agent A:
+           1. Re-derive the numbered difference list against plates 02/03
+              (the round-3 list in §4 is now the starting point, not the
+              answer — confirm each of its 13 differences is actually
+              closed, half-closed, or still open against the CURRENT code).
+           2. **Also run at least 3 real events + 3 real jobs through the
+              build's own pipeline** (`buildDailyEventPool()` /
+              `buildDailyJobPool()`, mapped with `scoredEventToEvent()` /
+              `scoredJobToJob()` — see §2 for the full mechanism and the
+              `.local-data/profile.json` / `PEER_PROFILE_SNAPSHOT_PATH`
+              loading precedent). A live Tavily key IS present in this
+              environment's `.local-data/profile.json` (confirmed only via
+              `Boolean(profile?.tavilyApiKey)`, never read or printed) — a
+              real run should be possible without fabricating anything.
+           3. Give both the fixture percentage (comparable to rounds 1–3)
+              and the real-data findings as their own numbered list, per §2.
+           4. Re-list exclusions (a)–(l) by name, as every round must.
+           5. Set `GATE (0%): MET` only if truly zero differences remain —
+              otherwise hand a fresh numbered list to B for round 4's guide.
 
-TODO:      **C works B3-01 → B3-11 in order** (§4 "Round 3 — Agent B";
-           **skip B3-10**, it is a bookkeeping note, not a work item).
-           - B3-02/B3-03 are one shared mechanism (the Timeline / deadline-
-             strip "Today" fix, duplicated across both report files) — do
-             both files' changes under B3-02, B3-03 is mostly verification
-             plus its own small "Register by" → "Register" label change.
-           - B3-04/B3-05 are one shared mechanism (the `EventType` → label
-             map) — build it under B3-04, B3-05 reuses it for the secondary
-             chip.
-           - B3-06 (Ruling 20) is the largest item and should be split into
-             two commits itself, exactly like B2-06 was: type + mapper
-             passthrough + render first, extraction second. If the phrase
-             list proves unreliable against real posting text, stop after the
-             safe half and report it rather than shipping a guessed flag.
-           - B3-07, B3-08, B3-09 are independent of everything else and of
-             each other once B3-01–B3-06 land. B3-11 is independent and
-             low-risk.
-
-           After each item: run the gate, commit, per §2/§3. Hand back to A
-           for round 4's measurement when done — and note for A that §2 now
-           carries a round-4 mandate to also measure against real search
-           results, not only a fixture (added by the user on 2026-08-05, see
-           §2 under Agent A).
-
-           Things this round could not check, for whoever picks them up:
-           everything round 2's TODO already listed (B2-04's contract-length
-           expand/abbreviate pair and B2-06's `workMode` inference against
-           real, not fixture, postings) — plus, new this round, whether
-           B3-06's proposed start-date-flexibility phrase list actually fires
-           correctly on real posting text, and whether B3-07's "exactly one
-           comma" guard is the right shape for real `travelGrant` strings
-           beyond the single example this loop has seen so far.
-GATE NOW:  82 files / **850 tests, all 850 passing**, typecheck clean, 1
+           Things this round could not check, carried forward for whoever
+           picks them up next: B2-04's contract-length expand/abbreviate pair
+           and B2-06's `workMode` inference against real (not fixture)
+           postings — still open from round 2 — plus, new this round, B3-06's
+           start-date-flexibility phrase list and B3-07's "exactly one comma"
+           travel-grant guard, both untested against real text (see STATUS).
+GATE NOW:  82 files / **865 tests, all 865 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **carried over unchanged from round 2's C; B does not run or
-           change code.** C must re-verify this baseline before touching
-           anything, per §2's own instruction to C.
+           **this is the current, final figure after all of round 3's
+           implementation.** A should re-verify it before measuring, per the
+           loop's standing convention.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
-           appears in live search results. The first C verified it was
-           already failing before any B2 work (stashed everything, reran
-           against the prior commit). **This second C's session had a live
-           key configured and the test PASSED on every gate run this
-           session** — i.e. it is genuinely flaky run-to-run against live
-           search results, not simply "currently broken." **MANAGER'S
-           RULING stands regardless of which way it happens to fall on a
-           given run: this is real-world data drift, not a regression. It is
-           not C's to fix and A must not count it against the gate.** Fixing
-           the benchmark's brittle assertion is a separate task.
-NOTE:      B2-06 (round 2's first C) landed all three layers including
-           extraction, which the guide had said to attempt only after
-           committing the safe half. B2-18 (this C) caught two pre-existing
-           tests the item broke that the guide's own risk section had not
-           named — both rewritten, neither deleted, per §2/§3 — a reminder
-           that "risk" sections in a B guide are a starting point, not a
-           complete list; C must still watch the gate itself.
+           appears in live search results. Round 2's first C verified it was
+           already failing before any B2 work; round 2's second C had a live
+           key and saw it pass every run. **This C's session also had a live
+           key configured (confirmed only via the boolean check, never the
+           key itself) and the test PASSED on every one of this round's gate
+           runs** — another data point for "flaky against live search
+           results," not "currently broken." **MANAGER'S RULING stands
+           regardless of which way it falls on a given run: real-world data
+           drift, not a regression. Not C's to fix, and A must not count it
+           against the gate.**
+NOTE:      **Two lessons from this round, worth carrying forward:**
+           - B3-09 needed a genuine small refactor (hoisting a computation
+             out of one component so two call sites could share it) rather
+             than a pure one-line fix — B's guide correctly anticipated this
+             and gave the shape to build ("there should be exactly one place
+             that decides tagged vs. untagged"); C followed it rather than
+             inventing a second, separately-computed count.
+           - B3-11's own new test initially asserted a regex against the
+             WHOLE rendered page and produced a false failure, because the
+             same label text legitimately appears twice on the page (chip +
+             footnote) for unrelated reasons. Scoping the assertion to the
+             specific element under test (rather than the page as a whole)
+             fixed it. Worth remembering for any future footnote/copy test
+             that greps for punctuation patterns rather than fixed strings.
 
-           **B3-01..B3-11 (this round) is B's most heavily cross-referenced
-           guide yet.** Two pairs of items are one mechanism each, not four
-           independent fixes (B3-02/B3-03; B3-04/B3-05), and B3-06 turns on a
-           pipeline-stage distinction (mapper-time vs. enrichment-time) that
-           Ruling 20's own text didn't draw explicitly. Read an item's
-           cross-references before starting it, not just its own heading.
-           B also flagged, without touching it (B does not change code), one
-           existing test comment that will mislead a future reader once
-           B3-06 lands: `jobs/[id]/page.test.ts:321-324`'s comment says the
-           STARTS `flexible` field "has no such field" — true before B3-06,
-           false after. The assertion itself doesn't need to change; C should
-           rewrite the comment when landing B3-06.
+           Standing note from round 2, still true: "risk" sections in a B
+           guide are a starting point, not a complete list — B3-11 above is
+           this round's example; C must still watch the gate itself.
+
+           **B3-01..B3-11 was B's most heavily cross-referenced guide yet**
+           and that cross-referencing held up under implementation — B3-02/
+           B3-03 really were one shared mechanism, B3-04/B3-05 really did
+           share one map, and B3-06's pipeline-stage correction (upstream
+           extraction, not the mapper) was the right call, confirmed by
+           tracing the mapper's actual inputs before writing any code.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
@@ -5008,10 +5059,9 @@ write), one commit per item, gate re-run after each.
   `data-happenings-footnote` paragraph first, then assert it contains
   exactly one em-dash — the one inside the label's own name — proving the
   sentence's own lead-in did not also use one. **Gate: 82 files / 865 tests
-  passing, typecheck clean, 1 pre-existing lint error.** Commit: (recorded
-  after commit, see below).
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: `c5f195a`.
 
 **All 11 items worked, B3-10 correctly skipped as a bookkeeping note.
-Round 3's fix guide is fully landed.**
+Round 3's fix guide is fully landed. STATUS: COMPLETE.**
 
 ---
