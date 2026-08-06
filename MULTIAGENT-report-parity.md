@@ -6320,3 +6320,102 @@ existing assertions to break for a wholly new field — add fresh cases there,
 not rewrite existing ones. For fees/organisations/people/registrationDeadline/
 travelGrant, no fix is being guided this item — see B4-12 for what a fix would
 actually require and why it is sized as `POLICY`, not a quick patch.
+
+---
+
+##### B4-11 — Under-extraction, jobs: salary / employmentType / contractLength / applicationMaterials / startDate / startDateFlexible / workMode. Mixed: `MISSING` (salary/employmentType's free-text path), likely `POLICY`-adjacent (contractLength/materials/startDate/startDateFlexible), and a genuine pipeline-stage defect (`workMode`).
+
+Splitting these the same way as B4-10, by whether an extractor exists and
+where it runs, not treating "0 of 3" as one problem.
+
+**salary and employmentType — structured sources extract them correctly;
+`jobweb` (general web search) has no path to them at all, structured or
+free-text.** Checked both keyed sources directly: `web/src/lib/jobs/sources/adzuna.ts:88-117`
+reads Adzuna's own `salary_min`/`salary_max`/`contract_time` fields through
+`normalizeSalary()`; `web/src/lib/jobs/sources/usajobs.ts:61-84` does the
+same from USAJobs's own remuneration/schedule fields. **These are real,
+already-working extractions** — a real Adzuna/USAJobs posting with no salary
+in these fields genuinely has none published, which is not a code defect.
+But `job-details.ts` (the free-text extractor that runs during enrichment,
+against the fetched page, regardless of source) has **no salary or
+employmentType extraction of any kind** — grepped the file, confirmed. Nor
+does `extractOpportunity()` (`web/src/lib/opportunities/structured-extract.ts:936-951`)
+read them from a page's own JobPosting JSON-LD, even though it already reads
+several other JobPosting fields from the same node (`validThrough`,
+`datePosted`, `place`) and schema.org's `JobPosting.baseSalary`/
+`employmentType` are common on real ATS-hosted postings (Google's own Jobs
+indexing guidelines effectively require `baseSalary` for rich results, so
+platforms like Greenhouse/Lever/Workday routinely emit it). **This is a real,
+closable, additive gap**, and a good one: schema.org's `baseSalary` shape
+(`{ currency, value: { minValue, maxValue, unitText } }`) maps almost exactly
+onto `normalizeSalary()`'s existing `StructuredSalaryInput` (`min?, max?,
+currency?, period?`, `web/src/lib/opportunities/salary.ts:10-15`) — `unitText`
+values like `"YEAR"`/`"MONTH"`/`"HOUR"` lower-case straight into
+`normalizePeriod()`'s existing map. Fix direction: extend
+`extractOpportunity()`'s JobPosting branch to also read `baseSalary` (via
+`normalizeSalary`, reusing its existing plausibility gate — never inventing a
+figure, silently dropping an implausible one exactly as it already does) and
+`employmentType`, then wire both into `enrichJobCandidates`'s merge
+(`enrich.ts:163-198`, which touches neither field today) and
+`hasExtractedJobSignal`'s OR-chain. This closes the gap for **any** job
+source whose posting page carries proper JobPosting markup, not only
+`jobweb` — real added value beyond just this round's three postings.
+
+**contractLength, applicationMaterials, startDate, startDateFlexible — the
+extractors already exist and already run at the right pipeline stage.**
+`extractJobDetails()` (`web/src/lib/opportunities/job-details.ts`) already
+extracts all four from the fetched page's free text, and B3-06 already traced
+exactly why this is the correct stage (upstream in `enrichJobCandidates`, not
+the mapper). "0 of 3 — never fired" for `startDateFlexible` is not evidence
+the round-3 phrase list is wrong specifically — it is consistent with the
+same architectural limitation named in B4-10/B4-12: if `fetchPageHtml()`
+never got real text back for these three postings, **nothing** extracted
+from page text could have fired, regardless of how good any individual
+regex is. Deferred to B4-12 rather than duplicated here; **I did not re-run
+round 4's search to confirm the fetches actually failed for these specific
+three jobs** — this is the most likely explanation given the code, not a
+confirmed diagnosis.
+
+**workMode — this one is not the same story, and it is a real, separate,
+closable defect.** `jobWorkMode()` (`web/src/lib/jobs/mapper.ts:81-85`) runs
+in the mapper against `item.location` — cheap by design (B2-06), because it
+was built to read a signal every job "already carries." **For `jobweb`-sourced
+jobs, that assumption is false**: `webResultToRawJobItem()`
+(`web/src/lib/jobs/sources/jobweb.ts:153`) sets `location: ""` — always,
+unconditionally, for every job this source produces, because Tavily/Brave
+search results have no structured location field to read. Enrichment can
+later fill `location` with a **geographic** string
+(`enrich.ts:181`, `formatOpportunityPlace(place) || item.location`), but that
+string is city/region/country text, never a work-mode word — `jobWorkMode()`'s
+regex (`/\bhybrid\b/i`, `/\bon[\s-]?site\b|\bin[\s-]?person\b/i`) can only
+ever match "remote" (via `isRemote`) or nothing, **never** "hybrid" or
+"on-site," for any job from this source, no matter what the real posting
+says about work arrangement — because that fact, if stated, lives in the
+posting's free text, and nothing in this pipeline ever offers it to
+`jobWorkMode()`. **This is the exact same "which pipeline stage" lesson
+B3-06 already learned for `startDateFlexible`** (§1h): a cheap,
+structured-field check is right when the signal already arrives structured,
+and wrong when it doesn't — and for a `jobweb` posting, work mode never
+arrives structured. Fix direction: add a free-text work-mode phrase check
+inside `extractJobDetails()`/`enrichJobCandidates` (the same upstream stage
+B3-06 used), additive alongside — not replacing — `jobWorkMode()`'s existing
+cheap check for sources whose location string does state it. Concretely:
+add `workMode?: Job["workMode"]` to `RawJobItem`
+(`web/src/lib/jobs/types.ts`), populated only upstream during enrichment when
+the posting's own text says so; then change `scoredJobToJob()`'s one line
+(`web/src/lib/jobs/mapper.ts:144`) from `workMode: jobWorkMode(item.location,
+item.isRemote)` to `workMode: item.workMode ?? jobWorkMode(item.location,
+item.isRemote)` — the upstream-extracted value wins when present, otherwise
+today's cheap location-string check still runs exactly as it does now.
+
+**Risk.** `web/src/lib/opportunities/enrich.test.ts` has no assertions on
+`salary`/`employmentType`/`workMode` today (grepped — none), so the salary/
+employmentType and workMode extensions are additive with nothing to break.
+`web/src/lib/jobs/mapper.test.ts:97-131`, the whole `describe("workMode")`
+block (four tests) — all four call `scoredJobToJob()` directly with a
+hand-built `ScoredJobItem` that has no `workMode` field at all (the field
+does not exist on the type yet, confirmed by grep). Under the proposed
+change, `item.workMode` is `undefined` for every one of these four fixtures,
+so `item.workMode ?? jobWorkMode(...)` falls through to the exact same
+expression these tests already exercise. **All four unaffected**, since none
+of them go through enrichment at all — they call the mapper in isolation.
