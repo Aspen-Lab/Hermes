@@ -885,6 +885,70 @@ the *data*, which is a different axis.
 
 ---
 
+## §1k. RULING 24 — B4-12 (no JavaScript rendering): MEASURE BEFORE BUYING
+
+Decided 2026-08-05. **B4-12 is the best-scoped finding this loop has produced**
+— it named an architectural cause, priced it honestly, and refused to decide.
+The ruling is neither yes nor no.
+
+### The ruling: do not add a headless browser yet. Get the number first.
+
+B4-12 says the remaining coverage gaps "may" trace to JavaScript shells. **May
+is not measured.** Buying headless-browser infrastructure — a new dependency,
+latency and compute multiplied across up to 40 candidates per pool build, and a
+possible collision with serverless deployment — on the strength of a 3-event,
+3-job sample and a plausible mechanism would be the most expensive guess this
+project has made.
+
+**Instead, in this order:**
+
+**1. Measure the shell rate.** Over a real candidate set (30+ pages, both
+surfaces), count how many fetched pages are JavaScript shells versus real
+server-rendered content. `page-text.ts`'s `JAVASCRIPT_PLACEHOLDER_RE` and the
+6 KB-shell fixture in `enrich.test.ts:388-400` already encode what a shell
+looks like, so the classifier mostly exists. **This is a one-off diagnostic,
+not a feature.** It converts a scope argument into a number.
+
+**2. Exhaust the cheap paths first, whatever that number says.** Two of them
+work on shells and neither needs a browser:
+
+- **JSON-LD.** `<script type="application/ld+json">` is *server-rendered even
+  on SPAs* — it is emitted for search engines, which do not run JS either.
+  `JobPosting` and `Event` are both standard schema.org types carrying exactly
+  the fields round 4 found missing: salary, employment type, dates, location,
+  organiser, offers. B4-11 already proposes reading it for salary. **Widen that
+  to every field it carries, on both surfaces, before considering a browser.**
+- **Known-ATS endpoints.** Greenhouse and Lever expose public JSON for a
+  posting behind a predictable URL. Where a posting resolves to one of those
+  hosts, fetching the JSON is cheaper *and* more reliable than rendering the
+  page.
+
+**3. Revisit headless with the number in hand.** If the shell rate is high
+*and* JSON-LD plus ATS endpoints still leave real gaps, that is a funded case
+and the manager will bring it back to the user with a cost. Not before.
+
+### Why this order and not "just add the browser"
+
+The cheap paths may make the expensive one unnecessary, and we cannot know
+until they are tried. Rendering a page also does not fix the four `WRONG DATA`
+items — a headless browser would have fetched the *same* stray COVID-19
+sentence as R1's title. **Nothing in B4-01 through B4-11 is blocked by this
+ruling, and B4-12 says so itself.**
+
+### Scope for this round — B's recommendation is accepted
+
+C works **B4-01 .. B4-09** plus the additive pieces of **B4-10, B4-11 and
+B4-13**. The deferred halves of B4-10/B4-11 stay deferred. **Step 1's
+measurement is A's job in round 5**, alongside the normal real-data pass — it
+is a counting exercise over pages A is already fetching.
+
+**`rank` is excluded — new item (n).** B4-10 found it comes only from a curated
+CS-conference dataset, and a titanium round table structurally cannot carry
+one. Not a defect; the field is genuinely inapplicable. Re-list it by name each
+round.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
