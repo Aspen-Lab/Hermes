@@ -3,6 +3,7 @@
 import { use, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { Job, RoleKind } from "@/types";
+import type { JobSourceId } from "@/lib/jobs/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
 import {
@@ -96,6 +97,34 @@ const VISA_LABELS: Record<VisaState, string> = {
   "not-stated": "Visa not stated",
   "wont-sponsor": "No sponsorship",
 };
+
+/**
+ * B4-05 (R6). `job.sourceId` is one of jobweb.ts's seven internal adapter
+ * ids — a real fact worth stating ("found on Adzuna"), but the raw id is
+ * not display copy; nothing translated it before, so the report printed
+ * literal strings like "jobweb". Five of the seven are real, named products
+ * a reader could look up and recognise. `jobweb` (general Tavily/Brave web
+ * search) and `jsearch` (a RapidAPI aggregator wrapping Google for Jobs)
+ * are not brand names — rather than dressing up an internal slug as if it
+ * were a company, they get an honest, generic description instead.
+ * Presentation-only: `job.sourceId` itself is untouched, since
+ * `jobPrestige()` (`lib/jobs/card.ts`) branches on its exact value.
+ */
+const JOB_SOURCE_LABELS: Record<JobSourceId, string> = {
+  adzuna: "Adzuna",
+  usajobs: "USAJOBS",
+  remotive: "Remotive",
+  arbeitnow: "Arbeitnow",
+  himalayas: "Himalayas",
+  jobweb: "Web search",
+  jsearch: "Job search aggregator",
+};
+
+function jobSourceLabel(sourceId: string | undefined): string | undefined {
+  const cleaned = clean(sourceId);
+  if (!cleaned) return undefined;
+  return JOB_SOURCE_LABELS[cleaned as JobSourceId] ?? cleaned;
+}
 
 /**
  * B-06. The VISA tile's short value, from plate 02. Deliberately different
@@ -687,8 +716,8 @@ export function JobReport({
     materials.length > 0
       ? { label: "Materials", value: materials.join(", ") }
       : undefined,
-    clean(job.sourceId)
-      ? { label: "Seen on", value: clean(job.sourceId)! }
+    jobSourceLabel(job.sourceId)
+      ? { label: "Seen on", value: jobSourceLabel(job.sourceId)! }
       : undefined,
   ].filter(Boolean) as Array<{ label: string; value: string }>;
   const hasEnrichment = hasJobEnrichment(enrichment);
@@ -885,7 +914,12 @@ export function JobReport({
               </ul>
             </section>
           )}
-          {applyRows.length > 0 && (
+          {/* B4-07 (R5). The heading promises what to prepare; applyRows.length
+              alone let a job with a sourceId but no applicationMaterials
+              render the whole section for "Seen on" alone -- a true fact,
+              but not something you prepare. Gated on materials specifically;
+              applyRows's own construction is unchanged. */}
+          {materials.length > 0 && (
             <section data-section="to-apply-have-ready">
               <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
                 To apply, have ready

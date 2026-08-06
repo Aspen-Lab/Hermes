@@ -251,14 +251,12 @@ describe("EventReport", () => {
     expect(starredHtml).toContain("The other 2 exhibitors, judged");
   });
 
-  it("locked block falls back to the generic phrasing when nothing is untagged", () => {
+  it("locked block falls back to the generic phrasing when everything is tagged but organisations exist", () => {
     // B3-09. Never print "The other 0 exhibitors" — the old generic
-    // phrasing stays when the count is zero (including when there are no
-    // organisations at all).
-    const noOrgsHtml = renderReport(baseEvent({ organisations: [] }));
-    expect(noOrgsHtml).toContain("The other exhibitors, judged");
-    expect(noOrgsHtml).not.toContain("The other 0 exhibitors");
-
+    // phrasing stays when the untagged count is zero, as long as real
+    // organisations exist at all (one fully-tagged organisation here).
+    // Unaffected by B4-08 immediately below: organisationCount = 1 > 0, so
+    // item 1 still renders.
     const allTaggedHtml = renderReport(
       baseEvent({
         organisations: [
@@ -268,6 +266,24 @@ describe("EventReport", () => {
     );
     expect(allTaggedHtml).toContain("The other exhibitors, judged");
     expect(allTaggedHtml).not.toContain("The other 0 exhibitors");
+  });
+
+  // B4-08 (R10, round 4) DELIBERATELY REVERSES this same fixture's
+  // expectation from B3-09's own test above (which used to assert the
+  // OPPOSITE — that "The other exhibitors, judged" DID appear for
+  // `organisations: []`). B3-09 built the >0-untagged branch correctly for
+  // "nothing untagged, but organisations exist"; round 4 found the
+  // uncovered case B3-09 didn't: zero organisations at all, where the same
+  // generic fallback text ("Reads the full list...") reads as a promise to
+  // judge a list that does not exist. The manager's own ruling (R10) says
+  // so explicitly: "Round 3 made that count live precisely so it would
+  // tell the truth; with an empty roster it now advertises reading a list
+  // that is empty." This is that reversal, made on purpose, not an
+  // oversight.
+  it("locked block drops the exhibitors item entirely when there are no organisations at all", () => {
+    const noOrgsHtml = renderReport(baseEvent({ organisations: [] }));
+    expect(noOrgsHtml).not.toContain("The other exhibitors, judged");
+    expect(noOrgsHtml).not.toContain("The other 0 exhibitors");
   });
 
   it("repeats the cheapest line and renders the required four-column cost table", () => {
@@ -594,6 +610,16 @@ describe("EventReport", () => {
     // three dates (Jan 28 / Jun 15 / Jul 20) never coincide with Jul 30, so
     // its total absence here is a clean signal that nothing prints under it.
     expect(html).not.toContain("Jul 30");
+  });
+
+  // B4-06 (R3). baseEvent() sets a start date but neither deadline field by
+  // default -- every OTHER test that touches this section happens to
+  // override both explicitly (see the two above), which is exactly why the
+  // empty-promise case shipped unnoticed for three rounds: 100% of this
+  // file's own tests set both fields until now.
+  it("does not promise two deadlines when the event has neither", () => {
+    const html = renderReport(baseEvent({ date: "2027-07-20" }));
+    expect(html).not.toContain("Two deadlines, one event");
   });
 
   it("keeps real activity vocabulary title-cased and leaves prose alone", () => {

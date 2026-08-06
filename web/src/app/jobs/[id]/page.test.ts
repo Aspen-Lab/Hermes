@@ -712,4 +712,39 @@ describe("JobReport", () => {
       }
     },
   );
+
+  // B4-05 (R6). No test asserted "Seen on"'s text or set sourceId anywhere
+  // in this file before this round (grepped, zero hits) — the row B-17
+  // built has never had its text checked.
+  it("translates a known source id into a name a reader recognises", () => {
+    const html = renderReport(
+      baseJob({ applicationMaterials: ["CV"], sourceId: "adzuna" }),
+    );
+    expect(html).toContain("Adzuna");
+    expect(html).not.toContain(">adzuna<");
+  });
+
+  it("never prints the internal jobweb/jsearch slugs verbatim", () => {
+    const jobwebHtml = renderReport(
+      baseJob({ applicationMaterials: ["CV"], sourceId: "jobweb" }),
+    );
+    expect(jobwebHtml).not.toContain("jobweb");
+    expect(jobwebHtml).toContain("Seen on");
+
+    const jsearchHtml = renderReport(
+      baseJob({ applicationMaterials: ["CV"], sourceId: "jsearch" }),
+    );
+    expect(jsearchHtml).not.toContain("jsearch");
+    expect(jsearchHtml).toContain("Seen on");
+  });
+
+  // B4-07 (R5). No existing fixture exercised materials-empty-but-
+  // sourceId-present -- baseJob() sets neither field, so the section was
+  // already absent for every OTHER test touching it; this is the first to
+  // set sourceId with no applicationMaterials.
+  it("does not promise something to prepare when only the source is known", () => {
+    const html = renderReport(baseJob({ sourceId: "adzuna" }));
+    expect(html).not.toContain("To apply, have ready");
+    expect(html).not.toContain("Seen on");
+  });
 });

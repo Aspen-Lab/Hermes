@@ -33,11 +33,11 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-04
-                  landed, working B4-05 next; see §4 "Round 4 — Agent C"
-                  for detail per item. This is a restart of C — a prior C
-                  died to a content-filter error before committing any
-                  code; nothing was lost.)
+WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-08
+                  landed, working B4-09 (skip) then B4-10 next; see §4
+                  "Round 4 — Agent C" for detail per item. This is a
+                  restart of C — a prior C died to a content-filter error
+                  before committing any code; nothing was lost.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -293,9 +293,9 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **886 tests, all 886 passing**, typecheck clean, 1
+GATE NOW:  83 files / **891 tests, all 891 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01..B4-04 only; will keep rising
+           **mid-round-4 figure, after B4-01..B4-08 only; will keep rising
            as C lands more items.** Not yet the final round-4 figure — see
            §4 "Round 4 — Agent C" for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
@@ -6920,4 +6920,95 @@ per item, gate re-run after each.
   replace the low-fidelity search-snippet `description` entirely) — sized
   correctly by B as new extraction work, not a guard, out of scope for this
   item. **Gate: 83 files / 886 tests passing** (3 new), **typecheck clean, 1
+  pre-existing lint error, unchanged.**
+
+- **B4-05 — LANDED.** Added `JOB_SOURCE_LABELS: Record<JobSourceId, string>`
+  and a `jobSourceLabel()` helper to `web/src/app/jobs/[id]/page.tsx`, next
+  to the file's existing `ROLE_LABELS`/`VISA_LABELS` maps (same pattern).
+  Five real product names (`Adzuna`, `USAJOBS`, `Remotive`, `Arbeitnow`,
+  `Himalayas`); `jobweb` → `"Web search"` (B's own suggested wording) and
+  `jsearch` → `"Job search aggregator"` (B named the tradeoff but left this
+  one's exact wording open — picked an equally honest, non-branded
+  description, not a guess at a company name). Render site only
+  (`applyRows`'s `"Seen on"` row); confirmed `job.sourceId` itself and
+  `item.source`/`RawJobItem.source` upstream are untouched, so
+  `jobPrestige()`'s `source === "jobweb"` branch
+  (`web/src/lib/jobs/card.ts`) still sees the real id. Grepped
+  `page.test.ts` for `"Seen on"` and `sourceId` first — zero hits, matching
+  B's own finding — then added the two cases B asked for. **Gate: 83 files /
+  888 tests passing** (2 new), **typecheck clean, 1 pre-existing lint
+  error, unchanged.**
+
+- **B4-06 — LANDED.** Took B's own "equivalent" alternative rather than
+  threading a new `hasDeadline` variable through: changed the render gate
+  at the "Two deadlines, one event" call site
+  (`web/src/app/events/[id]/page.tsx`) from `milestones.length > 0` to
+  `milestones.some((m) => m.key === "submission" || m.key === "registration")`.
+  `deadlineMilestones()`'s own construction is untouched, per B's
+  instruction — `Today`/`Event` still push exactly as before once the
+  section does render. Re-traced both named existing fixtures by hand
+  before running — both set `deadline` AND `registrationDeadline`
+  explicitly, both unaffected — then confirmed by running the suite. Added
+  the test B asked for: `baseEvent({ date: "2027-07-20" })` (baseEvent's
+  own default, no deadline fields) no longer renders the heading at all;
+  noted in the test's own comment that every OTHER test in the file
+  happens to set both deadline fields explicitly, which is exactly the
+  "hand-built fixture always populates every field" blind spot that let
+  this ship unnoticed for three rounds. **Sanity-checked the related,
+  weaker job-side case B named** (does `buildTimeline` render a bare
+  "Today" under the generic word "Timeline" when a job has neither a
+  deadline nor a start date) — confirmed present in the code
+  (`buildTimeline`'s own guard is the same "any one of three" shape) but,
+  per B's own read, not the same falsehood class (no specific count
+  promise in a generic heading) and not sized as its own fix here, since no
+  R-item named it. **Gate: 83 files / 889 tests passing** (1 new),
+  **typecheck clean, 1 pre-existing lint error, unchanged.**
+
+- **B4-07 — LANDED.** Changed the "To apply, have ready" section's render
+  gate (`web/src/app/jobs/[id]/page.tsx`) from `applyRows.length > 0` to
+  `materials.length > 0`, per B's own minimal fix — `applyRows`'s
+  construction is untouched. Confirmed B's own side-effect note in
+  practice: a job with a known `sourceId` but no `applicationMaterials` now
+  loses the whole section, "Seen on" included, since it has no other home
+  on the page — logging this plainly as the visible, deliberate trade-off B
+  named (matching R5's own wording) rather than relocating "Seen on"
+  myself, which would be a fresh scope decision, not this item's fix.
+  Re-checked both existing references to the section by hand (the
+  `matchReason`/`facetPreferenceReason` fixture, already empty for this
+  section today since `baseJob()` sets neither field; the "renders all
+  seven supported facts" fixture, which sets `applicationMaterials`
+  explicitly) — both confirmed unaffected before running, then by running.
+  Added the case B asked for: a job with `sourceId` set and no
+  `applicationMaterials` renders neither the heading nor "Seen on". **Gate:
+  83 files / 890 tests passing** (1 new), **typecheck clean, 1
+  pre-existing lint error, unchanged.**
+
+- **B4-08 — LANDED, including the deliberate test reversal B named.**
+  `buildEventTierUpgradeItems` (`web/src/app/events/[id]/page.tsx`) now
+  takes `organisationCount` alongside the existing
+  `untaggedOrganisationCount`, and only pushes item 1 ("The other N
+  exhibitors, judged" / the generic fallback) when `organisationCount > 0`
+  — exactly B's proposed shape, the other three items unconditional and
+  untouched. Call site now reads `roster.organisations.length` (the total,
+  junk-filtered list `partitionEventRoster` already returns) alongside
+  `roster.organisationTail.length`. Confirmed this is the same standard
+  `RosterSection` already applies to itself
+  (`organisations.length === 0 && people.length === 0` hides the whole
+  section), so the new gate is consistent with, not a new standard
+  alongside, an existing one.
+
+  **Rewrote B3-09's own test, as B said this item must.** Split
+  "locked block falls back to the generic phrasing when nothing is
+  untagged" into two: the one-fully-tagged-organisation case is unchanged
+  (`organisationCount = 1 > 0`, item 1 still renders); the
+  `organisations: []` case is REVERSED on purpose — the comment on the new
+  test says explicitly that this reverses B3-09's own prior assertion for
+  this exact fixture, cites R10's own reasoning ("Round 3 made that count
+  live precisely so it would tell the truth; with an empty roster it now
+  advertises reading a list that is empty"), and points back to B4-08 in
+  this file, per §3's rule to say which item changed a test and why.
+  Confirmed `tier-upgrade-block.test.tsx` renders its own fixture items
+  directly rather than calling this function — unaffected, no change
+  needed, matching B's own note. **Gate: 83 files / 891 tests passing** (net
+  +1: the rewritten test split one `it` into two), **typecheck clean, 1
   pre-existing lint error, unchanged.**

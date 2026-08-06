@@ -74,12 +74,21 @@ const ROSTER_STARS_KEY = "peer-event-roster-stars-v1";
  * that could drift apart. Falls back to the old generic phrasing when
  * there is nothing untagged (or no organisations at all), rather than
  * printing "The other 0 exhibitors."
+ *
+ * B4-08 (R10). That fallback still assumed SOME organisation exists — with
+ * zero real organisations at all, it read "Reads the full list and tells
+ * you which strangers are worth your day" over a list that does not exist.
+ * `organisationCount` is `partitionEventRoster`'s own total (junk-filtered)
+ * list, the same standard `RosterSection` itself already uses to decide
+ * whether to render at all — item 1 now only appears when that is nonzero.
  */
 function buildEventTierUpgradeItems(
+  organisationCount: number,
   untaggedOrganisationCount: number,
 ): TierUpgradeItem[] {
-  return [
-    {
+  const items: TierUpgradeItem[] = [];
+  if (organisationCount > 0) {
+    items.push({
       // B-20. Plate 03's wording, "The other 29 exhibitors, judged".
       title:
         untaggedOrganisationCount > 0
@@ -87,7 +96,9 @@ function buildEventTierUpgradeItems(
           : "The other exhibitors, judged",
       description:
         "Reads the full list and tells you which strangers are worth your day.",
-    },
+    });
+  }
+  items.push(
     {
       title: "What each talk is actually about",
       description: "Reads the programme abstracts, not just the session titles.",
@@ -103,7 +114,8 @@ function buildEventTierUpgradeItems(
       description:
         "Compares the call's scope against your project and says yes or no.",
     },
-  ];
+  );
+  return items;
 }
 
 const EVENT_PAGE_READING_NOTES: Record<
@@ -1925,7 +1937,17 @@ export function EventReport({
         {cheapest && <CheapestCallout cheapest={cheapest} />}
         {/* B-09. Every other block on the page is wrapped in a ReportSection;
             this one was rendered bare, so it emitted no heading at all. */}
-        {milestones.length > 0 && (
+        {/* B4-06 (R3). milestones always carries "Today", and "Event" whenever
+            the event merely has a start date -- neither is a deadline, so
+            gating on the array's raw length rendered this heading over an
+            event with a known date but no abstract or registration deadline
+            at all ("Two deadlines" over zero). Gate on an actual deadline
+            existing instead; Today/Event still render inside the strip once
+            the section does, unchanged -- they are the axis the deadlines
+            are plotted against, not the promise being made. */}
+        {milestones.some(
+          (milestone) => milestone.key === "submission" || milestone.key === "registration",
+        ) && (
           <ReportSection title="Two deadlines, one event">
             <DeadlineTimeline milestones={milestones} />
           </ReportSection>
@@ -2124,7 +2146,10 @@ export function EventReport({
         />
 
         <TierUpgradeBlock
-          items={buildEventTierUpgradeItems(roster.organisationTail.length)}
+          items={buildEventTierUpgradeItems(
+            roster.organisations.length,
+            roster.organisationTail.length,
+          )}
           providerConfigured={providerConfigured || hasEnrichment}
         />
       </div>
