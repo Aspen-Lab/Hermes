@@ -5721,3 +5721,84 @@ right level to fix it at rather than patching either report component.
 - I did not re-run round 4's live search this round to confirm the real TiRT7
   page's exact wording; this item's confidence rests on the gazetteer grep and
   the pre-existing test's own near-identical fixture, not a fresh fetch.
+
+---
+
+##### B4-03 — Job subtitle prints `Summer 2027` where the employer belongs (R7). `WRONG DATA`.
+
+**Note before the cause: R7, R4 and R6 (B4-04, B4-05 below) are very plausibly
+the same one real posting** — round 4's log names all three against "real job
+2." Fixing all three closes that one job's report by a lot; they are still
+three separate defects with three separate causes, guided as three items.
+
+**Cause.** `webResultToRawJobItem()`
+(`web/src/lib/jobs/sources/jobweb.ts:111-159`) derives the company from the
+search result's own title, not from any structured field — `jobweb` (Tavily
+or Brave web search) has no employer field at all, unlike Adzuna/USAJobs.
+
+```ts
+const parts = title.split(/\s+[-–—|·]\s+/);
+const roleTitle = parts[0]?.trim() || title;
+const company =
+  parts
+    .slice(1)
+    .map(cleanJobSubtitlePart)
+    .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d))) ||
+  host;
+```
+
+It splits the title on `- – — | ·`, and the first segment after the role
+title that is not blank and is not a known job-board domain **wins as the
+company, unconditionally.** For a title shaped like `"Battery R&D Intern -
+Summer 2027 - Acme Corp"` (or one where the true employer segment is missing
+or unparseable and only a cohort/season segment remains after the role), this
+picks `"Summer 2027"` — the internship cohort label — because nothing checks
+whether the candidate segment *reads like a company name* at all. It is only
+screened against `KNOWN_JOB_BOARD_DOMAINS` (a specific list of job-board host
+names like `higheredjobs.com`), which a season label obviously never matches,
+so it passes straight through. `cleanJobSubtitlePart()`
+(`web/src/lib/opportunities/job-cleanup.ts:43-48`) does not help either — it
+only strips leading punctuation and rejects a fixed call-to-action regex
+(`"apply now"`, `"learn more"`, etc.); a two-word season-plus-year string
+matches neither. From there `company` flows completely unguarded:
+`scoredJobToJob()` (`web/src/lib/jobs/mapper.ts:132`,
+`company = cleanJobSubtitlePart(item.company) ?? fallbackCompany`) does the
+same cleanup and passes it straight to `Job.companyOrLab`, which the report
+prints verbatim in the subtitle's first slot
+(`web/src/app/jobs/[id]/page.tsx:673`, `:733`).
+
+**Fix direction.** Add a guard, in the same spirit as `event-roster.ts`'s
+`looksLikeOrganisationName`/`looksLikePersonName` (reject an implausible
+candidate rather than trust anything that isn't already on a specific deny
+list): reject a candidate segment that is *only* a season/cohort/year label —
+`Summer|Fall|Winter|Spring\s+20\d\d`, `Class of 20\d\d`, `Cohort \d+`, a bare
+four-digit year, and similar — before accepting it as `company`. The existing
+`|| host` fallback already handles "nothing survived"; a rejected season
+segment should fall through to it (or to the next segment, if `parts` has
+more than two elements) exactly the way a rejected job-board-domain segment
+already does today — this is additive to an existing filter, not a new
+mechanism.
+
+**Blast radius.** Contained to `jobweb.ts`'s own `webResultToRawJobItem()` —
+this is the one source adapter with this shape of heuristic; Adzuna and
+USAJobs (checked both) read `company`/`employer` from each API's own
+structured field directly and never go through this segment-picking logic.
+`companyOrLab` itself is read by the feed's job cards too
+(`web/src/lib/jobs/card.ts`, not opened this round but the field is shared),
+so this fix also stops a season label from appearing on jobweb-sourced feed
+cards, not only the report.
+
+**Risk.** `web/src/lib/jobs/sources/jobweb.test.ts:102-110`, "keeps a real role
+that carries site chrome," is the only existing test that exercises this
+function's title-splitting path end to end (`title: "Battery Research
+Scientist | Acme Materials"`) — it asserts only `.title`, never `.company`
+(grepped the whole file for `.company` — no hits). **No existing test locks
+in `company` derivation at all**, so this fix has zero regression surface, but
+also no coverage to lean on. Re-traced this specific fixture through the
+proposed guard: `"Acme Materials"` is not season/cohort-shaped, so it still
+passes and the test's own behaviour (title only) is unaffected either way.
+**C should add the first real test here**: a title like `"Battery R&D Intern -
+Summer 2027 - Acme Corp"` should produce `company: "Acme Corp"`, not
+`"Summer 2027"`; a title with *only* a season segment after the role
+(`"Battery R&D Intern - Summer 2027"`, nothing else) should fall back to
+`host`, not print the season.
