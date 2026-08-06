@@ -6028,3 +6028,63 @@ class of falsehood. Worth C's sanity check (does a job with neither a
 deadline nor a start date render a "Timeline" section containing only the
 word "Today" and nothing else?) but not sized as a guided fix here, since no
 R-item named it.
+
+---
+
+##### B4-07 — "To apply, have ready" renders with nothing to prepare (R5). `WRONG SHAPE` — report-layer, closable now.
+
+**Cause.** `web/src/app/jobs/[id]/page.tsx:686-693`:
+
+```ts
+const applyRows: Array<{ label: string; value: string }> = [
+  materials.length > 0 ? { label: "Materials", value: materials.join(", ") } : undefined,
+  clean(job.sourceId) ? { label: "Seen on", value: clean(job.sourceId)! } : undefined,
+].filter(Boolean) as Array<{ label: string; value: string }>;
+```
+
+and the render gate at `:888`, `{applyRows.length > 0 && (<section
+data-section="to-apply-have-ready"><h2>To apply, have ready</h2>...)}`. The
+section's own heading promises something to prepare; its gate only checks
+whether the row array has **anything at all**, and `Seen on` alone (a true
+fact, but not something you prepare) is enough to satisfy `length > 0`. A job
+with a `sourceId` but no `applicationMaterials` — round 4's real job 2 — gets
+the full heading over a section whose only content is where Peer found it.
+
+**Fix direction.** Gate the section specifically on `materials.length > 0`,
+not `applyRows.length > 0` — the heading's own promise is about what to
+prepare, and `Materials` is the only row that is actually that. Leave
+`applyRows`'s construction itself unchanged.
+
+**A side effect worth naming, not deciding.** Under this gate, when
+`applyRows` is `[Seen on]` alone (materials empty, source known), the whole
+section — including the true, correctly-sourced `Seen on` fact — disappears
+along with it, since today `Seen on` has no other home on the page. That is
+what R5's own wording asks for ("It should not render when
+`applicationMaterials` is empty"), and I am guiding it as written rather than
+re-opening the ruling. Flagging plainly so it is a visible, deliberate
+trade-off rather than a silent one: if the manager would rather relocate
+`Seen on` to somewhere that doesn't carry the "have ready" promise (a
+metadata line elsewhere on the page, say) instead of losing it whenever
+materials are absent, that is a fresh, small `POLICY` question, not something
+I am deciding here by picking the minimal fix.
+
+**Risk.** Checked both existing references to `"To apply, have ready"` in
+`web/src/app/jobs/[id]/page.test.ts` directly, not just grepped for the
+string:
+- `:128-148` — `baseJob({ matchReason: ..., facetPreferenceReason: ... })`,
+  no `applicationMaterials` or `sourceId` override. `baseJob()`'s own base
+  object (`:38-49`) sets neither field either, so `applyRows` is **already**
+  empty and the section **already** does not render for this fixture today.
+  Its assertion, `expect(html.indexOf("To apply, have ready")).toBeLessThan(why)`
+  (`:148`), passes today only because `indexOf` returns `-1` when the string
+  is absent and `-1 < why` trivially — a pre-existing weak assertion, not one
+  my fix changes the truth of either way. **Unaffected.**
+- `:163-198` (the "renders all seven supported facts..." fixture) sets
+  `applicationMaterials: ["CV", "Cover letter"]` explicitly (`:188`), so
+  `materials.length > 0` is true regardless of the new gate — its ordering
+  assertion `expect(role).toBeLessThan(materials)` (`:245`) stays green,
+  unchanged, since the section still renders for this fixture.
+- **No existing test exercises materials-empty-but-sourceId-present** — the
+  exact shape this item closes. **Add one**: `baseJob({ sourceId: "adzuna" })`
+  with no `applicationMaterials` must not render `"To apply, have ready"` at
+  all (today's build renders it with only the `Seen on` row).
