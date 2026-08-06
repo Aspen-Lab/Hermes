@@ -4423,3 +4423,42 @@ same render -- that agreement is the actual point of hoisting the
 computation instead of duplicating it.
 
 ---
+
+##### B3-10 -- Subtitle's third segment lacks its day-count parenthetical. `NO FIX AVAILABLE THIS ROUND` -- scoped honestly, per the item's own instruction. (Job finding 5)
+
+**What this is a residual of.** Old exclusion (b) in Sec1e's original
+"no field exists" table was `Hybrid (3 days on-site) | job subtitle, 3rd
+segment`, and Sec1e's own exception text folded (a) and (b) together as "the
+same missing fact" and put both in scope for B2-06 to close. **They weren't
+quite the same fact.** B2-06 built `workMode`, which correctly supplies the
+mode *word* -- the subtitle at `web/src/app/jobs/[id]/page.tsx:713-722`
+now correctly prints `Hybrid` as its third segment (`workMode =
+workModeLabel(job)`, `:666`). But the plate's full text there is `Hybrid (3
+days on-site)` -- a **day-count**, not a mode word, and `workMode` was never
+built to carry one.
+
+**I looked for a newly-possible source and found none.** Grepped the whole
+`web/src` tree for any existing signal shaped like "days on-site" / "days a
+week" / "days per week" -- the only two hits are the doc comments at
+`page.tsx:272` and `:662` that already say, in nearly identical words, that
+the parenthetical has no field behind it. No extraction anywhere attempts a
+per-week on-site cadence, and nothing added by B3-06 or B3-08 (this round's
+other job-side items) creates one as a side effect -- `workMode` is a
+three-state enum (`on-site | hybrid | remote`), not a day count, and
+`startDateFlexible` (B3-06) and the LOCATION-tile country (B3-08) are both
+unrelated facts.
+
+**So: nothing is newly possible this round, and there is no fix for C to
+work here.** This is functionally an exclusion, but it is *narrower* than
+old exclusion (b) as originally written -- (b)'s mode-word half is closed
+(B2-06), only the day-count half remains open. Continuing to cite (b) as a
+single, still-fully-open item would misstate what's actually true.
+
+**Recommendation to A/the manager:** retire exclusion (b) as originally
+worded and replace it with a narrower one -- something like **(b')
+`(3 days on-site)` day-count parenthetical only, job subtitle 3rd segment**
+-- so the round's bookkeeping doesn't read as though B2-06 left the whole
+gap untouched. This is a paperwork correction, not a ruling request; no
+`POLICY` decision is needed since there is no candidate fix to rule on.
+
+---
