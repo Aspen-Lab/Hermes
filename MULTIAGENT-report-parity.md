@@ -33,13 +33,15 @@ before you stop, not after you finish.
 
 ```
 ROUND:            3
-WHOSE TURN:       B  (round-3 fix guide, items B3-01 ..)
-STATUS:           ROUND-3 MEASUREMENT COMPLETE — 16% different (84% matched).
-                  Run by the MANAGER, not an A subagent: four agents in a row
-                  died on the account spend limit or a 600s stall. See §4
-                  "Round 3" for why that makes this round less independent.
+WHOSE TURN:       C  (work B3-01 .. B3-11 in order, §4 "Round 3 — Agent B")
+STATUS:           ROUND-3 FIX GUIDE COMPLETE. B wrote and committed all 11
+                  items (B3-01..B3-11), one commit per item, per §4 "Round 3
+                  — Agent B". B did not run the gate and did not change any
+                  code (not B's job) — the measured 16% below is therefore
+                  still the pre-fix number; it will not move until C lands
+                  this guide and a future A re-measures.
 LAST DIFFERENCE:  16%   (13 differences: 5 job, 8 event — full ranked list in
-                  §4 under "Round 3")
+                  §4 under "Round 3"; unchanged by this round's B work)
 GATE (0%):        NOT MET
 
 NEW FOR A:        **From round 4, A must ALSO measure against real search
@@ -60,58 +62,86 @@ NEW RULING:       **§1g Ruling 19 REVERSES §1f Ruling 17.** Exclusion (j) is
                   for round 4: A reads the whole PDF once per loop, and a "no
                   honest source" claim must say where it looked.**
 
-OPEN POLICY:      **Both resolved — see §1h. Asked the user directly, and
-                  the two went opposite ways:**
-                  (1) STARTS tile's `flexible` sub-line — **RULED IN (Ruling
-                  20). B must guide it.** Follows the `workMode` (B2-06)
-                  pattern: additive, optional, never a guess when the posting
-                  is silent. Likely posting-text extraction, not an
-                  aggregator field — see §1h for the `visa.ts` vs `jobWorkMode`
-                  precedent comparison B should check first.
-                  (2) both reports' "Why Peer sent this to you" closing
-                  clauses — **RULED OUT (Ruling 21), permanently excluded as
-                  items (k) and (l). B must NOT guide these.**
+OPEN POLICY:      Both resolved — see §1h. (1) STARTS tile's `flexible`
+                  sub-line — Ruling 20, RULED IN, **guided this round as
+                  B3-06**. (2) both reports' "Why Peer sent this to you"
+                  closing clauses — Ruling 21, RULED OUT, permanently
+                  excluded as items (k) and (l); B did not write a guide item
+                  for either, per instruction.
 
-DONE:      B2-01 .. B2-18, all eighteen, each with its own commit and its own
-           §4 log entry. Split across two C's: the first did B2-01..B2-08 and
-           stalled at 600s committing B2-08 (nothing lost — it had committed
-           per item, exactly why that rule exists); this second C resumed at
-           B2-09 and finished B2-09..B2-18. B's guide itself was written by
-           the MANAGER after two B subagents died writing nothing — §1
-           stayed true through every one of those deaths, which is the only
-           reason any of this was resumable.
+DONE:      B2-01 .. B2-18 (round 2), unchanged from before, still all landed
+           and committed. **This round, B wrote and committed the round-3 fix
+           guide, B3-01 .. B3-11**, one commit per item, covering all 11
+           items §1's own TODO named (job findings 1, 3, 5; event findings 1,
+           2, 3, 4, 5, 7, 8; plus Ruling 20's STARTS `flexible` field). B did
+           not change any code. Full detail, file/line citations and test-risk
+           lists are in §4 "Round 3 — Agent B".
 
-           **Both POLICY halves C raised were ruled in §1f, and one of those
-           rulings has since been REVERSED:**
-             - B2-11's `Industry` qualifier (`"Summit"` → `"Industry
-               summit"`) — §1f Ruling 17 excluded it as unsourceable.
-               **§1g Ruling 19 REVERSES that: it is the spec's own label for
-               the `summit` kind (plate 04). Exclusion (j) withdrawn.**
-             - B2-17 gap 3, `looking at industry` — the profile DOES carry
-               `Profile.industryVsAcademia`. C found it, refused to use it
-               without a ruling, and recorded the field name. **RULED IN and
-               BUILT as B2-19 by the manager.** The reader set that value
-               themselves; printing it explains a highlight rather than
-               guessing at one.
-TODO:      **B writes the round-3 fix guide, items B3-01 onward**, covering
-           **11 items**: the 10 already-closable differences in §4 "Round 3"
-           (job findings 1, 3, 5; event findings 1, 2, 3, 4, 5, 7, 8) plus
-           the newly-ruled-in STARTS `flexible` field (Ruling 20). **Do NOT
-           write a guide item for job finding 4 or event finding 6** — both
-           are permanently excluded as (k) and (l) per Ruling 21. Before
-           starting, read §1g (withdraws exclusion (j), adds two rules about
-           where evidence may be searched) and §1h (this round's two
-           rulings, in full, with the extraction precedent for Ruling 20).
+           Two things B found worth flagging beyond a plain "here's the fix":
+             - **B3-06** — Ruling 20's own text frames the choice as
+               `jobWorkMode()` vs `visa.ts`. Checking what data the mapper
+               actually receives shows neither is quite right: the two
+               precedents differ not just in what they read but in *which
+               pipeline stage they run at* — `jobWorkMode` runs inside the
+               mapper itself; `extractVisaState` runs upstream, in
+               `enrichJobCandidates()`, before the mapper ever sees the
+               posting's free text. Start-date flexibility belongs in that
+               same upstream stage (`extractJobDetails()`, which already
+               extracts `startDate` itself the same way) — not in the
+               mapper. See B3-06 for the full trace.
+             - **B3-08** — closing the LOCATION tile's country gap byte-exactly
+               needs a US/UK-style short-country-name table that does not
+               exist anywhere in the codebase today (confirmed by grep).
+               Flagged as a named follow-up in B3-08, not built silently and
+               not left unmentioned; the field wiring itself is not blocked
+               on it (it just won't be byte-exact to the plate's "US" until
+               that follow-up lands).
 
-           Things round 3 could not check, for whoever picks them up: whether
-           B2-04's contract-length expand/abbreviate pair reads right on real
-           (not fixture) data, and whether B2-06's `workMode` inference from
-           location text ever mis-fires. Both were exercised only against a
-           hand-built fixture.
+           **B3-10 (job finding 5's subtitle parenthetical) has NO code for C
+           to write.** B found no newly-possible data source this round and
+           recommends A narrow old exclusion (b) — its mode-word half is
+           already closed by B2-06, only the day-count half is still open —
+           rather than continue treating (b) as either fully closed or fully
+           open. **C: skip B3-10 when working the list**, there is nothing to
+           implement.
+
+TODO:      **C works B3-01 → B3-11 in order** (§4 "Round 3 — Agent B";
+           **skip B3-10**, it is a bookkeeping note, not a work item).
+           - B3-02/B3-03 are one shared mechanism (the Timeline / deadline-
+             strip "Today" fix, duplicated across both report files) — do
+             both files' changes under B3-02, B3-03 is mostly verification
+             plus its own small "Register by" → "Register" label change.
+           - B3-04/B3-05 are one shared mechanism (the `EventType` → label
+             map) — build it under B3-04, B3-05 reuses it for the secondary
+             chip.
+           - B3-06 (Ruling 20) is the largest item and should be split into
+             two commits itself, exactly like B2-06 was: type + mapper
+             passthrough + render first, extraction second. If the phrase
+             list proves unreliable against real posting text, stop after the
+             safe half and report it rather than shipping a guessed flag.
+           - B3-07, B3-08, B3-09 are independent of everything else and of
+             each other once B3-01–B3-06 land. B3-11 is independent and
+             low-risk.
+
+           After each item: run the gate, commit, per §2/§3. Hand back to A
+           for round 4's measurement when done — and note for A that §2 now
+           carries a round-4 mandate to also measure against real search
+           results, not only a fixture (added by the user on 2026-08-05, see
+           §2 under Agent A).
+
+           Things this round could not check, for whoever picks them up:
+           everything round 2's TODO already listed (B2-04's contract-length
+           expand/abbreviate pair and B2-06's `workMode` inference against
+           real, not fixture, postings) — plus, new this round, whether
+           B3-06's proposed start-date-flexibility phrase list actually fires
+           correctly on real posting text, and whether B3-07's "exactly one
+           comma" guard is the right shape for real `travelGrant` strings
+           beyond the single example this loop has seen so far.
 GATE NOW:  82 files / **850 tests, all 850 passing**, typecheck clean, 1
-           pre-existing lint error (`src/components/persona/quiz.tsx:46`).
-           848 of those are C's figure after each of its 18 commits — the gate
-           was re-run per item, never batched. The last 2 are B2-19's.
+           pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
+           **carried over unchanged from round 2's C; B does not run or
+           change code.** C must re-verify this baseline before touching
+           anything, per §2's own instruction to C.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -132,6 +162,19 @@ NOTE:      B2-06 (round 2's first C) landed all three layers including
            named — both rewritten, neither deleted, per §2/§3 — a reminder
            that "risk" sections in a B guide are a starting point, not a
            complete list; C must still watch the gate itself.
+
+           **B3-01..B3-11 (this round) is B's most heavily cross-referenced
+           guide yet.** Two pairs of items are one mechanism each, not four
+           independent fixes (B3-02/B3-03; B3-04/B3-05), and B3-06 turns on a
+           pipeline-stage distinction (mapper-time vs. enrichment-time) that
+           Ruling 20's own text didn't draw explicitly. Read an item's
+           cross-references before starting it, not just its own heading.
+           B also flagged, without touching it (B does not change code), one
+           existing test comment that will mislead a future reader once
+           B3-06 lands: `jobs/[id]/page.test.ts:321-324`'s comment says the
+           STARTS `flexible` field "has no such field" — true before B3-06,
+           false after. The assertion itself doesn't need to change; C should
+           rewrite the comment when landing B3-06.
 ```
 
 **History of measured difference, newest last:** _(A appends one line per round)_
