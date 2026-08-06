@@ -6419,3 +6419,63 @@ change, `item.workMode` is `undefined` for every one of these four fixtures,
 so `item.workMode ?? jobWorkMode(...)` falls through to the exact same
 expression these tests already exercise. **All four unaffected**, since none
 of them go through enrichment at all — they call the mapper in isolation.
+
+---
+
+##### B4-12 — The architectural root cause behind most of B4-10 and B4-11's still-open coverage gaps: page fetching never renders JavaScript. `POLICY — manager decides.`
+
+**This is not a fix item. It is the most likely single explanation tying
+together everything B4-10 and B4-11 deferred**, named on its own so it is
+visible and decidable rather than silently assumed.
+
+**The evidence.** `fetchPageHtml()` (`web/src/lib/opportunities/page-fetch.ts:58-88`)
+is a plain `fetch()` — no headless browser, no JavaScript execution of any
+kind. Its own comment says so plainly (`:77-80`): *"real opportunity pages can
+contain only a few KB of server-rendered HTML. Downstream extractors are
+deliberately tolerant of JavaScript shells and return no fields when a page
+has no useful signal."* This is not a hidden gap I am the first to notice —
+the codebase already knows about it and has already engineered a graceful
+degrade for it: `web/src/lib/opportunities/enrich.test.ts:388-400`, "leaves a
+6 KB JavaScript shell unchanged and does not throw," fetches a fixture that
+is exactly an empty React/Vue-shaped mount point (`<div id="root"></div>`)
+behind a large inline `<script>` block, and asserts the item passes through
+`enrichJobCandidates` completely unchanged — a real, passing, currently-green
+test modelling precisely this failure mode. `web/src/lib/opportunities/page-text.ts:37-38`
+also has its own `JAVASCRIPT_PLACEHOLDER_RE`, built to recognise a fetched
+page whose whole visible text is just `"please enable javascript"` or
+`"loading"`. **Three independent places in this codebase already assume a
+meaningful share of real posting/event pages will come back as empty
+shells.** Modern ATS platforms (Greenhouse, Lever, Workday) and many
+conference-site builders render their actual content client-side; a plain
+HTTP fetch sees only the shell that arrives before that JavaScript runs.
+
+**Why this is `POLICY`, not a guided fix.** Every extraction gap this loop
+can close is a regex/mapping change inside functions that already receive
+real text. This one is different in kind: **there is no regex that can read
+content that was never in the response at all.** Closing it for real would
+mean running a headless browser (Playwright/Puppeteer or similar) to render
+each candidate page before extracting from it — a genuinely new piece of
+infrastructure, not a patch: a new dependency, materially higher latency and
+compute cost per candidate (multiplied by up to 40 candidates per pool
+build, `MAX_ENRICHMENT_CANDIDATES`), and possibly conflicting with whatever
+deployment environment this runs in (serverless functions in particular
+often cannot spawn a real browser process without extra configuration).
+Whether that investment is worth it — and if so, at what candidate cap, with
+what timeout, and for which surface first — is a scope and cost decision for
+the manager and the user, exactly the shape of question B4-10/B4-11 flagged
+rather than answered.
+
+**What this does NOT block.** Every item B4-01 through B4-11 above is
+independently worth doing regardless of how this is decided — none of them
+depend on better page rendering, and several (B4-01's title guard, B4-02's
+proximity check, B4-03's company guard, B4-04's chrome guard, B4-05's source
+label map, all three report-layer gates, expectedSize, and the JSON-LD
+salary/employmentType extension) work on whatever text is already being
+fetched today, shell or not. This item only explains why the **remaining**
+coverage numbers (fees, organisations, people, most deadlines, contract
+length, application materials, most of startDate/startDateFlexible) may stay
+low even after everything else in this guide lands, and why that would not
+be a sign the other fixes failed.
+
+**No code to write, no test to check.** Recording the finding and the
+trade-off for the manager to rule on.
