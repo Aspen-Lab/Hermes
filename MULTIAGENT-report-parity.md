@@ -107,6 +107,71 @@ then re-runs A's job independently before anything is called done.
 
 ---
 
+## §0d. THE TURN LOCK — how three machines share one branch without diverging
+
+**Read this before §0b or §0c. It governs everyone: this laptop, the user's
+second computer, and the hourly cloud run.**
+
+There are now three possible writers on `feature/summary-report-revamp`. Without
+coordination each one pulls a snapshot, works from it, and produces a history
+the others cannot merge — and §1, the one thing that makes this loop
+restartable, stops being true.
+
+### The two rules that make it work
+
+**RULE 1 — PUSH AFTER EVERY COMMIT. No exceptions.**
+
+```
+git push origin feature/summary-report-revamp
+```
+
+§3 already requires one commit per item. **Now every one of those commits is
+pushed the moment it is made.** Unpushed work is invisible work, and invisible
+work is what causes the divergence. The most another machine can ever be behind
+is one item.
+
+**RULE 2 — CLAIM THE TURN BEFORE YOU TOUCH ANYTHING.**
+
+§1 carries a `HELD BY:` line. To claim it:
+
+1. `git pull` — always, first, no exceptions.
+2. Read `HELD BY:`. **If it names someone else and its timestamp is under 2
+   hours old, stand down.** Change nothing, commit nothing, exit. Someone is
+   working.
+3. If it is free, stale (2+ hours), or already yours: set it to your own
+   identifier and the current UTC time, commit, and **push**.
+4. **If that push is REJECTED, you lost the race.** Another machine claimed it
+   in the same moment. `git pull`, re-read `HELD BY:`, and stand down.
+
+**Step 4 is the actual lock.** Git refuses a non-fast-forward push, so exactly
+one machine can win. Everything else is bookkeeping.
+
+**Release it when you stop** — set `HELD BY: free`, commit, push. And if you
+die mid-task without releasing, the 2-hour staleness rule frees it for you.
+
+### Identifiers
+
+Use something a human can read and recognise:
+
+- This laptop: `LAPTOP-3CL10CG5`
+- The cloud routine: `cloud-hourly`
+- The second computer: its own hostname
+
+### Why a lock and not "just merge it later"
+
+The conflicts would land in `MULTIAGENT-report-parity.md` itself — §1's status
+block and §4's append-only log. **Merging two versions of "whose turn is it"
+produces a file that is true for neither machine**, and §0's one rule ("§1 must
+always be true") is what seven agent deaths have been recovered from. Losing it
+costs more than the occasional stood-down run.
+
+### If you are the user, working interactively
+
+The same rules apply to the session you are talking to. **Tell it to claim the
+lock before starting a turn**, or just let it read this section — it will.
+
+---
+
 ## §0c. IF YOU ARE A SCHEDULED CLOUD RUN — three extra constraints
 
 You are running hourly in Anthropic's cloud, from a fresh checkout, with no
@@ -130,25 +195,15 @@ The user's local machine picks it up from there. A half-measurement that looks
 complete is worse than no measurement — the whole reason round 4 exists is that
 a fixture score of 3% hid reports that did not work on real data.
 
-### 1b. Stand down if someone else is already working. Check this FIRST.
+### 1b. Claim the turn lock first — §0d, and it is not optional.
 
-The user's local machine runs its own resume loop, and it is the only one that
-can do A's live pass. **You must not step on an active local session** — two
-sessions working the same item produces conflicting commits and a state file
-that is no longer true.
+**Your identifier is `cloud-hourly`.** Follow §0d's claim procedure exactly:
+pull, read `HELD BY:`, stand down if someone else holds it and the timestamp is
+under 2 hours old, otherwise claim it, commit, and push. **If your claiming push
+is rejected, you lost the race — pull and exit.**
 
-**The lock is the last commit's age.** Before doing anything else:
-
-```
-git log -1 --format=%cr
-```
-
-**If the last commit is less than 90 minutes old, someone is actively working.
-Change nothing, commit nothing, exit.** Do not "just check" — reading is fine,
-but writing is not.
-
-Only proceed when the branch has been quiet for 90+ minutes. That means the
-local session is asleep, out of budget, or finished — and picking up is safe.
+You fire every hour and the user's own machines take priority in practice, so
+expect to stand down often. That is the system working.
 
 ### 2. A quiet no-op is the correct outcome most of the time.
 
@@ -174,6 +229,11 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
+HELD BY:          free
+                  (§0d turn lock. Claim before working: set this to your
+                  identifier + UTC timestamp, commit, PUSH. If the push is
+                  rejected you lost the race — pull and stand down. Stale
+                  after 2 hours. Release to `free` when you stop.)
 ROUND:            4
 WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-08
                   landed, B4-09 skipped intentionally, B4-10's additive
@@ -1222,6 +1282,12 @@ Work through B's fix guide in order.
 - No API key is needed. Never log, commit, or write a key to a file.
 - If you start the dev server, `npm run kill-orphans` from `web/` afterwards and
   confirm no node process is left listening.
+- **PUSH after every commit** — `git push origin feature/summary-report-revamp`.
+  Three machines now share this branch (§0d). Unpushed work is invisible to the
+  others, and invisible work is what makes two histories diverge. **This
+  replaces the old "do not push" rule**, which was written when there was one
+  checkout.
+- **Claim the §0d turn lock before you touch anything.** Pull first, always.
 - **Do not open a PR.**
 - **Write as you go. Do not batch your §4 write to the end.** Two agents have
   now died on the account's monthly spend limit with no warning — round 1's C
