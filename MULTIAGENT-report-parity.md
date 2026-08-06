@@ -3855,7 +3855,7 @@ function formatEventType(value: string): string {
 }
 ```
 
-De-hyphenate, then title-case every word. There is no label map -- per Sec1g,
+De-hyphenate, then title-case every word. There is no label map -- per §1g,
 plate 04 (PDF page 9) is the spec's own `EventType` -> display-label
 dictionary, and it title-cases only the *first* word of a multi-word label
 (`Academic conference`, `Career fair`), not every word. `formatEventType`
@@ -3934,7 +3934,7 @@ finds, not restatements of the round-3 log:**
      assertion must be deleted or inverted, and its own comment (`:649-652`,
      "The 'Industry' qualifier has no honest source... the primary chip stays
      exactly what formatEventType produces from the raw enum value") is now
-     stale and should be rewritten to explain the reversal (Sec1g) instead of
+     stale and should be rewritten to explain the reversal (§1g) instead of
      citing the withdrawn ruling.
    - `:648` `expect(header).toContain("+ recruiting fair");` is B3-05's own
      target, not this item's -- see below.
@@ -4064,10 +4064,10 @@ depend on the two representations staying in sync.
 
 ##### B3-06 -- STARTS tile's `flexible` sub-line. `MISSING`. (Ruling 20 -- newly ruled IN, build it.)
 
-**The precedent comparison Sec1h asked me to check first -- and the
+**The precedent comparison §1h asked me to check first -- and the
 finding that changes where this code should live.**
 
-Sec1h frames this as a choice between two shapes: `jobWorkMode()`
+§1h frames this as a choice between two shapes: `jobWorkMode()`
 (structured-field regex, cheap) or `visa.ts`-style extraction (free-text
 regex, heavier). I checked what data each actually operates on and where
 each actually runs, and **the honest answer is a third thing: the two
@@ -4097,14 +4097,14 @@ here.**
   posting's free text at all -- it can't, that text isn't in scope by the
   time the mapper runs.**
 
-Sec1h is right that this is "almost certainly the second shape, not the
+§1h is right that this is "almost certainly the second shape, not the
 first" -- no aggregator field states start-date flexibility, it will be a
 sentence in the posting body if it's anywhere. But that means the new
 extraction **belongs in `enrichJobCandidates()`/`extractJobDetails()`, not
 in `scoredJobToJob`/`mapper.ts` at all.** Trying to derive it inside the
 mapper the way `jobWorkMode` does would fail immediately: the mapper simply
 does not have the posting's body text in scope. This is the "unexpected
-finding" worth flagging plainly -- Sec1h's own two-precedent framing reads as
+finding" worth flagging plainly -- §1h's own two-precedent framing reads as
 "pick A or B," but the correct answer is neither call site, it's upstream of
 both.
 
@@ -4113,7 +4113,7 @@ is a better-fitting precedent than `visa.ts` itself.** It already runs at
 exactly the right pipeline stage, on exactly the right input
 (`visibleText = stripHtml(html)`, `:257`), and it already extracts
 `startDate` specifically, via the same kind of small labelled-phrase
-matching Sec1h asks for (`START_LABEL_PATTERN`, `:46-47`;
+matching §1h asks for (`START_LABEL_PATTERN`, `:46-47`;
 `extractLabeledDate`, `:180-197`) -- not `visa.ts`'s heavier country-scoped
 sponsor/won't-sponsor state machine, which this doesn't need (there's no
 evidence quote to render here, only a boolean; the STARTS tile's detail is a
@@ -4469,9 +4469,9 @@ computation instead of duplicating it.
 
 ##### B3-10 -- Subtitle's third segment lacks its day-count parenthetical. `NO FIX AVAILABLE THIS ROUND` -- scoped honestly, per the item's own instruction. (Job finding 5)
 
-**What this is a residual of.** Old exclusion (b) in Sec1e's original
+**What this is a residual of.** Old exclusion (b) in §1e's original
 "no field exists" table was `Hybrid (3 days on-site) | job subtitle, 3rd
-segment`, and Sec1e's own exception text folded (a) and (b) together as "the
+segment`, and §1e's own exception text folded (a) and (b) together as "the
 same missing fact" and put both in scope for B2-06 to close. **They weren't
 quite the same fact.** B2-06 built `workMode`, which correctly supplies the
 mode *word* -- the subtitle at `web/src/app/jobs/[id]/page.tsx:713-722`
@@ -4612,13 +4612,13 @@ of everything above once B3-01 through B3-06 land. B3-10 has no code for C
 to write -- it is a bookkeeping note for A, not a work item, and should be
 skipped over when C reaches it. B3-11 is independent and low-risk.
 
-**One correction to how I'd apply Sec1h's own framing, stated plainly so A
-doesn't have to re-derive it:** Sec1h poses the STARTS `flexible` sub-line as
+**One correction to how I'd apply §1h's own framing, stated plainly so A
+doesn't have to re-derive it:** §1h poses the STARTS `flexible` sub-line as
 a choice between the `jobWorkMode()` shape and the `visa.ts` shape. Neither
 is exactly right -- see B3-06. The relevant precedent for *where the code
 goes* is `extractJobDetails()`/`enrich.ts`, not `visa.ts` itself; `visa.ts`
 is the right precedent only for "this needs free text, not a structured
-field," which Sec1h's own instinct about was correct.
+field," which §1h's own instinct about was correct.
 
 **One thing I did not find any evidence for, and did not invent:** a
 US/UK-style short-form country abbreviation table (needed to make B3-08
