@@ -5802,3 +5802,93 @@ Summer 2027 - Acme Corp"` should produce `company: "Acme Corp"`, not
 `"Summer 2027"`; a title with *only* a season segment after the role
 (`"Battery R&D Intern - Summer 2027"`, nothing else) should fall back to
 `host`, not print the season.
+
+---
+
+##### B4-04 — "What the role is" prints scraped site chrome verbatim (R4). `WRONG DATA`. **Same precedent as B-10 — read that item first.**
+
+**Cause.** `summarizeJob()` (`web/src/lib/jobs/summarize.ts:92-100`) selects up
+to three sentences from `job.description` by score
+(`scoreSentences`/`bestCombination`, `:35-90`) and joins them. Its one content
+filter, `NOISE_RE` (`:5-6`), rejects EEO/benefits boilerplate and "how to
+apply" phrasing — it has **no check at all for text that reads like scraped UI
+labels rather than prose.** `splitSentences()` (`:25-29`) splits only on
+`. ! ?`; a run of concatenated form-field labels and values with no sentence
+punctuation between them (`"Apply to job Employment type: Full time
+Experience required: Intermediate Salary"`) survives as one long pseudo-
+sentence, up to `MAX_SENTENCE_LENGTH` (300 chars, `:2`), and can still win a
+score high enough to be selected — round 4's own quote ends mid-word with an
+ellipsis, consistent with a sentence that was cut off at the length ceiling,
+not proof of anything humanly written. This reaches the report unfiltered:
+`roleSummary = cleanJobDescription(job.summary) || undefined`
+(`web/src/app/jobs/[id]/page.tsx:663`), `roleBullets =
+enrichment?.roleSummary?.length ? ... : splitIntoBullets(roleSummary)`
+(`:667-669`), rendered under "What the role is" (`:867-886`) with no further
+check. **`keyRequirements` (`web/src/lib/jobs/mapper.ts:51-69`) has a junk
+guard by way of B-10's report-layer fix to `skillComparison`
+(`web/src/app/jobs/[id]/page.tsx`, per round 1's guide) — `summary` was never
+given the equivalent.**
+
+**Fix direction.** Extend the noise filter in `summarize.ts`'s
+`scoreSentences()` to reject a candidate that reads as page chrome, not prose
+— same shape of decision B-10 made for skill chips, applied here to sentences
+instead of chip strings. Two ways to shape it, and they are not equivalent:
+1. **A small explicit phrase list**, mirroring `NOISE_RE`'s own style and
+   B-10's CTA list: `"apply to job"`, `"employment type:"`, `"experience
+   required:"`, `"date posted:"`, `"job type:"`, `"back to search"`, `"share
+   this job"` and similar known ATS-template labels. Cheap, precedented, but
+   grows forever as new site templates surface.
+2. **A shape-based rule**: reject a sentence containing **two or more** short
+   `Label:` markers (a capitalised phrase of a handful of words immediately
+   followed by a colon) rather than naming specific labels. More general,
+   closer to how R7's fix (B4-03) should also be shape-based rather than an
+   ever-growing blocklist, but needs care in exactly what counts as a "label"
+   shape.
+**Calibration warning, either way** — `web/src/lib/jobs/summarize.test.ts:11-16`'s
+own "Outsite" fixture contains a genuine, already-correctly-selected sentence
+that starts with a label: `"Role Overview: We're hiring a Business
+Development Representative..."` (`SECTION_RE`, `summarize.ts:8-9`, already
+scores this shape as a *bonus*, not noise — the two rules coexist today
+without conflict). **A rule of shape 2 must require two-or-more label markers
+in one candidate, not one** — a single `Label:` prefix is exactly what
+`SECTION_RE` already rewards as a good sentence opener, and a filter that
+rejects any colon-label at all would silently break this real, currently-
+working, already-tested case. Whichever shape C picks, run this fixture
+through it before landing.
+
+**Blast radius.** `summarizeJob()` has exactly one caller,
+`web/src/lib/jobs/mapper.ts:122` (`summary = summarizeJob(...)`), which feeds
+only `Job.summary`. Grepped for other callers — none. This is a genuinely
+report-scoped fix with no wider blast radius, unlike B4-01/B4-02/B4-03 above.
+
+**A deeper, related but separate observation, not this item's job to fix:**
+`enrichJobCandidates()` fetches the posting's full page HTML during
+enrichment but never uses it to improve `description` — the merge
+(`web/src/lib/opportunities/enrich.ts:174-192`) has no `description:` line at
+all, so the low-fidelity search-snippet text `summarizeJob` works from is
+never replaced by anything extracted from the real page, even though the real
+page is already sitting in memory at that point. A proper "extract the actual
+role-description block from the fetched HTML" extractor (something like
+`event-roster.ts`'s heading-scoped section-slicing, applied to a job posting's
+body) would likely help far more than any noise filter — but that is real new
+extraction work, not a guard, and closer in size to B4-10/B4-11 than to a
+same-day fix. Naming it so it is not lost, not guiding it as part of this item.
+
+**Risk.** `web/src/lib/jobs/summarize.test.ts` — re-traced all three
+`REAL_POSTING_FIXTURES` (`:4-23`) plus the two other `describe` blocks against
+both candidate rules: none of the three real-posting fixtures, the
+sentence-order fixture (`:36-44`), or the empty-result fixture (`:46-55`)
+contain a `Label:`-shaped run at all, so **all existing assertions are
+unaffected** by either shape of fix. **Add a new fixture** modelled on R4's
+own quote — a description containing `"Apply to job Employment type: Full
+time Experience required: Intermediate Salary"` plus a genuine sentence about
+the role — asserting `summarizeJob` returns only the genuine sentence, never
+the label run. If nothing survives after filtering (a description that is
+*entirely* chrome), `summarizeJob` already returns `""` today
+(`:46-55` covers this shape for other kinds of non-prose input) and
+`roleBullets` already renders nothing when `roleSummary` is empty — checked
+`splitIntoBullets()` directly (`page.tsx:161-163`): `if (!source) return [];`
+is its first line, so an empty string short-circuits to `[]`, not `[""]` —
+confirmed, not assumed. So a fully-chrome description already degrades to "no
+role bullets" rather than an empty-string bullet, consistent with §1j's
+"silently absent" standard, with no render-layer change needed.
