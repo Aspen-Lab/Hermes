@@ -33,8 +33,11 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       MANAGER — the user must rule before B can start. See
-                  "ROUND 4 CHANGED THE PROBLEM" below.
+WHOSE TURN:       B  (round-4 fix guide, items B4-01 ..)
+USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
+                  gate is redefined.** The loop continues until the reports
+                  work on REAL data, not just the fixture. Read §1j before
+                  doing anything; it changes what "0%" means.
 STATUS:           ROUND-4 MEASUREMENT COMPLETE, run by the MANAGER (the fifth
                   agent in a row died on the account spend limit). **Two
                   measurements, and they disagree completely.**
@@ -760,6 +763,70 @@ refuse. **The build states which chips are highlighted. That is the fact.**
 **Added as exclusion (m).** Re-list it by name every round. The one concrete
 defect B3-11 did find — the sentence's em-dash colliding with an em-dash inside
 a chip label — was fixed, not excluded.
+
+---
+
+## §1j. RULING 23 — EXTRACTION QUALITY IS NOW IN SCOPE. THE GATE IS REDEFINED.
+
+Decided 2026-08-05 by the user, after round 4's real-search run.
+
+**The user ruled: merge extraction quality into this loop and keep going until
+the reports work on real data too.** Rounds 1–4 measured one hand-built item
+with every field populated. That reached 3% while a real report could be titled
+with a stray sentence about the pandemic. **The fixture was measuring the wrong
+thing, and the loop does not end at 3%.**
+
+### What the gate means now — read this before writing or judging anything
+
+The old gate ("every plate element present, in the plate's shape and order")
+still applies to the fixture. **It cannot be applied literally to real data**,
+and pretending otherwise would send C chasing impossible work: a conference
+that genuinely publishes no fees cannot render a cost table, and it would be
+dishonest to invent one.
+
+**The real-data gate is this instead:**
+
+> **Every plate element whose data the source page actually contains must be
+> extracted and rendered. Every element whose data the source genuinely lacks
+> must be silently absent — never a heading over nothing, never a placeholder,
+> never a guess.**
+
+Two failure modes, both count against the gate:
+
+1. **Under-extraction** — the page says it, we did not get it. Round 4's real
+   events lost fees, speakers and deadlines that conference sites routinely
+   publish. **A must check the source page before calling a field genuinely
+   absent** — "our data is empty" is not evidence that the page was empty.
+2. **Rendering a promise we cannot keep** — R3, R5 and R10. A heading whose
+   contents are empty is worse than no section, because it tells the reader
+   Peer looked and found nothing when Peer never looked.
+
+**Wrong data is the worst failure of all and outranks everything else.** A
+title that is a stray sentence (R1), a location that contradicts the body (R2),
+navigation chrome printed as a job description (R4) — these are not parity gaps.
+They are the report stating something false. **Rank them first, always.**
+
+### What this changes for each role
+
+- **A** — measure **both**, every round. The fixture number stays only as a
+  regression check; **the real-data findings are the report.** Minimum 3 real
+  events and 3 real jobs, and for any element you score absent, **say whether
+  you checked the source page**. Rank wrong-data findings above missing ones.
+- **B** — the fix guide now covers the extraction pipeline
+  (`web/src/lib/opportunities/`, `event-details.ts`, `job-details.ts`,
+  `enrich.ts`, and the mappers), not only the two report components. Same
+  standard as before: name the file and the code, say `MISSING` / `WRONG DATA`
+  / `WRONG SHAPE`, and name the tests at risk.
+- **C** — unchanged, except the blast radius is larger. Extraction changes
+  affect the feed and the papers view too. **Additive and optional, never a
+  guess** — the same rule `workMode` and `startDateFlexible` were built under.
+
+### The exclusions all still stand
+
+§1d 1–5, exclusion 7, exclusion 8's (c)–(h), (b'), §1h's (k) and (l), and
+§1i's (m). **(j) remains withdrawn.** Nothing in this ruling reopens any of
+them — they are decided differences from the *plate*, and this ruling is about
+the *data*, which is a different axis.
 
 ---
 
