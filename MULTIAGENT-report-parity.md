@@ -4018,3 +4018,166 @@ depend on the two representations staying in sync.
   `SECONDARY_KIND_TERMS`. **Unaffected.**
 
 ---
+
+##### B3-06 -- STARTS tile's `flexible` sub-line. `MISSING`. (Ruling 20 -- newly ruled IN, build it.)
+
+**The precedent comparison Sec1h asked me to check first -- and the
+finding that changes where this code should live.**
+
+Sec1h frames this as a choice between two shapes: `jobWorkMode()`
+(structured-field regex, cheap) or `visa.ts`-style extraction (free-text
+regex, heavier). I checked what data each actually operates on and where
+each actually runs, and **the honest answer is a third thing: the two
+precedents don't just differ in what they read, they run at completely
+different pipeline stages, and that difference is what actually matters
+here.**
+
+- `jobWorkMode()` (`web/src/lib/jobs/mapper.ts:81-85`) runs **inside
+  `scoredJobToJob`** (the mapper itself, `mapper.ts:104-169`, called at
+  `:144`), reading `item.location` -- a short string every `ScoredJobItem`
+  already carries, no fetch required. It runs unconditionally, for every
+  job, at render-mapping time.
+- `extractVisaState()` (`web/src/lib/opportunities/visa.ts:183-233`) does
+  **not** run in the mapper at all. It runs in
+  `enrichJobCandidates()` (`web/src/lib/opportunities/enrich.ts:137-196`,
+  call at `:170-172`), a **separate, earlier pipeline stage** that (a) only
+  runs on the first `MAX_ENRICHMENT_CANDIDATES` (40) items per search, (b)
+  requires a successful fetch of the posting's own page
+  (`fetchPagesConcurrently`, `:152-157`; `if (!html) return item;` at
+  `:161` silently skips extraction when the fetch fails), and (c) writes its
+  result onto the `RawJobItem` (`visa?: Job["visa"]`,
+  `web/src/lib/jobs/types.ts:50`) *before* scoring ever happens. By the time
+  `scoredJobToJob` runs, `item.visa` is already a finished value --
+  `visaForAuthorisedCountries()` (`mapper.ts:87-102`) only *filters* it
+  (drops it if the country is one the user is already authorised in), it
+  never derives it from scratch. **The mapper never touches `html` or the
+  posting's free text at all -- it can't, that text isn't in scope by the
+  time the mapper runs.**
+
+Sec1h is right that this is "almost certainly the second shape, not the
+first" -- no aggregator field states start-date flexibility, it will be a
+sentence in the posting body if it's anywhere. But that means the new
+extraction **belongs in `enrichJobCandidates()`/`extractJobDetails()`, not
+in `scoredJobToJob`/`mapper.ts` at all.** Trying to derive it inside the
+mapper the way `jobWorkMode` does would fail immediately: the mapper simply
+does not have the posting's body text in scope. This is the "unexpected
+finding" worth flagging plainly -- Sec1h's own two-precedent framing reads as
+"pick A or B," but the correct answer is neither call site, it's upstream of
+both.
+
+**`extractJobDetails()` (`web/src/lib/opportunities/job-details.ts:253-280`)
+is a better-fitting precedent than `visa.ts` itself.** It already runs at
+exactly the right pipeline stage, on exactly the right input
+(`visibleText = stripHtml(html)`, `:257`), and it already extracts
+`startDate` specifically, via the same kind of small labelled-phrase
+matching Sec1h asks for (`START_LABEL_PATTERN`, `:46-47`;
+`extractLabeledDate`, `:180-197`) -- not `visa.ts`'s heavier country-scoped
+sponsor/won't-sponsor state machine, which this doesn't need (there's no
+evidence quote to render here, only a boolean; the STARTS tile's detail is a
+fixed word, "flexible," not a quoted sentence like the VISA tile's "stated in
+the posting").
+
+**Fix direction, in pipeline order:**
+
+1. **`web/src/lib/opportunities/job-details.ts`** -- add `startDateFlexible?:
+   true` to `JobPageDetails` (`:4-9`). Add a small phrase-match function
+   beside `extractLabeledDate`:
+   ```ts
+   const START_DATE_FLEXIBLE_RE =
+     /\b(?:start\s*date|start)\s+(?:is\s+)?(?:flexible|negotiable)\b|\bflexible\s+start\s*date\b|\bstart\s*date\s+(?:is\s+)?open\s+to\s+discussion\b/i;
+   function extractStartDateFlexible(text: string): true | undefined {
+     return START_DATE_FLEXIBLE_RE.test(text) ? true : undefined;
+   }
+   ```
+   Test this against real posting phrasing before trusting it -- the same
+   caveat the round-3 log already raised about `workMode`'s location regex
+   "ever mis-firing" applies equally to a brand-new phrase list. Call it from
+   `extractJobDetails` (`:253-280`) on the same `visibleText` already in
+   scope, spread conditionally like every other field there:
+   `...(startDateFlexible ? { startDateFlexible } : {})`.
+2. **`web/src/lib/opportunities/enrich.ts`** -- two changes to
+   `enrichJobCandidates`:
+   - `hasExtractedJobSignal()` (`:43-58`) -- add
+     `details?.startDateFlexible ||` to the boolean OR-chain. **Easy to
+     miss:** without this, a posting where flexibility is the *only* new
+     signal found causes the function to return `false`, and
+     `enrichJobCandidates` discards the whole enrichment
+     (`if (!hasExtractedJobSignal(...)) return item;`, `:173`) -- the newly
+     extracted flag would be silently thrown away.
+   - The returned object (`:174-192`) -- add
+     `startDateFlexible: item.startDateFlexible ?? details?.startDateFlexible,`
+     alongside the existing `startDate: item.startDate ?? details?.startDate,`
+     (`:184`).
+3. **`web/src/lib/jobs/types.ts`** -- add `startDateFlexible?: Job["startDateFlexible"];`
+   to `RawJobItem` (`:25-53`), next to `startDate?: Job["startDate"];`
+   (`:46`), matching that file's own convention of referencing the `Job`
+   field's type rather than redeclaring it. `ScoredJobItem`
+   (`:131-136`) needs no change -- it `extends RawJobItem` with only
+   additive fields, so this flows through automatically.
+4. **`web/src/types/index.ts`** -- add to `Job` (beside `startDate` at
+   `:222`):
+   ```ts
+   /**
+    * Ruling 20. Plate 02's STARTS tile sub-line ("flexible") -- whether the
+    * posting itself says the start date can move. Additive; undefined
+    * unless the posting states it explicitly, never inferred from silence,
+    * exactly like workMode (B2-06).
+    */
+   startDateFlexible?: boolean;
+   ```
+5. **`web/src/lib/jobs/mapper.ts`** -- in `scoredJobToJob` (`:104-169`), a
+   plain passthrough, **not a derived field** -- add
+   `startDateFlexible: item.startDateFlexible,` alongside the other
+   straight passthroughs (e.g. `contractLength: item.contractLength,` at
+   `:152`). Do **not** write a `jobStartDateFlexible()`-style mapper-local
+   function -- there is nothing left to derive by the time this runs; the
+   extraction already happened upstream in step 1.
+6. **`web/src/app/jobs/[id]/page.tsx`** -- `buildJobFacts` (`:275-373`),
+   change the STARTS tile at `:341` from
+   `start ? { key: "start", label: "Starts", value: start } : undefined,`
+   to:
+   ```ts
+   start
+     ? {
+         key: "start",
+         label: "Starts",
+         value: start,
+         detail: job.startDateFlexible ? "flexible" : undefined,
+       }
+     : undefined,
+   ```
+   `JobFact.detail` (`:140`) is already optional and already conditionally
+   rendered by the shared `ReportFactTile` component -- no render-layer
+   change needed beyond this one line.
+
+**C should split this exactly like B2-06 was split** (per the note in
+`§4`'s NOTE line): land the type + mapper passthrough + render first and
+commit, then attempt the extraction (steps 1-2) as a second commit. If the
+phrase list proves unreliable against real postings, stop after the safe
+half and report it -- a `Job` that carries the field with nothing populating
+it yet is still a usable checkpoint, same reasoning B2-06 used.
+
+**Risk.** `web/src/app/jobs/[id]/page.test.ts:320-333`, "prints STARTS at
+month/year only, with no invented sub-line" (B2-05's own test) --
+`baseJob({ startDate: "2026-10-01" })` never sets the new field, so
+`job.startDateFlexible` stays falsy and `expect(startTile).not.toContain(
+"data-report-fact-detail")` (`:332`) **still passes, unchanged.** But its
+own comment (`:321-324`, "Job has no such field, so this is excluded under
+the same 'no field exists' category... the tile stays absent for now") is
+now **factually wrong** once the field exists and should be rewritten to
+say the tile correctly stays quiet because *this fixture's posting doesn't
+say* the start date is flexible, not because the field doesn't exist.
+Rewrite the comment even though the assertion itself needs no change --
+leaving a stale "this can't be built" comment next to code that now builds
+it is exactly the kind of drift this loop exists to catch.
+
+Add a new test alongside it: `baseJob({ startDate: "2026-10-01",
+startDateFlexible: true })` should render `"flexible"` inside the STARTS
+tile. And in `web/src/lib/opportunities/job-details.test.ts` (which asserts
+`extractJobDetails`'s return via `toEqual({...})` exact-object matches at
+every one of its five cases, `:20`, `:35`, `:49`, `:65`, `:77`) -- none of
+the existing fixtures contain flexible-start phrasing, so none of those five
+break; add a sixth case exercising the new phrase match, in the same
+`toEqual({...})` style.
+
+---
