@@ -4181,3 +4181,90 @@ break; add a sixth case exercising the new phrase match, in the same
 `toEqual({...})` style.
 
 ---
+
+##### B3-07 -- Travel grant is one merged cell; invitation letter beside it is three columns. `WRONG SHAPE`. (Event finding 3)
+
+**Cause.** `supportRows` construction (`web/src/app/events/[id]/page.tsx:1583-1600`):
+
+```ts
+const supportRows: CostSupportRow[] = [
+  travelGrant
+    ? { label: "Travel grant", kind: "span", detail: travelGrant }
+    : undefined,
+  event.invitationLetter !== undefined
+    ? { label: "Visa invitation letter", kind: "columns", standard: ..., student: ..., deadline: "--" }
+    : undefined,
+].filter(...);
+```
+
+`CostSupportRow` (`:129-137`) is a discriminated union built by B2-15
+specifically so the two rows *could* take different shapes -- invitation
+letter (a boolean) already gets `"columns"`; travel grant (one human-written
+string) was deliberately kept `"span"`. B2-15's own comment explains why:
+"splitting it on punctuation would be a guess that will mangle a real string
+differently shaped than the example." That reasoning was sound at the time;
+this item is the manager (via the round-3 finding) deciding the split is
+worth doing anyway for the shape the plate actually shows, not overriding
+the caution as unfounded.
+
+**Plate wants:** `--` / `30 available` / `Apply with your abstract` --
+STANDARD dash (travel grants are student-targeted in every example this app
+has; `cheapestWayIn`, `:436-438`, already always describes a grant alongside
+a *student* ticket), STUDENT the count clause, DEADLINE the how-to-apply
+clause.
+
+**Fix direction -- guarded split, not an unconditional one.** Only convert to
+three columns when the string visibly has the plate's own two-clause shape
+(a count/availability clause, a comma, an application-method clause);
+anything else keeps today's single spanning cell exactly as before. This
+preserves B2-15's original caution for any real `travelGrant` text that
+isn't shaped like the plate's example, while closing the gap for text that
+is:
+
+```ts
+function travelGrantColumns(value: string): { student: string; deadline: string } | undefined {
+  const parts = value.split(",").map((part) => clean(part)).filter(Boolean) as string[];
+  if (parts.length !== 2) return undefined;
+  return { student: parts[0], deadline: parts[1] };
+}
+```
+
+Then at the `supportRows` construction, when `travelGrantColumns(travelGrant)`
+returns a value, emit `{ label: "Travel grant", kind: "columns", standard:
+"--", student: parts.student, deadline: parts.deadline }`; otherwise keep the
+existing `kind: "span"` row unchanged.
+
+**A byte-exact match needs one more small step, and it's worth naming
+rather than silently attempting.** The round-3 fixture's own value was `"30
+available, apply with your abstract"` (confirmed from the log's exact quoted
+render -- **not** "30 grants available"), which splits and capitalises
+straight into the plate's cells with nothing else needed beyond
+`clean()`ing whitespace and capitalising the deadline clause's first letter
+(`"apply..."` -> `"Apply..."`, the same inline idiom
+`formatActivityLabel`'s fallback branch already uses,
+`text.charAt(0).toUpperCase() + text.slice(1)`). A *differently worded* real
+`travelGrant` (e.g. "30 grants available, apply with your abstract") would
+split into `"30 grants available"` / `"Apply with your abstract"` --
+verbatim, not trimmed to "30 available." **Print the clause verbatim rather
+than attempting to strip filler words like "grants"** -- that second trim is
+a separate, smaller guess on top of the split itself, and isn't needed to
+close this finding honestly.
+
+**Risk.** `web/src/app/events/[id]/page.test.ts:313-350`, "puts the travel
+grant and invitation letter in the cost table only" -- its fixture is
+`travelGrant: "30 grants available"` (`:320`), **no comma at all.**
+`travelGrantColumns` returns `undefined` for it (`parts.length === 1`), so
+this row still falls through to the existing `kind: "span"` branch --
+`expect(grantRow).toContain('colSpan="3"')` (`:343`) and
+`expect(grantRow).toContain("30 grants available")` (`:344`) **both stay
+green, unchanged.** Confirmed by re-reading this test's exact fixture value,
+not assumed. `:270-311` ("names the travel grant and never signs off with
+the higher price") uses a comma-containing `travelGrant` (`:280`, `"30
+grants available, apply with your abstract"`) but never asserts anything
+about the cost-table support row -- only about `cheapestWayIn`'s own
+sentence, a separate code path -- so it is unaffected regardless of which
+branch the split takes for it. **Add a new test** with the round-3 shape
+(`travelGrant: "30 available, apply with your abstract"`) asserting the
+three cells `--` / `30 available` / `Apply with your abstract`.
+
+---
