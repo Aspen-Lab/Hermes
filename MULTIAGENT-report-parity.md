@@ -3587,3 +3587,77 @@ Every element scored net of the standing exclusions, per §1d/§1e.
    count for the job, a cross-pool comparison for the event. Neither has been
    scoped. The manager should decide whether they are in scope for this loop or
    are a separate piece of work.
+
+---
+
+### Round 3 — Agent B
+
+**STATUS: IN PROGRESS.** Read §0–§1h in full, then re-read §1/§1h a second time
+after discovering the file was being edited concurrently (two commits landed
+mid-read — `37a4cb7` adding §1h itself, `8e22255` adding A's round-4 real-search
+mandate — both scoped to sections that don't change this round's TODO). Working
+the 11 named items top to bottom: correctness first, then the two shared root
+causes (the Timeline/deadline-strip "Today" bug, and the missing `EventType`
+label map), then missing content by reader impact, then shape/copy. Writing and
+committing one item at a time per §3.
+
+I did not change code. Everything below was checked directly against the
+current file contents (line numbers cited are from this session's reads, not
+copied from an earlier round's log) and, where a risk is named, against the
+actual test file to confirm the assertion exists and would actually break.
+
+---
+
+##### B3-01 — Costs footnote quotes the standard price, not the after-early-bird price. `WRONG DATA`. (Event finding 4) **Do this first — a real correctness bug, not just a parity gap.**
+
+**Cause.** `costsFootnote()` (`web/src/app/events/[id]/page.tsx:928-946`) hunts
+for "full price with no grant" by taking the highest `fee.standard` across all
+rows:
+
+```ts
+const fullPrices = fees
+  .flatMap((fee) => {
+    const value = clean(fee.standard);
+    const parsed = value ? parsePrice(value) : null;
+    return parsed && value ? [{ value, parsed }] : [];
+  })
+  .filter(({ parsed }) => parsed.currency === cheapestPrice?.currency);
+const full = fullPrices.sort(
+  (left, right) => right.parsed.amount - left.parsed.amount,
+)[0];
+```
+
+On the plate's own data shape, the headline "Early bird" row's `standard`
+field is the *discounted* price ($480 — what you pay if you register during the
+early-bird window). The true worst-case price ($620) exists only as trailing
+text inside that **same row's `deadline` string**: `"Early bird ends Jan 9 ·
+$620 after"`. `costsFootnote` never reads `fee.deadline`, so it reports $480 as
+"full price with no grant" — understating the exact gap the sentence exists to
+dramatise. Confirmed by reading the function directly; this is not a fixture
+artefact.
+
+**Fix direction.** Add a small helper that pulls a price out of the *tail* of a
+compound deadline string — the part after the date-ish head `cutoffPhrase`
+(`page.tsx:145-156`) already extracts. Split on the same `· ` delimiter
+`cutoffPhrase` uses and regex-match a `$`/`€`/`£` amount in what's left. For
+each fee row, the "full" candidate becomes
+`max(parsePrice(fee.standard), priceAfterCutoff(fee.deadline))`, not
+`fee.standard` alone. Reuse `parsePrice` (already in scope, `page.tsx:373-381`)
+for both.
+
+**Risk.** No existing test currently locks in the $480 bug. Grepped
+`web/src/app/events/[id]/page.test.ts` for "480": it appears only in "renders
+the plate's fact tiles and a venue-format-duration subtitle" (`:368-418`,
+fixture at `:379-386`), which never checks `costsFootnote`'s output — that test
+is unaffected either way. The one existing test that *does* check the footnote
+text, "puts the travel grant and invitation letter in the cost table only"
+(`:313-350`), uses a fixture where `fee.standard` is already `"$620"` directly
+with **no** `deadline` field (`:322`) — nothing for the new helper to find, so
+`max()` still picks `fee.standard` and
+`expect(html).toContain("Full price with no grant would be $620.")` (`:346`)
+stays green. **Add a new test**: `fees: [{ label: "Early bird", standard:
+"$480", student: "$180", deadline: "Early bird ends Jan 9 · $620 after" }]`
+must render `"Full price with no grant would be $620."`, not `"...$480."` —
+this is the exact shape that exposed the bug and nothing today asserts it.
+
+---
