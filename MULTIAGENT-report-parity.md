@@ -3797,3 +3797,136 @@ sub-line") keeps its own "Register by" label untouched — that tile is correct
 today and this item does not touch it.
 
 ---
+
+##### B3-04 -- Kind chip reads `Summit`; plate reads `Industry summit`. `WRONG DATA`. (Event finding 1) **Shared mechanism with B3-05 (event finding 2) -- build the map here.**
+
+**Cause.** The primary chip renders `formatEventType(event.type)`
+(`web/src/app/events/[id]/page.tsx:1634`), and `formatEventType`
+(`:209-213`) is a mechanical humaniser:
+
+```ts
+function formatEventType(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+```
+
+De-hyphenate, then title-case every word. There is no label map -- per Sec1g,
+plate 04 (PDF page 9) is the spec's own `EventType` -> display-label
+dictionary, and it title-cases only the *first* word of a multi-word label
+(`Academic conference`, `Career fair`), not every word. `formatEventType`
+produces `Career Fair`; the spec's own vocabulary page says `Career fair`.
+
+**`formatEventType` is used for two different things and only one of them is
+wrong.** It is also called inside `formatActivityLabel` (`:249-254`) for any
+string that matches `KNOWN_ACTIVITY_LABELS` -- the union of `eventTypes` *and*
+the broader `ACTIVITY_LABELS` vocabulary (`event-details.ts`), things like
+`"poster session"`, `"hands-on session"`, `"keynote"` that are **not**
+`EventType` values. B2-09 already confirmed the all-words-title-cased
+behaviour is *correct* for that broader vocabulary and left it alone
+deliberately. **Do not replace `formatEventType` wholesale** -- that would
+re-break `"poster session"`: B2-09's own test locks in `>Poster Session<` for
+it (`web/src/app/events/[id]/page.test.ts:492`), and that one must stay green.
+
+**Fix direction.** Add a new, separate map keyed by the actual `EventType`
+union (`web/src/types/index.ts:76-85`, imported as `eventTypes` already is at
+this file's top):
+
+```ts
+const EVENT_TYPE_LABELS: Record<EventType, string> = {
+  conference: "Academic conference",
+  workshop: "Workshop",
+  seminar: "Seminar",
+  meetup: "Meetup",
+  "job-fair": "Job fair",
+  "career-fair": "Career fair",
+  summit: "Industry summit",
+  expo: "Expo",
+  hackathon: "Hackathon",
+};
+function eventTypeLabel(type: EventType): string {
+  return EVENT_TYPE_LABELS[type];
+}
+```
+
+Seven of the nine come straight off plate 04's own filter row (`Academic
+conference`, `Workshop`, `Career fair`, `Industry summit`, `Expo`, `Seminar`,
+`Hackathon`). **`Job fair` and `Meetup` are NOT sourced from the plate --
+say so plainly.** Plate 04's filter row doesn't show either of those two
+kinds at all. They follow the exact same title-case-first-word-only
+convention every one of the seven plate-shown labels uses, so the risk of
+being wrong is low, but it is a real gap: flag it to A/the manager as
+"consistent with the pattern, not verified against the spec," not as
+equally confirmed.
+
+- Primary chip (`:1634`): `<HeaderChip>{eventTypeLabel(event.type)}</HeaderChip>`.
+- `formatActivityLabel` (`:249-254`): when the candidate string resolves to an
+  actual `EventType` (matching case-insensitively and hyphen/space-normalised
+  -- `"career fair"` and `"career-fair"` must both hit `career-fair`), route
+  through `eventTypeLabel`; only fall through to the existing
+  `formatEventType`/first-letter-only branches for the rest of
+  `KNOWN_ACTIVITY_LABELS`. A small normalised lookup does this:
+  ```ts
+  const EVENT_TYPE_BY_TEXT = new Map<string, EventType>(
+    eventTypes.map((type) => [type.replace(/-/g, " "), type]),
+  );
+  function matchEventType(value: string): EventType | undefined {
+    return EVENT_TYPE_BY_TEXT.get(value.trim().toLowerCase().replace(/-/g, " "));
+  }
+  ```
+
+**Risk -- this ripples further than the primary chip, into two other places
+that happen to use `"career fair"` as their example activity. Both are real
+finds, not restatements of the round-3 log:**
+
+1. **`web/src/app/events/[id]/page.test.ts:636-655`, "builds a secondary
+   kind chip from a recognised fair activity"** -- `baseEvent({ type:
+   "summit", ... })`, then:
+   - `:653` `expect(header).toContain(">Summit<");` -- **breaks**, the primary
+     chip now reads `Industry summit`. -> `expect(header).toContain(">Industry
+     summit<")`.
+   - `:654` `expect(header).not.toContain("Industry");` -- **breaks in the
+     other direction** -- the label now legitimately contains "Industry." This
+     assertion must be deleted or inverted, and its own comment (`:649-652`,
+     "The 'Industry' qualifier has no honest source... the primary chip stays
+     exactly what formatEventType produces from the raw enum value") is now
+     stale and should be rewritten to explain the reversal (Sec1g) instead of
+     citing the withdrawn ruling.
+   - `:648` `expect(header).toContain("+ recruiting fair");` is B3-05's own
+     target, not this item's -- see below.
+2. **Three `happeningsFootnote` tests use `"career fair"` as a highlighted
+   activity, and their expected strings will silently go stale** if only the
+   header chip is checked before landing this:
+   - `:500-524`, "names the highlighted activities and shortens the career
+     stage...", `:519`: `"...Poster Session and Career Fair are the ones
+     you'd be sorry to miss."` -> `"...Poster Session and Career fair are the
+     ones..."`.
+   - `:526-540`, "names the reader's own sector lean...", `:538`:
+     `"...Poster Session and Career Fair are the ones"` -> `"...Career fair
+     are the ones"`.
+   - `:573-585`, "Oxford-commas three or more highlighted activities",
+     `:583`: `"Poster Session, Career Fair, and Workshop are the ones..."` ->
+     `"...Career fair, and Workshop..."`.
+   - **`:542-557`, "prints no sector clause...", `:555` is *not* affected** --
+     its assertion (`toContain("because you're a PhD 4 -- Poster Session")`) is
+     a prefix check that stops before "Career Fair" would appear. Listed so
+     nobody "fixes" a test that was never broken.
+   These three come from `formatActivityLabel("career fair")` being fed
+   through the SAME broken `formatEventType` path today (`"career fair"` is
+   in `ACTIVITY_LABELS`, `event-details.ts:44`, as well as being the spaced
+   form of the `career-fair` `EventType`) -- confirmed by reading
+   `event-details.ts` and cross-checking `KNOWN_ACTIVITY_LABELS`'s
+   construction (`page.tsx:245-247`). Fixing `formatActivityLabel` per this
+   item's own fix direction changes all four sites (the chip render plus
+   these three footnote strings) from one map -- that is the point of doing
+   this as one shared mechanism rather than four separate patches.
+
+Grepped the whole `web/src` tree for `"Career Fair"` (capital F) and for any
+test asserting a bare `>Conference<`/`"Conference"` chip (the *other* common
+default-fixture type, `baseEvent`'s own default is `type: "conference"`,
+`:23`) -- no test asserts the primary chip's text for the default type, so the
+`Conference` -> `Academic conference` change (which will also happen, since
+`conference` is in the same map) breaks nothing beyond the four sites above.
+
+---
