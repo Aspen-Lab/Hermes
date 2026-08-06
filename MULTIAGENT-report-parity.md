@@ -33,8 +33,8 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01, B4-02
-                  landed, working B4-03 next; see §4 "Round 4 — Agent C"
+WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-04
+                  landed, working B4-05 next; see §4 "Round 4 — Agent C"
                   for detail per item. This is a restart of C — a prior C
                   died to a content-filter error before committing any
                   code; nothing was lost.)
@@ -293,11 +293,11 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **881 tests, all 881 passing**, typecheck clean, 1
+GATE NOW:  83 files / **886 tests, all 886 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01/B4-02 only; will keep rising as
-           C lands more items.** Not yet the final round-4 figure — see §4
-           "Round 4 — Agent C" for the current per-item state.
+           **mid-round-4 figure, after B4-01..B4-04 only; will keep rising
+           as C lands more items.** Not yet the final round-4 figure — see
+           §4 "Round 4 — Agent C" for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -6876,4 +6876,48 @@ per item, gate re-run after each.
   explicit state code already. Added the two new tests described above.
 
   **Gate: 83 files / 881 tests passing** (2 new), **typecheck clean, 1
+  pre-existing lint error, unchanged.**
+
+- **B4-03 — LANDED.** Added `SEASON_COHORT_LABEL_RE` (a bare
+  `Spring/Summer/Fall/Autumn/Winter 20XX`, `Class of 20XX`, `Cohort N`, or a
+  bare four-digit year) to `web/src/lib/jobs/sources/jobweb.ts`'s company
+  guard, alongside the existing job-board-domain check, exactly as B
+  proposed — a rejected season segment falls through to the next segment or
+  to `|| host`, the same way a rejected job-board-domain segment already
+  did. No other job source shares this heuristic (checked Adzuna/USAJobs
+  directly: both read `company`/`employer` from the API's own structured
+  field, never through this segment-picking path), so the blast radius stays
+  contained to `jobweb.ts` alone, as B said. Grepped
+  `jobweb.test.ts` for `.company` first — zero existing assertions, matching
+  B's own finding — then added the two cases B asked for: a title with a
+  season segment AND a real company segment picks the company, not the
+  season; a title with only a season segment after the role falls back to
+  the host, not the season. **Gate: 83 files / 883 tests passing** (2 new),
+  **typecheck clean, 1 pre-existing lint error, unchanged.**
+
+- **B4-04 — LANDED.** Went with B's shape-based option (a phrase list "grows
+  forever as new site templates surface," per B's own tradeoff note) over
+  the phrase-list option: added `LABEL_MARKER_RE` (a capitalised phrase of
+  up to three words immediately followed by a colon: `Employment type:`,
+  `Experience required:`, `Location:`) and `looksLikeScrapedChrome()` to
+  `web/src/lib/jobs/summarize.ts`, rejecting a sentence with **two or more**
+  such markers alongside the existing `NOISE_RE` check in `scoreSentences`.
+  Applied B's own calibration warning exactly: required two-or-more, not
+  one, because `summarize.test.ts`'s existing Outsite fixture has a real,
+  currently-scored sentence opening with exactly one such marker
+  (`"Role Overview: We're hiring..."`, already rewarded as a bonus by
+  `SECTION_RE`) — re-ran that fixture's own test after landing the change
+  to confirm it still selects a summary containing "Role Overview", not
+  just reasoned about it. Added the fixture B asked for (paraphrased, not
+  R4's literal scraped text, per this round's instruction): a description
+  combining a 3-label ATS chrome run with one genuine sentence about the
+  role returns only the genuine sentence; the same chrome run alone returns
+  `""`, consistent with the already-existing "no sentence survives → empty
+  string" pattern (confirmed by re-checking `splitIntoBullets()` still
+  short-circuits an empty string to `[]`, not `[""]`, so no render-layer
+  change was needed here, matching B's own note). Did not touch the deeper,
+  separate observation B named (using the fetched page's own HTML to
+  replace the low-fidelity search-snippet `description` entirely) — sized
+  correctly by B as new extraction work, not a guard, out of scope for this
+  item. **Gate: 83 files / 886 tests passing** (3 new), **typecheck clean, 1
   pre-existing lint error, unchanged.**

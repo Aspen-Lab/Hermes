@@ -88,6 +88,29 @@ describe("careers index and aggregator category pages", () => {
   });
 });
 
+describe("company derivation", () => {
+  // B4-03 (round 4): no test asserted `.company` anywhere in this file
+  // before this round (grepped, zero hits) — this is the first coverage of
+  // webResultToRawJobItem's company-picking logic at all.
+  it("does not mistake an internship cohort/season segment for the company", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery R&D Intern - Summer 2027 - Acme Corp",
+      url: "https://acme.test/careers/job/9912",
+      snippet: "Research internship in molten salt battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe("Acme Corp");
+  });
+
+  it("falls back to the host when only a season segment survives", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery R&D Intern - Summer 2027",
+      url: "https://acme.test/careers/job/9912",
+      snippet: "Research internship in molten salt battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe("acme.test");
+  });
+});
+
 describe("listing titles hidden behind site chrome", () => {
   it("rejects a careers index whose label is only the first title segment", () => {
     expect(

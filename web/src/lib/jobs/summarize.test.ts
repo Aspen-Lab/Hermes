@@ -53,6 +53,35 @@ describe("summarizeJob", () => {
       ),
     ).toBe("");
   });
+
+  // B4-04 (round 4): a run of concatenated ATS form-field labels ("Apply to
+  // job Employment type: Full time Experience required: ...") had no guard
+  // at all and could win a high enough score to be selected — R4's own
+  // repro, paraphrased here rather than reproduced verbatim.
+  it("rejects a run of scraped ATS labels while keeping a genuine sentence", () => {
+    const description =
+      "Apply to job Employment type: Full time Experience required: Entry level Location: Remote. " +
+      "You will research solid-state battery materials and support daily electrochemistry experiments.";
+    const summary = summarizeJob(description, ["battery", "electrochemistry"]);
+    expect(summary).not.toMatch(/Employment type:/);
+    expect(summary).toBe(
+      "You will research solid-state battery materials and support daily electrochemistry experiments.",
+    );
+  });
+
+  it("returns an empty string when the whole description is scraped chrome", () => {
+    const description =
+      "Apply to job Employment type: Full time Experience required: Entry level Location: Remote.";
+    expect(summarizeJob(description, ["battery"])).toBe("");
+  });
+
+  it("still credits a single label as a genuine sentence opener, not chrome", () => {
+    // Same shape SECTION_RE already rewards — a rule that rejected any
+    // single "Label:" opener would break this real, already-working case.
+    const { description, terms } = REAL_POSTING_FIXTURES[1];
+    const summary = summarizeJob(description, [...terms]);
+    expect(summary).toContain("Role Overview");
+  });
 });
 
 describe("highlightSegments", () => {

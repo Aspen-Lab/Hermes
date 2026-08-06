@@ -68,6 +68,18 @@ export const CAREERS_INDEX_TITLE_RE =
 const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
 
 /**
+ * A title segment that names only an internship cohort or season, not a
+ * company — "Battery R&D Intern - Summer 2027 - Acme Corp" split on its own
+ * separators leaves "Summer 2027" as a candidate segment, and nothing
+ * checked whether a segment actually reads like a company before accepting
+ * it. `KNOWN_JOB_BOARD_DOMAINS` only screens out a specific denylist of job
+ * board hostnames, which a season label obviously never matches, so it
+ * passed straight through (R7).
+ */
+const SEASON_COHORT_LABEL_RE =
+  /^(?:spring|summer|fall|autumn|winter)\s+20\d{2}$|^class\s+of\s+20\d{2}$|^cohort\s+\d+$|^20\d{2}$/i;
+
+/**
  * True when the result is an aggregate listing or a careers index rather than
  * a single posting.
  *
@@ -143,8 +155,12 @@ export function webResultToRawJobItem(result: {
     parts
       .slice(1)
       .map(cleanJobSubtitlePart)
-      .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d))) ||
-    host;
+      .find(
+        (p) =>
+          p &&
+          !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d)) &&
+          !SEASON_COHORT_LABEL_RE.test(p),
+      ) || host;
   return {
     id: `jobweb:${urlHashId(url)}`,
     source: "jobweb",

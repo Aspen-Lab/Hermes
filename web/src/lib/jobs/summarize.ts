@@ -5,6 +5,22 @@ const MAX_SUMMARY_LENGTH = 240;
 const NOISE_RE =
   /\b(equal opportunit|affirmative action|without regard to|does not discriminate|reasonable accommodation|protected veteran|benefits? (?:include|package)|health insurance|dental insurance|401\(k\)|how to apply|apply (?:now|today)|submit(?:ting)? (?:your|an) application|application instructions|about us|our history|founded in)\b/i;
 
+/**
+ * A capitalised phrase of up to three words immediately followed by a
+ * colon — "Employment type:", "Experience required:", "Location:". One of
+ * these is a normal sentence opener (see SECTION_RE below, which already
+ * scores "Role Overview: ..." as a bonus, not noise). Two or more in one
+ * candidate is scraped ATS-page chrome, not prose (R4's own repro: a run of
+ * concatenated form-field labels and values with no real sentence
+ * punctuation between them). Shape-based rather than a phrase list tied to
+ * one site template.
+ */
+const LABEL_MARKER_RE = /\b[A-Z][a-zA-Z]*(?:\s+[a-zA-Z]+){0,2}:/g;
+
+function looksLikeScrapedChrome(text: string): boolean {
+  return (text.match(LABEL_MARKER_RE) ?? []).length >= 2;
+}
+
 const SECTION_RE =
   /^(?:key )?(?:responsibilities|requirements|qualifications|what you(?:'|’)ll do|the role|role overview)\b/i;
 
@@ -40,7 +56,8 @@ function scoreSentences(description: string, matchedKeywords: string[]): ScoredS
       if (
         text.length < MIN_SENTENCE_LENGTH ||
         text.length > MAX_SENTENCE_LENGTH ||
-        NOISE_RE.test(text)
+        NOISE_RE.test(text) ||
+        looksLikeScrapedChrome(text)
       ) {
         return null;
       }
