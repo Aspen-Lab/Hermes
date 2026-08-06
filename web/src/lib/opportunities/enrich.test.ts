@@ -79,8 +79,12 @@ describe("event detail enrichment", () => {
     const enriched = await enrichEventCandidates(items);
 
     expect(fetchMock).toHaveBeenCalledTimes(MAX_ENRICHMENT_CANDIDATES);
+    // B4-01: the fetched page's own JSON-LD name ("Enriched Event 0") now
+    // wins over the pre-fetch ingestion guess ("Battery Event 0") once it
+    // clears the title-shape guard — this fixture's name is a plain string,
+    // so it passes and is preferred, same as a real page's own title would be.
     expect(enriched[0]).toMatchObject({
-      name: "Battery Event 0",
+      name: "Enriched Event 0",
       location: "Chicago, IL, United States",
       place: {
         city: "Chicago",

@@ -238,6 +238,31 @@ describe("body-text place fallback", () => {
       region: "France",
     });
   });
+
+  // B4-01 (round 4): extractOpportunityPageDetails already computed a name
+  // from JSON-LD/og:title on every call, but enrichEventCandidates's merge
+  // never read it (grepped: no assertion anywhere exercised `.name` before
+  // this round). These lock in the field the round-4 fix now depends on.
+  it("prefers the JSON-LD name over the Open Graph title", () => {
+    const html = `
+      <script type="application/ld+json">
+        { "@type": "Event", "name": "Real Conference Name" }
+      </script>
+      <meta property="og:title" content="Different Title From Og">
+    `;
+    expect(extractOpportunityPageDetails(html, "event").name).toBe(
+      "Real Conference Name",
+    );
+  });
+
+  it("falls back to the Open Graph title when JSON-LD has no name", () => {
+    const html = `
+      <meta property="og:title" content="Fallback Title From Og">
+    `;
+    expect(extractOpportunityPageDetails(html, "event").name).toBe(
+      "Fallback Title From Og",
+    );
+  });
 });
 
 describe("country must belong to the city", () => {

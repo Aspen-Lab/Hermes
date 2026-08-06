@@ -33,7 +33,11 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       C  (round-4 implementation, items B4-01 .. B4-13, in order)
+WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01 landed,
+                  working B4-02 next; see §4 "Round 4 — Agent C" for detail
+                  per item. This is a restart of C — a prior C died to a
+                  content-filter error before committing any code; nothing
+                  was lost.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -289,11 +293,11 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  82 files / **865 tests, all 865 passing**, typecheck clean, 1
+GATE NOW:  83 files / **879 tests, all 879 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **this is the current, final figure after all of round 3's
-           implementation.** A should re-verify it before measuring, per the
-           loop's standing convention.
+           **mid-round-4 figure, after B4-01 only; will keep rising as C
+           lands more items.** Not yet the final round-4 figure — see §4
+           "Round 4 — Agent C" for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -6718,3 +6722,99 @@ on inference rather than a live reproduction, its own item says so plainly
 rather than presenting a strong guess as a confirmed fact.
 
 **STATUS: COMPLETE.**
+
+---
+
+### Round 4 — Agent C
+
+**STATUS: IN PROGRESS.** Baseline re-verified before the first change:
+**82 files / 865 tests passing, typecheck clean, 1 pre-existing lint error
+(`quiz.tsx:46`).** Matches §1's recorded figure exactly. This is a restart —
+a previous C died to a content-filtering error before committing any code;
+nothing was lost since §1 still pointed at C with a clean tree. Working
+B4-01 .. B4-09 plus the additive pieces of B4-10/B4-11/B4-13 in B's own
+order, per §1k's scope narrowing; skipping B4-09 (synthesis, no code) and
+B4-12 (`POLICY`, no code) the way B3-10 was skipped in round 3; one commit
+per item, gate re-run after each.
+
+- **B4-01 — LANDED.** Both halves, in one commit (shared mechanism, per B's
+  own instruction).
+  1. Added `looksLikeEventTitle()` to `web/src/lib/events/sources/eventweb.ts`
+     — rejects a candidate that reads as a narrative sentence about the
+     event (a finite "to be" verb directly before a past participle: "was
+     planned", "was delayed", "has been postponed" — an event's own name is
+     a noun phrase, never a conjugated claim about itself) or that is more
+     than one sentence (terminal punctuation after a real, 3+-letter word,
+     followed by more text — guarded so a mid-title abbreviation like "Dr."
+     or "U.S." is not mistaken for a sentence break), plus a generous
+     20-word ceiling as a last-resort net for a run of prose with neither
+     shape. Deliberately no length ceiling by itself below that: real event
+     names run long (checked against "The First European Conference on
+     Molten Salt Reactor Chemistry and Technology," eleven words — passes).
+     B's own fix direction suggested length as one of two signals; I judged
+     the verb check to be the one that actually catches B's own repro (a
+     14-word sentence, under most defensible "generous" ceilings) and kept
+     both rather than relying on length alone — said here so the choice is
+     visible, not silent. Wired into `eventNameFrom()`'s existing
+     `informative` filter alongside `isChromeSegment`, so a segment that
+     clears chrome-detection but still reads as prose falls through to the
+     same existing next steps (URL slug, then snippet mining) exactly as a
+     chrome-only title already did.
+  2. Wired `structured?.name` into `enrichEventCandidates`'s merge
+     (`web/src/lib/opportunities/enrich.ts`), gated behind the same guard:
+     `structured?.name && looksLikeEventTitle(structured.name) ?
+     structured.name : item.name`. Additive only — never invents a name,
+     falls back to the pre-fetch value whenever the fetched page's own name
+     is absent or itself fails the guard.
+
+  Exported `looksLikeEventTitle` from `eventweb.ts` for `enrich.ts` to
+  import — confirmed no import cycle first (`enrich.ts` already imports
+  `classifyRoleKind` from `@/lib/jobs/role-kind`, the same
+  opportunities-importing-from-events/jobs direction; neither `eventweb.ts`
+  nor `events/mapper.ts`, which it reads `classifyEventType` from, imports
+  anything back from `opportunities/enrich.ts`). `tsc --noEmit` confirmed
+  clean.
+
+  **Found one existing assertion this correctly changes the truth of, per
+  B's own risk note.** `enrich.test.ts`'s "caps detail requests at 40
+  gate-surviving candidates" fixture's fetched page carries JSON-LD `"name":
+  "Enriched Event 0"`, a plain string that now passes the guard and
+  correctly wins over the pre-fetch `"Battery Event 0"` — rewrote the
+  assertion to expect `"Enriched Event 0"` with a comment explaining why
+  B4-01 changed it. The other risk B named (`enrich.test.ts`'s roster/
+  attendance test, no JSON-LD name in its fixture) was confirmed unaffected,
+  as predicted.
+
+  **Added the foundational test coverage B's own risk note asked for** — no
+  test file existed for `eventweb.ts` before this round. New
+  `web/src/lib/events/sources/eventweb.test.ts` (12 tests): `looksLikeEventTitle`
+  directly (narrative-verb rejection, multi-sentence rejection, mid-title
+  abbreviations NOT mistaken for sentence breaks, real long titles accepted,
+  an implausibly long prose run rejected on length alone, blank input
+  rejected); `eventNameFrom`'s fallback chain (chrome segment skipped, a
+  narrative-sentence-only title falls through to snippet mining, falls
+  through further to the URL slug when the snippet also fails, and the
+  pre-existing "every segment is chrome" fallback still resolves — a slug
+  case caught my own first draft assuming word-by-word title-casing when the
+  function only capitalises the first character, fixed before landing); and
+  `webResultToRawEventItem` end to end for both a normal result and a
+  narrative-sentence title. Used a paraphrased sentence in the same shape as
+  the real repro, not the scraped original, per this round's instruction on
+  quoting scraped content. Also added two cases to `structured-extract.test.ts`
+  locking in `extractOpportunityPageDetails(...).name` (JSON-LD wins over
+  `og:title`; falls back to `og:title` when JSON-LD has none) — zero
+  assertions on `.name` existed anywhere before this round, confirmed by
+  grep, matching B's own finding.
+
+  **Did not attempt R8 (title truncated with an ellipsis) as a separate
+  check.** Per B's own fix direction, preferring the fetched page's full
+  title is the fix; a page whose own title is independently truncated is a
+  different, deeper problem no guard here can solve, and I did not invent a
+  new check for it.
+
+  **Blast radius.** `event.name` reaches the feed cards
+  (`web/src/lib/events/card.ts`) and the papers adjacency too, not only the
+  report, so ran the whole suite rather than only the touched files —
+  **83 files / 879 tests passing** (14 new: 12 in `eventweb.test.ts`, 2 in
+  `structured-extract.test.ts`), nothing else broke. **Typecheck clean, 1
+  pre-existing lint error, unchanged.**

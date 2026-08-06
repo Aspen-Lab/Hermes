@@ -221,6 +221,47 @@ function isChromeSegment(segment: string): boolean {
   );
 }
 
+/**
+ * Recognises a segment that reads as a narrative sentence *about* an event
+ * rather than the event's own name. B4-01's own repro — a real event whose
+ * H1 rendered as "TiRT7 was originally planned for 2020 but was delayed due
+ * to the COVID-19 pandemic." — clears isChromeSegment/isGenericPageTitle/
+ * EVENT_INDEX_TITLE_RE cleanly, because none of them check whether a segment
+ * reads as narration; it isn't a page label, an index, or a calendar view,
+ * it is a grammatical sentence.
+ *
+ * Two independent signals, either is enough to reject:
+ *  - a finite "to be" verb immediately before a past participle ("was
+ *    planned", "was delayed", "has been postponed") — an event's own NAME is
+ *    a noun phrase, not a conjugated claim about itself. This is the check
+ *    that actually catches the repro above.
+ *  - sentence-terminal punctuation with more text after it (more than one
+ *    sentence). Requires a real word (3+ letters) before the punctuation so
+ *    an abbreviation like "Dr." or "U.S." mid-title is not mistaken for a
+ *    sentence boundary.
+ *
+ * Deliberately no length ceiling on its own: real event names run long ("The
+ * First European Conference on Molten Salt Reactor Chemistry and
+ * Technology" is eleven words), so length alone is never treated as proof of
+ * narration. A generous word ceiling still applies as a last-resort net for
+ * a long run of prose with neither shape above (no conjugated verb, no
+ * terminal punctuation at all) — well above any real title's length, so it
+ * should essentially never be the reason a real name is rejected.
+ */
+const NARRATIVE_VERB_RE =
+  /\b(?:was|were|is|are|has been|have been|had been|will be)\s+\w+(?:ed|en)\b/i;
+const MULTI_SENTENCE_RE = /\w{3,}[.!?]\s+[A-Z][a-z]/;
+const MAX_TITLE_WORDS = 20;
+
+export function looksLikeEventTitle(candidate: string): boolean {
+  const trimmed = candidate.trim();
+  if (!trimmed) return false;
+  if (NARRATIVE_VERB_RE.test(trimmed)) return false;
+  if (MULTI_SENTENCE_RE.test(trimmed)) return false;
+  if (trimmed.split(/\s+/).length > MAX_TITLE_WORDS) return false;
+  return true;
+}
+
 /** Human-readable event name recovered from a deep event URL's slug. */
 function nameFromUrlSlug(url: string): string | undefined {
   let path: string;
@@ -254,7 +295,9 @@ export function eventNameFrom(
     .map((part) => part.trim())
     .filter(Boolean);
 
-  const informative = segments.filter((part) => !isChromeSegment(part));
+  const informative = segments.filter(
+    (part) => !isChromeSegment(part) && looksLikeEventTitle(part),
+  );
   if (informative.length > 0) {
     // Prefer a segment that actually reads as an event, else the longest one:
     // site chrome is normally shorter than the event name.
