@@ -33,16 +33,30 @@ before you stop, not after you finish.
 
 ```
 ROUND:            4
-WHOSE TURN:       B  (round-4 fix guide, items B4-01 ..)
+WHOSE TURN:       C  (round-4 implementation, items B4-01 .. B4-13, in order)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
-                  doing anything; it changes what "0%" means.
-STATUS:           ROUND-4 MEASUREMENT COMPLETE, run by the MANAGER (the fifth
-                  agent in a row died on the account spend limit). **Two
-                  measurements, and they disagree completely.**
+                  doing anything; it changes what "0%" means. **This ruling
+                  has now been actioned — B's round-4 guide (below) is
+                  written against it.**
+STATUS:           ROUND-4 B COMPLETE. B wrote and committed 13 items
+                  (B4-01 .. B4-13, one commit each, no code changes — see §4
+                  "Round 4 — Agent B"), covering all ten numbered real-data
+                  findings (R1–R10) plus the one remaining fixture gap. Read
+                  only; did not change code, per the role. **Classification:
+                  4 `WRONG DATA`, 4 `WRONG SHAPE`, 3 `MISSING` (two of them
+                  partial — see below), 1 synthesis item (R9, traces entirely
+                  to other items on the list, not a new mechanism), 1
+                  `POLICY — manager decides`, plus one `NOT FIXABLE THIS
+                  ROUND` sub-finding folded into B4-10 (`rank` — a curated,
+                  CS-only classification dataset, structurally unable to
+                  cover round 4's non-CS real events).** Full detail, code
+                  citations, fix directions and tests-at-risk per item are in
+                  §4 "Round 4 — Agent B"; do not re-derive from this summary.
 LAST DIFFERENCE:  3%  on the fixture (was 16%) — **but the fixture is no
-                  longer the honest number. See below.**
+                  longer the honest number. See below.** B4-13 is the guide
+                  item that closes the fixture's one remaining string.
 GATE (0%):        NOT MET
 
 ROUND 4 CHANGED THE PROBLEM
@@ -67,9 +81,14 @@ loop can close.** The rest are extraction quality, which this loop was never
 scoped to touch — and which now matter far more to a reader than the 3% of
 plate parity that remains.
 
-**Nothing goes to B until the user rules on §4's open POLICY items.** Writing a
-guide for the last 3% while a real report's title is a sentence about COVID-19
-would be optimising the wrong thing.
+**Superseded — the user has ruled.** This line originally held the round-4
+measurement's own open POLICY questions (were the extraction-quality findings
+in scope at all; should the fixture measurement continue). **§1j Ruling 23
+answers both**: yes, extraction quality is in scope, and yes, the fixture
+stays as a cheap regression check while the real-data findings are the actual
+report. B's guide (§4 "Round 4 — Agent B", 13 items) is written against that
+ruling. Kept here, marked superseded rather than deleted, so nobody reads the
+original sentence as still describing an open question.
 
 PRIOR STATUS (round 3, kept for the record)
 -------------------------------------------
@@ -207,7 +226,43 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
                and deliberately did NOT build a country-abbreviation table —
                that gap is still open and named, not silently resolved.
 
-TODO:      **A: run the round-4 measurement.** Per the mandate above and the
+           **Round 4's fix guide, B4-01 .. B4-13, is now written** (see §4
+           "Round 4 — Agent B"). Not yet implemented — this is C's next task,
+           below. No code changed this round; B is read-only per §2.
+
+TODO:      **C: work B4-01 .. B4-13 in order, per §2's rules for the role.**
+           Work order and dependencies are laid out in that section's own
+           Summary; the short version: B4-01/B4-02 are independent shared-
+           plumbing fixes; B4-03/B4-04/B4-05 are three independent job fixes
+           (very likely the same one real posting, but three separate
+           causes); B4-06/B4-07/B4-08 are three independent report-layer
+           gates — **B4-08 deliberately reverses one named round-3 test, not
+           by accident**; B4-09 has no code to write, skip it as intentionally
+           skipped, the way B3-10 was; B4-10 and B4-11 each contain a real,
+           additive piece worth building regardless of B4-12's outcome
+           (`expectedSize`; the JSON-LD `salary`/`employmentType` extension;
+           `workMode`'s upstream extraction) alongside pieces that depend on
+           it; **B4-12 has no code for C to write — it is a `POLICY` finding
+           for the manager, not a work item**, skip it the same way; B4-13
+           closes the fixture's last percentage point. Run the gate
+           (`cd web && npx vitest run && npx tsc --noEmit && npx eslint`)
+           after each item, same as every round. Hand back to A when done —
+           **A should re-run both measurements (fixture AND real search) per
+           the round-4 mandate below**, not just the fixture, since the real
+           search is what most of this guide targets.
+
+           **Superseded — kept for the record.** The task below was A's
+           round-4 measurement mandate. **It has already been completed**
+           (see STATUS at the top of this section and §4 "Round 4 — the
+           MANAGER, doing A's job") — the numbered findings it produced are
+           what B4-01 .. B4-13 above now guide. Left in place because its own
+           mechanism instructions (the profile-loading precedent, the key
+           list, the security rule) are still exactly what the *next* A
+           should follow when re-measuring after C's implementation — only
+           the specific findings are now stale, not the method.
+
+TODO (superseded — the round-4 measurement it describes is already done):
+           **A: run the round-4 measurement.** Per the mandate above and the
            full instructions in §2 under Agent A:
            1. Re-derive the numbered difference list against plates 02/03
               (the round-3 list in §4 is now the starting point, not the
@@ -5414,7 +5469,10 @@ user, not for A.
 
 ### Round 4 — Agent B
 
-**STATUS: IN PROGRESS.**
+**STATUS: COMPLETE.** 13 items (B4-01 .. B4-13) covering all ten numbered
+real-data findings (R1–R10) plus the one remaining fixture gap. See the
+Summary at the end of this section for the full classification breakdown,
+work order, and what still needs the manager's attention.
 
 Read §0, §1 (current state) in full, §1b–§1i (every accumulated ruling and
 exclusion), **§1j twice** as instructed, §2 (my role and A's), §3 (ground
@@ -6532,3 +6590,67 @@ was taken before rewriting these** — a full table changes `"United States"` �
 `"US"` unconditionally; a partial table only changes it if `"United States"`
 specifically is one of the covered entries (which it should be, being the
 plate's own example, but say so explicitly in the commit either way).
+
+---
+
+#### Summary — 13 items
+
+| Class | Count | Items |
+|---|---|---|
+| `WRONG DATA` | 4 | B4-01 (R1+R8), B4-02 (R2), B4-03 (R7), B4-04 (R4) |
+| `WRONG SHAPE` | 4 | B4-05 (R6), B4-06 (R3), B4-07 (R5), B4-08 (R10) |
+| `MISSING` | 3 (2 of them partial) | B4-13 (fully); B4-10's `expectedSize` half only (its fees/organisations/people/registrationDeadline/travelGrant half is deferred to B4-12, and its `rank` half is `NOT FIXABLE` — see below); B4-11's `salary`/`employmentType` free-text half and its `workMode` half (its contractLength/materials/startDate/startDateFlexible half is likewise deferred to B4-12) |
+| Synthesis, not a new mechanism | 1 | B4-09 (R9) — traced entirely to items already above |
+| `POLICY — manager decides` | 1 | B4-12 — page fetching has no JavaScript rendering; closing it means new infrastructure, not a patch |
+| `NOT FIXABLE THIS ROUND` (no code can produce it) | 1 sub-finding, folded into B4-10 | `rank` — CCF/CORE classification only exists for one curated CS-conference dataset (`ccfddl`); round 4's real events are not CS conferences and structurally cannot carry it regardless of extraction quality |
+
+**Work order for C: top to bottom as numbered**, per §1j's own priority
+(wrong data, then promises the report cannot keep, then under-extraction,
+then the fixture). B4-01 and B4-02 touch shared extraction plumbing
+(`enrich.ts`, `structured-extract.ts`) and are independent of each other.
+B4-03/B4-04/B4-05 are three separate, independent fixes that likely all
+belong to the same one real posting — land them in any order relative to
+each other. B4-06/B4-07/B4-08 are three independent report-layer gates, the
+closable core of §1j's "promises we cannot keep" category — B4-08
+specifically requires rewriting one named round-3 test on purpose, not
+avoiding it. B4-09 needs no code — skip it when reached, the way B3-10 was
+skipped for having none. B4-10 and B4-11 each contain a real, buildable,
+additive piece (`expectedSize`; `salary`/`employmentType`'s JSON-LD path;
+`workMode`'s upstream extraction) alongside pieces that depend on B4-12's
+policy decision — build the additive pieces regardless of how B4-12 is
+ruled, since they stand on their own. B4-12 has no code — it is the one
+item this guide could not close and should not attempt to. B4-13 is
+independent and closes the fixture's last percentage point.
+
+**Three things worth A's and the manager's attention that this guide
+surfaced but did not resolve:**
+1. **R1/R2/R8 all trace to the same one real event, and R4/R6/R7 very
+   plausibly trace to the same one real job.** Fixing each item individually
+   still leaves open whether A's next real-search run should specifically
+   re-check these same two items, or draw three fresh ones — worth deciding
+   before the next measurement.
+2. **B4-08 reverses a specific, named round-3 test on purpose** (B3-09's
+   `"locked block falls back to the generic phrasing when nothing is
+   untagged"`, the `organisations: []` case) — flagged plainly in the item
+   itself, not silently changed, but worth A's explicit confirmation that
+   this is the intended reading of R10 before C lands it.
+3. **B4-12 (page rendering) is the load-bearing decision for this whole
+   round.** Every other item in this guide is worth doing regardless of how
+   it is ruled, but the coverage table's remaining numbers (fees,
+   organisations, people, most deadlines, contract length, application
+   materials) will very likely stay low without it — worth the user seeing
+   this framed plainly rather than discovering it only after every other
+   item lands and the numbers still look thin.
+
+**One thing I did not do this round, and why.** I did not run a fresh live
+search to reproduce round 4's three real events or three real jobs against
+the current build. Every finding above is traced to its cause by reading the
+extraction code directly — including two independent pieces of static
+evidence strong enough to name specific likely causes (the gazetteer
+grep plus a near-identical pre-existing test fixture for R2; the hardcoded
+`location: ""` for R7's workMode consequence) — but I did not verify any of
+it against a fresh fetch of the real pages themselves. Where a finding rests
+on inference rather than a live reproduction, its own item says so plainly
+rather than presenting a strong guess as a confirmed fact.
+
+**STATUS: COMPLETE.**
