@@ -4965,7 +4965,53 @@ write), one commit per item, gate re-run after each.
   correct in isolation; and one confirming the zero-count fallback (no
   organisations at all, and all-organisations-tagged) never prints "The
   other 0 exhibitors." **Gate: 82 files / 864 tests passing, typecheck
-  clean, 1 pre-existing lint error.** Commit: (recorded after commit, see
-  below).
+  clean, 1 pre-existing lint error.** Commit: `55da2b9`.
+
+- **B3-10 — INTENTIONALLY SKIPPED, per B's own guide and §1's instruction.**
+  No code to write: B searched for a newly-possible data source this round
+  and found none (confirmed again myself by re-reading B3-10's own trace —
+  nothing B3-06, B3-08, or B3-09 added creates a day-count-on-site-cadence
+  signal as a side effect). B's recommendation to narrow old exclusion (b)
+  into (b') is a bookkeeping note for A/the manager, already reflected in
+  §1e's exclusion table. Not counted as a landed item, not counted as a
+  failure — there is simply nothing here for C to do.
+
+- **B3-11 — LANDED.** `happeningsFootnote()`
+  (`web/src/app/events/[id]/page.tsx`) now computes `const separator =
+  named.includes("—") ? ":" : " —"` and uses it as the sentence's lead-in,
+  instead of a hardcoded `" — "` — swaps to a colon only when the named list
+  itself already contains an em-dash (a real `ACTIVITY_LABELS`-shaped
+  string, `"Poster session — open call"`), so the sentence's own break
+  doesn't collide with the one already inside a label's name. Every other
+  case (one label, several labels, none containing a dash) is untouched —
+  confirmed by construction, since the ternary only changes behaviour when
+  `named.includes("—")` is true. **Kept B2-17's choice to name every
+  highlighted chip rather than shorten to the plate's fixture-specific "the
+  two"** — per B's own reasoning, shortening would mean inventing a
+  per-activity short alias for every possible highlighted label, which is
+  open-ended copy-authoring with no natural stopping point, not a
+  parity fix.
+
+  Ran the gate before touching any test: confirmed B's claim first-hand —
+  grepped for `"-- open call"` and `"Poster session --"`, zero hits, no
+  existing test exercises an em-dash-containing highlighted label, so
+  nothing broke. Added one new test with the exact fixture B recommended
+  (`activities: ["poster session — open call", "workshop"]`, both matched)
+  with no career stage passed (mirrors the sibling "omits the career-stage
+  clause" test's own `createElement` pattern, so the "about" clause doesn't
+  complicate the assertion — this test is about the dash collision only).
+  **First version of this test asserted `not.toMatch(/— .*—/)` against the
+  whole page and failed** — the same em-dash-containing label text also
+  appears once in its own activity chip a few lines above the footnote, so
+  an unscoped regex found a false collision spanning from the chip to the
+  footnote, not within the footnote itself. Rewrote to extract just the
+  `data-happenings-footnote` paragraph first, then assert it contains
+  exactly one em-dash — the one inside the label's own name — proving the
+  sentence's own lead-in did not also use one. **Gate: 82 files / 865 tests
+  passing, typecheck clean, 1 pre-existing lint error.** Commit: (recorded
+  after commit, see below).
+
+**All 11 items worked, B3-10 correctly skipped as a bookkeeping note.
+Round 3's fix guide is fully landed.**
 
 ---

@@ -475,10 +475,18 @@ function happeningsFootnote(
   const about = stage
     ? ` and because you’re a ${stage}${sectorClause ? ` ${sectorClause}` : ""}`
     : "";
+  // B3-11. A highlighted label can itself contain an em-dash ("Poster
+  // session — open call" is a real ACTIVITY_LABELS-shaped string) — leading
+  // with the sentence's own em-dash then collides with it: "...your topics
+  // — Poster session — open call, ... are the ones..." reads as if both
+  // dashes are the same kind of break. Swap to a colon lead-in only in that
+  // one case; every other case (one label, several labels, none containing
+  // a dash) keeps the em-dash exactly as before.
+  const separator = named.includes("—") ? ":" : " —";
   return (
     "Highlighted because they line up with your topics" +
     about +
-    ` — ${named} ${verb} you’d be sorry to miss.`
+    `${separator} ${named} ${verb} you’d be sorry to miss.`
   );
 }
 

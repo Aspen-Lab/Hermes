@@ -715,6 +715,50 @@ describe("EventReport", () => {
     );
   });
 
+  it("swaps the footnote's lead-in punctuation when a highlighted label already contains an em-dash", () => {
+    // B3-11. "Poster session — open call" is a real ACTIVITY_LABELS-shaped
+    // string carrying its own em-dash. Leading the sentence with the same
+    // glyph would read as two of the same kind of break run together:
+    // "...your topics — Poster session — open call, ... are the ones...".
+    // The fix swaps only the sentence's own lead-in to a colon when this
+    // collision would happen; every other case (tested elsewhere in this
+    // file) keeps the em-dash. No career stage, exactly like the sibling
+    // test above, so the "about" clause doesn't complicate the assertion —
+    // this test is about the dash collision only.
+    const html = renderToStaticMarkup(
+      createElement(EventReport, {
+        event: baseEvent({
+          activities: ["poster session — open call", "workshop"],
+          matchedTerms: ["poster", "workshop"],
+        }),
+        enrichment: null,
+        providerConfigured: false,
+        isSaved: false,
+        isRegistered: false,
+        isSubmitted: false,
+        isInterested: false,
+        nowMs: NOW,
+        starredKeys: new Set<string>(),
+        onToggleStar: () => undefined,
+        onToggleSave: () => undefined,
+        onRegisteredChange: () => undefined,
+        onSubmittedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+
+    const footnote = html.match(
+      /<p data-happenings-footnote="true"[^>]*>[\s\S]*?<\/p>/,
+    )?.[0];
+    expect(footnote).toContain(
+      "Highlighted because they line up with your topics: Poster session — open call and Workshop are the ones you’d be sorry to miss.",
+    );
+    // Exactly one em-dash in the whole footnote -- the one inside the
+    // label's own name. If the sentence's own lead-in had also used an
+    // em-dash (the bug this item fixes), there would be two.
+    expect(footnote?.match(/—/g)).toHaveLength(1);
+  });
+
   it("omits the career-stage clause entirely when no career stage is known", () => {
     // renderReport's own `careerStage` parameter defaults to "PhD Year 3"
     // even if undefined is passed explicitly (that's what a JS default
