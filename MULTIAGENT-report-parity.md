@@ -6479,3 +6479,56 @@ be a sign the other fixes failed.
 
 **No code to write, no test to check.** Recording the finding and the
 trade-off for the manager to rule on.
+
+---
+
+##### B4-13 — The one remaining fixture difference: LOCATION sub-line prints `United States`, plate prints `US`. `MISSING` (a lookup table that has never been built).
+
+**Cause — unchanged since B3-08, confirmed still true by re-reading the
+current code.** `web/src/app/jobs/[id]/page.tsx:328-344` (the LOCATION tile
+in `buildJobFacts`) joins `workModeLabel(job)` with `clean(job.place?.country)`
+verbatim. `job.place.country` is normalised upstream to a full canonical
+country name (`matchCountryToken`/`COUNTRY_ALIASES`,
+`web/src/lib/opportunities/structured-extract.ts:1129-1148`: `us` →
+`"United States"`, etc.) — never the plate's two-letter form. **Grepped the
+whole tree again this round for any alpha-2/ISO-3166/country-code table**
+(the reverse direction of `COUNTRY_ALIASES`) — still none, anywhere. This is
+the same gap B3-08 named and deliberately did not build, and round 4
+confirms it as the fixture's only remaining difference two rounds running.
+
+**Fix direction.** A small, report-scoped `COUNTRY_ABBREVIATIONS` (or similar)
+lookup, consumed only at this render site — same "the report gets its own
+vocabulary" precedent B2-01 set for date formatting. Two honest options,
+not one:
+1. **Full coverage**, keyed directly off the existing `COUNTRY_NAMES` list
+   (`structured-extract.ts:806-808`, ~195 entries) so the two lists cannot
+   drift apart — unlike `CONFERENCE_CITIES` (a heuristic gazetteer with real
+   false-positive risk, B4-02), ISO-3166 alpha-2 codes are a closed,
+   unambiguous, static standard: this is a bigger one-time typing job, not a
+   riskier one.
+2. **A smaller table** covering the countries most likely to actually appear,
+   with the existing full-name print as the fallback for anything uncovered
+   — faster to ship, honest (never omits or invents a code), but leaves a
+   real, if less common, residual gap.
+Either way: **never omit the country when no abbreviation is found for it —
+fall back to the full name**, exactly as today, rather than dropping real
+data because it lacks a short form yet.
+
+**Risk.** `web/src/app/jobs/[id]/page.test.ts:388-414`, "joins the country
+onto the LOCATION tile's sub-line, but never into the subtitle" — **breaks by
+design**: `expect(locationTile).toContain("Hybrid · United States")` (`:403`)
+must become `expect(locationTile).toContain("Hybrid · US")`. Its own comment
+(`:389-393`) is now stale once an abbreviation table exists and should be
+rewritten to describe the table rather than its absence, the same way B3-06's
+guide asked for a stale "cannot exist" comment to be rewritten once it no
+longer applied. `:416-434`, "shows only the half of LOCATION's sub-line it
+actually has..." — `expect(countryOnlyTile).toContain("United States")`
+(`:425`) and `.not.toContain(" · United States")` (`:426`) — the first likely
+becomes `"US"` too for consistency (this tile has no other rule for
+"abbreviate only when paired with a work mode"), the second's own guard
+(no dangling separator) is unaffected either way — the test's own logic (not
+its target string) still applies. **Confirm which of the two options above
+was taken before rewriting these** — a full table changes `"United States"` →
+`"US"` unconditionally; a partial table only changes it if `"United States"`
+specifically is one of the covered entries (which it should be, being the
+plate's own example, but say so explicitly in the commit either way).
