@@ -270,32 +270,29 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-07T19:40:43Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-07T00:26Z — round-5 Agent A died
-                  partway through its measurement on the account's monthly
-                  spend limit. **Round 5 is UNSTARTED for logging purposes**
-                  — A committed only its lock claim, no findings. Nothing is
-                  lost and nothing is half-recorded; the next A starts the
-                  round clean. See §4 "Round 5 — Agent A (died)" for the one
-                  artefact worth knowing about.
+STOPPED BECAUSE:  finished the turn — round-5 Agent A completed BOTH jobs and
+                  committed both (`78e339b` Job 2, `f5b6e25` Job 1), then
+                  stalled on a stream watchdog while writing this block. **Its
+                  findings are complete and its §4 entry says `STATUS:
+                  COMPLETE`** — only the §1 bookkeeping was missing, and the
+                  MANAGER wrote it (this block, plus §1l Ruling 25). Nothing
+                  is pending from A. This is write-as-you-go working exactly
+                  as intended: an agent died and the round cost nothing.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
-ROUND:            4  (round 5 opens the moment an A claims it)
-WHOSE TURN:       A  (round-4 implementation COMPLETE — all 13 guide items
-                  resolved: B4-01..B4-08 landed in full, B4-09 skipped
-                  (synthesis, no code of its own), B4-10 and B4-11 each
-                  landed their additive piece only per §1k's scope
-                  narrowing, B4-12 skipped (`POLICY — manager decides`, no
-                  code), B4-13 landed. See §4 "Round 4 — Agent C" for full
-                  detail per item. **A: run the round-5 measurement** — see
-                  the TODO below for the two specific jobs, both already on
-                  record, and what to watch for in B4-11 specifically.)
+ROUND:            5
+WHOSE TURN:       B  (round-5 measurement COMPLETE — see §4 "Round 5 — Agent
+                  A" for both jobs in full, and §1l Ruling 25 for the
+                  manager's ruling on what Job 2's number means. **B: write
+                  the round-5 fix guide** — see the TODO below for the work
+                  list and its required ranking.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -351,19 +348,24 @@ STATUS:           ROUND-4 IMPLEMENTATION COMPLETE (B + C). B wrote and
                   break (each rewrite comments which item changed it, per
                   §3) — see §4 for the exact per-item count and which
                   assertions changed.
-LAST DIFFERENCE:  3%  on the fixture (was 16%) — **B4-13 has now landed.**
-                  The code-side fix is in and its own test (a full
-                  `COUNTRY_NAMES`-completeness check plus the two named
-                  fixture assertions B flagged) passes, but **C does not
-                  set this number — only A's own fixture re-measurement
-                  can confirm 0 differences actually remain** and that
-                  nothing else regressed. **The fixture was never the
-                  honest number for this round regardless — see "ROUND 4
-                  CHANGED THE PROBLEM" below and run both measurements.**
-GATE (0%):        NOT MET — unchanged; only A sets this, and Ruling 23's
-                  real-data gate is very unlikely to be met yet (most
-                  under-extraction findings are deferred pending §1k's
-                  shell-rate measurement, not closed).
+LAST DIFFERENCE:  **0% fixture / real data still far from it.** A confirmed
+                  the fixture from RENDERED output, not from the code: 0 of
+                  32 plate elements different, B4-13 landed cleanly, nothing
+                  regressed. **The fixture half is done.** The real-data half
+                  is not: of round 4's ten findings, R3/R5/R10 closed, R1
+                  closed for its own reported shape only, R6/R8 could not be
+                  exercised this round, and **R2/R4/R7/R9 are still open** —
+                  R7 worse than round 4 reported (wrong company-slot value on
+                  **3 of 3** real jobs, none of them the shape B4-03's guard
+                  targets). Three new findings: **R11** (a brand-new
+                  extractor printed a cohort YEAR as a headcount — wrong data
+                  on its first real-data contact), **R12** (the job LOCATION
+                  tile prints the literal placeholder `See posting`; the
+                  event tile guards this, the job tile never mirrored it),
+                  **R13** (event-name quality is not closed as a class — 2 of
+                  3 real events, in shapes B4-01's guard cannot target).
+GATE (0%):        NOT MET. Fixture met on its own; real data not close.
+                  Per §1j Ruling 23 the gate needs **both** halves at zero.
 
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
@@ -539,7 +541,69 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            item, and STATUS above for the final gate figure). Round 4 is
            done; A's round-5 measurement is next, per TODO below.
 
-TODO:      **A: run the round-5 measurement.** Round 4's implementation is
+TODO:      **B: write the round-5 fix guide, B5-01 … B5-NN.** Your work list
+           is §4 "Round 5 — Agent A", both jobs. **Read §1l Ruling 25 first
+           — it scopes this round and it rules out one direction B4-12 had
+           pointed at.**
+
+           **The required ranking. Do not re-rank by visual prominence.**
+           Round 5 found stated-false data on a majority of real items, and
+           two of the four worst cases are things THIS loop introduced. A
+           wrong field is a lie; a missing field is only a gap.
+
+           1. **R11 — `extractExpectedSize()` prints a cohort year as a
+              headcount.** B4-10 built this last round; its first contact
+              with a real page produced `expectedSize: 2025` from a startup-
+              cohort label. **This is a regression the loop caused.** It
+              states a specific, plausible, wrong number as fact.
+           2. **B4-11's `extractWorkMode()` false positive — A confirmed it,
+              it is not hypothetical.** The round-4 TODO named this as a
+              risk; A checked all 15 fetched job pages and found the match
+              firing on prose that is not a work-arrangement statement. Also
+              a regression this loop caused. Treat 1 and 2 together: both are
+              new extractors that passed hand-written fixtures and failed
+              real pages, which is the pattern, not two coincidences.
+           3. **R7 — wrong value in the job subtitle's company slot, 3 of 3
+              real jobs.** None is the season/cohort shape B4-03's landed
+              guard targets: two are job-board brand names, one is a bare
+              location. 100% of the sample, stated-false every time.
+           4. **R12 — the job LOCATION tile prints the literal `See
+              posting`.** The event side already guards its equivalent
+              placeholder; the job side never mirrored it. This is the
+              cheapest real fix on the list — say so, and put it early in
+              C's work order even though it ranks below the above.
+           5. **R2 — event WHERE still contradicts its own body.** A
+              confirmed the true venue is absent from the ~300-city
+              gazetteer and structurally cannot become a candidate. This is
+              the residual B4-02 predicted; it needs a mechanism, not a
+              bigger list. If the honest answer is "print nothing rather
+              than the wrong city", say so — under §2 that is a real fix,
+              not a cop-out.
+           6. **R13 — event-name quality as a class**, 2 of 3 real events,
+              in shapes `looksLikeEventTitle` cannot target even in
+              principle. R1 is closed for its own reported shape; the class
+              is not. Do not treat this as R1 reopened.
+           7. **R4 — scraped chrome still reaches "What the role is".**
+              B4-04's guard needs 2+ colon-labels; the surviving junk has
+              none, so it clears the guard uncaught.
+
+           **R9 is a symptom, not an item** — A confirmed B4-09's finding
+           that it traces entirely to R13 plus known under-extraction. Do
+           not write it a fix entry; say in one line where it goes.
+
+           **R6 and R8 could not be exercised this round** and are neither
+           closed nor open. Say that plainly; do not quietly drop them.
+
+           **One thing A observed that is not a plate difference and is
+           therefore not yours to fix, but must not be lost:** `adzuna` and
+           `usajobs` returned **0 results at every limit tried**, despite
+           both keys being present. That is 2 of 6 job sources contributing
+           nothing, and it is why R6 could not be exercised. Flag it as
+           `POLICY — manager decides`; do not investigate it as part of this
+           round's guide.
+
+TODO (superseded — completed, kept for the record):
+           **A: run the round-5 measurement.** Round 4's implementation is
            now fully done (see STATUS above) — every B4 item is landed,
            intentionally skipped with a reason, or deliberately additive-
            only per §1k. Two jobs, both already on record, not a new one:
@@ -714,6 +778,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 2 | 22% | 0 of 32 plate elements absent, 14 wrong shape/copy, 18 exact (25/32). Gate not met — B-06 and B-12 only partially landed; fresh findings on date-granularity wording (job facts + Timeline) and event People-card content; one header-chip question still POLICY, unresolved since round 1. |
 | 3 | 16% | 0 absent, 10 wrong shape/copy, 22 exact (27/32). Gate not met — 13 differences, 5 job and 8 event. **Measured by the MANAGER, not an A subagent** (four agents died on the spend limit or a stall), so this round is less independent than 1 and 2. Reversed §1f Ruling 17 after finding the kind label defined on plate 04; B2-15 landed for only one of its two table rows. Two open POLICY items. |
 | 4 | **3% fixture / real data far worse** | 0 absent, 1 half, 31 exact (31/32) on the hand-built fixture — one string from the gate. **First real-search run says otherwise:** 0 of 3 real events carry fees, roster, or deadlines; 0 of 3 real jobs carry salary, work mode, or materials; one real event H1 is a stray COVID-19 sentence. Gate not met. Measured by the MANAGER (fifth agent died on the spend limit). |
+| 5 | **0% fixture / real data still far from it** | Fixture: 0 of 32 different (B4-13 confirmed landed, from render). Real data (3 events + 3 jobs, same profile round 4 used): R3/R5/R6(closed)/R8/R10 closed or unexercisable; R2/R4/R7/R9 still open (R7 worse than reported — wrong company-slot value on 3 of 3 real jobs, none the shape B4-03 fixed); three new findings, R11 (a brand-new extractor's first real-data test produced a wrong headcount from a cohort-year label), R12 (job LOCATION tile leaks the literal `"See posting"` placeholder — the event tile's equivalent guard was never mirrored), R13 (event-name quality not closed as a class — 2 of 3 real events, different shapes than R1's). §1k's shell-rate diagnostic: 14.8% of successfully-fetched real pages (4/27) are JavaScript shells — real, but well short of explaining round 4's near-universal coverage gaps by itself; JSON-LD did not rescue any of the 4 shells sampled and is itself present on only 10%/38.5% of real (non-shell) event/job pages. Gate not met. Measured by an A subagent — restart of a round-5 A that died on the spend limit before committing findings (§4 "Round 5 — Agent A (DIED)"). |
 
 ---
 
@@ -1318,6 +1383,85 @@ is a counting exercise over pages A is already fetching.
 CS-conference dataset, and a titanium round table structurally cannot carry
 one. Not a defect; the field is genuinely inapplicable. Re-list it by name each
 round.
+
+---
+
+## §1l. RULING 25 — THE SHELL RATE IS IN. NO BROWSER. — BINDING
+
+**Date: 2026-08-07. Answers Ruling 24 (§1k), which deferred this decision until
+there was a number. There is now a number.**
+
+### What A measured
+
+33 real candidate pages (14 events, 19 jobs), the full live pool for this
+profile — not a sample of it. Classified with the app's own `extractPageText`,
+the same function that defines a shell everywhere else in this codebase.
+
+| Outcome | Count | Share |
+|---|---|---|
+| Real, server-rendered, extractable text | 23 | 85.2% of fetched |
+| **JavaScript shell** | **4** | **14.8% of fetched** |
+| Fetch returned nothing at all (HTTP error / timeout / blocked / empty) | 6 | 18.2% of all candidates |
+
+### Ruling 25 — BINDING
+
+**The answer to B4-12 is no. Do not build, buy, or wire in a headless
+browser. Do not reopen this without a new measurement.**
+
+14.8% is real and it is not zero. But B4-12's claim was that JavaScript
+rendering is the *dominant* explanation for round 4's near-universal 0-of-3
+coverage on fees, organisations, people, salary, employment type and the rest.
+**A rendering problem touching roughly 1 page in 7 cannot produce a near-0%
+extraction rate on fields whose extractors B4-10 and B4-11 already confirmed
+are fully built and wired in.** The arithmetic does not reach. The remaining
+gap is regex and gazetteer coverage against real page structure — directly
+confirmed for location by R2 this round — plus pages that genuinely do not
+publish the field at all.
+
+**This is the ruling §1k was written to make possible, and it went the way
+§1k's caution suggested it might.** Round 4 wanted to buy infrastructure off a
+3-item sample. The measurement cost one agent-turn and saved that purchase.
+**Keep the precedent: measure the rate before buying the machine.**
+
+### Two corrections to the record that come with it
+
+**1. JSON-LD is the minority path, not the fallback.** §1k directed "widen
+JSON-LD before considering a browser." A measured what is actually there:
+only **1 of 10 real event pages (10%)** carries an `Event` block, and **5 of
+13 real job pages (38.5%)** carry a `JobPosting` block. Of 15 job pages
+scrutinised, **0 carried a `baseSalary` field of any shape.** So B4-11's
+landed JSON-LD salary path can only ever fire on a minority of postings, and
+this sample gave it nothing at all to fire on.
+
+**Therefore: the free-text extractors are the main road, not the shoulder.**
+Any future guide that treats JSON-LD as the primary source and free text as
+the fallback has it backwards. §1k's step-2 direction stands but is demoted —
+widening JSON-LD is worth doing and is not where the coverage comes from.
+
+**2. JSON-LD did not survive a single shell.** §1k reasoned that a shell might
+still carry server-rendered JSON-LD. A checked it directly: **0 of the 4 shell
+pages carried a matching-kind block.** Four is a small sample and this is not
+proof it never helps — but the theoretical decoupling paid nothing here, and
+it is no longer a reason to expect shells to be cheaply recoverable.
+
+### What is now in scope, and what is not
+
+**In scope for round 5:** everything in §1's TODO — the two extractor
+regressions this loop introduced (R11, `extractWorkMode`), R7, R12, R2, R13,
+R4. All of them are ordinary code, reachable without new infrastructure.
+
+**Still deferred, unchanged:** the deferred quarters of B4-10 and B4-11
+(`contractLength`, `applicationMaterials`, `startDate`, `startDateFlexible`,
+fees/organisations/people/deadlines/travelGrant). Ruling 25 removes the reason
+they were waiting — B4-12 is now settled — **but does not by itself schedule
+them.** A future B may pick them up on the merits; they are no longer blocked.
+
+**Not in scope, and now on the manager's list:** `adzuna` and `usajobs`
+returned 0 results at every limit tried, both keys present. That is 2 of 6 job
+sources contributing nothing to the candidate pool, and it is why R6 could not
+be exercised this round. It is not a plate difference, so it does not belong
+in B's guide or count against the gate. **The manager will take it up
+separately.** Recorded here so it is not lost.
 
 ---
 
