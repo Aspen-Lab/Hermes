@@ -9122,3 +9122,66 @@ only the genuine sentence; a description containing a sentence that is
 mostly the job's own title, passed alongside that title, is rejected even
 with no cart vocabulary present (this second case only if C builds option
 2).
+
+---
+
+##### B5-08 — Not one of the seven ranked items: a shape of test both regressions this round were missing, worth building into every future free-text extractor. Named as its own item per this round's own invitation, since it is worth more than either individual fix.
+
+**The pattern, stated plainly.** B5-01 (`extractExpectedSize`) and B5-02
+(`extractWorkMode`) are both brand-new this loop, both passed every
+hand-written fixture, and both produced a confidently wrong answer on their
+first real page. Tracing both failures to their root shows the **same**
+underlying gap, not two coincidences:
+
+- `extractExpectedSize`'s `EXPECTED_SIZE_COUNT_RE` cannot tell a headcount
+  from a calendar year that happens to sit next to the same trigger word
+  ("2,400 attendees" vs. "2025 Participants").
+- `extractWorkMode` cannot tell a statement about *this* job's arrangement
+  from an unrelated mention of the same word anywhere else on the fetched
+  page ("on-site" the work arrangement vs. "on-site fitness" the office
+  perk, or a different job's own "hybrid" on the same listing page).
+
+Both extractors ask only "does this pattern appear in the text," never "is
+this occurrence actually about the thing I am trying to extract." A
+hand-written fixture cannot expose this, by construction: it is a short
+snippet written *about* the field under test, with nothing else on the
+page competing for the same trigger word. Real pages are not that clean —
+they carry footers, amenity lists, other listings, and historical asides
+that a narrow regex has no way to rule out, because it was never asked to.
+
+**Verified this is not just a plausible story — checked both extractors'
+existing test suites directly for the missing shape.**
+`event-details.test.ts`'s four `expectedSize` tests (`:185`, `:192`,
+`:199`, `:210`) are three positive-shape cases plus one pure-silence case.
+`job-details.test.ts`'s three `workMode` tests (`:163`, `:170`, `:179`) are
+two positive-shape cases plus one pure-silence case (and that silence case
+tests a *different* thing — "don't invent remote" — not "don't fire on an
+unrelated nearby mention"). **Neither suite has a third kind of test: the
+trigger pattern present in the text, in a context that is plausible,
+real-world, and NOT about the subject being extracted, asserting the
+extractor stays silent.** That specific, missing test shape is exactly
+what would have caught both regressions before they shipped.
+
+**The rule to carry forward, concretely.** Any new free-text extractor
+built the way `job-details.ts` and `event-details.ts` already build theirs
+— a regex over a large blob of fetched page text, no structured field to
+lean on — should ship with at least one **adversarial-proximity** test
+alongside the usual positive and silence cases: a fixture where the
+trigger word/pattern is present, but attached to something other than the
+subject (a different listing, a past edition, an amenity, a section
+heading introducing a list) — and the extractor must return nothing, not
+the tempting match. This is a shape of test, not a rule tied to any one
+field, so it generalizes past this round's two items — worth applying if
+B4-10's or B4-11's still-deferred quarters (fees, organisations, people,
+deadlines, travel grant, contract length, application materials, start
+date — per §1l Ruling 25, no longer blocked, not yet scheduled) are ever
+picked up.
+
+**Not a code location, not ranked against the seven above.** This is a
+testing discipline, not a fix — nothing for C to "land" at a file/line the
+way B5-01 through B5-07 are. It applies most directly to how C builds the
+new tests those two items already call for (B5-01's cohort-year case,
+B5-02's furniture/other-listing case) — both are, in fact, instances of
+exactly this shape, already specified in each item's own risk section. C
+should treat this entry as the reason those two specific tests matter, not
+as a ninth thing to build.
