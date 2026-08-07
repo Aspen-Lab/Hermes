@@ -9185,3 +9185,50 @@ B5-02's furniture/other-listing case) — both are, in fact, instances of
 exactly this shape, already specified in each item's own risk section. C
 should treat this entry as the reason those two specific tests matter, not
 as a ninth thing to build.
+
+---
+
+##### Items explicitly not guided this round, per §1's own instruction — dispositions, not silent drops
+
+- **R9** — a real event's report renders almost nothing. **Not its own
+  item, per §1's TODO.** A confirmed B4-09's own finding again this round:
+  real event 3's thin report traces entirely to R13 (title quality — B5-06
+  above) plus genuine under-extraction already tracked under B4-10's
+  deferred quarter. No new mechanism, no separate fix entry. Where it goes:
+  B5-06 closing gap 3 (the headline-shape check) is the piece most likely
+  to change this specific event's outcome, since its own title is the
+  headline-elliptical-passive shape that item names.
+- **R6** — `SEEN ON` prints the internal slug `jobweb`. **Could not be
+  exercised this round, per §1's TODO — neither closed nor open, and not
+  guided as a fix.** B4-05's own render-layer label map (`JOB_SOURCE_LABELS`,
+  `web/src/app/jobs/[id]/page.tsx`) is still in the code, its own unit
+  tests still pass, and nothing this round touched it — but "Seen on" never
+  rendered for any of this round's 3 real jobs (R5's own gate hides it
+  whenever `applicationMaterials` is empty, true for all 3 this round), and
+  `adzuna`/`usajobs` — the two sources with recognisable brand labels in
+  the map — returned 0 results, so no real job with a non-`jobweb` source
+  and non-empty materials existed to check against. Confirmed by reading
+  A's own report rather than assuming from its one-line summary. Nothing
+  for B to guide; say so plainly rather than inventing a repro.
+- **R8** — event title truncated with an ellipsis. **Not reconfirmable this
+  round, per §1's TODO — neither closed nor open.** A tried to re-fetch the
+  original page (`euagenda.eu`) and it returned nothing (`fetch-null`), so
+  the fix B4-01 shipped (preferring the fetched page's own JSON-LD/OG title
+  over a pre-fetch guess, gated behind `looksLikeEventTitle`) could not be
+  checked against the actual page that reported it. **This round's B5-06
+  above is relevant background, not a substitute finding**: the same
+  `eventNameFrom` split-regex gap it names (missing a plain hyphen) is a
+  plausible, unconfirmed contributor to *why* a truncated title might
+  survive on some other page — a truncated raw title that never gets
+  split into segments at all skips `isChromeSegment`/`looksLikeEventTitle`
+  in exactly the same way event 3's headline did — but this is offered as
+  a hypothesis for a future A to check against a *reachable* page, not a
+  claim that R8 is now understood or closed. No fix entry for R8 itself;
+  the mechanism it depends on (B4-01's landed preference for the fetched
+  page's own title) is unchanged and untouched this round.
+- **`adzuna` and `usajobs` returning 0 results at every limit tried** — **not
+  investigated, per §1l Ruling 25's own instruction that this is already on
+  the manager's list.** Re-flagging only to keep it visible, adding no new
+  analysis: A confirmed this again in this round's Job 2 (both keys
+  present, 0 results at 150/500/1000). `POLICY — manager decides`, not a
+  plate difference, not B's to size a fix for.
