@@ -9024,3 +9024,101 @@ the same as the bare label; a headline elliptical-passive title
 ("`X deadline extended - SiteName`") is rejected and the function falls
 through toward the snippet/slug path rather than returning the headline
 verbatim.
+
+---
+
+##### B5-07 — R4: "What the role is" still prints scraped site chrome verbatim. `WRONG DATA`. B4-04's guard is real progress; the surviving junk has no colons, so it clears that specific guard uncaught — lowest-ranked of the seven per §1's TODO.
+
+**Cause — confirmed against the live code.**
+`web/src/lib/jobs/summarize.ts:18-22`:
+
+```ts
+const LABEL_MARKER_RE = /\b[A-Z][a-zA-Z]*(?:\s+[a-zA-Z]+){0,2}:/g;
+
+function looksLikeScrapedChrome(text: string): boolean {
+  return (text.match(LABEL_MARKER_RE) ?? []).length >= 2;
+}
+```
+
+B4-04's guard is anchored entirely on **colon-terminated labels** —
+"Employment type:", "Experience required:" — requiring two or more in one
+candidate sentence before rejecting it (deliberately two, not one, so it
+does not also reject the real, correctly-kept "Role Overview: We're
+hiring..." sentence `SECTION_RE` rewards, `:24-25` — confirmed this
+calibration is still respected). Real job 2's surviving junk, per A's
+report, is e-commerce widget chrome (a shopping-cart item counter)
+concatenated with a repeat of the job title — **zero colons anywhere in
+it.** `looksLikeScrapedChrome` returns `false` (0 matches, needs ≥2) and
+`NOISE_RE` (`:5-6`, EEO/benefits/how-to-apply phrasing) does not match
+either — the sentence clears both filters in `scoreSentences()`
+(`:56-61`) untouched and can be selected like any genuine sentence. This is
+a different **family** of junk than B4-04 targeted, not a bigger version of
+the same one: label-colon chrome (ATS templates) versus symbol/digit-heavy
+UI-widget chrome (e-commerce furniture) — B4-04's own guide already named
+the general risk ("grows forever as new site templates surface" was the
+trade-off argument *for* the shape-based colon rule over a phrase list; it
+did not claim the colon shape covers every kind of chrome).
+
+**Fix direction — two complementary options, same placement as B4-04's own
+mechanism (`scoreSentences()`'s filter chain), not a new one.**
+1. **Extend `NOISE_RE`, not `looksLikeScrapedChrome`.** This junk is
+   vocabulary-shaped (cart/checkout/e-commerce UI terms), not label-shaped
+   — `NOISE_RE` is already the phrase-list mechanism for exactly this kind
+   of signal (it already screens EEO/benefits language the same way). Add
+   e-commerce/UI terms (`cart|checkout|add to (?:cart|bag)|in stock|out of
+   stock|sku\b|wishlist|quantity`) as a parallel phrase family, not folded
+   into the colon-counting function, which should stay narrowly about
+   label shapes per its own name.
+2. **A generalizable, shape-based complement: reject a candidate that is
+   near-identical to the job's own title.** Real job 2's junk sentence
+   ends with "Opening For Marketing Intern Ion Exchange Ltd." — a near
+   match for the posting's own title. A sentence that mostly restates the
+   job title carries no descriptive information regardless of what
+   junk precedes it, and this is a distinct, reusable tell that does not
+   depend on naming e-commerce vocabulary specifically (would also catch a
+   different site's own non-colon, non-cart chrome that happens to repeat
+   the title). This needs a signature change: `summarizeJob()`
+   (`:109-117`) does not currently receive the job title — its only
+   caller, `web/src/lib/jobs/mapper.ts:131` (confirmed the exact line: `summary
+   = summarizeJob(cleanJobDescription(item.description),
+   item.matchedKeywords)`), already has `roleTitle` computed two lines
+   earlier (`:133`) and could pass it through. A **contained** change
+   (one new optional parameter, one call site), but worth flagging as a
+   real signature change, not a same-function tweak like option 1.
+
+**Blast radius.** `summarizeJob()` has exactly one caller
+(`jobs/mapper.ts:131`, reconfirmed by grep — no other call site), feeding
+only `Job.summary`. Option 1 (extending `NOISE_RE`) has zero blast radius
+beyond that. Option 2 (passing the title in) touches the same one call
+site and the function's own signature — still contained, but not literally
+zero-diff the way option 1 is.
+
+**A related, deeper gap named by B4-04 and still true, not this item's
+job.** `enrichJobCandidates()` fetches the posting's full page HTML during
+enrichment but never uses it to improve `description` — the low-fidelity
+search-snippet text `summarizeJob` works from is never replaced by
+anything extracted from the real fetched page, even though B4-11 already
+fetches and parses that same page for salary/employmentType/workMode. A
+proper "extract the actual role-description block from the fetched HTML"
+extractor would likely help far more than any further noise filter, but it
+is real new extraction work, correctly out of scope for a guard-shaped
+item at this rank.
+
+**Tests at risk — verified directly.** `web/src/lib/jobs/summarize.test.ts`
+— re-read `REAL_POSTING_FIXTURES` and the other two `describe` blocks:
+none contains e-commerce/cart vocabulary (grepped for
+`cart|checkout|sku|wishlist|add to (?:cart|bag)` — no hits) and the
+Outsite fixture's own "Role Overview:" sentence has no cart-shaped text
+near it either, so **option 1 does not touch any existing assertion.**
+Option 2 needs the title threaded through every call in the file (all of
+them currently call `summarizeJob(description, keywords)` with two
+arguments) — as an **additive third parameter with a default**, existing
+calls stay valid and their behaviour is unchanged unless the specific
+junk-repeats-title shape is present in their fixture (checked: none is).
+**Zero existing coverage of either the e-commerce-chrome shape or the
+title-echo shape.** C should add both: a description combining
+cart-widget-shaped junk (no colons) with one genuine role sentence returns
+only the genuine sentence; a description containing a sentence that is
+mostly the job's own title, passed alongside that title, is rejected even
+with no cart vocabulary present (this second case only if C builds option
+2).
