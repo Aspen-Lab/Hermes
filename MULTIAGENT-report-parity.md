@@ -8797,3 +8797,110 @@ fixture already carries a real location string; none exercises the
 placeholder. No existing assertion breaks.** C should add the first one:
 `baseJob({ location: "See posting" })` (not remote) must render neither the
 LOCATION tile nor a `"See posting"` fragment anywhere in the subtitle.
+
+---
+
+##### B5-05 — R2: event WHERE tile still contradicts its own body. `WRONG DATA`. The residual B4-02 predicted, exactly as predicted. Needs a mechanism, not a bigger gazetteer — per §1's TODO.
+
+**Cause — confirmed against the live code, and against A's fresh, direct
+read of the real page's text.** `web/src/lib/opportunities/structured-extract.ts:1319-1346`,
+`findVenueCity()` (B4-02's landed fix): scans every mention of every
+gazetteer city (`CONFERENCE_CITIES`, `:558`, ~300 entries), and a city only
+qualifies if some mention of it is preceded by a locational cue
+(`CITY_PROXIMITY_CUE_RE`, `:1286-1287`: `in|at|near|held|hosted|takes?
+place|taking place|venue|location|located`) or immediately followed by a
+state code. Among qualifying mentions, the **earliest** wins. This closed
+B4-02's own repro (an unrelated country mention winning over the true,
+cued city) and is real progress — but it has no way to prefer a cue
+describing the **current** event's venue over a cue describing a **past**
+edition's venue, because it does not distinguish them at all; both shapes
+satisfy the same cue regex.
+
+**This is very likely the actual page, not an analogous case — A fetched
+and read it directly this round.** The real event's own text states its
+current venue in one sentence with an explicit future-tense venue verb
+("will be held in Lanzhou, Gansu Province, China, from August 9…") and,
+separately, lists past hosts in another sentence ("Titanium Round Table
+conferences have previously been held in Cologne, Germany (2008),
+Trondheim-Tromsø, Norway (2010)…"). **Both sentences satisfy
+`CITY_PROXIMITY_CUE_RE`** — "will be held in" and "have previously been
+held in" both contain "held in." `Cologne` is in `CONFERENCE_CITIES`
+(`:180`, grep-confirmed) and is cued, so it wins as the earliest qualifying
+match. `Lanzhou` is not in the gazetteer at all (grep-confirmed, no
+occurrence anywhere in the file) — **it cannot become a candidate no matter
+how strongly the text cues it**, so the true current venue is structurally
+unreachable regardless of how the cue-vs-past-cue question is resolved.
+
+**Fix direction — a mechanism, per §1's own instruction, not a bigger
+list.** Two independent, complementary moves:
+
+1. **Downrank or reject a "past editions" framing, so the WHERE tile falls
+   silent rather than naming a former host as the current venue.** This is
+   buildable without growing the gazetteer at all, and it is the piece that
+   actually matters for THIS real page: even with zero new gazetteer
+   entries, correctly recognising Cologne's mention as historical would
+   make `findVenueCity()` return `undefined` (no *other* gazetteer city is
+   cued as current), converting today's confidently wrong tile into a
+   silently absent one — real progress under §1j's own standard ("if the
+   honest answer is print nothing rather than the wrong city, say so — that
+   is a real fix, not a cop-out"), even though it does not make Lanzhou
+   appear. Concretely: extend the proximity check to recognise a
+   historical/past-tense marker near the cue — "previously," "formerly,"
+   "past edition(s)," "used to be held," or (a strong, specific signal
+   grounded in this exact real page's shape) a city immediately followed by
+   a parenthetical year, `City, Country (YYYY)`, especially when several
+   such pairs appear in a comma-separated run — and reject or deprioritise
+   a match carrying one, in favour of an uncued-but-otherwise-absent result
+   over a cued-but-historical one. This is a shape-based rule in the same
+   spirit as `CITY_PROXIMITY_CUE_RE` itself, not a per-page special case,
+   though C should verify it does not over-trigger against a legitimately
+   current venue that happens to also be mentioned with a year nearby (e.g.
+   an event stating its own edition number, "the 2026 edition, held in
+   Austin").
+2. **Gazetteer coverage remains a separate, open-ended limitation** — still
+   true, still not a one-round fix, per B4-02's own note, reconfirmed by A:
+   `CONFERENCE_CITIES` already reaches beyond Western capitals but a fixed
+   ~300-city list will always have a long tail of real venues (Lanzhou, a
+   ~4-million-person Chinese provincial capital, is a real gap, not an edge
+   case). Adding Lanzhou by name would close this one page's specific
+   instance without closing the class — naming it as worth doing alongside
+   item 1, not instead of it, and not sized as this item's job to enumerate
+   further additions.
+
+**Say this plainly, per §1's own instruction:** even with both moves built,
+the honest outcome for this specific real event most likely moves from
+"confidently wrong (Cologne)" to "silently absent" — not to "correctly
+shows Lanzhou" — unless item 2 specifically adds it. That is still real,
+countable progress against the gate (a false statement removed), and it is
+the right thing to ship even though it does not fully close R2's real
+repro.
+
+**Blast radius — event- and job-side both, and the feed's location
+filter.** `extractBodyTextPlace()` is called from
+`extractOpportunityPageDetails()`, which both `enrichEventCandidates()` and
+`enrichJobCandidates()` call (`enrich.ts:113` and `:167`) — so this fix
+reaches a job's LOCATION tile and facet value too, not only an event's
+WHERE tile, unchanged from B4-02's own note. `CONFERENCE_CITIES` is also
+read directly by `web/src/components/opportunities/opportunity-facet-panel.tsx:263`
+to build the location-filter buttons on both feeds — a false-positive city
+match here can seat a wrong filter button, not only a wrong report tile.
+Fixing `findVenueCity()` fixes all of these call sites at once, the correct
+level, same as B4-02 already established.
+
+**Tests at risk — verified directly.** `web/src/lib/opportunities/structured-extract.test.ts:364-420`,
+the `"country must belong to the city"` block: 7 tests. Read each fixture
+directly: `:365` (Cologne/China, cued by "takes place in," no past-tense
+marker — **unaffected**), `:377` (Cologne/Germany, "Venue:" — **unaffected**),
+`:384` (Chicago/IL — **unaffected**), `:392`/`:396` (bare country cases,
+untouched by this fix, different function branch — **unaffected**), `:406`
+(two cities, one cued "takes place in," neither past-tense — **unaffected**),
+`:414` (neither cued — **unaffected**). **None of the seven carries a
+past-edition/parenthetical-year framing — all seven pass unchanged.**
+Confirmed by grep across the block for `previously|formerly|past edition|(20`
+— no hits. **Zero existing coverage of R2's actual residual shape** — a page
+with one gazetteer city cued but explicitly framed as a past edition, and a
+second, true-venue city absent from the gazetteer entirely. C should add
+this directly: a fixture combining a "previously held in `Cologne, Germany
+(2008)`" clause with a "will be held in `Lanzhou`" clause (Lanzhou
+deliberately kept out of the fixture's own mini-gazetteer, mirroring the
+real gap) must return `undefined`, not `Cologne`.
