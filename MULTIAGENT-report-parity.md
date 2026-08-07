@@ -8904,3 +8904,123 @@ this directly: a fixture combining a "previously held in `Cologne, Germany
 (2008)`" clause with a "will be held in `Lanzhou`" clause (Lanzhou
 deliberately kept out of the fixture's own mini-gazetteer, mirroring the
 real gap) must return `undefined`, not `Cologne`.
+
+---
+
+##### B5-06 — R13: event name quality is not closed as a class, 2 of 3 real events, shapes `looksLikeEventTitle` cannot target even in principle. `WRONG DATA`. Do not treat as R1 reopened — R1's own reported shape stays closed.
+
+**Scope check first, per R1's own status.** R1 (a grammatically conjugated
+narrative sentence as the H1) is genuinely closed for its own shape —
+`NARRATIVE_VERB_RE` (`web/src/lib/events/sources/eventweb.ts:251-252`)
+correctly rejects it, confirmed by A on the same real event that originally
+reported R1. R13 is a **different, broader class**: two other real events
+this round have a wrong name via shapes that were never what
+`looksLikeEventTitle`/`isChromeSegment` were built to catch. Three separate,
+independently-confirmed gaps, not one bug:
+
+**Gap 1 — a chrome segment that starts with a recognised generic-title word
+but isn't an exact match for it.** `GENERIC_PAGE_TITLE_RE`
+(`:171-172`) includes `agenda` as one of its alternatives, but the whole
+regex is anchored (`^(?:...)$`) — it requires the **entire** trimmed
+segment to equal one of its listed words exactly. Real event 2's title
+segment reads "Agenda & Information" (per A's direct fetch of the live
+page's own `<title>` tag) — this **starts with** a recognised chrome word
+but has trailing text appended, so the anchored exact-match fails and the
+whole segment is accepted as informative. The list already anticipates some
+compounding (`"meeting summary"` is a literal two-word entry), just not the
+general case of "label word + connector + more words," which is a very
+common real title shape ("Agenda & Speakers," "Schedule and Details,"
+"Overview | ...").
+
+**Gap 2 — even a correctly-rejected chrome segment can leave a site-brand
+segment as the accepted "winner."** If gap 1 is fixed and "Agenda &
+Information" is correctly rejected, the title's other segment, "The
+Engine" (the site's own brand — `engine.xyz`), remains and is **also**
+accepted: it is not on `GENERIC_PAGE_TITLE_RE`'s list, does not match
+`EVENT_INDEX_TITLE_RE`, and does not end in "event(s)" — none of
+`isChromeSegment()`'s three checks (`:215-222`) are built to recognise "this
+is the site's operator's own name," a fundamentally different signal than
+"this is a page-furniture label." **The same shape of check named for
+B5-03/R7's job-board-brand problem would help here too** — comparing a
+short candidate segment against the page's own hostname (or `og:site_name`,
+when present) is a reusable, cross-cutting signal worth building once and
+using in both places, rather than as two separate one-off guards. The real
+name A found ("Tough Tech Talent Fair & Resource Expo") sits in
+`shortDescription`, not the title at all — closing gaps 1 and 2 together is
+what would let `eventNameFrom()`'s existing fallback chain (URL slug, then
+snippet mining, `:309-327`) actually engage and have a chance at finding it;
+**whether the fallback chain actually recovers this specific string is
+unverified** — naming the open question rather than assuming the fallback
+succeeds.
+
+**Gap 3 — the segment-splitter's own separator list misses a plain
+hyphen.** `eventNameFrom()`'s split (`:293-294`) is
+`title.split(/\s+[|·–—]\s+/)` — pipe, middle dot, en dash, em dash. **A plain
+ASCII hyphen (`-`) is not in this character class.** Real event 3's title,
+"Abstract submission deadline extended - SolarPACES," uses a plain hyphen,
+so the split never fires and the whole string stays one segment. Traced
+through `looksLikeEventTitle()` (`:256-263`) as one segment: `NARRATIVE_VERB_RE`
+requires an auxiliary word (`was|were|is|are|has been|...`) directly before
+a participle — "deadline **extended**" has no auxiliary at all (an
+elliptical headline passive, "[the deadline was] extended"), so it does not
+match; `MULTI_SENTENCE_RE` needs terminal punctuation, and there is none;
+the word count (6 tokens) clears `MAX_TITLE_WORDS`. The whole string passes
+and is returned verbatim — confirmed to reproduce A's exact finding by
+tracing the regex by hand, not just citing A's own explanation. **Fixing
+the hyphen gap alone would not change this outcome**: even if the title
+correctly split into `["Abstract submission deadline extended",
+"SolarPACES"]`, neither segment is currently recognised as chrome
+(`"SolarPACES"` is a brand, same shape as gap 2 above) or as a narrative
+sentence (still no auxiliary verb), so the longer segment ("Abstract
+submission deadline extended," 37 characters) still wins over the shorter
+brand segment (10 characters) by length. **Both the splitter gap and a
+headline-shape check are needed together** for this specific repro to
+resolve differently.
+
+**Fix direction, matched to the three gaps above.**
+1. Change `isGenericPageTitle()`'s matching from a whole-segment exact match
+   to a prefix/leading-phrase match for its existing word list (a segment
+   that *starts with* "Agenda"/"Summary"/"Overview" followed by a
+   conjunction or short trailing phrase is still chrome) — bounded, reuses
+   the existing word list, does not need new entries.
+2. Add a site-brand check — compare a short, otherwise-unclassified segment
+   against the page's own hostname (normalised: lower-cased, TLD and
+   separators stripped) and/or `og:site_name` when `extractOpenGraphTags()`
+   provides one; a fuzzy match rejects it as chrome. Build this once, reuse
+   it for B5-03/R7's job-board-brand problem too, rather than duplicating
+   the idea in two files.
+3. Widen `eventNameFrom()`'s split character class to include a plain
+   hyphen — `/\s+[-|·–—]\s+/` — **and** add a bounded headline-shape check
+   alongside `NARRATIVE_VERB_RE`: a short list of common headline
+   past-participles (`extended|postponed|cancelled|canceled|delayed|
+   announced|updated|moved|rescheduled|confirmed`) following a
+   headline-subject noun (`deadline|registration|abstract|submission|call
+   for (?:papers|abstracts)|date`), with no explicit auxiliary verb
+   required — the same bounded, "catch known shapes, not a general parser"
+   philosophy `NARRATIVE_VERB_RE` itself already uses, extended to cover the
+   elliptical-passive headline case it was not built for. **Widening the
+   hyphen split without also adding this check will not change event 3's
+   outcome** — say this explicitly in the commit so the fix isn't landed
+   half-finished believing the split alone closes it.
+
+**Blast radius.** All three fixes live in `web/src/lib/events/sources/eventweb.ts`,
+which already feeds both the report (`event.name`) and the feed cards
+(`web/src/lib/events/card.ts`) and the papers adjacency, per B4-01's own
+note — unchanged scope from that item, no new surface.
+
+**Tests at risk — verified directly.** `web/src/lib/events/sources/eventweb.test.ts`
+(12 tests, confirmed by listing every `it(...)` in the file): the one
+`eventNameFrom` split test (`:60-64`) uses a pipe separator
+(`"Solid-State Battery Summit | Cambridge EnerTech"`) — **unaffected** by
+widening the character class to also include a hyphen, since the pipe still
+matches. No test in the file uses a plain-hyphen title, a "label word +
+trailing text" chrome segment, or a headline elliptical-passive shape —
+confirmed by reading all 12 test names and their fixtures directly, not
+just grepping for keywords. **Zero existing coverage of any of the three
+gaps; nothing breaks, and C is filling entirely new ground.** Add at least
+one case per gap: a hyphen-joined title recovers the same result a
+pipe-joined equivalent would; a "Label & extra words" segment is rejected
+the same as the bare label; a headline elliptical-passive title
+("`X deadline extended - SiteName`") is rejected and the function falls
+through toward the snippet/slug path rather than returning the headline
+verbatim.
