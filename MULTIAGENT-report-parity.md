@@ -8361,3 +8361,109 @@ rebuilt from the scratchpad copy, further modified in place during this
 round) deleted before finishing — confirmed by `git status --short` showing
 a clean tree before the final gate run (see §1 update below for the actual
 command output).
+
+---
+
+### Round 5 — Agent B
+
+**STATUS: IN PROGRESS.** Read §0 through §3 in full, §1b–§1k including **§1l
+Ruling 25 first**, per this round's own instruction — it settles B4-12/Ruling
+24 (no headless browser; the free-text extractors are the main road, JSON-LD
+the minority path) and scopes this round to exactly the items §1's TODO
+ranks. Read §4's Round 4 (manager-as-A, Agent B, Agent C) and both Round 5
+Agent A entries (the died one and the completed one) in full before writing
+anything, per this round's instruction to use A's findings rather than
+re-derive them.
+
+Working the TODO's required ranking, not visual prominence: R11, B4-11's
+`extractWorkMode`, R7, R12, R2, R13, R4. **Verified every finding below
+against the live source directly** — not against round 4's log or A's own
+paraphrase alone — before writing a fix direction, per this loop's own
+recurring lesson that the next role finds something the previous one got
+wrong. Also ran `cd web && npx vitest run` once, cold, before touching
+anything: **83 files / 910 tests, 1 failing (`benchmark.test.ts`, the
+documented live-search flake — real-world data drift, not a regression, per
+§1's own standing ruling)** — matches §1's recorded baseline exactly.
+
+I did not change code. Committing after each item, per §3.
+
+---
+
+##### B5-01 — R11: `extractExpectedSize()` reads a cohort/programme year as a headcount. `WRONG DATA`. Regression this loop introduced (B4-10), rank it first per §1's TODO.
+
+**Cause — confirmed against the live code, `web/src/lib/opportunities/event-details.ts:393-416`.**
+
+```ts
+const EXPECTED_SIZE_LABEL_RE =
+  /\b(?:expected|anticipated)\s+(?:attendance|turnout|audience)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+const EXPECTED_SIZE_COUNT_RE =
+  /\b(\d[\d,]{2,7})\+?\s+(?:expected\s+)?(?:attendees|participants|delegates|registrants)\b/i;
+const EXPECTED_SIZE_HISTORY_RE =
+  /\b(?:past|previous)\s+edition[s]?\s+(?:drew|attracted|welcomed|had)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+```
+
+`extractExpectedSize()` (`:405-416`) tries these three in order and returns on
+the first hit. `LABEL_RE` and `HISTORY_RE` both require an explicit
+attendance-framing verb near the number ("expected/anticipated
+attendance/turnout/audience," "past/previous edition(s)
+drew/attracted/welcomed/had") — real event 2's text has neither, so neither
+fires. **`COUNT_RE` is the one that does, and it is the loosest of the
+three: it accepts ANY number immediately followed by
+"attendees/participants/delegates/registrants," with no requirement that the
+surrounding text actually frames it as a crowd-size statement.** Per A's
+round-5 report, the real page reads (paraphrased shape, not the scraped
+original): a cohort/programme name ending in a year, immediately followed by
+the word "Participants" used as a section heading, immediately followed by a
+run of company names. `COUNT_RE` cannot distinguish "**2025** Participants"
+(a cohort year heading a company list) from "**1,800** attendees" (an actual
+headcount) — both satisfy `\d[\d,]{2,7}\s+participants` identically.
+
+**Fix direction.** Reject a candidate number that reads as a season/cohort
+year rather than a headcount before accepting `COUNT_RE`'s match. The
+codebase already has the exact concept this needs, built for a different
+field this same round: `SEASON_COHORT_LABEL_RE`
+(`web/src/lib/jobs/sources/jobweb.ts:79-80`, B4-03/R7 — see B5-03 below,
+which needs the same idea applied to a different problem). Check whether the
+matched number is immediately preceded by a season word
+(`Spring|Summer|Fall|Autumn|Winter`) or sits inside a `Class of NNNN` /
+`Cohort N` shape; if so, reject the match and let the function continue to
+the next pattern — additive to an existing three-pattern sequence, not a new
+mechanism, and it directly targets the repro ("Spring 2025" is exactly
+`SEASON_COHORT_LABEL_RE`'s own shape).
+
+A second, independent signal worth adding alongside it, since the
+season-word check alone is narrow: `COUNT_RE`'s trigger words can introduce a
+**list** rather than complete a **sentence**. Real event 2's own text is the
+trigger word immediately followed by a run of capitalised company names with
+no connecting verb — a genuine crowd-size sentence almost always has one
+("attendees **are** expected," "**over** 1,800 attendees," "drew **a crowd
+of**"). Requiring a connective near the match, or rejecting when the trigger
+word is immediately followed by a capitalised word with nothing lower-case in
+between, would catch the "heading introducing a list" shape even without a
+season word present. Naming this as a real, complementary option, not
+mandating the exact regex — C should verify the choice against both the real
+repro and the existing fixtures.
+
+**Blast radius — narrow, fully traced.** `extractExpectedSize()` has one
+caller, `extractEventDetails()` (same file, `:432`), which feeds only
+`EventPageDetails.expectedSize` → `RawEventItem.expectedSize` (`enrich.ts`'s
+merge) → `Event.expectedSize` via `scoredEventToEvent()`
+(`events/mapper.ts:139`) → the SCALE tile in
+`web/src/app/events/[id]/page.tsx`. Grepped every non-test consumer of
+`expectedSize` in the tree: the report page, the mapper, `types/index.ts`,
+`enrich.ts`, `event-details.ts` — no feed card, no papers surface reads it. A
+fix here cannot regress anything outside this one tile.
+
+**Tests at risk — verified directly, not assumed from B4-10's own note.**
+`web/src/lib/opportunities/event-details.test.ts:184-217`, the `"expected
+attendance (SCALE tile)"` block: 4 tests (`:185` labelled figure, `:192` bare
+count "1,800 attendees" — comma-formatted, not year-shaped, unaffected by a
+season-word guard either way, `:199` past-edition figure, `:210` pure
+silence). **Read each fixture directly: none uses a number shaped like a
+year or sits near a season word — all four are unaffected by this fix.**
+Grepped the file for `spring|summer|fall|winter|cohort|class of` — no hits
+anywhere. **Zero existing coverage of the actual false-positive shape.** C
+should add the repro directly (paraphrased, not A's exact scraped fragment,
+per this round's own rule on scraped text): a bare cohort-year number
+immediately followed by "Participants" and a capitalised company-name list
+must produce no `expectedSize` at all, not the year.
