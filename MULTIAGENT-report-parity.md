@@ -8581,3 +8581,130 @@ regression test for tier 1; (b) if C also pursues tier 2, a fixture shaped
 as a listing page (multiple job blocks, one stating "on-site" for a
 *different* role) should not have its `workMode` attributed to the job under
 test.
+
+---
+
+##### B5-03 — R7: job subtitle's company slot holds a wrong value, 3 of 3 real jobs. `WRONG DATA`. B4-03's guard is real but too narrow to cover what A actually found.
+
+**Cause — confirmed against the live code.**
+`web/src/lib/jobs/sources/jobweb.ts:154-163`:
+
+```ts
+const company =
+  parts
+    .slice(1)
+    .map(cleanJobSubtitlePart)
+    .find(
+      (p) =>
+        p &&
+        !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d)) &&
+        !SEASON_COHORT_LABEL_RE.test(p),
+    ) || host;
+```
+
+`webResultToRawJobItem()` splits the search-result title on `- – — | ·` and
+picks the first surviving segment that is neither blank, a known job-board
+**domain**, nor a season/cohort label — `SEASON_COHORT_LABEL_RE`
+(`:79-80`) is B4-03's own landed fix, and it works exactly as designed for
+the shape it targets (a bare `Spring 2027`-style segment). **None of this
+round's three real jobs is that shape.** Per A's report: job 1's company
+slot shows `Climatebase` (the job board `climatebase.org`'s own display
+name — not a domain string, so it never matches `KNOWN_JOB_BOARD_DOMAINS`,
+which is a fixed list of eight hostnames, `:17-26`, none of which is
+`climatebase.org`); job 2 shows `ZeroB` (`zerobonline.com`'s own brand,
+same shape); job 3 shows `Cambridge, MA` (a bare location string, not a
+board name at all — a title segment shaped like an address, which matches
+neither the domain denylist nor the season regex). **All three pass the
+existing guard chain untouched and are accepted as `company` outright.**
+This is precisely the failure mode B4-03's own fix direction warned about
+while choosing a narrower implementation than its own stated spirit: B4-03
+said the guard should be "in the same spirit as `event-roster.ts`'s
+`looksLikeOrganisationName`/`looksLikePersonName` (reject an implausible
+candidate rather than trust anything that isn't already on a specific deny
+list)," but what actually landed is two more denylist-shaped checks (a fixed
+domain list, a fixed season-word regex) — precise for their own repro, not
+generalizable to a new job board's brand name or a location string, which is
+exactly what broke on first contact with new real jobs. **Checked whether
+`looksLikeOrganisationName` itself would help: it would not** — read it
+directly (`web/src/lib/opportunities/event-roster.ts:358-384`) and traced
+`"Climatebase"`, `"ZeroB"`, and `"Cambridge, MA"` through it by hand: none
+trips its sponsor-tier-word list, its CTA-phrase list, or its length/URL
+checks, so all three would still pass. It is tuned for rejecting sponsor-wall
+and roster junk, not for this problem — do not reuse it here without
+changing it; a new, purpose-built check is the right size.
+
+**Fix direction — two tiers, and they close different amounts of the
+problem.**
+
+1. **Broaden the rejection guard, same mechanism, two new checks, cheap.**
+   (a) Reject a candidate that is location-shaped — the codebase already
+   built the exact signal needed for a sibling problem this same round:
+   `hasTrailingStateCode()` (`web/src/lib/opportunities/structured-extract.ts:1299-1304`,
+   built for B4-02/R2) recognises a bare `City, ST` shape as a structural
+   locational signal. A comparable check here (a segment ending in `, XX`
+   with an uppercase two-letter code, or matching a gazetteer city) would
+   reject `"Cambridge, MA"` the same way. (b) Reject a candidate that is
+   substantially the page's own hostname restated — compare the candidate
+   segment (lower-cased, spaces stripped) against `host` as a fuzzy
+   substring match: `"climatebase"` is contained in `climatebase.org`;
+   `"zerob"` is contained in `zerobonline.com`. This does not require a
+   growing hardcoded brand list (`KNOWN_JOB_BOARD_DOMAINS`'s own weakness) —
+   it is a structural comparison against data the function already has.
+   **Where this lands:** a rejected candidate falls through to the next
+   segment or to `|| host`, exactly as a rejected season segment already
+   does today. Falling to `host` (e.g. `climatebase.org`) is not the true
+   employer either, but it converts a confident, human-readable **lie**
+   ("Climatebase" reads exactly like a real company) into an honestly
+   domain-shaped string a reader can recognise as "found via this site" —
+   the same kind of improvement B4-02 made for WHERE (wrong-but-confident →
+   honest-but-incomplete).
+2. **The real fix: read the employer from JSON-LD, not the search-result
+   title.** `extractOpportunity()` (`web/src/lib/opportunities/structured-extract.ts:988-1011`)
+   already reads several `JobPosting` fields from a fetched page's own
+   structured data (`validThrough`, `baseSalary`, `employmentType`, added by
+   B4-11 this same file) but **not** `hiringOrganization` — schema.org's
+   standard field for the employer, `{"@type":"Organization","name":"..."}`
+   or, leniently, a bare string. Grepped the file: no read of
+   `node.hiringOrganization` anywhere. Adding it is the same shape of
+   addition B4-11 just made for salary — extend `JsonLdOpportunity`
+   (`:7-32`) with `hiringOrganization?: string`, read it in
+   `extractOpportunity()` the same way `employmentType` is read, wire it
+   into `extractJobDetails()`'s return and then into
+   `enrichJobCandidates`'s merge and `hasExtractedJobSignal`, and have
+   `scoredJobToJob()` prefer it over `jobweb.ts`'s segment-guessing the same
+   way `item.workMode` now wins over `jobWorkMode()` (B4-11's own
+   precedent, `jobs/mapper.ts:157`). **Unverified hit rate** — per §1l
+   Ruling 25, 38.5% of real job pages (5 of 13) carried a `JobPosting`
+   block this round, but nobody has checked how many of those carry
+   `hiringOrganization` specifically (the round-5 salary check found 0 of
+   15 carried `baseSalary` — a different field, no inference either way for
+   this one). Worth building regardless — it is additive, and B4-11's own
+   `baseSalary` work landed on the same "worth doing even if this
+   sample didn't exercise it" basis — but say the hit rate is unmeasured,
+   not assume it is high.
+
+**Blast radius.** Tier 1 is contained to `jobweb.ts`'s own
+`webResultToRawJobItem()` — confirmed (again) that Adzuna/USAJobs read
+`company`/`employer` from each API's own structured field and never go
+through this segment-picking path, so no other source is affected.
+`companyOrLab` is read by the feed's job cards too
+(`web/src/lib/jobs/card.ts`) — not opened in detail this round, but the
+field is shared, so tier 1 also stops a job-board brand or a location string
+from reaching `jobweb`-sourced feed cards, not just the report. Tier 2 is
+larger: it touches the same shared `structured-extract.ts` file B5-05 (R2)
+below also touches — different functions (`extractOpportunity()` here,
+`extractBodyTextPlace()`/`findVenueCity()` there), so no direct collision,
+but C should not expect to be the only item landing in this file this round.
+
+**Tests at risk — verified directly.** `web/src/lib/jobs/sources/jobweb.test.ts:91-112`,
+the `"company derivation"` block: 2 tests (`:95` season-segment-plus-real-company,
+`:104` season-segment-only falls back to host). **Neither uses a job-board
+brand name or a location-shaped segment — both unaffected by tier 1.**
+Grepped the file for `climatebase|zerob|cambridge|, MA|, CA` — no hits
+anywhere; this is genuinely new ground, not a rewrite. C should add the two
+cases tier 1 targets directly (a title segment that's a job board's own
+brand name, not on `KNOWN_JOB_BOARD_DOMAINS`, must not become `company`; a
+`City, ST`-shaped segment must not become `company`) plus, if tier 2 is
+built, a JSON-LD `hiringOrganization` case in `structured-extract.test.ts`
+and `job-details.test.ts` following B4-11's own four/four test split for
+salary as the shape to copy.
