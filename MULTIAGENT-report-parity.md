@@ -7824,3 +7824,396 @@ aggregate counts and short cross-check snippets already quoted):**
 outcomes, not plate elements, so §1d–§1k's exclusion list does not apply to
 it; it is re-listed in full under Job 1 below, which does score against the
 plate.
+
+---
+
+#### JOB 1 — the normal measurement: fixture AND real data
+
+Real-data pass below reuses the SAME live pool build Job 2 already paid for
+(one live search, not two) — `eventPool.items.slice(0, 3)` /
+`jobPool.items.slice(0, 3)`, mapped with `scoredEventToEvent(item,
+locationPreferences)` / `scoredJobToJob(item, locationPreferences)` (the same
+calls `runEventsPipeline`/`runJobsPipeline` make in production, not the
+harness's earlier no-second-argument shorthand), rendered through the real
+`EventReport`/`JobReport` components.
+
+**Fixture pass — 0 differences (32/32 exact), confirmed from rendered
+output, not assumed from the commit log.** Same maximal fixture and method as
+every round (plate values, `nowMs = Date.parse("2026-07-30T12:00:00Z")`,
+1/0.5/0 scoring on the same 32-element inventory). Spot-checked the one thing
+round 4 left open plus several other elements alongside it, reading the
+rendered HTML directly:
+
+- LOCATION sub-line: `Hybrid · US`, not `Hybrid · United States`. **B4-13
+  confirmed landed, from render, not from reading the diff.**
+- Full facts row, all 7 tiles with sub-lines, exact plate text: `Salary $95k
+  – $120k / per year · from posting`; `Type Postdoc / Full-time · 3-yr
+  contract`; `Location Los Altos, CA / Hybrid · US`; `Starts Jan 2027 /
+  flexible`; `Apply by Sep 15 / 47 days left`; `Posted Jul 22 / 8 days ago`;
+  `Visa Sponsors / stated in the posting`.
+- Event chip row: `Industry summit / + career fair / CCF-B / 88% match` —
+  exact.
+- `Skills they ask for` heading with `New` + `Tier 0` badges — exact.
+- `Two deadlines, one event`, `What it costs you` (Tier 0 badge), and the
+  locked block's `The other 31 exhibitors, judged` (34 organisations in the
+  fixture, 3 tagged + 31 untagged, arithmetic checked) all render.
+
+No difference found anywhere spot-checked. **Fixture score: 0%**, down from
+round 4's 3%. Per §1j this stays a regression check, not the gate by itself.
+
+**Real-data pass — 3 real events, 3 real jobs, through the build's own live
+pipeline, Tier 0 (no `feedAiApiKey`, matching every prior round). Reported
+per item, not averaged — per §2's own instruction, an element that works on
+1 of 3 is a finding even where the fixture is perfect.**
+
+##### Real event 1 — Titanium Round Table (tirt7.com) — the SAME event round 4's R1 and R2 both named
+
+- Name: `Meeting Summary-2026 International Round Table on Titanium
+  Production in Molten Salts`. **R1 (stray narrative-sentence title):
+  CLOSED for its own literally-reported shape** — no longer a grammatical
+  sentence about COVID-19; it names the real event. Not spotless: a
+  `Meeting Summary-` lead-in (the page's own section label) survives at the
+  front. See R13 below — event-name quality as a class is not closed, even
+  though this specific failure shape is.
+- WHERE tile: `Cologne, Germany`, confidently, no hedge. **R2 (WHERE
+  contradicts the body): STILL OPEN — confirmed directly against the source
+  text, not inferred from round 4's own description.** The page states, in
+  one sentence with an explicit venue verb, "(TiRT7) will be held in
+  Lanzhou, Gansu Province, China, from August 9…", and separately, also
+  cued, "Titanium Round Table conferences have previously been held in
+  Cologne, Germany (2008), Trondheim-Tromsø, Norway (2010), Cambridge, UK
+  (2012), Shanghai, China (2014)…". B4-02's proximity-cue fix is real and
+  did land (confirmed by reading `structured-extract.ts` directly) — but it
+  only rejects an UNCUED city; Cologne is cued here too (by "previously
+  been held in"), and Lanzhou — the true, current-edition venue — is not in
+  the ~300-city gazetteer at all, so it can never become a candidate no
+  matter how strongly the text cues it. This is the exact residual B4-02
+  itself named as unfixed this round ("Lanzhou… is a real gap, not an edge
+  case") — first-hand confirmation that the predicted residual is real and
+  still produces a confidently wrong WHERE tile on the exact page R2
+  originally reported.
+- `Two deadlines, one event`: does not render (no `deadline`/
+  `registrationDeadline`). Correct.
+- Everything else Tier-0-appropriate and correct: one-sentence description,
+  one activity chip, "Why Peer sent this to you," the locked block's four
+  generic AI-key items. No roster, no costs, no scale, no rank — none were
+  on the source page (a workshop-style summary page, not a conference site
+  with a roster or cost table), and none rendered a false promise about
+  them either.
+
+##### Real event 2 — Tough Tech Talent Fair & Resource Expo (engine.xyz)
+
+- Name: `Agenda & Information | The Engine`. **New finding, R13 below.**
+  Confirmed to be the page's own `<title>` tag verbatim (fetched the page
+  directly: `<title>Agenda &amp; Information | The Engine</title>`, no
+  `og:title` present) — page-chrome-shaped (a section label + the site's
+  own brand, pipe-joined), not the event's name. The real name, `Tough Tech
+  Talent Fair & Resource Expo`, sits one field away in `shortDescription`
+  but never reaches the title. Not a narrative sentence, so B4-01's
+  `looksLikeEventTitle` guard (built to screen a conjugated "to be" +
+  past-participle claim, or excessive length) would not have caught it even
+  in principle — a different shape of bad title than R1's.
+- `expectedSize: 2025`. **New finding, R11 below — rank it above everything
+  else found this round: it is WRONG DATA, not under- or over-extraction.**
+  Traced directly to the source text: "…agenda and key event details.
+  Blueprint Spring 2025 Participants 4DMorphix Adiabatic Materials AMR…" —
+  `Blueprint Spring 2025` is a startup-accelerator cohort/programme name,
+  and `Participants` introduces a list of company names, not a headcount.
+  B4-10's brand-new `extractExpectedSize()` read the year out of a cohort
+  label and presented it as the event's expected attendance. First
+  real-data contact for this extractor; its own guide explicitly asked for
+  this exact check ("test the phrase list against real conference-page
+  wording before trusting it") and it did not survive contact.
+- WHERE tile: does not render (`location: "See event page"`, correctly
+  suppressed — `buildEventFacts` guards this exact placeholder string; see
+  R12 below for why the job-side equivalent has no matching guard).
+- Facts row: `Dates` only. No fee/roster/rank/scale — none on the source
+  page (an accelerator's internal fair agenda page, not a conference site).
+
+##### Real event 3 — SolarPACES abstract-deadline page (solarpaces.org)
+
+- Name: `Abstract submission deadline extended - SolarPACES`. Same class of
+  problem as event 2 (R13) but a different shape again: a news/
+  press-release headline ABOUT the conference, not the conference's own
+  proper name. Precisely: `extended` here is a headline-style elliptical
+  passive with no explicit auxiliary verb ("[the deadline was] extended")
+  — B4-01's guard specifically requires a finite "to be" verb directly
+  before a past participle, so this shape would not trip it even in
+  principle, a further, distinct gap from event 2's chrome-title case.
+- WHERE tile: does not render (`location: "See event page"`, correctly
+  suppressed, same mechanism as event 2).
+- `Two deadlines, one event`: does not render (no deadline fields). Locked
+  block's exhibitor line: does not render (no organisations). Both correct
+  — **R3 and R10 reconfirmed CLOSED** (see the table below; this is the
+  third of three real events in a row with neither falsely rendering).
+- Facts row: `Dates` only. Subtitle: `in person · 4 days`, no location
+  segment (correctly omitted, no dangling separator). This is R9's own
+  shape (a thin report) reproduced exactly as B4-09 said it would be — not
+  a new mechanism, the visible symptom of the title problem plus genuine
+  under-extraction on this specific page.
+
+##### Real job 1 — "Spring Engineering Internship" (climatebase.org)
+
+- Subtitle / company slot: `Climatebase`. **R7 (wrong value in the company
+  slot): STILL OPEN, confirmed on a different concrete shape than the one
+  B4-03 fixed.** The role's own summary text says outright, "Mantel is
+  developing the first molten-salt based carbon capture technology" — the
+  real employer is Mantel. `Climatebase` is the job-search AGGREGATOR the
+  posting was found through (`climatebase.org` is the posting's host).
+  B4-03's landed guard rejects season/cohort labels (`Summer 2027`-shaped
+  text) specifically — a job-board's own brand name is neither blank nor
+  season-shaped, so it passes straight through whatever produced it. Rank
+  this first among this job's findings: it is stated-false data, not a gap.
+- Facts row: one tile, `Location: See posting`. **New finding, R12 below —
+  directly contradicts round 4's own claim that this placeholder is
+  suppressed.** Confirmed by reading both report components side by side:
+  `buildEventFacts` (events) gates its WHERE tile on `location &&
+  location.toLowerCase() !== "see event page"` — an explicit placeholder
+  check, and it works (events 2 and 3 above). `buildJobFacts` (jobs)
+  builds its LOCATION tile from a plain `clean(job.location)` with **no
+  equivalent check** — so whenever `Job.location` resolves to the mapper's
+  own literal fallback string (`"See posting"`, set when nothing else is
+  available and the job is not remote), the tile prints it as if it were a
+  real answer. Round 4's own 3 real jobs evidently never hit this branch;
+  this round's real job 1 does, directly.
+- `keyRequirements`: `["web job listing", "climatebase.org"]` in the raw
+  mapped data, but `Skills they ask for` does not render at all — confirms
+  B-10's report-layer junk guard (`skillComparison`) is still correctly
+  filtering this shape to zero survivors and hiding the section, rather
+  than showing "0 of 2." Good: this protection still holds, rounds later.
+- `To apply, have ready` / `Seen on`: neither renders (`applicationMaterials`
+  empty). **R5 reconfirmed CLOSED** — see the table below.
+
+##### Real job 2 — "Opening For Marketing Intern (Ion Exchange Ltd.)" (zerobonline.com)
+
+- Subtitle / company slot: `ZeroB`. **Second, independent instance of R7's
+  class, same round.** The role title names the real employer outright —
+  `(Ion Exchange Ltd.)` — and `ZeroB` is the job board's own brand
+  (`zerobonline.com`), not the employer.
+- `What the role is`, third bullet, rendered verbatim: **"00 0 Cart #
+  Opening For Marketing Intern Ion Exchange Ltd."** **R4 (site chrome
+  printed as the role description): STILL OPEN — B4-04's landed guard does
+  not cover this shape.** Unmistakably scraped e-commerce widget chrome (a
+  shopping-cart item count) from a company site that also sells product,
+  concatenated with a repeat of the job title. B4-04's guard
+  (`looksLikeScrapedChrome`, `web/src/lib/jobs/summarize.ts`) specifically
+  requires **two or more** colon-terminated `Label:` markers in one
+  sentence (deliberately calibrated against a real, correctly-kept "Role
+  Overview:" sentence so it would not over-trigger) — this junk has no
+  colon-labels at all, so it clears that specific guard and still reaches
+  the reader as if it were prose about the role. B4-04 is real progress
+  against its own named repro; the underlying class (chrome reaching the
+  role summary) is not closed.
+- Facts row: one tile, `Location: See posting`. Same R12 as job 1.
+- `Skills they ask for`: does not render (`["web job listing",
+  "zerobonline.com"]`, same junk shape as job 1, correctly filtered to
+  zero). Same confirmation as job 1.
+
+##### Real job 3 — "Spring Engineering Internship at Mantel Capture" (hiringcafe.com)
+
+The fullest of the three real jobs — the only one with `workMode`,
+`applicationDeadline`, `roleKind`, and `visa` all populated. Also the one
+with the clearest evidence trail, because this exact URL was independently
+scrutinised in Job 2's B4-11 pass before it was known this job would land in
+the top 3.
+
+- Subtitle, rendered exactly: **`Cambridge, MA · Cambridge, Massachusetts,
+  United States · Hybrid`. Third instance of R7's class, and the clearest
+  one: the company slot holds a LOCATION STRING, not any kind of name.**
+  The role title itself says `… at Mantel Capture`, and the summary
+  independently confirms it ("## About Mantel Capture Develops
+  high-temperature molten-salt carbon capture technology…"). `Cambridge,
+  MA` is not a job board this time — it is a duplicate of the location
+  segment that correctly appears immediately afterward in the same
+  subtitle. Three real jobs, three different wrong values in the same
+  slot (two job-board brand names, one bare location string) — a pattern,
+  not a one-off, and none of the three is the season/cohort shape B4-03
+  fixed.
+- Facts row LOCATION detail: `Hybrid · US`. **B4-11's `workMode` free-text
+  path fired on real data — and this is very likely the false positive its
+  own risk note asked A to check for, confirmed two independent ways.**
+  This URL is the exact one scrutinised in Job 2: `extractJobDetails()`
+  returned `workMode: "hybrid"`, but the visible, cleaned article text
+  (`extractPageText` output) contains **zero** occurrences of "hybrid" —
+  only five occurrences of "Onsite," each attached to a *different*
+  company and role (`Vicinity Energy`, `Medtronic`, `Qnity Electronics`,
+  `Alaka'i Technologies`…), because this URL resolves to a job-board
+  LISTING page carrying many postings, not a single one. `extractWorkMode()`
+  (`web/src/lib/opportunities/job-details.ts`) runs on `stripHtml(html)`,
+  not on `extractPageText(html)` — and `stripHtml` does **not** remove
+  navigation/sidebar/other-listing furniture the way `extractPageText`'s
+  own `withoutPageFurniture()` does (confirmed by reading both functions
+  side by side). So the "hybrid" that reached this job's report almost
+  certainly belongs to a *different* listing on the same aggregator page,
+  not to Mantel Capture's own posting — a concrete, reproducible instance
+  of the false-positive risk B4-11 flagged and explicitly did not rule out.
+- Visa tile: `No / stated in the posting`, from `visa.state: "wont-sponsor"`,
+  evidence quote "without visa sponsorship." — populated, plausible, not
+  independently fact-checked further (outside this round's named scope).
+- `Two deadlines`/roster/costs: not applicable (job report has no such
+  sections).
+
+---
+
+##### R1–R10, scored against the CURRENT code — closed / improved-but-not-closed / still open
+
+| # | Round-4 finding | This round's status | Evidence |
+|---|---|---|---|
+| R1 | Event H1 is a stray narrative sentence | **CLOSED** (for its own literally-reported shape) | Real event 1 — the SAME event — now names the conference, not a COVID-19 sentence. See R13: a broader "event name quality" problem persists via other shapes. |
+| R2 | Event WHERE contradicts its own description | **STILL OPEN** | Real event 1 — the SAME event — confirmed directly against source text: Cologne (cued, but a past 2008 host) still beats Lanzhou (the true current venue, cued, but absent from the ~300-city gazetteer and structurally unable to become a candidate). Exactly the residual B4-02 itself predicted. |
+| R3 | "Two deadlines, one event" renders with zero deadlines | **CLOSED** | 0 of 3 real events render the heading; all 3 genuinely lack both deadline fields. |
+| R4 | "What the role is" prints scraped site chrome | **IMPROVED, NOT CLOSED** | Real job 2's third bullet is unfiltered e-commerce chrome ("00 0 Cart #…"). B4-04's guard requires 2+ colon-labels; this junk has none, so it clears the guard uncaught. |
+| R5 | "To apply, have ready" renders with nothing to prepare | **CLOSED** | 0 of 3 real jobs render the heading; all 3 have empty `applicationMaterials`. The side effect B4-07 itself flagged (losing "Seen on" too) is now confirmed on all 3, not hypothetical. |
+| R6 | `SEEN ON` prints the internal slug `jobweb` | **NOT EXERCISED — cannot confirm either way** | "Seen on" never rendered for any of the 3 real jobs (R5's own gate hides it whenever materials are empty, true every time this round), and `adzuna`/`usajobs` — the sources with recognisable brand labels — returned 0 results this run regardless of the label map. B4-05's unit tests pass; real confirmation needs a real job with either materials or a non-`jobweb` source, and this round had neither. |
+| R7 | Job subtitle prints a season label where the employer belongs | **STILL OPEN, and broader than reported** | 3 of 3 real jobs this round have a wrong value in the company slot — none is a season/cohort label (`Summer 2027`-shaped), so none is the shape B4-03's landed guard targets: two are job-board brand names (`Climatebase`, `ZeroB`), one is a bare location string (`Cambridge, MA`). Rank this first among real-data findings — 100% of this round's sample, and it is stated-false company data every time. |
+| R8 | Event title truncated with an ellipsis | **NOT RECONFIRMABLE THIS ROUND** | The original page (euagenda.eu) returned `fetch-null` this run — could not be fetched, so the fix could not be re-checked against it. None of this round's 3 sampled events show ellipsis truncation, but none of them is that page. |
+| R9 | A real event's report renders almost nothing | **Still occurs, exactly as B4-09 predicted — not a separate mechanism** | Real event 3 is thin (1 fact tile, no roster/costs/deadlines) for reasons already tracked elsewhere (title quality → R13; genuine under-extraction → B4-10/B4-12's architecture), not a new cause. |
+| R10 | Locked block promises to judge exhibitors that don't exist | **CLOSED** | 0 of 3 real events render the "exhibitors, judged" line; all 3 genuinely have zero organisations. |
+
+**New findings this round (not in R1–R10):**
+
+- **R11 — `expectedSize` misextraction. WRONG DATA, rank it with R2/R7 at
+  the top.** Real event 2 renders `expectedSize: 2025`, traced to a
+  startup-cohort label ("Blueprint Spring 2025 Participants…") read as a
+  headcount by B4-10's brand-new `extractExpectedSize()`. Worse than
+  silence: it states a specific, wrong, plausible-looking number as fact.
+  First real-data contact for this extractor; it did not survive it.
+- **R12 — job LOCATION tile prints the literal placeholder `See posting`.**
+  `buildEventFacts` (events) explicitly guards against the `"see event
+  page"` placeholder; `buildJobFacts` (jobs) has no equivalent guard on
+  `"see posting"`. 2 of 3 real jobs this round hit this branch and printed
+  it as a real answer. Directly contradicts round 4's own claim ("the
+  literal strings … are correctly not printed as locations") — true for
+  events (verified again this round), not true for jobs (now reproduced
+  twice).
+- **R13 — event name quality is not closed as a class, even though R1's
+  specific reported shape is.** 2 of 3 real events this round have a wrong
+  name via shapes B4-01's guard does not target: event 2's name is the
+  page's own `<title>` tag verbatim, chrome-shaped (a section label + site
+  brand, pipe-joined) — not a narrative sentence, so `looksLikeEventTitle`
+  would not reject it even in principle. Event 3's name is a headline-style
+  elliptical passive ("[deadline was] extended") with no explicit "to be"
+  verb — the specific shape `looksLikeEventTitle` screens for. B4-01 closed
+  the exact bug it targeted; the broader "is this actually the event's
+  name" question is open, 2 of 3 sampled.
+
+**What continues to work, reconfirmed on real data this round (not just
+claimed from round 4's log):** B4-06/B4-07/B4-08's render gates, 3 of 3 real
+events/jobs each; the event WHERE tile's placeholder suppression, 2 of 2
+occasions it could fire; B-10's Skills junk guard, 2 of 2 jobs whose raw
+`keyRequirements` were 100% junk; Tier-0-only rendering with no enrichment
+key, consistently; date/countdown formatting (`Nov 5 / 89 days left`, `Jul
+23 / 15 days ago`), no years, plate wording, on real dates.
+
+---
+
+##### B4-11 specific scrutiny — both named checks, against real data
+
+Ran against all 15 job pages Job 2 successfully fetched (real + shell; a
+`fetch-null` page has no HTML to scrutinise). Numbers computed directly from
+the same fetch Job 2 already paid for, not a second fetch.
+
+**(a) Bare-number `baseSalary.value` with no `unitText` nearby — does it
+happen on real data?** **Inconclusive — the antecedent never occurred.** 5 of
+15 pages carried a `JobPosting` JSON-LD block; **0 of 15 (including all 5)
+carried a `baseSalary` field of ANY shape** — not the bare-value form, not
+the wrapped `QuantitativeValue` form, not present at all. `extractedSalary`
+was `null` for all 15 via the real `extractJobDetails()` call. The specific
+edge case B4-11's guide flagged (a present-but-unit-less `baseSalary`) cannot
+be confirmed either "handled correctly" or "a live bug" from this sample,
+because no real posting here published `baseSalary` via JSON-LD in the first
+place — a more basic absence than the one asked about. Not scored against
+R1–R10 since this is a brand-new additive path with nothing to regress.
+
+**(b) `extractWorkMode`'s hybrid/on-site free-text match — does it produce a
+false positive on real data?** **Yes, confirmed, and worse than "possible."**
+4 of 15 job pages produced a non-`undefined` `workMode`:
+
+| Host | Value | Verified relevance |
+|---|---|---|
+| `careerservices.upenn.edu` | `on-site` | **Confirmed false positive.** Both matches are irrelevant to this job's own arrangement: "communicate lab capabilities with on-site **visitors**" and "Employee amenities such as on-site **fitness**, banking, and cafeteria facilities." Neither is a statement about where this employee works. |
+| `lanl.jobs` | `on-site` | **Genuine true positive**, though the same page also carries one irrelevant "onsite gyms" amenity mention that did not change the outcome. The controlling sentence is explicit: "The work location for this position is onsite and located in Los Alamos, NM." |
+| `hiringcafe.com` | `hybrid` | **Cannot be confirmed relevant, and the mechanism is suspicious.** Zero "hybrid" occurrences in the cleaned, visible article text; the trigger is invisible to the report's own text pipeline (real job 3 above is this same URL, with the full trace). |
+| `ev.careers` | `on-site` | **Cannot be confirmed relevant.** Zero occurrences of any trigger word in the cleaned, visible text at all — same invisible-to-`extractPageText` signature as `hiringcafe.com`. |
+
+**At most 1 of 4 (25%) is a clean, fully-verified true positive; at least 1
+of 4 (25%) is a confirmed false positive; the remaining 2 of 4 (50%) are
+unverifiable from the visible article text and share a specific, identified
+mechanism: `extractWorkMode()` runs on `stripHtml(html)`
+(`web/src/lib/opportunities/job-details.ts`), not on `extractPageText(html)`.
+`stripHtml` only removes `<script>`/`<style>` tags and markup; it does not
+remove navigation, footer, sidebar, or other-listing furniture the way
+`extractPageText`'s own `withoutPageFurniture()` does (confirmed by reading
+both functions). So `extractWorkMode`'s false-positive surface is broader
+than "an unrelated sentence elsewhere in the article" (the shape B4-11's own
+risk note named) — it also reaches site chrome and, on an aggregator/listing
+page, other jobs' own text entirely. B4-11 never claimed zero false-positive
+risk, only that the signal was previously unreachable for `jobweb`-sourced
+jobs; this confirms the risk is real, on real data, via two different
+concrete mechanisms (irrelevant same-page prose; furniture/other-listing
+contamination via the `stripHtml`-vs-`extractPageText` gap).**
+
+---
+
+##### Exclusions — re-listed by name, as every round must
+
+- **§1d items 1–5** (job locked-block promises "How competitive this
+  actually is" and "The role in three clean sentences" stay out; the two
+  quoted-specifics job sections, the event description paragraph, and the
+  "Interested" button stay in as deliberate extras) — unchanged, still
+  settled, still excluded from the denominator. Not re-examined this round;
+  nothing touched them.
+- **Exclusion 7** — `REGISTER BY` sub-line, permanently empty. Unchanged.
+- **Exclusion 8, the six data-model gaps, by letter:**
+  - **(a)** `Hybrid · US` sub-line — **CLOSED** (B2-06's `workMode`), not an
+    active exclusion. Listed only so its absence from the active list is a
+    decision, not an omission.
+  - **(b)** superseded by **(b')**: the `(3 days on-site)` day-count
+    parenthetical only — still excluded. The mode word itself is closed
+    (same as (a)).
+  - **(c)** `ELIGIBILITY` row — excluded.
+  - **(d)** `TEAM` row — excluded.
+  - **(e)** `· reposted from employer site` — excluded.
+  - **(f)** `streamed keynotes` — excluded.
+  - **(g)** venue name — excluded.
+  - **(h)** `plus four nights` — excluded.
+- **(j)** `Summit` → `Industry summit` — **WITHDRAWN** (§1g Ruling 19), in
+  scope, closed per round 4. Not independently re-exercised this round —
+  none of the 3 sampled real events happened to be `type: "summit"` (one
+  workshop, two unclassified/expo-shaped) — but the label-map mechanism
+  itself is confirmed still in place: real event 1 correctly renders
+  `Workshop`, matching `EVENT_TYPE_LABELS` rather than a mechanical
+  title-case of the raw enum.
+- **(k), (l)** — the two shortened "Why Peer sent this to you" closing
+  clauses (job: no region/weekly-count; event: no pool-comparison) —
+  permanently excluded. Reconfirmed on real data this round: e.g. real job
+  1's clause reads "Matches your molten salt focus and fits a PhD Year 3
+  profile" — topics + career level, no region, no count, no comparison,
+  consistent with the permanently-shortened form.
+- **(m)** — happenings footnote naming every highlighted chip in full
+  rather than the plate's two-item shorthand — excluded. Not exercised this
+  round (none of the 3 real events had multiple highlighted activity chips
+  to test it against); render-logic exclusion, not expected to be
+  data-sensitive.
+- **(n)** — `rank` (CCF-B-style classification) — excluded; genuinely
+  inapplicable outside the curated CS-conference dataset (`ccfddl`).
+  Reconfirmed by this round's own sample: 0 of 3 real events carry `rank`,
+  and none is a computer-science conference, consistent with B4-10's own
+  finding.
+
+---
+
+##### GATE (0%)
+
+**NOT MET.** Fixture: 0% (met on its own). Real data: not met — R2, R4, R7
+remain open, R9 remains present as a symptom (not a separate mechanism), plus
+three new findings (R11, R12, R13), one of them (R11) a fresh WRONG DATA case
+on a brand-new extractor's first real-data contact. Per §1j Ruling 23 the
+gate requires **both** halves at zero; it is not close on the real-data half
+regardless of the fixture reading zero.
+
+**STATUS: COMPLETE.** Throwaway harness (`web/src/zz-round5-measurement.test.ts`,
+rebuilt from the scratchpad copy, further modified in place during this
+round) deleted before finishing — confirmed by `git status --short` showing
+a clean tree before the final gate run (see §1 update below for the actual
+command output).
