@@ -9232,3 +9232,68 @@ as a ninth thing to build.
   analysis: A confirmed this again in this round's Job 2 (both keys
   present, 0 results at 150/500/1000). `POLICY — manager decides`, not a
   plate difference, not B's to size a fix for.
+
+---
+
+#### Summary — 8 items (7 ranked fixes + 1 process item), all 7 fixes `WRONG DATA`
+
+| # | Finding | Class | File(s) |
+|---|---|---|---|
+| B5-01 | R11 — `extractExpectedSize` reads a cohort year as a headcount | `WRONG DATA` | `event-details.ts` |
+| B5-02 | B4-11's `extractWorkMode` false positive | `WRONG DATA` | `job-details.ts` (shared `visibleText`) |
+| B5-03 | R7 — job subtitle's company slot, 3 of 3 | `WRONG DATA` | `jobweb.ts`; optionally `structured-extract.ts`, `job-details.ts`, `enrich.ts`, `jobs/mapper.ts` |
+| B5-04 | R12 — job LOCATION tile leaks `"See posting"` | `WRONG DATA` | `app/jobs/[id]/page.tsx` |
+| B5-05 | R2 — event WHERE names a past host | `WRONG DATA` | `structured-extract.ts` |
+| B5-06 | R13 — event name quality as a class | `WRONG DATA` | `events/sources/eventweb.ts` |
+| B5-07 | R4 — non-colon scraped chrome | `WRONG DATA` | `jobs/summarize.ts`; optionally `jobs/mapper.ts` |
+| B5-08 | Shared regression pattern | not a plate difference — testing discipline | none (applies to B5-01/B5-02's own new tests) |
+
+**Every one of the seven ranked items is `WRONG DATA`, not `MISSING` or
+`WRONG SHAPE` — worth stating plainly, since it matches §1's own framing of
+why this round's ranking runs the way it does** ("a wrong field is a lie; a
+missing field is only a gap"). Two are regressions this loop itself caused
+(B5-01, B5-02); the other five are pre-existing defects A found broader or
+differently-shaped than round 4 recorded (B5-03/R7 wider than reported,
+B5-04/R12 and B5-06/R13 new findings, B5-05/R2 and B5-07/R4 the exact
+residuals their own round-4 fixes predicted would remain).
+
+**Work order — all seven are file-independent; the required order is
+priority (§1's TODO), not a dependency chain.** Each touches a different
+primary file (`event-details.ts`, `job-details.ts`, `jobweb.ts`,
+`app/jobs/[id]/page.tsx`, `structured-extract.ts`, `eventweb.ts`,
+`jobs/summarize.ts`), so C can work top to bottom without any item blocking
+another. Two things worth knowing before starting, not blockers:
+
+- **B5-03 and B5-05 both touch `structured-extract.ts`, different
+  functions** (`extractOpportunity()` for B5-03's optional
+  `hiringOrganization` piece; `extractBodyTextPlace()`/`findVenueCity()`
+  for B5-05) — no collision, land in either order, gate between them as
+  normal.
+- **B5-03 and B5-06 (its gap 2) want the same mechanism**: comparing a
+  short candidate string against the page's own hostname/`og:site_name` to
+  recognise "this is the site's own brand, not a real name" — one for the
+  job company slot, one for an event-title segment. Named explicitly in
+  both items so C builds it once (land B5-03 first, per rank; have B5-06
+  reuse rather than reinvent it) instead of duplicating the idea in two
+  files.
+- **B5-01 reuses an existing concept, not a not-yet-built one.**
+  `SEASON_COHORT_LABEL_RE` (`jobweb.ts:79-80`) already exists from B4-03 —
+  B5-01 borrows its shape for a new field; it does not depend on B5-03
+  landing first.
+
+**A pattern worth the manager's attention, not new to this round but sharper
+now.** Five of these seven items (B5-01, B5-02, B5-04, B5-05, B5-07 in
+part) share a root shape: a signal is trusted because a pattern matched
+*somewhere* in the available text, with no check that the match is actually
+*about* the specific subject (this job, this event, this venue, this
+person) rather than something else on the same page or in the same
+sentence. B5-08 names this precisely for the two brand-new extractors;
+B5-04's placeholder-as-value and B5-05's past-edition-vs-current-venue
+confusion are the same shape one level up (trusting a value's *presence*
+over its *relevance*). Not proposing a unifying refactor — each item's fix
+direction is scoped to its own file, per this round's own instruction not
+to reach beyond the surface under review — but naming the recurring shape
+once, in one place, in case it changes how a future extractor gets
+designed from the start rather than patched after a real page breaks it.
+
+**STATUS: COMPLETE.**
