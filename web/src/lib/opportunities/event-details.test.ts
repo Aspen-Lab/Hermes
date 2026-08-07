@@ -214,5 +214,25 @@ describe("extractEventDetails", () => {
         ).expectedSize,
       ).toBeUndefined();
     });
+
+    // B5-01 (round 5). Adversarial-proximity cases, per B5-08: the trigger
+    // pattern is present, but attached to a cohort/programme year heading a
+    // company list, not a crowd-size statement. Paraphrased shape, not the
+    // real scraped page. Both must stay silent, not print the year.
+    it("stays absent when a season-cohort year heads a participant list, not a headcount", () => {
+      expect(
+        extractEventDetails(
+          "<p>Blueprint Fall 2025 Participants Acme Robotics Nova Materials Helix Bio.</p>",
+        ).expectedSize,
+      ).toBeUndefined();
+    });
+
+    it("stays absent when a bare year introduces a capitalised list with no season word", () => {
+      expect(
+        extractEventDetails(
+          "<p>This year's 2025 Participants Acme Robotics Nova Materials Helix Bio.</p>",
+        ).expectedSize,
+      ).toBeUndefined();
+    });
   });
 });

@@ -397,6 +397,44 @@ const EXPECTED_SIZE_COUNT_RE =
 const EXPECTED_SIZE_HISTORY_RE =
   /\b(?:past|previous)\s+edition[s]?\s+(?:drew|attracted|welcomed|had)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
 
+/**
+ * B5-01 (round 5). `EXPECTED_SIZE_COUNT_RE` alone cannot tell a real
+ * headcount ("2,400 attendees") from a cohort/programme year that happens
+ * to sit next to the same trigger word ("...Spring 2025 Participants
+ * Acme Robotics...", a section heading introducing a company list, not a
+ * crowd-size sentence). Two independent, additive checks, applied only to
+ * this one pattern's match — reject and let the loop fall through to the
+ * next pattern rather than accept a plausible-looking wrong number:
+ *
+ * 1. The matched number is immediately preceded by a season/cohort word
+ *    ("Spring 2025", "Class of 2025", "Cohort 12 2025") — reuses the
+ *    concept `SEASON_COHORT_LABEL_RE` (`jobs/sources/jobweb.ts`) already
+ *    established for the same shape of false signal in a different field.
+ * 2. The trigger word is immediately followed by another capitalised (or
+ *    digit-led) token with nothing lower-case or sentence-ending in
+ *    between — a genuine crowd-size sentence almost always continues in
+ *    lower case ("attendees are expected", "delegates from 40
+ *    countries") or ends there; a list heading continues straight into
+ *    the next capitalised entry.
+ */
+const SEASON_COHORT_BEFORE_RE =
+  /\b(?:spring|summer|fall|autumn|winter)\s+$|\bclass\s+of\s+$|\bcohort\s+(?:\d+\s+)?$/i;
+const SENTENCE_CONTINUES_AFTER_RE = /^(?:\s*$|\s*[a-z]|\s*[.,;:!?])/;
+
+function looksLikeCohortOrListHeading(
+  text: string,
+  match: RegExpMatchArray,
+): boolean {
+  const index = match.index;
+  if (index === undefined) return false;
+
+  const before = text.slice(Math.max(0, index - 20), index);
+  if (SEASON_COHORT_BEFORE_RE.test(before)) return true;
+
+  const after = text.slice(index + match[0].length, index + match[0].length + 30);
+  return !SENTENCE_CONTINUES_AFTER_RE.test(after);
+}
+
 function parseAttendanceCount(token: string): number | undefined {
   const value = Number(token.replace(/,/g, ""));
   return Number.isFinite(value) && value > 0 ? value : undefined;
@@ -408,8 +446,16 @@ function extractExpectedSize(text: string): number | undefined {
     EXPECTED_SIZE_COUNT_RE,
     EXPECTED_SIZE_HISTORY_RE,
   ]) {
-    const token = text.match(pattern)?.[1];
-    const size = token ? parseAttendanceCount(token) : undefined;
+    const match = text.match(pattern);
+    const token = match?.[1];
+    if (!token) continue;
+    if (
+      pattern === EXPECTED_SIZE_COUNT_RE &&
+      looksLikeCohortOrListHeading(text, match)
+    ) {
+      continue;
+    }
+    const size = parseAttendanceCount(token);
     if (size) return size;
   }
   return undefined;

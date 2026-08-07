@@ -9369,3 +9369,81 @@ once, in one place, in case it changes how a future extractor gets
 designed from the start rather than patched after a real page breaks it.
 
 **STATUS: COMPLETE.**
+
+---
+
+### Round 5 — Agent C
+
+**STATUS: IN PROGRESS.** Read §0 through §3, §1b–§1l (every standing ruling,
+**§1l Ruling 25 first** per instruction), §2's Agent C section, and §4's full
+"Round 5 — Agent A" and "Round 5 — Agent B" entries before writing any code.
+Claimed the turn lock (`8947a3d`). Confirmed the baseline gate cold, before
+touching anything: 83 files, 1 failing (`benchmark.test.ts`, the documented
+live-search flake — city-coverage ratio 0.44–0.47 across two runs, both below
+its 0.5 threshold; matches §1's own standing ruling, real-world data drift,
+not a regression), 909 of 910 passing, typecheck clean, exactly 1 pre-existing
+lint error (`quiz.tsx:46`). Matches §1's recorded baseline exactly. Working
+B5-01 .. B5-07 in the numbered order per §1's TODO; B5-08 shapes the new
+tests rather than being its own item, as instructed. Committing per item.
+
+---
+
+##### B5-01 — `extractExpectedSize()` reads a cohort year as a headcount. LANDED.
+
+**Change — `web/src/lib/opportunities/event-details.ts`.** Added
+`looksLikeCohortOrListHeading()`, applied only to `EXPECTED_SIZE_COUNT_RE`'s
+match inside `extractExpectedSize()`'s existing three-pattern loop (a
+`continue` on rejection, same shape the loop already had for a falsy parse —
+no new control flow). Two independent checks, both from B5-03's fix
+direction, neither mandated verbatim:
+
+1. **Season/cohort word immediately before the matched number**
+   (`SEASON_COHORT_BEFORE_RE`) — `Spring 2025`, `Class of 2025`,
+   `Cohort 12 2025` all reject. This is the primary mechanism for B's own
+   repro shape (`"...Spring 2025 Participants..."`) and fires on it alone.
+2. **The trigger word immediately followed by another capitalised or
+   digit-led token with nothing lower-case or sentence-ending in between**
+   (`SENTENCE_CONTINUES_AFTER_RE`, inverted) — catches the complementary
+   "bare year heading a list, no season word present" shape B named as a
+   second, independent signal. Checked against a genuine elaboration clause
+   (`", including students and faculty"`) and a genuine new sentence
+   (`". Register now."`) by hand — both continue past a comma or period, so
+   neither is rejected; only an *immediate* capitalised/digit token with no
+   punctuation or lower-case word in between trips it.
+
+Did not build B5-01's own alternative framing of check 2 (a stricter "requires
+an explicit connective verb" version) — the inverted-continuation shape above
+is simpler, covers the same real repro, and is easier to verify against the
+existing fixtures by hand.
+
+**Tests.** Added two adversarial-proximity cases to
+`event-details.test.ts`'s `"expected attendance (SCALE tile)"` block, per
+B5-08 — paraphrased shapes, not A's scraped original: a season-word-plus-year
+heading a company list, and a bare year (no season word) heading a company
+list. Both assert `expectedSize` stays `undefined`. Confirmed all 4 pre-existing
+tests in the block are unaffected by reading each fixture against both new
+checks by hand before running anything, matching B's own verification:
+`:185` (LABEL_RE branch, untouched by this change), `:192` ("Over 1,800
+attendees are expected this year" — before-text "Over " has no season/cohort
+word, after-text " are expected..." starts lower-case, so neither check
+fires), `:199` (HISTORY_RE branch, untouched), `:210` (no digit at all).
+
+**B5-08 in practice.** This item is B5-08's own worked example: the existing
+suite had three positive shapes and one silence shape, nothing adversarial.
+The two new tests are exactly the missing third kind — trigger pattern
+present, context not about a headcount — and both would have caught the
+original regression before it shipped.
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 912 tests, 911 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged), typecheck clean, exactly 1 pre-existing lint error (`quiz.tsx:46`).
+Net +2 tests from baseline (910 → 912), zero deleted, zero rewritten — this
+item only added coverage, it did not need to change any existing assertion's
+expected value.
+
+**Blast radius — confirmed narrow, as B predicted.** `extractExpectedSize()`
+has one caller in the file; grepped the tree for `expectedSize` again after
+the change — same four consumers B already named (report page, mapper,
+`types/index.ts`, `enrich.ts`), no new one introduced.
+
+Commit: (this item, following).
