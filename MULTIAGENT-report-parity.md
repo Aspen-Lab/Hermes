@@ -8467,3 +8467,117 @@ should add the repro directly (paraphrased, not A's exact scraped fragment,
 per this round's own rule on scraped text): a bare cohort-year number
 immediately followed by "Participants" and a capitalised company-name list
 must produce no `expectedSize` at all, not the year.
+
+---
+
+##### B5-02 — B4-11's `extractWorkMode()` false positive, confirmed by A on real pages, not hypothetical. `WRONG DATA`. Regression this loop introduced, rank it second per §1's TODO.
+
+**Cause — confirmed against the live code.**
+`web/src/lib/opportunities/job-details.ts:96-103`:
+
+```ts
+const WORK_MODE_HYBRID_RE = /\bhybrid\b/i;
+const WORK_MODE_ON_SITE_RE = /\bon[\s-]?site\b|\bin[\s-]?person\b/i;
+
+function extractWorkMode(text: string): Job["workMode"] {
+  if (WORK_MODE_HYBRID_RE.test(text)) return "hybrid";
+  if (WORK_MODE_ON_SITE_RE.test(text)) return "on-site";
+  return undefined;
+}
+```
+
+Bare keyword match, no proximity requirement at all — it returns "hybrid" or
+"on-site" the moment either word appears **anywhere** in the input, with no
+check that the sentence carrying it is actually a statement about where
+*this* job's employee works. `extractJobDetails()` (`:309-341`) computes that
+input as `const visibleText = stripHtml(html)` (`:313`), then calls
+`extractWorkMode(visibleText)` (`:341`). `stripHtml()`
+(`web/src/lib/opportunities/shared.ts:68-85`) only removes `<script>`/
+`<style>` tags and markup — **it does not remove navigation, footer,
+sidebar, or other-listing content**, unlike `extractPageText()`
+(`web/src/lib/opportunities/page-text.ts:346-355`), whose own
+`withoutPageFurniture()` (`:102-122`) strips exactly that (`<nav>`,
+`<header>`, `<footer>`, `<aside>`, and any `<div>`/`<section>` whose role or
+class/id semantics read as furniture) before computing visible text.
+
+A confirmed this on real data two independent ways on the same URL
+(`hiringcafe.com`, a job-listing aggregator page): **zero** occurrences of
+"hybrid" in the page's own cleaned, visible article text
+(`extractPageText`'s output), yet `extractWorkMode` returned `"hybrid"` —
+meaning the match came from text `extractPageText` would have discarded as
+furniture or another listing's own content, not from anything about this
+job. A's broader 15-page scrutiny found 4 of 15 pages produced a non-`undefined`
+`workMode`; **at most 1 of 4 a clean true positive, at least 1 of 4 a
+confirmed false positive** (`careerservices.upenn.edu` — matched "on-site
+**visitors**" and "on-site **fitness**," neither a statement about this
+job's arrangement — the exact irrelevant-same-page-prose shape B4-11's own
+risk note named), **and 2 of 4 unverifiable, sharing the `stripHtml`-vs-
+`extractPageText` mechanism above** (`hiringcafe.com`, `ev.careers` — zero
+trigger-word occurrences in the visible article text at all).
+
+**Fix direction — two tiers, do both.**
+
+1. **Switch `extractJobDetails()`'s shared `visibleText` from `stripHtml(html)`
+   to `extractPageText(html) ?? ""`.** `extractPageText` returns `string |
+   null` (null for a JS-shell-shaped short page), so the call site needs an
+   explicit fallback — `stripHtml(html)` is the reasonable one, since a
+   `null` from `extractPageText` means no usable text either way and today's
+   behaviour on that page is already "extract nothing." This removes real
+   nav/header/footer/aside furniture before any of `job-details.ts`'s
+   regexes run, which directly closes the `careerservices.upenn.edu`
+   false positive (the "amenities" mention reads exactly like footer/perks
+   copy) with high confidence.
+2. **This alone will likely not fully close the `hiringcafe.com`/`ev.careers`
+   shape.** A's own read is that this URL is itself a multi-posting listing
+   page, not a single job's permalink — other jobs' text sitting in the
+   page's main content column is not "furniture" by `isPageFurniture()`'s
+   definition (nav/header/footer/aside semantics), so
+   `withoutPageFurniture()` would not remove it. A complementary, more
+   speculative direction worth C investigating rather than committing to
+   blind: reuse `isListingPage()` (`web/src/lib/jobs/sources/jobweb.ts:93-107`,
+   already built and already proven for exactly this "is this a listing, not
+   a posting" question during ingestion) as a pre-check before trusting any
+   free-text extraction from a fetched enrichment page — not just from a
+   search result's title. This is **not** confirmed to be the actual shape of
+   the `hiringcafe.com` page (that would need fetching it, which is outside
+   B's mandate) — flagging it as the next thing to check if tier 1 alone
+   doesn't close both remaining cases, not asserting it as a certain fix.
+
+**Blast radius — wider than `workMode` alone if C takes tier 1's route, and
+this must be said plainly.** `visibleText` is shared by every extractor in
+`extractJobDetails()`: `applicationDeadline`, `startDate`,
+`startDateFlexible`, `contractLength`, `applicationMaterials`, and
+`workMode` all read from the same variable (`:313-341`). Switching its
+source is very likely a net improvement for all six — furniture can only
+ever be noise, never genuine posting content, so removing it cannot newly
+cause a true signal to be missed — but it changes the exact text every one
+of those regexes sees, so **every existing test in this file needs
+re-verification against the new text shape, not just the three `workMode`
+tests.** Checked this directly rather than assuming: `MAX_PAGE_TEXT_CHARS`
+is 40,000 (`page-text.ts:4`), generous enough that truncation is unlikely to
+newly hide a signal that unlimited `stripHtml` output would have reached.
+Confirmed by reading `job-details.ts`'s consumers
+(`web/src/app/jobs/[id]/page.tsx`) that all six fields are report-scoped —
+none reaches a feed card or facet the way `location`/`company` do — so the
+*visible* blast radius of a behaviour change stays inside the job report,
+even though the *code* blast radius (which tests must be re-checked) is the
+whole file.
+
+**Tests at risk — verified directly.** `web/src/lib/opportunities/job-details.test.ts:163-186`,
+the three `workMode` tests (`:163` hybrid, `:170` on-site/in-person, `:179`
+silence on "fully remote"): **all three are single-sentence `<p>` fixtures
+with no `<nav>/<header>/<footer>/<aside>` markup anywhere in them** —
+confirmed by grep across the whole file for those four tag names: zero hits.
+`withoutPageFurniture()` is a no-op on every one of them, so **all three
+pass unchanged under tier 1's switch.** The other 13 tests in the file were
+also checked for the same tags — none present, so the swap is low-risk
+against the file's entire existing suite, not just the `workMode` block.
+**Zero existing coverage of the actual false-positive shape** (grepped for
+`nav|header|footer|aside|amenities|other listing` — no hits). C should add
+at least two new cases: (a) a page whose visible article text says nothing
+about work arrangement but whose (fixture) `<footer>` mentions "on-site
+parking" or similar must produce no `workMode` — this is the direct
+regression test for tier 1; (b) if C also pursues tier 2, a fixture shaped
+as a listing page (multiple job blocks, one stating "on-site" for a
+*different* role) should not have its `workMode` attributed to the job under
+test.
