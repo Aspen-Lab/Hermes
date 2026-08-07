@@ -29,6 +29,24 @@ before you stop, not after you finish.
 
 ---
 
+## §0e. IF YOU ARE NOT A CLAUDE CODE SESSION — START AT `HANDOFF-ABC.md`
+
+ChatGPT, Codex, Cursor, or any other agent: **read `HANDOFF-ABC.md` at the repo
+root before you read any further here.** It is short. It covers setup, the
+reading order into this file, how to run the A/B/C roles when your tool has no
+subagent mechanism, the security floor, and — most importantly — **how to stop
+so the next agent can pick up.**
+
+Why this exists: the account's monthly spend limit stops the Claude session
+outright, and the loop should keep running on whatever agent still has budget.
+`HANDOFF-ABC.md` is the entry door for every non-Claude writer. It restates
+none of the rules below, so there is only ever one copy of each rule.
+
+**Everything in this file applies to you unchanged.** Being a different agent
+changes nothing about the roles, the rulings, the lock, or the gate.
+
+---
+
 ## §0b. MANAGER'S RESUME PLAYBOOK — for a cold session with no memory
 
 **If you are a scheduled or fresh session picking this up with no conversation
@@ -107,20 +125,32 @@ then re-runs A's job independently before anything is called done.
 
 ---
 
-## §0d. THE TURN LOCK — two writers, one branch
+## §0d. THE TURN LOCK — three writers, one branch
 
 **Read this before §0b or §0c.**
 
-There are exactly **two** writers on `feature/summary-report-revamp`:
+There are exactly **three** writers on `feature/summary-report-revamp`:
 
-1. **The user's own session**, on their laptop. It holds the API keys, so it is
-   the only one that can do Agent A's real-data pass. The user drives it from
-   the laptop, their phone, or another computer through **Claude Code Remote
+1. **The user's own Claude Code session**, on their laptop. It holds the API
+   keys, so it can do Agent A's real-data pass. The user drives it from the
+   laptop, their phone, or another computer through **Claude Code Remote
    Control** — but those are all *windows into the same session*, not separate
    workers. **Remote Control adds no writer**, which is why there is no
    per-machine identifier here.
-2. **The hourly cloud routine** (§0c), identifier `cloud-hourly`. It exists for
+2. **A non-Claude agent on the same laptop** — ChatGPT, Codex, Cursor —
+   identifier `chatgpt-local`. Added 2026-08-07 because the account's monthly
+   spend limit stops the Claude session outright, and the loop should keep
+   running on whatever still has budget. **Being on the laptop, it has the
+   same credentials, so it can do everything the Claude session can**,
+   including A's real-data pass. Its entry door is `HANDOFF-ABC.md` (§0e).
+3. **The hourly cloud routine** (§0c), identifier `cloud-hourly`. It exists for
    the hours the laptop is asleep or closed.
+
+**The user is the router between 1 and 2.** No agent here can launch another.
+An agent that runs out of budget writes `STOPPED BECAUSE: out of budget` into
+§1, releases the lock, and stops; the user pastes the kickoff prompt
+(`HANDOFF-ABC.md` §10) into whichever agent still has budget. The switch is
+manual by design; everything either side of it is automatic.
 
 Without coordination the cloud run pulls a snapshot mid-round, works from it,
 and produces a history the laptop cannot merge — and §1, the one thing that
@@ -160,10 +190,11 @@ die mid-task without releasing, the 2-hour staleness rule frees it for you.
 
 ### Identifiers
 
-Two, because there are two writers:
+Three, because there are three writers:
 
-- The user's session: `LAPTOP-3CL10CG5` — whichever device they happen to be
-  looking at it from
+- The user's Claude Code session: `LAPTOP-3CL10CG5` — whichever device they
+  happen to be looking at it from
+- A non-Claude agent on the same laptop: `chatgpt-local`
 - The cloud routine: `cloud-hourly`
 
 ### Why a lock and not "just merge it later"
@@ -239,12 +270,23 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-07T00:26:08Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-ROUND:            4
+STOPPED BECAUSE:  out of budget @ 2026-08-07T00:26Z — round-5 Agent A died
+                  partway through its measurement on the account's monthly
+                  spend limit. **Round 5 is UNSTARTED for logging purposes**
+                  — A committed only its lock claim, no findings. Nothing is
+                  lost and nothing is half-recorded; the next A starts the
+                  round clean. See §4 "Round 5 — Agent A (died)" for the one
+                  artefact worth knowing about.
+                  (Set this every time you stop. Three values: `finished the
+                  turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
+                  tells the next agent whether to continue this turn or
+                  start the next one. See HANDOFF-ABC.md §9.)
+ROUND:            4  (round 5 opens the moment an A claims it)
 WHOSE TURN:       A  (round-4 implementation COMPLETE — all 13 guide items
                   resolved: B4-01..B4-08 landed in full, B4-09 skipped
                   (synthesis, no code of its own), B4-10 and B4-11 each
@@ -7586,3 +7628,59 @@ per item, gate re-run after each.
   0 of 32 elements different, if nothing else regressed. It does not touch
   any real-data finding (R1–R10): B4-13 was always the fixture-only item,
   independent of the extraction-quality work the rest of this round did.
+
+---
+
+### Round 5 — Agent A (DIED — no findings recorded)
+
+**Status: `PARTIAL`, and deliberately recorded as producing NOTHING.** Round 5's
+Agent A was spawned on 2026-08-07 with the full two-job brief (the normal
+fixture + real-data pass, and §1k Ruling 24's JavaScript-shell-rate
+measurement). It claimed the turn lock (`30a1b4e`), built its measurement
+harness, and was reading rendered output for the real items when it was killed
+by the account's **monthly spend limit**.
+
+**It committed no findings.** Round 5 is therefore unstarted, not half-started —
+the next A begins clean and should not try to recover anything from here. That
+is exactly the outcome the write-as-you-go rule is designed to produce when a
+turn dies before its first item: nothing lost, nothing half-recorded, nothing
+for the next agent to disentangle.
+
+**The manager's clean-up, done directly (2026-08-07T19:30Z):**
+
+1. **Verified round 4's gate independently** before touching anything, rather
+   than trusting Agent C's report: **83 files / 910 tests passing.** C's figure
+   was accurate.
+2. **Deleted a stray branch.** Round 4's C was silently handed a branch named
+   `membership-api-connection`, created from HEAD by the environment at session
+   start, and its first commit landed there. C caught it before pushing and
+   fast-forwarded the correct branch onto it, so nothing was lost. The stray
+   branch was fully contained in `feature/summary-report-revamp` and has been
+   deleted. **A `git branch --show-current` check is now the first instruction
+   in every brief and in `HANDOFF-ABC.md` §2** — this environment can hand an
+   agent the wrong branch without saying so, and a less careful agent would
+   have pushed real work somewhere nobody is watching.
+3. **Moved Agent A's abandoned harness out of the repo.** A left a 612-line
+   `web/src/zz-round5-measurement.test.ts` uncommitted when it died. It was
+   named `.test.ts`, so a gate run would have picked it up, changed the test
+   counts, and made live network calls inside the suite. It is preserved
+   outside the repo at
+   `<scratchpad>/68b6397b-7af0-4a98-8cdd-8284e877788d/scratchpad/round5-measurement-harness.ts`
+   on the user's laptop. **Round 5's A may reuse it or rebuild it — but must
+   still delete whatever it uses before finishing**, per §2. It is mentioned
+   here only so nobody re-derives it from scratch unknowingly; it is not
+   evidence of anything and carries no findings.
+4. **Released the stale lock.** A died holding it at `2026-08-07T00:26:08Z`,
+   19 hours before the clean-up — long past §0d's 2-hour staleness window.
+   Set back to `free` explicitly rather than relying on staleness, so §1 states
+   the truth instead of implying it.
+
+**New this round, and the reason there is a §0e:** the loop now has a **third
+writer**, `chatgpt-local` — a non-Claude agent on the same laptop. The account's
+monthly spend limit stops the Claude session outright, which makes "wait for the
+limit to clear" a strictly worse option than "run on whatever still has budget".
+`HANDOFF-ABC.md` at the repo root is that writer's entry door; §0d now lists
+three identifiers; §1 now carries a `STOPPED BECAUSE:` line so an incoming agent
+can tell **"this turn is finished, start the next one"** apart from **"this turn
+ran dry, pick it up where it stopped"** — a distinction the lock alone could
+never express, since a released lock looks identical in both cases.
