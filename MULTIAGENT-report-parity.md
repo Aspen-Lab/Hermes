@@ -7684,3 +7684,143 @@ three identifiers; §1 now carries a `STOPPED BECAUSE:` line so an incoming agen
 can tell **"this turn is finished, start the next one"** apart from **"this turn
 ran dry, pick it up where it stopped"** — a distinction the lock alone could
 never express, since a released lock looks identical in both cases.
+
+---
+
+### Round 5 — Agent A
+
+**STATUS: IN PROGRESS — Job 2 complete, committed on its own per instruction;
+Job 1 follows in a separate append/commit.** Restarted clean per §1 — the prior
+round-5 A died on the spend limit having committed only its lock claim (§4
+"Round 5 — Agent A (DIED)"). Reused and adapted the 612-line harness it left in
+the scratchpad rather than rebuilding from nothing, then deleted it — see the
+end of this entry for confirmation. Adapted it three ways: (1) pointed it at
+this session's own scratchpad, (2) split page-fetch outcomes into **three**
+buckets instead of two (see Job 2 below — the original's two-way split
+silently folded a real fetch failure into "shell", which would have overstated
+the JS-shell rate specifically), (3) reused already-fetched job HTML for the
+B4-11 scrutiny pass instead of fetching every job page a second time, and (4)
+added a real `extractJobDetails()` call to that scrutiny so it reports the
+pipeline's actual output (not just regex snippets suggesting what it might do).
+
+Read §0 through §3 in full, §1b–§1k (every standing ruling, including the two
+reversals), and §4's Round 4 sections (manager-as-A, B, C in full) before
+starting. Rendered the build with `renderToStaticMarkup` on the exported
+`JobReport`/`EventReport`, same mechanism as every round since 1. Live keys
+confirmed present via boolean check only (`tavilyApiKey`, `adzunaAppId`,
+`adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`; `feedAiApiKey`
+`false`, matching every prior round — Tier 0 only, no enrichment key, real
+items render only what plates 02/03 show above the locked block). No
+credential was printed, logged, or written anywhere at any point.
+
+---
+
+#### JOB 2 — §1k Ruling 24's JavaScript-shell-rate measurement. Run first, committed on its own, per instruction.
+
+**Method.** `buildDailyEventPool()` / `buildDailyJobPool()` with a no-op cache
+(forces a fresh live search) and `perSourceLimit: 1000` (raised from the
+harness's original 150 — see "candidate count" below for why the default
+undershoots 30). Took the top 40 by score on each surface
+(`MAX_ENRICHMENT_CANDIDATES`, the same cap `enrichEventCandidates`/
+`enrichJobCandidates` apply via a plain slice of the already-score-sorted
+survivors — confirmed by reading both functions directly) — since both
+surfaces returned fewer than 40 candidates this run, this is every candidate
+in the pool, not a sample of it. Every URL fetched with the app's own
+`fetchPageHtml()`, classified with the app's own `extractPageText()` — the
+exact function `JAVASCRIPT_PLACEHOLDER_RE` and the "nothing survives after
+stripping script/head/furniture" shape live in
+`web/src/lib/opportunities/page-text.ts`, the same shape the 6 KB shell
+fixture in `enrich.test.ts` ("leaves a 6 KB JavaScript shell unchanged...",
+`<div id="root"></div>` behind a large inline `<script>`) encodes.
+
+**Candidate count: 33 pages, both surfaces represented (14 events, 19 jobs) —
+above the 30+ target, but only after raising `perSourceLimit` well past the
+harness's original value.** At 150 the live pool returned only 8 events + 9
+jobs = 17 total for this profile's five research topics (`LCO`,
+`topochemical`, `ion exchange`, `molten salt`, `battery` — narrow and
+specific, which is why so few of ~250 raw per-surface candidates survive the
+pipeline's own required-topic gate). Raising the limit did not change what
+"passing" means — it only asked each source's own API for more raw results
+before the existing gate runs — and every source plateaued well under 1000 on
+its own (`ccfddl` 201, `confstech` 28, `researchseminars` 15, `eventweb` 46,
+`remotive` 33, `arbeitnow` 175, `himalayas` 60, `jobweb` 48 — all below the
+requested cap, i.e. each is that source's own real ceiling for this query
+today, not a limit I imposed). **`adzuna` and `usajobs` returned 0 results at
+every limit tried (150 / 500 / 1000), despite both keys being present** — a
+real, observed fact, not investigated further (A does not investigate
+causes); flagging it because it means 2 of 6 job sources contributed nothing
+to this round's candidate pool regardless of `perSourceLimit`, and it is also
+why R6 could not be exercised this round (see Job 1 below).
+
+**Classification — three-way, not two-way, and this matters.**
+`fetchPageHtml()` itself returns `null` for a non-OK HTTP status, a timeout, a
+network error, an oversized response, AND a genuinely empty body — all
+indistinguishable from outside the function, and **none of them is a
+"JavaScript shell."** A JavaScript shell is a page we DID get bytes back from,
+with nothing `extractPageText` can use. (The round-5-died harness's own
+classifier collapsed both into one "shell" bucket — its `catch` branch for a
+separate "fetch-failed" case can never fire, since `fetchPageHtml` catches
+every failure internally and always resolves to `string | null`, confirmed by
+reading it. Collapsing the two would have overstated the JS-shell rate
+specifically, so this round kept them apart.)
+
+| Surface | Total | Real (text found) | Shell (fetched, no usable text) | Fetch returned nothing (HTTP error / timeout / blocked / empty — cause not separable from outside `fetchPageHtml`) |
+|---|---|---|---|---|
+| Events | 14 | 10 | 2 | 2 |
+| Jobs | 19 | 13 | 2 | 4 |
+| **Combined** | **33** | **23** | **4** | **6** |
+
+**The number Ruling 24 asked for — JavaScript-shell rate among pages actually
+fetched:** 4 of 27 successfully-fetched pages = **14.8%** (events 2/12 =
+16.7%; jobs 2/15 = 13.3%). Separately, pages that returned nothing at all:
+6/33 = 18.2% of the total candidate set. Combined "no usable text, from either
+cause": 10/33 = 30.3%.
+
+**This turns B4-12's "may" into a number, and the number argues for LESS
+scope than B4-12's framing suggested, not more.** B4-12 named JavaScript
+rendering as the most likely single explanation for round 4's near-universal
+0-of-3 coverage on fees, organisations, people, salary, employment type, etc.
+**On this sample, 85.2% of pages the pipeline could actually fetch (23 of 27)
+have real, server-rendered, extractable text — not a shell.** A rendering
+problem that touches roughly 1 in 7 fetched pages cannot, by itself, explain a
+near-0% extraction rate for fields whose own extractors B4-10/B4-11 already
+confirmed are fully built and already wired into the merge. The larger share
+of the remaining gap is more likely regex/gazetteer coverage against real page
+structure (directly confirmed for location — see R2 under Job 1 below) and
+pages genuinely not publishing a field at all, not primarily rendering. **This
+is not evidence that a headless browser would be worthless** — 14.8% is real,
+not nothing, and B4-12 never claimed 100% — but it is evidence against
+treating JavaScript rendering as the *dominant* cause, which is the specific
+question Ruling 24 asked this measurement to answer. Recommend the manager
+read this alongside B4-12 rather than in place of it.
+
+**A second question this measurement was built to answer: does JSON-LD
+survive on a shell, as B4-12's own reasoning predicted** ("`<script
+type="application/ld+json">` is server-rendered even on SPAs")? Checked
+directly — `extractJsonLdOpportunities()` runs on raw, unstripped HTML
+(confirmed by reading `jsonLdBlocks()`: it regex-scans for `<script
+type="application/ld+json">` directly against the full `html` string),
+completely independent of `extractPageText`'s furniture-stripping pipeline
+(which discards all `<script>` content before it ever computes visible text).
+So a page can score "shell" by the visible-text definition while still
+carrying full, extractable JSON-LD underneath. **In this sample, that
+theoretical decoupling did not pay off: 0 of 4 shell pages (2 events, 2 jobs)
+carried a matching-kind JSON-LD block.** The sample is small (4 shells
+total), so this is not proof the decoupling never helps elsewhere — but it
+did not rescue a single shell this round. **JSON-LD is also far from
+universal even among the REAL (non-shell) pages**: only 1 of 10 real events
+carried an `Event` JSON-LD block (10%); 5 of 13 real jobs carried a
+`JobPosting` block (38.5%). B4-11's landed JSON-LD salary/employment-type path
+(see Job 1 below) can only ever fire on that minority of postings — most real
+postings and events need the free-text extractors
+(`event-details.ts`/`job-details.ts`/`event-roster.ts`) to work at all, not
+JSON-LD, which is the majority path here, not a fallback.
+
+**Files (scratchpad only, never committed, never printed above beyond the
+aggregate counts and short cross-check snippets already quoted):**
+`r5-pool-meta.json`, `r5-shell-rate-events.json`, `r5-shell-rate-jobs.json`.
+
+**Exclusions — not applicable to Job 2.** This measurement counts page-fetch
+outcomes, not plate elements, so §1d–§1k's exclusion list does not apply to
+it; it is re-listed in full under Job 1 below, which does score against the
+plate.
