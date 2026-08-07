@@ -113,6 +113,102 @@ describe("extractJsonLdOpportunities", () => {
       },
     ]);
   });
+
+  // B4-11. JobPosting.baseSalary/employmentType were declared on the
+  // interface but never read anywhere in extractOpportunity() -- the four
+  // cases below lock in the new reading, its plausibility gate, and its
+  // presentation normalization.
+  it("extracts JobPosting.baseSalary and employmentType, lower-cased to match every other source", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "employmentType": "FULL_TIME",
+          "baseSalary": {
+            "@type": "MonetaryAmount",
+            "currency": "USD",
+            "value": {
+              "@type": "QuantitativeValue",
+              "minValue": 95000,
+              "maxValue": 120000,
+              "unitText": "YEAR"
+            }
+          }
+        }
+      </script>
+    `;
+
+    const [job] = extractJsonLdOpportunities(html);
+    expect(job.salary).toEqual({
+      min: 95000,
+      max: 120000,
+      currency: "USD",
+      period: "year",
+    });
+    // Spec-conformant JSON-LD emits an uppercase enum; lower-cased so the
+    // report's existing humanize() renders it the same way Adzuna's own
+    // already-lowercase "full_time" does.
+    expect(job.employmentType).toBe("full_time");
+  });
+
+  it("extracts a single-figure JobPosting.baseSalary with no min/max range", () => {
+    // Some postings state one number, not a range -- minValue/maxValue are
+    // absent and only QuantitativeValue.value is there. Both min and max
+    // fall back to it.
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "baseSalary": {
+            "currency": "EUR",
+            "value": { "value": 55000, "unitText": "YEAR" }
+          }
+        }
+      </script>
+    `;
+
+    expect(extractJsonLdOpportunities(html)[0]?.salary).toEqual({
+      min: 55000,
+      max: 55000,
+      currency: "EUR",
+      period: "year",
+    });
+  });
+
+  it("drops a baseSalary with no unit text rather than guessing a period", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "baseSalary": { "currency": "EUR", "value": 55000 }
+        }
+      </script>
+    `;
+
+    expect(extractJsonLdOpportunities(html)[0]?.salary).toBeUndefined();
+  });
+
+  it("drops an implausible baseSalary rather than showing it as fact", () => {
+    // normalizeSalary's own plausibility gate (salary.ts), reused here rather
+    // than re-implemented. $3-$10/year is far below its MIN_ANNUALIZED floor.
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "baseSalary": {
+            "currency": "USD",
+            "value": { "minValue": 3, "maxValue": 10, "unitText": "YEAR" }
+          }
+        }
+      </script>
+    `;
+
+    expect(extractJsonLdOpportunities(html)[0]?.salary).toBeUndefined();
+  });
 });
 
 describe("Open Graph opportunity metadata", () => {

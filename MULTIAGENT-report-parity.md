@@ -246,11 +246,11 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-06T23:46:29Z
                   after 2 hours. Release to `free` when you stop.)
 ROUND:            4
 WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-08
-                  landed, B4-09 skipped intentionally, B4-10's additive
-                  piece landed, working B4-11 next; see §4 "Round 4 —
-                  Agent C" for detail per item. This is a restart of C — a
-                  prior C died to a content-filter error before committing
-                  any code; nothing was lost.)
+                  landed, B4-09 skipped intentionally, B4-10's and B4-11's
+                  additive pieces landed, working B4-13 next (last item);
+                  see §4 "Round 4 — Agent C" for detail per item. This is a
+                  restart of C — a prior C died to a content-filter error
+                  before committing any code; nothing was lost.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
@@ -506,12 +506,12 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **896 tests, all 896 passing**, typecheck clean, 1
+GATE NOW:  83 files / **908 tests, all 908 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01..B4-10 (B4-09 skipped,
-           B4-10 additive-only); will keep rising as C lands more items.**
-           Not yet the final round-4 figure — see §4 "Round 4 — Agent C"
-           for the current per-item state.
+           **mid-round-4 figure, after B4-01..B4-11 (B4-09 skipped,
+           B4-10/B4-11 additive-only); will keep rising as C lands B4-13,
+           the last item.** Not yet the final round-4 figure — see §4
+           "Round 4 — Agent C" for the current per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -7275,3 +7275,125 @@ per item, gate re-run after each.
   own comment to stop implying the field can never exist. **Gate: 83 files /
   896 tests passing** (5 new), **typecheck clean, 1 pre-existing lint
   error, unchanged.**
+
+- **B4-11 — additive pieces only, per §1k's scope: salary/employmentType
+  (JSON-LD) and workMode (free text) LANDED. The deferred quarter
+  (contractLength/applicationMaterials/startDate/startDateFlexible) stays
+  deferred to B4-12, untouched — B's own item already found their extractors
+  exist and run at the right stage; the "0 of 3" symptom is B4-12's
+  architecture, not a missing mechanism here.** Restart note: this is a fresh
+  C picking up mid-round after the lock's first claim; confirmed the gate
+  matched §1's recorded figure (83 files / 896 tests, typecheck clean, 1
+  pre-existing lint error) before touching anything.
+
+  **salary/employmentType.** Added `salary?: NormalizedSalary` and
+  `employmentType?: string` to `JsonLdOpportunity`
+  (`web/src/lib/opportunities/structured-extract.ts`) and wired
+  `extractOpportunity()` to read schema.org `JobPosting.baseSalary` (via a new
+  `extractBaseSalary()`, reshaping `{currency, value: {minValue, maxValue,
+  unitText}}` — or a bare numeric `value` — into `normalizeSalary()`'s
+  existing `StructuredSalaryInput`, so the same plausibility gate every other
+  salary source already passes through is the only thing that decides whether
+  a figure is shown) and `employmentType` (lower-cased so a spec-conformant
+  `"FULL_TIME"` renders through the report's existing `humanize()` the same
+  way Adzuna's already-lowercase `"full_time"` does — a presentation
+  normalization, never a value change, called out here per this round's own
+  "visible, not silent" convention). Both use the same conditional-spread
+  omission `validThrough` already established, confirmed by re-running the
+  full suite that this leaves every existing `extractJsonLdOpportunities`
+  fixture's exact expected object unchanged (none carry `baseSalary` or
+  `employmentType`, so the new keys never appear).
+
+  Read both fields in `extractJobDetails()`
+  (`web/src/lib/opportunities/job-details.ts`) alongside the existing
+  `validThrough` lookup — refactored that lookup's single `extractJsonLdOpportunities(html)`
+  call into one shared `jobOpportunities` array all three fields now read
+  from (same "first job-kind entry that actually carries the field" semantics
+  `validThrough` already had; confirmed no behaviour change for it, only one
+  fewer re-parse of the page's JSON-LD blocks). Deliberately did **not** route
+  these through the shared `extractOpportunityPageDetails()`/`OpportunityPageDetails`
+  (the event-and-job-common interface) — kept them job-only, next to
+  `validThrough`, the narrower-blast-radius precedent that function already
+  set for a JobPosting-only field.
+
+  **workMode.** Added `WORK_MODE_HYBRID_RE`/`WORK_MODE_ON_SITE_RE` and
+  `extractWorkMode()` to `job-details.ts` — the *exact same two patterns*
+  `jobWorkMode()` (`web/src/lib/jobs/mapper.ts`) already checks against a
+  job's `location` string, applied here to the fetched page's free text
+  instead, in the same hybrid-then-on-site precedence order. Deliberately
+  copied rather than imported: `job-details.ts` (in `opportunities/`) stays
+  self-contained exactly as today (it currently imports nothing from `jobs/`
+  or `events/`), avoiding any question of an import-cycle direction with
+  `jobs/mapper.ts`, which already imports several `opportunities/` helpers.
+  "Remote" is deliberately not re-derived here — `isRemote` already carries
+  that signal from elsewhere in the pipeline, and B4-11's own finding was
+  specifically that `jobWorkMode()` can never see "hybrid" or "on-site" for a
+  `jobweb`-sourced posting, not that "remote" is broken too.
+
+  Added `workMode?: Job["workMode"]` to `RawJobItem`
+  (`web/src/lib/jobs/types.ts`), populated only during enrichment. Changed
+  `scoredJobToJob()`'s one line (`web/src/lib/jobs/mapper.ts`) from
+  `workMode: jobWorkMode(item.location, item.isRemote)` to `workMode:
+  item.workMode ?? jobWorkMode(item.location, item.isRemote)`, exactly as B
+  specified — the upstream, free-text-derived value wins when present,
+  otherwise today's cheap location-string check still runs unchanged.
+
+  **Wiring, `web/src/lib/opportunities/enrich.ts`.** Added
+  `details?.salary`, `details?.employmentType`, `details?.workMode` to
+  `hasExtractedJobSignal`'s OR-chain — same bug class B3-06 already fixed for
+  `startDateFlexible` (§1h): without this, a posting whose only new signal is
+  salary would fail the gate and `enrichJobCandidates` would silently discard
+  it. Extended the merge with `salaryMin`/`salaryMax`/`salaryCurrency`/`salaryPeriod`
+  (each `item.X ?? details?.salary?.X` — confirmed by reading every job
+  source adapter that every one of them, Adzuna/USAJobs/Remotive/Himalayas/
+  JSearch, already sets these four fields as an all-or-nothing group from one
+  `normalizeSalary()`/`parseSalaryText()` call, so per-field `??` merging
+  cannot produce a mismatched currency-from-one-source, amount-from-another
+  state), `employmentType`, and `workMode` (`item.workMode ?? details?.workMode`,
+  future-proofing for a source adapter that might set it directly, though
+  none does today).
+
+  **Tests.** Grepped every fixture in the three touched test files for
+  `hybrid`/`on-site`/`onsite`/`in-person`/`salary`/`employmentType`/`baseSalary`
+  before writing anything, per this round's own precedent — zero hits
+  anywhere, confirming B's own claim ("`enrich.test.ts` has no assertions on
+  these today") and that none of the new extractors could fire against an
+  existing exhaustive fixture. Added 4 cases to `structured-extract.test.ts`
+  (a full min/max range with employment type; a single-figure `value` with no
+  `minValue`/`maxValue`, proving the bare-value fallback; a `baseSalary` with
+  no `unitText` correctly dropped rather than guessing a period; an
+  implausible `$3–$10/yr` figure correctly dropped by `normalizeSalary`'s own
+  gate), 4 to `job-details.test.ts` (salary+employmentType wired through the
+  full function; hybrid; on-site and in-person; a "says nothing — including
+  explicitly saying 'remote'" silence case, to make the deliberate
+  remote-is-not-re-derived choice visible in the suite, not just the code
+  comment), 3 to `enrich.test.ts` (full wiring through `enrichJobCandidates`;
+  a salary-only-signal-is-not-discarded case mirroring B3-06's own
+  `startDateFlexible` test; a case proving a source's own real salary is
+  never overwritten by a lower-confidence JSON-LD figure, only ever
+  supplemented on a field the source left empty), and 1 to `jobs/mapper.test.ts`
+  (the existing `describe("workMode")` block's 4 tests all use the shared
+  `fullJob` fixture, which sets no `workMode`, so B's own risk note held
+  exactly — all 4 pass unchanged, confirmed before adding the 5th: a new case
+  setting `location: "On-site in Chicago, IL"` **and** `workMode: "hybrid"`
+  together, so the upstream value winning over a location string that would
+  derive a *different* result proves real precedence, not coincidental
+  agreement). **Gate: 83 files / 908 tests passing** (12 new), **typecheck
+  clean, 1 pre-existing lint error, unchanged.**
+
+  **Worth A's attention on the next real-data pass** (see §1 for the fuller
+  version of this note). Neither addition has been run against a real
+  posting yet — everything above is exercised only against hand-written HTML
+  fixtures. Two specific things to check: (1) whether any real posting's
+  JSON-LD actually uses the bare-number `baseSalary.value` shape (no
+  `QuantitativeValue` wrapper) in practice, since that shape genuinely cannot
+  produce a salary without a `unitText` somewhere and this round's fixture
+  coverage of it is synthetic, not observed; (2) whether `extractWorkMode`'s
+  two patterns ever produce a false positive on real prose — "hybrid" and
+  "on-site" are common words that could in principle appear in an unrelated
+  sentence (a *hybrid* materials lab, an *on-site* seminar series), not only
+  in a work-arrangement statement, and B4-11's own finding never claimed
+  zero false-positive risk, only that the signal was completely unreachable
+  before this. Both are the same "safe failure direction is a false
+  negative, check the false-positive side against real data" shape B3-06's
+  own real-data caveat already used.

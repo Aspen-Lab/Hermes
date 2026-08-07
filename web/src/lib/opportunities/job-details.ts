@@ -1,4 +1,6 @@
+import type { Job } from "@/types";
 import { stripHtml } from "./shared";
+import type { NormalizedSalary } from "./salary";
 import { extractJsonLdOpportunities } from "./structured-extract";
 
 export interface JobPageDetails {
@@ -12,6 +14,20 @@ export interface JobPageDetails {
   startDateFlexible?: true;
   contractLength?: string;
   applicationMaterials?: string[];
+  /** B4-11. schema.org JobPosting.baseSalary, from this same fetched page. */
+  salary?: NormalizedSalary;
+  /** B4-11. schema.org JobPosting.employmentType, from this same fetched page. */
+  employmentType?: string;
+  /**
+   * B4-11. Same convention as `startDateFlexible` above: `undefined` unless
+   * the posting's own fetched-page text explicitly says "hybrid" or
+   * "on-site"/"in-person" -- never inferred from silence. Additive alongside
+   * the mapper's own cheap location-string check
+   * (`jobWorkMode` in `web/src/lib/jobs/mapper.ts`), not a replacement for
+   * it: a `jobweb`-sourced posting's `location` string is always empty, so
+   * that check can never see this signal no matter what the real page says.
+   */
+  workMode?: Job["workMode"];
 }
 
 const MONTHS: Readonly<Record<string, number>> = {
@@ -63,6 +79,27 @@ const START_DATE_FLEXIBLE_RE =
 
 function extractStartDateFlexible(text: string): true | undefined {
   return START_DATE_FLEXIBLE_RE.test(text) ? true : undefined;
+}
+
+/**
+ * B4-11. The exact two patterns `jobWorkMode()`
+ * (`web/src/lib/jobs/mapper.ts`) already checks against a job's `location`
+ * string, reused here against the fetched page's own free text instead. A
+ * `jobweb`-sourced posting's `location` is always `""` -- Tavily/Brave search
+ * results carry no structured location field -- so `jobWorkMode()` can only
+ * ever resolve "remote" (via `isRemote`) or nothing for those postings, no
+ * matter what the real page says about hybrid or on-site work. "remote" is
+ * deliberately not re-derived here: `isRemote` already carries that signal
+ * from elsewhere, and this only ever fills the gap `jobWorkMode()` cannot
+ * reach, never overrides it.
+ */
+const WORK_MODE_HYBRID_RE = /\bhybrid\b/i;
+const WORK_MODE_ON_SITE_RE = /\bon[\s-]?site\b|\bin[\s-]?person\b/i;
+
+function extractWorkMode(text: string): Job["workMode"] {
+  if (WORK_MODE_HYBRID_RE.test(text)) return "hybrid";
+  if (WORK_MODE_ON_SITE_RE.test(text)) return "on-site";
+  return undefined;
 }
 
 const CONTRACT_PATTERNS = [
@@ -274,8 +311,15 @@ export function extractJobDetails(
   now = new Date(),
 ): JobPageDetails {
   const visibleText = stripHtml(html);
-  const structuredDeadline = extractJsonLdOpportunities(html).find(
-    (item) => item.kind === "job" && item.validThrough,
+  // B4-11. One parse of the page's JSON-LD, shared by validThrough (existing)
+  // and the two new fields below -- each still takes the first job-kind
+  // entry that actually carries it, exactly as validThrough already did, so
+  // this is a no-behaviour-change refactor for validThrough itself.
+  const jobOpportunities = extractJsonLdOpportunities(html).filter(
+    (item) => item.kind === "job",
+  );
+  const structuredDeadline = jobOpportunities.find(
+    (item) => item.validThrough,
   )?.validThrough;
   const applicationDeadline =
     (structuredDeadline
@@ -290,6 +334,11 @@ export function extractJobDetails(
   const startDateFlexible = extractStartDateFlexible(visibleText);
   const contractLength = extractContractLength(visibleText);
   const applicationMaterials = extractApplicationMaterials(visibleText);
+  const salary = jobOpportunities.find((item) => item.salary)?.salary;
+  const employmentType = jobOpportunities.find(
+    (item) => item.employmentType,
+  )?.employmentType;
+  const workMode = extractWorkMode(visibleText);
 
   return {
     ...(applicationDeadline ? { applicationDeadline } : {}),
@@ -297,5 +346,8 @@ export function extractJobDetails(
     ...(startDateFlexible ? { startDateFlexible } : {}),
     ...(contractLength ? { contractLength } : {}),
     ...(applicationMaterials.length > 0 ? { applicationMaterials } : {}),
+    ...(salary ? { salary } : {}),
+    ...(employmentType ? { employmentType } : {}),
+    ...(workMode ? { workMode } : {}),
   };
 }

@@ -77,6 +77,15 @@ function keyRequirements(item: ScoredJobItem): string[] {
  * for the facet/filter system, reused rather than re-invented. A location
  * that says neither returns `undefined`; inferring "probably on-site" from
  * silence is the exact dishonesty Phase 7 removed.
+ *
+ * B4-11. This cheap check only ever sees `item.location`, which is always
+ * `""` for a `jobweb`-sourced posting (Tavily/Brave results carry no
+ * structured location field) — so it can never resolve "hybrid" or
+ * "on-site" for that source no matter what the real posting says. See
+ * `scoredJobToJob` below: `item.workMode`, extracted upstream from the
+ * fetched page's own free text during enrichment, now takes precedence over
+ * this function's result when present, and this function still runs exactly
+ * as before whenever it is absent.
  */
 function jobWorkMode(location: string, isRemote: boolean): Job["workMode"] {
   if (/\bhybrid\b/i.test(location)) return "hybrid";
@@ -141,7 +150,11 @@ export function scoredJobToJob(
     location,
     place: item.place,
     isRemote: item.isRemote,
-    workMode: jobWorkMode(item.location, item.isRemote),
+    // B4-11. item.workMode is only ever set upstream, during enrichment, from
+    // the posting's own fetched-page text (see job-details.ts's
+    // extractWorkMode). When present it wins; otherwise this is exactly the
+    // pre-B4-11 expression, unchanged.
+    workMode: item.workMode ?? jobWorkMode(item.location, item.isRemote),
     keyRequirements: keyRequirements(item),
     matchReason: item.matchReason,
     facetPreferenceReason: item.facetPreferenceReason,

@@ -128,5 +128,20 @@ describe("scoredJobToJob", () => {
           .workMode,
       ).toBeUndefined();
     });
+
+    it("prefers the upstream-extracted workMode over the location-derived one", () => {
+      // B4-11. item.workMode is set only during enrichment, from the
+      // posting's own fetched-page free text (job-details.ts's
+      // extractWorkMode) -- proven here with a location string that would
+      // derive a different result on its own, so the two cannot agree by
+      // coincidence.
+      expect(
+        scoredJobToJob({
+          ...fullJob,
+          location: "On-site in Chicago, IL",
+          workMode: "hybrid",
+        }).workMode,
+      ).toBe("hybrid");
+    });
   });
 });

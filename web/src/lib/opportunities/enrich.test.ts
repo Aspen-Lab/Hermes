@@ -405,6 +405,110 @@ describe("job detail enrichment", () => {
     expect(enriched).toMatchObject({ startDateFlexible: true });
   });
 
+  it("wires JSON-LD salary, employment type, and free-text work mode through enrichment", async () => {
+    // B4-11.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "employmentType": "FULL_TIME",
+              "baseSalary": {
+                "currency": "USD",
+                "value": { "minValue": 95000, "maxValue": 120000, "unitText": "YEAR" }
+              }
+            }
+          </script>
+          <p>This role follows a hybrid schedule, three days on-site.</p>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([job(21)]);
+
+    expect(enriched).toMatchObject({
+      salaryMin: 95000,
+      salaryMax: 120000,
+      salaryCurrency: "USD",
+      salaryPeriod: "year",
+      employmentType: "full_time",
+      workMode: "hybrid",
+    });
+  });
+
+  it("keeps a salary-only signal even when it is the only new fact a page offers", async () => {
+    // Same bug class B3-06 already fixed for startDateFlexible: without
+    // details?.salary in hasExtractedJobSignal's OR-chain, a posting whose
+    // only new signal is salary would fail the gate and enrichJobCandidates
+    // would return the original item unchanged, silently discarding it.
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "baseSalary": {
+                "currency": "USD",
+                "value": { "minValue": 95000, "maxValue": 120000, "unitText": "YEAR" }
+              }
+            }
+          </script>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([job(22)]);
+
+    expect(enriched).toMatchObject({ salaryMin: 95000, salaryMax: 120000 });
+  });
+
+  it("never overwrites a source's own salary with an upstream JSON-LD figure", async () => {
+    // B4-11's own note: item.X ?? details?.X only ever fills a gap a source
+    // left empty. An Adzuna/USAJobs job that already carries a real salary
+    // must keep it even when the fetched page's own JSON-LD states a
+    // different figure.
+    const original = {
+      ...job(23),
+      salaryMin: 80000,
+      salaryMax: 100000,
+      salaryCurrency: "USD" as const,
+      salaryPeriod: "year" as const,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "employmentType": "FULL_TIME",
+              "baseSalary": {
+                "currency": "USD",
+                "value": { "minValue": 200000, "maxValue": 250000, "unitText": "YEAR" }
+              }
+            }
+          </script>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([original]);
+
+    expect(enriched).toMatchObject({
+      salaryMin: 80000,
+      salaryMax: 100000,
+      // employmentType was genuinely absent on the source item, so this one
+      // field still upgrades from the fetched page.
+      employmentType: "full_time",
+    });
+  });
+
   it("leaves a 6 KB JavaScript shell unchanged and does not throw", async () => {
     const original = job(9);
     const fetchMock = vi.fn().mockResolvedValue(

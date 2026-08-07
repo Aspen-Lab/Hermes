@@ -48,6 +48,14 @@ export interface RawJobItem {
   startDateFlexible?: Job["startDateFlexible"];
   contractLength?: Job["contractLength"];
   applicationMaterials?: Job["applicationMaterials"];
+  /**
+   * B4-11. Populated only upstream during enrichment, when the posting's own
+   * fetched-page text explicitly says "hybrid" or "on-site"/"in-person" — no
+   * source adapter sets this at ingestion. `scoredJobToJob()` prefers it over
+   * its own cheap `location`-string check, which stays exactly as it was for
+   * every job this field is absent for.
+   */
+  workMode?: Job["workMode"];
   roleKind?: Job["roleKind"];
   visa?: Job["visa"];
   tags: string[];

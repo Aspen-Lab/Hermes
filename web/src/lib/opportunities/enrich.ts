@@ -58,6 +58,12 @@ function hasExtractedJobSignal(
       details?.startDateFlexible ||
       details?.contractLength ||
       details?.applicationMaterials?.length ||
+      // B4-11. Same reasoning as startDateFlexible above: a posting whose
+      // only new signal is salary, employment type, or work mode must not be
+      // discarded by this gate.
+      details?.salary ||
+      details?.employmentType ||
+      details?.workMode ||
       (visa &&
         (visa.state !== "not-stated" || visa.evidence || visa.country)),
   );
@@ -205,6 +211,24 @@ export async function enrichJobCandidates(
       contractLength: item.contractLength ?? details?.contractLength,
       applicationMaterials:
         item.applicationMaterials ?? details?.applicationMaterials,
+      // B4-11. JSON-LD JobPosting.baseSalary/employmentType, extracted
+      // upstream in extractJobDetails alongside every other field this merge
+      // already prefers-existing-then-falls-back-to. Adzuna/USAJobs already
+      // populate these four from their own structured fields before
+      // enrichment runs, so `item.X ?? details?.X` only ever fills a gap a
+      // source left empty -- it cannot overwrite a real value with a worse
+      // one, and the four always arrive together or not at all on either
+      // side (see B4-11's own note on normalizeSalary's all-or-nothing
+      // return).
+      salaryMin: item.salaryMin ?? details?.salary?.min,
+      salaryMax: item.salaryMax ?? details?.salary?.max,
+      salaryCurrency: item.salaryCurrency ?? details?.salary?.currency,
+      salaryPeriod: item.salaryPeriod ?? details?.salary?.period,
+      employmentType: item.employmentType ?? details?.employmentType,
+      // B4-11. Free-text hybrid/on-site signal from the fetched page;
+      // scoredJobToJob() prefers this over its own cheap location-string
+      // check when present (mapper.ts's jobWorkMode).
+      workMode: item.workMode ?? details?.workMode,
       roleKind,
       visa,
       // A web page being "online" does not prove that a job is remote.

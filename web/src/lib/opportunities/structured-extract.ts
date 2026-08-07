@@ -1,5 +1,6 @@
 import { canonicalize } from "@/lib/scoring/term-expand";
 import type { OpportunityPlace } from "@/types";
+import { normalizeSalary, type NormalizedSalary } from "./salary";
 
 export type ExtractedPlace = OpportunityPlace;
 
@@ -14,6 +15,20 @@ export interface JsonLdOpportunity {
   validThrough?: string;
   place?: ExtractedPlace;
   eventAttendanceMode?: string;
+  /**
+   * B4-11. schema.org JobPosting.baseSalary, run through the same
+   * plausibility gate (`normalizeSalary`) every other salary source already
+   * uses — a malformed or out-of-range figure is dropped here, the same as
+   * Adzuna's or USAJobs's own structured salary fields, never shown as fact.
+   */
+  salary?: NormalizedSalary;
+  /**
+   * B4-11. schema.org JobPosting.employmentType — a raw slug, lower-cased to
+   * match the convention every existing source already emits (Adzuna's
+   * `contract_time` is "full_time"), so the report's existing `humanize()`
+   * renders it the same way regardless of which source found it.
+   */
+  employmentType?: string;
 }
 
 export interface OpenGraphTags {
@@ -933,10 +948,53 @@ function extractPlace(location: unknown): ExtractedPlace | undefined {
   });
 }
 
+function numericValue(value: unknown): number | undefined {
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * B4-11. schema.org MonetaryAmount: `{ currency, value }`, where `value` is
+ * either a bare number or a nested QuantitativeValue (`{ value, minValue,
+ * maxValue, unitText }`). Delegates the actual plausibility call to
+ * `normalizeSalary` — this function's only job is reshaping JSON-LD's nesting
+ * into that function's existing `StructuredSalaryInput`, never deciding on
+ * its own whether a figure is believable.
+ */
+function extractBaseSalary(value: unknown): NormalizedSalary | null {
+  const salaryRecord = firstRecord(value);
+  if (!salaryRecord) return null;
+  const currency = nonEmptyString(salaryRecord.currency);
+  const valueRecord = firstRecord(salaryRecord.value);
+  if (valueRecord) {
+    return normalizeSalary({
+      min: numericValue(valueRecord.minValue ?? valueRecord.value),
+      max: numericValue(valueRecord.maxValue ?? valueRecord.value),
+      currency,
+      period: nonEmptyString(valueRecord.unitText),
+    });
+  }
+  const bareValue = numericValue(salaryRecord.value);
+  if (bareValue === undefined) return null;
+  return normalizeSalary({ min: bareValue, max: bareValue, currency });
+}
+
 function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   const kind = opportunityKind(node["@type"]);
   if (!kind) return null;
   const validThrough = nonEmptyString(node.validThrough);
+  const salary = extractBaseSalary(node.baseSalary);
+  // B4-11. Lower-cased so a spec-conformant "FULL_TIME" renders through the
+  // report's existing humanize() the same way Adzuna's own already-lowercase
+  // "full_time" does — a presentation normalization, not a guess: it never
+  // changes which employment type was stated, only its letter case.
+  const employmentType = nonEmptyString(node.employmentType)?.toLowerCase();
 
   return {
     kind,
@@ -947,6 +1005,8 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     ...(validThrough ? { validThrough } : {}),
     place: extractPlace(node.location ?? node.jobLocation),
     eventAttendanceMode: nonEmptyString(node.eventAttendanceMode),
+    ...(salary ? { salary } : {}),
+    ...(employmentType ? { employmentType } : {}),
   };
 }
 

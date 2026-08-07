@@ -131,6 +131,59 @@ describe("extractJobDetails", () => {
       ),
     ).toEqual({});
   });
+
+  // B4-11. JSON-LD JobPosting.baseSalary/employmentType, read from this same
+  // fetched page alongside validThrough above -- same JSON-LD parse, same
+  // "first job-kind entry that actually carries the field" precedent.
+  it("extracts JobPosting.baseSalary and employmentType from the fetched page", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "employmentType": "FULL_TIME",
+          "baseSalary": {
+            "currency": "USD",
+            "value": { "minValue": 95000, "maxValue": 120000, "unitText": "YEAR" }
+          }
+        }
+      </script>
+    `;
+
+    expect(extractJobDetails(html)).toEqual({
+      salary: { min: 95000, max: 120000, currency: "USD", period: "year" },
+      employmentType: "full_time",
+    });
+  });
+
+  // B4-11. The same two shapes jobWorkMode() (web/src/lib/jobs/mapper.ts)
+  // already checks against a job's location string, now also checked against
+  // the fetched page's own free text -- the signal a jobweb-sourced posting's
+  // always-empty location string could never carry.
+  it("recognises hybrid work mode from the page's own text", () => {
+    const html = "<p>This role follows a hybrid schedule, three days on-site.</p>";
+    // "hybrid" is checked first, matching jobWorkMode()'s own precedence, so
+    // this page (which also says "on-site") still resolves to "hybrid".
+    expect(extractJobDetails(html)).toEqual({ workMode: "hybrid" });
+  });
+
+  it("recognises on-site / in-person work mode from the page's own text", () => {
+    expect(
+      extractJobDetails("<p>This is an on-site position in Chicago, IL.</p>"),
+    ).toEqual({ workMode: "on-site" });
+    expect(
+      extractJobDetails("<p>This role is in-person at our Chicago lab.</p>"),
+    ).toEqual({ workMode: "on-site" });
+  });
+
+  it("never invents workMode when the posting says nothing about work arrangement", () => {
+    // Includes "remote" deliberately: that signal already reaches the mapper
+    // via isRemote, and is not re-derived here (see job-details.ts's own
+    // note on WORK_MODE_HYBRID_RE/WORK_MODE_ON_SITE_RE).
+    expect(
+      extractJobDetails("<p>Join our fully remote research team.</p>"),
+    ).toEqual({});
+  });
 });
 
 describe("normalizeJobDate", () => {
