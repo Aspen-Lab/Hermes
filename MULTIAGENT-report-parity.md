@@ -8708,3 +8708,92 @@ brand name, not on `KNOWN_JOB_BOARD_DOMAINS`, must not become `company`; a
 built, a JSON-LD `hiringOrganization` case in `structured-extract.test.ts`
 and `job-details.test.ts` following B4-11's own four/four test split for
 salary as the shape to copy.
+
+---
+
+##### B5-04 — R12: the job LOCATION tile prints the literal placeholder `See posting`. `WRONG DATA`. Cheapest real fix on the list — land it early despite ranking below the three above.
+
+**Cause — confirmed against the live code.** `web/src/lib/jobs/mapper.ts:142-144`:
+
+```ts
+const location =
+  cleanJobSubtitlePart(item.location) ??
+  (item.isRemote ? "Remote" : "See posting");
+```
+
+`Job.location` is set to the literal string `"See posting"` whenever nothing
+else is available and the job is not remote. Nothing downstream treats this
+as a sentinel to suppress — it is written into the same field a real address
+would occupy, then read at face value by everything that touches
+`job.location`. Compare the event side, which has exactly this problem and
+already guards it: `buildEventFacts()`
+(`web/src/app/events/[id]/page.tsx:651`) — `location &&
+location.toLowerCase() !== "see event page"` — an explicit placeholder
+check before the WHERE tile renders. **The job side's equivalent, the
+LOCATION tile in `buildJobFacts()`, has no such check**:
+`web/src/app/jobs/[id]/page.tsx:546` computes `const location =
+clean(job.location)` with no placeholder filter, and the tile at `:589-607`
+renders whenever that value is truthy — `"See posting"` is truthy, so it
+renders. This directly contradicts round 4's own record, which claimed (for
+both reports) "the literal strings … are correctly not printed as
+locations" — true for events, confirmed again this round; **never true for
+jobs**, and this round's real jobs 1 and 2 both hit it.
+
+**This is not the only call site — found by tracing every reader of
+`job.location`, not just the one A quoted.** Two more, neither mentioned in
+A's report, both exposed to the identical unguarded value:
+
+1. **The subtitle's own location segment**, same file,
+   `web/src/app/jobs/[id]/page.tsx:935` (`const location =
+   cleanJobSubtitlePart(job.location)`), rendered at `:992-994`
+   (`[company, location, workMode].filter(Boolean)`). `cleanJobSubtitlePart`
+   is a generic string cleaner with no placeholder awareness, so
+   `"See posting"` almost certainly survives it and reaches the subtitle
+   too, printed between the company and work-mode segments — unverified
+   directly against a live render this round (A did not quote the full
+   subtitle for jobs 1/2, only the company slot), but it reads from the
+   exact same field with the exact same absence of a guard, so it should be
+   treated as very likely affected, not assumed safe.
+2. **The feed card.** `web/src/lib/jobs/card.ts:47` — `const place =
+   job.isRemote ? "Remote" : job.location.trim() || "Location not listed"`
+   — also reads `job.location` directly, also with no placeholder check.
+   This is outside plates 02/03 (feed cards are not part of this loop's
+   scope), so it is not itself a guide item, but it confirms the root
+   defect is architectural, not report-local: the placeholder is written
+   into a field three separate consumers each read trustingly, and any
+   future fourth consumer would repeat the same mistake by default.
+
+**Fix direction.** Immediate, precedented, matches the existing pattern
+exactly: mirror the event side's guard at both job-report call sites —
+`location && location.toLowerCase() !== "see posting"` in `buildJobFacts()`
+(`:546`/`:589`) and the same check on the subtitle's `location` const
+(`:935`). This is the smallest possible fix and follows the codebase's own
+established convention (guard at each render site) rather than introducing
+a new one. **Worth naming, not mandating:** the deeper reason this needed
+two independent guards on the events side (facts row + subtitle, per the
+precedent) and now three on the jobs side (facts row + subtitle + feed card)
+is that the sentinel is written upstream and trusted downstream everywhere.
+A different, larger fix — leave `location` empty/`undefined` upstream
+instead of writing `"See posting"` at all, the way most other optional
+fields already work — would close every call site (present and future) at
+once, but it is a bigger, riskier change: every consumer's own "how do I
+know nothing is known" logic would need checking, not just adding a string
+comparison. Flagging it as the more thorough alternative; the per-site guard
+is the safe default this item should land, consistent with how the codebase
+already treats the identical problem on the events side.
+
+**Blast radius.** The two report-layer guards are contained to
+`web/src/app/jobs/[id]/page.tsx`. The `card.ts` leak is real but out of
+scope for this loop (feed, not report) — naming it so it is not lost, not
+guiding it as part of this item, the same way B4-01 named a same-shaped job
+`roleTitle` gap without sizing it as a fix.
+
+**Tests at risk — verified directly.** Grepped
+`web/src/app/jobs/[id]/page.test.ts` for `"See posting"` — zero hits
+anywhere. `baseJob()`'s own default (`:39-50`) sets `location: "Chicago,
+IL"` — a real value — and the only other `location:` override in the file
+(`:369`) also sets a real value (`"Los Altos, CA"`). **Every existing test
+fixture already carries a real location string; none exercises the
+placeholder. No existing assertion breaks.** C should add the first one:
+`baseJob({ location: "See posting" })` (not remote) must render neither the
+LOCATION tile nor a `"See posting"` fragment anywhere in the subtitle.
