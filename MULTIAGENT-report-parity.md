@@ -239,42 +239,89 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-06T23:46:29Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
 ROUND:            4
-WHOSE TURN:       C  (round-4 implementation IN PROGRESS — B4-01..B4-08
-                  landed, B4-09 skipped intentionally, B4-10's and B4-11's
-                  additive pieces landed, working B4-13 next (last item);
-                  see §4 "Round 4 — Agent C" for detail per item. This is a
-                  restart of C — a prior C died to a content-filter error
-                  before committing any code; nothing was lost.)
+WHOSE TURN:       A  (round-4 implementation COMPLETE — all 13 guide items
+                  resolved: B4-01..B4-08 landed in full, B4-09 skipped
+                  (synthesis, no code of its own), B4-10 and B4-11 each
+                  landed their additive piece only per §1k's scope
+                  narrowing, B4-12 skipped (`POLICY — manager decides`, no
+                  code), B4-13 landed. See §4 "Round 4 — Agent C" for full
+                  detail per item. **A: run the round-5 measurement** — see
+                  the TODO below for the two specific jobs, both already on
+                  record, and what to watch for in B4-11 specifically.)
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** The loop continues until the reports
                   work on REAL data, not just the fixture. Read §1j before
                   doing anything; it changes what "0%" means. **This ruling
                   has now been actioned — B's round-4 guide (below) is
                   written against it.**
-STATUS:           ROUND-4 B COMPLETE. B wrote and committed 13 items
-                  (B4-01 .. B4-13, one commit each, no code changes — see §4
-                  "Round 4 — Agent B"), covering all ten numbered real-data
-                  findings (R1–R10) plus the one remaining fixture gap. Read
-                  only; did not change code, per the role. **Classification:
-                  4 `WRONG DATA`, 4 `WRONG SHAPE`, 3 `MISSING` (two of them
-                  partial — see below), 1 synthesis item (R9, traces entirely
-                  to other items on the list, not a new mechanism), 1
-                  `POLICY — manager decides`, plus one `NOT FIXABLE THIS
-                  ROUND` sub-finding folded into B4-10 (`rank` — a curated,
-                  CS-only classification dataset, structurally unable to
-                  cover round 4's non-CS real events).** Full detail, code
-                  citations, fix directions and tests-at-risk per item are in
-                  §4 "Round 4 — Agent B"; do not re-derive from this summary.
-LAST DIFFERENCE:  3%  on the fixture (was 16%) — **but the fixture is no
-                  longer the honest number. See below.** B4-13 is the guide
-                  item that closes the fixture's one remaining string.
-GATE (0%):        NOT MET
+STATUS:           ROUND-4 IMPLEMENTATION COMPLETE (B + C). B wrote and
+                  committed 13 items (B4-01 .. B4-13, one commit each, no
+                  code changes — see §4 "Round 4 — Agent B"), covering all
+                  ten numbered real-data findings (R1–R10) plus the one
+                  remaining fixture gap. **Classification: 4 `WRONG DATA`,
+                  4 `WRONG SHAPE`, 3 `MISSING` (two of them partial), 1
+                  synthesis item (R9), 1 `POLICY — manager decides`
+                  (B4-12), plus one `NOT FIXABLE THIS ROUND` sub-finding
+                  folded into B4-10 (`rank`).** Full detail, code
+                  citations, fix directions and tests-at-risk per item are
+                  in §4 "Round 4 — Agent B"; do not re-derive from this
+                  summary.
+
+                  **C then worked all 13 in order, one commit per item,
+                  pushed after each (§0d).** This was a restart — a prior C
+                  died to a content-filter error before committing any
+                  code; nothing was lost, since §1 still pointed at C with
+                  a clean tree. B4-01..B4-08 landed in full; B4-09 skipped
+                  (synthesis — traces entirely to other items already on
+                  the list, no mechanism of its own, per B's own finding);
+                  B4-10 and B4-11 each landed their additive-only piece per
+                  §1k's scope narrowing (B4-10: `expectedSize`; B4-11:
+                  `salary`/`employmentType` read from JSON-LD, `workMode`
+                  read from the fetched page's free text) and left their
+                  deferred quarters untouched, pending B4-12; B4-12 skipped
+                  (`POLICY`, no code, per Ruling 24 §1k); B4-13 landed,
+                  closing the fixture's last known difference with a full
+                  198-entry `COUNTRY_ABBREVIATIONS` table (Option 1 of B's
+                  own two named choices), cross-checked against an
+                  authoritative ISO 3166-1 source before landing, not
+                  shipped from memory alone. Full detail, file/line
+                  citations, and exactly what each gate run showed are in
+                  §4 "Round 4 — Agent C".
+
+                  **Baseline re-verified before touching anything**: 83
+                  files / 896 tests passing, typecheck clean, 1
+                  pre-existing lint error — matched §1's recorded figure
+                  exactly before any change.
+
+                  **Final gate, all 13 items resolved: 83 files / 910
+                  tests, all 910 passing, typecheck clean, exactly 1
+                  pre-existing lint error (`src/components/persona/quiz.tsx:46`),
+                  unchanged.** 45 new tests added across the round
+                  (865→910, counting from round 4's own starting baseline),
+                  zero tests deleted, several existing assertions rewritten
+                  in place where B's own risk sections said they would
+                  break (each rewrite comments which item changed it, per
+                  §3) — see §4 for the exact per-item count and which
+                  assertions changed.
+LAST DIFFERENCE:  3%  on the fixture (was 16%) — **B4-13 has now landed.**
+                  The code-side fix is in and its own test (a full
+                  `COUNTRY_NAMES`-completeness check plus the two named
+                  fixture assertions B flagged) passes, but **C does not
+                  set this number — only A's own fixture re-measurement
+                  can confirm 0 differences actually remain** and that
+                  nothing else regressed. **The fixture was never the
+                  honest number for this round regardless — see "ROUND 4
+                  CHANGED THE PROBLEM" below and run both measurements.**
+GATE (0%):        NOT MET — unchanged; only A sets this, and Ruling 23's
+                  real-data gate is very unlikely to be met yet (most
+                  under-extraction findings are deferred pending §1k's
+                  shell-rate measurement, not closed).
 
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
@@ -443,11 +490,76 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
                and deliberately did NOT build a country-abbreviation table —
                that gap is still open and named, not silently resolved.
 
-           **Round 4's fix guide, B4-01 .. B4-13, is now written** (see §4
-           "Round 4 — Agent B"). Not yet implemented — this is C's next task,
-           below. No code changed this round; B is read-only per §2.
+           **Round 4's fix guide, B4-01 .. B4-13, was written** (see §4
+           "Round 4 — Agent B") **and is now fully implemented** — C worked
+           all 13 items (landed, intentionally skipped, or additive-piece-
+           only per §1k; see §4 "Round 4 — Agent C" for full detail per
+           item, and STATUS above for the final gate figure). Round 4 is
+           done; A's round-5 measurement is next, per TODO below.
 
-TODO:      **C: work B4-01 .. B4-13 in order, per §2's rules for the role.**
+TODO:      **A: run the round-5 measurement.** Round 4's implementation is
+           now fully done (see STATUS above) — every B4 item is landed,
+           intentionally skipped with a reason, or deliberately additive-
+           only per §1k. Two jobs, both already on record, not a new one:
+
+           1. **The normal real-data pass**, same mandate as every round
+              since 4 (§2 under Agent A, "MANDATORY FROM ROUND 4"):
+              re-derive the fixture percentage (should read 0 differences
+              if B4-13 landed cleanly and nothing else regressed — confirm
+              this, don't assume it from the code alone) AND run at least 3
+              real events + 3 real jobs through the build's own pipeline,
+              same mechanism as round 4's own first pass. Score each of the
+              ten numbered R1–R10 findings: closed, improved-but-not-closed,
+              or still open against the CURRENT code, plus anything newly
+              wrong this round's changes introduced.
+           2. **§1k's JavaScript-shell-rate measurement** — the one-off
+              diagnostic Ruling 24 deferred to round 5, not yet run by
+              anyone. Over a real candidate set (30+ pages, both event and
+              job surfaces), count how many fetched pages are JavaScript
+              shells (`page-text.ts`'s `JAVASCRIPT_PLACEHOLDER_RE` and the
+              6 KB shell fixture in `enrich.test.ts` already encode what one
+              looks like) versus real server-rendered content. This turns
+              B4-12's "may" into a number. Do it regardless of what job 1
+              finds — it directly explains why job 1's numbers land where
+              they do.
+
+           **B4-11 specifically may behave differently on real postings
+           than on the hand-written fixtures it was tested against — check
+           this explicitly, not just whether the fields populate:**
+           - Its JSON-LD `baseSalary`/`employmentType` reading and its new
+             `extractWorkMode()` free-text check have never seen a real
+             page. Every one of their tests (`structured-extract.test.ts`,
+             `job-details.test.ts`, `enrich.test.ts`) is a hand-written HTML
+             fixture — see §4 "Round 4 — Agent C", B4-11's own closing note,
+             for the full reasoning.
+           - Two specific things worth checking, not just "did it work":
+             (a) does any real posting's JSON-LD use the bare-number
+             `baseSalary.value` shape with no `unitText` anywhere nearby —
+             if so it correctly produces no salary, by design, not a bug to
+             fix; (b) does `extractWorkMode`'s "hybrid"/"on-site" text match
+             ever produce a false positive — those are common enough words
+             to appear outside a work-arrangement statement (a *hybrid*
+             materials lab, an *on-site* seminar series), and B4-11 never
+             claimed zero risk there, only that the signal was previously
+             unreachable for `jobweb`-sourced jobs.
+           - B4-11's own finding was that its still-deferred quarter
+             (`contractLength`/`applicationMaterials`/`startDate`/
+             `startDateFlexible`) and most of B4-10's deferred quarter
+             (fees/organisations/people/deadlines/travelGrant) trace to the
+             same architectural cause B4-12 named. **Don't treat B3-06's
+             still-unverified phrase list, B3-07's still-unverified guard,
+             and B4-11's two new extractors as separate open questions** —
+             job 2 above (the shell-rate count) is the one measurement that
+             bears on all of them at once. Run it first; it will likely
+             reframe what job 1 finds rather than sit beside it as one more
+             independent finding.
+
+           Full instructions and the exact pipeline entry points are in §2
+           under Agent A, unchanged from round 4's own mandate (see "NEW FOR
+           A" further down in this section, still accurate).
+
+TODO (superseded — completed, kept for the record):
+           **C: work B4-01 .. B4-13 in order, per §2's rules for the role.**
            Work order and dependencies are laid out in that section's own
            Summary; the short version: B4-01/B4-02 are independent shared-
            plumbing fixes; B4-03/B4-04/B4-05 are three independent job fixes
@@ -466,7 +578,8 @@ TODO:      **C: work B4-01 .. B4-13 in order, per §2's rules for the role.**
            after each item, same as every round. Hand back to A when done —
            **A should re-run both measurements (fixture AND real search) per
            the round-4 mandate below**, not just the fixture, since the real
-           search is what most of this guide targets.
+           search is what most of this guide targets. **Done — see STATUS
+           above and §4 "Round 4 — Agent C" for exactly what landed.**
 
            **Superseded — kept for the record.** The task below was A's
            round-4 measurement mandate. **It has already been completed**
@@ -506,12 +619,11 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **908 tests, all 908 passing**, typecheck clean, 1
+GATE NOW:  83 files / **910 tests, all 910 passing**, typecheck clean, 1
            pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **mid-round-4 figure, after B4-01..B4-11 (B4-09 skipped,
-           B4-10/B4-11 additive-only); will keep rising as C lands B4-13,
-           the last item.** Not yet the final round-4 figure — see §4
-           "Round 4 — Agent C" for the current per-item state.
+           **this IS the final round-4 figure.** All 13 guide items
+           resolved (landed, intentionally skipped, or additive-piece-only
+           per §1k) — see §4 "Round 4 — Agent C" for the per-item state.
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -7397,3 +7509,80 @@ per item, gate re-run after each.
   before this. Both are the same "safe failure direction is a false
   negative, check the false-positive side against real data" shape B3-06's
   own real-data caveat already used.
+
+- **B4-13 — LANDED. The last fixture gap, closed with Option 1 (full
+  coverage) of B's own two named choices.** Chose full coverage over the
+  smaller-table alternative because B's own framing was accurate: ISO 3166-1
+  alpha-2 is a closed, static, unambiguous standard, so typing all ~198 rows
+  once is real effort but not real risk, unlike a heuristic gazetteer
+  (`CONFERENCE_CITIES`, B4-02) where more entries means more false-positive
+  surface. Said here explicitly per B's own request to confirm which option
+  was taken before the risk section's tests were rewritten.
+
+  Added `COUNTRY_ABBREVIATIONS` (`web/src/app/jobs/[id]/page.tsx`, exported
+  — unlike this file's other label maps — specifically so a test can check
+  it) and a small `countryAbbreviation()` helper, following B's own "the
+  report gets its own vocabulary" placement (next to `WORK_MODE_LABELS`,
+  same file, same precedent B2-01 set for date formatting) rather than
+  putting it in `structured-extract.ts` alongside the extraction-side
+  `COUNTRY_NAMES`/`COUNTRY_ALIASES` it reads from. Keys transcribed directly
+  from `COUNTRY_NAMES` (`structured-extract.ts:806-819`, confirmed against
+  the live file, not from memory of an earlier read) in the same order, one
+  ISO 3166-1 alpha-2 code per row. **Did not trust memory alone for 198 data
+  points** — cross-checked every single code against Wikipedia's ISO
+  3166-1 alpha-2 article via six separate `WebFetch` calls (batched by
+  cluster: the confusable pairs first — Iran/Ireland/Iceland, Niger/Nigeria,
+  Sudan/South Sudan, Slovakia/Slovenia, Dominica/Dominican Republic,
+  Austria/Australia, Saudi Arabia/South Africa, and the full nine-country L
+  cluster and eighteen-country M cluster, both notorious for mix-ups — then
+  the remaining ~150 alphabetically), zero discrepancies found against my own
+  transcription. `"United States"` and `"United States of America"` (both
+  genuine `COUNTRY_NAMES` entries, the gazetteer's own alias handling) both
+  map to `"US"`, deliberately.
+
+  Wired into the LOCATION tile's `detail` line in `buildJobFacts`
+  (`countryAbbreviation(clean(job.place?.country))` in place of the bare
+  `clean(job.place?.country)`) — the only call site, confirmed by grep before
+  touching anything; `job.visa.country` (a different field entirely, used by
+  the VISA tile's evidence line) is untouched. Never omits: falls back to the
+  input string unchanged when no key matches, per B's own instruction, so a
+  country genuinely outside the gazetteer (or outside ISO 3166-1 entirely —
+  Kosovo's disputed status is the real-world example the new fallback test
+  uses) still renders rather than vanishing.
+
+  **Rewrote both tests B's risk section named, exactly as it anticipated.**
+  `page.test.ts`'s "joins the country onto the LOCATION tile's sub-line..."
+  (`"Hybrid · United States"` → `"Hybrid · US"`, comment rewritten to
+  describe the table rather than its absence, same convention B3-06's guide
+  established for a stale "cannot exist" comment) and "shows only the half
+  of LOCATION's sub-line it actually has..." — confirmed B's own prediction
+  that the country-only case abbreviates too (`"United States"` →
+  `"US"`; the dangling-separator guard `.not.toContain(" · United States")`
+  → `.not.toContain(" · US")`, same logic, updated string). Grepped the
+  whole test file for every other `country` reference first — one more hit
+  (`visa.country: "United States"` in the unrelated "renders all seven
+  supported facts" fixture, which sets no `place` at all) confirmed
+  unaffected before running, then by running.
+
+  **Added the drift-guard test B's own fix direction asked for.** Unlike
+  this file's other label maps (`ROLE_LABELS`, `VISA_LABELS`,
+  `WORK_MODE_LABELS`, `JOB_SOURCE_LABELS`), which are each keyed by a real
+  TypeScript union so the compiler already refuses a missing case,
+  `COUNTRY_NAMES` is a runtime string list — nothing stops it from
+  drifting out of sync with `COUNTRY_ABBREVIATIONS` except a test that
+  checks. Added one: iterates every `COUNTRY_NAMES` entry, asserts
+  `COUNTRY_ABBREVIATIONS` has that exact key, and asserts the value matches
+  `/^[A-Z]{2}$/`. This test is also what caught the transcription's own
+  correctness before it could reach the gate — it passed on the first run,
+  confirming both completeness and shape across all ~198 rows. Also added a
+  fallback case (`place.country: "Kosovo"`, real and genuinely absent from
+  the gazetteer, not a fictional stand-in) proving the "never omit" rule
+  holds. **Gate: 83 files / 910 tests passing** (4 new: 2 rewritten in
+  place, 2 added), **typecheck clean, 1 pre-existing lint error,
+  unchanged.**
+
+  **Worth A's attention on the next real-data pass.** This closes the
+  fixture's last known difference — round 4's fixture score should now read
+  0 of 32 elements different, if nothing else regressed. It does not touch
+  any real-data finding (R1–R10): B4-13 was always the fixture-only item,
+  independent of the extraction-quality work the rest of this round did.

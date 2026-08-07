@@ -6,7 +6,8 @@ import type {
   JobEnrichment,
   OpportunityPageReadingReason,
 } from "@/lib/opportunities/enrichment";
-import { JobReport } from "./page";
+import { COUNTRY_NAMES } from "@/lib/opportunities/structured-extract";
+import { COUNTRY_ABBREVIATIONS, JobReport } from "./page";
 
 const NOW = Date.parse("2026-07-30T12:00:00Z");
 
@@ -386,11 +387,11 @@ describe("JobReport", () => {
   });
 
   it("joins the country onto the LOCATION tile's sub-line, but never into the subtitle", () => {
-    // B3-08. Plate: "Hybrid · US". job.place.country exists on the type and
-    // is normalised upstream to a full country name ("United States"), not
-    // the plate's two-letter abbreviation — no such abbreviation table
-    // exists anywhere in the codebase yet (a named follow-up, not built
-    // here), so this prints the full name rather than inventing one.
+    // B4-13 / B3-08. Plate: "Hybrid · US". job.place.country is normalised
+    // upstream to a full country name ("United States"); COUNTRY_ABBREVIATIONS
+    // (this file) now turns that into the plate's two-letter form at render
+    // time, rather than printing the full name as it did before this table
+    // existed.
     const html = renderReport(
       baseJob({
         workMode: "hybrid",
@@ -400,7 +401,7 @@ describe("JobReport", () => {
     const locationTile = html.match(
       /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
     )?.[0];
-    expect(locationTile).toContain("Hybrid · United States");
+    expect(locationTile).toContain("Hybrid · US");
 
     // The subtitle's own third segment calls the same workModeLabel() but
     // must never gain a country — its own plate example, "Hybrid (3 days
@@ -422,8 +423,10 @@ describe("JobReport", () => {
     const countryOnlyTile = countryOnlyHtml.match(
       /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
     )?.[0];
-    expect(countryOnlyTile).toContain("United States");
-    expect(countryOnlyTile).not.toContain(" · United States");
+    // B4-13. Abbreviated unconditionally, not only when paired with a work
+    // mode — this tile has no separate rule for that.
+    expect(countryOnlyTile).toContain("US");
+    expect(countryOnlyTile).not.toContain(" · US");
 
     const modeOnlyHtml = renderReport(baseJob({ workMode: "on-site" }));
     const modeOnlyTile = modeOnlyHtml.match(
@@ -431,6 +434,33 @@ describe("JobReport", () => {
     )?.[0];
     expect(modeOnlyTile).toContain("On-site");
     expect(modeOnlyTile).not.toContain("On-site ·");
+  });
+
+  it("falls back to the full country name when it has no known abbreviation", () => {
+    // B4-13's own fix direction: never omit real, sourced data for lack of a
+    // short form. "Kosovo" is a real, plausible place-extraction result that
+    // is genuinely absent from COUNTRY_NAMES (disputed ISO 3166-1 status),
+    // not a fictional stand-in.
+    const html = renderReport(baseJob({ place: { country: "Kosovo" } }));
+    const locationTile = html.match(
+      /<div[^>]*data-job-fact="work-mode"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(locationTile).toContain("Kosovo");
+  });
+
+  it("gives every COUNTRY_NAMES entry an abbreviation, so the two lists cannot drift apart", () => {
+    // B4-13. COUNTRY_NAMES has no compiler-enforced link to
+    // COUNTRY_ABBREVIATIONS (it is a runtime string list, not a union type) —
+    // this is the check B's own guide asked for in place of that guarantee.
+    for (const name of COUNTRY_NAMES) {
+      expect(COUNTRY_ABBREVIATIONS, `missing abbreviation for "${name}"`).toHaveProperty(
+        name,
+      );
+      expect(
+        COUNTRY_ABBREVIATIONS[name],
+        `"${name}" should map to a two-letter code`,
+      ).toMatch(/^[A-Z]{2}$/);
+    }
   });
 
   it("renders the Applied control in both inactive and completed states", () => {
