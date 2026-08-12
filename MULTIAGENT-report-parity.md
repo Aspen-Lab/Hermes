@@ -275,23 +275,22 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-12 06:55 UTC. C pushed B7-01;
-                   completed and pushed five separate investigation records:
-                   B7-01, B7-02, B7-03, B7-04 (subsumed), and B7-05. C now
-                   implements the four ordered CODE items below. Fixture is
-                   0%; the real-data gate is NOT MET. Full evidence is in §4
-                   "Round 7 — Agent B" and its closing handoff.
+STOPPED BECAUSE:  out of budget @ 2026-08-12 06:55 UTC. C completed and
+                   pushed B7-01, then pushed B7-02 as a durable PARTIAL at
+                   `61a018a`. B7-02 TypeScript is clean, but its old fixtures
+                   still need ownership migration and its adversarial tests
+                   and full gate remain. No B7-03 work has started. Resume
+                   the same C turn from §4's B7-02 partial record.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       C — implement Round-7's CODE guides in this exact order:
-                   (1) B7-01 SolarPACES source-owned event identity; (2)
-                   B7-02 shared selected-posting ownership across work mode,
+WHOSE TURN:       C — resume B7-02 shared selected-posting ownership across
+                   work mode,
                    role kind, summary, and detailed report, including every
                    B7-04 summary acceptance test (B7-04 is not a separate
-                   item); (3) B7-03 current venue city/region/country
+                   item); then (3) B7-03 current venue city/region/country
                    extraction; (4) B7-05 source-owned employer identity,
                    after B7-02. Commit/push each item separately, then A
                    remeasures fixture and real data. No POLICY items remain.
@@ -308,9 +307,9 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 INVESTIGATION COMPLETE; C IMPLEMENTATION
-                   PENDING.** Fixture: 0 of 32 different (0%). Real defects
-                   remain SolarPACES wrong identity, hiringcafe foreign
+STATUS:           **ROUND-7 C IN PROGRESS: B7-01 COMPLETE; B7-02 PARTIAL.**
+                   Fixture: 0 of 32 different (0%). Real defects remain
+                   hiringcafe foreign
                    selected-posting facts/summary, TiRT7 missing true WHERE,
                    and Himalayas's confirmed Workday/Luminare employer
                    mismatch. B7-04 is fully subsumed by B7-02, not another
@@ -319,21 +318,21 @@ STATUS:           **ROUND-7 INVESTIGATION COMPLETE; C IMPLEMENTATION
                    guide item: 83 files / 948 tests, 947 passing with only
                    the documented live benchmark flake; typecheck clean;
                    exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET; four CODE items await
-                   C.** Do not count B7-04 separately. See §4 "Round 7 —
-                   Agent B" for executable detail, tests, dependencies, and
-                   the next-A real-data checks.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-02 is PARTIAL, then
+                   B7-03 and B7-05 remain.** B7-01 is implemented at
+                   `661c92f`; do not count B7-04 separately. See §4's B7-02
+                   partial record for the exact resume point.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 06:30 UTC. Agent B
-completed and pushed every Round-7 guide record, with no product/test code.
+**STOPPED BECAUSE:** out of budget @ 2026-08-12 06:55 UTC. C pushed B7-01
+complete at `661c92f` and B7-02 partial at `61a018a`; resume B7-02's fixture
+migration, adversarial tests, and full gate from its §4 partial record.
 `HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
 instruction.
 
-**WHOSE TURN: C.** Implement only this order: (1) B7-01 SolarPACES
-source-backed event identity; (2) B7-02's one selected-posting scope across
+**WHOSE TURN: C.** Resume B7-02's one selected-posting scope across
 work mode, role kind, Tier-0 summary, and BYOK detailed report — **including
 B7-04's acceptance tests, with no separate R4 implementation**; (3) B7-03's
 generic current venue city/region/country path; (4) B7-05's generic
@@ -341,8 +340,8 @@ source-owned employer hierarchy, after B7-02. No POLICY items are awaiting a
 manager decision.
 
 **STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
-MET. The four listed CODE items remain unimplemented. SolarPACES's absolute
-fallback, hiringcafe's foreign-posting fields/summary, TiRT7's true WHERE, and
+MET. B7-01 is implemented; B7-02 is PARTIAL and ungated. Hiringcafe's foreign
+posting fields/summary, TiRT7's true WHERE, and
 the confirmed Himalayas employer mismatch must be remeasured after C. B7-04 is
 subsumed, not an additional metric or code path. B6-08 careerservices amenity
 proximity and B6-04 Tesla title-employer extraction remain closed; continuity
