@@ -270,129 +270,142 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-12 01:14 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 01:15 UTC. Round-5 C
-                  resumed from the prior C's monthly-spend-limit death
-                  (which had landed B5-01/B5-02 only) and worked B5-03
-                  through B5-07 in the required numbered order, one commit
-                  each, pushed immediately per item — **all five landed,
-                  nothing skipped, nothing left partial.** B5-08 (the
-                  testing-discipline note, not a code item) was folded into
-                  every new test written this round, and its own closing
-                  note appended alongside B5-07's commit. Full detail, code
-                  citations, and exact gate readings per item are in §4
-                  "Round 5 — Agent C"; do not re-derive from this summary.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 01:40 UTC. Round-6 A ran the
+                  full two-part mandate: fixture re-derived at 0% (confirmed
+                  from render), real-data pass against 6 continuity postings
+                  (the same 3 events + 3 jobs round 5 named, re-fetched
+                  fresh) plus one fresh live pool (17 real events, 12 real
+                  jobs — 23+24 real items examined in total, well above the
+                  3+3 minimum). **Ruling 26 confirmed STILL OPEN and
+                  generalised**, per instruction: the `|| host`-shaped
+                  fallback exists in at least three places, not one
+                  (`jobweb.ts`, `jobs/mapper.ts`, and — the round's single
+                  largest finding — `eventweb.ts`'s `eventNameFrom`, where an
+                  entirely separate, unguarded code path in `enrich.ts` was
+                  found to bypass all of B5-06's guards outright on 4 of 17
+                  fresh events). R11 and R12 closed; R2 improved, not closed;
+                  R4, R7 (= Ruling 26), and R13 still open. B5-02 (named in
+                  this round's TODO, not one of the six R-numbers) is still
+                  open on both of its own real-page repros — **one of round
+                  5 C's own "CLOSED" claims (`careerservices.upenn.edu`) does
+                  not survive direct re-measurement**, stated plainly in §4
+                  rather than silently corrected. Full detail, evidence, and
+                  exact quotes are in §4 "Round 6 — Agent A"; do not re-derive
+                  from this summary.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
-ROUND:            5
-WHOSE TURN:       A — **round 5's implementation is done. Run the round-6
-                  measurement** (same two-job mandate every A round since 4:
-                  the normal real-data pass, §2 under Agent A; nothing new
-                  queued from §1k/§1l this time — that measurement is
-                  already done and Ruling 25 is settled). Re-derive the
-                  fixture percentage (should still read 0 differences — this
-                  round touched no report-layer component, only the
-                  extraction pipeline, so the fixture should not have moved,
-                  but confirm rather than assume) **and** run the same
-                  real-data pass against fresh real events/jobs, scoring
-                  R2/R4/R7/R11/R12/R13 against the CURRENT code, plus
-                  anything newly wrong this round's changes introduced. **See
-                  the TODO below ("What to check first") for the priority
-                  order** — several of this round's fixes are verified only
-                  against hand-written adversarial fixtures, the same
-                  position B5-01/B5-02 were in before this round's real-data
-                  pass found their false positives.
+ROUND:            6
+WHOSE TURN:       B — **write the round-6 fix guide.** Your work list is §4
+                  "Round 6 — Agent A", read in full — it is organised in the
+                  same priority order the TODO below repeats. **Read §1m
+                  Ruling 26 first**, then A's "FIRST" section, before
+                  anything else: the fix direction it asks for is explicitly
+                  not "add another guard" but "may the company slot (and,
+                  newly relevant, the event name) be empty/absent at all,"
+                  and B is the one who costs that, not C.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
-                  gate is redefined.** The loop continues until the reports
-                  work on REAL data, not just the fixture. Read §1j before
-                  doing anything; it changes what "0%" means. **§1l Ruling
-                  25 (2026-08-07) settles B4-12/Ruling 24 on top of it: no
-                  headless browser — the free-text extractors are the main
-                  road, JSON-LD the minority path.** Round 5's guide (B's
-                  entry, below) is written against both.
-STATUS:           **ROUND-5 IMPLEMENTATION COMPLETE.** B's guide (8 items,
-                  §4 "Round 5 — Agent B") is now fully landed: B5-01/B5-02 by
-                  the prior C (before the monthly-limit death), B5-03
-                  through B5-07 by this C, one commit each, pushed
-                  immediately. B5-08 (testing-discipline note, not a code
-                  item) shaped every new test written across all seven code
-                  items and got its own closing note. **Nothing skipped,
-                  nothing left partial.** Full per-item detail — exact code
-                  changes, design decisions and their reasoning, tests added,
-                  and gate readings — is in §4 "Round 5 — Agent C"; do not
-                  re-derive from this summary.
+                  gate is redefined.** Read §1j before doing anything; it
+                  changes what "0%" means. **§1l Ruling 25 — no headless
+                  browser; free-text extractors are the main road, JSON-LD
+                  the minority path.** **§1m Ruling 26 (2026-08-12,
+                  BINDING) — a guard that rejects a bad candidate and then
+                  falls through to an unguarded, non-optional default (a
+                  bare hostname; an unfiltered URL slug) has not fixed
+                  anything; it has renamed the defect.** Round 6's A entry
+                  confirmed this shape in three places and asks B to decide,
+                  per file, whether the honest fix is "may render nothing"
+                  rather than "guard harder." Round 6's guide must be
+                  written against all three rulings.
+STATUS:           **ROUND-6 MEASUREMENT COMPLETE.** Fixture: 0% (unchanged
+                  from round 5, reconfirmed from render). Real data: R11
+                  (`extractExpectedSize` cohort-year fix) and R12 (`See
+                  posting` placeholder) are **CLOSED**, reconfirmed live on
+                  their original repro pages plus a broader fresh sample. R2
+                  (event WHERE) is **IMPROVED, NOT CLOSED** — the WHERE tile
+                  is now silent rather than confidently wrong, exactly as
+                  B5-05's own author predicted, but the true venue still
+                  does not appear. **R4, R7, and R13 are STILL OPEN.**
 
-                  **One correction C made to B's own citation, worth
-                  knowing**: B5-07's guide said `mapper.ts` already had
-                  `roleTitle` computed before `summary`; it was actually
-                  computed after. C reordered the two statements rather than
-                  treating it as a blocker — noted here since it is the kind
-                  of small drift this loop's own recurring lesson warns
-                  about (the next role finds something the previous one got
-                  slightly wrong).
+                  **R7 = Ruling 26, scored together per instruction.** B5-03's
+                  two tier-1 guards are confirmed working on fresh data at
+                  scale (0 of 12 real jobs this round show the old wrong
+                  shapes) — real, verified progress — but 6 of 12 (50%) now
+                  show a bare hostname instead, including one case where the
+                  true employer's name is present in the very same title
+                  string the card renders. Full evidence, including a
+                  same-shape confirmation in `jobs/mapper.ts:143` that is not
+                  jobweb-specific, is in §4's "FIRST" section.
 
-                  **Two design decisions C made that go beyond a literal
-                  reading of B's guide, both worth A's attention because
-                  they involve a judgement call, not just an implementation
-                  choice:**
-                  - **B5-03's `looksLikeHostBrand()` is deliberately
-                    one-directional**, not the bidirectional fuzzy match B's
-                    own phrasing suggested — a bidirectional version would
-                    have rejected a real company name that legitimately
-                    shares a root with its own domain (an existing test
-                    fixture, "Acme Corp" at acme.test). Caught before
-                    writing new tests, not after. **B5-06 needed a second,
-                    narrower function** (`looksLikeArticledHostBrand`) to
-                    reach B's own named example ("The Engine" on
-                    engine.xyz), which sits on the OPPOSITE side of that
-                    same directional line — see B5-06's own entry for the
-                    full reasoning and a named residual risk (cannot
-                    distinguish an organisation's own unrelated brand from a
-                    conference's own dedicated domain).
-                  - **B5-03's tier 2 (JSON-LD `hiringOrganization`) was not
-                    built** — B named it optional and it is the larger of
-                    the two tiers (five call sites across four files).
-                    Tier 1 alone is real, verified progress on all three of
-                    A's named real-job repros.
+                  **R13's biggest news this round is not either of B5-06's
+                  two named events (both re-checked live; see §4) — it is a
+                  newly-found architectural gap.** `enrichEventCandidates()`
+                  (`enrich.ts`, written in round 4 for B4-01, untouched by
+                  B5-06) prefers a fetched page's own title whenever it
+                  clears `looksLikeEventTitle()` alone — never
+                  `isChromeSegment()`, never the segment splitter, never any
+                  of B5-06's three fixes. Confirmed directly: calling
+                  `eventNameFrom()` on a real chrome-wrapped live title
+                  (`ibatterysummit.com`, `"Home - International Battery
+                  Summit"`) correctly returns `"International Battery
+                  Summit"` — but the report renders the uncleaned original
+                  anyway, because that value never went through
+                  `eventNameFrom()` at all. **4 of 17 fresh real events this
+                  round show this exact signature.** This is a design
+                  question for B (which source is authoritative for an
+                  event's name once a page is fetched), not a one-line patch
+                  for C to guess at.
 
-                  **Verification note, worth the next A's attention,
-                  mirroring B's own note last round.** C ran the full gate
-                  after every one of the five items (not just once, cold) —
-                  83 files / 937 tests, 936 passing (the one documented
-                  `benchmark.test.ts` live-search flake, unchanged
-                  throughout), typecheck clean, exactly 1 pre-existing lint
-                  error, at every checkpoint. Net +23 tests this round from
-                  the prior C's checkpoint (914 → 937): +9 (B5-03), +1
-                  (B5-04), +3 (B5-05), +6 (B5-06), +4 (B5-07). Zero tests
-                  deleted, zero rewritten — every gate this round only added
-                  coverage.
-LAST DIFFERENCE:  **0% fixture / real data still far from it — measured
-                  BEFORE this round's implementation.** See §4 "Round 5 —
-                  Agent A" for the full numbered findings (R2/R4/R7/R9/R11/
-                  R12/R13 open at measurement time). **This number is now
-                  stale.** It will not update until A completes the round-6
-                  measurement described in WHOSE TURN above; do not treat it
-                  as this round's result. B5-01/B5-02 (R11, `workMode`) were
-                  already confirmed landed by the prior C against real-data
-                  reasoning, not yet re-measured live; B5-03 .. B5-07 (R7,
-                  R12, R2, R13, R4) are new this round and have **not been
-                  measured against a live search at all** — every one of
-                  this round's fixes was verified against hand-written
-                  fixtures (including deliberately adversarial ones, per
-                  B5-08) and by hand-tracing B's own real-data citations
-                  where B quoted specific real pages, not by re-running the
-                  actual pipeline. That is exactly the position B5-01/B5-02
-                  were in before this round's own A found `workMode`'s false
-                  positive — treat every one of B5-03 .. B5-07 as unverified
-                  against real data until A's round-6 pass says otherwise.
-GATE (0%):        NOT MET (unchanged from before — C does not set this; only
-                  A's own re-measurement can move it).
+                  **R4 still open**, three fresh chrome shapes found in real
+                  job summaries this round that none of B5-07's two guards
+                  target (a Markdown-link remnant; concatenated
+                  filter/listing chrome with no separators; a Markdown
+                  heading marker plus an unrelated newsletter CTA) — no
+                  evidence of B5-07 over-rejecting a genuine sentence,
+                  though.
+
+                  **B5-02 (`extractWorkMode`), named in this round's own
+                  TODO though not an R-number: still open on both of round
+                  5's own named real-page repros.** `hiringcafe.com` is
+                  precisely re-traced to a *different* real job's own text
+                  ("BAE Systems... Hybrid Internship," Nashua NH) bleeding in
+                  via the same-page-multiple-listings mechanism, not
+                  furniture — consistent with what tier 1 was never going to
+                  fix. **`careerservices.upenn.edu` is the one worth flagging
+                  loudest: round 5 C's own closing note called this
+                  "CLOSED," and direct re-fetch shows the identical two
+                  trigger mentions ("on-site visitors," "on-site fitness")
+                  are still present in the exact text `extractWorkMode()`
+                  scans, and the field still resolves to `"on-site"`.** Not a
+                  new regression (nothing changed there this round) — a
+                  previous round's own verification claim that does not
+                  survive being checked again.
+
+                  Full per-item detail, every quote sourced from a real
+                  render or a real function call (never a hand-trace alone),
+                  is in §4 "Round 6 — Agent A"; do not re-derive from this
+                  summary.
+LAST DIFFERENCE:  **0% fixture (unchanged) / real data: 2 of 6 required
+                  R-numbers closed (R11, R12), 1 improved-not-closed (R2), 3
+                  still open (R4, R7, R13) — plus B5-02 still open on both
+                  its own named repros, and one new architectural finding
+                  (the `enrich.ts` title-preference bypass) larger in scope
+                  than any single R-number.** Measured AFTER round 5's full
+                  implementation, live, against 6 continuity postings plus a
+                  fresh 17-event/12-job pool. See §4 "Round 6 — Agent A" for
+                  the full per-item table and every piece of supporting
+                  evidence. This number will not update until B's round-6
+                  guide is written and C implements it.
+GATE (0%):        NOT MET. Real-data half is the blocker (per §1j Ruling 23,
+                  both halves must read zero) — R4, R7/Ruling 26, and R13 are
+                  open, B5-02 is open on both its repros. Fixture half reads
+                  0% on its own, unchanged.
 
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
@@ -566,69 +579,93 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            all 13 items (landed, intentionally skipped, or additive-piece-
            only per §1k; see §4 "Round 4 — Agent C" for full detail per
            item, and STATUS above for the final gate figure). Round 4 is
-           done; A's round-5 measurement is next, per TODO below.
+           done.
 
-TODO:      **A: run the round-6 measurement.** Round 5's implementation is
-           now fully done (see STATUS above) — all seven ranked B5 items
-           landed, B5-08 folded into every new test. Same two-part mandate
-           as every A round since 4 (§2 under Agent A):
+           **Round 5's fix guide, B5-01 .. B5-08 (7 code items + 1
+           testing-discipline note), was written and is now fully
+           implemented** — see §4 "Round 5 — Agent B" and "Round 5 — Agent
+           C" for full per-item detail. Round 5 is done.
 
-           1. **Re-derive the fixture percentage.** Should still read 0
-              differences — this round touched only the extraction pipeline
-              (`jobweb.ts`, `structured-extract.ts`, `eventweb.ts`,
-              `job-details.ts`, `event-details.ts`, `jobs/summarize.ts`,
-              `jobs/mapper.ts`) and one report-layer file
-              (`app/jobs/[id]/page.tsx`, B5-04's placeholder guard, which
-              only ever suppresses a value the fixture never used) — but
-              confirm from rendered output, don't assume from the code.
-           2. **Run the normal real-data pass** — at least 3 real events and
-              3 real jobs through the build's own pipeline, same mechanism
-              as every round since 4. Score R2, R4, R7, R11, R12, R13
-              against the CURRENT code: closed, improved-but-not-closed, or
-              still open. Also check for anything newly wrong that this
-              round's own changes might have introduced — same discipline
-              that caught B5-01/B5-02's false positives last round.
+           **Round 6's measurement is also done** (this entry) — fixture
+           re-confirmed at 0%; real data scored R2/R4/R7/R11/R12/R13 against
+           6 continuity postings plus a fresh 17-event/12-job live pool;
+           Ruling 26 confirmed and generalised to two more call sites; one
+           new architectural finding (the `enrich.ts` title-preference
+           bypass) surfaced. Full detail in §4 "Round 6 — Agent A". B's
+           round-6 guide is next, per TODO below.
 
-           **What to check first — every one of this round's five items is
-           unverified against a live search, per STATUS's own note above.**
-           In priority order (same reasoning as this round's own TODO: check
-           the items most likely to produce a confident wrong answer,
-           first):
+TODO:      **B: write the round-6 fix guide.** Round 6's measurement is done
+           (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
+           **Read §1m Ruling 26 first**, then A's "FIRST" section in that
+           entry, before writing anything: the required fix direction is not
+           "add another guard," it is "may this slot legitimately render
+           nothing," costed per file, per §1m's own instruction.
 
-           - **B5-06's site-brand check** (`looksLikeHostBrand`/
-             `looksLikeArticledHostBrand` in event name extraction) has a
-             named, undefended residual: it cannot distinguish an
-             organisation's own unrelated brand (correctly rejected) from a
-             conference's own dedicated domain that legitimately matches its
-             own name (would be wrongly rejected). If a real event's own,
-             correct, terse name goes missing after this round and its
-             report falls back to a URL-slug/snippet-derived name instead,
-             check this mechanism first.
-           - **B5-03's tier-1 guards** (job-board-brand and bare-location
-             rejection in the company slot) were built and tested against
-             synthetic fixtures modelled on A's PARAPHRASED description of
-             three real jobs, not verified against those pages directly.
-             Check whether the company slot now reads correctly on those
-             same three postings, or a fresh sample.
-           - **B5-05's historical-framing check** (event WHERE) converts a
-             wrong city to a silently absent one on its own real repro, by
-             the fix's own design — confirm the WHERE tile is now silent
-             (not still wrong, and not the true venue, unless the gazetteer
-             happens to carry it) on that same real event.
-           - **B5-07's title-echo check** — confirm it doesn't over-reject a
-             genuine sentence on real postings the way its own false-positive
-             guard test protects against on a fixture only.
-           - **B5-04's placeholder guard** is the most mechanical of the
-             five (a string comparison, not a heuristic) — lowest risk of
-             this group, but confirm `"See posting"` no longer appears
-             anywhere in a real job's LOCATION tile or subtitle.
+           **Required ranking, per A's own priority order — do not re-rank
+           by visual prominence:**
+
+           1. **Ruling 26 / R7 — the job company slot's fallback.** 6 of 12
+              real jobs this round (50%) render a bare hostname, including
+              one where the true employer's name is already present in the
+              same title string the card renders. B's own round-5 guide
+              already named tier 2 (JSON-LD `hiringOrganization`) as the
+              piece that actually closes this; A's evidence makes it the
+              clear top priority, not an optional extra. Also decide: may
+              `companyOrLab` be empty/absent at all — for both `jobweb.ts`'s
+              own `|| host` AND `jobs/mapper.ts:143`'s independent
+              `?? fallbackCompany` (which fires for ANY source with a blank
+              `company`, not only jobweb-sourced postings). Report what an
+              empty company slot actually renders on the card and in the
+              report before recommending anything, per §1m's own text.
+           2. **R13's new architectural finding — the `enrich.ts`
+              title-preference bypass.** `enrichEventCandidates()`'s own
+              preference for a fetched page's `structured.name` checks only
+              `looksLikeEventTitle()`, never `isChromeSegment()` or the
+              segment splitter — so it can, and on 4 of 17 fresh events did,
+              overwrite an already-correctly-cleaned `eventNameFrom()` result
+              with a raw, chrome-wrapped page title. This is a design
+              decision (which source is authoritative for an event's name
+              once a page is fetched, and whether `enrich.ts` should route
+              through `eventNameFrom()`'s own guards rather than
+              `looksLikeEventTitle()` alone) — B's job to size and direct,
+              not C's to guess at unguided.
+           3. **R13's two named-event residuals.** (a) The site-brand check
+              now over-rejects a real, honest, terse conference name that
+              legitimately matches its own dedicated domain (`"SolarPACES"`
+              at `solarpaces.org`, confirmed firing) — B5-06's own author
+              flagged this exact shape as undefended. (b) `nameFromUrlSlug()`
+              has no headline/chrome guard of its own at all, so when the
+              title-segment path correctly rejects everything, this fallback
+              can reinstate an equally bad, narrative-headline-shaped name —
+              confirmed live, the same Ruling-26 shape independently found
+              on the event side.
+           4. **R4 — three new chrome shapes in job summaries** that clear
+              both of B5-07's guards (a Markdown-link remnant; concatenated
+              filter/listing chrome with no separators; a Markdown heading
+              marker plus a newsletter CTA). B5-07's own closing note already
+              points at the real fix — extracting the role description from
+              the fetched page rather than the low-fidelity search snippet —
+              cost that properly rather than adding a fourth narrow guard.
+           5. **B5-02's `careerservices.upenn.edu` regression-in-record.**
+              Not a code item — a correction to the project's own record.
+              Round 5 C's closing note called this repro "CLOSED"; A's
+              direct re-fetch shows it is not (the same two trigger mentions
+              are still present in the exact text `extractWorkMode()` scans
+              — they were never furniture, so tier 1 was never going to
+              remove them). Read this before assuming
+              `extractWorkMode()`'s known-issues list is shorter than it is.
+
+           **R2 (event WHERE) and R12 (`See posting`) do not need a guide
+           entry.** R12 is closed, reconfirmed on 7 real postings. R2 is
+           improved (silent, not wrong) and its remaining gap (gazetteer
+           coverage) is already a named, open-ended limitation, not a new
+           item to guide.
 
            Full instructions and the exact pipeline entry points are in §2
-           under Agent A, unchanged from round 4's own mandate. Give both
-           the fixture percentage and the real-data findings as their own
-           numbered list, re-list exclusions (a)-(n) by name, and set `GATE
-           (0%): MET` only if truly zero differences remain — otherwise hand
-           a fresh numbered list to B for round 6's guide.
+           under Agent A, unchanged. As always: name the file and the code,
+           say `MISSING` / `WRONG DATA` / `WRONG SHAPE`, name the tests at
+           risk, and flag anything that reads as a judgement call for the
+           manager rather than deciding it yourself.
 
 TODO (superseded — completed, kept for the record):
            **B: write the round-5 fix guide, B5-01 … B5-NN.** Your work list
@@ -869,6 +906,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 3 | 16% | 0 absent, 10 wrong shape/copy, 22 exact (27/32). Gate not met — 13 differences, 5 job and 8 event. **Measured by the MANAGER, not an A subagent** (four agents died on the spend limit or a stall), so this round is less independent than 1 and 2. Reversed §1f Ruling 17 after finding the kind label defined on plate 04; B2-15 landed for only one of its two table rows. Two open POLICY items. |
 | 4 | **3% fixture / real data far worse** | 0 absent, 1 half, 31 exact (31/32) on the hand-built fixture — one string from the gate. **First real-search run says otherwise:** 0 of 3 real events carry fees, roster, or deadlines; 0 of 3 real jobs carry salary, work mode, or materials; one real event H1 is a stray COVID-19 sentence. Gate not met. Measured by the MANAGER (fifth agent died on the spend limit). |
 | 5 | **0% fixture / real data still far from it** | Fixture: 0 of 32 different (B4-13 confirmed landed, from render). Real data (3 events + 3 jobs, same profile round 4 used): R3/R5/R6(closed)/R8/R10 closed or unexercisable; R2/R4/R7/R9 still open (R7 worse than reported — wrong company-slot value on 3 of 3 real jobs, none the shape B4-03 fixed); three new findings, R11 (a brand-new extractor's first real-data test produced a wrong headcount from a cohort-year label), R12 (job LOCATION tile leaks the literal `"See posting"` placeholder — the event tile's equivalent guard was never mirrored), R13 (event-name quality not closed as a class — 2 of 3 real events, different shapes than R1's). §1k's shell-rate diagnostic: 14.8% of successfully-fetched real pages (4/27) are JavaScript shells — real, but well short of explaining round 4's near-universal coverage gaps by itself; JSON-LD did not rescue any of the 4 shells sampled and is itself present on only 10%/38.5% of real (non-shell) event/job pages. Gate not met. Measured by an A subagent — restart of a round-5 A that died on the spend limit before committing findings (§4 "Round 5 — Agent A (DIED)"). |
+| 6 | **0% fixture / real data: 2 of 6 required R-numbers closed** | Fixture: 0 of 32 different, unchanged, reconfirmed from render. Real data (6 continuity postings, same 3 events + 3 jobs round 5 named, re-fetched fresh, plus a fresh 17-event/12-job live pool): **R11, R12 CLOSED**; **R2 IMPROVED, NOT CLOSED** (WHERE tile now silent instead of confidently wrong, exactly as its own fix predicted); **R4, R7, R13 STILL OPEN**. **R7 = Ruling 26** (§1m, found by the manager between rounds): B5-03's guards correctly reject the old wrong shapes on 100% of a fresh sample, but 6 of 12 real jobs (50%) now show a bare hostname via the guard's own `\|\| host` fallback — generalised to a second, non-jobweb-specific instance in `jobs/mapper.ts:143`. **R13's largest finding is new**: `enrich.ts`'s own title-preference (written in round 4, untouched by B5-06) bypasses `eventNameFrom()`'s entire guard apparatus by checking only one of its several conditions — confirmed on 4 of 17 fresh events; plus B5-06's own two named real events both re-checked live (one improved-not-closed, one still open with its author's own flagged residual — a real event's honest name rejected as a "site brand" — confirmed firing). R4: B5-07 closes its own two repros; three new chrome shapes found in fresh summaries. **Supplementary, not an R-number: B5-02 (`workMode`) still open on both of round 5's own named repros — one directly contradicts round 5 C's own "CLOSED" claim, confirmed by direct re-fetch.** Gate not met. Measured by an A subagent. |
 
 ---
 
@@ -10740,5 +10778,90 @@ question to cost, not a patch to sneak in.
 | R11 | **CLOSED** | Reconfirmed live on the original repro page: `extractEventDetails` now returns `expectedSize: undefined`, not `2025`. |
 | R12 | **CLOSED** | 7 of 7 real postings checked (2 from round 5 + 5 fresh) render zero leaks of `"see posting"`. |
 | R13 | **STILL OPEN** | Both of B5-06's named real events re-checked live: event 2 improved-not-closed (chrome gone, but URL-slug fallback gives an incomplete name); event 3 still open (site-brand check now over-rejects the real name "SolarPACES," and the unguarded `nameFromUrlSlug` fallback reinstates an equally headline-shaped name). Plus a newly-found architectural bypass (`enrich.ts`'s title preference skips `eventNameFrom()`'s guards entirely) confirmed on 4 of 17 fresh events. R8 independently reconfirmed still open on its own original page. |
+
+---
+
+#### Final gate
+
+Ran cold, after deleting the throwaway harness (`git status --short` showed a
+clean tree first):
+
+```
+cd web && npx vitest run && npx tsc --noEmit && npx eslint .
+```
+
+**83 files / 937 tests, 936 passing.** The one failure is
+`src/lib/events/benchmark.test.ts` — the documented live-search flake
+(`expected 'Salvador' to be 'Chicago'` — the same real conference resolved to
+a different city than the test's own hard-coded expectation on this run's
+live search). Exactly the flake §3's standing ruling names; not investigated
+further, not treated as a regression. **Typecheck clean. Exactly 1
+pre-existing lint error** (`src/components/persona/quiz.tsx:46`), unchanged.
+**These figures match §1's recorded baseline exactly — no regression from
+this round's own measurement work**, which changed no product code (only a
+throwaway test file, deleted before this entry was finished).
+
+Worth noting: this same live gate run independently corroborated part of the
+R13 finding above — `benchmark.test.ts`'s own top-5 output (different
+profile, different search terms, same day) included `"Program | Battery
+Safety Summit | August 12-13, 2026"` and `"The First European Conference on
+Molten Salt Reactor ..."`, the same defect shapes this round's own harness
+found independently.
+
+---
+
+#### Closing summary
+
+Two-part mandate complete: fixture 0% (unchanged, confirmed from render, not
+assumed), real-data pass run against 6 continuity postings plus a fresh
+17-event/12-job live pool (23 events + 24 jobs total real items examined
+across both passes, well above the 3+3 minimum). Ruling 26 confirmed and
+generalised as instructed — the `\|\| host` shape exists in at least three
+places (`jobweb.ts`, `jobs/mapper.ts`, and `eventweb.ts`'s `eventNameFrom`),
+and a fourth, more consequential gap was found alongside it: an entirely
+separate code path (`enrich.ts`'s title preference) that bypasses
+`eventNameFrom()`'s guards altogether, confirmed on 4 of 17 fresh events.
+
+**Score: R11 and R12 closed. R2 improved, not closed. R4, R7 (= Ruling 26),
+and R13 still open. B5-02, explicitly named this round though not one of the
+six R-numbers, still open on both of its own named repros — one of round 5
+C's own "CLOSED" claims (`careerservices.upenn.edu`) does not survive direct
+re-measurement.** `GATE (0%): NOT MET`.
+
+**What B should read first, in priority order, matching how this entry is
+organised:**
+1. **Ruling 26 / R7** — B was already asked to cost tier 2 (JSON-LD
+   `hiringOrganization`) properly this round rather than leave it optional;
+   this round's 50%-of-sample evidence makes that the clear top priority.
+   Also: whether the company slot may be *empty* at all (§1m's own question
+   2), now with `jobs/mapper.ts:143`'s own independent fallback confirmed as
+   a second instance of the same shape, not just jobweb.ts's.
+2. **R13's new architectural finding** — the `enrich.ts` title-preference
+   bypass. This is a design question (which source is authoritative for an
+   event's name once a page is fetched), not a one-line patch; B should own
+   the direction, not have C guess at it.
+3. **R13's own two named-event residuals** — the SolarPACES over-rejection
+   (does the site-brand check need a carve-out for "domain IS the event's own
+   name," and if so, how would it be told apart from "domain is an unrelated
+   organisation's brand" — B's own guide already named this as undefended);
+   `nameFromUrlSlug()`'s complete lack of a headline/chrome guard of its own.
+4. **R4** — three new chrome shapes (markdown-remnant, concatenated
+   filter-label, Markdown-heading-plus-CTA) B5-07 was never built to catch;
+   B5-07's own closing note already points at the real fix (extract from the
+   fetched page, not the search snippet) being out of a guard's reach.
+5. **B5-02's `careerservices.upenn.edu` regression-in-record** — not a code
+   item by itself, but B should know C's own closing claim for this repro
+   was wrong before writing anything that assumes it is fixed.
+
+**A does not change code and did not investigate root causes beyond what was
+needed to confirm each finding against the real, running code** — every claim
+above was checked by calling the real function or rendering the real
+component, not by reading source and reasoning about it alone, per this
+loop's own recurring lesson.
+
+**Turn lock released** (`HELD BY: free`) in the final commit of this entry,
+per §0d.
+
+**STATUS: COMPLETE.**
 
 ---
