@@ -14306,3 +14306,52 @@ time, not just that the commit succeeded locally** — a successful local
 commit proves nothing about which branch it is on if the checkout moved
 underneath you. This is the round-8 instance of the exact risk this file's
 own Step 0 already names.
+
+#### R4 (job summary chrome) — STILL OPEN, 4 of 4 non-empty real summaries in the fresh pool carry chrome
+
+Every real job with a non-empty `summary` in the fresh pool (run 1 + run 2
+combined, same 11-item pool both times, 4 of 11 items had any summary at
+all — the rest were correctly silent, not scored here) — full text quoted
+because each is short and is the report's own generated field, not scraped
+third-party prose:
+
+1. **`grad.wisc.edu`** (PhD Student Internship Opportunities at Thermo Fisher
+   Scientific): `"Must be able to independently design, plan, and execute
+   experiments, analyze data, and perform basic troubleshooting of
+   experimental protocols. ] and biophysical techniques for evaluating
+   surface interactions."` — a stray `]` mid-sentence. **The exact
+   Markdown-link-remnant shape round 6 named**, on a completely different
+   posting, reconfirmed live.
+2. **`postdocjobs.com`** (Molten Salt Chemical and Electrochemical
+   Engineering): `"More about this employer More jobs from this employer
+   University Profile"` — **zero role content**. Pure site-navigation chrome,
+   nothing else. This is a regression to round 4's *original* R4 shape
+   ("prints scraped site chrome as its role description"), not a new edge
+   case B5-07's later guards were built against.
+3. **`openmc.discourse.group`** (a forum thread, `?page=2`): `"Job vacancies
+   looking for OpenMC skills Announcements"` — the forum's own category
+   label ("Announcements") appended with no separator. A new chrome shape,
+   not named in any prior round.
+4. **`employbl.com`** (2027 Summer Investment Internship, Battery Ventures):
+   `"Battery is a private equity and venture capital firm with over 40 years
+   of heritage investing in category-leading technology companies.
+   Qualifications: ### Get the Saturday tech briefing [..."` — **the exact
+   Markdown-heading-plus-newsletter-CTA shape round 6 named**
+   (`"...category-leading technology companies. Qualifications: ### Get the
+   Saturday tech briefing ["`), reconfirmed live, closely matching wording —
+   plausibly the same underlying source template recurring across postings,
+   not proof of a fresh independent instance, but proof the shape is still
+   unfiltered today.
+
+**4 of 4 (100%) of this round's non-empty real summaries carry chrome.**
+Two are exact reconfirmations of round-6-named shapes (still unfixed, one
+round later); one is a full regression to the original, pre-B5-07 defect
+shape (zero role content, all navigation chrome); one is new
+(forum/pagination chrome). **R4 is correctly scored STILL OPEN.** No B7-0x
+item targeted `summarizeJob()`'s own filtering — B7-02/B7-04 targeted
+*ownership* (whether text belongs to the selected posting at all), a
+different axis from *chrome* (whether owned text is itself clean). Both can
+be true or false independently, and this round's evidence is that the chrome
+axis is untouched.
+
+Commit follows immediately.
