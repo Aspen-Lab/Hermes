@@ -282,6 +282,11 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:25 UTC. Round-7 C
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
+CANONICAL UPDATE: **WHOSE TURN: MANAGER.** A completed independent B7-06
+                  remeasurement at 2026-08-12 11:05 UTC. This update
+                  supersedes the legacy A lines immediately below: manager
+                  independently verifies before any overall gate decision;
+                  A cannot self-close the gate.
 WHOSE TURN:       A — independently remeasure B7-06 only: fixture, fresh event
                    source/pipeline summaries, report silence versus owned
                    evidence, ranking invariance, and prompt/no-provider
