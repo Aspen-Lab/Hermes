@@ -132,6 +132,25 @@ describe("event detail enrichment", () => {
     });
   });
 
+  it("enriches a source-backed current city/region/country clause", async () => {
+    const item = event(91);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      "<body><p>The conference will be held in Aurora, Northern Territory, Australia.</p></body>",
+      { status: 200 },
+    )));
+
+    const [enriched] = await enrichEventCandidates([item]);
+
+    expect(enriched).toMatchObject({
+      place: {
+        city: "Aurora",
+        region: "Northern Territory",
+        country: "Australia",
+      },
+      location: "Aurora, Northern Territory, Australia",
+    });
+  });
+
   it("uses a guarded event-title segment from fetched structured data", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

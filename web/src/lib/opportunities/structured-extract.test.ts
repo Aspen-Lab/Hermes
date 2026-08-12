@@ -419,21 +419,25 @@ describe("country must belong to the city", () => {
     expect(extractBodyTextPlace(html)).toBeUndefined();
   });
 
-  // B5-05 (round 5, R2): a past-edition mention satisfies the cue check
+  // B7-03: a complete current city/region/country clause is stronger than a
+  // former listed host, even when the current city is outside the gazetteer.
   // exactly the way a current-venue mention does — "have previously been
   // held in Cologne" and "will be held in Lanzhou" both contain "held in" —
   // and nothing distinguished them. The true venue here is deliberately a
   // real, non-gazetteer city (Lanzhou is not in CONFERENCE_CITIES, mirroring
-  // the actual gap A found), so the honest outcome is silently absent, not a
-  // wrong former host — per §1j, that is real progress, not a partial fix.
-  it("does not let a past-edition mention of a cued city win over an absent true venue", () => {
+  // the actual gap A found).
+  it("prefers a current non-gazetteer city clause over a former host", () => {
     const html =
       "<html><body><h1>International Titanium Conference</h1>" +
       "<p>The next edition will be held in Lanzhou, Gansu Province, China," +
       " from August 9.</p>" +
       "<p>Past editions of this conference have previously been held in" +
       " Cologne, Germany (2008).</p></body></html>";
-    expect(extractBodyTextPlace(html)).toBeUndefined();
+    expect(extractBodyTextPlace(html)).toEqual({
+      city: "Lanzhou",
+      region: "Gansu Province",
+      country: "China",
+    });
   });
 
   // The parenthetical-edition-year signal must reject a past host even with
@@ -454,6 +458,32 @@ describe("country must belong to the city", () => {
       "<html><body><p>Join us for its 2026 edition, held in Austin, Texas.</p></body></html>";
     const place = extractBodyTextPlace(html);
     expect(place?.city).toBe("Austin");
+  });
+
+  it("accepts a generic current non-gazetteer city/country clause", () => {
+    expect(extractBodyTextPlace("<body>The conference will be hosted in Aurora, Canada.</body>"))
+      .toEqual({ city: "Aurora", region: undefined, country: "Canada" });
+  });
+
+  it("does not borrow a country from a later sentence for an unknown city", () => {
+    expect(extractBodyTextPlace("<body>The conference will be held in Aurora. Canada supports this field.</body>"))
+      .toBeUndefined();
+  });
+
+  it("does not promote an uncued geographic phrase or a facility-only phrase", () => {
+    expect(extractBodyTextPlace("<body>Aurora, Canada is a research hub.</body>")).toBeUndefined();
+    expect(extractBodyTextPlace("<body>The conference will take place in Aurora Convention Center, Canada.</body>"))
+      .toBeUndefined();
+  });
+
+  it("suppresses both new and gazetteer fallbacks when current venue clauses disagree", () => {
+    const html = "<body>The conference will be held in Aurora, Canada. It will take place in Chicago, United States.</body>";
+    expect(extractBodyTextPlace(html)).toBeUndefined();
+  });
+
+  it("rejects a historical complete city/region/country clause", () => {
+    const html = "<body>Past editions were held in Aurora, Ontario, Canada (2014).</body>";
+    expect(extractBodyTextPlace(html)).toBeUndefined();
   });
 });
 

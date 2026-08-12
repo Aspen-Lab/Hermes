@@ -1353,6 +1353,55 @@ function isHistoricalMention(preceding: string, following: string): boolean {
   );
 }
 
+type CurrentVenueResult =
+  | { status: "found"; place: ExtractedPlace }
+  | { status: "none" | "ambiguous" };
+
+const CURRENT_VENUE_CUE_RE =
+  /\b(?:will be held in|will take place in|takes place in|will be hosted in|is scheduled to be held in)\s+([^,.!?;:|]+),\s*([^,.!?;:|]+)(?:,\s*([^,.!?;:|]+))?/gi;
+const FACILITY_NAME_RE =
+  /\b(?:center|centre|hotel|hall|campus|arena|resort|convention)\s*$/i;
+
+/**
+ * B7-03. A non-gazetteer city is only safe when an explicit current-event
+ * action owns a complete city/region/country clause. This is deliberately
+ * tri-state: ambiguity must suppress the older city-list fallback too.
+ */
+function findCurrentVenueClause(text: string): CurrentVenueResult {
+  const candidates = new Map<string, ExtractedPlace>();
+
+  for (const match of text.matchAll(CURRENT_VENUE_CUE_RE)) {
+    const index = match.index ?? 0;
+    const first = plausiblePlaceName(match[1]);
+    const second = plausiblePlaceName(match[2]);
+    const third = plausiblePlaceName(match[3]);
+    if (!first || !second || (match[3] && !third)) continue;
+
+    const country = matchCountryToken(third ?? second);
+    if (!country) continue;
+    const region = third ? second : undefined;
+    // A venue-only phrase has no separately proved municipal WHERE value.
+    if (FACILITY_NAME_RE.test(first)) continue;
+
+    const end = index + match[0].length;
+    const preceding = text.slice(Math.max(0, index - 120), index);
+    const following = text.slice(end, end + 40);
+    if (isHistoricalMention(preceding, following)) continue;
+
+    const place = { city: first, region, country };
+    const key = [
+      canonicalize(place.city),
+      canonicalize(place.region ?? ""),
+      canonicalize(place.country),
+    ].join("|");
+    candidates.set(key, place);
+  }
+
+  if (candidates.size === 0) return { status: "none" };
+  if (candidates.size > 1) return { status: "ambiguous" };
+  return { status: "found", place: [...candidates.values()][0] };
+}
+
 /**
  * Same ranking as findGazetteerMatch (earliest qualifying position, longest
  * name on a tie) but a city only qualifies if some mention of it — not
@@ -1405,6 +1454,10 @@ function findVenueCity(
 
 export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
   const text = bodyText(html);
+  const currentVenue = findCurrentVenueClause(text);
+  if (currentVenue.status === "found") return currentVenue.place;
+  if (currentVenue.status === "ambiguous") return undefined;
+
   const city = findVenueCity(text, CONFERENCE_CITIES);
   if (!city) return undefined;
 

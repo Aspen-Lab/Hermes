@@ -275,20 +275,18 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished item @ 2026-08-12 08:10 UTC. C completed B7-02
-                   selected-posting ownership and its B7-04 acceptance
-                   coverage; B7-03 is next. Manager lock remains held.
+STOPPED BECAUSE:  finished item @ 2026-08-12 08:15 UTC. C completed B7-03's
+                   generic current-venue extraction; B7-05 is next. Manager
+                   lock remains held.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       C — B7-03 only: generic, current same-clause city/region/
-                   country venue extraction before the gazetteer fallback;
-                   preserve venue-name exclusion and fail closed. Then B7-05
-                   source-owned employer identity, after B7-03. Commit/push
-                   each item separately, then A remeasures fixture and real
-                   data. No POLICY items remain.
+WHOSE TURN:       C — B7-05 only: generic source-record/owned-scope employer
+                   identity after B7-02; explicit high-tier conflicts are
+                   absent. Commit/push the item separately, then A remeasures
+                   fixture and real data. No POLICY items remain.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -302,8 +300,8 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 C IN PROGRESS: B7-01 and B7-02 COMPLETE; B7-03
-                   NEXT.**
+STATUS:           **ROUND-7 C IN PROGRESS: B7-01, B7-02/B7-04, and B7-03
+                   COMPLETE; B7-05 NEXT.**
                    Fixture: 0 of 32 different (0%). Real defects remain
                    hiringcafe foreign
                    selected-posting facts/summary, TiRT7 missing true WHERE,
@@ -314,31 +312,29 @@ STATUS:           **ROUND-7 C IN PROGRESS: B7-01 and B7-02 COMPLETE; B7-03
                    guide item: 83 files / 948 tests, 947 passing with only
                    the documented live benchmark flake; typecheck clean;
                    exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-03 and B7-05 remain.**
-                   B7-01 and B7-02 are implemented; B7-04 remains subsumed,
-                   not a separate item. See §4's B7-02 complete record.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-05 remains.** B7-01,
+                   B7-02/B7-04, and B7-03 are implemented. See §4's B7-03
+                   complete record.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished item @ 2026-08-12 08:10 UTC. C completed and
-pushed B7-02 at `cd0d938`, including B7-04's acceptance coverage. Resume the
-same C turn at B7-03 only.
+**STOPPED BECAUSE:** finished item @ 2026-08-12 08:15 UTC. C completed B7-03's
+generic current city/region/country extraction. Resume the same C turn at
+B7-05 only.
 `HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
 instruction.
 
-**WHOSE TURN: C.** Implement B7-03's generic current venue city/region/country
-path only; then B7-05's generic source-owned employer hierarchy. B7-02 and its
-B7-04 acceptance coverage are complete. No POLICY items await a manager
-decision.
+**WHOSE TURN: C.** Implement B7-05's generic source-owned employer hierarchy
+only. B7-01, B7-02/B7-04, and B7-03 are complete. No POLICY items await a
+manager decision.
 
 **STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
-MET. B7-01 and B7-02 are implemented and gated; TiRT7's true WHERE and the
-confirmed Himalayas employer mismatch remain for C, then A must remeasure the
-real SolarPACES and hiringcafe cases too. B7-04 is subsumed, not an additional
-metric or code path. B6-08 careerservices amenity proximity and B6-04 Tesla
-title-employer extraction remain closed; continuity findings and standing
-exclusions remain binding.
+MET. B7-01, B7-02/B7-04, and B7-03 are implemented and gated; the confirmed
+Himalayas employer mismatch remains for C, then A must remeasure SolarPACES,
+hiringcafe, TiRT7, and Himalayas. B6-08 careerservices amenity proximity and
+B6-04 Tesla title-employer extraction remain closed; continuity findings and
+standing exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
 real gates are separate and both must be zero. C preserves the §1d exclusions
@@ -13309,5 +13305,30 @@ reports only the documented `react-hooks/set-state-in-effect` at
 `src/components/persona/quiz.tsx:46`; `git diff --check` clean. B7-04 is
 closed solely through B7-02's shared scope. Next is B7-03 only; manager lock
 unchanged.
+
+---
+
+#### B7-03 — COMPLETE @ 2026-08-12 08:15 UTC — generic current venue clause
+
+Added one tri-state body-text helper before the existing gazetteer fallback.
+It accepts only an explicit current event-action cue followed in the same
+clause by a plausible city, optional plausible region, and recognized country.
+Historical clauses, facility-only first components, missing/later-sentence
+countries, and two distinct current candidates stay absent; ambiguity also
+suppresses the old gazetteer fallback. The helper returns city/region/country
+only and does not create or surface a venue name.
+
+Rewrote the checked-in TiRT-shaped regression to prove the current
+Lanzhou/Gansu Province/China clause wins over historical Cologne, while adding
+synthetic generic, historical, facility, later-country, uncued, and ambiguity
+coverage. Added event-enrichment coverage proving a source-backed location
+flows into the formatted event location. No TiRT7 fetch, city-list addition,
+host/source exception, provider, credential, model, or network behavior was
+added.
+
+**Gate:** 84 files / 966 tests passing; `tsc --noEmit` clean; `eslint .`
+reports only the documented `react-hooks/set-state-in-effect` at
+`src/components/persona/quiz.tsx:46`; `git diff --check` clean. Next is B7-05
+only; manager lock unchanged.
 
 ---
