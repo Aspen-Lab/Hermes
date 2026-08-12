@@ -13256,4 +13256,23 @@ explicit selected URL/heading owners, add the B7-02/B7-04 adversarial scope
 tests, then run the full gate. The focused enrichment/route suite is not yet
 green. No B7-03 work has started; the manager lock is unchanged.
 
+#### B7-02 — PARTIAL CHECKPOINT @ 2026-08-12 07:56 UTC
+
+Re-read the B7-02/B7-04 contracts and inspected both partial implementation
+commits before changing tests. The focused legacy suite is 10 failures: seven
+job-enrichment fixtures and three detailed-report fixtures still expect an
+unowned whole fetched page to supply facts. Added a small focused
+`job-posting-scope.test.ts` contract proving the selected DOM owner carries a
+matching selected structured record, retains that record with surrounding page
+content, and reaches `enrichJobCandidates()` as `fetchedPostingScope: "owned"`.
+Those three focused assertions pass. This proves the shared resolver/enrichment
+path itself before migrating the older fixtures; no host rule, fetched third-
+party text, model/provider change, B7-03 work, or manager lock change was made.
+
+**Remaining exactly:** migrate the seven enrichment and three route fixtures to
+explicit selected URL/heading owners, add the B7-02/B7-04 URL, duplicate,
+unproven, foreign-sibling, summary, prompt, and raw-description scoring
+adversarial cases, then run the focused and full gates. The manager lock remains
+unchanged.
+
 ---
