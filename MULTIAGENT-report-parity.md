@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
+HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -322,8 +322,8 @@ ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 **STOPPED BECAUSE:** finished item @ 2026-08-12 08:15 UTC. C completed B7-03's
 generic current city/region/country extraction. Resume the same C turn at
 B7-05 only.
-`HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
-instruction.
+`HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 07:26 UTC` for the
+manager-held A measurement.
 
 **WHOSE TURN: C.** Implement B7-05's generic source-owned employer hierarchy
 only. B7-01, B7-02/B7-04, and B7-03 are complete. No POLICY items await a
