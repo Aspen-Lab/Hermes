@@ -303,6 +303,27 @@ describe("source mappers", () => {
     expect(JOB_PATH_RE.test("/careers/jobs/battery-rd-scientist")).toBe(true);
     expect(NON_JOB_PATH_RE.test("/articles/molten-salt-study")).toBe(true);
 
+    // B8-02 (round 8) changed this from company: "QuantumScape" to
+    // company: undefined. This fixture predates looksLikeHostBrand
+    // (B5-03, round 5) entirely and was never revisited against it; it
+    // happened to keep passing only because the pre-B8-02 guard checked
+    // just the FIRST DNS label ("careers"), never the second ("quantumscape").
+    // B8-02 fixed a confirmed live bug where a platform's own brand on a
+    // subdomain (talents.vaia.com -> "Vaia") leaked through as if it were
+    // the employer, by checking every label instead of only the first.
+    // That is the identical shape to this fixture: careers.quantumscape.com
+    // also has its brand-like label second, one position deeper than the
+    // pre-fix check looked. There is no way to tell "a platform's brand
+    // hosted for other employers" apart from "a real employer's own name
+    // on their own careers subdomain" from host structure alone - both are
+    // "candidate equals a domain label" - and looksLikeHostBrand's own
+    // long-standing doc comment already accepts that exact-equal costs a
+    // rare real company name in exchange for catching many more job-board/
+    // platform-brand leaks (see shared.test.ts's "Climatebase" case, same
+    // rule, unchanged, since round 5). Silence here is the guard doing its
+    // job, not a new default - flagged in §4 for the next real-data pass to
+    // check how often "careers.<company>.<tld>" hosting actually costs a
+    // real name versus how often it is a platform in disguise.
     expect(
       webResultToRawJobItem({
         title: "Battery R&D Scientist - QuantumScape",
@@ -311,7 +332,7 @@ describe("source mappers", () => {
       }),
     ).toMatchObject({
       title: "Battery R&D Scientist",
-      company: "QuantumScape",
+      company: undefined,
     });
     expect(
       webResultToRawJobItem({

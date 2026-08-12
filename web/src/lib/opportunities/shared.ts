@@ -206,21 +206,32 @@ export function textMatchesAny(haystack: string, phrases: string[]): boolean {
  * *domain* so neither ever matched a fixed denylist (B5-03/R7).
  *
  * Deliberately one direction only: the candidate must not be LONGER than the
- * domain's first label. `"zerob"` is a prefix of `"zerobonline"` (reject);
- * `"climatebase"` equals `"climatebase"` (reject). The reverse shape — a
- * short domain label sitting as a prefix of a longer candidate, e.g. `"acme"`
- * inside `"Acme Corp"` at `acme.test` — is the ordinary, correct pattern of a
- * company hosting under its own name, and rejecting it would turn a real
- * company name into a lost one. A real company's display name legitimately
- * shares a root with its own domain far more often than a job board's own
- * brand leaks into a candidate slot, so only the narrower, safer direction is
- * checked here. Built for B5-03 (a job board's own name in the job
- * subtitle's company slot); reuse this rather than reinventing it for a
- * similar site-brand check elsewhere (B5-06).
+ * domain label it is checked against. `"zerob"` is a prefix of
+ * `"zerobonline"` (reject); `"climatebase"` equals `"climatebase"` (reject).
+ * The reverse shape — a short domain label sitting as a prefix of a longer
+ * candidate, e.g. `"acme"` inside `"Acme Corp"` at `acme.test` — is the
+ * ordinary, correct pattern of a company hosting under its own name, and
+ * rejecting it would turn a real company name into a lost one. A real
+ * company's display name legitimately shares a root with its own domain far
+ * more often than a job board's own brand leaks into a candidate slot, so
+ * only the narrower, safer direction is checked here. Built for B5-03 (a job
+ * board's own name in the job subtitle's company slot); reuse this rather
+ * than reinventing it for a similar site-brand check elsewhere (B5-06).
+ *
+ * B8-02 (round 8): checked only `host`'s FIRST label, so a brand hosted on a
+ * subdomain (`talents.vaia.com` — the brand "Vaia" is the SECOND label) was
+ * never caught, and a title-parsed "Vaia" sailed through as if it were a
+ * real employer name. Now checked against every label the host has — a
+ * brand can sit at any depth, and there is no reliable way to guess which
+ * label is "the real one" without public-suffix parsing (`co.uk`-shaped
+ * TLDs and the like), which this does not need: trying every label is
+ * simpler and carries the same one-directional safety per label, so a real
+ * company name that merely happens to be longer than every label (the
+ * ordinary, correct case above) is still never rejected.
  */
 export function looksLikeHostBrand(candidate: string, host: string): boolean {
   const normalized = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const domainLabel = host.toLowerCase().split(".")[0] ?? "";
-  if (normalized.length < 3 || !domainLabel) return false;
-  return domainLabel.startsWith(normalized);
+  if (normalized.length < 3) return false;
+  const labels = host.toLowerCase().split(".").filter(Boolean);
+  return labels.some((label) => label.startsWith(normalized));
 }

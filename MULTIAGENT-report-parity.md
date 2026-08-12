@@ -15643,3 +15643,159 @@ confirmed by grep, unchanged from B8-01's own note.
 zero deleted; the one failure is the same documented live-search flake,
 unrelated to this file). TypeScript clean. ESLint: the one standing
 `quiz.tsx:46` error, unchanged.
+
+#### B8-02 — `looksLikeHostBrand`, widened to check every DNS label, SolarPACES re-verified live — DONE
+
+**File:** `web/src/lib/opportunities/shared.ts:201-231`.
+
+Landed exactly as Ruling 31 confirmed and directed: check the candidate
+against every label of the host, not only the first, catching a brand
+hosted on a subdomain (`talents.vaia.com` → "Vaia" is now correctly
+rejected; confirmed by direct call, matching Ruling 31's own verified
+table). The one-directional safety per label (candidate must not be longer
+than the label it is compared against) is unchanged — only which labels get
+checked is new.
+
+**A real precision/recall tension found while implementing, not invented —
+read before treating this as simply "done."** Running only the targeted
+files first (`shared.test.ts`, `eventweb.test.ts`, `jobweb.test.ts`) looked
+clean, but the full-suite gate caught a failure in
+`web/src/lib/jobs/scoring.test.ts` that none of B8-02's own "tests at risk"
+citations named. Traced it: a fixture titled `"Battery R&D Scientist -
+QuantumScape"` at `careers.quantumscape.com` used to correctly keep
+`company: "QuantumScape"`, and now gets rejected to `company: undefined`.
+
+Checked git history before deciding what to do with it —
+`git log -S QuantumScape -- scoring.test.ts` shows this fixture is from
+commit `4811325`, a general pipeline refactor that predates
+`looksLikeHostBrand` and B5-03 entirely. It was never a purpose-built
+regression test for the host-brand guard; it kept passing only because the
+pre-B8-02 code checked exclusively the FIRST label ("careers"), never the
+second ("quantumscape").
+
+**Why this is not fixable by being more careful about which labels to
+check.** `talents.vaia.com` (confirmed bug: "Vaia" is a SaaS careers-portal
+brand hosting a THIRD PARTY's listing, must be rejected) and
+`careers.quantumscape.com` (this fixture: "QuantumScape" is the real
+employer hosting its OWN listing, must be kept) are structurally identical
+— `[generic portal word].[brand].[tld]`, brand in the same position, both
+an exact-length match against that label. Verified directly: both
+`looksLikeHostBrand("Vaia", "talents.vaia.com")` and
+`looksLikeHostBrand("QuantumScape", "careers.quantumscape.com")` return
+`true` under the new code. There is no structural signal in the URL or
+candidate that tells a platform's own brand apart from a real employer's
+own brand on their own domain — that is external knowledge (is this
+specific domain a known job board/ATS platform, which is exactly what the
+curated `KNOWN_JOB_BOARD_DOMAINS` list exists for, incompletely), not
+something derivable from label position. This is not new to B8-02, either
+— the function's own doc comment has documented "candidate equals a domain
+label → reject" as intended behaviour since B5-03 (`"climatebase" equals
+"climatebase" (reject)"` is the doc comment's own example), and the
+identical trade-off already existed for label\[0\] every round since round
+5; B8-02 only makes the code apply that same, already-accepted rule
+consistently to every label instead of leaving deeper labels unchecked.
+
+**Decision: ship as directed, do not invent a narrower heuristic.** Ruling
+28 and Ruling 29 both caution against inventing a new discriminating
+mechanism without a concrete counterexample forcing it, and I have no live
+evidence to design one with — I don't know, from this round's data, whether
+"a real employer's own `careers.<company>.<tld>`-shaped subdomain" or "a
+third-party platform's brand on a similarly-shaped subdomain" is more
+common in this profile's real job pool. Per this loop's own standard,
+silence is the safer of the two wrong choices when the mechanism cannot
+tell them apart — rejecting and falling through to `undefined` is the guard
+doing its documented job, not a new default (Ruling 26 already closed the
+`|| host`-shaped fallback that would have made this actually unsafe).
+**Flagging plainly for the next A:** if `careers.<company>.<tld>`-shaped
+hosting turns out to be common in the live job pool, this trade-off is
+costing real, correct employer names at a rate worth measuring — that is a
+new, narrower question this round's evidence cannot answer, not a
+reopening of B8-02.
+
+**Testing standard (Ruling 31) — hardest case per shape, and why:**
+
+1. **The confirmed bug itself, as the primary regression lock** —
+   `looksLikeHostBrand("Vaia", "talents.vaia.com")` → `true`. Chosen because
+   it is the exact live-confirmed shape from B8-01/B8-02's own report, not a
+   restatement of the already-passing `climatebase.org` single-label case.
+2. **Brand three labels deep** —
+   `looksLikeHostBrand("Acme", "careers.jobs.acme.com")` → `true`. Chosen
+   because "also check the second label" and "check every label" are
+   different implementations that agree on a 2-label case but diverge on a
+   3-label one; this proves the shipped code does the latter, matching the
+   fix direction's explicit instruction not to guess which single label is
+   "the real one."
+3. **Should still NOT reject (the inverse hardest case)** —
+   `looksLikeHostBrand("Vaia Talent Solutions", "talents.vaia.com")` →
+   `false`. Chosen because it is the shape most likely to break silently if
+   the one-directional guarantee were lost while widening from one label to
+   many — a real, longer company name sharing a root with one of several
+   labels must still survive, the same protection the pre-fix, single-label
+   version already had, now proven across a multi-label host.
+
+All three verified by direct call before being written into the test file,
+then confirmed via `npx vitest run`. The `scoring.test.ts` fixture above
+served as an unplanned fourth hardest-case, found by the full-suite gate,
+not anticipated going in — recorded in the "tests at risk" lesson for
+future rounds: **B's citation list is a starting point** (this loop's own
+standing instruction), and this item is this round's proof of it.
+
+**SolarPACES live re-verification — done in this item, not deferred to A,
+per Ruling 31's explicit requirement.** Built a throwaway vitest file
+(`web/src/zz-round8-c-solarpaces-verify.test.ts`, deleted before this
+item's commit) with two checks against this session's own live
+`.local-data/profile.json`:
+
+1. **Targeted fetch** — called `eventweb.fetch()` directly with a
+   SolarPACES-specific query. Found `solarpaces.org` live; raw ingestion
+   name was a full descriptive sentence ("The 32nd SolarPACES Conference
+   will take place on September 15-18, 2026 in Bad Neuenahr-Ahrweiler,
+   Germany.") — a different (already-known, unrelated) shape from what the
+   general query surfaces, but it contains "SolarPACES" and is specifically
+   **not** the bare brand-only string the confirmed bug would have produced
+   had the guard misfired.
+2. **Full pool + enrichment pipeline, the same harness A uses** —
+   `buildDailyEventPool()` with this session's real profile, mapped with
+   `scoredEventToEvent()`. Found `solarpaces.org` in a 16-item live pool
+   with final name **`"32nd SolarPACES Conference"`** — an exact string
+   match to Round 8 A's own pre-fix finding. This is the authoritative,
+   full-pipeline result (raw ingestion plus enrichment's guarded-path
+   override, per Ruling 27), and it is unchanged after B8-02 landed.
+
+Also confirmed by direct call: `looksLikeHostBrand("SolarPACES",
+"solarpaces.org")` still returns `true` — unaffected by the fix, exactly as
+B8-02 predicted, because `solarpaces.org` has only one label before its TLD
+and nothing about that case depends on checking additional labels.
+**SolarPACES (Ruling 28) remains CLOSED after this change**, verified live,
+in this item, not deferred.
+
+**Tests added:** three new cases in `web/src/lib/opportunities/shared.test.ts`
+(`describe("looksLikeHostBrand", ...)`), appended after the existing
+cases, none rewritten. **Tests at risk:** `shared.test.ts`'s existing six
+cases — re-run unchanged, all pass (every existing host is single-label,
+per B8-02's own note, so checking more labels changes nothing for them).
+`eventweb.test.ts`'s site-brand tests (`engine.xyz`, `exampleboard.io`) —
+both single-label, re-run unchanged, all pass. `jobweb.test.ts` — re-run
+unchanged, all pass. **`scoring.test.ts`'s one affected case, rewritten**
+with a comment naming B8-02 and explaining the new contract, per this
+loop's own standing rule (never delete a test to make a change pass;
+rewrite the assertion and say which item changed it).
+
+**Blast radius:** confirmed by grep — `looksLikeHostBrand` has exactly
+three callers: `jobweb.ts:211` (job employer guard), `eventweb.ts:238` (via
+`looksLikeArticledHostBrand`) and `:267` (event chrome-segment guard,
+direct). All three exercised by the tests above; no other caller exists.
+
+**What renders after this guard now correctly fires on a deeper label:**
+identical contract to B8-01 — a rejected candidate falls through to the
+next candidate in the same guard chain (job side) or the next name-
+resolution tier (event side, per B8-02's own citation of
+`eventweb.ts:392-426`'s silent tier fallback), never a placeholder.
+Confirmed via the same subtitle-omission render path on the job side; the
+event side's tier-fallback behaviour is unchanged code, not touched by this
+item.
+
+**Gate after this item:** 85 files / 997 tests, 996 passing (three new in
+`shared.test.ts`, one rewritten in `scoring.test.ts`, zero deleted; the one
+failure is the same documented live-search flake, unrelated). TypeScript
+clean. ESLint: the one standing `quiz.tsx:46` error, unchanged.
