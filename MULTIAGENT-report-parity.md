@@ -11554,3 +11554,115 @@ deserves its own assertion so a future change to the pool order doesn't
 silently reverse it).
 
 ---
+
+##### B6-05 — R13: `nameFromUrlSlug()`'s output is never checked against any guard. `WRONG DATA`. The same Ruling-26 shape, generalised to `eventNameFrom()`'s own slug fallback tier — A's finding 3 in the "generalisation" table, costed here.
+
+**Confirmed against the live code.** `eventweb.ts:390-395`:
+
+```ts
+// Every title segment is chrome. A deep event URL's slug is the most
+// reliable remaining source of the actual event name — try it before the
+// snippet, whose longest sentence is often prose ("Networking: An opening
+// get-together...") rather than a name.
+const fromSlug = url ? nameFromUrlSlug(url) : undefined;
+if (fromSlug) return fromSlug;
+```
+
+`nameFromUrlSlug()` (`:330-350`) mechanically de-hyphenates a URL path
+segment — it has **no shape check of its own at all**: not
+`isChromeSegment`, not `looksLikeEventTitle`, nothing. Whatever the slug
+happens to say is returned outright the moment it clears a bare length
+floor (8+ letters, 3+ words). This is **exactly Ruling 26's shape** — a
+guard rejects every title segment correctly, and the very next line hands
+back a value that was never itself checked against the standard the
+rejected segments just failed. A's own evidence: real event 3's URL path
+`/abstract-submission-deadline-extended-to-march-30` produces
+`"Abstract submission deadline extended to march 30"` — a headline
+sentence, not a name, the identical shape `HEADLINE_PASSIVE_RE` (B5-06's
+own gap-3 fix) was built specifically to reject one line earlier in the
+same function.
+
+**Fix direction — the same predicate the segment tier already applies,
+reused, not reinvented.** Gate the slug result exactly the way B6-01
+recommends factoring the segment tier's own check into a reusable form:
+
+```ts
+if (fromSlug && !isChromeSegment(fromSlug, host) && looksLikeEventTitle(fromSlug)) {
+  return fromSlug;
+}
+```
+
+(`host` is already computed earlier in `eventNameFrom()` for the segment
+tier, in scope at this point in the function — no new plumbing.) If B6-01's
+`bestTitleSegment()` extraction lands first, this can call the same
+`isChromeSegment`/`looksLikeEventTitle` pair it already exposes rather than
+importing them separately — one predicate, two call sites inside the same
+function, not a third reimplementation.
+
+**Verified against the two existing tests that exercise this tier — traced
+by hand, not assumed.**
+
+- `eventweb.test.ts:76-83`, `"falls through to the URL slug when both title
+  and snippet fail every check"`: slug `"Rivertown materials summit 2026"`.
+  `looksLikeEventTitle` → true (no narrative/headline/multi-sentence shape,
+  4 tokens). `isChromeSegment("Rivertown materials summit 2026",
+  "example.com")` → not generic, not an index page,
+  `looksLikeHostBrand` → normalized candidate 28 characters vs. domain
+  label `"example"` (7 characters), not rejected. **Passes the new gate,
+  test unaffected.**
+- `eventweb.test.ts:85-87`, `"still resolves when every title segment is
+  chrome, same as before this round"`: `eventNameFrom("Home | Events", "",
+  undefined)` → `"Home"`. **No `url` argument at all**, so `fromSlug` is
+  `undefined` before this gate is ever reached (`url ? nameFromUrlSlug(url)
+  : undefined`) — this test exercises the function's absolute last resort
+  (`segments[0]`, see below), not the slug tier, and is untouched by this
+  change either way.
+
+**What this does and does not fix for event 3 (SolarPACES) — say this
+precisely, not optimistically.** Tracing the new gate against A's own
+finding: the slug-mined string `"Abstract submission deadline extended to
+march 30"` contains `"submission"` followed within 30 characters by
+`"extended"` — **`HEADLINE_PASSIVE_RE` fires, the new gate rejects it
+too.** This does not make event 3 *worse* — both the rejected slug value
+and the original segment it's built from are equally wrong by this loop's
+own standard (neither is `"SolarPACES"`) — but it is not a confirmed fix
+either. What it **does** do, structurally: today, `nameFromUrlSlug`
+returning a truthy string **always** short-circuits the function before the
+snippet-mining tier ever runs (`:397-406`). Gating it correctly means a
+title whose segments AND slug are both chrome now genuinely falls through
+to snippet mining — a tier that has never had a chance to run for this
+event, because the slug always intercepted it first. **Whether the original
+search snippet contains a usable, event-shaped phrase for this specific
+event is unverified — I do not have its text and re-fetching it is A's
+job, not mine.** Naming this precisely so the next A round checks the
+actual outcome rather than assuming either "still broken" or "now fixed."
+
+**The connection to B6-03, worth stating once rather than re-deriving
+per-item.** `eventNameFrom()`'s own absolute last resort
+(`segments[0] ?? title.trim()`, `:408`) remains completely unguarded after
+this fix, and deliberately so — with the slug tier now gated, a title whose
+segments, slug, AND snippet are all chrome has nothing left to fall back to
+except this line, and `Event.name: string` is a required field (B6-03).
+Guarding this line too would mean the function sometimes has no string to
+return at all, which is exactly the type-level question B6-03 already
+answered "not this round" for events. **Do not add a fifth guard here** —
+this is the honest floor of the current architecture, named, not hidden,
+and it is the same floor B6-03 already reasoned about, not a new open
+question.
+
+**Blast radius.** Contained to `eventNameFrom()`'s own body,
+`eventweb.ts:390-395`. Its only caller is `webResultToRawEventItem()`
+(confirmed by grep, same file) — no other consumer.
+
+**Tests at risk.** `eventweb.test.ts`, 18 tests total; the two directly
+relevant ones traced above are both unaffected. The other 16 do not supply
+a URL alongside a title whose segments are all chrome (the one input shape
+this change touches) — confirmed by reading each test's own title/url
+arguments, not just grepping for keywords. **Zero existing coverage of the
+actual repro shape** (a slug that mechanically de-hyphenates into a
+headline sentence) — C should add it directly: a URL path like
+`/registration-deadline-extended-march-2026` with a title whose segments
+are all chrome must fall through past the slug to snippet mining or the
+final fallback, not return the slug's headline sentence verbatim.
+
+---
