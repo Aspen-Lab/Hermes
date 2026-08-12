@@ -1,5 +1,5 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
-import { urlHashId } from "@/lib/opportunities/shared";
+import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
 import {
   JOB_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
@@ -9,6 +9,7 @@ import {
   cleanJobSubtitlePart,
   cleanJobTitle,
 } from "@/lib/opportunities/job-cleanup";
+import { US_STATE_CODES } from "@/lib/opportunities/structured-extract";
 
 // Web discovery for research and R&D positions across academic and industry
 // employers. Search providers reach public listings that frequently block
@@ -78,6 +79,27 @@ const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
  */
 const SEASON_COHORT_LABEL_RE =
   /^(?:spring|summer|fall|autumn|winter)\s+20\d{2}$|^class\s+of\s+20\d{2}$|^cohort\s+\d+$|^20\d{2}$/i;
+
+/**
+ * A trailing-state-code build regex, matching the whole candidate segment
+ * against real, uppercase US state codes (case matters — see
+ * `structured-extract.ts`'s `hasTrailingStateCode`, which this mirrors).
+ * `US_STATE_CODES` is imported, not re-declared, so the two lists cannot
+ * drift apart.
+ */
+const TRAILING_STATE_CODE_RE = new RegExp(`,\\s*(${US_STATE_CODES.join("|")})$`);
+
+/**
+ * A title segment shaped like a bare US address ("Cambridge, MA") is a
+ * location, not a company (B5-03/R7) — the same structural signal
+ * `hasTrailingStateCode()` in structured-extract.ts already uses to keep a
+ * bare address out of the event WHERE tile (B4-02/R2), applied here to keep
+ * one out of the job company slot instead.
+ */
+function looksLikeBareLocation(candidate: string): boolean {
+  const match = candidate.match(TRAILING_STATE_CODE_RE);
+  return Boolean(match && match[1] === match[1].toUpperCase());
+}
 
 /**
  * True when the result is an aggregate listing or a careers index rather than
@@ -159,7 +181,9 @@ export function webResultToRawJobItem(result: {
         (p) =>
           p &&
           !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d)) &&
-          !SEASON_COHORT_LABEL_RE.test(p),
+          !SEASON_COHORT_LABEL_RE.test(p) &&
+          !looksLikeBareLocation(p) &&
+          !looksLikeHostBrand(p, host),
       ) || host;
   return {
     id: `jobweb:${urlHashId(url)}`,

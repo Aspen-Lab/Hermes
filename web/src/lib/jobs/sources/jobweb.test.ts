@@ -109,6 +109,42 @@ describe("company derivation", () => {
     });
     expect(item?.company).toBe("acme.test");
   });
+
+  // B5-03 (round 5): all three of A's real jobs wrongly showed a job board's
+  // own brand name or a bare location as the company. Neither shape is a
+  // known job-board *domain*, so `KNOWN_JOB_BOARD_DOMAINS` never caught
+  // either — both need their own guard.
+  it("does not mistake a job board's own brand name for the company", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery R&D Intern - GreenJobsBoard",
+      url: "https://greenjobsboard.io/careers/job/9912",
+      snippet: "Research internship in molten salt battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe("greenjobsboard.io");
+  });
+
+  it("does not mistake a bare city/state location segment for the company", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery R&D Intern - Cambridge, MA",
+      url: "https://acme.test/careers/job/9913",
+      snippet: "Research internship in molten salt battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe("acme.test");
+  });
+
+  // Confirms the new host-brand guard is one-directional, per its own
+  // comment in shared.ts: a real company's display name legitimately shares
+  // a root with its own domain (the domain label is a short PREFIX of a
+  // longer, real name) and must not be rejected the same way a job board's
+  // own, longer-or-equal brand is.
+  it("keeps a real company name that merely shares a root with its own domain", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery R&D Intern - Acme Materials Group",
+      url: "https://acme.test/careers/job/9914",
+      snippet: "Research internship in molten salt battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe("Acme Materials Group");
+  });
 });
 
 describe("listing titles hidden behind site chrome", () => {

@@ -9591,3 +9591,107 @@ passing) since it is the nearest indirect consumer of the six fields sharing
 themselves and their own tests (confirmed by grep).
 
 Commit: `1e49507` (committed by the manager after C died at the commit step; see the commit message).
+
+---
+
+##### B5-03 — R7: job subtitle's company slot holds a wrong value, 3 of 3 real jobs. TIER 1 LANDED. Tier 2 (JSON-LD `hiringOrganization`) NOT built this round — scoped out, reasons below.
+
+**Tier 1 — landed, both checks B guided, plus one B did not fully verify.**
+`web/src/lib/jobs/sources/jobweb.ts`: added `looksLikeBareLocation()` (a
+candidate segment ending in a real, uppercase `, ST` US state code — mirrors
+`hasTrailingStateCode()` in `structured-extract.ts`, importing
+`US_STATE_CODES` rather than re-declaring the list so the two cannot drift
+apart) and `looksLikeHostBrand()` (new, exported from
+`web/src/lib/opportunities/shared.ts` so B5-06 can reuse it rather than
+reinvent it, per B's own note). Both are added to the existing `.find()`
+guard chain in `webResultToRawJobItem()`, alongside the existing domain-
+denylist and season-label checks — same shape, no new control flow.
+
+**`looksLikeHostBrand()` needed a real design decision B's guide did not
+fully specify, and I want to be explicit about it rather than let it read as
+a straight transcription of B's fix direction.** B's own phrasing was "a
+fuzzy substring match, either direction" (`"climatebase"` contained in
+`climatebase.org`; `"zerob"` contained in `zerobonline.com`). **Checked that
+literally against the existing test suite before writing it, per B5-08's own
+lesson applied to a guard this time, not just an extractor: a bidirectional
+substring match rejects the file's own pre-existing, currently-passing
+fixture** — `"Acme Corp"` at host `acme.test` — because `"acme"` (the
+domain's own label) is contained in `"acmecorp"` (the normalised candidate)
+exactly the same way `"zerob"` is contained in `"zerobonline"`. Structurally
+these are the same shape from a pure string-containment view: a short root
+sitting inside a longer string. The difference is real but not
+string-visible — `"Acme Corp"` is a company's own display name legitimately
+sharing a root with its own domain (an extremely common, correct pattern for
+a self-hosted careers page), while `"Climatebase"`/`"ZeroB"` are a job
+board's own brand leaking into a slot meant for the featured employer.
+**Resolved by making the check one-directional**: reject only when the
+domain's own label is at least as long as the candidate and starts with it
+(`domainLabel.startsWith(normalizedCandidate)`) — catches both of B's named
+repros (an exact match for Climatebase, a prefix match for ZeroB) and does
+NOT catch the Acme Corp shape (there the candidate is longer than the domain
+label, the opposite direction). Documented this trade-off directly in
+`looksLikeHostBrand()`'s own comment in `shared.ts`: the excluded direction
+(a short domain label prefixing a longer, real-looking candidate) is left
+unrejected on purpose, because a wrong rejection turns a real company name
+into a lost one, and that is worse than leaving this narrower check unable to
+catch a hypothetical reverse-shaped board-brand leak. **Flagging for A's
+attention**: this means `looksLikeHostBrand()` will not catch every
+conceivable board-brand shape (e.g. a board name that is itself LONGER than
+its own domain label, such as a multi-word brand on a short/abbreviated
+domain) — a real, named limitation, not an oversight.
+
+**Blast radius — confirmed as B described, both tiers.** Re-grepped for
+`company`/`companyOrLab` consumers after the change: `jobs/card.ts` (feed,
+out of loop scope but benefits automatically since it shares the field) and
+the job report are the only two, unchanged from B's own list. Confirmed
+(again) Adzuna/USAJobs never reach this function — both read `company`
+directly from their own API response shape in their own source files, no
+shared code path with `jobweb.ts`'s segment-picking.
+
+**Tier 2 — not built this round, scoped out on budget and priority, not on
+merit.** B named this "the real fix" and it is additive (same shape as
+B4-11's `baseSalary` JSON-LD read), but B's own guide also names it
+explicitly optional ("optionally add") and it is the larger of the two
+tiers: it touches `structured-extract.ts`'s `JsonLdOpportunity` type and
+`extractOpportunity()`, `job-details.ts`'s return shape, `enrich.ts`'s merge
+and `hasExtractedJobSignal`, and `jobs/mapper.ts`'s preference order — five
+call sites across four files for one field, against four remaining ranked
+items still to work this round. Tier 1 alone is real, verified progress on
+all three of A's named real-job repros (a job-board brand name, a second
+job-board brand name, a bare location) — landing it now and naming tier 2 as
+still-open, additive work for a future round follows the same judgement
+B5-02's tier 2 used (investigate and land what is verified and contained;
+name what would need more scope rather than build it speculatively). Not
+investigated further than reading the field name (`hiringOrganization`)
+exists on schema.org's `JobPosting` type — no real page's JSON-LD was
+fetched to estimate its hit rate, consistent with B's own note that this is
+unmeasured.
+
+**Tests.** Added three to `jobweb.test.ts`'s `"company derivation"` block:
+(a) a job board's own brand name (synthetic, not any real board's name) not
+on `KNOWN_JOB_BOARD_DOMAINS` must not become `company` — falls to `host`;
+(b) a bare `City, ST` segment must not become `company` — falls to `host`;
+(c) the one-directional-guard confirmation named above: a synthetic company
+name that merely shares a root with its own (shorter) domain label must
+still win as `company`, not fall to `host`. Also added a direct unit-test
+block for `looksLikeHostBrand()` itself in `shared.test.ts` (6 cases: exact
+match, prefix match, case/spacing insensitivity, the protected reverse
+direction — 2 cases, an unrelated pair, and a short-candidate floor) since it
+is now a shared, reusable function B5-06 depends on, not only tested
+end-to-end through one consumer.
+
+**B5-08 in practice.** The one-directional design above IS this item's
+B5-08 moment, even though `looksLikeHostBrand()` is a new guard rather than a
+new extractor: the naive bidirectional version would have shipped a
+confidently wrong rejection (a real company's name discarded in favour of
+its own host string) on the strength of the same "pattern present somewhere"
+reasoning B5-08 names — caught by checking it against the existing fixture
+before writing any new test, not after.
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 923 tests, 922 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged), typecheck clean, exactly 1 pre-existing lint error
+(`quiz.tsx:46`). Net +9 tests from B5-02's checkpoint (914 → 923: 3 in
+`jobweb.test.ts`, 6 in `shared.test.ts`), zero deleted, zero rewritten.
+
+Commit: (this item, following).
