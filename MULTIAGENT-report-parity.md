@@ -275,25 +275,23 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:49 UTC. C completed,
-                   gated, committed, and
-                   pushed all scheduled code: B6-01 `dd5eb44`, B6-05
-                   `65ea13d`, B6-02 `51dd7d0`, B6-04 `266b276`, B6-03
-                   `1097ddb` (plus consumer follow-up `838773b`), B6-07
-                   `e8e2801`, and B6-08 careerservices `3c9cbd8`.
-                   B6-06 SolarPACES and B6-08
-                   hiringcafe.com are not C code this turn, are not excluded,
-                   and remain in the next A real-data gate.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 05:10 UTC. Round-7 A
+                   completed and pushed the fixture, fresh-pool, continuity,
+                   exclusion, gate, and handoff evidence. Fixture is 0%; the
+                   real-data gate is NOT MET. Full evidence is in §4
+                   "Round 7 — Agent A"; B starts from its ranked work list.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       A — remeasure fixture and real data. Re-check SolarPACES;
-                   hiringcafe workMode/roleKind/summary; title employer and
-                   optional company; pageText summary; and work-mode amenity
-                   proximity. The manager lock remains unchanged (chatgpt-local)
-                   for the manager's final stop commit.
+WHOSE TURN:       B — investigate the Round-7 findings in this order: (1)
+                   SolarPACES's wrong absolute fallback; (2) hiringcafe's
+                   shared posting-ownership boundary across `workMode`,
+                   `roleKind`, and summary; (3) TiRT7's missing true venue;
+                   (4) remaining R4 listing-chrome summaries; (5) verify the
+                   fresh Himalayas employer/body mismatch before counting it
+                   as wrong data. B writes a guide only; no product code.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -307,99 +305,27 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-6 C IMPLEMENTATION COMPLETE.** All seven scheduled
-                   code items are committed and pushed, with B6-03's
-                   consumer correction separately durable. Final gate: 83
-                   files / 948 tests, 947 passing with only the documented
-                   live benchmark flake; typecheck clean; exactly the known
-                   quiz.tsx:46 lint error. Fixture was 0% before C; the
-                   real-data gate remains NOT MET until A remeasures.
-
-                   **MANAGER POLICY COMPLETE.** §1o Ruling 28 keeps
-                   SolarPACES open but defers a standalone heuristic until
-                   B6-01/B6-05 land and A remeasures the newly reachable
-                   fallback tier. §1p Ruling 29 keeps same-page multi-listing
-                   contamination in scope and schedules one shared posting-
-                   ownership investigation after A remeasures; C must not
-                   substitute field-specific filters this turn.
-
-                  **R7 = Ruling 26, scored together per instruction.** B5-03's
-                  two tier-1 guards are confirmed working on fresh data at
-                  scale (0 of 12 real jobs this round show the old wrong
-                  shapes) — real, verified progress — but 6 of 12 (50%) now
-                  show a bare hostname instead, including one case where the
-                  true employer's name is present in the very same title
-                  string the card renders. Full evidence, including a
-                  same-shape confirmation in `jobs/mapper.ts:143` that is not
-                  jobweb-specific, is in §4's "FIRST" section.
-
-                  **R13's biggest news this round is not either of B5-06's
-                  two named events (both re-checked live; see §4) — it is a
-                  newly-found architectural gap.** `enrichEventCandidates()`
-                  (`enrich.ts`, written in round 4 for B4-01, untouched by
-                  B5-06) prefers a fetched page's own title whenever it
-                  clears `looksLikeEventTitle()` alone — never
-                  `isChromeSegment()`, never the segment splitter, never any
-                  of B5-06's three fixes. Confirmed directly: calling
-                  `eventNameFrom()` on a real chrome-wrapped live title
-                  (`ibatterysummit.com`, `"Home - International Battery
-                  Summit"`) correctly returns `"International Battery
-                  Summit"` — but the report renders the uncleaned original
-                  anyway, because that value never went through
-                  `eventNameFrom()` at all. **4 of 17 fresh real events this
-                  round show this exact signature.** This is a design
-                  question for B (which source is authoritative for an
-                  event's name once a page is fetched), not a one-line patch
-                  for C to guess at.
-
-                  **R4 still open**, three fresh chrome shapes found in real
-                  job summaries this round that none of B5-07's two guards
-                  target (a Markdown-link remnant; concatenated
-                  filter/listing chrome with no separators; a Markdown
-                  heading marker plus an unrelated newsletter CTA) — no
-                  evidence of B5-07 over-rejecting a genuine sentence,
-                  though.
-
-                  **B5-02 (`extractWorkMode`), named in this round's own
-                  TODO though not an R-number: still open on both of round
-                  5's own named real-page repros.** `hiringcafe.com` is
-                  precisely re-traced to a *different* real job's own text
-                  ("BAE Systems... Hybrid Internship," Nashua NH) bleeding in
-                  via the same-page-multiple-listings mechanism, not
-                  furniture — consistent with what tier 1 was never going to
-                  fix. **`careerservices.upenn.edu` is the one worth flagging
-                  loudest: round 5 C's own closing note called this
-                  "CLOSED," and direct re-fetch shows the identical two
-                  trigger mentions ("on-site visitors," "on-site fitness")
-                  are still present in the exact text `extractWorkMode()`
-                  scans, and the field still resolves to `"on-site"`.** Not a
-                  new regression (nothing changed there this round) — a
-                  previous round's own verification claim that does not
-                  survive being checked again.
-
-                  Full per-item detail, every quote sourced from a real
-                  render or a real function call (never a hand-trace alone),
-                  is in §4 "Round 6 — Agent A"; do not re-derive from this
-                  summary.
-LAST DIFFERENCE:  **0% fixture (unchanged) / real data: 2 of 6 required
-                  R-numbers closed (R11, R12), 1 improved-not-closed (R2), 3
-                  still open (R4, R7, R13) — plus B5-02 still open on both
-                  its own named repros, and one new architectural finding
-                  (the `enrich.ts` title-preference bypass) larger in scope
-                  than any single R-number.** Measured AFTER round 5's full
-                  implementation, live, against 6 continuity postings plus a
-                  fresh 17-event/12-job pool. See §4 "Round 6 — Agent A" for
-                  the full per-item table and every piece of supporting
-                  evidence. This number will not update until B's round-6
-                  guide is written and C implements it.
-GATE (0%):        NOT MET. Real-data half is the blocker (per §1j Ruling 23,
-                  both halves must read zero) — R4, R7/Ruling 26, and R13 are
-                  open, B5-02 is open on both its repros. Fixture half reads
-                  0% on its own, unchanged.
+STATUS:           **ROUND-7 MEASUREMENT COMPLETE.** Fixture: 0 of 32
+                   different (0%). Real: SolarPACES still renders the wrong
+                   absolute fallback; hiringcafe still attributes a foreign
+                   listing to the selected job's work mode and summary;
+                   TiRT7 remains silently locationless. B6-08 careerservices
+                   and B6-04 Tesla title-employer are closed on live
+                   remeasurement. Fresh pools rendered 6 events + 6 jobs with
+                   no placeholder leaks, but eventweb/jobweb returned zero
+                   candidates, so continuity findings remain binding. R8 was
+                   not re-exercised. Final gate: 83 files / 948 tests, 947
+                   passing with only the documented live benchmark flake;
+                   typecheck clean; exactly the known quiz lint error.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET.** Wrong data remains in
+                   SolarPACES and hiringcafe; TiRT7 remains under-extracted;
+                   R4 has a residual listing-chrome shape. See §4 "Round 7 —
+                   Agent A" for per-item evidence and the ranked B list.
+GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 06:08 UTC. Agent A
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 05:10 UTC. Agent A
 completed both measurements and pushed every evidence commit. `HELD BY:`
 remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by instruction.
 
@@ -611,11 +537,12 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            items are now committed and pushed. **A's post-C remeasurement is
            next.**
 
-TODO:      **A: remeasure fixture and real data against the current post-C
-           build.** Re-check SolarPACES; hiringcafe workMode/roleKind/summary;
-           title-employer extraction and optional company rendering; fetched
-           page-text summaries; and work-mode amenity proximity. Re-list every
-           exclusion and keep §1o/§1p residuals inside the real-data gate.
+TODO:      **B: investigate Round 7's ranked list and write the Round-7 fix
+           guide, one committed/pushed item at a time.** SolarPACES and
+           hiringcafe are wrong-data priorities and remain in the gate; TiRT7
+           is under-extraction; verify the Himalayas employer/body mismatch
+           before treating it as a confirmed defect. Full evidence is in §4
+           "Round 7 — Agent A".
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
@@ -931,6 +858,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 4 | **3% fixture / real data far worse** | 0 absent, 1 half, 31 exact (31/32) on the hand-built fixture — one string from the gate. **First real-search run says otherwise:** 0 of 3 real events carry fees, roster, or deadlines; 0 of 3 real jobs carry salary, work mode, or materials; one real event H1 is a stray COVID-19 sentence. Gate not met. Measured by the MANAGER (fifth agent died on the spend limit). |
 | 5 | **0% fixture / real data still far from it** | Fixture: 0 of 32 different (B4-13 confirmed landed, from render). Real data (3 events + 3 jobs, same profile round 4 used): R3/R5/R6(closed)/R8/R10 closed or unexercisable; R2/R4/R7/R9 still open (R7 worse than reported — wrong company-slot value on 3 of 3 real jobs, none the shape B4-03 fixed); three new findings, R11 (a brand-new extractor's first real-data test produced a wrong headcount from a cohort-year label), R12 (job LOCATION tile leaks the literal `"See posting"` placeholder — the event tile's equivalent guard was never mirrored), R13 (event-name quality not closed as a class — 2 of 3 real events, different shapes than R1's). §1k's shell-rate diagnostic: 14.8% of successfully-fetched real pages (4/27) are JavaScript shells — real, but well short of explaining round 4's near-universal coverage gaps by itself; JSON-LD did not rescue any of the 4 shells sampled and is itself present on only 10%/38.5% of real (non-shell) event/job pages. Gate not met. Measured by an A subagent — restart of a round-5 A that died on the spend limit before committing findings (§4 "Round 5 — Agent A (DIED)"). |
 | 6 | **0% fixture / real data: 2 of 6 required R-numbers closed** | Fixture: 0 of 32 different, unchanged, reconfirmed from render. Real data (6 continuity postings, same 3 events + 3 jobs round 5 named, re-fetched fresh, plus a fresh 17-event/12-job live pool): **R11, R12 CLOSED**; **R2 IMPROVED, NOT CLOSED** (WHERE tile now silent instead of confidently wrong, exactly as its own fix predicted); **R4, R7, R13 STILL OPEN**. **R7 = Ruling 26** (§1m, found by the manager between rounds): B5-03's guards correctly reject the old wrong shapes on 100% of a fresh sample, but 6 of 12 real jobs (50%) now show a bare hostname via the guard's own `\|\| host` fallback — generalised to a second, non-jobweb-specific instance in `jobs/mapper.ts:143`. **R13's largest finding is new**: `enrich.ts`'s own title-preference (written in round 4, untouched by B5-06) bypasses `eventNameFrom()`'s entire guard apparatus by checking only one of its several conditions — confirmed on 4 of 17 fresh events; plus B5-06's own two named real events both re-checked live (one improved-not-closed, one still open with its author's own flagged residual — a real event's honest name rejected as a "site brand" — confirmed firing). R4: B5-07 closes its own two repros; three new chrome shapes found in fresh summaries. **Supplementary, not an R-number: B5-02 (`workMode`) still open on both of round 5's own named repros — one directly contradicts round 5 C's own "CLOSED" claim, confirmed by direct re-fetch.** Gate not met. Measured by an A subagent. |
+| 7 | **0% fixture / real data NOT MET** | Fixture: 0 of 32 different, reconfirmed from rendered output and the full PDF. Real: SolarPACES still renders a wrong absolute fallback; hiringcafe still attributes foreign-listing text to work mode and summary; TiRT7 is silent rather than true-venue complete; residual R4 listing chrome remains. B6-08 careerservices and B6-04 Tesla title-employer closed live. Fresh pools rendered 6 events + 6 jobs without placeholder leaks, but eventweb/jobweb returned zero candidates; R8 was not re-exercised. Gate not met. Measured by an A subagent. |
 
 ---
 
