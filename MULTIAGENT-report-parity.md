@@ -270,27 +270,23 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          chatgpt-local @ 2026-08-12 08:24 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:25 UTC. Round-7 C
-                   completed the manager-requested B7-06 authority follow-up.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 08:54 UTC. The manager
+                  independently verified the overall gate; no next turn remains.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-CANONICAL UPDATE: **WHOSE TURN: MANAGER.** A completed independent B7-06
-                  remeasurement at 2026-08-12 11:05 UTC. This update
-                  supersedes the legacy A lines immediately below: manager
-                  independently verifies before any overall gate decision;
-                  A cannot self-close the gate.
-WHOSE TURN:       A — independently remeasure B7-06 only: fixture, fresh event
-                   source/pipeline summaries, report silence versus owned
-                   evidence, ranking invariance, and prompt/no-provider
-                   boundaries. Measure only; do not diagnose or change code.
+CANONICAL UPDATE: **WHOSE TURN: NONE — LOOP COMPLETE.** The manager completed
+                  the required independent fixture, fresh event/job source,
+                  authority, ranking, prompt/no-provider, and full-gate check.
+WHOSE TURN:       NONE — the loop is complete; no review, investigation, or
+                  implementation item remains.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -304,15 +300,14 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **B7-06 C COMPLETE; A REMEASUREMENT NEXT.** Fixture was 0
-                   of 32 different before B7-06. Raw discovery/scoring text is
-                   now separated from complete, tagged report evidence; full
-                   C gate: 85 files / 991 tests, 990 pass with only the
-                   documented benchmark city drift; typecheck clean; known
-                   quiz lint only.
-LAST DIFFERENCE:  **0% fixture / real data NOT YET REMEASURED AFTER B7-06.**
-                   A must independently measure the new authority boundary.
-GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
+STATUS:           **ROUND 7 COMPLETE; OVERALL GATE MET AFTER MANAGER
+                  INDEPENDENT VERIFICATION.** The fixture is 0 of 32 different;
+                  the last real-data residual, event-summary authority, is
+                  closed without changing raw discovery/scoring or security.
+LAST DIFFERENCE:  **0% fixture / 0 confirmed real-data differences under §1j.**
+GATE (0%):        MET. Both halves are zero on the measured evidence; missing
+                  source facts remain silent and unavailable pages remain
+                  non-evidence rather than guesses.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
@@ -360,6 +355,25 @@ remain binding.
 
 **GATE (0%): NOT MET.** A cannot self-close the overall gate. The manager lock
 remains held for the next independent verification.
+
+ROUND 7 MANAGER FINAL UPDATE — SUPERSEDES ALL EARLIER ROUND-7 CURRENT TEXT
+---------------------------------------------------------------------------
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 08:54 UTC. The manager
+completed the required independent verification and released the turn lock.
+
+**WHOSE TURN: NONE — LOOP COMPLETE.** No A, B, C, or manager item remains.
+
+**STATUS / LAST DIFFERENCE:** the fixture remains 0 of 32 different. The
+manager independently verified current event-summary authority on 11 reachable
+event pages, job ownership/fail-closed behavior on 6 reachable job pages,
+raw-to-mapped ranking invariance, prompt/no-provider boundaries, and the full
+gate. No unsupported real-data report fact was found in that verification.
+
+**GATE (0%): MET.** The manager's full evidence and commands are in §4 under
+"Round 7 — Manager independent overall gate verification." The only full-suite
+failure is the standing live benchmark drift (current Salvador versus its
+stale Chicago assertion); TypeScript is clean, and ESLint has only the standing
+quiz exception. `HELD BY: free`; no next turn exists.
 
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
@@ -894,6 +908,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 5 | **0% fixture / real data still far from it** | Fixture: 0 of 32 different (B4-13 confirmed landed, from render). Real data (3 events + 3 jobs, same profile round 4 used): R3/R5/R6(closed)/R8/R10 closed or unexercisable; R2/R4/R7/R9 still open (R7 worse than reported — wrong company-slot value on 3 of 3 real jobs, none the shape B4-03 fixed); three new findings, R11 (a brand-new extractor's first real-data test produced a wrong headcount from a cohort-year label), R12 (job LOCATION tile leaks the literal `"See posting"` placeholder — the event tile's equivalent guard was never mirrored), R13 (event-name quality not closed as a class — 2 of 3 real events, different shapes than R1's). §1k's shell-rate diagnostic: 14.8% of successfully-fetched real pages (4/27) are JavaScript shells — real, but well short of explaining round 4's near-universal coverage gaps by itself; JSON-LD did not rescue any of the 4 shells sampled and is itself present on only 10%/38.5% of real (non-shell) event/job pages. Gate not met. Measured by an A subagent — restart of a round-5 A that died on the spend limit before committing findings (§4 "Round 5 — Agent A (DIED)"). |
 | 6 | **0% fixture / real data: 2 of 6 required R-numbers closed** | Fixture: 0 of 32 different, unchanged, reconfirmed from render. Real data (6 continuity postings, same 3 events + 3 jobs round 5 named, re-fetched fresh, plus a fresh 17-event/12-job live pool): **R11, R12 CLOSED**; **R2 IMPROVED, NOT CLOSED** (WHERE tile now silent instead of confidently wrong, exactly as its own fix predicted); **R4, R7, R13 STILL OPEN**. **R7 = Ruling 26** (§1m, found by the manager between rounds): B5-03's guards correctly reject the old wrong shapes on 100% of a fresh sample, but 6 of 12 real jobs (50%) now show a bare hostname via the guard's own `\|\| host` fallback — generalised to a second, non-jobweb-specific instance in `jobs/mapper.ts:143`. **R13's largest finding is new**: `enrich.ts`'s own title-preference (written in round 4, untouched by B5-06) bypasses `eventNameFrom()`'s entire guard apparatus by checking only one of its several conditions — confirmed on 4 of 17 fresh events; plus B5-06's own two named real events both re-checked live (one improved-not-closed, one still open with its author's own flagged residual — a real event's honest name rejected as a "site brand" — confirmed firing). R4: B5-07 closes its own two repros; three new chrome shapes found in fresh summaries. **Supplementary, not an R-number: B5-02 (`workMode`) still open on both of round 5's own named repros — one directly contradicts round 5 C's own "CLOSED" claim, confirmed by direct re-fetch.** Gate not met. Measured by an A subagent. |
 | 7 | **0% fixture / real data NOT MET** | Fixture: 0 of 32 different, reconfirmed from rendered output and the full PDF. Real: SolarPACES still renders a wrong absolute fallback; hiringcafe still attributes foreign-listing text to work mode and summary; TiRT7 is silent rather than true-venue complete; residual R4 listing chrome remains. B6-08 careerservices and B6-04 Tesla title-employer closed live. Fresh pools rendered 6 events + 6 jobs without placeholder leaks, but eventweb/jobweb returned zero candidates; R8 was not re-exercised. Gate not met. Measured by an A subagent. |
+| 7 final | **0% fixture / real data MET** | B7-01 through B7-06 closed the measured Round-7 source-identity, selected-posting ownership, current-venue, employer-identity, and event-summary-authority residuals. A remeasured the final authority boundary; the manager then independently reran fixture, prompt/no-provider, ranking, 11 reachable event pages and 6 reachable job pages. No unsupported report fact remained. Full gate: 990/991, only standing live Chicago/Salvador benchmark drift; TypeScript clean; only standing quiz lint. Loop complete. |
 
 ---
 
@@ -13912,3 +13927,68 @@ streamed keynotes; venue name; four nights; shortened job/event Why-Peer
 clauses; full-chip happenings footnote; and rank. The Summit display vocabulary
 remains in scope. Unavailable current source pages are non-evidence, not
 exclusions.
+
+---
+
+### Round 7 — Manager independent overall gate verification
+
+#### Required independent verification — COMPLETE @ 2026-08-12 08:54 UTC
+
+The manager independently reran A's B7-06 job rather than closing from A's
+own report. A disposable local Vitest harness used the real profile only to
+construct Tier-0 requests (`aiTier: 0`, no LLM override), an isolated in-memory
+cache, the real daily event/job pipelines, real mappers, bounded page fetcher,
+structured event extractor, selected-posting resolver, and shared owned-summary
+cleaner. It logged no key, profile value, or fetched body and was deleted before
+the final gate.
+
+**Fixture and route boundaries.** The established exported JobReport/EventReport
+fixture suite passed **2 files / 85 tests** and remains **0 of 32 different**.
+The enrichment plus event/job report-route suite passed **3 files / 68 tests**,
+including provider-before-fetch and no-provider **0 page fetches / 0 model
+calls**. No real model call was made.
+
+**Fresh events.** The isolated pool fetched ccfddl **80**, confstech **28**,
+researchseminars **20**, eventweb **0**; 128 records before dedupe, 126 after,
+126 scored. Raw-to-mapped ID and official-URL order was identical. Eleven
+current pages inside the 40-item enrichment window were reachable and checked.
+Three page-owned records — PPSN 2026 (rank 14), ICPR 2026 (rank 21), and IROS
+2026 (rank 26) — carried complete summaries exactly matching the typed-Event or
+guarded paired-OG authority selected from their pages and rendered visibly.
+Eight source-record records at ranks 1–8 retained a source-record prefix, had
+no competing eligible page-owned summary, and stayed visibly silent when their
+source text was not a complete report sentence. The current eventweb call
+returned zero and is non-evidence against A's earlier live eventweb sample;
+A's fresh discovery-silence/page-owned checks and C's focused eventweb tests
+remain the independent evidence for that dynamic source. No discovery text was
+promoted and no rank changed.
+
+**Fresh jobs.** The isolated pool fetched Remotive **20**, Arbeitnow **60**,
+Himalayas **60**, Adzuna **0**, USAJobs **0**, jobweb **0**; 140 records before
+dedupe, 128 after, 128 scored. Raw-to-mapped ID and posting-URL order was
+identical. Six current Arbeitnow pages were reachable: five resolved an owned
+selected-posting scope and one correctly remained unproven. The unproven item
+kept `pageText` and report summary absent; no sampled item rendered a summary
+outside its owned/source-record text. All six mapped employer values equalled
+their source record and none was an `Unknown company`, hostname, or board
+fallback. The sample exercised an internship, remote work mode, populated and
+absent role kinds, and populated locations without a placeholder leak.
+
+**Final gate.** After deleting the disposable harness, `npx vitest run`
+reported **85 files / 991 tests, 990 passed**. The sole failure is the standing
+live benchmark drift: Battery Safety currently resolves Salvador while the
+benchmark expects Chicago; city coverage itself passed at 7/13 (0.5385).
+`npx tsc --noEmit` passed. `npx eslint .` reported only the standing
+`src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect` error.
+`git diff --check` passed and the worktree contained only this ledger update.
+
+**Manager verdict: OVERALL GATE MET.** This combines the loop's prior 3+3
+source-alignment pass (whose sole proven residual became B7-06) with the
+manager's independent B7-06 and current 11-event/6-job verification. Fixture
+parity is zero; the measured real-data difference is zero under Ruling 23.
+Unavailable/drifted historical pages remain non-evidence, all standing plate
+exclusions remain exclusions, and the security floor is unchanged: Tier 0 has
+no model call; paid report paths resolve the current user's BYOK provider before
+any report fetch; no provider means no report fetch/model call; no operator key,
+host exception, headless browser, branch, worktree, PR, or retained artifact was
+introduced. The lock is released and no next ABC turn remains.
