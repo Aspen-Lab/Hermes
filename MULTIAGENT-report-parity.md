@@ -1659,6 +1659,76 @@ than leave it optional again.
 
 ---
 
+## §1n. RULING 27 — ROUND 6'S THREE MANAGER CALLS — BINDING
+
+**Date: 2026-08-12**, after checking round-6 A's report against the source.
+A's findings hold; I verified the two that decide B's work.
+
+### 1. B5-02's "CLOSED" claim is WITHDRAWN. The code stays.
+
+Round-5 C wrote that the `careerservices.upenn.edu` false positive was
+**CLOSED**. A re-fetched the page and it is not: the same two trigger phrases
+are still there, in ordinary benefits-section prose, and `extractJobDetails()`
+still returns `on-site`. C reasoned from the fixture's assumption that an
+amenity mention *is* page furniture. On the real page it is body text, so
+furniture-stripping could never have reached it.
+
+**What stands and what does not:**
+
+- **The code change stands.** Furniture-stripping is a real improvement, it is
+  additive, and A confirmed nothing new broke. Do not revert it.
+- **The closure claim does not.** B5-02 is `STILL OPEN`, 0 of 2 named repros
+  closed. The remaining mechanism is a *different* one: on a multi-posting
+  aggregator page, another company's listing sits in the main column, which is
+  not furniture by any definition and never will be.
+
+**And the manager's part in it, on the record.** I committed B5-02 on C's
+behalf after C died at the commit step. I verified the **gate** — tests,
+typecheck, lint — and said so. I did **not** verify the closure claim inside
+the log entry I was committing, and it was wrong. Checking that a change is
+safe is not the same as checking that it works, and I shipped the second as
+if it followed from the first.
+
+### 2. B's priority this round is the bypass, not the fallback.
+
+Two themes came out of round 6. They are not equal.
+
+- **The `|| host`-shaped fallback** (Ruling 26) is now confirmed in **three**
+  places — `jobweb.ts:187`, `jobs/mapper.ts:143`, and `eventweb.ts`. It is a
+  known, understood, bounded problem.
+- **`enrich.ts`'s title preference is the bigger one, and it is
+  architectural.** It picks a fetched page's own title after checking only
+  `looksLikeEventTitle` — **one** of the several conditions `eventNameFrom()`
+  applies — so every guard B5-06 built is bypassed outright for any event that
+  gets enriched. I confirmed this directly at `enrich.ts:135-138`. **The code
+  comment there claims parity with `eventNameFrom()`'s guard and that claim is
+  false** — which is why three rounds of hardening the guarded path kept not
+  showing up in the reports.
+
+**B: investigate the bypass first.** The question is not "add the missing
+checks to `enrich.ts`" — it is **why two paths exist that both decide an
+event's name**, and whether the enrichment path should be calling
+`eventNameFrom()` itself rather than reimplementing a weaker version of it.
+Report what else in `enrich.ts` re-decides something an ingestion-time
+function already decides. If there is more than one, say so — that is a
+finding about the shape of the pipeline, not about event names.
+
+### 3. The empty-slot question must be answered before anything is built.
+
+Ruling 26 asked whether the company slot may be empty at all. **Nobody may
+propose a fix for the fallback shape until that is answered with rendered
+evidence.** B: show what the card and the report actually look like with an
+empty company, and with an empty event name. Then recommend.
+
+**One concrete lead, from A's own table**: a real posting titled
+`Internship, Battery Engineering (Summer 2026) at Tesla` renders `EV.Careers`
+as the employer. **The true employer is sitting in the title string the parser
+already has.** That is worth more than another guard, and it is the cheapest
+thing on this list — check it before costing the JSON-LD `hiringOrganization`
+path Ruling 26 asked about.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
