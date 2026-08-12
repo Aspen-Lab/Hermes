@@ -12521,3 +12521,178 @@ manager-policy escalation; it deliberately leaves the prior host-brand
 precision/recall rule intact.
 
 ---
+
+#### B7-02 — hiringcafe's selected job inherits another listing's facts because job enrichment has no selected-posting owner. `WRONG DATA`. **CODE: resolve one generic, fail-closed posting scope before every job-text consumer.**
+
+**A's claim checked: it holds, with one useful structural refinement.** I
+re-fetched the exact selected URL (HTTP 200) and treated all fetched content
+only as data:
+
+- The page has exactly one `JobPosting` JSON-LD record. Its `url` is an exact
+  match for the selected canonical URL and its identifier agrees with that URL's
+  terminal token. It carries a nonempty description and a role title shortened
+  to `Spring Engineering Internship`; the selected search-result title appends
+  `at Mantel Capture`, so title equality alone would *not* establish ownership
+  here.
+- The cleaned structured description has neither the foreign BAE brand/role
+  nor `hybrid`. The foreign BAE listing occurs in a separately rendered sibling
+  card (and duplicated client data), while the selected title is absent from
+  visible body markup. Thus the current page has **no safe DOM-text owner** for
+  the selected job, but it does have a safe structured URL owner.
+- I ran a throwaway live Vitest inspection, then deleted it before this entry.
+  The current `extractPageText(html)` contains the foreign brand and the
+  current `extractJobDetails(html)` returns `workMode: "hybrid"`. This verifies
+  the live code path, not merely a DOM reading.
+
+So A was right that the post-furniture text is undifferentiated at the point
+the pipeline consumes it. More precisely, the foreign listing is a sibling
+card in source markup; `extractPageText()` deliberately flattens both cards
+into one blob and loses that boundary. No large third-party text is recorded
+here.
+
+**Cause, traced in the current tree.** `JsonLdOpportunity` in
+`web/src/lib/opportunities/structured-extract.ts:4-34` and
+`extractOpportunity()` at `:988-1012` retain a job title and facts but discard
+the source record's `url` and `description`. Both generic selection call sites
+then choose the first job only: `extractOpportunityPageDetails()` at
+`:1502-1505` and `extractJobDetails()` at
+`web/src/lib/opportunities/job-details.ts:320-375` (including several
+field-by-field `.find(...)` calls). They cannot know which posting was selected.
+
+`enrichJobCandidates()` (`web/src/lib/opportunities/enrich.ts:181-198`) then
+derives four independently unscoped values from the same HTML: generic
+structured fields, `extractJobDetails(html)`, whole-page `extractPageText()`,
+and `classifyRoleKind(item.title, extractPageText(html) ?? stripHtml(html))`.
+It also passes the raw HTML to `extractVisaState()` at `:195-197`, even though
+that function is explicitly a `postingText` consumer
+(`web/src/lib/opportunities/visa.ts:183-189`). The summary finally prefers that
+unowned `pageText` in `web/src/lib/jobs/mapper.ts:130-135`. This is one missing
+ownership boundary, not three field regex failures.
+
+**Implement one shared scope, not a host exception.** Add a pure
+`resolveJobPostingScope(html, { url, title })` near the opportunity extraction
+utilities (a new `web/src/lib/opportunities/job-posting-scope.ts` is the
+clearest home). Its result must be explicit:
+
+```ts
+type JobPostingScope =
+  | { status: "owned"; text: string; structured?: JsonLdOpportunity }
+  | { status: "unproven" };
+```
+
+1. Extend only job-shaped `JsonLdOpportunity` records in
+   `structured-extract.ts` with optional raw `url` and `description`, preserving
+   the existing title/name behavior. Parse only nonempty strings. This is
+   provenance, not a new fact extractor. Do not use
+   `extractOpportunityPageDetails(html, "job")` as the selected record: its
+   first-by-kind rule is exactly what this item removes.
+2. The main road remains free text under Ruling 25. First seek a **unique,
+   smallest structural owner** after hidden/furniture removal: an
+   `article`/`li`/`section`/`div`/`main` block with one selected-job witness
+   (a same-origin link resolving exactly to the selected canonical URL, or a
+   heading whose normalized text exactly equals the selected title). It must
+   contain no second distinct job witness; siblings are not part of its scope.
+   Return `extractPageText(candidateHtml)` only when that bounded block is
+   nonempty. Refactor/reuse the balanced-element and furniture helpers in
+   `page-text.ts:73-140`; do not invent class-name rules from hiringcafe or a
+   second incompatible HTML parser.
+3. Where the DOM has no owner, as on this live repro, accept a structured scope
+   only when **exactly one** `JobPosting.url` resolves to the selected canonical
+   HTTP(S) URL and has nonempty description. Canonical comparison may normalize
+   hostname case, a trailing slash, and a fragment; it must reject credentials
+   and preserve path and query rather than silently broadening a listing/search
+   URL. Convert that record's description to bounded visible text. Duplicate
+   identical records may be de-duplicated; two distinct matching records,
+   a title-only near-match, a foreign first record, or a malformed URL all mean
+   `status: "unproven"`.
+4. If neither source proves ownership, return `unproven`. In particular, do
+   **not** fall through to whole-document `extractPageText`, `stripHtml`, the
+   first `JobPosting`, or a title substring. That is the required silence:
+   no foreign-page text becomes evidence merely because a fetch succeeded.
+
+**Thread that one scope through every consumer.** In
+`enrichJobCandidates()` resolve it once before any merge. Pass only
+`scope.text` plus `scope.structured` to a scoped `extractJobDetails` variant;
+that variant must no longer re-parse unrestricted HTML or choose its own first
+structured record. Use `scope.structured` for `place`, `datePosted`, deadline,
+salary, and employment type too, so a later multi-record page cannot leak a
+different job through an adjacent field. Call
+`classifyRoleKind(item.title, scope.text ?? "")`: the selected title remains a
+safe title-first signal, but its free-text fallback no longer sees the page.
+Likewise call `extractVisaState(scope.text, place?.country)` only for an owned
+scope; otherwise leave visa absent.
+
+Replace B6-07's broad fetched `pageText` assignment at `enrich.ts:234-236`
+with the owned scope text. Add a small explicit fetched-scope state to
+`RawJobItem` (`web/src/lib/jobs/types.ts:34-38`), for example
+`fetchedPostingScope?: "owned" | "unproven"`. A successful fetch that cannot
+prove ownership must survive enrichment with `"unproven"`, so
+`hasExtractedJobSignal()` recognizes that intentional state. In
+`jobs/mapper.ts:132-135`, an `unproven` fetched scope makes the report summary
+`undefined`; only an owned scope may supply `pageText`. An unfetched item keeps
+today's source-description behavior, and `description` itself remains
+untouched for scoring. This distinction prevents `pageText ?? description`
+from quietly replacing the rejected page body with another summary claim.
+
+The same resolver must also replace the unscoped `fetchPageText()` use in
+`web/src/app/api/jobs/report/route.ts:56-74`. Add a job-specific one-fetch
+helper that calls `fetchPageHtml()` then `resolveJobPostingScope()` with
+`job.linkPosting` and `job.roleTitle`; pass only owned text to the existing
+BYOK report prompt/parser. Do not modify the generic event `fetchPageText()`.
+This is the same ownership mechanism, not a second feature: otherwise a
+Tier-0 summary would be fixed while the detailed job report could still send
+a sibling listing to the model. Provider resolution, no-provider zero-fetch
+behavior, and request count stay unchanged.
+
+**Tests at risk and required adversarial coverage.**
+
+- Extend `structured-extract.test.ts:83-116` with a synthetic `JobPosting`
+  proving `url` and description provenance are retained without changing event
+  records. Add a scope test file for URL canonicalization, rejected malformed
+  URLs, and two distinct matching records returning `unproven` rather than
+  whichever happens to be first.
+- Update job-enrichment fixtures in `enrich.test.ts:327-443` to give direct
+  pages an actual selected URL/heading owner. Existing JSON-LD-only fixtures
+  without that owner must not keep accidentally passing through the old
+  first-job behavior.
+- Add the named adversarial shape using wholly synthetic text: the raw selected
+  title includes an employer suffix, its exact-URL `JobPosting` has a shortened
+  title and clean description, while a sibling card and a foreign structured
+  record carry `hybrid`. Assert `workMode` is absent, `roleKind` remains
+  `internship` from the selected title, selected `pageText`/summary contains no
+  foreign token, and the foreign record cannot donate a deadline/place/salary.
+- Add a DOM-main-road fixture: a selected URL anchor inside one article and a
+  foreign job sibling containing `hybrid`; only the selected article's text may
+  reach `extractJobDetails`, role-kind fallback, visa, or the summary. Preserve
+  the existing genuine on-site tests in `job-details.test.ts:170-231` by giving
+  them a proved owner rather than weakening the work-mode extractor.
+- Add the fail-closed case: successful fetch, no selected URL/title container,
+  and a tempting foreign work/visa/summary sentence. It yields no derived
+  free-text facts and an undefined mapped summary, while `description` remains
+  byte-for-byte available to `jobs/scoring.ts`'s existing readers. Update
+  `mapper.test.ts:86-94` to mark its preferred fetched text as owned and add
+  the new unproven-summary assertion.
+- Update `app/api/jobs/report/route.test.ts:54-191` with an owned page fixture
+  and an unproven multi-listing fixture. The latter must make one existing
+  fetch, preserve the no-provider zero-fetch guarantee, and never put the
+  foreign token in `generateJsonText`'s prompt.
+
+**Blast radius.** Retrieval and source adapters are unchanged. The initial
+score still uses the original `description`; enrichment's second score pass
+(`web/src/lib/jobs/pipeline.ts:82-102`) may legitimately change facets/ranking
+only when a selected posting's own place/work mode/role kind replaces a foreign
+one. Feed cards and the Tier-0 job report summary become silent rather than
+wrong when ownership is unproven. The detailed job-report route sends less,
+better-scoped evidence under the same BYOK provider and same single fetch; no
+model, credential, route authorization, or extra network call is added.
+
+**Search scope / no-POLICY result.** Checked the current live selected URL,
+canonical link, JSON-LD types/identity/description length, visible DOM owner
+shape, foreign-card separation, `__NEXT_DATA__` duplication, and the exact
+`extractPageText`/`extractJobDetails` result; then traced every current
+`pageText`, job-details, role-kind, visa, mapper, pipeline, and detailed-report
+consumer. The live record supplies a safe exact-URL ownership boundary and the
+generic DOM rule supplies the Ruling-25 free-text main road. This is a CODE
+item, not a manager-policy escalation.
+
+---
