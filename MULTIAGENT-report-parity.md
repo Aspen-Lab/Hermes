@@ -11885,3 +11885,149 @@ plus-CTA junk, alongside a `pageText` value that has none of it, must
 produce a summary drawn from `pageText`, not the junk-carrying snippet.
 
 ---
+
+##### B6-08 — B5-02's `careerservices.upenn.edu` residual: a fix direction for the mechanism that survived tier 1, now that Ruling 27 has withdrawn the closure claim. `WRONG DATA`. Plus `hiringcafe.com`, re-flagged `POLICY`, not a code item.
+
+**Ruling 27 already ruled on the record: the furniture-stripping change
+stands, the "CLOSED" claim does not, both of B5-02's named repros are still
+open. Not re-litigating that — this item is the fix direction for the one
+of the two that is actually buildable this round.**
+
+**Cause, confirmed against the live code — and confirmed the existing test
+does NOT reproduce the real remaining defect, worth stating precisely.**
+`job-details.ts:97-98`:
+
+```ts
+const WORK_MODE_ON_SITE_RE = /\bon[\s-]?site\b|\bin[\s-]?person\b/i;
+```
+
+Bare keyword match, zero proximity requirement, unchanged since B5-02
+(which only changed the *text source*, not this regex). A's re-fetch of the
+real page found the trigger firing on **genuine body prose**, not
+furniture: `"...communicate lab capabilities with on-site visitors..."` and
+`"...Employee amenities such as on-site fitness, banking, and cafeteria
+facilit[ies]..."` — an ordinary benefits-section paragraph, not
+`<nav>/<header>/<footer>/<aside>` markup. **The existing regression test**
+(`job-details.test.ts:195-201`, `"ignores an unrelated work-arrangement
+word sitting in page furniture"`) **puts its own amenity phrase inside a
+`<footer>` tag** — which tier 1 (furniture-stripping) correctly removes,
+so that test passes today, but **it is not the same shape as the real,
+still-open repro**: the real page's amenity mention sits in ordinary
+article-body text, which `withoutPageFurniture()` was never built to
+touch (it strips structural chrome, not on-topic-but-irrelevant prose) and
+cannot, by its own design, ever reach. **This is worth flagging on its own:
+the existing test's comment claims to cover the
+`careerservices.upenn.edu` shape; it does not — it covers a different,
+already-fully-fixed shape that happens to use the same two words.**
+
+**Fix direction — reject an "on-site"/"in-person" match immediately
+followed by a facility/amenity noun, the same bounded-deny-list shape this
+codebase already uses for exactly this kind of adversarial-proximity
+problem** (`SEASON_COHORT_LABEL_RE`'s season-word check, `NOISE_RE`'s
+phrase family). Make this a **tail** matcher, because the code must inspect
+the text following each work-mode match, not search the whole text again:
+
+```ts
+const WORK_MODE_AMENITY_TAIL_RE =
+  /^\s+(?:fitness|gym|parking|banking|cafeteria|dining|caf[eé]|daycare|child\s?care|visitors?|guests?|concierge)\b/i;
+```
+
+**Precision point, worth being exact about rather than leaving C to
+discover it the hard way:** this must NOT be implemented as a single
+whole-text pre-check (`if (WORK_MODE_AMENITY_TAIL_RE.test(text)) return
+undefined` before the main regex runs) — `extractWorkMode()`'s current
+shape (`WORK_MODE_ON_SITE_RE.test(text)`) only asks "does this pattern
+exist anywhere," so a page that genuinely says *both* "this is an on-site
+position" *and*, elsewhere, "on-site parking available" would have its
+genuine signal wrongly discarded by a single whole-text short-circuit. The
+check has to be **per-occurrence**: scan every match of a **local global
+clone** of `WORK_MODE_ON_SITE_RE` (for example, `new RegExp(source, "gi")`)
+via `matchAll` — `matchAll` requires `g`, and a shared global regexp would
+otherwise retain `lastIndex` across calls. For each match, test
+`text.slice((match.index ?? 0) + match[0].length)` with
+`WORK_MODE_AMENITY_TAIL_RE`, the same shape `findVenueCity()` in
+`structured-extract.ts` uses to check every mention of a candidate city
+rather than only the first. Accept `"on-site"` the moment **any** occurrence
+is not immediately followed by an amenity noun — only fall through to silence
+when **every** occurrence is amenity-adjacent. This covers both alternatives
+in `WORK_MODE_ON_SITE_RE`, rather than silently handling only `on-site`.
+This is a real, non-trivial restructuring of the function's current
+single-boolean-test shape, not a one-line insert, and C should size it
+accordingly.
+
+**Traced against all three existing true-positive fixtures and the one
+existing adversarial fixture, none of which this changes** (single-occurrence
+fixtures, so the whole-text-vs-per-occurrence distinction above does not
+change their outcome, only matters for a page with a genuine statement
+*and* an unrelated amenity mention together, which none of today's
+fixtures happens to combine):
+
+- `"This is an on-site position..."` — followed by `"position"`, not in the
+  amenity list. Unaffected, still `"on-site"`.
+- `"This role is in-person at..."` — `"in-person"` followed by `"at"`.
+  Unaffected.
+- `"...this position is onsite in Los Alamos..."` — followed by `"in"`.
+  Unaffected.
+- `"...on-site fitness, banking, and a cafeteria"` (the existing footer
+  fixture) — already suppressed by tier 1 (furniture-stripping) before this
+  regex ever runs; this new check would also independently catch it
+  (`"fitness"` is in the deny-list) if it were ever moved out of the
+  `<footer>` — a second, independent line of defence for the same fixture,
+  not a conflicting one.
+
+**Traced against the real, still-open repro** (paraphrased shape, not the
+scraped original, per §3): `"...on-site visitors..."` → the following tail
+starts with `"visitors"`, in the deny-list → rejected. `"...on-site fitness,
+banking, and cafeteria..."` → the following tail starts with `"fitness"`, in
+the deny-list → rejected. **Both trigger mentions A found are caught.**
+
+**This is a deny-list, not a general parser, and will not catch every
+amenity noun that could ever appear** — the same bounded, "catch known
+shapes" trade-off `NOISE_RE` and `SEASON_COHORT_LABEL_RE` already make.
+Worth naming so it is not mistaken for a complete fix: a benefits section
+phrased with a different amenity word not on this list would still produce
+a false positive. Real, bounded progress against the two confirmed real
+mentions, not a claim of exhaustive coverage.
+
+**Blast radius.** Contained to `extractWorkMode()`, one function, one file
+— same as B5-02's own tier 1.
+
+**Tests at risk.** `job-details.test.ts`'s `workMode` block — the three
+true-positive tests (`:170-176`, `:209-216`) and the existing furniture
+adversarial test (`:195-201`) are all traced above as unaffected. **C
+should add two:** (a) the repro this item actually targets, replacing the
+gap the existing test's comment claims to cover but does not — a genuine
+on-topic article paragraph (not inside `<nav>/<header>/<footer>/<aside>`)
+mentioning "on-site visitors" or "on-site fitness" as an amenity, with no
+genuine work-arrangement statement anywhere else on the page, must produce
+`workMode: undefined`; (b) the per-occurrence case the precision point
+above exists to protect — a page stating both a genuine work-arrangement
+fact ("This is an on-site position") **and**, elsewhere in the same body
+text, an unrelated amenity mention ("on-site parking available") must still
+resolve to `"on-site"`, not silence. (b) is the test that would catch a
+naive whole-text-short-circuit implementation of this fix; without it, a
+future round could "fix" this item in a way that quietly breaks a genuine
+positive and nothing would catch it.
+
+**`hiringcafe.com` — re-flagged `POLICY`, not a code item this round.**
+Round 5 B and C both already concluded this needs a same-page
+multi-listing detector inside `job-details.ts` (finding which block of text
+belongs to *this* job on a page listing several) — real new extraction
+work, correctly out of a guard-shaped item's scope, and not something to
+invent unguided at C's discretion. **This is the same open architectural
+question B6-02 (`roleKind`) and B6-07's own named residual (furniture-
+stripped whole-page text can still contain another listing's sentences)
+both already point at from different angles this round.** Not re-costing it
+a third time in three different items — naming it once here as the place
+all three findings converge, and leaving it as a standing, named limitation
+for the manager to schedule or not, the same way R2's gazetteer gap and
+B6-06's site-brand residual are.
+
+**Gate after B6-08 guide:** `cd web && npx vitest run && npx tsc --noEmit &&
+npx eslint .` — 83 files / 937 tests, **936 passing**; the sole test failure
+is the documented live-data flake `src/lib/events/benchmark.test.ts` (this
+run's expected Chicago city resolved to Salvador), TypeScript is clean, and
+the sole lint error is the known `src/components/persona/quiz.tsx:46` rule.
+No other failure appeared; accepted under §3's stated floor.
+
+---
