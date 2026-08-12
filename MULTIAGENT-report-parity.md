@@ -13479,3 +13479,44 @@ zero keyed-source returns limit coverage but are not a substitute for named
 continuity checks. No credential values or fetched body text were recorded.
 SolarPACES, hiringcafe, TiRT7, Himalayas, Tesla, and careerservices continuity
 measurement remains next; the real-data gate is still open.
+
+---
+
+#### Named continuity and source alignment — COMPLETE @ 2026-08-12 09:15 UTC
+
+**Reachable named results.** The live SolarPACES URL now renders the owned
+conference identity `32nd SolarPACES Conference`, not the deadline headline
+or hostname. The selected-posting boundary remains owned only for selected
+evidence; its foreign sibling does not enter the scope. The no-provider job
+report route made **zero** page fetches. The durable TiRT-style regression
+(not the drifted/parked URL, per Ruling 30) yields Lanzhou, Gansu Province,
+China and no historical Cologne or venue-name output. The Himalayas source
+record employer hierarchy still resolves Luminare Health from owned evidence
+and leaves a high-tier conflict absent.
+
+**Current-source limits, recorded as non-evidence.** The historical Mantel
+hiringcafe posting was not discoverable as a current single posting (the
+reachable result is a listing route), so no new live owned/unproven result is
+claimed. The historical LHB record is absent from the current 60-record
+Himalayas window. Direct bounded fetches for the old Tesla and careerservices
+URLs returned no usable page text. Their established synthetic/route
+regressions remain green, but none is counted as a current live confirmation.
+
+**Required fresh source-page comparison (three events, three jobs).** Of the
+top three fresh events, two source pages were fetchable: both rendered titles
+aligned; one rendered location aligned and the other was silent rather than
+claiming a source location. Neither rendered extractive summary was an exact
+source-page match; the third page was unavailable and is non-evidence. All
+three fresh job pages were fetchable: titles and employers aligned on all
+three; two rendered summaries aligned and one did not. No large page text was
+retained. These are source-alignment mismatches/unproven summaries, not a
+claim about their cause. They keep the real-data gate open under Ruling 23.
+
+**Ranked observations for B (measurement only):** 1. Fresh event summaries
+were non-identical to each reachable source page (2/2) and one event location
+could not be confirmed (1/2). 2. One fresh job summary was non-identical to
+its reachable source page (1/3). 3. Historical hiringcafe/Tesla/
+careerservices/LHB live targets were unavailable or drifted, so their durable
+contracts are not substitutes for live source proof. SolarPACES, scope,
+no-provider, TiRT regression, and employer conflict contracts hold. Fixture
+remains 0/32, but the real-data gate is **NOT MET**.
