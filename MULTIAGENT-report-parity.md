@@ -13827,3 +13827,14 @@ but B7-06 does not alter its title hierarchy and no unsupported identity claim
 was made here. The fixture and fresh source/pipeline authority measurements
 are each met for B7-06. The full gate is next; only an independent manager
 decision may close the overall real-data gate.
+
+---
+
+#### Full gate — COMPLETE @ 2026-08-12 10:50 UTC
+
+Fresh gate: **85 files / 991 tests, 990 passed**. The only Vitest failure is
+the documented live `src/lib/events/benchmark.test.ts` city drift: the current
+Battery Safety Summit resolved Salvador where its stale assertion expects
+Chicago (coverage 8/16 = 0.5). `npx tsc --noEmit` passed. ESLint reports only
+the known `src/components/persona/quiz.tsx:46` synchronous-effect error.
+`git diff --check` passed. No other test, type, lint, or diff failure appeared.
