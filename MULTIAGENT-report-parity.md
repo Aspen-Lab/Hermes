@@ -275,18 +275,20 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished item @ 2026-08-12 08:15 UTC. C completed B7-03's
-                   generic current-venue extraction; B7-05 is next. Manager
-                   lock remains held.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 08:30 UTC. Round-7 C
+                   completed all four ordered CODE items and the B7-05
+                   authority follow-up. A now remeasures the fixture and real
+                   named cases. Manager lock remains held.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       C — B7-05 only: generic source-record/owned-scope employer
-                   identity after B7-02; explicit high-tier conflicts are
-                   absent. Commit/push the item separately, then A remeasures
-                   fixture and real data. No POLICY items remain.
+WHOSE TURN:       A — independently remeasure the 32-element fixture and fresh
+                   real pools, then the named SolarPACES, hiringcafe, TiRT7,
+                   and Himalayas continuity cases. Measure only; do not
+                   diagnose or change product code. Commit/push each durable
+                   measurement record separately. No POLICY items remain.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -300,41 +302,37 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 C IN PROGRESS: B7-01, B7-02/B7-04, and B7-03
-                   COMPLETE; B7-05 NEXT.**
-                   Fixture: 0 of 32 different (0%). Real defects remain
-                   hiringcafe foreign
-                   selected-posting facts/summary, TiRT7 missing true WHERE,
-                   and Himalayas's confirmed Workday/Luminare employer
-                   mismatch. B7-04 is fully subsumed by B7-02, not another
-                   parser task. B6-08 careerservices and B6-04 Tesla
-                   title-employer remain closed. Full B gate after every
-                   guide item: 83 files / 948 tests, 947 passing with only
-                   the documented live benchmark flake; typecheck clean;
+STATUS:           **ROUND-7 C COMPLETE; A REMEASUREMENT NEXT.**
+                   Fixture was 0 of 32 different (0%) before the latest C
+                   work. Post-C real results are unknown until A remeasures
+                   SolarPACES, hiringcafe, TiRT7, and Himalayas. B7-04 is
+                   fully subsumed by B7-02, not another parser task. Final C
+                   gate: 85 files / 978 tests passing; typecheck clean;
                    exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-05 remains.** B7-01,
-                   B7-02/B7-04, and B7-03 are implemented. See §4's B7-03
-                   complete record.
+LAST DIFFERENCE:  **0% fixture / real data NOT YET REMEASURED AFTER C.** All
+                   Round-7 CODE items are implemented. See §4's C closing
+                   handoff for the exact named A checks.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished item @ 2026-08-12 08:15 UTC. C completed B7-03's
-generic current city/region/country extraction. Resume the same C turn at
-B7-05 only.
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 08:30 UTC. C completed all
+four ordered Round-7 CODE items plus the B7-05 authority follow-up. A now
+remeasures; C must not continue coding.
 `HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 07:26 UTC` for the
 manager-held A measurement.
 
-**WHOSE TURN: C.** Implement B7-05's generic source-owned employer hierarchy
-only. B7-01, B7-02/B7-04, and B7-03 are complete. No POLICY items await a
-manager decision.
+**WHOSE TURN: A.** Independently remeasure the 32-element fixture, fresh real
+pools, and the named SolarPACES, hiringcafe, TiRT7, and Himalayas continuity
+cases. Measure only; do not diagnose or change product code. No POLICY items
+await a manager decision.
 
-**STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
-MET. B7-01, B7-02/B7-04, and B7-03 are implemented and gated; the confirmed
-Himalayas employer mismatch remains for C, then A must remeasure SolarPACES,
-hiringcafe, TiRT7, and Himalayas. B6-08 careerservices amenity proximity and
-B6-04 Tesla title-employer extraction remain closed; continuity findings and
-standing exclusions remain binding.
+**STATUS / LAST DIFFERENCE:** fixture was 0 of 32 different (0%) before the
+latest C work; real gate is NOT YET REMEASURED AFTER C. All Round-7 CODE items
+are implemented and gated. A must now remeasure SolarPACES, hiringcafe, TiRT7,
+and Himalayas plus fresh-pool continuity. B6-08 careerservices amenity
+proximity and B6-04 Tesla title-employer extraction remain closed; standing
+exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
 real gates are separate and both must be zero. C preserves the §1d exclusions
@@ -13386,3 +13384,50 @@ added.
 reports only the documented `react-hooks/set-state-in-effect` at
 `src/components/persona/quiz.tsx:46`; `git diff --check` clean. §1 and the A
 handoff remain manager-owned and intentionally unchanged.
+
+---
+
+### Round 7 — Agent C closing handoff
+
+**C COMPLETE @ 2026-08-12 08:30 UTC.** Individually pushed code items are
+`661c92f` B7-01 source-owned event identity; the B7-02 ownership series ending
+at `cd0d938` (including B7-04 acceptance); `098553b` B7-03 current venue
+clauses; `585c01e` B7-05 employer identity; and manager-review follow-up
+`89f55cb`. No product or test change remains scheduled for C.
+
+**Final C gate:** 85 test files / 978 tests passing; `tsc --noEmit` clean;
+`eslint .` reports only the documented quiz line 46 exception; diff check
+clean. Provider resolution still precedes the detailed-report page fetch, no
+provider remains zero report fetches and zero model calls, and Tier 0 adds no
+model dependency. No credential, provider, source priority, host exception,
+branch, worktree, or PR was added.
+
+**Agent A must measure, not diagnose or fix, in this order:**
+
+1. Re-render the established maximal fixture through the real exported report
+   components and record the same 32-element denominator plus every standing
+   exclusion.
+2. Run a fresh source/pipeline pool and record actual source counts, rendered
+   summaries, employer absence/presence, work mode, role kind, location, and
+   whether fetched enrichment changed ranking. Preserve the source-security
+   floor and never print credential values or large fetched text.
+3. Recheck SolarPACES: the deadline article must resolve from an owned event
+   declaration to the conference identity, never the deadline headline,
+   hostname, or an empty required H1.
+4. Recheck hiringcafe across the one selected posting: structured facts, work
+   mode, role kind, visa, Tier-0 summary, and detailed BYOK prompt must contain
+   no foreign sibling or listing chrome. An unproven page must remain silent;
+   no-provider must still perform zero report fetch/model calls.
+5. Recheck TiRT7 without reusing the drifted parked page as evidence. The
+   durable current-clause regression must yield Lanzhou/Gansu Province/China,
+   reject historical Cologne and venue-name output, and any live source drift
+   must be recorded as non-evidence under Ruling 30.
+6. Recheck the selected Himalayas LHB record: the full owned description must
+   resolve Luminare Health rather than Workday; excerpt-only evidence must not
+   correct a label, selected high-tier conflicts must make company absent, and
+   an unproven fetched page must preserve the source-record result.
+
+The real-data gate remains NOT MET until A records this independent post-C
+measurement. Manager lock remains `chatgpt-local` for A.
+
+---
