@@ -321,27 +321,24 @@ GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** out of budget @ 2026-08-12 07:00 UTC. C pushed B7-01
-complete at `661c92f` and B7-02 partial checkpoints `61a018a` and `d4128cf`;
-resume B7-02's remaining fixture migration, adversarial tests, and full gate
-from its §4 partial records.
+**STOPPED BECAUSE:** finished item @ 2026-08-12 08:10 UTC. C completed and
+pushed B7-02 at `cd0d938`, including B7-04's acceptance coverage. Resume the
+same C turn at B7-03 only.
 `HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
 instruction.
 
-**WHOSE TURN: C.** Resume B7-02's one selected-posting scope across
-work mode, role kind, Tier-0 summary, and BYOK detailed report — **including
-B7-04's acceptance tests, with no separate R4 implementation**; (3) B7-03's
-generic current venue city/region/country path; (4) B7-05's generic
-source-owned employer hierarchy, after B7-02. No POLICY items are awaiting a
-manager decision.
+**WHOSE TURN: C.** Implement B7-03's generic current venue city/region/country
+path only; then B7-05's generic source-owned employer hierarchy. B7-02 and its
+B7-04 acceptance coverage are complete. No POLICY items await a manager
+decision.
 
 **STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
-MET. B7-01 is implemented; B7-02 is PARTIAL and ungated. Hiringcafe's foreign
-posting fields/summary, TiRT7's true WHERE, and
-the confirmed Himalayas employer mismatch must be remeasured after C. B7-04 is
-subsumed, not an additional metric or code path. B6-08 careerservices amenity
-proximity and B6-04 Tesla title-employer extraction remain closed; continuity
-findings and standing exclusions remain binding.
+MET. B7-01 and B7-02 are implemented and gated; TiRT7's true WHERE and the
+confirmed Himalayas employer mismatch remain for C, then A must remeasure the
+real SolarPACES and hiringcafe cases too. B7-04 is subsumed, not an additional
+metric or code path. B6-08 careerservices amenity proximity and B6-04 Tesla
+title-employer extraction remain closed; continuity findings and standing
+exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
 real gates are separate and both must be zero. C preserves the §1d exclusions
