@@ -275,13 +275,13 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn. C completed, gated, committed, and
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:49 UTC. C completed,
+                   gated, committed, and
                    pushed all scheduled code: B6-01 `dd5eb44`, B6-05
                    `65ea13d`, B6-02 `51dd7d0`, B6-04 `266b276`, B6-03
                    `1097ddb` (plus consumer follow-up `838773b`), B6-07
                    `e8e2801`, and B6-08 careerservices `3c9cbd8`.
-                   at B6-04; remaining order is B6-04 → B6-03 → B6-07 →
-                   B6-08 careerservices. B6-06 SolarPACES and B6-08
+                   B6-06 SolarPACES and B6-08
                    hiringcafe.com are not C code this turn, are not excluded,
                    and remain in the next A real-data gate.
                   (Set this every time you stop. Three values: `finished the
@@ -307,13 +307,13 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-6 B GUIDE COMPLETE.** Eight items classified:
-                  B6-01/02/03/04/05/07/08 are code guides; B6-06 is policy;
-                  B6-08 also carries the separate hiringcafe policy item.
-                  Gate after B6-08: 83 files / 937 tests, 936 passing with
-                  only the documented live benchmark flake; typecheck clean;
-                   exactly the known quiz.tsx:46 lint error. Fixture remains
-                   0%; the real-data gate remains NOT MET.
+STATUS:           **ROUND-6 C IMPLEMENTATION COMPLETE.** All seven scheduled
+                   code items are committed and pushed, with B6-03's
+                   consumer correction separately durable. Final gate: 83
+                   files / 948 tests, 947 passing with only the documented
+                   live benchmark flake; typecheck clean; exactly the known
+                   quiz.tsx:46 lint error. Fixture was 0% before C; the
+                   real-data gate remains NOT MET until A remeasures.
 
                    **MANAGER POLICY COMPLETE.** §1o Ruling 28 keeps
                    SolarPACES open but defers a standalone heuristic until
@@ -322,11 +322,6 @@ STATUS:           **ROUND-6 B GUIDE COMPLETE.** Eight items classified:
                    contamination in scope and schedules one shared posting-
                    ownership investigation after A remeasures; C must not
                    substitute field-specific filters this turn.
-
-                   **C PARTIAL:** B6-01, B6-05, and B6-02 are complete and
-                   pushed. Their latest gate is 83 files / 940 tests, 939
-                   passing with only the documented benchmark flake;
-                   typecheck clean; only the known quiz lint error.
 
                   **R7 = Ruling 26, scored together per instruction.** B5-03's
                   two tier-1 guards are confirmed working on fresh data at
@@ -581,18 +576,21 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            implemented** — see §4 "Round 5 — Agent B" and "Round 5 — Agent
            C" for full per-item detail. Round 5 is done.
 
-           **Round 6's measurement is also done** (this entry) — fixture
+           **Round 6's first measurement is also done** (this entry) — fixture
            re-confirmed at 0%; real data scored R2/R4/R7/R11/R12/R13 against
            6 continuity postings plus a fresh 17-event/12-job live pool;
            Ruling 26 confirmed and generalised to two more call sites; one
            new architectural finding (the `enrich.ts` title-preference
-           bypass) surfaced. Full detail in §4 "Round 6 — Agent A". **B's
-           complete round-6 guide, B6-01 .. B6-08, is now committed and
-           pushed; manager policy rulings are next, before C begins.**
+           bypass) surfaced. Full detail in §4 "Round 6 — Agent A". B's
+           guide, the manager's two policy rulings, and all seven scheduled C
+           items are now committed and pushed. **A's post-C remeasurement is
+           next.**
 
-TODO:      **C: resume at B6-04 → B6-03 → B6-07 → B6-08 careerservices,
-           one commit and push per item, with the full
-           gate after each.** Do not implement B6-06 or B6-08 hiringcafe.com.
+TODO:      **A: remeasure fixture and real data against the current post-C
+           build.** Re-check SolarPACES; hiringcafe workMode/roleKind/summary;
+           title-employer extraction and optional company rendering; fetched
+           page-text summaries; and work-mode amenity proximity. Re-list every
+           exclusion and keep §1o/§1p residuals inside the real-data gate.
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
