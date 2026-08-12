@@ -275,24 +275,25 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:14 UTC. Round-6 B has
-                  completed and pushed B6-01 .. B6-08, each as its own guide
-                  commit. B6-06 (SolarPACES site-brand precision/recall) and
-                  B6-08's `hiringcafe.com` same-page multi-listing residual
-                  are explicitly `POLICY — manager decides`; C must not begin
-                  until the manager rules both. Exact classification, C work
-                  order, dependencies, and the accepted gate are in §4
-                  "Round 6 — Agent B"'s closing handoff.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:20 UTC. Round-6 B's guide
+                   is complete and the manager has ruled both policy items in
+                   §1o/§1p. B6-06 SolarPACES and B6-08 hiringcafe.com are not
+                   C code this turn, are not excluded, and remain in the next
+                   A real-data gate. C's exact code-only order is B6-01 →
+                   B6-05 → B6-02 → B6-04 → B6-03 → B6-07 → B6-08
+                   careerservices, one commit and push per item.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            6
-WHOSE TURN:       MANAGER — both policy items are ruled (§1o, §1p). Verify
-                   the guide, then advance to C with the exact ordered,
-                  code-only work list in §4 "Round 6 — Agent B". The manager
-                  lock stays held by `chatgpt-local` until the final stop
-                  commit; do not change it in this handoff.
+WHOSE TURN:       C — implement the seven code items in this exact dependency
+                   order: B6-01 → B6-05 → B6-02 → B6-04 → B6-03 → B6-07 →
+                   B6-08 careerservices. Read each full guide in §4 "Round 6
+                   — Agent B" before touching its files. Do not implement
+                   B6-06 SolarPACES or B6-08 hiringcafe.com; §1o/§1p defer
+                   those without excluding them. The manager lock stays held
+                   by `chatgpt-local` until the final stop commit.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -311,8 +312,16 @@ STATUS:           **ROUND-6 B GUIDE COMPLETE.** Eight items classified:
                   B6-08 also carries the separate hiringcafe policy item.
                   Gate after B6-08: 83 files / 937 tests, 936 passing with
                   only the documented live benchmark flake; typecheck clean;
-                  exactly the known quiz.tsx:46 lint error. Fixture remains
-                  0%; the real-data gate remains NOT MET.
+                   exactly the known quiz.tsx:46 lint error. Fixture remains
+                   0%; the real-data gate remains NOT MET.
+
+                   **MANAGER POLICY COMPLETE.** §1o Ruling 28 keeps
+                   SolarPACES open but defers a standalone heuristic until
+                   B6-01/B6-05 land and A remeasures the newly reachable
+                   fallback tier. §1p Ruling 29 keeps same-page multi-listing
+                   contamination in scope and schedules one shared posting-
+                   ownership investigation after A remeasures; C must not
+                   substitute field-specific filters this turn.
 
                   **R7 = Ruling 26, scored together per instruction.** B5-03's
                   two tier-1 guards are confirmed working on fresh data at
@@ -576,9 +585,9 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            complete round-6 guide, B6-01 .. B6-08, is now committed and
            pushed; manager policy rulings are next, before C begins.**
 
-TODO:      **MANAGER: both policy items are ruled (§1o, §1p). Verify and
-           advance C to the code-only work order in §4's Round-6 B
-           handoff.** Neither policy item is C code this turn.
+TODO:      **C: implement B6-01 → B6-05 → B6-02 → B6-04 → B6-03 → B6-07 →
+           B6-08 careerservices, one commit and push per item, with the full
+           gate after each.** Do not implement B6-06 or B6-08 hiringcafe.com.
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
@@ -12150,5 +12159,15 @@ and `summary`. C lands B6-02/B6-07/B6-08 careerservices; the next A measures
 the named repro per field and records the page-block shape; the next B guides
 one shared posting-scoped text source if contamination remains. Full binding
 reasoning is in §1p.
+
+---
+
+#### Manager handoff to C
+
+**COMPLETE, committed separately.** Both policy questions are ruled in §1o
+and §1p. C's code-only order is B6-01 → B6-05 → B6-02 → B6-04 → B6-03 →
+B6-07 → B6-08 careerservices. B6-06 SolarPACES and B6-08 hiringcafe.com have
+no C code this turn; both remain named findings in the next A real-data pass
+and remain inside §1j's gate.
 
 ---
