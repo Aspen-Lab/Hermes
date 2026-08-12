@@ -12363,3 +12363,54 @@ but does not make any prior named real finding disappear. No credential or
 fetched third-party text was recorded. Continuity repros follow separately.
 
 ---
+
+#### Named continuity repros — COMPLETE
+
+All three named URLs were fetched again and their current data was rendered.
+Only the shortest output fragments are retained here; fetched page content was
+treated as data, never instructions.
+
+1. **R13 / SolarPACES — STILL OPEN, WRONG DATA.** The current fetched page
+   title remains the deadline headline. Both B6-01's guarded title segment
+   and B6-05's guarded slug reject it; the rendered report then lands on the
+   absolute final fallback, `Abstract submission deadline extended`.
+   **Required tier result: absolute fallback.** It is not the conference name,
+   so SolarPACES stays in the gate and is not an exclusion.
+2. **R2 / TiRT7 — IMPROVED, NOT CLOSED.** Re-fetch succeeded. The current
+   body-place extractor returns no place, so the old wrong past-host city does
+   not reappear; the report is silently locationless rather than true-venue
+   complete. This preserves the prior improved-not-closed status.
+3. **B6-04 / B6-03 employer path — PARTLY CLOSED.** The named Tesla title
+   now extracts and renders `Tesla`, never `EV.Careers`. Across the six fresh
+   jobs, absent company data produces no empty icon, heading, separator, or
+   placeholder. One new cautious real-data watch item: the fresh Himalayas
+   LHB role renders `Workday` while its own rendered body begins with a
+   different organisation name; B should verify source authority before this
+   becomes a new R7 item rather than A calling it a confirmed lie from one
+   summary alone.
+4. **B6-07 summary — PARTLY CLOSED / R4 remains open.** The named
+   hiringcafe report now selects fetched `pageText` for its summary, and the
+   current fresh nonempty summaries no longer show the old round-6
+   markdown/newsletter shapes. But hiringcafe's selected job still receives
+   listing-chrome opening text and the foreign BAE listing is present in the
+   same extracted page text: source body, not a separately selected owned
+   block. Thus summary contamination remains in the gate; fetching body text
+   did not silently change scoring/ranking.
+5. **B6-02 / B6-08 work mode and role kind.** hiringcafe renders
+   `roleKind: internship` (consistent with its selected title) but still
+   renders `workMode: hybrid`, which cannot be attributed safely because the
+   foreign listing is in the undifferentiated extracted body. The fetched page
+   exposes one JobPosting structured-data block, but the foreign listing also
+   appears in the page-text main body; this is the Ruling-29 ownership defect,
+   not a new field regex problem. careerservices now returns no work mode on
+   the named amenity/visitor repro, while the genuine on-site fixture still
+   returns `on-site`: B6-08's per-occurrence boundary is **CLOSED**.
+
+This makes the live gate unambiguously open: wrong-data findings rank first
+(SolarPACES, plus hiringcafe's cross-listing work mode/summary attribution),
+then missing/under-extracted data (TiRT7 venue). The fresh source pass did not
+exercise R8; it remains **not reconfirmed**, not closed. No fetched page
+contained agent-directed instructions; if it had, they would have been
+ignored.
+
+---
