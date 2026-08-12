@@ -4,6 +4,7 @@ import { resolveJobPostingScope } from "./job-posting-scope";
 import { enrichJobCandidates } from "./enrich";
 import { scoredJobToJob } from "@/lib/jobs/mapper";
 import { scoreIndustryFit } from "@/lib/jobs/scoring";
+import { jobDedupKey } from "@/lib/jobs/dedup";
 
 describe("resolveJobPostingScope", () => {
   it("selects a smallest DOM owner by exact canonical link", () => {
@@ -57,6 +58,14 @@ describe("resolveJobPostingScope", () => {
       structured: { employmentType: "intern" },
     });
     expect(scope.status === "owned" && scope.text).not.toContain("Foreign-marker");
+  });
+
+  it("retains hiringOrganization only from the exact selected JobPosting", () => {
+    const scope = resolveJobPostingScope(
+      `<script type="application/ld+json">[{"@type":"JobPosting","url":"https://jobs.example.com/selected","description":"At Luminare Health, our people build care.","hiringOrganization":{"name":"Luminare Health"}},{"@type":"JobPosting","url":"https://jobs.example.com/foreign","description":"Foreign.","hiringOrganization":{"name":"Foreign Corp"}}]</script>`,
+      { url: "https://jobs.example.com/selected", title: "Selected role" },
+    );
+    expect(scope).toMatchObject({ status: "owned", structured: { hiringOrganization: "Luminare Health" } });
   });
 
   it("fails closed for malformed URLs and distinct matching records", () => {
@@ -124,5 +133,50 @@ describe("resolveJobPostingScope", () => {
     expect(scoreIndustryFit(item, "academia")).toBe(1);
     expect(reportJob.summary).toBeUndefined();
     vi.unstubAllGlobals();
+  });
+
+  it("keeps a source-owned employer when a fetched page is unproven", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      "<main><h2>Different role</h2><p>At Foreign Corp, our people work here.</p></main>",
+      { status: 200 },
+    )));
+    const [item] = await enrichJobCandidates([{
+      id: "himalayas:owned-employer", source: "himalayas", title: "Selected role",
+      company: "Luminare Health", location: "Remote", isRemote: true,
+      description: "At Luminare Health, our people build care.",
+      url: "https://jobs.example.com/selected", tags: [],
+    }]);
+    expect(item).toMatchObject({ company: "Luminare Health", fetchedPostingScope: "unproven" });
+    expect(item.pageText).toBeUndefined();
+    vi.unstubAllGlobals();
+  });
+
+  it("silences employer identity when selected structured and owned text conflict", async () => {
+    const selectedUrl = "https://jobs.example.com/selected";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      `<script type="application/ld+json">{"@type":"JobPosting","url":"${selectedUrl}","hiringOrganization":{"name":"Structured Health"}}</script><article><a href="/selected">Selected role</a><p>At Declared Health, our employees build care.</p></article>`,
+      { status: 200 },
+    )));
+    const [item] = await enrichJobCandidates([{
+      id: "jobweb:employer-conflict", source: "jobweb", title: "Selected role",
+      company: "Catalog Health", location: "", isRemote: false,
+      description: "At Declared Health, our employees build care.", url: selectedUrl, tags: [],
+    }]);
+    expect(item).toMatchObject({ fetchedPostingScope: "owned" });
+    expect(item.company).toBeUndefined();
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the resolved employer consistently for report mapping, dedup, and fit", () => {
+    const item = {
+      id: "himalayas:luminare", source: "himalayas" as const, title: "Care Researcher",
+      company: "Luminare Health", location: "Remote", isRemote: true,
+      description: "At Luminare Health, our people build care.",
+      url: "https://jobs.example.com/luminare", tags: [],
+    };
+    const mapped = scoredJobToJob({ ...item, score: 0.8, matchedKeywords: [], matchReason: "Relevant." });
+    expect(mapped.companyOrLab).toBe("Luminare Health");
+    expect(jobDedupKey(item)).toContain("luminare");
+    expect(scoreIndustryFit(item, "industry")).toBe(1);
   });
 });

@@ -6,6 +6,7 @@ import { classifyRoleKind } from "@/lib/jobs/role-kind";
 import { extractDeclaredEventName, extractEventDetails } from "./event-details";
 import { extractEventRoster } from "./event-roster";
 import { extractJobDetails } from "./job-details";
+import { resolveEmployerIdentity } from "./employer-identity";
 import { resolveJobPostingScope } from "./job-posting-scope";
 import { fetchPagesConcurrently } from "./page-fetch";
 import { extractOpportunityPageDetails } from "./structured-extract";
@@ -214,7 +215,17 @@ export async function enrichJobCandidates(
     const visa = item.visa ?? (pageText
       ? tryExtract(() => extractVisaState(pageText, place?.country))
       : undefined);
-    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText)) return item;
+    const employer = resolveEmployerIdentity({
+      catalogLabel: item.company,
+      structuredOrganizations: structured?.hiringOrganization,
+      ownedTexts: [item.description, pageText].filter((text): text is string => Boolean(text)),
+    });
+    const company = employer.status === "ambiguous"
+      ? undefined
+      : employer.status === "none"
+        ? item.company
+        : employer.company;
+    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && company === item.company) return item;
     return {
       ...item,
       place,
@@ -250,6 +261,7 @@ export async function enrichJobCandidates(
       workMode: item.workMode ?? details?.workMode,
       roleKind,
       visa,
+      company,
       // B6-07: retain full furniture-stripped text separately so only the
       // report summary upgrades; scoring continues to use source snippets.
       pageText: item.pageText ?? pageText,

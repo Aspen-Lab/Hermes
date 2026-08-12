@@ -13332,3 +13332,34 @@ reports only the documented `react-hooks/set-state-in-effect` at
 only; manager lock unchanged.
 
 ---
+
+#### B7-05 — COMPLETE @ 2026-08-12 08:20 UTC — generic source-owned employer identity
+
+Added a pure `resolveEmployerIdentity()` hierarchy with explicit
+`structured` / `declared` / `none` / `ambiguous` outcomes. It accepts only a
+selected `JobPosting.hiringOrganization` or a bounded opening direct
+self-declaration from source-record-owned or B7-02-owned text. A unique direct
+declaration corrects a lower-tier catalog label; selected structured evidence
+wins when it agrees; multiple or conflicting high-tier identities deliberately
+leave `company` absent. Bare, late, client, partner, vendor, and on-behalf-of
+mentions remain non-evidence.
+
+Himalayas now applies the resolver to its single owned API record before
+scoring/dedup. Selected-page enrichment re-runs the same hierarchy only after
+B7-02 proves a posting scope; an unproven fetch returns before it can alter the
+raw-record employer, summary, role kind, work mode, visa, or prompt. JSON-LD
+retains `hiringOrganization` only on the selected exact-URL `JobPosting`.
+No source exception, hostname/title inference, fetch, provider, credential, or
+model path was added.
+
+Added synthetic resolver coverage, Himalayas correction plus ordinary catalog
+fallback, selected-structured provenance, conflict silence, unproven-fetch
+preservation, and mapper/dedup/scoring consumer coverage. All text is short
+synthetic evidence.
+
+**Gate:** 85 files / 977 tests passing; `tsc --noEmit` clean; `eslint .`
+reports only the documented `react-hooks/set-state-in-effect` at
+`src/components/persona/quiz.tsx:46`; `git diff --check` clean. B7-05 is the
+last C item. Next is Agent A's fixture and real-data remeasurement of
+SolarPACES, hiringcafe ownership/chrome, TiRT7 location, and Himalayas employer
+provenance/conflict silence; manager lock unchanged.

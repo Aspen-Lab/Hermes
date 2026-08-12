@@ -1,5 +1,6 @@
 import { canonicalize } from "@/lib/scoring/term-expand";
 import type { OpportunityPlace } from "@/types";
+import { cleanJobSubtitlePart } from "./job-cleanup";
 import { normalizeSalary, type NormalizedSalary } from "./salary";
 
 export type ExtractedPlace = OpportunityPlace;
@@ -32,6 +33,8 @@ export interface JsonLdOpportunity {
   /** Provenance retained only for selected-posting ownership checks. */
   url?: string;
   description?: string;
+  /** Selected JobPosting-only employer provenance; never read unscoped. */
+  hiringOrganization?: string;
 }
 
 export interface OpenGraphTags {
@@ -1003,6 +1006,12 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   const employmentType = nonEmptyString(node.employmentType)?.toLowerCase();
   const url = kind === "job" ? nonEmptyString(node.url) : undefined;
   const description = kind === "job" ? nonEmptyString(node.description) : undefined;
+  const organization = kind === "job"
+    ? (isRecord(node.hiringOrganization)
+      ? nonEmptyString(node.hiringOrganization.name)
+      : nonEmptyString(node.hiringOrganization))
+    : undefined;
+  const hiringOrganization = cleanJobSubtitlePart(organization);
 
   return {
     kind,
@@ -1017,6 +1026,7 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     ...(employmentType ? { employmentType } : {}),
     ...(url ? { url } : {}),
     ...(description ? { description } : {}),
+    ...(hiringOrganization ? { hiringOrganization } : {}),
   };
 }
 

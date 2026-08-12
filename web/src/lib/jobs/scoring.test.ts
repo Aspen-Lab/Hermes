@@ -366,6 +366,26 @@ describe("source mappers", () => {
     expect(item!.postedAt).toBe(new Date(1784491534 * 1000).toISOString());
   });
 
+  it("uses an owned Himalayas record declaration over an ATS catalog label", () => {
+    const item = himalayasJobToRawItem({
+      title: "Care Researcher",
+      companyName: "Workday",
+      description: "<p>At Luminare Health, our people build better care.</p>",
+      applicationLink: "https://himalayas.app/jobs/care-researcher",
+    });
+    expect(item?.company).toBe("Luminare Health");
+  });
+
+  it("preserves an ordinary Himalayas catalog label without a declaration", () => {
+    const item = himalayasJobToRawItem({
+      title: "Research Engineer",
+      companyName: "Example Energy",
+      description: "<p>Build battery models.</p>",
+      applicationLink: "https://himalayas.app/jobs/research-engineer",
+    });
+    expect(item?.company).toBe("Example Energy");
+  });
+
   it("returns null for postings without a link", () => {
     expect(remotiveJobToRawItem({ id: 1, title: "X" })).toBeNull();
     expect(himalayasJobToRawItem({ title: "X" })).toBeNull();
