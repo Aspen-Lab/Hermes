@@ -11774,3 +11774,114 @@ diagnoses: a check that looks like it closes something without actually
 being tested against what it must not break.
 
 ---
+
+##### B6-07 — R4: three new chrome shapes in job summaries clear both of B5-07's guards. `WRONG DATA`. Costing the real fix B5-07's own closing note already named, per this round's instruction, not a fourth narrow guard.
+
+**A found three shapes this round, none matching either of B5-07's two
+checks** (`looksLikeScrapedChrome`'s colon-count, `NOISE_RE`'s phrase list,
+`endsWithTitleEcho`'s title-tail check): a stray `]` where a Markdown
+link's visible text was stripped but its bracket survived; a job board's
+own filter labels and upsell copy concatenated with no separators at all
+(zero colons, no cart/checkout vocabulary, no title echo); a Markdown `###`
+heading marker followed by an unrelated newsletter signup CTA. **I am not
+proposing a fourth guard for a fourth shape** — per this round's own
+instruction, and because the pattern is now three-for-three: every shape
+B4-04, B5-07, and now A's fresh findings hit is a **different artifact of
+the same low-fidelity source**, not three unrelated defects.
+
+**The actual cause, confirmed by tracing where this text comes from.**
+`web/src/lib/jobs/mapper.ts:133-134`:
+
+```ts
+const summary =
+  summarizeJob(cleanJobDescription(item.description), item.matchedKeywords, roleTitle) ||
+```
+
+`item.description` traces to `RawJobItem.description`, set once at
+ingestion (`jobweb.ts:195`: `cleanJobDescription(result.snippet)` — the
+search **snippet**, a fragment a search provider chose and truncated, not
+the posting's own text) and **never touched by `enrich.ts`'s merge** —
+confirmed by re-reading the full object literal `enrichJobCandidates()`
+returns (`enrich.ts:199-236`): `description` is not one of the fields
+listed. Every one of the three new shapes A found is exactly what a
+truncated search-result snippet produces and a real page's own body text
+would not: a Markdown link cut mid-render, concatenated UI filter-widget
+text (search-result snippets from listing-adjacent pages routinely mash
+several UI elements together), a heading marker abutting unrelated
+newsletter chrome. **B5-07's own closing note already said this: "a proper
+extractor would likely help far more than any further noise filter."**
+Costing it, as instructed, rather than adding shape four.
+
+**Fix direction — do not build a new extractor from scratch; reuse
+`extractPageText()`, already proven and already in this exact pipeline.**
+`enrichJobCandidates()` already fetches the posting's full HTML
+(`enrich.ts:184-186`) and already calls `extractJobDetails(html)`, which
+internally computes `extractPageText(html) ?? stripHtml(html)`
+(`job-details.ts:326`, the same furniture-stripped text B5-02 proved out).
+**`enrich.ts` should call `extractPageText(html)` itself** (already
+imported in `job-details.ts`; a new, cheap, pure-function import for
+`enrich.ts`, no new dependency), and add it as a **new, additive field** —
+e.g. `RawJobItem.pageText?: string` — merged the same additive way every
+other enrichment field already is (`item.pageText ?? extractedPageText`,
+never overwriting). Then `jobs/mapper.ts:133-134` prefers it:
+`summarizeJob(cleanJobDescription(item.pageText ?? item.description),
+...)`.
+
+**Why this closes the three shapes without a new guard, not just
+plausibly.** `summarizeJob()`'s own sentence-scoring pipeline
+(`scoreSentences()`, `summarize.ts:83-115`) already screens every candidate
+sentence through `NOISE_RE`, `looksLikeScrapedChrome`, and
+`endsWithTitleEcho`, and already scores toward genuine content
+(`SECTION_RE`/`ROLE_RE` bonuses, matched-keyword bonus). **Feeding it a
+furniture-stripped page's real body text does not bypass those filters —
+it gives them better raw material.** A truncated snippet is a single short
+fragment with nowhere for the scorer to find a better sentence even when
+one exists; a full, cleaned page gives it dozens of real sentences to
+choose from, and the existing filters keep working on all of them. This
+does not require inventing a new "find the description block" heuristic —
+whole-page furniture-stripped text plus the existing sentence-scorer
+already does the equivalent job, cheaper.
+
+**Named, not swept under this recommendation: this does not fully remove
+the same-page-other-listing risk B5-02's `hiringcafe.com` residual already
+names.** A furniture-stripped *whole page* can still contain another
+listing's sentences on a multi-posting aggregator page. `summarizeJob()`'s
+own matched-keyword and section/role scoring bias toward the profile's own
+relevant terms and posting-shaped sentences, which mitigates this somewhat,
+but does not eliminate it — the same open architectural question B5-02 and
+B6-02 both already name, not a new one. Worth stating so this item is not
+read as a complete fix for every job on every page shape.
+
+**Deliberately NOT recommending `item.description` itself be overwritten.**
+Traced every consumer of `RawJobItem`/`ScoredJobItem.description` first:
+besides the `summarizeJob()` call above, `jobs/scoring.ts:162` and `:284-285`
+also read it directly, feeding **relevance-score text matching**, not just
+the report summary. If enrichment overwrote `description` in place, a
+description swap would also silently change which jobs rank higher or
+lower in the pool — a much bigger, unrelated blast radius for a chrome-in-summary
+fix. A separate, additive `pageText` field (or similarly named) used only
+at the one call site that actually has the problem keeps this item's blast
+radius to exactly what it claims to fix.
+
+**Blast radius.** New field, additive merge (`??`), one new read site
+(`jobs/mapper.ts`'s `summarizeJob()` call). `RawJobItem.description` and
+every one of its other readers (`scoring.ts` twice, the three other job
+sources' own `description:` assignments) are completely untouched.
+
+**Tests at risk.** `summarize.test.ts` (14 tests) tests `summarizeJob()`
+directly with hand-built description strings — none of them exercise the
+enrichment-stage plumbing this item adds (they call `summarizeJob()`
+directly, not through the mapper or enrichment), so **none is at risk.**
+`enrich.test.ts`'s job-side tests (checked: none currently assert on
+`description`/`summary` after enrichment) are also unaffected. C should add:
+(a) an `enrich.ts`-level test proving a fetched page's furniture-stripped
+text reaches the raw item as the new field when present; (b) a
+`mapper.ts`-level test proving `summarizeJob()` receives the new field's
+value over `item.description` when both are present — reusing this exact
+round's own three A-found shapes (paraphrased, not scraped verbatim, per
+§3) as the adversarial cases: a synthetic snippet-only description
+containing a Markdown-link remnant / concatenated filter chrome / heading-
+plus-CTA junk, alongside a `pageText` value that has none of it, must
+produce a summary drawn from `pageText`, not the junk-carrying snippet.
+
+---
