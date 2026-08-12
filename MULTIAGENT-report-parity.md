@@ -14961,3 +14961,105 @@ from other sources). No other file needs to change.
 **What renders after this guard fires:** identical to B8-01/B8-02 —
 confirmed via the same `app/jobs/[id]/page.tsx:1010-1019` subtitle-omission
 check.
+
+#### B8-04 — `resolveEmployerIdentity` has no shape/brand guard at all on either of its evidence tiers — `WRONG DATA` risk, latent, not proven live this round
+
+**File:** `web/src/lib/opportunities/employer-identity.ts`, the whole file
+— `resolveEmployerIdentity` (lines 54-70) and `directDeclarations`
+(lines 33-47). Called from `web/src/lib/opportunities/enrich.ts:233-237`
+(every job source's enrichment pass, not only jobweb) and
+`web/src/lib/jobs/sources/himalayas.ts:54-57`.
+
+**What I found live this round: it worked correctly.** `jobweb:ic2ygl`
+("Spring Engineering Internship at Mantel Capture", host `hiringcafe.com`)
+had raw `company: undefined` (titleEmployer's regex, unlike B8-01's
+failure case, correctly did not match anything in this title — no "at
+Employer" phrase present at the point the raw parser looked, or the page's
+JSON-LD simply agreed), and `resolveEmployerIdentity` correctly supplied
+`"Mantel Capture"` via its `structured` tier, reading the selected
+`JobPosting` JSON-LD record's own `hiringOrganization.name` — matching the
+title, matching B7-02's own scope-ownership guarantee (the JSON-LD `url`
+field matched the selected posting's canonical URL exactly). **A's named
+mechanism is real code, reachable, and did not misfire on the one live
+case this round exercised it.**
+
+**But it has zero of the defenses the ingestion-time parser sitting right
+next to it has.** Read side by side:
+
+- `jobweb.ts`'s guarded parse (`webResultToRawJobItem`) checks every
+  candidate against `KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`,
+  `looksLikeBareLocation`, and `looksLikeHostBrand` before accepting it.
+- `resolveEmployerIdentity`'s `structured` tier (JSON-LD
+  `hiringOrganization.name`) and `declared` tier (the `directDeclarations`
+  free-text regex) check **none of those four things**. Any matching
+  JSON-LD record's `hiringOrganization.name` is accepted outright,
+  whatever it says — a site's own generic self-description (a university
+  portal's own department name, an ATS platform's own brand in a
+  templated feed) would sail straight through with no host-brand check at
+  all, the exact class of value B8-01/B8-02 had to add guards to keep out
+  of the SAME field one call site earlier in the same function.
+
+**This is the same architectural shape §1n Ruling 27 named on the event
+side** ("`enrich.ts`'s title preference... checks only one of the several
+conditions `eventNameFrom()` applies") — a later pipeline stage re-decides
+a question an earlier, better-guarded stage already answers, using weaker
+checks. There it was event names; here it is, again, the job employer
+field. **It is also, independently, the same shape as B8-01/B8-02/B8-03:**
+a slot the ingestion-time guard correctly left silent gets filled by a
+downstream mechanism with fewer defenses than the one that declined to
+fill it.
+
+**Answering the round's structural question directly.** Counting every
+place that can write into the job employer slot after — or instead of —
+the ingestion-time guard: `jobweb.ts`'s own `parts.slice(1)` fallback
+(B8-01, technically still ingestion but the same guard/unguarded-fallback
+shape, inside one function), the five source adapters' hardcoded
+placeholder (B8-03, also ingestion-time, five separate files), and this
+function's two evidence tiers (B8-04, true enrichment-stage, reused by
+every job source). **Seven write sites, not one**, all controlled by the
+same "additive and optional, never a guess" standard §1m/§1j already
+state, only one of which (`jobweb.ts`'s host-brand check, partially — see
+B8-02) currently enforces it with any rigor.
+
+**Fix direction.** Thread an optional `host` parameter through
+`resolveEmployerIdentity` (additive, matching every other optional-signal
+convention already used in this codebase — `isChromeSegment`'s own `host?`
+parameter is the direct precedent) and apply `looksLikeHostBrand(candidate,
+host)` (once B8-02 lands) to reject a `structured`/`declared` candidate
+that is itself the page's own host brand, the same way `jobweb.ts` already
+protects its own candidates. This is the smallest change that closes the
+gap without inventing a new mechanism. Do **not** attempt to also add
+`KNOWN_JOB_BOARD_DOMAINS`/`SEASON_COHORT_LABEL_RE`/`looksLikeBareLocation`
+here without live evidence one of them is needed — that would be adding
+untested guesses on top of an already-untested function; land the
+host-brand check, then let the next A's live measurement say whether more
+is needed.
+
+**Sequencing: land after B8-02**, since the natural fix reuses the
+corrected `looksLikeHostBrand`.
+
+**Tests at risk:** `web/src/lib/opportunities/employer-identity.test.ts` —
+all 5 existing cases (lines 5-49) call `resolveEmployerIdentity` with no
+`host` argument at all; an optional, additive parameter leaves every one
+unaffected — confirmed by reading each case, none supplies or could be
+affected by a host. Add new cases for the host-brand rejection instead of
+rewriting these.
+
+**Blast radius:** two call sites. `enrich.ts:233-237` — already has `item.url`
+in scope (used elsewhere in the same function for `host` computation
+patterns like B8-01/B8-02's sites), trivial to pass through. `himalayas.ts:54-57`
+— has `job.applicationLink`/`url` in scope the same way; Himalayas's own
+host is stable and known (`himalayas.app` or the employer's own listed
+link), so this call site may see little practical benefit, but passing it
+through costs nothing and keeps the two call sites consistent. **No other
+file reads `resolveEmployerIdentity`'s output** (confirmed by the earlier
+grep — only these two call sites and the two test files exist).
+
+**What renders after this guard fires:** a rejected `structured`/`declared`
+candidate makes `resolveEmployerIdentity` return `{status: "none"}`
+(unchanged shape — this fix only affects which candidates are considered,
+not the function's return contract), which the caller already maps to
+"fall back to `item.company`" — i.e., whatever the (by then B8-01/B8-03
+fixed) raw parse produced, correctly silent if that was itself silent.
+Same subtitle-omission guarantee as every item above when everything
+upstream is also silent.
