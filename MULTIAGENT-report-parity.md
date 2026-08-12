@@ -1555,6 +1555,72 @@ separately.** Recorded here so it is not lost.
 
 ---
 
+## §1m. RULING 26 — B5-03 IS NOT CLOSED. THE `|| host` FALLBACK REINSERTS THE VALUE THE GUARD JUST REJECTED. — BINDING
+
+**Date: 2026-08-12. Found by the manager while checking round-5 C's work, not
+by A or B.** C implemented B5-03 exactly as B's guide specified and was right
+to. The gap is in the guide, and it only became visible in C's own test.
+
+### What is wrong
+
+`webResultToRawJobItem()` (`web/src/lib/jobs/sources/jobweb.ts:176-187`) picks
+the company like this:
+
+```ts
+const company =
+  parts.slice(1).map(cleanJobSubtitlePart).find(
+    (p) => p && !KNOWN_JOB_BOARD_DOMAINS.some(...) && !SEASON_COHORT_LABEL_RE.test(p)
+           && !looksLikeBareLocation(p) && !looksLikeHostBrand(p, host),
+  ) || host;
+```
+
+B5-03 added the last two guards. They work. But **when every candidate is
+rejected, `|| host` puts the page's hostname in the company slot** — and on a
+job board, the hostname *is* the job board. The guard rejects the brand as a
+word and the fallback reinstates it as a domain.
+
+**C's own new test states this outcome explicitly**
+(`jobweb.test.ts:117-123`): a title carrying a job board's brand name now
+yields `company === "greenjobsboard.io"`. The test is correct about what the
+code does. What it records is a *renamed* defect, not a closed one — the user
+still sees a job board where the employer should be.
+
+### Why this is a ruling and not just a bug report
+
+**It breaks this loop's own governing standard.** §2 and every C brief say:
+*additive and optional, never a guess — a wrong value is worse than a missing
+one.* `|| host` guarantees the company slot is **never empty**, which means it
+is guaranteed to be *populated with something* even when nothing is known.
+That is the exact trade the standard forbids, sitting in the code as a default.
+
+The same shape is worth checking wherever else this loop has added a guard:
+**a rejection is only a fix if what follows it is silence.** A guard in front
+of a non-optional fallback moves the wrong value; it does not remove it.
+
+### What happens next — this is A's and B's work, not a patch to sneak in now
+
+1. **A, round 6:** score B5-03 against **rendered output**, not against the
+   guard's unit tests. If the employer slot on a real job shows a hostname,
+   B5-03 is `still open`, whatever `looksLikeHostBrand`'s own tests say. This
+   is the first item on A's list.
+2. **B, round 6:** the fix direction is not "add another guard". It is
+   **whether the company slot may be empty at all** — which means checking
+   every consumer of `RawJobItem.company` (`mapper.ts:25` and `:143` both run
+   it through `cleanJobSubtitlePart(...) ?? ""` / `?? fallbackCompany`, so at
+   least two fallbacks are stacked) and what each renders when it is. Report
+   what an empty company actually looks like on the card and in the report
+   before recommending anything.
+3. **Nobody reverses C's guards.** They are correct and needed. This is about
+   what happens after they fire.
+
+**C's tier-2 (reading the employer from JSON-LD `hiringOrganization`), which
+B named optional and C deferred with a stated reason, is now the more
+interesting half of this item** — a real employer name is the only thing that
+closes it without an empty slot. B should cost it properly in round 6 rather
+than leave it optional again.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
