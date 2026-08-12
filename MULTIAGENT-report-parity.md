@@ -11239,3 +11239,184 @@ case B5-02 added for `workMode`: a fixture with a plain-titled job and a
 "Internship" must not have that word attributed to the job under test.
 
 ---
+
+##### B6-03 — Ruling 27 point 3, answered with rendered evidence: the job company slot MAY be empty; the event name slot, as currently built, MUST NOT be. `WRONG DATA` (Ruling 26/R7) + `WRONG SHAPE` (the fallback's own type). Answered before any fix is proposed, per Ruling 27's own instruction.
+
+**Ruling 26 asked whether `companyOrLab` may be empty at all before anyone
+proposes a fix for `|| host`. Ruling 27 widened the question to the event
+name. Here is what actually renders — not what I expect, what the real
+components produce — traced every consumer, both surfaces.**
+
+**Method.** Rendered the real, exported `JobReport` and `EventReport`
+through `renderToStaticMarkup` (the identical mechanism every A round has
+used) with `companyOrLab: ""` and `name: ""` respectively, everything else a
+normal fixture. Throwaway file, deleted before this commit — confirmed by a
+clean `git status --short`.
+
+**Job report, empty `companyOrLab`, `location` present:**
+
+```html
+<h1 ...>Battery Research Scientist</h1>
+<p class="mt-3 text-body text-text-muted"><span>Chicago, IL</span></p>
+```
+
+**Job report, empty `companyOrLab` AND empty `location` (no `workMode`
+either):**
+
+```html
+<h1 ...>Battery Research Scientist</h1>
+<div data-report-action-row="job" ...>
+```
+
+**The whole subtitle `<p>` is absent — not an empty `<p></p>`, not a
+dangling separator, nothing.** This is the exact "may render nothing" shape
+Ruling 26/27 ask for, and — this is the finding worth stating plainly — **it
+is already built**, at `app/jobs/[id]/page.tsx:1010-1018`:
+
+```tsx
+{(company || location || workMode) && (
+  <p ...>
+    {[company, location, workMode].filter(Boolean).map((part, index) => (
+      ...
+    ))}
+  </p>
+)}
+```
+
+The same `.filter(Boolean)` pattern B5-04 already proved out for `location`.
+**The report layer does not need a new guard for an absent company. It has
+had one since before this loop started paying attention to this field.**
+
+**Event report, empty `name`:**
+
+```html
+<h1 class="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]"></h1>
+<p data-event-subtitle="true" class="mt-3 text-body text-text-muted">Chicago, IL · in person</p>
+```
+
+**A completely empty `<h1>` — an empty heading element sitting at the top of
+the report, occupying its full heading-sized layout space, immediately
+followed by a normal, populated subtitle line right below it.**
+`app/events/[id]/page.tsx:1900-1902` renders `{event.name}` with **no
+guard, no `clean()` call, no conditional** — confirmed by reading the
+surrounding function: unlike the job report's `roleTitle`
+(`cleanJobTitle(job.roleTitle) || job.roleTitle`, which still always renders
+*something* because `cleanJobTitle` on a non-empty input never returns
+empty), `event.name` is interpolated completely raw. **This is a worse
+outcome than today's wrong-but-plausible chrome title** — a blank heading
+reads as broken, not as "Peer knows less than usual." A reader would
+reasonably wonder if the page failed to load.
+
+**Why the two slots get different answers.**
+
+**`companyOrLab` MAY be made empty-tolerant, cheaply, at the report layer.**
+The render-side work is already done. What forces it to be non-empty today
+is entirely upstream, and it is forced in at least three places, all
+stacking the same "never actually let this be unknown" fallback:
+
+1. `jobweb.ts:187` — `... || host` (Ruling 26's own finding).
+2. `jobs/mapper.ts:143` — `cleanJobSubtitlePart(item.company) ?? fallbackCompany`,
+   where `fallbackCompany` is the posting's own hostname or the literal
+   `"Employer not stated"` (`:136-142`) — **this one is not jobweb-specific**;
+   it runs for every job source, so any source that legitimately leaves
+   `company` blank hits it, confirmed directly in A's report with a
+   synthetic non-jobweb (`remotive`) item.
+3. `jobs/mapper.ts:25`, `jobPreferenceSignals()` —
+   `cleanJobSubtitlePart(item.company) ?? ""` — a third, independent
+   instance, feeding the preference ledger rather than the report; lower
+   stakes (an empty string there just means no employer-identity signal is
+   recorded) but the same shape, worth listing so it does not go unnoticed
+   later.
+
+**`Job.companyOrLab: string`** (`types/index.ts:202`) is currently a
+**required** field — the type system itself, not just the mapper's `??`,
+forbids the report from ever legitimately seeing "no company known." The
+type is the actual place the "must always be populated" decision lives.
+
+**`Event.name`, by contrast, has ZERO guarded consumers anywhere in the
+tree.** Traced every reader (`grep` for `.name` across
+`components/cards/*.tsx`, `lib/events/card.ts`,
+`app/events/[id]/page.tsx`): `event-card.tsx:96`, `feed-tile.tsx:466`,
+`briefing-hero.tsx:39`, `briefing-quick-hit.tsx:34`, and the report's own H1
+— every single one interpolates `event.name` (or `item.data.name`) directly,
+unconditionally, as the primary label of the thing being shown. There is no
+existing precedent anywhere to extend, unlike company/location. Making
+`Event.name` genuinely optional this round would mean building a **new**
+guard at every one of those five sites, each deciding what a nameless event
+card even looks like (an icon with no title? a generic "Untitled event"
+string, which is itself a fabricated label, exactly what §1j's ruling
+forbids?) — a materially bigger, more disruptive change than the company
+side, for a field that is arguably more load-bearing (a report's whole
+identity is its title).
+
+**Recommendation, stated as two separate answers, per Ruling 27's own
+framing:**
+
+1. **`companyOrLab`: yes, allow it to be genuinely absent.** Change
+   `Job.companyOrLab` from `string` to `companyOrLab?: string` — matching
+   the codebase's own existing convention for every other "additive,
+   never-a-guess" field (`workMode`, `startDateFlexible`, `visa`) — rather
+   than keeping it a required string and inventing a new sentinel value to
+   special-case (the `"See posting"` / `"see event page"` pattern this loop
+   has already had to guard against twice; do not add a third). Drop the
+   `|| host` in `jobweb.ts:187` and the `?? fallbackCompany` in
+   `jobs/mapper.ts:143` so `RawJobItem.company` / `Job.companyOrLab` can
+   genuinely be `undefined`. **The job report needs zero changes** — its
+   existing guard already produces the right output, confirmed above. What
+   this recommendation actually costs is **five other consumers**
+   (`briefing-hero.tsx:133`, `briefing-quick-hit.tsx:49`,
+   `feed-tile.tsx:535`, `job-card.tsx:87`, `preferences/ledger.ts:702`) that
+   currently assume a non-empty string and would need their own guard added
+   — see the blast-radius list below. This is real, non-trivial work, not a
+   free change, even though the report itself is already safe.
+2. **`Event.name`: no, not this round.** Keep it required. The honest fix
+   for the event side is making the **guarded** path (B6-01, B6-05, B6-06
+   below) reliably produce the best real name available, not building five
+   new "what does a nameless card look like" decisions for a field with no
+   existing precedent anywhere. If a future round finds `eventNameFrom()`'s
+   own last-resort tier (`segments[0] ?? title.trim()`,
+   `eventweb.ts:408` — itself an unguarded fallback, same shape as `|| host`,
+   named under B6-05 below) is still reached often enough on real data to
+   matter, **that** is when this question should be reopened for events
+   specifically — with its own full consumer trace, not by analogy to the
+   job side.
+
+**Blast radius, company-slot change, if C builds it — every non-test
+consumer of `companyOrLab`, checked individually:**
+
+| Consumer | File:line | Current shape | Risk if `companyOrLab` becomes `undefined` |
+|---|---|---|---|
+| Job report subtitle | `app/jobs/[id]/page.tsx:1010-1018` | `.filter(Boolean)`, whole block conditional | **None — already correct**, confirmed by render above |
+| Briefing hero card | `briefing-hero.tsx:133` | `` `{company} · {location}` `` literal template, no guard | Dangling leading `" · "` separator |
+| Briefing quick-hit | `briefing-quick-hit.tsx:49` | `` `${company}${isRemote ? " · Remote" : ""}` `` | Empty leading segment, or fully empty string rendered as the card's meta line |
+| Feed tile | `feed-tile.tsx:535` | `<MetaItem icon={BuildingMini}>{company}</MetaItem>` | Building icon renders with no text next to it — a promise-over-empty-content shape, the same class R3/R5/R10 were |
+| Job card (compact) | `job-card.tsx:87` | `<p>{company}</p>` | Empty `<p>` — a blank line in the card |
+| Preference ledger label | `preferences/ledger.ts:702` | `` `${roleTitle} — ${company}` `` | Dangling trailing em dash |
+| `jobPrestige()` | `lib/jobs/card.ts:85` | reads `company` as one of three keyword-match inputs | Benign — an empty string just matches nothing, degrades to "no prestige tag," not a rendering defect |
+| AI-enrichment prompt payload | `opportunities/enrichment.ts:393` | passthrough field | Benign — the prompt simply omits a fact it doesn't have |
+| Search-matching text blob | `opportunities/search.ts:69` | passthrough field | Benign — slightly weaker keyword match, not incorrect |
+
+Five real render-site risks (hero, quick-hit, feed tile, job card, ledger),
+three benign passthroughs, one already safe. **None of the five
+feed/briefing/ledger sites are report-scope (plates
+02/03)**, so per this loop's own boundary they are not this item's fix
+target — but they become newly *reachable* the moment `companyOrLab` can be
+`undefined`, so whoever builds the type change must either guard all five in
+the same change or accept the regression risk knowingly. Flagging this as
+the real cost of the recommendation, not hiding it because the report itself
+is free.
+
+**Tests at risk.** `types/index.ts`'s own type change has no runtime test,
+but every fixture across the tree that builds a `Job` with a real
+`companyOrLab` string is unaffected (the field simply becomes optional,
+existing required-string fixtures still satisfy `string | undefined`).
+`jobs/mapper.test.ts` (9 tests) — both `company:` fixtures (`"Example
+Energy"`, `"Example Lab"`) are non-empty; **zero existing coverage of the
+`?? fallbackCompany` branch at all** — confirmed by reading both fixtures in
+the file directly. C should add the direct case: `scoredJobToJob({ ...,
+company: "" })` must produce `companyOrLab: undefined`, not a hostname. Any
+test asserting today's hostname-fallback behaviour (none currently exist,
+confirmed by grep for `fallbackCompany|hostname` in the test file — no
+hits) would need rewriting per §3, but there is nothing to rewrite.
+
+---
