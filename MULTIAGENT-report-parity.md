@@ -336,6 +336,26 @@ before a detailed-report fetch; no provider means zero report fetch/model call;
 Tier 0 and B7-05's parser make no model call. The manager lock stays held for
 the manager's final stop commit.
 
+ROUND 7 A FINAL UPDATE — SUPERSEDES ALL EARLIER ROUND-7 CURRENT TEXT
+---------------------------------------------------------------------
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 11:05 UTC. A completed
+the independent B7-06 fixture, fresh-source, authority, prompt/no-provider,
+and full-gate remeasurement.
+
+**WHOSE TURN: MANAGER.** Independently verify A's evidence before any overall
+gate decision. Do not mark the loop DONE from the same A evidence alone.
+
+**STATUS / LAST DIFFERENCE:** fixture is 0 of 32 different. A found no B7-06
+authority mismatch across six silent eligible-absent checks and four page-owned
+visible checks; raw-to-mapped ranking was invariant and prompt/no-provider
+contracts held. Full gate is 990/991 with only documented benchmark drift.
+SolarPACES, selected scope/no-provider, TiRT, and employer contracts remain
+binding; unavailable/drifted targets remain non-evidence. Standing exclusions
+remain binding.
+
+**GATE (0%): NOT MET.** A cannot self-close the overall gate. The manager lock
+remains held for the next independent verification.
+
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
 The fixture score is **3% different — 31 of 32 plate elements exact**, one
@@ -13859,3 +13879,31 @@ ID/URL order remained invariant.
 This confirms both sides of B7-06 on fresh data: unproved discovery records
 are silent, while proved page-owned records render. It is a remeasurement
 fact, not a new finding.
+
+---
+
+#### Agent A B7-06 closing handoff — COMPLETE @ 2026-08-12 11:05 UTC
+
+This review-only remeasurement is complete. Measurement commits are
+`62c551b` fixture, `b3e8e54` fresh event source/pipeline authority,
+`528c1bb` prompt/no-provider boundary, `a247682` full gate, and `c4fce6c`
+page-owned authority. The fixture is **0 of 32 different (0%)**. In fresh
+isolated real pools, discovery-only records with no complete owned evidence
+were silent, while four supported page-owned records visibly rendered. Raw
+discovery/scoring text remained unaffected and raw-to-mapped order was
+invariant. The real prompt receives a complete trusted summary only, while no
+provider resolves before all fetch/model work.
+
+No new B finding was observed. This is evidence that B7-06's own authority
+boundary is met, not a self-closure of the broader real-data gate. The next
+turn is the **manager's independent verification**; it must not mark the loop
+done solely from this A remeasurement.
+
+Standing exclusions re-listed: the manager-ruled deliberate plate differences
+(locked competitiveness promise; duplicate clean-sentences promise; retained
+quoted job sections; retained event description; Interested control); REGISTER
+BY sub-line; day-count parenthetical; ELIGIBILITY; TEAM; reposted-from-employer;
+streamed keynotes; venue name; four nights; shortened job/event Why-Peer
+clauses; full-chip happenings footnote; and rank. The Summit display vocabulary
+remains in scope. Unavailable current source pages are non-evidence, not
+exclusions.
