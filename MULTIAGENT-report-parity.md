@@ -9840,4 +9840,148 @@ unchanged), typecheck clean, exactly 1 pre-existing lint error
 (`quiz.tsx:46`). Net +3 tests from B5-04's checkpoint (924 → 927), zero
 deleted, zero rewritten.
 
+Commit: `cb511fc`.
+
+---
+
+##### B5-06 — R13: event name quality not closed as a class. All three named sub-gaps LANDED. `web/src/lib/events/sources/eventweb.ts`.
+
+Confirmed all of B's citations against the live file first — line numbers
+had drifted a little (comments/blank lines added since B wrote its entry),
+content matched exactly: `GENERIC_PAGE_TITLE_RE`, `isChromeSegment()`,
+`NARRATIVE_VERB_RE`, `looksLikeEventTitle()`, `eventNameFrom()`'s split.
+
+**Gap 1 — `GENERIC_PAGE_TITLE_RE` now matches a short trailing phrase, not
+only an exact word.** Added one bounded optional group to the existing
+regex (`(?:\s*&\s*[\w\s]{1,24}|\s+(?:and|or)\s+[\w\s]{1,24})?` before the
+final `$`) rather than a second, separate regex — the word list stays in
+one place. Deliberately narrower than B's own phrasing ("a conjunction or
+short trailing phrase"): only `&`/`and`/`or` as connectors, not a bare
+hyphen or colon, to keep the false-rejection surface small — a segment like
+`"Agenda-Setting"` (no real trailing phrase, one word split by a hyphen with
+no spaces) is a real, if narrow, residual this narrower version does not
+reach. Named, not silently accepted as fully closed.
+
+**Gap 2 — a site-brand check, reusing B5-03's `looksLikeHostBrand`, plus one
+new, narrower function for a shape that mechanism deliberately does not
+cover.** `isChromeSegment()` now takes an optional `host` (derived from
+`eventNameFrom()`'s existing `url` parameter via `new URL(url).hostname`,
+matching `jobweb.ts`'s own www-stripping convention) and, when present,
+checks `looksLikeHostBrand(segment, host)`.
+
+**This alone does not catch B's own named example, and I want to be
+explicit about why, not just add a second function silently.** Traced
+`"The Engine"` against `engine.xyz` by hand: `looksLikeHostBrand` is
+deliberately one-directional (built in B5-03 specifically to NOT reject a
+real company name like `"Acme Corp"` at `acme.test`, where the domain label
+is a short PREFIX of a longer, real-looking candidate). `"The Engine"` is
+the *same* direction as `"Acme Corp"` — `engine` (6 chars) is a prefix of
+`theengine` (9 chars), not the other way around — so the existing function
+correctly, and by design, does not fire on it.
+
+Built a second, new, narrower function, `looksLikeArticledHostBrand()`:
+strip a leading `the`/`a`/`an`, and if one was actually present, run the
+*stripped* candidate through the existing `looksLikeHostBrand()`. `"The
+Engine"` → `"Engine"` → equals the domain label `"engine"` exactly →
+rejected. **Deliberately not folded into `looksLikeHostBrand()` itself** —
+widening the shared, job-side function to also strip a leading article
+would raise ITS false-rejection risk (a real company genuinely named `"The
+Widget Company"` becomes newly reachable) for no benefit on the job side,
+where B never found this shape. Kept the two functions separate, one shared
+(`shared.ts`) and one local to this file, rather than one function trying to
+serve both risk profiles at once.
+
+**A residual risk worth naming for A/the manager, found while reasoning
+through this, not in B's own entry.** The site-brand check cannot
+distinguish "the site's own ORGANISATION brand, unrelated to any specific
+event it hosts" (The Engine — correctly chrome) from "the site IS a
+conference's own dedicated domain, which legitimately matches the event's
+own name" (a real, common pattern — a conference literally named after its
+own domain, e.g. a dedicated `.org` site whose name IS the conference). Both
+produce the identical structural signature (candidate matches domain label).
+**Not fixed this round** — B's own example is confidently the first shape,
+and I have no data suggesting the second shape is common enough in this
+adapter's real results to outweigh the value of catching the first — but
+flagging it explicitly rather than letting the check read as risk-free.
+
+**`og:site_name`, named by B as an optional additional signal, is not
+reachable at this call site and was not built.** `eventNameFrom()` receives
+only a search result's `title`/`snippet`/`url` — never the fetched page's
+HTML — so `extractOpenGraphTags()` (which parses HTML) has nothing to run
+against here. Noting this so it doesn't read as an oversight: the hostname
+comparison is the only signal actually available at this pipeline stage.
+
+**Gap 3 — both halves, and confirmed by hand that the first alone would not
+have changed the repro, exactly as B warned.** Widened
+`eventNameFrom()`'s split character class to include a bare ASCII hyphen
+(`/\s+[-|·–—]\s+/` — `\s+` on both sides, same as the existing separators,
+so it does not touch an unspaced internal hyphen like `"Solid-State"`,
+verified by hand against the existing `eventNameFrom` test using that exact
+title). Added `HEADLINE_PASSIVE_RE` alongside `NARRATIVE_VERB_RE` inside
+`looksLikeEventTitle()`: a closed list of headline-subject nouns
+(deadline/registration/abstract/submission/call for papers/date) followed,
+within 30 characters, by a closed list of announcement participles
+(extended/postponed/cancelled/delayed/announced/updated/moved/rescheduled/
+confirmed) — no auxiliary verb required, unlike `NARRATIVE_VERB_RE`, which is
+exactly the gap: "deadline extended" has no auxiliary for that check to
+catch.
+
+**Verified the interaction, not just each half alone.** Confirmed by tracing
+a synthetic repro by hand that widening the split WITHOUT the headline check
+would still return the wrong (headline) segment: `"registration"` is itself
+an `EVENT_SIGNAL_RE` keyword, so an unguarded "Registration deadline
+extended" segment would out-rank a genuine, shorter event name under the
+existing longest-segment tie-break, once split apart. Both pieces were
+needed together, exactly as B's entry said.
+
+**One interaction genuinely left unverified, named rather than assumed
+either way.** Whether gap 2's site-brand check would ALSO fire on real event
+3's own `"SolarPACES"` segment (if that page's host is in fact
+`solarpaces.org`) is unknown — B's gap 3 section never states that event's
+real URL, and I did not fetch it. If it does fire, `"SolarPACES"` — which is
+itself a plausible, honest, if terse, real conference name, not obviously
+uninformative the way `"The Engine"` is — would also be rejected, and the
+final result would depend on the URL-slug/snippet fallback chain succeeding,
+which B's own gap 2 note already flagged as unverified. Tested gap 3 in
+isolation (no host supplied) specifically so this test does not silently
+bake in an assumption about that unverified interaction.
+
+**Blast radius.** Confirmed unchanged from B4-01's own note: all fixes stay
+inside `eventweb.ts`, which feeds `event.name` (report), `events/card.ts`
+(feed), and the papers adjacency. `isChromeSegment()` and
+`isGenericPageTitle()` are both module-private with exactly one call site
+each (re-confirmed by grep) — safe to change their signatures freely.
+
+**Tests.** Read all 12 pre-existing tests' fixtures directly (not just
+B's count) before writing anything, checking each against all three new
+mechanisms by hand: none contains a generic-word-plus-connector shape, a
+segment matching its own test URL's host, or a headline-subject-plus-
+participle shape — confirmed zero collisions, matching B's own read. Added
+6 new tests to `eventweb.test.ts`: one per gap 1 (two assertions: `&` and
+`and` connectors) and gap 3 (the combined hyphen-split-plus-headline-check
+repro, plus a same-result hyphen-vs-pipe equivalence check), two for gap 2
+(the named repro, reusing plain `looksLikeHostBrand` with no article, and
+the articled variant; a second test isolating the "no URL supplied" case to
+a single-segment title specifically so the assertion depends on the
+brand-check being skipped rather than passing incidentally via the
+existing eventLike tie-break), and one non-over-triggering case for the
+headline check (a real title that merely mentions "Registration" as its own
+topic, no announcement participle nearby, must still pass).
+
+**B5-08 in practice.** Every one of these seven new tests is the
+adversarial-proximity shape B5-08 names: gap 1's tests prove a
+near-generic-but-not-exact segment is still caught; gap 2's prove a
+brand-shaped segment is caught only when there is something to compare it
+against, and specifically NOT caught by coincidence; the non-over-triggering
+test proves the new headline check doesn't fire on a real name that merely
+contains one of its trigger words in an unrelated role.
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 933 tests, 932 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged — and unrelated to this item: that test's own failure is a
+location mismatch, not a name mismatch, so it is not this change surfacing a
+new problem). Typecheck clean, exactly 1 pre-existing lint error
+(`quiz.tsx:46`). Net +6 tests from B5-05's checkpoint (927 → 933), zero
+deleted, zero rewritten.
+
 Commit: (this item, following).

@@ -1,6 +1,6 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
-import { urlHashId } from "@/lib/opportunities/shared";
+import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
 import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
@@ -168,8 +168,18 @@ function isDeniedUrl(rawUrl: string): boolean {
 // Page titles that name the page rather than the event. Taking the first
 // title segment blindly produced cards reading "Meeting Summary" or "Home",
 // which tell the user nothing about what the event is.
+//
+// B5-06/R13 gap 1. A segment does not have to equal one of these words
+// EXACTLY to be just as uninformative — "Agenda & Information" tells the
+// reader nothing more than bare "Agenda" does, but the old anchored
+// whole-segment match required an exact word and let the "+ trailing text"
+// shape through as if it were the event's own name. The optional group
+// below is deliberately bounded (a short connector, then <=24 more
+// characters, then end of segment) so a genuinely long, substantive title
+// that happens to start with one of these common words is not caught by
+// accident — it reuses the same word list rather than a second, separate one.
 const GENERIC_PAGE_TITLE_RE =
-  /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?)$/i;
+  /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?)(?:\s*&\s*[\w\s]{1,24}|\s+(?:and|or)\s+[\w\s]{1,24})?$/i;
 
 function isGenericPageTitle(candidate: string): boolean {
   return GENERIC_PAGE_TITLE_RE.test(candidate.trim());
@@ -207,17 +217,54 @@ export function isEventIndexPage(title: string): boolean {
  * rather than showing the user a meaningless card.
  */
 /**
+ * B5-06/R13 gap 2. A short filler word ("the"/"a"/"an") stuck in front of
+ * what's otherwise the page's own domain restated — "The Engine" on
+ * engine.xyz — is the same site-brand shape `looksLikeHostBrand` already
+ * catches, just with an article attached. Deliberately its own function
+ * rather than folding the filler-strip into `looksLikeHostBrand` itself
+ * (shared.ts, built for B5-03's job-board-brand problem): a real company's
+ * own display name legitimately elaborates its domain root with a TRAILING
+ * descriptor far more often than a real name is genuinely "[article] +
+ * [domain root]" the way a media/platform brand's name commonly is, so
+ * widening the shared, job-side function itself to also strip a leading
+ * article would raise its false-rejection risk for the job side for no
+ * benefit there. Only reused where the shape is actually expected.
+ */
+const BRAND_FILLER_PREFIX_RE = /^(?:the|an?)\s+/i;
+
+function looksLikeArticledHostBrand(candidate: string, host: string): boolean {
+  const withoutFiller = candidate.replace(BRAND_FILLER_PREFIX_RE, "");
+  if (withoutFiller === candidate) return false;
+  return looksLikeHostBrand(withoutFiller, host);
+}
+
+/**
  * Site chrome: a title segment that names the website or a calendar view
  * rather than an event ("DLR Events", "Events for July 2026"). Real listings
  * routinely wrap a good event page in two of these, as in
  * "DLR Events | Events for July 2026" — whose URL is a specific workshop.
+ *
+ * B5-06/R13 gap 2 added the last two checks: a segment that is essentially
+ * the page's own domain restated (a site's own brand, not an event's name)
+ * — same mechanism B5-03 built for a job board's own brand leaking into the
+ * job company slot, reused rather than reinvented here. `host` is optional
+ * because `eventNameFrom` is sometimes called without a URL (see its own
+ * tests); the brand checks simply do not run when there is nothing to
+ * compare against, matching every other optional-signal convention in this
+ * codebase.
  */
-function isChromeSegment(segment: string): boolean {
+function isChromeSegment(segment: string, host: string | undefined): boolean {
   const trimmed = segment.trim();
-  return (
+  if (
     isGenericPageTitle(trimmed) ||
     isEventIndexPage(trimmed) ||
     /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed)
+  ) {
+    return true;
+  }
+  if (!host) return false;
+  return (
+    looksLikeHostBrand(trimmed, host) || looksLikeArticledHostBrand(trimmed, host)
   );
 }
 
@@ -250,6 +297,22 @@ function isChromeSegment(segment: string): boolean {
  */
 const NARRATIVE_VERB_RE =
   /\b(?:was|were|is|are|has been|have been|had been|will be)\s+\w+(?:ed|en)\b/i;
+
+/**
+ * B5-06/R13 gap 3, the second half. "Abstract submission deadline extended"
+ * is narration about the event, exactly the same kind NARRATIVE_VERB_RE
+ * already rejects when an auxiliary verb is present ("the deadline WAS
+ * extended") — but a real headline routinely drops the auxiliary
+ * ("deadline extended," not "deadline was extended"), and that elliptical
+ * passive has no conjugated verb for NARRATIVE_VERB_RE to catch. Bounded to
+ * a short, closed list of common headline subjects and participles — the
+ * same "catch known shapes, not a general parser" approach
+ * NARRATIVE_VERB_RE itself already uses — rather than a general
+ * subject-verb parser.
+ */
+const HEADLINE_PASSIVE_RE =
+  /\b(?:deadline|registration|abstract|submission|call\s+for\s+(?:papers|abstracts)|date)\b[^.]{0,30}\b(?:extended|postponed|cancell?ed|delayed|announced|updated|moved|rescheduled|confirmed)\b/i;
+
 const MULTI_SENTENCE_RE = /\w{3,}[.!?]\s+[A-Z][a-z]/;
 const MAX_TITLE_WORDS = 20;
 
@@ -257,6 +320,7 @@ export function looksLikeEventTitle(candidate: string): boolean {
   const trimmed = candidate.trim();
   if (!trimmed) return false;
   if (NARRATIVE_VERB_RE.test(trimmed)) return false;
+  if (HEADLINE_PASSIVE_RE.test(trimmed)) return false;
   if (MULTI_SENTENCE_RE.test(trimmed)) return false;
   if (trimmed.split(/\s+/).length > MAX_TITLE_WORDS) return false;
   return true;
@@ -290,13 +354,30 @@ export function eventNameFrom(
   snippet: string,
   url?: string,
 ): string {
+  // B5-06/R13 gap 3, the first half. The split only ever recognised a pipe,
+  // middle dot, en dash or em dash — a plain ASCII hyphen ("Deadline
+  // extended - SiteName") was never a recognised separator at all, so a
+  // title using one stayed a single, unsplit segment no matter what else
+  // this function did to it.
   const segments = title
-    .split(/\s+[|·–—]\s+/)
+    .split(/\s+[-|·–—]\s+/)
     .map((part) => part.trim())
     .filter(Boolean);
 
+  // B5-06/R13 gap 2. host is undefined when eventNameFrom is called without
+  // a URL (some tests, and any future caller that doesn't have one) — the
+  // brand checks inside isChromeSegment simply don't run in that case.
+  let host: string | undefined;
+  if (url) {
+    try {
+      host = new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      host = undefined;
+    }
+  }
+
   const informative = segments.filter(
-    (part) => !isChromeSegment(part) && looksLikeEventTitle(part),
+    (part) => !isChromeSegment(part, host) && looksLikeEventTitle(part),
   );
   if (informative.length > 0) {
     // Prefer a segment that actually reads as an event, else the longest one:

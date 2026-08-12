@@ -85,6 +85,91 @@ describe("eventNameFrom", () => {
   it("still resolves when every title segment is chrome, same as before this round", () => {
     expect(eventNameFrom("Home | Events", "", undefined)).toBe("Home");
   });
+
+  // B5-06/R13, three separate sub-gaps confirmed on real events A found,
+  // none of them the shape R1's own guard (NARRATIVE_VERB_RE) targets.
+
+  // Gap 1: a chrome segment that STARTS WITH a recognised generic word but
+  // isn't an exact match for it ("Agenda & Information", paraphrased —
+  // real event 2's title segment started with "Agenda" the same way).
+  it("rejects a generic-title word with a short trailing phrase, not only an exact match", () => {
+    expect(
+      eventNameFrom("Agenda & Information | Riverside Materials Symposium", ""),
+    ).toBe("Riverside Materials Symposium");
+    expect(
+      eventNameFrom("Schedule and Details | Example Energy Conference", ""),
+    ).toBe("Example Energy Conference");
+  });
+
+  // Gap 2: a segment that is the page's OWN site/organisation brand, not the
+  // event's name — "The Engine" on engine.xyz, paraphrased from real event
+  // 2's other title segment. Reuses looksLikeHostBrand (B5-03).
+  it("rejects a segment that is the page's own site brand (with or without a leading article)", () => {
+    expect(
+      eventNameFrom(
+        "The Engine | Deep Tech Founders Expo",
+        "",
+        "https://engine.xyz/events/123",
+      ),
+    ).toBe("Deep Tech Founders Expo");
+    expect(
+      eventNameFrom(
+        "Deep Tech Founders Expo | ExampleBoard",
+        "",
+        "https://exampleboard.io/events/123",
+      ),
+    ).toBe("Deep Tech Founders Expo");
+  });
+
+  // Without a URL, the brand checks have nothing to compare against and
+  // simply don't run — the same segment that gets rejected once a host IS
+  // available (previous test) is treated as informative instead. Isolated
+  // to a single-segment title so the outcome actually depends on this,
+  // rather than incidentally passing via the eventLike/longest-segment
+  // tie-break the way a two-segment title would.
+  it("does not attempt the site-brand check when no URL is available", () => {
+    expect(eventNameFrom("The Engine", "")).toBe("The Engine");
+  });
+
+  // Gap 3, both halves together: a plain-hyphen-joined title now splits
+  // (previously stayed one unsplit segment, matching real event 3's own
+  // title shape), AND the headline segment this exposes ("Registration
+  // deadline extended") is itself recognised as narration, not a name, even
+  // with no auxiliary verb for NARRATIVE_VERB_RE to catch. Confirmed by
+  // hand this test would fail without the headline check: "registration" is
+  // itself an EVENT_SIGNAL_RE keyword, so without HEADLINE_PASSIVE_RE the
+  // longer headline segment (31 chars) would out-rank the real name (26
+  // chars) under the existing longest-segment tie-break.
+  it("splits on a plain hyphen and rejects the elliptical-passive headline it exposes", () => {
+    expect(
+      eventNameFrom(
+        "Registration deadline extended - Example Energy Conference",
+        "",
+      ),
+    ).toBe("Example Energy Conference");
+  });
+
+  it("splits a hyphen-joined title the same way it already splits a pipe-joined equivalent", () => {
+    const viaHyphen = eventNameFrom(
+      "Riverside Materials Symposium - Example Host",
+      "",
+    );
+    const viaPipe = eventNameFrom(
+      "Riverside Materials Symposium | Example Host",
+      "",
+    );
+    expect(viaHyphen).toBe("Riverside Materials Symposium");
+    expect(viaHyphen).toBe(viaPipe);
+  });
+
+  // Must not over-trigger: a real name that merely mentions one of the
+  // headline-subject words as its own topic, with no announcement-shaped
+  // participle nearby, is not narration and must survive.
+  it("does not reject a real title that merely mentions a headline-subject word as its topic", () => {
+    expect(looksLikeEventTitle("International Symposium on Registration Systems and Data Standards")).toBe(
+      true,
+    );
+  });
 });
 
 describe("webResultToRawEventItem", () => {
