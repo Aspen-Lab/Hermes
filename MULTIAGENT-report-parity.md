@@ -13744,3 +13744,22 @@ lock remains `HELD BY: chatgpt-local`; all §1d exclusions, Rulings 23/25/26,
 B7-01 title authority, and raw discovery scoring/ranking plus provider/fetch
 contracts remain binding. The gate remains **NOT MET** pending A's independent
 real-data measurement; C cannot close it. No C work is partial or pending.
+
+---
+
+### Round 7 — Agent A B7-06 remeasurement
+
+#### Fixture measurement — COMPLETE @ 2026-08-12 10:30 UTC
+
+Re-rendered the established maximal job and event fixtures through the real
+exported `JobReport` and `EventReport` components with the component-suite
+`renderToStaticMarkup` path; no mock or source inspection stood in for the
+render. The focused report suite is **2 files / 85 tests passed**. The same
+32-element inventory is **0 of 32 different (0%)**: 18 job elements and 14
+event elements, with the established ruled exclusions outside the denominator.
+
+B7-06 changes only report-summary authority/silence. It did not change the
+plate layout contracts; the already-completed full-PDF visual review remains
+applicable, and this static re-render confirms the component outputs still
+meet the fixture contract. No temporary artifact was retained. Fresh live
+event-pool, source-authority, and prompt/no-provider measurements remain.
