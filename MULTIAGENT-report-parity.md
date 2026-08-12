@@ -275,9 +275,11 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-12 04:30 UTC. C completed, gated,
-                   committed, and pushed B6-01 (`dd5eb44`), B6-05
-                   (`65ea13d`), and B6-02 (`51dd7d0`). Resume the same C turn
+STOPPED BECAUSE:  finished the turn. C completed, gated, committed, and
+                   pushed all scheduled code: B6-01 `dd5eb44`, B6-05
+                   `65ea13d`, B6-02 `51dd7d0`, B6-04 `266b276`, B6-03
+                   `1097ddb` (plus consumer follow-up `838773b`), B6-07
+                   `e8e2801`, and B6-08 careerservices `3c9cbd8`.
                    at B6-04; remaining order is B6-04 → B6-03 → B6-07 →
                    B6-08 careerservices. B6-06 SolarPACES and B6-08
                    hiringcafe.com are not C code this turn, are not excluded,
@@ -287,12 +289,11 @@ STOPPED BECAUSE:  out of budget @ 2026-08-12 04:30 UTC. C completed, gated,
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            6
-WHOSE TURN:       C — resume at B6-04, then implement B6-03 → B6-07 → B6-08
-                   careerservices. Read each full guide in §4 "Round 6
-                   — Agent B" before touching its files. Do not implement
-                   B6-06 SolarPACES or B6-08 hiringcafe.com; §1o/§1p defer
-                   those without excluding them. The manager lock stays held
-                   by `chatgpt-local` until the final stop commit.
+WHOSE TURN:       A — remeasure fixture and real data. Re-check SolarPACES;
+                   hiringcafe workMode/roleKind/summary; title employer and
+                   optional company; pageText summary; and work-mode amenity
+                   proximity. The manager lock remains unchanged (chatgpt-local)
+                   for the manager's final stop commit.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -12283,6 +12284,21 @@ on-site-position statement still wins over separate parking copy.
 benchmark failed because its Chicago assertion received Salvador. TypeScript
 clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 (`react-hooks/set-state-in-effect`).
+
+---
+
+#### C closing handoff
+
+**STATUS: COMPLETE.** Scheduled code commits are B6-01 `dd5eb44`, B6-05
+`65ea13d`, B6-02 `51dd7d0`, B6-04 `266b276`, B6-03 `1097ddb`, B6-07
+`e8e2801`, and B6-08 careerservices `3c9cbd8`; B6-03's immediate display
+consumer follow-up is `838773b`. Final gate: 83 files / 948 tests, 947
+passing, only documented benchmark flake; typecheck clean; known quiz lint
+error only. No C code for SolarPACES or hiringcafe.com.
+
+**Next A real checks:** SolarPACES; hiringcafe workMode/roleKind/summary;
+title employer and optional company; pageText summary; work-mode amenity
+proximity.
 
 ---
 
