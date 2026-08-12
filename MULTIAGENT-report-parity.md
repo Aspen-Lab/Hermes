@@ -14154,3 +14154,126 @@ Gate immediately after (focused): `npx vitest run src/zz-round8-a-verification.t
 entry, not repeated here.
 
 Commit for this entry follows immediately (write-as-you-go, per §3).
+
+#### Fresh real-data pool — method
+
+Built fresh event and job pools through `buildDailyEventPool()` /
+`buildDailyJobPool()`, each with its own `MemoryPoolCache` (a from-scratch
+in-memory `PoolCache` implementation, same shape as the standing precedent in
+`daily-pool-cache.test.ts`, not reused from any prior round's deleted
+harness), `aiTier: 0`, the real profile's search connectors and job API keys
+read via the established boolean-only precedent, `now: new Date()` (today,
+not a frozen historical clock). Credential presence, confirmed by boolean
+only and never printed: `tavilyApiKey` true, `adzunaAppId` true,
+`adzunaAppKey` true, `usajobsApiKey` true, `usajobsUserAgent` true,
+`feedAiApiKey` false — Tier 0 only, matching every prior round. Three
+separate live runs, minutes apart (pools are not deterministic — confirmed by
+source counts and top items shifting slightly run to run, same as prior
+rounds' own experience):
+
+1. Profile's own narrow topics, `topN: 12` / `perSourceLimit: 100`.
+2. Same topics, widened to `topN: 20` / `perSourceLimit: 150`.
+3. Deliberately generic, high-volume topics ("software engineer", "data
+   scientist", "internship") — still a real search through the build's own
+   pipeline, aimed at raising the odds of surfacing a mainstream aggregator.
+
+All three ran end-to-end through the real pipeline into the real
+`scoredEventToEvent()` / `scoredJobToJob()` mappers and the real
+`EventReport` / `JobReport` components via `renderToStaticMarkup`. Full detail
+in the throwaway harnesses (`web/src/zz-round8-a-fresh-pool.test.ts`,
+`zz-round8-a-spotcheck.test.ts`, `zz-round8-a-r4-scan.test.ts`,
+`zz-round8-a-ruling29-hunt.test.ts` — all deleted before this turn's closing
+commit); only short, non-sensitive derived facts are quoted below, never
+large fetched text.
+
+Run 1 events: `ccfddl 100, confstech 28, researchseminars 19, eventweb 52`,
+199 before dedup, 195 after, 15 scored; top 12 rendered. Run 1 jobs:
+`remotive 17, arbeitnow 100, himalayas 60, adzuna 0, usajobs 0, jobweb 52`,
+229 before dedup, 228 after, **11 scored — the full current pool for this
+profile**, all 11 examined (not a subset). Run 2 jobs (widened) scored the
+same 11 items again, confirming the pool is small and stable for this
+profile's topics, not an artifact of `topN`. Run 3 (generic topics) scored 31
+job items across 6 sources with real, mainstream employer hosts
+(`careers.jnj.com`, `amazon.jobs`, `careers.astrazeneca.com`,
+`postdocs.stanford.edu`, `us-rse.org`, `research.google`, `linkedin.com`,
+`arbeitnow.co.uk`) — genuinely a different, much larger pool, used only for
+the aggregator hunt below.
+
+#### SolarPACES / Ruling 28 — CLOSED on fresh live data
+
+The live SolarPACES page (`solarpaces.org/abstract-submission-deadline-...`)
+surfaced unprompted as the **top-ranked eventweb result** in run 1's fresh
+pool, with no continuity URL reused from any prior round's log. Rendered H1,
+verbatim from live `renderToStaticMarkup` output: `"32nd SolarPACES
+Conference"` — exact match to the mapped name, exact match to the raw
+ingestion name (`nameChanged: false`), not the deadline headline, not the
+hostname. This independently reconfirms Ruling 28's residual is closed, from
+a fetch I ran myself, not from reading round 7's own report of the same page.
+
+One secondary, non-required observation, reported because §1j requires
+checking the source before calling a field absent: `event.location` for this
+item is the internal placeholder `"See event page"` and `reportSummary` is
+`undefined`, so the WHERE tile and the description paragraph are both
+silent — confirmed **silent in the rendered HTML**, not leaking the
+placeholder string anywhere (checked case-insensitively across the whole
+page). This is not a new finding to chase (SolarPACES's named residual was
+always the event **identity**, never its location), and I did not fetch the
+page myself to check whether a venue is stated there — noted only so the
+silence is on the record as checked, not assumed.
+
+**Bonus, applies pool-wide, not previously logged as its own check:** the
+same internal placeholder (`"See event page"`, `events/mapper.ts:136`,
+`events/sources/eventweb.ts:468`) appeared as the raw `location` field on
+**6 of the 12** fresh events rendered in run 1. Confirmed by direct source
+read (`app/events/[id]/page.tsx:1714-1719` and `:651`) and by rendered
+output together: both the WHERE fact tile and the subtitle guard it by exact
+lowercase string match before use, exactly mirroring the job side's
+`JOB_LOCATION_PLACEHOLDER`/R12 pattern. **Zero of the 12** leaked it into
+rendered HTML. Worth recording as a positive: the same silence-over-lie
+contract R12 established for jobs is independently confirmed to hold for
+events too.
+
+#### R13 (event name quality) — STILL OPEN, two round-6-named shapes reconfirmed live, one new shape found
+
+Scored per item, not averaged, across run 1's 12 rendered events:
+
+| # | Rendered name (verbatim) | Verdict |
+|---|---|---|
+| 1 | `32nd SolarPACES Conference` | Correct (see above) |
+| 2 | `The First European Conference on Molten Salt Reactor Technology` | Correct |
+| 3 | `Solid-State Battery Summit (Aug 2026), Chicago USA` (10times.com) | Odd shape, not confirmed false |
+| 4 | `Ruggiero Group Attends the 2026 Crystal Engineering GRC` | **WRONG DATA — see below** |
+| 5 | `Conference Program` (nanoge.org) | **WRONG DATA — see below** |
+| 6 | `AA ECC10 POSTERS 08072026.xlsx` | **WRONG DATA — new shape, see below** |
+| 7 | `International Battery Summit` | Correct |
+| 8 | `International Battery Conference Advanced Battery Power` | Odd concatenation, not confirmed false |
+| 9 | `Turkey Battery Technologies Summit 2026` (url slug says "2nd medical battery conference ... germany") | Name/URL mismatch, not confirmed which is true |
+| 10 | `The Battery Show North America` | Correct, page-owned summary present |
+| 11 | `The Battery Saloon` (batteryinnovationsummit.com) | Surprising but page-owned authority (typed/OG), not confirmed false |
+| 12 | `Battery Manufacturing & Simulation Summit` | Correct (my own first read flagged this as an H1 mismatch — confirmed on recheck to be my own harness's HTML-entity-encoding bug, `&` vs `&amp;`, not a product difference) |
+
+**Two of round 6's own named, unfixed residuals reappeared verbatim, unprompted, in this round's independent fresh search** — same URLs, same host shapes as round 6 described, confirming neither is fixed two rounds later:
+
+- `Ruggiero Group Attends the 2026 Crystal Engineering GRC`
+  (`ruggedthz.com`) — round 6 named this exact string as "a present-tense
+  narrative sentence with no auxiliary verb... a fourth distinct narrative
+  shape beyond the three already known." It is still the rendered H1.
+- `Conference Program` (`nanoge.org/SSI24/...`) — round 6 named this exact
+  string as passing every guard "purely because it contains the word
+  'conference,' even though it names no conference." Still the rendered H1.
+
+**One new shape, not named in any prior round:** `AA ECC10 POSTERS
+08072026.xlsx` (`euchems2026.eu`, a `.pdf`-served poster listing) — a raw
+**file name, with its file extension**, rendered as an event's H1. Worse than
+either previously-named shape: not prose at all, a literal filename.
+
+None of the three is B7-01's fault or in its scope — B7-01 added a
+source-owned identity **tier** ahead of the existing fallback chain; it did
+not add a narrative-sentence guard or a bare-generic-phrase guard, and never
+claimed to. **R13 is correctly scored STILL OPEN**: the SolarPACES-shaped
+mechanism Ruling 28 named is closed; event name quality as a whole is not,
+via two previously-known and one newly-observed mechanism, all confirmed on
+today's live data, not replayed from any prior round's cache.
+
+Gate after this entry: unchanged (measurement only, no product code touched).
+Commit follows immediately.
