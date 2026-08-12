@@ -288,8 +288,9 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:14 UTC. Round-6 B has
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            6
-WHOSE TURN:       MANAGER — rule B6-06 SolarPACES and B6-08 hiringcafe.com
-                  policy items, then advance to C with the exact ordered,
+WHOSE TURN:       MANAGER — B6-06 SolarPACES is ruled in §1o. Rule the
+                   remaining B6-08 hiringcafe.com policy item, then advance
+                   to C with the exact ordered,
                   code-only work list in §4 "Round 6 — Agent B". The manager
                   lock stays held by `chatgpt-local` until the final stop
                   commit; do not change it in this handoff.
@@ -576,8 +577,8 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            complete round-6 guide, B6-01 .. B6-08, is now committed and
            pushed; manager policy rulings are next, before C begins.**
 
-TODO:      **MANAGER: rule B6-06 SolarPACES and B6-08 hiringcafe.com.
-           Then advance C to the code-only work order in §4's Round-6 B
+TODO:      **MANAGER: B6-06 SolarPACES is ruled in §1o. Rule B6-08
+           hiringcafe.com, then advance C to the code-only work order in §4's Round-6 B
            handoff.** Do not hand either policy item to C unruled.
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
@@ -1713,6 +1714,38 @@ as the employer. **The true employer is sitting in the title string the parser
 already has.** That is worth more than another guard, and it is the cheapest
 thing on this list — check it before costing the JSON-LD `hiringOrganization`
 path Ruling 26 asked about.
+
+---
+
+## §1o. RULING 28 — SOLARPACES REMAINS OPEN; DO NOT GUESS BEFORE THE SHARED FALLBACK CHANGES LAND — BINDING
+
+**Date: 2026-08-12. Answers B6-06's `POLICY — manager decides`.**
+
+B is right about the evidence boundary: at the current call site, a real event
+whose dedicated domain matches its name (`SolarPACES` / `solarpaces.org`) and
+an unrelated site brand leaking into an event title can have the same local
+shape. Every narrow carve-out B tested either failed to distinguish them or
+reopened an already-confirmed defect. C must not turn that ambiguity into a
+new heuristic and call it a fix.
+
+**Ruling: no standalone B6-06 code item in this C turn. This is a deferral,
+not an exclusion and not an acceptance of wrong data.** SolarPACES remains a
+named, open real-data finding and continues to count against §1j's gate.
+
+The order matters. B6-01 changes which fetched event-name segment enrichment
+is allowed to prefer, and B6-05 prevents a rejected title from being replaced
+immediately by an unguarded headline-shaped URL slug. Both operate in the same
+fallback chain that produced the SolarPACES result. C lands those already-
+guided, independently safe changes first; the next A must re-fetch and render
+SolarPACES and report which tier then wins (guarded title segment, guarded
+slug, snippet mining, or the absolute last resort). Only that post-fix evidence
+can show whether a distinct SolarPACES mechanism remains.
+
+If it remains wrong, the next B investigates the residual from the newly
+reachable tier. It may recommend a source-backed signal or a different
+candidate-order rule, but it must again state what real counterexample the
+rule protects. **Nobody may remove SolarPACES from the gate merely because a
+cheap discriminator was not found this round.**
 
 ---
 
@@ -12057,5 +12090,17 @@ manager ruling explicitly schedules it. B6-01/B6-02/B6-07 touch
 **Gate record:** B6-08's full gate is the current accepted baseline: 83 files
 / 937 tests, 936 passing, only `src/lib/events/benchmark.test.ts` flaky;
 typecheck clean; only `src/components/persona/quiz.tsx:46` lint error.
+
+---
+
+### Round 6 — Manager policy rulings
+
+#### Ruling 28 — B6-06 SolarPACES
+
+**RULED, committed separately.** No speculative site-brand carve-out in this
+C turn. B6-06 has no direct C code, remains open, and remains in the real-data
+gate. C lands B6-01 and B6-05 first; the next A re-fetches and renders
+SolarPACES to identify which fallback tier remains reachable before another
+fix is designed. Full binding reasoning is in §1o.
 
 ---
