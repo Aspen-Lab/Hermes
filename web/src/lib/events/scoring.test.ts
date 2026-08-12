@@ -8,6 +8,8 @@ import {
 } from "./scoring";
 import { dedupEvents } from "./dedup";
 import { ccfConfToRawItem, parseCcfDateRange, parseCcfDeadline } from "./sources/ccfddl";
+import { confsTechConfToRawItem } from "./sources/confstech";
+import { rsTalkToRawItem } from "./sources/researchseminars";
 import {
   DENY_HOSTS,
   DENY_PATH_RE,
@@ -67,6 +69,16 @@ describe("scoreRank", () => {
 });
 
 describe("scoreEvents", () => {
+  it("keeps report evidence out of discovery scoring and ranking", () => {
+    const base = event({ id: "evidence-invariant", description: "Battery research conference." });
+    const plain = scoreEvents([base], { topics: ["battery"] }, NOW);
+    const proved = scoreEvents([
+      { ...base, reportSummary: { text: "Source-owned summary.", authority: "source-record" } },
+    ], { topics: ["battery"] }, NOW);
+    expect(proved.map(({ id, score }) => ({ id, score }))).toEqual(
+      plain.map(({ id, score }) => ({ id, score })),
+    );
+  });
   it("drops fully-past events and keyword-gates the rest", () => {
     const past = event({ id: "a", startDate: iso(-30), deadline: undefined });
     const unrelated = event({
@@ -267,6 +279,34 @@ describe("scoreEvents", () => {
         (item) => item.facetPreferenceReason === undefined,
       ),
     ).toBe(true);
+  });
+});
+
+describe("event source report-summary authority", () => {
+  it("tags only an explicit CCF description, never its title fallback", () => {
+    const common = { title: "MLConf", confs: [{ id: "mlconf-26", year: 2026, date: "October 1, 2026" }] };
+    expect(ccfConfToRawItem({ ...common, description: "Source record." }, NOW)?.reportSummary).toEqual(
+      { text: "Source record.", authority: "source-record" },
+    );
+    expect(ccfConfToRawItem(common, NOW)?.reportSummary).toBeUndefined();
+  });
+
+  it("tags a ResearchSeminars abstract but not its assembled speaker discovery text", () => {
+    const common = { title: "Battery talk", seminar_id: "series", seminar_ctr: 1, start_time: "2026-09-01 10:00:00", speaker: "A Speaker" };
+    expect(rsTalkToRawItem({ ...common, abstract: "Direct abstract." })?.reportSummary).toEqual(
+      { text: "Direct abstract.", authority: "source-record" },
+    );
+    expect(rsTalkToRawItem(common)?.reportSummary).toBeUndefined();
+  });
+
+  it("keeps a confs.tech synthesized description untagged", () => {
+    const item = confsTechConfToRawItem(
+      { name: "Battery Summit", url: "https://example.test", startDate: "2026-10-01" },
+      "battery",
+      NOW,
+    );
+    expect(item?.description).toContain("battery conference");
+    expect(item?.reportSummary).toBeUndefined();
   });
 });
 

@@ -148,6 +148,36 @@ describe("POST /api/events/report", () => {
     });
   });
 
+  it("sends only trusted complete report evidence to the provider prompt", async () => {
+    const generateJsonText = vi.fn().mockResolvedValue("{}");
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      "<main><p>Programme evidence.</p></main>", { status: 200 },
+    )));
+    const reportEvent = {
+      ...event,
+      activities: ["workshop"],
+      organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }],
+      linkOfficial: "https://events.example.com/summit",
+    };
+
+    await POST(request({ event: { ...reportEvent, shortDescription: "Search snippet only." } }));
+    let prompt = JSON.parse((generateJsonText.mock.calls[0][0] as { userPrompt: string }).userPrompt) as {
+      event: Record<string, unknown>;
+    };
+    expect(prompt.event.shortDescription).toBeUndefined();
+
+    generateJsonText.mockClear();
+    await POST(request({ event: {
+      ...reportEvent,
+      reportSummary: { text: "Trusted source sentence.", authority: "source-record" },
+    } }));
+    prompt = JSON.parse((generateJsonText.mock.calls[0][0] as { userPrompt: string }).userPrompt) as {
+      event: Record<string, unknown>;
+    };
+    expect(prompt.event.shortDescription).toBe("Trusted source sentence.");
+  });
+
   it("keeps marked heading evidence inside the single 40,000-character source cap", async () => {
     const generateJsonText = vi.fn().mockResolvedValue("{}");
     mocks.resolveProvider.mockReturnValue({ generateJsonText });

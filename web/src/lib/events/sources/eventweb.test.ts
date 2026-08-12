@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bestEventTitleSegment,
   eventNameFrom,
   looksLikeEventTitle,
   webResultToRawEventItem,
@@ -61,6 +62,10 @@ describe("eventNameFrom", () => {
     expect(eventNameFrom("Solid-State Battery Summit | Cambridge EnerTech", "")).toBe(
       "Solid-State Battery Summit",
     );
+  });
+
+  it("does not turn generic Open Graph page chrome into an event title", () => {
+    expect(bestEventTitleSegment("Home | Events", "https://example.com/event")).toBeUndefined();
   });
 
   it("falls through to snippet mining when the whole title is a sentence", () => {
@@ -183,6 +188,15 @@ describe("eventNameFrom", () => {
 });
 
 describe("webResultToRawEventItem", () => {
+  it("keeps a punctuated search snippet scoreable but untagged for reports", () => {
+    const item = webResultToRawEventItem(
+      { title: "Battery Summit 2026", url: "https://example.com/battery", snippet: "Battery research sessions are included." },
+      Date.parse("2026-01-01T00:00:00Z"),
+    );
+    expect(item?.description).toBe("Battery research sessions are included.");
+    expect(item?.reportSummary).toBeUndefined();
+  });
+
   it("uses the guarded name for a real-shaped result", () => {
     const item = webResultToRawEventItem(
       {

@@ -13720,3 +13720,22 @@ summary is empty or unfinished does not override source-record evidence.
 Focused report/enrichment verification is 3 files / 124 tests passing;
 route no-provider coverage still requires the manager-requested existing
 route-pattern addition before final acceptance.
+
+#### C7-06 FOLLOW-UP COMPLETE @ 2026-08-12 10:25 UTC
+
+Added the remaining B7-06 authority proof with short synthetic fixtures only:
+ccfddl explicit-description versus title fallback; ResearchSeminars direct
+abstract versus assembled speaker text; confs.tech synthesis; eventweb's
+punctuated discovery snippet; scoring/ranking invariance; report prompt
+presence/absence; route no-provider zero-fetch behavior; and typed/OG page
+evidence precedence, ambiguity, and unusable-value negatives. The rejected
+OG-title check uses `Home | Events`, which the existing guarded title resolver
+already rejects; no production code change was needed. `cleanOwnedEventReportSummary`
+remains the common report/prompt complete-sentence gate.
+
+Focused verification: 6 files / 213 tests passed. Fresh full gate: 85 files /
+991 tests, 990 passed; only the documented live benchmark city drift remains
+(current `Salvador` versus stale `Chicago`, coverage 8/16 = 0.5). TypeScript
+is clean; ESLint reports only the known `src/components/persona/quiz.tsx:46`
+error; `git diff --check` is clean. No credentials, source text, fetch/model
+path, provider, ranking behavior, branch, worktree, PR, or tests were removed.

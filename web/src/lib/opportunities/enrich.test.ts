@@ -192,6 +192,27 @@ describe("event detail enrichment", () => {
     expect(unfinished.reportSummary).toEqual({ text: "Source record.", authority: "source-record" });
   });
 
+  it("overrides source-record evidence only with a complete owned page summary", async () => {
+    const sourceRecord = { ...event(304), reportSummary: { text: "Source record.", authority: "source-record" as const } };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(
+      '<script type="application/ld+json">{ "@type": "Event", "name": "Battery Summit", "description": "Complete page summary." }</script>',
+    ), { status: 200 })));
+    const [typed] = await enrichEventCandidates([sourceRecord]);
+    expect(typed.reportSummary).toEqual({ text: "Complete page summary.", authority: "page-owned" });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(
+      '<meta property="og:title" content="Home | Events"><meta property="og:description" content="OG source summary.">',
+    ), { status: 200 })));
+    const [rejectedOg] = await enrichEventCandidates([sourceRecord]);
+    expect(rejectedOg.reportSummary).toEqual(sourceRecord.reportSummary);
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(
+      '<script type="application/ld+json">{ "@type": "Event", "name": "Battery Summit", "description": "No ending" }</script>',
+    ), { status: 200 })));
+    const [unusableTyped] = await enrichEventCandidates([sourceRecord]);
+    expect(unusableTyped.reportSummary).toEqual(sourceRecord.reportSummary);
+  });
+
   it("accepts a host-matching typed Event name by its structured provenance", async () => {
     const item = { ...event(31), url: "https://solarpaces.example.org/conference" };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`

@@ -369,6 +369,13 @@ describe("body-text place fallback", () => {
     const og = '<meta property="og:title" content="Battery Summit | Example"><meta property="og:description" content="OG source summary.">';
     expect(extractOpportunityPageDetails(og, "event")).toMatchObject({ openGraphTitle: "Battery Summit | Example", openGraphDescription: "OG source summary." });
   });
+
+  it("fails closed for missing Event descriptions and unusable metadata", () => {
+    const missing = '<script type="application/ld+json">{ "@type": "Event", "name": "Battery Summit" }</script>';
+    expect(extractOpportunityPageDetails(missing, "event").typedOpportunityDescription).toBeUndefined();
+    const unusable = '<meta property="og:title" content="Home | Example"><meta property="og:description" content="OG text.">';
+    expect(extractOpportunityPageDetails(unusable, "event")).toMatchObject({ openGraphTitle: "Home | Example", openGraphDescription: "OG text." });
+  });
 });
 
 describe("country must belong to the city", () => {

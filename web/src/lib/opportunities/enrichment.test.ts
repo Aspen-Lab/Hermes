@@ -633,6 +633,26 @@ describe("event enrichment prompt and parser", () => {
     expect(JSON.stringify(prompt)).not.toContain("You saved a role there.");
   });
 
+  it("puts only complete tagged report evidence in the event prompt", () => {
+    const rawOnly = JSON.parse(buildEventEnrichmentPrompt(
+      { ...event, shortDescription: "Discovery text only.", reportSummary: undefined },
+      "Topics: batteries",
+    )) as { event: Record<string, unknown> };
+    expect(rawOnly.event.shortDescription).toBeUndefined();
+
+    const trusted = JSON.parse(buildEventEnrichmentPrompt(
+      { ...event, shortDescription: "Discovery text only.", reportSummary: { text: "Trusted complete sentence.", authority: "source-record" } },
+      "Topics: batteries",
+    )) as { event: Record<string, unknown> };
+    expect(trusted.event.shortDescription).toBe("Trusted complete sentence.");
+
+    const unfinished = JSON.parse(buildEventEnrichmentPrompt(
+      { ...event, reportSummary: { text: "Unfinished source text", authority: "page-owned" } },
+      "Topics: batteries",
+    )) as { event: Record<string, unknown> };
+    expect(unfinished.event.shortDescription).toBeUndefined();
+  });
+
   it("does not spend a call on a description alone, and never revives generic session types", async () => {
     // Reviewer change. A description was briefly treated as a reason to call the
     // model. Almost every event has one, so the gate that keeps a report free
