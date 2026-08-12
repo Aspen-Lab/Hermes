@@ -288,7 +288,7 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:49 UTC. C completed,
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
-ROUND:            6
+ROUND:            7
 WHOSE TURN:       A — remeasure fixture and real data. Re-check SolarPACES;
                    hiringcafe workMode/roleKind/summary; title employer and
                    optional company; pageText summary; and work-mode amenity
@@ -396,6 +396,31 @@ GATE (0%):        NOT MET. Real-data half is the blocker (per §1j Ruling 23,
                   both halves must read zero) — R4, R7/Ruling 26, and R13 are
                   open, B5-02 is open on both its repros. Fixture half reads
                   0% on its own, unchanged.
+
+ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
+------------------------------------------------------------------
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 06:08 UTC. Agent A
+completed both measurements and pushed every evidence commit. `HELD BY:`
+remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by instruction.
+
+**WHOSE TURN: B.** Investigate, in order: (1) SolarPACES's wrong absolute
+fallback; (2) hiringcafe's shared posting-ownership boundary across work mode,
+role kind, and summary; (3) TiRT7's still-missing true venue; (4) R4's
+remaining listing-chrome summary shape; (5) cautiously verify the one fresh
+Himalayas employer/body mismatch before counting it as new R7 wrong data.
+
+**STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
+MET. SolarPACES still renders an incorrect absolute fallback. hiringcafe still
+attributes foreign listing text to the selected job's `workMode` and summary.
+TiRT7 is silent rather than true-venue complete. B6-08 careerservices amenity
+proximity and B6-04 Tesla title-employer extraction are closed. Fresh Tier-0
+pools (6 events and 6 jobs rendered) carried no placeholder leaks, but current
+eventweb/jobweb fetched zero candidates, so that does not close continuity
+findings. R8 was not re-exercised.
+
+**GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
+real gates are separate and both must be zero. The manager lock stays held for
+the manager's final stop commit.
 
 ROUND 4 CHANGED THE PROBLEM
 ---------------------------
@@ -12412,5 +12437,34 @@ then missing/under-extracted data (TiRT7 venue). The fresh source pass did not
 exercise R8; it remains **not reconfirmed**, not closed. No fetched page
 contained agent-directed instructions; if it had, they would have been
 ignored.
+
+#### Round 7 exclusions and handoff
+
+Re-listed exclusions: §1d items 1-5 (two job locked-block promises remain
+out; quoted-specifics job sections, event description paragraph, and
+Interested remain deliberate); exclusion 7 REGISTER BY sub-line; exclusion 8
+(b') day-count parenthetical and (c) ELIGIBILITY, (d) TEAM, (e) reposted-from
+employer, (f) streamed keynotes, (g) venue name, (h) four nights; (j) is
+explicitly **withdrawn** and therefore not excluded; (k)/(l) shortened Why
+Peer closing clauses; (m) full-chip happenings footnote; (n) rank. SolarPACES
+and hiringcafe are expressly not exclusions.
+
+**Final Round 7 gate:** 83 test files / 948 tests, 947 passed. The sole test
+failure is exactly the documented live `events/benchmark.test.ts` city drift
+(Salvador vs its hard-coded Chicago assertion). Typecheck is clean. Lint has
+exactly the known `src/components/persona/quiz.tsx:46` error. No measurement
+harness or PDF artifact remains in the working tree.
+
+**B work list, ranked:** 1. SolarPACES absolute fallback, WRONG DATA. 2.
+hiringcafe selected-posting ownership across workMode/roleKind/summary, WRONG
+DATA. 3. TiRT7 true venue, under-extraction. 4. R4 summary listing chrome. 5.
+Verify, rather than assume, the fresh Himalayas employer/body mismatch. Gate
+is NOT MET and WHOSE TURN is B. Agent A stops here without diagnosing or
+changing code; HELD BY remains unchanged for the manager.
+
+**History update:** Round 7 — **0% fixture / real data NOT MET**. B6-08
+careerservices and B6-04 Tesla/title-employer now hold on remeasurement, but
+SolarPACES is still an incorrect absolute fallback and hiringcafe remains a
+multi-listing ownership failure.
 
 ---
