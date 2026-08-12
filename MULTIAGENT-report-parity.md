@@ -10,23 +10,6 @@ PDF is in scope for this loop.
 
 ---
 
-### Round 7 — Agent C B7-02 resume checkpoint
-
-**PARTIAL @ 2026-08-12 07:00 UTC.** Kept the single selected-posting boundary
-fail-closed on a successful fetch whose ownership is unproven: enrichment now
-preserves every source-owned raw field and adds only
-`fetchedPostingScope: "unproven"`, rather than constructing an accidental
-object full of undefined derived fields. The DOM-owned path attaches a
-structured record only for an exact canonical selected URL; a description
-remains required for the JSON-LD-only fallback. No host rule, chrome regex,
-source scoring change, provider/model behavior, credential, or extra fetch was
-added.
-
-**Remaining exactly:** migrate existing job and detailed-report fixtures to
-explicit selected URL/heading owners, add the B7-02/B7-04 adversarial scope
-tests, then run the full gate. The focused enrichment/route suite is not yet
-green. No B7-03 work has started; the manager lock is unchanged.
-
 ## §0. HOW TO RESUME — READ THIS FIRST, EVERY TIME
 
 This file is the **only** durable state. A session can end at any moment; the
@@ -292,12 +275,12 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-12 06:55 UTC. C completed and
-                   pushed B7-01, then pushed B7-02 as a durable PARTIAL at
-                   `61a018a`. B7-02 TypeScript is clean, but its old fixtures
-                   still need ownership migration and its adversarial tests
-                   and full gate remain. No B7-03 work has started. Resume
-                   the same C turn from §4's B7-02 partial record.
+STOPPED BECAUSE:  out of budget @ 2026-08-12 07:00 UTC. C completed B7-01
+                   and pushed B7-02 checkpoints `61a018a` and `d4128cf`.
+                   The focused suite is not green: migrate remaining fixtures
+                   to explicit ownership, add B7-02/B7-04 adversarial tests,
+                   and run the full gate. No B7-03 work has started. Resume
+                   the same C turn from §4's B7-02 partial records.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
@@ -335,17 +318,18 @@ STATUS:           **ROUND-7 C IN PROGRESS: B7-01 COMPLETE; B7-02 PARTIAL.**
                    guide item: 83 files / 948 tests, 947 passing with only
                    the documented live benchmark flake; typecheck clean;
                    exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-02 is PARTIAL, then
-                   B7-03 and B7-05 remain.** B7-01 is implemented at
-                   `661c92f`; do not count B7-04 separately. See §4's B7-02
-                   partial record for the exact resume point.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-02 is PARTIAL at
+                   `d4128cf`, then B7-03 and B7-05 remain.** B7-01 is
+                   implemented at `661c92f`; do not count B7-04 separately.
+                   See §4's B7-02 partial records for the exact resume point.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** out of budget @ 2026-08-12 06:55 UTC. C pushed B7-01
-complete at `661c92f` and B7-02 partial at `61a018a`; resume B7-02's fixture
-migration, adversarial tests, and full gate from its §4 partial record.
+**STOPPED BECAUSE:** out of budget @ 2026-08-12 07:00 UTC. C pushed B7-01
+complete at `661c92f` and B7-02 partial checkpoints `61a018a` and `d4128cf`;
+resume B7-02's remaining fixture migration, adversarial tests, and full gate
+from its §4 partial records.
 `HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
 instruction.
 
@@ -13255,5 +13239,21 @@ because their old fixtures deliberately provided unowned whole-page text; they
 must be migrated to the guide's explicit selected DOM/URL owner and expanded
 with B7-02/B7-04 adversarial cases before this item can be gated. No B7-03
 work has started. Manager lock remains unchanged.
+
+#### B7-02 — PARTIAL CHECKPOINT @ 2026-08-12 07:00 UTC
+
+Kept the single selected-posting boundary fail-closed on a successful fetch
+whose ownership is unproven: enrichment now preserves every source-owned raw
+field and adds only `fetchedPostingScope: "unproven"`, rather than constructing
+an accidental object full of undefined derived fields. The DOM-owned path
+attaches a structured record only for an exact canonical selected URL; a
+description remains required for the JSON-LD-only fallback. No host rule,
+chrome regex, source scoring change, provider/model behavior, credential, or
+extra fetch was added.
+
+**Remaining exactly:** migrate existing job and detailed-report fixtures to
+explicit selected URL/heading owners, add the B7-02/B7-04 adversarial scope
+tests, then run the full gate. The focused enrichment/route suite is not yet
+green. No B7-03 work has started; the manager lock is unchanged.
 
 ---
