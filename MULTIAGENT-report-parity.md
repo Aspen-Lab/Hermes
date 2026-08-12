@@ -10935,3 +10935,307 @@ per §0d.
 **STATUS: COMPLETE.**
 
 ---
+
+### Round 6 — Agent B
+
+**STATUS: IN PROGRESS.** Claimed the turn lock (`c3017f9`). Read §0 through
+§3 in full (paged, not skimmed — the file is ~10,900 lines), **§1n Ruling 27
+first** per instruction, then §1m Ruling 26, §1l Ruling 25, §1b–§1k in full,
+and §4's Round 5 Agent B and Agent C entries in full (both B5-01..B5-08's own
+fix directions and exactly what C landed vs. deferred) before reading Round
+6 Agent A. Read Round 6 Agent A's entry in full, twice — once for the
+findings, once specifically re-reading the "FIRST" section and the closing
+"what B should read first" list against Ruling 27's three numbered calls.
+
+**Method.** Read every file A's report and Ruling 27 name directly from
+source, not from paraphrase: `enrich.ts`, `eventweb.ts`, `jobweb.ts`,
+`jobs/mapper.ts`, `events/mapper.ts`, `structured-extract.ts`, `shared.ts`,
+`job-details.ts`, `summarize.ts`, `job-cleanup.ts`, both report pages
+(`app/jobs/[id]/page.tsx`, `app/events/[id]/page.tsx`) and the feed/briefing
+card components that also read `companyOrLab`/`name`, plus `types/index.ts`
+for the exact field types. For Ruling 27 point 3 (the empty-slot question), a
+throwaway test file
+(`web/src/zz-round6-b-empty-slot-check.test.ts`, deleted before this entry
+was written — confirmed by `git status --short` showing a clean tree)
+rendered the real `JobReport`/`EventReport` components with an empty
+`companyOrLab` and an empty `name` through `renderToStaticMarkup`, the same
+mechanism every A round has used, so the answer is **what the components
+actually output**, not a prediction. Quoted fragments below are the real
+rendered HTML/output, or exact source lines with file:line citations — no
+scraped third-party page text is reproduced anywhere in this entry.
+
+I did not change code. Committing after each item, per §3.
+
+---
+
+##### B6-01 — R13's architectural finding: `enrich.ts`'s title preference bypasses `eventNameFrom()`'s guards entirely. `WRONG DATA`. Investigated first, per Ruling 27 point 2 — the round's biggest finding.
+
+**Confirmed directly against the live code.** `web/src/lib/opportunities/enrich.ts:135-138`, inside `enrichEventCandidates()`:
+
+```ts
+const name =
+  structured?.name && looksLikeEventTitle(structured.name)
+    ? structured.name
+    : item.name;
+```
+
+`structured.name` comes from `extractOpportunityPageDetails()`
+(`web/src/lib/opportunities/structured-extract.ts:1515`): `name:
+structured?.name ?? openGraph.title` — either a JSON-LD `Event`/`JobPosting`
+node's own `name`/`title`, or, when no matching JSON-LD block exists, the
+page's raw `<meta property="og:title">` content. **Neither of those two
+sources has ever been split on a separator or checked against
+`isChromeSegment()`** — `og:title` in particular is routinely the exact
+string a browser tab shows, chrome and all (`"Home - International Battery
+Summit"` is a textbook `og:title` value, not an edge case).
+
+`looksLikeEventTitle()` is **one of two independent gates**
+`eventNameFrom()` applies to every candidate segment
+(`eventweb.ts:379-381`): `!isChromeSegment(part, host) &&
+looksLikeEventTitle(part)`. `isChromeSegment()` is the gate that rejects a
+generic page label (`GENERIC_PAGE_TITLE_RE`), a calendar/index page
+(`EVENT_INDEX_TITLE_RE`), and — the specific mechanism B5-06 built for
+exactly this failure shape on the ingestion side — a segment that is
+essentially the page's own hostname restated (`looksLikeHostBrand`/
+`looksLikeArticledHostBrand`). `enrich.ts`'s override calls **none of it**.
+It also never splits `structured.name` on a separator at all — it tests the
+**whole, unsplit string** — so even a title `eventNameFrom()` would happily
+split and clean at ingestion sails through here as one piece.
+
+**Traced by hand, not just asserted:**
+`looksLikeEventTitle("Home - International Battery Summit")` → `true` (no
+narrative verb, no headline-passive shape, one clause, 5 tokens — every one
+of `looksLikeEventTitle`'s four checks is about *sentence* shape, and a
+chrome-wrapped title is not a sentence). The override therefore accepts it
+outright. Calling the real, exported `eventNameFrom()` on the same string
+(as A did directly) returns `"International Battery Summit"` — the guarded
+path gets it right; the code path actually wired into enrichment does not,
+because it is not the same path. **The code comment directly above this line
+claims parity with `eventNameFrom()`'s own guard ("the same... guard
+`eventNameFrom()` applies at ingestion"); that claim is false, confirmed by
+reading both functions side by side, not by trusting the comment.**
+
+**Why two paths exist — this is the question Ruling 27 actually asks, not "add the missing checks."**
+
+`enrich.ts` was written in round 4 (B4-01) to solve a real, additive problem:
+a page fetched during enrichment can *upgrade* a name that ingestion only
+guessed at from a search snippet, so re-checking it once the real page is in
+hand is the right instinct. But instead of calling the one function that
+already knows how to evaluate "is this string a good event name"
+(`eventNameFrom()`, or the guard pair it applies), B4-01 wrote a **second,
+narrower predicate from scratch** that happens to share one of
+`eventNameFrom()`'s four checks and silently drops the other three
+(`isChromeSegment`'s three sub-checks, and the segment split itself). This
+is not a case where two different questions are being asked — it is the
+**same question** ("is this string this event's real name") answered twice,
+once thoroughly and once carelessly, and the report shows whichever one ran
+last. That is the actual defect: not a missing guard, but a second decision
+authority that was never told to defer to the first one.
+
+**Fix direction — reuse the ingestion-time predicate, do not add a fourth check to the weak one.**
+
+Two viable shapes; I recommend the second and explain why:
+
+**Option A — call `eventNameFrom()` itself, unconditionally, whenever
+`structured?.name` exists.** Simple: `enrich.ts` already imports
+`looksLikeEventTitle` from `eventweb.ts`; importing `eventNameFrom` too is
+the same module, no new import path, no circular-import risk (confirmed:
+`enrich.ts` already depends on `eventweb.ts`, not the reverse).
+`eventNameFrom(title, snippet, url)` requires a `snippet` argument
+(non-optional in the current signature) — `item.description` (the
+`RawEventItem`'s own already-stored search-result snippet) is the closest
+available value and a reasonable choice.
+
+**The problem with Option A, worth stating plainly rather than glossing
+over:** `eventNameFrom()` **always returns a non-empty string** once given a
+non-empty title — its own last-resort tiers (URL slug, snippet mining,
+finally `segments[0] ?? title.trim()`) guarantee it. So "call it
+unconditionally and trust the result" means the override would **always**
+fire whenever `structured?.name` is present, never falling back to
+`item.name` — even when the fetched page's title is *entirely* chrome and
+`eventNameFrom()` has to fall all the way to its own worst-case tier. That
+worst case can easily be worse than the `item.name` ingestion already
+computed from the **original search result's title and snippet**, which may
+have had better material to work with than the fetched page's `<title>` tag
+does. Option A trades "one weak guard" for "no guard at all against a
+worse-than-before overwrite" — a different failure, not obviously a smaller
+one.
+
+**Option B — recommended. Extract `eventNameFrom()`'s own first tier (the
+segment-split-and-filter block, `eventweb.ts:362-388` up to `if
+(informative.length > 0) { ... }`) into its own exported function** —
+e.g. `bestTitleSegment(title: string, url?: string): string | undefined`,
+returning `undefined` when no segment survives `isChromeSegment` +
+`looksLikeEventTitle`, instead of falling through to the slug/snippet tiers.
+`eventNameFrom()` itself becomes a thin wrapper: try `bestTitleSegment()`
+first, and only if it returns `undefined` run its existing slug → snippet →
+`segments[0]` fallback chain, unchanged. This is a **mechanical extraction,
+not a rewrite** — same conditions, same order, same return values — so it is
+behavior-preserving by construction, not a reasoned guess: I hand-traced two
+of `eventweb.test.ts`'s existing tests against the extracted logic
+specifically (below) and both are unaffected, and the other 16 do not touch
+this tier's inputs at all (none supplies a chrome-plus-informative
+multi-segment title with a URL, the one shape the extraction touches).
+
+Then `enrich.ts`'s override becomes: only prefer the fetched page's title
+when `bestTitleSegment(structured.name, item.url)` finds something — i.e.
+when the fetched title actually contains an honest, guard-passing segment of
+its own, the exact same bar ingestion holds a search-result title to.
+Otherwise, keep `item.name`. This is the "only ever upgrades, never
+degrades" behaviour the existing code comment already *claims* — Option B is
+what would make that claim true instead of aspirational.
+
+**Verified the recommended fix against the one existing test that actually
+exercises this override, not assumed safe.** `enrich.test.ts:53-98`, `"caps
+detail requests at 40 gate-surviving candidates"`: fixture JSON-LD `"name":
+"Enriched Event ${index}"`, asserts `enriched[0].name === "Enriched Event
+0"`. Traced `bestTitleSegment("Enriched Event 0", "https://events.example.com/0")`
+by hand: no separator, single segment; `isChromeSegment` — not generic, not
+an index page, `looksLikeHostBrand("Enriched Event 0", "events.example.com")`
+→ normalized candidate `"enrichedevent0"` (14 chars) vs. domain label
+`"events"` (6 chars), `"events".startsWith("enrichedevent0")` → `false`, not
+rejected; `looksLikeEventTitle` → `true` (no narrative/headline/multi-sentence
+shape, 3 tokens). Segment survives, `eventLike` is empty (no
+`EVENT_SIGNAL_RE` word), pool falls back to `informative`, returns
+`"Enriched Event 0"` — **the existing test's expected value, unchanged.**
+Grepped the rest of `enrich.test.ts` for every other `name:`-bearing line (6
+total) — none of the others assert a *resulting* name after the override
+branch runs (one is the ingestion-time fixture default, one is an excluded
+candidate never fetched, two are roster person/org names, unrelated) — this
+is the only test at risk in this file, and it is not actually at risk.
+
+**Also traced against `eventweb.test.ts`'s core segment-tier test**
+(`:60-64`, `"picks the informative segment over site chrome"` —
+`eventNameFrom("Solid-State Battery Summit | Cambridge EnerTech", "")` →
+`"Solid-State Battery Summit"`): no `url` argument in this call, so
+`isChromeSegment`'s host-brand check never runs for either segment (returns
+`false` immediately when `host` is `undefined`) — both segments are
+"informative" and the choice is made by the `looksLikeEvent` preference step
+instead ("Summit" matches `EVENT_SIGNAL_RE`, "EnerTech" does not). This path
+through the logic is identical whether it lives inline or in an extracted
+function — unaffected by construction.
+
+**What this recommendation does NOT claim.** I have not run this refactor —
+B does not change code. "Behaviour-preserving by construction" describes the
+shape of the change (move code, do not alter conditions), not a substitute
+for C running the full gate, especially the other 16 `eventweb.test.ts`
+cases I did not hand-trace individually because none of them supplies a
+multi-segment, chrome-plus-informative title together with a URL (the one
+input shape the extraction actually touches).
+
+**Blast radius.** `bestTitleSegment` (or whatever C names it) would be a new
+export from `eventweb.ts`, alongside `eventNameFrom`/`looksLikeEventTitle`,
+both already imported by `enrich.ts` — no new module dependency.
+`eventNameFrom()`'s own external behaviour is unchanged (same inputs, same
+outputs, per the trace above), so every OTHER caller of `eventNameFrom()`
+(`webResultToRawEventItem()` in the same file — the only other call site,
+confirmed by grep) is unaffected. `enrich.ts`'s change is scoped to the
+`name` line inside `enrichEventCandidates()`; nothing else in that function
+reads or derives from `name`.
+
+**Tests to add, not just tests to protect.** None of `enrich.test.ts`'s 14
+tests currently supplies a chrome-wrapped `structured.name` (e.g. `"Home -
+International Battery Summit"`) to prove the override is now correctly
+declined to the *whole string* and correctly extracts the *segment*. This is
+the actual regression repro and should be C's first new test for this item —
+assert `enriched[0].name === "International Battery Summit"` from a fixture
+whose JSON-LD (or `og:title`, if C adds a fixture path for that — currently
+every `enrich.test.ts` fixture goes through the JSON-LD branch, not the
+`openGraph.title` fallback, which is itself untested in this file, worth
+naming) `"name"` is `"Home - International Battery Summit"`.
+
+---
+
+##### B6-02 — `enrich.ts`'s `roleKind` fallback reads from `stripHtml`, the same pre-B5-02 pipeline already proven to leak furniture and other-listing text into a sibling field. `WRONG DATA` (latent). Widening B6-01's investigation, per Ruling 27's instruction to check the rest of the file.
+
+**Ruling 27 asked whether `enrich.ts` re-decides anything else an
+ingestion-time function already decided. It does not, exactly — but it has
+an adjacent, real risk worth reporting in the same breath, found by checking
+every field the merge functions touch, not just `name`.**
+
+**What I checked and ruled out.** Read every field `enrichEventCandidates()`
+and `enrichJobCandidates()` set (`enrich.ts:139-156`, `:199-236`). All of
+them but `name` use `??` (fill a gap only) or a boolean/date `||` with no
+guarded ingestion-time counterpart to bypass — `registrationDeadline`,
+`fees`, `activities`, `organisations`, `people`, `travelGrant`,
+`invitationLetter`, `expectedSize`, `applicationDeadline`, `startDate`,
+`startDateFlexible`, `contractLength`, `applicationMaterials`, salary
+fields, `employmentType`, `workMode`, `visa` are all additive-only, matching
+the "never overrides, only fills a gap" doctrine this loop has followed
+since `workMode` (B2-06). `name` is the one field with a *conditional
+override* of an already-decided value — confirmed no second instance of
+that exact shape exists in this file.
+
+**What I found instead.** `enrich.ts:192-194`:
+
+```ts
+const roleKind =
+  item.roleKind ??
+  tryExtract(() => classifyRoleKind(item.title, stripHtml(html)));
+```
+
+`classifyRoleKind()` is called **nowhere else in the codebase** (grepped:
+only this call site, its own test file, and `role-kind.test.ts`) — so
+`item.roleKind` is always `undefined` when this runs; `enrich.ts` is the
+sole, first-time decider, not a second path overriding a first one. This is
+why it is not the same shape as `name` and not a second instance of Ruling
+27's bypass pattern — reporting it plainly as a *different*, smaller finding
+rather than stretching it to fit.
+
+**The real risk: it uses `stripHtml(html)`, not `extractPageText(html)`.**
+`classifyRoleKind(title, description)` (`web/src/lib/jobs/role-kind.ts:31-36`)
+classifies from `title` first and only reads `description` when the title
+itself doesn't match a role-kind pattern — so on any job whose *title*
+doesn't already say "intern"/"postdoc"/"faculty"/etc., this function reads
+the **whole stripped page**, including navigation, footers, and — per
+B5-02's own confirmed finding on this exact same URL shape
+(`hiringcafe.com`) — **other listings' own text on a multi-posting
+aggregator page**. `stripHtml()` (`shared.ts:68-85`) only removes
+`<script>`/`<style>` tags and markup; it does not remove
+`<nav>/<header>/<footer>/<aside>` furniture the way `extractPageText()`
+does. B5-02 already proved this exact input source produces false positives
+for a sibling field (`workMode`) in this same file, on this same kind of
+page, and fixed `job-details.ts`'s own `visibleText` to use
+`extractPageText(html) ?? stripHtml(html)` instead — **but `enrich.ts`'s own,
+separate `stripHtml(html)` call for `roleKind`, three lines below the
+`extractJobDetails(html)` call that now uses the better source, was never
+touched.** One file, one enrichment merge, one field fixed and its immediate
+neighbour left on the old, already-proven-risky pipeline.
+
+**Concretely, what could go wrong:** a job titled plainly ("Research
+Assistant," no role-kind keyword) on a multi-posting aggregator page sitting
+next to an "Internship" or "Postdoctoral Fellow" listing could have its
+`roleKind` classified from the **other** listing's title/text, the same
+same-page-contamination mechanism B5-02's `hiringcafe.com` residual already
+names for `workMode`. I have not confirmed this fires on a real page (that
+is A's job, not mine) — flagging it as a well-evidenced latent risk, not a
+confirmed live defect, and it is worth A specifically checking next round
+now that it has been named.
+
+**Fix direction.** Mirror B5-02's own tier 1 exactly: `stripHtml(html)` →
+`extractPageText(html) ?? stripHtml(html)`, same fallback shape, same
+reasoning (furniture can only ever be noise, never a genuine signal, so
+removing it cannot newly cause a true positive to be missed). One-line
+change, same file, same pattern already proven safe here once.
+
+**Blast radius.** `classifyRoleKind`'s only caller is this one line;
+`roleKind` feeds `Job.roleKind` → the header chip
+(`ROLE_LABELS[job.roleKind]`) and the facet filter
+(`opportunity-facet-panel.tsx`) — both already tolerate `undefined` (the
+chip is conditionally rendered, the facet counts skip it), so a fix that
+makes this **more conservative** (fewer, more accurate classifications)
+cannot newly break either consumer.
+
+**Tests at risk.** `enrich.test.ts`'s job-side tests (`"wires job
+application, role-kind, and visa details through enrichment"`, `:340`) — I
+read this fixture directly: its HTML has no `<nav>/<header>/<footer>/<aside>`
+markup (grepped the fixture string for those four tags — zero hits, same
+check B5-02's own author ran before landing tier 1 for `job-details.ts`), so
+`extractPageText` and `stripHtml` produce the same effective text for this
+fixture and the test is unaffected. **Zero existing coverage of the
+contamination shape** — C should add the same kind of adversarial-proximity
+case B5-02 added for `workMode`: a fixture with a plain-titled job and a
+`<footer>` or sibling `<article>`-shaped block mentioning "Postdoctoral" or
+"Internship" must not have that word attributed to the job under test.
+
+---
