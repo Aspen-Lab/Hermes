@@ -335,29 +335,30 @@ describe("body-text place fallback", () => {
     });
   });
 
-  // B4-01 (round 4): extractOpportunityPageDetails already computed a name
-  // from JSON-LD/og:title on every call, but enrichEventCandidates's merge
-  // never read it (grepped: no assertion anywhere exercised `.name` before
-  // this round). These lock in the field the round-4 fix now depends on.
-  it("prefers the JSON-LD name over the Open Graph title", () => {
+  // B7-01: preserve Event JSON-LD authority separately from the lower-tier
+  // Open Graph title. A caller must not mistake an article headline for an
+  // Event name merely because both supplied a generic `name` field before.
+  it("keeps the typed Event name separate from the Open Graph title", () => {
     const html = `
       <script type="application/ld+json">
         { "@type": "Event", "name": "Real Conference Name" }
       </script>
       <meta property="og:title" content="Different Title From Og">
     `;
-    expect(extractOpportunityPageDetails(html, "event").name).toBe(
-      "Real Conference Name",
-    );
+    expect(extractOpportunityPageDetails(html, "event")).toMatchObject({
+      typedOpportunityName: "Real Conference Name",
+      openGraphTitle: "Different Title From Og",
+    });
   });
 
-  it("falls back to the Open Graph title when JSON-LD has no name", () => {
+  it("retains an Open Graph title without treating it as a typed Event name", () => {
     const html = `
       <meta property="og:title" content="Fallback Title From Og">
     `;
-    expect(extractOpportunityPageDetails(html, "event").name).toBe(
-      "Fallback Title From Og",
-    );
+    expect(extractOpportunityPageDetails(html, "event")).toMatchObject({
+      openGraphTitle: "Fallback Title From Og",
+    });
+    expect(extractOpportunityPageDetails(html, "event").typedOpportunityName).toBeUndefined();
   });
 });
 

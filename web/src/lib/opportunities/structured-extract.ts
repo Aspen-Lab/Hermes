@@ -46,7 +46,10 @@ export interface MetaOpportunityDetails {
 }
 
 export interface OpportunityPageDetails {
-  name?: string;
+  /** A name asserted by a matching schema.org Event record, never page chrome. */
+  typedOpportunityName?: string;
+  /** Low-authority page metadata; callers must apply their normal title guard. */
+  openGraphTitle?: string;
   startDate?: string;
   endDate?: string;
   /** When the posting went up. Jobs carry this instead of a start date. */
@@ -1512,7 +1515,12 @@ export function extractOpportunityPageDetails(
   const attendanceMode = structured?.eventAttendanceMode?.toLowerCase() ?? "";
 
   return {
-    name: structured?.name ?? openGraph.title,
+    // Keep the two name authorities separate. An untyped og:title is often an
+    // article headline, whereas a matching Event record owns its name.
+    ...(kind === "event" && structured?.name
+      ? { typedOpportunityName: structured.name }
+      : {}),
+    ...(openGraph.title ? { openGraphTitle: openGraph.title } : {}),
     startDate: structured?.startDate ?? meta.start,
     endDate: structured?.endDate ?? meta.end,
     datePosted: structured?.datePosted,

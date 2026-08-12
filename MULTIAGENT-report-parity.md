@@ -13201,4 +13201,28 @@ does not close the real gate.
 **Handoff state:** §1 is now truthfully `WHOSE TURN: C`; fixture is 0% but
 the real-data gate remains NOT MET until A's post-C measurement. B stops here.
 
+### Round 7 — Agent C
+
+#### B7-01 — DONE @ 2026-08-12 06:45 UTC — source-owned enriched event identity
+
+Implemented the guided authority split without changing raw event ingestion or
+making event names optional. `OpportunityPageDetails` now keeps a matching
+typed `Event` JSON-LD name distinct from the lower-authority Open Graph title.
+Fetched-event enrichment accepts a typed name after the existing segment guard
+(including a host-matching typed name), then one unique visible current-event
+declaration, then the existing guarded Open Graph title, then the untouched
+ingestion name. `extractDeclaredEventName()` reads furniture-stripped visible
+text and requires an event-style noun immediately before a current-event
+predicate; headings alone and multiple distinct declarations are silent.
+
+Added synthetic regressions for the SolarPACES-shaped deadline headline, typed
+host-matching Event provenance, a heading-only negative, and conflicting
+future declarations. No network call, provider, credential, model path, or
+raw adapter fallback changed.
+
+**Gate:** 83 test files / 951 tests passing; `tsc --noEmit` clean; `eslint .`
+reports only the documented pre-existing `react-hooks/set-state-in-effect` at
+`src/components/persona/quiz.tsx:46`. `git diff --check` clean. Next is B7-02
+only after manager acceptance of this pushed commit.
+
 ---

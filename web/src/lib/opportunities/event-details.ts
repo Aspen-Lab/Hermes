@@ -1,5 +1,7 @@
 import type { EventFee } from "@/types";
 import { normalizeJobDate } from "./job-details";
+import { looksLikeEventTitle } from "@/lib/events/sources/eventweb";
+import { extractPageText } from "./page-text";
 import { stripHtml } from "./shared";
 
 export interface EventPageDetails {
@@ -9,6 +11,26 @@ export interface EventPageDetails {
   travelGrant?: string;
   invitationLetter?: boolean;
   expectedSize?: number;
+}
+
+const DECLARED_EVENT_NAME_RE =
+  /(?:^|\bthe\s+)([\p{L}\p{N}][\p{L}\p{N}&'’().,:/\-\s]{0,140}?\b(?:conference|symposium|workshop|congress|summit|meeting|forum|colloquium)\b)\s+(?:will\s+(?:take\s+place|be\s+held|convene)|takes\s+place|is\s+scheduled\s+to\s+be\s+held)\b/iu;
+
+/**
+ * Returns a page-body event identity only when one current-event declaration
+ * owns it. Headings and metadata are deliberately not evidence here.
+ */
+export function extractDeclaredEventName(html: string): string | undefined {
+  const text = extractPageText(html) ?? stripHtml(html);
+  const candidates = new Map<string, string>();
+  for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+    const raw = sentence.match(DECLARED_EVENT_NAME_RE)?.[1];
+    if (!raw) continue;
+    const candidate = raw.replace(/^the\s+/i, "").replace(/\s+/g, " ").trim();
+    if (!looksLikeEventTitle(candidate) || candidate.length > 160) continue;
+    candidates.set(candidate.toLocaleLowerCase(), candidate);
+  }
+  return candidates.size === 1 ? [...candidates.values()][0] : undefined;
 }
 
 const MONTH_PATTERN =

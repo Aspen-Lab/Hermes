@@ -1,9 +1,9 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
-import { bestEventTitleSegment } from "@/lib/events/sources/eventweb";
+import { bestEventTitleSegment, looksLikeEventTitle } from "@/lib/events/sources/eventweb";
 import type { RawJobItem } from "@/lib/jobs/types";
 import { classifyRoleKind } from "@/lib/jobs/role-kind";
-import { extractEventDetails } from "./event-details";
+import { extractDeclaredEventName, extractEventDetails } from "./event-details";
 import { extractEventRoster } from "./event-roster";
 import { extractJobDetails } from "./job-details";
 import { fetchPagesConcurrently } from "./page-fetch";
@@ -28,7 +28,8 @@ function hasExtractedEventSignal(
   roster: ReturnType<typeof extractEventRoster> | undefined,
 ): boolean {
   return Boolean(
-    structured?.startDate ||
+    structured?.typedOpportunityName ||
+      structured?.startDate ||
       structured?.endDate ||
       structured?.place ||
       structured?.isOnline ||
@@ -124,15 +125,27 @@ export async function enrichEventCandidates(
       extractOpportunityPageDetails(html, "event"),
     );
     const details = tryExtract(() => extractEventDetails(html));
+    const declaredEventName = tryExtract(() => extractDeclaredEventName(html));
     const roster = tryExtract(() => extractEventRoster(html));
-    if (!hasExtractedEventSignal(structured, details, roster)) return item;
+    if (!hasExtractedEventSignal(structured, details, roster) && !declaredEventName) return item;
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const location = formatOpportunityPlace(place) || item.location;
     // B6-01: reuse the guarded ingestion title segment. A fetched title can
     // improve the name only when it contains its own non-chrome event title.
-    const name = structured?.name
-      ? bestEventTitleSegment(structured.name, item.url) ?? item.name
-      : item.name;
+    const typedName = structured?.typedOpportunityName;
+    const name = typedName
+      ? bestEventTitleSegment(typedName, item.url) ??
+        (looksLikeEventTitle(typedName) ? typedName : undefined) ??
+        declaredEventName ??
+        (structured?.openGraphTitle
+          ? bestEventTitleSegment(structured.openGraphTitle, item.url)
+          : undefined) ??
+        item.name
+      : declaredEventName ??
+        (structured?.openGraphTitle
+          ? bestEventTitleSegment(structured.openGraphTitle, item.url)
+          : undefined) ??
+        item.name;
     return {
       ...item,
       name,

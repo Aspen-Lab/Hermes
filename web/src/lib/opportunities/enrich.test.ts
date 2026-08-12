@@ -146,6 +146,42 @@ describe("event detail enrichment", () => {
     expect(enriched.name).toBe("International Battery Summit");
   });
 
+  it("accepts a host-matching typed Event name by its structured provenance", async () => {
+    const item = { ...event(31), url: "https://solarpaces.example.org/conference" };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`
+      <script type="application/ld+json">{ "@type": "Event", "name": "SolarPACES" }</script>
+    `), { status: 200 })));
+
+    const [enriched] = await enrichEventCandidates([item]);
+    expect(enriched.name).toBe("SolarPACES");
+  });
+
+  it("uses one current body declaration instead of a deadline headline", async () => {
+    const item = { ...event(32), name: "Abstract submission deadline extended", url: "https://solarpaces.example.org/abstract-submission-deadline-extended" };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`
+      <meta property="og:title" content="Abstract submission deadline extended">
+      <h2>SolarPACES 2026 Call for Abstracts</h2>
+      <p>The 32nd SolarPACES Conference will take place in 2026.</p>
+    `), { status: 200 })));
+
+    const [enriched] = await enrichEventCandidates([item]);
+    expect(enriched.name).toBe("32nd SolarPACES Conference");
+  });
+
+  it("does not let a heading or multiple declarations replace the ingestion name", async () => {
+    const headingOnly = event(33);
+    const ambiguous = event(34);
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => new Response(usablePage(
+      url.endsWith("33")
+        ? "<h2>International Battery Summit</h2>"
+        : "<p>The Alpha Conference will take place in 2026.</p><p>The Beta Symposium will be held in 2026.</p>",
+    ), { status: 200 })));
+
+    const [unchangedHeading, unchangedAmbiguous] = await enrichEventCandidates([headingOnly, ambiguous]);
+    expect(unchangedHeading.name).toBe(headingOnly.name);
+    expect(unchangedAmbiguous.name).toBe(ambiguous.name);
+  });
+
   it("keeps city coverage above 50% for lean representative event pages", async () => {
     const pages = [
       "cambridge-solid-state-battery-summit.html",
