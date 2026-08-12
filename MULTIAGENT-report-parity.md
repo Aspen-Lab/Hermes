@@ -10418,4 +10418,200 @@ open part is entirely the `|| host` / `fallbackCompany` fallback, per Ruling
 Ruling 26 asks B to cost that properly this round rather than leave it
 optional.**
 
+##### R11 — `extractExpectedSize()` reads a cohort year as a headcount. CLOSED, reconfirmed live on the original repro.
+
+Re-fetched the exact real page (`engine.xyz/talent-fair-and-resource-expo/agenda`)
+and ran the current `extractEventDetails()` against it directly. **Result:
+`expectedSize: undefined`** — before B5-01, this same page produced
+`expectedSize: 2025` from the "Blueprint Spring 2025 Participants..." cohort
+label. The false headcount no longer renders. **Zero of the 17 fresh events**
+in this round's pool carry any `expectedSize` value at all (correct or
+otherwise) — this is consistent with the fix being appropriately conservative
+(silence over a guess) and with §1l's own finding that this field is rare on
+real pages; it does not itself prove a true positive still works, but it
+directly confirms no false positive recurred, on the exact page that reported
+one.
+
+##### R12 — job LOCATION tile leaks the literal placeholder `See posting`. CLOSED, reconfirmed on 7 real postings.
+
+Re-rendered the two real jobs that hit this in round 5 (Climatebase-hosted,
+ZeroB-hosted) through the current code end to end (raw item → enrichment →
+mapper → `JobReport`). **`see posting` does not appear anywhere in either
+rendered page** (checked case-insensitively across the whole HTML output, not
+just the facts tile). Broadened the check across this round's fresh pool: **5
+more real jobs** this round independently resolved to the internal placeholder
+value (Idaho National Laboratory Careers listing, and four others) — **all 5
+also render clean, zero leaks.** 7 of 7 real postings checked this round with
+the placeholder condition: 0 leaks. The underlying `job.location` field still
+*holds* the literal string internally (that is simply how the mapper's own
+fallback default is named; B5-04 does not change it) — what B5-04 fixed is
+that the string never reaches the reader, and that holds on every case
+checked.
+
+##### R4 — "What the role is" prints scraped chrome verbatim. STILL OPEN — B5-07 closes its own two named repros; the class persists via new shapes on fresh data.
+
+B5-07's two guards (e-commerce/UI vocabulary in `NOISE_RE`; the title-echo
+check) were not re-exercised on their own original repro (round 5's
+`zerobonline.com` posting was not re-fetched with its original search
+snippet, since that snippet was never recorded verbatim anywhere and cannot be
+reconstructed without guessing at it — flagging the gap rather than
+fabricating a test). **No evidence of over-rejection found**: every
+non-empty `summary` examined across the fresh sample (10 real jobs) contained
+substantive, genuine content; none reads as a real sentence wrongly dropped.
+
+**But the general class — scraped chrome reaching the role summary — is
+confirmed still open, via three shapes B5-07 was never built to catch**,
+found directly in this round's fresh `summary` output, not fixtures:
+
+1. A markdown-link remnant, twice, on two different real postings: `"...
+   protocols. ] and biophysical techniques..."` and `"... Career Services
+   Staff at WBL@lco. ] Internships at LCOOU..."` — a stray `]` where a
+   Markdown link's visible text was stripped but its closing bracket
+   survived, and (in the second case) an email address truncated mid-domain.
+   No colon-labels, no e-commerce vocabulary, no title echo — none of
+   B5-07's checks target this shape.
+2. Concatenated filter/listing chrome with no spacing at all: `"...
+   VA$22. 14/hrOnsiteInternInternshipStart … get full access to over 8
+   million jobs"` — a job board's own filter labels and upsell copy, run
+   together with no separators. Also clears both of B5-07's guards (zero
+   colons, no cart/checkout vocabulary, doesn't echo the job's own title).
+3. A Markdown heading marker plus a newsletter-signup teaser, mid-summary on
+   an otherwise genuine sentence: `"... category-leading technology
+   companies. Qualifications: ### Get the Saturday tech briefing ["` — a
+   `###` heading marker and an unrelated newsletter CTA, not part of the
+   posting's own content.
+
+**B5-07's own closing note already predicted this exact outcome**: "the
+low-fidelity search-snippet text `summarizeJob` works from is never replaced
+by anything extracted from the fetched page... a proper extractor would
+likely help far more than any further noise filter." Confirmed on fresh data,
+three more times, three more shapes.
+
+##### R13 — event name quality. STILL OPEN, and this round found the largest single mechanism yet — see below.
+
+**B5-06's three guards were checked directly against the two real events that
+named them, and both confirm the guards work exactly as built — and neither
+one closes on real data, for two entirely different reasons.**
+
+**Event 2 (`engine.xyz`) — IMPROVED, NOT CLOSED.** Re-fetched the live page;
+its `<title>` tag is still literally `Agenda & Information | The Engine`.
+Called `eventNameFrom()` directly on this live title: **result is `"Talent
+fair and resource expo"`.** This confirms gap 1 and gap 2 both fire correctly
+— the chrome title is gone, an improvement — but the fallback chain lands on
+`nameFromUrlSlug()`, which mechanically de-hyphenates the URL path
+(`/talent-fair-and-resource-expo/agenda`) with **no relevance or completeness
+check of its own**. It never reaches the snippet-mining step, where the true
+name ("Tough Tech Talent Fair & Resource Expo") actually sits. The rendered
+name is close but wrong in two small, honest ways (missing "Tough Tech",
+"and" instead of "&") — a real improvement over a chrome title, but not the
+event's real name, and not what B5-06's guide predicted it might reach
+("whether the fallback chain actually recovers this specific string is
+unverified" — confirmed now: it does not).
+
+**Event 3 (`solarpaces.org`) — STILL OPEN, and this is the residual round 5 C
+named as unverified, now confirmed live, worse than expected.** Live title is
+still `Abstract submission deadline extended - SolarPACES`. Two things,
+both directly confirmed, not inferred:
+
+- `looksLikeHostBrand("SolarPACES", "solarpaces.org")` → **`true`.** The new
+  site-brand check (built for B5-03, reused for B5-06's gap 2) rejects
+  "SolarPACES" — a real, honest, terse conference name that legitimately
+  matches its own dedicated domain — exactly the residual round 5 C flagged
+  as unverified: *"cannot distinguish an organisation's own unrelated brand
+  ... from a conference's own dedicated domain that legitimately matches its
+  own name."* This is not hypothetical any more; it happened, on the exact
+  event named in the guide.
+- With the title's other segment ("Abstract submission deadline extended")
+  also correctly rejected by gap 3's headline check, **both segments are
+  chrome and `informative` is empty.** The function falls to
+  `nameFromUrlSlug()` on `/abstract-submission-deadline-extended-to-march-30`
+  — which has **no headline-shape guard at all** — and returns `"Abstract
+  submission deadline extended to march 30"`. **Called `eventNameFrom()` on
+  the live title and confirmed this exact string is what the current code
+  produces**, not a hand-traced guess.
+
+**State this precisely: two independent guards fired correctly on this real
+event — the headline check rejected the narrative segment, the site-brand
+check rejected the real name — and what followed was not silence. It was an
+unguarded fallback that reinstated a value of the exact same bad shape
+(a headline sentence, not a name) the guards had just spent their effort
+removing.** This is the R13-side twin of Ruling 26's own finding, on a
+completely different function, confirmed independently in the same round.
+
+##### New this round: `eventNameFrom()`'s own guards can be bypassed entirely by a separate code path, before B5-06 ever runs. This is the single largest finding of the round.
+
+Found while investigating why several real events in the fresh pool rendered
+their **entire, unsplit, chrome-wrapped title verbatim** — a shape
+`eventNameFrom()` cannot itself produce (it always returns either one picked
+segment, a slug, or a mined snippet phrase — never the original multi-segment
+string with its separators still in it).
+
+**Confirmed directly, not inferred, on `ibatterysummit.com`:**
+
+| | |
+|---|---|
+| Live `<title>` tag / `og:title` | `Home - International Battery Summit` |
+| `eventNameFrom()` called on that exact live title | `"International Battery Summit"` (correct — the guards work) |
+| What actually rendered in the live pool | `"Home - International Battery Summit"` (uncleaned) |
+
+`eventNameFrom()`, called directly on the page's own title, produces the
+right answer. **The rendered report shows the wrong one anyway.** The cause
+is `enrichEventCandidates()` (`web/src/lib/opportunities/enrich.ts`, added
+by B4-01, untouched by B5-06): once a page is fetched during enrichment, it
+prefers the fetched page's own `structured.name` over the ingestion-time name
+whenever `looksLikeEventTitle(structured.name)` is true — and
+`looksLikeEventTitle()` only screens for a narrative sentence, a headline
+passive, multi-sentence text, or excess length. **It does not call
+`isChromeSegment()`. It does not split on separators. It has never run any of
+B5-06's three guards, or B4-01's own generic-title/event-index checks,
+against this value.** A chrome-wrapped homepage title like `"Home -
+International Battery Summit"` clears `looksLikeEventTitle()` trivially (no
+narrative verb, no headline passive, one short clause) and overwrites the
+already-correctly-cleaned ingestion-time name with the dirty one.
+
+**This is not new this round** — the preference logic is B4-01's, from round
+4, and B5-06 never touched `enrich.ts`. It is newly *consequential*: B5-06
+just spent three fixes making `eventNameFrom()` genuinely good at rejecting
+chrome, and this separate, weaker gate downstream can undo all three at once,
+on any event whose real page happens to have a chrome-shaped `<title>`/`og:title`
+— which, on this evidence, is common. **4 of the 17 fresh events this round
+show the exact "whole raw multi-segment title, verbatim, separators intact"
+signature** that only this path can produce: `"Home - International Battery
+Summit"`, `"Program | Battery Safety Summit | August 12-13, 2026"`, and two
+more of the same shape in the same sample. The code's own comment
+(`enrich.ts`, the B4-01 note) describes this as applying "the same... guard
+`eventNameFrom()` applies at ingestion" — **that description is not accurate**;
+it applies exactly one of `eventNameFrom()`'s several checks
+(`looksLikeEventTitle`), never `isChromeSegment()` or the segment splitter.
+
+**Independent corroboration, from the codebase's own pre-existing test, not
+from anything built this round:** the unrelated, standing
+`events/benchmark.test.ts` live-search run (part of this round's own gate,
+different profile, different search terms) independently surfaced
+`"Program | Battery Safety Summit | August 12-13, 2026"` and `"The First
+European Conference on Molten Salt Reactor ..."` (see R8 note below) in its
+own top-5 — the same defect shapes, found by a completely different query,
+the same day.
+
+**Also reconfirmed live: R8 (event title truncated with an ellipsis) is
+STILL OPEN, and reachable again this round** — round 5 could not re-check it
+because the original page (`euagenda.eu`) returned `fetch-null` that day.
+This round's fresh pool independently surfaced the identical event,
+**same host, same title, verbatim**: `"The First European Conference on
+Molten Salt Reactor ..."` at `euagenda.eu/events/2026/05/26/the-first-european-conference-on-molten-salt-reactor-technology`.
+R8 is not one of this round's six required scores, so not tabled below, but
+it is reachable and unfixed, on its own original page, and worth the
+manager's and next B's attention alongside R13 since both are event-name
+defects.
+
+**Two further R13 shapes, found in the same fresh sample, neither matching
+any existing guard, named for completeness and not investigated further (A
+does not investigate causes):** a bare `"Conference Program"` title (passes
+every guard — `looksLikeEvent()` treats it as event-like purely because it
+contains the word "conference," even though it names no conference); a
+research group's own headline, `"Ruggiero Group Attends the 2026 Crystal
+Engineering GRC"` — a present-tense narrative sentence with no auxiliary verb
+(`NARRATIVE_VERB_RE` requires one), a fourth distinct narrative shape beyond
+the three already known.
+
 ---
