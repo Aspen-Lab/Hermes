@@ -12943,3 +12943,165 @@ separate source boundary or independent chrome cause. This is explicitly a
 subsumed CODE acceptance record, not a new C task and not a policy escalation.
 
 ---
+
+#### B7-05 — Himalayas maps one selected LHB posting to the ATS/platform name `Workday` although that selected source record directly self-identifies the employer as Luminare Health. `WRONG DATA`. **CODE: add one generic, fail-closed employer-identity resolver for an owned source record or B7-02-proved posting scope; do not infer an employer from a hostname, a title, or unscoped page text.**
+
+**Verification first — A's cautious watch is now a confirmed data defect, not
+an assumption from body prose.** I queried the safely reachable public
+Himalayas API over its current three-page window (60 records) and found one
+selected record whose title is `Employer Service Representative - LHB`. Its
+same-record `companyName`, `companySlug`, and Himalayas canonical application
+path all say `Workday`; its description opens with the short direct declaration
+`At Luminare Health, our people...` and contains no `Workday` employer claim.
+That is one record's own title, link, catalog label, and body, not text borrowed
+from a neighbouring listing. A direct request for the Himalayas detail page was
+safely reachable but bot-blocked (403 challenge, no usable JSON-LD), so it was
+not treated as a competing structured authority and needs no retry.
+
+The source-record conflict is independently corroborated without copying a
+third-party body: current indexed exact-role results from LinkedIn and
+DailyRemote label the role Luminare Health and agree on its role/salary/remote
+shape; a current sibling LHB role on Himalayas is correctly labelled Luminare
+Health; and an HCSC Workday-hosted careers result confirms that this job family
+can be hosted on a Workday career platform while referring to Luminare Health.
+Those checks establish that `Workday` here is the platform/catalog
+misassociation, not a second employer. They do not authorize a fixed Luminare,
+HCSC, Workday, or Himalayas exception. The durable source fact for the fix is
+the selected record's unique direct employer declaration.
+
+**Exact current cause and already-built boundaries.**
+`himalayasJobToRawItem()` in `web/src/lib/jobs/sources/himalayas.ts:34-70`
+unconditionally assigns `job.companyName?.trim()` at `:51`, while it merely
+strips/truncates the same record's description at `:55`; no code records an
+employer-evidence tier or checks a direct self-declaration. Thus the bad
+catalog label reaches `RawJobItem.company` (`web/src/lib/jobs/types.ts:25-65`)
+as if it were a proved employer. It is then visible in the report mapper at
+`web/src/lib/jobs/mapper.ts:25-43,130-145`, participates in the title-plus-
+company dedup key at `web/src/lib/jobs/dedup.ts:4-37`, and is included in both
+industry fit and the general scoring facade at
+`web/src/lib/jobs/scoring.ts:158-192,280-288`.
+
+There is no dormant employer resolver to extend. `cleanJobSubtitlePart()` is
+only a render-safety cleanup, and B6-03 intentionally made absence more honest
+than a hostname fallback. B6-04's guarded `Role at Employer` title candidate
+in `jobs/sources/jobweb.ts:176-194` is a different, title-owned source path;
+it is not evidence that a body mention is an employer. Nor may C use the
+current unrestricted fetched text in `enrich.ts:184-198`: B7-02 is replacing
+that text precisely because a multi-listing page has no reliable owner.
+
+`JsonLdOpportunity` currently retains neither `hiringOrganization` nor the
+record URL/description needed to bind it to a selected job
+(`structured-extract.ts:7-34,988-1012`). B7-02 already requires the latter
+two and a single `resolveJobPostingScope()` result. This item must build on
+that one ownership boundary rather than introduce an employer-specific second
+HTML parser.
+
+**Implement one shared, tiered, source-owned employer decision.** Add a pure
+helper near the opportunity extraction utilities (for example
+`web/src/lib/opportunities/employer-identity.ts`) whose inputs make ownership
+explicit: an optional adapter catalog label, an optional selected
+`JobPosting.hiringOrganization.name`, and zero or more text values marked
+`source-record-owned` or `fetched-posting-owned`. It must return an explicit
+resolution such as `declared`, `none`, or `ambiguous`, not a bare regex match.
+The helper is reusable by any adapter that owns one structured record and by
+the B7-02 scope; it has no source host, employer, ATS, or company-name table.
+
+1. Retain `hiringOrganization.name` only on the **selected** `JobPosting`
+   record. Extend B7-02's provenance addition to `JsonLdOpportunity` with that
+   optional string (accept a nonempty schema string or an object `.name`, then
+   apply the existing bounded subtitle/name cleanup). A `JobPosting` from an
+   unproven/foreign page must never donate it. A unique selected structured
+   organization is the highest evidence tier.
+2. The next tier is a **unique direct employer declaration** in text already
+   proved owned. Parse only a bounded opening paragraph/window, never a whole
+   document. Require a self-identifying first-person/possessive construction
+   such as `At <Organization>, our people/employees/team ...` or `When you
+   join <Organization>, ...`; require one short plausible organization name,
+   normalize it for equality only, and retain the original cleaned spelling.
+   Reject indirect forms (`our client`, `partner`, `vendor`, `on behalf of`,
+   `for <Organization>`), headings/links, a bare capitalized organization,
+   and any candidate outside an owned source-record/scope. This deliberately
+   accepts the measured Himalayas shape but cannot turn a board footer,
+   benefits reference, or foreign sibling into an employer.
+3. Resolve in this order: one selected `hiringOrganization` that agrees with
+   the one direct declaration; otherwise one selected `hiringOrganization`;
+   otherwise one direct declaration; otherwise `none` and preserve the
+   adapter's existing company label. The raw Himalayas API description may
+   enter only because it is one selected record with the same title and
+   canonical `applicationLink`/`guid`; prefer `description`, not a loose
+   excerpt. Feed fetched-page text only after B7-02 returns `status: "owned"`.
+   An adapter catalog label alone is a lower-tier fallback, so a unique direct
+   declaration may correct it without a special case.
+4. If two normalized direct declarations differ, if two selected structured
+   organizations differ, or if the selected structured organization conflicts
+   with the direct declaration, return `ambiguous` and set `company` absent
+   for that item. Do not choose the first candidate, revert to the catalog
+   label, or ask an LLM to break the tie. This is the required fail-closed
+   conflict behavior. With no declaration at all, do not manufacture a
+   conflict: retain the adapter field exactly as today.
+5. Apply the helper while mapping the source record in
+   `himalayas.ts:34-70`, before scoring/dedup, and then let the B7-02 scoped
+   enrichment path in `enrich.ts:181-239` re-run the same evidence hierarchy
+   when a later selected page supplies a higher tier. The rerun must be
+   monotonic: unproven page text cannot erase or replace the raw-record result,
+   and an owned page can only upgrade it with one agreed, higher-tier fact or
+   make a real high-tier conflict silent. Preserve the raw `description` and
+   the B7-02 `fetchedPostingScope` contract; employer correction must not make
+   unowned text eligible for summary, work-mode, role-kind, visa, or a BYOK
+   prompt.
+
+**Required tests and adversarial cases.**
+
+- Add focused pure-helper tests for the measured abstract shape: an adapter
+  label `Workday` plus one source-record-owned `At Luminare Health, our
+  people...` declaration resolves to Luminare Health. Cover no declaration
+  (catalog label remains), a bare/late organization mention (ignored), client/
+  partner/vendor/on-behalf-of language (ignored), and two different direct
+  declarations (explicit `ambiguous`, mapped company absent). These are
+  synthetic short fragments, not copied listings.
+- Add a Himalayas adapter regression beside
+  `web/src/lib/jobs/scoring.test.ts:353-371` (or a dedicated source-adapter
+  test): the selected title/link, `companyName: "Workday"`, and owned
+  description yield `company: "Luminare Health"`. Preserve the existing
+  ordinary Himalayas fixture with `Example Energy` and no declaration, proving
+  normal catalog labels are not discarded.
+- Extend the B7-02 selected-URL scope fixtures in
+  `structured-extract.test.ts` / `enrich.test.ts` with
+  `hiringOrganization`. A unique matching selected record can supply it; a
+  foreign first `JobPosting`, an unproven multi-listing page, or a selected
+  structured/body disagreement cannot. Assert the disagreement maps no
+  employer rather than the first record's label. This proves B7-05 consumes
+  B7-02's one scope instead of reintroducing unscoped parsing.
+- Map the corrected raw job through `scoredJobToJob()` and assert the feed/
+  report employer is Luminare Health, never Workday. Add a dedup/scoring
+  regression showing the resolved company is the input used consistently by
+  `jobDedupKey()` and `scoreIndustryFit()`; retain the existing priority rules
+  and do not alter source ranking to compensate. Preserve
+  `mapper.test.ts:81-94`'s absent-company behavior.
+- Preserve every B7-02 no-provider and unproven-scope test: this resolver is
+  pure, issues no fetch, does not call a model, and cannot cause a detailed
+  report to fetch or prompt with new text. Add an integration assertion that a
+  failed/unproven fetched page leaves the already-resolved source-record
+  employer intact but adds no fetched summary/evidence.
+
+**Blast radius and security floor.** The corrected employer changes only when
+a single owned declaration or selected structured organization proves it. It
+then flows through feed cards, the job report header, preference labels,
+dedup, and the existing second score/facet/ranking path; that is desirable
+because the present `Workday` fact is wrong. Retrieval windows, source fetch
+count, raw content collection, and source priorities remain unchanged. The
+resolver is deterministic Tier-0 parsing, adds no provider/model/credential
+use, and must retain B7-02's provider-before-fetch and no-provider zero-fetch/
+zero-model-call guarantee. An unowned, missing, or conflicting identity is
+silent rather than a hostname, an ATS brand, or an inferred employer.
+
+**Search scope / no-POLICY result.** I checked Round-7 A's exact observation;
+the safely reachable Himalayas API selected record and its identity fields;
+the blocked detail-page response (as non-evidence); independently indexed
+exact-role and source-family corroboration; the Himalayas adapter, all current
+company consumers, title/hostname safeguards, B7-02's scope design, and their
+tests. The safe rule is a generic evidence hierarchy with explicit ambiguity,
+not a product decision or a one-off correction. **B7-05 is a separate CODE
+item dependent on B7-02's ownership scope; no POLICY escalation remains.**
+
+---
