@@ -12309,3 +12309,30 @@ no C code this turn; both remain named findings in the next A real-data pass
 and remain inside §1j's gate.
 
 ---
+
+### Round 7 — Agent A
+
+**STATUS: IN PROGRESS.** Agent A's post-C measurement is under way. The
+manager-held §0d lock remains unchanged, as directed.
+
+#### Fixture measurement — COMPLETE
+
+Rendered the established maximal JobReport and EventReport fixture through the
+real exported components with `renderToStaticMarkup`, not a mock or a source
+inspection. A throwaway test checked the same 32-element inventory used in
+prior rounds: job chips/header/actions/facts/timeline/skills/two-column
+content/why block (18) and event chips/header/actions/facts/costs (14). **All
+32 are present in the required fixture shape/order: 0 of 32 different, 0%.**
+The only intentional plate deviations remain outside the denominator under
+the standing rulings; no newly observed fixture difference is being hidden by
+that exclusion list.
+
+Visual evidence was also refreshed from the complete 20-page source PDF, not
+text extraction: all pages were rendered to PNG, skimmed once, and plates
+02/03 reviewed in detail. Plate 04 again confirms the display vocabulary
+`Industry summit`; it does not reopen withdrawn exclusion (j).
+
+The disposable harness passed (`1/1`) and was deleted before this commit,
+along with `tmp/pdfs/` render artifacts. Real-data measurement is next.
+
+---
