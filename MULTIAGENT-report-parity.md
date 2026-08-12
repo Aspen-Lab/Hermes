@@ -15063,3 +15063,114 @@ not the function's return contract), which the caller already maps to
 fixed) raw parse produced, correctly silent if that was itself silent.
 Same subtitle-omission guarantee as every item above when everything
 upstream is also silent.
+
+#### B8-05 — R4, job summary chrome: `summarizeJob` has no positive-content floor — `WRONG DATA` (chrome text presented as the role description)
+
+**File:** `web/src/lib/jobs/summarize.ts`, `scoreSentences` (lines 83-115)
+and `bestCombination` (117-144). Confirmed A's finding against source; no
+B7-0x item touches this file (checked — B7-01..B7-05 all target event
+identity, job-posting ownership scope, venue parsing, and employer
+identity, never `summarize.ts`).
+
+**The mechanism, read from source.** `scoreSentences` rejects a sentence
+only via three **negative** checks: `NOISE_RE` (a fixed vocabulary list —
+EEO boilerplate, e-commerce widget text), `looksLikeScrapedChrome` (2+
+`"Label:"`-shaped colon markers), `endsWithTitleEcho` (trails into the
+posting's own title). Anything that survives all three is scored and
+becomes eligible for selection — **there is no floor requiring the
+survivor to actually contain positive evidence of role content.**
+`bestCombination` always returns the best-scoring combination of whatever
+survived, even if every survivor scores near-zero. `summarizeJob` returns
+`""` only when scoring rejects every sentence outright, not when the best
+surviving sentence is genuinely uninformative.
+
+**Checked A's four shapes against this mechanism, one at a time:**
+
+1. Markdown-link remnant (a stray `]` mid-sentence) — **not this
+   mechanism.** The surrounding sentence likely has real content and a
+   real score; the defect is a leftover formatting character that
+   survived text cleanup. This needs a text-cleanup fix
+   (`cleanJobDescription`/page-text furniture-stripping), not a scoring
+   change — flagging so C doesn't try to solve it with the floor below.
+2. Pure navigation chrome ("More about this employer More jobs from this
+   employer University Profile") — **exactly the no-floor gap.** No
+   colons, no `NOISE_RE` vocabulary, no title echo — survives all three
+   negative checks — and has no keyword match, no section heading, no
+   role verb, so a positive floor would correctly silence it.
+3. Forum/pagination chrome ("Job vacancies looking for OpenMC skills
+   Announcements") — **the no-floor gap, with a caveat.** Same as above,
+   *unless* the reader's profile happens to have a matched keyword that
+   appears in the chrome text itself (plausible here — "OpenMC" reads
+   like a real research-tool keyword some profile could plausibly match).
+   A floor built as "keyword match OR role verb OR section heading" would
+   **not** catch this specific case if the keyword match fires; a floor
+   built as "role verb OR section heading only" would catch it but is a
+   stricter bar — see the fix direction below for why I'm not picking one
+   for C.
+4. Markdown-heading-plus-newsletter-CTA — contains exactly one
+   `"Qualifications:"` colon label, and `looksLikeScrapedChrome` requires
+   **two or more** to fire. Round 6 already named this shape; still
+   unguarded two rounds later, confirmed live again this round by A.
+
+**Verified live this round: chrome-carrying summaries come from both
+upstream sources, not only the low-fidelity snippet.** Built a small
+pipeline check (`buildDailyJobPool()` then `scoredJobToJob()` on the
+result) and found, in the same fresh pool, summaries built from **both**
+`item.pageText` (fetched, furniture-stripped — B6-07's own upgrade) and
+`item.description` (the raw search snippet, on items that were never
+successfully enriched). This matters because B5-07's original closing note
+(quoted by A) said the real fix was "extracting the role description from
+the fetched page rather than the low-fidelity search snippet" — **that
+upgrade already shipped (B6-07)** and chrome still gets through on
+`pageText`-sourced summaries, so fetching the real page is not sufficient
+by itself; the floor needs to live in `summarize.ts`'s own scoring
+regardless of which upstream source supplied the text.
+
+**Fix direction.** Add a minimum positive-signal requirement to
+`scoreSentences` before a sentence is eligible for `bestCombination` at
+all — at minimum, require `matchedCount > 0 || sectionScore > 0 ||
+roleScore > 0` (i.e., reject a survivor whose only points come from
+`positionScore`/`readableLengthScore`, which are structural/cosmetic, not
+evidence of content). This is the **minimal** version and is what I
+verified against the existing test suite below. It will not catch shape 3
+above when a keyword coincidentally matches chrome text — say this to C
+explicitly rather than claiming the fix is complete; a stricter version
+(excluding bare keyword-match as sufficient on its own) would catch it but
+changes the meaning of `matchedCount`'s contribution more broadly and
+needs its own risk pass against real postings before landing, which is
+more than this round has live evidence to justify. Land the minimal floor
+now; treat the stricter version as a follow-up if the next round's live
+sample still shows keyword-matched chrome. Handle finding 1 (Markdown-link
+remnant) separately, as a text-cleanup fix, not part of this floor.
+
+**Tests at risk — verified by tracing each existing case, not assumed:**
+`web/src/lib/jobs/summarize.test.ts` — the one case worth flagging by name
+is **"does not apply the title-echo check when no title is supplied"**
+(lines 135-147): its expected sentence ("Great opportunity now open for
+immediate consideration Marketing Intern Ion Exchange Materials Ltd.") has
+no section heading and no `ROLE_RE` verb, so it survives the minimal floor
+**only because** `"marketing"` (a supplied matched keyword) is a substring
+of `"Marketing Intern"` in that sentence — `matchedCount > 0`. Confirmed
+this by re-reading `termMatches`' substring check. This test should keep
+passing unchanged under the minimal floor; it would **break** under the
+stricter "role verb or section only" variant, which is exactly why I am
+not recommending that variant without a dedicated pass. The
+`REAL_POSTING_FIXTURES`-based tests (lines 26-34, 78-84) all have real
+section headings or role verbs in their expected sentences — safe.
+
+**Blast radius:** `summarizeJob` has one caller,
+`web/src/lib/jobs/mapper.ts:136-138`. No other file reads its output.
+
+**What renders after this guard fires:** confirmed from source, not
+assumed. `summarizeJob` returning `""` → `mapper.ts:137`'s
+`summarizeJob(...) || undefined` → `job.summary` is `undefined` →
+`app/jobs/[id]/page.tsx:935`'s `roleSummary = cleanJobDescription(job.summary)
+|| undefined` → `undefined` → `splitIntoBullets(undefined)` returns `[]`
+(`page.tsx:190-192`, confirmed: `if (!source) return []`) →
+`roleBullets.length === 0`. The section wrapper at `page.tsx:1143` is
+`{(roleBullets.length > 0 || materials.length > 0) && (...)}`, and the
+bullets sub-block at `page.tsx:1145` is separately guarded by
+`{roleBullets.length > 0 && (...)}` — so when both are empty the whole
+section is omitted, and even when application materials keep the outer
+block alive, the role-description sub-heading specifically stays silent.
+No heading over nothing, confirmed by reading the render, not inferred.
