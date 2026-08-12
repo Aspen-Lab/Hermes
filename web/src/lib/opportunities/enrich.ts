@@ -1,6 +1,6 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
-import { looksLikeEventTitle } from "@/lib/events/sources/eventweb";
+import { bestEventTitleSegment } from "@/lib/events/sources/eventweb";
 import type { RawJobItem } from "@/lib/jobs/types";
 import { classifyRoleKind } from "@/lib/jobs/role-kind";
 import { extractEventDetails } from "./event-details";
@@ -125,17 +125,11 @@ export async function enrichEventCandidates(
     if (!hasExtractedEventSignal(structured, details, roster)) return item;
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const location = formatOpportunityPlace(place) || item.location;
-    // B4-01 (R1/R8). The real page's own JSON-LD/og:title name is fetched
-    // and parsed right here, but was silently discarded — name was decided
-    // once at ingestion from a search result's title/snippet and never
-    // revisited. Prefer it once it clears the same "reads like a title, not
-    // a sentence" guard eventNameFrom() applies at ingestion; fall back to
-    // today's value whenever it is absent or fails the guard, so this only
-    // ever upgrades the name, never invents or degrades one.
-    const name =
-      structured?.name && looksLikeEventTitle(structured.name)
-        ? structured.name
-        : item.name;
+    // B6-01: reuse the guarded ingestion title segment. A fetched title can
+    // improve the name only when it contains its own non-chrome event title.
+    const name = structured?.name
+      ? bestEventTitleSegment(structured.name, item.url) ?? item.name
+      : item.name;
     return {
       ...item,
       name,

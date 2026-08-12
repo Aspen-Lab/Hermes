@@ -12162,6 +12162,24 @@ reasoning is in §1p.
 
 ---
 
+### Round 6 — Agent C
+
+#### B6-01 — guarded fetched event title segments
+
+**STATUS: COMPLETE.** Extracted `bestEventTitleSegment()` from
+`eventNameFrom()` without changing the latter's fallback tiers, then made
+event enrichment prefer only a fetched title segment that passes the same
+ingestion guards. Added a JSON-LD regression fixture proving
+`Home - International Battery Summit` enriches to `International Battery
+Summit`, rather than retaining page chrome.
+
+**Gate:** 83 files / 938 tests, 937 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o

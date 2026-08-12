@@ -349,11 +349,10 @@ function nameFromUrlSlug(url: string): string | undefined {
   return words.charAt(0).toLocaleUpperCase() + words.slice(1);
 }
 
-export function eventNameFrom(
+export function bestEventTitleSegment(
   title: string,
-  snippet: string,
   url?: string,
-): string {
+): string | undefined {
   // B5-06/R13 gap 3, the first half. The split only ever recognised a pipe,
   // middle dot, en dash or em dash — a plain ASCII hyphen ("Deadline
   // extended - SiteName") was never a recognised separator at all, so a
@@ -386,6 +385,22 @@ export function eventNameFrom(
     const pool = eventLike.length > 0 ? eventLike : informative;
     return pool.reduce((best, part) => (part.length > best.length ? part : best));
   }
+
+  return undefined;
+}
+
+export function eventNameFrom(
+  title: string,
+  snippet: string,
+  url?: string,
+): string {
+  const titleSegment = bestEventTitleSegment(title, url);
+  if (titleSegment) return titleSegment;
+
+  const segments = title
+    .split(/\s+[-|·–—]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
   // Every title segment is chrome. A deep event URL's slug is the most
   // reliable remaining source of the actual event name — try it before the

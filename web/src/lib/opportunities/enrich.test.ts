@@ -126,6 +126,26 @@ describe("event detail enrichment", () => {
     });
   });
 
+  it("uses a guarded event-title segment from fetched structured data", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`<script type="application/ld+json">
+          {
+            "@type": "Event",
+            "name": "Home - International Battery Summit",
+            "location": { "address": { "addressLocality": "Chicago" } }
+          }
+        </script>`),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichEventCandidates([event(3)]);
+
+    expect(enriched.name).toBe("International Battery Summit");
+  });
+
   it("keeps city coverage above 50% for lean representative event pages", async () => {
     const pages = [
       "cambridge-solid-state-battery-summit.html",
