@@ -282,11 +282,10 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:25 UTC. Round-7 C
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       C — implement B7-06 only: separate raw discovery/scoring
-                   description from an optional source-owned event report
-                   summary, with the listed typed-Event, guarded-OG, and
-                   adapter authority hierarchy. Do not broaden ranking,
-                   fetches, providers, or the B7-01 title authority rules.
+WHOSE TURN:       A — independently remeasure B7-06 only: fixture, fresh event
+                   source/pipeline summaries, report silence versus owned
+                   evidence, ranking invariance, and prompt/no-provider
+                   boundaries. Measure only; do not diagnose or change code.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -300,38 +299,33 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 C FOLLOW-UP IN PROGRESS.** B7-06 separates raw
-                   is 0 of 32 different (0%). B7-06 confirms a generic
-                   snippet-to-report provenance collapse, while correcting
-                   the undocumented historical 0/2 identities as not
-                   reproducible. SolarPACES, selected scope/no-provider,
-                   TiRT regression, and employer conflict contracts hold;
-                   unavailable targets remain non-evidence. B7-04 remains
-                   subsumed by B7-02. Full gate: 85 files / 978 tests, 977
-                   pass (documented benchmark city drift); typecheck clean;
-                   known quiz lint only.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET.** B7-06 is the sole C
-                   item: source-owned report-summary authority, fail closed.
+STATUS:           **B7-06 C COMPLETE; A REMEASUREMENT NEXT.** Fixture was 0
+                   of 32 different before B7-06. Raw discovery/scoring text is
+                   now separated from complete, tagged report evidence; full
+                   C gate: 85 files / 991 tests, 990 pass with only the
+                   documented benchmark city drift; typecheck clean; known
+                   quiz lint only.
+LAST DIFFERENCE:  **0% fixture / real data NOT YET REMEASURED AFTER B7-06.**
+                   A must independently measure the new authority boundary.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 10:05 UTC. B completed
-B7-06 and C now implements that one guide only.
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 10:25 UTC. C completed
+B7-06 and its manager-requested proof follow-up; A now remeasures only.
 `HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 08:24 UTC` for the
 manager-held A measurement.
 
-**WHOSE TURN: C.** Implement B7-06's source-owned event report-summary
-authority boundary only. Keep raw discovery description for scoring/ranking;
-source-record, typed Event description, then guarded paired OG description
-are the only report sources. Silence is required where authority is absent.
+**WHOSE TURN: A.** Independently remeasure B7-06: the 32-element fixture;
+fresh event pools and at least three source pages; raw ranking invariance;
+report silence for eventweb/confstech discovery copy; explicit summaries for
+ccfddl/researchseminars or safe typed/guarded-OG page evidence; and prompt/
+no-provider behavior. Measure only; do not diagnose or change product code.
 
-**STATUS / LAST DIFFERENCE:** fixture is 0 of 32 different (0%); the real
-source-alignment gate is NOT MET. B7-06 confirmed an eventweb snippet can
-reach report copy without page authority; its original 0/2 live sample cannot
-be replayed because the identities were not retained. SolarPACES now resolves
-to the owned conference identity; selected scope/no-provider, TiRT regression,
-and employer-conflict contracts hold. Unavailable/drifted targets remain
+**STATUS / LAST DIFFERENCE:** fixture was 0 of 32 different (0%) before B7-06;
+the post-B7-06 real gate is unknown. C's full gate is 990/991 with only the
+documented live benchmark drift. SolarPACES, selected scope/no-provider, TiRT,
+and employer contracts remain binding; unavailable/drifted targets remain
 non-evidence. Standing exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
