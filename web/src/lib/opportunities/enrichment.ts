@@ -597,11 +597,11 @@ export function buildEventEnrichmentPrompt(
       fees: event.fees,
       travelGrant: event.travelGrant,
       invitationLetter: event.invitationLetter,
-      shortDescription: event.shortDescription,
+      ...(event.reportSummary ? { shortDescription: event.reportSummary.text } : {}),
     },
     rules: {
       condensedDescription:
-        "State what happens at the event in at most two complete sentences. Condense only the supplied shortDescription and fetchedPageText; do not add facts or marketing language.",
+        "State what happens at the event in at most two complete sentences. Condense only the supplied source-owned shortDescription and fetchedPageText; do not add facts or marketing language.",
       judgedAttendees:
         `Return at most ${MAX_EVENT_JUDGED_ATTENDEES} exact names from unjudgedAttendees, prioritised for the user. Keep why to at most 25 words. Never add or rename a person or organisation. ` +
         "Some supplied names are website furniture rather than real attendees; set isAttendee false for those and they will be discarded.",

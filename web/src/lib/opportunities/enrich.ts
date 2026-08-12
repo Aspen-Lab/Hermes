@@ -29,6 +29,8 @@ function hasExtractedEventSignal(
 ): boolean {
   return Boolean(
     structured?.typedOpportunityName ||
+      structured?.typedOpportunityDescription ||
+      structured?.openGraphDescription ||
       structured?.startDate ||
       structured?.endDate ||
       structured?.place ||
@@ -133,6 +135,12 @@ export async function enrichEventCandidates(
     // B6-01: reuse the guarded ingestion title segment. A fetched title can
     // improve the name only when it contains its own non-chrome event title.
     const typedName = structured?.typedOpportunityName;
+    const pageSummary = structured?.typedOpportunityDescription
+      ? structured.typedOpportunityDescription
+      : structured?.openGraphDescription && structured.openGraphTitle &&
+          bestEventTitleSegment(structured.openGraphTitle, item.url)
+        ? structured.openGraphDescription
+        : undefined;
     const name = typedName
       ? bestEventTitleSegment(typedName, item.url) ??
         (looksLikeEventTitle(typedName) ? typedName : undefined) ??
@@ -163,6 +171,9 @@ export async function enrichEventCandidates(
       travelGrant: item.travelGrant ?? details?.travelGrant,
       invitationLetter: item.invitationLetter ?? details?.invitationLetter,
       expectedSize: item.expectedSize ?? details?.expectedSize,
+      ...(pageSummary
+        ? { reportSummary: { text: pageSummary, authority: "page-owned" as const } }
+        : {}),
     };
   });
 

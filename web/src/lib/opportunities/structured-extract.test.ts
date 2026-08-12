@@ -360,6 +360,15 @@ describe("body-text place fallback", () => {
     });
     expect(extractOpportunityPageDetails(html, "event").typedOpportunityName).toBeUndefined();
   });
+
+  it("retains only one typed Event description and separates guarded OG evidence", () => {
+    const typed = `<script type="application/ld+json">{ "@type": "Event", "name": "Battery Summit", "description": "Typed source summary." }</script>`;
+    expect(extractOpportunityPageDetails(typed, "event").typedOpportunityDescription).toBe("Typed source summary.");
+    const ambiguous = `${typed}<script type="application/ld+json">{ "@type": "Event", "name": "Other Event", "description": "Other summary." }</script>`;
+    expect(extractOpportunityPageDetails(ambiguous, "event").typedOpportunityDescription).toBeUndefined();
+    const og = '<meta property="og:title" content="Battery Summit | Example"><meta property="og:description" content="OG source summary.">';
+    expect(extractOpportunityPageDetails(og, "event")).toMatchObject({ openGraphTitle: "Battery Summit | Example", openGraphDescription: "OG source summary." });
+  });
 });
 
 describe("country must belong to the city", () => {

@@ -54,8 +54,11 @@ export interface MetaOpportunityDetails {
 export interface OpportunityPageDetails {
   /** A name asserted by a matching schema.org Event record, never page chrome. */
   typedOpportunityName?: string;
+  /** Description from exactly one typed Event record. */
+  typedOpportunityDescription?: string;
   /** Low-authority page metadata; callers must apply their normal title guard. */
   openGraphTitle?: string;
+  openGraphDescription?: string;
   startDate?: string;
   endDate?: string;
   /** When the posting went up. Jobs carry this instead of a start date. */
@@ -1005,7 +1008,7 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   // changes which employment type was stated, only its letter case.
   const employmentType = nonEmptyString(node.employmentType)?.toLowerCase();
   const url = kind === "job" ? nonEmptyString(node.url) : undefined;
-  const description = kind === "job" ? nonEmptyString(node.description) : undefined;
+  const description = nonEmptyString(node.description);
   const organization = kind === "job"
     ? (isRecord(node.hiringOrganization)
       ? nonEmptyString(node.hiringOrganization.name)
@@ -1573,8 +1576,9 @@ export function extractOpportunityPageDetails(
   kind?: JsonLdOpportunity["kind"],
 ): OpportunityPageDetails {
   const jsonLd = extractJsonLdOpportunities(html);
+  const typed = kind ? jsonLd.filter((item) => item.kind === kind) : [];
   const structured = kind
-    ? jsonLd.find((item) => item.kind === kind)
+    ? typed[0]
     : jsonLd[0];
   const openGraph = extractOpenGraphTags(html);
   const meta = extractMetaOpportunityDetails(html);
@@ -1591,6 +1595,12 @@ export function extractOpportunityPageDetails(
       ? { typedOpportunityName: structured.name }
       : {}),
     ...(openGraph.title ? { openGraphTitle: openGraph.title } : {}),
+    ...(openGraph.description ? { openGraphDescription: openGraph.description } : {}),
+    // A page with several Event records does not prove which description owns
+    // the selected result.  Fail closed instead of choosing the first one.
+    ...(kind === "event" && typed.length === 1 && typed[0]?.description
+      ? { typedOpportunityDescription: typed[0].description }
+      : {}),
     startDate: structured?.startDate ?? meta.start,
     endDate: structured?.endDate ?? meta.end,
     datePosted: structured?.datePosted,

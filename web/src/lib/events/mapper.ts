@@ -138,6 +138,7 @@ export function scoredEventToEvent(item: ScoredEventItem, locationPreferences?: 
     invitationLetter: item.invitationLetter,
     expectedSize: item.expectedSize,
     shortDescription: cleanEventDescription(item.description),
+    reportSummary: item.reportSummary,
     relevanceReason: item.relevanceReason,
     facetPreferenceReason: item.facetPreferenceReason,
     linkOfficial: item.url,

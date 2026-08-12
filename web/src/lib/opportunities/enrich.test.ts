@@ -171,6 +171,21 @@ describe("event detail enrichment", () => {
     expect(enriched.name).toBe("International Battery Summit");
   });
 
+  it("prefers one typed Event description, then a guarded paired OG description", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`
+      <script type="application/ld+json">{ "@type": "Event", "name": "Battery Summit", "description": "Typed summary." }</script>
+      <meta property="og:title" content="Battery Summit | Example"><meta property="og:description" content="OG summary.">
+    `), { status: 200 })));
+    const [typed] = await enrichEventCandidates([event(301)]);
+    expect(typed.reportSummary).toEqual({ text: "Typed summary.", authority: "page-owned" });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(
+      '<meta property="og:title" content="Battery Summit | Example"><meta property="og:description" content="OG summary.">',
+    ), { status: 200 })));
+    const [og] = await enrichEventCandidates([event(302)]);
+    expect(og.reportSummary).toEqual({ text: "OG summary.", authority: "page-owned" });
+  });
+
   it("accepts a host-matching typed Event name by its structured provenance", async () => {
     const item = { ...event(31), url: "https://solarpaces.example.org/conference" };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`

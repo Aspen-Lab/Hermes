@@ -13689,3 +13689,22 @@ TiRT, employer, exclusions, and all security rules remain binding.
 Chicago assertion). `tsc --noEmit` clean; ESLint only known
 `src/components/persona/quiz.tsx:46`; `git diff --check` clean. B7-06 record
 is commit `5cfffb3`, pushed. Next is C; manager lock remains unchanged.
+
+#### C7-06 — source-owned event report summary boundary — COMPLETE @ 2026-08-12 10:15 UTC
+
+Implemented B7-06 without changing raw discovery description, scoring, ranking,
+provider resolution, or fetch count. Raw and mapped events now carry optional
+authority-tagged `reportSummary` evidence. Only ccfddl's explicit description
+and researchseminars' direct abstract create source-record evidence;
+confstech synthesis and eventweb search snippets remain discovery-only.
+The existing event fetch pass promotes exactly one typed Event description, or
+a guarded paired OG description, to page-owned evidence; ambiguous Event
+records and unguarded metadata are silent. The visible report and BYOK prompt
+now consume this evidence only, including silence for legacy/tagless records.
+
+Focused verification passed: 4 files / 93 tests, TypeScript clean, and diff
+check clean. Full gate was run: the documented live benchmark city-drift and
+the known quiz lint remain; the pre-existing report test was updated for the
+new source-owned contract and passes in focused rerun. No credentials, new
+fetch/model path, test deletion, branch, worktree, or PR. Next: Agent A
+remeasures B7-06; manager lock remains unchanged.

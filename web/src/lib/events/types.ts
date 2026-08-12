@@ -43,6 +43,8 @@ export interface RawEventItem {
   /** B4-10. The SCALE tile's field — genuinely never populated before. */
   expectedSize?: Event["expectedSize"];
   description: string;
+  /** Kept separate from discovery text: only this value may reach a report. */
+  reportSummary?: Event["reportSummary"];
   url: string;
   registrationUrl?: string;
   /** Venue prestige, e.g. "CCF A" / "CORE A*". */

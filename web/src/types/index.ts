@@ -171,6 +171,11 @@ export interface Event {
   invitationLetter?: boolean;
   expectedSize?: number;
   shortDescription: string;
+  /** A source-owned summary that may be stated in an event report. */
+  reportSummary?: {
+    text: string;
+    authority: "source-record" | "page-owned";
+  };
   relevanceReason: string;
   /** Shown separately when weak facet history materially changed rank. */
   facetPreferenceReason?: string;

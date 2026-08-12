@@ -85,6 +85,9 @@ export function rsTalkToRawItem(talk: RsTalk): RawEventItem | null {
       .filter(Boolean)
       .join(" ")
       .slice(0, 1200),
+    ...(talk.abstract?.trim()
+      ? { reportSummary: { text: talk.abstract.trim(), authority: "source-record" as const } }
+      : {}),
     url: `https://researchseminars.org/talk/${seminarId}/${talk.seminar_ctr}/`,
     tags: expandRsTopics(talk.topics ?? []),
   };

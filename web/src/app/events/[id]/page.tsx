@@ -1783,7 +1783,7 @@ export function EventReport({
     sector,
   );
   const description = resolveEventReportDescription(
-    cleanEventDescription(event.shortDescription),
+    event.reportSummary ? cleanEventDescription(event.reportSummary.text) : undefined,
     enrichment,
   );
   const travelGrant = clean(event.travelGrant);

@@ -1374,6 +1374,10 @@ describe("EventReport", () => {
       baseEvent({
         shortDescription:
           "than a quarter of a century. It will review the criteria necessary to achieve such extended life in commercially manufactured Li-ion cells. [...] This work presents an in situ diagnosis system of large capacity lithium-ion battery based on a sponge-type battery swelling sensor, w",
+        reportSummary: {
+          text: "than a quarter of a century. It will review the criteria necessary to achieve such extended life in commercially manufactured Li-ion cells. [...] This work presents an in situ diagnosis system of large capacity lithium-ion battery based on a sponge-type battery swelling sensor, w",
+          authority: "source-record",
+        },
       }),
     );
 
@@ -1388,6 +1392,10 @@ describe("EventReport", () => {
       baseEvent({
         shortDescription:
           "The source repeats a long marketing introduction. A second source sentence follows.",
+        reportSummary: {
+          text: "The source repeats a long marketing introduction. A second source sentence follows.",
+          authority: "source-record",
+        },
       }),
       "PhD Year 3",
       { registered: false, submitted: false },
