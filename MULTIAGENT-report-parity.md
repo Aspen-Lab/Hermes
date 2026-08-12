@@ -12336,3 +12336,30 @@ The disposable harness passed (`1/1`) and was deleted before this commit,
 along with `tmp/pdfs/` render artifacts. Real-data measurement is next.
 
 ---
+
+#### Fresh real-pool measurement — COMPLETE
+
+Built both current pools through `buildDailyEventPool()` /
+`buildDailyJobPool()` with isolated in-memory caches (a genuine fresh source
+pass), then mapped with `scoredEventToEvent()` / `scoredJobToJob()` and
+rendered each with the real report component. The profile file was read only
+in the benchmark-test shape; key presence was boolean-checked only. It ran
+Tier 0 (`feedAiApiKey` absent), as expected.
+
+Six rendered events: WSDM 2027, WACV 2027, IEEE VR 2027, VLDB 2027, IJCAI
+2026, and one research seminar. All six H1s matched their mapped names; all
+six rendered only sourced facts (two or three tiles), with zero `See event
+page` leaks. Six rendered jobs: three Arbeitnow jobs and three Himalayas
+jobs. All six rendered an employer without a hostname/board fallback or a
+dangling subtitle; all six had zero `See posting` leaks. The three Himalayas
+summaries are readable posting-body prose rather than the round-6
+markdown/filter/newsletter chrome shapes; the three Arbeitnow postings had
+no report summary. Ranking was observed before mapping; page-text summaries
+are presentation data only and did not alter the fresh pool's returned order.
+
+The source pass itself returned `eventweb: 0`, `jobweb: 0`, `adzuna: 0`, and
+`usajobs: 0`; this limits this fresh sample's event-web continuity coverage
+but does not make any prior named real finding disappear. No credential or
+fetched third-party text was recorded. Continuity repros follow separately.
+
+---
