@@ -11420,3 +11420,137 @@ confirmed by grep for `fallbackCompany|hostname` in the test file — no
 hits) would need rewriting per §3, but there is nothing to rewrite.
 
 ---
+
+##### B6-04 — the employer is already in the title: extract `"... at <Employer>"` as a new candidate, costed before JSON-LD `hiringOrganization`. `WRONG DATA`, R7/Ruling 26. The cheapest lead on the list, per Ruling 27 point 3.
+
+**The repro, quoted exactly as Ruling 27 quotes it, not re-scraped:** a real
+posting titled `Internship, Battery Engineering (Summer 2026) at Tesla`
+renders `EV.Careers` as the employer. Tesla's name is sitting in the title
+the parser already holds; nothing extracts it.
+
+**Cause, confirmed against the live code.** `jobweb.ts:168`,
+`webResultToRawJobItem()`:
+
+```ts
+const parts = title.split(/\s+[-–—|·]\s+/);
+```
+
+The split class is exactly four punctuation separators — hyphen, en dash, em
+dash, pipe, middle dot. **The English word "at" is not one of them, and
+never has been.** `"Internship, Battery Engineering (Summer 2026) at
+Tesla"` contains none of those four characters, so `parts` is a
+**single-element array** — the whole string is `roleTitle`, and
+`parts.slice(1)` (the candidate pool the company guard chain runs over,
+`:176-187`) is **empty**. `.find()` on an empty array is `undefined`, and
+the existing `|| host` fallback (Ruling 26's own finding) takes over.
+
+**Why the rendered value is `EV.Careers` and not a lowercase hostname —
+traced by hand against the real guard functions, not re-fetched, flagged as
+inferred rather than independently confirmed.** A's own table caption notes
+titles are "truncated where long"; the most likely explanation, consistent
+with every guard's actual behaviour, is that the full title carries a
+trailing `" | EV.Careers"` or similar site-suffix segment A's quote dropped
+as the uninteresting part. If so: `parts = ["Internship, Battery
+Engineering (Summer 2026) at Tesla", "EV.Careers"]`. `"EV.Careers"` survives
+`cleanJobSubtitlePart` (not blank, not a call-to-action phrase), is not a
+`KNOWN_JOB_BOARD_DOMAINS` substring, not a season/cohort label, not a bare
+location. **The interesting part: `looksLikeHostBrand("EV.Careers",
+"ev.careers")` — traced directly against `shared.ts:221-226` — returns
+`false`.** `domainLabel = host.split(".")[0]` takes only `"ev"` (2
+characters) from the hostname `ev.careers`; the normalized candidate is
+`"evcareers"` (9 characters); `"ev".startsWith("evcareers")` is false
+because the domain label is *shorter* than the candidate, the exact
+direction `looksLikeHostBrand` was deliberately built to let through (the
+"Acme Corp" protection). **This is a real, previously unnamed gap**:
+`looksLikeHostBrand`'s domain normalization only ever looks at the label
+before the *first* dot, which is correct for an ordinary `company.com`
+domain but throws away the meaningful part of a "domain-hack" job-board
+brand like `ev.careers`, where the TLD itself carries the brand's meaning.
+Naming this for the record — it explains today's exact rendered value
+precisely — but not proposing a fix for it this round: it is a narrower,
+lower-value problem than the one below, and B5-03's own one-directional
+design already trades a narrow miss here for protecting real company names
+elsewhere, a trade worth keeping.
+
+**Fix direction — add the "at Employer" shape as one more candidate in the
+SAME guarded pool, not a second, separately-checked path.** This is the
+direct lesson of B6-01: do not build a second decision authority next to an
+existing one. Concretely:
+
+```ts
+const TITLE_EMPLOYER_RE = /\bat\s+([A-Z][\w&.,'’-]{1,60}?)\s*(?:[-–—|·(]|$)/;
+```
+
+Bounded: requires the captured name to start with a capital letter (real
+company names are proper nouns; this alone rejects "at your convenience"
+shaped false matches), stops at the next separator or an opening
+parenthesis or end of string, capped at 60 characters. **Prepend** this
+candidate (when found) to the existing `parts.slice(1)` pool before running
+`.find()` — so it goes through the **exact same** `KNOWN_JOB_BOARD_DOMAINS`
+/ `SEASON_COHORT_LABEL_RE` / `looksLikeBareLocation` / `looksLikeHostBrand`
+guard chain every other candidate already does, and is preferred first only
+because an explicit "at X" is a higher-confidence signal than a bare
+trailing segment, not because it skips scrutiny. **Traced against the
+repro**: candidate `"Tesla"` — not a job-board domain, not a season label,
+not a bare location, `looksLikeHostBrand("Tesla", "ev.careers")` →
+domainLabel `"ev"`, `"ev".startsWith("tesla")` → false, not rejected.
+`company` becomes `"Tesla"`. (If instead this posting were hosted directly
+at `tesla.com`, `looksLikeHostBrand("Tesla", "tesla.com")` → domainLabel
+`"tesla"`, `"tesla".startsWith("tesla")` → **true**, correctly rejected as
+redundant with the honest hostname already available in that case — the
+guard chain's own existing logic handles this correctly without any special
+case, exactly because the new candidate goes through it rather than around
+it.)
+
+**Cost against JSON-LD `hiringOrganization` (the path B5-03/Ruling 26 also
+named), per Ruling 27's instruction to cost this first.** This is
+materially cheaper on every axis:
+
+- **No fetch involved.** JSON-LD `hiringOrganization` only exists on a
+  *fetched* page (`enrichJobCandidates()`, during enrichment); this
+  extraction runs on the search-result title jobweb.ts already has in hand
+  at ingestion, before any page is fetched, so it also benefits every job
+  that is never enriched at all (the enrichment candidate pool is capped at
+  `MAX_ENRICHMENT_CANDIDATES = 40`, so a lower-ranked job in a large pool
+  may never get a fetch at all).
+- **One file, one function, reusing an existing guard chain** — versus
+  `hiringOrganization`'s five call sites across four files B5-03 already
+  scoped (`structured-extract.ts`'s type and extractor,
+  `job-details.ts`'s return shape, `enrich.ts`'s merge and
+  `hasExtractedJobSignal`, `jobs/mapper.ts`'s preference order).
+- **Unmeasured hit rate, same caveat B5-03 already named** — nobody has
+  checked what fraction of real job pages' JSON-LD actually carries
+  `hiringOrganization` (§1l's own measurement only checked `baseSalary`,
+  finding 0 of 15). The title-based extraction's hit rate is also
+  unmeasured, but it does not need a fetch to be attempted at all, so its
+  floor is not gated by JSON-LD prevalence.
+
+**This does not replace `hiringOrganization` — it is cheaper and should land
+first, per Ruling 27's own instruction, but it only fires when a title
+contains the word "at" followed by a capitalized name.** JSON-LD remains
+the more complete, structured answer for titles that don't follow this
+convention, and is still worth B5-03's own tier-2 scoping in a future round.
+Naming both, recommending this one first on cost, not claiming it makes the
+other redundant.
+
+**Blast radius.** Contained to `webResultToRawJobItem()`,
+`jobweb.ts:176-187` — the same guard chain, one more candidate merged in
+before the `.find()`. `company`/`companyOrLab` consumers are unchanged from
+B6-03's own list; this item only changes *which value* is more often
+correct, not who reads it.
+
+**Tests at risk.** `jobweb.test.ts` (14 tests) — read the `"company
+derivation"` block directly: none of its titles contains the word `" at "`
+followed by a capitalized name (grepped the file for `\bat\b` — zero hits
+outside comments), so **no existing test is at risk.** C should add: a
+title shaped `"<Role> at <Employer>"` with no other separator resolves
+`company` to `<Employer>`, not `host`; a title where "at" is followed by a
+lowercase word (e.g., "based at our campus") does not falsely extract a
+company (the capital-letter requirement is the guard against this, worth
+its own explicit test); a title carrying both an "at Employer" clause and a
+trailing job-board-brand segment prefers the "at Employer" extraction over
+the trailing segment (this ordering is a design choice, not incidental, and
+deserves its own assertion so a future change to the pool order doesn't
+silently reverse it).
+
+---
