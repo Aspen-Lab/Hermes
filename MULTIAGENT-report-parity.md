@@ -12708,3 +12708,148 @@ generic DOM rule supplies the Ruling-25 free-text main road. This is a CODE
 item, not a manager-policy escalation.
 
 ---
+
+#### B7-03 — TiRT7's current city/country is lost because body-text extraction can only promote a city already in `CONFERENCE_CITIES`. `MISSING`. **CODE: add one generic, fail-closed current-venue, same-clause-country path before the existing gazetteer fallback; do not add a city by name or surface a venue name.**
+
+**A's claim checked, with the source-drift qualification from Ruling 30.** The
+checked-in TiRT-shaped regression at
+`web/src/lib/opportunities/structured-extract.test.ts:421-436` still contains
+one short current-edition clause with `Lanzhou, Gansu Province, China` and a
+separate historical `Cologne, Germany (2008)` clause. On the current tree its
+assertion still returns `undefined`; the focused file passes `34/34`. Grep
+confirms `Lanzhou` is absent from `CONFERENCE_CITIES`, while `Cologne` remains
+in it. That verifies the claimed under-extraction mechanism, and the existing
+historic guard means the old wrong former host stays gone.
+
+The live TiRT7 URL is no longer usable evidence: under Ruling 30 it has drifted
+to a parked/repurposed host and contributes zero venue facts. I did not treat
+anything from that connection as source evidence and did not re-fetch it after
+the ruling. Thus A's previously measured source fact is represented here only
+by the checked-in regression and the prior audited ledger (not a new live
+claim); the current-tree claim is exactly that the source-shaped case remains
+silently absent. A was right about the architectural gap, but its former
+"re-fetch succeeded" observation is not presently reproducible and must not be
+used as fresh authority.
+
+**Cause and reusable pieces, traced before designing another parser.**
+`bodyText()` in `web/src/lib/opportunities/structured-extract.ts:1109-1119`
+already removes script/furniture and preserves the bounded body prose.
+`extractBodyTextPlace()` at `:1396-1408` then calls
+`findVenueCity(text, CONFERENCE_CITIES)` and returns immediately when no listed
+city is found. `findVenueCity()` at `:1359-1394` deliberately has no route for
+an unknown city, so `countryAfterCity()` at `:1172-1186` is never reached for
+Lanzhou. This is the exact drop point, not an absent country alias or an event
+mapping failure.
+
+There is useful half-built safety logic to reuse, but no dormant unknown-city
+solution: `plausiblePlaceName()` (`:877-890`) bounds user-facing components,
+`matchCountryToken()` (`:1203-1208`) canonicalizes an explicit country, and
+`isHistoricalMention()` (`:1318-1343`) rejects former editions. By contrast,
+`parseStructuredLocation()` (`:1223-1269`) is for already-structured comma
+strings and also requires a gazetteer city; feeding it arbitrary prose would
+weaken its boundary. `extractPlaceFromText()` (`:1416-1428`) already delegates
+to the body path and then has only a country-only fallback. Do not create a
+second competing body parser or expand the city list.
+
+**Implement one bounded source-backed candidate path.**
+
+1. Beside `isHistoricalMention()` / before `findVenueCity()` in
+   `structured-extract.ts`, add one pure helper for a **current venue clause**.
+   It should scan the raw `bodyText` sentence/window only when an explicit
+   event-action cue directly leads into the location, such as `will be held
+   in`, `will take place in`, `takes place in`, `will be hosted in`, or `is
+   scheduled to be held in`. Do not turn a bare `in`, `at`, `venue:`, or
+   `location:` label into this new unknown-city path: those forms can introduce
+   a facility rather than a municipal WHERE value and remain covered, where
+   applicable, by the existing known-city fallback.
+2. Within that same unsplit sentence/clause, accept only the complete
+   comma-delimited shape `city, country` or `city, region, country`. The final
+   country token must be recognized by `matchCountryToken()` / the existing
+   country vocabulary, and the city and optional region must independently pass
+   `plausiblePlaceName()`. Do not search the rest of the page for a country,
+   infer a country from an unknown city, or let a later sentence donate a
+   country. `Lanzhou, Gansu Province, China` is therefore a valid generic
+   result of `{ city: "Lanzhou", region: "Gansu Province", country: "China" }`,
+   whereas a bare city remains unproven.
+3. Keep the event-venue exclusion explicit. The helper returns only
+   `OpportunityPlace.city`, `.region`, and `.country` (the fields in
+   `web/src/types/index.ts:102-106`); it never creates a `venueName` field or
+   converts a facility label into the city. Reject a facility-looking first
+   component when no separate municipal city component is present (at minimum
+   a generic terminal facility token such as `Center/Centre`, `Hotel`, `Hall`,
+   `Campus`, `Arena`, `Resort`, or `Convention`). A sentence whose only precise
+   location is a venue name must remain silent; a source that supplies the
+   separate city/country shape still supplies required WHERE truth. This is a
+   generic false-data guard, not a TiRT7 exception.
+4. For every candidate, call the existing `isHistoricalMention(preceding,
+   following)` on the same local windows. Ignore candidates framed as former or
+   past editions or with a trailing edition year. Deduplicate identical
+   normalized candidates, but if two **distinct** current, full
+   city/region/country candidates remain, return an explicit `ambiguous` result
+   rather than selecting whichever happens to occur first. `extractBodyTextPlace()`
+   must return `undefined` on `ambiguous`; otherwise a later gazetteer fallback
+   could silently reintroduce arbitrary location choice.
+5. Make the helper's result tri-state (`found`, `none`, `ambiguous`) and set the
+   body precedence exactly as follows:
+
+   - existing JSON-LD / Open Graph place at
+     `extractOpportunityPageDetails():1502-1525` remains authoritative;
+   - a unique, non-historical current cue plus same-clause country candidate;
+   - the current `findVenueCity(text, CONFERENCE_CITIES)` / state-or-nearby-
+     country fallback only when the new helper returns `none`;
+   - silence.
+
+   This lets a source-backed non-gazetteer current venue win over an old listed
+   former host, while retaining established city-only cases such as Chicago.
+   Have `extractPlaceFromText()` continue through this one body helper before
+   its existing country-only fallback, so `ccfddl` and fetched-detail callers
+   cannot diverge.
+
+**Tests at risk and required adversarial coverage.**
+
+- Rewrite the B5-05 TiRT-shaped assertion at
+  `structured-extract.test.ts:421-436` to expect the exact Lanzhou/Gansu
+  Province/China object, while retaining the historical Cologne clause in the
+  same fixture. This proves the new candidate wins without weakening the
+  old-history protection.
+- Preserve the former-host-only case at `:438-446` and the known-city/current-
+  edition case at `:448-456`. Add a historical-only full
+  `city, region, country` candidate to prove the new path also calls
+  `isHistoricalMention`, rather than relying on the old gazetteer-only guard.
+- Add a wholly synthetic non-gazetteer current venue with a recognized country
+  to prove this is a general parser, plus negatives for (a) a cue plus unknown
+  city whose country appears only in a later sentence, (b) a bare geographic
+  phrase with no current event-action cue, (c) a facility-name-only phrase
+  ending in a generic facility token, and (d) two distinct current full
+  locations. Each negative must be silent, never a first-match city.
+- Preserve the body-only Chicago/US-state cases at
+  `structured-extract.test.ts:256-303` and the unrelated-country regression at
+  `:364-399`; they ensure the new high-confidence path does not disturb the
+  lower-authority known-city and country-only behavior.
+- Add an `enrichEventCandidates()` synthetic page regression near
+  `enrich.test.ts:53-98`: a raw event with no location and only the current
+  city/region/country clause must emerge with that exact `place` and formatted
+  `location`. Preserve `events/pipeline.ts:87-111`'s re-score assertion path so
+  a source-backed location still affects the intended preference/facet score.
+
+**Blast radius.** The only extraction code changes are shared body-text place
+handling, so an event's `place` moves through
+`enrichEventCandidates()` (`enrich.ts:98-153`), `mergeOpportunityPlace()`
+(`:86-96`), formatted WHERE text, and the event pipeline's second score pass
+(`events/pipeline.ts:87-111`). This can improve event feed cards, report WHERE
+facts, location facets, and ranking when the source explicitly proves them.
+The helper is also reached by the existing `ccfddl` text-location adapter, so
+its old country-only behavior must remain tested. Retrieval, raw source
+adapters, model/provider routing, report fetch count, and venue-name rendering
+are unchanged; an unproven or ambiguous value stays absent rather than wrong.
+
+**Search scope / no-POLICY result.** I checked all body-place helpers,
+structured/meta precedence, every `extractBodyTextPlace` /
+`extractPlaceFromText` caller, event enrichment/merge/re-score, the city and
+country vocabularies, the current test suite, and the facet consumer. Ruling 30
+explicitly permits this generic CODE guide on the durable regression evidence;
+the drifted domain supplies no facts. No product-policy choice remains: this is
+a CODE item with a fail-closed contract, no TiRT7 host rule, no gazetteer
+addition, and no excluded venue-name output.
+
+---
