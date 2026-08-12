@@ -12250,6 +12250,12 @@ benchmark failed because its Chicago assertion received Salvador. TypeScript
 clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 (`react-hooks/set-state-in-effect`).
 
+**Follow-up consumer audit:** The initial B6-03 commit guarded shared search,
+dedup, scoring, roster, and card metadata. This immediate follow-up corrects
+the three missed direct render/label consumers: briefing hero now joins only
+present parts, quick-hit does the same, and feedback ledger titles omit the
+separator when no employer is known.
+
 ---
 
 #### Manager handoff to C

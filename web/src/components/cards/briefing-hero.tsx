@@ -130,7 +130,9 @@ export function BriefingHero({ item }: { item: HeroItem }) {
           <p
             className="text-body text-text-muted mt-3"
           >
-            {item.data.companyOrLab} · {item.data.isRemote ? "Remote" : item.data.location}
+            {[item.data.companyOrLab, item.data.isRemote ? "Remote" : item.data.location]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <div className="flex items-center flex-wrap gap-2 mt-4">
             <Tag>Role</Tag>

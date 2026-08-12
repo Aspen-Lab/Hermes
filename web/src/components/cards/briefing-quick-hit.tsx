@@ -46,7 +46,9 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
       ? item.data.venue
       : item.kind === "event"
         ? `${formatDate(item.data.date, "short")} · ${item.data.isOnline ? "Online" : item.data.location}`
-        : `${item.data.companyOrLab}${item.data.isRemote ? " · Remote" : ""}`;
+        : [item.data.companyOrLab, item.data.isRemote ? "Remote" : undefined]
+            .filter(Boolean)
+            .join(" · ");
 
   return (
     <Link

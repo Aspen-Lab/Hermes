@@ -699,7 +699,7 @@ export function feedbackSnapshotForPaper(paper: Paper) {
 
 export function feedbackSnapshotForJob(job: Job) {
   return {
-    title: `${job.roleTitle} — ${job.companyOrLab}`,
+    title: [job.roleTitle, job.companyOrLab].filter(Boolean).join(" — "),
     concepts: conceptsFromJob(job),
   };
 }
