@@ -145,6 +145,35 @@ describe("company derivation", () => {
     });
     expect(item?.company).toBe("Acme Materials Group");
   });
+
+  // B6-04 (round 6): title-based employer evidence must use the same guarded
+  // candidate pool and take precedence over a trailing job-board label.
+  it("extracts an employer stated after 'at' without a punctuation separator", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Engineering Internship at Tesla",
+      url: "https://ev.careers/jobs/9915",
+      snippet: "Battery research internship. Apply now.",
+    });
+    expect(item?.company).toBe("Tesla");
+  });
+
+  it("does not treat a lowercase phrase after 'at' as an employer", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Researcher based at our campus",
+      url: "https://acme.test/careers/job/9916",
+      snippet: "Battery research position. Apply now.",
+    });
+    expect(item?.company).toBe("acme.test");
+  });
+
+  it("prefers a title-stated employer over a trailing job-board brand", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Engineering Internship at Tesla | EV.Careers",
+      url: "https://ev.careers/jobs/9917",
+      snippet: "Battery research internship. Apply now.",
+    });
+    expect(item?.company).toBe("Tesla");
+  });
 });
 
 describe("listing titles hidden behind site chrome", () => {

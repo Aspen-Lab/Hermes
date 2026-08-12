@@ -12221,6 +12221,21 @@ unchanged.
 
 ---
 
+#### B6-04 — guarded title employer candidate
+
+**STATUS: COMPLETE.** Added the bounded capitalized `at <Employer>` title
+candidate ahead of existing trailing segments, while retaining the exact same
+job-board, season/cohort, location, and host-brand guard chain. Coverage
+proves a separator-free title resolves Tesla, lowercase prose does not become
+an employer, and the explicit title employer wins over a trailing board label.
+
+**Gate:** 83 files / 943 tests, 942 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o

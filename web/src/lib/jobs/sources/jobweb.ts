@@ -173,9 +173,14 @@ export function webResultToRawJobItem(result: {
   if (isListingPage(roleTitle, host, `${parsed.pathname}${parsed.search}`)) {
     return null;
   }
+  // B6-04 (round 6): a result title can state the employer as "Role at
+  // Employer" without any punctuation segment. Keep it in the existing
+  // guarded candidate pool so it cannot bypass the board/location checks.
+  const titleEmployer = title.match(
+    /\bat\s+([A-Z][\w&.,'\u2019]{1,60}?)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
+  )?.[1];
   const company =
-    parts
-      .slice(1)
+    [titleEmployer, ...parts.slice(1)]
       .map(cleanJobSubtitlePart)
       .find(
         (p) =>
