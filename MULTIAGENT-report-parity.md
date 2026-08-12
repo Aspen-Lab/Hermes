@@ -275,20 +275,23 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 08:30 UTC. Round-7 C
-                   completed all four ordered CODE items and the B7-05
-                   authority follow-up. A now remeasures the fixture and real
-                   named cases. Manager lock remains held.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 09:25 UTC. Round-7 A's
+                   independent post-C fixture, fresh-pool, named continuity,
+                   and mandatory gate measurement is complete. Manager lock
+                   remains held; B investigates the ranked source-alignment
+                   observations next.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       A — independently remeasure the 32-element fixture and fresh
-                   real pools, then the named SolarPACES, hiringcafe, TiRT7,
-                   and Himalayas continuity cases. Measure only; do not
-                   diagnose or change product code. Commit/push each durable
-                   measurement record separately. No POLICY items remain.
+WHOSE TURN:       B — investigate the fresh source-alignment mismatches only:
+                   (1) both reachable event summary sentences are unsupported
+                   by their bounded owned page text; (2) what drifted/
+                   unavailable named targets mean for future
+                   evidence. Do not code. No POLICY item is inferred from
+                   absence alone; guide a fail-closed source boundary if one
+                   is warranted, one committed/pushed item at a time.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -302,36 +305,41 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 C COMPLETE; A REMEASUREMENT NEXT.**
-                   Fixture was 0 of 32 different (0%) before the latest C
-                   work. Post-C real results are unknown until A remeasures
-                   SolarPACES, hiringcafe, TiRT7, and Himalayas. B7-04 is
-                   fully subsumed by B7-02, not another parser task. Final C
-                   gate: 85 files / 978 tests passing; typecheck clean;
-                   exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT YET REMEASURED AFTER C.** All
-                   Round-7 CODE items are implemented. See §4's C closing
-                   handoff for the exact named A checks.
+STATUS:           **ROUND-7 A POST-C MEASUREMENT COMPLETE; B NEXT.** Fixture
+                   is 0 of 32 different (0%). Fresh real source-page checks
+                   found summary alignment unproven/mismatched on 2 of 2
+                   reachable events. SolarPACES,
+                   selected scope/no-provider, TiRT regression, and employer
+                   conflict contracts hold; historical named URLs that drifted
+                   or were unavailable are recorded as non-evidence. B7-04
+                   remains subsumed by B7-02. Full gate: 85 files / 978 tests,
+                   977 pass; typecheck clean; known quiz lint only.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET.** Ranked source-alignment
+                   observations are in §4 Round-7 A post-C measurement; B
+                   must investigate without treating unavailable pages as proof.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 08:30 UTC. C completed all
-four ordered Round-7 CODE items plus the B7-05 authority follow-up. A now
-remeasures; C must not continue coding.
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 09:25 UTC. A completed the
+post-C fixture, fresh-pool, named continuity, source-page, and gate pass; B
+now investigates the measured source-alignment observations only.
 `HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 07:26 UTC` for the
 manager-held A measurement.
 
-**WHOSE TURN: A.** Independently remeasure the 32-element fixture, fresh real
-pools, and the named SolarPACES, hiringcafe, TiRT7, and Himalayas continuity
-cases. Measure only; do not diagnose or change product code. No POLICY items
-await a manager decision.
+**WHOSE TURN: B.** Investigate the 2/2 reachable fresh event summary sentences
+unsupported by their owned source text. The silent event location has no
+affirmative source location and is not a mismatch. Unavailable/drifted named
+targets are non-evidence, not findings. Do not code. No POLICY items await a
+manager decision.
 
-**STATUS / LAST DIFFERENCE:** fixture was 0 of 32 different (0%) before the
-latest C work; real gate is NOT YET REMEASURED AFTER C. All Round-7 CODE items
-are implemented and gated. A must now remeasure SolarPACES, hiringcafe, TiRT7,
-and Himalayas plus fresh-pool continuity. B6-08 careerservices amenity
-proximity and B6-04 Tesla title-employer extraction remain closed; standing
+**STATUS / LAST DIFFERENCE:** fixture is 0 of 32 different (0%); the real
+source-alignment gate is NOT MET. Two reachable event summary sentences are
+unsupported by owned page text. SolarPACES now resolves to the owned
+conference identity; selected scope/no-provider, TiRT regression, and
+employer-conflict contracts hold. Fresh source-page evidence does not align
+all rendered summaries, while Tesla/careerservices/LHB/hiringcafe historical
+targets are unavailable or drifted and therefore non-evidence. Standing
 exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
@@ -13520,3 +13528,24 @@ careerservices/LHB live targets were unavailable or drifted, so their durable
 contracts are not substitutes for live source proof. SolarPACES, scope,
 no-provider, TiRT regression, and employer conflict contracts hold. Fixture
 remains 0/32, but the real-data gate is **NOT MET**.
+
+#### Source-alignment correction — COMPLETE @ 2026-08-12 09:22 UTC
+
+The preceding source comparison used whole-summary substring equality, which
+is too strict for a summary assembled from individual extractive sentences.
+Re-measurement therefore compared each normalized rendered sentence with
+bounded owned source-page text and compared location only when a source page
+affirmatively supplied one. Of the two reachable fresh event pages, there was
+one rendered summary sentence each and **0 of 2** sentences were source
+supported. One page supplied no affirmative location while the report was
+silent (not a mismatch); the other supplied and rendered a location. The third
+event page remains unavailable and non-evidence.
+
+The fresh job set changed during the re-fetch, so it is recorded conservatively:
+the only rendered summary sentence observed was source supported (**1 of 1**),
+and all populated employer output had support when checked against the complete
+selected evidence hierarchy (raw selected source-record company, title `at`
+shape, selected structured organization where present, owned declaration, then
+page text). The prior job-summary and employer provenance findings are
+withdrawn. The real-data gate remains open only for the event-summary boundary
+(2 of 2 reachable pages).
