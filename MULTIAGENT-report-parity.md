@@ -10615,3 +10615,130 @@ Engineering GRC"` — a present-tense narrative sentence with no auxiliary verb
 the three already known.
 
 ---
+
+#### Supplementary — B5-02 (`extractWorkMode` false positive). Not one of the six required R-numbers, but explicitly named in this round's TODO as unverified against a live page. Both of round 5's own named repros re-checked live. **One of round 5 C's own "CLOSED" claims does not hold.**
+
+**`hiringcafe.com` — STILL a confirmed false positive, precisely re-traced.**
+Round 5 C predicted tier 1 would "most likely" change this job's `workMode`
+from wrong `"hybrid"` to a *different* wrong `"on-site"`, not to silence, and
+explicitly did not confirm it. Re-fetched the exact page and ran
+`extractJobDetails()` directly: **result is still `"hybrid"`** (not
+`"on-site"` as predicted). Searched the SAME cleaned text
+(`extractPageText()`'s own output, 7,575 characters) `extractWorkMode()`
+itself scans — not raw HTML — and found the precise trigger, unambiguously:
+`"...Engineering Intern (EE/CE/RF) III, Summer 2027 (Hybrid) Nashua or New
+Hampshire $50k-$69k/yr"` and `"...Hybrid Internship BAE Systems London Stock
+Ex[change]..."` — **a different real company's own listing (BAE Systems, a
+role in Nashua, NH) on the same multi-posting aggregator page**, exactly the
+same-page-other-listing mechanism round 5 C's own tier-2 discussion
+described and did not build. This content sits in the page's main column, not
+in `<nav>/<header>/<footer>/<aside>`, so `withoutPageFurniture()` correctly
+leaves it alone — it was never furniture, so tier 1 (furniture-stripping)
+could never have closed this one, exactly as C's own "STILL OPEN" framing
+(not the "most likely closed" framing) anticipated.
+
+**`careerservices.upenn.edu` (the Oak Ridge/Molten Salt Characterization
+posting) — round 5 C's own words:** *"the confirmed false positive:
+**CLOSED**. Both trigger mentions were amenity/visitor prose, exactly the
+shape `withoutPageFurniture` targets ... tier 1 removes it."* **Re-fetched the
+exact page and this is not what happened.** `extractJobDetails()` still
+returns `workMode: "on-site"`. Searched the cleaned text directly: **the same
+two trigger mentions round 5 originally found are still present, verbatim**:
+`"...communicate lab capabilities with on-site visitors..."` and `"...Employee
+amenities such as on-site fitness, banking, and cafeteria facilit[ies]..."`.
+Neither is in `<nav>/<header>/<footer>/<aside>` markup either — they read as
+an ordinary paragraph inside the posting's own benefits section, which
+`withoutPageFurniture()` was never built to remove (it strips structural page
+chrome, not on-topic-but-irrelevant body prose). **C's own predicted closure
+does not hold; this is exactly the class of thing the loop's own recurring
+lesson warns about (the next role finds something the previous one got
+wrong), and it is worth flagging plainly rather than quietly correcting the
+record.**
+
+**This round's own instruction was to check whether round 5's changes newly
+broke anything, not just whether they fixed what they targeted — this is
+that check, and the answer for B5-02 is: nothing new broke, but the one
+new-code claim of a full close is contradicted by direct re-measurement.**
+Net for B5-02 across both of round 5's own named cases: 0 of 2 closed, both
+still open, for two different and now precisely identified reasons (same-page
+other-listing contamination; on-topic-but-irrelevant body prose that
+furniture-stripping was never going to reach). Not scored against the six
+required R-numbers — B5-02 was never given its own R-number — but reported
+here in full because the round's own TODO named it explicitly as unverified.
+
+---
+
+#### Exclusions — re-listed by name, as every round must
+
+- **§1d items 1–5** (job locked-block promises "How competitive this
+  actually is" and "The role in three clean sentences" stay out; the two
+  quoted-specifics job sections, the event description paragraph, and the
+  "Interested" button stay in as deliberate extras) — unchanged, still
+  settled, still excluded from the denominator.
+- **Exclusion 7** — `REGISTER BY` sub-line, permanently empty. Unchanged, not
+  independently re-exercised this round (no real event surfaced a wrongly
+  filled `REGISTER BY` sub-line to check against).
+- **Exclusion 8, the six data-model gaps, by letter:**
+  - **(a)** `Hybrid · US` sub-line — **CLOSED** (B2-06's `workMode`), not an
+    active exclusion. Listed only so its absence from the active list is a
+    decision, not an omission.
+  - **(b)** superseded by **(b')**: the `(3 days on-site)` day-count
+    parenthetical only — still excluded. The mode word itself is closed.
+  - **(c)** `ELIGIBILITY` row — excluded.
+  - **(d)** `TEAM` row — excluded.
+  - **(e)** `· reposted from employer site` — excluded.
+  - **(f)** `streamed keynotes` — excluded.
+  - **(g)** venue name — excluded.
+  - **(h)** `plus four nights` — excluded.
+- **(j)** `Summit` → `Industry summit` — **WITHDRAWN** (§1g Ruling 19), in
+  scope, closed per round 4. Reconfirmed again this round: multiple fresh
+  real events render `Workshop`, `Expo`, `Summit` via the label map, not a
+  mechanical title-case of the raw enum.
+- **(k), (l)** — the two shortened "Why Peer sent this to you" closing
+  clauses — permanently excluded. Not independently re-exercised this round
+  beyond noting the section still renders the shortened form on every real
+  item checked (topics + level, no region/count/comparison).
+- **(m)** — happenings footnote naming every highlighted chip in full rather
+  than the plate's two-item shorthand — excluded. Not exercised this round
+  (this round's real events carried at most one highlighted activity chip
+  each).
+- **(n)** — `rank` (CCF-B-style classification) — excluded; genuinely
+  inapplicable outside the curated CS-conference dataset. Reconfirmed again:
+  0 of 17 fresh real events this round carry `rank`.
+
+**Not an exclusion, re-flagged only to keep it visible per §1l's own
+instruction: `adzuna` and `usajobs` returned 0 results at every limit tried
+again this round** (`perSourceLimit: 150`, same as round 5's own default
+run), both keys present. Already on the manager's list, `POLICY — manager
+decides`, not investigated further here.
+
+---
+
+#### GATE (0%)
+
+**NOT MET.** Fixture: 0% (met on its own, unchanged from round 5). Real
+data: not met — R4, R7/Ruling-26, and R13 are STILL OPEN; R2 is IMPROVED, NOT
+CLOSED; R11 and R12 are CLOSED; B5-02 (not an R-number, but explicitly named
+this round) is STILL OPEN on both of its own named real-page repros, one of
+them contradicting round 5 C's own "CLOSED" claim. Per §1j Ruling 23 the gate
+requires **both** halves at zero; it is not close on the real-data half
+regardless of the fixture reading zero. **New this round: an architectural
+finding (the enrichment-stage title preference bypassing `eventNameFrom()`'s
+guards entirely) that is larger than any single R-number** — see R13 above.
+This is not code C should patch reflexively; it needs a design decision from
+B about which function is authoritative for an event's name once a page has
+actually been fetched, per Ruling 26's own instruction that this is B's
+question to cost, not a patch to sneak in.
+
+##### R2/R4/R7/R11/R12/R13, scored against the CURRENT code — summary table
+
+| # | This round's status | One-line evidence |
+|---|---|---|
+| R2 | **IMPROVED, NOT CLOSED** | WHERE tile now silent (confirmed live, `extractBodyTextPlace` → `undefined`) instead of wrongly naming Cologne. True venue (Lanzhou) still absent from gazetteer. |
+| R4 | **STILL OPEN** | B5-07 closes its own two named repros (no over-rejection found); 3 new chrome shapes confirmed on fresh real summaries (markdown-link remnants, concatenated filter chrome, Markdown-heading + newsletter teaser). |
+| R7 | **STILL OPEN** | = Ruling 26. 6 of 12 fresh real jobs (50%) render a bare hostname as the company. B5-03's own two guards confirmed working; the `\|\| host` / `fallbackCompany` fallback is the open part. |
+| R11 | **CLOSED** | Reconfirmed live on the original repro page: `extractEventDetails` now returns `expectedSize: undefined`, not `2025`. |
+| R12 | **CLOSED** | 7 of 7 real postings checked (2 from round 5 + 5 fresh) render zero leaks of `"see posting"`. |
+| R13 | **STILL OPEN** | Both of B5-06's named real events re-checked live: event 2 improved-not-closed (chrome gone, but URL-slug fallback gives an incomplete name); event 3 still open (site-brand check now over-rejects the real name "SolarPACES," and the unguarded `nameFromUrlSlug` fallback reinstates an equally headline-shaped name). Plus a newly-found architectural bypass (`enrich.ts`'s title preference skips `eventNameFrom()`'s guards entirely) confirmed on 4 of 17 fresh events. R8 independently reconfirmed still open on its own original page. |
+
+---
