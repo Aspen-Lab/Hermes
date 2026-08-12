@@ -10219,3 +10219,117 @@ Pushed.
 **STATUS: COMPLETE.**
 
 ---
+
+### Round 6 — Agent A
+
+**STATUS: IN PROGRESS.** Claimed the turn lock (`ee17ae3`). Read §0 through §3
+in full, §1b–§1m (every standing ruling, **§1m Ruling 26 first**, per
+instruction), and §4's Round 5 Agent B and Agent C entries in full before
+measuring anything. Rendered the build with `renderToStaticMarkup` on the
+exported `JobReport`/`EventReport`, same mechanism as every round since 1.
+Live keys confirmed present via boolean check only (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+`feedAiApiKey` `false`, matching every prior round — Tier 0 only, no
+enrichment key). No credential printed, logged, or written anywhere at any
+point.
+
+**Method.** A throwaway harness (`web/src/zz-round6-measurement.test.ts`,
+deleted before this entry was written — confirmed by `git status --short`
+showing a clean tree) did four things: (1) rendered the identical maximal
+fixture round 5 used, so the fixture percentage stays comparable round over
+round; (2) called the real, exported guard functions directly with the exact
+real-world strings round 5 already verified, to confirm Ruling 26's claim with
+no reconstruction risk and no hand-trace; (3) re-fetched the SAME six real
+URLs round 5 used (3 events, 3 jobs) and ran the current code's own
+direct-HTML functions against them, plus two of round 5's own named B5-02
+repro URLs; (4) built one fresh live pool for both surfaces (no-op cache,
+forced a real search, `perSourceLimit: 150`) and rendered the top 10 of each
+plus a full-pool census (17 events, 12 jobs — `adzuna`/`usajobs` returned 0
+results at this limit again, unchanged from round 5, already on the manager's
+list per §1l, not re-investigated here). Gate run cold before touching
+anything showed the same baseline §1 records (83 files, 936/937 passing, the
+one documented flake); full final gate is at the end of this entry.
+
+---
+
+#### FIRST — Ruling 26. B5-03 scored against rendered output.
+
+**B5-03 is STILL OPEN.** Confirmed on rendered output, not on `looksLikeHostBrand`'s
+own unit tests, and confirmed at far larger scale than the ruling's own
+one-item repro.
+
+**The exact rendered evidence Ruling 26 asked for.** The real job "Internship,
+Mechanical Design Engineer, Battery Engineering Fall ..." (posted at
+`tesla.com`) renders its subtitle line as literally `tesla.com` — quoted
+directly from the rendered HTML output, not paraphrased. The employer slot
+shows a bare hostname. Tesla is a real, well-known employer; its name does not
+appear anywhere on the card.
+
+**Generalised across the whole fresh sample, per the ruling's own instruction
+to check "what renders after the guard fires," not just whether it fires.**
+One fresh live pool build (12 real jobs, all `jobweb`-sourced this run —
+`adzuna`/`usajobs` contributed 0 as usual), full-pool census, not just the
+top 3:
+
+| # | Real job (title, truncated where long) | `companyOrLab` rendered |
+|---|---|---|
+| 1 | Internship, Mechanical Design Engineer, Battery Engineering Fall ... | `tesla.com` |
+| 2 | Internship, Battery Engineering (summer 2026) Jobs in United States | `jobright.ai` |
+| 3 | Molten Salt Systems Engineer/Scientist at Idaho National Laboratory | `terra.do` |
+| 4 | Actinide Chemistry/Ion Exchange Postdoc Research ... | `salutemyjob.com` |
+| 5 | Actinide Chemistry/Ion Exchange Postdoc Research ... (same role, LinkedIn mirror) | `linkedin.com` |
+| 6 | Internship, Battery Engineering (Summer 2026) **at Tesla** | `EV.Careers` |
+
+**6 of 12 real jobs this round (50%) show a bare hostname where the plate
+expects an employer name.** Item 6 is the clearest single case: the role
+title itself already says "**at Tesla**" — the true employer is sitting in
+the very string the card already renders — and the company slot still shows
+`EV.Careers`, the job board. **Zero of the 12** show the OLD wrong shapes (a
+raw job-board brand word, or a bare `City, ST` location) — B5-03's two guards
+are confirmed still firing correctly, on fresh data, at scale, and that is
+real, verified progress; nobody should read this finding as "the guards don't
+work." But every rejection this round fell through to `|| host`, exactly as
+Ruling 26 describes, and every one of those six is a wrong value the reader
+sees, not a missing one.
+
+**Direct, no-reconstruction confirmation of the mechanism itself** — calling
+the real exported functions with the exact real strings round 5 already
+verified, not a hand-trace: `looksLikeHostBrand("Climatebase",
+"climatebase.org")` → `true`; `looksLikeHostBrand("ZeroB",
+"zerobonline.com")` → `true`; `webResultToRawJobItem({title: "Research
+Assistant - Climatebase", url: "https://climatebase.org/job/74998360/...",
+...})` → `company: "climatebase.org"`; the same construction for the
+"Cambridge, MA" bare-location shape against `hiringcafe.com` → `company:
+"hiringcafe.com"`. The `looksLikeHostBrand("Acme Corp", "acme.test")`
+protection (the reason the guard is one-directional) still holds → `false`,
+unchanged — B5-03's design choice is not what broke here.
+
+##### The generalisation the ruling asked for: this shape exists in at least three places, not one
+
+1. **`jobweb.ts:187`, `webResultToRawJobItem()`** — Ruling 26's own finding.
+   `... || host`. Confirmed unchanged, still fires, exactly as described.
+2. **`jobs/mapper.ts:143`, one layer downstream, and NOT specific to
+   `jobweb`.** `const company = cleanJobSubtitlePart(item.company) ??
+   fallbackCompany;`, where `fallbackCompany` is, again, the posting's own
+   hostname (or the literal string `"Employer not stated"` if the URL fails
+   to parse). Confirmed directly: a synthetic `ScoredJobItem` from a
+   **non-`jobweb`** source (`remotive`) with a genuinely blank `company`
+   (three spaces) produces `companyOrLab: "boards.example-remote.test"` — the
+   same shape, on a code path that has nothing to do with jobweb.ts's guards
+   at all. **Any job source that legitimately leaves `company` empty hits
+   this**, not only jobweb-sourced postings — this is architectural, not a
+   jobweb-specific bug.
+3. **`events/sources/eventweb.ts`, `eventNameFrom()`'s own last line: `return
+   segments[0] ?? title.trim();`** — and, confirmed live and worse, an
+   *earlier*, entirely unguarded fallback in the same function
+   (`nameFromUrlSlug`) that reinstates an equally-bad value before this line
+   is ever reached. Full evidence under R13 below — this is the single
+   largest new finding this round, and it is the same shape as Ruling 26
+   itself, on the event side.
+
+**Per Ruling 26's own instruction, this is worth more than any single item on
+the list**: it is not one bug, it is a shape the loop's own guards keep
+taking — reject a bad candidate correctly, then fall through to something
+that was never itself checked against the same standard.
+
+---
