@@ -42,6 +42,10 @@ function request(body: Record<string, unknown>): NextRequest {
   });
 }
 
+function ownedPage(url: string, content: string): string {
+  return `<article><a href="${new URL(url).pathname}">Selected posting</a>${content}</article>`;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -122,9 +126,9 @@ describe("POST /api/jobs/report", () => {
     const llmOverride = { provider: "gemini", apiKey: "test-key" };
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
-        `<main><p>A PhD in electrochemistry is required.</p>` +
+        ownedPage("https://jobs.example.com/role", `<p>A PhD in electrochemistry is required.</p>` +
           `<p>Design and run solid-state interface experiments.</p>` +
-          `<a href="/role/schedule">Schedule</a></main>`,
+          `<a href="/role/schedule">Schedule</a>`),
         { status: 200 },
       ),
     );
@@ -170,7 +174,7 @@ describe("POST /api/jobs/report", () => {
     const generateJsonText = vi.fn().mockResolvedValue("not json");
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response("<main><p>Readable source posting details.</p></main>", {
+        new Response(ownedPage("https://jobs.example.com/readable-role", "<p>Readable source posting details.</p>"), {
         status: 200,
       }),
     );
@@ -199,7 +203,7 @@ describe("POST /api/jobs/report", () => {
     );
     mocks.resolveProvider.mockReturnValue({ generateJsonText });
     const fetchMock = vi.fn(async () =>
-      new Response("<main><p>Source posting details.</p></main>", {
+      new Response(ownedPage("https://jobs.example.com/cached-role", "<p>Source posting details.</p>"), {
         status: 200,
       }),
     );

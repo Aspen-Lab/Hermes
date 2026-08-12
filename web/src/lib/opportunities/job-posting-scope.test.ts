@@ -30,4 +30,27 @@ describe("resolveJobPostingScope", () => {
     expect(item).toMatchObject({ place: { city: "Chicago" }, fetchedPostingScope: "owned" });
     vi.unstubAllGlobals();
   });
+
+  it("normalizes only host case, a trailing slash, and a fragment", () => {
+    const scope = resolveJobPostingScope(
+      `<script type="application/ld+json">{"@type":"JobPosting","url":"https://JOBS.example.com/role/?id=7#apply","description":"Owned description."}</script>`,
+      { url: "https://jobs.example.com/role?id=7", title: "Selected role" },
+    );
+    expect(scope).toMatchObject({ status: "owned", text: "Owned description." });
+    expect(resolveJobPostingScope(
+      `<script type="application/ld+json">{"@type":"JobPosting","url":"https://jobs.example.com/role?id=8","description":"Foreign query."}</script>`,
+      { url: "https://jobs.example.com/role?id=7", title: "Selected role" },
+    )).toEqual({ status: "unproven" });
+  });
+
+  it("fails closed for malformed URLs and distinct matching records", () => {
+    expect(resolveJobPostingScope(
+      `<script type="application/ld+json">{"@type":"JobPosting","url":"not a URL","description":"Owned."}</script>`,
+      { url: "https://jobs.example.com/role", title: "Selected role" },
+    )).toEqual({ status: "unproven" });
+    expect(resolveJobPostingScope(
+      `<script type="application/ld+json">[{"@type":"JobPosting","url":"https://jobs.example.com/role","description":"First."},{"@type":"JobPosting","url":"https://jobs.example.com/role","description":"Second."}]</script>`,
+      { url: "https://jobs.example.com/role", title: "Selected role" },
+    )).toEqual({ status: "unproven" });
+  });
 });

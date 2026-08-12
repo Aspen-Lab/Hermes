@@ -13275,4 +13275,22 @@ unproven, foreign-sibling, summary, prompt, and raw-description scoring
 adversarial cases, then run the focused and full gates. The manager lock remains
 unchanged.
 
+#### B7-02 — PARTIAL CHECKPOINT @ 2026-08-12 08:02 UTC
+
+Migrated all seven legacy enrichment fixtures and all three detailed-report
+fixtures to actual selected-posting evidence: each structured fixture now puts
+the selected URL on its own `JobPosting` record rather than relying on a
+separate first record, and each report fixture has an exact selected DOM owner.
+The focused suite is now **94/94 passing** and `tsc --noEmit` is clean. The
+resolver also now deduplicates identical canonical selected records rather than
+raw-string variants, while tests cover canonical host/trailing-slash/fragment
+normalization with query preservation, malformed URLs, and distinct matching
+records failing closed. A post-return impossible `unproven` TypeScript branch
+in the partial enrichment implementation was removed; no behavior was broadened.
+
+**Remaining exactly:** add the B7-02/B7-04 foreign-sibling consumer-boundary
+tests (work mode, role kind, visa, Tier-0 summary, BYOK prompt), explicit
+unproven-summary/raw-description scoring test, and the full gate. B7-03 remains
+unstarted and the manager lock remains unchanged.
+
 ---

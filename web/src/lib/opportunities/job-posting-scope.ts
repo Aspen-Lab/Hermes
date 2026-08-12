@@ -50,12 +50,15 @@ function selectedDomScopes(html: string, selectedUrl: string, title: string): st
     const hrefs = Array.from(block.matchAll(/<a\b[^>]*\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/gi), m => m[1] ?? m[2] ?? "")
       .map(href => { try { return canonicalJobUrl(new URL(href, selectedUrl).toString()); } catch { return undefined; } });
     const exactLinks = hrefs.filter((href): href is string => href === selectedUrl).length;
-    const distinctLinks = new Set(hrefs.filter((href): href is string => Boolean(href))).size;
     const headings = Array.from(block.matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi), m =>
       m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
     );
     const titleMatches = headings.filter(heading => normalizedTitle(heading) === normalizedTitle(title)).length;
-    if ((exactLinks === 1 || titleMatches === 1) && distinctLinks <= 1 && titleMatches <= 1) {
+    // A bounded posting block can legitimately link to an application form or
+    // schedule as well as its own canonical URL. Only an additional job
+    // witness—not an arbitrary related link—would disprove this owner; exact
+    // selected-link/heading witnesses below establish the boundary.
+    if ((exactLinks === 1 || titleMatches === 1) && exactLinks <= 1 && titleMatches <= 1) {
       candidates.push({ html: block, length: block.length });
     }
   }
@@ -72,7 +75,10 @@ export function resolveJobPostingScope(
   if (!url) return { status: "unproven" };
   const matching = extractJsonLdOpportunities(html)
     .filter((item) => item.kind === "job" && item.url && canonicalJobUrl(item.url) === url)
-    .filter((item, index, all) => all.findIndex(other => other.url === item.url && other.description === item.description) === index);
+    .filter((item, index, all) => all.findIndex(other =>
+      canonicalJobUrl(other.url ?? "") === canonicalJobUrl(item.url ?? "") &&
+      other.description === item.description,
+    ) === index);
   for (const block of selectedDomScopes(html, url, selected.title)) {
     const text = extractPageText(block);
     if (text) return { status: "owned", text, ...(matching.length === 1 ? { structured: matching[0] } : {}) };

@@ -40,9 +40,13 @@ function job(index: number, isRemote = false): RawJobItem {
   };
 }
 
-function usablePage(content: string): string {
-  return `<script type="application/ld+json">{"@type":"JobPosting","url":"https://jobs.example.com/role"}</script>` +
-    `<article><a href="/role">Selected posting</a>${content}</article>` +
+function usablePage(content: string, selectedUrl = "https://jobs.example.com/role"): string {
+  const scopedContent = content.replace(
+    /("@type"\s*:\s*"JobPosting"\s*,?)/,
+    `$1 "url": "${selectedUrl}",`,
+  );
+  const selectedPath = new URL(selectedUrl).pathname;
+  return `<article><a href="${selectedPath}">Selected posting</a>${scopedContent}</article>` +
     `<main>${"Detailed opportunity information. ".repeat(800)}</main>`;
 }
 
@@ -619,7 +623,11 @@ describe("job detail enrichment", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(enrichJobCandidates([original])).resolves.toEqual([original]);
+    // B7-02: a successful fetch with no selected-posting owner is explicit
+    // evidence of an unproven scope, while every source-owned field survives.
+    await expect(enrichJobCandidates([original])).resolves.toEqual([
+      { ...original, fetchedPostingScope: "unproven" },
+    ]);
   });
 
   it("fetches only job gate survivors, caps at 40, and re-scores location", async () => {

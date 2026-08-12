@@ -216,7 +216,7 @@ export async function enrichJobCandidates(
     const visa = item.visa ?? (pageText
       ? tryExtract(() => extractVisaState(pageText, place?.country))
       : undefined);
-    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && scope.status !== "unproven") return item;
+    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText)) return item;
     return {
       ...item,
       place,
