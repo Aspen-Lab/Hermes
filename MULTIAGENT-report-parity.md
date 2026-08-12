@@ -275,7 +275,7 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 09:25 UTC. Round-7 A's
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 09:30 UTC. Round-7 A's
                    independent post-C fixture, fresh-pool, named continuity,
                    and mandatory gate measurement is complete. Manager lock
                    remains held; B investigates the ranked source-alignment
@@ -321,7 +321,7 @@ GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 09:25 UTC. A completed the
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 09:30 UTC. A completed the
 post-C fixture, fresh-pool, named continuity, source-page, and gate pass; B
 now investigates the measured source-alignment observations only.
 `HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 07:26 UTC` for the
@@ -13549,3 +13549,32 @@ shape, selected structured organization where present, owned declaration, then
 page text). The prior job-summary and employer provenance findings are
 withdrawn. The real-data gate remains open only for the event-summary boundary
 (2 of 2 reachable pages).
+
+---
+
+#### Agent A closing handoff — COMPLETE @ 2026-08-12 09:30 UTC
+
+This independent post-C review is complete. Durable measurement commits are
+`9dd306e` fixture, `580e458` fresh pools, `5703fb4` named continuity, and
+`f8b0c0e` source-alignment correction. The fixture is **0 of 32 different
+(0%)**. SolarPACES now resolves to its conference identity; selected posting
+scope/no-provider, TiRT current-venue regression, and fail-closed employer
+conflict contracts hold. The real-data gate remains **NOT MET** because both
+reachable fresh event summary sentences lacked support in their bounded owned
+page text (0/2). No source cause or fix was inferred.
+
+Standing exclusions re-listed: §1d items 1–5; REGISTER BY sub-line;
+day-count parenthetical; ELIGIBILITY; TEAM; reposted-from-employer; streamed
+keynotes; venue name; four nights; shortened Why-Peer clauses; full-chip
+happenings footnote; and rank. The withdrawn Summit vocabulary item remains
+in scope. Historical hiringcafe, Tesla, careerservices, and LHB targets that
+were unavailable or drifted remain non-evidence, not exclusions.
+
+**Final gate:** 85 test files / 978 tests, **977 passed**; the only failure is
+the documented live `src/lib/events/benchmark.test.ts` city-drift assertion
+(current coverage 9/15 = 0.6, target city Salvador rather than its stale
+Chicago assertion). `tsc --noEmit` is clean. ESLint reports only the known
+`src/components/persona/quiz.tsx:46` error. `git diff --check` is clean and
+no measurement artifact remains. **Next: B investigates only the 0/2
+event-summary source-boundary finding, preserving Rulings 23/25/26 and all
+security constraints.**
