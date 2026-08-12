@@ -82,6 +82,16 @@ describe("eventNameFrom", () => {
     expect(eventNameFrom(title, snippet, url)).toBe("Rivertown materials summit 2026");
   });
 
+  it("does not use a headline-shaped URL slug as an event name", () => {
+    expect(
+      eventNameFrom(
+        "Home | Events",
+        "The International Battery Summit brings researchers together.",
+        "https://example.com/events/registration-deadline-extended-march-2026",
+      ),
+    ).toBe("The International Battery Summit brings researchers together.");
+  });
+
   it("still resolves when every title segment is chrome, same as before this round", () => {
     expect(eventNameFrom("Home | Events", "", undefined)).toBe("Home");
   });

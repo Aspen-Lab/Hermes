@@ -12180,6 +12180,19 @@ clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 
 ---
 
+#### B6-05 — reject headline-shaped URL slugs
+
+**STATUS: COMPLETE.** Applied B6-01's shared guarded title-segment predicate
+to the URL-slug fallback. Added coverage proving a deadline-headline slug
+falls through to a usable snippet instead of becoming the event name.
+
+**Gate:** 83 files / 939 tests, 938 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o

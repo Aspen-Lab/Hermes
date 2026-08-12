@@ -407,7 +407,9 @@ export function eventNameFrom(
   // snippet, whose longest sentence is often prose ("Networking: An opening
   // get-together...") rather than a name.
   const fromSlug = url ? nameFromUrlSlug(url) : undefined;
-  if (fromSlug) return fromSlug;
+  if (fromSlug && bestEventTitleSegment(fromSlug, url) === fromSlug) {
+    return fromSlug;
+  }
 
   // Otherwise mine the snippet for its most informative event-like phrase.
   const substantial = snippet
