@@ -13808,3 +13808,22 @@ The fresh event summary boundary is met for the measured silent records, but
 the real-data gate remains open pending the required prompt/no-provider
 boundary and full gate. No body text, credentials, or measurement artifact was
 retained.
+
+---
+
+#### Prompt and no-provider boundary — COMPLETE @ 2026-08-12 10:45 UTC
+
+Exercised the real `buildEventEnrichmentPrompt()` with short synthetic event
+data only: raw discovery `shortDescription` was **absent**; a complete tagged
+source-record summary was **present**; and an unfinished tagged page-owned
+value was **absent**. The existing event report route/enrichment/component
+harness then passed **3 files / 114 tests**, including its no-provider route
+assertion: no provider resolves before page reading, so it makes **0 page
+fetches and 0 model calls**. This preserves the provider-before-fetch,
+BYOK-only, and Tier-0-no-model contracts. No real model was invoked.
+
+SolarPACES appeared in the fresh pool as the safe eventweb URL recorded above,
+but B7-06 does not alter its title hierarchy and no unsupported identity claim
+was made here. The fixture and fresh source/pipeline authority measurements
+are each met for B7-06. The full gate is next; only an independent manager
+decision may close the overall real-data gate.
