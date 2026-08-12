@@ -42,6 +42,14 @@ export function cleanEventDescription(description: string): string {
   return `${text}${needsEllipsis ? "\u2026" : ""}`;
 }
 
+/** An owned summary must still be complete enough to state as a report fact. */
+export function cleanOwnedEventReportSummary(description: string): string | undefined {
+  const cleaned = cleanEventDescription(description);
+  return cleaned && !cleaned.endsWith("…") && /[.!?](?:["')\]]*)$/.test(cleaned)
+    ? cleaned
+    : undefined;
+}
+
 function eventKindIn(text: string): EventType | undefined {
   if (/\b(?:career|student|graduate|campus) (?:fair|expo)\b/i.test(text)) {
     return "career-fair";

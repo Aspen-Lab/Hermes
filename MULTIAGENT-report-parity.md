@@ -275,9 +275,8 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:05 UTC. Round-7 B
-                   completed B7-06, the one source-summary authority guide.
-                   Manager lock remains held; C implements B7-06 only.
+STOPPED BECAUSE:  in progress @ 2026-08-12 10:15 UTC. Round-7 C is completing
+                   the manager-requested B7-06 authority follow-up.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
@@ -301,7 +300,7 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 B POST-C INVESTIGATION COMPLETE; C NEXT.** Fixture
+STATUS:           **ROUND-7 C FOLLOW-UP IN PROGRESS.** B7-06 separates raw
                    is 0 of 32 different (0%). B7-06 confirms a generic
                    snippet-to-report provenance collapse, while correcting
                    the undocumented historical 0/2 identities as not
@@ -13714,3 +13713,10 @@ fresh full gate recorded **85 files / 981 tests, 980 passed**. The sole test
 failure remains the documented live benchmark city drift (Salvador vs stale
 Chicago); `tsc --noEmit` is clean; ESLint reports only the known
 `src/components/persona/quiz.tsx:46` error; `git diff --check` is clean.
+
+**C7-06 manager follow-up — IN PROGRESS:** report and prompt now apply the
+same complete-sentence authority guard. Page-owned typed/OG metadata whose
+summary is empty or unfinished does not override source-record evidence.
+Focused report/enrichment verification is 3 files / 124 tests passing;
+route no-provider coverage still requires the manager-requested existing
+route-pattern addition before final acceptance.

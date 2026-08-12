@@ -1,6 +1,7 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
 import { bestEventTitleSegment, looksLikeEventTitle } from "@/lib/events/sources/eventweb";
+import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
 import type { RawJobItem } from "@/lib/jobs/types";
 import { classifyRoleKind } from "@/lib/jobs/role-kind";
 import { extractDeclaredEventName, extractEventDetails } from "./event-details";
@@ -141,6 +142,9 @@ export async function enrichEventCandidates(
           bestEventTitleSegment(structured.openGraphTitle, item.url)
         ? structured.openGraphDescription
         : undefined;
+    const ownedPageSummary = pageSummary
+      ? cleanOwnedEventReportSummary(pageSummary)
+      : undefined;
     const name = typedName
       ? bestEventTitleSegment(typedName, item.url) ??
         (looksLikeEventTitle(typedName) ? typedName : undefined) ??
@@ -171,8 +175,8 @@ export async function enrichEventCandidates(
       travelGrant: item.travelGrant ?? details?.travelGrant,
       invitationLetter: item.invitationLetter ?? details?.invitationLetter,
       expectedSize: item.expectedSize ?? details?.expectedSize,
-      ...(pageSummary
-        ? { reportSummary: { text: pageSummary, authority: "page-owned" as const } }
+      ...(ownedPageSummary
+        ? { reportSummary: { text: ownedPageSummary, authority: "page-owned" as const } }
         : {}),
     };
   });

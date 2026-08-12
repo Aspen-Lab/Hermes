@@ -1,4 +1,5 @@
 import type { Event, Job, UserAiProvider, UserProfile } from "@/types";
+import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   PAGE_HEADING_MARKER_PREFIX,
@@ -565,6 +566,9 @@ export function buildEventEnrichmentPrompt(
   fetchedPageText?: string,
   fetchedPageHeadings: readonly PageHeadingEvidence[] = [],
 ): string {
+  const trustedSummary = event.reportSummary
+    ? cleanOwnedEventReportSummary(event.reportSummary.text)
+    : undefined;
   const titleHeadingCandidates = programmeTitleHeadingCandidates(
     fetchedPageHeadings,
     eventAttendeeNames(event),
@@ -597,7 +601,7 @@ export function buildEventEnrichmentPrompt(
       fees: event.fees,
       travelGrant: event.travelGrant,
       invitationLetter: event.invitationLetter,
-      ...(event.reportSummary ? { shortDescription: event.reportSummary.text } : {}),
+      ...(trustedSummary ? { shortDescription: trustedSummary } : {}),
     },
     rules: {
       condensedDescription:

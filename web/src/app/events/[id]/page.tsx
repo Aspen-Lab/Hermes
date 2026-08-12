@@ -30,7 +30,7 @@ import {
   formatWeekdayRange,
 } from "@/lib/format";
 import { reportShortDate } from "@/components/reports/report-date";
-import { cleanEventDescription } from "@/lib/events/mapper";
+import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
 import { ACTIVITY_LABELS } from "@/lib/opportunities/event-details";
 import {
   buildEnrichmentContext,
@@ -1783,7 +1783,7 @@ export function EventReport({
     sector,
   );
   const description = resolveEventReportDescription(
-    event.reportSummary ? cleanEventDescription(event.reportSummary.text) : undefined,
+    event.reportSummary ? cleanOwnedEventReportSummary(event.reportSummary.text) : undefined,
     enrichment,
   );
   const travelGrant = clean(event.travelGrant);

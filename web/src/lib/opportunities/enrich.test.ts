@@ -184,6 +184,12 @@ describe("event detail enrichment", () => {
     ), { status: 200 })));
     const [og] = await enrichEventCandidates([event(302)]);
     expect(og.reportSummary).toEqual({ text: "OG summary.", authority: "page-owned" });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(
+      '<meta property="og:title" content="Battery Summit | Example"><meta property="og:description" content="Unfinished metadata",',
+    ), { status: 200 })));
+    const [unfinished] = await enrichEventCandidates([{ ...event(303), reportSummary: { text: "Source record.", authority: "source-record" } }]);
+    expect(unfinished.reportSummary).toEqual({ text: "Source record.", authority: "source-record" });
   });
 
   it("accepts a host-matching typed Event name by its structured provenance", async () => {

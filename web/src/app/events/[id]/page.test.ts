@@ -1381,10 +1381,8 @@ describe("EventReport", () => {
       }),
     );
 
-    expect(html).toContain("It will review");
+    expect(html).not.toContain("What actually happens there");
     expect(html).not.toContain("than a quarter of a century");
-    expect(html).not.toContain("[...]");
-    expect(html).not.toMatch(/sensor, w/);
   });
 
   it("uses the condensed description when enrichment provides one", () => {
