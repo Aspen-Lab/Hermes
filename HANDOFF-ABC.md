@@ -65,7 +65,7 @@ after the first page.** Reading order:
 
 | Order | Section | Why |
 |---|---|---|
-| 1 | **§1 CURRENT STATE** | Whose turn, which round, what the last agent was doing when it stopped. This is the source of truth. Trust it over any commit message. |
+| 1 | **§1 CURRENT STATE** | Whose turn, which round, what the last agent was doing when it stopped. This is the source of truth. Trust it over any commit message. **Read its `STOPPED BECAUSE:` line before anything else in the block** — it is the difference between "that turn is finished, start the next one" and "that turn ran dry part-way, pick it up where it stopped." A released lock looks identical in both cases, so the lock cannot tell you this. |
 | 2 | **§0d THE TURN LOCK** | Whether anyone else is working right now. Claim it before you touch a file. |
 | 3 | **§0b MANAGER'S PLAYBOOK** | Your whole brief if you are the manager. Written for a session with no memory — that is you. |
 | 4 | **§1b … §1k** | Every standing ruling. Several reverse earlier ones — Ruling 19 reverses Ruling 17, Ruling 23 redefined the finish line, Ruling 24 deferred a measurement to the current round. Reading only the latest is not enough; reading only the earliest is wrong. |
@@ -170,6 +170,15 @@ These are not style preferences. Each one is here because it already went wrong.
 - **Never delete a test to make a change pass.** Rewrite the assertion to state the new contract
   and comment which item changed it.
 - **Do not open a pull request.** The reviewer goes first.
+
+### One test fails on purpose — do not fix it
+
+`web/src/lib/events/benchmark.test.ts` hits a live search API, so the same event can resolve to a
+different city on different runs. It is a **documented flake with a standing ruling in §3**, and
+it is excluded from the gate. When it fails, that is not a regression and not yours.
+
+Before you conclude any test failure is pre-existing, check that it is **this** one by name. A
+different failing test means you broke something — stop and report rather than working around it.
 
 ---
 
