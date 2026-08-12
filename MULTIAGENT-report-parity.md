@@ -15799,3 +15799,74 @@ item.
 `shared.test.ts`, one rewritten in `scoring.test.ts`, zero deleted; the one
 failure is the same documented live-search flake, unrelated). TypeScript
 clean. ESLint: the one standing `quiz.tsx:46` error, unchanged.
+
+#### B8-03 — five job adapters' hardcoded `"Unknown company"` placeholder, removed — DONE
+
+**Files:** `web/src/lib/jobs/sources/{adzuna,arbeitnow,himalayas,jsearch,
+remotive}.ts`. Landed exactly as guided: `|| "Unknown company"` →
+`|| undefined` in all five, matching B6-03's already-established precedent
+(`RawJobItem.company` is already `string | undefined` everywhere
+downstream, confirmed unchanged by re-reading `mapper.ts:140` and
+`enrich.ts:233-242`, same as B8-03's own note). `himalayas.ts` is shaped
+slightly differently — the placeholder sat behind
+`resolveEmployerIdentity`'s `"none"`-status branch, not a bare `||` — fixed
+the same way in that one branch only, leaving the `"structured"`/
+`"declared"`/`"ambiguous"` branches untouched (those are B8-04's function,
+not this item's).
+
+**`usajobs.ts` deliberately NOT touched**, per B8-03's own explicit
+instruction: its fallback (`"U.S. Federal Government"`) is a different
+shape — categorically true for every USAJobs-sourced posting, not a guess —
+and B8-03 named it a `POLICY` question for the manager rather than bundling
+it into this mechanical fix. Confirmed by re-reading `usajobs.ts:73`
+myself before leaving it alone: still `descriptor.OrganizationName?.trim()
+|| "U.S. Federal Government"`, unchanged. **Flagging for the manager,
+exactly as B8-03 asked, not deciding it myself:** keep it (true, not
+guessed) unless the manager wants every source held to the identical
+"no non-optional company fallback anywhere" rule for consistency.
+
+**Testing standard (Ruling 31) — hardest case, and why.** This item isn't
+string-parsing, so "multi-word/punctuated/matches-nothing" doesn't map
+directly — the equivalent hardest case here, stated in B8-03's own tests-
+at-risk section, is **the empty-input branch itself**: confirmed by
+directory listing that none of these five files had a dedicated test file
+before this item (`ls src/lib/jobs/sources/*.test.ts` showed only
+`jobweb.test.ts` and `salary.test.ts`), and the existing indirect coverage
+in `scoring.test.ts`/`salary.test.ts` was re-checked directly — every case
+there supplies a non-empty company field, none exercises the branch this
+fix changes. That is why it was never caught: the one path that mattered
+was the one path with zero coverage in either direction, exactly the shape
+Ruling 31 asks C to prioritise over the easy-to-write "does it keep a real
+name" case.
+
+**Tests added:** five new files, one per adapter
+(`adzuna.test.ts`, `arbeitnow.test.ts`, `himalayas.test.ts`,
+`jsearch.test.ts`, `remotive.test.ts`), two cases each — the empty-input
+case (asserts `company` is `undefined`, not the old placeholder) and a
+populated-input regression case (asserts a real name still passes through
+unchanged), so the fix is locked in both directions, not just the one that
+changed. `himalayas.test.ts`'s empty case specifically combines an empty
+catalog label **and** a description with no `resolveEmployerIdentity`-
+matching self-declaration, since that combination — not either alone — is
+what used to reach the fabricated fallback.
+
+**Tests at risk:** none, per B8-03's own confirmed grep — no existing test
+supplied an empty company/companyName/display_name/employer_name to any of
+these five functions. Re-ran `scoring.test.ts` and `salary.test.ts`
+directly to confirm rather than trust the citation; both pass unchanged.
+
+**Blast radius:** `RawJobItem.company` is already optional everywhere
+downstream (confirmed above); no other file needed a change for this item.
+
+**What renders after this fires:** identical contract to B8-01/B8-02 —
+`company: undefined` flows to `mapper.ts`, and the subtitle `<p>` on the
+job detail page omits the company segment rather than showing a
+placeholder, confirmed via the same `app/jobs/[id]/page.tsx:1010-1019`
+render path already checked for the earlier items in this round. Not a new
+render path — same guard, five more sources feeding it honestly now instead
+of guessing.
+
+**Gate after this item:** 90 files / 1007 tests, 1006 passing (ten new,
+zero deleted; the one failure is the same documented live-search flake,
+unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error,
+unchanged.

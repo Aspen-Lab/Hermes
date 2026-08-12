@@ -50,7 +50,11 @@ export function jsearchJobToRawItem(job: JSearchJob): RawJobItem | null {
     id: `jsearch:${routeSafeId(String(id))}`,
     source: "jsearch",
     title,
-    company: job.employer_name?.trim() || "Unknown company",
+    // B8-03 (round 8): was "|| Unknown company" - a fabricated placeholder
+    // Ruling 26 already rejected in jobweb.ts, copy-pasted here unaudited.
+    // `company` is already optional; absence is honest, a made-up string
+    // is not.
+    company: job.employer_name?.trim() || undefined,
     location: location || (job.job_is_remote ? "Remote" : ""),
     place:
       job.job_city || job.job_state || job.job_country

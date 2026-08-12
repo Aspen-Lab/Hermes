@@ -33,7 +33,11 @@ export function arbeitnowJobToRawItem(job: ArbeitnowJob): RawJobItem | null {
     id: `arbeitnow:${routeSafeId(String(job.slug))}`,
     source: "arbeitnow",
     title,
-    company: job.company_name?.trim() || "Unknown company",
+    // B8-03 (round 8): was "|| Unknown company" - a fabricated placeholder
+    // Ruling 26 already rejected in jobweb.ts, copy-pasted here unaudited.
+    // `company` is already optional; absence is honest, a made-up string
+    // is not.
+    company: job.company_name?.trim() || undefined,
     location,
     place: parseStructuredLocation(location),
     isRemote: Boolean(job.remote),

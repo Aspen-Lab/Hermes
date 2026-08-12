@@ -59,10 +59,14 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
     id: `himalayas:${routeSafeId(url)}`,
     source: "himalayas",
     title,
+    // B8-03 (round 8): the "none" branch was "|| Unknown company" - a
+    // fabricated placeholder Ruling 26 already rejected in jobweb.ts, copy-
+    // pasted here unaudited. `company` is already optional; absence is
+    // honest, a made-up string is not.
     company: employer.status === "ambiguous"
       ? undefined
       : employer.status === "none"
-        ? job.companyName?.trim() || "Unknown company"
+        ? job.companyName?.trim() || undefined
         : employer.company,
     location,
     place: parseStructuredLocation(locations.join(", ")),
