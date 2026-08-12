@@ -184,6 +184,36 @@ describe("extractJobDetails", () => {
       extractJobDetails("<p>Join our fully remote research team.</p>"),
     ).toEqual({});
   });
+
+  // B5-02 (round 5). Adversarial-proximity case, per B5-08: the trigger word
+  // is present, but attached to page furniture (a footer amenity mention),
+  // not to a statement about this job's own work arrangement. This is the
+  // real, confirmed false positive A found on careerservices.upenn.edu ("...
+  // on-site fitness ... amenities"). Before this item, extractWorkMode() ran
+  // on stripHtml(html), which does not remove nav/header/footer/aside, so
+  // this exact shape returned "on-site". It must now stay silent.
+  it("ignores an unrelated work-arrangement word sitting in page furniture", () => {
+    const html = `
+      <header><nav>Careers | About | Contact</nav></header>
+      <p>We are hiring a research assistant to support our lab's ion-exchange work.</p>
+      <footer>Employee amenities include on-site fitness, banking, and a cafeteria.</footer>
+    `;
+    expect(extractJobDetails(html).workMode).toBeUndefined();
+  });
+
+  // B5-02 (round 5). A genuine work-arrangement statement sitting directly
+  // in the article body -- not furniture -- must still be found even when
+  // the same page also carries unrelated nav/footer furniture. Guards
+  // against the fix above over-correcting to "furniture-stripping means
+  // nothing is ever recognised any more."
+  it("still recognises a genuine work-arrangement statement alongside unrelated furniture", () => {
+    const html = `
+      <header><nav>Careers | About | Contact</nav></header>
+      <p>The work location for this position is onsite in Los Alamos, NM.</p>
+      <footer>Equal opportunity employer. All rights reserved.</footer>
+    `;
+    expect(extractJobDetails(html).workMode).toBe("on-site");
+  });
 });
 
 describe("normalizeJobDate", () => {

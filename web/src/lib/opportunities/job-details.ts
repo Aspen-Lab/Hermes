@@ -1,5 +1,6 @@
 import type { Job } from "@/types";
 import { stripHtml } from "./shared";
+import { extractPageText } from "./page-text";
 import type { NormalizedSalary } from "./salary";
 import { extractJsonLdOpportunities } from "./structured-extract";
 
@@ -310,7 +311,19 @@ export function extractJobDetails(
   html: string,
   now = new Date(),
 ): JobPageDetails {
-  const visibleText = stripHtml(html);
+  // B5-02 (round 5). Was `stripHtml(html)`, which removes only <script>/
+  // <style> and markup -- it does NOT remove nav/header/footer/aside/other-
+  // listing furniture, unlike `extractPageText()`'s own
+  // `withoutPageFurniture()`. A real job-listing aggregator page put an
+  // unrelated "on-site fitness" amenity mention and a different job's own
+  // "hybrid" text within reach of every regex below, because nothing had
+  // stripped the surrounding page chrome first. `extractPageText` returns
+  // `null` for a JS-shell-shaped page too short to have real content; fall
+  // back to `stripHtml(html)` there, since today's behaviour on that page is
+  // already "extract nothing" either way, so the fallback changes nothing
+  // observable for that case. Furniture can only ever be noise for any of
+  // the six fields this shared text feeds, never genuine posting content.
+  const visibleText = extractPageText(html) ?? stripHtml(html);
   // B4-11. One parse of the page's JSON-LD, shared by validThrough (existing)
   // and the two new fields below -- each still takes the first job-kind
   // entry that actually carries it, exactly as validThrough already did, so

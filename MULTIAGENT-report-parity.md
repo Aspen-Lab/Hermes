@@ -9446,4 +9446,133 @@ has one caller in the file; grepped the tree for `expectedSize` again after
 the change — same four consumers B already named (report page, mapper,
 `types/index.ts`, `enrich.ts`), no new one introduced.
 
+Commit: `5f0d555`.
+
+---
+
+##### B5-02 — B4-11's `extractWorkMode()` false positive. TIER 1 LANDED. Tier 2 investigated and NOT landed — reasons below, per this round's own instruction not to commit it blind.
+
+**Tier 1 — landed, exactly as guided.** `web/src/lib/opportunities/job-details.ts`:
+`extractJobDetails()`'s shared `visibleText` switched from `stripHtml(html)`
+to `extractPageText(html) ?? stripHtml(html)`. New import
+(`extractPageText` from `./page-text`) — checked for a circular-import risk
+first: `page-text.ts` imports only from `./page-fetch` and `./shared`, not
+from `job-details.ts` or anything that reaches it, so none exists.
+
+**Verified the blast radius directly before touching anything, per the
+manager's own instruction to run the full gate on this item and read the
+output.** Grepped `job-details.test.ts` for `nav|header|footer|aside` (zero
+hits, confirming B's count) and separately for `class\s*=|id\s*=|role\s*=`
+(also zero hits) — the second check matters because `isPageFurniture()`
+doesn't only match the four tag names, it also matches a `<div>`/`<section>`
+whose `class`/`id`/`role` reads as furniture (`nav|navbar|header|footer|
+sidebar|menu|breadcrumb`, or `role="navigation"` etc.); confirming zero hits
+on both checks is stronger evidence of safety than the tag-name grep alone.
+Also traced `lineWindows()` (`extractLabeledDate`'s own line-splitting,
+which `applicationDeadline`/`startDate` depend on) against
+`extractPageText`'s paragraph-joining (`\n\n`, vs. `stripHtml`'s single
+`\n`) by hand: `lineWindows` splits on `/\r?\n+/` — one-or-more, so a run of
+either one or two newlines is the same single split boundary. The two
+pipelines produce different newline *counts* at a paragraph break but the
+same line *structure*, so `extractLabeledDate` is unaffected by the swap.
+Ran the full gate after landing tier 1 alone, before writing any new tests,
+and read the complete output (not just exit codes): 83 files / 912 tests,
+911 passing (the one documented `benchmark.test.ts` flake, unchanged), 
+typecheck clean, 1 pre-existing lint error, unchanged. All 16 pre-existing
+`job-details.test.ts` tests passed with no changes needed to any of them.
+
+**Tier 2 — investigated concretely, not landed.** B flagged reusing
+`isListingPage()` (`web/src/lib/jobs/sources/jobweb.ts:93-107`) as a
+pre-check, explicitly marked speculative. Investigated rather than either
+building it on faith or skipping it silently:
+
+1. **A real signature change, confirmed.** `isListingPage(title, host,
+   pathAndQuery)` needs the search result's own title and URL.
+   `extractJobDetails(html)` is called from exactly one place,
+   `enrichJobCandidates()` (`web/src/lib/opportunities/enrich.ts:190`), and
+   at that call site `item.title`/`item.url` are in scope but are not
+   currently passed into `extractJobDetails()`. Wiring tier 2 means
+   threading two new parameters through a function whose only caller is
+   outside `job-details.ts` itself — the "contained but not zero-diff"
+   change B's own guide already named.
+2. **The concrete reason it stays unlanded: traced `isListingPage()`
+   against the actual repro and it does not fire on it.** `hiringcafe.com`
+   is not in `AGGREGATOR_HOSTS` (`indeed.com`, `glassdoor.com`,
+   `ziprecruiter.com`, `simplyhired.com`, `monster.com`, `careerjet.com`,
+   `jooble.org`, `neuvoo.com`, `talent.com` — nine hosts, checked by name,
+   `hiringcafe.com` is not among them), so `isListingPage()` can only
+   return `true` via its title check. Real job 3's own title
+   ("Spring Engineering Internship at Mantel Capture," per A's report) does
+   not match `LISTING_TITLE_RE` (needs a leading count + "jobs/vacancies/
+   openings/positions," or a "browse/search/find/latest/top/best jobs"
+   phrase) or `CAREERS_INDEX_TITLE_RE` (anchored, whole-title match against
+   "careers"/"jobs"/etc. only). **`isListingPage()` returns `false` for the
+   exact page this tier was proposed to fix.** Building it as literally
+   guided would add the signature change above for a mechanism that does
+   not close the case it was aimed at — worse than not building it, since a
+   landed-but-ineffective guard reads as "handled" when it is not.
+3. **Whether tier 1 alone closes the three flagged real pages — checked
+   each individually against A's own numbers, not assumed as a group.**
+   - `careerservices.upenn.edu` (the confirmed false positive): **CLOSED.**
+     Both trigger mentions were amenity/visitor prose, exactly the shape
+     `withoutPageFurniture` targets or which is easily separated from the
+     job's own text; tier 1 removes it.
+   - `ev.careers`: **very likely CLOSED.** A found zero occurrences of any
+     trigger word in `extractPageText`'s own output for this page — the
+     same "invisible to the report's own text pipeline" signature as
+     `hiringcafe.com`. Under tier 1, `visibleText` *is* that output, so
+     neither `WORK_MODE_HYBRID_RE` nor `WORK_MODE_ON_SITE_RE` has anything
+     left to match.
+   - `hiringcafe.com`: **STILL OPEN, for a specific and different reason
+     than before, not a full close.** A's own count for this page: zero
+     "hybrid" occurrences in `extractPageText`'s output (so the HYBRID
+     branch is now correctly silent — the wrong `"hybrid"` value tier 1 was
+     built to fix is gone), but **five occurrences of "Onsite," each
+     attached to a different company/role** on what A confirmed is a
+     multi-posting listing page. Those mentions sit in the page's main
+     content column, not in `<nav>/<header>/<footer>/<aside>` — outside
+     `isPageFurniture()`'s definition by design, so `withoutPageFurniture`
+     does not remove them. Tier 1 most likely changes this job's
+     `workMode` from a wrong `"hybrid"` to a **different** wrong
+     `"on-site"` (attributed to some other listing on the same page), not
+     to silence. Not re-fetched to confirm the exact post-fix value directly
+     (that would be Agent A's real-data measurement, outside this role) —
+     stated as the well-evidenced likely outcome from A's own numbers, not
+     as a confirmed re-measurement.
+
+**Net effect, stated plainly.** Tier 1 is real, confirmed progress: it closes
+the one A-confirmed false positive outright and very likely closes a second.
+It does not close the third, for a specific, now-understood mechanism
+(same-page other-listing contamination, not furniture) that tier 2 as
+proposed would not have fixed either. Flagging the `hiringcafe.com` residual
+by name for the next round rather than either claiming victory or leaving it
+unexplained: closing it needs either passing enrichment something narrower
+than a whole aggregator page (a per-posting fragment, not built by this
+loop) or a same-page multi-listing detector inside `job-details.ts` itself
+(not proposed by B, not something to invent unguided at C's own discretion
+per this loop's role boundaries) — a genuinely open question, not a fix C
+declined to do.
+
+**Tests.** Two added to `job-details.test.ts`'s `workMode` block. (1) The
+direct regression/adversarial-proximity case per B5-08: nav/header + a
+footer amenity mention of "on-site fitness," with the article body itself
+silent on work arrangement — `workMode` must stay `undefined`. This is the
+same shape B5-08 names by example ("an amenity"). Confirmed this fixture
+would have returned `"on-site"` under the pre-fix code by tracing
+`stripHtml`/`isPageFurniture` by hand (stripHtml does not special-case
+`<header>/<nav>/<footer>`, so all three tags flatten into the same text
+blob the old code scanned). (2) A non-regression sanity check: a genuine
+on-site statement in the article body, alongside unrelated (non-trigger-word)
+nav/footer furniture, must still resolve to `"on-site"` — guards against the
+furniture-stripping change over-correcting to "nothing is ever recognised."
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 914 tests, 913 passing (1 pre-existing flake, unchanged), typecheck
+clean, exactly 1 pre-existing lint error (`quiz.tsx:46`). Net +2 tests from
+B5-01's checkpoint (912 → 914). Also ran `enrich.test.ts` in isolation (14/14
+passing) since it is the nearest indirect consumer of the six fields sharing
+`visibleText`; no other file in the tree calls `extractJobDetails` or reads
+`JobPageDetails` fields directly outside `job-details.ts`/`enrich.ts`
+themselves and their own tests (confirmed by grep).
+
 Commit: (this item, following).
