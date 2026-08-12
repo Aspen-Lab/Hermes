@@ -13578,3 +13578,102 @@ Chicago assertion). `tsc --noEmit` is clean. ESLint reports only the known
 no measurement artifact remains. **Next: B investigates only the 0/2
 event-summary source-boundary finding, preserving Rulings 23/25/26 and all
 security constraints.**
+
+---
+
+### Round 7 — Agent B post-C investigation
+
+#### B7-06 — eventweb can turn a search-provider snippet into report copy without target-page authority. `WRONG DATA` risk; the recorded 0/2 live measurement itself is **not reproducible as written**. **CODE: separate discovery/scoring text from source-owned report-summary evidence; fail closed in the report and AI prompt.**
+
+**A's corrected claim, checked rather than assumed.** The 09:22 record does
+not name its two event IDs, URLs, raw snippets, or exact rendered sentences,
+so those historical two cannot safely be reconstructed after a changing live
+search result. I rebuilt the current fresh Tier-0 event pool through
+`buildDailyEventPool()` with an isolated in-memory cache and the same
+boolean-only local-profile precedent. Its two fetchable current eventweb
+results were SolarPACES and Battery Safety Summit; the third current result
+was unavailable. Both current page fetches succeeded, but neither now renders
+any report description after the actual report resolver. This is a correction:
+the record's 2/2 *rendered-sentence* result is not current proof of a visible
+wrong claim. It is not evidence that either historical sentence was supported
+or unsupported, and unavailable/drifted results remain non-evidence.
+
+**The authority defect is nevertheless real and reproducible from the
+pipeline, without trusting live text.** `eventweb.ts` accepts Tavily's
+`content` or Brave's `description` as `WebResult.snippet` and assigns it to
+`RawEventItem.description` (`searchTavily()` / `searchBrave()` and
+`webResultToRawEventItem()` at lines 477-534 / 441-474). `scoreEvents()` uses
+that same string for matching and ranking (`events/scoring.ts:165-177`).
+`scoredEventToEvent()` then copies it through
+`cleanEventDescription()` into `Event.shortDescription`
+(`events/mapper.ts:121-140`), and `EventReport` sends it through
+`resolveEventReportDescription()` for the visible report paragraph
+(`app/events/[id]/page.tsx:1785-1788`). `enrichEventCandidates()` fetches the
+target page but updates only identity, dates, location and other details;
+it does not attach a description with page provenance (`opportunities/enrich.ts:99-174`).
+Thus a search-provider snippet that happens to end in a sentence can render as
+an asserted event summary even when the selected page's bounded text does not
+contain it. This is neither source-adapter synthesis nor stale cache; it is a
+provenance collapse at the raw-description/mapper/report boundary.
+
+**Required generic authority boundary (no host rule, no model, no new fetch).
+** Preserve raw discovery `description` unchanged for retrieval, scoring,
+dedupe, local search, and ranking. Add a separate optional, tagged
+source-owned `reportSummary` to `RawEventItem` and mapped `Event`, with only
+`source-record` and `page-owned` authority states. The existing daily
+event-enrichment fetch already has the target HTML, so a safe page-owned
+summary does **not** need a new fetch or a speculative body-sentence selector.
+Extend `JsonLdOpportunity.description` to retain `Event.description` as well
+as the existing job value; `extractOpportunityPageDetails(html, "event")`
+may return it only when exactly one typed Event record has a nonempty
+description. That is the highest page-owned tier. Retain
+`openGraphDescription` separately too; use it only when there is no typed
+Event description **and** its paired `openGraphTitle` produces a guarded
+`bestEventTitleSegment(openGraphTitle, item.url)`. This reuses B7-01's
+page-title/chrome/headline guard rather than accepting an article or site
+metadata description merely because it came from the target host. No title,
+multiple typed Event records, a rejected headline, an empty/unfinished
+description, or a low-authority site name means no page summary.
+
+Adapter audit: `ccfddl` may set source-record evidence from its explicit
+`conf.description` only (not its title fallback); `researchseminars` may set
+only the direct `talk.abstract` (not the locally assembled `Speaker:` prefix);
+`confstech` has no source description and its generated `${name} — topic
+conference` string must remain discovery text only; `eventweb` Tavily/Brave
+snippets are discovery text only. Do not promote a snippet merely because it
+shares words with a page. The report component and event-enrichment prompt
+must consume only `reportSummary`, never raw `shortDescription`; legacy/cache
+records without the tag are also silent. This is Ruling 23's required
+direction: missing summary data is quiet, while unsupported text is never
+stated as fact.
+
+**C guide and tests.** In `events/types.ts`, `types/index.ts`, and
+`events/mapper.ts`, carry the optional authority-tagged value while retaining
+the existing raw description path. In `structured-extract.ts`, test typed
+Event description, paired guarded OG description, malformed/empty metadata,
+and two typed Events failing closed; update `enrich.test.ts` to prove the
+existing one-fetch event pass selects typed description before guarded OG and
+does not alter ranking. In `events/sources/eventweb.ts`, prove a punctuated
+search snippet remains scoreable but produces no report summary; add adapter
+tests for ccfddl's explicit description, researchseminars's abstract-only
+summary, and confstech's synthesized description staying unproved. In
+`events/scoring.test.ts`, prove identical discovery text preserves selection
+and score when report evidence is absent. In `events/mapper.test.ts`, prove a
+source-record summary renders and an absent/unproven one does not. Update
+`app/events/[id]/page.test.ts` so an absent report summary leaves no
+description paragraph or dangling happenings content; update
+`opportunities/enrichment.test.ts` and `app/api/events/report/route.test.ts`
+so the BYOK prompt receives only source-owned summary evidence and the
+no-provider zero-fetch/zero-model contract remains intact. All fixture text
+must be short and synthetic. The existing description may remain available to
+Tier-0 scoring/search, so ranking inputs do not change.
+
+**Blast and security.** This changes presentation authority, not source
+priority, query generation, ranking, provider resolution, or fetch count.
+Tier 0 stays useful through titles, dates, locations and all other sourced
+facts; a missing summary is preferable to a false one. Tier 1/2 retains the
+existing provider-before-fetch and BYOK-only boundaries, but its prompt must
+not receive unproven discovery text. No credential, host exception, new
+network fetch, model call, fixture scrape, branch, worktree, or PR is involved.
+Rulings 23, 25, 26 and the SolarPACES/scope/TiRT/employer contracts remain
+unchanged. **This is one CODE item, not POLICY.**
