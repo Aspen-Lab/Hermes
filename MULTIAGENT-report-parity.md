@@ -275,25 +275,20 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-12 07:00 UTC. C completed B7-01
-                   and pushed B7-02 checkpoints `61a018a` and `d4128cf`.
-                   The focused suite is not green: migrate remaining fixtures
-                   to explicit ownership, add B7-02/B7-04 adversarial tests,
-                   and run the full gate. No B7-03 work has started. Resume
-                   the same C turn from §4's B7-02 partial records.
+STOPPED BECAUSE:  finished item @ 2026-08-12 08:10 UTC. C completed B7-02
+                   selected-posting ownership and its B7-04 acceptance
+                   coverage; B7-03 is next. Manager lock remains held.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       C — resume B7-02 shared selected-posting ownership across
-                   work mode,
-                   role kind, summary, and detailed report, including every
-                   B7-04 summary acceptance test (B7-04 is not a separate
-                   item); then (3) B7-03 current venue city/region/country
-                   extraction; (4) B7-05 source-owned employer identity,
-                   after B7-02. Commit/push each item separately, then A
-                   remeasures fixture and real data. No POLICY items remain.
+WHOSE TURN:       C — B7-03 only: generic, current same-clause city/region/
+                   country venue extraction before the gazetteer fallback;
+                   preserve venue-name exclusion and fail closed. Then B7-05
+                   source-owned employer identity, after B7-03. Commit/push
+                   each item separately, then A remeasures fixture and real
+                   data. No POLICY items remain.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -307,7 +302,8 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 C IN PROGRESS: B7-01 COMPLETE; B7-02 PARTIAL.**
+STATUS:           **ROUND-7 C IN PROGRESS: B7-01 and B7-02 COMPLETE; B7-03
+                   NEXT.**
                    Fixture: 0 of 32 different (0%). Real defects remain
                    hiringcafe foreign
                    selected-posting facts/summary, TiRT7 missing true WHERE,
@@ -318,10 +314,9 @@ STATUS:           **ROUND-7 C IN PROGRESS: B7-01 COMPLETE; B7-02 PARTIAL.**
                    guide item: 83 files / 948 tests, 947 passing with only
                    the documented live benchmark flake; typecheck clean;
                    exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-02 is PARTIAL at
-                   `d4128cf`, then B7-03 and B7-05 remain.** B7-01 is
-                   implemented at `661c92f`; do not count B7-04 separately.
-                   See §4's B7-02 partial records for the exact resume point.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET; B7-03 and B7-05 remain.**
+                   B7-01 and B7-02 are implemented; B7-04 remains subsumed,
+                   not a separate item. See §4's B7-02 complete record.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
@@ -13292,5 +13287,30 @@ in the partial enrichment implementation was removed; no behavior was broadened.
 tests (work mode, role kind, visa, Tier-0 summary, BYOK prompt), explicit
 unproven-summary/raw-description scoring test, and the full gate. B7-03 remains
 unstarted and the manager lock remains unchanged.
+
+#### B7-02 — COMPLETE @ 2026-08-12 08:10 UTC — one selected-posting boundary
+
+Completed the shared fail-closed ownership boundary and its B7-04 acceptance
+coverage. A smallest selected DOM owner now rejects a block containing a
+second distinct heading; otherwise it accepts only one exact selected link or
+one exact selected heading. Where no DOM owner exists, the exact selected-URL
+`JobPosting` description remains the sole structured fallback. No host,
+listing-chrome, or field-specific rule was added.
+
+Added synthetic consumer-boundary tests that prove a foreign sibling cannot
+donate work mode, structured place/deadline/salary, role-kind text, visa
+evidence, Tier-0 summary text, or BYOK prompt text. The selected title still
+supplies its safe `internship` role kind. Added an unproven successful-fetch
+case proving `fetchedPostingScope: "unproven"` leaves source `description`
+byte-for-byte available to scoring but produces no page text or mapped
+summary. The detailed report still makes one fetch with a provider, while no
+provider retains zero fetches and zero model calls. Removed stale unused
+imports left by the partial scope migration.
+
+**Gate:** 84 files / 960 tests passing; `tsc --noEmit` clean; `eslint .`
+reports only the documented `react-hooks/set-state-in-effect` at
+`src/components/persona/quiz.tsx:46`; `git diff --check` clean. B7-04 is
+closed solely through B7-02's shared scope. Next is B7-03 only; manager lock
+unchanged.
 
 ---

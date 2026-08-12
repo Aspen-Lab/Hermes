@@ -50,10 +50,6 @@ function usablePage(content: string, selectedUrl = "https://jobs.example.com/rol
     `<main>${"Detailed opportunity information. ".repeat(800)}</main>`;
 }
 
-function ownedJobPage(index: number, content: string): string {
-  return `<article><a href="/${index}">Selected posting</a>${content}</article>`;
-}
-
 describe("event detail enrichment", () => {
   afterEach(() => {
     vi.restoreAllMocks();

@@ -195,6 +195,29 @@ describe("POST /api/jobs/report", () => {
     expect(generateJsonText).toHaveBeenCalledTimes(1);
   });
 
+  it("makes one fetch but never prompts the model with an unproven sibling listing", async () => {
+    const foreignMarker = "Foreign-only hiring detail.";
+    const generateJsonText = vi.fn().mockResolvedValue(JSON.stringify({
+      competitiveness: { verdict: "Unknown", reasoning: "Insufficient owned evidence." },
+    }));
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      `<main><article><h2>Different role</h2><p>${foreignMarker}</p></article></main>`,
+      { status: 200 },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(request({
+      job: { ...job, linkPosting: "https://jobs.example.com/selected" },
+    }));
+
+    expect((await response.json()).sourceReadStatus).toBe("failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(generateJsonText).toHaveBeenCalledTimes(1);
+    const modelRequest = generateJsonText.mock.calls[0][0] as { userPrompt: string };
+    expect(modelRequest.userPrompt).not.toContain(foreignMarker);
+  });
+
   it("reopens within the cache TTL with zero fetches and zero model calls", async () => {
     const generateJsonText = vi.fn().mockResolvedValue(
       JSON.stringify({

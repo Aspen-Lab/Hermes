@@ -8,8 +8,6 @@ import { extractEventRoster } from "./event-roster";
 import { extractJobDetails } from "./job-details";
 import { resolveJobPostingScope } from "./job-posting-scope";
 import { fetchPagesConcurrently } from "./page-fetch";
-import { extractPageText } from "./page-text";
-import { stripHtml } from "./shared";
 import { extractOpportunityPageDetails } from "./structured-extract";
 import { extractVisaState } from "./visa";
 

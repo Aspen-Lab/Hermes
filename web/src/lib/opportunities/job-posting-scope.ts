@@ -54,11 +54,14 @@ function selectedDomScopes(html: string, selectedUrl: string, title: string): st
       m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
     );
     const titleMatches = headings.filter(heading => normalizedTitle(heading) === normalizedTitle(title)).length;
+    const distinctHeadings = new Set(
+      headings.map(normalizedTitle).filter(Boolean),
+    ).size;
     // A bounded posting block can legitimately link to an application form or
     // schedule as well as its own canonical URL. Only an additional job
     // witness—not an arbitrary related link—would disprove this owner; exact
     // selected-link/heading witnesses below establish the boundary.
-    if ((exactLinks === 1 || titleMatches === 1) && exactLinks <= 1 && titleMatches <= 1) {
+    if ((exactLinks === 1 || titleMatches === 1) && exactLinks <= 1 && titleMatches <= 1 && distinctHeadings <= 1) {
       candidates.push({ html: block, length: block.length });
     }
   }
