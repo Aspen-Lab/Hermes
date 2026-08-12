@@ -275,23 +275,38 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-07 22:48 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn — round-5 Agent B read A's full report
-                  (§4 "Round 5 — Agent A", both jobs) plus §1l Ruling 25 and
-                  every standing ruling, verified every finding against the
-                  live source directly (not against A's paraphrase or round
-                  4's log alone), and wrote and committed 8 items (B5-01 ..
-                  B5-08, one commit each, no code changes — see §4 "Round 5
-                  — Agent B"). Nothing pending from B.
+STOPPED BECAUSE:  out of budget @ 2026-08-07T23:30Z — round-5 Agent C was
+                  killed by the account's **monthly** spend limit (not the
+                  5-hour one; it does not clear on its own) **after landing
+                  B5-01 and B5-02, with B5-03 .. B5-07 still to do.**
+
+                  **C died at the commit step, not mid-work.** It had
+                  written B5-02 in full — the code change, both new tests,
+                  and its complete §4 entry — and was killed before `git
+                  commit` ran. The manager verified that work and committed
+                  it (`1e49507`) rather than discarding it: gate read 83
+                  files / 914 tests, 913 passing, the one failure being
+                  `benchmark.test.ts`'s documented live-search flake (a
+                  different city resolved for the same event this run),
+                  which §3's standing ruling excludes, and which nothing in
+                  a `job-details.ts` change could cause. **Recorded here
+                  because a round the manager finished is less independent
+                  than one an agent finished, and that has to stay visible.**
+
+                  **The next writer picks up at B5-03**, per §4 "Round 5 —
+                  Agent B". Nothing about B5-01 or B5-02 needs redoing.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            5
-WHOSE TURN:       C  (round-5 fix guide COMPLETE — see §4 "Round 5 — Agent
+WHOSE TURN:       C  — **PARTIAL. B5-01 and B5-02 are LANDED; resume at
+                  B5-03.** (Round-5 fix guide COMPLETE — see §4 "Round 5 —
+                  Agent
                   B" for all 8 items in full: file/line citations, fix
                   directions, blast radius, and tests-at-risk verified
                   directly against the current source, not assumed from
-                  A's report or round 4's guide. **C: work B5-01 .. B5-07 in
+                  A's report or round 4's guide. **C: work B5-03 .. B5-07 in
                   the order numbered** — this IS the required ranking from
                   §1's own TODO (wrong data first, regressions this loop
                   caused first within that); **B5-08 is not a code item**,
@@ -9575,4 +9590,4 @@ passing) since it is the nearest indirect consumer of the six fields sharing
 `JobPageDetails` fields directly outside `job-details.ts`/`enrich.ts`
 themselves and their own tests (confirmed by grep).
 
-Commit: (this item, following).
+Commit: `1e49507` (committed by the manager after C died at the commit step; see the commit message).
