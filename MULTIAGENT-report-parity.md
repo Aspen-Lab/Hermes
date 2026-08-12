@@ -12853,3 +12853,93 @@ a CODE item with a fail-closed contract, no TiRT7 host rule, no gazetteer
 addition, and no excluded venue-name output.
 
 ---
+
+#### B7-04 — R4's residual listing-chrome summary is the **same selected-posting ownership defect** as B7-02, not a fourth `summarizeJob()` chrome family. `WRONG DATA`. **SUBSUMED BY B7-02: no separate CODE item; its shared fail-closed scope must satisfy these summary acceptance tests.**
+
+**Disposition after checking A's evidence and the current pipeline: fully
+subsumed; do not duplicate B7-02.** Round-7 A reports that the selected
+hiringcafe job's summary receives listing-chrome opening text and a foreign BAE
+listing from the same furniture-stripped fetched body
+(`MULTIAGENT-report-parity.md:12211-12224`). That is not merely a new sentence
+shape that `summarizeJob()` failed to blacklist: it is unowned evidence before
+sentence selection. Ruling 29 expressly identifies `workMode`, `roleKind`, and
+`summary` as three consumers of the same foreign block and requires one
+posting-scoped text source (`§1p:1704-1731`). A's R4 label is therefore a
+separate gate observation, not a separate implementation mechanism.
+
+**Exact current chrome path.** B6-07 made `pageText` additive and intentionally
+kept the source `description` for scoring. But
+`enrichJobCandidates()` still assigns unrestricted
+`extractPageText(html)` at `web/src/lib/opportunities/enrich.ts:188,234-236`.
+The mapper then unconditionally chooses `item.pageText ?? item.description` at
+`web/src/lib/jobs/mapper.ts:130-135` before calling `summarizeJob()`. The
+summary's existing shape guards in `web/src/lib/jobs/summarize.ts:13-30,49-99`
+run only **after** the selected and foreign listings have been flattened into
+one input string; they cannot prove which sentence belongs to the selected
+posting. This traces precisely to the B7-02 scope boundary, not to a missing
+Markdown, CTA, or list-chrome regex.
+
+**Why B7-02 already covers the complete fix.** Its required change replaces
+that broad `pageText` assignment with the one `resolveJobPostingScope()` result
+and adds `fetchedPostingScope: "owned" | "unproven"`
+(`§4 B7-02:12480-12512`). An owned DOM block or exact selected-URL JobPosting
+description supplies the only summary text; an unproven successful fetch sets
+the explicit state and mapper summary to `undefined`. That directly removes
+both the foreign BAE text and unowned listing chrome from the Tier-0 summary,
+without changing `description`, `jobs/scoring.ts:162,281-285`, retrieval, or
+ranking inputs. The same resolver also protects the BYOK detailed-report route,
+so the model cannot receive the residual source body while the visible Tier-0
+summary is silent.
+
+**Do not add a second R4 parser.** C must not extend `NOISE_RE`, add a
+hiringcafe/listing host rule, strip a Markdown bracket/heading/CTA globally, or
+introduce a `pageText`-specific summary sanitizer for this item. Each would
+hide one observed fragment while leaving an arbitrary foreign sentence eligible
+for `summarizeJob()` and would duplicate the ownership mechanism already
+scheduled in B7-02. Keep B5-07's existing guards unchanged: they remain useful
+for a genuinely owned posting whose own text contains established ATS or
+e-commerce chrome, but they are not ownership proof.
+
+**B7-02 summary acceptance tests are mandatory for this R4 disposition.**
+
+- In the B7-02 synthetic selected-URL JobPosting + foreign sibling fixture,
+  map the enriched raw job through `scoredJobToJob()`. Assert its Tier-0
+  `summary` contains selected owned content only and contains neither the
+  foreign token nor listing/filter/CTA fragments. Assert the selected
+  `pageText` itself has the same boundary; do not only test the rendered
+  summary, which could pass because a scoring heuristic happened to skip bad
+  text.
+- In the B7-02 DOM-main-road fixture, put a selected job link and owned role
+  prose in one smallest block and listing chrome plus a foreign job in a sibling
+  block. Assert the summary is built from the selected block and neither
+  `extractJobDetails`, role-kind fallback, visa, nor the summary sees sibling
+  content. This proves the free-text main road under Ruling 25, not only the
+  JSON-LD fallback.
+- In the B7-02 unproven multi-listing fixture, preserve a tempting local source
+  `description` but give the fetched page only foreign listing chrome. Assert
+  `fetchedPostingScope === "unproven"`, `pageText` is absent, mapped `summary`
+  is `undefined`, and `description` remains byte-for-byte available to
+  `jobs/scoring.ts`. This proves silence rather than a fallback back into the
+  rejected fetched blob or accidental ranking mutation.
+- Preserve `mapper.test.ts:86-94`, but mark its clean fetched text as owned
+  under the new state. Preserve the B5-07 `summarize.test.ts:60-99` guard
+  regressions unchanged, so B7-02 does not weaken existing filtering for
+  genuinely owned text. Preserve `app/api/jobs/report/route.test.ts:55-75`'s
+  no-provider **zero-fetch and zero-model-call** guarantee and add B7-02's
+  unproven-page assertion that no foreign token reaches `generateJsonText`.
+
+**Blast radius / security floor.** There is no additional retrieval, scoring,
+model, provider, credential, or fetch behavior to design here. The B7-02
+single-fetch scoped-text change is the entire shared blast radius: Tier-0
+summary and BYOK detailed report gain less, owned evidence; unproven fetched
+content is silent. Provider resolution remains before any page fetch, so no
+provider remains zero report fetch/model calls; user BYOK routing, current
+request count, and authorization stay unchanged.
+
+**Search scope / no-POLICY result.** Read Round-7 A's R4/hiringcafe evidence,
+Ruling 29, B6-07, the complete B7-02 guide, `enrich.ts`, `RawJobItem`, mapper,
+`summarizeJob`, scoring, and the detailed job-report route/tests. There is no
+separate source boundary or independent chrome cause. This is explicitly a
+subsumed CODE acceptance record, not a new C task and not a policy escalation.
+
+---
