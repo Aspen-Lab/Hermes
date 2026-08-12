@@ -13431,3 +13431,25 @@ The real-data gate remains NOT MET until A records this independent post-C
 measurement. Manager lock remains `chatgpt-local` for A.
 
 ---
+
+### Round 7 — Agent A post-C remeasurement
+
+#### Fixture measurement — COMPLETE @ 2026-08-12 08:40 UTC
+
+Rendered the established maximal JobReport and EventReport fixture through the
+real exported components with `renderToStaticMarkup`, never a mock or source
+inspection. The existing report-component suite passed **85/85** focused
+assertions, covering the same 32-element inventory and order as the previous
+round: Job header/chips/actions/facts/timeline/skills/two-column content/why
+block (18), then Event header/chips/actions/facts/costs and report sections
+(14). **0 of 32 different (0%).**
+
+Visual comparison used the source PDF, rendered to disposable PNGs and
+inspected as images: plate 02 confirms the job hierarchy and fact/timeline
+shape; plate 03 confirms its continuation and section sequence; plate 04
+confirms the event's `Industry summit` display vocabulary. The standing
+exclusions remain outside the denominator exactly as ruled; none were treated
+as a match. The PNGs and temporary folder were deleted before this record.
+
+Fixture measurement only is complete. Fresh source/pipeline measurement is
+next; the real-data gate remains unknown after C and therefore open.
