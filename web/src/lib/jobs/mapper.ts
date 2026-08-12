@@ -127,10 +127,12 @@ export function scoredJobToJob(
           period: item.salaryPeriod,
         }
       : undefined;
-  const summary =
-    summarizeJob(cleanJobDescription(item.description), item.matchedKeywords) ||
-    undefined;
+  // B5-07/R4. roleTitle now computed before summary (was after) so its
+  // value can be threaded into summarizeJob()'s title-echo check.
   const roleTitle = cleanJobTitle(item.title) || item.title.trim();
+  const summary =
+    summarizeJob(cleanJobDescription(item.description), item.matchedKeywords, roleTitle) ||
+    undefined;
   const fallbackCompany = (() => {
     try {
       return new URL(item.url).hostname.replace(/^www\./, "");

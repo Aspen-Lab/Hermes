@@ -9984,4 +9984,130 @@ new problem). Typecheck clean, exactly 1 pre-existing lint error
 (`quiz.tsx:46`). Net +6 tests from B5-05's checkpoint (927 → 933), zero
 deleted, zero rewritten.
 
+Commit: `72028e1`.
+
+---
+
+##### B5-07 — R4: "What the role is" still prints scraped chrome with no colons. BOTH options LANDED. `web/src/lib/jobs/summarize.ts` + `web/src/lib/jobs/mapper.ts`.
+
+Confirmed the cause against the live code first: `LABEL_MARKER_RE`/
+`looksLikeScrapedChrome()` at the cited lines, unchanged shape from B's
+citation. Built both of B's options, not just one, since they target
+different junk families and B framed them as complementary, not
+either/or.
+
+**Option 1 — extended `NOISE_RE`, not `looksLikeScrapedChrome`,** with
+e-commerce/UI vocabulary, per B's own instruction to keep the colon-counting
+function narrowly about colons. **Deliberately narrower than B's own
+suggested word list**: dropped bare `cart` and `quantity` (B's literal
+suggestion) in favour of more specific compounds (`shopping cart`,
+`add to (?:cart|bag)`, `item(?:s)? in (?:your |the )?cart`) — matching
+`NOISE_RE`'s own established convention already visible in every one of its
+existing entries (`benefits? (?:include|package)`, not bare `benefits`;
+`apply (?:now|today)`, not bare `apply`). A bare `cart`/`quantity` is common
+enough in unrelated, legitimate contexts (a facilities role mentioning a
+golf cart; a materials role discussing sample quantity) that including them
+would have raised the false-rejection risk for no real gain against the
+named repro, which is a clearly-shaped run of shopping-widget furniture.
+
+**Option 2 — the title-echo check, built as its own function
+(`endsWithTitleEcho()`), and threaded through a new, additive third
+parameter on `summarizeJob()`.** Checked the sentence's END specifically,
+not "contains the title anywhere" — traced by hand before writing any code
+that a naive "contains" check would be a real, serious false-positive risk:
+a genuinely good sentence very commonly OPENS by naming the role ("As a
+Marketing Intern, you will develop...") and a bare-substring check would
+have rejected it too. Only a sentence with nothing meaningful AFTER the
+title-shaped text is the echo shape B named. Also floors the title length
+at 6 normalised characters, so a very short title can't collide with an
+unrelated sentence's own tail by chance.
+
+**Correction to B's own citation, small but worth recording.** B wrote that
+`mapper.ts:131`'s `summarizeJob()` call "already has `roleTitle` computed
+two lines earlier (`:133`)" — checked directly: `roleTitle` was in fact
+computed two lines *after* `summary`, not before, so it was not actually in
+scope at the call site as written. Reordered the two `const` statements
+(`roleTitle` now first) rather than treating this as a blocker — a small,
+contained reshuffle, not a sign the fix direction was wrong.
+
+**Reused `normalizeLoose()`** (`web/src/lib/opportunities/shared.ts`,
+previously module-private, used internally for `locationFit()`) rather than
+writing a second, near-identical string-normalisation helper — exported it
+(confirmed its only two existing call sites first, both internal to that
+file, so exporting it is a zero-risk addition) and imported it into
+`summarize.ts`. This is a different kind of reuse than B5-03/B5-06's
+`looksLikeHostBrand()` sharing (a generic string utility, not a
+domain-specific heuristic), named so it doesn't read as the same pattern
+repeated three times by coincidence.
+
+**Blast radius.** `summarizeJob()` has exactly one caller
+(`jobs/mapper.ts`, reconfirmed by grep), feeding only `Job.summary`. The new
+third parameter is additive with a default (`jobTitle?: string`), so it does
+not touch the function's existing two-argument contract. Reordering
+`roleTitle`/`summary` inside `scoredJobToJob()` does not change either
+value — both are still computed from the same inputs, only the sequence
+changed, and `roleTitle`'s own value is unaffected by being computed one
+statement earlier.
+
+**A related, deeper gap named by B and still true, not this item's job —
+restated so it isn't lost.** `enrichJobCandidates()` already fetches the
+posting's full page HTML but never uses it to improve `description`; the
+low-fidelity search-snippet text `summarizeJob` works from is never replaced
+by anything extracted from the fetched page. Real new extraction work,
+correctly out of scope for a guard-shaped item at this rank.
+
+**Tests.** Read `REAL_POSTING_FIXTURES` and both existing `describe` blocks
+directly first: none contains e-commerce vocabulary or a title-echo shape,
+and none of the file's existing calls pass a third argument — confirmed
+both changes are additive against 100% of existing coverage, not just B's
+own grep-based claim. Added four: (a) e-commerce/shopping-widget chrome
+(no colons) alongside one genuine sentence returns only the genuine
+sentence; (b) a sentence mostly restating the job's own title, title
+supplied as the third argument, is rejected even with no cart vocabulary
+present; (c) the false-positive guard named above — a genuine sentence that
+opens by naming the title and then says something substantive survives;
+(d) the same description as (b) called with only two arguments (no title)
+produces a DIFFERENT result that includes the would-be-rejected sentence —
+traced the scoring by hand first (matched-keyword/position/role/length
+points) to predict this precise outcome before running it, rather than
+asserting a loose "something non-empty" — confirmed correct on the first
+run, which cross-checks the hand trace against the real scoring function
+rather than just against itself.
+
+**B5-08 in practice.** Test (c) above is this item's own adversarial-
+proximity case for a NEW guard, same shape B5-08 names: the trigger
+condition (title-shaped text present) without the check being merely
+"is it there" — the check has to be "is it there with nothing real
+after it."
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 937 tests, 936 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged, unrelated to this item — a location mismatch). Typecheck clean,
+exactly 1 pre-existing lint error (`quiz.tsx:46`). Net +4 tests from B5-06's
+checkpoint (933 → 937), zero deleted, zero rewritten.
+
 Commit: (this item, following).
+
+---
+
+##### B5-08 — testing-discipline note. Not a code item; folded into every new test written this round.
+
+Every new free-text-extractor or new-guard test added across B5-01 through
+B5-07 in this round included at least one adversarial-proximity case (a
+trigger pattern present but not about the subject), per this item's own
+instruction — not only the two items B5-08 was originally written against
+(B5-01, B5-02, already landed by the previous C). Specifically, this round
+added: B5-03's `looksLikeHostBrand` direction test (a real company name
+that shares a root with its own domain, the trigger-present-but-not-brand
+case); B5-05's non-over-triggering test (a current venue mentioned with its
+own edition number, the trigger-present-but-not-historical case); B5-06's
+non-over-triggering test (a real title merely mentioning a headline-subject
+word as its topic); B5-07's non-over-triggering test (a genuine sentence
+that opens with the title and then says something real). **Every new guard
+this round shipped with both a positive case and a "looks like it should
+match but shouldn't" case**, not only the positive/silence pair B5-08
+identified as the previously-missing shape. Worth carrying forward as
+literally as B5-08 itself asked: this is now a load-bearing habit across
+the round, not a one-off applied only where B5-08's own entry pointed.
+
+---

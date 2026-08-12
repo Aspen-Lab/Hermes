@@ -82,6 +82,69 @@ describe("summarizeJob", () => {
     const summary = summarizeJob(description, [...terms]);
     expect(summary).toContain("Role Overview");
   });
+
+  // B5-07/R4: real job 2's surviving junk was a different chrome FAMILY than
+  // B4-04's ATS-label repro above — e-commerce/shopping-widget furniture,
+  // zero colons anywhere, so looksLikeScrapedChrome's colon count never saw
+  // it. Paraphrased shape, not the scraped original.
+  it("rejects e-commerce/shopping-widget chrome while keeping a genuine sentence", () => {
+    const description =
+      "3 items in your cart. Add to cart or proceed to payment before checkout closes. In stock: 12 units, SKU 88213-B. " +
+      "You will research solid-state battery materials and support daily electrochemistry experiments.";
+    const summary = summarizeJob(description, ["battery", "electrochemistry"]);
+    expect(summary).not.toMatch(/cart|checkout|sku/i);
+    expect(summary).toBe(
+      "You will research solid-state battery materials and support daily electrochemistry experiments.",
+    );
+  });
+
+  // B5-07/R4, the second mechanism: real job 2's junk carried no cart
+  // vocabulary at all by the time it reached the title-echo shape — it just
+  // trailed off into a near-repeat of the posting's own title. Threading
+  // the title through is what catches this; option 1 (NOISE_RE) alone would
+  // not.
+  it("rejects a sentence that mostly restates the job's own title", () => {
+    const description =
+      "Great opportunity now open for immediate consideration Marketing Intern Ion Exchange Materials Ltd. " +
+      "You will design outreach campaigns and analyze customer engagement data across three regional markets.";
+    const summary = summarizeJob(
+      description,
+      ["marketing", "outreach"],
+      "Marketing Intern Ion Exchange Materials Ltd",
+    );
+    expect(summary).not.toMatch(/immediate consideration/i);
+    expect(summary).toBe(
+      "You will design outreach campaigns and analyze customer engagement data across three regional markets.",
+    );
+  });
+
+  it("does not reject a genuine sentence that merely opens by naming the role", () => {
+    // Guards against over-correcting: a sentence that NAMES the title near
+    // its start and then says something substantive is not the echo shape
+    // above — only a sentence with nothing meaningful AFTER the title is.
+    const description =
+      "As a Marketing Intern Ion Exchange Materials Ltd, you will design outreach campaigns and analyze customer engagement data across three regional markets.";
+    const summary = summarizeJob(
+      description,
+      ["marketing", "outreach"],
+      "Marketing Intern Ion Exchange Materials Ltd",
+    );
+    expect(summary).toContain("design outreach campaigns");
+  });
+
+  it("does not apply the title-echo check when no title is supplied (additive, optional)", () => {
+    // The third parameter has a default — every pre-existing two-argument
+    // call site (all of the above) must behave exactly as before. Same
+    // description as the title-echo test above, called with only two
+    // arguments: nothing else rejects the first sentence (no colons, no
+    // NOISE_RE vocabulary), so without a title it is free to be selected —
+    // contrast directly with the title-supplied test, which excludes it.
+    const description =
+      "Great opportunity now open for immediate consideration Marketing Intern Ion Exchange Materials Ltd. " +
+      "You will design outreach campaigns and analyze customer engagement data across three regional markets.";
+    const summary = summarizeJob(description, ["marketing", "outreach"]);
+    expect(summary).toContain("Great opportunity now open");
+  });
 });
 
 describe("highlightSegments", () => {

@@ -124,7 +124,10 @@ export function toScoringItem(input: {
   };
 }
 
-function normalizeLoose(value: string): string {
+/** Lower-cased, punctuation-stripped, whitespace-collapsed — for loose text
+ * comparisons where exact casing/punctuation shouldn't matter (location
+ * matching here; also reused by jobs/summarize.ts's B5-07 title-echo check). */
+export function normalizeLoose(value: string): string {
   return value
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
