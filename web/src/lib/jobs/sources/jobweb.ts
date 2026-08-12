@@ -176,8 +176,28 @@ export function webResultToRawJobItem(result: {
   // B6-04 (round 6): a result title can state the employer as "Role at
   // Employer" without any punctuation segment. Keep it in the existing
   // guarded candidate pool so it cannot bypass the board/location checks.
+  // B8-01 (round 8): the character class had no space, so this could only
+  // ever match a one-word employer ("at Tesla") and silently matched
+  // nothing for the far more common multi-word case ("at Idaho National
+  // Laboratory"), falling through to the older, unguarded parts.slice(1)
+  // path below.
+  //
+  // The naive fix (just add a space to the character class) was tried and
+  // rejected: with any char + space allowed, an unpunctuated title like
+  // "... at Bell Labs remote position with great benefits" wrongly captured
+  // the whole trailing clause as the employer, turning a silent absence
+  // into wrong data - exactly the failure this loop treats as worse than
+  // missing. Instead, the capture is a run of Title-Case words (each
+  // starting with an uppercase letter, matching this file's own "catch
+  // known shapes" style used by KNOWN_JOB_BOARD_DOMAINS et al.) optionally
+  // joined by a small closed list of lowercase connectors real org names
+  // use ("University of California", "Johnson & Johnson"). Ordinary lower-
+  // case prose is not in that grammar, so it cannot be swallowed: the
+  // repetition simply stops, and if what follows is not a separator or the
+  // end of the string, the whole match fails and titleEmployer is
+  // correctly undefined rather than a guess.
   const titleEmployer = title.match(
-    /\bat\s+([A-Z][\w&.,'\u2019]{1,60}?)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
+    /\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
   )?.[1];
   const company =
     [titleEmployer, ...parts.slice(1)]

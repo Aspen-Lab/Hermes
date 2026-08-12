@@ -176,6 +176,58 @@ describe("company derivation", () => {
     });
     expect(item?.company).toBe("Tesla");
   });
+
+  // B8-01 (round 8): the pre-fix character class had no space, so it could
+  // only ever match a one-word employer. Round 6's own regression test used
+  // "at Tesla" - one word - so the bug shipped undetected for two rounds
+  // (Ruling 31). This is the hardest shape for that bug specifically: a
+  // real, multi-word research employer, immediately followed by a trailing
+  // " - Brand" segment the multi-word match must win against. Mirrors the
+  // live example B8-01 traced ("... at Savannah River National Laboratory
+  // - Vaia" wrongly producing "Vaia").
+  it("extracts a multi-word employer stated after 'at', preferring it over a trailing brand", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoctoral Researcher at Idaho National Laboratory - LabCareers",
+      url: "https://labcareers.test/jobs/9918",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBe("Idaho National Laboratory");
+  });
+
+  // B8-01: the punctuated hardest-case. A real employer name legitimately
+  // carries internal punctuation (comma, period) that the character class
+  // already allowed pre-fix; this confirms the multi-word widening did not
+  // disturb that and still stops at the trailing separator, not inside the
+  // punctuated name.
+  it("extracts a punctuated multi-word employer (comma and abbreviation) stated after 'at'", () => {
+    const item = webResultToRawJobItem({
+      title: "Research Fellow at Alphabet, Inc. - Remote",
+      url: "https://alphabet.test/careers/job/9919",
+      snippet: "Research fellowship. Apply now.",
+    });
+    expect(item?.company).toBe("Alphabet, Inc.");
+  });
+
+  // B8-01: the "should match nothing" hardest case, and the one that is
+  // easiest to get wrong when "fixing" this bug. A title with a multi-word
+  // employer but NO trailing punctuation at all - just ordinary lowercase
+  // prose running on after it - has no honest boundary between the employer
+  // name and the rest of the sentence. The naive fix (widen the character
+  // class to include a bare space) was tried first and failed this exact
+  // case: it captured "Bell Labs remote position with great benefits" as
+  // the employer, trading a silent absence for wrong data. The shipped fix
+  // requires each additional word to be Title-Case or a small closed
+  // connector ("of"/"and"/"for"/"the"/"&"), so it cannot extend past "Bell
+  // Labs", and with no separator or end-of-string to close on, the whole
+  // match correctly fails rather than guessing.
+  it("does not swallow unpunctuated trailing prose into a multi-word employer", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoc at Bell Labs remote position with great benefits",
+      url: "https://belllabs.test/careers/job/9920",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBeUndefined();
+  });
 });
 
 describe("listing titles hidden behind site chrome", () => {

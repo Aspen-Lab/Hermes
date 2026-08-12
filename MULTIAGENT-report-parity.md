@@ -15531,3 +15531,115 @@ mine — same file A already flagged as belonging to a concurrent session).
 `WHOSE TURN: C` in §1, updated in place in the same commit.
 
 **STATUS: COMPLETE.**
+
+---
+
+### Round 8 — Agent C
+
+**STATUS: IN PROGRESS.** Claimed the turn lock (`6be2bf0`,
+`LAPTOP-3CL10CG5 @ 2026-08-12 13:48 UTC`). Read §0 through §3 in full,
+§1b–§1r (every standing ruling, **§1r Ruling 31 first**, per its own
+instruction), §2's Agent C section, and Round 8 A's and B's complete §4
+entries, before touching anything. Work list is §1's own: B8-01 through
+B8-07, in the stated order.
+
+Baseline gate reconfirmed cold before touching anything: 85 files / 991
+tests, 990 passing (the one failure is the documented `benchmark.test.ts`
+live-search flake), TypeScript clean, ESLint exactly the one standing
+`quiz.tsx:46` error. Matches §1's own recorded baseline exactly.
+
+#### B8-01 — `jobweb.ts`'s "Role at Employer" regex, fixed and re-bounded — DONE
+
+**File:** `web/src/lib/jobs/sources/jobweb.ts:176-201` (`webResultToRawJobItem`).
+
+Landed the fix Ruling 31 already confirmed was real (character class had no
+space, one-word-only match) — but **not the literal one-line suggestion**.
+Before writing any test, tried the naive fix first (add a bare space to
+`[\w&.,'’]{1,60}?`) and ran it against nine title shapes in an isolated
+node script before touching the source file. It correctly fixed the
+multi-word case B8-01/Ruling 31 named — but also introduced a new
+regression: with any character plus space now allowed and no other bound,
+a title with a multi-word employer followed by ordinary lowercase prose and
+**no** separator (`"...at Bell Labs remote position with great benefits"`)
+got captured whole, employer-plus-trailing-clause, as if it were all one
+company name. That is a silent-absence case (pre-fix: `undefined`,
+correctly, by the same one-word accident B8-01 describes) turned into wrong
+data — the exact failure this loop ranks worst, caught before it ever
+reached a test file or a commit.
+
+**Shipped fix instead:** the capture is now a run of Title-Case words (each
+starting with `[A-Z]`, matching this codebase's own "catch known shapes"
+convention — same spirit as `KNOWN_JOB_BOARD_DOMAINS`/`SEASON_COHORT_LABEL_RE`
+elsewhere in this file and `NARRATIVE_VERB_RE`/`HEADLINE_PASSIVE_RE` in
+`eventweb.ts`), optionally joined by a small closed connector list real
+organisation names use (`of`, `and`, `for`, `the`, `&` — "University of
+California", "Johnson & Johnson"). Ordinary lowercase prose cannot enter
+that grammar, so the repetition simply stops there; if what follows is not
+a separator or end-of-string, the **whole match fails** and `titleEmployer`
+is correctly `undefined` rather than a guess. Full regex and rationale is
+in the code comment at `jobweb.ts:176-198`.
+
+**Testing standard (Ruling 31) — hardest case per shape, and why:**
+
+1. **Multi-word** — `"Postdoctoral Researcher at Idaho National Laboratory -
+   LabCareers"` → `"Idaho National Laboratory"`. Chosen because it is
+   Ruling 31's own verified example (its table shows this exact phrase
+   failing pre-fix) and adds the trailing-brand contest B8-01's own fix
+   direction called for ("asserting the multi-word employer wins, not the
+   trailing brand") in one case rather than two.
+2. **Punctuated** — `"Research Fellow at Alphabet, Inc. - Remote"` →
+   `"Alphabet, Inc."`. Chosen because comma and period were already inside
+   the pre-fix character class individually; this confirms the multi-word
+   widening does not disturb that and still stops at the real separator,
+   not inside the punctuated name itself.
+3. **Should match nothing** — `"Postdoc at Bell Labs remote position with
+   great benefits"` → `undefined`. Chosen because it is the exact shape
+   that defeated the naive fix in my own pre-commit testing, not a shape
+   that was already safe before I touched the file — the lowercase-first-
+   word case already had a passing test (`jobweb.test.ts:162-169`,
+   unchanged), so repeating it would not have been the hardest available
+   case.
+
+All three, plus the existing one-word regression check (`"...at Tesla |
+EV.Careers"` → `"Tesla"`, `jobweb.test.ts:171-178`, unchanged) and every
+other existing case in the `describe("company derivation", ...)` block,
+were verified in isolated node-script form against the real regex before
+being written into the test file, then re-verified via the actual
+`webResultToRawJobItem()` call in the committed test.
+
+**What renders when this guard now correctly returns nothing** (the third
+case above, and any other title this grammar cannot bound): unchanged from
+before this item — falls through to `parts.slice(1)` exactly as it did
+pre-fix, and if nothing there passes the four downstream guards either,
+`company` stays `undefined`, and the whole subtitle `<p>` is omitted at
+`app/jobs/[id]/page.tsx:1010-1019` (same render path B8-01/B8-02/B8-03 all
+confirmed) — not a placeholder, not a blank field, silence.
+
+**Residual limitation, not fixed, no live evidence either way — flagging,
+not judging.** A title shape like `"...at Idaho National Laboratory, ID"`
+(a location appended after the employer with a comma but **no** dash/pipe
+separator) would still be captured whole, `"Idaho National Laboratory,
+ID"`, because a comma-joined trailing Title-Case token is indistinguishable,
+by this grammar, from a continuation of the org name — the same ambiguity a
+human reader would have without more context. I have no live title in hand
+with this exact shape (every live example B or I found this round uses an
+explicit ` - `/`|` separator before any trailing segment), so I did not
+build machinery to guess at it. Noting it for the next A's real-data pass:
+if this shape turns up live, it is a new, narrower finding, not a reopening
+of B8-01.
+
+**Tests added:** three new cases in
+`web/src/lib/jobs/sources/jobweb.test.ts` (`describe("company derivation",
+...)`), appended after the existing B6-04 tests, none rewritten. **Tests at
+risk, confirmed clean, not assumed:** all four `titleEmployer`-adjacent
+existing cases (`jobweb.test.ts:142-178`) re-run unchanged and pass —
+traced each by hand against the new regex before running vitest, then
+confirmed by actually running it.
+
+**Blast radius:** `titleEmployer` is not exported and has no other caller —
+confirmed by grep, unchanged from B8-01's own note.
+
+**Gate after this item:** 85 files / 994 tests, 993 passing (three new,
+zero deleted; the one failure is the same documented live-search flake,
+unrelated to this file). TypeScript clean. ESLint: the one standing
+`quiz.tsx:46` error, unchanged.
