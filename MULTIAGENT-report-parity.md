@@ -14091,3 +14091,66 @@ no model call; paid report paths resolve the current user's BYOK provider before
 any report fetch; no provider means no report fetch/model call; no operator key,
 host exception, headless browser, branch, worktree, PR, or retained artifact was
 introduced. The lock is released and no next ABC turn remains.
+
+---
+
+### Round 8 — Agent A (independent verification)
+
+**STATUS: IN PROGRESS.** This is the review Ruling 30 (§1q) required: an A that
+did not build round 7's work, re-measuring the real-data half of §1j's gate
+with fresh evidence. Per Ruling 30, the four points it verified directly
+(gate figures, the `|| host` removal, the guarded `Role at Employer` parse,
+`enrich.ts` routing through `bestEventTitleSegment`) are **not** re-derived
+here. Read §1 through §1q and §2-§3 in full before starting; did not read any
+prior A/B/C harness code (all were deleted before their commits, per §3).
+
+Claimed the turn lock (`fc47512`, `LAPTOP-3CL10CG5 @ 2026-08-12 12:24 UTC`).
+Read the design-spec PDF directly (pages 1-20, via the Read tool's native PDF
+support) rather than trusting any prior round's transcription, per §1g's
+"whole PDF once per loop" rule and Ruling 19's lesson about narrow reading.
+
+#### Fixture measurement — COMPLETE
+
+Built a **new** maximal Job and Event fixture from scratch, directly from the
+plate text on PDF pages 2-9 (not reused from any prior round's harness, all of
+which were deleted before commit per §3). Rendered both through the real
+exported `JobReport` / `EventReport` with `renderToStaticMarkup`
+(`web/src/zz-round8-a-verification.test.ts`, throwaway, deleted before this
+turn's closing commit) and checked presence/shape/order of all 32 plate
+elements (18 job: chips, H1, subtitle, 4 actions, 7 facts, visa quote,
+timeline, skills heading+ratio+Tier-0 badge, what-the-role-is, to-apply-have-
+ready, why-peer-sent, 2 excluded locked-block promises confirmed absent; 14
+event: 4 chips, H1, subtitle, 3 actions, 6 facts, cheapest-way-in, two-
+deadlines, what-happens, organisations+Tier-0+descriptor, people+descriptor,
+costs table incl. the two Ruling-15 dash rows, why-peer-sent, 4-item locked
+block).
+
+**Result: 0 of 32 different (0%).** Two things worth recording plainly since
+they looked like misses on the first harness draft and were not — both were
+my own fixture-construction errors, caught by reading `page.tsx` before
+concluding anything was wrong, exactly as §3 requires:
+
+- `relevanceScore` is a **0..1 fraction** (`formatMatchPct` in
+  `web/src/lib/format.ts:193-198` does `Math.round(...score * 100)`), not a
+  0..100 percentage. Using `91`/`88` silently clamped to 100% match. Using
+  `0.91`/`0.88` renders the plate's `91% match` / `88% match` correctly.
+- Travel grant and the visa invitation letter are **not** plain `EventFee`
+  rows — they are built separately from `event.travelGrant` /
+  `event.invitationLetter` into dedicated `supportRows`, which is exactly
+  where Ruling 15's `—` glyphs live (`page.tsx`'s `CostSupportRow` handling).
+  Once modelled correctly, both support rows rendered with the plate's
+  three-column shape and the required dash cells.
+
+Everything else — TYPE/LOCATION tile keys, the day-count parenthetical
+staying suppressed (exclusion b'), the fused Why-Peer-sent sentence with no
+region/count clause (exclusion k), the `Tier 0` badge text, the prose-cased
+(not title-cased) activity chips with hyphens intact, the happenings
+footnote's `PhD 4 ... looking at industry` clause, the two locked-block
+promises confirmed absent (exclusions 1-2) — matched the plate on the first
+attempt. This reconfirms round 7's fixture claim independently, from a
+fixture I built myself rather than one inherited from any prior round.
+
+Gate immediately after (focused): `npx vitest run src/zz-round8-a-verification.test.ts` → 3/3 passing. Full-suite gate is at the end of this
+entry, not repeated here.
+
+Commit for this entry follows immediately (write-as-you-go, per §3).
