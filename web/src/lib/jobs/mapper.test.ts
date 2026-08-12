@@ -83,6 +83,16 @@ describe("scoredJobToJob", () => {
     expect(scoredJobToJob({ ...fullJob, company: "" }).companyOrLab).toBeUndefined();
   });
 
+  it("prefers fetched page text over a chrome-shaped source snippet for summaries", () => {
+    const job = scoredJobToJob({
+      ...fullJob,
+      description: "### Battery filters ] Sign up now",
+      pageText: "This role develops solid-state battery models with electrochemical experiments.",
+    });
+    expect(job.summary).toContain("solid-state battery models");
+    expect(job.summary).not.toContain("Sign up");
+  });
+
   it("preserves preferred and unrelated on-site location fit", () => {
     expect(scoredJobToJob(fullJob, ["Chicago"]).locationFit).toBe(1);
     expect(

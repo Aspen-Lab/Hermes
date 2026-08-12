@@ -33,6 +33,8 @@ export interface RawJobItem {
   isRemote: boolean;
   /** Plain text (HTML stripped), truncated. */
   description: string;
+  /** Furniture-stripped fetched page text, used only for report summaries. */
+  pageText?: string;
   url: string;
   postedAt?: string;
   employmentType?: string;

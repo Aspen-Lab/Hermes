@@ -12258,6 +12258,20 @@ separator when no employer is known.
 
 ---
 
+#### B6-07 — fetched text for report summaries
+
+**STATUS: COMPLETE.** Added additive furniture-stripped `pageText` during job
+enrichment and uses it only as the mapper's report-summary input; source
+`description` remains unchanged for ranking. Coverage proves page furniture is
+excluded and a summary selects fetched body text over a chrome-shaped snippet.
+
+**Gate:** 83 files / 946 tests, 945 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o

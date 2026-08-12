@@ -427,6 +427,21 @@ describe("job detail enrichment", () => {
     expect(enriched.roleKind).toBeUndefined();
   });
 
+  it("retains furniture-stripped fetched text separately for report summaries", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage("<nav>Job filters</nav><p>Develop battery materials for electrochemical systems.</p>"),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([job(24)]);
+
+    expect(enriched.pageText).toContain("Develop battery materials");
+    expect(enriched.pageText).not.toContain("Job filters");
+  });
+
   it("keeps a start-date-flexible signal even when it is the only new fact a page offers", async () => {
     // B3-06. hasExtractedJobSignal must count startDateFlexible on its own —
     // without that, a posting whose only new signal is flexibility would

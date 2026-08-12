@@ -47,6 +47,7 @@ function hasExtractedJobSignal(
   structured: ReturnType<typeof extractOpportunityPageDetails> | undefined,
   details: ReturnType<typeof extractJobDetails> | undefined,
   visa: RawJobItem["visa"] | undefined,
+  pageText: string | undefined,
 ): boolean {
   return Boolean(
     structured?.datePosted ||
@@ -65,6 +66,7 @@ function hasExtractedJobSignal(
       details?.salary ||
       details?.employmentType ||
       details?.workMode ||
+      pageText ||
       (visa &&
         (visa.state !== "not-stated" || visa.evidence || visa.country)),
   );
@@ -183,6 +185,7 @@ export async function enrichJobCandidates(
       extractOpportunityPageDetails(html, "job"),
     );
     const details = tryExtract(() => extractJobDetails(html));
+    const pageText = tryExtract(() => extractPageText(html)) ?? undefined;
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const roleKind =
       item.roleKind ??
@@ -192,7 +195,7 @@ export async function enrichJobCandidates(
     const visa =
       item.visa ??
       tryExtract(() => extractVisaState(html, place?.country));
-    if (!hasExtractedJobSignal(structured, details, visa)) return item;
+    if (!hasExtractedJobSignal(structured, details, visa, pageText)) return item;
     return {
       ...item,
       place,
@@ -228,6 +231,9 @@ export async function enrichJobCandidates(
       workMode: item.workMode ?? details?.workMode,
       roleKind,
       visa,
+      // B6-07: retain full furniture-stripped text separately so only the
+      // report summary upgrades; scoring continues to use source snippets.
+      pageText: item.pageText ?? pageText,
       // A web page being "online" does not prove that a job is remote.
       isRemote: item.isRemote,
     };
