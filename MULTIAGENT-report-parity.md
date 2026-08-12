@@ -13838,3 +13838,24 @@ Battery Safety Summit resolved Salvador where its stale assertion expects
 Chicago (coverage 8/16 = 0.5). `npx tsc --noEmit` passed. ESLint reports only
 the known `src/components/persona/quiz.tsx:46` synchronous-effect error.
 `git diff --check` passed. No other test, type, lint, or diff failure appeared.
+
+---
+
+#### Page-owned authority follow-up — COMPLETE @ 2026-08-12 11:00 UTC
+
+The fresh pool changed during the bounded re-run, so the earlier 16-item
+authority distribution is retained as its own measurement rather than
+rewritten. The current isolated pool contained four page-owned eventweb
+records: `eventweb:f1a88d` / `https://www.thebatteryshow.com`,
+`eventweb:1pgvs6n` / `https://www.batteryinnovationsummit.com`,
+`eventweb:13qq6uq` / `https://www.internationalbatteryseminar.com`, and
+`eventweb:l56s5p` / `https://www.advancedautobat.com/us`. All four pages were
+reachable. Their cleaned report summaries were supported by the selected
+authority hierarchy and rendered visibly: the first by a typed Event
+description (and also qualified guarded OG metadata), the other three by
+guarded paired OG descriptions. No raw body text was retained. Raw-to-mapped
+ID/URL order remained invariant.
+
+This confirms both sides of B7-06 on fresh data: unproved discovery records
+are silent, while proved page-owned records render. It is a remeasurement
+fact, not a new finding.
