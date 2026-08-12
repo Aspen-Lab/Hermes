@@ -14873,3 +14873,91 @@ for the job side; the event side's silence-on-total-rejection was already
 confirmed by round 8 A (`bestEventTitleSegment` returns `undefined` when
 `informative.length === 0`, `eventNameFrom` then tries the URL slug, then
 the snippet, per `eventweb.ts:392-426` — never a placeholder).
+
+#### B8-03 — five job source adapters hardcode a literal `"Unknown company"` placeholder — `WRONG DATA`, Ruling 26's own anti-pattern, never previously audited outside `jobweb.ts`
+
+**This is the structural finding the round asked for.** Round 8's
+instructions asked B to "report every place in the enrichment pipeline that
+can write a field the ingestion path deliberately left empty." Reading
+every job source adapter (not just `jobweb.ts`, which is all any round has
+examined for this field before) found the identical anti-pattern §1m Ruling
+26 named — a non-optional fallback that guarantees the company slot is
+never empty even when nothing is known — copy-pasted into **five separate
+files**, never fixed, never audited, because every round's "employer field"
+investigation has looked only at `jobweb.ts` (the web-search source, where
+the interesting title-parsing bugs live) and never at the four structured,
+zero/low-effort API sources sitting right next to it.
+
+```
+grep -rn '"Unknown company"' src/
+web/src/lib/jobs/sources/adzuna.ts:98:      company: job.company?.display_name?.trim() || "Unknown company",
+web/src/lib/jobs/sources/arbeitnow.ts:36:    company: job.company_name?.trim() || "Unknown company",
+web/src/lib/jobs/sources/himalayas.ts:65:        ? job.companyName?.trim() || "Unknown company"
+web/src/lib/jobs/sources/jsearch.ts:53:    company: job.employer_name?.trim() || "Unknown company",
+web/src/lib/jobs/sources/remotive.ts:41:    company: job.company_name?.trim() || "Unknown company",
+```
+
+Each fires when that source's own API returns a job record with no
+company name at all. When it fires, the report would show the literal text
+**"Unknown company"** as the employer — not absence, a fabricated string,
+exactly the shape B6-03's own doc comment in `mapper.ts:139` already
+names and rejects: *"absence is more honest than a hostname or
+placeholder."* `remotive`, `arbeitnow`, and `himalayas` are the three
+**zero-key** sources (`sources/index.ts`'s own doc comment: "Tier 0 works
+with zero keys") — they run in every single round's live sample whether or
+not any API key is configured, which makes this the highest-reach of any
+finding in this item.
+
+**A close relative, one tier softer:** `web/src/lib/jobs/sources/usajobs.ts:73`
+— `company: descriptor.OrganizationName?.trim() || "U.S. Federal
+Government"`. Same shape, but the fallback is **categorically true** for
+every USAJobs-sourced posting (the source only ever lists federal
+positions), so it is not a guess the way "Unknown company" is. Flagging it
+for the manager's call rather than folding it into the same fix — it may
+be a defensible source-level label, not a defect.
+
+**Live reachability this round: confirmed live, confirmed not triggered
+today.** Ran `remotive.fetch()`, `arbeitnow.fetch()`, `himalayas.fetch()`
+directly against this session's own live profile: 17 + 100 + 60 = 177
+items fetched, **0 carried the literal placeholder today.** This is a real,
+reachable, unguarded code path — not a hypothetical — but on today's
+177-item sample every one of these three APIs' own company field happened
+to be populated. Saying this plainly rather than either overclaiming a
+live repro I don't have, or dropping a confirmed-live gap because it didn't
+fire in one day's sample: these are large third-party APIs; a job with an
+undisclosed/blank employer is a normal, if uncommon, real-world shape for
+a job board API to return, and the code today has no defense against it
+when it does.
+
+**Fix direction.** All five: change `|| "Unknown company"` to `|| undefined`
+(the field is already optional — `RawJobItem.company?: string`), matching
+B6-03's own precedent exactly. For `usajobs.ts`, name it to the manager as
+a `POLICY` question rather than bundling it silently into the same
+mechanical fix — recommend keeping it (it's true, not guessed) unless the
+manager wants every source held to the identical "no non-optional company
+fallback anywhere" rule for consistency.
+
+**Tests at risk: none.** `remotive.ts`, `arbeitnow.ts`, `himalayas.ts`,
+`adzuna.ts`, `jsearch.ts` have **no dedicated test files at all** —
+confirmed by directory listing (`web/src/lib/jobs/sources/*.test.ts` only
+contains `jobweb.test.ts` and `salary.test.ts`). Indirect coverage exists
+in `web/src/lib/jobs/scoring.test.ts` (lines ~335-402) and
+`web/src/lib/jobs/sources/salary.test.ts`, but every existing case there
+supplies a non-empty company/companyName/display_name/employer_name —
+none exercises the empty-input branch this fix changes. Checked this
+directly rather than assuming it from the file names. C should add new
+coverage for the empty-input case on all five (currently completely
+unguarded, in either direction) as part of this item, not leave it as
+untested as before.
+
+**Blast radius:** `RawJobItem.company` is already `string | undefined`
+optional everywhere downstream — `mapper.ts:140`'s
+`cleanJobSubtitlePart(item.company)` and `enrich.ts:233-242`'s
+`resolveEmployerIdentity({ catalogLabel: item.company, ... })` both already
+handle `undefined` safely today (confirmed by reading both — this is not a
+new code path, `company` is already `undefined` for plenty of real items
+from other sources). No other file needs to change.
+
+**What renders after this guard fires:** identical to B8-01/B8-02 —
+confirmed via the same `app/jobs/[id]/page.tsx:1010-1019` subtitle-omission
+check.
