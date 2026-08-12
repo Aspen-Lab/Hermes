@@ -1947,6 +1947,94 @@ deleting them would lose round 7's own reasoning; but they are not state.
 
 ---
 
+## §1r. RULING 31 — ROUND 8'S MANAGER CALLS — BINDING
+
+**Date: 2026-08-12.** Written after checking round-8 B's guide against the
+source. B corrected A's central hypothesis and found a defect class nobody had
+audited. Both of its load-bearing claims hold; I verified them myself.
+
+### 1. Confirmed independently — C must NOT re-derive either of these
+
+**B8-01's regex bug is real, and it is worse than "sometimes fails".** I ran
+the round-6 pattern against four title shapes:
+
+| Title ends with | Captured |
+|---|---|
+| `at Tesla` | `Tesla` |
+| `at Vaia` | `Vaia` |
+| `at Idaho National Laboratory` | **nothing** |
+| `at Oak Ridge National Laboratory` | **nothing** |
+
+The character class has no space in it, so the pattern can only ever match a
+**one-word** employer. Every multi-word employer — which is most real research
+employers — fails silently and falls through to the weaker path.
+
+**B8-03's placeholder finding is real.** Five job adapters — `adzuna`,
+`arbeitnow`, `himalayas`, `jsearch`, `remotive` — each hardcode a literal
+`"Unknown company"` when the source has no employer. Confirmed in all five
+files. This is precisely the shape §1m Ruling 26 was written about, sitting in
+five places nobody had looked at, because Ruling 26 was found in `jobweb.ts`
+and the audit stopped there.
+
+### 2. The lesson worth more than either fix
+
+**Round 6 tested the "Role at Employer" parse with `at Tesla` — and `Tesla` is
+one word.** The test passed, the item was marked landed, and the feature has
+never worked for a multi-word employer since. The example chosen to prove the
+fix was the one shape that could not expose the bug.
+
+This is the same failure B5-08 named two rounds ago, in a new costume: a
+fixture that matches the developer's mental model rather than the data's real
+range. **B5-08 said to test whether a match is really *about* the subject.
+Add to it: test the shape you expect to be hardest, not the shape that is
+easiest to write down.** For any string-parsing fix, that means at minimum a
+multi-word case, a punctuated case, and a case that should match nothing.
+
+**C: every new test this round is held to that.** Say in your log which
+hardest-case you chose for each item and why.
+
+### 3. B8-02 touches a function shared with a just-closed finding
+
+`looksLikeHostBrand` is used by both the job employer guard and the event-side
+guard whose SolarPACES case was confirmed **closed** on live data this round
+(§1o Ruling 28). B flagged this rather than proposing a blind change — correct.
+
+**Ruling: C may change it, and must re-verify SolarPACES live in the same
+item — not defer the check to A.** A closed finding that reopens silently is
+worse than an open one, because nobody is looking at it any more. If the live
+re-verification cannot be run, **land nothing on this item** and say so; do not
+land the change and hope A catches it.
+
+### 4. B8-07 / Ruling 29 — RULED. Neither wait nor fund a search.
+
+B asked whether to keep waiting for an incidental live repro (three rounds, two
+agents, zero found) or fund a deliberate hunt for aggregator URL shapes.
+
+**Neither. B already produced the better option without naming it as one.**
+
+Reading `job-posting-scope.ts`, B derived the *specific structural shape* that
+would defeat `selectedDomScopes`: a page laying its listings out as sibling
+`<tr>` rows, or as flat siblings with no per-listing wrapper among the five tag
+types the selector recognises. **That is a property of the code, and a property
+of the code can be tested with a fixture. It does not need a live page.**
+
+**So: C writes that fixture.** Express the shape B derived — multiple listings,
+no per-listing wrapper among `article`/`li`/`section`/`div`/`main` — and check
+whether the selector returns a block spanning more than one listing.
+
+- If it does, Ruling 29 has a confirmed repro and becomes an ordinary fix item.
+- If it does not, **the mechanism question closes** and only the frequency
+  question remains open.
+
+**Stated plainly so nobody overclaims later:** a fixture settles whether the
+mechanism can misbehave. It does not establish that any real page has that
+shape. So a passing fixture closes "is this selector broken", not "does this
+happen in production". **The frequency question stays open and explicitly
+de-prioritised — recorded, not dropped.** Nobody may cite a passing fixture as
+grounds for calling Ruling 29 resolved in full.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
