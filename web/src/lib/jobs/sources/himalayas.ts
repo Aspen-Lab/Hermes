@@ -46,9 +46,14 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
     period: job.salaryPeriod,
   });
   const description = truncateText(stripHtml(job.description || job.excerpt));
+  // An API excerpt is display/scoring copy, not proof that it belongs to this
+  // selected record's employer identity. Only the full record description is.
+  const ownedEmployerDescription = job.description
+    ? truncateText(stripHtml(job.description))
+    : undefined;
   const employer = resolveEmployerIdentity({
     catalogLabel: job.companyName,
-    ownedTexts: [description],
+    ownedTexts: ownedEmployerDescription ? [ownedEmployerDescription] : [],
   });
   return {
     id: `himalayas:${routeSafeId(url)}`,

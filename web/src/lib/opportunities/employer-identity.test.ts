@@ -33,6 +33,9 @@ describe("resolveEmployerIdentity", () => {
       ],
     })).toEqual({ status: "ambiguous" });
     expect(resolveEmployerIdentity({
+      ownedTexts: ["At Luminare Health, our team builds care. When you join Other Health, you help patients."],
+    })).toEqual({ status: "ambiguous" });
+    expect(resolveEmployerIdentity({
       structuredOrganizations: "Luminare Health",
       ownedTexts: ["At Other Health, our employees build care."],
     })).toEqual({ status: "ambiguous" });

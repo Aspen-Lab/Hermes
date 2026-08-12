@@ -386,6 +386,16 @@ describe("source mappers", () => {
     expect(item?.company).toBe("Example Energy");
   });
 
+  it("does not treat an excerpt-only declaration as owned employer evidence", () => {
+    const item = himalayasJobToRawItem({
+      title: "Research Engineer",
+      companyName: "Catalog Energy",
+      excerpt: "At Luminare Health, our people build better care.",
+      applicationLink: "https://himalayas.app/jobs/excerpt-only",
+    });
+    expect(item?.company).toBe("Catalog Energy");
+  });
+
   it("returns null for postings without a link", () => {
     expect(remotiveJobToRawItem({ id: 1, title: "X" })).toBeNull();
     expect(himalayasJobToRawItem({ title: "X" })).toBeNull();

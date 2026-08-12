@@ -30,19 +30,20 @@ function uniqueNames(values: readonly string[]): string[] {
   return [...names.values()];
 }
 
-function directDeclaration(text: string): string | undefined {
+function directDeclarations(text: string): string[] {
   // The first paragraph/window is the only text an owned record may use for
   // identity. A later benefits mention is not a self-identification.
   const opening = text.split(/\n\s*\n/)[0]?.slice(0, 600) ?? "";
-  const match = opening.match(
-    /\bat\s+([^,.;:]{2,80}),\s*our\s+(?:people|employees|team)\b|\bwhen\s+you\s+join\s+([^,.;:]{2,80})[,.;:]/i,
-  );
-  const candidate = match?.[1] ?? match?.[2];
-  if (!candidate) return undefined;
-  const cleaned = cleanJobSubtitlePart(candidate);
-  if (!cleaned || !/^[\p{L}\p{N}][\p{L}\p{N}&' .-]{1,78}$/u.test(cleaned)) return undefined;
-  if (/\b(?:our\s+client|client|partner|vendor|on\s+behalf\s+of|for)\b/i.test(cleaned)) return undefined;
-  return cleaned;
+  const candidates: string[] = [];
+  const declaration = /\bat\s+([^,.;:]{2,80}),\s*our\s+(?:people|employees|team)\b|\bwhen\s+you\s+join\s+([^,.;:]{2,80})[,.;:]/gi;
+  for (const match of opening.matchAll(declaration)) {
+    const candidate = match[1] ?? match[2];
+    const cleaned = cleanJobSubtitlePart(candidate);
+    if (!cleaned || !/^[\p{L}\p{N}][\p{L}\p{N}&' .-]{1,78}$/u.test(cleaned)) continue;
+    if (/\b(?:our\s+client|client|partner|vendor|on\s+behalf\s+of|for)\b/i.test(cleaned)) continue;
+    candidates.push(cleaned);
+  }
+  return candidates;
 }
 
 /**
@@ -57,9 +58,7 @@ export function resolveEmployerIdentity(
     ? evidence.structuredOrganizations
     : evidence.structuredOrganizations ? [evidence.structuredOrganizations] : [];
   const structured = uniqueNames(structuredValues);
-  const declared = uniqueNames((evidence.ownedTexts ?? [])
-    .map(directDeclaration)
-    .filter((value): value is string => Boolean(value)));
+  const declared = uniqueNames((evidence.ownedTexts ?? []).flatMap(directDeclarations));
 
   if (structured.length > 1 || declared.length > 1) return { status: "ambiguous" };
   if (structured[0] && declared[0] && normalized(structured[0]) !== normalized(declared[0])) {

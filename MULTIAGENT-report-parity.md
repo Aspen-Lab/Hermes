@@ -13363,3 +13363,26 @@ reports only the documented `react-hooks/set-state-in-effect` at
 last C item. Next is Agent A's fixture and real-data remeasurement of
 SolarPACES, hiringcafe ownership/chrome, TiRT7 location, and Himalayas employer
 provenance/conflict silence; manager lock unchanged.
+
+#### B7-05 — FOLLOW-UP COMPLETE @ 2026-08-12 08:28 UTC — tighten owned employer evidence
+
+Manager review correctly found two authority gaps in the original B7-05 item.
+Himalayas now keeps `excerpt` as display/scoring fallback only; its employer
+resolver receives only the full selected record `description`, so an
+excerpt-only self-identification cannot replace a catalog label. The pure
+declaration parser now gathers every permitted direct declaration in the same
+bounded 600-character owned window before normalization, so distinct in-window
+identities are `ambiguous` rather than silently selecting the first. Indirect
+candidate guards and the existing ownership boundary are unchanged.
+
+Added focused regressions for excerpt-only non-correction and two conflicting
+declarations inside one owned text. Audited call sites: raw Himalayas input is
+the full source record only; enrichment uses raw description and B7-02-proved
+scope text only; unproven fetched pages return before identity resolution.
+No provider, model, credential, fetch, host, title, or source exception was
+added.
+
+**Gate:** 85 files / 978 tests passing; `tsc --noEmit` clean; `eslint .`
+reports only the documented `react-hooks/set-state-in-effect` at
+`src/components/persona/quiz.tsx:46`; `git diff --check` clean. §1 and the A
+handoff remain manager-owned and intentionally unchanged.
