@@ -12118,6 +12118,18 @@ reasoning is in §1p.
 
 ---
 
+#### Ruling 30 — B7-03 TiRT7 source drift
+
+**RULED, committed separately.** Current-live-only evidence does not block a
+generic CODE guide because the checked-in synthetic regression and the prior
+audited ledger are durable evidence for the original place shape. The current
+TiRT7 URL has drifted to a parked or repurposed host and contributes zero facts;
+no content fetched with TLS verification disabled may be treated as evidence.
+B must guide a generic, fail-closed current-cue plus same-clause country parser,
+preserve the historic-location rejection, and must not add a TiRT7 host rule.
+
+---
+
 ### Round 6 — Agent C
 
 #### B6-01 — guarded fetched event title segments
