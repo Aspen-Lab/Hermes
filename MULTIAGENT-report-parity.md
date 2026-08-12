@@ -13708,3 +13708,9 @@ the known quiz lint remain; the pre-existing report test was updated for the
 new source-owned contract and passes in focused rerun. No credentials, new
 fetch/model path, test deletion, branch, worktree, or PR. Next: Agent A
 remeasures B7-06; manager lock remains unchanged.
+
+**C7-06 final gate correction:** after the final report-test adjustment, a
+fresh full gate recorded **85 files / 981 tests, 980 passed**. The sole test
+failure remains the documented live benchmark city drift (Salvador vs stale
+Chicago); `tsc --noEmit` is clean; ESLint reports only the known
+`src/components/persona/quiz.tsx:46` error; `git diff --check` is clean.
