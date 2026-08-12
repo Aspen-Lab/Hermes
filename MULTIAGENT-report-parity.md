@@ -14277,3 +14277,32 @@ today's live data, not replayed from any prior round's cache.
 
 Gate after this entry: unchanged (measurement only, no product code touched).
 Commit follows immediately.
+
+#### Process note — the exact branch-switch risk §0's Step 0 warns about, hit live
+
+Between this entry's commit and the previous one, something outside this
+agent's own commands (no `git checkout` was ever run by this session) silently
+moved the local checkout's `HEAD` from `feature/summary-report-revamp` to an
+unrelated pre-existing local branch, `membership-api-connection` — confirmed
+via `git reflog`: `checkout: moving from feature/summary-report-revamp to
+membership-api-connection`, immediately followed by this entry's commit,
+which therefore landed on the wrong branch and was never actually pushed
+(`git push origin feature/summary-report-revamp` reported "Everything
+up-to-date" because it pushed the *unmoved* local `feature/summary-report-revamp`
+ref, not `HEAD`). Caught immediately by checking the push output rather than
+assuming success. **Recovered without any destructive action**: checked out
+`feature/summary-report-revamp` again (confirmed back in sync with
+`origin`), cherry-picked the stray commit onto it, pushed, and independently
+verified with `git log origin/feature/summary-report-revamp` that it landed
+(commit `b08d47d`). Did **not** force-reset `membership-api-connection` back
+to its fork point, to avoid touching a branch that may belong to a concurrent
+session on this shared machine per §0d — it now carries one extra, harmless,
+content-duplicate commit (`b9808e2`) that its owner can rebase away. No file
+belonging to that other branch (`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`,
+untracked, not mine) was read, modified, or committed.
+
+**For whoever reads this next: verify the push landed on `origin`, every
+time, not just that the commit succeeded locally** — a successful local
+commit proves nothing about which branch it is on if the checkout moved
+underneath you. This is the round-8 instance of the exact risk this file's
+own Step 0 already names.
