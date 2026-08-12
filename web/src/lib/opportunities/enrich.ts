@@ -7,6 +7,7 @@ import { extractEventDetails } from "./event-details";
 import { extractEventRoster } from "./event-roster";
 import { extractJobDetails } from "./job-details";
 import { fetchPagesConcurrently } from "./page-fetch";
+import { extractPageText } from "./page-text";
 import { stripHtml } from "./shared";
 import { extractOpportunityPageDetails } from "./structured-extract";
 import { extractVisaState } from "./visa";
@@ -185,7 +186,9 @@ export async function enrichJobCandidates(
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const roleKind =
       item.roleKind ??
-      tryExtract(() => classifyRoleKind(item.title, stripHtml(html)));
+      tryExtract(() =>
+        classifyRoleKind(item.title, extractPageText(html) ?? stripHtml(html)),
+      );
     const visa =
       item.visa ??
       tryExtract(() => extractVisaState(html, place?.country));

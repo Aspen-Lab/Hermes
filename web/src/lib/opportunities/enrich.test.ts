@@ -405,6 +405,28 @@ describe("job detail enrichment", () => {
     });
   });
 
+  it("does not infer a job role kind from page furniture", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        usablePage(`
+          <script type="application/ld+json">
+            { "@type": "JobPosting", "jobLocation": { "address": { "addressLocality": "Chicago" } } }
+          </script>
+          <p>Support laboratory research projects.</p>
+          <footer>Postdoctoral fellowship applications are now open.</footer>
+        `),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const [enriched] = await enrichJobCandidates([
+      { ...job(21), title: "Research Assistant" },
+    ]);
+
+    expect(enriched.roleKind).toBeUndefined();
+  });
+
   it("keeps a start-date-flexible signal even when it is the only new fact a page offers", async () => {
     // B3-06. hasExtractedJobSignal must count startDateFlexible on its own —
     // without that, a posting whose only new signal is flexibility would

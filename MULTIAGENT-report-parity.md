@@ -12193,6 +12193,20 @@ clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 
 ---
 
+#### B6-02 — furniture-stripped role-kind input
+
+**STATUS: COMPLETE.** Switched enrichment's role-kind classification to the
+existing `extractPageText(html) ?? stripHtml(html)` tier-1 source. Added a
+plain-titled job fixture showing footer-only postdoctoral text cannot assign
+the job a role kind.
+
+**Gate:** 83 files / 940 tests, 939 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o
