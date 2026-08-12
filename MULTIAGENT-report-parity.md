@@ -275,23 +275,26 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 05:10 UTC. Round-7 A
-                   completed and pushed the fixture, fresh-pool, continuity,
-                   exclusion, gate, and handoff evidence. Fixture is 0%; the
-                   real-data gate is NOT MET. Full evidence is in §4
-                   "Round 7 — Agent A"; B starts from its ranked work list.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 06:30 UTC. Round-7 B
+                   completed and pushed five separate investigation records:
+                   B7-01, B7-02, B7-03, B7-04 (subsumed), and B7-05. C now
+                   implements the four ordered CODE items below. Fixture is
+                   0%; the real-data gate is NOT MET. Full evidence is in §4
+                   "Round 7 — Agent B" and its closing handoff.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       B — investigate the Round-7 findings in this order: (1)
-                   SolarPACES's wrong absolute fallback; (2) hiringcafe's
-                   shared posting-ownership boundary across `workMode`,
-                   `roleKind`, and summary; (3) TiRT7's missing true venue;
-                   (4) remaining R4 listing-chrome summaries; (5) verify the
-                   fresh Himalayas employer/body mismatch before counting it
-                   as wrong data. B writes a guide only; no product code.
+WHOSE TURN:       C — implement Round-7's CODE guides in this exact order:
+                   (1) B7-01 SolarPACES source-owned event identity; (2)
+                   B7-02 shared selected-posting ownership across work mode,
+                   role kind, summary, and detailed report, including every
+                   B7-04 summary acceptance test (B7-04 is not a separate
+                   item); (3) B7-03 current venue city/region/country
+                   extraction; (4) B7-05 source-owned employer identity,
+                   after B7-02. Commit/push each item separately, then A
+                   remeasures fixture and real data. No POLICY items remain.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -305,47 +308,52 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 MEASUREMENT COMPLETE.** Fixture: 0 of 32
-                   different (0%). Real: SolarPACES still renders the wrong
-                   absolute fallback; hiringcafe still attributes a foreign
-                   listing to the selected job's work mode and summary;
-                   TiRT7 remains silently locationless. B6-08 careerservices
-                   and B6-04 Tesla title-employer are closed on live
-                   remeasurement. Fresh pools rendered 6 events + 6 jobs with
-                   no placeholder leaks, but eventweb/jobweb returned zero
-                   candidates, so continuity findings remain binding. R8 was
-                   not re-exercised. Final gate: 83 files / 948 tests, 947
-                   passing with only the documented live benchmark flake;
-                   typecheck clean; exactly the known quiz lint error.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET.** Wrong data remains in
-                   SolarPACES and hiringcafe; TiRT7 remains under-extracted;
-                   R4 has a residual listing-chrome shape. See §4 "Round 7 —
-                   Agent A" for per-item evidence and the ranked B list.
+STATUS:           **ROUND-7 INVESTIGATION COMPLETE; C IMPLEMENTATION
+                   PENDING.** Fixture: 0 of 32 different (0%). Real defects
+                   remain SolarPACES wrong identity, hiringcafe foreign
+                   selected-posting facts/summary, TiRT7 missing true WHERE,
+                   and Himalayas's confirmed Workday/Luminare employer
+                   mismatch. B7-04 is fully subsumed by B7-02, not another
+                   parser task. B6-08 careerservices and B6-04 Tesla
+                   title-employer remain closed. Full B gate after every
+                   guide item: 83 files / 948 tests, 947 passing with only
+                   the documented live benchmark flake; typecheck clean;
+                   exactly the known quiz lint error.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET; four CODE items await
+                   C.** Do not count B7-04 separately. See §4 "Round 7 —
+                   Agent B" for executable detail, tests, dependencies, and
+                   the next-A real-data checks.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 05:10 UTC. Agent A
-completed both measurements and pushed every evidence commit. `HELD BY:`
-remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by instruction.
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 06:30 UTC. Agent B
+completed and pushed every Round-7 guide record, with no product/test code.
+`HELD BY:` remains `chatgpt-local @ 2026-08-12 04:02 UTC`, unchanged by
+instruction.
 
-**WHOSE TURN: B.** Investigate, in order: (1) SolarPACES's wrong absolute
-fallback; (2) hiringcafe's shared posting-ownership boundary across work mode,
-role kind, and summary; (3) TiRT7's still-missing true venue; (4) R4's
-remaining listing-chrome summary shape; (5) cautiously verify the one fresh
-Himalayas employer/body mismatch before counting it as new R7 wrong data.
+**WHOSE TURN: C.** Implement only this order: (1) B7-01 SolarPACES
+source-backed event identity; (2) B7-02's one selected-posting scope across
+work mode, role kind, Tier-0 summary, and BYOK detailed report — **including
+B7-04's acceptance tests, with no separate R4 implementation**; (3) B7-03's
+generic current venue city/region/country path; (4) B7-05's generic
+source-owned employer hierarchy, after B7-02. No POLICY items are awaiting a
+manager decision.
 
 **STATUS / LAST DIFFERENCE:** fixture 0 of 32 different (0%); real gate NOT
-MET. SolarPACES still renders an incorrect absolute fallback. hiringcafe still
-attributes foreign listing text to the selected job's `workMode` and summary.
-TiRT7 is silent rather than true-venue complete. B6-08 careerservices amenity
-proximity and B6-04 Tesla title-employer extraction are closed. Fresh Tier-0
-pools (6 events and 6 jobs rendered) carried no placeholder leaks, but current
-eventweb/jobweb fetched zero candidates, so that does not close continuity
-findings. R8 was not re-exercised.
+MET. The four listed CODE items remain unimplemented. SolarPACES's absolute
+fallback, hiringcafe's foreign-posting fields/summary, TiRT7's true WHERE, and
+the confirmed Himalayas employer mismatch must be remeasured after C. B7-04 is
+subsumed, not an additional metric or code path. B6-08 careerservices amenity
+proximity and B6-04 Tesla title-employer extraction remain closed; continuity
+findings and standing exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
-real gates are separate and both must be zero. The manager lock stays held for
+real gates are separate and both must be zero. C preserves the §1d exclusions
+(B7-03 may provide city/region/country WHERE truth but never an excluded venue
+name), Rulings 23/25/26, and the B7-02 security floor: provider resolution
+before a detailed-report fetch; no provider means zero report fetch/model call;
+Tier 0 and B7-05's parser make no model call. The manager lock stays held for
 the manager's final stop commit.
 
 ROUND 4 CHANGED THE PROBLEM
@@ -537,12 +545,34 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            items are now committed and pushed. **A's post-C remeasurement is
            next.**
 
-TODO:      **B: investigate Round 7's ranked list and write the Round-7 fix
-           guide, one committed/pushed item at a time.** SolarPACES and
-           hiringcafe are wrong-data priorities and remain in the gate; TiRT7
-           is under-extraction; verify the Himalayas employer/body mismatch
-           before treating it as a confirmed defect. Full evidence is in §4
-           "Round 7 — Agent A".
+TODO:      **C: implement Round 7's four CODE items in this exact order, one
+           committed/pushed item at a time, with the full gate after each.**
+           1. **B7-01 — SolarPACES `WRONG DATA`:** source-backed event
+              identity hierarchy, so no unsupported absolute deadline/title
+              fallback can become the event name.
+           2. **B7-02 — hiringcafe `WRONG DATA`:** one selected-posting scope
+              for structured fields, work mode, role kind, visa, Tier-0
+              summary, and BYOK detailed report. **B7-04 is subsumed here:**
+              land every B7-04 acceptance test; do not write another chrome
+              filter or a separate R4 implementation.
+           3. **B7-03 — TiRT7 `MISSING`:** one generic, current-venue,
+              same-clause city/region/country parser before the gazetteer
+              fallback; never add a city by name or surface an excluded venue
+              name.
+           4. **B7-05 — Himalayas `WRONG DATA`, after B7-02:** one generic,
+              source-record/owned-scope employer hierarchy with direct
+              self-declaration and explicit high-tier conflict → absent
+              company; no hostname, ATS, company, or source exception.
+
+           **No POLICY items remain before C.** Preserve all §1d exclusions,
+           Rulings 23/25/26, Tier-0 no-model behavior, and B7-02's
+           provider-before-fetch / no-provider zero-fetch-and-model-call
+           guarantee. Then A must remeasure both the fixture and live data:
+           SolarPACES identity/fallback order; hiringcafe selected ownership,
+           foreign-work-mode/summary absence, and B7-04 chrome; TiRT7's true
+           city/region/country with no venue name or historical host; and the
+           Himalayas employer against owned source evidence, including the
+           fail-closed conflict cases. `HELD BY` remains the manager's lock.
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
@@ -13103,5 +13133,72 @@ company consumers, title/hostname safeguards, B7-02's scope design, and their
 tests. The safe rule is a generic evidence hierarchy with explicit ambiguity,
 not a product decision or a one-off correction. **B7-05 is a separate CODE
 item dependent on B7-02's ownership scope; no POLICY escalation remains.**
+
+---
+
+### Round 7 — Agent B closing handoff
+
+**B COMPLETE @ 2026-08-12 06:30 UTC.** This investigator made no product or
+test changes. Five durable, individually pushed records now cover the ranked
+work list: `586da73` B7-01 SolarPACES identity, `f96115a` B7-02 selected
+posting ownership, `13798eb` B7-03 current venue, `37dbc63` B7-04's subsumed
+summary acceptance, and `2dc3bfe` B7-05 source-owned employer identity. The
+manager's `HELD BY: chatgpt-local @ 2026-08-12 04:02 UTC` lock was never
+claimed, refreshed, released, or otherwise changed.
+
+**Classification and exact C work order — do not re-rank.**
+
+1. **B7-01 — CODE, `WRONG DATA`:** SolarPACES must use the guide's
+   source-backed event-name candidate/order, including the newly reachable
+   final fallback, and must stay silent when no candidate is proved. It may
+   not make `Event.name` optional or turn a deadline headline into a name.
+2. **B7-02 — CODE, `WRONG DATA`:** implement one `resolveJobPostingScope()`
+   across the selected job's structured fields, work mode, role kind, visa,
+   Tier-0 summary, and detailed BYOK report. Its B7-04 acceptance record is
+   mandatory: a foreign listing or listing chrome is unowned evidence, so
+   **B7-04 is fully subsumed and is not a separate C task.** Do not add a
+   host rule, three field regexes, or another summary sanitizer.
+3. **B7-03 — CODE, `MISSING`:** implement the generic, current,
+   same-clause city/region/country venue path before the existing gazetteer
+   fallback. It must remain source-backed and fail closed on ambiguity,
+   historical references, a missing country, or a facility-only phrase. It
+   supplies WHERE city/country truth only; the event venue-name exclusion
+   remains unchanged.
+4. **B7-05 — CODE, `WRONG DATA`, dependent on B7-02:** after the shared scope
+   exists, implement the one generic source-record/owned-scope employer
+   hierarchy. A unique direct self-declaration may correct a lower-tier
+   catalog label; competing high-tier identities make the company absent.
+   Never use unscoped text, a title, a hostname, an ATS list, or a source/
+   employer exception.
+
+**No POLICY items remain before C.** The four entries above are all CODE. The
+only process requirements are one commit/push per item, the full gate after
+each, no test deletion, and a truthful §1 update in C's final handoff. Do not
+re-open the drifted TiRT7 URL as a fact source: Ruling 30 remains binding. Do
+not weaken Rulings 23, 25, or 26, or any §1d exclusion.
+
+**Security and data boundaries that C must preserve.** B7-02 has one
+source-selection/fetch path, not a second detailed-report fetch path: resolve
+the provider before its one page fetch, and with no provider do zero report
+fetches and zero model calls. Tier 0 remains deterministic and useful without
+a key. B7-03 and B7-05 are deterministic extraction only; neither adds an
+LLM, credential, network lookup, host exception, or relaxed ownership rule.
+Raw source descriptions stay available to existing scoring only where the
+guides say so; unproven fetched content never becomes a report fact or prompt.
+
+**Gate and next measurement.** B's full gate after each guide item matched the
+known baseline: 83 files / 948 tests, 947 passing, with only the live
+`benchmark.test.ts` city-coverage flake (6/13 = 0.4615); `tsc --noEmit` clean;
+only `src/components/persona/quiz.tsx:46` lint error. After C lands all four
+items, A must remeasure both the 0%-fixture and real data, specifically:
+SolarPACES candidate/fallback identity; hiringcafe's selected scope across
+work mode, role kind, Tier-0 summary, detailed prompt, and B7-04 chrome;
+TiRT7's current city/region/country with no historical host or venue name; and
+Himalayas's employer provenance plus ambiguous-conflict silence. A also keeps
+the existing fresh-pool/continuity checks; a passing synthetic suite alone
+does not close the real gate.
+
+**Handoff state:** §1 is now truthfully `WHOSE TURN: C`; fixture is 0% but
+the real-data gate remains NOT MET until A's post-C measurement. B stops here.
 
 ---
