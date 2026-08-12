@@ -275,41 +275,24 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 01:40 UTC. Round-6 A ran the
-                  full two-part mandate: fixture re-derived at 0% (confirmed
-                  from render), real-data pass against 6 continuity postings
-                  (the same 3 events + 3 jobs round 5 named, re-fetched
-                  fresh) plus one fresh live pool (17 real events, 12 real
-                  jobs — 23+24 real items examined in total, well above the
-                  3+3 minimum). **Ruling 26 confirmed STILL OPEN and
-                  generalised**, per instruction: the `|| host`-shaped
-                  fallback exists in at least three places, not one
-                  (`jobweb.ts`, `jobs/mapper.ts`, and — the round's single
-                  largest finding — `eventweb.ts`'s `eventNameFrom`, where an
-                  entirely separate, unguarded code path in `enrich.ts` was
-                  found to bypass all of B5-06's guards outright on 4 of 17
-                  fresh events). R11 and R12 closed; R2 improved, not closed;
-                  R4, R7 (= Ruling 26), and R13 still open. B5-02 (named in
-                  this round's TODO, not one of the six R-numbers) is still
-                  open on both of its own real-page repros — **one of round
-                  5 C's own "CLOSED" claims (`careerservices.upenn.edu`) does
-                  not survive direct re-measurement**, stated plainly in §4
-                  rather than silently corrected. Full detail, evidence, and
-                  exact quotes are in §4 "Round 6 — Agent A"; do not re-derive
-                  from this summary.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:14 UTC. Round-6 B has
+                  completed and pushed B6-01 .. B6-08, each as its own guide
+                  commit. B6-06 (SolarPACES site-brand precision/recall) and
+                  B6-08's `hiringcafe.com` same-page multi-listing residual
+                  are explicitly `POLICY — manager decides`; C must not begin
+                  until the manager rules both. Exact classification, C work
+                  order, dependencies, and the accepted gate are in §4
+                  "Round 6 — Agent B"'s closing handoff.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            6
-WHOSE TURN:       B — **write the round-6 fix guide.** Your work list is §4
-                  "Round 6 — Agent A", read in full — it is organised in the
-                  same priority order the TODO below repeats. **Read §1m
-                  Ruling 26 first**, then A's "FIRST" section, before
-                  anything else: the fix direction it asks for is explicitly
-                  not "add another guard" but "may the company slot (and,
-                  newly relevant, the event name) be empty/absent at all,"
-                  and B is the one who costs that, not C.
+WHOSE TURN:       MANAGER — rule B6-06 SolarPACES and B6-08 hiringcafe.com
+                  policy items, then advance to C with the exact ordered,
+                  code-only work list in §4 "Round 6 — Agent B". The manager
+                  lock stays held by `chatgpt-local` until the final stop
+                  commit; do not change it in this handoff.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -323,15 +306,13 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-6 MEASUREMENT COMPLETE.** Fixture: 0% (unchanged
-                  from round 5, reconfirmed from render). Real data: R11
-                  (`extractExpectedSize` cohort-year fix) and R12 (`See
-                  posting` placeholder) are **CLOSED**, reconfirmed live on
-                  their original repro pages plus a broader fresh sample. R2
-                  (event WHERE) is **IMPROVED, NOT CLOSED** — the WHERE tile
-                  is now silent rather than confidently wrong, exactly as
-                  B5-05's own author predicted, but the true venue still
-                  does not appear. **R4, R7, and R13 are STILL OPEN.**
+STATUS:           **ROUND-6 B GUIDE COMPLETE.** Eight items classified:
+                  B6-01/02/03/04/05/07/08 are code guides; B6-06 is policy;
+                  B6-08 also carries the separate hiringcafe policy item.
+                  Gate after B6-08: 83 files / 937 tests, 936 passing with
+                  only the documented live benchmark flake; typecheck clean;
+                  exactly the known quiz.tsx:46 lint error. Fixture remains
+                  0%; the real-data gate remains NOT MET.
 
                   **R7 = Ruling 26, scored together per instruction.** B5-03's
                   two tier-1 guards are confirmed working on fresh data at
@@ -591,10 +572,15 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            6 continuity postings plus a fresh 17-event/12-job live pool;
            Ruling 26 confirmed and generalised to two more call sites; one
            new architectural finding (the `enrich.ts` title-preference
-           bypass) surfaced. Full detail in §4 "Round 6 — Agent A". B's
-           round-6 guide is next, per TODO below.
+           bypass) surfaced. Full detail in §4 "Round 6 — Agent A". **B's
+           complete round-6 guide, B6-01 .. B6-08, is now committed and
+           pushed; manager policy rulings are next, before C begins.**
 
-TODO:      **B: write the round-6 fix guide.** Round 6's measurement is done
+TODO:      **MANAGER: rule B6-06 SolarPACES and B6-08 hiringcafe.com.
+           Then advance C to the code-only work order in §4's Round-6 B
+           handoff.** Do not hand either policy item to C unruled.
+
+TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
            **Read §1m Ruling 26 first**, then A's "FIRST" section in that
            entry, before writing anything: the required fix direction is not
@@ -852,11 +838,12 @@ TODO (superseded — the round-4 measurement it describes is already done):
            postings — still open from round 2 — plus, new this round, B3-06's
            start-date-flexibility phrase list and B3-07's "exactly one comma"
            travel-grant guard, both untested against real text (see STATUS).
-GATE NOW:  83 files / **910 tests, all 910 passing**, typecheck clean, 1
-           pre-existing lint error (`src/components/persona/quiz.tsx:46`) —
-           **this IS the final round-4 figure.** All 13 guide items
-           resolved (landed, intentionally skipped, or additive-piece-only
-           per §1k) — see §4 "Round 4 — Agent C" for the per-item state.
+GATE NOW:  83 files / **937 tests, 936 passing**; the sole test failure is
+           the documented live-data flake `src/lib/events/benchmark.test.ts`
+           (this run resolved Salvador where its live assertion expected
+           Chicago), typecheck clean, exactly 1 pre-existing lint error
+           (`src/components/persona/quiz.tsx:46`). No other failure appeared.
+           This is B6-08's accepted gate; see §4 "Round 6 — Agent B".
 FLAKE:     `src/lib/events/benchmark.test.ts` — a live Tavily-search
            integration test that only runs when a real API key is present in
            `.local-data/profile.json`, asserting a specific real event still
@@ -12029,5 +12016,46 @@ is the documented live-data flake `src/lib/events/benchmark.test.ts` (this
 run's expected Chicago city resolved to Salvador), TypeScript is clean, and
 the sole lint error is the known `src/components/persona/quiz.tsx:46` rule.
 No other failure appeared; accepted under §3's stated floor.
+
+---
+
+#### Round 6 B — classification summary and manager handoff
+
+**STATUS: COMPLETE.** B6-01 through B6-08 are committed and pushed as eight
+separate guide items (B6-01..07 were already durable when this turn resumed;
+B6-08 landed in `adb2c3b`). This B turn was run by the ABC investigator on
+the required Terra/high route. No product code or test changed.
+
+| Item | Classification | C disposition / dependency |
+|---|---|---|
+| B6-01 | `WRONG DATA` | **CODE.** Extract the guard-complete event title segment helper, then use it in enrichment; foundational for B6-05. |
+| B6-02 | `WRONG DATA` (latent) | **CODE.** Independently switch `roleKind` to B5-02's furniture-stripped page text; it shares `enrich.ts` with B6-01/B6-07, so land as its own commit after B6-01. |
+| B6-03 | `WRONG DATA` + `WRONG SHAPE` | **CODE.** Make `companyOrLab` genuinely optional and repair all named consumers; it must follow B6-04, which recovers the known title evidence before the remaining unknowns become silent. |
+| B6-04 | `WRONG DATA` | **CODE.** Add guarded `at <Employer>` title candidate before the existing candidate pool; do this before B6-03. |
+| B6-05 | `WRONG DATA` | **CODE.** Gate the URL-slug fallback with B6-01's shared predicate; **depends on B6-01**. |
+| B6-06 | `WRONG DATA` | **POLICY — manager decides. No C code.** SolarPACES is a real event whose name legitimately matches its dedicated domain; every bounded heuristic either fails to distinguish it from the closed board-brand case or reopens that defect. |
+| B6-07 | `WRONG DATA` | **CODE.** Add additive fetched `pageText` and prefer it only for report-summary input; keep `description` for scoring. Shared `enrich.ts` surface only, no code dependency. |
+| B6-08 careerservices.upenn.edu | `WRONG DATA` | **CODE.** Per-occurrence work-mode amenity-tail denial; independent, but retain valid work-arrangement evidence elsewhere in the same page. |
+| B6-08 hiringcafe.com | `POLICY — manager decides` | **NO C code.** Same-page multi-listing isolation needs a new, safely scoped ownership mechanism; current evidence does not supply one. |
+
+**Exact C work order after the manager rules policy:** B6-01 → B6-05
+(required dependency) → B6-02 → B6-04 → B6-03 → B6-07 → B6-08
+careerservices. Commit and push each item separately, run the full gate after
+each, and do **not** implement B6-06 or B6-08 hiringcafe.com unless a new
+manager ruling explicitly schedules it. B6-01/B6-02/B6-07 touch
+`enrich.ts`; their required separate commits make review and recovery safe.
+
+**POLICY — manager decides before C:**
+
+1. **B6-06 SolarPACES site-brand precision/recall.** Either retain it as a
+   named real-data residual or fund a distinct, out-of-scope signal; no
+   safe guard-only rule exists.
+2. **B6-08 hiringcafe.com same-page multi-listing.** Either schedule a
+   separately scoped job-content ownership mechanism or retain this named
+   residual; no narrow regex/filter is safe to hand to C.
+
+**Gate record:** B6-08's full gate is the current accepted baseline: 83 files
+/ 937 tests, 936 passing, only `src/lib/events/benchmark.test.ts` flaky;
+typecheck clean; only `src/components/persona/quiz.tsx:46` lint error.
 
 ---
