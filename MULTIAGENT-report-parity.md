@@ -14355,3 +14355,65 @@ be true or false independently, and this round's evidence is that the chrome
 axis is untouched.
 
 Commit follows immediately.
+
+#### Employer field — NEW finding, WRONG DATA, STILL OPEN via a mechanism that is NOT `|| host`
+
+**This is the highest-priority finding of this round.** Ruling 30 asked
+specifically: after the `|| host` guard/fallback was removed, is what took
+its place silence, "and not a new default that nobody named"? On the job
+company slot, across this round's fresh live pool, the answer is: mostly
+silence, but **not entirely** — a different, previously-unreported mechanism
+still reaches a confidently wrong value.
+
+**Full census, the complete current scored pool for this profile (11 items,
+both the 12- and 20-item pool requests independently returned the same 11 —
+not a subset)**, 8 of 11 carry a non-null `companyOrLab`:
+
+| Job (title, truncated) | Rendered company | Verdict |
+|---|---|---|
+| Internship, Battery Engineering (Summer 2026) **at Tesla** | `Tesla` | Correct — B6-04's fix holds live |
+| 2027 Summer Investment Internship (Battery Ventures) | `Battery Ventures` | Plausible, not contradicted |
+| Internships (`lco.global`, Las Cumbres Observatory's own site) | `Las Cumbres Observatory` | Correct — org's own domain |
+| PhD Student Internship Opportunities **at Thermo Fisher Scientific** | `Graduate School` | **WRONG** |
+| Summer Student Projects PSI Center for Nuclear Engineering and Sciences | `Summer Student Programme` | **WRONG** |
+| Postdoctoral Research Associate (URL: `oak-ridge-national-laboratory-...`) | `Molten Salt Characterization` | **WRONG** |
+| Job vacancies looking for OpenMC skills (`?page=2`) | `Page 2` | **WRONG** |
+| Actinide Chemistry & Ion Exchange Postdoc **at Savannah River National Laboratory** | `Vaia` | **WRONG** |
+
+**5 of 8 non-null companies (62.5%) are wrong** — each checked against the
+posting's own title or URL slug, which in 2 of the 5 cases (`Graduate
+School`, `Vaia`) states the real employer explicitly with the same "Role at
+Employer" shape B6-04 was built to catch. `Molten Salt Characterization` and
+`Summer Student Programme` are each a program/topic label, not an employer.
+`Page 2` is forum pagination UI text. None of the five is a bare hostname —
+confirmed each is a clean, plausible-looking string, which is worse for a
+reader than an obvious placeholder would be.
+
+**Isolated which stage produces the wrong value — not why, just where.**
+Called `webResultToRawJobItem()` directly with each posting's exact real
+title and URL, snippet omitted (the "at Employer" regex reads only the
+title, so this isolates it cleanly): **all five return `company: undefined`**
+— correctly silent, guards working exactly as designed, `|| host` confirmed
+absent (matches Ruling 30's verified point; not re-litigated here). The
+wrong values are therefore **not** produced by `jobweb.ts`'s own guarded
+parse. They appear only in the pool-built (post-enrichment) item, meaning
+something in the enrichment stage — most plausibly B7-05's new declared-
+employer resolver reading a fetched page's own institutional self-
+description (a university's own "Graduate School" portal text, a forum's
+own pagination chrome, an ATS platform's own name) as if it were the
+posting's employer — **manufactures a new wrong value on top of a correctly
+silent raw guess.** This is a hypothesis about *where*, offered for B to
+verify with instrumentation, not asserted as a checked root cause; A does
+not investigate causes.
+
+**Why this matters for the gate:** the specific mechanism the manager
+verified closed (`|| host` in `jobweb.ts`/`mapper.ts`) is genuinely gone —
+confirmed independently again here, from a different angle (calling the raw
+parser directly) than the manager's source read. But **the company slot
+still shows a confidently wrong value on a majority of this round's
+non-trivial sample**, through a mechanism nobody in this loop has named
+before. Per Ruling 23, wrong data outranks everything else and this is
+exactly that: not a hostname leaking through an old hole, but a new,
+unnamed hole reaching the same slot with the same reader-facing harm.
+
+Commit follows immediately.
