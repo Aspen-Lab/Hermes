@@ -12396,3 +12396,128 @@ SolarPACES is still an incorrect absolute fallback and hiringcafe remains a
 multi-listing ownership failure.
 
 ---
+
+### Round 7 — Agent B
+
+**STATUS: IN PROGRESS.** Read Round-7 A, §1b–§1p, and the current pipeline
+before starting. This investigator turn is on the required Terra/max route:
+the first two findings cross extraction, source authority, and rendering. No
+product or test code changed.
+
+#### B7-01 — SolarPACES reaches `eventNameFrom()`'s required-string absolute fallback after every guarded candidate honestly rejects. `WRONG DATA`. **CODE: add a source-owned enriched event-identity tier; do not weaken the guards or make `Event.name` optional.**
+
+**A's claim checked: it holds; no correction.** I re-fetched the named page
+at `https://www.solarpaces.org/abstract-submission-deadline-extended-to-march-30/`
+(HTTP 200) and treated fetched content only as data. Its document title and
+`og:title` are the deadline headline, and its JSON-LD contains article/page/site
+objects but **no typed `Event`**. Its visible article body has exactly one
+current-event declaration: `The 32nd SolarPACES Conference will take place ...`;
+the same article also has a visible `SolarPACES 2026 – Call for Abstracts`
+heading and a direct conference-submission link. The declaration—not the
+hostname and not the heading alone—is safe source evidence that this page
+identifies a specific upcoming conference.
+
+**Current chain, every tier verified.** A's live render gives `Abstract
+submission deadline extended`. A disposable focused test (deleted before this
+entry) independently confirmed that `eventNameFrom` with the current title,
+empty snippet, and page URL returns that exact string.
+
+1. `web/src/lib/events/sources/eventweb.ts:397-412`: the title first enters
+   `bestEventTitleSegment()`. Its deadline segment correctly fails
+   `HEADLINE_PASSIVE_RE` (`:313-326`); `SolarPACES` correctly fails the
+   host-brand test (`:256-268`) under title/URL-only evidence.
+2. The URL slug is the same deadline headline and B6-05 correctly applies the
+   same guarded segment test at `:409-412`, so it rejects too.
+3. A's current source pass has no usable snippet candidate. The function
+   therefore reaches `segments[0] ?? title.trim()` at `:425`, the absolute
+   required-string fallback Ruling 28 asked us to inspect.
+4. `web/src/lib/opportunities/structured-extract.ts:1502-1516` conflates a
+   matching JSON-LD name and `og:title` as `OpportunityPageDetails.name`. Here
+   that is only the bad OG title. `enrich.ts:131-135` correctly rejects it with
+   B6-01's guarded title parser, then retains the already-wrong ingestion name
+   because it has no body-identity source.
+
+**Cause.** This is not a reason to re-open the unsafe host-brand carve-out.
+The old source path has no authority distinction between typed Event metadata,
+untyped page metadata, and an explicit in-body event declaration. Meanwhile
+raw `RawEventItem.name` (`web/src/lib/events/types.ts:22-52`) and mapped
+`Event.name` (`web/src/types/index.ts:155+`) are required strings; B6-03
+rendered an empty event name and showed why silently making it optional would
+create a broken H1. Preserve `eventNameFrom()`'s final fallback as the raw
+ingestion seed; let fetched evidence upgrade it only when it is owned.
+
+**Implementable direction — one authority hierarchy, no host or SolarPACES exception.**
+
+1. In `web/src/lib/opportunities/structured-extract.ts:48-56,1498-1530`, split
+   the current provenance-free name into distinct optional fields: a matching
+   typed opportunity name (`Event` JSON-LD for event calls) and
+   `openGraphTitle`. Do not use `NewsArticle.name`, `WebPage.name`,
+   `og:site_name`, or a hostname as an event name. Update
+   `structured-extract.test.ts:338-361`; `enrich.ts` is the only current caller
+   found by grep.
+2. Add a small pure `extractDeclaredEventName` beside the fetched-event
+   extractors in `web/src/lib/opportunities/event-details.ts`. Read
+   `extractPageText(html) ?? stripHtml(html)` so structural furniture is not
+   evidence. Return a name only when **exactly one distinct** visible sentence
+   contains an event-style candidate (bounded event noun such as conference,
+   symposium, workshop, etc.) immediately before a current/future event
+   predicate such as `will take place`, `takes place`, `will be held`, or
+   `will convene`. Normalize whitespace and a leading article, cap length, and
+   require `looksLikeEventTitle`. Zero candidates or two distinct candidates
+   returns `undefined`; an H2 alone is never enough. This produces the source's
+   exact `32nd SolarPACES Conference` candidate, but chooses silence for a
+   roundup or sibling-event page.
+3. In `enrichEventCandidates()` (`enrich.ts:25-43,123-153`), include the new
+   optional declaration in `hasExtractedEventSignal()` and use this exact name
+   order:
+
+   - matching typed `Event` JSON-LD name, first cleaned through
+     `bestEventTitleSegment()`; if no clean segment remains but the direct typed
+     value passes non-host generic/title checks, accept it—the typed Event record
+     is ownership proof, so exact host equality alone must not veto it;
+   - the unique source-body declaration from step 2;
+   - `bestEventTitleSegment(openGraphTitle, item.url)`, the existing guarded
+     low-authority title source;
+   - existing `item.name`, unchanged.
+
+   Thus an untyped OG `SolarPACES` at `solarpaces.org` stays rejected, while a
+   typed `Event.name` or the unique explicit declaration may legitimately name
+   the event. Do **not** edit the raw `eventNameFrom()` final fallback or make
+   `Event.name` optional in this item.
+
+**Tests at risk and required adversarial coverage.**
+
+- Rewrite the two collapsed-name assertions in
+  `structured-extract.test.ts:338-361` to prove typed JSON-LD and OG
+  provenance remain separate. No job caller should consume the event authority.
+- Preserve `enrich.test.ts:53-98` (plain typed Event name) and `:129-147`
+  (chrome-wrapped typed Event name still cleans to its good segment). Add a
+  typed, host-matching single-token Event name to prove provenance—not a loosened
+  host parser—permits it.
+- Add the full SolarPACES-shaped synthetic fixture: bad deadline OG title and
+  URL slug, no Event JSON-LD, one visible current-event declaration. It must
+  enrich to the declared conference name, never headline or hostname.
+- Add the ownership negatives: a relevant H2 with no declaration preserves
+  `item.name`; two distinct declared upcoming events produce no body candidate
+  and preserve the next authority tier. This prevents a roundup from selecting
+  an arbitrary sibling.
+- Preserve `eventweb.test.ts:76-97,113-181`: title/slug guards and the
+  required-string absolute fallback remain as-is. Do not turn `Home | Events`
+  into an empty event name.
+
+**Blast radius.** This is fetched-event enrichment only. Retrieval and the raw
+adapter stay unchanged; same-run dedup precedes enrichment
+(`events/pipeline.ts:161-168`). The fixed name then enters the re-score
+(`pipeline.ts:87-111`), so matching/ranking and feed-card/report H1 text can
+improve for affected items. No model call, provider, route, or new network
+fetch is introduced.
+
+**Search scope / no-POLICY result.** Checked live title, Open Graph, JSON-LD
+types, visible heading, in-body declaration, and action link; then the whole
+fallback chain, all `extractOpportunityPageDetails()` callers, and
+`eventweb.test.ts`, `enrich.test.ts`, `structured-extract.test.ts`, and
+`page-text.ts`. A safe source-backed signal exists. This is a CODE item, not a
+manager-policy escalation; it deliberately leaves the prior host-brand
+precision/recall rule intact.
+
+---
