@@ -275,23 +275,19 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 09:30 UTC. Round-7 A's
-                   independent post-C fixture, fresh-pool, named continuity,
-                   and mandatory gate measurement is complete. Manager lock
-                   remains held; B investigates the ranked source-alignment
-                   observations next.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:05 UTC. Round-7 B
+                   completed B7-06, the one source-summary authority guide.
+                   Manager lock remains held; C implements B7-06 only.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-WHOSE TURN:       B — investigate the fresh source-alignment mismatches only:
-                   (1) both reachable event summary sentences are unsupported
-                   by their bounded owned page text; (2) what drifted/
-                   unavailable named targets mean for future
-                   evidence. Do not code. No POLICY item is inferred from
-                   absence alone; guide a fail-closed source boundary if one
-                   is warranted, one committed/pushed item at a time.
+WHOSE TURN:       C — implement B7-06 only: separate raw discovery/scoring
+                   description from an optional source-owned event report
+                   summary, with the listed typed-Event, guarded-OG, and
+                   adapter authority hierarchy. Do not broaden ranking,
+                   fetches, providers, or the B7-01 title authority rules.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -305,42 +301,39 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND-7 A POST-C MEASUREMENT COMPLETE; B NEXT.** Fixture
-                   is 0 of 32 different (0%). Fresh real source-page checks
-                   found summary alignment unproven/mismatched on 2 of 2
-                   reachable events. SolarPACES,
-                   selected scope/no-provider, TiRT regression, and employer
-                   conflict contracts hold; historical named URLs that drifted
-                   or were unavailable are recorded as non-evidence. B7-04
-                   remains subsumed by B7-02. Full gate: 85 files / 978 tests,
-                   977 pass; typecheck clean; known quiz lint only.
-LAST DIFFERENCE:  **0% fixture / real data NOT MET.** Ranked source-alignment
-                   observations are in §4 Round-7 A post-C measurement; B
-                   must investigate without treating unavailable pages as proof.
+STATUS:           **ROUND-7 B POST-C INVESTIGATION COMPLETE; C NEXT.** Fixture
+                   is 0 of 32 different (0%). B7-06 confirms a generic
+                   snippet-to-report provenance collapse, while correcting
+                   the undocumented historical 0/2 identities as not
+                   reproducible. SolarPACES, selected scope/no-provider,
+                   TiRT regression, and employer conflict contracts hold;
+                   unavailable targets remain non-evidence. B7-04 remains
+                   subsumed by B7-02. Full gate: 85 files / 978 tests, 977
+                   pass (documented benchmark city drift); typecheck clean;
+                   known quiz lint only.
+LAST DIFFERENCE:  **0% fixture / real data NOT MET.** B7-06 is the sole C
+                   item: source-owned report-summary authority, fail closed.
 GATE (0%):        NOT MET. Fixture is zero; real data is not zero under §1j.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
-**STOPPED BECAUSE:** finished the turn @ 2026-08-12 09:30 UTC. A completed the
-post-C fixture, fresh-pool, named continuity, source-page, and gate pass; B
-now investigates the measured source-alignment observations only.
+**STOPPED BECAUSE:** finished the turn @ 2026-08-12 10:05 UTC. B completed
+B7-06 and C now implements that one guide only.
 `HELD BY:` is refreshed to `chatgpt-local @ 2026-08-12 07:26 UTC` for the
 manager-held A measurement.
 
-**WHOSE TURN: B.** Investigate the 2/2 reachable fresh event summary sentences
-unsupported by their owned source text. The silent event location has no
-affirmative source location and is not a mismatch. Unavailable/drifted named
-targets are non-evidence, not findings. Do not code. No POLICY items await a
-manager decision.
+**WHOSE TURN: C.** Implement B7-06's source-owned event report-summary
+authority boundary only. Keep raw discovery description for scoring/ranking;
+source-record, typed Event description, then guarded paired OG description
+are the only report sources. Silence is required where authority is absent.
 
 **STATUS / LAST DIFFERENCE:** fixture is 0 of 32 different (0%); the real
-source-alignment gate is NOT MET. Two reachable event summary sentences are
-unsupported by owned page text. SolarPACES now resolves to the owned
-conference identity; selected scope/no-provider, TiRT regression, and
-employer-conflict contracts hold. Fresh source-page evidence does not align
-all rendered summaries, while Tesla/careerservices/LHB/hiringcafe historical
-targets are unavailable or drifted and therefore non-evidence. Standing
-exclusions remain binding.
+source-alignment gate is NOT MET. B7-06 confirmed an eventweb snippet can
+reach report copy without page authority; its original 0/2 live sample cannot
+be replayed because the identities were not retained. SolarPACES now resolves
+to the owned conference identity; selected scope/no-provider, TiRT regression,
+and employer-conflict contracts hold. Unavailable/drifted targets remain
+non-evidence. Standing exclusions remain binding.
 
 **GATE (0%): NOT MET.** Per §1j, wrong data outranks missing; the fixture and
 real gates are separate and both must be zero. C preserves the §1d exclusions
@@ -13677,3 +13670,22 @@ not receive unproven discovery text. No credential, host exception, new
 network fetch, model call, fixture scrape, branch, worktree, or PR is involved.
 Rulings 23, 25, 26 and the SolarPACES/scope/TiRT/employer contracts remain
 unchanged. **This is one CODE item, not POLICY.**
+
+#### Agent B post-C closing handoff — COMPLETE @ 2026-08-12 10:05 UTC
+
+**B7-06 is the only C item.** It separates discovery/scoring description from
+source-owned report-summary authority. C preserves all raw description ranking
+inputs, adds no fetch/model/provider path, and tests typed Event-description,
+guarded paired OG-description, explicit ccfddl/researchseminars evidence, and
+silence for confstech/eventweb synthesis or any ambiguous/unproven source.
+The report and BYOK prompt must receive no raw unproved summary; no-provider
+remains zero page fetches and zero model calls. The historical 0/2 identity
+observation is corrected as non-replayable because its changing live candidates
+were not retained; it is not a second C item. SolarPACES, selected scope,
+TiRT, employer, exclusions, and all security rules remain binding.
+
+**B gate:** 85 files / 978 tests, 977 passed; only documented
+`src/lib/events/benchmark.test.ts` live city drift failed (Salvador vs stale
+Chicago assertion). `tsc --noEmit` clean; ESLint only known
+`src/components/persona/quiz.tsx:46`; `git diff --check` clean. B7-06 record
+is commit `5cfffb3`, pushed. Next is C; manager lock remains unchanged.
