@@ -11666,3 +11666,111 @@ are all chrome must fall through past the slug to snippet mining or the
 final fallback, not return the slug's headline sentence verbatim.
 
 ---
+
+##### B6-06 — R13: the site-brand check over-rejects a real conference whose own domain legitimately matches its own name. `WRONG DATA`, with a genuine, named precision/recall tradeoff — no clean fix found; costed honestly rather than guessed at.
+
+**Confirmed against the live code, third round this exact residual has been
+raised (B5-06 named it as undefended; A confirmed it fires; this is the
+first attempt to cost a fix).** `looksLikeHostBrand("SolarPACES",
+"solarpaces.org")` → `true`, traced directly: `domainLabel =
+"solarpaces"`, normalized candidate `"solarpaces"`, exact match,
+`domainLabel.startsWith(normalized)` → `true`. `"SolarPACES"` is rejected
+as chrome by the same mechanism that correctly rejects `"Climatebase"` and
+`"ZeroB"` on the job side (B5-03) and `"The Engine"` on the event side
+(B5-06) — but here the rejected candidate **is the event's genuine, honest,
+correct name**, not a board's or organisation's brand leaking in.
+
+**Why this is hard, not just unattempted — worked through several
+directions, all fail or trade one false rejection for another:**
+
+1. **Word count / article prefix** (the signal `looksLikeArticledHostBrand`
+   already uses for `"The Engine"`): does not distinguish these two cases.
+   `"SolarPACES"` takes no article, same as a bare single-word brand would.
+2. **Single-token / acronym shape** (an internally-capitalised or
+   no-space candidate reads as a coined proper noun, more likely a
+   dedicated event name than a generic organisation brand): **this looked
+   promising until checked against the job side's own repros** —
+   `"Climatebase"` and `"ZeroB"` are *also* single-token, proper-noun-shaped
+   candidates that must stay rejected. Since `looksLikeHostBrand()` is
+   **shared** between the job company slot and the event name (B5-03 built
+   it, B5-06 reused it deliberately rather than duplicating it), the same
+   structural shape (single token, matches domain) has **opposite correct
+   answers on the two sides** — a signal that helps one side wrongly
+   un-rejects the other's real, confirmed defect. This rules out changing
+   `looksLikeHostBrand()` itself; any fix has to live in a new,
+   event-only wrapper, the same way `looksLikeArticledHostBrand` already
+   does, never touching the job-side function's own behaviour.
+3. **`og:site_name`, considered and set aside.** B5-06's own note already
+   found this unreachable at `eventNameFrom()`'s call site (title/snippet/
+   URL only, no fetched HTML) — reachable only after B6-01 lands
+   enrichment's own use of `eventNameFrom()`-shape logic against a fetched
+   page. But tracing it through: `og:site_name` for `solarpaces.org` would
+   most likely read `"SolarPACES"` too — a dedicated conference domain's
+   site name and its event's name are usually the *same* string by design,
+   so this signal does not actually resolve the ambiguity even if it were
+   reachable. Not worth the plumbing to reach a signal that doesn't
+   discriminate.
+
+**The actual asymmetry, named plainly.** A job posting hosted on a
+third-party board is essentially never *named after* that board — a real
+employer's name coinciding with an aggregator's own domain would be a
+bizarre coincidence, so an exact/prefix match is a strong, reliable "board
+brand leaked in" signal there. An event's **official site is routinely
+named after the event itself** — a dedicated single-conference domain is
+completely ordinary practice — so the identical structural match is the
+**expected, common, correct** case on this side, not a rare exception. The
+signal `looksLikeHostBrand()` checks (does the candidate match the domain)
+carries opposite prior probabilities on the two sides it is used on, and
+nothing available at this call site (title, snippet, URL) says which prior
+applies to a given page.
+
+**What I am NOT recommending: a heuristic dressed up as a fix.** I traced
+several bounded ideas (generic-organisation-noun deny-list on multi-word
+candidates; single-token acronym allowance) and every one either fails to
+distinguish the two real named repros or reopens a defect already closed on
+the job side. Per §2's own instruction ("if you find no honest source, say
+where you looked and mark it POLICY"), this is that case — not because no
+code exists to search, but because the two repros this loop already has on
+record are **structurally identical** and only distinguishable by
+information (is this domain dedicated to one event, or does it host many)
+that is not available at this pipeline stage without new plumbing that
+does not exist yet (crawling the domain's other pages, which is far
+outside this loop's scope).
+
+**A fourth candidate, tried and directly falsified against existing
+coverage — worth recording precisely because it looked plausible until
+checked.** Considered: exempt a host-brand match from rejection when the
+candidate is an *exact*, equal-length match to the domain label (not merely
+a prefix) **and** the URL's path is more than one segment deep — reasoning
+that a bare domain root is more likely an organisation's generic landing
+page, while a deep path is more likely a specific, dedicated event page.
+**Checked this directly against `eventweb.test.ts:107-122`, the existing
+`"rejects a segment that is the page's own site brand"` test, before
+proposing it any further:** both of its fixtures use a **deep** path
+(`https://engine.xyz/events/123`, `https://exampleboard.io/events/123`,
+both `/events/123` — two segments). `"The Engine"`, article-stripped to
+`"Engine"`, is an **exact, equal-length match** to domain label `"engine"`.
+**This candidate carve-out would un-reject `"The Engine"` itself** — the
+exact repro `looksLikeArticledHostBrand` was built to catch — breaking this
+existing, confirmed-correct test outright. Path depth does not distinguish
+the two real cases at all; both of this loop's own fixtures already use a
+deep path. **Discarding this direction, not offering it as an option** —
+recording the falsification so a future round does not re-derive and
+re-propose it without checking.
+
+**`POLICY — manager decides`.** Every bounded heuristic I traced either
+fails to distinguish the two real, on-record repros, or — as just shown —
+actively breaks the defect this loop already closed correctly. I have no
+remaining candidate direction I can recommend with any confidence. The
+honest options are: **(a)** accept this as a permanent, named residual, the
+same shape as R2's gazetteer-coverage gap — real, bounded, not closable by
+a guard, re-listed every round rather than silently dropped; or **(b)** the
+manager funds a different kind of signal entirely (e.g. checking whether a
+domain serves more than one distinct event across its own site — real new
+work, a crawl or a lookup this loop has no mechanism for, well outside a
+guard-shaped fix). I am not aware of a cheap third option, and inventing one
+under pressure to have a fix direction would repeat the exact mistake B6-01
+diagnoses: a check that looks like it closes something without actually
+being tested against what it must not break.
+
+---
