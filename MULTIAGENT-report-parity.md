@@ -9694,4 +9694,72 @@ unchanged), typecheck clean, exactly 1 pre-existing lint error
 (`quiz.tsx:46`). Net +9 tests from B5-02's checkpoint (914 → 923: 3 in
 `jobweb.test.ts`, 6 in `shared.test.ts`), zero deleted, zero rewritten.
 
+Commit: `3f5d773`.
+
+---
+
+##### B5-04 — R12: job LOCATION tile leaks the literal placeholder `See posting`. LANDED, all three call sites B named.
+
+**Change — `web/src/app/jobs/[id]/page.tsx`.** Confirmed both of B's cited
+call sites against the live file before touching anything (line numbers had
+drifted slightly from B's citations, content matched exactly): `buildJobFacts()`'s
+`const location = clean(job.location)` feeding the LOCATION tile's ternary,
+and the subtitle's own `const location = cleanJobSubtitlePart(job.location)`.
+Added one module-level constant, `JOB_LOCATION_PLACEHOLDER = "see posting"`
+(lower-cased, compared via `.toLowerCase()`, same convention the event side
+already uses for its own `"see event page"` placeholder) — a single shared
+constant rather than repeating the literal string at both call sites, so the
+two guards cannot silently drift into checking two different strings the way
+two independently-typed literals could.
+
+1. **Facts tile** — the ternary that gates the LOCATION tile now reads
+   `location && location.toLowerCase() !== JOB_LOCATION_PLACEHOLDER ? {...}
+   : undefined`, mirroring the event side's WHERE-tile guard exactly (`events/[id]/page.tsx:651`).
+2. **Subtitle** — introduced `rawLocation` for the cleaned value and derive
+   `location` from it with the same placeholder check, so the existing
+   `[company, location, workMode].filter(Boolean)` line downstream needed no
+   change at all.
+3. **Third call site, per this round's own instruction to check B's entry
+   and not just act on the summary line** — B's guide named a third reader,
+   `web/src/lib/jobs/card.ts:47` (the feed card), explicitly as *out of
+   scope* for this loop (feed, not report) rather than a third thing to fix.
+   Re-confirmed by grep that no other reader of `job.location` exists inside
+   `app/jobs/[id]/page.tsx` itself. Left `card.ts` untouched, matching B's
+   own scoping — noted here so "checked it" and "silently skipped it" stay
+   distinguishable.
+
+**A trade-off inherited from the event-side precedent, worth naming rather
+than treating as a clean close.** Because the guard sits at the whole-tile
+ternary (matching the precedent B named), a job whose `location` resolves to
+the placeholder loses the ENTIRE LOCATION tile, including any genuinely-known
+`workMode`/country `detail` that tile would otherwise have carried — the fix
+does not split "the location half is unusable" from "the work-mode half may
+still be real." This is not a new gap this item introduces: the event side's
+own WHERE tile has carried the identical trade-off, unremarked, since B2-06.
+B's own fix direction named the larger alternative (stop writing the
+placeholder into `job.location` upstream at all, so every consumer's
+"nothing is known" path is the same `undefined` path) and explicitly chose
+the per-site guard as "the safe default" instead. Flagging the residual
+case for the manager/A rather than silently treating it as fully closed: a
+non-remote job with a known `workMode` but no usable `location` will show
+neither on the LOCATION tile after this fix (before this fix it showed a
+false location; after, it shows nothing — still a real improvement under
+§1j's own standard, just not a total win).
+
+**Tests.** Added one to `page.test.ts`, placed next to the existing
+work-mode/LOCATION tests for locality: `baseJob({ location: "See posting",
+isRemote: false })` must render neither the `data-job-fact="work-mode"` tile
+nor the string `"see posting"` anywhere in the page (case-insensitive check,
+covers both the tile and the subtitle in one assertion), plus a companion
+check that a REMOTE job carrying the same placeholder value is unaffected —
+`isRemote` already wins over `location` in the mapper's own fallback
+(`job.isRemote ? "Remote" : "See posting"`), so this confirms the new guard
+doesn't accidentally interact with that branch.
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 924 tests, 923 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged), typecheck clean, exactly 1 pre-existing lint error
+(`quiz.tsx:46`). Net +1 test from B5-03's checkpoint (923 → 924), zero
+deleted, zero rewritten.
+
 Commit: (this item, following).

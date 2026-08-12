@@ -386,6 +386,26 @@ describe("JobReport", () => {
     expect(remoteFallbackHtml).toContain("Remote");
   });
 
+  it("never renders the 'See posting' placeholder as a location (B5-04/R12)", () => {
+    // B5-04. scoredJobToJob() (jobs/mapper.ts) writes the literal string
+    // "See posting" into job.location when nothing better is known and the
+    // job isn't remote — a placeholder, not a real address, but neither the
+    // LOCATION tile nor the subtitle used to know that. All three of this
+    // round's real jobs printed it verbatim before this fix.
+    const html = renderReport(baseJob({ location: "See posting", isRemote: false }));
+    expect(html).not.toContain('data-job-fact="work-mode"');
+    expect(html.toLowerCase()).not.toContain("see posting");
+
+    // A job that IS remote must be unaffected — "Remote" still renders,
+    // exactly as before this fix (the placeholder only ever appears on the
+    // non-remote fallback branch in the mapper).
+    const remoteHtml = renderReport(
+      baseJob({ location: "See posting", isRemote: true }),
+    );
+    expect(remoteHtml).toContain("Remote");
+    expect(remoteHtml.toLowerCase()).not.toContain("see posting");
+  });
+
   it("joins the country onto the LOCATION tile's sub-line, but never into the subtitle", () => {
     // B4-13 / B3-08. Plate: "Hybrid · US". job.place.country is normalised
     // upstream to a full country name ("United States"); COUNTRY_ABBREVIATIONS

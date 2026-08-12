@@ -213,6 +213,17 @@ function clean(value: string | null | undefined): string | undefined {
 }
 
 /**
+ * B5-04/R12. `scoredJobToJob()` (`jobs/mapper.ts`) writes the literal string
+ * "See posting" into `job.location` when nothing better is known and the job
+ * isn't remote — a placeholder, not a real value, but nothing downstream
+ * used to treat it as one. The event report already guards its own
+ * equivalent placeholder ("see event page") at both of its call sites; the
+ * job report never mirrored it. One constant, compared lower-cased, so both
+ * call sites below cannot drift into checking two different strings.
+ */
+const JOB_LOCATION_PLACEHOLDER = "see posting";
+
+/**
  * B2-03. `job.employmentType` arrives as a slug ("full-time", "part_time")
  * and the plate wants it capitalised as ONE phrase — "Full-time" — not every
  * word capitalised. The old body stripped hyphens before capitalising, so a
@@ -586,7 +597,7 @@ export function buildJobFacts(job: Job, nowMs: number = Date.now()): JobFact[] {
               .join(" · ") || undefined,
         }
       : undefined,
-    location
+    location && location.toLowerCase() !== JOB_LOCATION_PLACEHOLDER
       ? {
           key: "work-mode",
           label: "Location",
@@ -932,7 +943,14 @@ export function JobReport({
   const visaEvidence = clean(job.visa?.evidence);
   const roleTitle = cleanJobTitle(job.roleTitle) || job.roleTitle;
   const company = cleanJobSubtitlePart(job.companyOrLab);
-  const location = cleanJobSubtitlePart(job.location);
+  const rawLocation = cleanJobSubtitlePart(job.location);
+  // B5-04/R12. Same placeholder guard as the LOCATION tile above — without
+  // it, "See posting" printed here too, between the company and work-mode
+  // segments.
+  const location =
+    rawLocation && rawLocation.toLowerCase() !== JOB_LOCATION_PLACEHOLDER
+      ? rawLocation
+      : undefined;
   /**
    * B-18 / B2-06. Plate 02's subtitle has three segments — employer, place,
    * work mode ("Toyota Research Institute · Los Altos, CA · Hybrid (3 days
