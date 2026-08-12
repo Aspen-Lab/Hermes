@@ -275,7 +275,7 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:20 UTC. Round-6 B's guide
+STOPPED BECAUSE:  out of budget @ 2026-08-12 04:30 UTC. C completed B6-01,
                    is complete and the manager has ruled both policy items in
                    §1o/§1p. B6-06 SolarPACES and B6-08 hiringcafe.com are not
                    C code this turn, are not excluded, and remain in the next
@@ -12204,6 +12204,16 @@ the job a role kind.
 benchmark failed because its Chicago assertion received Salvador. TypeScript
 clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 (`react-hooks/set-state-in-effect`).
+
+---
+
+#### C partial handoff
+
+**STATUS: PARTIAL — out of budget.** Completed, gated, committed, and pushed:
+B6-01 `dd5eb44`, B6-05 `65ea13d`, and B6-02 `51dd7d0`. Remaining C work, in
+order: B6-04, B6-03, B6-07, and B6-08 careerservices. Do not implement
+B6-06 SolarPACES or B6-08 hiringcafe.com. The manager's HELD BY lock remains
+unchanged.
 
 ---
 
