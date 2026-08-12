@@ -14787,3 +14787,89 @@ as before this fix, and if nothing there passes either, `company` stays
 `app/jobs/[id]/page.tsx:1010-1019`, reconfirmed by me for a different item):
 when `company`/`location`/`workMode` are all absent, the whole subtitle
 `<p>` is omitted from the render, not a bare separator or placeholder.
+
+#### B8-02 — `looksLikeHostBrand` only inspects the FIRST DNS label — `WRONG DATA`, shared with the event side, needs care
+
+**File:** `web/src/lib/opportunities/shared.ts:221-226`.
+
+```ts
+export function looksLikeHostBrand(candidate: string, host: string): boolean {
+  const normalized = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const domainLabel = host.toLowerCase().split(".")[0] ?? "";
+  if (normalized.length < 3 || !domainLabel) return false;
+  return domainLabel.startsWith(normalized);
+}
+```
+
+**The defect, confirmed by calling the real exported function directly:**
+
+```
+looksLikeHostBrand("GreenJobsBoard", "greenjobsboard.io")  → true   (label[0] IS the brand)
+looksLikeHostBrand("Vaia", "talents.vaia.com")              → false  (label[0] is "talents", not "vaia")
+```
+
+`domainLabel = host.split(".")[0]` always takes the **leftmost** DNS label.
+That is correct for a bare brand domain (`greenjobsboard.io` — the shape
+B5-03 was built against) but wrong for the extremely common
+`subdomain.brand.tld` pattern used by careers-portal-as-a-service products
+(`talents.vaia.com`, and just as plausibly `careers.<brand>.com`,
+`jobs.<brand>.io`) — there the brand is the **second** label, and the
+function never looks at it. This is a distinct defect from the regex bug in
+B8-01: even after B8-01 is fixed, a title with no `"at Employer"` phrase at
+all (so `parts.slice(1)` is the only candidate source) would still let a
+brand-on-subdomain host's own name through unguarded.
+
+**Relationship to B8-01's reproduced example.** For the specific
+`talents.vaia.com` posting above, B8-01 alone already fixes the observed
+symptom, because `titleEmployer` (checked first in the `.find()` array)
+will correctly match `"Savannah River National Laboratory"` before
+`parts.slice(1)`'s `"Vaia"` is ever reached. **B8-02 is still independently
+necessary**: any title with no `"at Employer"` phrase, on a
+brand-on-subdomain host, has no other defense. Land both.
+
+**BLAST RADIUS — read before touching this function, this is the important
+part.** `looksLikeHostBrand` is shared, reused (per its own doc comment,
+`shared.ts:206-219`) by `web/src/lib/events/sources/eventweb.ts:238,267`
+for the event-name **site-brand/chrome-segment guard** — the exact
+mechanism §1o Ruling 28 (SolarPACES) turns on. Round 8 A just confirmed
+SolarPACES **CLOSED** live this round, through this same fallback chain
+(`solarpaces.org` → `"SolarPACES"`, single label before the TLD, currently
+an exact-match case this function already handles correctly). Widening the
+label check to also inspect non-first labels should not change
+`solarpaces.org`'s own outcome (its brand is already label[0], nothing
+about it depends on the fix), but **Ruling 28 is explicit: "nobody may
+remove SolarPACES from the gate merely because a cheap discriminator was
+not found," and any change to this fallback chain requires the next A to
+re-fetch and re-render SolarPACES specifically, not rely on the unit
+suite alone.** Say this to C directly: after this fix, re-run the
+SolarPACES live check yourself before calling this item done, the same way
+A already does every round — do not defer it to the next round's A.
+
+**Fix direction.** Check the candidate against **every** label of the
+hostname (or at minimum, also the second label when the first is short/
+generic), keeping the existing one-direction-only comparison (candidate
+must not be longer than the label being checked) for each label tried —
+that asymmetry is deliberate (see the doc comment) and is not part of this
+bug. Prefer "try all labels" over any attempt to guess which label is the
+"real" brand (eTLD+1/public-suffix parsing is its own hard problem —
+`co.uk`-shaped TLDs, etc. — and is not needed here; trying every label is
+simpler and safe).
+
+**Tests at risk:** `web/src/lib/opportunities/shared.test.ts:42-71` — the
+existing `looksLikeHostBrand` suite. Every current case uses a host with
+only one label before the TLD, so trying all labels should not change any
+existing assertion — confirm this explicitly rather than assuming it.
+`web/src/lib/events/sources/eventweb.test.ts` — its chrome/site-brand
+tests reuse this function; same expectation, same "confirm, don't assume."
+`web/src/lib/jobs/sources/jobweb.test.ts` — its own host-brand rejection
+tests.
+
+**What renders after this guard fires correctly:** same as B8-01 — a
+rejected candidate falls through to the next candidate in the same
+`.find()` chain, and if none pass, `company` (job side) or the event name
+falls through to its own next tier, ultimately silence if nothing
+qualifies. Confirmed via the same subtitle-omission render check as B8-01
+for the job side; the event side's silence-on-total-rejection was already
+confirmed by round 8 A (`bestEventTitleSegment` returns `undefined` when
+`informative.length === 0`, `eventNameFrom` then tries the URL slug, then
+the snippet, per `eventweb.ts:392-426` — never a placeholder).
