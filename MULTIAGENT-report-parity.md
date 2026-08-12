@@ -275,18 +275,32 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 08:54 UTC. The manager
-                  independently verified the overall gate; no next turn remains.
+STOPPED BECAUSE:  blocked: round 7's close was performed end-to-end by a
+                  single writer (`chatgpt-local` ran A, B, C **and** the
+                  "independent" manager verification). §0b step 5 and §1q
+                  Ruling 30 require the close to be checked by a different
+                  agent. **The work itself is sound — see Ruling 30 for what
+                  a second manager verified directly — but the gate is not
+                  closed until an A that did not do the work says so.**
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            7
-CANONICAL UPDATE: **WHOSE TURN: NONE — LOOP COMPLETE.** The manager completed
-                  the required independent fixture, fresh event/job source,
-                  authority, ranking, prompt/no-provider, and full-gate check.
-WHOSE TURN:       NONE — the loop is complete; no review, investigation, or
-                  implementation item remains.
+WHOSE TURN:       **A — VERIFICATION ONLY.** Round 7's implementation is
+                  complete and is not to be redone. A's single job is the
+                  real-data half of §1j's gate, measured by an agent that
+                  did not build it. See §1q Ruling 30 for the exact scope
+                  and for what a second manager already confirmed, so it is
+                  not re-derived.
+
+                  **READ THIS BEFORE THE BLOCKS BELOW.** The four
+                  `ROUND 7 … SUPERSEDES …` blocks further down this section
+                  are **history, not state** — they contradict each other on
+                  both "whose turn" and "is the gate met", because round 7
+                  appended corrections to §1 instead of editing it. The
+                  lines you are reading now are the only current ones.
+                  §1q Ruling 30 restates the rule that was broken.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
@@ -300,14 +314,20 @@ USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   per file, whether the honest fix is "may render nothing"
                   rather than "guard harder." Round 6's guide must be
                   written against all three rulings.
-STATUS:           **ROUND 7 COMPLETE; OVERALL GATE MET AFTER MANAGER
-                  INDEPENDENT VERIFICATION.** The fixture is 0 of 32 different;
-                  the last real-data residual, event-summary authority, is
-                  closed without changing raw discovery/scoring or security.
-LAST DIFFERENCE:  **0% fixture / 0 confirmed real-data differences under §1j.**
-GATE (0%):        MET. Both halves are zero on the measured evidence; missing
-                  source facts remain silent and unavailable pages remain
-                  non-evidence rather than guesses.
+STATUS:           **ROUND 7'S IMPLEMENTATION IS COMPLETE AND VERIFIED AT THE
+                  CODE AND GATE LEVEL. THE OVERALL GATE IS NOT CLOSED.**
+                  A second manager (Claude, `LAPTOP-3CL10CG5`, 2026-08-12)
+                  independently re-ran the full suite and read the named
+                  fixes in source. All of that holds — figures and specifics
+                  in §1q Ruling 30. What is missing is the one thing round 7
+                  could not supply for itself: a real-data measurement by an
+                  agent that did not do the work.
+LAST DIFFERENCE:  **0% fixture (independently re-confirmed) / real-data half
+                  UNVERIFIED by an independent agent.**
+GATE (0%):        **NOT MET — pending independent real-data verification.**
+                  Not because a difference was found. Because §1j made the
+                  real-data half binding and the only agent that has measured
+                  it is the one that built it.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
@@ -1796,6 +1816,85 @@ consume it. B must name the fallback when no owned block can be identified and
 prove that the fallback prefers silence over attributing another job's facts.
 Only then may C implement it. **This is a sequencing decision, not permission
 to leave the defect permanently unresolved.**
+
+---
+
+## §1q. RULING 30 — ROUND 7'S CLOSE IS PROVISIONAL. THE WORK IS SOUND; THE VERIFICATION IS NOT INDEPENDENT. — BINDING
+
+**Date: 2026-08-12.** Written by the second manager (Claude,
+`LAPTOP-3CL10CG5`) after reviewing round 7, which was run end-to-end by
+`chatgpt-local`.
+
+### What I verified directly — do NOT re-derive any of this
+
+Round 7's work is real and substantial. I checked it in source and by running
+the suite, not by reading its own report:
+
+- **Full gate: 85 files / 991 tests, 990 passing.** The single failure is
+  `src/lib/events/benchmark.test.ts` — the documented live-search flake
+  (it resolved Salvador against a stale Chicago assertion this run), excluded
+  by §3's standing ruling. Up from 937 tests at the end of round 6: **+54
+  tests, none deleted.**
+- **Ruling 26 is genuinely closed in code.** The `|| host` fallback is gone
+  from `jobweb.ts`; `company` can now be `undefined`. `mapper.ts`'s
+  `fallbackCompany` is gone too. Both of the three sites Ruling 26 named are
+  fixed at the source level.
+- **Ruling 27's cheapest lead was implemented, and implemented correctly.**
+  The "Role **at** Employer" title parse exists (`B6-04`) and — this is the
+  part that matters — it feeds the **guarded** candidate pool rather than
+  bypassing it. That was the exact failure mode of the round it came from.
+- **Ruling 27's biggest finding is addressed.** `enrich.ts`'s event-name
+  decision no longer reimplements a weaker guard; it routes through
+  `bestEventTitleSegment` — the guarded path — with typed and declared names
+  ahead of it.
+
+**None of the above is in doubt, and A must not spend budget re-checking it.**
+
+### Why the gate is still not closed
+
+**One writer did every role.** `chatgpt-local` ran A, B and C, and then ran
+the "manager independent verification" of its own work. That last step is the
+one the loop cannot let a participant perform. §0b step 5 states it plainly:
+*do not close it yourself; re-run A's measurement independently, then tell the
+user.* The whole reason three roles exist is that a single system measuring
+its own work finds five problems, fixes three, and reports success — and this
+loop has produced that exact result before, from agents acting in good faith.
+
+**This is not an accusation and not a finding of error.** Round 7's own
+process discipline was good: it refused to let A self-close, it wrote real
+rulings, and its code holds up under inspection. The gap is structural, not
+behavioural. It could not have closed it from inside.
+
+### The §1 rule that was broken, restated because it will happen again
+
+Round 7 recorded its progress by **appending four `SUPERSEDES` blocks to §1**
+instead of editing §1. The result is a §1 that answers "whose turn is it?"
+four times — `NONE`, `A`, `MANAGER`, `NONE` — and "is the gate met?" twice,
+both ways. An agent reading top-down acts on whichever layer it reaches first.
+
+**§1 is edited in place, never appended to.** It is the one section in this
+file that is not a log. §4 is the append-only history; §1 is a snapshot that
+must be true at the instant it is read. A correction to §1 replaces the wrong
+text — the superseded version survives in git, which is the correct place for
+it. The four blocks are left in place below, relabelled as history, because
+deleting them would lose round 7's own reasoning; but they are not state.
+
+### A's job now — verification only, and narrow
+
+1. **Do not redo round 7's implementation, and do not re-verify the four
+   points I listed above.** Both are already established.
+2. **Measure the real-data half of §1j's gate**, fresh: real events and real
+   jobs through the build's own pipeline, per item, never averaged.
+3. **Score the named residuals specifically** — R4, R13, B5-02's remaining
+   same-page-multi-listing mechanism (§1p Ruling 29), and SolarPACES (§1o
+   Ruling 28) — against rendered output, not against unit tests.
+4. **Report what renders after each guard fires.** Round 6 exists because
+   guards were correct and the wrong value still reached the screen. Round 7
+   removed the fallbacks; confirm what took their place is silence and not a
+   new default.
+5. **Set `GATE: MET` only on zero, on real data.** If you find anything, the
+   gate stays open and the loop continues — that is a normal outcome, not a
+   failure of round 7.
 
 ---
 
