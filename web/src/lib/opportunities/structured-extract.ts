@@ -1304,6 +1304,46 @@ function hasTrailingStateCode(following: string): boolean {
 }
 
 /**
+ * B5-05/R2. A "past editions" framing satisfies `CITY_PROXIMITY_CUE_RE`
+ * exactly the same way a current-venue statement does — "have previously
+ * been held in Cologne" and "will be held in Lanzhou" both contain "held
+ * in" — so the cue alone cannot tell a former host from the true venue.
+ * Checked against the same `preceding` window `CITY_PROXIMITY_CUE_RE`
+ * already scans: a marker anywhere in that lead-up, not only immediately
+ * before the city, disqualifies the mention. Deliberately backward-looking
+ * only (matching `CITY_PROXIMITY_CUE_RE`'s own direction) — a marker that
+ * shows up later in the text, describing a different city mentioned after
+ * it, must not retroactively taint an earlier, genuinely current mention.
+ */
+const HISTORICAL_FRAMING_RE =
+  /\b(?:previous(?:ly)?|formerly|past edition|prior edition|used to (?:be|take place)|last (?:year'?s|time)|earlier editions?)\b/i;
+
+/**
+ * The other half of the same signal: a city sitting directly in front of a
+ * parenthetical edition year ("Cologne, Germany (2008)") is itself a
+ * past-edition shape — the form a "previously held in X (year), Y (year),
+ * ..." list run takes — even when `HISTORICAL_FRAMING_RE`'s own marker word
+ * sits further back than a later mention's own 120-char lead-up reaches.
+ * Scoped to the text right after the match (through an optional country,
+ * not through a sentence boundary) rather than requiring the parenthetical
+ * immediately after the city itself, so "Cologne, Germany (2008)" still
+ * matches with "Germany" sitting between the city and the year.
+ */
+const TRAILING_EDITION_YEAR_RE = /^[^.]{0,24}\(\s*(?:19|20)\d{2}\s*\)/;
+
+/**
+ * True when a city mention that would otherwise qualify (cued, or carrying a
+ * trailing state code) actually names a FORMER host rather than the event's
+ * current venue. Either signal is enough on its own; the real repro this was
+ * built for trips both at once.
+ */
+function isHistoricalMention(preceding: string, following: string): boolean {
+  return (
+    HISTORICAL_FRAMING_RE.test(preceding) || TRAILING_EDITION_YEAR_RE.test(following)
+  );
+}
+
+/**
  * Same ranking as findGazetteerMatch (earliest qualifying position, longest
  * name on a tie) but a city only qualifies if some mention of it — not
  * necessarily its first — is preceded by a locational cue or immediately
@@ -1330,6 +1370,14 @@ function findVenueCity(
       const end = index + match[0].length;
       const preceding = text.slice(Math.max(0, index - 120), index);
       const following = text.slice(end, end + 12);
+      // B5-05/R2. A past-edition mention can satisfy the cue/state-code
+      // check below exactly the way a current-venue mention does — checked
+      // first, against a wider following-text window than the state-code
+      // check needs, so a qualifying-looking mention that is actually
+      // historical is skipped rather than accepted. `continue`, not
+      // `break`: a LATER mention of this same city name may still be a
+      // genuine, non-historical cue.
+      if (isHistoricalMention(preceding, text.slice(end, end + 40))) continue;
       if (CITY_PROXIMITY_CUE_RE.test(preceding) || hasTrailingStateCode(following)) {
         if (
           !best ||

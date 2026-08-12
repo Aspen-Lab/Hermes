@@ -9762,4 +9762,82 @@ unchanged), typecheck clean, exactly 1 pre-existing lint error
 (`quiz.tsx:46`). Net +1 test from B5-03's checkpoint (923 → 924), zero
 deleted, zero rewritten.
 
+Commit: `20ed5ab`.
+
+---
+
+##### B5-05 — R2: event WHERE names a past host over the true, gazetteer-absent venue. LANDED — converts a confidently wrong tile to a silently absent one, per §1j's own accepted standard; does not (and per B's own note, could not alone) make the true venue appear.
+
+**Change — `web/src/lib/opportunities/structured-extract.ts`, `findVenueCity()`.**
+Confirmed the cause against the live code first: `CITY_PROXIMITY_CUE_RE`
+("in|at|near|held|hosted|takes place|...") matches "have previously been
+held in Cologne" and "will be held in Lanzhou" identically — nothing checked
+whether a cued mention was framed as historical. Added two independent
+signals, either sufficient on its own, checked BEFORE the existing cue/
+state-code check on each candidate mention:
+
+1. **`HISTORICAL_FRAMING_RE`** — an explicit marker word
+   (previously/formerly/past edition/prior edition/used to be/last year's/
+   earlier editions) anywhere in the same 120-char `preceding` window
+   `CITY_PROXIMITY_CUE_RE` already scans. Deliberately backward-looking only,
+   matching that regex's own direction — a marker appearing later in the
+   text, describing a different city mentioned after it, must not
+   retroactively taint an earlier, genuinely current mention.
+2. **`TRAILING_EDITION_YEAR_RE`** — a city sitting directly in front of a
+   parenthetical edition year (`Cologne, Germany (2008)`), checked against a
+   wider (40-char) following-text window than the existing state-code check
+   needs, so the country between the city and the year doesn't defeat it.
+   This is the shape a "held in X (year), Y (year), Z (year)" list run
+   takes even with no single marker word anywhere nearby.
+
+A rejected mention `continue`s to the next mention of the *same* city name
+(not `break`) — a later, different, non-historical mention of the same city
+could still be a genuine cue; the real repro never needs this (Cologne
+appears once), but the loop structure shouldn't assume that.
+
+**Verified against the false-positive risk B explicitly named, not just
+the true-positive repro.** Traced "the 2026 edition, held in Austin" by
+hand before writing any test: neither regex fires (no "past"/"prior" word,
+no parenthetical immediately after the city), so a legitimately current
+venue that happens to also state its own edition number is unaffected —
+added as its own test, not just asserted in prose.
+
+**Say this plainly, matching B's own framing.** `Lanzhou` is still not in
+`CONFERENCE_CITIES` (this item does not touch the gazetteer, per B's own
+scoping — a separate, open-ended limitation). The real repro's honest
+outcome after this fix is `undefined`, not `Lanzhou` — a false statement
+removed, not the true venue recovered. That is the accepted, real-progress
+outcome per §1j's own standard, not a partial or deferred fix.
+
+**Blast radius — confirmed as B described.** `findVenueCity()` is called
+only from `extractBodyTextPlace()`, which both `enrichEventCandidates()` and
+`enrichJobCandidates()` call (`enrich.ts`) — so a job's LOCATION tile and the
+feed's location-filter buttons (`opportunity-facet-panel.tsx`, which reads
+`CONFERENCE_CITIES` directly, not `findVenueCity()` itself, so unaffected by
+this specific change) share the fix. Ran the full suite, not only this
+file's own tests, to check for exactly this kind of indirect breakage — see
+Gate below.
+
+**Tests.** Added three to `structured-extract.test.ts`'s `"country must
+belong to the city"` block, reading all 7 pre-existing fixtures in the block
+directly first (not just trusting B's own read) to confirm none carries a
+historical marker or parenthetical year — confirmed clean, zero changes
+needed to any of the 7: (a) B's own suggested repro shape — a
+"previously held in Cologne, Germany (2008)" clause alongside a "will be
+held in Lanzhou" clause (Lanzhou genuinely absent from the real gazetteer,
+not a fixture-local one — `extractBodyTextPlace` always uses the real
+`CONFERENCE_CITIES`) returns `undefined`; (b) the parenthetical-year signal
+alone, no "previously"-shaped marker word present, still rejects two
+different cued cities in the same comma-separated run (confirmed by hand
+that both `Cologne` and `Chicago, IL` in this fixture are rejected via their
+own trailing parenthetical, independently — worth noting since `Chicago, IL`
+would otherwise qualify via the state-code path alone); (c) the
+non-over-triggering case above (Austin/2026 edition) still resolves.
+
+**Gate.** `cd web && npx vitest run && npx tsc --noEmit && npx eslint .` — 83
+files / 927 tests, 926 passing (1 pre-existing flake, `benchmark.test.ts`,
+unchanged), typecheck clean, exactly 1 pre-existing lint error
+(`quiz.tsx:46`). Net +3 tests from B5-04's checkpoint (924 → 927), zero
+deleted, zero rewritten.
+
 Commit: (this item, following).

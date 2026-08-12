@@ -417,6 +417,43 @@ describe("country must belong to the city", () => {
       " to this year's programme.</p></body></html>";
     expect(extractBodyTextPlace(html)).toBeUndefined();
   });
+
+  // B5-05 (round 5, R2): a past-edition mention satisfies the cue check
+  // exactly the way a current-venue mention does — "have previously been
+  // held in Cologne" and "will be held in Lanzhou" both contain "held in" —
+  // and nothing distinguished them. The true venue here is deliberately a
+  // real, non-gazetteer city (Lanzhou is not in CONFERENCE_CITIES, mirroring
+  // the actual gap A found), so the honest outcome is silently absent, not a
+  // wrong former host — per §1j, that is real progress, not a partial fix.
+  it("does not let a past-edition mention of a cued city win over an absent true venue", () => {
+    const html =
+      "<html><body><h1>International Titanium Conference</h1>" +
+      "<p>The next edition will be held in Lanzhou, Gansu Province, China," +
+      " from August 9.</p>" +
+      "<p>Past editions of this conference have previously been held in" +
+      " Cologne, Germany (2008).</p></body></html>";
+    expect(extractBodyTextPlace(html)).toBeUndefined();
+  });
+
+  // The parenthetical-edition-year signal must reject a past host even with
+  // no explicit "previously"/"formerly" marker nearby — the shape a
+  // comma-separated "held in X (year), Y (year)" list run takes on its own.
+  it("rejects a city immediately paired with a parenthetical edition year, even without a 'previously' marker", () => {
+    const html =
+      "<html><body><p>Editions of this conference have been held in" +
+      " Cologne, Germany (2008) and Chicago, IL (2012).</p></body></html>";
+    expect(extractBodyTextPlace(html)).toBeUndefined();
+  });
+
+  // Must not over-trigger: an event naming its OWN edition number alongside
+  // its current, cued venue is not a past-edition mention and must still
+  // resolve normally.
+  it("still resolves a current venue that happens to be mentioned with its own edition number", () => {
+    const html =
+      "<html><body><p>Join us for its 2026 edition, held in Austin, Texas.</p></body></html>";
+    const place = extractBodyTextPlace(html);
+    expect(place?.city).toBe("Austin");
+  });
 });
 
 describe("parseStructuredLocation", () => {
