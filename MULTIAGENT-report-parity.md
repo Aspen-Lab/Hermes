@@ -15174,3 +15174,118 @@ bullets sub-block at `page.tsx:1145` is separately guarded by
 section is omitted, and even when application materials keep the outer
 block alive, the role-description sub-heading specifically stays silent.
 No heading over nothing, confirmed by reading the render, not inferred.
+
+#### B8-06 — R13, event name quality: three shapes, two reconfirmed from round 6, one new — `WRONG DATA`
+
+**File:** `web/src/lib/events/sources/eventweb.ts` — `NARRATIVE_VERB_RE`
+(lines 298-299), `HEADLINE_PASSIVE_RE` (313-314), `GENERIC_PAGE_TITLE_RE`
+(181-182), `isChromeSegment` (256-269), `looksLikeEventTitle` (319-327).
+**SolarPACES (§1o Ruling 28) is CLOSED — confirmed again reading the code
+below, not reopening it; do not write it a fix item.** Traced each of A's
+three named shapes to exactly why it clears every current guard.
+
+**Shape 1 — present-tense narrative sentence with no auxiliary verb**
+(round 6's own naming; A reconfirmed live: `"Ruggiero Group Attends the
+2026 Crystal Engineering GRC"`). `NARRATIVE_VERB_RE` only matches a finite
+**"to be" auxiliary** immediately before a past participle ("was
+delayed", "has been postponed") — it has nothing to say about a plain
+present-tense active verb ("Attends"). `HEADLINE_PASSIVE_RE` requires one
+of a specific noun set (deadline/registration/abstract/submission/call for
+papers/date); "Group Attends" matches none of them. `MULTI_SENTENCE_RE`
+needs a second sentence after terminal punctuation; this is one sentence.
+Word count (8) is well under the 20-word ceiling. **Every guard passes it
+by design, not by accident** — none of them was ever built to catch an
+active-voice narrative sentence.
+
+**Shape 2 — bare generic phrase, `"Conference Program"`** (round 6's own
+naming; A reconfirmed live, same URL). `GENERIC_PAGE_TITLE_RE` is anchored
+(`^...$`) to match **one exact generic word**, optionally followed by `"&
+X"`/`"and/or X"` — it has no form for two generic words concatenated
+directly. `"conference"` is in the list; `"program"` is separately in the
+list (as `programme?`); but `"Conference Program"` (adjective + noun, no
+connector) matches neither the single-word form nor the connector form,
+so the whole regex fails to match. None of `isChromeSegment`'s other
+checks (event-index shape, trailing-"events" shape, host-brand) apply
+either. `looksLikeEventTitle` then accepts it outright — two words, no
+narrative verb, no headline passive, one sentence.
+
+**Shape 3 — raw filename with its extension, `"AA ECC10 POSTERS
+08072026.xlsx"`** (new this round). Traced which function this passed
+through, not just that it did: `nameFromUrlSlug` (`eventweb.ts:330-350`)
+explicitly **strips** a trailing `\.\w{2,5}$` extension before returning
+anything (`.replace(/\.\w{2,5}$/, "")`, line 344) — since A's reported
+string still carries `.xlsx`, it did **not** come from the URL-slug
+fallback. It came from `bestEventTitleSegment` — the page's own raw
+`<title>`/search-result title was already this filename verbatim, and
+**no existing check anywhere in this file tests for a file-extension
+shape at all.** This is a genuinely new class, not a variant of shapes 1
+or 2 — a served document's filename is not a narrative sentence and not a
+generic index phrase.
+
+**Fix direction — three independent, narrow additions, matching this
+file's own stated practice** ("catch known shapes, not a general parser",
+`HEADLINE_PASSIVE_RE`'s own doc comment) rather than one generic parser:
+
+1. A sibling regex to `NARRATIVE_VERB_RE` for present-tense
+   narration-about-an-event, scoped to a small, closed verb list in the
+   same spirit as `HEADLINE_PASSIVE_RE`'s own closed participle list —
+   e.g. a leading capitalized subject phrase followed by
+   `attends|announces|hosts|presents|joins|visits` — **not** a general
+   "any present-tense verb" check, which would risk rejecting a real
+   terse event name that happens to contain a common verb-shaped word.
+2. Extend `isChromeSegment` (or `GENERIC_PAGE_TITLE_RE`) to recognise a
+   segment composed **entirely** of words drawn from the same closed
+   generic-word list it already has (conference/program/schedule/agenda/
+   summary/overview/meeting/session/workshop...), not only the
+   single-exact-phrase-plus-connector form it currently requires.
+3. A narrow, high-confidence filename check: segment ends in a common
+   document extension (`\.(?:pdf|docx?|xlsx?|pptx?|csv|zip)$`, case
+   insensitive). Very low false-positive risk — a real event name
+   essentially never ends this way.
+
+**Structural note, named but not acted on.** This is the fourth, fifth,
+and sixth narrow guard added to this same function family across three
+rounds (B5-06 added two, this adds three more). Each individual addition
+is well-evidenced and low-risk, matching this file's own stated
+philosophy — but naming the accumulation pattern for the manager's
+awareness, the same way the employer-field items above name theirs: at
+some point a positive "does this read as a specific, named, proper-noun-
+bearing thing" check might out-perform an ever-growing negative list.
+**Not recommending that rewrite now** — no evidence in hand says the
+narrow approach has stopped working, only that it keeps needing one more
+entry, and Ruling 28/29 both caution against inventing a general mechanism
+without a concrete counterexample forcing it.
+
+**Tests at risk:** `web/src/lib/events/sources/eventweb.test.ts` —
+`describe("looksLikeEventTitle", ...)` (from line 14) and its sibling
+chrome/generic-title cases (lines 61-167+) exercise this exact function
+family. Read each: none currently asserts a present-tense narrative
+sentence, a two-generic-word phrase, or a filename-with-extension should
+be *accepted* — so none should need rewriting, only new cases added. The
+existing test **"does not reject a real title that merely mentions a
+headline-subject word as its topic"** (line 183) is the one to re-run
+carefully after shape-1's fix, since it is the precedent guarding against
+over-rejection for this exact guard family.
+
+**Blast radius:** `isChromeSegment`, `looksLikeEventTitle`, and
+`GENERIC_PAGE_TITLE_RE` are called from `bestEventTitleSegment`, which
+feeds both `webResultToRawEventItem` (ingestion) and `enrich.ts`'s
+enrichment-stage name preference (`enrich.ts:148-160`, the path Ruling 27
+already fixed to route through this same guarded function). A change here
+reaches **both** call sites at once — confirm both live, not just one,
+after landing.
+
+**What renders after this guard fires:** confirmed from source
+(`eventweb.ts:392-426`) — when every title segment is rejected,
+`eventNameFrom` tries `nameFromUrlSlug` next, then mines the snippet, and
+only falls back to the first raw segment or the raw title itself as an
+absolute last resort (`segments[0] ?? title.trim()`, line 425). This last
+resort is **not** silence — worth flagging to C explicitly: unlike the
+employer-field and summary items above, event name has no "render
+nothing" option today (a report with no title at all is a different kind
+of broken), so a newly-rejected chrome segment does not disappear, it
+falls through this same chain one tier further. Confirm after landing
+that the next tier actually produces something better for each of the
+three shapes above, not just that the bad value stops appearing — a
+rejection with a worse fallback behind it would repeat Ruling 26's own
+lesson.
