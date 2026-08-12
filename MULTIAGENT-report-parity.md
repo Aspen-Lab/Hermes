@@ -13763,3 +13763,48 @@ plate layout contracts; the already-completed full-PDF visual review remains
 applicable, and this static re-render confirms the component outputs still
 meet the fixture contract. No temporary artifact was retained. Fresh live
 event-pool, source-authority, and prompt/no-provider measurements remain.
+
+---
+
+#### Fresh event source/pipeline measurement — COMPLETE @ 2026-08-12 10:40 UTC
+
+Read the local profile using the established runtime shape and recorded only
+the Tavily presence boolean (`true`), never its value. A fresh Tier-0
+`buildDailyEventPool()` pass used an isolated in-memory cache. Source counts
+were ccfddl **80**, confstech **28**, researchseminars **20**, and eventweb
+**54**; there were 182 candidates before dedupe, 177 after dedupe, and 16 in
+the scored pool. The pool's order did not change through
+`scoredEventToEvent()` (ID and official URL matched at every recorded rank),
+so B7-06 did not change ranking.
+
+The returned top six, in both raw and mapped order, were all eventweb:
+`eventweb:ui89az` / `https://www.solarpaces.org/abstract-submission-deadline-extended-to-march-30`,
+`eventweb:amo4p2` / `https://www.cambridgeenertech.com/battery-safety/program`,
+`eventweb:1inipbx` / `https://euagenda.eu/events/2026/05/26/the-first-european-conference-on-molten-salt-reactor-technology`,
+`eventweb:1ypv5ym` / `https://10times.com/e1z2-0h5z-3pgr`,
+`eventweb:ddjuqb` / `https://ruggedthz.com/ruggiero-group-attends-the-2026-crystal-engineering-grc`,
+and `eventweb:1hvdjy7` / `https://euchems2026.eu/wp-content/uploads/2026/07/ECC102026-POSTERS-v2.pdf`.
+Each had no raw or mapped `reportSummary` authority and rendered report
+summary **silence**. In the complete 16-item pool, eventweb had 14 no-summary
+records and two page-owned records; ccfddl, confstech, and researchseminars
+were collected but had no scored survivor, so no current report was available
+to measure from those adapters. This directly confirms eventweb discovery
+copy remains report-silent; confstech's discovery-only contract was not
+promoted by a current survivor.
+
+Bounded source checks reached five pages without retaining any page body.
+Three reachable fresh reports — `eventweb:ui89az`, `eventweb:amo4p2`, and
+`eventweb:ddjuqb` — each rendered no summary sentence/fact. For each, the
+complete eligible hierarchy was also absent: no source-record summary, no
+single typed-Event complete description, and no complete guarded paired-OG
+description. Their silence is therefore not under-extraction under Ruling 23.
+`eventweb:1inipbx` and the 10times item were unavailable and remain
+non-evidence; the remaining reachable checks (`eventweb:1hvdjy7`,
+`eventweb:zxaqf4`, and `eventweb:wyzb9k`) likewise had no eligible typed or
+guarded-OG summary. SolarPACES identity was not re-scored here beyond its
+safe ID/URL presence; this authority pass records only summary evidence.
+
+The fresh event summary boundary is met for the measured silent records, but
+the real-data gate remains open pending the required prompt/no-provider
+boundary and full gate. No body text, credentials, or measurement artifact was
+retained.
