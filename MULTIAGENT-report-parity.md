@@ -2040,6 +2040,18 @@ Work through B's fix guide in order.
 
 - Working directory: `C:\I\Personal\Github - start up project\Peer`
 - Branch: `feature/summary-report-revamp`. **Do not create a branch or worktree.**
+- **RUN `git branch --show-current` BEFORE YOUR FIRST COMMIT, AND CHECK THE
+  OUTPUT OF EVERY PUSH.** This has now happened **three times**: something in
+  this environment silently creates a branch named `membership-api-connection`
+  from HEAD and leaves the checkout sitting on it. Rounds 4, 8, and one in
+  between each landed a real commit there before anyone noticed. Every time it
+  was caught, and every time only because the agent looked rather than assumed.
+  **A push that reports success is not proof it went where you meant** — read
+  the branch name in the output. If you find yourself on the wrong branch:
+  check out the right one, confirm nothing is stranded
+  (`git merge-base --is-ancestor <stray> feature/summary-report-revamp`), and
+  say so in your log. **Do not delete the other branch** — that is the
+  manager's call after verifying the content survived.
 - `web/AGENTS.md`: this is **not** the Next.js you know (16.2.3, React 19.2.4).
   Read `web/node_modules/next/dist/docs/` before touching routing.
 - No API key is needed. Never log, commit, or write a key to a file.
