@@ -15289,3 +15289,72 @@ that the next tier actually produces something better for each of the
 three shapes above, not just that the bad value stops appearing — a
 rejection with a worse fallback behind it would repeat Ruling 26's own
 lesson.
+
+#### B8-07 — §1p Ruling 29 (same-page multi-listing contamination): still untestable live, `POLICY — manager decides`
+
+**Not a code item.** A already searched twice (narrow topics, broad
+topics) and found zero aggregator pages, then separately fetched one real,
+current `hiringcafe.com` page directly and found it resolved safely via
+the JSON-LD tier, never exercising the higher-risk DOM free-text path.
+My job this round was to say what I looked for, confirm from the code
+whether the mechanism is still reachable, and rule on the status — not to
+manufacture a repro.
+
+**What I looked for.** While independently verifying the employer-field
+items above, ran three fresh live job pool builds through the real
+pipeline (same profile A used, narrow topics at two pool sizes, no
+dedicated aggregator search — this was incidental, not a targeted Ruling
+29 hunt). One item in the resulting pool, `jobweb:ic2ygl`, resolved to
+host `hiringcafe.com` — the exact site Ruling 29 names. Checked it the way
+Ruling 29 itself specifies: scored `workMode`, `roleKind`, and `summary`
+(not just company) separately. Result: `workMode: undefined` (silent),
+`roleKind: "internship"` (matches the title, "Spring Engineering
+Internship..."), a 237-character summary. `fetchedPostingScope: "owned"`,
+resolved via the JSON-LD tier (confirmed earlier for the same item under
+B8-04) — **the same safe tier A's own direct fetch resolved through, not
+the DOM free-text fallback that carries the actual contamination risk.**
+No contamination signal in this example; consistent with, not
+contradicting, A's own finding.
+
+**Refinement to A's framing, worth naming precisely.** A's two *dedicated*
+searches for `hiringcafe`/`jobright`/etc. found zero hits, which A
+correctly did not overstate as "unreachable." My *undedicated*, ordinary
+topic search surfaced one incidentally in the same session. This doesn't
+close anything — it is one more JSON-LD-tier success, same as A's — but
+it does mean the site is not categorically absent from this profile's
+ordinary search results, only that the **specific page shape needed**
+(one without a clean, exact-URL-matching JSON-LD record, forcing the
+resolver onto the DOM/free-text path) has not turned up in either agent's
+sample yet. Worth recording so the next A does not read "two searches, zero
+hits" as "this site cannot be reached" — it can, the failure mode being
+tested for just hasn't shown up.
+
+**Is the mechanism still reachable in the current code? Yes — confirmed
+by reading `web/src/lib/opportunities/job-posting-scope.ts` in full (93
+lines, unchanged in shape since Ruling 29 was written; no B7-0x item
+touches this file).** `selectedDomScopes` (lines 42-70) picks the
+**smallest** DOM block among `article`/`li`/`section`/`div`/`main`
+elements that contains exactly one link to the selected URL or exactly
+one matching heading, with at most one distinct heading inside it. This
+heuristic assumes the page's own markup wraps each individual listing in
+one of those five tag types. A page that lays out multiple listings as,
+for example, sibling `<tr>` table rows, or flat sibling elements with no
+per-listing wrapper at all among those five tags, could still cause the
+"smallest valid candidate" to be a block spanning more than one listing's
+text — the exact contamination shape Ruling 29 describes — without
+tripping any of the current boundary checks. This is a read of the code,
+not a new live repro; stated as what the mechanism *would* do if such a
+page were found, not as a confirmed live failure.
+
+**Recommendation.** Keep Ruling 29's own disposition exactly as written —
+in scope, not excluded, no code item until a repro exists, and explicitly
+not permission to consider it permanently resolved. Nothing this round
+changes that calculus in either direction: no new evidence of live harm,
+no new evidence of safety, and the code-level reachability analysis above
+confirms the risk is still structurally live, not theoretical-and-now-
+closed. **Marking `POLICY — manager decides`**: whether to keep waiting
+for an incidental live repro (as both A and I have now tried and failed to
+force one), or to fund a deliberate, narrower search strategy (e.g.
+searching specifically for known multi-posting aggregator URL shapes by
+pattern rather than by topic) purely to settle the open question, given
+it has now gone three rounds without a live example either way.
