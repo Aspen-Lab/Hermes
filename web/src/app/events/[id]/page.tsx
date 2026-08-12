@@ -2278,7 +2278,9 @@ export default function EventDetailPage({
 
   const rosterContext = useMemo<EventRosterContext>(
     () => ({
-      savedEmployers: savedJobs.map((job) => job.companyOrLab),
+      savedEmployers: savedJobs
+        .map((job) => job.companyOrLab)
+        .filter((company): company is string => Boolean(company)),
       paperAuthors: [...papers, ...savedPapers].flatMap((paper) => paper.authors),
       declaredTopics: [
         ...profile.researchTopics,

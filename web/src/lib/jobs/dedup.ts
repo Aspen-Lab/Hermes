@@ -23,7 +23,7 @@ function normalizeToken(value: string): string[] {
 
 export function jobDedupKey(item: RawJobItem): string {
   const title = normalizeToken(item.title).slice(0, 6).sort().join(" ");
-  const company = normalizeToken(item.company).slice(0, 3).sort().join(" ");
+  const company = normalizeToken(item.company ?? "").slice(0, 3).sort().join(" ");
   return `${title}::${company}`;
 }
 

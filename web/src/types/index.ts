@@ -199,7 +199,7 @@ export type RoleKind =
 export interface Job {
   id: string;
   roleTitle: string;
-  companyOrLab: string;
+  companyOrLab?: string;
   location: string;
   place?: OpportunityPlace;
   isRemote: boolean;

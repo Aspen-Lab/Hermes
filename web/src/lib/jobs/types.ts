@@ -27,7 +27,7 @@ export interface RawJobItem {
   id: string;
   source: JobSourceId;
   title: string;
-  company: string;
+  company?: string;
   location: string;
   place?: OpportunityPlace;
   isRemote: boolean;

@@ -78,6 +78,11 @@ describe("scoredJobToJob", () => {
     });
   });
 
+  it("keeps an absent company absent instead of fabricating a hostname", () => {
+    // B6-03 (round 6): company absence is a valid report-safe state.
+    expect(scoredJobToJob({ ...fullJob, company: "" }).companyOrLab).toBeUndefined();
+  });
+
   it("preserves preferred and unrelated on-site location fit", () => {
     expect(scoredJobToJob(fullJob, ["Chicago"]).locationFit).toBe(1);
     expect(

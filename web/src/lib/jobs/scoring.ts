@@ -161,7 +161,7 @@ export function scoreIndustryFit(
 ): number {
   const text = `${item.title} ${item.company} ${item.description.slice(0, 400)}`;
   const isAcademic = ACADEMIC_RE.test(text);
-  const isBigTech = BIG_TECH_RE.test(item.company) || BIG_TECH_RE.test(item.title);
+  const isBigTech = BIG_TECH_RE.test(item.company ?? "") || BIG_TECH_RE.test(item.title);
   const isStartup = STARTUP_RE.test(text);
 
   switch (preference) {

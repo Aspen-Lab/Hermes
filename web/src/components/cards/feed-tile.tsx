@@ -532,7 +532,7 @@ function JobTile({ job, isRead }: { job: Job; isRead: boolean }) {
         {job.roleTitle}
       </h3>
       <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
-        <MetaItem icon={BuildingMini}>{job.companyOrLab}</MetaItem>
+        {job.companyOrLab && <MetaItem icon={BuildingMini}>{job.companyOrLab}</MetaItem>}
         {(job.isRemote || job.location) && (
           <MetaItem icon={job.isRemote ? GlobeMini : PinMini}>
             {job.isRemote ? "Remote" : job.location}

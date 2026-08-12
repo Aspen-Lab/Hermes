@@ -66,7 +66,7 @@ export function filterJobsByOpportunityQuery(
     includesQuery(
       [
         job.roleTitle,
-        job.companyOrLab,
+        ...(job.companyOrLab ? [job.companyOrLab] : []),
         job.matchReason,
         job.location,
         ...placeFields(job.place),

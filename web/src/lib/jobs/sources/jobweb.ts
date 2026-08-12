@@ -189,7 +189,7 @@ export function webResultToRawJobItem(result: {
           !SEASON_COHORT_LABEL_RE.test(p) &&
           !looksLikeBareLocation(p) &&
           !looksLikeHostBrand(p, host),
-      ) || host;
+      );
   return {
     id: `jobweb:${urlHashId(url)}`,
     source: "jobweb",

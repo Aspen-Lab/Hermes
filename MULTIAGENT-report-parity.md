@@ -12236,6 +12236,22 @@ clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 
 ---
 
+#### B6-03 — optional, honest job employer
+
+**STATUS: COMPLETE.** Made raw and rendered job employers optional, removing
+the jobweb hostname and mapper placeholder fallbacks. Guarded every newly
+reachable non-report consumer (briefing cards, feed/card metadata, ledger,
+search, dedup/scoring, and event roster context) so absence renders silently
+rather than as a separator, icon, or fabricated label. Existing tests that
+previously asserted hostname fallback now state the B6-03 contract.
+
+**Gate:** 83 files / 944 tests, 943 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o

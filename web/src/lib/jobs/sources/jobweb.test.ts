@@ -101,13 +101,15 @@ describe("company derivation", () => {
     expect(item?.company).toBe("Acme Corp");
   });
 
-  it("falls back to the host when only a season segment survives", () => {
+  // B6-03 (round 6): a rejected candidate must not become an unguarded host
+  // fallback; absence is an honest employer value.
+  it("leaves the company absent when only a season segment survives", () => {
     const item = webResultToRawJobItem({
       title: "Battery R&D Intern - Summer 2027",
       url: "https://acme.test/careers/job/9912",
       snippet: "Research internship in molten salt battery R&D. Apply now.",
     });
-    expect(item?.company).toBe("acme.test");
+    expect(item?.company).toBeUndefined();
   });
 
   // B5-03 (round 5): all three of A's real jobs wrongly showed a job board's
@@ -120,7 +122,7 @@ describe("company derivation", () => {
       url: "https://greenjobsboard.io/careers/job/9912",
       snippet: "Research internship in molten salt battery R&D. Apply now.",
     });
-    expect(item?.company).toBe("greenjobsboard.io");
+    expect(item?.company).toBeUndefined();
   });
 
   it("does not mistake a bare city/state location segment for the company", () => {
@@ -129,7 +131,7 @@ describe("company derivation", () => {
       url: "https://acme.test/careers/job/9913",
       snippet: "Research internship in molten salt battery R&D. Apply now.",
     });
-    expect(item?.company).toBe("acme.test");
+    expect(item?.company).toBeUndefined();
   });
 
   // Confirms the new host-brand guard is one-directional, per its own
@@ -163,7 +165,7 @@ describe("company derivation", () => {
       url: "https://acme.test/careers/job/9916",
       snippet: "Battery research position. Apply now.",
     });
-    expect(item?.company).toBe("acme.test");
+    expect(item?.company).toBeUndefined();
   });
 
   it("prefers a title-stated employer over a trailing job-board brand", () => {

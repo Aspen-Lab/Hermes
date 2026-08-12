@@ -133,14 +133,8 @@ export function scoredJobToJob(
   const summary =
     summarizeJob(cleanJobDescription(item.description), item.matchedKeywords, roleTitle) ||
     undefined;
-  const fallbackCompany = (() => {
-    try {
-      return new URL(item.url).hostname.replace(/^www\./, "");
-    } catch {
-      return "Employer not stated";
-    }
-  })();
-  const company = cleanJobSubtitlePart(item.company) ?? fallbackCompany;
+  // B6-03 (round 6): absence is more honest than a hostname or placeholder.
+  const company = cleanJobSubtitlePart(item.company);
   const location =
     cleanJobSubtitlePart(item.location) ??
     (item.isRemote ? "Remote" : "See posting");

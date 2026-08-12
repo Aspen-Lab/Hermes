@@ -46,7 +46,8 @@ describe("measured job extraction artifacts", () => {
     );
 
     expect(job.roleTitle).toBe("Research in Reno at American Battery");
-    expect(job.companyOrLab).toBe("americanbattery.example");
+    // B6-03 (round 6): hostname fallbacks are not employer evidence.
+    expect(job.companyOrLab).toBeUndefined();
     expect(job.location).toBe("Reno, Nevada, United States");
     expect(job.summary).not.toContain("]");
     expect(job.summary).toContain("Dive into hands-on research");
