@@ -275,8 +275,8 @@ HELD BY:          chatgpt-local @ 2026-08-12 07:26 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  in progress @ 2026-08-12 10:15 UTC. Round-7 C is completing
-                   the manager-requested B7-06 authority follow-up.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 10:25 UTC. Round-7 C
+                   completed the manager-requested B7-06 authority follow-up.
                   (Set this every time you stop. Three values: `finished the
                   turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
                   tells the next agent whether to continue this turn or
@@ -13739,3 +13739,14 @@ Focused verification: 6 files / 213 tests passed. Fresh full gate: 85 files /
 is clean; ESLint reports only the known `src/components/persona/quiz.tsx:46`
 error; `git diff --check` is clean. No credentials, source text, fetch/model
 path, provider, ranking behavior, branch, worktree, PR, or tests were removed.
+
+#### C7-06 closing handoff — COMPLETE @ 2026-08-12 10:25 UTC
+
+**CURRENT §1 UPDATE — supersedes every prior C-follow-up status line:**
+`STOPPED BECAUSE: finished the turn @ 2026-08-12 10:25 UTC`; `WHOSE TURN: A`.
+A independently remeasures B7-06 only against the report, prompt, fixture,
+and fresh source/pipeline evidence. It must not diagnose or fix. The manager
+lock remains `HELD BY: chatgpt-local`; all §1d exclusions, Rulings 23/25/26,
+B7-01 title authority, and raw discovery scoring/ranking plus provider/fetch
+contracts remain binding. The gate remains **NOT MET** pending A's independent
+real-data measurement; C cannot close it. No C work is partial or pending.
