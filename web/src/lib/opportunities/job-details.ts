@@ -96,10 +96,20 @@ function extractStartDateFlexible(text: string): true | undefined {
  */
 const WORK_MODE_HYBRID_RE = /\bhybrid\b/i;
 const WORK_MODE_ON_SITE_RE = /\bon[\s-]?site\b|\bin[\s-]?person\b/i;
+const WORK_MODE_AMENITY_TAIL_RE =
+  /^\s+(?:fitness|gym|parking|banking|cafeteria|dining|caf[eé]|daycare|child\s?care|visitors?|guests?|concierge)\b/i;
 
 function extractWorkMode(text: string): Job["workMode"] {
   if (WORK_MODE_HYBRID_RE.test(text)) return "hybrid";
-  if (WORK_MODE_ON_SITE_RE.test(text)) return "on-site";
+  // B6-08: evaluate every occurrence independently. A page can mention an
+  // amenity and still state that the role itself is on-site elsewhere.
+  const onSiteMatches = text.matchAll(
+    new RegExp(WORK_MODE_ON_SITE_RE.source, "gi"),
+  );
+  for (const match of onSiteMatches) {
+    const tail = text.slice((match.index ?? 0) + match[0].length);
+    if (!WORK_MODE_AMENITY_TAIL_RE.test(tail)) return "on-site";
+  }
   return undefined;
 }
 

@@ -201,6 +201,20 @@ describe("extractJobDetails", () => {
     expect(extractJobDetails(html).workMode).toBeUndefined();
   });
 
+  it("ignores amenity mentions in ordinary page body text", () => {
+    // B6-08 (round 6): this is distinct from the B5-02 furniture fixture.
+    expect(
+      extractJobDetails("<p>Employee amenities include on-site fitness, banking, and cafeteria access for visitors.</p>"),
+    ).toEqual({});
+  });
+
+  it("keeps a genuine work arrangement when another mention is an amenity", () => {
+    // B6-08: the denial is per occurrence, never a whole-page pre-check.
+    expect(
+      extractJobDetails("<p>This is an on-site position. Employee amenities include on-site parking.</p>"),
+    ).toEqual({ workMode: "on-site" });
+  });
+
   // B5-02 (round 5). A genuine work-arrangement statement sitting directly
   // in the article body -- not furniture -- must still be found even when
   // the same page also carries unrelated nav/footer furniture. Guards

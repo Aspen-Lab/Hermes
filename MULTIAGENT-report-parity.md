@@ -12272,6 +12272,20 @@ clean. The only lint error remains `src/components/persona/quiz.tsx:46`
 
 ---
 
+#### B6-08 careerservices — per-occurrence amenity denial
+
+**STATUS: COMPLETE.** Reworked on-site/in-person extraction to inspect each
+match's immediate tail and reject only amenity-adjacent mentions. Added body
+prose coverage for `on-site fitness` and a mixed page proving a genuine
+on-site-position statement still wins over separate parking copy.
+
+**Gate:** 83 files / 948 tests, 947 passing; only the documented live
+benchmark failed because its Chicago assertion received Salvador. TypeScript
+clean. The only lint error remains `src/components/persona/quiz.tsx:46`
+(`react-hooks/set-state-in-effect`).
+
+---
+
 #### Manager handoff to C
 
 **COMPLETE, committed separately.** Both policy questions are ruled in §1o
