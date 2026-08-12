@@ -288,9 +288,8 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 04:14 UTC. Round-6 B has
                   tells the next agent whether to continue this turn or
                   start the next one. See HANDOFF-ABC.md §9.)
 ROUND:            6
-WHOSE TURN:       MANAGER — B6-06 SolarPACES is ruled in §1o. Rule the
-                   remaining B6-08 hiringcafe.com policy item, then advance
-                   to C with the exact ordered,
+WHOSE TURN:       MANAGER — both policy items are ruled (§1o, §1p). Verify
+                   the guide, then advance to C with the exact ordered,
                   code-only work list in §4 "Round 6 — Agent B". The manager
                   lock stays held by `chatgpt-local` until the final stop
                   commit; do not change it in this handoff.
@@ -577,9 +576,9 @@ DONE:      B2-01 .. B2-19 (rounds 1–2), unchanged, still all landed and
            complete round-6 guide, B6-01 .. B6-08, is now committed and
            pushed; manager policy rulings are next, before C begins.**
 
-TODO:      **MANAGER: B6-06 SolarPACES is ruled in §1o. Rule B6-08
-           hiringcafe.com, then advance C to the code-only work order in §4's Round-6 B
-           handoff.** Do not hand either policy item to C unruled.
+TODO:      **MANAGER: both policy items are ruled (§1o, §1p). Verify and
+           advance C to the code-only work order in §4's Round-6 B
+           handoff.** Neither policy item is C code this turn.
 
 TODO (completed record): **B: write the round-6 fix guide.** Round 6's measurement is done
            (see STATUS above) — full evidence is in §4 "Round 6 — Agent A".
@@ -1746,6 +1745,42 @@ reachable tier. It may recommend a source-backed signal or a different
 candidate-order rule, but it must again state what real counterexample the
 rule protects. **Nobody may remove SolarPACES from the gate merely because a
 cheap discriminator was not found this round.**
+
+---
+
+## §1p. RULING 29 — SAME-PAGE MULTI-LISTING CONTAMINATION IS IN SCOPE, BUT NOT AS A FIELD-SPECIFIC REGEX — BINDING
+
+**Date: 2026-08-12. Answers B6-08's `hiringcafe.com` `POLICY — manager
+decides`.**
+
+The live repro is not ambiguous about the failure: text belonging to another
+job on the same aggregator page is being treated as evidence for the selected
+job. It already affects `workMode`, B6-02 shows the same mechanism can affect
+`roleKind`, and B6-07 correctly warns that whole-page `pageText` can expose it
+to summaries too. Three fields seeing the same foreign block is an ownership
+boundary problem, not three missing keyword deny-lists.
+
+**Ruling: the shared posting-ownership problem is IN SCOPE and remains in the
+real-data gate. It is not a C item in this turn because B has not yet supplied
+a safe mechanism.** C must not add a hiringcafe-specific host rule, suppress
+`hybrid` globally, or make three field-specific filters. Those would hide one
+repro while leaving the same foreign text authoritative elsewhere.
+
+C still lands B6-02, B6-07, and the careerservices half of B6-08 exactly as
+guided: each is independently safe and improves a distinct proven boundary.
+The next A must re-fetch the named hiringcafe posting and report the selected
+job's title plus, without reproducing large third-party text, which DOM or
+structured-data block contains that job and whether the foreign listing is in
+a sibling block, JSON-LD item, or undifferentiated body text. It must score
+`workMode`, `roleKind`, and `summary` separately.
+
+If contamination remains, the next B gets one explicitly scheduled
+architecture item: define a posting-scoped text source once, keyed to the
+selected job's own title/URL/structured record, and have downstream extractors
+consume it. B must name the fallback when no owned block can be identified and
+prove that the fallback prefers silence over attributing another job's facts.
+Only then may C implement it. **This is a sequencing decision, not permission
+to leave the defect permanently unresolved.**
 
 ---
 
@@ -12102,5 +12137,18 @@ C turn. B6-06 has no direct C code, remains open, and remains in the real-data
 gate. C lands B6-01 and B6-05 first; the next A re-fetches and renders
 SolarPACES to identify which fallback tier remains reachable before another
 fix is designed. Full binding reasoning is in §1o.
+
+---
+
+#### Ruling 29 — B6-08 hiringcafe.com
+
+**RULED, committed separately.** Same-page multi-listing contamination is in
+scope and remains in the real-data gate, but it is not a code item for this C
+turn. The current evidence supports one future posting-ownership mechanism,
+not a hiringcafe host exception or separate regexes for `workMode`, `roleKind`,
+and `summary`. C lands B6-02/B6-07/B6-08 careerservices; the next A measures
+the named repro per field and records the page-block shape; the next B guides
+one shared posting-scoped text source if contamination remains. Full binding
+reasoning is in §1p.
 
 ---
