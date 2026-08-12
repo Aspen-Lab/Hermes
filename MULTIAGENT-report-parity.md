@@ -14651,3 +14651,139 @@ zero on real data, and this is not zero.
 `WHOSE TURN: B` in §1, updated in place in the same commit.
 
 **STATUS: COMPLETE.**
+
+### Round 8 — Agent B
+
+**STATUS: IN PROGRESS.** Claimed the turn lock (`460352d`,
+`LAPTOP-3CL10CG5 @ 2026-08-12 13:09 UTC`). Read §1 through §1q, §2, §3 in
+full, and Round 8 A's complete entry in §4, before touching anything.
+
+**Method.** Read the source for every function A named or implied. Where A
+flagged a hypothesis as unverified ("offered as a lead, not a confirmed
+cause"), built a throwaway vitest file
+(`web/src/zz-round8-b-employer-verify.test.ts`, deleted before this entry's
+first commit, per §3 — "B does not change code") that called the real
+exported pipeline functions directly — `buildDailyJobPool()`,
+`resolveJobPostingScope()`, `resolveEmployerIdentity()`,
+`extractJsonLdOpportunities()`, `looksLikeHostBrand()`, the raw source
+adapters — never modifying any of them. Two kinds of check: (1) live,
+against this session's own fresh real search (same `.local-data/profile.json`
+precedent A used, keys checked only by boolean, never printed); (2) synthetic
+one-line calls to the real exported functions with hand-built strings, to
+isolate a mechanism precisely without depending on live-search timing. No
+fetched third-party page text is quoted below beyond single short derived
+facts (a hostname, a field name, a boolean) — never a paragraph.
+
+**Headline correction to A's report, found by verification A explicitly
+asked for.** A's hypothesis — that the employer field's new wrong-data
+mechanism is B7-05's `resolveEmployerIdentity`, in the enrichment stage — is
+**not confirmed as the dominant cause**. Calling the real pipeline directly,
+end to end, on fresh live postings (including what appears to be the exact
+same `talents.vaia.com` posting A's own census names, title-matched
+verbatim: "Actinide Chemistry & Ion Exchange Postdoc at Savannah River
+National Laboratory") shows the wrong value is already present in
+`jobweb.ts`'s own **raw, pre-enrichment** parse, before
+`resolveEmployerIdentity` ever runs — for that item, enrichment's own scope
+resolution was `"unproven"`, which makes `enrichJobCandidates` pass the raw
+item through completely unchanged. A's isolation check (calling
+`webResultToRawJobItem()` directly and getting `company: undefined` for all
+five) does not reproduce here; seven of eight jobweb items examined below
+were checked the same way A describes, and the mismatch is precise and
+explained below (B8-01). This is exactly the kind of correction §3's "check
+A's claims against the source" exists for — A's hypothesis was explicitly
+offered as unverified, and the verification found a different, and larger,
+mechanism. A's broader point — wrong data is reaching the employer slot
+through a path the ingestion-time guard should have made silent — holds and
+is, if anything, more serious than A's report describes: it traces to
+**seven separate write sites**, not one.
+
+#### B8-01 — `jobweb.ts`'s "Role at Employer" regex cannot match any multi-word employer — `WRONG DATA`
+
+**File:** `web/src/lib/jobs/sources/jobweb.ts:179-192` (`webResultToRawJobItem`).
+
+```ts
+const titleEmployer = title.match(
+  /\bat\s+([A-Z][\w&.,'’]{1,60}?)\s*(?:[-–—|·(]|$)/,
+)?.[1];
+const company =
+  [titleEmployer, ...parts.slice(1)]
+    .map(cleanJobSubtitlePart)
+    .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS.some(...) && !SEASON_COHORT_LABEL_RE.test(p)
+      && !looksLikeBareLocation(p) && !looksLikeHostBrand(p, host));
+```
+
+**The defect, confirmed with a one-line synthetic call to the real
+function** (no live search needed to prove this part):
+
+```
+"...Internship at Tesla".match(RE)?.[1]                                  → "Tesla"
+"...Postdoc at Savannah River National Laboratory - Vaia".match(RE)?.[1] → undefined
+```
+
+The capturing group `[\w&.,'’]{1,60}?` **does not include a space
+character.** `\w` and the rest of the class match letters, digits, `&`,
+`.`, `,`, `'`, but never a space, so the lazily-quantified capture can only
+ever span one contiguous non-space token. It matches `"Tesla"` (one word)
+and fails outright — not a wrong match, no match at all, `undefined` — for
+`"Savannah River National Laboratory"` (four words), because it hits the
+space after `"Savannah"` and has nowhere further to extend. **This means
+B6-04's own fix (round 6, "Role at Employer" title parsing) silently does
+nothing for the majority of real employer names**, which are two or more
+words far more often than one.
+
+**Confirmed live, on what appears to be A's own named example.** Called
+`jobweb.fetch()` directly (the real adapter, live Tavily search, same
+profile A used) and found `jobweb:16p04zh`, title "Actinide Chemistry & Ion
+Exchange Postdoc at Savannah River National Laboratory", host
+`talents.vaia.com` — same title A's census names verbatim, same wrong value
+("Vaia"). Its **raw**, pre-enrichment `.company` field is already `"Vaia"`
+— confirmed by calling `jobweb.fetch()` directly and reading the item
+before it ever reaches `enrichJobCandidates`. What happens: `titleEmployer`
+fails to match (space bug above), so the `.find()` falls through to
+`parts.slice(1)` — the **older**, pre-B6-04 mechanism, which splits the
+title on `" - "`/`" | "`/etc. Because the real title carries a trailing
+`" - Vaia"` segment (the site's own SEO title suffix), `parts[1]` is
+literally `"Vaia"`, and none of the four existing guards
+(`KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`,
+`looksLikeBareLocation`, `looksLikeHostBrand`) reject it — see B8-02 for
+why the last one doesn't catch it here. `.find()` returns the first
+passing candidate, so `"Vaia"` wins even though `titleEmployer`, had it
+matched, would have been checked first and would have correctly returned
+`"Savannah River National Laboratory"`.
+
+**Why this was never caught: zero test coverage of a multi-word "at
+Employer" title.** `web/src/lib/jobs/sources/jobweb.test.ts:151-160,171-178`
+— every test of the B6-04 regex uses `"...at Tesla"`, one word. The one
+test with a real multi-word company (`"Acme Materials Group"`,
+`jobweb.test.ts:142-149`) uses a `" - "` separator with no `"at"` keyword
+at all, so it never exercises `titleEmployer`. This is the same pattern
+this loop's own round 5 named ("a new extractor that passed hand-written
+fixtures and failed real pages") recurring against the same file, two
+rounds after B6-04 landed.
+
+**Fix direction.** Add a space to the character class so the lazy capture
+can span multiple words while still stopping at the first following
+separator or end-of-string (the separator/end-of-string requirement is
+what currently bounds the match and is not part of the bug — keep it).
+Add a regression test using this exact shape: a multi-word "at Employer"
+phrase immediately followed by a trailing `" - Brand"` segment, asserting
+the multi-word employer wins, not the trailing brand. Confirm
+`"Battery Engineering Internship at Tesla | EV.Careers"` (the existing
+one-word test) still passes unchanged.
+
+**Tests at risk:** `jobweb.test.ts`'s four `titleEmployer`-adjacent cases
+(lines ~142-178) — all currently pass with a one-word or no-"at" shape and
+should be unaffected; add rather than rewrite. `scoring.test.ts` does not
+touch this regex directly.
+
+**Blast radius:** `jobweb.ts` only — `titleEmployer` is not exported and
+has no other caller.
+
+**What renders after this guard fires correctly (i.e., titleEmployer now
+matches and a candidate is still rejected by the four downstream
+guards):** unchanged from today — falls through to `parts.slice(1)`, same
+as before this fix, and if nothing there passes either, `company` stays
+`undefined`. Confirmed live this round (A's own verbatim check,
+`app/jobs/[id]/page.tsx:1010-1019`, reconfirmed by me for a different item):
+when `company`/`location`/`workMode` are all absent, the whole subtitle
+`<p>` is omitted from the render, not a bare separator or placeholder.
