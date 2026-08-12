@@ -14417,3 +14417,68 @@ exactly that: not a hostname leaking through an old hole, but a new,
 unnamed hole reaching the same slot with the same reader-facing harm.
 
 Commit follows immediately.
+
+#### B5-02's remaining mechanism (§1p Ruling 29) — NOT reachable live this round either; one direct mechanism check on the named site
+
+**Two independent live pipeline searches found zero multi-posting
+aggregator pages** — searched where: (1) the profile's own narrow research
+topics, top 20 / `perSourceLimit` 150, grepped every returned URL against
+`hiringcafe`, `jobright`, `salutemyjob`, `linkedin.com/jobs/collections`,
+`indeed.com/jobs?`, `glassdoor`, `ziprecruiter`, `simplyhired`,
+`careerbuilder` — zero hits. (2) Deliberately generic, high-volume topics
+("software engineer", "data scientist", "internship") through the same real
+pipeline, 31 scored items across 6 sources — same zero hits; every host
+returned was a direct employer career page or a single-posting board. This
+matches round 7's own experience exactly ("the historical Mantel hiringcafe
+posting was not discoverable as a current single posting") — reconfirmed
+independently, not assumed from round 7's report.
+
+**One direct mechanism check on the exact named site, live.** Used a
+separate browser session to find a real, currently-live `hiringcafe.com` job
+detail page (not from the app's search — the app's own search cannot reach
+this site right now, per above), then fed that live URL through the app's
+own `fetchPageHtml()` and `resolveJobPostingScope()` directly:
+
+- Fetch succeeded (a real, current page, ~155 KB HTML).
+- `resolveJobPostingScope()` returned **`"owned"`**, via the **structured
+  JSON-LD tier** (one matching `JobPosting` record at the exact canonical
+  URL) — the safer of the two tiers B7-02 built.
+- The owned scope text was 154 characters; the whole page's extracted text
+  was 5,189 characters — the resolver narrowed sharply, not returning
+  whole-page text.
+- `extractJobDetails()` on the owned scope returned no `workMode` and no
+  other derived field — correctly silent on a short, generic scope, not
+  wrong.
+
+**No contamination reproduced on this one live example.** This is a real,
+positive data point, but it does not close Ruling 29: this specific page
+resolved via the **safe JSON-LD shortcut** and never exercised the **DOM
+free-text fallback path** (Ruling 25's "main road"), which is where the
+original repro's risk actually lived (a foreign listing in the page's main
+column, not in a structured record). One clean example is not proof the
+free-text path is safe on a page that lacks a clean JSON-LD match. **Scored:
+not reachable enough to change the gate either way.** Per the standing rule,
+an untested mechanism is not evidence of safety — it stays exactly where
+round 7 left it: in scope, no live repro available this round, still a named
+open item, not an exclusion.
+
+Commit follows immediately.
+
+#### What renders after the empty-company guard fires — verbatim, per Ruling 30's own instruction
+
+Rendered a real fresh job whose `companyOrLab`, `location`, and `workMode`
+were all absent (the `terra.do` Molten Salt Systems Engineer/Scientist
+posting) through the real `JobReport` component. **Confirmed directly in
+source** (`app/jobs/[id]/page.tsx:1010-1019`) and then **confirmed in the
+live rendered HTML together**: the subtitle line is built as
+`[company, location, workMode].filter(Boolean)`, wrapped in
+`{(company || location || workMode) && (...)}`. When all three are absent,
+**the entire `<p>` element is omitted from the page — not an empty tag, not
+a lone separator, not a placeholder.** Verified on the live render: no
+`<p class="mt-3 text-body text-text-muted">` exists anywhere in the output
+for this item, and a whole-page scan for a bare leading `·` with nothing
+before it found none, on this item or any other in the fresh pool. **This
+is the honest silence Ruling 26/30 asked for, confirmed on real data, not
+assumed from the source read alone.**
+
+Commit follows immediately.
