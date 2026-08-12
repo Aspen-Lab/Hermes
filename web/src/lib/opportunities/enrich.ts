@@ -6,6 +6,7 @@ import { classifyRoleKind } from "@/lib/jobs/role-kind";
 import { extractDeclaredEventName, extractEventDetails } from "./event-details";
 import { extractEventRoster } from "./event-roster";
 import { extractJobDetails } from "./job-details";
+import { resolveJobPostingScope } from "./job-posting-scope";
 import { fetchPagesConcurrently } from "./page-fetch";
 import { extractPageText } from "./page-text";
 import { stripHtml } from "./shared";
@@ -194,21 +195,25 @@ export async function enrichJobCandidates(
   const enriched = candidates.map((item, index) => {
     const html = pages[index];
     if (!html) return item;
-    const structured = tryExtract(() =>
-      extractOpportunityPageDetails(html, "job"),
-    );
-    const details = tryExtract(() => extractJobDetails(html));
-    const pageText = tryExtract(() => extractPageText(html)) ?? undefined;
+    const scope = tryExtract(() => resolveJobPostingScope(html, { url: item.url, title: item.title })) ?? { status: "unproven" as const };
+    const structured = scope.status === "owned" ? scope.structured : undefined;
+    const structuredDetails = structured
+      ? { ...structured, isOnline: false }
+      : undefined;
+    const details = scope.status === "owned"
+      ? tryExtract(() => extractJobDetails(scope.text, new Date(), structured))
+      : undefined;
+    const pageText = scope.status === "owned" ? scope.text : undefined;
     const place = mergeOpportunityPlace(item.place, structured?.place);
     const roleKind =
       item.roleKind ??
       tryExtract(() =>
-        classifyRoleKind(item.title, extractPageText(html) ?? stripHtml(html)),
+        classifyRoleKind(item.title, pageText ?? ""),
       );
-    const visa =
-      item.visa ??
-      tryExtract(() => extractVisaState(html, place?.country));
-    if (!hasExtractedJobSignal(structured, details, visa, pageText)) return item;
+    const visa = item.visa ?? (pageText
+      ? tryExtract(() => extractVisaState(pageText, place?.country))
+      : undefined);
+    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && scope.status !== "unproven") return item;
     return {
       ...item,
       place,
@@ -247,6 +252,7 @@ export async function enrichJobCandidates(
       // B6-07: retain full furniture-stripped text separately so only the
       // report summary upgrades; scoring continues to use source snippets.
       pageText: item.pageText ?? pageText,
+      fetchedPostingScope: scope.status,
       // A web page being "online" does not prove that a job is remote.
       isRemote: item.isRemote,
     };

@@ -275,7 +275,7 @@ HELD BY:          chatgpt-local @ 2026-08-12 04:02 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 06:30 UTC. Round-7 B
+STOPPED BECAUSE:  out of budget @ 2026-08-12 06:55 UTC. C pushed B7-01;
                    completed and pushed five separate investigation records:
                    B7-01, B7-02, B7-03, B7-04 (subsumed), and B7-05. C now
                    implements the four ordered CODE items below. Fixture is
@@ -13224,5 +13224,20 @@ raw adapter fallback changed.
 reports only the documented pre-existing `react-hooks/set-state-in-effect` at
 `src/components/persona/quiz.tsx:46`. `git diff --check` clean. Next is B7-02
 only after manager acceptance of this pushed commit.
+
+#### B7-02 — PARTIAL @ 2026-08-12 06:55 UTC — selected-posting ownership
+
+Started the guided shared scope in uncommitted work: job JSON-LD now retains
+URL/description provenance; a new `resolveJobPostingScope()` rejects malformed
+or credential-bearing canonical URLs, selects the smallest bounded DOM owner
+or one exact-URL JobPosting description, and otherwise returns `unproven`.
+Enrichment, the Tier-0 mapper, and the BYOK report route have been redirected
+to that one boundary; provider resolution remains before the route fetch.
+
+`tsc --noEmit` is clean. Existing enrichment and report tests currently fail
+because their old fixtures deliberately provided unowned whole-page text; they
+must be migrated to the guide's explicit selected DOM/URL owner and expanded
+with B7-02/B7-04 adversarial cases before this item can be gated. No B7-03
+work has started. Manager lock remains unchanged.
 
 ---

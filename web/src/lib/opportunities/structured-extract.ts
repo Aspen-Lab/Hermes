@@ -29,6 +29,9 @@ export interface JsonLdOpportunity {
    * renders it the same way regardless of which source found it.
    */
   employmentType?: string;
+  /** Provenance retained only for selected-posting ownership checks. */
+  url?: string;
+  description?: string;
 }
 
 export interface OpenGraphTags {
@@ -998,6 +1001,8 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   // "full_time" does — a presentation normalization, not a guess: it never
   // changes which employment type was stated, only its letter case.
   const employmentType = nonEmptyString(node.employmentType)?.toLowerCase();
+  const url = kind === "job" ? nonEmptyString(node.url) : undefined;
+  const description = kind === "job" ? nonEmptyString(node.description) : undefined;
 
   return {
     kind,
@@ -1010,6 +1015,8 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     eventAttendanceMode: nonEmptyString(node.eventAttendanceMode),
     ...(salary ? { salary } : {}),
     ...(employmentType ? { employmentType } : {}),
+    ...(url ? { url } : {}),
+    ...(description ? { description } : {}),
   };
 }
 

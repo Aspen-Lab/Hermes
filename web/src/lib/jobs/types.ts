@@ -35,6 +35,8 @@ export interface RawJobItem {
   description: string;
   /** Furniture-stripped fetched page text, used only for report summaries. */
   pageText?: string;
+  /** A fetched page was read but did not prove ownership of this posting. */
+  fetchedPostingScope?: "owned" | "unproven";
   url: string;
   postedAt?: string;
   employmentType?: string;

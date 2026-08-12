@@ -2,7 +2,7 @@ import type { Job } from "@/types";
 import { stripHtml } from "./shared";
 import { extractPageText } from "./page-text";
 import type { NormalizedSalary } from "./salary";
-import { extractJsonLdOpportunities } from "./structured-extract";
+import { extractJsonLdOpportunities, type JsonLdOpportunity } from "./structured-extract";
 
 export interface JobPageDetails {
   applicationDeadline?: string;
@@ -320,6 +320,7 @@ function extractApplicationMaterials(text: string): string[] {
 export function extractJobDetails(
   html: string,
   now = new Date(),
+  selectedStructured?: JsonLdOpportunity,
 ): JobPageDetails {
   // B5-02 (round 5). Was `stripHtml(html)`, which removes only <script>/
   // <style> and markup -- it does NOT remove nav/header/footer/aside/other-
@@ -338,9 +339,9 @@ export function extractJobDetails(
   // and the two new fields below -- each still takes the first job-kind
   // entry that actually carries it, exactly as validThrough already did, so
   // this is a no-behaviour-change refactor for validThrough itself.
-  const jobOpportunities = extractJsonLdOpportunities(html).filter(
-    (item) => item.kind === "job",
-  );
+  const jobOpportunities = selectedStructured
+    ? [selectedStructured]
+    : extractJsonLdOpportunities(html).filter((item) => item.kind === "job");
   const structuredDeadline = jobOpportunities.find(
     (item) => item.validThrough,
   )?.validThrough;

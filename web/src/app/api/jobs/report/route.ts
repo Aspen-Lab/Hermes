@@ -7,7 +7,8 @@ import {
 } from "@/lib/opportunities/enrichment";
 import type { Job } from "@/types";
 import { protectAiRequest } from "@/lib/security/ai-request";
-import { fetchPageText } from "@/lib/opportunities/page-text";
+import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
+import { resolveJobPostingScope } from "@/lib/opportunities/job-posting-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,17 @@ const JOB_REPORT_SYSTEM = [
   "Never invent or paraphrase a requirement or duty.",
   "Return only valid JSON.",
 ].join(" ");
+
+async function fetchOwnedJobPostingText(job: Job): Promise<string | null> {
+  if (!job.linkPosting) return null;
+  const html = await fetchPageHtml(job.linkPosting);
+  if (!html) return null;
+  const scope = resolveJobPostingScope(html, {
+    url: job.linkPosting,
+    title: job.roleTitle,
+  });
+  return scope.status === "owned" ? scope.text : null;
+}
 
 export async function POST(req: NextRequest) {
   let body: JobReportRequest;
@@ -53,9 +65,7 @@ export async function POST(req: NextRequest) {
   const denied = await protectAiRequest("job-report", 20);
   if (denied) return denied;
 
-  const pageText = body.job.linkPosting
-    ? await fetchPageText(body.job.linkPosting)
-    : null;
+  const pageText = await fetchOwnedJobPostingText(body.job);
 
   try {
     const raw = await provider.generateJsonText({

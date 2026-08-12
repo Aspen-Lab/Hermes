@@ -130,9 +130,12 @@ export function scoredJobToJob(
   // B5-07/R4. roleTitle now computed before summary (was after) so its
   // value can be threaded into summarizeJob()'s title-echo check.
   const roleTitle = cleanJobTitle(item.title) || item.title.trim();
-  const summary =
-    summarizeJob(cleanJobDescription(item.pageText ?? item.description), item.matchedKeywords, roleTitle) ||
-    undefined;
+  const summarySource = item.fetchedPostingScope === "unproven"
+    ? undefined
+    : item.pageText ?? item.description;
+  const summary = summarySource
+    ? summarizeJob(cleanJobDescription(summarySource), item.matchedKeywords, roleTitle) || undefined
+    : undefined;
   // B6-03 (round 6): absence is more honest than a hostname or placeholder.
   const company = cleanJobSubtitlePart(item.company);
   const location =
