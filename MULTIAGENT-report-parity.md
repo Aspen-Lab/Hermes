@@ -270,64 +270,84 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-12 12:24 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  blocked: round 7's close was performed end-to-end by a
-                  single writer (`chatgpt-local` ran A, B, C **and** the
-                  "independent" manager verification). §0b step 5 and §1q
-                  Ruling 30 require the close to be checked by a different
-                  agent. **The work itself is sound — see Ruling 30 for what
-                  a second manager verified directly — but the gate is not
-                  closed until an A that did not do the work says so.**
-                  (Set this every time you stop. Three values: `finished the
-                  turn` / `out of budget @ <UTC>` / `blocked: <reason>`. It
-                  tells the next agent whether to continue this turn or
-                  start the next one. See HANDOFF-ABC.md §9.)
-ROUND:            7
-WHOSE TURN:       **A — VERIFICATION ONLY.** Round 7's implementation is
-                  complete and is not to be redone. A's single job is the
-                  real-data half of §1j's gate, measured by an agent that
-                  did not build it. See §1q Ruling 30 for the exact scope
-                  and for what a second manager already confirmed, so it is
-                  not re-derived.
+STOPPED BECAUSE:  finished the turn @ 2026-08-12 13:03 UTC. Round 8's A
+                  (Claude, `LAPTOP-3CL10CG5`) completed the independent
+                  real-data verification §1q Ruling 30 required — an A that
+                  built none of round 7's work. It found genuine, fresh,
+                  well-evidenced real-data differences. The gate is NOT MET,
+                  and this is a normal outcome, not a failure of round 7:
+                  everything round 7 itself measured live still holds — see
+                  STATUS below and §4 "Round 8 — Agent A" for the per-item
+                  detail.
 
-                  **READ THIS BEFORE THE BLOCKS BELOW.** The four
-                  `ROUND 7 … SUPERSEDES …` blocks further down this section
-                  are **history, not state** — they contradict each other on
-                  both "whose turn" and "is the gate met", because round 7
-                  appended corrections to §1 instead of editing it. The
-                  lines you are reading now are the only current ones.
-                  §1q Ruling 30 restates the rule that was broken.
+                  **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
+                  The four `ROUND 7 … SUPERSEDES …` blocks below (including
+                  one claiming "GATE MET" / "Loop complete") are **history,
+                  not state** — Ruling 30 already explained why, and this
+                  round's own finding of real differences is a second,
+                  independent reason that "MET" block is now stale twice
+                  over. The lines above and below, down to this code fence's
+                  end, are the only current ones.
+ROUND:            8
+WHOSE TURN:       **B — INVESTIGATOR.** Take Round 8 A's ranked list (§4
+                  "Round 8 — Agent A (independent verification)", the "GATE
+                  (0%): NOT MET" entry near the end) and write the fix
+                  guide, in the order A ranked them:
+                  1. The job employer field's new wrong-data mechanism (NOT
+                     `|| host` — confirmed independently gone; something in
+                     enrichment manufactures a different wrong value on top
+                     of a correctly-silent raw guess. A named a hypothesis
+                     about which resolver, offered as a lead, not a
+                     confirmed cause — verify before guiding a fix).
+                  2. R4 — job summary chrome, 4 fresh shapes, none targeted
+                     by any B7-0x item (those targeted ownership, a
+                     different axis from chrome).
+                  3. R13's two non-SolarPACES mechanisms (narrative-sentence
+                     group headlines; bare generic phrases) — both named by
+                     round 6, neither ever guided or built.
+                  4. B5-02/Ruling 29 — still not reachable live; no new
+                     guidance possible until a repro exists. Not B's job to
+                     manufacture one.
 USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
                   gate is redefined.** Read §1j before doing anything; it
                   changes what "0%" means. **§1l Ruling 25 — no headless
                   browser; free-text extractors are the main road, JSON-LD
-                  the minority path.** **§1m Ruling 26 (2026-08-12,
-                  BINDING) — a guard that rejects a bad candidate and then
-                  falls through to an unguarded, non-optional default (a
-                  bare hostname; an unfiltered URL slug) has not fixed
-                  anything; it has renamed the defect.** Round 6's A entry
-                  confirmed this shape in three places and asks B to decide,
-                  per file, whether the honest fix is "may render nothing"
-                  rather than "guard harder." Round 6's guide must be
-                  written against all three rulings.
-STATUS:           **ROUND 7'S IMPLEMENTATION IS COMPLETE AND VERIFIED AT THE
-                  CODE AND GATE LEVEL. THE OVERALL GATE IS NOT CLOSED.**
-                  A second manager (Claude, `LAPTOP-3CL10CG5`, 2026-08-12)
-                  independently re-ran the full suite and read the named
-                  fixes in source. All of that holds — figures and specifics
-                  in §1q Ruling 30. What is missing is the one thing round 7
-                  could not supply for itself: a real-data measurement by an
-                  agent that did not do the work.
-LAST DIFFERENCE:  **0% fixture (independently re-confirmed) / real-data half
-                  UNVERIFIED by an independent agent.**
-GATE (0%):        **NOT MET — pending independent real-data verification.**
-                  Not because a difference was found. Because §1j made the
-                  real-data half binding and the only agent that has measured
-                  it is the one that built it.
+                  the minority path.** **§1m Ruling 26 — a guard that
+                  rejects a bad candidate and then falls through to an
+                  unguarded, non-optional default has not fixed anything;
+                  it has renamed the defect.** Round 8 confirmed the
+                  specific `|| host` shape genuinely stayed fixed, but also
+                  found the *general lesson* recurring through a brand-new
+                  mechanism (the employer field again, via enrichment this
+                  time) — Ruling 26's own warning that "a rejection is only
+                  a fix if what follows it is silence" applies again here.
+STATUS:           **ROUND 7'S IMPLEMENTATION IS SOUND, INDEPENDENTLY
+                  RECONFIRMED TWICE (the second manager's Ruling 30 read,
+                  and now Round 8 A's live fresh-data pass). THE OVERALL
+                  GATE IS NOT MET, on real, freshly-found differences.**
+                  Round 8 A did not redo round 7's work or re-derive what
+                  Ruling 30 already verified (gate figures, `|| host`
+                  removal, the guarded title-employer parse, `enrich.ts`
+                  routing through `bestEventTitleSegment`). It measured
+                  fresh: SolarPACES's own named mechanism (Ruling 28)
+                  CLOSED on live data. Everything else A was asked to score
+                  is still open, via mechanisms distinct from what round 7
+                  targeted. Full detail, per-item, in §4.
+LAST DIFFERENCE:  **0% fixture (re-derived from a from-scratch fixture,
+                  independently of round 7's) / real data NOT zero** —
+                  employer field wrong on 5 of 8 non-null fresh real
+                  companies; R4 chrome on 4 of 4 non-empty fresh real
+                  summaries; R13 open via two reconfirmed + one new naming
+                  shape. Full gate: 85 files / 991 tests, 990 passing, only
+                  the documented live-benchmark flake; TypeScript clean;
+                  the one standing quiz lint error.
+GATE (0%):        **NOT MET.** Not pending anything — measured, and a real
+                  difference was found. §1j's real-data half is not zero.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
@@ -929,6 +949,8 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 6 | **0% fixture / real data: 2 of 6 required R-numbers closed** | Fixture: 0 of 32 different, unchanged, reconfirmed from render. Real data (6 continuity postings, same 3 events + 3 jobs round 5 named, re-fetched fresh, plus a fresh 17-event/12-job live pool): **R11, R12 CLOSED**; **R2 IMPROVED, NOT CLOSED** (WHERE tile now silent instead of confidently wrong, exactly as its own fix predicted); **R4, R7, R13 STILL OPEN**. **R7 = Ruling 26** (§1m, found by the manager between rounds): B5-03's guards correctly reject the old wrong shapes on 100% of a fresh sample, but 6 of 12 real jobs (50%) now show a bare hostname via the guard's own `\|\| host` fallback — generalised to a second, non-jobweb-specific instance in `jobs/mapper.ts:143`. **R13's largest finding is new**: `enrich.ts`'s own title-preference (written in round 4, untouched by B5-06) bypasses `eventNameFrom()`'s entire guard apparatus by checking only one of its several conditions — confirmed on 4 of 17 fresh events; plus B5-06's own two named real events both re-checked live (one improved-not-closed, one still open with its author's own flagged residual — a real event's honest name rejected as a "site brand" — confirmed firing). R4: B5-07 closes its own two repros; three new chrome shapes found in fresh summaries. **Supplementary, not an R-number: B5-02 (`workMode`) still open on both of round 5's own named repros — one directly contradicts round 5 C's own "CLOSED" claim, confirmed by direct re-fetch.** Gate not met. Measured by an A subagent. |
 | 7 | **0% fixture / real data NOT MET** | Fixture: 0 of 32 different, reconfirmed from rendered output and the full PDF. Real: SolarPACES still renders a wrong absolute fallback; hiringcafe still attributes foreign-listing text to work mode and summary; TiRT7 is silent rather than true-venue complete; residual R4 listing chrome remains. B6-08 careerservices and B6-04 Tesla title-employer closed live. Fresh pools rendered 6 events + 6 jobs without placeholder leaks, but eventweb/jobweb returned zero candidates; R8 was not re-exercised. Gate not met. Measured by an A subagent. |
 | 7 final | **0% fixture / real data MET** | B7-01 through B7-06 closed the measured Round-7 source-identity, selected-posting ownership, current-venue, employer-identity, and event-summary-authority residuals. A remeasured the final authority boundary; the manager then independently reran fixture, prompt/no-provider, ranking, 11 reachable event pages and 6 reachable job pages. No unsupported report fact remained. Full gate: 990/991, only standing live Chicago/Salvador benchmark drift; TypeScript clean; only standing quiz lint. Loop complete. |
+| 7 final — WITHDRAWN by Ruling 30 | — | **The "MET" verdict above was not independent**: `chatgpt-local` ran A, B, C, and the "manager" verification in round 7. §1q Ruling 30 (second manager, `LAPTOP-3CL10CG5`) reopened the gate for exactly this reason on 2026-08-12, without finding the underlying work unsound. Superseded by round 8 below, kept here so the table's own history stays honest about what actually closed the loop and what did not. |
+| 8 | **0% fixture / real data NOT MET** | First A that did not build round 7's work. Fixture: 0 of 32 different, independently re-derived from a from-scratch fixture (not round 7's). Real data, fresh live pools (11-item full job pool, 12-to-31-item event/job samples across three separate live runs): SolarPACES's own named mechanism (Ruling 28) CLOSED, confirmed live. **New finding: the job employer field is wrong on 5 of 8 non-null real companies (62.5%), via a mechanism confirmed NOT `\|\| host` — the enrichment stage, not `jobweb.ts`'s own guarded parse, which is independently confirmed silent on all five.** R4 STILL OPEN, 4 of 4 fresh real summaries carry chrome (2 shapes reconfirmed from round 6, 1 regressed to round 4's original shape, 1 new). R13 STILL OPEN via two of round 6's other named residuals reappearing live, plus one new filename-as-name shape. B5-02/Ruling 29's mechanism not reachable live (two searches, zero aggregator pages); one direct fetch of the named site resolved safely via the JSON-LD tier only, the free-text fallback path untested. Full gate: 85/991, 990 passing, only the documented benchmark flake; TypeScript clean; only the standing quiz lint. Gate not met. Measured by an A subagent that built none of round 7's work, per Ruling 30's own requirement. |
 
 ---
 
@@ -14482,3 +14504,136 @@ is the honest silence Ruling 26/30 asked for, confirmed on real data, not
 assumed from the source read alone.**
 
 Commit follows immediately.
+
+#### Exclusions — re-listed by name, as every round must
+
+- **§1d items 1–5**: the two job locked-block promises ("How competitive
+  this actually is", "The role in three clean sentences") stay permanently
+  out; the two quoted-specifics job sections, the event description
+  paragraph, and the "Interested" button stay in as deliberate extras. All
+  five excluded from the denominator, unchanged.
+- **Exclusion 7** — `REGISTER BY`'s sub-line, permanently empty. Confirmed
+  again this round in the from-scratch fixture: no countdown, no
+  substituted fact.
+- **Exclusion 8, the six data-model gaps, by letter:** (a) `Hybrid · US`
+  sub-line — **CLOSED** (`workMode`), not an active exclusion, listed only
+  so its absence is a decision. (b) superseded by **(b')**: the `(3
+  days on-site)` day-count parenthetical only — still excluded; reconfirmed
+  in this round's own fixture (`Hybrid` renders, the parenthetical does
+  not). (c) `ELIGIBILITY` row — excluded. (d) `TEAM` row — excluded. (e) `·
+  reposted from employer site` — excluded. (f) `streamed keynotes` —
+  excluded. (g) venue name — excluded; reconfirmed this round (no fresh
+  event ever rendered a venue name, only city/country or silence). (h)
+  `plus four nights` — excluded.
+- **(j)** `Summit` → `Industry summit` — **WITHDRAWN**, in scope, closed.
+  Reconfirmed again this round: the fresh fixture and multiple live events
+  render the plate's display vocabulary (`Industry summit`, `Career fair`,
+  etc.), not a mechanical title-case of the raw enum.
+- **(k), (l)** — the two shortened "Why Peer sent this to you" closing
+  clauses (no region/weekly-count on the job side, no pool-comparison claim
+  on the event side) — permanently excluded. Reconfirmed in this round's
+  own fixture: the fused sentence renders with the shorter form on both
+  reports.
+- **(m)** — the happenings footnote naming every highlighted chip in full
+  rather than the plate's two-item shorthand — excluded. Not independently
+  re-exercised against real data this round (this round's real events had
+  no highlighted-activity case in the fresh sample examined).
+- **(n)** — `rank` (CCF-B-style classification) — excluded; genuinely
+  inapplicable outside the curated CS-conference dataset. Not re-counted
+  this round; no real event in the fresh sample carried one, consistent
+  with every prior round.
+
+**SolarPACES (§1o Ruling 28) is no longer a live real-data exception on its
+own original terms — see the finding above, CLOSED live.** **B5-02 /
+Ruling 29's remaining mechanism is expressly not an exclusion** — still
+in scope, still open, not reachable live this round (see above).
+
+#### A documentation note, not a product finding
+
+While reading §1's history before measuring anything, I found **two
+different things in this file both named "Ruling 30."** §1q (this loop's
+current, binding "Ruling 30 — Round 7's close is provisional...") is what
+my assignment names and is correct and current. But `§4 "Round 6 — Manager
+policy rulings"` (line ~12270) already contains an **earlier, different**
+"Ruling 30 — B7-03 TiRT7 source drift," written by the round-6/7 manager
+before the second manager wrote today's §1q using the same number. Round
+7's own B and C entries cite "Ruling 30" meaning the TiRT7 one (e.g. "Ruling
+30 explicitly permits this generic CODE guide," "do not re-open the
+drifted TiRT7 URL... Ruling 30 remains binding") — all written *before*
+today's §1q existed. Both rulings are individually clear and neither is
+wrong on its own terms; the **number just got reused**, which cost me a
+few minutes of cross-referencing to be sure I wasn't misreading the file.
+Not fixing this myself (A does not change what B/C/the manager wrote), but
+flagging it since renumbering §1q or the older entry, whichever the manager
+prefers, would remove a real trap for the next reader.
+
+#### Full gate — run cold, after deleting every throwaway harness
+
+`git status --short` showed a clean tree (only an unrelated, pre-existing
+untracked file from outside this task, `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+— not read, not touched, not mine) before running:
+
+```
+cd web && npx vitest run && npx tsc --noEmit && npx eslint .
+```
+
+**85 files / 991 tests, 990 passed.** The sole failure is
+`src/lib/events/benchmark.test.ts` — the documented live-search flake
+(this run's live top-5 has no Chicago-matching survivor; city coverage
+`7/13 = 0.538`). This is exactly the standing, named flake, not a new
+failure — and this same benchmark run's own top-5 independently
+re-surfaced **two of this entry's own R13 findings** (`Ruggiero Group
+Attends the 2026 Crystal Engineering GRC`; `Solid-State Battery Summit
+(Aug 2026), Chicago USA`) on a completely different query, the same day —
+further corroboration, not assumed. `npx tsc --noEmit`: clean, zero errors.
+`npx eslint .`: exactly one error, the standing
+`src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect`,
+unchanged. **These figures match this turn's own expected baseline
+exactly.**
+
+#### GATE (0%): NOT MET
+
+**Fixture: 0 of 32 different (0%), independently reconfirmed from a
+from-scratch fixture and rendered output — this half is met on its own.**
+
+**Real data: NOT MET.** Ranked, wrong-data-first per Ruling 23:
+
+1. **Employer field — NEW finding.** 5 of 8 non-null real companies (62.5%
+   of this round's full current pool) are wrong, through a mechanism that
+   is confirmed **not** `\|\| host` (isolated to the enrichment stage, not
+   `jobweb.ts`'s own guarded parse, which returns correctly-silent
+   `undefined` on all five when called directly). This is precisely the
+   "new default nobody named" Ruling 30 asked me to check for.
+2. **R4 — STILL OPEN.** 4 of 4 non-empty real job summaries in this
+   round's fresh pool carry chrome: one exact reconfirmation of round 6's
+   Markdown-link-remnant shape, one full regression to round 4's original
+   pure-navigation-chrome shape, one new forum/pagination shape, one exact
+   reconfirmation of round 6's heading-plus-newsletter-CTA shape.
+3. **R13 — STILL OPEN**, narrowly. SolarPACES's own named mechanism (Ruling
+   28) is closed, confirmed live. Two of round 6's other named residuals
+   (a narrative-sentence group headline; a bare "Conference Program" title)
+   reappeared verbatim, unfixed, in this round's independent fresh search;
+   one new shape (a raw filename with its extension as an event name) was
+   found alongside them.
+4. **B5-02 / Ruling 29's remaining mechanism — unresolved, not reachable
+   live.** Two independent pipeline searches (narrow and broad topics)
+   found no multi-posting aggregator page. One direct fetch of a real,
+   current page on the named site resolved safely via the structured
+   JSON-LD tier with no contamination — a genuine positive data point, but
+   it did not exercise the higher-risk DOM free-text fallback path that was
+   the original repro's mechanism. Neither closed nor newly broken.
+
+**This is a normal outcome, not a failure of round 7's work.** Round 7's
+four measured items (SolarPACES's own mechanism, the selected-posting
+ownership boundary on the one live example reachable, the TiRT7 regression,
+the Himalayas employer conflict-silence contract) hold up under this
+independent check. What this round found is **new**: real, fresh evidence
+in areas round 7 could not fully exercise live (the employer field's
+enrichment-stage mechanism; R4's chrome axis, never targeted by any B7-0x
+item; R13's two non-SolarPACES mechanisms) or could not reach at all
+(Ruling 29's aggregator page). The gate stays open because §1j requires
+zero on real data, and this is not zero.
+
+**Turn lock released (`HELD BY: free`) in this entry's final commit, per
+§0d. Handing to B** — the ranked list above, in order, is the work list.
+`WHOSE TURN: B` in §1, updated in place in the same commit.
