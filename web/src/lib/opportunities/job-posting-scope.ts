@@ -70,15 +70,15 @@ export function resolveJobPostingScope(
 ): JobPostingScope {
   const url = canonicalJobUrl(selected.url);
   if (!url) return { status: "unproven" };
+  const matching = extractJsonLdOpportunities(html)
+    .filter((item) => item.kind === "job" && item.url && canonicalJobUrl(item.url) === url)
+    .filter((item, index, all) => all.findIndex(other => other.url === item.url && other.description === item.description) === index);
   for (const block of selectedDomScopes(html, url, selected.title)) {
     const text = extractPageText(block);
-    if (text) return { status: "owned", text };
+    if (text) return { status: "owned", text, ...(matching.length === 1 ? { structured: matching[0] } : {}) };
   }
 
-  const matching = extractJsonLdOpportunities(html)
-    .filter((item) => item.kind === "job" && item.url && canonicalJobUrl(item.url) === url && item.description)
-    .filter((item, index, all) => all.findIndex(other => other.url === item.url && other.description === item.description) === index);
-  if (matching.length !== 1) return { status: "unproven" };
+  if (matching.length !== 1 || !matching[0].description) return { status: "unproven" };
   const text = extractPageText(`<main>${matching[0].description}</main>`);
   return text ? { status: "owned", text, structured: matching[0] } : { status: "unproven" };
 }

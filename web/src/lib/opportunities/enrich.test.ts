@@ -34,14 +34,20 @@ function job(index: number, isRemote = false): RawJobItem {
     location: isRemote ? "Remote" : "",
     isRemote,
     description: "Research solid-state battery materials and electrochemistry",
-    url: `https://jobs.example.com/${index}`,
+    url: "https://jobs.example.com/role",
     postedAt: "2026-07-20",
     tags: ["solid-state battery"],
   };
 }
 
 function usablePage(content: string): string {
-  return `${content}<main>${"Detailed opportunity information. ".repeat(800)}</main>`;
+  return `<script type="application/ld+json">{"@type":"JobPosting","url":"https://jobs.example.com/role"}</script>` +
+    `<article><a href="/role">Selected posting</a>${content}</article>` +
+    `<main>${"Detailed opportunity information. ".repeat(800)}</main>`;
+}
+
+function ownedJobPage(index: number, content: string): string {
+  return `<article><a href="/${index}">Selected posting</a>${content}</article>`;
 }
 
 describe("event detail enrichment", () => {

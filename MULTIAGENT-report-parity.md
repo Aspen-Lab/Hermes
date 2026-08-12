@@ -10,6 +10,23 @@ PDF is in scope for this loop.
 
 ---
 
+### Round 7 — Agent C B7-02 resume checkpoint
+
+**PARTIAL @ 2026-08-12 07:00 UTC.** Kept the single selected-posting boundary
+fail-closed on a successful fetch whose ownership is unproven: enrichment now
+preserves every source-owned raw field and adds only
+`fetchedPostingScope: "unproven"`, rather than constructing an accidental
+object full of undefined derived fields. The DOM-owned path attaches a
+structured record only for an exact canonical selected URL; a description
+remains required for the JSON-LD-only fallback. No host rule, chrome regex,
+source scoring change, provider/model behavior, credential, or extra fetch was
+added.
+
+**Remaining exactly:** migrate existing job and detailed-report fixtures to
+explicit selected URL/heading owners, add the B7-02/B7-04 adversarial scope
+tests, then run the full gate. The focused enrichment/route suite is not yet
+green. No B7-03 work has started; the manager lock is unchanged.
+
 ## §0. HOW TO RESUME — READ THIS FIRST, EVERY TIME
 
 This file is the **only** durable state. A session can end at any moment; the

@@ -196,6 +196,9 @@ export async function enrichJobCandidates(
     const html = pages[index];
     if (!html) return item;
     const scope = tryExtract(() => resolveJobPostingScope(html, { url: item.url, title: item.title })) ?? { status: "unproven" as const };
+    if (scope.status === "unproven") {
+      return { ...item, fetchedPostingScope: "unproven" as const };
+    }
     const structured = scope.status === "owned" ? scope.structured : undefined;
     const structuredDetails = structured
       ? { ...structured, isOnline: false }
