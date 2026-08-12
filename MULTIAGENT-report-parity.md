@@ -14637,3 +14637,5 @@ zero on real data, and this is not zero.
 **Turn lock released (`HELD BY: free`) in this entry's final commit, per
 §0d. Handing to B** — the ranked list above, in order, is the work list.
 `WHOSE TURN: B` in §1, updated in place in the same commit.
+
+**STATUS: COMPLETE.**
