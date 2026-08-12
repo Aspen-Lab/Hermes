@@ -13453,3 +13453,29 @@ as a match. The PNGs and temporary folder were deleted before this record.
 
 Fixture measurement only is complete. Fresh source/pipeline measurement is
 next; the real-data gate remains unknown after C and therefore open.
+
+---
+
+#### Fresh source/pipeline measurement — COMPLETE @ 2026-08-12 08:55 UTC
+
+Read the local profile only as the established test does: credential presence
+was boolean-only (Tavily, Adzuna, and USAJobs true; feed-AI false), so this was
+a genuine **Tier 0** fresh pass. Two isolated in-memory caches forced the
+current `buildDailyEventPool()` and `buildDailyJobPool()` paths; every top-six
+item was mapped and rendered with its real report component.
+
+Event source counts were ccfddl 80, confstech 28, researchseminars 20, and
+eventweb 49. The returned top six were eventweb items: all six had a sourced
+summary, two had a city, and none rendered `See event page`. Job source counts
+were remotive 20, Arbeitnow 60, Himalayas 60, Adzuna 0, USAJobs 0, and jobweb
+46. The returned top six were jobweb items: three had an employer, two a
+summary, two a role kind (internship and postdoc), none an explicit work mode,
+and none rendered `See posting`. Absence remained silent rather than producing
+a hostname/board fallback or dangling report content.
+
+Mapping and real-component rendering preserved the pool order exactly for both
+surfaces: fetched presentation data did not change fresh-pool ranking. The
+zero keyed-source returns limit coverage but are not a substitute for named
+continuity checks. No credential values or fetched body text were recorded.
+SolarPACES, hiringcafe, TiRT7, Himalayas, Tesla, and careerservices continuity
+measurement remains next; the real-data gate is still open.
