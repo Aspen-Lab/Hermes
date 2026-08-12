@@ -10333,3 +10333,89 @@ taking — reject a bad candidate correctly, then fall through to something
 that was never itself checked against the same standard.
 
 ---
+
+#### SECOND, part 1 — fixture pass. 0% (32/32), confirmed from rendered output.
+
+Same maximal fixture and method as every round since 4 (plate values,
+`nowMs = Date.parse("2026-07-30T12:00:00Z")`, same 32-element inventory).
+Round 5's implementation touched only the extraction pipeline plus one
+report-layer guard (B5-04, which only ever suppresses a value this fixture
+never carries), so a full re-derivation from scratch was not needed — spot-checked
+the same elements round 5 spot-checked, reading the rendered HTML directly,
+not the diff:
+
+- LOCATION tile: `Hybrid · US` — exact.
+- Full facts row present: `Salary $95k – $120k / per year · from posting`;
+  `Type Postdoc / Full-time · 3-yr contract`; `Starts Jan 2027 / flexible`;
+  `Apply by Sep 15 / 47 days left`; `Posted Jul 22 / 8 days ago`; `Visa
+  Sponsors`.
+- Event chip row: `Industry summit` / `+ career fair` / `CCF-B` / `88% match`
+  — exact.
+- Costs footnote: `$620` — exact.
+- Locked block: `The other 31 exhibitors, judged` — a live count, exact.
+- Placeholder guard sanity check: `see event page` does **not** appear
+  anywhere in the fixture's rendered event HTML (it never carries that value,
+  confirming B5-04's guard is inert on data that doesn't need it, not that it
+  is untested).
+
+**No difference found anywhere spot-checked. Fixture score: 0%, unchanged
+from round 5.** Per §1j this stays a regression check, not the gate by
+itself.
+
+---
+
+#### SECOND, part 2 — real-data pass.
+
+**Sample.** Two overlapping sets, both real, both through the build's own
+pipeline:
+
+1. **The same 3 events + 3 jobs round 5 used** (continuity sample, per this
+   round's own instruction — "those same three postings, or a fresh sample").
+   Re-fetched fresh today, not replayed from round 5's cached HTML. Titanium
+   Round Table (`tirt7.com`), Tough Tech Talent Fair (`engine.xyz`),
+   SolarPACES (`solarpaces.org`); Climatebase-hosted internship
+   (`climatebase.org`), ZeroB-hosted internship (`zerobonline.com`),
+   hiringcafe.com-hosted internship at Mantel Capture.
+2. **One fresh live pool build**, both surfaces, no-op cache (forced a real
+   search): **17 real events, 12 real jobs** total in the pool this run; top
+   10 of each rendered through the real `EventReport`/`JobReport`
+   components; the full pool (not just the top 10) censused programmatically
+   for the two shapes named above. This is larger than the minimum 3+3 —
+   used throughout to say "how many of N," not just "1 of 3," per §2's own
+   instruction.
+
+Both sets used the real profile (`.local-data/profile.json`, boolean-checked
+only), Tier 0 (no `feedAiApiKey`), same as every round since 4.
+
+##### R2 — event WHERE names a past host over the true venue. IMPROVED, NOT CLOSED — matches B5-05's own predicted outcome, confirmed live.
+
+Re-fetched the exact real event (`tirt7.com/Summary.html`) directly and ran
+the current `extractBodyTextPlace()` against the live page. **Result:
+`undefined`** — no place extracted at all. Before B5-05, this same function on
+this same page returned `Cologne, Germany`, confidently and wrongly (the page
+states the current venue is Lanzhou; Cologne is a 2008 past host, mentioned in
+the same "previously held in" sentence B5-05's `HISTORICAL_FRAMING_RE` now
+recognises). **The WHERE tile is now silent, not wrong.** This is exactly the
+outcome B5-05's own author called it: "does not fully close R2's real repro"
+— the false statement is gone, but the true venue (Lanzhou, still absent from
+the ~300-city gazetteer) does not appear either, so this is scored
+**improved, not closed**, not closed outright — the specific defect R2
+reported (a confident, wrong value) cannot recur on this page, but the class
+"the reader is told where the event is" is still not served by the fixture's
+honest answer.
+
+##### R7 — job subtitle's company slot holds a wrong value. STILL OPEN — see Ruling 26 above; this is the same finding, not a second one.
+
+Scored together with Ruling 26 above per this round's own instruction ("This
+overlaps Ruling 26; do them together"). Full evidence there: 6 of 12 real
+jobs this round (50%) show a bare hostname in the company slot, including one
+case where the true employer name is in the very same title string the card
+already renders. B5-03's tier 1 guards are confirmed working (0 of 12 show
+the raw job-board-brand or bare-location shapes B4-03/B5-03 targeted) — the
+open part is entirely the `|| host` / `fallbackCompany` fallback, per Ruling
+26. **Not closed by B5-03's tier 1 alone; B's own guide already named tier 2
+(JSON-LD `hiringOrganization`) as the piece that would actually close it, and
+Ruling 26 asks B to cost that properly this round rather than leave it
+optional.**
+
+---
