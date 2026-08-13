@@ -135,22 +135,29 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 04:10 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       A
-STATUS:           Loop initialised. No MCP code exists yet. A measures the
-                  M1 acceptance criteria against the current build (expected:
-                  everything OPEN) and freezes the M1 inventory for the trend.
-LAST DIFFERENCE:  —
+WHOSE TURN:       B
+STATUS:           Round 1 measured: M1 is greenfield, 100% OPEN (11/11 frozen
+                  criteria unmet). Gate holds at baseline. Pass 2 confirmed
+                  Peer's live pipelines can supply real jobs+papers items
+                  today with zero LLM keys; papers carry no deadline field
+                  and Events/Grants were not checked this round.
+LAST DIFFERENCE:  1-01 — no MCP endpoint exists anywhere in web/ (grep+glob
+                  confirmed); every other M1 criterion is blocked on it.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
 DONE:             —
 GATE NOW:         npm test (web/): 597 passed | 1 skipped (598), 73 files +1 skipped
-TODO:             A: round-1 measurement, then B guide, then C implements M1.
+TODO:             B: write the M1 fix guide from A's round-1 list (1-01..1-11)
+                  in §4 — insertion points, HANDOFF §5 anchors, MCP SDK
+                  adoption plan, Apps-SDK card contract. Read web/AGENTS.md +
+                  node_modules/next/dist/docs/ before prescribing Next.js
+                  route patterns (Next 16.2.3). Then C implements M1.
 ```
 
 **History of measured difference, newest last:**
 
 | Round | Milestone | Measured | Verdict |
 |---|---|---|---|
-| | | | |
+| 1 | M1 | 11/11 frozen criteria unmet (100% OPEN); gate 597/1/598 intact, no regression; Pass 2: 8 real items live (5 jobs + 3 papers), zero LLM keys — Events/Grants unchecked | NOT MET |
 
 ---
 
@@ -281,3 +288,72 @@ Work B's guide top to bottom, in order.
 ## §4. ROUND LOG — APPEND ONLY, NEVER REWRITE HISTORY
 
 ### Round 1 — Milestone M1
+
+#### Round 1 — Agent A
+
+**Method:** Read HANDOFF §4 M1 + §6 matrix, mockup screen 2 (`sc1`) including
+its four `<div class="note">` annotations, and
+MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md §5/§7/§10. Confirmed greenfield by
+grepping `web/src` for `mcp|modelcontextprotocol|streamable.?http|tool.?registry`
+(case-insensitive, zero matches) and globbing `web/src/app/api/mcp/**` +
+`web/src/lib/mcp/**` (zero files). Ran the gate. Then wrote a throwaway
+vitest file (created and deleted within this round, never committed) that
+called Peer's live Tier-0 library code directly — no fixtures, no mocks — for
+Pass 2.
+
+**Pass 1 — inventory (frozen, 11 criteria, HANDOFF §4 M1 bullets expanded per RULING 1):**
+
+| # | Criterion (spec requirement) | Build has | Classification |
+|---|---|---|---|
+| 1 | MCP endpoint inside the existing Next app (`web/`) | No route exists. `web/src/app/api/mcp/**` and `web/src/lib/mcp/**` glob to zero files. | MISSING |
+| 2 | Streamable HTTP transport via official TS SDK | `@modelcontextprotocol/sdk` is not a dependency. Its only appearance anywhere is an **unused optional peerDependency of `@google/genai`** recorded in `package-lock.json` (not in `package.json`, not installed under `node_modules/@modelcontextprotocol`). | MISSING |
+| 3 | Tools discoverable by ChatGPT developer mode | No endpoint to register (see #1). | MISSING |
+| 4 | Tools discoverable/usable by Claude custom connectors | Same — no endpoint. | MISSING |
+| 5 | `get_daily_forecast` tool, exact field list (id, title, org, location, posted/deadline, relevance, why-it-matters, tags, deep link) | No MCP tool registry exists. The data to fill these fields lives today in three **differently-shaped** pipelines, unmapped to a common contract: `Job` (`roleTitle`/`companyOrLab`/`location`/`postedDate`/`applicationDeadline`/`relevanceScore`/`matchReason`/`keyRequirements`+`visa`/`linkPosting`), `Paper` (`title`/`venue`, no location field, `publishedDate`, **no deadline field at all**, `relevanceScore`/`relevanceReason`/`summaryExperimentKeywords`/`linkPaper`), `Event` (`name`/`location`/`date`/`deadline`/`tags`/`linkRegistration` or `linkOfficial`) — read from `web/src/types/index.ts`, `web/src/lib/jobs/types.ts`, `web/src/lib/events/types.ts`. No "Grant" type or source exists anywhere in `web/src` (zero hits). | MISSING |
+| 6 | `get_opportunity` tool (one item's detail) | No MCP tool. Closest precedent: a single-item REST route exists for papers only (`web/src/app/api/papers/[id]/route.ts`); no equivalent for jobs or events. | MISSING |
+| 7 | Inline interactive card (Apps-SDK component) per screen-2 mockup: header (mark, "Daily Forecast" title, date + shown/total count, Expand), rows (relevance %, title, org/location/posted meta, why/matches reasoning, tags), footer (Open-in-Peer deep link, attribution) | No widget code anywhere; `web/src/lib/mcp/ui/**` globs to zero files. (The tool-call transparency chip in the mockup — note 2 — is host-native ChatGPT chrome, not Peer code; nothing to build there beyond a well-named/described tool.) | MISSING |
+| 8 | Card visual identity — Peer tokens from `web/src/app/globals.css` (ivory/sand/espresso/orange, serif) | Tokens exist and match the mockup exactly: `--color-bg:#fdf6ee`, `--color-surface:#f1e9da`, `--color-heading:#2b180a`, `--color-accent:#ff520d`. Nothing consumes them yet — no card exists to apply them to. | MISSING |
+| 9 | Graceful text-only fallback for hosts without component rendering | Nothing exists. | MISSING |
+| 10 | Dev auth: unguessable `/api/mcp/<slug>` route, server-side mapped to a test user, read-only-tools-only, `MCP_DEV_SLUG` in gitignored `web/.env.local` (RULING 2) | No such route. Reusable general infra exists (Supabase SSR auth, `web/src/lib/supabase/middleware.ts`) but no dev-slug mapping layer. | MISSING |
+| 11 | Tier-0 rule: tools answer without any LLM provider key configured | No tool exists to test, so trivially unmet as a *tool* guarantee — **but** the underlying pipelines are already Tier-0-capable today: Pass 2 below pulled real items from both the jobs and papers pipelines with zero API keys of any kind. | MISSING |
+
+**Numbered difference list (ranked by user impact):**
+
+1-01. No MCP endpoint exists in `web/` — every other item is blocked on this.
+1-02. `get_daily_forecast` has no implementation — the forecast the user would ask for has no answer.
+1-03. No inline interactive card — the mockup's central promise (a real Peer surface, not prose) is entirely unmet.
+1-04. Card can't carry Peer's visual identity because no card exists (tokens themselves are correct and ready — see #8).
+1-05. `get_opportunity` has no implementation — the "tell me more" follow-up is unmet.
+1-06. Not discoverable in ChatGPT developer mode — nothing to connect to.
+1-07. Not discoverable/usable as a Claude custom connector — same gap, second host.
+1-08. Streamable HTTP transport unimplemented — the SDK itself isn't a dependency yet.
+1-09. No text-only fallback for non-rendering hosts.
+1-10. Dev-slug auth (RULING 2) doesn't exist — blocks any connection attempt, including the user's own dev-mode test, until built.
+1-11. Tier-0 guarantee unencoded on any tool (smallest real gap — the pipelines it would wrap are already Tier-0-clean, confirmed live in Pass 2).
+
+**Percentage (RULING 1):** 11/11 unmet = **100% OPEN** for M1 (0% met). Expected for Round 1 greenfield.
+
+**Gate:** `npm test` (from `web/`): **597 passed | 1 skipped (598), 73 files passed + 1 skipped (74)** — matches baseline exactly, no regression.
+
+**Pass 2 — real-data availability (not fixtures):** Wrote a throwaway vitest
+file, `web/src/lib/jobs/__round1_throwaway_realdata.test.ts` (deleted
+immediately after capturing output; never committed — `git status --short`
+confirmed clean afterward), calling Peer's real Tier-0 library code directly
+against live public no-key APIs:
+
+- **Jobs** (`remotive` + `arbeitnow` + `himalayas` → `dedupJobs` → `scoreJobs` → `scoredJobToJob`, topics=["machine learning"], zero API keys): 97 raw → 88 deduped → top 5 scored. All 5 real, dated 2026-08-13 (today). Example: "AI Safety Specialist — Fully Remote" at "mercor", "Remote (United Kingdom)", relevance 0.78, matchReason "Matches your machine learning, research focus · remote-friendly", 4 keyword tags, real deep link to `himalayas.app`. Field presence across all 5: id ✓ title ✓ org ✓ location ✓ posted ✓ (real ISO timestamps) — **applicationDeadline: field exists but null on all 5** (these three free sources don't carry deadlines; most tech postings are open-ended, not a pipeline bug) — relevance ✓ why-line ✓ (real but templated/formulaic phrasing, thinner than the mockup's illustrative "team is doing agent evals" style) tags ✓ (via `keyRequirements`) deep link ✓ (external, to the source posting — not a Peer-internal URL).
+- **Papers** (`arxiv` → `scoreItems` → `scoredItemToPaper`, topics=["machine learning"], zero API keys): 20 raw → top 3 scored. All 3 real, published 2026-08-12. Example: "Learning-Based Behavior Planning for Automated Driving: Real-World Integration and Deployment", venue "arXiv", relevance 0.74, relevanceReason "Matches your interest in machine learning and deep learning. today." (real, though the trailing phrasing reads awkwardly — noted as observed, not investigated), 5 tags (mostly arXiv category codes, e.g. `cs.RO`), real deep link to `arxiv.org`. Field presence: id ✓ title ✓ org→venue ✓ **location: no field exists on `Paper` at all** (papers aren't geographic — schema fact, not a bug) posted ✓ **deadline: no field exists on `Paper` at all** — a real gap against the mockup's own screen-2 example, which shows a paper-type row ("CHI 2027 — Late-Breaking Work") carrying a submission deadline; nothing in today's Paper pipeline carries that concept — relevance ✓ why-line ✓ tags ✓ deep link ✓.
+- **Not checked this round** (saying where I looked, not fabricating): Events and Grants. For Events I read `web/src/lib/events/types.ts` only (confirms `Event` has `location`, `deadline`, `tags` fields) but did not run a live fetch against `ccfddl`/`confstech`/`researchseminars`/`eventweb`, so today's real Events item count and which sources need zero keys are unverified. For Grants: **no dedicated Grant type or source exists anywhere in `web/src`** — the mockup's "NSF SBIR" example would have to come through the Jobs (or Tavily web-search) pipeline tagged as a grant; no real grant-shaped item was verified.
+- **Net:** ≥3 real items confirmed (8 total, across 2 of the 4 opportunity types), satisfying the Pass-2 bar for this round. Cross-type field-shape is inconsistent today (see #5 above) — a fact for B to design against, not a defect to fix now.
+
+**NEEDS LOCAL VERIFY** (real host-client checks only the user's own
+ChatGPT/Claude account can do — none of these are closable by A/B/C alone):
+- Criterion 3 — ChatGPT developer-mode discovery: user must enable Developer mode (Plus/Pro required), add `Peer (dev)` as a custom connector with the eventual MCP URL, and confirm `tools/list` surfaces both tools inside a real chat.
+- Criterion 4 — Claude custom-connector discovery/render fidelity in a real Claude client (protocol-level `initialize`/`tools/list` can be scripted by A once the endpoint exists; full UI rendering cannot).
+- Criterion 7 — the inline card actually rendering (not just returning valid Apps-SDK metadata) inside real ChatGPT chrome, matching Peer's visual identity as the user sees it.
+- Criterion 9 — the text-only fallback actually triggering on a host that doesn't support component rendering.
+- Criterion 10 — completing a real "No authentication" custom-connector connect flow end-to-end using the dev slug from inside the user's ChatGPT account (the slug mechanics themselves — reject-unknown-slug, read-only-only — are scriptable by A/B/C without the user).
+
+**Exclusions / HOST LIMIT (RULING 3):** none recorded yet — nothing is built,
+so no host limitation has been hit. Re-listed every round per RULING 3;
+currently empty.
