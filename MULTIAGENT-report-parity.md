@@ -20019,3 +20019,150 @@ referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (summary across B10-01–07)
+
+Written so C does not have to reassemble seven separate entries, matching A's
+and B9's own "summary across parts" precedent. Full method, code citations,
+and evidence for each are in their own entries above; this is the headline
+result from each in one place, the classification breakdown, and the work
+order.
+
+**B10-01 (items 1+2, employer field).** ONE gap, not two, confirmed
+identical mechanism via controlled construction: `looksLikeHostBrand`'s
+deliberate one-directional length rule (rejects only a candidate no longer
+than a host DNS label) lets both a hosting-platform boilerplate sentence
+(`postdocjobs.com`) and the hosting institution's own full name
+(`careerservices.upenn.edu`) survive, the same way a real long-form employer
+name is designed to. Not a fallback-reinstatement case (B9-01's own
+confirmed-clean chain holds) — a genuine coverage gap. Fix: a new, additive,
+narrow check in `jobweb.ts` only, not a change to the shared function (which
+has a second caller, `employer-identity.ts`, this round's evidence never
+touched). Two confidence tiers: a closed boilerplate-phrase check closes item
+2 with near-zero risk; item 1's "real name, wrong institution" shape has no
+cheap safe heuristic — flagged `POLICY — manager decides` on whether to
+attempt a URL-slug cross-check or accept it as a named cost.
+
+**Confirmed item 4 is a SEPARATE gap** (own entry, B10-02) — different
+field, different file, different mechanism (a missing check, not a
+mis-scoped existing one). Resolves this round's "one gap or several"
+question with evidence, per Ruling 32.
+
+**B10-02 (item 4, `internationalbatteryseminar.com`).** MISSING guard: once
+B9-04's bare-date guard rejects the date segment, a sibling bare-location
+segment (`"Orlando, FL"`) fills the slot because `isChromeSegment` has no
+location concept at all — the event side's own version of a gap the job
+side already closed. Fix: reuse the job side's `US_STATE_CODES` machinery,
+but anchor the new check to the WHOLE segment (`isBareDateSegment`'s own
+convention), not the job side's unanchored trailing-check shape — flagged
+this explicitly since a careless copy would risk rejecting a real event name
+that legitimately ends in a city/state, and named the live, already-correct
+`10times.com` case as the regression test that would catch it.
+
+**B10-03 (item 3, `ecs.confex.com`, new host).** MISSING guard:
+`"Call for Papers"` — a common academic-conference-platform page/section
+label — is in none of `isGenericPageTitle`'s closed word lists, and is
+ironically PREFERRED once it survives because the exact same phrase is
+`EVENT_SIGNAL_RE`'s own positive event signal. Fix: add it to
+`GENERIC_PAGE_TITLE_RE`'s existing closed list, smallest possible diff.
+**Caveat that must not be skipped:** traced that rejecting the label alone
+does not guarantee a good replacement — this host's likely URL shape fails
+the slug fallback too (confirmed via construction: a `.cgi`-style opaque path
+segment does not clear `nameFromUrlSlug`'s 3-word minimum), cascading to
+snippet-mining, which B cannot verify without A's already-fetched page
+content. Recommend C confirm the resulting value before treating this item
+as closed, not just land the regex change.
+
+**B10-04 (item 5, `ruggedthz.com`).** WRONG DATA, a pure casing bug, the
+most precisely traced finding this round: `PRESENT_NARRATIVE_RE` requires
+Title-Case subject words, but `nameFromUrlSlug` capitalises only the string's
+first character, so the identical narrative sentence is correctly rejected
+Title-Cased and wrongly accepted sentence-cased — reproduced A's exact live
+string character-for-character via this mechanism alone. Fix: relax the
+casing requirement in the regex (do not change `nameFromUrlSlug`'s casing
+output, which has a wider, unrelated blast radius). Verified the fix against
+the one existing precedent test it could plausibly break
+(`scoring.test.ts`'s own sentence-cased `"Emea2026 workshop on..."` case) and
+confirmed it survives.
+
+**B10-05 (item 7, `euagenda.eu`).** Stays open, no fix guide item. Ruled out
+the only Peer-side ellipsis-generating mechanism in the entire codebase
+(`truncateText`, never called on an event name). Confirmed the snippet-
+mining fallback has no stripping step and could pass through a pre-existing
+source-side ellipsis unaltered, but cannot confirm it did without live data B
+does not have standing to fetch. Recommend a future A retry the direct
+fetch — the same path that resolved `sdle.co.il` this round.
+
+**B10-06 (item 9, `careers.abbvie.com`).** Traced, closes — **not a defect.**
+Controlled construction proves the current guard chain has no coverage gap
+that would suppress a legitimate long-form candidate on this host (only a
+bare short-form match is rejected, correctly, same shape as the
+already-confirmed INL/LCO/Battery precedent); combined with A's own finding
+that the title carries no employer-shaped text at all, there is nothing to
+fix. Closes the standing host-brand trade-off question as a traced data
+point.
+
+**B10-07 (items 6+8, job summary colon-label chrome).** Checked whether
+they share a root, per the manager's instruction — **they do not.** Item 6's
+cause was already fully known (round 9's own B: `SECTION_RE` grants
+content-free `sectionScore` credit, a SELECTION-layer defect letting a junk
+fragment get chosen at all) and was not re-derived here. Item 8 was
+empirically confirmed, via controlled construction against the real
+`summarizeJob`, to clear the floor through `roleScore`/`matchedCount` on real
+content — never through `SECTION_RE` — meaning it is a legitimately-selected
+sentence with a purely COSMETIC un-stripped label prefix. One combined
+entry, two-part fix: (1) item-6-specific, narrow `SECTION_RE`'s credit so a
+bare label match cannot clear the floor alone; (2) shared cosmetic fix,
+strip a leading `Label:` pattern, grouped under B9-03's own existing
+formatting-artifact cleanup umbrella — fixes item 8 outright and improves
+item 6's presentation without being a substitute for fix (1). Named
+explicitly why landing only the cosmetic fix would be worse than today in
+one respect (a wrong sentence dressed as legitimate content).
+
+**Item count and classification, against B's assigned 9-item load
+(1–9, minus manager-closed item 10):**
+- **3 WRONG DATA:** B10-01 (items 1+2, one finding), B10-04 (item 5), item 6
+  (within B10-07, cause pre-known).
+- **1 WRONG SHAPE:** item 8 (within B10-07, cosmetic, newly traced this
+  round to confirm it is NOT item 6's mechanism).
+- **2 MISSING (guard):** B10-02 (item 4), B10-03 (item 3).
+- **1 NOT A DEFECT, closes:** B10-06 (item 9).
+- **1 unresolved, stays open, no classification possible without live
+  data:** B10-05 (item 7).
+- **1 `POLICY — manager decides`:** item 1's "real institution name, wrong
+  institution" residual shape (within B10-01), specifically the
+  effort/risk trade-off on a URL-slug cross-check versus accepting it as a
+  named cost.
+
+**Work order for C, with dependencies — grouped by shared file/test surface,
+not simply A's reader-impact order, though it mostly agrees with it:**
+1. **B10-01** (items 1+2, `jobweb.ts`) — independent of everything else this
+   round; land the boilerplate-phrase check with confidence; treat item 1's
+   harder residual per the manager's ruling on the flagged `POLICY`
+   question, or defer that half if the manager has not ruled yet.
+2. **B10-02 + B10-03 + B10-04 bundle** (items 4, 3, 5 — all three touch
+   `eventweb.ts`'s `isChromeSegment`/`looksLikeEventTitle` family and share
+   the same three test files). Land together in one session so
+   `eventweb.test.ts`/`enrich.test.ts`/`scoring.test.ts` are only run cold
+   once, same reasoning B9's own summary used for bundling Fix 1/Fix
+   2/bare-date last round. Suggested internal order: **B10-02 first**
+   (cleanest, reuses existing job-side data, clear anchoring guidance) →
+   **B10-04** (single-regex casing relaxation, precisely isolated, one
+   precedent test to protect) → **B10-03 last** (needs the extra
+   fallback-verification step named above before it can be called done, so
+   give it the most room). Not hard-dependent on each other.
+3. **B10-07** (items 6+8, `summarize.ts` + `job-cleanup.ts`) — independent
+   file area from 1–2 above; sequenced last because fix (1) here is a
+   scoring-floor change (affects what does/doesn't clear a threshold,
+   inherently more sensitive than an independent guard addition) and
+   deserves isolated attention rather than being bundled under review
+   fatigue from the larger event-side batch. Land fix (1) before fix (2)
+   within this item, per the severity reasoning in B10-07 itself.
+4. **Not C's work this round:** item 7 (`euagenda.eu`, B10-05) — needs a
+   live fetch only A has standing to do; item 9 (`careers.abbvie.com`,
+   B10-06) — closed, no code to write; item 1's `POLICY` half — needs a
+   manager ruling first.
+
+Commit follows immediately.
+
