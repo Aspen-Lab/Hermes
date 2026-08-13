@@ -16041,3 +16041,110 @@ evidence this round motivating it.
 zero deleted; the one failure is the same documented live-search flake,
 unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error,
 unchanged.
+
+#### B8-05 — R4, `summarizeJob` now has a minimal positive-content floor — DONE
+
+**File:** `web/src/lib/jobs/summarize.ts`, `scoreSentences` (inside the
+`.map()` callback).
+
+Landed exactly the minimal variant B8-05 directed, not the stricter one it
+explicitly declined to recommend without a dedicated risk pass. Before this
+item, `scoreSentences` rejected a candidate sentence only through four
+**negative** checks (length bounds, `NOISE_RE`, `looksLikeScrapedChrome`,
+`endsWithTitleEcho`); anything that survived was scored and eligible for
+`bestCombination`, even if every one of its points came from
+`positionScore`/`readableLengthScore` — where a sentence sits and how long
+it is, not evidence it is actually about the role. Added one guard clause
+right after the four score components are computed: a survivor with
+`matchedCount === 0 && sectionScore === 0 && roleScore === 0` now returns
+`null` instead of a scored candidate — B's own exact minimal-floor
+direction, written as an early-return rather than an inline `||` to match
+this function's existing "each negative check returns `null`" shape.
+
+**Proved the tests were a genuine regression check before claiming the fix
+works, not after.** Wrote the three new tests below, ran them against the
+**unmodified** source first: two failed (chrome sentences were selected
+into the summary), one already passed (the named limitation, see below) —
+confirmed each failure's actual output matched what B's mechanism
+description predicted, not just that something failed. Only then applied
+the one guard clause and re-ran: all three flipped to passing, all 17
+pre-existing cases in the file unaffected. This is the same discipline the
+first C used for B8-01 (verify in isolation before trusting a fix), applied
+via the real test file instead of a throwaway script since this change has
+no regex to isolate — the function itself is the smallest testable unit.
+
+**Testing standard (Ruling 31) — hardest case per shape, and why.** This
+item is a scoring-floor addition, not string parsing, so the translation is:
+does it reject the exact no-signal shape A found live, does it avoid
+over-rejecting genuine content that only has one of the three signals (not
+all three), and — the hardest one, chosen deliberately over a shape that
+would merely confirm the fix works — does it correctly NOT claim to fix the
+one shape B explicitly named as unsolved by the minimal variant.
+
+1. **Rejects pure navigation chrome with zero positive signal** — B's shape
+   2 verbatim ("More about this employer More jobs from this employer
+   University Profile"): no colons, no `NOISE_RE` vocabulary, no keyword, no
+   section heading, no role verb. Chosen because it is the exact shape every
+   existing negative check was proven to miss, and because pre-fix it
+   demonstrably won a seat in the summary (positionScore 3 + readableLengthScore
+   1, at index 0 — a real, non-trivial pre-fix score, not a near-miss).
+2. **Keeps a genuine sentence whose only positive signal is a role verb** —
+   no matched keyword (used `"nonexistent-term"` deliberately), no section
+   heading, only `ROLE_RE`. Chosen because the easy-to-write version of this
+   floor is "AND all three signals," which would over-reject ordinary
+   descriptive prose that names no profile keyword verbatim and opens no
+   named section — a real failure mode a less careful floor could introduce.
+3. **Does NOT catch chrome containing a matched keyword — verified as a
+   named, unfixed limitation, not left as an unchecked claim in prose.**
+   B's own shape-3 caveat: `"Job vacancies looking for OpenMC skills
+   Announcements"` survives the floor because `"OpenMC"` is itself a
+   supplied, matched profile keyword (`matchedCount > 0`). Chosen because it
+   is the hardest case for this specific item — the one shape guaranteed to
+   still be wrong after landing it — and writing it as a test rather than
+   only a log sentence means a future green suite can never be misread as
+   "R4 fully closed," and a future round fixing it will be forced to update
+   this assertion and say so, per this loop's own standing rule.
+
+**Tests at risk — traced by hand against the new guard, then confirmed by
+running, matching B's own citation exactly.** `summarize.test.ts`'s
+existing 17 cases: the one B named by number, **"does not apply the
+title-echo check when no title is supplied"** (its kept sentence has
+`matchedCount > 0` via `"marketing"` inside `"Marketing Intern"`) — traced
+and confirmed unaffected, exactly as B predicted. The three
+`REAL_POSTING_FIXTURES`-based cases and every other existing case were
+individually re-traced (not assumed): every kept sentence in every case has
+a role verb (`"you will"`/`"we're hiring"`/`"develop"`/etc.), a matched
+keyword, or a `SECTION_RE` heading — none relies solely on
+`positionScore`/`readableLengthScore`. All 17 re-run unchanged, all pass.
+
+**Blast radius:** confirmed by grep — `summarizeJob` has exactly one
+caller, `web/src/lib/jobs/mapper.ts:136-138`. No other file reads its
+output; matches B8-05's own citation exactly.
+
+**What renders after this guard fires — confirmed from source, unchanged
+code path (B8-05's own trace, re-read and still accurate; `mapper.ts` was
+not touched by this item).** `summarizeJob` returning `""` (every sentence
+now rejected) flows through `mapper.ts:137`'s
+`summarizeJob(...) || undefined` to `job.summary: undefined`, then
+`app/jobs/[id]/page.tsx:935`'s `cleanJobDescription(job.summary) ||
+undefined` stays `undefined`, `splitIntoBullets(undefined)` returns `[]`,
+and the role-description sub-heading is omitted at `page.tsx:1145`
+(separately guarded from the outer materials-block wrapper at `:1143`) —
+silence, not a heading over nothing, not a placeholder. Re-verified this
+call chain by re-reading `mapper.ts:130-138` directly rather than trusting
+B's citation number unchecked.
+
+**Explicitly not attempted, per B8-05's own scope.** Finding 1
+(Markdown-link remnant, a stray `]` mid-sentence) is a text-cleanup defect,
+not a scoring one — B named it out of scope for this floor and I left it
+untouched. The fourth shape (Markdown-heading-plus-newsletter-CTA, exactly
+one colon label, below `looksLikeScrapedChrome`'s 2-marker threshold) also
+remains open; B's fix direction for this item was the floor only, and
+nothing in the floor specifically targets a single-colon-label sentence
+that otherwise carries a role verb or keyword. Flagging both for the next A
+rather than claiming either is resolved.
+
+**Gate after this item:** 90 files / 1015 tests, 1014 passing (three new,
+zero deleted; the one failure is the same documented live-search flake,
+unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error,
+unchanged.

@@ -105,6 +105,22 @@ function scoreSentences(
       const roleScore = ROLE_RE.test(text) ? 2 : 0;
       const readableLengthScore = text.length >= 60 && text.length <= 180 ? 1 : 0;
 
+      // B8-05 (round 8): everything above this point is a NEGATIVE check —
+      // nothing required a survivor to carry positive evidence of role
+      // content. positionScore and readableLengthScore are structural/
+      // cosmetic (where a sentence sits, how long it is), not evidence a
+      // sentence is actually about the role, so a survivor scoring only on
+      // those two — site-navigation chrome, ATS breadcrumbs with no colon
+      // markers — was still eligible and could outscore or join genuine
+      // content on a short candidate pool. Minimal floor, as guided: require
+      // at least one real content signal. Known, named limitation (not
+      // fixed here): a chrome sentence that happens to contain a matched
+      // profile keyword still clears this floor — see
+      // summarize.test.ts's "positive-content floor (B8-05)" block.
+      if (matchedCount === 0 && sectionScore === 0 && roleScore === 0) {
+        return null;
+      }
+
       return {
         index,
         text,

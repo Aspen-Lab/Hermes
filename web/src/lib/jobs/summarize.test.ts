@@ -145,6 +145,62 @@ describe("summarizeJob", () => {
     const summary = summarizeJob(description, ["marketing", "outreach"]);
     expect(summary).toContain("Great opportunity now open");
   });
+
+  // B8-05 (round 8): scoreSentences previously had only NEGATIVE checks
+  // (length, NOISE_RE, looksLikeScrapedChrome, endsWithTitleEcho) — nothing
+  // required a survivor to carry POSITIVE evidence of role content, so a
+  // sentence scoring only on positionScore/readableLengthScore (structural,
+  // not evidence) was still eligible and could outscore genuine content on a
+  // short pool. A's fresh real-data pass found this on 4 of 4 non-empty
+  // summaries. This block tests the minimal floor (matchedCount > 0 ||
+  // sectionScore > 0 || roleScore > 0) B8-05 directed, not the stricter
+  // variant it explicitly declined to land without a dedicated risk pass.
+  describe("positive-content floor (B8-05)", () => {
+    it("rejects pure navigation chrome that carries no positive content signal", () => {
+      // B's shape 2 exactly: no colons (looksLikeScrapedChrome needs 2+), no
+      // NOISE_RE vocabulary, no keyword, no section heading, no role verb —
+      // the shape every existing negative check was proven to miss.
+      const description =
+        "More about this employer More jobs from this employer University Profile. " +
+        "You will investigate solid-state battery degradation mechanisms across three cell chemistries.";
+      const summary = summarizeJob(description, ["battery", "degradation"]);
+      expect(summary).not.toMatch(/More about this employer/i);
+      expect(summary).toBe(
+        "You will investigate solid-state battery degradation mechanisms across three cell chemistries.",
+      );
+    });
+
+    it("keeps a genuine sentence whose only positive signal is a role verb", () => {
+      // Isolates the OR: no matched keyword, no section heading, only
+      // ROLE_RE — proves the floor doesn't quietly require all three (the
+      // easy-to-write version of this check), which would over-reject
+      // ordinary descriptive prose that names no profile keyword verbatim.
+      const description =
+        "Company overview and site navigation footer text goes here for context only padding. " +
+        "You will design new synthesis routes for advanced electrode coatings and evaluate their cycling performance.";
+      const summary = summarizeJob(description, ["nonexistent-term"]);
+      expect(summary).toBe(
+        "You will design new synthesis routes for advanced electrode coatings and evaluate their cycling performance.",
+      );
+    });
+
+    it("does not catch chrome that happens to contain a matched keyword — the minimal floor's named, unfixed limitation", () => {
+      // B's shape 3 caveat, verified rather than left as an unchecked claim:
+      // "OpenMC" is a real, matched profile keyword, so matchedCount > 0 for
+      // this chrome sentence too, and the minimal floor cannot tell it apart
+      // from genuine content. This is the hardest case for this item, not
+      // the easiest — recorded so a future round doesn't need to
+      // rediscover it, and so a green suite here is never read as "R4 fully
+      // closed." B8-05 explicitly declined to land the stricter variant
+      // that would catch this without a dedicated risk pass; this test
+      // documents the boundary, it does not assert desired behavior.
+      const description =
+        "Job vacancies looking for OpenMC skills Announcements. " +
+        "You will develop reactor physics models using OpenMC and validate them against benchmark data.";
+      const summary = summarizeJob(description, ["OpenMC", "reactor physics"]);
+      expect(summary).toContain("Job vacancies looking for OpenMC");
+    });
+  });
 });
 
 describe("highlightSegments", () => {
