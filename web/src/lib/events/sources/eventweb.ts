@@ -299,7 +299,26 @@ function looksLikeArticledHostBrand(candidate: string, host: string): boolean {
  */
 const DOCUMENT_FILENAME_RE = /\.(?:pdf|docx?|xlsx?|pptx?|csv|zip)$/i;
 
-function isChromeSegment(segment: string, host: string | undefined): boolean {
+/**
+ * B9-04 Fix 2 (round 9): additive and optional, same "thread an option
+ * through, default preserves old behaviour" convention this file already
+ * used for `host` itself (B8-04). `skipHostBrand` lets a caller ask "is this
+ * chrome for any reason OTHER than matching the page's own host brand" —
+ * built for `enrich.ts`'s typedName rescue, which legitimately needs to
+ * un-reject a structured/typed event name for host-brand collisions only
+ * (an organisation's own domain commonly IS its own name) while still
+ * rejecting it for every other reason a segment can be chrome. Every
+ * existing caller omits this and is unaffected.
+ */
+interface ChromeSegmentOptions {
+  skipHostBrand?: boolean;
+}
+
+function isChromeSegment(
+  segment: string,
+  host: string | undefined,
+  options?: ChromeSegmentOptions,
+): boolean {
   const trimmed = segment.trim();
   if (
     isGenericPageTitle(trimmed) ||
@@ -309,7 +328,7 @@ function isChromeSegment(segment: string, host: string | undefined): boolean {
   ) {
     return true;
   }
-  if (!host) return false;
+  if (options?.skipHostBrand || !host) return false;
   return (
     looksLikeHostBrand(trimmed, host) || looksLikeArticledHostBrand(trimmed, host)
   );
@@ -421,6 +440,7 @@ function nameFromUrlSlug(url: string): string | undefined {
 export function bestEventTitleSegment(
   title: string,
   url?: string,
+  options?: ChromeSegmentOptions,
 ): string | undefined {
   // B5-06/R13 gap 3, the first half. The split only ever recognised a pipe,
   // middle dot, en dash or em dash — a plain ASCII hyphen ("Deadline
@@ -445,7 +465,7 @@ export function bestEventTitleSegment(
   }
 
   const informative = segments.filter(
-    (part) => !isChromeSegment(part, host) && looksLikeEventTitle(part),
+    (part) => !isChromeSegment(part, host, options) && looksLikeEventTitle(part),
   );
   if (informative.length > 0) {
     // Prefer a segment that actually reads as an event, else the longest one:

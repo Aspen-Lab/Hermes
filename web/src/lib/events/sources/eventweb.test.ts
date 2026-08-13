@@ -254,6 +254,48 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B9-04 Fix 2 (round 9): unit-level coverage for the new skipHostBrand
+  // option itself, independent of enrich.ts's own integration tests (which
+  // cover the actual call site being changed). isChromeSegment bundles four
+  // checks; skipHostBrand must bypass only the host-brand one.
+  describe("skipHostBrand option (B9-04 Fix 2)", () => {
+    it("rescues a segment rejected only for matching its own host's brand", () => {
+      // Without the option: rejected, same as before this fix — an
+      // organisation's own domain restating its own name still looks like
+      // site chrome by default.
+      expect(
+        bestEventTitleSegment("SolarPACES", "https://solarpaces.example.org/conference"),
+      ).toBeUndefined();
+      // With it: rescued. This is the one thing skipHostBrand exists to do.
+      expect(
+        bestEventTitleSegment("SolarPACES", "https://solarpaces.example.org/conference", {
+          skipHostBrand: true,
+        }),
+      ).toBe("SolarPACES");
+    });
+
+    it("still rejects a generic page title even with skipHostBrand set", () => {
+      // "Conference Program" (B8-06/B9-01's live-confirmed repro) is chrome
+      // for a reason that has nothing to do with the host — skipHostBrand
+      // must not accidentally widen into "skip every check."
+      expect(
+        bestEventTitleSegment("Conference Program", "https://example.com/event", {
+          skipHostBrand: true,
+        }),
+      ).toBeUndefined();
+    });
+
+    it("still rejects a raw document filename even with skipHostBrand set", () => {
+      // The other B8-06/B9-01 shape, same reasoning: rejected for being a
+      // filename, not for matching a host brand.
+      expect(
+        bestEventTitleSegment("AA ECC10 POSTERS 08072026.xlsx", "https://example.com/event", {
+          skipHostBrand: true,
+        }),
+      ).toBeUndefined();
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.

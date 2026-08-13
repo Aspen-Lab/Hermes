@@ -17989,3 +17989,96 @@ not a fixed regression this item introduced. Typecheck clean. Lint: exactly
 the 1 pre-existing `quiz.tsx:46` error.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-04 Fix 2: `enrich.ts`'s `typedName` rescue, narrowed to `skipHostBrand`)
+
+**STATUS: LANDED.** Third item on B's work order, bundled in the same
+session as Fix 1 above since the two share test files, per B's own
+instruction. **B called this item's own tests-at-risk its central risk, not
+a footnote — treated it that way**, verified by hand before running
+anything and again after.
+
+**Landed exactly the fix direction B specified**, no deviation:
+
+1. **`web/src/lib/events/sources/eventweb.ts`:** added an additive, optional
+   `ChromeSegmentOptions` (`{ skipHostBrand?: boolean }`) parameter to both
+   `isChromeSegment` (third param) and the exported `bestEventTitleSegment`
+   (third param, threaded straight through to `isChromeSegment`). Every
+   existing call site (confirmed by grep: two in `eventweb.ts` itself, one
+   in `eventweb.test.ts` at the time, four in `enrich.ts`) passes at most
+   two arguments today, so the new parameter changes nothing for any of
+   them — additive and optional, not a guess, matching this loop's standing
+   contract. Inside `isChromeSegment`, `skipHostBrand` short-circuits only
+   the final host-brand branch (`looksLikeHostBrand` /
+   `looksLikeArticledHostBrand`); the first four checks (generic title,
+   event index, the bare-`events?`-suffix regex, document filename) run
+   unconditionally, exactly as B specified — the option narrows what it
+   bypasses, it does not add a second, weaker bypass alongside it.
+2. **`web/src/lib/opportunities/enrich.ts`:** replaced the rescue term
+   `(looksLikeEventTitle(typedName) ? typedName : undefined)` with
+   `bestEventTitleSegment(typedName, item.url, { skipHostBrand: true })`,
+   B's own literal example verbatim. `typedName` now passes through the
+   SAME guarded function on both tries, differing only in whether
+   host-brand counts against it — not a parallel, weaker check. Removed the
+   now-unused `looksLikeEventTitle` import (grepped first: that rescue term
+   was its only use in this file).
+
+**Verified by hand before writing any test, per Ruling 31 — traced, not
+assumed:**
+- **SolarPACES (`enrich.test.ts`'s existing "accepts a host-matching typed
+  Event name by its structured provenance"), the item's own named central
+  risk: still passes, confirmed both by trace and by running it.** First
+  `bestEventTitleSegment("SolarPACES", host)` call still rejects (host-brand
+  match, unchanged). Second call, with `skipHostBrand: true`, short-circuits
+  past the host-brand branch before it runs, none of the other four checks
+  fire on "SolarPACES", `looksLikeEventTitle` passes it → rescued, same
+  output as before this item.
+- **The other two tests B named** (`"uses a guarded event-title segment
+  from fetched structured data"`, `"does not let a heading or multiple
+  declarations replace the ingestion name"`): confirmed neither one's
+  execution path reaches the rescue term at all — the first resolves via
+  the FIRST `bestEventTitleSegment` call already succeeding (an informative
+  segment survives without needing the rescue), the second has no
+  `typedName` in its fixture at all (no JSON-LD `Event.name`), so it never
+  enters the `typedName`-truthy branch where the rescue lives. Both re-run
+  and pass unchanged, as predicted before running them.
+
+**New tests, both levels, per Ruling 31's "prove the line is drawn in
+exactly the right place" standard — the three cases B named plus the
+existing SolarPACES test covering the third:**
+- **`eventweb.test.ts`, new `describe("skipHostBrand option (B9-04 Fix
+  2)")`:** unit-level, directly on `bestEventTitleSegment`'s new parameter,
+  independent of `enrich.ts`'s own call site. Three cases: SolarPACES
+  rejected without the option and rescued with it (the one thing
+  `skipHostBrand` must do); `"Conference Program"` still rejected WITH the
+  option set (chrome for an unrelated reason — B8-06/B9-01's live-confirmed
+  generic-concatenation shape); the `.xlsx`-filename shape also still
+  rejected WITH the option set (B8-06/B9-01's other live-confirmed shape).
+- **`enrich.test.ts`, two new integration-level tests** next to the
+  SolarPACES test: the same `"Conference Program"` and filename shapes fed
+  through full `enrichEventCandidates` as a JSON-LD `Event.name`, asserting
+  the enriched name falls through to the original, unmodified
+  `item.name` — proving the fix at the actual call site being changed, not
+  only at the unit level.
+
+**Tests at risk beyond B's own list — checked, none found this time.**
+Grepped every call site of `bestEventTitleSegment` and `isChromeSegment`
+across `src/` (not only the files B named) before writing anything;
+confirmed the four `enrich.ts` call sites and the `eventweb.ts` internal
+ones are the only ones, all now consistent with the new signature.
+
+**Blast radius, confirmed:** `isChromeSegment` is not exported (unchanged).
+`bestEventTitleSegment` has the same three callers B9-01 already
+catalogued; the new parameter is additive so the two callers that never
+pass it (`eventNameFrom`'s own two internal calls) are unaffected.
+`event-details.ts`'s `extractDeclaredEventName` still does not call
+`bestEventTitleSegment` at all, confirmed unaffected as B stated.
+
+**Gate: 90 files / 1035 tests, 1034 passing (+5: 3 unit tests in
+`eventweb.test.ts`, 2 integration tests in `enrich.test.ts`; none
+deleted).** The one failure remains `benchmark.test.ts`'s documented
+live-search flake, same `summit?.place?.city` assertion as the previous two
+items' runs this turn. Typecheck clean. Lint: exactly the 1 pre-existing
+`quiz.tsx:46` error.
+
+Commit follows immediately.

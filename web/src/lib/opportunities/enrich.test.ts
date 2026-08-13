@@ -223,6 +223,36 @@ describe("event detail enrichment", () => {
     expect(enriched.name).toBe("SolarPACES");
   });
 
+  // B9-04 Fix 2 (round 9): the typedName rescue term used to call
+  // looksLikeEventTitle alone, which bypasses ALL FOUR of isChromeSegment's
+  // checks -- so it rescued a typed name for reasons that have nothing to
+  // do with the one case above (a host-brand collision). These two prove
+  // the narrowed rescue (skipHostBrand) still rejects a typed name that is
+  // chrome for an UNRELATED reason, same live-confirmed shapes as B8-06/
+  // B9-01. Both must fall through to the raw ingestion name, same as "does
+  // not let a heading or multiple declarations replace the ingestion name"
+  // above -- proving the fix narrows the rescue rather than only relocating
+  // which function performs the same over-wide bypass.
+  it("does not rescue a typed name that is chrome for a reason unrelated to host-brand: generic title", async () => {
+    const item = event(35);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`
+      <script type="application/ld+json">{ "@type": "Event", "name": "Conference Program" }</script>
+    `), { status: 200 })));
+
+    const [enriched] = await enrichEventCandidates([item]);
+    expect(enriched.name).toBe(item.name);
+  });
+
+  it("does not rescue a typed name that is chrome for a reason unrelated to host-brand: raw filename", async () => {
+    const item = event(36);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`
+      <script type="application/ld+json">{ "@type": "Event", "name": "AA ECC10 POSTERS 08072026.xlsx" }</script>
+    `), { status: 200 })));
+
+    const [enriched] = await enrichEventCandidates([item]);
+    expect(enriched.name).toBe(item.name);
+  });
+
   it("uses one current body declaration instead of a deadline headline", async () => {
     const item = { ...event(32), name: "Abstract submission deadline extended", url: "https://solarpaces.example.org/abstract-submission-deadline-extended" };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(usablePage(`

@@ -1,6 +1,6 @@
 import type { OpportunityPlace } from "@/types";
 import type { RawEventItem } from "@/lib/events/types";
-import { bestEventTitleSegment, looksLikeEventTitle } from "@/lib/events/sources/eventweb";
+import { bestEventTitleSegment } from "@/lib/events/sources/eventweb";
 import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
 import type { RawJobItem } from "@/lib/jobs/types";
 import { classifyRoleKind } from "@/lib/jobs/role-kind";
@@ -147,7 +147,19 @@ export async function enrichEventCandidates(
       : undefined;
     const name = typedName
       ? bestEventTitleSegment(typedName, item.url) ??
-        (looksLikeEventTitle(typedName) ? typedName : undefined) ??
+        // B9-04 Fix 2 (round 9, Ruling 32): the rescue term used to call
+        // looksLikeEventTitle alone, which bypasses ALL FOUR of
+        // isChromeSegment's checks (generic title, event index, document
+        // filename, host-brand) when the SolarPACES-shaped test just below
+        // only needs the host-brand one bypassed. Calling
+        // bestEventTitleSegment a second time, with skipHostBrand, keeps
+        // typedName passing through the SAME guarded function both times —
+        // still correctly rescues a typed name rejected only for matching
+        // its own host's brand (an organisation's domain commonly IS its
+        // name), but still correctly rejects "Conference Program" and a
+        // bare document filename, which are chrome for reasons unrelated to
+        // host-brand and which this second call still catches.
+        bestEventTitleSegment(typedName, item.url, { skipHostBrand: true }) ??
         declaredEventName ??
         (structured?.openGraphTitle
           ? bestEventTitleSegment(structured.openGraphTitle, item.url)
