@@ -17720,3 +17720,96 @@ deleted before their respective commits. No product code touched anywhere
 in this turn. No credential referenced, logged, or written.
 
 Commit follows immediately.
+
+### Round 9 — Agent B (summary across B9-01–04)
+
+Written so C does not have to reassemble four separate entries, matching A's
+own "summary across parts" precedent from this same round. Full method,
+tables, and evidence for each are in their own entries above; this is the
+headline result from each in one place, plus the work order and
+classification breakdown.
+
+**B9-01 (Ruling 32's enumeration).** Employer and summary chains: clean end
+to end, confirmed silence on total rejection, matching Ruling 32's own
+precedent, independently re-verified from source rather than taken on
+trust. Event name: **not clean** — two fallbacks reinstate an
+already-rejected string verbatim. One already found by A
+(`eventweb.ts:494`'s `segments[0] ?? title.trim()`); one new, found this
+turn (`enrich.ts:148-155`'s `typedName` rescue, which correctly needs to
+survive a host-brand-only rejection — an existing SolarPACES-shaped test
+requires exactly that — but as shipped bypasses all four of
+`isChromeSegment`'s checks, not just that one). Also found: a dead, unused
+`catalogLabel` parameter on `EmployerIdentityEvidence` (flagged only, no fix
+needed); confirmed the `usajobs.ts`/five-adapter `catalogLabel` gaps are
+B8-04's own already-flagged, differently-shaped issue, not new.
+
+**B9-02 (employer field, 3 postings).** All three pass every existing guard
+cleanly because no guard covers their shape — not a fallback problem.
+`inl.referrals.selectminds.com`'s "Careers" suffix: WRONG SHAPE, a narrow
+in-file trailing-word strip. `postdocjobs.com`/`careerservices.upenn.edu`'s
+topic-label-as-employer (the latter unchanged across two rounds now): WRONG
+DATA, a new guard needed, fix direction given (reuse the profile's own
+topic list), exact detection rule left as C/next-A's research question
+since B has no standing to fetch live titles this round.
+
+**B9-03 (MANAGER CARRY-FORWARD + 2 summary defects).** Isolated the
+36%→13.8% summary-bearing-rate question with a direct replay of round 8's
+own four quoted chrome summaries against today's exact floor code: 1 of 4
+now empties (a confirmed, measured, non-hypothetical instance of the
+floor's own cost), 1 improves (cleans an artifact rather than emptying), 2
+are unchanged. Both explanations (floor over-rejection, pool composition)
+are real; neither is the whole story; the floor's own share is now a
+number, not a guess — closes the manager's open question. Two smaller
+defects: a stray dash artifact (WRONG SHAPE, group with the already-open
+Markdown-remnant finding), and an LCO acronym collision (borderline WRONG
+DATA/POLICY, flagged for the manager rather than prescribed, since two
+deliberate design decisions compound to produce it).
+
+**B9-04 (R13 event names).** Fix directions for both B9-01 fallback sites
+(a URL-host or literal-placeholder last resort for `eventNameFrom`; a
+narrowed, single-sub-check rescue for `enrich.ts`'s `typedName`, preserving
+the existing SolarPACES-shaped test). One new guard gap found and verified
+directly: a bare date (`"March 15-18, 2027"`) clears every existing check
+and renders as an event's name — MISSING, same category as B9-02's
+topic-label gap, fix direction given (reuse this codebase's own existing
+date-token pattern from `event-details.ts`). `sdle.co.il`'s name/URL
+mismatch: not root-caused, said where the trail stops (needs a live
+single-page fetch A has standing to do and B does not) rather than guessed.
+
+**Same-page contamination (B8-07/Ruling 29): no item, per Ruling 32's own
+instruction that it is parked, not re-opened.** Spot-checked A's part 4
+description against source (`selectedDomScopes` in `job-posting-scope.ts`
+confirmed to include `tr` in its recognised tag set, exactly as described)
+— matches, no discrepancy found, no action taken, no hunt performed.
+
+**Item count and classification breakdown.** 9 items total: 4 WRONG DATA
+(B9-02b/c topic-label-as-employer, B9-04 Fix 1 `eventNameFrom`, B9-04 Fix 2
+`enrich.ts` `typedName`), 2 WRONG SHAPE (B9-02a Careers-suffix, B9-03 dash
+artifact), 1 MISSING (B9-04 bare-date guard), 1 POLICY (B9-03 LCO
+collision, manager decides), 1 not-yet-classifiable (`sdle.co.il`, root
+cause unknown, needs live evidence first). Plus two no-fix-needed notes
+(the dead `catalogLabel` parameter; same-page contamination's confirmed
+parked status) that are not counted as items.
+
+**Work order for C, with dependencies:**
+1. **B9-02a** (Careers-suffix strip) — no dependency, safe to land first,
+   narrowest blast radius.
+2. **B9-04 Fix 1** (`eventNameFrom` last resort) — no dependency on any
+   other item here; independent of Fix 2 despite sharing a file.
+3. **B9-04 Fix 2** (`enrich.ts` `typedName` rescue) — depends on nothing in
+   this turn, but its test suite overlaps Fix 1's file; land in the same
+   session so `eventweb.test.ts`/`enrich.test.ts` are only run cold once.
+4. **B9-04's bare-date guard** — same file as Fix 1/2
+   (`eventweb.ts`'s `isChromeSegment`); bundle with them for the same
+   reason.
+5. **B9-02b/c** (topic-label-as-employer) — needs a signature change
+   (threading the profile's topic list into `webResultToRawJobItem`'s
+   caller) if approach (1) is chosen; scope and risk-assess before landing,
+   do not bundle with B9-02a.
+6. **B9-03's dash-artifact cleanup** — independent, land whenever
+   convenient.
+7. **B9-03's LCO collision** — do not implement until the manager rules
+   POLICY; no code to write until then.
+8. **`sdle.co.il`** — not C's work yet; needs A's live fetch first.
+
+Commit follows immediately.
