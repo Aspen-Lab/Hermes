@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 11:25 UTC
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior). M1 acceptance pends the USER host-test per
@@ -177,13 +177,15 @@ DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
                   all 13 items now have code + tests behind them per C's
                   round-3 build (§4 "Round 3 — Agent C") — not yet
                   independently verified by A.
-GATE NOW:         npm test (web/): 685 passed | 1 skipped (687), 82
-                  files + 1 skipped (84); `npx tsc --noEmit -p .` and
-                  `npx eslint src/lib/mcp src/app/api/mcp` both clean,
-                  re-confirmed after every commit this round. One
-                  pre-existing, unrelated failure throughout
-                  (src/lib/jobs/card.test.ts, timezone flake, flagged
-                  above) — excluded from every figure quoted.
+GATE NOW:         npm test (web/): 686 passed | 1 skipped (687), 81
+                  files + 1 skipped (82) — green in BOTH timezones
+                  (verified with and without TZ=UTC) after the manager's
+                  post-C intervention (§4 "Round 3 — Manager", RULING
+                  11): the "pre-existing flake" cloud-C flagged is fixed,
+                  and the local failure it couldn't see (its own new
+                  home-widget date test, exposing a real date-only TZ bug
+                  in both widget scripts) is fixed too. `npx tsc --noEmit
+                  -p .` clean.
 TODO:             A (round 4): independently re-measure M2 against the
                   same 13-criterion inventory frozen in round 3 A (§4
                   "Round 3 — Agent A", per RULING 1 — reuse the frozen
@@ -203,7 +205,11 @@ TODO:             A (round 4): independently re-measure M2 against the
                   Agent C") stay exactly that — not closable by A alone
                   either, same as M1's own standing five. The USER
                   checklist for M1 remains authoritative in §4 Round 2
-                  A — unchanged, not this round's concern.
+                  A — unchanged, not this round's concern. ALSO (added
+                  post-intervention): independently re-verify the
+                  manager's TZ fixes per §4 "Round 3 — Manager" and
+                  RULING 11 — run the gate in both zones; a manager-
+                  built fix gets the same scrutiny as agent work.
 ```
 
 **History of measured difference, newest last:**
@@ -319,6 +325,34 @@ considered", not "everything Peer web would count today". If M2's fullscreen
 header needs true day-pool counts, that is an explicit M2 design item — not
 a silent redefinition of these fields. M2 reuses these exact semantics
 unless a new ruling says otherwise.
+
+## §1l. RULING 11 (2026-08-13, manager) — BINDING. Timezone-safe dates in every MCP surface
+
+Prompted by the round-3 post-C failures (see §4 "Round 3 — Manager"). Three
+standing rules:
+
+1. **A date-only string names a calendar day, not an instant.** Every MCP
+   widget/text surface must render `"2026-08-13"` as August 13 for every
+   viewer in every timezone — construct it as a local calendar date; never
+   `new Date("YYYY-MM-DD")`-then-display, which shows the previous day west
+   of UTC. Full timestamps keep instant semantics. Both widget scripts now
+   share a hand-synced `parseDate` helper implementing this.
+2. **No backslash escapes inside widget template literals.** The widget
+   scripts live in TS template literals, where a cooked `\d` silently
+   becomes `d` — a regex written there matches nothing and fails silently
+   (this exact trap shipped and was caught only by the sandbox-executed
+   test). Use charAt/slice string checks instead; a comment in both
+   `parseDate` implementations marks the trap.
+3. **Time-sensitive tests pin fixed UTC instants.** A locally-constructed
+   `now` against a fixed-offset fixture made `src/lib/jobs/card.test.ts`
+   green on UTC-5 machines and red on UTC runners (the cloud clock's own
+   environment) — the exact split-brain that made cloud-C misattribute its
+   local failure. Authorized rewrite landed (`Date.UTC` pin); the same rule
+   applies to all future time-math tests.
+
+The gate is green in BOTH timezones as of `ff9b5be` (686 passed | 1 skipped
+(687), verified with and without `TZ=UTC`), and A must keep verifying both
+zones whenever a date-rendering surface changes.
 
 ## §1j. RULING 9 (2026-08-13, manager) — BINDING. M1 acceptance pends the user; the loop proceeds to M2; M3 is gated
 
@@ -3274,3 +3308,48 @@ concern):** M1 user-pending set (§4 Round 2 A remains authoritative);
 RULING 6 (papers lane restriction, unaffected — `open_home` shares
 `get_daily_forecast`'s exact same `PAPERS_LANE_SOURCES`); OpenAlex
 empty-title observation (unaffected).
+
+#### Round 3 — Manager (post-C intervention, disclosed)
+
+**Who/why:** The interactive manager session (`LAPTOP-3CL10CG5`, Fable) did
+this work directly. Context: the local round-3 C subagent died on the
+account's MONTHLY spend limit before writing code; the hourly cloud clock
+(`cloud-hourly-mcp`) then correctly claimed the stale lock and ran C's whole
+turn itself (previous entry). On manager re-verification of the cloud run,
+the local gate was RED — and per the abc protocol the manager fixed forward
+directly rather than spawning (spend limit still killing subagents at the
+time). Disclosure: this entry's work was both performed and graded by the
+manager; A must re-verify it independently in round 4.
+
+**What the manager found (correcting cloud-C's §1 note):**
+- Cloud-C attributed the failure to the pre-existing `src/lib/jobs/
+  card.test.ts` flake. That is only the UTC half of the story. The test
+  failing LOCALLY (UTC-5) was cloud-C's own new
+  `src/lib/mcp/ui/daily-forecast-home.test.ts` date-header case, which
+  exposed a REAL product bug in both widget scripts: date-only strings were
+  UTC-parsed then locally displayed, rendering the previous day for every
+  viewer west of UTC (WRONG DATA class — the exact thing RULING 4 exists
+  for). Green-in-UTC/red-in-UTC-5 and its mirror image made each
+  environment see a different single failure.
+- First fix attempt introduced a second, subtler bug the sandbox test
+  caught: a `\d` regex inside the widget's TS template literal cooks to
+  `d` and never matches. Replaced with charAt/slice checks. Both traps are
+  now codified in RULING 11.
+
+**Commits (one per item, pushed):**
+- `fdafc41` fix: render date-only strings as calendar dates in MCP widgets
+  (both widget scripts, hand-synced `parseDate`).
+- `ff9b5be` test: pin jobs card day-diff test to a fixed UTC instant
+  (closes the pre-existing flake cloud-C flagged per POLICY; authorized by
+  RULING 11.3).
+
+**Gate after both:** `npm test` (web/): **686 passed | 1 skipped (687), 81
+files + 1 skipped (82)** — verified TWICE, with and without `TZ=UTC`;
+`npx tsc --noEmit -p .` clean. The suite is now green in both the laptop's
+timezone and the cloud clock's.
+
+**For A (round 4), additional to cloud-C's own hand-back notes:** verify
+the TZ fix from the shipped code and the sandbox tests independently; run
+the gate in both zones; confirm the two `parseDate` copies are in sync;
+re-check that no other date rendering site in either widget script still
+UTC-parses a date-only string.
