@@ -22,9 +22,12 @@ const getDailyForecastInputShape = {
     .enum(["job", "paper", "event"])
     .optional()
     .describe(
-      "Restrict the forecast to one opportunity type. Omit for a single " +
-        "merged forecast across jobs, papers, and events ranked together " +
-        "by relevance — this is what the inline Daily Forecast card shows.",
+      "Restrict the forecast to one opportunity type: 'job' for job/" +
+        "internship/postdoc postings, 'paper' for research papers, 'event' " +
+        "for conferences/workshops/seminars with a submission or " +
+        "registration deadline. Omit for a single merged forecast across " +
+        "all three, ranked together by relevance — this is what the " +
+        "inline Daily Forecast card shows and what most requests want.",
     ),
   limit: z
     .number()
@@ -32,7 +35,11 @@ const getDailyForecastInputShape = {
     .min(1)
     .max(30)
     .optional()
-    .describe("Maximum number of items to return, highest relevance first. Defaults to 9."),
+    .describe(
+      "Maximum number of items to return, highest relevance first. " +
+        "Defaults to 9. Raise this only if the user explicitly asks for " +
+        "more than the default view.",
+    ),
 };
 
 const getOpportunityInputShape = {
@@ -41,9 +48,11 @@ const getOpportunityInputShape = {
     .min(1)
     .describe(
       "The exact `id` field from a get_daily_forecast item (its " +
-        "`items[].id`). Returns that item's full detail in the same shape, " +
-        "or `{ found: false, id }` if it no longer resolves to anything — " +
-        "never a guessed or partial result.",
+        "`items[].id`, e.g. \"remotive:12345\" or \"arxiv:2508.00001\") — " +
+        "never a title, a guess, or an id from anywhere else. Returns that " +
+        "item's full detail in the same per-type shape as a forecast row, " +
+        "or `{ found: false, id }` if it no longer resolves to anything " +
+        "today (never a partial or invented result).",
     ),
 };
 
@@ -112,12 +121,15 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
     {
       title: "Get Daily Forecast",
       description:
-        "Today's Peer Daily Forecast for the signed-in user: the " +
-        "highest-relevance jobs, papers, and events ranked together, the " +
-        "same signal Peer's own web app shows on its dashboard. Call this " +
-        "when the user asks what's new, what's worth their attention " +
-        "today, or for a briefing/forecast/digest of opportunities. No " +
-        "arguments are required.",
+        "Today's Peer Daily Forecast for the signed-in user: their " +
+        "highest-relevance job postings, research papers, and academic " +
+        "events/conferences, ranked together — the same signal Peer's own " +
+        "web app shows on its dashboard. Call this when the user asks " +
+        "what's new, what's worth their attention today, for a briefing, " +
+        "digest, or forecast of opportunities, or anything like \"what " +
+        "should I look at today\" / \"anything new for me\". Answers " +
+        "instantly from the user's existing Peer profile — no arguments " +
+        "are required and no setup or login step is needed first.",
       inputSchema: getDailyForecastInputShape,
       _meta: {
         "openai/outputTemplate": DAILY_FORECAST_CARD_URI,
@@ -145,11 +157,13 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
     {
       title: "Get Opportunity Detail",
       description:
-        "Full detail for a single job, paper, or event by its id — the " +
-        "'tell me more' follow-up after get_daily_forecast. Only accepts " +
-        "ids that came from a get_daily_forecast call; returns " +
-        "`{ found: false, id }` if the id doesn't resolve to anything " +
-        "today (never a guess).",
+        "Full detail for one specific job, paper, or event, by its id — " +
+        "the 'tell me more' / 'open that one' follow-up after " +
+        "get_daily_forecast. Requires an id from a prior " +
+        "get_daily_forecast call in this conversation; do not call this " +
+        "with a guessed, remembered, or made-up id. Returns " +
+        "`{ found: false, id }` if the id no longer resolves to anything " +
+        "today, rather than guessing at what it might have been.",
       inputSchema: getOpportunityInputShape,
     },
     async (args) => {

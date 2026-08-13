@@ -184,6 +184,32 @@ describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () =
     expect(meta["openai/outputTemplate"]).toBe("ui://peer/daily-forecast-card.html");
   });
 
+  // 1-06+1-07 (discoverability): the model decides whether to call Peer by
+  // reading these descriptions, not from any code path — this is the
+  // mechanical part of that (real descriptions exist, are substantial, and
+  // mention the trigger concepts a user's question would use); the rest
+  // (does a real ChatGPT/Claude actually pick the right tool) is
+  // NEEDS LOCAL VERIFY, A's job with the user's own host account, not C's.
+  it("both tools carry substantial, non-generic descriptions for model tool-selection", async () => {
+    stubDevAuthEnv();
+    const body = await callRoute(jsonRpcRequest("tools/list", {}));
+    const result = body.result as { tools: Array<Record<string, unknown>> };
+
+    for (const name of ["get_daily_forecast", "get_opportunity"]) {
+      const tool = result.tools.find((t) => t.name === name)!;
+      expect(tool.description).toBeTypeOf("string");
+      expect((tool.description as string).length).toBeGreaterThan(80);
+      const inputSchema = tool.inputSchema as Record<string, unknown>;
+      expect(inputSchema).toBeTruthy();
+    }
+
+    const forecastTool = result.tools.find((t) => t.name === "get_daily_forecast")!;
+    expect(forecastTool.description).toMatch(/forecast|briefing|digest/i);
+
+    const opportunityTool = result.tools.find((t) => t.name === "get_opportunity")!;
+    expect(opportunityTool.description).toMatch(/get_daily_forecast/);
+  });
+
   it("tools/call for get_daily_forecast returns structuredContent and non-empty text content", async () => {
     stubDevAuthEnv();
     mocks.maybeSingle.mockResolvedValue({

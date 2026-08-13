@@ -154,15 +154,15 @@ STATUS:           Round 1 C in progress, working B's guide top to bottom.
                   tests. Full details in §4 — read before touching this
                   code again. Continuing down the build order; §4 gets one
                   entry per commit as it happens, pushed immediately.
-LAST DIFFERENCE:  1-06+1-07 — discoverability polish (tool description
-                  quality pass) and the final full-suite confirmation of
-                  1-11's aiTier:0 claim remain. Both tools otherwise work
-                  end to end through the real MCP dispatch.
+LAST DIFFERENCE:  None of B's 11 items remain — all six build-order steps
+                  are closed. What's left is the task's own Step 3 (local
+                  cold-cache latency measurement via `npm run dev`) and the
+                  final write-up, not a spec gap.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05, 1-03+1-04+1-09 — only
-                  discoverability polish + the local latency measurement
-                  remain, see §4.
-GATE NOW:         npm test (web/): 658 passed | 1 skipped (659), 79 files +1 skipped
+DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05, 1-03+1-04+1-09,
+                  1-06+1-07 — B's full build order is closed. Only the
+                  latency measurement + final write-up remain this round.
+GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1397,3 +1397,51 @@ fixed forward rather than flagged `POLICY`.
   name or delivers data a different way than the docs this round described
   — not this code's RULING-4/escaping logic, which has real, executed
   coverage.
+
+**1-06 + 1-07 — discoverability polish.** DONE. Closed by construction per
+B's own framing (nothing to build once 1-01/1-02/1-05/1-10 respond
+correctly to `initialize`/`tools/list`/`tools/call` — verified true, all
+three now do, see the protocol tests in the previous item) plus a
+description-quality pass:
+
+- Reworded both tools' `description` and per-parameter `.describe()` text
+  in `web/src/lib/mcp/server.ts`: `get_daily_forecast` now spells out the
+  three concrete opportunity types (job/paper/event) instead of the vaguer
+  "opportunities" so a model reading it understands Peer covers academic
+  papers specifically, adds explicit trigger phrasing ("what should I look
+  at today" / "anything new for me"), and states plainly that no login/
+  setup step is needed first (mockup note 1's "ChatGPT judges whether to
+  call Peer based on the question" — the description is the only surface
+  that judgment reads). `get_opportunity` now explicitly instructs against
+  calling it with "a guessed, remembered, or made-up id" (echoing RULING
+  4's standard into the tool-selection layer itself, not just the
+  implementation) and gives concrete id-format examples
+  (`"remotive:12345"`, `"arxiv:2508.00001"`).
+- **One test added, beyond B's literal "no new tests beyond 1-01's
+  tools/list assertion":** a mechanical check in `route.test.ts` that both
+  tools' descriptions are substantial (not a one-word stub) and mention the
+  right trigger concepts (`get_daily_forecast` → forecast/briefing/digest,
+  `get_opportunity` → references `get_daily_forecast` by name). Justified
+  because "good descriptions" is literally this item's entire deliverable —
+  a mechanical floor check felt worth the ~20 lines rather than trusting an
+  eyeballed read, though it obviously can't verify a real model's judgment
+  the way A's protocol pass + the user's own host test will.
+- **What stays NEEDS LOCAL VERIFY, unchanged, not closable by C:** criteria
+  3 and 4 (a real ChatGPT dev-mode connector add, a real Claude
+  custom-connector add) — both require the user's own accounts. Everything
+  script-checkable through `initialize`/`tools/list`/`tools/call`/
+  `resources/read` is now green (see this round's `route.test.ts`).
+- 1-11's `aiTier: 0` claim: already mechanically asserted (item 1-02's
+  test, unchanged, still passing) — B's "final pass confirming this" is
+  satisfied by that existing coverage; nothing new needed.
+- Gate after this item: **659 passed | 1 skipped (660), 79 files + 1
+  skipped (80)** — +1 test, 0 new files (existing `route.test.ts` extended
+  in place). 658+1=659, matches.
+- Blast radius: none — only `description`/`.describe()` string content
+  changed in `server.ts`; no behavior change, confirmed by every other test
+  in the file staying green untouched.
+
+**Build order complete (B's steps 1-6, all six items closed this round).**
+Remaining before handing back to A: the local cold-cache latency
+measurement (task's own Step 3, not one of B's 11 items) and orphan-process
+cleanup, then the final §4/§1 write-up.
