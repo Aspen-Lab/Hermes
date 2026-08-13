@@ -133,87 +133,125 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 
 ```
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 06:40 UTC
-ROUND:            1
+ROUND:            2
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       A
-STATUS:           Round 1 C finished B's entire 6-step / 11-item build
-                  order (§4 Round 1 — Agent C has one entry per commit,
-                  written as-they-happened, plus a consolidated
-                  "summary for A" at the end — read that section first).
-                  All 11 of A's round-1 MISSING items now have real code:
-                  MCP endpoint (dev-slug gated, 404-on-mismatch, RULING 2),
-                  get_daily_forecast (Tier-0 by construction, RULING-6
-                  papers lane, RULING-4 field truth enforced by the type
-                  system for papers), get_opportunity (searches the full
-                  pool not topN items, RULING-6 gap returns structured
-                  not-found without a wasted call), the inline card + text
-                  fallback (RULING-7 compliant — no Save, no Expand), and
-                  tool-description polish. One real architecture bug found
-                  and fixed along the way (not a RULING reversal, a
-                  protocol fact): a `ui://` widget resource must be a
-                  static template delivering per-call data over a
-                  `ui/notifications/tool-result` postMessage bridge, not
-                  server-baked HTML per tool call — B's original design (a
-                  closure-based per-call render) could not have worked once
-                  1-01 committed to a fresh McpServer per HTTP request.
-                  Verified via a Node `vm`-sandboxed execution of the real
-                  widget script (not just string matching) plus new
-                  route-level protocol tests (tools/list, tools/call,
-                  resources/read) driving the actual MCP dispatch. Gate
-                  never regressed the whole round — every new test file
-                  raised the count, nothing was deleted or weakened.
-LAST DIFFERENCE:  Not yet re-measured this round — that's A's job next.
-                  Everything script-checkable (initialize/tools/list/
-                  tools/call/resources/read) is green; two items stay
-                  NEEDS LOCAL VERIFY regardless of any code C could write
-                  (criteria 3/4, a real ChatGPT dev-mode connector add and
-                  a real Claude custom-connector add — both need the
-                  user's own accounts), and the full pipeline path
-                  (Supabase profile lookup through to a real forecast) is
-                  UNVERIFIED end-to-end because this sandbox has no
-                  Supabase credentials — see GATE NOW's caveat and the
-                  Step-3 §4 entry.
+WHOSE TURN:       MANAGER (user host-test pending)
+STATUS:           Round 2 A re-measured the frozen 11-criterion inventory
+                  against the real build: gate independently re-run (659
+                  passed | 1 skipped (660), 79 files +1 skipped (80),
+                  matches C's figure exactly) and `tsc --noEmit -p .`
+                  independently confirmed clean. Scripted a real MCP
+                  client against a real `npm run dev` (initialize ->
+                  tools/list -> tools/call get_daily_forecast ->
+                  tools/call get_opportunity x2 -> resources/read),
+                  slug read internally from web/.env.local and never
+                  printed (verified after the fact: captured output has
+                  zero occurrences of it). Result: 6/11 criteria fully
+                  MET, 5/11 NEEDS LOCAL VERIFY (the standing user-
+                  account-gated set: 3, 4, 7, 9, 10), 0/11 unmet — no
+                  difference, defect, or RULING contradiction found
+                  anywhere. All three of C's corrections to B (SDK pin,
+                  MIME type, TS narrowing) independently re-verified
+                  against code/lockfile/a from-scratch tsc repro, not
+                  just re-read; the architecture-bug fix (static ui://
+                  template + postMessage bridge) independently
+                  re-verified by fetching developers.openai.com/apps-sdk/
+                  build/custom-ux directly rather than trusting the
+                  citation. New finding this round, more precise than
+                  round 1 had: checked the MAIN checkout's
+                  web/.env.local (not just the worktree's) for real
+                  Supabase credentials — it exists but its Supabase
+                  section is a commented-out template only (placeholder
+                  values), so real Supabase credentials do not exist
+                  ANYWHERE reachable this round, worktree or main
+                  checkout. Real-input pass therefore stayed partially
+                  blocked exactly as C predicted for get_daily_forecast
+                  and the job/event side of get_opportunity (both
+                  correctly return an honest isError/not-found, never
+                  invented data) -- but get_opportunity's arxiv:/openalex:
+                  path needs no Supabase at all (verified by reading
+                  the code), so A pulled genuinely real external data
+                  through it live: 2 real arxiv papers resolved
+                  correctly (RULING 4 field truth confirmed on live,
+                  non-mocked data), 1 openalex id resolved with an
+                  empty title/org that A traced to OpenAlex's own
+                  source record (not a Peer mapping bug) -- noted, not
+                  counted as a difference. Full details, evidence
+                  excerpts, and the exact NEEDS MANAGER/USER list are in
+                  §4 "Round 2 -- Agent A".
+LAST DIFFERENCE:  None found against any of the 11 frozen criteria this
+                  round. The entire remaining gap (5/11 criteria) is the
+                  standing NEEDS LOCAL VERIFY set -- host-account and/or
+                  real-Supabase-credential dependent, not something B or
+                  C can act on further. See §4 Round 2 A's NEEDS
+                  MANAGER/USER list for exactly what unblocks each piece.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             All 11 of A's round-1 items now have code + tests. Zero
-                  POLICY items outstanding (both were ruled before this
-                  round started). One new judgment call flagged for A's
-                  sanity-check, not a RULING: `get_daily_forecast`'s
-                  `counts.total`/`counts.shown` semantics (B's contract
-                  named the fields, didn't define the relationship —
-                  full reasoning in §4 under item 1-02).
+                  -- M1 itself cannot be marked accepted until the user's
+                  own host-test (§0b step 5) is done; that is now the
+                  only remaining step for M1.
+DONE:             All 11 of A's round-1 items have code + tests, and are
+                  now independently re-verified in round 2 (not just
+                  re-read) at the protocol/live level: 6/11 fully MET,
+                  5/11 down to only the standing host-account-gated
+                  NEEDS LOCAL VERIFY set. Zero POLICY items outstanding.
+                  The `counts.total`/`counts.shown` judgment call C
+                  flagged is sane and RULING-8-compliant (code + test
+                  verified; live confirmation blocked only by the same
+                  missing-Supabase-credentials gap as the rest of
+                  real-data verification).
 GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
-                  skipped (80) — up from the round's starting baseline of
-                  597|1|598, 73+1 files. Every commit this round raised
-                  this number; none lowered it. `npx tsc --noEmit -p .`
-                  clean project-wide. `npx eslint src/lib/mcp/
-                  src/app/api/mcp/` (everything this round touched) clean;
-                  a full `npx eslint src/` sweep found exactly one
-                  pre-existing error, unrelated, in
-                  `src/components/persona/quiz.tsx` (a React
-                  set-state-in-effect rule) — confirmed via `git log` that
-                  file was last touched in an unrelated prior commit
-                  (`29569e0`), not part of this round's diff at all; left
-                  untouched, out of scope. NOT independently re-verified by
-                  A yet — the
-                  figure above is C's own last run, not a fresh one.
-TODO:             A: run the Fixture/protocol pass — script
-                  initialize → tools/list → tools/call → resources/read
-                  against the real endpoint. `web/src/app/api/mcp/[slug]/
-                  route.test.ts` already has exactly this sequence working
-                  (reuse it or lift it verbatim — that's what it was built
-                  for). Re-run the frozen 11-criterion inventory from
-                  round 1 against what's actually built now; expect most
-                  to move from MISSING toward MET, but verify rather than
-                  assume — C's own §4 "summary for A" section names the
-                  specific things most likely to differ from what the
-                  mocks/vm-sandbox tests could prove (the real widget
-                  bridge contract on an actual host, real-world latency
-                  variance, the still-placeholder MCP_DEV_TEST_USER_ID
-                  blocking any real-data Pass 2 this round). Re-list
-                  RULING 6 (papers lane) and RULING 7 (Expand exclusion)
-                  by name per their own standing instructions. Do NOT
-                  change code — throwaway measurement scripts only,
-                  deleted before finishing, same as round 1.
+                  skipped (80) -- INDEPENDENTLY RE-VERIFIED by A this
+                  round (fresh run, not reused from C's figure), matches
+                  exactly. `npx tsc --noEmit -p .` independently
+                  re-verified clean project-wide. eslint not re-run this
+                  round (out of A's explicit checklist; C's prior sweep
+                  and its one documented pre-existing/out-of-scope
+                  finding in quiz.tsx stand unchallenged).
+TODO:             MANAGER/USER, in order:
+                  1. Real Supabase project credentials are needed before
+                  any further automated progress is possible -- fill in
+                  the commented-out "# Supabase" section of the MAIN
+                  checkout's web/.env.local (NEXT_PUBLIC_SUPABASE_URL,
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+                  SUPABASE_SERVICE_ROLE_KEY) with real project values,
+                  then supply the same into the worktree's
+                  web/.env.local, and point MCP_DEV_TEST_USER_ID (same
+                  file) at a real auth.users id whose profiles row has a
+                  non-empty research_topics array (RULING 2: manager
+                  decision). Restart `npm run dev`, re-run
+                  get_daily_forecast -- should return real items instead
+                  of isError:true.
+                  2. ChatGPT dev-mode connector test (criteria 3/7/9/10):
+                  needs the user's own ChatGPT Plus/Pro account with
+                  Developer mode on, AND a way for ChatGPT's servers to
+                  reach the endpoint (localhost alone is not reachable --
+                  needs a tunnel like ngrok, or a deployed preview URL).
+                  Add "Peer (dev)" as a custom connector at
+                  `<reachable-origin>/api/mcp/<MCP_DEV_SLUG>` (slug from
+                  the gitignored web/.env.local -- never share/paste it
+                  outside the user's own ChatGPT connector settings).
+                  Ask something like "what's new for me today on Peer" --
+                  expect the "Checking today's Peer forecast…" status,
+                  then an inline card: ivory/sand background, dark serif
+                  heading, orange relevance badges, one row per real
+                  item, a footer "Open in Peer ↗" link, and NO Save
+                  button / NO Expand control anywhere (RULING 7 -- if
+                  either appears, that IS a real difference to report).
+                  Try a follow-up ("tell me more about the first one")
+                  to exercise get_opportunity too.
+                  3. Claude custom-connector test (criterion 4): same
+                  MCP URL, the user's own Claude account, "Add custom
+                  connector." Confirm both tools appear/work; if the
+                  card doesn't render, confirm it falls back to the
+                  plain-text forecast list instead (expected/correct on
+                  a host without ui:// support, not a bug).
+                  4. Report back what actually appeared for both hosts.
+                  If a card is stuck on "Loading…" or blank, that
+                  specifically implicates the postMessage bridge
+                  contract on that real host (C's own flagged highest-
+                  risk item) -- not the data/escaping logic underneath,
+                  which has real executed test coverage plus this
+                  round's live protocol proof.
 ```
 
 **History of measured difference, newest last:**
@@ -221,6 +259,7 @@ TODO:             A: run the Fixture/protocol pass — script
 | Round | Milestone | Measured | Verdict |
 |---|---|---|---|
 | 1 | M1 | 11/11 frozen criteria unmet (100% OPEN); gate 597/1/598 intact, no regression; Pass 2: 8 real items live (5 jobs + 3 papers), zero LLM keys — Events/Grants unchecked | NOT MET |
+| 2 | M1 | 6/11 MET (54.5%), 5/11 NEEDS LOCAL VERIFY (standing set 3/4/7/9/10), 0/11 unmet; gate 659/1/660 intact (+62 tests since round 1), `tsc` clean, both independently re-verified; real-input: 2 real arxiv papers resolved live via get_opportunity (zero keys, RULING 4 confirmed on live data), get_daily_forecast/job-event-opportunity blocked on Supabase credentials confirmed absent in BOTH worktree and main checkout | NEEDS LOCAL VERIFY (host-test pending) |
 
 ---
 
@@ -1653,3 +1692,247 @@ inline under its own item above)
   `pubmed:`/`web:`/`hn:` paper will never appear in a forecast and
   `get_opportunity` will correctly refuse to resolve one if somehow asked —
   by design, not a bug, until M4.
+
+---
+
+### Round 2 — Milestone M1
+
+#### Round 2 — Agent A
+
+**Method:** `git pull --ff-only` (already up to date). Read the full handoff
+file — §1 state, RULINGS 1–8 (binding, 8 not re-litigated), §2 A's contract,
+§3 ground rules, all of §4 Round 1 including C's "summary for A" watch-list.
+Re-measured the frozen 11-criterion inventory (same numbering, RULING 1)
+against the build **as it actually behaves**, using three independent
+evidence sources per criterion where possible, not just re-reading code:
+
+1. **Gate + types**, re-run fresh, not reused from C's figures: `npm test`
+   and `npx tsc --noEmit -p .` from `web/`.
+2. **A real scripted MCP client**, written in Node (`fetch` + manual
+   JSON-RPC/SSE parsing), saved to the OS scratchpad directory — never
+   inside the repo, so there was nothing to delete from the worktree
+   afterward (`git status --short` confirmed clean throughout). It reads
+   `MCP_DEV_SLUG` out of `web/.env.local` internally and never prints it;
+   every line of captured output was passed through a redact step that
+   string-replaces the slug value everywhere, and I additionally grepped
+   the final captured-output files for the literal slug value after the
+   fact and confirmed zero occurrences. Ran against two real `npm run dev`
+   sessions on `http://localhost:3000`, each stopped and orphan-checked
+   afterward (`node scripts/kill-dev-orphans.mjs` + an independent
+   `Get-Process -Name node` check, both sessions, zero processes both
+   times).
+3. **Independent verification of C's specific technical claims** rather
+   than trusting the write-up: an isolated TypeScript repro (not the real
+   file) to test the narrowing claim myself; a live `WebFetch` of
+   `developers.openai.com/apps-sdk/build/custom-ux` to check the "cache
+   key" quote myself; `npm ls` + a direct `node_modules/@modelcontextprotocol/`
+   listing to confirm the SDK-family claim myself.
+4. **Real-input pass**: checked both the worktree's *and* — new this round
+   — the **main checkout's** `web/.env.local` (existence + key names only,
+   values never read) for real Supabase credentials, per this round's
+   instructions.
+
+**Pass 1 — re-measured inventory (same 11 criteria, same numbering, RULING 1):**
+
+| # | Criterion | Round 2 verdict | Evidence |
+|---|---|---|---|
+| 1 | MCP endpoint inside `web/` | **MET** | Live: `initialize`/`tools/list`/`tools/call`/`resources/read` all round-tripped correctly through the real route against a real `npm run dev`. |
+| 2 | Streamable HTTP transport via official TS SDK | **MET** | `@modelcontextprotocol/sdk@1.26.0` real, resolved, zero-conflict (`npm ls`; `node_modules/@modelcontextprotocol/` contains only `sdk/`, confirming the v2 `server`/`node` family was never pulled in). Live JSON-RPC exchange confirmed over real HTTP with correct SSE/JSON content negotiation. |
+| 3 | Discoverable by ChatGPT developer mode | **NEEDS LOCAL VERIFY** (standing) | Everything script-checkable is green (protocol-correct `tools/list`, schemas, descriptions). The ChatGPT-account connector-add step itself is unreachable to me. |
+| 4 | Discoverable/usable by Claude custom connectors | **NEEDS LOCAL VERIFY** (standing) | Same as #3, for Claude's own client. |
+| 5 | `get_daily_forecast` exact field list | **MET** (tool/schema/mapping level) | Live-registered and callable; field mapping matches B's table exactly (source-read + 11 mapper unit tests; RULING 4 structurally enforced by TypeScript for papers — `paper.location`/`paper.deadline` don't even compile). **Caveat, not a criterion failure:** a real, populated live forecast was NOT observed this round — see Real-input pass; the live call returns an honest, structured `isError`, never invented items. |
+| 6 | `get_opportunity` tool | **MET** | Live-verified with **real external data** (see Real-input pass): 2 genuine arxiv papers resolved correctly through the actual protocol dispatch, zero API keys. Job/event pool-search path is code+test verified (14 tests) but not live-data-observed (same Supabase gap as #5). |
+| 7 | Inline interactive card | **NEEDS LOCAL VERIFY** (standing) — **Expand sub-part EXCLUDED until M2, RULING 7**, re-listed by name | Live `resources/read` returns the correct static template: right `_meta`/`outputTemplate` wiring (confirmed via live `tools/list`), header/rows/footer structure, postMessage bridge present, byte-static (no baked per-call data). Real rendering fidelity inside actual ChatGPT/Claude chrome needs a live host. |
+| 8 | Card visual identity — Peer tokens | **MET** | Live: the real `resources/read` response body contains the literal hex values `#FDF6EE`, `#2B180A`, `#FF520D`, `#237A4B`, `#A8642A` verbatim, matching `globals.css`. |
+| 9 | Text-only fallback | **NEEDS LOCAL VERIFY** (standing) | The fallback mechanism itself (the `content` array) is proven live and populated on every one of 5 live tool calls this round, including a real-data one. Whether a real non-rendering host actually falls back to displaying it (vs. failing at `ui://` rendering) needs a live host. |
+| 10 | Dev-slug auth | **NEEDS LOCAL VERIFY** (standing) — slug mechanics themselves fully proven | Live: correct slug → 200, wrong slug → 404 (never 401/403, RULING 2). Completing a real connector "No authentication" flow end-to-end from inside the user's own account is the only remaining piece. |
+| 11 | Tier-0 rule | **MET** | `aiTier: 0` on all three pipeline calls (source + test verified). **Additionally live-proven this round:** the real arxiv/openalex lookups in the Real-input pass pulled genuine external data with zero API keys of any kind configured anywhere in this sandbox. |
+
+**Percentage (RULING 1):** **6/11 fully MET (54.5%)**, **5/11 NEEDS LOCAL
+VERIFY (45.5%)** — exactly the standing set (criteria 3, 4, 7, 9, 10), **0/11
+unmet**. Nothing found broken, wrongly shaped, missing, or contradicting a
+RULING. Down from Round 1's 100% OPEN / 0% MET. Every remaining point of
+the gap is host-account- and/or Supabase-credential-dependent — not
+something B or C can act on with more code. No rounding down was needed in
+either direction: nothing here is being called MET that isn't fully proven
+at the protocol/build level, and nothing is being called NEEDS LOCAL VERIFY
+out of excess caution — each of the 5 has a concrete, named, unreachable
+dependency (see NEEDS MANAGER/USER below).
+
+**Gate:** `npm test` (from `web/`), independently re-run fresh: **659
+passed | 1 skipped (660), 79 files passed + 1 skipped (80)** — matches C's
+figure exactly, confirms no regression from Round 1's baseline
+(597/1/598 → 659/1/660: +62 tests, +6 files, all additive). `npx tsc
+--noEmit -p .`: independently re-run, clean, zero errors, project-wide.
+
+**Protocol pass — live evidence (shortest honest excerpts, slug redacted
+throughout):**
+
+- `initialize` → 200, `serverInfo: {"name":"peer","version":"0.1.0"}`,
+  valid `protocolVersion`/`capabilities`.
+- `tools/list` → both tools present. `get_daily_forecast._meta` =
+  `{"openai/outputTemplate":"ui://peer/daily-forecast-card.html",
+  "openai/toolInvocation/invoking":"Checking today's Peer forecast…",
+  "openai/toolInvocation/invoked":"Here's today's Peer forecast",
+  "openai/widgetAccessible":true,
+  "ui":{"resourceUri":"ui://peer/daily-forecast-card.html"}}`. Both tools
+  carry real Zod-derived JSON-Schema `inputSchema`s with descriptions.
+  `get_opportunity` correctly has no `_meta` (no inline card of its own in
+  M1, by design).
+- `tools/call get_daily_forecast {}` →
+  `{"content":[{"type":"text","text":"Missing SUPABASE_SERVICE_ROLE_KEY or
+  NEXT_PUBLIC_SUPABASE_URL env var"}],"isError":true}` — graceful, honest,
+  structured failure (the SDK's own `registerTool` wrapper catching the
+  thrown error, exactly as C described). No crash. No invented items.
+- `tools/call get_opportunity {id:"semantic_scholar:definitely-not-real-12345"}`
+  → clean `{"found":false,"id":"semantic_scholar:definitely-not-real-12345"}`
+  — and, checked directly in the code path, this prefix never touches
+  Supabase at all (dispatch is pure string-prefix matching before any
+  admin-client call). Live proof RULING 6's gap-handling works exactly as
+  designed, on the one request in this whole pass that *didn't* depend on
+  Supabase.
+- `resources/read {uri:"ui://peer/daily-forecast-card.html"}` → `mimeType:
+  "text/html;profile=mcp-app"`; body contains the literal palette hex
+  values, the `ui/notifications/tool-result` bridge script, and a
+  `"Loading…"` placeholder in the rows slot — never baked per-call data.
+  Grepped the **entire** captured protocol transcript (all six live calls,
+  not just the card) case-insensitively for `save` and `expand`: **zero
+  matches anywhere** (RULING 7, live-confirmed, not just unit-tested).
+- Wrong slug (`/api/mcp/definitely-wrong-slug-xyz-000`) → **404** (RULING
+  2, live-confirmed).
+- Both dev-server sessions stopped and orphan-checked:
+  `node scripts/kill-dev-orphans.mjs` → `no leftover dev workers found`
+  each time; `Get-Process -Name node` → zero processes, independently,
+  each time.
+
+**Real-input pass:**
+
+`get_daily_forecast` against the placeholder `MCP_DEV_TEST_USER_ID`
+short-circuits at the Supabase-admin-client layer, exactly as C predicted
+(see above). Attempted the honest next step per this round's instructions:
+checked the **main checkout**
+(`C:/I/Personal/Github - start up project/Peer/web/.env.local` — existence
+and key NAMES only, no values read at any point) for real Supabase
+credentials to bring in. **Finding, more precise than Round 1 had:** the
+main checkout's `.env.local` **exists** (4 active keys: Google Vertex AI +
+`PEER_DIGEST_PROVIDER`) but its entire "# Supabase" section is
+**commented out** — template placeholders only (`YOUR_PROJECT_REF`,
+`sb_publishable_...`, `eyJ...`), not real values. **No real Supabase
+credentials exist anywhere reachable in this environment, worktree or main
+checkout.** Per instructions, made no worktree changes — there was nothing
+real to copy — and did not fake or invent anything.
+
+**NEEDS MANAGER/USER, precisely:**
+1. Real Supabase project credentials (`NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`/anon key,
+   `SUPABASE_SERVICE_ROLE_KEY`) need to be filled into the main checkout's
+   currently-commented-out template (or otherwise supplied), and the same
+   into the worktree, before `get_daily_forecast` real-data, job/event
+   `get_opportunity` real-data, or a real cold/warm latency-on-real-profile
+   measurement can move past NEEDS LOCAL VERIFY.
+2. `MCP_DEV_TEST_USER_ID` (worktree `web/.env.local`) is still the
+   placeholder `00000000-0000-4000-8000-000000000000` (not a secret — C
+   disclosed this value in the committed Round 1 log already) — needs
+   pointing at a real `auth.users` id with a populated
+   `profiles.research_topics` array (RULING 2: manager decision).
+
+**However**, `get_opportunity`'s paper-by-id path (`resolvePaper` in
+`get-opportunity.ts`) never touches Supabase at all — confirmed by reading
+it: it calls `fetchPaperById` directly, nothing else — so real data *was*
+obtainable there, live:
+
+- `get_opportunity {id:"arxiv:1706.03762"}` → real: title "Attention Is
+  All You Need", `posted:"2017-06-12T17:57:34Z"`, `tags:["cs.CL","cs.LG"]`,
+  `deepLink:"https://arxiv.org/abs/1706.03762v7"`. **No `location`/
+  `deadline` key present** (RULING 4, confirmed on live external data, not
+  a mock).
+- `get_opportunity {id:"arxiv:1512.03385"}` → real: title "Deep Residual
+  Learning for Image Recognition" (ResNet), same field shape, same
+  RULING-4 compliance.
+- `get_opportunity {id:"openalex:W2963341956"}` → resolved (not
+  not-found), but `title`/`org` came back as empty strings. Traced this
+  myself, not delegated: queried the raw OpenAlex API for the same work id
+  directly — `display_name`/`title` are **empty at the source itself**.
+  Not a Peer mapping bug; an inherited, pre-existing upstream data-quality
+  gap in a function this loop reused rather than wrote (`rawItemToPaper`/
+  `openAlexWorkToRawItem` predate this loop). **Not counted as a
+  difference against any of the 11 criteria** — noted because an empty
+  string is a softer version of the invented-placeholder failure mode
+  RULING 4 warns about, worth someone's attention outside this loop, not
+  inside it.
+
+This is real, live, zero-API-key data (Tier-0, criterion 11) flowing
+through the actual protocol dispatch for 2 of 3 paper attempts — satisfies
+this round's "field truth per RULING 4" bar for the paper lane
+specifically. It is **not** a substitute for a real forecast (jobs/events/
+merged) pull, which stays blocked on the Supabase gap above.
+
+**Step 2 — C's corrections of B, each verified independently, not just re-read:**
+
+1. **SDK pin.** Confirmed: `package.json` declares
+   `@modelcontextprotocol/sdk: ^1.26.0` (not B's original `^1.30.0`).
+   `npm ls` shows a single, fully-deduped resolution at exactly `1.26.0`
+   shared by `mcp-handler@1.1.0`'s own peer dependency, `@google/genai@1.50.1`'s
+   optional peer dep, and the direct dependency — zero conflicts.
+   `node_modules/@modelcontextprotocol/` contains only `sdk/` — confirmed
+   the newer, separately-named `server`/`node` "v2" family was never
+   pulled in. **Verdict: correct, matches C's description exactly, still
+   the HANDOFF-named family.**
+2. **MIME type fix.** Confirmed in `server.ts` (resource config arg `{}`,
+   `mimeType: "text/html;profile=mcp-app"` on the content item, not the
+   config) and independently confirmed **live** — the real `resources/read`
+   response's `mimeType` field is exactly `"text/html;profile=mcp-app"`.
+   **Verdict: correct.**
+3. **TS narrowing fix.** Reproduced C's claim myself with an isolated
+   2-function repro (not the real file, a throwaway scratchpad `.ts`, run
+   through `tsc --strict --noEmit`): a bare `if ("found" in result)`
+   narrows correctly on the fall-through branch (compiles clean); the
+   rejected compound form `if ("found" in result && result.found ===
+   false)` genuinely fails to narrow — `tsc` errors with `Property 'title'
+   does not exist on type 'NotFound | Item'` on the compound form's
+   fall-through. **Verdict: correct, genuine TypeScript control-flow
+   behavior, not a misdiagnosis.**
+4. **Architecture bug (static template + postMessage bridge).** Fetched
+   `developers.openai.com/apps-sdk/build/custom-ux` myself rather than
+   trust the citation. It states: "Treat the resource URI as a cache key.
+   When you make a breaking change…" — directly supports the
+   "static, fetched-once, cached" claim. The page also describes the host
+   delivering each tool call's latest result to the widget via a
+   `ui/notifications/tool-result` postMessage/JSON-RPC notification
+   carrying `structuredContent` — matches `WIDGET_SCRIPT`'s implementation
+   exactly. Treated as data throughout; one short quote only, per the
+   standing rule on fetched third-party text. **Verdict: correct — a
+   genuine protocol fact, correctly fixed forward, not a scope judgment
+   call dressed up as one.**
+
+**Minor, non-blocking observations (not counted as differences against any
+of the 11 criteria):**
+- `get-daily-forecast.test.ts` has no explicit assertion that
+  `runFeedPipeline` is called with `sources: ["arxiv","openalex"]`
+  (RULING 6) — the restriction is genuinely present in source
+  (`get-daily-forecast.ts`, the `PAPERS_LANE_SOURCES` const and its one
+  use site) and indirectly live-confirmed (both prefixes resolved
+  correctly above), just not pinned by its own unit-test assertion the
+  way sibling RULINGs are. A one-line test addition, not a functional
+  gap — flagging for whoever next touches that file.
+- The OpenAlex empty-title case above.
+
+**Exclusions / HOST LIMIT, re-listed by name (RULING 3):** none newly
+triggered this round — nothing has been placed in front of a real host yet
+to trigger a HOST LIMIT deviation. Still empty.
+
+**Standing exclusions, re-listed by name every round as instructed:**
+- **RULING 6** — M1's papers lane is `arxiv`+`openalex` only, temporary,
+  re-decided at M4. Live-confirmed both sources resolve correctly this
+  round; a `semantic_scholar:`/`dblp:`/`pubmed:`/`web:`/`hn:` item will
+  never appear in a forecast and `get_opportunity` correctly refuses to
+  resolve one if somehow asked (live-confirmed this round too).
+- **RULING 7** — the inline card's Expand control is excluded until M2
+  (fullscreen home not built yet). Live-confirmed absent this round (zero
+  occurrences of "expand" anywhere in the live protocol transcript). Save
+  is omitted entirely per the same ruling, also live-confirmed absent.
+- **Standing NEEDS LOCAL VERIFY set:** criteria 3, 4, 7, 9, 10 +
+  latency-on-real-profile — all five criteria and the latency measurement
+  stay exactly here; nothing closes any of them without the user's own
+  ChatGPT/Claude account and/or real Supabase credentials (see NEEDS
+  MANAGER/USER above for exactly what's missing).
