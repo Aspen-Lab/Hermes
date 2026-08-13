@@ -1,0 +1,824 @@
+<title>Peer in ChatGPT — MCP 模拟图</title>
+<style>
+/* ═══ Spec-chrome tokens — three-state theme ═══ */
+:root {
+  --ground: #ECEEF2;          /* cool pale grey, biased toward host-teal */
+  --panel: #FFFFFF;
+  --panel-2: #F5F6F9;
+  --ink: #1B1E24;
+  --ink-2: #5A6170;
+  --ink-3: #8B92A0;
+  --line: rgba(27, 30, 36, 0.12);
+  --line-soft: rgba(27, 30, 36, 0.07);
+  --peer: #FF520D;            /* Peer hot orange — Peer-owned annotations */
+  --peer-dim: rgba(255, 82, 13, 0.10);
+  --host: #0F8A6D;            /* host teal — ChatGPT / membership-owned */
+  --host-dim: rgba(15, 138, 109, 0.10);
+  --chip-active: #1B1E24;
+  --chip-active-ink: #FFFFFF;
+  --shadow: 0 1px 2px rgba(20, 24, 32, 0.06), 0 12px 32px rgba(20, 24, 32, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #14161B;
+    --panel: #1C1F26;
+    --panel-2: #22262E;
+    --ink: #E7E9EE;
+    --ink-2: #9AA1AE;
+    --ink-3: #6C7380;
+    --line: rgba(231, 233, 238, 0.14);
+    --line-soft: rgba(231, 233, 238, 0.08);
+    --peer: #FF6A2B;
+    --peer-dim: rgba(255, 106, 43, 0.14);
+    --host: #2FB392;
+    --host-dim: rgba(47, 179, 146, 0.14);
+    --chip-active: #E7E9EE;
+    --chip-active-ink: #14161B;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px rgba(0, 0, 0, 0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #14161B;
+  --panel: #1C1F26;
+  --panel-2: #22262E;
+  --ink: #E7E9EE;
+  --ink-2: #9AA1AE;
+  --ink-3: #6C7380;
+  --line: rgba(231, 233, 238, 0.14);
+  --line-soft: rgba(231, 233, 238, 0.08);
+  --peer: #FF6A2B;
+  --peer-dim: rgba(255, 106, 43, 0.14);
+  --host: #2FB392;
+  --host-dim: rgba(47, 179, 146, 0.14);
+  --chip-active: #E7E9EE;
+  --chip-active-ink: #14161B;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* ═══ Base ═══ */
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0;
+  padding: 0 20px 80px;
+}
+.serif { font-family: "Iowan Old Style", Georgia, "Times New Roman", "Songti SC", serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+a { color: inherit; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--peer); outline-offset: 2px; }
+.wrap { max-width: 1060px; margin: 0 auto; }
+
+/* ═══ Header ═══ */
+header.wrap { padding-top: 48px; }
+.eyebrow {
+  font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 600; margin-bottom: 14px;
+}
+.eyebrow b { color: var(--peer); font-weight: 600; }
+h1 {
+  font-family: "Iowan Old Style", Georgia, "Times New Roman", "Songti SC", serif;
+  font-size: clamp(28px, 4.5vw, 42px); font-weight: 500; line-height: 1.2;
+  margin: 0 0 16px; text-wrap: balance; letter-spacing: -0.01em;
+}
+.lede { max-width: 66ch; color: var(--ink-2); margin: 0 0 8px; }
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* party strip */
+.parties {
+  display: flex; align-items: stretch; gap: 0; flex-wrap: wrap;
+  margin: 28px 0 10px; row-gap: 10px;
+}
+.party {
+  border: 1px solid var(--line); background: var(--panel);
+  border-radius: 12px; padding: 10px 16px; min-width: 150px;
+}
+.party .p-role { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+.party .p-name { font-size: 13.5px; color: var(--ink-2); }
+.party.host .p-role { color: var(--host); }
+.party.peer-side .p-role { color: var(--peer); }
+.party.host { background: var(--host-dim); border-color: transparent; }
+.party.peer-side { background: var(--peer-dim); border-color: transparent; }
+.p-arrow {
+  display: flex; align-items: center; padding: 0 10px;
+  color: var(--ink-3); font-size: 11.5px; white-space: nowrap; flex-direction: column; justify-content: center; gap: 2px;
+}
+.p-arrow .a-line { letter-spacing: -1px; }
+.legend { display: flex; gap: 22px; flex-wrap: wrap; margin: 14px 0 0; font-size: 13px; color: var(--ink-2); }
+.legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: baseline; }
+.legend .dot.d-host { background: var(--host); }
+.legend .dot.d-peer { background: var(--peer); }
+
+/* ═══ Step nav ═══ */
+nav.steps {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: 14px 0 12px; margin-top: 30px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.steps-inner { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.step-btn {
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink-2);
+  border-radius: 999px; padding: 7px 15px; font-size: 13px; cursor: pointer;
+  font-family: inherit; transition: background 0.15s, color 0.15s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.step-btn .n {
+  font-size: 11px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel-2); color: var(--ink-3); flex: none;
+}
+.step-btn[aria-pressed="true"] { background: var(--chip-active); color: var(--chip-active-ink); border-color: var(--chip-active); }
+.step-btn[aria-pressed="true"] .n { background: var(--peer); color: #fff; }
+.step-btn:hover:not([aria-pressed="true"]) { background: var(--panel-2); }
+@media (prefers-reduced-motion: reduce) { .step-btn { transition: none; } }
+
+/* ═══ Screen sections ═══ */
+section.screen { padding-top: 34px; }
+section.screen[hidden] { display: none; }
+.sc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
+.sc-title {
+  font-family: "Iowan Old Style", Georgia, "Times New Roman", "Songti SC", serif;
+  font-size: 24px; font-weight: 500; margin: 0;
+}
+.sc-title .k { color: var(--peer); font-size: 14px; vertical-align: 0.35em; margin-right: 8px; font-family: inherit; }
+.sc-scene { color: var(--ink-2); font-size: 13.5px; max-width: 72ch; margin: 0 0 20px; }
+
+/* browser frame */
+.frame-scroll { overflow-x: auto; padding-bottom: 6px; }
+.browser {
+  width: 980px; border-radius: 14px; overflow: hidden;
+  box-shadow: var(--shadow); border: 1px solid var(--line-soft);
+  position: relative; background: #FFFFFF;
+}
+.b-bar {
+  height: 40px; background: #EDEDEF; display: flex; align-items: center;
+  padding: 0 14px; gap: 14px; border-bottom: 1px solid #E0E0E3;
+}
+.b-dots { display: flex; gap: 7px; }
+.b-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.b-dots i:nth-child(1) { background: #F26D5F; }
+.b-dots i:nth-child(2) { background: #F2BE4C; }
+.b-dots i:nth-child(3) { background: #5FC454; }
+.b-url {
+  background: #FFFFFF; border: 1px solid #E0E0E3; border-radius: 8px;
+  font-size: 12px; color: #6E6E76; padding: 4px 14px; flex: 1; max-width: 380px;
+  margin: 0 auto; text-align: center;
+}
+.b-ribbon {
+  position: absolute; top: 9px; right: 12px; z-index: 30;
+  font-size: 10px; letter-spacing: 0.12em; font-weight: 700; text-transform: uppercase;
+  color: #8A6D00; background: #FFF3C4; border: 1px solid #EAD98A;
+  border-radius: 6px; padding: 3px 9px;
+}
+.sim-wrap { position: relative; }
+
+/* ═══ ChatGPT simulation — fixed light palette (a depicted screenshot) ═══ */
+.sim { display: flex; height: 620px; background: #FFFFFF; color: #0D0D0D;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; }
+.s-side {
+  width: 236px; flex: none; background: #F9F9F9; border-right: 1px solid #ECECEC;
+  padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px;
+}
+.s-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 6px 8px 14px; font-size: 14.5px; color: #0D0D0D; }
+.s-brand .o-mark { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid #0D0D0D; display: inline-block; position: relative; }
+.s-brand .o-mark::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 2px dotted #0D0D0D; }
+.s-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 8px; color: #3A3A40; }
+.s-item svg { flex: none; opacity: 0.75; }
+.s-item.on { background: #ECECEE; font-weight: 600; color: #0D0D0D; }
+.s-label { font-size: 11px; color: #9A9AA2; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 14px 8px 5px; }
+.s-app { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 8px; color: #3A3A40; }
+.s-app .p-mark, .p-mark {
+  width: 19px; height: 19px; border-radius: 5px; background: #FDF6EE; border: 1px solid #EAD9C4;
+  color: #FF520D; font-family: "Iowan Old Style", Georgia, serif; font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center; flex: none; line-height: 1;
+}
+.s-chat { padding: 6px 8px; border-radius: 8px; color: #55555C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.s-main { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
+.s-top { height: 50px; display: flex; align-items: center; padding: 0 18px; font-weight: 600; font-size: 15px; color: #0D0D0D; gap: 5px; }
+.s-top .v { color: #8F8F98; font-weight: 400; }
+.s-chatcol { flex: 1; overflow: hidden; padding: 4px 0 0; }
+.s-col { max-width: 640px; margin: 0 auto; padding: 0 24px; }
+.u-bubble {
+  background: #F4F4F4; color: #0D0D0D; border-radius: 22px; padding: 11px 18px;
+  max-width: 75%; margin-left: auto; width: fit-content; font-size: 14.5px; margin-bottom: 22px;
+}
+.a-text { font-size: 14.5px; line-height: 1.65; color: #0D0D0D; margin: 0 0 14px; }
+.tool-chip {
+  display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ECECEC;
+  border-radius: 999px; padding: 5.5px 13px 5.5px 8px; font-size: 12.5px; color: #55555C;
+  margin-bottom: 14px; background: #FFFFFF;
+}
+.tool-chip .tname { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: #7A7A82; }
+.tool-chip .ok { color: #1D8A54; font-weight: 700; }
+.tool-chip .pending { color: #B58A1E; font-weight: 700; }
+.s-composer {
+  margin: 10px auto 18px; max-width: 640px; width: calc(100% - 48px);
+  border: 1px solid #E3E3E6; border-radius: 26px; background: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 13px 18px; font-size: 14.5px; color: #9A9AA2;
+  display: flex; align-items: center; gap: 12px;
+}
+.s-composer .plus { font-size: 18px; color: #55555C; line-height: 1; }
+.s-composer .grow { flex: 1; }
+.s-composer .mic { color: #55555C; }
+
+/* ═══ Peer surfaces (inside the sim) — fixed warm palette ═══ */
+.peer-card {
+  border: 1px solid #ECECEC; border-radius: 16px; overflow: hidden; margin-bottom: 14px;
+  background: #FFFDF9; max-width: 560px;
+}
+.pc-head {
+  background: #FDF6EE; padding: 11px 14px; display: flex; align-items: center; gap: 9px;
+  border-bottom: 1px solid rgba(62, 36, 7, 0.07);
+}
+.pc-head .t { font-family: "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 14.5px; color: #2B180A; }
+.pc-head .m { font-size: 11.5px; color: #94877C; margin-left: auto; }
+.pc-head .expand { font-size: 11.5px; color: #6B6156; border: 1px solid rgba(62, 36, 7, 0.12); border-radius: 6px; padding: 2px 8px; background: #FFFDF9; }
+.p-row { padding: 11px 14px; display: flex; gap: 12px; align-items: flex-start; border-bottom: 1px solid rgba(62, 36, 7, 0.06); }
+.p-row:last-of-type { border-bottom: 0; }
+.rel {
+  font-family: "Iowan Old Style", Georgia, serif; font-weight: 700; font-size: 13px;
+  color: #237A4B; background: rgba(35, 122, 75, 0.09); border-radius: 8px;
+  padding: 3px 7px; flex: none; line-height: 1.3;
+}
+.p-row .body { min-width: 0; flex: 1; }
+.p-row .ti { font-family: "Iowan Old Style", Georgia, serif; font-size: 14.5px; font-weight: 600; color: #2B180A; line-height: 1.35; }
+.p-row .me { font-size: 12px; color: #6B6156; margin-top: 1px; }
+.p-row .why { font-size: 12px; color: #A8642A; margin-top: 3px; }
+.p-row .why b { font-weight: 600; }
+.ptag {
+  display: inline-block; font-size: 10.5px; font-weight: 600; color: #A8642A;
+  background: rgba(168, 100, 42, 0.10); border-radius: 5px; padding: 1.5px 7px; margin-right: 5px; vertical-align: 1px;
+}
+.psave {
+  border: 1px solid rgba(62, 36, 7, 0.12); background: #F1E9DA; color: #3E2407;
+  font-size: 11.5px; border-radius: 7px; padding: 4px 10px; flex: none; align-self: center; font-weight: 500;
+}
+.pc-foot {
+  padding: 9px 14px; display: flex; align-items: center; gap: 10px;
+  background: #FDF6EE; border-top: 1px solid rgba(62, 36, 7, 0.07); font-size: 12px; color: #6B6156;
+}
+.pc-foot .open { color: #FF520D; font-weight: 600; }
+.pc-foot .attr { margin-left: auto; font-size: 11px; color: #94877C; }
+
+/* fullscreen Peer overlay */
+.p-full { position: absolute; inset: 0; background: #FDF6EE; display: flex; flex-direction: column; }
+.pf-bar {
+  height: 48px; background: #FDF6EE; border-bottom: 1px solid rgba(62, 36, 7, 0.09);
+  display: flex; align-items: center; gap: 10px; padding: 0 16px; flex: none;
+}
+.pf-bar .t { font-family: "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 14.5px; color: #2B180A; }
+.pf-bar .sep { color: #C9BCA9; }
+.pf-bar .view { font-size: 13px; color: #6B6156; }
+.pf-bar .open { margin-left: auto; font-size: 12px; color: #FF520D; font-weight: 600; }
+.pf-bar .x { font-size: 15px; color: #6B6156; padding: 2px 8px; border-radius: 6px; }
+.pf-body { flex: 1; overflow: hidden; padding: 20px 26px; }
+.pf-h { font-family: "Iowan Old Style", Georgia, serif; font-size: 23px; color: #2B180A; margin: 0; font-weight: 500; }
+.pf-sub { font-size: 12.5px; color: #94877C; margin: 3px 0 14px; }
+.fchips { display: flex; gap: 7px; margin-bottom: 16px; }
+.fchip {
+  font-size: 12px; color: #6B6156; border: 1px solid rgba(62, 36, 7, 0.10);
+  border-radius: 999px; padding: 4px 13px; background: transparent;
+}
+.fchip.on { background: #2B180A; color: #FDF6EE; border-color: #2B180A; font-weight: 500; }
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pf-card {
+  background: #F1E9DA; border-radius: 14px; padding: 13px 15px;
+  box-shadow: 0 1px 2px rgba(43, 24, 10, 0.04);
+}
+.pf-card .row1 { display: flex; align-items: baseline; gap: 8px; }
+.pf-card .ti { font-family: "Iowan Old Style", Georgia, serif; font-size: 15px; font-weight: 600; color: #2B180A; line-height: 1.3; }
+.pf-card .me { font-size: 11.5px; color: #6B6156; margin-top: 2px; }
+.pf-card .why { font-size: 11.5px; color: #A8642A; margin-top: 6px; }
+.pf-card .acts { display: flex; gap: 6px; margin-top: 9px; }
+.pf-card .acts span { font-size: 11px; border: 1px solid rgba(62, 36, 7, 0.13); border-radius: 6px; padding: 2.5px 9px; color: #3E2407; background: rgba(253, 246, 238, 0.6); }
+.pf-composer {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px;
+  width: 480px; border: 1px solid #E3E3E6; border-radius: 24px; background: #FFFFFF;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.10); padding: 11px 17px; font-size: 13.5px; color: #9A9AA2;
+  display: flex; gap: 10px; align-items: center;
+}
+
+/* report reader */
+.rp-grid { display: grid; grid-template-columns: 1fr 190px; gap: 24px; height: 100%; }
+.rp-kicker { font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: #A8642A; font-weight: 700; margin-bottom: 6px; }
+.rp-title { font-family: "Iowan Old Style", Georgia, serif; font-size: 21px; font-weight: 500; color: #2B180A; margin: 0 0 3px; line-height: 1.25; }
+.rp-meta { font-size: 12px; color: #94877C; margin-bottom: 12px; }
+.rp-p { font-size: 13px; color: #2A2722; line-height: 1.62; margin: 0 0 12px; max-width: 62ch; }
+.rp-sec { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #94877C; font-weight: 700; margin: 14px 0 8px; }
+.src {
+  background: #F1E9DA; border-radius: 10px; padding: 9px 12px; margin-bottom: 7px;
+  font-size: 12px; color: #2A2722; display: flex; gap: 9px; align-items: flex-start;
+}
+.src .fav { width: 8px; height: 8px; border-radius: 50%; background: #237A4B; margin-top: 5px; flex: none; }
+.src .fav.f2 { background: #2B5C8F; }
+.src .fav.f3 { background: #A8792C; }
+.src .s-t { font-weight: 600; color: #2B180A; }
+.src .s-m { color: #94877C; font-size: 11px; }
+.src .s-q { font-style: italic; color: #6B6156; margin-top: 2px; font-family: "Iowan Old Style", Georgia, serif; }
+.evi {
+  border: 1px solid rgba(168, 121, 44, 0.35); background: rgba(168, 121, 44, 0.07);
+  border-radius: 10px; padding: 9px 12px; font-size: 12px; color: #6B5116; margin-top: 10px;
+}
+.rp-rail { border-left: 1px solid rgba(62, 36, 7, 0.08); padding-left: 18px; }
+.rp-rail .o-item { font-size: 12.5px; color: #6B6156; padding: 4px 0; }
+.rp-rail .o-item.on { color: #2B180A; font-weight: 600; }
+.rp-act { display: block; width: 100%; text-align: left; font-size: 12px; border: 1px solid rgba(62, 36, 7, 0.12); border-radius: 8px; padding: 6px 10px; margin-bottom: 6px; color: #3E2407; background: rgba(253, 246, 238, 0.7); }
+.rp-act.hot { background: #FF520D; color: #FFF; border-color: #FF520D; font-weight: 600; }
+
+/* persona confirm card */
+.confirm-card { border: 1px solid #ECECEC; border-radius: 16px; overflow: hidden; max-width: 480px; margin-bottom: 14px; background: #FFFDF9; }
+.cc-head { background: #FDF6EE; padding: 10px 14px; display: flex; gap: 9px; align-items: center; border-bottom: 1px solid rgba(62, 36, 7, 0.07); }
+.cc-head .t { font-family: "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 14px; color: #2B180A; }
+.cc-body { padding: 12px 14px; }
+.cc-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed rgba(62, 36, 7, 0.09); }
+.cc-row:last-of-type { border-bottom: 0; }
+.cc-row .f { color: #6B6156; }
+.cc-row .v { color: #2B180A; font-weight: 500; }
+.cc-row .old { color: #94877C; text-decoration: line-through; font-weight: 400; margin-right: 7px; }
+.cc-note { font-size: 11.5px; color: #94877C; margin-top: 8px; }
+.cc-acts { display: flex; gap: 8px; padding: 11px 14px; background: #FDF6EE; border-top: 1px solid rgba(62, 36, 7, 0.07); }
+.cc-acts .ghost { font-size: 12.5px; border: 1px solid rgba(62, 36, 7, 0.14); border-radius: 8px; padding: 6px 14px; color: #3E2407; background: transparent; }
+.cc-acts .hot { font-size: 12.5px; border-radius: 8px; padding: 6px 16px; color: #FFF; background: #FF520D; border: 1px solid #FF520D; font-weight: 600; }
+
+/* settings modal (screen 1) */
+.set-dim { position: absolute; inset: 0; background: rgba(13, 13, 13, 0.45); }
+.set-modal {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-58%);
+  width: 560px; background: #FFFFFF; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3); display: flex; height: 420px;
+}
+.set-nav { width: 168px; flex: none; background: #F9F9F9; padding: 14px 8px; font-size: 13px; border-right: 1px solid #ECECEC; }
+.set-nav .h { font-weight: 700; font-size: 14.5px; padding: 4px 10px 12px; }
+.set-nav .i { padding: 7px 10px; border-radius: 8px; color: #3A3A40; }
+.set-nav .i.on { background: #ECECEE; font-weight: 600; color: #0D0D0D; }
+.set-pane { flex: 1; padding: 18px 20px; overflow: hidden; }
+.set-pane .h { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.set-pane .sub { font-size: 12px; color: #8F8F98; margin-bottom: 14px; }
+.app-row { display: flex; align-items: center; gap: 11px; padding: 11px 4px; border-bottom: 1px solid #F0F0F2; font-size: 13.5px; }
+.app-row .nm { font-weight: 600; }
+.app-row .ds { font-size: 11.5px; color: #8F8F98; }
+.app-row .cta { margin-left: auto; font-size: 12px; border: 1px solid #D9D9DE; border-radius: 999px; padding: 4.5px 14px; font-weight: 600; background: #FFF; }
+.app-row .cta.pri { background: #0D0D0D; color: #FFF; border-color: #0D0D0D; }
+.app-row.dim { opacity: 0.55; }
+.app-ico { width: 26px; height: 26px; border-radius: 7px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 13px; background: #F0F0F2; color: #55555C; font-weight: 700; }
+
+/* oauth popup (screen 1) */
+.oauth-pop {
+  position: absolute; top: 78px; right: 34px; width: 330px; z-index: 20;
+  background: #FDF6EE; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(43, 24, 10, 0.38); border: 1px solid rgba(62, 36, 7, 0.12);
+}
+.op-bar { background: #F7F0E8; font-size: 11px; color: #6B6156; padding: 7px 12px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid rgba(62, 36, 7, 0.08); }
+.op-bar .lock { color: #237A4B; }
+.op-body { padding: 16px 18px 18px; }
+.op-title { font-family: "Iowan Old Style", Georgia, serif; font-size: 16.5px; color: #2B180A; font-weight: 600; line-height: 1.35; margin: 10px 0 4px; }
+.op-sub { font-size: 12px; color: #6B6156; margin-bottom: 12px; }
+.op-acct { font-size: 12px; background: #F1E9DA; border-radius: 999px; padding: 4px 12px; display: inline-block; color: #3E2407; margin-bottom: 12px; }
+.scope { display: flex; gap: 9px; font-size: 12.5px; color: #2A2722; padding: 6.5px 0; border-bottom: 1px solid rgba(62, 36, 7, 0.07); align-items: baseline; }
+.scope:last-of-type { border-bottom: 0; }
+.scope .ck { color: #237A4B; font-weight: 700; }
+.scope .ask { font-size: 10.5px; color: #A8642A; background: rgba(168, 100, 42, 0.1); border-radius: 5px; padding: 1px 7px; margin-left: auto; flex: none; }
+.op-acts { display: flex; gap: 8px; margin-top: 15px; }
+.op-acts .ghost { flex: 1; text-align: center; font-size: 12.5px; border: 1px solid rgba(62, 36, 7, 0.16); border-radius: 9px; padding: 8px 0; color: #3E2407; background: transparent; }
+.op-acts .hot { flex: 1.4; text-align: center; font-size: 12.5px; border-radius: 9px; padding: 8px 0; color: #FFF; background: #FF520D; font-weight: 600; border: 1px solid #FF520D; }
+
+/* ═══ Callout pins + annotations ═══ */
+.pin {
+  position: absolute; z-index: 40; width: 24px; height: 24px; border-radius: 50%;
+  color: #FFF; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+.pin.peer-pin { background: #FF520D; }
+.pin.host-pin { background: #0F8A6D; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 18px; }
+.note {
+  background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px;
+  padding: 12px 14px; font-size: 13px; color: var(--ink-2); line-height: 1.6;
+}
+.note b { color: var(--ink); font-weight: 600; }
+.note .nn {
+  width: 20px; height: 20px; border-radius: 50%; color: #FFF; font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; vertical-align: -4px;
+}
+.note.n-peer .nn { background: var(--peer); }
+.note.n-host .nn { background: var(--host); }
+.note.n-peer { border-left: 3px solid var(--peer); }
+.note.n-host { border-left: 3px solid var(--host); }
+
+/* pager */
+.pager { display: flex; justify-content: space-between; margin-top: 26px; gap: 10px; }
+.pg-btn {
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  border-radius: 10px; padding: 9px 18px; font-size: 13.5px; cursor: pointer; font-family: inherit;
+}
+.pg-btn:disabled { opacity: 0.35; cursor: default; }
+.pg-btn:hover:not(:disabled) { background: var(--panel-2); }
+
+footer.wrap { margin-top: 48px; font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--line-soft); padding-top: 18px; max-width: 1060px; }
+footer .serif { font-style: italic; }
+
+@media (max-width: 720px) {
+  .rp-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 26px; }
+}
+</style>
+
+<header class="wrap">
+  <div class="eyebrow"><b>membership-api-connection</b> · A 路设计模拟 · 2026-08-12</div>
+  <h1>Peer 出现在 ChatGPT 里,会长这样</h1>
+  <p class="lede">MCP 是一个公开标准,让 ChatGPT / Claude 这类聊天应用能安全地调用外部应用——外部应用提供「工具 + 界面」,聊天应用负责对话和模型。下面 5 张模拟图走完一个用户的完整流程:<b>连接 → 唤起 → 全屏 → 读报告 → 改 Persona</b>。</p>
+  <p class="lede">关键点:整个过程中,<b>说话和思考的模型是用户会员已付费的 ChatGPT</b>;Peer 提供数据、排序和自己的界面,从头到尾碰不到用户的 ChatGPT 账号。</p>
+
+  <div class="parties" role="img" aria-label="四方关系:ChatGPT 会员付费给 ChatGPT 模型,ChatGPT 通过 MCP 协议调用 Peer 服务,Peer 服务读写用户的 Peer 账号">
+    <div class="party host"><div class="p-role">用户的会员</div><div class="p-name">ChatGPT Plus / Pro</div></div>
+    <div class="p-arrow"><span>付费给</span><span class="a-line">──▶</span></div>
+    <div class="party host"><div class="p-role">对话 + 模型</div><div class="p-name">ChatGPT 应用</div></div>
+    <div class="p-arrow"><span>MCP 协议</span><span class="a-line">◀──▶</span></div>
+    <div class="party peer-side"><div class="p-role">数据 + 界面</div><div class="p-name">Peer 服务器</div></div>
+    <div class="p-arrow"><span>授权读写</span><span class="a-line">◀──▶</span></div>
+    <div class="party peer-side"><div class="p-role">用户的账号</div><div class="p-name">Peer 账号(Persona、报告、保存)</div></div>
+  </div>
+  <div class="legend">
+    <span><i class="dot d-host"></i>青色标注 = ChatGPT / 会员负责的部分</span>
+    <span><i class="dot d-peer"></i>橙色标注 = Peer 负责的部分</span>
+    <span>🟡 右上角黄标 = 模拟示意,非真实截图</span>
+  </div>
+</header>
+
+<nav class="steps wrap" aria-label="模拟场景切换">
+  <div class="steps-inner">
+    <button class="step-btn" data-go="0" aria-pressed="true"><span class="n">1</span>连接 Peer</button>
+    <button class="step-btn" data-go="1" aria-pressed="false"><span class="n">2</span>对话里唤起</button>
+    <button class="step-btn" data-go="2" aria-pressed="false"><span class="n">3</span>Daily Forecast 全屏</button>
+    <button class="step-btn" data-go="3" aria-pressed="false"><span class="n">4</span>Report Reader</button>
+    <button class="step-btn" data-go="4" aria-pressed="false"><span class="n">5</span>改 Persona(要确认)</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ═══════════ SCREEN 1 · CONNECT ═══════════ -->
+<section class="screen" id="sc0">
+  <div class="sc-head"><h2 class="sc-title"><span class="k">第 1 步</span>在 ChatGPT 设置里连接 Peer</h2></div>
+  <p class="sc-scene">场景:用户打开 ChatGPT 的 Settings → Apps &amp; Connectors,找到 Peer,点 Connect。弹出的授权窗口是 <b>Peer 自己的页面</b>——用户在 Peer 的页面上决定把哪些权限交给 ChatGPT。</p>
+  <div class="frame-scroll"><div class="browser">
+    <div class="b-bar"><div class="b-dots"><i></i><i></i><i></i></div><div class="b-url">chatgpt.com</div></div>
+    <div class="b-ribbon">模拟示意 · Mockup</div>
+    <div class="sim-wrap">
+      <div class="sim">
+        <aside class="s-side">
+          <div class="s-brand"><span class="o-mark"></span>ChatGPT</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New chat</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search chats</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Library</div>
+          <div class="s-label">Chats</div>
+          <div class="s-chat">对比两个 offer 的成长空间</div>
+          <div class="s-chat">改一版简历要点</div>
+          <div class="s-chat">Boston 租房检查清单</div>
+        </aside>
+        <div class="s-main">
+          <div class="s-top">ChatGPT <span class="v">▾</span></div>
+          <div class="set-dim"></div>
+          <div class="set-modal">
+            <div class="set-nav">
+              <div class="h">Settings</div>
+              <div class="i">General</div>
+              <div class="i">Notifications</div>
+              <div class="i">Personalization</div>
+              <div class="i on">Apps &amp; Connectors</div>
+              <div class="i">Data controls</div>
+              <div class="i">Security</div>
+            </div>
+            <div class="set-pane">
+              <div class="h">Apps &amp; Connectors</div>
+              <div class="sub">Connect apps to use them in your chats.</div>
+              <div class="app-row">
+                <span class="p-mark">P</span>
+                <div><div class="nm">Peer</div><div class="ds">Daily opportunity forecast — jobs, papers, grants</div></div>
+                <span class="cta pri">Connect</span>
+              </div>
+              <div class="app-row dim">
+                <span class="app-ico">C</span>
+                <div><div class="nm">Calendar</div><div class="ds">See and create events</div></div>
+                <span class="cta">Connect</span>
+              </div>
+              <div class="app-row dim">
+                <span class="app-ico">D</span>
+                <div><div class="nm">Drive</div><div class="ds">Search your files</div></div>
+                <span class="cta">Connect</span>
+              </div>
+            </div>
+          </div>
+          <div class="oauth-pop">
+            <div class="op-bar"><span class="lock">🔒</span>peer.app/oauth/authorize</div>
+            <div class="op-body">
+              <span class="p-mark" style="width:28px;height:28px;font-size:17px;">P</span>
+              <div class="op-title">ChatGPT wants to access your Peer account</div>
+              <div class="op-sub">只授权下面列出的权限,随时可以在 Peer 里撤销。</div>
+              <span class="op-acct">mei.lin@example.com · Peer</span>
+              <div class="scope"><span class="ck">✓</span>Read your Daily Forecast</div>
+              <div class="scope"><span class="ck">✓</span>Read your reports &amp; sources</div>
+              <div class="scope"><span class="ck">✓</span>Read your Persona summary</div>
+              <div class="scope"><span class="ck">•</span>Save / dismiss items<span class="ask">每次询问</span></div>
+              <div class="scope"><span class="ck">•</span>Update Persona<span class="ask">每次询问</span></div>
+              <div class="op-acts"><span class="ghost">Cancel</span><span class="hot">Allow access</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pin host-pin" style="top:33.5%; left:36.5%;">1</div>
+      <div class="pin peer-pin" style="top:11%; right:31%;">2</div>
+      <div class="pin peer-pin" style="top:56%; right:31.5%;">3</div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div class="note n-host"><span class="nn">1</span><b>入口在 ChatGPT 的设置里。</b>Peer 以「App / Connector」身份出现在列表中,和日历、网盘这类连接并列。上架方式是提交给 OpenAI 的应用目录。</div>
+    <div class="note n-peer"><span class="nn">2</span><b>授权发生在 Peer 自己的页面上。</b>注意方向:是 ChatGPT 请求访问<b>你的 Peer 账号</b>,不是 Peer 访问你的 ChatGPT 会员。Peer 全程看不到用户的 ChatGPT 密码,ChatGPT 也拿不到 Peer 密码——只拿到一张范围受限的「通行证」。</div>
+    <div class="note n-peer"><span class="nn">3</span><b>权限最小化,先只读。</b>第一版只开「读预报、读报告、读 Persona 摘要」;保存、修改这类「写」操作单独列出,并且每次都要用户当场确认。</div>
+  </div>
+  <div class="pager"><button class="pg-btn" data-nav="-1" disabled>← 上一屏</button><button class="pg-btn" data-nav="1">下一屏:对话里唤起 →</button></div>
+</section>
+
+<!-- ═══════════ SCREEN 2 · INVOKE IN CHAT ═══════════ -->
+<section class="screen" id="sc1" hidden>
+  <div class="sc-head"><h2 class="sc-title"><span class="k">第 2 步</span>在对话里自然唤起,Peer 卡片直接出现</h2></div>
+  <p class="sc-scene">场景:用户用一句自然语言提问。ChatGPT(用户会员付费的模型)判断该调用 Peer 的工具,调用后把 Peer 返回的<b>带界面的卡片</b>嵌进对话里——不是干巴巴的一段文字。</p>
+  <div class="frame-scroll"><div class="browser">
+    <div class="b-bar"><div class="b-dots"><i></i><i></i><i></i></div><div class="b-url">chatgpt.com</div></div>
+    <div class="b-ribbon">模拟示意 · Mockup</div>
+    <div class="sim-wrap">
+      <div class="sim">
+        <aside class="s-side">
+          <div class="s-brand"><span class="o-mark"></span>ChatGPT</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New chat</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search chats</div>
+          <div class="s-label">Apps</div>
+          <div class="s-app"><span class="p-mark">P</span>Peer</div>
+          <div class="s-label">Chats</div>
+          <div class="s-chat s-item on">今天的机会</div>
+          <div class="s-chat">对比两个 offer 的成长空间</div>
+          <div class="s-chat">改一版简历要点</div>
+        </aside>
+        <div class="s-main">
+          <div class="s-top">ChatGPT <span class="v">▾</span></div>
+          <div class="s-chatcol"><div class="s-col">
+            <div class="u-bubble">Peer,今天有什么值得我看的机会?</div>
+            <div class="tool-chip"><span class="p-mark">P</span>Peer · <span class="tname">get_daily_forecast</span> <span class="ok">✓</span></div>
+            <p class="a-text">今天的 Peer Daily Forecast 里有 3 条高信号,最相关的是 Meridian Labs 的实习——和你的 HCI×ML 方向几乎完全对口:</p>
+            <div class="peer-card">
+              <div class="pc-head"><span class="p-mark">P</span><span class="t">Daily Forecast</span><span class="m">Tue · Aug 12 · 3 / 9 条</span><span class="expand">⤢ Expand</span></div>
+              <div class="p-row"><span class="rel">92%</span><div class="body"><div class="ti">Meridian Labs — ML Research Intern (Summer '27)</div><div class="me">Boston / Remote · posted 6h ago</div><div class="why"><b>Matches:</b> HCI×ML 方向 · F-1 OPT friendly <span class="ptag">Job</span><span class="ptag">Visa ✓</span></div></div><span class="psave">Save</span></div>
+              <div class="p-row"><span class="rel">88%</span><div class="body"><div class="ti">CHI 2027 — Late-Breaking Work 截稿还有 9 天</div><div class="me">deadline Aug 21 · AoE</div><div class="why"><b>Matches:</b> 你的 &ldquo;Ambient Agents&rdquo; 草稿符合该 track <span class="ptag">Paper</span></div></div><span class="psave">Save</span></div>
+              <div class="p-row"><span class="rel">81%</span><div class="body"><div class="ti">NSF SBIR Phase I — AI tools for career discovery</div><div class="me">deadline Oct 6 · non-dilutive</div><div class="why"><b>Matches:</b> 和你的 side project 方向一致 <span class="ptag">Grant</span></div></div><span class="psave">Save</span></div>
+              <div class="pc-foot"><span class="open">Open in Peer ↗</span><span class="attr">Peer app · data from your Peer account</span></div>
+            </div>
+            <p class="a-text">要不要我把这个实习和你上周存的那个岗位对比一下?</p>
+          </div></div>
+          <div class="s-composer"><span class="plus">⨁</span><span class="grow">Ask anything</span><span class="mic">🎤</span></div>
+        </div>
+      </div>
+      <div class="pin host-pin" style="top:12%; right:24%;">1</div>
+      <div class="pin host-pin" style="top:20.5%; left:28.5%;">2</div>
+      <div class="pin peer-pin" style="top:44%; left:60%;">3</div>
+      <div class="pin peer-pin" style="top:50%; right:9.5%;">4</div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div class="note n-host"><span class="nn">1</span><b>一句话唤起,不用记命令。</b>点名「Peer」或者只是问相关问题,ChatGPT 自己判断要不要调用 Peer。回答问题的模型来自用户的会员——<b>这就是「用会员的额度享受 Peer」的合法形态</b>。</div>
+    <div class="note n-host"><span class="nn">2</span><b>调用过程是透明的。</b>对话里会显示一个小标签:调用了 Peer 的哪个工具(比如读取今日预报)。用户始终知道数据从哪来。</div>
+    <div class="note n-peer"><span class="nn">3</span><b>卡片是 Peer 的界面,不是模型编的文字。</b>象牙底、衬线标题、相关度、Matches 理由——数据和样式都由 Peer 服务器返回。模型无法篡改排序,也不会「幻觉」出不存在的机会。</div>
+    <div class="note n-peer"><span class="nn">4</span><b>按钮是真的。</b>点 Save 会写回用户的 Peer 账号(用第 1 步授权的写权限,按约定需要确认)。明天在 Peer 网站打开 Saved,东西就在那。</div>
+  </div>
+  <div class="pager"><button class="pg-btn" data-nav="-1">← 上一屏:连接</button><button class="pg-btn" data-nav="1">下一屏:全屏视图 →</button></div>
+</section>
+
+<!-- ═══════════ SCREEN 3 · FULLSCREEN FORECAST ═══════════ -->
+<section class="screen" id="sc2" hidden>
+  <div class="sc-head"><h2 class="sc-title"><span class="k">第 3 步</span>点 Expand,Peer 全屏接管——但还在 ChatGPT 里</h2></div>
+  <p class="sc-scene">场景:用户点了卡片右上角的 ⤢ Expand。Peer 的完整 Daily Forecast 界面在 ChatGPT 内全屏展开:筛选、完整列表、保存操作都在。底部悬浮的输入框还能继续和模型对话。</p>
+  <div class="frame-scroll"><div class="browser">
+    <div class="b-bar"><div class="b-dots"><i></i><i></i><i></i></div><div class="b-url">chatgpt.com</div></div>
+    <div class="b-ribbon">模拟示意 · Mockup</div>
+    <div class="sim-wrap">
+      <div class="sim">
+        <aside class="s-side">
+          <div class="s-brand"><span class="o-mark"></span>ChatGPT</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New chat</div>
+          <div class="s-label">Apps</div>
+          <div class="s-app"><span class="p-mark">P</span>Peer</div>
+          <div class="s-label">Chats</div>
+          <div class="s-chat s-item on">今天的机会</div>
+          <div class="s-chat">对比两个 offer 的成长空间</div>
+        </aside>
+        <div class="s-main">
+          <div class="p-full">
+            <div class="pf-bar"><span class="p-mark">P</span><span class="t">Peer</span><span class="sep">·</span><span class="view">Daily Forecast</span><span class="open">Open in Peer ↗</span><span class="x">✕</span></div>
+            <div class="pf-body">
+              <h3 class="pf-h">Tuesday, August 12</h3>
+              <div class="pf-sub">9 opportunities · 3 high-signal · ranked for <b>mei.lin</b>'s Persona</div>
+              <div class="fchips"><span class="fchip on">All · 9</span><span class="fchip">Jobs · 4</span><span class="fchip">Papers · 3</span><span class="fchip">Grants · 2</span></div>
+              <div class="pf-grid">
+                <div class="pf-card">
+                  <div class="row1"><span class="rel">92%</span><span class="ti">Meridian Labs — ML Research Intern</span></div>
+                  <div class="me">Boston / Remote · Summer '27 · posted 6h ago</div>
+                  <div class="why"><b>Why:</b> HCI×ML 对口 · F-1 OPT friendly · 团队在做 agent evals</div>
+                  <div class="acts"><span>Save</span><span>Dismiss</span><span>Report →</span></div>
+                </div>
+                <div class="pf-card">
+                  <div class="row1"><span class="rel">88%</span><span class="ti">CHI 2027 — Late-Breaking Work</span></div>
+                  <div class="me">deadline Aug 21 (AoE) · 9 days left</div>
+                  <div class="why"><b>Why:</b> 你的 &ldquo;Ambient Agents&rdquo; 草稿符合该 track</div>
+                  <div class="acts"><span>Save</span><span>Dismiss</span><span>Report →</span></div>
+                </div>
+                <div class="pf-card">
+                  <div class="row1"><span class="rel">81%</span><span class="ti">NSF SBIR Phase I — AI career tools</span></div>
+                  <div class="me">deadline Oct 6 · non-dilutive funding</div>
+                  <div class="why"><b>Why:</b> 与 side project 方向一致</div>
+                  <div class="acts"><span>Save</span><span>Dismiss</span><span>Report →</span></div>
+                </div>
+                <div class="pf-card">
+                  <div class="row1"><span class="rel">74%</span><span class="ti">Figma — Research Ops Contractor</span></div>
+                  <div class="me">Remote (US) · part-time · posted 1d ago</div>
+                  <div class="why"><b>Why:</b> 匹配研究方法技能;时薪信息已验证</div>
+                  <div class="acts"><span>Save</span><span>Dismiss</span><span>Report →</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="pf-composer"><span class="plus">⨁</span><span class="grow">Ask about today's forecast…</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="pin peer-pin" style="top:2%; left:29%;">1</div>
+      <div class="pin peer-pin" style="top:42.5%; left:53.5%;">2</div>
+      <div class="pin host-pin" style="bottom:7%; left:47%;">3</div>
+      <div class="pin peer-pin" style="top:2%; right:12%;">4</div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div class="note n-peer"><span class="nn">1</span><b>全屏 = Peer 的完整界面。</b>暖象牙底、沙色卡片、衬线标题——Peer 的视觉身份完整保留。它不是「ChatGPT 里的一段文字」,而是一个可辨认的 Peer 应用。</div>
+    <div class="note n-peer"><span class="nn">2</span><b>排序和理由来自 Peer 自己的算法。</b>每条的相关度、Why 解释,由 Peer 的排序管线基于用户 Persona 算出,不依赖 ChatGPT 的聊天记忆。换个宿主(Claude)结果一致。</div>
+    <div class="note n-host"><span class="nn">3</span><b>底部输入框还在。</b>全屏浏览时随时可以问:「帮我把这 4 条按截止日期排」「用英文写封询问邮件」——这些又回到会员模型来干活。数据 Peer 出,语言活模型干。</div>
+    <div class="note n-peer"><span class="nn">4</span><b>Open in Peer 随时回本体。</b>深链接跳到 Peer 网站的同一天预报。ChatGPT 是「第二入口」,Peer 网站永远是家。</div>
+  </div>
+  <div class="pager"><button class="pg-btn" data-nav="-1">← 上一屏:唤起</button><button class="pg-btn" data-nav="1">下一屏:Report Reader →</button></div>
+</section>
+
+<!-- ═══════════ SCREEN 4 · REPORT READER ═══════════ -->
+<section class="screen" id="sc3" hidden>
+  <div class="sc-head"><h2 class="sc-title"><span class="k">第 4 步</span>Report Reader:每个事实都带来源</h2></div>
+  <p class="sc-scene">场景:用户在预报卡片上点了「Report →」。Peer 的报告阅读器全屏打开:为什么匹配、核实过的来源、原文摘录、不确定项标注,右侧是大纲和操作。</p>
+  <div class="frame-scroll"><div class="browser">
+    <div class="b-bar"><div class="b-dots"><i></i><i></i><i></i></div><div class="b-url">chatgpt.com</div></div>
+    <div class="b-ribbon">模拟示意 · Mockup</div>
+    <div class="sim-wrap">
+      <div class="sim">
+        <aside class="s-side">
+          <div class="s-brand"><span class="o-mark"></span>ChatGPT</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New chat</div>
+          <div class="s-label">Apps</div>
+          <div class="s-app"><span class="p-mark">P</span>Peer</div>
+          <div class="s-label">Chats</div>
+          <div class="s-chat s-item on">今天的机会</div>
+          <div class="s-chat">对比两个 offer 的成长空间</div>
+        </aside>
+        <div class="s-main">
+          <div class="p-full">
+            <div class="pf-bar"><span class="p-mark">P</span><span class="t">Peer</span><span class="sep">·</span><span class="view">Report Reader</span><span class="open">Open in Peer ↗</span><span class="x">✕</span></div>
+            <div class="pf-body">
+              <div class="rp-grid">
+                <div>
+                  <div class="rp-kicker">Opportunity Report · Job · 92% match</div>
+                  <h3 class="rp-title">Meridian Labs — ML Research Intern (Summer 2027)</h3>
+                  <div class="rp-meta">Boston / Remote · posted 6h ago · report generated 07:14 today</div>
+                  <p class="rp-p"><b>Why it matters to you:</b> 团队正在做 agent evaluation 工具,和你 Persona 里的 HCI×ML 方向、&ldquo;Ambient Agents&rdquo; 项目直接相关;职位说明明确接受在读研究生远程实习。</p>
+                  <div class="rp-sec">What we verified · 3 sources</div>
+                  <div class="src"><span class="fav"></span><div><span class="s-t">meridianlabs.com/careers</span> <span class="s-m">· captured 07:12 today</span><div class="s-q">&ldquo;…open to current graduate students; remote within US time zones.&rdquo;</div></div></div>
+                  <div class="src"><span class="fav f2"></span><div><span class="s-t">greenhouse.io — posting #8841</span> <span class="s-m">· captured 07:13 today</span><div class="s-q">&ldquo;Visa sponsorship: F-1 OPT/CPT supported for internships.&rdquo;</div></div></div>
+                  <div class="src"><span class="fav f3"></span><div><span class="s-t">founder hiring thread (X)</span> <span class="s-m">· captured 07:13 today</span><div class="s-q">&ldquo;evals + interface work — send us your weirdest prototype.&rdquo;</div></div></div>
+                  <div class="evi">⚠ 1 项未核实:薪资范围只出现在第三方聚合站,原始职位页未标注——已标记为「不确定」,不写进结论。</div>
+                </div>
+                <div class="rp-rail">
+                  <div class="rp-sec">Outline</div>
+                  <div class="o-item on">Overview</div>
+                  <div class="o-item">Fit analysis</div>
+                  <div class="o-item">Sources (3)</div>
+                  <div class="o-item">Next steps</div>
+                  <div class="rp-sec" style="margin-top:20px;">Actions</div>
+                  <button class="rp-act hot">Save to Peer</button>
+                  <button class="rp-act">Export Markdown</button>
+                  <button class="rp-act">Open in Peer ↗</button>
+                </div>
+              </div>
+            </div>
+            <div class="pf-composer"><span class="plus">⨁</span><span class="grow">Ask about this report…</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="pin peer-pin" style="top:42%; left:34%;">1</div>
+      <div class="pin peer-pin" style="top:76%; left:56%;">2</div>
+      <div class="pin host-pin" style="bottom:7%; left:47%;">3</div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div class="note n-peer"><span class="nn">1</span><b>证据存在 Peer,不靠模型记忆。</b>每条来源带抓取时间和原文摘录,是 Peer 服务器核实并存档的。模型说错了可以对照原文——这是 Peer 和「纯聊天答案」的本质区别。</div>
+    <div class="note n-peer"><span class="nn">2</span><b>不确定就明说。</b>核实不了的信息(比如只有第三方站提到的薪资)被明确标出,不冒充事实。这套诚实规则由 Peer 的管线保证,不由模型自觉。</div>
+    <div class="note n-host"><span class="nn">3</span><b>模型是最好的阅读伴侣。</b>「把这份报告翻成中文」「据此写一封 cold email」「和我存的另一个岗位对比」——会员模型基于 Peer 给的事实来干语言活,各干各的强项。</div>
+  </div>
+  <div class="pager"><button class="pg-btn" data-nav="-1">← 上一屏:全屏预报</button><button class="pg-btn" data-nav="1">下一屏:改 Persona →</button></div>
+</section>
+
+<!-- ═══════════ SCREEN 5 · PERSONA WRITE + CONFIRM ═══════════ -->
+<section class="screen" id="sc4" hidden>
+  <div class="sc-head"><h2 class="sc-title"><span class="k">第 5 步</span>对话式修改 Persona——但落笔前必须确认</h2></div>
+  <p class="sc-scene">场景:用户随口说「把求职地点改成 Boston 和 remote」。ChatGPT 调用 Peer 的修改工具,但 Peer <b>不直接执行</b>:先弹出确认卡,把改动前后列清楚,用户点了 Confirm 才写入。</p>
+  <div class="frame-scroll"><div class="browser">
+    <div class="b-bar"><div class="b-dots"><i></i><i></i><i></i></div><div class="b-url">chatgpt.com</div></div>
+    <div class="b-ribbon">模拟示意 · Mockup</div>
+    <div class="sim-wrap">
+      <div class="sim">
+        <aside class="s-side">
+          <div class="s-brand"><span class="o-mark"></span>ChatGPT</div>
+          <div class="s-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New chat</div>
+          <div class="s-label">Apps</div>
+          <div class="s-app"><span class="p-mark">P</span>Peer</div>
+          <div class="s-label">Chats</div>
+          <div class="s-chat s-item on">今天的机会</div>
+          <div class="s-chat">对比两个 offer 的成长空间</div>
+        </aside>
+        <div class="s-main">
+          <div class="s-top">ChatGPT <span class="v">▾</span></div>
+          <div class="s-chatcol"><div class="s-col">
+            <div class="u-bubble">我下学期搬去 Boston,把我求职的地点改成 Boston 和 remote</div>
+            <div class="tool-chip"><span class="p-mark">P</span>Peer · <span class="tname">update_persona</span> <span class="pending">待确认</span></div>
+            <div class="confirm-card">
+              <div class="cc-head"><span class="p-mark">P</span><span class="t">Confirm Persona change</span></div>
+              <div class="cc-body">
+                <div class="cc-row"><span class="f">Location</span><span class="v"><span class="old">Seattle</span>Boston</span></div>
+                <div class="cc-row"><span class="f">Remote roles</span><span class="v"><span class="old">Off</span>On</span></div>
+                <div class="cc-row"><span class="f">生效范围</span><span class="v">从明天的 Daily Forecast 起</span></div>
+                <div class="cc-note">此修改写入你的 Peer 账号的 Persona,在 Peer 网站与所有连接的入口同步生效。</div>
+              </div>
+              <div class="cc-acts"><span class="ghost">Cancel</span><span class="hot">Confirm change</span></div>
+            </div>
+            <p class="a-text">确认后,我明天的预报就会按 Boston + Remote 来排。也可以随时去 Peer 的 Persona 页手动改。</p>
+          </div></div>
+          <div class="s-composer"><span class="plus">⨁</span><span class="grow">Ask anything</span><span class="mic">🎤</span></div>
+        </div>
+      </div>
+      <div class="pin host-pin" style="top:12%; right:23%;">1</div>
+      <div class="pin peer-pin" style="top:36%; left:47%;">2</div>
+      <div class="pin peer-pin" style="top:73%; left:56%;">3</div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div class="note n-host"><span class="nn">1</span><b>改设置像聊天一样自然。</b>不用找设置页,一句话就行——这是宿主模型贡献的体验。</div>
+    <div class="note n-peer"><span class="nn">2</span><b>写操作必须过确认关。</b>Peer 把改动前后并排列出,用户亲手点 Confirm 才落库。模型不能替用户做决定——这条规则由 Peer 服务器强制,不是靠提示词求模型自觉。</div>
+    <div class="note n-peer"><span class="nn">3</span><b>Persona 的正本永远在 Peer。</b>ChatGPT 的聊天记忆只是辅助;改动同步到 Peer 网站、Claude 入口和邮件推送。换宿主、删聊天记录,你的 Persona 都不丢。</div>
+  </div>
+  <div class="pager"><button class="pg-btn" data-nav="-1">← 上一屏:Report Reader</button><button class="pg-btn" data-nav="1" disabled>已是最后一屏</button></div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p>以上均为<b>设计模拟示意</b>,不是真实产品截图;ChatGPT 界面为示意性重绘,Peer 卡片使用 Peer 现行设计系统(暖象牙 / 沙色 / 亮橙)。对应 handoff 文档的 Phase 1(Peer 自有 MCP + 交互界面,只读优先)与 Phase 2(工作区试点)。Claude 侧的形态类似:以 interactive connector 呈现同一套卡片与全屏视图。<span class="serif">— membership-api-connection · 2026-08-12</span></p>
+</footer>
+
+<script>
+(function () {
+  var btns = Array.prototype.slice.call(document.querySelectorAll(".step-btn"));
+  var screens = Array.prototype.slice.call(document.querySelectorAll("section.screen"));
+  var cur = 0;
+  function go(i) {
+    if (i < 0 || i >= screens.length) return;
+    cur = i;
+    screens.forEach(function (s, k) { s.hidden = k !== i; });
+    btns.forEach(function (b, k) { b.setAttribute("aria-pressed", k === i ? "true" : "false"); });
+    var nav = document.querySelector("nav.steps");
+    var y = nav.getBoundingClientRect().bottom;
+    if (y < 0 || window.scrollY > 300) {
+      var target = document.querySelector("header.wrap").offsetHeight - 40;
+      window.scrollTo({ top: Math.max(0, target), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+  }
+  btns.forEach(function (b) {
+    b.addEventListener("click", function () { go(parseInt(b.getAttribute("data-go"), 10)); });
+  });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-nav]");
+    if (t && !t.disabled) go(cur + parseInt(t.getAttribute("data-nav"), 10));
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    if (e.key === "ArrowRight") go(cur + 1);
+    if (e.key === "ArrowLeft") go(cur - 1);
+  });
+})();
+</script>
