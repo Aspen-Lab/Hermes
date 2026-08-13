@@ -270,6 +270,84 @@ describe("company derivation", () => {
   });
 });
 
+describe("company derivation with the profile's own topics (B9-02b/c)", () => {
+  const topics = ["molten salt", "battery"];
+
+  // B9-02b: postdocjobs.com's live repro. Multi-word hardest case per
+  // Ruling 31 - the topic followed by a multi-word academic-field
+  // continuation ("Chemical and Electrochemical Engineering").
+  it("does not mistake a topic-prefixed research-field label for the company (postdocjobs.com shape)", () => {
+    const item = webResultToRawJobItem(
+      {
+        title: "Postdoctoral Fellow - Molten Salt Chemical and Electrochemical Engineering",
+        url: "https://postdocjobs.com/job/999001",
+        snippet: "Postdoctoral research position. Apply now.",
+      },
+      topics,
+    );
+    expect(item?.company).toBeUndefined();
+  });
+
+  // B9-02c: careerservices.upenn.edu's live repro, unchanged across two
+  // rounds before this fix - the simpler of the two live shapes, the topic
+  // followed by a single field noun.
+  it("does not mistake a topic-prefixed research-field label for the company (careerservices.upenn.edu shape)", () => {
+    const item = webResultToRawJobItem(
+      {
+        title: "Research Associate - Molten Salt Characterization",
+        url: "https://careerservices.upenn.edu/jobs/12345",
+        snippet: "Research position in molten salt characterization. Apply now.",
+      },
+      topics,
+    );
+    expect(item?.company).toBeUndefined();
+  });
+
+  // The "should match nothing" hardest case, named explicitly in B's own
+  // guide: a real employer name that happens to share a word with a search
+  // topic must survive. The topic is not a PREFIX of this candidate (it
+  // sits in the middle), and "Technologies" is not in the closed
+  // field-vocabulary list either - two independent reasons it survives.
+  it("does not reject a real employer name that merely shares a word with a topic", () => {
+    const item = webResultToRawJobItem(
+      {
+        title: "Battery R&D Intern - Acme Molten Salt Technologies",
+        url: "https://acme.test/careers/job/9930",
+        snippet: "Research internship in molten salt battery R&D. Apply now.",
+      },
+      topics,
+    );
+    expect(item?.company).toBe("Acme Molten Salt Technologies");
+  });
+
+  // The other "must survive" case B named: a multi-word employer sharing no
+  // words with any topic at all is trivially unaffected.
+  it("does not reject a multi-word employer name sharing no words with any topic", () => {
+    const item = webResultToRawJobItem(
+      {
+        title: "Battery R&D Intern - Idaho National Laboratory",
+        url: "https://inl.jobs/careers/job/9931",
+        snippet: "Research internship in molten salt battery R&D. Apply now.",
+      },
+      topics,
+    );
+    expect(item?.company).toBe("Idaho National Laboratory");
+  });
+
+  // Additive and optional, per this loop's own standing contract: the
+  // identical postdocjobs.com-shaped candidate above, with NO topics
+  // supplied at all, must reproduce exactly today's pre-fix behaviour -
+  // proving the new guard cannot fire unless a caller opts in.
+  it("does not apply the topic-label guard when no topics are supplied", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoctoral Fellow - Molten Salt Chemical and Electrochemical Engineering",
+      url: "https://postdocjobs.com/job/999001",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBe("Molten Salt Chemical and Electrochemical Engineering");
+  });
+});
+
 describe("listing titles hidden behind site chrome", () => {
   it("rejects a careers index whose label is only the first title segment", () => {
     expect(

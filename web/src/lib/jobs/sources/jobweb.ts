@@ -129,6 +129,59 @@ function stripTrailingCareersChrome(
 }
 
 /**
+ * A research-subject/field label rendered as if it were the employer
+ * (B9-02b/c/R13) — "Molten Salt Chemical and Electrochemical Engineering"
+ * (`postdocjobs.com`), "Molten Salt Characterization"
+ * (`careerservices.upenn.edu`, unchanged across two rounds). Both live
+ * examples clear every guard above cleanly, because none of them has any
+ * concept of "reads as a field of study, not an organisation."
+ *
+ * Fix direction B recommended (of two offered, chosen as "the safer
+ * starting point"): reuse the profile's own search topics — which is
+ * exactly what put this posting in the pool in the first place — rather
+ * than a structural "field phrasing" grammar B explicitly warned risks
+ * becoming a general parser. Two narrow, closed checks:
+ *  1. The candidate IS one of the profile's own topics, verbatim
+ *     (case/whitespace-insensitive) — a job's "employer" being literally
+ *     the search topic that found it is never a real organisation name.
+ *  2. The candidate STARTS WITH one of the profile's own topics as a
+ *     whole-word prefix, and everything after it is drawn from a short,
+ *     closed academic-field vocabulary (an adjective, "and", or a field
+ *     noun) — the exact shape of both live-confirmed repros
+ *     ("<topic> Characterization", "<topic> Chemical and Electrochemical
+ *     Engineering"). Deliberately narrow and deliberately incomplete, per
+ *     B's own framing: a real org name sharing one word with a topic
+ *     ("Acme Molten Salt Technologies") survives, because the topic is not
+ *     a PREFIX of the candidate (it's in the middle) and "Technologies" is
+ *     not in the closed vocabulary — this under-catches on purpose rather
+ *     than risk rejecting a real employer name.
+ */
+const FIELD_LABEL_CONTINUATION_WORD_RE =
+  /^(?:and|chemical|electrochemical|mechanical|materials?|characterization|characterisation|engineering|chemistry|science|sciences)$/i;
+
+function normalizeTopicText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
+  if (topics.length === 0) return false;
+  const normalizedCandidate = normalizeTopicText(candidate);
+  if (!normalizedCandidate) return false;
+  for (const topic of topics) {
+    const normalizedTopic = normalizeTopicText(topic);
+    if (!normalizedTopic) continue;
+    if (normalizedCandidate === normalizedTopic) return true;
+    if (!normalizedCandidate.startsWith(`${normalizedTopic} `)) continue;
+    const remainder = normalizedCandidate.slice(normalizedTopic.length).trim();
+    const words = remainder.split(/\s+/).filter(Boolean);
+    if (words.length > 0 && words.every((word) => FIELD_LABEL_CONTINUATION_WORD_RE.test(word))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * True when the result is an aggregate listing or a careers index rather than
  * a single posting.
  *
@@ -169,11 +222,20 @@ interface BraveResult {
   description?: string;
 }
 
-export function webResultToRawJobItem(result: {
-  title?: string;
-  url?: string;
-  snippet?: string;
-}): RawJobItem | null {
+export function webResultToRawJobItem(
+  result: {
+    title?: string;
+    url?: string;
+    snippet?: string;
+  },
+  // B9-02b/c (round 9): additive and optional, defaults to "no topics" so
+  // every existing caller (this file's own two search functions before
+  // this item, and every test in jobweb.test.ts) is unaffected unless it
+  // opts in. The profile's own search topics — plumbed from JobsQuery,
+  // which already carries them for scoring — are the signal
+  // looksLikeTopicLabel needs.
+  topics: string[] = [],
+): RawJobItem | null {
   const title = cleanJobTitle(result.title);
   const url = result.url?.trim();
   if (!title || !url) return null;
@@ -235,7 +297,8 @@ export function webResultToRawJobItem(result: {
           !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d)) &&
           !SEASON_COHORT_LABEL_RE.test(p) &&
           !looksLikeBareLocation(p) &&
-          !looksLikeHostBrand(p, host),
+          !looksLikeHostBrand(p, host) &&
+          !looksLikeTopicLabel(p, topics),
       ),
   );
   return {
@@ -255,6 +318,7 @@ async function searchTavily(
   query: string,
   apiKey: string,
   limit: number,
+  topics: string[],
 ): Promise<RawJobItem[]> {
   try {
     const res = await fetch("https://api.tavily.com/search", {
@@ -273,7 +337,7 @@ async function searchTavily(
     if (!res.ok) return [];
     const data = (await res.json()) as { results?: TavilyResult[] };
     return (data.results ?? [])
-      .map((r) => webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.content }))
+      .map((r) => webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.content }, topics))
       .filter((item): item is RawJobItem => item !== null);
   } catch (err) {
     console.error("[jobs/jobweb] tavily error:", err);
@@ -285,6 +349,7 @@ async function searchBrave(
   query: string,
   apiKey: string,
   limit: number,
+  topics: string[],
 ): Promise<RawJobItem[]> {
   const params = new URLSearchParams({
     q: query,
@@ -304,7 +369,7 @@ async function searchBrave(
     const data = (await res.json()) as { web?: { results?: BraveResult[] } };
     return (data.web?.results ?? [])
       .map((r) =>
-        webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.description }),
+        webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.description }, topics),
       )
       .filter((item): item is RawJobItem => item !== null);
   } catch (err) {
@@ -333,8 +398,8 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
     searches.map((q) => {
       const jobQuery = `${q} position opening apply`;
       return keys.tavily
-        ? searchTavily(jobQuery, keys.tavily, perQuery)
-        : searchBrave(jobQuery, keys.brave!, perQuery);
+        ? searchTavily(jobQuery, keys.tavily, perQuery, query.topics)
+        : searchBrave(jobQuery, keys.brave!, perQuery, query.topics);
     }),
   );
   const all: RawJobItem[] = [];

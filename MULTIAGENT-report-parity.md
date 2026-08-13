@@ -18172,3 +18172,117 @@ failure remains `benchmark.test.ts`'s documented live-search flake, same
 clean. Lint: exactly the 1 pre-existing `quiz.tsx:46` error.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-02b/c: `postdocjobs.com`/`careerservices.upenn.edu`'s topic-label-as-employer)
+
+**STATUS: LANDED.** Fifth item on B's work order, scoped and risk-assessed
+on its own per B's own instruction, not bundled with B9-02a. The riskiest
+remaining item this turn — the only one requiring a signature change — sized
+and landed narrower than B's own worst-case framing turned out to require.
+
+**The signature change was smaller than B's guide anticipated.**
+B's blast-radius note said threading the topic list in "needs the profile's
+topic list threaded into `webResultToRawJobItem` or its caller, which today
+only receives `{title, url, snippet}` — a signature change." Checked
+`JobsQuery` (`web/src/lib/jobs/types.ts:83`) before writing anything: it
+**already carries `topics: string[]`**, read but never used inside
+`jobweb.ts`'s `fetchImpl`. So the actual change is threading an
+already-available field one level further down this same file — `fetchImpl`
+→ `searchTavily`/`searchBrave` → `webResultToRawJobItem` — not adding a new
+field anywhere upstream, and touching no file outside `jobweb.ts`.
+
+**Read the real profile's topics before designing the rule, without running
+a live search or reading any key.** `web/.local-data/profile.json` is
+present in this checkout (§2's own precedent for A's real-data pass); read
+**only** its non-secret array-of-string fields via a small Node script that
+explicitly filtered out anything matching `/key|secret|token/i` before
+printing — confirmed `"molten salt"` is one of this profile's own
+`researchTopics`, exactly as both live-confirmed defect strings assume. No
+API called, no key read or printed, matching this loop's standing
+credential rule.
+
+**Implemented exactly B's recommended approach (of two offered, chosen as
+"the safer starting point"), scoped narrower than B's own approach (2) on
+purpose:**
+1. **Exact match** — candidate equals a profile topic verbatim
+   (case/whitespace-insensitive) → reject. Near risk-free: a job's employer
+   being literally the search topic that found it is never a real
+   organisation name.
+2. **Topic-prefix + closed academic-field vocabulary** — candidate STARTS
+   WITH a topic as a whole-word prefix, and everything after it is drawn
+   from a short, closed list (`and`, a handful of field adjectives —
+   `chemical`/`electrochemical`/`mechanical`/`materials`, and field nouns —
+   `characterization`/`engineering`/`chemistry`/`science`) → reject. Sized
+   to exactly the vocabulary the two live repros need plus their closest,
+   extremely common synonyms, not a general "field phrasing" grammar — B's
+   own approach (2), explicitly not built. **Deliberately under-catches**,
+   per B's own framing: a real employer sharing one word with a topic
+   survives both because the topic is not a PREFIX (it's mid-string) and
+   because org-identifying words ("Technologies", "Laboratory") are not in
+   the closed vocabulary.
+
+**Verified the exact matcher by hand against 10 cases — including this
+profile's real topic list — before writing any product test, per Ruling
+31.** Confirmed both live repro shapes reject, an exact-topic candidate
+rejects, a real org sharing a topic word survives (twice — once via the
+prefix requirement, once via the vocabulary gate), a topic-prefixed
+candidate followed by a non-vocabulary word survives, and an unrelated
+multi-word org survives. All 10 correct on the first run (the earlier
+heredoc-escaping lesson from the previous item was already learned; used
+the file-writing tool again here).
+
+**Additive and optional, verified explicitly, not just claimed:**
+`webResultToRawJobItem(result, topics: string[] = [])` — every existing
+caller (this file's own two search functions before this item's edit, and
+all 18 pre-existing calls in `jobweb.test.ts`) omits the new parameter and
+defaults to `[]`, under which `looksLikeTopicLabel` always returns `false`
+(checked at the top of the function) — a provable no-op. One of the five new
+tests below runs the identical postdocjobs.com-shaped candidate with no
+`topics` argument at all and asserts today's pre-fix (wrong) value is
+unchanged, proving the guard cannot fire unless a caller opts in.
+
+**Five tests added to a new `describe("company derivation with the
+profile's own topics (B9-02b/c)")` block in `jobweb.test.ts`, per Ruling 31:**
+1. **Multi-word hardest case, the live repro itself** —
+   `postdocjobs.com`'s `"Molten Salt Chemical and Electrochemical
+   Engineering"` → `company` undefined.
+2. **The simpler live shape** — `careerservices.upenn.edu`'s `"Molten Salt
+   Characterization"` (unchanged across two rounds before this fix) →
+   `company` undefined.
+3. **The "should match nothing" hardest case, named explicitly in B's own
+   guide** — `"Acme Molten Salt Technologies"` (a real employer sharing a
+   topic word) → survives as `company`.
+4. **B's other named must-survive case** — a multi-word employer
+   (`"Idaho National Laboratory"`) sharing no words with any topic →
+   survives, unaffected.
+5. **Additive/optional proof** — the postdocjobs.com shape again, with no
+   `topics` argument, reproduces today's pre-fix value verbatim.
+
+**Tests at risk — checked, none found requiring changes.** `JobsQuery.topics`
+was already a required field on the type (confirmed in
+`query-budget.test.ts` and `daily-search-budget.test.ts`, both of which
+already supply `topics: ["battery"]` — required by the type before this
+item existed, not added by it), so no existing `JobsQuery`-constructing test
+needed updating; `tsc --noEmit` running clean end to end confirms this
+rather than a file-by-file guess. `searchTavily`/`searchBrave` are file-
+private (grepped, no reference outside `jobweb.ts`), so making their new
+`topics` parameter non-optional (unlike the exported function's own default)
+is safe — both callers inside this file were updated in the same edit.
+
+**Blast radius:** `webResultToRawJobItem`'s two production callers
+(`searchTavily`, `searchBrave`) and one new upstream pass-through
+(`fetchImpl`'s call to both) — all inside `jobweb.ts`. No other file
+changed. `FIELD_LABEL_CONTINUATION_WORD_RE`/`looksLikeTopicLabel` are new,
+unexported, file-local.
+
+**What renders after this guard fires:** unchanged from B9-01's own
+confirmed-clean chain — falls through the same guarded `.find()` to the next
+candidate, or `undefined` and silence if none remain, same render path
+already verified this round.
+
+**Gate: 90 files / 1043 tests, 1042 passing (+5, none deleted).** The one
+failure remains `benchmark.test.ts`'s documented live-search flake, same
+assertion as every run this turn. Typecheck clean. Lint: exactly the 1
+pre-existing `quiz.tsx:46` error.
+
+Commit follows immediately.
