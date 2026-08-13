@@ -397,6 +397,63 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B11-02 (round 11, Rulings 32/35): the sequel to B10-03 above, same host.
+  // Once "Call for Papers" is correctly rejected as a title segment,
+  // execution reaches the snippet-mining stage — which filtered candidates
+  // with `looksLikeEvent` alone, a topicality check that happily passes a
+  // full narrative sentence containing one topic keyword. ecs.confex.com
+  // rendered "Invited speakers present keynote lectures." live as a result.
+  describe("snippet stage shape guard (B11-02)", () => {
+    // THE hardest real shape, and the case B11-01 identified as the actual
+    // live mechanism: two candidates in one snippet, both passing
+    // `looksLikeEvent` ("Meeting" and "keynote" are both on its list), where
+    // the WRONG one wins the longest-fragment tie-break by two characters
+    // (42 vs 40). Both fragments are real and confirmed present on the live
+    // page by round 11 A part 2. No test in either file exercising this
+    // stage had more than one viable candidate before this one, which is
+    // why nothing caught the regression: with `looksLikeEvent` as the only
+    // filter this returns the narrative sentence, not the name.
+    it("prefers the real name over a longer narrative sentence in the same snippet", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "250th ECS Meeting (October 25-29, 2026). Invited speakers present keynote lectures.",
+        ),
+      ).toBe("250th ECS Meeting (October 25-29, 2026).");
+    });
+
+    // The narrative sentence on its own, with nothing better beside it. The
+    // guard is only a fix if what replaces the rejected value is defensible
+    // (Ruling 26): here every candidate is rejected, so execution falls
+    // through to the honest URL-host last resort (B9-04 Fix 1) rather than
+    // reinstating the string the guard just rejected.
+    it("falls through to the honest host when the only candidate is a narrative sentence", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Invited speakers present keynote lectures.",
+          "https://www.ecs.confex.com/ecs/250/cfp.cgi",
+        ),
+      ).toBe("ecs.confex.com");
+    });
+
+    // B11-01's enumeration shape 4, closed as a side effect of filtering
+    // BEFORE the `looksLikeEvent` preference tier rather than after it: when
+    // no fragment is event-like at all, the old ternary discarded the
+    // filter's verdict wholesale and returned the longest raw fragment. The
+    // snippet here has no topic keyword and its longest fragment is a
+    // narrative sentence, so the old code returned that sentence.
+    it("does not reinstate an unfiltered fragment when nothing is event-like", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "The venue was refurbished last year and now seats twelve hundred people.",
+          "https://example.org/cfp",
+        ),
+      ).toBe("example.org");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.

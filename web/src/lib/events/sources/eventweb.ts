@@ -543,6 +543,26 @@ function nameFromUrlSlug(url: string): string | undefined {
   return words.charAt(0).toLocaleUpperCase() + words.slice(1);
 }
 
+/**
+ * B11-02 (round 11): extracted verbatim from `bestEventTitleSegment`'s own
+ * inline block, unchanged in behaviour, because `eventNameFrom`'s snippet
+ * stage now needs the identical value to run the identical guards. Two
+ * copies of this derivation that must agree for the two stages to guard the
+ * same way is exactly the drift this loop has been bitten by before; one
+ * function cannot drift from itself. `eventNameFrom`'s final URL-host
+ * fallback deliberately does NOT use this helper — it must return an empty
+ * hostname verbatim where this helper's callers want a falsy "no host,
+ * don't run the brand checks" instead.
+ */
+function hostFromUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return undefined;
+  }
+}
+
 export function bestEventTitleSegment(
   title: string,
   url?: string,
@@ -561,14 +581,7 @@ export function bestEventTitleSegment(
   // B5-06/R13 gap 2. host is undefined when eventNameFrom is called without
   // a URL (some tests, and any future caller that doesn't have one) — the
   // brand checks inside isChromeSegment simply don't run in that case.
-  let host: string | undefined;
-  if (url) {
-    try {
-      host = new URL(url).hostname.replace(/^www\./, "");
-    } catch {
-      host = undefined;
-    }
-  }
+  const host = hostFromUrl(url);
 
   const informative = segments.filter(
     (part) => !isChromeSegment(part, host, options) && looksLikeEventTitle(part),
@@ -602,12 +615,43 @@ export function eventNameFrom(
   }
 
   // Otherwise mine the snippet for its most informative event-like phrase.
+  //
+  // B11-02 (round 11, Rulings 32/35): this stage used to filter candidates
+  // with `looksLikeEvent` ALONE — a topicality check (does this text mention
+  // a conference/keynote/symposium at all?) already used upstream to decide
+  // whether a web result is about an event, with no concept of sentence
+  // shape, narration, or scraped markup. It is not a name-quality check and
+  // was never meant to be one. The title-segment stage above has had every
+  // guard this loop built since round 4 (`isChromeSegment` +
+  // `looksLikeEventTitle`); this stage had none of them, so a full narrative
+  // sentence containing one topic keyword sailed through here after being
+  // correctly rejected one stage earlier. Live-confirmed on ecs.confex.com,
+  // which rendered "Invited speakers present keynote lectures." as an event
+  // name: `looksLikeEvent` passes it ("keynote"), `looksLikeEventTitle`
+  // rejects it, and only the first check ran. Reuse of the existing pair,
+  // not a new parallel check — B11-01's enumeration confirmed the URL-slug
+  // stage above is already re-guarded by this same pair, so this makes the
+  // snippet stage the last one to get them rather than inventing anything.
+  //
+  // Applying them to `nameLike` FIRST, ahead of the `looksLikeEvent`
+  // preference tier, also closes B11-01's enumeration shape 4 for free: the
+  // `eventLike.length > 0 ? ... : ...` ternary now falls back to the
+  // hard-filtered `nameLike`, never to raw `substantial`, so a snippet in
+  // which nothing scores as event-like can no longer discard the guard's
+  // verdict wholesale and hand back its longest unfiltered fragment. When
+  // every candidate is rejected, execution falls through to the honest URL-
+  // host last resort below (B9-04 Fix 1), which already exists — per Ruling
+  // 35, no new fallback needed designing.
+  const host = hostFromUrl(url);
   const substantial = snippet
     .split(/(?<=[.!?])\s+|\s+[|·–—]\s+|\n/)
     .map((part) => part.trim())
     .filter((part) => part.length >= 20 && part.length <= 120);
-  const eventLike = substantial.filter((part) => looksLikeEvent(part));
-  const pool = eventLike.length > 0 ? eventLike : substantial;
+  const nameLike = substantial.filter(
+    (part) => !isChromeSegment(part, host) && looksLikeEventTitle(part),
+  );
+  const eventLike = nameLike.filter((part) => looksLikeEvent(part));
+  const pool = eventLike.length > 0 ? eventLike : nameLike;
   if (pool.length > 0) {
     return pool.reduce((best, part) => (part.length > best.length ? part : best));
   }

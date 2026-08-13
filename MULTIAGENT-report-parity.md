@@ -22394,3 +22394,103 @@ in place. Round 11's C is the first worker to run on Opus.
 **Manager's turn complete. `WHOSE TURN: C` stands as B left it, now governed
 by Ruling 36. Round 11 C is spawned next.**
 
+---
+
+### Round 11 — Agent C (B11-02: snippet stage gets the title stage's own shape guard — LANDED)
+
+**STATUS: DONE, committed and pushed.** Claimed the turn lock (`49ef3bd`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 16:06 UTC`) after `git pull --ff-only` (already
+up to date) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's
+whole `WHOSE TURN: C` block, §1v Ruling 35 **including its dated amendment**,
+§1w Ruling 36, §2, §3, all six B11 entries plus B's summary entry, and §4
+"Round 11 — MANAGER verification of Agent B" before touching any code.
+
+**Baseline confirmed cold before the first edit, not taken on trust:** 90
+files / 1067 tests, 1066 passing, the sole failure `benchmark.test.ts`'s
+documented live-search flake (city coverage 0.47 against a 0.5 floor — it
+RUNS on this laptop because the live keys are present, and SKIPS in the
+credential-less cloud; both are normal). This matters because the manager's
+own verification of B established the baseline from a `git diff` rather than
+a run; a cold run confirms the diff-based reasoning held.
+
+**What landed**, `web/src/lib/events/sources/eventweb.ts`, exactly B's
+verified fix direction, no widening:
+
+1. `eventNameFrom`'s snippet-mining stage now hard-filters `substantial`
+   through `!isChromeSegment(part, host) && looksLikeEventTitle(part)` into a
+   new `nameLike` list, **ahead of** the existing `looksLikeEvent` preference
+   tier. `eventLike` is now derived from `nameLike`, and the ternary's
+   fallback arm is `nameLike`, never raw `substantial`.
+2. **One deviation from B's sketch, taken up as the style option B itself
+   offered and logged rather than done silently:** B's sketch inlines a
+   second copy of the five-line `new URL(url).hostname.replace(/^www\./, "")`
+   host derivation. Extracted it instead into a `hostFromUrl` helper and
+   pointed **both** `bestEventTitleSegment` and the new snippet-stage call at
+   it. Rationale: two copies of the derivation that must agree for the two
+   stages to guard identically is precisely the drift shape this loop keeps
+   getting bitten by, and one function cannot drift from itself. The
+   extraction is semantically identical (same parse, same `www.` strip, same
+   `undefined` on throw or absent URL). **Deliberately NOT applied to
+   `eventNameFrom`'s final URL-host fallback**, where a URL that parses to an
+   empty hostname must still return that empty string verbatim rather than
+   being coerced to a falsy "no host" — a real behavioural difference, so
+   that call site is untouched.
+
+**Everything below the snippet stage is unchanged.** When every candidate is
+now rejected, execution falls all the way through to the URL-host / "Untitled
+event" last resort (B9-04 Fix 1), which already existed. Per Ruling 35, no
+new fallback needed designing and none was designed. Per Ruling 26 this is
+what makes it a fix rather than just a guard: the replacement is defensible,
+and one of the new tests asserts exactly that fall-through rather than
+assuming it.
+
+**Closes B11-01's enumeration shape 4 for free**, as B predicted — because
+the hard filter runs *before* the preference tier, the
+`eventLike.length > 0 ? eventLike : nameLike` ternary can no longer discard
+the guard's verdict wholesale when nothing is event-like. There is now an
+executable test for that latent path (third case below), so it is closed with
+evidence rather than by argument.
+
+**Three new tests**, `web/src/lib/events/sources/eventweb.test.ts`, in a new
+`describe("snippet stage shape guard (B11-02)")` placed directly after the
+B10-03 block — same host, same lineage, so the sequence reads in order:
+
+- **The two-candidate tie-break — the one Ruling 31 case that would have
+  caught this live regression before it shipped.** Both real `ecs.confex.com`
+  fragments B11-01 §2 confirmed exist on the page, in one snippet: the
+  40-char correct name and the 42-char narrative sentence. Both pass
+  `looksLikeEvent` ("Meeting" and "keynote" are both on its list), so the
+  old longest-wins tie-break returned the wrong one by a two-character
+  margin. No existing case in either file had more than one viable
+  20–120-char candidate, which is exactly why nothing caught it.
+- **The narrative sentence alone, with a URL**, asserting the honest host
+  (`ecs.confex.com`) is what reaches the reader — Ruling 26's requirement
+  that the guard's replacement be checked, not assumed.
+- **Nothing event-like at all**, asserting shape 4's latent path returns the
+  honest host rather than the longest unfiltered fragment.
+
+**Gate after this item: matches baseline plus the three new tests.** 90 files
+/ 1070 tests, 1069 passing; the only failure is `benchmark.test.ts`'s
+documented live flake (0.41 this run — a different number each run, which is
+what a live-search flake looks like). `npx tsc --noEmit` clean. `npx eslint`
+reports exactly the one standing pre-existing error (`quiz.tsx:46`), none
+added.
+
+**All three new tests were proved to FAIL against the pre-fix code, by
+execution, not by argument.** Copied the edited source aside, `git checkout
+--`'d it back to HEAD, ran `eventweb.test.ts` alone against the unmodified
+original: **3 failed / 44 passed**, the three failures being exactly the three
+new cases (the tie-break returned the 42-char narrative sentence; the
+host-fallthrough cases returned the raw fragments). Restored the fix, re-ran,
+all pass. A new test that would also have passed before the fix proves
+nothing — this loop has shipped that mistake before, so the check is now on
+the record. The temporary copy was deleted immediately; `git status` shows no
+stray file.
+
+**No existing test assertion was changed or deleted** — B's construction-based
+prediction of zero changed assertions across `eventweb.test.ts` and
+`scoring.test.ts` held exactly, confirmed by both files passing untouched.
+
+Commit follows immediately.
+
