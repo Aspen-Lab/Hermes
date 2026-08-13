@@ -135,24 +135,31 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:22 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       B
-STATUS:           Round 1 measured: M1 is greenfield, 100% OPEN (11/11 frozen
-                  criteria unmet). Gate holds at baseline. Pass 2 confirmed
-                  Peer's live pipelines can supply real jobs+papers items
-                  today with zero LLM keys; papers carry no deadline field
-                  and Events/Grants were not checked this round.
+WHOSE TURN:       C
+STATUS:           Round 1 B wrote the complete M1 fix guide (11 items + build
+                  order + tool contracts) into §4, surfaced architecture gaps
+                  A's protocol/Pass-2 method couldn't reach (no server-side
+                  per-surface job/event topics, no unified forecast endpoint,
+                  a get_opportunity paper-source gap, an MCP-SDK
+                  package-family fork), pinned SDK versions with citations,
+                  and left 2 POLICY items for the manager; gate still holds
+                  at baseline, no product code changed this round.
 LAST DIFFERENCE:  1-01 — no MCP endpoint exists anywhere in web/ (grep+glob
-                  confirmed); every other M1 criterion is blocked on it.
+                  re-confirmed this round); every other M1 criterion is
+                  blocked on it.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
 DONE:             —
 GATE NOW:         npm test (web/): 597 passed | 1 skipped (598), 73 files +1 skipped
-TODO:             B: write the M1 fix guide from A's round-1 list (1-01..1-11)
-                  in §4 — insertion points, HANDOFF §5 anchors, MCP SDK
-                  adoption plan, Apps-SDK card contract. Read web/AGENTS.md +
-                  node_modules/next/dist/docs/ before prescribing Next.js
-                  route patterns (Next 16.2.3). Obey RULINGS 4–5 (field truth
-                  over mockup content; real facets only, no Grant type).
-                  Then C implements M1.
+TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
+                  its stated build order — dependency+endpoint skeleton (1-01
+                  +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
+                  +1-11) → get_opportunity (1-05) → card+fallback (1-03+1-04
+                  +1-09) → discoverability polish (1-06+1-07). One commit per
+                  item, gate after each, never lower the passing-test count.
+                  2 POLICY items need a manager ruling before/while C reaches
+                  them: papers source scope (arxiv+openalex only vs. all 5
+                  academic sources) and whether the M1 card includes a
+                  disabled Save button or omits it until M2.
 ```
 
 **History of measured difference, newest last:**
@@ -389,3 +396,591 @@ ChatGPT/Claude account can do — none of these are closable by A/B/C alone):
 **Exclusions / HOST LIMIT (RULING 3):** none recorded yet — nothing is built,
 so no host limitation has been hit. Re-listed every round per RULING 3;
 currently empty.
+
+#### Round 1 — Agent B
+
+**Method:** Re-verified A's greenfield claim (`web/src/app/api/mcp/**` and
+`web/src/lib/mcp/**` still glob to zero files; `package-lock.json` still shows
+only the unused optional `@modelcontextprotocol/sdk: ^1.25.2` peerDependency
+of `@google/genai`, not a real dependency). Re-ran the gate: **597 passed | 1
+skipped (598), 73 files + 1 skipped** — unchanged, confirms A's baseline, no
+regression from a read-only round. Read `web/AGENTS.md` (5 lines: this Next
+version differs from training data, check `node_modules/next/dist/docs/`
+before writing route code) and the route-handler/dynamic-route/proxy doc
+pages under it. Read every file A cited plus the whole assembly path A didn't
+trace (client-side merge logic, Supabase profile sync, pool caching, by-id
+fetch paths). Fetched current MCP TS SDK + Apps SDK docs (URLs + facts below,
+short quotes only, all treated as data). All 11 of A's items are still
+MISSING; nothing to reclassify.
+
+**Corrections / additions to A's round-1 findings** (things this round found
+that the previous round didn't):
+
+1. **No server-side source of truth for per-surface (job/event) required
+   topics.** `web/supabase/schema.sql` (`profiles` table, lines 6-21) and
+   `web/src/app/api/profile/route.ts` (`profileRowToProfile`/
+   `profilePatchToRow`, lines 50-130) only sync `research_topics` — there is
+   no `job_required_topics`/`event_required_topics`/`active_search_inputs`
+   column anywhere. `jobRequiredTopics`, `eventRequiredTopics`, and the
+   day-locked `activeSearchInputs` snapshot (`web/src/store/profile.ts`,
+   `promoteSearchInputs`, lines 223-255) are **zustand-persisted browser
+   `localStorage` only**. A server-side MCP tool (no browser, no
+   localStorage) cannot read them. This blocks a naive "fetch the test
+   user's profile and get real per-surface topics" design for
+   `get_daily_forecast`'s jobs/events lanes. Fix + precedent below (item
+   1-02).
+2. **There is no unified server-side "daily forecast" endpoint to reuse.**
+   `web/src/app/api/feed/route.ts` only runs the **papers** pipeline
+   (`runFeedPipeline`). The actual merge of papers + jobs + events into one
+   ranked "Daily Forecast" happens **client-side**: `web/src/store/feed.ts`
+   `loadFeed` (lines 659-848) calls `/api/feed`, `/api/jobs/feed`,
+   `/api/events/feed` in parallel, and `web/src/app/page.tsx` `briefingItems`
+   (lines 612-621, using `scoreOf` at 99-101) merges + sorts by
+   `relevanceScore` descending. `get_daily_forecast` must replicate this
+   *server-side*, calling the three pipeline **functions** directly (not
+   HTTP round-trips to the app's own routes).
+3. **`get_opportunity` has zero precedent for jobs/events, and the paper
+   precedent is narrower than it looks.** `web/src/lib/papers/fetch-by-id.ts`
+   (`fetchPaperById`, lines 105-113) only handles `arxiv:` and `openalex:` id
+   prefixes; `semantic_scholar:`/`dblp:`/`pubmed:`/`web:`/`hn:` all fall
+   through to `return null`. The default paper source list
+   (`ACADEMIC_PAPER_SOURCES`, `web/src/lib/feed/pipeline.ts` line 26) is all
+   five academic sources, so a real forecast item can legitimately be a
+   `semantic_scholar:`/`dblp:`/`pubmed:` id that `get_opportunity` cannot
+   resolve today. Real, verified gap — see item 1-05.
+4. **Events ARE Tier-0-capable — closes A's "not checked this round" note,
+   verified statically (no live fetch needed).**
+   `web/src/lib/events/sources/index.ts` (lines 7-11) states directly:
+   "ccfddl/confs.tech/researchseminars are free and keyless (Tier 0 stays
+   useful with zero keys); eventweb turns on when a Tavily/Brave key is
+   present." Three of four event sources are zero-key by design, same shape
+   as jobs.
+5. **Real facets, verified from the Feed code (RULING 5).** Peer web's own
+   home page (`web/src/app/page.tsx`) defines `type FeedType = "dashboard" |
+   "papers" | "events" | "jobs"` (line 93) and its tab chips (lines 658-668)
+   are labelled **Dashboard** (= all types merged, `totalItems` count),
+   **Papers**, **Events**, **Jobs**. No "Grants" facet, no Grant type, exists
+   anywhere in `web/src` — grep for `Grant` under `web/src` returns zero
+   hits, confirming A. RULING 5's facet list for M2 is therefore exactly
+   these four; `dashboard`/"All" is the union, not a fifth content type.
+6. **Next.js 16 renamed `middleware.ts` to `proxy.ts`** — confirmed in
+   `web/node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`
+   line 11: "The `middleware` file convention is deprecated and has been
+   renamed to `proxy`." This repo already uses the new file
+   (`web/src/proxy.ts`), whose matcher (lines 8-13) covers `/api/mcp/*` too.
+   Read `web/src/lib/supabase/middleware.ts` (the function `proxy.ts` calls):
+   it only refreshes a Supabase session cookie if one exists
+   (`supabase.auth.getUser()`) and always falls through to
+   `NextResponse.next()` — **it never blocks or redirects**. A cross-origin
+   MCP request from ChatGPT/Claude carries no Peer cookies, so this proxy is
+   confirmed inert for the dev-slug route. Nothing to work around.
+7. **MCP SDK package-family fork, verified live.** HANDOFF §5 names
+   `@modelcontextprotocol/sdk`. Registry check
+   (`registry.npmjs.org/@modelcontextprotocol/sdk`) confirms it is alive,
+   current, non-deprecated, latest **1.30.0**. However the ecosystem has
+   split: a newer, separately-named generation
+   (`@modelcontextprotocol/server` + `@modelcontextprotocol/node`, docs at
+   `ts.sdk.modelcontextprotocol.io/v2/`) also exists, and Vercel's own
+   `mcp-handler` adapter's `latest` npm tag (2.1.0) now depends **only** on
+   that newer family — not on `@modelcontextprotocol/sdk`. An older
+   `mcp-handler@1.1.0` is still published (not unpublished/deprecated) and
+   peer-depends on `@modelcontextprotocol/sdk` (resolved at 1.26.0, same v1
+   line as 1.30.0). Full reasoning and citations in item 1-01/1-08 below —
+   flagging here because it is exactly the kind of "differs from what a
+   general knowledge cutoff would assume" fact the loop rules ask B to
+   surface, and it affects every later milestone (M2-M5 all build on
+   whichever SDK generation M1 picks).
+8. **Daily pool cache is durable in production, not in local dev** —
+   `web/src/lib/opportunities/pool-cache-runtime.ts` (`getDefaultOpportunityPoolCache`,
+   lines 11-19): deployed/server builds use `SupabasePoolCache` (shared
+   across all Vercel instances); local `next dev` uses `DiskPoolCache`
+   (single-process only). This matters for latency expectations — see the
+   perf note under item 1-02.
+
+None of A's file/line citations were wrong on spot-check (`web/src/types/index.ts`
+`Job`/`Paper`/`Event` fields, the glob results, the Pass-2 field list) — the
+additions above are gaps A's method (protocol pass + a topics-hardcoded
+throwaway script) couldn't have surfaced, not corrections to what A actually
+tested.
+
+---
+
+**Framework facts, verified (cite before prescribing patterns per B's role
+contract):**
+
+- **Route Handlers, Next 16.2.3** —
+  `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route.md`:
+  a `route.ts` exports named async functions per HTTP verb (`GET`, `POST`,
+  `DELETE`, …); the second arg's `params` is a **Promise** —
+  `{ params }: { params: Promise<{ slug: string }> }`, must `await params`
+  (this is the v15+ behavior, still current in 16.2.3, confirmed in the same
+  doc's "Version History" table). Dynamic segment convention: folder named
+  `[slug]` (`node_modules/next/dist/docs/.../dynamic-routes.md`). `GET`
+  handlers are cached by default unless the route opts out
+  (`export const dynamic = 'force-dynamic'`) — a tool-call endpoint must opt
+  out; it is never safely cacheable.
+- **`proxy.ts` (not `middleware.ts`)** —
+  `node_modules/next/dist/docs/.../file-conventions/proxy.md` line 11, quoted
+  above. Confirmed inert for `/api/mcp/*` (finding 6 above).
+- **MCP transport (spec, `modelcontextprotocol.io/specification/2025-06-18/basic/transports`,**
+  fetched):** the server **MUST** provide a single endpoint path supporting
+  both POST and GET; POST carries one JSON-RPC message per request, response
+  is either `Content-Type: application/json` (one object) or
+  `text/event-stream` (SSE); a **stateless** server (no `Mcp-Session-Id`
+  issued) simply never emits that header — clients then send no session
+  header either, which is valid. Servers **MUST** validate the `Origin`
+  header (DNS-rebinding protection) and **SHOULD** implement authentication —
+  relevant to item 1-10. Protocol version travels in the
+  `MCP-Protocol-Version` header; absent header → server assumes
+  `2025-03-26` for backwards compatibility.
+- **MCP TypeScript SDK, pinned `@modelcontextprotocol/sdk@1.30.0`**
+  (`raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/1.30.0/...`,
+  fetched): the repo's own stateless reference example is
+  `src/examples/server/simpleStatelessStreamableHttp.ts` — POST creates a
+  **new** `McpServer` + `StreamableHTTPServerTransport({ sessionIdGenerator:
+  undefined })` per request (never reused across requests), calls
+  `transport.handleRequest(req, res, parsedBody)`; GET and DELETE both
+  return HTTP 405 with a JSON-RPC `-32000` "Method not allowed" body in this
+  mode. That transport speaks Node's `IncomingMessage`/`ServerResponse`, not
+  the Web `Request`/`Response` a Next.js Route Handler receives — see 1-01
+  for the adapter.
+- **Apps SDK component contract** (`developers.openai.com/apps-sdk/reference`
+  + independent WebSearch corroboration, two sources agreeing): tool-level
+  `_meta["openai/outputTemplate"]` (ChatGPT-specific, points at a `ui://…`
+  resource URI) plus the newer cross-host standard alias
+  `_meta.ui.resourceUri` — register **both**. Other optional `_meta` keys:
+  `openai/toolInvocation/invoking` / `openai/toolInvocation/invoked`
+  (≤64-char status strings), `openai/widgetAccessible` (bool). A
+  `CallToolResult` carries `structuredContent` (model+UI data) and `content`
+  (text blocks — the fallback for hosts that can't render `ui://`
+  resources). Design guidance
+  (`developers.openai.com/apps-sdk/concepts/design-guidelines`, fetched):
+  cards auto-fit height to content, no nested scrolling, and — important for
+  1-04 — "Do not include your logo as part of the response. ChatGPT will
+  always append your logo and app name" for **partner** apps, but Peer's own
+  card content (not ChatGPT's chrome) still carries Peer's own mark per
+  HANDOFF guardrail 4 and the mockup's own card design; the guideline is
+  about not duplicating ChatGPT's outer attribution, not about suppressing
+  Peer's brand inside the card body.
+- **npm registry checks (all fetched live this round):**
+  `@modelcontextprotocol/sdk` latest `1.30.0`, not deprecated.
+  `mcp-handler` latest tag `2.1.0` now peer-depends on
+  `@modelcontextprotocol/server@^2.0.0` (the newer, separately-named "v2"
+  generation), **not** `@modelcontextprotocol/sdk`. `mcp-handler@1.1.0`
+  (still published) peer-depends on `@modelcontextprotocol/sdk` (resolved
+  `1.26.0`) and its README's Next.js App Router example
+  (`raw.githubusercontent.com/vercel/mcp-handler/main/README.md`, fetched,
+  short quote only) is exactly:
+  `createMcpHandler((server) => { server.registerTool(...) })` returning one
+  Web-API `(Request) => Promise<Response>` handler, `export { handler as
+  GET, handler as POST }` from `route.ts`. This is the adapter that bridges
+  Next's Web Request/Response to the SDK's Node-style transport, so C does
+  not hand-roll that bridge.
+
+---
+
+**Contract to build to.**
+
+`get_daily_forecast` — **input** (all optional; no required params, mirrors
+"today's forecast" needing no user-supplied context beyond who's asking):
+`type?: "job"|"paper"|"event"` (filters to one lane — forward-compatible
+with M2's facet chips per RULING 5, unused by M1's card but cheap to accept
+now), `limit?: number` (default ~9, matching the mockup's "3 / 9条" header;
+cap at e.g. 30).
+**Output:** `{ date: string, generatedAt: string, counts: { jobs: number,
+papers: number, events: number, total: number, shown: number }, items:
+ForecastItem[] }` where `ForecastItem` is a **union with per-type optional
+fields**, never a forced uniform shape (RULING 4):
+
+| Tool field | `type:"job"` ← `Job` | `type:"paper"` ← `Paper` | `type:"event"` ← `Event` |
+|---|---|---|---|
+| `id` | `id` | `id` | `id` |
+| `title` | `roleTitle` | `title` | `name` |
+| `org` | `companyOrLab` | `venue` | `organisations?.[0]?.name` (omit if absent) |
+| `location` | `location` | **absent — `Paper` has no location field** | `location` |
+| `posted` | `postedDate` | `publishedDate` | `date` (event start) |
+| `deadline` | `applicationDeadline` (absent/null when the source doesn't carry one — most free job sources don't, confirmed live in A's Pass 2) | **absent — `Paper` has no deadline field, RULING 4 explicit** | `deadline` (CFP) ?? `registrationDeadline` |
+| `relevance` | `relevanceScore` | `relevanceScore` | `relevanceScore` |
+| `whyItMatters` | `matchReason` | `relevanceReason` | `relevanceReason` |
+| `tags` | `keyRequirements` | `summaryExperimentKeywords` | `tags` |
+| `deepLink` | `linkPosting` (external — matches what Peer web itself links to) | `linkPaper ?? linkArxiv` | `linkOfficial ?? linkRegistration` |
+| `isSaved` | `isSaved` (always `false` in M1 — no write tools yet) | `isSaved` | `isSaved` |
+
+Every field above is verified present on `Job`/`Paper`/`Event` in
+`web/src/types/index.ts` (Job 175-215, Paper 51-72, Event 131-164) — no
+invented field, and the two Paper gaps are exactly RULING 4's own examples.
+
+`get_opportunity` — **input:** `{ id: string }`. **Output:** the matching
+item in the *same* per-type shape as one forecast row (reuse the same mapper,
+don't build a second shape), or a structured not-found result
+(`{ found: false, id }`) — never a partial guess. Routing and gaps: see item
+1-05.
+
+---
+
+**1-01. MISSING — MCP endpoint skeleton.** (merges A's 1-01 and 1-08 — same
+commit, can't meaningfully separate "install the SDK" from "the route that
+uses it")
+
+- `web/package.json`: add `@modelcontextprotocol/sdk@^1.30.0` and
+  `mcp-handler@^1.1.0` (peer-compatible with each other; do **not** take the
+  `mcp-handler` `latest` tag — see the framework-facts note above, it silently
+  pulls a different SDK family). After `npm install`, `npm ls
+  @modelcontextprotocol/sdk` should show one resolved version with no peer
+  conflict.
+- New: `web/src/lib/mcp/server.ts` — a factory `buildPeerMcpServer(ctx: {
+  userId: string }): McpServer` that constructs a **fresh** `McpServer` per
+  call (never a module-level singleton — matches the SDK's own stateless
+  example and `mcp-handler`'s per-request factory model) and registers
+  `get_daily_forecast` + `get_opportunity` (bodies land in 1-02/1-05). Leave
+  a clearly-commented spot for M5's write tools; do not scaffold them now.
+- New: `web/src/app/api/mcp/[slug]/route.ts`. Route segment config:
+  `export const runtime = "nodejs";` (the SDK needs Node APIs, Edge won't
+  do), `export const dynamic = "force-dynamic";` (never cache a tool-call
+  response — `route.md`'s caching section, above), `export const
+  maxDuration = 60;` as a starting point, sized down from the cron
+  precedent's `maxDuration = 300`
+  (`web/src/app/api/jobs/dispatch-digests/route.ts` line 30) because this is
+  an interactive chat tool call, not a batch job — **NEEDS LOCAL VERIFY**:
+  the real ceiling depends on the Vercel plan and on ChatGPT/Claude's own
+  client-side tool-call timeout, neither of which B can check without a live
+  host. Handlers: `await params`, validate the slug (1-10), then delegate to
+  the `mcp-handler`-built handler for that request.
+- Classification: MISSING. Closes A's **1-01, 1-08**.
+- Tests: new `web/src/app/api/mcp/[slug]/route.test.ts` — POST a raw MCP
+  `initialize` JSON-RPC request with the fixture slug, assert 200 + a valid
+  `InitializeResult` shape (server name/version, capabilities). This is the
+  exact request A's own "Fixture/protocol pass" method will reuse next
+  round — build it so A can lift it verbatim.
+- Blast radius: none yet (new files only).
+
+**1-10. MISSING — dev-slug auth (RULING 2).**
+
+- `web/.env.local` (gitignored — confirmed via `.gitignore` lines 33-34
+  `.env*`, already covers this; line 44 `/.local-data` covers the other
+  gitignored path RULING 2 names): add `MCP_DEV_SLUG=<random>` and
+  `MCP_DEV_TEST_USER_ID=<a Supabase auth.users UUID>`. B did not generate,
+  view, or write a real value for either — that is C's/the manager's step,
+  not B's (B is read-only).
+- New: `web/src/lib/mcp/dev-auth.ts` — `verifyDevSlug(candidate: string):
+  boolean` using **`crypto.timingSafeEqual`** (Node `crypto`, not `===` —
+  avoids a timing side-channel on the slug), returning `false` immediately
+  (no compare attempted) when either side is unset/empty so a blank env var
+  can never accidentally "match." Also `getDevTestUserId(): string` reading
+  `MCP_DEV_TEST_USER_ID`, thrown/guarded if unset.
+- In `web/src/app/api/mcp/[slug]/route.ts`: `if (!verifyDevSlug(slug)) return
+  new Response(null, { status: 404 });` — **404, not 401/403**, per HANDOFF
+  and this brief's own "404-on-mismatch" — doesn't confirm to a prober that
+  `/api/mcp/*` is a meaningful path shape at all.
+- Read-only enforcement for M1 is automatic: only two read tools are
+  registered (1-02, 1-05); there is nothing to additionally lock down until
+  M5 adds write tools behind a *different* (real OAuth, M3) auth path.
+- **Never commit:** the slug value, the test user's UUID, `.env.local`
+  itself, or any log/test fixture containing either — repeating the standing
+  rule precisely because this item is the one place it's easiest to slip.
+- Classification: MISSING. Closes A's **1-10**.
+- Tests: `web/src/lib/mcp/dev-auth.test.ts` — stub the env var with
+  `vi.stubEnv("MCP_DEV_SLUG", "test-fixture-slug-xyz")` (an obviously-fake,
+  test-only value, never a real one) and assert: correct slug → true; wrong
+  slug → false; unset env var → false even for an empty candidate;
+  different-length strings → false without throwing.
+- Blast radius: none (new files only; the slug check runs before anything
+  else touches shared code).
+
+**1-02 + 1-11. MISSING — `get_daily_forecast`, and the Tier-0 guarantee it
+carries by construction.**
+
+- New: `web/src/lib/mcp/tools/get-daily-forecast.ts`.
+- Step 1 — profile: `const admin = createAdminClient()` (reuse
+  `web/src/lib/supabase/admin.ts` verbatim — service-role client, bypasses
+  RLS, exact precedent for "act as a specific user_id with no browser
+  session" at `web/src/app/api/jobs/dispatch-digests/route.ts` lines
+  130-145). `admin.from("profiles").select("*").eq("user_id",
+  getDevTestUserId()).maybeSingle()`, then reuse **`profileRowToProfile`
+  imported directly from `web/src/app/api/profile/route.ts`** (it's already
+  exported, lines 50-88) — do not re-implement the row mapping.
+- Step 2 — topics: per finding 1 above, `jobRequiredTopics`/
+  `eventRequiredTopics` don't exist server-side. **Use
+  `profile.researchTopics` as the `topics` input for all three pipelines**
+  (papers/jobs/events). This is a precedented fallback, not an invention:
+  it's the same default the app's own v3 local-storage migration uses
+  (`web/src/store/profile.ts` lines 161-164, `jobRequiredTopics =
+  [...requiredTopics]` where `requiredTopics = researchTopics`) and exactly
+  what the paper-only cron digest already does server-side
+  (`dispatch-digests/route.ts` line 203, `topics: row.research_topics`). If
+  `researchTopics` is empty, return an empty forecast without calling any
+  pipeline — mirrors `web/src/store/feed.ts`'s own early-return
+  (`activeSurfaceTopics(...).topics.length === 0`, checked separately in
+  `fetchRealFeed`/`fetchRealEvents`/`fetchRealJobs`). **Operational note, not
+  a code task:** the dev-slug test user's `profiles.research_topics` row
+  must be populated for A's next-round Pass 2 to see real items — a setup
+  prerequisite, flagging so it isn't mistaken for a bug next round.
+  **Known, disclosed scope limit** (not a defect): because jobs/events use
+  `researchTopics` instead of their own per-surface topics, the MCP
+  forecast's job/event ranking can differ from what the same user sees on
+  Peer web's own Jobs/Events tabs (which use the richer, browser-local
+  topics). Closing that gap for real means persisting per-surface topics
+  server-side — bigger than M1, don't attempt it here.
+- Step 3 — fetch, in parallel via `Promise.allSettled` (mirrors
+  `web/src/store/feed.ts` lines 706-838's three-lane pattern so one source's
+  failure never blanks the others): `runFeedPipeline({ topics, topN, aiTier:
+  0 })` (`web/src/lib/feed/pipeline.ts`), `runJobsPipeline({ topics,
+  careerStage, industryVsAcademia, locationPreferences, authorisedCountries,
+  topN, aiTier: 0 })` (`web/src/lib/jobs/pipeline.ts` lines 247-301),
+  `runEventsPipeline({ topics, careerStage, industryVsAcademia,
+  locationPreferences, topN, aiTier: 0 })` (`web/src/lib/events/pipeline.ts`
+  lines 254-300). **`aiTier: 0` on all three calls is the entire
+  implementation of 1-11** — Tier-0 is a request parameter here, not a
+  separate feature; there is no code path that would need a provider key.
+- Step 4 — map: `runFeedPipeline`'s `FeedResponse.items` are `ScoredItem[]`,
+  **not** `Paper[]` (`web/src/lib/feed/types.ts` lines 64-67) — call
+  **`scoredItemToPaper`** (`web/src/lib/feed/mapper.ts` lines 146-152) on
+  each, exactly as `web/src/store/feed.ts`'s `fetchRealFeed` does (`
+  data.items.map(scoredItemToPaper)`). `runJobsPipeline`/`runEventsPipeline`
+  already return mapped `Job[]`/`Event[]` (they call `scoredJobToJob`/
+  `scoredEventToEvent` internally, `jobs/pipeline.ts` line 281,
+  `events/pipeline.ts` line 284) — no extra mapping step for those two.
+- Step 5 — merge + sort + shape: `[...papers, ...jobs, ...events].sort((a,b)
+  => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0))` — exact match for
+  `web/src/app/page.tsx`'s `briefingItems` (lines 612-621) and `scoreOf`
+  (99-101). Slice to `limit`. Map each to the tool's per-type shape (table
+  above). `date`: reuse `localCalendarDate`
+  (`web/src/lib/local-calendar-date.ts`, already used by the pipelines and
+  `page.tsx`) — don't write a second date formatter.
+- **Perf note (measured facts, not a blocker):** jobs/events read through a
+  Supabase-backed daily pool cache in production
+  (`pool-cache-runtime.ts`, finding 8) — only the first call of the day
+  across *any* caller pays full fetch+enrich cost; later calls that day are
+  cache hits. **Papers have no equivalent pool cache** (`runFeedPipeline`
+  only caches its Tavily-discovery step, not the scored corpus) — every
+  `get_daily_forecast` call re-runs the academic-source fetch fresh, bounded
+  by each source's `withSourceTimeout` (default 8000ms,
+  `web/src/lib/opportunities/shared.ts` line 16, `Promise.allSettled` across
+  sources so it's bounded by the slowest one, not their sum). **NEEDS LOCAL
+  VERIFY:** measure real end-to-end latency once `npm run dev` is up: cold
+  (first call of the day) vs. warm.
+- Classification: MISSING (1-02); MISSING as a standalone guarantee but
+  satisfied automatically by `aiTier: 0` above, not a separate code path
+  (1-11). Closes A's **1-02, 1-11**.
+- Blast radius: `runFeedPipeline`/`runJobsPipeline`/`runEventsPipeline` are
+  also called by `/api/feed`, `/api/jobs/feed`, `/api/events/feed`, and
+  `/api/jobs/dispatch-digests` — all pure functions of their request object,
+  additive/safe to call again, but they **do** share the daily pool cache
+  and per-source timeout budget with the live web app; nothing new there,
+  just a new caller. `profileRowToProfile` is also used by `/api/profile`
+  GET — reused, not duplicated, per HANDOFF §5.
+- Tests: `web/src/lib/mcp/tools/get-daily-forecast.test.ts` — mock the three
+  `runXPipeline` functions + the admin client (`vi.mock`). Assert: (a)
+  merge+sort order matches a hand-built expectation across mixed scores; (b)
+  a mapped paper item has **no `location`/`deadline` keys at all** (not
+  `null` — literally absent; the concrete, automatable check for RULING 4);
+  (c) `aiTier: 0` is the value actually passed to all three pipeline calls;
+  (d) empty `researchTopics` short-circuits to an empty forecast without
+  calling any pipeline.
+- Tests at risk (existing suites near this code — do not modify without
+  flagging why): `web/src/app/api/feed/route.test.ts`,
+  `web/src/app/api/jobs/report/route.test.ts`,
+  `web/src/app/api/events/report/route.test.ts`,
+  `web/src/app/api/profile/route.test.ts`, `web/src/lib/feed/mapper` has no
+  standalone test file today (covered indirectly via the route test) —
+  don't add MCP-specific branching inside these shared files; if a change
+  there feels necessary, that's a signal the MCP-specific logic belongs in
+  `web/src/lib/mcp/` instead.
+
+**1-05. MISSING — `get_opportunity`.**
+
+- New: `web/src/lib/mcp/tools/get-opportunity.ts`. Input `{ id }`, dispatch
+  by source prefix (`id.split(":")[0]`, format `${source}:${stableId}`
+  confirmed in `web/src/lib/jobs/types.ts` line 26 and
+  `web/src/lib/events/types.ts` line 23):
+  - **Job prefixes** (`remotive|arbeitnow|himalayas|adzuna|usajobs|jsearch|jobweb`,
+    `web/src/lib/jobs/types.ts` lines 15-22) or **event prefixes**
+    (`ccfddl|confstech|researchseminars|eventweb`,
+    `web/src/lib/events/types.ts` lines 15-19): re-run
+    `runJobsPipeline`/`runEventsPipeline` with the **same** request
+    `get_daily_forecast` would build (same admin-fetched `researchTopics` +
+    profile fields), then search **`response.pool`** — the full scored pool
+    (up to `MAX_OPPORTUNITY_POOL_ITEMS = 200`,
+    `web/src/lib/opportunities/facets.ts` line 10), **not** `response.items`
+    (which is score-floor-filtered and `topN`-sliced, so a shown-but-lower-
+    ranked item could be missing from it). Because both pipelines key their
+    daily pool cache on `{surface, requiredTopics, careerStage,
+    locationPreferences, localDate}` (`derivePoolCacheKey`,
+    `web/src/lib/opportunities/pool-cache.ts`, called from
+    `buildDailyJobPool`/`buildDailyEventPool`), a same-day repeat lookup for
+    the same test user is a cache hit — real infra reuse, not new caching
+    work.
+  - **Paper, `arxiv:`/`openalex:` prefix:** call **`fetchPaperById`**
+    (`web/src/lib/papers/fetch-by-id.ts`, exact precedent already used by
+    `web/src/app/api/papers/[id]/route.ts`) then map with **`rawItemToPaper`**
+    (same file as `scoredItemToPaper`,
+    `web/src/lib/feed/mapper.ts` lines 95-144). This path needs no
+    topics/profile at all — strictly cheaper than the job/event path.
+  - **Paper, `semantic_scholar:`/`dblp:`/`pubmed:`/`web:`/`hn:` prefix:**
+    `fetchPaperById` returns `null` for all of these today (verified by
+    reading the function body, lines 105-113 — only two `if
+    (id.startsWith(...))` branches exist). Return the structured not-found
+    result. **Real, verified gap, see POLICY note below — do not fabricate a
+    paper.**
+  - **No match found** (job/event id from a stale/rotated day's pool):
+    structured not-found result, same shape.
+- **POLICY — manager decides:** two honest ways to close the
+  semantic_scholar/dblp/pubmed gap, and picking between them is a scope call:
+  (a) restrict `get_daily_forecast`'s papers lane to `sources: ["arxiv",
+  "openalex"]` only (zero new code, matches what A's Pass 2 actually
+  exercised live) — **B's recommendation**, because it keeps
+  `get_opportunity` from ever dead-ending on a forecast item M1 itself just
+  showed; or (b) extend `fetchPaperById` with source-specific by-id lookups
+  (Semantic Scholar and PubMed both have documented single-item APIs; DBLP
+  does not have a stable per-paper JSON endpoint, so a DBLP item may stay
+  permanently unresolvable this way regardless) — real, addable, but new
+  source-adapter work bigger than M1's "read-only tool" framing. Not
+  resolving this myself; both are legitimate, (a) is just smaller and
+  matches verified live behavior.
+- Classification: MISSING. Closes A's **1-05**.
+- Blast radius: same as 1-02 (reuses the same pipelines + `fetchPaperById`,
+  which is also called by `/api/papers/[id]`).
+- Tests: `web/src/lib/mcp/tools/get-opportunity.test.ts` — one case per
+  prefix family (job, event, arxiv, openalex, an unresolvable paper source,
+  not-found), mocking the pipelines and `fetchPaperById`.
+
+**1-03 + 1-04 + 1-09. MISSING — inline card, Peer visual identity, text-only
+fallback.** (one implementation — a widget can't "carry visual identity"
+separately from existing, and the fallback is the same tool response's
+alternate branch, not a separate build)
+
+- Tool-level `_meta` (both keys, per the framework-facts entry above):
+  ```
+  _meta: {
+    "openai/outputTemplate": "ui://peer/daily-forecast-card.html",
+    "openai/toolInvocation/invoking": "Checking today's Peer forecast…",
+    "openai/toolInvocation/invoked": "Here's today's Peer forecast",
+    "openai/widgetAccessible": true,
+    ui: { resourceUri: "ui://peer/daily-forecast-card.html" }
+  }
+  ```
+- New: `web/src/lib/mcp/ui/daily-forecast-card.ts` — co-located under
+  `web/src/lib/mcp/ui/` per HANDOFF §5. Export **one** mapper-consuming pair
+  of renderers so the card and the fallback never diverge:
+  `renderDailyForecastCard(items): string` (HTML) and
+  `renderDailyForecastText(items): string` (plain text). Register the HTML
+  one as a resource: `server.registerResource("daily-forecast-card",
+  "ui://peer/daily-forecast-card.html", { mimeType: "text/html" }, async ()
+  => ({ contents: [{ uri, mimeType: "text/html", text:
+  renderDailyForecastCard(...) }] }))`; return the text one in the tool
+  result's `content: [{ type: "text", text: renderDailyForecastText(...) }]`
+  — that `content` array **is** the fallback for hosts that can't render
+  `ui://` resources (e.g. a Claude connector in text mode), automatically,
+  no separate code path to "detect" the host.
+- Visual contract: reuse the mockup's own card CSS verbatim as the palette
+  source — `docs/design/peer-in-chatgpt-mcp-mockups.html` lines 230-267
+  (`.peer-card`, `.pc-head`, `.p-row`, `.rel`, `.ptag`, `.psave`,
+  `.pc-foot`), explicitly commented there as a **"fixed warm palette"**
+  independent of the mockup's own three-state host-chrome theme tokens
+  (lines 3-56, `--ground`/`--panel`/`--peer`/`--host` — those style the
+  mockup's *own* annotation chrome, not the card; don't confuse the two
+  blocks). This matches HANDOFF §5's literal values, confirmed live in
+  `web/src/app/globals.css` lines 9-30 (`--color-bg:#fdf6ee`,
+  `--color-surface:#f1e9da`, `--color-heading:#2b180a`,
+  `--color-accent:#ff520d`). **Use the literal hex values in the widget's
+  own inline `<style>`, not CSS custom properties** — the widget renders in
+  a sandboxed host iframe with no access to Peer's stylesheet. Deliberate,
+  disclosed scope note: Peer web lets a signed-in user pick one of 6 accent
+  colors (`ColorTheme`, `web/src/types/index.ts` lines 260-268, 476-488);
+  the card always uses the fixed default ember/orange rather than that
+  user's live choice — there's no verified channel for the widget to learn
+  it. Not a defect, just noted so nobody "fixes" it as one.
+- Card contents (per mockup `sc1` lines 575-581 and notes 3-4): header (mark,
+  "Daily Forecast", `date` + `shown/total` from 1-02's `counts`, an Expand
+  control) — **Expand has nothing to open to yet** (fullscreen home is M2's
+  `open_home`); render it but leave a code comment that it's inert until M2,
+  never wire it to a tool that doesn't exist. Rows: relevance badge, title,
+  org/location/posted meta, why-it-matters, type tag — from the 1-02
+  mapping; per-type absent fields (no location/deadline for papers) shorten
+  the meta line, never render a placeholder dash. Footer: "Open in Peer"
+  (deep-links to the **Peer web app itself**, per RULING 4's last bullet —
+  the one link in the card that isn't item data; reuse the existing
+  site-origin env-var pattern at `dispatch-digests/route.ts`'s
+  `originUrlFor`, lines 18-27) + attribution text.
+- Per-row "Save" button (mockup `psave`, note 4 — framed there as a live
+  write): M1 must **not** wire it to a real write (write tools are M5
+  scope). **POLICY — manager decides:** HANDOFF §4 M2 explicitly allows
+  "Save/Dismiss may remain visually present but disabled until M5," but
+  that line is scoped to M2's fullscreen view, not M1's inline card — B
+  recommends **omitting the Save control from the M1 card entirely** (zero
+  risk of a visually-live-looking but non-functional button) and adding it
+  disabled in M2 alongside the fullscreen view, but this is the manager's
+  call.
+- Classification: MISSING (all three). Closes A's **1-03, 1-04, 1-09**.
+- Tests: `web/src/lib/mcp/ui/daily-forecast-card.test.ts` — assert the fixed
+  hex values appear in the rendered HTML; assert a paper row's HTML contains
+  no "location"/"deadline" label when those fields are absent; assert the
+  text fallback contains every item's title and deep link. Avoid a
+  brittle full-HTML snapshot test.
+- Still **NEEDS LOCAL VERIFY** per A's list, unchanged by this round:
+  criterion 7 (the card actually rendering inside real ChatGPT chrome,
+  matching Peer's visual identity as the user sees it) and criterion 9 (the
+  text fallback actually triggering on a non-rendering host) — nothing B or
+  C can close alone.
+
+**1-06 + 1-07. MISSING → closed by construction, not new code.**
+Discoverability isn't a separate build: once 1-01/1-02/1-05/1-10 exist and
+respond correctly to `initialize`/`tools/list`, closing these is (a) writing
+clear, complete Zod input schemas + descriptions on both tools — the model
+decides whether to call Peer based on reading these (mockup note 1: "ChatGPT
+judges whether to call Peer based on the question"), not on new code, and
+(b) the two NEEDS LOCAL VERIFY items A already listed (criteria 3/4 — a real
+ChatGPT dev-mode connector add and a real Claude custom-connector add,
+requiring the user's own accounts). C's job here is description quality;
+verification is A's protocol pass (`initialize` → `tools/list`, scriptable
+without a live host) plus the user's own host test. Closes A's **1-06,
+1-07**. No new files beyond good descriptions on the tools already built in
+1-02/1-05; no new tests beyond 1-01's `tools/list` assertion.
+
+---
+
+**Build order for C — follow exactly, one commit per item, gate after
+each:**
+
+1. **1-01 + 1-08** — dependency + endpoint skeleton (open/unauthenticated is
+   fine transiently; nothing is deployed yet).
+2. **1-10** — slug gate, immediately after, before any real data path exists.
+3. **1-02** (+ **1-11** falls out of it automatically) — forecast tool +
+   Tier-0.
+4. **1-05** — opportunity detail tool (depends on 1-02's mapping/topics
+   logic being in place to copy).
+5. **1-03 + 1-04 + 1-09** — card + fixed palette + text fallback (depends on
+   1-02/1-05's output shape existing to render).
+6. **1-06 + 1-07** — discoverability polish (tool descriptions) + a final
+   pass confirming 1-11's `aiTier: 0` claim mechanically in tests, plus the
+   full new-test suite listed above.
+
+**Gate:** `npm test` from `web/`. Baseline re-confirmed this round: **597
+passed | 1 skipped (598), 73 files + 1 skipped (74)**. Every new test file
+above raises this number — note the new total in each commit's §4 log line,
+never lower it.
+
+**Classification rollup:** all 11 of A's items are **MISSING** (nothing is
+`WRONG DATA`/`WRONG SHAPE`/`WRONG ORDER`/`EXTRA` — there is no existing
+behavior to be wrong yet). Wrong-data risk to watch once built: the RULING-4
+paper-gap fields (never let `location`/`deadline` render as a placeholder
+for papers) and the RULING-4 deadline-null-vs-omitted distinction for jobs.
+
+**POLICY flags for the manager (not resolved by B, no ruling reversal
+proposed):**
+- Whether M1's papers lane should default to `sources: ["arxiv",
+  "openalex"]` only (recommended) vs. all five academic sources with a
+  known `get_opportunity` gap for three of them (item 1-05).
+- Whether the M1 card should omit the Save affordance entirely (recommended)
+  or render it visually-present-but-disabled a milestone early (item
+  1-03/1-04/1-09).
+
+**NEEDS LOCAL VERIFY (carried forward from A unchanged, plus one addition):**
+criteria 3, 4, 7, 9, 10 from A's list stand as written — B found nothing
+that closes any of them without the user's own ChatGPT/Claude account.
+Addition: real end-to-end latency of a cold-cache `get_daily_forecast` call
+(perf note under 1-02) and the real `maxDuration` ceiling for the route
+(1-01) both need a live `npm run dev` measurement, not just code reading.
+
+**Exclusions / HOST LIMIT (RULING 3):** none — still nothing rendered
+anywhere a host limitation could show up. Re-listed empty per RULING 3.
