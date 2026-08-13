@@ -21272,3 +21272,129 @@ their own separately-committed entry.
 
 Commit follows immediately.
 
+---
+
+### Round 11 — Agent A (summary across parts 1–4, ranked difference list, gate verdict)
+
+Written so B does not have to reassemble four separate entries. Full
+method, tables, and evidence for each are in their own entries above
+("Round 11 — Agent A (part 1: employer field)" through "(part 4: R13 event
+names)"); this is the ranked, numbered difference list plus the headline
+result from each part, in one place, per §2's own required output shape
+for A.
+
+**GATE (0%): NOT MET.** Real, non-zero, live-confirmed differences were
+found in the employer field (one, accepted per Ruling 34a, not counted as
+open), R4 summaries, and R13 event names. Percentage per part, same
+convention every prior round used (a rough, stated method, not one invented
+blended number): **employer field 1 of 9 non-null wrong (11.1%, down from
+round 10's 20%) — entirely the accepted residual, not a new defect**;
+**R4 summaries 4 of 14 postings summary-bearing (28.6%), of which 1 carries
+a defect (25%, down from round 10's 33%)**; **R13 event names 6 of 18
+confirmed wrong (33.3%, comparable to round 10's 5 of 17), 4 not confirmed
+false, 1 flagged**. Every host any of this round's three fixes (B10-02,
+B10-03, B10-04) specifically targeted no longer shows its *original*
+defect string — the fixes did what they claimed, live, today. **The finding
+this round adds, again, is the one Ruling 32 predicted in general and this
+round's own brief asked to have reported plainly: on most of the same
+hosts, a new, differently-shaped wrong value has taken the old one's
+place** — and twice this round (`internationalbatteryseminar.com`,
+`ecs.confex.com`) that new value is a step down in quality, not a lateral
+move.
+
+**RANKED DIFFERENCE LIST — what a reader would notice first goes first:**
+
+1. **R13 event name, `internationalbatteryseminar.com` — the most visibly
+   broken value measured this round.** Renders
+   `"Tim DeBastos.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery
+   Carousel"` — an image-filename fragment and a carousel-widget label, not
+   prose of any kind. B10-02's own target (`"Orlando, FL"`, a bare location)
+   is confirmed gone from this exact host — but the fallback chain's new
+   answer is worse, not better: a wrong-but-readable location string
+   replaced by scraped non-content a reader would immediately recognise as
+   broken. See part 4, Finding 2.
+2. **R13 event name, `thebatteryshowsouth.com` — a new host, a new visibly
+   broken value.** Renders `"[...] ## 2026 Keynote Speakers"` — a Markdown
+   heading marker and an ellipsis-bracket fragment ahead of a page-section
+   label. Not one of this round's three fix targets; a new finding on a new
+   host. See part 4, Finding 4.
+3. **R13 event name, `ecs.confex.com` — wrong, but reads as plausible
+   prose, which makes it the harder failure to notice.** Renders
+   `"Invited speakers present keynote lectures."` — the real event name,
+   confirmed by this round's own direct fetch (part 2), is "250th ECS
+   Meeting." B10-03's guard correctly rejects `"Call for Papers"` (confirmed
+   live); the value underneath is wrong instead. **The structurally
+   important part: this value's shape is the same narrative-sentence
+   category B10-04 targets, but it reaches the reader through
+   `eventNameFrom`'s snippet-mining fallback, a code path B10-04's fix does
+   not reach** (B10-04 changed `isChromeSegment`, which only guards the
+   title-segment path) — a real gap in this round's own guard coverage, not
+   a one-off wrong string. See part 2 and part 4, Finding 1.
+4. **R13 event name, `ruggedthz.com` — still wrong, but the one case this
+   round where the news is unambiguously good on the fix's own terms.**
+   B10-04's own confirmed-live target (the sentence-cased narrative URL
+   slug) is gone from this host today; the render
+   (`"Ruggiero Research Lab"`) is round 9's own older, already-catalogued
+   wrong value on a different fallback branch, not a new defect. The real
+   event remains the Gordon Research Conference on Crystal Engineering. See
+   part 4, Finding 3.
+5. **R4 job summary, `careers.gevernova.com` — mild, a new finding adjacent
+   to but not caused by fix 2.** *"What you'll do Support engineering
+   teams..."* — a credited section-opener label (the same `SECTION_RE`
+   family as `"Role Overview"`) runs directly into its sentence with no
+   separating punctuation, because the source text has no colon for fix 2's
+   `LEADING_LABEL_RE` to match. Not the over-stripping shape this round's
+   brief asked to watch for — the opposite: a label that isn't cleaned up
+   at all. See part 3.
+6. **R13 event name, `euagenda.eu` — flagged, not confirmed either way, a
+   second consecutive round.** The live pipeline renders the full name
+   today, byte-identical to round 9's own original citation, unlike round
+   10's shorter render — but the direct-fetch verification this round was
+   specifically asked to retry was blocked again (HTTP 403). Reported
+   honestly as unverified, not inferred correct from its complete-looking
+   shape. See part 4.
+
+**Not an open item — accepted per Ruling 34a, included here only for the
+trend number, per this round's own brief:** employer field,
+`careerservices.upenn.edu` still renders `"University of Pennsylvania"` for
+an Oak Ridge National Laboratory posting, unchanged a fourth consecutive
+round. This is the named, accepted cost, not a new or open finding. See
+part 1.
+
+**Positive confirmations, not just defects — worth stating plainly since a
+ranked list reads as all-bad-news otherwise:**
+- SolarPACES regression-lock byte-identical, live, today (part 4).
+- `postdocjobs.com`'s B10-01 item-2 defect (hosting-platform boilerplate)
+  confirmed gone, better than expected — both the topic-label guard and the
+  new boilerplate guard reject their candidates on the same posting,
+  leaving honest silence rather than any wrong value (part 1).
+- `employbl.com`'s round-10 stacked-chrome defect (colon-label + heading
+  marker + orphaned bracket) confirmed gone; replaced by a second fully
+  clean sentence (part 3).
+- `inl.referrals.selectminds.com`'s round-10 colon-label prefix confirmed
+  gone — fix 2 working correctly, and costing nothing, since the label was
+  redundant with its own sentence's content (part 3).
+- Fix 2's own blast-radius risk — this round's brief's specific watch
+  point, a stripped label that carried real meaning — was **not observed**
+  anywhere in this round's live data (part 3).
+- B10-04's own watch point — a real event name wrongly rejected as a
+  narrative sentence — was **not observed** anywhere in this round's live
+  data (part 4).
+
+**RULING 33's ACRONYM TALLY.** Round 9: 1 of 4. Round 10: 0 of 3. **Round
+11: 0 of 4.** Two zero rounds running since the single round-9 LCO
+instance — still one anecdote, not a frequency pattern.
+
+**RULING 34a's INSTITUTION TALLY.** First round tracked, per the ruling's
+own instruction (no prior round to combine with). **Round 11: 1 of 9**
+non-null employer values were a real, correctly-spelled institution name
+that was NOT the actual employer (`"University of Pennsylvania"`, actual
+employer Oak Ridge National Laboratory) — the same single instance carried
+across rounds 9–11 on the identical URL, not three independent
+occurrences.
+
+**Same-page contamination (B8-07/Ruling 29): not re-measured this round,
+per Ruling 32 and this round's own brief. Stays parked.**
+
+Commit follows immediately.
+
