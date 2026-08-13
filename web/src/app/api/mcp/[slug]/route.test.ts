@@ -195,12 +195,12 @@ describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () =
   // mention the trigger concepts a user's question would use); the rest
   // (does a real ChatGPT/Claude actually pick the right tool) is
   // NEEDS LOCAL VERIFY, A's job with the user's own host account, not C's.
-  it("both tools carry substantial, non-generic descriptions for model tool-selection", async () => {
+  it("all three tools carry substantial, non-generic descriptions for model tool-selection", async () => {
     stubDevAuthEnv();
     const body = await callRoute(jsonRpcRequest("tools/list", {}));
     const result = body.result as { tools: Array<Record<string, unknown>> };
 
-    for (const name of ["get_daily_forecast", "get_opportunity"]) {
+    for (const name of ["get_daily_forecast", "get_opportunity", "open_home"]) {
       const tool = result.tools.find((t) => t.name === name)!;
       expect(tool.description).toBeTypeOf("string");
       expect((tool.description as string).length).toBeGreaterThan(80);
