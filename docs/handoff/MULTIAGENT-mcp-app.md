@@ -144,15 +144,18 @@ STATUS:           Round 1 C in progress, working B's guide top to bottom.
                   a real test user, flagged for A/manager in §4), 1-02+1-11
                   (get_daily_forecast, Tier-0 by construction, one
                   underspecified judgment call on counts semantics —
-                  documented in §4 for A to sanity-check). Continuing down
-                  the build order; §4 gets one entry per commit as it
-                  happens, pushed immediately.
-LAST DIFFERENCE:  1-05 — `get_opportunity` has no implementation yet, so a
-                  forecast item's "tell me more" follow-up is still unmet.
+                  documented in §4), 1-05 (get_opportunity, searches the
+                  full pool not .items, found+fixed a real TS narrowing bug
+                  via tsc). Continuing down the build order; §4 gets one
+                  entry per commit as it happens, pushed immediately.
+LAST DIFFERENCE:  1-03+1-04+1-09 — no inline card, no Peer visual identity,
+                  no text fallback yet. Both tools work but every response
+                  still renders as a placeholder bullet list, not the
+                  mockup's card.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08, 1-10, 1-02+1-11 — rest of B's build order in
-                  progress this round, see §4.
-GATE NOW:         npm test (web/): 628 passed | 1 skipped (629), 77 files +1 skipped
+DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05 — card+fallback and
+                  discoverability polish remain, see §4.
+GATE NOW:         npm test (web/): 642 passed | 1 skipped (643), 78 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1209,3 +1212,61 @@ grows through the round rather than being written at the end.
   §5), never modified; this is a new caller, not a changed contract for the
   existing ones (`/api/feed`, `/api/jobs/feed`, `/api/events/feed`,
   `/api/profile`, `/api/jobs/dispatch-digests` are all untouched).
+
+**1-05 — `get_opportunity`.** DONE.
+
+- New: `web/src/lib/mcp/tools/get-opportunity.ts`. Routes by `id.split(":")[0]`
+  exactly per B's design: job prefixes and event prefixes both re-run their
+  pipeline with the same profile-derived request `get_daily_forecast` builds,
+  then search **`response.pool`** (the full up-to-200 scored pool), never
+  `response.items` — confirmed by a test that deliberately leaves `.items`
+  empty and only populates `.pool`, so the lookup can't be accidentally
+  reading the wrong field and passing by coincidence. `arxiv:`/`openalex:`
+  paper ids go through `fetchPaperById` + `rawItemToPaper` (same precedent
+  `/api/papers/[id]/route.ts` already uses). RULING 6's gap
+  (`semantic_scholar:`/`dblp:`/`pubmed:`/`web:`/`hn:`) returns structured
+  `{ found: false, id }` **without calling `fetchPaperById` at all** — those
+  prefixes are already known-unresolvable (verified by reading the
+  function body: only two `if (id.startsWith(...))` branches exist), so
+  skipping the call is both correct and avoids a pointless request. Tested
+  directly (`it.each` over all five gap prefixes, asserting `fetchPaperById`
+  was never invoked).
+- **Small scope note, not a defect:** duplicates ~8 lines of "admin client →
+  `profiles` row → `profileRowToProfile`" against `get-daily-forecast.ts`'s
+  equivalent block rather than extracting a shared helper. Considered
+  extracting one (B's own wording, "the same request get_daily_forecast
+  would build," reads like it wants shared logic), but that would mean
+  editing 1-02's already-committed, already-tested file mid-round to
+  restructure it — decided against touching shipped code without a
+  correctness reason. Flagging as a reasonable, low-priority follow-up
+  refactor, not doing it now.
+- Wired into `web/src/lib/mcp/server.ts`: `get_opportunity` registered with
+  a Zod `{ id: string }` input shape and a description naming it as the
+  get_daily_forecast follow-up. Same placeholder-`content` pattern as
+  `get_daily_forecast` (`simpleOpportunitySummary`, replaced by the real
+  renderer in the next item).
+- **Bug found and fixed via `tsc`, not by inspection:** my first draft of
+  `simpleOpportunitySummary` used `if ("found" in result && result.found
+  === false)` to branch on the not-found case. `npx tsc --noEmit` failed —
+  TypeScript does not narrow the fall-through branch after a compound `&&`
+  condition inside an `in`-narrowed `if` the way it does for a bare `"found"
+  in result` check (verified with a 4-line isolated repro before touching
+  the real file: the plain form narrows correctly, the `&&`-with-literal
+  form does not, even though `found` is a `false`-only literal so the two
+  reads are behaviorally identical). Simplified to the bare `in` check;
+  comment left in place explaining why, so nobody "simplifies" it back.
+- Tests: `web/src/lib/mcp/tools/get-opportunity.test.ts` — one case per
+  prefix family exactly as B specified (job match via pool, event match via
+  pool, arxiv, openalex, all five unresolvable paper prefixes, unrecognized
+  prefix, stale pool id), plus the pool-vs-items proof above and two
+  short-circuit cases (empty topics, no profile row) mirroring
+  `get_daily_forecast`'s own discipline.
+- `npx tsc --noEmit -p .`: clean after the fix above, zero errors
+  project-wide.
+- Gate after this item: **642 passed | 1 skipped (643), 78 files + 1
+  skipped (79)** — +1 file, +14 tests. 628+14=642, matches. No existing
+  test touched.
+- Blast radius: none new — `runJobsPipeline`/`runEventsPipeline`/
+  `fetchPaperById`/`rawItemToPaper` are called, never modified;
+  `/api/papers/[id]` (the other `fetchPaperById`/`rawItemToPaper` caller) is
+  untouched.

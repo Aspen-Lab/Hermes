@@ -1,7 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDailyForecast } from "./tools/get-daily-forecast";
-import type { DailyForecastResult } from "./types";
+import { getOpportunity } from "./tools/get-opportunity";
+import type { DailyForecastResult, ForecastItem } from "./types";
 
 export interface PeerMcpContext {
   /**
@@ -48,6 +49,34 @@ const getDailyForecastInputShape = {
     .describe("Maximum number of items to return, highest relevance first. Defaults to 9."),
 };
 
+const getOpportunityInputShape = {
+  id: z
+    .string()
+    .min(1)
+    .describe(
+      "The exact `id` field from a get_daily_forecast item (its " +
+        "`items[].id`). Returns that item's full detail in the same shape, " +
+        "or `{ found: false, id }` if it no longer resolves to anything — " +
+        "never a guessed or partial result.",
+    ),
+};
+
+// Placeholder fallback rendering for a single opportunity — same rationale
+// as simpleForecastSummary above, replaced by 1-03+1-04+1-09's real
+// renderer.
+function simpleOpportunitySummary(result: ForecastItem | { found: false; id: string }): string {
+  // Plain `in` check, not `"found" in result && result.found === false` --
+  // the compound `&&` form defeats TS's narrowing on the fall-through
+  // branch below (verified: TS negates the whole `&&` expression rather
+  // than eliminating the `{ found: false }` member), even though `found` is
+  // a `false`-only literal so the two forms are behaviorally identical.
+  if ("found" in result) {
+    return `No item found for id "${result.id}".`;
+  }
+  const link = result.deepLink ? ` — ${result.deepLink}` : "";
+  return `[${result.type}] ${result.title}${link}`;
+}
+
 /**
  * Registers every Peer MCP tool onto a caller-supplied McpServer instance.
  *
@@ -86,5 +115,24 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
     },
   );
 
-  // 1-05: get_opportunity registers here.
+  server.registerTool(
+    "get_opportunity",
+    {
+      title: "Get Opportunity Detail",
+      description:
+        "Full detail for a single job, paper, or event by its id — the " +
+        "'tell me more' follow-up after get_daily_forecast. Only accepts " +
+        "ids that came from a get_daily_forecast call; returns " +
+        "`{ found: false, id }` if the id doesn't resolve to anything " +
+        "today (never a guess).",
+      inputSchema: getOpportunityInputShape,
+    },
+    async (args) => {
+      const result = await getOpportunity(ctx.userId, args);
+      return {
+        content: [{ type: "text" as const, text: simpleOpportunitySummary(result) }],
+        structuredContent: result as unknown as Record<string, unknown>,
+      };
+    },
+  );
 }
