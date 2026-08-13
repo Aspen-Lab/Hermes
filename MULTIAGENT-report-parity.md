@@ -16346,3 +16346,134 @@ code touched. No credential printed, logged, or written anywhere.
 **Not done this turn (parts 2–4, next A's job):** R4 job summaries (B8-05), R13 event
 names (B8-06), same-page multi-listing contamination (B8-07). No gate verdict is set
 by this entry — the gate cannot be judged until all four parts are in.
+
+### Round 9 — Agent A (part 2: job summaries)
+
+**STATUS: PARTIAL BY DESIGN**, continuing the same deliberately-split A turn part 1
+started. This entry covers **part 2 only — R4 job summaries (B8-05)**. Parts 3–4 (R13
+event names/B8-06, same-page contamination/B8-07) are **not yet done** and are the
+next A's job, not this session's.
+
+Reclaimed the turn lock (`be3f6e0`, `LAPTOP-3CL10CG5 @ 2026-08-13 03:12 UTC`) after
+reading §1's current-state block (four `ROUND 7 … SUPERSEDES …` blocks skipped, per
+Ruling 30), §4 "Round 9 — Agent A (part 1: employer field)" in full, §4 "Round 8 —
+Agent C"'s B8-05 entry in full, §2 Agent A, and §3.
+
+**Method.** Live keys reconfirmed present, boolean check only (`tavilyApiKey`,
+`adzunaAppKey`, `adzunaAppId`, `usajobsApiKey` all present; `feedAiApiKey` empty,
+matching every prior round). Built a throwaway vitest file
+(`web/src/zz-round9-a-summaries-live.test.ts`, deleted before this commit) following
+`benchmark.test.ts`'s/part 1's profile-loading precedent, plus `store/feed.ts`'s own
+request-shape precedent for a real `JobsFeedRequest` (topics, softTopics, methods,
+seedTexts, careerStage, industryVsAcademia, locationPreferences, authorisedCountries,
+currentProject, `searchConnectors.tavily`, `apiKeys`). Did **not** use
+`PEER_PROFILE_SNAPSHOT_PATH`.
+
+**Reaching >= 8 summary-bearing postings — target not met, reported plainly, not
+padded.** `buildDailyJobPool()`'s own disk pool cache returns an identical pool on a
+same-day repeat call (part 1's own finding), so this session passed a no-op
+`PoolCache` (`get` always `null`, `set` a no-op — the real pipeline itself untouched,
+only the persistence layer stubbed) to force a genuinely fresh live fetch on every
+call. Ran **9 independent fresh live pulls across two configurations** — default
+`perSourceLimit` (60) x5 calls in one session, widened `perSourceLimit` (120) x2
+further sessions x2 calls each — accumulating **29 unique real postings** (union
+across all pulls; any single configuration alone landed 26-29, plateauing after its
+first one or two calls). Every configuration converged on the **same 4
+summary-bearing postings, byte-identical text each time** — reproducibility as strong
+as part 1's identical-pool finding. Despite genuine, repeated, methodologically-varied
+effort, **only 4 of 29 real postings carried any non-empty summary (13.8%)** — the
+target of >= 8 was not reached. This reads as a real property of today's live result
+set for this profile (a markedly narrower summary-bearing rate than round 8's 4/11 =
+36%), not a methodology gap — stated plainly per this turn's own instruction never to
+fabricate a bigger live run.
+
+**Per-posting result — all 4 non-empty summaries, none averaged:**
+
+1. `bebee.com` (Salt Qualification Scientist/Engineer, Terrestrial Energy), matched
+   keyword `"molten salt"`: *"Terrestrial Energy is seeking a Salt Qualification
+   Scientist/Engineer in Bryan, Texas, to lead the experimental testing and
+   qualification of salts for our Integral Molten Salt Reactor (IMSR) applications."*
+   CLEAN. No clutter of any kind.
+2. `salutemyjob.com`, matched keyword `"ion exchange"`: *"The candidate should have a
+   thorough background in liquid-liquid separations and the use of various ion
+   exchange technologies."* CLEAN. No clutter.
+3. `www.aiu.edu`, matched keyword `"battery"`: *"A postdoctoral position in
+   electrochemistry enhances understanding of – charge transfer, ion mobility, and
+   degradation mechanisms critical to battery research."* Not site chrome, but **not
+   perfectly clean either** — shortest fragment showing the defect: `"of – charge
+   transfer"`, a stray en-dash sitting exactly where a stripped bullet or colon most
+   likely was. Same *family* as the still-open Markdown-link-remnant shape (a
+   formatting-strip leftover), a different literal character, a new instance.
+4. `www.lco-cdo.org` (Law Commission of Ontario), matched keyword `"LCO"`: *"The Law
+   Commission of Ontario (LCO) is seeking a Project and Website Coordinator for a
+   one-year contract that may be extended. The LCO always welcomes proposals from
+   individuals and organizations."* First sentence CLEAN. Second sentence, shortest
+   fragment showing the defect: `"The LCO always welcomes proposals from individuals
+   and organizations."` — generic organisational boilerplate, not role content, not
+   in `NOISE_RE`'s literal phrase list, a new non-chrome filler shape. **Separately
+   worth flagging:** the matched keyword `"LCO"` here is the Law Commission of
+   Ontario's own initialism, not this profile's actual `"LCO"` research topic (a
+   battery cathode-material abbreviation) — an acronym collision in the *keyword
+   match itself*, not in the summarizer. It is why `matchedCount > 0` let this
+   sentence clear the floor at all.
+
+**0 of 4 (0%) carry the classic site-navigation-chrome shape** round 8 A found in 4 of
+4 (menus, "More about this employer," breadcrumbs, colon-label runs) — **the trend
+moved from 100% to 0% on this specific measure.** **2 of 4 carry a lesser,
+differently-shaped defect** (items 3 and 4 above) that neither B8-05 nor any prior
+round named.
+
+**The three specific shapes this turn was asked to check:**
+
+1. **Named still-open shape (a chrome sentence containing a matched keyword still
+   clears the floor)**: **not observed as literal chrome this round.** The closest
+   live analogue is `lco-cdo.org` above — a matched keyword letting a sentence
+   through the floor — but the sentence itself is ordinary prose, not
+   navigation/menu chrome; it is a *keyword-match* false positive, not the
+   *chrome-survives-via-keyword* shape B8-05 named. No confirmed recurrence of the
+   exact named shape in this sample.
+2. **Markdown-link remnants (a stray `]` mid-sentence)**: **not observed.** 0 of 4.
+   Round 8's exact instance (`grad.wisc.edu`) is entirely absent from today's 29-item
+   pool (ordinary day-to-day live-search variance, not a code claim) — so this is
+   "not observed this round," not "confirmed fixed."
+3. **Single-colon-label chrome**: **not observed.** 0 of 4. Round 8's exact instance
+   (`employbl.com`) is also entirely absent from today's pool — same caveat as above.
+
+**What renders when the floor rejects everything — confirmed from rendered output,
+not source-tracing alone.** Of the 25 no-summary postings in the pool that had any
+source text, one — `inl.referrals.selectminds.com`, `fetchedPostingScope: undefined`
+(**not** the B7-02 "unproven" short-circuit, so this one genuinely reached
+`summarizeJob`) — had 168 real characters of source text yet `job.summary` was still
+empty. Rendered this exact real `Job` through `JobReport` (`renderToStaticMarkup`,
+same harness `page.test.ts` itself uses): **no "What the role is" heading, no
+`data-section="what-the-role-is"` element, no `data-role-and-materials` wrapper at
+all — clean silence.** Confirmed twice more with controlled `Job` objects built the
+same way `page.test.ts`'s own `baseJob()` helper does: (a) summary and
+`applicationMaterials` both empty — same full silence, no wrapper at all; (b) summary
+empty but `applicationMaterials` non-empty — the outer two-column wrapper renders
+(for the materials half) but the role-description heading is still correctly omitted
+— never a heading over nothing. **No heading-over-empty-content defect found in any
+of the three checks.** (Precise caveat: 168 characters of source text could itself
+fail only on `scoreSentences`'s pre-existing 40-character-per-sentence floor rather
+than B8-05's new positive-content floor specifically — which exact internal check
+fired is a cause-level question, out of scope for A. The render-time *outcome*, which
+is in scope, is confirmed regardless of which check inside `scoreSentences` produced
+it: silence, never a stray heading.)
+
+**Excluded from the render check on purpose:** `www.faraday.ac.uk` and
+`talents.vaia.com` (1340 and 1068 real characters respectively, the largest two in
+the no-summary set) both carry `fetchedPostingScope: "unproven"` —
+`mapper.ts:133-135`'s own ternary forces `summarySource` to `undefined` for those
+*before* `summarizeJob` is ever called (B7-02's ownership guard, a different
+mechanism entirely). Using either as a "the floor rejected this" example would have
+misattributed B7-02's short-circuit to B8-05's floor — caught and corrected before
+this was written down.
+
+**Cleanup:** the throwaway vitest file and all of its exploratory reruns (widening
+`perSourceLimit`, then narrowing the render-check candidate to exclude `unproven`
+scope) are deleted before this commit. No product code touched. No credential
+printed, logged, or written anywhere.
+
+**Not done this turn (parts 3–4, next A's job):** R13 event names (B8-06), same-page
+multi-listing contamination (B8-07). No gate verdict is set by this entry — the gate
+cannot be judged until all four parts are in.
