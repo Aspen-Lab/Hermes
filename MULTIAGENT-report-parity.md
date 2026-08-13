@@ -16752,3 +16752,144 @@ commit. No product code touched. No credential printed, logged, or written anywh
 **Not done this turn (part 4, next A's job):** same-page multi-listing contamination
 (B8-07, Ruling 29). No gate verdict is set by this entry — the gate cannot be judged
 until all four parts are in.
+
+### Round 9 — Agent A (part 4: same-page contamination)
+
+**STATUS: COMPLETE — this is the last part of the deliberately-split round-9 A turn.**
+This entry covers **part 4 — same-page multi-listing contamination (B8-07, Ruling 29)**,
+and, per §1's own instruction, this session also closes out the whole round-9 A turn
+(summary entry, history-table row, gate verdict, §1 handoff to B — all below/after this
+entry).
+
+**Claimed the turn lock FIRST, before any reading** (`1bfcb29`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 03:43 UTC`) — correcting part 3's own documented
+process error against itself. Then read §0d, §1's current-state block (four
+`ROUND 7 … SUPERSEDES …` blocks skipped, per Ruling 30), §4 "Round 8 — Agent C"'s
+B8-07 entry in full, §1p Ruling 29, §1r Ruling 31 section 4, §4 "Round 9 — Agent A"
+parts 1–3 in full, §2 Agent A, §3.
+
+**Method.** Live keys reconfirmed present, boolean check only (`tavilyApiKey`,
+`adzunaAppKey`, `adzunaAppId`, `usajobsApiKey` all `true`; `feedAiApiKey` `false`,
+matching every prior part). Built throwaway vitest files (all deleted before this
+commit: `zz-round9-a-contamination-live.test.ts`, `zz-round9-a-openmc-check.test.ts`,
+`zz-round9-a-openmc-render.test.ts`, `zz-round9-a-contamination-wide.test.ts`,
+`zz-round9-a-battery-check.test.ts`), reusing part 2's own no-op `PoolCache` (`get`
+always `null`, `set` a no-op) to force fresh live fetches rather than replaying the
+day's cached pool. Did **not** use `PEER_PROFILE_SNAPSHOT_PATH`.
+
+Called `buildDailyJobPool()` across **5 independent live pulls, 3 different
+configurations** (default `perSourceLimit` 60; widened 120; widened 200 with `topN`
+80). All 5 converged on the **same ~14–15 real postings** — widening the limits found
+zero new hosts, which itself is informative: this is close to the full live pool
+available to this profile today, not a truncated sample. For every unique posting
+found, **re-fetched its own page directly** (`fetchPageHtml`, the same fetcher
+`enrichJobCandidates` itself uses — not a stub) and ran the real, unmodified
+`resolveJobPostingScope(html, {url, title})` against it directly, exactly as
+production does. Fetch failures were consistent across every pull:
+`climatebase.org`, `inl.referrals.selectminds.com`, `www.employbl.com` failed every
+time; `grad.wisc.edu` failed intermittently (present one pull, absent the next) —
+10–12 of ~15 postings had fetchable HTML per pull.
+
+**Two structural probes, written for measurement only, product code untouched.**
+Ruling 31 section 4 names the two shapes precisely: (1) sibling `<tr>` rows with no
+per-row wrapper beyond `tr` itself, now recognised by the shipped fix; (2) flat
+siblings with **no wrapper tag of any kind**, still unfixed. Wrote two regex-based
+probes against the raw fetched HTML: **shape-1 probe** — ≥2 `<tr>` blocks (≥15 chars
+of row text each) carrying ≥2 distinct outbound hrefs; **shape-2 probe** — ≥2
+"listing-sized" `<a href>` anchors (≥8 chars of link text) with different hrefs,
+where the raw HTML **between** them contains no opening `article`/`li`/`section`/
+`div`/`main`/`tr` tag at all (i.e. neither anchor sits inside its own per-listing
+wrapper). Both probes are coarse, over-inclusive proxies for the shapes' literal
+preconditions — every hit was manually checked against the actual evidence (the
+hrefs themselves, and separately the `resolveJobPostingScope` output) before being
+counted as anything.
+
+**1. Shape 1 (sibling `<tr>` rows) — CONFIRMED on a real, live page for the first
+time in four rounds. Did not contaminate the actual selected posting.**
+
+`openmc.discourse.group` (a Discourse forum used to post OpenMC-software-adjacent
+job openings) is genuinely, structurally shape-1: the selected posting's own page
+(`.../t/job-vacancies-looking-for-openmc-skills/1727?page=2`) embeds a "Suggested
+Topics" table with 5 sibling `<tr class="topic-list-item">` rows, each linking to a
+**different** forum thread (one of them itself literally titled "OpenMC vacancy for
+fusion energy" — a second, unrelated job-adjacent posting on the same page).
+Confirmed present on all 5 of 5 live pulls, byte-identical hrefs each time.
+
+**But this specific selected posting is not contaminated.** `resolveJobPostingScope`
+called directly on the real fetched HTML, with the real item's own `url`/`title`,
+returns `{status: "owned", text: "Job vacancies looking for OpenMC skills\n\nAnnouncements"}`
+— the selected topic's own title plus its own category badge, nothing from any
+neighbouring row. Cross-checked against the **real pipeline's own live-computed pool
+item** (not a second, separate call): `buildDailyJobPool()` → the same item carries
+`fetchedPostingScope: "owned"`, `pageText` byte-identical to the above, `workMode:
+undefined`, `roleKind: undefined`. Mapped through `scoredJobToJob()` and rendered
+through the real `JobReport` (`renderToStaticMarkup`, same harness `page.test.ts`
+uses): rendered `<h1>` matches the title exactly; `summary` is `undefined` (the
+pageText is short enough that nothing survives B8-05's floor); no
+`data-section="what-the-role-is"` element at all — clean silence, not a stray
+heading, matching part 2's own finding for the same failure mode.
+
+**Why it stayed clean, stated as what was checked, not a causal theory:** searched
+the full raw HTML for every literal occurrence of the selected posting's own URL —
+it appears exactly twice, both inside `<head>` (`rel="canonical"`, `rel="alternate"`
+RSS link), **never as an `<a href>` inside the body**. The 5-row suggested-topics
+table does not contain the selected posting itself (Discourse does not suggest a
+topic to itself), so that table cannot satisfy the exact-link-match check for this
+posting regardless of the `tr` fix; a separate, smaller, title-matching block wins
+the smallest-candidate race instead. **Net: shape 1's precondition is real and live
+today; the fix's own row-selection logic was not actually exercised by this specific
+case, but the observed outcome — no contamination — is confirmed, not inferred.**
+
+**2. Shape 2 (flat siblings, no wrapper tag at all) — NOT OBSERVED. Say plainly: not
+observed in 15 real postings across 3 independent live-pull configurations, not
+"does not occur."**
+
+The shape-2 probe flagged 7 pages across the two full-probe pulls (`www.terra.do`,
+`www.postdocjobs.com`, `careerservices.upenn.edu`, `openmc.discourse.group`,
+`ev.careers`, `lco.global`, `grad.wisc.edu`). **Every flagged href set was read
+directly, not just counted:** all 7 are generic chrome link clusters — footer
+privacy/terms/accessibility links, social-share buttons (Facebook/LinkedIn/Twitter
+share intents), a course-catalog nav menu, a `mailto:`/Cloudflare email-obfuscation
+link — never two distinct job-listing chunks. Cross-checked from the content side
+too: of the 6 real postings that resolved to `status: "owned"` this round
+(`grad.wisc.edu`, `www.postdocjobs.com`, `careerservices.upenn.edu`,
+`openmc.discourse.group`, `ev.careers`, `lco.global`), the actual returned text —
+the thing that would reach a reader — is either clean single-posting content
+(`grad.wisc.edu`: `"PhD Student Internship Opportunities at Thermo Fisher
+Scientific\n\nNovember 13, 2025"`) or a short generic-chrome fragment
+(`www.postdocjobs.com`: `"More about this employer\n\nMore jobs from this
+employer\n\nUniversity Profile"`; `ev.careers`: `"Do not have a resume? Continue
+without resume."`) — the latter is R4/B8-05's own already-documented chrome
+territory, not a second listing's content, and out of this part's scope. **None of
+the 6 contain a second, identifiably-different listing's text.**
+
+**One structurally-relevant non-result, reported because it looked promising before
+being checked:** this round's live pool surfaced `jobs.battery.com`'s own
+`/jobs?jobTypes=Intern` URL — a filtered **listing** page, the closest thing to a
+textbook aggregator URL in this sample. Direct fetch: 18,770 bytes of raw HTML, but
+only **621 characters of real visible body text** ("You are using an outdated
+browser... Companies People Services About Research 221 companies . 4,155 jobs ..."),
+zero `<tr>` elements, 18 generic nav-only `<a href>`s. The page's real listings are
+client-rendered and never reach a plain fetch at all — the pre-existing, already-
+ruled "no headless browser" limitation (§1l Ruling 25), not a new finding, and
+neither evidence for nor against either shape: the shape cannot be observed here
+either way.
+
+`hiringcafe.com` — Ruling 29's own originally-motivating host — did not appear in
+any of this round's 5 pulls either. Fourth round running without a live encounter.
+
+**3. What the reader sees when contamination occurs.** **No contamination was found
+on real data this round, for either shape** — so there is nothing to report here.
+The one live shape-1 instance found (`openmc.discourse.group`, above) was checked
+end-to-end at the field level specifically because Ruling 29 requires `workMode`,
+`roleKind`, and `summary` to be scored separately when contamination is found: all
+three are clean (two `undefined`, one absent-by-floor), confirmed from real rendered
+output, not source-tracing alone. This is the strongest real test of "does the fixed
+shape behave correctly on a real page" this loop has had in four rounds, precisely
+because it is the first real page to exhibit the precondition at all.
+
+**Cleanup:** all five throwaway vitest files deleted before this commit. No product
+code touched. No credential printed, logged, or written anywhere.
+
+**Not done:** nothing — this is the last part of the round-9 A turn. Round-9 summary,
+history-table row, gate verdict, and §1 handoff to B follow below/after this entry.
