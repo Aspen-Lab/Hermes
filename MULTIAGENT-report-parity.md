@@ -524,7 +524,17 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   ruling directs. B11-04 therefore did not land; it is back
                   with the manager (see MANAGER CARRY-FORWARD above). The
                   clause worked as written and is worth keeping in future
-                  rulings of this shape.
+                  rulings of this shape. **NEW: §1x Ruling 37** — the
+                  escalation is ruled: the colonless-label run-on is an
+                  ACCEPTED COST; no version of the strip lands (13 confirmed
+                  mutilation shapes across two designs vs. 1 cosmetic,
+                  information-preserving run-on). A records a third one-line
+                  tally from round 12 (colonless heading run-ons in
+                  surviving summaries); recurrence beyond the single
+                  `careers.gevernova.com` instance sends it to a future B to
+                  design a genuinely closed discriminator, with two recorded
+                  leads (C's casing observation with its two caveats; the
+                  manager's additive-repair preference).
 STATUS:           **Round 11's six-item ranked list is now worked through:
                   three of the six ranked differences have a landed fix,
                   one is back with the manager, and two were already ruled
@@ -2572,6 +2582,51 @@ the **guarded version only** — B verified it correct on all seven cases, the
 defect is real and live, and the fix is small; but if C finds any eighth shape
 the guard misses, it stops and records rather than widening the guard inline.
 A's own naive version is confirmed unsafe and must not land in any form.
+*(Outcome: the eighth-shape condition fired — see §1x Ruling 37.)*
+
+---
+
+### §1x Ruling 37 — THE COLONLESS-LABEL RUN-ON IS AN ACCEPTED COST. NO VERSION OF THE STRIP LANDS. THE VERB LIST WAS AN OPEN CLASS IN A CLOSED LIST'S CLOTHING.
+
+Round 11 C exercised Ruling 36's eighth-shape clause on B11-04 and found
+**eight** further ordinary job-posting sentences the guarded strip mutilates —
+the decisive one near-boilerplate (`"The role reports to the Director of
+Engineering."` → `"reports to the Director of Engineering."`, subject gone).
+C stopped, built nothing, recorded three options, and escalated. That was
+exactly right.
+
+**Ruling: option 1 — accept the run-on as a cost. Nothing lands, in any form.**
+
+1. **The arithmetic is not close.** Thirteen confirmed mutilation shapes
+   across two independent designs (A's naive five, the guarded version's
+   eight) versus **one** cosmetic, information-preserving run-on observed
+   once in a four-item sample. Both designs trade common correct sentences
+   for one rare cosmetic improvement — the wrong direction, twice.
+2. **C's structural diagnosis is accepted as the reason no third design is
+   scheduled now:** every other closed list in this codebase enumerates a
+   genuinely finite set; `SUBJECT_CONTINUATION_RE` enumerates the verbs
+   English allows after a plural noun subject — an open class. Widening it
+   moves the boundary without closing it.
+3. Option 2 (land with collateral) is **rejected outright** — the collateral
+   is more common than the defect. Option 3 (design a closed discriminator)
+   is **deferred, not refused**, behind the same evidence bar as Rulings
+   33/34a: **A: from round 12 onward, when you measure job summaries, record
+   in one line how many surviving summaries show a colonless heading run
+   into the following sentence.** If the tally shows recurrence beyond the
+   single `careers.gevernova.com` instance, a future B designs — and
+   adversarially tests per Ruling 31 — before any C touches code.
+
+**Two leads for that day, recorded so they are not re-derived. Leads, not
+designs, not authorisation:**
+- **C's casing observation:** across all fifteen probed strings, heading-form
+  cases continue with a capitalised word, subject-usage cases continue in
+  lowercase. Carries its own two recorded caveats: casing-dependence is the
+  assumption B10-04 already had to fix once on the event side, and a
+  subject-usage sentence continuing with a proper noun defeats it.
+- **The manager adds one:** if a discriminator ever exists, prefer an
+  **additive repair** (insert the missing colon or break after the heading)
+  over deletion — a wrong insertion reads odd; a wrong deletion destroys the
+  sentence's subject. Same discriminator problem, far cheaper failure.
 
 ---
 
@@ -22770,4 +22825,57 @@ B11-06 already flagged that the persistent 403 is itself the finding worth
 naming, rather than something to keep retrying silently.
 
 Commit follows immediately.
+
+
+---
+
+### Round 11 — MANAGER verification of Agent C (before round 12 A is spawned)
+
+**Verdict: both landed items confirmed. The not-landed item is the round's best
+work, and it is ruled (§1x Ruling 37): the run-on is an accepted cost, nothing
+lands. Ruling 36's escape clause fired on its first outing and did exactly what
+it was written to do.**
+
+**Gate, re-run independently on the laptop:** 90 files / **1076 tests, 1075
+passing**, sole failure the documented `benchmark.test.ts` live-search flake.
+Matches C's line exactly. TypeScript clean; the one standing lint error only.
+
+**Verified rather than trusted:**
+- **SolarPACES lock (Ruling 28):** `enrich.test.ts`'s diff across C's turn is
+  empty — the file was not touched at all — and it passes in the manager's own
+  gate run. Third consecutive round of edits to the same guard family with the
+  lock byte-identical. C also correctly noted the manager's blast-radius warning
+  misplaced the file (it lives under `opportunities/`, not `events/`) — the
+  warning's substance held, its path was wrong, C checked rather than inherited.
+- **B11-03's two regexes run in `isChromeSegment`'s content block**, before the
+  `skipHostBrand` short-circuit — confirmed in the diff. So the enrichment
+  rescue path gets the new chrome checks too, which is the correct side of that
+  line: `"SolarPACES"` contains no filename, query-string, or heading marker.
+- **`summarize.ts` untouched** — `git diff -- web/src/lib/jobs/` is empty, as
+  B11-04's stop-and-record requires.
+- **C's negative-proof discipline, worth naming as a standard:** for both landed
+  items C reverted the source and re-ran the new tests to show they FAIL against
+  pre-fix code (3 and 4 failures respectively) — proving the tests test the fix,
+  not just pass alongside it. Adopt where practical.
+
+**B11-04, ruled — see §1x Ruling 37.** C rebuilt B's guarded version, confirmed
+B's seven cases exactly (B's verification stands, undisputed), then found eight
+ordinary sentences it mutilates — the decisive one near-boilerplate and correct
+in today's shipped code. C's structural diagnosis (a closed list enumerating an
+open class — the verbs English allows after a plural noun subject) is accepted
+as the reason no third design is scheduled. The tally decides if that changes.
+
+**Sixth consecutive round of the role-after catching the role-before**, and the
+first in which the catch was pre-authorised by a ruling rather than improvised —
+Ruling 36's eighth-shape clause converted "C notices the guide is unsafe" from a
+judgment call into an instruction. That is the loop's checking pattern maturing
+into its rules.
+
+**Round 11 closes with:** two structural event-name fixes landed (the unguarded
+snippet stage now runs the same guards as the title stage; two new chrome
+shapes rejected everywhere), one fix correctly refused, three rulings issued or
+amended (35 amended, 36, 37), and three one-line tallies now running for A.
+
+**Manager's turn complete. `WHOSE TURN: A` (round 12) stands as C left it.
+Round 12 A is spawned next, on Opus.**
 
