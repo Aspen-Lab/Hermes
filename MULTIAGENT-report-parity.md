@@ -22494,3 +22494,102 @@ prediction of zero changed assertions across `eventweb.test.ts` and
 
 Commit follows immediately.
 
+### Round 11 — Agent C (B11-03: two new narrow chrome-shape guards — LANDED)
+
+**STATUS: DONE, committed and pushed.** Landed in the same session as B11-02
+and directly on top of it, as B and §1 both required — these checks are only
+reachable through the `isChromeSegment` call B11-02 added to the snippet
+stage, so landed alone on unmodified code they would have done nothing at
+all.
+
+**What landed**, `web/src/lib/events/sources/eventweb.ts`, exactly B's two
+verified regexes, character-for-character, added to `isChromeSegment`'s
+existing host-independent `if` alongside `DOCUMENT_FILENAME_RE`,
+`isBareDateSegment` and `isBareLocationSegment`:
+
+- `EMBEDDED_FILENAME_RE` — a media/document extension optionally followed by
+  a query string, matched ANYWHERE in the segment rather than anchored to the
+  end the way `DOCUMENT_FILENAME_RE` is, because this shape is a filename
+  *stitched to* other scraped text, not a segment that IS a filename.
+- `MARKDOWN_CHROME_RE` — an ATX heading marker (`{2,6}` hashes) or a
+  bracketed ellipsis.
+
+**Took B's shared-`isChromeSegment` placement, not the "third,
+snippet-stage-only filter" alternative B left open**, for the reason B's own
+entry gives: this file's repeated practice is reuse over a parallel check,
+and duplicating two regexes to protect one call site is how two copies drift.
+The manager's blast-radius warning made the cost of that choice explicit and
+checkable, and it was checked (below).
+
+**THE MANAGER'S BLAST-RADIUS WARNING, ANSWERED EXPLICITLY: the SolarPACES
+regression-lock is unaffected, verified by running it, not by reasoning.**
+The manager correctly pointed out that `isChromeSegment` also runs under the
+`skipHostBrand` option used by `enrich.ts`'s typed-name rescue path (B9-04
+Fix 2), which B's own tests-at-risk list did not name — so a third test file
+was at risk beyond the two B listed. **The lock lives in
+`web/src/lib/opportunities/enrich.test.ts`** (not `enrich.test.ts` under
+`events/`, which does not exist — recorded so the next reader does not go
+looking in the wrong directory). Ran that file on its own with the change in
+place: **25 of 25 pass, unchanged.** Both SolarPACES assertions are intact —
+the typed-provenance rescue still returns `"SolarPACES"`, and the
+body-declaration case still returns `"32nd SolarPACES Conference"`. Neither
+string contains a period-plus-extension, a query string, a heading marker or
+a bracketed ellipsis, so neither new check can reach them; that is the
+reasoning, and the run is the evidence. `enrichment.test.ts` (the adjacent
+file, checked in case the name was ambiguous) also passes untouched.
+
+**Six new tests**, `web/src/lib/events/sources/eventweb.test.ts`, in a new
+`describe("scraped widget and markup chrome (B11-03)")` — both live repros
+asserted twice each, once at the guard level and once through the snippet
+stage where they actually reached a reader, plus both must-survive cases:
+
+- The embedded-filename repro rejected by `bestEventTitleSegment`.
+- The same value losing to the real event name inside a snippet — **the case
+  that proves the two items compose**, since it needs B11-02's call site AND
+  B11-03's regex to pass.
+- The Markdown repro rejected by `bestEventTitleSegment`.
+- The same value losing to the real event name inside a snippet.
+- **The single-`#` adversarial must-survive case, per the manager's explicit
+  instruction to protect the deliberate `{2,6}` boundary with an executable
+  test (Ruling 34's pattern).** `"Session # 3: Advanced Battery Chemistry
+  Track"` must come back unchanged. The test comment says in as many words
+  that it exists so a future round cannot relax the floor to `{1,6}` without
+  a failing test telling it what that costs.
+- A matching must-survive case for the filename check: a real workshop that
+  merely *names* a file format (`"Workshop on PDF Accessibility Standards
+  2026"`) must survive, since the check keys on a literal period before a
+  closed extension list, not on the format word appearing anywhere.
+
+**One deviation, logged rather than done silently.** The
+`internationalbatteryseminar.com` repro's leading two words are a real
+individual's personal name (the speaker in the photographed image). Every
+part of the string the regex actually keys on is verbatim from B11-01's log —
+the extension, the cache-busting query string, the bracketed ellipsis, the
+carousel widget label, and their exact ordering and punctuation — but the
+personal name itself is substituted with `"Speaker Photo"`. It carries no
+part of the shape being tested, and this file already has a precedent for
+paraphrasing the non-load-bearing part of a repro (see the
+`looksLikeEventTitle` block's own note at the top of the file). Ruling 31's
+"hardest real shape" is preserved exactly; only a private person's name is
+not committed into the repo. The `thebatteryshowsouth.com` repro is verbatim
+in full — it contains no personal data.
+
+**All four must-reject tests were proved to FAIL against B11-02-only code, by
+execution.** Same method as B11-02: copied the edited source aside,
+`git checkout --`'d back to HEAD (which at that point was exactly B11-02),
+ran `eventweb.test.ts`: **4 failed / 49 passed**, the four failures being
+precisely the four new must-reject cases. The two must-survive cases passed
+in both states, which is the correct result — they were never rejected and
+must not start being. This is the dependency B described, demonstrated rather
+than asserted. Temporary copy deleted immediately; `git status` clean of
+strays.
+
+**Gate after this item.** 90 files / 1076 tests, **1075 passing**; the only
+failure is `benchmark.test.ts`'s documented live-search flake. `npx tsc
+--noEmit` clean. `npx eslint` reports exactly the one standing pre-existing
+error (`quiz.tsx:46`), none added. **No existing test assertion changed or
+deleted** — B's prediction of zero false positives held on the full suite as
+well as on its own 16-value census.
+
+Commit follows immediately.
+

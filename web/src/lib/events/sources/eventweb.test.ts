@@ -454,6 +454,80 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B11-03 (round 11): scraped widget/markup chrome — the defect class
+  // B11-01's enumeration named and neither existing guard had any concept
+  // of. B11-01 confirmed by execution that BOTH live repros below pass
+  // looksLikeEventTitle unchanged, so B11-02's guard alone cannot reach
+  // them; these two checks are only reachable at all through the
+  // isChromeSegment call B11-02 added to the snippet stage, which is why
+  // that item had to land first.
+  describe("scraped widget and markup chrome (B11-03)", () => {
+    // internationalbatteryseminar.com's live repro. Everything the regex
+    // actually keys on is verbatim from B11-01's own log — the image
+    // extension, the cache-busting query string, the bracketed ellipsis and
+    // the carousel widget's own label. Only the leading personal name of the
+    // photographed speaker is substituted, since it is a real individual's
+    // name, carries no part of the shape being tested, and this file already
+    // has a precedent for paraphrasing the non-load-bearing part of a repro
+    // (see the looksLikeEventTitle block at the top).
+    it("rejects an embedded filename with a query string stitched into scraped text", () => {
+      expect(
+        bestEventTitleSegment(
+          "Speaker Photo.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery Carousel",
+        ),
+      ).toBeUndefined();
+    });
+
+    // The same value in the place it actually reached a reader: the snippet
+    // stage, where it beat the real name on the longest-fragment tie-break.
+    // This is the case that proves the two items compose — it fails with
+    // B11-02 alone.
+    it("keeps the real event name when scraped image chrome sits beside it in a snippet", () => {
+      expect(
+        eventNameFrom(
+          "Home",
+          "Speaker Photo.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery Carousel. The International Battery Seminar brings researchers together.",
+        ),
+      ).toBe("The International Battery Seminar brings researchers together.");
+    });
+
+    // thebatteryshowsouth.com's live repro, verbatim.
+    it("rejects a raw Markdown heading marker and bracketed ellipsis", () => {
+      expect(bestEventTitleSegment("[...] ## 2026 Keynote Speakers")).toBeUndefined();
+    });
+
+    it("keeps the real event name when scraped Markdown chrome sits beside it in a snippet", () => {
+      expect(
+        eventNameFrom(
+          "Home",
+          "[...] ## 2026 Keynote Speakers. The Battery Show South returns to Atlanta this year.",
+        ),
+      ).toBe("The Battery Show South returns to Atlanta this year.");
+    });
+
+    // THE must-survive case, and the reason the hash floor is {2,6} rather
+    // than {1,6}. A single `#` followed by a space reads as ordinary title
+    // punctuation, not markup, and this shape has exactly one live
+    // confirmation behind it — so the narrower floor is doing deliberate
+    // work. This test exists so a future round cannot quietly relax the
+    // floor without a failing test telling it exactly what that costs.
+    it("does not reject a real title containing a single hash as ordinary punctuation", () => {
+      expect(
+        bestEventTitleSegment("Session # 3: Advanced Battery Chemistry Track"),
+      ).toBe("Session # 3: Advanced Battery Chemistry Track");
+    });
+
+    // The matching must-survive case for the filename check: it keys on a
+    // literal period immediately before a closed extension list, not on the
+    // format word appearing anywhere. A real workshop about a file format
+    // must survive.
+    it("does not reject a real title merely because it names a file format", () => {
+      expect(
+        bestEventTitleSegment("Workshop on PDF Accessibility Standards 2026"),
+      ).toBe("Workshop on PDF Accessibility Standards 2026");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.

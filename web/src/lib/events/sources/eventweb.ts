@@ -321,6 +321,53 @@ function looksLikeArticledHostBrand(candidate: string, host: string): boolean {
 const DOCUMENT_FILENAME_RE = /\.(?:pdf|docx?|xlsx?|pptx?|csv|zip)$/i;
 
 /**
+ * B11-03 (round 11): scraped widget/markup chrome — a class B11-01's
+ * enumeration named that NO guard on either candidate path had ever
+ * targeted, and the one that produced two of round 11's three confirmed
+ * wrong event names. Distinct from every check above it: these strings are
+ * not a page label, not an index, not a date, not a location, and not
+ * narration either — B11-01 confirmed by execution that both live repros
+ * pass `looksLikeEventTitle` unchanged, so B11-02's guard alone cannot
+ * reach them. What they are is raw page furniture that survived text
+ * extraction and got stitched into what reads as one 20-120-character
+ * fragment.
+ *
+ * Both follow this file's own established convention (NARRATIVE_VERB_RE,
+ * HEADLINE_PASSIVE_RE, PRESENT_NARRATIVE_RE): a narrow, closed regex per
+ * confirmed shape, not a general markup parser.
+ *
+ * A media/document filename with its extension, optionally followed by a
+ * query-string suffix, ANYWHERE in the segment. Deliberately not anchored
+ * to the end the way DOCUMENT_FILENAME_RE above is — that check targets a
+ * segment that IS a filename, whereas this shape is a filename STITCHED to
+ * other scraped text (internationalbatteryseminar.com's live repro: an
+ * image filename with a cache-busting query string, then a bracketed
+ * ellipsis, then a carousel widget's own label). The trailing `\b` is
+ * load-bearing: it keeps a real word that merely CONTAINS an extension's
+ * letters after a period (".docs", ".zipper") from matching, since there is
+ * no word boundary mid-word.
+ */
+const EMBEDDED_FILENAME_RE =
+  /\.(?:jpe?g|png|gif|webp|svg|bmp|tiff?|pdf|docx?|xlsx?|pptx?|csv|zip)(?:\?[\w=&%-]*)?\b/i;
+
+/**
+ * B11-03 (round 11), second shape: raw Markdown syntax leaking through text
+ * extraction — an ATX heading marker or a bracketed ellipsis, both artifacts
+ * of the extraction step rather than anything a real event name contains.
+ * thebatteryshowsouth.com's live repro carried both.
+ *
+ * The `{2,6}` hash floor is deliberate and was verified against a
+ * constructed adversarial case before being written here, per Ruling 31: a
+ * SINGLE `#` followed by a space is closer to plausible real-title
+ * punctuation ("Session # 3: ...") than to markup, and this shape has
+ * exactly one live confirmation to justify it on. `{1,6}` would have been
+ * wider for no evidence. The must-not-reject test for that boundary is in
+ * eventweb.test.ts and exists specifically so a future round cannot relax
+ * the floor without a test telling it what it just gave up.
+ */
+const MARKDOWN_CHROME_RE = /#{2,6}\s|\[\s*\.\.\.\s*\]/;
+
+/**
  * B9-04's bare-date guard (round 9): a segment that is ONLY a date —
  * "March 15-18, 2027" — clears every check above cleanly (none of them has
  * any concept of "this is only a date, not a name") and clears
@@ -415,6 +462,8 @@ function isChromeSegment(
     isEventIndexPage(trimmed) ||
     /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed) ||
     DOCUMENT_FILENAME_RE.test(trimmed) ||
+    EMBEDDED_FILENAME_RE.test(trimmed) ||
+    MARKDOWN_CHROME_RE.test(trimmed) ||
     isBareDateSegment(trimmed) ||
     isBareLocationSegment(trimmed)
   ) {
