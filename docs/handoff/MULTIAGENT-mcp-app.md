@@ -137,18 +137,20 @@ ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
 WHOSE TURN:       C (in progress — see §4 Round 1 — Agent C for live item log)
 STATUS:           Round 1 C in progress, working B's guide top to bottom.
-                  DONE so far: 1-01+1-08 (dependency + endpoint skeleton,
-                  with 3 corrections to B's guide found by actually running
-                  the install/test rather than reading — see §4). Continuing
+                  DONE so far: 1-01+1-08 (endpoint skeleton, 3 corrections to
+                  B's guide found by running install/tests — see §4),
+                  1-10 (dev-slug gate; MCP_DEV_TEST_USER_ID is a placeholder
+                  UUID — this sandbox has no Supabase credentials to create
+                  a real test user, flagged for A/manager in §4). Continuing
                   down the build order; §4 gets one entry per commit as it
                   happens, pushed immediately.
-LAST DIFFERENCE:  1-10 — the dev-slug gate (RULING 2) doesn't exist yet;
-                  the route from 1-01 is still transiently open per the
-                  build order's own allowance. Next commit closes this.
+LAST DIFFERENCE:  1-02 — `get_daily_forecast` has no implementation yet.
+                  The route now 404s correctly on a bad/missing slug but
+                  has zero tools registered.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08 (endpoint skeleton) — rest of B's build order in
-                  progress this round, see §4.
-GATE NOW:         npm test (web/): 598 passed | 1 skipped (599), 74 files +1 skipped
+DONE:             1-01+1-08 (endpoint skeleton), 1-10 (dev-slug gate) — rest
+                  of B's build order in progress this round, see §4.
+GATE NOW:         npm test (web/): 608 passed | 1 skipped (609), 75 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1095,3 +1097,51 @@ grows through the round rather than being written at the end.
   new test exactly. No existing test touched.
 - Blast radius: none — new files only; `package.json`/`package-lock.json`
   changed but nothing existing imports the new packages yet.
+
+**1-10 — dev-slug auth gate (RULING 2).** DONE.
+
+- New: `web/src/lib/mcp/dev-auth.ts` (`verifyDevSlug` via
+  `crypto.timingSafeEqual`, `getDevTestUserId`), matches B's design exactly
+  — length-mismatch guarded before comparing (avoids `timingSafeEqual`'s
+  `RangeError` on unequal-length buffers), unset-env-var short-circuits to
+  `false` before any comparison is attempted.
+- `web/src/app/api/mcp/[slug]/route.ts`: now calls `verifyDevSlug(slug)` and
+  `getDevTestUserId()` before constructing the handler; both failure paths
+  return a bare `404` (`new Response(null, { status: 404 })`), never
+  401/403, matching RULING 2's "don't confirm this path is meaningful."
+  `registerPeerTools` now receives the real resolved `userId` instead of
+  1-01's placeholder `""`.
+- Generated `web/.env.local` locally (confirmed gitignored first —
+  `git check-ignore -v web/.env.local` — before writing anything): a fresh
+  random `MCP_DEV_SLUG` via a one-shot Node script that wrote the file
+  directly and never printed the value to any command output, log, or this
+  file. **`MCP_DEV_TEST_USER_ID` is a placeholder**
+  (`00000000-0000-4000-8000-000000000000`), commented as such in the file —
+  this sandboxed build environment has no Supabase project credentials at
+  all (`NEXT_PUBLIC_SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` both confirmed
+  unset via `!!process.env.X` existence checks, values never inspected), so
+  I could not look up or create a real `auth.users` row to point it at.
+  **Flagging for A/manager:** real local verification against live Supabase
+  data (this round's remaining NEEDS LOCAL VERIFY items, and the perf
+  measurement in step 3 below) needs someone with real project credentials
+  to replace this placeholder — RULING 2 already marks "wiring the slug to
+  the user's real Peer account" as a manager decision, so this is expected,
+  not a gap I introduced.
+- Assertions rewritten (why): `route.test.ts`'s one existing test
+  ("responds 200... for any slug") no longer held once the gate is real —
+  rewrote it to stub `MCP_DEV_SLUG`/`MCP_DEV_TEST_USER_ID` and use the
+  correct fixture slug, same InitializeResult assertions otherwise
+  unchanged. Added three new cases: wrong slug → 404, unset
+  `MCP_DEV_SLUG` → 404, unset `MCP_DEV_TEST_USER_ID` → 404. This is the one
+  rewrite expected by the build order itself (1-01's skeleton was
+  explicitly "transiently unauthenticated," 1-10 is what makes it real) —
+  no other existing test touched.
+- Test: `web/src/lib/mcp/dev-auth.test.ts` — the exact cases B specified
+  (correct→true, wrong-same-length→false, unset-env→false even for an
+  empty candidate, different-length→false without throwing), plus
+  `getDevTestUserId` set/unset cases.
+- Gate after this item: **608 passed | 1 skipped (609), 75 files + 1
+  skipped (76)** — +1 file (`dev-auth.test.ts`, 7 tests), +3 net tests in
+  `route.test.ts` (1→4). 598+10=608, matches.
+- Blast radius: none — `route.ts` is the only existing file touched, and it
+  has no callers yet outside its own test (M1 isn't deployed).
