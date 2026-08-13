@@ -270,20 +270,19 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 03:43 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished part 3 of a deliberately split A turn @
-                  2026-08-13 03:55 UTC. §1 itself pre-split this A turn into
-                  four parts after a previous round-9 A died on the
-                  account's spend limit before it had even finished reading.
-                  This session did **part 3 only — R13 event names (B8-06),
-                  measured live** — and stopped there by design, exactly as
-                  instructed. **Part 4 (same-page contamination/B8-07) is
-                  not done** and is the next A's job. Full method and every
-                  number is in §4 "Round 9 — Agent A (part 3: event names)."
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 (part 4 of the deliberately
+                  split round-9 A turn, plus this turn's own closeout: cross-
+                  parts summary, history-table row, gate verdict, this
+                  handoff). All four parts are now done and independently
+                  measured on real data. Full method and every number for
+                  part 4 is in §4 "Round 9 — Agent A (part 4: same-page
+                  contamination)"; the four-part headline is in §4 "Round 9
+                  — Agent A (summary across parts 1–4)."
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -291,23 +290,99 @@ STOPPED BECAUSE:  finished part 3 of a deliberately split A turn @
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 (in progress — parts 1-3 of 4 done)
-WHOSE TURN:       **A — PARTIAL, parts 1–3 of 4 complete, resume at part 4
-                  (same-page multi-listing contamination, B8-07).**
-                  Independently re-measure on real data whether either of
-                  Ruling 29's two derived markup shapes (one fixed in round
-                  8, one deliberately left open — §4 "Round 8 — Agent C",
-                  B8-07) can be found on a live page; report plainly if
-                  neither can. Fresh real events/jobs through the build's
-                  own pipeline, per item, never averaged, per §1j/Ruling
-                  30's standard. **C does not remeasure.** Do **not** redo
-                  parts 1–3 (employer field; R4 job summaries; R13 event
-                  names) — all three are measured and closed out below;
-                  part 4's figures still describe the pre-fix/fixture-only
-                  state until measured.
+ROUND:            9 — COMPLETE (all 4 A parts done). Next: B.
+WHOSE TURN:       **B.** Round 9's A turn independently re-measured all four
+                  round-8 residuals on real data (never a fixture this
+                  round). Three of four parts found real, non-zero
+                  differences; find why each still differs and produce a
+                  fix guide, in this order:
 
-MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — **for B,
-                  not for A parts 3–4; do not spend A budget on it**):
+                  1. **Employer field, 3 still-wrong real postings out of 11
+                     non-null (27.3%), down from round 8's pre-fix 62.5%.**
+                     Full census in §4 "Round 9 — Agent A (part 1)." The
+                     three wrong ones, by shape: (a) `inl.referrals.
+                     selectminds.com` — renders "Idaho National Laboratory
+                     Careers," a trailing "Careers" chrome word not
+                     stripped from an otherwise-correct name; (b)
+                     `postdocjobs.com` — renders a research-field label
+                     ("Molten Salt Chemical and Electrochemical
+                     Engineering"), not an organisation name at all; (c)
+                     `careerservices.upenn.edu` — renders a topic label
+                     ("Molten Salt Characterization") in place of the
+                     employer named explicitly in the posting's own URL
+                     slug (Oak Ridge National Laboratory) — this exact
+                     posting was flagged unchanged in rounds 8 and 9, a
+                     different, still-unnamed mechanism from every B8-0x
+                     guard. Find each shape's own source, not one shared
+                     regex fix — (a) looks like a stray-suffix cleanup,
+                     (b)/(c) look like the extractor picking a topic/label
+                     field over an organisation field somewhere upstream of
+                     any host-brand guard.
+                  2. **R4 job summaries — isolate the cause before touching
+                     anything.** See the MANAGER CARRY-FORWARD block below,
+                     kept from this turn's part 2 and still unactioned:
+                     summary-bearing rate fell from 36% to 13.8% in the same
+                     measurement that took chrome from 4-of-4 to 0-of-4, and
+                     the two explanations (pool composition vs. the new
+                     floor over-rejecting) were not separated. Do this
+                     first, per that block's own method. Two smaller,
+                     newly-named defects from part 2 to fix once the floor
+                     question is settled: a formatting-strip dash artifact
+                     (`www.aiu.edu`, `"of – charge transfer"`) and an
+                     acronym-collision keyword match letting generic
+                     boilerplate through (`www.lco-cdo.org`'s own "LCO"
+                     initialism matching this profile's unrelated "LCO"
+                     research topic).
+                  3. **R13 event names, 5 of 15 real events confirmed wrong
+                     out of 15 individually scored, 3 not confirmed false.**
+                     Full table in §4 "Round 9 — Agent A (part 3)." All
+                     three of B8-06's own guards fire correctly at the shape
+                     level — this is not a regression — but two specific
+                     live mechanisms outside B8-06's three shapes still
+                     produce wrong names: (a) `looksLikeHostBrand()` misses
+                     a display name whose host's DNS label does not
+                     textually resemble it (`ruggedthz.com` → "Ruggiero
+                     Research Lab" rendered, the site's own blog/brand name,
+                     not the event); (b) `nameFromUrlSlug()`'s fallback
+                     strips a document's file extension but keeps the rest
+                     of the filename as if it were an event name
+                     (`euchems2026.eu` → "ECC102026 POSTERS v2", a posters
+                     PDF's own filename). A third, separate defect, not
+                     host-specific: `eventNameFrom()`'s unconditional
+                     last-resort line (`segments[0] ?? title.trim()`)
+                     returns the raw first title segment even when every
+                     earlier guard in the same call already rejected it —
+                     confirmed by direct call with a controlled all-chrome-
+                     title/no-slug/no-snippet input, not yet observed live.
+                     Two more real wrong names worth a look, not yet
+                     root-caused at all: `sdle.co.il` (rendered name and
+                     URL slug name two different events, in two different
+                     countries) and `internationalbatteryseminar.com`
+                     (renders a bare date, not a name).
+                  4. **Same-page contamination (B8-07/Ruling 29) — no fix
+                     item this round, informational only.** Part 4 confirmed
+                     Ruling 29's shape-1 precondition (sibling `<tr>` rows,
+                     multiple distinct postings, no per-row wrapper) exists
+                     on a real, live page for the first time in four rounds
+                     (`openmc.discourse.group`) — but it did **not**
+                     contaminate the actual selected posting there; an
+                     unrelated, smaller, correctly-scoped candidate is
+                     selected instead, confirmed clean at the `workMode`/
+                     `roleKind`/`summary` field level via the real
+                     pipeline's own live pool item. Shape 2 (flat, unwrapped
+                     siblings) was **not observed** in 15 real postings
+                     across 3 pull configurations — say "not observed," not
+                     "does not occur," per Ruling 31 section 4's own
+                     standard. **Do not open a fix item for either shape
+                     this round** — there is no live counterexample of
+                     actual contamination to design against, exactly as
+                     Ruling 31 already ruled. Full detail in §4 "Round 9 —
+                     Agent A (part 4)."
+
+MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — kept here
+                  unchanged, per this turn's own closeout instruction not to
+                  delete it; folded into work item 2 above, but the full
+                  original reasoning stays below for B to read directly):
                   **part 2's headline number has a second reading nobody has
                   ruled out.** Chrome in summaries went 4-of-4 → 0-of-4,
                   which is the win. But the share of postings that carry a
@@ -328,83 +403,9 @@ MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — **for B,
                   standard but is still a cost that must be **measured and
                   named**, not absorbed silently.
 
-                  **Specifically watch for real-data shapes that don't match
-                  the fixtures this session built everything against.**
-                  Every item this turn was verified at the source/fixture
-                  level (synthetic markup, hand-built regex cases against
-                  the real exported functions) — not against a fresh live
-                  page — except B8-02's SolarPACES re-check, which was done
-                  live inside that item per Ruling 31's one-time
-                  requirement (do not repeat it; do not skip re-checking
-                  everything else against real data).
-
-                  Priority watch list, most likely to differ from a fixture:
-                  1. **Employer field** (B8-01/02/03/04, seven write sites
-                     total, all now guarded). **MEASURED THIS TURN — see §4
-                     "Round 9 — Agent A (part 1: employer field)" for the
-                     full table and method.** 3 of 11 non-null real
-                     postings wrong (27.3%), down from Round 8 A's pre-fix
-                     5 of 8 (62.5%); two of Round 8 A's own flagged postings
-                     directly confirmed fixed live, same host, before vs.
-                     after (`talents.vaia.com`/Savannah River National
-                     Laboratory, was "Vaia"; `grad.wisc.edu`/Thermo Fisher
-                     Scientific, was "Graduate School"). The
-                     `careers.<company>.<tld>` trade-off B8-02 flagged is
-                     real — confirmed live via direct calls to the shipped
-                     `looksLikeHostBrand()` on 4 of 15 sampled hosts — but
-                     **zero proven suppressions** in this sample, one
-                     plausible-but-unproven (`jobs.lbl.gov`, null company).
-                     Silence (not a new default) confirmed on both card and
-                     report for a real null-company posting. One still-open
-                     wrong-value shape (Oak Ridge National Laboratory
-                     posting rendering a topic label as employer) persists
-                     unchanged by any B8-0x item — a different, unnamed
-                     mechanism, not a host-brand-guard case.
-                  2. **R4 job summaries** (B8-05). **MEASURED THIS TURN —
-                     see §4 "Round 9 — Agent A (part 2: job summaries)" for
-                     the full per-posting detail and method.** 0 of 4
-                     non-empty live summaries carry the classic
-                     site-navigation-chrome shape this round, down from
-                     Round 8 A's pre-fix 4 of 4 — but the summary-bearing
-                     rate itself fell too (4 of 29 unique real postings,
-                     13.8%, vs round 8's 4 of 11, 36%), and 2 of the 4 carry
-                     a smaller, different, previously-unnamed defect (a
-                     formatting-strip dash artifact; a generic-org filler
-                     sentence let through by an acronym-collision keyword
-                     match, not a chrome match). The named still-open shape
-                     (chrome + matched keyword) was **not observed as
-                     literal chrome** this round; the Markdown-link-remnant
-                     and single-colon-label shapes were **not observed**
-                     either — but round 8's exact named hosts for both are
-                     absent from today's pool entirely, so this is "not
-                     observed," not "confirmed fixed." Floor-rejects-
-                     everything render-confirmed as clean silence (no
-                     heading, no section, no wrapper) on a real posting plus
-                     two controlled cases — no heading-over-nothing defect
-                     found in any of the three checks.
-                  3. **R13 event names** (B8-06). §4 records incidental live
-                     corroboration — the standing benchmark flake's own live
-                     run touched both originally-cited hosts (`ruggedthz.com`,
-                     `nanoge.org`) again post-fix and produced different,
-                     non-chrome names — but this was **not** a dedicated
-                     re-verification and neither new name was independently
-                     checked for correctness. Worth a direct look. Also: a
-                     pre-existing gap in `GENERIC_PAGE_TITLE_RE` (bare
-                     single-word `"Program"`, American spelling, still
-                     unmatched) was found but deliberately left unfixed —
-                     out of scope for B8-06, no live evidence motivating it.
-                  4. **Same-page multi-listing contamination** (B8-07,
-                     Ruling 29). The sibling-`<tr>` shape is now fixed code,
-                     confirmed via fixture, not yet confirmed on a real
-                     page. The flat-sibling-no-wrapper shape is confirmed
-                     reproducible on a fixture but deliberately **not**
-                     fixed (no live counterexample to design a safe
-                     mechanism against — see §4 for why). If a real page
-                     ever surfaces in either shape, say so explicitly.
-
                   Standing, unchanged: **B8-03's `usajobs.ts` fallback**
                   (`"U.S. Federal Government"`) is still an open `POLICY`
-                  question for the manager, not for A.
+                  question for the manager, not for A or B.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
@@ -422,39 +423,40 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   result in either direction. **No item reversed a recorded
                   ruling; SolarPACES (Ruling 28) was re-verified live inside
                   B8-02 and remains CLOSED.** Full per-item detail in §4
-                  "Round 8 — Agent C."
-LAST DIFFERENCE:  **Employer field (part 1): 3 of 11 non-null real postings
-                  wrong (27.3%), down from 5 of 8 (62.5%) pre-fix.** Full
-                  table in §4 "Round 9 — Agent A (part 1)." **R4 job
-                  summaries (part 2): 0 of 4 non-empty real summaries carry
-                  classic chrome, down from round 8's 4 of 4** — but the
-                  summary-bearing rate itself dropped to 4 of 29 (13.8%)
-                  from 4 of 11 (36%), and 2 of the 4 carry a smaller,
-                  different, newly-observed defect. Full detail in §4
-                  "Round 9 — Agent A (part 2: job summaries)." **R13 event
-                  names (part 3, this turn): 15 real events scored
-                  individually — 7 correct, 5 confirmed wrong, 3 not
-                  confirmed false.** All three of B8-06's closed shapes
-                  re-verified by direct execution of the real function: the
-                  narrative-sentence guard and the filename-extension guard
-                  both fire correctly at the shape level, but in both cases
-                  the host they were named on (`ruggedthz.com`,
-                  `euchems2026.eu`) is **still wrong live today**, via
-                  mechanisms outside B8-06's three shapes (an unmatched
-                  host-brand segment; the same document-filename fallback,
-                  minus its extension). `nanoge.org` is now correct — its
-                  own page content changed, independent of any fix. The
-                  bare-`"Program"` gap is confirmed still open but costs
-                  nothing in this sample (0 of 31 rendered names). Full
-                  detail, table, and a fallback-chain finding (the
-                  no-slug-no-snippet worst case can still return an
-                  already-rejected chrome string verbatim) in §4 "Round 9 —
-                  Agent A (part 3: event names)." **Same-page contamination
-                  (part 4) is still the PRE-fix/fixture-only state**, not
-                  yet remeasured on real data.
-GATE (0%):        **NOT MET.** Unchanged — the gate cannot be judged until
-                  all four parts of this A turn are done (parts 1–3 of 4
-                  done).
+                  "Round 8 — Agent C." **Round 9 A has now independently
+                  re-measured all four residuals against real data, in four
+                  parts, across four sessions — see LAST DIFFERENCE below
+                  and §4 "Round 9 — Agent A (summary across parts 1–4)."**
+LAST DIFFERENCE:  **Employer field: 3 of 11 non-null real postings wrong
+                  (27.3%), down from 5 of 8 (62.5%) pre-fix.** **R4 job
+                  summaries: 0 of 4 non-empty real summaries carry classic
+                  chrome, down from round 8's 4 of 4** — but the summary-
+                  bearing rate itself dropped to 4 of 29 (13.8%) from 4 of
+                  11 (36%), cause not yet isolated; 2 of 4 carry a smaller,
+                  newly-observed defect. **R13 event names: 15 real events
+                  scored individually — 7 correct, 5 confirmed wrong, 3 not
+                  confirmed false**, both originally-cited hosts still wrong
+                  live via mechanisms outside B8-06's three shapes. **Same-
+                  page contamination: shape 1's precondition confirmed live
+                  for the first time in four rounds, but produced zero
+                  contamination on the one real page found; shape 2 not
+                  observed in 15 real postings.** Full detail for each in
+                  their own §4 "Round 9 — Agent A (part N)" entries; the
+                  four-part headline is in §4 "Round 9 — Agent A (summary
+                  across parts 1–4)."
+GATE (0%):        **NOT MET.** Three of the four parts (employer field, R4
+                  summaries, R13 event names) found real, non-zero
+                  differences on real data this round. Per §2's own
+                  instruction, the gate is set to MET only on zero
+                  unexplained differences — that bar was not met. This is a
+                  normal outcome, not a failure of round 8's work: every
+                  measured number improved from round 8's own pre-fix
+                  baseline (employer field 62.5%→27.3% wrong; summary chrome
+                  4-of-4→0-of-4). Same-page contamination (part 4) is the
+                  one part that found zero contamination on real data this
+                  round — but not zero finding, since it newly confirmed
+                  shape 1's precondition is real and live, which stays
+                  recorded, not treated as closed.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
