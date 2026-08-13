@@ -20990,3 +20990,125 @@ gate verdict.
 
 Commit follows immediately.
 
+---
+
+### Round 11 — Agent A (part 3: R4 job summaries, scored against B10-07 fixes 1 and 2, plus Ruling 33's tally)
+
+**STATUS: DONE.** Continuing the same session as part 2. Checks whether a
+bare section label can still clear the summary floor alone (fix 1), whether
+the leading `Label:` strip (fix 2) is live and whether it ever costs real
+meaning (the blast-radius watch this part's own brief named), and records
+Ruling 33's mandatory acronym tally.
+
+**Method.** Live keys reconfirmed present, boolean check only. Built a
+throwaway vitest file
+(`web/src/zz-round11-a-part3-summaries-live.test.ts`, deleted before this
+commit) following round 9/10 A's own profile-loading and no-op-`PoolCache`
+precedent, calling `buildDailyJobPool()` then `scoredJobToJob()` — the exact
+entry points §2 names. Wrote the JSON result to this session's own
+scratchpad directory, fully outside the repository, per round 11 A part 1's
+tightened practice — never a throwaway result file inside the git working
+tree. For each non-empty summary, additionally computed which of the
+posting's own `matchedKeywords` appear verbatim in the final displayed text
+(same case-insensitive substring test `summarize.ts`'s own `termMatches`
+uses), to support the acronym tally without reading further into the
+scoring internals than needed to characterize what was observed.
+
+**Two independent fresh live pulls, same session: 14 unique postings each,
+4 summary-bearing each, byte-identical text both times.** One honest
+reproducibility note: an earlier pull earlier in this same session (before
+this part's scaffold was extended to also record pool size) found only 3 of
+these 4, missing `grad.wisc.edu` — no product code changed between the two
+pulls; this is the same live-search run-to-run variance this loop has
+repeatedly documented elsewhere, not a regression. The 4-item reading below
+is the reproducible one (2 of 2 identical pulls) and is this round's own
+number.
+
+**4 of 14 (28.6%) summary-bearing this round**, up from round 10's 3 of 13
+(23.1%) and round 9's 4 of 29 (13.8%) — different days, different pool
+sizes each time, so reported as this round's own number, not a trend.
+
+**Per-posting result, all 4, none averaged:**
+
+1. `grad.wisc.edu`, matched `"ion exchange"`: *"Must be able to
+   independently design, plan, and execute experiments, analyze data, and
+   perform basic troubleshooting of experimental protocols."* **CLEAN,
+   byte-identical to round 10's own citation.** No clutter, unchanged.
+2. `inl.referrals.selectminds.com`, matched `"molten salt"`: *"This is a
+   multi-level posting and you will be placed at the appropriate level
+   dependent on degree field and level of education."* **CLEAN — fix 2
+   confirmed live and working on this exact host/sentence.** Round 10 found
+   this same sentence prefixed with `"Multi-Level:"`; that prefix is gone
+   today. No meaning lost: the sentence already states "this is a
+   multi-level posting" in its own words, so the label was redundant with
+   its own sentence — stripping it cost nothing.
+3. `employbl.com`, matched `"battery"`: *"Battery is a private equity and
+   venture capital firm with over 40 years of heritage investing in
+   category-leading technology companies. During our 10-week paid summer
+   internship program, you will earn up to $2,500 per week."* **CLEAN, two
+   full sentences.** Round 10's own stacked-chrome defect on this exact host
+   (`"Qualifications:"` colon-label + bare Markdown heading marker `###` +
+   an orphaned, unpaired opening bracket ending in `"[..."`) — round 10's
+   own #6 ranked-difference-list item — **is confirmed gone today**,
+   replaced by a different, fully clean second sentence. Cannot cleanly
+   attribute this to fix 1 specifically versus the live page's own content
+   simply differing on a different pull (a cause question, not this turn's
+   to answer) — reporting the outcome, not the mechanism.
+4. `careers.gevernova.com`, matched `"battery"`: *"What you'll do Support
+   engineering teams developing new battery technology for use in the
+   Utilities, Datacenter, and Defense industries. Interface with the
+   advanced research center on testing results."* **New summary-bearing
+   posting this round** (not in round 10's 3-item sample, though round 11 A
+   part 1 already saw this same posting as a null-employer census entry).
+   Mostly clean and informative, but **a new, adjacent shape worth flagging
+   plainly, distinct from fix 2's own scope**: the leading `"What you'll
+   do"` is the same credited `SECTION_RE` family as `"Role Overview"`, but
+   the source text carries **no colon** after it — confirmed by reading
+   `LEADING_LABEL_RE` (`web/src/lib/jobs/summarize.ts:122`,
+   `/^[A-Z][a-zA-Z]*(?:[\s-][A-Za-z]+){0,2}:\s*/`), which requires a literal
+   trailing colon before it matches. With no colon to match, fix 2 never
+   fires, so the label runs straight into the body text with only a space:
+   `"What you'll do Support engineering teams..."`. Mildly awkward, not
+   seriously broken — but **not the fix-2-over-stripping shape this part's
+   brief asked to watch for; the opposite** — a credited section-opener
+   label that ISN'T cosmetically cleaned up, because it lacks the one
+   character the strip requires. Recorded as a new, previously-unreported
+   finding, not chased further (a fix direction is B's job).
+
+**Fix 1 watch (a bare section label can no longer clear the floor alone) —
+not confirmed needed to fire, nothing to report as broken.** No bare/junk
+section-label fragment (zero keyword match, zero readable content) survived
+in this 4-item sample. Consistent with fix 1 working; equally consistent
+with simply not drawing that shape this pull — "not observed," not
+"confirmed still firing," same standard this loop has always used for an
+absent shape.
+
+**Fix 2 watch — the blast-radius question this part's brief specifically
+asked about: did the strip ever remove a label that carried real meaning,
+making a summary read worse? Not observed in this live sample.** The one
+confirmed live strip (`inl.referrals.selectminds.com`, above) cost nothing.
+The one adjacent finding (`careers.gevernova.com`, above) is a case of the
+strip **not** firing, not of it over-firing. No regression found.
+
+**RULING 33's ACRONYM TALLY — round 11.** Of the 4 surviving summary
+sentences this round, the matched keyword evidence was: `"molten salt"` (11
+characters), `"ion exchange"` (12 characters), `"battery"` (7 characters),
+`"battery"` (7 characters, second posting). **None is an acronym under 5
+characters. Tally this round: 0 of 4.** Running total across all three
+tracked rounds: **round 9 = 1 of 4; round 10 = 0 of 3; round 11 = 0 of 4.**
+Two zero rounds running since the single round-9 LCO instance — still a
+single anecdote, not a frequency pattern, per Ruling 33's own standard for
+revisiting.
+
+**Cleanup:** throwaway vitest file and its JSON output deleted/left outside
+the repository before this commit (`git status` confirmed clean under
+`web/src/` before committing). No product code touched. No credential
+printed, logged, or written anywhere.
+
+**Not done this turn (part 4, same session, continuing next):** R13 event
+names re-check (`internationalbatteryseminar.com`, `ruggedthz.com`,
+`euagenda.eu` retry, SolarPACES lock), then the round's summary/ranked
+difference list/gate verdict.
+
+Commit follows immediately.
+
