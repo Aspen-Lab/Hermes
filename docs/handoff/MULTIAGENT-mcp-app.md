@@ -132,82 +132,76 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly-mcp @ 2026-08-13 10:20 UTC
-ROUND:            3
+HELD BY:          free
+ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior). M1 acceptance pends the USER host-test per
                   RULING 9 — its checklist lives in §4 Round 2 A's NEEDS
                   MANAGER/USER list and is re-listed every round.
-WHOSE TURN:       C
-STATUS:           Round 3 B wrote the full M2 fix guide for A's 13
-                  MISSING criteria (items 3-01..3-13, §4 "Round 3 —
-                  Agent B"), read-only throughout (`git status --short`
-                  clean at every checkpoint; gate independently re-run
-                  fresh, unchanged at 659/1/660, tsc clean). Verified
-                  all four of A's flagged claims correct (FeedType
-                  facets, the no-_meta-fullscreen claim, the
-                  System-close claim, profile.displayName) plus one
-                  more on B's own initiative (window.openai.callTool
-                  exists, needed for Expand wiring). Resolved both of
-                  A's delegated design tensions (filter-chip counts;
-                  limit-cap vs "full list") with concrete, testable
-                  mechanisms, not left open for C to guess. Item 3-10's
-                  POLICY flag was already closed by RULING 10 before
-                  this round began; the guide builds directly to it.
-                  Found two things narrower than A's inventory implied:
-                  (1) "starter prompts" are a published-app-only Apps
-                  SDK surface, not configurable for M1/M2's dev-mode
-                  connector at all (developers.openai.com/apps-sdk/
-                  deploy/connect-chatgpt, fetched fresh) — folded into
-                  3-06 so C isn't asked to build a config surface that
-                  doesn't exist; (2) per-card "Open in Peer" deep links
-                  must not point at Peer web's own /jobs/[id] or
-                  /events/[id] (both are client-store-only, no
-                  fetch-by-id fallback, confirmed by reading all three
-                  detail pages — a cold external click would 404/empty)
-                  — 3-11 routes around this by linking each card to the
-                  item's own external source instead. Full guide,
-                  architecture decisions, and all citations: §4 "Round
-                  3 — Agent B".
-LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: 13/13
-                  criteria MISSING — round 3 A's difference list, items
-                  3-01..3-13, full table in §4 "Round 3 — Agent A"; B's
-                  fix guide for every item in §4 "Round 3 — Agent B".
-GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-                  — M1 pends only the user host-test per RULING 9; M2
-                  still measured at 0% MET (13/13 MISSING) — B does not
-                  change code, so this is unchanged from A's measurement.
-                  C implements the guide next.
+WHOSE TURN:       A
+STATUS:           Round 3 C implemented B's full M2 fix guide top to
+                  bottom, in the stated build order, one commit per item
+                  (5 commits: 3-01; 3-02+3-13; the combined 3-04/05/07/
+                  08/09/10/11/12 content item; 3-03; 3-06), gate + tsc +
+                  eslint clean after every commit, pushed immediately —
+                  identifier `cloud-hourly-mcp` (§0c), no subagents.
+                  Full detail, blast radius, and hand-back notes: §4
+                  "Round 3 — Agent C". Found and fixed one real bug
+                  beyond the guide's literal sketch: the guide's Expand-
+                  button placement (inside the replaced pc-head div)
+                  would have had the button destroyed by the very first
+                  real render, taking its listener with it — restructured
+                  so mark/title/Expand are static siblings and only the
+                  date/counts meta text is replaced. Also found (not
+                  fixed) a pre-existing, unrelated test flake:
+                  `src/lib/jobs/card.test.ts`'s day-diff assertion is
+                  timezone-dependent (fixture uses a -05:00 posted date
+                  against a locally-constructed `now`; this environment's
+                  TZ is UTC) — flagged per the ground rules' POLICY
+                  instruction, not silently fixed, not counted in any
+                  gate figure quoted this round.
+LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: round 3
+                  A measured 13/13 MISSING (§4 "Round 3 — Agent A");
+                  round 3 C has now written code for all 13 items
+                  (§4 "Round 3 — Agent C") — UNVERIFIED by A. A's own
+                  role contract requires an independent re-measurement
+                  next round, not trusting C's own account of what it
+                  built.
+GATE (target):    NOT MET (M1–M5 accepted + parity matrix closed/waived)
+                  — M1 pends only the user host-test per RULING 9; M2's
+                  percentage is C's build-progress claim only until A
+                  re-measures round 4.
 DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
                   at protocol/live level. Outstanding on M1: only the
-                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER). M2
-                  fix guide complete (§4 "Round 3 — Agent B"); zero M2
-                  code written yet — that's C's job next.
-GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
-                  skipped (80); `npx tsc --noEmit -p .` clean (re-run
-                  fresh again in round 3 by both A and B, unchanged).
-TODO:             C (round 3): work B's guide (§4 "Round 3 — Agent B")
-                  top to bottom, in the stated build order (3-01 →
-                  3-02+3-13 → the combined 3-04/05/07/08/09/10/11/12
-                  content item → 3-03 → 3-06). One commit per item
-                  (the combined content item may be split into
-                  sub-commits if useful — B's guide names the one
-                  internal ordering that matters there: chips before
-                  grid). Gate after every commit, push immediately.
-                  Two NEEDS-LOCAL-VERIFY-flagged design points in B's
-                  guide are written defensively so C doesn't need the
-                  answer to proceed: whether a widget-initiated
-                  window.openai.callTool() result arrives via the
-                  existing message listener or only via the call's own
-                  promise (render() is a plain function of a result
-                  object either way — B's guide shows both call sites);
-                  and whether Claude's fullscreen chrome provides its
-                  own close affordance the way ChatGPT's documented
-                  "System close" does (B's guide ships without a
-                  Peer-drawn close button on ChatGPT-verified evidence;
-                  if the user's Claude cross-check later finds none,
-                  that becomes a HOST LIMIT per RULING 3 and B's guide
-                  already names the small, additive fix). The USER
+                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER). M2:
+                  all 13 items now have code + tests behind them per C's
+                  round-3 build (§4 "Round 3 — Agent C") — not yet
+                  independently verified by A.
+GATE NOW:         npm test (web/): 685 passed | 1 skipped (687), 82
+                  files + 1 skipped (84); `npx tsc --noEmit -p .` and
+                  `npx eslint src/lib/mcp src/app/api/mcp` both clean,
+                  re-confirmed after every commit this round. One
+                  pre-existing, unrelated failure throughout
+                  (src/lib/jobs/card.test.ts, timezone flake, flagged
+                  above) — excluded from every figure quoted.
+TODO:             A (round 4): independently re-measure M2 against the
+                  same 13-criterion inventory frozen in round 3 A (§4
+                  "Round 3 — Agent A", per RULING 1 — reuse the frozen
+                  inventory, don't re-derive it). Read C's round-3 build
+                  (§4 "Round 3 — Agent C") for what to watch, but verify
+                  by reading the shipped code and running both passes
+                  (fixture/protocol + real-input), not by trusting C's
+                  summary. Specific things C flagged for A: the chip-
+                  count caching mechanism is proven against synthetic
+                  fixtures only, not live; the Expand-button persistence
+                  fix is worth independently re-deriving from the
+                  shipped code; per-card deep links are new on any Peer
+                  MCP surface this milestone — worth confirming at least
+                  one real link actually resolves during host
+                  verification. Standing NEEDS LOCAL VERIFY items
+                  (3-01/3-03/3-05/3-06, listed in full in §4 "Round 3 —
+                  Agent C") stay exactly that — not closable by A alone
+                  either, same as M1's own standing five. The USER
                   checklist for M1 remains authoritative in §4 Round 2
                   A — unchanged, not this round's concern.
 ```
@@ -3064,3 +3058,219 @@ every round so far.
   `get_daily_forecast`'s exact same `PAPERS_LANE_SOURCES` restriction via
   the same underlying function, nothing new to re-decide.
 - OpenAlex empty-title observation — unaffected, not touched this round.
+
+---
+
+#### Round 3 — Agent C
+
+**Method:** `git pull --ff-only` (already up to date), `git log --oneline -8`
++ `git status --short` clean. Claimed the turn lock per §0d (previous
+`HELD BY` was `LAPTOP-3CL10CG5 @ 07:38 UTC`, stale at 2h38m). Read the
+whole state file per §0b/§0c — §0 through §1k (all 10 rulings), §2 role
+contracts, §3 ground rules, all of §4 Round 1/Round 2/Round 3 A and B in
+full — before touching anything. Identifier `cloud-hourly-mcp` (§0c): did
+the work directly, no subagents. `npm install` failed initially on a 403
+from `registry.npmmirror.com` (this environment's outbound proxy only
+allows `registry.npmjs.org` directly) — `package-lock.json`'s `resolved`
+URLs pointed at the mirror; rewrote them to `registry.npmjs.org` locally,
+ran `npm install` (548 packages, clean), then `git checkout --
+web/package-lock.json` to restore the committed file exactly — this
+never touched a tracked file, `node_modules/` isn't versioned. Worked
+B's guide top to bottom in the exact stated build order, one commit per
+item, gate + `npx tsc --noEmit -p .` + `npx eslint` after every commit,
+pushed immediately after each.
+
+**Pre-existing flake found and flagged, not fixed (ground rules'
+"POLICY — do not fix it silently"):** `src/lib/jobs/card.test.ts`'s
+`"builds the detailed job facts and disclosure labels"` test fails on a
+clean checkout with zero files touched, before any commit this round —
+confirmed by running the gate before making any code change. Root cause:
+the fixture's `now` is built from local-timezone `Date` components
+(`new Date(2026, 6, 29, 12)`) while `job.postedDate` carries an explicit
+`-05:00` offset; this container's `TZ` is UTC (confirmed via `date`),
+so the day-diff comes out one day short of what the fixture's own
+"Posted 3 days ago" expectation assumes. Timezone-dependent, not
+date-of-run-dependent — reproduces any time this suite runs in a
+non-`-05:00` environment, unrelated to M2 or anything in `web/src/lib/mcp/`.
+Not this loop's file to fix (out of `web/src/lib/mcp/` and
+`web/src/app/api/mcp/`, HANDOFF's own scope boundary) — flagging for the
+manager, not touching it. Every gate figure logged in this round's
+commits is stated **excluding** this one pre-existing failure (i.e.
+"683 passed" means 683 real passes plus this one unrelated failure,
+consistently across every commit this round).
+
+**Items closed, in build order (full detail lives in each commit's own
+message — `git log` on `membership-api-connection` — summarized here per
+§0 step 4):**
+
+1. **3-01** (`ui://peer/daily-forecast-home.html` resource + registration
+   skeleton) — new `web/src/lib/mcp/ui/daily-forecast-home.ts`
+   (`buildDailyForecastHomeWidgetHtml`/`__getHomeWidgetScriptForTest`,
+   same static-template shape as the card), registered in `server.ts`
+   right after the card resource. New
+   `web/src/lib/mcp/ui/daily-forecast-home.test.ts` (byte-identical
+   across calls, no Save/Dismiss text yet, script non-empty). Extended
+   `route.test.ts`'s `resources/read` describe block with the home URI
+   case. Gate: 662/1/664 (+4 over B's own 659/1/660 read-only baseline).
+2. **3-02+3-13** (`open_home` tool + text fallback) — new
+   `web/src/lib/mcp/tools/open-home.ts` exactly matching the guide's
+   contract (parameter-shaping wrapper, `MAX_LIMIT` ceiling, now
+   exported from `get-daily-forecast.ts`). Registered in `server.ts`
+   with the description text B's guide specified verbatim (this is also
+   3-06's entry-behavior lever, built here). New `open-home.test.ts`.
+   Extended `route.test.ts` with `tools/list` (open_home present, `_meta`
+   points at the home URI) and `tools/call open_home` cases. Gate:
+   666/1/668.
+3. **3-04/05/07/08/09/10/11/12** (full fullscreen content, one commit —
+   the guide's own instruction, since none of the eight pieces is
+   independently testable without the others already present in the
+   same render pipeline) — fleshed out `daily-forecast-home.ts` in full:
+   top bar (Peer mark/title/Open-in-Peer, no Peer-drawn close button, no
+   composer markup — both host chrome per B's design decision), date
+   header + honest shown/total sub-line (RULING 8 semantics unchanged,
+   personaName-driven "ranked for X's Persona" with a true generic
+   fallback), filter chips (All/Papers/Events/Jobs, latest-unfiltered-
+   count caching per design tension (a), event-delegated click handler
+   calling `window.openai.callTool("open_home", ...)`), card grid
+   (per-card title links to `item.deepLink` only, never Peer web's own
+   `/jobs/[id]`/`/events/[id]`), disabled-visible Save/Dismiss/Report →
+   row (RULING 10, string-concatenation-only, zero `addEventListener`
+   calls on those elements — confirmed by an exact count assertion, not
+   just visual absence). One small necessary deviation from the guide's
+   literal code sketch, not a design change: the guide's
+   `render()`/`renderHeader()` sketch implicitly assumed a header
+   structure; I split the date-header rendering so the persistent
+   top-bar mark/title never gets touched by re-renders (mirrors the same
+   fix 3-03 needed on the card — see below) — B's guide didn't fully
+   spell out this mechanic for the home file since its header markup is
+   simpler (no Expand button competing for the same slot), but the same
+   "don't let a client-side render wipe out a static element and its
+   listeners" principle applies, so I built it in from the start here
+   rather than discovering the bug later. Added `personaName?: string`
+   to `DailyForecastResult` (additive) and a small second profile lookup
+   inside `openHome` (matches `get-opportunity.ts`'s own
+   `resolveProfileForPipelines` precedent, per the guide). Exported
+   `peerWebOrigin` from `daily-forecast-card.ts` (the guide's own
+   instruction). New, extensive `daily-forecast-home.test.ts` coverage:
+   static palette/no-host-chrome/serif checks; behavioral checks via the
+   same `vm`-sandbox pattern extended with `addEventListener`-capable
+   stub elements and a stubbed `window.openai` (`callTool`/
+   `requestDisplayMode` spies) — chip counts from an unfiltered result,
+   the tension-(a) regression test itself (a jobs-only refetch doesn't
+   zero the other three chips), `requestDisplayMode({mode:"fullscreen"})`
+   called exactly once unconditionally, RULING 4 paper omission
+   re-proven for this file, RULING 10's three-`aria-disabled` count plus
+   an exact `addEventListener`-call-count assertion, HTML-escaping,
+   empty state, cross-origin message rejection. Gate: 683/1/685 (+17).
+4. **3-03** (Expand wiring, closing RULING 7's Expand exclusion) — found
+   a real structural problem while implementing this one, not present in
+   the guide's own code sketch: the guide says to add the Expand span
+   "inside the pc-head div" and wire it once at script-init via
+   `getElementById("pc-expand-btn").addEventListener(...)`, but the
+   *existing* M1 code's `render()` sets `pc-head-slot`'s (== the whole
+   `.pc-head` div's) `innerHTML` wholesale on every
+   `ui/notifications/tool-result` — so an Expand button placed "inside"
+   that div per the guide's literal instruction would render once from
+   the static template, then be **destroyed the moment the first real
+   forecast result arrives**, taking its listener with it (a new DOM
+   node replaces it, unwired). Fixed by restructuring `.pc-head` into
+   three persistent children (mark, title, Expand) plus one child that's
+   actually replaced (`.m`, carrying only the date/counts text, now
+   `id="pc-head-slot"` instead of the whole div) — `renderHeader()` now
+   returns just the meta string. This is a real bugfix beyond the
+   guide's literal sketch, not a design deviation: the guide's own
+   intent (Expand always visible and clickable) is only achieved this
+   way; verified with a new behavioral test that clicks Expand *after* a
+   real render cycle has already fired once (`runWidgetScriptAndRender`
+   already fires one `ui/notifications/tool-result` before returning
+   `clickExpand`), which would have caught the bug if it had shipped as
+   the guide literally describes. Rewrote (not deleted) the one existing
+   test the guide flagged as at-risk (`daily-forecast-card.test.ts`'s
+   "never mentions Save or Expand"), split exactly as prescribed. Gate:
+   685/1/687 (+2).
+5. **3-06** (entry-behavior polish) — the buildable half was already
+   done as a side effect of 3-02 (tool description) and 3-01
+   (unconditional `requestDisplayMode` promotion); this commit is
+   exactly the guide's own remaining piece, extending
+   `route.test.ts`'s existing tool-descriptions test to include
+   `open_home`. Gate: 685/1/687 (unchanged — one-line extension to an
+   existing test, not a new one).
+
+**Final gate this round:** 685 passed | 1 skipped (687), 82 files + 1
+skipped (84) — +26 over round 3's own 659/1/660 read-only baseline, +22
+over B's own re-confirmed 659/1/660. `npx tsc --noEmit -p .` clean on
+every commit. `npx eslint src/lib/mcp src/app/api/mcp` clean on every
+commit. One pre-existing, unrelated failure throughout
+(`src/lib/jobs/card.test.ts`, flagged above, not counted in any of the
+figures quoted per-commit or here).
+
+**Percentage (RULING 1), measured by C for A to re-verify next round —
+C does not grade its own work, this is a build-progress note, not A's
+number:** all 13 of round 3 A's M2 criteria now have code behind them
+(criterion 11's own R2 half stays permanently NEEDS LOCAL VERIFY per
+RULING 3, same shape as M1's criteria 3/4). A's job next round is to
+independently re-measure, not trust this summary.
+
+**Blast radius, consolidated:** `daily-forecast-card.ts` — two additive
+exports (`peerWebOrigin`), one structural change to `.pc-head` (mark/
+title/Expand now static siblings, `.m` alone is the replaced slot),
+`renderHeader()`'s return value narrows from a 3-element header string
+to just the meta text (the only consumer, `render()`, updated in the
+same commit). `get-daily-forecast.ts` — one `export` keyword, zero
+behavior change, all 9 existing tests untouched. `types.ts` — one new
+optional field, zero existing consumer affected. `server.ts` — two new
+`registerResource`/`registerTool` calls, zero edits to the two existing
+tool registrations or the existing card resource registration.
+`route.test.ts` — three new `it()` blocks + one `for` loop's array
+extended by one string; zero existing assertions changed. No file
+outside `web/src/lib/mcp/**`, `web/src/app/api/mcp/**`, or this state
+file was touched.
+
+**NEEDS LOCAL VERIFY, unchanged from B's list (nothing this round could
+close — no browser, no user account, no dev slugs, per §0c):**
+
+- 3-03: does a card-initiated `callTool("open_home", {})` actually
+  mount/switch to the home widget on a real host?
+- 3-05: does a widget-initiated `callTool` result arrive at the same
+  iframe's existing `message` listener, or only via the call's own
+  promise resolution? (`render()` in the home widget works either way.)
+- 3-01: does Claude's own fullscreen chrome provide a close affordance
+  the way ChatGPT's documented "System close" does?
+- 3-06: does a dev-mode custom connector show Peer anywhere in a
+  sidebar/launcher on the user's actual plan?
+- M1's standing five (criteria 3/4/7/9/10) — unchanged, §4 Round 2 A
+  remains authoritative.
+
+**POLICY flags for the manager:** none new from C. B's two flagged items
+(the mockup's "3 high-signal" sub-count, omitted; the Claude close-button
+uncertainty) are unchanged, still open, still the manager's to decide if
+ever — this round didn't need either resolved to proceed, per the guide's
+own defensive design.
+
+**Hand-back to A (§2 role contract — "what to watch for, especially
+anything that behaves differently on real data than in tests"):**
+
+- The chip-count caching mechanism (design tension (a)) is proven
+  against synthetic fixtures only. If a real host's `callTool` result
+  shape differs even slightly from what the `structuredContent` object
+  looks like in tests (e.g. extra wrapping, different key casing), the
+  cache logic degrades safely (falls back to the latest result's own
+  counts, per the `render()` guard `!activeType || latestCounts === null`)
+  but won't produce the exact "other chips keep their old counts" UX
+  until confirmed live.
+- The Expand button's persistence fix (item 4 above) was driven by a
+  real bug the guide's literal sketch would have shipped — worth A
+  independently re-deriving from the shipped code rather than trusting
+  this summary, per A's own role contract ("does not change code" but
+  should still verify by reading, not by trusting C's account).
+- Per-card deep links now exist for the first time on any Peer MCP
+  surface (the M1 card never linked its rows) — worth A clicking through
+  at least one real job/paper/event link during the host-verification
+  pass to confirm the URL actually resolves to something real, not just
+  that a href attribute is present.
+
+**Standing items re-listed by name (unchanged, not this round's
+concern):** M1 user-pending set (§4 Round 2 A remains authoritative);
+RULING 6 (papers lane restriction, unaffected — `open_home` shares
+`get_daily_forecast`'s exact same `PAPERS_LANE_SOURCES`); OpenAlex
+empty-title observation (unaffected).
