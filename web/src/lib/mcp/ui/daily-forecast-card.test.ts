@@ -61,27 +61,55 @@ function forecast(items: ForecastItem[]): DailyForecastResult {
  * This is real behavioral coverage of the client-side rendering logic, not
  * a substring check on the generated source.
  */
-function runWidgetScriptAndRender(result: DailyForecastResult): {
+interface StubButton {
+  innerHTML: string;
+  listeners: Record<string, Array<() => void>>;
+  addEventListener: (type: string, fn: () => void) => void;
+}
+
+function makeStubButton(): StubButton {
+  return {
+    innerHTML: "",
+    listeners: {},
+    addEventListener(type, fn) {
+      (this.listeners[type] ??= []).push(fn);
+    },
+  };
+}
+
+function runWidgetScriptAndRender(
+  result: DailyForecastResult,
+): {
   headHtml: string;
   rowsHtml: string;
+  clickExpand: () => void;
+  openaiCalls: { callTool: Array<[string, unknown]> };
 } {
   const elements: Record<string, { innerHTML: string }> = {
     "pc-head-slot": { innerHTML: "" },
     "rows-slot": { innerHTML: "" },
   };
+  const expandBtn = makeStubButton();
   let messageListener: ((event: { source: unknown; data: unknown }) => void) | undefined;
+  const openaiCalls = { callTool: [] as Array<[string, unknown]> };
 
   const fakeWindow = {
     addEventListener: (type: string, listener: typeof messageListener) => {
       if (type === "message") messageListener = listener;
     },
     parent: "the-host-parent",
+    openai: {
+      callTool: (name: string, args: unknown) => {
+        openaiCalls.callTool.push([name, args]);
+        return Promise.resolve({});
+      },
+    },
   };
 
   const sandbox = {
     window: fakeWindow,
     document: {
-      getElementById: (id: string) => elements[id],
+      getElementById: (id: string) => (id === "pc-expand-btn" ? expandBtn : elements[id]),
     },
     Intl,
     Date,
@@ -102,7 +130,16 @@ function runWidgetScriptAndRender(result: DailyForecastResult): {
     },
   });
 
-  return { headHtml: elements["pc-head-slot"].innerHTML, rowsHtml: elements["rows-slot"].innerHTML };
+  function clickExpand() {
+    for (const fn of expandBtn.listeners["click"] ?? []) fn();
+  }
+
+  return {
+    headHtml: elements["pc-head-slot"].innerHTML,
+    rowsHtml: elements["rows-slot"].innerHTML,
+    clickExpand,
+    openaiCalls,
+  };
 }
 
 describe("buildDailyForecastWidgetHtml (static template)", () => {
@@ -116,11 +153,16 @@ describe("buildDailyForecastWidgetHtml (static template)", () => {
     expect(html).not.toMatch(/var\(--/);
   });
 
-  it("never mentions Save or Expand (RULING 7 — no dead controls)", () => {
+  it("never mentions Save (RULING 7 — Save stays M5 scope on the inline card)", () => {
     const html = buildDailyForecastWidgetHtml();
     expect(html.toLowerCase()).not.toContain("save");
-    expect(html.toLowerCase()).not.toContain("expand");
     expect(html).not.toContain("psave");
+  });
+
+  it("renders an Expand control wired to open_home, now that the fullscreen view exists (RULING 7's Expand exclusion closes in M2)", () => {
+    const html = buildDailyForecastWidgetHtml();
+    expect(html).toContain('id="pc-expand-btn"');
+    expect(html).toContain(">Expand<");
   });
 
   it("includes the Open in Peer footer link and attribution, baked in once", () => {
@@ -175,6 +217,12 @@ describe("WIDGET_SCRIPT executed in a sandbox (real client-side behavior)", () =
   it("shows a graceful empty state instead of crashing on zero items", () => {
     const { rowsHtml } = runWidgetScriptAndRender(forecast([]));
     expect(rowsHtml).toContain("No forecast items today.");
+  });
+
+  it("clicking Expand calls window.openai.callTool(\"open_home\", {}) exactly (3-03)", () => {
+    const { clickExpand, openaiCalls } = runWidgetScriptAndRender(forecast([JOB_ITEM]));
+    clickExpand();
+    expect(openaiCalls.callTool).toEqual([["open_home", {}]]);
   });
 
   it("ignores a message from a source other than window.parent", () => {

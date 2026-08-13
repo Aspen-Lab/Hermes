@@ -63,14 +63,19 @@ function metaParts(item: {
 // custom properties (web/src/app/globals.css) aren't reachable here.
 // Reused verbatim from docs/design/peer-in-chatgpt-mcp-mockups.html lines
 // 195-267 (.peer-card/.pc-head/.p-row/.rel/.ptag/.pc-foot/.p-mark) --
-// `.pc-head .expand` and `.psave` are deliberately not carried over
-// (RULING 7).
+// `.psave` is deliberately not carried over (RULING 7 -- Save stays M5
+// scope on the inline card). `.pc-head .expand` WAS also excluded here but
+// is wired up as of M2 (3-03): RULING 7 draws Save's and Expand's
+// exclusions as two separate, independently-timed things, and the
+// fullscreen home this now opens (open_home) exists as of this same
+// round -- don't read this comment as implying both lift together.
 const CARD_STYLE = `
 .peer-card{border:1px solid #ECECEC;border-radius:16px;overflow:hidden;margin-bottom:14px;background:#FFFDF9;max-width:560px;}
 .pc-head{background:#FDF6EE;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(62,36,7,0.07);}
 .p-mark{width:19px;height:19px;border-radius:5px;background:#FDF6EE;border:1px solid #EAD9C4;color:#FF520D;font-family:"Iowan Old Style",Georgia,serif;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:1;}
 .pc-head .t{font-family:"Iowan Old Style",Georgia,serif;font-weight:600;font-size:14.5px;color:#2B180A;}
 .pc-head .m{font-size:11.5px;color:#94877C;margin-left:auto;}
+.pc-head .expand{font-size:11.5px;color:#6B6156;border:1px solid rgba(62,36,7,0.12);border-radius:6px;padding:2px 8px;background:#FFFDF9;cursor:default;}
 .p-row{padding:11px 14px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid rgba(62,36,7,0.06);}
 .p-row:last-of-type{border-bottom:0;}
 .rel{font-family:"Iowan Old Style",Georgia,serif;font-weight:700;font-size:13px;color:#237A4B;background:rgba(35,122,75,0.09);border-radius:8px;padding:3px 7px;flex:none;line-height:1.3;}
@@ -182,6 +187,11 @@ const WIDGET_SCRIPT = `
     );
   }
 
+  // Returns only the ".m" meta text -- mark/title/Expand are static,
+  // persistent siblings in the markup (see buildDailyForecastWidgetHtml),
+  // never replaced by a render() call, so Expand's own click listener
+  // (wired once, see wireExpand below) stays attached to a live DOM node
+  // across every re-render.
   function renderHeader(result) {
     var d = result.date ? new Date(result.date) : null;
     var weekday = d && !isNaN(d.getTime())
@@ -190,10 +200,7 @@ const WIDGET_SCRIPT = `
     var dateLabel = formatShortDate(result.date) || result.date || "";
     var headerDate = weekday ? weekday + " · " + dateLabel : dateLabel;
     var counts = result.counts || { shown: 0, total: 0 };
-    return (
-      '<span class="p-mark">P</span><span class="t">Daily Forecast</span>' +
-      '<span class="m">' + escapeHtml(headerDate) + " · " + counts.shown + "/" + counts.total + "</span>"
-    );
+    return escapeHtml(headerDate) + " · " + counts.shown + "/" + counts.total;
   }
 
   function render(result) {
@@ -205,6 +212,16 @@ const WIDGET_SCRIPT = `
     rows.innerHTML = items.length > 0
       ? items.map(renderRow).join("")
       : '<div class="p-row"><div class="body"><div class="me">No forecast items today.</div></div></div>';
+  }
+
+  function wireExpand() {
+    var btn = document.getElementById("pc-expand-btn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      if (window.openai && typeof window.openai.callTool === "function") {
+        window.openai.callTool("open_home", {});
+      }
+    });
   }
 
   // MCP Apps postMessage bridge: the host delivers this tool's latest
@@ -222,14 +239,17 @@ const WIDGET_SCRIPT = `
     },
     { passive: true },
   );
+
+  wireExpand();
 })();
 `.trim();
 
 /**
  * The inline Apps-SDK card's static template (screen-2 mockup): header
- * (mark, "Daily Forecast", date + shown/total — no Expand control, RULING
- * 7), one row per item (relevance badge, title, org/location/posted/
- * deadline meta, why-it-matters, type tag — no Save button, RULING 7),
+ * (mark, "Daily Forecast", date + shown/total, Expand -- wired as of M2,
+ * 3-03, closing RULING 7's Expand exclusion), one row per item (relevance
+ * badge, title, org/location/posted/deadline meta, why-it-matters, type
+ * tag — no Save button, RULING 7 still excludes Save on this surface),
  * footer ("Open in Peer" + attribution, baked in once since the site
  * origin is a deployment constant). Registered once as a `ui://` resource
  * and reused for every call — see the WIDGET_SCRIPT comment for why.
@@ -239,7 +259,9 @@ export function buildDailyForecastWidgetHtml(): string {
   return (
     `<style>${CARD_STYLE}</style>` +
     `<div class="peer-card">` +
-    `<div class="pc-head" id="pc-head-slot"><span class="p-mark">P</span><span class="t">Daily Forecast</span></div>` +
+    `<div class="pc-head"><span class="p-mark">P</span><span class="t">Daily Forecast</span>` +
+    `<span class="m" id="pc-head-slot">Loading…</span>` +
+    `<span class="expand" id="pc-expand-btn">Expand</span></div>` +
     `<div id="rows-slot"><div class="p-row"><div class="body"><div class="me">Loading…</div></div></div></div>` +
     `<div class="pc-foot"><a class="open" href="${origin}" target="_blank" rel="noopener noreferrer">Open in Peer ↗</a>` +
     `<span class="attr">Peer app · data from your Peer account</span></div>` +
