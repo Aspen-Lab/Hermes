@@ -270,28 +270,22 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 03:01 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 00:56 UTC. This session was
-                  a **resumption** of round 8's C: the first C landed
-                  B8-01/02/03 and then died on the account's monthly spend
-                  limit partway through B8-04, working tree clean, nothing
-                  lost. This session re-claimed the lock, re-read §0–§3,
-                  every standing ruling, and both of A's and B's full §4
-                  entries, then completed **B8-04, B8-05, B8-06, B8-07 in
-                  order**, each committed and pushed individually the moment
-                  it finished (never batched). **All seven of Round 8 B's
-                  items are now closed or ruled** — six landed as code
-                  (B8-01 through B8-06), B8-07 landed in part (one of
-                  Ruling 29's two derived markup shapes fixed; the other
-                  confirmed reproducible on a fixture and explicitly
-                  recorded open, not silently dropped — see §4). Full detail
-                  per item, including exactly where a shipped fix diverged
-                  from B's own literal suggestion after catching a bug in
-                  testing (B8-01, B8-06), is in §4 "Round 8 — Agent C."
+STOPPED BECAUSE:  finished part 1 of a deliberately split A turn @
+                  2026-08-13 03:04 UTC. §1 itself pre-split this A turn into
+                  four parts after a previous round-9 A died on the
+                  account's spend limit before it had even finished reading.
+                  This session did **part 1 only — the employer field
+                  (B8-01/02/03/04), measured live** — and stopped there by
+                  design, exactly as instructed. **Parts 2–4 (R4 job
+                  summaries/B8-05, R13 event names/B8-06, same-page
+                  contamination/B8-07) are not done** and are the next A's
+                  job. Full method and every number is in §4 "Round 9 —
+                  Agent A (part 1: employer field)."
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -299,14 +293,16 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 00:56 UTC. This session was
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            8
-WHOSE TURN:       **A.** Independently re-measure the real-data gap now that
-                  six code items are fully landed and a seventh is landed in
-                  part. Fresh real events and jobs through the build's own
-                  pipeline, per item, never averaged, per §1j/Ruling 30's
-                  standard. **C does not remeasure — none of the figures
-                  below are a new real-data score; they describe the
-                  pre-fix state A already reported.**
+ROUND:            9 (in progress — part 1 of 4 done)
+WHOSE TURN:       **A — PARTIAL, part 1 of 4 complete, resume at part 2 (R4
+                  job summaries).** Independently re-measure the real-data
+                  gap now that six code items are fully landed and a seventh
+                  is landed in part. Fresh real events and jobs through the
+                  build's own pipeline, per item, never averaged, per
+                  §1j/Ruling 30's standard. **C does not remeasure.** Do
+                  **not** redo part 1 (employer field) — it is measured and
+                  closed out below; figures for parts 2–4 (B8-05/06/07)
+                  still describe the pre-fix state until measured.
 
                   **Specifically watch for real-data shapes that don't match
                   the fixtures this session built everything against.**
@@ -320,14 +316,26 @@ WHOSE TURN:       **A.** Independently re-measure the real-data gap now that
 
                   Priority watch list, most likely to differ from a fixture:
                   1. **Employer field** (B8-01/02/03/04, seven write sites
-                     total, all now guarded). Re-run something like A's
-                     original 8-company real sample if practical. Check
-                     specifically whether the `careers.<company>.<tld>`
-                     host trade-off B8-02's own §4 entry names — a real
-                     employer's own subdomain and a platform's brand on a
-                     similarly-shaped subdomain are structurally
-                     indistinguishable to the shipped guard — is costing
-                     real, correct employer names at any measurable rate.
+                     total, all now guarded). **MEASURED THIS TURN — see §4
+                     "Round 9 — Agent A (part 1: employer field)" for the
+                     full table and method.** 3 of 11 non-null real
+                     postings wrong (27.3%), down from Round 8 A's pre-fix
+                     5 of 8 (62.5%); two of Round 8 A's own flagged postings
+                     directly confirmed fixed live, same host, before vs.
+                     after (`talents.vaia.com`/Savannah River National
+                     Laboratory, was "Vaia"; `grad.wisc.edu`/Thermo Fisher
+                     Scientific, was "Graduate School"). The
+                     `careers.<company>.<tld>` trade-off B8-02 flagged is
+                     real — confirmed live via direct calls to the shipped
+                     `looksLikeHostBrand()` on 4 of 15 sampled hosts — but
+                     **zero proven suppressions** in this sample, one
+                     plausible-but-unproven (`jobs.lbl.gov`, null company).
+                     Silence (not a new default) confirmed on both card and
+                     report for a real null-company posting. One still-open
+                     wrong-value shape (Oak Ridge National Laboratory
+                     posting rendering a topic label as employer) persists
+                     unchanged by any B8-0x item — a different, unnamed
+                     mechanism, not a host-brand-guard case.
                   2. **R4 job summaries** (B8-05). The shipped floor is the
                      *minimal* variant only. Check live whether the named,
                      still-open shape (a chrome sentence containing a
@@ -375,17 +383,17 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   ruling; SolarPACES (Ruling 28) was re-verified live inside
                   B8-02 and remains CLOSED.** Full per-item detail in §4
                   "Round 8 — Agent C."
-LAST DIFFERENCE:  **Unchanged from Round 8 A's original measurement — this
-                  describes the PRE-fix state, not a new score.** Employer
-                  field wrong on 5 of 8 non-null fresh real companies (now
-                  traced to 7 code-level write sites, all guarded this
-                  turn); R4 chrome on 4 of 4 non-empty fresh real summaries
-                  (minimal floor now landed); R13 open via three naming
-                  shapes (all three now guarded). Whether and how much each
-                  has actually improved on real data is A's own next
-                  measurement to make.
-GATE (0%):        **NOT MET.** Unchanged — C does not set this; only A's
-                  next re-measurement can move it.
+LAST DIFFERENCE:  **Employer field now measured POST-fix (this turn, part 1
+                  of 4): 3 of 11 non-null real postings wrong (27.3%), down
+                  from 5 of 8 (62.5%) pre-fix.** Full table in §4 "Round 9 —
+                  Agent A (part 1)." **R4, R13 and same-page contamination
+                  are still the PRE-fix numbers**, unchanged, pending parts
+                  2–4: R4 chrome on 4 of 4 non-empty fresh real summaries
+                  (minimal floor now landed, not yet remeasured); R13 open
+                  via three naming shapes (all three now guarded, not yet
+                  remeasured); same-page contamination not yet remeasured.
+GATE (0%):        **NOT MET.** Unchanged — the gate cannot be judged until
+                  all four parts of this A turn are done (part 1 of 4 done).
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
