@@ -97,8 +97,27 @@ describe("eventNameFrom", () => {
     ).toBe("The International Battery Summit brings researchers together.");
   });
 
-  it("still resolves when every title segment is chrome, same as before this round", () => {
-    expect(eventNameFrom("Home | Events", "", undefined)).toBe("Home");
+  // B9-04 Fix 1 (round 9, Ruling 32): this test used to assert "Home" — one
+  // of the two segments isChromeSegment/GENERIC_PAGE_TITLE_RE had already
+  // rejected a few lines above ("Home" and "Events" are both chrome here),
+  // reinstated verbatim by the old `segments[0] ?? title.trim()` absolute
+  // last resort. That is exactly the pattern Ruling 32 named the defect: a
+  // guard rejects a candidate, then a fallback hands the reader that same
+  // rejected candidate anyway. With no URL to read an honest host from, the
+  // new last resort is a literal placeholder, not a second look at the
+  // pool the guard just rejected.
+  it("falls back to a literal placeholder when every title segment is chrome and there is no URL", () => {
+    expect(eventNameFrom("Home | Events", "", undefined)).toBe("Untitled event");
+  });
+
+  // The same "every segment is chrome" shape, but WITH a URL present — the
+  // last resort now reads the URL's own host, which is never a value any
+  // guard rejected (only title segments were ever tested), matching this
+  // codebase's own honest-placeholder precedent on the job side.
+  it("falls back to the URL host when every title segment is chrome and a URL is available", () => {
+    expect(eventNameFrom("Home | Events", "", "https://www.example.org/events/index")).toBe(
+      "example.org",
+    );
   });
 
   // B5-06/R13, three separate sub-gaps confirmed on real events A found,

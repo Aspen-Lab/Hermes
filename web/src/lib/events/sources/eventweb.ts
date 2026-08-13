@@ -466,11 +466,6 @@ export function eventNameFrom(
   const titleSegment = bestEventTitleSegment(title, url);
   if (titleSegment) return titleSegment;
 
-  const segments = title
-    .split(/\s+[-|·–—]\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-
   // Every title segment is chrome. A deep event URL's slug is the most
   // reliable remaining source of the actual event name — try it before the
   // snippet, whose longest sentence is often prose ("Networking: An opening
@@ -491,7 +486,23 @@ export function eventNameFrom(
     return pool.reduce((best, part) => (part.length > best.length ? part : best));
   }
 
-  return segments[0] ?? title.trim();
+  // B9-04 Fix 1 (round 9, Ruling 32): every title segment was already
+  // rejected by bestEventTitleSegment above -- that rejection is the only
+  // way execution reaches this line -- so re-splitting the title and
+  // returning segments[0] here would hand back one of those exact rejected
+  // strings, verbatim (confirmed live: "Conference Program" in, "Conference
+  // Program" out). The URL host is never itself a value a guard rejected,
+  // and mirrors this codebase's own honest-placeholder precedent on the job
+  // side ("See posting", jobs/mapper.ts). Falls back to a literal
+  // placeholder only when there is no URL to read a host from at all.
+  if (url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      // Malformed url - fall through to the placeholder below.
+    }
+  }
+  return "Untitled event";
 }
 
 export function webResultToRawEventItem(

@@ -573,8 +573,17 @@ describe("event name extraction", () => {
     );
   });
 
-  it("falls back to the raw title when nothing better exists", () => {
-    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Home");
+  // B9-04 Fix 1 (round 9, Ruling 32): this used to assert "Home" — the same
+  // bare title `isGenericPageTitle` had already rejected as chrome a few
+  // lines earlier inside `bestEventTitleSegment`, reinstated verbatim by
+  // the old `segments[0] ?? title.trim()` absolute last resort. Found while
+  // landing B9-04 Fix 1 — not in B's own tests-at-risk list, which named
+  // only `eventweb.test.ts` — the same defect shape reached from a second
+  // test file exercising the same line. With no URL to read an honest host
+  // from, the new last resort is a literal placeholder, never the same
+  // rejected string looked at twice.
+  it("falls back to a literal placeholder when the title is chrome and the snippet has nothing usable", () => {
+    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Untitled event");
   });
 });
 

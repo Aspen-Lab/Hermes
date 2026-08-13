@@ -17924,3 +17924,68 @@ assignment); `TRAILING_CAREERS_CHROME_RE` is not exported and not reused
 elsewhere. No other file changed.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-04 Fix 1: `eventNameFrom`'s absolute last resort)
+
+**STATUS: LANDED.** Second item on B's work order. `web/src/lib/events/
+sources/eventweb.ts:494`'s `return segments[0] ?? title.trim();` could
+return a title segment `bestEventTitleSegment` had already rejected earlier
+in the same call — B9-01's primary citation for Ruling 32, confirmed live
+(`"Conference Program"` in, `"Conference Program"` out).
+
+**Landed exactly B's recommended option (1), falling back to (2) only when
+no URL exists — did not implement option (3) (promoting `title.trim()`),
+which B itself flagged as not obviously safer.** Removed the now-dead
+`segments` recomputation (it was used only by the line being replaced;
+nothing else in the function reads it) and replaced the final fallback:
+reads the URL's own hostname (`www.` stripped, matching this file's and
+`jobweb.ts`'s own existing convention) when a `url` is available, wrapped in
+a try/catch for a malformed URL; falls back to the literal placeholder
+`"Untitled event"` only when there is no `url` parameter at all. A host is
+never itself a value any guard rejected — only title segments were ever
+tested — so this satisfies Ruling 32 item 3 exactly: a defensible last
+resort, not a second look at the pool the guard just rejected.
+
+**Tests at risk, traced by hand per Ruling 31, not just re-run:** grepped
+every `eventNameFrom` call across the test suite and manually traced which
+ones reach the changed final-fallback line (i.e., `titleSegment` fails,
+`fromSlug` fails, snippet `pool` is empty) versus which resolve earlier in
+the chain and are structurally unaffected. Exactly one call in
+`eventweb.test.ts` reaches it: the `"Home | Events"`/no-URL case
+(previously named "still resolves ... same as before this round" —
+asserted `"Home"`, one of the two segments this exact test's own
+`bestEventTitleSegment` call had already rejected two lines above).
+Rewrote it to assert `"Untitled event"` and added a sibling case with a URL
+present, asserting the host (`"example.org"`) — the two branches of the new
+last resort, not just the one the old test happened to exercise.
+
+**Found one more instance B's own tests-at-risk note did not name — flagging
+per this loop's standing instruction, not silently folding it in.** B's
+guide said "Tests at risk: `eventweb.test.ts`'s existing `eventNameFrom`
+cases" — but `web/src/lib/events/scoring.test.ts` also calls `eventNameFrom`
+directly, and one of its cases, `"falls back to the raw title when nothing
+better exists"` (bare title `"Home"`, snippet too short to mine), hits the
+exact same line and asserted the exact same defect shape (`"Home"`,
+already-rejected, returned verbatim). This is B's own item's fix reaching a
+second file grep alone would have missed if I had only opened the file B
+named. Rewrote it the same way, same reasoning, comment-tagged B9-04 Fix 1.
+Grepped the full `src` tree for every `.test.ts` referencing `eventNameFrom`
+afterward to confirm no third file exists — confirmed exactly these two.
+
+**Blast radius, confirmed by grep:** `eventNameFrom` has exactly one
+production caller (`webResultToRawEventItem`, same file), matching B9-01's
+citation. No other file changed besides the two test files above.
+
+**Gate: 90 files / 1030 tests, 1029 passing (net +1: eventweb.test.ts lost
+one test to a rename and gained two, for +1; scoring.test.ts's one
+affected test was renamed and reasserted in place, +0; none deleted, all
+renames documented with which item changed them).** The one failure remains
+`benchmark.test.ts`'s documented live-search flake — it has now failed on
+two different assertions within the same test across this turn's runs
+(`cityCoverage` 0.47-vs-0.5 at this turn's very first baseline check,
+`summit?.place?.city` undefined-vs-`"Chicago"` on both this item's and
+B9-02a's runs), which is what a live-network-dependent flake looks like,
+not a fixed regression this item introduced. Typecheck clean. Lint: exactly
+the 1 pre-existing `quiz.tsx:46` error.
+
+Commit follows immediately.
