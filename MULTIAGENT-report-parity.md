@@ -270,12 +270,21 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-12 13:48 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-12 13:42 UTC. Round 8's B
+STOPPED BECAUSE:  out of budget @ 2026-08-12 — round-8 C was killed by the
+                  account's **monthly** spend limit partway through B8-04,
+                  after landing B8-01, B8-02 and B8-03. **Working tree was
+                  clean at death; nothing was lost.** The manager released
+                  the lock C died holding and made this block true. Resume
+                  at B8-04. (Historical note kept below: the text that
+                  followed described round-8 B finishing its turn, which was
+                  the state before C started.)
+
+                  Round 8's B
                   (Claude, `LAPTOP-3CL10CG5`) wrote the fix guide against
                   Round 8 A's ranked list — 7 items, B8-01 through B8-07 (§4
                   "Round 8 — Agent B"). **B corrected A's central hypothesis
@@ -307,7 +316,18 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-12 13:42 UTC. Round 8's B
                   over. The lines above and below, down to this code fence's
                   end, are the only current ones.
 ROUND:            8
-WHOSE TURN:       **C — IMPLEMENTER.** Work §4 "Round 8 — Agent B"'s 7 items
+WHOSE TURN:       **C — PARTIAL. B8-01, B8-02 and B8-03 are LANDED and
+                  pushed; RESUME AT B8-04.** The first C died on the
+                  account's **monthly** spend limit (not the 5-hour one; it
+                  does not clear on its own) partway through B8-04, with the
+                  working tree clean — nothing was lost, and nothing from
+                  those three items needs redoing. **B8-02 included its
+                  live SolarPACES re-verification, as Ruling 31 required**;
+                  that check does not need repeating either.
+
+                  Remaining: **B8-04, B8-05, B8-06, B8-07.**
+
+                  Work §4 "Round 8 — Agent B"'s 7 items
                   in this order (dependencies noted, full detail per item in
                   §4):
                   1. **B8-01** — `jobweb.ts`'s "Role at Employer" regex
