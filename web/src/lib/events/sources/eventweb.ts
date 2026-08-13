@@ -7,6 +7,7 @@ import {
   MONTH_PATTERN,
   urlHashId,
 } from "@/lib/opportunities/shared";
+import { US_STATE_CODES } from "@/lib/opportunities/structured-extract";
 import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
@@ -184,8 +185,22 @@ function isDeniedUrl(rawUrl: string): boolean {
 // characters, then end of segment) so a genuinely long, substantive title
 // that happens to start with one of these common words is not caught by
 // accident — it reuses the same word list rather than a second, separate one.
+//
+// B10-03 (round 10): `call\s+for\s+(?:papers|abstracts)|cfp` added —
+// `ecs.confex.com`'s live repro, "Call for Papers", a real conference-
+// platform page/section label standing in for the event's own name, in
+// none of this list's phrases. `EVENT_SIGNAL_RE` below lists this exact
+// phrase as one of its own POSITIVE event signals, which is what lets a
+// page carrying it be recognised as an event page in the first place —
+// the same signal that gets a page through the front door then wins the
+// segment-selection tie-break over a plainer chrome segment. Not adding
+// the sibling labels ("Program"/"Technical Program"/"Registration") B also
+// named as plausible on the same class of platform — B had no live
+// evidence any of them has actually fired, and this loop's own standing
+// practice (Ruling 32/34b) is to land what is confirmed, not what merely
+// seems likely; left for a future A to measure.
 const GENERIC_PAGE_TITLE_RE =
-  /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?)(?:\s*&\s*[\w\s]{1,24}|\s+(?:and|or)\s+[\w\s]{1,24})?$/i;
+  /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?|call\s+for\s+(?:papers|abstracts)|cfp)(?:\s*&\s*[\w\s]{1,24}|\s+(?:and|or)\s+[\w\s]{1,24})?$/i;
 
 /**
  * B8-06 (round 8): GENERIC_PAGE_TITLE_RE above only recognises ONE exact
@@ -342,6 +357,39 @@ function isBareDateSegment(candidate: string): boolean {
 }
 
 /**
+ * B10-02 (round 10): a segment that IS only a US city/state location
+ * ("Orlando, FL") reads as a perfectly fine "title" to every check above —
+ * none has any concept of "this is only a location, not a name." Confirmed
+ * live: internationalbatteryseminar.com rendered exactly this string once
+ * B9-04's bare-date guard removed the sibling date segment that used to sit
+ * next to it, leaving the location as the sole survivor — the event side's
+ * own version of a gap `looksLikeBareLocation` already closed for the job
+ * side (`jobweb.ts`), reusing the same `US_STATE_CODES` list so the two
+ * cannot drift apart.
+ *
+ * Deliberately NOT a straight copy of the job side's check, which is
+ * unanchored (it only requires the candidate to END in ", ST", with no
+ * bound on what precedes it — safe there because a job-title split segment
+ * carrying a location is already isolated to just the location in
+ * practice). An event segment could legitimately be a longer, real title
+ * that merely ENDS in a city/state — a live, already-correct example this
+ * round is `10times.com`'s own "Solid-State Battery Summit (Aug 2026),
+ * Chicago USA". Anchored to the WHOLE trimmed segment instead, mirroring
+ * `isBareDateSegment`'s own `^...$` convention: "the segment IS a bare
+ * location," not "the segment ENDS WITH one." Bounded to at most four
+ * Title-Case-or-lowercase words before the comma so a long real title that
+ * happens to end in a real city/state is not caught by accident.
+ */
+const BARE_LOCATION_SEGMENT_RE = new RegExp(
+  `^[A-Za-z][\\w.'-]*(?:\\s+[A-Za-z][\\w.'-]*){0,3},\\s*(${US_STATE_CODES.join("|")})$`,
+);
+
+function isBareLocationSegment(candidate: string): boolean {
+  const match = candidate.trim().match(BARE_LOCATION_SEGMENT_RE);
+  return Boolean(match && match[1] === match[1].toUpperCase());
+}
+
+/**
  * B9-04 Fix 2 (round 9): additive and optional, same "thread an option
  * through, default preserves old behaviour" convention this file already
  * used for `host` itself (B8-04). `skipHostBrand` lets a caller ask "is this
@@ -367,7 +415,8 @@ function isChromeSegment(
     isEventIndexPage(trimmed) ||
     /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed) ||
     DOCUMENT_FILENAME_RE.test(trimmed) ||
-    isBareDateSegment(trimmed)
+    isBareDateSegment(trimmed) ||
+    isBareLocationSegment(trimmed)
   ) {
     return true;
   }
@@ -433,15 +482,29 @@ const HEADLINE_PASSIVE_RE =
  * itself: a small, closed verb list, not "any present-tense verb" (which
  * would risk rejecting a real terse name that happens to contain a common
  * verb-shaped word). Anchored to the START of the segment — a leading
- * Title-Case subject phrase (1-5 words) immediately followed by one of the
- * verbs — so a long real title that merely contains one of these words well
- * after its own subject is not caught by accident. Verified directly against
- * both the confirmed repro and this file's own existing "must not
- * over-reject" precedents before being written here (see
- * eventweb.test.ts's "present-tense narrative sentence (B8-06)" block).
+ * subject phrase (1-5 words) immediately followed by one of the verbs — so
+ * a long real title that merely contains one of these words well after its
+ * own subject is not caught by accident. Verified directly against both the
+ * confirmed repro and this file's own existing "must not over-reject"
+ * precedents before being written here (see eventweb.test.ts's
+ * "present-tense narrative sentence (B8-06)" block).
+ *
+ * B10-04 (round 10): the subject words were originally required to be
+ * `[A-Z]`-led (Title-Case), built and tested against a real page `<h1>`/
+ * `<title>`, which is normally Title-Cased. But `nameFromUrlSlug` — one of
+ * `eventNameFrom`'s own fallback stages — capitalises only the FIRST
+ * character of its entire output, so a slug-derived narrative sentence
+ * ("Ruggiero group attends the 2026 crystal engineering GRC") stays
+ * lowercase from the second word on. The identical sentence was correctly
+ * rejected Title-Cased and wrongly accepted sentence-cased, confirmed live,
+ * 2 of 2 pulls, character-for-character. Fix is casing-only: the leading
+ * subject words no longer require an uppercase letter (`\w` in place of
+ * `[A-Z]`), and the verb alternation drops its manual `[Aa]`-style casing in
+ * favour of the `i` flag doing the same job — `nameFromUrlSlug`'s own output
+ * casing is untouched, only which casing reaches this check changes.
  */
 const PRESENT_NARRATIVE_RE =
-  /^[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+(?:[Aa]ttends?|[Aa]nnounces?|[Hh]osts?|[Pp]resents?|[Jj]oins?|[Vv]isits?)\b/;
+  /^\w[\w&.'-]*(?:\s+\w[\w&.'-]*){0,4}\s+(?:attends?|announces?|hosts?|presents?|joins?|visits?)\b/i;
 
 const MULTI_SENTENCE_RE = /\w{3,}[.!?]\s+[A-Z][a-z]/;
 const MAX_TITLE_WORDS = 20;

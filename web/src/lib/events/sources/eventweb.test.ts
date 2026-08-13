@@ -332,6 +332,71 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B10-02 (round 10): internationalbatteryseminar.com's own live-confirmed
+  // repro — once B9-04's bare-date guard rejects the sibling date segment,
+  // a bare "City, ST" location segment fills the slot instead, because
+  // nothing in this file had any concept of "this is only a location."
+  describe("bare location segment (B10-02)", () => {
+    // The live repro itself: a bare location segment must lose to a real
+    // name sitting in the same title.
+    it("rejects a segment that is only a city/state location, falling through to a real name", () => {
+      expect(
+        eventNameFrom("March 15-18, 2027 | Orlando, FL | International Battery Seminar", ""),
+      ).toBe("International Battery Seminar");
+    });
+
+    // The literal live shape: no other segment to fall back to within
+    // bestEventTitleSegment itself.
+    it("rejects a bare location-only title with no other segment, continuing to the snippet", () => {
+      expect(
+        eventNameFrom(
+          "Orlando, FL",
+          "The International Battery Seminar brings together researchers.",
+        ),
+      ).toBe("The International Battery Seminar brings together researchers.");
+    });
+
+    // The "should match nothing" hardest case, and the reason this check is
+    // anchored to the WHOLE segment rather than copying the job side's
+    // unanchored trailing check verbatim: a real, longer event name that
+    // merely ENDS in a city/state must survive. A's own live, already-
+    // correct 10times.com example, named explicitly per B10-02's own
+    // instruction rather than a synthetic case.
+    it("does not reject a real event name merely because it ends in a city/state", () => {
+      expect(
+        bestEventTitleSegment("Solid-State Battery Summit (Aug 2026), Chicago USA"),
+      ).toBe("Solid-State Battery Summit (Aug 2026), Chicago USA");
+    });
+  });
+
+  // B10-03 (round 10): ecs.confex.com's live repro — a real conference-
+  // platform page/section label ("Call for Papers") stands in for the
+  // event's own name. Ironic mechanism named in B10-03: EVENT_SIGNAL_RE
+  // treats the identical phrase as a POSITIVE event signal, which is part
+  // of why the page is recognised as an event page at all.
+  describe("Call for Papers page label (B10-03)", () => {
+    it("rejects a bare 'Call for Papers' segment, falling through to a real name", () => {
+      expect(eventNameFrom("Call for Papers | 250th ECS Meeting", "")).toBe("250th ECS Meeting");
+    });
+
+    it("rejects a bare 'Call for Papers' title with no other segment, continuing to the snippet", () => {
+      expect(
+        eventNameFrom("Call for Papers", "The 250th ECS Meeting welcomes abstract submissions."),
+      ).toBe("The 250th ECS Meeting welcomes abstract submissions.");
+    });
+
+    // Must-survive: a longer, real sentence that legitimately CONTAINS the
+    // phrase must not be caught as chrome — the generic-title check requires
+    // either an exact phrase match or every word in the segment to be
+    // generic, and a longer real sentence has words outside that closed
+    // list, so it must reach bestEventTitleSegment's output untouched.
+    it("does not reject a real sentence that merely contains the phrase", () => {
+      expect(
+        bestEventTitleSegment("Call for Papers now open for the 2026 Battery Symposium"),
+      ).toBe("Call for Papers now open for the 2026 Battery Symposium");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.
@@ -363,6 +428,37 @@ describe("eventNameFrom", () => {
       expect(
         looksLikeEventTitle("Ruggiero Group Battery Innovation Summit 2026"),
       ).toBe(true);
+    });
+
+    // B10-04 (round 10): ruggedthz.com's live repro — the SAME sentence as
+    // above, sentence-cased instead of Title-Cased, reached via
+    // nameFromUrlSlug (which capitalises only the string's first
+    // character). Before this fix, casing alone flipped this from
+    // correctly-rejected to wrongly-accepted; the check must reject it
+    // regardless of casing now.
+    it("rejects the identical narrative sentence when it is sentence-cased, not Title-Cased", () => {
+      expect(
+        looksLikeEventTitle("Ruggiero group attends the 2026 crystal engineering grc"),
+      ).toBe(false);
+    });
+
+    // Must-not-break: the existing, load-bearing precedent this fix could
+    // most plausibly widen into rejecting — a legitimate sentence-cased
+    // slug-derived phrase (scoring.test.ts's own case) that contains none
+    // of the closed verbs. Re-asserted here, at the unit level, alongside
+    // the casing fix that touches the same regex.
+    it("does not reject a legitimate sentence-cased slug-derived phrase with no narrative verb", () => {
+      expect(
+        looksLikeEventTitle("Emea2026 workshop on ion exchange membranes for energy applications"),
+      ).toBe(true);
+    });
+
+    // Must-survive: proves the fix widened WHICH CASING reaches the verb
+    // check, not WHICH VERBS the check itself accepts — a sentence-cased
+    // subject followed by a verb-shaped word outside the closed list
+    // ("builds") must still be treated as a real name, not narration.
+    it("does not reject a sentence-cased subject followed by a verb outside the closed list", () => {
+      expect(looksLikeEventTitle("Ruggiero group builds a new lab")).toBe(true);
     });
   });
 });

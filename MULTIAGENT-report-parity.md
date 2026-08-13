@@ -20323,3 +20323,104 @@ site is unaffected (confirmed by its own test file passing unchanged).
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent C (C10-02: B10-02 + B10-03 + B10-04 bundle, `eventweb.ts`)
+
+**STATUS: DONE.** Landed together in one session, per B's own bundling
+rationale — all three touch `isChromeSegment`/`looksLikeEventTitle` in
+`web/src/lib/events/sources/eventweb.ts` and share the same three test
+files (`eventweb.test.ts`, `enrich.test.ts`, `scoring.test.ts`). Internal
+order followed exactly as B's summary suggested: B10-02 → B10-04 → B10-03.
+Read `§1u Ruling 34` (pushed by `LAPTOP-3CL10CG5` between this session's
+lock claim and this item — pulled and rebased cleanly, no conflict) before
+starting this slot; **34b directly governs B10-03's caveat below.**
+
+**B10-02 (item 4, bare location segment) — landed as guided.** New
+`isBareLocationSegment` + `BARE_LOCATION_SEGMENT_RE` in `eventweb.ts`,
+wired as a sixth `isChromeSegment` condition alongside `isBareDateSegment`.
+Imports `US_STATE_CODES` directly from `structured-extract.ts` (B's first
+option — no relocation to `shared.ts`, smaller diff, no circular import,
+confirmed by the same import already working unchanged in `jobweb.ts`).
+**Anchored to the WHOLE trimmed segment** (`^...$`), not a straight copy of
+the job side's unanchored trailing check, per B's explicit warning — bounded
+to at most 4 words before the comma so a long real title ending in a real
+city/state cannot be caught by accident.
+
+**B10-04 (item 5, casing bug) — landed exactly as B's fix direction 1
+specified, option 2 (Title-Case the slug output) not attempted.**
+`PRESENT_NARRATIVE_RE`'s leading-subject character class changed from
+`[A-Z]` to `\w`, and the verb alternation's manual `[Aa]`-style casing
+replaced with a plain `i` flag on the whole regex. `nameFromUrlSlug` itself
+untouched, confirmed by the fix's own diff (zero lines changed outside the
+one regex literal).
+
+**B10-03 (item 3, "Call for Papers" label) — landed the regex addition
+only, per Ruling 34b, which arrived (via the rebase above) after B wrote
+this item's own caveat.** Added `call\s+for\s+(?:papers|abstracts)|cfp` to
+`GENERIC_PAGE_TITLE_RE`'s closed alternation — smallest diff, as B
+recommended. **Did not add the sibling labels** ("Program"/"Technical
+Program"/"Registration") B also floated — B had no live evidence any of
+them fires, and Ruling 32/34b's own standard is to land what is confirmed,
+not what merely seems plausible; left as a note for a future A, not silently
+dropped.
+
+**The cascade Ruling 34b says to record, not verify — traced via a
+throwaway vitest file against the real, unmodified functions (not a live
+pull), deleted before this commit.** Using an illustrative `confex.com`-
+shaped opaque `.cgi` URL, matching B10-03's own construction:
+- No snippet available: `eventNameFrom` falls all the way to the honest
+  last resort — the URL's own host (`"ecs.confex.com"`) — **not** the
+  rejected `"Call for Papers"` string and not a crash or empty value. This
+  is B9-04 Fix 1's already-established last-resort convention, reused
+  unchanged; no new fallback design was needed.
+- A plausible snippet present: `eventNameFrom` correctly recovers the real
+  name from snippet-mining (`"The 250th ECS Meeting will be held with a
+  special symposium on electrochemistry."` → returned verbatim).
+**This is not proof of what the REAL `ecs.confex.com` page's own snippet
+contains** (B does not have it, C does not have live access either, per
+§0c) — it confirms the mechanism's worst case is the honest host fallback,
+never a re-surfaced rejected value, satisfying Ruling 34b's "say what the
+replacement was" without claiming the live case is verified good. **Item 3
+is not marked closed in this log** — the regex change is landed and correct
+on its own terms per Ruling 34b, but whether the real page's rendered name
+is now right is for a future A to confirm live.
+
+**Tests added, all three in `eventweb.test.ts`, following this file's
+existing per-shape `describe` block convention:**
+- `"bare location segment (B10-02)"` — the live repro (falls through to a
+  real name); the bare-title-only case (falls to snippet); the named
+  must-survive regression (`10times.com`'s own live, already-correct
+  `"Solid-State Battery Summit (Aug 2026), Chicago USA"`).
+- `"Call for Papers page label (B10-03)"` — the live repro shape (falls
+  through to a real name); the bare-title-only case (falls to snippet); the
+  must-survive case (a longer real sentence containing the phrase, tested
+  via `bestEventTitleSegment` specifically — not `looksLikeEventTitle`,
+  which never calls the changed regex at all — so the assertion actually
+  exercises `GENERIC_PAGE_TITLE_RE`/`isAllGenericWords`, not a different
+  function that happens to also return `true`).
+- Added to the existing `"present-tense narrative sentence (B8-06)"` block
+  — the live repro sentence-cased (must now reject); the existing
+  `scoring.test.ts` precedent phrase re-asserted at the unit level
+  alongside the fix that touches its regex (must still accept); a
+  sentence-cased subject followed by a non-listed verb (`"builds"`) (must
+  still accept — proves the fix widened casing, not the verb list).
+
+**Tests at risk, all re-run together in one pass, all pass unchanged:**
+`eventweb.test.ts` (see additions above), `enrich.test.ts`,
+`scoring.test.ts` (its own `"Emea2026 workshop..."` case, the one B10-04
+flagged as closest to what changed, passes unchanged — also re-asserted
+directly in `eventweb.test.ts` per above).
+
+**Gate:** `TZ=America/Chicago npx vitest run` → 90 files / 1061 passed + 1
+skipped; `npx tsc --noEmit` clean; `npx eslint` → the same 1 pre-existing
+`quiz.tsx:46` error, unchanged.
+
+**Blast radius:** `web/src/lib/events/sources/eventweb.ts` only. All three
+fixes are additive (`isChromeSegment`'s new sixth condition) or casing-only
+(`PRESENT_NARRATIVE_RE`) or a closed-list addition
+(`GENERIC_PAGE_TITLE_RE`) — no exported function signature changed, no
+caller outside this file touched.
+
+Commit follows immediately.
+
