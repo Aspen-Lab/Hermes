@@ -22059,3 +22059,78 @@ directly.
 
 Commit follows immediately.
 
+### Round 11 — Agent B (B11-05: `ruggedthz.com` — confirmed out of Ruling 35's scope, no fix recommended; one `POLICY` flag)
+
+**Classify: WRONG DATA, but a different, already-diagnosed mechanism —
+lowest priority per A's own ranking (#4).**
+
+**Correction to this turn's own brief, stated plainly rather than silently
+followed:** the brief says "check round 9 B's own entry before re-deriving."
+**Grepped the entire round 9 B section (§4, `"Round 9 — Agent B"` through
+its own summary) for `ruggedthz`/`Ruggiero`/`looksLikeHostBrand` — no
+dedicated entry exists there.** The actual trace is in **round 9 Agent A,
+part 3** (§4, direct page fetch, `"STILL WRONG, different mechanism"`
+paragraph): the real `<title>` is two segments,
+`"Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero
+Research Lab"`; the first (narrative sentence) is correctly rejected by
+`isChromeSegment`/`looksLikeEventTitle`; the second survives because
+`looksLikeHostBrand("Ruggiero Research Lab", "ruggedthz.com")` returns
+`false` — the host's own DNS label (`ruggedthz`) shares no prefix with the
+normalised candidate (`ruggieroresearchlab`), per that function's own
+documented algorithm (`web/src/lib/opportunities/shared.ts:232-237`, cited
+exactly by round 9 A). Round 9 B's own section discusses
+`looksLikeHostBrand` several times in other contexts (the SolarPACES
+rescue, the employer field) but never proposes a fix for this specific
+host/value. **No B item, in any round, has ever targeted this mechanism.**
+Recorded here so the next reader does not go looking for a round 9 B entry
+that does not exist.
+
+**Confirmed not part of Ruling 35's scope.** This is the **title-segment
+stage** (a two-segment page `<title>`, `bestEventTitleSegment`), not the
+snippet-mining stage B11-01–03 address — a different sub-check
+(`looksLikeHostBrand`, inside `isChromeSegment`'s host-brand branch) failing
+to match, not an absent guard. B11-02/B11-03 do not touch it and would not
+change it.
+
+**No fix recommended this round**, matching A's own "lowest priority"/
+"unambiguous good news" framing: B10-04's actual target (the sentence-cased
+narrative segment) is confirmed gone; what remains is round 9's
+already-catalogued value, not a new defect, and `looksLikeHostBrand`'s
+normalisation algorithm is deliberately narrow (prefix/substring-style
+matching against the domain label) — widening it generically to catch "a
+real organisation name that shares no substring with its own domain" risks
+the same over-reach this loop has already declined twice on similar
+evidence (Ruling 33's LCO acronym, Ruling 34a's institution-name problem).
+
+**`POLICY — manager decides`, not decided here:** this exact mechanism
+(`looksLikeHostBrand` returning `false` for `"Ruggiero Research Lab"` /
+`"ruggedthz.com"`) has now been the confirmed cause of this **same host's**
+wrong value in two non-consecutive rounds (9 and 11) — a narrower,
+more-repeated pattern than either Ruling 33 or Ruling 34a had when the
+manager accepted those as costs rather than building a fix. Whether two
+rounds on one host is enough to revisit that call, or whether it stays
+exactly the single-anecdote-per-mechanism standard those rulings already
+set, is a judgment about how much repetition on one host should weigh
+against a generic policy — the manager's call, not mine to make by
+default. No fix designed here either way, per Ruling 32's own instruction
+not to design a fix before the call is made.
+
+Commit follows immediately.
+
+### Round 11 — Agent B (B11-06: `euagenda.eu` — not mine to resolve, left open)
+
+**Not investigated.** B has no live fetch access (§0c), and A's direct
+fetch has now returned HTTP 403 two consecutive rounds — per this turn's
+own brief, not attempting a fetch here, and not inferring a verdict from
+the string's own shape (the live pipeline's `"The First European
+Conference on Molten Salt Reactor Technology"` reads as a plausible full
+name, but A already said plausible-looking is not the same as verified,
+and B has no way to do better than A did with the same tool). **No code
+path traced, no fix guide entry, no classification.** Stays open for the
+next A to retry the direct fetch; if it fails a third consecutive round,
+that is itself worth the next A naming as a pattern (a persistently
+403-blocking host, not merely an unlucky day) rather than continuing to
+retry silently forever.
+
+Commit follows immediately.
+
