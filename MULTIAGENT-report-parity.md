@@ -20563,3 +20563,111 @@ place, and does not skip ahead to B's or C's work.
 referenced.** Leaving §1 pointing at A, exactly as round 10 C left it.
 Releasing the lock.
 
+
+---
+
+### Round 10 — MANAGER verification of Agent C (before round 11 A is spawned)
+
+**Verdict: all six landed items confirmed. Both halves of Ruling 34 were
+honoured, and 34a was honoured better than asked. One item C found that B's
+guide did not name. One number that looks like a discrepancy and is not.**
+
+**Gate, re-run independently on the laptop:** 90 files / **1067 tests, 1066
+passing.** The single failure is `benchmark.test.ts`, the documented live-search
+flake.
+
+**That reconciles with C's reported "1066 passing + 1 skipped" — it is not a
+disagreement.** C ran in the credential-less cloud container, where that test
+**skips**; on the laptop it **runs and flakes**. Same 1067 total, same 1066
+passing, both times. Recorded explicitly because a future reader comparing the
+two gate lines would otherwise chase a phantom regression. **It is a useful
+`§0c` data point in its own right: the cloud CAN run C's turn**, because C's
+turn needs no credentials — only A's real-data pass does.
+
+---
+
+#### RULING 34a — honoured, and locked in better than the ruling required
+
+Mechanically verified: **no slug cross-check, and no cross-check of any kind,
+appears anywhere in C's diff.** C landed only the closed boilerplate-phrase
+check, which closes item 2.
+
+C then did something the ruling did not ask for and that is worth keeping:
+**it added an explicit test proving the new check does NOT fire on
+`"University of Pennsylvania"`.** That converts "we decided not to fix item 1"
+from a note in a log into an executable statement of intent. If a future round
+widens the phrase check until it starts catching ordinary institution names, that
+test fails and someone has to make the decision consciously rather than by
+accident. **This is the right pattern for every accepted cost from here on.**
+
+#### RULING 34b — honoured exactly, including the part that was easy to skip
+
+C landed the `"Call for Papers"` regex addition and **traced what replaces it**:
+with an opaque URL and no snippet the value falls to the honest host fallback
+(B9-04 Fix 1's convention), never to the rejected string; with a plausible
+snippet it recovers a real name.
+
+**And C did not mark item 3 closed.** That is the whole point of 34b — say what
+the replacement was, do not claim it is good — and it is the sentence a tired
+agent drops. C also declined to add the sibling labels B floated
+("Program"/"Registration") on the grounds that no live evidence shows any of them
+firing, and recorded that choice rather than silently dropping it. Correct on
+Ruling 32's standard.
+
+---
+
+#### The SolarPACES lock (Ruling 28) — still intact, checked the same way as last round
+
+`enrich.test.ts` is **entirely untouched** by this turn's diff, and no SolarPACES
+line appears in the `eventweb.test.ts` diff either. It passes in the manager's own
+gate run. Two rounds of edits to the same guard family, lock still byte-identical.
+
+#### The one removed assertion — rewritten, not deleted, and the contract stays covered
+
+`expect(summary).toContain("Role Overview")` is the only assertion removed this
+turn. B10-07 fix 2 strips a leading `Label:` from displayed text, so that
+assertion could no longer hold. C rewrote it in place to assert the sentence's
+real content, **and added a second test asserting the label's absence** — so the
+display contract is still covered from both directions. §3 satisfied.
+
+---
+
+#### C FOUND SOMETHING B's GUIDE DID NOT NAME — fourth round running
+
+B's guide said to reject `"See more jobs at PostdocJobs.com"` in the candidate
+guard chain. C found that the title's own `at X` employer capture would have
+grabbed **`"PostdocJobs.com"` on its own, earlier**, stripped of the very words
+that mark the sentence as boilerplate — so the guard chain would never have seen
+the full sentence and the new check would never have fired. C added a negative
+lookbehind for that one closed lead-in so the whole segment reaches the guards
+intact.
+
+**This is the fourth consecutive round where the role after the guide found
+something the guide missed** (round 9 C found a second test file; round 10 A
+found a live-confirmed shape B had only constructed; round 10 B found item 4 was
+a separate gap from items 1+2). It is the loop working as designed and it is the
+standing argument against merging the roles.
+
+---
+
+#### PROCESS — the three-writer lock delivered a ruling to a writer that started before it existed
+
+Worth recording because this is the first time the mechanism was tested for real,
+not reasoned about.
+
+`cloud-hourly` claimed the turn for round 10 C at 06:29 UTC while the manager was
+still writing Ruling 34. The manager's push was rejected, the manager rebased the
+ruling on top and pushed it, and **stood down rather than taking the turn back.**
+The cloud C had pulled *before* Ruling 34 existed — but its own first commit push
+was then rejected for the same reason, forcing it to pull, at which point it
+picked up the ruling. Its log names Ruling 34 as arriving "via the rebase above."
+
+**Nobody coordinated that. The rejected push did it.** §0d's claim that "the
+rejected push is the actual lock, everything else is bookkeeping" now has a
+worked example, and the case it survived was the awkward one: a ruling written
+*after* the agent it governs had already started.
+
+**Manager's turn complete. `WHOSE TURN: A` stands as C left it. Round 11 A is
+spawned next, on the laptop — it needs the live pass, which the cloud correctly
+declined at `1f88aaa`.**
+
