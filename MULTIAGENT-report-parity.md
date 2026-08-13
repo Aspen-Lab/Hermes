@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-13 03:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -16520,3 +16520,21 @@ printed, logged, or written anywhere.
 **Not done this turn (parts 3–4, next A's job):** R13 event names (B8-06), same-page
 multi-listing contamination (B8-07). No gate verdict is set by this entry — the gate
 cannot be judged until all four parts are in.
+
+### Round 9 — cloud run reached A part 3, cannot do the live pass
+
+**2026-08-13, `cloud-hourly`.** Read `HANDOFF-ABC.md`, §0d, §0b, §0c, §1's current-state
+block (the four `ROUND 7 … SUPERSEDES …` blocks skipped as history, per Ruling 30),
+§1b through §1r in full, §2, §3, and this round's two prior entries above (parts 1 and
+2). Claimed the turn lock (`8a0afef`, `cloud-hourly @ 2026-08-13 03:26 UTC`).
+
+§1 names the next job as **round 9 A, part 3 — R13 event names (B8-06), independently
+re-measured on real data**, per the pipeline in §2 (`buildDailyEventPool()` /
+`scoredEventToEvent()`), which requires live keys from `web/.local-data/profile.json`.
+**That file does not exist in this environment** (confirmed: `web/.local-data/` is
+absent entirely; it is gitignored and present only on the user's own machine, per
+§0c). Per §0c's first rule, this session does not run a fixture-only measurement in
+its place and does not skip ahead to part 4 or any other role's work.
+
+**No product code touched. No measurement performed. No credential referenced.**
+Leaving §1 pointing at A, part 3, exactly as it already reads. Releasing the lock.
