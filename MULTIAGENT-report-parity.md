@@ -21950,3 +21950,112 @@ item.
 
 Commit follows immediately.
 
+### Round 11 — Agent B (B11-04: `careers.gevernova.com` R4 job-summary label — the brief's suggested fix is unsafe as stated; a guarded version verified instead)
+
+**Classify: WRONG DATA (cosmetic, run-on, not a stripped-content
+regression).** Ranked difference #5 (round 11 A part 3, its own finding, not
+one of B10-07's two fixes). Unrelated file/pipeline to B11-01–03 above — no
+ordering dependency either direction.
+
+**File and function.** `web/src/lib/jobs/summarize.ts`. `SECTION_RE`
+(`:56-57`) credits `"what you'll do"` (among five other phrases) as a
+section opener for `sectionScore` with no colon required. `stripLeadingLabel`
+(`:124-126`), called unconditionally at `:196` on every sentence that
+survives scoring, only removes a label via `LEADING_LABEL_RE` (`:122`),
+which **requires** a literal trailing colon. `"What you'll do"` has none in
+A's live repro, so the credit and the strip disagree, and
+`"What you'll do Support engineering teams..."` reaches the reader
+unstripped.
+
+**A's own brief suggested the fix should "key off the same match
+`SECTION_RE` already found instead of re-testing for a colon
+independently." Built and tested that literally — it is unsafe as stated,
+and the reason is worth recording precisely, not just flagged.**
+
+**The naive version** (strip whatever `SECTION_RE` matches at the start,
+colon or not) was constructed and run against six cases: the real repro,
+plus five hand-built sentences using the same closed phrase list as its own
+grammatical subject (`"Responsibilities include mentoring junior
+engineers..."`, `"Requirements include a PhD..."`, `"The role is based
+in..."`, `"The role requires strong communication..."`, `"Qualifications
+include a strong background..."`). **Confirmed by execution: the naive
+strip correctly fixes the real repro and mutilates all five of the others**
+— e.g. `"Responsibilities include mentoring junior engineers and reviewing
+code daily."` becomes `"include mentoring junior engineers and reviewing
+code daily."`, a sentence missing its own subject. **The colon in the
+existing, working `LEADING_LABEL_RE` is not incidental — it is exactly the
+signal that distinguishes "this phrase is a standalone heading" from "this
+phrase is the sentence's own grammatical subject," and the naive version
+throws that signal away without replacing it with anything.** This would
+trade a mild run-on (the confirmed defect) for an occasional broken
+sentence (a worse one) — not confirmed live this round, but a real,
+demonstrated hazard in exactly the shape Ruling 31 requires be checked
+before a fix is recommended, not discovered by C after landing it.
+
+**Guarded fix direction, constructed and verified instead:** only strip the
+colon-less `SECTION_RE` match when the word immediately following it is
+**not** one of a small, closed set of linking/copula verbs a
+subject-usage sentence would use next — the same "narrow, closed list, not
+a general parser" convention this file and `eventweb.ts` both already use
+repeatedly (`ROLE_RE`, `HEADLINE_PASSIVE_RE`, `PRESENT_NARRATIVE_RE`):
+
+```ts
+const SUBJECT_CONTINUATION_RE =
+  /^\s*(?:is|are|was|were|include|includes|involve|involves|require|requires|mean|means|matter|matters|entail|entails)\b/i;
+
+function stripLeadingLabel(text: string): string {
+  const withColon = text.replace(LEADING_LABEL_RE, "");
+  if (withColon !== text) return withColon;
+  const sectionMatch = text.match(SECTION_RE);
+  if (sectionMatch) {
+    const rest = text.slice(sectionMatch[0].length);
+    if (!SUBJECT_CONTINUATION_RE.test(rest)) {
+      return rest.replace(/^\s+/, "");
+    }
+  }
+  return text;
+}
+```
+
+**Confirmed by execution, all seven cases correct**: the real repro
+(`"What you'll do Support engineering teams..."` → strips cleanly), a
+second heading-form construction (`"Role overview Support the advanced
+research center..."` → strips cleanly), and all five subject-usage
+adversarial cases above → **left untouched, verbatim**, exactly as today's
+code already leaves them.
+
+**Is this worth landing — left to C/the manager, not decided here, per A's
+own framing of this as "B's own call."** The defect is one instance in this
+round's 4-item summary sample, purely cosmetic (a run-on, not lost or wrong
+information), and the guarded fix, while verified safe on every case
+checked, adds a second regex and a branch to a function every job summary
+passes through. Recommend landing it **only if** C judges the diff small
+enough to be low-risk on its own terms — the guarded version above is the
+one to use if so; **the naive version A's brief gestured at must not be
+landed as-is**, regardless of time pressure, since it is now a demonstrated
+regression risk, not a hypothetical one.
+
+**Tests at risk.** Single test file confirmed by grep across
+`web/src/lib/jobs/`, `web/src/components/`: `web/src/lib/jobs/summarize.test.ts`.
+Every existing case touching `stripLeadingLabel`/`SECTION_RE` uses a
+colon-terminated label (`:95-99` "Role Overview:", `:242-256`
+"Qualifications:", `:258-270` "Multi-Level:", `:272-279` mid-sentence
+"as follows:") — all four go through the **unchanged** first branch
+(`LEADING_LABEL_RE`, colon required) and are confirmed unaffected; none
+exercises the new second branch, since none omits a colon. `web/src/lib/jobs/mapper.test.ts`
+also asserts on `.summary` output (`:50-51`, `:92-93`) via `toContain(...)`
+substring checks against fixtures that do not start with any of
+`SECTION_RE`'s six phrases — confirmed by reading both fixtures directly,
+unaffected. **New tests needed if this lands**: the real repro shape as a
+must-strip case, and at minimum the `"Responsibilities include..."`/`"The
+role is..."` shapes as must-NOT-strip cases — the exact adversarial pair
+this entry's own construction found, per Ruling 31.
+
+**Blast radius.** `stripLeadingLabel` has one call site (`:196`, inside
+`scoreSentences`), confirmed by grep. `summarizeJob` (the public entry
+point) has one production caller, `web/src/lib/jobs/mapper.ts`. No other
+file reads `stripLeadingLabel`, `SECTION_RE`, or `LEADING_LABEL_RE`
+directly.
+
+Commit follows immediately.
+
