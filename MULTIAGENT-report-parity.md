@@ -352,6 +352,15 @@ WHOSE TURN:       **B.** Take A's ranked, numbered difference list — full
                      in a literal `"[..."` (confirmed byte-exact via direct
                      file write). Same host round 8 named for colon-label
                      chrome, recurring with two more defects layered on.
+                     **CAUSE ALREADY KNOWN — DO NOT RE-INVESTIGATE.** Round
+                     9's B found this exact string byte-for-byte and traced
+                     it to completion: `SECTION_RE` matches the leading
+                     `"Qualifications:"` and grants `sectionScore = 4`,
+                     clearing the floor with **zero** keyword credit (see
+                     the replay table in §4 "Round 9 — Agent B (B9-03)").
+                     A's contribution is confirming it survives the **live**
+                     pipeline, not only a replay. Go straight to what to do
+                     about it.
                   7. **`euagenda.eu`** — flagged, not confirmed: a shorter,
                      ellipsis-terminated name than round 9's own full
                      citation for the identical URL. Verification fetch
@@ -361,6 +370,10 @@ WHOSE TURN:       **B.** Take A's ranked, numbered difference list — full
                   8. **`inl.referrals.selectminds.com`'s job summary** —
                      mild colon-label prefix (`"Multi-Level:"`) ahead of
                      otherwise-clean prose. Lower severity than 6.
+                     **ALSO ALREADY ENUMERATED** — this is the
+                     single-colon-label-sentence shape round 8 named as one
+                     of B8-05's two knowingly-unaddressed shapes. Not
+                     unexplored ground; likely the same root as item 6.
                   9. **`careers.abbvie.com`** (and the standing
                      `jobs.lbl.gov` precedent) — null company on an
                      organisation's own branded subdomain. A data point for
@@ -371,6 +384,16 @@ WHOSE TURN:       **B.** Take A's ranked, numbered difference list — full
                   10. **`sdle.co.il`** — RESOLVED. Explanation (b): a
                       source-site URL artifact. No fix guide needed;
                       included for closure, not as an open item.
+                      **MANAGER RE-FETCHED THE PAGE INDEPENDENTLY AND
+                      CONFIRMS IT** — the live `<title>` names the Turkey
+                      summit, the body is entirely that event, the Germany
+                      slug is stale on the source site. Item CLOSED, not
+                      deferred. B owes nothing here.
+
+                  **MANAGER NOTE ON B's ACTUAL LOAD:** items 6 and 8 arrive
+                  with their cause already traced (see §4 "Round 10 —
+                  MANAGER verification of Agent A"), and item 10 is closed.
+                  **B's real investigation load is 7 items: 1–5, 7, 9.**
 
                   **A pattern worth B's attention, offered as an
                   observation, not a diagnosis:** items 1, 2, and arguably
@@ -19068,4 +19091,115 @@ cover.
 per this round's own brief and Ruling 32. Stays parked.**
 
 Commit follows immediately.
+
+
+---
+
+### Round 10 — MANAGER verification of Agent A (before round 10 B is spawned)
+
+**Verdict: A's measurement stands. The `sdle.co.il` closure is independently
+confirmed and closes. Two of A's ten items are NOT new — their cause is already
+fully diagnosed in this file, and B must not spend a turn re-deriving them.**
+
+---
+
+#### CONFIRMED — `sdle.co.il` (item 10) closes. Verified by the manager's own fetch.
+
+Closure claims are the one class this loop has got wrong before (B5-02, round 5:
+the manager verified the *gate* and shipped the *closure claim* untested, and the
+claim was false). So this one was re-fetched independently rather than read.
+
+The manager's own direct fetch of the page returns a `<title>` naming the **Turkey
+Battery Technologies Summit 2026, Gebze, October 21-22 2026**, and body content
+entirely about that event. The URL path naming a 2018 Germany medical conference
+is a stale slug on the source site itself.
+
+**A's explanation (b) is correct. Peer renders what the page says.** No wrong data
+reaches a reader, nothing in this codebase is at fault, and no fix guide is owed.
+**Item 10 is closed, not deferred.**
+
+---
+
+#### CORRECTION — item 6 (`employbl.com`) is NOT a new finding. Its cause is already written down.
+
+A presented item 6 as a fresh discovery and did good work confirming it byte-exact
+via a direct file write rather than console output. **The confirmation is new and
+valuable. The finding is not.**
+
+**Round 9's own B already found this exact string, byte-for-byte, including the
+trailing `"[..."`** — see the replay table in §4 "Round 9 — Agent B (B9-03)", the
+`employbl.com` row. It also already traced the mechanism to completion:
+
+> `SECTION_RE` matches the leading `"Qualifications:"` and grants
+> `sectionScore = 4`, clearing the floor with **zero** keyword credit at all.
+
+**B: do not re-investigate why this survives. It is answered.** The open question
+is only what to do about it — a `SECTION_RE` match on a bare colon-label granting
+full section credit with no keyword support at all.
+
+What round 10 A genuinely adds is the **evidence class**: round 9's B saw this
+string only by replaying round 8's *saved* summaries against today's code. A has
+now confirmed it survives the **live pipeline end-to-end**, today, on a fresh pull.
+That upgrade matters — a replay can be wrong about what the live pool produces —
+but it is a stronger proof of the same finding, not a second finding.
+
+#### Same correction, smaller, for item 8
+
+`inl.referrals.selectminds.com`'s `"Multi-Level:"` prefix is the
+**single-colon-label-sentence** shape **round 8 already enumerated and explicitly
+left open** as one of B8-05's two known-unaddressed shapes. Also not new. A
+correctly called it "a milder possible instance of round 8's originally-named
+shape" — this entry just makes that pointer explicit so B does not treat it as
+unexplored ground.
+
+**Net effect: 2 of A's 10 items arrive with their cause already known. B's real
+investigation load is 7 items (1–5, 7, 9), not 10.** Ruling 32's enumerate-first
+discipline is working — the enumeration is paying for itself.
+
+---
+
+#### READING NOTE — the summary chrome count did NOT regress, and will look like it did
+
+Round 9: **0 of 4** non-empty summaries carried classic chrome.
+Round 10: **1 of 3**.
+
+Read naively that is 0% → 33% and looks like round 9 C broke something. **It is
+not a regression, and nothing C landed touched it.** Round 9's live pool did not
+contain `employbl.com` at all (§4 round 9 A part 2 records the host as absent that
+day). The shape has been continuously open since round 8; the host simply drops in
+and out of the live sample between rounds.
+
+Recorded here because the next reader comparing two round summaries will otherwise
+draw the wrong conclusion. **A itself did not make this error** — its §4 part 3
+reports summary-bearing rate and chrome rate as separate numbers and explicitly
+declines to claim a trend against a differently-sized sample. This note protects
+the reader, not the measurement.
+
+#### Same caution on the employer wrong-rate trend line
+
+62.5% → 27.3% → 20% across rounds 8, 9, 10 reads as steady progress. The
+**62.5% → 20% swing is large enough to be real.** The **27.3% → 20% step is not**:
+on denominators of 11 and 10 that is 3 wrong versus 2 wrong — a one-posting
+difference, well inside sampling noise. A flagged the composition change honestly;
+this note names the arithmetic so no future round cites the last step as evidence a
+specific fix worked.
+
+---
+
+#### Process — A did the two things this loop keeps having to relearn
+
+Both worth keeping on the record because both were failures in earlier rounds:
+
+1. **It answered the blocked question first.** `sdle.co.il` had stalled two roles
+   across two rounds because neither B nor C would guess at it. A did the targeted
+   single-page fetch before anything else and closed it in part 1.
+2. **It reported a blocked verification as blocked.** Item 7 (`euagenda.eu`) hit a
+   403 and A said so, ranking it "flagged, not confirmed," rather than inferring an
+   answer from the shape of the string. That is the standard Ruling 31 asked for.
+
+Its throwaway measurement files were removed before commit; the working tree is
+clean and no credential was printed, logged, or committed.
+
+**Manager's turn complete. `WHOSE TURN: B` stands as A left it. Round 10 B is
+spawned next, with items 6 and 8 marked cause-known.**
 
