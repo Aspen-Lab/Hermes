@@ -2284,6 +2284,72 @@ evidence instead of a single anecdote.
 
 ---
 
+### §1v Ruling 35 — THE EVENT-NAME SNIPPET PATH IS UNGUARDED, AND ITS FALLBACK IS RULING 32'S DEFECT FOR THE FOURTH TIME. ENUMERATE IT BEFORE FIXING ANY HOST.
+
+Round 11 A found that `ecs.confex.com` renders `"Invited speakers present
+keynote lectures."` — a program blurb, not a name — even though B10-03's guard
+correctly rejects that page's real title. A traced *which path* produced it and
+correctly stopped there, leaving *why* to B. The manager then read that path and
+is naming what is in it, because it is a defect class this loop has now hit four
+times and because per-host fixes will keep missing it.
+
+**`eventNameFrom` has two candidate paths and rounds 9 and 10 only ever guarded
+one of them.** The title-segment path runs through `bestEventTitleSegment` →
+`isChromeSegment`, where every guard those rounds added lives: the bare-date
+guard, the bare-location guard, `"Call for Papers"`, the document-filename
+check, host-brand, generic page titles. **The snippet-mining path filters with a
+different function entirely (`looksLikeEvent`), so none of those guards has any
+reach into it.** That much is A's finding.
+
+**What the manager adds, from reading the path itself:**
+
+```ts
+const eventLike = substantial.filter((part) => looksLikeEvent(part));
+const pool = eventLike.length > 0 ? eventLike : substantial;   // <- HERE
+return pool.reduce((best, part) => (part.length > best.length ? part : best));
+```
+
+1. **`eventLike.length > 0 ? eventLike : substantial` is Ruling 32's defect in
+   its purest form yet.** When the filter rejects every candidate, the code does
+   not fall through to a defensible "nothing" — it **discards the filter's
+   verdict wholesale** and reuses the raw list. Every previous occurrence needed
+   a paragraph to explain; this one is a single ternary that says "if the guard
+   found nothing acceptable, ignore the guard."
+2. **`reduce(... part.length > best.length ...)` picks the LONGEST fragment.**
+   Event names are short; prose sentences are long. So the tie-break
+   systematically prefers exactly the wrong kind of string, which is why the
+   observed value is a full sentence about keynote lectures.
+
+Together these two lines explain the live render without needing any per-host
+theory.
+
+**Ruling — binding on round 11 B:**
+
+- **Enumerate this second path before writing a single per-host fix entry**,
+  exactly as Ruling 32 required the fallback enumeration in round 9 (B9-01). For
+  each way the snippet path can produce a value, say what reaches a reader.
+- **Do not write per-host guide entries for hosts whose wrong value came out of
+  this path** until that enumeration exists. Findings 1, 2 and 4 of round 11 A's
+  part 4 all look like they may share it; establishing whether they do is the
+  first job, not an afterthought.
+- **The two lines quoted above are the manager's reading, not a verified cause.
+  Check them.** If the enumeration shows they are wrong, say so plainly — a
+  manager's guess carries no more weight here than anyone else's, and this loop
+  has already recorded one case of the manager shipping an unverified claim.
+- Ruling 32's standard still governs the fix direction: a guard alone is not a
+  fix; a guard plus a defensible "nothing" is. The event-name field's honest
+  fallback already exists and is already in use (the URL host, per B9-04 Fix 1) —
+  no new fallback needs designing.
+
+**Why this is a ruling and not just a finding:** three rounds in a row have
+closed a specifically-cited event-name defect and watched a differently-shaped
+wrong value take the same slot. Round 11 A's own summary says two of its three
+fix-target confirmations were replaced by something *worse*, not merely
+different. That is not bad luck; it is what happens when the guarded path is not
+the path most wrong values come from.
+
+---
+
 ### §1u Ruling 34 — A CORRECTLY-SPELLED INSTITUTION NAME THAT IS THE WRONG INSTITUTION IS AN ACCEPTED COST. DO NOT BUILD THE SLUG CROSS-CHECK.
 
 Round 10 B escalated one `POLICY — manager decides` (B10-01, item 1) and one
@@ -2509,6 +2575,15 @@ Work through B's fix guide in order.
   `model: "sonnet"`; do not let it inherit the manager's model.
 - Prior phase decisions live in `HANDOFF-phase7..10*.md`. Read before assuming
   something is a bug.
+- **A usage-limit error's own text is not reliable evidence that credit is
+  exhausted. Retry on the next scheduled tick; do not stand down for hours.**
+  On **2026-08-13** a spawn died citing a "monthly spend limit" and the manager
+  slowed the resume clock from hourly to 12-hourly on the strength of that
+  wording. The user's actual plan usage at that moment was **12% of the 5-hour
+  limit and 17% of the weekly limit**, and a retry a few hours later ran
+  normally. The wording cost most of a working day. Treat a failed spawn as a
+  no-op for that tick only. Escalate to the user — quoting the error text
+  verbatim — only after several consecutive retries fail the same way.
 
 ---
 
@@ -21323,4 +21398,96 @@ occurrences.
 per Ruling 32 and this round's own brief. Stays parked.**
 
 Commit follows immediately.
+
+
+---
+
+### Round 11 — MANAGER verification of Agent A (before round 11 B is spawned)
+
+**Verdict: A's measurement stands, and A corrected its own optimistic reading
+inside the same turn — which is the single best thing it did. One new ruling
+(§1v Ruling 35) issued from what its part-4 finding exposed. One standing
+ground rule added to §3 from the manager's own mistake, not A's.**
+
+**Gate, re-run independently:** 90 files / **1067 tests, 1066 passing**, the sole
+failure being the documented `benchmark.test.ts` live-search flake. Unchanged, as
+expected — A touches no code. Working tree clean, no throwaway scaffolds left
+behind (A rebuilt and deleted its own, per the instruction added after the
+previous A left one).
+
+---
+
+#### A CAUGHT ITSELF, IN WRITING, AND THAT IS THE FINDING TO KEEP
+
+Part 2 direct-fetched `ecs.confex.com`, confirmed its title is literally the
+rejected string, fed the page's own body text into the real `eventNameFrom`, and
+got the correct name back. Its commit message says the item is closed.
+
+**Part 4 then ran the actual live pipeline and found the real render is
+`"Invited speakers present keynote lectures."`** — and A went back and marked
+part 2's reading as not holding, in §1's own headline and again in part 4's
+Finding 1, rather than leaving two entries that disagree.
+
+This matters more than the finding itself. **Part 2's method was the flaw: it
+hand-fed a stand-in for the snippet instead of letting the pipeline produce
+one.** A said so explicitly at the time ("the actual live snippet was never
+itself observed"), which is the only reason the contradiction was catchable
+later. The commit message for part 2 still reads "closes C's open question" and
+is now wrong — **the state file corrects it, and the state file is the source of
+truth, so no history is being rewritten.** Recorded here so nobody reads that
+commit subject alone and believes it.
+
+**Standard for every future A: a value produced by hand-feeding a function is
+evidence about the function, never about what a reader sees.** Only a pipeline
+pull is evidence about the render.
+
+---
+
+#### RULING 35 ISSUED — see §1v
+
+A traced *which* code path produced the wrong value and correctly stopped there,
+leaving *why* to B. The manager then read that path and found it contains
+**Ruling 32's defect class for the fourth time**, in its most compact form yet: a
+single ternary that reuses the unfiltered candidate list whenever the filter
+rejects everything, followed by a tie-break that prefers the longest string —
+which systematically prefers prose over names.
+
+Ruling 35 requires B to **enumerate that second path before writing any per-host
+entry**, the same discipline Ruling 32 imposed in round 9, and explicitly tells B
+to check the manager's reading rather than inherit it.
+
+---
+
+#### GROUND RULE ADDED TO §3 — from the manager's error, not A's
+
+The previous round-11 A died citing a "monthly spend limit" and the manager
+slowed the resume clock from hourly to 12-hourly on the strength of that wording.
+**The user's actual plan usage at that moment was 12% of the 5-hour limit and 17%
+of the weekly limit**, and the retry a few hours later ran normally. The wording
+cost most of a working day.
+
+§3 now carries the rule: **a usage-limit error's own text is not reliable
+evidence that credit is exhausted — retry on the next tick.** Recorded in the
+state file rather than only in the manager's own notes, because the next manager
+may be a different agent entirely.
+
+---
+
+#### What A did well, worth keeping on the record
+
+1. **Reported a blocked verification as blocked, twice.** `euagenda.eu` returned
+   403 for the second round running and A said so rather than inferring an answer
+   from the string's shape. Second round in a row this standard held.
+2. **Distinguished a fix working from a fix helping.** On `ruggedthz.com` it
+   noted the fix's own target shape is gone and the value underneath is an
+   *already-catalogued* wrong value rather than a novel one — and called that the
+   round's only unambiguous good news, while stating plainly it could not fully
+   separate the fix's effect from which page the search surfaced.
+3. **Carried both tallies without prompting.** Ruling 33's acronym tally: round
+   11 = 0 of 4 (running: 1/4, 0/3, 0/4 — still one anecdote, not a pattern).
+   Ruling 34a's institution tally: 1 of 9, and A correctly counted the accepted
+   residual into the tally rather than reporting it as a defect.
+
+**Manager's turn complete. `WHOSE TURN: B` stands as A left it, now governed by
+Ruling 35. Round 11 B is spawned next.**
 
