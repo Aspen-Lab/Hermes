@@ -19638,5 +19638,120 @@ referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-04: item 5, `ruggedthz.com` — URL-slug narrative sentence evades its own matching check by casing alone)
+
+**STATUS: DONE.** Continuing the same session. This is the sharpest, most
+precisely traceable finding this turn — a casing bug, not a coverage gap.
+
+**Classify: WRONG DATA.** A already noted round 9 A itself produced this
+exact string as a "controlled, not-observed-live construction" — this round
+confirms it live, 2 of 2 pulls. Traced the mechanism fully.
+
+**Confirmed via controlled construction against the real, unmodified
+`eventweb.ts` (not a live pull) — the exact live string, reproduced
+character-for-character, not merely a similar one:**
+```
+looksLikeEventTitle("Ruggiero Group Attends The 2026 Crystal Engineering GRC") === false  (correctly rejected)
+looksLikeEventTitle("Ruggiero group attends the 2026 crystal engineering grc") === true   (WRONGLY accepted)
+eventNameFrom("Home | Events", "short", "https://ruggedthz.com/blog/ruggiero-group-attends-the-2026-crystal-engineering-grc")
+    === "Ruggiero group attends the 2026 crystal engineering grc"
+```
+The second line is the SAME semantic sentence as the first, differing only
+in capitalisation — and the check flips from correctly-rejects to
+wrongly-accepts on that difference alone.
+
+**Root cause, traced to the exact character.** `PRESENT_NARRATIVE_RE`
+(`eventweb.ts:443-444`), the B8-06 check built specifically to catch this
+grammatical shape ("Ruggiero Group Attends the 2026 Crystal Engineering
+GRC" is its own doc-comment example, `:426-441`):
+```
+/^[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+(?:[Aa]ttends?|...)\b/
+```
+requires each word BEFORE the verb to start with an uppercase letter
+(`[A-Z]`). `nameFromUrlSlug` (`:461-481`), the function that actually
+produces this string, capitalises **only the first character of the whole
+result** (`:480`: `words.charAt(0).toLocaleUpperCase() + words.slice(1)`) —
+a URL slug is conventionally all-lowercase, so every word after the first
+stays lowercase. `"Ruggiero group attends..."` — `"group"` (lowercase `g`)
+breaks the `{0,4}` repeated-Title-Case-word group at the very first
+repetition, so the regex can never reach `"attends"` at all, regardless of
+how the verb alternation itself is cased (`[Aa]ttends?` already tolerates
+either case for the verb — it is the SUBJECT words before it that the regex
+requires to be capitalised, and the slug never capitalises those). **The
+check was built and tested against Title-Cased input (a real page `<h1>` or
+`<title>`); it is reached, in this specific case, via a fallback path whose
+own output format was never Title-Cased in the first place.** Confirmed the
+other three `looksLikeEventTitle` checks do not independently catch it
+either (traced by hand: no "to be" auxiliary for `NARRATIVE_VERB_RE`, no
+headline-passive vocabulary, no sentence-ending punctuation for
+`MULTI_SENTENCE_RE`, 8 words under the 20-word ceiling) — this is not a
+partial miss, `looksLikeEventTitle` returns `true` cleanly.
+
+**Fix direction: relax the casing requirement in the narrative-detection
+regexes, do NOT change `nameFromUrlSlug`'s own output casing.** Two options,
+recommending the first:
+1. **Drop the `[A-Z]` requirement on the leading subject words in
+   `PRESENT_NARRATIVE_RE`** (e.g. `\w[\w&.'-]*` in place of
+   `[A-Z][\w&.'-]*`, keeping the case-insensitive `i` flag doing the rest) —
+   narrow, contained to this one regex, leaves every other check and
+   `nameFromUrlSlug` itself untouched.
+2. Title-Case every word in `nameFromUrlSlug`'s own output, not just the
+   first character — **actively not recommended**: this changes the output
+   format of EVERY slug-derived name, not just narrative-sentence-shaped
+   ones, a much wider blast radius for a defect this round's evidence only
+   shows in the narrative-detection path specifically.
+
+**Why option 1 is safe — verified against the load-bearing existing
+precedent test, not assumed.** `web/src/lib/events/scoring.test.ts:613-622`
+("recovers the event name from the URL slug when every title segment is
+chrome") is an EXISTING, PASSING test asserting `eventNameFrom` returns
+`"Emea2026 workshop on ion exchange membranes for energy applications"` —
+itself a `nameFromUrlSlug` sentence-cased output, and itself proof that
+sentence-casing is fine for a legitimate phrase-shaped slug (a workshop
+title, not a narrative sentence about one). Traced this string against a
+casing-relaxed `PRESENT_NARRATIVE_RE`: contains none of
+attends/announces/hosts/presents/joins/visits, so a casing-relaxed version
+still does not reject it — **this existing test should survive option 1
+unchanged**, but flagging it explicitly as the one to re-run first, before
+any other, since it is the closest existing precedent to what changes.
+
+**Hardest cases to add, per Ruling 31:**
+- The live repro itself, sentence-cased, as the must-now-reject case.
+- The doc comment's own original Title-Cased example, as the must-still-
+  reject regression lock (proves option 1 is a widening, not a replacement).
+- `scoring.test.ts:614-622`'s existing `"Emea2026 workshop on ion exchange
+  membranes for energy applications"` case, re-run explicitly and named, per
+  above — the must-not-break precedent.
+- A slug-derived phrase that starts with a capitalised proper noun followed
+  by a lowercase common verb-shaped word that is NOT in the closed verb list
+  (e.g. a hypothetical `"Ruggiero group builds a new lab"` — "builds" is not
+  attends/announces/hosts/presents/joins/visits) — must continue to survive,
+  proving the fix widens WHICH CASING reaches the verb check without widening
+  WHICH VERBS the check itself accepts.
+
+**What renders when the guard fires:** no new design needed — once rejected
+at the slug-validation step inside `eventNameFrom`
+(`bestEventTitleSegment(fromSlug, url) === fromSlug` at `:537`), the chain
+already falls through to snippet-mining then Fix 1's host/placeholder, the
+same confirmed-complete chain B10-02 cites.
+
+**Tests at risk:** same three files as B10-02/B10-03
+(`eventweb.test.ts`/`enrich.test.ts`/`scoring.test.ts`) —
+`PRESENT_NARRATIVE_RE` is called only from `looksLikeEventTitle`, which all
+three exercise.
+
+**Blast radius:** `PRESENT_NARRATIVE_RE` has exactly one reference
+(`looksLikeEventTitle`, confirmed by grep) — a casing-only change to this one
+regex touches no other function or file.
+
+Cleanup: throwaway vitest file (`zz-round10-b-eventname-trace.test.ts`,
+shared with B10-02/03, all three items' cases added before one deletion)
+deleted before the B10-02 commit already. No product code touched. No
+credential referenced, logged, or written.
+
+Commit follows immediately.
+
 Commit follows immediately.
 
