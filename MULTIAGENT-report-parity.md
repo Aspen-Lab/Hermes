@@ -2184,6 +2184,56 @@ a status, not a close.
 
 ---
 
+## §1t. RULING 33 — THE SHORT-ACRONYM COLLISION IS AN ACCEPTED COST, NOT A FIX ITEM — BINDING
+
+**Date: 2026-08-13.** Ruling on B9-03's `POLICY — manager decides` item.
+
+### The question B asked
+
+A boilerplate sentence — *"The LCO always welcomes proposals…"* — cleared the
+summary's positive-content floor because `"LCO"` matched a profile topic. But
+that `LCO` is a law-reform body, not the battery material the profile means.
+B asked: build a short-acronym disambiguation rule, or accept the cost?
+
+### Ruling: accept it. Do not build the rule.
+
+Three reasons, in order of weight:
+
+1. **One instance, in an entire round's sample. There is no frequency data**,
+   and B said so rather than implying otherwise. Rulings 28 and 31 both exist
+   because this loop has bought things on samples this thin before.
+2. **The matcher is deliberately context-free and documented as such.** B read
+   the doc comment and confirmed the design is intentional. Bending it for one
+   case trades a documented, predictable rule for an undocumented special case.
+3. **The blast radius reaches ranking.** `termMatches` feeds job scoring, not
+   just this floor. A change here can reorder what a reader sees first — a far
+   larger surface than the defect it would fix.
+
+**This is now a named, accepted cost.** It is not "unresolved", and nobody
+should rediscover it in three rounds as a fresh finding.
+
+### One observation B did not consider, for whoever picks this up later
+
+**The sentence is boilerplate regardless of which term matched.** *"…always
+welcomes proposals from individuals and organizations"* would be filler even if
+`LCO` were the right LCO. So a fix aimed at the **matcher** may be aimed one
+layer too deep: the same sentence would also be caught by anything that
+recognises generic institutional boilerplate, which does not touch ranking at
+all and shares a surface with B9-03's other defect.
+
+**Stated as an observation, not a fix direction** — diagnosis is B's job, and
+this only matters if the shape recurs.
+
+### What makes this reversible
+
+**A: from round 10 onward, when you measure job summaries, record whether any
+surviving sentence's only keyword evidence was an acronym under 5 characters.**
+One line per round. That costs almost nothing and it is the frequency data
+nobody has. If it turns out to be common, this ruling gets revisited with
+evidence instead of a single anecdote.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
