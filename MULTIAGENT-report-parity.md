@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-13 14:50 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -20879,6 +20879,38 @@ names re-check (`ecs.confex.com` direct fetch, `internationalbatteryseminar.com`
 `ruggedthz.com`, `euagenda.eu` retry, SolarPACES lock), R4 job summaries
 re-check plus Ruling 33's acronym tally. No gate verdict is set by this
 entry — the gate cannot be judged until all parts are in.
+
+Commit follows immediately.
+
+---
+
+### Round 11 — cloud run reached A parts 2–4, cannot do the live pass (second check)
+
+**2026-08-13 14:50 UTC, `cloud-hourly`.** Checked out
+`feature/summary-report-revamp`, pulled (already up to date at `6b40ba3`),
+read `HANDOFF-ABC.md` in full, then `MULTIAGENT-report-parity.md`: §0b, §0c,
+§0d, §1's current-state block in full, §1b through §1u in full, and this
+round's own §4 entries ("Round 11 — cloud run reached A, cannot do the live
+pass" and "Round 11 — Agent A (part 1: employer field)") before touching
+anything. Claimed the turn lock first (`a243631`,
+`cloud-hourly @ 2026-08-13 14:50 UTC`); it was free, released by
+`LAPTOP-3CL10CG5`'s own out-of-budget stop commit (`6b40ba3`).
+
+§1 is unchanged from that stop commit: **round 11 A, part 1 of 4 done and
+banked (`7a6ec13`), parts 2–4 (`ecs.confex.com` event-name re-check, R4 job
+summaries + Ruling 33's tally, R13 event names + gate verdict) still
+unstarted**, and the same turn — not a new one — needs picking up. All three
+remaining parts require the live real-data pass through the app's own
+pipeline (§2), which needs the credentials in
+`web/.local-data/profile.json`. **That file is still absent in this
+environment** (confirmed again: `web/.local-data/` does not exist). Per
+§0c's first rule, this session does not run a fixture-only measurement in
+its place, does not skip ahead to B's or C's work, and does not re-run part
+1 (already done and correct per its own entry).
+
+**No product code touched. No measurement performed. No credential
+referenced.** Leaving §1 pointing at round 11 A, parts 2–4, exactly as the
+laptop session left it. Releasing the lock.
 
 Commit follows immediately.
 
