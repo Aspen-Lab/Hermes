@@ -270,21 +270,20 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 03:40 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished part 2 of a deliberately split A turn @
-                  2026-08-13 03:20 UTC. §1 itself pre-split this A turn into
+STOPPED BECAUSE:  finished part 3 of a deliberately split A turn @
+                  2026-08-13 03:55 UTC. §1 itself pre-split this A turn into
                   four parts after a previous round-9 A died on the
                   account's spend limit before it had even finished reading.
-                  This session did **part 2 only — R4 job summaries
-                  (B8-05), measured live** — and stopped there by design,
-                  exactly as instructed. **Parts 3–4 (R13 event names/B8-06,
-                  same-page contamination/B8-07) are not done** and are the
-                  next A's job. Full method and every number is in §4
-                  "Round 9 — Agent A (part 2: job summaries)."
+                  This session did **part 3 only — R13 event names (B8-06),
+                  measured live** — and stopped there by design, exactly as
+                  instructed. **Part 4 (same-page contamination/B8-07) is
+                  not done** and is the next A's job. Full method and every
+                  number is in §4 "Round 9 — Agent A (part 3: event names)."
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -292,17 +291,20 @@ STOPPED BECAUSE:  finished part 2 of a deliberately split A turn @
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 (in progress — parts 1-2 of 4 done)
-WHOSE TURN:       **A — PARTIAL, parts 1–2 of 4 complete, resume at part 3
-                  (R13 event names, B8-06).** Independently re-measure the
-                  real-data gap now that six code items are fully landed and
-                  a seventh is landed in part. Fresh real events and jobs
-                  through the build's own pipeline, per item, never
-                  averaged, per §1j/Ruling 30's standard. **C does not
-                  remeasure.** Do **not** redo parts 1–2 (employer field; R4
-                  job summaries) — both are measured and closed out below;
-                  figures for parts 3–4 (B8-06/07) still describe the
-                  pre-fix state until measured.
+ROUND:            9 (in progress — parts 1-3 of 4 done)
+WHOSE TURN:       **A — PARTIAL, parts 1–3 of 4 complete, resume at part 4
+                  (same-page multi-listing contamination, B8-07).**
+                  Independently re-measure on real data whether either of
+                  Ruling 29's two derived markup shapes (one fixed in round
+                  8, one deliberately left open — §4 "Round 8 — Agent C",
+                  B8-07) can be found on a live page; report plainly if
+                  neither can. Fresh real events/jobs through the build's
+                  own pipeline, per item, never averaged, per §1j/Ruling
+                  30's standard. **C does not remeasure.** Do **not** redo
+                  parts 1–3 (employer field; R4 job summaries; R13 event
+                  names) — all three are measured and closed out below;
+                  part 4's figures still describe the pre-fix/fixture-only
+                  state until measured.
 
 MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — **for B,
                   not for A parts 3–4; do not spend A budget on it**):
@@ -424,18 +426,34 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
 LAST DIFFERENCE:  **Employer field (part 1): 3 of 11 non-null real postings
                   wrong (27.3%), down from 5 of 8 (62.5%) pre-fix.** Full
                   table in §4 "Round 9 — Agent A (part 1)." **R4 job
-                  summaries (part 2, this turn): 0 of 4 non-empty real
-                  summaries carry classic chrome, down from round 8's 4 of
-                  4** — but the summary-bearing rate itself dropped to 4 of
-                  29 (13.8%) from 4 of 11 (36%), and 2 of the 4 carry a
-                  smaller, different, newly-observed defect. Full detail in
-                  §4 "Round 9 — Agent A (part 2: job summaries)." **R13 and
-                  same-page contamination are still the PRE-fix numbers**,
-                  unchanged, pending parts 3–4: R13 open via three naming
-                  shapes (all three now guarded, not yet remeasured);
-                  same-page contamination not yet remeasured.
+                  summaries (part 2): 0 of 4 non-empty real summaries carry
+                  classic chrome, down from round 8's 4 of 4** — but the
+                  summary-bearing rate itself dropped to 4 of 29 (13.8%)
+                  from 4 of 11 (36%), and 2 of the 4 carry a smaller,
+                  different, newly-observed defect. Full detail in §4
+                  "Round 9 — Agent A (part 2: job summaries)." **R13 event
+                  names (part 3, this turn): 15 real events scored
+                  individually — 7 correct, 5 confirmed wrong, 3 not
+                  confirmed false.** All three of B8-06's closed shapes
+                  re-verified by direct execution of the real function: the
+                  narrative-sentence guard and the filename-extension guard
+                  both fire correctly at the shape level, but in both cases
+                  the host they were named on (`ruggedthz.com`,
+                  `euchems2026.eu`) is **still wrong live today**, via
+                  mechanisms outside B8-06's three shapes (an unmatched
+                  host-brand segment; the same document-filename fallback,
+                  minus its extension). `nanoge.org` is now correct — its
+                  own page content changed, independent of any fix. The
+                  bare-`"Program"` gap is confirmed still open but costs
+                  nothing in this sample (0 of 31 rendered names). Full
+                  detail, table, and a fallback-chain finding (the
+                  no-slug-no-snippet worst case can still return an
+                  already-rejected chrome string verbatim) in §4 "Round 9 —
+                  Agent A (part 3: event names)." **Same-page contamination
+                  (part 4) is still the PRE-fix/fixture-only state**, not
+                  yet remeasured on real data.
 GATE (0%):        **NOT MET.** Unchanged — the gate cannot be judged until
-                  all four parts of this A turn are done (parts 1–2 of 4
+                  all four parts of this A turn are done (parts 1–3 of 4
                   done).
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
@@ -16538,3 +16556,199 @@ its place and does not skip ahead to part 4 or any other role's work.
 
 **No product code touched. No measurement performed. No credential referenced.**
 Leaving §1 pointing at A, part 3, exactly as it already reads. Releasing the lock.
+
+### Round 9 — Agent A (part 3: event names)
+
+**STATUS: PARTIAL BY DESIGN**, continuing the same deliberately-split A turn parts 1–2
+started. This entry covers **part 3 only — R13 event names (B8-06)**. Part 4 (same-page
+multi-listing contamination, B8-07) is **not yet done** and is the next A's job, not
+this session's.
+
+**Process note, against myself, for the next agent.** I read §0d/§1/§4/§2/§3 and ran
+the entire live measurement below **before** claiming the turn lock — out of §0d's own
+required order ("claim before you touch anything"). The only concurrent writer this
+session, `cloud-hourly`, claimed the lock mid-way through my reading (`8a0afef`) and
+released it clean one commit later as a no-op (`25d16fa` — its environment has no
+`web/.local-data/profile.json`, so it correctly declined to fake a live pass, exactly
+per §0c), so nothing collided this time. I claimed the lock properly right after
+(`c155ec7`, `LAPTOP-3CL10CG5 @ 2026-08-13 03:40 UTC`) before writing anything to this
+file. **This was luck, not correctness — claim the lock first, before reading, every
+time.**
+
+**Method.** Live keys confirmed present by boolean check only (`tavilyApiKey: true`;
+matches every prior part, `feedAiApiKey` still empty). Built a throwaway vitest file
+(`web/src/zz-round9-a-eventnames-live.test.ts`, deleted before this commit) following
+`benchmark.test.ts`'s/parts 1–2's profile-loading precedent, calling
+`buildDailyEventPool()` then `scoredEventToEvent()` on every pool item — the exact
+entry points §2 names. Reused **part 2's own no-op `PoolCache` trick** (`get` always
+`null`, `set` a no-op) to force a genuinely fresh live fetch rather than replaying the
+day's cached pool. Did **not** use `PEER_PROFILE_SNAPSHOT_PATH`.
+
+**Two independent fresh live pulls, same session, same profile: 16 items then 15
+items, both 100% eventweb-sourced.** The curated sources (ccfddl, confstech,
+researchseminars) landed zero scored survivors in either pull — R13's entire guard
+chain lives in `eventweb.ts`, so this is exactly the population that exercises it, not
+a sampling choice. The two pulls shared 14 items byte-identical; one item
+(`nanoge.org`) present in pull 1 was absent from pull 2 — live-search variance between
+calls, not a code effect, consistent with this loop's standing observation about
+live-search reproducibility (contrast part 1's job pool, which reproduced identically
+twice).
+
+**Every rendered name below was confirmed from actual React output, not
+source-tracing.** Rendered every pool item through the real `EventReport` component
+(`renderToStaticMarkup`, same harness `page.test.ts` itself uses) and extracted the
+`<h1>` text, decoding HTML entities. In all 31 renders across both pulls, the rendered
+`<h1>` was byte-identical to the mapped `Event.name` — confirms `scoredEventToEvent`
+passes `item.name` straight through unchanged (`web/src/lib/events/mapper.ts:132`) and
+`EventReport`'s heading (`web/src/app/events/[id]/page.tsx:1900-1902`) renders
+`{event.name}` bare, with no further guard or fallback at the render layer. This also
+directly re-confirms round 8 A's own resolved false alarm was a harness bug, not a
+product one: this session's own `&`-bearing name (`sae.org`) rendered its literal `&`
+correctly both times, not `&amp;`.
+
+**1. Fresh live sample — 15 real events (pull 2, chosen because it carries full URLs
+for evidence), scored per item, never averaged:**
+
+| # | Host | Rendered name (verbatim) | Evidence checked | Verdict |
+|---|---|---|---|---|
+| 1 | `ans.org` | `Molten Salt Research Reactor Tour` | URL is a real ANS student-conference calendar entry (`meetings/student2026/calendar/event-1993`); no defect shape present | not confirmed false |
+| 2 | `solarpaces.org` | `32nd SolarPACES Conference` | Matches the identity already independently closed under Ruling 28 | CORRECT |
+| 3 | `euagenda.eu` | `The First European Conference on Molten Salt Reactor Technology` | URL slug is the identical phrase, word for word | CORRECT |
+| 4 | `ruggedthz.com` | `Ruggiero Research Lab` | **Live page fetched directly this session**: the actual event is "the 2026 Gordon Research Conference on Crystal Engineering"; "Ruggiero Research Lab" is the blog/site's own name | **WRONG** |
+| 5 | `euchems2026.eu` | `ECC102026 POSTERS v2` | URL is a raw PDF upload path for a posters document (`.../ECC102026-POSTERS-v2.pdf`); rendered name is that document's own filename, extension stripped, not a conference name | **WRONG** |
+| 6 | `ibatterysummit.com` | `International Battery Summit` | Bare-root URL; name matches host branding | not confirmed false |
+| 7 | `battery-power.eu` | `International Battery Conference Advanced Battery Power` | Bare-root URL; same odd double-name concatenation round 8 A saw verbatim on this identical string | not confirmed false (unchanged read) |
+| 8 | `sdle.co.il` | `Turkey Battery Technologies Summit 2026` | URL slug reads `2nd-medical-battery-conference-19-20-11-18-germany` — different subject (medical, not battery-tech) and different country (Germany, not Turkey) | **WRONG** (name/URL contradiction) |
+| 9 | `thebatteryshow.com` | `The Battery Show North America` | Bare-root URL matches host branding exactly | CORRECT |
+| 10 | `batteryinnovationsummit.com` | `The Battery Saloon` | **Live page fetched directly this session**: the event's own self-declared name is "The Battery Innovation Summit Series"; "Battery Saloon" appears only in the page's logo/nav/footer, a secondary brand element, not the event's name | **WRONG** |
+| 11 | `grc.org` | `2026 Batteries Conference GRC` | URL path (`/batteries-conference/2026`) matches | CORRECT |
+| 12 | `sae.org` | `Battery Manufacturing & Simulation Summit` | URL path is the identical slug | CORRECT |
+| 13 | `internationalbatteryseminar.com` | `March 15-18, 2027` | This is a date, not a name; bare-root URL | **WRONG** — not an event name at all |
+| 14 | `flogen.org` | `WELCOME TO SIPS 2026` | URL path (`/sips2026`) supports "SIPS 2026" as the real identity; "WELCOME TO" reads as page-banner wording a real event name would not include | not confirmed false as to identity, but the rendered string itself carries banner chrome |
+| 15 | `advancedautobat.com` | `26th Advanced Automotive Battery Conference (AABC)` | Bare-root URL; well-formed, self-consistent, matches the known real AABC conference series | CORRECT |
+
+**Tally: 7 CORRECT, 5 confirmed WRONG, 3 not confirmed false.** The **5 confirmed-wrong
+count is new signal** — round 8 A's own pre-fix sample never got a number this
+precise; two of the five (#4, #10) were confirmed wrong only by fetching the live page
+directly, not by url-slug inspection alone, and would have been miscounted as correct
+by that cheaper method.
+
+**The central instruction this turn: a different name is not automatically a correct
+one.** #4 (`ruggedthz.com`) is the clearest case. The pre-fix wrong render
+(`Ruggiero Group Attends the 2026 Crystal Engineering GRC`) is confirmed gone — but the
+name that now renders in its place (`Ruggiero Research Lab`) is **also wrong**, just
+differently: it is the site's own blog/brand name, not the event. Reported precisely
+below under shape 1.
+
+**2. The two originally-cited hosts, direct look:**
+
+- **`ruggedthz.com` — STILL WRONG, different mechanism.** Fetched the live page
+  directly this session (not replayed from any prior round). Exact current `<title>`:
+  `"Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero Research Lab"`
+  — two segments, unchanged in shape from what rounds 6/8 described, just now with a
+  second segment. Fed this exact real title/URL directly into the shipped
+  `eventNameFrom()`: returns `Ruggiero Research Lab`, matching both today's live pool
+  render and B8-06's own incidental benchmark-flake observation. **Directly confirmed
+  this is not the event**: the page itself describes the lab's attendance at "the 2026
+  Gordon Research Conference on Crystal Engineering." `Ruggiero Research Lab` is the
+  hosting blog's own name. Not caught as host-brand chrome because
+  `looksLikeHostBrand("Ruggiero Research Lab", "ruggedthz.com")` — called directly,
+  unmodified — returns `false`: the host's own DNS label (`ruggedthz`) does not start
+  with the normalised candidate (`ruggieroresearchlab`), the function's exact,
+  documented algorithm (`web/src/lib/opportunities/shared.ts:232-237`). A registrant
+  whose domain name doesn't textually resemble their own display name defeats this
+  check by construction, independent of anything B8-06 touched.
+- **`nanoge.org` — RIGHT, on today's content; original repro content is gone,
+  independent of any code change.** Fetched the live page directly this session
+  (`curl`, not replayed). Exact current `<title>`: `"nanoGe  - SSI24 - Home"` — this is
+  **not** `"Conference Program"` any more; the site's own content changed since rounds
+  6/8 described it, unrelated to this codebase. Fed this exact real title/URL directly
+  into `eventNameFrom()`: returns `SSI24`, matching today's live pool render exactly.
+  The page's own self-declared name (checked directly) is `"nanoGe - SSI24"` — `SSI24`
+  is the event's own real shorthand code, not confirmed false, though the `nanoGe`
+  organiser prefix is dropped. Graded CORRECT with that one caveat.
+
+**3. The three closed shapes, scored separately:**
+
+- **Shape 1 (present-tense narrative sentence, no auxiliary verb) — OBSERVED, AND THE
+  SHAPE ITSELF IS FIXED, BUT THE HOST IS STILL WRONG.** The exact narrative string
+  (`Ruggiero Group Attends the 2026 Crystal Engineering GRC`) is confirmed **not**
+  reaching the render on `ruggedthz.com` today — `eventNameFrom()` correctly excludes
+  it from the informative-segment pool (confirmed by direct call, not inference). That
+  part of B8-06 works as shipped. But it hands off to the OTHER title segment
+  (`Ruggiero Research Lab`), which is wrong for an unrelated reason (the host-brand
+  check above) that is **not** shape 1's guard and not in B8-06's three-shape scope.
+  Score the guard itself: **fixed.** Score the host: **still wrong**, via an adjacent,
+  older mechanism (B5-06/R13 gap 2's host-brand check), not a regression in B8-06.
+- **Shape 2 (bare two-generic-word phrase, no connector, e.g. `Conference Program`) —
+  NOT OBSERVED LIVE this round; the originally-cited host no longer serves that title
+  at all (see above), so this is "not observed," not "confirmed fixed," per this
+  loop's own standard. Direct function-level check, real code: feeding the exact
+  historical string `"Conference Program"` straight into `bestEventTitleSegment()`
+  confirms it is correctly excluded from the informative pool (`isAllGenericWords`
+  correctly flags both words as generic — the American-spelling fix from B8-06 is
+  exercised here, since "program" only matches because of it). **New nuance, found by
+  direct execution, not live-observed on any real page this round:** feeding that same
+  string through the full `eventNameFrom()` with an empty snippet and a URL with no
+  usable slug returns `Conference Program` anyway — the function's own unconditional
+  last-resort line (`return segments[0] ?? title.trim()`) uses the raw, unfiltered
+  first title segment, ignoring every guard that already rejected it earlier in the
+  same call. This is a controlled construction (empty snippet), not confirmed as
+  today's actual behaviour for any specific live page — flagged because it is a real,
+  standing code path, not a hypothetical one, and directly answers this turn's item 5
+  below.
+- **Shape 3 (raw filename with its extension) — OBSERVED AND FIXED AT THE LITERAL
+  SHAPE; THE UNDERLYING DEFECT IS STILL WRONG, LIVE, TODAY.** `euchems2026.eu` (#5
+  above) is the same host round 8 named, now serving a different specific document
+  (`ECC102026-POSTERS-v2.pdf` vs round 8's `AA ECC10 POSTERS 08072026.xlsx`) — the live
+  content itself rotates. Direct isolation test: `bestEventTitleSegment()` on the
+  matched historical title/URL pair confirms the extension-bearing segment is
+  correctly **rejected** at the title stage (`DOCUMENT_FILENAME_RE` firing as
+  designed — confirmed `undefined`, not inferred). But the full `eventNameFrom()` chain
+  on that same input falls through to `nameFromUrlSlug()`, which strips the extension
+  and returns `AA ECC10 POSTERS 08072026` anyway — a filename, just without the dot and
+  three letters. **This exact pattern is independently corroborated on a real live page
+  today**: `euchems2026.eu` currently renders `ECC102026 POSTERS v2`, a different
+  document's filename, same shape, extension stripped the same way. A reader cannot
+  tell either rendered string apart from a real event name any better than they could
+  the pre-fix version with `.xlsx` attached. **Score the literal shape (extension
+  reaching render): fixed. Score the underlying defect (a document's filename standing
+  in for the event's name): still wrong, confirmed live, via the same shared fallback
+  mechanism shape 2's nuance above also uses.**
+
+**4. Pre-existing gap — bare single-word `"Program"` (American spelling), left
+unfixed by B8-06 on purpose.** Directly confirmed via `looksLikeEventTitle("Program")`
+→ `true` — the gap is real and unchanged, exactly as flagged. **Costs nothing in this
+round's live sample**: none of the 31 rendered names across both pulls is a bare
+`"Program"`. No live evidence this round that this gap has a real cost — consistent
+with B8-06's own reason for leaving it.
+
+**5. What renders when every name candidate is rejected — confirmed from rendered
+output, both sub-cases:**
+
+- **When a usable URL slug exists**, the fallback is genuinely sensible: never empty,
+  never a raw hyphenated slug. Controlled case (all-chrome title `"Home | Events"`
+  paired with `ruggedthz.com`'s own real, slug-rich URL): renders
+  `Ruggiero group attends the 2026 crystal engineering grc` — humanised (hyphens to
+  spaces), not a URL slug. Side note, not one of this turn's five required checks, only
+  offered for completeness: this particular humanised phrase reads as the same
+  narrative-sentence shape shape 1 targets, and is not rejected by
+  `PRESENT_NARRATIVE_RE` on a second pass — because `nameFromUrlSlug()` capitalises only
+  the string's first character, not each word, so the Title-Case-anchored guard does
+  not fire on it. Not observed on any live page this round; a controlled construction
+  only.
+- **When no usable URL slug exists either** (this session's worst-case construction:
+  all-chrome title, short/empty URL path, empty snippet): confirmed via direct render
+  through `EventReport` that the rendered `<h1>` is neither empty nor a raw slug —
+  it is the exact originally-rejected chrome string, returned unmodified
+  (`Conference Program`, per item 3's shape-2 finding above). **Technically satisfies
+  "not empty, not a raw URL slug," but is not a sensible fallback either** — it is the
+  literal value the same function call already decided was generic chrome, one line
+  earlier.
+
+**Cleanup:** the throwaway vitest file and its two edits are deleted before this
+commit. No product code touched. No credential printed, logged, or written anywhere.
+
+**Not done this turn (part 4, next A's job):** same-page multi-listing contamination
+(B8-07, Ruling 29). No gate verdict is set by this entry — the gate cannot be judged
+until all four parts are in.
