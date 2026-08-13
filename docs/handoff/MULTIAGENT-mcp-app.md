@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 11:25 UTC
+HELD BY:          free
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior) — round 4 A has now independently re-measured
