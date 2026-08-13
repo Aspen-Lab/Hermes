@@ -21112,3 +21112,163 @@ difference list/gate verdict.
 
 Commit follows immediately.
 
+---
+
+### Round 11 — Agent A (part 4: R13 event names, scored against B10-02, B10-03, B10-04)
+
+**STATUS: DONE — this is the last part of round 11 A.** Continuing the same
+session as parts 2–3. Re-checks `internationalbatteryseminar.com` (item 4,
+B10-02), `ecs.confex.com` (item 3, B10-03 — completes part 2's own
+question with the real pipeline this time), `ruggedthz.com` (item 5,
+B10-04), watches B10-04's relaxed casing for a wrongly-rejected real name,
+and retries `euagenda.eu`'s direct fetch.
+
+**Method.** Live keys reconfirmed present, boolean check only. Rebuilt the
+throwaway scaffold from round 10 A part 4's own precedent
+(`web/src/zz-round11-a-part4-eventnames-live.test.ts`, deleted before this
+commit) — same profile-loading and no-op-`PoolCache` shape, two independent
+fresh live pulls, same session, same profile. Result JSON written to this
+session's own scratchpad directory, outside the repository.
+
+**Reproducibility: 16 items in pull 1, 18 in pull 2 — not byte-identical
+counts this time, unlike round 10's own two pulls.** All 16 of pull 1's
+items reappear in pull 2 with byte-identical names; pull 2 adds two more
+(`ans.org`, `engine.xyz`) that pull 1 simply didn't surface. No product code
+changed between the two pulls, seconds apart — this is the same live-search
+run-to-run variance already noted in part 3 today, now visible on the event
+side too. **Pull 2's 18 items (the superset) are this round's own reading.**
+
+**SolarPACES regression-lock: confirmed intact.** `solarpaces.org` renders
+`"32nd SolarPACES Conference"`, byte-identical to rounds 9 and 10's own
+citations, both pulls today.
+
+**`euagenda.eu` — direct-fetch retry: blocked again, HTTP 403, second
+consecutive round. Reporting that plainly and leaving it open, exactly as
+instructed — not inferring an answer from the string's shape.** The live
+pipeline itself renders `"The First European Conference on Molten Salt
+Reactor Technology"` today — the full name, byte-identical to round 9's own
+original citation, not the shorter ellipsis-terminated version round 10
+found. A fuller-looking string is not proof of correctness (that is the
+entire reason this loop verifies against the real page rather than trusting
+shape) — without the direct fetch, this stays genuinely unverified, not
+"probably fine."
+
+**Full census — 18-item live pool (pull 2), scored per item:**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `ans.org` | `Molten Salt Research Reactor Tour` | not confirmed false (unchanged) |
+| `engine.xyz` | `Tough Tech Talent Fair & Resource Expo` | not confirmed false, new host |
+| `solarpaces.org` | `32nd SolarPACES Conference` | CORRECT (regression-lock, unchanged) |
+| `ecs.confex.com` | `Invited speakers present keynote lectures.` | **WRONG, new value — Finding 1** |
+| `euagenda.eu` | `The First European Conference on Molten Salt Reactor Technology` | flagged, unverifiable — see above |
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT (unchanged) |
+| `ruggedthz.com` | `Ruggiero Research Lab` | WRONG, but B10-04's own target shape gone — Finding 2 |
+| `euchems2026.eu` | `ECC102026 POSTERS v2` | WRONG (unchanged, filename-as-name) |
+| `ibatterysummit.com` | `International Battery Summit` | not confirmed false (unchanged) |
+| `nanoge.org` | `SSI24` | CORRECT (unchanged) |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+| `sdle.co.il` | `Turkey Battery Technologies Summit 2026` | CORRECT (resolved, unchanged) |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | WRONG (unchanged) |
+| `internationalbatteryseminar.com` | `Tim DeBastos.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery Carousel` | **WRONG, new + worse value — Finding 3** |
+| `flogen.org` | `WELCOME TO SIPS 2026` | not confirmed false, banner chrome (unchanged) |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged) |
+| `advancedautobat.com` | `26th Advanced Automotive Battery Conference (AABC)` | CORRECT (unchanged) |
+| `thebatteryshowsouth.com` | `[...] ## 2026 Keynote Speakers` | **WRONG, new host + new shape — Finding 4** |
+
+**Tally: 7 CORRECT, 6 confirmed WRONG, 4 not confirmed false, 1 flagged.**
+Round 10 was 7/5/4/1 on 17 items. Read the composition, exactly as every
+prior round has warned: the same five hosts that were wrong last round are
+still wrong today, but three of the five (`ecs.confex.com`, `ruggedthz.com`,
+`internationalbatteryseminar.com`) now show a **different** wrong value than
+last round, one host (`battery-power.eu`) dropped out of this pull entirely
+(churn, neither resolved nor re-confirmed), and one new host
+(`thebatteryshowsouth.com`) is wrong for the first time.
+
+**Finding 1 — `ecs.confex.com`: the real pipeline completes what part 2's
+own approximation had to leave open, and the honest answer is worse than
+hoped.** Part 2 (this round, committed separately) fed the real page's own
+body text as a stand-in for the search snippet directly into the real,
+unmodified `eventNameFrom`, and got back the correct name — with an
+explicit caveat that the actual live snippet Peer's pipeline hands that
+function at runtime was never itself observed, since part 2 deliberately
+did not run the search pipeline. **This part did, and the real answer is
+different: today's live render is `"Invited speakers present keynote
+lectures."`** — a narrative sentence describing conference programming, not
+the event's own name (which part 2's direct fetch already confirmed is
+"250th ECS Meeting"). B10-03's guard is confirmed still working — the
+rejected string `"Call for Papers"` does not appear — but the value that
+fills the gap is wrong. **Worth naming precisely, from what was already
+read while building part 2's scaffold, not a new investigation this part:**
+this value's shape is structurally the same category B10-04 targets (a
+sentence-cased present-tense narrative fragment), but `eventNameFrom`'s
+snippet-mining fallback branch (reached after both the title segment and
+the URL slug are rejected) filters candidates with a different function
+(`looksLikeEvent`) than the title-segment path's `isChromeSegment`/
+`PRESENT_NARRATIVE_RE` — so B10-04's fix, which lives inside
+`isChromeSegment`, has no reach into this branch at all. Recorded as which
+code path was reached, not why that path lacks an equivalent guard — that
+question is B's.
+
+**Finding 2 — `internationalbatteryseminar.com`: B10-02's own target is
+confirmed gone, and this is this round's clearest case of the fallback
+finding something worse, not just different.** Round 10 rendered
+`"Orlando, FL"`, the bare-location-segment shape B10-02 was built to
+reject. That shape does not appear today. In its place:
+`"Tim DeBastos.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery
+Carousel"` — an image-filename fragment with a query string, stitched to a
+carousel-widget label. Not prose of any kind, and visibly broken to any
+reader, a step down from a wrong-but-readable location string to scraped
+non-content.
+
+**Finding 3 — `ruggedthz.com`: B10-04's own target shape is confirmed gone,
+and — the one case this round where that's unambiguously good news — the
+value underneath is old, not new.** Round 10 confirmed live, for the first
+time, the exact sentence-cased narrative-slug shape
+(`"Ruggiero group attends the 2026 crystal engineering grc"`) B10-04 fixes.
+That shape is absent today; the render is `"Ruggiero Research Lab"` — round
+9's own original finding on this same host, a different fallback branch
+(the host-brand-unmatched title segment). Both are wrong — the real event,
+per round 9's own direct fetch, is the Gordon Research Conference on
+Crystal Engineering — but this is the only one of this round's three
+findings where the fix's specific target was not replaced by a novel
+defect; it reverted to an already-catalogued one. Cannot fully separate the
+fix's own effect from which page content this pull's search happened to
+surface (a cause question, not this part's to answer), but the observation
+is at minimum consistent with the fix working as intended.
+
+**Finding 4 — `thebatteryshowsouth.com`: a new host, and a new chrome shape
+on the event-name side.** Renders `"[...] ## 2026 Keynote Speakers"` — a
+Markdown heading marker and an ellipsis-bracket fragment ahead of a
+page-section label (`"Keynote Speakers"` is a section of the conference
+site, not the conference's own name). Structurally adjacent to, but not the
+same code as, the job-summary side's own Markdown-heading-marker family
+B10-07 fix 1 addressed this round (different file, different pipeline) —
+not something any of this round's three fixes targeted; a new finding.
+
+**B10-04's own watch point — a real event name wrongly rejected as a
+narrative sentence because the casing check now accepts any case — not
+observed this round.** All 7 CORRECT entries are conventionally-titled
+(numbered/branded conference names), none narrative-sentence-shaped; no
+sign of over-rejection in this sample.
+
+**Cleanup:** throwaway vitest file and its JSON output deleted/left outside
+the repository before this commit (`git status` confirmed clean before
+committing). No product code touched. No credential printed, logged, or
+written anywhere. The one direct-fetch attempt this part made (the
+`euagenda.eu` retry) returned only an HTTP 403 with no body — nothing to
+quote, nothing to sanitize.
+
+**Full gate, re-run this session before writing up:** `TZ=America/Chicago
+npx vitest run` → 90 files / 1067 tests, 1066 passing, 1 failing
+(`benchmark.test.ts`, the documented live-search flake — confirmed by name,
+not assumed pre-existing); `npx tsc --noEmit` clean; `npx eslint` → the same
+1 pre-existing `quiz.tsx:46` error, unchanged. No regression; no product
+code was touched this session.
+
+**This is the last part of round 11 A.** Round-11 summary, ranked
+difference list, both tallies, and the §1 handoff to B follow next, as
+their own separately-committed entry.
+
+Commit follows immediately.
+
