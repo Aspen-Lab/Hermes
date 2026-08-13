@@ -138,38 +138,56 @@ MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior). M1 acceptance pends the USER host-test per
                   RULING 9 — its checklist lives in §4 Round 2 A's NEEDS
                   MANAGER/USER list and is re-listed every round.
-WHOSE TURN:       A
-STATUS:           Round 2 closed M1's code side with ZERO differences —
-                  6/11 criteria fully MET, 5/11 in the standing user-
-                  gated NEEDS LOCAL VERIFY set, gate + tsc independently
-                  re-verified, all of C's corrections re-verified. Full
-                  evidence: §4 "Round 2 — Agent A". RULING 9 then opened
-                  M2 rather than idling on the user's host test, and
-                  gated M3 on that test passing. Round 3 begins now: A
-                  freezes the M2 inventory and measures the current
-                  build against it.
-LAST DIFFERENCE:  M1: none code-side (round 2). M2: not yet measured —
-                  round 3 A produces the first M2 difference list.
+WHOSE TURN:       B
+STATUS:           Round 3 A froze a 13-criterion M2 inventory from
+                  HANDOFF §4 M2 + mockup screen 3 (`sc2`, all 4 notes)
+                  per RULING 1/9.2, and measured 13/13 MISSING (100%
+                  OPEN) — expected: zero M2-specific code exists
+                  anywhere in the repo (grep-confirmed across
+                  web/src/lib/mcp and web/src/app/api/mcp). Gate
+                  independently re-run, holds at 659/1/660, no
+                  regression. M1 is untouched since round 2 and still
+                  pends only the user's host test. Full evidence: §4
+                  "Round 3 — Agent A".
+LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: 13/13
+                  criteria MISSING — round 3 A's first M2 difference
+                  list, items 3-01..3-13, full table in §4 "Round 3 —
+                  Agent A".
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
                   — M1 pends only the user host-test per RULING 9; M2
-                  measurement starting.
+                  now measured at 0% MET (13/13 MISSING), fix guide is
+                  next (B).
 DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
                   at protocol/live level. Outstanding on M1: only the
                   user checklist (§4 Round 2 A, NEEDS MANAGER/USER).
 GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
                   skipped (80); `npx tsc --noEmit -p .` clean (both
-                  independently re-verified in round 2).
-TODO:             A (round 3): freeze the M2 inventory per RULINGS 1 and
-                  9.2 from HANDOFF §4 M2 + mockup screen 3 (`sc2`),
-                  measure the current build against it (expect mostly
-                  MISSING; note what M1's code already provides), re-list
-                  by name: the M1 user-pending set (criteria 3/4/7/9/10
-                  + Supabase credentials + MCP_DEV_TEST_USER_ID), the
-                  RULING 6 papers-lane restriction, and the RULING 7
-                  Expand-until-M2 exclusion (which M2 now closes by
-                  building the real fullscreen). The USER checklist for
-                  M1 remains authoritative in §4 Round 2 A — do not
-                  restate it here, point at it.
+                  independently re-verified in round 2; gate re-run
+                  fresh again in round 3, unchanged).
+TODO:             B (round 3): write the M2 fix guide from A's
+                  3-01..3-13 difference list (§4 "Round 3 — Agent A").
+                  Reuse C's Round-1 architecture write-up (§4 "Round 1
+                  — Agent C", the static-template + postMessage-bridge
+                  fix and its "Corrections to B's guide" summary)
+                  instead of re-deriving it — do not repeat the
+                  per-call-baked-resource design B's own round-1 guide
+                  got wrong there. Fetch and cite the Apps SDK
+                  fullscreen/display-mode docs A used this round
+                  (developers.openai.com/apps-sdk/reference for
+                  window.openai.requestDisplayMode/displayMode/
+                  requestClose; developers.openai.com/apps-sdk/concepts/
+                  design-guidelines for the fullscreen "System close" /
+                  composer host-chrome split; developers.openai.com/
+                  apps-sdk/deploy/troubleshooting and
+                  modelcontextprotocol.io/docs/extensions/apps for
+                  launcher/starter-prompt and MCP-Apps-protocol facts)
+                  before prescribing the top-bar/close-button and
+                  open_home design. Item 3-10's POLICY flag (Report →
+                  disabled vs. omitted) is the manager's call, not B's —
+                  write the guide either provisionally or flag it
+                  onward, do not decide it. The USER checklist for M1
+                  remains authoritative in §4 Round 2 A — unchanged,
+                  not B's concern this round.
 ```
 
 **History of measured difference, newest last:**
@@ -178,6 +196,7 @@ TODO:             A (round 3): freeze the M2 inventory per RULINGS 1 and
 |---|---|---|---|
 | 1 | M1 | 11/11 frozen criteria unmet (100% OPEN); gate 597/1/598 intact, no regression; Pass 2: 8 real items live (5 jobs + 3 papers), zero LLM keys — Events/Grants unchecked | NOT MET |
 | 2 | M1 | 6/11 MET (54.5%), 5/11 NEEDS LOCAL VERIFY (standing set 3/4/7/9/10), 0/11 unmet; gate 659/1/660 intact (+62 tests since round 1), `tsc` clean, both independently re-verified; real-input: 2 real arxiv papers resolved live via get_opportunity (zero keys, RULING 4 confirmed on live data), get_daily_forecast/job-event-opportunity blocked on Supabase credentials confirmed absent in BOTH worktree and main checkout | NEEDS LOCAL VERIFY (host-test pending) |
+| 3 | M2 | 13/13 frozen criteria unmet (100% OPEN); gate 659/1/660 intact, no regression; every criterion's "Build has" column names an M1-code precedent it can reuse (widget-resource pattern, tool-registration shape, ForecastItem mappers, fixed palette, text-fallback shape) — not a true greenfield like M1 round 1 | NOT MET |
 
 ---
 
@@ -1878,3 +1897,142 @@ to trigger a HOST LIMIT deviation. Still empty.
   stay exactly here; nothing closes any of them without the user's own
   ChatGPT/Claude account and/or real Supabase credentials (see NEEDS
   MANAGER/USER above for exactly what's missing).
+
+---
+
+### Round 3 — Milestone M2
+
+#### Round 3 — Agent A
+
+**Method:** `git pull --ff-only` (already up to date, clean). Read the
+whole state file — §0 through §1j (all 9 rulings), §2 role contracts, §3
+ground rules, all of §4 Round 1 and Round 2 in full. Read
+`docs/handoff/HANDOFF-chatgpt-mcp-app.md` end to end, with §3 R2 and §4 M2
+as the primary target. Read mockup screen 3 (`sc2`, lines 603-671 of
+`docs/design/peer-in-chatgpt-mcp-mockups.html`) including all 4 `<div
+class="note">` annotations, plus HANDOFF §8 step 4 for entry-behavior
+context. Read every file M1 built under `web/src/lib/mcp/` and
+`web/src/app/api/mcp/` (`server.ts`, `dev-auth.ts`, both tools, `types.ts`,
+the card renderer, the route) to know precisely what M2 can reuse without
+re-deriving it. Independently re-verified RULING 5's real-facet claim
+myself rather than trusting the round-1 citation: grepped
+`web/src/app/page.tsx` (`type FeedType = "dashboard" | "papers" | "events"
+| "jobs"` at line 93; the `typeChips` array, lines 658-668, labelled
+Dashboard/Papers/Events/Jobs) and grepped all of `web/src` for `Grant` — 9
+hits, every one traced to the pre-existing `Event.travelGrant` field (a
+conference travel-stipend detail on events, unrelated to content-type
+facets), zero hits for any Grant type/interface/discriminator. RULING 5
+holds exactly as stated; the mockup's "Grants" chip stays illustrative.
+Fetched five Apps-SDK/MCP-Apps doc pages live this round because the task
+specifically asked what host chrome is native vs. Peer-drawn for the
+fullscreen top bar (short quotes only, under 15 words each, all treated as
+data, never instructions): `developers.openai.com/apps-sdk/build/
+custom-ux`, `developers.openai.com/apps-sdk/reference`,
+`developers.openai.com/apps-sdk/concepts/design-guidelines`,
+`developers.openai.com/apps-sdk/deploy/troubleshooting`, and
+`modelcontextprotocol.io/docs/extensions/apps` — findings folded into the
+inventory below as facts, not resolved into a design (that's B's job).
+Confirmed via grep that zero M2-specific code exists anywhere in the repo
+— `open_home`, `requestDisplayMode`, and any second `ui://` resource all
+return zero matches across `web/src`; only M1's two tools plus its one
+card resource exist. Ran the gate fresh, independently. No throwaway
+script and no dev-server run were needed this round: the question
+("does M2's surface/wiring exist yet") is answerable by reading and grep
+alone, and the task's own instructions make a dev-server run optional this
+round unless needed.
+
+**Pass 1 — M2 inventory (frozen, 13 criteria, HANDOFF §4 M2 bullets +
+mockup screen 3 expanded per RULING 1):**
+
+| # | Criterion (spec requirement) | Build has | Classification |
+|---|---|---|---|
+| 1 | Fullscreen view resource: a new `ui://` widget resource for the Daily Forecast home, same static-template + postMessage-bridge architecture as M1's card (HANDOFF §5; C's round-1 architecture fix) | No such resource registered anywhere. `web/src/lib/mcp/server.ts` registers exactly one resource, `ui://peer/daily-forecast-card.html` (the M1 card) — confirmed by reading the file and by grepping `web/src` for `ui://peer` (2 hits, both the M1 card: `server.ts` and its own test). **Directly reusable from M1:** the whole pattern — `server.registerResource(id, uri, {}, async (uri) => ({contents:[{uri, mimeType:"text/html;profile=mcp-app", text: buildXWidgetHtml()}]}))` with a zero-argument, byte-static builder, plus a client-side `WIDGET_SCRIPT` that listens for `ui/notifications/tool-result` and renders from `event.data.params.structuredContent`. This is exactly the fix C found and documented in §4 "Round 1 — Agent C" (the "static template, cache key" architecture bug) — B's fix guide should point at that writeup instead of re-deriving it. | MISSING |
+| 2 | Top bar: Peer mark, "Peer · Daily Forecast" title/view label, "Open in Peer ↗", close affordance | Nothing renders. **Host-chrome fact, verified live this round** (`developers.openai.com/apps-sdk/concepts/design-guidelines`, fetched): fullscreen mode has a documented **"System close: Closes the sheet or view"** control and a persistent host **Composer** — both host-provided, not widget-drawn (corroborated by the mockup's own tagging: note 3, the composer, is `n-host` not `n-peer`). This means the mockup's "✕" is plausibly *already* host chrome Peer doesn't need to draw, while the Peer mark / "Daily Forecast" title / "Open in Peer ↗" are content only Peer's widget can supply (the host has no knowledge of Peer's branding or its own web app's URL). Whether ChatGPT's real fullscreen chrome visually matches this reading, and whether Claude's matches too, is unconfirmed by docs alone — would join the standing NEEDS LOCAL VERIFY set once built. | MISSING |
+| 3 | Date header + counts/sub-line, per RULING 8 semantics | Nothing renders. **Underlying data is already reusable from M1, just unwired:** `localCalendarDate` (date), `get_daily_forecast`'s existing `counts` object (RULING 8's `total`/`shown` semantics, already implemented in `get-daily-forecast.ts`), and — newly confirmed this round — `profile.displayName` (`web/src/types/index.ts` line 271, mapped from `row.display_name` by `profileRowToProfile`, `web/src/app/api/profile/route.ts` line 52, the exact function M1's tool already calls) together supply everything the mockup's "Tuesday, August 12 / 9 opportunities · 3 high-signal · ranked for mei.lin's Persona" line needs with zero new plumbing ("Persona" is real Peer product terminology too — confirmed via `web/src/app/persona/page.tsx` and its nav entry — not mockup invention). **Open question for B, not resolved here** (RULING 8's own flagged nuance): `counts.total` is the pre-slice pool *capped per lane at the requested `limit`* (max 30), not Peer web's true unbounded day total — if the fullscreen header is meant to read as a true day-pool count, that is an explicit M2 design item per RULING 8, not something this criterion assumes either way. | MISSING |
+| 4 | Filter chips = real facets (RULING 5: Dashboard/Papers/Events/Jobs — not the mockup's All/Jobs/Papers/Grants/Events) | Nothing renders. Real facet list self-verified this round (see Method) — RULING 5 already closed the "Grants chip" question; nothing new to decide there. **Reusable, newly confirmed this round:** an *unfiltered* `get_daily_forecast` call (`type` omitted) already runs all three pipelines and returns real per-type counts (`counts.jobs`/`counts.papers`/`counts.events`/`counts.total`) in one response — the exact numbers a chip row needs, no new tool required just for the counts. **Design tension for B to resolve, not decided here:** `get_daily_forecast({type:"job"})` only runs the jobs lane, so that response's `counts.papers`/`counts.events` come back `0` — a chip-click that just replaces the widget's last tool result verbatim would make the *other* chips' counts disappear. Flagging as a fact B needs to design against (e.g. client-side count caching, or a different call shape), not resolving it myself. | MISSING |
+| 5 | Full ranked card list, per-card field truth (RULING 4) | Nothing renders. **100% reusable from M1 verbatim:** the `ForecastItem` shape, `jobToForecastItem`/`paperToForecastItem`/`eventToForecastItem` (RULING 4 structurally enforced by TypeScript for papers), and the row/meta-line rendering logic already written twice for exactly this reason (TS in `daily-forecast-card.ts`, plain JS in `WIDGET_SCRIPT`) are copy-point-precedented, not net-new design. **Open question for B, not resolved here:** `get_daily_forecast`'s `limit` caps the *final* shown slice at the requested limit (max 30) even though each lane can independently pool up to 30 first — whether "full card list" means "call with `limit: 30`" (still capped, could be less than Peer web's true full pool) or needs a new pagination/ceiling is unresolved, flagged not decided. | MISSING |
+| 6 | Per-card actions row: Save/Dismiss, disabled-but-visible — explicitly ALLOWED here by RULING 7's fullscreen carve-out (unlike the inline card, which must never show them) | Nothing renders anywhere yet — RULING 7 currently has Save excluded from the only card that exists at all (live-confirmed round 2: zero occurrences of "save" anywhere in the protocol transcript). Building this is exactly what RULING 7's fullscreen allowance exists for; nothing to reuse beyond the general row-rendering pattern already covered under criterion 5. | MISSING |
+| 7 | "Report →" affordance | Nothing renders; Report Reader itself (M4) doesn't exist yet either. **POLICY — manager decides** (task-flagged, not resolved here): does it render disabled-visible in M2 (matches RULING 7's fullscreen Save/Dismiss allowance, matches the mockup showing it on every card) or is it omitted entirely until M4 (matches RULING 7's underlying "no dead controls" principle and M1's own precedent of omitting Save entirely rather than disabling it a milestone early)? Both readings of RULING 7 are legitimate; A is not picking one. | MISSING |
+| 8 | "Open in Peer" deep links (HANDOFF says "throughout" — plural; the mockup itself renders only one, in the top bar) | Nothing renders in a fullscreen context yet. **Reusable verbatim from M1:** `peerWebOrigin()` (env-var-first, hardcoded-fallback pattern) is the exact, already-built helper. **Minor spec/mockup tension, noted not resolved:** HANDOFF's own wording ("throughout") reads as more than the mockup's single header-level link (e.g. also per-card, linking to that specific opportunity on Peer web) — a scope question for B to size, not something this inventory item pre-answers either way. | MISSING |
+| 9 | `open_home` tool | Not registered anywhere (grep-confirmed). **Reusable pattern from M1:** `server.registerTool(name, {inputSchema, _meta:{"openai/outputTemplate": <uri>, ui:{resourceUri: <uri>}, ...}}, handler)` is the exact, already-proven shape `get_daily_forecast` uses — copy the registration shape, point `_meta` at the new fullscreen resource URI instead of the card's. **Documented architecture fact, verified live this round** (`developers.openai.com/apps-sdk/reference`): no `_meta` field lets a tool declare "opens directly in fullscreen" at registration time — fullscreen is exclusively a client-side runtime request, `window.openai.requestDisplayMode({mode:"fullscreen"})`, called by the widget's own script after it first mounts inline. So even a working `open_home` tool would flash inline before the widget's own script self-promotes to fullscreen — a real constraint on how literally "lands here in one step" (R2) can be built, not something A is resolving, recorded here for B. | MISSING |
+| 10 | Expand wiring on the M1 card — closes RULING 7's Expand exclusion | The M1 card deliberately renders no Expand control at all right now (`daily-forecast-card.ts`'s own comment: "`.pc-head .expand` and `.psave` are deliberately not carried over (RULING 7)"; live-confirmed round 2, zero occurrences of "expand" in the protocol transcript). This criterion **is** RULING 7's Expand exclusion closing — once items 1 and 9 (fullscreen resource + `open_home` tool) exist, wiring the M1 card's header to call `window.openai.requestDisplayMode({mode:"fullscreen"})` (or the host's nearest equivalent) is what discharges it. Re-listed by name below per standing instructions. | MISSING |
+| 11 | Entry behavior (R2), measured honestly per RULING 3 — **not** "the sidebar behaves like the mockup"; the actual bar is "the closest supported one-step entry exists (app metadata / starter prompts configured per HANDOFF) **and** the real behavior per host surface is recorded" | Neither half exists yet: no app-metadata/starter-prompt configuration anywhere in the repo, and there is nothing built yet for a live host to exercise. Per RULING 3 this criterion will always retain a NEEDS LOCAL VERIFY half even once the buildable half is done — the live-host-observation portion is inherently not closable by A/B/C alone, the same shape as M1's criteria 3/4. HANDOFF §8 step 4's own script ("check whether your plan shows Peer in the sidebar/launcher and note it") is the exact user action this half waits on. | MISSING |
+| 12 | Peer visual identity applied to the fullscreen surface (fixed warm palette, literal hex, no CSS custom properties reachable inside the sandboxed iframe — same discipline as M1's card) | No fullscreen surface exists to carry it yet. **100% reusable verbatim from M1:** the exact literal hex values (`#FDF6EE`/`#2B180A`/`#FF520D`/`#237A4B`/`#A8642A`, live-confirmed present in M1's card in round 2) and the `CARD_STYLE`-equivalent inline-`<style>` pattern are copy-point-precedented, not new design work. | MISSING |
+| 13 | Text-only fallback for `open_home` (parity with M1's own item 9 — every tool's `CallToolResult.content` needs a graceful fallback for non-rendering hosts) | No such tool exists yet. **100% reusable pattern from M1:** both existing tools already return `content: [{type:"text", text: render...Text(result)}]` alongside `structuredContent` — `open_home` needs the same shape, describing the same full card list `renderDailyForecastText` already knows how to render (or a direct extension of it). | MISSING |
+
+**Percentage (RULING 1):** 13/13 unmet = **100% OPEN** for M2 (0% met).
+Expected: this is M2's first measurement and zero M2-specific code exists
+anywhere in the repo (grep-confirmed) — the same shape as M1's own
+round-1 result (11/11 unmet). Every criterion's "Build has" column above
+names what M1's already-shipped code makes directly reusable, so 100%
+OPEN here is not the same as M1 round 1's true greenfield — there is a
+proven architecture and multiple copy-point precedents waiting, just not
+yet applied to M2's surface.
+
+**Gate:** `npm test` (from `web/`), independently re-run fresh: **659
+passed | 1 skipped (660), 79 files passed + 1 skipped (80)** — matches
+round 2's figure exactly, confirms no regression. `git status --short`
+clean throughout this round (read + grep + WebFetch only; no product code
+touched; no throwaway script needed, so none was created or deleted).
+
+**Numbered difference list (ranked by user impact):**
+
+3-01. No fullscreen view resource exists — blocks every other M2
+      criterion; there is nothing to render into yet.
+3-02. `open_home` tool doesn't exist — no MCP-level way to reach the
+      fullscreen view at all.
+3-03. The M1 card's Expand control still renders nothing (deliberately,
+      per RULING 7) — the other route into the fullscreen view is also
+      closed; closing this discharges RULING 7's Expand exclusion.
+3-04. The full ranked card list isn't shown anywhere in fullscreen form —
+      the Daily Forecast home's actual central promise is unmet.
+3-05. Filter chips (real facets) don't exist — HANDOFF's own named
+      fullscreen-specific requirement.
+3-06. Entry behavior (R2, one-step landing) is unbuilt and unmeasured
+      beyond docs — no app metadata/starter-prompt configuration exists.
+3-07. Date header + counts/sub-line don't render, though the underlying
+      data (date, counts, real display name) already flows through
+      reusable M1 code.
+3-08. Top bar chrome (mark/title/Open-in-Peer/close) doesn't render.
+3-09. Per-card actions row (disabled Save/Dismiss) doesn't render —
+      lowest-stakes of the content criteria since it's explicitly
+      non-functional either way once built.
+3-10. "Report →" affordance doesn't render, and is gated on a manager
+      POLICY call plus M4 (which doesn't exist yet).
+3-11. Open-in-Peer deep links aren't wired into a fullscreen context,
+      though the underlying helper is trivially reusable.
+3-12. Peer visual identity isn't applied to any fullscreen surface, though
+      the exact palette is copy-pasteable from M1.
+3-13. `open_home` has no text-only fallback — cheapest item to close,
+      same shape as M1's two existing tools.
+
+**Exclusions / HOST LIMIT (RULING 3):** none newly triggered this round —
+nothing M2-specific is built yet, so nothing has been placed in front of a
+real host to trigger a documented deviation. (M1's own HOST-LIMIT list
+stays empty too, unchanged since round 1/2.)
+
+**POLICY — manager decides:**
+- Item 7 / difference 3-10 ("Report →" affordance): disabled-visible in
+  M2 (RULING 7's fullscreen Save/Dismiss allowance, matches the mockup)
+  vs. omitted entirely until M4 (RULING 7's "no dead controls" principle,
+  matches M1's own Save precedent). Not resolved here — both readings are
+  legitimate; B should not silently pick one either.
+
+**Re-listed standing items (by name, per every-round instructions):**
+
+- **M1 user-pending set** (criteria 3/4/7/9/10 + real Supabase project
+  credentials + a real `MCP_DEV_TEST_USER_ID`): unchanged since round 2.
+  Authoritative checklist: §4 "Round 2 — Agent A", "NEEDS MANAGER/USER,
+  precisely" — not restated here.
+- **RULING 6** (M1's papers lane = `arxiv` + `openalex` only, temporary):
+  unchanged, re-decided at M4. Nothing this round touches the papers
+  pipeline or `get_opportunity`'s resolution logic.
+- **RULING 7's Expand exclusion**: unchanged as a standing exclusion, but
+  this round's own inventory item 10 (difference 3-03, "Expand wiring on
+  the M1 card") is now the named item that closes it once built — tracked
+  here per the task's instruction, not resolved by A.
+- **OpenAlex empty-title observation** (round 2: `get_opportunity
+  {id:"openalex:W2963341956"}` resolved with empty `title`/`org` strings,
+  traced to the OpenAlex API itself returning an empty `display_name` at
+  the source, not a Peer mapping bug): no new evidence this round. Still
+  not counted as a difference against any M1 or M2 criterion.
