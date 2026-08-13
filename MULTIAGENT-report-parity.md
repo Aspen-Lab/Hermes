@@ -18082,3 +18082,93 @@ items' runs this turn. Typecheck clean. Lint: exactly the 1 pre-existing
 `quiz.tsx:46` error.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-04's bare-date guard: `"March 15-18, 2027"` as an event name)
+
+**STATUS: LANDED.** Fourth item on B's work order, same file as Fix 1/2,
+bundled in the same session as B instructed. `internationalbatteryseminar.com`
+rendered a bare date as its event name because no existing check in
+`isChromeSegment` has any concept of "this is only a date, not a name" — a
+genuinely missing guard, not another fallback-of-last-resort case.
+
+**Reused `event-details.ts`'s `MONTH_PATTERN`/`DAY_PATTERN`/`DATE_TOKEN_PATTERN`
+exactly as directed — but not by importing them where they lived.** Traced
+the import graph before writing anything: `event-details.ts` already imports
+`looksLikeEventTitle` FROM `eventweb.ts`. Importing the three date-pattern
+constants the other way — directly from `event-details.ts` into
+`eventweb.ts` — would have created a genuine circular import between the
+two files, which is a real risk for top-level `const`s used to build other
+top-level `const`s (a `ReferenceError`/TDZ failure at module-load time,
+order-dependent on which file happens to be imported first — not merely a
+style concern I decided to avoid for its own sake). Confirmed `shared.ts`
+has no dependency on either file (grepped its imports), so relocated all
+three constants there instead, unchanged in value, with a comment
+explaining why. `event-details.ts` now imports `DATE_TOKEN_PATTERN` from
+`./shared`; its three existing call sites (`:167`, `:213`, `:317`)
+untouched otherwise. `eventweb.ts` imports all three from the same module
+it already imports `looksLikeHostBrand`/`urlHashId` from.
+
+**`DATE_TOKEN_PATTERN` alone does not cover the live repro — confirmed by
+hand before writing the guard, not assumed.** Its "Month Day[, Year]"
+alternative allows only a single day number, no range, so it cannot match
+"March 15-18" as one token on its own. Added two more alternatives (Month
+Day-Day[, Year] and Day-Day Month[, Year]) with an optional day-range in the
+middle, built from the same `MONTH_PATTERN`/`DAY_PATTERN` primitives and
+mirroring this file's own existing `DATE_DMY_RE`, which already supports an
+identical optional range for the other date order. New `isBareDateSegment`
+helper, added as a fifth condition inside `isChromeSegment` (alongside
+generic title, event index, the bare-`events?` regex, document filename) —
+runs unconditionally, same as the other four, not affected by
+`skipHostBrand` from the previous item.
+
+**Verified the full regex by hand against 11 cases in an isolated script
+before writing any product test, per Ruling 31 — and caught my own tooling
+mistake doing it.** A first pass using a bash heredoc to write the
+verification script silently collapsed every `\\d`/`\\s`/`\\.` escape to a
+single backslash (a heredoc quoting artifact, not a source-code bug — the
+actual `eventweb.ts` edit, made with the file-editing tool rather than a
+heredoc, was unaffected throughout), making all five true-cases fail in the
+first run. Re-wrote the same script with the file-writing tool instead
+(byte-exact, no shell involved) and re-ran: all 11 cases passed, including
+the exact live repro with and without a year, both date orders, the ISO
+form, and — the case this guard is narrowest against — `"SolarPACES 2026"`
+(date-containing, not date-shaped-as-a-whole) correctly surviving.
+
+**Three tests added to `eventweb.test.ts`'s new `describe("bare date segment
+(B9-04)")`, per Ruling 31 (multi-word + punctuated combined in the live
+repro itself, plus the must-not-match inverse):**
+1. **The live repro, paired with a real name it must lose to** —
+   `"March 15-18, 2027 | International Battery Seminar"` → `"International
+   Battery Seminar"`. Multi-word and punctuated (day range plus a comma) in
+   one case, since that is the live shape itself.
+2. **The hardest "should match nothing" case, chosen because it is the one
+   this guard is most likely to get wrong** — `"SolarPACES 2026"` (an
+   existing passing case elsewhere in this same file) must keep resolving
+   to itself: a segment that legitimately *contains* a year is not a
+   segment that *is* a date.
+3. **The literal live shape with no second segment to fall back to within
+   `bestEventTitleSegment` itself** — a bare `"March 15-18, 2027"` title
+   alone, snippet carrying a real name — `eventNameFrom` continues past the
+   rejected title to the snippet, same chain every other chrome shape in
+   this file already falls through.
+
+**Tests at risk, confirmed by running, not only by inspection:**
+`event-details.test.ts` (the file whose constants moved) and `shared.test.ts`
+(the file they moved into) both re-run in full and pass unchanged — the
+relocation is a pure move, same values, same three call sites in
+`event-details.ts`. Grepped `src/` for any other date-shaped bare segment in
+an existing fixture that could collide with the new guard; none found —
+the new alternatives require the WHOLE trimmed segment to be a date-shaped
+token, which no existing real-name fixture in this codebase is.
+
+**Blast radius:** `isBareDateSegment`/`BARE_DATE_SEGMENT_RE` are new,
+unexported, used only inside `isChromeSegment`. The relocated constants'
+only behavioural surface is `event-details.ts`'s existing three call sites
+(unchanged) plus this new one; no other file reads them.
+
+**Gate: 90 files / 1038 tests, 1037 passing (+3, none deleted).** The one
+failure remains `benchmark.test.ts`'s documented live-search flake, same
+`summit?.place?.city` assertion as this turn's two previous items. Typecheck
+clean. Lint: exactly the 1 pre-existing `quiz.tsx:46` error.
+
+Commit follows immediately.

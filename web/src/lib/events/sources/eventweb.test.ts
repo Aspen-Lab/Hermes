@@ -296,6 +296,42 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B9-04's bare-date guard (round 9): internationalbatteryseminar.com's
+  // own live-confirmed repro — a segment that is only a date cleared every
+  // existing check and rendered as the event's name.
+  describe("bare date segment (B9-04)", () => {
+    // Multi-word, punctuated hardest case per Ruling 31: the live repro
+    // itself, with a day range and a comma, paired with a real name it must
+    // lose to.
+    it("rejects a segment that is only a date, falling through to a real name", () => {
+      expect(
+        eventNameFrom("March 15-18, 2027 | International Battery Seminar", ""),
+      ).toBe("International Battery Seminar");
+    });
+
+    // The "should match nothing" hardest case, and the one this guard is
+    // most likely to get wrong: "SolarPACES 2026" (an existing passing case
+    // elsewhere in this file) legitimately CONTAINS a year but is not a
+    // date-shaped segment as a whole — the guard must require the segment
+    // be date-and-nothing-else, not merely date-containing.
+    it("does not reject a real event name merely because it contains a year", () => {
+      expect(bestEventTitleSegment("SolarPACES 2026")).toBe("SolarPACES 2026");
+    });
+
+    // The literal live shape: the WHOLE title is nothing but a date, no
+    // second segment to fall back to within bestEventTitleSegment itself —
+    // eventNameFrom must continue past it to the snippet, same fallback
+    // chain every other chrome shape in this file already uses.
+    it("continues past a bare date-only title with no other segment to the snippet", () => {
+      expect(
+        eventNameFrom(
+          "March 15-18, 2027",
+          "The International Battery Seminar brings together researchers.",
+        ),
+      ).toBe("The International Battery Seminar brings together researchers.");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.

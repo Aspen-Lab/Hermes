@@ -7,6 +7,25 @@ import type { RawItem } from "@/lib/sources/types";
 import type { PreferenceConcept } from "@/types";
 
 /**
+ * B9-04 (round 9): moved here from `event-details.ts`, unchanged, so
+ * `events/sources/eventweb.ts` can reuse the same date-token building
+ * blocks for its own bare-date-segment guard. `event-details.ts` already
+ * imports `looksLikeEventTitle` FROM `eventweb.ts` — importing these three
+ * constants the other way, directly from `event-details.ts` INTO
+ * `eventweb.ts`, would create a real circular import between the two (a
+ * genuine risk for top-level `const`s used to build other top-level
+ * `const`s, not just a style concern). `shared.ts` has no dependency on
+ * either file, so it is the safe common home. `event-details.ts` now
+ * imports these from here instead of defining them locally; its own three
+ * call sites are unchanged.
+ */
+export const MONTH_PATTERN =
+  "(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)";
+export const DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
+export const DATE_TOKEN_PATTERN =
+  `(?:\\d{4}-\\d{2}-\\d{2}|${MONTH_PATTERN}\\.?\\s+${DAY_PATTERN}(?:,?\\s+\\d{4})?|${DAY_PATTERN}\\s+${MONTH_PATTERN}\\.?(?:,?\\s+\\d{4})?)`;
+
+/**
  * Hard wall on a single source's fetch — same contract as the paper
  * pipeline's guard: one slow source never drags Promise.allSettled past 8s.
  */

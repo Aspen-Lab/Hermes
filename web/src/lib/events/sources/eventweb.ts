@@ -1,6 +1,12 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
-import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
+import {
+  DATE_TOKEN_PATTERN,
+  DAY_PATTERN,
+  looksLikeHostBrand,
+  MONTH_PATTERN,
+  urlHashId,
+} from "@/lib/opportunities/shared";
 import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
@@ -300,6 +306,42 @@ function looksLikeArticledHostBrand(candidate: string, host: string): boolean {
 const DOCUMENT_FILENAME_RE = /\.(?:pdf|docx?|xlsx?|pptx?|csv|zip)$/i;
 
 /**
+ * B9-04's bare-date guard (round 9): a segment that is ONLY a date —
+ * "March 15-18, 2027" — clears every check above cleanly (none of them has
+ * any concept of "this is only a date, not a name") and clears
+ * looksLikeEventTitle too (no narrative verb, not multi-sentence, well
+ * under the word ceiling), so nothing else in the chain rejects it either.
+ * Confirmed live: internationalbatteryseminar.com rendered exactly this
+ * string as an event's name.
+ *
+ * Reuses shared.ts's MONTH_PATTERN/DAY_PATTERN/DATE_TOKEN_PATTERN (moved
+ * there this round specifically so this file could reuse them without a
+ * circular import with event-details.ts, which already imports
+ * looksLikeEventTitle FROM this file) rather than a new from-scratch date
+ * parser. DATE_TOKEN_PATTERN alone does not cover the live repro — its
+ * "Month Day[, Year]" alternative allows only a single day, not a range —
+ * so this adds two more alternatives with a day range in the middle
+ * ("15-18"), the same optional-range shape this file's own DATE_DMY_RE
+ * already uses for the other date order (day before month).
+ *
+ * Anchored to the WHOLE trimmed segment on both ends: "SolarPACES 2026"
+ * (an existing passing case that must not be affected) contains a bare
+ * year but is not a date-shaped segment as a whole, so it does not match
+ * here — this rejects a segment that IS a date, not one that merely
+ * contains one.
+ */
+const BARE_DATE_SEGMENT_RE = new RegExp(
+  `^(?:${DATE_TOKEN_PATTERN}` +
+    `|${MONTH_PATTERN}\\.?\\s+${DAY_PATTERN}\\s*[-–]\\s*${DAY_PATTERN}(?:,?\\s+\\d{4})?` +
+    `|${DAY_PATTERN}\\s*[-–]\\s*${DAY_PATTERN}\\s+${MONTH_PATTERN}\\.?(?:,?\\s+\\d{4})?)$`,
+  "i",
+);
+
+function isBareDateSegment(candidate: string): boolean {
+  return BARE_DATE_SEGMENT_RE.test(candidate.trim());
+}
+
+/**
  * B9-04 Fix 2 (round 9): additive and optional, same "thread an option
  * through, default preserves old behaviour" convention this file already
  * used for `host` itself (B8-04). `skipHostBrand` lets a caller ask "is this
@@ -324,7 +366,8 @@ function isChromeSegment(
     isGenericPageTitle(trimmed) ||
     isEventIndexPage(trimmed) ||
     /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed) ||
-    DOCUMENT_FILENAME_RE.test(trimmed)
+    DOCUMENT_FILENAME_RE.test(trimmed) ||
+    isBareDateSegment(trimmed)
   ) {
     return true;
   }

@@ -2,7 +2,7 @@ import type { EventFee } from "@/types";
 import { normalizeJobDate } from "./job-details";
 import { looksLikeEventTitle } from "@/lib/events/sources/eventweb";
 import { extractPageText } from "./page-text";
-import { stripHtml } from "./shared";
+import { DATE_TOKEN_PATTERN, stripHtml } from "./shared";
 
 export interface EventPageDetails {
   registrationDeadline?: string;
@@ -33,11 +33,10 @@ export function extractDeclaredEventName(html: string): string | undefined {
   return candidates.size === 1 ? [...candidates.values()][0] : undefined;
 }
 
-const MONTH_PATTERN =
-  "(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)";
-const DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
-const DATE_TOKEN_PATTERN =
-  `(?:\\d{4}-\\d{2}-\\d{2}|${MONTH_PATTERN}\\.?\\s+${DAY_PATTERN}(?:,?\\s+\\d{4})?|${DAY_PATTERN}\\s+${MONTH_PATTERN}\\.?(?:,?\\s+\\d{4})?)`;
+// MONTH_PATTERN/DAY_PATTERN/DATE_TOKEN_PATTERN moved to shared.ts this round
+// (B9-04) so eventweb.ts can reuse DATE_TOKEN_PATTERN too, without a
+// circular import between this file and eventweb.ts (this file already
+// imports looksLikeEventTitle FROM eventweb.ts). Values unchanged.
 const REGISTRATION_LABEL_PATTERN =
   "(?:registration\\s+deadline|registrations?\\s+close(?:s)?|register\\s+by|last\\s+day\\s+to\\s+register)";
 
