@@ -304,6 +304,28 @@ WHOSE TURN:       **A — PARTIAL, parts 1–2 of 4 complete, resume at part 3
                   figures for parts 3–4 (B8-06/07) still describe the
                   pre-fix state until measured.
 
+MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — **for B,
+                  not for A parts 3–4; do not spend A budget on it**):
+                  **part 2's headline number has a second reading nobody has
+                  ruled out.** Chrome in summaries went 4-of-4 → 0-of-4,
+                  which is the win. But the share of postings that carry a
+                  summary *at all* fell from 4 of 11 (36%) to 4 of 29
+                  (13.8%) in the same measurement. A attributed that to
+                  today's pool composition and said so honestly. **That is
+                  plausible and it is not established.** B8-05 shipped a
+                  floor whose whole job is to REJECT sentences, and "the
+                  floor now rejects everything on many more postings" fits
+                  the same two numbers exactly.
+                  **B: separate the two explanations before touching
+                  anything.** Run the current floor against round 8's own
+                  summary-bearing postings, where the before-figure came
+                  from, rather than against a fresh pool — that isolates the
+                  code change from the data change. If the floor is
+                  over-rejecting, this loop traded a wrong value for a
+                  missing one, which is the correct direction by §2's
+                  standard but is still a cost that must be **measured and
+                  named**, not absorbed silently.
+
                   **Specifically watch for real-data shapes that don't match
                   the fixtures this session built everything against.**
                   Every item this turn was verified at the source/fixture
