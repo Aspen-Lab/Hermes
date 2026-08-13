@@ -3803,3 +3803,16 @@ nothing left in M2 for B or C to build against. §1 is updated below to
 reflect this: `WHOSE TURN: MANAGER`, combining M1's and M2's user-gated
 checklists into one, since RULING 9.3 already anticipated exactly this
 — "a combined M1+M2 host test is acceptable and expected."
+
+#### Round 4 — Manager note: user chose Path 1 (Vercel preview host-test)
+
+2026-08-13: the user chose the Vercel-preview route for the combined M1+M2
+host test. Per RULING 2's reservation, the manager records: `MCP_DEV_TEST_USER_ID`
+will point at the **user's own Peer account** (their explicit choice), and both
+MCP dev vars are to be scoped to the **Preview** environment only — the dev
+slug endpoint must never ship in a Production deployment. The slug value
+stays known only to the user (minted by them, entered only in Vercel env and
+their own ChatGPT connector settings; never pasted into chat, commits, or
+this file). Deploy readiness verified by the manager: route exports
+`runtime="nodejs"` + `maxDuration=60`; the prebuild BYOK guard only checks
+operator AI keys and does not touch the MCP vars.
