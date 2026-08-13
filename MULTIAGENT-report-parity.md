@@ -19871,3 +19871,151 @@ touched. No credential referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-07: items 6+8, job summary colon-label chrome — fix direction only, cause of item 6 already known)
+
+**STATUS: DONE.** Per the manager's own instruction: item 6's cause is
+answered (round 9's own B, `SECTION_RE` matching `"Qualifications:"` grants
+`sectionScore = 4`, clearing the floor with zero keyword credit — see the
+replay table in §4 "Round 9 — Agent B (B9-03)"). **Not re-derived here.**
+Item 8 is B8-05's own already-named "single-colon-label sentence" shape,
+flagged this round as "likely the same root as item 6 — check that before
+writing two separate guide entries." Checked.
+
+**Answer: related surface shape, DIFFERENT underlying mechanism — not the
+same root. One combined entry, two-part fix, so C does not apply only half
+of it and assume both items are closed.**
+
+**Item 8's own sentence does NOT go through `SECTION_RE` at all — confirmed
+by regex inspection and by controlled construction against the real,
+unmodified `summarizeJob` (not re-testing item 6's own sentence, which is
+off-limits this round).** `SECTION_RE`
+(`web/src/lib/jobs/summarize.ts:56-57`) is anchored to a closed list
+(`responsibilities|requirements|qualifications|what you'll do|the
+role|role overview`) — `"Multi-Level"` is not one of them, so
+`SECTION_RE.test(...)` is `false` on this sentence; `sectionScore` is `0`.
+Verified end-to-end: A's own quoted sentence
+(`"Multi-Level: This is a multi-level posting and you will be placed at the
+appropriate level dependent on degree field and level of education."`)
+**survives `summarizeJob` with ZERO matched keywords** — proving `roleScore`
+alone (`ROLE_RE` matches `"you will"`, `:59-60`) clears the floor here, not a
+section-label match. A constructed variant with the role-verb phrase removed
+but a real keyword present also survives (via `matchedCount`), and a variant
+with **both** removed is correctly rejected — confirming no hidden third
+path is keeping it alive either. **Item 8's sentence is legitimately,
+correctly selected on real content signal.** Its only defect is cosmetic:
+nothing strips the leading `"Multi-Level:"` label text before the sentence
+reaches the render.
+
+**Item 6, by contrast, is a SELECTION-layer defect, per round 9's own
+already-established trace — restated only to explain why the fix differs,
+not re-derived.** The junk fragment (`"Qualifications: ### Get the Saturday
+tech briefing [..."`) has zero keyword match and zero role-verb match, per
+round 9's own replay; it is selected SOLELY because `SECTION_RE` grants
+`sectionScore = 4` to any sentence starting with a bare section word,
+regardless of what follows. Stripping the label text cosmetically would not
+fix this — traced what remains after a hypothetical prefix-strip: `"### Get
+the Saturday tech briefing [..."`, still a newsletter-signup fragment, still
+not role content. **No amount of surface cleanup turns this into a good
+sentence; it should never have been selected.**
+
+**Two-part fix, addressing each layer separately — do not treat either part
+as sufficient alone:**
+
+1. **Item 6-specific, necessary: narrow `SECTION_RE`'s scoring credit so a
+   bare label match cannot single-handedly clear the floor.** The gap is
+   specifically that `sectionScore` is granted for STARTING WITH a section
+   word, with no requirement that anything resembling real content follows.
+   Options for C to weigh, not prescribed: require a minimum length/word
+   count of non-label text after the match before granting the score: reject
+   when `looksLikeScrapedChrome`-adjacent markers are present in the same
+   sentence (a bare `###`, an unpaired bracket) even alongside a section-word
+   match; or fold `sectionScore`'s contribution into the same
+   `matchedCount === 0 && sectionScore === 0 && roleScore === 0` floor
+   check's spirit by requiring `sectionScore` to co-occur with at least a
+   nonzero `readableLengthScore` and NOT trip `looksLikeScrapedChrome`'s own
+   marker-counting logic even at threshold 1 rather than 2. B does not
+   prescribe the exact rule (this is genuinely a scoring-design question,
+   the same caution B9-02b/c's own guide gave for the topic-label check);
+   flagging the shape of the gap precisely so C is not guessing where to
+   look.
+2. **Shared, cosmetic: strip a recognised label prefix from a sentence's
+   displayed text, regardless of why it was selected.** Fixes item 8 outright
+   (a legitimately-good sentence, prefix removed) and improves item 6's
+   FIRST sentence's neighbourhood even though it cannot fix item 6's second
+   sentence alone (see above). **Recommend grouping this under the exact
+   same "one narrow rule, not two separate patches" umbrella B9-03 already
+   used for the stray-dash/bracket findings**
+   (`web/src/lib/opportunities/job-cleanup.ts:87-97`,
+   `stripOrphanedFormattingArtifacts`) — a leading `Label:` pattern (a
+   capitalised phrase of up to a few words immediately followed by a colon,
+   at the START of the string) is the same general "formatting-strip
+   leftover" family already established there, just at the front of the
+   sentence instead of mid-string. Note this cleanup function is already
+   scoped to `cleanJobDescription` specifically (not the shared
+   `cleanJobText`/`cleanJobSubtitlePart` path job company/location also use)
+   per B9-03's own explicit scoping — the natural, lowest-risk home for this
+   addition is the same function, for the same reason.
+
+**Why this matters as a sequencing decision for C, not just a
+classification exercise:** landing fix 2 alone and calling both items closed
+would leave item 6's junk fragment selected AND cosmetically ungarbled up to
+its own remaining un-fixable chrome (`###`, the orphaned `[...`) — a worse
+outcome than today in one respect (a cleaner-looking but still-wrong
+sentence could read as more credible, not less). Landing fix 1 alone closes
+item 6 but leaves item 8's cosmetically-broken-but-substantively-fine
+sentence unchanged. **Both are needed; recommend fix 1 first** (it is the
+one with reader-trust consequences — a wrong sentence dressed as legitimate
+content — versus fix 2's purely cosmetic, lower-severity defect, matching
+A's own reader-impact ranking of item 6 over item 8).
+
+**Tests at risk:**
+- `web/src/lib/jobs/summarize.test.ts` — both the existing
+  `SECTION_RE`/`sectionScore` cases and the "positive-content floor (B8-05)"
+  block B8-05 itself added; fix 1 changes scoring behaviour directly, so
+  every existing section-credit case needs re-tracing by hand, per Ruling
+  31, not just re-running — including the ORIGINAL correct case
+  `sectionScore` exists to reward (a genuine `"Responsibilities: Design and
+  build systems that..."`-shaped sentence with real content following the
+  label) as the hardest must-still-survive case.
+- `web/src/lib/opportunities/job-cleanup.test.ts` — fix 2's likely home;
+  B9-03's own dash/bracket cases must keep passing, plus this file's
+  existing call-to-action and bracket-balancing cases.
+- Grepped for other callers of `summarizeJob`/`cleanJobDescription` beyond
+  these two test files before finalising this list: both are file-private to
+  their own module's exports otherwise (`summarizeJob` consumed by
+  `web/src/lib/jobs/mapper.ts`, `cleanJobDescription` by
+  `web/src/lib/jobs/sources/*.ts` adapters and `jobweb.ts`) — no adapter or
+  mapper test constructs a summary/description through these functions
+  directly with a fixture resembling either shape (confirmed by grep across
+  `web/src/lib/jobs/**/*.test.ts`), so no third test file is at risk here,
+  unlike B10-02/03/04's shared event-name surface.
+
+**Hardest cases to add, per Ruling 31:**
+- For fix 1: the genuine "Responsibilities: Design and build reliable
+  systems for..." shape (real content after the label) must keep clearing
+  the floor — this is `sectionScore`'s own reason to exist and must not be
+  collaterally damaged.
+- For fix 1: item 6's own exact junk fragment as the must-now-reject case
+  (already known, cite rather than re-derive).
+- For fix 2: item 8's own exact sentence, prefix stripped, content
+  preserved verbatim after the colon.
+- For fix 2, the must-NOT-strip case: a sentence where a colon-led phrase is
+  mid-sentence, not a leading label (e.g. "...as follows: design, build, and
+  test...") — anchoring the new pattern to the START of the string only,
+  matching `LABEL_MARKER_RE`'s own existing precedent of being shape-based
+  rather than position-blind, avoids this; worth its own explicit test.
+
+**Blast radius:** fix 1 is contained to `scoreSentences`
+(`summarize.ts:83-131`), no exported signature change. Fix 2 is contained to
+`cleanJobDescription`/`stripOrphanedFormattingArtifacts`
+(`job-cleanup.ts:91-103`), already scoped away from the job company/location
+path per B9-03's own prior work — unaffected by either fix.
+
+Cleanup: throwaway vitest file (`zz-round10-b-summary-item8-trace.test.ts`)
+deleted before this commit. No product code touched. No credential
+referenced, logged, or written.
+
+Commit follows immediately.
+
