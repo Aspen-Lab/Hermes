@@ -17387,3 +17387,170 @@ through the same guarded chain to `undefined` and silence, same render path
 already confirmed clean.
 
 Commit follows immediately.
+
+### Round 9 — Agent B (B9-03: MANAGER CARRY-FORWARD answered -- the floor's own cost, measured; plus two smaller summary defects)
+
+#### The isolation the manager asked for
+
+The MANAGER CARRY-FORWARD block (§1) asked to separate two explanations for
+the summary-bearing rate falling from 4 of 11 (36%, round 8) to 4 of 29
+(13.8%, round 9 part 2): pool composition, or B8-05's new floor
+over-rejecting. Instruction: run the current floor against round 8's own
+summary-bearing postings, not a fresh pool.
+
+**Method.** Round 8 A's own §4 entry ("R4 (job summary chrome) — STILL OPEN")
+already quotes all four of round 8's non-empty summaries verbatim — tracked,
+public text in this same file, not a fresh fetch. Built a throwaway vitest
+file (`web/src/zz-round9-b-floor-isolation.test.ts`, deleted before this
+commit) that feeds each of those four quoted strings into today's
+`summarizeJob()` unmodified, twice each: once with a matched-keyword guess
+drawn from the posting's own title/subject (`"experiments"`, `"molten salt"`,
+`"OpenMC"`, `"battery"`), and once with **zero** matched keywords at all —
+the pessimistic case, which isolates whether `sectionScore`/`roleScore` alone
+(the two signals independent of keyword luck) can save a candidate.
+
+**Caveat stated plainly, per this loop's own standard for reused historical
+text:** this replays only the *previously selected* summary sentences, not
+each posting's full original description, which nobody in this loop has
+retained and which B does not have standing to re-fetch this round (B does
+not run new live searches). This measures the floor's effect on the specific
+text that made it into round 8's rendered report, not on every sentence in
+each full posting — a lower bound on the floor's real effect, not a
+guaranteed exact replay.
+
+**Result, per posting — the floor's own effect, confirmed by direct
+execution, not inferred:**
+
+| Posting | Round 8 output (chrome) | Today's floor, with a plausible keyword | Today's floor, zero keywords |
+|---|---|---|---|
+| `grad.wisc.edu` | 2 sentences incl. stray `]` fragment | **Cleaned, not emptied** — 1 sentence, the `]`-fragment sentence alone is dropped (it has no role verb/section/keyword of its own) | same |
+| `postdocjobs.com` | "More about this employer..." (pure chrome) | **Empty** — `""`, floor rejects it even *with* a topic keyword credited | Empty |
+| `openmc.discourse.group` | "Job vacancies looking for OpenMC skills Announcements" | **Unchanged, still chrome** — survives via `matchedCount > 0` (the posting's own subject, "OpenMC", is a real matched keyword) | Empty (confirms the keyword match, not the floor, is what saves it) |
+| `employbl.com` | Private-equity boilerplate + "Qualifications: ### Get the Saturday tech briefing [..." | **Unchanged, still chrome** | Second sentence alone still survives — `SECTION_RE` matches the leading `"Qualifications:"` and grants `sectionScore = 4`, clearing the floor with **zero** keyword credit at all |
+
+**Answer: both explanations are real, and neither is the whole story — this
+is the measured, not-absorbed cost Ruling 32/the carry-forward asked for.**
+Of round 8's four chrome summaries replayed verbatim against today's exact
+code: one (`postdocjobs.com`) is a confirmed, direct, non-hypothetical
+instance of the floor converting a prior wrong-value summary into silence —
+the correct direction by §2's own standard, and now a measured fact, not a
+guess. One (`grad.wisc.edu`) the floor actively improves (strips the
+artifact fragment, keeps the good sentence) rather than emptying. Two
+(`openmc.discourse.group`, `employbl.com`) are **unchanged** — the floor does
+not touch them, for reasons B8-05 already named and explicitly left open
+(keyword-collision, and — newly confirmed here — `SECTION_RE` matching a
+label fragment independent of any keyword at all). Since the floor does not
+uniformly reject this replayed set (2 of 4 unchanged, 1 improved, only 1
+emptied), it is not "rejecting everything" broadly — the much larger
+remaining gap between 36% and 13.8% (11-item pool vs. 29-item pool, a
+near-3x difference in size with the same 4 absolute summary-bearing
+postings) is consistent with pool composition being the dominant factor,
+with the floor contributing a real but smaller, now-quantified share.
+
+**No code change recommended from this item alone.** The floor is working
+within its own documented scope (B8-05's own log already named the two
+shapes that still leak through, and this isolation reproduces both live,
+under the exact current code, rather than leaving them as prose claims).
+This entry closes the manager's open question with a number; it does not
+open a new fix item beyond the two below, which were separately named by A.
+
+#### Defect 1 — stray dash artifact (`www.aiu.edu`)
+
+**Classify: WRONG SHAPE.** A's quote: `"...enhances understanding of –
+charge transfer, ion mobility..."` — an orphaned en-dash sitting where a
+bullet, colon, or connector word most likely was in the source markup.
+
+**Confirmed no cleanup step targets this.** Read `stripHtml`
+(`web/src/lib/opportunities/shared.ts:68-85`) in full: it strips tags,
+converts block boundaries to newlines, and decodes a fixed set of HTML
+entities, but has no rule for an isolated dash character bordered by
+whitespace on both sides. `cleanJobText`
+(`web/src/lib/opportunities/job-cleanup.ts:32-37`) only strips **leading**
+punctuation (`^[\s….·•|/\\:;-]+`), never a mid-string floating
+character. A does not have standing to re-fetch the live page this round, so
+the exact source shape (a literal stray character in the page's own prose,
+vs. an HTML entity such as `&ndash;`/`&#8211;` sitting where a bullet
+separator was in the original markup) is not confirmed either way — noted
+per this loop's "say where you looked" standard rather than guessed.
+
+**Fix direction: group with the already-open Markdown-link-remnant finding,
+not a new category.** A herself named this "same family... a formatting-
+strip leftover, a different literal character, a new instance" — B8-05
+already scoped a stray `]` (Markdown-link remnant) as explicitly out of
+scope for the positive-content floor ("a text-cleanup defect, not a scoring
+one"). Recommend a single small post-processing pass over `summarizeJob`'s
+selected output (or `cleanJobDescription`, its input) that strips an
+isolated dash/bracket character surrounded by whitespace on both sides —
+covering both the stray `]` and this stray `–` under one narrow rule, rather
+than two separate patches for what appears to be the same underlying
+formatting-strip-artifact class.
+
+**Tests at risk:** `summarize.test.ts` — a cleanup pass must not eat a
+legitimate em-dash used correctly inside a real sentence ("state-of-the-art
+— and rare —"); needs its own hardest-case test distinguishing "isolated,
+orphaned dash" from "a real dash used as a parenthetical."
+
+**Blast radius:** contained to wherever the cleanup pass is added (either
+`summarize.ts` or `job-cleanup.ts`); if added to the latter, note it is
+shared with location text (same caveat as B9-02).
+
+#### Defect 2 — acronym collision in the keyword match itself (`www.lco-cdo.org`)
+
+**Classify: borderline WRONG DATA / POLICY — leaning POLICY, flagging for
+the manager rather than prescribing a fix.** The Law Commission of Ontario's
+own self-referential "(LCO)" initialism matches this profile's unrelated
+"LCO" research-topic keyword (a battery cathode-material abbreviation),
+letting a generic organisational-boilerplate sentence clear the
+positive-content floor via `matchedCount > 0`.
+
+**Confirmed deliberate design, not a bug in the matcher.** Read
+`termMatches` (`web/src/lib/scoring/term-expand.ts:161-171`): a whole-word,
+case-insensitive match against the canonicalized item text, with an explicit
+doc comment: *"Deliberately context-free... Generic terms are handled
+structurally instead."* `isGenericTerm`/`GENERIC_TERMS`
+(`:178-183`, `:36`) is the mechanism built to suppress exactly this class of
+false positive, but it is keyed to genuinely generic words ("materials",
+"energy") — adding `"lco"` to it would be wrong, since LCO is a real,
+specific, meaningful topic for this profile everywhere else it correctly
+matches. The collision here is not genericness; it is two unrelated real
+things sharing one short acronym, a case this deliberately context-free
+design was never built to disambiguate, by its own documented reasoning.
+
+**Why this is not simply "B8-05's already-named limitation" restated.**
+B8-05's own log names "a chrome sentence containing a matched keyword still
+clears the floor" as a known, tested, accepted gap — but its own example
+was a *real* keyword match (`"OpenMC"` genuinely referring to the
+profile's own subject). This case's keyword match is not even about the
+right subject — `"LCO"` here refers to a government law-reform body, not a
+battery material. That is a different, narrower failure one level upstream
+of the floor, in the matching step itself, not in what the floor does with
+a match once found.
+
+**Fix direction, offered narrow and optional, not mandated — two deliberate
+design decisions compound here and neither should be reversed lightly:**
+short acronym topics (say, under 5 characters) could require a co-occurring
+signal (a second matched term, or the acronym appearing near one of its own
+expansion's other words) before counting toward `matchedCount` specifically
+for the positive-content floor — not for ranking generally, where the
+existing behaviour is probably fine. This is exactly the kind of narrow,
+low-confidence heuristic Ruling 28/29 caution against inventing from a
+single counterexample. **Recommend flagging `POLICY — manager decides`**:
+is a rare, short-acronym false positive worth the complexity of a
+disambiguation rule, or is this an acceptable, low-frequency cost of a
+deliberately simple, context-free matcher? B found one live instance in this
+round's entire sample; no frequency data exists to weigh the trade-off
+properly.
+
+**Tests at risk:** none proposed to change without a manager ruling; if a
+fix is later commissioned, `term-expand.test.ts` and `keyword.test.ts`'s
+existing whole-word-match guarantees must not regress (a real short acronym
+like `"AI"` or `"ML"` still needs to match normally in its own correct
+context).
+
+**Blast radius:** `termMatches`/`scoreKeyword` are used for ranking as well
+as the summary floor (`web/src/lib/jobs/scoring.ts:318-346`) — any change
+scoped to "the floor only" needs a separate parameter threaded through, not
+a change to `termMatches` itself, to avoid touching ranking behaviour that
+nobody has evidence is a problem.
+
+Commit follows immediately.
