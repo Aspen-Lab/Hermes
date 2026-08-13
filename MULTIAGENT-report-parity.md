@@ -17554,3 +17554,169 @@ a change to `termMatches` itself, to avoid touching ranking behaviour that
 nobody has evidence is a problem.
 
 Commit follows immediately.
+
+### Round 9 — Agent B (B9-04: R13 event names fix guide)
+
+Builds directly on B9-01's two enumerated event-name fallback sites. Both
+are the fix target here; the "not yet root-caused" names A flagged get a
+best-effort look, then an honest stop where live evidence would be needed.
+
+#### Fix 1 — `eventNameFrom`'s absolute last resort (`web/src/lib/events/sources/eventweb.ts:494`)
+
+**Classify: WRONG DATA.** `return segments[0] ?? title.trim();` can return a
+segment `bestEventTitleSegment` already rejected earlier in the same call,
+verbatim — B9-01's primary citation.
+
+**Fix direction.** The honest last resort Ruling 32 asks for needs to be
+something `isChromeSegment`/`looksLikeEventTitle` did **not** already reject
+— reusing `segments[0]` defeats the point, since it is drawn from the exact
+same pool those checks just filtered. Candidates, in order of how much they
+reuse the codebase's own existing tools:
+1. **The URL host**, formatted plainly (e.g. `new URL(url).hostname`,
+   already computed once at `bestEventTitleSegment`'s own `:438-445` and
+   available to thread down) — mirrors the job side's own honest fallback
+   precedent (B9-01: "See posting"), and a host is never itself something a
+   guard rejected.
+2. **A literal placeholder** (`"Untitled event"` or similar) — simplest,
+   least informative, but unambiguous and matches this loop's own standard
+   that a placeholder is defensible where a guess is not.
+3. **`title.trim()` itself, promoted from silent-fallback-of-the-fallback to
+   the primary last resort**, on the reasoning that the *whole, unsplit*
+   title (not one rejected segment of it) was never itself tested against
+   `isChromeSegment`/`looksLikeEventTitle` — it might fail those checks too
+   if tested, so this is not obviously safer without adding that check.
+Recommend (1), reusing (2) only when no URL is available at all (matching
+`bestEventTitleSegment`'s own existing optional-`url` convention at
+`:421-424`).
+
+**Tests at risk:** `eventweb.test.ts`'s existing `eventNameFrom` cases,
+especially any asserting today's `segments[0]` behaviour as correct — must
+be re-traced by hand (per Ruling 31's standard) since this changes an
+observable return value, not just an internal guard. B8-06's own four shape
+tests must be re-verified to still pass unchanged (this fix is downstream of
+all three, only activating when every one of them has already rejected
+everything).
+
+**Blast radius:** `eventNameFrom` has exactly one caller
+(`webResultToRawEventItem`, confirmed by grep, per B9-01). Contained.
+
+#### Fix 2 — `enrichEventCandidates`'s `typedName` rescue (`web/src/lib/opportunities/enrich.ts:148-155`)
+
+**Classify: WRONG DATA.** B9-01's second citation — the rescue term
+`(looksLikeEventTitle(typedName) ? typedName : undefined)` bypasses all four
+of `isChromeSegment`'s checks when it only needs to bypass one (host-brand),
+per the existing `enrich.test.ts:216-224` SolarPACES-shaped test that
+requires the host-brand bypass specifically.
+
+**Fix direction: narrow the rescue to the one sub-check it actually needs to
+undo, not all four.** `isChromeSegment`
+(`web/src/lib/events/sources/eventweb.ts:302-316`) currently has no way to
+run its first three checks (generic title, event index, document filename)
+while skipping only the fourth (host-brand). Recommend threading an
+additive, optional parameter through `isChromeSegment` and
+`bestEventTitleSegment` (same convention B8-04 already used for `host`
+itself — e.g. `bestEventTitleSegment(typedName, item.url, { skipHostBrand:
+true })`), then changing `enrich.ts`'s rescue term to call
+`bestEventTitleSegment` a second time with that flag, instead of calling
+`looksLikeEventTitle` alone:
+```
+bestEventTitleSegment(typedName, item.url) ??
+bestEventTitleSegment(typedName, item.url, { skipHostBrand: true }) ??
+declaredEventName ?? ...
+```
+This keeps `typedName` passing through the SAME guarded function both times
+— reusing the guard, not inventing a parallel weaker one — and would still
+correctly rescue SolarPACES (rejected only for host-brand) while correctly
+continuing to reject `"Conference Program"` and the filename shape
+(rejected for reasons unrelated to host-brand, which the second call would
+still catch).
+
+**Tests at risk — this is the item's central risk, name it precisely.**
+`enrich.test.ts:216-224` ("accepts a host-matching typed Event name by its
+structured provenance") **must continue to pass unchanged** — this is the
+regression lock proving the fix does not remove the legitimate rescue path,
+only narrow it. `enrich.test.ts:154-172` ("uses a guarded event-title
+segment from fetched structured data") and `:238-250` ("does not let a
+heading or multiple declarations replace the ingestion name") should also
+be re-run and re-traced, though neither currently exercises the rescue term
+directly (confirmed by reading both: the first has an informative segment
+survive the first `bestEventTitleSegment` call already, never reaching the
+rescue; the second has no `typedName` at all, a different branch). New
+hardest-case tests needed, per Ruling 31: the two controlled repros this
+entry verified directly (`"Conference Program"`, the `.xlsx`-filename
+shape) as must-now-fall-through cases, plus the existing SolarPACES shape
+as the must-still-rescue case — three cases proving the narrowed rescue
+draws the line in exactly the right place, not just that it changes
+something.
+
+**Blast radius:** `isChromeSegment` is not exported; `bestEventTitleSegment`
+is, with three confirmed callers per B8-06's own blast-radius note
+(`webResultToRawEventItem` ingestion, `enrich.ts`'s `typedName` resolution —
+this item — and `event-details.ts:30`'s `extractDeclaredEventName` via
+`looksLikeEventTitle` only, not `bestEventTitleSegment` itself, so unaffected
+by this specific change). An additive, optional parameter defaulting to
+today's behaviour leaves the ingestion call site (which never passes it)
+completely unaffected — same "additive and optional" contract B8-04 already
+established for `host`.
+
+#### `internationalbatteryseminar.com` — a bare date rendered as the event name, NEW shape, not previously reported
+
+**Classify: MISSING (guard).** A flagged this as "not yet root-caused."
+Traced it: **not a fallback-of-last-resort case at all — a genuinely missing
+guard, same category as B9-02's topic-label gap.** Verified directly
+(throwaway vitest, deleted before this commit):
+`looksLikeEventTitle("March 15-18, 2027")` returns `true` and
+`bestEventTitleSegment("March 15-18, 2027", <url>)` returns the date string
+itself as the "informative" segment — no guard in the chain
+(`isGenericPageTitle`, `isEventIndexPage`, `DOCUMENT_FILENAME_RE`,
+host-brand, `looksLikeEventTitle`'s own four checks) has any concept of "this
+is only a date, not a name." It clears every check cleanly and is treated as
+a perfectly good event name.
+
+**Fix direction:** add a bare-date check to `isChromeSegment`
+(`eventweb.ts:302-316`), reusing this codebase's own existing date-token
+pattern rather than writing a new one — `web/src/lib/opportunities/
+event-details.ts:36-40` already defines `MONTH_PATTERN`/`DAY_PATTERN`/
+`DATE_TOKEN_PATTERN` for exactly this shape of text, built for a different
+purpose (deadline extraction) but directly reusable here: a segment that is
+*only* a date token (optionally with a year range/dash) and nothing else
+should be rejected the same way a bare generic word is. Matches this file's
+own repeated "reuse, don't reinvent" practice (B5-06 reusing
+`looksLikeHostBrand`, B8-06 reusing the generic-word list shape).
+
+**Tests at risk:** `eventweb.test.ts` — hardest case per Ruling 31: a real
+event name that legitimately contains a date as PART of a longer title
+("SolarPACES 2026" already exists as a passing case and must not be
+affected — the new check must require the segment be date-and-nothing-else,
+not merely date-containing).
+
+**Blast radius:** same three callers as Fix 2 above, since this would live
+inside `isChromeSegment` itself, not a new standalone function.
+
+#### `sdle.co.il` — rendered name and URL slug name different events in different countries, NOT root-caused this round
+
+A's finding: rendered `"Turkey Battery Technologies Summit 2026"`, URL slug
+reads `"2nd-medical-battery-conference-19-20-11-18-germany"` — different
+subject (battery vs. medical) and different country. **Looked at this
+directly and could not root-cause it from source alone.** `eventNameFrom`
+operates only on the search result's own `{title, snippet, url}} — no page
+fetch happens at ingestion time, so a title/URL mismatch this large is
+either (a) the search index's own title for this URL being stale or wrong
+(outside this codebase's control), or (b) the live page genuinely presenting
+two different pieces of self-contradictory information (its own `<title>`
+naming one event, its URL path retaining a different, older one) — either
+of which requires fetching the actual live page to distinguish, which B does
+not have standing to do this round (no live search, per §2's own role
+boundary). **Marked `POLICY — manager decides` is not quite right either**,
+since this may not be a decision at all, just an unresolved fact question.
+Recommend the next A fetch this specific URL directly (not through the
+pipeline — a targeted, single-page check) and report which of (a)/(b) it
+is before any fix guide is written for it; no fix direction is offered here
+because the mechanism is not yet known.
+
+Cleanup: two throwaway vitest files used across this turn's entries
+(floor-isolation, and this entry's `typedName`/bare-date verification) both
+deleted before their respective commits. No product code touched anywhere
+in this turn. No credential referenced, logged, or written.
+
+Commit follows immediately.
