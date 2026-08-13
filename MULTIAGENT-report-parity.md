@@ -20671,3 +20671,135 @@ worked example, and the case it survived was the awkward one: a ruling written
 spawned next, on the laptop — it needs the live pass, which the cloud correctly
 declined at `1f88aaa`.**
 
+---
+
+### Round 11 — Agent A (part 1: employer field)
+
+**STATUS: PARTIAL BY DESIGN.** This A turn is deliberately pre-split into four
+parts, same discipline rounds 9 and 10 used, so a real finding banks even if
+the session dies. This entry covers **part 1 only — the employer field,
+scored against B10-01 part 1 (items 1+2)**. Parts 2–4 (R13 event names, R4
+job summaries plus Ruling 33's tally, and the summary/ranked-list/gate
+verdict) are **not yet done** and are this same session's next steps.
+
+Claimed the turn lock (`697c97b`, `LAPTOP-3CL10CG5 @ 2026-08-13 07:41 UTC`)
+after `git pull --ff-only` (already up to date — the `cloud-hourly` no-op at
+07:28 UTC had released it clean) and confirming `git branch --show-current`
+reads `feature/summary-report-revamp`. Read §0d, §1's current-state block in
+full (four `ROUND 7 … SUPERSEDES …` blocks skipped, history not state, per
+Ruling 30), §1t/§1u (Rulings 33/34 in full, including 34a/34b), §2 Agent A,
+§3, §4 "Round 9 — Agent A" (all four parts + summary, for the method
+precedent), §4 "Round 10 — Agent A" (all four parts + summary + manager
+verification), §4 "Round 10 — Agent B" (B10-01 through B10-07), and §4
+"Round 10 — Agent C" (C10-01 through C10-03) plus the manager's verification
+of C, before touching anything.
+
+**Method.** Live keys reconfirmed present, boolean check only
+(`tavilyApiKey`, `adzunaAppKey`, `adzunaAppId`, `usajobsApiKey` all `true`;
+`feedAiApiKey` empty, matching every prior round exactly). Built a throwaway
+vitest file (`web/src/zz-round11-a-employer-live.test.ts`, deleted before
+this commit) following round 9/10 A's own profile-loading and
+request-shape precedent, reusing the no-op `PoolCache` trick (`get` always
+`null`, `set` a no-op) to force a genuinely fresh live pull rather than
+today's already-cached pool, calling `buildDailyJobPool()` then
+`scoredJobToJob()` — the exact entry points §2 names. Did **not** use
+`PEER_PROFILE_SNAPSHOT_PATH`. **One method change from precedent, tightening
+the security floor rather than loosening it:** wrote the JSON result to a
+path fully outside the repository (this session's own scratchpad directory)
+instead of a throwaway file under `web/`, so there was never a moment a
+result file sat inside the git working tree. Ground-truthed every non-null
+company against the posting's own title, URL slug, or (for two new hosts
+with no self-evident title phrase) a direct fetch of the live posting page —
+same standard rounds 9/10 A used, short fragments only, per the security
+floor.
+
+**Census — 14-item fresh live pool, 9 non-null companies, 5 null:**
+
+| host | rendered company | evidence checked | verdict |
+|---|---|---|---|
+| `careers.abbvie.com` | *(null)* | title has no "at Employer" phrase; own-domain subdomain | not counted (standing trade-off) |
+| `inl.referrals.selectminds.com` | `INL` | host is INL's own referral-system instance; `INL` is a real, correct abbreviation of Idaho National Laboratory | CORRECT (short form) |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` | title "...at Thermo Fisher Scientific" | CORRECT |
+| `postdocjobs.com` | *(null)* | **live page fetched directly this session**: real employer stated explicitly as `"Employer: Argonne National Laboratory"`; the page's own `<title>` carries BOTH B9-02b's original topic-label shape (`"Molten Salt Chemical and Electrochemical Engineering"`) AND B10-01's exact boilerplate phrase (`"Job posted on PostdocJobs.com"`) — both are now correctly rejected, leaving honest silence, not a wrong value | **item 2's defect CONFIRMED GONE** — missing, not wrong (see finding below) |
+| `careers.gevernova.com` | *(null)* | title states "GE Vernova" plainly; own-domain subdomain | not counted (standing trade-off, see finding below) |
+| `careerservices.upenn.edu` | `University of Pennsylvania` | **identical URL round 9 and round 10 A both cited**, already direct-fetch-confirmed real employer is Oak Ridge National Laboratory | **WRONG — ACCEPTED per Ruling 34a, not a new/open item** |
+| `terra.do` | `Idaho National Laboratory` | title "...at Idaho National Laboratory" | CORRECT |
+| `jobs.battery.com` | `Battery Ventures Companies` | title matches verbatim (portfolio-companies listing, standing caveat) | CORRECT |
+| `electrochemistry.uoregon.edu` | `Oregon Center for Electrochemistry` | **live page fetched directly this session**: page's own title is `"M.S. Internship Program – Oregon Center for Electrochemistry"` — own-domain research center hosting its own internship posting | CORRECT |
+| `salutemyjob.com` | *(null)* | title has no employer phrase | not counted |
+| `ev.careers` | `Tesla` | title "...at Tesla" | CORRECT |
+| `employbl.com` | `Battery Ventures` | URL slug names it | CORRECT |
+| `jobright.ai` | *(null)* | aggregator's own generic listing title | not counted |
+| `lco.global` | `Las Cumbres Observatory` | organisation's own domain | CORRECT |
+
+**1 of 9 non-null (11.1%) wrong this round** — continuing the downward trend
+(round 8 pre-fix 62.5% → round 9 27.3% → round 10 20% → round 11 11.1%), but
+**read the composition, not just the number, exactly as round 10's own
+manager note warned**: the denominator is now small enough (9) that this is
+one posting, and it is the *same* posting, not a new one.
+
+**Finding 1 — item 2 (B10-01 part 1) is confirmed closed on live data, and
+better than this round's own brief anticipated.** The brief's watch point
+said "a DIFFERENT hosting-platform boilerplate phrase surviving is expected
+under-catching, not evidence the guard is broken." What actually happened on
+`postdocjobs.com` today is stronger than that: the exact repro phrase
+(`"Job posted on PostdocJobs.com"`) is present in the live page's own title,
+sitting right next to the exact string B9-02b's older topic-label guard
+targets, and **both are correctly rejected** — the field renders `null`
+(honest silence, per Ruling 23) rather than any wrong string. No different
+wrong phrase took its place. This is the cleanest of any of this round's six
+fixes to confirm.
+
+**Finding 2 — `careerservices.upenn.edu` (item 1's accepted residual) persists
+unchanged, exactly as ruled.** Same exact URL round 9 and round 10 A both
+independently cited, reproduced live a third consecutive round, still
+rendering `University of Pennsylvania` for an Oak Ridge National Laboratory
+posting. Per this round's own brief and Ruling 34a, **this is not reported as
+a new defect** — it is the named, accepted cost. Counted here only for the
+trend number and the tally below.
+
+**Finding 3 — the standing host-brand trade-off gained one more data point,
+same shape as `careers.abbvie.com`/`jobs.lbl.gov` in prior rounds.**
+`careers.gevernova.com`'s title plainly states "GE Vernova," but the
+candidate normalizes to `"gevernova"`, which the host's own DNS label
+(`gevernova.com`) starts with — the same one-directional-length collision
+mechanism round 9 A first measured directly. Consistent with, not proof of,
+the guard suppressing a short candidate on the employer's own domain; not
+counted as WRONG for the same reason prior rounds did not count its
+siblings. Not one of this round's six items in scope — recorded because it
+is the same standing measurement, not a new question.
+
+**Observation, not chased — `INL` surviving is worth a note for whoever
+picks this up.** Round 9 A's own direct control test recorded
+`looksLikeHostBrand("INL", "inl.referrals.selectminds.com") === true` (a
+collision, meaning that guard would reject the short form if it evaluated
+this candidate). Yet `INL` is exactly what rendered here, live, today, for
+what is plainly INL's own posting. `INL` is the real, correct employer
+abbreviation, so this is **not wrong** and is not added to the difference
+list — but a candidate the guard's own control test says should collide
+reaching render anyway means either a different code path produced this
+value or the guard never saw this exact candidate. **Not investigated
+further — that is a cause question, B's job, not A's** — recorded here only
+so it is not lost.
+
+**RULING 34a's INSTITUTION TALLY — round 11 (first round tracked, per the
+ruling's own instruction).** Of this round's 9 non-null employer values, how
+many are a real, correctly-spelled institution name that is NOT the actual
+employer: **1** (`University of Pennsylvania`, actual employer Oak Ridge
+National Laboratory). **Tally this round: 1 of 9.** Cumulative record starts
+here, as the ruling specified — this is the first round it has been counted.
+
+**Cleanup:** throwaway vitest file and both fetched-page scratch files
+deleted/left outside the repository; nothing under `web/` from this part was
+ever tracked. No product code touched. No credential printed, logged, or
+written anywhere. Both direct page fetches quoted only in short fragments
+extracted programmatically, per the security floor.
+
+**Not done this turn (parts 2–4, same session, continuing next):** R13 event
+names re-check (`ecs.confex.com` direct fetch, `internationalbatteryseminar.com`,
+`ruggedthz.com`, `euagenda.eu` retry, SolarPACES lock), R4 job summaries
+re-check plus Ruling 33's acronym tally. No gate verdict is set by this
+entry — the gate cannot be judged until all parts are in.
+
+Commit follows immediately.
+
