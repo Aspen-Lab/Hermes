@@ -137,25 +137,32 @@ ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
 WHOSE TURN:       C (in progress — see §4 Round 1 — Agent C for live item log)
 STATUS:           Round 1 C in progress, working B's guide top to bottom.
-                  DONE so far: 1-01+1-08 (endpoint skeleton, 3 corrections to
-                  B's guide found by running install/tests — see §4),
-                  1-10 (dev-slug gate; MCP_DEV_TEST_USER_ID is a placeholder
-                  UUID — this sandbox has no Supabase credentials to create
-                  a real test user, flagged for A/manager in §4), 1-02+1-11
-                  (get_daily_forecast, Tier-0 by construction, one
-                  underspecified judgment call on counts semantics —
-                  documented in §4), 1-05 (get_opportunity, searches the
-                  full pool not .items, found+fixed a real TS narrowing bug
-                  via tsc). Continuing down the build order; §4 gets one
+                  DONE so far: 1-01+1-08, 1-10, 1-02+1-11, 1-05 (see §4 for
+                  each), and 1-03+1-04+1-09 (inline card + text fallback) —
+                  this last one found and fixed a REAL ARCHITECTURE BUG in
+                  B's design, not just an implementation gap: a `ui://`
+                  resource must be a static template (fetched once, cached)
+                  with per-call data delivered over a postMessage
+                  `ui/notifications/tool-result` bridge — B's design (and my
+                  first draft) baked one specific forecast into the
+                  resource per read, which cannot work once 1-01 already
+                  committed to a fresh McpServer per HTTP request (a
+                  tools/call and a later resources/read don't share one).
+                  Rebuilt against developers.openai.com/apps-sdk/build/
+                  custom-ux, verified via a Node `vm`-sandboxed execution of
+                  the actual widget script plus new route-level protocol
+                  tests. Full details in §4 — read before touching this
+                  code again. Continuing down the build order; §4 gets one
                   entry per commit as it happens, pushed immediately.
-LAST DIFFERENCE:  1-03+1-04+1-09 — no inline card, no Peer visual identity,
-                  no text fallback yet. Both tools work but every response
-                  still renders as a placeholder bullet list, not the
-                  mockup's card.
+LAST DIFFERENCE:  1-06+1-07 — discoverability polish (tool description
+                  quality pass) and the final full-suite confirmation of
+                  1-11's aiTier:0 claim remain. Both tools otherwise work
+                  end to end through the real MCP dispatch.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05 — card+fallback and
-                  discoverability polish remain, see §4.
-GATE NOW:         npm test (web/): 642 passed | 1 skipped (643), 78 files +1 skipped
+DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05, 1-03+1-04+1-09 — only
+                  discoverability polish + the local latency measurement
+                  remain, see §4.
+GATE NOW:         npm test (web/): 658 passed | 1 skipped (659), 79 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1270,3 +1277,123 @@ grows through the round rather than being written at the end.
   `fetchPaperById`/`rawItemToPaper` are called, never modified;
   `/api/papers/[id]` (the other `fetchPaperById`/`rawItemToPaper` caller) is
   untouched.
+
+**1-03 + 1-04 + 1-09 — inline card, Peer visual identity, text fallback.**
+DONE — but this item found and fixed a real architecture bug in B's guide,
+not just an implementation. Read in full; this is the highest-stakes
+correction this round.
+
+**The bug.** B's design (item 1-03/1-04/1-09, and the framework-facts Apps
+SDK note) was: a `server.registerResource("daily-forecast-card", ...)`
+callback that renders that *specific* forecast's HTML into the resource's
+`text` on every read — i.e. treat `ui://…` like a per-call render target.
+I built exactly that first, wired it with a request-scoped closure variable
+(`get_daily_forecast`'s handler sets `lastForecastResult`; the resource
+callback reads it) to work around resources/tools being separate SDK
+callbacks. It passed every test I wrote for it. Before wiring it into
+`server.ts` I stopped to ask a design question B's guide never actually
+answered: *if the MCP server is stateless and builds a fresh `McpServer` per
+HTTP request (which 1-01 deliberately does, on B's own instruction), what
+happens when the host sends `tools/call` and the later `resources/read` as
+two separate HTTP requests?* A fresh server per request means the second
+request's resource callback has never heard of the first request's closure
+variable — it would always render the *empty*-forecast fallback, never real
+data. Fetched `developers.openai.com/apps-sdk/build/custom-ux` (not
+`/apps-sdk/reference` — a different page than B's framework-facts section
+cited, this round) to check, and confirmed: a `ui://` resource is a
+**static template, fetched once by the host and cached** — the docs' own
+words are "treat the resource URI as a cache key." It is never re-rendered
+per tool call. Per-call data reaches the widget over a **postMessage
+bridge**: the host posts a `ui/notifications/tool-result` JSON-RPC
+notification carrying `params.structuredContent` (exactly the object a tool
+handler returns), and the widget's own client-side JS listens for it and
+renders. B's design and my first draft were both wrong about this — not a
+scope/product judgment call with two legitimate answers (unlike the Save
+button or the papers-lane gap), a protocol fact with one correct answer, so
+fixed forward rather than flagged `POLICY`.
+
+- **Second, smaller correction found the same way:** B's guide said
+  `{ mimeType: "text/html" }`. The docs' own `registerResource` example
+  uses `mimeType: "text/html;profile=mcp-app"` on the *content item*
+  (config argument is `{}` — mimeType doesn't belong there). Fixed to
+  match.
+- Rewrote `web/src/lib/mcp/ui/daily-forecast-card.ts`: `renderDailyForecastCard(result)`
+  (the wrong, per-call-baked design) → `buildDailyForecastWidgetHtml()`
+  (static, zero arguments, byte-identical across calls — tested). The
+  static shell still carries the exact same fixed warm palette (literal
+  hex, verbatim from the mockup, RULING-7-compliant — no Expand, no Save)
+  and now embeds a `WIDGET_SCRIPT`: vanilla JS implementing the
+  `window.addEventListener("message", …)` bridge, filtering
+  `event.source !== window.parent` and `message.method ===
+  "ui/notifications/tool-result"`, then rendering the header/rows from
+  `message.params.structuredContent` — the same object `get_daily_forecast`
+  already returns as `structuredContent`, no new shape to design.
+  `renderDailyForecastText` (the `content` text fallback) is genuinely
+  unaffected by this bug — it's part of the tool's own `CallToolResult`,
+  returned directly, never a separate fetch — so it's unchanged from the
+  previous item.
+- **Known duplication, disclosed, not accidental:** the row/meta-line
+  rendering logic now exists twice — once as TS (`metaParts`, used by
+  `renderDailyForecastText`) and once as hand-written plain JS inside
+  `WIDGET_SCRIPT` (used by the client-side card). No client bundle step
+  exists in this repo for MCP widget assets to import a shared module
+  through; the widget is a plain inline `<script>` string. Commented in the
+  file, both directions, as "keep in sync by hand."
+- `web/src/lib/mcp/server.ts`: the `lastForecastResult` closure and the
+  data-dependent resource callback are both gone. The resource now
+  registers once with static content; `get_daily_forecast`'s tool handler
+  no longer needs to reach outside itself at all.
+- **Tests, rewritten, not just extended (why):** the previous
+  `daily-forecast-card.test.ts` asserted things like "a paper row's
+  rendered HTML has no location/deadline" against
+  `renderDailyForecastCard(result)` — a function that no longer exists,
+  because a static template can't render *any* specific item's data
+  server-side by design. Rewrote around what's actually true now, in two
+  layers: (a) the static shell (`buildDailyForecastWidgetHtml()`) —
+  palette, no Save/Expand text, bridge wiring present, **byte-identical
+  across two calls** (this is the literal regression test for the bug); (b)
+  the embedded script's *real behavior* — executed via Node's `vm` module
+  (`vm.createContext`/`vm.runInContext`) against a minimal `window`/
+  `document` stub, capturing the `message` listener the script registers
+  and firing a synthetic `ui/notifications/tool-result` event at it exactly
+  as the host would, then asserting on the resulting DOM. This is genuine
+  behavioral coverage of the client-side logic, not a substring check on
+  generated source — it would catch a real bug in `WIDGET_SCRIPT` (RULING 4
+  violation, broken escaping, wrong message-source filtering) that a
+  string-contains assertion could miss. 13 tests total.
+- **Stronger proof, added to `route.test.ts`:** three new tests drive the
+  *real* MCP dispatch (`McpServer.registerTool`/`registerResource` via the
+  actual route, mocking only the pipeline layer underneath, same mocks
+  `get-daily-forecast.test.ts` uses) — `tools/list` shows both tools with
+  `get_daily_forecast`'s `_meta["openai/outputTemplate"]` pointing at the
+  card URI; `tools/call` for `get_daily_forecast` returns real
+  `structuredContent` + non-empty text; `resources/read` for the card URI
+  returns the static shell and **explicitly asserts it does NOT contain the
+  test fixture's item title** — the literal, protocol-level proof that the
+  fix works, since the old design's exact failure mode was "the resource
+  either has stale/wrong data or none at all, depending on request
+  routing." This is precisely the kind of check a fresh-server-per-request
+  bug could hide from mocked unit tests alone; a route-level test was
+  necessary, not optional, for this specific item.
+- Gate after this item: **658 passed | 1 skipped (659), 79 files + 1
+  skipped (80)** — +13 (`daily-forecast-card.test.ts`, rewritten in place,
+  net file count unchanged since it already existed) +3 (`route.test.ts`,
+  extended). 642+13+3=658, matches.
+- Blast radius: `web/src/lib/mcp/server.ts` is the only previously-shipped
+  file materially restructured this round (removed the closure, simplified
+  the resource registration) — re-ran every test that touches it
+  (`route.test.ts`, `get-daily-forecast.test.ts`, `get-opportunity.test.ts`)
+  and the full suite; all green.
+- **For A, specifically:** this is the item most likely to look different
+  on a real host than in tests. The `vm`-sandbox test proves the bridge
+  *logic* is correct in isolation; it cannot prove ChatGPT/Claude actually
+  deliver a `ui/notifications/tool-result` message in the exact shape
+  assumed, or that `text/html;profile=mcp-app` is accepted by every host
+  that claims Apps-SDK/MCP-UI support (Claude's own custom-connector
+  rendering path in particular — HANDOFF's own criterion 4 — is a different
+  client than ChatGPT and NEEDS LOCAL VERIFY either way). If the card
+  renders blank/stuck-on-"Loading…" in a real host, the first thing to
+  check is whether that host's bridge uses a different notification method
+  name or delivers data a different way than the docs this round described
+  — not this code's RULING-4/escaping logic, which has real, executed
+  coverage.

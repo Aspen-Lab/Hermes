@@ -1,4 +1,29 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Pipeline-layer mocks so a real tools/call for get_daily_forecast can
+// succeed through the actual MCP dispatch (McpServer -> registerPeerTools
+// -> get-daily-forecast.ts), not just at the unit level. This is what lets
+// the tests below prove the tool<->widget data path end to end.
+const mocks = vi.hoisted(() => ({
+  maybeSingle: vi.fn(),
+  profileRowToProfile: vi.fn(),
+  runFeedPipeline: vi.fn(),
+  runJobsPipeline: vi.fn(),
+  runEventsPipeline: vi.fn(),
+  scoredItemToPaper: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: () => ({
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.maybeSingle }) }) }),
+  }),
+}));
+vi.mock("@/app/api/profile/route", () => ({ profileRowToProfile: mocks.profileRowToProfile }));
+vi.mock("@/lib/feed/pipeline", () => ({ runFeedPipeline: mocks.runFeedPipeline }));
+vi.mock("@/lib/jobs/pipeline", () => ({ runJobsPipeline: mocks.runJobsPipeline }));
+vi.mock("@/lib/events/pipeline", () => ({ runEventsPipeline: mocks.runEventsPipeline }));
+vi.mock("@/lib/feed/mapper", () => ({ scoredItemToPaper: mocks.scoredItemToPaper }));
+
 import { POST } from "./route";
 
 // Fixtures only — never a real slug or a real Supabase user id (RULING 2,
@@ -13,6 +38,7 @@ function stubDevAuthEnv() {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.clearAllMocks();
 });
 
 // This is the exact request A's own "Fixture/protocol pass" method (see
@@ -98,5 +124,107 @@ describe("POST /api/mcp/[slug]", () => {
       params: Promise.resolve({ slug: FIXTURE_SLUG }),
     });
     expect(res.status).toBe(404);
+  });
+});
+
+// 1-03+1-04+1-09: proves the tool<->widget data path through the REAL MCP
+// dispatch (McpServer.registerTool/registerResource, not just unit-level
+// function calls) -- exactly the gap that hid the original closure-based
+// design's bug (a resources/read call never actually shares a server
+// instance with the tools/call that preceded it, since each request builds
+// a fresh McpServer; only a protocol-level test through the route can catch
+// that class of problem).
+function jsonRpcRequest(method: string, params: unknown, id = 2): Request {
+  return new Request(`http://localhost/api/mcp/${FIXTURE_SLUG}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
+  });
+}
+
+async function callRoute(request: Request): Promise<Record<string, unknown>> {
+  const res = await POST(request, { params: Promise.resolve({ slug: FIXTURE_SLUG }) });
+  expect(res.status).toBe(200);
+  const contentType = res.headers.get("content-type") ?? "";
+  if (contentType.includes("text/event-stream")) {
+    const text = await res.text();
+    const dataLine = text.split("\n").find((line) => line.startsWith("data:"));
+    if (!dataLine) throw new Error(`no data: line in SSE body: ${text}`);
+    return JSON.parse(dataLine.slice("data:".length).trim());
+  }
+  return res.json();
+}
+
+const FIXTURE_JOB = {
+  id: "remotive:proto-a",
+  roleTitle: "Protocol Test Job",
+  companyOrLab: "Co",
+  location: "Remote",
+  isRemote: true,
+  keyRequirements: [],
+  matchReason: "m",
+  relevanceScore: 0.9,
+  linkPosting: "https://x/proto-a",
+};
+
+describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () => {
+  it("tools/list surfaces both tools, and get_daily_forecast's _meta points at the widget resource", async () => {
+    stubDevAuthEnv();
+    const body = await callRoute(jsonRpcRequest("tools/list", {}));
+    const result = body.result as { tools: Array<Record<string, unknown>> };
+    const names = result.tools.map((t) => t.name);
+    expect(names).toContain("get_daily_forecast");
+    expect(names).toContain("get_opportunity");
+
+    const forecastTool = result.tools.find((t) => t.name === "get_daily_forecast")!;
+    const meta = forecastTool._meta as Record<string, unknown>;
+    expect(meta["openai/outputTemplate"]).toBe("ui://peer/daily-forecast-card.html");
+  });
+
+  it("tools/call for get_daily_forecast returns structuredContent and non-empty text content", async () => {
+    stubDevAuthEnv();
+    mocks.maybeSingle.mockResolvedValue({
+      data: { user_id: FIXTURE_USER_ID },
+      error: null,
+    });
+    mocks.profileRowToProfile.mockReturnValue({ researchTopics: ["machine learning"] });
+    mocks.runFeedPipeline.mockResolvedValue({ items: [], meta: {} });
+    mocks.runJobsPipeline.mockResolvedValue({
+      items: [FIXTURE_JOB],
+      pool: [FIXTURE_JOB],
+      facetCounts: {},
+      meta: {},
+    });
+    mocks.runEventsPipeline.mockResolvedValue({ items: [], pool: [], facetCounts: {}, meta: {} });
+
+    const body = await callRoute(
+      jsonRpcRequest("tools/call", { name: "get_daily_forecast", arguments: {} }),
+    );
+    const result = body.result as {
+      content: Array<{ type: string; text: string }>;
+      structuredContent: { items: Array<Record<string, unknown>> };
+    };
+
+    expect(result.content[0].type).toBe("text");
+    expect(result.content[0].text).toContain("Protocol Test Job");
+    expect(result.structuredContent.items).toHaveLength(1);
+    expect(result.structuredContent.items[0].title).toBe("Protocol Test Job");
+  });
+
+  it("resources/read for the card URI returns the static widget shell, independent of any tool call", async () => {
+    stubDevAuthEnv();
+    const body = await callRoute(
+      jsonRpcRequest("resources/read", { uri: "ui://peer/daily-forecast-card.html" }),
+    );
+    const result = body.result as { contents: Array<Record<string, unknown>> };
+    const content = result.contents[0];
+    expect(content.mimeType).toBe("text/html;profile=mcp-app");
+    expect(content.text).toContain("ui/notifications/tool-result");
+    expect(content.text).toContain("#FF520D");
+    // Static -- never contains a specific item's data baked in server-side.
+    expect(content.text).not.toContain("Protocol Test Job");
   });
 });

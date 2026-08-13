@@ -2,7 +2,8 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDailyForecast } from "./tools/get-daily-forecast";
 import { getOpportunity } from "./tools/get-opportunity";
-import type { DailyForecastResult, ForecastItem } from "./types";
+import { buildDailyForecastWidgetHtml, renderDailyForecastText } from "./ui/daily-forecast-card";
+import type { ForecastItem } from "./types";
 
 export interface PeerMcpContext {
   /**
@@ -14,22 +15,7 @@ export interface PeerMcpContext {
   userId: string;
 }
 
-// Placeholder fallback rendering — replaced by the real
-// renderDailyForecastText (1-03+1-04+1-09) once it exists. Honest (real
-// titles/links only, nothing invented), just unpolished; the `content`
-// array is required on every CallToolResult regardless of whether a host
-// can render the `ui://` card, so this can't be deferred entirely to 1-09.
-function simpleForecastSummary(result: DailyForecastResult): string {
-  if (result.items.length === 0) {
-    return "No forecast items today.";
-  }
-  return result.items
-    .map((item) => {
-      const link = item.deepLink ? ` — ${item.deepLink}` : "";
-      return `- [${item.type}] ${item.title}${link}`;
-    })
-    .join("\n");
-}
+const DAILY_FORECAST_CARD_URI = "ui://peer/daily-forecast-card.html";
 
 const getDailyForecastInputShape = {
   type: z
@@ -61,9 +47,10 @@ const getOpportunityInputShape = {
     ),
 };
 
-// Placeholder fallback rendering for a single opportunity — same rationale
-// as simpleForecastSummary above, replaced by 1-03+1-04+1-09's real
-// renderer.
+// get_opportunity has no inline card of its own in M1 — A's frozen
+// criterion 7 / the mockup's screen-2 annotations only ask for a card on
+// get_daily_forecast. This plain-text response is get_opportunity's
+// permanent M1 shape, not a placeholder awaiting a renderer.
 function simpleOpportunitySummary(result: ForecastItem | { found: false; id: string }): string {
   // Plain `in` check, not `"found" in result && result.found === false` --
   // the compound `&&` form defeats TS's narrowing on the fall-through
@@ -93,6 +80,33 @@ function simpleOpportunitySummary(result: ForecastItem | { found: false; id: str
  * than the dev slug entirely) — nothing to scaffold for them yet.
  */
 export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void {
+  // Static template, fetched once by the host and cached ("treat the
+  // resource URI as a cache key" — developers.openai.com/apps-sdk/build/
+  // custom-ux). Its content never depends on any specific tool call, so a
+  // config of `{}` (no mimeType there — mimeType belongs on the returned
+  // content item, matching that doc's own registerResource example) and a
+  // fixed HTML string are correct. Per-call data reaches the widget over
+  // the postMessage bridge (see WIDGET_SCRIPT in daily-forecast-card.ts),
+  // not through this callback.
+  server.registerResource(
+    "daily-forecast-card",
+    DAILY_FORECAST_CARD_URI,
+    {},
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          // Not plain "text/html" (what B's guide said) -- the Apps SDK's
+          // own documented MIME type for a widget resource is
+          // "text/html;profile=mcp-app", confirmed against
+          // developers.openai.com/apps-sdk/build/custom-ux this round.
+          mimeType: "text/html;profile=mcp-app",
+          text: buildDailyForecastWidgetHtml(),
+        },
+      ],
+    }),
+  );
+
   server.registerTool(
     "get_daily_forecast",
     {
@@ -105,11 +119,22 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
         "today, or for a briefing/forecast/digest of opportunities. No " +
         "arguments are required.",
       inputSchema: getDailyForecastInputShape,
+      _meta: {
+        "openai/outputTemplate": DAILY_FORECAST_CARD_URI,
+        "openai/toolInvocation/invoking": "Checking today's Peer forecast…",
+        "openai/toolInvocation/invoked": "Here's today's Peer forecast",
+        "openai/widgetAccessible": true,
+        ui: { resourceUri: DAILY_FORECAST_CARD_URI },
+      },
     },
     async (args) => {
       const result = await getDailyForecast(ctx.userId, args);
+      // structuredContent is exactly what reaches the widget client-side,
+      // over the postMessage bridge, as a ui/notifications/tool-result
+      // notification's `params.structuredContent` -- not through the
+      // resource above at all.
       return {
-        content: [{ type: "text" as const, text: simpleForecastSummary(result) }],
+        content: [{ type: "text" as const, text: renderDailyForecastText(result) }],
         structuredContent: result as unknown as Record<string, unknown>,
       };
     },
