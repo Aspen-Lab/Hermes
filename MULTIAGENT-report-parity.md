@@ -19805,3 +19805,69 @@ grep-and-read above is the entire trace.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-06: item 9, `careers.abbvie.com` — null company, traced, NOT a defect)
+
+**STATUS: DONE. Closes — no fix guide entry, no code change recommended.**
+A explicitly named this "genuinely indistinguishable from 'no candidate was
+ever extracted' without tracing the internal call chain, which is B's job,
+not A's." Traced it.
+
+**A's own census note for this posting:** "title has no 'at Employer'
+phrase; URL slug has no company text either" — i.e. A already checked and
+found no employer-shaped text anywhere in the title, not merely a rejected
+one. B's job here is to determine whether the CURRENT guard chain even has a
+coverage gap that could explain a wrongly-suppressed long-form candidate, or
+whether the guards are irrelevant to this specific null (nothing for them to
+reject).
+
+**Confirmed via controlled construction against the real, unmodified
+`webResultToRawJobItem` (not a live pull) — three cases, isolating exactly
+what the guard chain does and does not do on this host:**
+```
+title "...- AbbVie"          -> company undefined   (bare short brand: correctly rejected)
+title "...- AbbVie Careers"  -> company "AbbVie"     (long form: survives the guard, chrome-strip yields the real name)
+title "...(no employer segment)" -> company undefined (nothing to extract)
+```
+The second case is the load-bearing one: it proves there is **no coverage
+gap** in the current chain that would explain a suppressed LONG-form
+candidate — `looksLikeHostBrand("AbbVie Careers", "careers.abbvie.com")` is
+`false` (13-character normalized candidate against 7/6/3-character labels,
+same one-directional shape as B10-01), so it survives to
+`stripTrailingCareersChrome`, which correctly yields `"AbbVie"`. **If the
+real title had contained AbbVie in any multi-word or suffixed form, it would
+already render correctly today.** Only a BARE, short, host-matching `"AbbVie"`
+segment would be rejected — and that rejection is the guard working exactly
+as designed, the identical shape already confirmed correct for
+`inl.referrals.selectminds.com`/INL, `lco.global`/LCO, `jobs.battery.com`/
+Battery in A's own part 1 controlled tests, round 9.
+
+**Conclusion: this is the same shape as the standing `jobs.lbl.gov`
+precedent, and for the same reason — consistent with, but not proof of,
+suppression, with the balance of evidence now leaning further toward "no
+candidate ever existed."** Combined with A's own direct observation that the
+title carries no employer-shaped text at all (not "a short brand that got
+rejected," but genuinely absent), and this round's confirmation that the
+chain has no gap that would swallow a legitimate long form, there is nothing
+here to recommend fixing. Per B9-01's own confirmed-clean finding, a null
+company already renders true silence, not a placeholder — exactly the
+"defensible nothing" Ruling 32 asks for, already in place. **This closes the
+host-brand guard's trade-off question as a data point, same status as A left
+it, now with the internal call chain traced rather than left as an open
+question** — matching my role's instruction to flag rather than reverse
+something that traces back to working-as-designed behaviour.
+
+**Not flagging `POLICY — manager decides`** — this is not a policy question,
+it is a traced, closed technical finding: no coverage gap exists, and B9-01
+already confirmed the resulting silence is clean. Nothing for the manager to
+rule on here beyond what B8-02 already flagged and A already measured as a
+trade-off rate.
+
+Cleanup: this item's three cases were appended to and run inside
+`zz-round10-b-employer-hostbrand-trace.test.ts` (the same file B10-01 used),
+before that file's deletion, ahead of B10-01's own commit. No product code
+touched. No credential referenced, logged, or written.
+
+Commit follows immediately.
+
