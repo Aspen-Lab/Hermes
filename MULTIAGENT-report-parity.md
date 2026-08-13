@@ -270,19 +270,19 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 04:08 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 (part 4 of the deliberately
-                  split round-9 A turn, plus this turn's own closeout: cross-
-                  parts summary, history-table row, gate verdict, this
-                  handoff). All four parts are now done and independently
-                  measured on real data. Full method and every number for
-                  part 4 is in §4 "Round 9 — Agent A (part 4: same-page
-                  contamination)"; the four-part headline is in §4 "Round 9
-                  — Agent A (summary across parts 1–4)."
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 B: Ruling 32's
+                  required enumeration (B9-01), then a 9-item fix guide
+                  across the employer field, R4 job summaries, and R13
+                  event names, plus the MANAGER CARRY-FORWARD isolation the
+                  manager asked for, answered with a measured number, not
+                  left open). Full detail in §4 "Round 9 — Agent B (B9-01)"
+                  through "(B9-04)" and the cross-items summary entry
+                  immediately after them.
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -290,129 +290,116 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 (part 4 of the deliberately
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 — COMPLETE (all 4 A parts done). Next: B.
-WHOSE TURN:       **B.** Round 9's A turn independently re-measured all four
-                  round-8 residuals on real data (never a fixture this
-                  round). Three of four parts found real, non-zero
-                  differences; find why each still differs and produce a
-                  fix guide, in this order:
+ROUND:            9 — A and B both complete. Next: C.
+WHOSE TURN:       **C.** Round 9 B produced a 9-item fix guide from A's four
+                  parts, per Ruling 32's own required order — the
+                  enumeration first (B9-01, every guard-then-fallback chain
+                  across the job/event report surface), then per-field
+                  items that reference it rather than re-deriving "what
+                  renders after the guard fires." Full detail in §4 "Round
+                  9 — Agent B (B9-01)" through "(B9-04)"; the cross-items
+                  summary entry has the same work order and dependencies
+                  copied below, not re-derived.
 
-                  1. **Employer field, 3 still-wrong real postings out of 11
-                     non-null (27.3%), down from round 8's pre-fix 62.5%.**
-                     Full census in §4 "Round 9 — Agent A (part 1)." The
-                     three wrong ones, by shape: (a) `inl.referrals.
-                     selectminds.com` — renders "Idaho National Laboratory
-                     Careers," a trailing "Careers" chrome word not
-                     stripped from an otherwise-correct name; (b)
-                     `postdocjobs.com` — renders a research-field label
-                     ("Molten Salt Chemical and Electrochemical
-                     Engineering"), not an organisation name at all; (c)
-                     `careerservices.upenn.edu` — renders a topic label
-                     ("Molten Salt Characterization") in place of the
-                     employer named explicitly in the posting's own URL
-                     slug (Oak Ridge National Laboratory) — this exact
-                     posting was flagged unchanged in rounds 8 and 9, a
-                     different, still-unnamed mechanism from every B8-0x
-                     guard. Find each shape's own source, not one shared
-                     regex fix — (a) looks like a stray-suffix cleanup,
-                     (b)/(c) look like the extractor picking a topic/label
-                     field over an organisation field somewhere upstream of
-                     any host-brand guard.
-                  2. **R4 job summaries — isolate the cause before touching
-                     anything.** See the MANAGER CARRY-FORWARD block below,
-                     kept from this turn's part 2 and still unactioned:
-                     summary-bearing rate fell from 36% to 13.8% in the same
-                     measurement that took chrome from 4-of-4 to 0-of-4, and
-                     the two explanations (pool composition vs. the new
-                     floor over-rejecting) were not separated. Do this
-                     first, per that block's own method. Two smaller,
-                     newly-named defects from part 2 to fix once the floor
-                     question is settled: a formatting-strip dash artifact
-                     (`www.aiu.edu`, `"of – charge transfer"`) and an
-                     acronym-collision keyword match letting generic
-                     boilerplate through (`www.lco-cdo.org`'s own "LCO"
-                     initialism matching this profile's unrelated "LCO"
-                     research topic).
-                  3. **R13 event names, 5 of 15 real events confirmed wrong
-                     out of 15 individually scored, 3 not confirmed false.**
-                     Full table in §4 "Round 9 — Agent A (part 3)." All
-                     three of B8-06's own guards fire correctly at the shape
-                     level — this is not a regression — but two specific
-                     live mechanisms outside B8-06's three shapes still
-                     produce wrong names: (a) `looksLikeHostBrand()` misses
-                     a display name whose host's DNS label does not
-                     textually resemble it (`ruggedthz.com` → "Ruggiero
-                     Research Lab" rendered, the site's own blog/brand name,
-                     not the event); (b) `nameFromUrlSlug()`'s fallback
-                     strips a document's file extension but keeps the rest
-                     of the filename as if it were an event name
-                     (`euchems2026.eu` → "ECC102026 POSTERS v2", a posters
-                     PDF's own filename). A third, separate defect, not
-                     host-specific: `eventNameFrom()`'s unconditional
-                     last-resort line (`segments[0] ?? title.trim()`)
-                     returns the raw first title segment even when every
-                     earlier guard in the same call already rejected it —
-                     confirmed by direct call with a controlled all-chrome-
-                     title/no-slug/no-snippet input, not yet observed live.
-                     Two more real wrong names worth a look, not yet
-                     root-caused at all: `sdle.co.il` (rendered name and
-                     URL slug name two different events, in two different
-                     countries) and `internationalbatteryseminar.com`
-                     (renders a bare date, not a name).
-                  4. **Same-page contamination (B8-07/Ruling 29) — no fix
-                     item this round, informational only.** Part 4 confirmed
-                     Ruling 29's shape-1 precondition (sibling `<tr>` rows,
-                     multiple distinct postings, no per-row wrapper) exists
-                     on a real, live page for the first time in four rounds
-                     (`openmc.discourse.group`) — but it did **not**
-                     contaminate the actual selected posting there; an
-                     unrelated, smaller, correctly-scoped candidate is
-                     selected instead, confirmed clean at the `workMode`/
-                     `roleKind`/`summary` field level via the real
-                     pipeline's own live pool item. Shape 2 (flat, unwrapped
-                     siblings) was **not observed** in 15 real postings
-                     across 3 pull configurations — say "not observed," not
-                     "does not occur," per Ruling 31 section 4's own
-                     standard. **Do not open a fix item for either shape
-                     this round** — there is no live counterexample of
-                     actual contamination to design against, exactly as
-                     Ruling 31 already ruled. Full detail in §4 "Round 9 —
-                     Agent A (part 4)."
+                  **Classification: 4 WRONG DATA, 2 WRONG SHAPE, 1 MISSING,
+                  1 POLICY (manager decides, no code yet), 1 not yet
+                  classifiable (root cause unknown, not C's item yet).**
 
-MANAGER CARRY-FORWARD (added 2026-08-13, after reading part 2 — kept here
-                  unchanged, per this turn's own closeout instruction not to
-                  delete it; folded into work item 2 above, but the full
-                  original reasoning stays below for B to read directly):
-                  **part 2's headline number has a second reading nobody has
-                  ruled out.** Chrome in summaries went 4-of-4 → 0-of-4,
-                  which is the win. But the share of postings that carry a
-                  summary *at all* fell from 4 of 11 (36%) to 4 of 29
-                  (13.8%) in the same measurement. A attributed that to
-                  today's pool composition and said so honestly. **That is
-                  plausible and it is not established.** B8-05 shipped a
-                  floor whose whole job is to REJECT sentences, and "the
-                  floor now rejects everything on many more postings" fits
-                  the same two numbers exactly.
-                  **B: separate the two explanations before touching
-                  anything.** Run the current floor against round 8's own
-                  summary-bearing postings, where the before-figure came
-                  from, rather than against a fresh pool — that isolates the
-                  code change from the data change. If the floor is
-                  over-rejecting, this loop traded a wrong value for a
-                  missing one, which is the correct direction by §2's
-                  standard but is still a cost that must be **measured and
-                  named**, not absorbed silently.
+                  1. **B9-02a — `inl.referrals.selectminds.com`'s "Careers"
+                     suffix.** WRONG SHAPE. A narrow, in-file trailing-word
+                     strip inside `jobweb.ts`'s own candidate-building step
+                     — NOT the shared `cleanJobSubtitlePart`, which also
+                     cleans location text and has no evidence motivating a
+                     change there. No dependency; land first.
+                  2. **B9-04 Fix 1 — `eventweb.ts:494`'s `eventNameFrom`
+                     last resort** (`segments[0] ?? title.trim()` can return
+                     a segment already rejected earlier in the same call).
+                     WRONG DATA. Replace with the URL host (preferred) or a
+                     literal placeholder — never a value drawn from the same
+                     rejected pool. No dependency on any other item here.
+                  3. **B9-04 Fix 2 — `enrich.ts:148-155`'s `typedName`
+                     rescue.** WRONG DATA. Currently bypasses all four of
+                     `isChromeSegment`'s checks when an existing test
+                     (`enrich.test.ts:216-224`, SolarPACES-shaped) only
+                     requires bypassing the host-brand one. Fix direction:
+                     thread an additive `skipHostBrand` option through
+                     `isChromeSegment`/`bestEventTitleSegment` (same
+                     convention as B8-04's own `host` parameter) and call
+                     `bestEventTitleSegment` a second time with it, instead
+                     of calling `looksLikeEventTitle` alone. **The
+                     SolarPACES test must still pass unchanged — this is
+                     the item's central risk, not a footnote.** Bundle with
+                     Fix 1 and item 4 below (same file, overlapping test
+                     files).
+                  4. **B9-04's bare-date guard — `"March 15-18, 2027"`
+                     rendering as an event's name** (`internationalbattery
+                     seminar.com`, new this round). MISSING. Add a
+                     date-only-segment check to `isChromeSegment`, reusing
+                     `event-details.ts`'s own existing
+                     `MONTH_PATTERN`/`DAY_PATTERN`/`DATE_TOKEN_PATTERN`
+                     rather than writing a new one. Bundle with items 2-3.
+                  5. **B9-02b/c — `postdocjobs.com`/`careerservices.
+                     upenn.edu`'s topic-label-as-employer** (the latter
+                     unchanged across rounds 8 and 9 both). WRONG DATA.
+                     Needs a new guard; recommended approach reuses the
+                     profile's own matched topics, which requires threading
+                     the topic list into `webResultToRawJobItem`'s caller —
+                     a signature change, confirmed wider than item 1's blast
+                     radius. Scope and risk-assess on its own; do not bundle
+                     with item 1.
+                  6. **B9-03's dash-artifact cleanup** (`www.aiu.edu`, a
+                     stray en-dash). WRONG SHAPE. Group with the
+                     already-open Markdown-link-remnant finding under one
+                     small post-processing pass, rather than two separate
+                     patches. Independent; land whenever convenient.
+                  7. **B9-03's LCO acronym collision** (`www.lco-cdo.org`).
+                     POLICY — manager decides whether a short-acronym
+                     disambiguation rule is worth the complexity, or
+                     whether this is an acceptable, low-frequency cost of
+                     the matcher's deliberately context-free design. No
+                     code to write until the manager rules.
+                  8. **`sdle.co.il`'s name/URL mismatch** — NOT C's item.
+                     Root cause unknown; needs a next-A live single-page
+                     fetch before any fix guide can be written for it.
+
+                  **Same-page contamination (B8-07/Ruling 29): still no fix
+                  item, confirmed by B this turn, not re-opened.**
+                  Spot-checked A's part 4 description against source
+                  (`selectedDomScopes` in `job-posting-scope.ts` does
+                  include `tr` in its recognised tag set, exactly as
+                  described) — matches, no discrepancy, no hunt performed,
+                  per Ruling 32's own parking of Ruling 29.
+
+MANAGER CARRY-FORWARD (ANSWERED this turn — see §4 "Round 9 — Agent B
+                  (B9-03)" for the full method and per-posting table; kept
+                  here as a pointer, not restated, since the open question
+                  itself no longer exists): **both explanations were real,
+                  and neither was the whole story.** Replaying round 8's own
+                  four quoted chrome summaries against today's exact floor
+                  code, directly, not hypothetically: 1 of 4 now empties (a
+                  confirmed, measured instance of the floor's own cost),
+                  1 improves (an artifact sentence is dropped, the good one
+                  kept — not emptied), 2 are unchanged. The floor is not
+                  rejecting everything broadly, so pool composition remains
+                  the larger factor in the 36%→13.8% drop, with the floor's
+                  own share now a measured number rather than an open
+                  question. No code change recommended from this alone.
 
                   Standing, unchanged: **B8-03's `usajobs.ts` fallback**
                   (`"U.S. Federal Government"`) is still an open `POLICY`
-                  question for the manager, not for A or B.
+                  question for the manager, not for A, B, or C.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
-                  non-optional fallback has not fixed anything), and this
-                  round's own **§1r Ruling 31** — still binding for A's own
-                  measurement standard: test the hardest real shape a field
-                  can take, not the easiest one to find.
+                  non-optional fallback has not fixed anything), **§1r
+                  Ruling 31** — still binding for A's own measurement
+                  standard: test the hardest real shape a field can take,
+                  not the easiest one to find. **This round's own §1s
+                  Ruling 32** is now actioned, not merely recorded: no
+                  per-field fallback item without the enumeration first;
+                  B9-01 is that enumeration, done this turn, and every other
+                  item in this turn's guide references it rather than
+                  restating it.
 STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   FULLY LANDED. B8-07 IS LANDED IN PART** — one of Ruling
                   29's two derived markup shapes fixed (sibling `<tr>` rows
@@ -423,16 +410,23 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   result in either direction. **No item reversed a recorded
                   ruling; SolarPACES (Ruling 28) was re-verified live inside
                   B8-02 and remains CLOSED.** Full per-item detail in §4
-                  "Round 8 — Agent C." **Round 9 A has now independently
-                  re-measured all four residuals against real data, in four
-                  parts, across four sessions — see LAST DIFFERENCE below
-                  and §4 "Round 9 — Agent A (summary across parts 1–4)."**
+                  "Round 8 — Agent C." **Round 9 A independently re-measured
+                  all four residuals against real data, in four parts,
+                  across four sessions — see LAST DIFFERENCE below and §4
+                  "Round 9 — Agent A (summary across parts 1–4)." Round 9 B
+                  has now produced the fix guide Ruling 32 required, led by
+                  its own enumeration (B9-01) — see §4 "Round 9 — Agent B
+                  (summary across B9-01–04)" for the full item list,
+                  classification breakdown, and work order for C.**
 LAST DIFFERENCE:  **Employer field: 3 of 11 non-null real postings wrong
                   (27.3%), down from 5 of 8 (62.5%) pre-fix.** **R4 job
                   summaries: 0 of 4 non-empty real summaries carry classic
                   chrome, down from round 8's 4 of 4** — but the summary-
                   bearing rate itself dropped to 4 of 29 (13.8%) from 4 of
-                  11 (36%), cause not yet isolated; 2 of 4 carry a smaller,
+                  11 (36%) — cause now isolated by B this round (see the
+                  MANAGER CARRY-FORWARD line above): both pool composition
+                  and the floor's own cost are real, the floor's own share
+                  now measured, not merely asserted; 2 of 4 carry a smaller,
                   newly-observed defect. **R13 event names: 15 real events
                   scored individually — 7 correct, 5 confirmed wrong, 3 not
                   confirmed false**, both originally-cited hosts still wrong
