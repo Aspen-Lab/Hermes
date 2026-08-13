@@ -2048,3 +2048,412 @@ stays empty too, unchanged since round 1/2.)
   traced to the OpenAlex API itself returning an empty `display_name` at
   the source, not a Peer mapping bug): no new evidence this round. Still
   not counted as a difference against any M1 or M2 criterion.
+
+---
+
+#### Round 3 — Agent B
+
+**Method:** `git pull --ff-only` (already up to date). Read the full state
+file start to end: §0 resume playbook, all 10 rulings (§1b–§1k), §2 role
+contracts, §3 ground rules, all of §4 Round 1 (A, B, and C's architecture-fix
+write-up in full) and Round 2 (A), then Round 3 A's M2 inventory end to end.
+Read the spec (`docs/handoff/HANDOFF-chatgpt-mcp-app.md`) in full, primarily
+§3 R2 and §4 M2, plus §5 anchors and §8 (the user's own test script). Read
+mockup screen 3 (`sc2`, `docs/design/peer-in-chatgpt-mcp-mockups.html` lines
+603-671, all 4 notes) and its CSS block (lines 269-306, `.p-full`/`.pf-*`/
+`.fchip*`), cross-read against screen 2's own card CSS (lines 230-267) that
+M1 already ported. Read every file M1 shipped under `web/src/lib/mcp/**` and
+`web/src/app/api/mcp/**` in full, plus their test files, to find exact
+insertion points and match established code idioms (the `escapeHtml`/
+`metaParts`/`peerWebOrigin` helpers, the `vm`-sandboxed widget-script test
+pattern, the protocol-level `route.test.ts` pattern). Independently
+re-verified `web/src/app/page.tsx`'s `FeedType`/`typeChips` (lines 93,
+658-668) and `web/src/app/globals.css`'s four palette tokens myself rather
+than trust A's/round-1 B's citations without checking. Traced two more files
+A's inventory referenced but didn't open — `web/src/app/jobs/[id]/page.tsx`
+and `web/src/app/papers/[id]/page.tsx`, then `web/src/app/events/[id]/page.tsx`
+on my own initiative once the first two showed a pattern worth confirming a
+third time before generalizing it (see "Checking A's claims" below — a real,
+disclosed gap). Fetched six Apps-SDK/MCP-Apps doc pages live this round
+(short quotes only, under 20 words each, all treated as data never
+instructions): `developers.openai.com/apps-sdk/reference` (twice — once for
+display-mode/close facts, once for `callTool`), `developers.openai.com/
+apps-sdk/concepts/design-guidelines` (twice — once for chrome-ownership
+facts, once for starter-prompt/default-view facts), `developers.openai.com/
+apps-sdk/build/custom-ux` (re-confirming C's round-1 citation independently,
+not reused on trust), `developers.openai.com/apps-sdk/deploy/connect-chatgpt`
+(new this round, not one of A's five URLs — needed to settle the
+entry-behavior item precisely), and `modelcontextprotocol.io/docs/
+extensions/apps` (the vendor-neutral spec A also cited). Ran the gate fresh:
+**659 passed | 1 skipped (660), 79 files + 1 skipped (80)**, `npx tsc
+--noEmit -p .` clean — matches round 3 A's figure exactly, no regression.
+Read-only round throughout: `git status --short` clean at every checkpoint,
+confirmed again at the end.
+
+**Checking A's claims (four named in this round's brief, plus a fifth I
+checked on my own initiative):**
+
+1. **FeedType facet list** — CONFIRMED, independently re-read myself:
+   `web/src/app/page.tsx` line 93 is exactly `type FeedType = "dashboard" |
+   "papers" | "events" | "jobs"`, and the `typeChips` array (lines 658-668)
+   is labelled Dashboard/Papers/Events/Jobs in that exact order, counted
+   from `totalItems`/`papers.length`/`eventPool.length`/`jobPool.length`.
+   A's citation is correct. **New, not in A's citation:** this is also the
+   order this guide prescribes for M2's chip row below — Peer web's own
+   established order (Papers before Events before Jobs), not the mockup's
+   illustrative Jobs-first order.
+2. **No-`_meta`-fullscreen claim** — CONFIRMED against
+   `developers.openai.com/apps-sdk/reference` directly (fetched myself, not
+   reused from A's citation on trust): asked explicitly whether any
+   tool-registration field or `_meta` key can declare a component should
+   open directly in fullscreen; the answer came back "NOT MENTIONED... does
+   not describe any `_meta` field or tool registration option." Independently
+   re-confirmed on `developers.openai.com/apps-sdk/concepts/design-guidelines`,
+   which states plainly: **"Every app initially appears inline."** A's claim
+   holds, and this second quote is a stronger, more direct confirmation than
+   what A had.
+3. **System-close claim** — CONFIRMED against `developers.openai.com/
+   apps-sdk/concepts/design-guidelines` directly: **"System close: Closes
+   the sheet or view."** Also confirmed the composer half of the same
+   claim: **"ChatGPT's native composer, allowing the user to follow up in
+   the context of the fullscreen view"** — host-provided, not ours to draw.
+   **Independent second line of evidence A didn't have:** the mockup's own
+   CSS backs this up visually — `.pf-composer` (mockup lines 300-305) is
+   styled `background:#FFFFFF` / `border:#E3E3E6` / `color:#9A9AA2`, which
+   matches none of Peer's fixed warm-palette values anywhere else in the
+   file; it's drawn in generic host-chrome grey/white, consistent with the
+   mockup's own `n-host` tag on that note (note 3) and inconsistent with
+   every other Peer-drawn element on the same screen, which all use the
+   warm-palette hex values. Two independent sources — OpenAI's docs, the
+   mockup's own styling choice — agree.
+4. **`profile.displayName` reuse claim** — CONFIRMED, re-read myself:
+   `web/src/types/index.ts` line 271 is exactly `displayName: string;` on
+   the `Profile` interface, and `web/src/app/api/profile/route.ts` line 52
+   is exactly `displayName: row.display_name ?? undefined` inside
+   `profileRowToProfile` — the same function `get-daily-forecast.ts`
+   already calls. A's line citations are both correct. **One nuance A
+   didn't flag:** because of the `?? undefined`, `displayName` is genuinely
+   optional at the type level (a user who never set one gets `undefined`,
+   not an empty string) — item 3-07 below prescribes a true, non-placeholder
+   fallback for this.
+5. **A's own criterion 9 said building `open_home`'s registration is "the
+   exact, already-proven shape `get_daily_forecast` uses" — true, but A
+   didn't check whether a widget can actually *trigger* that shape from
+   inside another widget**, which 3-03's Expand wiring needs. Checked this
+   round, on my own initiative: it can. `developers.openai.com/apps-sdk/
+   reference` documents **`window.openai.callTool(name, args)`** — "Invoke
+   another MCP tool from the widget." Confirmed live this round, not in A's
+   or C's prior research at all. Its effect on what re-renders afterward is
+   genuinely undocumented (see 3-03/3-05 below); this guide is written
+   defensively around that gap, not assuming an answer.
+
+No error found in any of A's four flagged claims this round — all confirmed
+correct on independent re-check, not just re-read. Two things turned out
+**more constrained than A's inventory language implied**, both real, both
+material to this guide, neither a "someone was wrong" finding so much as a
+"the docs/code say less than hoped" finding:
+
+- **Entry behavior's "app metadata/starter prompts" half is not just
+  unbuilt — it isn't a configurable surface at all for a dev-mode custom
+  connector**, confirmed against `developers.openai.com/apps-sdk/deploy/
+  connect-chatgpt` (new this round): creating a custom connector exposes
+  exactly **"user-facing name and description"** plus a connection-method
+  choice — nothing else. The one "starter prompts" mention on that whole
+  page is scoped explicitly to **published** plugins/apps, and publishing to
+  the app directory is out of scope for this loop per HANDOFF §10 ("a launch
+  decision, after M5"). See item 3-06.
+- **Per-card "Open in Peer" deep links can't safely point at Peer web's own
+  `/jobs/[id]` or `/events/[id]` pages.** Traced all three per-type detail
+  pages myself (A's inventory didn't open any of them):
+  `web/src/app/jobs/[id]/page.tsx` (lines 680-683) and
+  `web/src/app/events/[id]/page.tsx` (lines 1046-1048) both resolve their
+  item purely from client-side Zustand store state (`useFeedStore`'s
+  `feedJobs`/`jobPool`/`savedJobs` or `feedEvents`/`eventPool`/`savedEvents`)
+  with **no fetch-by-id fallback** — a cold external click (arriving from a
+  ChatGPT/Claude widget with no prior Peer browser session) would render an
+  empty/not-found page. `web/src/app/papers/[id]/page.tsx` (lines 633-641)
+  is different and safe: it has a real `shouldFetchById` →
+  `apiFetch('/api/papers/' + id)` path for `arxiv:`/`openalex:` ids
+  specifically — which, per RULING 6, is the only paper-id shape M1/M2 can
+  ever produce. See item 3-04/3-11 below — this is exactly the "a wrong
+  value outranks a gap" case B's role contract asks me to prioritize.
+
+**New framework/doc facts, verified this round (cite before prescribing, per
+B's role contract):**
+
+- **`window.openai.requestDisplayMode({mode})`** — runtime-only promotion
+  API, exact signature confirmed via a live example on the reference page:
+  `await window.openai?.requestDisplayMode({ mode: "fullscreen" })`. Modes:
+  inline / picture-in-picture / fullscreen. Return value and failure/denial
+  behavior are **not documented**; the one behavioral hint present is "on
+  mobile, picture-in-picture may be presented as fullscreen" — i.e. the host
+  is documented as free to silently substitute a different mode than
+  requested. No subscription/event API for reacting to a later mode change
+  is documented anywhere fetched (checked `reference` and `build/custom-ux`
+  both, specifically for this).
+- **`window.openai.displayMode`** — a readable/subscribable "environment
+  signal," read via a `useOpenAiGlobal` helper per the reference page — a
+  React-flavored primitive; M1's widgets are plain vanilla JS (no bundler
+  for widget assets, per C's round-1 note), so this guide doesn't depend on
+  it. See 3-01 for how the design below avoids needing it.
+- **`window.openai.requestClose()`** — "Call `window.openai.requestClose()`
+  to ask ChatGPT to close the current UI." A **widget-initiated** close
+  request, confirmed to exist, distinct from the host's own "System close"
+  chrome. Not used by this guide's default design (see 3-01's close-button
+  reasoning) but named here because it's the documented escape hatch if a
+  later round needs one.
+- **`window.openai.callTool(name, args)`** — "Invoke another MCP tool from
+  the widget." Confirmed to exist; its effect on what the host renders
+  afterward (does it refresh the currently-mounted widget, open a second
+  one, or just return data with no rendering change?) is **not documented**
+  anywhere fetched. Central to 3-03 and 3-05 below — both written
+  defensively around this gap, not assuming an answer either way.
+- **Static-template architecture, re-confirmed independently** (not reused
+  from C's or Round 2 A's citation without checking) —
+  `developers.openai.com/apps-sdk/build/custom-ux`, fetched fresh this
+  round: **"Treat the resource URI as a cache key. When you make a breaking
+  change to the HTML, JavaScript, or CSS, publish a new URI and update every
+  tool that references it."** Confirms C's round-1 finding exactly, and
+  settles this guide's first design decision (below): a second,
+  separately-addressable `ui://` resource for the fullscreen home, not a
+  display-mode-branching single resource — a resource callback has no
+  display-mode parameter available to branch on in the first place
+  (`registerResource`'s callback signature, confirmed by reading
+  `server.ts`, is `async (uri) => ({contents})`, nothing else), so "one
+  resource, display-mode-aware" was never actually buildable against this
+  SDK's real API, independent of any style preference.
+- **MCP Apps, vendor-neutral spec** (`modelcontextprotocol.io/docs/
+  extensions/apps`, fetched fresh) — corroborates the same architecture from
+  the protocol side, not just OpenAI's client-specific docs: a tool declares
+  `_meta.ui.resourceUri`; the host fetches that resource once; app↔host data
+  after that flows over "its own dialect of MCP" built on `postMessage`, and
+  the documented sequence for a widget-initiated follow-up (`App->>Agent:
+  tools/call request` … `Agent-->>App: fresh data` … "App updates with new
+  data") shows the **same app instance** receiving fresh data back after its
+  own tool-call request — consistent with (though not proof of the exact
+  mechanism for) the design in 3-05. Also newly confirms **Claude and Claude
+  Desktop are both supported MCP-Apps clients today**, alongside VS Code
+  Copilot, M365 Copilot, Goose, Postman, MCPJam, Archestra — useful context
+  for HANDOFF's own "ChatGPT primary, Claude second host" framing; nothing
+  in this list contradicts that framing.
+
+---
+
+**Design decision 1 (task-required): a second `ui://` resource, not a
+display-mode-aware single resource.**
+
+Building `ui://peer/daily-forecast-home.html` as its own static template +
+its own `registerResource` call, separate from the card's
+`ui://peer/daily-forecast-card.html`. Reasons, in order of weight:
+
+1. **Not buildable the other way, independent of preference.** A
+   `registerResource` callback's only argument is the requested `uri`
+   (confirmed reading `server.ts`'s existing registration and the SDK's own
+   types) — there is no display-mode, no request context, nothing to branch
+   on. A single resource "aware" of display mode would have to mean baking
+   *both* the compact card's markup and the full home's markup into one
+   HTML/JS payload and toggling visibility client-side with CSS — which
+   duplicates all of the same rendering logic into one file for zero benefit
+   over two small, clean files, since the payload-size cost is paid either
+   way (the resource is fetched once and cached regardless of which parts
+   get displayed).
+2. **The existing architecture already routes by tool, not by mode.**
+   `get_daily_forecast`'s `_meta.outputTemplate` points at the card; a new
+   tool's `_meta.outputTemplate` pointing at the home resource is the same,
+   already-proven, already-tested mechanism (M1's own two-tool,
+   one-resource-each pattern) doing the routing — model calls
+   `get_daily_forecast` → gets the card; model calls `open_home` → gets the
+   home. Zero new architectural surface.
+3. **Matches A's own criterion 1 framing** ("a new `ui://` widget resource
+   for the Daily Forecast home, same static-template + postMessage-bridge
+   architecture as M1's card").
+
+**Host chrome vs. Peer content, verified against the docs the state file's
+TODO named plus one more (`deploy/connect-chatgpt`, needed for a precise
+answer on item 3-06):**
+
+| Element | Who draws it | Evidence |
+|---|---|---|
+| "System close" (closes the fullscreen view) | **Host** | `design-guidelines`: "System close: Closes the sheet or view." |
+| Bottom composer (chat input, stays live during fullscreen) | **Host** | `design-guidelines`: "ChatGPT's native composer…"; independently, the mockup's own `.pf-composer` CSS uses non-Peer colors and is tagged `n-host` (note 3) — two agreeing sources. |
+| Top bar mark / "Peer · Daily Forecast" label / "Open in Peer ↗" | **Peer** (nothing else knows Peer's own branding or web URL) | By elimination — not covered by either "System close" or "Composer," the only two host-chrome elements the docs name; matches mockup pins 1/2/4 (all `n-peer`), pin 3 (`n-host`) landing only on the composer. |
+
+**Prescription: do not draw a close button (✕) in the fullscreen widget.**
+The mockup's own "✕" glyph is not tagged by any of its 4 notes — genuinely
+ambiguous in the mockup alone — but ChatGPT's own docs resolve it: fullscreen
+already gets a System close from the host, so a second, Peer-drawn one would
+be a redundant, possibly-conflicting affordance. **Caveat, not fully
+closed:** this finding comes from OpenAI's ChatGPT-specific docs; Claude is
+also a supported MCP-Apps host (confirmed above) and its own fullscreen
+chrome contract is not documented anywhere fetched. If the user's HANDOFF §8
+step 5 Claude cross-check finds no way to leave Claude's fullscreen view,
+that's a `HOST LIMIT — documented` per RULING 3, and the fix is small and
+additive (a Peer-drawn close affordance calling the documented
+`window.openai.requestClose()`, shown only where needed) — not a reason to
+hold this item now on ChatGPT-verified evidence.
+
+**Promotion from inline mount.** Confirmed independently (not reused from A
+without checking): no `_meta` field declares fullscreen at registration —
+"Every app initially appears inline" (`design-guidelines`, quoted above). So
+`open_home`'s widget **always** flashes inline first, then its own script
+calls `window.openai.requestDisplayMode({mode:"fullscreen"})` unconditionally
+on mount — this is the only path that exists. **The card's widget script
+must never call this** — only the home widget's script does; promoting a
+card the user only asked a quick question with would defeat the point of
+having a compact view at all.
+
+**Graceful degradation on hosts without fullscreen support.** No doc
+anywhere states what happens if a host ignores or can't honor the request
+(checked `reference` and `build/custom-ux` both, specifically for this — not
+covered). Since the one documented behavior in this area is that a host is
+already free to silently substitute a different mode ("on mobile,
+picture-in-picture may be presented as fullscreen"), treat an unhonored
+request the same way: don't branch on success/failure at all (there is no
+confirmed way to detect it), and instead make the *same* HTML/CSS render
+acceptably at inline-card width too — a responsive, not
+fixed-fullscreen-only, layout (concrete CSS in 3-04). "Graceful" here means
+"never a broken state by construction," not "detect and adapt" — there's
+nothing documented to detect.
+
+---
+
+**Contract to build to.**
+
+`open_home` — **input:** `{ type?: "job"|"paper"|"event" }` (same optional
+filter `get_daily_forecast` accepts; omit for the merged/"All" view — what
+"open my Peer home" means by default). **No `limit` parameter** —
+deliberately not model-facing; internally always requests the existing
+`MAX_LIMIT` ceiling (30, already defined in `get-daily-forecast.ts`), because
+"open my home" means the full view, not the ~9-item default the inline card
+uses. **Output:** the exact same `DailyForecastResult` shape
+`get_daily_forecast` already returns (`{date, generatedAt, counts, items}`,
+plus one new optional field — see 3-07) — this is a parameter-shaping
+wrapper around the existing function, not new business logic:
+
+```ts
+// web/src/lib/mcp/tools/open-home.ts
+import { getDailyForecast, MAX_LIMIT } from "./get-daily-forecast";
+import type { DailyForecastResult, ForecastItemType } from "../types";
+
+export interface OpenHomeInput {
+  type?: ForecastItemType;
+}
+
+export async function openHome(
+  userId: string,
+  input: OpenHomeInput = {},
+): Promise<DailyForecastResult> {
+  return getDailyForecast(userId, { type: input.type, limit: MAX_LIMIT });
+}
+```
+
+Requires exactly one change to an already-shipped file:
+`web/src/lib/mcp/tools/get-daily-forecast.ts` line 24, add `export` to
+`const MAX_LIMIT = 30` (currently module-private). No logic change — every
+one of that file's 9 existing tests stays valid untouched.
+
+**Design tension (a) — filter-chip counts when a type filter is active**
+(A's own flagged tension, resolved here, not left to C to guess).
+
+The problem, verified by reading `get-daily-forecast.ts` directly:
+`getDailyForecast(userId, {type:"job"})` skips the papers/events lanes
+entirely (`wantsType` short-circuits them to `Promise.resolve(null)`), so
+that response's `counts.papers`/`counts.events` come back `0` — not
+"unknown," a real, honest `0` for lanes that genuinely didn't run. A chip
+row that just re-renders from the latest tool result's `counts` on every
+refetch would make the other three chips read `· 0` the moment any one chip
+is clicked.
+
+**Prescription, consistent with RULING 8 as directed:**
+
+1. Chip **labels** always render from an **unfiltered** call's `counts` —
+   the true "pre-slice merged pool" numbers RULING 8 already defines. Cache
+   them client-side the first time they're seen (`latestCounts` below); do
+   not let a filtered call's zeroed-out counts overwrite the cache.
+2. The header **sub-line** (not the chips) reflects the *currently active*
+   selection's own `shown`/`total`, using RULING 8's existing fields with no
+   redefinition:
+   - `shown === total` → `"{shown} {typeLabel} today"` (no "of total" —
+     nothing was hidden; this is always true when filtered, since a single
+     lane's own pool is already capped at the same `limit` the merge would
+     apply, so filtering never actually hides anything the pool itself had
+     more of. The same branch also covers the rare unfiltered case where
+     the whole merged pool fits under the limit.)
+   - `shown < total` → `"{shown} shown of {total} considered today"` — the
+     honest, RULING-8-consistent phrasing; never overclaims "everything,"
+     per this guide's own directive under tension (b) below.
+3. **Mechanism** (client-side JS, inside the new widget script — full
+   context in 3-05):
+
+   ```js
+   var latestCounts = null; // unfiltered counts, cached across chip clicks
+   var activeType = null;   // null = "All"
+
+   function render(result) {
+     if (result && result.counts && (!activeType || latestCounts === null)) {
+       // Refresh the cache whenever this result IS the unfiltered one, or
+       // (defensively) when nothing has been cached yet at all -- e.g. if a
+       // future caller ever opens open_home pre-filtered as its first call.
+       latestCounts = result.counts;
+     }
+     renderChips();
+     renderHeader(result);
+     renderGrid(result);
+   }
+   ```
+
+4. Chip clicks call `window.openai.callTool("open_home", activeType ?
+   {type: activeType} : {})` — the **same** tool whose template is already
+   mounted (not `get_daily_forecast`, whose `_meta.outputTemplate` points at
+   the card instead) — the more self-consistent choice given `callTool`'s
+   effect on rendering is undocumented (see the framework-facts note above);
+   calling the tool that owns the currently-mounted resource is the smallest
+   assumption. Whatever comes back is expected to reach the **same**
+   `ui/notifications/tool-result` listener already wired for the initial
+   mount — reusing that one proven code path for every data update, initial
+   or refetch, rather than depending on `callTool`'s own promise-resolution
+   shape (undocumented) as a second, parallel data path. **NEEDS LOCAL
+   VERIFY**, named precisely: does a widget-initiated `callTool` result
+   actually arrive at the same iframe's `message` listener the way the
+   model-initiated original call's result did? If a real host instead only
+   delivers it via the `callTool()` promise's resolved value, `render()` is
+   already written as a plain function of a result object (no dependency on
+   how it was invoked), so wiring a second call site
+   (`window.openai.callTool(...).then(r => render(r.structuredContent))`) is
+   a same-file, few-line follow-up, not a redesign.
+5. **Reassurance, checked, not assumed:** the jobs lane's own daily pool
+   cache is keyed on `{surface, requiredTopics, careerStage,
+   locationPreferences, localDate}` (`derivePoolCacheKey`, confirmed live
+   already in Round 1 B/C's `get-opportunity` work) — the same key whether
+   or not sibling lanes are also being fetched in the same call. So a cached
+   unfiltered `counts.jobs` and a later Jobs-filtered call's own
+   `counts.total` read from the same day's cached pool and will match in
+   practice — the chip label and the sub-line underneath it won't visibly
+   disagree.
+
+**Design tension (b) — `limit` cap vs. "full card list"** (A's own flagged
+tension, resolved here).
+
+`get_daily_forecast`'s `limit` caps the *final merged* slice at whatever's
+requested (max 30, `MAX_LIMIT`); each lane independently pools up to that
+same number before the merge. Peer web's own dashboard total (`totalItems =
+papers.length + eventPool.length + jobPool.length`, `web/src/app/page.tsx`
+line 624) is a true sum of three independently-fetched, unbounded-by-any-
+shared-limit pools — a bigger number than anything `get_daily_forecast` can
+honestly claim today.
+
+**Prescription:** `open_home` requests `limit: MAX_LIMIT` (30) always —
+reusing the existing ceiling, zero new tool code (this is exactly what the
+contract above already does). This is **not** Peer web's true day-pool
+total, and the header must say so honestly rather than imply completeness:
+
+- Never render unqualified language like "your full day's opportunities" or
+  "everything today."
+- Always use the `shown`/`total` framing from tension (a) above, which
+  already encodes "this is what the pool considered, capped at a known
+  ceiling" without needing new copy or a new field.
+- If the manager later wants a true unbounded day-pool count in the
+  fullscreen header specifically, that's an explicit new ruling (RULING 8
+  already flags this as its own open question) — not something this guide
+  decides by default; shipping the honest, capped number now doesn't
+  foreclose it.
