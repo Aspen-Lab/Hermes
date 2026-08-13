@@ -178,10 +178,15 @@ describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () =
     const names = result.tools.map((t) => t.name);
     expect(names).toContain("get_daily_forecast");
     expect(names).toContain("get_opportunity");
+    expect(names).toContain("open_home");
 
     const forecastTool = result.tools.find((t) => t.name === "get_daily_forecast")!;
     const meta = forecastTool._meta as Record<string, unknown>;
     expect(meta["openai/outputTemplate"]).toBe("ui://peer/daily-forecast-card.html");
+
+    const homeTool = result.tools.find((t) => t.name === "open_home")!;
+    const homeMeta = homeTool._meta as Record<string, unknown>;
+    expect(homeMeta["openai/outputTemplate"]).toBe("ui://peer/daily-forecast-home.html");
   });
 
   // 1-06+1-07 (discoverability): the model decides whether to call Peer by
@@ -229,6 +234,34 @@ describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () =
     const body = await callRoute(
       jsonRpcRequest("tools/call", { name: "get_daily_forecast", arguments: {} }),
     );
+    const result = body.result as {
+      content: Array<{ type: string; text: string }>;
+      structuredContent: { items: Array<Record<string, unknown>> };
+    };
+
+    expect(result.content[0].type).toBe("text");
+    expect(result.content[0].text).toContain("Protocol Test Job");
+    expect(result.structuredContent.items).toHaveLength(1);
+    expect(result.structuredContent.items[0].title).toBe("Protocol Test Job");
+  });
+
+  it("tools/call for open_home returns structuredContent and non-empty text content", async () => {
+    stubDevAuthEnv();
+    mocks.maybeSingle.mockResolvedValue({
+      data: { user_id: FIXTURE_USER_ID },
+      error: null,
+    });
+    mocks.profileRowToProfile.mockReturnValue({ researchTopics: ["machine learning"] });
+    mocks.runFeedPipeline.mockResolvedValue({ items: [], meta: {} });
+    mocks.runJobsPipeline.mockResolvedValue({
+      items: [FIXTURE_JOB],
+      pool: [FIXTURE_JOB],
+      facetCounts: {},
+      meta: {},
+    });
+    mocks.runEventsPipeline.mockResolvedValue({ items: [], pool: [], facetCounts: {}, meta: {} });
+
+    const body = await callRoute(jsonRpcRequest("tools/call", { name: "open_home", arguments: {} }));
     const result = body.result as {
       content: Array<{ type: string; text: string }>;
       structuredContent: { items: Array<Record<string, unknown>> };

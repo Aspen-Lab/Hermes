@@ -21,7 +21,7 @@ export interface GetDailyForecastInput {
 }
 
 const DEFAULT_LIMIT = 9;
-const MAX_LIMIT = 30;
+export const MAX_LIMIT = 30;
 
 // RULING 6 (docs/handoff/MULTIAGENT-mcp-app.md §1g) -- M1's papers lane is
 // arxiv + openalex only, temporary, re-decided at M4. This keeps

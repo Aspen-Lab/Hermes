@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDailyForecast } from "./tools/get-daily-forecast";
 import { getOpportunity } from "./tools/get-opportunity";
+import { openHome } from "./tools/open-home";
 import { buildDailyForecastWidgetHtml, renderDailyForecastText } from "./ui/daily-forecast-card";
 import { buildDailyForecastHomeWidgetHtml } from "./ui/daily-forecast-home";
 import type { ForecastItem } from "./types";
@@ -41,6 +42,17 @@ const getDailyForecastInputShape = {
       "Maximum number of items to return, highest relevance first. " +
         "Defaults to 9. Raise this only if the user explicitly asks for " +
         "more than the default view.",
+    ),
+};
+
+const openHomeInputShape = {
+  type: z
+    .enum(["job", "paper", "event"])
+    .optional()
+    .describe(
+      "Restrict the home view to one opportunity type: 'job', 'paper', or " +
+        "'event'. Omit for the merged/'All' view -- what 'open my Peer " +
+        "home' means by default.",
     ),
 };
 
@@ -193,6 +205,40 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
       const result = await getOpportunity(ctx.userId, args);
       return {
         content: [{ type: "text" as const, text: simpleOpportunitySummary(result) }],
+        structuredContent: result as unknown as Record<string, unknown>,
+      };
+    },
+  );
+
+  server.registerTool(
+    "open_home",
+    {
+      title: "Open Peer Daily Forecast Home",
+      description:
+        "Opens Peer's full Daily Forecast home -- the fullscreen surface " +
+        "with every ranked job, paper, and event for today, filterable by " +
+        "type, not just the short inline preview. Call this when the user " +
+        "asks to 'open Peer', 'open my Peer home', 'show my full forecast', " +
+        "or wants to see everything rather than the top few. Answers " +
+        "instantly from the user's existing Peer profile -- no arguments " +
+        "are required and no setup or login step is needed first.",
+      inputSchema: openHomeInputShape,
+      _meta: {
+        "openai/outputTemplate": DAILY_FORECAST_HOME_URI,
+        "openai/toolInvocation/invoking": "Opening your Peer home…",
+        "openai/toolInvocation/invoked": "Here's your Peer home",
+        "openai/widgetAccessible": true,
+        ui: { resourceUri: DAILY_FORECAST_HOME_URI },
+      },
+    },
+    async (args) => {
+      const result = await openHome(ctx.userId, args);
+      // Reuses renderDailyForecastText verbatim -- open_home's
+      // structuredContent is the same DailyForecastResult shape
+      // get_daily_forecast returns, so the same text fallback already
+      // produces a correct result with zero new function.
+      return {
+        content: [{ type: "text" as const, text: renderDailyForecastText(result) }],
         structuredContent: result as unknown as Record<string, unknown>,
       };
     },
