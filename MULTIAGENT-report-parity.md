@@ -270,30 +270,44 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:28 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 C: landed six of
-                  B's nine items — B9-02a, B9-04 Fix 1, B9-04 Fix 2, B9-04's
-                  bare-date guard, B9-02b/c, B9-03's dash/bracket cleanup —
-                  plus a ruled-out log entry for the LCO collision (Ruling
-                  33: accept the cost, build nothing). `sdle.co.il` is the
-                  only item left genuinely open, and it was never C's —
-                  needs A's live single-page fetch first). Full detail in
-                  §4 "Round 9 — Agent C" — one entry per item, in landing
-                  order, plus the LCO ruled-out entry.
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 05:52 UTC (round 10 A:
+                  re-ran the four-part real-data measurement in four
+                  separately-committed parts, scored against round 9 C's six
+                  landed fixes, plus the mandatory `sdle.co.il` live
+                  single-page fetch done first. Full detail in §4 "Round 10
+                  — Agent A (part 1..4)" and the consolidated "Round 10 —
+                  Agent A (summary across parts 1–4, ranked difference list,
+                  gate verdict)" entry immediately after part 4.
 
-                  **MANAGER VERIFIED C's TURN** — see §4 "Round 9 — MANAGER
-                  verification of Agent C". Gate re-run independently (1046
-                  of 1047, only the documented flake). The SolarPACES
-                  regression-lock assertion confirmed **byte-identical**
-                  across the turn, not merely re-passing. `skipHostBrand`
-                  confirmed in source to skip only the two host-brand
-                  checks, with all five content checks still running. Two
-                  observations recorded there, **neither opened as a fix
-                  item** — A needs no extra work for either.
+                  **Headline: every host C's six fixes specifically
+                  targeted no longer shows its *original* defect — the
+                  fixes did what they claimed, confirmed live, not only in
+                  the fixture. But on 4 of those same hosts (2 employer, 2
+                  event-name), a new, differently-shaped wrong value has
+                  taken the old one's place** — expected under-catching by
+                  design, per this round's own brief, reported as findings,
+                  not treated as breakage. Two new findings independently
+                  confirmed by fetching the real live page directly, not
+                  through the pipeline: `careerservices.upenn.edu` renders
+                  `"University of Pennsylvania"` for an Oak Ridge National
+                  Laboratory posting; `postdocjobs.com` renders generic
+                  site boilerplate for an Argonne National Laboratory
+                  posting. `sdle.co.il` is fully **resolved** — the
+                  mismatch is a source-site URL artifact (B9-04's
+                  explanation (b)), not a codebase defect; no reader-facing
+                  wrong data; no fix guide needed for it.
+
+                  Positive confirmations, not just new findings: SolarPACES
+                  regression-lock byte-identical, live, today. The new
+                  bare-hostname event-name last resort has still never
+                  fired on real data. Employer field's wrong-rate kept
+                  falling (round 8 62.5% → round 9 27.3% → round 10 20%).
+                  Ruling 33's acronym tally begins: round 10 = 0 of 3.
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -301,213 +315,157 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 C: landed six of
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 — A, B, and C all complete. Next: round 10, A.
-WHOSE TURN:       **A.** Round 9 C worked B's nine-item guide in the order
-                  given, landing six, ruling out one (per the manager, not
-                  C's own call), and leaving two genuinely not C's to
-                  touch. Full method, hand-verification detail, and new
-                  tests for each are in §4 "Round 9 — Agent C" (one entry
-                  per item — search for "B9-02a", "B9-04 Fix 1", "B9-04 Fix
-                  2", "bare-date", "B9-02b/c", "B9-03", "LCO" in turn).
-                  Gate after the final item: **90 files / 1047 tests, 1046
-                  passing** (the one failure is the documented
-                  `benchmark.test.ts` live-search flake, confirmed on every
-                  gate run this turn, always the same file). TypeScript
-                  clean throughout. ESLint: the one standing `quiz.tsx:46`
-                  error, unchanged throughout. Every item committed and
-                  pushed individually as it finished; nothing batched.
+ROUND:            10 — A complete. Next: round 10, B.
+WHOSE TURN:       **B.** Take A's ranked, numbered difference list — full
+                  text and evidence in §4 "Round 10 — Agent A (summary
+                  across parts 1–4, ranked difference list, gate verdict)"
+                  — and find *why* the build produces each one, per §2. Do
+                  not change code. Ten items, ranked by reader impact (A's
+                  own ranking, not necessarily your fix-priority order):
 
-                  1. **B9-02a — landed.** Trailing "Careers"/"Jobs"/
-                     "Employment"/"Job Openings" chrome stripped from an
-                     otherwise-real employer candidate, applied after the
-                     four existing guards accept it, not before.
-                  2. **B9-04 Fix 1 — landed.** `eventNameFrom`'s absolute
-                     last resort no longer returns a rejected title segment
-                     verbatim; now the URL host, or a literal `"Untitled
-                     event"` placeholder when no URL exists.
-                  3. **B9-04 Fix 2 — landed, SolarPACES re-verified
-                     unchanged.** `enrich.ts`'s `typedName` rescue narrowed
-                     to an additive `skipHostBrand` option on
-                     `isChromeSegment`/`bestEventTitleSegment`, bypassing
-                     only the host-brand check instead of all four.
-                  4. **B9-04's bare-date guard — landed.** A segment that is
-                     only a date (`"March 15-18, 2027"`) is now chrome;
-                     `"SolarPACES 2026"` (contains a year, is not only a
-                     date) confirmed still not affected.
-                  5. **B9-02b/c — landed, narrower change than B's guide
-                     anticipated.** `JobsQuery.topics` already existed and
-                     was simply unused inside `jobweb.ts` — no wider
-                     signature change was needed. New `looksLikeTopicLabel`
-                     guard: candidate exactly equals a profile topic, or
-                     starts with one followed only by a short closed
-                     academic-field vocabulary. Deliberately under-catches
-                     by design (see risk 2 below).
-                  6. **B9-03 — landed.** One rule handles both the
-                     Markdown-`]` remnant (unconditional — no legitimate
-                     prose use of an isolated, space-surrounded `]`) and the
-                     `www.aiu.edu` orphaned dash (conditional on a closed
-                     preposition list — a real em-dash parenthetical has a
-                     legitimate space-surrounded use a bracket never has).
-                  7. **LCO acronym collision — RULED OUT, no code**, per
-                     §1t Ruling 33. Not an open item any more.
-                  8. **`sdle.co.il`'s name/URL mismatch — still not
-                     C's item.** Root cause unknown; needs A's targeted,
-                     single-page live fetch (not through the pipeline)
-                     before any fix guide can be written for it — B9-04's
-                     own instruction, unchanged.
+                  1. **`careerservices.upenn.edu`** — renders `"University
+                     of Pennsylvania"` for an Oak Ridge National Laboratory
+                     posting (confirmed live by direct fetch). B9-02c's own
+                     topic-label defect on this exact host/URL is confirmed
+                     gone; this is a new value.
+                  2. **`postdocjobs.com`** — renders `"Job posted on
+                     PostdocJobs.com"` (confirmed live by direct fetch to
+                     be site boilerplate) for an Argonne National
+                     Laboratory posting. B9-02b's own topic-label defect on
+                     this host is confirmed gone; new value.
+                  3. **`ecs.confex.com`** (new host) — renders `"Call for
+                     Papers"`; confirmed live by direct fetch that the real
+                     event is `"250th ECS Meeting."`
+                  4. **`internationalbatteryseminar.com`** — B9-04's
+                     bare-date guard's own target (`"March 15-18, 2027"`)
+                     is confirmed gone; today renders `"Orlando, FL"` (a
+                     location, not a name) instead.
+                  5. **`ruggedthz.com`** — now renders a lowercase,
+                     narrative-sentence-shaped, humanized URL slug
+                     (`"Ruggiero group attends the 2026 crystal engineering
+                     grc"`); round 9 A itself only produced this exact
+                     string as a controlled, not-observed-live
+                     construction — it is now confirmed live, 2 of 2 pulls.
+                  6. **`employbl.com`'s job summary** — one surviving
+                     sentence stacks a colon-label prefix, a bare Markdown
+                     heading marker, and an orphaned opening bracket ending
+                     in a literal `"[..."` (confirmed byte-exact via direct
+                     file write). Same host round 8 named for colon-label
+                     chrome, recurring with two more defects layered on.
+                  7. **`euagenda.eu`** — flagged, not confirmed: a shorter,
+                     ellipsis-terminated name than round 9's own full
+                     citation for the identical URL. Verification fetch
+                     blocked (HTTP 403); A could not determine whether this
+                     is Peer-side or search-index-side. B has standing to
+                     investigate the codebase side of this that A does not.
+                  8. **`inl.referrals.selectminds.com`'s job summary** —
+                     mild colon-label prefix (`"Multi-Level:"`) ahead of
+                     otherwise-clean prose. Lower severity than 6.
+                  9. **`careers.abbvie.com`** (and the standing
+                     `jobs.lbl.gov` precedent) — null company on an
+                     organisation's own branded subdomain. A data point for
+                     the host-brand guard's trade-off, not a confirmed
+                     defect — genuinely indistinguishable from "no
+                     candidate was ever extracted" without tracing the
+                     internal call chain, which is B's job, not A's.
+                  10. **`sdle.co.il`** — RESOLVED. Explanation (b): a
+                      source-site URL artifact. No fix guide needed;
+                      included for closure, not as an open item.
 
-                  **A's job now: re-run the same four-part real-data
-                  measurement this round's own A did, scored against these
-                  six landed fixes specifically — and watch for the
-                  following, each a place a fixture cannot settle the
-                  question, not a known regression:**
+                  **A pattern worth B's attention, offered as an
+                  observation, not a diagnosis:** items 1, 2, and arguably
+                  4 all share the same general shape Ruling 32 already
+                  named — a guard closes its one specifically-cited defect,
+                  and the fallback chain finds a *different* wrong value to
+                  fill the same slot rather than the real answer or a
+                  defensible silence. Items 1 and 2 look, from the
+                  already-published `looksLikeHostBrand` examples in §4
+                  "Round 9 — Agent A (part 1)," like the same
+                  one-directional length rule that lets a real long-form
+                  employer name survive is also letting the *hosting
+                  platform's own* long-form name survive when it is not
+                  the actual employer — worth checking whether this is one
+                  underlying gap or two unrelated ones, per Ruling 32's own
+                  "enumerate before building" discipline, before writing
+                  per-host guide entries. This is A's read of the shape
+                  from outside the code, not a traced cause — B's own
+                  investigation may find something different.
 
-                  - **`sdle.co.il`** — do the live single-page fetch first
-                    (item 8 above); report which of B9-04's two named
-                    explanations it is before writing any fix guide for it.
-                  - **Employer field** — re-check the three named hosts
-                    directly. Then watch for a DIFFERENT trailing-chrome
-                    word C's closed list doesn't cover, and a DIFFERENT
-                    topic-label shape C's closed continuation vocabulary
-                    (`chemical`/`electrochemical`/`mechanical`/`materials`/
-                    `characterization`/`engineering`/`chemistry`/`science`)
-                    doesn't cover. Both guards were built deliberately
-                    narrow — matched only to the live-confirmed repros, not
-                    a general parser — so a new, differently-shaped wrong
-                    value surviving on real data is expected under-catching,
-                    not evidence either guard is broken. **Also watch for a
-                    bare host brand as an employer** — B9-02a strips the
-                    chrome word *after* the guards run, so a candidate that
-                    only cleared `looksLikeHostBrand` because the chrome was
-                    still attached becomes the host brand once stripped,
-                    unchecked (manager's OBSERVATION 2 in §4; derived from
-                    guard order, zero live instances, deliberately not
-                    built — just report it if you see it).
-                  - **R13 event names — the one real risk worth naming
-                    plainly.** The SolarPACES regression-lock test proves
-                    the one *named* case still rescues after B9-04 Fix 2
-                    narrowed the bypass — it cannot prove no OTHER real
-                    typed event name was relying on the old, wider
-                    `looksLikeEventTitle`-only bypass for a reason unrelated
-                    to host-brand. If a previously-correct real event name
-                    goes missing or degrades, start here. Separately: when
-                    `eventNameFrom`'s absolute last resort actually fires on
-                    real data, the reader now sees a bare hostname where
-                    they used to see wrong data — new, visible behaviour,
-                    not yet observed live; worth a look at whether it reads
-                    sensibly in a rendered report.
-                  - **R4 job summaries** — the `www.aiu.edu` dash and the
-                    Markdown-`]` remnant should both be gone. The dash rule
-                    is gated on a closed preposition list
-                    (`of/to/in/on/for/with/as/by/from/about/into/onto/at`);
-                    a dash orphaned after a different word (a verb, or a
-                    preposition outside this list) will not be caught —
-                    expected under-catching, not a regression.
-                  - **Ruling 33's one-line acronym tally — due starting
-                    this round, do not skip it.** When measuring R4 job
-                    summaries, record whether any surviving sentence's only
-                    keyword evidence was an acronym under 5 characters. One
-                    line, cumulative across rounds — the frequency data
-                    Ruling 33 said does not exist yet.
+                  **Same-page contamination (B8-07/Ruling 29): still
+                  parked, not re-measured this round either, per this
+                  round's own brief and Ruling 32. No B budget implied by
+                  its absence from this list.**
 
-                  **Same-page contamination (B8-07/Ruling 29): still no fix
-                  item, still parked, not re-opened this turn either — no A
-                  budget, per Ruling 32's own instruction.**
-
-MANAGER CARRY-FORWARD (ANSWERED this turn — see §4 "Round 9 — Agent B
-                  (B9-03)" for the full method and per-posting table; kept
-                  here as a pointer, not restated, since the open question
-                  itself no longer exists): **both explanations were real,
-                  and neither was the whole story.** Replaying round 8's own
-                  four quoted chrome summaries against today's exact floor
-                  code, directly, not hypothetically: 1 of 4 now empties (a
-                  confirmed, measured instance of the floor's own cost),
-                  1 improves (an artifact sentence is dropped, the good one
-                  kept — not emptied), 2 are unchanged. The floor is not
-                  rejecting everything broadly, so pool composition remains
-                  the larger factor in the 36%→13.8% drop, with the floor's
-                  own share now a measured number rather than an open
-                  question. No code change recommended from this alone.
-
-                  Standing, unchanged: **B8-03's `usajobs.ts` fallback**
-                  (`"U.S. Federal Government"`) is still an open `POLICY`
-                  question for the manager, not for A, B, or C.
+MANAGER CARRY-FORWARD: none new this turn. Standing, unchanged: **B8-03's
+                  `usajobs.ts` fallback** (`"U.S. Federal Government"`) is
+                  still an open `POLICY` question for the manager, not for
+                  A, B, or C.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
                   non-optional fallback has not fixed anything), **§1r
-                  Ruling 31** — still binding for A's own measurement
-                  standard: test the hardest real shape a field can take,
-                  not the easiest one to find. **§1s Ruling 32** is now
-                  actioned, not merely recorded: no per-field fallback item
-                  without the enumeration first; B9-01 is that enumeration,
-                  and every item in round 9 B's guide referenced it rather
-                  than restating it — C's six landed items all trace back
-                  to it. **§1t Ruling 33** is now also actioned: the
-                  short-acronym collision is a named, accepted cost, not an
-                  open item — C ruled it out with no code this turn, and A's
-                  one-line acronym tally starts round 10 (see WHOSE TURN
-                  above).
-STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
-                  FULLY LANDED. B8-07 IS LANDED IN PART** — one of Ruling
-                  29's two derived markup shapes fixed (sibling `<tr>` rows
-                  with no per-listing wrapper), the other confirmed
-                  reproducible on a fixture and explicitly recorded open
-                  (flat sibling listings, no wrapper tag at all), per
-                  Ruling 31's own instruction not to overclaim a fixture
-                  result in either direction. **No item reversed a recorded
-                  ruling; SolarPACES (Ruling 28) was re-verified live inside
-                  B8-02 and remains CLOSED.** Full per-item detail in §4
-                  "Round 8 — Agent C." **Round 9 A independently re-measured
-                  all four residuals against real data, in four parts,
-                  across four sessions — see LAST DIFFERENCE below and §4
-                  "Round 9 — Agent A (summary across parts 1–4)." Round 9 B
-                  has now produced the fix guide Ruling 32 required, led by
-                  its own enumeration (B9-01) — see §4 "Round 9 — Agent B
-                  (summary across B9-01–04)" for the full item list,
-                  classification breakdown, and work order for C.** **Round
-                  9 C worked that guide in order: six items landed, one
-                  ruled out (LCO, Ruling 33), two left genuinely open for
-                  round 10's A (`sdle.co.il`, plus the standing
-                  `usajobs.ts` policy question below) — see §4 "Round 9 —
-                  Agent C" for the full per-item detail. LAST DIFFERENCE and
-                  GATE below are still round 9 A's own pre-fix measurement,
-                  unchanged by C's work — re-measuring against these six
-                  fixes on real data is round 10 A's own job, not
-                  restated here in advance of that measurement.**
-LAST DIFFERENCE:  **Employer field: 3 of 11 non-null real postings wrong
-                  (27.3%), down from 5 of 8 (62.5%) pre-fix.** **R4 job
-                  summaries: 0 of 4 non-empty real summaries carry classic
-                  chrome, down from round 8's 4 of 4** — but the summary-
-                  bearing rate itself dropped to 4 of 29 (13.8%) from 4 of
-                  11 (36%) — cause now isolated by B this round (see the
-                  MANAGER CARRY-FORWARD line above): both pool composition
-                  and the floor's own cost are real, the floor's own share
-                  now measured, not merely asserted; 2 of 4 carry a smaller,
-                  newly-observed defect. **R13 event names: 15 real events
-                  scored individually — 7 correct, 5 confirmed wrong, 3 not
-                  confirmed false**, both originally-cited hosts still wrong
-                  live via mechanisms outside B8-06's three shapes. **Same-
-                  page contamination: shape 1's precondition confirmed live
-                  for the first time in four rounds, but produced zero
-                  contamination on the one real page found; shape 2 not
-                  observed in 15 real postings.** Full detail for each in
-                  their own §4 "Round 9 — Agent A (part N)" entries; the
-                  four-part headline is in §4 "Round 9 — Agent A (summary
-                  across parts 1–4)."
-GATE (0%):        **NOT MET.** Three of the four parts (employer field, R4
-                  summaries, R13 event names) found real, non-zero
-                  differences on real data this round. Per §2's own
-                  instruction, the gate is set to MET only on zero
-                  unexplained differences — that bar was not met. This is a
-                  normal outcome, not a failure of round 8's work: every
-                  measured number improved from round 8's own pre-fix
-                  baseline (employer field 62.5%→27.3% wrong; summary chrome
-                  4-of-4→0-of-4). Same-page contamination (part 4) is the
-                  one part that found zero contamination on real data this
-                  round — but not zero finding, since it newly confirmed
-                  shape 1's precondition is real and live, which stays
-                  recorded, not treated as closed.
+                  Ruling 31** — binding for B's own investigation standard
+                  too: trace the hardest real shape, not the easiest.
+                  **§1s Ruling 32** — B, read the "pattern worth B's
+                  attention" note above before writing per-host items;
+                  enumerate before building, the same discipline B9-01
+                  established. **§1t Ruling 33** — accepted cost, no
+                  code; A's one-line acronym tally is now running (round 9:
+                  1 of 4; round 10: 0 of 3) and continues every round from
+                  here, unchanged instruction.
+STATUS:           **ROUND 9'S SIX CODE ITEMS (B9-02a, B9-04 FIX 1, B9-04
+                  FIX 2, B9-04's BARE-DATE GUARD, B9-02b/c, B9-03) ARE ALL
+                  LANDED AND MANAGER-VERIFIED** (§4 "Round 9 — MANAGER
+                  verification of Agent C") — gate re-run independently at
+                  1046/1047, SolarPACES regression-lock byte-identical, the
+                  `skipHostBrand` narrowing confirmed in source. **Round 10
+                  A has now independently re-measured all six fixes against
+                  fresh real data, in four separately-committed parts, plus
+                  the `sdle.co.il` live fetch — see LAST DIFFERENCE below
+                  and §4 "Round 10 — Agent A (summary across parts 1–4,
+                  ranked difference list, gate verdict)."** Every original
+                  defect the six fixes targeted is confirmed gone live;
+                  ten differences remain, ranked above, none a regression
+                  in the sense of "something that used to work now
+                  doesn't" — every new-shape finding is on ground the six
+                  fixes were never built to cover. `sdle.co.il` is fully
+                  resolved (not a codebase defect). B8-03's `usajobs.ts`
+                  policy question remains open, untouched this round.
+LAST DIFFERENCE:  **Employer field: 2 of 10 non-null real postings wrong
+                  (20%), down from round 9's 27.3% and round 8's 62.5%
+                  pre-fix** — composition changed, not just the number: the
+                  three originally-targeted hosts' specific defects are
+                  gone, but 2 of those 3 hosts show a new wrong value.
+                  **R4 job summaries: 1 of 3 non-empty real summaries
+                  carries a chrome defect (33%)**, a new stacked shape
+                  (colon-label + Markdown heading marker + orphaned
+                  bracket) on a smaller live sample than round 9's 4-of-29;
+                  the two shapes B9-03 specifically fixed were not observed
+                  in this sample (their host was absent), so "not
+                  observed," not "confirmed still fixed." **R13 event
+                  names: 17 real events scored individually — 7 correct, 5
+                  confirmed wrong, 4 not confirmed false, 1 flagged** —
+                  SolarPACES regression-lock intact; the bare-date guard's
+                  own target confirmed gone but replaced by a new wrong
+                  value on the same host; a previously-only-hypothetical
+                  fallback shape now confirmed live for the first time.
+                  **Same-page contamination: not re-measured this round**,
+                  per Ruling 32 and this round's own brief — stays at round
+                  9's own last reading (parked, not re-opened). Full detail
+                  for each in their own §4 "Round 10 — Agent A (part N)"
+                  entries; the ranked headline is in §4 "Round 10 — Agent A
+                  (summary across parts 1–4, ranked difference list, gate
+                  verdict)."
+GATE (0%):        **NOT MET.** Real, non-zero, live-confirmed differences
+                  found in employer field, R4 summaries, and R13 event
+                  names. Per §2's own instruction, the gate is set to MET
+                  only on zero unexplained differences — that bar was not
+                  met. Not a failure of round 9's work: every host the six
+                  fixes targeted is confirmed clean of its *original*
+                  defect, live; the employer field's wrong-rate kept
+                  falling round over round (62.5%→27.3%→20%). `sdle.co.il`
+                  — the one item left open after round 9 — is now fully
+                  resolved and needs no further gate consideration.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
