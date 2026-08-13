@@ -181,8 +181,41 @@ function isDeniedUrl(rawUrl: string): boolean {
 const GENERIC_PAGE_TITLE_RE =
   /^(?:meeting\s+summary|summary|home|homepage|welcome|index|about(?:\s+us)?|agenda|programme?|schedule|overview|main\s+page|news|events?|conferences?)(?:\s*&\s*[\w\s]{1,24}|\s+(?:and|or)\s+[\w\s]{1,24})?$/i;
 
+/**
+ * B8-06 (round 8): GENERIC_PAGE_TITLE_RE above only recognises ONE exact
+ * generic phrase, optionally plus a connector-joined trailing phrase — it
+ * has no form for two generic words concatenated directly with no
+ * connector, which is exactly how a real page titled bare "Conference
+ * Program" reads (A's own reconfirmed live example, round 6 and round 8
+ * both). Checking this as "every space-separated word is itself one of the
+ * same generic words" (rather than widening the regex into an unreadable
+ * alternation) catches that shape without touching the single-phrase-plus-
+ * connector form above. Requires 2+ words so this stays additive to, not a
+ * replacement for, the exact single-word/single-phrase form
+ * GENERIC_PAGE_TITLE_RE already owns.
+ *
+ * `program(?:me)?s?` deliberately does NOT reuse GENERIC_PAGE_TITLE_RE's own
+ * `programme?` spelling verbatim: verified directly (before writing this)
+ * that `programme?` matches only "programme"/"programm", never the American
+ * "program" — and "Conference Program" (the actual live-confirmed repro) uses
+ * the American spelling. Copying the existing pattern here would have shipped
+ * a check that cannot catch its own named example. Not fixing this same gap
+ * in GENERIC_PAGE_TITLE_RE itself — that form's own bare/connector shape is
+ * not one of this round's three named shapes and has no live evidence behind
+ * it; flagged in the round log for the next A instead of silently expanding
+ * scope.
+ */
+const GENERIC_TITLE_WORD_RE =
+  /^(?:meeting|summary|home|homepage|welcome|index|about|us|agenda|program(?:me)?s?|schedule|overview|main|page|news|events?|conferences?|sessions?|workshops?)$/i;
+
+function isAllGenericWords(candidate: string): boolean {
+  const words = candidate.trim().split(/\s+/).filter(Boolean);
+  return words.length >= 2 && words.every((word) => GENERIC_TITLE_WORD_RE.test(word));
+}
+
 function isGenericPageTitle(candidate: string): boolean {
-  return GENERIC_PAGE_TITLE_RE.test(candidate.trim());
+  const trimmed = candidate.trim();
+  return GENERIC_PAGE_TITLE_RE.test(trimmed) || isAllGenericWords(trimmed);
 }
 
 /**
@@ -253,12 +286,26 @@ function looksLikeArticledHostBrand(candidate: string, host: string): boolean {
  * compare against, matching every other optional-signal convention in this
  * codebase.
  */
+/**
+ * B8-06 (round 8): a served document's own filename with its extension
+ * ("AA ECC10 POSTERS 08072026.xlsx") is neither a page label, an index, nor
+ * a brand — it's a raw filename that happened to be the page's own <title>.
+ * Traced which function this actually passes through before writing
+ * anything: nameFromUrlSlug (below) already strips a trailing extension
+ * before it can return one, so a segment still carrying its extension did
+ * NOT come from the URL-slug fallback — it reaches here, straight from
+ * bestEventTitleSegment's own title-segment split. Narrow and high-
+ * confidence: a real event name essentially never ends this way.
+ */
+const DOCUMENT_FILENAME_RE = /\.(?:pdf|docx?|xlsx?|pptx?|csv|zip)$/i;
+
 function isChromeSegment(segment: string, host: string | undefined): boolean {
   const trimmed = segment.trim();
   if (
     isGenericPageTitle(trimmed) ||
     isEventIndexPage(trimmed) ||
-    /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed)
+    /^[\w\s.-]{0,24}\bevents?$/i.test(trimmed) ||
+    DOCUMENT_FILENAME_RE.test(trimmed)
   ) {
     return true;
   }
@@ -313,6 +360,27 @@ const NARRATIVE_VERB_RE =
 const HEADLINE_PASSIVE_RE =
   /\b(?:deadline|registration|abstract|submission|call\s+for\s+(?:papers|abstracts)|date)\b[^.]{0,30}\b(?:extended|postponed|cancell?ed|delayed|announced|updated|moved|rescheduled|confirmed)\b/i;
 
+/**
+ * B8-06 (round 8): a present-tense, active-voice sentence NAMING an event
+ * ("Ruggiero Group Attends the 2026 Crystal Engineering GRC" — A's own
+ * reconfirmed live example, round 6 and round 8 both) has no "to be"
+ * auxiliary for NARRATIVE_VERB_RE to catch (it isn't a participle) and
+ * matches none of HEADLINE_PASSIVE_RE's closed noun list — simple present
+ * tense is a different grammatical shape from both existing checks. Same
+ * "catch known shapes, not a general parser" practice as HEADLINE_PASSIVE_RE
+ * itself: a small, closed verb list, not "any present-tense verb" (which
+ * would risk rejecting a real terse name that happens to contain a common
+ * verb-shaped word). Anchored to the START of the segment — a leading
+ * Title-Case subject phrase (1-5 words) immediately followed by one of the
+ * verbs — so a long real title that merely contains one of these words well
+ * after its own subject is not caught by accident. Verified directly against
+ * both the confirmed repro and this file's own existing "must not
+ * over-reject" precedents before being written here (see
+ * eventweb.test.ts's "present-tense narrative sentence (B8-06)" block).
+ */
+const PRESENT_NARRATIVE_RE =
+  /^[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,4}\s+(?:[Aa]ttends?|[Aa]nnounces?|[Hh]osts?|[Pp]resents?|[Jj]oins?|[Vv]isits?)\b/;
+
 const MULTI_SENTENCE_RE = /\w{3,}[.!?]\s+[A-Z][a-z]/;
 const MAX_TITLE_WORDS = 20;
 
@@ -321,6 +389,7 @@ export function looksLikeEventTitle(candidate: string): boolean {
   if (!trimmed) return false;
   if (NARRATIVE_VERB_RE.test(trimmed)) return false;
   if (HEADLINE_PASSIVE_RE.test(trimmed)) return false;
+  if (PRESENT_NARRATIVE_RE.test(trimmed)) return false;
   if (MULTI_SENTENCE_RE.test(trimmed)) return false;
   if (trimmed.split(/\s+/).length > MAX_TITLE_WORDS) return false;
   return true;

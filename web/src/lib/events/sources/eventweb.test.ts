@@ -177,6 +177,64 @@ describe("eventNameFrom", () => {
     expect(viaHyphen).toBe(viaPipe);
   });
 
+  // B8-06 (round 8): confirms what renders AFTER the shape-1 guard fires,
+  // not only that looksLikeEventTitle itself returns false in isolation
+  // (already covered above). This is the standard B's own log named
+  // explicitly: a rejected segment must yield a real name from the same
+  // fallback chain, not just disappear.
+  it("falls through to a real event name when the narrative-sentence segment is rejected", () => {
+    expect(
+      eventNameFrom(
+        "Ruggiero Group Attends the 2026 Crystal Engineering GRC | Crystal Engineering Symposium",
+        "",
+      ),
+    ).toBe("Crystal Engineering Symposium");
+  });
+
+  // B8-06 (round 8), shape 2: two generic words concatenated with no
+  // connector at all ("Conference Program") — round 6 first named this
+  // shape, reconfirmed live again this round on the same URL.
+  describe("bare concatenated generic words (B8-06)", () => {
+    it("rejects a bare two-word generic phrase with no connector, keeping the real event name", () => {
+      // A's own reconfirmed live example, verbatim.
+      expect(
+        eventNameFrom("Conference Program | Riverside Materials Symposium", ""),
+      ).toBe("Riverside Materials Symposium");
+    });
+
+    it("does not treat a real two-word segment as chrome merely because one word is generic", () => {
+      // Hardest inverse case: "Workshop" alone is in the same generic-word
+      // list that must catch "Conference Program" above, but a real,
+      // specific segment pairing it with a substantive word must survive —
+      // the "every word must be generic" requirement is what protects this,
+      // not the word list being short.
+      expect(bestEventTitleSegment("Battery Workshop")).toBe("Battery Workshop");
+    });
+  });
+
+  // B8-06 (round 8), shape 3: a served document's own filename with its
+  // extension ("AA ECC10 POSTERS 08072026.xlsx") reaching the title-segment
+  // path directly — new this round, traced to bestEventTitleSegment, not
+  // the URL-slug fallback (nameFromUrlSlug already strips an extension
+  // before it can return one).
+  describe("raw filename with extension (B8-06)", () => {
+    it("rejects a raw filename-with-extension segment, keeping the real event name", () => {
+      // A's own reconfirmed live example, verbatim.
+      expect(
+        eventNameFrom("AA ECC10 POSTERS 08072026.xlsx | Advanced Composites Conference", ""),
+      ).toBe("Advanced Composites Conference");
+    });
+
+    it("does not reject a real segment merely because it ends with a period-abbreviated word", () => {
+      // Hardest inverse case: the extension check is anchored to a short,
+      // closed document-extension list, not "ends with a period" — a real
+      // segment ending in an unrelated period-abbreviation must survive.
+      expect(
+        bestEventTitleSegment("International Workshop on Molten Salt Chemistry, Inc."),
+      ).toBe("International Workshop on Molten Salt Chemistry, Inc.");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.
@@ -184,6 +242,31 @@ describe("eventNameFrom", () => {
     expect(looksLikeEventTitle("International Symposium on Registration Systems and Data Standards")).toBe(
       true,
     );
+  });
+
+  // B8-06 (round 8), shape 1: a present-tense, active-voice sentence NAMING
+  // an event has no "to be" auxiliary (NARRATIVE_VERB_RE) and matches none
+  // of HEADLINE_PASSIVE_RE's closed noun list — a third grammatical shape,
+  // still open two rounds after round 6 first named it, reconfirmed live
+  // again this round.
+  describe("present-tense narrative sentence (B8-06)", () => {
+    it("rejects a subject-verb narrative sentence with no auxiliary verb", () => {
+      // A's own reconfirmed live example, verbatim.
+      expect(
+        looksLikeEventTitle("Ruggiero Group Attends the 2026 Crystal Engineering GRC"),
+      ).toBe(false);
+    });
+
+    it("does not reject a real event name sharing the same subject phrase but no verb", () => {
+      // Hardest inverse case for this shape: the identical two-word subject
+      // ("Ruggiero Group") that must be rejected above, immediately
+      // followed by ordinary event-name words instead of a verb — proves
+      // the check targets the VERB specifically, not "starts with a
+      // capitalized organisation name."
+      expect(
+        looksLikeEventTitle("Ruggiero Group Battery Innovation Summit 2026"),
+      ).toBe(true);
+    });
   });
 });
 
