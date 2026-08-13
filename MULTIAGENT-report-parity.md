@@ -21491,3 +21491,236 @@ may be a different agent entirely.
 **Manager's turn complete. `WHOSE TURN: B` stands as A left it, now governed by
 Ruling 35. Round 11 B is spawned next.**
 
+### Round 11 — Agent B (B11-01: Ruling 35's enumeration — required first)
+
+**STATUS: DONE.** Claimed the turn lock (`d3a3f62`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 15:34 UTC`) after `git pull --ff-only` (already
+up to date) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`. Read §1's current-state block in full
+(the whole `WHOSE TURN: B` block), §1v Ruling 35, §2, §3, §4 "Round 11 —
+Agent A" parts 1–4 plus the summary entry, §4 "Round 11 — MANAGER
+verification of Agent A", and Rulings §1s/§1t/§1u (32/33/34) in full, before
+touching anything. Also read §4 "Round 9 — Agent B (B9-01)" and "(B9-04)" in
+full, per Ruling 35's own instruction to use B9-01 as the precedent for this
+entry's shape.
+
+This is item B11-01, required first by Ruling 35 before any per-host entry.
+No product code touched. Three throwaway vitest files used to verify every
+claim below by execution rather than hand-traced regex (`eventweb.ts`'s
+checks backtrack in ways that are easy to get wrong by eye) — all three
+deleted before this commit, confirmed by `git status --short` showing
+nothing. Every string fed into a probe below is either copied verbatim from
+A's own already-committed log (short fragments only, per the security
+floor) or a hand-built adversarial case I wrote myself to test a guard's
+edges — nothing newly fetched, no live pipeline call, no credential
+referenced.
+
+#### 1. `eventNameFrom`'s real shape is three candidate stages, not two — the third (final) stage is not in question
+
+Read `web/src/lib/events/sources/eventweb.ts:587-632` directly. In call
+order:
+
+1. **Title-segment stage** — `bestEventTitleSegment(title, url)`
+   (`:546-585`). Splits the title on `-`/`|`/`·`/`–`/`—`, then keeps only
+   segments passing BOTH `!isChromeSegment(part, host)` (`:407-427`:
+   generic-page-title, event-index, a short bare-`events` tail,
+   document-filename, bare-date, bare-location, then — unless
+   `skipHostBrand`/no host — host-brand) AND `looksLikeEventTitle(part)`
+   (`:512-521`: rejects a narrative "to-be + participle" verb, an
+   elliptical headline passive, a present-tense narrative sentence, more
+   than one sentence, or over 20 words). Of the survivors ("informative"),
+   prefers the ones also matching `looksLikeEvent` (topicality), else all
+   survivors, then reduces to the longest. **This is the one guarded path
+   — every guard B5-06 through B10-04 added lives inside `isChromeSegment`
+   or `looksLikeEventTitle`, both applied here.**
+2. **URL-slug stage** — `nameFromUrlSlug(url)` (`:524-544`), reached only
+   if stage 1 returns nothing. Takes the last `/`-separated path component
+   with ≥8 letters, replaces `-_+` with spaces, requires ≥3 words,
+   Title-cases only the first character. **Confirmed re-guarded, not a
+   separate unguarded path**: `eventNameFrom` immediately re-tests the slug
+   with `bestEventTitleSegment(fromSlug, url) === fromSlug` (`:600`) before
+   accepting it — since a plain slug (spaces, no `-|·–—`) never splits into
+   more than one segment, this re-test runs the slug through the **exact
+   same** `isChromeSegment`/`looksLikeEventTitle` pair as stage 1. This is
+   why B10-04's casing fix (relaxing `PRESENT_NARRATIVE_RE`'s leading-word
+   case requirement) was necessary at all — `nameFromUrlSlug`'s
+   first-letter-only capitalisation is what let a slug-derived narrative
+   sentence dodge the Title-Case-anchored version of that check before
+   round 10; the guard itself was never bypassed, only briefly blind to one
+   casing of input.
+3. **Snippet-mining stage** — `:604-613`, reached only if stages 1 and 2
+   both return nothing. Splits `snippet` on sentence-final punctuation,
+   `|·–—`, or newline; keeps fragments 20–120 chars (`substantial`);
+   prefers the subset also matching `looksLikeEvent`
+   (`eventLike`) — **and if that subset is empty, silently reuses the
+   unfiltered `substantial` list** (the ternary the manager quoted);
+   reduces whichever pool survives to the single **longest** fragment.
+   **Confirmed: this stage never calls `isChromeSegment` or
+   `looksLikeEventTitle` at all** — `looksLikeEvent` (`:81-83`,
+   `EVENT_SIGNAL_RE`) is the only filter, and it is a pure topicality
+   keyword match (conference/symposium/workshop/.../keynote/proceedings/…),
+   with no concept of sentence shape, narration, or scraped markup. **This
+   is Ruling 35's second path, and A's finding stands: confirmed by
+   reading the source directly, not inferred.**
+4. **Final fallback** — `:624-631`. The URL host, or `"Untitled event"`
+   with no URL. This is B9-04 Fix 1, confirmed still landed and unchanged
+   (the code comment at `:615-623` cites it by name). **Not broken, not in
+   question, no new fallback needs designing** — Ruling 35 says so and the
+   source confirms it.
+
+#### 2. The manager's two-line reading, checked against execution, not inherited
+
+Ruling 35 quotes two lines from stage 3 and offers a reading: line 1 (the
+`eventLike.length > 0 ? eventLike : substantial` ternary) is "Ruling 32's
+defect in its purest form yet," discarding the filter's verdict once it
+rejects everything; line 2 (`reduce`-to-longest) "systematically prefers
+exactly the wrong kind of string." Both lines are real, unmodified code —
+but built a throwaway harness
+(`web/src/lib/events/sources/zz-round11-b-enumeration.test.ts`, deleted
+before this commit) to test the reading against A's own three confirmed
+wrong values, rather than accept the reading on inspection alone, per
+Ruling 35's explicit instruction to check it.
+
+**Result: line 1 is not what produced any of this round's three confirmed
+wrong values. Line 2 is confirmed as the precise mechanism for exactly one
+of them, and a third cause — not named in the manager's reading at all —
+is what actually governs the other two.**
+
+- **`ecs.confex.com` → `"Invited speakers present keynote lectures."`**
+  Fed verbatim into `looksLikeEvent`: **`true`** (it contains "keynote," one
+  of `EVENT_SIGNAL_RE`'s ~25 literal keywords). So `eventLike` was **not**
+  empty for this candidate — line 1's discard-branch is not what put it in
+  the pool. Fed into `looksLikeEventTitle`: **`false`** — this exact string
+  would be *rejected* by the same guard the title-segment stage already
+  uses (confirmed independently: `bestEventTitleSegment` on this string
+  alone returns `undefined`). **Then, using only the two fragments part 2
+  already confirmed exist verbatim on the real page** (the correct name,
+  `"250th ECS Meeting (October 25-29, 2026)."`, 40 chars; and a second real
+  sentence from the same page, `"See the Call for Papers PDF for detailed
+  information about the symposia, manuscript submission requirements, and
+  financial assistance."`, 134 chars — over the 120-char cap, so it can
+  never enter `substantial` regardless of anything else): if the actual
+  runtime snippet pool had contained both the correct name (40 chars) and
+  the wrong narrative fragment (42 chars) as candidates, `looksLikeEvent`
+  passes **both** ("meeting" and "keynote" are both on the list), so
+  `eventLike` would hold both, and line 2's reduce-to-longest picks the
+  wrong one **by a 2-character margin**. This is a real, precise,
+  confirmed-by-construction demonstration of line 2's mechanism — but it is
+  a construction (the actual live snippet pool was never captured by
+  anyone this round; part 2 said so explicitly), not proof of the exact
+  live sequence, and is reported as exactly that distinction, per the
+  manager's own standard from round 11 A's part 2/part 4 correction: a
+  hand-fed construction is evidence about the function, not about what a
+  reader saw.
+- **`internationalbatteryseminar.com` → `"Tim DeBastos.jpeg?sfvrsn=…) [...]
+  Conference Image Gallery Carousel"`.** Fed verbatim into `looksLikeEvent`:
+  **`true`** ("Conference" is on the list) — again, not an empty-filter
+  case. Fed into `looksLikeEventTitle`: **`true`** — this string is **not**
+  narrative-sentence-shaped at all (no to-be+participle, no headline
+  passive, no present-tense-narrative subject-verb opener, no second
+  sentence), so it would **survive** a `looksLikeEventTitle` filter
+  unchanged. Line 2 is irrelevant here too, in the sense that nothing in
+  `isChromeSegment`/`looksLikeEventTitle` — the guard the title-segment
+  stage already has — would catch this shape either. **This is a third,
+  previously-unnamed defect: a scraped-widget/filename chrome shape that no
+  guard anywhere in this file, on either path, has ever had a concept of.**
+  Proven structurally, not just observed: `nameFromUrlSlug` reads only
+  `new URL(url).pathname`, and confirmed directly
+  (`new URL("https://x/path/name?query=1#hash").pathname === "/path/name"`)
+  that a `?query` string can **never** reach that function's output — so
+  this value, which contains a literal `?sfvrsn=…`, could not have come
+  from the URL-slug stage under any input. It is either the snippet stage
+  or (less plausibly — a `<title>` tag containing a raw image filename with
+  a query string would be an unusual authoring choice, versus a very
+  natural shape for flattened scraped body/widget text) the title-segment
+  stage; either way, no *existing* guard on *either* path stops it.
+- **`thebatteryshowsouth.com` → `"[...] ## 2026 Keynote Speakers"`.** Fed
+  verbatim into `looksLikeEvent`: **`true`** ("Keynote" is on the list).
+  Fed into `looksLikeEventTitle`: **`true`** — again survives unchanged; no
+  existing check has any concept of a Markdown ATX heading marker (`##`) or
+  a bracketed ellipsis as chrome. Same third-defect class as the finding
+  above, and the same structural proof applies: `#` cannot appear in
+  `URL.pathname` either (it delimits the fragment, stripped before
+  `.pathname` by the URL spec), so this value could not have come from the
+  URL-slug stage.
+
+**Correction to the manager's reading, stated plainly per Ruling 35's own
+instruction:** line 1 (the empty-filter discard) is real, reachable code —
+`substantial` can plausibly be non-empty while none of its individual
+20–120-char fragments happen to contain an `EVENT_SIGNAL_RE` keyword even
+though the combined title+snippet text that got the item through
+`webResultToRawEventItem`'s own upstream `looksLikeEvent` gate did — but it
+is **not demonstrated to be what produced any of this round's three
+findings**; in all three, `looksLikeEvent` matched the winning fragment
+directly. Line 2 (prefer-longest) is confirmed, precisely, as the operative
+mechanism for `ecs.confex.com` alone. Neither line explains
+`internationalbatteryseminar.com` or `thebatteryshowsouth.com` — those pass
+every check the manager cited **and** the one check (`looksLikeEventTitle`)
+the title-segment path already uses. **The manager's reading is accurate as
+a description of real code and incomplete as an explanation of the
+findings**: the deeper, common defect across all three is that
+`eventNameFrom`'s snippet stage filters candidates with `looksLikeEvent`
+alone — a topicality check, built and already used upstream to decide "is
+this text about an event at all," not a name-quality check — and never
+applies the shape checks (`isChromeSegment`, `looksLikeEventTitle`) the
+title-segment stage already has. `looksLikeEvent` will happily pass a full
+narrative sentence, a stitched filename-plus-widget-label, or scraped
+Markdown, because all three can easily contain one of its ~25 keywords.
+
+#### 3. Which shapes can the snippet stage produce — the enumeration Ruling 35 actually asks for
+
+For each way `pool.reduce(...)` in stage 3 can resolve, what reaches the
+reader:
+
+1. **A short, real, name-shaped fragment.** Works today — e.g.
+   `scoring.test.ts:555-562`'s own existing case (a 70-char round-table
+   name recovered from a generic-titled page). No defect.
+2. **A full narrative/descriptive sentence about the event that happens to
+   contain a topic keyword.** `ecs.confex.com`, confirmed. Would be
+   directly rejected by `looksLikeEventTitle` if that check ran here — it
+   already exists, is already tested, and is already applied one stage
+   earlier for exactly this shape.
+3. **Scraped widget/markup chrome — an embedded filename, a query string,
+   a Markdown heading marker, a bracket-ellipsis artifact — stitched into
+   what reads as one 20–120-char fragment.**
+   `internationalbatteryseminar.com` and `thebatteryshowsouth.com`,
+   confirmed. **Not caught by `looksLikeEventTitle` either** — this is a
+   shape neither existing guard, on neither path, has ever targeted. A new,
+   narrow check is needed regardless of what happens to the ternary.
+4. **(Reachable, not confirmed as this round's cause) When literally
+   nothing in `substantial` contains a topicality keyword, the ternary
+   discards the empty `eventLike` filter and returns the single longest
+   20–120-char fragment of *whatever the snippet contains*, with zero
+   quality filtering of any kind.** This is Ruling 32's defect in its
+   cleanest form — real, latent, worth closing on principle even though it
+   is not shown to be live this round.
+
+#### 4. Which fields may render nothing; the honest last resort
+
+Unchanged from B9-01, re-confirmed against today's source rather than taken
+on trust: `RawEventItem.name`/`Event.name` are still typed `string`, never
+optional (`web/src/lib/events/types.ts:26`, `web/src/types/index.ts:132`),
+and both render sites are still unconditional —
+`web/src/app/events/[id]/page.tsx:1901` (`<h1>{event.name}</h1>`, no guard)
+and `web/src/components/cards/event-card.tsx:96`. Event name still cannot
+render silence. The honest last resort is still the URL host /
+`"Untitled event"` (B9-04 Fix 1, confirmed intact at `eventweb.ts:615-631`)
+— per Ruling 35, this does not need to change; only what happens *before*
+execution reaches it does.
+
+#### 5. Fix direction, sized to what's confirmed above (elaborated per-host in B11-02/B11-03 below)
+
+Reuse, not reinvent, per this file's own repeated practice: apply the
+**same** `isChromeSegment`/`looksLikeEventTitle` pair the title-segment
+stage already uses as a hard pre-filter on `substantial`, and add two new,
+narrow, closed-shape checks to `isChromeSegment`'s existing bundle for the
+chrome class no path currently catches. Verified by construction (same
+throwaway harness) that this closes all three of this round's confirmed
+findings and changes the outcome of **zero** existing passing tests —
+detailed per-item in B11-02 and B11-03, including the full test-risk list
+Ruling 31 requires (a second test file, `scoring.test.ts`, independently
+exercises this exact function — confirmed by grep, not assumed from
+`eventweb.test.ts` alone).
+
+Commit follows immediately.
+
