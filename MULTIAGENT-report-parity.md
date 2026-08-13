@@ -270,44 +270,43 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:59 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 05:52 UTC (round 10 A:
-                  re-ran the four-part real-data measurement in four
-                  separately-committed parts, scored against round 9 C's six
-                  landed fixes, plus the mandatory `sdle.co.il` live
-                  single-page fetch done first. Full detail in §4 "Round 10
-                  — Agent A (part 1..4)" and the consolidated "Round 10 —
-                  Agent A (summary across parts 1–4, ranked difference list,
-                  gate verdict)" entry immediately after part 4.
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 06:25 UTC (round 10 B:
+                  investigated the assigned 7-item load (items 1, 2, 3, 4,
+                  5, 7, 9) and wrote fix-direction-only entries for items 6
+                  and 8, whose cause arrived pre-known, across seven
+                  separately-committed §4 entries (B10-01 through B10-07)
+                  plus a consolidated summary. Full detail in each entry;
+                  the ranked, dependency-grouped work order for C is in §4
+                  "Round 10 — Agent B (summary across B10-01–07)."
 
-                  **Headline: every host C's six fixes specifically
-                  targeted no longer shows its *original* defect — the
-                  fixes did what they claimed, confirmed live, not only in
-                  the fixture. But on 4 of those same hosts (2 employer, 2
-                  event-name), a new, differently-shaped wrong value has
-                  taken the old one's place** — expected under-catching by
-                  design, per this round's own brief, reported as findings,
-                  not treated as breakage. Two new findings independently
-                  confirmed by fetching the real live page directly, not
-                  through the pipeline: `careerservices.upenn.edu` renders
-                  `"University of Pennsylvania"` for an Oak Ridge National
-                  Laboratory posting; `postdocjobs.com` renders generic
-                  site boilerplate for an Argonne National Laboratory
-                  posting. `sdle.co.il` is fully **resolved** — the
-                  mismatch is a source-site URL artifact (B9-04's
-                  explanation (b)), not a codebase defect; no reader-facing
-                  wrong data; no fix guide needed for it.
+                  **Headline: items 1 and 2 collapse to ONE gap, item 4 is
+                  confirmed separate, item 9 closes as not-a-defect, item 7
+                  stays open pending live data, and items 6/8 are confirmed
+                  NOT the same root despite the shared surface shape** —
+                  Ruling 32's "enumerate before building" question this
+                  round posed was answered with evidence (controlled
+                  construction against the real, unmodified functions —
+                  never a live pull), not assumption, for every item. Three
+                  entries (B10-01, B10-04, B10-06/B10-07's item-8 half)
+                  reproduced A's exact live strings character-for-character
+                  through the traced mechanism alone. One `POLICY — manager
+                  decides` flag raised (item 1's harder residual shape,
+                  folded into B10-01 — see MANAGER CARRY-FORWARD below).
 
-                  Positive confirmations, not just new findings: SolarPACES
-                  regression-lock byte-identical, live, today. The new
-                  bare-hostname event-name last resort has still never
-                  fired on real data. Employer field's wrong-rate kept
-                  falling (round 8 62.5% → round 9 27.3% → round 10 20%).
-                  Ruling 33's acronym tally begins: round 10 = 0 of 3.
+                  Positive confirmations from this turn's own tracing, not
+                  just new findings: the job-employer and job-summary
+                  fields' "renders true silence on total rejection"
+                  precedent (B9-01) held up under every one of this round's
+                  new checks — none of the six recommended fixes needs a
+                  new fallback design, all reuse that existing precedent.
+                  Every fix direction was checked against at least one
+                  existing precedent test it could plausibly break, per
+                  Ruling 31, before being recommended.
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -315,124 +314,97 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 05:52 UTC (round 10 A:
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            10 — A complete. Next: round 10, B.
-WHOSE TURN:       **B.** Take A's ranked, numbered difference list — full
-                  text and evidence in §4 "Round 10 — Agent A (summary
-                  across parts 1–4, ranked difference list, gate verdict)"
-                  — and find *why* the build produces each one, per §2. Do
-                  not change code. Ten items, ranked by reader impact (A's
-                  own ranking, not necessarily your fix-priority order):
+ROUND:            10 — A and B complete. Next: round 10, C.
+WHOSE TURN:       **C.** Work through B's fix guide (§4 "Round 10 — Agent B
+                  (B10-01" through "(B10-07" and the consolidated summary
+                  entry immediately after) in the order below. Run the gate
+                  after each item: `cd web && npx vitest run && npx tsc
+                  --noEmit && npx eslint`. Baseline unchanged from round 9's
+                  own close: 90 files / 1043 tests passing (1042 + the one
+                  documented `benchmark.test.ts` live-search flake),
+                  typecheck clean, lint exactly 1 pre-existing
+                  `quiz.tsx:46` error — B touched no product code this
+                  turn, only this file, so this baseline should be exactly
+                  what C finds at the start. Commit per item, per §3.
 
-                  1. **`careerservices.upenn.edu`** — renders `"University
-                     of Pennsylvania"` for an Oak Ridge National Laboratory
-                     posting (confirmed live by direct fetch). B9-02c's own
-                     topic-label defect on this exact host/URL is confirmed
-                     gone; this is a new value.
-                  2. **`postdocjobs.com`** — renders `"Job posted on
-                     PostdocJobs.com"` (confirmed live by direct fetch to
-                     be site boilerplate) for an Argonne National
-                     Laboratory posting. B9-02b's own topic-label defect on
-                     this host is confirmed gone; new value.
-                  3. **`ecs.confex.com`** (new host) — renders `"Call for
-                     Papers"`; confirmed live by direct fetch that the real
-                     event is `"250th ECS Meeting."`
-                  4. **`internationalbatteryseminar.com`** — B9-04's
-                     bare-date guard's own target (`"March 15-18, 2027"`)
-                     is confirmed gone; today renders `"Orlando, FL"` (a
-                     location, not a name) instead.
-                  5. **`ruggedthz.com`** — now renders a lowercase,
-                     narrative-sentence-shaped, humanized URL slug
-                     (`"Ruggiero group attends the 2026 crystal engineering
-                     grc"`); round 9 A itself only produced this exact
-                     string as a controlled, not-observed-live
-                     construction — it is now confirmed live, 2 of 2 pulls.
-                  6. **`employbl.com`'s job summary** — one surviving
-                     sentence stacks a colon-label prefix, a bare Markdown
-                     heading marker, and an orphaned opening bracket ending
-                     in a literal `"[..."` (confirmed byte-exact via direct
-                     file write). Same host round 8 named for colon-label
-                     chrome, recurring with two more defects layered on.
-                     **CAUSE ALREADY KNOWN — DO NOT RE-INVESTIGATE.** Round
-                     9's B found this exact string byte-for-byte and traced
-                     it to completion: `SECTION_RE` matches the leading
-                     `"Qualifications:"` and grants `sectionScore = 4`,
-                     clearing the floor with **zero** keyword credit (see
-                     the replay table in §4 "Round 9 — Agent B (B9-03)").
-                     A's contribution is confirming it survives the **live**
-                     pipeline, not only a replay. Go straight to what to do
-                     about it.
-                  7. **`euagenda.eu`** — flagged, not confirmed: a shorter,
-                     ellipsis-terminated name than round 9's own full
-                     citation for the identical URL. Verification fetch
-                     blocked (HTTP 403); A could not determine whether this
-                     is Peer-side or search-index-side. B has standing to
-                     investigate the codebase side of this that A does not.
-                  8. **`inl.referrals.selectminds.com`'s job summary** —
-                     mild colon-label prefix (`"Multi-Level:"`) ahead of
-                     otherwise-clean prose. Lower severity than 6.
-                     **ALSO ALREADY ENUMERATED** — this is the
-                     single-colon-label-sentence shape round 8 named as one
-                     of B8-05's two knowingly-unaddressed shapes. Not
-                     unexplored ground; likely the same root as item 6.
-                  9. **`careers.abbvie.com`** (and the standing
-                     `jobs.lbl.gov` precedent) — null company on an
-                     organisation's own branded subdomain. A data point for
-                     the host-brand guard's trade-off, not a confirmed
-                     defect — genuinely indistinguishable from "no
-                     candidate was ever extracted" without tracing the
-                     internal call chain, which is B's job, not A's.
-                  10. **`sdle.co.il`** — RESOLVED. Explanation (b): a
-                      source-site URL artifact. No fix guide needed;
-                      included for closure, not as an open item.
-                      **MANAGER RE-FETCHED THE PAGE INDEPENDENTLY AND
-                      CONFIRMS IT** — the live `<title>` names the Turkey
-                      summit, the body is entirely that event, the Germany
-                      slug is stale on the source site. Item CLOSED, not
-                      deferred. B owes nothing here.
+                  **Slot 1 — B10-01 (items 1+2, employer field,
+                  `jobweb.ts`).** Independent of everything else this
+                  round. Land the closed boilerplate-phrase check
+                  (`"Job posted on X"`-shaped candidates) with confidence —
+                  closes item 2. Item 1's harder "real institution name,
+                  wrong institution" residual is a flagged `POLICY`
+                  question (see MANAGER CARRY-FORWARD) — land the rest of
+                  this slot regardless and revisit item 1's second half
+                  once the manager rules, rather than blocking on it.
 
-                  **MANAGER NOTE ON B's ACTUAL LOAD:** items 6 and 8 arrive
-                  with their cause already traced (see §4 "Round 10 —
-                  MANAGER verification of Agent A"), and item 10 is closed.
-                  **B's real investigation load is 7 items: 1–5, 7, 9.**
+                  **Slot 2 — B10-02 + B10-03 + B10-04 bundle (items 4, 3, 5,
+                  all three in `eventweb.ts`'s `isChromeSegment`/
+                  `looksLikeEventTitle` family, sharing the same three test
+                  files — `eventweb.test.ts`/`enrich.test.ts`/
+                  `scoring.test.ts`).** Land together so those three files
+                  are only run cold once. Suggested internal order:
+                  B10-02 (bare-location guard, cleanest) →
+                  B10-04 (casing relaxation in `PRESENT_NARRATIVE_RE`,
+                  precisely isolated) → B10-03 (`"Call for Papers"` label,
+                  needs the extra fallback-verification step B10-03 itself
+                  names before it can be called done — do not skip that
+                  check). Not hard-dependent on each other internally.
 
-                  **A pattern worth B's attention, offered as an
-                  observation, not a diagnosis:** items 1, 2, and arguably
-                  4 all share the same general shape Ruling 32 already
-                  named — a guard closes its one specifically-cited defect,
-                  and the fallback chain finds a *different* wrong value to
-                  fill the same slot rather than the real answer or a
-                  defensible silence. Items 1 and 2 look, from the
-                  already-published `looksLikeHostBrand` examples in §4
-                  "Round 9 — Agent A (part 1)," like the same
-                  one-directional length rule that lets a real long-form
-                  employer name survive is also letting the *hosting
-                  platform's own* long-form name survive when it is not
-                  the actual employer — worth checking whether this is one
-                  underlying gap or two unrelated ones, per Ruling 32's own
-                  "enumerate before building" discipline, before writing
-                  per-host guide entries. This is A's read of the shape
-                  from outside the code, not a traced cause — B's own
-                  investigation may find something different.
+                  **Slot 3 — B10-07 (items 6+8, `summarize.ts` +
+                  `job-cleanup.ts`).** Independent file area from slots 1–2.
+                  Sequenced last: fix (1) inside this item is a
+                  scoring-floor change (touches what does/doesn't clear a
+                  selection threshold), more sensitive than an independent
+                  guard addition, and deserves isolated attention rather
+                  than review fatigue from the larger event-side batch.
+                  Land fix (1) — narrow `SECTION_RE`'s credit, closes item 6
+                  — before fix (2) — the shared label-prefix cosmetic strip,
+                  closes item 8 and improves item 6's presentation but is
+                  not a substitute for fix (1) — per B10-07's own severity
+                  reasoning.
 
-                  **Same-page contamination (B8-07/Ruling 29): still
-                  parked, not re-measured this round either, per this
-                  round's own brief and Ruling 32. No B budget implied by
-                  its absence from this list.**
+                  **Not C's work this round:** item 7 (`euagenda.eu`,
+                  B10-05) — stays open, needs a live fetch only a future A
+                  has standing to do; item 9 (`careers.abbvie.com`,
+                  B10-06) — CLOSED, traced as not-a-defect, no code to
+                  write; item 1's `POLICY` half — no code until the manager
+                  rules.
 
-MANAGER CARRY-FORWARD: none new this turn. Standing, unchanged: **B8-03's
-                  `usajobs.ts` fallback** (`"U.S. Federal Government"`) is
-                  still an open `POLICY` question for the manager, not for
-                  A, B, or C.
+                  After all three slots land (or after whichever the
+                  manager and remaining time allow), hand back to A for the
+                  next real-data remeasurement, per §2's normal loop
+                  rhythm.
+
+MANAGER CARRY-FORWARD: **one new this turn.** B10-01's item 1 residual
+                  (`careerservices.upenn.edu` renders the hosting
+                  institution's own real, legitimate name instead of the
+                  posting's real employer — no cheap, safe string-shape
+                  heuristic distinguishes this from a university correctly
+                  hiring for its own posting on its own site, e.g. `"Duke
+                  University"` on `careers.duke.edu`, which must keep
+                  surviving). Two options, not a recommendation between
+                  them: **(a)** accept as a named, low-frequency cost, same
+                  shape as Ruling 33's own LCO acceptance (one live instance,
+                  no frequency data); or **(b)** invest in a URL-slug
+                  cross-check heuristic (higher effort, own false-positive
+                  risk). Full reasoning in §4 "Round 10 — Agent B (B10-01)."
+                  Standing, unchanged: **B8-03's `usajobs.ts` fallback**
+                  (`"U.S. Federal Government"`) is still an open `POLICY`
+                  question for the manager, not for A, B, or C.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
                   non-optional fallback has not fixed anything), **§1r
-                  Ruling 31** — binding for B's own investigation standard
-                  too: trace the hardest real shape, not the easiest.
-                  **§1s Ruling 32** — B, read the "pattern worth B's
-                  attention" note above before writing per-host items;
-                  enumerate before building, the same discipline B9-01
-                  established. **§1t Ruling 33** — accepted cost, no
+                  Ruling 31** — binding for C now too: name the hardest
+                  real shape in every new/rewritten test, and every test
+                  FILE at risk, not just the obvious one — B's own §4
+                  entries this round each name the specific files checked.
+                  **§1s Ruling 32** — B's own "one gap or several" question
+                  for items 1/2/4 is answered with evidence in §4 "Round 10
+                  — Agent B (B10-01" and "(B10-02" (items 1+2 are one gap;
+                  item 4 is separate), and items 6/8 are confirmed NOT the
+                  same root in "(B10-07" — enumerate-before-building held up
+                  again this round. **§1t Ruling 33** — accepted cost, no
                   code; A's one-line acronym tally is now running (round 9:
                   1 of 4; round 10: 0 of 3) and continues every round from
                   here, unchanged instruction.
@@ -448,11 +420,16 @@ STATUS:           **ROUND 9'S SIX CODE ITEMS (B9-02a, B9-04 FIX 1, B9-04
                   and §4 "Round 10 — Agent A (summary across parts 1–4,
                   ranked difference list, gate verdict)."** Every original
                   defect the six fixes targeted is confirmed gone live;
-                  ten differences remain, ranked above, none a regression
-                  in the sense of "something that used to work now
-                  doesn't" — every new-shape finding is on ground the six
-                  fixes were never built to cover. `sdle.co.il` is fully
-                  resolved (not a codebase defect). B8-03's `usajobs.ts`
+                  ten differences remain (A's own ranked list is in §4
+                  "Round 10 — Agent A (summary across parts 1–4, ranked
+                  difference list, gate verdict)"; B's own fix-guide work
+                  order for them is above under WHOSE TURN and in §4 "Round
+                  10 — Agent B (summary across B10-01–07)"), none a
+                  regression in the sense of "something that used to work
+                  now doesn't" — every new-shape finding is on ground the
+                  six fixes were never built to cover. `sdle.co.il` is fully
+                  resolved (not a codebase defect); item 9 is now also
+                  resolved as not-a-defect, per B10-06. B8-03's `usajobs.ts`
                   policy question remains open, untouched this round.
 LAST DIFFERENCE:  **Employer field: 2 of 10 non-null real postings wrong
                   (20%), down from round 9's 27.3% and round 8's 62.5%
