@@ -17253,3 +17253,137 @@ regress); confirmed clean at the end of this turn instead, in the closeout
 entry.
 
 Commit follows immediately.
+
+### Round 9 — Agent B (B9-02: employer field, 3 remaining wrong postings)
+
+Builds on B9-01, which already established that the employer chain renders
+true silence when every candidate is rejected — none of the three items
+below is a fallback problem. All three pass every existing guard cleanly
+because no guard covers their shape yet. Per B9-01, `looksLikeHostBrand`
+(`web/src/lib/opportunities/shared.ts:232-237`) is one-directional (rejects
+only when the candidate is no longer than the host label it matches) — so a
+long, well-formed candidate string that happens to be the wrong *kind* of
+string entirely (a chrome suffix, a research topic) sails through it with
+no collision to catch.
+
+#### (a) `inl.referrals.selectminds.com` — "Idaho National Laboratory Careers"
+
+**Classify: WRONG SHAPE.** The organisation identity itself is correct
+(Idaho National Laboratory is the real employer); the defect is a trailing
+chrome word ("Careers") that no cleanup step strips.
+
+**Confirmed no existing guard addresses this.** Checked all four guards in
+`webResultToRawJobItem`'s candidate filter
+(`web/src/lib/jobs/sources/jobweb.ts:202-212`) against this exact string:
+`KNOWN_JOB_BOARD_DOMAINS` (`:18-27`) is a fixed 8-domain denylist, none
+matching this host; `SEASON_COHORT_LABEL_RE` (`:80-81`) only matches
+whole-string season/cohort patterns ("Summer 2027"); `looksLikeBareLocation`
+(`:99-102`) only matches a trailing US state code; `looksLikeHostBrand`
+normalizes the *whole* candidate and checks it against the host's labels
+(`inl`/`referrals`/`selectminds`/`com`) — "idahonationallaboratorycareers"
+is not a prefix of any of them, so it survives, exactly as it should for a
+real long-form name. `CAREERS_INDEX_TITLE_RE` (`:65-66`) is anchored
+(`^\s*...\s*$`) to reject a *bare* "careers"/"jobs"-shaped title, which this
+is not — it rejects a whole matching title, not a suffix on a longer one.
+No existing mechanism strips a trailing chrome word from an otherwise-valid
+multi-word candidate.
+
+**Fix direction: a narrow, closed trailing-word strip, scoped to the
+employer candidate only — not the shared cleanup utility.**
+`cleanJobSubtitlePart`/`cleanJobText` (`web/src/lib/opportunities/
+job-cleanup.ts:32-48`) is shared by company **and** location cleanup
+(`web/src/lib/jobs/mapper.ts:140,142`) and by the structured/declared
+employer tiers (`employer-identity.ts:37,53`) and JSON-LD `hiringOrganization`
+(`structured-extract.ts:1017`) — six call sites total, confirmed by grep.
+Adding a trailing-chrome-word strip there would touch job location text too,
+which was never part of this finding and has no evidence motivating a
+change. Recommend instead a small, closed regex applied only inside
+`jobweb.ts`'s own candidate-building step (same file, same "catch known
+shapes, not a general parser" convention B8-01/B8-02 already used there) —
+something in the shape of stripping a trailing `\s+(?:Careers?|Jobs?|
+Employment|Job\s+Openings?)$` (case-insensitive) from a candidate that
+already cleared the four existing guards, mirroring how `CAREERS_INDEX_TITLE_RE`
+already recognises the same vocabulary as a *whole* title. Exact word list is
+C's call; keep it closed and short, per this file's own established practice
+— do not generalise to "any trailing capitalised word."
+
+**Tests at risk:** `web/src/lib/jobs/sources/jobweb.test.ts`'s "company
+derivation" describe block — re-run every existing case by hand against the
+new strip before committing, per Ruling 31's own standard (a strip added
+after four already-passing guards must not eat a real trailing word that is
+legitimately part of an org's name — "Board of Regents", for instance, is a
+different but adjacent risk worth a hardest-case test: does the new strip
+correctly leave a name ending in a real, non-chrome word alone).
+
+**Blast radius:** contained to `jobweb.ts`'s own candidate list if
+implemented as recommended above (narrow, in-file) — no other caller.
+
+**What renders after this guard fires:** per B9-01, unchanged — falls
+through to the next candidate in the same `.find()` chain, or `undefined`
+and silence if none remain.
+
+#### (b)/(c) `postdocjobs.com` and `careerservices.upenn.edu` — a research topic/field label rendered as the employer
+
+**Classify: WRONG DATA.** Unlike (a), the string itself is not the real
+employer under any reading — `"Molten Salt Chemical and Electrochemical
+Engineering"` and `"Molten Salt Characterization"` are subject-matter labels,
+not organisation names. The `careerservices.upenn.edu` posting is the more
+serious of the two: its own URL slug names the real employer explicitly
+(Oak Ridge National Laboratory) and has done so, unchanged, across **two
+rounds now** (round 8 and round 9) — this is not a fresh regression, it is a
+still-fully-open mechanism nobody has fixed since it was first reported.
+
+**Confirmed no existing guard addresses this shape either**, for the same
+reason as (a): `KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`,
+`looksLikeBareLocation`, and `looksLikeHostBrand` each check for one
+specific, narrow shape (a fixed domain list, a season/cohort pattern, a
+trailing state code, a host-label collision) and none of them has any
+concept of "this reads as a subject/topic phrase, not an organisation."
+Both hosts have no dedicated adapter (confirmed by grep — neither
+`postdocjobs`/`careerservices` appears anywhere outside this generic
+`jobweb`-sourced path), so these are Tavily web-search results parsed by the
+same `webResultToRawJobItem` chain as (a), meaning the candidate almost
+certainly comes from a title segment (`parts.slice(1)`) or the "at Employer"
+regex matching a subject phrase that happens to be Title-Cased the same way
+a real multi-word organisation name is.
+
+**Fix direction: a new guard, same shape as `looksLikeBareLocation`, added
+to the same four-guard chain — but the exact detection rule is a research
+question, not something B can specify without the raw source titles (B does
+not run new live searches; that is A's instrument).** Two candidate
+approaches for C/next-A to weigh, not a prescription:
+1. **Reuse the profile's own matched topics/keywords.** If the candidate
+   string closely matches (or is contained in) the profile's own search
+   topics — which is exactly what put this posting in the pool in the first
+   place — that is reasonably strong evidence it is a subject label, not an
+   employer. Cheap, uses data already in scope at the call site, but only
+   catches candidates that echo the *searched* topic, not every possible
+   topic-label shape.
+2. **A closed-list structural check** (parallel to `SEASON_COHORT_LABEL_RE`):
+   research-field phrasing has recognisable shapes ("X and Y Engineering/
+   Chemistry/Characterization/Science", gerund-headed phrases) but this
+   risks becoming exactly the "general parser" this file's own comments
+   repeatedly warn against building.
+Recommend (1) as the safer starting point since it reuses data the call site
+already has and cannot reject a real organisation name that happens to share
+no words with the search topics.
+
+**Tests at risk:** same `jobweb.test.ts` "company derivation" block. Any new
+guard reading matched topics needs its own hardest-case set per Ruling 31:
+a real org name that happens to share a word with a search topic (must
+survive), the two live-confirmed strings above (must reject), and a
+multi-word org name sharing no words with any topic (must survive,
+unaffected).
+
+**Blast radius:** if implemented via approach (1), the guard needs the
+profile's topic list threaded into `webResultToRawJobItem` or its caller,
+which today only receives `{title, url, snippet}` — a signature change,
+confirmed by re-reading the function (`jobweb.ts:145-149`). That is a wider
+change than (a)'s in-file strip and should be scoped and risk-assessed on
+its own before landing, not bundled with (a).
+
+**What renders after this guard fires:** per B9-01, unchanged — falls
+through the same guarded chain to `undefined` and silence, same render path
+already confirmed clean.
+
+Commit follows immediately.
