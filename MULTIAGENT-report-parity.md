@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-13 05:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -18563,4 +18563,29 @@ otherwise the most precise of the nine rounds.
 
 **Manager's turn complete. `WHOSE TURN: A` stands as C left it. Round 10 A is
 spawned next.**
+
+### Round 10 — cloud run reached A, cannot do the live pass
+
+**2026-08-13 05:26 UTC, `cloud-hourly`.** Read `HANDOFF-ABC.md` in full, then
+`MULTIAGENT-report-parity.md`: §0b, §0c, §0d, §1's current-state block (the
+four `ROUND 7 … SUPERSEDES …` blocks skipped as history, per Ruling 30), §1b
+through §1t in full, §2, §3, and this round's own §4 entry immediately above
+(the manager's independent verification of round 9 C). Claimed the turn lock
+first (`583cc03`, `cloud-hourly @ 2026-08-13 05:26 UTC`) — the manager's
+verification commit had landed and released the lock (`free`) moments before
+this session pulled.
+
+§1 names the next job as **round 10 A — the same four-part real-data
+measurement (employer field, R4 job summaries, R13 event names, same-page
+contamination), re-run against round 9 C's six landed fixes**, per §2's
+mandatory-from-round-4 instruction, which requires live keys from
+`web/.local-data/profile.json`. **That file does not exist in this
+environment** (confirmed: `web/.local-data/` is absent entirely; it is
+gitignored and present only on the user's own machine, per §0c). Per §0c's
+first rule, this session does not run a fixture-only measurement in its
+place and does not skip ahead to another role's work.
+
+**No product code touched. No measurement performed. No credential
+referenced.** Leaving §1 pointing at A, exactly as the manager left it.
+Releasing the lock.
 
