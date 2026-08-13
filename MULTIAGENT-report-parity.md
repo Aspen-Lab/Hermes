@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-13 07:28 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -20531,4 +20531,35 @@ no code; item 1's `POLICY` half — ruled by Ruling 34a (accept, do not
 build), nothing further for C.
 
 Commit follows immediately.
+
+---
+
+### Round 11 — cloud run reached A, cannot do the live pass
+
+**2026-08-13 07:28 UTC, `cloud-hourly`.** Checked out
+`feature/summary-report-revamp`, pulled (already up to date at `d8890da`),
+read `HANDOFF-ABC.md` in full, then `MULTIAGENT-report-parity.md`: §0b, §0c,
+§0d, §1's current-state block in full (the four `ROUND 7 … SUPERSEDES …`
+blocks skipped as history, per Ruling 30), §1b through §1u in full, and
+this round's own §4 entries — "Round 10 — Agent A" (parts 1–4 + summary),
+"Round 10 — Agent B" (B10-01 through B10-07 + summary), and "Round 10 —
+Agent C" (C10-01 through C10-03) — before touching anything. Claimed the
+turn lock first (`c211a7b`, `cloud-hourly @ 2026-08-13 07:28 UTC`); it was
+free, released by round 10 C's own closing commit.
+
+§1 names the next job as **the next A turn: re-run the real-data
+measurement against round 10 C's six landed fixes**, specifically the
+employer-field, R13 event-name, and R4 job-summary watch points §1 itself
+lists, plus both of Ruling 33's and Ruling 34a's one-line cumulative
+tallies. Per §2's mandatory-from-round-4 instruction this requires live
+search results fetched through the app's own pipeline, which needs the
+credentials in `web/.local-data/profile.json`. **That file does not exist
+in this environment** (confirmed: `web/.local-data/` is absent entirely —
+gitignored, present only on the user's own machine, per §0c). Per §0c's
+first rule, this session does not run a fixture-only measurement in its
+place, and does not skip ahead to B's or C's work.
+
+**No product code touched. No measurement performed. No credential
+referenced.** Leaving §1 pointing at A, exactly as round 10 C left it.
+Releasing the lock.
 
