@@ -18887,3 +18887,125 @@ names re-check. No gate verdict is set by this entry.
 
 Commit follows immediately.
 
+### Round 10 — Agent A (part 4: R13 event names)
+
+**STATUS: COMPLETE — this is the last part of round 10 A.** Checks the one
+real risk this round's brief named plainly: whether Fix 2's narrowed rescue
+cost any previously-correct real event name, and whether the new
+bare-hostname last resort has fired live yet and reads sensibly if so.
+
+**Method.** Live keys reconfirmed present, boolean check only. Built a
+throwaway vitest file (`web/src/zz-round10-a-eventnames-live.test.ts`, plus
+its own throwaway JSON output, both deleted before this commit) following
+round 9 A part 3's own precedent, reusing the no-op `PoolCache` trick.
+**Two independent fresh live pulls, same session, same profile.** Both
+converged on the **same 17 items, byte-identical names, hosts, and URLs
+across both pulls** — stronger reproducibility than round 9 A part 3's own
+two pulls (which differed by one item). Two of the findings below were
+additionally confirmed by fetching the real live page directly (not
+through the pipeline).
+
+**SolarPACES regression-lock: confirmed intact.** `solarpaces.org` renders
+`"32nd SolarPACES Conference"`, byte-identical to round 9's own citation —
+the one named case Fix 2 was built to keep rescuing still rescues, live,
+today.
+
+**The bare-hostname last resort: still not observed live.** Checked
+programmatically across all 34 renders (17 items × 2 pulls, comparing each
+rendered name against its own host): **zero matches.** Consistent with
+round 9's own "never yet observed live" and with the manager's own
+OBSERVATION 1 (recorded last round) that the only non-test caller cannot
+structurally reach that branch. The "does it read sensibly" question this
+round's brief asked therefore still has no live case to answer it with —
+round 9 A's own controlled-case render check (confirmed sensible, hostname
+not raw slug) remains the only evidence on record; not re-run this round
+since nothing changed that would affect it.
+
+**Full census — 17-item fresh live pool, scored per item:**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `ans.org` | `Molten Salt Research Reactor Tour` | not confirmed false (unchanged from round 9) |
+| `solarpaces.org` | `32nd SolarPACES Conference` | CORRECT (regression-lock, unchanged) |
+| `ecs.confex.com` | `Call for Papers` | **WRONG, new host — confirmed by direct fetch: real name is `"250th ECS Meeting"`** |
+| `euagenda.eu` | `The First European Conference on Molten Salt Reactor ...` | **flagged, see below — possible degradation from round 9's own fuller citation** |
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT, new host — matches `benchmark.test.ts`'s own long-standing known-good target pattern |
+| `ruggedthz.com` | `Ruggiero group attends the 2026 crystal engineering grc` | **WRONG, new value — see below** |
+| `euchems2026.eu` | `ECC102026 POSTERS v2` | WRONG (unchanged from round 9, filename-as-name) |
+| `ibatterysummit.com` | `International Battery Summit` | not confirmed false (unchanged) |
+| `nanoge.org` | `SSI24` | CORRECT (unchanged) |
+| `sdle.co.il` | `Turkey Battery Technologies Summit 2026` | **CORRECT — resolved this round, see part 1** |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | WRONG (unchanged from round 9's own direct-fetch-confirmed finding) |
+| `internationalbatteryseminar.com` | `Orlando, FL` | **WRONG, new value — see below** |
+| `flogen.org` | `WELCOME TO SIPS 2026` | not confirmed false as to identity; banner chrome in the string (unchanged) |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | not confirmed false (unchanged) |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged) |
+| `advancedautobat.com` | `26th Advanced Automotive Battery Conference (AABC)` | CORRECT (unchanged) |
+
+**Tally: 7 CORRECT, 5 confirmed WRONG, 4 not confirmed false, 1 flagged
+inconclusive.** Nearly the same shape as round 9's 7/5/3 split (15 items),
+now on a 17-item pool — but, as with the employer field in part 2, **the
+number looks stable while two of the specific items underneath it changed
+in an important way:**
+
+**Finding 1 — `internationalbatteryseminar.com`: the bare-date guard's own
+target shape is confirmed gone, but a new wrong value fills the same
+slot.** Round 9 rendered `"March 15-18, 2027"` here — the exact bare-date
+shape B9-04's fourth item fixed. **That shape is confirmed gone**: today's
+render is `"Orlando, FL"`, not a date. But `"Orlando, FL"` is a **location**,
+not an event name either — still wrong, just wrong a different way. Same
+pattern part 2 found on the employer field: a guard closes its one named
+shape, and the fallback chain still finds a different wrong value to fill
+the slot rather than the event's real name. Reproducible 2 of 2 pulls.
+
+**Finding 2 — `ruggedthz.com`: a previously-hypothetical risk is now live
+for the first time.** Round 9 rendered `"Ruggiero Research Lab"` here (the
+blog's own brand, confirmed wrong via direct fetch last round — the real
+event is Gordon Research Conference on Crystal Engineering). **Today's
+render is different: `"Ruggiero group attends the 2026 crystal engineering
+grc"`** — lowercase throughout except its first letter, phrased as a
+narrative sentence fragment. This is **not a new repro** — it is the exact
+string round 9 A part 3 itself already produced, but only as a **controlled
+construction**, explicitly noting it was "not observed on any live page
+this round; a controlled construction only." **It is now observed live**,
+reproducibly (2 of 2 pulls), on the same host both B and C's own log
+entries already discuss at length. Still wrong (not the real conference
+name), but via the URL-slug fallback rather than the host-brand-unmatched
+title segment round 9 saw — a different point in the same fallback chain,
+now confirmed reachable on real data, not only in a controlled test.
+
+**`euagenda.eu` — flagged, not conclusively scored, reported honestly
+rather than forced.** Round 9 A's own citation for this exact host/URL was
+the full name, no ellipsis: `"The First European Conference on Molten Salt
+Reactor Technology"`. Today's render, reproducible 2 of 2 pulls, is
+shorter: `"...Reactor ..."`, ending in a literal ellipsis, missing the word
+`"Technology"` that the URL slug itself still carries in full
+(`.../the-first-european-conference-on-molten-salt-reactor-technology`).
+**Attempted direct verification of the live page; blocked (HTTP 403).**
+Cannot determine from here whether this is a Peer-side change or a
+search-index-side truncation (the same open-mechanism situation part 1
+resolved for `sdle.co.il`, except this one could not be resolved the same
+way since the direct fetch failed). Reporting this as the clearest
+candidate answer to this round's own named question — "if a previously
+correct real event name goes missing or degrades, start here" — **without
+claiming to know which side caused it.**
+
+**`ecs.confex.com` — new host, confirmed wrong by direct fetch.** Rendered
+`"Call for Papers"`, a generic page-type label. **Confirmed directly: the
+real event is `"250th ECS Meeting"` (October 25-29, 2026), stated on the
+page's own heading.** A previously-unreported shape — a specific,
+recognisable page-type label (not one of the generic single/two-word
+strings the existing generic-title check targets) standing in for the
+actual event name.
+
+**Cleanup:** both throwaway files deleted before this commit. No product
+code touched. No credential printed, logged, or written anywhere. Both
+direct page fetches quoted only in short fragments, per the security
+floor.
+
+**This is the last part of round 10 A.** Round-10 summary, ranked
+difference list, and the §1 handoff to B follow below/after this entry.
+
+Commit follows immediately.
+
