@@ -270,22 +270,21 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 03:12 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished part 1 of a deliberately split A turn @
-                  2026-08-13 03:04 UTC. §1 itself pre-split this A turn into
+STOPPED BECAUSE:  finished part 2 of a deliberately split A turn @
+                  2026-08-13 03:20 UTC. §1 itself pre-split this A turn into
                   four parts after a previous round-9 A died on the
                   account's spend limit before it had even finished reading.
-                  This session did **part 1 only — the employer field
-                  (B8-01/02/03/04), measured live** — and stopped there by
-                  design, exactly as instructed. **Parts 2–4 (R4 job
-                  summaries/B8-05, R13 event names/B8-06, same-page
-                  contamination/B8-07) are not done** and are the next A's
-                  job. Full method and every number is in §4 "Round 9 —
-                  Agent A (part 1: employer field)."
+                  This session did **part 2 only — R4 job summaries
+                  (B8-05), measured live** — and stopped there by design,
+                  exactly as instructed. **Parts 3–4 (R13 event names/B8-06,
+                  same-page contamination/B8-07) are not done** and are the
+                  next A's job. Full method and every number is in §4
+                  "Round 9 — Agent A (part 2: job summaries)."
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -293,16 +292,17 @@ STOPPED BECAUSE:  finished part 1 of a deliberately split A turn @
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 (in progress — part 1 of 4 done)
-WHOSE TURN:       **A — PARTIAL, part 1 of 4 complete, resume at part 2 (R4
-                  job summaries).** Independently re-measure the real-data
-                  gap now that six code items are fully landed and a seventh
-                  is landed in part. Fresh real events and jobs through the
-                  build's own pipeline, per item, never averaged, per
-                  §1j/Ruling 30's standard. **C does not remeasure.** Do
-                  **not** redo part 1 (employer field) — it is measured and
-                  closed out below; figures for parts 2–4 (B8-05/06/07)
-                  still describe the pre-fix state until measured.
+ROUND:            9 (in progress — parts 1-2 of 4 done)
+WHOSE TURN:       **A — PARTIAL, parts 1–2 of 4 complete, resume at part 3
+                  (R13 event names, B8-06).** Independently re-measure the
+                  real-data gap now that six code items are fully landed and
+                  a seventh is landed in part. Fresh real events and jobs
+                  through the build's own pipeline, per item, never
+                  averaged, per §1j/Ruling 30's standard. **C does not
+                  remeasure.** Do **not** redo parts 1–2 (employer field; R4
+                  job summaries) — both are measured and closed out below;
+                  figures for parts 3–4 (B8-06/07) still describe the
+                  pre-fix state until measured.
 
                   **Specifically watch for real-data shapes that don't match
                   the fixtures this session built everything against.**
@@ -336,12 +336,28 @@ WHOSE TURN:       **A — PARTIAL, part 1 of 4 complete, resume at part 2 (R4
                      posting rendering a topic label as employer) persists
                      unchanged by any B8-0x item — a different, unnamed
                      mechanism, not a host-brand-guard case.
-                  2. **R4 job summaries** (B8-05). The shipped floor is the
-                     *minimal* variant only. Check live whether the named,
-                     still-open shape (a chrome sentence containing a
-                     matched profile keyword) recurs, and whether the
-                     Markdown-link-remnant and single-colon-label shapes
-                     (neither addressed this round) still appear.
+                  2. **R4 job summaries** (B8-05). **MEASURED THIS TURN —
+                     see §4 "Round 9 — Agent A (part 2: job summaries)" for
+                     the full per-posting detail and method.** 0 of 4
+                     non-empty live summaries carry the classic
+                     site-navigation-chrome shape this round, down from
+                     Round 8 A's pre-fix 4 of 4 — but the summary-bearing
+                     rate itself fell too (4 of 29 unique real postings,
+                     13.8%, vs round 8's 4 of 11, 36%), and 2 of the 4 carry
+                     a smaller, different, previously-unnamed defect (a
+                     formatting-strip dash artifact; a generic-org filler
+                     sentence let through by an acronym-collision keyword
+                     match, not a chrome match). The named still-open shape
+                     (chrome + matched keyword) was **not observed as
+                     literal chrome** this round; the Markdown-link-remnant
+                     and single-colon-label shapes were **not observed**
+                     either — but round 8's exact named hosts for both are
+                     absent from today's pool entirely, so this is "not
+                     observed," not "confirmed fixed." Floor-rejects-
+                     everything render-confirmed as clean silence (no
+                     heading, no section, no wrapper) on a real posting plus
+                     two controlled cases — no heading-over-nothing defect
+                     found in any of the three checks.
                   3. **R13 event names** (B8-06). §4 records incidental live
                      corroboration — the standing benchmark flake's own live
                      run touched both originally-cited hosts (`ruggedthz.com`,
@@ -383,17 +399,22 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   ruling; SolarPACES (Ruling 28) was re-verified live inside
                   B8-02 and remains CLOSED.** Full per-item detail in §4
                   "Round 8 — Agent C."
-LAST DIFFERENCE:  **Employer field now measured POST-fix (this turn, part 1
-                  of 4): 3 of 11 non-null real postings wrong (27.3%), down
-                  from 5 of 8 (62.5%) pre-fix.** Full table in §4 "Round 9 —
-                  Agent A (part 1)." **R4, R13 and same-page contamination
-                  are still the PRE-fix numbers**, unchanged, pending parts
-                  2–4: R4 chrome on 4 of 4 non-empty fresh real summaries
-                  (minimal floor now landed, not yet remeasured); R13 open
-                  via three naming shapes (all three now guarded, not yet
-                  remeasured); same-page contamination not yet remeasured.
+LAST DIFFERENCE:  **Employer field (part 1): 3 of 11 non-null real postings
+                  wrong (27.3%), down from 5 of 8 (62.5%) pre-fix.** Full
+                  table in §4 "Round 9 — Agent A (part 1)." **R4 job
+                  summaries (part 2, this turn): 0 of 4 non-empty real
+                  summaries carry classic chrome, down from round 8's 4 of
+                  4** — but the summary-bearing rate itself dropped to 4 of
+                  29 (13.8%) from 4 of 11 (36%), and 2 of the 4 carry a
+                  smaller, different, newly-observed defect. Full detail in
+                  §4 "Round 9 — Agent A (part 2: job summaries)." **R13 and
+                  same-page contamination are still the PRE-fix numbers**,
+                  unchanged, pending parts 3–4: R13 open via three naming
+                  shapes (all three now guarded, not yet remeasured);
+                  same-page contamination not yet remeasured.
 GATE (0%):        **NOT MET.** Unchanged — the gate cannot be judged until
-                  all four parts of this A turn are done (part 1 of 4 done).
+                  all four parts of this A turn are done (parts 1–2 of 4
+                  done).
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
