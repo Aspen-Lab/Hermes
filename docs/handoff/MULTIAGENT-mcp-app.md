@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 06:52 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 07:16 UTC
 ROUND:            3
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior). M1 acceptance pends the USER host-test per
@@ -327,6 +327,18 @@ the user**. Therefore:
    first real host test of M1/M2 passes.** If the widget/postMessage bridge
    misbehaves on a real host, that rework lands before OAuth builds on top.
    A combined M1+M2 host test is acceptable and expected.
+
+## §1k. RULING 10 (2026-08-13, manager) — BINDING. M2 fullscreen action row: "Report →" ships disabled-visible
+
+Resolves round-3 item 3-10. In M2's fullscreen card action row, **"Report →"
+renders disabled-visible alongside the equally-disabled Save/Dismiss** —
+consistent treatment under RULING 7's fullscreen allowance: in that surface a
+muted, non-interactive row is itself informative ("this exists, arrives
+next"), and one uniform disabled row beats a mix of missing and disabled
+controls. Requirements: visually muted, `aria-disabled="true"`, no pointer
+action, no fake affordance on hover. Save/Dismiss go live in M5; "Report →"
+goes live in M4. The inline card (M1) remains control-free per RULING 7 —
+this ruling changes nothing there.
 
 ---
 
