@@ -253,4 +253,17 @@ describe("POST /api/mcp/[slug] — tools/list, tools/call, resources/read", () =
     // Static -- never contains a specific item's data baked in server-side.
     expect(content.text).not.toContain("Protocol Test Job");
   });
+
+  // 3-01: the fullscreen home resource, same static-template proof as the
+  // card resource above.
+  it("resources/read for the home URI returns the static widget shell, independent of any tool call", async () => {
+    stubDevAuthEnv();
+    const body = await callRoute(
+      jsonRpcRequest("resources/read", { uri: "ui://peer/daily-forecast-home.html" }),
+    );
+    const result = body.result as { contents: Array<Record<string, unknown>> };
+    const content = result.contents[0];
+    expect(content.mimeType).toBe("text/html;profile=mcp-app");
+    expect(content.text).not.toContain("Protocol Test Job");
+  });
 });

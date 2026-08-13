@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getDailyForecast } from "./tools/get-daily-forecast";
 import { getOpportunity } from "./tools/get-opportunity";
 import { buildDailyForecastWidgetHtml, renderDailyForecastText } from "./ui/daily-forecast-card";
+import { buildDailyForecastHomeWidgetHtml } from "./ui/daily-forecast-home";
 import type { ForecastItem } from "./types";
 
 export interface PeerMcpContext {
@@ -16,6 +17,7 @@ export interface PeerMcpContext {
 }
 
 const DAILY_FORECAST_CARD_URI = "ui://peer/daily-forecast-card.html";
+const DAILY_FORECAST_HOME_URI = "ui://peer/daily-forecast-home.html";
 
 const getDailyForecastInputShape = {
   type: z
@@ -111,6 +113,27 @@ export function registerPeerTools(server: McpServer, ctx: PeerMcpContext): void 
           // developers.openai.com/apps-sdk/build/custom-ux this round.
           mimeType: "text/html;profile=mcp-app",
           text: buildDailyForecastWidgetHtml(),
+        },
+      ],
+    }),
+  );
+
+  // Same static-template shape as the card resource above -- see
+  // daily-forecast-home.ts's own architecture note. Registered as a second,
+  // separately-addressable resource rather than a display-mode-branching
+  // single resource: registerResource's callback only ever receives `uri`,
+  // nothing to branch a display mode on (docs/handoff/MULTIAGENT-mcp-app.md
+  // §4 "Round 3 -- Agent B", Design decision 1).
+  server.registerResource(
+    "daily-forecast-home",
+    DAILY_FORECAST_HOME_URI,
+    {},
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: "text/html;profile=mcp-app",
+          text: buildDailyForecastHomeWidgetHtml(),
         },
       ],
     }),
