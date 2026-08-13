@@ -22134,3 +22134,103 @@ retry silently forever.
 
 Commit follows immediately.
 
+### Round 11 — Agent B (summary across B11-01–06)
+
+Written so C does not have to reassemble six separate entries, matching
+A's and round 9 B's own "summary across" precedent. Full method, harness
+output, and evidence for each are in their own entries above; this is the
+headline result plus the work order and classification breakdown.
+
+**B11-01 (Ruling 35's enumeration, required first).** `eventNameFrom` has
+three stages, not two: title-segment (guarded, `isChromeSegment` +
+`looksLikeEventTitle`), URL-slug (re-guarded by the same pair, confirmed —
+not a separate unguarded path), snippet-mining (**confirmed unguarded** —
+filters with `looksLikeEvent`, a topicality check, alone). **The manager's
+two-line reading, checked by execution against all three of this round's
+confirmed wrong values, holds for one of three and is incomplete for the
+other two**: line 2 (prefer-longest) is the precise, confirmed mechanism
+for `ecs.confex.com` (a 40-vs-42-character near-tie, verified by
+construction from the two real fragments part 2 already confirmed exist on
+the page); line 1 (empty-filter discard) is real, reachable code but not
+demonstrated to have produced any of this round's three findings — in all
+three, `looksLikeEvent` matched the winning fragment directly, no discard
+needed. `internationalbatteryseminar.com` and `thebatteryshowsouth.com`
+trace to a **third defect the manager's reading does not name**: scraped
+widget/markup chrome (an embedded filename+query-string; a Markdown
+heading marker) that passes `looksLikeEventTitle` unchanged, confirmed by
+execution — a shape no guard on either path has ever targeted.
+
+**B11-02 (snippet stage gets the title stage's own guard).** Reuse
+`isChromeSegment`/`looksLikeEventTitle` as a hard pre-filter ahead of the
+existing `looksLikeEvent` preference tier. Confirmed by construction:
+closes `ecs.confex.com`; changes zero other real values in A's round-11
+census; changes zero existing test assertions across both files that
+exercise this stage (`eventweb.test.ts` **and** `scoring.test.ts` — the
+second file Ruling 31 warned this loop has missed before). Confirmed NOT
+sufficient alone for the other two hosts.
+
+**B11-03 (two new narrow chrome-shape guards, depends on B11-02).** An
+embedded-filename+querystring regex and a Markdown-heading/ellipsis-bracket
+regex, added to `isChromeSegment`'s existing bundle. Confirmed by
+construction: closes both remaining hosts; zero false positives against
+16 real values (this round's full census plus existing test-suite names);
+the `{2,6}`-hash floor (not `{1,6}`) confirmed deliberately avoiding a
+constructed single-`#` adversarial case.
+
+**B11-04 (`careers.gevernova.com` summary label).** **A's own suggested
+fix direction was built literally and confirmed unsafe**: keying the strip
+off `SECTION_RE`'s match with no colon requirement fixes the real repro but
+mutilates any sentence using the same phrase as its own grammatical
+subject, confirmed on five constructed adversarial cases (e.g.
+`"Responsibilities include mentoring..."` → `"include mentoring..."`, a
+sentence missing its subject). A guarded version (skip the strip when the
+next word is a closed-list linking verb) verified correct on all seven
+cases. Whether the fix is worth landing at all for a single-instance
+cosmetic defect is left to C/the manager; if landed, only the guarded
+version is safe.
+
+**B11-05 (`ruggedthz.com`).** **Corrects this turn's own brief**: the
+existing trace is round 9 Agent A part 3's, not round 9 Agent B's — no B
+item, this round or any prior one, has ever targeted this mechanism
+(grepped the full B9 section to confirm). Confirmed out of Ruling 35's
+scope (title-segment stage, a `looksLikeHostBrand` normalisation miss, not
+an absent guard). No fix recommended, matching A's "lowest priority"
+framing. One `POLICY — manager decides` flag: this same host, same
+mechanism, has now been the confirmed cause across two non-consecutive
+rounds (9 and 11) — narrower and more repeated than the evidence base
+Rulings 33/34a accepted as a cost, worth the manager's call on whether that
+changes anything.
+
+**B11-06 (`euagenda.eu`).** Not investigated — B has no live fetch access
+and A's own retry is blocked a second consecutive round. Left open.
+
+**Item count and classification breakdown.** 6 items total: 1 enumeration
+(B11-01, no fix of its own — the two structural items below implement its
+findings), 2 WRONG DATA/MISSING-guard structural fixes with verified code
+sketches (B11-02, B11-03), 1 WRONG DATA cosmetic fix with a verified-safe
+alternative to the brief's own unsafe suggestion (B11-04), 1 confirmed
+out-of-scope with a `POLICY` flag (B11-05), 1 not investigated / left open
+(B11-06). Zero items required re-measuring anything A already measured;
+every claim above was checked either by reading source directly or by
+feeding already-known strings (A's own logged values, or hand-built
+adversarial cases) through the real, unmodified functions — never through
+Peer's own search pipeline, never a new live fetch.
+
+**Work order for C, with dependencies:**
+1. **B11-02** (snippet stage guard) — no dependency on anything else this
+   round; land first, since B11-03 depends on it and nothing depends on
+   B11-03.
+2. **B11-03** (two new chrome-shape regexes) — **depends on B11-02**
+   landing first; land in the same session so `eventweb.test.ts`/
+   `scoring.test.ts` are only run cold once across both.
+3. **B11-04** (`careers.gevernova.com` label strip) — no dependency on
+   B11-02/B11-03 (different file, different pipeline); land whenever
+   convenient, or skip per this item's own "worth it?" framing — C's call
+   to make and log, not a silent drop.
+4. **B11-05** — no code to write. Log the `POLICY` flag for the manager;
+   do not implement anything until it rules.
+5. **B11-06** — no code to write, nothing to log beyond what B11-06 above
+   already states.
+
+Commit follows immediately.
+
