@@ -78,9 +78,24 @@ describe("summarizeJob", () => {
   it("still credits a single label as a genuine sentence opener, not chrome", () => {
     // Same shape SECTION_RE already rewards — a rule that rejected any
     // single "Label:" opener would break this real, already-working case.
+    // B10-07 fix 1 (round 10): sectionScore now also requires readable
+    // content after the label — this sentence's content ("We're hiring a
+    // Business Development Representative...") easily clears that bar, so
+    // the sentence is still selected.
     const { description, terms } = REAL_POSTING_FIXTURES[1];
     const summary = summarizeJob(description, [...terms]);
-    expect(summary).toContain("Role Overview");
+    expect(summary).toContain("We're hiring a Business Development Representative");
+  });
+
+  // B10-07 fix 2 (round 10, item 8): the label itself is stripped from the
+  // DISPLAYED text — a purely cosmetic change layered on top of the
+  // selection this test already covers above. Changed from asserting
+  // `toContain("Role Overview")` (fix 2 removes it) to asserting its
+  // absence, so the display contract stays covered once the label is gone.
+  it("strips the leading label from the displayed text of a credited section opener", () => {
+    const { description, terms } = REAL_POSTING_FIXTURES[1];
+    const summary = summarizeJob(description, [...terms]);
+    expect(summary).not.toMatch(/Role Overview:/);
   });
 
   // B5-07/R4: real job 2's surviving junk was a different chrome FAMILY than
@@ -199,6 +214,68 @@ describe("summarizeJob", () => {
         "You will develop reactor physics models using OpenMC and validate them against benchmark data.";
       const summary = summarizeJob(description, ["OpenMC", "reactor physics"]);
       expect(summary).toContain("Job vacancies looking for OpenMC");
+    });
+  });
+
+  // B10-07 (round 10, items 6+8): a bare section label immediately followed
+  // by scraped-page markers (an unbalanced bracket, a bare Markdown heading
+  // marker) with nothing readable in between must not clear the floor on
+  // sectionScore alone — round 9's own trace found exactly this shape
+  // selected with zero keyword or role-verb match. Separately, any credited
+  // section opener's label is stripped from the displayed text.
+  describe("colon-label chrome (B10-07)", () => {
+    it("rejects a section-label opener followed only by scraped-page markers, falling through to a real sentence", () => {
+      // Item 6's own exact junk fragment (round 9's trace), paraphrased
+      // length-wise but the same shape: a section label, a bare Markdown
+      // heading marker, and an unpaired bracket, with no readable content
+      // and no keyword/role-verb match anywhere in the fragment.
+      const description =
+        "Qualifications: ### Get the Saturday tech briefing [and other newsletter signup chrome that never closes its bracket. " +
+        "You will research solid-state battery materials and support daily electrochemistry experiments.";
+      const summary = summarizeJob(description, ["battery", "electrochemistry"]);
+      expect(summary).not.toMatch(/Qualifications:|###|\[/);
+      expect(summary).toBe(
+        "You will research solid-state battery materials and support daily electrochemistry experiments.",
+      );
+    });
+
+    it("still credits a section label followed by genuine, readable content, label stripped from display", () => {
+      // The hardest must-still-survive case per Ruling 31: the ORIGINAL
+      // correct shape sectionScore exists to reward — real content
+      // immediately after the label, no scraped-page markers — is still
+      // SELECTED. Fix 2 strips the label from display "regardless of why
+      // it was selected" (B10-07's own words), so the label itself does not
+      // appear in the output even though it drove the selection.
+      const description =
+        "Qualifications: Design and build reliable battery testing systems for a growing research team.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).not.toMatch(/Qualifications:/);
+      expect(summary).toBe(
+        "Design and build reliable battery testing systems for a growing research team.",
+      );
+    });
+
+    it("strips a leading label from a sentence legitimately selected on real content, not section credit", () => {
+      // Item 8's own live shape: the label plays no role in selection at
+      // all (confirmed by construction — no SECTION_RE match, selected
+      // purely via roleScore/matchedCount) but is still cosmetic chrome in
+      // the displayed text.
+      const description =
+        "Multi-Level: This is a multi-level posting and you will be placed at the appropriate level dependent on degree field and level of education.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).not.toMatch(/Multi-Level:/);
+      expect(summary).toBe(
+        "This is a multi-level posting and you will be placed at the appropriate level dependent on degree field and level of education.",
+      );
+    });
+
+    it("does not strip a colon-led phrase that is mid-sentence, not a leading label", () => {
+      const description =
+        "You will support the team as follows: design, build, and test new battery cell chemistries.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).toBe(
+        "You will support the team as follows: design, build, and test new battery cell chemistries.",
+      );
     });
   });
 });

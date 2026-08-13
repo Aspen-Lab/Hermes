@@ -20424,3 +20424,92 @@ caller outside this file touched.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent C (C10-03: B10-07 slot — items 6+8, job summary colon-label chrome)
+
+**STATUS: DONE.** Sequenced last, per B's own instruction, since fix 1 is a
+scoring-floor change. Landed both fixes B10-07 named.
+
+**Fix 1 (item 6) — landed as guided, option chosen: co-occurrence with
+readable content, not a length/word-count minimum alone.** New
+`sectionOpenerHasReadableContent` in `web/src/lib/jobs/summarize.ts`: after
+stripping the matched `SECTION_RE` prefix, requires the remainder to be
+≥20 characters AND free of a bare Markdown heading marker (`#{2,}`) AND free
+of an unbalanced bracket. `sectionScore` now only grants its 4 points when
+`SECTION_RE.test(text) && sectionOpenerHasReadableContent(text)` both hold —
+`matchedCount`/`roleScore` untouched. Verified by construction against
+round 9's own quoted junk fragment: rejected on the marker check alone
+(matches item 6's own trace — restated from round 9, not re-derived, per
+B10-07's own instruction).
+
+**Fix 2 (item 8) — landed, but in a DIFFERENT FILE than B recommended, and
+the reason is a real ordering bug B's guide did not trace.** B named
+`job-cleanup.ts`'s `cleanJobDescription` as "the natural, lowest-risk home,"
+citing B9-03's own scoping precedent. **Traced the actual call order before
+landing anywhere:** `web/src/lib/jobs/mapper.ts:137` calls
+`summarizeJob(cleanJobDescription(summarySource), ...)` —
+`cleanJobDescription` runs on the WHOLE raw description **before**
+`scoreSentences` ever sees it. Stripping a leading label there would remove
+it from the text `SECTION_RE` itself scores, silently blinding
+`sectionScore`'s detection for every label-led sentence — including the
+existing "Role Overview: We're hiring..." case this file's own test already
+protects — before scoring ever ran. Confirmed by construction (a throwaway
+check applying the candidate label-strip regex ahead of `scoreSentences`
+turns that sentence's `sectionScore` to 0). **That is a scoring regression,
+not a cosmetic fix**, so fix 2 is landed inside `summarize.ts` instead: new
+`stripLeadingLabel`/`LEADING_LABEL_RE`, applied only to the STORED/displayed
+`text` field of a `ScoredSentence`, after every scoring check
+(`SECTION_RE`, the new `sectionOpenerHasReadableContent`, `ROLE_RE`,
+`matchedCount`) has already run against the original, unstripped sentence.
+`job-cleanup.ts` is untouched by this item.
+
+**Consequence worth stating plainly: fix 2 strips the label from EVERY
+credited section opener's displayed text, not only item 8's shape** — per
+B10-07's own words, "regardless of why it was selected." This changes the
+existing `"still credits a single label as a genuine sentence opener, not
+chrome"` test's own assertion (it previously asserted the literal string
+`"Role Overview"` appeared in the output) — **updated, not deleted**, split
+into two tests: one confirming the sentence is still SELECTED (asserts the
+real content, not the label), one confirming the label is now stripped from
+DISPLAY. Comment marks which item changed it.
+
+**Tests added, all in `summarize.test.ts`, new describe block "colon-label
+chrome (B10-07)", per Ruling 31's hardest-case instruction:**
+- Fix 1 must-now-reject: item 6's own junk-fragment shape (label + bare
+  heading marker + unpaired bracket, zero keyword/role-verb match) —
+  rejected entirely, falls through to the real sentence.
+- Fix 1 must-still-survive, the hardest case (the ORIGINAL reason
+  `sectionScore` exists): a genuine "Qualifications: Design and build
+  reliable..." sentence — still selected. (Its label is then ALSO stripped
+  by fix 2, so the test asserts the un-labelled content, not the raw
+  selection — see the consequence above.)
+- Fix 2 must-strip: item 8's own exact live shape, prefix removed, content
+  preserved verbatim.
+- Fix 2 must-NOT-strip: a colon-led phrase mid-sentence ("...as follows:
+  design, build...") — `LEADING_LABEL_RE`'s `^` anchor does not reach it.
+
+**Tests at risk, all re-run, all pass — including the two updated in
+place:** `summarize.test.ts` (existing `SECTION_RE` case updated per above,
+`positive-content floor (B8-05)` block re-run unchanged),
+`job-cleanup.test.ts` (untouched file, re-run to confirm — B9-03's own
+dash/bracket cases and this file's call-to-action/bracket-balancing cases
+all pass unchanged, consistent with fix 2 living in `summarize.ts` instead).
+
+**Gate:** `TZ=America/Chicago npx vitest run` → 90 files / 1066 passed + 1
+skipped; `npx tsc --noEmit` clean; `npx eslint` → the same 1 pre-existing
+`quiz.tsx:46` error, unchanged.
+
+**Blast radius:** `web/src/lib/jobs/summarize.ts` only.
+`web/src/lib/opportunities/job-cleanup.ts` — the file B recommended — is
+untouched; its own test file was re-run to confirm nothing there was
+affected by that deliberate deviation.
+
+**This closes out round 10's three C slots.** All of B's fix guide is now
+landed except: item 7 (`euagenda.eu`) — stays open, needs a live fetch only
+A has standing to do; item 9 (`careers.abbvie.com`) — already closed by B,
+no code; item 1's `POLICY` half — ruled by Ruling 34a (accept, do not
+build), nothing further for C.
+
+Commit follows immediately.
+

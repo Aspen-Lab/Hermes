@@ -56,6 +56,75 @@ function endsWithTitleEcho(sentence: string, jobTitle: string | undefined): bool
 const SECTION_RE =
   /^(?:key )?(?:responsibilities|requirements|qualifications|what you(?:'|’)ll do|the role|role overview)\b/i;
 
+/**
+ * B10-07 fix 1 (round 10, item 6): SECTION_RE above grants `sectionScore`
+ * for STARTING WITH a section word, with no requirement that anything
+ * resembling real content follows it. Round 9's own trace (§4 "Round 9 —
+ * Agent B (B9-03)") found a junk fragment
+ * ("Qualifications: ### Get the Saturday tech briefing [...") cleared the
+ * positive-content floor on `sectionScore` alone — zero keyword match, zero
+ * role-verb match. A bare section label followed by real prose is a
+ * legitimate, rewarded sentence opener (`summarize.test.ts`'s own "still
+ * credits a single label as a genuine sentence opener, not chrome" case,
+ * unaffected by this) — the defect is specifically a label immediately
+ * followed by SCRAPED-PAGE markers with nothing readable in between: an
+ * unbalanced bracket (a Markdown-link remnant, same general shape
+ * `job-cleanup.ts`'s `stripOrphanedFormattingArtifacts` already treats as
+ * an artifact, B9-03) or a bare Markdown heading marker (`##`+). Narrow and
+ * shape-based, matching this file's own "catch a known shape" convention:
+ * does not touch `matchedCount` or `roleScore`, and a genuine
+ * "Qualifications: Design and build systems that..."-shaped sentence has
+ * neither marker and is unaffected.
+ */
+const SCRAPED_FRAGMENT_MARKER_RE = /#{2,}/;
+
+function hasUnbalancedBracket(text: string): boolean {
+  const opens = (text.match(/\[/g) ?? []).length;
+  const closes = (text.match(/\]/g) ?? []).length;
+  return opens !== closes;
+}
+
+function sectionOpenerHasReadableContent(text: string): boolean {
+  const afterLabel = text.replace(SECTION_RE, "").trim();
+  return (
+    afterLabel.length >= 20 &&
+    !SCRAPED_FRAGMENT_MARKER_RE.test(afterLabel) &&
+    !hasUnbalancedBracket(afterLabel)
+  );
+}
+
+/**
+ * B10-07 fix 2 (round 10, item 8): a leading `Label:` pattern left visible
+ * in the final displayed summary — a capitalised phrase of up to three
+ * words immediately followed by a colon, at the START of a sentence (the
+ * same shape LABEL_MARKER_RE above recognises, anchored). Item 8's own live
+ * repro ("Multi-Level: This is a multi-level posting...") is confirmed, by
+ * controlled construction against this file's real, unmodified scoring
+ * logic, to clear the floor through `roleScore`/`matchedCount` on real
+ * content — never through `SECTION_RE` — so it is a legitimately-selected
+ * sentence with a purely cosmetic un-stripped label prefix.
+ *
+ * **Deliberately NOT placed in `job-cleanup.ts`'s `cleanJobDescription`**,
+ * though B's guide named that as the natural home (same scoping precedent
+ * as B9-03's dash/bracket cleanup). Traced the actual call order first:
+ * `mapper.ts` calls `cleanJobDescription(summarySource)` BEFORE
+ * `summarizeJob` ever runs `scoreSentences` — stripping the label there
+ * would remove it from the text `SECTION_RE` itself scores, silently
+ * blinding `sectionScore`'s detection for every label-led sentence
+ * (including the "Role Overview: We're hiring..." case this file's own
+ * existing test protects) before scoring ever saw it. That is a scoring
+ * regression, not a cosmetic fix. Stripped here instead, applied only to
+ * the STORED/displayed `text` of a sentence that already survived scoring
+ * — every scoring check above (`SECTION_RE`, `sectionOpenerHasReadableContent`,
+ * `ROLE_RE`, `matchedCount`) still runs against the original, unstripped
+ * sentence text.
+ */
+const LEADING_LABEL_RE = /^[A-Z][a-zA-Z]*(?:[\s-][A-Za-z]+){0,2}:\s*/;
+
+function stripLeadingLabel(text: string): string {
+  return text.replace(LEADING_LABEL_RE, "");
+}
+
 const ROLE_RE =
   /\b(?:in this role|you will|you(?:'|’)ll|responsible for|we(?:'|’)re hiring|develop|design|build|research|analy[sz]e|lead|manage)\b/i;
 
@@ -101,7 +170,8 @@ function scoreSentences(
 
       const matchedCount = terms.filter((term) => termMatches(text, term)).length;
       const positionScore = Math.max(0, 3 - index * 0.25);
-      const sectionScore = SECTION_RE.test(text) ? 4 : 0;
+      const sectionScore =
+        SECTION_RE.test(text) && sectionOpenerHasReadableContent(text) ? 4 : 0;
       const roleScore = ROLE_RE.test(text) ? 2 : 0;
       const readableLengthScore = text.length >= 60 && text.length <= 180 ? 1 : 0;
 
@@ -123,7 +193,7 @@ function scoreSentences(
 
       return {
         index,
-        text,
+        text: stripLeadingLabel(text),
         score: matchedCount * 6 + positionScore + sectionScore + roleScore + readableLengthScore,
       };
     })
