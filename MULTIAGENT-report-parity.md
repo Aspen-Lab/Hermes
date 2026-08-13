@@ -2118,6 +2118,78 @@ grounds for calling Ruling 29 resolved in full.
 
 ---
 
+## §1s. RULING 32 — "THIS FIELD MUST NOT BE EMPTY" IS THE DEFECT. STOP FIXING IT ONE SITE AT A TIME. — BINDING
+
+**Date: 2026-08-13**, after round 9's four-part measurement.
+
+### The pattern, stated once
+
+Three separate times now, this loop has found the same thing:
+
+| Round | Guard added | What filled the gap instead |
+|---|---|---|
+| 6 → Ruling 26 | job-board brand rejected in the company slot | `\|\| host` — the same brand as a domain |
+| 8 | seven employer write sites guarded | five adapters' hardcoded `"Unknown company"` |
+| 9 part 3 | three event-name shapes rejected | a site's own blog brand; a filename minus its extension |
+
+Each time it was diagnosed as a bug in one place, fixed in that place, and
+reappeared somewhere else. **It is not three bugs. It is one property of this
+codebase: no field is allowed to be empty, so every rejection path ends at
+something that fills it.**
+
+**Round 9 part 3 found the sharpest form of it.** The name fallback of last
+resort can return **a string the guards have already rejected**, verbatim. The
+system evaluates a candidate, decides it is unfit, and then uses it anyway
+because the alternative would be an empty slot.
+
+### The ruling
+
+**B: stop treating these as per-field defects.** The next guide does not get an
+item per wrong value. It gets **one investigation** answering, for the whole
+report surface:
+
+1. **Where can a rejected candidate still reach the reader?** Enumerate every
+   fallback that runs after a guard rejects something — job employer, event
+   name, summary, and anything else with the same shape. Name each one.
+2. **Which of those fields may render nothing?** This is the question Ruling 26
+   asked about one field and nobody has answered for the rest. Round 9 already
+   established the answer is *yes, cleanly* for the job employer (part 1) and
+   for the job summary (part 2) — both render true silence, no heading over
+   emptiness, verified from rendered output. **Use those two as the precedent
+   they are**, rather than re-deriving the question per field.
+3. **Where a field genuinely cannot be empty** — an event with no name has to
+   render something — say so explicitly and state what the honest last resort
+   is. **"An already-rejected string" is never the answer.** A URL host, a
+   truncated title, "Untitled event": any of these is defensible. Re-using a
+   value the code just judged unfit is not.
+
+**Do not propose a fix for any individual wrong value until that enumeration
+exists.** Every round that skipped this step fixed one site and shipped the
+next one.
+
+### And the standing standard this comes from
+
+§2's rule has always been *a wrong value is worse than a missing one.* This
+ruling is only that rule applied to the place it keeps being violated: **the
+code path that runs after "no". A guard is not a fix. A guard plus a defensible
+"nothing" is a fix.**
+
+### Ruling 29 — formally de-prioritised, not closed
+
+Four rounds, four agents, zero live examples of the unfixed flat-sibling shape.
+Round 9 part 4 finally confirmed shape 1's precondition on a real page
+(`openmc.discourse.group`) and confirmed it **did not** contaminate the selected
+posting.
+
+**Ruling: no fix item, no dedicated hunt, no further A budget.** The
+`KNOWN, CONFIRMED, NOT FIXED THIS ROUND` test round 8 wrote stays exactly as it
+is — that test is the record. If a live counterexample ever turns up
+incidentally, it becomes an ordinary item that day. **Nobody may cite this
+ruling as grounds for calling Ruling 29 resolved**; it is parked, and parked is
+a status, not a close.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
