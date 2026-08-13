@@ -141,16 +141,18 @@ STATUS:           Round 1 C in progress, working B's guide top to bottom.
                   B's guide found by running install/tests — see §4),
                   1-10 (dev-slug gate; MCP_DEV_TEST_USER_ID is a placeholder
                   UUID — this sandbox has no Supabase credentials to create
-                  a real test user, flagged for A/manager in §4). Continuing
-                  down the build order; §4 gets one entry per commit as it
+                  a real test user, flagged for A/manager in §4), 1-02+1-11
+                  (get_daily_forecast, Tier-0 by construction, one
+                  underspecified judgment call on counts semantics —
+                  documented in §4 for A to sanity-check). Continuing down
+                  the build order; §4 gets one entry per commit as it
                   happens, pushed immediately.
-LAST DIFFERENCE:  1-02 — `get_daily_forecast` has no implementation yet.
-                  The route now 404s correctly on a bad/missing slug but
-                  has zero tools registered.
+LAST DIFFERENCE:  1-05 — `get_opportunity` has no implementation yet, so a
+                  forecast item's "tell me more" follow-up is still unmet.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08 (endpoint skeleton), 1-10 (dev-slug gate) — rest
-                  of B's build order in progress this round, see §4.
-GATE NOW:         npm test (web/): 608 passed | 1 skipped (609), 75 files +1 skipped
+DONE:             1-01+1-08, 1-10, 1-02+1-11 — rest of B's build order in
+                  progress this round, see §4.
+GATE NOW:         npm test (web/): 628 passed | 1 skipped (629), 77 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1145,3 +1147,65 @@ grows through the round rather than being written at the end.
   `route.test.ts` (1→4). 598+10=608, matches.
 - Blast radius: none — `route.ts` is the only existing file touched, and it
   has no callers yet outside its own test (M1 isn't deployed).
+
+**1-02 + 1-11 — `get_daily_forecast` tool, Tier-0 by construction.** DONE.
+
+- New: `web/src/lib/mcp/types.ts` (`ForecastItem`/`ForecastCounts`/
+  `DailyForecastResult` + the three per-type mappers `jobToForecastItem`/
+  `paperToForecastItem`/`eventToForecastItem` — exactly B's mapping table).
+  `paperToForecastItem` structurally never assigns `location`/`deadline` at
+  all (TypeScript won't even compile `paper.location` — `Paper` has no such
+  field — so RULING 4 is enforced by the type system, not just by
+  discipline). The other two mappers run every optional field through an
+  `omitUndefined` helper so an unset value is a genuinely missing key, never
+  `null` — matches B's own test wording ("not null — literally absent").
+- New: `web/src/lib/mcp/tools/get-daily-forecast.ts` (`getDailyForecast`).
+  Followed B's 5-step design as written: admin client + `profileRowToProfile`
+  (reused, not reimplemented) → `researchTopics` as the shared topics input
+  for all three pipelines (the precedented fallback B named, empty topics
+  short-circuits to an empty forecast, zero pipeline calls) →
+  `Promise.allSettled` across `runFeedPipeline`/`runJobsPipeline`/
+  `runEventsPipeline`, every one with `aiTier: 0` explicit → the papers lane
+  passes `sources: ["arxiv", "openalex"]` per RULING 6 → merge + sort by
+  relevance descending (exact match for `page.tsx`'s `briefingItems`) →
+  slice to `limit` (default 9, cap 30).
+- **Judgment call, not in B's contract text (documented in code + here for
+  A to sanity-check):** B's contract table names `counts: {jobs, papers,
+  events, total, shown}` without defining `total` vs `shown` precisely. I
+  read `total`/per-type counts off the **full merged pool before the final
+  limit-slice** (each lane independently fetched up to `limit` items via its
+  own `topN`), and `shown` as the post-slice count. This makes `total ≥
+  shown` a meaningful signal (echoing "3 / 9条" in the mockup) instead of
+  the two numbers being trivially always equal — but it's my interpretation
+  of an underspecified field, not something B or a RULING pinned down.
+- Wired into `web/src/lib/mcp/server.ts`: `registerPeerTools` now calls
+  `server.registerTool("get_daily_forecast", {...zod input shape...},
+  handler)`. The handler's `content` (text fallback) is a **placeholder**
+  `simpleForecastSummary` for this commit only — a plain, honest bullet list
+  of real titles + links, no invented fields, but not B's designed renderer.
+  1-03+1-04+1-09 replaces it with `renderDailyForecastText`; a
+  `CallToolResult` needs a `content` array regardless of whether a host can
+  render the `ui://` card, so it couldn't be deferred entirely to that item.
+- Tests: `web/src/lib/mcp/types.test.ts` (11 cases — direct, isolated checks
+  of the three mappers, including the two RULING-4 omission cases B's
+  contract specifically calls out) and
+  `web/src/lib/mcp/tools/get-daily-forecast.test.ts` (9 cases — B's four
+  required: merge+sort order, paper item has no location/deadline key,
+  `aiTier: 0` on all three calls, empty-topics short-circuit; plus 5 more:
+  no-profile-row short-circuit, `type` filter skips the other two lanes'
+  fetches entirely, counts semantics from the judgment call above, one
+  lane's rejection doesn't blank the others, limit default/cap). All three
+  `runXPipeline` functions + the admin client + `profileRowToProfile` +
+  `scoredItemToPaper` mocked via `vi.mock`, matching B's spec.
+- Ran `npx tsc --noEmit -p .` (not part of the gate, vitest's esbuild
+  transform doesn't type-check) as an extra check given how much of this
+  item is type-shape-sensitive (RULING 4 in particular) — clean, zero
+  errors, across the whole project.
+- Gate after this item: **628 passed | 1 skipped (629), 77 files + 1
+  skipped (78)** — +2 files, +20 tests (11 + 9). 608+20=628, matches. No
+  existing test touched.
+- Blast radius: none new — `runFeedPipeline`/`runJobsPipeline`/
+  `runEventsPipeline`/`profileRowToProfile` are called (reused per HANDOFF
+  §5), never modified; this is a new caller, not a changed contract for the
+  existing ones (`/api/feed`, `/api/jobs/feed`, `/api/events/feed`,
+  `/api/profile`, `/api/jobs/dispatch-digests` are all untouched).
