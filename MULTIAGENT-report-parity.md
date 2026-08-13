@@ -407,7 +407,18 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   again this round. **§1t Ruling 33** — accepted cost, no
                   code; A's one-line acronym tally is now running (round 9:
                   1 of 4; round 10: 0 of 3) and continues every round from
-                  here, unchanged instruction.
+                  here, unchanged instruction. **NEW: §1u Ruling 34** —
+                  both of round 10 B's escalations are ruled. **34a:** item
+                  1's "correctly-spelled name, wrong institution" is an
+                  ACCEPTED COST; C lands B10-01 part 1 only and does NOT
+                  build the URL-slug cross-check (the collateral case — a
+                  university hiring for itself on its own domain — is the
+                  common one, and one instance is not frequency data). A
+                  starts a second one-line tally from round 11. **34b:** C
+                  lands B10-03's regex change and, if a different wrong
+                  value surfaces underneath, RECORDS it for A rather than
+                  chasing it — C must say what the replacement was, not
+                  prove it is good.
 STATUS:           **ROUND 9'S SIX CODE ITEMS (B9-02a, B9-04 FIX 1, B9-04
                   FIX 2, B9-04's BARE-DATE GUARD, B9-02b/c, B9-03) ARE ALL
                   LANDED AND MANAGER-VERIFIED** (§4 "Round 9 — MANAGER
@@ -2246,6 +2257,74 @@ surviving sentence's only keyword evidence was an acronym under 5 characters.**
 One line per round. That costs almost nothing and it is the frequency data
 nobody has. If it turns out to be common, this ruling gets revisited with
 evidence instead of a single anecdote.
+
+---
+
+### §1u Ruling 34 — A CORRECTLY-SPELLED INSTITUTION NAME THAT IS THE WRONG INSTITUTION IS AN ACCEPTED COST. DO NOT BUILD THE SLUG CROSS-CHECK.
+
+Round 10 B escalated one `POLICY — manager decides` (B10-01, item 1) and one
+process question (B10-03). Both are ruled here.
+
+#### Ruling 34a — item 1: accept, do not build
+
+`careerservices.upenn.edu` renders `"University of Pennsylvania"` as the
+employer for an Oak Ridge National Laboratory posting. B offered two options
+and correctly refused to pick: (a) accept as a named low-frequency cost, or
+(b) a URL-slug cross-check treating a candidate as suspect when the URL's own
+slug names an unrelated organisation.
+
+**Ruling: (a). C lands B10-01's part 1 — the closed boilerplate-phrase check,
+which closes item 2 — and does NOT attempt (b).** Reasons, in order of weight:
+
+1. **One live instance, zero frequency data.** This is the identical evidence
+   position as Ruling 33's LCO collision, which was accepted eight days into
+   the same loop. Ruling the opposite way on identical evidence would make the
+   standard incoherent — the next agent could no longer predict what gets built.
+2. **The collateral case is the common one, and this is the decisive reason.**
+   A university hiring for its own position on its own domain (`"Duke
+   University"` on `careers.duke.edu`) is the *normal* case; a university site
+   carrying another employer's posting is the exception. B proved nothing about
+   item 1's string shape distinguishes the two. So (b) trades a frequently-correct
+   value for a rarely-wrong one — the wrong direction on this evidence.
+3. **(b) is undesigned.** B explicitly declined to prescribe it because it does
+   not prescribe untested heuristics — the right call. Asking C to invent it,
+   land it, and test it inside one turn is precisely how round 6's employer
+   parse shipped broken for two rounds.
+
+**One observation B did not consider, recorded as a lead, not an instruction.**
+The distinguishing signal may live in neither the candidate string nor the URL
+slug, but in **the subdomain's own semantics**: `careerservices.` /
+`careercenter.` read structurally as *aggregators* — sites whose purpose is
+carrying other organisations' postings — whereas `careers.` / `jobs.` on an
+institution's domain read as that institution's own board. That is a cheaper and
+better-targeted signal than a slug cross-check, and it is the shape a future fix
+should be built from **if** the frequency data ever justifies one. It is not
+authorisation to build it now.
+
+**What makes this reversible — the same mechanism Ruling 33 used, because it
+worked:** **A: from round 11 onward, when you measure the employer field, record
+in one line how many values were a real, correctly-spelled institution name that
+was NOT the actual employer.** Cumulative across rounds. If this turns out to be
+common rather than a single anecdote, this ruling gets revisited with evidence.
+
+#### Ruling 34b — item 3: land the guard, do not chase the cascade
+
+B10-03 found that `"Call for Papers"` is missing from the generic-page-title
+list, and correctly warned that rejecting it does not guarantee a good
+replacement — the fallback may surface a *different* wrong value it cannot
+verify without live data.
+
+**Ruling: C lands the regex change, and if a different wrong value surfaces
+underneath, C RECORDS it as a finding for A and does not chase it.**
+
+`"Call for Papers"` is never an event's name. Rejecting it is correct on its own
+terms regardless of what sits beneath it, and leaving it in place because the
+next value might also be wrong would be choosing a known-wrong value over an
+unknown one. But chasing the cascade inside C's turn is exactly the
+"stop fixing it one site at a time" behaviour **Ruling 32** named, and C cannot
+verify live anyway. **C is not required to prove the replacement is good. C is
+required to say what the replacement was.** Marking the item closed requires the
+first; this round only asks for the second.
 
 ---
 
