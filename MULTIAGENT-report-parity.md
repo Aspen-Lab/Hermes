@@ -18795,3 +18795,95 @@ No gate verdict is set by this entry.
 
 Commit follows immediately.
 
+### Round 10 — Agent A (part 3: R4 job summaries, plus Ruling 33's acronym tally)
+
+**STATUS: COMPLETE.** Continuing the same session as parts 1–2. Checks
+whether the `www.aiu.edu` dash and the Markdown-`]` remnant (B9-03) are gone,
+and starts Ruling 33's mandatory per-round acronym tally.
+
+**Method.** Live keys reconfirmed present, boolean check only. Built a
+throwaway vitest file (`web/src/zz-round10-a-summaries-live.test.ts`, plus
+its own throwaway JSON output file, both deleted before this commit)
+following round 9 A part 2's own profile-loading and request-shape
+precedent, reusing the no-op `PoolCache` trick to force fresh live fetches.
+**Three independent live pulls, widening `perSourceLimit` (60, then 120,
+then 200), unioned by posting URL.** Wrote the full result straight to a
+file (`fs.writeFileSync`, not only `console.info`) specifically to rule out
+any reporter/terminal truncation before trusting a surprising string — one
+of this round's findings depended on an exact trailing substring, and a
+first console-only look was ambiguous enough to be worth the extra step.
+
+**Reproducibility, matching this loop's standing bar:** all three
+configurations converged on the **same 13 unique postings, same 3
+summary-bearing, byte-identical text each time** — widening the limit found
+zero new postings, a plateau consistent with round 9 A part 4's own
+"close to the full live pool available today" reading, not a truncated
+sample.
+
+**3 of 13 (23.1%) summary-bearing this round**, up from round 9's 4 of 29
+(13.8%) — a different day's pool composition and a much smaller absolute
+base (13 vs. 29 unique postings), so this is reported as this round's own
+number, not claimed as a trend against a differently-sized sample.
+
+**Per-posting result, all 3, none averaged:**
+
+1. `grad.wisc.edu`, matched `"ion exchange"`: *"Must be able to
+   independently design, plan, and execute experiments, analyze data, and
+   perform basic troubleshooting of experimental protocols."* **CLEAN. No
+   clutter of any kind.**
+2. `inl.referrals.selectminds.com`, matched `"molten salt"`: *"Multi-Level:
+   This is a multi-level posting and you will be placed at the appropriate
+   level dependent on degree field and level of education."* Readable and
+   genuinely informative once past its first two words, but opens with a
+   colon-label prefix (`"Multi-Level:"`) — a milder possible instance of
+   round 8's originally-named "single-colon-label chrome" shape. Flagged,
+   not treated as equal in severity to item 3 below.
+3. `employbl.com`, matched `"battery"`: *"Battery is a private equity and
+   venture capital firm with over 40 years of heritage investing in
+   category-leading technology companies. Qualifications: ### Get the
+   Saturday tech briefing [..."* **First sentence CLEAN.** Second
+   fragment — the shortest quote that shows it in full, confirmed
+   byte-exact via a direct file write, not just console output, precisely
+   because it looks like it could be a truncation artifact and is not one
+   — stacks three separate chrome elements in one surviving fragment: a
+   colon-label prefix (`"Qualifications:"`, the same shape as item 2, and
+   the same general family round 8 originally named on this exact host),
+   a bare Markdown heading marker (`"###"`) sitting mid-sentence, and an
+   **orphaned, unpaired opening bracket immediately before a literal
+   ellipsis** (`"[..."`, no closing `]` anywhere in the string). **This is
+   a different character than B9-03 fixed** — B9-03's unconditional rule
+   targets an isolated *closing* `]`; this is an unpaired *opening* `[`,
+   a shape not covered by that rule at all. Reads, to a candidate, as a
+   newsletter-signup call-to-action fragment that leaked in from the
+   source page's own chrome, not role content.
+
+**The two specific shapes this round was asked to check:**
+
+- **The `www.aiu.edu` dash (B9-03):** `www.aiu.edu` is **absent from
+  today's 13-item sample entirely** — say "not observed," not "confirmed
+  fixed," per this loop's own standard; the same live-search day-to-day
+  churn round 9 A itself noted for other hosts. No dash artifact of any
+  kind appears in any of today's 3 summaries.
+- **The Markdown-`]` remnant (B9-03):** also not observed in this sample —
+  but a **different, previously-unreported bracket shape** (the unpaired
+  `[` above, item 3) was found live instead. Not the same defect
+  recurring; a new one, on the opposite bracket.
+
+**RULING 33's ACRONYM TALLY — round 10 (first round recording it).** Of the
+3 surviving summary sentences this round, the matched keyword evidence was:
+`"molten salt"` (11 characters), `"ion exchange"` (12 characters),
+`"battery"` (7 characters). **None is an acronym under 5 characters. Tally
+this round: 0 of 3.** Recorded per Ruling 33's own instruction even though
+the answer is "none" — this is the frequency data the ruling said does not
+exist yet; round 9's own single LCO instance remains the only positive
+example on record so far across the two rounds this has now been tracked.
+
+**Cleanup:** both throwaway files (the vitest test and the JSON it wrote)
+deleted before this commit. No product code touched. No credential printed,
+logged, or written anywhere.
+
+**Not done this turn (part 4, same session, continuing next):** R13 event
+names re-check. No gate verdict is set by this entry.
+
+Commit follows immediately.
+
