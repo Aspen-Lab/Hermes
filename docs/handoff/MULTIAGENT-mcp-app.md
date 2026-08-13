@@ -2457,3 +2457,115 @@ total, and the header must say so honestly rather than imply completeness:
   already flags this as its own open question) — not something this guide
   decides by default; shipping the honest, capped number now doesn't
   foreclose it.
+
+---
+
+**3-01. MISSING — fullscreen view resource skeleton.**
+
+- New: `web/src/lib/mcp/ui/daily-forecast-home.ts`, mirroring
+  `daily-forecast-card.ts`'s exact module shape: a module-level `HOME_STYLE`
+  string (CSS), a module-level `HOME_WIDGET_SCRIPT` string (vanilla JS
+  IIFE), `export function buildDailyForecastHomeWidgetHtml(): string` (zero
+  arguments, byte-static — the actual regression test for the architecture
+  bug C already found and fixed once; don't reintroduce it), `export
+  function __getHomeWidgetScriptForTest(): string`. Content (top bar, date
+  header, chips, grid, actions row, palette) is items 3-04/3-05/3-07/3-08/
+  3-09/3-10/3-11/3-12 below — this item is the container + registration
+  only.
+- Edit `web/src/lib/mcp/server.ts`: add `const DAILY_FORECAST_HOME_URI =
+  "ui://peer/daily-forecast-home.html";` near the existing
+  `DAILY_FORECAST_CARD_URI` const (line 18), and a second
+  `server.registerResource(...)` call immediately after the existing one
+  (lines 100-117), same shape: `{}` config, `mimeType:
+  "text/html;profile=mcp-app"`, `text: buildDailyForecastHomeWidgetHtml()`.
+  Import `buildDailyForecastHomeWidgetHtml` from the new file alongside the
+  existing import of `buildDailyForecastWidgetHtml`/`renderDailyForecastText`
+  (line 5).
+- Text fallback: reuses `renderDailyForecastText` verbatim (no new
+  function) — see 3-02/3-13.
+- Classification: MISSING. Closes A's **3-01**.
+- Tests: new `web/src/lib/mcp/ui/daily-forecast-home.test.ts` — the same
+  static-template checks `daily-forecast-card.test.ts` already runs for the
+  card (literal hex values present, no `var(--`, byte-identical across two
+  calls, no Save/Expand/close-button markup), plus the content-specific ones
+  under 3-04/3-05/3-07/3-08/3-09/3-10 below. Also extend
+  `web/src/app/api/mcp/[slug]/route.test.ts`'s existing `resources/read`
+  describe block (lines 243-255) with one more case: `resources/read` for
+  the new home URI returns `mimeType: "text/html;profile=mcp-app"` and does
+  not contain the test fixture's item title (same "static, never baked
+  per-call data" protocol-level proof the card already has).
+- Blast radius: `server.ts`'s existing card resource registration and both
+  existing tools are untouched — this only adds, never edits, existing
+  lines there. `route.test.ts`'s existing tests untouched, one new case
+  appended.
+
+**3-02 + 3-13. MISSING — `open_home` tool + its text-only fallback.**
+
+- New: `web/src/lib/mcp/tools/open-home.ts` — exactly the contract above.
+- Edit `web/src/lib/mcp/tools/get-daily-forecast.ts` line 24: `const
+  MAX_LIMIT = 30;` → `export const MAX_LIMIT = 30;`. Only change to this
+  file. Every one of its 9 existing tests (`get-daily-forecast.test.ts`)
+  stays valid — none of them assert on the const's export-ness, and its
+  value/behavior is unchanged.
+- Edit `web/src/lib/mcp/server.ts`: import `openHome` from the new file,
+  add an `openHomeInputShape` Zod object (one optional `type` field, same
+  enum as `getDailyForecastInputShape`'s), and register the tool
+  immediately after `get_opportunity`'s registration (after line 176):
+
+  ```ts
+  server.registerTool(
+    "open_home",
+    {
+      title: "Open Peer Daily Forecast Home",
+      description:
+        "Opens Peer's full Daily Forecast home -- the fullscreen surface " +
+        "with every ranked job, paper, and event for today, filterable by " +
+        "type, not just the short inline preview. Call this when the user " +
+        "asks to 'open Peer', 'open my Peer home', 'show my full forecast', " +
+        "or wants to see everything rather than the top few. Answers " +
+        "instantly from the user's existing Peer profile -- no arguments " +
+        "are required and no setup or login step is needed first.",
+      inputSchema: openHomeInputShape,
+      _meta: {
+        "openai/outputTemplate": DAILY_FORECAST_HOME_URI,
+        "openai/toolInvocation/invoking": "Opening your Peer home…",
+        "openai/toolInvocation/invoked": "Here's your Peer home",
+        "openai/widgetAccessible": true,
+        ui: { resourceUri: DAILY_FORECAST_HOME_URI },
+      },
+    },
+    async (args) => {
+      const result = await openHome(ctx.userId, args);
+      return {
+        content: [{ type: "text" as const, text: renderDailyForecastText(result) }],
+        structuredContent: result as unknown as Record<string, unknown>,
+      };
+    },
+  );
+  ```
+
+  Reuses `renderDailyForecastText` (already imported for `get_daily_forecast`)
+  verbatim — `open_home`'s `structuredContent` is the same
+  `DailyForecastResult` shape, so the same renderer produces a correct
+  fallback with zero new function. This is also the answer to A's own open
+  question on criterion 8's "throughout" wording at the tool-response
+  level: the text fallback already lists every item's own deep link, same
+  as today.
+- Description phrasing doubles as this milestone's entry-behavior lever —
+  see 3-06.
+- Classification: MISSING. Closes A's **3-02, 3-13**.
+- Tests: new `web/src/lib/mcp/tools/open-home.test.ts` — mock
+  `./get-daily-forecast`'s `getDailyForecast` export directly (not the
+  three underlying pipelines again — `openHome` has no pipeline logic of
+  its own to test, only parameter-shaping) and assert: (a) called with
+  `{type: undefined, limit: 30}` when `input` is `{}`; (b) called with
+  `{type: "job", limit: 30}` when `input` is `{type:"job"}`; (c) the
+  function returns exactly what `getDailyForecast` resolved to, unchanged.
+  Extend `route.test.ts`'s protocol describe block with `tools/list`
+  (`open_home` present, `_meta["openai/outputTemplate"]` points at the home
+  URI) and `tools/call open_home` (returns `structuredContent` + non-empty
+  text) cases, mirroring the existing `get_daily_forecast` ones exactly
+  (same `FIXTURE_JOB`/mocks already defined in that file, nothing new to
+  fixture).
+- Blast radius: none on existing tool registrations; `get-daily-forecast.ts`'s
+  only change is the one `export` keyword noted above.
