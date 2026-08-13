@@ -19407,3 +19407,130 @@ code touched. No credential referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-02: item 4, `internationalbatteryseminar.com` — bare-location segment fills the slot after the bare-date guard)
+
+**STATUS: DONE.** Continuing the same session as B10-01. Confirmed separate
+from items 1/2 there; traced independently here.
+
+**Classify: MISSING (guard) — same category B9-04 used for the bare-date
+guard itself**, not a fallback-reinstatement case. `"Orlando, FL"` was never
+rejected by anything because nothing in the event-name chain has any concept
+of "this is only a location, not a name" — the event-side equivalent of a
+gap the job side already closed for its own field.
+
+**Confirmed via controlled construction against the real, unmodified
+`web/src/lib/events/sources/eventweb.ts` functions (not a live pull):**
+```
+looksLikeEventTitle("Orlando, FL")                                            === true
+bestEventTitleSegment("Orlando, FL", "https://internationalbatteryseminar.com/") === "Orlando, FL"
+eventNameFrom("March 15-18, 2027 | Orlando, FL", "", "https://internationalbatteryseminar.com/")
+                                                                                === "Orlando, FL"
+```
+Traced why, checking every branch of `isChromeSegment` (`:359-378`) by hand:
+`isGenericPageTitle` — no (not a generic-word phrase); `isEventIndexPage` —
+no; the bare-`events?`-suffix regex — no; `DOCUMENT_FILENAME_RE` — no;
+**`isBareDateSegment`** (B9-04's own new fifth check) — no, `"Orlando, FL"`
+is not date-shaped; host-brand — no, `"orlandofl"` normalized shares no text
+with `internationalbatteryseminar`'s own labels (a different reason for
+surviving than items 1/2 above — this is an ordinary, correct non-collision,
+not the length-asymmetry gap). `looksLikeEventTitle` (`:449-458`) — no
+narrative verb, no headline-passive, no present-narrative-verb, not
+multi-sentence, two words: clears every one of its four checks. **This is
+the exact mechanism B9-04's own bare-date guard fixed, one field-type over:
+a segment that is only a $DATATYPE (there, a date; here, a location) reads as
+a perfectly fine "title" to every existing check, because none of them has
+any concept of that datatype at all.**
+
+**Why this specific string, this round, on this exact host — likely
+mechanism, not confirmed live (B does not re-measure):** B9-04's bare-date
+guard removed the `"March 15-18, 2027"` segment from the informative pool.
+If the real title carries a sibling `"Orlando, FL"` segment (plausible from
+the confirmed two-pull-reproducible live string `eventNameFrom` returned —
+consistent with a title shaped like `"March 15-18, 2027 | Orlando, FL |
+<something>"` or a two-segment title with no event-name segment present at
+all in the page's own `<title>` tag), removing the date segment leaves the
+location segment as the sole (or most competitive) survivor. This is
+Ruling 32's own named pattern in its precise, literal form here (unlike
+items 1/2): a guard closing shape A left shape B, sitting right next to it in
+the same fallback pool, uncaught.
+
+**Fix direction: reuse the job side's existing state-code machinery, adapted
+to the event side's stricter whole-segment anchoring — do not copy
+`looksLikeBareLocation` verbatim.** `web/src/lib/jobs/sources/jobweb.ts:90-102`
+already has this exact concept for the job-employer field
+(`TRAILING_STATE_CODE_RE`/`looksLikeBareLocation`, built on the exported
+`US_STATE_CODES` from `structured-extract.ts:578`). Confirmed no circular-
+import obstacle: `structured-extract.ts`'s own imports (`:1-4`) do not touch
+`eventweb.ts`, so `US_STATE_CODES` can be imported directly, or relocated to
+`shared.ts` first — **`shared.ts` is the established common home for
+job+event primitives after B9-04's own bare-date-pattern relocation there
+this same round**, matching that precedent exactly.
+
+**Important adaptation, not a straight copy — this is the one place a
+careless reuse would introduce a new bug.** `looksLikeBareLocation` on the
+job side is **unanchored** — `TRAILING_STATE_CODE_RE` only checks that the
+candidate string ENDS in `, ST`, with no requirement that the whole string be
+short. That is safe on the job side because a job-title split segment
+carrying a location is, in practice, already isolated to just the location.
+On the event side this is riskier: a single unsplit segment could legitimately
+be a longer, real event-identifying phrase that merely ends in a city/state
+(a conference routinely names its own location as part of a longer string).
+**Recommend anchoring the new check to the WHOLE trimmed segment, mirroring
+`isBareDateSegment`'s own `^...$` convention exactly** (`eventweb.ts:333-338,
+340-342`) — "the segment IS a bare location" not "the segment ENDS WITH one."
+
+**Hardest must-survive case, already live and already correct this
+round — use it, do not invent a synthetic one, per Ruling 31.** A's own
+census this round: `10times.com` → `"Solid-State Battery Summit (Aug 2026),
+Chicago USA"`, scored CORRECT. A whole-segment-anchored check leaves this
+alone (it is far more than just a city/state), but this is exactly the case
+that would break under an unanchored, job-side-style copy if the site's title
+ever produced this whole phrase as one unsplit segment — name it explicitly
+as the regression test, not a hypothetical.
+
+**Other hardest cases to add:**
+- The live repro pair itself:
+  `"March 15-18, 2027 | Orlando, FL"` → must resolve to a real name if one is
+  present elsewhere in the same title, or to the next honest fallback
+  (URL-slug, then snippet, then host) if not — not to `"Orlando, FL"`.
+- A bare "City, ST" with NO other segment available anywhere (title, slug,
+  snippet) — confirms the chain still falls through to Fix 1's honest last
+  resort (URL host / `"Untitled event"`) rather than producing an empty
+  string or throwing, since event name is a required non-optional `string`
+  (B9-01's own confirmed constraint).
+- `"SolarPACES 2026"` — the regression-lock case, unaffected by construction
+  (contains no comma-plus-state-code shape at all) but worth re-running
+  regardless since it shares the same `isChromeSegment` call site.
+
+**What renders when the guard fires:** no new design needed. Once this
+segment is rejected, `eventNameFrom`'s existing chain (title segments →
+URL slug → snippet mining → B9-04 Fix 1's host/placeholder) already runs
+unconditionally, per B9-01's and B9-04's own confirmed-complete trace of this
+exact function — this item only adds one more rejection condition to
+`isChromeSegment`, it does not touch the fallback chain itself.
+
+**Tests at risk — searched for callers before listing, same three files
+B9-04's own audit already established and this round's fresh grep
+reconfirms unchanged (`eventNameFrom`/`bestEventTitleSegment`/
+`isChromeSegment`/`looksLikeEventTitle`):**
+`web/src/lib/events/sources/eventweb.test.ts`,
+`web/src/lib/opportunities/enrich.test.ts`,
+`web/src/lib/events/scoring.test.ts`. The third is the one a guide that only
+grepped the file B names would miss — round 9 C's own B9-04 Fix 1 entry
+already documents this exact near-miss; re-confirmed still exactly these
+three files, no fourth has appeared since.
+
+**Blast radius:** same three callers of `bestEventTitleSegment`/
+`isChromeSegment` as B9-04's own Fix 2 (`eventNameFrom`'s two internal calls,
+`enrich.ts`'s four `typedName` call sites) — the new check lives inside
+`isChromeSegment` itself, same integration point as the bare-date guard, so
+no new caller and no signature change.
+
+Cleanup: throwaway vitest file (`zz-round10-b-eventname-trace.test.ts`)
+deleted before this commit. No product code touched. No credential
+referenced, logged, or written.
+
+Commit follows immediately.
+
