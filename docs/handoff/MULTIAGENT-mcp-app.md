@@ -135,81 +135,102 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 11:25 UTC
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
-                  behavior). M1 acceptance pends the USER host-test per
-                  RULING 9 — its checklist lives in §4 Round 2 A's NEEDS
-                  MANAGER/USER list and is re-listed every round.
-WHOSE TURN:       A
-STATUS:           Round 3 C implemented B's full M2 fix guide top to
-                  bottom, in the stated build order, one commit per item
-                  (5 commits: 3-01; 3-02+3-13; the combined 3-04/05/07/
-                  08/09/10/11/12 content item; 3-03; 3-06), gate + tsc +
-                  eslint clean after every commit, pushed immediately —
-                  identifier `cloud-hourly-mcp` (§0c), no subagents.
-                  Full detail, blast radius, and hand-back notes: §4
-                  "Round 3 — Agent C". Found and fixed one real bug
-                  beyond the guide's literal sketch: the guide's Expand-
-                  button placement (inside the replaced pc-head div)
-                  would have had the button destroyed by the very first
-                  real render, taking its listener with it — restructured
-                  so mark/title/Expand are static siblings and only the
-                  date/counts meta text is replaced. Also found (not
-                  fixed) a pre-existing, unrelated test flake:
-                  `src/lib/jobs/card.test.ts`'s day-diff assertion is
-                  timezone-dependent (fixture uses a -05:00 posted date
-                  against a locally-constructed `now`; this environment's
-                  TZ is UTC) — flagged per the ground rules' POLICY
-                  instruction, not silently fixed, not counted in any
-                  gate figure quoted this round.
-LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: round 3
-                  A measured 13/13 MISSING (§4 "Round 3 — Agent A");
-                  round 3 C has now written code for all 13 items
-                  (§4 "Round 3 — Agent C") — UNVERIFIED by A. A's own
-                  role contract requires an independent re-measurement
-                  next round, not trusting C's own account of what it
-                  built.
+                  behavior) — round 4 A has now independently re-measured
+                  M2: 8/13 frozen criteria MET, 5/13 NEEDS LOCAL VERIFY
+                  (criteria 2/4/10/11/13), 0/13 unmet. M2 has reached the
+                  identical shape M1 reached at the end of round 2 —
+                  every criterion an agent can act on is closed; every
+                  remaining gap needs a real host account. M1 acceptance
+                  still pends the USER host-test per RULING 9 — its
+                  checklist lives in §4 Round 2 A's NEEDS MANAGER/USER
+                  list. Both milestones are now blocked on the same
+                  thing: a real ChatGPT/Claude host test from the user's
+                  own account (RULING 9.3 already anticipated exactly
+                  this — "a combined M1+M2 host test is acceptable and
+                  expected").
+WHOSE TURN:       MANAGER (user host-test pending — now covers M1+M2
+                  together)
+STATUS:           Round 4 A independently re-measured the frozen
+                  13-criterion M2 inventory from §4 "Round 3 — Agent A"
+                  (per RULING 1, reused verbatim, not re-derived).
+                  Verified by reading shipped code, running the gate
+                  twice (default TZ + forced TZ=UTC, identical: 686/1/687,
+                  81/1/82), running `npx tsc --noEmit -p .` (clean) and
+                  `npx eslint src/lib/mcp src/app/api/mcp` (clean),
+                  scripting a live MCP client against a real `npm run dev`
+                  (initialize/tools-list/tools-call/resources-read all
+                  live-confirmed, including two separate live fetches per
+                  ui:// resource proving byte-identical static output),
+                  and re-running the arxiv/openalex get_opportunity
+                  real-input check. Independently verified both of the
+                  manager's RULING 11 fix commits (§4 "Round 3 —
+                  Manager") via direct diff review, not just re-reading
+                  final source — both CORRECT AND COMPLETE, no gaps
+                  found in either. Full detail, the compound-verdict
+                  grading method, exact user steps for every NEEDS LOCAL
+                  VERIFY item, and two new named (non-blocking)
+                  observations: §4 "Round 4 — Agent A". One operational
+                  finding: `node scripts/kill-dev-orphans.mjs` reported
+                  "no leftover dev workers found" while 3 real node
+                  processes (one LISTENING on port 3000) were still
+                  running — independent Get-Process/netstat double-check
+                  caught it, manually cleaned up; first round this
+                  double-check has found a real discrepancy.
+LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: round 4 A
+                  independently re-measured all 13 frozen criteria: 8/13
+                  MET (1,3,5,6,7,8,9,12), 5/13 NEEDS LOCAL VERIFY
+                  (2,4,10,11,13 — exact user steps in §4 "Round 4 —
+                  Agent A"), 0/13 unmet. Zero code-level differences
+                  remain that any agent (A/B/C) can act on further in
+                  M2.
 GATE (target):    NOT MET (M1–M5 accepted + parity matrix closed/waived)
-                  — M1 pends only the user host-test per RULING 9; M2's
-                  percentage is C's build-progress claim only until A
-                  re-measures round 4.
+                  — M1 and M2 are both now blocked purely on the user's
+                  own real-host test (plus, for two M1-only items, real
+                  Supabase credentials) — nothing left for A/B/C to
+                  measure or build until that happens.
 DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
-                  at protocol/live level. Outstanding on M1: only the
-                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER). M2:
-                  all 13 items now have code + tests behind them per C's
-                  round-3 build (§4 "Round 3 — Agent C") — not yet
-                  independently verified by A.
+                  at protocol/live level. M2 items (13/13, see §4 "Round
+                  3 — Agent C" for the build, §4 "Round 4 — Agent A" for
+                  independent verification) code-complete and now
+                  independently A-verified at protocol/live level too.
+                  Outstanding on both: only the combined user checklist
+                  below.
 GATE NOW:         npm test (web/): 686 passed | 1 skipped (687), 81
-                  files + 1 skipped (82) — green in BOTH timezones
-                  (verified with and without TZ=UTC) after the manager's
-                  post-C intervention (§4 "Round 3 — Manager", RULING
-                  11): the "pre-existing flake" cloud-C flagged is fixed,
-                  and the local failure it couldn't see (its own new
-                  home-widget date test, exposing a real date-only TZ bug
-                  in both widget scripts) is fixed too. `npx tsc --noEmit
-                  -p .` clean.
-TODO:             A (round 4): independently re-measure M2 against the
-                  same 13-criterion inventory frozen in round 3 A (§4
-                  "Round 3 — Agent A", per RULING 1 — reuse the frozen
-                  inventory, don't re-derive it). Read C's round-3 build
-                  (§4 "Round 3 — Agent C") for what to watch, but verify
-                  by reading the shipped code and running both passes
-                  (fixture/protocol + real-input), not by trusting C's
-                  summary. Specific things C flagged for A: the chip-
-                  count caching mechanism is proven against synthetic
-                  fixtures only, not live; the Expand-button persistence
-                  fix is worth independently re-deriving from the
-                  shipped code; per-card deep links are new on any Peer
-                  MCP surface this milestone — worth confirming at least
-                  one real link actually resolves during host
-                  verification. Standing NEEDS LOCAL VERIFY items
-                  (3-01/3-03/3-05/3-06, listed in full in §4 "Round 3 —
-                  Agent C") stay exactly that — not closable by A alone
-                  either, same as M1's own standing five. The USER
-                  checklist for M1 remains authoritative in §4 Round 2
-                  A — unchanged, not this round's concern. ALSO (added
-                  post-intervention): independently re-verify the
-                  manager's TZ fixes per §4 "Round 3 — Manager" and
-                  RULING 11 — run the gate in both zones; a manager-
-                  built fix gets the same scrutiny as agent work.
+                  files + 1 skipped (82) — independently re-confirmed by
+                  A in round 4, green in BOTH timezones (re-run with and
+                  without TZ=UTC, identical). `npx tsc --noEmit -p .` and
+                  `npx eslint src/lib/mcp src/app/api/mcp` both clean.
+TODO:             MANAGER: arrange the user's own real-host test,
+                  combining M1 and M2 into one session per RULING 9.3's
+                  own anticipation. Two prerequisites, both user-gated,
+                  neither closable by any agent:
+                  1. Real Supabase project credentials (main checkout's
+                     web/.env.local currently has its whole "# Supabase"
+                     section commented out — see §4 Round 2 A) filled
+                     in, plus a real MCP_DEV_TEST_USER_ID pointed at a
+                     populated profiles.research_topics row (RULING 2:
+                     manager decision) — needed for get_daily_forecast/
+                     open_home to return real items instead of isError,
+                     in both the worktree and wherever the user's real
+                     ChatGPT/Claude session points.
+                  2. The user's own ChatGPT developer-mode connector add
+                     and/or Claude custom-connector add (HANDOFF §8) —
+                     the only way to close the combined NEEDS LOCAL
+                     VERIFY set below.
+                  Combined host-test checklist (supersedes running M1
+                  and M2 host tests separately): §4 Round 2 A's "NEEDS
+                  MANAGER/USER, precisely" (M1: criteria 3,4,7,9,10) +
+                  §4 Round 4 A's own M2 NEEDS LOCAL VERIFY set (criteria
+                  2,4,10,11,13 — written as exact click-by-click steps
+                  in that section). Read both before testing.
+                  If the host test surfaces a real difference (wrong
+                  render, a broken bridge call, a missing Claude close
+                  affordance), that is the next round's material —
+                  reopens WHOSE TURN: A with the finding, same as any
+                  other round. If it passes clean, M1 and M2 both close
+                  per §0b step 5 and the loop advances to M3 per RULING
+                  9.3 (production OAuth) — a manager decision to make at
+                  that time, not before.
 ```
 
 **History of measured difference, newest last:**
@@ -219,6 +240,7 @@ TODO:             A (round 4): independently re-measure M2 against the
 | 1 | M1 | 11/11 frozen criteria unmet (100% OPEN); gate 597/1/598 intact, no regression; Pass 2: 8 real items live (5 jobs + 3 papers), zero LLM keys — Events/Grants unchecked | NOT MET |
 | 2 | M1 | 6/11 MET (54.5%), 5/11 NEEDS LOCAL VERIFY (standing set 3/4/7/9/10), 0/11 unmet; gate 659/1/660 intact (+62 tests since round 1), `tsc` clean, both independently re-verified; real-input: 2 real arxiv papers resolved live via get_opportunity (zero keys, RULING 4 confirmed on live data), get_daily_forecast/job-event-opportunity blocked on Supabase credentials confirmed absent in BOTH worktree and main checkout | NEEDS LOCAL VERIFY (host-test pending) |
 | 3 | M2 | 13/13 frozen criteria unmet (100% OPEN); gate 659/1/660 intact, no regression; every criterion's "Build has" column names an M1-code precedent it can reuse (widget-resource pattern, tool-registration shape, ForecastItem mappers, fixed palette, text-fallback shape) — not a true greenfield like M1 round 1 | NOT MET |
+| 4 | M2 | 8/13 MET (61.5%: criteria 1,3,5,6,7,8,9,12), 5/13 NEEDS LOCAL VERIFY (38.5%: criteria 2,4,10,11,13), 0/13 unmet; gate 686/1/687 intact in BOTH timezones (independently re-run twice, default machine TZ + forced `TZ=UTC`, identical figures), `tsc`+`eslint` clean; both manager RULING-11 fixes independently re-verified correct and complete via diff review, source re-derivation, and live dual-TZ execution — no gaps found in either; real-input: arxiv/openalex `get_opportunity` re-confirmed live post-refactor (RULING 4 intact), OpenAlex empty-title observation persists (still not a Peer bug); new observation: `get_opportunity`'s paper path hardcodes a generic `whyItMatters` string (pre-existing M1 code, not a new M2 regression, not counted against any criterion); live cleanup-script discrepancy found and manually resolved (see round 4 entry) | NEEDS LOCAL VERIFY (host-test pending, now covers M1+M2 together) |
 
 ---
 
@@ -3353,3 +3375,431 @@ the TZ fix from the shipped code and the sandbox tests independently; run
 the gate in both zones; confirm the two `parseDate` copies are in sync;
 re-check that no other date rendering site in either widget script still
 UTC-parses a date-only string.
+
+---
+
+### Round 4 — Milestone M2
+
+#### Round 4 — Agent A
+
+**Method:** `git pull --ff-only` (already up to date, clean; HEAD `dc3ee4c`).
+`HELD BY` already read `LAPTOP-3CL10CG5 @ 2026-08-13 11:25 UTC` — left
+untouched per this round's own instructions (the manager claimed the turn
+before spawning this pass). Read the whole state file top to bottom before
+touching anything: §0 through §1l (all 11 rulings), §2 role contracts, §3
+ground rules, and all of §4 Round 1, Round 2, and Round 3 (A, B, C, and the
+manager's post-C intervention entry) in full. Reused the frozen 13-criterion
+M2 inventory from §4 "Round 3 — Agent A" verbatim per RULING 1 — did not
+re-derive it. Verified by reading the shipped code, running the gate twice,
+running a real `npm run dev` and scripting a live MCP client against it, and
+diffing the manager's two fix commits directly — not by trusting C's,
+B's, or the manager's own write-ups at face value.
+
+**Gate, independently re-run, twice, plus types and lint:**
+
+- `npm test` (default machine timezone — confirmed via
+  `Intl.DateTimeFormat().resolvedOptions().timeZone` → `America/Chicago`,
+  offset 300): **686 passed | 1 skipped (687), 81 files passed + 1 skipped
+  (82)** — exact match to §1's target.
+- `TZ=UTC npm test`: **686 passed | 1 skipped (687), 81 files + 1 skipped
+  (82)** — identical figures. Confirmed `TZ=UTC` genuinely took effect, not
+  a silent no-op: `Intl.DateTimeFormat().resolvedOptions().timeZone` under
+  the forced run reports `UTC` (offset 0), a real 5-hour shift from the
+  default run, independently visible in each run's own reported wall-clock
+  start time (06:13:28 vs. 11:13:37).
+- `npx tsc --noEmit -p .`: clean, exit code 0, zero output.
+- Extra, beyond this round's required gate (cheap, matches C's own
+  per-commit practice): `npx eslint src/lib/mcp src/app/api/mcp` — clean,
+  zero output.
+
+RULING 11's "the gate is green in BOTH timezones" claim holds,
+independently reconfirmed, not just re-read from the manager's log line.
+
+**Code-level verification (read the shipped code directly, cross-checked
+against `git show` of the manager's two commits, not commit messages):**
+
+1. **Both `parseDate` copies in sync.** Byte-for-byte identical between
+   `web/src/lib/mcp/ui/daily-forecast-card.ts` (lines 139-148) and
+   `web/src/lib/mcp/ui/daily-forecast-home.ts` (lines 109-118) — same
+   10-char/dash-at-4/dash-at-7 date-only detection, same
+   `new Date(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10))` local
+   construction, same comment text. `git show fdafc41` confirms the manager
+   applied an identical, symmetric patch to both files in one commit.
+2. **No remaining date-rendering site UTC-parses a date-only string.**
+   Grepped `new Date(` across the whole `web/src/lib/mcp/**` tree: exactly
+   three hits total — the two guarded `parseDate` internals above, plus
+   `get-daily-forecast.ts:63`'s `const now = new Date();` (the current
+   instant, feeding `generatedAt`/`date` construction — not a date-only-
+   string parse, unaffected by RULING 11). Also grepped `Date.parse`,
+   `toLocaleDateString`, `toLocaleString`, `toISOString`: every
+   `toLocaleDateString`/`Intl.DateTimeFormat(...).format()` call in both
+   widget scripts runs on a `d` already produced by `parseDate`; every
+   `toISOString()` call is on a fresh instant, never a parsed date-only
+   value. Zero unguarded sites in either widget script.
+   **One level deeper than literally asked, worth recording:** the
+   server-side text fallback (`renderDailyForecastText`, shared by all
+   three tools) computes its dates via `formatDate`/`formatDayAge` imported
+   from the pre-existing, shared `web/src/lib/format.ts` — not a third
+   hand-rolled copy. Read that file directly: its own `parseDate` (lines
+   16-23) already implements the identical local-calendar-date discipline,
+   using a real regex (`/^(\d{4})-(\d{2})-(\d{2})$/`, safe here since this
+   is plain TypeScript, not a template literal — RULING 11.2's escape trap
+   never applied to this file). `git log --oneline -- web/src/lib/format.ts`
+   shows exactly one commit, `f096e44`, the app's own original foundational
+   commit — predates this loop entirely. No third hidden copy of the bug
+   exists; the manager's two-file fix scope was correctly bounded, not
+   incomplete.
+3. **Expand's persistence fix, re-derived from the shipped markup/render
+   code, not taken on C's account.** `buildDailyForecastWidgetHtml()`
+   (`daily-forecast-card.ts` lines 270-284) writes `.pc-head` as four
+   literal children in one string: `.p-mark`, `.t` ("Daily Forecast"), `.m`
+   (`id="pc-head-slot"`), `.expand` (`id="pc-expand-btn"`). `render()`
+   (inside `WIDGET_SCRIPT`, lines 219-228) calls
+   `document.getElementById("pc-head-slot")` and replaces only *that*
+   element's `innerHTML` — it never touches the parent `.pc-head` div or
+   `.expand`. `wireExpand()` (lines 230-238) runs once, at IIFE top level,
+   binding directly to `#pc-expand-btn`, a node `render()` structurally
+   cannot ever replace. Executed proof, not just a read:
+   `daily-forecast-card.test.ts`'s "clicking Expand calls
+   window.openai.callTool" test drives `runWidgetScriptAndRender(...)`,
+   which fires one real `ui/notifications/tool-result` render cycle
+   *before* returning `clickExpand` — the passing test is specifically
+   proof the listener survives a render, not merely that it exists before
+   any render happens. Confirmed correctly targeted.
+4. **RULING 10 action row** (`daily-forecast-home.ts`, `renderActs()`
+   lines 159-165, `.pf-card .acts .acts-btn` CSS line 53): all three
+   controls (Save, Dismiss, Report →) carry `role="button"
+   aria-disabled="true"`, built by string concatenation only. Grepped the
+   whole file for `addEventListener`: exactly two calls exist anywhere in
+   the script — chip-container click delegation and the `message`
+   bridge listener — neither targets `.acts-btn`, and `getElementById`
+   never resolves one. Grepped for `hover`: zero `:hover` rules anywhere in
+   `HOME_STYLE`. All three RULING 10 requirements independently confirmed
+   at the source level, matching the executed test's own count assertions
+   (3× `aria-disabled="true"` per card; exactly 2 `addEventListener` calls
+   script-wide).
+5. **No Peer-drawn close button.** `buildDailyForecastHomeWidgetHtml()`'s
+   `.pf-bar` markup has exactly five children (mark, "Peer", "·", "Daily
+   Forecast", "Open in Peer ↗") — no sixth close element anywhere. Grepped
+   the file for `close|✕|pf-bar .x`: only inside comments explaining the
+   decision, never in rendered markup. **Live-confirmed, not just
+   source-read:** a real `resources/read` response from a running dev
+   server (Protocol pass below) tested negative for `class="x"`.
+6. **Per-card links never point at `/jobs/[id]` or `/events/[id]`.**
+   `renderCard()` (`daily-forecast-home.ts` lines 172-190) links the title
+   only via `item.deepLink` (the item's own external source), omitting the
+   `<a>` entirely when absent — same discipline as every other optional
+   field. Grepped all of `web/src/lib/mcp` for `/jobs/`, `/events/`,
+   `/papers/`: the only hits are test fixtures using external URLs (a
+   source posting's own domain, e.g. `remotive.com/jobs/a`, never a Peer
+   route) and unrelated import paths/comments. No code path anywhere
+   constructs a Peer-internal `/jobs/[id]` or `/events/[id]` href.
+7. **Chips cache mechanism matches B's tension-(a) prescription.**
+   `daily-forecast-home.ts`'s `latestCounts`/`activeType` module state,
+   `render()`'s cache-refresh guard (`!activeType || latestCounts ===
+   null`), `renderChips()`'s per-chip lookup, and `wireChips()`'s
+   event-delegated handler calling
+   `window.openai.callTool("open_home", type ? {type: type} : {})` are a
+   line-for-line match to B's prescribed code (§4 "Round 3 — Agent B",
+   Design tension (a)). Executed proof: the "a later type-filtered result
+   does not zero out the other chips' cached counts" test fires an
+   unfiltered result, clicks the Jobs chip, fires a second jobs-only result
+   (papers/events genuinely `0`), and asserts the other three chips still
+   read their *original* cached counts — the literal regression test for
+   the exact failure mode B's design exists to avoid.
+8. **RULING 8 header copy.** `renderHeader()` (`daily-forecast-home.ts`
+   lines 221-243): `shown < total ? "{shown} shown of {total} considered
+   today" : "{shown} {typeNoun} today"` — never renders "everything," "your
+   full day's opportunities," or any other overclaiming phrase; `total`/
+   `shown` are read directly off `result.counts` with zero redefinition of
+   RULING 8's own semantics. Executed proof: the vm-sandbox test asserts
+   both branches verbatim ("4 shown of 10 considered today" when capped,
+   "1 opportunities today" when not).
+
+**Protocol pass (live, scripted MCP client against a real `npm run dev`):**
+
+Started the dev server (`✓ Ready in 525ms`, picked up `web/.env.local`).
+Wrote a throwaway Node script in the OS scratchpad directory only — never
+inside the repo, so there was nothing to delete from the worktree
+afterward (`git status --short` confirmed clean throughout and at the end).
+It reads `MCP_DEV_SLUG` out of `web/.env.local` internally and never prints
+it; every captured line passes through a string-replace redaction step
+before being logged. Confirmed `.env.local` still carries only the same two
+keys prior rounds found (`MCP_DEV_SLUG`, `MCP_DEV_TEST_USER_ID`) — no
+Supabase credentials, same standing constraint as every prior round.
+
+- `initialize` → 200, `serverInfo: {"name":"peer","version":"0.1.0"}`,
+  `protocolVersion: "2025-06-18"`, correct `capabilities`.
+- `tools/list` → 200, all **three** tools present: `get_daily_forecast`,
+  `get_opportunity`, `open_home`. Each carries a real Zod-derived
+  JSON-Schema `inputSchema` and a substantial description (547 / 397 / 441
+  chars). `get_daily_forecast._meta["openai/outputTemplate"]` =
+  `"ui://peer/daily-forecast-card.html"`; `open_home`'s equivalent =
+  `"ui://peer/daily-forecast-home.html"` — both tool→resource bindings
+  live-confirmed correct.
+- `tools/call open_home {}` → 200,
+  `{"content":[{"type":"text","text":"Missing SUPABASE_SERVICE_ROLE_KEY or
+  NEXT_PUBLIC_SUPABASE_URL env var"}],"isError":true}` — the honest text
+  fallback this round's task asked me to assert: a graceful, structured,
+  truthful failure (no Supabase locally, the standing constraint), not a
+  crash, not invented data, same shape `get_daily_forecast` has always
+  returned. The "resource reference" half is the `_meta` binding above,
+  confirmed via `tools/list` — MCP doesn't repeat that binding on every
+  individual `tools/call` response; it's a registration-time fact.
+- `resources/read` for **both** `ui://` templates, each fetched **twice**
+  (two separate live HTTP round trips to the fresh-server-per-request
+  route — stronger proof of "static" than calling a function twice
+  in-process):
+  - Card (`ui://peer/daily-forecast-card.html`): 200 both times,
+    `mimeType: "text/html;profile=mcp-app"`, contains the bridge
+    (`ui/notifications/tool-result`), contains the palette (`#FF520D`),
+    contains the Expand button (`pc-expand-btn`), **byte-identical across
+    the two live calls**.
+  - Home (`ui://peer/daily-forecast-home.html`): 200 both times, same MIME
+    type, contains the bridge and palette, contains `chips-slot`, **does
+    not** contain a `class="x"` close-button or `pf-composer` markup,
+    **byte-identical across the two live calls**.
+- `tools/call get_daily_forecast {}` → 200, identical honest `isError:
+  true` Supabase-missing message — unchanged M1 behavior, confirmed live
+  post-refactor.
+- Wrong slug (`/api/mcp/definitely-wrong-slug-round4-xyz`) → **404**,
+  RULING 2 confirmed live again.
+- Stopped the dev server, ran `node scripts/kill-dev-orphans.mjs` →
+  `no leftover dev workers found`. **Independent double-check (as the
+  ground rules require) found this claim false this round:**
+  `Get-Process -Name node` still showed 3 live node processes, one of them
+  confirmed via `netstat -ano` actively `LISTENING` on port 3000.
+  Force-stopped all three manually (`Stop-Process -Force`); re-verified
+  with both `kill-dev-orphans.mjs` and an independent `Get-Process`/
+  `netstat` check afterward — genuinely clean the second time.
+  **Flagging, not investigating (A's own contract):** this is the first
+  round where the independent double-check caught a real discrepancy —
+  Round 2 A's identical double-check came back clean both times it ran
+  that round. Not one of the 13 M2 criteria and not caused by any code
+  change this round, but a real, live, reproduced-today gap between what
+  the cleanup script reports and what was actually still running —
+  worth the manager's or a future round's attention before trusting that
+  script's own success message at face value again.
+
+**Real-input pass** (unchanged constraint: no Supabase credentials exist
+locally; did not fake or create any):
+
+- `get_opportunity {id:"arxiv:1706.03762"}` → real: "Attention Is All You
+  Need", `posted:"2017-06-12T17:57:34Z"`, `tags:["cs.CL","cs.LG"]`,
+  `deepLink:"https://arxiv.org/abs/1706.03762v7"`. No `location`/`deadline`
+  key (RULING 4, confirmed live again, post-refactor).
+- `get_opportunity {id:"arxiv:1512.03385"}` → real: "Deep Residual Learning
+  for Image Recognition" (ResNet), same shape, same RULING-4 compliance.
+- `get_opportunity {id:"openalex:W2963341956"}` → resolved (not
+  not-found), `title`/`org` still empty strings — the same pre-existing
+  OpenAlex-source data-quality gap Round 2 A first traced to the OpenAlex
+  API itself, re-confirmed still present post-M2-refactor, still not a
+  Peer mapping bug, still not counted against any criterion.
+- `get_opportunity {id:"semantic_scholar:definitely-not-real-r4"}` → clean
+  `{"found":false,...}`, RULING 6's gap-handling confirmed live again.
+- **New observation this round, not previously flagged:** all three
+  resolved papers above carry `whyItMatters: "Pulled from today's Peer
+  Daily Forecast."` — a fixed, hardcoded string
+  (`web/src/lib/mcp/tools/get-opportunity.ts` line 108, `resolvePaper()`),
+  unconditionally attached to every paper `get_opportunity` resolves,
+  regardless of the user's real topics (a direct by-id lookup via
+  `fetchPaperById` never runs the topic-relevance pipeline, so there is no
+  real personalized reasoning to report — unlike a forecast row's own
+  `whyItMatters`, which is a genuine per-user match reason). Confirmed
+  pre-existing M1 code, not a new M2 regression: `git log --oneline --
+  web/src/lib/mcp/tools/get-opportunity.ts` shows exactly one commit,
+  Round 1's original build, never touched since (not in C's or the
+  manager's blast radius this round). Not one of the 13 frozen M2
+  criteria — flagging because live data surfaced it for the first time
+  this round (prior rounds' real-input passes didn't quote this field) and
+  because it sits close to RULING 4's own territory: a fixed sentence in a
+  field the UI otherwise treats as personalized reasoning is a softer
+  version of the same "don't imply something wasn't earned" concern
+  RULING 4 raises for data fields, applied here to narrative copy instead.
+  Same posture as the standing OpenAlex observation: not counted as a
+  difference against any criterion, named so nobody re-discovers it as if
+  new.
+
+---
+
+**Pass 1 — M2 inventory, RE-MEASURED (same 13 criteria, same numbering,
+RULING 1 — reused verbatim from §4 "Round 3 — Agent A," not re-derived):**
+
+**Grading method, stated explicitly since several verdicts are judgment
+calls the manager should be able to override individually:** a criterion is
+**MET** when its own defining claim — as HANDOFF/the mockup phrase it — is
+a fact about *Peer's own code/data being correctly shaped, present, and
+wired* (an endpoint existing, a schema being right, a mechanism correctly
+implemented), provable by source review, executed tests, and/or live
+protocol calls, independent of any specific host client's own rendering or
+interpretation. It stays **NEEDS LOCAL VERIFY** when its own defining claim
+is fundamentally about *a real host's behavior* (does ChatGPT/Claude's
+chrome actually render/interpret/relay this the way the docs say; is Peer
+discoverable in a host's own UI) — something no script can stand in for.
+Several criteria have *both*: a provable core plus a narrower, separately
+named host-behavior question. Where the named question is a specific
+implementation-reliability detail one layer removed from the criterion's
+own literal text (e.g. "do real facets exist" vs. "does a click's result
+definitely reach the right listener on host X"), I counted it MET with the
+open question carried as a standing note. Where the host-behavior question
+*is* the criterion's own core text (the top bar's close affordance; R2
+entry behavior; a non-rendering host's fallback), I counted it NEEDS LOCAL
+VERIFY even though the code underneath is fully proven. This mirrors how
+Round 2 A itself split M1 (criteria 5/6/8/11 MET despite real, named
+live-data gaps; criteria 3/4/7/9/10 NEEDS LOCAL VERIFY even where the
+underlying mechanism was fully proven).
+
+| # | Criterion | Round 4 verdict | Evidence |
+|---|---|---|---|
+| 1 | Fullscreen view resource (architecture) | **MET** | Live: `resources/read` for the home URI returns 200, correct MIME, byte-identical across 2 separate live HTTP round trips (stronger than one process calling a function twice), contains bridge + palette. Source: `buildDailyForecastHomeWidgetHtml()` is zero-argument, matches the card's already-proven architecture exactly. |
+| 2 | Top bar chrome (mark/title/Open-in-Peer/close) | **NEEDS LOCAL VERIFY** (standing — B/C's own `3-01` note) | Peer's own content (mark, title, Open-in-Peer link, deliberately *no* Peer-drawn close button) live-confirmed correct and present. Whether ChatGPT's real fullscreen chrome actually supplies a system close the way its docs describe, and whether Claude's does too, is unconfirmed by docs alone — A's own round-3 language already forecast this ("would join the standing NEEDS LOCAL VERIFY set once built"), honored here. |
+| 3 | Date header + counts sub-line (RULING 8) | **MET** | RULING 8 semantics correctly implemented, executed-test-proven for both phrasing branches. Live: static shell's `pf-h-slot`/`pf-sub-slot` placeholders confirmed present in the served HTML. |
+| 4 | Filter chips = real facets (RULING 5) | **MET**, standing sub-question named `3-05` | All/Papers/Events/Jobs order matches Peer web's own `typeChips`; caching mechanism matches B's design exactly, executed-test-proven including the tension-(a) regression case. Standing, unclosable by A: does a widget-initiated `callTool` result actually arrive at the same message listener on a real host, or only via the call's own promise. |
+| 5 | Full ranked card list, field truth (RULING 4) | **MET** | RULING 4 structurally enforced via `ForecastItem`'s type shape (same mechanism M1 already proved); executed test re-proves the paper-omission case for this new file specifically. |
+| 6 | Per-card actions row (RULING 7 fullscreen carve-out) | **MET** | RULING 10 fully implemented, independently re-derived from source (aria-disabled ×3, exactly 2 `addEventListener` calls total, neither on `.acts-btn`, zero `:hover` rules) — not just re-read from a test's own claim. |
+| 7 | "Report →" affordance | **MET** | RULING 10 resolved the prior POLICY flag; ships disabled-visible alongside Save/Dismiss, identical evidence to #6. |
+| 8 | "Open in Peer" deep links (HANDOFF "throughout") | **MET** | Per-card links use only `item.deepLink` (external); grep-confirmed zero hardcoded `/jobs/[id]`/`/events/[id]` anywhere. This round's real-input pass additionally re-confirmed live that arxiv deep links resolve to genuine external content, not merely present as an href — partial satisfaction of C's "click through a real link" ask; full in-host click-through still needs a live host. |
+| 9 | `open_home` tool | **MET** | Live-confirmed end-to-end through the real dispatch: `tools/list` shows correct schema + `_meta`; `tools/call open_home` dispatches correctly (honest `isError` given no Supabase, identical shape to `get_daily_forecast`'s own already-proven M1 behavior). |
+| 10 | Expand wiring on the M1 card (closes RULING 7's exclusion) | **MET**, standing sub-question named `3-03` | Persistence fix independently re-derived from source (static siblings, `.m`-only replacement — see code-level item 3 above) and executed-test-proven (the click fires *after* a real render cycle, not just before one ever happens). Standing, unclosable by A: what a real host actually does when the card's widget calls `callTool("open_home", {})` — mount the home widget in place, open alongside, or require a chat-turn relay. |
+| 11 | Entry behavior (R2) | **NEEDS LOCAL VERIFY** (buildable half MET, observation half permanent per RULING 3) | Description quality and unconditional `requestDisplayMode({mode:"fullscreen"})` on mount both live/source-confirmed — the buildable half is done. RULING 3 itself pre-declares this criterion permanently retains an unclosable-by-agents half (sidebar/launcher presence), the same shape as M1's own criteria 3/4 — bucketed as NEEDS LOCAL VERIFY here for the same reason those were, not MET-with-a-footnote. |
+| 12 | Peer visual identity, fullscreen surface | **MET** | All 5 literal hex values live-confirmed present in the actual served HTML over the wire (not just read from source), plus dedicated executed-test coverage; zero CSS custom properties anywhere. |
+| 13 | Text-only fallback for `open_home` | **NEEDS LOCAL VERIFY** (new this round — direct parity with M1's own criterion 9, at A's own initiative, not carried from B/C) | Mechanism fully proven live: every `open_home` call this round returned a real, honest `content` text entry, correct even under the Supabase-missing error path. Whether a real *non-rendering* host actually falls back to displaying it, rather than failing at `ui://` rendering, is the exact same unclosable question Round 2 A held M1's criterion 9 open for ("The fallback mechanism itself... is proven live... Whether a real non-rendering host actually falls back to displaying it... needs a live host"). Criterion 13's own original text is explicit parity ("parity with M1's own item 9") — applying that precedent here rather than letting the label change the verdict. |
+
+**Percentage (RULING 1):** **8/13 MET (61.5%)**, **5/13 NEEDS LOCAL VERIFY
+(38.5%)** — criteria 2, 4, 10, 11, 13 — **0/13 unmet**. Up from round 3's
+13/13 unmet (100% OPEN). Every code-level gap C's build was supposed to
+close is closed and independently re-verified; every remaining open item
+needs either a real ChatGPT/Claude host account or real Supabase
+credentials — the identical shape M1 reached at the end of round 2 (6/11
+MET, 5/11 NEEDS LOCAL VERIFY, 0/11 unmet). No rounding down (every MET
+verdict above has live-protocol or executed-test evidence cited, not just
+a source read) and no rounding up (criteria 2/11/13 are genuinely held to
+NEEDS LOCAL VERIFY despite fully-proven underlying mechanisms, matching
+the exact bar Round 2 A used for M1's analogous criteria).
+
+**Verdict on the manager's two RULING 11 fixes (independent, not
+deferential):**
+
+- **`fdafc41` (date-only rendering fix) — CORRECT AND COMPLETE.** Verified
+  five independent ways: (a) direct diff review (`git show fdafc41`) shows
+  an identical, symmetric patch applied to both widget scripts in one
+  commit; (b) today's source confirms both `parseDate` copies remain
+  byte-identical; (c) grepped the entire `web/src/lib/mcp` tree for every
+  date-construction pattern (`new Date(`, `Date.parse`, `toLocaleDateString`,
+  `toLocaleString`, `toISOString`) and traced each hit — zero unguarded
+  sites remain; (d) confirmed the separate, pre-existing shared
+  `web/src/lib/format.ts` (used for the server-side text fallback) already
+  had its own correct date-only handling since the app's original
+  foundational commit, predating this loop — so the fix's two-file scope
+  was correctly bounded, not incomplete against a hidden third copy; (e)
+  the gate passes identically under the default machine timezone and a
+  forced `TZ=UTC`, and the vm-sandboxed `daily-forecast-home.test.ts`
+  directly asserts `"August 12"` renders from a `"2026-08-12"` date-only
+  fixture — the literal, executed regression test for this exact bug
+  class. No gaps found in either scope or correctness.
+- **`ff9b5be` (jobs card day-diff test pin) — CORRECT AND COMPLETE.**
+  Verified: (a) diff review (`git show ff9b5be`) shows the old
+  `new Date(2026,6,29,12)` (local-timezone construction) replaced with
+  `Date.UTC(2026,6,29,17)` (a genuine, fixed epoch instant); (b) confirmed
+  `jobCardView`'s own signature (`now: number = Date.now()`) expects a
+  `number`, and `Date.UTC(...)`'s return value is also a `number` — the
+  swap is type-correct, not a silent behavior change; (c) confirmed the
+  underlying day-math (`Math.floor((now - timestamp) / DAY_MS)` in
+  `postingView`) is pure epoch-millisecond arithmetic with zero
+  local-calendar-component dependency, so the fix is genuinely complete,
+  not superficially timezone-flavored; (d) hand-checked the arithmetic:
+  fixture `postedDate` "2026-07-26T12:00:00-05:00" = 2026-07-26T17:00:00Z;
+  the new fixed `now` = 2026-07-29T17:00:00Z; the difference is exactly
+  3.000 days in every timezone, matching the "3d ago"/"Posted 3 days ago"
+  assertions precisely; (e) the gate is green in both zones this round.
+  **One scope note, not a defect:** `web/src/lib/jobs/card.test.ts` sits
+  outside `web/src/lib/mcp/**`, the loop's own file boundary — the same
+  boundary cloud-C itself cited when declining to fix this flake. RULING
+  11.3 explicitly authorizes the manager's fix as a disclosed, ruled
+  exception, so this is not scope creep, just noting the boundary was
+  deliberately crossed with a standing ruling behind it, not silently.
+
+**NEEDS LOCAL VERIFY — exact user steps for each of the 5 standing M2
+items** (none closable by any agent; all require the user's own
+ChatGPT/Claude account, per HANDOFF §8):
+
+- **Criterion 2 (top bar close affordance):** after connecting Peer (dev
+  slug) as a custom connector, trigger `open_home` (e.g. "open my Peer
+  home") and reach the fullscreen view. In ChatGPT: confirm there is a
+  visible way to exit fullscreen even though Peer's own widget draws none
+  — the docs say this is a host-provided "System close." In Claude
+  (HANDOFF §8 step 5's own cross-check): confirm the same. If Claude's
+  fullscreen view has *no* visible exit, that is a `HOST LIMIT —
+  documented` per RULING 3, and the fix (a small, additive Peer-drawn
+  close button calling the already-documented
+  `window.openai.requestClose()`) is scoped and ready, not a redesign.
+- **Criterion 4 (chip click round-trip):** in the fullscreen home, click
+  any filter chip other than "All" (e.g. "Jobs"). Confirm the card grid
+  actually updates to the filtered set, *and* that the other three chips'
+  counts do **not** drop to "· 0" — that second half is the live proof of
+  this round's caching mechanism (proven only against synthetic fixtures
+  today).
+- **Criterion 10 (Expand → fullscreen mount):** trigger `get_daily_forecast`
+  (e.g. "what's my forecast today"), see the inline card, click "Expand."
+  Confirm it actually opens or switches to the fullscreen home — not just
+  that nothing visibly breaks.
+- **Criterion 11 (sidebar/launcher presence):** per HANDOFF §8 step 4's own
+  script — after adding Peer as a dev-mode custom connector, check whether
+  ChatGPT's sidebar/launcher/apps menu shows Peer anywhere outside an
+  active chat's "+/Apps" menu, and note it either way. This guide's own
+  documentation-based expectation (stated as a prior, not a promise,
+  carried from B/C) is "no."
+- **Criterion 13 (non-rendering host fallback):** harder to force
+  deliberately in ChatGPT, which does support rendering. The most direct
+  test is via any MCP client that intentionally doesn't render `ui://`
+  resources (or Claude, if its Apps support differs in practice) — confirm
+  the plain-text forecast summary is what displays, not a blank or broken
+  widget area.
+
+**Re-listed standing items (by name, per every-round instructions):**
+
+- **M1 user-pending set** (criteria 3/4/7/9/10 + real Supabase project
+  credentials + a real `MCP_DEV_TEST_USER_ID`): unchanged since round 2.
+  Authoritative checklist: §4 "Round 2 — Agent A," "NEEDS MANAGER/USER,
+  precisely" — not restated here.
+- **M2's own NEEDS LOCAL VERIFY set**, as named in the round-4 TODO this
+  round inherited (B/C's own item numbers `3-01`/`3-03`/`3-05`/`3-06`, per
+  C's entry): mapped this round to A's own criterion numbers 2, 10, 4, 11
+  respectively (B/C filed the close-affordance question under `3-01`,
+  the item where that design decision was written up, not under `3-08`
+  where the top-bar content itself was built — noted here so round 5
+  doesn't read `3-01` as "the resource itself is unverified," which it is
+  not). Criterion 13 is this round's own addition, not part of C's named
+  four — direct parity with M1's own criterion 9, see the inventory table
+  above.
+- **RULING 6** (M1's papers lane = `arxiv` + `openalex` only, temporary,
+  re-decided at M4): unchanged. Live-reconfirmed this round: both
+  `arxiv:`/`openalex:` prefixes resolve correctly; `open_home` shares
+  `get_daily_forecast`'s exact same `PAPERS_LANE_SOURCES` restriction via
+  the same underlying function — nothing new to re-decide.
+- **OpenAlex empty-title observation** (round 2: `get_opportunity
+  {id:"openalex:W2963341956"}` resolves with empty `title`/`org` strings,
+  traced to the OpenAlex API itself returning an empty `display_name` at
+  the source): re-confirmed live again this round, unchanged, still not
+  counted as a difference against any M1 or M2 criterion.
+- **New this round, same posture as the OpenAlex observation:**
+  `get_opportunity`'s paper-resolution path hardcodes `whyItMatters:
+  "Pulled from today's Peer Daily Forecast."` for every paper it resolves
+  (`get-opportunity.ts` line 108) — pre-existing M1 code, confirmed
+  untouched since round 1, not one of the 13 M2 criteria, not counted as a
+  difference — named here so a future round doesn't mistake it for new.
+
+**POLICY — manager decides:** none newly raised this round. B's two
+previously-flagged, still-open items (the mockup's "3 high-signal"
+sub-count, recommended omitted and left that way; the Claude close-button
+uncertainty, folded into criterion 2's NEEDS LOCAL VERIFY entry above, not
+a separate decision point) are unchanged and not blocking.
+
+**Bottom line for the manager:** M2 has reached the exact same shape M1
+reached at the end of round 2 — every criterion an agent could act on is
+now MET, and every remaining gap needs a real host account (or, for two
+M1-only items, real Supabase credentials) that no agent has. There is
+nothing left in M2 for B or C to build against. §1 is updated below to
+reflect this: `WHOSE TURN: MANAGER`, combining M1's and M2's user-gated
+checklists into one, since RULING 9.3 already anticipated exactly this
+— "a combined M1+M2 host test is acceptable and expected."
