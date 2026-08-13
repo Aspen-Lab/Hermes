@@ -19203,3 +19203,207 @@ clean and no credential was printed, logged, or committed.
 **Manager's turn complete. `WHOSE TURN: B` stands as A left it. Round 10 B is
 spawned next, with items 6 and 8 marked cause-known.**
 
+---
+
+### Round 10 — Agent B (B10-01: items 1+2, employer field — `looksLikeHostBrand`'s one-directional length rule)
+
+**STATUS: DONE.** Claimed the turn lock (`9d0ed45`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 05:59 UTC`) before reading anything, per §0d.
+Read §1 in full (four `ROUND 7 … SUPERSEDES …` blocks skipped, history not
+state, per Ruling 30), §2, §3, §4 "Round 10 — Agent A" parts 1–4 and the
+summary entry, §4 "Round 10 — MANAGER verification of Agent A", §1s/§1t
+(Rulings 32/33), and the cited Round 9 history (B9-01 enumeration, B9-02,
+B9-04, the matching Round 9 C landings, and Round 9 A part 1's own
+`looksLikeHostBrand` control tests) before touching anything. Read only, plus
+two throwaway vitest files (controlled-construction checks against the real,
+unmodified functions — not a live pull), both deleted before this commit.
+
+**Ruling 32's own discipline first, per this round's explicit instruction: is
+this one gap or several, across items 1, 2, and 4?** Traced all three from
+source before writing anything.
+
+**Items 1 and 2 are the SAME gap — confirmed identical mechanism, not just a
+similar shape.** Both candidates fail to be rejected by the exact same
+function for the exact same structural reason:
+`web/src/lib/opportunities/shared.ts:251-256`, `looksLikeHostBrand`:
+```
+export function looksLikeHostBrand(candidate: string, host: string): boolean {
+  const normalized = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (normalized.length < 3) return false;
+  const labels = host.toLowerCase().split(".").filter(Boolean);
+  return labels.some((label) => label.startsWith(normalized));
+}
+```
+This is `label.startsWith(normalized)` — the candidate is only ever rejected
+if it is **no longer than** some DNS label of the host. The function's own
+doc comment (`:227-234`) names this as deliberate: "the candidate must not be
+LONGER than the domain label it is checked against... rejecting [a longer
+candidate] would turn a real company name into a lost one." Verified by
+direct call against the real function, no code changed:
+```
+looksLikeHostBrand("University of Pennsylvania", "careerservices.upenn.edu") === false
+looksLikeHostBrand("Job posted on PostdocJobs.com", "postdocjobs.com")       === false
+```
+Both `false` — neither is rejected — for the identical reason: `"upenn"` (5
+chars) cannot start-with a 25-character normalized candidate; `"postdocjobs"`
+(11 chars) cannot start-with a 26-character one. Control, same session,
+confirms the guard still does its correctly-designed job on the SHORT form:
+`looksLikeHostBrand("Upenn", "careerservices.upenn.edu") === true`,
+`looksLikeHostBrand("PostdocJobs", "postdocjobs.com") === true`. **End-to-end
+reproduction, real unmodified `webResultToRawJobItem`, no live call**: a
+constructed title shaped like each live case (`"Postdoctoral Researcher -
+University of Pennsylvania"` / `"Postdoctoral Fellow | Job posted on
+PostdocJobs.com"`, matching this file's own title-segment convention)
+reproduces `company` equal to A's exact reported live string, verbatim, both
+cases. **This is not "a fallback reinstates a rejected value" (Ruling 32's
+literal mechanism, already confirmed absent from this chain by B9-01) — it is
+a coverage gap: the candidate is never rejected in the first place**, because
+no existing guard (`KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`,
+`looksLikeBareLocation`, `looksLikeHostBrand`, `looksLikeTopicLabel`) has any
+concept of "this long, well-formed candidate is the HOSTING PLATFORM's own
+name/boilerplate, not the posting's employer." `cleanJobSubtitlePart`
+(`job-cleanup.ts:43-48`) does not touch it either — confirmed by reading it,
+it only strips leading punctuation and rejects a pure call-to-action string.
+
+**Item 4 is NOT the same gap — traced separately, own entry below (B10-02).**
+Different field (event name, not job employer), different file
+(`eventweb.ts`, not `jobweb.ts`), different mechanism entirely (a missing
+bare-location check in `isChromeSegment`, not `looksLikeHostBrand`'s length
+asymmetry — `looksLikeHostBrand` correctly returns `false` for `"Orlando,
+FL"` against `internationalbatteryseminar.com`, for the ordinary, correct
+reason that the two share no text at all, not because of the length rule).
+The three items share only Ruling 32's general, whole-codebase-level
+observation ("a guard closes one shape, a sibling shape goes uncaught") — not
+a shared line of code. Writing item 4 as its own entry rather than folding it
+in here; folding it in would be exactly the over-merge Ruling 32's own
+"enumerate before building" discipline warns against as much as the
+over-split it more commonly warns about.
+
+**Classify: WRONG DATA**, both items. The rendered strings are not the real
+employer under any reading (same classification B9-02b/c used for the topic-
+label shape these two guards' predecessor fixed).
+
+**Fix direction — additive, new, narrow check; do NOT modify
+`looksLikeHostBrand` itself.** `looksLikeHostBrand` has a second call site
+this round's evidence never touched: `employer-identity.ts:75`
+(`resolveEmployerIdentity`'s `structured`/`declared` JSON-LD/self-declaration
+tiers, confirmed by grep — a second, independent caller B9-01's own audit
+listed but did not flag as needing a change). `shared.test.ts:42-100`'s own
+"looksLikeHostBrand" suite has five cases proving the one-directional design
+is deliberate and load-bearing (`"Acme Corp"`/`"Acme Materials"` at
+`acme.test`, `"Vaia Talent Solutions"` at `talents.vaia.com` — all real,
+longer names that MUST keep surviving). Modifying the shared function risks
+all of that plus `employer-identity.test.ts:53-110`'s own "host-brand guard
+(B8-04)" block, for a defect this round's live evidence only shows in the
+`jobweb.ts` generic web-search ingestion path. Recommend instead a new,
+narrow, additive check in `jobweb.ts`'s own five-guard chain
+(`:291-303`), same convention as `looksLikeTopicLabel`/`looksLikeBareLocation`
+before it — local to this file, zero blast radius on the two files above.
+
+**Two-part fix, different confidence levels — say so plainly rather than
+presenting one fabricated confidence level for both:**
+1. **High-confidence, low-risk: a closed boilerplate-phrase-shape check.**
+   No real employer name is grammatically shaped like `"Job posted on
+   X"`/`"Posted by X"`/`"Listing on X"`/`"See more jobs at X"` — this is
+   unambiguously page chrome by sentence shape alone, regardless of host,
+   same "catch a known shape, not a general parser" convention this file
+   already uses repeatedly. Closes item 2 outright with essentially no
+   false-positive risk to a real employer name. Worth checking whether other,
+   not-yet-observed hosts share this exact chrome convention (a live-search
+   aggregator boilerplate phrase is likely to recur), but that is a
+   live-measurement question for a future A, not something to guess at here.
+2. **Item 1's shape is genuinely harder — flagging the trade-off rather than
+   prescribing an answer.** `"University of Pennsylvania"` is not
+   distinguishable from a real employer name by STRING SHAPE alone — it is a
+   perfectly ordinary, grammatical organisation name. The only signal that
+   marks it wrong here is external to the candidate string itself (the
+   posting's real employer is Oak Ridge National Laboratory, per A's direct
+   fetch) — data this guard has no access to. Confirmed the obvious cheap
+   shortcut does not generalise: `"upenn"` is not a literal substring of
+   normalized `"universityofpennsylvania"` (unlike item 2, where
+   `"postdocjobs"` literally is a substring of the boilerplate candidate), so
+   a simple "candidate contains a host label" check would catch item 2 but
+   NOT item 1. Two options, not a recommendation between them:
+   (a) **accept it as a named, low-frequency cost**, same shape as Ruling
+   33's own acceptance of the LCO acronym collision — one live instance this
+   round, no frequency data, and a rejected-by-string-shape rule risks
+   collateral damage (a REAL posting where a university hires for its own
+   position on its own careers site — `"Duke University"` employer on
+   `careers.duke.edu` — must keep surviving, and nothing about item 1's
+   string shape distinguishes the wrong case from that correct one); or
+   (b) **a URL-slug cross-check**, reusing this codebase's existing
+   `nameFromUrlSlug`-style idea (already used on the event-name side) as a
+   corroborating signal for the job side too — if the URL's own deep-path
+   slug names an organisation sharing no words with the candidate, treat the
+   candidate as suspect. Higher effort, not designed here (B does not
+   prescribe untested heuristics), and carries its own false-positive risk
+   (a slug can be an opaque ID, not always organisation-shaped). **Flagging
+   as `POLICY — manager decides` on effort/risk appetite for (b); recommend
+   C land (1) regardless, since it is unambiguous and closes item 2 today.**
+
+**What renders when the guard fires — no new design needed, cite the
+precedent.** B9-01 already confirmed, from source, that the job-employer
+chain renders true silence end-to-end when every candidate is rejected — no
+heading, no placeholder — at both `page.tsx:1010-1019` and
+`job-card.tsx:87-89`. A new rejection here needs no new fallback design;
+Ruling 32 item 3's "field genuinely cannot be empty" question does not apply
+to this field at all (job employer is one of the two fields Ruling 32 itself
+names as already safe to render nothing).
+
+**Tests at risk — searched for callers before listing, per this round's own
+instruction, not just the obvious file:**
+- `web/src/lib/jobs/sources/jobweb.test.ts` — both "company derivation"
+  (`:91`) and "company derivation with the profile's own topics (B9-02b/c)"
+  (`:273`) describe blocks; the new check joins the same five-guard `.find()`
+  chain these exercise.
+- `web/src/lib/opportunities/shared.test.ts:42-100` — the "looksLikeHostBrand"
+  suite. Not expected to need changes if the new check stays a separate
+  function (recommended above), but must be RE-RUN to confirm untouched,
+  specifically the five survive-cases, since those are the exact shape (a
+  real long name sharing a root with a shorter host label) any new check must
+  not accidentally widen into rejecting.
+- `web/src/lib/opportunities/employer-identity.test.ts:53-110` — "host-brand
+  guard (B8-04)" block. Only at risk if C scopes the fix inside
+  `looksLikeHostBrand` itself rather than as directed (a separate, additive
+  check in `jobweb.ts`); re-run regardless to confirm the recommended scoping
+  left it untouched.
+- `web/src/lib/jobs/scoring.test.ts:304-322` — no functional test of the
+  guard, but carries a comment explaining a fixture's shape in terms of
+  `looksLikeHostBrand`'s design; re-read (not necessarily re-written) so the
+  comment does not go stale if the design context changes.
+
+**Hardest cases to add, per Ruling 31 — name the case that could break by
+accident, not just the two live repros:**
+- The two live repros themselves (`"University of Pennsylvania"` on
+  `careerservices.upenn.edu`; `"Job posted on PostdocJobs.com"` on
+  `postdocjobs.com`) as the must-now-reject pair.
+- **Must-survive, the case that proves check (1) is safely scoped:** a real
+  employer name that is NOT boilerplate-phrase-shaped and is NOT the hosting
+  platform's own name — e.g. `"Idaho National Laboratory"` on
+  `inl.referrals.selectminds.com` (already a passing live case this round,
+  part 2's census) — must be unaffected by a new closed-phrase check.
+- **Must-survive, the case that proves (1) does not overreach into (2)'s
+  territory:** `"University of Pennsylvania"` itself is NOT boilerplate-
+  phrase-shaped (it doesn't match `"Job posted on X"` or similar), so check
+  (1) alone correctly leaves item 1 unresolved rather than accidentally
+  catching it through an overly broad phrase pattern — worth an explicit test
+  proving check (1) does NOT fire on it, so nobody later assumes (1) silently
+  covers (2) as well.
+- If (b) is attempted: `"Duke University"` on `careers.duke.edu` (a
+  university legitimately hiring for its own posting on its own site) must
+  survive — the case that shows why item 1 cannot be closed by "reject any
+  candidate shaped like a university name."
+
+**Blast radius:** contained to `jobweb.ts`'s own five-guard chain if
+implemented as directed (new, local, additive function) — zero change to
+`shared.ts`, `employer-identity.ts`, or their tests. If C instead touches
+`looksLikeHostBrand` itself, blast radius widens to both call sites and all
+tests listed above; not recommended.
+
+Cleanup: both throwaway vitest files
+(`zz-round10-b-employer-hostbrand-trace.test.ts`, its item-9 addition folded
+into the same file — see B10-06 below) deleted before this commit. No product
+code touched. No credential referenced, logged, or written.
+
+Commit follows immediately.
+
