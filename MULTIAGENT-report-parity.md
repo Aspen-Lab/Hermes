@@ -18676,3 +18676,122 @@ own brief and Ruling 32. No gate verdict is set by this entry.
 
 Commit follows immediately.
 
+### Round 10 — Agent A (part 2: employer field)
+
+**STATUS: COMPLETE.** Continuing the same session as part 1. Re-checks the
+three hosts B9-02a/B9-02b/c specifically targeted, plus the three named watch
+shapes, against fresh live data.
+
+**Method.** Live keys reconfirmed present, boolean check only (`tavilyApiKey`,
+`adzunaAppKey`, `adzunaAppId`, `usajobsApiKey` all `true`). Built a throwaway
+vitest file (`web/src/zz-round10-a-employer-live.test.ts`, deleted before this
+commit) following round 9 A part 1's own profile-loading and request-shape
+precedent, reusing the no-op `PoolCache` trick (`get` always `null`, `set` a
+no-op) to force a genuinely fresh live pull rather than today's already-cached
+pool, calling `buildDailyJobPool()` then `scoredJobToJob()` — the exact entry
+points §2 names. Did **not** use `PEER_PROFILE_SNAPSHOT_PATH`. Ground-truthed
+every non-null company against the posting's own title/URL, same standard as
+round 9 A part 1; two of the wrong findings below were also independently
+confirmed by fetching the real live page directly (not through the pipeline),
+since they became this round's headline result.
+
+**Census — 13-item fresh live pool (10 non-null companies, 3 null):**
+
+| host | rendered company | evidence checked | verdict |
+|---|---|---|---|
+| `careers.abbvie.com` | *(null)* | title has no "at Employer" phrase; URL slug has no company text either | not counted (see trade-off note below) |
+| `inl.referrals.selectminds.com` | `Idaho National Laboratory` | one of B9-02a's three named hosts — clean, no trailing "Careers" suffix this posting | CORRECT (see caveat below) |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` | title "...at Thermo Fisher Scientific"; same posting round 9 A cited | CORRECT |
+| `postdocjobs.com` | `Job posted on PostdocJobs.com` | **live page fetched directly this session**: real employer is `Argonne National Laboratory`; rendered string is confirmed site boilerplate, not an employer name | **WRONG (new shape)** |
+| `careerservices.upenn.edu` | `University of Pennsylvania` | **live page fetched directly this session**: real employer is `Oak Ridge National Laboratory`; Penn is only hosting the listing | **WRONG (new shape)** |
+| `terra.do` | `Idaho National Laboratory` | title "...at Idaho National Laboratory" | CORRECT |
+| `talents.vaia.com` | `Savannah River National Laboratory` | title "...at Savannah River National Laboratory" | CORRECT |
+| `jobs.battery.com` | `Battery Ventures Companies` | title matches verbatim (portfolio-companies listing, same caveat round 9 A noted) | CORRECT |
+| `linkedin.com` | *(null)* | title has no "at Employer" phrase this posting (different shape from round 9's under-extraction case) | not counted |
+| `ev.careers` | `Tesla` | title "...at Tesla" | CORRECT |
+| `employbl.com` | `Battery Ventures` | URL slug names it; same posting round 9 A cited (identical listing ID) | CORRECT |
+| `jobright.ai` | *(null)* | title states no employer (aggregator's own generic listing title) | not counted |
+| `lco.global` | `Las Cumbres Observatory` | organisation's own domain; same host round 9 A cited | CORRECT |
+
+**2 of 10 non-null (20%) wrong this round** — continuing the same downward
+trend as round 9's 3 of 11 (27.3%) and round 8's pre-fix 62.5%. **But the
+composition changed, not just the number, and that is the finding worth
+reading past the headline percentage:**
+
+**The three named hosts, re-checked directly, per this round's brief:**
+
+1. **`inl.referrals.selectminds.com` (B9-02a's target) — clean, but this
+   specific posting doesn't re-exercise the strip.** Today's live posting
+   title carries no trailing "Careers" suffix at all, so this confirms no
+   regression on the host but is **not** a live re-confirmation of the strip
+   mechanism itself — stated plainly, the way round 9 A treated `nanoge.org`,
+   rather than claimed as stronger evidence than it is.
+2. **`postdocjobs.com` (B9-02b's target) — the specific topic-label defect
+   is gone, but the host renders a different wrong value today.** Today's
+   live posting isn't the "Molten Salt Chemical and Electrochemical
+   Engineering" shape B9-02b fixed; it renders `"Job posted on
+   PostdocJobs.com"` instead. **Confirmed by direct fetch: this is generic
+   site boilerplate — the real employer is Argonne National Laboratory,
+   stated explicitly on the page as `"Employer: Argonne National
+   Laboratory."`** This shape defeats the host-brand guard for a structural
+   reason, not a coincidence: `looksLikeHostBrand`'s own one-directional
+   length rule (confirmed in round 9 A part 1's own direct testing) only
+   catches a candidate short enough that the host label could start with
+   it. `"Job posted on PostdocJobs.com"` is long, and it does not begin with
+   the host's own label (it begins with `"Job posted..."`), so it survives
+   the guard the same way a real long-form employer name is designed to
+   survive — except this one is not a real employer name at all. Neither
+   B9-02a's trailing-word list (this isn't a trailing suffix) nor B9-02b/c's
+   topic-vocabulary gate (this isn't topic-label-shaped) was ever built to
+   catch this shape.
+3. **`careerservices.upenn.edu` (B9-02c's target) — same pattern, this
+   round's clearest single finding.** The specific "Molten Salt
+   Characterization" topic-label defect is confirmed gone — **same exact
+   posting round 9 A cited (identical URL), reproduced live again today**,
+   no longer renders a topic label. But it now renders `"University of
+   Pennsylvania"` instead of the real employer. **Confirmed by direct
+   fetch: the real, self-declared employer is Oak Ridge National
+   Laboratory** — the page states `"Oak Ridge National Laboratory is the
+   largest US Department of Energy science and energy laboratory"` and
+   gives an `@ornl.gov` contact address; Penn's career-services site is
+   only hosting the listing, the way a university career center commonly
+   aggregates external partner postings. This is the same host-brand
+   one-directional-length-rule gap as `postdocjobs.com` above, but sharper:
+   `"University of Pennsylvania"` is a real, long, legitimate organisation
+   name — exactly the shape the guard's design intends to let through — it
+   is simply the **wrong** organisation for this specific posting, because
+   it is the hosting platform's own name, not the employer that posted on
+   it. The guard cannot distinguish "a real long employer name" from "a
+   real long name belonging to whoever runs the job board," and nothing in
+   this round's fixes was aimed at that distinction.
+
+**The three specific watch shapes named in this round's brief — none
+observed in this sample, stated plainly, not implied fixed:**
+(a) a differently-shaped trailing chrome word — not observed; (b) a
+differently-shaped topic-label — not observed; (c) a bare host brand
+surviving B9-02a's strip-after-guard ordering (manager's OBSERVATION 2) —
+not observed. **What this sample found instead were two shapes outside all
+three anticipated categories** (above) — still squarely "a new,
+differently-shaped wrong value surviving on real data," per this round's
+own framing, just not the specific shapes anticipated.
+
+**`careers.abbvie.com`'s null — a data point for the standing trade-off
+measurement, not a new claim.** Same shape as round 9 A's own
+`jobs.lbl.gov` finding: an organisation's own branded subdomain, null
+company, no employer stated in title or URL text. Consistent with, but not
+proof of, the host-brand guard suppressing a short "AbbVie" candidate —
+genuinely indistinguishable from "no candidate was ever extracted" without
+tracing the internal call chain, which is investigating cause, out of
+scope for A. Not counted as WRONG for that reason, flagged for the same
+reason round 9 A flagged `jobs.lbl.gov`.
+
+**Cleanup:** throwaway vitest file deleted before this commit. No product
+code touched. No credential printed, logged, or written anywhere. Both
+direct page fetches quoted only in short fragments, per the security floor.
+
+**Not done this turn (parts 3–4, same session, continuing next):** R4 job
+summary re-check (plus Ruling 33's acronym tally), R13 event names re-check.
+No gate verdict is set by this entry.
+
+Commit follows immediately.
+
