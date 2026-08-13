@@ -17027,3 +17027,229 @@ newly confirming one shape's precondition is real and live.** Three of four part
 real data. Only part 4 found zero contamination — but not zero finding, since
 shape 1's live existence is itself new information Ruling 31 explicitly asked this
 loop to keep watching for.
+
+### Round 9 — Agent B (B9-01: Ruling 32's enumeration)
+
+**STATUS: DONE.** Claimed the turn lock (`3f0d1da`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 04:08 UTC`) before reading anything, per §0d and
+this round's own documented near-miss (part 3's process note about claiming
+late). Read §1s Ruling 32 first, §1's current-state block in full (work list
+and the MANAGER CARRY-FORWARD block), §4 "Round 9 — Agent A (summary across
+parts 1-4)" and all four individual part entries, §1r/q/p/m (Rulings
+31/30/29/26), §1j/l (Rulings 23/25), §2, §3, and round 8 C's B8-01 through
+B8-07 entries in full for exact file/line citations before touching any
+source file. Read only — no product code changed; two throwaway vitest files
+used to verify claims below, both deleted before this commit.
+
+**This is item B9-01, required first by Ruling 32.** The rest of this turn's
+entries reference this one rather than re-deriving "what renders after the
+guard fires" per field, per Ruling 32's own instruction.
+
+#### 1. Every fallback that runs after a guard rejects something
+
+Traced each chain from ingestion through the mapper to the rendered
+component, reading the current source directly — not round 8's or round 9
+A's own description of it, both checked against the file as it stands today.
+
+**Job employer — clean, confirmed end to end. No fallback reinstates a
+rejected value.**
+- Ingestion (`web/src/lib/jobs/sources/jobweb.ts:199-212`,
+  `webResultToRawJobItem`): `company` is the result of `.find()` over
+  `[titleEmployer, ...parts.slice(1)]` through four guards
+  (`KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`, `looksLikeBareLocation`,
+  `looksLikeHostBrand`). No `|| host` anywhere — Ruling 26/30's fix holds; if
+  every candidate is rejected, `company` is `undefined`.
+- Mapper (`web/src/lib/jobs/mapper.ts:140`): `const company =
+  cleanJobSubtitlePart(item.company);` — no `??`/`||` fallback of any kind.
+  `cleanJobSubtitlePart` (`web/src/lib/opportunities/job-cleanup.ts:43-48`)
+  itself returns `undefined` on empty/call-to-action-only input, never a
+  substitute string.
+- Enrichment (`web/src/lib/opportunities/enrich.ts:242-252`,
+  `resolveEmployerIdentity` in `employer-identity.ts:66-88`): `ambiguous` to
+  `undefined`; `none` to `item.company` (the pre-enrichment, already-guarded
+  value for jobweb-sourced items — not a rejected candidate reinstated, since
+  `resolveEmployerIdentity` never evaluates `catalogLabel` against its own
+  guard at all — see the dead-parameter note below); `structured`/`declared`
+  to the guarded candidate itself.
+- Render: `web/src/app/jobs/[id]/page.tsx:1010-1019` — the whole subtitle
+  `<p>` is gated on `(company || location || workMode)`, and `[company,
+  location, workMode].filter(Boolean)` drops a missing company silently, no
+  placeholder, no dangling separator. `web/src/components/cards/job-card.tsx:87-89`
+  uses the identical unconditional `{job.companyOrLab && (...)}` guard, no
+  alternate branch. Matches A's part 1 finding, independently re-confirmed
+  from source, not taken on trust.
+
+**Job summary — clean, confirmed end to end.**
+- `web/src/lib/jobs/summarize.ts:83-131` (`scoreSentences`) rejects a
+  sentence outright (`return null`) on four negative checks, then (B8-05) a
+  fifth: `matchedCount === 0 && sectionScore === 0 && roleScore === 0`. A
+  rejected sentence is filtered out of the candidate array entirely — never
+  scored, never eligible for `bestCombination`.
+- `summarizeJob` (`:162-175`): if `bestCombination` selects nothing,
+  `selected` is `[]`, `.map(...).join(" ")` is `""`. No fallback to raw
+  description text.
+- Mapper (`web/src/lib/jobs/mapper.ts:136-138`): `summarizeJob(...) ||
+  undefined` — `""` becomes `undefined`.
+- Render (`web/src/app/jobs/[id]/page.tsx:935,1143-1146`): `roleBullets.length
+  > 0` gates both the outer `data-role-and-materials` wrapper (jointly with
+  `materials.length`) and, independently, the `data-section="what-the-role-is"`
+  heading itself. An empty summary produces neither. Matches A's part 2
+  finding, independently re-confirmed from source.
+
+**Event name — NOT clean. Two separate fallbacks reinstate an
+already-rejected string: one already found by A, one new this turn.**
+
+Event name genuinely cannot render nothing: `RawEventItem.name` and
+`Event.name` are both typed `string`, never `string | undefined`
+(`web/src/lib/events/types.ts:26`, `web/src/types/index.ts:155`), and the
+render site is unconditional — `web/src/app/events/[id]/page.tsx:1900-1902`,
+`<h1>{event.name}</h1>`, no guard, no alternate branch. Whatever the pipeline
+computes is what the reader sees, always, which is why the two fallbacks
+below are the field's entire defence, not a backstop in front of a silent
+option.
+
+1. **Ingestion, already found by A (part 3) — `eventNameFrom`'s absolute
+   last resort.** `web/src/lib/events/sources/eventweb.ts:494`:
+   `return segments[0] ?? title.trim();`. `segments` (recomputed at
+   `:469-472`) is the same split `bestEventTitleSegment` used two lines above
+   to build the `informative` (guard-passing) pool. If `informative.length
+   === 0` — every segment was rejected by `isChromeSegment`/
+   `looksLikeEventTitle` — and the URL-slug and snippet mining both also
+   fail, `segments[0]` is one of the very segments just rejected, returned
+   verbatim. Directly confirmed by A via controlled construction
+   (`"Conference Program"` in, `"Conference Program"` out).
+
+2. **Enrichment, NEW this turn, not in any prior round's log —
+   `enrichEventCandidates`'s `typedName` fallback.**
+   `web/src/lib/opportunities/enrich.ts:148-155`:
+   ```
+   const name = typedName
+     ? bestEventTitleSegment(typedName, item.url) ??
+       (looksLikeEventTitle(typedName) ? typedName : undefined) ??
+       declaredEventName ?? ...
+   ```
+   `bestEventTitleSegment(typedName, item.url)` runs the full guard
+   (`isChromeSegment` — generic title, event index, document filename,
+   host-brand — AND `looksLikeEventTitle`). If it rejects `typedName`, the
+   very next term re-tests the **same, unmodified `typedName`** against
+   `looksLikeEventTitle` alone — omitting `isChromeSegment` entirely — and
+   returns it unchanged if that weaker check happens to pass.
+
+   Verified directly (throwaway vitest, deleted before this commit): fed
+   `typedName = "Conference Program"` through this exact ternary (matching
+   B8-06's own confirmed live-repro host shape) — `bestEventTitleSegment`
+   correctly returns `undefined` (`isGenericPageTitle` fires), but
+   `looksLikeEventTitle("Conference Program")` returns `true` (no narrative
+   verb, not multi-sentence, under 20 words), so the ternary yields
+   `"Conference Program"` — the same string rejected one line above. Same
+   result for a document-filename-shaped `typedName`
+   (`"AA ECC10 POSTERS 08072026.xlsx"`, B8-06's other named shape).
+
+   **This is not simply an oversight — one existing, passing test needs part
+   of it.** `web/src/lib/opportunities/enrich.test.ts:216-224`, "accepts a
+   host-matching typed Event name by its structured provenance": a JSON-LD
+   `Event.name` of `"SolarPACES"` on `solarpaces.example.org` is *correctly*
+   rejected by `bestEventTitleSegment` (`looksLikeHostBrand("SolarPACES",
+   "solarpaces.example.org")` is `true` — the candidate is the host's own
+   first label) and the test asserts the second term rescues it back to
+   `"SolarPACES"`. For a **typed/structured** name specifically, matching the
+   host is the expected, correct case — an organisation's own domain
+   commonly is its own name — unlike a scraped title segment, where the same
+   collision usually means site chrome. Part of this fallback's existence is
+   therefore deliberate and must not simply be deleted.
+
+   **But the rescue is broader than the one thing it needs to fix.**
+   `isChromeSegment` bundles four independent checks (generic title, event
+   index, document filename, host-brand) into one boolean; the rescue term
+   re-tests none of them and instead runs an unrelated check
+   (`looksLikeEventTitle`: narrative verb / passive headline / present-tense
+   narrative / sentence count) that was never the reason
+   `bestEventTitleSegment` rejected `"Conference Program"` or the filename in
+   the first place. The SolarPACES test only requires bypassing the
+   host-brand sub-check; the shipped code bypasses all four. Fix direction in
+   B9-04 below.
+
+**Roster arrays (event people/organisations) — safe, different field shape,
+confirmed by inspection, no item needed.**
+`web/src/lib/opportunities/event-roster.ts:398-421,443-465`: every candidate
+is guarded (`looksLikePersonName`/`looksLikeOrganisationName`) and a rejected
+candidate is dropped from the array (`return []`), never replaced. An array
+can honestly be empty in a way a headline scalar field cannot, so there is no
+"must render something" pressure and no fallback exists to create one.
+
+**Location placeholders — the codebase's own existing example of doing this
+right, cited as precedent, not a new finding.** `web/src/lib/jobs/mapper.ts:143`
+(`item.isRemote ? "Remote" : "See posting"`) and the event-side equivalent
+(`"See event page"`, `web/src/lib/events/sources/eventweb.ts:468` and
+`mapper.ts:136`) are both literal, honest, already-filtered-at-render
+sentinels (`JOB_LOCATION_PLACEHOLDER`, confirmed guarded at
+`web/src/app/jobs/[id]/page.tsx:947-953`) — never a guessed value, never a
+value a guard rejected. This is Ruling 32 item 3's "field genuinely cannot be
+empty, name the honest last resort" already implemented correctly elsewhere
+in this codebase.
+
+**`catalogLabel` on five job adapters — a different, already-flagged shape,
+not new, not the Ruling 32 pattern.** B8-04's own residual note (round 8 log)
+already named this: `adzuna.ts:102`, `arbeitnow.ts:40`, `jsearch.ts:57`,
+`remotive.ts:45` all do `field?.trim() || undefined` with no guard at all —
+never submitted to `looksLikeHostBrand` or any check — not a rejected value
+reinstated, an unvetted one, because these four have no self-declaration/
+JSON-LD tier for `resolveEmployerIdentity` to guard in the first place.
+`himalayas.ts:77-81` is the same shape via `resolveEmployerIdentity`'s "none"
+branch. Confirmed a deliberate, different threat model (structured API
+fields, not scraped HTML), per B8-04's own reasoning — not re-litigating it
+here. Named precisely because it is the same underlying property Ruling 32
+describes ("no field may be empty") even though the mechanism differs from a
+guard-then-fallback pair.
+
+**`EmployerIdentityEvidence.catalogLabel` — dead parameter, found while
+tracing the chain above, not previously logged.**
+`web/src/lib/opportunities/employer-identity.ts:10-12`: the interface
+declares and documents `catalogLabel` ("a source adapter's existing label;
+it is deliberately only a fallback") but `resolveEmployerIdentity`'s body
+(`:66-88`) never reads `evidence.catalogLabel` anywhere — grepped to
+confirm. Both call sites (`enrich.ts:243`, `himalayas.ts:65`) pass it in, and
+both then separately re-read their own `item.company`/`job.companyName`
+directly at the "none" branch instead of through the function's return
+value. The parameter is not wired to anything; removing it would change no
+behaviour. Flagging as dead/misleading code, not a defect with reader-facing
+impact — no fix item recommended this round, noted per this loop's standing
+instruction to look for dead or half-built code.
+
+**`usajobs.ts:73`'s `"U.S. Federal Government"` — unchanged, still
+`POLICY`, not re-litigated.** Confirmed still present, still the only
+source-specific non-optional string default in the job pipeline, still
+categorically true (not guessed) rather than a rejected-candidate
+reinstatement. B8-03 already asked the manager to rule; this turn adds
+nothing new to that question.
+
+#### 2. Which fields may render nothing
+
+Matches Ruling 32's own precedent exactly, now confirmed independently from
+source rather than taken on trust: **job employer and job summary both
+render true silence** when every candidate/sentence is rejected — no
+heading, no placeholder, no dangling separator, confirmed at both the
+component and card level. **Event name may not** — it is a required
+`string` at the type level and the `<h1>` renders it unconditionally; there
+is no silent branch to fall back to. This is *why* the two event-name
+fallbacks above matter more than an equivalent-shaped gap would on a field
+that can legally be absent.
+
+#### 3. Where a field genuinely cannot be empty, the honest last resort
+
+- **Job/event location already has one:** a literal, honest placeholder
+  string ("See posting"/"See event page"), filtered from ever appearing bare
+  next to real data. Cited above as the precedent to copy.
+- **Event name has no honest last resort today.** Its last resort in each of
+  the two fallbacks above is "the value most recently rejected, tried again
+  under a weaker or absent check" — precisely what Ruling 32 rules out. A
+  defensible replacement (a URL host, a truncated title, a literal
+  `"Untitled event"`) does not exist yet at either fallback site. Fix
+  direction is in B9-04 below; not designed here, since Ruling 32 asks this
+  entry to enumerate, not to patch.
+
+No product code touched in this entry. Gate not re-run here (nothing to
+regress); confirmed clean at the end of this turn instead, in the closeout
+entry.
+
+Commit follows immediately.
