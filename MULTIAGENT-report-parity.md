@@ -270,100 +270,94 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 16:06 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-13 15:56 UTC — ROUND 11 B IS
-                  COMPLETE, ALL SIX ITEMS.** Claimed the lock cleanly (no
-                  race), read §1v Ruling 35 and the round 9 B9-01 precedent
-                  it names as the shape to follow, then worked the ruling's
-                  own required order: the enumeration first (B11-01), then
-                  each fix-guide item in turn, committing and pushing after
-                  every single one — write-as-you-go held throughout,
-                  nothing batched.
+STOPPED BECAUSE:  **finished the turn @ 2026-08-13 16:17 UTC — ROUND 11 C IS
+                  COMPLETE.** Claimed the lock cleanly (no race; the hourly
+                  cloud run did not contest it), confirmed the branch reads
+                  `feature/summary-report-revamp` before touching anything,
+                  then read §1's whole `WHOSE TURN: C` block, §1v Ruling 35
+                  **including its dated amendment**, §1w Ruling 36, §2, §3,
+                  all six B11 entries plus B's summary, and the manager's
+                  verification of B — before editing a line. Committed and
+                  pushed after every single item; nothing batched.
 
-                  **Full detail for all six items, method, verification-by-
-                  construction evidence (three throwaway vitest harnesses,
-                  each deleted before its commit), and the ranked write-up
-                  are in §4**: "Round 11 — Agent B (B11-01: Ruling 35's
-                  enumeration...)" through "(B11-06: `euagenda.eu`...)",
-                  and "(summary across B11-01–06)". This block is the short
-                  version; read the summary entry in §4 before starting C's
-                  work.
+                  **Full detail in §4**: "Round 11 — Agent C (B11-02…)"
+                  through "(B11-06…)". This block is the short version.
 
-                  **Headline:**
-                  - **B11-01 (the enumeration, required first by Ruling
-                    35):** confirmed `eventNameFrom` has three candidate
-                    stages, not two, and only the snippet-mining stage is
-                    unguarded — title-segment and URL-slug both run
-                    through `isChromeSegment`/`looksLikeEventTitle`; the
-                    snippet stage only ever calls `looksLikeEvent`, a
-                    topicality check with no concept of sentence shape,
-                    narration, or scraped markup. **Checked the manager's
-                    own two-line reading by execution rather than
-                    inheriting it, per the ruling's explicit instruction —
-                    it holds for one of three findings and is incomplete
-                    for the other two.** Line 2 (prefer-longest) is the
-                    precise, confirmed mechanism for `ecs.confex.com` (a
-                    40-vs-42-character near-tie between the real name and
-                    the wrong value, verified by construction from the two
-                    real fragments part 2 already found on the page). Line
-                    1 (empty-filter discard) is real, reachable code but
-                    **not shown to have fired for any of this round's
-                    three findings** — in all three, `looksLikeEvent`
-                    matched the winning fragment directly, no discard
-                    needed. `internationalbatteryseminar.com` and
-                    `thebatteryshowsouth.com` trace to a **third defect
-                    the manager's reading never named**: scraped
-                    widget/markup chrome (an embedded filename+query-
-                    string; a Markdown heading marker) that passes
-                    `looksLikeEventTitle` unchanged — confirmed by
-                    execution, a shape no guard on either path has ever
-                    targeted.
-                  - **B11-02/B11-03 (the structural fix, two dependent
-                    parts):** B11-02 reuses the title-segment stage's own
-                    guard pair as a hard pre-filter in the snippet stage —
-                    confirmed by construction to close `ecs.confex.com`
-                    alone, and to change **zero** other real values in A's
-                    round-11 census and **zero** existing test assertions
-                    across both files that exercise this stage
-                    (`eventweb.test.ts` **and** `scoring.test.ts` — the
-                    second file Ruling 31 warned this loop has missed
-                    before; confirmed present by grep, not assumed
-                    absent). B11-03 adds two new narrow chrome-shape
-                    regexes to `isChromeSegment`, **depends on B11-02
-                    landing first**, confirmed by construction to close
-                    the other two hosts with zero false positives against
-                    16 real values tested.
-                  - **B11-04 (`careers.gevernova.com` summary label):**
-                    **this turn's own brief suggested a fix direction that
-                    was built literally and confirmed unsafe** — keying
-                    the strip off `SECTION_RE`'s match with no colon
-                    requirement fixes the real repro but mutilates any
-                    sentence using the same phrase as its own grammatical
-                    subject (confirmed on five constructed adversarial
-                    cases, e.g. `"Responsibilities include mentoring..."`
-                    → `"include mentoring..."`, missing its own subject).
-                    A guarded version (skip the strip when the next word
-                    is a closed-list linking verb) verified correct on all
-                    seven cases including the five adversarial ones.
-                    Whether landing it at all is worth the risk for a
-                    single-instance cosmetic gap is left to C/the manager;
-                    if landed, only the guarded version is safe.
-                  - **B11-05 (`ruggedthz.com`):** confirmed out of Ruling
-                    35's scope entirely (title-segment stage, a
-                    `looksLikeHostBrand` normalisation miss, not an absent
-                    guard). **Corrects this turn's own brief**: the
-                    existing trace lives in round 9 Agent A part 3, not
-                    round 9 Agent B — grepped the whole B9 section, no B
-                    item has ever targeted this mechanism. No fix
-                    recommended, matching A's own "lowest priority"
-                    framing; one new `POLICY` flag below.
-                  - **B11-06 (`euagenda.eu`):** not investigated — B has
-                    no live fetch access and A's own retry is blocked a
-                    second consecutive round. Left open.
+                  **Two fixes landed, one deliberately NOT landed.**
+                  - **B11-02 — LANDED** (`949bb90`). `eventNameFrom`'s
+                    snippet-mining stage now runs the same
+                    `isChromeSegment`/`looksLikeEventTitle` pair the
+                    title-segment stage has always used, as a hard
+                    pre-filter ahead of the `looksLikeEvent` preference
+                    tier. Closes `ecs.confex.com`, and closes B11-01's
+                    enumeration shape 4 (the empty-filter discard) for free,
+                    because the filter now runs BEFORE the preference tier
+                    so the ternary can only ever fall back to already-guarded
+                    candidates. Three new tests, **all three verified by
+                    execution to FAIL against the pre-fix code** — including
+                    the two-candidate 40-vs-42-character tie-break, the one
+                    case in the whole suite that would have caught this live
+                    regression before it shipped. One logged deviation: took
+                    B's own offered style option and extracted `hostFromUrl`
+                    so both stages derive the host from one function instead
+                    of two copies that must agree.
+                  - **B11-03 — LANDED** (`bd3f076`), on top of B11-02 in the
+                    same session as required. Two new closed-shape regexes in
+                    `isChromeSegment`: embedded filename+querystring, and
+                    Markdown heading/bracket-ellipsis. Closes
+                    `internationalbatteryseminar.com` and
+                    `thebatteryshowsouth.com`. Six new tests; **the four
+                    must-reject cases verified by execution to FAIL against
+                    B11-02-only code**, which demonstrates the dependency B
+                    described rather than asserting it. The `{2,6}` hash
+                    floor is kept and is now protected by a must-survive
+                    test. **The manager's blast-radius warning is answered
+                    explicitly: the SolarPACES regression-lock passes
+                    unchanged, 25 of 25, verified by running it.** It lives
+                    in `web/src/lib/opportunities/enrich.test.ts` — recorded
+                    because there is no such file under `events/`.
+                  - **B11-04 — NOT LANDED. §1w Ruling 36's eighth-shape
+                    condition fired, and it fired eight times.** B's seven
+                    cases reproduced exactly — B's verification is confirmed
+                    correct, not disputed. But all five of B's adversarial
+                    cases happen to continue with a verb that is on the
+                    guard's closed list, and **eight further sentences of
+                    ordinary job-posting English are mutilated**, most
+                    decisively `"The role reports to the Director of
+                    Engineering."` → `"reports to the Director of
+                    Engineering."`. That shape is close to boilerplate in
+                    real postings and today's shipped code renders it
+                    correctly. The structural point: every other closed list
+                    in this codebase enumerates a genuinely finite set (file
+                    extensions, heading markers); this one enumerates *the
+                    verbs English allows after a plural noun subject*, which
+                    is an open class wearing a closed list's clothes. Ruling
+                    36 forbade widening it inline, and having seen why, that
+                    instruction looks right. **Stopped and recorded, per the
+                    ruling. `summarize.ts` is untouched.** New `POLICY` flag
+                    below.
+                  - **B11-05 — ruled, not skipped.** No code, by Ruling 36,
+                    which settled it before this turn began. Logged as ruled
+                    so it is not mistaken for a quiet drop.
+                  - **B11-06 — no action**, as instructed. Stays open for
+                    round 12's A.
+
+                  **Gate at the end of the turn:** 90 files / 1076 tests,
+                  **1075 passing**. The only failure is
+                  `benchmark.test.ts`'s documented live-search flake (it RUNS
+                  and flakes on this laptop, where the live keys are present,
+                  and SKIPS in the credential-less cloud — both normal).
+                  `npx tsc --noEmit` clean. `npx eslint` reports exactly the
+                  one standing pre-existing error (`quiz.tsx:46`), none
+                  added. **No existing test assertion was changed or
+                  deleted this turn** — nine tests added, zero rewritten.
+                  Baseline was confirmed cold before the first edit
+                  (1067/1066) rather than inherited.
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -371,78 +365,120 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-13 15:56 UTC — ROUND 11 B IS
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            11 — **A and B both COMPLETE.** Round 10 (A, B, C,
-                  manager verification) is also fully complete. Next is
-                  round 11 C.
-WHOSE TURN:       **C — Implementer.** Work B's fix guide in this order
-                  (full detail, code sketches, and per-item tests-at-risk
-                  lists are in §4's six B11 entries and the summary entry
-                  — read those, not just this block, before editing
-                  anything):
-                  1. **B11-02** — add a hard pre-filter
-                     (`isChromeSegment`/`looksLikeEventTitle`, the exact
-                     pair `bestEventTitleSegment` already uses) to
-                     `eventNameFrom`'s snippet-mining stage
-                     (`web/src/lib/events/sources/eventweb.ts:604-613`).
-                     No dependency; land first. Code sketch and full
-                     tests-at-risk list in §4's B11-02 entry.
-                  2. **B11-03** — add two new narrow chrome-shape regexes
-                     (embedded filename+querystring; Markdown heading
-                     marker/bracket-ellipsis) to `isChromeSegment`
-                     (`eventweb.ts:407-427`). **Depends on B11-02 landing
-                     first** — its new checks are only reachable through
-                     the call B11-02 adds. Land in the same session so
-                     `eventweb.test.ts` **and** `scoring.test.ts` (both
-                     exercise this stage — do not run only the first) are
-                     only run cold once across both items.
-                  3. **B11-04** — `careers.gevernova.com`'s summary label
-                     (`web/src/lib/jobs/summarize.ts`). Independent of
-                     items 1–2 (different file, different pipeline).
-                     **Use the guarded version B11-04's entry verifies —
-                     never the naive colon-less strip**, which is a
-                     confirmed regression risk (mutilates a real sentence
-                     using the same phrase as its subject), not a
-                     hypothetical one. C's own call whether the fix is
-                     worth landing at all for a single-instance cosmetic
-                     gap; log the decision either way rather than silently
-                     skipping it.
-                  4. **B11-05** — no code to write. Log the new `POLICY`
-                     flag below for the manager; do not build a fix for
-                     the `looksLikeHostBrand` normalisation gap pending
-                     that ruling.
-                  5. **B11-06** — no code, nothing further to do this
-                     round.
+ROUND:            11 — **COMPLETE (A, B, C).** Round 10 (A, B, C, manager
+                  verification) is also fully complete. Next is **round 12
+                  A**, after the manager's verification of round 11 C.
+WHOSE TURN:       **A — Reviewer, round 12.** Measure only; do not diagnose
+                  and do not change code (§2). Two event-name fixes landed
+                  this round and one job-summary fix was deliberately not
+                  landed, so the watch list below is written as **questions a
+                  fixture cannot settle** — every one needs live data. None
+                  of them is a known regression; each is a place where the
+                  test suite proves the mechanism and only a real page can
+                  prove the outcome.
 
-                  After each code item (1–3), run the gate
-                  (`cd web && npx vitest run && npx tsc --noEmit && npx
-                  eslint`) — baseline to match: 90 files / 1067 tests,
-                  1066 passing (the one documented `benchmark.test.ts`
-                  live-search flake, expected), typecheck clean, exactly 1
-                  pre-existing lint error (`quiz.tsx:46`). Add the
-                  hardest-real-shape tests each B11 entry names — the
-                  two-candidate `ecs.confex.com` tie-break case (B11-02),
-                  the two confirmed-repro strings plus the single-`#`
-                  adversarial case (B11-03), and the real repro plus the
-                  five adversarial subject-usage cases (B11-04, if landed)
-                  — not only the shapes already in the fix-guide code
-                  sketches. Never delete a test; rewrite an assertion in
-                  place with a comment naming which item changed it, per
-                  §3. Commit per item, then hand back to A.
+                  **Per-fix watch points — a fixture cannot settle any of
+                  these:**
+                  1. **B11-02 — did the guard's replacement value actually
+                     improve what a reader sees?** The tests prove the
+                     narrative sentence is now rejected and that execution
+                     falls through to the honest URL host. They cannot prove
+                     what the live snippet pool contains, so they cannot
+                     prove whether `ecs.confex.com` now renders its real
+                     name or renders `ecs.confex.com`. **Both are correct
+                     behaviour; only one is a good card.** Say which
+                     happened, and say it for every event whose name is now
+                     a bare hostname — a rise in bare-hostname names is the
+                     expected cost shape of this fix and is worth counting,
+                     not just noting. Ruling 26's standard: a guard plus a
+                     defensible nothing is a fix, but the reader still has
+                     to be better off.
+                  2. **B11-02 — did anything that used to render a real name
+                     stop doing so?** The new filter is strictly more
+                     selective than the old code: a candidate that used to
+                     survive can now be excluded, never the reverse. The
+                     suite confirms zero existing assertions changed and B
+                     confirmed zero changes across round 11's own 10 correct
+                     values — but neither covers a real name shape nobody
+                     has met yet. This is the one direction this fix can be
+                     wrong in.
+                  3. **B11-03 — false positives on real names, which no
+                     fixture can rule out.** Both new regexes were checked
+                     against 16 real values with zero false positives, and
+                     two must-survive tests lock the deliberate boundaries
+                     (a single `#` as ordinary punctuation; a title that
+                     merely names a file format). A real event name
+                     containing a period-plus-extension or two-plus hashes
+                     would be rejected as chrome. Nobody has seen one. If
+                     one exists, live data is the only thing that will find
+                     it.
+                  4. **B11-03 — the shared-`isChromeSegment` placement.**
+                     These checks were deliberately put in the shared bundle
+                     rather than a snippet-stage-only copy, so they also run
+                     on page `<title>` segments and on the enrichment rescue
+                     path. The SolarPACES lock passes unchanged and an
+                     authored `<title>` essentially never contains raw
+                     markup — but "essentially never" is a claim about the
+                     live web, not about the test suite. Watch the enriched
+                     names as well as the Tier 0 ones.
+                  5. **B11-04 — nothing landed, so measure the defect, not a
+                     fix.** `careers.gevernova.com`'s run-on label is still
+                     live and expected to still be there. Does it recur, and
+                     does the same colon-less-label shape appear on any
+                     other host? One instance was the whole evidence base
+                     for a fix that turned out to cost more than it bought;
+                     a second instance changes that calculus and a second
+                     round of zero also settles it.
 
-MANAGER CARRY-FORWARD: **one new this round.** **B11-05's flag**: the same
-                  host (`ruggedthz.com`), same mechanism
-                  (`looksLikeHostBrand` returning `false` for a real
-                  organisation name sharing no substring with its own
-                  domain), has now been the confirmed cause of this host's
-                  wrong value across two non-consecutive rounds (9 and
-                  11) — narrower and more repeated than the single-anecdote
-                  evidence base Rulings 33/34a each accepted as a cost on.
-                  Worth the manager's call on whether that changes
-                  anything; no fix designed pending the ruling, per Ruling
-                  32's own instruction not to design before the call is
-                  made. Standing, unchanged: **B8-03's `usajobs.ts`
-                  fallback** (`"U.S. Federal Government"`) is still an open
-                  `POLICY` question for the manager, not for A, B, or C.
+                  **Carry forward — all four are due in round 12 and none is
+                  optional:**
+                  - **Ruling 33's acronym tally** — cumulative count of
+                    wrong values caused by an acronym collision. Due.
+                  - **Ruling 34a's institution tally** — cumulative count of
+                    employer values that are a real, correctly-spelled
+                    institution name that is NOT the actual employer. Due.
+                  - **Ruling 36's third-strike check on `ruggedthz.com`** —
+                    **round 12's A must say explicitly whether the same host
+                    and the same mechanism (`looksLikeHostBrand` failing to
+                    connect the organisation's real name to its own domain)
+                    recur a third time.** That answer is what triggers or
+                    clears the threshold; the threshold cannot fire on
+                    silence, and "not mentioned" will be read as "not
+                    measured," not as "clear."
+                  - **`euagenda.eu`'s third direct-fetch attempt.** If it
+                    403s a third consecutive round, name the persistent
+                    block itself as the finding rather than retrying
+                    silently again.
+
+MANAGER CARRY-FORWARD: **one new this round, and it is C's, not B's.**
+                  **B11-04's flag — Ruling 36's own eighth-shape condition
+                  fired, so B11-04 did NOT land and needs a ruling to go
+                  anywhere.** B's guarded fix was rebuilt and reproduced
+                  exactly (B's seven cases all behave as B said), but all
+                  five of B's adversarial cases happen to continue with a
+                  verb that is on the guard's closed list, and **eight
+                  further sentences of ordinary job-posting English are
+                  mutilated** — most decisively `"The role reports to the
+                  Director of Engineering."` → `"reports to the Director of
+                  Engineering."`, a shape close to boilerplate that today's
+                  shipped code renders correctly. The structural reason:
+                  every other closed list in this codebase enumerates a
+                  finite set (file extensions, heading markers), while this
+                  one enumerates the verbs English allows after a plural
+                  noun subject — an open class in a closed list's clothing,
+                  so widening it moves the boundary without fixing it.
+                  Three options for the manager (accept the run-on as a
+                  cost; rule the guarded version lands anyway with the eight
+                  shapes as collateral; or send it to a future B to design a
+                  discriminator that is actually closed), plus one
+                  observation recorded as a lead and explicitly not a design
+                  — full detail in §4 "Round 11 — Agent C (B11-04…)". No
+                  code written pending the call, per Ruling 32.
+                  **Resolved this round, no longer carried:** B11-05's own
+                  flag, settled by Ruling 36. Standing, unchanged: **B8-03's
+                  `usajobs.ts` fallback** (`"U.S. Federal Government"`) is
+                  still an open `POLICY` question for the manager, not for
+                  A, B, or C.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
@@ -479,27 +515,42 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   to design the fix, no further escalation needed) and the
                   design lead recorded (recover the name from the rejected
                   sibling title segment, not host-brand widening). Ruling 36
-                  also settles B11-04's open question: C lands the guarded
+                  also settled B11-04's open question: C lands the guarded
                   version only; A's naive version must not land in any form.
-STATUS:           **Round 11 A's six-item ranked list (§4 "Round 11 — Agent
-                  A (summary across parts 1–4...)") is now fully
-                  investigated — see §4 "Round 11 — Agent B (summary across
-                  B11-01–06)" for the complete cross-item picture.** Four
-                  items have a verified-by-construction fix direction ready
-                  for C (B11-02, B11-03, and B11-04's guarded version — the
-                  brief's own naive suggestion for B11-04 was checked and
-                  rejected, not carried forward); one is confirmed entirely
-                  out of Ruling 35's scope with a new `POLICY` flag for the
-                  manager (B11-05); one stays open pending live access
-                  (B11-06, `euagenda.eu`). **No product code touched this
-                  turn** — B does not change code, per §2. Round 10's six
-                  code items remain landed and manager-verified as before
-                  (§4 "Round 10 — MANAGER verification of Agent C");
-                  `careerservices.upenn.edu` remains the sole accepted
-                  employer-field cost (Ruling 34a), unchanged. B8-03's
-                  `usajobs.ts` policy question remains open, untouched this
-                  round.
-LAST DIFFERENCE:  **Employer field: 1 of 9 non-null real postings wrong
+                  **Ruling 36's own eighth-shape escape clause then fired in
+                  C's turn** — C rebuilt the guarded version, found eight
+                  ordinary job-posting sentences it mutilates, and stopped
+                  and recorded rather than widening it inline, exactly as the
+                  ruling directs. B11-04 therefore did not land; it is back
+                  with the manager (see MANAGER CARRY-FORWARD above). The
+                  clause worked as written and is worth keeping in future
+                  rulings of this shape.
+STATUS:           **Round 11's six-item ranked list is now worked through:
+                  three of the six ranked differences have a landed fix,
+                  one is back with the manager, and two were already ruled
+                  or already open.** Landed and gated this turn: **B11-02**
+                  (ranked #3, `ecs.confex.com`) and **B11-03** (ranked #1
+                  and #2, `internationalbatteryseminar.com` and
+                  `thebatteryshowsouth.com`), together with B11-01's
+                  enumeration shape 4 closed as a side effect. **Not
+                  landed: B11-04** (ranked #5) — Ruling 36's eighth-shape
+                  condition fired; `web/src/lib/jobs/summarize.ts` is
+                  untouched and the item is a `POLICY` question again.
+                  **B11-05** (ranked #4) stays an accepted cost by Ruling 36
+                  with a third-strike threshold armed for round 12.
+                  **B11-06** (`euagenda.eu`) stays open pending live access.
+                  Nine tests added, **zero rewritten and zero deleted**.
+                  Round 10's six code items remain landed and
+                  manager-verified as before (§4 "Round 10 — MANAGER
+                  verification of Agent C"); `careerservices.upenn.edu`
+                  remains the sole accepted employer-field cost (Ruling
+                  34a), unchanged. B8-03's `usajobs.ts` policy question
+                  remains open, untouched this round.
+LAST DIFFERENCE:  **This is round 11 A's reading and it PRE-DATES round 11
+                  C's two landed fixes — C does not re-measure (§2), so
+                  nothing below has been re-checked against the current
+                  build. Round 12's A produces the post-fix numbers.**
+                  **Employer field: 1 of 9 non-null real postings wrong
                   (11.1%), down from round 10's 20%** — the sole wrong value
                   is the accepted `careerservices.upenn.edu` residual, not a
                   new defect; no other host showed a wrong employer this
@@ -521,7 +572,13 @@ LAST DIFFERENCE:  **Employer field: 1 of 9 non-null real postings wrong
                   in their own §4 "Round 11 — Agent A (part N)" entries; the
                   ranked headline is in §4 "Round 11 — Agent A (summary
                   across parts 1–4, ranked difference list, gate verdict)."
-GATE (0%):        **NOT MET.** Six real, non-zero, live-confirmed
+GATE (0%):        **NOT MET — round 11 A's verdict, unchanged. C cannot
+                  close or move this**; landing a fix is not evidence the
+                  difference is gone, only round 12's A's live measurement
+                  is. Three of the six differences below now have a landed
+                  fix and one is back with the manager unfixed, but the
+                  count stays as A left it until it is re-measured.
+                  Six real, non-zero, live-confirmed
                   differences found across R4 summaries and R13 event names
                   (ranked list above); the employer field's sole remaining
                   wrong value is an accepted cost, not counted toward this.
@@ -22590,6 +22647,127 @@ failure is `benchmark.test.ts`'s documented live-search flake. `npx tsc
 error (`quiz.tsx:46`), none added. **No existing test assertion changed or
 deleted** — B's prediction of zero false positives held on the full suite as
 well as on its own 16-value census.
+
+Commit follows immediately.
+
+### Round 11 — Agent C (B11-04: NOT LANDED — Ruling 36's eighth-shape condition fired, and it fired eight times)
+
+**STATUS: STOPPED AND RECORDED, exactly as §1w Ruling 36 instructs. No
+product code written for this item. `web/src/lib/jobs/summarize.ts` is
+untouched.**
+
+Ruling 36's own words: *"C lands the **guarded version only** … but if C
+finds any eighth shape the guard misses, it stops and records rather than
+widening the guard inline."* That conditional fired. This entry is the
+record.
+
+**What was checked, and how.** Built B11-04's guarded `stripLeadingLabel` in
+a throwaway vitest harness (`web/src/lib/jobs/zz-round11-c-b1104-probe.test.ts`,
+**deleted before this commit** — `git status --short` confirmed empty), with
+`SECTION_RE` and `LEADING_LABEL_RE` copied character-for-character from
+`summarize.ts` and `SUBJECT_CONTINUATION_RE` copied character-for-character
+from B11-04's own entry. Ran B's seven cases plus eight candidate eighth
+shapes. Same method B used, so the two results are directly comparable.
+
+**B's seven cases reproduced exactly. B's verification is confirmed correct,
+not disputed:** both heading-form cases strip cleanly, and all five
+subject-usage adversarial cases come back verbatim, untouched. Nothing in
+what follows is a correction to B's work — B verified what it said it
+verified.
+
+**The problem is what B's seven cases do not span.** All five of B's
+adversarial cases happen to continue with a verb that is on
+`SUBJECT_CONTINUATION_RE`'s closed list (`include`, `is`, `requires`). Eight
+further sentences, all ordinary job-posting English, continue with a verb
+that is not — and every one is mutilated:
+
+| input | guarded output |
+| --- | --- |
+| `The role reports to the Director of Engineering.` | `reports to the Director of Engineering.` |
+| `The role sits within our Platform Infrastructure group.` | `sits within our Platform Infrastructure group.` |
+| `The role focuses on battery materials characterisation.` | `focuses on battery materials characterisation.` |
+| `The role combines applied research with production engineering.` | `combines applied research with production engineering.` |
+| `Responsibilities span the full product lifecycle from research to launch.` | `span the full product lifecycle from research to launch.` |
+| `Responsibilities grow with seniority on this team.` | `grow with seniority on this team.` |
+| `Qualifications vary by level and are listed under each track.` | `vary by level and are listed under each track.` |
+| `Requirements differ slightly for the senior and staff levels.` | `differ slightly for the senior and staff levels.` |
+
+**`"The role reports to …"` is the one that decides this.** It is not a
+constructed edge case — it is close to boilerplate in real job postings, and
+today's shipped code renders it correctly. Landing B11-04 would replace a
+correct rendering of a common sentence with a subjectless fragment, in order
+to fix a run-on that appeared once in a four-item sample and loses no
+information. That is the same trade B rejected for A's naive version, just
+smaller — and Ruling 31 exists precisely to catch it before it lands, not
+after.
+
+**The structural point, which is why this is an escalation and not a
+one-more-verb tweak.** Every other closed list in this codebase
+(`HEADLINE_PASSIVE_RE`, `PRESENT_NARRATIVE_RE`, `DOCUMENT_FILENAME_RE`,
+B11-03's own two) enumerates a **closed** set: file extensions are finite,
+Markdown heading markers are finite, the announcement participles are a
+genuinely small family. `SUBJECT_CONTINUATION_RE` enumerates **the verbs
+English allows after a plural noun subject**, which is not a closed set and
+never will be. It is a sample of an open class presented in the shape of a
+closed one. Adding `reports|sits|span|vary|differ|focuses|grow|combines`
+would move the boundary without changing that, and finding the ninth shape
+would take about as long as finding the eighth did. **Widening it inline is
+exactly what Ruling 36 forbade, and having now seen why, that instruction
+looks right.**
+
+**`POLICY — manager decides`, not decided here.** Three options, stated
+neutrally, none designed or built:
+1. **Accept the run-on as a cost.** It is cosmetic, single-instance, and
+   loses no information — the same evidence position Rulings 33 and 34a both
+   accepted on.
+2. **Rule that the guarded version lands anyway**, treating the eight shapes
+   above as acceptable collateral. Recorded as an option because it is the
+   manager's call to make, not because it is recommended: the collateral
+   shapes are more common than the defect.
+3. **Send it back to a future B to design a discriminator that is actually
+   closed**, per Ruling 32's design-then-build order.
+
+**One observation, recorded as a lead for option 3, explicitly NOT a design
+and NOT authorisation to build** — same shape as Ruling 34a's own recorded
+lead. Across all fifteen strings probed above, one signal separates the two
+groups perfectly and does not depend on enumerating verbs: **the heading-form
+cases continue with a capitalised word** (`"What you'll do **S**upport…"`,
+`"Role overview **S**upport…"`) because a heading run together with the
+following sentence leaves that sentence's own initial capital intact, while
+**all thirteen subject-usage cases continue in lowercase**, because the
+sentence never ended. Two things a future B must check before trusting it,
+both visible by inspection and neither tested here: it is casing-dependent,
+which is precisely the assumption that silently broke on the event side and
+had to be fixed by B10-04; and a subject-usage sentence continuing with a
+proper noun would defeat it. Fifteen strings is not a verification.
+
+**Gate not re-run for this item** — no code changed, so the B11-03 gate
+result stands unaltered. `git status` was confirmed clean after the probe was
+deleted, which is the stronger evidence here.
+
+### Round 11 — Agent C (B11-05: ruled, not skipped — no code by instruction)
+
+**No code, by ruling, not by omission.** §1w Ruling 36 settled B11-05 before
+this turn began: `ruggedthz.com` stays an accepted cost for one more round,
+with a hard third-strike threshold set in advance and the design lead
+(recover the name from the rejected sibling title segment, not host-brand
+widening) already recorded. C designs nothing and builds nothing here, per
+Ruling 32's own instruction not to design before the call is made — and the
+call has been made. Logged as ruled so a future reader does not mistake it
+for an item that was quietly dropped.
+
+**Carried into round 12's A watch list**, because the threshold only fires if
+someone measures it: round 12's A must say explicitly whether the same host
+and the same mechanism recur a third time. That answer either triggers the
+threshold or clears it.
+
+### Round 11 — Agent C (B11-06: no action, as instructed)
+
+**No code, no new finding.** `euagenda.eu` stays open for round 12's A's
+third direct-fetch attempt. B11-06's own entry already states everything
+known; nothing is added here. If that fetch fails a third consecutive round,
+B11-06 already flagged that the persistent 403 is itself the finding worth
+naming, rather than something to keep retrying silently.
 
 Commit follows immediately.
 
