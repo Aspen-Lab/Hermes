@@ -285,6 +285,16 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 C: landed six of
                   §4 "Round 9 — Agent C" — one entry per item, in landing
                   order, plus the LCO ruled-out entry.
 
+                  **MANAGER VERIFIED C's TURN** — see §4 "Round 9 — MANAGER
+                  verification of Agent C". Gate re-run independently (1046
+                  of 1047, only the documented flake). The SolarPACES
+                  regression-lock assertion confirmed **byte-identical**
+                  across the turn, not merely re-passing. `skipHostBrand`
+                  confirmed in source to skip only the two host-brand
+                  checks, with all five content checks still running. Two
+                  observations recorded there, **neither opened as a fix
+                  item** — A needs no extra work for either.
+
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
                   one claiming "GATE MET" / "Loop complete") remain
@@ -365,7 +375,14 @@ WHOSE TURN:       **A.** Round 9 C worked B's nine-item guide in the order
                     narrow — matched only to the live-confirmed repros, not
                     a general parser — so a new, differently-shaped wrong
                     value surviving on real data is expected under-catching,
-                    not evidence either guard is broken.
+                    not evidence either guard is broken. **Also watch for a
+                    bare host brand as an employer** — B9-02a strips the
+                    chrome word *after* the guards run, so a candidate that
+                    only cleared `looksLikeHostBrand` because the chrome was
+                    still attached becomes the host brand once stripped,
+                    unchecked (manager's OBSERVATION 2 in §4; derived from
+                    guard order, zero live instances, deliberately not
+                    built — just report it if you see it).
                   - **R13 event names — the one real risk worth naming
                     plainly.** The SolarPACES regression-lock test proves
                     the one *named* case still rescues after B9-04 Fix 2
@@ -18435,3 +18452,115 @@ starting round 10, whether any surviving job-summary sentence's only
 keyword evidence was an acronym under 5 characters — but that is explicitly
 A's instrument, not C's, and is called out again in this turn's closing §1
 update below so it is not lost between rounds.
+
+---
+
+### Round 9 — MANAGER verification of Agent C (before round 10 A is spawned)
+
+**Verdict: all six landed items confirmed. Two observations recorded, neither
+opened as a fix item this round. One process point worth keeping.**
+
+The manager's own re-derivation, not a re-reading of C's log entries:
+
+**Gate, re-run independently:** 90 files / 1047 tests, **1046 passing.** The one
+failure is `src/lib/events/benchmark.test.ts` — the documented live-search flake
+(§3), asserting a live-resolved city. Matches C's reported gate exactly. Nothing
+else fails.
+
+**"Never delete a test" (§3), checked mechanically:** the diff `f1c9f43..HEAD`
+removes exactly two `it(...)` lines across all test files. Both are rewrites in
+place of the same test, each carrying a comment naming the item that changed the
+contract (B9-04 Fix 1, twice — `scoring.test.ts` and `eventweb.test.ts`). No
+test was removed. Net +21 tests. Consistent with §3.
+
+**The one risk C was told to hold: the SolarPACES regression-lock (Ruling 28).**
+Verified two ways, not one. The assertion `expect(enriched.name).toBe("SolarPACES")`
+in `enrich.test.ts` is **byte-identical** across the turn — C's commits touch that
+file only to ADD two tests immediately after it. And it passes in the manager's
+own independent gate run above. C's claim holds.
+
+**B9-04 Fix 2's central structural claim, checked in source rather than trusted.**
+`skipHostBrand` short-circuits *after* the five content checks and *before* the
+two host-brand checks:
+
+```
+if (isGenericPageTitle || isEventIndexPage || /events?$/ || DOCUMENT_FILENAME_RE
+    || isBareDateSegment) return true;      // <- all five still run
+if (options?.skipHostBrand || !host) return false;   // <- only these are skipped
+return looksLikeHostBrand(...) || looksLikeArticledHostBrand(...);
+```
+
+Genuinely additive and genuinely narrower than the `looksLikeEventTitle`-only
+bypass it replaces. This is Ruling 32 applied correctly: the rescue still exists,
+but it can now only rescue for the one reason that justifies a rescue.
+
+---
+
+#### OBSERVATION 1 — `"Untitled event"` is unreachable through the live path
+
+`eventNameFrom`'s no-URL branch returns the literal `"Untitled event"`. Its only
+non-test caller is `webResultToRawEventItem` (`eventweb.ts:604`), which cannot
+reach that line: the function already returned `null` if `url` were absent, and
+builds its own `id` from `urlHashId(url)` two lines later. So on real data the
+absolute last resort always yields a **hostname**, never the placeholder.
+
+**Recorded so nobody spends a future round on it.** The placeholder is exercised
+only by direct unit-test calls that pass no URL. It is not user-visible today and
+is not an open item. If a second caller of `eventNameFrom` is ever added without a
+URL, this becomes live and should be revisited then — not before.
+
+The hostname branch, by contrast, IS new user-visible behaviour and is already on
+A's watch list in §1. That distinction is the point of this entry: two branches of
+one fallback, only one of which can actually reach a reader.
+
+---
+
+#### OBSERVATION 2 — B9-02a strips AFTER the guards, and the stripped value is never re-checked
+
+Not a defect found in the live repros, and **not opened as a fix item.** Recorded
+because it is the same *shape* as Ruling 32 and will otherwise be rediscovered.
+
+`stripTrailingCareersChrome` is applied to the result of `.find(...)`, so the four
+guards judge the **unstripped** candidate and never see the stripped one. C
+documented this ordering deliberately and it is right for the confirmed repro —
+`"Idaho National Laboratory Careers"` must survive the guards to be stripped at
+all. But the ordering leaves one shape unhandled by construction: a candidate that
+passes `looksLikeHostBrand` only *because* the chrome word is still attached, and
+becomes the host brand once stripped. `"Smithlab Careers"` on `smithlab.com`
+normalises to `smithlabcareers`, which `smithlab` does not prefix — so it passes —
+and then strips to `"Smithlab"`, which is exactly the host brand, unchecked.
+
+**Why this is an observation and not an item, in order of weight:**
+
+1. **Zero live instances.** It was derived from reading the guard order, not found
+   in data. Ruling 32's own discipline — enumerate before building — applies to
+   the manager too.
+2. The most likely real hosts for this shape (`indeed.com` and friends) are
+   already rejected earlier by `KNOWN_JOB_BOARD_DOMAINS`, which narrows the
+   surviving population to a self-hosted lab/company careers page whose own domain
+   label is also its brand.
+3. The fix, if ever warranted, is small and known: re-run the guard predicate on
+   the stripped value. Knowing the fix cheaply is a reason to wait for evidence,
+   not a reason to spend a round now.
+
+**A: this needs no extra work from you.** It is covered by the employer-field watch
+item already in §1 — if a bare host brand shows up as an employer on real data,
+this entry is the first place to look.
+
+---
+
+#### PROCESS — C found a second test file B's guide did not name
+
+Worth keeping on the record because it is the third round in a row where the role
+*after* the guide found something the guide missed. B9-04's tests-at-risk list
+named `eventweb.test.ts` only; C found `scoring.test.ts` exercising the same
+`eventNameFrom` last-resort line and rewrote its assertion too. Had C worked only
+the named list, the gate would have failed on a file nobody was watching.
+
+This is the loop working as designed — each role checks the last — and it is the
+reason the roles stay separate. It is not a criticism of B's guide, which was
+otherwise the most precise of the nine rounds.
+
+**Manager's turn complete. `WHOSE TURN: A` stands as C left it. Round 10 A is
+spawned next.**
+
