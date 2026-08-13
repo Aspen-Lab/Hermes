@@ -19534,3 +19534,109 @@ referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-03: item 3, `ecs.confex.com` — "Call for Papers" page-type label, new host)
+
+**STATUS: DONE.** Continuing the same session. New host, new shape — not a
+variant of items 1/2/4.
+
+**Classify: MISSING (guard).** `"Call for Papers"` is a real, recognisable
+academic-conference-platform page/section label (this shape is common on
+`confex.com`-style conference-management sites, which typically split
+"Program"/"Registration"/"Call for Papers" into separate pages) standing in
+for the event's own name.
+
+**Confirmed via controlled construction against the real, unmodified
+`eventweb.ts` (not a live pull):**
+```
+isGenericPageTitle("Call for Papers")  === false   (traced by hand below)
+looksLikeEventTitle("Call for Papers") === true
+bestEventTitleSegment("Call for Papers", "https://ecs.confex.com/...") === "Call for Papers"
+eventNameFrom("Call for Papers", "<snippet mentioning the 250th ECS Meeting>", url)
+                                        === "Call for Papers"
+```
+Traced `isGenericPageTitle` (`:222-225`) by hand: `GENERIC_PAGE_TITLE_RE`
+(`:187-188`) is a closed single-phrase list (meeting summary, summary, home,
+homepage, welcome, index, about(us), agenda, programme, schedule, overview,
+main page, news, events, conferences) — `"call for papers"` is not one of
+them. `isAllGenericWords` (`:217-219`, the B8-06 "Conference Program" fix)
+requires **every** word in the candidate to be in `GENERIC_TITLE_WORD_RE`
+(`:214-215`); `"call"` and `"for"` are not in that list, so this does not
+fire either even though `"papers"` alone would not be there regardless.
+Neither of `isEventIndexPage`, the bare-`events?`-suffix check,
+`DOCUMENT_FILENAME_RE`, `isBareDateSegment`, or host-brand fires on it
+either — confirmed by the same per-branch trace used for item 4.
+
+**The irony worth naming, because it explains why THIS specific string wins
+the selection, not just why it survives rejection.** `EVENT_SIGNAL_RE`
+(`:77-78`, feeding `looksLikeEvent`) explicitly lists `call for papers|cfp`
+as one of its own POSITIVE event-indicating phrases — the same signal that
+correctly identifies this page as an event page in the first place is also
+what makes `"Call for Papers"` win `bestEventTitleSegment`'s `eventLike`
+preference (`:516-518`) over a plainer, non-event-flavoured chrome segment,
+if any other segment happened to be in the same informative pool. The
+mechanism that makes the page get through the front door is the same one
+that then mistakes a section label for the exhibit itself.
+
+**Fix direction: add the phrase to `GENERIC_PAGE_TITLE_RE`'s existing closed
+list — smallest possible diff, same convention already in use.** E.g. an
+additional alternative such as `call\s+for\s+(?:papers|abstracts)|cfp`
+alongside the existing phrases at `:187-188`. Recommend checking, at the same
+time, whether sibling page-type labels common on the same class of platform
+(`"Program"`, `"Technical Program"`, `"Registration"`) are already covered —
+`"programme?"` is already in the list but, per this file's own existing doc
+comment at `:203-212`, does **not** match the American spelling `"program"`
+(a gap already flagged there for "the next A", not fixed) — worth a bundled
+look since C will already be in this exact list, though B does not have live
+evidence any of these specific siblings has fired.
+
+**Important caveat — rejecting the label is necessary but not proven
+sufficient, and B does not have the real URL/snippet to verify the rest of
+the chain.** A's log names only the host, not the full URL (checked — not
+given anywhere in A's part 4 entry or the summary). Traced what happens
+NEXT if `"Call for Papers"` is rejected, using an illustrative (not
+confirmed-real) URL shape typical of `confex.com`-hosted platforms
+(`.../meetingapp.cgi`-style opaque script paths): `nameFromUrlSlug`
+(`:461-481`) requires the deepest usable path segment to split into **3 or
+more words** after de-hyphenation; an opaque script-name segment like
+`meetingapp.cgi` yields exactly one word after stripping its extension, so
+the slug fallback would produce nothing on a URL shaped this way, and
+`eventNameFrom` would cascade to snippet-mining. **This is exactly Ruling
+32's own named risk** — rejecting one wrong value is not automatically a fix
+if the next fallback in line also lands on something wrong; B cannot confirm
+what the real snippet-mining stage selects without A's actual fetched
+content (B does not re-measure). **Recommend C verify against the real page
+(or ask A for the already-fetched title/snippet A used to confirm `"250th
+ECS Meeting"` this round) before treating this item as closed**, not just
+run the unit-level regex change and stop.
+
+**Tests at risk:** same three files as B10-02
+(`eventweb.test.ts`/`enrich.test.ts`/`scoring.test.ts`) — same shared
+`isChromeSegment`/`isGenericPageTitle` call site.
+
+**Hardest cases to add, per Ruling 31:**
+- `"Call for Papers"` alone, and combined in a realistic multi-segment title
+  (e.g. `"Call for Papers | 250th ECS Meeting"`) — the second form must
+  prefer the real name over the label once both exist as segments (should
+  already work today via the `eventLike`-then-longest tie-break, since a
+  literal "250th ECS Meeting" segment is also event-like and non-generic;
+  worth a test proving it rather than assuming it).
+- Must-survive: a real, longer title that legitimately CONTAINS "call for
+  papers" as part of a fuller sentence (e.g. `"Call for Papers now open for
+  the 2026 Battery Symposium"`) — `isAllGenericWords` requires every word to
+  match, so a longer real sentence is structurally safe already; still worth
+  one explicit case given this touches the same regex.
+
+**Blast radius:** `GENERIC_PAGE_TITLE_RE` is used only inside
+`isGenericPageTitle`, itself only inside `isChromeSegment` — same contained
+surface as B10-02.
+
+Cleanup: no new throwaway file for this item (reused the B10-02 event-name
+trace file before its deletion). No product code touched. No credential
+referenced, logged, or written.
+
+Commit follows immediately.
+
+Commit follows immediately.
+
