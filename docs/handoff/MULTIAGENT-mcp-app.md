@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 04:10 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:22 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
 WHOSE TURN:       B
@@ -150,7 +150,9 @@ TODO:             B: write the M1 fix guide from A's round-1 list (1-01..1-11)
                   in §4 — insertion points, HANDOFF §5 anchors, MCP SDK
                   adoption plan, Apps-SDK card contract. Read web/AGENTS.md +
                   node_modules/next/dist/docs/ before prescribing Next.js
-                  route patterns (Next 16.2.3). Then C implements M1.
+                  route patterns (Next 16.2.3). Obey RULINGS 4–5 (field truth
+                  over mockup content; real facets only, no Grant type).
+                  Then C implements M1.
 ```
 
 **History of measured difference, newest last:**
@@ -184,6 +186,36 @@ sidebar entry behavior), the loop implements the closest supported experience,
 and A records the deviation as `HOST LIMIT — documented`, which leaves the
 denominator (like an exclusion) once the manager confirms it. Deviations are
 re-listed by name every round.
+
+## §1e. RULING 4 (2026-08-13, manager) — BINDING. Field truth over mockup content
+
+Prompted by A's round-1 Pass 2. The mockup's example rows are **illustrative
+content, not a data contract**. The binding data rule is: the MCP surface
+exposes exactly what Peer's pipelines truthfully have, per item type, and
+omits (leaves unset, renders nothing for) what a source genuinely lacks —
+never a placeholder, never a guess. Concretely:
+
+- `applicationDeadline` stays absent/null for job sources that don't carry it.
+- `Paper` items carry **no location and no deadline** — the schema has neither
+  field, and Peer web shows neither for papers, so parity is intact. The
+  mockup's "CHI deadline" row does not create an M1 obligation. Adding CFP
+  deadlines to the paper pipeline is product work **outside this loop**;
+  recorded here so nobody "fixes" it as a defect.
+- The common tool contract is a union with per-type optional fields, not a
+  forced uniform shape. A wrong or invented value outranks any gap.
+- Item-level links mirror what Peer web links to today (external source
+  postings are correct if that is what web does — B verifies). The card-level
+  "Open in Peer" affordance links to the Peer web app itself.
+
+## §1f. RULING 5 (2026-08-13, manager) — BINDING. Real facets only; no Grant type
+
+The M1/M2 surfaces expose the item types Peer web actually has (today: Jobs,
+Papers, Events — B verifies the live facet list from the Feed code). The
+mockup's "Grants" chip and NSF SBIR row are illustrative. **Building a Grant
+content type is out of scope for this loop** — the goal is parity with Peer
+web, not with mockup sample data. Grant-shaped items that already arrive
+through existing pipelines pass through tagged as they are today. HANDOFF §4
+M2's "per Peer's real facets" wording governs the filter chips.
 
 ---
 
