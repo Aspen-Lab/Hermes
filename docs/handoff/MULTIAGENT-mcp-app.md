@@ -132,126 +132,44 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 06:40 UTC
-ROUND:            2
-MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       MANAGER (user host-test pending)
-STATUS:           Round 2 A re-measured the frozen 11-criterion inventory
-                  against the real build: gate independently re-run (659
-                  passed | 1 skipped (660), 79 files +1 skipped (80),
-                  matches C's figure exactly) and `tsc --noEmit -p .`
-                  independently confirmed clean. Scripted a real MCP
-                  client against a real `npm run dev` (initialize ->
-                  tools/list -> tools/call get_daily_forecast ->
-                  tools/call get_opportunity x2 -> resources/read),
-                  slug read internally from web/.env.local and never
-                  printed (verified after the fact: captured output has
-                  zero occurrences of it). Result: 6/11 criteria fully
-                  MET, 5/11 NEEDS LOCAL VERIFY (the standing user-
-                  account-gated set: 3, 4, 7, 9, 10), 0/11 unmet — no
-                  difference, defect, or RULING contradiction found
-                  anywhere. All three of C's corrections to B (SDK pin,
-                  MIME type, TS narrowing) independently re-verified
-                  against code/lockfile/a from-scratch tsc repro, not
-                  just re-read; the architecture-bug fix (static ui://
-                  template + postMessage bridge) independently
-                  re-verified by fetching developers.openai.com/apps-sdk/
-                  build/custom-ux directly rather than trusting the
-                  citation. New finding this round, more precise than
-                  round 1 had: checked the MAIN checkout's
-                  web/.env.local (not just the worktree's) for real
-                  Supabase credentials — it exists but its Supabase
-                  section is a commented-out template only (placeholder
-                  values), so real Supabase credentials do not exist
-                  ANYWHERE reachable this round, worktree or main
-                  checkout. Real-input pass therefore stayed partially
-                  blocked exactly as C predicted for get_daily_forecast
-                  and the job/event side of get_opportunity (both
-                  correctly return an honest isError/not-found, never
-                  invented data) -- but get_opportunity's arxiv:/openalex:
-                  path needs no Supabase at all (verified by reading
-                  the code), so A pulled genuinely real external data
-                  through it live: 2 real arxiv papers resolved
-                  correctly (RULING 4 field truth confirmed on live,
-                  non-mocked data), 1 openalex id resolved with an
-                  empty title/org that A traced to OpenAlex's own
-                  source record (not a Peer mapping bug) -- noted, not
-                  counted as a difference. Full details, evidence
-                  excerpts, and the exact NEEDS MANAGER/USER list are in
-                  §4 "Round 2 -- Agent A".
-LAST DIFFERENCE:  None found against any of the 11 frozen criteria this
-                  round. The entire remaining gap (5/11 criteria) is the
-                  standing NEEDS LOCAL VERIFY set -- host-account and/or
-                  real-Supabase-credential dependent, not something B or
-                  C can act on further. See §4 Round 2 A's NEEDS
-                  MANAGER/USER list for exactly what unblocks each piece.
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 06:52 UTC
+ROUND:            3
+MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
+                  behavior). M1 acceptance pends the USER host-test per
+                  RULING 9 — its checklist lives in §4 Round 2 A's NEEDS
+                  MANAGER/USER list and is re-listed every round.
+WHOSE TURN:       A
+STATUS:           Round 2 closed M1's code side with ZERO differences —
+                  6/11 criteria fully MET, 5/11 in the standing user-
+                  gated NEEDS LOCAL VERIFY set, gate + tsc independently
+                  re-verified, all of C's corrections re-verified. Full
+                  evidence: §4 "Round 2 — Agent A". RULING 9 then opened
+                  M2 rather than idling on the user's host test, and
+                  gated M3 on that test passing. Round 3 begins now: A
+                  freezes the M2 inventory and measures the current
+                  build against it.
+LAST DIFFERENCE:  M1: none code-side (round 2). M2: not yet measured —
+                  round 3 A produces the first M2 difference list.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-                  -- M1 itself cannot be marked accepted until the user's
-                  own host-test (§0b step 5) is done; that is now the
-                  only remaining step for M1.
-DONE:             All 11 of A's round-1 items have code + tests, and are
-                  now independently re-verified in round 2 (not just
-                  re-read) at the protocol/live level: 6/11 fully MET,
-                  5/11 down to only the standing host-account-gated
-                  NEEDS LOCAL VERIFY set. Zero POLICY items outstanding.
-                  The `counts.total`/`counts.shown` judgment call C
-                  flagged is sane and RULING-8-compliant (code + test
-                  verified; live confirmation blocked only by the same
-                  missing-Supabase-credentials gap as the rest of
-                  real-data verification).
+                  — M1 pends only the user host-test per RULING 9; M2
+                  measurement starting.
+DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
+                  at protocol/live level. Outstanding on M1: only the
+                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER).
 GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
-                  skipped (80) -- INDEPENDENTLY RE-VERIFIED by A this
-                  round (fresh run, not reused from C's figure), matches
-                  exactly. `npx tsc --noEmit -p .` independently
-                  re-verified clean project-wide. eslint not re-run this
-                  round (out of A's explicit checklist; C's prior sweep
-                  and its one documented pre-existing/out-of-scope
-                  finding in quiz.tsx stand unchallenged).
-TODO:             MANAGER/USER, in order:
-                  1. Real Supabase project credentials are needed before
-                  any further automated progress is possible -- fill in
-                  the commented-out "# Supabase" section of the MAIN
-                  checkout's web/.env.local (NEXT_PUBLIC_SUPABASE_URL,
-                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-                  SUPABASE_SERVICE_ROLE_KEY) with real project values,
-                  then supply the same into the worktree's
-                  web/.env.local, and point MCP_DEV_TEST_USER_ID (same
-                  file) at a real auth.users id whose profiles row has a
-                  non-empty research_topics array (RULING 2: manager
-                  decision). Restart `npm run dev`, re-run
-                  get_daily_forecast -- should return real items instead
-                  of isError:true.
-                  2. ChatGPT dev-mode connector test (criteria 3/7/9/10):
-                  needs the user's own ChatGPT Plus/Pro account with
-                  Developer mode on, AND a way for ChatGPT's servers to
-                  reach the endpoint (localhost alone is not reachable --
-                  needs a tunnel like ngrok, or a deployed preview URL).
-                  Add "Peer (dev)" as a custom connector at
-                  `<reachable-origin>/api/mcp/<MCP_DEV_SLUG>` (slug from
-                  the gitignored web/.env.local -- never share/paste it
-                  outside the user's own ChatGPT connector settings).
-                  Ask something like "what's new for me today on Peer" --
-                  expect the "Checking today's Peer forecast…" status,
-                  then an inline card: ivory/sand background, dark serif
-                  heading, orange relevance badges, one row per real
-                  item, a footer "Open in Peer ↗" link, and NO Save
-                  button / NO Expand control anywhere (RULING 7 -- if
-                  either appears, that IS a real difference to report).
-                  Try a follow-up ("tell me more about the first one")
-                  to exercise get_opportunity too.
-                  3. Claude custom-connector test (criterion 4): same
-                  MCP URL, the user's own Claude account, "Add custom
-                  connector." Confirm both tools appear/work; if the
-                  card doesn't render, confirm it falls back to the
-                  plain-text forecast list instead (expected/correct on
-                  a host without ui:// support, not a bug).
-                  4. Report back what actually appeared for both hosts.
-                  If a card is stuck on "Loading…" or blank, that
-                  specifically implicates the postMessage bridge
-                  contract on that real host (C's own flagged highest-
-                  risk item) -- not the data/escaping logic underneath,
-                  which has real executed test coverage plus this
-                  round's live protocol proof.
+                  skipped (80); `npx tsc --noEmit -p .` clean (both
+                  independently re-verified in round 2).
+TODO:             A (round 3): freeze the M2 inventory per RULINGS 1 and
+                  9.2 from HANDOFF §4 M2 + mockup screen 3 (`sc2`),
+                  measure the current build against it (expect mostly
+                  MISSING; note what M1's code already provides), re-list
+                  by name: the M1 user-pending set (criteria 3/4/7/9/10
+                  + Supabase credentials + MCP_DEV_TEST_USER_ID), the
+                  RULING 6 papers-lane restriction, and the RULING 7
+                  Expand-until-M2 exclusion (which M2 now closes by
+                  building the real fullscreen). The USER checklist for
+                  M1 remains authoritative in §4 Round 2 A — do not
+                  restate it here, point at it.
 ```
 
 **History of measured difference, newest last:**
@@ -366,6 +284,30 @@ considered", not "everything Peer web would count today". If M2's fullscreen
 header needs true day-pool counts, that is an explicit M2 design item — not
 a silent redefinition of these fields. M2 reuses these exact semantics
 unless a new ruling says otherwise.
+
+## §1j. RULING 9 (2026-08-13, manager) — BINDING. M1 acceptance pends the user; the loop proceeds to M2; M3 is gated
+
+Round 2 found zero code-side differences: M1 is **code-complete and
+protocol-verified**, and everything still open (criteria 3/4/7/9/10 +
+real Supabase credentials + `MCP_DEV_TEST_USER_ID`) is actionable **only by
+the user**. Therefore:
+
+1. **M1 stays NOT ACCEPTED** until the user's own host test passes (§0b
+   step 5). The authoritative user checklist is §4 "Round 2 — Agent A"
+   (NEEDS MANAGER/USER list, reproduced in round 2's §1 TODO). A re-lists
+   the pending set by name every round until closed.
+2. **The loop does not idle on the user.** Round 3 opens milestone M2
+   (screen 3 — fullscreen Daily Forecast home + entry behavior): A freezes
+   the M2 inventory per RULING 1 from HANDOFF §4 M2, honoring RULING 5
+   (real facets: Dashboard/Papers/Events/Jobs), RULING 7 (fullscreen action
+   row MAY carry disabled-visible Save/Dismiss; inline card still may not),
+   RULING 8 (same counts semantics; true day-pool counts would be an
+   explicit design item), RULING 3 (record real host entry behavior, never
+   promise the sidebar).
+3. **Risk gate: M3 (production OAuth) does not start until the user's
+   first real host test of M1/M2 passes.** If the widget/postMessage bridge
+   misbehaves on a real host, that rework lands before OAuth builds on top.
+   A combined M1+M2 host test is acceptable and expected.
 
 ---
 
