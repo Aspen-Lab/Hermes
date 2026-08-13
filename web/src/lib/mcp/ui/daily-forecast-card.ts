@@ -28,7 +28,7 @@ function escapeHtml(s: string): string {
  * forecast data): the site origin is a deployment constant, not per-call
  * data, so it doesn't run into the same-template-every-call problem below.
  */
-function peerWebOrigin(): string {
+export function peerWebOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
   if (explicit) return explicit.replace(/\/$/, "");
   return "https://hermes-flax-six.vercel.app";

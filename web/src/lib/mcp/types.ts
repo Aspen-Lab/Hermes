@@ -39,6 +39,14 @@ export interface DailyForecastResult {
   generatedAt: string;
   counts: ForecastCounts;
   items: ForecastItem[];
+  /**
+   * The user's display name, for the fullscreen home's "ranked for
+   * {name}'s Persona" sub-line only -- `get_daily_forecast`'s inline card
+   * doesn't need it, so only `open_home` populates this (optional, and a
+   * user who never set a display name genuinely has none -- render a
+   * generic "your Persona" fallback, never a placeholder name).
+   */
+  personaName?: string;
 }
 
 /**
