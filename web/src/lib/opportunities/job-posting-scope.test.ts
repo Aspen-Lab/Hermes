@@ -179,4 +179,92 @@ describe("resolveJobPostingScope", () => {
     expect(jobDedupKey(item)).toContain("luminare");
     expect(scoreIndustryFit(item, "industry")).toBe(1);
   });
+
+  // B8-07 (round 8): Ruling 29 asked whether the specific markup shape B
+  // derived from selectedDomScopes' own recognised-tag scan — multiple
+  // listings with no per-listing wrapper among article/li/section/div/main
+  // — could really defeat the selector. Per Ruling 31: write the fixture,
+  // and if it reproduces, this is an ordinary fix item, not a policy
+  // question anymore. Confirmed BEFORE any fix was written: both shapes
+  // below returned a block spanning more than one listing. One is fixed
+  // here; one is not (see the last case). A passing fixture settles whether
+  // the MECHANISM can misbehave, not whether any real page has this shape —
+  // the frequency question stays open and de-prioritised, recorded here,
+  // not silently dropped.
+  describe("same-page multi-listing contamination (B8-07)", () => {
+    it("no longer contaminates when listings are laid out as sibling <tr> rows with no per-listing wrapper", () => {
+      // Confirmed repro before this item's fix: the only candidate block
+      // selectedDomScopes found was the whole <table>'s outer <div>,
+      // spanning both rows' text, because `tr` was not in the recognised
+      // tag set at all. Fixed by adding `tr` to that set — the acceptance
+      // logic itself (exact-link/heading witnesses) is unchanged; a `tr`
+      // candidate must still pass every existing check, the same as any
+      // other tag. This is the same "widen WHERE a candidate may be found,
+      // not WHAT counts as one" principle page-text.ts's own
+      // extractPageHeadings already uses for <li>/<td> rows.
+      const selectedUrl = "https://jobs.example.com/selected";
+      const html =
+        `<div><table>` +
+        `<tr><td><a href="${selectedUrl}">Selected Role</a></td><td>Selected duties.</td></tr>` +
+        `<tr><td><a href="https://jobs.example.com/foreign">Foreign Role</a></td><td>Foreign duties.</td></tr>` +
+        `</table></div>`;
+      const scope = resolveJobPostingScope(html, { url: selectedUrl, title: "Selected Role" });
+      expect(scope).toMatchObject({ status: "owned", text: "Selected Role Selected duties." });
+      expect(scope.status === "owned" && scope.text).not.toContain("Foreign");
+    });
+
+    it("a legitimate secondary link in the same row (an apply button) does not defeat the fix", () => {
+      // Guards against over-correcting: the existing acceptance logic's own
+      // comment already establishes that a bounded posting block may
+      // legitimately carry more than one link (an apply button, a schedule
+      // link) alongside its canonical URL. A second href in the SAME row
+      // must not be mistaken for a second listing.
+      const selectedUrl = "https://jobs.example.com/selected";
+      const html =
+        `<div><table>` +
+        `<tr><td><a href="${selectedUrl}">Selected Role</a> <a href="https://jobs.example.com/selected/apply">Apply</a></td><td>Selected duties.</td></tr>` +
+        `<tr><td><a href="https://jobs.example.com/foreign">Foreign Role</a></td><td>Foreign duties.</td></tr>` +
+        `</table></div>`;
+      const scope = resolveJobPostingScope(html, { url: selectedUrl, title: "Selected Role" });
+      expect(scope).toMatchObject({ status: "owned" });
+      expect(scope.status === "owned" && scope.text).not.toContain("Foreign");
+    });
+
+    it("an unrelated <tr> elsewhere on the page does not create a false match", () => {
+      // Widening the tag set must not make an incidental table row (page
+      // navigation, unrelated content) a candidate just because it is now a
+      // recognised tag — it still has to pass the same exact-link/heading
+      // acceptance check as before.
+      const selectedUrl = "https://jobs.example.com/selected";
+      const html =
+        `<tr><td><a href="https://example.com/nav-item">Site Nav Item</a></td></tr>` +
+        `<main><a href="${selectedUrl}">Selected Role</a><p>Selected duties.</p></main>`;
+      const scope = resolveJobPostingScope(html, { url: selectedUrl, title: "Selected Role" });
+      expect(scope).toMatchObject({ status: "owned", text: "Selected Role Selected duties." });
+    });
+
+    it("KNOWN, CONFIRMED, NOT FIXED THIS ROUND: flat sibling listings with no wrapper tag at all still contaminate", () => {
+      // The second shape B derived, and the harder one. Safely fixing this
+      // would require a materially new mechanism — detecting repeated
+      // sibling structure with no containing tag at all — which Ruling 29
+      // explicitly cautions against building without a live counterexample
+      // forcing it, and B did not propose a design for this specific shape
+      // (B's job this round was diagnosis, not a fix direction, for either
+      // shape). This test documents CURRENT, STILL-WRONG behavior so it is
+      // recorded, not dropped, and so any future fix is forced to
+      // consciously update this assertion rather than silently regress
+      // further. A green run of this test is not a sign of health — it is
+      // the open finding, on record. Flagging for the next A/B rather than
+      // leaving this only as a log sentence that could get lost.
+      const selectedUrl = "https://jobs.example.com/selected";
+      const html =
+        `<main>` +
+        `<a href="${selectedUrl}">Selected Role</a><p>Selected duties.</p>` +
+        `<a href="https://jobs.example.com/foreign">Foreign Role</a><p>Foreign duties.</p>` +
+        `</main>`;
+      const scope = resolveJobPostingScope(html, { url: selectedUrl, title: "Selected Role" });
+      expect(scope.status).toBe("owned");
+      expect(scope.status === "owned" && scope.text).toContain("Foreign");
+    });
+  });
 });

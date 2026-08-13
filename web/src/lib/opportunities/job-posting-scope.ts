@@ -39,9 +39,24 @@ function blockEnd(html: string, tag: string, start: number): number | undefined 
   return undefined;
 }
 
+// B8-07 (round 8, closing Ruling 29's own fixture question): a page that
+// lays its listings out as sibling <tr> table rows, with no per-listing
+// <article>/<li>/<section>/<div>/<main> wrapper around each individual row,
+// left `tr` invisible to the scan above — the only candidate block found was
+// the whole <table>'s own outer wrapper (if any), spanning every row's text,
+// not just the selected listing's. Confirmed with a fixture before this fix
+// (see job-posting-scope.test.ts's "same-page multi-listing contamination
+// (B8-07)" block): the acceptance filter below is unchanged and already
+// correct — it was never given the smaller, single-row candidate to prefer.
+// `tr` is added to the recognised tag set for exactly the same reason
+// page-text.ts's own extractPageHeadings already treats <li>/<td> rows as
+// entries: "Widening WHERE a candidate may be found is safe. The verbatim
+// check... stays as strict as it was." No change to the acceptance logic
+// itself — a `tr` candidate must still pass every check below, the same as
+// any other tag.
 function selectedDomScopes(html: string, selectedUrl: string, title: string): string[] {
   const candidates: Array<{ html: string; length: number }> = [];
-  const opening = /<(article|li|section|div|main)\b[^>]*>/gi;
+  const opening = /<(article|li|section|div|main|tr)\b[^>]*>/gi;
   for (let match = opening.exec(html); match; match = opening.exec(html)) {
     const tag = match[1].toLowerCase();
     const end = blockEnd(html, tag, opening.lastIndex);

@@ -270,131 +270,122 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 00:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  out of budget @ 2026-08-12 — round-8 C was killed by the
-                  account's **monthly** spend limit partway through B8-04,
-                  after landing B8-01, B8-02 and B8-03. **Working tree was
-                  clean at death; nothing was lost.** The manager released
-                  the lock C died holding and made this block true. Resume
-                  at B8-04. (Historical note kept below: the text that
-                  followed described round-8 B finishing its turn, which was
-                  the state before C started.)
-
-                  Round 8's B
-                  (Claude, `LAPTOP-3CL10CG5`) wrote the fix guide against
-                  Round 8 A's ranked list — 7 items, B8-01 through B8-07 (§4
-                  "Round 8 — Agent B"). **B corrected A's central hypothesis
-                  after verifying it, as instructed**: the employer field's
-                  wrong-data mechanism is not primarily B7-05's
-                  `resolveEmployerIdentity` (A's own hypothesis, offered as
-                  unverified) — live instrumentation traced it to seven
-                  separate write sites, the largest being a character-class
-                  bug in `jobweb.ts`'s own B6-04 regex (B8-01) and a
-                  first-DNS-label-only bug in the shared `looksLikeHostBrand`
-                  (B8-02, shared with the event-side SolarPACES guard —
-                  needs live re-verification after the fix, not deferred).
-                  Also found, independently of A's report, that five job
-                  source adapters hardcode a literal `"Unknown company"`
-                  placeholder (B8-03) — Ruling 26's own anti-pattern, never
-                  before audited outside `jobweb.ts`. R4 (B8-05) and R13
-                  (B8-06) guided against source with exact line citations.
-                  Ruling 29 (B8-07) reaffirmed `POLICY — manager decides`,
-                  not reachable live this round either, with one
-                  corroborating incidental data point. Full detail, per
-                  item, in §4.
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 00:56 UTC. This session was
+                  a **resumption** of round 8's C: the first C landed
+                  B8-01/02/03 and then died on the account's monthly spend
+                  limit partway through B8-04, working tree clean, nothing
+                  lost. This session re-claimed the lock, re-read §0–§3,
+                  every standing ruling, and both of A's and B's full §4
+                  entries, then completed **B8-04, B8-05, B8-06, B8-07 in
+                  order**, each committed and pushed individually the moment
+                  it finished (never batched). **All seven of Round 8 B's
+                  items are now closed or ruled** — six landed as code
+                  (B8-01 through B8-06), B8-07 landed in part (one of
+                  Ruling 29's two derived markup shapes fixed; the other
+                  confirmed reproducible on a fixture and explicitly
+                  recorded open, not silently dropped — see §4). Full detail
+                  per item, including exactly where a shipped fix diverged
+                  from B's own literal suggestion after catching a bug in
+                  testing (B8-01, B8-06), is in §4 "Round 8 — Agent C."
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
-                  one claiming "GATE MET" / "Loop complete") are **history,
-                  not state** — Ruling 30 already explained why, and Round 8
-                  A's own finding of real differences is a second,
-                  independent reason that "MET" block is now stale twice
-                  over. The lines above and below, down to this code fence's
-                  end, are the only current ones.
+                  one claiming "GATE MET" / "Loop complete") remain
+                  **history, not state**, per Ruling 30. The lines above and
+                  below, down to this code fence's end, are the only
+                  current ones.
 ROUND:            8
-WHOSE TURN:       **C — PARTIAL. B8-01, B8-02 and B8-03 are LANDED and
-                  pushed; RESUME AT B8-04.** The first C died on the
-                  account's **monthly** spend limit (not the 5-hour one; it
-                  does not clear on its own) partway through B8-04, with the
-                  working tree clean — nothing was lost, and nothing from
-                  those three items needs redoing. **B8-02 included its
-                  live SolarPACES re-verification, as Ruling 31 required**;
-                  that check does not need repeating either.
+WHOSE TURN:       **A.** Independently re-measure the real-data gap now that
+                  six code items are fully landed and a seventh is landed in
+                  part. Fresh real events and jobs through the build's own
+                  pipeline, per item, never averaged, per §1j/Ruling 30's
+                  standard. **C does not remeasure — none of the figures
+                  below are a new real-data score; they describe the
+                  pre-fix state A already reported.**
 
-                  Remaining: **B8-04, B8-05, B8-06, B8-07.**
+                  **Specifically watch for real-data shapes that don't match
+                  the fixtures this session built everything against.**
+                  Every item this turn was verified at the source/fixture
+                  level (synthetic markup, hand-built regex cases against
+                  the real exported functions) — not against a fresh live
+                  page — except B8-02's SolarPACES re-check, which was done
+                  live inside that item per Ruling 31's one-time
+                  requirement (do not repeat it; do not skip re-checking
+                  everything else against real data).
 
-                  Work §4 "Round 8 — Agent B"'s 7 items
-                  in this order (dependencies noted, full detail per item in
-                  §4):
-                  1. **B8-01** — `jobweb.ts`'s "Role at Employer" regex
-                     cannot match a multi-word company (character class
-                     excludes spaces). Independent, land first.
-                  2. **B8-02** — shared `looksLikeHostBrand` only inspects
-                     the first DNS label, missing brand-on-subdomain hosts.
-                     **Re-verify SolarPACES live after landing — do not
-                     defer to the next A**, per Ruling 28.
-                  3. **B8-03** — five job source adapters
-                     (remotive/arbeitnow/himalayas/adzuna/jsearch) hardcode
-                     `"Unknown company"`. Fully independent, zero test risk.
-                  4. **B8-04** — `resolveEmployerIdentity` has no
-                     shape/brand guard on either evidence tier. Land after
-                     B8-02 (reuses its fix).
-                  5. **B8-05** — R4: `summarizeJob` has no positive-content
-                     floor. Land the minimal variant named in the item only.
-                  6. **B8-06** — R13: three event-name shapes traced to
-                     exact guard gaps (one reconfirmed narrative shape, one
-                     reconfirmed generic phrase, one new filename shape).
-                     Confirm both call sites after landing.
-                  7. **B8-07** — Ruling 29, `POLICY — manager decides`, no
-                     code. Hand to manager; not blocking.
+                  Priority watch list, most likely to differ from a fixture:
+                  1. **Employer field** (B8-01/02/03/04, seven write sites
+                     total, all now guarded). Re-run something like A's
+                     original 8-company real sample if practical. Check
+                     specifically whether the `careers.<company>.<tld>`
+                     host trade-off B8-02's own §4 entry names — a real
+                     employer's own subdomain and a platform's brand on a
+                     similarly-shaped subdomain are structurally
+                     indistinguishable to the shipped guard — is costing
+                     real, correct employer names at any measurable rate.
+                  2. **R4 job summaries** (B8-05). The shipped floor is the
+                     *minimal* variant only. Check live whether the named,
+                     still-open shape (a chrome sentence containing a
+                     matched profile keyword) recurs, and whether the
+                     Markdown-link-remnant and single-colon-label shapes
+                     (neither addressed this round) still appear.
+                  3. **R13 event names** (B8-06). §4 records incidental live
+                     corroboration — the standing benchmark flake's own live
+                     run touched both originally-cited hosts (`ruggedthz.com`,
+                     `nanoge.org`) again post-fix and produced different,
+                     non-chrome names — but this was **not** a dedicated
+                     re-verification and neither new name was independently
+                     checked for correctness. Worth a direct look. Also: a
+                     pre-existing gap in `GENERIC_PAGE_TITLE_RE` (bare
+                     single-word `"Program"`, American spelling, still
+                     unmatched) was found but deliberately left unfixed —
+                     out of scope for B8-06, no live evidence motivating it.
+                  4. **Same-page multi-listing contamination** (B8-07,
+                     Ruling 29). The sibling-`<tr>` shape is now fixed code,
+                     confirmed via fixture, not yet confirmed on a real
+                     page. The flat-sibling-no-wrapper shape is confirmed
+                     reproducible on a fixture but deliberately **not**
+                     fixed (no live counterexample to design a safe
+                     mechanism against — see §4 for why). If a real page
+                     ever surfaces in either shape, say so explicitly.
 
-                  **No item reverses a recorded ruling.** SolarPACES (Ruling
-                  28) reconfirmed CLOSED by both A and B this round — do not
-                  write it a fix item.
-USER RULED:       **§1j Ruling 23 — extraction quality is IN SCOPE and the
-                  gate is redefined.** Read §1j before doing anything; it
-                  changes what "0%" means. **§1l Ruling 25 — no headless
-                  browser; free-text extractors are the main road, JSON-LD
-                  the minority path.** **§1m Ruling 26 — a guard that
-                  rejects a bad candidate and then falls through to an
-                  unguarded, non-optional default has not fixed anything;
-                  it has renamed the defect.** Round 8 B found this same
-                  shape recurring **twice more** beyond what A reported:
-                  once inside `jobweb.ts` itself (B8-01/B8-02, a guard
-                  silently no-ops and falls through to an older, weaker
-                  mechanism already sitting in the same function) and once
-                  copy-pasted into five other source files verbatim (B8-03).
-                  Ruling 26's own warning — "a rejection is only a fix if
-                  what follows it is silence" — is the standard every one of
-                  B8-01 through B8-04 is guided against.
-STATUS:           **ROUND 7'S IMPLEMENTATION REMAINS SOUND (unchanged from
-                  Round 8 A's finding — B did not re-touch anything A
-                  already verified). THE FIX GUIDE FOR ROUND 8's REAL-DATA
-                  GAP IS NOW WRITTEN.** B did not change any product code
-                  (read-only role; one throwaway verification script,
-                  deleted before the closing commit). B's own live
-                  instrumentation both confirmed and **corrected** part of
-                  A's report — see STOPPED BECAUSE above and §4 for full
-                  detail, including exactly which of A's claims did not
-                  reproduce and why.
-LAST DIFFERENCE:  **Unchanged from Round 8 A's measurement — B does not
-                  remeasure.** 0% fixture / real data NOT zero: employer
+                  Standing, unchanged: **B8-03's `usajobs.ts` fallback**
+                  (`"U.S. Federal Government"`) is still an open `POLICY`
+                  question for the manager, not for A.
+USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
+                  scope, gate redefined), **§1l Ruling 25** (no headless
+                  browser), **§1m Ruling 26** (a guard followed by a
+                  non-optional fallback has not fixed anything), and this
+                  round's own **§1r Ruling 31** — still binding for A's own
+                  measurement standard: test the hardest real shape a field
+                  can take, not the easiest one to find.
+STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
+                  FULLY LANDED. B8-07 IS LANDED IN PART** — one of Ruling
+                  29's two derived markup shapes fixed (sibling `<tr>` rows
+                  with no per-listing wrapper), the other confirmed
+                  reproducible on a fixture and explicitly recorded open
+                  (flat sibling listings, no wrapper tag at all), per
+                  Ruling 31's own instruction not to overclaim a fixture
+                  result in either direction. **No item reversed a recorded
+                  ruling; SolarPACES (Ruling 28) was re-verified live inside
+                  B8-02 and remains CLOSED.** Full per-item detail in §4
+                  "Round 8 — Agent C."
+LAST DIFFERENCE:  **Unchanged from Round 8 A's original measurement — this
+                  describes the PRE-fix state, not a new score.** Employer
                   field wrong on 5 of 8 non-null fresh real companies (now
-                  traced to 7 code-level write sites, not 1 — see §4);
-                  R4 chrome on 4 of 4 non-empty fresh real summaries; R13
-                  open via two reconfirmed + one new naming shape. Full
-                  gate, reconfirmed cold by B before writing anything: 85
-                  files / 991 tests, 990 passing, only the documented
-                  live-benchmark flake (this run's own top-5 independently
-                  re-surfaced two of B8-06's cited R13 strings); TypeScript
-                  clean; the one standing quiz lint error.
-GATE (0%):        **NOT MET.** Unchanged — B does not set this; only A's
-                  next re-measurement, after C implements B8-01..B8-06, can
-                  move it.
+                  traced to 7 code-level write sites, all guarded this
+                  turn); R4 chrome on 4 of 4 non-empty fresh real summaries
+                  (minimal floor now landed); R13 open via three naming
+                  shapes (all three now guarded). Whether and how much each
+                  has actually improved on real data is A's own next
+                  measurement to make.
+GATE (0%):        **NOT MET.** Unchanged — C does not set this; only A's
+                  next re-measurement can move it.
 
 ROUND 7 CURRENT UPDATE — SUPERSEDES THE ROUND-6 STATUS TEXT ABOVE
 ------------------------------------------------------------------
@@ -16177,3 +16168,47 @@ unchanged.
 **Incidental live corroboration, not a formal re-verification — stating this precisely so it isn't overclaimed.** Running the full suite after this item, the standing `benchmark.test.ts` live-search flake's own top-5 (unrelated live Tavily search, not a dedicated check I ran on purpose) touched both of B8-06's originally-cited hosts again: `ruggedthz.com` (previously `"Ruggiero Group Attends the 2026 Crystal Engineering GRC"`, now `"Ruggiero Research Lab"`) and `nanoge.org` (previously `"Conference Program"`, now `"SSI24"`). Same hosts, same ranking positions, different names — consistent with, not proof of, this fix working on live data; I did not independently investigate whether either new name is itself fully correct, and am not claiming this as this item's live verification. The benchmark's own failing assertion (`summit?.place?.city`) is about a different field entirely and is the same pre-existing documented flake, not a regression.
 
 **Gate after this item:** 90 files / 1022 tests, 1021 passing (seven new, zero deleted; the one failure is the same documented live-search flake, unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error, unchanged.
+
+#### B8-07 — Ruling 29's fixture: CONFIRMED REPRO, one of two shapes fixed, one recorded open — DONE
+
+**File:** `web/src/lib/opportunities/job-posting-scope.ts`, `selectedDomScopes` (the recognised-tag scan) and its test file's new `describe` block.
+
+**Followed Ruling 31's own instruction exactly: wrote the fixture first, before deciding anything.** B derived two concrete markup shapes that would defeat `selectedDomScopes` without proposing a fix for either (B's job this round was diagnosis, explicitly marked `POLICY — manager decides`; Ruling 31 overrode that and said the fixture itself settles the next step). Built both shapes as fixtures against the real, unmodified `resolveJobPostingScope` in a throwaway vitest file (`web/src/zz-round8-c-b807-verify.test.ts`, deleted before this item's commit, per this round's own precedent) before touching source:
+
+1. **Sibling `<tr>` rows, whole `<table>` wrapped in one recognised tag (`<div>`), no per-listing wrapper among `article`/`li`/`section`/`div`/`main`.** Result, pre-fix: `{status: "owned", text: "Selected Role Selected Location duties.\n\nForeign Role Foreign Location duties."}` — the returned block spanned both listings.
+2. **Flat siblings, no wrapper tag of any kind around either listing, inside one `<main>`.** Same result shape: both listings' text present.
+
+**Confirmed repro on both. Per Ruling 31, this is now an ordinary fix item, not a policy question.** Fixed shape 1; did not fix shape 2 — reasoning for each below.
+
+**Fix, shape 1 only: added `tr` to `selectedDomScopes`' recognised tag set** (`article|li|section|div|main` → `article|li|section|div|main|tr`). The acceptance logic itself — exact-link count, title-match count, distinct-heading count — is completely unchanged; a `tr` candidate must clear every existing check exactly like any other tag. Root cause was structural, not a logic gap: `<tr>` was invisible to the scan, so the only candidate ever found for a table-row layout was the whole table's own outer wrapper (when one existed), which necessarily spans every row. Adding `tr` lets the correctly-scoped, single-row candidate be found and preferred by the existing smallest-candidate selection — no new heuristic invented. **This is not a novel mechanism; it is the same principle already established elsewhere in this codebase**, confirmed by reading `web/src/lib/opportunities/page-text.ts:149-150` before writing anything: `extractPageHeadings`'s own doc comment states "Widening WHERE a candidate may be found is safe. The verbatim check that a title must survive is unchanged and stays as strict as it was" — built for a different function (event programme entries, `<li>`/`<td>` rows) but the identical shape of fix. Re-ran the shape-1 fixture after the change: contamination gone, text is exactly `"Selected Role Selected Location duties."`
+
+**Why shape 2 was NOT fixed this round.** Flat siblings with no containing tag at all cannot be solved by widening the recognised-tag set — there is no tag to add, because the markup uses none. Safely detecting "these flat siblings are actually separate listings" would require a materially new mechanism (recognising repeated sibling structure with no container), which is exactly the kind of invention **Ruling 29 explicitly prohibits without a concrete counterexample forcing it** ("C must not add a hiringcafe-specific host rule... those would hide one repro while leaving the same foreign text authoritative elsewhere" — the same caution applies to inventing a sibling-detection heuristic on a hand-built fixture alone, with no live page ever observed in this shape). B did not propose a design for this shape either. Landing an untested, self-designed heuristic for a shape with zero live evidence would repeat exactly the mistake this loop's own rulings keep naming: a guess dressed as a fix.
+
+**Testing standard (Ruling 31) — hardest case per shape, and why.** This item is a markup-shape/DOM-scoping fix, not string parsing, so the translation is: does the fix close the confirmed repro, does it avoid over-rejecting a legitimate single-listing block that merely has more than one link, and does it avoid creating a new false-positive source elsewhere on the page. Four cases, all verified against the real function via the throwaway script before being written into the committed test file:
+
+1. **The confirmed repro itself (shape 1)** — now asserts the fixed, clean contract.
+2. **A legitimate secondary link in the same row (an "Apply" button)** — chosen because the existing code's own comment already warns a bounded block may legitimately carry more than one link; this is the shape most likely to be broken by a careless "reject any block with more than one href" fix (which I did not build, but is the natural wrong instinct here) — confirmed the shipped fix does not do this.
+3. **An unrelated `<tr>` elsewhere on the page (page navigation, zero relation to the job)** — chosen because widening the tag set is the kind of change most likely to create a new false-positive source; confirmed the existing acceptance filter (which I did not touch) still correctly ignores it.
+4. **Shape 2, recorded as a known, confirmed, unfixed limitation** — a deliberate test asserting current (still-wrong) behavior, named `"KNOWN, CONFIRMED, NOT FIXED THIS ROUND"` in the test title itself so a green run can never be misread as endorsement. This is the literal implementation of Ruling 31's own instruction: **"a passing fixture closes 'is this selector broken,' not 'does this happen in production'"** and **"nobody may cite a passing fixture as grounds for calling Ruling 29 resolved in full."** Writing it as an assertion, not only a log sentence, means a future fix is forced to consciously update this test and say so, rather than silently regressing further or the finding quietly getting lost.
+
+**Tests added:** 4 new cases in `job-posting-scope.test.ts`, under a new `describe("same-page multi-listing contamination (B8-07)", ...)` block. **Tests at risk:** ran the full existing `job-posting-scope.test.ts` suite (12 pre-existing cases) plus `enrich.test.ts` and every file under `src/lib/jobs/` (164 tests total across 14 files) after widening the tag set — all pass unchanged. Traced by reasoning, not only by the green run: every existing fixture in this file uses `article`/`li`/`main` wrappers already, none relies on a bare `<tr>` being ignored, so none could be affected by adding one more recognised tag to a scan that only ever *adds* candidates, never removes one that previously qualified.
+
+**Blast radius:** `selectedDomScopes` is not exported; its only caller is `resolveJobPostingScope` in the same file, itself called from `enrich.ts`'s job-enrichment pass (confirmed unchanged, not touched by this item) and exercised by every job-posting-scope test. No event-side code path touches this file — `web/src/lib/events/` has no dependency on `job-posting-scope.ts`, confirmed by the full suite: the only post-change failure anywhere is the standing `benchmark.test.ts` live-search flake, which is events-only and failed on a *different* assertion this run (`cityCoverage`, not the `summit?.place?.city` line the pre-B8-04 baseline failed on) — consistent with ordinary day-to-day live-search variance on a non-deterministic test, not a regression this item could have caused.
+
+**What renders after this guard fires — confirmed from source, unchanged code path.** Unaffected by this item: when `selectedDomScopes` finds no accepted candidate at all, `resolveJobPostingScope` falls to the JSON-LD exact-URL fallback, and if that also fails, returns `{status: "unproven"}` — already-existing, already-tested behavior (`"fails closed for malformed URLs and distinct matching records"`, `"makes an unproven successful fetch silent..."`, both pre-existing cases, re-run unchanged). This item only changes which candidates `selectedDomScopes` can find in the first place; it does not touch the fail-closed contract at all.
+
+**Gate after this item:** 90 files / 1026 tests, 1025 passing (four new, zero deleted; the one failure is the same documented live-search flake, unrelated, events-only). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error, unchanged.
+
+#### Round 8 — all four assigned items complete
+
+B8-04, B8-05, B8-06, B8-07 all landed, each committed and pushed individually as it finished, per §3's standing rule. Combined with the first C's B8-01/02/03 (landed before the spend-limit death this session resumed from), **all seven of Round 8 B's items are now closed or ruled**: six code items landed (B8-01 through B8-06, one — B8-07 — landed in part with the other part explicitly recorded open rather than silently dropped), and B8-03's `usajobs.ts` policy question is still waiting on the manager, exactly as B8-03 itself asked. Final gate for this turn: **90 files / 1026 tests, 1025 passing** (the sole failure is the documented `benchmark.test.ts` live-search flake — confirmed on every single gate run this turn, always the same file, never a different one), TypeScript clean throughout, ESLint's one pre-existing `quiz.tsx:46` error unchanged throughout. Every item was committed and pushed individually the moment it finished; nothing was batched.
+
+**Flagging for the next A, collected in one place:**
+
+- **B8-03's `usajobs.ts` fallback** (`"U.S. Federal Government"`) — still an open `POLICY` question for the manager, untouched by this session, exactly as B8-03 asked.
+- **B8-04's residual:** `catalogLabel` itself (the raw source's own company field every call site falls back to) has no host-brand guard from this item — deliberate, out of scope, a different threat model for the four adapters with no self-declaration/JSON-LD tier.
+- **B8-05's two open shapes:** a Markdown-link remnant (text-cleanup, not scoring) and a single-colon-label sentence with no other guard — neither addressed by the positive-content floor. Also: the floor's own named limitation (a chrome sentence containing a matched keyword still clears it) is now locked in as a test, not just prose.
+- **B8-06's residual:** the pre-existing `GENERIC_PAGE_TITLE_RE`'s own American-spelling gap (bare single-word `"Program"` still unmatched) — found while building this item's fix, deliberately not touched (out of scope, no live evidence).
+- **B8-07's shape 2 (flat sibling listings, no wrapper tag at all)** — confirmed reproducible on a fixture, deliberately not fixed this round (would require a new, undesigned mechanism with zero live counterexample). **This is the one most worth a real page if one ever turns up** — the fixture proves the mechanism, not the frequency, exactly as Ruling 31 specified.
+- **Incidental live corroboration from B8-06** — the benchmark test's own live top-5 touched both of B8-06's cited hosts again post-fix and produced different, non-chrome names. Not a formal re-verification; worth the next A's own independent look at those two names specifically (`ruggedthz.com`, `nanoge.org`) since I did not investigate whether the new names are themselves fully correct, only that the old bad shapes are gone.
+- **Everything landed this round is additive/optional and was checked for what renders in place of a rejected candidate** — every item confirms silence (or a real, better value) replaces a rejected one, never a new default, per this round's own standard. The next A should specifically watch for **real-data shapes that don't match the fixtures built this round** — every fix here was verified against hand-built markup, not a fresh live page (B8-02's SolarPACES check was the one live re-verification this round required, and it was done in that item, not repeated here since Ruling 31 only required it once). B8-01 through B8-06 all target mechanisms B found through a mix of live and synthetic checks; this session's own testing was source-level and fixture-level throughout, matching this round's own division of labor (B measures live, C implements and unit-tests).
