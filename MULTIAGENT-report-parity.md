@@ -18564,6 +18564,82 @@ otherwise the most precise of the nine rounds.
 **Manager's turn complete. `WHOSE TURN: A` stands as C left it. Round 10 A is
 spawned next.**
 
+---
+
+### Round 10 — Agent A (part 1: `sdle.co.il` targeted live fetch)
+
+**STATUS: COMPLETE.** Done FIRST, before any other measurement this turn, per
+this round's own brief — B9-04 named two possible explanations and stopped
+there deliberately; nobody could write a fix guide until this question was
+answered.
+
+Claimed the turn lock (`1823904`, `LAPTOP-3CL10CG5 @ 2026-08-13 05:28 UTC`)
+after losing an initial race to `cloud-hourly` (which correctly ran §0c's
+no-op — could not do a live pass, appended a note, released cleanly — see the
+entry immediately below §1's current-state block once this turn's §1 update
+lands). Read §1 in full (four `ROUND 7 … SUPERSEDES …` blocks skipped, per
+Ruling 30), §2, §3, §4 "Round 9 — Agent A" parts 1–4, §4 "Round 9 — Agent C"
+(all six entries) and the LCO ruled-out entry, §4 "Round 9 — MANAGER
+verification of Agent C," and §1s/§1t (Rulings 32/33) before touching
+anything.
+
+**Method — two steps, kept deliberately separate.** (1) Live keys reconfirmed
+present, boolean check only (`tavilyApiKey: true`). Built a throwaway vitest
+file (`web/src/zz-round10-a-sdle-locate.test.ts`, deleted before this commit)
+reusing round 9 A's own no-op `PoolCache` trick (`get` always `null`, `set` a
+no-op) to force a fresh live pull rather than the day's cached pool, and
+`buildDailyEventPool()`/`scoredEventToEvent()` — the pipeline entry points
+§2 names. **This step's only purpose was discovering the exact live URL
+string**, not evaluating it — reproduced round 9 A's own finding
+independently on fresh data: rendered name `"Turkey Battery Technologies
+Summit 2026"`, `linkOfficial`:
+`https://www.sdle.co.il/services/2nd-medical-battery-conference-19-20-11-18-germany`.
+(2) Fetched that one URL directly — no Peer code, no pipeline function, a
+plain page fetch outside the codebase entirely, the "not through the
+pipeline" check this round's brief specifically asked for.
+
+**Finding: explanation (b), not (a).** The live page's own `<title>` tag
+reads (short fragment only, per the security floor): *"Turkey Battery
+Technologies Summit 2026 – October 21-22, 2026 - Shmuel De-Leon Energy -
+Battery knowledge"* — matching what the pipeline renders almost verbatim.
+The page's visible body content is entirely about that same Turkey summit
+(Gebze, Turkey; Oct 21–22, 2026); no mention of Germany or a medical
+conference anywhere in the page's own content. The mismatch is real and
+lives entirely on the source site itself: the site's own on-page navigation
+still links to this event under a URL path left over from a different,
+older listing (the "2nd medical battery conference," Germany, per the slug
+text) — the operator appears to have repurposed an old URL for a new event
+without updating the URL path. **This rules out (a)** — the search index's
+title is not stale or wrong; it matches the live page's own current content
+exactly. It is (b): the live page's own two pieces of information (its
+`<title>`/content versus its URL path) genuinely disagree with each other,
+a source-site artifact, not a search-index staleness problem.
+
+**Reader impact, observed, not diagnosed further (cause-finding is B's job,
+not A's).** The rendered name shown to a reader is accurate — it matches the
+live page's own real, current content. The URL, if a reader followed it,
+leads to that same accurate content. The only place the "medical
+conference … Germany" wording ever appears is inside the URL path string
+itself, which a reader does not normally read as prose. **Net: no wrong
+information reaches a reader in this specific case** — confined to a
+source-site URL artifact, not a codebase defect and not a rendering defect.
+**Not adding this to the ranked difference list as a wrong-data item for
+that reason.** Recorded here because B and C both stopped on it and the
+question needed a direct answer before any fix guide could be written —
+this answer is: no fix guide is needed for this item: nothing in Peer's own
+code produced the mismatch, and nothing a reader sees is wrong.
+
+**Cleanup:** throwaway vitest file deleted before this commit. No product
+code touched. No credential referenced, logged, or written. Fetched page
+content quoted only in short fragments, per the security floor.
+
+**Not done this turn (parts 2–4, same session, continuing next):** employer
+field re-check, R4 job summary re-check (plus Ruling 33's acronym tally), R13
+event names re-check. Same-page contamination stays parked, per this round's
+own brief and Ruling 32. No gate verdict is set by this entry.
+
+Commit follows immediately.
+
 ### Round 10 — cloud run reached A, cannot do the live pass
 
 **2026-08-13 05:26 UTC, `cloud-hourly`.** Read `HANDOFF-ABC.md` in full, then
