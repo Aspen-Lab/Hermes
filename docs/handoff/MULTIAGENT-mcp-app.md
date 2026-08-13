@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:50 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 06:40 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
 WHOSE TURN:       A
@@ -312,6 +312,21 @@ into a standing principle: **a control that does nothing must not render.**
 - The disabled-but-visible allowance in HANDOFF §4 M2 applies to M2's
   fullscreen action row only, where a disabled state is itself informative
   ("this exists, arrives next"). Inline cards never get dead controls.
+
+## §1i. RULING 8 (2026-08-13, manager) — BINDING. Forecast counts semantics
+
+Ratifies C's round-1 judgment call on `get_daily_forecast`'s `counts`:
+`total` and the per-type counts are read off the **full merged pool before
+the final limit-slice**; `shown` is the post-slice item count. `total ≥
+shown` is therefore a meaningful "showing X of Y ranked today" signal, and
+card/text surfaces must phrase it that way.
+
+Nuance recorded so nobody mistakes it later: each lane fetches at most
+`limit` items before the merge, so `total` means "the pool this call
+considered", not "everything Peer web would count today". If M2's fullscreen
+header needs true day-pool counts, that is an explicit M2 design item — not
+a silent redefinition of these fields. M2 reuses these exact semantics
+unless a new ruling says otherwise.
 
 ---
 
