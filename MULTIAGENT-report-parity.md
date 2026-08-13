@@ -21724,3 +21724,229 @@ exercises this exact function — confirmed by grep, not assumed from
 
 Commit follows immediately.
 
+### Round 11 — Agent B (B11-02: snippet stage gets the title stage's own shape guard — closes `ecs.confex.com`)
+
+**Classify: WRONG DATA.** Ranked difference #3 (part 4 Finding 1). Builds
+directly on B11-01 above; do not re-read the mechanism, it is established
+there.
+
+**File and function.** `web/src/lib/events/sources/eventweb.ts`,
+`eventNameFrom`'s snippet-mining stage, `:604-613`.
+
+**Fix direction.** Insert a hard pre-filter using the exact
+`isChromeSegment`/`looksLikeEventTitle` pair the title-segment stage
+already applies (`bestEventTitleSegment`, `:573-575`), before the existing
+`looksLikeEvent` preference tier — reuse, not a parallel check:
+
+```ts
+// Otherwise mine the snippet for its most informative event-like phrase.
+let host: string | undefined;
+if (url) {
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    host = undefined;
+  }
+}
+const substantial = snippet
+  .split(/(?<=[.!?])\s+|\s+[|·–—]\s+|\n/)
+  .map((part) => part.trim())
+  .filter((part) => part.length >= 20 && part.length <= 120);
+const nameLike = substantial.filter(
+  (part) => !isChromeSegment(part, host) && looksLikeEventTitle(part),
+);
+const eventLike = nameLike.filter((part) => looksLikeEvent(part));
+const pool = eventLike.length > 0 ? eventLike : nameLike;
+if (pool.length > 0) {
+  return pool.reduce((best, part) => (part.length > best.length ? part : best));
+}
+```
+
+Everything below this (the URL-host / `"Untitled event"` final fallback) is
+unchanged — when `nameLike` is empty, execution now falls all the way
+through to that already-correct, already-honest last resort, instead of
+returning the longest fragment of unfiltered `substantial`. **This also
+closes B11-01 §3 item 4 (the ternary's empty-filter discard) as a side
+effect, at no extra cost**, since `eventLike`'s source pool is now the
+already-hard-filtered `nameLike`, not the raw `substantial` — a real,
+if unconfirmed-live, latent defect closed for free rather than chased
+separately.
+
+`host` duplicates the computation `bestEventTitleSegment` already does
+internally (`:564-571`) — C may factor this into a small shared helper if
+preferred; noted as a style option, not a requirement, since the duplicate
+five lines carry no behavioural risk on their own.
+
+**Confirmed by construction, not asserted:** fed `"Invited speakers present
+keynote lectures."` (A's exact live value) through `looksLikeEventTitle`
+directly — returns `false`. The same string through
+`bestEventTitleSegment` (no URL) — returns `undefined`, i.e. rejected. This
+fragment cannot survive the proposed `nameLike` filter.
+
+**Confirmed NOT sufficient alone for the round's other two findings** —
+say so plainly rather than overclaim: fed both
+`internationalbatteryseminar.com`'s and `thebatteryshowsouth.com`'s exact
+values through the same two checks, **with their real hosts populated**
+(`bestEventTitleSegment(fragment, "https://<real-host>/...")`) — both
+checks return the **input unchanged** for both fragments, i.e. neither
+guard rejects either one, host-brand matching included. This fix closes
+`ecs.confex.com` only. The other two need B11-03, below, which depends on
+this item landing first (its new checks are only reachable through the
+`isChromeSegment` call this item adds to the snippet stage).
+
+**Risk.** Confirmed zero behavioural change to every OTHER real value in
+A's round-11 census (all 10 CORRECT / not-confirmed-false / good-news
+values, `ruggedthz.com` included, fed through `looksLikeEventTitle`
+directly: all `true`, unaffected). Confirmed zero behavioural change to
+every existing test assertion that exercises the snippet-mining stage
+(full list below) — each one's own EXPECTED output string, fed through
+`looksLikeEventTitle` directly, returns `true`. The mechanism this fix adds
+is strictly more selective than today's code (`nameLike` ⊆ `substantial`
+always), so the only possible behavioural change is a candidate that used
+to survive now being excluded — never the reverse — which is exactly the
+direction Ruling 32 asks for.
+
+**Tests at risk — full list, both files, not just the obvious one (Ruling
+31):**
+- `web/src/lib/events/sources/eventweb.test.ts` — every case under
+  `describe("eventNameFrom", ...)` that reaches the snippet stage:
+  `:71-79` ("falls through to snippet mining when the whole title is a
+  sentence"), `:90-98` ("does not use a headline-shaped URL slug"),
+  `:306-310`/`:325-332` (bare-date, snippet continuation),
+  `:350-357` (bare-location, snippet continuation), `:382-386`/`:393-397`
+  (Call for Papers, snippet continuation) all confirmed by direct probe to
+  still pass. `:488-502` (`webResultToRawEventItem`, "does not let a
+  narrative-sentence title through") also reaches this stage via its own
+  URL's slug failing the ≥3-word check — confirmed, expected output
+  survives `looksLikeEventTitle` unchanged.
+- **`web/src/lib/events/scoring.test.ts`** — found by grepping every
+  caller of `eventNameFrom`, not assumed absent. `describe("event name
+  extraction", ...)` at `:554-588` directly exercises this stage three of
+  its four cases: `:555-562` ("recovers a real event name when the page
+  title is generic" — confirmed, expected 70-char output survives),
+  `:570-574` (title-segment-only, does not reach this stage, unaffected),
+  `:585-587` (snippet too short to enter `substantial` at all — 19 chars,
+  confirmed by count — already falls through regardless of this change).
+  This is the same file round 9's own C found the hard way after B9's
+  guide named only `eventweb.test.ts` (see that entry's own comment at
+  `scoring.test.ts:576-584`) — not repeating that miss here.
+- **New test needed, per Ruling 31's "hardest real shape" standard**: none
+  of the above existing cases has more than one viable 20–120-char
+  candidate in its snippet, so none of them exercises the actual
+  longest-wins tie-break B11-01 §2 identified as the live mechanism.
+  Recommend a new case built from the two real, already-confirmed
+  `ecs.confex.com` fragments (the 40-char correct name and the 42-char
+  wrong narrative sentence, both cited in B11-01 §2) as the two-candidate
+  snippet input — this is the one case in the whole suite that would
+  actually have caught this round's live regression before it shipped.
+
+**Blast radius.** `eventNameFrom` has one caller
+(`webResultToRawEventItem`, confirmed by grep, matching B9-01's own prior
+finding, unchanged). `isChromeSegment` and `looksLikeEventTitle` are
+unmodified by this item — only a new call site is added — so every other
+consumer of either function (title-segment stage, URL-slug re-validation,
+`event-details.ts`'s `extractDeclaredEventName`, `enrich.ts`'s `typedName`
+rescue) is untouched.
+
+Commit follows immediately.
+
+### Round 11 — Agent B (B11-03: two new narrow chrome-shape guards — closes `internationalbatteryseminar.com` and `thebatteryshowsouth.com`)
+
+**Classify: MISSING (guard).** Ranked differences #1 and #2 (part 4
+Findings 2 and 4). **Depends on B11-02 landing first** — these checks are
+only reachable through the `isChromeSegment` call B11-02 adds to the
+snippet stage; landed alone, on top of today's unmodified code, they do
+nothing (the snippet stage does not call `isChromeSegment` at all today).
+
+**File and function.** `isChromeSegment`, `web/src/lib/events/sources/eventweb.ts:407-427`
+— add two new checks to its existing host-independent block (alongside
+`isGenericPageTitle`, `isEventIndexPage`, `DOCUMENT_FILENAME_RE`,
+`isBareDateSegment`, `isBareLocationSegment`), matching this file's own
+established shape: a narrow, closed regex per confirmed shape, not a
+general parser.
+
+**Neither confirmed value is narrative-sentence-shaped** — B11-01 §2
+already confirmed both pass `looksLikeEventTitle` unchanged, so B11-02
+alone cannot reach them. Both are a different category this file has never
+named: scraped widget/markup chrome.
+
+**Fix direction, two new checks:**
+
+```ts
+// A media/document filename with its extension, optionally followed by a
+// query-string-like suffix, ANYWHERE in the segment -- not anchored to the
+// end the way DOCUMENT_FILENAME_RE is, because this shape is a filename
+// STITCHED to other scraped text ("Tim DeBastos.jpeg?sfvrsn=... [...]
+// Conference Image Gallery Carousel"), not a whole segment that IS a
+// filename. internationalbatteryseminar.com's own live-confirmed repro.
+const EMBEDDED_FILENAME_RE =
+  /\.(?:jpe?g|png|gif|webp|svg|bmp|tiff?|pdf|docx?|xlsx?|pptx?|csv|zip)(?:\?[\w=&%-]*)?\b/i;
+
+// Raw Markdown syntax leaking through extraction -- an ATX heading marker
+// (2-6 `#` characters, the shape a real live page actually produced; a
+// single `#` is left out deliberately, since one bare `#` followed by a
+// space is closer to plausible real-title punctuation, e.g. a session
+// number, and this shape has exactly one live confirmation to justify it
+// on) or a bracketed ellipsis, both scraped-content artifacts, not
+// anything a real event name contains. thebatteryshowsouth.com's own
+// live-confirmed repro.
+const MARKDOWN_CHROME_RE = /#{2,6}\s|\[\s*\.\.\.\s*\]/;
+```
+
+...added into `isChromeSegment`'s existing `if` (`:412-422`) alongside the
+other host-independent checks.
+
+**Confirmed by construction:**
+- `EMBEDDED_FILENAME_RE.test("Tim DeBastos.jpeg?sfvrsn=2fdd4033_1) [...]
+  Conference Image Gallery Carousel")` → `true`.
+- `MARKDOWN_CHROME_RE.test("[...] ## 2026 Keynote Speakers")` → `true`.
+- **Must-not-reject, checked against every other real value in this
+  round's own census** (all 10 CORRECT/not-confirmed-false/good-news
+  values from A's part 4 table, `ruggedthz.com` included) plus six
+  existing test-suite real names spanning long titles, parenthetical
+  locations, abbreviation-only names, and ordinal-numbered names — **zero
+  false positives on either regex** across all 16.
+- **Adversarial edge case checked, not just the easy negatives**: a
+  constructed plausible real name containing a single `#` followed by a
+  space (`"Session # 3: Advanced Battery Chemistry Track"`) does **not**
+  match `MARKDOWN_CHROME_RE` — confirming the `{2,6}` floor (not `{1,6}`)
+  is doing real, deliberate work, not merely narrower for its own sake.
+
+**Design choice, left open for C/the manager rather than decided here**:
+these two checks are proposed inside the shared `isChromeSegment` bundle,
+which also protects the title-segment and URL-slug-revalidation call sites
+— low realistic risk there (an authored `<title>` tag essentially never
+contains a raw image filename+query-string or literal Markdown syntax,
+unlike flattened scraped body/widget text), and matches this file's own
+repeated "reuse, don't invent a parallel check" practice. The more
+conservative alternative is a third, snippet-stage-only filter, touching
+zero shared code at the cost of duplicating two three-line regexes. No live
+evidence either way this round — noted as a choice, not escalated as
+`POLICY`, since either is a small, contained, reversible change.
+
+**Risk.** Same shape as B11-02: `isChromeSegment` gains checks, never loses
+one, so the only possible behavioural change is a candidate that used to
+survive now being excluded. Confirmed zero false positives on the
+combined 16-value real-data set above.
+
+**Tests at risk.** Same two files as B11-02 (`eventweb.test.ts`,
+`scoring.test.ts`) for the same reason — both call `isChromeSegment`
+transitively through `bestEventTitleSegment`/`eventNameFrom`. No existing
+case in either file contains a filename-with-extension or Markdown-heading
+shape (confirmed by reading every fixture cited in B11-02's own list), so
+none is expected to change — but both files should still be re-run in
+full, not spot-checked, since `isChromeSegment` is shared, load-bearing
+code. **New tests needed**: the two confirmed-repro strings above as
+must-reject cases, plus the adversarial single-`#` case as a must-NOT-reject
+case, mirroring this file's own established "hardest real shape either
+way" pairing (see e.g. `:339-370`'s bare-location block for the pattern to
+copy).
+
+**Blast radius.** `isChromeSegment` is not exported; its only callers are
+`bestEventTitleSegment` (title-segment stage, URL-slug re-validation) and,
+after B11-02 lands, the snippet stage — the same three call sites B9-04
+already catalogued for the function's existing checks, unchanged by this
+item.
+
+Commit follows immediately.
+
