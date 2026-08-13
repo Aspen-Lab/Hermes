@@ -270,12 +270,81 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 07:41 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 10 C, run by
+STOPPED BECAUSE:  **out of budget @ 2026-08-13 09:30 UTC — ROUND 11 A IS
+                  PART-WAY THROUGH ITS OWN TURN. DO NOT START A NEW TURN;
+                  PICK THIS ONE UP.**
+
+                  Round 11 A died on the account's **monthly spend limit**
+                  (the error text says so specifically — not the 5-hour
+                  limit, which refills on its own). It had **finished and
+                  pushed part 1** before dying — the write-as-you-go rule
+                  worked again, nothing was lost.
+
+                  **PART 1 — DONE, banked in commit `7a6ec13`, §4 "Round 11
+                  — Agent A (part 1: employer field)".** Do not re-run it.
+                  Two results: item 2's hosting-platform boilerplate defect
+                  is **confirmed gone live** on `postdocjobs.com`, and
+                  better than expected — both the topic-label guard and the
+                  new boilerplate guard reject their candidates on the same
+                  posting, leaving **honest silence** rather than any wrong
+                  value, which is exactly the outcome Ruling 32 asks for.
+                  Item 1's accepted residual
+                  (`careerservices.upenn.edu` → `"University of
+                  Pennsylvania"`) persists unchanged, exactly as Ruling 34a
+                  expects — **not a defect, do not report it as one.**
+                  **Ruling 34a's institution tally starts: 1 of 9 non-null
+                  this round.**
+
+                  **PARTS 2, 3 AND 4 ARE UNSTARTED.** Whoever picks this up
+                  does those three and only those three:
+                  - **Part 2 — `ecs.confex.com`.** Round 10 C landed the
+                    `"Call for Papers"` guard but deliberately did NOT claim
+                    the item closed, because it had no live access to see
+                    what replaces it. Fetch that page directly and report
+                    what Peer now renders as the event name. This is the
+                    specific question C handed A.
+                  - **Part 3 — R4 job summaries**, scored against B10-07
+                    fixes 1 and 2. **Ruling 33's acronym tally is due here**
+                    (running total: round 9 = 1 of 4, round 10 = 0 of 3).
+                    Watch B10-07 fix 2's blast radius: the label strip
+                    applies to EVERY credited section opener, so watch for a
+                    summary that now reads worse because a leading label
+                    carried real meaning.
+                  - **Part 4 — R13 event names**, scored against B10-02,
+                    B10-03, B10-04. Watch B10-04's relaxed casing for a real
+                    event name now wrongly rejected as a narrative sentence.
+                    Also retry `euagenda.eu`'s direct fetch (round 10's A
+                    was blocked by a 403); if blocked again say so plainly
+                    and leave it open.
+                  A left an untracked throwaway scaffold for part 4
+                  (`web/src/zz-round11-a-eventnames-live.test.ts`); the
+                  manager **deleted it** because an untracked `*.test.ts`
+                  under `web/src/` is picked up by `npx vitest run` and
+                  would have made a live pipeline call inside the next
+                  agent's gate. Rebuild it from round 10 A part 4's own
+                  precedent if you need it, and delete it before committing.
+
+                  **CADENCE NOTE (manager, 2026-08-13 09:40 UTC).** Because
+                  the blocker is the **monthly** limit, which does not refill
+                  on its own, the laptop's local resume clock dropped from
+                  hourly to **every 12 hours** — waking hourly against a
+                  weeks-long block is pure waste at exactly the moment
+                  budget is scarce. **The hourly cloud routine was left
+                  alone deliberately**: it completed the whole of round 10 C
+                  three hours ago, it costs nothing extra when it no-ops,
+                  and it is the one writer that may still function while the
+                  laptop is blocked. If the cloud starts failing too, drop it
+                  to 12 hours as well.
+
+                  ---
+
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-13 (round 10 C, run by
                   `cloud-hourly`: landed all three of B's slots — B10-01
                   part 1, the B10-02+B10-03+B10-04 bundle, and B10-07 —
                   across three separately-committed §4 entries ("Round 10 —
@@ -303,8 +372,18 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 10 C, run by
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            10 — A, B, and C all complete. Next: round 11, A.
-WHOSE TURN:       **A.** Round 10 C worked B's fix guide across all three
+ROUND:            11 — **A IS IN PROGRESS, PART 1 OF 4 DONE.** Round 10 is
+                  fully complete (A, B, C, and the manager's verification of
+                  C). Do not restart round 11 A from the beginning — see
+                  `STOPPED BECAUSE:` above for exactly which parts remain.
+WHOSE TURN:       **A — continuing, not starting.** Parts 2, 3 and 4 only.
+                  The per-fix brief and watch points below are still
+                  current; part 1's half of it is already answered above and
+                  must not be re-run.
+
+                  --- Round 10 C's own hand-off to A, unchanged below ---
+
+                  Round 10 C worked B's fix guide across all three
                   slots. Full method, hand-verification detail, and new
                   tests for each are in §4 "Round 10 — Agent C" (search for
                   "C10-01", "C10-02", "C10-03" in turn). Gate after the
