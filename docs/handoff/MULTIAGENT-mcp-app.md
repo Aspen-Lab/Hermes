@@ -135,46 +135,85 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:50 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       C (in progress — see §4 Round 1 — Agent C for live item log)
-STATUS:           Round 1 C in progress, working B's guide top to bottom.
-                  DONE so far: 1-01+1-08, 1-10, 1-02+1-11, 1-05 (see §4 for
-                  each), and 1-03+1-04+1-09 (inline card + text fallback) —
-                  this last one found and fixed a REAL ARCHITECTURE BUG in
-                  B's design, not just an implementation gap: a `ui://`
-                  resource must be a static template (fetched once, cached)
-                  with per-call data delivered over a postMessage
-                  `ui/notifications/tool-result` bridge — B's design (and my
-                  first draft) baked one specific forecast into the
-                  resource per read, which cannot work once 1-01 already
-                  committed to a fresh McpServer per HTTP request (a
-                  tools/call and a later resources/read don't share one).
-                  Rebuilt against developers.openai.com/apps-sdk/build/
-                  custom-ux, verified via a Node `vm`-sandboxed execution of
-                  the actual widget script plus new route-level protocol
-                  tests. Full details in §4 — read before touching this
-                  code again. Continuing down the build order; §4 gets one
-                  entry per commit as it happens, pushed immediately.
-LAST DIFFERENCE:  None of B's 11 items remain — all six build-order steps
-                  are closed. What's left is the task's own Step 3 (local
-                  cold-cache latency measurement via `npm run dev`) and the
-                  final write-up, not a spec gap.
+WHOSE TURN:       A
+STATUS:           Round 1 C finished B's entire 6-step / 11-item build
+                  order (§4 Round 1 — Agent C has one entry per commit,
+                  written as-they-happened, plus a consolidated
+                  "summary for A" at the end — read that section first).
+                  All 11 of A's round-1 MISSING items now have real code:
+                  MCP endpoint (dev-slug gated, 404-on-mismatch, RULING 2),
+                  get_daily_forecast (Tier-0 by construction, RULING-6
+                  papers lane, RULING-4 field truth enforced by the type
+                  system for papers), get_opportunity (searches the full
+                  pool not topN items, RULING-6 gap returns structured
+                  not-found without a wasted call), the inline card + text
+                  fallback (RULING-7 compliant — no Save, no Expand), and
+                  tool-description polish. One real architecture bug found
+                  and fixed along the way (not a RULING reversal, a
+                  protocol fact): a `ui://` widget resource must be a
+                  static template delivering per-call data over a
+                  `ui/notifications/tool-result` postMessage bridge, not
+                  server-baked HTML per tool call — B's original design (a
+                  closure-based per-call render) could not have worked once
+                  1-01 committed to a fresh McpServer per HTTP request.
+                  Verified via a Node `vm`-sandboxed execution of the real
+                  widget script (not just string matching) plus new
+                  route-level protocol tests (tools/list, tools/call,
+                  resources/read) driving the actual MCP dispatch. Gate
+                  never regressed the whole round — every new test file
+                  raised the count, nothing was deleted or weakened.
+LAST DIFFERENCE:  Not yet re-measured this round — that's A's job next.
+                  Everything script-checkable (initialize/tools/list/
+                  tools/call/resources/read) is green; two items stay
+                  NEEDS LOCAL VERIFY regardless of any code C could write
+                  (criteria 3/4, a real ChatGPT dev-mode connector add and
+                  a real Claude custom-connector add — both need the
+                  user's own accounts), and the full pipeline path
+                  (Supabase profile lookup through to a real forecast) is
+                  UNVERIFIED end-to-end because this sandbox has no
+                  Supabase credentials — see GATE NOW's caveat and the
+                  Step-3 §4 entry.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             1-01+1-08, 1-10, 1-02+1-11, 1-05, 1-03+1-04+1-09,
-                  1-06+1-07 — B's full build order is closed. Only the
-                  latency measurement + final write-up remain this round.
-GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1 skipped
-TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
-                  its stated build order — dependency+endpoint skeleton (1-01
-                  +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
-                  +1-11) → get_opportunity (1-05) → card+fallback (1-03+1-04
-                  +1-09) → discoverability polish (1-06+1-07). One commit per
-                  item, gate after each, never lower the passing-test count.
-                  Both POLICY items are now ruled: RULING 6 (papers lane =
-                  arxiv+openalex for M1, temporary, re-listed every round) and
-                  RULING 7 (no dead controls — omit Save AND Expand from the
-                  M1 card; Expand sub-part of criterion 7 excluded until M2).
-                  C also measures cold-cache forecast latency locally (B's
-                  addition) and logs it in §4.
+DONE:             All 11 of A's round-1 items now have code + tests. Zero
+                  POLICY items outstanding (both were ruled before this
+                  round started). One new judgment call flagged for A's
+                  sanity-check, not a RULING: `get_daily_forecast`'s
+                  `counts.total`/`counts.shown` semantics (B's contract
+                  named the fields, didn't define the relationship —
+                  full reasoning in §4 under item 1-02).
+GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
+                  skipped (80) — up from the round's starting baseline of
+                  597|1|598, 73+1 files. Every commit this round raised
+                  this number; none lowered it. `npx tsc --noEmit -p .`
+                  clean project-wide. `npx eslint src/lib/mcp/
+                  src/app/api/mcp/` (everything this round touched) clean;
+                  a full `npx eslint src/` sweep found exactly one
+                  pre-existing error, unrelated, in
+                  `src/components/persona/quiz.tsx` (a React
+                  set-state-in-effect rule) — confirmed via `git log` that
+                  file was last touched in an unrelated prior commit
+                  (`29569e0`), not part of this round's diff at all; left
+                  untouched, out of scope. NOT independently re-verified by
+                  A yet — the
+                  figure above is C's own last run, not a fresh one.
+TODO:             A: run the Fixture/protocol pass — script
+                  initialize → tools/list → tools/call → resources/read
+                  against the real endpoint. `web/src/app/api/mcp/[slug]/
+                  route.test.ts` already has exactly this sequence working
+                  (reuse it or lift it verbatim — that's what it was built
+                  for). Re-run the frozen 11-criterion inventory from
+                  round 1 against what's actually built now; expect most
+                  to move from MISSING toward MET, but verify rather than
+                  assume — C's own §4 "summary for A" section names the
+                  specific things most likely to differ from what the
+                  mocks/vm-sandbox tests could prove (the real widget
+                  bridge contract on an actual host, real-world latency
+                  variance, the still-placeholder MCP_DEV_TEST_USER_ID
+                  blocking any real-data Pass 2 this round). Re-list
+                  RULING 6 (papers lane) and RULING 7 (Expand exclusion)
+                  by name per their own standing instructions. Do NOT
+                  change code — throwaway measurement scripts only,
+                  deleted before finishing, same as round 1.
 ```
 
 **History of measured difference, newest last:**
@@ -1445,3 +1484,157 @@ description-quality pass:
 Remaining before handing back to A: the local cold-cache latency
 measurement (task's own Step 3, not one of B's 11 items) and orphan-process
 cleanup, then the final §4/§1 write-up.
+
+**Step 3 — local latency measurement.** DONE, with an honest gap disclosed.
+
+Started `npm run dev` (Next 16.2.3 + Turbopack, `✓ Ready in 5.4s`, picked up
+`web/.env.local`). **Could not measure the real, complete
+`get_daily_forecast` round-trip end to end**: this sandboxed build
+environment has no Supabase project credentials at all
+(`NEXT_PUBLIC_SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` both confirmed unset
+— existence-checked via `!!process.env.X`, values never inspected, same as
+the 1-10 note), so `createAdminClient()` throws immediately on every real
+call. Confirmed this is handled gracefully, not a crash — the SDK's own
+`registerTool` wrapper catches the thrown error and returns a normal
+JSON-RPC 200 with `{ content: [...], isError: true }`, exactly per spec,
+with zero try/catch of my own needed. Measured what I actually could, in
+three honest pieces, via a curl script that never printed `MCP_DEV_SLUG` to
+any output (built the request URL inside the script from the gitignored
+`.env.local`, never echoed):
+
+1. **First-ever POST to the route** (forces Turbopack's one-time dev-mode
+   compilation of the whole route's import graph): **3.89s**. This is a
+   dev-server-only artifact, not representative of anything in production
+   (a built app has no on-demand compilation step) — noted so nobody
+   mistakes it for real latency.
+2. **Second POST, route already compiled** (still fails at
+   `createAdminClient()`, so this isolates route dispatch + dev-slug
+   verification + the admin-client-failure path): **37ms**. This is the one
+   number I'm confident represents real overhead my own route code adds on
+   top of the pipelines.
+3. **Real pipeline fan-out** (the dominant real cost, per B's own perf
+   note) — measured directly via a throwaway script calling
+   `runFeedPipeline`/`runJobsPipeline`/`runEventsPipeline` with real topics
+   (`["machine learning"]`, same as A's round-1 Pass 2) and the exact same
+   parameters `get_daily_forecast` builds (papers lane restricted to
+   `["arxiv","openalex"]` per RULING 6, `aiTier: 0`, `topN: 9`), run twice
+   in the same local session (precedented by A's own round-1 throwaway
+   vitest file — created, run, deleted, never committed;
+   `git status --short` confirmed clean afterward both times):
+   - Run 1: papers 865ms, jobs 909ms, events 5947ms — **total 5984ms**
+     (`Promise.allSettled` in parallel, bounded by the slowest lane, exactly
+     as B's design and `web/src/lib/feed/pipeline.ts`'s own
+     `withSourceTimeout` describe — events came close to but didn't hit the
+     8000ms per-source ceiling).
+   - Run 2 (same process instance's local disk pool cache, per B's finding
+     8 — `DiskPoolCache` in `next dev`): papers 601ms, jobs 872ms, events
+     3144ms — **total 3180ms**. Jobs barely moved; events roughly halved.
+     Two data points isn't enough to claim a clean "X% cache speedup" —
+     reporting both honestly rather than picking the flattering one.
+   - **Papers has no pool cache at all** (confirmed, matches B's finding) —
+     its ~600-900ms cost recurs on *every* call, forever, cache or no
+     cache; not a regression, just a standing cost.
+
+**What this means for `maxDuration`:** the route is set to 60s (B's
+starting point). The real pipeline-fan-out numbers above (3-6s) leave large
+headroom even before adding the fast (37ms) route overhead and a real
+(unmeasured) Supabase profile lookup, which is normally a single indexed
+row read and should be small. 60s looks safe, not tight — no reason to
+raise it on this evidence. The `maxDuration` line itself is
+`web/src/app/api/mcp/[slug]/route.ts`'s own **NEEDS LOCAL VERIFY** either
+way per B's original note (the real ceiling also depends on the Vercel plan
+and ChatGPT/Claude's own client-side tool-call timeout — that's the user's
+real deployment, not this sandbox).
+
+**What A needs to know:** the ~6-second cold total is slower than a
+snappy chat-tool-call feel; whether that reads as acceptable depends on
+what loading-state UX the host shows during a tool call (the
+`_meta["openai/toolInvocation/invoking"]` string, "Checking today's Peer
+forecast…", is exactly the affordance for this) — not something A/B/C can
+judge without a live host. **Flagging for the manager:** getting a REAL
+end-to-end number (including the Supabase profile step, and confirming the
+`isError: true` path never fires for a correctly-configured deployment)
+needs Supabase credentials this sandbox doesn't have — likely present in
+`web/.env.local` on whatever checkout the user runs `npm run dev` from
+day to day, which this isolated worktree does not inherit (gitignored
+files aren't shared between worktrees).
+
+Stopped the dev server (`Stop-Process` on the listening PID, verified via
+`netstat`), then ran `node scripts/kill-dev-orphans.mjs` in `web/`:
+`[kill-dev-orphans] no leftover dev workers found.` Independently confirmed
+via `Get-Process -Name node` — zero node processes running. (One
+unrelated, pre-existing process on the machine — Granola, an Electron
+meeting-notes app — showed up in an initial `netstat` scan on a coincidental
+local port; verified by process name/path that it has nothing to do with
+this dev server before ruling it out.)
+
+---
+
+### Round 1 — Agent C — summary for A (consolidated; each point also lives
+inline under its own item above)
+
+**Corrections to B's guide, all fixed forward (none reversed a RULING):**
+1. SDK version pin: `@modelcontextprotocol/sdk@^1.30.0` doesn't install
+   alongside `mcp-handler@^1.1.0` (peer conflict) — pinned to the exact
+   peer-matched `1.26.0` instead, same v1 family B correctly chose (item
+   1-01).
+2. `createMcpHandler` is a registration-*callback* API (library owns
+   `McpServer` construction), not a factory you hand a pre-built server to
+   — `registerPeerTools(server, ctx)` takes the SDK-constructed server
+   instead (item 1-01).
+3. `mcp-handler` routes internally by exact `pathname === streamableHttpEndpoint`
+   string match, defaulting to `/mcp` — every request needs
+   `streamableHttpEndpoint` set to its own `new URL(request.url).pathname`
+   or it 404s inside the library before reaching any tool (item 1-01).
+4. **The big one:** a `ui://` resource must be a *static template*
+   (fetched once, cached — "treat the resource URI as a cache key"), not
+   re-rendered per tool call. B's design (and my first draft) baked one
+   specific forecast into the resource on every read via a closure, which
+   cannot work once a fresh `McpServer` is built per HTTP request (item
+   1-01's own design) — a `tools/call` and a later `resources/read` never
+   share one. Rebuilt against `developers.openai.com/apps-sdk/build/
+   custom-ux`; per-call data now reaches the widget over a
+   `ui/notifications/tool-result` postMessage bridge (item 1-03/1-04/1-09).
+5. Widget resource MIME type is `text/html;profile=mcp-app`, not plain
+   `text/html` (item 1-03/1-04/1-09).
+
+**Judgment calls made, not RULING-backed, worth A's sanity-check:**
+- `counts.total`/`counts.shown`/per-type counts in `get_daily_forecast`:
+  read `total` as the pre-final-slice merged pool size (each lane
+  independently capped at `limit`), `shown` as the post-slice count — B's
+  contract named the fields but didn't define the total-vs-shown
+  relationship (item 1-02).
+- `get_opportunity` duplicates ~8 lines of profile-resolution logic against
+  `get-daily-forecast.ts` rather than extracting a shared helper, to avoid
+  touching 1-02's already-shipped, already-tested file mid-round (item
+  1-05).
+
+**What's most likely to behave differently on real data than in tests
+(the actual ask for this section):**
+- **The widget bridge (highest risk).** `vm`-sandboxed execution of the
+  literal `WIDGET_SCRIPT` string proves the render logic and
+  `ui/notifications/tool-result` handling are internally correct. It
+  cannot prove ChatGPT or Claude's real iframe host actually sends that
+  exact notification shape, or accepts `text/html;profile=mcp-app`. If the
+  card is stuck on "Loading…" in a real host, suspect the bridge contract
+  first, not the RULING-4/escaping logic underneath (which has real,
+  executed test coverage, not just string-matching).
+- **Latency.** The ~6s cold-pipeline number (Step 3 above) was measured
+  with `aiTier: 0` against real public APIs with real network variance —
+  a bad day for one source (events came closest to the 8s per-source
+  ceiling) could push a real call close to feeling slow in a chat UI, even
+  though `maxDuration: 60` has huge headroom. Nothing to fix without more
+  data; just don't be surprised if a real call feels slower than the
+  route's own 37ms overhead would suggest.
+- **The MCP_DEV_TEST_USER_ID placeholder.** Every real-data check A wants
+  to run needs a real Supabase `auth.users` id with a populated
+  `research_topics` row wired into `web/.env.local` first (RULING 2 — a
+  manager decision, not something A/B/C can do alone) — until then,
+  `get_daily_forecast`/`get_opportunity` against the dev slug return a
+  graceful `isError: true` (missing Supabase env vars), not real forecast
+  data, and that's expected, not a regression to chase.
+- **Papers lane scope (RULING 6, re-listed as instructed):** only
+  `arxiv`/`openalex` this milestone. A `semantic_scholar:`/`dblp:`/
+  `pubmed:`/`web:`/`hn:` paper will never appear in a forecast and
+  `get_opportunity` will correctly refuse to resolve one if somehow asked —
+  by design, not a bug, until M4.
