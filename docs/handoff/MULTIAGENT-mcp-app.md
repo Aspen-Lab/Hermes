@@ -132,62 +132,84 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 07:16 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 07:38 UTC
 ROUND:            3
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior). M1 acceptance pends the USER host-test per
                   RULING 9 — its checklist lives in §4 Round 2 A's NEEDS
                   MANAGER/USER list and is re-listed every round.
-WHOSE TURN:       B
-STATUS:           Round 3 A froze a 13-criterion M2 inventory from
-                  HANDOFF §4 M2 + mockup screen 3 (`sc2`, all 4 notes)
-                  per RULING 1/9.2, and measured 13/13 MISSING (100%
-                  OPEN) — expected: zero M2-specific code exists
-                  anywhere in the repo (grep-confirmed across
-                  web/src/lib/mcp and web/src/app/api/mcp). Gate
-                  independently re-run, holds at 659/1/660, no
-                  regression. M1 is untouched since round 2 and still
-                  pends only the user's host test. Full evidence: §4
-                  "Round 3 — Agent A".
+WHOSE TURN:       C
+STATUS:           Round 3 B wrote the full M2 fix guide for A's 13
+                  MISSING criteria (items 3-01..3-13, §4 "Round 3 —
+                  Agent B"), read-only throughout (`git status --short`
+                  clean at every checkpoint; gate independently re-run
+                  fresh, unchanged at 659/1/660, tsc clean). Verified
+                  all four of A's flagged claims correct (FeedType
+                  facets, the no-_meta-fullscreen claim, the
+                  System-close claim, profile.displayName) plus one
+                  more on B's own initiative (window.openai.callTool
+                  exists, needed for Expand wiring). Resolved both of
+                  A's delegated design tensions (filter-chip counts;
+                  limit-cap vs "full list") with concrete, testable
+                  mechanisms, not left open for C to guess. Item 3-10's
+                  POLICY flag was already closed by RULING 10 before
+                  this round began; the guide builds directly to it.
+                  Found two things narrower than A's inventory implied:
+                  (1) "starter prompts" are a published-app-only Apps
+                  SDK surface, not configurable for M1/M2's dev-mode
+                  connector at all (developers.openai.com/apps-sdk/
+                  deploy/connect-chatgpt, fetched fresh) — folded into
+                  3-06 so C isn't asked to build a config surface that
+                  doesn't exist; (2) per-card "Open in Peer" deep links
+                  must not point at Peer web's own /jobs/[id] or
+                  /events/[id] (both are client-store-only, no
+                  fetch-by-id fallback, confirmed by reading all three
+                  detail pages — a cold external click would 404/empty)
+                  — 3-11 routes around this by linking each card to the
+                  item's own external source instead. Full guide,
+                  architecture decisions, and all citations: §4 "Round
+                  3 — Agent B".
 LAST DIFFERENCE:  M1: none code-side (round 2, unchanged). M2: 13/13
-                  criteria MISSING — round 3 A's first M2 difference
-                  list, items 3-01..3-13, full table in §4 "Round 3 —
-                  Agent A".
+                  criteria MISSING — round 3 A's difference list, items
+                  3-01..3-13, full table in §4 "Round 3 — Agent A"; B's
+                  fix guide for every item in §4 "Round 3 — Agent B".
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
                   — M1 pends only the user host-test per RULING 9; M2
-                  now measured at 0% MET (13/13 MISSING), fix guide is
-                  next (B).
+                  still measured at 0% MET (13/13 MISSING) — B does not
+                  change code, so this is unchanged from A's measurement.
+                  C implements the guide next.
 DONE:             M1 items 1-01..1-11 code-complete and round-2 verified
                   at protocol/live level. Outstanding on M1: only the
-                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER).
+                  user checklist (§4 Round 2 A, NEEDS MANAGER/USER). M2
+                  fix guide complete (§4 "Round 3 — Agent B"); zero M2
+                  code written yet — that's C's job next.
 GATE NOW:         npm test (web/): 659 passed | 1 skipped (660), 79 files +1
-                  skipped (80); `npx tsc --noEmit -p .` clean (both
-                  independently re-verified in round 2; gate re-run
-                  fresh again in round 3, unchanged).
-TODO:             B (round 3): write the M2 fix guide from A's
-                  3-01..3-13 difference list (§4 "Round 3 — Agent A").
-                  Reuse C's Round-1 architecture write-up (§4 "Round 1
-                  — Agent C", the static-template + postMessage-bridge
-                  fix and its "Corrections to B's guide" summary)
-                  instead of re-deriving it — do not repeat the
-                  per-call-baked-resource design B's own round-1 guide
-                  got wrong there. Fetch and cite the Apps SDK
-                  fullscreen/display-mode docs A used this round
-                  (developers.openai.com/apps-sdk/reference for
-                  window.openai.requestDisplayMode/displayMode/
-                  requestClose; developers.openai.com/apps-sdk/concepts/
-                  design-guidelines for the fullscreen "System close" /
-                  composer host-chrome split; developers.openai.com/
-                  apps-sdk/deploy/troubleshooting and
-                  modelcontextprotocol.io/docs/extensions/apps for
-                  launcher/starter-prompt and MCP-Apps-protocol facts)
-                  before prescribing the top-bar/close-button and
-                  open_home design. Item 3-10's POLICY flag (Report →
-                  disabled vs. omitted) is the manager's call, not B's —
-                  write the guide either provisionally or flag it
-                  onward, do not decide it. The USER checklist for M1
-                  remains authoritative in §4 Round 2 A — unchanged,
-                  not B's concern this round.
+                  skipped (80); `npx tsc --noEmit -p .` clean (re-run
+                  fresh again in round 3 by both A and B, unchanged).
+TODO:             C (round 3): work B's guide (§4 "Round 3 — Agent B")
+                  top to bottom, in the stated build order (3-01 →
+                  3-02+3-13 → the combined 3-04/05/07/08/09/10/11/12
+                  content item → 3-03 → 3-06). One commit per item
+                  (the combined content item may be split into
+                  sub-commits if useful — B's guide names the one
+                  internal ordering that matters there: chips before
+                  grid). Gate after every commit, push immediately.
+                  Two NEEDS-LOCAL-VERIFY-flagged design points in B's
+                  guide are written defensively so C doesn't need the
+                  answer to proceed: whether a widget-initiated
+                  window.openai.callTool() result arrives via the
+                  existing message listener or only via the call's own
+                  promise (render() is a plain function of a result
+                  object either way — B's guide shows both call sites);
+                  and whether Claude's fullscreen chrome provides its
+                  own close affordance the way ChatGPT's documented
+                  "System close" does (B's guide ships without a
+                  Peer-drawn close button on ChatGPT-verified evidence;
+                  if the user's Claude cross-check later finds none,
+                  that becomes a HOST LIMIT per RULING 3 and B's guide
+                  already names the small, additive fix). The USER
+                  checklist for M1 remains authoritative in §4 Round 2
+                  A — unchanged, not this round's concern.
 ```
 
 **History of measured difference, newest last:**
@@ -2831,3 +2853,214 @@ renderer, `get-daily-forecast.ts`, all 11 `types.test.ts` mapper tests) is
 unaffected since nothing currently reads or requires that field.
 `get-opportunity.ts` itself is not touched — `openHome`'s profile lookup
 only *matches its pattern*, it doesn't call into that file.
+
+---
+
+**3-03. MISSING → the M1 card's Expand control, closing RULING 7's
+exclusion.**
+
+- Edit `web/src/lib/mcp/ui/daily-forecast-card.ts`:
+  - `CARD_STYLE` (lines 68-86): add back `.pc-head .expand{font-size:11.5px;
+    color:#6B6156;border:1px solid rgba(62,36,7,0.12);border-radius:6px;
+    padding:2px 8px;background:#FFFDF9;cursor:default;}` — the mockup's own
+    value (mockup line 241), previously and deliberately omitted per the
+    module comment on lines 66-67 ("`.pc-head .expand` and `.psave` are
+    deliberately not carried over (RULING 7)") — **that comment needs
+    updating too**: Expand's exclusion is what this item lifts; Save's
+    stays. RULING 7 draws these as two separate, independently-timed
+    exclusions — don't let the comment imply both lift together.
+  - `buildDailyForecastWidgetHtml()` (lines 237-249): add `<span
+    class="expand" id="pc-expand-btn">Expand</span>` inside the `pc-head`
+    div, after the existing title span (line 242).
+  - `WIDGET_SCRIPT` (lines 117-226): add a `wireExpand()` function, called
+    once at IIFE top level alongside the existing `message` listener
+    registration:
+
+    ```js
+    function wireExpand() {
+      var btn = document.getElementById("pc-expand-btn");
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        if (window.openai && typeof window.openai.callTool === "function") {
+          window.openai.callTool("open_home", {});
+        }
+      });
+    }
+    ```
+
+    Call `wireExpand()` right after the existing `window.addEventListener
+    ("message", ...)` block — keep that one first, per the module's own
+    existing comment on why ("Listen FIRST, before anything else, so an
+    early notification is never missed").
+- **NEEDS LOCAL VERIFY, named precisely, not assumed either way:** what a
+  real host actually does when a card's widget calls `callTool("open_home",
+  {})` — does it mount the home widget in place, alongside, or does it
+  require the model/chat turn to relay the result first? Same posture as
+  C's own round-1 flag on the render bridge itself ("if the card renders
+  blank/stuck in a real host, check the bridge contract first, not this
+  code's logic, which has real, executed coverage").
+- Classification: MISSING → wired (closes RULING 7's Expand exclusion, per
+  A's criterion 10). Closes A's **3-03**.
+- **Tests at risk, named exactly** (existing test that must be rewritten,
+  not deleted, per the ground rules): `daily-forecast-card.test.ts` lines
+  119-124, `"never mentions Save or Expand (RULING 7 — no dead controls)"`
+  — this assertion is **half wrong the moment this item ships**: Expand is
+  no longer a dead control, and RULING 7's own text excludes it "until M2"
+  specifically. Split into two tests: (a) keep the Save-specific assertions
+  (`not.toContain("save")`, `not.toContain("psave")`) under a retitled
+  `"never mentions Save (RULING 7 — Save stays M5 scope on the inline
+  card)"`; (b) new test `"renders an Expand control wired to open_home, now
+  that the fullscreen view exists (RULING 7's Expand exclusion closes in
+  M2)"` asserting the static HTML contains `id="pc-expand-btn"` and, via the
+  `vm`-sandbox pattern (extended to support `addEventListener` on the
+  button stub, same extension 3-04's own new test file needs), that
+  clicking it calls `window.openai.callTool` with `("open_home", {})`
+  exactly.
+- Blast radius: `daily-forecast-card.ts`'s existing render logic (rows,
+  header, footer, text fallback) is untouched — this only adds a header
+  element and a click wire. The one existing test named above is rewritten,
+  not deleted; every other test in that file (palette checks, RULING-4 row
+  checks, escaping, empty-state, message-source filtering,
+  `renderDailyForecastText`) is unaffected and stays green untouched.
+
+---
+
+**3-06. Entry behavior (R2) — buildable half + NEEDS LOCAL VERIFY half, per
+RULING 3.**
+
+**What's buildable this milestone, and it's smaller than A's inventory
+language implied** (see "Checking A's claims" above — confirmed against
+`developers.openai.com/apps-sdk/deploy/connect-chatgpt`, fetched fresh this
+round): a dev-mode custom connector's own creation form exposes exactly
+**"user-facing name and description"** plus a connection-method choice. No
+starter-prompts field, no default-view/landing-tool field exists at that
+layer at all. The one "starter prompts" mention anywhere fetched is scoped
+explicitly to **published** app-directory listings — out of scope per
+HANDOFF §10 until a post-M5 publishing decision. So R2's "app
+metadata/starter prompts" clause has two different kinds of "not done"
+hiding inside it, and this guide only assigns C the buildable one:
+
+1. **Buildable now — tool description quality, the real lever.**
+   `open_home`'s description (3-02's exact text above) is written to fire
+   on "open Peer" / "open my Peer home" / "show my full forecast" / "see
+   everything" phrasing — the model decides whether to call it by reading
+   this text (mockup note 1's own framing, already established in Round
+   1). Nothing else to build; there's no second file, manifest, or config
+   surface this milestone's connector type supports.
+2. **Buildable now — immediate self-promotion.** `open_home`'s widget calls
+   `requestDisplayMode({mode:"fullscreen"})` unconditionally on mount
+   (3-01's design decision above) — so once the model does call it, the
+   user reaches fullscreen in the fewest possible steps the current API
+   allows (one flash-inline frame, then promoted) — this is the literal
+   ceiling given no `_meta` field can skip the inline flash (independently
+   reconfirmed this round, see "Checking A's claims").
+3. **NOT buildable this milestone, confirmed by the docs rather than
+   assumed unbuilt:** any config-level "starter prompt" or "default landing
+   view" for the dev-mode connector itself. Not a gap in this guide's
+   coverage — there is nothing in `web/` that could implement it; the
+   surface doesn't exist for this connector type per the docs quoted above.
+4. **NEEDS LOCAL VERIFY, restating HANDOFF §8 step 4's own script
+   precisely, not expanding it:** "check whether your plan shows Peer in
+   the sidebar/launcher and note it." Given finding 3 above, my own prior
+   expectation (stated so the user isn't surprised, not a promise) is that
+   a dev-mode custom connector has **no** sidebar/launcher presence at all
+   — it's reached only via the in-chat "+/Apps" menu (HANDOFF §8 step 3's
+   own instructions already describe exactly this) — but this is inferred
+   from documentation coverage, not from having driven a real ChatGPT UI
+   myself, so it stays a real, named NEEDS LOCAL VERIFY item, not a claim.
+   **Never promise the sidebar**, per the task's explicit instruction —
+   this guide doesn't.
+- Classification: MISSING (the buildable half) / documentation-scoped-out
+  (the config half, newly clarified this round) / NEEDS LOCAL VERIFY (the
+  observation half, unchanged, standing). Closes A's **3-06** to the extent
+  buildable.
+- Tests: covered by 3-02's own `open_home` description-quality test —
+  extend `route.test.ts`'s existing "both tools carry substantial,
+  non-generic descriptions" test (lines 193-211) to include `open_home` in
+  its `for (const name of [...])` loop — a one-line addition to an existing
+  test, not a new one.
+- Blast radius: none beyond 3-02's own tool registration.
+
+---
+
+**Build order for C — follow exactly, one commit per item, gate after
+each:**
+
+1. **3-01** — fullscreen resource skeleton + registration (empty/loading-
+   state shell is fine transiently, same allowance M1's own build order
+   used for its endpoint).
+2. **3-02 + 3-13** — `open_home` tool (depends on 3-01's resource URI
+   existing to point `_meta` at).
+3. **3-04 + 3-05 + 3-07 + 3-08 + 3-09 + 3-10 + 3-11 + 3-12** — the
+   fullscreen content, all at once (they're one file's contents; splitting
+   the commit finer than this buys nothing, since none of the eight is
+   independently testable without the others already present in the same
+   render pipeline). Consider sub-commits only if budget/PARTIAL protocol
+   forces a pause — chips (3-05) before grid (3-04) is the one internal
+   ordering that matters, since the grid's data flow depends on the
+   chip-click mechanism already existing.
+4. **3-03** — Expand wiring on the M1 card (depends on 3-02's tool existing
+   to call).
+5. **3-06** — entry-behavior polish (tool description is already mostly
+   written in step 2; this step is really just the `route.test.ts` one-line
+   extension plus the state-file documentation of what's confirmed
+   unbuildable this milestone).
+
+**Gate:** `npm test` from `web/`. Baseline re-confirmed this round: **659
+passed | 1 skipped (660), 79 files + 1 skipped (80)**; `npx tsc --noEmit
+-p .` clean. Every new test file above raises this number — note the new
+total in each commit's §4 log line, never lower it.
+
+**Classification rollup:** all 13 of A's items are **MISSING** (nothing is
+`WRONG DATA`/`WRONG SHAPE`/`WRONG ORDER`/`EXTRA` — there is no existing M2
+behavior to be wrong yet, same as M1's own round-1 rollup). Wrong-data risk
+to watch once built: the jobs/events cold-deep-link gap (do not point
+per-card links at `/jobs/[id]`/`/events/[id]`, per 3-11 above — a wrong
+link is worse than no link) and the RULING-4 paper-gap fields, re-proven for
+the new file rather than assumed inherited from the card.
+
+**POLICY flags for the manager:** none new. A's own 3-10 POLICY flag was
+resolved by RULING 10 before this round started (Report → ships
+disabled-visible; this guide builds to that ruling directly in 3-09/3-10
+above). Two things worth the manager's attention, flagged, not blocking:
+
+- The mockup's "3 high-signal" sub-count (3-07): recommend omitting, not
+  built by this guide — a genuine future nice-to-have if the manager wants
+  to define a real threshold.
+- The Claude-specific close-button uncertainty (3-01's design decision):
+  recommend shipping without a Peer-drawn close button on the evidence
+  available (ChatGPT-specific docs, confirmed), explicitly flagged as
+  needing the user's own Claude cross-check (HANDOFF §8 step 5) to close
+  for certain.
+
+**NEEDS LOCAL VERIFY, this round's additions** (all new; none of M1's
+standing five are B's concern this round — unchanged, see Round 2 A):
+
+- 3-03: does a card-initiated `callTool("open_home", {})` actually
+  mount/switch to the home widget on a real host, and how (replaces the
+  card, opens alongside it, requires a chat-turn relay)?
+- 3-05: does a widget-initiated `callTool` result arrive at the same
+  iframe's existing `message` listener, or only via the call's own promise
+  resolution? (`render()` is written to work either way per the design
+  above — this only affects which call site needs wiring, not a redesign.)
+- 3-01: does Claude's own fullscreen chrome provide a close affordance the
+  way ChatGPT's documented "System close" does? If not, `HOST LIMIT —
+  documented` per RULING 3; the fix is small and additive.
+- 3-06: does a dev-mode custom connector show Peer anywhere in a
+  sidebar/launcher on the user's actual plan? (My own documentation-based
+  expectation is no — stated as a prior, not a promise.)
+
+**Exclusions / HOST LIMIT (RULING 3):** none newly triggered — nothing
+M2-specific is built yet (B doesn't write code). Re-listed empty, same as
+every round so far.
+
+**Standing items re-listed by name (unchanged, not this round's concern):**
+
+- M1 user-pending set (criteria 3/4/7/9/10 + real Supabase credentials + a
+  real `MCP_DEV_TEST_USER_ID`) — §4 Round 2 A remains authoritative, not
+  restated here.
+- RULING 6 (M1's papers lane = `arxiv` + `openalex` only, temporary,
+  re-decided at M4) — unaffected by this guide; `open_home` shares
+  `get_daily_forecast`'s exact same `PAPERS_LANE_SOURCES` restriction via
+  the same underlying function, nothing new to re-decide.
+- OpenAlex empty-title observation — unaffected, not touched this round.
