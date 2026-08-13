@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Job } from "@/types";
 import { jobCardView } from "./card";
 
-const now = new Date(2026, 6, 29, 12).getTime();
+// Fixed UTC instant so the day-diff labels below are identical in every
+// timezone the suite runs in (local construction made this fail on UTC
+// runners while passing on UTC-5 machines): 2026-07-29T17:00Z is exactly
+// 3 days after the fixture's postedDate of 2026-07-26T12:00:00-05:00.
+const now = Date.UTC(2026, 6, 29, 17);
 
 const job: Job = {
   id: "adzuna:test",
