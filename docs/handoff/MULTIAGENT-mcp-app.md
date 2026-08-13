@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:22 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:50 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
 WHOSE TURN:       C
@@ -156,10 +156,12 @@ TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   +1-11) → get_opportunity (1-05) → card+fallback (1-03+1-04
                   +1-09) → discoverability polish (1-06+1-07). One commit per
                   item, gate after each, never lower the passing-test count.
-                  2 POLICY items need a manager ruling before/while C reaches
-                  them: papers source scope (arxiv+openalex only vs. all 5
-                  academic sources) and whether the M1 card includes a
-                  disabled Save button or omits it until M2.
+                  Both POLICY items are now ruled: RULING 6 (papers lane =
+                  arxiv+openalex for M1, temporary, re-listed every round) and
+                  RULING 7 (no dead controls — omit Save AND Expand from the
+                  M1 card; Expand sub-part of criterion 7 excluded until M2).
+                  C also measures cold-cache forecast latency locally (B's
+                  addition) and logs it in §4.
 ```
 
 **History of measured difference, newest last:**
@@ -223,6 +225,41 @@ content type is out of scope for this loop** — the goal is parity with Peer
 web, not with mockup sample data. Grant-shaped items that already arrive
 through existing pipelines pass through tagged as they are today. HANDOFF §4
 M2's "per Peer's real facets" wording governs the filter chips.
+
+## §1g. RULING 6 (2026-08-13, manager) — BINDING. M1 papers lane = arxiv + openalex, temporary
+
+Adopts B's recommendation (a) on the `get_opportunity` paper-source gap
+(round 1, item 1-05). For M1, `get_daily_forecast`'s papers lane requests
+`sources: ["arxiv", "openalex"]` only, so no forecast item can dead-end when
+the user asks for its detail — never show an item you cannot open. Zero new
+code; matches the live behavior A verified.
+
+**Temporary and re-listed every round like an exclusion.** It narrows the MCP
+surface relative to Peer web's full papers pool, so it is a tracked parity
+delta, not a silent default. It MUST be re-decided at M4 (Report Reader needs
+by-id resolution anyway); extending `fetchPaperById` with Semantic
+Scholar/PubMed single-item lookups is the expected closing move then. A DBLP
+item may stay unresolvable regardless (B verified no stable per-paper JSON
+endpoint); if so, that becomes a named permanent exclusion at M4, decided by
+the manager, not silently.
+
+## §1h. RULING 7 (2026-08-13, manager) — BINDING. No dead controls, ever
+
+Extends B's recommendation on the Save button (round 1, item 1-03/1-04/1-09)
+into a standing principle: **a control that does nothing must not render.**
+
+- The M1 inline card **omits Save entirely** (writes are M5). It also
+  **omits the hand-drawn Expand control** — M2 wires the real fullscreen
+  home; until then a dead Expand is the same lie as a dead Save. B's
+  "render it inert with a comment" is overridden on this one point. If the
+  host's own chrome offers component expansion natively, that is the host's
+  affordance, not ours — fine.
+- A's frozen criterion 7 lists Expand in the card header: the Expand
+  sub-part is **EXCLUDED until M2 by this ruling** and A re-lists it by name
+  every round; the rest of criterion 7 stays fully counted.
+- The disabled-but-visible allowance in HANDOFF §4 M2 applies to M2's
+  fullscreen action row only, where a disabled state is itself informative
+  ("this exists, arrives next"). Inline cards never get dead controls.
 
 ---
 
