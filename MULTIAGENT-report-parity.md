@@ -16212,3 +16212,129 @@ B8-04, B8-05, B8-06, B8-07 all landed, each committed and pushed individually as
 - **B8-07's shape 2 (flat sibling listings, no wrapper tag at all)** — confirmed reproducible on a fixture, deliberately not fixed this round (would require a new, undesigned mechanism with zero live counterexample). **This is the one most worth a real page if one ever turns up** — the fixture proves the mechanism, not the frequency, exactly as Ruling 31 specified.
 - **Incidental live corroboration from B8-06** — the benchmark test's own live top-5 touched both of B8-06's cited hosts again post-fix and produced different, non-chrome names. Not a formal re-verification; worth the next A's own independent look at those two names specifically (`ruggedthz.com`, `nanoge.org`) since I did not investigate whether the new names are themselves fully correct, only that the old bad shapes are gone.
 - **Everything landed this round is additive/optional and was checked for what renders in place of a rejected candidate** — every item confirms silence (or a real, better value) replaces a rejected one, never a new default, per this round's own standard. The next A should specifically watch for **real-data shapes that don't match the fixtures built this round** — every fix here was verified against hand-built markup, not a fresh live page (B8-02's SolarPACES check was the one live re-verification this round required, and it was done in that item, not repeated here since Ruling 31 only required it once). B8-01 through B8-06 all target mechanisms B found through a mix of live and synthetic checks; this session's own testing was source-level and fixture-level throughout, matching this round's own division of labor (B measures live, C implements and unit-tests).
+
+---
+
+### Round 9 — Agent A (part 1: employer field)
+
+**STATUS: PARTIAL BY DESIGN.** This A turn was deliberately pre-split into four parts
+(§1's own instruction, written after a round-9 A died on the account's spend limit
+before finishing a read) so a real finding banks even if the session dies. This entry
+covers **part 1 only — the employer field (B8-01/02/03/04)**. Parts 2–4 (R4 job
+summaries/B8-05, R13 event names/B8-06, same-page contamination/B8-07) are **not yet
+done** and are the next A's job, not this session's.
+
+Claimed the turn lock (`35cc7c1`, `LAPTOP-3CL10CG5 @ 2026-08-13 03:01 UTC`) after
+reading §0d, §1's current-state block (the four `ROUND 7 … SUPERSEDES …` blocks
+skipped as instructed — history, not state, per Ruling 30), §4 "Round 8 — Agent C"'s
+B8-01 through B8-04 entries in full, §2's Agent A section, §3, and §1j Ruling 23.
+
+**Method.** Live keys confirmed present by boolean check only (`tavilyApiKey`,
+`adzunaAppKey`, `adzunaAppId`, `usajobsApiKey` all present; `feedAiApiKey` empty,
+exactly as §2 documents — no key value ever printed, logged, or written). Built a
+throwaway vitest file (`web/src/zz-round9-a-employer-live.test.ts`, and two smaller
+throwaway follow-ups for direct function checks — all three deleted before this
+commit) following `benchmark.test.ts`'s own profile-loading precedent, calling
+`buildDailyJobPool()` with this session's real profile and topics, then
+`scoredJobToJob()` on every pool item — the exact entry points §2 names. Did **not**
+use `PEER_PROFILE_SNAPSHOT_PATH` to skip the live run.
+
+**Census — 15-item live pool, reproduced identically on two independent calls
+(same 15 hosts/companies, same order, both times), 11 non-null companies, 4 null:**
+
+| host | rendered company | evidence checked | verdict |
+|---|---|---|---|
+| `workingreen.jobs` | `Kairos Power` | url slug "...at-kairos-power-..." | CORRECT |
+| `inl.referrals.selectminds.com` | `Idaho National Laboratory Careers` | host label `inl` = INL's own abbreviation; org is right, trailing "Careers" chrome word not stripped | **WRONG (shape)** |
+| `terra.do` | *(null)* | title states no employer | not counted |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` | title "...at Thermo Fisher Scientific" | CORRECT |
+| `postdocjobs.com` | `Molten Salt Chemical and Electrochemical Engineering` | rendered text is a research-field label, not an org name | **WRONG** |
+| `careerservices.upenn.edu` | `Molten Salt Characterization` | url slug names "oak-ridge-national-laboratory" explicitly as the real employer | **WRONG** |
+| `jobs.lbl.gov` | *(null)* | LBL's own domain — see guard section below | not counted |
+| `jobs.battery.com` | `Battery Ventures Companies` | title matches verbatim (page reads as a portfolio-companies listing, caveat only, not a verdict flip) | CORRECT |
+| `ev.careers` | `Tesla` | title "...at Tesla" | CORRECT |
+| `jobright.ai` | *(null)* | title states no employer | not counted |
+| `employbl.com` | `Battery Ventures` | url slug "...battery-ventures-1410243" | CORRECT |
+| `talents.vaia.com` | `Savannah River National Laboratory` | title + url both confirm | CORRECT |
+| `arbeitnow.com` | `Stark` | url "/companies/stark/" | CORRECT |
+| `linkedin.com` | *(null)* | title actually does say "...at Savannah River National Laboratory" — under-extraction, not a host-brand-guard case | not counted |
+| `lco.global` | `Las Cumbres Observatory` | organisation's own domain | CORRECT |
+
+**3 of 11 non-null (27.3%) wrong this round, down from Round 8 A's pre-fix baseline
+of 5 of 8 (62.5%).** Same ground-truthing method as Round 8 A (checked against each
+posting's own title or URL slug).
+
+**Two direct same-posting, same-host, live before/after confirmations that this
+round's fixes work outside the fixture, not only inside it:**
+1. `talents.vaia.com` (Savannah River National Laboratory posting) — Round 8 A found
+   `Vaia` (WRONG, the platform's own brand) pre-fix; this is B8-04's own headline
+   test pair. Now renders `Savannah River National Laboratory` — CORRECT, live.
+2. `grad.wisc.edu` (Thermo Fisher posting) — Round 8 A found `Graduate School`
+   (WRONG) pre-fix; matches B8-01's exact target shape ("Role at Employer"). Now
+   renders `Thermo Fisher Scientific` — CORRECT, live.
+
+**Still open, unchanged by any of B8-01 through B8-04:** the Oak Ridge National
+Laboratory posting (`careerservices.upenn.edu`, URL names ORNL explicitly) still
+renders a topic label (`Molten Salt Characterization`) as the employer — the same
+wrong-value shape Round 8 A reported pre-fix, still present post-fix. Not a
+host-brand-guard case (no label collision on this host relates to ORNL) — a
+different, still-unnamed mechanism, consistent with B8-04's own residual note that
+`catalogLabel` and non-guarded raw fields are out of this round's scope. **New this
+round, not previously reported:** the `inl.referrals.selectminds.com` "Careers"-suffix
+shape and the `postdocjobs.com` topic-as-employer shape.
+
+**The guard trade-off rate — B8-02's own flagged cost, measured as a number.**
+Verified by calling the real, unmodified `looksLikeHostBrand()` directly (no code
+changed) against real hosts and real candidate employer short-names drawn from this
+sample:
+
+```
+looksLikeHostBrand("INL", "inl.referrals.selectminds.com")            = true   (collision)
+looksLikeHostBrand("Idaho National Laboratory", same host)            = false  (full name survives)
+looksLikeHostBrand("LCO", "lco.global")                               = true   (collision)
+looksLikeHostBrand("Las Cumbres Observatory", same host)              = false  (survives)
+looksLikeHostBrand("Battery", "jobs.battery.com")                     = true   (collision)
+looksLikeHostBrand("Battery Ventures Companies", same host)           = false  (survives)
+looksLikeHostBrand("LBL", "jobs.lbl.gov")                             = true   (collision)
+looksLikeHostBrand("Lawrence Berkeley National Laboratory", same host)= false  (survives)
+```
+
+Plus three controls confirming the guard does its intended job elsewhere:
+`looksLikeHostBrand` on each generic-platform null host against **its own** platform
+name (`Terra`/`terra.do`, `Jobright`/`jobright.ai`, `LinkedIn`/`linkedin.com`) — all
+`true`, correctly, since none of those three is a real employer.
+
+**Measured: 4 of 15 postings in this sample (27%) — 3 of them non-null (INL, LCO,
+Battery) plus `jobs.lbl.gov` (null) — sit on a host whose DNS label textually
+collides with that employer's own real, commonly-used short name/abbreviation under
+the shipped guard's exact algorithm.** Of those 4: **0 show a proven suppression.**
+In 3 of the 4 (INL, LCO, Battery), the value that actually rendered was the long/full
+form, which survives the guard's one-directional length rule — the correct name came
+through, just not in short form. The 4th, `jobs.lbl.gov`, renders null; this is
+**consistent with, but not proof of,** the guard suppressing a short "LBL" candidate,
+because a null company is equally explained by no candidate ever being extracted at
+all — genuinely indistinguishable from outside without instrumenting the internal
+call chain, which would be investigating cause, out of scope for A. **Net: the
+collision shape B8-02 flagged is real and present in ~27% of a live sample, not
+hypothetical — but this sample shows zero proven losses and exactly one
+plausible-but-unproven one.**
+
+**Silence check (Ruling 23's "never a new default").** Rendered `JobReport`
+(`web/src/app/jobs/[id]/page.tsx`) live for a real pool item with `company: null`
+(the `terra.do` posting). Verbatim: the entire subtitle `<p>` block is **absent**
+from the output — `</h1>` is immediately followed by the action-row `<div>`, no
+placeholder text anywhere, no dangling separator. (All 4 of this sample's null-company
+jobs also carry `location: "See posting"`, a sentinel already filtered elsewhere in
+this codebase per B5-04/R12 — unrelated to this round's items, noted only because
+it's why the *whole* line vanished here, not only the company slot.) Card side
+(`web/src/components/cards/job-card.tsx:87-89`) uses the identical unconditional
+`{job.companyOrLab && (<p>...)}` guard, source-confirmed, with no alternate branch
+that could render a placeholder. **Confirmed: silence on both surfaces, not a new
+default.**
+
+**Cleanup:** all three throwaway vitest files deleted before this commit. No product
+code touched. No credential printed, logged, or written anywhere.
+
+**Not done this turn (parts 2–4, next A's job):** R4 job summaries (B8-05), R13 event
+names (B8-06), same-page multi-listing contamination (B8-07). No gate verdict is set
+by this entry — the gate cannot be judged until all four parts are in.
