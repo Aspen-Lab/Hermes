@@ -270,13 +270,41 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 16:25 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-13 16:17 UTC — ROUND 11 C IS
-                  COMPLETE.** Claimed the lock cleanly (no race; the hourly
+STOPPED BECAUSE:  **blocked: the user paused the loop @ 2026-08-13 16:38 UTC
+                  (going offline for a while) — ROUND 12 A IS PART-WAY
+                  THROUGH ITS TURN. PICK IT UP AT PART 2; DO NOT RESTART.**
+
+                  The manager stopped the running round-12 A mid-turn on the
+                  user's instruction. Nothing was lost:
+
+                  **PART 1 — DONE, banked in commit `5e7b80a`, §4 "Round 12
+                  — Agent A (part 1: live event-name census)". Do not
+                  re-run it.**
+
+                  **PARTS 2, 3, 4 ARE UNSTARTED.** The full per-part brief
+                  (watch points, the honest-host cost count, Ruling 36's
+                  third-strike check on `ruggedthz.com`, `euagenda.eu`'s
+                  third fetch attempt, and all THREE one-line tallies —
+                  Rulings 33, 34a, 37) is in the `WHOSE TURN` block below,
+                  unchanged and still current. A's part-2 measurement
+                  scaffold was deleted by the manager (untracked test files
+                  under the source tree get collected by the next gate run);
+                  rebuild it from the round-11 precedent if needed.
+
+                  **Both resume clocks are OFF by user instruction** (the
+                  laptop's hourly cron cancelled, the cloud routine
+                  disabled). Nothing will self-resume; the user restarts
+                  the loop manually when back online.
+
+                  ---
+
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-13 16:17 UTC — round 11 C complete. Claimed the lock cleanly (no race; the hourly
                   cloud run did not contest it), confirmed the branch reads
                   `feature/summary-report-revamp` before touching anything,
                   then read §1's whole `WHOSE TURN: C` block, §1v Ruling 35
