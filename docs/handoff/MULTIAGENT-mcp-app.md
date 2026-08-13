@@ -135,21 +135,20 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 05:50 UTC
 ROUND:            1
 MILESTONE:        M1 (screen 2 — MCP server + inline Daily Forecast card)
-WHOSE TURN:       C
-STATUS:           Round 1 B wrote the complete M1 fix guide (11 items + build
-                  order + tool contracts) into §4, surfaced architecture gaps
-                  A's protocol/Pass-2 method couldn't reach (no server-side
-                  per-surface job/event topics, no unified forecast endpoint,
-                  a get_opportunity paper-source gap, an MCP-SDK
-                  package-family fork), pinned SDK versions with citations,
-                  and left 2 POLICY items for the manager; gate still holds
-                  at baseline, no product code changed this round.
-LAST DIFFERENCE:  1-01 — no MCP endpoint exists anywhere in web/ (grep+glob
-                  re-confirmed this round); every other M1 criterion is
-                  blocked on it.
+WHOSE TURN:       C (in progress — see §4 Round 1 — Agent C for live item log)
+STATUS:           Round 1 C in progress, working B's guide top to bottom.
+                  DONE so far: 1-01+1-08 (dependency + endpoint skeleton,
+                  with 3 corrections to B's guide found by actually running
+                  the install/test rather than reading — see §4). Continuing
+                  down the build order; §4 gets one entry per commit as it
+                  happens, pushed immediately.
+LAST DIFFERENCE:  1-10 — the dev-slug gate (RULING 2) doesn't exist yet;
+                  the route from 1-01 is still transiently open per the
+                  build order's own allowance. Next commit closes this.
 GATE (target):    NOT MET  (M1–M5 accepted + parity matrix closed/waived)
-DONE:             —
-GATE NOW:         npm test (web/): 597 passed | 1 skipped (598), 73 files +1 skipped
+DONE:             1-01+1-08 (endpoint skeleton) — rest of B's build order in
+                  progress this round, see §4.
+GATE NOW:         npm test (web/): 598 passed | 1 skipped (599), 74 files +1 skipped
 TODO:             C: work B's guide (§4 Round 1 — Agent B) top to bottom in
                   its stated build order — dependency+endpoint skeleton (1-01
                   +1-08) → dev-slug auth (1-10) → get_daily_forecast (1-02
@@ -1021,3 +1020,78 @@ Addition: real end-to-end latency of a cold-cache `get_daily_forecast` call
 
 **Exclusions / HOST LIMIT (RULING 3):** none — still nothing rendered
 anywhere a host limitation could show up. Re-listed empty per RULING 3.
+
+#### Round 1 — Agent C
+
+Working B's guide top to bottom per the stated build order. Logging one
+entry per commit, immediately, per §3's write-as-you-go rule — this section
+grows through the round rather than being written at the end.
+
+**1-01 + 1-08 — dependency + endpoint skeleton.** DONE.
+
+- `web/package.json`: added `@modelcontextprotocol/sdk`, `mcp-handler`,
+  `zod`. New: `web/src/lib/mcp/server.ts` (`registerPeerTools` — currently a
+  documented no-op; 1-02/1-05 add the real `server.registerTool` calls into
+  it), `web/src/app/api/mcp/[slug]/route.ts` (transiently unauthenticated
+  per the build order's own allowance — 1-10 is the very next commit),
+  `web/src/app/api/mcp/[slug]/route.test.ts`.
+- **Correction to B's guide (verified, not a guess):** B's exact pins
+  (`@modelcontextprotocol/sdk@^1.30.0` + `mcp-handler@^1.1.0`) do **not**
+  install together — confirmed by actually running the install (not just
+  reading registry JSON, which is as far as B's own read-only role could
+  go): `mcp-handler@1.1.0`'s `peerDependencies` pins
+  `@modelcontextprotocol/sdk` to the **exact** string `"1.26.0"` (not a
+  caret range), so `^1.30.0` alongside it is an immediate `ERESOLVE`
+  conflict (ran `npm install` in a scratch dir, reproduced, then fixed).
+  Smallest faithful correction: pinned the SDK to the exact peer-matched
+  version, `@modelcontextprotocol/sdk@1.26.0` — same v1 family B correctly
+  identified as the right choice (the newer, separately-named
+  `@modelcontextprotocol/server` "v2" family is still avoided), just the
+  specific patch `mcp-handler@1.1.0` actually declares support for. Clean
+  `npm ls` afterward, zero peer warnings. `zod` needed no new resolution —
+  the SDK's `^3.25 || ^4.0` range already matched the `zod@4.4.3` already
+  present in the tree (transitive via `@anthropic-ai/sdk`/`@google/genai`);
+  added as an explicit direct dependency anyway since this new code
+  `import`s it directly and shouldn't lean on an un-declared transitive
+  version.
+- **Second correction (verified against the installed package, not
+  paraphrased):** `mcp-handler@1.1.0`'s actual shipped API is
+  `createMcpHandler(initializeServer, serverOptions?, config?)` — a
+  **registration-callback** shape where the library itself constructs the
+  `McpServer` and hands it to `initializeServer(server)`. It does not accept
+  an already-built `McpServer` instance as an argument. B's item 1-01 bullet
+  2 described `buildPeerMcpServer(ctx): McpServer` as a factory that
+  constructs its own `McpServer` directly (matching the *raw* SDK's own
+  stateless reference example, which hand-rolls the transport) — that shape
+  doesn't fit the adapter B's own citation two paragraphs later says to use
+  instead of hand-rolling the bridge. Resolved in favor of the adapter (the
+  one actually installed): `registerPeerTools(server, ctx)` takes the
+  SDK-constructed server and attaches tools to it; the route file calls
+  `createMcpHandler((server) => registerPeerTools(server, ctx))` **fresh
+  inside the request handler** (never at module scope), which preserves
+  everything B's "never a module-level singleton, fresh per call" intent
+  was actually protecting — just via a callback instead of a returned
+  instance.
+- **Third fix, empirically found by running the test, not foreseeable from
+  reading:** `mcp-handler` routes internally by exact string match on
+  `url.pathname === streamableHttpEndpoint`, defaulting `streamableHttpEndpoint`
+  to `"/mcp"` — built for its own `/app/[transport]/route.ts` convention. Our
+  route owns routing via the `[slug]` segment instead, so every request
+  needs `streamableHttpEndpoint` set to *that specific request's own*
+  `new URL(request.url).pathname` — otherwise every call 404s inside the
+  library before ever reaching tool dispatch (reproduced, then fixed; see
+  the route file). Also set `disableSse: true` (legacy transport, not part
+  of the current MCP spec per the SDK's own JSDoc — nothing in this build
+  needs it).
+- Test: `route.test.ts` — POSTs a real `initialize` JSON-RPC request
+  (`protocolVersion`/`capabilities`/`clientInfo`, spec-shaped) and asserts a
+  200 with a valid `InitializeResult` (`protocolVersion`, `capabilities`,
+  `serverInfo.name === "peer"`). Handles both possible response
+  `Content-Type`s (`application/json` and `text/event-stream`) since the
+  spec allows either and this is exactly the request A's protocol pass
+  reuses next round.
+- Gate after this item: **598 passed | 1 skipped (599), 74 files + 1
+  skipped (75)** — +1 test file, +1 test, matches baseline plus this item's
+  new test exactly. No existing test touched.
+- Blast radius: none — new files only; `package.json`/`package-lock.json`
+  changed but nothing existing imports the new packages yet.

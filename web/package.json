@@ -15,6 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
     "@google/genai": "^1.50.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.0",
     "@types/js-yaml": "^4.0.9",
@@ -22,11 +23,13 @@
     "clsx": "^2.1.1",
     "fast-xml-parser": "^5.7.1",
     "js-yaml": "^5.2.1",
+    "mcp-handler": "^1.1.0",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.2",
     "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
