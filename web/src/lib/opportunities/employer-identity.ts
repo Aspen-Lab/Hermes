@@ -1,4 +1,5 @@
 import { cleanJobSubtitlePart } from "./job-cleanup";
+import { looksLikeHostBrand } from "./shared";
 
 export type EmployerIdentityResolution =
   | { status: "structured"; company: string }
@@ -13,6 +14,17 @@ export interface EmployerIdentityEvidence {
   structuredOrganizations?: string | readonly string[];
   /** Text already owned by the selected source record or posting scope. */
   ownedTexts?: readonly string[];
+  /**
+   * B8-04 (round 8): the selected posting's own host. Optional and additive
+   * — every existing caller that omits it keeps today's exact behavior.
+   * When present, a `structured`/`declared` candidate equal to the page's
+   * own site brand (an ATS platform's templated "our team" blurb, or a
+   * JSON-LD record inheriting the platform's own organization name) is
+   * rejected the same way jobweb.ts's ingestion-time parse already protects
+   * its own candidates with `looksLikeHostBrand` — neither tier here had
+   * any shape/brand guard before this.
+   */
+  host?: string;
 }
 
 function normalized(value: string): string {
@@ -57,8 +69,14 @@ export function resolveEmployerIdentity(
   const structuredValues = Array.isArray(evidence.structuredOrganizations)
     ? evidence.structuredOrganizations
     : evidence.structuredOrganizations ? [evidence.structuredOrganizations] : [];
-  const structured = uniqueNames(structuredValues);
-  const declared = uniqueNames((evidence.ownedTexts ?? []).flatMap(directDeclarations));
+  // Reject a candidate that is itself the page's own host brand, on either
+  // tier — no-op when no host was supplied, so this is purely additive.
+  const isOwnHostBrand = (name: string) =>
+    evidence.host ? looksLikeHostBrand(name, evidence.host) : false;
+  const structured = uniqueNames(structuredValues).filter((name) => !isOwnHostBrand(name));
+  const declared = uniqueNames((evidence.ownedTexts ?? []).flatMap(directDeclarations)).filter(
+    (name) => !isOwnHostBrand(name),
+  );
 
   if (structured.length > 1 || declared.length > 1) return { status: "ambiguous" };
   if (structured[0] && declared[0] && normalized(structured[0]) !== normalized(declared[0])) {

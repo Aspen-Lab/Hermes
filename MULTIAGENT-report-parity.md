@@ -15890,3 +15890,154 @@ of guessing.
 zero deleted; the one failure is the same documented live-search flake,
 unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error,
 unchanged.
+
+**Session note: this C is a resumption, not the original round-8 C.** The
+first C landed B8-01/02/03 above and died on the account's monthly spend
+limit partway through B8-04, working tree clean, nothing lost (§1's own
+`STOPPED BECAUSE`). Re-claimed the turn lock (`4309788`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 00:26 UTC`) after re-reading §0 through §3,
+every standing ruling §1b–§1r (**§1r Ruling 31 first**), §2's Agent C
+section, and both of Round 8 A's and B's complete §4 entries, plus this
+same round's already-landed C entries above, before touching anything.
+Baseline gate reconfirmed cold, unchanged from what the first C recorded:
+90 files / 1007 tests, 1006 passing, TypeScript clean, one standing
+`quiz.tsx:46` lint error. Resuming at B8-04, exactly where §1 says to.
+
+#### B8-04 — `resolveEmployerIdentity` threaded with an optional host-brand guard on both evidence tiers — DONE
+
+**Files:** `web/src/lib/opportunities/employer-identity.ts` (the guard
+itself), `web/src/lib/opportunities/enrich.ts:233-245` and
+`web/src/lib/jobs/sources/himalayas.ts:54-66` (both call sites, updated to
+supply it).
+
+Landed exactly the fix direction B8-04 and Ruling 31 specified: an optional
+`host` field added to `EmployerIdentityEvidence` (additive — every existing
+caller that omits it is provably unaffected, see below), applied via
+`looksLikeHostBrand(candidate, host)` — the same function B8-02 already
+widened this round — to reject a `structured` or `declared` candidate that
+is itself the page's own site brand, before that candidate can win or count
+toward the `ambiguous` check. Did **not** add
+`KNOWN_JOB_BOARD_DOMAINS`/`SEASON_COHORT_LABEL_RE`/`looksLikeBareLocation`
+here, per the item's own explicit instruction not to guess without live
+evidence one of them is needed.
+
+**Host computed at each call site, not inside the guarded function itself**
+— `resolveEmployerIdentity` takes the already-resolved hostname as plain
+data, matching `isChromeSegment(segment, host: string | undefined)`'s own
+signature, the precedent B8-04 named. Both call sites derive it from their
+own in-scope URL with the identical `try { new URL(url).hostname.replace(/^www\./, "") } catch { undefined }`
+pattern already used, unfactored, in both `jobweb.ts:155-160` and
+`eventweb.ts:369-376` — matched the existing (if duplicated) convention
+rather than introducing a new shared helper, since inventing one was not
+what this item asked for. `enrich.ts` derives it from `item.url` (in scope
+already, used two lines above for `resolveJobPostingScope`); `himalayas.ts`
+derives it from the same `url` local (`applicationLink` or `guid`) used to
+build the item's own id and `url` field two lines above its
+`resolveEmployerIdentity` call.
+
+**Confirmed exactly two call sites exist, matching B8-04's own citation** —
+re-ran the grep myself (`resolveEmployerIdentity(` across `src/`) before
+and after editing: `enrich.ts:233` and `himalayas.ts:54` (now `:60` after
+the added host block), plus the two test files. No third call site was
+introduced by B8-01/02/03's own changes.
+
+**Testing standard (Ruling 31) — hardest case per shape, and why.** This
+item is a guard addition, not string parsing, so "multi-word/punctuated/
+matches-nothing" doesn't map literally; the equivalent hardest cases for a
+guard are: does it reject on both tiers independently, does it correctly
+spare a real name that merely shares a root with the brand it must reject,
+and does omitting the new parameter truly reproduce old behavior rather
+than a silently stricter one. Five new cases in
+`employer-identity.test.ts`, nested under `describe("host-brand guard
+(B8-04)", ...)`:
+
+1. **Structured tier rejects the round's own confirmed live pair** —
+   `structuredOrganizations: "Vaia"`, `host: "talents.vaia.com"` →
+   `{status: "none"}`. Chosen because it is the exact shape B8-01/B8-04 both
+   cite, applied to the tier that had zero guards before this item existed.
+2. **Declared tier rejects independently, on a different host/brand pair**
+   — `"At Lever, our team helps companies hire well."` on
+   `jobs.lever.co` → `{status: "none"}`. Chosen because reusing the same
+   Vaia pair here would only prove the structured-tier path works twice; a
+   second pair proves the guard is wired into the free-text tier on its own
+   terms, not merely reachable through the tier checked first.
+3. **The inverse hardest case: a real, long employer name must survive
+   being checked against the exact host whose short brand it must reject**
+   — `structuredOrganizations: "Savannah River National Laboratory"`,
+   `host: "talents.vaia.com"` → `{status: "structured", company:
+   "Savannah River National Laboratory"}`. Chosen because it reuses this
+   round's own headline real/wrong pair (B8-01's confirmed example) and
+   proves the one-directional length safety survives being threaded through
+   this function, not only inside `looksLikeHostBrand` itself (already
+   proven by B8-02's own tests).
+4. **No host supplied must reproduce the exact pre-fix behavior** —
+   `structuredOrganizations: "Vaia"` alone → `{status: "structured",
+   company: "Vaia"}`. Chosen because "additive and optional" is a claim,
+   and this is the one case that would silently fail if a future edit ever
+   defaulted the new parameter to an empty string instead of leaving it
+   undefined.
+5. **A rejected top tier must fall through to a real lower tier, not just to
+   silence** — structured `"Vaia"` (rejected) plus a declared self-
+   declaration naming `"Savannah River National Laboratory"`, same host →
+   `{status: "declared", company: "Savannah River National Laboratory"}`.
+   Chosen because this loop's own standard is "additive... a wrong value is
+   worse than a missing one," not "a wrong value is worse than anything" —
+   when a correct lower-tier value is available, the guard firing should
+   surface it, not manufacture false silence. Every case above was reasoned
+   through the actual regex/filter logic by hand before being written, then
+   confirmed by running `npx vitest run
+   src/lib/opportunities/employer-identity.test.ts` (10/10 passed, first
+   attempt).
+
+**Tests at risk — confirmed by inspection, not only by the green run.**
+`employer-identity.test.ts`'s five pre-existing cases: none supplies `host`,
+so `isOwnHostBrand` evaluates to `false` for every candidate in every one of
+them — re-ran unchanged, all pass. `enrich.test.ts`: grepped for
+`hiringOrganization`/`our team`/`our people`/`our employees`/`when you join`
+— **zero matches** in the whole file, meaning no job-enrichment test in
+this file ever populates `resolveEmployerIdentity`'s structured or declared
+tiers with real evidence in the first place; the host-brand filter runs
+against empty arrays for every one of them, a provable no-op independent of
+which host each fixture's `https://jobs.example.com/role` resolves to.
+`himalayas.test.ts`: its two cases use host `himalayas.app` (labels
+`himalayas`/`app`) against candidates `"Acme Materials"`
+(catalog-label-only path, never reaches `resolveEmployerIdentity`'s guarded
+tiers) and no self-declaration text at all in the other — neither candidate
+string is a prefix of either label, confirmed by hand, not assumed. All
+three files re-run and pass unchanged.
+
+**Blast radius:** confirmed exactly as B8-04 cited — `enrich.ts:233-245`
+and `himalayas.ts` (now `:54-66`) are the only two callers; no other file
+reads `resolveEmployerIdentity`'s output.
+
+**What renders after this guard fires — confirmed from source, unchanged
+code path.** A rejected `structured`/`declared` candidate makes
+`resolveEmployerIdentity` return `{status: "none"}` (test 1/2 above) or, if
+a real lower-tier candidate survives, that candidate instead (test 5) — the
+function's return contract itself is unchanged by this item, only which
+candidates are considered. Re-read both callers' own status-mapping to
+confirm neither was touched: `enrich.ts:246-250`'s `employer.status ===
+"none" ? item.company : employer.company` and `himalayas.ts`'s identical
+shape (`job.companyName?.trim() || undefined` on `"none"`, B8-03's own
+fix) both still fall back to the raw, ingestion-time-guarded value — itself
+now protected by B8-01 (jobweb.ts regex) and B8-03 (five adapters), not a
+new default. If that is also empty, the subtitle `<p>` is omitted at
+`app/jobs/[id]/page.tsx:1010-1019`, the same render path already confirmed
+for every other item this round — not a placeholder, silence.
+
+**Residual, explicitly out of scope for this item, flagging for the next
+A.** `catalogLabel` itself — the raw source's own company field that every
+call site falls back to on `"none"` — has no host-brand guard from this
+item; that is deliberate, per B8-04's own instruction to land only the
+`structured`/`declared` tiers this round. For `jobweb.ts`, that raw field is
+already guarded by B8-01/B8-02's own chain. For the four adapters B8-03
+touched that have no self-declaration/JSON-LD tier at all
+(`adzuna`/`arbeitnow`/`jsearch`/`remotive`), `catalogLabel` comes directly
+from that source's own structured API field, not scraped free text or HTML
+— a different threat model B8-04 was not asked to cover and I found no live
+evidence this round motivating it.
+
+**Gate after this item:** 90 files / 1012 tests, 1011 passing (five new,
+zero deleted; the one failure is the same documented live-search flake,
+unrelated). TypeScript clean. ESLint: the one standing `quiz.tsx:46` error,
+unchanged.

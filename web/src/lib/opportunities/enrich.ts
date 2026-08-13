@@ -230,10 +230,20 @@ export async function enrichJobCandidates(
     const visa = item.visa ?? (pageText
       ? tryExtract(() => extractVisaState(pageText, place?.country))
       : undefined);
+    // B8-04 (round 8): pass the posting's own host so a structured/declared
+    // candidate that is itself the page's site brand gets rejected, the same
+    // guard jobweb.ts's ingestion-time parse already applies (B8-01/B8-02).
+    let host: string | undefined;
+    try {
+      host = new URL(item.url).hostname.replace(/^www\./, "");
+    } catch {
+      host = undefined;
+    }
     const employer = resolveEmployerIdentity({
       catalogLabel: item.company,
       structuredOrganizations: structured?.hiringOrganization,
       ownedTexts: [item.description, pageText].filter((text): text is string => Boolean(text)),
+      host,
     });
     const company = employer.status === "ambiguous"
       ? undefined

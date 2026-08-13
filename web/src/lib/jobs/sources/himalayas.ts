@@ -51,9 +51,20 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
   const ownedEmployerDescription = job.description
     ? truncateText(stripHtml(job.description))
     : undefined;
+  // B8-04 (round 8): pass the listing's own host so a declared candidate
+  // that is itself the page's site brand gets rejected. Himalayas has no
+  // structured tier (no JSON-LD here), so this only guards ownedTexts, but
+  // it keeps both resolveEmployerIdentity call sites consistent.
+  let host: string | undefined;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    host = undefined;
+  }
   const employer = resolveEmployerIdentity({
     catalogLabel: job.companyName,
     ownedTexts: ownedEmployerDescription ? [ownedEmployerDescription] : [],
+    host,
   });
   return {
     id: `himalayas:${routeSafeId(url)}`,
