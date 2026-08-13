@@ -102,10 +102,24 @@ const HOME_WIDGET_SCRIPT = `
       .replace(/'/g, "&#39;");
   }
 
-  function formatDayAge(iso) {
+  // A date-only string ("2026-08-13") names a calendar day, not an instant.
+  // new Date("2026-08-13") parses it as UTC midnight, which displays as the
+  // PREVIOUS day for every viewer west of UTC -- construct date-only values
+  // as local calendar dates instead. Full timestamps keep instant semantics.
+  function parseDate(iso) {
     if (!iso) return null;
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return null;
+    // No regex here: this code lives inside a TS template literal, where a
+    // cooked "\d" silently becomes "d" and the pattern never matches.
+    var dateOnly = iso.length === 10 && iso.charAt(4) === "-" && iso.charAt(7) === "-";
+    var d = dateOnly
+      ? new Date(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))
+      : new Date(iso);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDayAge(iso) {
+    var d = parseDate(iso);
+    if (!d) return null;
     var diffDays = Math.floor((Date.now() - d.getTime()) / 86400000);
     if (diffDays < 1) return "Today";
     if (diffDays < 2) return "Yesterday";
@@ -115,9 +129,8 @@ const HOME_WIDGET_SCRIPT = `
   }
 
   function formatShortDate(iso) {
-    if (!iso) return null;
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return null;
+    var d = parseDate(iso);
+    if (!d) return null;
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
@@ -210,8 +223,8 @@ const HOME_WIDGET_SCRIPT = `
     var subEl = document.getElementById("pf-sub-slot");
     if (!hEl || !subEl) return;
 
-    var d = result && result.date ? new Date(result.date) : null;
-    hEl.textContent = d && !isNaN(d.getTime())
+    var d = result && result.date ? parseDate(result.date) : null;
+    hEl.textContent = d
       ? new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(d)
       : (result && result.date) || "";
 
