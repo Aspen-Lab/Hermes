@@ -1058,6 +1058,7 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 7 final | **0% fixture / real data MET** | B7-01 through B7-06 closed the measured Round-7 source-identity, selected-posting ownership, current-venue, employer-identity, and event-summary-authority residuals. A remeasured the final authority boundary; the manager then independently reran fixture, prompt/no-provider, ranking, 11 reachable event pages and 6 reachable job pages. No unsupported report fact remained. Full gate: 990/991, only standing live Chicago/Salvador benchmark drift; TypeScript clean; only standing quiz lint. Loop complete. |
 | 7 final — WITHDRAWN by Ruling 30 | — | **The "MET" verdict above was not independent**: `chatgpt-local` ran A, B, C, and the "manager" verification in round 7. §1q Ruling 30 (second manager, `LAPTOP-3CL10CG5`) reopened the gate for exactly this reason on 2026-08-12, without finding the underlying work unsound. Superseded by round 8 below, kept here so the table's own history stays honest about what actually closed the loop and what did not. |
 | 8 | **0% fixture / real data NOT MET** | First A that did not build round 7's work. Fixture: 0 of 32 different, independently re-derived from a from-scratch fixture (not round 7's). Real data, fresh live pools (11-item full job pool, 12-to-31-item event/job samples across three separate live runs): SolarPACES's own named mechanism (Ruling 28) CLOSED, confirmed live. **New finding: the job employer field is wrong on 5 of 8 non-null real companies (62.5%), via a mechanism confirmed NOT `\|\| host` — the enrichment stage, not `jobweb.ts`'s own guarded parse, which is independently confirmed silent on all five.** R4 STILL OPEN, 4 of 4 fresh real summaries carry chrome (2 shapes reconfirmed from round 6, 1 regressed to round 4's original shape, 1 new). R13 STILL OPEN via two of round 6's other named residuals reappearing live, plus one new filename-as-name shape. B5-02/Ruling 29's mechanism not reachable live (two searches, zero aggregator pages); one direct fetch of the named site resolved safely via the JSON-LD tier only, the free-text fallback path untested. Full gate: 85/991, 990 passing, only the documented benchmark flake; TypeScript clean; only the standing quiz lint. Gate not met. Measured by an A subagent that built none of round 7's work, per Ruling 30's own requirement. |
+| 9 | **0% fixture (not re-measured — unchanged since round 8, no fixture-affecting code landed) / real data NOT MET** | Round 8's six B8-0x code items re-measured against the four residuals they targeted, in a deliberately four-way-split A turn (a prior round-9 A died reading, before any measurement). **Employer field (B8-01–04): 3 of 11 non-null real postings wrong (27.3%), down from round 8's pre-fix 62.5%** — two direct same-host before/after confirmations; host-brand guard trade-off measured for the first time (4 of 15 hosts collide, zero proven suppressions this sample); one still-open different-mechanism wrong value persists (ORNL topic-as-employer); two new wrong-value shapes found. **R4 job summaries (B8-05): 0 of 4 non-empty real summaries carry classic chrome (down from round 8's 4 of 4)** — but the summary-bearing rate itself fell from 36% to 13.8% in the same measurement and the cause (pool composition vs. floor over-rejection) was not isolated, carried to B; 2 of 4 carry a smaller, newly-named defect; floor-rejects-everything confirmed clean silence. **R13 event names (B8-06): 15 real events scored individually — 7 correct, 5 confirmed wrong, 3 not confirmed false** — all three closed shapes re-verified live: guards fire correctly at the shape level, but both originally-cited hosts are still wrong live via mechanisms outside B8-06's scope; worst-case fallback confirmed to return an already-rejected chrome string. **Same-page contamination (B8-07/Ruling 29): shape 1 (sibling `<tr>` rows) confirmed live for the first time in four rounds** (a real Discourse forum's own suggested-topics table) but did not contaminate the actual selected posting — an unrelated, correctly-scoped, smaller candidate wins first, confirmed clean at the workMode/roleKind/summary field level; **shape 2 (flat unwrapped siblings) not observed in 15 real postings across 3 pull configurations** — say "not observed," not "does not occur"; `hiringcafe.com` absent again, fourth round running. Gate not met — real, non-zero differences found in 3 of 4 parts; only same-page contamination found zero contamination this round, while newly confirming one shape's precondition is real and live. Measured by an A subagent across four separate sessions/turns. |
 
 ---
 
@@ -16893,3 +16894,62 @@ code touched. No credential printed, logged, or written anywhere.
 
 **Not done:** nothing — this is the last part of the round-9 A turn. Round-9 summary,
 history-table row, gate verdict, and §1 handoff to B follow below/after this entry.
+
+### Round 9 — Agent A (summary across parts 1–4)
+
+Written so B does not have to reassemble four separate entries. Full method, tables,
+and evidence for each are in their own entries above; this is the headline result
+from each, in one place.
+
+**Part 1 — employer field (B8-01–04).** **3 of 11 non-null real postings wrong
+(27.3%), down from round 8's pre-fix 62.5%.** Two direct same-host before/after
+confirmations that the fix works live, not only in the fixture
+(`talents.vaia.com`/Savannah River National Laboratory, was "Vaia";
+`grad.wisc.edu`/Thermo Fisher Scientific, was "Graduate School"). B8-02's own
+flagged host-brand trade-off measured as a number for the first time: 4 of 15
+sampled hosts (27%) collide under the guard's exact algorithm, but **zero proven
+suppressions** in this sample, one plausible-but-unproven (`jobs.lbl.gov`, null
+company). One still-open, different-mechanism wrong value persists unchanged
+(Oak Ridge National Laboratory posting rendering a topic label as employer). Two
+new wrong-value shapes found, not previously reported (an "Careers"-suffix host
+label; a topic-as-employer shape on `postdocjobs.com`).
+
+**Part 2 — R4 job summaries (B8-05).** **0 of 4 non-empty real summaries carry the
+classic chrome shape, down from round 8's 4 of 4** — but the summary-bearing rate
+itself fell from 4 of 11 (36%) to 4 of 29 (13.8%) in the same measurement, and the
+cause (today's pool composition vs. the new floor over-rejecting) was **not
+isolated this round** — flagged to the manager, carried forward to B below. 2 of the
+4 non-empty summaries carry a smaller, newly-named defect (a formatting-strip dash
+artifact; a generic-org filler sentence let through by an acronym-collision keyword
+match). Floor-rejects-everything confirmed as clean silence on real and controlled
+cases alike — no heading-over-nothing defect found.
+
+**Part 3 — R13 event names (B8-06).** **15 real events scored individually: 7
+correct, 5 confirmed wrong, 3 not confirmed false.** All three of B8-06's closed
+shapes re-verified by direct execution of the real function: the guards fire
+correctly at the shape level, but both originally-cited hosts (`ruggedthz.com`,
+`euchems2026.eu`) are **still wrong live today**, via mechanisms outside B8-06's
+three shapes entirely (an unmatched host-brand segment; the same document-filename
+fallback, minus its extension). `nanoge.org` is now correct — its own page content
+changed, unrelated to any code change. A fallback-chain finding: the no-slug/
+no-snippet worst case can still return an already-rejected chrome string verbatim,
+not empty and not a raw slug, but not sensible either.
+
+**Part 4 — same-page contamination (B8-07/Ruling 29).** **Shape 1 (sibling `<tr>`
+rows) confirmed live for the first time in four rounds** (`openmc.discourse.group`'s
+own suggested-topics table) — but the actual selected posting on that page is
+**not** contaminated: the table never qualifies as a candidate for it under the
+existing acceptance filter, and an unrelated, smaller, correctly-scoped block wins
+first. Confirmed clean at the `workMode`/`roleKind`/`summary` field level via the
+real pipeline's own live-computed pool item. **Shape 2 (flat, unwrapped siblings)
+not observed in 15 real postings across 3 independent live-pull configurations** —
+say "not observed," not "does not occur." `hiringcafe.com` absent again; fourth
+round running without a live encounter.
+
+**Across all four parts: every named residual from round 8 either improved with a
+measured number, or (part 4 only) produced zero contamination this round while
+newly confirming one shape's precondition is real and live.** Three of four parts
+(employer field, R4 summaries, R13 event names) found real, non-zero differences on
+real data. Only part 4 found zero contamination — but not zero finding, since
+shape 1's live existence is itself new information Ruling 31 explicitly asked this
+loop to keep watching for.
