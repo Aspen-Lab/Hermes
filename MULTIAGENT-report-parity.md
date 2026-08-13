@@ -18566,6 +18566,43 @@ spawned next.**
 
 ---
 
+### Round 10 — cloud run reached A, cannot do the live pass
+
+**2026-08-13 05:26 UTC, `cloud-hourly`.** Read `HANDOFF-ABC.md` in full, then
+`MULTIAGENT-report-parity.md`: §0b, §0c, §0d, §1's current-state block (the
+four `ROUND 7 … SUPERSEDES …` blocks skipped as history, per Ruling 30), §1b
+through §1t in full, §2, §3, and this round's own §4 entry immediately above
+(the manager's independent verification of round 9 C). Claimed the turn lock
+first (`583cc03`, `cloud-hourly @ 2026-08-13 05:26 UTC`) — the manager's
+verification commit had landed and released the lock (`free`) moments before
+this session pulled.
+
+§1 names the next job as **round 10 A — the same four-part real-data
+measurement (employer field, R4 job summaries, R13 event names, same-page
+contamination), re-run against round 9 C's six landed fixes**, per §2's
+mandatory-from-round-4 instruction, which requires live keys from
+`web/.local-data/profile.json`. **That file does not exist in this
+environment** (confirmed: `web/.local-data/` is absent entirely; it is
+gitignored and present only on the user's own machine, per §0c). Per §0c's
+first rule, this session does not run a fixture-only measurement in its
+place and does not skip ahead to another role's work.
+
+**No product code touched. No measurement performed. No credential
+referenced.** Leaving §1 pointing at A, exactly as the manager left it.
+Releasing the lock.
+
+---
+
+**Round 10 A — ordering correction, against myself.** The entry below
+(part 1) was first committed ahead of the `cloud-hourly` entry immediately
+above, out of true chronological order — a mechanical mistake (an `old_string`
+match against text that was no longer the file's actual end once
+`cloud-hourly`'s own commit had landed in between my read and my write), not
+a content error. **Moved here, after `cloud-hourly` and before this session's
+own work, in this same commit.** No text in either block was altered by this
+correction, only its position — §4 stays append-only in substance; this note
+exists so nobody mistakes the reordering itself for a rewrite of history.
+
 ### Round 10 — Agent A (part 1: `sdle.co.il` targeted live fetch)
 
 **STATUS: COMPLETE.** Done FIRST, before any other measurement this turn, per
@@ -18576,12 +18613,11 @@ answered.
 Claimed the turn lock (`1823904`, `LAPTOP-3CL10CG5 @ 2026-08-13 05:28 UTC`)
 after losing an initial race to `cloud-hourly` (which correctly ran §0c's
 no-op — could not do a live pass, appended a note, released cleanly — see the
-entry immediately below §1's current-state block once this turn's §1 update
-lands). Read §1 in full (four `ROUND 7 … SUPERSEDES …` blocks skipped, per
-Ruling 30), §2, §3, §4 "Round 9 — Agent A" parts 1–4, §4 "Round 9 — Agent C"
-(all six entries) and the LCO ruled-out entry, §4 "Round 9 — MANAGER
-verification of Agent C," and §1s/§1t (Rulings 32/33) before touching
-anything.
+entry immediately above). Read §1 in full (four `ROUND 7 … SUPERSEDES …`
+blocks skipped, per Ruling 30), §2, §3, §4 "Round 9 — Agent A" parts 1–4, §4
+"Round 9 — Agent C" (all six entries) and the LCO ruled-out entry, §4
+"Round 9 — MANAGER verification of Agent C," and §1s/§1t (Rulings 32/33)
+before touching anything.
 
 **Method — two steps, kept deliberately separate.** (1) Live keys reconfirmed
 present, boolean check only (`tavilyApiKey: true`). Built a throwaway vitest
@@ -18639,29 +18675,4 @@ event names re-check. Same-page contamination stays parked, per this round's
 own brief and Ruling 32. No gate verdict is set by this entry.
 
 Commit follows immediately.
-
-### Round 10 — cloud run reached A, cannot do the live pass
-
-**2026-08-13 05:26 UTC, `cloud-hourly`.** Read `HANDOFF-ABC.md` in full, then
-`MULTIAGENT-report-parity.md`: §0b, §0c, §0d, §1's current-state block (the
-four `ROUND 7 … SUPERSEDES …` blocks skipped as history, per Ruling 30), §1b
-through §1t in full, §2, §3, and this round's own §4 entry immediately above
-(the manager's independent verification of round 9 C). Claimed the turn lock
-first (`583cc03`, `cloud-hourly @ 2026-08-13 05:26 UTC`) — the manager's
-verification commit had landed and released the lock (`free`) moments before
-this session pulled.
-
-§1 names the next job as **round 10 A — the same four-part real-data
-measurement (employer field, R4 job summaries, R13 event names, same-page
-contamination), re-run against round 9 C's six landed fixes**, per §2's
-mandatory-from-round-4 instruction, which requires live keys from
-`web/.local-data/profile.json`. **That file does not exist in this
-environment** (confirmed: `web/.local-data/` is absent entirely; it is
-gitignored and present only on the user's own machine, per §0c). Per §0c's
-first rule, this session does not run a fixture-only measurement in its
-place and does not skip ahead to another role's work.
-
-**No product code touched. No measurement performed. No credential
-referenced.** Leaving §1 pointing at A, exactly as the manager left it.
-Releasing the lock.
 
