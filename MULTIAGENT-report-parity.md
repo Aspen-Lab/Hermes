@@ -20914,3 +20914,79 @@ laptop session left it. Releasing the lock.
 
 Commit follows immediately.
 
+---
+
+### Round 11 — Agent A (part 2: `ecs.confex.com`, the question C handed A)
+
+**STATUS: DONE.** Continuing round 11 A's own turn (parts 2–4), picked up
+from the laptop's out-of-budget stop. Claimed the turn lock
+(`c46ddba`, `LAPTOP-3CL10CG5 @ 2026-08-13 15:04 UTC`) after `git pull
+--ff-only` (already up to date) and confirming `git branch --show-current`
+reads `feature/summary-report-revamp`. This entry answers exactly the
+question round 10 C (C10-02) left open under Ruling 34b: C traced the
+fallback cascade only via an "illustrative," constructed URL, explicitly
+because it had no live access to the real page. This part closes that gap
+with the real page.
+
+**Method — a targeted single-page fetch, deliberately not the search
+pipeline, per this part's own brief.** No prior round's log recorded the
+real page's full path, only the host (`ecs.confex.com`), consistent with the
+security floor's rule against pasting fetched URLs/text unnecessarily. Used
+`WebSearch` to locate it: `https://ecs.confex.com/ecs/250/cfp.cgi`, the
+250th ECS Meeting's own Call for Papers page (October 25–29, 2026, Calgary)
+— matching round 10 A part 4's own citation ("250th ECS Meeting") exactly.
+Fetched that one URL directly (`WebFetch`, not Peer's own pipeline/scraper).
+
+**What the real page actually has, today:**
+- `<title>`: **`"Call for Papers"`**, byte-identical to the exact string
+  B10-03/C10-02's new `GENERIC_PAGE_TITLE_RE` alternative rejects — this is
+  now confirmed on the real live page, not only a construction.
+- H1: `"Call for Abstracts"`.
+- Body text immediately under the H1, verbatim: `"250th ECS Meeting
+  (October 25-29, 2026)."`, followed by `"See the Call for Papers PDF for
+  detailed information about the symposia, manuscript submission
+  requirements, and financial assistance."`
+
+**What Peer renders — measured by calling the real, unmodified
+`eventNameFrom`/`bestEventTitleSegment` (`web/src/lib/events/sources/eventweb.ts`)
+directly against these real values, via a throwaway vitest scaffold
+(`web/src/lib/events/sources/zz-round11-a-part2-confex-live.test.ts`,
+deleted before this commit — same discipline as every prior round's
+throwaway files):**
+- `bestEventTitleSegment("Call for Papers", url)` → falsy. The guard fires
+  on the real page's own title, confirmed live.
+- `eventNameFrom("Call for Papers", <the real body text above as the
+  snippet input>, url)` → **`"250th ECS Meeting (October 25-29, 2026)."`**
+  — the correct real event name, recovered by snippet-mining exactly as
+  C10-02 traced it would if a plausible snippet is present.
+- Worst case, no snippet at all (`eventNameFrom("Call for Papers", "", url)`)
+  → **`"ecs.confex.com"`**, the honest host fallback — matches C10-02's own
+  constructed worst-case trace exactly, now confirmed consistent with the
+  real title/URL rather than an illustrative one.
+
+**Answer to part 2's own question: what Peer now renders as the event name
+for `ecs.confex.com` is `"250th ECS Meeting (October 25-29, 2026)."` — the
+real, correct event name — provided the snippet text Peer's own pipeline
+supplies at runtime resembles the page's own body text used here.** That one
+caveat is honest, not hedging for its own sake: this part deliberately did
+not invoke Peer's live search pipeline (Tavily), so the exact snippet string
+the real pipeline would hand to `eventNameFrom` at runtime was not itself
+observed — only the real page's own real text was. The two bounding cases
+measured (real body text vs. no snippet at all) both land on defensible
+outcomes (correct name, or honest host fallback) with no re-surfaced
+rejected string in between, which is what Ruling 34b actually asked to have
+confirmed.
+
+**Cleanup:** throwaway vitest file deleted before this commit
+(`git status` confirmed clean under `web/src/lib/events/sources/` before
+committing). No product code touched. No credential referenced. The fetched
+page's text is quoted here only in the two short fragments that make the
+point, per the security floor.
+
+**Not done this turn (parts 3–4, same session, continuing next):** R4 job
+summaries + Ruling 33's acronym tally; R13 event names +
+`internationalbatteryseminar.com`/`ruggedthz.com`/`euagenda.eu` re-checks +
+gate verdict.
+
+Commit follows immediately.
+
