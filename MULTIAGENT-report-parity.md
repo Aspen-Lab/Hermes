@@ -469,7 +469,18 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   one of three findings and incomplete for the other two
                   (detail in STOPPED BECAUSE above and in §4); its fix-
                   direction standard (reuse the existing pieces, design no
-                  new fallback) is exactly what B11-02/03 both do.
+                  new fallback) is exactly what B11-02/03 both do. **Ruling
+                  35 now carries a dated amendment recording that outcome —
+                  read the amendment, not just the original reading. NEW:
+                  §1w Ruling 36** — B11-05's `POLICY` flag is ruled:
+                  `ruggedthz.com` stays an accepted cost for one more round,
+                  with a hard threshold set in advance (a third confirmed
+                  round of the same host + mechanism authorises round 12's B
+                  to design the fix, no further escalation needed) and the
+                  design lead recorded (recover the name from the rejected
+                  sibling title segment, not host-brand widening). Ruling 36
+                  also settles B11-04's open question: C lands the guarded
+                  version only; A's naive version must not land in any form.
 STATUS:           **Round 11 A's six-item ranked list (§4 "Round 11 — Agent
                   A (summary across parts 1–4...)") is now fully
                   investigated — see §4 "Round 11 — Agent B (summary across
@@ -2373,6 +2384,20 @@ fix-target confirmations were replaced by something *worse*, not merely
 different. That is not bad luck; it is what happens when the guarded path is not
 the path most wrong values come from.
 
+**AMENDED 2026-08-13, after B11-01 checked the manager's reading by execution
+(per this ruling's own instruction). The reading scored 1 of 3.** Line 2
+(prefer-longest) is the confirmed, precise mechanism for `ecs.confex.com`
+alone — a 40-vs-42-character near-tie. Line 1 (the empty-filter discard) is
+real, reachable code but produced **none** of this round's three findings; it
+stays worth closing on principle as the enumeration's shape 4. The other two
+findings trace to a **third defect this ruling never named**: scraped
+widget/markup chrome (an embedded filename+query-string; a Markdown heading
+marker) that passes `looksLikeEventTitle` unchanged — a shape no guard on
+either path had ever targeted. The enumeration (B11-01) supersedes the
+two-line reading as the authoritative account of this path; B11-02/B11-03 are
+its implementation. Recorded per this ruling's own clause that a manager's
+guess carries no more weight than anyone else's.
+
 ---
 
 ### §1u Ruling 34 — A CORRECTLY-SPELLED INSTITUTION NAME THAT IS THE WRONG INSTITUTION IS AN ACCEPTED COST. DO NOT BUILD THE SLUG CROSS-CHECK.
@@ -2440,6 +2465,56 @@ unknown one. But chasing the cascade inside C's turn is exactly the
 verify live anyway. **C is not required to prove the replacement is good. C is
 required to say what the replacement was.** Marking the item closed requires the
 first; this round only asks for the second.
+
+---
+
+### §1w Ruling 36 — `ruggedthz.com` STAYS AN ACCEPTED COST FOR ONE MORE ROUND. A THIRD CONFIRMED ROUND AUTHORISES THE FIX, AND THE DESIGN LEAD IS ALREADY NAMED.
+
+Round 11 B escalated one `POLICY — manager decides` (B11-05): the same host,
+same mechanism — the host-brand check cannot connect `"Ruggiero Research Lab"`
+to `ruggedthz.com`, so the organisation's name renders as the event's name —
+has now been the confirmed cause in **two non-consecutive rounds** (9 and 11).
+B correctly noted that is a narrower, more-repeated pattern than either Ruling
+33 or Ruling 34a had when those were accepted as costs, and declined to make
+the call itself.
+
+**Ruling: do not build this round. But this is persistence, not an anecdote,
+so it gets what 33 and 34a did not: a hard threshold, in advance.**
+
+Reasons for not building now, in order of weight:
+
+1. **Persistence is not prevalence.** Two rounds of the same single host is
+   one wrong card per report, and its wrong value is the organiser's real
+   name — misleading, not garbage. The reader-facing cost is the same one
+   card it was in round 9.
+2. **Both available fix directions carry known risk.** Widening the
+   host-brand check generically has been declined twice on over-reach
+   evidence (Rulings 33, 34a). The alternative — recovering the name from a
+   sibling segment — is undesigned, and Ruling 34a already established that
+   asking C to invent, land, and test an undesigned heuristic in one turn is
+   how round 6 shipped a broken parse for two rounds.
+3. **B11-02/03 do not touch this mechanism** (title-segment stage, not the
+   snippet stage), so this is not "wait for the structural fix" — it is
+   "spend one more measurement before building a third accepted-cost
+   exception into a check that two rulings have protected."
+
+**The threshold — binding on round 12:** if round 12's A confirms the same
+host + same mechanism a **third** time, round 12's **B is authorised and
+required to design the fix** — no further manager escalation needed.
+
+**The design lead for that day, recorded now so it is not re-derived:** the
+page's own title is two segments, and the first — rejected as a narrative
+sentence — **contains the true event name** (`"…Attends the 2026 Crystal
+Engineering GRC"`). The promising direction is recovering the name from the
+rejected sibling segment, not widening the host-brand check. A lead, not a
+prescription — B designs and adversarially tests it per Ruling 31 before C
+touches anything.
+
+Also ruled here, small: **B11-04's "worth landing at all?" question.** C lands
+the **guarded version only** — B verified it correct on all seven cases, the
+defect is real and live, and the fix is small; but if C finds any eighth shape
+the guard misses, it stops and records rather than widening the guard inline.
+A's own naive version is confirmed unsafe and must not land in any form.
 
 ---
 
@@ -2594,10 +2669,14 @@ Work through B's fix guide in order.
   item to §4 and commit it before starting the next one.** A partial guide in
   the file beats a complete one in a dead agent's context. The commit cost is
   trivial next to redoing the work.
-- **Model:** A, B and C all run on **Sonnet**. Only the manager runs on Opus.
-  Set by the user on 2026-08-03 to control spend — the account hit its monthly
-  limit mid-way through round 1's C. Spawn every agent with an explicit
-  `model: "sonnet"`; do not let it inherit the manager's model.
+- **Model:** A, B and C all run on **Opus**; the manager session runs on
+  **Fable**. Set by the user on **2026-08-13** after moving to a Max plan.
+  Spawn every agent with an explicit `model: "opus"`; do not let it inherit
+  the manager's model. (History: 2026-08-03 → 2026-08-13 the split was the
+  reverse — workers on Sonnet, manager on Opus — to control spend after the
+  account hit its monthly limit mid-way through round 1's C. The cloud
+  routine is a separate execution path and stays on `claude-sonnet-5` unless
+  the user says otherwise.)
 - Prior phase decisions live in `HANDOFF-phase7..10*.md`. Read before assuming
   something is a bug.
 - **A usage-limit error's own text is not reliable evidence that credit is
@@ -22258,4 +22337,60 @@ Peer's own search pipeline, never a new live fetch.
    already states.
 
 Commit follows immediately.
+
+
+---
+
+### Round 11 — MANAGER verification of Agent B (before round 11 C is spawned)
+
+**Verdict: B's turn confirmed in full. B refuted half the manager's own
+Ruling 35 reading, by execution, and the refutation is accepted — Ruling 35
+now carries a dated amendment, and the enumeration (B11-01) supersedes the
+two-line reading as the authoritative account. One new ruling (§1w Ruling 36)
+settles B's `POLICY` flag and B11-04's open question. §3's model line updated
+on the user's instruction.**
+
+**Code untouched, verified mechanically:** `git diff 47f95e3..HEAD -- web/`
+is empty. B changed only the state file, so the standing gate (1067 tests,
+1066 passing, the documented flake) holds without a re-run — a diff is
+stronger evidence than a re-run here.
+
+**Spot-checks of the enumeration against source, not taken on trust:** the
+URL-slug re-guard line (`bestEventTitleSegment(fromSlug, url) === fromSlug`)
+is real — the manager had already read it during round 9's verification and
+missed its significance; B is right that the slug stage is re-guarded and the
+manager's "two paths, one guarded" framing undercounted the guarded stages.
+The `?query`/`#fragment` never-in-`pathname` claims are URL-spec facts. The
+three-stage structure matches the source as the manager last read it.
+
+**The scoreboard on the manager's reading, stated plainly:** 1 of 3. Line 2
+(prefer-longest) — confirmed, precisely, for `ecs.confex.com`. Line 1 (the
+empty-filter discard) — real code, produced none of this round's findings;
+stays in the fix as the enumeration's shape 4, on principle. Two findings
+trace to a third defect the manager never named (scraped widget/markup chrome
+passing `looksLikeEventTitle`). **Ruling 35's check-me clause did exactly what
+it was written to do, and this entry is the manager saying so on the record.**
+
+**B11-04 is Ruling 31 working in the sharpest form this loop has seen:** B
+built A's own suggested fix direction literally, fed it five adversarial
+constructions, watched it mutilate a real sentence shape
+(`"Responsibilities include mentoring…"` → `"include mentoring…"`), and only
+then designed the guarded version and verified it on all seven cases. That is
+the fifth consecutive round in which the role after caught something the role
+before missed — this round B caught A's fix direction, the manager's reading,
+AND a citation error in the manager's own brief (the `ruggedthz.com` trace
+lives in round 9 **A part 3**, not round 9 B — the manager's brief said
+otherwise, B grepped rather than inherited, and said so). All three catches
+accepted.
+
+**Ruling 36 issued** — see §1w: `ruggedthz.com` stays an accepted cost for
+one more round with a hard third-strike threshold set in advance and the
+design lead recorded; B11-04 lands in its guarded form only.
+
+**Model policy, on the user's instruction (2026-08-13):** A, B and C now spawn
+on **Opus**; the manager session runs on **Fable**. §3's model line is updated
+in place. Round 11's C is the first worker to run on Opus.
+
+**Manager's turn complete. `WHOSE TURN: C` stands as B left it, now governed
+by Ruling 36. Round 11 C is spawned next.**
 
