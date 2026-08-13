@@ -102,6 +102,33 @@ function looksLikeBareLocation(candidate: string): boolean {
 }
 
 /**
+ * A trailing chrome word left on an otherwise-real employer candidate that
+ * has already cleared every guard below (B9-02a/R13) — "Idaho National
+ * Laboratory Careers" names the real employer with a careers-page suffix
+ * still attached, not a different kind of string.
+ * `CAREERS_INDEX_TITLE_RE` above already rejects a *bare* title drawn from
+ * this same vocabulary; this strips the identical short, closed word list
+ * when it trails a longer, otherwise-accepted candidate, instead of
+ * duplicating a new list. Deliberately narrow, matching this file's own
+ * "catch known shapes, not a general parser" convention: a rule that
+ * stripped any trailing capitalised word would eat a real org name that
+ * legitimately ends in an ordinary word ("Board of Regents"). The leading
+ * `\s+` also means a candidate that IS only this word, with nothing before
+ * it to strip, is left untouched here — it is the guards above's business,
+ * not this one's.
+ */
+const TRAILING_CAREERS_CHROME_RE =
+  /\s+(?:careers?|jobs?|employment|job\s+openings?)$/i;
+
+function stripTrailingCareersChrome(
+  candidate: string | undefined,
+): string | undefined {
+  if (!candidate) return candidate;
+  const stripped = candidate.replace(TRAILING_CAREERS_CHROME_RE, "").trim();
+  return stripped || candidate;
+}
+
+/**
  * True when the result is an aggregate listing or a careers index rather than
  * a single posting.
  *
@@ -199,7 +226,7 @@ export function webResultToRawJobItem(result: {
   const titleEmployer = title.match(
     /\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
   )?.[1];
-  const company =
+  const company = stripTrailingCareersChrome(
     [titleEmployer, ...parts.slice(1)]
       .map(cleanJobSubtitlePart)
       .find(
@@ -209,7 +236,8 @@ export function webResultToRawJobItem(result: {
           !SEASON_COHORT_LABEL_RE.test(p) &&
           !looksLikeBareLocation(p) &&
           !looksLikeHostBrand(p, host),
-      );
+      ),
+  );
   return {
     id: `jobweb:${urlHashId(url)}`,
     source: "jobweb",

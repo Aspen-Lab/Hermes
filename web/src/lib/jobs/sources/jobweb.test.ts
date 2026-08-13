@@ -228,6 +228,46 @@ describe("company derivation", () => {
     });
     expect(item?.company).toBeUndefined();
   });
+
+  // B9-02a (round 9): inl.referrals.selectminds.com's live repro. The real
+  // employer name clears every guard above cleanly (it is not a job board,
+  // season label, bare location, or host-brand collision) but still carries
+  // a careers-page suffix nothing stripped before this fix. Multi-word
+  // hardest case per Ruling 31, matching the live shape B traced.
+  it("strips a trailing careers-page suffix from an otherwise-real multi-word employer", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist - Idaho National Laboratory Careers",
+      url: "https://inl.referrals.selectminds.com/jobs/12345",
+      snippet: "Battery research position. Apply now.",
+    });
+    expect(item?.company).toBe("Idaho National Laboratory");
+  });
+
+  // B9-02a: the punctuated hardest case. The strip must remove only the
+  // trailing chrome word, not the punctuation that legitimately belongs to
+  // the real employer name sitting in front of it.
+  it("strips trailing careers-page chrome without disturbing punctuation inside the real name", () => {
+    const item = webResultToRawJobItem({
+      title: "Research Fellow - Alphabet, Inc. Careers",
+      url: "https://alphabet.test/careers/job/9921",
+      snippet: "Research fellowship. Apply now.",
+    });
+    expect(item?.company).toBe("Alphabet, Inc.");
+  });
+
+  // B9-02a: the "should match nothing" hardest case, and the one this fix
+  // is most likely to get wrong. A real, longer employer name that happens
+  // to end in an ordinary word must survive untouched - only the closed
+  // careers/jobs/employment vocabulary strips, never a general "trailing
+  // capitalised word" rule that would eat a name like this one.
+  it("does not strip a real trailing word that is not careers-page chrome", () => {
+    const item = webResultToRawJobItem({
+      title: "Research Fellow - State University Board of Regents",
+      url: "https://stateu.test/careers/job/9922",
+      snippet: "Research fellowship. Apply now.",
+    });
+    expect(item?.company).toBe("State University Board of Regents");
+  });
 });
 
 describe("listing titles hidden behind site chrome", () => {

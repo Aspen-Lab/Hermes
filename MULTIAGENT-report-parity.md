@@ -17857,3 +17857,70 @@ parked status) that are not counted as items.
 8. **`sdle.co.il`** — not C's work yet; needs A's live fetch first.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-02a: `inl.referrals.selectminds.com`'s "Careers" suffix)
+
+**STATUS: LANDED.** Claimed the turn lock (`d4e5809`,
+`LAPTOP-3CL10CG5 @ 2026-08-13 04:37 UTC`) before reading anything, per §0d.
+Read §1's current-state block, §1l/m/p/q/r/s/t (Rulings 25/26/29/30/31/32/33),
+§2, §3, and B9-01 through B9-04 plus the cross-items summary in full before
+touching any source file. Confirmed baseline first: 90 files / 1026 tests,
+1025 passing (the documented `benchmark.test.ts` flake), typecheck clean, 1
+pre-existing lint error (`quiz.tsx:46`) — matches §1 exactly.
+
+**First item on B's work order, landed exactly as guided: a narrow, in-file
+trailing-word strip inside `jobweb.ts`'s own candidate-building step, not the
+shared `cleanJobSubtitlePart`.**
+
+`web/src/lib/jobs/sources/jobweb.ts`: added `TRAILING_CAREERS_CHROME_RE`
+(`/\s+(?:careers?|jobs?|employment|job\s+openings?)$/i`, exactly the word
+list B's fix direction proposed) and `stripTrailingCareersChrome()`, applied
+to the **result** of the existing four-guard `.find()`, not to its inputs —
+the guards still see the candidate exactly as scraped; only the winning
+candidate gets the trailing chrome stripped, matching B's own phrasing
+("a candidate that already cleared the four existing guards"). The leading
+`\s+` in the pattern means a candidate that IS only "Careers" with nothing
+in front of it to strip is left alone, unchanged from today's behaviour —
+deliberately out of scope, per B's "keep it closed and short" instruction.
+
+**Three tests added to `jobweb.test.ts`'s "company derivation" block, per
+Ruling 31's standard, comment-tagged B9-02a:**
+1. **Multi-word, the live repro itself** — `"Battery Research Scientist -
+   Idaho National Laboratory Careers"` on `inl.referrals.selectminds.com`
+   now yields `"Idaho National Laboratory"`, matching B's cited real-data
+   shape exactly, not a simplified stand-in for it.
+2. **Punctuated** — `"Alphabet, Inc. Careers"` yields `"Alphabet, Inc."`,
+   proving the strip removes only the trailing chrome word and does not
+   touch punctuation legitimately inside the real name in front of it.
+3. **Should-match-nothing, chosen as the hardest case because it is the one
+   most likely to expose an overbroad rule** — `"State University Board of
+   Regents"` survives **unstripped**. This is the case B's fix direction
+   explicitly named as the risk ("Board of Regents" as "a different but
+   adjacent risk worth a hardest-case test") and is the reason a general
+   "strip any trailing capitalised word" rule was rejected in favour of the
+   closed vocabulary.
+
+**Verified by hand, not just by running the suite, per Ruling 31:** traced
+`looksLikeHostBrand`'s normalize-and-prefix-match logic
+(`web/src/lib/opportunities/shared.ts:232-237`) against all three new
+candidates before writing them, confirming none of the three trips the
+host-brand guard for the reason stated in each test's own host choice (a
+long, multi-word candidate can never be a prefix of a short host label, so
+the guard cannot fire regardless of which test host is used) — not simply
+trusting the test run to prove it.
+
+**Gate: 90 files / 1029 tests, 1028 passing (+3 tests, all new, none
+deleted).** The one failure remains `benchmark.test.ts`'s documented live-
+search flake — this run it failed on a different assertion within the same
+test (`summit?.place?.city` `undefined` vs `"Chicago"`) than the baseline
+run's city-coverage-ratio assertion, consistent with it being a live-network
+flake and not a regression from this item; no other test file touched.
+Typecheck clean. Lint: exactly the 1 pre-existing `quiz.tsx:46` error, same
+as baseline.
+
+**Blast radius, confirmed as scoped:** `stripTrailingCareersChrome` is
+called from exactly one site (`webResultToRawJobItem`'s `company`
+assignment); `TRAILING_CAREERS_CHROME_RE` is not exported and not reused
+elsewhere. No other file changed.
+
+Commit follows immediately.
