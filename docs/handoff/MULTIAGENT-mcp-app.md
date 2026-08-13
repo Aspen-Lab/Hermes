@@ -2569,3 +2569,265 @@ total, and the header must say so honestly rather than imply completeness:
   fixture).
 - Blast radius: none on existing tool registrations; `get-daily-forecast.ts`'s
   only change is the one `export` keyword noted above.
+
+---
+
+**3-04 + 3-05 + 3-07 + 3-08 + 3-09 + 3-10 + 3-11 + 3-12. MISSING — the
+fullscreen resource's full content.**
+
+All eight are pieces of the one static template `buildDailyForecastHomeWidgetHtml()`
+builds (3-01) and the one script it embeds — split here by A's own item
+numbers so each is easy to find, not because they're separate files.
+
+**Shared palette (closes 3-12).** Literal hex, inline `<style>`, no CSS
+custom properties — same discipline and the same reason as the card
+(sandboxed iframe, no access to `globals.css`). Port verbatim from the
+mockup's own fullscreen CSS block (`docs/design/peer-in-chatgpt-mcp-mockups.html`
+lines 269-306, `.p-full`/`.pf-bar`/`.pf-h`/`.pf-sub`/`.fchips`/`.fchip`/
+`.pf-grid`/`.pf-card`), independently re-confirmed this round against
+`web/src/app/globals.css` (`--color-bg:#fdf6ee`, `--color-surface:#f1e9da`,
+`--color-heading:#2b180a`, `--color-accent:#ff520d`) exactly as the card
+already does. **Two deliberate omissions from the mockup's own CSS, both
+already decided above:** `.pf-bar .x` (no Peer-drawn close button) and
+`.pf-composer` (host draws its own, don't reserve layout space for it — the
+iframe's own box already excludes whatever screen area the host's chrome
+occupies). **One deliberate addition the mockup doesn't need (it's a static
+image, not a live layout):** a narrow-width fallback so the same template
+still reads sanely if fullscreen promotion is never honored (the
+graceful-degradation decision above) —
+
+```css
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:620px){.pf-grid{grid-template-columns:1fr;}}
+.pf-body{overflow-y:auto;}
+```
+
+`.pf-h`'s font stack (`"Iowan Old Style",Georgia,serif`) is already the
+serif the task asks for, carried straight from the mockup.
+
+**Top bar (closes 3-08, and 3-11's top-bar half).**
+
+```html
+<div class="pf-bar">
+  <span class="p-mark">P</span>
+  <span class="t">Peer</span>
+  <span class="sep">·</span>
+  <span class="view">Daily Forecast</span>
+  <a class="open" href="${origin}" target="_blank" rel="noopener noreferrer">Open in Peer ↗</a>
+</div>
+```
+
+`origin` = `peerWebOrigin()`, imported from `daily-forecast-card.ts` rather
+than duplicated. No `.x` element — decided above. *Small fix needed to reuse
+it:* `peerWebOrigin()` in `daily-forecast-card.ts` (lines 31-35) is not
+currently exported. Add `export` to its declaration — zero behavior change,
+same shape as the `MAX_LIMIT` fix in 3-02. `daily-forecast-card.test.ts`
+doesn't test this function directly today (only indirectly, via the
+rendered footer link), so nothing there needs updating.
+
+**Date header + counts sub-line (closes 3-07).**
+
+```html
+<h3 class="pf-h" id="pf-h-slot">Loading…</h3>
+<div class="pf-sub" id="pf-sub-slot"></div>
+```
+
+`open_home`'s handler doesn't currently pass `displayName` through
+`DailyForecastResult` at all — it's on `Profile`, not `ForecastItem`/
+`DailyForecastResult` (confirmed reading `types.ts`: no such field).
+**Needed addition:** add an optional `personaName?: string` field to
+`DailyForecastResult` (`web/src/lib/mcp/types.ts`, inside the interface at
+lines 37-42, alongside `counts`/`items`), and have `openHome` (not
+`getDailyForecast` — the card doesn't need this field, don't add it to the
+more heavily-used function) read `profile.displayName` after its own
+`getDailyForecast` call and attach it. Cleanest way to do this without
+touching `get-daily-forecast.ts`'s return type: `getDailyForecast` already
+resolves the profile row internally but doesn't return it, so the smallest,
+lowest-blast-radius option is a second, tiny profile lookup inside
+`openHome` itself — the same `createAdminClient` → `profiles` →
+`profileRowToProfile` three-liner `get-opportunity.ts`'s own
+`resolveProfileForPipelines` (lines 51-60) already duplicates for the exact
+same reason. Matching an established precedent, not inventing a new one, and
+not touching `get-daily-forecast.ts`'s 9 already-shipped tests. Render:
+
+- `displayName` present: `"{shown} {typeLabel} today · ranked for
+  {displayName}'s Persona"` (or the "shown of total" variant from tension
+  (a) above).
+- `displayName` absent: `"… · ranked for your Persona"` — a true, generic
+  statement, not a placeholder (RULING 4's "never a placeholder" is about
+  *data fields*; this is copy wording with a genuinely true fallback either
+  way).
+- **Not building:** the mockup's "3 high-signal" sub-count. Zero support
+  anywhere in the codebase for a "high signal" concept (grepped `web/src`
+  for `high-signal`/`highSignal`/`high_signal`, zero hits) — inventing a
+  threshold (e.g. relevance ≥ 85%) here would be exactly the kind of guess
+  RULING 4 warns against, applied to a new derived metric instead of a data
+  field. Omit; flagging for the manager as a possible future nice-to-have,
+  not deciding it here.
+
+**Filter chips (closes 3-05).** Labels/order **All/Papers/Events/Jobs**,
+mapped from `FeedType` exactly as Peer web's own `typeChips` array orders
+them (`web/src/app/page.tsx` lines 658-668, re-verified above) — not the
+mockup's Jobs-first illustrative order. **"Dashboard" maps to "All" in this
+surface:** Round 1 B's own finding 5 already establishes this equivalence
+("`dashboard`/'All' is the union, not a fifth content type") and RULING 5
+adopts it; "Dashboard" is Peer-web-internal navigation vocabulary tied to a
+literal Dashboard page concept that doesn't exist inside a ChatGPT/Claude
+fullscreen surface, whereas "All" is a plain filter-state label matching
+what the mockup itself already shows and what a pure filter row (not a
+page-navigation tab row) should say. Mechanism: design tension (a) above, in
+full. Markup:
+
+```html
+<div class="fchips" id="chips-slot"></div>
+```
+
+(rendered entirely by `renderChips()`, per tension (a) — no static markup
+needed beyond the container). Event delegation, not per-chip listeners:
+attach one click listener to the stable `chips-slot` container once, at
+script init, rather than re-binding after every `innerHTML` replace —
+
+```js
+function wireChips() {
+  var chipsEl = document.getElementById("chips-slot");
+  if (!chipsEl) return;
+  chipsEl.addEventListener("click", function (event) {
+    var target = event.target;
+    if (!target || !target.getAttribute) return;
+    var type = target.getAttribute("data-type");
+    if (type === null) return; // clicked the container, not a chip
+    activeType = type || null;
+    renderChips(); // optimistic: show the new "on" state immediately
+    if (window.openai && typeof window.openai.callTool === "function") {
+      window.openai.callTool("open_home", type ? { type: type } : {});
+    }
+  });
+}
+```
+
+**Card grid + per-card field truth (closes 3-04).** Row rendering logic is a
+straight port of the card's existing `renderRow`/`metaParts`/`escapeHtml`/
+`formatDayAge`/`formatShortDate`/`formatMatchPct` from `WIDGET_SCRIPT` in
+`daily-forecast-card.ts` (lines 121-183) — copy verbatim into
+`HOME_WIDGET_SCRIPT`, same known-duplication-by-hand pattern the card
+itself already uses against `daily-forecast-card.ts`'s TS-side `metaParts`
+(same file, same comment explaining why: no client bundle step exists for
+widget assets to share a module through). RULING 4 is enforced the same
+way — structurally, by `ForecastItem`'s own type shape, not by new logic.
+**Design tension (b)'s resolution is what feeds this grid its data** —
+`open_home`'s `limit: 30` request, per the contract above; nothing new to
+build here beyond wiring `result.items` into the same row-rendering
+function the card already has, inside a `grid-template-columns:1fr 1fr`
+container instead of a stacked list.
+
+**Per-card actions row (closes 3-09, 3-10 — RULING 10).** All three — Save,
+Dismiss, Report → — disabled-visible, uniformly, per RULING 10 (already
+binding, not a POLICY flag anymore — A's own 3-10 flag is resolved):
+
+```js
+function renderActs() {
+  return '<div class="acts">' +
+    '<span class="acts-btn" role="button" aria-disabled="true">Save</span>' +
+    '<span class="acts-btn" role="button" aria-disabled="true">Dismiss</span>' +
+    '<span class="acts-btn" role="button" aria-disabled="true">Report →</span>' +
+    '</div>';
+}
+```
+
+CSS — muted, not just the mockup's own base style (which predates RULING 10
+and doesn't itself encode a disabled/enabled distinction):
+
+```css
+.pf-card .acts{display:flex;gap:6px;margin-top:9px;}
+.pf-card .acts .acts-btn{font-size:11px;border:1px solid rgba(62,36,7,0.10);border-radius:6px;padding:2.5px 9px;color:#8C7A68;background:rgba(253,246,238,0.4);cursor:default;}
+```
+
+No `:hover` rule anywhere for `.acts-btn` — the absence of one **is** the
+"no fake affordance on hover" mechanism required by RULING 10, nothing to
+add. **No `addEventListener` call targets these elements anywhere in the
+script** — they're rendered by string concatenation only, never looked up
+by `getElementById`/`querySelectorAll`, never passed to a listener. That
+omission is the actual enforcement of RULING 10's "no pointer action"; the
+test below checks for it directly rather than trusting the omission by eye.
+**Exact test assertions, per the task's own instruction:** rendered row HTML
+contains `aria-disabled="true"` for all three controls (`expect(rowsHtml).
+toMatch(/aria-disabled="true"/g)` count === 3 per card, or equivalent); no
+`addEventListener` call recorded by the test's stub DOM ever targets an
+`.acts-btn` element (track every registration the sandboxed script makes,
+assert none of them are on an acts element, since none are ever even
+`getElementById`'d).
+
+**Open-in-Peer links (closes 3-11, the rest of it).** HANDOFF's "throughout"
+(plural) vs. the mockup's single top-bar instance — sizing this myself per
+the task's instruction, and this is where the jobs/events cold-link gap
+(found this round, see "Checking A's claims" above) matters:
+
+- **Per-card title links to `item.deepLink` (the item's own external
+  source) when present**, guarded exactly like every other optional field
+  (`ForecastItem.deepLink` is already `?: string` — omit the `<a>` wrapper,
+  render plain text, when absent, same discipline as `metaParts`). This is
+  genuinely new — the card doesn't link its rows today (`renderRow`'s `.ti`
+  div has no `<a>` at all, confirmed reading `WIDGET_SCRIPT`) — but it's
+  real, already-flowing, non-fake data (RULING 4's own "item-level links
+  mirror what Peer web links to today" bullet already blesses
+  external-source links at the item level), so adding it here genuinely
+  satisfies "throughout" honestly.
+- **Not linking per-card to Peer's own `/jobs/[id]`/`/events/[id]`** — both
+  resolve their item from client-side Zustand store state only, no
+  fetch-by-id fallback (verified this round, see "Checking A's claims"), so
+  a cold external click would land on an empty page. This is a real
+  Peer-web gap (jobs/events lack what `fetchPaperById`/`/api/papers/[id]`
+  already gives papers), **out of scope for this loop to fix** — flagging
+  it, not fixing it, same posture as every other disclosed-gap item in this
+  file. `/papers/[id]` specifically IS safe to deep-link (a real
+  `apiFetch('/api/papers/' + id)` fallback for `arxiv:`/`openalex:` ids —
+  the only shape RULING 6 allows anyway), but singling out one item type
+  for a different link target than the other two adds real inconsistency
+  for a marginal gain; **not** doing that either, for now — keeping all
+  three types on the same `item.deepLink` rule keeps this guide's own
+  "additive, not a guess" bar simpler, and avoids a design that's correct
+  for one-third of items and silently wrong for the rest if RULING 6 ever
+  changes.
+- Top-bar "Open in Peer ↗" stays exactly as scoped above (closes 3-08's
+  share of this).
+
+**Tests (all eight items, one test file):** new
+`web/src/lib/mcp/ui/daily-forecast-home.test.ts`, mirroring
+`daily-forecast-card.test.ts`'s two-layer pattern (static-template string
+checks + `vm`-executed behavioral checks). Specific new assertions beyond
+the card's own pattern:
+
+- Static: `html` contains no `pf-composer`/close-button markup (the two
+  host-chrome omissions); contains the serif font-family string for
+  `.pf-h`. Chip labels are **not** asserted statically — they render
+  client-side from data, per tension (a) — nothing to bake into the static
+  shell beyond an empty `id="chips-slot"` container.
+- Behavioral (extend `runWidgetScriptAndRender`'s pattern with
+  `addEventListener`-capable stub elements — the home script, unlike the
+  card's, needs interactive elements, and a stubbed `window.openai` with
+  `callTool`/`requestDisplayMode` spies): fire an unfiltered
+  `ui/notifications/tool-result` first, assert all four chips render with
+  real counts; fire a synthetic click on the Jobs chip (dispatch through the
+  `chips-slot` stub's registered listener with a `target` stub exposing
+  `getAttribute("data-type") === "job"`), assert `window.openai.callTool`
+  was called with `("open_home", {type:"job"})`; fire a second, jobs-only
+  `ui/notifications/tool-result` (simulating the refetch's answer) and
+  assert the **other three chips still show their original, cached
+  counts**, not zero — this is the literal regression test for tension
+  (a)'s whole design. Assert `requestDisplayMode` was called with
+  `{mode:"fullscreen"}` exactly once when the script loads, unconditionally.
+  Assert a paper row with no `location`/`deadline` renders neither (RULING
+  4, same coverage the card already has, re-proven for the new file rather
+  than assumed inherited). Plus the RULING-10 assertions named above.
+- `renderDailyForecastText` reuse needs no new tests (zero new code path —
+  see 3-02/3-13).
+
+**Blast radius:** `daily-forecast-card.ts` gets exactly two additive
+changes (`peerWebOrigin` exported here; the Expand addition is a separate
+item, 3-03, next) — nothing about its existing card-rendering logic
+changes. `types.ts` gets one new optional field (`personaName?: string` on
+`DailyForecastResult`) — additive; every existing consumer (the card's own
+renderer, `get-daily-forecast.ts`, all 11 `types.test.ts` mapper tests) is
+unaffected since nothing currently reads or requires that field.
+`get-opportunity.ts` itself is not touched — `openHome`'s profile lookup
+only *matches its pattern*, it doesn't call into that file.
