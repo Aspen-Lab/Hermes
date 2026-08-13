@@ -47,8 +47,57 @@ export function cleanJobSubtitlePart(
   return cleaned && !JOB_CALL_TO_ACTION_RE.test(cleaned) ? cleaned : undefined;
 }
 
+/**
+ * B9-03 (round 9): a single leftover punctuation character standing alone
+ * where a Markdown link's visible text, or a bullet/colon, was stripped
+ * upstream before this text ever reached the app — surviving as its own
+ * isolated "word" surrounded by whitespace. Two live-confirmed shapes,
+ * handled by one narrow rule rather than two separate patches, per this
+ * loop's own "same underlying formatting-strip-artifact class" framing:
+ *
+ *  - A Markdown-link remnant — `"...protocols. ] and biophysical..."` — a
+ *    bare `]` with nothing before it to close within this same sentence.
+ *    `stripUnbalancedBrackets` above does not reliably catch this: across a
+ *    long, real description it can find some OTHER, unrelated `[` earlier
+ *    in the text and treat the two as a valid pair, leaving both alone —
+ *    confirmed directly (a short isolated test string strips cleanly; nothing
+ *    here claims the longer, real-world case does). No legitimate English
+ *    prose uses a bare, space-surrounded `]`, so this rule is unconditional.
+ *  - A dash where a bullet/colon/connector most likely stood in the source
+ *    markup — `"...understanding of – charge transfer..."` (`www.aiu.edu`).
+ *    Unlike the bracket, a dash DOES have a legitimate space-surrounded use
+ *    (a real parenthetical aside — "equipment — and rare access — for..."),
+ *    so this rule is conditional: only a dash immediately preceded by a
+ *    short, closed list of prepositions strips, because standard English
+ *    prose does not open a parenthetical dash directly after a bare
+ *    preposition — a real parenthetical follows a complete phrase or
+ *    clause, not a dangling "of"/"to"/"for". Verified by hand before
+ *    writing any test (throwaway probe, deleted before commit): the
+ *    aiu.edu-shaped sentence strips to "...understanding of charge
+ *    transfer..." (still fully grammatical), while a genuine double-em-dash
+ *    parenthetical is left untouched because neither of its dashes follows
+ *    one of these prepositions.
+ *
+ * Scoped to `cleanJobDescription` specifically, NOT the shared
+ * `cleanJobText`/`cleanJobSubtitlePart` used for the title/company/location
+ * path — company and location strings have no evidence of either shape, and
+ * folding this into the shared function would widen the blast radius for no
+ * proven benefit (B's own guide flagged this exact risk).
+ */
+const ISOLATED_BRACKET_REMNANT_RE = /\s+\]\s+/g;
+const ORPHANED_DASH_AFTER_PREPOSITION_RE =
+  /\b(of|to|in|on|for|with|as|by|from|about|into|onto|at)\s+[–—]\s+/gi;
+
+function stripOrphanedFormattingArtifacts(value: string): string {
+  return value
+    .replace(ISOLATED_BRACKET_REMNANT_RE, " ")
+    .replace(ORPHANED_DASH_AFTER_PREPOSITION_RE, "$1 ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function cleanJobDescription(
   value: string | null | undefined,
 ): string {
-  return cleanJobText(value);
+  return stripOrphanedFormattingArtifacts(cleanJobText(value));
 }

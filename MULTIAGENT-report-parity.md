@@ -18286,3 +18286,96 @@ assertion as every run this turn. Typecheck clean. Lint: exactly the 1
 pre-existing `quiz.tsx:46` error.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-03: stray dash artifact, grouped with the already-open Markdown-link-remnant finding)
+
+**STATUS: LANDED.** Sixth and last of this turn's real work items, per B's
+own "independent, land whenever convenient" note. `www.aiu.edu`'s "...
+enhances understanding of – charge transfer..." and the still-open
+Markdown-link remnant (a bare `]`, named since round 6, explicitly left
+unfixed by B8-05 as "a text-cleanup defect, not a scoring one") landed
+together under one rule, per B's own instruction not to write two patches
+for what is the same underlying artifact class.
+
+**Found why the bracket case is still open despite `stripUnbalancedBrackets`
+looking like it should already catch it — verified by hand, not assumed.**
+Built a throwaway vitest probe (deleted before this commit) against the real
+functions with the exact quoted strings. A short, isolated bracket DOES
+already get stripped by the existing stack-based `stripUnbalancedBrackets`
+— but that function pairs brackets across the WHOLE string; in a longer
+real description carrying some other, unrelated balanced or unclosed
+bracket earlier in the text (from a different stripped link elsewhere on
+the same page), the algorithm can find a false partner for the stray `]`
+and leave both alone. Reproduced this specific failure mode directly (a
+fixture with an earlier, unrelated balanced `(...)` pair ahead of the
+target `]`) before designing the fix, not only the short isolated case that
+happens to already work. Confirmed separately that the en-dash shape was
+never going to be caught by anything existing: `stripUnbalancedBrackets`
+only handles bracket characters, and no other cleanup step in this
+codebase touches a dash at all.
+
+**New rule, deliberately asymmetric between the two shapes because their
+false-positive risk is not symmetric:**
+- **Bracket (`]`):** unconditional — any `]` surrounded by whitespace on
+  both sides strips. No legitimate English prose uses an isolated,
+  space-surrounded `]` (a real citation marker like `[1]` has no whitespace
+  between the digit and the bracket, so it is untouched).
+- **Dash (en/em):** conditional on the word immediately before it being one
+  of a short, closed list of prepositions (`of/to/in/on/for/with/as/by/
+  from/about/into/onto/at`). A dash DOES have a legitimate space-surrounded
+  use — a real parenthetical aside — so an unconditional rule would eat
+  `"equipment — and rare access — for..."` (confirmed this exact failure
+  mode by hand before choosing the preposition gate: an earlier
+  unconditional design change stripped this correctly). Standard English
+  never opens a parenthetical dash directly after a bare preposition; a
+  real parenthetical follows a complete phrase or clause. Removing the
+  dash entirely (not replacing it with anything) leaves grammatical text:
+  "of – charge transfer" → "of charge transfer".
+
+**Scoped to `cleanJobDescription` specifically, not the shared
+`cleanJobText`/`cleanJobSubtitlePart`.** B's own blast-radius note flagged
+that adding this to the shared function would also touch job location/
+company text, with no evidence either shape occurs there. Added as a second
+pass layered on top of `cleanJobDescription`'s existing call to
+`cleanJobText`, leaving `cleanJobTitle`/`cleanJobSubtitlePart` (and every
+consumer of them — company, location, title) completely untouched.
+
+**Four tests added to a new `describe("orphaned formatting artifacts
+(B9-03)")` block in `job-cleanup.test.ts`, per Ruling 31:**
+1. **The harder bracket case** — a fixture with an earlier, unrelated
+   balanced bracket pair ahead of the remnant, reproducing the specific
+   condition that defeats `stripUnbalancedBrackets` alone (the case the
+   existing, simpler bracket test in this same file does not exercise,
+   since its fixture has no other brackets to cause false pairing).
+2. **The live dash repro** — `www.aiu.edu`'s exact shape, asserting the
+   dash is removed and the surrounding text stays grammatical.
+3. **The "should match nothing" hardest case, named explicitly in B's own
+   guide** — a real double-em-dash parenthetical, asserted byte-for-byte
+   unchanged.
+4. **Both shapes together in one description** — proving the two rules
+   compose without interfering with each other.
+
+**Tests at risk, checked, none required changes.** Grepped every test file
+referencing `cleanJobDescription` (only the file just edited) and every
+fixture in `mapper.test.ts` containing a literal `]`
+(`"### Battery filters ] Sign up now"`, `mapper.test.ts:89`) — that
+fixture's own test asserts `pageText` is preferred over the chrome-shaped
+`description` for the summary source, so the bracket-bearing string is
+never the one `cleanJobDescription` actually cleans in that test; ran it
+to confirm rather than relying on the reasoning alone. `summarize.test.ts`
+calls `summarizeJob` directly, never through `cleanJobDescription`, so it
+was structurally unaffected and needed no changes.
+
+**Blast radius:** `stripOrphanedFormattingArtifacts` is new, unexported,
+called from exactly one place — `cleanJobDescription`, whose own two
+production callers (`mapper.ts:137`'s `summarizeJob` input, `jobweb.ts:311`'s
+raw `RawJobItem.description`) both benefit from the same fix, confirmed by
+grep. No event-side file touched — this defect and its evidence are
+job-summary-specific (R4).
+
+**Gate: 90 files / 1047 tests, 1046 passing (+4, none deleted).** The one
+failure remains `benchmark.test.ts`'s documented live-search flake, same
+assertion as every run this turn. Typecheck clean. Lint: exactly the 1
+pre-existing `quiz.tsx:46` error.
+
+Commit follows immediately.

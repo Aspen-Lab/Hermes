@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { JobReport } from "@/app/jobs/[id]/page";
 import { scoredJobToJob } from "@/lib/jobs/mapper";
 import { webResultToRawJobItem } from "@/lib/jobs/sources/jobweb";
+import { cleanJobDescription } from "@/lib/opportunities/job-cleanup";
 import type { Job } from "@/types";
 
 const fixture = JSON.parse(
@@ -58,5 +59,54 @@ describe("measured job extraction artifacts", () => {
     // phrase, the tile carries the plate's short value ("Not stated").
     expect(html.match(/Visa not stated/g)).toHaveLength(1);
     expect(html).toContain('data-job-fact="visa"');
+  });
+});
+
+describe("orphaned formatting artifacts (B9-03)", () => {
+  // The harder version of the existing bracket case above: an earlier,
+  // unrelated BALANCED bracket pair sits before the remnant in the same
+  // description. This is exactly the shape that can defeat
+  // stripUnbalancedBrackets's stack-based pairing on a long real
+  // description (a `[` from a different, already-stripped link elsewhere
+  // could wrongly "close" against this `]`) -- this rule does not depend on
+  // pairing at all, so it is unaffected by what else is in the text.
+  it("strips an isolated markdown-link-remnant bracket past an unrelated earlier bracket pair", () => {
+    const raw =
+      "This role involves fieldwork (some travel required) and mentoring. Reach out to Career Services Staff at WBL@lco. ] Internships at LCOOU are posted every semester.";
+    const cleaned = cleanJobDescription(raw);
+    expect(cleaned).not.toContain("]");
+    expect(cleaned).toContain("WBL@lco. Internships");
+  });
+
+  // The www.aiu.edu live repro: a dash sitting where a bullet, colon, or
+  // connector word most likely stood in the source markup.
+  it("strips a dash orphaned immediately after a preposition (www.aiu.edu shape)", () => {
+    const raw =
+      "This graduate program enhances understanding of – charge transfer, ion mobility, and related transport phenomena in molten salts.";
+    expect(cleanJobDescription(raw)).toBe(
+      "This graduate program enhances understanding of charge transfer, ion mobility, and related transport phenomena in molten salts.",
+    );
+  });
+
+  // The "should match nothing" hardest case per Ruling 31, named explicitly
+  // in B's own guide: a real, legitimate em-dash parenthetical must survive
+  // untouched. Both of its dashes are surrounded by whitespace too -- the
+  // same surface shape as the defect above -- so what has to distinguish
+  // them is that neither dash here follows one of the closed prepositions;
+  // a real parenthetical follows a complete phrase, not a dangling "of".
+  it("does not strip a real em-dash parenthetical used correctly", () => {
+    const raw =
+      "This position requires state-of-the-art equipment — and rare access to shared beamline time — for structural characterization work.";
+    expect(cleanJobDescription(raw)).toBe(raw);
+  });
+
+  // Both shapes together in one description, proving the two rules compose
+  // without interfering with each other.
+  it("strips both artifact shapes together in the same description", () => {
+    const raw =
+      "Our lab focuses on materials characterization. ] The program covers aspects of – synthesis, testing, and scale-up for industrial partners.";
+    expect(cleanJobDescription(raw)).toBe(
+      "Our lab focuses on materials characterization. The program covers aspects of synthesis, testing, and scale-up for industrial partners.",
+    );
   });
 });
