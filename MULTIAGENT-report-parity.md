@@ -19009,3 +19009,105 @@ difference list, and the §1 handoff to B follow below/after this entry.
 
 Commit follows immediately.
 
+### Round 10 — Agent A (summary across parts 1–4, ranked difference list, gate verdict)
+
+Written so B does not have to reassemble four separate entries. Full method,
+tables, and evidence for each are in their own entries above; this is the
+ranked, numbered difference list plus the headline result from each part, in
+one place, per §2's own required output shape for A.
+
+**GATE (0%): NOT MET.** Real, non-zero, live-confirmed differences were found
+in three of the three parts measured this round (employer field, R4
+summaries, R13 event names); same-page contamination stayed parked, per
+Ruling 32 and this round's own brief, and was not re-measured. Percentage
+per part, same convention round 9 A used (a rough, stated method, not one
+invented blended number): **employer field 2 of 10 non-null wrong (20%,
+down from round 9's 27.3%)**; **R4 summaries 1 of 3 non-empty summaries
+carries a chrome defect (33%, on a much smaller live sample than round 9's
+4-of-29)**; **R13 event names 5 of 17 confirmed wrong, 4 not confirmed
+false, 1 flagged (down from round 9's 5 of 15 confirmed wrong on a smaller
+pool, roughly flat as a share)**. Every measured host that C's six fixes
+specifically targeted no longer shows its *original* defect — the fixes did
+what they claimed. **The finding this round adds is that on most of those
+same hosts, a new, differently-shaped wrong value has taken its place**,
+which this round's own brief predicted in general terms and asked to be
+reported, not treated as breakage.
+
+**RANKED DIFFERENCE LIST — what a reader would notice first goes first:**
+
+1. **Employer field, `careerservices.upenn.edu` — confidently wrong,
+   title-level field.** Renders `"University of Pennsylvania"`; the real,
+   self-declared employer, confirmed by direct fetch, is **Oak Ridge
+   National Laboratory** — Penn's career-services site is only hosting the
+   listing. B9-02c's own topic-label defect on this exact host (same URL as
+   round 9's own citation) is confirmed gone; this is a new value, wrong for
+   a new reason (the host-brand guard's long-form-survives rule cannot tell
+   a real employer's long name from the hosting platform's own long name).
+   See part 2.
+2. **Employer field, `postdocjobs.com` — visibly not a real name, but still
+   occupies the slot.** Renders `"Job posted on PostdocJobs.com"`, confirmed
+   by direct fetch to be generic site boilerplate; the real employer is
+   **Argonne National Laboratory**. B9-02b's own topic-label defect on this
+   host is confirmed gone; new value, defeats the host-brand guard for the
+   same structural reason as #1. See part 2.
+3. **R13 event name, `ecs.confex.com` — confidently wrong, title-level
+   field, new host.** Renders `"Call for Papers"`, a generic page-type
+   label; the real event, confirmed by direct fetch, is **"250th ECS
+   Meeting."** See part 4.
+4. **R13 event name, `internationalbatteryseminar.com` — the bare-date
+   guard's own target is gone, a new wrong value fills the slot.** Round 9's
+   bare date (`"March 15-18, 2027"`) is confirmed gone; today renders
+   `"Orlando, FL"` — a location, not a name. Same "guard closes its one
+   shape, the fallback finds a different wrong one" pattern as #1/#2 above,
+   now confirmed on the event side too. See part 4.
+5. **R13 event name, `ruggedthz.com` — a previously-hypothetical risk is
+   now live.** Renders a lowercase, narrative-sentence-shaped, humanized URL
+   slug (`"Ruggiero group attends the 2026 crystal engineering grc"`) —
+   round 9 A itself produced this exact string only as a controlled,
+   not-observed-live construction; it is now confirmed live, 2 of 2 pulls.
+   Still not the real event name. See part 4.
+6. **R4 job summary, `employbl.com` — visibly broken formatting reaching a
+   reader.** One surviving sentence stacks a colon-label prefix, a bare
+   Markdown heading marker, and an orphaned opening bracket ending in a
+   literal `"[..."` — confirmed byte-exact via direct file write. Same host
+   round 8 originally named for colon-label chrome, recurring with two
+   additional defects layered on. See part 3.
+7. **R13 event name, `euagenda.eu` — flagged, not confirmed, reported
+   honestly.** A shorter, ellipsis-terminated name than round 9's own full
+   citation for the identical URL. Verification fetch blocked (HTTP 403);
+   cannot say whether this is Peer-side or search-index-side. See part 4.
+8. **R4 job summary, `inl.referrals.selectminds.com` — mild, borderline.**
+   A colon-label prefix (`"Multi-Level:"`) ahead of otherwise-clean,
+   informative prose. Lower severity than #6; noted for completeness. See
+   part 3.
+9. **Employer field, `careers.abbvie.com` (and the standing `jobs.lbl.gov`
+   precedent) — a trade-off data point, not a confirmed defect.** Null
+   company on an organisation's own branded subdomain; consistent with, not
+   proof of, the host-brand guard suppressing a short candidate. See part 2.
+10. **`sdle.co.il` — RESOLVED this round, listed for closure, not as an open
+    item.** The name/URL mismatch B9-04 stopped on is explanation (b): a
+    source-site URL artifact. The rendered name is accurate; no wrong
+    information reaches a reader. See part 1.
+
+**Ruling 33's acronym tally, round 10: 0 of 3.** None of this round's three
+surviving job-summary sentences had an acronym under 5 characters as their
+only keyword evidence (`"molten salt"`, `"ion exchange"`, `"battery"` — none
+qualifies). Cumulative record so far: round 9 found 1 instance (LCO) in a
+4-summary sample; round 10 found 0 in a 3-summary sample.
+
+**Positive confirmations, not just defects — worth stating plainly since a
+ranked difference list can read as all-bad-news:** the SolarPACES
+regression-lock is byte-identical, live, today. The bare-hostname last
+resort has still never fired on real data. Every one of C's six fixes'
+*specific, originally-cited* defect strings are confirmed gone on live data
+today, not just in the fixture. The employer field's wrong-rate continued
+falling (62.5% → 27.3% → 20%). None of this round's findings is a
+regression in the sense of "something that used to work now doesn't" —
+every new-shape finding is on ground the six fixes were never built to
+cover.
+
+**Same-page contamination (B8-07/Ruling 29): not re-measured this round,
+per this round's own brief and Ruling 32. Stays parked.**
+
+Commit follows immediately.
+
