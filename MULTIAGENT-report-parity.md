@@ -19753,5 +19753,55 @@ credential referenced, logged, or written.
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent B (B10-05: item 7, `euagenda.eu` — ellipsis-terminated name, inconclusive from source)
+
+**STATUS: DONE, stays open — not a fix guide item.** A flagged this
+unconfirmed (direct fetch blocked, HTTP 403) and explicitly noted "B has
+standing to investigate the codebase side of this that A does not." Did so;
+the codebase side does not resolve it either, but narrows it honestly.
+
+**What was ruled OUT, with certainty — the one Peer-side mechanism that
+could explain an appended ellipsis.** `truncateText`
+(`web/src/lib/opportunities/shared.ts:108-111`) is the only place in this
+entire codebase that appends an ellipsis character to any string. Grepped
+every call site: `adzuna.ts:112`, `arbeitnow.ts:44`, `jsearch.ts:68`,
+`remotive.ts:49`, `usajobs.ts:77`, `himalayas.ts:48,52` (all job
+**description** fields), and `query-gen.ts:347` (the profile's own
+`currentProject` field, an LLM-prompt input, unrelated to any rendered
+name). **Never called on an event name, anywhere** — confirmed by reading
+every call site, not just grepping the function name. This rules out the one
+mechanism that would make the truncation definitively Peer's own doing.
+
+**What was confirmed CAPABLE of passing a pre-existing ellipsis through
+unaltered — not proof it did, but the only plausible Peer-side carrier.**
+`eventNameFrom`'s snippet-mining fallback (`eventweb.ts:542-550`) splits the
+raw snippet on sentence boundaries/separators and keeps substrings 20–120
+characters long, verbatim — no stripping step of any kind runs on the
+result. If the search provider's own snippet text already contained a
+trailing `"…"`/`"..."` (a common search-API behaviour, and the same general
+class of source-side artifact `sdle.co.il` turned out to be, per A's part 1
+this round), this path would carry it straight through unmodified. **Neither
+title-segment splitting (`bestEventTitleSegment`) nor `nameFromUrlSlug` has
+any equivalent behaviour** — this narrows which of `eventNameFrom`'s three
+stages could plausibly be the carrier, if this is Peer-side at all, but does
+not prove which one produced today's specific string, since B does not have
+today's raw title/snippet text and does not have standing to fetch it.
+
+**Not marking `POLICY — manager decides`, per B9-04's own precedent for the
+identical situation last round on `sdle.co.il` before A's targeted fetch
+resolved it — this is an unresolved fact question, not a decision.**
+Recommend the same resolution path that worked there: a future A attempts
+the direct fetch again (possibly via a different method if the 403 persists
+— A's own tooling choice, not prescribed here), and only write a fix guide
+entry once the mechanism is known. **No code change is recommended without
+knowing whether there is anything to change** — writing a fix for a
+not-yet-diagnosed cause is exactly what Ruling 31 and this loop's own history
+(round 6's single-shape-tested employer fix) warn against.
+
+No throwaway file needed for this item — nothing to construct against; the
+grep-and-read above is the entire trace.
+
 Commit follows immediately.
 
