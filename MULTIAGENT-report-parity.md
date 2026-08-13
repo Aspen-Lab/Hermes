@@ -270,19 +270,20 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-13 04:37 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 B: Ruling 32's
-                  required enumeration (B9-01), then a 9-item fix guide
-                  across the employer field, R4 job summaries, and R13
-                  event names, plus the MANAGER CARRY-FORWARD isolation the
-                  manager asked for, answered with a measured number, not
-                  left open). Full detail in §4 "Round 9 — Agent B (B9-01)"
-                  through "(B9-04)" and the cross-items summary entry
-                  immediately after them.
+STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 C: landed six of
+                  B's nine items — B9-02a, B9-04 Fix 1, B9-04 Fix 2, B9-04's
+                  bare-date guard, B9-02b/c, B9-03's dash/bracket cleanup —
+                  plus a ruled-out log entry for the LCO collision (Ruling
+                  33: accept the cost, build nothing). `sdle.co.il` is the
+                  only item left genuinely open, and it was never C's —
+                  needs A's live single-page fetch first). Full detail in
+                  §4 "Round 9 — Agent C" — one entry per item, in landing
+                  order, plus the LCO ruled-out entry.
 
                   **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
                   The four `ROUND 7 … SUPERSEDES …` blocks below (including
@@ -290,85 +291,111 @@ STOPPED BECAUSE:  finished the turn @ 2026-08-13 (round 9 B: Ruling 32's
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            9 — A and B both complete. Next: C.
-WHOSE TURN:       **C.** Round 9 B produced a 9-item fix guide from A's four
-                  parts, per Ruling 32's own required order — the
-                  enumeration first (B9-01, every guard-then-fallback chain
-                  across the job/event report surface), then per-field
-                  items that reference it rather than re-deriving "what
-                  renders after the guard fires." Full detail in §4 "Round
-                  9 — Agent B (B9-01)" through "(B9-04)"; the cross-items
-                  summary entry has the same work order and dependencies
-                  copied below, not re-derived.
+ROUND:            9 — A, B, and C all complete. Next: round 10, A.
+WHOSE TURN:       **A.** Round 9 C worked B's nine-item guide in the order
+                  given, landing six, ruling out one (per the manager, not
+                  C's own call), and leaving two genuinely not C's to
+                  touch. Full method, hand-verification detail, and new
+                  tests for each are in §4 "Round 9 — Agent C" (one entry
+                  per item — search for "B9-02a", "B9-04 Fix 1", "B9-04 Fix
+                  2", "bare-date", "B9-02b/c", "B9-03", "LCO" in turn).
+                  Gate after the final item: **90 files / 1047 tests, 1046
+                  passing** (the one failure is the documented
+                  `benchmark.test.ts` live-search flake, confirmed on every
+                  gate run this turn, always the same file). TypeScript
+                  clean throughout. ESLint: the one standing `quiz.tsx:46`
+                  error, unchanged throughout. Every item committed and
+                  pushed individually as it finished; nothing batched.
 
-                  **Classification: 4 WRONG DATA, 2 WRONG SHAPE, 1 MISSING,
-                  1 POLICY (manager decides, no code yet), 1 not yet
-                  classifiable (root cause unknown, not C's item yet).**
+                  1. **B9-02a — landed.** Trailing "Careers"/"Jobs"/
+                     "Employment"/"Job Openings" chrome stripped from an
+                     otherwise-real employer candidate, applied after the
+                     four existing guards accept it, not before.
+                  2. **B9-04 Fix 1 — landed.** `eventNameFrom`'s absolute
+                     last resort no longer returns a rejected title segment
+                     verbatim; now the URL host, or a literal `"Untitled
+                     event"` placeholder when no URL exists.
+                  3. **B9-04 Fix 2 — landed, SolarPACES re-verified
+                     unchanged.** `enrich.ts`'s `typedName` rescue narrowed
+                     to an additive `skipHostBrand` option on
+                     `isChromeSegment`/`bestEventTitleSegment`, bypassing
+                     only the host-brand check instead of all four.
+                  4. **B9-04's bare-date guard — landed.** A segment that is
+                     only a date (`"March 15-18, 2027"`) is now chrome;
+                     `"SolarPACES 2026"` (contains a year, is not only a
+                     date) confirmed still not affected.
+                  5. **B9-02b/c — landed, narrower change than B's guide
+                     anticipated.** `JobsQuery.topics` already existed and
+                     was simply unused inside `jobweb.ts` — no wider
+                     signature change was needed. New `looksLikeTopicLabel`
+                     guard: candidate exactly equals a profile topic, or
+                     starts with one followed only by a short closed
+                     academic-field vocabulary. Deliberately under-catches
+                     by design (see risk 2 below).
+                  6. **B9-03 — landed.** One rule handles both the
+                     Markdown-`]` remnant (unconditional — no legitimate
+                     prose use of an isolated, space-surrounded `]`) and the
+                     `www.aiu.edu` orphaned dash (conditional on a closed
+                     preposition list — a real em-dash parenthetical has a
+                     legitimate space-surrounded use a bracket never has).
+                  7. **LCO acronym collision — RULED OUT, no code**, per
+                     §1t Ruling 33. Not an open item any more.
+                  8. **`sdle.co.il`'s name/URL mismatch — still not
+                     C's item.** Root cause unknown; needs A's targeted,
+                     single-page live fetch (not through the pipeline)
+                     before any fix guide can be written for it — B9-04's
+                     own instruction, unchanged.
 
-                  1. **B9-02a — `inl.referrals.selectminds.com`'s "Careers"
-                     suffix.** WRONG SHAPE. A narrow, in-file trailing-word
-                     strip inside `jobweb.ts`'s own candidate-building step
-                     — NOT the shared `cleanJobSubtitlePart`, which also
-                     cleans location text and has no evidence motivating a
-                     change there. No dependency; land first.
-                  2. **B9-04 Fix 1 — `eventweb.ts:494`'s `eventNameFrom`
-                     last resort** (`segments[0] ?? title.trim()` can return
-                     a segment already rejected earlier in the same call).
-                     WRONG DATA. Replace with the URL host (preferred) or a
-                     literal placeholder — never a value drawn from the same
-                     rejected pool. No dependency on any other item here.
-                  3. **B9-04 Fix 2 — `enrich.ts:148-155`'s `typedName`
-                     rescue.** WRONG DATA. Currently bypasses all four of
-                     `isChromeSegment`'s checks when an existing test
-                     (`enrich.test.ts:216-224`, SolarPACES-shaped) only
-                     requires bypassing the host-brand one. Fix direction:
-                     thread an additive `skipHostBrand` option through
-                     `isChromeSegment`/`bestEventTitleSegment` (same
-                     convention as B8-04's own `host` parameter) and call
-                     `bestEventTitleSegment` a second time with it, instead
-                     of calling `looksLikeEventTitle` alone. **The
-                     SolarPACES test must still pass unchanged — this is
-                     the item's central risk, not a footnote.** Bundle with
-                     Fix 1 and item 4 below (same file, overlapping test
-                     files).
-                  4. **B9-04's bare-date guard — `"March 15-18, 2027"`
-                     rendering as an event's name** (`internationalbattery
-                     seminar.com`, new this round). MISSING. Add a
-                     date-only-segment check to `isChromeSegment`, reusing
-                     `event-details.ts`'s own existing
-                     `MONTH_PATTERN`/`DAY_PATTERN`/`DATE_TOKEN_PATTERN`
-                     rather than writing a new one. Bundle with items 2-3.
-                  5. **B9-02b/c — `postdocjobs.com`/`careerservices.
-                     upenn.edu`'s topic-label-as-employer** (the latter
-                     unchanged across rounds 8 and 9 both). WRONG DATA.
-                     Needs a new guard; recommended approach reuses the
-                     profile's own matched topics, which requires threading
-                     the topic list into `webResultToRawJobItem`'s caller —
-                     a signature change, confirmed wider than item 1's blast
-                     radius. Scope and risk-assess on its own; do not bundle
-                     with item 1.
-                  6. **B9-03's dash-artifact cleanup** (`www.aiu.edu`, a
-                     stray en-dash). WRONG SHAPE. Group with the
-                     already-open Markdown-link-remnant finding under one
-                     small post-processing pass, rather than two separate
-                     patches. Independent; land whenever convenient.
-                  7. **B9-03's LCO acronym collision** (`www.lco-cdo.org`).
-                     POLICY — manager decides whether a short-acronym
-                     disambiguation rule is worth the complexity, or
-                     whether this is an acceptable, low-frequency cost of
-                     the matcher's deliberately context-free design. No
-                     code to write until the manager rules.
-                  8. **`sdle.co.il`'s name/URL mismatch** — NOT C's item.
-                     Root cause unknown; needs a next-A live single-page
-                     fetch before any fix guide can be written for it.
+                  **A's job now: re-run the same four-part real-data
+                  measurement this round's own A did, scored against these
+                  six landed fixes specifically — and watch for the
+                  following, each a place a fixture cannot settle the
+                  question, not a known regression:**
+
+                  - **`sdle.co.il`** — do the live single-page fetch first
+                    (item 8 above); report which of B9-04's two named
+                    explanations it is before writing any fix guide for it.
+                  - **Employer field** — re-check the three named hosts
+                    directly. Then watch for a DIFFERENT trailing-chrome
+                    word C's closed list doesn't cover, and a DIFFERENT
+                    topic-label shape C's closed continuation vocabulary
+                    (`chemical`/`electrochemical`/`mechanical`/`materials`/
+                    `characterization`/`engineering`/`chemistry`/`science`)
+                    doesn't cover. Both guards were built deliberately
+                    narrow — matched only to the live-confirmed repros, not
+                    a general parser — so a new, differently-shaped wrong
+                    value surviving on real data is expected under-catching,
+                    not evidence either guard is broken.
+                  - **R13 event names — the one real risk worth naming
+                    plainly.** The SolarPACES regression-lock test proves
+                    the one *named* case still rescues after B9-04 Fix 2
+                    narrowed the bypass — it cannot prove no OTHER real
+                    typed event name was relying on the old, wider
+                    `looksLikeEventTitle`-only bypass for a reason unrelated
+                    to host-brand. If a previously-correct real event name
+                    goes missing or degrades, start here. Separately: when
+                    `eventNameFrom`'s absolute last resort actually fires on
+                    real data, the reader now sees a bare hostname where
+                    they used to see wrong data — new, visible behaviour,
+                    not yet observed live; worth a look at whether it reads
+                    sensibly in a rendered report.
+                  - **R4 job summaries** — the `www.aiu.edu` dash and the
+                    Markdown-`]` remnant should both be gone. The dash rule
+                    is gated on a closed preposition list
+                    (`of/to/in/on/for/with/as/by/from/about/into/onto/at`);
+                    a dash orphaned after a different word (a verb, or a
+                    preposition outside this list) will not be caught —
+                    expected under-catching, not a regression.
+                  - **Ruling 33's one-line acronym tally — due starting
+                    this round, do not skip it.** When measuring R4 job
+                    summaries, record whether any surviving sentence's only
+                    keyword evidence was an acronym under 5 characters. One
+                    line, cumulative across rounds — the frequency data
+                    Ruling 33 said does not exist yet.
 
                   **Same-page contamination (B8-07/Ruling 29): still no fix
-                  item, confirmed by B this turn, not re-opened.**
-                  Spot-checked A's part 4 description against source
-                  (`selectedDomScopes` in `job-posting-scope.ts` does
-                  include `tr` in its recognised tag set, exactly as
-                  described) — matches, no discrepancy, no hunt performed,
-                  per Ruling 32's own parking of Ruling 29.
+                  item, still parked, not re-opened this turn either — no A
+                  budget, per Ruling 32's own instruction.**
 
 MANAGER CARRY-FORWARD (ANSWERED this turn — see §4 "Round 9 — Agent B
                   (B9-03)" for the full method and per-posting table; kept
@@ -394,12 +421,16 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   non-optional fallback has not fixed anything), **§1r
                   Ruling 31** — still binding for A's own measurement
                   standard: test the hardest real shape a field can take,
-                  not the easiest one to find. **This round's own §1s
-                  Ruling 32** is now actioned, not merely recorded: no
-                  per-field fallback item without the enumeration first;
-                  B9-01 is that enumeration, done this turn, and every other
-                  item in this turn's guide references it rather than
-                  restating it.
+                  not the easiest one to find. **§1s Ruling 32** is now
+                  actioned, not merely recorded: no per-field fallback item
+                  without the enumeration first; B9-01 is that enumeration,
+                  and every item in round 9 B's guide referenced it rather
+                  than restating it — C's six landed items all trace back
+                  to it. **§1t Ruling 33** is now also actioned: the
+                  short-acronym collision is a named, accepted cost, not an
+                  open item — C ruled it out with no code this turn, and A's
+                  one-line acronym tally starts round 10 (see WHOSE TURN
+                  above).
 STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   FULLY LANDED. B8-07 IS LANDED IN PART** — one of Ruling
                   29's two derived markup shapes fixed (sibling `<tr>` rows
@@ -417,7 +448,16 @@ STATUS:           **ROUND 8's SIX CODE ITEMS (B8-01 THROUGH B8-06) ARE
                   has now produced the fix guide Ruling 32 required, led by
                   its own enumeration (B9-01) — see §4 "Round 9 — Agent B
                   (summary across B9-01–04)" for the full item list,
-                  classification breakdown, and work order for C.**
+                  classification breakdown, and work order for C.** **Round
+                  9 C worked that guide in order: six items landed, one
+                  ruled out (LCO, Ruling 33), two left genuinely open for
+                  round 10's A (`sdle.co.il`, plus the standing
+                  `usajobs.ts` policy question below) — see §4 "Round 9 —
+                  Agent C" for the full per-item detail. LAST DIFFERENCE and
+                  GATE below are still round 9 A's own pre-fix measurement,
+                  unchanged by C's work — re-measuring against these six
+                  fixes on real data is round 10 A's own job, not
+                  restated here in advance of that measurement.**
 LAST DIFFERENCE:  **Employer field: 3 of 11 non-null real postings wrong
                   (27.3%), down from 5 of 8 (62.5%) pre-fix.** **R4 job
                   summaries: 0 of 4 non-empty real summaries carry classic
@@ -18379,3 +18419,19 @@ assertion as every run this turn. Typecheck clean. Lint: exactly the 1
 pre-existing `quiz.tsx:46` error.
 
 Commit follows immediately.
+
+### Round 9 — Agent C (B9-03's LCO acronym collision: RULED OUT, no code)
+
+**STATUS: RULED OUT, not built, per §1t Ruling 33 — logged as such, not
+silently skipped.** Ruling 33 answered B9-03's own `POLICY — manager
+decides` question on this item directly: *"accept it. Do not build the
+rule."* Per this turn's own instructions, no disambiguation rule was
+written, `termMatches`/`GENERIC_TERMS`/the scoring path were not touched,
+and no test was added or changed for this item. Nothing to gate-check;
+nothing changed.
+
+Ruling 33 does add one small thing for a future round — A recording,
+starting round 10, whether any surviving job-summary sentence's only
+keyword evidence was an acronym under 5 characters — but that is explicitly
+A's instrument, not C's, and is called out again in this turn's closing §1
+update below so it is not lost between rounds.
