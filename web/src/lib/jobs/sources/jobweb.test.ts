@@ -270,6 +270,64 @@ describe("company derivation", () => {
   });
 });
 
+describe("company derivation — hosting-platform boilerplate phrase (B10-01, item 2)", () => {
+  // B10-01's live repro (postdocjobs.com): `looksLikeHostBrand` never
+  // rejects this — it is deliberately one-directional and only rejects a
+  // candidate no LONGER than a host DNS label, and "Job posted on
+  // PostdocJobs.com" is far longer than "postdocjobs". This is the
+  // must-now-reject case the new check exists for.
+  it("does not mistake a hosting-platform's own posting boilerplate for the company", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoctoral Fellow | Job posted on PostdocJobs.com",
+      url: "https://postdocjobs.com/job/999003",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBeUndefined();
+  });
+
+  // Same shape, a different closed phrase from the same list.
+  it.each([
+    "Posted by PostdocJobs.com",
+    "Listing on PostdocJobs.com",
+    "See more jobs at PostdocJobs.com",
+  ])("rejects another hosting-platform boilerplate phrasing: %s", (phrase) => {
+    const item = webResultToRawJobItem({
+      title: `Postdoctoral Fellow | ${phrase}`,
+      url: "https://postdocjobs.com/job/999004",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBeUndefined();
+  });
+
+  // Must-survive: a real, non-boilerplate-shaped multi-word employer name
+  // must be completely unaffected by this new check (INL's own real name,
+  // already covered above, re-asserted here as the cross-check that this
+  // item's addition did not narrow it).
+  it("keeps a real multi-word employer name that is not boilerplate-shaped", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist - Idaho National Laboratory Careers",
+      url: "https://inl.referrals.selectminds.com/jobs/12346",
+      snippet: "Battery research position. Apply now.",
+    });
+    expect(item?.company).toBe("Idaho National Laboratory");
+  });
+
+  // Must-not-overreach (item 1 stays open, on purpose): "University of
+  // Pennsylvania" is a real, grammatical organisation name, not shaped like
+  // "Job posted on X"/"Posted by X"/etc. This check must NOT fire on it —
+  // item 1's harder "real name, wrong institution" residual is a flagged
+  // POLICY question (§1 MANAGER CARRY-FORWARD), not something this closed
+  // phrase check may silently absorb.
+  it("does not fire on a real organisation name merely because it is long (item 1 stays open)", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoctoral Researcher - University of Pennsylvania",
+      url: "https://careerservices.upenn.edu/job/12347",
+      snippet: "Postdoctoral research position. Apply now.",
+    });
+    expect(item?.company).toBe("University of Pennsylvania");
+  });
+});
+
 describe("company derivation with the profile's own topics (B9-02b/c)", () => {
   const topics = ["molten salt", "battery"];
 

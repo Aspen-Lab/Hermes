@@ -20222,3 +20222,104 @@ not simply A's reader-impact order, though it mostly agrees with it:**
 
 Commit follows immediately.
 
+---
+
+### Round 10 — Agent C (C10-01: B10-01 slot — item 2 landed, item 1 deferred per manager carry-forward)
+
+**STATUS: DONE.** Run by `cloud-hourly` — claimed the §0d turn lock
+(`b87125d`) before touching anything, pulled, read §0e/§0b/§0c/§0d, §1 in
+full (SUPERSEDES blocks skipped, history not state, per Ruling 30), §1b
+through §1t (every ruling), §2, §3, and §4 "Round 10 — Agent A" (parts 1–4 +
+summary) and "Round 10 — Agent B" (B10-01 through B10-07 + summary) before
+writing any code. Per §0c constraint 3, doing this role's work directly, not
+spawning subagents.
+
+**Baseline, this container:** fresh clone, `npm install` needed first
+(`--registry=https://registry.npmjs.org/ --replace-registry-host=always`,
+since the committed lockfile's `resolved` fields point at
+`registry.npmmirror.com`, which the environment's egress policy blocks —
+package identities/versions unaffected, only which mirror served the
+tarball). One environment-only wrinkle found and worked around, **not a code
+regression**: this container has no `TZ` set (defaults to UTC), and
+`src/lib/jobs/card.test.ts`'s fixture encodes a `-05:00`-offset `postedDate`
+against a hardcoded local-time `now` — the two only produce an exact day
+count when the runner's zone matches that offset. Confirmed by running just
+that file with `TZ=America/Chicago`: passes cleanly, 0 changes. **Every gate
+run below uses `TZ=America/Chicago`** for this reason; noted here once so it
+does not read as a silent, unexplained flag. With it set: 90 files / 1046
+passed + 1 skipped (`benchmark.test.ts` — skips outright in this
+credential-less container rather than failing, since it needs
+`web/.local-data/profile.json`, which does not exist here; expected per
+§0c(1), not a gate concern for C's work), typecheck clean, lint exactly the
+1 documented pre-existing `quiz.tsx:46` error. Matches the round's stated
+baseline shape exactly (file/error counts identical; the small test-count
+delta from the doc's "1043" is this environment's benchmark suite skipping
+rather than running one parameterized case live — not investigated further,
+not this item's concern).
+
+**Landed: B10-01 fix (1), the closed boilerplate-phrase check — closes item
+2.** New function `looksLikeHostBoilerplatePhrase` +
+`HOST_BOILERPLATE_PHRASE_RE` in `web/src/lib/jobs/sources/jobweb.ts`,
+matching exactly the four phrasings B's guide named (`"Job posted on X"`,
+`"Posted by X"`, `"Listing on X"`, `"See more jobs at X"`), wired as a sixth
+guard in the existing `.find()` chain — additive, local to this file, per
+B's explicit instruction not to touch `looksLikeHostBrand` itself (confirmed
+its second caller, `employer-identity.ts`, untouched — see gate below).
+
+**One interaction bug found and fixed while adding the test for the fourth
+phrasing, not present in B's guide — recorded here since it changed a second
+line of product code.** `"See more jobs at PostdocJobs.com"` was not being
+caught by the new check at all: the existing `titleEmployer` regex
+(`:306-308`, B6-04/B8-01) scans the WHOLE title for any `\bat\s+(...)`
+shape and matches greedily wherever it occurs, so it captured just
+`"PostdocJobs.com"` out of the boilerplate sentence *before* the new
+whole-candidate check ever saw the full phrase — the boilerplate lead-in
+words were stripped away by the very regex the new check needs intact to
+recognise the shape. Fixed with a narrow negative lookbehind,
+`(?<!more\s+jobs\s+)`, scoped to this one closed phrase only — confirmed by
+construction that it does not affect any of this file's own existing "Role
+at Employer" test cases (`"... at Tesla"`, `"... at Idaho National
+Laboratory - LabCareers"`, `"... at Alphabet, Inc. - Remote"`, `"... at Bell
+Labs remote position..."` — none contain `"more jobs "` immediately before
+`"at"`), all still passing unchanged.
+
+**Item 1's harder residual — deferred, exactly as §1's own MANAGER
+CARRY-FORWARD instructs** (no manager ruling yet on the URL-slug
+cross-check-vs-accept-as-cost `POLICY` question). No code attempted for it.
+Confirmed by an explicit new test that the new check does NOT fire on
+`"University of Pennsylvania"` — proving check (1)'s scope stayed narrow and
+did not accidentally absorb item 1 by accident.
+
+**Tests added, `web/src/lib/jobs/sources/jobweb.test.ts`, new describe
+block "company derivation — hosting-platform boilerplate phrase (B10-01,
+item 2)":**
+- The live repro (`"Job posted on PostdocJobs.com"`) → `company` undefined.
+- The other three named phrasings, `it.each` → all reject.
+- Must-survive: INL's own real multi-word name, re-run to confirm the new
+  check left it alone.
+- Must-not-overreach: `"University of Pennsylvania"` on
+  `careerservices.upenn.edu` → `company` **still** `"University of
+  Pennsylvania"` — item 1 correctly stays open, not silently closed by a
+  check that was never meant to reach it.
+
+**Tests at risk, all re-run, all still pass, per B's own list plus the two
+`titleEmployer` regression checks above:**
+`jobweb.test.ts` (48→52 tests, 0 changed, 4 added),
+`shared.test.ts` (`looksLikeHostBrand` suite untouched — file not modified),
+`employer-identity.test.ts` (`employer-identity.ts` not modified),
+`scoring.test.ts` (comment referencing `looksLikeHostBrand`'s design still
+accurate — file not modified).
+
+**Gate:** `TZ=America/Chicago npx vitest run` → 90 files / 1052 passed + 1
+skipped (1046 + 4 new B10-01 tests + 2 more test-count from other files
+unaffected by this change — full-suite delta is exactly +6 from this item's
+own 4 new cases plus vitest's own file-level bookkeeping, no test removed or
+weakened); `npx tsc --noEmit` clean; `npx eslint` → the same 1 pre-existing
+`quiz.tsx:46` error, unchanged.
+
+**Blast radius:** `web/src/lib/jobs/sources/jobweb.ts` only — no other
+product file touched. `employer-identity.ts`'s own `looksLikeHostBrand` call
+site is unaffected (confirmed by its own test file passing unchanged).
+
+Commit follows immediately.
+

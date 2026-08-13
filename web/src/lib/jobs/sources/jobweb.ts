@@ -102,6 +102,24 @@ function looksLikeBareLocation(candidate: string): boolean {
 }
 
 /**
+ * A whole-candidate sentence naming the HOSTING PLATFORM's own posting
+ * boilerplate, not the employer (B10-01, items 1+2). `looksLikeHostBrand`
+ * is deliberately one-directional — it only rejects a candidate no LONGER
+ * than a DNS label of the host (`shared.ts`'s own doc comment) — so a long,
+ * well-formed sentence like "Job posted on PostdocJobs.com" survives it
+ * untouched, the same way a real, long employer name is designed to. No
+ * real employer name is grammatically shaped like this: closed,
+ * sentence-shape check, not a general parser, matching this file's own
+ * "catch a known shape" convention used by `SEASON_COHORT_LABEL_RE` et al.
+ */
+const HOST_BOILERPLATE_PHRASE_RE =
+  /^(?:job\s+posted\s+on|posted\s+by|listing\s+on|see\s+more\s+jobs\s+at)\s+\S/i;
+
+function looksLikeHostBoilerplatePhrase(candidate: string): boolean {
+  return HOST_BOILERPLATE_PHRASE_RE.test(candidate.trim());
+}
+
+/**
  * A trailing chrome word left on an otherwise-real employer candidate that
  * has already cleared every guard below (B9-02a/R13) — "Idaho National
  * Laboratory Careers" names the real employer with a careers-page suffix
@@ -285,8 +303,16 @@ export function webResultToRawJobItem(
   // repetition simply stops, and if what follows is not a separator or the
   // end of the string, the whole match fails and titleEmployer is
   // correctly undefined rather than a guess.
+  //
+  // B10-01 (round 10): "See more jobs at PostdocJobs.com" is one of the
+  // closed hosting-platform boilerplate phrases `looksLikeHostBoilerplatePhrase`
+  // rejects below, but its own "at X" shape would otherwise be captured
+  // HERE first, before the candidate-pool guard chain ever sees the whole
+  // sentence \u2014 the same platform name, stripped of the very words that mark
+  // it as boilerplate. The negative lookbehind keeps that one closed lead-in
+  // out of this capture so the full segment reaches the guard chain intact.
   const titleEmployer = title.match(
-    /\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
+    /(?<!more\s+jobs\s+)\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
   )?.[1];
   const company = stripTrailingCareersChrome(
     [titleEmployer, ...parts.slice(1)]
@@ -298,7 +324,8 @@ export function webResultToRawJobItem(
           !SEASON_COHORT_LABEL_RE.test(p) &&
           !looksLikeBareLocation(p) &&
           !looksLikeHostBrand(p, host) &&
-          !looksLikeTopicLabel(p, topics),
+          !looksLikeTopicLabel(p, topics) &&
+          !looksLikeHostBoilerplatePhrase(p),
       ),
   );
   return {
