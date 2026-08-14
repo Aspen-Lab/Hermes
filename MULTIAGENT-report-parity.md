@@ -26191,3 +26191,82 @@ Rulings 32/34b say land what is confirmed. C did not fold it into this item.
 - `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
   error (`quiz.tsx:46`), none added.
 - **No existing test assertion changed or deleted.**
+
+---
+
+### Round 12 — Agent C (B12-06: `openmc.discourse.group` — the employer slot gets the chrome-check family member it never had; forum-thread drop NOT built, by ruling)
+
+**STATUS: LANDED.** Commit follows this entry. A's worst-ranked single value of
+the round.
+
+**What landed**, in `web/src/lib/jobs/sources/jobweb.ts`: `NAV_CHROME_SEGMENT_RE`
+and `looksLikeNavChrome`, B's regex verbatim, added as a **seventh** rejection in
+`webResultToRawJobItem`'s existing candidate-guard chain. Nothing else changed.
+
+**B's framing is the reason this is one line and not a host patch, and it is
+carried into the code comment:** this is not "a missing pagination rule", it is a
+**missing family member**. The event side has had chrome checks whose shared job
+is "this segment is site furniture, not a name" since round 5 — and its own
+`GENERIC_TITLE_WORD_RE` lists `page` explicitly — while the employer slot had no
+member of that family at all. All six of its existing rejections ask "is this a
+known-bad KIND of name", never "is this navigation". Ruling 32's shape in its
+plainest form.
+
+**Ruling 37 checked, not assumed:** the vocabulary of pagination and navigation
+controls is a finite set of UI affordances, not an open grammatical class. This
+is not the open-class-in-a-closed-list trap.
+
+**The `^…$` anchor is the whole safety argument and it is now six tests.**
+`Home Depot`, `Page Industries`, `First Solar` and `Next Energy Technologies` are
+real companies whose names BEGIN with a rejected word; an unanchored check would
+delete all four employers. Same anchor `SEASON_COHORT_LABEL_RE` and
+`CAREERS_INDEX_TITLE_RE` already use in this file.
+
+**Ruling 32 from the render side, asserted:** when every candidate is rejected
+`.find()` returns `undefined`, `company` is `undefined`, and the UI omits the
+employer line entirely — both `job-card.tsx` and `feed-tile.tsx` guard on
+`job.companyOrLab`. No placeholder, nothing rejected reinserted, and it is this
+field's own existing behaviour (round 12 A's census already has six null
+employers rendering that way).
+
+**TESTS — 17 new**, all in `jobweb.test.ts`.
+
+Negative proof by execution (source reverted, tests run, source restored):
+**11 of 17 FAIL against pre-fix code** — all three Discourse title shapes and all
+seven nav-vocabulary segments, plus the absence assertion. **The other 6 are the
+real-employer must-survive cases** and pass on both sides by design, which is
+exactly what they are for.
+
+**All three of B's reconstructed Discourse title shapes are asserted, not just
+one.** B was explicit that the provider's exact title is a reconstruction (A's
+log has the URL and the value but not the title), and it reproduces the observed
+value byte-for-byte on every shape. Asserting all three makes the fix independent
+of which shape the provider actually sends, which is the honest way to use a
+reconstruction as evidence.
+
+**FORUM-THREAD DROP: NO CODE, and this is a RULING, not an omission.** §1z
+**Ruling 39c** says land the nav-chrome guard and do **not** build the
+thread-drop this round: one observed instance, deferred behind the same bar as
+every accepted risk. **If any future round finds a second
+forum-thread-rendered-as-posting instance, that round's B designs the drop** —
+and the ruling states the preference in advance: a host-list addition, not phrase
+matching, which samples an open class (Ruling 37). B's own narrow `page=N with
+N ≥ 2` option remains recorded as partial, catching page-2 links but not the
+underlying "a forum thread is not a posting" problem.
+
+**GATE after this item** (job-side item, so the event-side locks are run as
+proof of non-interference rather than as the item's own coverage):
+- `web/src/lib/jobs/sources/jobweb.test.ts`: **65 of 65 passing.**
+- `web/src/lib/jobs/mapper.test.ts` + `web/src/lib/jobs/scoring.test.ts` (the
+  twice-missed second file, job side), run together: **42 of 42 passing.**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**):
+  **25 of 25 passing, unchanged.**
+- `web/src/lib/events/scoring.test.ts`: **71 of 71 passing.** The new regex is
+  module-private and additive and no shared function was touched, so the event
+  side cannot be affected — run anyway rather than argued.
+- Full: `npx vitest run` → **90 files / 1134 tests, 1133 passing.** 1117 → 1134
+  is exactly the 17 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**

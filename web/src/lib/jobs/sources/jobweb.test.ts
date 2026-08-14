@@ -112,6 +112,80 @@ describe("company derivation", () => {
     expect(item?.company).toBeUndefined();
   });
 
+  // B12-06 (round 12): openmc.discourse.group rendered the employer as
+  // "Page 2" — round 12 A's worst single value of the round. Not a missing
+  // pagination rule: a missing FAMILY MEMBER. The event side has had chrome
+  // checks whose job is "this segment is site furniture, not a name" since
+  // round 5, and its own word list even contains "page"; the employer slot had
+  // no member of that family at all. Its six existing rejections all ask "is
+  // this a known-bad KIND of name", never "is this navigation".
+  describe("navigation chrome in the employer slot (B12-06)", () => {
+    // All three plausible Discourse title shapes for a paginated thread. B
+    // reproduced the observed value byte-for-byte on every one of them, and
+    // recorded the reconstruction as a reconstruction; asserting all three is
+    // what makes the fix independent of which shape the provider actually
+    // sends.
+    it.each([
+      "Job vacancies looking for OpenMC skills - Page 2 - Users - OpenMC Discourse",
+      "Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse",
+      "Job vacancies looking for OpenMC skills | Page 2 | OpenMC",
+    ])("does not mistake a pagination label for the employer: %s", (title) => {
+      const item = webResultToRawJobItem({
+        title,
+        url: "https://openmc.discourse.group/t/job-vacancies/1234?page=2",
+        snippet: "Several groups are hiring for molten salt reactor work. Apply now.",
+      });
+      expect(item?.company).not.toBe("Page 2");
+    });
+
+    // The rest of the closed vocabulary, asserted on the guard's own shape so
+    // each alternative is covered rather than assumed.
+    it.each(["Page 2", "Page 12 of 40", "3 of 10", "Next", "Home", "Previous", "Back"])(
+      "rejects the nav-chrome segment %s",
+      (segment) => {
+        const item = webResultToRawJobItem({
+          title: `Battery Research Scientist - ${segment}`,
+          url: "https://example.test/forum/t/thread/1?page=2",
+          snippet: "Open position in battery R&D. Apply now.",
+        });
+        expect(item?.company).toBeUndefined();
+      },
+    );
+
+    // THE must-survive cases, and the reason the check is anchored to the whole
+    // segment. Every one of these is a real company whose name BEGINS with a
+    // word the guard rejects on its own. An unanchored check would delete all
+    // four employers.
+    it.each([
+      "Home Depot",
+      "Page Industries",
+      "First Solar",
+      "Next Energy Technologies",
+      "Idaho National Laboratory",
+      "Battery Ventures",
+    ])("keeps the real employer %s", (company) => {
+      const item = webResultToRawJobItem({
+        title: `Battery Research Scientist - ${company}`,
+        url: "https://example.test/careers/job/9912",
+        snippet: "Open position in battery R&D. Apply now.",
+      });
+      expect(item?.company).toBe(company);
+    });
+
+    // Ruling 32 from the render side: absence, not a placeholder. Both the job
+    // card and the feed tile guard on companyOrLab, so the employer line is
+    // omitted entirely rather than showing anything rejected.
+    it("leaves the employer absent when only nav chrome survives", () => {
+      const item = webResultToRawJobItem({
+        title: "Battery Research Scientist - Page 2",
+        url: "https://openmc.discourse.group/t/job-vacancies/1234?page=2",
+        snippet: "Open position in battery R&D. Apply now.",
+      });
+      expect(item).not.toBeNull();
+      expect(item?.company).toBeUndefined();
+    });
+  });
+
   // B5-03 (round 5): all three of A's real jobs wrongly showed a job board's
   // own brand name or a bare location as the company. Neither shape is a
   // known job-board *domain*, so `KNOWN_JOB_BOARD_DOMAINS` never caught

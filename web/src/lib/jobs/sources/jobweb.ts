@@ -120,6 +120,46 @@ function looksLikeHostBoilerplatePhrase(candidate: string): boolean {
 }
 
 /**
+ * B12-06 (round 12): `openmc.discourse.group` rendered the employer as
+ * `"Page 2"`. Round 12 A ranked it the worst single value of the round.
+ *
+ * **This is not "a missing pagination rule" — it is a missing FAMILY MEMBER.**
+ * The event side has had a whole family of chrome checks since round 5
+ * (`isGenericPageTitle`, `isAllGenericWords`, `isEventIndexPage`, the filename
+ * and markup regexes, the bare-date and bare-location checks) whose shared job
+ * is "this segment is site furniture, not a name" — its `GENERIC_TITLE_WORD_RE`
+ * even lists `page` explicitly. The employer slot had **no member of that family
+ * at all**: all six of its existing rejections ask "is this a known-bad KIND of
+ * name", never "is this navigation". So Ruling 32's shape shows up here in its
+ * plainest form — the slot is filled by whatever survives, and nothing was ever
+ * asked to recognise furniture.
+ *
+ * The vocabulary of pagination and navigation controls is **genuinely closed**:
+ * it is a finite set of UI affordances, not an open grammatical class, so this
+ * is not §1x Ruling 37's trap. Same anchored, narrow, closed style as
+ * `SEASON_COHORT_LABEL_RE` above.
+ *
+ * **The `^…$` whole-segment anchor is load-bearing** and the four hardest
+ * must-survive cases are why: `Home Depot`, `Page Industries`, `First Solar` and
+ * `Next Energy Technologies` are all real companies whose names BEGIN with a
+ * rejected word. Same anchor `SEASON_COHORT_LABEL_RE` and
+ * `CAREERS_INDEX_TITLE_RE` already use in this file.
+ *
+ * Ruling 32's question, answered from the render side: when every candidate is
+ * rejected, `.find()` returns `undefined`, `company` is `undefined`, and the UI
+ * **omits the employer line entirely** — both `job-card.tsx` and `feed-tile.tsx`
+ * guard on `job.companyOrLab`. No placeholder, nothing rejected reinserted, and
+ * it is this field's own existing behaviour: round 12 A's census already has six
+ * null employers rendering exactly that way.
+ */
+const NAV_CHROME_SEGMENT_RE =
+  /^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back)$/i;
+
+function looksLikeNavChrome(candidate: string): boolean {
+  return NAV_CHROME_SEGMENT_RE.test(candidate.trim());
+}
+
+/**
  * A trailing chrome word left on an otherwise-real employer candidate that
  * has already cleared every guard below (B9-02a/R13) — "Idaho National
  * Laboratory Careers" names the real employer with a careers-page suffix
@@ -325,7 +365,9 @@ export function webResultToRawJobItem(
           !looksLikeBareLocation(p) &&
           !looksLikeHostBrand(p, host) &&
           !looksLikeTopicLabel(p, topics) &&
-          !looksLikeHostBoilerplatePhrase(p),
+          !looksLikeHostBoilerplatePhrase(p) &&
+          // B12-06: the family member this slot never had — see above.
+          !looksLikeNavChrome(p),
       ),
   );
   return {
