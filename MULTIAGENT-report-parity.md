@@ -2909,6 +2909,64 @@ starting point and Ruling 31's adversarial-test standard as the bar.
 
 ---
 
+### §1z Ruling 39 — ROUND 12 B's FOUR ESCALATIONS, RULED. B12-01 LANDS.
+
+**39a — B12-01's contract change is APPROVED. C lands it.** The snippet stage
+stops returning a sentence and returns the name inside it, or nothing.
+
+1. **Ruling 23/26 decides this, not novelty caution.** Today a reader is told an
+   event is *called* "Abstracts are due no later than Friday…". A sentence is
+   never a name; an honest hostname says "we don't know" and is strictly better
+   on the standard this loop has enforced since round 8.
+2. **The measured-zero honest-host rate is not health to preserve** — it was
+   zero because wrong sentences were occupying the slot. Trading it for the
+   removal of a defect class is the right direction, and the cost stays
+   accounted: **round 13 A counts every honest-host render this creates and
+   judges, per instance, whether the reader is better off** (the standing
+   expected-cost standard).
+3. **The eight restated assertions all move to strictly better values** — §3's
+   rewrite-with-comment rule was written for exactly this, and here the tests
+   get stronger, not weaker. Each restatement carries a comment naming B12-01;
+   the old sentence values join the must-reject cases so the class cannot
+   silently return.
+4. **Ruling 37 compliance is verified, not asserted** — the design's closed
+   list is event-kind NOUNS, genuinely finite, already enumerated twice in this
+   codebase. B's determiner note is binding: no determiner strip in B12-01.
+
+**39b — `batteryinnovationsummit.com`'s `"The Battery Saloon"` is an ACCEPTED
+COST, Ruling 34a's class on the event side.** The provider hands Peer a real,
+correctly-spelled name of the wrong thing (`og:title`); no string-side signal
+exists, and B's refusal to invent a guard is endorsed. Machinery per the
+standard: **Ruling 34a's one-line tally becomes two lines from round 13 —
+employer-side and event-side, same definition** (a correctly-spelled real name
+that is not the actual entity). Re-listed by name every round; excluded from
+open-defect counts.
+
+**39c — the forum-thread question: land B12-06's nav-chrome guard (designed,
+closed-class, adversarially tested); do NOT build the thread-drop this round.**
+One observed instance. Deferred behind the same bar as every accepted risk: **if
+any future round finds a second forum-thread-rendered-as-posting instance, that
+round's B designs the drop** — host-list addition preferred over phrase
+matching, which samples an open class (Ruling 37).
+
+**39d — employer instability: option 1 (accept upstream variance) is ADOPTED,
+per B's own recommendation.** The variance enters at the search provider; Peer's
+processing is verified deterministic. Option 2 (read the employer from the URL
+when the title omits it) is recorded as a **lead for a future round's B** — a
+designed, adversarially-tested item of its own, never bolted onto B12-07
+(round 6's lesson). Option 3 (prefer-by-cache) is rejected for the reason B
+gave: output that depends on pull history is worse than the variance it hides.
+**A's census method does not change**: five independent pulls, majority value
+scored, minority value always stated — that disclosure is now the standing
+method note.
+
+**Recorded as a lead, no work this round:** B's incidental finding that the
+SolarPACES regression lock survives its own guard only because the title
+carries a year. If the guard family is touched again, a year-less variant test
+is the cheap way to make that fragility visible before it bites.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
@@ -25580,3 +25638,47 @@ confirmed `feature/summary-report-revamp` before the first commit and the output
 of every push read, per §3.
 
 §1 is advanced to C in the same commit as this entry.
+
+---
+
+### Round 12 — MANAGER verification of Agent B (before round 12 C is spawned)
+
+**Verdict: B's turn confirmed — the strongest investigative turn of the loop.
+All four escalations ruled (§1z Ruling 39); B12-01 lands. Code untouched,
+verified by empty diff; every finding was established by execution in
+self-contained harnesses, deleted before each commit.**
+
+**The mandatory design survived the right way.** B built the `ruggedthz.com`
+fix, killed its own first version with a counterexample it constructed to break
+it (a title where V1 threw away the correct name), and only then produced V2 —
+anchored to the URL, standing down when a surviving sibling is backed by the
+URL instead, handling both of A's observed failure modes. Eleven adversarial
+cases, one honest residual reported rather than hidden. This is Ruling 31
+executed at design time, which is where it is cheapest.
+
+**B overturned the manager's framing of item 2, correctly.** The brief asked
+"how did the new guard pass it" — B showed by execution that no guard passed
+it: the guard ran and correctly said "not narration", because the defect is one
+layer up, in what the stage is *asked to return*. The test suite asserts the
+sentence-contract eight times, including a landed fix's own test whose
+"correct" value is itself a wrong name by A's standard. Seventh consecutive
+round of the role-after catching the role-before, and the second time the
+catch reversed the manager's own diagnosis. Both accepted.
+
+**One-gap-or-several, all by execution:** the welded label is TWO gaps (two
+hosts share the no-separator cause; `adt.media` is a wrong-input case);
+`talents.vaia.com` is ONE gap (a brand spanning two DNS labels joined by
+"by" — B8-02 changed *which* label is checked, never *one at a time*); items
+5/6 on the event side share ONE function with `ruggedthz.com`, failing three
+different ways — the ordering dependency B recorded for C follows from that.
+
+**Nothing in A's measurement was found wrong** — every reproducible value
+reproduced byte-identically. The instability A flagged is confirmed upstream
+(the provider's own title varies per pull; Peer is deterministic), with one
+amplifier A could not see: the employer feeds the dedup key, so an unstable
+title also changes which duplicate survives.
+
+**Manager's turn complete. `WHOSE TURN: C` stands as B left it, now governed by
+Ruling 39. Round 12 C is spawned next — B12-02 first (independent), then
+B12-01 (now approved), then the rest in B's recorded order.**
+
