@@ -24441,3 +24441,179 @@ Files C will touch: `web/src/lib/events/sources/eventweb.ts` and
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-03: the welded page-type label on three hosts — TWO gaps, not one and not three, established by execution)
+
+**STATUS: DONE.** A's item 4, and A explicitly left the one-or-many conclusion to
+me with a comparative observation attached. Ruling 32 requires establishing it by
+execution before writing per-host entries, so that is what this is. Throwaway
+harness outside `src/`, deleted before this commit. No product code touched.
+
+---
+
+**1. A's COMPARATIVE OBSERVATION IS CONFIRMED, AND IT IS THE WHOLE MECHANISM FOR
+TWO OF THE THREE.**
+
+`bestEventTitleSegment` splits on `/\s+[-|·–—]\s+/` (`eventweb.ts:625`) — a
+separator must be **surrounded by whitespace**. Segment counts, by execution:
+
+```
+battery2030.eu       "Call for Abstracts for the Battery 2030+ Annual Conference 2026"  -> 1 segment
+isea.rwth-aachen.de  "Advanced Battery Power Conference 2026 Call for Papers"           -> 1 segment
+adt.media            "Automotive Battery Conference 2026: key topics and speakers"      -> 1 segment
+battery-power.eu     "Call for papers - Battery Conference 2027"                        -> 2 segments
+```
+
+So on the three failures the whole title is **one** segment. That segment is not
+chrome (`isGenericPageTitle` needs the whole segment to be a generic phrase, or
+every word generic) and it is not narration, so it passes both guards and is
+returned verbatim. On `battery-power.eu` the space-delimited hyphen splits the
+title, the label half is caught by `GENERIC_PAGE_TITLE_RE`'s
+`call\s+for\s+(?:papers|abstracts)` branch (added by B10-03), and the real name
+survives. **A's observation was exactly right: the separator is the operative
+difference, and every guard in this file only ever operates on a segment the
+splitter already produced.**
+
+**2. BUT `adt.media` IS A DIFFERENT GAP, AND MERGING IT WOULD HAVE BEEN WRONG.**
+
+Its rendered value looks like the same shape but the cause is elsewhere. This
+page is a **news article about** the conference, and the codebase already has a
+filter whose whole job is to drop those (`NEWS_TITLE_RE` / `isNewsArticleTitle`,
+`eventweb.ts:129-130`, whose own doc comment says "there is nothing to register
+for"). By execution:
+
+```
+isNewsArticleTitle("Automotive Battery Conference 2026: key topics and speakers") === false
+isNewsArticleTitle("What to expect at the Automotive Battery Conference 2026")    === true
+```
+
+The second string is the page's own `<h1>`, and its URL path is
+`/what-to-expect-at-the-automotive-battery-conference-2026`. **The filter's
+vocabulary is not missing anything — its INPUT is wrong.** It is handed only the
+search provider's title, and on this page the tell sits in the `<h1>` and the URL
+and not in the title.
+
+**VERDICT: two gaps. Gap A = the unseparated welded label (`battery2030.eu`,
+`isea.rwth-aachen.de`). Gap B = the news-article filter reading only the title
+(`adt.media`).** They need two fixes and I recommend them as two entries, not
+three host patches and not one merged patch.
+
+---
+
+**3. GAP A — FIX DESIGN, ADVERSARIALLY TESTED.**
+
+Strip a welded page-type label from a segment that survived every guard, then
+require the remainder to still name an event. Two anchored forms, one closed
+label vocabulary drawn from `GENERIC_PAGE_TITLE_RE`'s own list:
+
+```
+LABEL   = (?:call\s+for\s+(?:papers|abstracts)|cfp|registration|programme|program|agenda|schedule)
+FRONT   = ^LABEL\s+for\s+(?:the\s+)?      <-- the "for the" is load-bearing, see below
+BACK    = [\s:–—-]+LABEL$
+```
+
+then require the remainder to (a) contain an event-kind **noun** from the same
+closed list B12-01 uses, and (b) still pass the shipped `looksLikeEventTitle`.
+If either fails, **do not strip** — return the segment untouched.
+
+**This is the job side's own precedent reused, not a new invention:**
+`stripTrailingCareersChrome` (`jobs/sources/jobweb.ts:138-147`, B9-02a) does
+exactly this — strip a short closed chrome word off an otherwise-accepted
+candidate. Same shape, different vocabulary, event side.
+
+**Adversarial results, run against shipped code:**
+
+```
+"Call for Abstracts for the Battery 2030+ Annual Conference 2026" -> "Battery 2030+ Annual Conference 2026"   FIXED
+"Advanced Battery Power Conference 2026 Call for Papers"          -> "Advanced Battery Power Conference 2026" FIXED
+"Advanced Battery Power Conference 2026: Call for Papers"         -> "Advanced Battery Power Conference 2026" (colon form)
+"Advanced Battery Power Conference 2026 - Call for Papers"        -> "Advanced Battery Power Conference 2026" (dash form)
+-- must-survive --
+"Call for Papers now open for the 2026 Battery Symposium"         -> no strip   <-- eventweb.test.ts:395's existing assertion, PRESERVED
+"26th Advanced Automotive Battery Conference (AABC)"              -> no strip
+"Battery Conference 2027"                                         -> no strip
+"SolarPACES 2026"                                                 -> no strip
+"Call for Papers for the 2026 Ruggiero Prize"                     -> no strip   <-- remainder has no event-kind noun
+"Call for Papers"                                                 -> no strip   <-- bare label; isGenericPageTitle owns it
+```
+
+**Why `\s+for\s+(?:the\s+)?` is load-bearing, and I only found this by running
+the existing test against the design:** without it, the front form also strips
+`"Call for Papers now open for the 2026 Battery Symposium"` into `"now open for
+the 2026 Battery Symposium"` — breaking a must-survive assertion that already
+exists in the suite (`eventweb.test.ts:393-397`, B10-03's own). Requiring the
+label to be *immediately* followed by `for (the)` separates the two: the live
+defect reads "Call for Abstracts **for the** Battery 2030+…", the protected test
+string reads "Call for Papers **now open**…".
+
+**One behaviour I am calling correct rather than a miss, so it is not mistaken
+for one:** `"Riverside Materials Symposium Programme"` strips to `"Riverside
+Materials Symposium"`. That is the same trade the job side already accepts when
+it strips `Careers` off `Idaho National Laboratory Careers`, and the remainder
+still names the event. Recorded because a future round should not read it as
+over-reach that slipped through untested.
+
+**What renders when the design finds nothing (Ruling 32):** the segment,
+unchanged — every check is a veto and the fallback is "do not modify". No
+rejected value is introduced anywhere, because nothing is rejected: this fix
+*edits* an accepted candidate rather than adding or removing one.
+
+---
+
+**4. GAP B — FIX DESIGN, WITH THE OVER-REACH I FOUND AND BLOCKED.**
+
+Give `isNewsArticleTitle` a second input: the URL path, normalised to spaced
+words. `/what-to-expect-at-…` becomes `"what to expect at the automotive battery
+conference 2026"`, which the existing regex matches.
+
+**But NOT with the whole regex — I tested that and it over-reaches badly.**
+`NEWS_TITLE_RE` has an unanchored final alternative
+`\b(?:news|press\s+release|blog\s+post|newsletter)\b`. Applied to a path it
+matches **`news/call-for-abstracts` — which is `battery2030.eu`'s own URL**, the
+other host on this very item. Confirmed by execution:
+
+```
+full NEWS_TITLE_RE on "what to expect at the automotive battery conference 2026" -> true
+full NEWS_TITLE_RE on "news call for abstracts"                                  -> true   <-- OVER-REACH
+anchored-headline subset on the adt.media path                                   -> true
+anchored-headline subset on "news call for abstracts"                            -> false  <-- SAFE
+```
+
+So the path check must use **only the anchored headline-form alternatives**
+(`the year ahead|year in review|top/best N|what to expect|what to watch|a look
+back|a look ahead|recap|highlights from|report from|announcing`), never the
+`news|blog` word list. A page living under `/news/` on the organiser's own site
+is routinely a real event announcement; a page whose path *begins* with a
+listicle headline never is.
+
+**What renders when it fires:** nothing — `webResultToRawEventItem` returns
+`null` (`eventweb.ts:736`) and the result never becomes a card. That is the
+existing, intended behaviour for this class and reinserts nothing. **The
+reader-facing effect is one fewer card, not a different name**, which is correct:
+there is no name on that page that would be right, because it is not the
+conference's page.
+
+---
+
+**5. TESTS AT RISK.**
+
+- Gap A touches `bestEventTitleSegment` in
+  `web/src/lib/events/sources/eventweb.ts` and its tests in
+  `web/src/lib/events/sources/eventweb.test.ts`. **The one existing assertion in
+  real danger is `eventweb.test.ts:393-397`** and the design is built
+  specifically to preserve it — C must run it and confirm it still passes
+  unchanged, and should add it to the new block as an explicit must-survive.
+- Gap B touches `isNewsArticleTitle` and its caller
+  `webResultToRawEventItem` (`eventweb.ts:736`). `isNewsArticleTitle` is
+  exported — grepped for callers: `eventweb.ts` only, plus tests. **Signature
+  change (adding an optional second argument) must keep the existing one-argument
+  calls working**; every current caller passes one argument.
+- Both: run **`web/src/lib/opportunities/enrich.test.ts`** (SolarPACES lock,
+  lives there and not under `events/`) and **`web/src/lib/events/scoring.test.ts`**
+  (the twice-missed second file). Full gate:
+  `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
