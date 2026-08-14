@@ -1357,8 +1357,21 @@ export function webResultToRawEventItem(
   if (isEarningsCallPage(title, url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;
-  const startDate = extractEventDate(text);
+  const extractedDate = extractEventDate(text);
   const deadline = extractDeadline(text);
+  // A22-02 (round 22 C): one token cannot be both the day the event happens
+  // and the day its call for papers closes. DEADLINE_RE only matches a date
+  // that a "deadline"/"submissions due"/"abstracts due" phrase introduces,
+  // while extractEventDate matches any month-day shape — so when both return
+  // the identical instant, the token belongs to the deadline and the event
+  // date is unknown. Keep the deadline (it is evidenced), drop the start date;
+  // the card falls back to the "date TBA" this function already documents
+  // below. Cannot delete a row: the expiry anchor below takes the max of the
+  // two, and the two are equal here.
+  const startDate =
+    extractedDate && deadline && Date.parse(extractedDate) === Date.parse(deadline)
+      ? undefined
+      : extractedDate;
   const anchor = [startDate, deadline]
     .filter((d): d is string => Boolean(d))
     .map((d) => Date.parse(d));

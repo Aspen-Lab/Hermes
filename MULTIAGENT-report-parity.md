@@ -54369,3 +54369,96 @@ accepted cost (item 8) and Ruling 33's definition (untouched anywhere).
 **THE HAND-OFF:** `WHOSE TURN: C — round 22` stands as B wrote it. C's work list is B's §1 order with B's item 8 Part 4 governing the build sequence of the design-derived pieces; **the place half (60c) and the A22-04 guard half (60a) are NOT C items**; 59b carries no code at all. The gate stays `GATE (0%): NOT MET` — only round 23 A's live measurement can move it, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 22 — Agent C (item 1 of 6: **A22-02 — `battery-power.eu`. The deadline role check. A token the deadline extractor owns can no longer also be the event date.**)
+
+**STATUS: PARTIAL BY DESIGN.** One commit per item, code plus this entry
+together, each pushed immediately. This is item 1 of 6 (B's build order per
+item 8 Part 4, with Ruling 60a/60c's deferrals removed from the list).
+
+Claimed the §0d lock after `git pull --ff-only` and confirming
+`git branch --show-current` reads `feature/summary-report-revamp`. **The claiming
+push was ACCEPTED (`7e38467..f35c83f`), so the race was won rather than assumed.**
+
+**THE COLD BASELINE, RUN BEFORE THE FIRST EDIT, MATCHES §1 BYTE FOR BYTE:**
+**91 files / 1652 tests, 1651 passing**, sole failure `benchmark.test.ts` (this
+run at `:119`, `expected undefined to be 'Chicago'` — a recorded assertion form
+of the standing live-search flake, not fixed and not counted). `npx tsc --noEmit`
+clean; `npx eslint` exactly the one standing `src/components/persona/quiz.tsx:46`
+error.
+
+---
+
+## WHAT CHANGED
+
+`web/src/lib/events/sources/eventweb.ts:1360-1375`. `extractEventDate`'s return
+is now named `extractedDate`, and `startDate` is derived from it:
+
+```ts
+const startDate =
+  extractedDate && deadline && Date.parse(extractedDate) === Date.parse(deadline)
+    ? undefined
+    : extractedDate;
+```
+
+Nothing else moved. No new regex, no host list, no new vocabulary, no change to
+the expiry anchor below it — which is why **the clause cannot delete a row**:
+the anchor takes `Math.max` of the two dates and on a firing row the two are
+equal, so the max is unchanged.
+
+## WHY THIS IS THE EVIDENCED DIRECTION AND NOT A COIN TOSS
+
+The two extractors are not symmetric. `DEADLINE_RE` (`:36`) only matches a date
+that a `deadline` / `submissions due` / `abstracts due` phrase introduces within
+40 characters; `extractEventDate` (`:49`) matches **any** month-day shape. So on
+a collision the deadline reading carries a witness the event reading does not.
+**The deadline is kept because it is evidenced, not because it was picked.** The
+comment in source says this in the same words, so a later reader does not have to
+re-derive it.
+
+## TESTS ADDED — one new `describe` block, four cases, in `eventweb.test.ts`
+
+`web/src/lib/events/sources/eventweb.test.ts` — `a date token the deadline
+extractor owns (A22-02)`. **NO existing test was edited or deleted.** B's
+tests-at-risk list named four files; C greped all four plus every caller and
+**none moved** — the reds B predicted did not materialise because no shipped
+fixture has a lone date token claimed by the deadline phrase. Recorded so round
+23 does not go looking for a red that was never there.
+
+| case | role |
+|---|---|
+| `leaves the event date absent when it is the same instant as the deadline` | **the uniquely-red case** |
+| `keeps the row alive rather than expiring it when the start date goes silent` | control — the drop side |
+| `does not touch a row whose event date and deadline are different days` | must-keep control |
+| `does not touch a row that has an event date and no deadline at all` | must-keep control |
+
+## NEGATIVE PROOF — the source was reverted and the suite re-run
+
+With `const startDate = extractedDate;` in place of the clause:
+**`eventweb.test.ts` 1 failed | 143 passed (144)**. The single red is the
+uniquely-red case; the three controls pass both ways **by design and are labelled
+as controls**, which is what a control is for. One clause, one uniquely-red case
+(§3's vacuity rule). Source restored and re-verified before the gate run.
+
+## THE GATE AFTER THIS ITEM
+
+**91 files / 1656 tests, 1655 passing** (+4, exactly the four added cases). Sole
+failure the standing `benchmark.test.ts` flake — this run at `:102`
+(`0.4705… >= 0.5`), a different recorded assertion form of the same live-search
+flake, **not fixed, not counted, and not caused by this change** (it is an
+enrichment-rate assertion against live search on a code path this item does not
+touch). `npx tsc --noEmit` clean. `npx eslint` exactly the one standing
+`quiz.tsx:46` error.
+
+**`src/lib/opportunities/enrich.test.ts` SOLO: 53 of 53 — the SolarPACES lock
+holds.**
+
+## WHAT THIS DOES NOT FIX, RESTATED FROM B SO IT IS NOT LOST
+
+The reader still never sees `9 April 2027`. Recovering it means reading the
+page's prose and reversing `enrich.ts:335`'s backwards precedence (snippet over
+the page's own declared value) — **B named that as a separate defect on the same
+line and C has not touched it.** A silent `date TBA` beside a correct
+`Abstract due 31 Oct` is honest; the self-contradicting pair was not.
+
+---

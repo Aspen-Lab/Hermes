@@ -1239,6 +1239,77 @@ describe("webResultToRawEventItem", () => {
     // the event name — is unchanged and still asserted on the line above.
     expect(item?.name).toBe("Rivertown Summit");
   });
+
+  // A22-02 (round 22, `battery-power.eu`): the snippet held exactly ONE date
+  // token, it was the CFP deadline's, and both extractors claimed it — so the
+  // card printed "Dates 31 Oct" beside "Abstract due 31 Oct" from one token.
+  // An event cannot happen on the day its own call for papers closes.
+  describe("a date token the deadline extractor owns (A22-02)", () => {
+    const DEADLINE_NOW = Date.parse("2026-01-01T00:00:00Z");
+
+    it("leaves the event date absent when it is the same instant as the deadline", () => {
+      const item = webResultToRawEventItem(
+        {
+          title: "International Battery Power Conference 2026",
+          url: "https://example.com/conference",
+          snippet: "Deadline 31 October 2026 to submit your abstracts for the conference.",
+        },
+        DEADLINE_NOW,
+      );
+      // Both extractors return 2026-10-31 on this text. The deadline is the
+      // evidenced reading (its regex demanded the word "deadline" in front of
+      // the token); the event date is not, so it goes silent — "date TBA".
+      expect(item?.deadline?.slice(0, 10)).toBe("2026-10-31");
+      expect(item?.startDate).toBe("");
+    });
+
+    it("keeps the row alive rather than expiring it when the start date goes silent", () => {
+      // The admitted control on the drop side: clearing the start date must
+      // not delete the row. The expiry anchor takes the max of the two dates
+      // and they were equal, so a real live conference survives with an
+      // honest silence instead of a self-contradicting pair of tiles.
+      const item = webResultToRawEventItem(
+        {
+          title: "International Battery Power Conference 2026",
+          url: "https://example.com/conference",
+          snippet: "Deadline 31 October 2026 to submit your abstracts for the conference.",
+        },
+        DEADLINE_NOW,
+      );
+      expect(item).not.toBeNull();
+      expect(item?.name).toBe("International Battery Power Conference 2026");
+    });
+
+    it("does not touch a row whose event date and deadline are different days", () => {
+      // The must-keep control: two distinct tokens, two distinct roles, and
+      // the clause must not fire. This is the shape B measured on 49 of the
+      // 50 live ingestion-kept rows.
+      const item = webResultToRawEventItem(
+        {
+          title: "Advanced Battery Materials Conference 2026",
+          url: "https://example.com/events/advanced-battery-materials",
+          snippet:
+            "The conference runs September 14, 2026 in Boston. Abstract submissions deadline: August 14, 2026.",
+        },
+        DEADLINE_NOW,
+      );
+      expect(item?.startDate?.slice(0, 10)).toBe("2026-09-14");
+      expect(item?.deadline?.slice(0, 10)).toBe("2026-08-14");
+    });
+
+    it("does not touch a row that has an event date and no deadline at all", () => {
+      const item = webResultToRawEventItem(
+        {
+          title: "Advanced Battery Materials Conference 2026",
+          url: "https://example.com/events/advanced-battery-materials",
+          snippet: "The conference runs September 14, 2026 in Boston.",
+        },
+        DEADLINE_NOW,
+      );
+      expect(item?.startDate?.slice(0, 10)).toBe("2026-09-14");
+      expect(item?.deadline).toBeUndefined();
+    });
+  });
 });
 
 // B13-03 (round 13): the BANNER LEAD-IN. `flogen.org` rendered
