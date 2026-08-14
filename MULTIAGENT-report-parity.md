@@ -38537,3 +38537,248 @@ nothing** (`Head of Careers`).
 
 ---
 
+### Round 17 — Agent B (item 2 of 2, Ruling 48a's paired question: the CATL wrong employer. IT DOES need its own guard, and the reason is the inverse of round 16's — landing the drop ALONE would make this wrong value UNFALSIFIABLE rather than fixed. Reproduced on a REAL posting shape, 4/4 catches with ZERO destroyed employers, and the obvious repair is the forbidden move, measured.)
+
+**STATUS: DONE.** Same lock (`b9ba97e`), same branch, re-confirmed with
+`git branch --show-current` before this commit and read again in the push output
+(§3). Harness lived outside `src/` (`web/zz-r17b/`, own vitest config) and is
+**deleted before this commit**; `git status --porcelain --untracked-files=all`
+confirmed clean. **B changes no code, deletes no test, edits no test, and
+touches no file except this one** (§2). **No live pull, no page fetch, no
+credential read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.**
+
+---
+
+#### 0. RULING 48a RUNS BACKWARDS HERE, AND THAT IS THE WHOLE ARGUMENT
+
+Round 16's gap 2C existed because a drop fix **recovered** two postings and one
+came back with the employer `Search` — a missing item converted into a wrong
+one. **This round the drop fix goes the other way: item 1 REMOVES the page that
+carries the wrong employer, so nothing is converted into anything.** Ruling 48a's
+literal condition does not fire.
+
+**It fires on the consequence instead, and the consequence is worse than a
+missed fix.** Executed against the shipped code, before any of this round's
+changes:
+
+| row | shipped render |
+|---|---|
+| `CATL Internships - Battery Cell, R&D & Gigafactory Programs - EV.Careers` (**LIVE, 1 of 5**) | title `CATL Internships`, employer **`Battery Cell, R&D & Gigafactory Programs`** |
+| `Battery Cell Engineer - Battery Cell, R&D & Gigafactory Programs - EV.Careers` (**a REAL posting on the same board**) | title `Battery Cell Engineer`, employer **`Battery Cell, R&D & Gigafactory Programs`** |
+| `Senior Materials Scientist - Engineering, Science & Technology Programs - EV.Careers` | title `Senior Materials Scientist`, employer **`Engineering, Science & Technology Programs`** |
+
+**The wrong value is NOT a property of the brochure page. It is a property of
+that board's `<title>` template, and it lands on ordinary vacancies too** — a
+list of programme areas sitting where a company name belongs. Item 1 drops the
+one page this loop has actually sighted it on. **Land item 1 alone and the
+defect stops being visible without stopping being real** — the only row a census
+could ever have caught it on has left the pool. That is the opposite of
+progress, and it is why this must land in the same change.
+
+**EVIDENCE CLASS, STATED HONESTLY AND IT IS STRONGER THAN ROUND 16's WAS.**
+Round 16's gap 2C was **LATENT** — reproduced by executing the chain, never
+sighted. **This value WAS sighted live** by round 17 A (minority, 1 of 5, and A
+reported it rather than letting majority scoring delete it). What is latent is
+only the *kept-posting* form: the host and role title in rows 2 and 3 above are
+constructed, the employer segment is not.
+
+---
+
+#### 1. WHERE IT COMES FROM — THREE WORDS OF MECHANISM, NOT A MYSTERY
+
+The title splits on ` - ` into `CATL Internships`, `Battery Cell, R&D &
+Gigafactory Programs`, `EV.Careers`. There is no ` at <Employer>` phrase, so
+`titleEmployer` is undefined and the chain falls to `parts.slice(1)`. **The
+first candidate clears all nine existing vetoes**: it is not a known job-board
+domain, not a season label, not a bare location, not the host brand, not a topic
+label, not hosting boilerplate, not nav chrome, not a bare careers-section
+label, not a field label. **Nothing in the chain has any concept of "this is a
+list of programme areas."** Ruling 32's shape in its plainest form: the slot is
+filled by whatever survives.
+
+---
+
+#### 2. THE OBVIOUS REPAIR IS THE FORBIDDEN MOVE, AND IT IS MEASURED RATHER THAN ASSERTED
+
+`TRAILING_CAREERS_CHROME_RE` already strips a trailing chrome word from an
+otherwise-real candidate. The obvious move is to add `programs?` to it. **Run,
+it produces this:**
+
+| input | after the widened strip |
+|---|---|
+| `Battery Cell, R&D & Gigafactory Programs` | `Battery Cell, R&D & Gigafactory` |
+| `Engineering, Science & Technology Programs` | `Engineering, Science & Technology` |
+| `Graduate, Placement & Internship Programmes` | `Graduate, Placement & Internship` |
+
+**Every one is still a wrong employer — just a differently wrong one.** That is
+exactly what Ruling 48a forbids, and it is the same finding round 16 recorded
+for its own strip (`stripTrailingCareersChrome` returns the ORIGINAL candidate
+when the strip would empty it, so the strip can never produce silence). **Only
+the veto chain can produce silence, which is Ruling 32's own required answer.**
+
+---
+
+#### 3. THE MATRIX — 4 MUST-VETO, 43 MUST-KEEP, AND THE SWEEP FOUND THE NARROWING
+
+| candidate | catches | DESTROYS |
+|---|---|---|
+| **E2 — any segment ending in a plural programme noun** | 4/4 | **5/43** — `Advanced Technology Programs`, `Head Start Programs`, `Youth Programs`, `Special Programs`, `Wildlife Conservation Programs` |
+| **E1 — coordinated list + a trailing plural section noun** (first draft) | 4/4 | **5/43** — `Alphabet, Inc. Careers`, `Baker, Smith & Co Careers`, `Johnson & Johnson Careers`, `Smith, Jones & Partners Vacancies`, `Procter & Gamble Openings` |
+| **E1′ — RECOMMENDED: coordinated list + a trailing plural PROGRAMME noun only** | **4/4** | **0/43** |
+
+**E1's five false fires were found by the string sweep, not by inspection, and
+one of them is a SHIPPED ASSERTION.** `Research Fellow - Alphabet, Inc. Careers`
+is a shipped test expecting the employer `Alphabet, Inc.` — the comma in the
+real company name plus a trailing `Careers` is exactly E1's shape. **The
+narrowing is therefore structural rather than cosmetic: the trailing noun list
+must contain ONLY the words `TRAILING_CAREERS_CHROME_RE` does NOT already
+handle.** `careers`, `jobs`, `employment` and `job openings` are the strip's
+territory and a candidate ending in one of them is a real employer with chrome
+attached, which the strip recovers correctly today. `programs` / `programmes`
+are the two words nothing owns.
+
+**The must-keep set is 43 real organisation names**: round 16 gap 2C's own
+twelve hardest (`Search Party Media`, `View Systems Inc`, `Find Therapeutics`,
+`Browse AI`, `Best Buy`, `Top Glove Corporation`, `All Jobs Ltd`,
+`Search Laboratories`, `Home Depot`, `Page Industries`, `First Solar`,
+`Next Energy Technologies`), eleven names built from commas, ampersands and
+programme words (`Johnson & Johnson`, `Baker, Smith & Co`, `Procter & Gamble`,
+`United Nations Development Programme`, `Head Start Program`,
+`Battery Cell Technologies`, `Gigafactory Nevada`, `R&D Systems`,
+`Marks & Spencer`, `Ernst & Young`, `Booz Allen Hamilton`), five names ending in
+a plural programme noun written specifically to kill E2, every employer round 17
+A recorded live, and the six careers-chrome forms above. **E1′ fires on none of
+them, and separately on none of the ten employer values A recorded live this
+round.**
+
+**THE COORDINATION REQUIREMENT IS LOAD-BEARING AND E2 IS THE PROOF.** A list of
+programme areas is a *coordinated* phrase — it carries `,` or `&` or `and`. A
+real company name that merely ends in `Programs` does not. Dropping that
+conjunct costs five real employers. Same "require a confirming structural token"
+discipline `FORUM_THREAD_URL_RE` (an id or a filename) and
+`NAV_CHROME_SEGMENT_RE` (verb + job noun) already ship.
+
+---
+
+#### 4. RULING 32's QUESTION — WHAT RENDERS WHEN THE VETO FIRES
+
+**Honest silence, measured by execution on the shipped chain rather than
+reasoned about:**
+
+| row | render after the veto |
+|---|---|
+| `Battery Cell Engineer - <vetoed> - EV.Careers` | title `Battery Cell Engineer`, **employer ABSENT** |
+| `Senior Materials Scientist - <vetoed> - EV.Careers` | title `Senior Materials Scientist`, **employer ABSENT** |
+| `Battery Cell Engineer - CATL - <vetoed> - EV.Careers` | title `Battery Cell Engineer`, **employer `CATL` — a real employer later in the chain still wins** |
+
+The next candidate (`EV.Careers`) is already rejected by `looksLikeHostBrand`,
+so `.find()` returns `undefined`, `company` is `undefined`, and **all four
+render sites omit the employer line entirely** — `job-card.tsx` and
+`feed-tile.tsx` guard on `job.companyOrLab`; `briefing-hero.tsx` and
+`briefing-quick-hit.tsx` build an array and `.filter(Boolean).join(" · ")`, so
+the separator disappears with the value. That is this chain's established
+behaviour (B12-06's corrected count of four sites, B13-01's re-check in the
+components), inherited unchanged.
+
+**Missing beats wrong (Ruling 23), and the third row is the proof this is a
+veto and not a blanket.**
+
+---
+
+#### 5. TESTS AT RISK — ZERO, BY THE SAME SWEEP
+
+The 1016-literal × 19-host sweep in item 1 covered this too. **E1 (the first
+draft) fired on one literal — `Research Fellow - Alphabet, Inc. Careers`, a
+shipped assertion — which is what produced the narrowing.** **E1′ fires on
+zero literals in `jobweb.test.ts`, `scoring.test.ts` or `job-cleanup.test.ts`,
+and on zero of round 17 A's live employer values.** No shipped test asserts on
+any segment ending in a plural programme noun.
+
+---
+
+#### 6. THE FIX GUIDE FOR C — ONE CONSTANT, ONE HELPER, ONE LINE IN THE CHAIN
+
+**File: `web/src/lib/jobs/sources/jobweb.ts`.** Add beside `NAV_CHROME_SEGMENT_RE`
+/ `looksLikeNavChrome`, whose style it deliberately mirrors:
+
+```ts
+// B17-02 (Ruling 48a's paired half): a LIST OF PROGRAMME AREAS in the employer
+// slot. `ev.careers` renders `Battery Cell, R&D & Gigafactory Programs` where
+// the employer is CATL — a description of what a board covers, not a company.
+const PROGRAMME_AREA_LIST_RE =
+  /^[^,&]*(?:,|\s&\s|\sand\s)[^,]*\s(?:programmes|programs)$/i;
+
+function looksLikeProgrammeAreaList(candidate: string): boolean {
+  return PROGRAMME_AREA_LIST_RE.test(candidate.trim());
+}
+```
+
+Add one conjunct to the `.find()` veto chain in `webResultToRawJobItem`,
+directly after `!looksLikeNavChrome(p) &&`:
+
+```ts
+          !looksLikeProgrammeAreaList(p) &&
+```
+
+**DO NOT:**
+- **Do not add `programs?` to `TRAILING_CAREERS_CHROME_RE`** — part 2 shows it
+  turns a wrong value into a differently wrong value, which is Ruling 48a's
+  named forbidden move.
+- **Do not drop the coordination requirement** (`,` / `&` / `and`) — part 3
+  prices it at five destroyed real employers.
+- **Do not add `careers`, `jobs`, `positions`, `vacancies` or `openings` to the
+  trailing-noun list** — that is `TRAILING_CAREERS_CHROME_RE`'s territory and it
+  breaks the shipped `Alphabet, Inc.` assertion.
+- **Do not add a host rule for `ev.careers`** — Ruling 32's headline complaint,
+  and `ev.careers` also hosts postings that render the correct employer `Tesla`
+  in this very round's census.
+
+**C's tests must state, at minimum:**
+1. **The live value is vetoed:** the full offered CATL title renders **no
+   employer**, not `Battery Cell, R&D & Gigafactory Programs`. Assert it on the
+   **kept real-posting form** (`Battery Cell Engineer - Battery Cell, R&D &
+   Gigafactory Programs - EV.Careers`), because item 1 drops the brochure page
+   and an assertion on that row would be vacuous.
+2. **The `and` and the `&` forms both fire**, and the British `Programmes`
+   spelling fires.
+3. **A REAL EMPLOYER LATER IN THE CHAIN STILL WINS:**
+   `Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs -
+   EV.Careers` renders `CATL`.
+4. **THE SHIPPED STRIP IS UNTOUCHED, asserted end to end:**
+   `Research Fellow - Alphabet, Inc. Careers` still renders `Alphabet, Inc.`,
+   and `Battery Research Scientist - Idaho National Laboratory Careers` still
+   renders `Idaho National Laboratory`.
+5. **The five names that killed E2, as must-keeps:**
+   `Advanced Technology Programs`, `Head Start Programs`, `Youth Programs`,
+   `Special Programs`, `Wildlife Conservation Programs` all survive in the
+   employer slot.
+6. **The coordination-comma traps:** `Baker, Smith & Co`, `Johnson & Johnson`,
+   `Marks & Spencer`, `Ernst & Young`, `R&D Systems` all survive.
+7. **`United Nations Development Programme` survives** — the singular is not in
+   the list, and this is the hardest "must match nothing" case (Ruling 31).
+
+**Ruling 31's three hardest:** a multi-word case
+(`Graduate, Placement & Internship Programmes`), a punctuated case
+(`Alphabet, Inc. Careers` as a must-keep), and a case that must match nothing
+(`United Nations Development Programme`).
+
+---
+
+#### 7. WHAT B DOES NOT CLAIM, AND ONE JUDGEMENT FOR THE MANAGER
+
+- **One sighted instance, one board.** The value was seen live once (1 of 5).
+  The three other must-veto strings are constructed and B says so.
+- **The kept-posting form is latent.** Its employer segment is the real recorded
+  string; its host and role title are constructed.
+- **B did NOT re-score A's minority row or convert it into anything stronger.**
+- **`POLICY — manager decides`: must this land in the same commit as item 1?**
+  Ruling 48a's literal trigger (a drop fix resurrecting an item) does **not**
+  fire this round. B recommends pairing anyway on the argument in part 0 —
+  **landing item 1 alone deletes the only row a future census could sight this
+  value on** — and because the guard costs nothing measurable. **If the manager
+  prefers to hold it, the two are separable: item 1 is complete and correct
+  without item 2, and item 2 is testable without item 1.** They are two commits
+  in either case.
+
+---
+
