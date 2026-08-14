@@ -567,6 +567,77 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B12-05 (round 12): the URL-slug stage was LAUNDERING a document filename
+  // past the guard written to reject it. DOCUMENT_FILENAME_RE (B8-06) stops a
+  // served document's filename becoming an event name, and it works at the
+  // title stage — but the slug stage's first act was to strip the extension,
+  // so the guard could never see one. Round 9's B named it exactly: "a
+  // filename, just without the dot and three letters." Unchanged since, and
+  // euchems2026.eu rotates the document, so the mechanism mints a fresh wrong
+  // name every time it is measured.
+  describe("document filename laundered through the URL slug (B12-05)", () => {
+    // The live repro. Round 9 and round 12 saw different documents from the
+    // same host, which is the point.
+    it("does not turn a served document's filename into an event name", () => {
+      expect(
+        eventNameFrom(
+          "ECC102026-POSTERS-v2.pdf",
+          "",
+          "https://www.euchems2026.eu/files/ECC102026-POSTERS-v2.pdf",
+        ),
+      ).toBe("euchems2026.eu");
+    });
+
+    // The title stage already rejected it; this asserts the two stages now
+    // agree instead of the second undoing the first.
+    it("keeps the title stage and the slug stage agreeing on a filename", () => {
+      expect(
+        bestEventTitleSegment(
+          "ECC102026-POSTERS-v2.pdf",
+          "https://www.euchems2026.eu/files/ECC102026-POSTERS-v2.pdf",
+        ),
+      ).toBeUndefined();
+    });
+
+    // Media extensions come from EMBEDDED_FILENAME_RE, the other existing list.
+    it("does not turn an image filename into an event name", () => {
+      expect(
+        eventNameFrom("Home | Events", "", "https://example.org/media/battery-symposium-photo.jpg"),
+      ).toBe("example.org");
+    });
+
+    // MUST-SURVIVE, and B named it as the assertion to protect: a slug with NO
+    // extension is untouched. This is the same case as the existing
+    // "falls through to the URL slug" test higher up, restated here so the
+    // protection is local to the fix that could break it.
+    it("still reads a real event name from an extensionless slug", () => {
+      expect(
+        eventNameFrom(
+          "Rivertown Summit was originally planned for 2020 but was delayed.",
+          "",
+          "https://example.com/events/rivertown-materials-summit-2026",
+        ),
+      ).toBe("Rivertown materials summit 2026");
+    });
+
+    // MUST-SURVIVE, and the reason the generic `\.\w{2,5}$` strip below the new
+    // check is deliberately left in place: a PAGE extension is not a document,
+    // and rejecting those would throw away real names on every classic-CMS
+    // site. Only the closed document/media lists reject.
+    it.each(["html", "php", "aspx"])(
+      "still reads a real event name from a slug ending .%s",
+      (ext) => {
+        expect(
+          eventNameFrom(
+            "Home | Events",
+            "",
+            `https://example.com/events/rivertown-materials-summit-2026.${ext}`,
+          ),
+        ).toBe("Rivertown materials summit 2026");
+      },
+    );
+  });
+
   // B11-02 (round 11, Rulings 32/35): the sequel to B10-03 above, same host.
   // Once "Call for Papers" is correctly rejected as a title segment,
   // execution reaches the snippet-mining stage — which filtered candidates

@@ -26108,3 +26108,86 @@ string therefore costs nothing on this host.
 - `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
   error (`quiz.tsx:46`), none added.
 - **No existing test assertion changed or deleted.**
+
+---
+
+### Round 12 — Agent C (B12-05: `euchems2026.eu` slug-laundering LANDED; `batteryinnovationsummit.com` NO CODE, ruled not skipped)
+
+**STATUS: LANDED (one half), NO CODE BY RULING (the other half).**
+
+---
+
+**`euchems2026.eu` — LANDED.**
+
+`nameFromUrlSlug` was **laundering a document filename past the guard written to
+reject it**. `DOCUMENT_FILENAME_RE` exists precisely to stop a served document's
+own filename becoming an event name (B8-06), and it works at the title stage. But
+the slug stage's first act was to strip the extension, so that guard could never
+see one — round 9's B named it exactly: "a filename, just without the dot and
+three letters." Unchanged since round 9, and the host rotates the document, so
+the mechanism mints a fresh wrong name every time anyone measures it.
+
+**What landed:** the chosen path part is now rejected outright when it carries an
+extension from **the two existing lists** (`DOCUMENT_FILENAME_RE` for documents,
+`EMBEDDED_FILENAME_RE` for media), instead of having that extension stripped. No
+third list was written, per B's instruction — a closed set of file extensions,
+no open class sampled.
+
+**One decision inside the fix, commented in the code because getting it wrong
+would be expensive:** the generic `\.\w{2,5}$` strip immediately below the new
+check **deliberately stays**. A *page* extension (`.html`, `.php`, `.aspx`) is
+not a document, and rejecting those would throw away real event names on every
+classic-CMS site. Only the closed document/media lists reject; everything else
+still strips as before. Asserted with three must-survive cases.
+
+Ruling 32's question: when it fires, execution continues to the snippet stage and
+then to B9-04 Fix 1's honest URL host. The suppressed value is the slug's own
+derivative and nothing rejected is reinserted — the reader gets a bare organiser
+hostname instead of a filename dressed up as a conference name.
+
+**TESTS — 7 new**, all in `eventweb.test.ts`. Negative proof by execution (source
+rolled back to its post-B12-04 state, tests run, source restored): **2 of 7
+FAIL** — the live `.pdf` repro and the media-extension case. **The other 5 are
+must-survive** and pass on both sides by design: the title stage's existing
+rejection (asserted so the two stages are seen to agree rather than one undoing
+the other), the extensionless slug B named as the assertion to protect, and the
+three page-extension cases.
+
+---
+
+**`batteryinnovationsummit.com` — NO CODE, and this is a RULING, not an
+omission.**
+
+**§1z Ruling 39b** classifies `"The Battery Saloon"` as an **ACCEPTED COST,
+Ruling 34a's class on the event side**: the provider hands Peer the page's
+`og:title`, which is a real, correctly-spelled name of the wrong thing. B refused
+to design a guard and the manager endorsed the refusal — there is no string-side
+signal, because there is nothing wrong with the string. C wrote no code here, by
+ruling.
+
+**Machinery the ruling sets up, recorded so round 13 A does not have to derive
+it:** Ruling 34a's one-line tally **becomes two lines from round 13** —
+employer-side and event-side, same definition (a correctly-spelled real name that
+is not the actual entity). Re-listed by name every round; excluded from
+open-defect counts. Ruling 39b also records as the standing answer, rather than
+something to re-derive each round, that **the enrichment tier is the only route
+that could ever fix this class** — and that tier is dark while `feedAiApiKey` is
+empty.
+
+**Also untouched, on purpose:** B's incidental `EVENT_SIGNAL_RE` plural finding
+(`looksLikeEvent("Battery Summits") === false`). B explicitly left it as a lead
+and did not schedule it, there is no live wrong value attributed to it, and
+Rulings 32/34b say land what is confirmed. C did not fold it into this item.
+
+**GATE after this item:**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**,
+  which lives there and NOT under `events/`), run on its own:
+  **25 of 25 passing, unchanged.**
+- `web/src/lib/events/scoring.test.ts` (the twice-missed second file), run:
+  **71 of 71 passing.**
+- Full: `npx vitest run` → **90 files / 1117 tests, 1116 passing.** 1110 → 1117
+  is exactly the 7 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**

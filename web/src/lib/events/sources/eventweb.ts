@@ -675,6 +675,29 @@ function nameFromUrlSlug(url: string): string | undefined {
     .reverse()
     .find((part) => /[a-z]/i.test(part) && part.replace(/[^a-z]/gi, "").length >= 8);
   if (!slug) return undefined;
+  // B12-05 (round 12): the slug stage was LAUNDERING a document filename past
+  // the guard built to reject it. `DOCUMENT_FILENAME_RE` exists precisely to
+  // stop a served document's own filename becoming an event name (B8-06), and
+  // it works at the title stage — `bestEventTitleSegment("ECC102026-POSTERS-v2.pdf",
+  // url)` correctly returns nothing. Execution then arrives here, where the
+  // FIRST act used to be stripping the extension, so the guard could never see
+  // one: "a filename, just without the dot and three letters", as round 9's B
+  // put it. `euchems2026.eu` rendered `ECC102026 POSTERS v2` this way, and it
+  // rotates the document, so the mechanism mints a new wrong name each time.
+  //
+  // Reuses the two existing extension lists rather than writing a third — a
+  // closed list of file extensions, no open class sampled. Note the generic
+  // `\.\w{2,5}$` strip below deliberately stays: page extensions (.html, .php,
+  // .aspx) are not documents and must still be stripped, not rejected.
+  //
+  // Ruling 32's question: when this fires, execution continues to the snippet
+  // stage and then to B9-04 Fix 1's honest URL host. The suppressed value is
+  // the slug's own derivative and nothing rejected is reinserted — the reader
+  // sees a bare organiser hostname instead of a filename dressed as a
+  // conference name.
+  if (DOCUMENT_FILENAME_RE.test(slug) || EMBEDDED_FILENAME_RE.test(slug)) {
+    return undefined;
+  }
   const words = slug
     .replace(/\.\w{2,5}$/, "")
     .replace(/[-_+]+/g, " ")
