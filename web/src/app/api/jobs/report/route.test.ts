@@ -42,8 +42,18 @@ function request(body: Record<string, unknown>): NextRequest {
   });
 }
 
+// A22-03(b) / Ruling 60d (round 22 C): the deep report now inherits the
+// minimum-substance floor — an `owned` verdict alone no longer proves the block
+// contains a posting BODY, so a block thinner than two publishable sentences is
+// not handed to the model as evidence and the read reports "failed". Every
+// caller below that means "a page the model could legitimately read" therefore
+// gets a second sentence. The cases that mean the opposite pass their own
+// deliberately-thin content and are commented where they do.
+const SECOND_SENTENCE =
+  "<p>Applicants join the electrochemistry group for a full research term.</p>";
+
 function ownedPage(url: string, content: string): string {
-  return `<article><a href="${new URL(url).pathname}">Selected posting</a>${content}</article>`;
+  return `<article><a href="${new URL(url).pathname}">Selected posting</a>${content}${SECOND_SENTENCE}</article>`;
 }
 
 beforeEach(() => {
@@ -216,6 +226,32 @@ describe("POST /api/jobs/report", () => {
     expect(generateJsonText).toHaveBeenCalledTimes(1);
     const modelRequest = generateJsonText.mock.calls[0][0] as { userPrompt: string };
     expect(modelRequest.userPrompt).not.toContain(foreignMarker);
+  });
+
+  // A22-03(b) / Ruling 60d (round 22 C): the deep report's own uniquely-red
+  // case for the minimum-substance floor. This block is OWNED — it carries the
+  // exact self-link the resolver demands — and it is still not evidence,
+  // because it is nothing but that witness. B measured the shipped resolver
+  // certifying blocks of 8, 9, 48, 74 and 83 characters as owned.
+  it("does not prompt the model with an owned block that carries no posting body", async () => {
+    const thinContent = "<p>Careers</p>";
+    const generateJsonText = vi.fn().mockResolvedValue(JSON.stringify({
+      competitiveness: { verdict: "Unknown", reasoning: "Insufficient owned evidence." },
+    }));
+    mocks.resolveProvider.mockReturnValue({ generateJsonText });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      `<article><a href="/thin-role">Selected posting</a>${thinContent}</article>`,
+      { status: 200 },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(request({
+      job: { ...job, linkPosting: "https://jobs.example.com/thin-role" },
+    }));
+
+    expect((await response.json()).sourceReadStatus).toBe("failed");
+    const modelRequest = generateJsonText.mock.calls[0][0] as { userPrompt: string };
+    expect(modelRequest.userPrompt).not.toContain("Careers");
   });
 
   it("reopens within the cache TTL with zero fetches and zero model calls", async () => {

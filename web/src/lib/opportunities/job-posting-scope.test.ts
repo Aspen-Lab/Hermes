@@ -1,10 +1,55 @@
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
-import { resolveJobPostingScope } from "./job-posting-scope";
+import { ownedTextHasPostingSubstance, resolveJobPostingScope } from "./job-posting-scope";
 import { enrichJobCandidates } from "./enrich";
 import { scoredJobToJob } from "@/lib/jobs/mapper";
 import { scoreIndustryFit } from "@/lib/jobs/scoring";
 import { jobDedupKey } from "@/lib/jobs/dedup";
+
+// A22-03(b) / Ruling 60d (round 22 C): THE MINIMUM-SUBSTANCE FLOOR.
+// `resolveJobPostingScope` proves a boundary, not a body — its acceptance
+// filter admits a block on ONE self-link or ONE matching heading with no second
+// witness, so a block whose entire content IS that witness passes. The strings
+// below are the ones B measured `owned` across a live pull; they were harmless
+// only while nothing published them. The fail-closed summary gate now does.
+describe("ownedTextHasPostingSubstance", () => {
+  it("rejects the nav fragments the shipped resolver certifies as owned", () => {
+    // Lengths as B measured them: 4, 7, 8, 9, 48 and 74 characters.
+    expect(ownedTextHasPostingSubstance("Home")).toBe(false);
+    expect(ownedTextHasPostingSubstance("Sitemap")).toBe(false);
+    expect(ownedTextHasPostingSubstance("Careers")).toBe(false);
+    expect(ownedTextHasPostingSubstance("Apply now")).toBe(false);
+    expect(ownedTextHasPostingSubstance("Battery Research Internship - Example Lab Careers")).toBe(false);
+    expect(
+      ownedTextHasPostingSubstance("Search all open roles at Example Energy and set up a job alert."),
+    ).toBe(false);
+  });
+
+  it("rejects an 83-character headline, which no bare length floor could (Ruling 59b(b))", () => {
+    // The witness that makes this a BODY test and not a length guess: the
+    // resolver certified a blog post's headline as owned. A headline is a
+    // single fragment however long it runs, so a character count set above 83
+    // would only be taste — a posting body says more than one thing.
+    const headline = "Graduate Internship Opportunities In Battery And Molten Salt Research Announced";
+    expect(headline.length).toBeGreaterThan(74);
+    expect(ownedTextHasPostingSubstance(headline)).toBe(false);
+  });
+
+  it("accepts a real posting body — the admitted control", () => {
+    expect(
+      ownedTextHasPostingSubstance(
+        "You will develop solid-state battery cells for a growing research team. "
+        + "Applicants should hold a PhD in electrochemistry or a related field.",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not accept a body padded out with short fragments", () => {
+    // Two sentences are not enough on their own; each must clear the length
+    // this codebase already publishes at (summarize.ts's MIN_SENTENCE_LENGTH).
+    expect(ownedTextHasPostingSubstance("Apply now. Save this job. Share it. See more roles.")).toBe(false);
+  });
+});
 
 describe("resolveJobPostingScope", () => {
   it("selects a smallest DOM owner by exact canonical link", () => {
@@ -84,8 +129,16 @@ describe("resolveJobPostingScope", () => {
     const selectedTitle = "Battery Internship at Example Lab";
     const html = [
       `<script type="application/ld+json">[{"@type":"JobPosting","url":"${selectedUrl}","description":"Selected research duties."},{"@type":"JobPosting","url":"https://jobs.example.com/foreign","description":"Foreign-marker hybrid visa sponsorship.","validThrough":"2030-01-01","baseSalary":{"value":{"minValue":999999,"maxValue":1000000,"unitText":"YEAR"}},"jobLocation":{"address":{"addressLocality":"Elsewhere"}}}]</script>`,
-      `<article><h2>${selectedTitle}</h2><p>Selected research duties.</p></article>`,
-      `<article><h2>Foreign battery role</h2><p>Foreign-marker hybrid visa sponsorship.</p></article>`,
+      // A22-03(b) / Ruling 60d (round 22 C): both blocks extended from one
+      // sentence to a body. The minimum-substance floor requires an owned
+      // block to carry two publishable sentences, and these synthetic blocks
+      // were shorter than the nav fragments the floor exists to reject. What
+      // this case tests — that every job-text consumer stays inside the
+      // SELECTED owner and never reads the foreign sibling — is unchanged, and
+      // the foreign block is padded too so it stays a live temptation rather
+      // than being disqualified by length.
+      `<article><h2>${selectedTitle}</h2><p>Selected research duties. Interns join the electrochemistry group for two terms.</p></article>`,
+      `<article><h2>Foreign battery role</h2><p>Foreign-marker hybrid visa sponsorship. This other listing sponsors relocation for senior staff.</p></article>`,
     ].join("");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(html, { status: 200 })));
 

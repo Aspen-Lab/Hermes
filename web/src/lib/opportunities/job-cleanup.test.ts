@@ -50,8 +50,21 @@ describe("measured job extraction artifacts", () => {
     // B6-03 (round 6): hostname fallbacks are not employer evidence.
     expect(job.companyOrLab).toBeUndefined();
     expect(job.location).toBe("Reno, Nevada, United States");
-    expect(job.summary).not.toContain("]");
-    expect(job.summary).toContain("Dive into hands-on research");
+    // A22-03(a) (round 22, round 22 C) — REWRITTEN, NOT DELETED. This case
+    // used to assert that the summary contained "Dive into hands-on research",
+    // prose taken from the provider's PAGE-SCOPED search snippet on a `jobweb`
+    // row that never proved ownership of anything. That is precisely the value
+    // A22-03 was raised to stop: on an aggregator page the snippet belongs to
+    // whichever posting the provider chose to show, not necessarily this one.
+    // The summary gate is now fail-closed, so the honest output is no summary
+    // at all and the card falls back to the `Matches your …` line.
+    //
+    // The bracket-debris rule this line also used to guard is NOT lost: it is
+    // asserted directly against `cleanJobDescription` in the "orphaned
+    // formatting artifacts (B9-03)" block below, at the unit level, where it
+    // cannot be made vacuous by an absent summary.
+    expect(raw!.fetchedPostingScope).toBeUndefined();
+    expect(job.summary).toBeUndefined();
     expect(html).not.toContain("Apply now!");
     // B-06 rewrote this. Plate 02 has a VISA tile, so the tile is no longer
     // absent — but what this test actually protects is that the visa fact is

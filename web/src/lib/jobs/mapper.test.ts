@@ -24,6 +24,12 @@ const fullJob: ScoredJobItem = {
   matchedKeywords: ["solid-state battery", "electrochemical"],
   matchReason: "Matches your battery research focus.",
   place: { city: "Chicago", region: "IL", country: "United States" },
+  // A22-03(a) (round 22 C): the summary gate is now FAIL-CLOSED — publication
+  // requires a proven `owned` scope, not merely the absence of `"unproven"`.
+  // This fixture always meant "text that belongs to this posting"; it now says
+  // so out loud. Without this line the two summary assertions below go red,
+  // and that red IS the new contract.
+  fetchedPostingScope: "owned",
   visa: {
     state: "wont-sponsor",
     evidence: "Applicants must already be authorised to work in the US.",
@@ -49,6 +55,123 @@ describe("scoredJobToJob", () => {
     });
     expect(job.summary).toContain("solid-state battery");
     expect(job.summary).toContain("electrochemical");
+  });
+
+  // A22-03 (round 22, `lensa.com`): a `$111K-$135K` Principal Engineer role in
+  // Alameda was rendered under an internship in Albuquerque — a DIFFERENT job
+  // from the same aggregator page. Two independent causes, tested separately.
+  describe("ownership is required before a summary or a remote flag is published (A22-03)", () => {
+    // The body every case below shares: two publishable sentences, so the only
+    // variable under test is ownership, never length.
+    const BODY =
+      "This role develops solid-state battery cells for a growing research team. "
+      + "You will analyze electrochemical experiments and publish the findings.";
+
+    it("publishes no summary when the page could not be fetched at all", () => {
+      // `undefined` scope is the state with the LEAST evidence: enrich.ts
+      // returns early when there is no html, which is what happened when
+      // lensa.com answered 403. The old gate named only "unproven", so this
+      // state sailed through and published the provider's snippet.
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        fetchedPostingScope: undefined,
+        pageText: undefined,
+        description: BODY,
+      });
+      expect(job.summary).toBeUndefined();
+    });
+
+    it("still publishes no summary when the page was read but not attributed", () => {
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        fetchedPostingScope: "unproven",
+        pageText: undefined,
+        description: BODY,
+      });
+      expect(job.summary).toBeUndefined();
+    });
+
+    it("publishes a summary once ownership is proven — the admitted control", () => {
+      // The must-keep. If this ever goes silent the gate has stopped being a
+      // gate and become a blanket ban, which would be a wrong silence.
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        fetchedPostingScope: "owned",
+        pageText: BODY,
+      });
+      expect(job.summary).toContain("solid-state battery");
+    });
+
+    it("refuses to summarise an owned block that is only its own witness (Ruling 60d)", () => {
+      // The minimum-substance floor. B measured the five `owned` job rows in a
+      // live pool carrying 8, 9, 48, 74 and 83 characters of "owned" text —
+      // the 83 being a blog post's headline. Ownership proves WHOSE text it
+      // is; it does not prove there is any.
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        fetchedPostingScope: "owned",
+        pageText: "Solid-State Battery Research Scientist 2 | Example Energy Careers",
+      });
+      expect(job.summary).toBeUndefined();
+    });
+
+    it("does not render a web-search snippet's `remote` as a location or work mode", () => {
+      // `jobweb` sets isRemote from `title + snippet` at ingestion and nothing
+      // revisits it. lensa's snippet carried another posting's "Remote
+      // Alameda, CA". All three rendered forms go silent together.
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        location: "",
+        isRemote: true,
+        workMode: undefined,
+      });
+      expect(job.location).toBe("See posting");
+      expect(job.isRemote).toBe(false);
+      expect(job.workMode).toBeUndefined();
+    });
+
+    it("keeps a structured source's own remote flag — the admitted control", () => {
+      // The must-keep on the other side. Adzuna/USAJOBS/Remotive set isRemote
+      // from a structured field of the item's OWN record, where it is owned,
+      // and none of them is touched.
+      const job = scoredJobToJob({ ...fullJob, location: "", isRemote: true });
+      expect(job.location).toBe("Remote");
+      expect(job.isRemote).toBe(true);
+      expect(job.workMode).toBe("remote");
+    });
+
+    it("still prefers an owned page's work mode on a jobweb row", () => {
+      // The honest source is unaffected: `workMode` comes from OWNED page text
+      // via extractJobDetails and still wins outright.
+      const job = scoredJobToJob({
+        ...fullJob,
+        source: "jobweb",
+        location: "",
+        isRemote: true,
+        workMode: "hybrid",
+      });
+      expect(job.workMode).toBe("hybrid");
+    });
+
+    it("leaves the scoring input untouched so no score moves", () => {
+      // locationFit reads the RAW item.isRemote, not the rendered flag. This
+      // is the difference between a render-boundary edit and deleting the
+      // signal, which B explicitly warned against.
+      const remote = scoredJobToJob(
+        { ...fullJob, source: "jobweb", location: "", isRemote: true },
+        ["Chicago"],
+      );
+      const notRemote = scoredJobToJob(
+        { ...fullJob, source: "jobweb", location: "", isRemote: false },
+        ["Chicago"],
+      );
+      expect(remote.locationFit).not.toBe(notRemote.locationFit);
+    });
   });
 
   it("leaves absent optional fields undefined without throwing", () => {
@@ -87,7 +210,14 @@ describe("scoredJobToJob", () => {
     const job = scoredJobToJob({
       ...fullJob,
       description: "### Battery filters ] Sign up now",
-      pageText: "This role develops solid-state battery models with electrochemical experiments.",
+      // A22-03(b) / Ruling 60d: extended from one sentence to two. The floor
+      // requires an owned block to carry a BODY, and this fixture's original
+      // single sentence was shorter than the nav fragments the floor exists to
+      // reject. What the case tests — that fetched page text beats a
+      // chrome-shaped snippet — is unchanged and still asserted below.
+      pageText:
+        "This role develops solid-state battery models with electrochemical experiments. "
+        + "You will publish findings and work alongside the materials characterisation team.",
     });
     expect(job.summary).toContain("solid-state battery models");
     expect(job.summary).not.toContain("Sign up");

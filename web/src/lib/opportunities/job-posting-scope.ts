@@ -84,6 +84,62 @@ function selectedDomScopes(html: string, selectedUrl: string, title: string): st
   return smallest ? [smallest.html] : [];
 }
 
+// A22-03(b) / Ruling 60d (round 22 C): THE MINIMUM-SUBSTANCE FLOOR.
+//
+// `resolveJobPostingScope` proves a BOUNDARY, not a BODY. The acceptance
+// filter above admits a block on one exact self-link OR one matching heading
+// with no second witness — so a block whose entire content IS that witness
+// passes it. Measured by B across a live pull: the five `owned` job rows in
+// the pool carried 8, 9, 48, 74 and 83 characters of "owned" text (the 83
+// being a blog post's headline, Ruling 59b(b)), and the same resolver run on
+// event pages returned `owned` for `"Home"` (4 chars), `"Sitemap"` (7) and a
+// reCAPTCHA notice (147).
+//
+// That was harmless while nothing published the text. It stops being harmless
+// the moment `owned` AUTHORISES publication, which is exactly what the
+// fail-closed gate in `jobs/mapper.ts` now makes it do.
+//
+// THE FLOOR IS A BODY TEST, NOT A LENGTH GUESS. A posting body says more than
+// one thing. A heading, a nav label, a headline and a self-link are each a
+// SINGLE fragment however long they run — which is why a bare character count
+// cannot separate the 83-character headline from real prose, and why picking
+// a number above 83 would be taste. So the floor is TWO sentences that each
+// clear the length this codebase already publishes at: `MIN_SENTENCE_LENGTH`
+// in `jobs/summarize.ts`, 40 characters, the number `summarizeJob` has used to
+// mean "long enough to show a human" since B5-07. Restated here rather than
+// imported so the summary layer keeps its own private constant.
+//
+// FAILURE DIRECTION: too high silences a terse real posting's summary, which
+// renders the `Matches your …` line A21-04 already ships — a MISSING value.
+// Too low lets a nav fragment be summarised — a WRONG value. This loop's
+// standing rule is that a wrong value is worse than a missing one, so the
+// floor errs high. It is also free today: B measured ZERO summaries rendered
+// from `owned` rows in the live pool, so it removes nothing that exists and
+// only constrains what may be published from here.
+//
+// IT DOES NOT CHANGE THE RESOLVER'S `owned`/`unproven` VERDICT — deliberately,
+// and this is C's one documented deviation from B's literal placement at the
+// acceptance filter. That verdict also drives place, employer, roleKind, visa,
+// workMode and salary; B's matrix priced none of those against a floor, and
+// B's own expected effect for this commit is "0 correct values leave". Moving
+// the verdict would silence values nobody measured. The floor therefore sits
+// at each PUBLICATION boundary instead — the card summary and the deep
+// report's LLM evidence — which is the full set of places `owned` text is
+// shown to a human, so the deep report inherits it exactly as B required.
+const MIN_BODY_SENTENCE_LENGTH = 40;
+const MIN_BODY_SENTENCES = 2;
+
+/**
+ * Whether owned posting text carries enough substance to be published as a
+ * body. Ownership proves WHOSE text it is; this proves there is text.
+ */
+export function ownedTextHasPostingSubstance(text: string): boolean {
+  const sentences = (text.match(/[^.!?]+(?:[.!?]+|$)/g) ?? [])
+    .map((sentence) => sentence.replace(/\s+/g, " ").trim())
+    .filter((sentence) => sentence.length >= MIN_BODY_SENTENCE_LENGTH);
+  return sentences.length >= MIN_BODY_SENTENCES;
+}
+
 /** Resolves one selected posting boundary; successful fetch alone proves nothing. */
 export function resolveJobPostingScope(
   html: string,

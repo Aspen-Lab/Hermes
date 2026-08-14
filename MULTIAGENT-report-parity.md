@@ -54462,3 +54462,149 @@ line and C has not touched it.** A silent `date TBA` beside a correct
 `Abstract due 31 Oct` is honest; the self-contradicting pair was not.
 
 ---
+
+### Round 22 — Agent C (item 2 of 6: **A22-03 — `lensa.com`. The summary gate is fail-closed, the snippet-derived `remote` can no longer be rendered, and `owned` now has to mean something.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 2 of 6. Gate re-run and green before this
+commit.
+
+---
+
+## (a) THE GATE — `web/src/lib/jobs/mapper.ts`
+
+`fetchedPostingScope === "unproven" ? undefined : …` became a two-step:
+
+```ts
+const ownedBody =
+  item.fetchedPostingScope === "owned" ? item.pageText ?? item.description : undefined;
+const summarySource =
+  ownedBody && ownedTextHasPostingSubstance(ownedBody) ? ownedBody : undefined;
+```
+
+`undefined` — the state where the page could not be fetched **at all** — no
+longer publishes. The `?? item.description` tail is **kept untouched** and is
+unreachable under `owned` (enrichment always sets `pageText` from `scope.text`
+on that branch); narrowing it would have been an unearned edit and C says so in
+source rather than doing it quietly.
+
+## (b) THE RENDERED REMOTE — same file, **and C WIDENED B's TWO LINES TO FOUR RENDER SITES. DEVIATION, TRACED.**
+
+B's fix direction named `mapper.ts:141-143` (`location`) and `:156`
+(`workMode`). **C greped the consumers and B's list is incomplete**: the mapper
+also passes `isRemote` straight into the view model, and **four view layers turn
+that field into the word "Remote" by themselves** —
+`components/cards/feed-tile.tsx:542`, `components/cards/briefing-hero.tsx:136`,
+`components/cards/briefing-quick-hit.tsx:51` and `lib/jobs/card.ts:47`. Gating
+only B's two lines would have left the wrong value on **the feed tile, which is
+the card A actually measured.** So one boolean is computed once and used for all
+three outputs:
+
+```ts
+const rendersRemote = item.isRemote && item.source !== "jobweb";
+```
+
+**The raw `item.isRemote` is untouched**, exactly as B required — it still feeds
+`locationFit` in this same function and `scoring.ts:358`'s own, so **no score
+moves**, and there is a test asserting precisely that. This is a render-boundary
+edit, not the ingestion deletion B warned against.
+
+## (b) THE MINIMUM-SUBSTANCE FLOOR — Ruling 60d. **C'S ONE DELIBERATE DEVIATION FROM B's PLACEMENT, WITH THE TRACE.**
+
+New exported predicate `ownedTextHasPostingSubstance` in
+`web/src/lib/opportunities/job-posting-scope.ts`, applied at **both**
+publication boundaries: the card summary (`mapper.ts`) and the deep report's LLM
+evidence (`app/api/jobs/report/route.ts:34`'s `fetchOwnedJobPostingText`). **So
+the deep report inherits it, which is what B asked for.**
+
+**B put the floor at the acceptance filter (`:79`), which would change the
+resolver's `owned`/`unproven` VERDICT. C did not, and here is why, traced before
+deviating (§3 standard 4):** that verdict is read at `enrich.ts:411` and gates
+**`place`, `company`, `roleKind`, `visa`, `workMode`, `employmentType`, `salary`
+and `structured`** as well as the text. **B's matrix priced none of those against
+a floor**, and **B's own stated expected effect for this commit is "1 wrong
+summary and 1 wrong location leave, 0 correct values leave".** Flipping five
+live rows from `owned` to `unproven` would silence values nobody measured — the
+opposite of that promise. **Ruling 60d's own stated purpose is narrower than its
+placement**: *"an `owned` that means almost nothing would convert **the
+fail-closed gate** into a rubber stamp."* The gate is what must not be
+rubber-stamped, so the floor sits where publication is authorised. Every place
+`owned` text is shown to a human is covered; nothing else moves.
+
+**THE FLOOR IS A BODY TEST, NOT A NUMBER PICKED ABOVE THE JUNK.** Two sentences
+that each clear **40 characters — `MIN_SENTENCE_LENGTH`, `jobs/summarize.ts`'s
+own shipped constant** for "long enough to show a human", restated locally
+rather than imported so the summary layer keeps its private constant.
+
+**Why not a character count.** B's two witnesses do not permit one. The junk
+runs 4, 7, 8, 9, 48, 74, **83** and 147 characters; the 83 is a blog headline
+(59b(b)). **Any pure length floor that rejects an 83-character headline is a
+number chosen above 83, which is taste.** A headline, a nav label, a sitemap
+link and a self-link are each a **single fragment however long they run** — a
+posting body is the thing that says more than one thing. That is structural and
+it is what the predicate tests.
+
+**Failure direction, stated in source:** too high silences a terse real
+posting's summary → the `Matches your …` line A21-04 already ships, a MISSING
+value. Too low summarises a nav fragment → a WRONG value. The loop's standing
+rule decides it. **And it is free today: B measured ZERO summaries rendered from
+`owned` rows**, so it removes nothing that exists and only constrains what may
+be published from here.
+
+---
+
+## TESTS — **B's AT-RISK LIST WAS RIGHT ABOUT TWO AND MISSED FOUR**
+
+**B predicted `mapper.test.ts:50-51` and `:92-93`. Both went red exactly as
+predicted. C greped the callers itself and found four more, which is the class
+of miss §3 warns about every round:**
+
+| file | went red | why B missed it |
+|---|---|---|
+| `lib/jobs/mapper.test.ts` (2) | predicted | — |
+| **`lib/opportunities/job-cleanup.test.ts:53`** | **NOT predicted** | it reaches the mapper through `webResultToRawJobItem`, so it never mentions `fetchedPostingScope` |
+| **`lib/opportunities/job-posting-scope.test.ts:109`** | **NOT predicted** | B named this file for the FLOOR, but the red is the GATE — its fixture block is thinner than the junk the floor rejects |
+| **`app/api/jobs/report/route.test.ts:189` and `:270`** | **NOT predicted** | B's blast-radius note said the report "inherits the floor"; it did not follow that through to `sourceReadStatus` flipping `read` to `failed` |
+
+**NO TEST WAS DELETED. ONE ASSERTION WAS REWRITTEN TO STATE THE NEW CONTRACT**
+— `job-cleanup.test.ts` asserted `job.summary` contained prose taken from an
+unowned `jobweb` snippet, **which is the exact value A22-03 exists to stop.** It
+now asserts `fetchedPostingScope` is `undefined` and the summary is absent, with
+a comment naming the item. **The bracket-debris rule that line also guarded is
+not lost**: it is asserted directly against `cleanJobDescription` at the unit
+level in the same file's B9-03 block, where an absent summary cannot make it
+vacuous. The other five reds were **fixture extensions**, each commented, each
+leaving the case's original purpose asserted unchanged.
+
+**ADDED:** one `describe` block of 8 cases in `mapper.test.ts`, one of 4 cases
+in `job-posting-scope.test.ts`, one case in `route.test.ts`. **+13 tests.**
+
+## NEGATIVE PROOFS — three separate reverts, each run against the pre-fix code
+
+| reverted | red count |
+|---|---|
+| gate back to `=== "unproven"` | **2 failed / 50 passed** — `publishes no summary when the page could not be fetched at all`, and `job-cleanup.test.ts`'s rewritten contract |
+| floor neutralised (always true) | **4 failed / 48 passed** — the three `ownedTextHasPostingSubstance` cases plus `refuses to summarise an owned block that is only its own witness`; **re-run separately with the route case present: `route.test.ts` 1 failed / 7 passed** |
+| `rendersRemote` back to bare `item.isRemote` | **1 failed / 18 passed** — `does not render a web-search snippet's remote as a location or work mode` |
+
+**Every clause ships a uniquely-red case.** The named controls —
+`publishes a summary once ownership is proven`, `keeps a structured source's own
+remote flag`, `still prefers an owned page's work mode`, `leaves the scoring
+input untouched` — pass both ways **by design and are labelled as controls**.
+
+## THE GATE AFTER THIS ITEM
+
+**91 files / 1669 tests, 1668 passing** (+13). Sole failure the standing
+`benchmark.test.ts` flake. `npx tsc --noEmit` clean. `npx eslint` exactly the
+one standing `quiz.tsx:46` error.
+
+**`src/lib/opportunities/enrich.test.ts` SOLO: 53 of 53 — SolarPACES holds.**
+
+## WHAT ROUND 23 A SHOULD EXPECT, WITH ITS FALSIFIER
+
+`lensa.com`'s row keeps its title and employer, loses its summary (falls back to
+`Matches your …`) and loses `Remote` (falls back to `See posting`). **FALSIFIER:
+if any row that renders a CORRECT summary today goes silent, the gate is too
+wide** — B measured exactly one summary in the pool and it was the wrong
+posting's, so any second silence is new information.
+
+---

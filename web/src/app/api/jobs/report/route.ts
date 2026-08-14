@@ -8,7 +8,10 @@ import {
 import type { Job } from "@/types";
 import { protectAiRequest } from "@/lib/security/ai-request";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
-import { resolveJobPostingScope } from "@/lib/opportunities/job-posting-scope";
+import {
+  ownedTextHasPostingSubstance,
+  resolveJobPostingScope,
+} from "@/lib/opportunities/job-posting-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +38,12 @@ async function fetchOwnedJobPostingText(job: Job): Promise<string | null> {
     url: job.linkPosting,
     title: job.roleTitle,
   });
-  return scope.status === "owned" ? scope.text : null;
+  // A22-03(b) / Ruling 60d (round 22 C): the deep report inherits the same
+  // minimum-substance floor as the card summary. This text is handed to an LLM
+  // as the posting's own evidence; a nav fragment or a headline is not
+  // evidence, and an `owned` verdict alone does not prove there is a body.
+  if (scope.status !== "owned") return null;
+  return ownedTextHasPostingSubstance(scope.text) ? scope.text : null;
 }
 
 export async function POST(req: NextRequest) {
