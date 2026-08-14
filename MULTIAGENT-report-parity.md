@@ -53708,3 +53708,200 @@ it, sits in `scoring.ts`'s gate and CAN delete rows — which is the whole reaso
 B is not designing it on four data points.
 
 ---
+
+### Round 22 — Agent B (item 8 of 9: **RULING 59a — THE POSTING-SCOPED OWNERSHIP DESIGN. Verdict: TWO mechanisms, not one. TWO drafts were built and BOTH were killed by their own adversarial matrix before the third was recommended.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 8 of 9. Method as stated in item 1.
+**DESIGN ONLY — C implements nothing here until the manager reads it**, per
+Ruling 29's own sequencing and 59a's explicit instruction.
+
+---
+
+## PART 1 — **ONE MECHANISM OR TWO? ESTABLISHED BY EXECUTION: TWO.**
+
+Ruling 59a required this to be settled first. It is settled against the
+convenient answer.
+
+| | A22-03 (job summary / location) | A22-01 (event date / city) |
+|---|---|---|
+| is there an ownership resolver on this path? | **YES** — `resolveJobPostingScope`, `web/src/lib/opportunities/job-posting-scope.ts`, wired at `enrich.ts:383` and `app/api/jobs/report/route.ts:34` | **NO. None exists.** `enrich.ts:286-291` calls four extractors straight on `html` |
+| what failed | the **gate that consumes** the resolver's answer: `mapper.ts:133` tests `=== "unproven"` and lets `undefined` through | the **absence of the resolver**, plus first-token-wins in `extractEventDate` |
+| what the wrong value was read from | the provider snippet (summary) and the provider snippet again (`isRemote`) | the provider snippet (date) and the **whole fetched page** (city) |
+| the shape of the repair | close a hole in existing architecture | build the architecture |
+
+**They share ONE input — the page-scoped provider snippet — and they do not
+share the page-side mechanism at all.** Merging them would have produced a design
+that rebuilt something already shipped on one surface and under-built the other.
+**The design below therefore has two halves that ship independently.**
+
+---
+
+## PART 2 — **THE DESIGN.** Ownership is a property of a SOURCE, recorded once; each field declares the minimum ownership it will accept; the fallback is always absence, never a lower tier.
+
+### The three tiers, defined by what can be PROVED, not by where the bytes came from
+
+| tier | proof required | examples in this codebase |
+|---|---|---|
+| **`item-owned`** | a structured record whose own `url` canonicalises to the selected item's URL, **or** a DOM block that carries the item's own title/self-link as a witness and no second item's witness | `resolveJobPostingScope`'s `owned` branch; `thebatteryshow.eu`'s single JSON-LD `Event` |
+| **`page-owned`** | from the fetched page but not provably from the item's block | `og:title`, `<title>`, `extractBodyTextPlace` |
+| **`unowned`** | from the provider's search snippet | `RawJobItem.description`, `RawEventItem.description`, `extractEventDate`'s input |
+
+### The per-field minimum, and every one of these is set by a MEASUREMENT in this entry, not by taste
+
+| field | minimum tier | why, in one line |
+|---|---|---|
+| job `summary` | **`item-owned`** | it is prose *about a specific posting*; a sibling's prose is indistinguishable from the item's own |
+| job `location` / `workMode` | **`item-owned`** | `Remote Alameda, CA` belonged to the other posting |
+| event `date` | **see Part 3** — `unowned` is acceptable *only when the text offers one reading* | 44 of 50 live rows have exactly one reading and are correct today |
+| event `place` | **`item-owned`, falling back to `page-owned` only when the page carries a single event identity** | `ans.org` is a calendar; `battery-power.eu` is one conference's site |
+| item `name` / `roleTitle` | **`page-owned`** is enough | on a single-item page the page IS the item; ten rounds of 0-of-N name fidelity prove this tier is already right |
+
+### The fallback, named once and applying to every row of the table above
+
+**When no source meets a field's minimum tier, the field is ABSENT. It never
+falls back to a lower tier.** The rendered result is the silence Ruling 32
+already settled: `See posting`, `See event page`, `date TBA`, and — for the job
+summary — the `Matches your …` line A21-04 already shipped. **No new rendering
+shape is introduced anywhere in this design.**
+
+---
+
+## PART 3 — **THE FALLBACK PROOF. Two drafts were built, measured, and KILLED. The recommendation is the third.**
+
+Ruling 59a requires proof that the fallback prefers silence over another item's
+facts. B built each draft literally, in a throwaway harness, and ran it against
+**every ingestion-kept row of a live pull** — 50 events, 39 jobs.
+
+### DRAFT 1 — REJECTED. "Gate every snippet-derived field on a title witness."
+
+Owned span = the item's own title found as a line in the snippet, running to the
+next heading.
+
+| | result |
+|---|---|
+| events: rows resolving `owned` | **8 of 50** |
+| **event dates lost** | **18** |
+| event dates gained | 0 |
+| jobs: rows resolving `owned` | **2 of 39** |
+| both repros fixed? | yes |
+
+**It fixes both repros and destroys eighteen correct dates, including
+`thebatteryshow.com`'s correct `2026-10-12`. A design that fixes the repro and
+mutilates common correct cases must not ship. REJECTED.**
+
+The reason is diagnostic and worth recording: **a search snippet usually does
+not restate the page's own heading**, so "the title appears as a line" is absent
+on 84% of rows. Ownership cannot be demanded of a source that structurally
+cannot supply it.
+
+### DRAFT 2 — REJECTED. "Reuse `resolveJobPostingScope` verbatim on event pages."
+
+The obvious lift-and-shift, and the one a reader of Ruling 29 would try first.
+
+| page | what the shipped job resolver returned |
+|---|---|
+| `ans.org` | `owned`, text = **`"Sitemap"`** (7 chars) |
+| `battery-power.eu` | `owned`, text = a **reCAPTCHA notice** (147 chars) |
+| `thebatteryshow.eu` | `owned`, text = **`"Home"`** (4 chars) |
+
+Place restricted to those blocks is `null` in **all three** cases, so every event
+place in the pool would go silent. **REJECTED — and it exposed a defect in the
+shipped job resolver that item 1 of this entry now carries: its acceptance filter
+(`job-posting-scope.ts:79`) has no minimum-substance floor, so `owned` currently
+means almost nothing.** The five `owned` job rows in this pool carry 8, 9, 48, 74
+and 83 characters of "owned" text.
+
+### DRAFT 3 — **RECOMMENDED.** Demand ownership only where the text is provably AMBIGUOUS.
+
+The insight both rejections paid for: **the defect is never "unowned text was
+read". It is "unowned text was read and there was more than one thing it could
+have meant, and the tie was broken by position."** So ownership is demanded
+exactly there.
+
+**For the event date:**
+
+1. Collect every candidate event day in `title + snippet`, **using the shipped
+   regexes** (`MONTH_DAY_RE`, `DATE_DMY_RE`, `YEAR_RE`), not a copy — see the
+   warning below.
+2. **Collapse candidates into clusters within a 21-day window.** A conference's
+   own range (`October 12-15`) is ONE candidate; a sibling event four months away
+   is a second. **This single step is what separates draft 3 from draft 1.**
+3. **Exactly one cluster** → use today's value, subject to (5).
+4. **Two or more clusters** → the snippet is ambiguous. Look for the item's own
+   title as a line; read the date from that span only. **No witness → the date is
+   ABSENT.**
+5. **Role check, always:** if the chosen instant equals the instant
+   `extractDeadline` returns, the event date is ABSENT and the deadline is kept.
+   (This is item 3's clause; it is stated here too because the design must carry
+   it, and it is the only part of the design that stands alone.)
+
+**THE MEASURED MATRIX — all 50 ingestion-kept event rows of a live pull:**
+
+| | count |
+|---|---|
+| rows unchanged | **44** |
+| dates lost | **4** |
+| dates moved to a different value | **2** |
+| dates newly invented | **0** |
+
+**The 4 losses, every one named:** `naco.org` (an events INDEX page with five
+unrelated dates), `ascl.org` (a news post with three), `powergen.com` (two
+clusters), `battery-power.eu` (the deadline repro, item 3). **None of the first
+three is in the pool. Correct pool dates lost: ZERO.**
+
+**The 2 moves:**
+
+- **`ans.org` → `2026-04-16`.** The repro. That date is in the past, so
+  `eventweb.ts:1367` drops the row. **The finished event does not merely lose a
+  wrong date — it correctly disappears.**
+- **`batteryinnovationsummit.com` → `2026-04-22`** (today: `2026-11-05`). **B did
+  not expect this and reports it against its own convenience: the design has
+  found a SECOND live instance of A22-01's shape that round 22 A did not catch.**
+  The snippet's own block for this item reads
+  `### Battery Innovation Summit 2026 / April 22–24, 2026 · San Francisco`, and
+  the November token belongs to a different summit on the same hub page. **B
+  ground-truthed the page (one fetch, clipped programmatically): `<title>` is
+  `The Battery Saloon | Battery & Energy Storage Summits`, there is no `<h1>`, no
+  JSON-LD, and NOT ONE date token on the page.** So the shipped `2026-11-05` has
+  **no evidence behind it at all** and the design's `2026-04-22` has the only
+  evidence available. April 2026 is past, so this row would also drop.
+
+**MANAGER NOTE, FLAGGED NOT DECIDED (§3).** That row is `The Battery Saloon` —
+**Ruling 39b's named accepted cost.** 39b accepted the wrong NAME; it did not
+require the row to exist. Dropping it is a side effect of a date fix, not a
+reversal of 39b. **B flags it rather than letting C silently retire a row a
+ruling names.** If the manager prefers the row kept, the design still silences
+its date, which is the honest half either way.
+
+**A WARNING C MUST NOT SKIP.** B's cluster counter was written from copies of
+the regexes and it **disagreed with the shipped extractor on two rows**
+(`ibatterysummit.com`, `ecs.confex.com` — logged as `no-cluster-fallthrough`).
+Those rows fell through to today's behaviour, which is the safe direction, but a
+counter that can disagree with the extractor it guards is a latent second defect.
+**Build the counter from the shipped constants, exported, and assert that
+`candidates.length >= 1` whenever `extractEventDate` returns a value.**
+
+**For the event place:** the same principle, one tier up. `place` may come from
+the whole-page body scan **only when the page carries a single event identity**;
+when it carries several, only the block bearing the item's own name may donate,
+and **no matching block means no place**. B does **not** hand C a measured matrix
+for this half — one live repro (`ans.org`) and three captured pages is not a
+corpus, and draft 2 proved that guessing the witness here is expensive.
+**RECOMMENDATION: C ships the DATE half of draft 3 and item 3's role check. The
+PLACE half is specified above and DEFERRED until a round captures every pool
+page**, so that its own matrix can be built the way the date half's was.
+
+---
+
+## PART 4 — THE ORDER C SHOULD BUILD IN, AND WHAT EACH STEP COSTS
+
+1. **Item 3's role check** — 3 lines, 1 row moves, cannot delete a row. Ship first.
+2. **Item 1(a)+(b)** — the job gate made fail-closed, with the substance floor.
+   Removes 1 wrong summary and 1 wrong location, 0 correct values.
+3. **Draft 3's date clustering** — the widest change; 44 of 50 rows unchanged.
+4. **The place half** — DEFERRED, corpus first.
+
+**Nothing in this design touches scoring, dedup, the required-topic gate, any
+host list, or any standing ruling's own instrument.**
+
+---
