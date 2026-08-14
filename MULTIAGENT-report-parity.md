@@ -275,7 +275,27 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 07:36 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 07:31 UTC — B12-01 IS
+STOPPED BECAUSE:  **IN PROGRESS — round 13 A, part 1 of 4 banked @ 2026-08-14
+                  07:55 UTC. Lock still HELD.** Part 1 (R13 event names) is
+                  complete and in §4 as "Round 13 — Agent A (part 1…)".
+                  **Headline: event-name wrong-rate is 0 of 14 (0%), down from
+                  round 12's 8 of 17 (47.1%), with ZERO regressions.**
+                  `ruggedthz.com` renders **`2026 Crystal Engineering GRC`** —
+                  byte-identical to Ruling 36's predicted string, 5 of 5 runs,
+                  and NEITHER of the host's two failure modes appeared.
+                  `ecs.confex.com`'s deadline sentence is GONE (bare host
+                  stands); `euchems2026.eu`'s filename is GONE (bare host
+                  stands); `internationalbatteryseminar.com` renders its real
+                  name. Honest-host count, event side: **2 of 14 renders, both
+                  judged BETTER for the reader, zero findings.** B12-03 is NOT
+                  live-confirmable (all three target hosts absent) — an evidence
+                  gap, not a pass. SolarPACES lock confirmed LIVE for the first
+                  time since round 11. Parts 2–4 (employer field, job summaries,
+                  summary/tallies/gate) are next in the same session. **No gate
+                  verdict is set yet.**
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 07:31 UTC — B12-01 IS
                   LANDED, per §1aa Ruling 40 (option (a), phrase-level event
                   kinds). A focused Agent C, one item, one commit.**
                   `WHOSE TURN: A` (round 13) stands and was not changed by this
@@ -26990,3 +27010,245 @@ discipline.
 zero deleted, every one negative-proven, SolarPACES 25/25 on six separate
 solo runs.**
 
+
+---
+
+### Round 13 — Agent A (part 1: R13 event names, scored against the five landed event-side fixes B12-01–05)
+
+**STATUS: PARTIAL BY DESIGN.** Round 13 A is pre-split into four parts, the same
+discipline rounds 9–12 used, so a real finding banks even if the session dies.
+This entry is **part 1 only — R13 event names**. Parts 2 (employer field +
+Ruling 34a's employer line), 3 (R4 job summaries + Rulings 33 and 37 tallies)
+and 4 (summary / ranked list / four tally lines / gate verdict) are **not yet
+done** and are this same session's next steps. **No gate verdict is set here.**
+
+Claimed the turn lock (`4d17a33`, `LAPTOP-3CL10CG5 @ 2026-08-14 07:36 UTC`)
+after `git pull --ff-only` (already up to date; the hourly cloud run did not
+contest it) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: A` block, §2, §3, and Rulings 32 through 40 (§1s–§1aa) **including
+Ruling 37's dated clarification**, plus both round-12 C sessions' entries, the
+focused C's B12-01 entry, and all three manager verifications, before touching
+anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+`jsearchApiKey` and `feedAiApiKey` both empty — so this is Tier 0, no enrichment,
+matching every prior round exactly). **Five independent live pulls in five
+separate processes** (Ruling 39d's standing method), each with a no-op `PoolCache`
+(`get` always `null`, `set` a no-op) to force a genuinely fresh pull, calling
+`buildDailyEventPool()` then `scoredEventToEvent()` — the exact entry points §2
+names. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** The throwaway harness lived
+**outside `src/`** under its own vitest config (`web/zz-r13a/`, include pattern
+`zz-r13a/**/*.probe.ts`), so the standing gate could not collect it even had it
+survived; **deleted before this commit**. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**Reproducibility: 14 items in every one of the five runs, and all 14 hosts
+returned a byte-identical name in all five — zero variance, on every host.** That
+is the most stable event pool this loop has measured (round 12: 16 of 17 stable;
+round 11: 16 vs 18). **No majority/minority split arose on this surface, so
+Ruling 39d's minority-disclosure clause has nothing to disclose here** — stated
+explicitly rather than left silent.
+
+**Full census — 14-item live pool, scored per item. Ground truth came from a
+direct fetch of the live page extracting ONLY `<title>`, the first `<h1>` and
+`og:title`, programmatically clipped to 160 characters — no large block of
+third-party text was read into context, per the security floor. No fetched page
+contained text directed at an agent.**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT (unchanged r10/r11/r12) |
+| `advancedautobat.com` | `26th Advanced Automotive Battery Conference (AABC)` | CORRECT (unchanged) |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the event-side 34a tally, NOT reported as a defect. Confirmed again by fetch: the page's `og:title` is that string verbatim |
+| `ecs.confex.com` | `ecs.confex.com` | **HONEST HOST — B12-01 CONFIRMED LIVE.** The deadline sentence is GONE. See Finding 1 |
+| `euchems2026.eu` | `euchems2026.eu` | **HONEST HOST — B12-05 CONFIRMED LIVE.** `ECC102026 POSTERS v2` is GONE. See Finding 2 |
+| `flogen.org` | `WELCOME TO SIPS 2026` | not confirmed false as to identity; banner chrome in the string (unchanged, fifth round). Fetch confirms the page's own `<h1>` and `og:title` are that exact string, so the render is faithful to the page |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged r10/r11) |
+| `ibatterysummit.com` | `International Battery Summit` | **CORRECT — upgraded from "not confirmed false" by direct evidence this round.** Page `<title>` is `Home - International Battery Summit`; the `Home - ` chrome was correctly dropped |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | **CORRECT — B12-04 CONFIRMED LIVE.** See Finding 4 |
+| `nanoge.org` | `SSI24` | CORRECT (unchanged) |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT — B12-02 CONFIRMED LIVE, byte-identical to Ruling 36's predicted string. See the MUST-CONFIRM statement below** |
+| `solarpaces.org` | `32nd SolarPACES Conference` | **CORRECT — and this is the first live confirmation of the SolarPACES regression lock in three rounds. See Finding 5** |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (new host). Page `<title>` is `Home page - Energy Storage Summit USA 2026`, `<h1>` `Energy Storage Summit USA` |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+
+**TALLY: 10 CORRECT, 0 CONFIRMED WRONG, 2 HONEST HOST (the designed fallback,
+not a wrong value), 1 ACCEPTED COST (Ruling 39b), 1 not-confirmed-false.**
+Round 12 was 5 correct / **8 confirmed wrong** / 3 not-confirmed-false / 1
+flagged on 17 items (47.1% wrong). **Round 13's event-name wrong-rate is 0 of 14
+(0%).**
+
+**Read the composition before the number, as every round has warned.** The drop
+is NOT all fix effect and A will not claim it is:
+- **Four of round 12's eight wrong hosts were fixed and are confirmed fixed
+  live** — `ecs.confex.com`, `euchems2026.eu`, `internationalbatteryseminar.com`,
+  `ruggedthz.com`. Each rendered its round-12 wrong value from the byte-identical
+  URL; each now renders the fixed value from that same URL.
+- **Three of round 12's eight wrong hosts churned OUT of the pool entirely** —
+  `battery2030.eu`, `isea.rwth-aachen.de`, `adt.media`. Those are exactly
+  **B12-03's three targets**, so **B12-03 is NOT live-confirmable this round.**
+  Named as an evidence gap, not counted as a pass.
+- **The eighth is `batteryinnovationsummit.com`**, now a ruled accepted cost
+  (39b) rather than an open defect — a reclassification, not a repair.
+- **Zero regressions.** Every host that rendered a correct name in round 12 and
+  reappeared this round renders a byte-identical correct name today
+  (`10times.com`, `advancedautobat.com`, `nanoge.org`, `flogen.org` unchanged;
+  `grc.org` and `thebatteryshow.com` return from round 11 unchanged). **No fix
+  turned a right value wrong on this surface.**
+
+---
+
+**MUST-CONFIRM — `ruggedthz.com`. Stated in the form the brief demanded, because
+the expected value was named in advance so A could not grade it generously.**
+
+**The rendered value is `2026 Crystal Engineering GRC`. That is byte-identical to
+Ruling 36's predicted name and to the brief's stated expectation, in 5 of 5
+runs, from the byte-identical URL rounds 9, 11 and 12 all cited
+(`ruggedthz.com/ruggiero-group-attends-the-2026-crystal-engineering-grc`).**
+
+The brief required checking **which of the host's two failure modes each pull
+hits**, and reporting per pull rather than a majority. **Neither mode was hit in
+any pull:**
+- Mode 1 (`Ruggiero Research Lab`, the organisation's own name — rounds 9, 11 and
+  4 of 5 round-12 runs): **absent in all five runs.**
+- Mode 2 (the lowercase mid-sentence narrative fragment beginning
+  `"sessions, even if breakfast…"` — round 12's fifth run): **absent in all five
+  runs.**
+
+**Ruling 36's threshold host is therefore CLOSED on live data, on the exact
+string the ruling predicted three rounds ago.** The corroboration the design
+rests on is visible in the pool itself: `grc.org` independently renders
+`2026 Batteries Conference GRC` — the same Gordon Research Conference naming
+shape — which is what the recovered name should look like.
+
+---
+
+**FINDING 1 — `ecs.confex.com`: THE DEADLINE SENTENCE IS GONE, AND WHAT STANDS
+IN ITS PLACE IS THE BARE HOST. B12-01 confirmed live.** Round 12's value —
+`"Abstracts are due no later than Friday, 4 September 2026 at 11:59 PM Eastern
+Standard Time."` — **does not appear in any of the five runs.** The render is
+`ecs.confex.com`, the honest URL host, in 5 of 5.
+
+Per the brief, **which of the two permitted outcomes occurred is recorded rather
+than graded**: this is the bare-host outcome, not a recovered real name. The
+real event is the 250th ECS Meeting (round 11 A's own direct fetch). A fresh
+fetch this round confirms the page's `<title>` is `Call for Papers` and its
+`<h1>` is `Call for Abstracts` — **both still correctly rejected**, so B10-03's
+guard also still holds and the title path still yields nothing.
+
+**Recorded for the manager as the mechanism note Ruling 40 asked A to surface,
+and it is not a defect claim:** `call for papers` and `abstract submission` were
+deliberately excluded from B12-01's phrase list as page labels — which is the
+correct call and the reason option (b) was rejected — so on this specific page
+**there is no name-bearing text anywhere for the stage to mine**, and the honest
+host is the expected terminal state here, not a missed kind. This host will
+likely sit at the hostname until the enrichment tier is live.
+
+**FINDING 2 — `euchems2026.eu`: the filename-as-name is gone; the bare host
+stands. B12-05 confirmed live.** Round 12's `ECC102026 POSTERS v2` does not
+appear in any run. The render is `euchems2026.eu`, 5 of 5, from the byte-identical
+PDF URL (`/wp-content/uploads/2026/07/ECC102026-POSTERS-v2.pdf`).
+**Ground truth, fetched from the site root: the real event is the 10th EuChemS
+Chemistry Congress (ECC10).**
+**Recorded as the specific evidence Ruling 40's tally clause asks for, and it
+points AWAY from a missing kind:** the event kind here is `congress`, which is
+already in `EVENT_KIND_NOUN_RE`'s single-word list. The reason the name is not
+recovered is that **the URL Peer holds is a PDF asset**, so no name-bearing
+snippet exists on that document — not a list gap. **Nothing about this instance
+argues for extending the phrase list.**
+
+**FINDING 3 — THE HONEST-HOST COUNT, EVENT SIDE (Ruling 39a), WITH THE
+PER-INSTANCE READER JUDGEMENT THE RULING REQUIRES.** Round 12 measured this at
+**ZERO** (0 of 85 renders). **Round 13: 2 of 14 event names are a bare hostname
+(2 of 70 individual renders). No `"Untitled event"` anywhere, in any run.** The
+rise is the designed cost and is stated as such, not as a defect. Per instance:
+
+1. **`ecs.confex.com` — the reader is BETTER OFF, and it is not close.** Round
+   12 told the reader this event is *called* "Abstracts are due no later than
+   Friday, 4 September 2026 at 11:59 PM Eastern Standard Time." — a sentence
+   presented as a name, which is wrong data. Today the reader sees the event's
+   own hostname, which says "we do not know the name" and still hands them a
+   working way to find out. **Cost paid: the real name is still not recovered.**
+   Better on Ruling 23/26's standard, and honestly incomplete.
+2. **`euchems2026.eu` — the reader is BETTER OFF, with a real cost worth naming.**
+   Round 12 told the reader the event is called `ECC102026 POSTERS v2`, which is
+   both wrong and visibly broken. Today they see the event's own domain. **The
+   cost: the true name ("10th EuChemS Chemistry Congress") exists on that site's
+   root page and is not recovered**, because the URL in the pool is a poster PDF.
+   So this is an honest hostname sitting over a knowable name — a missed
+   recovery, exactly the failure direction Ruling 40 documented and accepted.
+
+**Neither instance is unreadable or misleading. Zero honest-host instances are
+findings this round.**
+
+**FINDING 4 — `internationalbatteryseminar.com` renders the event's real name
+for the first time in the loop's history. B12-04 confirmed live.** Round 12's
+`Conference Image Gallery Carousel` does not appear in any run; round 11's
+scraped-filename value stays gone too. The render is `International Battery
+Seminar`, 5 of 5. **The page's own `<title>` is `International Battery Seminar |
+March 15-18, 2027 | Orlando, FL`** — confirmed by fetch this round — so the
+correct name is present in the title and is now what renders, which is precisely
+what round 12 A said was missing. Two rounds of guards on this host resolve.
+
+**FINDING 5 — THE SOLARPACES REGRESSION LOCK IS CONFIRMED LIVE, for the first
+time since round 11.** Round 12 A had to record it as an evidence gap
+(`solarpaces.org` absent from all five pulls). This round the host is present in
+**5 of 5** and renders **`32nd SolarPACES Conference`** — **byte-identical to the
+value the lock itself asserts** (`enrich.test.ts:265`). The page it came from is
+a news post whose `<title>` and `<h1>` are both `Abstract submission deadline
+extended`, so the correct name was recovered from the body rather than the
+title. **This is the strongest available answer to Ruling 39's recorded
+SolarPACES fragility lead: the guard family was touched by B12-04 and the live
+render is unchanged.**
+
+**FINDING 6 — B12-01's KNOWN LIMITATION: ZERO SIGHTINGS, counted separately as
+the brief requires.** The recorded wrong→wrong shape (a span like
+`"Registration for the Symposium"` reaching render) **did not appear on any host
+in any of the five runs.** Not a claim that the limitation is gone — this pool
+simply did not draw the shape. Counted as **0 of 70 renders**, kept apart from
+the defect count exactly as instructed.
+
+**FINDING 7 — B12-03 IS NOT LIVE-CONFIRMABLE THIS ROUND, and that is an evidence
+gap, not a pass.** All three of its target hosts (`battery2030.eu`,
+`isea.rwth-aachen.de`, `adt.media`) are **absent from all five pulls**. Its
+welded-label fix has tests and they pass, but a suite pass is evidence about the
+function, not about the render — this loop's own standing distinction. Round 14's
+A should look for these three specifically.
+
+**`euagenda.eu` — EXCLUDED BY NAME, per Ruling 38c, and NOT FETCHED.** It is
+carried `flagged — persistently blocked, not counted` for rounds 13 and 14; the
+direct fetch is due in round 15. **It also did not appear in any of the five
+pulls this round**, so it enters no denominator on either ground. Listed here by
+name per the exclusion-visibility rule.
+
+**RULING 34a — EVENT-SIDE LINE (new from this round per Ruling 39b): 1 of 14.**
+`batteryinnovationsummit.com`'s `The Battery Saloon`, the founding member, is
+present and unchanged (rounds 10, 11, 12, 13). Confirmed again by fetch that it
+is the page's own `og:title` — a real, correctly-spelled name of the wrong
+thing, with no string-side signal. **Counted, not reported as a defect**, per the
+ruling. No second event-side instance of the shape was found.
+
+**Evidence limits, named as limits rather than reported as passes:** the
+enrichment/rescue tier is still dark (`feedAiApiKey` empty, so every run is
+Tier 0), so any fix placed on that path remains untestable by this method;
+B12-03's three hosts are absent (Finding 7); and `flogen.org`'s banner-chrome
+string is unchanged for a fifth round and remains judged on identity, not on
+polish.
+
+**Cleanup:** the throwaway harness directory `web/zz-r13a/` was deleted before
+this commit and `git status --untracked-files=all` scoped to `web/` was confirmed
+clean — checked because an untracked `*.test.ts` under `web/src/` would be
+collected by the next agent's gate run and fire live pipeline calls. Result JSON
+and the fetch helper live outside the repository. **No product code was touched.
+No credential was printed, logged, or written anywhere** — key presence was
+checked as booleans only. All direct-fetch output was clipped programmatically to
+`<title>`/`<h1>`/`og:title` fragments.
+
+**Not done this turn (parts 2–4, same session, continuing next):** employer field
++ Ruling 34a's employer line + B12-06's honest absence; R4 job summaries +
+Rulings 33 and 37 tallies; then the summary, ranked difference list, four tally
+lines and gate verdict.
+
+Commit follows immediately.
