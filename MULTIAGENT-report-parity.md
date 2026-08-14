@@ -270,12 +270,124 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 13:34 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:29 UTC — ROUND 17 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:52 UTC — ROUND 17 C IS
+                  COMPLETE.** **ONE commit for the code, per Ruling 49b**
+                  (`909b6bf`), pushed immediately, plus this hand-off. Claimed
+                  the lock cleanly (`703d09c`) after `git pull --ff-only` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **NO TEST DELETED, NO TEST
+                  REWRITTEN, NO EXISTING LINE CHANGED — 726 insertions, ZERO
+                  deletions across all three files.** Harness lived outside
+                  `src/` (`web/zz-r17c/`, own vitest config) and was deleted
+                  before the commit; `git status --porcelain
+                  --untracked-files=all` confirmed clean.
+
+                  **HEADLINE: BOTH ITEMS LANDED EXACTLY AS B DESIGNED THEM AND
+                  RULING 49 DIRECTED, AND C RE-MEASURED EVERY LOAD-BEARING
+                  NUMBER BY EXECUTION AGAINST THE REAL SHIPPED FUNCTIONS BEFORE
+                  WRITING A LINE. B's REFUSAL OF THE ONE-SIGNAL DESIGN — THE
+                  THING THE WHOLE ROUND TURNED ON — REPRODUCES EXACTLY.**
+
+                  **COLD BASELINE CONFIRMED, NOT INHERITED:** 90 files / **1426
+                  tests, 1425 passing**, sole failure the standing
+                  `benchmark.test.ts` live-search flake.
+
+                  **THE ONE-SIGNAL DESIGN DESTROYS THE OREGON POSTING, AND C
+                  BUILT IT RATHER THAN ACCEPTING B ON AUTHORITY.** Both rows —
+                  `M.S. Internship Program – Oregon Center for Electrochemistry`
+                  and the segment the card renders, `M.S. Internship Program` —
+                  die under the unified rule. **Ruling 49a therefore stands on
+                  measured ground, not on manager preference.** C's S3 shows
+                  THREE false fires where B recorded seven; **C reports its own
+                  number rather than rounding to B's**, and names the
+                  reconstruction difference. The verdict and its reason are
+                  identical.
+
+                  **THE SHIPPED RESULT: 94/95 WITH ONE NAMED MISS AND ZERO FALSE
+                  FIRES**, against an **84/95 baseline with 11 misses and zero
+                  false fires**. The miss is the one B named,
+                  `Idaho National Laboratory Internships` — a three-token owner
+                  — and it is **asserted as documented-known**. The 95/95
+                  three-token variant is real and is refused: C ran it and **it
+                  turns THREE SHIPPED TESTS RED**, including B's named
+                  `Idaho National Laboratory Careers` employer assertion.
+                  **PROVENANCE STATED, NOT IMPLIED: B's harness was deleted
+                  before B's commits, so ROW-FOR-ROW IDENTITY IS NOT CLAIMED.**
+                  C's corpus is 95 rows against B's 92 — three must-keeps harder
+                  — and C's totals are `/95` and `/46`.
+
+                  **THE CALL PATTERN BEHAVES AS B PREDICTED, WHICH IS WHAT PROVES
+                  THE FIX REACHES THE READER.** On the full offered CATL title
+                  the whole-title call is still **false** and the **SECOND**
+                  `isListingPage` call is **true**; end to end it returns `null`.
+                  Asserted at both levels so neither can go vacuous. Both
+                  EnerSys forms — the tagline title and the `<h1>` — drop on
+                  call 1.
+
+                  **ITEM 2: 4 OF 4 CAUGHT, 0 OF 46 REAL EMPLOYER NAMES
+                  DESTROYED.** Ruling 32's render question measured, not
+                  reasoned: both vetoed rows render the employer **ABSENT**, and
+                  **`CATL` still wins when a real employer sits earlier in the
+                  same title** — the proof this is a veto and not a blanket.
+                  B's dependency warning was honoured: **every item-2 assertion
+                  is on the KEPT real-posting form**, never on the brochure row
+                  item 1 drops.
+
+                  **ALL FOUR FORBIDDEN MOVES REPRODUCED ON THE REAL FILE, AND ONE
+                  IS WORSE THAN B MEASURED.** Widening
+                  `CAREERS_INDEX_TITLE_RE` turns `Tesla Careers` and
+                  `Kairos Power Careers` into silence (B's table, row for row).
+                  **Adding `programs?` to `TRAILING_CAREERS_CHROME_RE` produces
+                  B's three differently-wrong values AND DESTROYS SEVEN REAL
+                  NAMES**, including B's own hardest "must match nothing" case
+                  `United Nations Development Programme` — B recorded three
+                  rows; the true cost is 7 of 46. E1's wider trailing-noun list
+                  destroys **B's exact five**, one of them the shipped
+                  `Alphabet, Inc.` assertion; E2 without the coordination
+                  requirement destroys **B's exact five**. Every revert was
+                  `diff`ed byte-identical before the next; **no revert was
+                  scripted with `perl -pi`** (round 16 C's recorded hazard).
+
+                  **NEGATIVE PROOF, ONE PER EDIT, AND THE TWO CHECKS HAVE ZERO
+                  OVERLAP.** Check (a) reverted → **3 red** (both CATL rows plus
+                  the unrelated-host row); check (b) reverted → **2 red** (both
+                  EnerSys rows); the employer guard reverted → **5 red**.
+                  **Neither check alone is a fix and no later round can collapse
+                  them without failing a red test.**
+
+                  **THE GATE:** `npx vitest run` **90 files / 1482 tests, 1481
+                  passing** — sole failure the standing `benchmark.test.ts`
+                  live-search flake, **the same assertion and the same message
+                  as the cold baseline** (`expected undefined to be 'Chicago'`,
+                  the Solid-State Battery Summit city). **`32nd SolarPACES
+                  Conference` resolves its real name in that same run — the
+                  SolarPACES line is clean.** `tsc --noEmit` clean; `eslint`
+                  exactly the one standing `quiz.tsx:46` error.
+                  `scoring.test.ts` + `job-cleanup.test.ts` by name **37/37**;
+                  `enrich.test.ts` solo **25/25**. **Test count 1426 → 1482:
+                  +56 new assertions, zero deleted, zero rewritten.**
+                  `PEER_PROFILE_SNAPSHOT_PATH` was NOT used.
+
+                  **ONE CORRECTION FOR THE NEXT AGENT, recorded rather than
+                  quietly worked around:** the brief names `enrich.test.ts` at
+                  `src/lib/events/`. **There is no such file** — it is
+                  `src/lib/opportunities/enrich.test.ts`. Run it from there.
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`.
+                  No third-party page text read into context. No branch,
+                  worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Tree clean.** Full detail in §4's "Round 17 — Agent
+                  C" entry.
+                  ---
+                  Previous entry, kept for continuity: **round 17 B finished @
+                  2026-08-14 13:29 UTC — ROUND 17 B WAS
                   COMPLETE.** Both items, one commit each, each pushed
                   immediately (`8264d4b`, `7891c4d`) plus this hand-off.
                   Claimed the lock cleanly (`b9ba97e`) after `git pull
@@ -1587,13 +1699,166 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:29 UTC — ROUND 17 B IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **17 — A IS DONE. B IS NEXT.** Both round-16 items are
-                  live-confirmed and the wrongly-dropped column is at zero, but
-                  **A's census found TWO items of ONE class** — employer-run
-                  internship PROGRAMME index pages admitted as vacancies, on
-                  `enersys.com` (5 of 5) and `ev.careers` (1 of 5). Ranked list
-                  in §4, "Round 17 — Agent A (part 4…)".
-WHOSE TURN:       **C — Implementer, round 17.** B's guide is **TWO** items, in
+ROUND:            **17 IS CLOSED — A, B AND C ARE ALL DONE. ROUND 18 A IS
+                  NEXT, AND IT IS A GATE CANDIDATE ROUND.** Both of round 17's
+                  items landed in one commit (`909b6bf`, Ruling 49b) and both
+                  are measured, so round 18 A goes in with **no known open
+                  difference on either surface** — the same position round 17 A
+                  went in with. **A does not close the gate; see THE GATE RULE.**
+WHOSE TURN:       **A — Reviewer, round 18. GATE CANDIDATE ROUND.** A's job is
+                  the standing live census (§2) plus the checks below. Claim the
+                  §0d lock first, always.
+
+                  **WHAT ROUND 17 C CHANGED, AND THE EXACT EFFECT A SHOULD
+                  EXPECT TO SEE LIVE.** Two items, three edits, ONE commit
+                  (`909b6bf`), all in `web/src/lib/jobs/sources/jobweb.ts`. Full
+                  detail in §4's "Round 17 — Agent C" entry.
+
+                  **1. BOTH BROCHURE PAGES SHOULD BE GONE FROM THE JOB POOL.**
+                  - `enersys.com/en/careers/enersys-internship-program` — role
+                    title `EnerSys Internship Program: Powering Future
+                    Innovators`, **5 of 5 pulls in round 17** — should be
+                    **ABSENT**.
+                  - `ev.careers/catl-internships` — role title `CATL
+                    Internships`, **1 of 5, a MINORITY row** — should be
+                    **ABSENT**.
+                  **Nothing replaces either; the pool shrinks.**
+                  `MAX_OPPORTUNITY_POOL_ITEMS` is 200 against a pool of
+                  thirteen, so the cap is nowhere near binding and nothing
+                  backfills. **If either is still there, that is a finding.**
+                  **The EnerSys `<h1>` form (`EnerSys Internship Program`, no
+                  tagline) is also asserted to drop**, so an upstream title
+                  change does not reopen the item.
+
+                  **2. NO PROGRAMME-AREA EMPLOYER ANYWHERE, AND THIS IS A NAMED
+                  LINE ON A's LIST.** `Battery Cell, R&D & Gigafactory Programs`
+                  rendered as the employer where the real employer is **CATL**.
+                  It is now vetoed. **The value is a property of that board's
+                  `<title>` template, not of the brochure page** — executed on
+                  the shipped code, an ordinary vacancy on the same board
+                  rendered the identical wrong employer. **So A looks for the
+                  shape on EVERY host, not only `ev.careers`**, and records
+                  either a sighting or a zero. **Expected render when it fires,
+                  verified end to end by execution: the employer field is
+                  ABSENT, and a real employer later in the same title still
+                  wins.** Note the honest limit: **item 1 removes the only row
+                  this loop has ever sighted the value on**, so a zero here is
+                  weaker evidence than usual — say so rather than treating it as
+                  a close.
+
+                  **3. THE OREGON POSTING MUST STILL BE THERE IF IT IS OFFERED.**
+                  `M.S. Internship Program – Oregon Center for Electrochemistry`
+                  at `electrochemistry.uoregon.edu` is a **MUST-KEEP under
+                  Ruling 49a** — round 11 A fetched it, scored it CORRECT, and
+                  called it an own-domain research center hosting its own
+                  internship posting. **The whole two-signal design exists to
+                  keep it**, and C proved by execution that the tempting
+                  one-signal design destroys it. **If it is offered and dropped,
+                  that is a serious regression and outranks everything else on
+                  A's list.** If it is simply not offered this round, say that —
+                  absence from the provider is not evidence either way.
+
+                  **4. RULING 48b's BOTH-COLUMNS SCAN, AND IT IS NOW STANDING
+                  METHOD.** Round 17 A made this scan structurally complete for
+                  the first time: **pool membership is decided by TWO
+                  `isListingPage` calls and BOTH must be scored**, and the
+                  TITLES of correctly-dropped rows recorded, not only a count.
+                  Round 17 A scored 292 offered rows: **34 dropped, all 34
+                  correct, WRONGLY DROPPED 0 of 292 (0.0%)**. **Do both columns
+                  again.** The new checks are additive, so the correct-drop
+                  count should RISE and the wrongly-dropped column should stay
+                  at zero. **A rise in wrongly-dropped is a finding; so is a
+                  correct-drop count that does not move at all.**
+
+                  **THE NAMED MISS, so A recognises it rather than reporting it
+                  as new:** a THREE-token owner (`Idaho National Laboratory
+                  Internships`) is **NOT** dropped. It is an accepted cost of
+                  Ruling 44's class, asserted as a shipped documented-known miss.
+                  **A counts sightings** — that is the whole point of naming it —
+                  but does not rank it as a defect unless it appears.
+
+                  **ALL TALLIES, AFFIRMED AND CARRIED WITH THEIR RUNNING
+                  COUNTS.** **Ruling 33: cumulative 2 of 33, NOT closed — and
+                  round 17 recorded ZERO short-acronym admissions for the first
+                  time in this loop's history, which is EVIDENCE AND NOT A
+                  CLOSE; the matcher is untouched and the route returns on any
+                  pull.** **Ruling 34a employer: running r11 1/9, r12 1/10, r13
+                  0/12, r14 1/9, r15 1/8, r16 0/6, r17 1/6 — cumulative 5 of
+                  60.** **Event side: running r13 1/14, r14 1/13, r15 1/11, r16
+                  1/14, r17 1/13 — cumulative 5 of 65, SECOND DISTINCT INSTANCE
+                  STILL ABSENT, so Ruling 42b does NOT fire, and round 18 is the
+                  sixth round of that.** **Ruling 37: 1 of 2, baseline only,
+                  SIXTH round running; Ruling 44's sub-count ZERO.** **Rulings
+                  46a and 46b: ZERO each, checked against the pool AND all
+                  offered rows.** **Ruling 36: STAYS CLOSED, zero, FIFTH
+                  consecutive round, MEASURED not absent.** **Ruling 39c is not a
+                  tally.** **Event names: 0 of 13 (0%), FIFTH consecutive zero.**
+                  **Job summaries: 2 of 13 bearing, ZERO open defects, THIRD
+                  consecutive clean column.**
+
+                  **THRESHOLDS AFFIRMED, UNCHANGED:** five independent pulls per
+                  surface in five separate processes with a no-op `PoolCache`;
+                  `buildDailyEventPool()` / `buildDailyJobPool()` then the
+                  mappers; summaries read from the JOB CARD's own view model
+                  (`jobCardView().summaryText`); **`PEER_PROFILE_SNAPSHOT_PATH`
+                  NOT used**; keys checked as booleans only and never printed;
+                  **per Ruling 42b the tier statement is "page-fetch enrichment
+                  ran, LLM enrichment did not"** — never "Tier 0 only". **Score
+                  every replayed row with a real snippet and the profile's real
+                  topics** (round 17 A's own method correction), or a text-gate
+                  `null` will read as a guard drop. **Report BOTH shipped guard
+                  calls separately.** **A MINORITY row (1 of 5) is REPORTED, not
+                  deleted by majority scoring** — round 17 A did that and it is
+                  why item 2 exists.
+
+                  **WHAT A MUST NOT TREAT AS OPEN**, unchanged and by name:
+                  `careerservices.upenn.edu` (34a — counted, not ranked),
+                  `The Battery Saloon` (39b), `careers.gevernova.com`'s colonless
+                  run-on (37), Ruling 44's label-miss, the `lco-cdo.org` `LCO`
+                  acronym and the matcher generally (33), same-page
+                  contamination (29), `ecs.confex.com`'s and `euchems2026.eu`'s
+                  honest hosts (39a/40), the document-URL retarget (42c),
+                  **`euagenda.eu` (45a — permanently excluded, DO NOT FETCH)**,
+                  Ruling 41c's three hosts (45b), 46a's false fire, 46b's two
+                  titles, round 16's own named cost (a brand-first search page on
+                  a non-aggregator host — **NOT sighted live in round 17, so the
+                  trade does not reopen**), and **round 17's named three-token
+                  miss above**.
+
+                  **STILL OPEN FOR THE MANAGER, NOT A's:** B11-04's flag and
+                  B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD;
+                  round 13's unresolved `POLICY — manager decides` on five-pull
+                  majority scoring; round 14 C's `LEADING_LABEL_RE` widening
+                  question; round 15 B's question on the shipped section rule's
+                  two dropped titles; the `@`-separator employer at
+                  `befjobs.breakthroughenergy.org`; and **A's own round 17
+                  question — can a MINORITY row (1 of 5) hold the gate open?**
+
+                  **ONE PRACTICAL CORRECTION FROM ROUND 17 C:** the standing
+                  brief names `enrich.test.ts` at `src/lib/events/`. **There is
+                  no such file** — it is `src/lib/opportunities/enrich.test.ts`.
+
+                  **THE GATE RULE, VERBATIM AND BINDING: zero unexplained
+                  differences → `WHOSE TURN: MANAGER — independent re-measurement
+                  before any close`; A never closes.** Ruling 30 is why: round
+                  7's close was provisional because the verification was not
+                  independent. **A sets `GATE (0%): MET` and STOPS.** If any
+                  unexplained difference remains, the hand-off is B with a ranked
+                  list, exactly as round 17 went. Do not round down, do not call a
+                  difference cosmetic to clear the gate, and do not stop reporting
+                  something because it has appeared in three rounds. A difference
+                  A believes should not be closed is marked
+                  `POLICY — manager decides` with the gate left NOT MET — never
+                  quietly dropped.
+
+                  **THE GATE STAYS AS A LEFT IT: `GATE (0%): NOT MET`.** C does
+                  not set it and did not (§2). Only round 18 A's live measurement
+                  can move it, and only the manager closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 17 C
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **C — Implementer, round 17.** B's guide is **TWO** items, in
                   §4's two "Round 17 — Agent B" entries. **Work them in order.
                   C implements; C does not redesign** (§2). Commit per item,
                   push per commit, run the gate after each.
