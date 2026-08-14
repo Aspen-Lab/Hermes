@@ -47963,3 +47963,158 @@ commit; tree clean.
 
 **Not done yet:** item 2 (B20-01, hybrid attendance at ALL SIX call sites, Ruling
 55a) and item 0 (the mangled-text hygiene repair).
+
+---
+
+### Round 20 — Agent C (item 2 of 3: B20-01 / A20-01, hybrid attendance reaches every render site. **SHIPPED AT ALL SIX, per Ruling 55a**, off ONE exported predicate, with a **uniquely-red test per site** so a half-applied fix cannot pass.)
+
+**STATUS: DONE.** Second of round 20 C's three items, in Ruling 55b's order.
+**NO TEST DELETED. NO SHIPPED ASSERTION EDITED.** Item 1 is banked in `7372d40`
+and is not re-run.
+
+Branch re-read before this commit and in the push output (§3). Harness rebuilt
+outside `src/` (`web/zz-r20c/`, own vitest config, include pattern
+`zz-r20c/**/*.probe.ts`) for the pre-code re-measurement and **deleted before this
+commit**; tree confirmed clean with `git status --porcelain --untracked-files=all`.
+Appended from bash with `cat >>` — **NOT PowerShell**.
+
+---
+
+## C RE-MEASURED B's 13-ROW MUST-KEEP TABLE BEFORE WRITING CODE — ALL 13 ROWS HOLD
+
+Control copy of `events/card.ts` proved faithful against the genuinely imported
+`eventCardView` on **13 of 13 rows, 0 mismatches**. Every row built from the shape
+B recorded for that source's own construction code.
+
+| B's recorded claim | C's re-measurement | verdict |
+|---|---|---|
+| 2 of 13 rows change, and both are hybrid | **2 of 13, both hybrid** | **HOLDS** |
+| all 7 genuinely-online shapes still render `Online` | **7 of 7** | **HOLDS** |
+| the all-whitespace place object must not count as physical | renders `Online` | **HOLDS** |
+| 3 offline rows byte-identical | **3 of 3** | **HOLDS** |
+| the build contradicts itself on the Rome row | `opportunityFormat` = **`hybrid`**, shipped card = **`Online`** | **HOLDS** |
+| after the fix the chip and the card agree | facet `hybrid`, card `Rome, Italy` | **HOLDS** |
+| `card.test.ts` has NO `isOnline: true` test | confirmed: 2 tests, both `false` | **HOLDS** |
+| ccfddl hybrid stays an under-catch | renders `Online` | **HOLDS** |
+
+---
+
+## THE CHANGE — ONE DEFINITION, SIX SITES
+
+**The rule was already shipped and already tested; it simply never reached a render
+site.** `facets.ts` now exports the predicate `opportunityFormat` was inlining, plus
+the one question every render site needs:
+
+- `hasPhysicalPlace(place)` — extracted from `opportunityFormat`, which now calls it.
+  **A pure refactor, and proved to be one BY EXECUTION, not asserted:** the shipped
+  `facets.test.ts` is 11/11 unchanged, and breaking `hasPhysicalPlace` turns **2** of
+  its shipped tests red — so `opportunityFormat` genuinely routes through the export
+  rather than the export being a dead wrapper.
+- `isOnlineOnly(item)` — `isOnline && !hasPhysicalPlace(place)`. The single question
+  each of the six sites now asks.
+
+| # | site | file:line | surface |
+|---|---|---|---|
+| 1 | card tile | `lib/events/card.ts` | event card |
+| 2 | report WHERE fact | `app/events/[id]/page.tsx` | **plate 03 — the measured surface** |
+| 3 | report subtitle | `app/events/[id]/page.tsx` | **plate 03 — the measured surface** |
+| 4 | feed tile | `components/cards/feed-tile.tsx` | feed |
+| 5 | briefing hero | `components/cards/briefing-hero.tsx` | briefing |
+| 6 | briefing quick hit | `components/cards/briefing-quick-hit.tsx` | briefing |
+
+**ONE ADJACENT LINE CHANGED THAT B DID NOT LIST, AND C SAYS SO.** `feed-tile.tsx`
+picks its icon on the line above (`isOnline ? GlobeMini : PinMini`). Left alone, the
+fix would have printed a **globe next to "Rome, Italy"** — the change contradicting
+itself one line up. The icon now moves with the label. It is the same decision, not
+a new one, and it is named here rather than smuggled in.
+
+**EVERYTHING ON B's DO-NOT-TOUCH LIST IS UNTOUCHED**, each verified by re-reading it:
+`page.tsx`'s `preferredFeeTier`, both format-word sites (`"in person"` / `"online"` —
+the declined COPY question), `shared.ts`'s `locationFit`, `scoring.ts:244`, and
+**`ccfddl.ts:146`**. **None of the three priced-and-rejected alternatives was
+re-opened** — in particular `attendanceMode.includes("mixed")` was NOT dropped, so
+the Format facet keeps its `hybrid` answer and no scoring input moves.
+
+---
+
+## NEGATIVE PROOF — EVERY SITE HAS ITS OWN UNIQUELY-RED TEST
+
+Each site reverted to the raw `isOnline ?` form **in the real shipped file**, the
+four affected suites run, then restored from a byte-identical backup and re-verified
+`diff`-clean:
+
+| reverted | tests turned red |
+|---|---|
+| site 1 — card | **2** (both card hybrid tests; sites 2–6 unaffected) |
+| site 2 — report WHERE tile | **1, uniquely** |
+| site 3 — report subtitle | **1, uniquely** |
+| site 4 — feed tile | **1, uniquely** |
+| site 5 — briefing hero | **1, uniquely** |
+| site 6 — briefing quick hit | **1, uniquely** |
+| **`isOnlineOnly` collapsed to plain `isOnline`** (whole item reverted) | **7 — all six sites at once** |
+| `hasPhysicalPlace` broken | **2 shipped `facets.test.ts` tests** — the refactor is real |
+
+**A HALF-APPLIED FIX CANNOT PASS.** That is the point of asserting per site rather
+than once: Ruling 55a's six sites are individually load-bearing, and the next round
+does not have to take C's word for which ones landed.
+
+**VACUITY DISCIPLINE — WHAT IS *NOT* NEGATIVE PROOF, LABELLED IN THE FILES.** The
+**seven genuinely-online rows**, the **in-person rows** and the **ccfddl under-catch
+row** are **ADMITTED CONTROLS**: they pass before and after, because before this
+change `card.test.ts` had no `isOnline: true` test at all and the three feed and
+briefing surfaces had no location assertion of any kind. They are **LOCKS, not
+coverage** — B predicted exactly this and C labels them that way in the test
+comments so a later round cannot present them as proof the guard works.
+
+**15 new assertions across 15 new tests**: `card.test.ts` 2 → 8,
+`app/events/[id]/page.test.ts` 53 → 57, and **one new file**,
+`components/cards/hybrid-location.test.ts` (5), which is the first location
+assertion those three surfaces have ever had.
+
+---
+
+## RULING 55c's DEBT — STATED, NOT DISCHARGED
+
+**The 7 genuinely-online must-keep shapes are CONSTRUCTED, not live.** Round 20 B
+measured that this round's live pool contained **no genuinely-online event at all**,
+so the must-keep has never had a live witness. C has landed the constructed set as
+**shipped tests** — that is the half C can do — but **the live confirmation remains
+open and is round 21 A's debt under Ruling 55c**, carried as its own line in §1.
+
+**C DID NOT DISCHARGE B's ACCEPTANCE CHECK EITHER.** B asked for a live pull showing
+`chemistryworldconference.com` rendering `Rome, Italy` on the card and `Rome` in the
+Location facet. **C ran NO live pull and NO page fetch of any kind** (round 19 C's
+precedent), so that check is **carried to round 21 A**, not claimed.
+
+**SCORE MOVEMENT: ZERO, and structurally so.** All six sites are pure view code
+outside the scoring path, and the extractor was not touched by this item.
+`scoring.test.ts` (events and jobs) plus `job-cleanup.test.ts`: **108/108**,
+unchanged.
+
+---
+
+## THE GATE AFTER ITEM 2, HARNESS DELETED FIRST
+
+**91 files / 1596 tests, 1595 passing** — up from item 1's **1581/1580**, itself up
+from the cold baseline **1573/1572**. **+15, all new, all passing.** The file count
+rises by one for the new test file. Sole failure every time the standing
+`benchmark.test.ts` live-search flake at **`:109`** (`expected false to be true`) —
+the same one of its three recorded forms C saw on the cold baseline. **Not a new
+defect.** `npx tsc --noEmit` **clean**; `npx eslint` exactly the one standing
+`quiz.tsx:46` error. **`enrich.test.ts` run SOLO
+(`src/lib/opportunities/enrich.test.ts`): 53/53.** `facets.test.ts` **11/11**.
+`PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**No credential read, printed, logged or written. NO live pipeline pull and NO PAGE
+FETCH OF ANY KIND** — `euagenda.eu` not fetched (45a), Ruling 41c's three hosts not
+hunted (45b), no job-side host fetched. No third-party page text entered context and
+none was treated as an instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Harness deleted before this
+commit; tree clean.
+
+**C RAISES NO NEW `POLICY — manager decides` AND DECIDES NONE OF THE OPEN ONES** —
+Ruling 33's full-phrase collisions, 51b's five-pull majority scoring, 51c's
+`owned`-widening, and B's declined format-word copy question all stand exactly as
+left.
+
+**Not done yet:** item 0 (the mangled-text hygiene repair in `jobweb.test.ts`).

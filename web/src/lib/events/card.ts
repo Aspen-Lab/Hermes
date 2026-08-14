@@ -3,6 +3,7 @@ import { daysUntil, formatDate, parseDate } from "@/lib/format";
 import { eventPrestige } from "@/lib/opportunities/prestige";
 import { eventUrgency, type UrgencyBucket } from "@/lib/opportunities/urgency";
 import { matchQuality } from "@/lib/opportunities/match-quality";
+import { isOnlineOnly } from "@/lib/opportunities/facets";
 
 const UNKNOWN_URGENCY: UrgencyBucket = {
   text: "text-text-faint",
@@ -35,7 +36,13 @@ function dateLabel(event: Event): string {
 }
 
 function locationView(event: Event): Pick<EventCardView, "locationLabel" | "locationTone"> {
-  const place = event.isOnline ? "Online" : event.location.trim() || "Location not listed";
+  // B20-01, render site 1 of 6. Was `event.isOnline ? "Online" : …`, which
+  // deleted the venue of a HYBRID event — schema.org's Mixed attendance mode
+  // is stored as `isOnline: true`. `isOnlineOnly` is the shipped predicate the
+  // Format facet chips already use, so the tile and the chip now agree.
+  const place = isOnlineOnly(event)
+    ? "Online"
+    : event.location.trim() || (event.isOnline ? "Online" : "Location not listed");
   if (event.locationFit === undefined) {
     return { locationLabel: place, locationTone: "neutral" };
   }

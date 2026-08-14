@@ -1461,3 +1461,60 @@ describe("stale cached enrichment shapes", () => {
     expect(html).not.toContain("data-page-reading-note");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// B20-01 (A: event A20-01), render sites 2 and 3 of 6 — THE EVENT REPORT.
+//
+// Plate 03 IS this report, so these two are the surface the parity loop
+// measures. Both used to collapse `isOnline ? "Online" : location`, which
+// deletes the venue of a HYBRID event, because schema.org's Mixed attendance
+// mode is stored as `isOnline: true`.
+//
+// NEGATIVE PROOF: reverting either site to the raw `event.isOnline ?` form
+// turns its own test below red, and only that one — the WHERE tile and the
+// subtitle are asserted separately on purpose, so a half-applied fix cannot
+// pass.
+// ─────────────────────────────────────────────────────────────────────────
+describe("B20-01 — a hybrid event keeps its venue in the report", () => {
+  const hybrid = () =>
+    baseEvent({
+      isOnline: true,
+      location: "Rome, Italy",
+      place: { city: "Rome", country: "Italy" },
+      date: "2027-06-21",
+      endDate: "2027-06-23",
+    });
+
+  it("render site 2 — the WHERE tile names the city", () => {
+    const html = renderReport(hybrid());
+    const whereTile = html.match(
+      /<div[^>]*data-event-fact="where"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(whereTile).toContain("Rome, Italy");
+    expect(whereTile).not.toContain("Online");
+  });
+
+  it("render site 3 — the subtitle names the city", () => {
+    const html = renderReport(hybrid());
+    expect(html).toContain("Rome, Italy · online · 3 days");
+  });
+
+  it("LOCK, not coverage: a genuinely-online event still says Online at both sites", () => {
+    // Passes before and after — an ADMITTED CONTROL, not proof of the change.
+    const html = renderReport(
+      baseEvent({ isOnline: true, location: "Online", date: "2027-06-21" }),
+    );
+    const whereTile = html.match(
+      /<div[^>]*data-event-fact="where"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+    expect(whereTile).toContain("Online");
+    expect(html).toContain("Online · online");
+  });
+
+  it("ADMITTED CONTROL: an in-person event is untouched at both sites", () => {
+    const html = renderReport(
+      baseEvent({ location: "San Diego, US", date: "2027-03-08", endDate: "2027-03-11" }),
+    );
+    expect(html).toContain("San Diego, US · in person · 4 days");
+  });
+});

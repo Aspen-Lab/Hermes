@@ -32,6 +32,7 @@ import {
 import { reportShortDate } from "@/components/reports/report-date";
 import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
 import { ACTIVITY_LABELS } from "@/lib/opportunities/event-details";
+import { isOnlineOnly } from "@/lib/opportunities/facets";
 import {
   buildEnrichmentContext,
   canAttemptOpportunityEnrichment,
@@ -631,7 +632,10 @@ export function buildEventFacts(event: Event, nowMs: number): ReportFact[] {
   // be ambiguous between two different years.
   const abstractDue = reportShortDate(event.deadline, nowMs);
   const registerBy = reportShortDate(event.registrationDeadline, nowMs);
-  const location = event.isOnline ? "Online" : clean(event.location);
+  // B20-01, render site 2 of 6 — the report's WHERE tile. Plate 03 IS the
+  // event report, so this is the surface the parity loop measures. Same
+  // shipped predicate as the card and the Format facet chips.
+  const location = isOnlineOnly(event) ? "Online" : clean(event.location);
   const headline = (event.fees ?? []).find((fee) => clean(fee.standard));
   const student = clean(headline?.student);
   // B2-12. Reuses B-11's own extraction: cutoffPhrase already applies B-01's
@@ -1711,8 +1715,12 @@ export function EventReport({
   };
   const matchPct = formatMatchPct(event.relevanceScore);
   const facts = buildEventFacts(event, nowMs);
+  // B20-01, render site 3 of 6 — the report SUBTITLE's venue segment. The
+  // format segment two lines below still prints "in person" for a hybrid;
+  // that is a separate COPY question, deliberately left alone (writing
+  // "hybrid" there would be inventing plate copy).
   const location =
-    event.isOnline
+    isOnlineOnly(event)
       ? "Online"
       : clean(event.location)?.toLowerCase() === "see event page"
         ? undefined

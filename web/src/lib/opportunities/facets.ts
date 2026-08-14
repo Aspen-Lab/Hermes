@@ -291,6 +291,38 @@ function monthLabel(item: FacetableOpportunity): string | undefined {
   ).padStart(2, "0")}`;
 }
 
+/**
+ * B20-01 (A: event A20-01). schema.org has THREE attendance modes — Offline,
+ * Online and **Mixed** — but an opportunity record carries a two-valued
+ * `isOnline` boolean, so `Mixed` (which means "there is a physical venue AND
+ * an online option") is stored as if it meant "there is no physical venue".
+ * Every render site then used that flag to delete the venue, which is how a
+ * physical conference in Rome came to render `Online` on its card while THIS
+ * FILE already classified the very same row as `hybrid` for the filter chips.
+ *
+ * Exported so the render sites ask the question the facet layer was already
+ * asking, off ONE definition — the card, the event report and the facet chips
+ * cannot drift apart again. `opportunityFormat` below is unchanged in
+ * behaviour; it now calls this instead of inlining the same three checks.
+ */
+export function hasPhysicalPlace(place: OpportunityPlace | undefined): boolean {
+  return Boolean(
+    cleanLabel(place?.city) || cleanLabel(place?.region) || cleanLabel(place?.country),
+  );
+}
+
+/**
+ * B20-01. The one question every `isOnline` render site must ask before it
+ * replaces a venue with the word `Online`: is this record *only* online?
+ * A hybrid answers `false` here and keeps its venue.
+ */
+export function isOnlineOnly(item: {
+  isOnline?: boolean;
+  place?: OpportunityPlace;
+}): boolean {
+  return Boolean(item.isOnline) && !hasPhysicalPlace(item.place);
+}
+
 export function opportunityFormat(
   surface: FacetSurface,
   item: FacetableOpportunity,
@@ -300,12 +332,7 @@ export function opportunityFormat(
 
   if (surface === "events") {
     if (!item.isOnline) return "in-person";
-    const hasPhysicalPlace = Boolean(
-      cleanLabel(item.place?.city) ||
-        cleanLabel(item.place?.region) ||
-        cleanLabel(item.place?.country),
-    );
-    return hasPhysicalPlace ? "hybrid" : "online";
+    return hasPhysicalPlace(item.place) ? "hybrid" : "online";
   }
 
   return item.isRemote ? "online" : "in-person";

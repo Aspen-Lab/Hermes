@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "@/types";
 import { eventCardView } from "./card";
+import { opportunityFormat } from "@/lib/opportunities/facets";
 
 const now = new Date(2026, 6, 29, 12).getTime();
 
@@ -61,5 +62,105 @@ describe("eventCardView", () => {
       urgency: { label: "CFP deadline not listed", bucket: { label: "Not listed" } },
       matchedTerms: [],
     });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// B20-01 (A: event A20-01). Hybrid attendance reaches the card.
+//
+// schema.org has THREE attendance modes — Offline, Online and Mixed — but the
+// record carries a two-valued `isOnline`, so a HYBRID event is stored as
+// `isOnline: true` and this tile used to delete its venue. The app already
+// disagreed with itself: the Format facet chips called the same row `hybrid`
+// while this tile called it `Online`. The fix asks the chips' own shipped,
+// tested question (`isOnlineOnly`) at the render site.
+//
+// NEGATIVE PROOF, MEASURED BY MUTATION and recorded so a later round can check
+// rather than rediscover: reverting `locationView` to `event.isOnline ?
+// "Online" : …` turns the two HYBRID tests below red, and nothing else.
+//
+// THE SEVEN GENUINELY-ONLINE ROWS ARE A **LOCK, NOT COVERAGE**. Before this
+// change `card.test.ts` had NO test where `isOnline` was `true` at all, so the
+// shipped code passes them too — they cannot be uniquely red, and a later
+// round must not present them as proof the guard works. They exist to stop a
+// future edit from taking `Online` away from an event that really is
+// online-only. Each row's shape is built the way its own source builds it.
+// ─────────────────────────────────────────────────────────────────────────
+describe("B20-01 — a hybrid event keeps its venue on the card", () => {
+  const hybrid: Event = {
+    ...event,
+    isOnline: true,
+    location: "Rome, Italy",
+    place: { city: "Rome", country: "Italy" },
+    locationFit: undefined,
+  };
+
+  it("renders the venue, not the word Online", () => {
+    expect(eventCardView(hybrid, now).locationLabel).toBe("Rome, Italy");
+  });
+
+  it("agrees with the Format facet chip on the same row", () => {
+    // The contradiction this item closes: one record, two answers.
+    expect(opportunityFormat("events", hybrid)).toBe("hybrid");
+    expect(eventCardView(hybrid, now).locationLabel).not.toBe("Online");
+  });
+
+  it("LOCK, not coverage: all seven genuinely-online shapes still say Online", () => {
+    const onlineOnly: Array<[string, Partial<Event>]> = [
+      ["eventweb, genuinely online", { isOnline: true, location: "Online" }],
+      ["ccfddl, genuinely online", { isOnline: true, location: "Online" }],
+      ["confstech online, no city", { isOnline: true, location: "Online" }],
+      ["researchseminars online talk", { isOnline: true, location: "Online" }],
+      ["eventweb online, enrichment failed", { isOnline: true, location: "" }],
+      [
+        "online with an all-blank place object",
+        { isOnline: true, location: "Online", place: { city: "  ", region: "" } },
+      ],
+      ["ccfddl online, source place text was Online", { isOnline: true, location: "Online" }],
+    ];
+    expect(onlineOnly).toHaveLength(7);
+    for (const [label, shape] of onlineOnly) {
+      expect(
+        eventCardView({ ...event, locationFit: undefined, ...shape }, now).locationLabel,
+        label,
+      ).toBe("Online");
+    }
+  });
+
+  it("ADMITTED CONTROL: an offline event with no location at all is unchanged", () => {
+    expect(
+      eventCardView({ ...event, location: "", locationFit: undefined }, now).locationLabel,
+    ).toBe("Location not listed");
+  });
+
+  it("a hybrid whose location string is empty falls back to Online, never to a blank", () => {
+    // The one branch the fix adds that could have produced an empty tile.
+    expect(
+      eventCardView(
+        { ...hybrid, location: "   " },
+        now,
+      ).locationLabel,
+    ).toBe("Online");
+  });
+
+  it("DOCUMENTED KNOWN UNDER-CATCH: a ccfddl hybrid still reads Online", () => {
+    // `events/sources/ccfddl.ts:146` overwrites the venue string with the
+    // literal "Online" at INGESTION, before enrichment ever runs, while still
+    // setting `place` from the same text. So the venue never reaches this
+    // function to be rendered. That is a DIFFERENT defect in a DIFFERENT file
+    // with zero live sightings; it is recorded here, not fixed here, and the
+    // miss lands on an honest string the codebase already ships.
+    expect(
+      eventCardView(
+        {
+          ...event,
+          isOnline: true,
+          location: "Online",
+          place: { city: "Chicago", region: "IL", country: "United States" },
+          locationFit: undefined,
+        },
+        now,
+      ).locationLabel,
+    ).toBe("Online");
   });
 });

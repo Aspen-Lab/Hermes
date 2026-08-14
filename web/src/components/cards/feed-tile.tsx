@@ -10,6 +10,7 @@ import { useFeedStore } from "@/store/feed";
 import { formatDate, formatMatchPct } from "@/lib/format";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
+import { isOnlineOnly } from "@/lib/opportunities/facets";
 import { chipTones } from "@/components/ui/chip";
 import {
   OpportunityRelevanceBar,
@@ -467,9 +468,12 @@ function EventTile({ event, isRead }: { event: Event; isRead: boolean }) {
       </h3>
       <div className="text-caption text-text-faint mt-2 flex items-center gap-2.5 min-w-0">
         <MetaItem icon={CalendarMini}>{formatDate(event.date, "short")}</MetaItem>
+        {/* B20-01, render site 4 of 6. The ICON moves with the label on
+            purpose: a globe beside "Rome, Italy" would be the fix
+            contradicting itself one line up. */}
         {(event.isOnline || event.location) && (
-          <MetaItem icon={event.isOnline ? GlobeMini : PinMini}>
-            {event.isOnline ? "Online" : event.location}
+          <MetaItem icon={isOnlineOnly(event) ? GlobeMini : PinMini}>
+            {isOnlineOnly(event) ? "Online" : event.location}
           </MetaItem>
         )}
       </div>
