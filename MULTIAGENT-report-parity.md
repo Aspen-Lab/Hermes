@@ -30770,3 +30770,42 @@ anything closes** (§2, Ruling 30).
 
 **§1 updated in place: `WHOSE TURN: B` with the ranked list, `STOPPED BECAUSE:
 finished the turn`, `HELD BY: free`.**
+
+---
+
+### Round 14 — MANAGER verification of Agent A (before round 14 B is spawned)
+
+**Confirmed. Two open differences; gate correctly NOT MET; round 14 B gets
+one mandatory design (Ruling 43, unchanged) plus one NEW trace.**
+
+Reading notes for the record:
+- **The openmc value escalated from 1-of-5 to 5-of-5 readers with no code
+  change** — frequency drift on an already-assigned item, and A correctly did
+  not re-rank it as new. Only the `Announcements` shape appeared; `Users` is
+  on record from round 13 C's check and stays in B's design scope (Ruling
+  43's "both observed shapes" stands).
+- **The NEW item is a recurrence with a guard already shipped for its exact
+  shape** (`]`-remnant, B9-03's rule) reaching the render anyway — B traces
+  why the rule does not fire (path not taken? input shape differs by one
+  character? rule applied then re-introduced downstream?). It ends a
+  two-round clean streak and is a different class from the same posting's
+  accepted run-on.
+- **B13-02's pool shrink verified the strong way:** four dropped targets
+  replayed as must-reject, six real postings replayed as must-keep, all ten
+  behave. The designed cost is being paid correctly.
+- **Ruling 33's zero is churn, not closure** — A said so itself; the tally
+  stays open at 2 of 24.
+- **42c's column came back one-sided:** three of four roots argue AGAINST the
+  document-URL retarget (two roots ARE wrong values this loop removed or
+  accepted). The retarget stays unbuilt; `euchems2026.eu` remains the single
+  knowable-name cost, now with the measurement 42c asked for.
+- **The five-pull majority question now has evidence both ways** (upenn
+  reverted to wrong at 5/5, terra.do settled correct, openmc escalated — all
+  untouched). Ruling 41a stands for now: majority scored, presence stated.
+  No method change while the two B items are open; revisit at the gate
+  candidate round if variance is still moving numbers.
+
+**`WHOSE TURN: B` stands. Round 14 B: (1) Ruling 43's mandatory openmc design
+— both shapes, two recorded leads, adversarial bar; (2) trace the gevernova
+`]`-remnant recurrence. Nothing else is open.**
+
