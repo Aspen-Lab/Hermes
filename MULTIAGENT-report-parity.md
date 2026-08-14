@@ -53342,3 +53342,140 @@ being printed twice. Independent of items 1, 2 and 8; C may land it first and
 alone, and it is the safest item in the round.
 
 ---
+
+### Round 22 — Agent B (items 4 and 5 of 9: **A22-06 and A22-07 ARE ONE LINE. `jobweb.ts:1109` is a two-clause OR that is simultaneously too narrow on the URL and too loose on the text. Fixing either half alone re-opens the other.**)
+
+**STATUS: PARTIAL BY DESIGN.** Items 4 and 5 of 9, written as one entry because
+B established by execution that they are one gap. **The A22-xx numbers are kept
+as the primary item numbers, per the brief.**
+
+## **CLASSIFICATION: A22-06 = WRONG SHAPE (item-KIND). A22-07 = MISSING.**
+
+B ranks the MISSING item immediately after the WRONG SHAPE one, breaking §2's
+"missing content later" ordering for this pair alone, **and states the reason: if
+C fixes them in separate commits, the second commit will re-open the first.**
+
+## THE ONE LINE
+
+`web/src/lib/jobs/sources/jobweb.ts:1109`:
+
+```ts
+if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;
+```
+
+This is the ONLY test of "is this a job posting at all" that runs before the
+listing-page rules. `JOB_PATH_RE` (`:29`) is a closed list of URL segments.
+`JOB_TEXT_RE` (`:1062`) is a list of hiring PHRASES matched against
+`title + snippet` — **the same page-scoped snippet items 1 and 2 are about.**
+
+**Executed on the live offered rows, all three verdicts measured, not reasoned:**
+
+| row | `JOB_PATH_RE` | `JOB_TEXT_RE` | line 1109 | outcome |
+|---|---|---|---|---|
+| `lanl.jobs/search/jobdetails/nuclear-materials-and-molten-salt-technologist-1---research-technologist-1/9afb00cb-…` | **false** | **false** | **DROPS** | **A22-07 — a real Los Alamos vacancy lost** |
+| `stemgateway.nasa.gov/public/s/course-offering/…/battery-material-intern` | **false** | **false** | **DROPS** | A's UNCONFIRMED row — **same line, same mechanism** |
+| `batteryjunction.com/collections/batteries` | false | **true**, on `Apply Now` | **KEPT** | **A22-06 — a shop's catalogue page as a job card** |
+
+## A22-07 — why the path clause misses it
+
+The path is `/search/jobdetails/<slug>/<uuid>`. `JOB_PATH_RE` requires a segment
+that IS `job` or `jobs` (`\/(?:job|jobs|…)(?:\/|$)`); `jobdetails` is a different
+segment and `search` is not in the list at all. **`isListingPage` returns FALSE
+on this row — A is right — because it never gets the chance: line 1109 returns
+first.** A's ground truth is confirmed: the offered title is
+`Nuclear Materials and Molten Salt Technologist 1`, a single real role, and the
+URL ends in a UUID posting id.
+
+**This is Ruling 48b's first non-zero wrongly-dropped column in six rounds, and
+it is not a subtle guard — it is a vocabulary list that has never been widened.**
+
+## A22-06 — why the text clause admits it
+
+`JOB_TEXT_RE`'s `apply (?:now|today|for)` alternative matches the shop's own
+`Apply Now` button text, which the provider included in the snippet. **Nothing
+about a retail catalogue page distinguishes it from a posting once that phrase
+is present**, because the clause reads unowned page-wide text and asks only
+whether a hiring phrase appears anywhere in it.
+
+**A different shape from A21-01, confirmed:** A21-01 was a job-BOARD category
+page and was closed by adding a section-noun to a title list. This is a
+retail-SHOP page whose title (`Batteries`) is a product category. No standing
+exclusion names it.
+
+## FIX DIRECTION — one commit, both halves, and the two halves pay for each other
+
+**(a) Widen `JOB_PATH_RE` to the applicant-tracking-system route conventions it
+already tries to cover.** `jobdetails`, `job-details`, `jobdetail` are ATS
+routing conventions — closed by construction, in the same sense
+`FORUM_THREAD_URL_RE`'s doc comment (`:165-172`) defends its own list: *fixed by
+the software that emits them, not by English.* That single addition turns
+`lanl.jobs` from a drop into a keep **and it changes nothing else in this pull —
+measured: no other offered row's verdict moves.**
+
+**(b) Tighten the text clause so it cannot admit a page whose URL says shop.**
+The honest, non-host-specific signal is already in this file's vocabulary:
+`NON_JOB_PATH_RE` (`:31`) exists precisely to name paths that are not postings,
+and it has no retail segment. `collections`, `products`, `product`, `shop`,
+`cart`, `category` are storefront routing conventions (Shopify's `/collections/`
+is the live one here) and belong in that regex, which runs at `:1108` **before**
+line 1109 and therefore beats the text clause outright.
+
+**WHY (b) MUST NOT BE "REMOVE `apply now` FROM `JOB_TEXT_RE`".** B priced that
+and it is the wrong instrument: `apply now` is the ONLY clause keeping several
+real single postings alive whose URL is not job-shaped, and removing it would
+widen A22-07's class instead of closing it. **The two halves must land together
+or the drop rate moves in the wrong direction.** Recorded so it is not
+re-proposed.
+
+**FALLBACK / FAILURE DIRECTION, both halves.** (a) fails by keeping a row it
+should not — the status quo for every unlisted ATS route, never a new wrong
+value. (b) fails by keeping a shop page — again the status quo. **Neither half
+can produce a wrong FIELD; both only move whole items, which is the direction
+Ruling 23 prefers.**
+
+**VACUITY CHECK (§3).** Every added token has a live red case: `jobdetails` is
+`lanl.jobs`; `collections` is `batteryjunction.com`. `job-details` / `jobdetail`
+/ `products` / `shop` have **no live case in this pull** and are therefore
+**named as unearned** — C may include them only as a deliberate, documented
+widening, or leave them out. B recommends leaving them out and letting a later
+round earn them.
+
+## A NAMED CONTROL C MUST NOT BREAK
+
+`salutemyjob.com/jobs/actinide-chemistry-ion-exchange-postdoc-research-associate-columbia-south-carolina/2893886008-2`
+is KEPT today on `JOB_PATH_RE` alone. It must stay kept. So must the six retail
+battery shops A counted as **correctly** dropped — check that (b) does not
+double-count them, since they already drop for other reasons.
+
+## THE UNCONFIRMED ROW IS NOW CONFIRMED AS A MECHANISM, NOT AS A COUNT
+
+`stemgateway.nasa.gov` drops on the identical line. **B does NOT convert it into
+a counted wrong drop** — Ruling 25 still forbids the browser that would
+ground-truth what the page is, and A was right to leave it uncounted. What B adds
+is that **whatever it turns out to be, it is not a separate defect**, so no
+future round needs to investigate it twice.
+
+## TESTS AT RISK
+
+- **`web/src/lib/jobs/sources/jobweb.test.ts`** — the primary home. Grep for
+  `JOB_PATH_RE`, `NON_JOB_PATH_RE` and `webResultToRawJobItem`. Note `:1944`
+  already asserts a **must-DROP** on `Acme Internships: Apply Now` at an
+  unrelated host; confirm (b) does not change how that row drops.
+- **`web/src/lib/jobs/scoring.test.ts`** — a SECOND file that calls
+  `webResultToRawJobItem`. This is the class of miss the ground rules warn
+  about; do not stop at the first file.
+- `web/src/lib/opportunities/job-cleanup.test.ts` — third caller, title-side
+  only, but read it.
+- `web/src/app/api/jobs/feed/route.test.ts` / `dispatch-digests` — end-to-end
+  counts that shift by one row if the pool composition moves.
+
+## BLAST RADIUS
+
+Two regex constants in one file. **`isListingPage` is not touched, so B13-02's
+and B15-01's count locks, Ruling 46a/46b, B17-01's named miss and Ruling 39c's
+forum rule all stand by construction.** The employer chain is downstream and
+unaffected. One row enters the job pool (`lanl.jobs`) and one leaves
+(`batteryjunction.com`), so **round 23 A should expect a 12-row pool with
+different membership, not a 13-row one.**
+
+---
