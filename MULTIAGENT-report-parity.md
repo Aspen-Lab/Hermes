@@ -270,14 +270,19 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 05:21 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **blocked: the user paused the loop @ 2026-08-13 16:38 UTC
-                  (going offline for a while) — ROUND 12 A IS PART-WAY
-                  THROUGH ITS TURN. PICK IT UP AT PART 2; DO NOT RESTART.**
+STOPPED BECAUSE:  **resumed by the user @ 2026-08-14 05:21 UTC — round 12 A
+                  continuing at part 2. PICK IT UP AT PART 2; DO NOT
+                  RESTART.**
+
+                  The loop was paused by the user on 2026-08-13 (going
+                  offline) and has now RESUMED on 2026-08-14. **Both resume
+                  clocks are back ON** — the laptop's hourly cron and the
+                  cloud routine are re-enabled.
 
                   The manager stopped the running round-12 A mid-turn on the
                   user's instruction. Nothing was lost:
@@ -295,11 +300,6 @@ STOPPED BECAUSE:  **blocked: the user paused the loop @ 2026-08-13 16:38 UTC
                   scaffold was deleted by the manager (untracked test files
                   under the source tree get collected by the next gate run);
                   rebuild it from the round-11 precedent if needed.
-
-                  **Both resume clocks are OFF by user instruction** (the
-                  laptop's hourly cron cancelled, the cloud routine
-                  disabled). Nothing will self-resume; the user restarts
-                  the loop manually when back online.
 
                   ---
 
