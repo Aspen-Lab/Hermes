@@ -44774,3 +44774,174 @@ this loop has produced.**
 **`WHOSE TURN: C` stands — two items, C's vacuity standard (round 18) in
 force.**
 
+
+### Round 19 — Agent C (item 1: B19-01, the punctuated search-results slug. THREE TOKENS, FIVE CHARACTERS, ONE CLAUSE — B's "one clause not one token" FINDING RE-MEASURED BY EXECUTION BEFORE ANY CODE WAS WRITTEN, AND CONFIRMED.)
+
+**STATUS: COMPLETE.** Two files changed: `web/src/lib/jobs/sources/jobweb.ts`
+(two constants + a doc block) and `web/src/lib/jobs/sources/jobweb.test.ts`
+(one new `describe`, 31 assertions, plus ONE comment-only correction). **No test
+deleted. No test's assertion edited.** `LISTING_TITLE_RE` untouched — verified by
+`git diff`, not by memory. Harness lived outside `src/` (`web/zz-r19c/`, own
+vitest config, include pattern `zz-r19c/**/*.probe.ts`) and was **deleted before
+this commit**; `git status --porcelain --untracked-files=all` showed only the two
+intended files. State file appended with `cat >>` from bash — **NOT PowerShell**
+(round 19 A's recorded hazard).
+
+---
+
+#### 1. RE-MEASUREMENT FIRST — B's TABLE RE-RUN, NOT TRUSTED
+
+Same method B used: **every candidate is a REAL COPY of the shipped file with one
+textual substitution**, imports rewritten, never a regex re-declared in a probe.
+The control copy's fidelity is proved by asserting its verdict equal to the
+**genuinely imported** `webResultToRawJobItem` on every row.
+
+| candidate | C's re-measurement | B recorded | agrees? |
+|---|---|---|---|
+| v0 shipped, A19-01 live row | **KEEP** | KEEP | YES |
+| v1 leaf only, A19-01 | **KEEP** | KEEP | **YES — a one-token fix is inert** |
+| v2 title only, A19-01 | **KEEP** | KEEP | **YES** |
+| v9 three tokens, A19-01 | **DROP** | DROP | YES |
+| v10 (leaf tail left shipped) | **misses exactly 1 row** | 1 miss | YES |
+| v4/v7 open classes (`[^/]`, `\S`) | **verdict-for-verdict IDENTICAL to v9 on every row** | identical | **YES — no open class needed** |
+| shipped `isListingPage` on jobright / linkedin | **false / true** | false / true | YES |
+
+**THE TWO FALSE FIRES AND THEIR TWINS, RE-MEASURED — B's KEY CLAIM HOLDS:**
+
+| row | shipped (v0) | v9 |
+|---|---|---|
+| `Manager, Green Jobs in Ontario` @ `/jobs/manager,-green-jobs` | KEEP | **DROP** |
+| `Senior Engineer, Green Jobs in Ontario at Hydro One` @ `/jobs/senior-engineer,-green-jobs` | KEEP | **DROP** |
+| **un-punctuated twin of the first** | **ALREADY DROPS** | DROPS |
+| **un-punctuated twin of the second** | **ALREADY DROPS** | DROPS |
+
+**So the change removes punctuation as an accidental shield over B15-01's own
+named accepted cost rather than creating a new failure mode. Confirmed by
+execution, not inherited.**
+
+**TWO DISCLOSURES ABOUT THE NUMBERS, SO THEY ARE NOT READ AS MORE THAN THEY ARE.**
+(1) **C's absolute totals differ from B's** — C scored 39/47 shipped and 47/47 on
+v9, where B scored 40/47 and 45/47. **The reason is corpus composition, not
+disagreement:** A's log names rows rather than listing all 96, so C rebuilt the
+corpus independently and placed the two known false fires in a SEPARATE price
+table instead of inside the 47. **Every DELTA and every DIRECTION matches B
+exactly**; no verdict C measured contradicts one B measured.
+(2) **C's first corpus draft contained two labelling errors OF C's OWN**, both
+found by execution and both corrected before any code was written: round 17's
+`Acme Fellowship Program` must-keep was given a URL whose host brand appears in
+the title, which trips B17-01b; and the un-punctuated twin was labelled must-KEEP
+when B's own text says it already drops. **The second error's correction IS the
+confirmation of B's claim.** Recorded because a corpus that was never wrong is a
+corpus that was never checked.
+
+---
+
+#### 2. THE CHANGE AS SHIPPED
+
+`web/src/lib/jobs/sources/jobweb.ts`, exactly B's recommendation, no more: the
+leaf regex's two `[a-z0-9-]` classes both become `[a-z0-9,.&()-]`, and the title
+regex's `[\w&/-]` becomes `[\w&/,.()-]`. Five characters, three tokens.
+
+**`isTopicLandingPage`'s body: unchanged. `TOPIC_LANDING_FUNCTION_WORD_RE`:
+unchanged. `LISTING_TITLE_RE`: unchanged, not one byte. No host added to
+`AGGREGATOR_HOSTS`. No open class. Ruling 46a not re-opened.**
+
+---
+
+#### 3. THE NEGATIVE PROOF — ONE EDIT AT A TIME, RESTORED BYTE-IDENTICAL BETWEEN EACH
+
+Each revert applied as a single targeted edit — **no `perl -pi`** (round 16 C's
+hazard). Restore verified by **SHA-256 equality** against a pristine copy taken
+before the first revert, checked and printed after every restore.
+
+| token reverted alone | tests RED | uniquely red for this token |
+|---|---|---|
+| leaf **HEAD** class | **9** | **2** — `drops a slug head carrying a comma`, `drops a slug head carrying a dot and an ampersand` (plus both accepted-cost rows) |
+| leaf **TAIL** class | **1** | **1 — `drops a locale tail carrying a comma`. A clean, uniquely-red test.** |
+| **title** token class | **5** | **ZERO — and its 5 are a STRICT SUBSET of the leaf head's 9** |
+
+**B PREDICTED THE TITLE TOKEN COULD NOT BE ISOLATED AND B WAS RIGHT, FOR THE
+REASON B GAVE.** Conjunct 3 forces the title's word before the job noun to be the
+leaf head's second-to-last segment, so a punctuated title token always forces a
+punctuated leaf head. C tried to build a separating row and failed, exactly as B
+did. **Per Ruling 53b it is DOCUMENTED AS UNTESTABLE IN THE TEST FILE** — a named
+test carries the explanation and asserts only the combined revert, and its own
+comment forbids a later round replacing it with something that merely looks
+isolating. **No vacuous test was shipped to paper over it.**
+
+---
+
+#### 4. THE 31 NEW ASSERTIONS, AND THE VACUITY STANDARD APPLIED
+
+All twelve of B's required assertions are present. Beyond them:
+
+- **The admitted control (Ruling 51) is FOUR rows, not one** — every drop title
+  above is re-asserted `not.toBeNull()` on a slug that does not restate it, so a
+  future vacuity turns those red instead of hiding.
+- **The two accepted costs ship WITH their documented-known controls** — the
+  un-punctuated twins are asserted as already-dropping, so a later "rescue" of
+  the class goes red on B15-01's contract rather than silently on B19-01's.
+- **The block's non-vacuity counterpart:** a real punctuated posting on the SAME
+  host (`Battery Engineer (Cell Design)`) still produces an item.
+- **Ruling 32 answered from the render side** in the block's own comment: the
+  item never exists, so the reader sees one fewer card — against today's card
+  whose link opens a thousand postings.
+
+---
+
+#### 5. ONE COMMENT-ONLY CORRECTION C MADE THAT B DID NOT NAME
+
+B named two comment-only corrections, both in `enrich.test.ts` (item 2). **C
+found a THIRD, in `jobweb.test.ts`, and handled it the same way (53b):** the
+shipped must-keep row labelled *"the COMMA form — punctuation the slug cannot
+carry"* is now mislabelled, because after B19-01 a slug CAN carry a comma. **Its
+assertion is untouched and it still passes** — for a reason its label does not
+state: its SLUG has no comma, so conjunct 3 cannot agree. A comment above the
+block says so and points at the B19-01 row whose slug DOES carry the comma.
+**The label string itself was left alone; it is test data, not a comment.**
+
+---
+
+#### 6. A PRE-EXISTING DEFECT FOUND IN PASSING — RECORDED, NOT FIXED (escape clause)
+
+`web/src/lib/jobs/sources/jobweb.test.ts` carries **17 lines of mojibake**: an
+en dash mangled to U+9225 followed by a question mark. **Introduced by round 17's
+C in commit `909b6bf`**, three rounds ago — found by `git log -S`, not guessed.
+One of the 17 is **inside a test string literal** (the Oregon must-keep title), so
+that test asserts on a corrupted title rather than the real one.
+`src/lib/text/clean.ts` and `src/lib/papers/report-stream.test.ts` each show one
+line on the same scan and were **not** investigated — a Chinese character in a
+text-cleaning module may be legitimate.
+
+**C did NOT fix it.** It is outside both items, and repairing a string literal is
+editing a test (§3). **C's own new assertions deliberately avoid that string** and
+use the clean segment `M.S. Internship Program` for Ruling 49a's must-keep. C
+verified its own two edits introduced **zero** new non-ASCII corruption.
+**Flagged for the manager as a possible future item.**
+
+---
+
+#### 7. THE GATE AFTER ITEM 1
+
+`cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+- **Cold baseline before any edit: 90 files / 1527 tests, 1526 passing.**
+- **After item 1: 90 files / 1558 tests, 1557 passing** (+31, all new and all
+  passing). Sole failure the standing `benchmark.test.ts` live-search flake.
+- **THE FLAKE'S PRESENTATION, FOURTH DATA POINT:** C's cold baseline tripped
+  `expected undefined to be 'Chicago'` (round 18 C's form, at `:119`), and the
+  post-item-1 run tripped the **`:109` survivor check** (round 19 B's form).
+  **So it moved WITHIN A SINGLE C SESSION, on an unchanged event pipeline.**
+  Still **one flake, one test** — now three distinct assertions and four
+  observations. Do not read it as a new defect.
+- `npx tsc --noEmit`: **clean**.
+- `npx eslint`: **exactly the one standing `quiz.tsx:46` error.**
+- `scoring.test.ts` + `job-cleanup.test.ts` run by name: **37/37 pass.**
+- `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**Security and cleanup.** No credential read, printed, logged or written. No live
+pipeline pull, no page fetch, no third-party page text in context. `euagenda.eu`
+NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b); B18-02's three
+named under-catch hosts NOT fetched. No branch, worktree or PR;
+`git branch --show-current` read before the commit and in the push output (§3).
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.

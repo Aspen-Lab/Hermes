@@ -332,16 +332,64 @@ const FORUM_THREAD_URL_RE =
  * Failure direction when it does NOT fire: exactly today's behaviour — the page
  * stays in the pool with an empty employer and no summary. Never a new wrong
  * value.
+ *
+ * B19-01 (round 19, Ruling 52a): THREE CHARACTER CLASSES GAIN FIVE CHARACTERS
+ * (`, . & ( )`). NOT A NEW RULE — the removal of an accidental shield.
+ *
+ * `jobright.ai` rendered a "1000+ results" search page as a single job card on
+ * 5 pulls of 5, headed `Internship, Battery Engineering (summer 2026) Jobs in
+ * United States`, in the SAME run in which this file correctly dropped
+ * `linkedin.com`'s `1,000+ Molten Salt jobs in United States`. The two rows are
+ * separated by two DIFFERENT clauses and that is what sized the fix: LinkedIn
+ * drops on the leading count (`LISTING_TITLE_RE`), and the jobright title
+ * carries no count at all — its `(1000+)` lives in the page's own `<h1>`, which
+ * this guard runs too early to ever see. So the clause that should have caught
+ * it is this one, and it failed on TWO of its four conjuncts, both because a
+ * character class written from three punctuation-free examples excluded the
+ * punctuation this host's LOSSLESS slugifier preserves. Conjunct 3 — B15-01's
+ * own strongest conjunct — was satisfied exactly, punctuation and all.
+ *
+ * WHY THREE TOKENS AND NOT ONE, ESTABLISHED BY EXECUTION AND RE-ESTABLISHED BY
+ * ROUND 19's C BEFORE THIS EDIT WAS WRITTEN. Widening the leaf alone leaves the
+ * live row KEPT; widening the title token alone leaves it KEPT; only all three
+ * together drop it. A later round must not "simplify" this back to one edit —
+ * the leaf-tail token has its own uniquely-red test below, and the leaf-head
+ * token has two.
+ *
+ * THE CLASS IS CLOSED AND EVERY ADDED CHARACTER IS EARNED BY A TEST. Apostrophe,
+ * plus and percent were measured and are DELIBERATELY EXCLUDED: no row reaches
+ * them, so they would be characters no test could turn red.
+ *
+ * AN OPEN CLASS IS REJECTED ON A NUMBER, NOT ON TASTE. The `[^/]` / `\S` form
+ * was scored against the identical corpus and is IDENTICAL verdict-for-verdict
+ * on every row — same catches, same false fires, same zero misses. It buys
+ * nothing, so the enumerated list is free. Do not "generalise" it later.
+ *
+ * THE PRICE, AND WHAT KIND OF PRICE IT IS. Two constructed false fires, both
+ * the comma form of the accepted cost named directly above (`Manager, Green
+ * Jobs in Ontario` and `Senior Engineer, Green Jobs in Ontario at Hydro One`).
+ * THE UN-PUNCTUATED TWIN OF EACH ONE ALREADY DROPS UNDER THE SHIPPED RULE
+ * TODAY — measured, and asserted below as a documented-known control. So this
+ * change creates no new failure MODE; it stops punctuation from accidentally
+ * shielding a cost B15-01 already named, priced and shipped. `LISTING_TITLE_RE`
+ * is NOT touched by this item — not one byte — so B13-02's and B15-01's count
+ * locks stand by construction, and Ruling 46a is not re-opened.
+ *
+ * ROUTES MEASURED AND REJECTED, recorded so they are not re-proposed: adding
+ * `jobright.ai` to AGGREGATOR_HOSTS (dead on a number — the path contains
+ * `2026`, so `POSTING_ID_RE` matches and the aggregator branch returns false);
+ * making the leading count optional (Ruling 46a); and a `(1000+)`-in-the-heading
+ * rule (structurally impossible — this guard never sees the page).
  */
 /** The final path segment, and the head of it up to a job noun. */
 const TOPIC_LANDING_LEAF_RE =
-  /^([a-z0-9-]*?-(?:jobs|vacancies|openings))(?:-[a-z0-9-]+)?$/i;
+  /^([a-z0-9,.&()-]*?-(?:jobs|vacancies|openings))(?:-[a-z0-9,.&()-]+)?$/i;
 /** A query is a noun phrase. A role title uses function words. CLOSED class. */
 const TOPIC_LANDING_FUNCTION_WORD_RE =
   /(?:^|-)(?:of|for|and|or|to|with|in|on|at|the|a|an)(?:-|$)/i;
 /** `<content word> <job noun> in|near …` — the search-results title grammar. */
 const TOPIC_LANDING_TITLE_RE =
-  /(?:^|\s)(?!(?:of|for|and|or|to|with|in|on|at|the|a|an|&)\s)[\w&/-]+\s+(?:jobs|vacancies|openings)\s+(?:in|near)\b/i;
+  /(?:^|\s)(?!(?:of|for|and|or|to|with|in|on|at|the|a|an|&)\s)[\w&/,.()-]+\s+(?:jobs|vacancies|openings)\s+(?:in|near)\b/i;
 
 function isTopicLandingPage(title: string, pathAndQuery: string): boolean {
   const leaf = (pathAndQuery.split("?")[0] ?? "").split("/").filter(Boolean).pop();

@@ -1041,6 +1041,17 @@ describe("non-posting pool items (B13-02)", () => {
     // employer brand ending in `Jobs`, and the HARD cases whose slug itself
     // ends at the noun. These are why all four conjuncts are load-bearing: the
     // URL-leaf test ALONE scores 79/92 and destroys the first five of these.
+    //
+    // COMMENT-ONLY CORRECTION BY ROUND 19's C (B19-01). One row's LABEL below
+    // is now out of date and its ASSERTION IS DELIBERATELY UNTOUCHED (§3).
+    // "the COMMA form — punctuation the slug cannot carry" was true when it was
+    // written; after B19-01 a slug CAN carry a comma. This row still keeps, and
+    // for a reason the label does not state: its SLUG has no comma
+    // (`/jobs/manager-green-jobs`), so conjunct 3 cannot agree with the title's
+    // `Manager, Green ...` opening. The row whose slug DOES carry the comma is
+    // asserted in the B19-01 block below as a named accepted cost. Read this
+    // row as "a comma in the title alone is not enough", not as coverage of
+    // punctuated slugs.
     it.each([
       ["a role using `of` in the slug", "Director of Green Jobs in Boston", "example.test", "/jobs/director-of-green-jobs"],
       ["another `of` slug", "Head of Green Jobs in Ontario", "example.test", "/jobs/head-of-green-jobs"],
@@ -1168,6 +1179,251 @@ describe("non-posting pool items (B13-02)", () => {
       });
       expect(item).not.toBeNull();
     });
+  });
+});
+
+// B19-01 (round 19, Ruling 52a): THE PUNCTUATED SEARCH-RESULTS SLUG.
+//
+// `jobright.ai` put a "1000+ results" search page on a job card in 5 pulls of
+// 5, headed `Internship, Battery Engineering (summer 2026) Jobs in United
+// States` — in the SAME run in which this file correctly dropped
+// `linkedin.com`'s `1,000+ Molten Salt jobs in United States`. Caught on one
+// host, missed on another, same round.
+//
+// THE TWO ROWS ARE SEPARATED BY TWO DIFFERENT CLAUSES, which is what sized the
+// fix. LinkedIn drops on the LEADING COUNT (`LISTING_TITLE_RE`). The jobright
+// title carries no count at all — its `(1000+)` lives in the page's own <h1>,
+// and this guard runs at ingestion and never sees the page. So the clause that
+// should have caught it is B15-01's, and it failed on two of its four
+// conjuncts, both because a character class excluded the punctuation this
+// host's LOSSLESS slugifier preserves.
+//
+// THE FIX IS THREE TOKENS, NOT ONE, AND THAT IS PROVED BY THE NEGATIVE-PROOF
+// STRUCTURE OF THIS BLOCK rather than asserted in prose. Round 19's C
+// re-measured it by execution before writing the code: widening the leaf alone
+// leaves the live row KEPT, widening the title token alone leaves it KEPT.
+//
+// `LISTING_TITLE_RE` IS NOT TOUCHED BY THIS ITEM — not one byte — so every
+// count-form lock above still stands and Ruling 46a is not re-opened.
+describe("punctuated search-results slugs are not postings (B19-01, Ruling 52a)", () => {
+  const JOBRIGHT_TITLE =
+    "Internship, Battery Engineering (summer 2026) Jobs in United States";
+  const JOBRIGHT_URL =
+    "https://jobright.ai/jobs/internship,-battery-engineering-(summer-2026)-jobs-in-united-states";
+
+  // 1 + 2. A19-01's LIVE ROW, in both title forms the provider may hand over.
+  // The whole-title call site sees the ` | Jobright` tail; the role-segment
+  // call does not, so both have to drop.
+  it.each([
+    ["the bare title", JOBRIGHT_TITLE],
+    ["the title with its `| Jobright` tail", `${JOBRIGHT_TITLE} | Jobright`],
+  ])("drops round 19 A's live jobright.ai search page — %s", (_label, title) => {
+    expect(webResultToRawJobItem({ title, url: JOBRIGHT_URL })).toBeNull();
+  });
+
+  // 3. THE "NOT A HOST RULE" LOCK. `jobright.ai` was deliberately NOT added to
+  // AGGREGATOR_HOSTS — that route was measured and is dead on a number, because
+  // the path contains `2026` so `POSTING_ID_RE` matches and the aggregator
+  // branch returns false. The identical shape must drop on a host nobody has
+  // ever heard of.
+  it("drops the identical shape on an unrelated host", () => {
+    expect(
+      webResultToRawJobItem({
+        title: JOBRIGHT_TITLE,
+        url: "https://jobboard.test/jobs/internship,-battery-engineering-(summer-2026)-jobs-in-united-states",
+      }),
+    ).toBeNull();
+  });
+
+  // 4 + 6. THE LEAF-HEAD TOKEN'S OWN CASES. Both of these go red if and only if
+  // the leaf HEAD class is reverted: neither title's word before the job noun
+  // carries punctuation, and neither slug carries punctuation after it, so
+  // neither the title token nor the leaf tail can rescue them.
+  it.each([
+    ["a comma", "Internship, Battery Engineering Jobs in United States", "https://jobright.ai/jobs/internship,-battery-engineering-jobs-in-united-states"],
+    ["a dot and an ampersand", "R&D Scientist, M.S. Level Jobs in Ohio", "https://jobright.ai/jobs/r&d-scientist,-m.s.-level-jobs-in-ohio"],
+  ])("drops a slug head carrying %s", (_label, title, url) => {
+    expect(webResultToRawJobItem({ title, url })).toBeNull();
+  });
+
+  // 5. THE LEAF-TAIL TOKEN'S OWN CASE, and the ONLY assertion in this file that
+  // goes red for that token alone. The head (`battery-engineering-jobs`) is
+  // punctuation-free and so is the word before the job noun, so this row is
+  // reachable only once the class AFTER the job noun accepts a comma. It is
+  // what makes the two-token form (leaf head + title) score one short.
+  it("drops a locale tail carrying a comma", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Battery Engineering Jobs in United States, Remote",
+        url: "https://jobright.ai/jobs/battery-engineering-jobs-in-united-states,-remote",
+      }),
+    ).toBeNull();
+  });
+
+  // THE TITLE TOKEN IS LOAD-BEARING AND HAS NO ISOLATING TEST. THAT IS
+  // STRUCTURAL, NOT A GAP IN THE CORPUS — Ruling 53b requires it be documented
+  // as untestable here rather than papered over with a test that cannot in fact
+  // isolate it.
+  //
+  // WHY NO SUCH TEST CAN EXIST: conjunct 3 requires the de-slugified leaf head
+  // to be the title's opening phrase, so the title's word before the job noun
+  // is ALWAYS the leaf head's second-to-last segment. A title token carrying
+  // punctuation therefore FORCES a leaf head carrying the same punctuation, and
+  // any row that needs the widened title token needs the widened leaf head too.
+  // Both B and C tried to build a separating row and both failed.
+  //
+  // WHAT PROVES IT IS LOAD-BEARING ANYWAY: revert the title token alone and the
+  // two live-row assertions at the top of this block go red. That is a COMBINED
+  // revert, and it is the honest evidence — do not replace this comment with an
+  // assertion that merely looks isolating.
+  it("documents that the title token's own effect is proved by a COMBINED revert", () => {
+    // The live row needs BOTH the widened leaf head and the widened title
+    // token. This assertion is the combined proof and is deliberately not
+    // claimed as an isolating one.
+    expect(webResultToRawJobItem({ title: JOBRIGHT_TITLE, url: JOBRIGHT_URL })).toBeNull();
+  });
+
+  // 7. THE ADMITTED CONTROL (Ruling 51 / round 18 C's vacuity standard). Every
+  // drop above is paired with the SAME title on a slug that does NOT restate
+  // it. If a later change ever made this clause fire on the title alone, these
+  // go red instead of the drops silently becoming vacuous.
+  it.each([
+    ["the live title", JOBRIGHT_TITLE],
+    ["the leaf-head comma title", "Internship, Battery Engineering Jobs in United States"],
+    ["the dot/ampersand title", "R&D Scientist, M.S. Level Jobs in Ohio"],
+    ["the comma-tail title", "Battery Engineering Jobs in United States, Remote"],
+  ])("KEEPS %s when the slug does not restate it", (_label, title) => {
+    expect(
+      webResultToRawJobItem({
+        title,
+        url: "https://jobright.ai/jobs/some-other-role-12345",
+        snippet: "Apply now for this open position.",
+      }),
+    ).not.toBeNull();
+  });
+
+  // 8. ROUND 15 B's NINE NAMED MUST-KEEPS, all of them, by name. These are the
+  // real role titles the widened classes must still let through.
+  it.each([
+    ["Manager, Green Jobs in Ontario", "https://example.test/jobs/manager-green-jobs-in-ontario-88213"],
+    ["Green Jobs Program Manager", "https://example.test/jobs/green-jobs-program-manager"],
+    ["Youth Jobs Coordinator in Ontario", "https://example.test/jobs/youth-jobs-coordinator"],
+    ["Director of Green Jobs in Boston", "https://example.test/jobs/director-of-green-jobs"],
+    ["Head of Green Jobs in Ontario", "https://example.test/jobs/head-of-green-jobs"],
+    ["Battery Engineer at Rocket Jobs in Berlin", "https://example.test/jobs/battery-engineer-at-rocket-jobs"],
+    ["Head of Jobs in Manchester", "https://example.test/jobs/head-of-jobs"],
+    ["Jobs Data Analyst at the Bureau of Labor Statistics", "https://example.test/jobs/jobs-data-analyst"],
+    ["Research positions at CERN", "https://jobs.cern.test/jobs/research-positions"],
+  ])("keeps round 15 B's must-keep: %s", (title, url) => {
+    expect(
+      webResultToRawJobItem({ title, url, snippet: "Apply now for this open position." }),
+    ).not.toBeNull();
+  });
+
+  // 9. RULING 49a's OREGON MUST-KEEP, the segment the card actually renders.
+  it("keeps Ruling 49a's Oregon must-keep", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "M.S. Internship Program",
+        url: "https://electrochemistry.uoregon.edu/careers/ms-internship-program-2026",
+        snippet: "Applications are invited for this internship.",
+      }),
+    ).not.toBeNull();
+  });
+
+  // 10. THE CONJUNCT-4 LOCK. A punctuated slug that ALSO carries a function
+  // word must still be kept, because the function-word check runs on the head
+  // before conjunct 3 is ever reached. THIS IS THE ASSERTION THAT FAILS IF A
+  // LATER ROUND "TIDIES" `TOPIC_LANDING_FUNCTION_WORD_RE`.
+  it("keeps a punctuated slug that still carries a function word", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Head of R&D, Green Jobs in Ontario",
+        url: "https://example.test/jobs/head-of-r&d,-green-jobs",
+        snippet: "Apply now for this open position.",
+      }),
+    ).not.toBeNull();
+  });
+
+  // 11. THE NAMED ACCEPTED COST, IN A TEST RATHER THAN ONLY IN A COMMENT — and
+  // WITH THE MEASUREMENT THAT SAYS WHAT KIND OF COST IT IS.
+  //
+  // These two are B15-01's own named accepted cost in its COMMA form: a
+  // function-word-free noun phrase ending in a bare plural job noun, rendered
+  // `<phrase> in <place>`, with a slug that is exactly that phrase. B15-01
+  // already priced and shipped that cost; B19-01 removes punctuation as an
+  // ACCIDENTAL SHIELD over it. Both were CONSTRUCTED; the catch above is LIVE
+  // 5 of 5. Measured frequency of the class: zero real postings across rounds
+  // 8–19's censuses.
+  it.each([
+    ["Manager, Green Jobs in Ontario", "https://example.test/jobs/manager,-green-jobs"],
+    ["Senior Engineer, Green Jobs in Ontario at Hydro One", "https://example.test/jobs/senior-engineer,-green-jobs"],
+  ])("DROPS %s — a named, accepted cost, not a win", (title, url) => {
+    expect(webResultToRawJobItem({ title, url })).toBeNull();
+  });
+
+  // THE DOCUMENTED-KNOWN CONTROL FOR THE TWO COSTS ABOVE, AND THE REASON THIS
+  // CHANGE CREATES NO NEW FAILURE MODE: the UN-PUNCTUATED TWIN of each one
+  // ALREADY DROPPED BEFORE B19-01 EXISTED. Re-measured by execution against the
+  // shipped file. If a later round ever "rescues" this class, these go red
+  // first and the rescue is revealed as a change to B15-01, not to B19-01.
+  it.each([
+    ["Manager Green Jobs in Ontario", "https://example.test/jobs/manager-green-jobs"],
+    ["Senior Engineer Green Jobs in Ontario at Hydro One", "https://example.test/jobs/senior-engineer-green-jobs"],
+  ])("documents that the un-punctuated twin already dropped: %s", (title, url) => {
+    expect(webResultToRawJobItem({ title, url })).toBeNull();
+  });
+
+  // 12. THE NAMED UNDER-CATCH, AND IT IS NOT FIXABLE BY ANY CHARACTER CLASS.
+  // `new URL()` percent-encodes a non-ASCII path before this rule ever sees it
+  // (`/jobs/ing%C3%A9nieur-...`), so the de-slugified leaf can never agree with
+  // the title. Measured, not assumed. Widening the class further would be
+  // vacuous here, which is why no accented character was added.
+  it("does NOT drop a non-ASCII slug — a deliberate, named under-catch", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Ingénieur Batterie Jobs in France",
+        url: "https://example.test/jobs/ingénieur-batterie-jobs-in-france",
+        snippet: "Apply now for this open position.",
+      }),
+    ).not.toBeNull();
+  });
+
+  // THE TWO OTHER FILES THAT CALL `webResultToRawJobItem`, replayed here so
+  // this item's blast radius is asserted in the file that changed.
+  it.each([
+    ["scoring.test.ts's QuantumScape posting", "Battery R&D Scientist - QuantumScape", "https://careers.quantumscape.com/jobs/battery-rd-scientist"],
+    ["job-cleanup.test.ts's fixture row", "…Research in Reno at American Battery - Apply now!", "https://americanbattery.example/careers/job/42"],
+  ])("keeps %s", (_label, title, url) => {
+    expect(
+      webResultToRawJobItem({ title, url, snippet: "Apply now for this open position." }),
+    ).not.toBeNull();
+  });
+
+  // RULING 32 — WHAT RENDERS ON REJECTION, ANSWERED FROM THE RENDER SIDE.
+  // Nothing renders, because the item never exists: the reader simply sees one
+  // fewer job card. What renders TODAY without this item is worse — a card
+  // headed like a role whose link opens a list of a thousand postings.
+  it("produces no item at all when it fires", () => {
+    expect(
+      webResultToRawJobItem({
+        title: JOBRIGHT_TITLE,
+        url: JOBRIGHT_URL,
+        snippet: "Apply now to the latest battery engineering internships.",
+      }),
+    ).toBeNull();
+  });
+
+  // AND THE COUNTERPART THAT STOPS THE BLOCK GOING VACUOUS: a real posting on
+  // the SAME host with a punctuated slug still becomes an item.
+  it("still produces an item for a real punctuated posting on the same host", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Battery Engineer (Cell Design)",
+        url: "https://jobright.ai/jobs/battery-engineer-(cell-design)-55120",
+        snippet: "We are hiring a battery engineer. Apply now.",
+      }),
+    ).not.toBeNull();
   });
 });
 
