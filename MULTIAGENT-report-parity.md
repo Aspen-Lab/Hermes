@@ -28658,3 +28658,261 @@ pool class (which per Ruling 41b also removes the `lco-cdo` acronym instance),
 `flogen.org`, and `euchems2026.eu`.
 
 Commit follows immediately.
+
+---
+
+### Round 13 — Agent B (B13-02: four pool items are not postings — THREE holes in ONE function, one fix, 51/51 adversarial; and RULING 41b's factual premise is WRONG, with A's own evidence)
+
+**STATUS: DONE.** Second of round 13 B's four items. Same session, same lock.
+Harness outside `src/`, deleted before this commit. **No live pull, no page
+fetch, no credential read.** **B changes no code** (§2).
+
+---
+
+#### ONE GAP OR SEVERAL — **THREE HOLES, ALL IN ONE FUNCTION. One item, one fix, per Ruling 32.**
+
+Established by execution: I ran all four of A's instances through
+`isListingPage()` (`jobweb.ts:253`) and through the real entry point
+`webResultToRawJobItem`, and printed which of the five existing checks fires on
+each. **The answer is none of them, on any of the four.** All four are ingested.
+
+| A's instance | `LISTING_TITLE_RE` | `CAREERS_INDEX_TITLE_RE` | `LISTING_URL_RE` | aggregator branch | ingested? |
+|---|---|---|---|---|---|
+| `lco-cdo.org/en/author/lco_admin/feed/` | false | false | false | host not listed | **yes** |
+| `linkedin.com/jobs/molten-salt-jobs` | false | false | false | host not listed | **yes** |
+| `jobs.battery.com/jobs?jobTypes=Intern` | false | false | false | host not listed | **yes** |
+| `jobs.battery.com/jobs?jobTypes=` | false | false | false | host not listed | **yes** |
+
+**They are three distinct holes, not one and not four**, and each one is a
+different KIND of miss. This matters because a fix aimed at any single hole
+closes at most half the class:
+
+- **HOLE 1 — the count form cannot read a thousands separator.** `LISTING_TITLE_RE`'s
+  leading-number grammar is `\d{1,5}`. **`1000+ Molten Salt jobs in United
+  States` fires today. `1,000+ Molten Salt jobs in United States` does not** —
+  verified both ways by execution. One comma defeats the whole alternative.
+  `10,000 Battery Engineer positions in Germany` is missed for the same reason.
+  *(Aside worth recording: the suite's existing must-reject
+  `"1,204 Battery Engineer Jobs, Employment"` passes today for a DIFFERENT
+  reason — the separate `jobs,\s*employment` alternative — which is exactly why
+  four rounds of green tests never surfaced this.)*
+- **HOLE 2 — `isListingPage` has no concept of a syndication endpoint.** An RSS
+  or Atom feed URL is by definition a list of many items, never one posting, and
+  nothing in the file looks at that. `NON_JOB_PATH_RE` does not cover it, and
+  the item does not even arrive through `JOB_PATH_RE` — it enters on
+  `JOB_TEXT_RE` matching `vacancies` in its text.
+- **HOLE 3 — a title that NAMES A SECTION rather than a role.** `Jobs at Battery
+  Ventures Companies` is a board's own section heading. `LISTING_TITLE_RE`
+  already recognises the `jobs at …` shape, but only when the title also ends in
+  a `| host.tld` tail — the tail is the gap.
+
+**Every hole is in `isListingPage()`, which is already this class's one home**
+(its doc comment: "True when the result is an aggregate listing or a careers
+index rather than a single posting"). So this is one item with a three-part fix,
+not three items and not four host patches — Ruling 32 satisfied by construction
+rather than by assertion.
+
+**One structural signal does NOT cover all four, and I checked the obvious
+candidate by execution rather than assuming.** All four URLs lack a posting
+identifier, so "require `POSTING_ID_RE` on every host" looks like a single
+elegant rule. **It is not available:** the same rule drops
+`hyetlithium.com/careers/internship-battery-research` — a real posting the suite
+already asserts must survive (`jobweb.test.ts:85-87`) — and `isListingPage`'s own
+doc comment states this is deliberate ("Employer sites are left alone so a real
+posting at `/careers/internship-battery-research` still gets through"). The
+elegant rule was already considered and already rejected, in code, with a
+reason. Recorded so nobody re-proposes it.
+
+---
+
+#### RULING 41b's FACTUAL PREMISE IS WRONG. THE TWO FINDINGS ARE NOT ONE ITEM.
+
+**This is the disagreement §2 requires me to state with evidence, and the
+evidence is A's own log, not my inference.**
+
+Ruling 41b says: *"The Ruling 33 tally's first non-zero since round 9
+(`lco-cdo`) IS difference 2's non-posting class — an RSS feed item scored as a
+job. If B's design for difference 2 drops non-postings from the pool, the
+acronym instance disappears with it."*
+
+**It does not, because the acronym instance is on the OTHER `lco-cdo.org` item —
+the real posting.** A's census carries two separate `lco-cdo.org` rows, and A's
+own evidence columns tell them apart:
+
+1. **A part 2, census row `lco-cdo.org` (coordinator post):** evidence recorded
+   as *"organisation's own domain; **its own summary names it in full — 'The Law
+   Commission of Ontario (LCO)…'**"*.
+2. **A part 2, census row `lco-cdo.org` (`/author/lco_admin/feed`):** evidence
+   recorded as *"same organisation, same domain"* — **no summary is attributed
+   to it at all.**
+3. **A part 3, summary item 6, the ONLY `lco-cdo.org` entry among the six
+   summary-bearing postings**, matched keyword `"LCO"`: *"The Law Commission of
+   Ontario (LCO) is seeking a **Project and Website Coordinator** for a one-year
+   contract…"* — the same sentence A attributed to the **coordinator post** in
+   step 1, and it names the coordinator role in its own text.
+
+**So the Ruling 33 acronym instance belongs to the Project and Website
+Coordinator posting — a genuine job posting that this item's fix does not and
+must not touch.** Only one of the two `lco-cdo.org` items is summary-bearing, and
+it is not the feed.
+
+**What actually changes, and what does not:**
+- **41b's RULING is unaffected and I follow it exactly:** Ruling 33 stays an
+  accepted cost and I do no separate work on it. Nothing here reopens it.
+- **41b's ARITHMETIC is what breaks.** Dropping the RSS feed removes **one**
+  item, not two findings. **Round 14's A must NOT expect Ruling 33's tally to
+  fall to zero when B13-02 lands**, and must not score it as closed if it does
+  not — the acronym posting is a real posting and will keep appearing. This loop
+  guards its tallies carefully; a tally that silently changes meaning between
+  rounds is exactly the failure Rulings 33/34a/37 were built to avoid.
+- I verified by execution that the coordinator posting's own URL shape
+  (`/en/jobs/project-and-website-coordinator/`) is **not** caught by any part of
+  my design.
+
+---
+
+#### FIX DESIGN B13-02 — three parts, all inside `isListingPage()`. **51/51 on the adversarial matrix.**
+
+**Part 1 — the count form learns a thousands separator.** In
+`LISTING_TITLE_RE`, and **only** in its first alternative's leading number:
+
+```
+\d{1,5}                       ->   (?:\d{1,3}(?:,\d{3})+|\d{1,5})
+```
+
+Every other alternative is byte-identical to today's.
+
+> **MY FIRST DRAFT WAS KILLED BY MY OWN COUNTEREXAMPLE, and C must not use it.**
+> The obvious rewrite `\d{1,3}(?:,\d{3})*` reads correctly and **silently loses
+> two shapes the shipped regex catches today** — `1000+ Molten Salt jobs…` and
+> `12345 vacancies` — because with the comma group optional, `\d{1,3}` can never
+> consume a 4- or 5-digit run. Measured: shipped 6/9, my first draft **7/9 with
+> two NEW misses**, the recommended form **9/9 with zero false fires**. The
+> alternation shape (`comma form OR plain form`) is load-bearing; a "tidier"
+> single-group rewrite regresses.
+
+**Part 2 — a syndication endpoint is never one posting.** A new closed check,
+tested first in `isListingPage`:
+
+```
+const FEED_PATH_RE = /(?:^|\/)(?:feed|rss|atom)(?:\/|$)|\.(?:rss|atom|xml)$|[?&]feed=/i;
+```
+
+- **Genuinely closed, and this is the Ruling 37 test answered directly:** it
+  enumerates the standardised RSS/Atom endpoint conventions — a finite set fixed
+  by the syndication specs and by what CMSs emit — not a grammatical class that
+  English keeps extending. Nothing about a real posting URL is drawn from that
+  vocabulary.
+- **The whole-segment anchoring is load-bearing**, and the four hardest
+  counterexamples are why: `/jobs/feedstock-process-engineer`,
+  `/careers/rss-platform-engineer`,
+  `/jobs/atomic-layer-deposition-scientist` and `/jobs/feeder-line-technician`
+  are all real-shaped posting slugs containing a feed token as a substring. All
+  four are untouched. Same anchoring discipline `NAV_CHROME_SEGMENT_RE` uses.
+- **Failure direction:** an unlisted feed convention survives → the status quo,
+  never a wrong value.
+
+**Part 3 — a section title is not a role title.** A new closed check:
+
+```
+const LISTING_SECTION_TITLE_RE =
+  /^\s*(?:[\w&/-]+\s+)?(?:jobs|vacancies|openings|careers)\s+(?:at|in|near|with)\b/i;
+```
+
+- **Two narrowings, each forced on me by a counterexample I wrote to break it —
+  recorded so C does not "simplify" them back out:**
+  1. **`for` is deliberately NOT in the preposition list.** With it, the check
+     false-fires on three plausible real role titles — `Jobs for Veterans
+     Program Manager`, `Job for a Battery Engineer`, `Career for Life
+     Coordinator`. Measured: 3 of 15 real postings destroyed. Without it: 0 of
+     15, with no loss of catch (8/8 listings still fire).
+  2. **The section word must be PLURAL.** Strictly narrower at no cost — same
+     8/8 catch — and it removes the whole singular-role-title risk class.
+- **The leading anchor is what separates this from `LISTING_TITLE_RE`'s
+  unanchored `jobs at` alternative**, which is why that one needed a
+  `| host.tld` tail to be safe and this one does not. The deliberate trap
+  `Jobs Data Analyst at the Bureau of Labor Statistics` — a real posting whose
+  role BEGINS with `Jobs` — does not fire, because the preposition must follow
+  the section word immediately. `Research positions at CERN` does not fire
+  either: `positions` is deliberately absent from the list, since a real posting
+  legitimately uses it.
+- **Ruling 39c's preference, addressed head-on rather than skirted.** 39c prefers
+  a host-list addition over phrase matching. I tested that route too: adding
+  `linkedin.com` and `battery.com` to `AGGREGATOR_HOSTS` **does** drop all three
+  aggregator-shaped instances and **does** keep both LinkedIn permalink shapes
+  and a Battery Ventures portfolio-posting shape. **I am not recommending it, for
+  two reasons stated so the manager can overrule me cheaply:** (a) Ruling 32's
+  headline is "STOP FIXING IT ONE SITE AT A TIME", and a host addition fixes the
+  site while the same title shape on the next board stays broken; (b) the host
+  route's safety depends on an **unmeasured** assumption about `jobs.battery.com`
+  and `linkedin.com` posting-URL shapes, whereas part 3 depends on nothing
+  unmeasured. **If a later round finds a board listing view with no section-form
+  title, the host list is the right second tool** — recorded as a tested lead so
+  it is not re-derived.
+
+**ADVERSARIAL RESULT: 51 of 51.** The matrix holds:
+- A's **four** instances (must now fire) — each carried by exactly one part, no
+  overlap: feed / count / section / section.
+- **Every must-reject already asserted in `jobweb.test.ts`** (14 cases) — all
+  still fire.
+- **Every must-keep already asserted in `jobweb.test.ts`** (7 cases) — all still
+  pass, including the employer-slug posting the elegant universal-ID rule would
+  have killed.
+- **Eleven live-confirmed real postings from round 13 A's own census** — all
+  still pass.
+- **Three count-form regression cases** (`1000+`, `12345`, `999`) — added only
+  after my first draft failed them.
+- **Twelve constructed near-misses** — feed tokens inside slugs, role titles
+  beginning with `Jobs`/`Career`/`Vacancy`/`Openings`, `positions at`, an
+  unpunctuated `at`-title, and a host containing `atom`.
+
+**`openmc.discourse.group` is explicitly in the matrix as a MUST-NOT-FIRE and it
+does not fire.** This design does **not** sweep up the forum thread, so it does
+**not** do Ruling 39c's deferred work by the back door. Checked deliberately,
+because the brief and 39c both require these to stay separate.
+
+**Tests at risk — grepped, not assumed.** `isListingPage` has **one** importer
+outside its own file: `jobweb.test.ts` (10 call sites, all covered in the matrix
+above). `LISTING_TITLE_RE`, `LISTING_URL_RE` and `CAREERS_INDEX_TITLE_RE` have
+**no** importers anywhere outside `jobweb.ts`. **`scoring.test.ts` imports
+`JOB_PATH_RE` and `NON_JOB_PATH_RE` from this same file (`scoring.test.ts:12-13`)
+— neither is touched by any part of this design**, stated explicitly because the
+brief names `scoring.test.ts` as twice-missed. `enrich.test.ts` holds the
+SolarPACES lock and is event-side; nothing here reaches it.
+
+**Tests C should add:** one must-reject per hole using A's own live strings; the
+three count-form regression cases; the four feed-token-in-slug slugs; the three
+`for`-preposition role titles that killed draft 1 of part 3; and
+`openmc.discourse.group` as an explicit must-keep with a comment saying Ruling
+39c owns it.
+
+---
+
+#### WHAT RENDERS WHEN A NON-POSTING IS DROPPED — **NOTHING. The pool shrinks. Stated explicitly, as the brief requires.**
+
+Traced from the code, not assumed. `isListingPage` returning true makes
+`webResultToRawJobItem` return `null` (`jobweb.ts:312` and `:320`); both
+`searchTavily` and `searchBrave` filter nulls out before returning; the item
+therefore never reaches dedup, scoring, the mapper or any card. **There is no
+placeholder, no substitution and no backfill** — `buildDailyJobPool` ends with
+`.slice(0, MAX_OPPORTUNITY_POOL_ITEMS)`, a **cap**, never a top-up. This is the
+identical, already-shipped behaviour of every existing `isListingPage` rejection.
+
+**A consequence round 14's A must be told in advance so a smaller pool is not
+read as a regression: this removes 4 of 20 items — a 20% pool reduction on
+round 13's sample.** That is the fix working, not the pipeline degrading. It is
+also the reason this item is worth doing at all: those four occupy slots a real
+posting could have had.
+
+---
+
+**Cleanup:** `web/zz-r13b/` deleted before this commit; `git status
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched. No credential read, printed, logged or written. No
+page fetched, no pipeline pull run, no branch created, no PR opened,
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+**Not done yet (items 3–4, same session, continuing next):** `flogen.org` and
+`euchems2026.eu`.
+
+Commit follows immediately.
