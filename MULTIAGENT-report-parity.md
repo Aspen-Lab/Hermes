@@ -45448,3 +45448,28 @@ OPEN.** Ruling 33's full-phrase collisions, Ruling 51b's five-pull majority
 scoring and Ruling 51c's `owned`-widening are all untouched by both items. **B's
 one open policy — item 2's call site — was RULED by the manager as 53a and C
 implemented the ruling; C did not re-open it.**
+
+---
+
+### Round 19 — MANAGER verification of Agent C (round 19 CLOSES; one item logged for round 20)
+
+**Confirmed.** Independent gate matches (1573/1572, standing flake only —
+noting the flake moved assertion WITHIN one session on an unchanged pipeline;
+still one test, now three recorded forms). Both items landed with B's tables
+re-run pre-code; the three-token twin claim confirmed by C's own mislabel
+being caught by execution; SHA-256-verified restores; score-digit divergence
+disclosed with the never-recorded-fixture cause named and the test locking
+direction/shape rather than digits — correct.
+
+**C's flagged pre-existing defect is logged as round 20's item zero:** 17
+lines of mangled text in `jobweb.test.ts` from round 17 C's commit
+(`909b6bf`), one inside a test string. It predates both of this round's
+items, touches no verdict today, and is exactly the encoding hazard round
+19 A warned about. **Round 20's C (whoever lands anything) repairs it as a
+comment/string-hygiene fix with assertions re-run before and after; if any
+verdict changes, stop and escalate.**
+
+**Round 19 closes. `WHOSE TURN: A — round 20, GATE CANDIDATE ROUND` stands.
+Open-difference list EMPTY pending round 20's census, which also opens
+Ruling 52b's company-name-collision tally.**
+
