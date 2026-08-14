@@ -25798,3 +25798,143 @@ function should not inherit "no other production caller" as fact.
 Scratch copy of the modified source (used for the revert-and-restore negative
 proof) lives outside the repo in the session scratchpad; nothing untracked in
 the working tree at commit time.
+
+---
+
+### Round 12 — Agent C (B12-01: `ecs.confex.com` — NOT LANDED. Built it, and it destroys a real event name. The closed noun list is single-word; the codebase's own event kinds are not.)
+
+**STATUS: STOPPED AND RECORDED, per §1's standing clause — "if you find a shape
+B's design misses, stop and record it rather than widening a guard inline," the
+clause §1 itself credits with saving round 11 from landing B11-04. NO CODE
+COMMITTED. Working tree returned to HEAD, verified clean.**
+
+**This is not a refusal of Ruling 39a.** 39a is right and the item should land.
+The contract change works: I built it, ran it, and every value B predicted came
+out byte-for-byte. It is blocked on one thing, that thing is a design question
+rather than a typo, and answering it is not C's call.
+
+---
+
+**1. WHAT WAS BUILT, AND IT WORKED.**
+
+`leadingNameSpan` exactly as B12-01 specifies — start-anchored token walk, B's
+closed joiner list, drop trailing joiners, two-word floor, event-kind noun test,
+re-run the shipped `looksLikeEventTitle`, every step a veto returning
+`undefined`. Called from ONE place, `eventNameFrom`'s snippet stage, as
+`.map(leadingNameSpan).filter(...)` chained onto B11-02's existing hard
+pre-filter, which is untouched and still runs first. `looksLikeEventTitle`
+unchanged. **No determiner strip** (Ruling 39a point 4, binding).
+
+Every one of B's predicted values reproduced exactly, including all seven
+must-rejects. The eight restated assertions all moved to strictly better values,
+with the determiner left on where B's own mid-test correction says it belongs
+(`"The 250th ECS Meeting"`, `"The Battery Show South"`).
+
+**2. B's COUNT OF EIGHT RESTATED ASSERTIONS IS NINE.** Same class as C's
+correction to B12-02's blast-radius list, and worth the same note: B enumerated
+the assertions that asserted a *sentence*. There is a ninth, B11-02's other test
+(`eventweb.test.ts:433-440`), whose asserted value is
+`"250th ECS Meeting (October 25-29, 2026)."` — a name with a parenthetical date
+and a full stop welded on. The design corrects it to `"250th ECS Meeting"`,
+strictly better in the same direction. Not a problem; a correction to the count.
+
+**3. THE BLOCKER — a real event name becomes `"Untitled event"`.**
+
+`web/src/lib/events/scoring.test.ts:555-562` asserts:
+
+```
+eventNameFrom("Meeting Summary",
+  "2026 International Round Table on Titanium Production in Molten Salts. Registration is open.")
+  === "2026 International Round Table on Titanium Production in Molten Salts."
+```
+
+With B12-01 as designed it returns **`"Untitled event"`**. Traced: the span walk
+keeps the whole fragment (every token is a name token or a closed-list joiner),
+then **step 3 rejects it, because B's noun list contains `roundtable` and the
+name says `Round Table`.**
+
+**This is a REGRESSION in the direction Ruling 23/26 forbids** — not a wrong
+value replaced by an honest one, but a *correct* value replaced by a placeholder.
+It is the one and only failure B12-01 causes across the whole suite (1098 tests).
+
+**4. WHY I DID NOT JUST ADD THE MISSING WORD.** This is the part that matters.
+
+Adding `round ?table` closes this one test and leaves the class open. B12-01's
+own justification for the list being closed is that **"this codebase already
+enumerates it twice (`EVENT_SIGNAL_RE`, and `eventKindIn` in
+`events/mapper.ts`)"** — and both of those enumerations contain **multi-word**
+event kinds, while B's transcription is single-word-only:
+
+| in the cited source | in B's list |
+|---|---|
+| `round ?table` (`EVENT_SIGNAL_RE`) | `roundtable` — a spelling neither source uses |
+| `hack day` (`EVENT_SIGNAL_RE`) | absent |
+| `lecture series` (`eventKindIn`) | absent |
+| `networking event` (`eventKindIn`) | absent |
+| `annual meeting` (`eventKindIn`) | absent |
+
+So the missed shape is **any event whose kind is named in two words**, and
+B's adversarial pass had no such case in it. All three of these already appear
+in this repo's own fixtures as REAL names, not synthetics:
+`scoring.test.ts:559,606` and `structured-extract.test.ts:383-386`
+(`Round Table`, live-derived), `eventweb.test.ts:36` (`Lecture Series`),
+`scoring.test.ts:477` (`Annual Meeting`).
+
+**The design question C cannot answer:** step 3 as written is a **word-level**
+test over the span, and the codebase's event kinds are **phrase-level**. Patching
+one word makes the word-level test pass one more case while the class stays
+open — which is §1s Ruling 32's named defect ("stop fixing it one site at a
+time") committed by C, in the very item whose whole argument is that per-instance
+patching is the wrong direction.
+
+**5. THREE RESOLUTIONS FOR THE MANAGER, WITH COSTS. C RECOMMENDS NONE.**
+
+- **(a) Phrase-level noun test.** Turn step 3's list into a regex over the joined
+  span, with the multi-word kinds spelled as the sources spell them
+  (`round ?table`, `hack day`, `lecture series`, `networking event`). Smallest
+  change, keeps the list hand-maintained, and leaves the next multi-word kind to
+  be discovered the same way this one was.
+- **(b) Reuse `looksLikeEvent` (`EVENT_SIGNAL_RE`) as step 3.** This codebase's
+  stated preference is reuse over a parallel check, and it covers `round ?table`
+  for free and cannot drift from its own source. **Its cost is real and I checked
+  it:** `EVENT_SIGNAL_RE` also contains `registration`, `keynote`,
+  `call for papers`, `cfp`, `abstract submission` and `proceedings`, which are
+  page labels, not event kinds — so a span like `"Registration Desk Hours"` would
+  qualify as a name. That is a new wrong-value class in exchange for closing this
+  one.
+- **(c) Land as designed and restate the `Round Table` assertion.** **C rejects
+  this one on sight and records it only for completeness**: the new value is
+  `"Untitled event"` where a correct name stands today, so it is not a
+  strictly-better restatement, it is deleting a passing contract. §2 forbids it.
+
+**6. EVIDENCE, so a future C does not rebuild this from scratch.**
+
+Negative proof was run before the blocker was found, twice (source reverted,
+suite run, source restored). Second run, final shape of the tests:
+**18 of 75 assertions in `eventweb.test.ts` fail against pre-fix code** — the 9
+restated assertions (proving each genuinely changed) plus **9 of the 10 new
+tests**. The tenth new test is the documented honest-miss
+(`"Conference Image Gallery Carousel"` survives) and passes on both sides by
+design, which is the whole point of asserting it.
+
+One new test had to be sharpened after the first negative-proof run showed it
+passing pre-fix for the wrong reason: `"The deadline falls on Friday and no late
+work **will be accepted**"` is caught by `NARRATIVE_VERB_RE`, so the span rule
+never got to decide. Rewritten to `"…and nothing later than that counts."`,
+which clears all four narrative checks and can only be stopped by the span rule.
+Same discipline as C's B12-02 SSI24 sharpening.
+
+Gate observed with B12-01 applied, before reverting: **90 files / 1098 tests,
+1096 passing**; the two failures were `benchmark.test.ts`'s documented live flake
+and the `Round Table` regression above. **SolarPACES lock
+(`web/src/lib/opportunities/enrich.test.ts`), run on its own: 25 of 25 passing,
+unchanged** — the lock does NOT catch this, because `bestEventTitleSegment` and
+the enrich path never reach the snippet stage.
+
+**Nothing of B12-01 is in the tree.** `git status --porcelain` empty at this
+commit; the built version exists only in the session scratchpad, outside the
+repo, and dies with this session. Everything needed to rebuild it in minutes is
+in B12-01's own entry plus §2 above.
+
+**C continues to the next item.** B's own dependency table says nothing on the
+list depends on B12-01, so stopping it blocks nothing else.
