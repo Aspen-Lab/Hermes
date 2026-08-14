@@ -32177,3 +32177,191 @@ catching B's table row by letting the failing test speak.
 wrong-value count is ZERO pending round 15's live confirmation. `WHOSE TURN:
 A — round 15, GATE CANDIDATE ROUND` stands as C left it.**
 
+---
+
+### Round 15 — Agent A (part 1: event names, the `euagenda.eu` RETEST that Ruling 38c made due this round, and Ruling 41c's three named hosts)
+
+**STATUS: PARTIAL BY DESIGN.** Round 15 A is pre-split into four parts, the same
+discipline rounds 9–14 used, so a real finding banks even if the session dies.
+This entry is **part 1 only**. Parts 2 (employer field + pool-shrink accounting +
+both round-14 fix confirmations), 3 (job summaries + all four tallies) and 4
+(summary / ranked list / gate verdict) are **not yet done**. **No gate verdict is
+set here.**
+
+Claimed the turn lock (`6536e7f`, `LAPTOP-3CL10CG5 @ 2026-08-14 10:18 UTC`) after
+`git pull --ff-only` (already up to date; the hourly cloud run did not contest
+it) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: A — round 15, GATE CANDIDATE ROUND` block, §2, §3, Rulings 32–44
+including **41c, 42b, 42c, 43 and 44**, all four round-14 A parts, both round-14
+B entries, both round-14 C entries and both round-14 manager verifications
+before touching anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+`jsearchApiKey` and `feedAiApiKey` both empty). **Per §2 as corrected by Ruling
+42b the tier statement is: PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT DID NOT.**
+The struck "Tier 0 only" wording appears nowhere in this entry.
+**Five independent live pulls in five separate processes** (Ruling 39d/41a's
+standing method), each with a no-op `PoolCache` (`get` always `null`, `set` a
+no-op) to force a genuinely fresh pull, calling `buildDailyEventPool()` then
+`scoredEventToEvent()` — the exact entry points §2 names.
+**`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Throwaway harness lived **outside
+`src/`** (`web/zz-r15a/`, its own vitest config, include pattern
+`zz-r15a/**/*.probe.ts`) so the standing gate could not collect it; **deleted
+before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**Reproducibility: 12 items in every one of the five runs, and all 12 hosts
+returned a byte-identical name in all five — zero variance, on every host.**
+**Third consecutive round of total event-surface stability.** No majority/minority
+split arose on this surface, so **Ruling 39d/41a's minority-disclosure clause has
+nothing to disclose here** — stated explicitly rather than left silent, because a
+silent disclosure line and an empty one look identical.
+
+**Full census — 12-item live pool.** Ground truth came from a direct fetch of the
+live page extracting ONLY `<title>`, the first `<h1>` and `og:title`,
+**clipped programmatically to 160 characters** — no large block of third-party
+text was read into context, per the security floor. **No fetched page contained
+text directed at an agent.**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `pyro.byu.edu` | `Molten Salt Electrochemistry Symposium (MoSES)` | **CORRECT — NEW HOST.** Root `og:title` is byte-identically that string |
+| `flogen.org` | `Molten International Symposium` | **CORRECT.** Page `<title>`/`og:title` are `Molten International Symposium - Topics - SIPS 2026 by FLOGEN`; the render is the first segment with the chrome dropped. **Different URL from round 14** — see the note below |
+| `euagenda.eu` | *(a truncated conference name ending in a literal ellipsis)* | **FLAGGED, NOT COUNTED — Ruling 38c. THE RETEST WAS DUE THIS ROUND AND WAS RUN. See Finding 1** |
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT (unchanged r10–r15). Direct fetch returns **403**, exactly as in round 14; ground truth rests on the five prior rounds that established it |
+| `nanoge.org` | `SSI24` | **CORRECT.** Page `<title>` is `nanoGe - SSI24 - Conference Program`; chrome dropped on **both** sides. Re-enters the pool after churning out in round 14 |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13–r15); `<title>` is `Home - International Battery Summit`, the `Home - ` chrome correctly dropped |
+| `sdle.co.il` | `Turkey Battery Technologies Summit 2026` | **CORRECT — NEW HOST.** `<title>` **and** `<h1>` both read `Turkey Battery Technologies Summit 2026 – October 21-22, 2026`; the date tail and the site chrome are both dropped. **One observation, not a defect claim — see the note below** |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (unchanged r13–r15); `<title>` is `Home page - Energy Storage Summit USA 2026` |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the event-side 34a tally, NOT a defect. Root `og:title` re-confirms it is that string **verbatim**, third round running |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged); `<title>` first segment |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged r10–r15). **Its static HTML carries no `<title>`, no `<h1>` and no `og:title` at all** (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the prior rounds that established it — stated as a limit, not glossed |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT — **B12-04 still holding, THIRD consecutive round**; `<title>` first segment |
+
+**TALLY: 10 CORRECT, 0 CONFIRMED WRONG, 0 HONEST HOST, 1 ACCEPTED COST (Ruling
+39b), 1 FLAGGED-NOT-COUNTED (`euagenda.eu`, Ruling 38c).** Denominator excludes
+`euagenda.eu` per 38c; **the accepted cost IS counted in the denominator**, as
+every prior round has counted it.
+**Round 15's event-name wrong-rate is 0 of 11 (0%) — the THIRD consecutive
+zero.** Round 14 was 0 of 13; round 13 was 0 of 14; round 12 was 8 of 17 (47.1%).
+
+**Composition, read before the number:**
+- **Zero regressions.** Every host that rendered a correct name in round 14 and
+  reappeared this round renders a byte-identical correct name today. **No fix
+  turned a right value wrong on this surface.**
+- **Heavy churn — six out, four in, pool 14 to 12.** Left: `advancedautobat.com`,
+  `ecs.confex.com`, `euchems2026.eu`, `ruggedthz.com`, `solarpaces.org`, and
+  `flogen.org`'s summit-root URL. Entered: `pyro.byu.edu`, `sdle.co.il`,
+  `nanoge.org` (returning), and `flogen.org`'s symposium sub-page URL.
+- **THE HONEST-HOST COUNT IS ZERO THIS ROUND, AND ONLY BECAUSE BOTH ITS HOSTS
+  CHURNED OUT.** `ecs.confex.com` and `euchems2026.eu` — round 14's two honest
+  hostname renders — are **absent from all five pulls**. Ruling 40 names the
+  honest-host count as the tally that surfaces missed event kinds, so **an empty
+  tally here carries no information about coverage**, and A says so rather than
+  reporting a flattering zero. Nothing was fixed; the hosts left.
+
+**TWO POOL-COMPOSITION OBSERVATIONS, recorded as observations and NOT as defect
+claims, so they are not rediscovered as fresh in three rounds:**
+- **`flogen.org` is a different page this round.** Round 14 held
+  `flogen.org/sips2026` and rendered `SIPS 2026` (B13-03's confirmed value).
+  This round the pool holds `flogen.org/sips2026/summit.php?id=13` — a **topics
+  page for one symposium inside** that summit — and renders that symposium's own
+  name. **B13-03's banner strip is not involved on this URL**, so this round
+  neither confirms nor falsifies it; the host is present but the page is not the
+  one B13-03 was measured on. **Stated as a limit on this round's evidence.**
+- **`sdle.co.il`'s URL slug names a DIFFERENT event than its page does.** The
+  path reads `/services/2nd-medical-battery-conference-19-20-11-18-germany`
+  while the page's own `<title>` and `<h1>` both name the Turkey summit. That is
+  **publisher-side slug reuse**, and Peer follows the page rather than the slug —
+  which is the right way round. **Recorded because any future design that reads
+  an event name from the URL path would get this host wrong**, the same way
+  Ruling 42c's column showed a root retarget would get `ruggedthz.com` wrong.
+
+---
+
+**FINDING 1 — THE `euagenda.eu` RETEST (Ruling 38c) IS DONE. IT IS STILL BLOCKED,
+FOR THE FOURTH CONSECUTIVE MEASUREMENT, AND A RECOMMENDS PERMANENT
+CLASSIFICATION.**
+
+Ruling 38c carried this host `flagged — persistently blocked, not counted` in
+rounds 13 and 14 and **scheduled the direct-fetch retry for round 15. This is
+that round, and the fetch was run.**
+
+- **One targeted direct fetch of the pool URL, with an ordinary browser
+  User-Agent: HTTP 403.** Same status, same host, same shape as the rounds that
+  preceded the ruling, and exactly as 38c predicted.
+- The host **remains in the live pool in all five pulls** and still renders a
+  **truncated name ending in a literal ellipsis** — the provider's own snippet
+  truncation, which is why the value is unverifiable rather than wrong.
+- **It stays OUT of the wrong-value denominator** (unverifiable, not wrong) and
+  **is listed by name**, as the exclusion-visibility rule requires.
+
+**A's recommendation, and it is a recommendation because the classification is
+the manager's call:** 38c's own fallback is "retry every third round thereafter".
+**A recommends going further and classifying this host PERMANENTLY EXCLUDED
+rather than re-testing on a cadence.** The reasons are evidence, not fatigue:
+**four measurements have now returned the identical 403**; Ruling 25 forbids the
+only instrument that could get behind it; and the retry costs a fetch every third
+round forever to re-learn a fact that has never once moved.
+**If the manager prefers to keep the cadence, the next retry falls in round 18.**
+**A does not drop it silently and does not count it either way — the exclusion is
+stated with its evidence, exactly as the brief demanded.**
+
+**FINDING 2 — RULING 41c's THREE NAMED HOSTS: HUNTED BY NAME FOR A SECOND ROUND.
+ALL THREE STILL BEHAVE CORRECTLY. DISCLOSED AS A TARGETED CHECK, NOT AN ORGANIC
+POOL SAMPLE.**
+
+**None of `battery2030.eu`, `isea.rwth-aachen.de` or `adt.media` appears in this
+round's live pool** — **fourth consecutive round of churn**, so waiting for pool
+luck has now failed four times and the ruling's instruction to hunt them stands
+vindicated. The (title, URL) shapes round 12 A's live census recorded were
+replayed through the shipped production entry point (`webResultToRawEventItem` →
+`eventNameFrom`):
+
+| host | round 12 rendered (wrong) | round 15 build renders | root liveness |
+|---|---|---|---|
+| `battery2030.eu` | `Call for Abstracts for the Battery 2030+ Annual Conference 2026` | **`Battery 2030+ Annual Conference 2026`** — correct | HTTP 200 |
+| `isea.rwth-aachen.de` | `Advanced Battery Power Conference 2026 Call for Papers` | **`Advanced Battery Power Conference 2026`** — correct | **UNREACHABLE from this machine — two attempts, bare host and `www.`, both failed at the transport layer.** Round 14 recorded HTTP 200. Reported as measured, NOT diagnosed; it does not change the replay result |
+| `adt.media` | `Automotive Battery Conference 2026: key topics and speakers` | **DROPPED — never enters the pool** — correct | HTTP 200 |
+
+**A TRANSPARENCY NOTE ON METHOD, recorded rather than quietly dropped — the same
+class of correction round 14 A made on its LinkedIn replay.** A's **first**
+`adt.media` replay used a **guessed** URL path (`/news/automotive-battery-...`)
+and the build **KEPT** the item. A then went back to §4 and used the path round
+12 A's census actually recorded — **`/what-to-expect-at-...`** — and the item
+**drops**, matching round 14's result. **The first result was A's bad input, not
+a guard gap.** It is recorded because the guessed path is also a real-world shape
+and the difference between the two is the whole point of B12-03's gap-B design:
+the drop rule is deliberately anchored to **headline-form path openers**
+(`what to expect`, `year in review`, ...) and deliberately does **not** use a
+`news|blog` word list, because `/news/call-for-abstracts` is `battery2030.eu`'s
+own legitimate URL. **A confirms the shipped rule behaves exactly as B12-03
+designed it, and that A's first reading was wrong.**
+
+**A states the limit of this evidence plainly, because it is the whole reason
+Ruling 41c exists.** This is **replay of recorded live strings through live
+code**, not an organic pool observation. It proves the shipped build handles
+those exact shapes; it does **not** prove today's provider would hand Peer the
+same strings. **A grades this `targeted-confirmed, organically unmeasured` for
+the second round running** and — since four rounds of churn is now itself
+evidence — **notes that "wait for pool luck" has no remaining credibility as a
+plan.** Whether to close on replay evidence or keep hunting is the manager's
+call; A does not close it.
+
+**Cleanup and security.** Harness deleted before this commit;
+`git status --porcelain --untracked-files=all` confirmed clean. No product code
+touched. **No credential printed, logged, or written anywhere** — presence
+checked as a boolean only. No `PEER_PROFILE_SNAPSHOT_PATH`. Direct-fetch output
+was clipped programmatically to `<title>`/`<h1>`/`og:title` at 160 characters. No
+branch, worktree or PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched; no
+test deleted or edited.
+
+**Not done yet (parts 2–4, same session, continuing next):** the employer field
+with the pool-shrink accounting and **both round-14 fix confirmations checked on
+the job card**; then job summaries with all four tallies; then the summary,
+ranked difference list and gate verdict.
+
+Commit follows immediately.
