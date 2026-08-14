@@ -23137,3 +23137,180 @@ summary, ranked difference list and gate verdict. No gate verdict is set by this
 entry — the gate cannot be judged until all parts are in.
 
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent A (part 2: employer field, scored against B10-01's boilerplate guard and B9-02's guards, plus Ruling 34a's tally)
+
+**STATUS: DONE.** Second of round 12 A's four parts. Part 1 (R13 event names) is
+banked in `5e7b80a` and is **not** re-run. Parts 3 (R4 job summaries + Rulings 33
+and 37 tallies) and 4 (summary/ranked list/gate verdict) follow in this same
+session.
+
+Resumed the turn after the user's 2026-08-13 pause. Re-claimed the lock
+(`3ddb149`, `LAPTOP-3CL10CG5 @ 2026-08-14 05:21 UTC`) after `git pull --ff-only`
+(already up to date; the hourly cloud run did not contest it) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed, per §3. The same commit corrected §1's pause header: the loop has
+resumed and **both resume clocks are back ON**.
+
+**Method.** Live keys reconfirmed present, **boolean check only**
+(`tavilyApiKey`, `adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`,
+`usajobsUserAgent` all `true`; `jsearchApiKey` and `feedAiApiKey` both empty —
+so this is Tier 0, no enrichment, matching every prior round). Rebuilt the
+throwaway scaffold from round 9/10/11 A's own precedent (the manager deleted the
+previous one on pause), same profile-loading and no-op-`PoolCache` shape (`get`
+always `null`, `set` a no-op) to force a genuinely fresh live pull, calling
+`buildDailyJobPool()` then `scoredJobToJob()` — the exact entry points §2 names.
+Did **not** use `PEER_PROFILE_SNAPSHOT_PATH`. Result JSON written to this
+session's scratchpad directory, outside the repository. **Scaffold deleted before
+this commit; `git status` confirmed clean, including an `--untracked-files=all`
+check scoped to `web/src`.**
+
+**Method carried forward from part 1, and it changed a conclusion again.** Part 1
+established that same-process pulls are not fully independent
+(`getOrBuildCachedPool` keeps an in-flight promise map keyed by the cache
+object). **This part ran five pulls in five separate processes**, same as part 1.
+That is what surfaced the `talents.vaia.com` variance below, which a single pull
+would have scored the opposite way.
+
+**One measurement-efficiency note, stated so it is not mistaken for
+corner-cutting:** parts 2 and 3 read the *same* five job-pool pulls rather than
+ten. The employer field and the summary field are two columns of one
+`scoredJobToJob()` output, so a second set of pulls would measure a different
+minute's pool and make the two parts' denominators disagree for no gain. Rounds
+9–11 pulled separately; this is a deliberate, disclosed change and it makes the
+two parts directly comparable.
+
+**Reproducibility: pool sizes 14, 14, 14, 15, 15 across the five runs; 16 unique
+postings in the union.** 14 of the 16 returned a byte-identical employer value in
+every run they appeared in. **Two did not — `terra.do` and `talents.vaia.com` —
+and that variance is Finding 4 below.** Where a host varied, the value scored is
+the majority across the runs it appeared in, per part 1's own convention; the
+minority value is disclosed in every case.
+
+**Census — 16 unique postings, 10 non-null employer values, 6 null.** Ground
+truth from the posting's own title, its URL slug, or a same-pool duplicate of the
+identical posting. No direct page fetch was needed this part: every disputed
+value was settled by the URL slug, which prior rounds already accept as evidence.
+
+| host | rendered employer | evidence checked | verdict |
+|---|---|---|---|
+| `inl.referrals.selectminds.com` | `Idaho National Laboratory` | host is INL's own referral-system instance | CORRECT — **full name this round, where r11 rendered `INL`; see Finding 5** |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` | title "…at Thermo Fisher Scientific" | CORRECT (unchanged r11) |
+| `careers.gevernova.com` | *(null)* | title states "GE Vernova" plainly; own-domain subdomain | not counted (standing host-brand trade-off, unchanged r11) |
+| `terra.do` | *(null)* — 4 of 5 runs | run 1 rendered `Idaho National Laboratory` correctly from a title carrying "…at Idaho National Laboratory"; runs 2–5 received the same posting with a bare title and rendered null | not counted (null by majority) — **but see Finding 4** |
+| `openmc.discourse.group` | `Page 2` | URL is `…/1727?page=2`; the value is the thread's pagination label | **WRONG, new host — Finding 1** |
+| `jobs.battery.com` | `Battery Ventures Companies` | title matches verbatim (portfolio-companies listing) | CORRECT (standing caveat, unchanged r11) |
+| `jobright.ai` | *(null)* | aggregator's own generic listing title | not counted (unchanged r11) |
+| `ev.careers` | `Tesla` | title "…at Tesla" | CORRECT (unchanged r11) |
+| `employbl.com` | `Battery Ventures` | URL slug names it | CORRECT (unchanged r11) |
+| `talents.vaia.com` | `Talents by Vaia` — 3 of 4 runs | URL slug is `/companies/savannah-river-national-laboratory/…`; **independently corroborated by a duplicate of the same posting in the same pool** (`linkedin.com/jobs/view/…-at-savannah-river-national-laboratory-…`). Run 1 rendered `Savannah River National Laboratory` correctly | **WRONG, new host — Finding 2** |
+| `linkedin.com` (SRNL postdoc) | *(null)* | URL names the employer; title does not | not counted |
+| `linkedin.com` (INL postdoc) | *(null)* | URL names the employer; title does not | not counted |
+| `lco.global` | `Las Cumbres Observatory` | organisation's own domain | CORRECT (unchanged r11) |
+| `arbeitnow.com` | `trawa` | URL slug is `/jobs/companies/trawa/…` | CORRECT (new host, no defect) |
+| `postdocjobs.com` | *(null)* | round 11 A's own direct fetch established the real employer is Argonne National Laboratory and that the page title carries BOTH guarded shapes | **B10-01 + B9-02b confirmed still holding — second consecutive round of honest silence, Finding 3** |
+| `careerservices.upenn.edu` | `University of Pennsylvania` | identical URL rounds 9, 10 and 11 all cited; real employer Oak Ridge National Laboratory | **WRONG — ACCEPTED per Ruling 34a, not reported as a defect** |
+
+**3 of 10 non-null wrong (30%).** Round 11 was 1 of 9 (11.1%); rounds 8/9/10 were
+62.5% / 27.3% / 20%. **Read the composition before the number, and this round the
+composition is the whole story.** One of the three is the accepted UPenn residual,
+unchanged and not a defect. **The other two are hosts that have never appeared in
+any prior round's employer census** (`openmc.discourse.group`,
+`talents.vaia.com`). **Every host that rendered a correct employer in round 11 and
+reappeared this round rendered a correct employer again** — zero regressions. So
+the rise is pool churn bringing two new failing hosts, not a fix coming undone;
+the honest reading is that the wrong-rate never was 11.1% in general, it was
+11.1% on a 9-item sample that happened not to contain a shape like these two.
+
+**Finding 1 — `openmc.discourse.group` renders `Page 2` as the employer. New
+host, and it is the plainest instance of Ruling 32's shape yet seen on the
+employer field.** The posting is a forum thread ("Job vacancies looking for
+OpenMC skills") and the value in the employer slot is that thread's pagination
+control. A does not claim which rejection path produced it — what is recorded is
+the outcome: a reader is told the employer is `Page 2`. **This is the worst
+single value in the census on reader impact**, because unlike a wrong institution
+name it is not even the right kind of thing. Noted for continuity and not as a
+cause claim: this same host is the one round 9 part 4 examined for Ruling 29's
+same-page contamination and cleared. That was a different question about a
+different field; this is a new, separate observation.
+
+**Finding 2 — `talents.vaia.com` renders `Talents by Vaia`, the job board's own
+brand, in the employer slot. New host.** The real employer is Savannah River
+National Laboratory, named in the URL's own path segment
+(`/companies/savannah-river-national-laboratory/`) and confirmed independently by
+a duplicate of the identical posting sitting in the same pool from `linkedin.com`,
+whose URL also names SRNL. **This is Ruling 26's shape — a job-board brand
+occupying the company slot — on a host no round has measured before.** Recorded
+as observed; whether any existing guard should have caught it is a cause question
+and belongs to B.
+
+**Finding 3 — B10-01's boilerplate guard and B9-02b's topic-label guard are both
+confirmed still holding, second consecutive round.** `postdocjobs.com` renders
+`null` again — honest silence rather than a wrong string, per Ruling 23 — on the
+same posting shape round 11 A ground-truthed by direct fetch. Nothing new filled
+the slot. This is the one unambiguously good result in this part.
+
+**Finding 4 — the employer value for a single posting is not stable across pulls
+minutes apart, and both directions were observed.** `terra.do` rendered the
+correct employer in run 1 and `null` in runs 2–5. `talents.vaia.com` rendered the
+correct employer in run 1 and the job board's own brand in runs 2, 4 and 5. In
+both cases the recorded upstream title differed between runs — run 1 carried an
+"…at &lt;Employer&gt;" phrase that runs 2–5 did not. **Stated as the correlation
+visible in the recorded data, not as a mechanism; the mechanism is B's.** Two
+consequences worth naming: (a) a reader can see a different employer for the same
+job on two different days, which is a reader-facing property and not only a
+measurement artefact; and (b) **every single-pull employer census this loop has
+run, including round 11's, may have scored a varying host on whichever value it
+happened to draw.** That is a limitation of the earlier numbers, said plainly.
+
+**Finding 5 — `inl.referrals.selectminds.com` now renders the full
+`Idaho National Laboratory` where round 11 rendered `INL`.** Both are correct, so
+this is not a defect either way and is not on the difference list. It is recorded
+because round 11 A left an explicit open observation about `INL` reaching render
+despite round 9 A's control test saying that guard should have rejected it. The
+value has changed, so that observation is no longer live on this host. Whether
+anything in the code changed or the upstream title simply differs is a cause
+question and is not answered here.
+
+**RULING 34a's INSTITUTION TALLY — round 12. Reported under two readings, because
+this round produced the first value that sits on the ruling's boundary.**
+- **Strict reading (the UPenn shape the ruling was written about — a real,
+  correctly-spelled institution name belonging to a *third party* that is not the
+  actual employer): 1 of 10** — `University of Pennsylvania` for an Oak Ridge
+  National Laboratory posting, fourth consecutive round, unchanged.
+- **Widest reading (any real, correctly-spelled organisation name that is not the
+  actual employer): 2 of 10** — the above plus `Talents by Vaia`.
+
+**A scores the tally at 1 of 10 and flags the boundary call for the manager
+rather than deciding it.** The reason for excluding `Talents by Vaia`: Ruling 34a
+exists to gather frequency data for one specific candidate fix — a URL-slug
+cross-check against an unrelated institution — and it explicitly weighed that
+against the common correct case of an institution posting on its own domain. An
+aggregator's own brand in the company slot is **Ruling 26's** class, with its own
+guard and its own history; folding it into 34a's tally would inflate the number
+that decides whether 34a gets revisited, using evidence about a different defect.
+**If the manager reads the boundary the other way, the tally is 2 of 10 and the
+running total below shifts accordingly.** `POLICY — manager decides` on the
+boundary only; the value itself is reported as a defect either way (Finding 2).
+
+**Running tally (Ruling 34a): round 11 = 1 of 9; round 12 = 1 of 10. Cumulative
+2 of 19 (10.5%).** Two rounds, two instances, and **both are the identical
+posting on the identical URL** — so this is still one anecdote observed twice,
+not a frequency pattern, by Ruling 34a's own standard for revisiting.
+
+**Cleanup:** throwaway vitest scaffold deleted before this commit; `git status`
+confirmed clean under `web/src` with `--untracked-files=all`, checked because an
+untracked `*.test.ts` there would be collected by the next agent's gate run and
+fire live pipeline calls. Result JSON lives outside the repository. No product
+code touched. No credential printed, logged, or written anywhere. **No
+third-party page text was fetched in this part at all** — every ground truth came
+from a URL slug or a title already inside the pipeline's own output.
+
+**Not done yet (parts 3–4, same session, continuing next):** R4 job summaries
+scored against B10-07 fixes 1 and 2 plus Ruling 37's acceptance, with Rulings 33
+and 37 tallies; then the summary across parts 1–4, the ranked difference list and
+the gate verdict. No gate verdict is set by this entry.
+
+Commit follows immediately.
