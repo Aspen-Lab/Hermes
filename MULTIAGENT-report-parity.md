@@ -25682,3 +25682,108 @@ title also changes which duplicate survives.
 Ruling 39. Round 12 C is spawned next — B12-02 first (independent), then
 B12-01 (now approved), then the rest in B's recorded order.**
 
+
+---
+
+### Round 12 — Agent C (B12-02: `ruggedthz.com` — B's V2 design landed verbatim, both attachment points, 12 tests)
+
+**STATUS: LANDED.** Commit follows this entry. Ruling 36's pre-set third strike
+fired (Ruling 38 confirmed the authorisation is automatic), B designed it, and C
+implemented B's V2 exactly as written — no widening, no extra step, no
+substituted mechanism.
+
+**Baseline confirmed cold before the first edit**, not inherited: 90 files /
+1076 tests, 1075 passing, the only failure `events/benchmark.test.ts`'s
+documented live-search flake. That is the expected baseline exactly.
+
+**What landed**, in `web/src/lib/events/sources/eventweb.ts`:
+
+- `NARRATIVE_DETERMINER_RE`, `urlPathWords`, `isSlugCorroborated`,
+  `recoverFromNarrative` — steps 1–5 of B's design. The verb is located by
+  `PRESENT_NARRATIVE_RE`'s own match (nothing re-parsed), one determiner is
+  stripped, the remainder is re-admitted only by the shipped
+  `isChromeSegment` + `looksLikeEventTitle` pair, must carry a 4-digit year or
+  pass `looksLikeEvent`, and must be corroborated word-for-word by the page's
+  own URL path.
+- **B's flagged implementation trap avoided:** the re-guard calls
+  `isChromeSegment` and `looksLikeEventTitle` **directly**. `bestEventTitleSegment`
+  is `recoverFromNarrative`'s own caller, so calling it from inside would be
+  infinite recursion. Named in a code comment so the next reader cannot undo it
+  by accident.
+- **Attachment point 1** — inside `bestEventTitleSegment`, with step 6 (the
+  stand-down when a surviving sibling is itself slug-corroborated) implemented
+  there because that is the only place siblings exist.
+- **Attachment point 2** — `eventNameFrom`'s URL-slug stage, after the existing
+  re-guard fails, before the snippet stage. Step 6 is vacuous there by
+  construction (no siblings). First-character capitalisation applied, matching
+  `nameFromUrlSlug`'s own documented convention; cosmetic, as B said.
+- **The determiner strip is here and only here**, per B's binding note and
+  Ruling 39a.
+
+**Every step is a veto.** When any fails the function returns `undefined` and
+the existing chain continues byte-identically — surviving sibling, URL slug,
+snippet, honest URL host, `"Untitled event"`. No new fallback; the recovery is
+always a substring of a rejected segment that has passed the same guard pair
+that rejected its parent, never the rejected segment itself.
+
+**TESTS — 12 new, all of B's 11 adversarial cases plus one extra.**
+
+Negative proof by execution (source reverted, tests run, source restored):
+**5 of 12 FAIL against pre-fix code** — the real host's title, the URL-slug
+failure mode, the chrome-only-sibling case, the Gordon-Research case, and the
+documented residual. **The other 7 are must-survive cases and pass both before
+and after by construction**, which is what they are for; they are reported as
+must-survive, not counted as negative-proved, because a must-survive test that
+failed pre-fix would mean the design had already broken something.
+
+The single most load-bearing test is
+`"stands down when a surviving sibling is the slug-corroborated one"` —
+B's own counterexample, the one that killed B's V1
+(`"SolarPACES Announces the 2026 Call Deadline – SolarPACES 2026"` →
+`"2026 Call Deadline"`, a real name replaced by a label). If a future round
+deletes step 6, that test says exactly what it costs.
+
+**One deviation from B's matrix, recorded.** B's "correct short sibling, longer
+UNcorroborated tail" case (`… – SSI24`, url `/ssi24`) is blocked by steps 4, 5
+**and 6** as B wrote it — the sibling `SSI24` is itself corroborated by the path
+`/ssi24`, so step 6 alone would pass the test. C sharpened it so **only step 5**
+can block: the tail now carries an event noun (clears step 4) and the URL is an
+unrelated path (so the sibling is uncorroborated too, disabling step 6). Same
+design, same expected value, but the test can now only pass for the intended
+reason. B's conclusion is unchanged and is confirmed.
+
+**The known residual is a test, not a footnote.**
+`"Ruggiero Group Attends A Long Series Of 2026 Meetings – …"` with a matching
+slug renders `"Long Series Of 2026 Meetings"`. Both the old and new values are
+wrong so it is not a reader-facing regression, but it is a new wrong string and
+it is asserted with a comment saying so, so the next round that touches this
+design meets it immediately instead of rediscovering it.
+
+**CORRECTION TO B12-02 §5's blast-radius list — B under-counted, same way B
+under-counted B12-07's (which B12-08 §0 corrected).** B wrote of
+`bestEventTitleSegment`: "Grepped: no other production caller." There **is**
+one: `web/src/lib/opportunities/enrich.ts` calls it **five times**
+(lines 142, 149, 162, 165, 170), every one of them **with `item.url`** — so
+every one of them can reach the new recovery. That is also the file the
+SolarPACES regression lock exercises. Checked rather than assumed: the enrich
+path passes a page `<title>` / `og:title` / typed name plus the page's own URL,
+which is exactly the shape the design was built and adversarially tested for,
+and the lock passes unchanged. Recorded because the next agent to touch this
+function should not inherit "no other production caller" as fact.
+
+**GATE after this item:**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**,
+  which lives there and NOT under `events/`), run on its own:
+  **25 of 25 passing, unchanged.**
+- `web/src/lib/events/scoring.test.ts` (the twice-missed second file), run:
+  **passing** (92 of 92 together with the lock file).
+- Full: `npx vitest run` → **90 files / 1088 tests, 1087 passing.** 1076 → 1088
+  is exactly the 12 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**
+
+Scratch copy of the modified source (used for the revert-and-restore negative
+proof) lives outside the repo in the session scratchpad; nothing untracked in
+the working tree at commit time.

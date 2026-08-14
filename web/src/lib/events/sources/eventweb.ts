@@ -612,6 +612,107 @@ function hostFromUrl(url: string | undefined): string | undefined {
   }
 }
 
+/**
+ * B12-02 (round 12, §1w Ruling 36's pre-set third strike + §1y Ruling 38's
+ * binding addition): `ruggedthz.com` publishes one blog post per event
+ * attended, and every such title has the same STRUCTURE —
+ * `<narrative sentence naming the event> – <the lab's own brand>`. The brand
+ * half always survives the guards (it is a perfectly well-formed organisation
+ * name); the naming half is always rejected by PRESENT_NARRATIVE_RE. **The
+ * name the reader wants only ever exists inside the rejected half**, which is
+ * why widening the host-brand check cannot fix this host even in principle,
+ * and why Ruling 36's recorded design lead (recover from the rejected sibling)
+ * is the only route.
+ *
+ * Nothing here is parsed from scratch and no new fallback is created (Ruling
+ * 35): the verb is located by the guard that already rejected the segment, the
+ * remainder is re-admitted only by the SAME shipped guard pair, and every step
+ * is a veto — when any of them fails the function returns undefined and the
+ * existing chain continues byte-identically.
+ *
+ * Corroboration by the page's own URL slug (step 5) and the stand-down when a
+ * surviving sibling is corroborated instead (step 6) are the two steps that
+ * make this safe. B's first version had neither and was killed by its own
+ * counterexample — `"SolarPACES Announces the 2026 Call Deadline – SolarPACES
+ * 2026"`, where the correct answer IS the sibling and a naive recovery
+ * replaces a real name with a label. Both steps have their own must-survive
+ * tests; see the B12-02 block in eventweb.test.ts.
+ *
+ * Ruling 37's open-class trap was checked deliberately: step 4's two tests are
+ * a 4-digit year and this file's existing `looksLikeEvent` vocabulary of event
+ * NOUNS. Both are genuinely finite. No verb list is extended here.
+ */
+const NARRATIVE_DETERMINER_RE = /^(?:the|an?|its|our|their|his|her)\s+/i;
+
+/**
+ * The page's own URL path as a set of whole lowercase alphanumeric words.
+ * `undefined` when there is no URL (or it is malformed) — which is what makes
+ * the recovery impossible to fire on a caller that passes no URL, and is why
+ * `eventweb.test.ts`'s existing no-URL Ruggiero assertion is untouched.
+ */
+function urlPathWords(url: string | undefined): Set<string> | undefined {
+  if (!url) return undefined;
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return undefined;
+  }
+  const words = path.toLocaleLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  return words.length > 0 ? new Set(words) : undefined;
+}
+
+/** Every alphanumeric word of the candidate appears as a whole word in the path. */
+function isSlugCorroborated(
+  candidate: string,
+  pathWords: Set<string> | undefined,
+): boolean {
+  if (!pathWords) return false;
+  const words = candidate.toLocaleLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  if (words.length === 0) return false;
+  return words.every((word) => pathWords.has(word));
+}
+
+/**
+ * Steps 1-5 of B12-02. Step 6 (the surviving-sibling stand-down) lives in
+ * `bestEventTitleSegment`, because that is the only place siblings exist.
+ *
+ * IMPLEMENTATION NOTE, flagged by B because B hit it: the re-guard on line
+ * "guard pair" below must call `isChromeSegment` + `looksLikeEventTitle`
+ * DIRECTLY. Calling `bestEventTitleSegment` from here would be infinite
+ * recursion, since `bestEventTitleSegment` is this function's own caller.
+ */
+function recoverFromNarrative(
+  segment: string,
+  host: string | undefined,
+  pathWords: Set<string> | undefined,
+): string | undefined {
+  if (!pathWords) return undefined;
+  const trimmed = segment.trim();
+  // 1. Locate the verb with the guard that already found it — the text AFTER
+  //    PRESENT_NARRATIVE_RE's own match, nothing parsed from scratch.
+  const match = PRESENT_NARRATIVE_RE.exec(trimmed);
+  if (!match) return undefined;
+  // 2. Strip one leading determiner. It belongs HERE and nowhere else: in this
+  //    shape the article is demonstrably a sentence artefact ("Attends THE 2026
+  //    Crystal Engineering GRC"), which is not true of a title segment in
+  //    general — see B12-01, which deliberately does not strip one.
+  const rest = trimmed
+    .slice(match[0].length)
+    .trim()
+    .replace(NARRATIVE_DETERMINER_RE, "")
+    .trim();
+  if (!rest) return undefined;
+  // 3. Re-run the shipped guard pair on the remainder.
+  if (isChromeSegment(rest, host) || !looksLikeEventTitle(rest)) return undefined;
+  // 4. The remainder must actually look like an event's name, by one of two
+  //    closed tests. Blocks "Its Annual Review" and "Berlin And Munich".
+  if (!YEAR_RE.test(rest) && !looksLikeEvent(rest)) return undefined;
+  // 5. The page's own URL slug must corroborate it.
+  if (!isSlugCorroborated(rest, pathWords)) return undefined;
+  return rest;
+}
+
 export function bestEventTitleSegment(
   title: string,
   url?: string,
@@ -635,6 +736,20 @@ export function bestEventTitleSegment(
   const informative = segments.filter(
     (part) => !isChromeSegment(part, host, options) && looksLikeEventTitle(part),
   );
+
+  // B12-02, attachment point 1 of 2 (ruggedthz.com failure mode 1: the
+  // provider returns the real page <title>). Step 6 — the recovery runs ONLY
+  // when no surviving sibling is itself corroborated by the same slug. When
+  // one is, that sibling IS the event ("SolarPACES 2026" on a
+  // /solarpaces-announces-… path) and the selection below runs untouched.
+  const pathWords = urlPathWords(url);
+  if (pathWords && !informative.some((part) => isSlugCorroborated(part, pathWords))) {
+    for (const part of segments) {
+      const recovered = recoverFromNarrative(part, host, pathWords);
+      if (recovered) return recovered;
+    }
+  }
+
   if (informative.length > 0) {
     // Prefer a segment that actually reads as an event, else the longest one:
     // site chrome is normally shorter than the event name.
@@ -659,8 +774,30 @@ export function eventNameFrom(
   // snippet, whose longest sentence is often prose ("Networking: An opening
   // get-together...") rather than a name.
   const fromSlug = url ? nameFromUrlSlug(url) : undefined;
-  if (fromSlug && bestEventTitleSegment(fromSlug, url) === fromSlug) {
-    return fromSlug;
+  if (fromSlug) {
+    if (bestEventTitleSegment(fromSlug, url) === fromSlug) {
+      return fromSlug;
+    }
+    // B12-02, attachment point 2 of 2 (ruggedthz.com failure mode 2, which A
+    // caught on its fifth pull: the SAME page, but the provider returned a
+    // chrome-only title that minute, so the title stage yields nothing and the
+    // slug re-guard correctly rejects the slug's own narrative sentence —
+    // B10-04's casing fix working as designed). Without this the snippet stage
+    // below supplies a mid-sentence prose fragment. One host, two confirmed
+    // failure modes, so one design has to attach at two points.
+    //
+    // There are no siblings here, so step 6 is vacuous by construction.
+    // Capitalisation follows `nameFromUrlSlug`'s own documented convention
+    // (first character only) because the recovery returns a substring of that
+    // function's output; cosmetic, not load-bearing.
+    const recovered = recoverFromNarrative(
+      fromSlug,
+      hostFromUrl(url),
+      urlPathWords(url),
+    );
+    if (recovered) {
+      return recovered.charAt(0).toLocaleUpperCase() + recovered.slice(1);
+    }
   }
 
   // Otherwise mine the snippet for its most informative event-like phrase.

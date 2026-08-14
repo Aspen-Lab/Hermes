@@ -528,6 +528,181 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B12-02 (round 12): ruggedthz.com, the host §1w Ruling 36's pre-set third
+  // strike authorised a fix for. The whole adversarial matrix B built is
+  // reproduced here, including the case that killed B's own first version —
+  // that one is the reason the design has a stand-down step at all, so it is
+  // the single most load-bearing test in this block.
+  describe("narrative-segment name recovery (B12-02)", () => {
+    const RUGGED_URL =
+      "https://ruggedthz.com/ruggiero-group-attends-the-2026-crystal-engineering-grc";
+
+    // FAILURE MODE 1, the real host's real <title> (round 9 A fetched it
+    // directly). Before this fix the reader was told the event is called
+    // "Ruggiero Research Lab" — a correct organisation name that is not an
+    // event, and the ONLY name in the title lives inside the segment the
+    // narrative guard rejects.
+    it("recovers the event name from the rejected narrative segment", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero Research Lab",
+          "",
+          RUGGED_URL,
+        ),
+      ).toBe("2026 Crystal Engineering GRC");
+    });
+
+    // THE counterexample. B built this to break its own V1 and it did: with no
+    // stand-down step the recovery replaces a real event name with a label
+    // ("2026 Call Deadline"). Here the SIBLING is the slug-corroborated one,
+    // so the recovery must not fire and selection runs untouched. If a future
+    // round removes step 6, this is the test that says what that costs.
+    it("stands down when a surviving sibling is the slug-corroborated one", () => {
+      expect(
+        eventNameFrom(
+          "SolarPACES Announces the 2026 Call Deadline – SolarPACES 2026",
+          "",
+          "https://solarpaces.org/solarpaces-announces-the-2026-call-deadline",
+        ),
+      ).toBe("SolarPACES 2026");
+    });
+
+    // FAILURE MODE 2, the same page on a different pull: the provider returned
+    // a chrome-only title, so the title stage yields nothing and the URL-slug
+    // stage correctly rejects its own narrative sentence (B10-04's casing fix
+    // working). Without the second attachment point the snippet stage supplies
+    // a mid-sentence prose fragment — A's fifth pull rendered exactly that.
+    // Lowercase after the first character is nameFromUrlSlug's own convention.
+    it("recovers from the URL slug when the title is chrome and the snippet is prose", () => {
+      expect(
+        eventNameFrom(
+          "Home | Events",
+          "sessions, even if breakfast occasionally became more of an aspiration than a reality.",
+          RUGGED_URL,
+        ),
+      ).toBe("2026 crystal engineering grc");
+    });
+
+    // Chrome-only sibling: nothing survives the title stage at all, so before
+    // this fix execution fell all the way to the honest URL host. The recovery
+    // is strictly better than a hostname here.
+    it("recovers even when the only sibling segment is chrome", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Attends the 2026 Crystal Engineering GRC – Home",
+          "",
+          RUGGED_URL,
+        ),
+      ).toBe("2026 Crystal Engineering GRC");
+    });
+
+    // An organisation name that legitimately IS the host org still loses to
+    // the event the sentence actually names — the reader wants the event.
+    it("prefers the named event over the organisation doing the attending", () => {
+      expect(
+        eventNameFrom(
+          "Gordon Research Conferences Presents the 2026 Crystal Engineering GRC – Gordon Research Conferences",
+          "",
+          RUGGED_URL,
+        ),
+      ).toBe("2026 Crystal Engineering GRC");
+    });
+
+    // MUST-SURVIVE: no URL at all means no slug, so step 5 can never pass and
+    // the recovery is unreachable by construction. This is what protects the
+    // existing B8-06 assertion above, which passes no URL.
+    it("does not fire when eventNameFrom is called without a URL", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero Research Lab",
+          "",
+        ),
+      ).toBe("Ruggiero Research Lab");
+    });
+
+    // MUST-SURVIVE: the narrative segment names no event. Step 4's two closed
+    // tests (a 4-digit year, or this file's existing event-noun vocabulary)
+    // both fail, so nothing is recovered and the sibling stands.
+    it("does not recover a narrative tail that names no event", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Presents Its Annual Review – Ruggiero Research Lab",
+          "",
+          "https://ruggedthz.com/ruggiero-group-presents-its-annual-review",
+        ),
+      ).toBe("Ruggiero Research Lab");
+    });
+
+    // MUST-SURVIVE: the tail is a pair of place names. Same step-4 veto.
+    it("does not recover a narrative tail that is only places", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Visits Berlin And Munich – Ruggiero Research Lab",
+          "",
+          "https://ruggedthz.com/ruggiero-group-visits-berlin-and-munich",
+        ),
+      ).toBe("Ruggiero Research Lab");
+    });
+
+    // MUST-SURVIVE, and this one isolates STEP 5 specifically: the tail clears
+    // step 4 (it carries an event noun) and the short sibling is not
+    // corroborated either, so step 6 cannot be what saves it. Only the slug
+    // corroboration blocks the recovery here. B's own version of this case was
+    // additionally blocked by steps 4 and 6; sharpened so the test can only
+    // pass for the intended reason.
+    it("does not recover a tail the page's own URL does not corroborate", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Attends The Big Crystal Engineering Symposium In Boston – SSI24",
+          "",
+          "https://ruggedthz.com/blog/annual-roundup",
+        ),
+      ).toBe("SSI24");
+    });
+
+    // MUST-SURVIVE: a real conference sibling beside a narrative tail that
+    // names nothing.
+    it("keeps a real conference sibling beside an empty narrative tail", () => {
+      expect(
+        eventNameFrom(
+          "Acme Corp Presents Summer Fun – Acme Battery Symposium 2026",
+          "",
+          "https://acme.example.org/acme-corp-presents-summer-fun",
+        ),
+      ).toBe("Acme Battery Symposium 2026");
+    });
+
+    // MUST-SURVIVE: no narrative segment anywhere means the recovery never
+    // gets a candidate in the first place.
+    it("leaves a title with no narrative segment completely alone", () => {
+      expect(
+        eventNameFrom(
+          "Call for papers - Battery Conference 2027",
+          "",
+          "https://battery.example.org/call-for-papers-battery-conference-2027",
+        ),
+      ).toBe("Battery Conference 2027");
+    });
+
+    // DOCUMENTED-KNOWN RESIDUAL, recorded rather than hidden — B constructed
+    // it deliberately and could not build a plausible real-world instance. A
+    // fully slug-corroborated narrative tail that carries a year but names no
+    // real event is recovered as if it were a name. Both the old value
+    // ("Ruggiero Research Lab") and the new one are wrong, so this is not a
+    // regression in reader terms, but it IS a new wrong string and this test
+    // exists so the next round that touches the design sees it immediately
+    // rather than rediscovering it.
+    it("recovers a year-bearing tail that names no real event (known residual)", () => {
+      expect(
+        eventNameFrom(
+          "Ruggiero Group Attends A Long Series Of 2026 Meetings – Ruggiero Research Lab",
+          "",
+          "https://ruggedthz.com/ruggiero-group-attends-a-long-series-of-2026-meetings",
+        ),
+      ).toBe("Long Series Of 2026 Meetings");
+    });
+  });
+
   // Must not over-trigger: a real name that merely mentions one of the
   // headline-subject words as its own topic, with no announcement-shaped
   // participle nearby, is not narration and must survive.
