@@ -1825,7 +1825,7 @@ describe("ATS action controls in the employer slot (B16-02 gap 2C, Ruling 48a)",
 // B17-01 (round 17, Rulings 49a/49b): AN EMPLOYER'S OWN INTERNSHIP/PROGRAMME
 // BROCHURE PAGE, admitted as if it were a vacancy. Two live instances in round
 // 17 A's census. TWO additive checks, deliberately NOT merged into one and
-// deliberately NOT added to `CAREERS_INDEX_TITLE_RE` 鈥?see the constants' doc
+// deliberately NOT added to `CAREERS_INDEX_TITLE_RE` — see the constants' doc
 // comment for both measurements. C re-measured B's whole matrix by execution on
 // a 95-row corpus (11 must-drop, 84 must-keep) before writing a line:
 // baseline 84/95 with 11 misses and zero false fires, the shipped result
@@ -1846,7 +1846,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
 
   // 2. END TO END, which is what proves the fix reaches the render: the CATL
   // title carries separators, so the WHOLE-title call still returns false and
-  // it is the SECOND `isListingPage` call 鈥?on the role segment 鈥?that drops
+  // it is the SECOND `isListingPage` call — on the role segment — that drops
   // it. The shipped call pattern doing the job its own comment says it exists
   // for. Asserted at both levels so neither can go vacuous.
   it("drops the full offered CATL title end to end, via the second call", () => {
@@ -1866,7 +1866,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
   });
 
   // 3. THE `<h1>` FORM DROPS TOO, so a title change upstream does not reopen
-  // the item 鈥?the EnerSys page's `<h1>` is the colonless string.
+  // the item — the EnerSys page's `<h1>` is the colonless string.
   it("drops the EnerSys <h1> form, with no marketing tagline", () => {
     expect(
       isListingPage(
@@ -1882,23 +1882,32 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
   it.each([
     ["acme.test", "/careers/internships"],
     ["northvolt.test", "/students"],
-  ])("drops `Acme Internships` at %s%s 鈥?not a host list", (host, pathAndQuery) => {
+  ])("drops `Acme Internships` at %s%s — not a host list", (host, pathAndQuery) => {
     expect(isListingPage("Acme Internships", host, pathAndQuery)).toBe(true);
   });
 
   // 5. THE LIVE MUST-KEEP, AND IT IS THE MOST IMPORTANT ASSERTION IN THIS
   // BLOCK. Round 11 A fetched this posting directly, scored it CORRECT, and
   // called it "an own-domain research center hosting its own internship
-  // posting". The tempting UNIFIED one-signal design 鈥?strip the tagline and
+  // posting". The tempting UNIFIED one-signal design — strip the tagline and
   // the `Program(me)` suffix, then test for an owner in front of a section
-  // label 鈥?reaches both brochure pages with one statement AND DESTROYS BOTH
+  // label — reaches both brochure pages with one statement AND DESTROYS BOTH
   // OF THESE ROWS, because grammatically the Oregon posting and the EnerSys
   // brochure are the same string. C reproduced that destruction by execution.
   // Ruling 49a refused to reclassify this page to make the one-signal design
   // available. If these two ever go red, the one-signal design has been
   // reintroduced.
+  //
+  // ENCODING REPAIR, round 20 C item 0. This title, and 16 other lines in this
+  // file, were mangled when round 17's C wrote them (commit `909b6bf`): a
+  // UTF-8 punctuation mark was read back through a Chinese code page, so
+  // `– ` became two junk characters. The separator here is restored to the EN
+  // DASH that the SAME commit's own doc comment in `jobweb.ts` spells it with,
+  // unmangled. **Measured: this assertion's verdict does not depend on the
+  // separator at all** — en dash, em dash and a plain hyphen all pass — so no
+  // contract was ever riding on the mangled bytes. Nothing else changed.
   it.each([
-    "M.S. Internship Program 鈥?Oregon Center for Electrochemistry",
+    "M.S. Internship Program – Oregon Center for Electrochemistry",
     "M.S. Internship Program",
   ])("keeps round 11 A's live-sighted Oregon posting: %s", (title) => {
     expect(
@@ -1906,7 +1915,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
     ).toBe(false);
   });
 
-  // 6. THE `of` TRAP 鈥?the false fires B wrote to break its own first draft,
+  // 6. THE `of` TRAP — the false fires B wrote to break its own first draft,
   // and two more C added. Ordinary HR and university role titles, not exotica.
   // Six false fires without the closed function-word exclusion, zero with it,
   // and no catch is lost either way.
@@ -1932,7 +1941,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
       "enersys.com",
     ],
     ["the same shape at an UNRELATED host", "Acme Fellowship Program", "othersite.test"],
-    ["鈥ith a colon tail, unrelated host", "Acme Internships: Apply Now", "othersite.test"],
+    ["…with a colon tail, unrelated host", "Acme Internships: Apply Now", "othersite.test"],
     ["a programme designation, unrelated host", "Acme Graduate Programme", "example.test"],
     ["the singular with no programme suffix", "Acme Internship", "acme.test"],
   ])("keeps %s", (_label, title, host) => {
@@ -1962,7 +1971,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
   // THEM. C measured the widening on the real file: at a two-token owner budget
   // it turns `Tesla Careers` and `Kairos Power Careers` into silence; at three
   // tokens it additionally breaks the shipped `Idaho National Laboratory
-  // Careers` assertion 鈥?THREE shipped tests red in total.
+  // Careers` assertion — THREE shipped tests red in total.
   it.each([
     ["Tesla Careers", "Tesla"],
     ["Kairos Power Careers", "Kairos Power"],
@@ -1982,7 +1991,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
   // that catches it scores 95/95 on C's corpus against the shipped 94/95, and
   // it is refused because the miss costs only the status quo while the widened
   // form is one careless edit away from the shipped assertion above.
-  it("does NOT drop a three-token owner 鈥?a deliberate, named miss", () => {
+  it("does NOT drop a three-token owner — a deliberate, named miss", () => {
     expect(
       isListingPage("Idaho National Laboratory Internships", "inl.gov", "/internships"),
     ).toBe(false);
@@ -1991,7 +2000,7 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
 
 // B17-02 (round 17, Rulings 48a + 49b): A LIST OF PROGRAMME AREAS IN THE
 // EMPLOYER SLOT. Landed in the SAME commit as B17-01 because B17-01 removes the
-// only page a census has ever sighted this value on 鈥?land the drop alone and
+// only page a census has ever sighted this value on — land the drop alone and
 // the defect stops being visible without stopping being real. C re-measured:
 // 4/4 caught, 0 of 46 real employer names destroyed.
 describe("programme-area lists are not employers (B17-02)", () => {
@@ -2003,7 +2012,8 @@ describe("programme-area lists are not employers (B17-02)", () => {
     });
 
   // 1. THE LIVE VALUE IS VETOED, asserted on the KEPT REAL-POSTING FORM. An
-  // assertion on the brochure row would be vacuous 鈥?B17-01 drops that page 鈥?  // and would pass for the wrong reason. This is the row that proves the wrong
+  // assertion on the brochure row would be vacuous — B17-01 drops that page —
+  // and would pass for the wrong reason. This is the row that proves the wrong
   // value is a property of the BOARD'S TITLE TEMPLATE, not of the brochure.
   it("renders no employer for the live programme-area list on a real posting", () => {
     const item = render(
@@ -2037,7 +2047,7 @@ describe("programme-area lists are not employers (B17-02)", () => {
   // 4. THE SHIPPED STRIP IS UNTOUCHED, END TO END. The first draft of this
   // guard also allowed `careers` / `vacancies` / `openings` in the trailing-noun
   // list and destroyed FIVE real employers, one of them the shipped
-  // `Alphabet, Inc.` assertion 鈥?a real company name with a comma plus trailing
+  // `Alphabet, Inc.` assertion — a real company name with a comma plus trailing
   // careers chrome is the same shape. Those words are
   // `TRAILING_CAREERS_CHROME_RE`'s territory. C reproduced all five by
   // execution. Do not widen the list.
@@ -2060,11 +2070,11 @@ describe("programme-area lists are not employers (B17-02)", () => {
 
   // 5. THE COORDINATION REQUIREMENT IS LOAD-BEARING. The first five real names
   // below end in a plural programme noun and carry no comma, ampersand or
-  // `and`. Dropping the coordination conjunct destroys every one of them 鈥?C
+  // `and`. Dropping the coordination conjunct destroys every one of them — C
   // measured it. 6. THE COORDINATION-COMMA TRAPS follow: real names that DO
   // carry the coordinator but do not end in a programme noun. 7. `United
   // Nations Development Programme` is the hardest "must match nothing" case
-  // (Ruling 31) 鈥?the SINGULAR is deliberately not in the list.
+  // (Ruling 31) — the SINGULAR is deliberately not in the list.
   it.each([
     "Advanced Technology Programs",
     "Head Start Programs",
@@ -2090,7 +2100,7 @@ describe("programme-area lists are not employers (B17-02)", () => {
 
   // 8. THE FORBIDDEN REPAIR IS LOCKED OUT BY A TEST, NOT A COMMENT. Adding
   // `programs?` to `TRAILING_CAREERS_CHROME_RE` turns the live value into
-  // `Battery Cell, R&D & Gigafactory` 鈥?a DIFFERENTLY WRONG value, which is
+  // `Battery Cell, R&D & Gigafactory` — a DIFFERENTLY WRONG value, which is
   // Ruling 48a's named forbidden move. C measured that widening on the real
   // file: it produces three differently-wrong values AND destroys SEVEN real
   // names, including `United Nations Development Programme` above. The strip

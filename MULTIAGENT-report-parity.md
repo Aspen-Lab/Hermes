@@ -270,12 +270,114 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 18:02 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 18:04 UTC — ROUND 20 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 18:33 UTC — ROUND 20 C IS
+                  COMPLETE. ALL THREE ITEMS SHIPPED.** **One commit per item, each
+                  pushed immediately** (`7372d40`, `51532b4`, plus this hand-off).
+                  Claimed the lock cleanly (`d7521ea`) after `git pull --ff-only`
+                  and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read before every
+                  commit and in the output of every push (§3). **NO TEST DELETED.
+                  NO SHIPPED ASSERTION EDITED.** Harness lived outside `src/`
+                  (`web/zz-r20c/`, own vitest config, include pattern
+                  `zz-r20c/**/*.probe.ts`) and was **deleted before every commit**;
+                  `git status --porcelain --untracked-files=all` confirmed only the
+                  intended files each time. State file appended by writing each
+                  entry to a scratchpad file and `cat`-ing it in from bash — **NOT
+                  PowerShell**; the three appends were **pure insertions (135, 155
+                  and this one, ZERO deletions) with ZERO mojibake**, verified
+                  programmatically against the appended region.
+
+                  **C RE-MEASURED B's TABLES BY EXECUTION BEFORE WRITING A LINE OF
+                  CODE, USING B's OWN METHOD — every candidate a real copy of the
+                  shipped file with one textual edit, the control copy's verdict
+                  asserted equal to the genuinely imported function (16 of 16 and
+                  13 of 13, ZERO mismatches). EVERY LOAD-BEARING CLAIM OF B's
+                  HELD**, including the four-way replay's separation: the guarded
+                  record still carries `isOnline: true`, so item 2 alone still
+                  cannot move the card.
+
+                  **ITEM 1 — B20-02 SHIPPED (Ruling 55b's order: item 2 first).**
+                  `extractPlace` now distrusts an address whose `addressLocality`
+                  repeats the record's own `Place.name`, and fails the WHOLE branch
+                  closed so the body-text layer answers. **Measured: 0 of 14
+                  shipped fixture-by-kind combinations change; the German-workshop
+                  fixture keeps `Oldenburg`; blanking only the city was re-measured
+                  and is genuinely insufficient** (`{region:"Italy",
+                  country:"Italy"}` still stops the chain). **8 new tests.**
+
+                  **ITEM 2 — B20-01 SHIPPED AT ALL SIX CALL SITES (Ruling 55a),**
+                  off ONE exported predicate: `facets.ts` now exports
+                  `hasPhysicalPlace` (extracted from `opportunityFormat` — a pure
+                  refactor **proved by execution**, since breaking it turns 2
+                  shipped `facets.test.ts` tests red) and `isOnlineOnly`. **2 of 13
+                  card rows change, both hybrid; all 7 genuinely-online shapes
+                  still render `Online`. 15 new tests, one new test file.**
+
+                  **ITEM 0 — THE MANGLED-TEXT REPAIR IS DONE AND NOTHING MOVED.
+                  387 verdicts before, 387 after, IDENTICAL SEQUENCE**, compared
+                  mark-for-mark rather than by total. The lost characters were
+                  **recovered from evidence**: the byte pattern named the codec,
+                  and **the same commit's own doc comment in `jobweb.ts` named the
+                  en dash in the one TEST-INPUT string.** C also measured that the
+                  Oregon assertion passes with an en dash, an em dash **and** a
+                  plain hyphen, so no contract was riding on the damage.
+
+                  **THREE THINGS C REPORTS AGAINST ITS OWN CONVENIENCE.**
+                  (1) **C's first pass at item 1 was VACUOUS in one place** —
+                  dropping BOTH presence conjuncts of the new guard turned **zero**
+                  tests red. C found it by mutation, added the country-only case
+                  that closes it, and **documented in the test file that dropping
+                  EITHER conjunct alone is structurally untestable** (Ruling 53b).
+                  (2) **C changed ONE line B did not list** — the feed tile's ICON,
+                  which would otherwise have printed a globe beside `Rome, Italy`.
+                  Named, not smuggled. (3) **C did NOT discharge B's live
+                  acceptance check and did NOT discharge Ruling 55c's debt** —
+                  there was **no live pull and no page fetch of any kind** this
+                  turn, so B's page facts stay INHERITED and both live
+                  confirmations pass to A.
+
+                  **THE GATE AFTER EACH ITEM.** Cold baseline re-measured first:
+                  **90 files / 1573 tests, 1572 passing.** After item 1:
+                  **1581/1580.** After item 2: **91 files / 1596 / 1595.** After
+                  item 0: **1596/1595, unchanged** — as a hygiene-only change must
+                  be. **+23 tests, all new, all passing.** Sole failure every time
+                  the standing `benchmark.test.ts` live-search flake at **`:109`**
+                  (`expected false to be true`) — the same one of its three
+                  recorded forms A and B saw. `npx tsc --noEmit` clean;
+                  `npx eslint` exactly the one standing `quiz.tsx:46` error;
+                  `scoring.test.ts` (events and jobs) + `job-cleanup.test.ts` by
+                  name **108/108**; **`enrich.test.ts` SOLO
+                  (`src/lib/opportunities/enrich.test.ts`) 53/53 — the SolarPACES
+                  lock is intact**; `jobweb.test.ts` solo 387/387;
+                  `facets.test.ts` 11/11. `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+
+                  **ONE NEW ITEM FOR THE MANAGER, RECORDED NOT FIXED.**
+                  `papers/report-stream.test.ts:44` carries the SAME class of
+                  damage — one mangled middle dot, **inside a test string** — but
+                  it is outside item 0's named scope, so C recorded it and declined
+                  the widening. **`text/clean.ts` is NOT damage** and is now
+                  measured rather than merely suspected: it holds zero mangled
+                  characters and its odd inventory is a text-normaliser's
+                  legitimate one.
+
+                  **No credential read, printed, logged or written. NO live
+                  pipeline pull and NO PAGE FETCH OF ANY KIND** — `euagenda.eu` NOT
+                  fetched (45a); Ruling 41c's three hosts NOT hunted (45b); no
+                  job-side host fetched; no third-party page text entered context
+                  and none was treated as an instruction. No branch, worktree or
+                  PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **C
+                  raised NO new `POLICY — manager decides` and decided none of the
+                  open ones**; Ruling 55a/b/c were implemented as ruled, not
+                  re-opened. Full detail in §4's three "Round 20 — Agent C"
+                  entries.
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-14 18:04 UTC — ROUND 20 B WAS
                   COMPLETE. THE ROME CASE IS TWO GAPS, NOT ONE, AND IT IS PROVED
                   BY EXECUTION.** Both items (Ruling 54a), **one commit each, each
                   pushed immediately** (`c1c9580`, `1e4492a`), plus this hand-off.
@@ -2889,7 +2991,221 @@ ROUND:            **20 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found two
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **C — Implementer, round 20.** Round 20 B is COMPLETE. Both items
+WHOSE TURN:       **A — round 21, GATE CANDIDATE ROUND.** Round 20 C is COMPLETE:
+                  **all three items shipped, one commit each, each pushed**
+                  (`7372d40`, `51532b4`, plus the hand-off). Claim the §0d lock
+                  first, always. **A measures; A does not change code and does not
+                  investigate causes (§2).** Full evidence is in §4's three
+                  "Round 20 — Agent C" entries — **work from those, not from this
+                  summary.**
+
+                  **WHY THIS IS A GATE CANDIDATE ROUND.** Round 20's only two
+                  unexplained differences were the SAME ROW's two wrong values, and
+                  **both now have shipped fixes**. If A finds zero unexplained
+                  differences, the hand-off is the MANAGER, not B — see THE GATE
+                  RULE below.
+
+                  **WHAT THE TWO FIXES ARE EXPECTED TO DO, STATED SO A CAN FALSIFY
+                  THEM RATHER THAN CONFIRM THEM.**
+                  - **B20-02 (shipped `7372d40`) — the self-distrusting address
+                    guard.** `chemistryworldconference.com`'s `place.city` should
+                    no longer be a hotel name. **Expected: `place` reads
+                    `{city:"Rome", country:"Italy"}` and the LOCATION FACET BUTTON
+                    reads `Rome`, not `NH Villa Carpegna`.** The guard fires only
+                    when a record's `addressLocality` repeats its own `Place.name`,
+                    so **no well-formed page may change** — 0 of 14 shipped
+                    fixture-by-kind combinations moved.
+                  - **B20-01 (shipped `51532b4`) — hybrid attendance at ALL SIX
+                    render sites (Ruling 55a).** **Expected: the card's LOCATION
+                    tile reads `Rome, Italy · …` instead of `Online`, AND the
+                    Format filter chip and the card now AGREE on that row** — the
+                    self-contradiction round 20 B measured (chip `hybrid`, card
+                    `Online`) should be gone. The two EVENT-REPORT sites carry the
+                    same change, so **plate 03's WHERE tile and subtitle should
+                    name the city too.**
+                  - **TOGETHER: the acceptance check round 20 B wrote and C did NOT
+                    discharge — on a LIVE pull, `chemistryworldconference.com`
+                    renders `Rome, Italy · …` on the card and `Rome` in the
+                    Location facet.** C ran no live pull and no page fetch at all,
+                    so **this is A's to measure, and A should report it as a
+                    finding either way.**
+
+                  **RULING 55c's DEBT — A's OWN LINE, DO NOT FOLD IT INTO ANYTHING
+                  ELSE.** B20-01's must-keep — that a **genuinely-online** event
+                  still renders `Online` — is proved only by **CONSTRUCTED** shapes
+                  built from each source's own code, which C landed as seven
+                  shipped tests. **Round 20's live pool contained NO genuinely
+                  online event at all, so the must-keep has never had a live
+                  witness.** **Ruling 55c: the FIRST round a genuinely-online event
+                  appears live, A confirms it still renders `Online`, and says so
+                  as its own named line.** If none appears again, **say that
+                  plainly and carry the debt forward** — an absent witness is not a
+                  confirmation.
+
+                  **RULING 52b — FULL-PHRASE COMPANY-NAME COLLISIONS. THE RUNNING
+                  COUNT IS SETTLED: 2 ADMISSIONS ACROSS r19–r20, AND 7 BLOCKED IN
+                  r20.** Round 20 measured **8 instances, 1 ADMITTED
+                  (`employbl.com` / `Battery Ventures`, pool 5 of 5), 7 DROPPED**;
+                  round 19's own §4 measurement carries the same firm as the other
+                  admission. **Report it every round, with the running count, even
+                  at zero, and say whether each row was ADMITTED or DROPPED.** Not
+                  the short-acronym class — that stays Ruling 33, and 33 does NOT
+                  widen. **No fix is authorised; this is the evidence line that
+                  would justify one.**
+
+                  **THE ITEM-KIND COLUMN IS STANDING ON BOTH SURFACES (Ruling 50a).
+                  Report BOTH lines every round, even at zero.** Round 20's numbers
+                  to beat: **event item-KIND 0 of 16 — a SECOND consecutive zero,
+                  it holds; job item shape 0 of 10 counted — a RETURN to zero after
+                  one round away, NOT a third consecutive zero.** One row
+                  (`grad.wisc.edu`) is UNRESOLVED and excluded from the job
+                  denominator, exactly as rounds 19 and 20 excluded it. **Say
+                  plainly whether each holds a further round, and report the
+                  denominator if it moves.**
+
+                  **RULING 48b's OFFERED-ROW SCAN, BOTH COLUMNS, IS STILL
+                  REQUIRED.** Round 20: **CORRECTLY DROPPED 44 of 102 (43.1%);
+                  WRONGLY DROPPED 0 of 102 (0.0%) — FOURTH CONSECUTIVE ZERO.**
+                  Round 19 was 40 of 96 / 0 of 96; round 18 45 of 102 / 0 of 102;
+                  round 17 34 of 292. **Give rates AND counts, and report the
+                  denominator plainly if it moves again.**
+
+                  **ALL TALLIES, WITH THEIR RUNNING COUNTS — CARRY THEM FORWARD, DO
+                  NOT RESTART THEM. These are round 20's MEASURED figures (Ruling
+                  54b: measured only, never inherited-and-restated).**
+                  - **Ruling 52b:** r20 **8 instances, 1 ADMITTED, 7 DROPPED**;
+                    **cumulative admissions 2 across r19–r20**, the same firm both
+                    times.
+                  - **Ruling 33:** r20 **0 of 4**; running r9 1/4, r10 0/3, r11
+                    0/4, r12 0/3, r13 1/6, r14 0/4, r15 0/4, r16 0/3, r17 0/2, r18
+                    0/3, r19 0/3, r20 0/4 → **cumulative 2 of 43 — NOT closed.**
+                    Nothing under 5 characters was matched anywhere, **FOURTH
+                    consecutive round.**
+                  - **Ruling 34a, employer (job side):** r20 **0 of 4 non-null**;
+                    running r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8, r16 0/6,
+                    r17 1/6, r18 0/6, r19 0/5, r20 0/4, **cumulative 5 of 75.**
+                    `careerservices.upenn.edu`'s named accepted cost ABSENT for the
+                    third round running.
+                  - **Event name (fidelity):** r20 **0 of 16 — EIGHTH consecutive
+                    zero.** r19 0/14, r18 0/15, r17 0/13, r16 0/14, r15 0/11, r14
+                    0/13, r13 0/14; r12 was 8 of 17 (47.1%).
+                  - **Event side of 34a:** r20 **1 of 16** — the same named
+                    accepted cost (`batteryinnovationsummit.com` → `The Battery
+                    Saloon`, Ruling 39b), EIGHTH round running; running r13 1/14,
+                    r14 1/13, r15 1/11, r16 1/14, r17 1/13, r18 1/15, r19 1/15, r20
+                    1/16, **cumulative 8 of 111 — a second distinct instance is
+                    ABSENT, so Ruling 42b does NOT fire.**
+                  - **Job summaries:** r20 **ZERO open defects — SIXTH consecutive
+                    clean column.**
+                  - **Ruling 37:** r20 **1 of 3, baseline only, NINTH round
+                    running**; Ruling 44's label-miss sub-count **ZERO**, and the
+                    one candidate string is 37's run-on and **NOT also** a 44
+                    label-miss — do not count it twice.
+                  - **Rulings 46a and 46b:** **ZERO live sightings each, FIFTH
+                    round counted**, and MEASURED rather than merely absent — all
+                    three named strings were replayed against the shipped guard and
+                    all three still DROP. A zero means "absent from this round's
+                    data", not "the rule stopped working": **replay the named
+                    strings again.**
+                  - **Ruling 36 (`ruggedthz.com`):** STAYS CLOSED, zero, **EIGHTH
+                    consecutive round, MEASURED not absent** — the host was in the
+                    pool 5 of 5 with the byte-identical correct name.
+                  - **Ruling 39c:** **MEASURABLE for the first time in round 20 and
+                    it FIRED** (`openmc.discourse.group`, clause isolated), graded
+                    `live-confirmed, organic`. **Do not write it up as a
+                    consecutive confirmation unless a thread is actually offered
+                    again.**
+                  - **B14-02:** still owed, **SIXTH round running; zero `]` on any
+                    card value across 28 majority rows in five runs. NOT an open
+                    difference**, graded `targeted-confirmed, organically
+                    unmeasured`.
+
+                  **THRESHOLDS AFFIRMED, UNCHANGED:** the target is **0%, not 5%**
+                  (§2, raised 2026-08-03). Every element plates 02 and 03 carry must
+                  be present, in the plate's shape and order. **Do not round down,
+                  do not call a difference cosmetic to clear the gate, and do not
+                  stop reporting something because it has appeared in three
+                  rounds.** The only elements excluded from the count are those
+                  ruled on in §1d. **The user REAFFIRMED this strict Ruling-23 gate
+                  on 2026-08-14 — grep "user reaffirmed the gate" — so no agent
+                  re-scopes it.**
+
+                  **STANDING EXCLUSIONS — WHAT A MUST NOT TREAT AS OPEN, BY NAME:**
+                  `careerservices.upenn.edu` (34a), `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's
+                  label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29), `ecs.confex.com`'s
+                  and `euchems2026.eu`'s honest hosts (39a/40), the document-URL
+                  retarget (42c), **`euagenda.eu` (45a — permanently excluded, DO
+                  NOT FETCH)**, Ruling 41c's three hosts (45b), 46a's false fire,
+                  46b's two titles, round 16's brand-first search page and its
+                  accepted cost, round 17's named three-token miss (`Idaho National
+                  Laboratory Internships`), the `jobs.polymer.co` Spring/Fall
+                  mismatch, round 18's three named under-catches (`talent.com`,
+                  `bebee.com`, `xtalks.com` — **`xtalks.com` is NOT closed**),
+                  `balchem.com` and `roberthalf.com` (B18-01), B18-03's
+                  em/en-dash-only restriction, B19-01's non-ASCII-slug under-catch
+                  and its comma-form accepted cost, B19-02's no-witness under-catch
+                  and its constructed nav-chrome cost, the seven latent
+                  brochure/index pages round 18 A recorded, **and NEW THIS ROUND:
+                  the `ccfddl.ts:146` hybrid under-catch** — that source overwrites
+                  its own venue string with the literal `"Online"` at ingestion, so
+                  a ccfddl hybrid still renders `Online` after B20-01; **zero live
+                  sightings, a DIFFERENT defect in a DIFFERENT file, documented
+                  known-remaining (Rulings 37/40)**. **None of these is in any pool,
+                  and a fix for them does NOT close a ranked item.**
+
+                  **THREE HYGIENE ITEMS FOR THE MANAGER, NOT FOR A TO RANK.**
+                  (1) `jobweb.test.ts`'s 17 mangled lines are **REPAIRED** by round
+                  20 C, verdicts identical before and after — **closed.**
+                  (2) **NEW: `papers/report-stream.test.ts:44` carries the SAME
+                  class of damage, one mangled middle dot INSIDE a test string.**
+                  C recorded it and declined the widening. **`text/clean.ts` is NOT
+                  damage** — measured, not assumed.
+                  (3) **NEW AND LARGEST: THIS FILE carries 176 of the same mangled
+                  character** (plus one letter-swallowing case), present in `HEAD`
+                  before round 20 C started; **C's 437 appended lines added ZERO**,
+                  counted in the diff rather than eyeballed. **This is why the
+                  append-with-`cat`-from-bash rule exists.** C did not repair it —
+                  §4 is append-only history and a bulk rewrite of this file is the
+                  operation most likely to lose a turn. **A decision for the
+                  manager.** **None of the three is a report-parity difference and
+                  A must not rank any of them.**
+
+                  **THREE `POLICY — manager decides` REMAIN OPEN AND A DECIDES
+                  NONE:** Ruling 33's full-phrase-collision question (**52b's tally
+                  is its evidence line**); Ruling 51b's five-pull majority scoring;
+                  Ruling 51c's `owned`-widening lead. **Plus B's declined COPY
+                  question:** the event report prints the FORMAT word (`"in person"`
+                  / `"online"`) beside the venue, which is now incomplete for a
+                  hybrid — writing `"hybrid"` there would be inventing plate copy,
+                  so nobody has. **A may report it as an observation; A does not
+                  decide it.**
+
+                  **THE GATE RULE, VERBATIM AND BINDING: zero unexplained
+                  differences → `WHOSE TURN: MANAGER — independent re-measurement
+                  before any close`; A never closes.** Ruling 30 is why: round 7's
+                  close was provisional because the verification was not
+                  independent. **A sets `GATE (0%): MET` and STOPS.** If any
+                  unexplained difference remains, the hand-off is B with a ranked
+                  list, exactly as rounds 15–20 went. Do not round down, do not call
+                  a difference cosmetic to clear the gate, and do not stop reporting
+                  something because it has appeared in three rounds. A difference A
+                  believes should not be closed is marked `POLICY — manager decides`
+                  with the gate left NOT MET — never quietly dropped.
+
+                  **THE GATE C LEFT BEHIND, for A to hold:** `cd web && npx vitest
+                  run && npx tsc --noEmit && npx eslint`. **91 files / 1596 tests,
+                  1595 passing** (up from 1573/1572 — C added 23, all passing, and
+                  one new test file), sole failure the standing `benchmark.test.ts`
+                  live-search flake at **`:109`**; typecheck clean; lint exactly the
+                  one standing `quiz.tsx:46` error. **`enrich.test.ts` SOLO 53/53 —
+                  the SolarPACES lock is intact.**
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-20 C
+                  briefing that follows is complete and was executed. Do not work
+                  from it.*
+                  **C — Implementer, round 20.** Round 20 B is COMPLETE. Both items
                   investigated (Ruling 54a), **one commit each, each pushed
                   immediately** (`c1c9580`, `1e4492a`), plus this hand-off. **B
                   changed no code (§2); C is the first role this round to touch
@@ -48118,3 +48434,148 @@ Ruling 33's full-phrase collisions, 51b's five-pull majority scoring, 51c's
 left.
 
 **Not done yet:** item 0 (the mangled-text hygiene repair in `jobweb.test.ts`).
+
+---
+
+### Round 20 — Agent C (item 0 of 3: the mangled-text hygiene repair. **DONE, AND NO VERDICT CHANGED — 387 verdicts before, 387 after, identical sequence.** The lost characters were RECOVERED from evidence, not guessed: the byte pattern names the encoding, and the SAME COMMIT's own doc comment names the one character that mattered.)
+
+**STATUS: DONE. ROUND 20 C IS COMPLETE.** Third of three items, queued by the manager
+at round 19's close and re-confirmed present by round 20 A. **NOT a report-parity
+difference and not ranked as one.** **NO TEST DELETED. NO ASSERTION EDITED. NO
+BEHAVIOUR CHANGED.**
+
+Branch re-read before this commit and in the push output (§3). No harness needed —
+the repair is measured with the shipped suite. Appended from bash with `cat >>` —
+**NOT PowerShell**, which is the write path that caused the damage being repaired.
+
+---
+
+## WHAT WAS BROKEN, AND WHAT ACTUALLY HAPPENED
+
+`web/src/lib/jobs/sources/jobweb.test.ts` carried **17 mangled lines** introduced by
+round 17's C in `909b6bf`. **The mechanism, identified by reading the raw bytes
+rather than by guessing:** UTF-8 punctuation was written out and then read back
+through a Chinese code page (GB18030/cp936). The three-byte UTF-8 sequence for a
+dash or an ellipsis (`E2 80 xx`) splits: `E2 80` decodes to a CJK character, and the
+third byte pairs with whatever followed it.
+
+- **Where the next byte was a space or a newline**, the pair is invalid GBK and the
+  decoder emitted a single `?` — **consuming the space, and in one place consuming
+  the NEWLINE, which is why two comment lines had been welded into one.**
+- **Where the next byte was a letter**, the pair was a VALID GBK code point, so a
+  real character was produced and **the letter was swallowed silently.**
+
+**18 occurrences of the `?` form on 17 lines** (one line carried two), plus **one
+letter-swallowing occurrence.** Confirmed by round-tripping the candidate bytes
+through the codec, not asserted.
+
+---
+
+## HOW THE LOST CHARACTERS WERE RECOVERED — EVIDENCE, NOT TASTE
+
+| case | evidence | restored to |
+|---|---|---|
+| 16 prose comments | this file already carries **108** em dashes and uses them for exactly this parenthetical construction | em dash + the space it ate |
+| the welded pair of comment lines | the trailing `?` sits immediately before `  // `, which only happens if a NEWLINE was consumed | em dash + newline (two lines again) |
+| the swallowed letter | **`A6 77` is the gb18030 encoding of the produced character** — so the original bytes were the ellipsis's third byte followed by `w` | `…with a colon tail, unrelated host` |
+| **the one TEST-INPUT string** | **`jobweb.ts:523`, written by the SAME agent in the SAME commit, carries this exact title UNMANGLED with an EN DASH** — and `jobweb.ts` has zero mangled characters | en dash + space |
+
+**THE ONE THAT MATTERED MOST WAS DECIDED BY AN IN-REPO WITNESS, NOT BY C's TASTE.**
+The Oregon must-keep title is a test INPUT, so getting it wrong would have changed
+what the test measures. The source module's own doc comment describing that very
+posting survived unmangled and spells it with an en dash. C used that.
+
+**AND C MEASURED WHETHER THE CHOICE COULD HAVE MATTERED, RATHER THAN ASSUMING IT
+DID NOT.** The Oregon assertion was run three ways — **en dash, em dash, and a plain
+ASCII hyphen. All three pass, 387/387 each time.** So no contract was ever riding on
+those bytes, and the repair is safe under every reading. **That is recorded in a
+comment at the test itself**, naming the item, the mechanism and the measurement, so
+a later round does not re-litigate it.
+
+---
+
+## THE PROOF THAT NOTHING MOVED
+
+Verdicts captured **before** the repair and **after**, from the same verbose run:
+
+| | tests | pass | fail | verdict sequence |
+|---|---|---|---|---|
+| before | 387 | 387 | 0 | — |
+| after | 387 | 387 | 0 | **IDENTICAL, position for position** |
+
+**Compared as a sequence of pass/fail marks, not as a total** — a total can hide two
+compensating changes. The only textual differences in the run output are four test
+NAMES, which changed because the repaired characters appear inside those names.
+**The escape clause did not need to fire: no verdict changed, so there was nothing to
+escalate.** Character count of the file is **identical before and after** (109,053)
+— every two-character piece of damage was replaced by exactly two characters.
+
+**Residual scan: ZERO mangled characters left in the file.** Its non-ASCII inventory
+is now 125 em dashes, 4 en dashes, 4 ellipses, two section marks, a middle dot and
+**the two legitimate accented letters in `Ingénieur Batterie` — which were never
+damage and were correctly left alone.**
+
+---
+
+## THE TWO OTHER FLAGGED FILES — NOW INVESTIGATED, AND THE ANSWER IS NOT THE SAME FOR BOTH
+
+Round 19's C flagged `clean.ts` and `report-stream.test.ts` as showing one line each
+and deliberately did not investigate them, on the honest ground that a Chinese
+character in a text-cleaning module may well be legitimate. **C investigated both
+cheaply and reports opposite answers:**
+
+- **`src/lib/text/clean.ts` — NOT DAMAGE. Leave it alone.** It contains zero
+  instances of the mangled character. Its non-ASCII inventory is exactly what a
+  text-normalising module should hold: subscripts, superscripts, the full family of
+  dash and quote variants, and a deliberate replacement character. **Round 19's C
+  was right to be cautious, and the caution is now discharged with a measurement.**
+- **`src/lib/papers/report-stream.test.ts:44` — IT IS DAMAGE, THE SAME CLASS, AND C
+  DID NOT FIX IT.** The line reads `label: "Reading <mangled>"`; the mangled
+  character's GBK bytes are byte-identical to the UTF-8 encoding of a **middle dot**,
+  so the original was a middle-dot separator. **It is INSIDE a test string, like the
+  Oregon title.** **It is outside item 0's scope** — the brief scoped this item to
+  `jobweb.test.ts` by name — and round 18's "take the fix, decline the widening"
+  precedent applies. **Recorded here for the manager as a one-character candidate
+  item, not fixed, not ranked, and not a report-parity difference.**
+
+---
+
+## AND THE BIGGEST INSTANCE OF THIS DAMAGE IS **THIS FILE** — 176 OF THEM
+
+Scanning for the same character while verifying that C's own appends were clean:
+**`MULTIAGENT-report-parity.md` itself carries 176 mangled characters plus one
+letter-swallowing case**, present in `HEAD` before C touched anything. **C's 437
+appended lines this turn introduced ZERO** — verified by counting the character in
+the ADDED lines of the diff, not by inspection.
+
+**This is the same mechanism, and it is exactly why every round's brief says to
+append with `cat` from bash and NOT with PowerShell.** The rule was learned the
+expensive way and the scar tissue is 176 characters long.
+
+**C did NOT repair them.** It is far outside item 0's scope, it is the loop's own
+append-only history (§4 says never rewrite history), and a bulk rewrite of this file
+is precisely the operation most likely to lose somebody's turn. **Recorded for the
+manager as a decision, not taken as one.**
+
+---
+
+## THE GATE AFTER ITEM 0
+
+**91 files / 1596 tests, 1595 passing — byte-for-byte what item 2 left**, as a
+hygiene-only change must be: no test added, none removed, none re-verdicted. Sole
+failure the standing `benchmark.test.ts` live-search flake at **`:109`**, the same
+one of its three recorded forms C saw on the cold baseline. `npx tsc --noEmit`
+**clean**; `npx eslint` exactly the one standing `quiz.tsx:46` error.
+**`jobweb.test.ts` solo: 387/387. `enrich.test.ts` SOLO
+(`src/lib/opportunities/enrich.test.ts`): 53/53 — the SolarPACES lock is intact.**
+`scoring.test.ts` (events and jobs) plus `job-cleanup.test.ts`: **108/108.**
+`PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**No credential read, printed, logged or written. NO live pipeline pull and NO PAGE
+FETCH OF ANY KIND** across all three items — `euagenda.eu` not fetched (45a), Ruling
+41c's three hosts not hunted (45b), no job-side host fetched, and B's page facts stay
+INHERITED. No third-party page text entered context and none was treated as an
+instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**Round 20 C is COMPLETE.**
