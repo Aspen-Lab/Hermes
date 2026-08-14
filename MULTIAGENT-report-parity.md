@@ -270,12 +270,144 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 16:41 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 16:37 UTC — ROUND 19 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 17:02 UTC — ROUND 19 C IS
+                  COMPLETE. BOTH ITEMS SHIPPED.** One commit each, **each pushed
+                  immediately** (`6d4a151`, `d2e0188`), plus this hand-off.
+                  Claimed the lock cleanly (`3cde653`) after `git pull
+                  --ff-only` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read before
+                  every commit and in the output of every push (§3). **NO TEST
+                  DELETED. NO TEST'S ASSERTION EDITED.** Harness lived outside
+                  `src/` (`web/zz-r19c/`, own vitest config, include pattern
+                  `zz-r19c/**/*.probe.ts`) and was **deleted before the FIRST
+                  commit and never rebuilt**; `git status --porcelain
+                  --untracked-files=all` confirmed only the intended files. State
+                  file appended by writing each entry to a scratchpad file and
+                  `cat`-ing it in from bash — **NOT PowerShell**; both appends
+                  were **pure insertions (171 and 183 lines, ZERO deletions) and
+                  introduced ZERO mojibake**, verified by diffing the appended
+                  region against `HEAD`.
+
+                  **C RE-MEASURED B's TABLES BY EXECUTION BEFORE WRITING A LINE
+                  OF CODE, USING B's OWN METHOD — EVERY CANDIDATE A REAL COPY OF
+                  THE SHIPPED FILE WITH ONE TEXTUAL EDIT, THE CONTROL COPY'S
+                  VERDICT ASSERTED EQUAL TO THE GENUINELY IMPORTED FUNCTION.
+                  EVERY LOAD-BEARING CLAIM OF B's HELD.**
+
+                  **ITEM 1 — B19-01 SHIPPED.** Three character classes in
+                  `isTopicLandingPage` gained five closed characters
+                  (`, . & ( )`). **B's "one clause, three tokens, not one token"
+                  finding REPRODUCED: leaf-only leaves A's live row KEPT,
+                  title-only leaves it KEPT, all three together DROP it.** The
+                  open-class form scored **verdict-for-verdict identical** on
+                  every row, so no open class was shipped. **`LISTING_TITLE_RE`
+                  untouched, not one byte; no host added; Ruling 46a not
+                  re-opened.** **The two false fires' un-punctuated twins were
+                  confirmed to ALREADY DROP under the shipped rule**, so the
+                  change removes an accidental shield rather than creating a
+                  failure mode — and both twins ship as documented-known
+                  controls. **31 new assertions.** Negative proof: **leaf TAIL
+                  has ONE uniquely-red test, leaf HEAD has TWO, and the TITLE
+                  TOKEN HAS NONE — structurally, exactly as B predicted**, so
+                  per **Ruling 53b it is DOCUMENTED AS UNTESTABLE in the test
+                  file** with a named test that asserts only the combined revert
+                  and forbids a later round replacing it.
+
+                  **ITEM 2 — B19-02 SHIPPED IN THE NARROW FORM (Ruling 53a).**
+                  The `<h1>` wins outright whenever one exists; the `<title>` is
+                  consulted only when there is none, behind the IDENTICAL
+                  containment gate, **cut at the first separator boundary that
+                  already satisfies that gate**. **`extendTruncatedTitle`
+                  untouched** — same floor, same strict-prefix test, same
+                  strictly-longer test. **B's two contract facts both
+                  re-measured and both hold:** an employer-prefixed `<title>`
+                  fails containment **even with no `<h1>` to fall back on**, and
+                  the raw form really does render the brand tail on the card.
+                  **`split()[0]` was measured and is worse than "wrong" — on a
+                  real title containing a separator it repairs NOTHING**, since
+                  the first boundary is shorter than the stem. **15 new
+                  assertions, `enrich.test.ts` run SOLO at 53/53.** Negative
+                  proof: **the narrow-vs-wide branch and the boundary walk EACH
+                  have exactly ONE uniquely-red test.**
+
+                  **THE ONE NUMBER C COULD NOT REPRODUCE, SAID PLAINLY.** B
+                  recorded the score moving **0.7209 → 0.7160 (cut) / 0.7107
+                  (raw)**; C measures **0.7398 → 0.7336 / 0.7243** on its own
+                  fixture. **B's row fixture is not recorded in §4, so the exact
+                  digits were never reproducible.** What C DOES confirm and what
+                  the shipped test locks: **the score moves DOWN, the cut form
+                  moves roughly HALF as far as the raw form, and
+                  `matchedKeywords` is IDENTICAL in all three forms.** C does not
+                  call the cost negligible. **Blast radius otherwise nil:**
+                  `company`, `fetchedPostingScope` (`unproven`) and `pageText`
+                  (`undefined`) identical across every candidate. **AND THE TWO
+                  ITEMS DO NOT INTERACT** — the repaired title is admitted by the
+                  ingestion gate both as shipped and with item 1's widening,
+                  re-checked by execution.
+
+                  **THREE COMMENT-ONLY CORRECTIONS LANDED, ASSERTIONS UNTOUCHED
+                  (Ruling 53b).** B named two, both in `enrich.test.ts`: the two
+                  no-`<h1>` tests now say the under-catch is "no `<h1>` **and**
+                  no usable `<title>`", walk the named hosts one by one, and
+                  **explicitly forbid recording `xtalks.com` as closed — it is
+                  the class newly reached but it is UNMEASURED and was NOT
+                  fetched.** **C FOUND A THIRD, IN `jobweb.test.ts`:** the
+                  must-keep labelled *"the COMMA form — punctuation the slug
+                  cannot carry"* is now mislabelled; it still passes because its
+                  SLUG has no comma, and a comment says so rather than the label
+                  being edited.
+
+                  **ONE PRE-EXISTING DEFECT FOUND IN PASSING AND DELIBERATELY NOT
+                  FIXED (escape clause).** `web/src/lib/jobs/sources/jobweb.test.ts`
+                  carries **17 lines of mojibake** — an en dash mangled to U+9225
+                  plus `?` — **introduced by ROUND 17's C in commit `909b6bf`**,
+                  found with `git log -S` rather than guessed. **One of the 17 is
+                  INSIDE A TEST STRING LITERAL** (the Oregon must-keep title), so
+                  that test asserts on a corrupted title. `src/lib/text/clean.ts`
+                  and `src/lib/papers/report-stream.test.ts` show one line each
+                  and were NOT investigated — a Chinese character in a
+                  text-cleaning module may well be legitimate. **C did not touch
+                  it: it is outside both items and repairing a string literal is
+                  editing a test (§3).** C's own new assertions deliberately
+                  avoid that string. **Flagged for the manager as a candidate
+                  future item.**
+
+                  **THE GATE AFTER EACH ITEM.** Cold baseline first: **90 files /
+                  1527 tests, 1526 passing.** After item 1: **1558 / 1557.**
+                  After item 2: **1573 / 1572** — **+46 tests, all new, all
+                  passing.** Sole failure every time the standing
+                  `benchmark.test.ts` live-search flake. `npx tsc --noEmit`
+                  clean; `npx eslint` exactly the one standing `quiz.tsx:46`
+                  error; `scoring.test.ts` + `job-cleanup.test.ts` by name 37/37;
+                  `enrich.test.ts` SOLO 53/53. **THE FLAKE MOVED WITHIN A SINGLE
+                  SESSION** — `:119` (`expected undefined to be 'Chicago'`) on the
+                  cold baseline, `:109` (the survivor check) on both post-item
+                  runs, **on an unchanged event pipeline. Still ONE flake, ONE
+                  test, THREE distinct assertion forms. Do not read it as a new
+                  defect.** `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+
+                  **No credential read, printed, logged or written. NO live
+                  pipeline pull and NO PAGE FETCH OF ANY KIND** — `careers.dupont.com`
+                  was NOT fetched, so A's two page facts stay **INHERITED**
+                  exactly as B left them, and no third-party page text entered
+                  context. **`euagenda.eu` NOT fetched (45a); Ruling 41c's three
+                  hosts NOT hunted (45b); B18-02's three named under-catch hosts
+                  NOT fetched.** No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **C
+                  raised NO new `POLICY — manager decides` and decided none of
+                  the three open** (Ruling 33's full-phrase collisions, 51b's
+                  five-pull majority scoring, 51c's `owned`-widening); B's one
+                  open policy was ruled as 53a and C implemented the ruling
+                  rather than re-opening it. Full detail in §4's two "Round 19 —
+                  Agent C" entries.
+                  ---
+                  Previous entry, kept for continuity: **finished the turn @
+                  2026-08-14 16:37 UTC — ROUND 19 B WAS
                   COMPLETE.** Both items (Ruling 52a), **one commit each, each
                   pushed immediately** (`a6a46c1`, `e4c7223`), plus this
                   hand-off. Claimed the lock cleanly (`83c5aa7`) after
@@ -2512,7 +2644,195 @@ ROUND:            **19 IS OPEN — A IS DONE, B IS NEXT.** Round 19 was briefed 
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **C — Implementer, round 19.** B's investigation is complete.
+WHOSE TURN:       **A — Reviewer, round 20. GATE CANDIDATE ROUND.** Round 19
+                  closed both of its ranked differences. **A's job is the live
+                  measurement (§2) — measure, do not fix, do not redesign.**
+                  Claim the §0d lock first, always.
+
+                  **THE TWO ITEMS TO LOOK FOR, AND HOW TO GRADE THEM. BOTH ARE
+                  BUILT ON A19's OWN LIVE 5-OF-5 SIGHTINGS, so unlike round 19's
+                  three they are NOT `targeted-confirmed` by construction — but
+                  an ABSENCE still proves nothing on its own (Ruling 39d/41a's
+                  variance class). Replay the strings if the rows do not
+                  reappear, the way rounds 17–19 A did.**
+
+                  - **B19-01 — the punctuated search-results slug.** EXPECTED
+                    EFFECT: **`jobright.ai`'s "1000+ results" row is GONE from
+                    the job pool** — no card headed `Internship, Battery
+                    Engineering (summer 2026) Jobs in United States`, and the
+                    reader simply sees one fewer job card. **NAMED ACCEPTED
+                    COST, NOT A NEW DIFFERENCE:** a role title that is a
+                    function-word-free noun phrase ending in a bare plural job
+                    noun, rendered `<phrase> in <place>`, with a slug that is
+                    exactly that phrase, is dropped — **now including its comma
+                    form**. B15-01 priced that cost; B19-01 only removed
+                    punctuation as an accidental shield over it, and the
+                    un-punctuated twins already dropped. **If A SIGHTS that shape
+                    live, that observation is what reopens the trade — and it
+                    would be the first in twelve rounds of censuses.** **NAMED
+                    UNDER-CATCH:** a non-ASCII slug is deliberately missed and is
+                    not fixable by any character class, because `new URL()`
+                    percent-encodes the path first.
+                  - **B19-02 — the truncated role title, second witness.**
+                    EXPECTED EFFECT: **`careers.dupont.com`'s card renders the
+                    FULL un-truncated title and NO brand tail** — `Process R&D
+                    Senior Scientist job in Wilmington, Delaware, United States
+                    of America`, with no `| Science & Technology jobs at Dupont`
+                    and no ellipsis. **REACH IS A LIMIT, NOT A DEFECT, AND THE
+                    LIMIT MOVED:** `talent.com` and `bebee.com` are unchanged (no
+                    page fetches at all) and rows past position 40 never get a
+                    page. **`xtalks.com` IS THE CLASS THIS ITEM NEWLY REACHES BUT
+                    IT IS UNMEASURED — nobody has fetched that page, it is a
+                    standing exclusion, and A must NOT record it as closed.**
+                    **NAMED NEW COST, CONSTRUCTED:** a board's own `<title>` that
+                    begins with the role and continues into listing chrome is not
+                    left alone. **A SIGHTING OF THAT ON REAL DATA IS A GENUINE
+                    NEW FINDING.** **A DISCLOSED PRICE, NOT A DEFECT:** the row's
+                    relevance score moves DOWN slightly; `matchedKeywords` does
+                    not change.
+
+                  **RULING 52b — A NEW TALLY LINE STARTS THIS ROUND, ON BOTH
+                  SURFACES: FULL-PHRASE COMPANY-NAME COLLISIONS.** Not the
+                  short-acronym class (that stays Ruling 33, and 50b stands — 33
+                  does NOT widen). This counts a profile topic matching a
+                  COMPANY'S OWN NAME in full: `battery` matching **`Battery
+                  Ventures`**, a private-equity firm (round 19, job side), and
+                  round 18's event-side case. **Two rounds, two surfaces, one
+                  mechanism.** **Report it every round from now on, with a
+                  running count, even at zero, and say whether the row was
+                  ADMITTED or DROPPED** — round 19's three instances were all
+                  DROPPED, so none was an admission. **No fix is authorised. This
+                  is the evidence line that would justify one**, per the standing
+                  accepted-cost machinery.
+
+                  **THE ITEM-KIND COLUMN IS STANDING ON BOTH SURFACES (Ruling
+                  50a). Report BOTH lines every round, even at zero.** Round 19's
+                  numbers to beat: **event item-kind 0 of 15 — the FIRST zero
+                  that column has recorded; job item shape 0 of 12, a SECOND
+                  consecutive zero.** Say plainly whether each holds a further
+                  round.
+
+                  **RULING 48b's OFFERED-ROW SCAN, BOTH COLUMNS, IS STILL
+                  REQUIRED.** Round 19: **CORRECTLY DROPPED 40 of 96 (41.7%);
+                  WRONGLY DROPPED 0 of 96 (0.0%), THIRD CONSECUTIVE ZERO.** Round
+                  18 was 45 of 102 / 0 of 102; round 17 34 of 292. **Give rates
+                  AND counts, and report the denominator plainly if it moves
+                  again.** **AND EXPECT THE CORRECT-DROP COUNT TO RISE BY AT
+                  LEAST ONE CLASS** — B19-01 drops a shape that was previously
+                  kept.
+
+                  **ALL TALLIES, WITH THEIR RUNNING COUNTS — CARRY THEM FORWARD,
+                  DO NOT RESTART THEM.**
+                  - **Ruling 52b (NEW, starts this round):** full-phrase
+                    company-name collisions, both surfaces. Round 19 evidence: 3
+                    instances, **all DROPPED, so ZERO admissions.** Cumulative
+                    admissions **0**.
+                  - **Ruling 33:** r19 0 of 3, **cumulative 2 of 39 — NOT
+                    closed.** Zero short-acronym admissions for three rounds
+                    running. **The `POLICY` on whether 33 should reach
+                    full-phrase collisions is now ANSWERED by 52b as a TALLY, not
+                    as a widening — A does not widen the rule and does not
+                    inflate either count.**
+                  - **Ruling 34a, employer:** r19 0 of 5. Running r11 1/9, r12
+                    1/10, r13 0/12, r14 1/9, r15 1/8, r16 0/6, r17 1/6, r18 0/6,
+                    r19 0/5, **cumulative 5 of 71.**
+                  - **Event name (fidelity):** r19 **0 of 15 — SEVENTH
+                    consecutive zero.**
+                  - **Event side of 34a:** running r13 1/14, r14 1/13, r15 1/11,
+                    r16 1/14, r17 1/13, r18 1/15, r19 1/15, **cumulative 7 of 95
+                    — second distinct instance ABSENT, so Ruling 42b does NOT
+                    fire, seventh round running.**
+                  - **Job summaries:** **ZERO open defects — FIFTH consecutive
+                    clean column.**
+                  - **Ruling 37:** 1 of 3, baseline only, **eighth round
+                    running**; Ruling 44's sub-count **ZERO**.
+                  - **Rulings 46a and 46b:** ZERO each, and the zero means
+                    "absent from this round's data", not "the rule stopped
+                    working" — **replay the named strings.**
+                  - **Ruling 36:** STAYS CLOSED, zero, **seventh consecutive
+                    round, MEASURED not absent.**
+                  - **Ruling 39c:** **NOT MEASURABLE in round 19** — no forum
+                    thread offered, so B14-01 had nothing to fire on. **Do not
+                    write it up as a consecutive confirmation unless a thread is
+                    actually offered.**
+                  - **B14-02:** still owed, **fifth round running; zero `]` on
+                    any card, any posting, any run. NOT an open difference.**
+
+                  **THRESHOLDS AFFIRMED, UNCHANGED:** the target is **0%, not
+                  5%** (§2, raised 2026-08-03). Every element plates 02 and 03
+                  carry must be present, in the plate's shape and order. **Do not
+                  round down, do not call a difference cosmetic to clear the
+                  gate, and do not stop reporting something because it has
+                  appeared in three rounds.** The only elements excluded from the
+                  count are those ruled on in §1d. **The user REAFFIRMED this
+                  strict Ruling-23 gate on 2026-08-14 — grep "user reaffirmed the
+                  gate" — so no agent re-scopes it.**
+
+                  **STANDING EXCLUSIONS — WHAT A MUST NOT TREAT AS OPEN, BY
+                  NAME:** `careerservices.upenn.edu` (34a), `The Battery Saloon`
+                  (39b), `careers.gevernova.com`'s colonless run-on (37), Ruling
+                  44's label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29), `ecs.confex.com`'s
+                  and `euchems2026.eu`'s honest hosts (39a/40), the document-URL
+                  retarget (42c), **`euagenda.eu` (45a — permanently excluded, DO
+                  NOT FETCH)**, Ruling 41c's three hosts (45b), 46a's false fire,
+                  46b's two titles, round 16's brand-first search page and its
+                  accepted cost, round 17's named three-token miss
+                  (`Idaho National Laboratory Internships`), the
+                  `jobs.polymer.co` Spring/Fall mismatch, round 18's three named
+                  under-catches (`talent.com`, `bebee.com`, `xtalks.com` — **and
+                  `xtalks.com` is NOT closed by B19-02, see above**),
+                  `balchem.com` and `roberthalf.com` (B18-01), B18-03's
+                  em/en-dash-only restriction, **B19-01's non-ASCII-slug
+                  under-catch and its comma-form accepted cost**, **B19-02's
+                  no-witness under-catch and its constructed nav-chrome cost**,
+                  and the seven latent brochure/index pages round 18 A recorded —
+                  **none is in any pool, and a fix for them does NOT close a
+                  ranked item.**
+
+                  **ONE PRE-EXISTING DEFECT IS ON THE TABLE FOR THE MANAGER, NOT
+                  FOR A:** `jobweb.test.ts` carries 17 lines of mojibake from
+                  round 17's C (`909b6bf`), one of them inside a test string
+                  literal. **It is NOT a report-parity difference and A must not
+                  rank it.** Recorded in §4's round-19 C item-1 entry.
+
+                  **THREE `POLICY — manager decides` REMAIN OPEN AND A DECIDES
+                  NONE:** Ruling 33's full-phrase-collision question (**now
+                  carrying 52b's tally as its evidence line**); Ruling 51b's
+                  five-pull majority scoring; and Ruling 51c's `owned`-widening
+                  lead (a future item, NOT part of B19-02, and deliberately not
+                  bolted on).
+
+                  **THE GATE RULE, VERBATIM AND BINDING: zero unexplained
+                  differences → `WHOSE TURN: MANAGER — independent re-measurement
+                  before any close`; A never closes.** Ruling 30 is why: round
+                  7's close was provisional because the verification was not
+                  independent. **A sets `GATE (0%): MET` and STOPS.** If any
+                  unexplained difference remains, the hand-off is B with a ranked
+                  list, exactly as rounds 15–19 went. Do not round down, do not
+                  call a difference cosmetic to clear the gate, and do not stop
+                  reporting something because it has appeared in three rounds. A
+                  difference A believes should not be closed is marked
+                  `POLICY — manager decides` with the gate left NOT MET — never
+                  quietly dropped.
+
+                  **THE GATE C LEFT BEHIND, for A to hold:** `cd web && npx
+                  vitest run && npx tsc --noEmit && npx eslint`. **90 files /
+                  1573 tests, 1572 passing** (up from 1527/1526 — C added 46,
+                  all passing), sole failure the standing `benchmark.test.ts`
+                  live-search flake; typecheck clean; lint exactly the one
+                  standing `quiz.tsx:46` error. **The flake has now presented on
+                  THREE distinct assertions and moved WITHIN a single session;
+                  it is one test and it is excluded. Do not skip the live
+                  benchmark via `PEER_PROFILE_SNAPSHOT_PATH`.**
+
+                  **`GATE (0%): NOT MET`.** Only round 20's A's live measurement
+                  can move it, and only the manager closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-19 C
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **C — Implementer, round 19.** B's investigation is complete.
                   **TWO items, and they are INDEPENDENT — no shared file, no
                   shared function, and B checked by execution that they do not
                   interact.** Work them in the order below anyway, one commit
