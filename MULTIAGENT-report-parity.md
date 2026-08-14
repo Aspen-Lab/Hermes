@@ -275,8 +275,30 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 07:36 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **IN PROGRESS — round 13 A, part 1 of 4 banked @ 2026-08-14
-                  07:55 UTC. Lock still HELD.** Part 1 (R13 event names) is
+STOPPED BECAUSE:  **IN PROGRESS — round 13 A, parts 1 AND 2 of 4 banked @
+                  2026-08-14 08:06 UTC. Lock still HELD.**
+                  **Part 2 (employer field): 0 of 12 non-null employer values
+                  wrong by the standing majority method (0%), down from round
+                  12's 3 of 10 (30%).** `talents.vaia.com` renders **`Savannah
+                  River National Laboratory`** — B12-07 confirmed live, 5 of 5.
+                  `openmc.discourse.group`'s `Page 2` is GONE (B12-06 confirmed)
+                  — but in **1 pull of 5** the next chrome segment of the same
+                  title, **`Announcements`**, took the slot: reported as an open
+                  defect at 1-in-5 frequency even though majority-scoring hides
+                  it. Honest-absence count, employer side: **8 of 20 postings,
+                  every instance judged neutral-or-better, zero findings.**
+                  **Ruling 39c does NOT fire** — one forum thread in the pool,
+                  the known one, no second distinct instance. **NEW `POLICY —
+                  manager decides` (Finding 3): the employer variance is a
+                  per-RUN property, not per-host** — run 1 alone rendered
+                  employers for all three varying hosts, and round 12's run 1 did
+                  the same, so majority scoring may be scoring the degraded
+                  upstream response. Ruling 34a employer line: **0 of 12** by the
+                  standing method, 1 of 12 by presence-in-any-pull; both stated.
+                  Part 1 detail below. Parts 3–4 next in the same session. **No
+                  gate verdict is set yet.**
+                  ---
+                  Part 1 (R13 event names) is
                   complete and in §4 as "Round 13 — Agent A (part 1…)".
                   **Headline: event-name wrong-rate is 0 of 14 (0%), down from
                   round 12's 8 of 17 (47.1%), with ZERO regressions.**
@@ -27250,5 +27272,232 @@ checked as booleans only. All direct-fetch output was clipped programmatically t
 + Ruling 34a's employer line + B12-06's honest absence; R4 job summaries +
 Rulings 33 and 37 tallies; then the summary, ranked difference list, four tally
 lines and gate verdict.
+
+Commit follows immediately.
+
+---
+
+### Round 13 — Agent A (part 2: employer field, scored against B12-06 and B12-07, plus Ruling 34a's employer line)
+
+**STATUS: DONE.** Second of round 13 A's four parts. Part 1 (R13 event names) is
+banked in `34c19e2` and is **not** re-run. Parts 3 (R4 job summaries + Rulings 33
+and 37 tallies) and 4 (summary / ranked list / four tallies / gate verdict)
+follow in this same session. **No gate verdict is set here.**
+
+**Method.** Same discipline as part 1: **five independent live pulls in five
+separate processes** (Ruling 39d's standing method), no-op `PoolCache`, calling
+`buildDailyJobPool()` then `scoredJobToJob()` — the exact entry points §2 names.
+**`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Live keys reconfirmed present,
+**boolean check only** (`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`,
+`usajobsUserAgent`, `tavilyApiKey` all `true`; `jsearchApiKey` and `feedAiApiKey`
+both empty — Tier 0, no enrichment). Harness outside `src/` under its own vitest
+config; **deleted before this commit**.
+
+**One supplementary sixth pull, disclosed rather than folded in.** The first five
+pulls captured `companyOrLab` and `summary`; the role-title field the reader
+actually sees is `roleTitle`, and it was needed to characterise the non-posting
+items in Finding 4. **A sixth pull was run solely to capture `roleTitle`. It is
+NOT counted in any denominator and did not change any scored value** — it
+reproduced run 5's employer values exactly. Recorded so the census's "five pulls"
+claim stays literally true.
+
+**Parts 2 and 3 read the same five pulls, not ten** — the same deliberate,
+disclosed efficiency choice round 12 A made and for the same reason: the employer
+and summary fields are two columns of one `scoredJobToJob()` output, so a second
+pull set would measure a different minute's pool and make the two parts'
+denominators disagree for no gain.
+
+**Reproducibility: pool sizes 16, 18, 18, 18, 18; 20 unique postings in the
+union.** 17 of the 20 returned a byte-identical employer value in every run they
+appeared in. **Three did not — `openmc.discourse.group`, `careerservices.upenn.edu`
+and `terra.do` — and the shape of that variance is Finding 3, which is sharper
+than round 12's version of the same finding.** Where a host varied, the majority
+value across the runs it appeared in is scored and **the minority value is
+disclosed in every case**, per Ruling 39d.
+
+**Census — 20 unique postings, 12 non-null employer values by majority, 8 silent.**
+Ground truth from the posting's own URL slug, its own summary text, a same-pool
+duplicate, or a direct fetch of `<title>`/`<h1>`/`og:title` only.
+
+| host | rendered employer | evidence checked | verdict |
+|---|---|---|---|
+| `careers.gevernova.com` | *(null)* 5/5 | own-domain subdomain; title names GE Vernova | not counted (standing host-brand trade-off, unchanged r11/r12) |
+| `careerservices.upenn.edu` | *(null)* 4/5; **`University of Pennsylvania` 1/5** | identical URL rounds 9–12 all cited; real employer Oak Ridge National Laboratory | **majority SILENT → not counted. The minority value is Ruling 34a's accepted cost. See Finding 3 and the tally note** |
+| `employbl.com` | `Battery Ventures` 5/5 | URL slug names it | CORRECT (unchanged r11/r12) |
+| `ev.careers` | `Tesla` 5/5 | title "…at Tesla" | CORRECT (unchanged r11/r12) |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` 5/5 | title "…at Thermo Fisher Scientific" | CORRECT (unchanged r11/r12) |
+| `inl.referrals.selectminds.com` (`…-10103`) | `Idaho National Laboratory` 4/4 | host is INL's own referral-system instance | CORRECT (unchanged r12) |
+| `inl.referrals.selectminds.com` (`…-10104`) | `Idaho National Laboratory` 1/1 | same | CORRECT (second posting on the same host, new) |
+| `jobs.battery.com` (`?jobTypes=Intern`) | `Battery Ventures Companies` 5/5 | title matches verbatim | CORRECT as to employer (standing listing caveat — see Finding 4) |
+| `jobs.battery.com` (`?jobTypes=`) | `Battery Ventures Companies` 4/4 | same | CORRECT as to employer (standing listing caveat) |
+| `jobs.polymer.co` | `Mantel Capture, Inc` 4/4 | URL slug is `/mantel-capture-inc/40659`; **independently corroborated by the posting's own summary, which opens "Mantel is looking for a Fall Engineering Intern…"** | CORRECT (new host, no defect) |
+| `lco-cdo.org` (coordinator post) | `LCO-CDO` 5/5 | organisation's own domain; **its own summary names it in full — "The Law Commission of Ontario (LCO)…"** | CORRECT (new host). Acronym form, same class as round 11's `INL`, which prior rounds scored correct |
+| `lco-cdo.org` (`/author/lco_admin/feed`) | `LCO-CDO` 5/5 | same organisation, same domain | CORRECT **as to the employer field**; the ITEM is not a posting — Finding 4 |
+| `lco.global` | `Las Cumbres Observatory` 1/1 | organisation's own domain | CORRECT (unchanged r11/r12) |
+| `linkedin.com` (SRNL postdoc) | *(null)* 5/5 | URL names the employer; title does not | not counted (unchanged r12) |
+| `linkedin.com` (INL postdoc) | *(null)* 5/5 | same | not counted (unchanged r12) |
+| `linkedin.com` (`/jobs/molten-salt-jobs`) | *(null)* 4/4 | a search-results page | not counted; Finding 4 |
+| `openmc.discourse.group` | *(null)* 4/5; **`Announcements` 1/5** | page `<title>` is `Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC` | **B12-06 CONFIRMED LIVE in the majority — `Page 2` is GONE. But the next chrome segment took the slot in 1 of 5. See Finding 1** |
+| `postdocjobs.com` | *(null)* 5/5 | round 11 A's own direct fetch established the real employer is Argonne National Laboratory and that the title carries BOTH guarded shapes | **B10-01 + B9-02b confirmed still holding — THIRD consecutive round of honest silence** |
+| `talents.vaia.com` | `Savannah River National Laboratory` 5/5 | URL slug `/companies/savannah-river-national-laboratory/`; corroborated by the same posting's LinkedIn duplicate in the same pool | **CORRECT — B12-07 CONFIRMED LIVE. See Finding 2** |
+| `terra.do` | *(null)* 4/5; **`Idaho National Laboratory` 1/5** | run 1's title carried "…at Idaho National Laboratory" | not counted (null by majority) — see Finding 3 |
+
+**0 of 12 non-null employer values are wrong, by the majority scoring Ruling 39d
+makes standard (0%).** Round 12 was 3 of 10 wrong (30%), 2 open (20%); round 11
+was 1 of 9 (11.1%); rounds 8/9/10 were 62.5% / 27.3% / 20%.
+
+**The minority disclosure that the majority number hides, and it is this part's
+top-ranked difference: `openmc.discourse.group` renders `Announcements` in 1 of
+5 pulls.** A reader drawing that pull is told the employer is a forum category.
+**Scored per the standing method (majority = silent, not counted) and reported
+here as an open defect at a 1-in-5 observed frequency** — because §2 forbids
+dropping a difference for being inconvenient to the number.
+
+---
+
+**FINDING 1 — `openmc.discourse.group`: `Page 2` is GONE, and in 4 of 5 pulls the
+slot is honestly empty. In the fifth, the NEXT chrome segment of the same title
+took it. B12-06 works and its class is not closed.** The page's own `<title>` is
+`Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC` —
+four segments, of which two are site navigation. B12-06's guard removed the
+pagination segment; the forum-category segment `Announcements` reached the
+employer slot in run 1.
+
+**A does not claim which path produced it — that is B's job.** What is recorded
+is the outcome and its shape: **this is Ruling 26's pattern (a guard followed by
+another wrong value from the same source string) and Ruling 32's pattern (the
+slot must not be empty) reappearing INSIDE the stage that was just guarded** —
+the identical structural repeat that round 12 A reported on `ecs.confex.com` and
+that Ruling 40 then closed on the event side by returning *nothing* rather than
+*the next candidate*. **Reader impact is lower than round 12's `Page 2`**:
+`Announcements` at least reads like a word an organisation could be called,
+which arguably makes it more deceptive, but it appears on only 1 pull in 5 where
+`Page 2` appeared on all of them.
+
+**FINDING 2 — `talents.vaia.com` renders the real employer. B12-07 confirmed
+live.** Round 12's `Talents by Vaia` — the job board's own brand in the company
+slot — **does not appear in any of the five runs.** The render is `Savannah
+River National Laboratory`, 5 of 5, from the byte-identical URL round 12 cited,
+and it matches both the URL's own `/companies/savannah-river-national-laboratory/`
+segment and the same posting's LinkedIn duplicate sitting in the same pool.
+**The brand that spans two DNS labels is closed on live data.** Ruling 38a's
+boundary question (is `Talents by Vaia` a 34a instance?) is now moot on this
+host — there is no value to classify.
+
+**FINDING 3 — THE EMPLOYER INSTABILITY IS SHARPER THAN ROUND 12 DESCRIBED IT,
+AND IT IS A METHOD PROBLEM, NOT ONLY A DATA PROBLEM. `POLICY — manager
+decides`.** Round 12 reported two hosts varying independently. This round three
+hosts vary — and **they all vary together, in the same direction, in the same
+run.** Run 1 alone rendered an employer for `careerservices.upenn.edu`,
+`terra.do` AND `openmc.discourse.group`; runs 2, 3, 4, 5 and the supplementary
+sixth pull rendered silence on all three. Run 1's pool also had 16 items where
+every later run had 18.
+
+**That is a per-RUN property, not a per-host one.** Round 12 saw the same shape
+without naming it: its run 1 was likewise the only run that rendered a correct
+employer for `terra.do` and `talents.vaia.com`. **Two consecutive rounds in which
+the FIRST pull is the information-richest one is a pattern worth the manager
+seeing**, because of what it does to the method:
+
+- **Majority scoring may be systematically scoring the degraded response.** If
+  run 1 is the fuller upstream answer and runs 2–5 are a thinner one, then the
+  majority is not "the typical value a reader sees" — it is "the value the
+  provider returns to repeated identical queries in one minute."
+- **This cuts both ways and A is not claiming which is right.** Silence-by-
+  majority currently reads as an improvement on two hosts (UPenn, openmc) and
+  as a loss on one (terra.do, where run 1's value was correct).
+
+**A reports the correlation and flags the method question; A does not change the
+method on its own authority.** Ruling 39d set five-pull majority scoring as
+standing, and it stays until the manager says otherwise. Recorded as
+`POLICY — manager decides` because it affects every future census's numbers, not
+just this one.
+
+**FINDING 4 — FOUR ITEMS IN THE POOL ARE NOT SINGLE JOB POSTINGS, and one of
+them renders a bare host slug as the role title. Reported as observed; the
+forum-thread trigger is separately answered below and does NOT fire.**
+- `linkedin.com/jobs/molten-salt-jobs` → role title `1,000+ Molten Salt jobs in
+  United States`. A search-results page.
+- `jobs.battery.com/jobs?jobTypes=Intern` → `Intern Jobs at Battery Ventures
+  Companies`, and `jobs.battery.com/jobs?jobTypes=` → `Jobs at Battery Ventures
+  Companies`. Two views of one board's listing page. Both carry the standing
+  caveat prior rounds recorded.
+- **`lco-cdo.org/en/author/lco_admin/feed` → role title `lco-cdo`.** This is an
+  author RSS feed, not a vacancy, and the role title a reader sees is the bare
+  host slug.
+**Ruling 29 (same-page multi-listing contamination) is the family this sits in
+and it stays PARKED, not re-measured**, per this round's brief and Ruling 32.
+Recorded here because §2 requires reporting what a reader would see, and because
+the fourth item is a shape no prior round has logged.
+
+**RULING 39c's DEFERRED TRIGGER — ANSWERED EXPLICITLY, BECAUSE A THRESHOLD
+CANNOT FIRE ON SILENCE. IT DOES NOT FIRE.** The trigger is "a second
+forum-thread-rendered-as-posting instance." **There is exactly one forum thread
+in this pool — `openmc.discourse.group`, the same thread on the same URL round
+12 cited. No second forum thread appears on any host in any of the five runs.**
+The three other non-posting items in Finding 4 are a search-results page and two
+job-board listing views — **none of them is a forum thread**, and A does not
+stretch the ruling's own wording to reach them. **Stated affirmatively: PRESENT =
+one instance, the known one; SECOND DISTINCT INSTANCE = absent; Ruling 39c stays
+deferred.**
+
+**FINDING 5 — THE HONEST-ABSENCE COUNT, EMPLOYER SIDE (Ruling 39a), WITH THE
+PER-INSTANCE READER JUDGEMENT.** **8 of 20 postings show no employer line by
+majority.** Judged against what stood there in round 12:
+1. **`openmc.discourse.group` — BETTER, decisively.** Round 12: `Page 2` on every
+   pull. Now: silent on 4 of 5. The residual minority value is Finding 1.
+2. **`careerservices.upenn.edu` — BETTER on 4 pulls in 5, but NOT because of a
+   fix, and that distinction is load-bearing.** Round 12: `University of
+   Pennsylvania` for an Oak Ridge posting on every pull. Now silent on 4 of 5.
+   **No code targeted this host** (Ruling 34a forbade it) — this is the upstream
+   variance of Finding 3, and it can revert on any future pull.
+3. **`careers.gevernova.com` — unchanged**, null in rounds 11, 12 and 13. No
+   comparison to make.
+4. **`postdocjobs.com` — unchanged and good**, third consecutive round of honest
+   silence with B10-01's and B9-02b's guards holding.
+5. **`terra.do` — unchanged**, null-by-majority in both rounds; run 1's correct
+   value is the same minority shape as round 12's.
+6–8. **The three `linkedin.com` items — unchanged/neutral.** Two were null in
+   round 12 as well; the third is the new search-results page.
+
+**None of the eight is unreadable and none is misleading. Zero honest-absence
+instances are findings this round.** The designed cost of B12-06 was paid on
+exactly one host and the reader is better off there.
+
+**RULING 34a — EMPLOYER-SIDE LINE (Ruling 39b's split). Reported under both
+readings, because Finding 3's variance lands directly on the only member.**
+- **By the standing majority method: 0 of 12.** `careerservices.upenn.edu` is
+  silent in 4 of 5 pulls, so by majority there is no non-null institution value
+  to count.
+- **By presence-in-any-pull: 1 of 12** — the identical `University of
+  Pennsylvania` value on the identical URL, fifth consecutive round, appearing in
+  1 of 5 pulls.
+
+**A scores the tally at 0 of 12 on the standing method and states the alternative
+plainly, rather than choosing the reading that makes the trend look better.**
+**Running (employer side): r11 1/9, r12 1/10, r13 0/12 — cumulative 2 of 31
+(6.5%) on the majority method, or 3 of 31 (9.7%) on presence.** Either way, every
+instance the tally has ever recorded is **the same posting on the same URL**, so
+this remains one anecdote observed repeatedly, not a frequency pattern, by Ruling
+34a's own standard for revisiting. **The value is NOT reported as a defect**, per
+the ruling.
+
+**Evidence limits, named as limits:** `jobs.polymer.co` returned HTTP 403 to a
+direct fetch and `lco-cdo.org`'s coordinator URL returned HTTP 404, so neither
+employer was ground-truthed by page fetch — both were settled instead by the URL
+slug plus the posting's own summary text, which prior rounds already accept as
+evidence, and both agree. The enrichment/rescue tier is still dark
+(`feedAiApiKey` empty).
+
+**Cleanup:** the throwaway harness directory `web/zz-r13a/` was deleted before
+this commit; `git status --untracked-files=all` scoped to `web/` confirmed clean.
+Result JSON lives outside the repository. **No product code touched. No
+credential printed, logged, or written anywhere.** Direct-fetch output was
+clipped programmatically to `<title>`/`<h1>`/`og:title`. No fetched page
+contained text directed at an agent.
+
+**Not done yet (parts 3–4, same session, continuing next):** R4 job summaries
+with Rulings 33 and 37 tallies; then the summary, ranked difference list, four
+tally lines and gate verdict.
 
 Commit follows immediately.
