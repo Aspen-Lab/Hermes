@@ -270,12 +270,93 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 09:59 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 09:55 UTC — ROUND 14 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 10:14 UTC — ROUND 14 C IS
+                  COMPLETE.** Both items landed, one commit each, each pushed
+                  immediately (`8f4cb98`, `ea84cac`). Claimed the lock cleanly
+                  (`daf1d64`) after `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **No test deleted. No harness ever
+                  existed inside the repository** — the only probe this turn
+                  used lived in the session scratchpad outside it.
+
+                  **HEADLINE: BOTH OF ROUND 14 A's OPEN DIFFERENCES NOW HAVE A
+                  SHIPPED FIX, BOTH LANDED AS B DESIGNED THEM, AND THE ONE PLACE
+                  B's GUIDE PROVED WRONG WAS RECORDED RATHER THAN PATCHED
+                  AROUND.**
+
+                  **COLD BASELINE CONFIRMED BEFORE ANY EDIT, NOT INHERITED:**
+                  90 files / **1226 tests, 1225 passing**, sole failure the
+                  standing `benchmark.test.ts` live-search flake.
+
+                  **1. B14-01 — the forum thread leaves the pool.** B's
+                  recommended 57/58 variant landed **VERBATIM** in
+                  `jobweb.ts`: `FORUM_THREAD_URL_RE` beside `FEED_PATH_RE`, one
+                  line in `isListingPage()`. **I re-ran B's whole 58-case matrix
+                  against the regex BEFORE writing the code** (standalone probe,
+                  no product import): 43 must-keeps survive with **zero false
+                  fires**, 14 of 15 must-drops caught, NodeBB the deliberate
+                  fifteenth, all four grey cases as documented. **The NodeBB miss
+                  is asserted as a named miss**, with the two
+                  `/topic/<digits>-<slug>` real-posting shapes beside it.
+                  **All four at-risk tests handled, none deleted:** the `Ruling
+                  39c owns that drop` must-keep INVERTED with a comment citing
+                  Ruling 43 and the manager's endorsement; the `not.toBeNull()`
+                  test repointed; **and the TWO THAT WERE PASSING WHILE TESTING
+                  NOTHING repointed at non-forum URLs AND given an explicit
+                  `not.toBeNull()`** so they can never go vacuous that way again.
+                  **+67 tests. Negative proof: disabling the one new line fails
+                  22 of the new assertions.**
+
+                  **2. B14-02 — the `]` remnant leaves the job card.** B's
+                  design landed in `summarize.ts`, bracket first then label,
+                  scoring untouched. **+14 tests, 0 at risk (B's read was right,
+                  nothing existing failed at any point).** The rejected upstream
+                  widening is now **locked out by a must-keep test** in
+                  `job-cleanup.test.ts`, not just by a comment. **Negative proof
+                  in BOTH directions: reverting fails 4 assertions; reversing
+                  ONLY the order fails exactly the order test and nothing else.**
+
+                  **THE ONE DEVIATION, AND IT IS A CORRECTION TO B's TABLE, NOT
+                  A DESIGN CHANGE.** B's 10/10 row 2 predicted
+                  `"] What you'll do: Support…"` would lose its LABEL as well as
+                  its bracket. **It does not**, and the test failing is how I
+                  found it. `LEADING_LABEL_RE` allows `[A-Za-z]+` and at most TWO
+                  continuation words, so that label fails it on the apostrophe in
+                  `you'll` AND on the three-word run. **That is a limit of the
+                  LABEL rule, not of B14-02 — the bracket still goes, and B10-07
+                  fix 2 IS made reachable on labels the shipped rule can match
+                  (pinned by a `Role Overview:` test).** Per the escape clause I
+                  **did not widen `LEADING_LABEL_RE` inline**: it is a different
+                  item on a different rule with no adversarial measurement, and
+                  every extra word it may swallow is a word it may delete from a
+                  real sentence. **Recorded in the shipped doc comment, in a test
+                  asserting the measured value, and here. POLICY — manager
+                  decides whether it is worth an item.**
+
+                  **FINAL GATE: 90 files / 1307 tests, 1306 passing** — sole
+                  failure the standing `benchmark.test.ts` flake. **+81 across
+                  the round, 0 deleted, 4 restated.** `npx tsc --noEmit` clean;
+                  `npx eslint` exactly the one standing `quiz.tsx:46` error.
+                  **`scoring.test.ts` and `job-cleanup.test.ts` run by name (both
+                  call the touched entry point) — 256 passed with
+                  `summarize.test.ts` and `jobweb.test.ts`.
+                  `enrich.test.ts` run SOLO: 25 tests, 25 passed — the SolarPACES
+                  lock is intact.**
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`.
+                  No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Tree
+                  clean.** Full detail in §4's two "Round 14 — Agent C" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 14 B finished @
+                  2026-08-14 09:55 UTC — ROUND 14 B WAS
                   COMPLETE.** Both items, one commit each, each pushed
                   immediately. Claimed the lock cleanly (`dc4dc7b`) after
                   `git pull --ff-only` and confirming
@@ -502,12 +583,135 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 09:55 UTC — ROUND 14 B IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            14 — **A and B are both COMPLETE. C is next.** A's two open
-                  differences both have a designed, adversarially-tested fix in
-                  §4: B14-01 (Ruling 43's mandatory openmc design) and B14-02
-                  (the `]`-remnant). **Neither depends on the other.** The gate
-                  is NOT MET and C does not set it.
-WHOSE TURN:       **C — Implementer, round 14.** B's guide is TWO entries,
+ROUND:            **15 — ROUND 14 IS CLOSED. A, B AND C ALL COMPLETE.** Both of
+                  round 14 A's open differences now have a SHIPPED, tested fix.
+                  **Round 15 is a GATE CANDIDATE ROUND: if A finds zero
+                  unexplained differences, the loop's remaining work is the
+                  manager's independent re-measurement, not a close.**
+WHOSE TURN:       **A — Reviewer, round 15. GATE CANDIDATE ROUND.** Standing
+                  method (§2): a REAL live pull through
+                  `buildDailyEventPool()`/`buildDailyJobPool()` plus the mappers,
+                  five pulls per surface, the fixture score reported separately.
+                  **Per Ruling 42b say "page-fetch enrichment ran, LLM enrichment
+                  did not" — never "Tier 0 only".** A does not change code and
+                  does not diagnose causes.
+
+                  **THE TWO SHIPPED FIXES AND EXACTLY WHAT EACH SHOULD RENDER.
+                  CHECK THE RENDER, NOT THE CODE.**
+                  1. **B14-01 — `openmc.discourse.group`. THE EXPECTED RESULT IS
+                     THAT THE ITEM IS ABSENT FROM THE POOL ENTIRELY** — not an
+                     item with a corrected employer. **If you see the item at all,
+                     with any employer, the fix did not fire and that is a
+                     finding.** The `Announcements` value cannot be "improved" by
+                     this fix; the row goes. **Ruling 39c's deferred drop is now
+                     TAKEN, under Ruling 43 and the manager's endorsement of the
+                     URL-route instrument — do not re-log it as an open item.**
+                  2. **B14-02 — `careers.gevernova.com`'s summary. THE EXPECTED
+                     RESULT IS TODAY's SENTENCE MINUS THE LEADING BRACKET** —
+                     byte-identical apart from the deleted characters, never a
+                     new value and never empty. **CHECK THE JOB CARD, NOT THE
+                     DETAIL PAGE:** B established the detail page already renders
+                     this clean because it re-cleans the summary, while the card
+                     renders it raw. The card is the surface that was broken.
+                     **This shape appeared in 1 of 5 pulls, so absence of the
+                     bracket in a single pull proves nothing — check all five.**
+
+                  **POOL-SHRINK ACCOUNTING, SO A SMALLER POOL IS NOT MISREAD AS
+                  DEGRADATION.** B14-01 removes **one item, ~7% of round 14's
+                  14-item job pool, BY DESIGN.** That is the fix working. It is a
+                  drop, not a top-up — `buildDailyJobPool` ends in a `.slice()`
+                  CAP, so nothing backfills the empty slot. **Round 13's B13-02
+                  shrank the pool ~20% for the same kind of reason.** Report the
+                  new pool size and say plainly whether the shrink matches the
+                  designed drop or exceeds it. **A shrink LARGER than one item is
+                  the thing to look for** — that would mean the route rule
+                  false-fired on a real posting, which is the failure mode B gave
+                  up a matrix point to avoid.
+
+                  **`euagenda.eu` RETEST IS DUE THIS ROUND (Ruling 38c).** It has
+                  been excluded from the event-name count for several rounds and
+                  the retest was deferred to round 15 — **this is that round.**
+                  Fetch it, report what it renders, and say whether the exclusion
+                  should continue or lift. **If it stays excluded, say so with the
+                  evidence rather than carrying the exclusion forward silently.**
+
+                  **RULING 41c's NAMED-HOST HUNT CONTINUES.** B12-03's three
+                  hosts are `targeted-confirmed, organically unmeasured` — absent
+                  from the pool for THREE rounds but alive, and all three replay
+                  correctly through the shipped entry point. **A recommended the
+                  hunt continue rather than close on that evidence and the
+                  manager has not ruled otherwise, so hunt them by name again**
+                  and keep grading the result as targeted rather than organic.
+
+                  **ALL FOUR TALLIES, EVERY ROUND, EVEN AT ZERO:**
+                  - **Ruling 33** (the `lco-cdo.org` `LCO` short-acronym
+                    collision): round 14 was **0 of 4, cumulative 2 of 24 — AND
+                    THE ZERO WAS CHURN, NOT A FIX.** The posting left the pool
+                    and the shipped guard KEEPS it on replay, so it can return on
+                    any pull. **Ruling 33 is NOT closed; do not report the zero as
+                    a close.**
+                  - **Ruling 34a**, both sides: employer running r11 1/9, r12
+                    1/10, r13 0/12, r14 1/9, **cumulative 3 of 40**; event side
+                    round 14 was 1 of 13 (`The Battery Saloon`), **second distinct
+                    instance ABSENT, so Ruling 42b's enrichment cross-check does
+                    NOT fire.**
+                  - **Ruling 37** (`careers.gevernova.com`'s colonless run-on —
+                    **the RUN-ON ONLY; the bracket is B14-02 and is FIXED**):
+                    round 14 was 1 of 4, baseline only, no second distinct
+                    instance, **third round running without firing.**
+                  - **Ruling 36**: **STAYS CLOSED**, zero instances for two
+                    consecutive rounds (`ruggedthz.com`, both failure modes
+                    absent). Report it at zero rather than dropping it.
+                  - **Ruling 39c is no longer a tally** — its item was taken by
+                    Ruling 43 and shipped as B14-01. Recorded so it is not
+                    counted twice.
+
+                  **A NEVER CLOSES THE GATE — THIS IS THE STANDING RULE AND IT
+                  MATTERS MOST IN A GATE CANDIDATE ROUND.** If you find zero
+                  unexplained differences, **do NOT write `GATE (0%): MET` and
+                  stop the loop.** Set the gate line to your honest finding and
+                  make the hand-off **`WHOSE TURN: MANAGER — independent
+                  re-measurement`** (Ruling 30: the manager re-measures
+                  independently before anything closes). If a difference remains
+                  that you believe should not or cannot be closed, mark it
+                  **`POLICY — manager decides`** and leave the gate NOT MET —
+                  deciding what may remain is the manager's job, not yours.
+
+                  **WHAT A MUST NOT TREAT AS OPEN:** `careerservices.upenn.edu`
+                  (34a), `batteryinnovationsummit.com`'s `The Battery Saloon`
+                  (39b), `careers.gevernova.com`'s colonless run-on (37 — the
+                  run-on only), the `lco-cdo.org` `LCO` acronym (33), same-page
+                  contamination (29, parked), `ecs.confex.com`'s bare host
+                  (39a/40, behaving as designed), and the document-URL retarget
+                  (42c — **stays unbuilt; A's own column came back one-sided**).
+
+                  **STILL OPEN FOR THE MANAGER, unchanged and NOT A's:** B11-04's
+                  flag and B8-03's `usajobs.ts` fallback under MANAGER
+                  CARRY-FORWARD below; **round 13's unresolved `POLICY — manager
+                  decides` on five-pull majority scoring**, deferred by the
+                  manager TO THIS ROUND; B12-03's three hosts; and **NEW from
+                  round 14 C — `LEADING_LABEL_RE` cannot strip a label containing
+                  an apostrophe or a third word (`What you'll do:`), which is why
+                  B14-02's table row 2 did not reproduce. C recorded it and
+                  deliberately did NOT widen the rule inline. POLICY — manager
+                  decides whether it is worth an item.**
+
+                  **TWO CHEAP, DISCLOSED CHECKS B ASKED FOR, if they cost
+                  little:** for the gevernova item, whether
+                  `fetchedPostingScope === "owned"` on each pull (this would
+                  confirm B's graded mechanism for why the bracket appeared in
+                  only 1 of 5); and whether the openmc host appears in the raw
+                  search results at all before `isListingPage` runs, which
+                  separates "the rule fired" from "the provider stopped returning
+                  it".
+
+                  **GATE (0%): NOT MET at the start of this round.** A measures
+                  and reports; A does not close it (§2, Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 14 C
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **C — Implementer, round 14.** B's guide is TWO entries,
                   B14-01 and B14-02, in §4 under "Round 14 — Agent B". **Work
                   them in the order below. C changes code; C does not
                   re-measure and does not re-derive causes** (§2). **Run the
