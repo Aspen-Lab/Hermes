@@ -55651,3 +55651,267 @@ B18-03, not the `ccfddl.ts:146` hybrid under-catch. **No standing exclusion name
 and the row is honest anyway.
 
 **Turn lock NOT released — parts 2, 3 and 4 follow.**
+
+---
+
+### Round 23 — Agent A (part 2: the job pool, ALL SIX landed round-22 items, and the 48b offered-row scan. **ALL SIX ITEMS ARE CONFIRMED WORKING — AND THE ROW A22-07 PUT INTO THE POOL RENDERS A JOB GRADE AS ITS EMPLOYER, WHICH IS EXACTLY THE CHECK §1 ORDERED. The job-side wrongly-dropped column returns to ZERO, and Ruling 57b's job surface is ORGANICALLY WITNESSED for the first time.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 2 of four. Part 1 (event surface) is
+committed. Parts 3 (job summaries + all tally lines) and 4 (ranked list + gate
+verdict) are not yet done.
+
+**Method, identical to part 1.** Five independent live pulls in five separate
+processes, no-op `PoolCache`, `buildDailyJobPool()` then `scoredJobToJob()` then
+the shipped `jobCardView()` and **plate 02's own `buildJobFacts()`
+(`page.tsx:549`)**. `PEER_PROFILE_SNAPSHOT_PATH` NOT used. Page-fetch enrichment
+ran, LLM enrichment did not (42b). Keys confirmed by boolean check only.
+
+---
+
+## REPRODUCIBILITY — **11 ROWS IN 5 OF 5 PULLS. ZERO MEMBERSHIP VARIANCE AND ZERO VALUE VARIANCE — BOTH, FOR THE FIRST TIME ON THIS SURFACE IN SEVERAL ROUNDS.**
+
+Membership 11/11/11/11/11, union 11, **no minority row exists, so Ruling
+39d/41a's disclosure clause has nothing to disclose here** — stated explicitly,
+because a silent disclosure line and an empty one look identical. **Every scored
+column on every row was byte-identical across all five pulls.** Offered rows:
+**120 raw / 97 unique per pull, identical in all five; 43 unique kept at
+ingestion, 54 unique dropped.**
+
+**All 11 rows come from `jobweb`.** No Adzuna, USAJOBS, Remotive or Arbeitnow row
+reached the pool — which matters for one of §1's falsifiers and is recorded here
+rather than discovered later.
+
+---
+
+## **EVERY ONE OF THE SIX ROUND-22 ITEMS IS CONFIRMED. THREE ORGANICALLY, THREE BY REPLAY — AND A LEADS WITH WHICH IS WHICH.**
+
+**A LEADS WITH THE LIMIT.** `lensa.com`, `zerobonline.com` and
+`batteryjunction.com` are **absent from all five pools AND from all 97 offered
+rows.** Absence proves nothing, so each was **replayed through the SHIPPED code
+using round 22's own recorded strings, copied verbatim out of §4** — no invented
+string was used for any of them, because round 21 A recorded that an invented
+string produced a misleading verdict. Where A had to construct a case (C's own
+must-keep controls, the structured-source falsifier) it says so on the line.
+
+| item | expected by §1 | measured |
+|---|---|---|
+| **A22-02** — deadline role check | `date TBA` beside a correct `Abstract due 31 Oct`, row survives | **CONFIRMED ORGANICALLY** on `battery-power.eu` itself — part 1 |
+| **A22-01** — date clustering | 44 of 50 unchanged, no date invented | **CONFIRMED ORGANICALLY** — part 1. Zero invented dates on 14 rows |
+| **A22-03(a)** — fail-closed summary gate | the wrong summary is gone; the card falls to `Matches your …` | **CONFIRMED BY REPLAY.** With `fetchedPostingScope: undefined` and round 22's own recorded `lensa` summary string, `summary` is now `undefined`; the card renders `Matches your molten salt focus`. `"unproven"` behaves the same |
+| **A22-03(b)** — snippet-derived `remote` may not render | the card loses `Remote`, falls to `See posting` | **CONFIRMED BY REPLAY.** Same item with `isRemote: true` and `source: "jobweb"` renders `See posting · Preferred`, not `Remote` |
+| **A22-06** — shop pages out | `batteryjunction.com/collections/batteries` drops | **CONFIRMED BY REPLAY. DROPS** |
+| **A22-07** — `lanl.jobs` in | the Los Alamos vacancy enters the pool | **CONFIRMED ORGANICALLY. IT IS IN THE POOL 5 of 5** — *and its rendered employer is WRONG. See A23-01* |
+| **A22-05** — the Savannah River duplicate | ONE slot, not two | **CONFIRMED ORGANICALLY.** All three variants were offered and kept at ingestion; **exactly one reached the pool, in all five runs** |
+| **A22-04(a)** — the parenthetical employer | `zerobonline.com` renders `Ion Exchange Ltd.` | **CONFIRMED BY REPLAY.** Round 22's recorded title yields `company: "Ion Exchange Ltd."` |
+
+### **EVERY FALSIFIER §1 NAMED WAS RUN. ONE READS AS FIRED AND A SHOWS THE ARITHMETIC RATHER THAN EXPLAINING IT AWAY.**
+
+| falsifier | result |
+|---|---|
+| A22-03 — **a row that renders a CORRECT summary today goes silent** | **NO — AND THIS ONE HAS AN ORGANIC WITNESS.** The pool's one non-empty source-owned summary (`careers.gevernova.com`, `owned`, substantive) **RENDERS**, byte-identical to the value rounds 11–19 recorded |
+| A22-03 — **a STRUCTURED-source row loses `Remote`** | **NO — but there is NO ORGANIC WITNESS, because all 11 pool rows are `jobweb`.** Replayed: `adzuna`, `usajobs` and `remotive` items with `isRemote: true` all still render `Remote · Preferred`. **A states the limit rather than claiming an organic pass** |
+| Ruling 60d's floor — an `owned` page with a junk body publishes | **NO.** `Home`, `Apply Now` and `Cookies` as `owned` bodies each publish **nothing**; a substantive `owned` body publishes normally |
+| A22-06 — a real posting whose slug merely contains the word | **NO.** `…/job/12345/molten-salt-collection-scientist` is **KEPT** |
+| A22-05 — **two visibly DIFFERENT postings collapse into one card** | **NO.** Three genuinely different molten-salt postings stay three. And the live merge is order-independent: the three Savannah variants collapse to one whichever order they arrive in |
+| A22-05 — `salutemyjob.com`'s row (B's named control) is gone | **NO.** It was offered and **kept at ingestion**; it merged, which is the fix working |
+| A22-04(a) — **any row's employer line changes to a non-employer** | **IT FIRED — BUT NOT THROUGH THIS RULE, AND A PROVES WHICH LINE DID IT.** `lanl.jobs` renders `Research Technologist 1`. Its title contains **no parentheses at all**, and the same row with its dash tail removed yields `company: null`. **So the parenthetical rule is not the producer; the pre-existing dash/pipe splitter is.** Filed as **A23-01**, NOT as an A22-04(a) regression, so B is not sent to the wrong line |
+| A22-04(a) — C's own must-keeps | **BOTH HOLD.** `Battery Research Intern (Mumbai, India)` gives `company: null`; `Molten Salt Postdoc (Summer 2027)` gives `company: null`. **No city and no season became an employer** |
+| **A22-06/07 — the pool comes back at 11 or 13** | **IT READS 11, AND HERE IS THE FULL ARITHMETIC.** Round 22's twelve, minus four (`lensa.com`, `zerobonline.com`, `batteryjunction.com` — **all three simply NOT OFFERED this round**; `talents.vaia.com` — **merged by A22-05, working as designed**), plus three newly offered (`lanl.jobs` by the A22-07 fix, `careers.gevernova.com`, `ev.careers`) = **11.** **12 − 4 + 3 = 11, and it closes exactly.** No row is missing for a reason a round-22 fix caused. **A does not reclassify the falsifier as passed; it records that its literal condition is met, its stated purpose is not, and lets the manager rule** |
+| `stemgateway.nasa.gov` | **Offered, and it DROPS.** Per §1, whichever way it lands it is **NOT a new defect and NOT a counted wrong drop.** Recorded, not counted |
+
+---
+
+## THE JOB CENSUS — **11 MAJORITY ROWS, EVERY COLUMN SCORED**
+
+| # | host | roleTitle | employer | verdict |
+|---|---|---|---|---|
+| 1 | `inl.referrals.selectminds.com` | `Molten Salt Flowloop Internship` | `INL` | CORRECT |
+| 2 | `terra.do` | `Molten Salt Systems Engineer/Scientist` | *(silent)* | CORRECT — honest silence. *(Observation below: the page's own `<title>` names Idaho National Laboratory)* |
+| 3 | `grad.wisc.edu` | `PhD Student Internship Opportunities at Thermo Fisher Scientific` | `Thermo Fisher Scientific` | **DEFECT — A23-04. Every scored VALUE is right; the row is a nine-month-old BLOG POST rendered as a live internship card.** Ruling 60e carries it into this census with no exclusion |
+| 4 | `postdocjobs.com` (`/7317952`) | `Molten Salt Chemical and Electrochemical Engineering` | *(silent)* | CORRECT — **and A21-03's live confirmation holds for a second round.** The provider offered exactly this title, so the render is faithful to what Peer was given |
+| 5 | `lanl.jobs` | `Nuclear Materials and Molten Salt Technologist 1` | **`Research Technologist 1`** | **DEFECT — A23-01. A JOB GRADE IS RENDERED AS THE HIRING ORGANISATION** |
+| 6 | `careers.gevernova.com` | `GE Vernova Battery Engineering & Technology Intern` | *(silent)* | CORRECT on every scored column. **Its summary is RULING 37's baseline, back in the pool after two rounds absent — an accepted cost, not a defect** |
+| 7 | `careerservices.upenn.edu` | `Postdoctoral Research Associate` | *(silent)* | **RULING 34a's NAMED ACCEPTED COST**, on the standing exclusion list. Not counted a defect |
+| 8 | `careers.inl.gov` (`/job/1515`) | `Molten Salt R&D Engineer` | *(silent)* | CORRECT. Summary falls back to `Matches your molten salt focus` |
+| 9 | `ev.careers` | `Internship, Battery Engineering (Summer 2026) at Tesla` | `Tesla` | **CORRECT — ground-truthed live: the page's own `og:title` is `Internship, Battery Engineering (Summer 2026) at Tesla`.** A DIFFERENT URL from the one A21-01 dropped (a numbered posting, not `/jobs/internship`), so this is **not** an A21-01 regression |
+| 10 | `linkedin.com` | `Actinide Chemistry/Ion Exchange Postdoc Research Associate` | *(silent)* | CORRECT — **and this row IS A22-05's live confirmation.** It is the single survivor of three offered variants |
+| 11 | `linkedin.com` | `Molten Salt Electrochemistry Postdoctoral Researcher` | *(silent)* | CORRECT |
+
+---
+
+## **A23-01 — `lanl.jobs`: THE EMPLOYER'S OWN NAME IS IN THE SAME STRING, AND PEER PRINTS A JOB GRADE INSTEAD. Job surface, 5 of 5.**
+
+§1's item 4 said, in terms: verify `lanl.jobs`'s rendered values are RIGHT, not
+merely present. **They are not.**
+
+**The provider offered this title, whole:**
+
+> `Nuclear Materials and Molten Salt Technologist 1 - Research Technologist 1 | Los Alamos, NM | Los Alamos National Laboratory`
+
+Four segments: the role, the **civil-service grade**, the **city**, and the
+**employer's full name, last**. Peer's split produced:
+
+| field | value | verdict |
+|---|---|---|
+| `roleTitle` | `Nuclear Materials and Molten Salt Technologist 1` | **CORRECT** — segment 1 |
+| **employer** | **`Research Technologist 1`** | **WRONG — segment 2, the JOB GRADE.** The real employer is segment 4 |
+| `location` | `See posting` | **SILENT, not wrong** — though `Los Alamos, NM` is segment 3 of the same string |
+| `salary` | `Salary not disclosed` | **SILENT, not wrong** — though the page's JSON-LD carries `baseSalary: "$87,800 - $143,000"` |
+| `postedDate` | `Posting date not listed` | **SILENT, not wrong** — though the JSON-LD carries `datePosted: "4/13/2026"` |
+
+**GROUND TRUTH, through a plain fetch clipped programmatically:** the page's
+`<title>` ends `… | Los Alamos, NM | Los Alamos National Laboratory`; its
+`og:title` reads `… at Los Alamos National Laboratory`; and its **JSON-LD
+`@type: JobPosting`** carries the salary and posted date above. **Three
+independent markers name the laboratory. Peer names a pay grade.**
+
+**A ISOLATED THE PRODUCING RULE BY REPLAY SO B IS NOT SENT TO THE WRONG LINE.**
+The same row with its dash tail removed yields `company: null`; the title
+contains no parentheses, so **A22-04(a)'s parenthetical rule cannot be
+involved**. It is the dash/pipe splitter.
+
+**AND THIS IS NOT ONE ROW — IT IS A SIX-INSTANCE SHAPE IN THIS ROUND'S OWN
+OFFERED CORPUS.** The same splitter produced these "employers" from offered
+titles this round:
+
+| offered title | rendered `company` | what it actually is |
+|---|---|---|
+| `Nuclear Materials and Molten Salt Technologist 1 - Research Technologist 1 \| …` | `Research Technologist 1` | **a pay grade — AND IT REACHES THE POOL** |
+| `Careers Open application - Internship battery R&D` | `Internship battery R&D` | a job title |
+| `Graduate Intern – Focused Ion Beam, Electron Microscopy ...` | `Focused Ion Beam, Electron Microscopy ...` | a technique list, **ending in a literal ellipsis** |
+| `Vertex Pharmaceuticals \| Careers \| Co-ops` | `Co-ops` | a programme type — **and the real employer is segment 1** |
+| `Jobs and Internships - Youth & Young Adult Programs ...` | `Youth & Young Adult Programs ...` | a programme name |
+| `xFU(s)ION Internship Applicant Call - PIRE at CSE` | `CSE` | a department acronym |
+
+**Five of the six were excluded for other reasons before any reader saw them.
+One was not.** That is the difference between a latent shape and a live defect,
+and A reports both.
+
+**Exclusion walk by name.** Not Ruling 34a's named accepted cost (that is
+`careerservices.upenn.edu` rendering SILENCE — this renders a WRONG VALUE, which
+is the opposite outcome). Not A21-03 — that shipped a board veto and a dash split
+whose measured outcome on `postdocjobs.com` was **honest silence**, and A
+re-verified this round that `postdocjobs.com` still renders no employer. Not
+B19-01/B19-02, not B18-01 (`balchem.com` / `roberthalf.com`, neither offered),
+not 46a/46b, not 52b (no required topic is in the name), not 57b, not 33.
+**No standing exclusion names it.**
+
+---
+
+## **A23-04 — `grad.wisc.edu`: A NINE-MONTH-OLD BLOG POST IS STILL RENDERED AS A LIVE INTERNSHIP CARD. Job surface, 5 of 5. CARRIED FORWARD, NOT NEW — AND IT HAS NEVER BEEN RANKED.**
+
+Ruling 59b(b) resolved this row as an item-KIND defect and **Ruling 60e ended its
+denominator exclusion**; but it was never in round 22's ranked list, so **no fix
+was ever commissioned for it.** §2 forbids dropping a difference because it has
+already appeared. **A ranks it now.**
+
+Re-measured this round from the page Peer itself fetched, same URL
+(`grad.wisc.edu/2025/11/13/…`): the JSON-LD is **`"@type": "Article"`** with
+**`datePublished: "2025-11-13"`** and `dateModified: "2026-04-13"`. It is a
+WordPress blog post on a graduate school's news site. The card renders
+`roleKind: internship`, an employer, a match reason, a `Type: Internship` fact —
+**and no date anywhere**, so nothing tells the reader the page is nine months
+old.
+
+**RECENCY STAYS UNSCORED, exactly as 59b(b) requires.** The row would be an
+item-KIND defect if it had been published this morning. **Every scored VALUE on
+it is correct**; what is wrong is that an article ABOUT opportunities is rendered
+as an opportunity.
+
+---
+
+## **RULING 57b, JOB SURFACE — UPGRADED. `organically witnessed` FOR THE FIRST TIME.**
+
+Round 22's grade was **`targeted-confirmed on round 21's own recorded strings,
+organically unoffered`** — `employbl.com` was absent from all pools and all 101
+offered rows, so it had to be replayed.
+
+**This round it was OFFERED.** `employbl.com/jobs/2027-summer-investment-internship-battery-ventures-1410243`,
+title `2027 Summer Investment Internship - Battery Ventures`, **kept at ingestion
+with `company: "Battery Ventures"`** — and it **reached no pool in any of the
+five runs.** The shipped `isOwnerNameTopicCollision` executed on that owner name
+returns **`true`**.
+
+**NEW GRADE: `organically witnessed`.** A does not claim more than that: the row
+was offered, carried the owner name into the slot the guard reads, and was
+excluded.
+
+**The three named must-keeps were re-verified by execution and all three still
+survive the guard:** `Ion Exchange Global`, `Molten Salt Solutions`,
+`Battery Resourcers` — all `false`. **Ruling 33 neither widened nor narrowed:**
+bare `LCO`, `ION` and `MSR` as owner names all return `false`.
+
+---
+
+## **RULING 60a's THIRD-STRIKE BACKSTOP DOES NOT ADVANCE THIS ROUND, AND A SAYS SO AFFIRMATIVELY.**
+
+60a's shape is: *the only evidence for a required topic is the employer's own
+registered name, and the posting's subject matter contradicts it.* **A searched
+this round's 97 offered job rows and 149 offered event rows for a live instance
+and found NONE that reached a pool.** `zerobonline.com` was not offered at all.
+**The strike count therefore stays at ONE recorded round (round 22). Design is
+NOT authorised.** Recorded affirmatively so a later round does not have to
+re-derive whether this round counted.
+
+---
+
+## **RULING 48b — THE OFFERED-ROW SCAN, BOTH SURFACES, BOTH COLUMNS**
+
+| surface | offered (unique / raw) | correctly dropped | **wrongly dropped** |
+|---|---|---|---|
+| **jobs** | **97 / 120** | 54 (55.7%) | **0 (0.0%)** |
+| **events** | **149 / 160** | 98 (65.8%) | **0 (0.0%)** |
+
+**THE JOB-SIDE WRONGLY-DROPPED COLUMN RETURNS TO ZERO, AND IT RETURNS BECAUSE THE
+ROUND-22 FIX WORKED.** Round 22's single confirmed wrong drop was `lanl.jobs`;
+this round `lanl.jobs` is **in the pool**. Job denominator history: r17 292,
+r18 102, r19 96, r20 102, r21 102, r22 101, **r23 97.** Wrongly-dropped history:
+r17–r21 zero, r22 **1**, **r23 zero.**
+
+All 54 job-side drops are aggregator category pages, careers landing pages,
+`Internships & Co-ops` index pages, recruiter query pages or off-topic postings.
+**A checked the one that would have been embarrassing:**
+`job-boards.greenhouse.io/…/Chemical and Materials Engineering Internship - Summer 2027`
+— **the real Kairos Power posting that `lensa.com` was misrepresenting in round
+22** — is in this round's offered corpus, on the employer's own board. It reaches
+no pool, and the reason is honest: **neither its title nor its offered snippet
+contains a required topic** (the snippet says `Salt Chemistry`, not
+`molten salt`). **A does not count that as a wrong drop, and says why rather
+than passing over it.**
+
+---
+
+## **THE JOB ITEM-KIND COLUMN: 1 of 11 (9.1%).**
+
+`grad.wisc.edu` alone (A23-04). Round 22 stands restated at **2 of 12 (16.7%)**
+per Ruling 60e; **`batteryjunction.com`, the other half of that figure, is gone
+and its fix is replay-confirmed.** Every other row is a single, real, individual
+vacancy.
+
+---
+
+## **ONE OBSERVATION THAT IS NOT A DEFECT, RECORDED BECAUSE IT WILL LOOK LIKE ONE LATER**
+
+`terra.do` renders **no employer**, and the page's own `<title>` reads
+`Molten Salt Systems Engineer/Scientist at Idaho National Laboratory`, with the
+same name in its JSON-LD `JobPosting` description. **Silence where an evidenced
+name exists is Ruling 32's accepted honest-silence outcome and every prior round
+has declined to count it.** A counts it here too: **not a defect, not ranked.**
+It is recorded only so that a later round comparing `terra.do` against
+`lanl.jobs` sees that A knew the difference between the two — one is silent when
+it could speak, the other **speaks and is wrong.**
+
+---
+
+## **WHAT PART 2 LEAVES FOR PART 4's RANKED LIST**
+
+- **A23-01** — `lanl.jobs`: a pay grade rendered as the hiring organisation, on
+  the very row A22-07 admitted. Job surface, 5 of 5. **WRONG DATA.**
+- **A23-04** — `grad.wisc.edu`: a nine-month-old article rendered as a live
+  internship card. Job surface, 5 of 5. **WRONG SHAPE.** Carried from round 22's
+  diagnostics; never ranked, never fixed.
+- **One falsifier that reads as fired**: the pool came back at 11, not 12. The
+  arithmetic closes exactly and no fix caused a loss, but **A does not
+  reclassify it** — recorded for the manager.
+
+**Turn lock NOT released — parts 3 and 4 follow.**
