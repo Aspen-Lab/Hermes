@@ -270,12 +270,148 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 13:09 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:05 UTC — ROUND 17 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:29 UTC — ROUND 17 B IS
+                  COMPLETE.** Both items, one commit each, each pushed
+                  immediately (`8264d4b`, `7891c4d`) plus this hand-off.
+                  Claimed the lock cleanly (`b9ba97e`) after `git pull
+                  --ff-only` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **B changed no code, deleted no
+                  test, edited no test, and touched no file except this one.**
+                  Harness lived outside `src/` (`web/zz-r17b/`, own vitest
+                  config) and was deleted before BOTH commits; `git status
+                  --porcelain --untracked-files=all` confirmed clean each time.
+
+                  **THE BRIEF'S QUESTION IS ANSWERED AND THE ANSWER IS TWO
+                  SIGNALS, SETTLED BY EXECUTION RATHER THAN BY TASTE.** B built
+                  the unified one-signal design instead of dismissing it —
+                  normalise away the marketing tagline and the `Program(me)`
+                  suffix, then test for a section label with an owner in front —
+                  and **it DESTROYS `M.S. Internship Program – Oregon Center for
+                  Electrochemistry`, a posting round 11 A fetched directly,
+                  scored CORRECT, and called "an own-domain research center
+                  hosting its own internship posting".** Not constructed, not
+                  B's invention. **The unified signal cannot tell EnerSys's
+                  brochure from Oregon's posting because grammatically they are
+                  the same string.** It scores **82/92 with SEVEN false fires**
+                  against an **81/92 zero-false-fire baseline**: +1 net for 7
+                  destroyed real postings. Dead on B14-01's asymmetry.
+
+                  **THE RECOMMENDED DESIGN IS 91/92 WITH ZERO FALSE FIRES**, on
+                  a 92-case matrix (11 must-drop, 81 must-keep). Two additive
+                  checks in `isListingPage`, both closed: **(a) an OWNER'S NAME
+                  in front of a plural careers-section label**, with the owner
+                  tokens forbidden from being function words — the closed list
+                  `TOPIC_LANDING_FUNCTION_WORD_RE` already ships in this same
+                  file; **(b) the SITE'S OWN BRAND in front of a programme
+                  designation**, using the already-imported `looksLikeHostBrand`
+                  relation, so it is a title/host relation and **not a host
+                  list**. The tagline route (S2) was measured and refused: it
+                  destroys `Internship Program: Battery Characterization Track`.
+                  Every URL route was measured again on this round's data and
+                  loses again — **3 false fires, one of them round 16 item 2's
+                  own named accepted cost**, and it cannot reach EnerSys at all.
+
+                  **THE FINDING C MUST NOT MISS: THE OBVIOUS HOME IS THE WRONG
+                  HOME.** Round 16's item 1 was one word added to
+                  `CAREERS_INDEX_TITLE_RE`, so widening that same regex is the
+                  obvious move. **Measured, it silently deletes correct
+                  employers** — that regex has a SECOND call site in the employer
+                  veto chain, and `Tesla Careers` → `Tesla`,
+                  `Kairos Power Careers` → `Kairos Power`,
+                  `Idaho National Laboratory Careers` → `Idaho National
+                  Laboratory` (**a shipped assertion**) all become silence. **The
+                  new checks must be their own constants, read only by
+                  `isListingPage`.** A bare section label is a section label in
+                  either slot; a brand-prefixed one is a company name wearing a
+                  suffix. Round 16 C's change stays exactly as it is.
+
+                  **THE `of` TRAP, written by B to break B's own first draft:**
+                  the unnarrowed owner rule destroys `Head of Careers`,
+                  `Head of Careers - Imperial College London`,
+                  `Manager of Vacancies` and `Head of Internships` — four
+                  ordinary HR and university roles. Four false fires → zero with
+                  the function-word exclusion, **no catch lost.**
+
+                  **ITEM 2 — THE PAIRED EMPLOYER GUARD IS NEEDED, AND RULING 48a
+                  RUNS BACKWARDS HERE.** 48a's literal trigger does NOT fire: the
+                  drop REMOVES the page carrying the wrong employer rather than
+                  resurrecting it. **It fires on the consequence.** The wrong
+                  value is a property of that board's title template, not of the
+                  brochure page: executed on the shipped code, **an ordinary
+                  vacancy on the same board renders the same wrong employer.**
+                  **Land item 1 alone and this value stops being VISIBLE without
+                  stopping being REAL** — the only row a census could ever sight
+                  it on has left the pool. **The guard scores 4/4 catches with
+                  ZERO of 43 real employer names destroyed.**
+
+                  **THE OBVIOUS REPAIR IS THE FORBIDDEN MOVE, MEASURED:** adding
+                  `programs?` to `TRAILING_CAREERS_CHROME_RE` turns
+                  `Battery Cell, R&D & Gigafactory Programs` into
+                  `Battery Cell, R&D & Gigafactory` — **a differently wrong
+                  value**, exactly what 48a forbids. Only the veto chain can
+                  produce silence.
+
+                  **A NARROWING THE STRING SWEEP FOUND, NOT B's EYES:** the
+                  guard's first draft fired on `Alphabet, Inc. Careers` — **a
+                  SHIPPED assertion expecting `Alphabet, Inc.`** — because a real
+                  company name with a comma plus trailing careers chrome is the
+                  same shape. **The trailing-noun list is now only `programs` /
+                  `programmes`**, the two words `TRAILING_CAREERS_CHROME_RE` does
+                  not already own. 5 false fires → 0.
+
+                  **WHAT RENDERS ON REJECTION, both items, measured not
+                  reasoned:** the two pages **leave the pool entirely** (pool 13,
+                  cap 200, `.slice()` never tops up; nothing backfills, nothing
+                  is stranded — EnerSys's employer is already silent and CATL's
+                  is wrong, so the drop removes a wrong value rather than a right
+                  one). When the employer veto fires the field is **absent**, and
+                  **a real employer later in the chain still wins** (`CATL` in
+                  the third row of B's render table).
+
+                  **TESTS AT RISK: ZERO, by grep AND by execution.** Four callers
+                  across `web/src`. **String sweep: 1016 distinct literals × 19
+                  hosts = 19,304 combinations.** The host-brand check fires on
+                  zero; the owner check fires on six, **all resolved by
+                  execution** — four are already `true` on the shipped guard and
+                  asserted as must-drops, two are never used as a title at all.
+                  **Zero verdict changes on any shipped assertion.**
+
+                  **A METHOD IMPROVEMENT WITH A STRUCTURAL REASON, not effort:**
+                  round 16 B had to re-declare `isListingPage`'s private
+                  internals and add a fidelity gate. **This round needed
+                  neither** — every candidate is ADDITIVE, so a variant is
+                  exactly `shipped(...) || signal(...)` and the SHIPPED function
+                  is called on every row. **A transcription slip cannot exist.**
+                  A's own method correction was adopted: every row scored with a
+                  real snippet and the profile's real topics, so a `null` is
+                  never the text gate masquerading as a guard drop.
+
+                  **TWO `POLICY — manager decides`, raised not decided.** (1) **Is
+                  `M.S. Internship Program – Oregon Center for Electrochemistry`
+                  actually a posting?** Round 11 A fetched it and scored it
+                  CORRECT; B treated that as binding and built around keeping it,
+                  which is what forced two signals. **If the manager rules it a
+                  brochure page of this class, the one-signal design becomes
+                  available and the recommendation changes.** (2) **Must item 2
+                  land in the same commit as item 1?** B recommends yes on the
+                  visibility argument above; **they are separable if the manager
+                  prefers to hold it.**
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`.
+                  No third-party page text read into context. No branch,
+                  worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Tree clean.** Full detail in §4's two "Round 17 —
+                  Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 17 A finished @
+                  2026-08-14 13:05 UTC — ROUND 17 A WAS
                   COMPLETE.** All four parts, one commit each, each pushed
                   immediately (`201ac81`, `a9b1d58`, `eef0b21`, this one).
                   Claimed the lock cleanly (`2f04969`) after `git pull
@@ -1457,7 +1593,124 @@ ROUND:            **17 — A IS DONE. B IS NEXT.** Both round-16 items are
                   internship PROGRAMME index pages admitted as vacancies, on
                   `enersys.com` (5 of 5) and `ev.careers` (1 of 5). Ranked list
                   in §4, "Round 17 — Agent A (part 4…)".
-WHOSE TURN:       **B — Investigator, round 17.** A's list is **TWO** numbered
+WHOSE TURN:       **C — Implementer, round 17.** B's guide is **TWO** items, in
+                  §4's two "Round 17 — Agent B" entries. **Work them in order.
+                  C implements; C does not redesign** (§2). Commit per item,
+                  push per commit, run the gate after each.
+
+                  **THE WORK LIST, AND THE DEPENDENCY BETWEEN THE TWO IS REAL.**
+                  - **ITEM 1 — the brochure-page drop.** Two additive checks in
+                    `isListingPage`, `web/src/lib/jobs/sources/jobweb.ts`. The
+                    exact code, the placement, the DO-NOTs and the ten required
+                    assertions are in B's §4 item-1 entry part 8.
+                  - **ITEM 2 — the paired employer guard.** One constant, one
+                    helper, one conjunct in the `.find()` veto chain in
+                    `webResultToRawJobItem`, same file. Exact code and seven
+                    required assertions in B's §4 item-2 entry part 6.
+                  - **DEPENDENCY: item 2's live row becomes UNTESTABLE once item
+                    1 lands**, because item 1 drops the page that carries it.
+                    **So item 2's assertions must be written on the KEPT
+                    real-posting form** (`Battery Cell Engineer - Battery Cell,
+                    R&D & Gigafactory Programs - EV.Careers`), not on the CATL
+                    brochure title. B says so explicitly; an assertion on the
+                    dropped row would be vacuous and would pass for the wrong
+                    reason. **Two commits either way.**
+
+                  **THE ONE THING MOST LIKELY TO GO WRONG, NAMED IN ADVANCE.**
+                  Round 16's item 1 was one word added to
+                  `CAREERS_INDEX_TITLE_RE`, so the natural move is to widen that
+                  same regex again. **B measured it and it silently deletes
+                  correct employers** — that regex has a SECOND call site in the
+                  employer veto chain, and `Tesla Careers`,
+                  `Kairos Power Careers` and `Idaho National Laboratory Careers`
+                  (**a shipped assertion**) all collapse to silence. **The two
+                  new checks must be their own constants, read only by
+                  `isListingPage`.** Assertion 9 of item 1 exists to fail if this
+                  is got wrong.
+
+                  **DO NOT REDESIGN WHAT B PRICED.** Each of these was measured
+                  and each has a number beside it: no URL rule, no leaf
+                  vocabulary, no host list (3 false fires, and it cannot reach
+                  EnerSys); no unified one-signal rule (7 false fires, two on a
+                  live-sighted posting); no colon-tagline signal on its own (1
+                  false fire); no three-token owner budget; no `positions` in the
+                  section-noun list; no `programs?` added to
+                  `TRAILING_CAREERS_CHROME_RE` (it produces a differently wrong
+                  value, Ruling 48a's forbidden move); no `careers`/`vacancies`/
+                  `openings` in the employer guard's trailing-noun list (it
+                  breaks the shipped `Alphabet, Inc.` assertion); no coordination
+                  requirement dropped from the employer guard (5 destroyed real
+                  employers). **Round 16 C's `internships` word,
+                  `LISTING_TITLE_RE`, `NON_JOB_PATH_RE` and `isListingPage`'s
+                  existing check order are all untouched by both items.**
+
+                  **RE-MEASURE BEFORE YOU WRITE, as rounds 15 and 16 C both did.**
+                  B's harness was deleted before B's commits, so **B's rows are
+                  NOT recoverable byte-for-byte** — reconstruct from B's prose and
+                  say so, and do not claim row-for-row identity. **C is the
+                  implementer, so C needs no re-declaration and no fidelity
+                  gate**: apply each candidate to the REAL file and score the REAL
+                  `isListingPage` and `webResultToRawJobItem`. Score every row
+                  with a real snippet and real topics (A's own method correction),
+                  or a text-gate `null` will read as a guard drop.
+
+                  **NEGATIVE PROOF, ONE PER EDIT, as round 16 C ran four.** Revert
+                  each check in turn and record how many of the new assertions go
+                  red; restore and `diff` byte-identical before the next. **Do not
+                  script the reverts with `perl -pi`** — round 16 C recorded that
+                  it mangled the regex backslashes twice. The must-keeps that
+                  deliberately do NOT fail are the proof the changes cost nothing.
+
+                  **THE GATE:** `cd web && npx vitest run && npx tsc --noEmit &&
+                  npx eslint`. Baseline to hold: **90 files / 1426 tests, 1425
+                  passing**, sole failure the standing `benchmark.test.ts`
+                  live-search flake; typecheck clean; lint exactly the one
+                  standing `quiz.tsx:46` error. **Never delete a test to make a
+                  change pass**; if an assertion must change, rewrite it to state
+                  the new contract with a comment naming the item. **Do not skip
+                  the live benchmark via `PEER_PROFILE_SNAPSHOT_PATH`.** Run
+                  `jobs/scoring.test.ts` and `opportunities/job-cleanup.test.ts`
+                  BY NAME, and `enrich.test.ts` SOLO (the SolarPACES lock).
+
+                  **TWO `POLICY — manager decides` ARE OPEN AND C DOES NOT DECIDE
+                  THEM.** (1) Whether `M.S. Internship Program – Oregon Center for
+                  Electrochemistry` is really a posting — round 11 A scored it
+                  CORRECT and B built the whole design around keeping it. **C
+                  implements the two-signal design as written and asserts that row
+                  as a must-keep**; if the manager later rules otherwise, that is
+                  a future round's change. (2) Whether item 2 must land alongside
+                  item 1 — B recommends yes. **If the manager has not said
+                  otherwise by the time C runs, land both, one commit each.**
+
+                  **WHAT C MUST NOT TREAT AS OPEN**, unchanged and by name:
+                  `careerservices.upenn.edu` (34a), `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's
+                  label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29),
+                  `ecs.confex.com`'s and `euchems2026.eu`'s honest hosts
+                  (39a/40), the document-URL retarget (42c), **`euagenda.eu`
+                  (45a — permanently excluded, DO NOT FETCH)**, Ruling 41c's
+                  three hosts (45b), 46a's false fire, 46b's two titles, and
+                  round 16's own named cost.
+
+                  **STILL OPEN FOR THE MANAGER, NOT C's:** B11-04's flag and
+                  B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD;
+                  round 13's unresolved `POLICY — manager decides` on five-pull
+                  majority scoring; round 14 C's `LEADING_LABEL_RE` widening
+                  question; round 15 B's question on the shipped section rule's
+                  two dropped titles; the `@`-separator employer at
+                  `befjobs.breakthroughenergy.org`; and A's question on whether a
+                  MINORITY row can hold the gate open.
+
+                  **THE GATE STAYS AS A LEFT IT: `GATE (0%): NOT MET`.** C does
+                  not set it and cannot move it (§2); only round 18's A's live
+                  measurement can, and only the manager closes (Ruling 30).
+                  **Hand back to A when both items are in.**
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 17 B
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **B — Investigator, round 17.** A's list is **TWO** numbered
                   differences, ranked, in §4's "Round 17 — Agent A (part 4…)"
                   entry, with the full evidence in parts 1–3. **B finds causes and
                   writes a fix guide; B does not change code** (§2). Ruling 31's
