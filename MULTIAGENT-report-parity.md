@@ -53592,3 +53592,119 @@ it**, and it is why (b) requires the URL slug to agree rather than loosening the
 title test. Pool size falls by one; nothing else in the pipeline reads the key.
 
 ---
+
+### Round 22 — Agent B (item 7 of 9: **A22-04 — `zerobonline.com`. B did NOT re-derive A's guard verdict, and then found something A's verdict did not cover: the employer name IS on the row, in the title's parentheses, and it never reaches the slot the guard reads.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 7 of 9. Method as stated in item 1.
+
+## **CLASSIFICATION: EXTRA.** A Mumbai marketing internship in a molten-salt/battery pool.
+
+## WHAT B DID NOT DO
+
+§1 and Ruling 59's note both forbid re-deriving A's finding that this is not a
+57b guard defect. **B did not re-derive it.** What B did instead was ask the next
+question — *is the guard even reachable, and would it fire if it were?* — because
+"the guard returns false" and "the guard cannot see the row" are different
+facts with different fixes.
+
+## THE MECHANISM, MEASURED
+
+The row enters the pool because the required topic `ion exchange` matches. The
+profile's required topics are `["LCO", "topochemical", "ion exchange", "molten
+salt", "battery"]`; the row's `matchedKeywords` is exactly `["ion exchange"]`,
+and the only place that string occurs is **inside the employer's company name**.
+
+The 57b guard is called at `web/src/lib/jobs/scoring.ts:329-331` with
+`ownerName: item.company`. **`item.company` on this row is `null`.** The reason
+is structural and B traced it:
+
+`web/src/lib/jobs/sources/jobweb.ts:1128` splits the title on
+`\s+([-–—|·])\s+`. The title is `Opening For Marketing Intern (Ion Exchange
+Ltd.)` — **the employer is in PARENTHESES, and `(` is not a separator in that
+class.** The `at <Employer>` capture at `:1176` does not apply either. So no
+employer candidate is ever produced, `company` stays undefined, and **the guard's
+conjunct 1 — a topic must be a proper sub-span of the owner's NAME — has no name
+to test.**
+
+## B EXECUTED THE COUNTERFACTUAL, WHICH IS THE PART A's CHECK DID NOT COVER
+
+Running the shipped `isOwnerNameTopicCollision`
+(`web/src/lib/opportunities/shared.ts:285`) with the parenthetical supplied as
+the owner name:
+
+| `ownerName` passed | guard fires |
+|---|---|
+| `null` (today) | **false** |
+| `Ion Exchange Ltd.` (the counterfactual) | **false** |
+
+**So surfacing the employer would NOT close this row.** Conjunct 5's
+investment-vehicle tail still blocks it, exactly as A said — and B has now shown
+that independently, on the same call A used, rather than restating A.
+**A's verdict stands and is strengthened: this is a NEW SHAPE.**
+
+The three named must-keeps were re-run in the same harness and **none of them
+fires the guard either** (`Ion Exchange Global`, `Molten Salt Solutions`,
+`Battery Resourcers` — all `false`), which is what makes conjunct 5 load-bearing
+rather than decorative.
+
+## FIX DIRECTION — a fresh design, and B recommends C ship only the safe half
+
+**(a) SAFE, INDEPENDENT, AND WORTH SHIPPING ON ITS OWN MERITS — let a
+parenthetical employer reach the `company` slot.** Today this row renders **no
+employer line at all** for a posting that names its employer plainly. That is a
+wrong SILENCE, and closing it is a Ruling 32 improvement regardless of A22-04.
+It must go through the **existing** candidate guard chain (`:1182-1235`) like
+every other candidate, so `looksLikeBareLocation`, `looksLikeHostBrand`,
+`looksLikeTopicLabel`, `looksLikeBoardSelfName` and the rest all still apply.
+**It does not close A22-04 and B does not claim it does.**
+
+**(b) THE GUARD HALF — A FRESH DESIGN, NOT A CONJUNCT WIDENED INLINE.** Ruling
+59's note and Ruling 58a's escape clause both require this, and B holds the line:
+**no clause of the shipped 57b guard may be edited to reach this row.** The
+shape that is actually new is *"the ONLY evidence for a required topic is the
+employer's own registered name, and the posting's own subject matter contradicts
+it"* — `Marketing`, `Business`, `BMS`, `social media`, nothing chemical anywhere.
+
+**B does NOT hand C a ready design for (b), and says why rather than shipping a
+guess.** A design here needs an adversarial table over a corpus of real
+employer names that legitimately contain a topic word, and **this pull offers
+four rows to build it from** (`zerobonline`, `ionenviromgt.net`,
+`ionexchangeglobal.com`, `jobs.battery.com`) — three of which already drop for
+other reasons. Four rows is not a matrix. **Shipping a subject-matter guard off
+four rows is exactly the "fix one site" failure Ruling 32 named**, and a false
+fire here deletes a real chemistry postdoc at a company called `Ion Exchange
+Global`, which the loop has protected for four rounds.
+
+**RECOMMENDATION: C ships (a) only this round. (b) is deferred with its shape
+recorded**, and a later A that measures more instances of the shape earns the
+matrix. **This is B declining to design rather than B forgetting to.**
+
+**`POLICY — manager decides`, and B says where it looked.** If the manager wants
+(b) attempted now rather than deferred, the corpus problem does not go away —
+B searched this pull's 99 offered job rows and 138 offered event rows and found
+**no fifth instance** of the shape. There is no honest wider source available
+inside this loop's own evidence; the alternative is a constructed corpus, which
+Ruling 55c has already ruled insufficient for a different must-keep.
+
+## TESTS AT RISK
+
+- `web/src/lib/jobs/sources/jobweb.test.ts` — the employer candidate chain. (a)
+  adds a candidate source, so **every existing "employer is silent" assertion on
+  a parenthetical title is a potential red**; grep for `(` in title fixtures.
+- `web/src/lib/opportunities/employer-identity.test.ts` and
+  `web/src/lib/opportunities/shared.test.ts` — the guard's own tests. **(a) must
+  leave both untouched and green**; if either moves, (a) has drifted into (b).
+- `web/src/lib/jobs/scoring.test.ts` — the guard's call site.
+- Ruling 49a's Oregon lock and Ruling 33's acronym cases live in these files and
+  are the standing falsifiers for any employer-chain edit.
+
+## BLAST RADIUS
+
+(a) is one added candidate in one array in one function; it can only ever turn a
+silence into a name, never a name into a different name, because the existing
+`find` takes the first candidate that passes and `titleEmployer` still precedes
+it. **It cannot move a row into or out of any pool.** (b), if the manager orders
+it, sits in `scoring.ts`'s gate and CAN delete rows — which is the whole reason
+B is not designing it on four data points.
+
+---
