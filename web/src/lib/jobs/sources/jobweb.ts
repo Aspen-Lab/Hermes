@@ -83,6 +83,85 @@ export const LISTING_URL_RE =
 const FEED_PATH_RE =
   /(?:^|\/)(?:feed|rss|atom)(?:\/|$)|\.(?:rss|atom|xml)$|[?&]feed=/i;
 
+/**
+ * B14-01 (round 14, Ruling 43): a FORUM THREAD is a discussion, not a posting.
+ * `openmc.discourse.group/t/job-vacancies-looking-for-openmc-skills/1727?page=2`
+ * rendered the forum CATEGORY (`Announcements`, and in another round `Users`) in
+ * the employer slot, unanimously across all five of round 14 A's pulls.
+ *
+ * **THIS IS A PAGE-KIND RULE, NOT A STRING RULE, AND THAT IS THE WHOLE POINT.**
+ * The three wrong-or-empty employer values recorded for this host are three
+ * TITLES of ONE page. A string-side guard has to beat each separately; this
+ * beats all of them at once because `isListingPage` is consulted BEFORE the
+ * employer chain ever runs — the wrong value cannot be derived from an item that
+ * never exists. B verified by execution that ALL FIVE recorded title shapes drop
+ * from this one URL rule (paginated `Announcements`, page-1 `Announcements`,
+ * `Users`, the `|`-separated r12 variant, and the no-category variant), which is
+ * how Ruling 43's "both observed shapes, not one string" is satisfied. A sixth
+ * title shape appearing tomorrow drops too. **The rule never reads the title.**
+ *
+ * Closed by construction, the same bar `FEED_PATH_RE` cleared: it enumerates
+ * FORUM SOFTWARE'S OWN ROUTING CONVENTIONS — fixed by the software that emits
+ * them, not by English — so it is not Ruling 37's open-class trap.
+ *  1. Discourse: `/t/[<slug>/]<topic-id>[/<post-no>]` (the live shape).
+ *  2. phpBB / vBulletin: the literal script filenames. A filename is as closed
+ *     as a vocabulary gets.
+ *  3. XenForo: `/threads/<slug>.<thread-id>` — the `.` + id suffix is XenForo's
+ *     own and is REQUIRED, rather than matching the bare word `threads`.
+ *
+ * EVERY ALTERNATIVE IS WHOLE-SEGMENT ANCHORED AND EVERY ALTERNATIVE REQUIRES A
+ * CONFIRMING STRUCTURAL TOKEN — a numeric id or a literal script filename. None
+ * fires on a word alone. The naive token-only form (`/t/`, `/topic/`, `/thread/`,
+ * `/forum/` …) was measured at 46/58 with EIGHT FALSE FIRES; do not simplify to
+ * it. `/jobs/threading-machine-operator`, `/careers/discourse-analysis-researcher`,
+ * `/t-shirt-designer/jobs/1234`, `/t/battery-research-scientist` (a `/t/` segment
+ * with no id) and `/threads/hiring.today` (a dot with no id) are all real-shaped
+ * posting URLs it would have destroyed. All are asserted below as must-keeps.
+ *
+ * TWO NARROWINGS B MEASURED AND C MUST NOT REVERSE:
+ *  1. **NodeBB/Invision's `/topic/<id>` is DELIBERATELY ABSENT.** Adding it
+ *     scores 58/58 instead of 57/58, and it is still wrong: its true-fire shape
+ *     `/topic/8891-hiring-battery-postdocs/` and its false-fire shapes
+ *     `/topic/12-month-battery-fellowship`, `/topic/2026-summer-internship` are
+ *     both `/topic/<digits>-<slug>` and NO structural test separates them — a
+ *     four-digit year is a four-digit id, so a digit floor does not help. The
+ *     miss costs the status quo; the false fire destroys a real posting. Same
+ *     arithmetic `LISTING_SECTION_TITLE_RE` used to exclude `for`. The miss is
+ *     asserted below as a deliberate named miss so a later widening is a
+ *     deliberate act rather than a drift.
+ *  2. **Do NOT anchor the Discourse alternative to `^\/t\/`.** Measured at
+ *     55/58: it stops catching subfolder Discourse installs
+ *     (`/community/t/hiring-postdocs/8891`, a documented deployment shape) AND
+ *     this suite's own idea of a forum thread URL.
+ *
+ * Ruling 39c's recorded preference was a HOST LIST, and this is neither a host
+ * list nor phrase matching. 39c's own stated REASON for that preference —
+ * avoiding an open class — endorses a URL-route rule; and a host list would not
+ * have closed this item at all, because Discourse is a PLATFORM, not a site
+ * (`discuss.example.org` and a subfolder install are the same defect on
+ * different hosts, and both are caught here). Fixing one site is Ruling 32's
+ * headline complaint. **The manager verified round 14 B and ENDORSED this
+ * departure: the route rule is ruled the correct instrument. Do not "fix" it
+ * back into a host list.**
+ *
+ * THE ASYMMETRY THAT SHAPED EVERY NARROWING: this is the first drop this loop
+ * has designed for a wrong VALUE rather than a wrong ITEM. A guard's false fire
+ * leaves a field empty; a DROP's false fire destroys a whole real posting. That
+ * is why a matrix point was given up rather than keep `/topic/<id>`.
+ *
+ * Accepted cost, stated rather than hidden: if a forum thread is ever the only
+ * home of a real vacancy, this drops it. What such a thread renders TODAY is a
+ * thread title in the role slot (`Job vacancies looking for OpenMC skills` — not
+ * a role anyone can apply to) and a forum category in the employer slot. That is
+ * wrong data, which Ruling 23 ranks ABOVE missing data.
+ *
+ * Failure direction when it does NOT fire: exactly today's behaviour — an
+ * unlisted forum convention stays in the pool with whatever employer the chain
+ * derives. Never a new wrong value.
+ */
+const FORUM_THREAD_URL_RE =
+  /(?:^|\/)t\/(?:[\w%.~-]+\/)?\d+(?:\/\d+)?(?:\/|$|\?)|(?:^|\/)(?:viewtopic|showthread|viewforum|forumdisplay)\.php(?:$|[?&])|(?:^|\/)threads\/[\w%.~-]*?\.\d+(?:\/|$|\?)/i;
+
 /** Aggregators whose deep links are fine but whose listing pages are noise. */
 const AGGREGATOR_HOSTS = [
   "indeed.com",
@@ -351,6 +430,7 @@ export function isListingPage(
   pathAndQuery: string,
 ): boolean {
   if (FEED_PATH_RE.test(pathAndQuery)) return true;
+  if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
   if (LISTING_TITLE_RE.test(title)) return true;
   if (CAREERS_INDEX_TITLE_RE.test(title)) return true;
   if (LISTING_SECTION_TITLE_RE.test(title)) return true;

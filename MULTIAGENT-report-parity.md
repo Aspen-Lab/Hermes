@@ -31653,3 +31653,151 @@ Also verified and worth keeping:
 B14-02 (display-stage bracket strip, 10/10), with the two silent-passing
 tests restated.**
 
+
+---
+
+### Round 14 — Agent C (B14-01: the forum-thread route rule LANDED — 58 adversarial cases as tests, the four at-risk tests handled including the two that were passing while testing nothing, and the NodeBB miss asserted as deliberate)
+
+**STATUS: DONE.** First of round 14 C's two items. Turn lock claimed (`daf1d64`,
+`LAPTOP-3CL10CG5 @ 2026-08-14 09:59 UTC`) after `git pull --ff-only` (already up
+to date) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: C` block, both "Round 14 — Agent B" entries in full, **the manager's
+"Round 14 — MANAGER verification of Agent B"**, §2 and §3 before writing a line.
+
+**COLD BASELINE CONFIRMED FIRST, NOT INHERITED: 90 files / 1226 tests, 1225
+passing**, the single failure being `benchmark.test.ts`'s standing live-search
+flake. Typecheck clean, lint exactly the one standing `quiz.tsx:46` error.
+
+---
+
+#### WHAT LANDED — B's RECOMMENDED VARIANT, VERBATIM
+
+`web/src/lib/jobs/sources/jobweb.ts`: one new `FORUM_THREAD_URL_RE` constant
+placed directly beside `FEED_PATH_RE`, and **one line** added to
+`isListingPage()` as its second check, immediately after the feed check:
+
+```
+if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
+```
+
+**The regex is byte-identical to B's recommendation.** Closed forum-software
+route set, whole-segment anchored, every alternative id-confirmed. **No
+narrowing, no widening, no "tidying".** The three rejected variants B measured
+(`^\/t\/`-anchored at 55/58, the naive token-only form at 46/58, and the
+NodeBB-inclusive 58/58) are all recorded in the shipped doc comment so none of
+them is re-derived, along with the manager's endorsement of the route rule over
+Ruling 39c's stated host-list preference.
+
+**I VERIFIED B's MATRIX BEFORE WRITING THE CODE, NOT AFTER.** A standalone probe
+(scratchpad, outside the repo entirely, no import of product code) ran the
+recommended regex over all 58 cases: **43 must-keeps all survive with ZERO false
+fires; 14 of the 15 must-drops are caught; NodeBB is the fifteenth and is
+missed.** That is B's 57/58 exactly, reproduced rather than trusted. All four
+grey cases behaved as B documented (`/careers/t/1234` and `/en/t/1234` drop;
+both `/topic/…` shapes survive).
+
+---
+
+#### THE FOUR TESTS AT RISK — ALL FOUR HANDLED, NONE DELETED
+
+Per §3, every one is **restated with a comment naming the item**, never removed.
+
+1. **`jobweb.test.ts` — `keeps the openmc forum thread in the pool — Ruling 39c
+   owns that drop, not B13-02`. HARD FAIL, INVERTED.** Its own comment said "if
+   a future change makes this fail, that change is taking a deferred decision
+   without a ruling". **Ruling 43 is that ruling**, and the manager's round-14
+   verification endorsed this instrument specifically. Renamed to
+   `drops the openmc forum thread — Ruling 43 authorises it, B14-01 implements
+   it`, assertion `.toBe(false)` → `.toBe(true)`, comment replaced with one
+   citing Ruling 43, B14-01 and the manager's endorsement.
+2. **`leaves the employer absent when only nav chrome survives`. HARD FAIL,
+   REPOINTED.** Its subject is `looksLikeNavChrome`, not the host, so the URL
+   moved to `https://example.test/careers/job/9912`. The contract it asserts —
+   absence, not a placeholder — is unchanged.
+3. **The nav-chrome `it.each` over the closed pagination vocabulary. WAS PASSING
+   WHILE TESTING NOTHING.** Its URL was `/forum/t/thread/1?page=2`, which B14-01
+   now drops: `item` becomes `null`, `item?.company` is `undefined` for the
+   WRONG REASON, and **the entire closed nav-chrome vocabulary would have
+   stopped being checked without one red test.** Repointed at a non-forum
+   posting URL **and given an explicit `expect(item).not.toBeNull()`** so it can
+   never go vacuous this way again.
+4. **The three-openmc-title `it.each`. WAS PASSING VACUOUSLY**, same mechanism —
+   B12-06's pagination guard was about to stop being exercised at all.
+   Repointed at a non-forum posting URL carrying `?page=2`, **plus
+   `not.toBeNull()`**, so the guard is genuinely exercised again. **A separate
+   new test asserts the real openmc URL is now dropped**, so the two contracts
+   sit side by side rather than one silently masking the other.
+
+**The two silent-passing tests are the reason I added `not.toBeNull()` to both
+rather than only moving their URLs.** Repointing alone restores what they test
+today; the added assertion is what makes a future drop rule fail them LOUDLY
+instead of quietly hollowing them out. That is the class the manager named.
+
+---
+
+#### TESTS ADDED — B's 58-CASE TABLE, PLUS THE THREE PROPERTIES
+
+**+67 tests, 0 deleted, 4 restated.** In `jobweb.test.ts`, a new
+`forum threads are not postings (B14-01, Ruling 43)` block:
+
+- **The 14 caught must-drops** as an `it.each`, grouped by forum software so the
+  closed-set argument is visible in the test names: six Discourse shapes, **the
+  second Discourse host and the subfolder install** (the two cases that show a
+  host list would not have closed this item), the four phpBB/vBulletin script
+  filenames, XenForo, and this suite's own forum URL.
+- **All 43 must-keeps** as an `it.each` — the 20 real postings from A's censuses
+  and this suite, then B's 23 adversarial shapes. **`hyetlithium.com` (this
+  file's own doc-comment must-keep) and `lco.global/about/interns` (A's part-2
+  Finding 4) are both in, each with a comment saying why.**
+- **Every case in both tables uses a title that is NOT itself a listing title**,
+  so a must-drop cannot go green on `LISTING_TITLE_RE` and prove nothing about
+  B14-01. Stated because a passing test that passes for the wrong reason is the
+  exact failure this round is cleaning up.
+- **The NodeBB miss asserted as a deliberate named miss**, with the two
+  `/topic/<digits>-<slug>` real-posting shapes that are structurally
+  indistinguishable from it asserted underneath as must-keeps.
+- **Title-independence**: all five recorded title shapes drop from the one URL,
+  including the `Users` shape absent from round 14's census.
+- **Ruling 32's render-side answer**: `webResultToRawJobItem` returns `null`, so
+  no employer can be derived and nothing rejected is reinserted.
+
+---
+
+#### NEGATIVE PROOF — 22 FAILURES, THEN RESTORED
+
+Disabled the one new line in `isListingPage()` and re-ran the file: **22 of the
+new assertions failed**; restored, and all 181 pass. The must-keeps stay green in
+both states **by design** — they guard against false fires, so a green must-keep
+under the reverted code is the correct result, not a weak test. The 22 that move
+are the ones that assert the new behaviour.
+
+---
+
+#### GATE AFTER ITEM 1
+
+- `npx vitest run` — **90 files / 1293 tests, 1292 passing.** Sole failure
+  `benchmark.test.ts`, the standing live-search flake. **+67 from the 1226
+  baseline, 0 deleted.**
+- `npx tsc --noEmit` — **clean.**
+- `npx eslint` — **exactly 1 error, the standing `quiz.tsx:46`.**
+- **Named runs, both called for because both call the touched entry point:**
+  `scoring.test.ts` and `job-cleanup.test.ts` run together with `jobweb.test.ts`
+  — **217 passed**, zero failures. B's read was right: neither uses a
+  forum-shaped URL.
+- **`enrich.test.ts` run SOLO — 25 tests, 25 passed.** The SolarPACES regression
+  lock is intact.
+
+**Expected render change for round 15 A:** the openmc item is **ABSENT FROM THE
+POOL** — not an item with a corrected employer. The pool shrinks by one, ~7% of
+round 14's 14-item sample, and that is the fix working.
+
+**No credential read, printed, logged or written. No live pipeline pull, no page
+fetch, no `PEER_PROFILE_SNAPSHOT_PATH`. No branch, worktree or PR. No test
+deleted. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.** The verification
+probe lived in the session scratchpad **outside the repository** — `git status`
+scoped to `web/` is clean of it by construction.
+
+Commit follows immediately.
+
+---

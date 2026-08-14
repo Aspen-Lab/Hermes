@@ -125,6 +125,15 @@ describe("company derivation", () => {
     // recorded the reconstruction as a reconstruction; asserting all three is
     // what makes the fix independent of which shape the provider actually
     // sends.
+    // RESTATED BY B14-01 (round 14, Ruling 43), NOT DELETED. This block used to
+    // carry the real openmc forum URL. B14-01 drops that URL at
+    // `isListingPage`, so `webResultToRawJobItem` now returns `null` and
+    // `item?.company` would be `undefined` FOR THE WRONG REASON — the assertion
+    // would keep PASSING while B12-06's pagination guard stopped being
+    // exercised at all. B named this exact class: a test that goes green while
+    // the guard it exercises becomes unreachable. The URL is repointed at a
+    // non-forum posting so the pagination guard is genuinely tested again; the
+    // openmc URL's new drop is asserted separately below.
     it.each([
       "Job vacancies looking for OpenMC skills - Page 2 - Users - OpenMC Discourse",
       "Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse",
@@ -132,22 +141,45 @@ describe("company derivation", () => {
     ])("does not mistake a pagination label for the employer: %s", (title) => {
       const item = webResultToRawJobItem({
         title,
-        url: "https://openmc.discourse.group/t/job-vacancies/1234?page=2",
+        url: "https://example.test/careers/job/9912?page=2",
         snippet: "Several groups are hiring for molten salt reactor work. Apply now.",
       });
+      expect(item).not.toBeNull();
       expect(item?.company).not.toBe("Page 2");
+    });
+
+    // B14-01: the counterpart assertion. The real openmc forum thread URL no
+    // longer produces an item at all, so no employer can be derived from it —
+    // which is how Ruling 43's wrong value is closed. Kept next to B12-06's
+    // block so the two contracts are read together rather than one silently
+    // masking the other.
+    it("drops the real openmc forum thread outright (B14-01) — no item, so no employer", () => {
+      const item = webResultToRawJobItem({
+        title: "Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC",
+        url: "https://openmc.discourse.group/t/job-vacancies-looking-for-openmc-skills/1727?page=2",
+        snippet: "Several groups are hiring for molten salt reactor work. Apply now.",
+      });
+      expect(item).toBeNull();
     });
 
     // The rest of the closed vocabulary, asserted on the guard's own shape so
     // each alternative is covered rather than assumed.
+    // RESTATED BY B14-01 (round 14), NOT DELETED. The URL here was
+    // `https://example.test/forum/t/thread/1?page=2` — a forum-thread shape,
+    // which B14-01 now drops. The assertion would have kept PASSING with
+    // `item` null and `item?.company` undefined for the wrong reason, so the
+    // whole closed nav-chrome vocabulary would have stopped being checked
+    // without a single red test. Repointed at a non-forum posting URL, plus an
+    // explicit `not.toBeNull()` so this can never silently go vacuous again.
     it.each(["Page 2", "Page 12 of 40", "3 of 10", "Next", "Home", "Previous", "Back"])(
       "rejects the nav-chrome segment %s",
       (segment) => {
         const item = webResultToRawJobItem({
           title: `Battery Research Scientist - ${segment}`,
-          url: "https://example.test/forum/t/thread/1?page=2",
+          url: "https://example.test/careers/job/9913?page=2",
           snippet: "Open position in battery R&D. Apply now.",
         });
+        expect(item).not.toBeNull();
         expect(item?.company).toBeUndefined();
       },
     );
@@ -175,10 +207,16 @@ describe("company derivation", () => {
     // Ruling 32 from the render side: absence, not a placeholder. Both the job
     // card and the feed tile guard on companyOrLab, so the employer line is
     // omitted entirely rather than showing anything rejected.
+    // RESTATED BY B14-01 (round 14), NOT DELETED. Its subject is
+    // `looksLikeNavChrome`, not the host, so repointing the URL preserves what
+    // it actually tests. It used the openmc forum URL, which B14-01 now drops
+    // before the employer chain runs; `expect(item).not.toBeNull()` would have
+    // failed loudly. The contract asserted here — absence, not a placeholder —
+    // is unchanged.
     it("leaves the employer absent when only nav chrome survives", () => {
       const item = webResultToRawJobItem({
         title: "Battery Research Scientist - Page 2",
-        url: "https://openmc.discourse.group/t/job-vacancies/1234?page=2",
+        url: "https://example.test/careers/job/9912",
         snippet: "Open position in battery R&D. Apply now.",
       });
       expect(item).not.toBeNull();
@@ -731,20 +769,24 @@ describe("non-posting pool items (B13-02)", () => {
     });
   });
 
-  // MUST-KEEP, DELIBERATE AND LOAD-BEARING: the openmc forum thread stays IN
-  // the pool. Dropping forum threads is RULING 39c's item and it is DEFERRED —
-  // its trigger (a second, distinct forum-thread instance) has not fired. This
-  // design must not do 39c's work by the back door, so the thread is asserted
-  // here as a must-keep. If a future change makes this fail, that change is
-  // taking a deferred decision without a ruling.
-  it("keeps the openmc forum thread in the pool — Ruling 39c owns that drop, not B13-02", () => {
+  // RESTATED BY B14-01 (round 14), NOT DELETED. This assertion was written by
+  // round 13 C to catch exactly a change that took Ruling 39c's DEFERRED drop
+  // without a ruling — its comment said "if a future change makes this fail,
+  // that change is taking a deferred decision without a ruling."
+  //
+  // RULING 43 IS THAT RULING. It authorises and requires the drop, and the
+  // manager's round-14 verification of Agent B endorsed the URL-route
+  // instrument specifically. So the contract inverts: the openmc forum thread
+  // must now be dropped, and the test that guarded the old contract states the
+  // new one instead of being removed.
+  it("drops the openmc forum thread — Ruling 43 authorises it, B14-01 implements it", () => {
     expect(
       isListingPage(
         "Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse",
         "openmc.discourse.group",
         "/t/job-vacancies/1234?page=2",
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   // Eleven live-confirmed real postings from round 13 A's own census must all
@@ -757,5 +799,161 @@ describe("non-posting pool items (B13-02)", () => {
     ["Internship Battery R&D", "hyetlithium.com", "/careers/internship-battery-research"],
   ])("keeps the live posting %s", (title, host, pathAndQuery) => {
     expect(isListingPage(title, host, pathAndQuery)).toBe(false);
+  });
+
+  // B14-01 (round 14, Ruling 43): the forum-thread route rule, asserted as B's
+  // own 58-case adversarial matrix — 15 must-drop and 43 must-keep. B scored
+  // the recommended design 57/58: every must-keep survives with ZERO false
+  // fires, and 14 of the 15 must-drops are caught. The fifteenth is the
+  // deliberate named miss asserted at the bottom of this block.
+  //
+  // Every case here uses a TITLE THAT IS NOT ITSELF A LISTING TITLE, so a pass
+  // can only come from the URL rule — otherwise a must-drop could go green on
+  // `LISTING_TITLE_RE` and this block would prove nothing about B14-01.
+  describe("forum threads are not postings (B14-01, Ruling 43)", () => {
+    // THE 14 CAUGHT MUST-DROPS. Three forum-software routing conventions:
+    // Discourse `/t/[<slug>/]<id>[/<post>]`, the phpBB/vBulletin script
+    // filenames, and XenForo's `/threads/<slug>.<id>`.
+    it.each([
+      // Discourse — the live shape and its recorded siblings
+      ["live openmc thread", "openmc.discourse.group", "/t/job-vacancies-looking-for-openmc-skills/1727?page=2"],
+      ["openmc page-1 shape", "openmc.discourse.group", "/t/job-vacancies-looking-for-openmc-skills/1727"],
+      ["the shipped suite's openmc URL", "openmc.discourse.group", "/t/job-vacancies/1234?page=2"],
+      ["a bare topic id", "openmc.discourse.group", "/t/1727"],
+      ["a post permalink", "openmc.discourse.group", "/t/job-vacancies-looking-for-openmc-skills/1727/14"],
+      ["a trailing-slash form", "openmc.discourse.group", "/t/job-vacancies/1234/"],
+      // Discourse is a PLATFORM, not a site — a host list would not have closed
+      // this item. These two are the concrete reason.
+      ["another Discourse host", "discuss.example.org", "/t/hiring-postdocs/8891"],
+      ["a SUBFOLDER Discourse install", "example.test", "/community/t/hiring-postdocs/8891"],
+      // phpBB / vBulletin — literal script filenames
+      ["phpBB viewtopic.php", "forum.example.test", "/viewtopic.php?t=1234"],
+      ["phpBB viewforum.php", "forum.example.test", "/viewforum.php?f=12"],
+      ["vBulletin showthread.php", "forum.example.test", "/showthread.php?t=1234"],
+      ["vBulletin forumdisplay.php", "forum.example.test", "/forumdisplay.php?f=12"],
+      // XenForo — the `.` + id suffix is REQUIRED, never the bare word
+      ["XenForo /threads/<slug>.<id>", "forum.example.test", "/threads/hiring-battery-postdocs.8891/"],
+      // This suite's own idea of a forum thread URL. It is the reason the
+      // Discourse alternative is NOT anchored to `^/t/` — that draft scored
+      // 55/58 because it missed this and subfolder installs.
+      ["this suite's own forum URL", "example.test", "/forum/t/thread/1?page=2"],
+    ])("drops %s", (_label, host, pathAndQuery) => {
+      expect(isListingPage("Battery Research Scientist", host, pathAndQuery)).toBe(true);
+    });
+
+    // THE 43 MUST-KEEPS — 20 real postings from A's censuses (rounds 11–14) and
+    // this suite, then 23 adversarial shapes B wrote to break its own draft.
+    // ZERO false fires is the property that matters here: a guard's false fire
+    // leaves a field empty, but a DROP's false fire destroys a whole real
+    // posting. That asymmetry is why the design gave up a matrix point.
+    it.each([
+      // --- 20 real postings ---
+      ["talents.vaia.com", "talents.vaia.com", "/companies/savannah-river-national-laboratory/jobs/1234"],
+      ["lco-cdo.org coordinator posting", "lco-cdo.org", "/en/jobs/project-and-website-coordinator/"],
+      ["employbl.com", "employbl.com", "/jobs/2027-summer-investment-internship-battery-ventures-1410243"],
+      ["careers.inl.gov", "careers.inl.gov", "/job/12345"],
+      // isListingPage's own doc-comment must-keep — a real posting with NO id.
+      ["hyetlithium.com", "hyetlithium.com", "/careers/internship-battery-research"],
+      ["inl.referrals.selectminds.com", "inl.referrals.selectminds.com", "/jobs/12345"],
+      ["careerservices.upenn.edu", "careerservices.upenn.edu", "/job/12347"],
+      ["postdocjobs.com", "postdocjobs.com", "/job/999003"],
+      ["ev.careers", "ev.careers", "/jobs/battery-cell-engineer-1234"],
+      ["careers.gevernova.com", "careers.gevernova.com", "/global/en/job/GEVEGLOBAL12345/Battery-Engineer"],
+      ["grad.wisc.edu", "grad.wisc.edu", "/funding/graduate-assistantship-battery-research/"],
+      ["a linkedin.com deep posting", "linkedin.com", "/jobs/view/battery-research-scientist-at-acme-4123456789"],
+      ["terra.do", "terra.do", "/climate-jobs/battery-systems-engineer/"],
+      ["mykelly.com", "mykelly.com", "/job/battery-lab-technician-1234567/"],
+      // Round 14 A's part-2 Finding 4 observation. B14-01 does not touch it —
+      // it is an internships index, not a forum thread, and closing it (if it
+      // is ever ruled a defect) is a different item.
+      ["lco.global/about/interns", "lco.global", "/about/interns"],
+      ["jobs.lbl.gov", "jobs.lbl.gov", "/jobs/battery-materials-postdoc-1234"],
+      ["jobs.ac.uk", "jobs.ac.uk", "/job/DKL123/postdoctoral-research-associate-in-battery-science"],
+      ["a Greenhouse board deep link", "boards.greenhouse.io", "/acmebattery/jobs/4123456"],
+      ["this suite's ziprecruiter deep link", "ziprecruiter.com", "/c/Acme/Job/Battery-Scientist/-in-San-Jose?jid=1234567"],
+      ["careers.inl.gov, second posting", "careers.inl.gov", "/job/12346"],
+      // --- 23 adversarial shapes: forum tokens as ordinary slug substrings ---
+      // These 8 are the naive token-only draft's false fires. That draft scored
+      // 46/58 and destroyed real postings; do not simplify the rule back to it.
+      ["threading-machine-operator", "example.test", "/jobs/threading-machine-operator"],
+      ["topical-drug-formulation-scientist", "example.test", "/jobs/topical-drug-formulation-scientist"],
+      ["discourse-analysis-researcher", "example.test", "/careers/discourse-analysis-researcher"],
+      ["viewtopic-ux-designer", "example.test", "/careers/viewtopic-ux-designer"],
+      ["t-shirt-designer", "example.test", "/t-shirt-designer/jobs/1234"],
+      ["threads-of-innovation", "example.test", "/threads-of-innovation/careers/1234"],
+      ["forum/careers", "example.test", "/forum/careers/battery-scientist"],
+      ["topics/battery", "example.test", "/topics/battery/jobs/1234"],
+      // These prove the CONFIRMING STRUCTURAL TOKEN requirement: a `/t/`
+      // segment with no id, digits with no segment boundary, a dot with no id,
+      // and a `.php` that is not one of the four forum scripts.
+      ["a /t/ segment with NO id", "example.test", "/t/battery-research-scientist"],
+      ["digits with no segment boundary", "example.test", "/t/2026-battery-intern"],
+      ["a dot with no id", "example.test", "/threads/hiring.today"],
+      ["a .php that is not a forum script", "example.test", "/careers/apply.php?id=1234"],
+      ["another non-forum .php", "example.test", "/jobs/viewjob.php?id=99"],
+      ["/topic/ with a non-id slug", "example.test", "/topic/battery-research/jobs/1234"],
+      ["bare /threads/ with no id", "example.test", "/threads/battery-careers"],
+      ["bare /thread/ singular", "example.test", "/thread/battery-jobs"],
+      ["/topics/ with no id", "example.test", "/forums/topics/battery"],
+      ["a /t segment at the end with no id", "example.test", "/careers/t"],
+      ["a /t/ segment naming a team", "example.test", "/about/t/team"],
+      ["threadneedle in a slug", "example.test", "/jobs/threadneedle-street-analyst"],
+      ["showthread in a slug", "example.test", "/careers/showthread-content-strategist"],
+      ["forumdisplay in a slug", "example.test", "/careers/forumdisplay-engineer"],
+      ["a numeric team path", "example.test", "/team/1234/battery-scientist"],
+    ])("keeps %s", (_label, host, pathAndQuery) => {
+      expect(isListingPage("Battery Research Scientist", host, pathAndQuery)).toBe(false);
+    });
+
+    // THE FIFTEENTH MUST-DROP, DELIBERATELY MISSED. Adding NodeBB/Invision's
+    // `/topic/<id>` scores 58/58 instead of 57/58 and is still wrong: its
+    // true-fire shape and its false-fire shapes are BOTH `/topic/<digits>-<slug>`
+    // and no structural test separates them — a four-digit year is a four-digit
+    // id, so raising the digit floor does not help. The two false-fire shapes
+    // are asserted underneath. Assert the miss so that widening this rule later
+    // is a deliberate act with its own evidence, not a drift.
+    it("does NOT drop a NodeBB/Invision thread — a deliberate, named miss", () => {
+      expect(
+        isListingPage("Battery Research Scientist", "forum.example.test", "/topic/8891-hiring-battery-postdocs/"),
+      ).toBe(false);
+    });
+
+    it.each([
+      "/topic/12-month-battery-fellowship",
+      "/topic/2026-summer-internship",
+    ])("is why NodeBB was cut — %s is a real posting sharing that shape", (pathAndQuery) => {
+      expect(isListingPage("Battery Research Scientist", "example.test", pathAndQuery)).toBe(false);
+    });
+
+    // TITLE-INDEPENDENCE — the property that made the URL route beat every
+    // string-side design tried across six rounds, and how Ruling 43's "both
+    // observed shapes, not one string" is satisfied. All five recorded title
+    // shapes for this one page drop from the same URL rule, INCLUDING the
+    // `Users` shape that did not appear in round 14's census. A sixth title
+    // shape appearing tomorrow drops too, because the rule never reads a title.
+    it.each([
+      ["paginated Announcements (live round 14, 5/5)", "Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC"],
+      ["page-1 Announcements", "Job vacancies looking for OpenMC skills - Announcements - OpenMC"],
+      ["the Users shape (recorded round 13)", "Job vacancies looking for OpenMC skills - Page 2 - Users - OpenMC Discourse"],
+      ["the round 12 pipe-separated variant", "Job vacancies looking for OpenMC skills | Page 2 | OpenMC"],
+      ["the no-category variant", "Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse"],
+    ])("drops the openmc thread regardless of title shape: %s", (_label, title) => {
+      expect(
+        isListingPage(title, "openmc.discourse.group", "/t/job-vacancies-looking-for-openmc-skills/1727?page=2"),
+      ).toBe(true);
+    });
+
+    // RULING 32's QUESTION, ANSWERED FROM THE RENDER SIDE: when this fires the
+    // item never exists, so there is no field to fill and nothing rejected can
+    // be reinserted. The pool simply shrinks by one — `buildDailyJobPool` ends
+    // in a `.slice()` CAP, never a top-up, so no substitute is pulled in.
+    it("produces no item at all when it fires, so no employer can be derived", () => {
+      const item = webResultToRawJobItem({
+        title: "Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC",
+        url: "https://openmc.discourse.group/t/job-vacancies-looking-for-openmc-skills/1727?page=2",
+        snippet: "Several groups are hiring for molten salt reactor work. Apply now.",
+      });
+      expect(item).toBeNull();
+    });
   });
 });
