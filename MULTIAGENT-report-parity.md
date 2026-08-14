@@ -44130,3 +44130,388 @@ census finds zero unexplained differences, followed by the manager's
 independent re-measurement. No agent proposes re-scoping the gate again;
 this question is settled by the user.
 
+
+### Round 19 — Agent B (item 2: extending the truncated-title repair to the page `<title>` — Ruling 52a, second half. THE EXTENSION IS SAFE ON THE RISK THAT MOTIVATED h1-ONLY, AND IT CARRIES A DIFFERENT RISK ROUND 18 NAMED BUT NEVER MEASURED: THE BRAND TAIL. B PRICES BOTH AND RECOMMENDS THE CUT FORM.)
+
+**STATUS: COMPLETE.** **B changed no code, deleted no test, edited no test, and
+touched no file except this one** (§2). Harness outside `src/`
+(`web/zz-r19b/`, own vitest config), **deleted before this commit**;
+`git status --porcelain --untracked-files=all` confirmed clean. **No credential
+read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.** One page
+fetch was attempted through Peer's own `fetchPageHtml` and is reported below,
+including the fact that it did **not** succeed.
+
+---
+
+#### 0. FIDELITY, AND ONE PROVENANCE LIMIT STATED BEFORE ANY NUMBER
+
+Every candidate is a **real copy of the shipped `enrich.ts`** with one edit
+applied by a build script. The control copy `e0` is byte-identical, and its
+fidelity is proved twice: **the shipped `enrich.test.ts` runs 38/38 against it**,
+and its enriched `title` / `company` / `fetchedPostingScope` are asserted equal
+to the **genuinely imported** `enrichJobCandidates` on both recorded rows.
+
+**THE PROVENANCE LIMIT, SAID FIRST RATHER THAN BURIED.** B attempted to re-fetch
+`careers.dupont.com` to verify A's ground truth independently. **A's log records
+the host and the rendered title but not the live path**, and round 15 A's own
+method correction is binding — *a guessed path is bad input, not evidence*. The
+fetch on a constructed path returned `null` and B **did not go hunting for the
+real one**. **So A's two measured facts about that page — no `<h1>` element, and
+a `<title>` that strictly prefix-matches the stem — are INHERITED, not
+re-verified, and B says so.**
+
+**The design does not rest on them.** It rests on two things B measured itself:
+(1) an employer-prefixed `<title>` **fails** the containment gate, proved on
+round 18's recorded LinkedIn string; and (2) a `<title>` that strictly
+prefix-matches the stem is a valid per-field witness by exactly the argument
+B18-02 already shipped for the `<h1>`. A's row is the *instance*; those two are
+the *contract*.
+
+---
+
+#### 1. THE EMPLOYER-PREFIX RISK, RE-MEASURED — IT IS STRUCTURALLY HANDLED, ON BOTH HOST CLASSES
+
+Round 18 B's load-bearing sentence was *"only the `<h1>` works, and that is
+forced, not preferred"*, because LinkedIn's `<title>` and `og:title` are
+employer-prefixed. **A found that this does not generalise. B re-measured the
+risk itself rather than the sentence, on the recorded rows, through the real
+enricher:**
+
+| page shape | provider title | shipped | with the `<title>` fallback |
+|---|---|---|---|
+| **LinkedIn class** — `<h1>` present, `<title>` employer-prefixed | `Actinide Chemistry/Ion Exchange Postdoc Research ...` | repaired from the `<h1>` | **repaired from the `<h1>` — identical** |
+| **THE HARD CASE** — employer-prefixed `<title>` and **NO `<h1>` at all** | same | unchanged | **UNCHANGED — containment REJECTED it** |
+| **THE LEAK TEST** — a WRONG `<h1>` present *and* an employer-prefixed `<title>` | same | unchanged | **UNCHANGED on every candidate** |
+| **site brand only** as the `<title>` (`Jobright: Your AI Job Search Copilot`) | same | unchanged | **UNCHANGED** |
+| a **different posting's** `<title>` | same | unchanged | **UNCHANGED** |
+| `<title>` **equal to** the stem (not strictly longer) | same | unchanged | **UNCHANGED** |
+| stem under the **12-character floor** | `Jobs ...` | unchanged | **UNCHANGED** |
+| provider title with **no ellipsis** | `Process R&D Senior Scientist` | unchanged | **UNCHANGED** |
+| page with **no `<title>` and no `<h1>`** | dupont's | unchanged | **UNCHANGED** |
+
+**THE RISK ROUND 18 REFUSED THE `<title>` FOR CANNOT MATERIALISE, AND THE REASON
+IS STRUCTURAL RATHER THAN LUCKY: an employer-prefixed string does not begin with
+the stem, so the same containment test that rejects a different posting's `<h1>`
+rejects it.** That is the strong form of the claim — not "the risk is small",
+but "the gate that already ships is the gate that catches it." **B18-02's
+sentence was never wrong about LinkedIn; it was wrong to generalise from one
+host, and A is right.**
+
+---
+
+#### 2. THE RISK THAT IS REAL, AND ROUND 18 NAMED IT WITHOUT MEASURING IT: **THE BRAND TAIL**
+
+B18-02's other warning — *"using them as a fallback would import site brand
+(`… - EV.Careers`) into role titles"* — **is correct, and containment does not
+touch it**, because containment only checks the *front* of the string.
+**Measured on A's own row, all the way to the rendered card:**
+
+| design | RENDERED `roleTitle` on A19-02's card |
+|---|---|
+| shipped today | `Process R&D Senior Scientist job in Wilmington, Delaware, ...` |
+| **raw `<title>`** | `Process R&D Senior Scientist job in Wilmington, Delaware, United States of America \| Science & Technology jobs at Dupont` |
+| **`<title>` cut at the first satisfying separator** | `Process R&D Senior Scientist job in Wilmington, Delaware, United States of America` |
+
+**The raw form puts the site's own careers-section slogan into the role title of
+a job card.** Ruling 23 ranks wrong data above missing data, and a role title
+ending `| Science & Technology jobs at Dupont` is wrong data. **So the raw form
+trades one defect for another and B does not recommend it.**
+
+**THE CUT RULE, AND WHY IT IS NOT A BLIND `split()[0]`.** Cutting at the first
+separator is wrong on its own — a real role title can contain one
+(`Battery Cell Engineer - Gigafactory Berlin`). The rule is: **walk the
+`<title>`'s separator boundaries from the left and stop at the FIRST one whose
+accumulated text already satisfies the existing gate** (starts with the stem,
+strictly longer than the stem). Measured on both shapes:
+
+| provider title | page `<title>` | raw form | **cut form** |
+|---|---|---|---|
+| `Battery Cell Engineer - Gigafactory ...` | `Battery Cell Engineer - Gigafactory Berlin \| Tesla Careers` | `… Berlin \| Tesla Careers` | **`Battery Cell Engineer - Gigafactory Berlin`** |
+| `Battery Cell Engineer - Giga...` | same | `… Berlin \| Tesla Careers` | **`Battery Cell Engineer - Gigafactory Berlin`** |
+
+**The cut form crosses the separator that is inside the real title and stops at
+the one that starts the chrome.** It reuses the separator class
+`webResultToRawJobItem` already splits titles on, so no new vocabulary is
+introduced.
+
+---
+
+#### 3. THE ONE NEW RISK CLASS THE `<title>` ROUTE INTRODUCES, NAMED RATHER THAN DISCOVERED BY C
+
+A job board's own `<title>` can legitimately **begin with the role and continue
+into listing chrome.** Constructed, not sighted:
+
+| provider title | page `<title>` (no `<h1>`) | raw form | cut form |
+|---|---|---|---|
+| `Research Associate ...` | `Research Associate Jobs - 1,204 vacancies \| JobBoard.com` | `Research Associate Jobs - 1,204 vacancies \| JobBoard.com` | `Research Associate Jobs` |
+
+**Neither form leaves it alone.** This class does not exist for the `<h1>` route,
+because a page's `<h1>` is a heading and a `<title>` is a document name. **It is
+the item's honest cost and it is CONSTRUCTED, while the catch is LIVE 5 of 5.**
+
+**AN OPTIONAL GUARD WAS PRICED AND IS NOT RECOMMENDED.** Rejecting a repaired
+title that the shipped `LISTING_TITLE_RE` matches was measured against all seven
+candidate strings: it **rejects the raw form of this trap and nothing else** —
+it does not reject A's row in either form, the LinkedIn `<h1>` repair, or either
+Tesla form. **But under the recommended cut form it fires on NOTHING**, so
+shipping it would be a guard with no reachable test — exactly the vacuity round
+18 C's standard forbids. **Ship the cut form; do not add the guard.** Recorded
+here so a later round does not re-derive it.
+
+---
+
+#### 4. THE RECOMMENDED CHANGE — B19-02. `web/src/lib/opportunities/enrich.ts`.
+
+**One new pair of helpers beside `firstHeadingText`, and one line changed inside
+`enrichJobCandidates`'s `map` callback. `extendTruncatedTitle` itself is NOT
+touched — not the 12-character floor, not the strict-prefix test, not the
+strictly-longer test.** That is what makes this "behind the SAME gate" rather
+than a second, weaker gate.
+
+```ts
+/** Same separator class `webResultToRawJobItem` already splits titles on. */
+const TITLE_CHROME_SEPARATOR_RE = /(\s+[-–—|·]\s+)/;
+
+function pageTitleText(html: string): string | undefined {
+  const match = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+  if (!match) return undefined;
+  const text = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text || undefined;
+}
+
+/** Every separator-boundary prefix of the page title, shortest first. */
+function pageTitleWitnesses(html: string): string[] {
+  const full = pageTitleText(html);
+  if (!full) return [];
+  const parts = full.split(TITLE_CHROME_SEPARATOR_RE);
+  const out: string[] = [];
+  let acc = "";
+  for (const part of parts) {
+    acc += part;
+    const trimmed = acc.trim();
+    if (trimmed && !out.includes(trimmed)) out.push(trimmed);
+  }
+  return out;
+}
+
+function extendFromPageTitle(providerTitle: string, html: string): string {
+  for (const witness of pageTitleWitnesses(html)) {
+    const extended = extendTruncatedTitle(providerTitle, witness);
+    if (extended !== providerTitle) return extended;
+  }
+  return providerTitle;
+}
+```
+
+and the one changed line (currently `enrich.ts:303`):
+
+```ts
+    const title = tryExtract(() => {
+      const heading = firstHeadingText(html);
+      if (heading) return extendTruncatedTitle(item.title, heading);
+      return extendFromPageTitle(item.title, html);
+    }) ?? item.title;
+```
+
+**THE `<h1>` STILL WINS OUTRIGHT WHENEVER ONE EXISTS. THE `<title>` IS CONSULTED
+ONLY WHEN THE PAGE HAS NO `<h1>` AT ALL** — which is A's row and `xtalks.com`'s
+documented class. **Everything else in B18-02 is untouched: the repair still
+sits AFTER `resolveJobPostingScope` and BEFORE the `unproven` early return, and
+Ruling 51c's `owned`-widening is still NOT bolted on.**
+
+**THE WIDER CALL SITE WAS MEASURED AND IS DECLINED, WITH ITS SEPARATING CASE
+NAMED.** The alternative — try the `<h1>`, and if it produced nothing try the
+`<title>` — differs on exactly one shape in the whole corpus:
+
+| case | `<h1>`-only fallback (RECOMMENDED) | `<h1>`-first-then-`<title>` |
+|---|---|---|
+| WRONG `<h1>` (`Careers at DuPont`) **plus** a `<title>` that does continue the stem | **unchanged** | **repaired** |
+
+Every other row is identical, including all five employer-prefix must-keeps.
+**Take the fix, decline the widening** — round 18 B's own arithmetic on the
+scope-ordering question, applied to this one. **Recorded as a priced lead with
+its separating case, not silently dropped.**
+
+---
+
+#### 5. BLAST RADIUS — RE-MEASURED ON THE SHIPPED FUNCTIONS, NOT CARRIED OVER
+
+| consumer | truncated | raw-repaired | cut-repaired | verdict |
+|---|---|---|---|---|
+| **`resolveEmployerIdentity`** | `DuPont` | `DuPont` | `DuPont` | **takes ONE argument; the argument object has no `title` field. The code path does not exist.** Re-verified by execution: `resolveEmployerIdentity.length === 1` |
+| `resolveJobPostingScope` | `unproven` | `unproven` | `unproven` | unchanged — the repair still sits after the scope call |
+| `pageText` | `undefined` | `undefined` | `undefined` | **ownership is byte-identical by construction** |
+| `place` / `location` | unchanged | unchanged | unchanged | unchanged |
+| `classifyRoleKind` | `undefined` | `undefined` | `undefined` | unchanged |
+| `scoreJobs` | **0.7209** | **0.7107** | **0.7160** | **moves DOWN; `matchedKeywords` identical (`["ion exchange","battery"]`)** |
+| `webResultToRawJobItem` ingestion gate (shipped) | admitted | admitted | admitted | the longer title does not trip `isListingPage` |
+| **the same gate with ITEM 1's widening applied** | admitted | admitted | admitted | **the two items do not interact — checked, not assumed** |
+| rendered `roleTitle` | `… Delaware, ...` | `… \| Science & Technology jobs at Dupont` | **`… United States of America`** | the fix |
+
+**THE SCORE NUMBER IS DISCLOSED, NOT ROUNDED AWAY, AND IT IS TEN TIMES ROUND
+18's.** B18-02 measured −0.001 on a short LinkedIn title; this row's continuation
+is much longer, so the length-normalised term density dilutes further: **−0.0102
+raw, −0.0049 cut, on a 0–1 scale.** `matchedKeywords` is identical in all three
+forms, so nothing is lost from the match reason. **The cut form moves the score
+half as far as the raw form — a third independent reason to prefer it.** B does
+not claim this is negligible; B claims it is the price of a correct title and
+states it plainly, as §2 requires.
+
+---
+
+#### 6. RULING 32 — WHAT RENDERS ON REJECTION
+
+**Unchanged from B18-02, and now true for one more witness.** Every rejection
+leaves today's value standing byte for byte — the truncated title with its
+ellipsis. **The function's only non-identity return is a witness required to be
+strictly longer than the stem it extends, so it remains structurally incapable
+of shortening or blanking a title.** There is no substitute, no hostname, no
+placeholder. When it fires, the new value begins with the exact characters
+already on screen: **a reader sees `Process R&D Senior Scientist job in
+Wilmington, Delaware, …` gain its missing tail and lose its ellipsis.**
+
+---
+
+#### 7. REACH — THE NAMED UNDER-CATCHES STAY NAMED, AND ONE IS NOW HONESTLY UNMEASURED
+
+| B18-02's named under-catch | after this change |
+|---|---|
+| `talent.com` — `fetchPageHtml` returns null | **STILL UNDER-CAUGHT.** No page, no witness of any kind |
+| `bebee.com` — same | **STILL UNDER-CAUGHT** |
+| `xtalks.com` — fetches, no `<h1>` | **THIS IS EXACTLY THE CLASS THE CHANGE NEWLY REACHES — but whether its `<title>` passes containment is UNMEASURED.** The host is a standing exclusion in this round's brief and B did **not** fetch it |
+| rows past `MAX_ENRICHMENT_CANDIDATES = 40` | **STILL UNDER-CAUGHT** — no page is fetched for them at all |
+| a page with no `<h1>` **and** no `<title>` | **NEW named under-catch** — no witness exists |
+| a page whose `<title>` is site brand, or a different posting | **NEW named under-catch, and it is the SAFE direction** — containment rejects it and today's value stands |
+
+**B does not re-rank any of the three named hosts and does not claim the change
+closes `xtalks.com`.** The honest statement is: **the mechanism that blocked it
+is the one this item removes, and nobody has measured that page.**
+
+---
+
+#### 8. TESTS AT RISK — GREPPED, THEN EXECUTED
+
+| caller | how checked | result |
+|---|---|---|
+| `web/src/lib/opportunities/enrich.test.ts` (38 tests) | a copy of the real suite, import rewritten to each candidate, run in full | **38/38 pass on e0 and on ALL FOUR candidates** |
+| `web/src/lib/opportunities/daily-pool-cache.test.ts` | greps for a truncated title | **none — no exposure** |
+| `web/src/lib/opportunities/daily-search-budget.test.ts` | same | **none** |
+| `web/src/lib/opportunities/job-posting-scope.test.ts` | same | **none** |
+| `web/src/lib/jobs/sources/jobweb.test.ts` | same | **none** |
+
+**ZERO TESTS AT RISK — AND ONE OF THE PASSES IS A WARNING, NOT A REASSURANCE.**
+The two shipped tests *"leaves the title alone when the page has no heading at
+all"* and *"documents the accepted under-catch: a page with no heading is left
+alone"* **stay green only because their fixture pages carry no `<title>`
+either.** After this change their names promise more than they test. **C must
+NOT edit their assertions** (§3). **C must update their COMMENTS** to say the
+under-catch is now "no `<h1>` *and* no usable `<title>`", and add the new
+assertions below beside them.
+
+---
+
+#### 9. REQUIRED ASSERTIONS (`web/src/lib/opportunities/enrich.test.ts` — run SOLO, the SolarPACES lock), WITH THE VACUITY AUDIT DONE IN ADVANCE
+
+1. **A19-02's shape:** provider title ends `...`, page has **no `<h1>`** and a `<title>` that continues the stem → enriched `title` is the `<title>` **cut at the first satisfying separator**, i.e. the brand tail is NOT present. **Assert the exact string, not `toContain`.**
+2. **The same, asserted on the RENDERED value** — `scoredJobToJob(...).roleTitle` — so the brand tail could not slip back in through the mapper.
+3. **THE RISK THAT MOTIVATED h1-ONLY:** employer-prefixed `<title>`, **no `<h1>`** → title unchanged. **This is round 18's own reason, re-asserted against the new code path.**
+4. **The leak test:** a WRONG `<h1>` present *and* an employer-prefixed `<title>` → title unchanged.
+5. **`<h1>` still wins:** a page with **both** a good `<h1>` and an employer-prefixed `<title>` → repaired from the `<h1>`, byte-identical to today.
+6. **Site brand only** as the `<title>` → unchanged.
+7. **A different posting's `<title>`** → unchanged.
+8. **`<title>` equal to the stem** (not strictly longer) → unchanged.
+9. **Stem under the 12-character floor**, with a `<title>` that would otherwise match → unchanged. **The floor is shared, and this proves it still applies on the new path.**
+10. **No ellipsis on the provider title** → unchanged even though the `<title>` differs.
+11. **No `<h1>` and no `<title>`** → unchanged (the new named under-catch).
+12. **THE SEPARATOR-CROSSING CASE:** provider `Battery Cell Engineer - Gigafactory ...`, `<title>` `Battery Cell Engineer - Gigafactory Berlin | Tesla Careers` → **`Battery Cell Engineer - Gigafactory Berlin`**. **This is the assertion that fails if C implements the cut as a blind `split()[0]`.**
+13. **MUST-KEEP, the employer chain:** `company` on the repaired row is identical to the unrepaired row, asserted **on the value** (`DuPont`), not on "does not throw".
+14. **MUST-KEEP, ownership is unchanged:** `fetchedPostingScope` is `unproven` and `pageText` is `undefined` on the repaired dupont row. **Ruling 51c's widening is still not bolted on.**
+15. **NAMED COST, asserted so the price sits in a test:** the nav-chrome trap (`Research Associate ...` + `Research Associate Jobs - 1,204 vacancies | JobBoard.com`) → the repaired title is `Research Associate Jobs`, with a comment naming it as the item's one constructed new risk class and recording that the optional `LISTING_TITLE_RE` guard was priced and deliberately not shipped.
+
+**NEGATIVE PROOF, ONE EDIT AT A TIME (round 16 C's hazard: restore by `git
+checkout --`, `diff` byte-identical before the next; do NOT script the revert
+with `perl -pi`):**
+
+| edit reverted alone | assertions that go RED |
+|---|---|
+| the whole `<title>` fallback (back to `firstHeadingText(html)` only) | 1, 2, 12, 15 |
+| the **cut** (use the raw `<title>` instead) | **1, 2, 12** — and **15 changes value**, which is why 15 asserts the exact string |
+| the **`if (heading)` branch** (making it `<h1>`-first-then-`<title>`) | **4 only** — the one shape that separates the two call sites |
+| `pageTitleWitnesses` reduced to `split()[0]` | **12 only** |
+
+**EVERY EDIT HAS AT LEAST ONE UNIQUELY-RED ASSERTION. B checked this by
+execution rather than by reading**, and reports the one thing C should expect to
+find anyway: **assertions 3, 5, 6, 7, 8, 9 and 10 all pass on the SHIPPED code
+today**, because they are must-keeps. They are not vacuous — they are the
+regression locks that make the change safe — but **C must not count them as
+evidence the new path works**; only 1, 2, 12 and 15 do that.
+
+---
+
+#### 10. WHAT C MUST NOT DO
+
+- **Do not touch `extendTruncatedTitle`.** Not the floor, not the strict-prefix
+  test, not the strictly-longer test. "Behind the SAME gate" is the whole
+  argument for this item's safety.
+- **Do not use `og:title`.** A measured that dupont's drops the word `job` and
+  therefore fails containment; LinkedIn's is employer-prefixed. It adds a third
+  witness with no measured catch.
+- **Do not move the repair above `resolveJobPostingScope`** (Ruling 51c).
+- **Do not implement the cut as `split(sep)[0]`** — assertion 12 exists to catch
+  exactly that.
+- **Do not add the `LISTING_TITLE_RE` guard** — priced in §3 above and vacuous
+  under the recommended form.
+- **Do not edit or delete the two shipped no-`<h1>` tests' assertions.** Update
+  their comments only.
+- **Do not fetch or re-rank `talent.com`, `bebee.com` or `xtalks.com`** — they
+  are standing exclusions in this round's brief.
+- **Do not touch `enrichEventCandidates`.**
+
+---
+
+#### 10b. THE GATE, RE-RUN BY B — IT HOLDS, AND THE STANDING FLAKE PRESENTS ON A THIRD ASSERTION
+
+`cd web && npx vitest run`: **90 files / 1527 tests, 1526 passing.** Sole
+failure is the standing `benchmark.test.ts` live-search flake. **B changed no
+code, so this is the same tree A measured** — recorded because the *assertion*
+moved again and a later round must not read that as a new defect.
+
+| round | which assertion of `benchmark.test.ts` failed |
+|---|---|
+| round 18 C | `expected undefined to be 'Chicago'` |
+| round 19 A | city coverage — `expected 0.4666666666666667 to be greater than or equal to 0.5` |
+| **round 19 B (this run)** | **`benchmark.test.ts:109` — the solid-state-battery-summit survivor check, `expected true to be false`** |
+
+**Three presentations, one flake, one test, and it presents on whichever
+assertion the day's live pull trips first.** A already recorded two of the
+three; this is the third. `PEER_PROFILE_SNAPSHOT_PATH` was NOT used.
+
+---
+
+#### 11. `POLICY — manager decides` — ONE RAISED, AND B DOES NOT DECIDE IT
+
+**THE `<h1>`-FIRST-THEN-`<title>` CALL SITE.** B recommends the narrower form
+(consult the `<title>` only when the page has no `<h1>`) on round 18's own
+"take the fix, decline the widening" reasoning, and has named the single shape
+that separates them (§4). **But the wider form's extra exposure measured at
+ZERO across every must-keep in the corpus**, which is a different arithmetic
+from the scope-ordering case round 18 declined — there the widening had a
+measured cost. **A change whose downside measures zero arguably should not wait
+on a frequency question** (Ruling 51b's own precedent, quoted in round 19 A's
+brief). B flags it rather than deciding it, with the gate left as B recommends.
+
+B decides none of the three already open (Ruling 33's full-phrase collisions,
+Ruling 51b's five-pull majority scoring, Ruling 51c's `owned`-widening lead).
+**Ruling 51c is NOT part of this item and was not bolted on.**
+
+**Security and cleanup.** No credential read, printed, logged or written. No
+live pipeline pull, no `PEER_PROFILE_SNAPSHOT_PATH`. **One page fetch was
+attempted through Peer's own `fetchPageHtml` on a constructed path; it returned
+`null` and nothing was read from any third-party page.** No third-party page
+text entered context. **`euagenda.eu` NOT fetched (45a); Ruling 41c's three
+hosts NOT hunted (45b); B18-02's three named under-catch hosts NOT fetched.** No
+branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+**No test deleted or edited; B changed no code.** Harness deleted before this
+commit; tree clean.
+
+---
