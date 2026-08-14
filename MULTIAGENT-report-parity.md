@@ -32365,3 +32365,301 @@ the job card**; then job summaries with all four tallies; then the summary,
 ranked difference list and gate verdict.
 
 Commit follows immediately.
+
+---
+
+### Round 15 — Agent A (part 2: BOTH ROUND-14 FIX CONFIRMATIONS checked on the job card, the pool-shrink accounting, the employer field, and ONE NEW OPEN DEFECT — a listing page the count-based guard cannot see)
+
+**STATUS: DONE.** Second of round 15 A's four parts. Part 1 is banked in
+`eae697a` and is **not** re-run. Parts 3 and 4 follow in this same session. **No
+gate verdict is set here.**
+
+**Method.** Same discipline as part 1: **five independent live pulls in five
+separate processes** (Ruling 39d/41a's standing method), no-op `PoolCache`,
+calling `buildDailyJobPool()` then `scoredJobToJob()` — the exact entry points §2
+names. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Live keys reconfirmed
+present, boolean check only. **Page-fetch enrichment ran; LLM enrichment did
+not** (Ruling 42b's wording). Harness outside `src/` under its own vitest config;
+**deleted before part 1's commit**. **Parts 2 and 3 read the same five pulls, not
+ten** — the same deliberate, disclosed efficiency choice rounds 12, 13 and 14
+made, and for the same reason: employer and summary are two columns of one
+`scoredJobToJob()` output, so a second pull set would measure a different
+minute's pool and make the two parts' denominators disagree for no gain.
+
+**THE BRIEF ORDERED THE FIX CHECK ON THE JOB CARD, NOT THE DETAIL PAGE, AND THAT
+IS WHAT WAS MEASURED.** Every summary value in parts 2 and 3 is read from
+**`jobCardView(job).summaryText`** (`web/src/lib/jobs/card.ts`) — the card's own
+view model, which B established renders `job.summary` **raw** while the detail
+page re-cleans it. **The broken surface is the one that was measured.**
+
+**Reproducibility: pool sizes 12, 13, 13, 15, 13; 16 unique postings in the
+union. EVERY ONE OF THE 16 RETURNED A BYTE-IDENTICAL EMPLOYER VALUE — AND A
+BYTE-IDENTICAL ROLE TITLE AND SUMMARY — IN EVERY RUN IT APPEARED IN. Zero
+variance, on every host, on every column.** **Second consecutive round of zero
+employer variance**, and this round the summary column is stable too (round 14's
+one varying summary is discussed below). **Ruling 39d/41a's minority-disclosure
+clause therefore has nothing to disclose on either column** — stated explicitly,
+because a silent disclosure line and an empty one look identical.
+
+---
+
+## THE TWO ROUND-14 FIXES, CHECKED AS THE BRIEF DEMANDED
+
+**FIX 1 — B14-01, `openmc.discourse.group`. CONFIRMED, AND CONFIRMED IN THE ONE
+WAY THAT COULD NOT BE FAKED BY CHURN.**
+
+The brief set the bar precisely: **the expected result is that the item is ABSENT
+FROM THE POOL ENTIRELY**, and "if you see the item at all, with any employer, the
+fix did not fire."
+
+- **`openmc.discourse.group` is ABSENT from all five pools.** No item, no
+  employer, no role title, on any run.
+- **AND IT IS PRESENT IN THE RAW PROVIDER RESULTS IN ALL FIVE RUNS.** This is the
+  cheap disclosed check B asked for, and it is the whole finding. A wrapped the
+  global `fetch` to record only host/url/title from the search provider's own
+  result rows **before any Peer filtering runs**, at **zero extra API cost** — it
+  observes the pull that was happening anyway. In **all five runs** the provider
+  returned:
+  - host `openmc.discourse.group`
+  - URL `…/t/job-vacancies-looking-for-openmc-skills/1727?page=2`
+  - title `Job vacancies looking for OpenMC skills - Page 2 - Announcements - OpenMC`
+
+  **That is the byte-identical URL and the byte-identical paginated
+  `Announcements` title round 14 A measured at 5 of 5.** Provider row counts were
+  118–120 per run and the forum row was in every one of them.
+
+**This separates "the rule fired" from "the provider stopped returning it", which
+is exactly what the brief asked A to separate, and the answer is unambiguous: THE
+RULE FIRED. Five times out of five, on the exact string that produced the loop's
+last remaining wrong value.** Absence alone would have been suggestive; absence
+*while the provider keeps offering it* is proof.
+
+**Replayed through the shipped entry point as a second, independent
+confirmation** — all three title shapes ever recorded on this host, against the
+live URL path:
+
+| replayed title shape | `isListingPage` | `webResultToRawJobItem` |
+|---|---|---|
+| `… - Page 2 - Announcements - OpenMC` (this round's live shape) | `true` | **DROPPED (null)** |
+| `… - Announcements - OpenMC Discourse` | `true` | **DROPPED (null)** |
+| `… - Page 2 - Users - OpenMC Discourse` (the `Users` shape) | `true` | **DROPPED (null)** |
+
+**All three drop from the one URL rule — including the `Users` shape, which has
+not appeared live since round 13.** That is Ruling 43's "both observed shapes,
+not one string" requirement satisfied on live-shaped input, and it is B14-01's
+title-independence claim confirmed rather than trusted.
+
+**FIX 2 — B14-02, `careers.gevernova.com`'s `]` remnant. NO BRACKET ANYWHERE —
+BUT A IS NOT SCORING THIS AS AN ORGANIC CONFIRMATION, AND SAYS WHY.**
+
+- **Zero `]` characters on ANY job card, on ANY of the 16 postings, in ANY of the
+  five runs.** Checked by scanning the rendered card string for the character,
+  not by eye.
+- **`careers.gevernova.com` is in the pool 5 of 5** and its card summary is
+  byte-identical in all five runs.
+
+**THE HONEST PART, AND IT MATTERS FOR THE GATE: the input shape that produced the
+bracket did not recur this round, so the organic evidence cannot falsify the
+fix.** Round 14 saw **two** different summaries on this posting — a majority
+run-on (4 of 5) and a minority bracket-bearing value (1 of 5). **This round there
+is only ONE value, in 5 of 5, and it is the MAJORITY (run-on) value, byte-identical
+to rounds 11–15.** The bracket-bearing variant did not appear at all. **The brief
+warned that absence in a single pull proves nothing and told A to check all five;
+A checked all five and reports that the bracket is absent AND that its source
+shape is also absent — which is a weaker fact than it looks.**
+
+**So A ran the targeted replay instead, disclosed as targeted.** The bracket-
+bearing source shape round 14 B reconstructed (each `]` immediately after a
+sentence-ending `.` with **no whitespace between them**) was pushed through the
+shipped display path — `cleanJobDescription()` then `summarizeJob()`:
+
+- **Rendered: `You have a passion for battery technology, energy, and new product
+  development. Support engineering teams developing new battery technology for
+  use in the Utilities, Datacenter, and Defense industries.`**
+- **No bracket. Not empty. Both sentences intact** — byte-identical to round 14's
+  observed value apart from the deleted characters, which is exactly the render
+  the brief named in advance.
+- **Control:** the same source with a space around each bracket (B9-03's
+  already-handled shape) renders **identically clean**, so the new rule and the
+  old one agree rather than fight.
+
+**A grades B14-02 `targeted-confirmed, organically unmeasured`** — the same
+grading Ruling 41c established for exactly this evidence position. **A does NOT
+log it as a live-confirmed fix**, because its triggering input never arrived.
+**It is not an open difference either** — nothing rendered wrong. It is a fix
+whose live proof is still owed, and the honest place for it is the manager's
+carry list, not the difference list.
+
+---
+
+## THE POOL-SHRINK ACCOUNTING — THE COUNT, AND THE JUDGEMENT
+
+**The brief asked A to say plainly whether the shrink matches the designed drop
+or exceeds it, and flagged "a shrink LARGER than one item" as the thing to look
+for. THE ANSWER IS THAT THERE WAS NO SHRINK AT ALL.**
+
+- **Round 14's union was 14 unique postings; round 15's is 16. Net +2.**
+- **Per-run sizes rose too:** round 14 ran 10/14/14/14/14; round 15 runs
+  **12/13/13/15/13**.
+- **The designed drop is exactly one item** (`openmc.discourse.group`) and
+  **exactly one item is gone.** The drop is real — the provider still offers the
+  row in every run — and it is the only removal attributable to B14-01.
+- **Nothing backfilled it and nothing needed to.** One correction to the brief's
+  premise, stated because a later round should not inherit a wrong reason for a
+  right conclusion: `buildDailyJobPool` does end in a `.slice()`, but the cap is
+  **`MAX_OPPORTUNITY_POOL_ITEMS = 200`** and the pool is thirteen-ish, **so the
+  cap is nowhere near binding.** The pool is not "capped and therefore not
+  backfilled" — it is simply however many items survive the guards and the score
+  floor. The conclusion the brief drew is right; the mechanism is not the cap.
+
+**THE JUDGEMENT — did the route rule take anything real with it? NO, AND THIS WAS
+TESTED RATHER THAN ASSUMED.** **All sixteen of this round's live pool items were
+replayed through the shipped `isListingPage()` using their exact live
+(title, host, path+query) triples. All sixteen are KEPT.** Six historical
+must-keeps were replayed alongside them — including `lco.global/about/interns`,
+`talents.vaia.com`, `climatetechlist.com` and `careers.gevernova.com` — and all
+six are kept too. **B14-01 over-fired on nothing. The route rule cost zero real
+postings, which is the failure mode B gave up a matrix point to avoid.**
+
+---
+
+## CENSUS — 16 unique postings, 8 non-null employer values, 8 silent
+
+Ground truth from the posting's own URL slug, its own title, its own summary
+text, or a same-pool duplicate.
+
+| host | rendered employer | evidence checked | verdict |
+|---|---|---|---|
+| `climatetechlist.com` | `Mantel` 5/5 | URL slug `/job/mantel-…` names the client, not the board | **CORRECT — NEW HOST**, and note the aggregator names its client rather than itself |
+| `inl.referrals.selectminds.com` (`…-10104`) | `Idaho National Laboratory` 5/5 | host is INL's own referral-system instance | CORRECT (unchanged r13–r15) |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` 5/5 | title "…at Thermo Fisher Scientific" | CORRECT (unchanged r11–r15) |
+| `postdocjobs.com` | *(null)* 5/5 | round 11 A's direct fetch established the real employer is Argonne National Laboratory and that the title carries BOTH guarded shapes | **B10-01 + B9-02b confirmed still holding — FIFTH consecutive round of honest silence** |
+| `careers.gevernova.com` | *(null)* 5/5 | own-domain subdomain; title names GE Vernova | not counted (standing host-brand trade-off, unchanged r11–r15) |
+| `terra.do` | `Idaho National Laboratory` 5/5 | title "…at Idaho National Laboratory" | CORRECT — **second consecutive round at the correct value, and now stable** |
+| `ev.careers` | `Tesla` 5/5 | title "…at Tesla" | CORRECT (unchanged r11–r15) |
+| `employbl.com` | `Battery Ventures` 5/5 | URL slug names it | CORRECT (unchanged r11–r15) |
+| `talents.vaia.com` | *(null)* 5/5 | URL slug `/companies/savannah-river-national-laboratory/` names the real employer; this round's provider title does not | **CHANGED from round 14's correct value — see Finding 2. NOT a wrong value: B12-07's wrong value is ABSENT** |
+| `careerservices.upenn.edu` | `University of Pennsylvania` 5/5 | identical URL rounds 9–15 all cited; URL slug names Oak Ridge National Laboratory as the real employer | **RULING 34a ACCEPTED COST — counted in the employer-side 34a tally, NOT reported as a defect** |
+| `linkedin.com` (SRNL postdoc) | *(null)* 4/5 | URL names the employer; title does not | not counted (unchanged r12–r15) |
+| `linkedin.com` (INL postdoc) | *(null)* 5/5 | same | not counted (unchanged r12–r15) |
+| `befjobs.breakthroughenergy.org` | *(null)* 4/5 | **NEW HOST.** Title names the employer after an `@` (`Battery R&D Intern @ LiftOFF Technology`); URL slug `/companies/liftoff-technology/` corroborates | **HONEST SILENCE. Recorded as a coverage observation, not a defect — see Finding 3** |
+| `linkedin.com` (**listing page**) | *(null)* 1/5 | — | **NOT A POSTING AT ALL — THIS ROUND'S ONE OPEN DEFECT. See Finding 1** |
+| `magnet.me` | `AquaBattery` 1/5 | title "…in Amsterdam at AquaBattery" | **CORRECT — NEW HOST** |
+| `salutemyjob.com` | *(null)* 1/5 | **NEW HOST.** Aggregator; the same posting's SRNL duplicate is in the same pool | **HONEST SILENCE AND CORRECTLY SO** — naming `SaluteMyJob` would be exactly Ruling 26's host-brand defect |
+
+**0 of 8 non-null employer values is wrong (0%)**, by the majority scoring
+Ruling 39d/41a makes standard, **with `careerservices.upenn.edu` counted in the
+Ruling 34a tally rather than as a defect** — accepted costs counted, not
+reported, exactly as the brief directs.
+Round 14 was 1 of 9 (11.1%); round 13 was 0 of 12; round 12 was 3 of 10 (30%);
+round 11 was 1 of 9 (11.1%); rounds 8/9/10 were 62.5% / 27.3% / 20%.
+
+**The single wrong value round 14 carried — `openmc.discourse.group`'s
+`Announcements` — is gone because the item is gone. That is B14-01, and it is the
+whole difference between 11.1% and 0%.**
+
+---
+
+**FINDING 1 — THE ROUND'S ONE OPEN DEFECT: A LINKEDIN AGGREGATE LISTING PAGE IS
+IN THE JOB POOL, AND THE SHIPPED GUARD KEEPS IT BECAUSE THE TITLE HAS NO NUMBER
+IN FRONT OF IT.**
+
+**Observed live in run 4 (1 of 5 pulls):**
+- **URL:** `linkedin.com/jobs/ion-exchange-resin-jobs`
+- **Rendered role title:** `Ion Exchange Resin jobs in United States`
+- **Employer:** null. **Summary:** none.
+
+**This is a search-results page, not a vacancy.** It is the same host, the same
+path family (`/jobs/<topic>-jobs`) and the same title grammar as
+`linkedin.com/jobs/molten-salt-jobs` — **one of B13-02's own four named
+targets**, which round 14 A confirmed dropped.
+
+**A did not judge this by eye. The shipped guard was asked directly, and the
+contrast isolates the mechanism to a single token:**
+
+| replayed shape | `isListingPage` |
+|---|---|
+| `1,000+ Molten Salt jobs in United States` @ `/jobs/molten-salt-jobs` | **DROP** |
+| `Ion Exchange Resin jobs in United States` @ `/jobs/ion-exchange-resin-jobs` | **KEEP** |
+| `1,000+ Ion Exchange Resin jobs in United States` @ `/jobs/ion-exchange-resin-jobs` | **DROP** |
+
+**The only difference between the shape that drops and the shape that survives is
+the leading count.** `LISTING_TITLE_RE`'s first alternative requires a numeric
+run before the `jobs|vacancies|openings|positions|opportunities` noun, and this
+title has none — LinkedIn omits the count when the result set is small. **A
+reports the pairing and stops there; A does not diagnose and does not propose a
+fix** (§2).
+
+**Why this is a difference and not an accepted cost:** it states nothing false,
+but it puts a **card that promises a job in front of a reader and opens a search
+page** — the same reader-facing failure as B13-02's four targets, which the loop
+chose to fix rather than accept. **It is Ruling 32's class** ("this field must not
+be empty" / one site at a time), and it is a **second distinct instance of the
+countless-listing shape's family on the same host**, not a repeat of an accepted
+one. **A leaves the classification to the manager but does not drop it, and the
+gate cannot be a candidate while it stands.**
+
+**FINDING 2 — `talents.vaia.com` LOST A CORRECT EMPLOYER, AND THE REPLAY SHOWS IT
+IS UPSTREAM VARIANCE, NOT A REGRESSION. B12-07 IS STILL HOLDING.**
+
+Round 14 measured `Savannah River National Laboratory` at 4/4 on this host. **This
+round it is null at 0/5.** A tested rather than assumed:
+
+- **The live shape was replayed through the shipped `webResultToRawJobItem()` →
+  `scoredJobToJob()`: the employer comes out `null`** — so the build genuinely
+  derives nothing from **this round's** title.
+- **B12-07's wrong value is ABSENT.** `Talents by Vaia` — the host-brand string
+  B12-07 was built to reject — **does not appear on any run**. The guard is doing
+  its job; there is simply nothing left for it to guard.
+- **B12-07 was never the thing that produced `Savannah River National
+  Laboratory`** — it is a rejection rule, not a derivation. Round 14's correct
+  value came from the provider's own title text, and this round's provider title
+  (`Actinide Chemistry & Ion Exchange Postdoc`) does not carry it.
+
+**So this is Ruling 39d's accepted upstream variance, on a fourth host, and it is
+reported as measurement rather than as a defect.** It is the same phenomenon
+round 14's Finding 2 documented on three hosts — with the difference that this
+time it moved a value from correct to silent rather than from silent to wrong.
+**The reader loses a fact and is told nothing false.**
+
+**FINDING 3 — THE SILENT-EMPLOYER COUNT (Ruling 39a), WITH THE PER-INSTANCE
+READER JUDGEMENT THE RULING REQUIRES. 8 of 16 postings show no employer line.**
+Round 14 was 5 of 14; round 13 was 8 of 20. Judged one at a time:
+
+1. **`careers.gevernova.com` — unchanged**, null in rounds 11–15. Own-domain
+   host-brand trade-off. Reader is not misled.
+2. **`postdocjobs.com` — unchanged and good**, fifth consecutive round of honest
+   silence with B10-01's and B9-02b's guards holding.
+3–4. **The two `linkedin.com` postdoc items — unchanged/neutral**, null in rounds
+   12–15. The URL names the employer and the title does not.
+5. **`talents.vaia.com` — NEW silence, Finding 2.** Upstream, not a defect.
+6. **`salutemyjob.com` — NEW host, and the reader is BETTER OFF than the
+   alternative.** A veterans' job board carrying a client's posting; rendering
+   the board's own brand would be Ruling 26's defect exactly.
+7. **`befjobs.breakthroughenergy.org` — NEW host, and this one is a genuine
+   coverage observation rather than a neutral loss.** The title
+   `Battery R&D Intern @ LiftOFF Technology` names the employer after an **`@`**
+   rather than the ` at ` the extractors recognise, and the URL slug
+   `/companies/liftoff-technology/` names it a second time. **A records the shape
+   and makes no recommendation** — whether one instance of an `@`-separator
+   justifies anything is Ruling 32's and the manager's question, not A's, and A
+   is deliberately not turning a single observation into a build request.
+8. **The LinkedIn listing page — its silence is correct and irrelevant**; the
+   item should not be in the pool at all (Finding 1).
+
+**Zero of the eight silences is misleading and none is unreadable. No silent
+instance is reported as a defect this round.**
+
+**Cleanup and security.** No harness remains (deleted before part 1's commit;
+`git status --porcelain --untracked-files=all` confirmed clean). Result JSON
+lives outside the repository. **No product code touched. No credential printed,
+logged, or written anywhere** — boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`. The provider-row observation retained host, URL and
+a 120-character title only; **no large block of third-party text was read into
+context.** No branch, worktree or PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched; no test deleted or edited.
+
+**Not done yet (parts 3–4, same session, continuing next):** job summaries with
+all four tally lines; then the summary, ranked difference list and gate verdict.
+
+Commit follows immediately.
