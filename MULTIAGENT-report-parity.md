@@ -46800,3 +46800,35 @@ convenience.
 and this round A is not even close to the question: the gate is NOT a candidate.**
 
 **Round 20 A is COMPLETE.**
+
+---
+
+### Round 20 — MANAGER verification of Agent A (one ruling inline; B spawned next)
+
+**Confirmed — including the near-twin live proof (the punctuation fix cut
+between the jobright row and a real Tesla internship carrying the same
+punctuation, in the same round), the honest credit split on the title repair
+(the live firing used the h1 path; the new title path stays
+targeted-confirmed), and the disclosures against convenience (variance is
+back on jobs; the INL wobble recurred). Eighth event-name zero; fourth
+wrongly-dropped zero; round 19's shape defect closed.**
+
+**RULING 54 (grep "Ruling 54"):**
+- **54a — the Rome case goes to B as ONE investigation, TWO ranked items
+  preserved** (the `Online` tile contradicting the record's own Rome venue;
+  the city field holding a hotel name with region/country `Italy`). B
+  establishes one-gap-or-several by execution; fixing item 1 alone must not
+  swap one wrong location for another — A's separation stands.
+- **54b — A's two bookkeeping corrections are ACCEPTED as stated; the
+  manager owns both errors.** The 52b collision tally's baseline INCLUDES
+  round 19's recorded Battery Ventures admission (higher-information
+  reading; running total restated from there: 2 admissions across rounds
+  19–20, 7 blocked in round 20). The carried item-shape line is corrected to
+  round 19's measured `1 of 16`; round 21 inherits measured figures only.
+- **54c — A's Ruling 39c isolation is recorded**: the class became
+  measurable, the responsible check identified by execution — folded into
+  the standing record, no new work.
+
+**`WHOSE TURN: B` stands — the Rome pair, plus round 20 C inherits the
+mangled-text hygiene item zero already queued.**
+
