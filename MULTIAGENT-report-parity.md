@@ -53238,3 +53238,107 @@ Recorded as an observation. **B does not add it to the census** — that is the
 manager's call, and A22-01 and A22-02 are already counted individually.
 
 ---
+
+### Round 22 — Agent B (item 3 of 9: **A22-02 — `battery-power.eu`. This is NOT A22-01's mechanism. The snippet holds exactly ONE date, it is the right one, and it is being given TWO jobs.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 3 of 9. Method as stated in item 1.
+
+## **CLASSIFICATION: WRONG DATA.** One value, one cause, and the cheapest fix in the round.
+
+## B CHECKED WHETHER THIS SHARES A22-01's MECHANISM AND IT DOES NOT
+
+A22-01 is *the wrong owner's date*. This row is *the right owner's date in the
+wrong role*. Measured, both from the captured snippet:
+
+| | `ans.org` | `battery-power.eu` |
+|---|---|---|
+| candidate event days in the snippet | **3** (`August 24`, `April 16`, `Jan 26`) | **1** (`October 31`) |
+| is the chosen token the item's own? | **no** | **yes** |
+| does the deadline extractor claim the same token? | no | **YES** |
+
+So the two must not be merged, and a fix aimed at ownership does nothing here.
+
+## THE MECHANISM, IN TWO ADJACENT LINES
+
+`web/src/lib/events/sources/eventweb.ts:1360-1361`:
+
+```ts
+const startDate = extractEventDate(text);
+const deadline  = extractDeadline(text);
+```
+
+`extractEventDate` (`:49`) matches any `Month D` token. `extractDeadline` (`:64`)
+matches the same token *when it is preceded by* `deadline` / `submissions due` /
+`abstracts due` within 40 characters (`DEADLINE_RE`, `:36`). The page's own words
+are `Deadline 31 October 2026 … Submit your papers by October 31, 2026`, so
+**both extractors return the identical instant** and **nothing between them
+notices.** Executed: both return `2026-10-31T12:00:00.000Z`.
+
+Plate 03 then prints **`Dates 31 Oct` beside `Abstract due 31 Oct`, from one
+token.** An event cannot happen on the day its call for papers closes; the report
+contradicts itself on its own face.
+
+## THE REAL DATE EXISTS AND IS SHADOWED TWICE OVER — worth C's attention
+
+B fetched the page once, through Peer's own `fetchPageHtml`, and reduced it to
+regex-matched date tokens (no page prose entered context). Its own tokens are
+**`7–8 April 2027`, `9 April 2027`, `31 October 2026`, `October 31, 2026`.** So
+the conference date is on the page. It never reaches the card for **two**
+independent reasons, and C must know both:
+
+1. **The page carries no JSON-LD at all** (measured: zero records), so
+   `structured?.startDate` in `web/src/lib/opportunities/enrich.ts:335` is
+   `undefined` — the April 2027 token lives only in body prose.
+2. **Even if it were structured, it would lose.** That line reads
+   `startDate: item.startDate || structured?.startDate` — **the snippet-derived
+   value takes precedence over the page's own declared value.** That precedence
+   is backwards on its face: the page declares, the snippet guesses. B names it
+   as a second, separate defect on the same line and does **not** fold it into
+   this item's fix, because changing precedence moves rows and needs its own
+   measurement.
+
+## FIX DIRECTION — one reconciliation, and its fallback is proved
+
+**A token the deadline extractor owns cannot also be the event date.** In
+`webResultToRawEventItem`, after both extractors have run: if `startDate` and
+`deadline` resolve to the same instant, **`startDate` is unknown**. The deadline
+is kept — it is correct and A verified it.
+
+**FALLBACK PROOF, MEASURED ACROSS ALL 50 INGESTION-KEPT EVENT ROWS OF THIS
+PULL:** the clause fires on **exactly one row — this one.** No other row has its
+sole date candidate claimed by the deadline regex. **Correct dates lost: ZERO.**
+The card falls back to `date TBA`, which the code's own comment at
+`eventweb.ts:1369-1371` already names as the designed outcome, and five pool rows
+already render it today.
+
+**AND THE ROW SURVIVES, WHICH IS THE RIGHT OUTCOME AND B SAYS SO EXPLICITLY.**
+The expiry anchor at `:1367` still has the deadline (`2026-10-31`, future), so a
+real, live, on-topic conference is not destroyed to fix a date. This is the
+difference between this clause and a blunt "drop rows with suspicious dates".
+
+**WHAT IT DOES NOT FIX, STATED PLAINLY:** the reader still never sees
+`9 April 2027`. Recovering it means reading the page's prose, which is a
+different and much larger item. **A silent `date TBA` beside a correct
+`Abstract due 31 Oct` is honest; today's output is not.** That is the whole of
+the claim being made here.
+
+## TESTS AT RISK
+
+- `web/src/lib/events/sources/eventweb.test.ts` — grep it for `extractDeadline`
+  and for `deadline:`. Any case whose fixture text has a deadline phrase and no
+  second date token and which asserts a non-empty `startDate` **goes red, and is
+  the case that documents the new rule.**
+- `web/src/lib/events/scoring.test.ts` — the expiry branch reads both anchors;
+  a row that keeps its deadline and loses its start must still be kept.
+- `web/src/lib/events/mapper.test.ts` and `web/src/lib/events/card.test.ts` —
+  the `Dates` / `Abstract due` render.
+- `web/src/app/api/events/report/route.test.ts` — plate 03's own tiles.
+
+## BLAST RADIUS
+
+Three lines in one function, no new regex, no host list, no new vocabulary.
+**It cannot delete a row** — it only ever empties a field whose value was already
+being printed twice. Independent of items 1, 2 and 8; C may land it first and
+alone, and it is the safest item in the round.
+
+---
