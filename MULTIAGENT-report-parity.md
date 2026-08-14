@@ -270,12 +270,122 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 19:07 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 19:05 UTC — ROUND 21 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 19:39 UTC — ROUND 21 B IS
+                  COMPLETE. ALL FIVE ITEMS DONE (Ruling 57), one commit each,
+                  each pushed immediately** (`aab0b2d`, `5c730ac`, `74e7ff3`,
+                  `e361c71`, `52e46e3`, plus this hand-off). Claimed the lock
+                  cleanly (`b3ff421`) after `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`9c7ab3f..b3ff421`), so the race was won rather than
+                  assumed**; branch name re-read in the output of every push (§3).
+                  **B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST, AND
+                  TOUCHED NO FILE EXCEPT THIS ONE.** Harness lived outside `src/`
+                  (`web/zz-r21b/`, own vitest config, include pattern
+                  `zz-r21b/**/*.probe.ts`) and was **moved out of the repository
+                  before every commit and DELETED before the gate re-run**;
+                  `git status --porcelain --untracked-files=all` showed only the
+                  state file each time. All five appends were **pure insertions
+                  (81, 83, 87, 86 and 123 lines, ZERO deletions) with ZERO
+                  mojibake**, verified programmatically against the appended
+                  region rather than by eye.
+
+                  **METHOD: EVERY CANDIDATE IS A REAL COPY OF THE SHIPPED FILE
+                  WITH ONE TEXTUAL EDIT** (rounds 19/20 B's method), and the
+                  byte-identical control copy was proved faithful **THREE ways
+                  before any candidate verdict was used**: the shipped
+                  `jobweb.test.ts` runs **387/387** against it; every control
+                  verdict is asserted equal to the **genuinely imported** shipped
+                  module on all **115 live offered rows (0 mismatches)** and on
+                  all **28 target-table rows (0 mismatches)**. `summarize.ts` got
+                  the same treatment (**51/51**, 7 of 7 outputs identical).
+                  **TWO live job-pool pulls in two separate processes**, no-op
+                  `PoolCache`, **`PEER_PROFILE_SNAPSHOT_PATH` NOT used**,
+                  page-fetch enrichment ran and LLM enrichment did not (42b);
+                  **12 pool rows both times, identical membership and identical
+                  values — zero variance.**
+
+                  **ALL FOUR OF A's DIFFERENCES REPRODUCE EXACTLY, INCLUDING BOTH
+                  GUARD VERDICTS AND ALL THREE WRONG EMPLOYER STRINGS, CHARACTER
+                  FOR CHARACTER.** **A21-01 is ONE gap:** `jobs` is missing from
+                  `OWNER_INDEX_TITLE_RE`'s section-noun list, and **the file's own
+                  comments prove the omission was never a decision** — `jobs` is
+                  in every other section-noun list in the same file, and the one
+                  word deliberately excluded (`positions`) is named as such.
+                  **A21-02: RULING 57a's QUESTION IS ANSWERED — YES, link
+                  integrity is measurable AT INGESTION by a closed signal with
+                  ZERO fetches** (an identifier-named query parameter with an
+                  EMPTY value, on a path carrying no posting id); B also found
+                  that `POSTING_ID_RE` **positively matches `?Id=` when empty**, a
+                  latent affirmative wrong answer. **A21-03 is TWO gaps, and the
+                  second closes BOTH `postdocjobs.com` cards with ONE edit** — the
+                  title split collapses en/em dash and hyphen into one separator
+                  class. **A21-04: THE TRUNCATION LAYER IS NOT PEER** — every
+                  layer on the summary path was audited and none cuts
+                  mid-sentence; the defect is `splitSentences`' `|$` alternative
+                  plus a scoring block with no completeness check.
+
+                  **RULING 57b's MANDATORY DESIGN IS DELIVERED: FIVE conjuncts,
+                  all closed, ALL PROVED LOAD-BEARING BY MUTATION. 17 of 17
+                  adversarial. 1 of 13 live pool rows and 1 of 49 admitted
+                  offered rows fire — the same row 52b has counted three rounds
+                  running, and nothing else.** The distinguishing signal is **the
+                  owner's LINE OF BUSINESS (an investment-vehicle name tail), not
+                  the topic word**, so real on-topic employers whose names contain
+                  a topic word survive by construction.
+
+                  **FOUR THINGS B REPORTS AGAINST ITS OWN CONVENIENCE.** (1) **B's
+                  first item-5 draft was ORDER-DEPENDENT** — it picked
+                  `matched[0]`, so the verdict turned on where a topic sat in the
+                  user's own profile list rather than on the item; rewritten to
+                  select by the owner name, and the superseded verdicts are used
+                  nowhere. (2) **B's first item-5 draft had SIX conjuncts and FOUR
+                  WERE VACUOUS.** Mutation found it, not inspection; three were
+                  closed with cases written to break the guard, and **conjunct 1
+                  is structurally redundant, so B recommends DELETING it** rather
+                  than shipping a clause no test can turn red. (3) **B used an
+                  INVENTED URL in a replay** and `Research positions at CERN` read
+                  as destroyed by the control itself — it was the URL (`/postings/`
+                  is not in `JOB_PATH_RE`), not the guard; corrected, and the
+                  superseded table appears nowhere. (4) **The item-5 guard ships
+                  on the EVENT surface UNWITNESSED** — B ran no event pull, and A's
+                  event-side 52b count is 1 instance / 0 admitted; graded
+                  `designed, organically unwitnessed` under Ruling 55c's own
+                  standard.
+
+                  **THE GATE, RE-RUN AFTER DELETING THE HARNESS: 91 files / 1596
+                  tests, 1595 passing** — byte-for-byte what round 20 C left and
+                  round 21 A re-measured; sole failure the standing
+                  `benchmark.test.ts` flake at **`:109`** (`expected false to be
+                  true`); `npx tsc --noEmit` **clean**; `npx eslint` exactly the
+                  one standing `quiz.tsx:46` error. Named solo runs:
+                  **`enrich.test.ts` 53/53 (the SolarPACES lock is intact)**,
+                  `jobweb.test.ts` 387/387, `summarize.test.ts` 51/51,
+                  `scoring.test.ts` (jobs + events) + `job-cleanup.test.ts`
+                  108/108, `shared.test.ts` + `facets.test.ts` 37/37. **B changed
+                  no code, so this confirms the harness left nothing behind — it
+                  is not a result.**
+
+                  **No credential read, printed, logged or written — boolean
+                  presence only.** **NO PAGE FETCH OF ANY KIND this turn**;
+                  `euagenda.eu` NOT fetched (45a), Ruling 41c's three hosts NOT
+                  hunted (45b), and no job-side host fetched. The offered-row
+                  capture reads only the provider's RESPONSE body, never the
+                  request init that carries the key. No third-party page text
+                  entered context and none was treated as an instruction. No
+                  branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **B RAISED
+                  NO NEW `POLICY — manager decides` AND DECIDED NONE OF THE THREE
+                  OPEN ONES; Ruling 33 is NOT widened and NOT narrowed.** Full
+                  detail in §4's five "Round 21 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-14 19:05 UTC — ROUND 21 A IS
                   COMPLETE. THE ROME ACCEPTANCE CHECK IS DISCHARGED AND BOTH
                   ROUND-20 FIXES ARE CONFIRMED — AND THE GATE IS NOT A
                   CANDIDATE.** Four parts, **one commit each, each pushed
@@ -3141,7 +3251,158 @@ ROUND:            **20 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found two
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — Investigator, round 21.** Round 21 A's live measurement is
+WHOSE TURN:       **C — Implementer, round 21.** Round 21 B's investigation is
+                  COMPLETE. **All five items (Ruling 57) have a measured fix
+                  guide; every candidate below is a REAL COPY OF THE SHIPPED FILE
+                  WITH ONE TEXTUAL EDIT that B already executed, so C is
+                  re-measuring, not deriving.** Claim the §0d lock first, always.
+                  **Full evidence is in §4's five "Round 21 — Agent B" entries —
+                  work from those, not from this summary.**
+
+                  **RE-MEASURE B's TABLES BY EXECUTION BEFORE WRITING A LINE OF
+                  CODE** (round 20 C's standard, and it caught nothing wrong last
+                  round only because C actually did it). B's control-fidelity
+                  numbers are the things to reproduce first: shipped
+                  `jobweb.test.ts` **387/387** against a byte-identical copy,
+                  **0 mismatches** against the genuinely imported module on 115
+                  live offered rows and on 28 target rows, and `summarize.test.ts`
+                  **51/51**.
+
+                  **THE WORK LIST, IN THE ORDER C SHOULD WORK IT. THE ORDER IS
+                  DEPENDENCY-DRIVEN AND B GIVES THE REASON.**
+
+                  - **ITEM 0 (HYGIENE, INHERITED — do it FIRST, it is free).**
+                    `papers/report-stream.test.ts:44` carries the SAME mangled
+                    middle dot round 20 C repaired elsewhere, **inside a test
+                    string** (Ruling 56a). Round 20 C recorded it and declined the
+                    widening; round 21 A did not touch, rank or count it. **It is
+                    C's.** Repair the character from evidence, then prove nothing
+                    moved by comparing verdicts mark-for-mark rather than by total,
+                    exactly as round 20 C's item 0 did.
+                  - **ITEM 1 — A21-01, `ev.careers`. ONE WORD, ONE LIST.** Add
+                    `jobs` to **`OWNER_INDEX_TITLE_RE`'s** section-noun list in
+                    `jobweb.ts` — **and to nothing else.** Measured: drops the row,
+                    **0 changes on 387 shipped assertions, 115 live offered rows
+                    and the other 27 target rows.** **DO NOT also widen
+                    `BRAND_PROGRAMME_TITLE_RE`** — B measured it (`i1jobsboth`) and
+                    it scores identically, so the second edit is a byte no test can
+                    turn red. **DO NOT build the host-brand variant** (`i1brandjobs`)
+                    — measured and **it does not fire at all**, because
+                    `looksLikeHostBrand("EV", "ev.careers")` is false.
+                  - **ITEM 2 — A21-02, the dead apply link.** Add
+                    `hasEmptyPostingIdentifier(pathAndQuery)` and consult it in
+                    `webResultToRawJobItem` **immediately after the protocol
+                    check**, before any field is derived. **BOTH conjuncts are
+                    load-bearing and the second is earned by a LIVE row**
+                    (`careers.inl.gov/…/job/1515?lastSelectedFacet=` carries an
+                    empty parameter and must survive). **Do NOT touch
+                    `POSTING_ID_RE`** in this item — B recorded its empty-id
+                    behaviour as a **latent** finding, not a ranked one.
+                  - **ITEM 3 — A21-03, the wrong employers. TWO EDITS, ONE
+                    COMMIT.** (a) a whole-segment-anchored **board-self-name veto**
+                    beside `looksLikeNavChrome`, requiring a job word IMMEDIATELY
+                    followed by a board noun; (b) **keep the separators when
+                    splitting the title** and drop en/em-dash-introduced segments
+                    from the employer pool **only when the title ALSO uses a chrome
+                    separator**. (b) fixes BOTH `postdocjobs.com` cards on its own.
+                    **The "also uses a chrome separator" conjunct is what protects
+                    Ruling 49a's Oregon lock — do not simplify it out.** **Do NOT
+                    teach `titleEmployer` the `@` separator** — B measured it as a
+                    separate, larger change and declined it deliberately.
+                    **`i3ellipsis` (one filter on the `...` token in
+                    `looksLikeTopicLabel`) is OPTIONAL, costs zero, and closes a
+                    LATENT hole — it closes NOTHING on its own and must not be
+                    counted as closing A21-03.**
+                  - **ITEM 4 — A21-04, the summary that stops at `of`.** Add a
+                    **closed-class dangling-tail check** as a sixth disjunct in
+                    `scoreSentences`'s existing rejection block. **It must REJECT a
+                    candidate, never TRIM one** — every other check in that block
+                    works that way. **The "ends on a FUNCTION WORD" narrowing is
+                    the whole safety argument**: rejecting every unterminated
+                    sentence is a wrong drop, and B has the must-keeps to prove it.
+                    **Do NOT touch B8-05's positive-content floor** — B measured
+                    that it, not this change, is why a complete sibling sentence is
+                    not promoted, and B does not propose widening it.
+                  - **ITEM 5 — RULING 57b's COLLISION GUARD, BOTH SURFACES.**
+                    `isOwnerNameTopicCollision`, consulted at the required gate in
+                    **both** `jobs/scoring.ts` and `events/scoring.ts` as a
+                    `continue`, immediately after `passesRequiredGate`. **SHIP FIVE
+                    CONJUNCTS, NOT SIX — B's conjunct 1 is structurally subsumed by
+                    conjunct 2 and mutation proves it changes nothing.** **Choose
+                    the collision topic BY THE OWNER NAME, never by list order** —
+                    B's first draft got this wrong and the bug is invisible unless
+                    the profile's topic order changes. **Every one of the five must
+                    have a test that turns red when it alone is removed; B's
+                    17-row adversarial table already contains one such case per
+                    conjunct.**
+
+                  **DEPENDENCIES, STATED SO C DOES NOT DISCOVER THEM LATE.**
+                  Items 1, 2 and 3 all edit `jobweb.ts` and all are measured by
+                  `jobweb.test.ts` — **land them in that order and re-run the
+                  387-assertion suite after each**, because item 3(b) changes the
+                  `parts` binding item 1 and item 2 both sit upstream of. Item 4 is
+                  independent (`summarize.ts`). **Item 5 is LAST and it is the only
+                  one that touches the scorers** — `src/lib/jobs/scoring.test.ts`
+                  and **`src/lib/opportunities/enrich.test.ts` (the SolarPACES lock,
+                  53 tests) both call `scoreJobs`**, and `src/lib/events/scoring.test.ts`
+                  (51) and `src/lib/opportunities/shared.test.ts` (20) cover the
+                  gate. **Those are the tests at risk and B named them by grepping
+                  the callers, not by guessing.** `eventweb.ts`'s only mention of
+                  `isListingPage` is a doc comment — no code dependency.
+
+                  **WHAT RENDERS ON REJECTION, FOR EVERY ITEM, BECAUSE RULING 32
+                  REQUIRES THE ANSWER BEFORE THE FIX.** Items 1, 2 and 5: **the
+                  item leaves the pool** — no card at all. Item 3: **`company` is
+                  `undefined` and all four render sites omit the employer line**,
+                  the behaviour ten of A's eighteen rows already have. Item 4: the
+                  card falls back to **`matchReason`**, the shape the SAME HOST's
+                  other posting already renders this round.
+
+                  **WHAT C MUST NOT TREAT AS OPEN, BY NAME** — the full standing
+                  exclusion list is reproduced in the superseded B briefing below
+                  and **every entry still binds**: `careerservices.upenn.edu` (34a),
+                  `The Battery Saloon` (39b), `careers.gevernova.com` (37), Ruling
+                  44's label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29), the honest hosts
+                  (39a/40), the document-URL retarget (42c), **`euagenda.eu` (45a —
+                  DO NOT FETCH)**, Ruling 41c's three hosts (45b), 46a's Title-Case
+                  lock, 46b's two titles, round 16's brand-first search page, round
+                  17's named three-token miss, the `jobs.polymer.co` Spring/Fall
+                  mismatch, round 18's three named under-catches, `balchem.com` and
+                  `roberthalf.com` (B18-01), B18-03's dash restriction, B19-01's and
+                  B19-02's named costs, the seven latent brochure/index pages, and
+                  the `ccfddl.ts:146` hybrid under-catch. **`euchems2026.eu`'s
+                  `Hackathon` chip is a MANAGER OBSERVATION, not a work item — C
+                  must not build against it.**
+
+                  **THREE `POLICY — manager decides` REMAIN OPEN AND C DECIDES
+                  NONE:** Ruling 33's full-phrase-collision question (**item 5
+                  answers the DESIGN question Ruling 57b asked; it does NOT decide
+                  33, and 33 is neither widened nor narrowed**); Ruling 51b's
+                  five-pull majority scoring; Ruling 51c's `owned`-widening lead.
+                  **Plus B's own earlier declined COPY question** — nobody has
+                  invented plate copy and nobody should.
+
+                  **RULING 55c's ONLINE MUST-KEEP DEBT CARRIES INTO ITS THIRD
+                  ROUND. It is A's line, not C's**, and B did not discharge it —
+                  B ran no event pull at all this turn.
+
+                  **THE GATE C INHERITS: 91 files / 1596 tests, 1595 passing** —
+                  byte-for-byte what round 20 C left, round 21 A re-measured and
+                  round 21 B re-measured again; sole failure the standing
+                  `benchmark.test.ts` flake at **`:109`**; `npx tsc --noEmit`
+                  clean; `npx eslint` exactly the one standing `quiz.tsx:46` error.
+                  **`enrich.test.ts` is at `src/lib/opportunities/enrich.test.ts` —
+                  run it SOLO; the SolarPACES lock lives there and it reads 53/53.**
+
+                  **THRESHOLDS AFFIRMED, UNCHANGED:** the target is **0%, not 5%**.
+                  **The user REAFFIRMED this strict Ruling-23 gate on 2026-08-14 —
+                  grep "user reaffirmed the gate" — so no agent re-scopes it.**
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-21 B
+                  briefing that follows is complete and was executed. Do not work
+                  from it.*
+                  **B — Investigator, round 21.** Round 21 A's live measurement is
                   COMPLETE. **The round-20 fixes are CONFIRMED and the event
                   surface is clean on every column — but FOUR unexplained
                   differences remain, ALL on the JOB surface, and the gate is NOT
