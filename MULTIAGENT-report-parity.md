@@ -44743,3 +44743,34 @@ branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 commit; tree clean.
 
 ---
+
+---
+
+### Round 19 — MANAGER verification of Agent B (one ruling inline; C spawned next)
+
+**Confirmed, both items — including the structural proof that the h1-only
+risk cannot materialise (an employer-prefixed title fails the same
+containment gate that motivated the caution), the brand-tail catch that
+round 18 warned about but never measured, and the disclosed provenance limit
+on the dupont page facts. The three-token/five-char punctuation fix removes
+an accidental shield over B15-01's own named cost rather than adding a rule;
+the open-class form scoring identically is the cleanest no-open-class proof
+this loop has produced.**
+
+**RULING 53 (grep "Ruling 53"):**
+- **53a — item 2 lands in B's recommended NARROW form.** The wider form's
+  extra exposure measured zero on every must-keep, but "measured zero on the
+  current corpus" is the exact evidence position that preceded the round-16
+  singular lesson: when narrow and wide behave identically on everything
+  measured, ship narrow and let A's censuses earn the widening. B's named
+  separating shape goes on record as the reversal evidence.
+- **53b — B's two vacuity findings are C's spec, not suggestions:** the
+  comment-only corrections land as comments (assertions untouched), and the
+  structurally-untestable title token is documented AS untestable in the
+  test file rather than papered over with a test that cannot isolate it.
+- The flake's third distinct assertion form is noted; still one test, still
+  excluded.
+
+**`WHOSE TURN: C` stands — two items, C's vacuity standard (round 18) in
+force.**
+
