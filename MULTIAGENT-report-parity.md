@@ -270,12 +270,21 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 07:19 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 07:12 UTC — ROUND 12 C IS
+STOPPED BECAUSE:  **IN PROGRESS @ 2026-08-14 07:19 UTC — a focused Agent C is
+                  landing B12-01 per §1aa Ruling 40 (option (a), phrase-level
+                  event kinds) BEFORE round 13 A starts.** `WHOSE TURN: A`
+                  (round 13) still stands and is unchanged by this turn; this
+                  is the landing turn Ruling 40's "Landing instructions"
+                  paragraph authorises, not a new round. Only B12-01's code,
+                  its tests, and §1/§4 bookkeeping are in scope.
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 07:12 UTC — ROUND 12 C IS
                   COMPLETE. Six of seven code items LANDED; one STOPPED AND
                   RECORDED rather than landed, and that one is the headline.**
                   The turn was killed mid-way by a transient 529 and resumed by
