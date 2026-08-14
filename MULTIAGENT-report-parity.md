@@ -28401,3 +28401,260 @@ none misleading — the designed cost is being paid and is worth paying.
 **Manager's turn complete. `WHOSE TURN: B` stands. Round 13 B is spawned next
 with four items and Ruling 41's connections in hand.**
 
+
+---
+
+### Round 13 — Agent B (B13-01: `openmc.discourse.group` → `Announcements` — A's shape-read is RIGHT about the mechanism and WRONG about the trigger, established by execution; the Ruling 40 contract change does NOT transfer to this field, and I have the cost in numbers)
+
+**STATUS: DONE.** First of round 13 B's four items. Turn lock claimed
+(`b3d23f7`, `LAPTOP-3CL10CG5 @ 2026-08-14 08:02 UTC`) after `git pull --ff-only`
+(already up to date) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: B` block, §1ab Ruling 41, §2, §3, all four round-13 A parts, the
+manager's verification, and Rulings 32–41 before touching anything. **B changes
+no code** (§2).
+
+**Method.** Throwaway harness **outside `src/`** (`web/zz-r13b/`, its own vitest
+config, include pattern `zz-r13b/**/*.probe.ts`) so the standing gate
+(`src/**/*.test.{ts,tsx}`) could not collect it. **No live pipeline pull, no page
+fetch, no credential read** — every string below is either A's own quoted
+evidence or a shape constructed from it. Harness deleted before this commit.
+
+---
+
+#### ONE GAP OR SEVERAL — **SEVERAL. Two, and only one of them is A's.**
+
+Established by execution before any design, per the standing rule.
+
+**The mechanism A described is real and I reproduce it exactly.** The live
+`<title>` A quoted splits on `jobweb.ts`'s own separator regex into four
+segments — `Job vacancies looking for OpenMC skills` / `Page 2` /
+`Announcements` / `OpenMC`. The employer chain is a single `.find()` over
+`[titleEmployer, ...parts.slice(1)]` (`jobweb.ts:354-372`). `Page 2` is rejected
+by B12-06's `looksLikeNavChrome`; `Announcements` clears all seven guards;
+`OpenMC` would be rejected by `looksLikeHostBrand` (its normalised form is a
+prefix of the `openmc` DNS label) but is never reached. **Render:
+`Announcements`. Confirmed by execution through `webResultToRawJobItem`, the
+real entry point.**
+
+**But A's TRIGGER reading does not survive execution, and this is the finding
+that kills two of the three obvious fix directions.** A's shape-read is "remove
+one navigation segment, the next takes the slot" — i.e. B12-06 *created* the
+opening. **It did not.** The same title with the pagination segment absent —
+`Job vacancies looking for OpenMC skills - Announcements - OpenMC`, which is what
+Discourse serves for page 1 of the identical thread — **also renders
+`Announcements`, and would have done so before B12-06 ever landed.** The
+pagination segment is not the trigger; it is merely earlier in scan order.
+**B12-06 did not open this hole. It exposed a hole that was always there.**
+
+So the two gaps are:
+
+- **GAP A — a bare careers-section label reaches the employer slot, and the
+  closed list that names it is already in this file and is never consulted here.
+  NEW; no round has logged it.** `Battery Research Scientist - Careers - Idaho
+  National Laboratory` renders the employer **`Careers`** today.
+  `jobweb.ts` already exports `CAREERS_INDEX_TITLE_RE` (`jobweb.ts:65`) — an
+  anchored, closed list containing `careers?`, `jobs?`, `vacancies`,
+  `job openings?`, `employment`, `opportunities`, `join us`, `work with us` — but
+  it is only ever applied by `isListingPage()` to the **whole title** and to
+  **`roleTitle`**, never to an employer candidate. `stripTrailingCareersChrome`'s
+  own doc comment (`jobweb.ts:174-176`) states the intent explicitly: a candidate
+  that IS only this word "is the guards above's business, not this one's" —
+  **and no guard above is that business.** The intent is documented; the guard is
+  missing.
+- **GAP B — a forum/site CATEGORY segment (`Announcements`) reaches the employer
+  slot, and there is no closed string-side signal that separates it from a real
+  employer name.** This is the live one.
+
+**They are separate gaps, not one, and the evidence is that no single change
+closes both:** every design that closes B leaves A open or costs correct
+employers, and the change that closes A does not touch B. Reported as two so C
+is not handed a fix that silently does half a job.
+
+---
+
+#### THE RULING 40 CONTRACT CHANGE DOES NOT TRANSFER TO THIS FIELD. HERE IS THE COST, MEASURED.
+
+The brief asked me to establish by execution whether the job-side employer
+derivation needs the same contract change Ruling 40 made on the event side
+(return the thing you want, or nothing) or whether iterating the existing guard
+suffices. **Neither.** I ran six designs over a **21-case matrix** built from
+round 13 A's own live census plus every must-survive company already asserted in
+`jobweb.test.ts`. Two of the 21 are the openmc shapes (must fix); nineteen are
+values that must not move.
+
+| design | matrix | what it costs |
+|---|---|---|
+| **D0 — today** | 18/21 | baseline: `Announcements` on both openmc shapes, plus Gap A's `Careers` |
+| **D1 — stop the scan at a nav-chrome candidate** (the literal "nothing rather than the next candidate") | 18/21 | fixes the page-2 shape ONLY; **misses the page-1 shape entirely**, and destroys the employer on `Role - Home - Idaho National Laboratory` |
+| **D2 — a chrome segment anywhere poisons the whole title** | 17/21 | same two misses, **plus** it destroys `Role - Idaho National Laboratory - Page 2`, where the correct employer sits BEFORE the chrome |
+| **D3 — positional (only the at-capture and the segment next to the role)** | 18/21 | **misses both openmc shapes** — `Announcements` is the second candidate |
+| **D4 — the real Ruling 40 analogue: the candidate must carry an ORGANISATION-KIND noun** | **15/21** | **destroys SIX live-confirmed correct employers** |
+| **D5 — also consult `CAREERS_INDEX_TITLE_RE` on each candidate** | **19/21** | **costs nothing. Closes Gap A. Does not touch Gap B.** |
+
+**D4 is the one that matters and it is the answer to the brief's question.** I
+seeded its organisation-kind list generously — 50+ alternatives covering every
+kind noun and legal-form suffix appearing in any employer this loop has ever
+cited (`laboratory`, `university`, `institute`, `commission`, `ventures`,
+`technologies`, `corporation`, `inc`, `llc`, `gmbh`, `group`, `holdings`,
+`industries`, `society`, `authority`, and more). **It still deletes `Tesla`,
+`Thermo Fisher Scientific`, `LCO-CDO`, `Las Cumbres Observatory`, `Home Depot`
+and `First Solar` — six of the nineteen protected values, five of them
+live-confirmed correct in round 13 A's own census.**
+
+**Why the event side's contract change worked and this one cannot — the
+structural reason, stated once so nobody re-derives it:** an event's name almost
+always CONTAINS its kind (`…Conference`, `…Summit`, `…Congress`, `…Round
+Table`), which is why `EVENT_KIND_NOUN_RE` plus `EVENT_KIND_PHRASE_RE` is a
+usable positive test. **An organisation's name usually does not contain its
+kind.** `Tesla` is a company; nothing in the string says so. The positive-test
+contract is available in FORM on the job side and unaffordable in COST — it
+fails on roughly a third of real employers. Ruling 40's own justification
+("misses fall to an honest fallback") does hold here — a miss omits the employer
+line, which is honest — but the ruling's **arithmetic** does not: there the
+misses were rare and the removed class common; here it is the reverse, which is
+exactly the arithmetic Ruling 37 rejected.
+
+**Where my trace disagrees with the handed-down reading, said plainly as §2
+requires:** A recorded the parallel as an observation and explicitly did not
+claim it as the fix — that was the right call, and **the parallel does not hold.**
+The manager's verification note ("A correctly recognised its shape as Ruling
+40's one-layer-up pattern on the job side") is right about the SHAPE and, on the
+evidence above, wrong about the REMEDY. Recorded with numbers rather than
+asserted.
+
+---
+
+#### FIX DESIGN B13-01 — GAP A ONLY. Ready to land. Cheapest item in the round.
+
+**Add `CAREERS_INDEX_TITLE_RE` to the employer candidate chain's veto list.**
+One clause in the existing `.find()` predicate at `jobweb.ts:360-371`, alongside
+the seven already there, with a comment naming B13-01:
+
+```
+!CAREERS_INDEX_TITLE_RE.test(p) &&
+```
+
+- **Closed list, and it is genuinely finite** (Ruling 37's bar): it enumerates
+  the names a careers SECTION is called, not a grammatical class. It is already
+  anchored end to end, already shipped, already asserted by six tests via
+  `isListingPage`, and it is defined in this same file — nothing new is invented
+  and nothing is duplicated.
+- **Adversarial result: 19/21, the best of the six, and it regresses NOTHING.**
+  Every must-survive employer in the matrix is untouched, including all four
+  anchored trap names (`Home Depot`, `Page Industries`, `First Solar`,
+  `Next Energy Technologies`) — the regex is whole-segment anchored, so a real
+  company whose name merely CONTAINS one of these words is unaffected. Verified
+  by execution, not by reading.
+- **Failure direction:** a careers-section label not in the list survives — the
+  status quo, never a new wrong value.
+- **Tests C should add:** one must-reject per breadcrumb shape
+  (`Role - Careers - Employer` renders the employer, not `Careers`), and the four
+  anchored trap names re-asserted through this new clause so a later widening
+  cannot silently break them.
+- **HONESTY NOTE, and C and the manager should weigh it:** Gap A is **latent,
+  not live**. Round 13 A's census contains no `Careers` employer render. I found
+  it by executing the chain against breadcrumb shapes, not by observing it. This
+  loop's standing practice is "land what is confirmed, not what merely seems
+  likely" (Rulings 32/34b, quoted verbatim in `eventweb.ts:198-201`). **What
+  makes it worth landing anyway is that it costs nothing and closes a gap the
+  code's own comment already says should be closed** — but I flag the evidence
+  class rather than dressing it up as a live defect.
+
+**What renders when every candidate is rejected — Ruling 32's mandatory
+question, answered from the render side and BROADER than B12-06's own comment
+claimed.** B12-06 named two render sites; there are **four**, and all four omit
+the employer rather than substituting anything: `job-card.tsx:87`
+(`job.companyOrLab && …`), `feed-tile.tsx:535` (same guard),
+`briefing-hero.tsx:133` and `briefing-quick-hit.tsx:49` (both build an array and
+`.filter(Boolean).join(" · ")`, so the separator disappears with the value — no
+dangling middle dot). **`company` is `undefined`, the line is omitted, nothing
+rejected is reinserted.** Checked in the components, not assumed.
+
+---
+
+#### GAP B — NO FIX DESIGNED, AND THE REASON IS EVIDENCE, NOT CAUTION. `POLICY — manager decides`.
+
+**I am not designing a string-side guard for `Announcements`, and I am not
+recommending one.** Every honest route was tried and each fails on its own
+terms:
+
+1. **Widen `NAV_CHROME_SEGMENT_RE` to include forum-category words.** This is
+   Ruling 37's trap in its purest form. Pagination is a closed vocabulary — a
+   finite set of UI affordances, which is exactly why B12-06 was allowed.
+   **Forum and site CATEGORY names are an open class**: this same platform hosts
+   categories called `General`, `Support`, `Development`, `Site Feedback`, and a
+   battery forum would call one `Battery Research`. A list of them moves the
+   boundary without closing it, and its misses produce **wrong output**, not an
+   honest fallback — Ruling 40's own stated test for when a list is a trap.
+2. **The contract change (D1–D4).** Measured above. D1/D2/D3 miss the page-1
+   shape; D4 costs six correct employers.
+3. **"The last segment is the host brand, so the middle segments are a
+   breadcrumb."** Killed by execution against the live data: the round-13 shape
+   `Postdoctoral Research Associate - Savannah River National Laboratory -
+   Talents by Vaia` on `talents.vaia.com` has exactly that structure, and this
+   rule would delete **the correct employer B12-07 won last round**. A design
+   that regresses a live-confirmed fix is not a candidate.
+4. **URL-slug corroboration** (the event side's `isSlugCorroborated`, B12-02).
+   Not transferable: the employer is routinely absent from the job URL
+   (`grad.wisc.edu/…` renders `Thermo Fisher Scientific`), so requiring
+   corroboration deletes correct employers wholesale. It also would not fire
+   here — `announcements` is not in the openmc path either way.
+
+**What the value actually is, stated so the manager can rule on the real
+question:** `Announcements` is not a *kind* of bad string. It is a correctly
+spelled, ordinary English word that could name an organisation, sitting in a
+title that is a site breadcrumb rather than a posting title. **It is
+distinguishable from a real employer only by knowing that the page is a forum
+thread** — which is knowledge about the PAGE, not about the string. That is the
+same "no string-side signal exists" shape Rulings 34a and 39b already accepted
+twice, on both surfaces.
+
+**And that points at the one route that does close it, which is already ruled
+and deferred: Ruling 39c's forum-thread drop.** If the forum thread is not in
+the job pool, `Announcements` cannot render. **I am NOT merging this into item 2
+and I am NOT designing 39c's drop** — the brief and Ruling 39c both forbid it,
+and 39c's own trigger (a second, distinct forum-thread instance) did not fire
+this round; A checked and stated it affirmatively.
+
+**`POLICY — manager decides`, and the question is narrow:**
+
+> Ruling 39c deferred the forum-thread drop on the arithmetic of **one instance
+> that was merely a non-posting**. That arithmetic has changed: the same single
+> instance is now **the loop's only remaining wrong value on any surface** (round
+> 13 A: one wrong value in the whole census, and this is it). Ruling 39c's stated
+> trigger — a second, distinct instance — has NOT fired. **Does a known instance
+> escalating from "noise" to "wrong data" justify lifting the deferral early,
+> when the ruling's own counting trigger has not?**
+>
+> The manager has ruled both ways on exactly this distinction and it is not mine
+> to pick: **Ruling 36 counts persistence deliberately because its defect states
+> wrong data; Ruling 37 does not, because its defect is cosmetic.** This defect
+> states wrong data — which puts it on Ruling 36's side of the line the manager
+> itself drew — but the trigger it sits under was written on Ruling 37's side.
+> **That conflict is a ruling to make, not a call for B.**
+
+**If the manager declines**, the honest outcome is the one this loop has adopted
+three times already: **`Announcements` becomes a named accepted cost with a
+one-line tally** ("employer slot shows a site-category segment"), re-listed by
+name every round, excluded from open-defect counts, and revisited on a second
+distinct instance. **It should NOT be left as an open defect nobody may fix and
+nobody may close** — that is the state Rulings 33, 34a and 37 all exist to
+prevent.
+
+**What renders if the manager takes the drop route:** nothing — the item leaves
+the pool and the job pool shrinks by one. Stated explicitly, per the brief.
+
+---
+
+**Cleanup:** `web/zz-r13b/` deleted before this commit; `git status
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched. No credential read, printed, logged or written. No
+page fetched, no pipeline pull run, no branch created, no PR opened, and
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` was not touched.**
+
+**Not done yet (items 2–4, same session, continuing next):** the non-posting
+pool class (which per Ruling 41b also removes the `lco-cdo` acronym instance),
+`flogen.org`, and `euchems2026.eu`.
+
+Commit follows immediately.
