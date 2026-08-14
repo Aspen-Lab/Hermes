@@ -9,6 +9,10 @@ import {
 } from "./enrich";
 import { scoreEventPoolCandidates } from "@/lib/events/pipeline";
 import { scoreJobPoolCandidates } from "@/lib/jobs/pipeline";
+// B19-02: the repaired title is asserted on the RENDERED card, not only on the
+// enriched item, so the site's brand tail cannot slip back in via the mapper.
+import { scoredJobToJob } from "@/lib/jobs/mapper";
+import { scoreJobs } from "@/lib/jobs/scoring";
 
 function event(index: number): RawEventItem {
   return {
@@ -889,6 +893,13 @@ describe("provider-truncated role title repair (B18-02)", () => {
     expect(enriched.title).toBe("Actinide Chemistry Postdoc Research Associate");
   });
 
+  // COMMENT-ONLY CORRECTION BY B19-02 (Ruling 53b). THE ASSERTION IS
+  // DELIBERATELY UNCHANGED and this test still passes — but after B19-02 its
+  // NAME promises more than it tests. "No heading at all" is no longer enough
+  // to leave a title alone; the page must also carry no usable `<title>`. This
+  // fixture happens to have neither, which is the ONLY reason it stays green.
+  // Read it as "no witness of any kind", not as coverage of the no-`<h1>` case.
+  // The case where a `<title>` IS present is asserted in the B19-02 block below.
   it("leaves the title alone when the page has no heading at all", async () => {
     stubPage(`<html><body><div id="root"></div></body></html>`);
     const [enriched] = await enrichJobCandidates([truncatedJob()]);
@@ -977,9 +988,247 @@ describe("provider-truncated role title repair (B18-02)", () => {
   // `fetchPageHtml`, and `xtalks.com` fetches but has no <h1> at all. On all
   // three the result is today's value exactly. It is also bounded by
   // MAX_ENRICHMENT_CANDIDATES — rows past position 40 never get a page.
+  //
+  // COMMENT-ONLY CORRECTION BY B19-02 (Ruling 53b). THE ASSERTION IS
+  // DELIBERATELY UNCHANGED and still passes — but the under-catch it documents
+  // has NARROWED, and this test's fixture no longer demonstrates the whole of
+  // it. The under-catch is now "no `<h1>` AND no usable `<title>`". This
+  // fixture carries no `<title>`, which is the only reason it stays green.
+  //
+  // WHAT MOVED, HOST BY HOST: `talent.com` and `bebee.com` are UNCHANGED — no
+  // page fetches, so there is no witness of any kind. Rows past
+  // MAX_ENRICHMENT_CANDIDATES are UNCHANGED for the same reason.
+  // `xtalks.com` is EXACTLY the class B19-02 newly reaches, but whether its own
+  // `<title>` passes containment is UNMEASURED — that host is a standing
+  // exclusion and was deliberately not fetched. Do not record this item as
+  // closing it.
   it("documents the accepted under-catch: a page with no heading is left alone", async () => {
     stubPage(usablePage("<p>No heading anywhere on this page.</p>"));
     const [enriched] = await enrichJobCandidates([truncatedJob()]);
     expect(enriched.title).toBe(TRUNCATED);
+  });
+
+  // B19-02 (round 19, Rulings 52a + 53a): THE PAGE `<title>` AS A SECOND
+  // WITNESS, BEHIND THE IDENTICAL GATE.
+  //
+  // `careers.dupont.com` put a role title ending in a literal ellipsis on a
+  // card in 5 pulls of 5 — a FOURTH host, outside B18-02's three documented
+  // under-catches. A measured which gate rejected the repair rather than
+  // guessing: the page fetches, the 57-character stem clears the 12-character
+  // floor, and the page has NO `<h1>` ELEMENT AT ALL. So the mechanism was the
+  // documented one; what made it an item is that the page's own `<title>`
+  // carries the continuation AND strictly prefix-matches the stem.
+  //
+  // ROUND 18's REASON FOR REFUSING THE `<title>` WAS RE-MEASURED, NOT ASSUMED
+  // AWAY, and it CANNOT MATERIALISE — for a structural reason, not a lucky one.
+  // An employer-prefixed string does not BEGIN with the stem, so the same
+  // containment test that rejects a different posting's `<h1>` rejects it. That
+  // is asserted below, including in the hard case where there is no `<h1>` to
+  // fall back on. `extendTruncatedTitle` is NOT touched.
+  //
+  // THE OTHER HALF OF ROUND 18's WARNING WAS RIGHT: the brand tail is real, and
+  // containment cannot catch it because containment only checks the FRONT of a
+  // string. Hence the cut — and the cut is NOT a blind `split()[0]`.
+  describe("the page <title> as a second witness (B19-02, Rulings 52a + 53a)", () => {
+    const DUPONT_TRUNCATED =
+      "Process R&D Senior Scientist job in Wilmington, Delaware, ...";
+    const DUPONT_PAGE_TITLE =
+      "Process R&D Senior Scientist job in Wilmington, Delaware, United States of America | Science & Technology jobs at Dupont";
+    const DUPONT_REPAIRED =
+      "Process R&D Senior Scientist job in Wilmington, Delaware, United States of America";
+
+    /** A page that fetches, resolves `unproven`, and carries a `<title>`. */
+    function unprovenPageWithTitle(title: string, heading?: string): string {
+      return (
+        `<html><head><title>${title}</title></head><body>` +
+        (heading ? `<h1>${heading}</h1>` : "") +
+        `<script>${"a".repeat(6 * 1024)}</script>` +
+        `<div id="root"></div></body></html>`
+      );
+    }
+
+    function dupontJob(overrides: Partial<RawJobItem> = {}): RawJobItem {
+      return {
+        ...job(31),
+        title: DUPONT_TRUNCATED,
+        company: "DuPont",
+        description: "Ion exchange and battery materials process research",
+        url: "https://jobs.example.com/role",
+        tags: ["ion exchange"],
+        ...overrides,
+      };
+    }
+
+    // 1. A19-02's SHAPE. The exact string is asserted, not `toContain`, because
+    // the whole point of the cut is what is ABSENT from the end.
+    it("repairs A19-02's row from the page <title>, cut before the brand tail", async () => {
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE));
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_REPAIRED);
+    });
+
+    // 2. THE SAME, ASSERTED ON THE RENDERED VALUE, so the brand tail cannot
+    // slip back in through the mapper. B measured the raw form all the way to
+    // the card and it rendered the site's own careers slogan as the role title;
+    // Ruling 23 ranks that as wrong data, above missing data.
+    it("renders the repaired title on the card WITHOUT the site's brand tail", async () => {
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE));
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      const [scored] = scoreJobs([enriched], { topics: ["ion exchange", "battery"] });
+      const card = scoredJobToJob(scored);
+      expect(card.roleTitle).toBe(DUPONT_REPAIRED);
+      expect(card.roleTitle).not.toContain("Science & Technology jobs at Dupont");
+      expect(card.roleTitle).not.toContain("|");
+    });
+
+    // 3. THE RISK THAT MOTIVATED THE h1-ONLY RULE, RE-ASSERTED AGAINST THE NEW
+    // CODE PATH — AND IN ITS HARD FORM, WITH NO `<h1>` TO FALL BACK ON. This is
+    // round 18's own reason for refusing the `<title>`, and it is the proof
+    // that the reason is structural: containment rejects an employer prefix
+    // because such a string does not begin with the stem.
+    it("refuses an employer-prefixed <title> even when the page has no <h1>", async () => {
+      stubPage(
+        unprovenPageWithTitle(
+          "DuPont hiring Process R&D Senior Scientist in Wilmington, Delaware, United States of America",
+        ),
+      );
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_TRUNCATED);
+    });
+
+    // 4. THE LEAK TEST, AND THE ONE SHAPE THAT SEPARATES THE NARROW CALL SITE
+    // FROM THE WIDE ONE. A wrong `<h1>` is present, so the `<h1>` wins outright
+    // and the `<title>` is never consulted. GO RED HERE AND THE CALL SITE HAS
+    // BEEN WIDENED TO `<h1>`-first-then-`<title>` — which Ruling 53a declined.
+    it("does not consult the <title> when a WRONG <h1> is present", async () => {
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE, "Careers at DuPont"));
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_TRUNCATED);
+    });
+
+    // 5. THE `<h1>` STILL WINS, byte-identically to today, when both exist.
+    it("repairs from the <h1> when both an <h1> and a <title> are present", async () => {
+      stubPage(
+        unprovenPageWithTitle(
+          "DuPont hiring Process R&D Senior Scientist",
+          DUPONT_REPAIRED,
+        ),
+      );
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_REPAIRED);
+    });
+
+    // 6–11. THE MUST-KEEPS. Every one of these passes on the SHIPPED code too —
+    // they are regression locks, NOT evidence the new path works. Only tests 1,
+    // 2 and the separator-crossing one below are that.
+    it.each([
+      ["the <title> is the site brand only", "Jobright: Your AI Job Search Copilot"],
+      ["the <title> belongs to a different posting", "Molten Salt Electrochemistry Postdoctoral Researcher | DuPont"],
+      ["the <title> equals the stem and is not strictly longer", "Process R&D Senior Scientist job in Wilmington, Delaware,"],
+    ])("leaves the title alone when %s", async (_label, pageTitle) => {
+      stubPage(unprovenPageWithTitle(pageTitle));
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_TRUNCATED);
+    });
+
+    // 9. THE 12-CHARACTER FLOOR IS SHARED, and this proves it still applies on
+    // the new path. Without it, `Jobs ...` would be "extended" by any page
+    // whose title happens to start `Jobs at …`.
+    it("still applies the 12-character floor on the <title> path", async () => {
+      stubPage(unprovenPageWithTitle("Jobs at DuPont in Wilmington, Delaware"));
+      const [enriched] = await enrichJobCandidates([dupontJob({ title: "Jobs ..." })]);
+      expect(enriched.title).toBe("Jobs ...");
+    });
+
+    // 10. NO ELLIPSIS MEANS NO REPAIR, even when the `<title>` differs.
+    it("leaves a title with no ellipsis alone even when the <title> continues it", async () => {
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE));
+      const [enriched] = await enrichJobCandidates([
+        dupontJob({ title: "Process R&D Senior Scientist" }),
+      ]);
+      expect(enriched.title).toBe("Process R&D Senior Scientist");
+    });
+
+    // 11. THE NEW NAMED UNDER-CATCH: no `<h1>` and no `<title>` means no
+    // witness exists at all.
+    it("documents the new under-catch: no <h1> and no <title>", async () => {
+      stubPage(
+        `<html><body><script>${"a".repeat(6 * 1024)}</script><div id="root"></div></body></html>`,
+      );
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_TRUNCATED);
+    });
+
+    // 12. THE SEPARATOR-CROSSING CASE. THIS IS THE ASSERTION THAT FAILS IF THE
+    // CUT IS EVER IMPLEMENTED AS A BLIND `split(sep)[0]`: the first boundary
+    // yields `Battery Cell Engineer`, which is SHORTER than the stem and repairs
+    // nothing. Walking the boundaries crosses the separator inside the real
+    // title and stops at the one that starts the chrome.
+    it("crosses a separator INSIDE the real title and stops before the chrome", async () => {
+      stubPage(
+        unprovenPageWithTitle("Battery Cell Engineer - Gigafactory Berlin | Tesla Careers"),
+      );
+      const [enriched] = await enrichJobCandidates([
+        dupontJob({ title: "Battery Cell Engineer - Gigafactory ...", company: "Tesla" }),
+      ]);
+      expect(enriched.title).toBe("Battery Cell Engineer - Gigafactory Berlin");
+    });
+
+    // 13 + 14. THE MUST-KEEPS THAT ARE NOT ABOUT THE TITLE AT ALL: the employer
+    // chain and ownership. `resolveEmployerIdentity` takes ONE argument and its
+    // argument object has no `title` field — the code path simply does not
+    // exist — and the repair still sits AFTER `resolveJobPostingScope`, so
+    // Ruling 51c's `owned`-widening is still NOT bolted on. Asserted on the
+    // VALUES, not on "does not throw".
+    it("changes neither the employer nor the ownership of the repaired row", async () => {
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE));
+      const [enriched] = await enrichJobCandidates([dupontJob()]);
+      expect(enriched.title).toBe(DUPONT_REPAIRED);
+      expect(enriched.company).toBe("DuPont");
+      expect(enriched.fetchedPostingScope).toBe("unproven");
+      expect(enriched.pageText).toBeUndefined();
+    });
+
+    // THE DISCLOSED PRICE, ASSERTED SO IT SITS IN A TEST RATHER THAN ONLY IN A
+    // LOG. A longer title dilutes the length-normalised term density, so the
+    // score MOVES DOWN. B measured 0.7209 → 0.7160 on its own row (and 0.7107
+    // for the rejected raw form — the cut form moves roughly half as far, a
+    // third independent reason to prefer it). C re-measured the same direction
+    // and the same ordering on this fixture; the exact digits belong to
+    // whichever row is scored, so what is LOCKED here is the contract: the
+    // score moves down, it moves only slightly, and NOTHING is lost from the
+    // match reason. If a later change ever RAISES the score or drops a keyword,
+    // this goes red.
+    it("discloses the score cost: it moves DOWN, slightly, and keeps every keyword", async () => {
+      const opts = { topics: ["ion exchange", "battery"] };
+      stubPage(unprovenPageWithTitle(DUPONT_PAGE_TITLE));
+      const [repaired] = await enrichJobCandidates([dupontJob()]);
+      const [before] = scoreJobs([dupontJob()], opts);
+      const [after] = scoreJobs([repaired], opts);
+      expect(repaired.title).toBe(DUPONT_REPAIRED);
+      expect(after.score).toBeLessThan(before.score);
+      expect(before.score - after.score).toBeLessThan(0.02);
+      expect(after.matchedKeywords).toEqual(before.matchedKeywords);
+    });
+
+    // THE ITEM'S ONE CONSTRUCTED NEW RISK CLASS, ASSERTED SO THE PRICE IS IN A
+    // TEST. A job board's own `<title>` can legitimately begin with the role
+    // and continue into listing chrome. NEITHER the raw nor the cut form leaves
+    // it alone, and the cut form's answer is `Research Associate Jobs`. It is
+    // CONSTRUCTED; the catch above is LIVE 5 of 5.
+    //
+    // A `LISTING_TITLE_RE` guard against exactly this was priced and
+    // DELIBERATELY NOT SHIPPED: under the cut form it fires on nothing, so it
+    // would be a guard no test could turn red — the vacuity round 18 C's
+    // standard forbids. Do not re-derive it.
+    it("names its own cost: a board's listing chrome can survive the cut", async () => {
+      stubPage(
+        unprovenPageWithTitle("Research Associate Jobs - 1,204 vacancies | JobBoard.com"),
+      );
+      const [enriched] = await enrichJobCandidates([
+        dupontJob({ title: "Research Associate ...", company: "JobBoard" }),
+      ]);
+      expect(enriched.title).toBe("Research Associate Jobs");
+    });
   });
 });

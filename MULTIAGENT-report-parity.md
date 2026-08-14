@@ -44945,3 +44945,186 @@ NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b); B18-02's three
 named under-catch hosts NOT fetched. No branch, worktree or PR;
 `git branch --show-current` read before the commit and in the push output (§3).
 `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+
+---
+
+### Round 19 — Agent C (item 2: B19-02, the page `<title>` as a second witness. SHIPPED IN B's NARROW FORM PER RULING 53a; B's TWO CONTRACT FACTS RE-MEASURED BY EXECUTION AND BOTH HOLD.)
+
+**STATUS: COMPLETE.** Two files changed: `web/src/lib/opportunities/enrich.ts`
+(three new helpers, one changed call site, one corrected doc block) and
+`web/src/lib/opportunities/enrich.test.ts` (one nested `describe`, 15
+assertions, **two comment-only corrections**, two added imports). **No test
+deleted. No test's assertion edited.** `extendTruncatedTitle` untouched — not
+the 12-character floor, not the strict-prefix test, not the strictly-longer
+test. Harness deleted before item 1's commit and never rebuilt.
+
+---
+
+#### 1. RE-MEASUREMENT FIRST — B's TWO CONTRACT FACTS, RE-RUN
+
+B was explicit that A's two dupont page facts are **INHERITED, not re-verified**,
+and that the design rests instead on two facts B measured itself. **C re-measured
+those two, plus the whole matrix, through real copies of the shipped file — and
+C did NOT fetch `careers.dupont.com` either.** The provenance limit stands
+exactly where B left it.
+
+| shape | C's re-measurement | B recorded | agrees? |
+|---|---|---|---|
+| **employer-prefixed `<title>`, NO `<h1>` at all** | **UNCHANGED — containment rejects it** | UNCHANGED | **YES — the h1-only risk is structurally impossible, not merely rare** |
+| dupont row: no `<h1>`, `<title>` continues the stem | **repaired, brand tail ABSENT** | repaired, cut | YES |
+| the RAW `<title>` form | **renders `… \| Science & Technology jobs at Dupont` on the card** | same | **YES — the brand tail is real** |
+| WRONG `<h1>` + employer-prefixed `<title>` (the leak) | UNCHANGED | UNCHANGED | YES |
+| good `<h1>` + employer-prefixed `<title>` | repaired from the `<h1>`, byte-identical to today | same | YES |
+| site brand only / different posting / equal to stem / no `<title>` at all | **all four UNCHANGED** | all UNCHANGED | YES |
+| 12-character floor, and no-ellipsis | both UNCHANGED | both UNCHANGED | YES |
+| Tesla separator-crossing | **`Battery Cell Engineer - Gigafactory Berlin`** | same | YES |
+| **`split()[0]` on the same row** | **UNCHANGED — repairs NOTHING** | fails assertion 12 | **YES, and worse than "wrong": the first boundary is SHORTER than the stem** |
+| nav-chrome trap, cut form | `Research Associate Jobs` | same | YES |
+| **the wide form vs the narrow form** | **differ on EXACTLY ONE shape in the whole matrix** | exactly one | **YES — Ruling 53a's separating shape confirmed** |
+| `company`, `fetchedPostingScope`, `pageText`, `matchedKeywords` | **all identical across every candidate** | identical | YES |
+| ingestion gate on the repaired title, shipped AND with item 1's widening | **admitted by both** | admitted | **YES — the two items do not interact** |
+
+**THE ONE NUMBER C COULD NOT REPRODUCE EXACTLY, SAID PLAINLY.** B recorded the
+score moving **0.7209 → 0.7160 (cut) / 0.7107 (raw)**. C measures **0.7398 →
+0.7336 (cut) / 0.7243 (raw)** on its own fixture. **The absolute digits belong to
+whichever row is scored, and B's row fixture is not recorded in §4, so they were
+never reproducible.** What IS reproducible and what C confirms: **the score moves
+DOWN; the cut form moves roughly HALF as far as the raw form; and
+`matchedKeywords` is identical in all three forms**, so nothing is lost from the
+match reason. **That contract — not the digits — is what the shipped test asserts**,
+with B's measured pair recorded in the test's own comment so a later round can
+see where the numbers came from. C does not claim the cost is negligible.
+
+---
+
+#### 2. THE CHANGE AS SHIPPED — B's CODE, RULING 53a's FORM
+
+`web/src/lib/opportunities/enrich.ts`: `TITLE_CHROME_SEPARATOR_RE` (the SAME
+separator class `webResultToRawJobItem` already splits on — verified
+character-by-character, U+2013 / U+2014 / U+00B7, no new vocabulary),
+`pageTitleText`, `pageTitleWitnesses`, `extendFromPageTitle`, and the one changed
+line inside `enrichJobCandidates`'s `map` callback:
+
+```ts
+    const title = tryExtract(() => {
+      const heading = firstHeadingText(html);
+      if (heading) return extendTruncatedTitle(item.title, heading);
+      return extendFromPageTitle(item.title, html);
+    }) ?? item.title;
+```
+
+**THE NARROW FORM, EXACTLY AS RULING 53a DIRECTED: the `<h1>` wins outright
+whenever one exists — INCLUDING when it produces no repair.** The wider
+`<h1>`-first-then-`<title>` form is NOT shipped, and the single shape that
+separates them is asserted as a test so the widening, if it ever comes, is a
+deliberate act with A's census behind it.
+
+**EVERY "DO NOT" HONOURED:** `extendTruncatedTitle` untouched; no `og:title`; the
+repair still sits AFTER `resolveJobPostingScope` and BEFORE the `unproven` early
+return (Ruling 51c's `owned`-widening NOT bolted on); the cut is NOT
+`split(sep)[0]`; the `LISTING_TITLE_RE` guard NOT added; the two shipped
+no-`<h1>` tests' assertions NOT edited; `talent.com`, `bebee.com` and
+`xtalks.com` NOT fetched and NOT re-ranked; `enrichEventCandidates` untouched.
+
+---
+
+#### 3. THE NEGATIVE PROOF — FOUR EDITS, ONE AT A TIME, RESTORED BYTE-IDENTICAL
+
+Each revert a single targeted edit — **no `perl -pi`**. Restore verified by
+**SHA-256 equality** against a pristine copy, printed after every restore.
+
+| edit reverted alone | tests RED | B predicted | uniquely red? |
+|---|---|---|---|
+| the whole `<title>` fallback | **6** | 1, 2, 12, 15 | no — strictly the most destructive revert |
+| **the CUT** (raw `<title>` instead) | **6** | 1, 2, 12; 15 changes value | no — see below |
+| **the `if (heading)` branch** (→ the wide form) | **1** | 4 only | **YES — one test, and it is Ruling 53a's separating shape** |
+| **`pageTitleWitnesses` → `split()[0]`** | **1** | 12 only | **YES — one test, the separator-crossing case** |
+
+**TWO HONEST NOTES ON THIS TABLE.**
+(1) **C's red sets are SUPERSETS of B's predictions, and the reason is C's own
+vacuity discipline:** C's employer/ownership test and C's score-disclosure test
+each re-assert the repaired TITLE as their precondition, because without that
+they would pass on the unrepaired row and be vacuous. So they go red alongside
+the four B named. That is the standard working, not a discrepancy.
+(2) **THE CUT HAS NO UNIQUELY-RED TEST, AND THAT IS STRUCTURAL, NOT A GAP.**
+Removing the fallback entirely is strictly more destructive than removing only
+the cut, so no test can be green under the first and red under the second. **The
+cut is isolated BY VALUE, not by colour:** the rendered-card test carries
+`not.toContain("Science & Technology jobs at Dupont")`, which is the assertion
+that fires under the raw form specifically, while the plain `toBe` is what fires
+when the fallback is gone. **Recorded rather than papered over**, the same way
+item 1's title token was.
+
+---
+
+#### 4. THE 15 NEW ASSERTIONS, AND THE VACUITY WARNING B GAVE
+
+All fifteen of B's required assertions are present, in `enrich.test.ts`, **run
+SOLO — the SolarPACES lock — at `web/src/lib/opportunities/enrich.test.ts`,
+53 of 53 passing** (38 shipped + 15 new).
+
+**B's WARNING WAS HEEDED AND IS RESTATED IN THE TEST FILE ITSELF:** assertions
+3, 5, 6, 7, 8, 9 and 10 **all pass on the shipped code today**, because they are
+must-keeps. They are regression locks, not evidence the new path works. **Only
+the dupont repair, its rendered form, the separator-crossing case and the named
+cost are that**, and the block's own comment says so, so a later round cannot
+read seven green must-keeps as coverage.
+
+**RULING 32, ANSWERED:** every rejection leaves today's value standing byte for
+byte. The function's only non-identity return is required to be strictly longer
+than the stem it extends, so it remains **structurally incapable of shortening or
+blanking a title**. When it fires, the reader sees
+`Process R&D Senior Scientist job in Wilmington, Delaware, …` **gain its missing
+tail and lose its ellipsis** — and NOT gain a brand tail.
+
+---
+
+#### 5. THE TWO COMMENT-ONLY CORRECTIONS (RULING 53b) — ASSERTIONS UNTOUCHED
+
+Both shipped tests B named now carry a comment saying what they do and do not
+cover. **Neither assertion was changed and both still pass.**
+
+- *"leaves the title alone when the page has no heading at all"* — now reads as
+  "no witness of any kind"; it stays green only because its fixture carries no
+  `<title>` either.
+- *"documents the accepted under-catch: a page with no heading is left alone"* —
+  the under-catch is now **"no `<h1>` AND no usable `<title>`"**, and the comment
+  walks the named hosts one by one: `talent.com` and `bebee.com` UNCHANGED (no
+  page fetches at all), rows past `MAX_ENRICHMENT_CANDIDATES` UNCHANGED, and
+  **`xtalks.com` is exactly the class this item newly reaches but is
+  UNMEASURED — a standing exclusion, deliberately not fetched. The comment
+  forbids recording this item as closing it.**
+
+---
+
+#### 6. THE GATE AFTER ITEM 2
+
+- **After item 2: 90 files / 1573 tests, 1572 passing** (+15 on item 1's 1558;
+  +46 on the 1527 cold baseline). Sole failure the standing
+  `benchmark.test.ts` live-search flake, presenting at **`:109`** —
+  `expected false to be true`, the solid-state-battery-summit survivor check.
+- **THE FLAKE, FIFTH OBSERVATION: still ONE flake, ONE test, THREE distinct
+  assertion forms.** Within this single C session it presented as `:119`
+  (`expected undefined to be 'Chicago'`) on the cold baseline and as `:109`
+  on both post-item runs. **Do not read the movement as a new defect.**
+- `npx tsc --noEmit`: **clean**.
+- `npx eslint`: **exactly the one standing `quiz.tsx:46` error.**
+- `scoring.test.ts` + `job-cleanup.test.ts` by name: **37/37.**
+- `enrich.test.ts` SOLO: **53/53.**
+- `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**Security and cleanup.** No credential read, printed, logged or written. **No
+live pipeline pull and NO PAGE FETCH OF ANY KIND** — `careers.dupont.com` was
+not fetched, so A's two page facts remain INHERITED exactly as B left them, and
+no third-party page text entered context. `euagenda.eu` NOT fetched (45a);
+Ruling 41c's three hosts NOT hunted (45b); B18-02's three named under-catch hosts
+NOT fetched. No branch, worktree or PR; `git branch --show-current` read before
+the commit and in the push output (§3).
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**`POLICY — manager decides`: NONE RAISED BY C, AND C DECIDED NONE OF THE THREE
+OPEN.** Ruling 33's full-phrase collisions, Ruling 51b's five-pull majority
+scoring and Ruling 51c's `owned`-widening are all untouched by both items. **B's
+one open policy — item 2's call site — was RULED by the manager as 53a and C
+implemented the ruling; C did not re-open it.**

@@ -109,6 +109,49 @@ function hasExtractedJobSignal(
  * here, and using them as a fallback would import site brand (`… - EV.Careers`)
  * into role titles. Do not add them.
  *
+ * ^^^ CORRECTED BY B19-02 (round 19, Rulings 52a + 53a). THE PARAGRAPH ABOVE IS
+ * KEPT VERBATIM BECAUSE IT IS STILL TRUE ABOUT LINKEDIN — it was wrong only to
+ * GENERALISE from one host. On `careers.dupont.com` the page has NO `<h1>` AT
+ * ALL and its `<title>` DOES strictly prefix-match the stem, so the repair sat
+ * inert on a row it should have fixed, 5 pulls out of 5.
+ *
+ * WHAT MADE THE EXTENSION SAFE IS THAT THE RISK ABOVE CANNOT MATERIALISE, AND
+ * THE REASON IS STRUCTURAL RATHER THAN LUCKY: an employer-prefixed string does
+ * not BEGIN with the stem, so the very containment test that rejects a
+ * different posting's `<h1>` rejects it too. Re-measured by execution on round
+ * 18's own recorded LinkedIn string, including the hard case where the page has
+ * no `<h1>` at all to fall back on. `extendTruncatedTitle` is UNCHANGED — same
+ * 12-character floor, same strict-prefix test, same strictly-longer test — and
+ * that is the whole argument for this item's safety. Do not weaken it into a
+ * second, looser gate for the `<title>`.
+ *
+ * THE OTHER HALF OF B18-02's WARNING WAS RIGHT AND IS HANDLED SEPARATELY: the
+ * brand tail is real, and containment cannot catch it because containment only
+ * checks the FRONT of the string. The raw `<title>` renders dupont's card as
+ * `… United States of America | Science & Technology jobs at Dupont` — a site
+ * slogan in a role title, which Ruling 23 ranks as wrong data. So the `<title>`
+ * is CUT, and not with a blind `split()[0]`: a real role title can contain a
+ * separator (`Battery Cell Engineer - Gigafactory Berlin`). See
+ * `pageTitleWitnesses`.
+ *
+ * THE `<h1>` STILL WINS OUTRIGHT WHENEVER ONE EXISTS (Ruling 53a, the NARROW
+ * form). The wider form — try the `<h1>`, and if it produced nothing try the
+ * `<title>` — was measured and differs on exactly ONE shape in the whole
+ * corpus: a WRONG `<h1>` present alongside a `<title>` that does continue the
+ * stem. Its extra exposure measured ZERO across every must-keep, but "zero on
+ * the corpus we have" is the evidence position that preceded the round-16
+ * singular lesson, so narrow ships and A's censuses must earn the widening.
+ * That one separating shape is the reversal evidence and is asserted in the
+ * tests.
+ *
+ * ONE NEW RISK CLASS, NAMED RATHER THAN DISCOVERED LATER: a job board's own
+ * `<title>` can legitimately begin with the role and continue into listing
+ * chrome (`Research Associate Jobs - 1,204 vacancies | JobBoard.com`). Neither
+ * the raw nor the cut form leaves it alone. It is CONSTRUCTED; the catch is
+ * LIVE 5 of 5. A `LISTING_TITLE_RE` guard against it was priced and REJECTED:
+ * under the cut form it fires on nothing, so it would be a guard no test could
+ * turn red.
+ *
  * FAILURE DIRECTION: every rejection leaves today's value untouched. The
  * function's only non-identity return is the heading, which is required to be
  * strictly longer than the stem it extends, so it is structurally incapable of
@@ -121,6 +164,57 @@ function firstHeadingText(html: string): string | undefined {
   if (!match) return undefined;
   const text = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return text || undefined;
+}
+
+/**
+ * B19-02: the SAME separator class `webResultToRawJobItem` already splits
+ * provider titles on. No new vocabulary is introduced by this item.
+ */
+const TITLE_CHROME_SEPARATOR_RE = /(\s+[-–—|·]\s+)/;
+
+function pageTitleText(html: string): string | undefined {
+  const match = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+  if (!match) return undefined;
+  const text = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text || undefined;
+}
+
+/**
+ * B19-02: every separator-boundary PREFIX of the page title, shortest first.
+ *
+ * WHY NOT `split(sep)[0]`. Cutting at the first separator is wrong on its own,
+ * because a real role title can contain one — `Battery Cell Engineer -
+ * Gigafactory Berlin | Tesla Careers` would be cut to `Battery Cell Engineer`,
+ * which is SHORTER than the stem and so repairs nothing at all. Offering every
+ * boundary in turn lets the caller stop at the FIRST one that already satisfies
+ * the existing gate, which crosses the separator inside the real title and
+ * stops before the chrome. There is a test that goes red for exactly this.
+ */
+function pageTitleWitnesses(html: string): string[] {
+  const full = pageTitleText(html);
+  if (!full) return [];
+  const parts = full.split(TITLE_CHROME_SEPARATOR_RE);
+  const out: string[] = [];
+  let acc = "";
+  for (const part of parts) {
+    acc += part;
+    const trimmed = acc.trim();
+    if (trimmed && !out.includes(trimmed)) out.push(trimmed);
+  }
+  return out;
+}
+
+/**
+ * B19-02: the `<title>` witness, behind the IDENTICAL gate. Every candidate is
+ * handed to the unchanged `extendTruncatedTitle`, so a witness that does not
+ * begin with the stem, or is not strictly longer than it, changes nothing.
+ */
+function extendFromPageTitle(providerTitle: string, html: string): string {
+  for (const witness of pageTitleWitnesses(html)) {
+    const extended = extendTruncatedTitle(providerTitle, witness);
+    if (extended !== providerTitle) return extended;
+  }
+  return providerTitle;
 }
 
 function extendTruncatedTitle(
@@ -300,7 +394,16 @@ export async function enrichJobCandidates(
     // byte-identical by construction. The `owned`-widening is a recorded lead
     // for a future round with its own evidence (Ruling 51c) and is deliberately
     // NOT bolted on here.
-    const title = tryExtract(() => extendTruncatedTitle(item.title, firstHeadingText(html))) ?? item.title;
+    // B19-02 (round 19, Ruling 53a): the `<h1>` WINS OUTRIGHT whenever one
+    // exists — including when it produces no repair. The `<title>` is consulted
+    // only when the page has NO `<h1>` at all, which is A's dupont row and
+    // `xtalks.com`'s documented class. This shape, not the wider
+    // `<h1>`-first-then-`<title>`, is what Ruling 53a authorised.
+    const title = tryExtract(() => {
+      const heading = firstHeadingText(html);
+      if (heading) return extendTruncatedTitle(item.title, heading);
+      return extendFromPageTitle(item.title, html);
+    }) ?? item.title;
     // The repair must sit ABOVE this early return: an unproven scope is A's
     // actual row (all three live `linkedin.com` rows are unproven, 3 of 3), so
     // a repair placed below it could never reach the defect it exists to fix.
