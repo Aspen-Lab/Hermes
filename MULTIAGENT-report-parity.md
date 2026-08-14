@@ -275,7 +275,26 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 15:34 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 15:28 UTC — ROUND 18 C IS
+STOPPED BECAUSE:  **IN PROGRESS — ROUND 19 A, PART 1 OF 4 BANKED @ 2026-08-14
+                  15:52 UTC.** Lock claimed cleanly (`1c972f3`). Part 1 (the
+                  EVENT surface) is complete and committed; **parts 2, 3 and 4
+                  are NOT done.** If this session dies here, the next A resumes
+                  at part 2 and does **not** re-run part 1.
+                  **Part 1's result: event pool 15 items, 5 of 5 runs,
+                  ZERO variance on membership and values (seventh consecutive
+                  round). Event NAME wrong-rate 0 of 14 — SEVENTH consecutive
+                  zero. Event ITEM-KIND 0 of 14 — the FIRST zero that column has
+                  recorded. B18-01 graded `targeted-confirmed, organically
+                  unoffered`: `specterfi.com` is absent from all five pools AND
+                  from all 149 offered rows, but the shipped rule replays as
+                  firing on all three recorded forms with ZERO false fires on 8
+                  must-keeps — and `ascl.org`'s must-keep was OFFERED
+                  ORGANICALLY and is ADMITTED, which is a genuine live
+                  confirmation.** No gate verdict set; **A never closes the
+                  gate.**
+                  ---
+                  Previous entry, kept for continuity: **finished the turn @
+                  2026-08-14 15:28 UTC — ROUND 18 C IS
                   COMPLETE.** Three items, **one commit each, each pushed
                   immediately** (`ca79c00`, `6109a36`, `91d7d85`), plus this
                   hand-off. Claimed the lock cleanly (`c873fc3`) after
@@ -42517,3 +42536,190 @@ than B believed.
 **Round 18 closes. `WHOSE TURN: A — round 19, GATE CANDIDATE ROUND` stands.
 Open-difference list EMPTY pending round 19's census.**
 
+
+---
+
+### Round 19 鈥?Agent A (part 1: the event surface. SEVENTH consecutive zero on name fidelity, and the item-KIND column reaches ZERO for the first time since it was created 鈥?B18-01's earnings-call row is gone, and the rule is proven still firing rather than assumed.)
+
+**STATUS: PARTIAL BY DESIGN.** Round 19 A is pre-split into four parts, the same
+discipline rounds 9鈥?8 used, so a real finding banks even if the session dies.
+This entry is **part 1 only**. Parts 2 (job pool, round 18's expected effects,
+the offered-row scan with BOTH 48b columns, employer field, item shape), 3 (job
+summaries + all tallies) and 4 (summary / ranked list / gate verdict) are **not
+yet done**. **No gate verdict is set here, and A never closes the gate in any
+case.**
+
+Claimed the turn lock (`1c972f3`, `LAPTOP-3CL10CG5 @ 2026-08-14 15:34 UTC`)
+after `git pull --ff-only` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` 鈥?checked, not
+assumed, per 搂3. Read 搂1's whole `WHOSE TURN: A 鈥?round 19, GATE CANDIDATE
+ROUND` block, 搂2, 搂3, all three round-18 C entries, the round-18 manager
+verification and the rulings the brief cites, before touching anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only**
+(`tavilyApiKey`, `adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`,
+`usajobsUserAgent` all `true`; `jsearchApiKey` absent and `feedAiApiKey` empty).
+**Per 搂2 as corrected by Ruling 42b the tier statement is: PAGE-FETCH ENRICHMENT
+RAN, LLM ENRICHMENT DID NOT.** The struck "Tier 0 only" wording appears nowhere
+in this entry. **Five independent live pulls in five separate processes**
+(Ruling 39d/41a's standing method), each with a no-op `PoolCache` (`get` always
+`null`, `set` a no-op) to force a genuinely fresh pull, calling
+`buildDailyEventPool()` then `scoredEventToEvent()` 鈥?the exact entry points 搂2
+names. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Throwaway harness lived
+**outside `src/`** (`web/zz-r19a/`, its own vitest config, include pattern
+`zz-r19a/**/*.probe.ts`) so the standing gate could not collect it; **deleted
+before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**ONE PROBE BUG FOUND AND FIXED BEFORE IT BECAME A FINDING, RECORDED BECAUSE IT
+WOULD HAVE BEEN A FABRICATED DIFFERENCE.** A's first job-surface probe read
+`job.url`. **`Job` has no `url` field 鈥?the posting link is `linkPosting`** 鈥?so
+every row came back with an empty URL and an empty host, which reads exactly
+like "every job card lost its apply link". A checked the type before reporting
+it, found the probe at fault, corrected it and **re-ran all five job pulls from
+scratch** rather than patching the captured JSON. No number in part 2 or 3 comes
+from the bad run. Recorded because round 18 C's vacuity audit is the same lesson
+pointed the other way: a measurement that cannot fail is worthless, and so is
+one whose instrument is wrong.
+
+**Reproducibility: 15 items in every one of the five runs, 15 unique hosts in
+the union, and every one of the 15 returned a byte-identical name in all five
+runs 鈥?zero variance on MEMBERSHIP and on VALUES.** **SEVENTH consecutive round
+of total event-surface stability.** No majority / minority split arose on this
+surface, so **Ruling 39d/41a's minority-disclosure clause has nothing to
+disclose here** 鈥?stated explicitly rather than left silent, because a silent
+disclosure line and an empty one look identical.
+
+**Ground truth** for the values below rests on the six-to-nine prior rounds that
+established each host, plus this round's own five-run byte-identity. **No
+third-party page was fetched for part 1** 鈥?every host in the table was already
+ground-truthed in an earlier round against its `<title>` / `<h1>` / `og:title`,
+and none of those values moved. Stated as the method actually used rather than
+implied.
+
+| host | rendered name | verdict |
+|---|---|---|
+| `solarpaces.org` | `32nd SolarPACES Conference` | **CORRECT 鈥?THE SOLARPACES REGRESSION LOCK IS LIVE-CONFIRMED FOR THE SECOND ROUND RUNNING.** The pool URL is again a news post (`/abstract-submission-deadline-extended-to-march-30`) and the render still names the CONFERENCE, not the headline. Byte-identical to round 18 |
+| `ecs.confex.com` | `ecs.confex.com` | **HONEST HOST 鈥?accepted, Ruling 39a/40, on A's exclusion list.** Byte-identical to rounds 14鈥?9. Not a wrong value |
+| `euagenda.eu` | *(not measured)* | **PERMANENTLY EXCLUDED BY NAME 鈥?Ruling 45a. NOT fetched, NOT retested, NOT counted.** Listed so the exclusion stays visible. **One observation recorded without scoring, and it is NEW: its render this round is `The First European Conference on Molten Salt Reactor ...` 鈥?it ENDS IN A LITERAL ELLIPSIS**, where round 18 A recorded "a full event name". A does **not** count it, does **not** rank it and does **not** treat it as evidence in either direction, because 45a forbids the fetch that would establish ground truth. Recorded so a later round is not surprised by it |
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT (unchanged r10鈥搑16, absent r17, present and byte-identical r18鈥搑19) |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT 鈥?RULING 36 MEASURED, NOT ABSENT, seventh consecutive round.** Both historical failure modes absent |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13鈥搑19) |
+| `euchems2026.eu` | `euchems2026.eu` | **HONEST HOST 鈥?accepted, Ruling 39a/40, on A's exclusion list. BACK after one round away.** Its URL is a **POSTERS PDF**, so it is ALSO the document-URL retarget class (42c) 鈥?both faces are standing exclusions, and A names both rather than the convenient one |
+| `nanoge.org` | `SSI24` | CORRECT (unchanged r18鈥搑19) |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (unchanged r13鈥搑19) |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** 鈥?counted in the event-side 34a tally, NOT a defect. Seventh round running |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT 鈥?**B12-04 still holding, SEVENTH consecutive round** |
+| `flogen.org` | `SIPS 2026` | **CORRECT 鈥?B13-03's banner strip CONFIRMED LIVE for the fourth consecutive round**, the pool again holding `flogen.org/sips2026`, the exact URL B13-03 was measured on |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | **CORRECT 鈥?fourth consecutive round on its own domain** |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged r10鈥搑19). Its static HTML carries no `<title>`, `<h1>` or `og:title` (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the nine prior rounds 鈥?stated as a limit, not glossed |
+
+**TALLY: 11 CORRECT, 0 CONFIRMED WRONG NAME, 2 HONEST HOSTS, 1 ACCEPTED COST
+(Ruling 39b), 1 EXCLUDED BY NAME (`euagenda.eu`, Ruling 45a).** Denominator
+excludes `euagenda.eu` per 45a; **the accepted cost and both honest hosts ARE
+counted in the denominator**, as every prior round has counted them.
+**Round 19's event-NAME wrong-rate is 0 of 14 (0%) 鈥?the SEVENTH consecutive
+zero.** Round 18 was 0 of 15; r17 0 of 13; r16 0 of 14; r15 0 of 11; r14 0 of
+13; r13 0 of 14; r12 was 8 of 17 (47.1%).
+
+---
+
+## THE EVENT ITEM-KIND COLUMN (Ruling 50a): **0 of 14 (0%) 鈥?THE FIRST ZERO THIS COLUMN HAS RECORDED**
+
+Reported at zero exactly as the brief requires ("**report BOTH item-kind lines
+every round from now on, even at zero**"). Round 18 was **1 of 15 (6.7%)**.
+
+**Every one of the 14 counted rows is a thing a researcher can attend, or a real
+conference's own page.** A checked each row's KIND separately from its NAME,
+because round 18's whole finding was that a faithful name can sit on a
+wrong-KIND item. The rows worth stating the reasoning for:
+
+- **`ruggedthz.com` and `solarpaces.org` are both NEWS POSTS by URL and both
+  render a real CONFERENCE name.** They are not counted as wrong KIND, and that
+  is precedent rather than convenience: Ruling 36 covers `ruggedthz.com`, and
+  rounds 16鈥?8 scored both as CORRECT. The item a reader gets is the conference.
+- **`euchems2026.eu` is a POSTERS PDF.** Its KIND is the document-URL retarget
+  class, **already a standing exclusion (42c)**, and it is also an honest host
+  (39a/40). A names it here rather than letting a zero hide it.
+
+---
+
+## B18-01 IS `targeted-confirmed`, THE GRADE IS BINDING 鈥?AND THE MUST-KEEP GOT SOMETHING BETTER THAN A REPLAY
+
+**`specterfi.com` IS ABSENT FROM ALL FIVE POOLS.** Per the brief that is
+**"absent from this round's data", NOT proof the rule works** 鈥?and A can now
+say something sharper than round 18 could, in both directions.
+
+**IT WAS NOT OFFERED EITHER.** A's disclosed sixth, targeted event pull captured
+every row the provider offered before any Peer filtering 鈥?**149 unique offered
+rows (160 raw)** 鈥?and **zero of them are `specterfi.com`; zero carry `concall`
+or `earnings call` anywhere in title or URL.** So absence from the pool is not
+evidence the guard fired, exactly the reasoning round 18 A applied to
+`enersys`/`catl`. **Grade: `targeted-confirmed, organically unoffered`.**
+
+**THE RULE STILL FIRES 鈥?REPLAYED, NOT ASSUMED, the way rounds 17鈥?8 A did with
+Rulings 46a/46b.** Every recorded string replayed against the **shipped**
+`isEarningsCallPage` and the **shipped** `webResultToRawEventItem`:
+
+| replayed row | predicate | ingestion |
+|---|---|---|
+| `1539 Feb2026 Conference Call Summary / Specter` @ `/companies/1539/concalls/Feb2026` (the PROVIDER title, which is what the gate actually reads) | **true** | **DROPPED** |
+| `1539 Feb2026 Concall Summary` @ same URL (the `og:title` / rendered form) | **true** | **DROPPED** |
+| `Associated Alcohols & Breweries Ltd Nov2025 ... - SpecterFi` @ `/companies/812/concalls/Nov2025` (B's truncated title 鈥?the PATH clause is its only reach) | **true** | **DROPPED** |
+| **8 must-keeps** 鈥?`ascl.org`, the three snippet-variant hosts (`samsungsdi.com`, `cmcsa.com`, `investor.bankofamerica.com`), and three real event names this loop has sighted | **false, all 8** | **ADMITTED, all 8** |
+
+**ZERO FALSE FIRES. All three clauses 鈥?occasion-on-title, call-artefact and
+occasion-on-path 鈥?are demonstrably still reachable.**
+
+**AND THE NAMED MUST-KEEP WAS OFFERED ORGANICALLY THIS ROUND, WHICH IS BETTER
+EVIDENCE THAN ANY REPLAY.** `ascl.org`'s *"2026 YCC Conference Call for Papers
+(and Student ..."* 鈥?the exact real scholarly event Ruling 50b named, the one
+the naive rule would destroy 鈥?**was really offered by the provider this round**,
+and on its exact offered strings the shipped gate **ADMITS it**
+(`isEarningsCallPage` false, `looksLikeEvent` true). It does not reach the final
+pool, but that is ranking, not this rule: **the guard round 18 was built to
+avoid tripping was live-tested and did not trip.** A grades this
+**live-confirmed**, and it is the only part of B18-01 that earns that word.
+
+**THE FORBIDDEN NAIVE RULE RE-MEASURED, AND IT IS WORSE THAN ROUND 18
+RECORDED.** Bare `conference call` applied to the same corpus **destroys the
+live `ascl.org` row** and buys exactly one extra catch 鈥?`balchem.com` 鈥?**which
+the shipped ingestion gate already drops anyway on a different check**
+(`isEarningsCallPage` is correctly `false` on it, yet `webResultToRawEventItem`
+still returns `null`). **So the naive rule's true price this round is one real
+event destroyed for ZERO net gain.** Recorded so it is never re-proposed.
+
+**THE TWO NAMED UNDER-CATCHES BEHAVE EXACTLY AS DOCUMENTED at the level the
+documentation is about:** `isEarningsCallPage` is `false` on both
+`balchem.com`'s *"Conference Call for Fourth Quarter鈥?* and `roberthalf.com`'s
+*"Investor Center: Quarterly Conference Calls"*. **Neither is re-ranked as new**
+(standing exclusion). A notes without claiming credit that `balchem.com` leaves
+the pool anyway via another shipped check.
+
+**Composition, read before the numbers.**
+- **ZERO REGRESSIONS.** Every host that rendered a correct name in round 18 and
+  is still in the pool rendered the identical name this round.
+- **Light churn: two out, one in, pool 16 鈫?15.** Left: **`specterfi.com`**
+  (round 18's not-an-event row 鈥?gone, and never offered) and
+  `advancedautobat.com`. Entered: `euchems2026.eu`, returning after one round
+  away as the same honest host round 17 recorded.
+- **`advancedautobat.com`'s departure costs nothing measurable** 鈥?it was
+  correct in round 18 and is simply not in this round's data; round 18's record
+  stands as history and is **not inherited as a round-19 result.**
+
+**No credential read, printed, logged or written 鈥?boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`. `euagenda.eu` NOT fetched (45a). Ruling 41c's
+three hosts NOT hunted (45b). No third-party page fetched at all in part 1; the
+offered-row capture reads only the search provider's own RESPONSE body, never
+the request, which is what carries the key. No page text was read into context
+beyond a 160-character title and a 600-character snippet per row. No fetched
+text was treated as an instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or edited.
+Harness deleted before this commit; tree clean.**
+
+**Not done yet (parts 2鈥?, same session, continuing next):** the job pool with
+round 18's B18-02 and B18-03 expected effects, the offered-row scan with BOTH
+48b columns, the employer field and job item shape; then summaries and all
+tallies; then the summary, ranked difference list and gate verdict.
