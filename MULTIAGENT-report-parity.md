@@ -29162,3 +29162,222 @@ page fetched, no pipeline pull run, no branch created, no PR opened,
 **Not done yet (item 4, same session, next):** `euchems2026.eu`.
 
 Commit follows immediately.
+
+---
+
+### Round 13 — Agent B (B13-04: `euchems2026.eu` — the chain ALREADY recovers this name; there are THREE candidate causes and A's log cannot distinguish them. One is a real structural finding: the snippet stage's pre-filter still encodes B12-01's OLD contract.)
+
+**STATUS: DONE.** Fourth and last of round 13 B's four items. Same session, same
+lock. Harness outside `src/`, deleted before this commit. **No live pull, no page
+fetch, no credential read.** **B changes no code** (§2).
+
+---
+
+#### ONE GAP OR SEVERAL — **ZERO gaps in the title and slug stages, and that is the finding.**
+
+Run through the real entry point with the live URL:
+
+| stage | input | result |
+|---|---|---|
+| title | `ECC102026-POSTERS-v2.pdf` | **rejected** (`DOCUMENT_FILENAME_RE`) — correct |
+| slug | `/wp-content/uploads/2026/07/ECC102026-POSTERS-v2.pdf` | **rejected** (B12-05) — correct |
+| snippet | *(whatever the provider returned)* | nothing |
+| last resort | — | `euchems2026.eu` |
+
+**Then I fed the snippet stage what a PDF's extracted text plausibly looks like,
+and the chain recovers the name — today, with no code change at all:**
+
+| snippet shape | render |
+|---|---|
+| `"The 10th EuChemS Chemistry Congress will take place in Dublin. Poster presentations…"` | **`The 10th EuChemS Chemistry Congress`** ✅ |
+| `"10th EuChemS Chemistry Congress poster programme. Please mount…"` | **`10th EuChemS Chemistry Congress`** ✅ |
+| newline-separated PDF lines, name on its own line | **`10th EuChemS Chemistry Congress`** ✅ |
+| ALL-CAPS PDF header line | **`10TH EUCHEMS CHEMISTRY CONGRESS`** ✅ |
+| text with no name in it | `euchems2026.eu` (correct) |
+
+**So the machinery is not broken. B12-01's span logic, B11-02's guards and
+B9-04's honest fallback all work on this host.** The render is a bare hostname
+because of what arrived, not because of what the code does with it.
+
+---
+
+#### THE THREE CANDIDATE CAUSES — and A's log cannot distinguish them. This is an evidence gap and I am naming it as one.
+
+1. **The provider's snippet for that PDF simply carries no name.** Then there is
+   nothing to fix at Tier 0 and the bare host is the correct terminal state.
+2. **The name is present but mid-run.** Measured: a snippet reading
+   `"Poster programme … at the 10th EuChemS Chemistry Congress please mount…"`
+   renders `euchems2026.eu`. That is **correct by design** — `leadingNameSpan` is
+   anchored to the start, and B12-01's own comment records that anchoring was
+   verified, not assumed, because an unanchored span finds
+   `"Friday, 4 September 2026"` inside a deadline sentence. **Not a defect.**
+3. **The name is at the FRONT of one long unpunctuated run.** Measured: **LOST.**
+   This one is a real structural finding and it gets its own section below.
+
+**A recorded the rendered value but not the raw provider snippet, so which of
+the three fired is unknowable from the log.** Named as a gap, not guessed at.
+**The measurement that settles it is cheap and round 14's A can add it to the
+existing pass: for any host rendering a bare hostname, capture the raw provider
+snippet alongside the render.** That single column turns this from three
+hypotheses into one fact.
+
+---
+
+#### THE STRUCTURAL FINDING — **the snippet stage's pre-filter still encodes the contract B12-01 replaced.**
+
+Measured, on the identical text at two lengths:
+
+```
+"10th EuChemS Chemistry Congress poster programme exhibition hall Monday
+ Tuesday afternoon mount your poster before the session opens board numbers
+ are listed alphabetically by presenting author surname"        -> euchems2026.eu   LOST
+"10th EuChemS Chemistry Congress poster programme exhibition hall Monday
+ Tuesday afternoon"                                             -> 10th EuChemS Chemistry Congress   RECOVERED
+```
+
+**Same name, same position, same everything — only the length of the text
+carrying it differs.**
+
+The cause is two constraints applied to the CARRIER rather than to the name:
+
+- `eventNameFrom`'s `substantial` filter keeps only parts of **20–120
+  characters**;
+- `looksLikeEventTitle`, applied to the whole part, rejects anything over
+  **20 words** (`MAX_TITLE_WORDS`).
+
+**Both were written when the snippet stage returned the PART ITSELF as the event
+name.** Under that contract a length cap was essential — nobody wants a 300-
+character sentence in the name slot. **B12-01 (Ruling 40) changed the contract:
+the stage now returns `leadingNameSpan(part)` — a few words from the front —
+and re-runs `looksLikeEventTitle` on that span at its own step 4.** The
+carrier's length no longer bounds the output; the span does. So the two
+constraints now filter candidates by a property that stopped mattering, and a
+name sitting at the front of a long run is discarded before any guard looks at
+it.
+
+**This is the same shape as B12-01's own founding diagnosis** — "the guard ran
+and correctly returned 'not narration'; the STAGE'S CONTRACT was the problem" —
+one layer further out. Recorded here in full so it is not re-derived.
+
+**AND I AM NOT RECOMMENDING IT BE LANDED THIS ROUND. Three reasons, in order of
+weight:**
+
+1. **Its trigger is unconfirmed.** Cause 3 is one of three hypotheses; nobody
+   has seen the snippet. Rulings 32/34b: land what is confirmed, not what seems
+   likely. Landing this blind is exactly the move this loop has punished before.
+2. **Relaxing an input filter WIDENS what reaches `leadingNameSpan`, and that
+   stage has a known wrong→wrong limitation.** B12-01's own comment names it
+   (`"Registration for the Symposium"`-shaped spans) and round 13 A measured
+   **0 sightings in 70 renders**. Feeding it more candidates is precisely how
+   that zero stops being zero. **A widening with no measured benefit and a
+   measured-at-zero-so-far risk is the wrong trade.**
+3. **The right fix may not be "raise the cap" at all** — it may be splitting a
+   long unpunctuated run into shorter units before filtering. That is a design
+   question that deserves its own round with evidence, not a number nudged in
+   passing.
+
+**Recorded as a designed lead with a named trigger:** if round 14's A captures a
+raw snippet for a bare-hostname host and it turns out to carry the name at the
+front of a >120-character run, that round's B designs this properly — and the
+adversarial bar is Ruling 31's, with B12-01's known limitation as the thing to
+beat.
+
+---
+
+#### "WHERE THE URL CHOICE IS MADE" — **nowhere. Peer never chooses a URL.**
+
+The brief asked me to trace this. Traced, and the answer is short:
+`webResultToRawEventItem` takes `result.url` **verbatim** from the search
+provider; there is no canonicalisation, no root-preference, no URL rewriting
+anywhere in the event path. `eventDedupKey` (`events/dedup.ts:13`) keys on the
+**name plus year**, not the URL — so a PDF item and a real page item on the same
+host would **not** merge and neither could stand in for the other. **The pool
+holds a poster PDF because that is the result Tavily returned. There is no
+"choice" in Peer to change.**
+
+---
+
+#### WHAT IS ALLOWED TODAY vs. WHAT WOULD BE A NEW NETWORK STEP — **and the standing assumption here is wrong, which changes the question**
+
+The brief anticipated that any honest fix would need a new fetch and told me to
+mark it `POLICY` if so. **The premise is off, and B13-03's finding is why:**
+
+- **Peer ALREADY fetches this exact PDF URL on every live run.**
+  `buildDailyEventPool` passes `{ enrichDetails: true }`
+  (`events/pipeline.ts:210`), so `enrichEventCandidates` calls
+  `fetchPagesConcurrently` on the top 40 candidates' own URLs
+  (`enrich.ts:117`). A 14-item pool is entirely inside that window.
+- **`fetchPageHtml` has no content-type check** (`page-fetch.ts:58-87`; the
+  `Accept` header is a preference, not a filter). The PDF is downloaded, decoded
+  as text, handed to HTML extractors, and yields nothing. **The request is
+  already being made and already being wasted.**
+- **Therefore "fetch the site root instead when the item's URL is a document" is
+  NOT a new network step.** It is the same single request, pointed at a
+  different path on the same host. Request count unchanged. **Ruling 25 (no
+  headless browser) is not engaged at all** — this is the plain fetch the
+  codebase already performs.
+
+**That said, I am NOT recommending it, and I have the measured reason.** I ran
+seven plausible site-root names through `bestEventTitleSegment` with the target
+host:
+
+| hypothetical root name | survives the name guards? | `looksLikeEvent`? |
+|---|---|---|
+| `10th EuChemS Chemistry Congress` | ✅ accepted | ✅ true |
+| `Home \| 10th EuChemS Chemistry Congress` | ✅ → `10th EuChemS Chemistry Congress` | ✅ |
+| `University of Dublin` | ✅ **accepted as a name** | ❌ false |
+| `Elsevier` | ✅ **accepted as a name** | ❌ false |
+| `Royal Society of Chemistry` | ✅ **accepted as a name** | ❌ false |
+| `Welcome` / `Home` | ❌ rejected | — |
+
+**Unguarded, the design MANUFACTURES Ruling 34a's class**: a conference PDF
+hosted on a university or publisher domain would render the *institution's*
+correctly-spelled name as the *event's* name — the exact defect Rulings 34a and
+39b both declared unfixable and accepted as a cost. Removing one honest hostname
+by creating a wrong value is Ruling 40's explicitly rejected direction.
+
+**A `looksLikeEvent`-guarded version survives that test** — all four dangerous
+institution names are rejected, the target is accepted — so the design is not
+dead. **But its blast radius is unmeasurable from here**: I have no data on how
+many document-URL event items exist per pool, or what their roots say, and I am
+not permitted a live pull. **One instance, one round.**
+
+**`POLICY — manager decides`, stated narrowly:**
+
+> Retargeting the enrichment fetch from a document URL to that host's site root
+> costs **zero additional network requests** and is **not** blocked by Ruling 25.
+> Guarded with `looksLikeEvent`, it survives every root shape I could construct.
+> **But it is a behaviour change affecting every document-URL event item, on the
+> evidence of ONE instance in ONE round** — which is below the bar Rulings 32
+> and 34b set. **Does the manager want this designed properly in a future round
+> (with A first measuring how many document-URL items a pool actually holds), or
+> is `euchems2026.eu` an accepted cost?**
+>
+> My recommendation is **measure first**: a single extra column in A's next pass
+> (how many pool items have a document URL) is nearly free and turns this from
+> a one-anecdote design into an evidence-backed one.
+
+---
+
+#### WHAT RENDERS WHEN EVERY CANDIDATE IS REJECTED — **`euchems2026.eu`, today's value, on every rejection path.**
+
+Traced, not assumed. The title stage rejects the filename, the slug stage rejects
+the document extension (B12-05), the snippet stage's pool is empty, and
+`eventNameFrom` falls to B9-04 Fix 1's honest URL host — the hostname with `www.`
+stripped. `"Untitled event"` is reachable only when there is no parseable URL at
+all, which is not this case. **Nothing rejected is reinserted anywhere. This item
+already renders its honest fallback correctly, which is why it is ranked last:
+nothing false is stated.**
+
+---
+
+**Cleanup:** `web/zz-r13b/` deleted before this commit; `git status
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched. No credential read, printed, logged or written. No
+page fetched, no pipeline pull run, no branch created, no PR opened,
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+**All four items are done.** §1 is advanced to **C** in the summary entry that
+follows.
+
+Commit follows immediately.
