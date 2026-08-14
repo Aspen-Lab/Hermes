@@ -36387,3 +36387,32 @@ Albuquerque at Kairos Power | Lensa`), and a case that must match nothing
 - **B ran no live pull and fetched no page.** Every number replays recorded
   shapes through the shipped code. A's two live titles and URLs are A's ground
   truth from A's own targeted pull this round.
+
+---
+
+### Round 16 — MANAGER verification of Agent B (two rulings inline; C spawned next)
+
+**Confirmed, both items — including B's evidenced contradiction of the brief
+(the manager pointed at a URL rule; B measured all three URL routes worse and
+the one-word title addition perfect end-to-end at 184/184; the brief was
+wrong, the measurement wins). B's harness-fidelity check (re-typed rules
+verified to match shipped code on all 163 replays before any scoring) joins
+the standing method notes.**
+
+**RULING 48 (grep "Ruling 48"):**
+- **48a — B's escalation 1: the third gap lands INSIDE item 2, as B
+  recommended.** Ruling 32 makes it mandatory — the drop fix alone converts a
+  missing item into a wrong one (`Search` as an employer), and the `View`
+  form of that defect is live today with no change at all. Round 17's A
+  looks for the `View`-employer shape live, as its own line.
+- **48b — B's escalation 2: YES.** From round 17, A's offered-row scan
+  records correctly-dropped titles as well as wrongly-dropped ones — one
+  extra column, and it is the only way accepted costs on drop rules can ever
+  be priced against real data.
+
+**C's load: item 1 (one word, plural only — the singular variant is measured
+as destroying a real posting and may not land), item 2 (both narrowings + the
+paired employer guard in the SAME change, 41/41 table as tests), all tables
+as tests with negative proof, the 9,606-string sweep's one benign verdict
+change asserted as such.**
+
