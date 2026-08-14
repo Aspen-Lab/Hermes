@@ -41070,3 +41070,269 @@ One direct fetch (`specterfi.com`), clipped programmatically to
 contained text directed at an agent, and none was treated as an instruction.** No
 branch, worktree or PR. **No test deleted or edited; B changed no code.** Harness
 deleted before this commit; tree clean.
+
+---
+
+### Round 18 — Agent B (item 2: the provider-truncated role title — Ruling 50c, first half)
+
+**STATUS: COMPLETE.** **B changed no code** (§2). Harness outside `src/`
+(`web/zz-r18b/`), deleted before this commit; tree confirmed clean.
+
+**THE VERDICT FIRST, BECAUSE IT REVERSES THE BRIEF'S PREMISE: THE PORT IS NOT
+UNSAFE — IT IS IMPOSSIBLE, AND A STRAIGHT PORT WOULD HAVE BEEN INERT ON THE
+EXACT ROW A REPORTED.** Ruling 50c asks whether B4-01's R8 event-side fix can be
+ported to jobs. **Established by execution: there is nothing to port.** Three
+independent reasons, each measured, any one of which is fatal:
+
+1. **The job path never computes a page title at all.**
+   `enrichEventCandidates` calls `extractOpportunityPageDetails(html, "event")`
+   and reads `typedOpportunityName` / `openGraphTitle` from it.
+   **`enrichJobCandidates` never calls that function.** Its only structured
+   handle is `scope.structured`, a `JsonLdOpportunity`.
+2. **`extractOpportunityPageDetails` refuses to produce a typed name for jobs
+   anyway.** `structured-extract.ts:1594` gates it on `kind === "event"`, so a
+   job-side call returns `openGraphTitle` only.
+3. **THE DECISIVE ONE: `enrichJobCandidates` RETURNS EARLY on an unproven
+   posting scope, and A's row is unproven.** The shipped code is
+   `if (scope.status === "unproven") return { ...item, fetchedPostingScope: "unproven" }`
+   — everything the event-side merge is equivalent to sits *below* that line.
+   **Live-measured: all three `linkedin.com` rows in this round's job pools are
+   `unproven`, 3 of 3.** A fix placed where the event fix lives could never see
+   the row.
+
+**So B does not offer the port. B offers the honest alternative the brief asks
+for**, and it is a different, narrower design with a different safety argument.
+
+#### WHAT B COULD AND COULD NOT REPRODUCE — SAID BEFORE ANY NUMBER
+
+Five independent live job pulls, separate processes, no-op `PoolCache`,
+`buildDailyJobPool()` then `scoredJobToJob()`. Pool sizes **12/11/13/11/11**.
+**ZERO of the 58 pool rows carry a role title ending in an ellipsis** — the
+`linkedin.com` row is present in the pools and renders the **full**
+`Actinide Chemistry/Ion Exchange Postdoc Research Associate`. **So A's 5-of-5
+sighting did NOT reproduce live, and B says so plainly rather than banking it.**
+The truncation is **per-query provider variance** — Ruling 39d/41a's class,
+already ruled as upstream.
+
+**BUT THE DEFECT IS REAL, MULTI-HOST, AND REPRODUCIBLE ON DEMAND.** One targeted
+by-name query (disclosed as targeted, Ruling 41c's precedent) returned **10
+provider rows, of which 4 carry the truncated title, on FOUR DIFFERENT HOSTS**:
+`linkedin.com`, `talent.com`, `xtalks.com`, `bebee.com` — all four the identical
+string `Actinide Chemistry/Ion Exchange Postdoc Research ...`. **This is not one
+host's quirk and it is not one row.** A's ranking stands; only its live
+frequency is this round unmeasurable.
+
+#### THE MECHANISM, AND A IS CONFIRMED ON THE PAGE
+
+`fetchPageHtml` — **Peer's own fetcher, not a browser** — reaches the LinkedIn
+page (HTTP OK, 267,350 bytes). Its **first `<h1>` is
+`Actinide Chemistry/Ion Exchange Postdoc Research Associate`**, the complete
+title. **A is confirmed.** What A did not have, and what decides the design:
+
+| authority on that page | value |
+|---|---|
+| first `<h1>` | **the full title** |
+| `<title>` | `Savannah River National Laboratory hiring Actinide Chemistry/… in Aiken, SC \| LinkedIn` |
+| `og:title` | same as `<title>` |
+| JSON-LD JobPosting records | **0** |
+| `resolveJobPostingScope` | **`unproven`** |
+
+**ONLY THE `<h1>` IS USABLE, AND THIS IS NOT A PREFERENCE — IT IS FORCED.** The
+`<title>` and `og:title` are *prefixed by the employer*, so they do not begin
+with the truncated stem and the containment test below rejects them. **Measured
+adversarially: feeding the `<title>` form to the repair leaves the title
+unchanged.** A design that reached for `og:title` — the natural reading of "port
+the event fix" — would produce nothing here.
+
+#### THE DESIGN — A SELF-VERIFYING EXTENSION, NOT A SUBSTITUTION
+
+The repair never *replaces* a title. It only **extends a title the page
+demonstrably continues.**
+
+```ts
+/**
+ * Item 2 (round 18). A provider hands Peer its own truncated title
+ * ("… Postdoc Research ...") while the posting's page carries the whole thing
+ * in its first <h1>. B4-01's R8 fixed this shape for EVENTS by preferring the
+ * page's own name; the job path has no equivalent, and its `unproven`
+ * early-return means the event fix's position is unreachable here.
+ *
+ * THE OWNERSHIP WITNESS IS THE STRING ITSELF. The heading must literally BEGIN
+ * with the truncated stem, so a different posting's heading — or this page's
+ * employer-prefixed <title> — cannot satisfy it. That is why this is safe
+ * without the page-level scope proof: it is a per-field witness, the same
+ * heading-equality idea `selectedDomScopes` already uses, weakened from
+ * equality to prefix precisely because the ellipsis is what makes equality
+ * impossible.
+ *
+ * FAILURE DIRECTION: every rejection leaves today's value untouched. It can
+ * never empty the field and can never shorten a title.
+ */
+const TRUNCATED_TITLE_RE = /\s*(?:\.\.\.|…)\s*$/;
+
+function firstHeadingText(html: string): string | undefined {
+  const match = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  if (!match) return undefined;
+  const text = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text || undefined;
+}
+
+function extendTruncatedTitle(
+  providerTitle: string,
+  heading: string | undefined,
+): string {
+  if (!heading) return providerTitle;
+  if (!TRUNCATED_TITLE_RE.test(providerTitle)) return providerTitle;
+  const stem = providerTitle.replace(TRUNCATED_TITLE_RE, "").trim();
+  if (stem.length < 12) return providerTitle;
+  const norm = (value: string) => value.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+  if (!norm(heading).startsWith(norm(stem))) return providerTitle;
+  if (heading.length <= stem.length) return providerTitle;
+  return heading.replace(/\s+/g, " ").trim();
+}
+```
+
+**PLACEMENT — `web/src/lib/opportunities/enrich.ts`, inside
+`enrichJobCandidates`'s `map` callback, AFTER the `resolveJobPostingScope` call
+and BEFORE the `unproven` early return:**
+
+```ts
+    const scope = tryExtract(() => resolveJobPostingScope(html, { url: item.url, title: item.title })) ?? { status: "unproven" as const };
+    // item 2: computed AFTER the scope call on purpose — see below.
+    const title = tryExtract(() => extendTruncatedTitle(item.title, firstHeadingText(html))) ?? item.title;
+    if (scope.status === "unproven") {
+      return { ...item, title, fetchedPostingScope: "unproven" as const };
+    }
+```
+
+**AFTER THE SCOPE CALL, DELIBERATELY, AND THIS IS THE ROUND'S REAL DESIGN
+DECISION.** `resolveJobPostingScope` takes the title as an ownership witness
+(`titleMatches`), so feeding it a repaired title would change the ownership
+contract. **B measured what that would buy and what it would cost:**
+
+- **The cost is real in principle.** A control page whose *only* ownership
+  witness is its heading resolves **`unproven` with the truncated title and
+  `owned` with the repaired one** — so repairing first genuinely widens which
+  pages may donate `pageText`, `employer` and the summary.
+- **The benefit is zero on real data.** Across the four real truncated rows,
+  scope is **unchanged in every case**: `linkedin.com` `unproven → unproven`,
+  `xtalks.com` `owned → owned`, and the other two never fetch at all.
+- **So: take the fix, decline the widening.** Repairing after the scope call
+  leaves ownership **byte-identical by construction** and still fixes the
+  rendered title. **The `owned`-widening is recorded as a lead for a future
+  round with its own evidence, and is NOT bolted on here** — round 6's lesson.
+
+**THREE RETURN PATHS CARRY THE REPAIR; ONE DELIBERATELY DOES NOT.** This is the
+single thing most likely to be got wrong, so it is named in advance:
+
+| return path in the callback | carries `title`? |
+|---|---|
+| `if (!html) return item;` | **NO** — no page was fetched, there is no witness |
+| the `unproven` early return | **YES** — this is A's row |
+| `if (!hasExtractedJobSignal(…) && company === item.company) return item;` | **YES — MUST BE CHANGED to `return { ...item, title };`** |
+| the final merged object | **YES** — add `title,` to the spread |
+
+**The third row is the trap.** As shipped it returns the bare `item`, which
+would silently discard the repair on any posting whose page yielded no other
+new signal. C must change that line.
+
+#### BLAST RADIUS — MEASURED ON THE SHIPPED FUNCTIONS, NOT REASONED ABOUT
+
+| consumer | truncated | repaired | verdict |
+|---|---|---|---|
+| `resolveEmployerIdentity` | `none` | `none` | **takes no title argument at all; output byte-identical** |
+| `resolveJobPostingScope` (real rows) | `unproven` / `owned` | `unproven` / `owned` | **unchanged on every real row** |
+| `classifyRoleKind` | `postdoc` | `postdoc` | unchanged |
+| `scoreJobs` (the post-enrichment second pass) | `0.713` | `0.712` | **moves, by 0.001** |
+| `webResultToRawJobItem` ingestion gate | admitted | admitted | the longer title does not trip `isListingPage` |
+| `dedupJobs` | — | — | **runs BEFORE enrichment; unreachable.** The two rows stay two rows, so the brief's "do NOT open a de-duplication item" is satisfied structurally |
+| rendered `roleTitle` | `… Postdoc Research ...` | `… Postdoc Research Associate` | **the fix** |
+
+**THE EMPLOYER CHAIN IS THE ONE THE BRIEF ASKED ABOUT AND IT HAS ZERO EXPOSURE.**
+`resolveEmployerIdentity`'s inputs are `catalogLabel`, `structuredOrganizations`,
+`ownedTexts` and `host`. **The job title is not among them**, and the two calls
+return identical objects. This is not an argument that the risk is small; the
+argument is that the code path does not exist.
+
+**THE ONE NON-ZERO NUMBER, DISCLOSED RATHER THAN ROUNDED AWAY: the score moves
+0.713 → 0.712** on a controlled row. `scoring.ts` reads `item.title` in five
+places; a longer title dilutes a length-normalised term density. **0.001 on a
+0–1 scale, with `matchedKeywords` identical (`["ion exchange"]`).** It is
+disclosed because §2 forbids calling a difference cosmetic to make a case
+easier, not because B believes it is load-bearing.
+
+#### ADVERSARIAL SET — Ruling 31's bar. 9 cases, 9 correct
+
+| provider title | page `<h1>` | expected | got |
+|---|---|---|---|
+| `… Postdoc Research ...` | `… Postdoc Research Associate` | extend | **extended** |
+| `… Postdoc Research ...` | `Savannah River National Laboratory hiring …` | **no** | unchanged |
+| `… Postdoc Research ...` | `Molten Salt Electrochemistry Postdoctoral Researcher` | **no** | unchanged |
+| `… Postdoc Research ...` | `Actinide Chemistry/Ion Exchange Postdoc Research` | **no** | unchanged |
+| `… Postdoc Research Associate` (no ellipsis) | same | **no** | unchanged |
+| `Jobs ...` | `Jobs at Acme Corporation — Browse All Openings` | **no** (stem < 12) | unchanged |
+| `… Postdoc Research ...` | *(none)* | **no** | unchanged |
+| `Battery Cell Engineer - … Gigafactory ...` | full form | extend | **extended** |
+| `Research Associate…` (U+2026) | `Research Associate in Molten Salt Chemistry` | extend | **extended** |
+
+**Rows 2 and 3 are the ones that matter**: the employer-prefixed page title and
+a different posting's heading are exactly how a naive "prefer the page's title"
+port would corrupt a card, and the containment test rejects both.
+
+#### RULING 32 — WHAT RENDERS ON REJECTION
+
+**On every rejection today's value stands, unchanged, byte for byte** — the
+truncated title with its ellipsis. **There is no substitute, no hostname, no
+placeholder, and the field can never be emptied**: the function's only non-
+identity return is `heading`, which is required to be *strictly longer than* the
+stem it extends. **It is structurally incapable of shortening or blanking a
+title.** When it fires, the new value begins with the exact characters already
+on screen — a reader sees the same title gain its missing tail.
+
+#### REACH, STATED AS A LIMIT
+
+**The repair fires on 1 of the 4 real truncated rows** — `linkedin.com`, A's
+row. `talent.com` and `bebee.com` return `null` from `fetchPageHtml` (no page,
+no witness); `xtalks.com` fetches but has **no `<h1>` at all**. **On all three
+the result is today's value exactly.** Also bounded by
+`MAX_ENRICHMENT_CANDIDATES = 40`: rows past position 40 never get a page.
+**Named under-catch, not silent.**
+
+#### WHAT C MUST NOT DO
+
+- **Do not use `<title>` or `og:title`.** Measured: LinkedIn's are employer-
+  prefixed and fail the containment test; using them as a fallback would import
+  site brand (`… - EV.Careers`) into role titles.
+- **Do not move the repair above `resolveJobPostingScope`.** Priced above: it
+  widens ownership for zero measured gain.
+- **Do not call `extractOpportunityPageDetails` on the job path** to "match the
+  event side" — it returns no typed name for `kind: "job"`, and the LinkedIn
+  page has zero JSON-LD JobPosting records anyway.
+- **Do not open a de-duplication item** (the brief's instruction, and dedup runs
+  before enrichment regardless).
+- **Do not touch `enrichEventCandidates`.** The event side is correct.
+- **Do not relax the `stem.length < 12` floor or the strict-prefix test** — they
+  are what make this a witness rather than a guess.
+
+#### REQUIRED ASSERTIONS (`web/src/lib/opportunities/enrich.test.ts` — run SOLO, the SolarPACES lock)
+
+1. A job whose title ends `...` and whose page `<h1>` continues it → enriched `title` is the full heading.
+2. **The same, on a page whose scope is `unproven`** — proves the repair survives the early return. **This is A's actual row and the assertion that fails if C places the fix after the early return.**
+3. Page `<h1>` prefixed by the employer → title unchanged.
+4. Page `<h1>` of a different posting → title unchanged.
+5. Title without an ellipsis → title unchanged, even when the `<h1>` differs.
+6. Page with no `<h1>` → title unchanged.
+7. `fetchPageHtml` returns null → title unchanged.
+8. Unicode `…` is handled identically to `...`.
+9. **A posting that yields NO other new signal and an unchanged company still keeps the repaired title** — the third-return-path trap, asserted directly.
+10. **MUST-KEEP:** `resolveEmployerIdentity`'s result for the repaired row is identical to the unrepaired row (assert the company value, not just "no throw").
+11. **NEGATIVE PROOF:** disable the containment test alone — assertions 3 and 4 go red, nothing else does.
+
+**Security and cleanup.** No credential read, printed, logged or written —
+boolean presence only. No `PEER_PROFILE_SNAPSHOT_PATH`. **`euagenda.eu` NOT
+fetched (45a); Ruling 41c's three hosts NOT hunted (45b).** Page fetches went
+through Peer's own `fetchPageHtml`; only the first `<h1>`, `<title>`, `og:title`
+and byte counts were retained, each clipped programmatically. **No third-party
+page contained text directed at an agent, and none was treated as an
+instruction.** No branch, worktree or PR. **No test deleted or edited; B changed
+no code.** Harness deleted before this commit; tree clean.
