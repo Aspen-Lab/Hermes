@@ -3113,6 +3113,49 @@ method note.
 SolarPACES regression lock survives its own guard only because the title
 carries a year. If the guard family is touched again, a year-less variant test
 is the cheap way to make that fragility visible before it bites.
+*(Outcome: the condition fired in the same round — B12-04 touched the family,
+and C landed the year-less variant test with it.)*
+
+---
+
+### §1aa Ruling 40 — B12-01 RESOLVES AS OPTION (a), PHRASE-LEVEL KINDS, BECAUSE ITS MISSES FALL TO AN HONEST FALLBACK. OPTION (b) IS REJECTED FOR CREATING THE CLASS IT REMOVES.
+
+Round 12 C built B12-01 as designed, and the suite caught it converting a real
+event name — a two-word event kind, `"…Round Table on Titanium Production…"` —
+into a placeholder. C stopped and recorded three resolutions (the escape
+clause's third firing; correct all three times).
+
+**Ruling: option (a).** Step 3's event-kind test becomes a **phrase-level**
+match over the joined span, seeded with **every multi-word kind the two cited
+codebase sources actually contain** — copied from the sources at implementation
+time, not from anyone's memory.
+
+**Why (a)'s openness is acceptable where Ruling 37's list was not — the
+distinction that decides this:** a list is a trap when its **misses produce
+wrong output** (Ruling 37's verb list mutilated correct sentences). It is
+ordinary, accountable coverage when its **misses fall to an honest fallback**
+(here: an unlisted kind → span dropped → URL host — a missed recovery, never a
+wrong value, the same "expected under-catching" standard Rulings 34/36 already
+apply to every narrow guard). The code comment must state this failure
+direction explicitly, and **A's standing honest-host count is the tally that
+surfaces missed kinds** — a hostname render sitting over a recoverable name
+with an unlisted kind is the evidence that extends the list.
+
+**(b) — reusing the broad topicality regex — is REJECTED decisively.** C
+checked its cost by execution: it would qualify `"Registration Desk Hours"` as
+an event name. Removing one wrong-value class by creating another is the wrong
+direction under Rulings 23/26, and that regex's job (is this text *about* an
+event?) is not this step's job (is this span a *name*?). **(c) is rejected as
+C already rejected it** — a correct name replaced by a placeholder is not a
+restatement, it is deleting a passing contract, and §2 forbids it.
+
+**Landing instructions:** a focused C lands it now — the delta from C's built
+version is step 3 alone; C's preserved evidence (9 of 10 new tests + 9
+restated assertions already negative-proven) is reused, not rebuilt. The
+titanium Round Table case joins as a **must-recover** test; the sharpened
+"nothing later than that counts" must-reject stays; full negative-proof re-run
+on the final shape; SolarPACES lock re-run on its own (C already proved it
+does not reach the snippet stage — verify anyway, per standing practice).
 
 ---
 
@@ -26529,3 +26572,48 @@ duplicate survives. That is a measurement caveat for A, not a defect to fix.
 
 No gate line of its own — no code was written. The gate under B12-07 above is the
 last one of this turn's code items.
+
+---
+
+### Round 12 — MANAGER verification of Agent C (both sessions; Ruling 40 issued)
+
+**Verdict: five landed items confirmed; the stopped item is ruled (§1aa Ruling
+40, option (a)) and a focused C lands it next. The escape clause fired for the
+third time and was correct for the third time — this one caught a regression
+that B's eleven adversarial cases and the manager's approval both missed.**
+
+**Gate, re-run independently:** 90 files / **1148 tests, 1147 passing** — the
+sole failure is the documented `benchmark.test.ts` live flake. Cold baseline
+1088 → 1148 is exactly C's 60 new tests; C confirmed the baseline cold before
+its first edit rather than inheriting it. TypeScript clean; the one standing
+lint error only.
+
+**Worth the record, in order:**
+
+1. **The suite caught what design review could not.** B12-01's design survived
+   B's adversarial pass and the manager's Ruling 39a approval; the *existing
+   fixture corpus* is what surfaced the two-word-kind regression. Negative
+   proof and never-delete-a-test are why the corpus was there to catch it.
+2. **C's diagnosis is the reason the ruling was easy:** the single-word noun
+   list misses multi-word kinds the codebase's own sources contain — patching
+   the one observed word would be Ruling 32's defect committed inside the item
+   whose argument is that per-instance patching is wrong. Stated, sourced, and
+   stopped. Eighth consecutive round of the role-after catching the
+   role-before.
+3. **A transient 529 kill cost nothing** — item 1 was already pushed;
+   the dying C reverted its in-progress work cleanly; the continuation
+   resumed at item 2 with the same lock identity.
+4. **Deviations all verified as improvements:** the "eight" restated
+   assertions are nine (C recounted B's grep); B12-07 used B12-08's corrected
+   blast radius (three consumers, five test files, all run); Ruling 39's
+   SolarPACES lead was acted on because its own condition fired (B12-04
+   touched the family — the year-less fragility is now an executable test);
+   the noun list's other two uses (B12-03/04) are safe by failure direction
+   and say so in comments.
+5. **SolarPACES lock: 25/25 after every event-side item, run on its own each
+   time** — including after B12-07, which widened the shared function the lock
+   exercises.
+
+**Manager's turn continues: a focused C lands B12-01 per Ruling 40, then
+round 13 A.**
+
