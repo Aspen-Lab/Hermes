@@ -48871,3 +48871,285 @@ summaries and all tallies including Ruling 52b's full reading; then the summary,
 ranked difference list and gate verdict.
 
 ---
+
+### Round 21 — Agent A (part 2: the job pool. **THE JOB SURFACE PRODUCES FOUR NEW OPEN DIFFERENCES AND IT IS THE WORST JOB ROUND SINCE ROUND 11** — a category page rendered as a single job card, a DEAD apply link, three wrong employer values on two mechanisms, and a summary that stops mid-sentence. Wrongly-dropped holds a FIFTH consecutive zero.)
+
+**STATUS: DONE.** Second of round 21 A's four parts. Part 1 is banked in `82bb836`
+and is **not** re-run. Parts 3 and 4 follow in this same session. **No gate verdict
+is set here.**
+
+**Method.** Same discipline as part 1: **five independent live pulls in five
+separate processes** (Ruling 39d/41a's standing method), no-op `PoolCache`, calling
+`buildDailyJobPool()` then `scoredJobToJob()` — the exact entry points §2 names.
+**`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Live keys reconfirmed present,
+boolean check only. **Page-fetch enrichment ran; LLM enrichment did not** (Ruling
+42b's wording). Harness outside `src/` under its own vitest config, **deleted
+before this commit**. **Parts 2 and 3 read the same five pulls, not ten** — the
+same deliberate, disclosed efficiency choice rounds 12–20 made, and for the same
+reason: employer and summary are two columns of one `scoredJobToJob()` output.
+
+**Every summary value in parts 2 and 3 is read from `jobCardView(job).summaryText`**
+(`web/src/lib/jobs/card.ts`) — the card's own view model. **Every role title and
+link is read from `Job.roleTitle` and `Job.linkPosting`**, the field names round 19
+A's recorded probe bug forced it to check against the type rather than assume.
+
+**ONE DISCLOSED EXTRA PULL PER SURFACE, AND IT IS NOT PART OF THE CENSUS.** A
+**sixth**, targeted pull recorded **every row the search provider offered**, by
+wrapping `fetch` before any Peer filtering, at zero extra API cost. **102 unique
+offered job rows (120 raw)** — both counts recorded so the capture can be shown
+complete rather than asserted. **It is a different minute's offer list from the five
+census pulls, so "offered" and "in the pool" are NOT the same population** — every
+claim below says which one it rests on. **SECURITY: the capture reads only the
+provider's RESPONSE body. The request init, which carries the key, is never
+touched, logged or written.**
+
+**THE OFFER-LIST DENOMINATOR IS UNCHANGED THIS ROUND AND A SAYS SO BEFORE USING
+IT.** Round 17 recorded **292** unique offered rows, round 18 **102**, round 19
+**96**, round 20 **102**, round 21 **102**. **A reports the wrongly-dropped column
+as a RATE as well as a count** for the fifth round running.
+
+**Method correction carried forward from round 17 A, not re-derived:** **BOTH shipped
+`isListingPage` calls are reported separately** — the whole-title call and the
+role-segment call inside `webResultToRawJobItem` — so a text-gate `null` can never
+be mistaken for a guard drop.
+
+---
+
+## REPRODUCIBILITY — **MEMBERSHIP VARIANCE IS BACK, AND IT IS THE SAME SHAPE ROUND 20 RECORDED: ONE OUTLIER RUN**
+
+- **MEMBERSHIP: 17, 13, 18, 18, 18 postings across the five runs; the UNION is 19.**
+  **Run 2 is the sole outlier**, dropping five rows (`jobs.manchester.ac.uk`,
+  `psi.ch`, `postdocjobs.com/7317954`, `cefracor.org`, `careers.inl.gov/1930`) and
+  admitting `careers.augustana.edu` in their place. Run 1 is missing only
+  `talents.vaia.com`.
+- **MAJORITY POOL (present in ≥3 of 5): 18 rows.** Everything scored below is
+  scored on that majority, per Ruling 51b's still-open five-pull method.
+- **MINORITY DISCLOSED IN FULL (Ruling 39d/41a):** `careers.augustana.edu`
+  (`/jobs/oak-ridge-national-laboratory-postdoctoral-research-associate-molten-salt-characterization-2`),
+  **1 of 5. Not scored, not silently dropped.** It is a near-duplicate of the
+  majority's `careerservices.upenn.edu` row — the same ORNL posting syndicated to a
+  second university careers board.
+- **VALUES: ZERO variance. Every column — role title, employer, location,
+  `roleKind`, the card's summary, salary and location labels — is byte-identical
+  across every run in which the row appears.**
+- **ROUND 18/20's `careers.inl.gov` SUMMARY WOBBLE DOES NOT RECUR.** Round 20
+  recorded it returning after skipping round 19; this round it is absent again.
+  **A reports that as this round's measurement, not as a trend.**
+
+---
+
+## FINDING 1 — **`ev.careers/jobs/internship` IS A CATEGORY PAGE RENDERED AS A SINGLE JOB CARD. 5 OF 5. RANK 1.**
+
+**This is the class round 19's `jobright.ai` finding belonged to, arriving on a
+host this loop has sighted twice before, with a THIRD title neither exclusion
+names.**
+
+| field | value |
+|---|---|
+| rendered `roleTitle` | **`Internship EV Jobs`** |
+| rendered `roleKind` | `internship` |
+| `linkPosting` | `https://ev.careers/jobs/internship` |
+| employer | `null` (honest silence — **not** the defect) |
+| card `summaryText` | `Matches your battery focus and fits a PhD Year 3 profile` (the fallback) |
+| presence | **majority pool, 5 of 5** |
+
+**GROUND TRUTH, fetched through Peer's own `fetchPageHtml` and clipped
+programmatically**, settles it beyond argument:
+
+- `<title>` — `Internship EV Jobs - EV.Careers`
+- `<h1>` — **`Internship Jobs`**
+- `og:description` — *"Find the best electric vehicle Internship jobs on
+  EV.Careers today. Apply to career openings Tesla, Rivian, and more!"*
+
+**The page's own description says it lists jobs at multiple named employers.
+There is no single vacancy on it.** A reader clicking this card expecting a role
+gets a search page.
+
+**BOTH SHIPPED `isListingPage` CALLS RETURN FALSE and `webResultToRawJobItem`
+ADMITS it** — measured, not inferred. **This is an UNDER-catch, Ruling 32's class,
+in `isListingPage()`'s home**, where B13-02, B14-01, B15-01, round 16's item 1 and
+B19-01 all landed.
+
+**A CHECKED THE EXCLUSION LIST BY NAME BEFORE RANKING IT, AND NONE COVERS IT.**
+Ruling 46b names **two** titles — `EnerSys Internship Program: Powering Future
+Innovators` and `CATL Internships` (@ `ev.careers/catl-internships`). **This is a
+THIRD title on a DIFFERENT URL**, and **exclusion 8 says in terms that a named
+exclusion is "not a general licence"**. Both 46b strings were replayed against the
+shipped guard this round and **both still DROP** (see part 3's tally) — so 46b's
+own targets are not the thing that is failing here. **A applies the exclusions as
+written and does not stretch them in either direction.**
+
+**Evidence class: live, organic, 5 of 5, byte-identical in every census pull.**
+
+---
+
+## FINDING 2 — **`jobs.manchester.ac.uk`'s CARD CARRIES A DEAD APPLY LINK AND A TRUNCATED LOWERCASE TITLE. 4 OF 5. RANK 2.**
+
+**ONE ROW WITH TWO FACES, AND A COUNTS IT ONCE** — round 18 A's precedent for the
+`ev.careers/catl-internships` row, applied here so B treats it as one item too.
+
+| field | value |
+|---|---|
+| rendered `roleTitle` | **`research associate in molten salt & nuclear graphite ...`** |
+| `linkPosting` | **`https://www.jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id=`** |
+| presence | majority pool, **4 of 5** |
+
+**FACE 1 — THE LINK GOES NOWHERE.** The URL's `Id` query parameter is **empty**.
+Fetched through Peer's own `fetchPageHtml`, the response body is **9 bytes** — no
+`<title>`, no `<h1>`, no `og:title`, no content of any kind. **A reader cannot
+apply to this posting at all.** Every other card in the pool resolves to a real
+page; this one is the only dead link in 18 rows.
+
+**FACE 2 — THE TITLE IS TRUNCATED WITH A LITERAL ELLIPSIS AND IS ALL LOWERCASE.**
+`research associate in molten salt & nuclear graphite ...` — the ellipsis is
+literal characters in the rendered value, exactly the defect shape round 18 A
+first reported (`talent.com`, `bebee.com`, `xtalks.com`) and round 19 A reported
+on `careers.dupont.com`, **which B19-02 fixed**.
+
+**A CHECKED THE NAMED UNDER-CATCHES AND THIS IS A FIFTH HOST.** Round 18's three
+named under-catches are `talent.com`, `bebee.com` and `xtalks.com`;
+`careers.dupont.com` was the fourth and is **closed** (B19-02, confirmed by round
+20 A). `jobs.manchester.ac.uk` is named by none of them. **B19-02's own recorded
+limit is that it repairs a truncated `<title>` from an `<h1>` or a separator
+boundary — and here there is no page at all to read either from**, which A states
+as a measured fact rather than a diagnosis. **A does not investigate the cause
+(§2); B owns the why.**
+
+---
+
+## FINDING 3 — **THE EMPLOYER FIELD IS WRONG ON 3 OF 8 NON-NULL VALUES — THE WORST READING SINCE ROUND 11, ON TWO DISTINCT MECHANISMS. RANK 3.**
+
+Eight of the eighteen majority postings render an employer; ten render **honest
+silence**, which is B6-03's decided behaviour and **not** a defect.
+
+| host | employer | verdict |
+|---|---|---|
+| `befjobs.breakthroughenergy.org` | **`Breakthrough Energy Fellows Job Board`** | **WRONG.** Ground truth `<title>` is `Summer Engineering Internship @ Mantel \| Breakthrough Energy Fellows Job Board` and the page's **`og:title` IS literally `Breakthrough Energy Fellows Job Board`**. **The rendered employer is the JOB BOARD's own name.** The real employer is **`Mantel`** — named in the card's OWN role title (`Summer Engineering Internship @ Mantel`) and in the URL path (`/companies/mantel/jobs/…`). Peer had the answer twice over and rendered the board |
+| `postdocjobs.com` (`/posting/7317952`) | **`Molten Salt Chemical and Electrochemical ...`** | **WRONG.** Ground truth `<title>` is `Postdoctoral Appointee – Molten Salt Chemical and Electrochemical Engineering - Job posted on PostdocJobs.com`. The rendered employer is **the second half of the ROLE TITLE, after the en dash, truncated with a literal ellipsis.** It is not an employer, and it is not even a complete phrase |
+| `postdocjobs.com` (`/posting/7317954`) | **`MSR Fuel Cycle`** | **WRONG, same mechanism.** Ground truth `<title>` is `Postdoctoral Researcher – MSR Fuel Cycle - Job posted on PostdocJobs.com`. Again the en-dash tail of the role title, rendered as the employer. **Two instances, one mechanism** — A reports them separately because they are two cards a reader sees, and names the shared mechanism so B fixes it once |
+| `jobs.polymer.co` | `Mantel Capture, Inc` | correct |
+| `inl.referrals.selectminds.com` | `INL` | correct |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` | correct — the employer, not the hosting university |
+| `employbl.com` | `Battery Ventures` | correct — it **is** the employer. Its *relevance* is Ruling 52b's line in part 3, not an employer defect |
+| `talents.vaia.com` | `Savannah River National Laboratory` | correct |
+
+**RULING 34a, JOB SIDE: 3 of 8 non-null (37.5%).** Round 20 was 0 of 4. Running
+r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8, r16 0/6, r17 1/6, r18 0/6, r19 0/5,
+r20 0/4, r21 **3 of 8**, **cumulative 8 of 83.**
+
+**THE NAMED ACCEPTED COST IS ABSENT FOR A FOURTH ROUND RUNNING.**
+`careerservices.upenn.edu` **is in the majority pool 5 of 5** this round, and it
+renders **`null`** — honest silence, not the `Career Services` wrong value the
+exclusion names. **So the row is present and the defect is not.** A states that
+explicitly, because "absent host" and "present host, absent defect" are different
+facts and only the second is evidence.
+
+**ONE HONEST-SILENCE ROW RECORDED WITHOUT COUNTING IT.** `terra.do`'s card renders
+no employer, while its own `<title>` reads `Molten Salt Systems Engineer/Scientist
+at Idaho National Laboratory`. **The employer was available and Peer said
+nothing.** That is B6-03's decided trade-off (silence over a guess) and **NOT a
+defect** — recorded as corpus for B, not ranked, not counted.
+
+---
+
+## FINDING 4 — RULING 48b's OFFERED-ROW SCAN, BOTH COLUMNS. **WRONGLY DROPPED: 0 of 102 (0.0%), FIFTH CONSECUTIVE ZERO.**
+
+The drop VERDICT for every row comes from the **shipped `isListingPage()`** and from
+nowhere else.
+
+- **CORRECTLY DROPPED: 32 of 102 offered rows (31.4%).** Round 20 was 44 of 102
+  (43.1%); round 19 40 of 96 (41.7%); round 18 45 of 102 (44.1%); round 17 34 of
+  292 (11.6%).
+- **WRONGLY DROPPED: 0 of 102 (0.0%). FIFTH CONSECUTIVE ZERO.**
+
+**All 32 were read individually, not sampled.** Every one is an aggregator search
+page, a company careers index, or an owner-section index — `indeed.com`'s *"Molten
+Salt Jobs, Employment"* and *"Battery Materials Intern Jobs, Employment"*,
+`linkedin.com`'s *"101 Molten Salt jobs in United States"* and *"7,000+ Research
+Intern jobs in United States"*, `glassdoor.com`'s *"574 Battery internship jobs in
+United States"*, `ziprecruiter.com`'s priced search pages, `jobs.merck.com`'s
+*"Student Opportunities"*, `careers.na.panasonic.com`'s *"Panasonic Energy
+Careers"*, `ionexchangeglobal.com`'s *"Careers"*, and 23 more of the same three
+kinds. **ZERO of the 32 is a single vacancy.**
+
+**THE CORRECT-DROP RATE FELL AND A SAYS WHY IT CANNOT CLAIM MORE THAN IT
+MEASURED.** 43.1% → 31.4% is a real change in the number, but **the offer list is a
+different day's composition** — this round's 102 rows contain markedly more
+single-vacancy postings and university/lab pages than round 20's did. **Nothing in
+the guard changed between the two rounds** (round 20 C touched `structured-extract.ts`
+and `facets.ts`, not `jobweb.ts`). **A reports the movement as composition, not as
+a regression, and does not attribute it to code.**
+
+**AND A NAMES THE UNCOMFORTABLE PAIRING RATHER THAN REPORTING THE FLATTERING
+HALF.** The guard correctly dropped **32 aggregator and index pages in this very
+offer list** — and in the same round it **ADMITTED `ev.careers/jobs/internship`,
+which its own `og:description` calls a job search page** (Finding 1). **The class
+is caught on the aggregator hosts and missed on the vertical job board.** That
+pairing is the strongest single argument for Finding 1 being real, and it is
+recorded here rather than in a place that flatters the column.
+
+---
+
+## FINDING 5 — **RULING 39c IS NOT MEASURABLE THIS ROUND, AND A SAYS SO RATHER THAN CLAIMING A CONSECUTIVE CONFIRMATION**
+
+The brief is explicit that round 20 was the first time 39c became measurable and
+that A must **not** *"write it up as a consecutive confirmation unless a thread is
+actually offered again."*
+
+**No forum thread was offered this round.** Zero of the 102 unique offered rows is
+a `discourse.group`, NodeBB or phpBB thread; `openmc.discourse.group` appears
+nowhere. **Round 21's 39c reading is NOT MEASURABLE — not a zero, not a
+confirmation.**
+
+**The rule was nonetheless REPLAYED against the shipped guard, so a "not
+measurable" does not decay into "unknown":**
+
+| variant | verdict |
+|---|---|
+| round 20's live row exactly as offered | **DROP** |
+| same title, non-forum URL | **KEEP** — the title is not what drops it |
+| same forum URL, ordinary role title | **DROP** — the URL clause alone is sufficient |
+
+**Identical to round 20's isolation, three for three. Grade: `targeted-confirmed,
+organically unoffered`.**
+
+---
+
+## THE JOB ITEM-SHAPE COLUMN (Ruling 50a): **1 of 17 (5.9%) — THE ZERO DOES NOT HOLD**
+
+The brief asks A to *"say plainly whether each holds a further round."* **On the
+job side it does NOT.**
+
+**`ev.careers/jobs/internship` is a category page rendered as a single job card**
+(Finding 1). Every other counted row is a single posting.
+
+**THE DENOMINATOR MOVED AND A REPORTS IT PLAINLY**, as the brief requires. Round
+20 counted **10**; this round counts **17**. The majority pool is 18 rows and
+**`grad.wisc.edu` is excluded as UNRESOLVED, exactly as rounds 19 and 20 excluded
+it** — its URL is a university news post announcing a Thermo Fisher internship
+programme, and A has never resolved whether the item a reader gets is the
+programme or the announcement. **Carrying that exclusion forward unchanged rather
+than quietly resolving it in the convenient direction.**
+
+Round 20 was **0 of 10 counted** — a return to zero after one round away. **Round
+21 is 1 of 17: the column has now been at a defect in three of the last four
+rounds** (r18 0 of 12, r19 1 of 16, r20 0 of 10, r21 1 of 17).
+
+---
+
+**No credential read, printed, logged or written — boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`.** Ground-truth fetches went through Peer's own
+`fetchPageHtml`, **clipped programmatically to `<title>` / first `<h1>` /
+`og:title` at 200 characters**; the offered-row capture reads only the provider's
+RESPONSE body, never the request init that carries the key. **`euagenda.eu` NOT
+fetched (45a); Ruling 41c's three hosts NOT hunted (45b); `talent.com`,
+`bebee.com`, `xtalks.com` and `careers.dupont.com` NOT fetched.** No third-party
+page contained text directed at an agent and none was treated as an instruction.
+No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+No test deleted or edited. Harness deleted before this commit; tree clean.
+
+**Not done yet (parts 3–4, same session, continuing next):** job summaries and all
+tally lines with running counts; then the summary, ranked difference list and gate
+verdict.
+
+---
