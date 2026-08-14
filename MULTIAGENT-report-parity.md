@@ -270,12 +270,131 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 21:25 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 21:20 UTC — ROUND 22 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 21:55 UTC — ROUND 22 B IS
+                  COMPLETE. NINE ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
+                  (`31d0ffb`, `65f9b01`, `e79887d`, `ac05100`, `ae9674d`,
+                  `1b403dc`, `0fd2ce0`, `ada757c`, plus this hand-off). Claimed
+                  the lock cleanly (`84450df`) after `git pull --ff-only` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`ade78f4..84450df`), so the race was won rather than
+                  assumed.** **B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST,
+                  AND TOUCHED NO FILE EXCEPT THIS ONE.**
+
+                  **METHOD: B REPRODUCED A's CENSUS BEFORE INVESTIGATING IT, AND
+                  IT MATCHED ROW FOR ROW.** One live pull per surface through
+                  `buildDailyJobPool()` / `buildDailyEventPool()` with a no-op
+                  `PoolCache`, then the shipped mappers. **The job pool came back
+                  12 rows in A's order with A's hosts, titles, employers and
+                  locations; the event pool returned A's values on every row A
+                  scored. All seven of A's findings are live.** A `fetch`
+                  interceptor stored the provider RESPONSE bodies and ten hosts'
+                  HTML — **never the request init that carries the key** — and
+                  every verdict was then computed OFFLINE against that capture,
+                  so all of it is repeatable without re-hitting a third party.
+                  `PEER_PROFILE_SNAPSHOT_PATH` NOT used; page-fetch enrichment
+                  ran, LLM enrichment did not (42b). Harness lived outside `src/`
+                  (`web/zz-r22b/`), **deleted before the first commit**, results
+                  moved to this session's scratchpad outside the repository.
+
+                  **THE SEVEN ARE RE-RANKED BY §2 (wrong data first), NOT BY A's
+                  READER-NOTICE ORDER: A22-03, A22-01, A22-02, A22-06, A22-07,
+                  A22-05, A22-04. CLASSIFICATION: 3 WRONG DATA, 1 WRONG SHAPE, 2
+                  EXTRA, 1 MISSING**, plus Ruling 59a's design and 59b's two
+                  diagnostics.
+
+                  **THE STRUCTURAL FINDING: A22-06 AND A22-07 ARE ONE
+                  EXPRESSION** — `jobweb.ts:1109`, simultaneously too narrow on
+                  the URL and too loose on the text. **They must land in ONE
+                  commit or C re-opens one while fixing the other.** A's
+                  UNCONFIRMED `stemgateway.nasa.gov` row drops on the identical
+                  line; B names the mechanism and **does not convert it into a
+                  counted wrong drop**, because Ruling 25 still forbids the
+                  browser that would settle what the page is.
+
+                  **RULING 59a IS ANSWERED: TWO MECHANISMS, NOT ONE, BY
+                  EXECUTION.** The job path already HAS the ownership resolver and
+                  its consuming gate leaks (`mapper.ts:133` tests `=== "unproven"`
+                  and lets `undefined` through — and `undefined` is precisely the
+                  state where the page could not be fetched, `lensa.com` having
+                  answered **403**). The event path has **no resolver at all**.
+                  **TWO DESIGN DRAFTS WERE BUILT LITERALLY AND BOTH WERE KILLED BY
+                  THEIR OWN MATRIX**: draft 1 destroys **18 correct event dates**;
+                  draft 2 (reusing the job resolver on event pages) returns
+                  `owned` for **`"Sitemap"`, `"Home"` and a reCAPTCHA notice**.
+                  **Draft 3 — demand ownership only where the text is provably
+                  ambiguous — measures 44 of 50 rows unchanged, 4 dates lost (none
+                  in the pool), 2 moved, 0 invented.**
+
+                  **EVERY FALLBACK IS PROVED BY MEASUREMENT.** The pool holds
+                  **exactly ONE job summary, it is the wrong posting's, and the
+                  fix removes exactly it — ZERO correct summaries lost.** **ZERO
+                  correct pool dates lost.** Every fallback lands on a silence the
+                  build already renders.
+
+                  **A THIRD FINDING B DID NOT GO LOOKING FOR AND WHICH SITS UNDER
+                  THE WHOLE DESIGN: `resolveJobPostingScope` HAS NO
+                  MINIMUM-SUBSTANCE FLOOR.** Its five `owned` pool rows carry 8,
+                  9, 48, 74 and 83 characters of "owned" text. Today that is
+                  harmless only because `summarizeJob` refuses to summarise nine
+                  characters — **the moment `owned` AUTHORISES a summary it has to
+                  mean something.**
+
+                  **RULING 59b: BOTH DIAGNOSTICS RESOLVED, AND ONE CONTRADICTS A.**
+                  **(a) `thebatteryshow.eu` is NEITHER outcome the ruling named —
+                  THE EVENT IS OVER.** Enrichment read the page's own JSON-LD
+                  `Event` record (`2026-06-09` to `2026-06-11`) and
+                  `scoring.ts:216` dropped a finished event. Executed: scored 1
+                  before enrichment, **0 after**. **A's word "FUTURE" is wrong.**
+                  Working as designed; **NOT a wrongly-suppressed row**; recall
+                  stays unscored. **(b) `grad.wisc.edu` IS the item-KIND column** —
+                  `og:type` = `article`, body class `single-post`,
+                  `article:published_time` `November 13, 2025`, rendered as a
+                  present-tense internship card with no date anywhere. **The
+                  denominator exclusion ENDS; round 22's job item-KIND is restated
+                  as 2 of 12 (16.7%).** Recency itself stays unscored.
+
+                  **ONE NEW `POLICY — manager decides`, WITH WHERE B LOOKED**
+                  (A22-04's guard half: no fifth instance exists in 99 offered job
+                  rows or 138 offered event rows, so no honest corpus exists —
+                  B recommends deferring it). **TWO RECORDED DECISIONS FLAGGED,
+                  NOT TOUCHED:** Ruling 39b's `The Battery Saloon` (draft 3 would
+                  drop that row, and **B found a SECOND live instance of A22-01's
+                  shape there that A did not catch**, ground-truthed to a page
+                  with no `<h1>`, no JSON-LD and **not one date token**), and
+                  Ruling 33, untouched. **B re-checked A's 57b verdict by
+                  executing the shipped guard WITH the parenthetical employer
+                  supplied — still `false`, so A's "new shape" is confirmed
+                  independently.**
+
+                  **THE GATE, RE-RUN AFTER DELETING THE HARNESS: 91 files / 1652
+                  tests, 1651 passing** — byte-for-byte what round 22 A measured,
+                  because **B changed no code**; sole failure the standing
+                  `benchmark.test.ts` flake at **`:109`**.
+                  `git status --porcelain --untracked-files=all` clean.
+
+                  **No credential read, printed, logged or written — boolean
+                  presence only.** **ONE deliberate extra page fetch in the whole
+                  turn** (`batteryinnovationsummit.com`), through Peer's own
+                  `fetchPageHtml`, reduced programmatically to `<title>` /
+                  `og:title` / `<h1>` / JSON-LD fields / regex-matched date
+                  tokens. **`euagenda.eu` NOT fetched (45a); Ruling 41c's three
+                  hosts NOT hunted (45b).** No third-party page contained text
+                  directed at an agent and none was treated as an instruction. No
+                  branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **All nine
+                  appends were pure insertions with ZERO deletions**, verified
+                  programmatically, written via a scratchpad file and Python from
+                  bash — **NOT PowerShell.** Full detail in §4's nine "Round 22 —
+                  Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-14 21:20 UTC — ROUND 22 A IS
                   COMPLETE. ALL FIVE ROUND-21 FIXES ARE CONFIRMED WORKING AND
                   EVERY ONE OF THE TEN FALSIFIERS §1 NAMED CAME BACK CLEAN — AND
                   THE GATE IS NOT MET, because SEVEN new unexplained differences
@@ -3435,7 +3554,163 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — round 22.** *(A's hand-off wrote "round 23"; normalized
+WHOSE TURN:       **C — round 22.** Round 22 B is COMPLETE: **nine items, one
+                  commit each, each pushed immediately** (`31d0ffb`, `65f9b01`,
+                  `e79887d`, `ac05100`, `ae9674d`, `1b403dc`, `0fd2ce0`,
+                  `ada757c`, plus this hand-off). Claim the §0d lock first,
+                  always. **C implements; C does not re-measure and does not
+                  re-rank (§2).** Full evidence is in §4's nine "Round 22 — Agent
+                  B" entries — **work from those, not from this summary.**
+
+                  **B REPRODUCED A's CENSUS EXACTLY BEFORE INVESTIGATING IT.**
+                  One live pull per surface returned **the same 12-row job pool,
+                  in A's order, with A's hosts, titles, employers and locations
+                  row for row**, and A's values on every event row A scored. **All
+                  seven of A's findings are live and confirmed.** Every verdict
+                  below is by EXECUTION on that capture, offline and repeatable.
+
+                  **B's ORDER — RE-RANKED BY §2 (wrong data first), WHICH IS NOT
+                  A's READER-NOTICE ORDER. THE A22-xx IDs ARE UNCHANGED.**
+                  1. **A22-03** `lensa.com` — WRONG DATA
+                  2. **A22-01** `ans.org` — WRONG DATA
+                  3. **A22-02** `battery-power.eu` — WRONG DATA
+                  4. **A22-06** `batteryjunction.com` — WRONG SHAPE
+                  5. **A22-07** `lanl.jobs` — MISSING
+                  6. **A22-05** the Savannah River duplicate — EXTRA
+                  7. **A22-04** `zerobonline.com` — EXTRA
+                  8. **Ruling 59a** — the ownership DESIGN (no code this round
+                     beyond what items 1–3 name)
+                  9. **Ruling 59b** — both diagnostics, mechanism only
+
+                  **CLASSIFICATION BREAKDOWN: 3 WRONG DATA, 1 WRONG SHAPE, 2
+                  EXTRA, 1 MISSING**, plus one design and two diagnostics.
+                  **B breaks §2's "missing last" for the A22-06/A22-07 pair ALONE
+                  and says why: they are THE SAME LINE.**
+
+                  **THE ONE STRUCTURAL FINDING THAT CHANGES HOW C WORKS: A22-06
+                  AND A22-07 ARE ONE EXPRESSION**, `jobweb.ts:1109`, a two-clause
+                  OR that is simultaneously **too narrow on the URL** (`lanl.jobs`
+                  drops because `/search/jobdetails/` is not in `JOB_PATH_RE`) and
+                  **too loose on the text** (`batteryjunction.com` is admitted
+                  because `JOB_TEXT_RE` matches the shop's `Apply Now` button).
+                  Both verdicts executed. **They must land in ONE commit — fixing
+                  either half alone re-opens the other**, and B records why
+                  "just remove `apply now`" is the wrong instrument. **A's
+                  UNCONFIRMED row (`stemgateway.nasa.gov`) drops on the identical
+                  line — same mechanism, and B does NOT convert it into a counted
+                  wrong drop, because Ruling 25 still forbids the browser that
+                  would ground-truth it.**
+
+                  **RULING 59a — VERDICT: TWO MECHANISMS, NOT ONE, ESTABLISHED BY
+                  EXECUTION.** A22-03's path **already has** the ownership
+                  resolver (`resolveJobPostingScope`) and its GATE leaks;
+                  A22-01's path **has no resolver at all**. They share exactly one
+                  input — the page-scoped provider snippet. **The design ships in
+                  two halves that are independent.**
+
+                  **TWO DESIGN DRAFTS WERE BUILT LITERALLY AND BOTH WERE KILLED BY
+                  THEIR OWN MATRIX BEFORE THE THIRD WAS RECOMMENDED.** Draft 1
+                  (gate every snippet field on a title witness) fixes both repros
+                  and **destroys 18 correct event dates** — rejected. Draft 2
+                  (reuse the job resolver verbatim on event pages) returns `owned`
+                  with the strings **`"Sitemap"`, `"Home"` and a reCAPTCHA
+                  notice**, silencing every event place — rejected, **and it
+                  exposed that the SHIPPED job resolver has no minimum-substance
+                  floor, so `owned` currently certifies 8-to-83-character nav
+                  fragments.** Draft 3 demands ownership **only where the text is
+                  provably ambiguous**: **44 of 50 rows unchanged, 4 dates lost
+                  (none in the pool), 2 moved, 0 invented.**
+
+                  **THE FALLBACK IS PROVED, NOT ASSERTED, ON EVERY HALF.** Job
+                  summary: **the pool contains exactly ONE summary, it is the
+                  wrong posting's, and the fix removes exactly it — ZERO correct
+                  summaries lost.** Job location: 3 of 39 kept rows carry a
+                  snippet-derived `remote`, **1 reaches the pool and it is wrong.**
+                  Event date: **ZERO correct pool dates lost.** Every fallback
+                  lands on a silence the build already renders (`See posting`,
+                  `See event page`, `date TBA`, `Matches your …`).
+
+                  **C's BUILD ORDER, WITH WHAT EACH STEP COSTS.**
+                  1. **Item 3's role check** — 3 lines, cannot delete a row.
+                  2. **Item 1(a)+(b)** — the job gate made fail-closed, WITH the
+                     substance floor. `mapper.ts:133` must become `!== "owned"`.
+                  3. **Items 4+5 together** — the one `jobweb.ts:1109` commit.
+                  4. **Item 6** — dedup, **and the tie-break is not optional**:
+                     at equal source priority prefer the item with a non-null
+                     `company`, or the merge trades two cards for a worse one.
+                  5. **Item 7(a) only** — let a parenthetical employer reach the
+                     `company` slot. **(b) is deferred; do NOT widen a 57b
+                     conjunct.**
+                  6. **Draft 3's date clustering.**
+                  7. **The place half — DEFERRED until a round captures every
+                     pool page.** B refused to design it on three pages.
+
+                  **TESTS C MUST EXPECT TO GO RED, NAMED BY GREPPING FOR CALLERS.**
+                  **`web/src/lib/jobs/mapper.test.ts:50-51` and `:92-93`** assert a
+                  non-empty summary from a fixture with no `fetchedPostingScope` —
+                  **both go red under item 1 until the fixtures declare
+                  `"owned"`, and that red IS the new contract.**
+                  `web/src/lib/opportunities/job-posting-scope.test.ts` will move
+                  under the substance floor. **`web/src/lib/jobs/scoring.test.ts`
+                  is a SECOND caller of `webResultToRawJobItem` and the ONLY
+                  caller of `dedupJobs` — there is no `dedup.test.ts`.**
+                  `web/src/lib/opportunities/place-flow.test.ts` is the second
+                  file on the place line. Full lists per item in §4.
+
+                  **RULING 59b — BOTH DIAGNOSTICS RESOLVED, AND ONE OF THEM
+                  CONTRADICTS A.**
+                  **(a) `thebatteryshow.eu` is NEITHER outcome the ruling
+                  anticipated. THE EVENT IS OVER.** Kept at ingestion (no date in
+                  the snippet), then enrichment read the page's own JSON-LD
+                  `Event` record — **`startDate 2026-06-09`, `endDate
+                  2026-06-11`** — and `scoring.ts:216` dropped it as finished.
+                  **Executed: scored 1 before enrichment, 0 after.** **A's
+                  description of it as a "FUTURE" event is WRONG.** It is
+                  **working as designed**, must **NOT** enter round 23 A's census
+                  as a wrongly-suppressed row, and round 23 A should record it
+                  resolved and stop carrying it. Recall stays unscored.
+                  **(b) `grad.wisc.edu` IS the item-KIND column.** The page is a
+                  WordPress blog post — **`og:type` = `article`**, body class
+                  `single-post`, `article:published_time` `November 13, 2025` —
+                  rendered as a present-tense internship card with a role kind, an
+                  employer, a match reason and **no date anywhere**. **The
+                  denominator exclusion ENDS. Round 22's job item-KIND is restated
+                  as 2 of 12 (16.7%), not 1 of 12.** **Recency itself stays
+                  unscored — the row would be wrong if it were published this
+                  morning.**
+
+                  **ONE NEW `POLICY — manager decides`, WITH WHERE B LOOKED.**
+                  A22-04's guard half needs a corpus and there is not one: B
+                  searched **99 offered job rows and 138 offered event rows** and
+                  found **no fifth instance** of the shape. B recommends deferring
+                  it and shipping only the safe half. **B re-checked A's 57b
+                  verdict by executing the shipped guard with the parenthetical
+                  employer supplied — it STILL returns `false`, so A's "new shape,
+                  not a guard defect" is confirmed independently rather than
+                  restated.**
+
+                  **TWO RECORDED DECISIONS ARE FLAGGED, NOT TOUCHED (§3).**
+                  Ruling 39b's accepted cost (`The Battery Saloon`): draft 3
+                  would move that row's date to a past value and the row would
+                  drop. **B found a SECOND live instance of A22-01's shape there
+                  that A did not catch**, and ground-truthed the page (no `<h1>`,
+                  no JSON-LD, **not one date token**), so the shipped
+                  `2026-11-05` has no evidence behind it. 39b accepted the wrong
+                  NAME, not the row's existence — **the manager decides, C does
+                  not.** Ruling 33's definition is untouched anywhere.
+
+                  **THE GATE B LEAVES, RE-RUN AFTER DELETING THE HARNESS: 91 files
+                  / 1652 tests, 1651 passing** — byte-for-byte what round 22 A
+                  measured, because **B CHANGED NO CODE**; sole failure the
+                  standing `benchmark.test.ts` flake at **`:109`**. Harness
+                  (`web/zz-r22b/`, outside `src/`) **DELETED**;
+                  `git status --porcelain --untracked-files=all` clean.
+
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-22 B
+                  briefing that follows is complete and was executed. Do not work
+                  from it.*
+                  **B — round 22.** *(A's hand-off wrote "round 23"; normalized
                   by the manager to the standing convention — a failed gate
                   candidate keeps its round, exactly as rounds 17, 18 and 19
                   did, and the seven items are already numbered A22-xx. Nothing
