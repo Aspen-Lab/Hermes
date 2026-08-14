@@ -50173,3 +50173,89 @@ const parts = title.split(/\s+[-–—|·]\s+/);
 - **Neither is a host rule.** `postdocjobs.com` and `befjobs.breakthroughenergy.org` appear in neither; both are asserted on unrelated constructed hosts.
 
 **B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
+
+---
+
+### Round 21 — Agent B (item 4 of 5: **A21-04, the summary that stops at `of`. THE TRUNCATION LAYER IS *NOT* PEER — no layer on the summary path cuts mid-sentence, and that is proved by audit AND by reproduction. Peer's defect is that it never asks whether the sentence it publishes actually FINISHES.**)
+
+**STATUS: DONE.** Fourth of five. **B changed no code, deleted no test, edited no test.**
+
+**METHOD.** Same real-copy-with-one-edit method, applied to `summarize.ts`. The control copy is proved faithful two ways: **the shipped `summarize.test.ts` runs green against it — 51/51** — and **every control output is asserted equal to the genuinely imported `summarizeJob` on all seven probe rows (7 of 7)**.
+
+---
+
+## THE TRUNCATION LAYER, TRACED END TO END — **PEER DOES NOT CUT**
+
+A asked B to trace the truncation layer. **It is not in Peer, and every layer on the path was checked rather than assumed:**
+
+| layer | what it does with length | can it cut mid-sentence? |
+|---|---|---|
+| `resolveJobPostingScope` → `extractPageText` | `MAX_PAGE_TEXT_CHARS = 40_000`, applied by **dropping whole paragraphs** (`if (length + separatorLength + paragraph.length > limit) break;`) | **No** |
+| `cleanJobDescription` | whitespace normalisation + orphaned-artifact strip only; **no slice, no substring** | **No** |
+| `summarizeJob` → `scoreSentences` | `MIN_SENTENCE_LENGTH` / `MAX_SENTENCE_LENGTH` **reject** a candidate | **No** |
+| `summarizeJob` → `bestCombination` | `MAX_SUMMARY_LENGTH = 240` **rejects a combination** (`continue`), never trims one | **No** |
+| `jobCardView` | `job.summary?.trim() \|\| job.matchReason` | **No** |
+
+**The one `slice` on the whole path is `scoring.ts`'s `item.description.slice(0, 300)`, and it builds the SCORING facade's gate text — it never reaches the summary.**
+
+**SO THE UNFINISHED SENTENCE ARRIVES ALREADY UNFINISHED.** The path's own shape says where from: when no DOM scope is found, `resolveJobPostingScope` falls back to **the JSON-LD `JobPosting.description`** (`job-posting-scope.ts:106`), which on an ATS is routinely a short marketing blurb rather than the full advert. That is consistent with A's finding that the value is **byte-identical in every run the row appears in** — a stable source field, not a variable cut. **B states this as the path's own structure, NOT as a fetched fact: `careers.inl.gov/job/1930` is absent from both of B's live pools this round and B did NOT fetch it.**
+
+---
+
+## PEER'S ACTUAL DEFECT, AND IT IS ONE LINE OF GRAMMAR
+
+```
+function splitSentences(description: string): string[] {
+  return (description.match(/[^.!?]+(?:[.!?]+|$)/g) ?? [])
+```
+
+**The `|$` alternative makes an unterminated trailing fragment a first-class "sentence".** Nothing downstream ever asks whether a selected sentence ends. `scoreSentences` runs five **negative** checks and four **positive** scores, and **not one of them is about completeness**: `ROLE_RE` matches `research`, the length lands inside 40–300, so the fragment scores and is selected.
+
+**REPRODUCED, NOT INFERRED.** Fed a source text whose tail is **A's recorded string**, the genuinely imported shipped `summarizeJob` returns **exactly A's recorded summary, character for character** — including the final word `of`. It does so **both** when the fragment stands alone and when a complete sentence precedes it.
+
+**EXCLUSIONS CHECKED BY NAME, AND B AGREES WITH A ON ALL FOUR.** Not Ruling 37 (`LEADING_LABEL_RE` still requires a literal trailing colon and the defect is at the END); not Ruling 44's label-miss; not B18-03's date stamp (`LEADING_DATE_STAMP_RE` is anchored `^` and needs an em/en dash after a date); not round 20's `careers.inl.gov` wobble (that was a majority/minority split on `/job/1515`; this is one stable value on `/job/1930`). **All three strip functions run on a `^` anchor and cannot see a tail.**
+
+---
+
+## THE FIX — **A CLOSED-CLASS DANGLING-TAIL CHECK, ADDED TO THE EXISTING REJECTION BLOCK**
+
+```
+const DANGLING_TAIL_RE =
+  /[^.!?…]\s+(?:of|for|and|or|to|with|in|on|at|the|a|an|from|by|as|into|than|that|which|but)\s*$/i;
+```
+
+Consulted as a sixth disjunct beside `endsWithTitleEcho`, so it **rejects a candidate sentence rather than trimming one** — the same shape every other check in that block already has.
+
+**WHY "ENDS ON A FUNCTION WORD" AND NOT "ENDS WITHOUT A FULL STOP" — THIS IS THE LOAD-BEARING NARROWING.** Rejecting every unterminated sentence would be a **wrong drop**: scraped advert text is full of headings, bullets and final lines with no terminal punctuation, and they are complete. **Measured on the must-keep set: `We are hiring a research scientist to develop molten salt electrochemistry methods` (unterminated, complete) survives; so does the live-shaped `What you will do Support engineering teams developing new battery cell chemistries and manufacturing processes across the business`.** A sentence ending on a preposition, conjunction or article is unambiguously unfinished. **The vocabulary is the CLOSED function-word list this file's neighbours already ship** — `INDEX_OWNER_FUNCTION_WORD_RE` and `TOPIC_LANDING_FUNCTION_WORD_RE` in `jobweb.ts` use the identical class for the identical reason ("a query is a noun phrase; a role title uses function words"). **Nothing new is invented.**
+
+**THE `[^.!?…]` LEADING CHARACTER AND THE `…` EXCLUSION ARE BOTH EARNED.** A sentence that ends `… and more…` is deliberately terminated and survives, asserted. And `of` at the end of a **complete** clause is not the trap it looks like: `You will lead the design and development of advanced molten salt reactor components` does not end on `of`, and is asserted as a must-keep.
+
+| case | shipped | with `sumdangle` |
+|---|---|---|
+| **A21-04 tail alone** | A's exact recorded string | **`""`** |
+| **A21-04 tail after a complete sentence** | A's exact recorded string | **`""`** |
+| MK unterminated but complete | unchanged | **unchanged** |
+| MK terminated sentence | unchanged | **unchanged** |
+| MK complete clause containing `of` | unchanged | **unchanged** |
+| MK ellipsis-terminated tail | unchanged | **unchanged** |
+| MK live-shaped `What you will do …` opener | unchanged | **unchanged** |
+
+**Shipped `summarize.test.ts`: 51/51 against the control copy AND 51/51 against the candidate. Zero shipped assertions move.**
+
+---
+
+## WHAT RENDERS ON REJECTION — **AND IT IS A SHAPE THIS ROUND ALREADY WITNESSED**
+
+`summarizeJob` returns `""`, `mapper.ts` maps `"" || undefined` to `undefined`, and `jobCardView`'s `job.summary?.trim() || job.matchReason` falls back to **the `Matches your … focus` match reason**. **That is not a new behaviour and B does not have to argue for it: A recorded the SAME HOST's other posting (`/job/1515`) rendering exactly that fallback this very round**, and B's own two live pulls show `careers.inl.gov` rendering an empty summary and the fallback as well. **The card degrades to the shape 14 of A's 17 majority rows already have.**
+
+**B NAMES THE COST PLAINLY: a reader loses a real, if unfinished, sentence and gets a generic one instead.** That is the correct trade under Ruling 23, which ranks **wrong** data above **missing** data — and a sentence that stops at `of` is wrong, not merely short.
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Measured cost: ZERO** — 51 shipped assertions unchanged, five must-keeps unchanged, only the two target rows move.
+- **Failure direction: an unfinished sentence ending on a content word (`…research and development` with no `of`) survives — the status quo, never a new wrong value.** The check can only remove a summary; it can never write one.
+- **Not a host rule.** `careers.inl.gov` appears nowhere in it.
+
+**A LIMITATION B RECORDS RATHER THAN HIDES.** When the truncated fragment is rejected, `bestCombination` does **not** promote a complete sentence in its place in the second probe case — because the preceding complete sentence fails `scoreSentences`'s existing **positive-content floor** (B8-05), not because of this change. **The floor is untouched by this item and B does not propose widening it here.** The consequence is that the fallback renders rather than a different real sentence, and B says so rather than implying a better summary appears.
+
+**B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
