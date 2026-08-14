@@ -249,8 +249,52 @@ function isGenericPageTitle(candidate: string): boolean {
 export const EVENT_INDEX_TITLE_RE =
   /^\s*(?:all\s+|upcoming\s+|past\s+|our\s+)?events?\b(?:\s+(?:for|in|calendar|archive|list|listing)\b|\s*$)|^\s*(?:events?|conferences?|seminars?)\s+(?:calendar|archive|listings?|schedule)\b|^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events?|conferences?|seminars?|workshops?)\s*$|\b(?:research\s+group|research\s+laboratory|research\s+center|research\s+centre|department\s+of|faculty\s+of)\b/i;
 
-export function isNewsArticleTitle(title: string): boolean {
-  return NEWS_TITLE_RE.test(title.trim());
+/**
+ * B12-03 gap B (round 12): the news-article filter's VOCABULARY is not missing
+ * anything — its INPUT is wrong. `adt.media` publishes an article about a
+ * conference; the tell sits in the page's own `<h1>` ("What to expect at the
+ * Automotive Battery Conference 2026") and in its URL path, while the search
+ * provider hands Peer a title with no tell in it at all
+ * ("Automotive Battery Conference 2026: key topics and speakers"). So the filter
+ * gets a second input: the URL path, normalised to spaced words.
+ *
+ * ONLY THE ANCHORED HEADLINE FORMS ARE APPLIED TO THE PATH, never
+ * `NEWS_TITLE_RE` whole. B tested the whole regex on a path and it over-reaches
+ * badly: its final alternative `\b(?:news|press release|blog post|newsletter)\b`
+ * is unanchored, so it matches `news/call-for-abstracts` — which is
+ * `battery2030.eu`'s own URL, the OTHER host on this very item. A page living
+ * under `/news/` on an organiser's own site is routinely a real event
+ * announcement; a path that BEGINS with a listicle headline never is.
+ *
+ * When this fires the result is dropped entirely (`webResultToRawEventItem`
+ * returns null) — one fewer card, not a different name, which is correct: there
+ * is no name on that page that would be right, because it is not the
+ * conference's own page.
+ */
+const NEWS_HEADLINE_PATH_RE =
+  /^(?:the\s+year\s+ahead|year\s+in\s+review|(?:top|best)\s+\d+\b|what\s+to\s+(?:expect|watch)|a\s+look\s+(?:back|ahead)|recap|highlights\s+from|report\s+from|announcing\b)/i;
+
+/** The URL's path as spaced lowercase words, so a slug reads as a headline. */
+function urlPathPhrase(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return undefined;
+  }
+  const phrase = path.toLocaleLowerCase().split(/[^a-z0-9]+/).filter(Boolean).join(" ");
+  return phrase || undefined;
+}
+
+/**
+ * `url` is optional so every existing one-argument caller keeps working
+ * unchanged — the path check simply does not run without it.
+ */
+export function isNewsArticleTitle(title: string, url?: string): boolean {
+  if (NEWS_TITLE_RE.test(title.trim())) return true;
+  const phrase = urlPathPhrase(url);
+  return phrase !== undefined && NEWS_HEADLINE_PATH_RE.test(phrase);
 }
 
 export function isPaperPageTitle(title: string): boolean {
@@ -713,6 +757,70 @@ function recoverFromNarrative(
   return rest;
 }
 
+/**
+ * B12-03 gap A (round 12): the welded page-type label. Every guard in this file
+ * only ever operates on a segment the SPLITTER already produced, and the
+ * splitter needs a separator surrounded by whitespace
+ * (`/\s+[-|·–—]\s+/`). So `"Call for papers - Battery Conference 2027"` splits,
+ * the label half is caught by `GENERIC_PAGE_TITLE_RE`, and the real name
+ * survives — while `"Call for Abstracts for the Battery 2030+ Annual Conference
+ * 2026"` and `"Advanced Battery Power Conference 2026 Call for Papers"` are ONE
+ * segment each, are not generic (not every word is a generic word) and are not
+ * narration, so they pass every guard and reach the reader with the label welded
+ * on. Same defect, two hosts, one cause; established by execution in B12-03.
+ *
+ * This is the job side's own precedent reused, not a new invention:
+ * `stripTrailingCareersChrome` (`jobs/sources/jobweb.ts`, B9-02a) strips a short
+ * closed chrome word off an otherwise-accepted candidate in exactly this shape.
+ *
+ * `\s+for\s+(?:the\s+)?` on the FRONT form is LOAD-BEARING and B found it only by
+ * running the design against the existing suite. Without it the front form also
+ * eats `"Call for Papers now open for the 2026 Battery Symposium"` down to
+ * `"now open for the 2026 Battery Symposium"`, breaking the must-survive
+ * assertion B10-03 already put in `eventweb.test.ts`. Requiring the label to be
+ * IMMEDIATELY followed by `for (the)` separates the live defect ("Call for
+ * Abstracts FOR THE Battery 2030+…") from the protected string ("Call for
+ * Papers NOW OPEN…").
+ *
+ * Every check is a veto and the fallback is "do not modify" — this edits an
+ * accepted candidate rather than adding or removing one, so no rejected value
+ * can be introduced anywhere (Ruling 32's mandatory question).
+ */
+const WELDED_LABEL =
+  "(?:call\\s+for\\s+(?:papers|abstracts)|cfp|registration|programme|program|agenda|schedule)";
+const WELDED_LABEL_FRONT_RE = new RegExp(`^${WELDED_LABEL}\\s+for\\s+(?:the\\s+)?`, "i");
+const WELDED_LABEL_BACK_RE = new RegExp(`[\\s:–—-]+${WELDED_LABEL}$`, "i");
+
+/**
+ * The remainder must still NAME an event, by a closed list of event-kind nouns.
+ *
+ * KNOWN LIMITATION, recorded rather than fixed here: this list is single-word,
+ * while this codebase's own event-kind enumerations (`EVENT_SIGNAL_RE` above,
+ * `eventKindIn` in `events/mapper.ts`) also carry MULTI-WORD kinds —
+ * `round table`, `hack day`, `lecture series`, `networking event`. A title whose
+ * kind is named in two words therefore fails this test and is simply NOT
+ * stripped. That direction is safe: the fallback is "leave the segment alone",
+ * so the cost is a missed fix, never a wrong value. It is NOT safe in B12-01,
+ * which uses the same list as a hard veto on whether a name exists at all —
+ * which is why B12-01 is stopped and recorded rather than landed. Whoever
+ * resolves that should reconcile both uses in one place.
+ */
+const EVENT_KIND_NOUN_RE =
+  /\b(?:conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exposition|exhibition|forum|convention|show|school|hackathon|roundtable|fair)\b/i;
+
+/** B12-03 gap A. Returns the segment with a welded label removed, or unchanged. */
+function stripWeldedPageTypeLabel(segment: string): string {
+  for (const pattern of [WELDED_LABEL_FRONT_RE, WELDED_LABEL_BACK_RE]) {
+    if (!pattern.test(segment)) continue;
+    const remainder = segment.replace(pattern, "").trim();
+    if (!remainder) continue;
+    if (!EVENT_KIND_NOUN_RE.test(remainder)) continue;
+    if (!looksLikeEventTitle(remainder)) continue;
+    return remainder;
+  }
+  return segment;
+}
+
 export function bestEventTitleSegment(
   title: string,
   url?: string,
@@ -755,7 +863,13 @@ export function bestEventTitleSegment(
     // site chrome is normally shorter than the event name.
     const eventLike = informative.filter((part) => looksLikeEvent(part));
     const pool = eventLike.length > 0 ? eventLike : informative;
-    return pool.reduce((best, part) => (part.length > best.length ? part : best));
+    // B12-03 gap A: strip a welded page-type label off the CHOSEN segment.
+    // Deliberately last, after selection: the label is part of why a segment
+    // wins the longest-wins tie-break, so stripping earlier would change which
+    // segment is picked, which is not what this fix is for.
+    return stripWeldedPageTypeLabel(
+      pool.reduce((best, part) => (part.length > best.length ? part : best)),
+    );
   }
 
   return undefined;
@@ -870,7 +984,8 @@ export function webResultToRawEventItem(
   if (!title || !url) return null;
   if (isDeniedUrl(url)) return null;
   if (isEventIndexPage(title)) return null;
-  if (isNewsArticleTitle(title)) return null;
+  // B12-03 gap B: the URL is now a second input — see isNewsArticleTitle.
+  if (isNewsArticleTitle(title, url)) return null;
   if (isPaperPageTitle(title)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;

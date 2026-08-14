@@ -397,6 +397,98 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B12-03 gap A (round 12): the WELDED page-type label. A's item 4 looked like
+  // three hosts with one defect; B established by execution that it is two
+  // different defects, and this describe covers the first.
+  //
+  // The mechanism, and it is the whole item: every guard in this file only ever
+  // sees a segment the SPLITTER already produced, and the splitter needs a
+  // separator with whitespace around it. `battery-power.eu` writes
+  // "Call for papers - Battery Conference 2027", which splits, so B10-03's
+  // generic-title check catches the label half and the real name survives.
+  // The two hosts below weld the label on with no separator at all, so the
+  // whole title is ONE segment which is neither generic (not every word is a
+  // generic word) nor narration — it passes every guard and reaches the reader
+  // with the label still attached.
+  describe("welded page-type label (B12-03 gap A)", () => {
+    // battery2030.eu's live repro, verbatim. Front form.
+    it("strips a leading label welded on with 'for the'", () => {
+      expect(
+        bestEventTitleSegment("Call for Abstracts for the Battery 2030+ Annual Conference 2026"),
+      ).toBe("Battery 2030+ Annual Conference 2026");
+    });
+
+    // isea.rwth-aachen.de's live repro, verbatim. Back form, no punctuation.
+    it("strips a trailing label welded on with no separator", () => {
+      expect(
+        bestEventTitleSegment("Advanced Battery Power Conference 2026 Call for Papers"),
+      ).toBe("Advanced Battery Power Conference 2026");
+    });
+
+    it("strips a trailing label attached by a colon", () => {
+      expect(
+        bestEventTitleSegment("Advanced Battery Power Conference 2026: Call for Papers"),
+      ).toBe("Advanced Battery Power Conference 2026");
+    });
+
+    // The same shape with a SPACED hyphen resolves through the splitter and
+    // B10-03's generic-title check instead, never reaching the strip. Asserted
+    // because the two routes must agree on the answer — if a future round
+    // changes one, this says the other exists.
+    it("reaches the same answer through the splitter when the separator is spaced", () => {
+      expect(
+        bestEventTitleSegment("Advanced Battery Power Conference 2026 - Call for Papers"),
+      ).toBe("Advanced Battery Power Conference 2026");
+    });
+
+    // THE must-survive case, and the one B12-03's design was shaped around.
+    // B found this by running the design against the existing suite: without
+    // requiring `for (the)` IMMEDIATELY after the label, the front form eats
+    // this into "now open for the 2026 Battery Symposium" and breaks B10-03's
+    // assertion four lines above. This is a second copy of that assertion,
+    // stated here as a must-survive so the reason it matters is local to the
+    // fix that endangers it.
+    it("does not strip a label that continues into a real sentence", () => {
+      expect(
+        bestEventTitleSegment("Call for Papers now open for the 2026 Battery Symposium"),
+      ).toBe("Call for Papers now open for the 2026 Battery Symposium");
+    });
+
+    // The remainder must still NAME an event. A real call for papers for a
+    // PRIZE is not an event, so stripping would leave a non-name behind.
+    it("does not strip when the remainder names no kind of event", () => {
+      expect(bestEventTitleSegment("Call for Papers for the 2026 Ruggiero Prize")).toBe(
+        "Call for Papers for the 2026 Ruggiero Prize",
+      );
+    });
+
+    // Real names that merely resemble the shape, none of which must move.
+    it.each([
+      "26th Advanced Automotive Battery Conference (AABC)",
+      "Battery Conference 2027",
+      "SolarPACES 2026",
+    ])("does not touch a real event name: %s", (title) => {
+      expect(bestEventTitleSegment(title)).toBe(title);
+    });
+
+    // A bare label is NOT this fix's business — isGenericPageTitle already owns
+    // it and rejects the segment outright, which is a different and better
+    // outcome than stripping it to nothing.
+    it("leaves a bare label to the generic-title check, which rejects it", () => {
+      expect(bestEventTitleSegment("Call for Papers")).toBeUndefined();
+    });
+
+    // Recorded by B as correct-not-a-miss, and asserted so a future round does
+    // not read it as over-reach that slipped through untested: this is the same
+    // trade the job side already accepts when B9-02a strips "Careers" off
+    // "Idaho National Laboratory Careers". The remainder still names the event.
+    it("strips a trailing 'Programme' label, the same trade the job side accepts", () => {
+      expect(bestEventTitleSegment("Riverside Materials Symposium Programme")).toBe(
+        "Riverside Materials Symposium",
+      );
+    });
+  });
+
   // B11-02 (round 11, Rulings 32/35): the sequel to B10-03 above, same host.
   // Once "Call for Papers" is correctly rejected as a title segment,
   // execution reaches the snippet-mining stage — which filtered candidates

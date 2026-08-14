@@ -662,4 +662,58 @@ describe("commerce and news pages", () => {
   ])("keeps a real event title: %s", (title) => {
     expect(isNewsArticleTitle(title)).toBe(false);
   });
+
+  // B12-03 gap B (round 12): adt.media rendered a conference name for a page
+  // that is an ARTICLE ABOUT the conference. B established the filter's
+  // vocabulary is not missing anything — its INPUT was wrong. It only ever saw
+  // the search provider's title, and on this page the tell is in the <h1> and
+  // the URL, not the title. So the URL path became a second input.
+  describe("news article detected from the URL path (B12-03 gap B)", () => {
+    // adt.media's live repro. The title alone carries no tell at all.
+    it("drops an article whose path begins with a listicle headline", () => {
+      const title = "Automotive Battery Conference 2026: key topics and speakers";
+      expect(isNewsArticleTitle(title)).toBe(false);
+      expect(
+        isNewsArticleTitle(
+          title,
+          "https://adt.media/what-to-expect-at-the-automotive-battery-conference-2026",
+        ),
+      ).toBe(true);
+    });
+
+    // THE must-survive case, and the reason the path check uses ONLY the
+    // anchored headline forms and never NEWS_TITLE_RE whole. That regex's last
+    // alternative (`news|press release|blog post|newsletter`) is UNANCHORED, so
+    // on a path it matches "news call for abstracts" — which is
+    // battery2030.eu's own URL, the other host on this very item. A page under
+    // /news/ on an organiser's own site is routinely a real announcement.
+    it("keeps a real event page that merely lives under a /news/ path", () => {
+      expect(
+        isNewsArticleTitle(
+          "Call for Abstracts for the Battery 2030+ Annual Conference 2026",
+          "https://battery2030.eu/news/call-for-abstracts",
+        ),
+      ).toBe(false);
+    });
+
+    // The path check must not fire on an ordinary event path either.
+    it("keeps a real event page whose path is its own name", () => {
+      expect(
+        isNewsArticleTitle(
+          "Advanced Battery Power Conference 2026",
+          "https://example.org/events/advanced-battery-power-conference-2026",
+        ),
+      ).toBe(false);
+    });
+
+    // Every existing caller passes one argument; the second is optional and a
+    // malformed URL must be treated as "no path", not as a match.
+    it("behaves exactly as before with no URL, or with a malformed one", () => {
+      expect(isNewsArticleTitle("Solid-State Battery Summit")).toBe(false);
+      expect(isNewsArticleTitle("Solid-State Battery Summit", "not a url")).toBe(false);
+      expect(isNewsArticleTitle("The Year Ahead: Key Events at the IAEA in 2026", "not a url")).toBe(
+        true,
+      );
+    });
+  });
 });

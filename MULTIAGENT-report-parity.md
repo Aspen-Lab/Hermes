@@ -25938,3 +25938,89 @@ in B12-01's own entry plus §2 above.
 
 **C continues to the next item.** B's own dependency table says nothing on the
 list depends on B12-01, so stopping it blocks nothing else.
+
+---
+
+### Round 12 — Agent C (B12-03: the welded page-type label — both gaps landed, 15 tests, and B's load-bearing anchor is now asserted twice on purpose)
+
+**STATUS: LANDED.** Commit follows this entry. B's two-gaps-not-one-and-not-three
+verdict implemented as two fixes in one item, exactly as B recommended, with no
+merging and no third host patch.
+
+**What landed**, both in `web/src/lib/events/sources/eventweb.ts`:
+
+**Gap A — `stripWeldedPageTypeLabel`**, B's closed label vocabulary and both
+anchored forms verbatim (`^LABEL\s+for\s+(?:the\s+)?` and `[\s:–—-]+LABEL$`),
+then the two vetoes: the remainder must contain an event-kind noun and must still
+pass the shipped `looksLikeEventTitle`. Every check is a veto and the fallback is
+**do not modify** — this edits an accepted candidate rather than adding or
+removing one, so Ruling 32's "what renders when it finds nothing" answer is "the
+segment, unchanged", and no rejected value can enter anywhere.
+
+**Placement, decided and commented because it is not arbitrary:** the strip runs
+on the CHOSEN segment, after selection, not on every segment before it. The label
+is part of why a welded segment wins the longest-wins tie-break, so stripping
+earlier would change *which* segment is picked — a different behaviour from the
+one B designed and tested.
+
+**Gap B — `isNewsArticleTitle` gains an optional second argument**, the URL, and
+a new `NEWS_HEADLINE_PATH_RE` containing **only the anchored headline
+alternatives** of `NEWS_TITLE_RE`, never its unanchored `news|blog` word list.
+`webResultToRawEventItem` is the only production caller and now passes the URL it
+already has. The signature stays backward-compatible; the existing one-argument
+test calls are untouched and still pass.
+
+**B's over-reach block is the thing this fix is really made of, and it is now a
+test.** Applying `NEWS_TITLE_RE` whole to a path matches `news/call-for-abstracts`
+— `battery2030.eu`'s own URL, the other host on this very item — so the two
+halves of B12-03 would have fought each other. Asserted directly.
+
+**TESTS — 15 new.** 11 in `eventweb.test.ts` (gap A), 4 in `scoring.test.ts`
+(gap B, which is where `isNewsArticleTitle`'s tests already live).
+
+Negative proof by execution (source reverted, tests run, source restored):
+**5 of 15 FAIL against pre-fix code** — both live repros (`battery2030.eu`'s
+front form, `isea.rwth-aachen.de`'s back form), the colon form, the `Programme`
+strip, and `adt.media`'s path detection. **The other 10 are must-survive cases
+and pass on both sides by construction**, which is what they are for; reported as
+must-survive, not counted as negative-proved.
+
+**B's instruction on the endangered assertion followed exactly.**
+`eventweb.test.ts`'s B10-03 must-survive (`"Call for Papers now open for the 2026
+Battery Symposium"`) passes unchanged, and per B's own note it is **also restated
+as an explicit must-survive inside the new B12-03 block**. That is deliberate
+duplication: the assertion lives in B10-03's block because B10-03 created it, and
+a copy lives in B12-03's block because B12-03's `for (the)` anchor is the only
+thing keeping it alive. A future round that relaxes that anchor now gets a
+failure in the block whose design it is relaxing.
+
+**One case that resolves by a different route, asserted anyway.** The spaced-
+hyphen form (`"… Conference 2026 - Call for Papers"`) never reaches the strip —
+the splitter separates it and B10-03's generic-title check eats the label half.
+Both routes must agree on the answer, so the assertion says so; if a future round
+changes one route this test says the other exists.
+
+**KNOWN LIMITATION, RECORDED IN THE CODE, NOT WIDENED.** Gap A's event-kind noun
+list is B12-01's list, and B12-01's list is single-word while this codebase's own
+enumerations also carry multi-word kinds (`round table`, `hack day`,
+`lecture series`, `networking event`) — the finding that stopped B12-01, one
+entry above. **Here the same gap is harmless and the direction is why:** the
+fallback is "leave the segment alone", so a two-word event kind costs a missed
+strip, never a wrong value. In B12-01 the identical list is a hard veto on
+whether a name exists at all, which is how it turned a correct name into
+`"Untitled event"`. Both uses are named in the code comment so whoever resolves
+B12-01 reconciles them in one place instead of finding this one by accident.
+
+**GATE after this item:**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**,
+  which lives there and NOT under `events/`), run on its own:
+  **25 of 25 passing, unchanged.**
+- `web/src/lib/events/scoring.test.ts` (the twice-missed second file), run:
+  **passing** — and it is a file this item actually edits, not merely a file to
+  remember.
+- Full: `npx vitest run` → **90 files / 1103 tests, 1102 passing.** 1088 → 1103
+  is exactly the 15 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**
