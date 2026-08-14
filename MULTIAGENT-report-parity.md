@@ -52957,3 +52957,164 @@ via a scratchpad file and `cat` from bash — **NOT PowerShell**.
 **THE HAND-OFF:** `WHOSE TURN: B — round 22`. B's work list is the seven ranked items A22-01–A22-07 **plus Ruling 59a's architecture design and Ruling 59b's two diagnostics**, re-ranked by B under §2's priority (wrong data first). The gate stays `GATE (0%): NOT MET` — only a later A census can move it, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 22 — Agent B (item 1 of 9: **A22-03 — `lensa.com`. The ownership gate is written `=== "unproven"`, so the one state with the LEAST ownership evidence — `undefined`, meaning the page could not be fetched at all — sails straight through it.**)
+
+**STATUS: PARTIAL BY DESIGN.** One commit per item, each pushed immediately, so a
+finished item banks even if the session dies. This is item 1 of 9 (A's seven plus
+Ruling 59a's design and 59b's two diagnostics).
+
+Claimed the §0d lock after `git pull --ff-only` and confirming
+`git branch --show-current` reads `feature/summary-report-revamp`. **The claiming
+push was ACCEPTED (`ade78f4..84450df`), so the race was won rather than assumed.**
+**B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST, AND TOUCHED NO FILE EXCEPT
+THIS ONE.**
+
+**METHOD, STATED ONCE FOR ALL NINE ITEMS.** One live pull per surface through
+`buildDailyJobPool()` / `buildDailyEventPool()` with a no-op `PoolCache`, then
+`scoredJobToJob()` / `scoredEventToEvent()`. `PEER_PROFILE_SNAPSHOT_PATH` NOT
+used; page-fetch enrichment ran, LLM enrichment did not (42b). `fetch` was
+wrapped by an interceptor that stored the provider RESPONSE bodies and the
+fetched HTML of ten named hosts; **the interceptor never reads the request init
+that carries the key.** Everything after that ran OFFLINE against that capture,
+so every verdict below is reproducible without re-hitting a third party.
+Throwaway harness lived **outside `src/`** (`web/zz-r22b/`, own vitest config,
+include pattern `zz-r22b/**/*.probe.ts`), **deleted before this commit**; its
+result files are in this session's scratchpad, outside the repository.
+`git status --porcelain --untracked-files=all` clean.
+
+**B REPRODUCED A's CENSUS EXACTLY BEFORE INVESTIGATING IT.** The job pool came
+back **12 rows, in A's order, with A's hosts, titles, employers and locations
+row for row**; the event pool came back with A's values on every row A scored.
+**A's seven findings are all live and all confirmed.** One row A listed
+(`nanoge.org`) is absent a day later — composition, not a fix, and not counted.
+
+---
+
+## **CLASSIFICATION: WRONG DATA.** Three rendered fields, one row, two distinct causes.
+
+## WHERE THE WRONG SUMMARY COMES FROM — one line, and it is a `===` that should be a `!==`
+
+`web/src/lib/jobs/mapper.ts:133-135`:
+
+```ts
+const summarySource = item.fetchedPostingScope === "unproven"
+  ? undefined
+  : item.pageText ?? item.description;
+```
+
+`fetchedPostingScope` has **three** states, not two: `"owned"`, `"unproven"`, and
+**`undefined`**. The gate names only one of them. `undefined` therefore falls to
+the right-hand branch and, with no `pageText`, lands on **`item.description` —
+which is the provider's PAGE-SCOPED snippet**, set at
+`web/src/lib/jobs/sources/jobweb.ts:1245`
+(`description: cleanJobDescription(result.snippet)`).
+
+**Measured on the live row, not argued:**
+
+| fact | value |
+|---|---|
+| `fetchedPostingScope` on the pool item | **absent (`undefined`)** |
+| why | `web/src/lib/opportunities/enrich.ts:382` — `if (!html) return item;` |
+| why there was no html | `web/src/lib/opportunities/page-fetch.ts:75` — `if (!response.ok) return null;` and **lensa.com answered `403`** |
+| what the fetched body actually was | a bot wall; the whole page yields **144 characters** of text, beginning `Explore Jobs Safely and Confidently!` |
+| `resolveJobPostingScope` run by B on that captured body | **`unproven`** — so even a 200 would have suppressed the summary |
+| rendered summary | the **Principal Engineer, Molten Salt Heat Transport / Remote Alameda, CA / $111K-$135K** posting — a different job on the same aggregator page |
+
+**So the failure direction is exactly backwards.** A page Peer could not read at
+all is treated as MORE trustworthy than a page it read and could not attribute.
+`unproven` suppresses; `undefined` publishes.
+
+## WHERE THE WRONG LOCATION COMES FROM — a different cause, in a different file, with no gate anywhere
+
+`web/src/lib/jobs/sources/jobweb.ts:1244`: `isRemote: /\bremote\b/i.test(text)`
+where `text` is `title + snippet`. The snippet's foreign posting contains
+`Remote Alameda, CA`, so `isRemote` is `true` at ingestion. Nothing revisits it —
+`web/src/lib/opportunities/enrich.ts:511` deliberately re-states
+`isRemote: item.isRemote`. The mapper then turns it into two rendered values:
+`web/src/lib/jobs/mapper.ts:141-143` (`location` becomes `"Remote"`) and
+`:156` (`workMode` becomes `jobWorkMode("", true)` = `"remote"`).
+
+**This half has no ownership gate at any stage**, which is why it survives on a
+row whose summary gate would have caught it.
+
+## FIX DIRECTION — two edits, and the fallback is proved by measurement, not asserted
+
+**(a) Make the summary gate fail-closed.** `mapper.ts:133` becomes
+`item.fetchedPostingScope !== "owned" ? undefined : …`. **Read the fallback proof
+before pricing it — B measured every row in the live pool:**
+
+| pool rows | scope | summary rendered today | after the change |
+|---|---|---|---|
+| 3 (`lensa`, `inl.referrals`, `careers.inl.gov`) | `undefined` | **1 — lensa's, and it is the wrong job's** | **0** |
+| 5 (`zerobonline`, `grad.wisc`, `postdocjobs`, `upenn`, `batteryjunction`) | `owned` | 0 | 0 |
+| 4 (`terra.do`, two `linkedin`, plus `talents.vaia`) | `unproven` | 0 | 0 |
+
+**ONE summary exists in the entire pool, it is the wrong posting's, and the
+change removes exactly it and nothing else. Correct summaries lost: ZERO.** The
+card then falls back to `Matches your …`, which is A21-04's already-shipped and
+already-accepted outcome, so no new rendering shape is introduced.
+
+**(b) A snippet-derived `remote` may not become a rendered location.** The
+honest source for work mode already exists and is already preferred:
+`enrich.ts:502` sets `workMode` from the **owned** page text via
+`extractJobDetails`. The defect is only that `mapper.ts:143` synthesises
+`"Remote"` from the unowned `isRemote` when that is absent. **Measured cost: of
+39 ingestion-kept job rows, exactly 3 carry a snippet-derived `isRemote: true`,
+and exactly 1 of those reaches the pool — lensa's, which is wrong.** So the
+change removes 1 wrong value and 0 correct ones **in this pull**, and the
+fallback is `"See posting"`, which 10 of the 12 rows already render.
+
+**DO NOT "FIX" THIS BY DELETING `isRemote`.** It is a real scoring input
+(`locationFit`) and Adzuna/USAJOBS/Remotive set it from structured fields where
+it IS owned. The edit is at the RENDER boundary, not the ingestion one: only a
+`jobweb`-sourced `isRemote` (the one derived from an unowned snippet) is barred
+from becoming `location`/`workMode`.
+
+## A THIRD FINDING B DID NOT GO LOOKING FOR, AND IT SITS DIRECTLY UNDER (a)
+
+**`resolveJobPostingScope` currently returns `owned` for blocks that are
+obviously not postings.** The five `owned` pool rows carry owned text of **48, 83,
+74, 8 and 9 characters** — nav-fragment grade, not posting bodies. Run on the
+three captured EVENT pages it returns `owned` with the strings `"Sitemap"` (7
+chars), `"Home"` (4 chars) and a reCAPTCHA notice. Its acceptance filter
+(`web/src/lib/opportunities/job-posting-scope.ts:79`) has **no minimum-substance
+floor**: a block containing one self-link and no second heading passes.
+
+Today this is harmless only because `summarizeJob` refuses to summarise nine
+characters. **The moment (a) makes `owned` the thing that AUTHORISES a summary,
+`owned` has to mean something.** So (a) ships with a substance floor on the
+`owned` branch — C must pick the floor from the shipped corpus, not from taste,
+and the floor's own falsifier is that the five named `owned` rows must not
+suddenly start rendering summaries built from nav text.
+
+## TESTS AT RISK — named by grepping for callers, not from memory
+
+- **`web/src/lib/jobs/mapper.test.ts:50-51` and `:92-93`** — both build an item
+  with a `description` and assert a non-empty `summary`. Neither fixture sets
+  `fetchedPostingScope`, so **both go red under (a)** until the fixtures declare
+  `fetchedPostingScope: "owned"`. This is the intended red: it is the suite
+  stating the new contract.
+- `web/src/lib/opportunities/enrich.test.ts` — five `fetchedPostingScope`
+  assertions (`:720`, `:862`, `:982`, `:1188`, plus the `:974`/`:1180` comment
+  blocks). None asserts the `undefined` case; one should be added.
+- `web/src/lib/opportunities/job-posting-scope.test.ts` — the substance floor's
+  home. Existing cases use short synthetic blocks and **several will go red**;
+  read them before choosing the floor.
+- `web/src/app/jobs/[id]/page.test.ts:386-405` — asserts `"Remote"` renders for
+  a job that IS remote. Fixture-driven, unaffected by (b) if (b) is scoped to
+  `jobweb`-sourced items, and it is the must-keep that proves the scoping.
+- `web/src/lib/jobs/card.test.ts`, `web/src/lib/jobs/summarize.test.ts` — read,
+  not expected to move.
+
+## BLAST RADIUS
+
+(a) touches one expression in the mapper and one filter in
+`job-posting-scope.ts`; the second is shared with
+`web/src/app/api/jobs/report/route.ts:34`, so **the deep report reads the same
+scope and inherits the floor** — that is the point, not a side effect. (b) is
+confined to the mapper's `location`/`workMode` lines. **Neither touches the event
+surface, scoring, dedup, or any drop rule, so no row enters or leaves either
+pool.** Ruling 32's honest-silence outcome is what both fallbacks land on.
+
+---
