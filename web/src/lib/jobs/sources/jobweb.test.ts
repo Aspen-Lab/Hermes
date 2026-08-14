@@ -2077,6 +2077,107 @@ describe("a posting URL with an empty identifier is not reachable (A21-02)", () 
   });
 });
 
+// ROUND 21, ITEM 3 (A21-03): THE EMPLOYER FIELD WAS WRONG ON 3 OF 8 NON-NULL
+// VALUES, ON TWO DISTINCT MECHANISMS. Two edits, one commit:
+//   (a) a job board naming ITSELF in the employer slot;
+//   (b) an en-dash role tail treated as an employer segment — ONE edit, BOTH
+//       postdocjobs.com cards.
+// Neither is a host rule: `postdocjobs.com` and `befjobs.breakthroughenergy.org`
+// appear in neither, and both are asserted here on constructed hosts too.
+describe("a board's own name is not the employer (A21-03a)", () => {
+  const employerOf = (title: string, url = "https://careers.acme.test/job/44231") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  it("renders honest silence instead of the job board's own name", () => {
+    expect(
+      employerOf(
+        "Summer Engineering Internship @ Mantel | Breakthrough Energy Fellows Job Board",
+        "https://befjobs.breakthroughenergy.org/companies/mantel/jobs/44231",
+      ),
+    ).toBeUndefined();
+  });
+
+  it.each([
+    "Battery Research Scientist - Acme Talent Portal",
+    "Battery Research Scientist - Nordic Careers Hub",
+  ])("also vetoes the constructed sibling `%s`", (title) => {
+    expect(employerOf(title)).toBeUndefined();
+  });
+
+  // THE ADJACENCY REQUIREMENT. `National Labor Relations Board` is the sharp
+  // case: it ENDS in a board noun, so an end-anchored veto without the job-word
+  // adjacency requirement would wrongly destroy it. `Board of Regents` is an
+  // ADMITTED CONTROL — its board noun is not at the end, so it survives either
+  // way and proves nothing.
+  it.each([
+    ["National Labor Relations Board", "National Labor Relations Board"],
+    ["Board of Regents", "Board of Regents"],
+    ["Battery Board Games Inc", "Battery Board Games Inc"],
+  ])("keeps the real employer `%s`", (segment, expected) => {
+    expect(employerOf(`Battery Research Scientist - ${segment}`)).toBe(expected);
+  });
+});
+
+describe("an en-dash role tail is not the employer (A21-03b)", () => {
+  const employerOf = (title: string, url = "https://postdocjobs.com/posting/7317952") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  // BOTH cards, ONE edit. A reported them separately because a reader sees two.
+  it.each([
+    "Postdoctoral Appointee – Molten Salt Chemical and Electrochemical ... - Job posted on PostdocJobs.com",
+    "Postdoctoral Researcher – MSR Fuel Cycle - Job posted on PostdocJobs.com",
+  ])("renders honest silence for `%s`", (title) => {
+    expect(employerOf(title)).toBeUndefined();
+  });
+
+  // RULING 49a's LOCK, AND IT IS WHAT THE "ALSO USES A CHROME SEPARATOR"
+  // CONJUNCT EXISTS FOR. An en dash and NOTHING else means nothing is excluded.
+  // Drop that conjunct and this goes silent — measured.
+  it.each([
+    ["M.S. Internship Program – Oregon Center for Electrochemistry", "Oregon Center for Electrochemistry"],
+    ["Battery Scientist – Acme Energy Ltd", "Acme Energy Ltd"],
+  ])("keeps `%s` — en dash only, so nothing is excluded", (title, expected) => {
+    expect(employerOf(title, "https://careers.acme.test/job/44231")).toBe(expected);
+  });
+
+  // The vetoes are not blankets: a real employer later in the chain still wins.
+  it("still renders a real employer behind chrome separators", () => {
+    expect(
+      employerOf(
+        "Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs - EV.Careers",
+        "https://careers.acme.test/job/44231",
+      ),
+    ).toBe("CATL");
+  });
+});
+
+// OPTIONAL LATENT CLOSURE landed in the same commit, CLASSED HONESTLY.
+// A truncation marker is not a word. This closes NOTHING on its own and is NOT
+// counted as closing A21-03 — with item 3(b) shipped, the two rows that
+// inspired it never reach this check. It is reachable only through a
+// HYPHEN-ONLY title, which is what this asserts. Evidence class: LATENT, not
+// live — no census has recorded this shape.
+describe("a truncated field label is still a field label (round 21, latent)", () => {
+  it("vetoes a topic label whose tail was clipped to an ellipsis", () => {
+    expect(
+      webResultToRawJobItem(
+        {
+          title: "Postdoctoral Appointee - Molten Salt Chemical and Electrochemical ...",
+          url: "https://careers.acme.test/job/44231",
+          snippet: "We are hiring a research scientist. Apply now.",
+        },
+        ["battery", "molten salt", "electrochemistry"],
+      )?.company,
+    ).toBeUndefined();
+  });
+});
+
 // B17-02 (round 17, Rulings 48a + 49b): A LIST OF PROGRAMME AREAS IN THE
 // EMPLOYER SLOT. Landed in the SAME commit as B17-01 because B17-01 removes the
 // only page a census has ever sighted this value on — land the drop alone and

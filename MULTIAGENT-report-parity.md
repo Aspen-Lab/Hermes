@@ -50881,3 +50881,91 @@ The five "keeps" are **ADMITTED CONTROLS** and stay green either way, by design.
 **C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
 
 ---
+
+### Round 21 — Agent C (item 3 of 6: **A21-03, the three wrong employers. SHIPPED — two edits, one commit, exactly as B specified, plus the optional latent closure.** B's whole table reproduces including the "one edit, BOTH cards" claim. **AND C REPORTS A COST B COULD NOT HAVE SEEN: landing the optional closure makes one of edit (b)'s two rows doubly protected.**)
+
+**STATUS: DONE.** **NO TEST DELETED. NO ASSERTION EDITED.** Twelve assertions ADDED. Branch re-read before the commit and in the push output (§3). Harness moved out of the repository before the commit and the gate re-run; `git status --porcelain --untracked-files=all` showed only the two source files.
+
+---
+
+## RE-MEASUREMENT FIRST — **ALL THREE WRONG VALUES REPRODUCE CHARACTER FOR CHARACTER**
+
+Control copy verdict-identical to the **genuinely imported** shipped module. On A's recorded ground-truth titles:
+
+| host | rendered `company` on the shipped module |
+|---|---|
+| `befjobs.breakthroughenergy.org` | **`Breakthrough Energy Fellows Job Board`** |
+| `postdocjobs.com/posting/7317952` | **`Molten Salt Chemical and Electrochemical ...`** |
+| `postdocjobs.com/posting/7317954` | **`MSR Fuel Cycle`** |
+
+**B's diagnosis of the tempting fix also reproduces:** fed the UNTRUNCATED ground-truth title, the shipped module renders **silence** — confirming `looksLikeTopicLabel` fails only because the literal ellipsis token is outside its closed vocabulary.
+
+| candidate | shipped suite | board name | 7317952 | 7317954 |
+|---|---|---|---|---|
+| `control` | 401/401 | wrong | wrong | wrong |
+| `i3board` (a) | 401/401 | **silence** | wrong | wrong |
+| `i3endash` (b) | 401/401 | wrong | **silence** | **silence** |
+| **`i3boardendash`** | **401/401** | **silence** | **silence** | **silence** |
+
+**B's headline claim is confirmed by execution: (b) alone closes BOTH `postdocjobs.com` cards.**
+
+---
+
+## THE THREE EDITS
+
+- **(a) `looksLikeBoardSelfName`**, beside `looksLikeNavChrome`: a job word IMMEDIATELY followed by a board noun, anchored to the end of the segment.
+- **(b) THE SPLIT NOW KEEPS ITS SEPARATORS.** En/em-dash-introduced segments leave the employer pool **only when the title ALSO uses a chrome separator**. `parts[0]` and the role-title check are untouched.
+- **(c) OPTIONAL LATENT CLOSURE:** a truncation marker is skipped when `looksLikeTopicLabel` tests its continuation vocabulary.
+
+**The at-sign separator IS DELIBERATELY NOT TAUGHT TO `titleEmployer`** — B measured it as a separate, larger change and declined it; recorded in the doc comment so a later round takes it up as its own item.
+
+---
+
+## **THE COST OF THE OPTIONAL EDIT, WHICH C FOUND ONLY BY RUNNING THE NEGATIVE PROOF**
+
+B priced the ellipsis closure at zero. **It is not quite zero, and C reports it rather than leaving it for round 22 to trip over.** With (c) shipped, reverting (b) alone turns **only ONE** of the two `postdocjobs.com` assertions red — because (c) independently catches the truncated one through `looksLikeTopicLabel`. **The 7317952 row is now DOUBLY protected and can no longer prove (b) on its own.**
+
+Measured, all four states:
+
+| state | red |
+|---|---|
+| everything shipped | **0** |
+| **(b) reverted, (c) shipped** | **1** — `MSR Fuel Cycle` only |
+| **(b) and (c) both reverted** | **3** — both cards **and** the latent assertion |
+| **(c) reverted, (b) shipped** | **1** — the latent assertion only |
+
+**So: (b) is uniquely red on `MSR Fuel Cycle`. (c) is uniquely red on its own constructed hyphen-only case. Neither is vacuous, and the `Molten Salt` row is an ADMITTED CONTROL for (b) rather than evidence for it.** This is the same shape as item 2's doubly-protected live row, found the same way — by running the mutation instead of trusting the table.
+
+**A METHOD NOTE, RECORDED BECAUSE IT ALMOST PRODUCED A FALSE RESULT.** C's first mutant for (c) short-circuited the word filter to `false`, which emptied the word list and disabled `looksLikeTopicLabel` **entirely** — turning two PRE-EXISTING shipped tests red and looking like a much bigger regression than the edit could cause. **A mutant must remove the conjunct under test and nothing else**; the clean revert (delete the filter line) gives the 3-red result above.
+
+---
+
+## VACUITY — BOTH CONJUNCTS OF (a) AND (b), MUTATED
+
+| mutant | what breaks |
+|---|---|
+| (a) without the **adjacency** requirement | **`National Labor Relations Board` is wrongly vetoed** |
+| (b) without **"also uses a chrome separator"** | **Ruling 49a's Oregon lock goes silent** |
+
+**`Board of Regents` CANNOT prove the adjacency requirement and C says so** — its board noun is not at the END of the segment, so the end-anchored mutant misses it too. It survives both ways and is asserted as an **ADMITTED CONTROL**. The sharp case is `National Labor Relations Board`, a real employer that genuinely ends in a board noun. **B named both as must-keeps; only one of them is evidence, and that distinction is C's, by execution.**
+
+---
+
+## MUST-KEEPS AND FAILURE DIRECTION
+
+Asserted in the shipped suite: **Ruling 49a's Oregon lock renders `Oregon Center for Electrochemistry`** (en dash only, so nothing is excluded), `Battery Scientist` with `Acme Energy Ltd`, `National Labor Relations Board`, `Board of Regents`, the constructed `Battery Board Games Inc`, and **the four-segment `EV.Careers` title still rendering `CATL`** — a real employer still wins later in the chain, so neither edit is a blanket.
+
+- **Measured cost: ZERO on every corpus available offline** — 401 shipped assertions unchanged under all three candidates.
+- **Failure direction for all three: an unlisted board noun, or a role tail introduced by a HYPHEN rather than a dash, survives — the status quo, never a new wrong value.**
+- **Neither host appears in any of the three edits**; every mechanism is asserted on unrelated constructed hosts as well.
+- **What renders on rejection:** `company` is `undefined` and **all four render sites omit the employer line** — ten of A's eighteen census rows already render exactly that way. No new render path.
+
+**(c) IS CLASSED LATENT, NOT LIVE, AND IS NOT COUNTED AS CLOSING A21-03** — with (b) shipped the two rows that inspired it never reach the check, and it is asserted only through a constructed hyphen-only title, the one route by which it remains reachable.
+
+---
+
+**GATE AFTER ITEM 3: 91 files / 1622 tests, 1621 passing.** Sole failure the standing `benchmark.test.ts` flake at **`:109`**. `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error. Named runs: `scoring.test.ts` (jobs and events) plus `job-cleanup.test.ts` plus `jobweb.test.ts` **521/521**; **`enrich.test.ts` SOLO 53/53 — the SolarPACES lock is intact.**
+
+**C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
+
+---

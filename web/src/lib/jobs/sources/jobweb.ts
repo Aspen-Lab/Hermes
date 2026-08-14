@@ -813,6 +813,47 @@ function looksLikeNavChrome(candidate: string): boolean {
 }
 
 /**
+ * ROUND 21, ITEM 3(a) (A21-03): A JOB BOARD NAMING ITSELF IN THE EMPLOYER SLOT.
+ *
+ * `befjobs.breakthroughenergy.org` rendered the employer as
+ * **`Breakthrough Energy Fellows Job Board`** — the board's own name, and
+ * literally that page's `og:title`. The real employer is `Mantel`, named twice
+ * over (in the role title after `@`, and in the URL path).
+ *
+ * The segment cleared all nine existing vetoes: it is a NAME, not a domain, so
+ * `KNOWN_JOB_BOARD_DOMAINS` cannot see it, and `looksLikeHostBoilerplatePhrase`
+ * matches a SENTENCE (`Job posted on …`), not a name. Ruling 32's shape in its
+ * plainest form — the slot is filled by whatever survives, and nothing ever
+ * asked "is this the board rather than the employer".
+ *
+ * **THE ADJACENCY REQUIREMENT IS THE CONFIRMING STRUCTURAL TOKEN, AND IT IS
+ * WHAT KEEPS REAL EMPLOYERS ENDING IN `Board` ALIVE.** A job word must sit
+ * IMMEDIATELY in front of the board noun, at the end of the segment.
+ * `National Labor Relations Board` is the case that proves it: drop the
+ * adjacency requirement and that real employer is wrongly vetoed (measured).
+ * `Board of Regents` — this file's own named reason a trailing-word strip is
+ * forbidden — cannot prove it either way, because its board noun is not at the
+ * end; it is an ADMITTED CONTROL here, not evidence.
+ *
+ * **THE `@` SEPARATOR IS DELIBERATELY NOT TAUGHT TO `titleEmployer`.** B
+ * measured recovering `Mantel` as a separate, larger change and declined it for
+ * Ruling 48a's reason: recovering a value is not a win if it comes back wrong,
+ * and `@` is far looser than the shipped `at ` capture (handles, address
+ * fragments, `9am @ HQ`). The veto alone produces honest silence, which is
+ * Ruling 32's own required answer. Recorded so a later round takes it up as its
+ * own item rather than re-deriving it.
+ *
+ * Failure direction: an unlisted board noun survives — the status quo, never a
+ * new wrong value.
+ */
+const BOARD_SELF_NAME_RE =
+  /\b(?:jobs?|careers?|vacanc(?:y|ies)|hiring|talent|recruit(?:ment|ing))\s+(?:board|portal|site|hub|exchange|network|directory)$/i;
+
+function looksLikeBoardSelfName(candidate: string): boolean {
+  return BOARD_SELF_NAME_RE.test(candidate.trim());
+}
+
+/**
  * B17-02 (round 17, Ruling 48a's paired half, landed in the SAME commit as
  * B17-01 by Ruling 49b): A LIST OF PROGRAMME AREAS sitting where a company name
  * belongs. `ev.careers` renders the employer `Battery Cell, R&D & Gigafactory
@@ -950,7 +991,19 @@ function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
     if (normalizedCandidate === normalizedTopic) return true;
     if (!normalizedCandidate.startsWith(`${normalizedTopic} `)) continue;
     const remainder = normalizedCandidate.slice(normalizedTopic.length).trim();
-    const words = remainder.split(/\s+/).filter(Boolean);
+    // Round 21, item 3, OPTIONAL LATENT CLOSURE. A truncation marker is not a
+    // word: a provider that clips `Molten Salt Chemical and Electrochemical
+    // Engineering` to `… Electrochemical ...` left a token that is not in the
+    // closed continuation vocabulary, so the `every` below failed and a field
+    // label reached the employer slot. **EVIDENCE CLASS: LATENT, NOT LIVE** —
+    // no census has recorded this shape, and with item 3(b) shipped the two
+    // rows that inspired it never reach this check. It closes NOTHING on its
+    // own and is NOT counted as closing A21-03. Asserted on a constructed
+    // hyphen-only title, which is the only way it can still be reached.
+    const words = remainder
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((word) => word !== "..." && word !== "…");
     if (words.length > 0 && words.every((word) => FIELD_LABEL_CONTINUATION_WORD_RE.test(word))) {
       return true;
     }
@@ -1057,7 +1110,31 @@ export function webResultToRawJobItem(
   if (isListingPage(title, host, `${parsed.pathname}${parsed.search}`)) return null;
 
   // Split "Postdoc in X - University of Y | board.com" style titles.
-  const parts = title.split(/\s+[-–—|·]\s+/);
+  //
+  // ROUND 21, ITEM 3(b) (A21-03): THE SPLIT NOW KEEPS ITS SEPARATORS.
+  // Hyphen, en dash, em dash, pipe and middot were all collapsed into one
+  // class, so the split could not tell a role-internal dash from site chrome.
+  // Both `postdocjobs.com` cards are `<role> – <specialisation> - <site
+  // boilerplate>` — TWO different separator kinds in one title — and
+  // `parts.slice(1)` handed the specialisation to the employer slot first,
+  // rendering `Molten Salt Chemical and Electrochemical ...` and
+  // `MSR Fuel Cycle` as employers. ONE edit closes BOTH cards.
+  //
+  // **THE "ALSO USES A CHROME SEPARATOR" CONJUNCT IS LOAD-BEARING AND IT IS
+  // RULING 49a's LOCK.** `M.S. Internship Program – Oregon Center for
+  // Electrochemistry` uses an en dash and NOTHING else, so nothing is excluded
+  // and it still renders `Oregon Center for Electrochemistry`. Drop the
+  // conjunct and that must-keep goes silent — measured, and asserted below.
+  const splitParts = title.split(/\s+([-–—|·])\s+/);
+  const parts = splitParts.filter((_, i) => i % 2 === 0);
+  const separators = splitParts.filter((_, i) => i % 2 === 1);
+  const usesChromeSeparator = separators.some((s) => s !== "–" && s !== "—");
+  const employerSegments = parts
+    .slice(1)
+    .filter(
+      (_, i) =>
+        !(usesChromeSeparator && (separators[i] === "–" || separators[i] === "—")),
+    );
   const roleTitle = parts[0]?.trim() || title;
   // The check above saw the full title; the card shows only this first
   // segment. "CAREER | Acme Corp" clears a whole-title test and then renders
@@ -1100,7 +1177,7 @@ export function webResultToRawJobItem(
     /(?<!more\s+jobs\s+)\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
   )?.[1];
   const company = stripTrailingCareersChrome(
-    [titleEmployer, ...parts.slice(1)]
+    [titleEmployer, ...employerSegments]
       .map(cleanJobSubtitlePart)
       .find(
         (p) =>
@@ -1113,6 +1190,8 @@ export function webResultToRawJobItem(
           !looksLikeHostBoilerplatePhrase(p) &&
           // B12-06: the family member this slot never had — see above.
           !looksLikeNavChrome(p) &&
+          // Round 21, item 3(a): the board naming itself. See above.
+          !looksLikeBoardSelfName(p) &&
           // B17-02 (round 17, Rulings 48a + 49b): a list of PROGRAMME AREAS
           // where a company name belongs. See the constant's doc comment above
           // for why the strip cannot be the fix and why the coordination
