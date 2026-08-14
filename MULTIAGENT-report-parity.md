@@ -54815,3 +54815,112 @@ does C**; Ruling 25 still forbids the browser that would settle what that page
 is, so whichever way it lands it is not a new defect.
 
 ---
+
+### Round 22 — Agent C (item 5 of 6: **A22-05 — the dedup key. B's option (b) is built; B's option (a) was built, MEASURED, AND REJECTED because it breaks a merge that works today.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 5 of 6.
+
+---
+
+## **THE DEVIATION FIRST, BECAUSE IT REVERSES B's RECOMMENDATION**
+
+**B recommended (a) — "sort, THEN slice" — as a correctness repair worth doing
+on its own merits, noting only that it does not close the row. C built it and it
+is a REGRESSION.** Measured on the two live rows B recorded:
+
+| title (as offered) | shipped `slice-then-sort` | B's (a) `sort-then-slice` |
+|---|---|---|
+| `…Postdoc Research Associate` (linkedin) | `actinide chemistry exchange ion postdoc research` | `actinide associate chemistry exchange ion postdoc` |
+| `…Postdoc Research ...` (salutemyjob) | `actinide chemistry exchange ion postdoc research` | `actinide chemistry exchange ion postdoc research` |
+
+**The keys MATCH under the shipped order and DIVERGE under B's**, because
+`associate` sorts early and displaces `research` out of the six-token window on
+the longer title only. **That un-merges the one pair that merges correctly
+today** — and an un-merge is an EXTRA card, the exact defect class A22-05 is
+filed under. B measured that (a) would not close the row; **B did not measure
+that it re-opens a merge that already works.**
+
+**(a) IS NOT SHIPPED.** The reason is written into `dedup.ts` with the table
+above, and **`dedup.test.ts` carries the assertion that would go red if a later
+round reintroduces the swap** (`keeps the merge B's recommended sort-then-slice
+would have broken`). The order-independence B wanted is delivered by the URL
+rule instead, on strictly better evidence than a truncated rendered heading.
+
+## WHAT SHIPPED — `web/src/lib/jobs/dedup.ts`
+
+**(b) THE URL KEY.** `jobSlugTokens` reads the posting-name segment an
+aggregator put in the path; two items collide when **one slug's token sequence
+is a PREFIX of the other's, in full.**
+
+**Why a prefix and not "share the first N tokens":** aggregators TRUNCATE an
+employer's title, they do not rewrite it. So `actinide chemistry ion exchange
+postdoc` (vaia) is a prefix of `… research associate columbia south carolina`
+(salutemyjob) and of `… research associate savannah river national laboratory`
+(linkedin) — all three collide. **Two genuinely different postings DIVERGE
+rather than stop**: `research scientist battery materials cathode` and `…
+anode` share four tokens and neither is a prefix of the other, so they do not
+collide. **That is the discrimination B named as the one way this item could
+create wrong data instead of removing it, and it has its own must-keep test.**
+
+A **four-token floor** keeps opaque slugs (`/jobs/12345`, `/apply/req-8891`) out
+of the rule entirely. **B's option (c), token-overlap similarity, is REJECTED
+and recorded as rejected in source** so it is not re-proposed without a matrix.
+
+**THE TIE-BREAK, WHICH B CORRECTLY CALLED NON-OPTIONAL.** At equal source
+priority the copy that carries a non-empty `company` wins. Without it the merge
+keeps the `linkedin` row, which renders no employer at all, and **the reader
+loses the `Savannah River National Laboratory` line they can see today** — two
+cards traded for one worse card.
+
+**GROUPING IS A UNION.** Two identity signals now exist and a posting can be
+related to one copy by its title and to another by its URL. **C's first draft
+used a first-match lookup and got the live triple wrong (2 groups, not 1)**, so
+the grouping is a union-find over both signals. Input order is preserved in the
+output, so pool composition does not shuffle under anything downstream.
+
+**AND C CAUGHT ITS OWN OVERCLAIM.** The first version of that docstring said the
+live triple proves the union is necessary. **It does not** — under the shipped
+key order, linkedin and salutemyjob already share a title key, so several
+structures would collapse them. The claim was replaced with an explicitly
+constructed three-way case (A shares a slug with C, B shares a title key with C,
+A and B share NEITHER) whose **premises are asserted in the test** so it cannot
+quietly stop testing the union. Recorded because a plausible-sounding rationale
+that does not hold is exactly what these logs exist to catch.
+
+## TESTS — **`dedup.test.ts` CREATED, 16 CASES. NONE DELETED, NONE EDITED.**
+
+B was right that there was no `dedup.test.ts` and that `jobs/scoring.test.ts`
+was the only caller of `dedupJobs` anywhere — **a shared key function that runs
+on every raw item from every source had no direct coverage at all.** It has now.
+
+**B's at-risk list named `jobs/scoring.test.ts`, `events/scoring.test.ts` and
+`opportunities/daily-pool-cache.test.ts`. C ran all three plus every caller.
+NOT ONE MOVED**, including `daily-pool-cache.test.ts`'s
+`beforeDedup`/`afterDedup` counts, which B expected to shift. **The event twin
+(`events/dedup.ts`, identical slice-then-sort shape at `:22`) is DELIBERATELY
+UNTOUCHED** — B found no live event-side duplicate this pull, so changing it
+would be an unearned edit. Recorded so a later round finds it already named.
+
+## NEGATIVE PROOFS — three reverts
+
+| reverted | red count |
+|---|---|
+| URL rule removed | **4 failed / 12 passed** — the three-copy collapse, the tie-break, the source-priority case, and the three-way union case |
+| tie-break removed | **1 failed / 15 passed** — `keeps the copy that names the employer when priority ties` |
+| **B's rejected sort-then-slice reintroduced** | **1 failed / 15 passed** — `keeps the merge B's recommended sort-then-slice would have broken` |
+
+## THE GATE AFTER THIS ITEM
+
+**92 files / 1709 tests, 1708 passing** (+16, and +1 test FILE). Sole failure the
+standing `benchmark.test.ts` flake. `npx tsc --noEmit` clean. `npx eslint`
+exactly the one standing `quiz.tsx:46` error.
+
+## WHAT ROUND 23 A SHOULD EXPECT, WITH ITS FALSIFIER
+
+**The Savannah River vacancy occupies ONE slot, not two, and the surviving card
+names `Savannah River National Laboratory`.** Pool size falls by one from this
+item. **FALSIFIER: if any two visibly different postings have collapsed into one
+card, the prefix rule reached too far** — the slug rule can only ever merge, so
+that is its single failure mode and it is the thing to look for.
+
+---
