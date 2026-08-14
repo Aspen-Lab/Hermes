@@ -30809,3 +30809,306 @@ Reading notes for the record:
 — both shapes, two recorded leads, adversarial bar; (2) trace the gevernova
 `]`-remnant recurrence. Nothing else is open.**
 
+
+---
+
+### Round 14 — Agent B (B14-01: `openmc.discourse.group` → `Announcements` — the thread-as-non-posting lead WINS on execution, Gap B is re-killed with fresh counterexamples, and the fix is TITLE-INDEPENDENT so all five recorded title shapes go with one URL rule. 57/58 adversarial.)
+
+**STATUS: DONE.** First of round 14 B's two items. Turn lock claimed (`dc4dc7b`,
+`LAPTOP-3CL10CG5 @ 2026-08-14 09:29 UTC`) after `git pull --ff-only` (already up
+to date) and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: B` block, §1ad **Ruling 43**, all four round-14 A parts and the
+manager's verification, §4's "Round 13 — Agent B (B13-01…)" in full, §2, §3, and
+Rulings 32/37/39/40/42 before touching anything. **B changes no code** (§2).
+
+**Method.** Throwaway harness **outside `src/`** (`web/zz-r14b/`, its own vitest
+config, include pattern `zz-r14b/**/*.probe.ts`) so the standing gate
+(`src/**/*.test.{ts,tsx}`) could not collect it. **No live pipeline pull, no page
+fetch, no credential read** — every string is A's own quoted evidence, a shape
+constructed from it, or a URL already asserted in the shipped suite. Harness
+deleted before this commit.
+
+---
+
+#### BASELINE, RE-ESTABLISHED BY EXECUTION BEFORE ANY DESIGN
+
+Ran all five recorded title shapes through the real entry point
+`webResultToRawJobItem` against the live pool URL
+`/t/job-vacancies-looking-for-openmc-skills/1727?page=2`:
+
+| title shape | item | rendered employer |
+|---|---|---|
+| paginated (LIVE r14, 5/5) `… - Page 2 - Announcements - OpenMC` | kept | **`Announcements`** |
+| page-1 (B13-01's reconstruction) `… - Announcements - OpenMC` | kept | **`Announcements`** |
+| `Users` (r13 C recorded) `… - Page 2 - Users - OpenMC Discourse` | kept | **`Users`** |
+| r12 variant `… \| Page 2 \| OpenMC` | kept | *(undefined)* |
+| no-category `… - Page 2 - OpenMC Discourse` | kept | *(undefined)* |
+
+**`isListingPage()` returns `false` on every one of them.** B13-01's central
+finding is re-confirmed rather than inherited: **the pagination segment is not
+the trigger** — the page-1 shape renders the same wrong value and would have
+done so before B12-06 ever landed.
+
+---
+
+#### ONE GAP OR SEVERAL — **ONE, AND IT IS A PAGE-KIND GAP, NOT A STRING GAP.**
+
+The three wrong-or-empty employer values above are three *titles* of **one
+page**. Any string-side design has to beat all three separately; a page-kind
+design beats all three at once, because `isListingPage()` is consulted at
+`jobweb.ts:409` — **before** the employer chain at `jobweb.ts:451-505` ever runs.
+**That ordering is the whole argument for the drop route, and it is structural,
+not stylistic: the wrong value cannot be derived from an item that never exists.**
+
+---
+
+#### LEAD 1 — GAP B (a string-side employer guard). RE-KILLED, WITH TWO FRESH COUNTEREXAMPLES OF MY OWN. NOT INHERITED.
+
+B13-01 killed four directions (widening `NAV_CHROME_SEGMENT_RE` to category
+words; the D1–D4 contract change; "last segment is the host brand so the middle
+is a breadcrumb"; URL-slug corroboration). I did not take those on trust. The two
+that could plausibly have moved since round 13 were re-run:
+
+- **(a) Could the SHIPPED title-side check be widened to reach it?**
+  `LISTING_SECTION_TITLE_RE` (`jobweb.ts:141`) is
+  `^\s*(?:[\w&/-]+\s+)?(?:jobs|vacancies|openings|careers)\s+(?:at|in|near|with)\b`.
+  The live role title is `Job vacancies looking for OpenMC skills`. **It does not
+  fire — and it does not fire even with `for` re-added to the preposition list**
+  (measured both ways). The preposition is not adjacent to the section word;
+  `looking` sits between them. **So this is dead for a DIFFERENT reason than
+  B13-02's `for` exclusion, and re-adding `for` — which B13-02 proved destroys
+  three real role titles — would buy nothing here.** Recorded so no later round
+  reopens the `for` question hoping it helps openmc.
+- **(b) "The last segment is the host brand, so the middle segments are a
+  breadcrumb."** Re-run against B12-07's own won value:
+  `Postdoctoral Research Associate - Savannah River National Laboratory -
+  Talents by Vaia` has **exactly the same three-segment shape** as
+  `Job vacancies looking for OpenMC skills - Announcements - OpenMC`. The rule
+  returns `undefined` for both — **it deletes the correct employer B12-07 won in
+  round 12.** Confirmed by execution, not quoted.
+
+**Conclusion, unchanged and now independently supported:** `Announcements` and
+`Users` are ordinary, correctly-spelled English words that could name an
+organisation. **They are separable from a real employer only by knowing what
+kind of page this is** — and that knowledge is in the URL, not in the string.
+**Gap B has no route. Lead 2 wins on evidence.**
+
+---
+
+#### LEAD 2 — THE THREAD AS A NON-POSTING. THE DESIGN, AND WHY EACH NARROWING IS THERE.
+
+**B14-01 — one new check, in `isListingPage()`, next to `FEED_PATH_RE`.**
+
+```
+const FORUM_THREAD_URL_RE =
+  /(?:^|\/)t\/(?:[\w%.~-]+\/)?\d+(?:\/\d+)?(?:\/|$|\?)|(?:^|\/)(?:viewtopic|showthread|viewforum|forumdisplay)\.php(?:$|[?&])|(?:^|\/)threads\/[\w%.~-]*?\.\d+(?:\/|$|\?)/i;
+```
+
+applied as the second line of `isListingPage()` (`jobweb.ts:353`):
+
+```
+if (FEED_PATH_RE.test(pathAndQuery)) return true;
+if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
+```
+
+**Why this is a CLOSED class and not Ruling 37's trap.** It enumerates **forum
+software's own routing conventions** — three alternatives, each fixed by the
+software that emits it, not by English:
+1. **Discourse:** `/t/[<slug>/]<topic-id>[/<post-no>]`. This is the live shape.
+2. **phpBB / vBulletin:** the literal script filenames `viewtopic.php`,
+   `viewforum.php`, `showthread.php`, `forumdisplay.php`. A filename is as closed
+   as a vocabulary gets.
+3. **XenForo:** `/threads/<slug>.<thread-id>` — the `.` + id suffix is XenForo's
+   own, and it is REQUIRED here rather than matching the bare word `threads`.
+
+**This is the same bar `FEED_PATH_RE` cleared in B13-02** ("a finite set fixed by
+the syndication specs and by what CMSs emit"), and the same anchoring discipline:
+every alternative is whole-segment anchored, and **every alternative requires a
+confirming structural token — a numeric id or a literal script filename.** None
+fires on a word alone.
+
+**THE NARROWING THAT COST ME A POINT ON THE MATRIX, AND WHY I TOOK IT.** A fourth
+alternative, NodeBB/Invision's `/topic/<id>`, scores **58/58** instead of 57/58.
+**I am not recommending it.** Its true-fire shape is
+`/topic/8891-hiring-battery-postdocs/` and its false-fire shape is
+`/topic/12-month-battery-fellowship` or `/topic/2026-summer-internship` — both
+are `/topic/<digits>-<slug>` and **no structural test separates them.** Raising
+the digit floor does not help: a four-digit year is a four-digit id. **The miss
+costs the status quo; the false fire destroys a real posting.** Same arithmetic
+B13-02 used to exclude the preposition `for`. **NodeBB/Invision threads stay
+ingested and that is a deliberate, named miss** — C should assert it as one so a
+later widening is a deliberate act rather than a drift.
+
+**THE OTHER NARROWING I TESTED AND REJECTED.** Anchoring the Discourse
+alternative to the start of the path (`^\/t\/`) removes the design's two
+constructed grey drops — but it scores **55/58**, because it also stops catching
+**subfolder Discourse installs** (`/community/t/hiring-postdocs/8891`, a
+documented deployment shape) **and the shipped suite's own idea of a forum thread
+URL** (`example.test/forum/t/thread/1?page=2`, `jobweb.test.ts:148`). Too narrow.
+Recorded so it is not re-derived.
+
+---
+
+#### THE ADVERSARIAL MATRIX — 58 cases, 43 must-keep / 15 must-drop, plus 4 unscored grey cases
+
+| design | score | what it costs |
+|---|---|---|
+| **F2** Discourse + classic scripts only | 56/58 | misses XenForo and NodeBB |
+| **F3** + bare `/threads/` + bare `/topic/<id>` | 56/58 | **2 FALSE FIRES** — destroys `/careers/threads/senior-battery-engineer` and `/threads/hiring.today` |
+| **F5** = B14-01 + NodeBB `/topic/<id>` | **58/58** | clean on the matrix, but drops both grey `/topic/` shapes — see above |
+| **B14-01 (F6) — RECOMMENDED** | **57/58** | **zero false fires.** One named miss: NodeBB/Invision |
+| **F7** = B14-01 with `^\/t\/` anchored | 55/58 | also misses subfolder Discourse and the suite's own forum URL |
+| **F4** the naive token-only version (`/t/`, `/topic/`, `/thread/`, `/forum/` …) | **46/58** | **8 FALSE FIRES and 4 misses** — recorded so nobody proposes it |
+
+**The 15 must-drops B14-01 catches:** the live openmc URL; its page-1 shape; the
+shipped tests' `/t/job-vacancies/1234?page=2`; a bare topic id `/t/1727`; a post
+permalink `/t/…/1727/14`; a trailing-slash form; another Discourse host; a
+**subfolder Discourse install**; `viewtopic.php`; `viewforum.php`;
+`showthread.php`; `forumdisplay.php`; XenForo `/threads/….8891/`; and
+`example.test/forum/t/thread/1?page=2`. **The one it does not: NodeBB/Invision.**
+
+**The 43 must-keeps, all surviving.** Twenty are real postings from A's censuses
+(rounds 11–14) and the shipped suite — `talents.vaia.com`, `lco-cdo.org`'s
+coordinator posting, `employbl.com`, `careers.inl.gov`, **`hyetlithium.com`
+(`isListingPage`'s own doc-comment must-keep)**, `inl.referrals.selectminds.com`,
+`careerservices.upenn.edu`, `postdocjobs.com`, `ev.careers`,
+`careers.gevernova.com`, `grad.wisc.edu`, a `linkedin.com` deep posting,
+`terra.do`, `mykelly.com`, **`lco.global/about/interns`** (A's part-2 Finding 4
+observation — **B14-01 does not touch it; it is not a forum thread**),
+`jobs.lbl.gov`, `jobs.ac.uk`, a Greenhouse board deep link, and the suite's
+`ziprecruiter.com` deep link. **Twenty-three are adversarial shapes I wrote to
+break my own draft**, including `/jobs/threading-machine-operator`,
+`/jobs/topical-drug-formulation-scientist`, `/careers/discourse-analysis-researcher`,
+`/careers/viewtopic-ux-designer`, `/t-shirt-designer/jobs/1234`,
+`/threads-of-innovation/careers/1234`, `/t/battery-research-scientist` (a `/t/`
+segment with NO id), `/t/2026-battery-intern` (digits with no boundary),
+`/threads/hiring.today` (a dot with no id), `/careers/apply.php?id=1234` (a `.php`
+that is not a forum script), `/topic/battery-research/jobs/1234`,
+`/forum/careers/battery-scientist` and `/topics/battery/jobs/1234`.
+
+**THE FOUR GREY CASES — the design's honest failure surface, stated rather than
+buried in the total.** B14-01 drops `/careers/t/1234` and `/en/t/1234`: any site
+that routes `/t/<digits>` for something that is not a Discourse topic loses that
+item. **Neither shape is observed anywhere in any round's census; both are
+constructed.** The other two greys (`/topic/2026/…`, `/topic/12-month-…`) survive
+B14-01 and are the reason the NodeBB alternative was cut.
+
+---
+
+#### TITLE-INDEPENDENCE — THIS IS HOW RULING 43's "BOTH OBSERVED SHAPES, NOT ONE STRING" IS SATISFIED
+
+**All five recorded title shapes drop from the same URL, verified by execution:**
+paginated `Announcements`, page-1 `Announcements`, `Users`, the r12 `|`-separated
+variant, and the no-category variant. **The rule never reads the title.** A sixth
+title shape appearing tomorrow drops too. **This is the property no string-side
+design in six rounds has been able to offer**, and it is the concrete reason
+Lead 2 beat Lead 1 rather than merely being easier.
+
+---
+
+#### RULING 32's MANDATORY QUESTION — WHAT RENDERS WHEN THIS FIRES, AND WHEN IT DOES NOT
+
+**When it fires: NOTHING, and the pool shrinks by one.** `isListingPage` returns
+`true` → `webResultToRawJobItem` returns `null` (`jobweb.ts:409`) → both search
+functions `.filter(item => item !== null)` → the item never reaches dedup,
+scoring, the mapper or any card. **`buildDailyJobPool` ends in
+`.slice(0, MAX_OPPORTUNITY_POOL_ITEMS)` — a CAP, never a top-up (re-verified at
+`pipeline.ts:168`, `:228`, `:270`, not inherited from B13-02's claim).** No
+placeholder, no substitution, no backfill. On round 14's sample that is **1 of 14
+pool items (~7%)**.
+
+**When it does NOT fire: exactly today's behaviour.** An unlisted forum
+convention stays in the pool with whatever employer the chain derives — the
+status quo, never a new wrong value.
+
+**AND THE ASYMMETRY THAT SHAPED EVERY NARROWING, SAID PLAINLY BECAUSE IT IS THE
+FIRST TIME THIS LOOP HAS DESIGNED A DROP FOR A WRONG *VALUE* RATHER THAN A WRONG
+*ITEM*:** a guard's false fire leaves a field empty; **a drop's false fire
+destroys a whole real posting.** That is why every alternative is id-confirmed
+and why I gave up a matrix point rather than keep `/topic/<id>`.
+
+**THE COST I AM NOT HIDING:** if a forum thread is ever the *only* home of a real
+vacancy, B14-01 drops it. **I judge the trade correct and say why rather than
+asserting it:** what such a thread renders TODAY is a thread title in the role
+slot (`Job vacancies looking for OpenMC skills` — not a role anyone can apply to)
+and a forum category in the employer slot. That is wrong data, which Ruling 23
+ranks **above** missing data. **The reader loses a row that was never applicable
+and stops being told a forum category is an employer.**
+
+---
+
+#### TESTS AT RISK — FOUR, IN ONE FILE. TWO FAIL LOUDLY; TWO PASS WHILE SILENTLY TESTING NOTHING. C MUST HANDLE ALL FOUR.
+
+Established by grepping every caller, not by guessing. **`isListingPage` and
+`webResultToRawJobItem` have no non-test caller outside `jobweb.ts`.**
+`scoring.test.ts` and `job-cleanup.test.ts` both call `webResultToRawJobItem` —
+**every `url:` in both was read and neither uses a forum-shaped URL, so neither
+is affected.** `enrich.test.ts` is untouched by this item.
+
+1. **`jobweb.test.ts:740` — `it("keeps the openmc forum thread in the pool —
+   Ruling 39c owns that drop, not B13-02")`. HARD FAIL.** This test was written by
+   round 13 C to catch exactly a change that takes 39c's deferred decision
+   without a ruling. **Ruling 43 IS that ruling.** C rewrites the assertion to
+   `.toBe(true)`, renames the test, and replaces the comment with one citing
+   Ruling 43 and B14-01 (§3's rewrite-with-a-comment rule — **never delete it**).
+2. **`jobweb.test.ts:178-186` — `it("leaves the employer absent when only nav
+   chrome survives")` asserts `expect(item).not.toBeNull()` on the openmc URL.
+   HARD FAIL.** Its subject is `looksLikeNavChrome`, not the host. C repoints its
+   `url` at a non-forum posting URL (`https://example.test/careers/job/9912`) with
+   a comment naming B14-01.
+3. **`jobweb.test.ts:145-153` — the nav-chrome `it.each([...])` uses
+   `https://example.test/forum/t/thread/1?page=2`. PASSES, AND THAT IS THE
+   PROBLEM.** The item becomes `null`, so `item?.company` is `undefined` for the
+   wrong reason and **B12-06's guard stops being exercised by this test at all.**
+   C repoints the URL at a non-forum posting URL.
+4. **`jobweb.test.ts:129-140` — the three-openmc-title `it.each([...])` asserts
+   `expect(item?.company).not.toBe("Page 2")` on the openmc URL. PASSES
+   VACUOUSLY**, same mechanism. C repoints these title assertions at a non-forum
+   URL so they keep testing the pagination guard, **and adds a separate assertion
+   that the real openmc URL is now dropped.**
+
+**Tests C should ADD:** the 15 must-drops as an `it.each`; the adversarial
+must-keeps listed above as an `it.each`; the five-title title-independence block
+against the live openmc URL; and **one assertion that NodeBB/Invision's
+`/topic/8891-hiring-battery-postdocs/` is NOT dropped**, commented as a
+deliberate named miss.
+
+---
+
+#### WHERE I DEPART FROM A RECORDED PREFERENCE — SAID PLAINLY, PER §2
+
+**Ruling 39c states "host-list addition preferred over phrase matching" for this
+drop, and both §1 and A repeat it. B14-01 is NEITHER.** I am not proposing a host
+list and I want the manager to see that deliberately rather than discover it.
+
+**39c's own stated REASON for that preference is that phrase matching "samples an
+open class (Ruling 37)". A URL-route rule is not phrase matching and is not an
+open class — so 39c's reason endorses this design rather than excluding it.** And
+a host list has a defect this does not: **it fixes one site**, which is Ruling
+32's headline complaint, and round 13 C's own shipped comment
+(`jobweb.ts:133-138`) already records that the host route was tested and
+deliberately not landed because "the host route's safety rests on an unmeasured
+assumption about posting-URL shapes". **A host list would also not have closed
+this item**, because Discourse is a platform, not a site — `discuss.example.org`
+and a subfolder install are the same defect on different hosts, and B14-01
+catches both. **If the manager prefers the host list anyway, that is a ruling to
+make; I have recorded the evidence rather than quietly substituting my own
+preference.**
+
+**No `POLICY — manager decides` item on this entry.** Ruling 43 authorises and
+requires the design; 39c's second-instance trigger has not fired and, per the
+manager's own round-14 verification, is not what this rests on.
+
+---
+
+**Cleanup:** harness lives at `web/zz-r14b/` and is deleted before this commit;
+`git status --untracked-files=all` scoped to `web/` confirmed clean. **No product
+code touched. No test touched. No credential read, printed, logged or written. No
+page fetched, no pipeline pull run, no branch created, no PR opened, and
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` was not touched.**
+
+**Not done yet (item 2, same session, continuing next):** the
+`careers.gevernova.com` `]`-remnant trace.
+
+Commit follows immediately.
