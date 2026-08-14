@@ -25027,3 +25027,149 @@ Files C will touch: `web/src/lib/jobs/sources/jobweb.ts` and
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-07: `talents.vaia.com` renders `Talents by Vaia` — B8-02 fixed WHICH label is checked; the brand that spans TWO labels was never covered)
+
+**STATUS: DONE.** A's item 3. §1y Ruling 38a classified this **out** of Ruling
+34a's tally precisely because it is a fixable coverage defect and told me to find
+the coverage hole — including the pointed question of why `talents.vaia.com`, the
+exact host B8-02's every-DNS-label fix was built on, still lets this through.
+**Found, and the answer is that B8-02 fixed a different half of the problem.**
+Reproduced by execution. Throwaway harness outside `src/`, deleted before this
+commit. No product code touched.
+
+---
+
+**1. THE COVERAGE HOLE, EXACTLY.**
+
+`looksLikeHostBrand` (`web/src/lib/opportunities/shared.ts:251-256`) is three
+lines:
+
+```
+normalized = candidate.toLowerCase().replace(/[^a-z0-9]/g, "")
+labels     = host.toLowerCase().split(".")
+return labels.some(label => label.startsWith(normalized))
+```
+
+By execution against `talents.vaia.com`:
+
+```
+looksLikeHostBrand("Vaia")            === true    <-- B8-02's fix working
+looksLikeHostBrand("Talents")         === true
+looksLikeHostBrand("Talents by Vaia") === false   <-- THE HOLE
+```
+
+**Why.** Normalisation strips the spaces, so `"Talents by Vaia"` becomes the
+single token `talentsbyvaia` (13 chars). It is then compared against each label
+**individually** — `talents` (7), `vaia` (4), `com` (3) — and it is longer than
+all of them, so the one-directional `startsWith` rule can never match.
+
+**B8-02 changed the check from "the first label" to "every label". It did not
+change "one label at a time".** The board's display brand is composed of *two*
+of its own host labels joined by a filler word, and no single label can ever
+contain it. That is the coverage hole, and it is the reason the host B8-02 was
+built on still fails on a different candidate from the same host.
+
+Live-shaped repro through the real entry point: a title of the form
+`"<Role> - Talents by Vaia"` on that host returns `company === "Talents by
+Vaia"`, matching A's live value.
+
+**2. FIX DESIGN — adversarially tested.**
+
+Two additions to `looksLikeHostBrand`, both keeping its documented
+one-directional safety rule intact:
+
+1. **Compare against contiguous RUNS of labels, not only single labels.** For
+   `talents.vaia.com` the runs are `talents`, `vaia`, `com`, `talentsvaia`,
+   `vaiacom`, `talentsvaiacom`. This is the natural completion of B8-02's own
+   reasoning ("a brand can sit at any depth") — a brand can also *span* depths.
+2. **Also try the candidate with a small closed list of filler words removed**
+   (`by|at|for|the|a|an|of|and|und|de`), in addition to the current whole-string
+   form. `"Talents by Vaia"` → `talentsvaia`, which is exactly the
+   `talents`+`vaia` run. This mirrors `looksLikeArticledHostBrand`
+   (`eventweb.ts:289-293`), which already strips `the|a|an` for the same reason;
+   the list is closed and short.
+
+Keep `startsWith` in the same direction and keep the 3-character floor. A real
+company name that is merely longer than every label run is still never rejected —
+that is what protects the ordinary correct case.
+
+**Adversarial results (shipped vs proposed):**
+
+```
+"Talents by Vaia"                    @ talents.vaia.com               keep   -> REJECT   FIXED
+"Vaia"                               @ talents.vaia.com               REJECT -> REJECT   unchanged
+"Climatebase"                        @ climatebase.org (B5-03 repro)  REJECT -> REJECT   unchanged
+"Savannah River National Laboratory" @ talents.vaia.com (real employer) keep -> keep     SAFE
+"Acme Corp"                          @ acme.test (shared.ts's own documented must-survive) keep -> keep  SAFE
+"Idaho National Laboratory"          @ inl.referrals.selectminds.com  keep   -> keep     SAFE
+"Tesla" @ ev.careers · "trawa" @ arbeitnow.com · "Battery Ventures" @ employbl.com       SAFE
+"Las Cumbres Observatory" @ lco.global · "Thermo Fisher Scientific" @ grad.wisc.edu      SAFE
+"Bank of America"                    @ bankofamerica.com             REJECT -> REJECT   see note
+```
+
+**Every real employer in A's own round-12 census survives unchanged.** The only
+behaviour change on the whole matrix is the one live defect.
+
+**Note on `Bank of America`, because it is a pre-existing cost and not mine:** it
+is rejected **today**, unchanged by this design — a company posting under its own
+exact domain name is rejected by the equal-length branch that `shared.ts`'s doc
+comment describes deliberately. A's own census records the same trade-off live
+(`careers.gevernova.com` → null for "GE Vernova", carried as a standing
+host-brand trade-off). Recorded so nobody attributes it to this fix.
+
+**3. DEPENDENCY ON B12-04 — read this before scheduling.**
+
+`looksLikeHostBrand` is **shared with the event side** (`isChromeSegment`,
+`eventweb.ts:474`). Widening it makes the event side reject slightly more, and
+B12-04 has just shown the event side already over-rejects here — it is why
+`internationalbatteryseminar.com` loses its own correct name. Checked the three
+event-side hosts in the matrix: `International Battery Seminar` is rejected
+**before and after** (B12-04's exemption is what fixes it, not this),
+`Ruggiero Research Lab` and `SolarPACES 2026` are untouched either way. So there
+is no new event-side cost in this sample — but **B12-04 should land before or
+with B12-07**, so the event side's exemption is in place before the shared check
+gets wider. Recorded as an ordering dependency, not a blocker.
+
+**4. WHAT RENDERS WHEN EVERY CANDIDATE IS REJECTED — Ruling 32.**
+
+Same as B12-06: `company` becomes `undefined` and the UI **omits the employer
+line entirely** (`job-card.tsx:87`, `feed-tile.tsx:535` both guard on truthiness).
+No placeholder, nothing reinserted. For this posting the reader would see the
+role with no employer instead of being told the employer is the job board.
+
+**Worth naming, because it is the honest limit of this fix:** the real employer
+(Savannah River National Laboratory) **is sitting in the URL's own path**
+(`/companies/savannah-river-national-laboratory/`), and the pipeline never looks
+there — see B12-08, which traces that the employer is derived from the provider's
+title and nothing else. This fix converts wrong data into honest silence; it does
+not recover the right answer. Recovering it is a different, larger change and is
+raised as an option in B12-08, not here.
+
+**5. TESTS AT RISK — this is the one item with real blast radius, so it is
+itemised.**
+
+`looksLikeHostBrand` is imported by **both** sides:
+- `web/src/lib/jobs/sources/jobweb.ts:326` (employer slot)
+- `web/src/lib/events/sources/eventweb.ts:474` and `:292` (chrome + articled
+  brand)
+
+Test files C must run and read, not just run:
+- `web/src/lib/opportunities/shared.test.ts` (if present — the function's own
+  unit tests, including B5-03's and B8-02's cases)
+- `web/src/lib/jobs/sources/jobweb.test.ts`
+- `web/src/lib/events/sources/eventweb.test.ts`
+- **`web/src/lib/opportunities/enrich.test.ts`** — the SolarPACES regression lock
+  lives here and nowhere under `events/`; it exercises the event-side brand path.
+- **`web/src/lib/jobs/scoring.test.ts` and `web/src/lib/events/scoring.test.ts`**
+  — `scoring.test.ts` has been the missed second file twice in this loop.
+
+Full gate: `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+Files C will touch: `web/src/lib/opportunities/shared.ts` plus its tests, and new
+cases in `jobweb.test.ts`.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
