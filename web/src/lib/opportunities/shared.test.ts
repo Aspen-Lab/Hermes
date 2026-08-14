@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { looksLikeHostBrand, routeSafeId, urlHashId } from "./shared";
+import {
+  isOwnerNameTopicCollision,
+  looksLikeHostBrand,
+  routeSafeId,
+  urlHashId,
+} from "./shared";
 
 // Regression guard: source ids flow straight into the single-segment
 // /events/[id] and /jobs/[id] routes, so any slash (or other route-breaking
@@ -158,5 +163,135 @@ describe("looksLikeHostBrand", () => {
     it("rejects a company posting under its own exact domain, exactly as before", () => {
       expect(looksLikeHostBrand("Bank of America", "bankofamerica.com")).toBe(true);
     });
+  });
+});
+
+// RULING 57b (round 21, item 5): THE OWNER-NAME TOPIC COLLISION GUARD.
+// `Battery Ventures` cleared the required gate for a battery researcher three
+// rounds running, because its ADVERT repeats its own name as prose. Five
+// conjuncts, all of which must hold. Each `it` block below names the conjunct
+// it is the sharp case for; removing that conjunct alone turns it red
+// (measured: 18/18 with all five, 16/16/17/17/15 with each removed).
+describe("isOwnerNameTopicCollision (Ruling 57b)", () => {
+  const TOPICS = ["molten salt", "ion exchange", "electrochemistry", "battery"];
+  const PE_BODY =
+    "Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies.";
+  const fires = (
+    item: { ownerName?: string; title: string; description: string },
+    topics = TOPICS,
+  ) => isOwnerNameTopicCollision(item, topics);
+
+  it("fires on the measured admission", () => {
+    expect(
+      fires({
+        ownerName: "Battery Ventures",
+        title: "2027 Summer Investment Internship",
+        description: PE_BODY,
+      }),
+    ).toBe(true);
+  });
+
+  // NOT A DENYLIST OF ONE FIRM: the same shape on unrelated topics and firms.
+  it.each([
+    ["Molten Salt Capital", "Summer Analyst Programme", "Molten Salt is a growth equity firm backing industrial technology."],
+    ["Ion Exchange Partners", "Operations Associate", "Ion Exchange is a private investment partnership founded in 2009."],
+  ])("fires on the constructed sibling %s", (ownerName, title, description) => {
+    expect(fires({ ownerName, title, description })).toBe(true);
+  });
+
+  // CONJUNCT 5's sharp cases, and the whole point of Ruling 57b: a real
+  // ON-TOPIC employer whose name legitimately contains a topic word survives,
+  // because its name asserts an OPERATING business, not an investment vehicle.
+  it.each([
+    ["Ion Exchange Global", "Process Chemist", "We manufacture ion exchange resins for industrial water treatment."],
+    ["Molten Salt Solutions", "Maintenance Technician", "Molten salt handling equipment maintenance across the plant."],
+    ["Battery Technologies Inc", "Operations Associate", "We build battery packs."],
+  ])("keeps the on-topic operating company %s (conjunct 5)", (ownerName, title, description) => {
+    expect(fires({ ownerName, title, description })).toBe(false);
+  });
+
+  it("keeps a posting whose ROLE TITLE carries the topic and nothing else does (conjunct 3)", () => {
+    expect(
+      fires({
+        ownerName: "Battery Ventures",
+        title: "Battery Analyst",
+        description:
+          "A private equity and venture capital firm investing in category-leading technology companies.",
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps a posting that mentions the topic more than once (conjunct 4)", () => {
+    expect(
+      fires({
+        ownerName: "Battery Ventures",
+        title: "Technical Associate",
+        description: `${PE_BODY} We back battery manufacturing companies.`,
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps a posting corroborated by a SECOND required topic (conjunct 2)", () => {
+    expect(
+      fires({
+        ownerName: "Battery Ventures",
+        title: "Investment Associate",
+        description: `${PE_BODY} Our portfolio includes molten salt storage.`,
+      }),
+    ).toBe(false);
+  });
+
+  it.each([
+    ["owner name carries no topic at all", "Sequoia Capital", "Research Associate", "Supporting our battery portfolio companies."],
+    ["owner name IS the topic, nothing more", "Molten Salt", "Research Chemist", "Molten salt process chemistry."],
+  ])("keeps %s (conjunct 1)", (_label, ownerName, title, description) => {
+    expect(fires({ ownerName, title, description })).toBe(false);
+  });
+
+  // B's SIXTH conjunct is deliberately not shipped: an absent owner name has no
+  // sub-spans, so conjunct 1 already covers it. These prove the empty case
+  // without a clause of its own.
+  it.each([
+    ["no owner name at all", undefined],
+    ["an empty owner name", ""],
+  ])("keeps a row with %s", (_label, ownerName) => {
+    expect(
+      fires({ ownerName, title: "Molten Salt Systems Engineer", description: "Design molten salt systems." }),
+    ).toBe(false);
+  });
+
+  it("keeps everything when the profile has no required topics", () => {
+    expect(
+      fires(
+        { ownerName: "Battery Ventures", title: "Investment Internship", description: PE_BODY },
+        [],
+      ),
+    ).toBe(false);
+  });
+
+  // THE ORDER-DEPENDENCE BUG B CAUGHT IN ITS OWN FIRST DRAFT. The collision
+  // topic is chosen BY THE OWNER NAME, so the profile's list order cannot move
+  // any verdict.
+  it("is invariant under every rotation and the reversal of the topic list", () => {
+    const row = {
+      ownerName: "Battery Ventures",
+      title: "2027 Summer Investment Internship",
+      description: PE_BODY,
+    };
+    for (let i = 0; i < TOPICS.length; i += 1) {
+      expect(fires(row, [...TOPICS.slice(i), ...TOPICS.slice(0, i)])).toBe(true);
+    }
+    expect(fires(row, [...TOPICS].reverse())).toBe(true);
+  });
+
+  // RULING 33 IS NEITHER WIDENED NOR NARROWED. A bare short acronym cannot
+  // reach this guard: the topic must be a PROPER sub-span of a LONGER name.
+  it.each(["LCO", "ION", "MSR"])("cannot fire on the bare acronym %s (Ruling 33)", (acronym) => {
+    expect(
+      fires(
+        { ownerName: acronym, title: "Research Associate", description: "Work on lco cathodes." },
+        [acronym.toLowerCase()],
+      ),
+    ).toBe(false);
   });
 });

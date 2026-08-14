@@ -15,6 +15,7 @@ import {
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
 import {
+  isOwnerNameTopicCollision,
   locationFit,
   passesRequiredGate,
   toScoringItem,
@@ -221,6 +222,23 @@ export function scoreEvents(
     });
     const requiredAnywhere = scoreKeyword(facade, profile.topics);
     if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
+    // Ruling 57b (round 21, item 5): the gate opened only because the
+    // ORGANISER'S OWN NAME contains a topic word. Ships on this surface
+    // DESIGNED BUT ORGANICALLY UNWITNESSED — round 21 A's event-side count was
+    // 1 instance, 0 admitted, and no event pull has ever caught this shape.
+    // Round 22 A's line.
+    if (
+      isOwnerNameTopicCollision(
+        {
+          ownerName: item.organisations?.[0]?.name,
+          title: item.name,
+          description: item.description,
+        },
+        profile.topics,
+      )
+    ) {
       continue;
     }
 

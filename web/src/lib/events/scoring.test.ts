@@ -717,3 +717,44 @@ describe("commerce and news pages", () => {
     });
   });
 });
+
+// RULING 57b (round 21, item 5): THE WIRING, ASSERTED END TO END ON THE EVENT
+// SURFACE. Ruling 57b requires the guard on BOTH surfaces. It ships here
+// DESIGNED BUT ORGANICALLY UNWITNESSED: round 21 A's event-side count was 1
+// instance / 0 admitted, and no event pull has ever caught this shape, so
+// these rows are CONSTRUCTED and are labelled as such rather than presented as
+// evidence the defect occurs on events. Round 22 A's line.
+describe("owner-name topic collisions leave the event pool (Ruling 57b)", () => {
+  const PE_BODY =
+    "Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies.";
+
+  it("drops an event whose ORGANISER's name is the only reason it matched", () => {
+    const collision = event({
+      id: "pe",
+      name: "2027 Summer Investment Showcase",
+      organisations: [{ name: "Battery Ventures" }],
+      description: PE_BODY,
+      tags: [],
+    });
+    const real = event({
+      id: "real",
+      name: "International Battery Materials Symposium",
+      description: "Three days on battery cathode chemistry.",
+      tags: [],
+    });
+    const scored = scoreEvents([collision, real], { topics: ["battery"] }, NOW);
+    expect(scored.map((s) => s.id)).toEqual(["real"]);
+  });
+
+  it("keeps an on-topic organiser whose name legitimately contains the topic", () => {
+    const operating = event({
+      id: "op",
+      name: "Water Treatment Technical Day",
+      organisations: [{ name: "Ion Exchange Global" }],
+      description: "A day on ion exchange resin manufacturing.",
+      tags: [],
+    });
+    const scored = scoreEvents([operating], { topics: ["ion exchange"] }, NOW);
+    expect(scored.map((s) => s.id)).toEqual(["op"]);
+  });
+});

@@ -484,3 +484,40 @@ describe("bare leading year cycles", () => {
     expect(isExpiredPosting(j("Research Scientist, Batteries since 2025"), NOW2)).toBe(false);
   });
 });
+
+// RULING 57b (round 21, item 5): THE WIRING, ASSERTED END TO END ON THE JOB
+// SURFACE. The guard itself is covered in opportunities/shared.test.ts; this
+// proves scoreJobs actually consults it at the required gate. Remove the
+// `continue` and this block goes red.
+describe("owner-name topic collisions leave the job pool (Ruling 57b)", () => {
+  const PE_BODY =
+    "Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies.";
+
+  it("drops the private-equity internship a battery researcher kept being shown", () => {
+    const collision = job({
+      id: "pe",
+      title: "2027 Summer Investment Internship",
+      company: "Battery Ventures",
+      description: PE_BODY,
+    });
+    const real = job({
+      id: "real",
+      title: "Battery Materials Process Engineer",
+      company: "Battery Resourcers",
+      description: "Join our battery recycling team.",
+    });
+    const scored = scoreJobs([collision, real], { topics: ["battery"] });
+    expect(scored.map((s) => s.id)).toEqual(["real"]);
+  });
+
+  it("keeps an on-topic employer whose name legitimately contains the topic", () => {
+    const operating = job({
+      id: "op",
+      title: "Process Chemist",
+      company: "Ion Exchange Global",
+      description: "We manufacture ion exchange resins for industrial water treatment.",
+    });
+    const scored = scoreJobs([operating], { topics: ["ion exchange"] });
+    expect(scored.map((s) => s.id)).toEqual(["op"]);
+  });
+});

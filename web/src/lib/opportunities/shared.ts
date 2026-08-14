@@ -2,7 +2,7 @@
 // pipeline's conventions (8s per-source wall, RawItem scoring facade) without
 // importing from lib/feed, so the three surfaces stay parallel implementations.
 
-import { isGenericTerm } from "@/lib/scoring/term-expand";
+import { canonicalize, isGenericTerm } from "@/lib/scoring/term-expand";
 import type { RawItem } from "@/lib/sources/types";
 import type { PreferenceConcept } from "@/types";
 
@@ -209,6 +209,128 @@ export function passesRequiredGate(
 
   // Only generic matches, and only one of them — not enough to prove relevance.
   return false;
+}
+
+/**
+ * RULING 57b (round 21, item 5): AN OWNER'S NAME THAT HAPPENS TO CONTAIN A
+ * TOPIC WORD IS NOT EVIDENCE THE ITEM IS ON TOPIC.
+ *
+ * `Battery Ventures` — a private-equity firm — kept clearing the required gate
+ * for a battery researcher with `2027 Summer Investment Internship`, three
+ * rounds running. **The gate does not open on the company FIELD**: somebody
+ * already decided an employer's name must not open it, and `scoreKeyword`'s
+ * scoped read excludes it. It opens because **the advert repeats the firm's own
+ * name as PROSE** ("Battery is a private equity and venture capital firm…").
+ * So "keep the company name out of the haystack" is already done and is NOT the
+ * fix — recorded so nobody proposes it again.
+ *
+ * **FIVE CONJUNCTS. ALL FIVE MUST HOLD. EVERY ONE IS PROVED LOAD-BEARING BY A
+ * TEST THAT TURNS RED WHEN IT ALONE IS REMOVED** (scores on the 18-row
+ * adversarial table: all five 18/18, and 16/16/17/17/15 with each removed).
+ *
+ * **CONJUNCT 5 IS THE HEART OF IT, AND IT IS WHY THE MUST-KEEP CLASS SURVIVES
+ * BY CONSTRUCTION.** A name ending in `Ventures` / `Capital` / `Partners`
+ * asserts a FINANCIAL line of business, so a topic word inside it is a brand. A
+ * name ending in `Global` / `Solutions` / `Resourcers` / `Technologies` asserts
+ * an OPERATING business, so the topic word may genuinely describe what the firm
+ * does — and those are admitted unconditionally, as the status quo. **The
+ * distinguishing signal is the owner's LINE OF BUSINESS, never the topic
+ * word**, exactly as Ruling 57b required.
+ *
+ * **THE COLLISION TOPIC IS CHOSEN BY THE OWNER NAME, NEVER BY LIST ORDER.** B's
+ * first draft took the first MATCHED topic, which made the verdict depend on
+ * where a topic sits in the user's own profile list rather than on any property
+ * of the item. Here a topic is selected because it is inside the owner's name,
+ * and when several are, the LONGEST wins. Asserted invariant under every
+ * rotation and the reversal of the profile's topic list.
+ *
+ * **B's SIXTH CONJUNCT IS DELIBERATELY NOT SHIPPED.** It asked "does the item
+ * name an owner", and mutation proves it changes nothing — conjunct 1 requires
+ * a topic to be a proper sub-span of the owner name, and an empty name has no
+ * sub-spans. Restoring it scores an identical 18/18. It is structurally
+ * subsumed, so the empty-owner case falls out of conjunct 1 rather than being
+ * restated; a guard clause no test can turn red is what Ruling 53b exists to
+ * catch.
+ *
+ * **NOT A DENYLIST AND NOT A HOST RULE.** `Battery Ventures`, `employbl.com`
+ * and `battery.com` appear nowhere in it; it is asserted on two constructed
+ * siblings on unrelated topics (`Molten Salt Capital`, `Ion Exchange Partners`).
+ *
+ * **THIS DOES NOT DECIDE RULING 33.** 33 is the SHORT-ACRONYM class (`LCO` vs
+ * `lco-cdo.org`) and stays exactly where it is — an accepted cost, neither
+ * widened nor narrowed. This guard needs the topic to be a PROPER sub-span of a
+ * LONGER owner name plus four more conjuncts, so it cannot reach a bare
+ * three-character acronym. Asserted.
+ *
+ * Matching uses `canonicalize` plus whole-word token spans rather than
+ * `expandTerm`: an expanded term set makes "appears exactly once" ill-defined,
+ * and every expansion would only ever widen the KEEP side.
+ *
+ * Misses fall to ADMISSION — the status quo — and every conjunct fails that
+ * way. There is no path by which this drops a posting whose ROLE content
+ * carries the topic; conjuncts 3 and 4 both stop that, and both are asserted.
+ */
+const INVESTMENT_VEHICLE_TAIL_RE =
+  /(?:^|\s)(?:ventures?|capital|partners|holdings?|equity|funds?|investments?|advisors?|advisers?|asset management)$/;
+
+function wholeWordSpanCount(haystack: string[], needle: string[]): number {
+  if (needle.length === 0 || haystack.length < needle.length) return 0;
+  let count = 0;
+  for (let i = 0; i + needle.length <= haystack.length; i += 1) {
+    if (needle.every((word, j) => haystack[i + j] === word)) count += 1;
+  }
+  return count;
+}
+
+export function isOwnerNameTopicCollision(
+  item: {
+    ownerName?: string | null;
+    title?: string | null;
+    description?: string | null;
+  },
+  requiredTopics: string[],
+): boolean {
+  const ownerTokens = canonicalize(item.ownerName ?? "")
+    .split(" ")
+    .filter(Boolean);
+
+  // CONJUNCT 1 — a required topic is a PROPER sub-span of the owner's own name.
+  // An absent owner name has no sub-spans, so it falls out here.
+  let collisionTopic = "";
+  let collisionTokens: string[] = [];
+  for (const topic of requiredTopics) {
+    const tokens = canonicalize(topic).split(" ").filter(Boolean);
+    if (tokens.length === 0) continue;
+    if (ownerTokens.length <= tokens.length) continue;
+    if (wholeWordSpanCount(ownerTokens, tokens) === 0) continue;
+    if (tokens.length > collisionTokens.length) {
+      collisionTopic = topic;
+      collisionTokens = tokens;
+    }
+  }
+  if (collisionTokens.length === 0) return false;
+
+  const titleTokens = canonicalize(item.title ?? "").split(" ").filter(Boolean);
+  const bodyTokens = canonicalize(`${item.title ?? ""} ${item.description ?? ""}`)
+    .split(" ")
+    .filter(Boolean);
+
+  // CONJUNCT 2 — no OTHER required topic corroborates the item.
+  for (const topic of requiredTopics) {
+    if (topic === collisionTopic) continue;
+    const tokens = canonicalize(topic).split(" ").filter(Boolean);
+    if (tokens.length === 0) continue;
+    if (wholeWordSpanCount(bodyTokens, tokens) > 0) return false;
+  }
+
+  // CONJUNCT 3 — the collision topic is not in the item's TITLE.
+  if (wholeWordSpanCount(titleTokens, collisionTokens) > 0) return false;
+
+  // CONJUNCT 4 — it appears exactly once in title + description.
+  if (wholeWordSpanCount(bodyTokens, collisionTokens) !== 1) return false;
+
+  // CONJUNCT 5 — the owner's line of business is an investment vehicle.
+  return INVESTMENT_VEHICLE_TAIL_RE.test(ownerTokens.join(" "));
 }
 
 /** Case-insensitive containment against a list of phrases. */

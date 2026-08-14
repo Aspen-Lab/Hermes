@@ -17,6 +17,7 @@ import {
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
 import {
+  isOwnerNameTopicCollision,
   locationFit,
   passesRequiredGate,
   toScoringItem,
@@ -320,6 +321,20 @@ export function scoreJobs(
     });
     const requiredAnywhere = scoreKeyword(facade, profile.topics);
     if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
+    // Ruling 57b (round 21, item 5): the gate opened only because the
+    // EMPLOYER'S OWN NAME contains a topic word. See the guard's own comment.
+    if (
+      isOwnerNameTopicCollision(
+        {
+          ownerName: item.company,
+          title: item.title,
+          description: item.description,
+        },
+        profile.topics,
+      )
+    ) {
       continue;
     }
 

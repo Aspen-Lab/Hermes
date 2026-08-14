@@ -51053,3 +51053,85 @@ The five must-keeps are **ADMITTED CONTROLS** and stay green either way, by desi
 **C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.** The upstream-truncation finding is **RULED-PENDING** and is flagged here for the manager's round-close, not decided by C.
 
 ---
+
+### Round 21 — Agent C (item 5 of 6: **RULING 57b's COLLISION GUARD. SHIPPED ON BOTH SURFACES, FIVE CONJUNCTS NOT SIX.** B's vacuity verdict on its own sixth conjunct is CONFIRMED by re-measurement. **AND C FOUND A SIXTH VACUITY B's TABLE COULD NOT SHOW: one of the five was unfalsifiable on B's 17 rows, and C added the row that closes it.**)
+
+**STATUS: DONE. ROUND 21 C IS COMPLETE.** **NO TEST DELETED. NO ASSERTION EDITED.** Twenty-two assertions ADDED across three files. Branch re-read before the commit and in the push output (§3). Harness moved out of the repository before the commit and the gate re-run; `git status --porcelain --untracked-files=all` showed only the six source files.
+
+---
+
+## WHERE IT LIVES, AND THE WIRING
+
+`isOwnerNameTopicCollision` sits in `opportunities/shared.ts` — the module that already owns `passesRequiredGate`, which both scorers already import. Consulted **immediately after `passesRequiredGate`, as a `continue`**, in **both** `jobs/scoring.ts` and `events/scoring.ts`, exactly as §1 requires.
+
+- **Jobs:** `ownerName` = `item.company`, `title` = `item.title`, `description` = `item.description`.
+- **Events:** `ownerName` = `item.organisations?.[0]?.name`, `title` = `item.name`, `description` = `item.description`. **B's spec said "the first entry of `item.organisations`"; that entry is an `EventOrg` OBJECT, not a string** — `.name` is the field. Caught by `tsc`, not by reading. **No facade change was needed on either surface, as B predicted.**
+
+---
+
+## **THE VACUITY B's TABLE COULD NOT SHOW — AND C CLOSED IT**
+
+Every conjunct was mutated by **deletion** against the adversarial table (rewriting a mutant can disable more than the conjunct under test — item 3 proved that the hard way):
+
+| variant | score | what breaks |
+|---|---|---|
+| **the shipped five** | **18/18** | — |
+| **B's SIXTH conjunct restored** | **18/18** | **NOTHING — B's vacuity verdict CONFIRMED by re-measurement, not inherited** |
+| no c1 (proper sub-span of the owner name) | 16/18 | the measured admission, and one sibling collision |
+| no c2 (no other topic corroborates) | 16/18 | both corroborated must-keeps |
+| **no c3 (topic not in the TITLE)** | **17/18** | **only the row C ADDED** |
+| no c4 (exactly one mention) | 17/18 | the topic-twice-in-the-body must-keep |
+| no c5 (investment-vehicle tail) | **15/18** | **all three on-topic OPERATING companies** |
+
+**ON B's 17 ROWS AS WRITTEN, CONJUNCT 3 SCORED 18/18 WHEN REMOVED — IT WAS UNFALSIFIABLE.** B offered `Battery Ventures` + `Battery Technology Analyst` as the row conjunct 3 decides. But that row's body **repeats the topic**, so conjunct 4 ("exactly once") catches it as well: the row is doubly protected and can prove neither conjunct. **The sharp case puts the topic in the TITLE AND NOWHERE ELSE** — `Battery Ventures` + `Battery Analyst` with a blurb that never repeats the name — and only conjunct 3 can keep it. **C wrote that row, and it is now the shipped assertion for conjunct 3.**
+
+**This is the third time this round the same pattern appeared** (item 2's doubly-protected live INL row, item 3's `Board of Regents`, and now this). **A must-keep that survives for two reasons proves neither of them, and only mutation shows which.** B's mutation discipline caught four vacuous conjuncts in its own first draft; this is the same discipline applied one layer further out.
+
+---
+
+## ORDER-INDEPENDENCE, ASSERTED RATHER THAN CLAIMED
+
+B's first draft picked `matched[0]`, so the verdict turned on where a topic sat in the user's own profile list. **The shipped guard selects the topic BECAUSE it is inside the owner's name, and when several are, the LONGEST wins.** Asserted in the shipped suite: **every rotation of the profile's topic list, and its reversal, produce identical verdicts on every row** — with `battery` deliberately placed LAST in the fixture, the position that hid B's bug.
+
+---
+
+## WHAT SHIPS, AND WHAT DELIBERATELY DOES NOT
+
+- **FIVE conjuncts, not six.** B's "does the item name an owner" is **structurally subsumed** — conjunct 1 needs a topic to be a proper sub-span of the owner name, and an empty name has no sub-spans. The empty-owner case is asserted twice (absent, and empty string) **without a clause of its own**.
+- **Matching uses `canonicalize` plus whole-word token spans, NOT `expandTerm`.** B's wording named both. **C states the deviation and its reason:** an expanded term set makes "appears exactly once" ill-defined, and every expansion would only ever widen the KEEP side. Recorded so it is a decision, not a drift.
+- **Ruling 33 is NEITHER WIDENED NOR NARROWED**, and that is asserted rather than argued: `LCO`, `ION` and `MSR` as bare owner names **cannot fire the guard**, because the topic must be a PROPER sub-span of a LONGER name.
+- **Not a denylist.** `Battery Ventures`, `employbl.com` and `battery.com` appear nowhere. The two constructed siblings on unrelated topics (`Molten Salt Capital`, `Ion Exchange Partners`) both fire, asserted.
+
+---
+
+## THE NEGATIVE PROOF — **AND IT IS PER-SURFACE, SO A HALF-APPLIED FIX CANNOT PASS**
+
+Both call sites disabled at once (Ruling 55a's discipline):
+
+| | red |
+|---|---|
+| both surfaces wired | **0** |
+| **both call sites disabled** | **exactly 2 — ONE PER SURFACE**, the job-pool drop and the event-pool drop |
+
+**Each surface has its own uniquely-red test.** The two "keeps" (an on-topic operating company on each surface) are **ADMITTED CONTROLS** and stay green either way. The guard's own five conjuncts are covered separately in `shared.test.ts`.
+
+---
+
+## **THE EVENT SURFACE SHIPS `designed, organically unwitnessed` — AND THE TEST FILE SAYS SO**
+
+Ruling 57b requires both surfaces. **B ran no event pull, A's event-side 52b count this round was 1 instance / 0 admitted, and no event pull has ever caught this shape.** The event-side rows in `events/scoring.test.ts` are **CONSTRUCTED**, and the block comment there says exactly that rather than letting a later round read them as evidence the defect occurs on events. **It is round 22 A's line**, and it is carried into §1 as such.
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Misses fall to ADMISSION — the status quo — and every conjunct fails that way**, as Ruling 57b requires. An investment vehicle named outside the closed tail list survives; an advert naming itself twice survives; a collision corroborated by a second profile topic survives.
+- **There is no path by which this drops a posting whose ROLE content carries the topic** — conjuncts 3 and 4 both stop it, and both are asserted.
+- **What renders on rejection: the item leaves the pool**, before scoring, mapping and any card view model. No card, no employer line, no summary, no facet count. **And the pool does not shrink** — `buildJobPool` takes a top-N from a larger scored set, so the reader loses a wrong card and gains a real one. The shipped job-surface assertion asserts exactly that: the collision leaves, the real posting is what remains.
+- **The three DROPPED 52b instances A recorded are unaffected** — `jobs.battery.com` (×2) and `ziprecruiter.com` already drop earlier, before this gate.
+
+---
+
+**GATE AFTER ITEM 5: 91 files / 1652 tests, 1651 passing.** Sole failure the standing `benchmark.test.ts` flake at **`:109`** (`expected false to be true`). `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error, **0 warnings** — the three warnings seen while the harness was present were all inside the harness and left with it. Named runs: `scoring.test.ts` (jobs) + `scoring.test.ts` (events) + `job-cleanup.test.ts` + `jobweb.test.ts` + `shared.test.ts` + `summarize.test.ts` **628/628**; and **`src/lib/opportunities/enrich.test.ts` run SOLO: 53/53 — THE SOLARPACES LOCK IS INTACT**, which is the assertion that mattered most this item, because `enrich.test.ts` calls `scoreJobs` and item 5 is the only change that touches the scorers.
+
+**C RAISES NO NEW `POLICY — manager decides` AND DECIDES NONE OF THE THREE OPEN ONES. Ruling 33 is NOT widened and NOT narrowed.**
+
+---
