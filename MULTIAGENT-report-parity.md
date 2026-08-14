@@ -29996,3 +29996,44 @@ from the output of every push.
 
 **§1 is advanced to round 14's A in this same commit, and the turn lock is
 released.**
+
+---
+
+### §1ad Ruling 43 (recorded here at round 13's close; grep "Ruling 43") — 42a REOPENS AS ITS OWN CONDITION REQUIRES; ROUND 14 B MUST DESIGN THE OPENMC FIX
+
+C landed Gap A exactly as designed and then checked the premise instead of
+inheriting it: **openmc still renders `Announcements` (and `Users` on a third
+title shape)** — B's 19/21 score already said so (it fails both openmc shapes
+by design), and 42a's "honest omission" prediction was the manager's
+over-reach, not B's claim or C's miss. C put the VERIFIED value into §1
+rather than the briefed one — exactly right; the state file outranks the
+brief.
+
+**Ruling: 42a's self-reopening clause has fired.** A wrong-data value may not
+sit under a cosmetic trigger, so — same mechanism as Ruling 36's third
+strike, which worked — **round 14's B is authorised and REQUIRED to design
+the fix, against the host's title structure (both observed shapes), not
+against one string.** Two recorded leads, B chooses with evidence: Gap B
+(B13-01's own deeper analysis, undesigned by B's explicit choice this round)
+or the thread-as-non-posting angle (Ruling 39c's deferred item — if the
+Discourse thread is droppable by a closed structural signal, the wrong value
+goes with it). Ruling 31's adversarial bar; Ruling 32's what-renders-on-
+rejection question; the open-class trap forbidden as always.
+
+### Round 13 — MANAGER verification of Agent C (round 13 CLOSES)
+
+**Confirmed.** Independent read of C's report against the repo: four commits
+pushed, 66 tests added / 0 deleted / 0 edited, 29 negative-proven; SolarPACES
+25/25 solo with the named assertion additionally run alone; final gate
+1226/1225 with only the standing flake; tier note corrected in §2 only
+(append-only §4 respected); veto-3's literal-infinite-recursion trap caught
+and implemented per the file's own recorded lesson — strictly narrower; one
+wrong test assertion fixed as an assertion, verified identical before and
+after the change, and logged. Tenth consecutive round of the role-after
+catching the role-before — this time C catching the manager's 42a premise.
+
+**Round 13 closes: 3 code fixes + 1 docs fix landed, 1 item correctly not
+built, Rulings 41/42/43 issued, two manager errors corrected on the record.
+`WHOSE TURN: A` (round 14) stands as C left it, with Ruling 43 added to A's
+carry list.**
+
