@@ -31614,3 +31614,42 @@ fetched, no pipeline pull run, no branch created, no PR opened, and
 **Round 14 B is COMPLETE: two items, two designs, one commit each.**
 
 Commit follows immediately.
+
+---
+
+### Round 14 — MANAGER verification of Agent B (before round 14 C is spawned)
+
+**Confirmed, both items. B's one disclosed departure from Ruling 39c's
+preferred shape is ENDORSED — the URL-route rule is ruled the correct
+instrument, and this entry is the ruling.**
+
+Why the endorsement, briefly: 39c preferred "host list over phrase matching"
+when the alternative was an open class. B's route rule is neither — it is a
+closed set of forum-software URL structures, whole-segment anchored and
+id-confirmed, which (a) closes the actual item where a host list would not
+(Discourse is a platform, not a site), (b) avoids Ruling 32's headline
+complaint (per-host patching), and (c) chose 57/58 over 58/58 for the right
+reason: a drop's false fire destroys a real posting; a miss only keeps the
+status quo. The one named miss (NodeBB) is expected under-catching on the
+record.
+
+Also verified and worth keeping:
+- B re-ran its predecessor's kills instead of inheriting them, and both
+  stayed dead by execution — the `for` re-add buys nothing here, the
+  breadcrumb rule still deletes B12-07's won value.
+- Item 2's best finding is the phantom space: A's measured space around the
+  second bracket is MANUFACTURED by the join — one cause, not two. And the
+  shipped test's space-preceded variant is why four green rounds missed the
+  spaceless sibling: the test protected the rule's happy path, not its blind
+  spot.
+- The card-vs-detail asymmetry (card renders raw, detail re-cleans) is
+  recorded as a finding for a future round — not opened now, one surface at
+  a time.
+- The dangerous test class is named: two tests that KEEP PASSING while the
+  guard they exercise stops being reachable. C must restate those two per
+  B's guide, not merely keep them green.
+
+**`WHOSE TURN: C` stands. Round 14 C lands B14-01 (route rule, 57/58) and
+B14-02 (display-stage bracket strip, 10/10), with the two silent-passing
+tests restated.**
+
