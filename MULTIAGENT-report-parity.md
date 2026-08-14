@@ -54924,3 +54924,108 @@ card, the prefix rule reached too far** — the slug rule can only ever merge, s
 that is its single failure mode and it is the thing to look for.
 
 ---
+
+### Round 22 — Agent C (item 6 of 6: **A22-04 half (a) ONLY — the parenthetical employer. A22-04 STAYS OPEN; the guard half is untouched per Ruling 60a.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 6 of 6, the last code item of the round.
+
+---
+
+## WHAT CHANGED — `web/src/lib/jobs/sources/jobweb.ts`
+
+A title's **trailing** parenthetical becomes an employer candidate, placed
+**LAST** in the array — after `titleEmployer` and after the separator segments —
+so the existing `find` reaches it only when every better-evidenced candidate was
+absent or rejected. **`Opening For Marketing Intern (Ion Exchange Ltd.)` now
+names its employer instead of rendering no employer line at all.**
+
+## **RULING 60a's BOUNDARY HELD, AND IT WAS CHECKED RATHER THAN ASSERTED**
+
+`git diff HEAD` on `opportunities/shared.ts`,
+`opportunities/employer-identity.test.ts` and `opportunities/shared.test.ts`
+returns **EMPTY** — no clause of the shipped 57b guard was touched and neither
+test file moved. Both were run: **54 of 54 green.** **A22-04 REMAINS OPEN. This
+closes a wrong SILENCE (Ruling 32 class), not the item**, and the guard half
+stays deferred with its shape recorded and 60a's third-strike backstop armed.
+
+## **THE DEVIATION, AND C's OWN TEST IS WHAT FORCED IT**
+
+B's blast radius says (a) goes through the **existing** guard chain, naming
+`looksLikeBareLocation`, `looksLikeHostBrand`, `looksLikeTopicLabel` and
+`looksLikeBoardSelfName`, and concludes it "can only ever turn a silence into a
+name". **C wrote the must-keep cases and two of them FAILED against B's literal
+form.** The reason is in source at `:733`:
+
+```ts
+function looksLikeBareLocation(candidate: string): boolean {
+  const match = candidate.match(TRAILING_STATE_CODE_RE);
+  return Boolean(match && match[1] === match[1].toUpperCase());
+}
+```
+
+**It only matches a TRAILING US STATE CODE.** It was never a general location
+test — nothing in the chain is. So under B's literal form
+`Battery Research Intern (Mumbai, India)` renders **`Mumbai, India` as the
+employer.** B's claim is right that (a) cannot change a name into a different
+name; **it does not follow that (a) cannot turn a silence into a WRONG name**,
+and a trailing parenthetical carries a place or a qualifier — `(Remote)`,
+`(Boston, MA)`, `(Full-time)` — at least as often as an employer. **That trades
+a wrong silence for a wrong VALUE, which this loop ranks as the worse of the
+two.**
+
+**THE FIX: the parenthetical must NAME AN ORGANISATION.** A closed
+corporate/institutional designator vocabulary, anchored at the END of the
+candidate, in this file's own "catch a known shape" convention — the same
+instrument as `KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE` and
+`FIELD_LABEL_CONTINUATION_WORD_RE`. **No shipped guard was widened**; the new
+candidate carries its own admission test, which is the narrower instrument and
+the one the escape clause permits.
+
+**VACUITY, STATED HONESTLY IN SOURCE AND HERE: only `Ltd` is earned by a live
+row.** The other tokens are the same closed grammatical class and are covered by
+**constructed** assertions — one per token, 32 of them. That is proportionate
+HERE and would not be for a guard that drops rows (Ruling 55c's precedent):
+every token in this list can only ever ADMIT a name that is silent today, and a
+token that never fires costs nothing. **A token that could DELETE a row would
+need a live matrix; this one cannot.**
+
+## TESTS — **42 ADDED, NONE DELETED, NONE EDITED**
+
+One `describe` block in `jobweb.test.ts`: the repro, two "never displaces a
+better candidate" cases, **five refusal cases** (non-US location, US location,
+work-mode qualifier, contract qualifier, subject qualifier), **32 designator
+cases**, the end-anchor case (`Limited Openings` is not an organisation), and
+the explicit `does not remove the row from the pool — the guard half is
+deferred` case so nobody later reads (a) as having closed A22-04.
+
+**B warned that "every existing 'employer is silent' assertion on a
+parenthetical title is a potential red" and asked C to grep title fixtures for
+`(`. C did. NONE MOVED.** Ruling 49a's Oregon lock and Ruling 33's acronym cases
+were run and are green.
+
+## NEGATIVE PROOFS — two reverts
+
+| reverted | red count |
+|---|---|
+| parenthetical candidate removed entirely | **33 failed / 428 passed** |
+| **B's literal form restored** (candidate admitted with no organisation test) | **5 failed / 456 passed** — the five refusal cases, exactly the wrong values B's form would have printed |
+
+The second row is the one that matters: it is the measurement behind the
+deviation, not an argument for it.
+
+## THE GATE AFTER THIS ITEM
+
+**92 files / 1751 tests, 1750 passing** (+42). Sole failure the standing
+`benchmark.test.ts` flake. `npx tsc --noEmit` clean. `npx eslint` exactly the
+one standing `quiz.tsx:46` error. **`enrich.test.ts` SOLO: 53 of 53.**
+
+## WHAT ROUND 23 A SHOULD EXPECT, WITH ITS FALSIFIER
+
+`zerobonline.com`'s row **stays in the pool** and now renders
+`Ion Exchange Ltd.` where it rendered no employer. **FALSIFIER: if any row's
+employer line changes to something that is not an employer, the designator
+vocabulary is reaching a shape it should not** — and because the rule is
+last-in-line, any such change can only appear where the line was previously
+BLANK, which makes it easy to spot.
+
+---

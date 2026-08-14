@@ -736,6 +736,19 @@ function looksLikeBareLocation(candidate: string): boolean {
 }
 
 /**
+ * A22-04(a) (round 22 C): the closed vocabulary that lets a title's trailing
+ * parenthetical name an EMPLOYER rather than a place or a qualifier. See the
+ * call site in `webResultToRawJobItem` for why this is required and for the
+ * vacuity statement (only `Ltd` is earned by a live row).
+ *
+ * Anchored at the end of the candidate, so the designator has to be the thing
+ * the name FINISHES on — `Ion Exchange Ltd.` qualifies, `Limited Openings` does
+ * not.
+ */
+const ORG_DESIGNATOR_RE =
+  /\b(?:ltd|limited|inc|incorporated|llc|llp|plc|pvt|corp|corporation|co|gmbh|ag|sa|bv|nv|ab|oy|as|pty|university|universit[ée]|institute|institut|laboratory|laboratories|labs?|college|hospital|foundation|academy|centre|center)\b\.?\s*$/i;
+
+/**
  * A whole-candidate sentence naming the HOSTING PLATFORM's own posting
  * boilerplate, not the employer (B10-01, items 1+2). `looksLikeHostBrand`
  * is deliberately one-directional — it only rejects a candidate no LONGER
@@ -1205,8 +1218,61 @@ export function webResultToRawJobItem(
   const titleEmployer = title.match(
     /(?<!more\s+jobs\s+)\bat\s+([A-Z][\w&.,'\u2019]*(?:\s+(?:[A-Z][\w&.,'\u2019]*|of\b|and\b|for\b|the\b|&))*)\s*(?:[-\u2013\u2014|\u00b7(]|$)/,
   )?.[1];
+  // A22-04(a) (round 22 C, Ruling 60a): THE PARENTHETICAL EMPLOYER.
+  //
+  // `Opening For Marketing Intern (Ion Exchange Ltd.)` names its employer
+  // plainly and rendered NO employer line at all, because the split above uses
+  // the separator class `([-–—|·])` and `(` is not in it, and the `at <X>`
+  // capture does not apply either. So no candidate was ever produced and the
+  // slot stayed silent — a wrong SILENCE, which Ruling 32 says to close.
+  //
+  // **THIS DOES NOT CLOSE A22-04 AND NOBODY CLAIMS IT DOES.** B executed the
+  // counterfactual: running the shipped 57b guard WITH this name supplied still
+  // returns `false`, so surfacing the employer does not remove the row from the
+  // pool. **The guard half is DEFERRED by Ruling 60a** — four rows is not a
+  // matrix, B searched 99 offered job rows and 138 offered event rows and found
+  // no fifth instance — and **no clause of the shipped 57b guard is touched
+  // here.**
+  //
+  // IT IS AN ORDINARY CANDIDATE AND NOTHING MORE. It goes through the same
+  // guard chain below as every other one, and it is placed LAST — after
+  // `titleEmployer` and after the separator segments — so the `find` reaches it
+  // only when every better-evidenced candidate was absent or rejected.
+  // **It can turn a silence into a name; it can never turn a name into a
+  // different name, and it cannot move a row into or out of any pool.**
+  //
+  // End-anchored on purpose: a trailing parenthetical is the observed shape,
+  // and a mid-title one is far more often a qualifier (`Research Scientist
+  // (Batteries) - Idaho`) than an employer. Failure direction is the silence
+  // that ships today.
+  //
+  // **AND IT MUST NAME AN ORGANISATION, WHICH B's GUIDE DID NOT REQUIRE AND
+  // C's OWN TEST FORCED.** B's blast radius says the existing candidate guard
+  // chain below still applies and that is true — but C wrote the must-keep
+  // cases and found the chain does not screen this shape at all:
+  // `looksLikeBareLocation` (`:733`) only matches a TRAILING US STATE CODE, so
+  // `Battery Research Intern (Mumbai, India)` would have rendered
+  // `Mumbai, India` as the employer. A trailing parenthetical in a job title
+  // holds a LOCATION or a qualifier at least as often as an employer
+  // (`(Remote)`, `(Boston, MA)`, `(Full-time)`), so admitting every one of them
+  // trades a wrong silence for a wrong VALUE — which this loop ranks as worse.
+  //
+  // So the parenthetical must end in a corporate or institutional designator.
+  // That is this file's own "catch a known shape with a closed vocabulary"
+  // convention, the same instrument as `KNOWN_JOB_BOARD_DOMAINS`,
+  // `SEASON_COHORT_LABEL_RE` and `FIELD_LABEL_CONTINUATION_WORD_RE`.
+  //
+  // **VACUITY, STATED HONESTLY: only `Ltd` is earned by a live row**
+  // (`Ion Exchange Ltd.`). The rest are the same closed grammatical class and
+  // are covered by constructed assertions, not live ones. That is proportionate
+  // HERE and would not be for a guard that drops rows (Ruling 55c): every token
+  // in this list can only ever ADMIT a name that is silent today, and a token
+  // that never fires costs nothing.
+  const parenthetical = title.match(/\(([^()]{2,60})\)\s*$/)?.[1];
+  const parentheticalEmployer =
+    parenthetical && ORG_DESIGNATOR_RE.test(parenthetical) ? parenthetical : undefined;
   const company = stripTrailingCareersChrome(
-    [titleEmployer, ...employerSegments]
+    [titleEmployer, ...employerSegments, parentheticalEmployer]
       .map(cleanJobSubtitlePart)
       .find(
         (p) =>

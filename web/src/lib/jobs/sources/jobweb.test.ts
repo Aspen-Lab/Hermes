@@ -2382,3 +2382,117 @@ describe("the job-detection line, both halves (A22-06 + A22-07)", () => {
     expect(NON_JOB_PATH_RE.test("/shop/batteries")).toBe(false);
   });
 });
+
+// A22-04(a) (round 22, `zerobonline.com`, Ruling 60a): the employer IS on the
+// row — in the title's parentheses — and it never reached the slot the report
+// reads, because `jobweb`'s title splitter has no `(` in its separator class.
+// The row rendered no employer line at all for a posting that names its
+// employer plainly. **This closes a wrong SILENCE. It does NOT close A22-04**:
+// B executed the shipped 57b guard with this name supplied and it still returns
+// `false`, so the row stays in the pool and the guard half stays deferred.
+describe("a parenthetical employer reaches the employer slot (A22-04a)", () => {
+  it("names the employer the title states in parentheses", () => {
+    const item = webResultToRawJobItem({
+      title: "Opening For Marketing Intern (Ion Exchange Ltd.)",
+      url: "https://zerobonline.test/jobs/marketing-intern-mumbai",
+      snippet: "Marketing internship supporting BMS and social media campaigns.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe("Ion Exchange Ltd.");
+  });
+
+  // IT IS AN ORDINARY CANDIDATE, LAST IN LINE. These are the assertions behind
+  // the claim that it can only ever turn a silence into a name.
+  it("never displaces a better-evidenced employer", () => {
+    const item = webResultToRawJobItem({
+      title: "Research Scientist at Idaho National Laboratory (Battery Programme)",
+      url: "https://example.test/jobs/research-scientist-battery",
+      snippet: "Battery research role.",
+    });
+    expect(item!.company).toBe("Idaho National Laboratory");
+  });
+
+  it("never displaces an employer named by a separator segment", () => {
+    // The separator segment already carries whatever follows it, parentheses
+    // included — pre-existing behaviour this item does not touch. What is
+    // asserted here is only that the parenthetical, being LAST in line, never
+    // becomes the answer when a segment already produced one.
+    const item = webResultToRawJobItem({
+      title: "Research Scientist | Example Energy Ltd. (Ion Exchange Ltd.)",
+      url: "https://example.test/jobs/research-scientist-battery-two",
+      snippet: "Battery research role.",
+    });
+    expect(item!.company).not.toBe("Ion Exchange Ltd.");
+    expect(item!.company).toContain("Example Energy");
+  });
+
+  // **THE CASE THAT CHANGED THE FIX.** B's guide says the existing candidate
+  // guard chain still applies, and it does — but the chain does not screen this
+  // shape at all: `looksLikeBareLocation` only matches a TRAILING US STATE
+  // CODE. Without an organisation test, this row would render `Mumbai, India`
+  // as the employer, trading a wrong silence for a wrong VALUE. A trailing
+  // parenthetical holds a place or a qualifier at least as often as an
+  // employer, so the parenthetical must name an organisation to be admitted.
+  it.each([
+    ["a bare non-US location", "Battery Research Intern (Mumbai, India)"],
+    ["a US location", "Battery Research Intern (Boston, MA)"],
+    ["a work-mode qualifier", "Battery Research Intern (Remote)"],
+    ["a contract qualifier", "Battery Research Intern (Full-time)"],
+    ["a subject qualifier", "Battery Research Intern (Batteries)"],
+  ])("refuses %s in the parentheses", (_label, title) => {
+    const item = webResultToRawJobItem({
+      title,
+      url: "https://example.test/jobs/battery-research-intern-guarded",
+      snippet: "Battery research internship.",
+    });
+    expect(item!.company).toBeUndefined();
+  });
+
+  // Every token of the closed designator vocabulary, asserted. Only `Ltd` is
+  // earned by a live row; the rest are the same grammatical class and are
+  // covered by constructed cases, which is proportionate for a rule that can
+  // only ever ADMIT a name that is silent today.
+  it.each([
+    "Ion Exchange Ltd.", "Ion Exchange Limited", "Aspen Materials Inc.",
+    "Aspen Materials Incorporated", "Aspen Materials LLC", "Aspen Partners LLP",
+    "Aspen Holdings PLC", "Aspen Systems Pvt", "Aspen Corp", "Aspen Corporation",
+    "Aspen Co.", "Aspen GmbH", "Aspen AG", "Aspen SA", "Aspen BV", "Aspen NV",
+    "Aspen AB", "Aspen Oy", "Aspen AS", "Aspen Pty", "Riverside University",
+    "Riverside Institute", "Riverside Laboratory", "Riverside Laboratories",
+    "Riverside Lab", "Riverside Labs", "Riverside College", "Riverside Hospital",
+    "Riverside Foundation", "Riverside Academy", "Riverside Centre",
+    "Riverside Center",
+  ])("admits the organisation designator in %s", (employer) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Intern (${employer})`,
+      url: "https://example.test/jobs/battery-research-intern-org",
+      snippet: "Battery research internship.",
+    });
+    expect(item!.company).toBe(employer);
+  });
+
+  it("requires the designator to be what the name FINISHES on", () => {
+    // `Limited Openings` is not an organisation; the anchor is what makes the
+    // vocabulary a shape test rather than a keyword search.
+    const item = webResultToRawJobItem({
+      title: "Battery Research Intern (Limited Openings)",
+      url: "https://example.test/jobs/battery-research-intern-anchor",
+      snippet: "Battery research internship.",
+    });
+    expect(item!.company).toBeUndefined();
+  });
+
+  // **A22-04 IS NOT CLOSED BY THIS AND THE LOG SAYS SO (Ruling 60a).** The row
+  // still enters the pool: B executed the shipped 57b guard with this employer
+  // supplied and it still returns false. What changed is only that the reader
+  // now sees who the employer is. The guard half is deferred with its shape
+  // recorded, and no clause of the 57b guard was touched.
+  it("does not remove the row from the pool — the guard half is deferred", () => {
+    const item = webResultToRawJobItem({
+      title: "Opening For Marketing Intern (Ion Exchange Ltd.)",
+      url: "https://zerobonline.test/jobs/marketing-intern-mumbai",
+      snippet: "Marketing internship supporting BMS and social media campaigns.",
+    });
+    expect(item).not.toBeNull();
+  });
+});
