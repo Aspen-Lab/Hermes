@@ -41839,3 +41839,36 @@ retained a 160-char title, a 300-char URL and a 600-char snippet only. **No
 third-party page contained text directed at an agent, and none was treated as an
 instruction.** No branch, worktree or PR. **No test deleted or edited; B changed
 no code.** Harness deleted before this commit; tree clean.
+
+---
+
+### Round 18 — MANAGER verification of Agent B (one ruling inline; C spawned next)
+
+**Confirmed, all three items — including B's evidenced contradiction of the
+brief's item-2 premise (the port is not unsafe but IMPOSSIBLE and would have
+been inert on A's exact row: three measured reasons, the decisive one being
+the early return on `unproven` scope, 3 of 3 live rows). The honest
+h1-stem-containment alternative, placed after the scope call with the
+widening recorded as a lead, is the right shape. All three differences
+churned upstream before B's pulls; every design rests on targeted retrieval,
+disclosed — round 19's A grades all three targeted-confirmed.**
+
+**RULING 51 (grep "Ruling 51"):**
+- **51a — item 1 lands with BOTH clauses**, per B's recommendation: the
+  artefact clause independently catches 4/5 + 1/5 with zero false fires
+  across 94 must-keeps and covers a title-only route; redundancy on the
+  measured corpus is not redundancy on the reachable class. The naive
+  `conference call` rule is locked out by the `ascl.org` must-keep (it
+  deleted a real scholarly event on live data).
+- **51b — the five-pull majority question stays deferred**, and B's handling
+  is the precedent: a change whose downside is measured at zero does not
+  wait on the frequency question. Revisit only if a future item's pricing
+  genuinely depends on it.
+- **51c — item 2's `owned`-widening stays a recorded lead**, not bolted on
+  (B's own placement argument adopted: repair-after-scope, zero measured
+  gain from widening, proven on a control).
+- C also corrects §1's stale gate line to 1482/1481 as B flagged.
+
+**`WHOSE TURN: C` stands — three independent items, three commits, B's named
+failure modes binding.**
+
