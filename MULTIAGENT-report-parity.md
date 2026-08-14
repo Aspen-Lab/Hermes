@@ -47828,3 +47828,138 @@ one.**
 **`WHOSE TURN: C` stands — items 2 then 1 (six sites), plus the queued
 mangled-text hygiene item zero.**
 
+
+---
+
+### Round 20 — Agent C (item 1 of 3: B20-02 / A20-02, the self-distrusting address guard. **SHIPPED.** Every one of B's tables re-measured by execution first and every load-bearing claim held — including the one B could not have known: **the presence conjuncts had ZERO red tests until C added the case that closes them.**)
+
+**STATUS: DONE.** First of round 20 C's three items, in Ruling 55b's order (item 2
+first). **NO TEST DELETED. NO SHIPPED ASSERTION EDITED.**
+
+Claimed the turn lock (`d7521ea`, `LAPTOP-3CL10CG5 @ 2026-08-14 18:02 UTC`) after
+`git pull --ff-only` (already up to date) and confirming `git branch --show-current`
+reads `feature/summary-report-revamp` — checked, not assumed (§3); the branch name is
+re-read before every commit and in the output of every push. Read §1's whole
+`WHOSE TURN: C` block, §2, §3, both "Round 20 — Agent B" entries in §4 and the
+manager's verification carrying **Ruling 55**, before touching anything.
+
+**Harness** lived **outside `src/`** (`web/zz-r20c/`, own vitest config, include
+pattern `zz-r20c/**/*.probe.ts`) so the standing gate could not collect it;
+**deleted before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. State file appended by writing the
+entry to a scratchpad file and `cat`-ing it in from bash — **NOT PowerShell**.
+
+---
+
+## C RE-MEASURED B's TABLES BY EXECUTION BEFORE WRITING A LINE OF CODE
+
+B's method, reused: **every candidate is a real copy of the shipped file with one
+textual edit** (the only other difference is two relative imports rewritten to the
+`@/` alias, which point at the same modules). The control copy was proved faithful
+by asserting its verdict **equal to the genuinely imported shipped function** on
+every row: **16 of 16 identical, 0 mismatches** — 7 shipped fixtures times 2 kinds,
+plus the reconstructed record under two body variants.
+
+**NO LIVE PULL AND NO PAGE FETCH OF ANY KIND** (round 19 C's precedent). The Rome
+record is **RECONSTRUCTED field-for-field from the values B recorded in §4's own
+table** — `Place.name`, `addressLocality`, `addressRegion`, `addressCountry`,
+`streetAddress`, `postalCode` — and the body text is **constructed by C**, not
+scraped. So B's page facts stay **INHERITED**, exactly as B left them, and no
+third-party page text entered context. **The acceptance check B wrote for C —
+`chemistryworldconference.com` rendering `Rome, Italy` on a LIVE pull — is
+therefore NOT discharged by C and is carried to round 21 A.**
+
+| B's claim | C's re-measurement | verdict |
+|---|---|---|
+| shipped publishes the hotel | `{city:"NH Villa Carpegna", region:"Italy", country:"Italy"}` | **HOLDS** |
+| candidate falls through to branch 3 | `{city:"Rome", region:undefined, country:"Italy"}` | **HOLDS** |
+| blanking only the city is not enough | blank-city form yields **`{region:"Italy", country:"Italy"}`** — chain still stops at branch 1, no `Rome` | **HOLDS** |
+| DLR fixture must-keep survives | `{city:"Oldenburg", country:"Germany"}`, byte-identical | **HOLDS** |
+| cannot fire on a well-formed record | **0 of 14** shipped fixture-by-kind combinations change | **HOLDS** |
+| cost row: guard fires, body names no city | `place` is `undefined` | **HOLDS** |
+| item 2 does not touch `isOnline` | `isOnline` is `true` under BOTH forms | **HOLDS** |
+
+**AND THE SEPARATION IS RE-CONFIRMED INDEPENDENTLY.** `isOnline` stays `true` on the
+guarded record, so this item alone still cannot change the card tile — exactly
+Ruling 54a's separation, measured a second time by a different agent.
+
+---
+
+## THE CHANGE — ONE CLOSED, STRUCTURAL, SELF-CONTAINED TEST
+
+`web/src/lib/opportunities/structured-extract.ts`, `extractPlace`. B's design
+shipped verbatim: when `canonicalize(addressLocality) === canonicalize(Place.name)`,
+the whole address branch fails closed and the `??` chain's lower layers answer.
+**No host string, no word list, no gazetteer, no open character class.** The comment
+names the item, names why failing the WHOLE branch is load-bearing, and names the
+`findCurrentVenueClause` precedent it copies.
+
+**None of the three priced-and-rejected alternatives was re-opened** — not the
+per-component merge (it breaks `structured-extract.test.ts:322`), not the
+`CONFERENCE_CITIES` cross-check, not `addressRegion === addressCountry`.
+
+---
+
+## NEGATIVE PROOF — MEASURED BY MUTATION, AND IT FOUND A REAL VACUITY GAP
+
+Each mutation applied to the **real shipped file**, the real suite run, the file
+then restored from a byte-identical backup and re-verified `diff`-clean:
+
+| mutation | tests turned red |
+|---|---|
+| guard removed entirely (full revert) | **3** |
+| `canonicalize(a) === canonicalize(b)` becomes `a === b` | **1, uniquely** |
+| `return undefined` becomes blank-only-the-city | **3** |
+| **both presence conjuncts dropped** | **1, uniquely — but only after C added a test** |
+| `venueName &&` dropped alone | **0** |
+| `locality &&` dropped alone | **0** |
+
+**THE GAP C FOUND AND CLOSED.** On the first pass, dropping **both** presence
+conjuncts turned **ZERO** tests red — the guard's conjuncts were completely
+unasserted, and B's structural prediction did not reach them. The missing case is a
+`Place` with **neither** a `name` nor an `addressLocality`: without the conjuncts
+both sides canonicalize to `""`, compare equal, and a perfectly good country-only
+address is thrown away. **C added `stays silent when the record names NEITHER — a
+country-only address survives`, and that mutation now has exactly one uniquely-red
+test.**
+
+**DOCUMENTED AS STRUCTURALLY UNTESTABLE (Ruling 53b), IN THE TEST FILE.** Dropping
+**either** conjunct **on its own** turns zero tests red and **no test can be written
+that would**: with one conjunct still standing, the other side's missing value is
+only ever compared as `""`, which never equals a non-empty string. Both are
+nonetheless required, because `canonicalize` takes a `string` and the type checker
+rejects either one alone. The comment forbids a later round "simplifying" a conjunct
+away or adding a test that claims to cover one.
+
+**ADMITTED CONTROLS, LABELLED AS SUCH IN THE FILE.** The four `stays silent` cases
+and the **DLR fixture LOCK** pass before and after and go red under **no** mutation.
+They are must-keeps, not coverage. The fixture test says so in its own comment so a
+later round cannot present it as negative proof of the guard.
+
+**8 new assertions across 8 new tests** (`structured-extract.test.ts` 41 to 49).
+
+---
+
+## THE GATE AFTER ITEM 1, HARNESS DELETED FIRST
+
+**Cold baseline re-measured by C before any work: 90 files / 1573 tests, 1572
+passing** — byte-for-byte what round 19 C left, round 20 A re-measured and round 20 B
+confirmed; sole failure the standing `benchmark.test.ts` live-search flake at
+**`:109`** (`expected false to be true`), the same one of its three recorded forms.
+
+**After item 1: 90 files / 1581 tests, 1580 passing.** +8, all new, all passing. Sole
+failure the same flake at the same line. `npx tsc --noEmit` **clean**; `npx eslint`
+exactly the one standing `quiz.tsx:46` error. **`enrich.test.ts` run SOLO
+(`src/lib/opportunities/enrich.test.ts`): 53/53.** `scoring.test.ts` (both — events
+and jobs) plus `job-cleanup.test.ts` by name: **108/108.**
+`PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**No credential read, printed, logged or written. NO live pipeline pull and NO PAGE
+FETCH OF ANY KIND**, so `euagenda.eu` was not fetched (45a), Ruling 41c's three hosts
+were not hunted (45b), and no job-side host was fetched. No third-party page text
+entered context and none was treated as an instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Harness deleted before this
+commit; tree clean.
+
+**Not done yet:** item 2 (B20-01, hybrid attendance at ALL SIX call sites, Ruling
+55a) and item 0 (the mangled-text hygiene repair).

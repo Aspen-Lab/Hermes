@@ -573,3 +573,188 @@ describe("facet label consistency", () => {
     }
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────
+// B20-02 (A: event A20-02). The self-distrusting address guard.
+//
+// A real page declared its venue TWICE: `Place.name` = "NH Villa Carpegna"
+// and `address.addressLocality` = "NH Villa Carpegna" again, with the country
+// sitting in `addressRegion`. `extractPlace` read only `address`, so the one
+// field that PROVED the locality slot was holding a venue name was discarded,
+// and a hotel became the city on the Location facet button and in the
+// `location` string derived from it.
+//
+// The guard is a comparison of ONE record against ITSELF. By construction it
+// cannot fire on a well-formed record, because a well-formed record's venue
+// name and its locality are different strings — asserted below, not assumed.
+//
+// NEGATIVE PROOF, MEASURED BY MUTATION (not claimed). Removing the guard
+// entirely turns 3 of the tests below red. Replacing `canonicalize(a) ===
+// canonicalize(b)` with a raw `a === b` turns exactly 1 red ("compares
+// canonically"). Blanking only the city instead of returning `undefined`
+// turns 3 red. Dropping BOTH presence conjuncts turns exactly 1 red ("names
+// NEITHER").
+//
+// DOCUMENTED AS STRUCTURALLY UNTESTABLE (Ruling 53b): dropping EITHER
+// presence conjunct ON ITS OWN turns ZERO tests red, and no test can be
+// written that would. With one conjunct still in place the other side's
+// missing value can only ever be compared as "", which never equals a
+// non-empty string, so each conjunct is individually redundant — and both are
+// nonetheless required, because `canonicalize` takes a `string` and the type
+// checker rejects either one alone. A later round must not "fix" this by
+// deleting a conjunct, and must not add a test claiming to cover one.
+//
+// The four "stays silent" cases and the fixture LOCK below are ADMITTED
+// CONTROLS: they pass before and after, and they are must-keeps, not coverage.
+// ───────────────────────────────────────────────────────────────────────
+describe("B20-02 — a Place whose locality repeats its own venue name", () => {
+  // The record shape, field-for-field. Not scraped: reconstructed from the
+  // values recorded in the round-20 investigation.
+  function venuePage(
+    place: Record<string, unknown>,
+    body = "<p>Abstract submissions close in April.</p>",
+  ): string {
+    return `<html><head><script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name: "Chemistry World Conference",
+      startDate: "2027-06-21",
+      location: place,
+    })}</script></head><body>${body}</body></html>`;
+  }
+
+  const SELF_REPEATING = {
+    "@type": "Place",
+    name: "NH Villa Carpegna",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Via Pio IV, 6, 00165 Roma RM, Italy",
+      addressLocality: "NH Villa Carpegna",
+      addressRegion: "Italy",
+      postalCode: "00165",
+      addressCountry: "Italy",
+    },
+  };
+
+  // Body text naming a gazetteer city with a proximity cue — the lower layer
+  // that was already computing the right answer and never getting to run.
+  const BODY_WITH_CITY = "<p>The conference will be held in Rome, Italy.</p>";
+
+  it("fails the JSON-LD branch closed so the body-text layer answers", () => {
+    // THE uniquely-red test for the guard. Reverting it puts the hotel back.
+    expect(
+      extractOpportunityPageDetails(venuePage(SELF_REPEATING, BODY_WITH_CITY), "event")
+        .place,
+    ).toEqual({ city: "Rome", region: undefined, country: "Italy" });
+  });
+
+  it("drops the whole address record, not just the city", () => {
+    // Load-bearing, and measured: blanking only the city leaves
+    // `{region:"Italy", country:"Italy"}`, which is still truthy, so the `??`
+    // chain would stop at the JSON-LD branch and the body-text city would
+    // never be reached. This asserts the region and country go too.
+    const place = extractOpportunityPageDetails(
+      venuePage(SELF_REPEATING),
+      "event",
+    ).place;
+    expect(place).toBeUndefined();
+  });
+
+  it("compares canonically, so case and spacing cannot dodge the guard", () => {
+    expect(
+      extractOpportunityPageDetails(
+        venuePage({
+          "@type": "Place",
+          name: "NH  Villa Carpegna",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "nh villa carpegna",
+            addressCountry: "Italy",
+          },
+        }),
+        "event",
+      ).place,
+    ).toBeUndefined();
+  });
+
+  it("stays silent when the record names a venue but no locality", () => {
+    expect(
+      extractOpportunityPageDetails(
+        venuePage({
+          "@type": "Place",
+          name: "NH Villa Carpegna",
+          address: { "@type": "PostalAddress", addressCountry: "Italy" },
+        }),
+        "event",
+      ).place,
+    ).toEqual({ city: undefined, region: undefined, country: "Italy" });
+  });
+
+  it("stays silent when the record names a locality but no venue", () => {
+    expect(
+      extractOpportunityPageDetails(
+        venuePage({
+          "@type": "Place",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Oldenburg",
+            addressCountry: "Germany",
+          },
+        }),
+        "event",
+      ).place,
+    ).toEqual({ city: "Oldenburg", region: undefined, country: "Germany" });
+  });
+
+  it("stays silent when the record names NEITHER — a country-only address survives", () => {
+    // The `locality && venueName &&` conjuncts are load-bearing, and this is
+    // the case that proves it: with both fields absent, a comparison that did
+    // not guard on presence would compare "" against "", call them equal, and
+    // throw away a perfectly good country. Measured — without this test the
+    // conjuncts had NO red test at all.
+    expect(
+      extractOpportunityPageDetails(
+        venuePage({
+          "@type": "Place",
+          address: { "@type": "PostalAddress", addressCountry: "Germany" },
+        }),
+        "event",
+      ).place,
+    ).toEqual({ city: undefined, region: undefined, country: "Germany" });
+  });
+
+  it("stays silent when a well-formed record names both and they differ", () => {
+    expect(
+      extractOpportunityPageDetails(
+        venuePage({
+          "@type": "Place",
+          name: "Palazzo dei Congressi",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Rome",
+            addressCountry: "Italy",
+          },
+        }),
+        "event",
+      ).place,
+    ).toEqual({ city: "Rome", region: undefined, country: "Italy" });
+  });
+
+  it("LOCK, not coverage: the shipped German-workshop fixture is unchanged", () => {
+    // ADMITTED CONTROL. This fixture passes BEFORE and AFTER the guard, so it
+    // is NOT negative proof of the change — it is the must-keep witness that
+    // the guard cuts the right way on a REAL page whose venue name
+    // ("DLR Institute of Networked Energy Systems") and locality
+    // ("Oldenburg") genuinely differ. A later round must not present it as
+    // coverage of the guard.
+    const fixture = readFileSync(
+      new URL("./__fixtures__/dlr-emea2026-workshop.html", import.meta.url),
+      "utf8",
+    );
+    expect(extractOpportunityPageDetails(fixture, "event").place).toEqual({
+      city: "Oldenburg",
+      region: undefined,
+      country: "Germany",
+    });
+  });
+});

@@ -953,8 +953,25 @@ function extractPlace(location: unknown): ExtractedPlace | undefined {
   const address = firstRecord(locationRecord.address);
   if (!address) return undefined;
 
+  const locality = nonEmptyString(address.addressLocality);
+  const venueName = nonEmptyString(locationRecord.name);
+  // B20-02 (A: event A20-02). schema.org `Place.name` IS the venue. When the
+  // locality slot repeats it verbatim, the slot is holding a venue name rather
+  // than a municipality, so the whole address record is unreliable: fail it
+  // closed and let the lower layers of the `place:` chain answer instead of
+  // publishing a hotel as a city. Failing the WHOLE branch (rather than
+  // blanking only the city) is load-bearing — a leftover region/country is
+  // still truthy, so the `??` chain would stop here and the body-text layer
+  // would never run. This is a comparison of ONE record against ITSELF: no
+  // host string, no word list, no gazetteer, so by construction it cannot fire
+  // on a well-formed record, whose venue name and locality differ. Same policy
+  // `findCurrentVenueClause` already applies to a venue-only clause below.
+  if (locality && venueName && canonicalize(locality) === canonicalize(venueName)) {
+    return undefined;
+  }
+
   return sanitizePlace({
-    city: nonEmptyString(address.addressLocality),
+    city: locality,
     region: nonEmptyString(address.addressRegion),
     country: countryName(address.addressCountry),
   });
