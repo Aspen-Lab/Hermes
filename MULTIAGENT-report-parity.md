@@ -270,7 +270,10 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          **LAPTOP-3CL10CG5 @ 2026-08-14 11:24 UTC** — Agent A, round
+                  16, GATE CANDIDATE ROUND. Claimed after `git pull --ff-only`
+                  and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`.
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
