@@ -270,12 +270,141 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 17:37 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 17:35 UTC — ROUND 20 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 18:04 UTC — ROUND 20 B IS
+                  COMPLETE. THE ROME CASE IS TWO GAPS, NOT ONE, AND IT IS PROVED
+                  BY EXECUTION.** Both items (Ruling 54a), **one commit each, each
+                  pushed immediately** (`c1c9580`, `1e4492a`), plus this hand-off.
+                  Claimed the lock cleanly (`03d9c53`) after `git pull --ff-only`
+                  and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read before every
+                  commit and in the output of every push (§3). **B CHANGED NO CODE,
+                  DELETED NO TEST, EDITED NO TEST, AND TOUCHED NO FILE EXCEPT THIS
+                  ONE.** Harness lived outside `src/` (`web/zz-r20b/`, own vitest
+                  config, include pattern `zz-r20b/**/*.probe.ts`) and was
+                  **deleted before BOTH commits**; `git status --porcelain
+                  --untracked-files=all` confirmed clean each time. State file
+                  appended by writing each entry to a scratchpad file and `cat`-ing
+                  it in from bash — **NOT PowerShell**; both appends were **pure
+                  insertions (293 and 372 lines, ZERO deletions) with ZERO
+                  mojibake**, verified by diffing the appended region against the
+                  source; the §1 rewrite is 158 insertions and **exactly ONE
+                  deletion — the demoted `WHOSE TURN:` header line, checked.**
+
+                  **METHOD: EVERY CANDIDATE IS A REAL COPY OF THE SHIPPED FILE WITH
+                  ONE TEXTUAL EDIT** (round 19 B's method), and the byte-identical
+                  control copy was proved faithful **twice per item**: the
+                  **shipped suites run green against it** (`card.test.ts` 2/2,
+                  `structured-extract.test.ts` 41/41, `enrich.test.ts` 53/53)
+                  **and every control verdict is asserted equal to the genuinely
+                  imported function on every live row** (0 mismatches of 17, twice).
+                  **One live event-pool pull** with a no-op `PoolCache` (Ruling
+                  39d/41a), `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used;
+                  **page-fetch enrichment ran, LLM enrichment did not** (42b).
+
+                  **THE VERDICT: TWO GAPS, IN TWO FUNCTIONS, NEITHER CLOSING THE
+                  OTHER.** Replayed end to end on the real page: **item 2 alone
+                  changes NOTHING on the card; item 1 alone swaps one wrong
+                  location for another (`NH Villa Carpegna, Italy`); only both
+                  together render `Rome, Italy`.** Ruling 54a's separation is
+                  confirmed by execution, not argued.
+
+                  **A20-01 — `Online` DOES NOT WIN AT THE CARD. IT IS BORN AT THE
+                  PAGE EXTRACTOR.** `structured-extract.ts:1614-1617` folds
+                  schema.org's **`MixedEventAttendanceMode` (HYBRID)** into a
+                  two-valued `isOnline`. **Measured: `meta.isOnline` is `false` and
+                  the og text carries no online token — `.includes("mixed")` is the
+                  ONLY clause that fires.** `enrich.ts:339` then latches it and
+                  `card.ts:38` suppresses the venue. **THE BUILD ALREADY
+                  CONTRADICTS ITSELF: `facets.ts:294-312` calls this same row
+                  `hybrid` while the card calls it `Online`** — and it is the only
+                  row of 17 the facet calls hybrid. **Fix reuses that already-shipped,
+                  already-tested predicate at the render site: 1 of 17 live rows
+                  changes, 7 constructed genuinely-online shapes (built from each
+                  source's OWN code) all still render `Online`, zero tests at risk,
+                  ZERO score movement.**
+
+                  **A20-02 — THE PAGE DECLARES THE VENUE TWICE AND PEER READS THE
+                  WRONG COPY.** The JSON-LD `Place` carries
+                  `name = "NH Villa Carpegna"` **and repeats it in
+                  `address.addressLocality`**, with the country in `addressRegion`.
+                  **`extractPlace` reads ONLY `address`, so the one field that
+                  proves the slot is wrong is discarded.** Branch 3 of the `place:`
+                  chain already computes **`{city:"Rome", country:"Italy"}` and
+                  never runs.** **Fix is a closed record self-comparison
+                  (`Place.name` vs `addressLocality`) — no host string, no word
+                  list, no gazetteer, no open class: 1 of 16 real pages changes,
+                  zero tests at risk, and the SHIPPED DLR fixture is the must-keep
+                  witness** (its venue name and locality differ, so `Oldenburg`
+                  survives).
+
+                  **B INVERTED A's WORK ORDER AND GAVE THE REASON — ITEM 2 FIRST.**
+                  Stopping after item 2 leaves the card exactly as today and repairs
+                  the facet button; stopping after item 1 puts a **fresh** wrong
+                  value on the measured surface. 54a binds the separation, not the
+                  order.
+
+                  **THREE ALTERNATIVES PRICED AND REJECTED ON MEASURED
+                  CONSEQUENCES.** Dropping `includes("mixed")` **deletes
+                  information** (the Format facet would regress to `in-person`, and
+                  `locationFit`/score/`preferredFeeTier` all move). A per-component
+                  place merge produced the right city **and independently improved a
+                  second real row** (`thebatteryshow.com` gained a correct
+                  `region:"MI"`) **but BREAKS a shipped test** —
+                  `structured-extract.test.ts:322` gets `region:"France"` on a Berlin
+                  address, the exact cross-contamination the `??` chain's precedence
+                  exists to prevent. A `CONFERENCE_CITIES` cross-check would discard
+                  thousands of real small localities.
+
+                  **B REPORTED THREE THINGS AGAINST ITS OWN CONVENIENCE.** (1) **The
+                  brief's "A did NOT fetch the page" is wrong — A DID**, recorded in
+                  §4's own part-1 entry; the true statement is that A did not read
+                  `place`/`isOnline` off it. (2) **A20-02 is NOT invisible today** —
+                  the LOCATION FACET BUTTON already reads `NH Villa Carpegna`, so A's
+                  "no reader can see it" is wrong, though **A's ranking still stands
+                  and B does not re-rank.** (3) **This round's live pool contains NO
+                  genuinely-online event, so item 1's must-keep has NO live witness**
+                  — the 7 must-keep shapes are constructed from each source's own
+                  code, and the live run proves only the no-regression half.
+
+                  **ONE NEW `POLICY — manager decides`: THE RENDER-SITE SCOPE.**
+                  `isOnline ? "Online" : location` appears at **SIX** sites. A
+                  measured the card, **but plate 03 is the event REPORT, which
+                  carries the identical collapse at `page.tsx:634` and `:1715` — so a
+                  card-only fix leaves the wrong value on the surface this loop
+                  exists to measure.** B recommends including those two and does not
+                  decide. **B also declined a separate copy question** (`page.tsx:656`
+                  / `:1728` printing `"in person"` for a hybrid) because writing
+                  `"hybrid"` there would be inventing plate copy. **B decided none of
+                  the three standing `POLICY` items** (Ruling 33, 51b, 51c) and
+                  accepts 54b/54c as ruled.
+
+                  **THE GATE, RE-RUN BY B AFTER DELETING THE HARNESS: 90 files / 1573
+                  tests, 1572 passing** — byte-for-byte what round 19 C left and round
+                  20 A re-measured; sole failure the standing `benchmark.test.ts`
+                  flake at **`:109`** (`expected false to be true`), the same one of
+                  its three recorded forms A saw; `npx tsc --noEmit` clean;
+                  `npx eslint` exactly the one standing `quiz.tsx:46` error. **B
+                  changed no code, so this confirms the harness left nothing behind —
+                  it is not a result.**
+
+                  **No credential read, printed, logged or written — boolean presence
+                  only.** Page fetches went through Peer's **own** `fetchPageHtml`, of
+                  pool URLs and the one URL A recorded; **every retained value is a
+                  derived boolean or a short field and no page body entered context.**
+                  **`euagenda.eu` NOT fetched deliberately (45a)** and it independently
+                  returned `null`; **Ruling 41c's three hosts NOT hunted (45b); no
+                  job-side host fetched.** No third-party page contained text directed
+                  at an agent and none was treated as an instruction. No branch,
+                  worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Full detail in §4's two "Round 20 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-14 17:35 UTC — ROUND 20 A IS
                   COMPLETE. BOTH ROUND-19 ITEMS ARE CONFIRMED, AND THE GATE IS
                   NOT A CANDIDATE.** Four parts, **one commit each, each pushed
                   immediately** (`bd7b67a`, `46e78b8`, `2ac45c7`, plus this
@@ -2702,7 +2831,21 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 17:35 UTC — ROUND 20 A IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **19 IS OPEN — A IS DONE, B IS NEXT.** Round 19 was briefed as
+ROUND:            **20 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found two
+                  unexplained differences on one row of one new host, 5 of 5, and
+                  the manager ruled them one investigation / two ranked items
+                  (Ruling 54a). **B has investigated both, one commit each, and
+                  establishes by execution that they are TWO gaps in two functions,
+                  neither closing the other.** **B changed no code (§2); C is the
+                  first role this round to touch `src/`.** C also inherits the
+                  manager's queued **mangled-text hygiene item zero**
+                  (`jobweb.test.ts`), which is NOT a report-parity difference. The
+                  gate stays `GATE (0%): NOT MET` — **C does not set it and cannot
+                  move it (§2); only round 21's A's live measurement can, and only
+                  the manager closes (Ruling 30).**
+                  ---
+                  *Superseded, kept only as history: the round-20 B round line.*
+                  **19 IS OPEN — A IS DONE, B IS NEXT.** Round 19 was briefed as
                   a GATE CANDIDATE ROUND and **the gate condition was applied
                   exactly as written: zero unexplained differences was required
                   and TWO were found**, both on 5 of 5 pulls. So the hand-off is
@@ -2746,7 +2889,164 @@ ROUND:            **19 IS OPEN — A IS DONE, B IS NEXT.** Round 19 was briefed 
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — Investigator, round 20.** Round 20 A's live measurement is
+WHOSE TURN:       **C — Implementer, round 20.** Round 20 B is COMPLETE. Both items
+                  investigated (Ruling 54a), **one commit each, each pushed
+                  immediately** (`c1c9580`, `1e4492a`), plus this hand-off. **B
+                  changed no code (§2); C is the first role this round to touch
+                  `src/`.** Claim the §0d lock first, always. Full evidence is in
+                  §4's two "Round 20 — Agent B" entries — **work from those, not
+                  from this summary.**
+
+                  **VERDICT: TWO GAPS, PROVED BY EXECUTION. NEITHER CLOSES THE
+                  OTHER.** Replayed end to end on the real page: **item 2 alone
+                  changes NOTHING on the card** (`isOnline` still suppresses the
+                  venue); **item 1 alone swaps one wrong location for another**
+                  (`NH Villa Carpegna, Italy`); **only both together render
+                  `Rome, Italy`.** Ruling 54a's separation is confirmed.
+
+                  **B INVERTED A's WORK ORDER AND SAYS WHY — DO ITEM 2 FIRST.**
+                  Stopping after item 2 leaves the card exactly as it is today and
+                  repairs the facet button; stopping after item 1 puts a **fresh**
+                  wrong value (a hotel name) on the surface this loop measures.
+                  54a binds the SEPARATION, not the order; §2 gives B the order.
+
+                  - **WORK ITEM 1 (do first) — A20-02, the hotel-as-city.**
+                    `structured-extract.ts`, `extractPlace` (:950-961). **The page's
+                    own JSON-LD `Place` names the venue correctly
+                    (`location.name = "NH Villa Carpegna"`) and then REPEATS it in
+                    `address.addressLocality`, with the country in `addressRegion`.
+                    `extractPlace` reads ONLY `address`, so the one field that
+                    proves the slot is wrong is discarded.** Branch 3 of the
+                    `place:` chain (:1610-1613) already computes
+                    **`{city:"Rome", country:"Italy"}`** and never runs. **Fix: one
+                    closed, structural self-comparison —
+                    `canonicalize(addressLocality) === canonicalize(location.name)`
+                    ⇒ fail the whole branch closed.** No host string, no word list,
+                    no gazetteer, no open class. **1 of 16 real pages changes;
+                    `structured-extract.test.ts` 41/41 and `enrich.test.ts` 53/53
+                    green on the candidate; the shipped DLR fixture is the
+                    MUST-KEEP witness** (its venue name and locality differ, so
+                    `Oldenburg` survives).
+                  - **WORK ITEM 2 (do second) — A20-01, the `Online` tile.**
+                    **`Online` does NOT win at the card — it is BORN at
+                    `structured-extract.ts:1614-1617`, where schema.org's
+                    `MixedEventAttendanceMode` (HYBRID) is folded into a two-valued
+                    `isOnline`.** Measured: `meta.isOnline` is `false` and the og
+                    text carries no online token — **`.includes("mixed")` is the
+                    only clause that fires.** Then `enrich.ts:339` latches it and
+                    `card.ts:38` suppresses the venue. **THE BUILD ALREADY
+                    CONTRADICTS ITSELF: `facets.ts:294-312` calls this same row
+                    `hybrid` while the card calls it `Online`.** **Fix: export
+                    `hasPhysicalPlace(place)` from `facets.ts`, have
+                    `opportunityFormat` call it (pure refactor), and ask the same
+                    question in `card.ts`'s `locationView`.** **1 of 17 live rows
+                    changes; 7 constructed genuinely-online shapes (built from each
+                    source's OWN code) all still render `Online`; `card.test.ts`
+                    2/2 green; ZERO score movement — `card.ts` is a pure view
+                    function outside the scoring path.**
+                  - **WORK ITEM 0 — the mangled-text hygiene item, queued by the
+                    manager at round 19's close.** `web/src/lib/jobs/sources/jobweb.test.ts`
+                    carries **17 lines of mojibake** introduced by round 17's C in
+                    `909b6bf`, **one of them INSIDE a test string literal** (the
+                    Oregon must-keep title). **Not a report-parity difference**; A
+                    confirmed it is still present and untouched. `clean.ts` and
+                    `report-stream.test.ts` show one line each and were NOT
+                    investigated.
+
+                  **ONE `POLICY — manager decides`, RAISED BY B AND NOT DECIDED:
+                  THE RENDER-SITE SCOPE.** `isOnline ? "Online" : location` appears
+                  at **SIX** sites. A measured `eventCardView()`, **but plate 03 is
+                  the event REPORT, which carries the identical collapse at
+                  `app/events/[id]/page.tsx:634` (the Where fact) and `:1715` (the
+                  subtitle) — so a card-only fix leaves the same wrong value on the
+                  surface this loop exists to measure, and A20-01 returns next
+                  round.** B recommends including those two through the same
+                  exported predicate and **does not decide it**. The three
+                  feed/briefing sites are out of plate scope. **A SEPARATE COPY
+                  QUESTION B ALSO DECLINED:** `page.tsx:656` and `:1728` print the
+                  FORMAT word (`"in person"`), which is now incomplete for a hybrid
+                  — **saying `"hybrid"` there would be inventing plate copy.**
+
+                  **DO NOT TOUCH, each named with its reason in §4:**
+                  `page.tsx:527` (`preferredFeeTier` — correctly offers a hybrid's
+                  online ticket today), `page.tsx:656`, `page.tsx:1728`,
+                  `shared.ts`'s `locationFit`, `scoring.ts:244`, **`ccfddl.ts:146`**
+                  (a DIFFERENT defect in a different file — the source overwrites
+                  the venue string with the literal `"Online"`, so a ccfddl hybrid
+                  row is a **documented known-remaining under-catch** with ZERO live
+                  sightings, Rulings 37/40), and the three feed/briefing render
+                  sites.
+
+                  **THREE ALTERNATIVES PRICED AND REJECTED ON MEASURED
+                  CONSEQUENCES, NOT TASTE. C SHOULD NOT RE-OPEN THEM.**
+                  (1) **Dropping `attendanceMode.includes("mixed")`** — one line,
+                  fixes all six sites, **but DELETES information**: the Format facet
+                  would regress from `hybrid` to `in-person`, and `locationFit`, the
+                  score and `preferredFeeTier` all move. (2) **A per-component merge
+                  of the three place layers** — produces the right city AND
+                  independently improved a second real row (`thebatteryshow.com`
+                  gained a correct `region:"MI"`), **but it BREAKS A SHIPPED TEST**:
+                  `structured-extract.test.ts:322` expects `region: undefined` on a
+                  Berlin address and gets **`"France"`**, pulled in from an og layer
+                  whose "region" is actually a country — exactly the
+                  cross-contamination the `??` chain's strict precedence exists to
+                  prevent. (3) **A `CONFERENCE_CITIES` cross-check** — 454 names
+                  would discard thousands of real small localities.
+
+                  **NEGATIVE PROOF (Ruling 53b), PREDICTED STRUCTURALLY SO C CAN
+                  CHECK RATHER THAN DISCOVER.** Item 2's guard **will** have a
+                  uniquely-red test. **But `card.test.ts` has NO test where
+                  `isOnline` is `true` — the branch item 1 changes is UNTESTED
+                  TODAY**, so the must-keep (`isOnline && !hasPhysicalPlace` ⇒
+                  `Online`) **cannot be uniquely red; it is a LOCK, not coverage,
+                  and C must label it that way.** The shipped **DLR fixture** is
+                  likewise a lock for item 2, not negative proof.
+
+                  **WHAT RENDERS ON REJECTION, MEASURED AT EVERY LAYER.** Guard
+                  fires + gazetteer city ⇒ `Rome, Italy`. Guard fires + country only
+                  ⇒ `Italy` (thin but true). **Guard fires + body text finds nothing
+                  ⇒ no `place`, so item 1's predicate is false and the tile returns
+                  to `Online` — a return to TODAY's behaviour, not a new failure
+                  mode. B does not call that cost negligible; it had ZERO
+                  occurrences in 16 real pages.** No branch invents a value; every
+                  rejection lands on a string the codebase already ships.
+
+                  **TWO CORRECTIONS TO THE RECORD, BOTH AGAINST B's CONVENIENCE.**
+                  (1) **B's brief says "A did NOT fetch the page." A DID** — §4's own
+                  round-20 part-1 entry records the fetch, clipped to
+                  `<title>`/`<h1>`/`og:title`. What is true is the substance: A did
+                  not read `place` or `isOnline` off the page. (2) **A20-02 is NOT
+                  invisible today.** A wrote that no reader can see it; **measured,
+                  the LOCATION FACET BUTTON already reads `NH Villa Carpegna`**
+                  (`facets.ts:319` → `:88` reads `place.city` and never consults
+                  `isOnline`). **A's ranking still stands and B does not re-rank** —
+                  but item 2 repairs a live user-facing wrong value on its own, which
+                  is why it goes first.
+
+                  **B DECIDED NONE OF THE THREE STANDING `POLICY` ITEMS** — Ruling
+                  33's full-phrase collisions, 51b's five-pull majority scoring,
+                  51c's `owned`-widening. **Rulings 54b and 54c are accepted as
+                  ruled and neither touches these items.**
+
+                  **THE GATE C INHERITS, RE-RUN BY B AFTER DELETING THE HARNESS:
+                  90 files / 1573 tests, 1572 passing** — byte-for-byte what round
+                  19 C left and round 20 A re-measured; sole failure the standing
+                  `benchmark.test.ts` flake at **`:109`** (`expected false to be
+                  true`), the same one of its three recorded forms A saw;
+                  `npx tsc --noEmit` clean; `npx eslint` exactly the one standing
+                  `quiz.tsx:46` error. **B changed no code, so this confirms the
+                  harness left nothing behind — it is not a result.**
+
+                  **ACCEPTANCE FOR C, ON A LIVE PULL:**
+                  `chemistryworldconference.com` renders **`Rome, Italy · …`** on the
+                  card and **`Rome`** in the Location facet. **The round is not
+                  finished until BOTH items land** — one alone leaves a wrong value
+                  on the card either way.
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-20 B
+                  briefing that follows is complete and was executed. Do not work
+                  from it.*
+                  **B — Investigator, round 20.** Round 20 A's live measurement is
                   COMPLETE and **BOTH round-19 items are CONFIRMED**. **TWO
                   unexplained differences remain, both on the SAME row, on ONE
                   host that is new to this loop, on 5 of 5 pulls.** Claim the §0d
