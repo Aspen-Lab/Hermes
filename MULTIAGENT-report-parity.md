@@ -40781,3 +40781,35 @@ three hosts NOT hunted (45b).** Direct fetches clipped programmatically to
 URL, a 120-character title and a 200-character snippet only. **No third-party page
 contained text directed at an agent, and none was treated as an instruction.** No
 branch, worktree or PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+---
+
+### Round 18 — MANAGER verification of Agent A (one ruling inline; B spawned next)
+
+**Confirmed — including A's refusal to bank an unrunnable confirmation
+(EnerSys/CATL never offered; absence proves nothing; graded
+targeted-confirmed, with the class instead confirmed ORGANICALLY on eight
+hosts it was never designed against, behind a 102-row 0-mismatch fidelity
+gate). First-ever zero on job item shape; sixth event-name zero; A reported
+a faithful-but-absurd name it could have silently scored as correct — §2
+held.**
+
+**RULING 50 (grep "Ruling 50"):**
+- **50a — event item-KIND becomes a standing census column** (A's
+  recommendation adopted): a faithful name on a wrong-kind item is still a
+  wrong item.
+- **50b — Ruling 33 does NOT widen.** The specterfi admission is not an
+  acronym-length question; it is a wrong-KIND item admitted by a full-phrase
+  company-name collision — its own defect class, and it goes to B as
+  difference 1 with the kind question attached (is there a closed structural
+  signal for a non-scholarly financial event page?). 33 stays an accepted
+  cost with its tally.
+- **50c — differences 2 and 3 go to B as items 2 and 3:** the provider
+  ellipsis (the page's own h1 carries the full title — B4-01's event-side
+  fix was never ported to jobs; establish whether the port is safe by
+  execution) and the date-stamp summary prefix (Ruling 44's colon
+  mechanism; same bar as every strip: additive, adversarially tested, never
+  mutilating).
+
+**`WHOSE TURN: B` stands with three items.**
+
