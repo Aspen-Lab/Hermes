@@ -270,12 +270,156 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 14:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 14:22 UTC — ROUND 18 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 14:56 UTC — ROUND 18 B IS
+                  COMPLETE.** Three items, **one commit each, each pushed
+                  immediately** (`3815c0f`, `e4e0b35`, `c8ecd83`), plus this
+                  hand-off. Claimed the lock cleanly (`1fa0bee`) after
+                  `git pull --ff-only` and confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; branch name re-read in
+                  the output of every push (§3). **B changed no code, deleted no
+                  test, edited no test, and touched no file except this one**
+                  (§2). Harness lived outside `src/` (`web/zz-r18b/`, own vitest
+                  config) and was **deleted before every one of the three
+                  commits**; `git status --porcelain --untracked-files=all`
+                  confirmed clean each time.
+
+                  **HEADLINE: ALL THREE ITEMS ARE DESIGNED AND ADVERSARIALLY
+                  TESTED — BUT B COULD NOT REPRODUCE ANY OF THE THREE LIVE, AND
+                  SAYS SO BEFORE REPORTING A SINGLE NUMBER.** Five independent
+                  live event pulls and five independent live job pulls, separate
+                  processes, no-op `PoolCache`, the exact entry points §2 names.
+                  `PEER_PROFILE_SNAPSHOT_PATH` NOT used; keys checked as booleans
+                  only. **`specterfi.com` is absent from all 171 raw provider
+                  rows (136 hosts); ZERO of 58 job pool rows carry an ellipsis
+                  title; ZERO of 5 INL summaries carry the date stamp.** All
+                  three churned upstream between A's pull and B's — Ruling
+                  39d/41a's variance class. **Every design below therefore rests
+                  on TARGETED retrieval, disclosed as targeted (Ruling 41c's
+                  precedent), and round 19's A should grade all three
+                  `targeted-confirmed`, not live-confirmed.**
+
+                  **ITEM 1 — YES, A CLOSED STRUCTURAL SIGNAL EXISTS, AND IT IS
+                  NOT THE OBVIOUS ONE.** Targeted retrieval returned **twelve
+                  real specterfi concall rows**; the shipped gate **already
+                  rejects 7** (past dates) and **admits 5**. **The naive rule —
+                  bare `conference call` — was measured FIRST and it deletes a
+                  real scholarly event on live data** (`ascl.org`, *"2026 YCC
+                  Conference Call for Papers"*), exactly the must-keep class
+                  Ruling 50b names. **REJECTED and recorded so it is not
+                  re-proposed.** What survives: a shareholder-occasion noun list
+                  plus a call-ARTEFACT page-type label, read off the provider
+                  title and the URL path phrase (`urlPathPhrase`, shipped
+                  precedent from B12-03 gap B). **Every candidate term was
+                  measured ALONE and SEVEN were cut for earning nothing — and
+                  the cut also removed the only adversarial false fire
+                  (`quarterly results`). The evidence-minimal list and the safe
+                  list are the same list.** Final: **specterfi 5/5, other finance
+                  hosts 3/5, ZERO false fires on 77 real admitted rows, ZERO on
+                  17 adversarial must-keeps.** **A is CONFIRMED on `og:title`
+                  (`1539 Feb2026 Concall Summary`, verified by direct fetch) and
+                  CORRECTED on one load-bearing detail: the INGESTION gate reads
+                  the PROVIDER title, which is a different string** — both forms
+                  are covered. **The class spans five other hosts, so no host
+                  list and no URL-only rule is offered.**
+
+                  **ITEM 2 — B CONTRADICTS THE BRIEF'S PREMISE WITH EVIDENCE:
+                  THE PORT IS NOT UNSAFE, IT IS IMPOSSIBLE, AND A STRAIGHT PORT
+                  WOULD HAVE BEEN INERT ON A's EXACT ROW.** Three measured
+                  reasons: the job path never calls
+                  `extractOpportunityPageDetails`; that function refuses a typed
+                  name unless `kind === "event"`; and **`enrichJobCandidates`
+                  RETURNS EARLY on `scope.status === "unproven"` — and all three
+                  live `linkedin.com` rows are `unproven`, 3 of 3.** The event
+                  fix's position cannot see the row. **B offers the honest
+                  alternative Ruling 50c asks for: a self-verifying EXTENSION** —
+                  extend a title only when the page's own first `<h1>` literally
+                  BEGINS with the truncated stem. **Only the `<h1>` works, and
+                  that is forced, not preferred: LinkedIn's `<title>`/`og:title`
+                  are employer-prefixed and fail the containment test** — the
+                  natural "prefer the page title" port produces nothing here.
+                  **BLAST RADIUS, MEASURED ON THE SHIPPED FUNCTIONS: the employer
+                  chain has ZERO exposure — `resolveEmployerIdentity` takes no
+                  title argument and returns a byte-identical object.** Scope,
+                  role kind and the ingestion gate are unchanged on all four real
+                  truncated rows; **dedup runs BEFORE enrichment so the two rows
+                  stay two rows** (the brief's no-dedup instruction satisfied
+                  structurally). **One non-zero number disclosed rather than
+                  rounded away: the score moves 0.713 → 0.712.** The repair is
+                  placed AFTER the scope call **deliberately** — repairing first
+                  would widen page ownership (proven on a control) for **zero
+                  measured gain on real rows**. **The defect is multi-host: 4 of
+                  10 provider rows truncated, on `linkedin.com`, `talent.com`,
+                  `xtalks.com`, `bebee.com`.** Repair fires on 1 of the 4; the
+                  other three fetch to `null` or have no `<h1>` — **named
+                  under-catch, status quo on all three.**
+
+                  **ITEM 3 — ADDITIVE, ZERO MEASURED COLLATERAL, AND THE
+                  LOOKAHEAD IS THE WHOLE FIX.** Mechanism proven end to end
+                  through the real `cleanJobDescription` + `summarizeJob`
+                  (`STAMP SURVIVES TODAY: true`). **`LEADING_LABEL_RE` IS NOT
+                  TOUCHED** — Ruling 44 stands; this is a separate rule for a
+                  colonless shape. **A SECOND, DISTINCT INSTANCE ON A DIFFERENT
+                  HOST was found without hunting for it** (`carleton.edu`), and
+                  it is the round's best adversarial case because the sentence
+                  behind the stamp contains a REAL date. **Candidate comparison:
+                  no-lookahead mutilates 3 of 8 real sentence shapes (one INVENTS
+                  a start date from a date range), em-dash-only 2 of 8, the
+                  proposed form 0 of 8 while still stripping 3 of 3.** **Zero
+                  fires on 95 of 96 real provider snippets; the one fire is
+                  correct.** **Structurally cannot empty the field** — the 40-char
+                  minimum is enforced on the UNSTRIPPED text and the longest
+                  possible match is 21 characters. **The strip ORDER is proven by
+                  table, not asserted:** bracket → date → label is the only order
+                  that cleans the three-prefix case, for the same anchor-blocking
+                  reason B14-02 already documented. **B prices the minority-row
+                  question rather than deferring it: a change whose downside is
+                  measured at zero does not need the frequency question answered.
+                  The `POLICY` stays open and stays the manager's.**
+
+                  **TESTS AT RISK — GREPPED, NOT GUESSED. NONE.** No existing
+                  test anywhere in `src/lib/events/` or `src/lib/opportunities/`
+                  contains any finance vocabulary, so item 1 cannot collide with
+                  the 16 existing `webResultToRawEventItem` call sites. No
+                  `enrich.test.ts` job title ends in an ellipsis, so item 2 is a
+                  no-op on every existing assertion. No `summarize.test.ts`
+                  sentence begins with a month token, so item 3 is a no-op there.
+                  **All three items are purely additive.**
+
+                  **GATE BASELINE RE-MEASURED AND THE STALE NUMBER CORRECTED.**
+                  `npx vitest run` → **90 files / 1482 tests, 1481 passing**,
+                  sole failure the standing `benchmark.test.ts` live-search flake
+                  (city coverage 0.467 vs its 0.5 threshold). `npx tsc --noEmit`
+                  **clean**. `npx eslint` **exactly the one standing
+                  `quiz.tsx:46` error**. **§1's round-17 C text said "1426 tests,
+                  1425 passing" — that is out of date; C must hold 1482/1481.**
+
+                  **THREE `POLICY — manager decides` REMAIN OPEN AND B DECIDED
+                  NONE OF THEM:** whether item 1 should land occasion-only
+                  (B discloses that the artefact clause is REDUNDANT on the
+                  measured corpus and recommends keeping it anyway, with the
+                  reason); round 13's five-pull majority scoring; and the
+                  `owned`-widening lead from item 2, recorded as a future item
+                  and deliberately NOT bolted on.
+
+                  **No credential read, printed, logged or written — boolean
+                  presence only. No `PEER_PROFILE_SNAPSHOT_PATH`. `euagenda.eu`
+                  NOT fetched (45a). Ruling 41c's three hosts NOT hunted (45b).**
+                  Direct fetches went through Peer's own `fetchPageHtml` or were
+                  clipped programmatically to `<title>`/`og:title`/first `<h1>`
+                  at 160 chars; provider rows retained a 160-char title, a
+                  300-char URL and a 300–600-char snippet only. **No third-party
+                  page contained text directed at an agent, and none was treated
+                  as an instruction.** No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Full
+                  detail in §4's three "Round 18 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity: **finished the turn @
+                  2026-08-14 14:22 UTC — ROUND 18 A IS
                   COMPLETE.** All four parts, one commit each, each pushed
                   immediately (`fd62cb5`, `ad3764e`, `7581851`, this one).
                   Claimed the lock cleanly (`82bff5f`) after `git pull
@@ -1877,7 +2021,17 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 14:22 UTC — ROUND 18 A IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **18 IS OPEN — A IS DONE, B IS NEXT.** Round 18 was briefed as
+ROUND:            **18 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found three
+                  differences and the manager ruled them into three items
+                  (Ruling 50). **B has designed and adversarially tested all
+                  three, one commit each.** **B changed no code (§2); C is the
+                  first role this round to touch `src/`.** The gate stays
+                  `GATE (0%): NOT MET` — only round 19's A can move it, and only
+                  the manager closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history: the round-18 B briefing text
+                  that follows is complete and was executed.*
+                  **18 IS OPEN — A IS DONE, B IS NEXT.** Round 18 was briefed as
                   a GATE CANDIDATE ROUND and **the gate condition was applied
                   exactly as written: zero unexplained differences was required
                   and THREE were found**, two of them on 5 of 5 pulls. So the
@@ -1887,7 +2041,145 @@ ROUND:            **18 IS OPEN — A IS DONE, B IS NEXT.** Round 18 was briefed 
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — Investigator, round 18.** A's list is **THREE** numbered
+WHOSE TURN:       **C — Implementer, round 18.** B's guide is **THREE** items, in
+                  §4's three "Round 18 — Agent B" entries. **Work them in order.
+                  C implements; C does not redesign** (§2). Commit per item, push
+                  per commit, run the gate after each. Claim the §0d lock first,
+                  always.
+
+                  **THE WORK LIST — THREE INDEPENDENT ITEMS, NO DEPENDENCIES
+                  BETWEEN THEM.** Unlike round 17, nothing here blocks anything
+                  else: three different files, three different surfaces, three
+                  separate commits. **If budget runs out, land them in order and
+                  leave the rest — each stands alone.**
+
+                  - **ITEM 1 — the earnings-call page in the EVENT pool.** Two
+                    new constants and one predicate `isEarningsCallPage` in
+                    `web/src/lib/events/sources/eventweb.ts`, plus ONE call line
+                    in `webResultToRawEventItem` immediately after
+                    `isPaperPageTitle`. Exact code, placement, the DO-NOTs and
+                    **eleven required assertions** are in B's §4 item-1 entry.
+                  - **ITEM 2 — the provider-truncated role title.** One regex,
+                    two helpers (`firstHeadingText`, `extendTruncatedTitle`) in
+                    `web/src/lib/opportunities/enrich.ts`, applied inside
+                    `enrichJobCandidates`. Exact code and **eleven required
+                    assertions** in B's §4 item-2 entry.
+                  - **ITEM 3 — the leading date stamp in a job summary.** One
+                    constant, one helper, **one existing line changed** in
+                    `web/src/lib/jobs/summarize.ts`. Exact code and **ten
+                    required assertions** in B's §4 item-3 entry.
+
+                  **THE THREE THINGS MOST LIKELY TO GO WRONG, NAMED IN ADVANCE
+                  BECAUSE B MEASURED EACH ONE.**
+                  1. **ITEM 1: the natural rule is bare `conference call`, and it
+                     DELETES A REAL SCHOLARLY EVENT** (`ascl.org`, *"2026 YCC
+                     Conference Call for Papers"*, a live row). Assertion 6
+                     exists to fail if C reaches for it. **Do not add it in any
+                     position, and do not apply the rule to the SNIPPET** — the
+                     snippet variant false-fires 3 times on real admitted rows.
+                  2. **ITEM 2: there are FOUR return paths in
+                     `enrichJobCandidates`'s map callback and THREE of them must
+                     carry the repaired title.** The one that reads
+                     `if (!hasExtractedJobSignal(…) && company === item.company) return item;`
+                     **must be changed to return the repaired title** or the fix
+                     is silently discarded on any posting with no other new
+                     signal. **And the repair must sit BEFORE the `unproven`
+                     early return** — that return is A's actual row. Assertions 2
+                     and 9 exist to fail if either is got wrong.
+                  3. **ITEM 3: the negative lookahead is the whole fix.** Without
+                     it the rule eats the first half of a real date range and
+                     **invents a start date**. Assertions 3 and 4 exist to fail
+                     if it is dropped. **Do not widen the dash class to a plain
+                     hyphen** and **do not touch `LEADING_LABEL_RE`** (Ruling 44).
+
+                  **DO NOT REDESIGN WHAT B PRICED.** Each rejection below has a
+                  measured number beside it in §4: no host list and no URL-only
+                  rule for item 1 (the class spans five other hosts); no bare
+                  `conference call` (1 live false fire); none of the seven cut
+                  vocabulary terms (each earned zero on real data, and
+                  `quarterly results` was the sole adversarial failure); no
+                  `og:title`/`<title>` for item 2 (employer-prefixed, fails the
+                  containment test, and imports site brand); no repair before the
+                  scope call (widens ownership for zero measured gain); no
+                  relaxing item 2's 12-character stem floor or its strict-prefix
+                  test; no `index === 0` guard on item 3 (considered, not
+                  recommended, recorded as a future tightening).
+
+                  **RE-MEASURE BEFORE YOU WRITE, as rounds 15–17 C all did.**
+                  B's harness was deleted before B's commits, so **B's rows are
+                  NOT recoverable byte-for-byte** — reconstruct from B's prose and
+                  say so; do not claim row-for-row identity. **C is the
+                  implementer, so C needs no re-declaration and no fidelity
+                  gate**: apply each candidate to the REAL file and score the REAL
+                  `webResultToRawEventItem`, `enrichJobCandidates` and
+                  `summarizeJob`. **For item 1, give every must-keep row a future
+                  date or no date** — the shipped past-event check will return
+                  `null` for the wrong reason otherwise and the assertion passes
+                  vacuously (round 14's two vacuous tests are the precedent; use
+                  `not.toBeNull()` explicitly).
+
+                  **NEGATIVE PROOF, ONE PER EDIT.** Revert each new clause in turn
+                  and record how many assertions go red; restore and `diff`
+                  byte-identical before the next. B has named which assertion
+                  should fail for each clause (item 1 assertion 4 for the path
+                  clause; item 2 assertions 3–4 for the containment test; item 3
+                  assertions 3–4 for the lookahead). **Do not script the reverts
+                  with `perl -pi`** — round 16 C recorded that it mangled regex
+                  backslashes twice.
+
+                  **THE GATE:** `cd web && npx vitest run && npx tsc --noEmit &&
+                  npx eslint`. **Baseline B RE-MEASURED this turn: 90 files /
+                  1482 tests, 1481 passing**, sole failure the standing
+                  `benchmark.test.ts` live-search flake; typecheck clean; lint
+                  exactly the one standing `quiz.tsx:46` error. **The "1426
+                  tests" figure in the superseded round-17 text below is STALE —
+                  use 1482/1481.** **Never delete a test to make a change pass**;
+                  if an assertion must change, rewrite it to state the new
+                  contract with a comment naming the item. **Do not skip the live
+                  benchmark via `PEER_PROFILE_SNAPSHOT_PATH`.** Run
+                  `events/scoring.test.ts` and `events/sources/eventweb.test.ts`
+                  BY NAME for item 1, `jobs/summarize.test.ts` BY NAME for item 3,
+                  and **`enrich.test.ts` SOLO** (the SolarPACES lock) for item 2.
+
+                  **TESTS AT RISK: NONE — B GREPPED THE CALLERS RATHER THAN
+                  ASSUMING.** No existing test in `src/lib/events/` or
+                  `src/lib/opportunities/` contains any finance vocabulary; no
+                  `enrich.test.ts` job title ends in an ellipsis; no
+                  `summarize.test.ts` sentence begins with a month token. **All
+                  three items are purely additive, so any red test is a real
+                  regression and must not be rewritten away.**
+
+                  **THREE `POLICY — manager decides` ARE OPEN AND C DECIDES
+                  NONE.** (1) Whether item 1 lands with the artefact clause or
+                  occasion-only — **B discloses the artefact clause is REDUNDANT
+                  on the measured corpus and recommends keeping it; if the
+                  manager has not said otherwise by the time C runs, land BOTH
+                  clauses as written.** (2) Round 13's five-pull majority scoring.
+                  (3) Item 2's `owned`-widening lead — **a future item, NOT part
+                  of this one.**
+
+                  **WHAT C MUST NOT TREAT AS OPEN**, unchanged and by name:
+                  `careerservices.upenn.edu` (34a), `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's
+                  label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29), `ecs.confex.com`'s
+                  honest host (39a/40), the document-URL retarget (42c),
+                  **`euagenda.eu` (45a — permanently excluded, DO NOT FETCH)**,
+                  Ruling 41c's three hosts (45b), 46a's false fire, 46b's two
+                  titles, round 16's brand-first search page, round 17's named
+                  three-token miss, the `jobs.polymer.co` Spring/Fall mismatch,
+                  and the seven latent brochure/index pages A recorded (none is
+                  in any pool; **a fix for them does NOT close a ranked item**).
+
+                  **THE GATE STAYS `GATE (0%): NOT MET`.** C does not set it and
+                  cannot move it (§2); only round 19's A's live measurement can,
+                  and **only the manager closes (Ruling 30).** **Hand back to A
+                  when all three items have landed.**
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-18 B
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **B — Investigator, round 18.** A's list is **THREE** numbered
                   differences, ranked, in §4's "Round 18 — Agent A (part 4…)"
                   entry, with the full evidence in parts 1–3. **B finds causes and
                   writes a fix guide; B does not change code** (§2). Ruling 31's
