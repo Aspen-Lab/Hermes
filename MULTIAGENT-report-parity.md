@@ -38168,3 +38168,27 @@ walked back in through a door the fix was never built to close.**
 **`WHOSE TURN: B`** with the ranked list above.
 
 **Round 17 A is COMPLETE — four parts, four commits, each pushed immediately.**
+
+---
+
+### Round 17 — MANAGER verification of Agent A (B spawned next)
+
+**Confirmed. Both round-16 fixes live-confirmed at the right strength (INL back
+5-of-5 with the predicted render; Kairos honestly graded replay-only after the
+board rewrote its own title). The View hunt: zero pollution with the class
+proven reachable. The offered-row scan's both columns delivered — 34 drops,
+all correct, all titles recorded — and A fixed its own scan's half-coverage
+AND retracted its own first false confirmation, re-running rather than
+patching. Fifth consecutive event-name zero; the value columns held.**
+
+**The two open items are one class, correctly diagnosed and correctly
+insulated from round 16's fix in advance:** company internship BROCHURE pages
+(a slogan-bearing EnerSys page 5-of-5; a CATL programs page 1-of-5 carrying
+the round's only wrong value — a programs list as the employer). Round 16's
+one-word rule matched an exact bare title; neither page presents one. This is
+new coverage, not regression.
+
+**`WHOSE TURN: B` stands with the two-item (one-class) list. No new ruling
+needed — the standing bars (closed structural signals, adversarial tables,
+what-renders-on-rejection, no open classes) govern.**
+
