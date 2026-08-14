@@ -26270,3 +26270,124 @@ proof of non-interference rather than as the item's own coverage):
 - `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
   error (`quiz.tsx:46`), none added.
 - **No existing test assertion changed or deleted.**
+
+---
+
+### Round 12 — Agent C (B12-07: `talents.vaia.com` — the brand that spans two DNS labels, landed after B12-04 as the ordering dependency requires; B12-08's corrected blast radius used, not B12-07's own)
+
+**STATUS: LANDED.** Commit follows this entry. The largest blast radius on the
+round-12 list, and the one shared function both fields depend on.
+
+**Ordering dependency honoured:** B12-04 landed first (two commits earlier), so
+the event side's own exemption was already in place before this widened the
+shared check — exactly what B12-07 §3 asked for.
+
+**Blast radius: B12-08's corrected list was used, NOT B12-07's own.** B12-07
+named two production consumers and hedged on one test file; B12-08 §0 corrected
+it to **three** consumers and **five** test files, having found
+`web/src/lib/opportunities/employer-identity.ts` (which imports
+`looksLikeHostBrand` directly and is reached from `jobs/sources/himalayas.ts` and
+`opportunities/enrich.ts` — B8-04's structured/declared employer tiers) and its
+test file, both missed. **All five were run and read, plus both standing locks.**
+
+**What landed**, in `web/src/lib/opportunities/shared.ts`, B's two additions:
+
+1. **Contiguous RUNS of host labels**, not only single labels — `talents.vaia.com`
+   now yields `talents`, `talentsvaia`, `talentsvaiacom`, `vaia`, `vaiacom`,
+   `com`. B's framing is the reason this is the right shape and it is in the code
+   comment: **B8-02 changed the check from "the first label" to "every label"; it
+   never changed "one label at a time."** A brand can sit at any depth, so a
+   brand can also SPAN depths.
+2. **A closed filler-word list** (`by|at|for|the|a|an|of|and|und|de`) tried in
+   addition to the existing whole-string form. Mirrors
+   `looksLikeArticledHostBrand`, which already strips `the|a|an` for the same
+   reason. Words are dropped only as WHOLE words — asserted.
+
+`startsWith` keeps its direction and the 3-character floor is unchanged, so the
+one-directional guarantee the function's doc comment is built around survives
+intact: a real name merely longer than every label RUN is still never rejected.
+
+**TESTS — 14 new**: 12 in `shared.test.ts` (the function's own unit tests, where
+B5-03's and B8-02's cases already live) and 2 in `jobweb.test.ts` (through the
+real entry point).
+
+Negative proof by execution (source reverted, tests run, source restored):
+**2 of 14 FAIL against pre-fix code** — the unit-level live defect and the same
+defect through `webResultToRawJobItem`. **The other 12 are must-survive or
+unchanged-behaviour cases** and pass on both sides by design, which is the whole
+point of a widening this shared.
+
+**The must-survive set is seven real employers from A's own round-12 live census,
+each checked against the host it actually appeared on** — not synthetics. Plus
+`shared.ts`'s own documented `Acme Corp`/`acme.test` pair, re-run specifically
+against the label-run widening (`acme`+`test` concatenates to `acmetest`, which
+must not swallow `Acme Corp`).
+
+**The most load-bearing new test is the job-side must-survive**, and it exists
+because of B12-08: the provider alternates between two titles for this one URL,
+so the SAME host and the SAME posting is asserted twice — once with the board's
+brand (employer must be absent) and once with the real employer (`Savannah River
+National Laboratory`, which must survive). Without both, the fix could trade one
+wrong value for another and no test would notice.
+
+**Pre-existing cost asserted rather than left as prose:** `Bank of America` @
+`bankofamerica.com` is rejected today by the equal-length branch and is rejected
+identically after B12-07. A's census carries the same trade-off live on
+`careers.gevernova.com`. Asserted so no future round attributes it to this item.
+
+**The honest limit of this fix, restated from B12-07 §4:** it converts wrong data
+into honest silence, it does not recover the right answer. The real employer is
+sitting in the URL's own path (`/companies/savannah-river-national-laboratory/`)
+and the pipeline never looks there. Reading the employer from the URL is
+**Ruling 39d's recorded lead for a future round's B** — a designed,
+adversarially-tested item of its own, and the ruling is explicit that it must
+never be bolted onto B12-07 (round 6's lesson). C did not touch it.
+
+**GATE after this item — the full five-file list from B12-08's correction:**
+- `web/src/lib/opportunities/shared.test.ts`, `employer-identity.test.ts`,
+  `web/src/lib/jobs/scoring.test.ts`, `web/src/lib/jobs/sources/jobweb.test.ts`,
+  `web/src/lib/events/sources/eventweb.test.ts`, run together:
+  **224 of 224 passing.**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**,
+  which lives there and NOT under `events/`), run on its own:
+  **25 of 25 passing, unchanged** — and this is the run that matters most on this
+  item, because the lock exercises the event-side brand path through the shared
+  function this item just widened.
+- `web/src/lib/events/scoring.test.ts`: **71 of 71 passing.**
+- Full: `npx vitest run` → **90 files / 1148 tests, 1147 passing.** 1134 → 1148
+  is exactly the 14 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**
+
+---
+
+### Round 12 — Agent C (B12-08: NO CODE, by Ruling 39d)
+
+**STATUS: NO CODE, and this is a RULING, not an omission.**
+
+§1z **Ruling 39d** adopts **option 1 — accept the upstream variance** — on B's
+own recommendation. The variance enters at the search provider, which returns a
+different `title` for the same URL on different calls; **Peer's own processing is
+verified deterministic** (B reproduced same-input-same-output on both of A's
+observed directions). There is nothing in this codebase to fix.
+
+**The two rejected options, recorded so they are not re-litigated:**
+- **Option 2 — read the employer from the URL when the title omits it** — is
+  recorded as a **lead for a future round's B**: a designed, adversarially-tested
+  item of its own, **never bolted onto B12-07**, because a new extractor landed
+  in one turn is how round 6 shipped a broken parse.
+- **Option 3 — prefer-by-cache** — is rejected for B's own reason: output that
+  depends on pull history is worse than the variance it hides.
+
+**A's census method does not change** (Ruling 39d): five independent pulls,
+majority value scored, **minority value always stated** — that disclosure is now
+the standing method note for round 13 A.
+
+**The amplifier B found is worth carrying forward even though no code changes:**
+the employer feeds `jobDedupKey`, so an unstable title also changes which
+duplicate survives. That is a measurement caveat for A, not a defect to fix.
+
+No gate line of its own — no code was written. The gate under B12-07 above is the
+last one of this turn's code items.

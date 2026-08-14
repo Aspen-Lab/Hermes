@@ -247,10 +247,66 @@ export function textMatchesAny(haystack: string, phrases: string[]): boolean {
  * simpler and carries the same one-directional safety per label, so a real
  * company name that merely happens to be longer than every label (the
  * ordinary, correct case above) is still never rejected.
+ *
+ * B12-07 (round 12): `talents.vaia.com` — the exact host B8-02 was built on —
+ * still rendered `"Talents by Vaia"` as an employer. **B8-02 changed the check
+ * from "the first label" to "every label"; it did not change "one label at a
+ * time."** The board's display brand is composed of TWO of its own host labels
+ * joined by a filler word, and normalisation collapses it to the single
+ * 13-character token `talentsbyvaia`, which is longer than `talents`, `vaia`
+ * and `com` individually — so the one-directional rule could never match it.
+ * Two additions, both keeping that rule intact:
+ *
+ *  1. Compare against contiguous RUNS of labels, not only single labels. For
+ *     `talents.vaia.com`: `talents`, `talentsvaia`, `talentsvaiacom`, `vaia`,
+ *     `vaiacom`, `com`. This is the natural completion of B8-02's own reasoning
+ *     — a brand can sit at any depth, so a brand can also SPAN depths.
+ *  2. Also try the candidate with a short closed list of filler words removed,
+ *     in addition to the current whole-string form. `"Talents by Vaia"` becomes
+ *     `talentsvaia`, which is exactly the `talents`+`vaia` run. This mirrors
+ *     `looksLikeArticledHostBrand` in `events/sources/eventweb.ts`, which
+ *     already strips `the|a|an` for the same reason.
+ *
+ * `startsWith` keeps its direction and the 3-character floor still applies, so
+ * the protection above is untouched: a real company name that is merely longer
+ * than every label RUN is still never rejected. Verified against every real
+ * employer in round 12 A's own census — the only behaviour change on B's whole
+ * adversarial matrix was the one live defect.
+ *
+ * Pre-existing cost, restated so it is not attributed to B12-07: a company
+ * posting under its own exact domain name (`Bank of America` at
+ * `bankofamerica.com`) is rejected TODAY by the equal-length branch this comment
+ * describes above, and is rejected identically after B12-07. A's census records
+ * the same trade-off live on `careers.gevernova.com`.
  */
-export function looksLikeHostBrand(candidate: string, host: string): boolean {
-  const normalized = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (normalized.length < 3) return false;
+const HOST_BRAND_FILLER_RE = /^(?:by|at|for|the|a|an|of|and|und|de)$/i;
+
+/** Every contiguous run of host labels, joined — B12-07 addition 1. */
+function hostLabelRuns(host: string): string[] {
   const labels = host.toLowerCase().split(".").filter(Boolean);
-  return labels.some((label) => label.startsWith(normalized));
+  const runs: string[] = [];
+  for (let start = 0; start < labels.length; start += 1) {
+    let run = "";
+    for (let end = start; end < labels.length; end += 1) {
+      run += labels[end];
+      runs.push(run);
+    }
+  }
+  return runs;
+}
+
+export function looksLikeHostBrand(candidate: string, host: string): boolean {
+  const forms: string[] = [];
+  const whole = candidate.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (whole.length >= 3) forms.push(whole);
+  // B12-07 addition 2: the same candidate with closed-list filler words dropped.
+  const withoutFiller = candidate
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word && !HOST_BRAND_FILLER_RE.test(word))
+    .join("")
+    .replace(/[^a-z0-9]/g, "");
+  if (withoutFiller.length >= 3 && withoutFiller !== whole) forms.push(withoutFiller);
+  if (forms.length === 0) return false;
+  return hostLabelRuns(host).some((run) => forms.some((form) => run.startsWith(form)));
 }

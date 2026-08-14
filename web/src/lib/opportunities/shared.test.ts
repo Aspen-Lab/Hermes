@@ -98,4 +98,65 @@ describe("looksLikeHostBrand", () => {
       false,
     );
   });
+
+  // B12-07 (round 12): talents.vaia.com — the EXACT host B8-02 was built on —
+  // still let "Talents by Vaia" through as an employer. B8-02 changed the check
+  // from "the first label" to "every label"; it never changed "one label at a
+  // time". The board's display brand is composed of TWO of its own labels
+  // joined by a filler word, so normalisation collapses it to a 13-character
+  // token that is longer than talents, vaia and com individually and the
+  // one-directional rule can never match it.
+  describe("brand spanning two DNS labels (B12-07)", () => {
+    // THE live defect. Both additions are required: the label RUN supplies
+    // "talentsvaia", the filler strip supplies the candidate form that matches
+    // it. Either one alone leaves this true.
+    it("rejects a brand composed of two host labels joined by a filler word", () => {
+      expect(looksLikeHostBrand("Talents by Vaia", "talents.vaia.com")).toBe(true);
+    });
+
+    // B8-02's own case, unchanged — the widening must not have replaced it.
+    it("still rejects a single-label brand at depth", () => {
+      expect(looksLikeHostBrand("Vaia", "talents.vaia.com")).toBe(true);
+      expect(looksLikeHostBrand("Talents", "talents.vaia.com")).toBe(true);
+    });
+
+    // THE must-survive set, and the whole safety argument. Every one of these
+    // is a real employer from round 12 A's own live census, checked against
+    // the host it actually appeared on. A real name that is merely longer than
+    // every label RUN is still never rejected — that is the one-directional
+    // guarantee surviving the widening.
+    it.each([
+      ["Savannah River National Laboratory", "talents.vaia.com"],
+      ["Idaho National Laboratory", "inl.referrals.selectminds.com"],
+      ["Las Cumbres Observatory", "lco.global"],
+      ["Thermo Fisher Scientific", "grad.wisc.edu"],
+      ["Battery Ventures", "employbl.com"],
+      ["Tesla", "ev.careers"],
+      ["trawa", "arbeitnow.com"],
+    ])("keeps the real employer %s on %s", (candidate, host) => {
+      expect(looksLikeHostBrand(candidate, host)).toBe(false);
+    });
+
+    // shared.ts's own documented must-survive, re-run against the label-run
+    // widening: "acme" + "test" concatenates to "acmetest", which must NOT
+    // swallow "Acme Corp".
+    it("keeps a company hosting under its own name when the name differs", () => {
+      expect(looksLikeHostBrand("Acme Corp", "acme.test")).toBe(false);
+      expect(looksLikeHostBrand("Acme Materials", "acme.test")).toBe(false);
+    });
+
+    // A filler word is only dropped as a WHOLE word. A real name whose letters
+    // merely contain a filler's letters must be unaffected.
+    it("only drops a filler word standing alone, never letters inside a word", () => {
+      expect(looksLikeHostBrand("Bythe Analytics", "by.the.com")).toBe(false);
+    });
+
+    // Pre-existing cost, asserted so nobody attributes it to B12-07: a company
+    // posting under its own exact domain is rejected TODAY by the equal-length
+    // branch, and identically after. A's census records the same trade-off live
+    // on careers.gevernova.com.
+    it("rejects a company posting under its own exact domain, exactly as before", () => {
+      expect(looksLikeHostBrand("Bank of America", "bankofamerica.com")).toBe(true);
+    });
+  });
 });

@@ -186,6 +186,34 @@ describe("company derivation", () => {
     });
   });
 
+  // B12-07 (round 12): the same widening, seen through the real entry point.
+  // talents.vaia.com rendered "Talents by Vaia" as the employer — the job
+  // board's own composed brand, sitting in the slot meant for who is hiring.
+  describe("job board brand spanning two DNS labels (B12-07)", () => {
+    it("does not mistake a two-label board brand for the employer", () => {
+      const item = webResultToRawJobItem({
+        title: "Postdoctoral Research Associate - Talents by Vaia",
+        url: "https://talents.vaia.com/companies/savannah-river-national-laboratory/jobs/1234",
+        snippet: "Postdoctoral position in molten salt chemistry. Apply now.",
+      });
+      expect(item?.company).toBeUndefined();
+    });
+
+    // THE must-survive: the SAME host, the SAME posting, with the provider's
+    // other title variant — the one that names the real employer. B12-08
+    // established the provider alternates between these two titles for this
+    // one URL, so both have to behave correctly or the fix trades one wrong
+    // value for another.
+    it("keeps the real employer on that same host and posting", () => {
+      const item = webResultToRawJobItem({
+        title: "Postdoctoral Research Associate at Savannah River National Laboratory",
+        url: "https://talents.vaia.com/companies/savannah-river-national-laboratory/jobs/1234",
+        snippet: "Postdoctoral position in molten salt chemistry. Apply now.",
+      });
+      expect(item?.company).toBe("Savannah River National Laboratory");
+    });
+  });
+
   // B5-03 (round 5): all three of A's real jobs wrongly showed a job board's
   // own brand name or a bare location as the company. Neither shape is a
   // known job-board *domain*, so `KNOWN_JOB_BOARD_DOMAINS` never caught
