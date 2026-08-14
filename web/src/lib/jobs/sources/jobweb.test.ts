@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isListingPage, LISTING_TITLE_RE, webResultToRawJobItem } from "./jobweb";
+import {
+  isListingPage,
+  JOB_PATH_RE,
+  LISTING_TITLE_RE,
+  NON_JOB_PATH_RE,
+  webResultToRawJobItem,
+} from "./jobweb";
 
 describe("job aggregator listing pages", () => {
   it.each([
@@ -2292,5 +2298,87 @@ describe("programme-area lists are not employers (B17-02)", () => {
     );
     expect(item!.company).not.toBe("Battery Cell, R&D & Gigafactory");
     expect(item!.company).toBeUndefined();
+  });
+});
+
+// A22-06 and A22-07 (round 22): ONE LINE, `jobweb.ts`'s two-clause OR
+// `if (!JOB_PATH_RE.test(pathname) && !JOB_TEXT_RE.test(text)) return null;`.
+// It is simultaneously TOO NARROW on the URL — a real Los Alamos vacancy at
+// `/search/jobdetails/<slug>/<uuid>` drops — and TOO LOOSE on the text — a
+// retail shop's `/collections/batteries` catalogue page is admitted on its own
+// `Apply Now` button. B established by execution that fixing either half alone
+// re-opens the other, so both land in one commit and are tested together.
+describe("the job-detection line, both halves (A22-06 + A22-07)", () => {
+  it("keeps a real vacancy on an ATS jobdetails route (A22-07)", () => {
+    const item = webResultToRawJobItem({
+      title: "Nuclear Materials and Molten Salt Technologist 1 - Research Technologist 1",
+      url: "https://lanl.jobs/search/jobdetails/nuclear-materials-and-molten-salt-technologist-1/9afb00cb-1111-2222-3333-444455556666",
+      snippet: "Los Alamos National Laboratory seeks a technologist for molten salt work.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.title).toContain("Molten Salt Technologist");
+  });
+
+  it("drops a retail shop's product category page (A22-06)", () => {
+    // The snippet carries the shop's own `Apply Now` button text, which is
+    // what `JOB_TEXT_RE` matched. Nothing about a catalogue page distinguishes
+    // it from a posting once that phrase is present, so the URL has to decide.
+    expect(
+      webResultToRawJobItem({
+        title: "Batteries",
+        url: "https://batteryjunction.com/collections/batteries",
+        snippet: "Shop batteries and chargers. Apply Now for our trade account.",
+      }),
+    ).toBeNull();
+  });
+
+  // B's NAMED CONTROL. This row is kept today on `JOB_PATH_RE` alone and must
+  // stay kept: it is the proof that widening the path list did not disturb the
+  // segments already in it.
+  it("keeps B's named control — a posting kept on the path clause alone", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Actinide Chemistry/Ion Exchange Postdoc Research Associate",
+        url: "https://salutemyjob.com/jobs/actinide-chemistry-ion-exchange-postdoc-research-associate-columbia-south-carolina/2893886008-2",
+        snippet: "Savannah River National Laboratory postdoctoral appointment.",
+      }),
+    ).not.toBeNull();
+  });
+
+  // VACUITY: each half must be able to fail on its own, so neither token is
+  // decoration. `collections` must not swallow a genuine posting whose URL is
+  // job-shaped, and `jobdetails` must not rescue a page the text clause never
+  // wanted.
+  it("does not let the storefront segment drop a posting that is otherwise job-shaped", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Research Scientist, Battery Collections Group",
+        url: "https://example.test/careers/research-scientist-battery",
+        snippet: "We are hiring a research scientist for our collections group.",
+      }),
+    ).not.toBeNull();
+  });
+
+  it("still drops a page that is neither job-shaped by URL nor by text", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "About our battery chemistry programme",
+        url: "https://example.test/about/programme",
+        snippet: "An overview of our research areas and facilities.",
+      }),
+    ).toBeNull();
+  });
+
+  // The regexes themselves, so a later reader can see exactly which segments
+  // were bought and which were deliberately not.
+  it("buys jobdetails and collections, and nothing else in either family", () => {
+    expect(JOB_PATH_RE.test("/search/jobdetails/role/uuid")).toBe(true);
+    expect(NON_JOB_PATH_RE.test("/collections/batteries")).toBe(true);
+    // Named as UNEARNED in source: no live case in this pull, so §3's vacuity
+    // rule leaves them out. If a later round earns one, this is where it lands.
+    expect(JOB_PATH_RE.test("/search/job-details/role")).toBe(false);
+    expect(JOB_PATH_RE.test("/search/jobdetail/role")).toBe(false);
+    expect(NON_JOB_PATH_RE.test("/products/batteries")).toBe(false);
+    expect(NON_JOB_PATH_RE.test("/shop/batteries")).toBe(false);
   });
 });

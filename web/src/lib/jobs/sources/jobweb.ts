@@ -26,10 +26,39 @@ const KNOWN_JOB_BOARD_DOMAINS = [
   "science.org",
 ];
 
+// A22-07 (round 22 C): `jobdetails` added. `lanl.jobs`'s real Los Alamos
+// vacancy lives at `/search/jobdetails/<slug>/<uuid>` — a single role, a UUID
+// posting id — and dropped because the list required a segment that IS `job`
+// or `jobs`. `jobdetails` is an applicant-tracking-system ROUTING convention,
+// closed by construction in the same sense `FORUM_THREAD_URL_RE`'s own doc
+// comment defends its list: fixed by the software that emits them, not by
+// English. This is Ruling 48b's first non-zero wrongly-dropped column in six
+// rounds, and the cause was a vocabulary list that had never been widened.
+//
+// `job-details`, `jobdetail`, `jobDetail` and the rest of the family are
+// DELIBERATELY LEFT OUT. B searched this pull and found no live case for any of
+// them; §3's vacuity rule says an added token needs a red case of its own, so
+// they are named here as UNEARNED and a later round may earn them.
 export const JOB_PATH_RE =
-  /\/(?:job|jobs|career|careers|position|positions|vacancy|vacancies|opportunity|opportunities|job-search|jobsearch)(?:\/|$)/i;
+  /\/(?:job|jobs|jobdetails|career|careers|position|positions|vacancy|vacancies|opportunity|opportunities|job-search|jobsearch)(?:\/|$)/i;
+// A22-06 (round 22 C): `collections` added. `batteryjunction.com/collections/
+// batteries` — a retail shop's product CATEGORY page, role title `Batteries` —
+// was admitted as a job posting because `JOB_TEXT_RE` matched the shop's own
+// `Apply Now` BUTTON in the provider snippet. `/collections/` is Shopify's
+// storefront routing convention, the same closed-by-construction kind of
+// signal as the ATS routes above, and this regex runs BEFORE the two-clause
+// OR below, so it beats the text clause outright.
+//
+// WHY NOT "REMOVE `apply now` FROM JOB_TEXT_RE": B priced that and it is the
+// wrong instrument. `apply now` is the only clause keeping several real single
+// postings alive whose URL is not job-shaped, so removing it would WIDEN
+// A22-07's class while closing A22-06 — the two halves must land together or
+// the drop rate moves the wrong way. Recorded so it is not re-proposed.
+//
+// `products`, `product`, `shop`, `cart` and `category` are LEFT OUT for the
+// same vacuity reason as the ATS family above: no live case in this pull.
 export const NON_JOB_PATH_RE =
-  /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts)(?:\/|$)/i;
+  /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts|collections)(?:\/|$)/i;
 
 /**
  * Search-results and category pages on job aggregators. These match every

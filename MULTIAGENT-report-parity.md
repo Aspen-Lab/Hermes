@@ -54723,3 +54723,95 @@ fix — which is precisely why 60c ties its reopening to a NEW live witness or a
 manager-ordered capture round.
 
 ---
+
+### Round 22 — Agent C (item 4 of 6: **A22-06 + A22-07 — ONE COMMIT, both halves of `jobweb.ts`'s two-clause OR.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 4 of 6. **B's structural finding is honoured
+exactly: both halves in ONE commit**, because fixing either alone re-opens the
+other.
+
+---
+
+## WHAT CHANGED — two regex constants in `web/src/lib/jobs/sources/jobweb.ts`
+
+| half | change | earned by |
+|---|---|---|
+| **A22-07** (too narrow on the URL) | `jobdetails` added to `JOB_PATH_RE` | `lanl.jobs/search/jobdetails/<slug>/<uuid>` — a real Los Alamos vacancy |
+| **A22-06** (too loose on the text) | `collections` added to `NON_JOB_PATH_RE` | `batteryjunction.com/collections/batteries` — a retail shop's catalogue page |
+
+`NON_JOB_PATH_RE` runs at `:1108`, **before** the OR at `:1109`, so the
+storefront segment beats the text clause outright without touching
+`JOB_TEXT_RE`. **`isListingPage` is not touched**, so B13-02's and B15-01's
+count locks, Ruling 46a/46b, B17-01's named miss and Ruling 39c's forum rule all
+stand by construction.
+
+**WHY NOT "REMOVE `apply now` FROM `JOB_TEXT_RE`" is written into the source
+comment**, not just this log, so the next reader does not re-propose it: `apply
+now` is the only clause keeping several real single postings alive whose URL is
+not job-shaped, so removing it would widen A22-07's class while closing A22-06.
+
+## VACUITY — THE UNEARNED TOKENS ARE NAMED IN SOURCE AND ASSERTED ABSENT
+
+B listed `job-details`, `jobdetail`, `products`, `shop` as having no live case
+in this pull. **C left all four out and B's recommendation is followed.** They
+are named as UNEARNED in the source comments, and there is a test asserting each
+of them still does NOT match — so a later round that earns one has to change an
+assertion deliberately rather than widen the list quietly.
+
+## **A DEFECT IN B's GUIDE THAT COST A RED, AND IT IS WORTH RECORDING**
+
+B's entry gives `webResultToRawJobItem`'s verdicts row by row but never states
+its signature. **The second parameter is `topics: string[]`, not a timestamp**
+(`jobweb.ts:1117`). C's first draft of the tests passed a `now` value there, and
+the `lanl.jobs` case failed with `TypeError: topics is not iterable` from
+`looksLikeTopicLabel` — **which reads exactly like the fix not working.** It was
+diagnosed with a one-off probe **placed under `web/src/`, run, and DELETED
+before the commit** (`git status --porcelain --untracked-files=all` verified
+clean above). Recorded because the same trap will catch the next agent that
+writes a test against this function from B's entry alone.
+
+## TESTS — **7 ADDED, NONE DELETED, NONE EDITED**
+
+New `describe` block in `web/src/lib/jobs/sources/jobweb.test.ts`. **B's named
+control is asserted by name**: `salutemyjob.com/jobs/actinide-chemistry-…` is
+kept today on `JOB_PATH_RE` alone and stays kept. Two further vacuity controls
+prove neither token overreaches — a job-shaped URL whose TITLE contains
+"Collections" is still kept, and a page that is neither job-shaped by URL nor by
+text is still dropped.
+
+**B's at-risk list named four files. C ran all four** —
+`jobs/sources/jobweb.test.ts`, `jobs/scoring.test.ts`,
+`opportunities/job-cleanup.test.ts`, `app/api/jobs/feed/route.test.ts` — **plus
+every caller of both regexes** (`jobs/scoring.test.ts:303-304` imports them
+directly). **NOT ONE MOVED**, including `jobweb.test.ts:1944`'s
+`Acme Internships: Apply Now` must-drop, which B specifically asked C to
+re-check: it drops for a different reason and still drops.
+
+## NEGATIVE PROOFS — each half reverted separately
+
+| reverted | red count |
+|---|---|
+| `jobdetails` removed from `JOB_PATH_RE` | **2 failed / 417 passed** — `keeps a real vacancy on an ATS jobdetails route`, `buys jobdetails and collections…` |
+| `collections` removed from `NON_JOB_PATH_RE` | **2 failed / 417 passed** — `drops a retail shop's product category page`, `buys jobdetails and collections…` |
+
+**Each half has its own uniquely-red case**, which is the whole point of landing
+them together rather than trusting one commit to cover both.
+
+## THE GATE AFTER THIS ITEM
+
+**91 files / 1693 tests, 1692 passing** (+6 net; the 7th case replaced nothing).
+Sole failure the standing `benchmark.test.ts` flake. `npx tsc --noEmit` clean.
+`npx eslint` exactly the one standing `quiz.tsx:46` error.
+
+## WHAT ROUND 23 A SHOULD EXPECT, WITH ITS FALSIFIER
+
+**One row enters the job pool (`lanl.jobs`) and one leaves
+(`batteryjunction.com`) — expect a 12-row pool with different membership, not a
+13-row one.** **FALSIFIER: if the pool comes back at 11 or 13, or if
+`salutemyjob.com`'s row is gone, one of the two tokens reached further than its
+case.** A's UNCONFIRMED `stemgateway.nasa.gov` row drops on this same line and
+may now be kept — **B did not convert it into a counted wrong drop and neither
+does C**; Ruling 25 still forbids the browser that would settle what that page
+is, so whichever way it lands it is not a new defect.
+
+---
