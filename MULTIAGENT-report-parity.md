@@ -3171,7 +3171,24 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 20:24 UTC — ROUND 21 C IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **20 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found two
+ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIED;
+                  22 IS OPEN AND ITS A IS NEXT (GATE CANDIDATE ROUND).** All six
+                  of round 21 C's items shipped, one commit each, and the manager
+                  re-verified independently (gate 1652/1651; SolarPACES 53/53
+                  solo; item 5's negative proof re-executed to the digit).
+                  **Ruling 58a–d decided all three standing `POLICY` items AND
+                  item 4's RULED-PENDING upstream finding at the close — the
+                  deferred list is EMPTY.** The gate stays `GATE (0%): NOT MET` —
+                  only round 22 A's live measurement can move it, and only the
+                  manager closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history: the round-20 B→C round line.
+                  NOTE, recorded at the round-21 manager close: this field sat
+                  STALE on the text below through rounds 20 C, 21 A, 21 B and
+                  21 C, while `WHOSE TURN:` and `STOPPED BECAUSE:` were correctly
+                  maintained every turn. Caught and repaired at the close. No
+                  decision was corrupted — §0 routes on `WHOSE TURN:`.*
+                  **20 IS OPEN — A AND B ARE DONE, C IS NEXT.** A found two
                   unexplained differences on one row of one new host, 5 of 5, and
                   the manager ruled them one investigation / two ranked items
                   (Ruling 54a). **B has investigated both, one commit each, and
@@ -51329,5 +51346,43 @@ Ruling 57b requires both surfaces. **B ran no event pull, A's event-side 52b cou
 **GATE AFTER ITEM 5: 91 files / 1652 tests, 1651 passing.** Sole failure the standing `benchmark.test.ts` flake at **`:109`** (`expected false to be true`). `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error, **0 warnings** — the three warnings seen while the harness was present were all inside the harness and left with it. Named runs: `scoring.test.ts` (jobs) + `scoring.test.ts` (events) + `job-cleanup.test.ts` + `jobweb.test.ts` + `shared.test.ts` + `summarize.test.ts` **628/628**; and **`src/lib/opportunities/enrich.test.ts` run SOLO: 53/53 — THE SOLARPACES LOCK IS INTACT**, which is the assertion that mattered most this item, because `enrich.test.ts` calls `scoreJobs` and item 5 is the only change that touches the scorers.
 
 **C RAISES NO NEW `POLICY — manager decides` AND DECIDES NONE OF THE THREE OPEN ONES. Ruling 33 is NOT widened and NOT narrowed.**
+
+---
+
+### Round 21 — MANAGER verification of Agent C, RULING 58a–d, and the ROUND-21 CLOSE
+
+**Date: 2026-08-14. Every check below was re-executed by the manager, not inherited from C's log.**
+
+**THE GATE, INDEPENDENTLY RE-RUN.** `cd web && npx vitest run` → **91 files / 1652 tests, 1651 passing** — exactly C's figure, +56 over the 1596/1595 cold baseline, and the 56 added assertions are the whole difference. Sole failure: the standing `benchmark.test.ts` live-search flake, presenting this run on the **`:109`** solid-state-battery-summit assertion — one of its recorded forms. `npx tsc --noEmit` → clean. `npx eslint` → exactly the one standing `quiz.tsx:46` error, **0 warnings**. `PEER_PROFILE_SNAPSHOT_PATH` was not used on any run.
+
+**THE SOLARPACES LOCK, SOLO:** `src/lib/opportunities/enrich.test.ts` → **53/53 — intact**, re-run by the manager after item 5, the round's only change touching the scorers.
+
+**THE HYGIENE REPAIR, RE-RUN SOLO:** `src/lib/papers/report-stream.test.ts` → **4/4**. C's finding that the repair was NOT free — the `0xe8` sentinel names the first byte of the character the test splits across stream chunks, so it had to move with the restored character, and a character-only repair FAILS the test — is **ACCEPTED as an execution-grade amendment to Ruling 56a's wording**. The exact `gb18030` round-trip recovery is stronger evidence than round 20's family-level identification, and the verdict-identity protocol held: 4 before, 4 after, mark for mark.
+
+**NO TEST DELETED, PROVEN BY NUMSTAT, NOT BY TRUST:** `git diff 93011ec..HEAD --numstat -- '*.test.ts'` shows additions only across all six touched test files, except the 2 replaced lines that ARE the hygiene repair and 1 edited line in `shared.test.ts` (item 5's own file). No file shrank.
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (item 5, the most consequential):** both scoring call sites restored to their pre-`d233328` source with the new tests kept → **exactly 2 red, one per surface** — `jobs/scoring.test.ts` × "drops the private-equity internship a battery researcher kept being shown"; `events/scoring.test.ts` × "drops an event whose ORGANISER's name is the only reason it matched" — while `shared.test.ts` stayed 106-green throughout (the guard function itself intact; the WIRING is what the two red tests demand, which is the pipeline-vs-function discipline applied to a negative proof). Sources restored → 106/106 green, tree clean. **C's claim reproduces to the digit.**
+
+**C'S FIVE AGAINST-THE-GUIDE FINDINGS, ALL ACCEPTED:** the load-bearing sentinel (item 0); item 2's live row protected by BOTH conjuncts, so each got its own constructed sharp case, recorded as constructed; item 3's ellipsis closure making edit (b) uniquely red on `MSR Fuel Cycle` only, and `National Labor Relations Board` replacing `Board of Regents` as the true adjacency case; item 4's limitation narrower than B recorded — a complete sibling sentence clearing the B8-05 floor IS promoted, both branches asserted; item 5's title-conjunct unfalsifiable on B's own 17 rows until C added the sharp row, and B's own recommendation to delete its sixth conjunct CONFIRMED by an identical 18/18. **The role-after-catches-role-before streak continues unbroken — no round yet has ended with the guide surviving contact intact, and the loop is healthier for it.**
+
+**C'S DEVIATIONS, ALL ACCEPTED:** `POSTING_ID_RE` untouched per §1 over the prompt's wording (the state file outranks the brief — standing precedent; the latent empty-`?Id=` affirmative match is closed anyway because the new check runs AHEAD of `isListingPage`, asserted on `indeed.com`); `canonicalize` + whole-word token spans instead of `expandTerm`, because an expanded term set makes "appears exactly once" ill-defined — reason recorded in the module comment where the next reader needs it; no live pull claimed, the 115-offered-row corpus not re-measured — correctly left to round 22 A.
+
+**ONE STALENESS THE MANAGER CATCHES AND REPAIRS IN THIS COMMIT:** §1's `ROUND:` field still read "20 IS OPEN — A AND B ARE DONE, C IS NEXT" — stale through rounds 20 C, 21 A, 21 B and 21 C, four turns, while `WHOSE TURN:` and `STOPPED BECAUSE:` were correctly maintained every one of those turns. Top text now reads 21-closed/22-open and the stale text is demoted to the field's superseded-history tail with a dated note. No decision was corrupted — §0 routes on `WHOSE TURN:` — which is why this is a repair at the close, not a reopening.
+
+---
+
+## RULING 58 — THE ROUND-21 CLOSE-OUT RULINGS. BINDING. All four items deferred by name at the B verification are decided here; none carries past this close.
+
+**58a. Ruling 33's full-phrase collision question — CLOSED, SUPERSEDED BY MECHANISM.** The question that has fed for consecutive rounds on two surfaces (`specterfi.com`: `ion exchange` → *Ion Exchange (India) Limited*, event surface; `employbl.com`: `battery` → *Battery Ventures*, job surface) — "should Ruling 33's acronym tally be widened to count full-word and full-phrase collisions?" — is answered **NO**. Ruling 33's tally definition is **UNCHANGED**: acronyms only, the cumulative count as A currently carries it stands. Full-phrase collisions now have an **ACTIVE TREATMENT instead of a wider ledger line**: Ruling 57b's five-conjunct guard, landed this round at BOTH scoring surfaces (`d233328`). Ruling 52b's company-name collision tally **CONTINUES as the standing evidence line**. **Escape:** if a new 52b admission appears that the landed guard should have suppressed, that is a **GUARD DEFECT** — stop and record per the standing escape clause — not a tally-widening question, and it must not be reopened as one.
+
+**58b. Ruling 51b's five-pull majority scoring — AFFIRMED, and the POLICY line open since round 13 is DECIDED.** Five-pull within-round majority scoring stays the measurement instrument; it has caught within-round flapping and nothing has beaten it at that job. The recorded blind spot — the same host's scored column moving BETWEEN rounds with no code touching that path (A's standing observation on the 34a employer column) — is **ACKNOWLEDGED AND PRICED**: distinguishing "the source page itself changed" from "the pipeline is nondeterministic" would require archiving fetched pages across rounds, which is new infrastructure of exactly the class B4-12 established, and no ruling buys it. Between-round movement is recorded as an **EVIDENCE LINE when observed** — exactly as A already does — and does **NOT** gate. **Escape:** if between-round movement lands a WRONG value in any census, that wrong value is an ordinary difference in that census and gates normally. The census is the watch; no new instrument is created.
+
+**58c. Ruling 51c's `owned`-widening lead — SHELVED BY NAME, EVIDENCE-GATED REOPEN.** Not scheduled. At gate-candidate stage an un-forced widening violates the additive discipline, and the third-strike precedent (Ruling 36) records **zero strikes** against the current `owned` scope. The lead stays in the ledger under this ruling's name so it cannot silently vanish, and it **REOPENS only when a census difference's fix guide names the `owned` scope as its mechanism**. It carries in the ledger only — no A tally line, because there is nothing to measure until evidence exists.
+
+**58d. The upstream-truncation finding (round 21 item 4, logged RULED-PENDING by C) — RULED: A21-04 IS PEER'S COMPLETE REMEDY.** B traced the cut to a layer that is not Peer — most likely the provider's JSON-LD `JobPosting.description` fallback. Reconstructing text the source never delivered is **OUT OF REMIT** (the B4-12 class again: new infrastructure, not a patch). Peer's real defect — **nothing asked whether a published sentence finishes** — is exactly what A21-04 closed, and the honest outcome for an unfinished sentence is the drop A21-04 now enforces. C's falsifier **STANDS as the watch**: a COMPLETE-but-unterminated sentence disappearing from any summary is the wrong-drop that would reopen this as a **defect**, not a policy. No further design is owed. Round 22 A verifies A21-04's live behaviour in the ordinary census.
+
+---
+
+**ROUND 21 IS CLOSED.** A (four differences + the hygiene queue) → B (five items designed, five confirmed by the manager) → C (six items shipped, five guide corrections found by execution) → manager (independent re-verification, this entry). **Ruling 58a–d empties the deferred POLICY list — nothing carries past this close undecided.** `WHOSE TURN: A — round 22, GATE CANDIDATE ROUND` stands exactly as C wrote it, with every carry (each landed item's expected effect with its falsifier; the event surface `designed, organically unwitnessed`; Ruling 55c's online must-keep debt in its THIRD round, named; all tally lines with running counts; exclusions by name; the gate rule verbatim). **The gate stays `GATE (0%): NOT MET` — only round 22 A's live measurement can move it, and only the manager closes, after an independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
 
 ---
