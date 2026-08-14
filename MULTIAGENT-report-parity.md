@@ -49890,3 +49890,35 @@ eye.
 **Round 21 A is COMPLETE.**
 
 ---
+
+---
+
+### Round 21 — MANAGER verification of Agent A (one ruling inline; B spawned next)
+
+**Confirmed — the Rome debt discharged the right way (live page fetched, the
+bug-causing input verified still present, pre-fix record still reproducing
+the hotel name so the improvement is attributed not assumed), the online debt
+carried honestly for a second round, and A's probe error caught in the
+flattering direction before it could tell a false success story. Ninth
+event-name zero. The jobs side regressed on live composition: four new
+differences, employer at its worst count since round 11.**
+
+**RULING 57 (grep "Ruling 57"):**
+- **57a — all four differences go to B, ranked as A ranked them** (the
+  `ev.careers` search page; the dead apply link + truncated title — the
+  loop's first link-integrity defect, B establishes whether link integrity
+  is measurable at ingestion by a closed signal; the two-cause wrong
+  employers; the mid-sentence summary).
+- **57b — the 52b collision tally has done its job: THREE admissions in
+  three rounds, same firm, same mechanism. Per the third-strike precedent
+  (Ruling 36), round 21's B is AUTHORISED AND REQUIRED to design the
+  full-phrase company-name collision guard**, both surfaces, with the
+  hard must-keep class stated now: real, on-topic employers whose names
+  legitimately contain a topic word must survive; the distinguishing
+  signal is B's to find by execution, not the topic word itself. No open
+  classes; misses fall to admission (status quo), never to a wrongly
+  dropped on-topic posting.
+
+**`WHOSE TURN: B` stands — five items (four differences + the 57b design),
+plus round 21 C inherits the queued `report-stream` hygiene item (56a).**
+
