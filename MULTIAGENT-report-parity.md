@@ -48579,3 +48579,30 @@ instruction. No branch, worktree or PR.
 `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 
 **Round 20 C is COMPLETE.**
+
+---
+
+### Round 20 — MANAGER verification of Agent C (round 20 CLOSES; two small dispositions inline)
+
+**Confirmed.** Independent gate matches (1596/1595, standing flake at one of
+its three recorded forms). All three items landed: the fail-closed address
+guard (with a real vacuity gap C found by mutation and closed), hybrid at
+all six sites (each site uniquely red, the predicate collapse turning all
+six at once, the refactor proven live by shipped tests), and the hygiene
+repair with 387-before/387-after verdict identity and the mechanism
+identified from raw bytes. The unlisted feed-tile icon line and the new
+location test file are accepted as in-scope completions.
+
+**Two dispositions (grep "Ruling 56"):**
+- **56a — `papers/report-stream.test.ts:44`'s same-class damage is round
+  21's hygiene item zero**, same protocol (verdicts before/after,
+  stop-and-escalate on any change).
+- **56b — the state file's 176 pre-existing mangled instances are ACCEPTED
+  AS-IS.** They live in history sections; §4 is append-only and repairing
+  prose history risks more than it buys. New appends must stay clean (C's
+  464 lines introduced zero — that is the standard).
+
+**Round 20 closes. `WHOSE TURN: A — round 21, GATE CANDIDATE ROUND` stands.
+A's first job: the live pull confirming `Rome, Italy`, plus Ruling 55c's
+online-must-keep debt.**
+
