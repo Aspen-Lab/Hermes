@@ -270,12 +270,23 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 06:18 UTC
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 06:42 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 06:12 UTC — ROUND 12 B IS
+STOPPED BECAUSE:  **ROUND 12 C IS IN PROGRESS — resumed after a transient 529
+                  killed the first C session mid-turn.** Same identity, same
+                  turn, lock refreshed rather than re-claimed. **Landed so far:
+                  B12-02 (ruggedthz sibling-segment recovery) at `808c5ed`**,
+                  with its §4 entry and tests; the working tree was verified
+                  clean after the kill and the interrupted B12-01 attempt had
+                  been reverted cleanly, leaving nothing behind. Remaining, in
+                  order: B12-01, B12-03, B12-04, B12-05, B12-06, B12-07 (B12-08
+                  is NO CODE per Ruling 39d).
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 06:12 UTC — ROUND 12 B IS
                   COMPLETE. Eight entries (B12-01–08) cover all nine of A's
                   ranked items. THE MANDATORY `ruggedthz.com` DESIGN WAS BUILT
                   AND IT SURVIVED ITS ADVERSARIAL PASS** — after its first
