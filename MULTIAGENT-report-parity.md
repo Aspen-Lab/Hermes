@@ -270,12 +270,140 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 16:09 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 16:52 UTC — ROUND 19 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 16:37 UTC — ROUND 19 B IS
+                  COMPLETE.** Both items (Ruling 52a), **one commit each, each
+                  pushed immediately** (`a6a46c1`, `e4c7223`), plus this
+                  hand-off. Claimed the lock cleanly (`83c5aa7`) after
+                  `git pull --ff-only` and confirming `git branch
+                  --show-current` reads `feature/summary-report-revamp`; branch
+                  name re-read in the output of every push (§3). **B changed no
+                  code, deleted no test, edited no test, and touched no file
+                  except this one.** Harness lived outside `src/`
+                  (`web/zz-r19b/`, own vitest config, include pattern
+                  `zz-r19b/**/*.probe.ts`) and was **deleted before BOTH
+                  commits**; `git status --porcelain --untracked-files=all`
+                  confirmed clean each time. State file appended with `cat >>`
+                  from bash — **NOT PowerShell** (round 19 A's recorded
+                  hazard); both appends were pure insertions (318 and 385
+                  lines, **zero deletions**) and introduced **zero** mojibake.
+
+                  **THE METHOD THAT MAKES BOTH ITEMS CHECKABLE: EVERY CANDIDATE
+                  IS A REAL COPY OF THE SHIPPED FILE WITH ONE TEXTUAL EDIT, NOT
+                  A RE-DECLARED REGEX IN A PROBE.** The byte-identical control
+                  copy was proved faithful twice per item — **the shipped test
+                  suite runs green against it** (`jobweb.test.ts` 356/356,
+                  `enrich.test.ts` 38/38) **and every control verdict is
+                  asserted equal to the genuinely imported function.**
+
+                  **ITEM 1 — A19-01 `jobright.ai`. THE CLAUSE IS
+                  `isTopicLandingPage`, AND THE FIX IS ONE CLAUSE / THREE
+                  TOKENS, NOT ONE TOKEN.** All eight clauses of `isListingPage`
+                  were run on both rows: **LinkedIn drops on the leading COUNT
+                  (`LISTING_TITLE_RE`), jobright has no count in its title at
+                  all** — its `(1000+)` lives in the page `<h1>`, which the
+                  ingestion gate never sees. **The clause that should have
+                  caught it fails TWO of its four conjuncts, both because a
+                  character class excludes the punctuation this host's lossless
+                  slugifier keeps.** Conjunct 3, B15-01's own strongest
+                  conjunct, is satisfied exactly, punctuation and all.
+                  **Leaf-only and title-only each leave A's row KEPT** — a
+                  one-token fix is inert. **Recommended: five characters
+                  (`, . & ( )`) added to two constants; `isTopicLandingPage`'s
+                  body and `LISTING_TITLE_RE` untouched.** Scored end to end on
+                  **47 rows**: shipped **40/47, 7 misses**; recommended
+                  **45/47, ZERO misses, TWO false fires.** **The open-class
+                  form (`[^/]`, `\S`) scores IDENTICALLY, so no open class is
+                  needed and none is proposed.** **The two false fires are
+                  CONSTRUCTED and their un-punctuated twins ALREADY DROP
+                  TODAY** — the change removes punctuation as an accidental
+                  shield over B15-01's named accepted cost; it creates no new
+                  failure mode. **ZERO tests at risk, proved by running the
+                  real 356-test suite against every variant.**
+
+                  **ITEM 2 — A19-02 `careers.dupont.com`. THE EXTENSION IS SAFE
+                  ON THE RISK THAT MOTIVATED h1-ONLY — AND IT CARRIES A
+                  DIFFERENT RISK ROUND 18 NAMED BUT NEVER MEASURED.**
+                  Re-measured on the recorded rows through the real enricher:
+                  **an employer-prefixed `<title>` fails containment even when
+                  the page has NO `<h1>` at all**, so round 18's reason for
+                  refusing the `<title>` cannot materialise — structurally, not
+                  luckily. **But the brand tail is real:** the raw `<title>`
+                  renders the role title as `… United States of America |
+                  Science & Technology jobs at Dupont` **on the card**,
+                  measured through the real mapper. **Recommended: cut the
+                  `<title>` at the first separator boundary that already
+                  satisfies the existing gate** — which crosses the separator
+                  inside a real title (`Battery Cell Engineer - Gigafactory
+                  Berlin`) and stops before the chrome. **`extendTruncatedTitle`
+                  is NOT touched: same floor, same strict-prefix test, same
+                  strictly-longer test.** **The `<h1>` still wins outright
+                  whenever one exists.** **One new risk class is NAMED, not
+                  discovered by C:** a board's own `<title>` can begin with the
+                  role and continue into listing chrome. **An optional guard was
+                  priced and is REJECTED as vacuous under the recommended
+                  form.** **ZERO tests at risk (38/38 on all four candidates) —
+                  but B warns that two shipped no-`<h1>` tests stay green only
+                  because their fixtures carry no `<title>` either, so their
+                  COMMENTS must be updated (not their assertions).**
+
+                  **BLAST RADIUS RE-MEASURED, NOT CARRIED OVER.**
+                  `resolveEmployerIdentity` **takes ONE argument and its
+                  argument object has no `title` field — the code path does not
+                  exist** (re-verified by execution). Scope stays `unproven`,
+                  `pageText` stays `undefined`, `matchedKeywords` identical.
+                  **THE ONE NON-ZERO NUMBER, DISCLOSED AND TEN TIMES ROUND
+                  18's: the score moves 0.7209 → 0.7160 (cut) / 0.7107 (raw).**
+                  **AND THE TWO ITEMS DO NOT INTERACT** — the repaired title is
+                  admitted by the ingestion gate both as shipped and with item
+                  1's widening applied, checked rather than assumed.
+
+                  **THE GATE, RE-RUN BY B: 90 files / 1527 tests, 1526
+                  passing**, sole failure the standing `benchmark.test.ts`
+                  live-search flake; **and B records that it presented on a
+                  THIRD distinct assertion this time** (`benchmark.test.ts:109`,
+                  the solid-state-battery-summit survivor check), after round
+                  18 C's `expected undefined to be 'Chicago'` and round 19 A's
+                  city-coverage form. **One flake, one test, three
+                  presentations.** `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+
+                  **ONE PROVENANCE LIMIT STATED RATHER THAN BURIED.** B tried to
+                  re-fetch `careers.dupont.com` to verify A's ground truth
+                  independently. **A's log records the host and rendered title
+                  but not the live path**, and round 15 A's binding correction
+                  says a guessed path is bad input, not evidence. **The fetch on
+                  a constructed path returned `null`, B did NOT hunt for the
+                  real one, and A's two page facts are recorded as INHERITED.**
+                  The design does not rest on them — it rests on the two
+                  contract facts B measured itself.
+
+                  **ONE NEW `POLICY — manager decides`, AND B DECIDED NONE OF
+                  THE THREE ALREADY OPEN.** New: **item 2's call site** — B
+                  recommends consulting the `<title>` only when the page has no
+                  `<h1>`, on round 18's "take the fix, decline the widening"
+                  reasoning, **but the wider form's extra exposure measured at
+                  ZERO across every must-keep**, which is a different arithmetic
+                  from the case round 18 declined. B names the single shape that
+                  separates them and does not decide. Still open and untouched:
+                  Ruling 33's full-phrase collisions, Ruling 51b's five-pull
+                  majority scoring, Ruling 51c's `owned`-widening lead.
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no `PEER_PROFILE_SNAPSHOT_PATH`. ONE page fetch
+                  attempted through Peer's own `fetchPageHtml`; it returned
+                  `null` and no third-party page text entered context.
+                  `euagenda.eu` NOT fetched (45a); Ruling 41c's three hosts NOT
+                  hunted (45b); B18-02's three named under-catch hosts NOT
+                  fetched.** No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Full
+                  detail in §4's two "Round 19 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity: **finished the turn @
+                  2026-08-14 16:52 UTC — ROUND 19 A WAS
                   COMPLETE.** All four parts, **one commit each, each pushed
                   immediately** (`9d4e4e4`, `63458fd`, `680e11e`, this one).
                   Claimed the lock cleanly (`1c972f3`) after `git pull
@@ -2384,7 +2512,107 @@ ROUND:            **19 IS OPEN — A IS DONE, B IS NEXT.** Round 19 was briefed 
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — Investigator, round 19.** A's live measurement is
+WHOSE TURN:       **C — Implementer, round 19.** B's investigation is complete.
+                  **TWO items, and they are INDEPENDENT — no shared file, no
+                  shared function, and B checked by execution that they do not
+                  interact.** Work them in the order below anyway, one commit
+                  each, gate after each (§2/§3). Claim the §0d lock first,
+                  always. **Full designs, corpora, negative proofs and required
+                  assertions are in §4's two "Round 19 — Agent B" entries — work
+                  from those, not from this summary.**
+
+                  - **B19-01 — `web/src/lib/jobs/sources/jobweb.ts`. Widen the
+                    two `TOPIC_LANDING_*` character classes by five closed
+                    characters (`, . & ( )`).** THREE tokens: the leaf head
+                    class, the leaf tail class, and the title token class.
+                    **`isTopicLandingPage`'s body does not change and
+                    `LISTING_TITLE_RE` is not touched — not one byte.** Tests
+                    go in `jobweb.test.ts`. **B measured 45/47 against a
+                    shipped 40/47, zero misses, two constructed false fires
+                    whose un-punctuated twins already drop today.** **DO NOT
+                    reduce this to one edit — leaf-only and title-only each
+                    leave A's live row KEPT, proved by execution. DO NOT use an
+                    open class (`[^/]`/`\S`): it was measured and scores
+                    identically, so it buys nothing. DO NOT add a host list, and
+                    DO NOT re-open the leading count (Ruling 46a).**
+                  - **B19-02 — `web/src/lib/opportunities/enrich.ts`. Add a
+                    `<title>` witness behind the IDENTICAL gate, consulted only
+                    when the page has NO `<h1>`.** Three small helpers plus one
+                    changed line at `enrich.ts:303`. **`extendTruncatedTitle`
+                    itself must not be touched** — same 12-character floor, same
+                    strict-prefix test, same strictly-longer test. **The
+                    `<title>` must be CUT at the first separator boundary that
+                    already satisfies the gate**, or the card renders the site's
+                    brand tail as its role title (B measured that through the
+                    real mapper). Tests go in `enrich.test.ts`, **run SOLO — the
+                    SolarPACES lock.** **DO NOT implement the cut as
+                    `split(sep)[0]`; DO NOT use `og:title`; DO NOT move the
+                    repair above `resolveJobPostingScope` (Ruling 51c); DO NOT
+                    add the `LISTING_TITLE_RE` guard B priced and rejected as
+                    vacuous.**
+
+                  **THE ONE DEPENDENCY, AND IT IS A SEQUENCING ONE ONLY.** Both
+                  items touch the job surface, and B verified that item 2's
+                  repaired title is still admitted by item 1's widened ingestion
+                  gate. **If C lands them in the other order, re-run that check
+                  rather than assuming it.**
+
+                  **TWO THINGS B FOUND THAT C MUST HANDLE RATHER THAN
+                  REDISCOVER.** (1) **Item 1's title token has NO isolating
+                  test, and that is structural** — conjunct 3 forces the title's
+                  punctuation and the leaf's to match, so no row can separate
+                  them. **Record it as "load-bearing, proved by a combined
+                  revert, no isolating test exists" — do not invent one.**
+                  (2) **Item 2 makes two shipped test names promise more than
+                  they test** (`leaves the title alone when the page has no
+                  heading at all`, and the under-catch one): they stay green
+                  only because their fixtures carry no `<title>`. **Update their
+                  COMMENTS; do NOT edit their assertions** (§3).
+
+                  **ONE NEW `POLICY — manager decides`, RAISED BY B AND NOT
+                  DECIDED: item 2's call site.** B recommends the narrow form
+                  (`<title>` only when there is no `<h1>`); the wider form
+                  (`<h1>` first, then `<title>`) measured **zero** extra
+                  exposure across every must-keep, and B names the single shape
+                  that separates them. **C implements B's recommendation and
+                  does not decide the policy.** Still open and untouched by both
+                  items: Ruling 33's full-phrase collisions, Ruling 51b's
+                  five-pull majority scoring, Ruling 51c's `owned`-widening.
+
+                  **THE STANDING BAR FOR C, unchanged:** work B's guide in
+                  order; **never delete a test to make a change pass** — rewrite
+                  the assertion to state the new contract and comment which item
+                  changed it; **negative proof one edit at a time, every restore
+                  `diff`ed byte-identical before the next, and no revert scripted
+                  with `perl -pi`** (round 16 C's recorded hazard); **every
+                  clause and guard ships with a test only it satisfies, and
+                  every drop assertion ships with its admitted control**
+                  (Ruling 51 / round 18 C's vacuity standard). **B has already
+                  audited reachability and named what cannot be isolated — C
+                  should still re-check by execution, because round 18 C found
+                  five of B's assertions vacuous and the standard is that C
+                  measures rather than trusts.**
+
+                  **THE GATE:** `cd web && npx vitest run && npx tsc --noEmit &&
+                  npx eslint`. **B re-ran it and it HOLDS at 90 files / 1527
+                  tests, 1526 passing**, sole failure the standing
+                  `benchmark.test.ts` live-search flake — **which presented on a
+                  THIRD distinct assertion this round** (`benchmark.test.ts:109`)
+                  after round 18 C's and round 19 A's two forms. **One flake,
+                  one test, three presentations; do not read it as a new
+                  defect.** **Do not skip the live benchmark via
+                  `PEER_PROFILE_SNAPSHOT_PATH`.**
+
+                  **`GATE (0%): NOT MET`. C does not set it and cannot move it
+                  (§2); only round 20's A's live measurement can, and only the
+                  manager closes (Ruling 30). The user reaffirmed the strict
+                  Ruling-23 gate on 2026-08-14 — grep "user reaffirmed the
+                  gate" — so no agent re-scopes it.**
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-19 B
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **B — Investigator, round 19.** A's live measurement is
                   complete and found **TWO** differences, both on **5 of 5**
                   pulls. **B's job is to find WHY for each, and to produce a fix
                   guide C can work in order (§2). B changes no code, deletes no
