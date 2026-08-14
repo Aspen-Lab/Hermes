@@ -270,13 +270,56 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 05:40 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 05:34 UTC — ROUND 12 A IS
-                  COMPLETE (all four parts).** The loop was paused by the
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 06:12 UTC — ROUND 12 B IS
+                  COMPLETE. Eight entries (B12-01–08) cover all nine of A's
+                  ranked items. THE MANDATORY `ruggedthz.com` DESIGN WAS BUILT
+                  AND IT SURVIVED ITS ADVERSARIAL PASS** — after its first
+                  version was killed by a counterexample B built to break it.
+                  **No product code was touched.** One commit per item, pushed
+                  immediately, nothing batched. Every harness lived outside
+                  `src/` under its own vitest config and was deleted before its
+                  commit.
+
+                  **Full detail in §4**: "Round 12 — Agent B (B12-01…)" through
+                  "(summary across B12-01–08…)". This block is the short
+                  version, and C's ordered work list is in the summary entry.
+
+                  **THE TWO STRUCTURAL FINDINGS THAT SHOULD DRIVE THE
+                  MANAGER'S READING:**
+                  1. **Three of A's nine items are the SAME shared function
+                     (`looksLikeHostBrand`) failing in three different
+                     directions** — it cannot connect `Ruggiero Research Lab`
+                     to `ruggedthz.com` (too different), it destroys
+                     `International Battery Seminar` on
+                     `internationalbatteryseminar.com` (identical), and it never
+                     sees `Talents by Vaia` on `talents.vaia.com` (the brand
+                     spans two DNS labels, and B8-02 fixed *which* label is
+                     checked, not *one label at a time*). One function, three
+                     genuinely different fixes, **two of which must land in a
+                     specific order** (B12-04 before B12-07).
+                  2. **`ecs.confex.com` did not slip past B11-02's guard — the
+                     guard ran and correctly returned "not narration".** The
+                     snippet stage is *designed* to return a whole sentence and
+                     **the suite asserts that eight times**, including
+                     B11-02's own test at `eventweb.test.ts:384`, whose asserted
+                     "correct" answer is itself a wrong event name. All four of
+                     `looksLikeEventTitle`'s narrative checks are **verb
+                     inventories** — §1x Ruling 37's open-class-in-a-closed-list
+                     trap, already inside the shipped code. No filter fixes
+                     this; the stage has to change what it *returns*.
+
+                  **Gate: unchanged and NOT MET. B cannot move it** (§2) — a fix
+                  guide is not evidence a difference is gone. Only round 13's A
+                  can change that line.
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 05:34 UTC — ROUND 12 A COMPLETE (all four parts).
+                  The loop was paused by the
                   user on 2026-08-13 and resumed 2026-08-14; **both resume
                   clocks are back ON** (laptop hourly cron + cloud routine
                   re-enabled). Part 1 was banked before the pause
@@ -440,91 +483,96 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 05:34 UTC — ROUND 12 A IS
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            12 — **A COMPLETE (all four parts).** Rounds 10 and 11 (A,
-                  B, C, manager verification) are fully complete. Next is
-                  **round 12 B**, after the manager's verification of round
-                  12 A.
-WHOSE TURN:       **B — Investigator, round 12. RULING 36's THIRD-STRIKE
-                  THRESHOLD HAS FIRED: `ruggedthz.com` was confirmed present
-                  and wrong by the same mechanism for a third round (9, 11,
-                  12), so YOU ARE AUTHORISED AND REQUIRED to design that
-                  fix, with no further manager escalation.** That is the one
-                  item on this list you may not defer. B does not change
-                  code and does not re-measure (§2) — produce a fix guide in
-                  the order C should work.
+ROUND:            12 — **A COMPLETE, B COMPLETE.** Rounds 10 and 11 (A, B, C,
+                  manager verification) are fully complete. Next is
+                  **round 12 C**, after the manager's verification of round
+                  12 B.
+WHOSE TURN:       **C — Implementer, round 12.** B's guide is eight entries,
+                  B12-01 through B12-08, in §4. **Work them in the order
+                  below, not in A's ranked order** — B re-ordered them for
+                  dependencies and one of them is blocked. C changes code; C
+                  does not re-measure and does not re-derive causes (§2).
+                  Run the gate after EVERY item and commit per item.
 
-                  **Ruling 32 still governs the shape of your output.**
-                  Round 12's central result is that per-host guarding is not
-                  generalising: round 11's two fixes each removed their exact
-                  target string, live, and the measured wrong-rate still rose
-                  on both fields because the pool brought in hosts with
-                  shapes no guard has met. Prefer one structural entry over
-                  three host patches wherever A's list already groups a shape.
+                  **1. B12-02 — `ruggedthz.com`. THE MANDATORY ONE. Land it
+                  first.** Ruling 36's third strike fired; B designed it and
+                  it survived 11 adversarial cases including both must-survive
+                  shapes the brief named. No dependencies, breaks no existing
+                  assertion. **Read its flagged implementation trap before
+                  writing a line**: the guard-pair re-check must call
+                  `isChromeSegment` + `looksLikeEventTitle` directly, NOT
+                  `bestEventTitleSegment` — that would be infinite recursion.
+                  It attaches at **two** points (title stage and URL-slug
+                  stage) because the host has two confirmed failure modes.
 
-                  **A's ranked list is in §4 "Round 12 — Agent A (part 4…)".
-                  Work it in that order. The load-bearing points:**
-                  1. **`openmc.discourse.group` renders `Page 2` as the
-                     employer** — Ruling 32's shape in its plainest form yet
-                     on this field, and the worst single value measured.
-                  2. **`ecs.confex.com` — the round's structurally most
-                     important result, and your first job.** B11-02's exact
-                     target string is confirmed gone, and **a second
-                     narrative sentence of the same class took the same
-                     slot**. The page's own `<title>`/`<h1>` are both still
-                     correctly rejected. **Why a sentence of this shape
-                     passes the guard B11-02 just installed, when round 11's
-                     sentence did not, is the question.** Ruling 26's
-                     standard: this is a guard followed by another wrong
-                     value, which is not yet a fix.
-                  3. **`talents.vaia.com` renders `Talents by Vaia`** — a
-                     job-board brand in the company slot, Ruling 26's shape
-                     on a new host.
-                  4. **`ruggedthz.com` — the mandatory item.** Ruling 36's
-                     recorded design lead stands (recover the name from the
-                     rejected sibling title segment; **do NOT widen the
-                     host-brand check** — that direction has been declined
-                     twice on over-reach evidence). **Design against the
-                     host, not the single string: A found a SECOND failure
-                     mode this round** — one run in five rendered a
-                     lowercase mid-sentence narrative fragment instead, a
-                     strictly worse value. Ruling 31 applies: adversarially
-                     test your design before recommending it, exactly as
-                     B11-04's collapse showed why.
-                  5. **A new event-name shape on three hosts at once — a
-                     page-type label welded into the same segment as the real
-                     name** (`battery2030.eu` front-welded,
-                     `isea.rwth-aachen.de` end-welded, `adt.media` an article
-                     headline from a news page about the conference rather
-                     than the conference's own page). **A recorded one
-                     comparative observation and explicitly left the
-                     conclusion to you:** `battery-power.eu` scores CORRECT
-                     from the same page-type label **separated by a dash**;
-                     all three failures carry it with **no separator**.
-                  6. **`internationalbatteryseminar.com`** — B11-03's target
-                     shape is confirmed gone and the value genuinely
-                     improved, but **the correct name is sitting in the
-                     page's own `<title>` and is not what renders.**
-                  7. **Long-standing, never fixed:** `euchems2026.eu`
-                     (`ECC102026 POSTERS v2`) and
-                     `batteryinnovationsummit.com` (`The Battery Saloon`).
-                  8. **Cross-cutting, NEW — the employer value for one
-                     posting is not stable across pulls minutes apart**, in
-                     both directions, tracking a change in the upstream
-                     title. Worth an entry: this is reader-facing, not only a
-                     measurement artefact.
+                  **2. B12-04 — `internationalbatteryseminar.com`.** No
+                  dependencies. **Must land BEFORE or WITH B12-07.** Also
+                  closes A's item 6 outright. The exemption goes in
+                  `isChromeSegment`, **NOT** in `looksLikeHostBrand` — putting
+                  it in the shared function would put the employer field at
+                  risk for an event-side problem.
 
-                  **Do NOT re-measure these — they are ruled or accepted:**
+                  **3. B12-03 — the welded page-type label.** Two independent
+                  sub-fixes (a label strip; a news-article path check). The
+                  strip's `for the` anchor is **load-bearing** — without it
+                  the existing must-survive assertion at
+                  `eventweb.test.ts:393-397` breaks. The path check must use
+                  ONLY the anchored headline alternatives, never the
+                  `news|blog` word list — B proved by execution that the full
+                  regex on a path eats `battery2030.eu`'s own URL.
+
+                  **4. B12-06 — `openmc.discourse.group`.** Independent, job
+                  side, the smallest change on the list.
+
+                  **5. B12-07 — `talents.vaia.com`. AFTER B12-04.** Largest
+                  blast radius here: **three production consumers and five
+                  test files.** B12-07's own list under-counted them; **the
+                  corrected list is in B12-08 §0** — read that before starting.
+
+                  **6. B12-05's `euchems2026.eu` half.** Independent and small.
+
+                  **7. B12-01 — `ecs.confex.com`. DO NOT LAND without a
+                  manager ruling.** It deliberately restates eight assertions
+                  that B11-02 and B11-03 wrote or depend on (all to *better*
+                  values, none deleted) and trades a measured-ZERO honest-host
+                  rate for the removal of a defect class. Nothing else on this
+                  list depends on it.
+
+                  **8. No code at all:** B12-05's `batteryinnovationsummit.com`
+                  half (B refused to design a fix, with evidence) and B12-08
+                  (mechanism traced, options only).
+
+                  **Standing rules that bit this loop before, restated because
+                  they apply to almost every item above:**
+                  - **`scoring.test.ts` has been the missed second file
+                    TWICE** — both `web/src/lib/events/scoring.test.ts` and
+                    `web/src/lib/jobs/scoring.test.ts`.
+                  - **The SolarPACES regression lock lives in
+                    `web/src/lib/opportunities/enrich.test.ts`, NOT under
+                    `events/`.** Run it and record the count.
+                  - Never delete a test. Restate the assertion and say in a
+                    comment which item changed it (§2).
+                  - New tests must be **verified by execution to FAIL against
+                    pre-fix code** before being counted, per this loop's own
+                    standard.
+                  - **If you find a shape B's design misses, stop and record
+                    it** rather than widening a guard inline — that clause is
+                    what saved round 11 from landing B11-04.
+
+                  **Do NOT touch, they are ruled or parked:**
                   `careerservices.upenn.edu` (Ruling 34a),
-                  `careers.gevernova.com`'s colonless run-on (Ruling 37),
-                  the short-acronym collision (Ruling 33), same-page
-                  contamination (Ruling 29, parked). A keeps all three
-                  tallies; B does not re-derive them.
+                  `careers.gevernova.com`'s run-on (Ruling 37), the
+                  short-acronym collision (Ruling 33), same-page contamination
+                  (Ruling 29), and `euagenda.eu` (Ruling 38c — flagged, not
+                  counted, until round 15).
 
-                  **Evidence gaps A named as gaps — do not read them as
-                  passes:** the SolarPACES lock could not be confirmed live
-                  (host absent from all five pulls); the enrichment/rescue
-                  path is untestable live while `feedAiApiKey` is empty (Tier
-                  0 only); `euagenda.eu` stays unverified behind a third 403.
+                  **Evidence limits B named as limits — do not read them as
+                  passes:** `openmc.discourse.group`'s provider title is a
+                  reconstruction that reproduces the observed value on all
+                  three plausible shapes; `internationalbatteryseminar.com`'s
+                  trace explains the render uniquely but is not a captured
+                  provider payload; the enrichment/rescue tier is still dark
+                  while `feedAiApiKey` is empty.
 
 MANAGER CARRY-FORWARD: **one new this round, and it is C's, not B's.**
                   **B11-04's flag — Ruling 36's own eighth-shape condition
@@ -587,6 +635,49 @@ MANAGER CARRY-FORWARD: **one new this round, and it is C's, not B's.**
                   rather than retrying every round or writing the host off
                   permanently. Ruling 25 forbids a headless browser, so no
                   other access route exists inside the loop's rules.
+
+                  **ADDED BY ROUND 12 B — four `POLICY` flags, all raised
+                  rather than decided. One of them BLOCKS an item.**
+                  1. **B12-01's contract change — this one blocks.** B's
+                     recommended `ecs.confex.com` fix deliberately restates
+                     **eight existing assertions** that B11-02 and B11-03
+                     wrote or depend on (all to *better* values; no test
+                     deleted), and trades a **measured-ZERO** honest-host rate
+                     (A: 0 of 85 renders) for the removal of a whole defect
+                     class. **C is told not to land it until this is ruled.**
+                     Everything else on B's list is unblocked.
+                  2. **`batteryinnovationsummit.com` — B REFUSED to design a
+                     fix, with evidence, and asks it be classified as an
+                     accepted cost of Ruling 34a's class.** One targeted fetch
+                     established the provider hands Peer the page's `og:title`,
+                     `"The Battery Saloon"`, which passes every guard because
+                     **there is nothing wrong with it as a string** — a real,
+                     well-formed name that is the wrong name, separable only by
+                     knowledge outside the string. B also asks that "the
+                     enrichment tier is the only route for this class" be
+                     recorded as the standing answer rather than re-derived
+                     each round.
+                  3. **Should a forum thread listing vacancies be dropped as a
+                     listing page?** (`openmc.discourse.group`.) B did not
+                     design it — every rule B could write either enumerates
+                     phrasings (Ruling 37's trap) or drops real postings. One
+                     narrow closed option exists (`page=N` with N ≥ 2 is never
+                     a single posting) and is partial. Flagged, not proposed.
+                  4. **The employer instability — three options, B recommends
+                     option 1 now.** Accept upstream variance; hold option 2
+                     (read the employer from the URL when the title omits it)
+                     as a candidate for a future round's B, **explicitly not
+                     bolted onto B12-07**, because a new extractor landed in
+                     one turn is how round 6 shipped a broken parse.
+
+                  **Also raised by round 12 B, not a `POLICY` flag:** B12-04's
+                  trace found that **`solarpaces.org`'s regression lock
+                  survives the host-brand check only because its title carries
+                  a trailing year** — `looksLikeHostBrand("SolarPACES",
+                  "solarpaces.org")` is `true`. Drop the year and the lock's
+                  own host fails the same way
+                  `internationalbatteryseminar.com` does. Worth the manager
+                  knowing where that lock is standing.
 USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   scope, gate redefined), **§1l Ruling 25** (no headless
                   browser), **§1m Ruling 26** (a guard followed by a
@@ -646,8 +737,22 @@ USER RULED:       Unchanged — **§1j Ruling 23** (extraction quality in
                   **Round 12 A has now kept Ruling 37's tally for the first
                   time: 1 of 3, the baseline instance only, NO recurrence
                   beyond it — the escalation does not fire.**
-STATUS:           **Round 12 A is complete and has produced a nine-item
-                  ranked list; round 12 B has not started.** Round 11's two
+STATUS:           **Round 12 A and B are both complete; round 12 C has not
+                  started.** B produced eight entries covering all nine of A's
+                  ranked items, **no product code touched**, one commit per
+                  item. **The mandatory `ruggedthz.com` design was built and it
+                  SURVIVED its adversarial pass** — its first version was
+                  killed by a counterexample B constructed to break it, and the
+                  discriminator that saves the second version (the recovered
+                  name must be corroborated by the page's own URL slug, and
+                  must stand down when a surviving sibling is corroborated
+                  instead) exists **because** of that failure. Seven of B's
+                  eight entries carry a design; one
+                  (`batteryinnovationsummit.com`) is a **refused** design with
+                  evidence. **One item, B12-01, is BLOCKED pending a manager
+                  ruling** — see MANAGER CARRY-FORWARD. Four `POLICY` flags
+                  raised. Round 11's two
+                  landed fixes are both confirmed live to have removed their
                   landed fixes are both confirmed live to have removed their
                   exact target strings (B11-02 on `ecs.confex.com`, B11-03 on
                   `internationalbatteryseminar.com`), and **zero regressions
@@ -25312,3 +25417,166 @@ in section 0 applies to B12-07's item, not to this one.
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (summary across B12-01–08, with C's recommended order and its dependencies)
+
+**Eight entries covering all nine of A's ranked items. The mandatory
+`ruggedthz.com` design was built and it SURVIVED its adversarial pass — after its
+first version was killed by a counterexample I built to break it.** Every finding
+below is established by **execution against the shipped code**; nothing is
+asserted from reading. All harnesses lived outside `src/` under their own vitest
+config so the standard gate could never collect them, and **every one was deleted
+before its commit** (`git status --untracked-files=all` clean each time). **No
+product code was touched at any point in this turn.** One commit per item, pushed
+immediately, nothing batched.
+
+| A's item | entry | verdict |
+|---|---|---|
+| 1 `openmc.discourse.group` = `Page 2` | B12-06 | traced + designed |
+| 2 `ecs.confex.com` deadline sentence | B12-01 | traced + designed, **`POLICY`** |
+| 3 `euchems2026.eu` = `ECC102026 POSTERS v2` | B12-05 | traced + designed |
+| 4 `talents.vaia.com` = `Talents by Vaia` | B12-07 | traced + designed |
+| 5 `ruggedthz.com` = `Ruggiero Research Lab` | B12-02 | **traced + designed + survived** |
+| 6 `internationalbatteryseminar.com` | B12-04 | traced + designed |
+| 7 `batteryinnovationsummit.com` = `The Battery Saloon` | B12-05 | **fix REFUSED, with evidence** |
+| 8 welded page-type label ×3 | B12-03 | **two gaps, not one or three** |
+| 9 employer unstable across pulls | B12-08 | mechanism traced, **`POLICY`** |
+
+---
+
+**THE ONE SENTENCE THAT SUMMARISES ROUND 12 B.** Three of A's nine items turned
+out to be the *same shared function failing in three different directions* — the
+host-brand check cannot connect `Ruggiero Research Lab` to `ruggedthz.com`
+(too different), destroys `International Battery Seminar` on
+`internationalbatteryseminar.com` (identical), and never sees `Talents by Vaia`
+on `talents.vaia.com` (spans two labels) — **and Ruling 32's "prefer one
+structural entry" turns out to cut the other way here: one function, three
+genuinely different fixes, two of which must land in a specific order.**
+
+**THE SECOND STRUCTURAL FINDING, and it is the one I would most want the manager
+to read.** `ecs.confex.com` did not slip past B11-02's guard. **The snippet stage
+is *designed* to return a whole sentence, and the test suite asserts that eight
+times** — including `eventweb.test.ts:384`, B11-02's own test, whose asserted
+"correct" answer is `"The 250th ECS Meeting welcomes abstract submissions."`
+That is itself a wrong event name by A's standard. **No filter fixes this**:
+every one of `looksLikeEventTitle`'s four narrative checks is a verb inventory,
+which is §1x Ruling 37's open-class-in-a-closed-list trap already sitting inside
+the shipped code. The fix has to change what the stage *returns*, not which
+sentences it accepts — which is why B12-01 carries a `POLICY` flag.
+
+---
+
+**RECOMMENDED ORDER FOR C, with dependencies.**
+
+1. **B12-02 — `ruggedthz.com`.** Mandatory (Ruling 36's third strike). **No
+   dependencies. Land first.** Design verified against 11 adversarial cases
+   including both must-survive shapes the brief named; breaks no existing
+   assertion. Carries one flagged implementation trap (do not call
+   `bestEventTitleSegment` from inside itself).
+2. **B12-04 — `internationalbatteryseminar.com`.** No dependencies. **Must land
+   before or with B12-07** — it puts the event side's exemption in place before
+   the shared brand check gets wider. Also closes A's item 6 outright.
+3. **B12-03 — welded page-type label.** Two independent sub-fixes (the label
+   strip; the news-article path check). Independent of everything else. The
+   strip's `for the` anchor is load-bearing and preserves
+   `eventweb.test.ts:393-397`.
+4. **B12-06 — `openmc.discourse.group`.** Independent, job side, smallest change
+   on the list.
+5. **B12-07 — `talents.vaia.com`.** **AFTER B12-04.** Largest blast radius of
+   anything here: **three production consumers and five test files** — see
+   B12-08 §0, which corrects B12-07's own under-count.
+6. **B12-05's item 6 half — `euchems2026.eu`.** Independent, small, and the
+   cause was already traced in round 9 and merely reconfirmed here.
+7. **B12-01 — `ecs.confex.com`. BLOCKED pending a manager ruling.** Do not land
+   before the ruling. Nothing else on this list depends on it.
+8. **B12-05's item 7 half and B12-08 — no code at all.** Policy only.
+
+---
+
+**`POLICY — manager decides`: four, all raised rather than decided.**
+
+1. **B12-01's contract change.** The recommended fix deliberately restates eight
+   existing assertions that B11-02 and B11-03 wrote or depend on, and it trades a
+   **measured-zero** honest-host rate (A: 0 of 85 renders) for the removal of a
+   whole defect class. All eight restatements are to *better* values, and no test
+   is deleted — but restating another round's landed tests is the manager's call,
+   not mine.
+2. **B12-05: classify `batteryinnovationsummit.com` as an accepted cost of Ruling
+   34a's class.** I refused to design a fix. The provider hands Peer the page's
+   `og:title`, `"The Battery Saloon"`, which passes every guard because **there
+   is nothing wrong with it as a string** — it is a real, well-formed name that is
+   the wrong name, separable only by knowledge outside the string. Any guard
+   narrow enough to catch it is a denylist of one host. Recommend accepting it,
+   and recording "the enrichment tier is the only route for this class" as the
+   standing answer rather than re-deriving it each round.
+3. **B12-06: whether a forum thread listing vacancies should be dropped as a
+   listing page.** I did not design it — every rule I could write either
+   enumerates phrasings (Ruling 37's trap) or drops real postings. One narrow
+   closed option exists (`page=N` with N ≥ 2 is never a single posting) and is
+   partial. Flagged, not proposed.
+4. **B12-08: the three options for the employer instability.** My
+   recommendation, since one was asked for: option 1 (accept upstream variance)
+   now, with option 2 (read the employer from the URL when the title omits it) as
+   a candidate for a future round's B — **not bolted onto B12-07**, because a new
+   extractor landed in one turn is how round 6 shipped a broken parse.
+
+---
+
+**WHERE MY TRACE DISAGREES WITH A's OR THE MANAGER's READING — checked, not
+inherited, as the brief required.**
+
+- **The manager framed item 2 as "how did the new guard pass it".** The guard did
+  not fail; it ran and correctly returned "not narration". The defect is one
+  layer up, in what the stage is asked to return. Same host, different diagnosis,
+  and it changes the fix.
+- **A grouped three hosts as one welded-label shape and left the conclusion to
+  me.** Two of them are one gap; `adt.media` is a different one entirely (the
+  news-article filter is handed the wrong input, not missing vocabulary). A's
+  comparative separator observation was exactly right for the other two.
+- **A's item 6 and item 5 read as two unrelated hosts.** They are the same
+  function — B12-04's fix is what actually closes item 6's live value, and
+  B12-01's design does *not* catch `"Conference Image Gallery Carousel"`, which
+  that entry records rather than hides.
+- **Nothing in A's measurement was found to be wrong.** Every value I could
+  reproduce, reproduced byte-identically.
+
+---
+
+**EVIDENCE LIMITS, named as limits.**
+
+- `openmc.discourse.group`'s provider title is a **reconstruction** (A's log has
+  the value and the URL, not the title). It reproduces the observed value on all
+  three plausible Discourse shapes, which is as close as this item gets without a
+  fetch it does not need.
+- `internationalbatteryseminar.com`'s trace uses the page `<title>` A fetched; I
+  did not separately capture what the provider hands the pipeline. The mechanism
+  explains the observed render exactly and uniquely, but it is an explanation,
+  not a captured payload.
+- **One targeted fetch was made**, for `batteryinnovationsummit.com` only, because
+  its trace genuinely required a title no prior log contains. Output was clipped
+  programmatically to the title tags; no block of third-party text was read into
+  context; **nothing fetched contained text directed at an agent.**
+- The enrichment/rescue tier remains untestable while `feedAiApiKey` is empty —
+  the same gap A has named for three rounds. It is the only route that could ever
+  fix item 7.
+- **`euagenda.eu` was not touched**, per §1y Ruling 38c (flagged, not counted,
+  until round 15). `careerservices.upenn.edu`, `careers.gevernova.com`'s run-on,
+  the LCO acronym and same-page contamination were all left alone, per their
+  rulings.
+
+**One incidental lead, not scheduled** (B12-05): `EVENT_SIGNAL_RE` has no plural
+forms — `looksLikeEvent("Battery Summits")` is `false` where
+`looksLikeEvent("Battery Summit")` is `true`, and the same is true of every noun
+in the list. Silent cost, one character per noun to fix, closed change. Left for
+a future round because I have no live evidence of a wrong value caused by it.
+
+**Security floor, recorded once.** No credential printed, logged, written or
+committed — keys were never read at all this turn (B does not measure). No live
+pipeline run. `PEER_PROFILE_SNAPSHOT_PATH` not used. No test deleted. No branch,
+no worktree, no PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Branch
+confirmed `feature/summary-report-revamp` before the first commit and the output
+of every push read, per §3.
+
+§1 is advanced to C in the same commit as this entry.
