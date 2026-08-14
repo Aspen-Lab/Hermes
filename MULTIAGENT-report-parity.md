@@ -53118,3 +53118,123 @@ surface, scoring, dedup, or any drop rule, so no row enters or leaves either
 pool.** Ruling 32's honest-silence outcome is what both fallbacks land on.
 
 ---
+
+### Round 22 — Agent B (item 2 of 9: **A22-01 — `ans.org`. The date and the city come from two DIFFERENT unowned sources, and the ownership witness Peer needs is already sitting in the text it reads.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 2 of 9. Method as stated in item 1.
+
+## **CLASSIFICATION: WRONG DATA.** Two rendered values plus one wrong outcome, from **two** causes, not one.
+
+## CAUSE 1 — the DATE: the first date token in a page-scoped snippet wins, and the wrong one is first
+
+`web/src/lib/events/sources/eventweb.ts:49-61`:
+
+```ts
+export function extractEventDate(text: string): string | undefined {
+  const md = text.match(MONTH_DAY_RE);      // <- FIRST match in the whole string
+  …
+}
+```
+
+called at `:1360` on `text = title + result.snippet`. **The snippet is whatever
+the search engine chose to show for the PAGE, and this page is a conference
+CALENDAR.** B read the captured snippet programmatically and reports only
+positions and the shortest carrying fragments:
+
+| offset | what sits there |
+|---|---|
+| 416 | `…tlight` — the tail of the page's `Conference Spotlight` block |
+| 484 | `August 24–27, 2026` — **the OTHER event's date** |
+| 504 | `Dallas, TX` — the OTHER event's city |
+| 778 | `# Molten Salt Research Reactor Tour` — **the selected item's own title, as a markdown heading** |
+| 823 | `Thursday, April 16, 2026` — **the selected item's own date** |
+
+`MONTH_DAY_RE` returns the token at 484. The item's own date, 339 characters
+later, never gets a look. **Executed:** `extractEventDate(full)` returns
+`2026-08-24T12:00:00.000Z`, byte-identical to what the card renders.
+
+**And this is why a finished event survives.** `eventweb.ts:1367` drops a row
+whose newest anchor is in the past; the anchor it was handed belongs to a
+different event four months in the future.
+
+## CAUSE 2 — the CITY: a whole-page text scan, on a path that has no scope resolver at all
+
+`ans.org` carries **zero JSON-LD** (measured: `extractJsonLdOpportunities` returns
+an empty array). So in
+`web/src/lib/opportunities/structured-extract.ts:1627-1630` the place falls
+through both structured layers to **`extractBodyTextPlace(html)` — a scan of the
+whole document** — which returns `{Dallas, TX, United States}`. That flows into
+`web/src/lib/opportunities/enrich.ts:293-294` and becomes the card's `location`,
+plate 03's WHERE tile and the Location facet.
+
+**The job path has an ownership resolver for exactly this problem
+(`resolveJobPostingScope`). The event path has none.** `enrich.ts:286-291` calls
+`extractOpportunityPageDetails`, `extractEventDetails`, `extractDeclaredEventName`
+and `extractEventRoster` **directly on `html`**, with no boundary anywhere.
+
+**One detail that decides the fix and that B checked rather than assumed:** the
+same file already applies the right discipline one field over.
+`structured-extract.ts:1616-1620` refuses to publish a description when a page
+carries several `Event` records — *"A page with several Event records does not
+prove which description owns the selected result. Fail closed instead of
+choosing the first one."* **`startDate`, `endDate` and `place` on the very next
+lines take `typed[0]` with no such test.** The principle is already written down
+in this file; three fields were left out of it.
+
+## FIX DIRECTION
+
+Both halves are covered by the Ruling 59a design (item 8 of this entry), which
+is where the adversarial matrix and the fallback proof live. Stated here only in
+outline so this item reads on its own:
+
+- **Date** — when the text offers more than one candidate event day, Peer may
+  not pick by position. It must find the item's own title in the text and read
+  the date from that span, and **be silent when it cannot**. On this row the
+  witness is present (offset 778, as a heading) and the owned span yields
+  `2026-04-16` — **which is in the past, so the row does not merely lose a wrong
+  date, it correctly disappears.** Executed end to end.
+- **City** — `place` must come from a block the item owns, and the whole-page
+  body scan is the last resort, not the default. **B tested the obvious
+  shortcut — reuse `resolveJobPostingScope` verbatim on event pages — and it
+  FAILED: it returns `owned` with the strings `"Sitemap"`, `"Home"` and a
+  reCAPTCHA notice on the three captured event pages, which would silence every
+  event place in the pool.** That draft is recorded as rejected so it is not
+  re-proposed. The workable form is in item 8.
+
+## TESTS AT RISK
+
+- `web/src/lib/events/sources/eventweb.test.ts` — the home of `extractEventDate`.
+  Grep it for `extractEventDate` before touching the function; several cases pass
+  strings with more than one month-day token and expect the first.
+- `web/src/lib/events/scoring.test.ts` — exercises the expiry branch
+  (`scoring.ts:216`) that a changed date feeds. A row that starts returning a
+  past date will now be dropped there, which is the intended behaviour and will
+  need a case.
+- `web/src/lib/opportunities/place-flow.test.ts` and
+  `web/src/lib/opportunities/structured-extract.test.ts` — both exercise
+  `extractBodyTextPlace` / `extractOpportunityPageDetails`. **`place-flow.test.ts`
+  is the second test file on this line that has been missed before; read it.**
+- `web/src/lib/events/mapper.test.ts`, `web/src/lib/events/card.test.ts` — the
+  render side of `date` and `location`.
+- `web/src/lib/events/benchmark.test.ts` — the standing flake. Do not fix it, and
+  do not let a change here be blamed on it.
+
+## BLAST RADIUS
+
+The date half touches one function every web-discovered event row passes
+through, so it is the widest single change in this round — **which is exactly why
+item 8 carries a 50-row measured matrix rather than an argument.** The city half
+is confined to the event enrichment path. Neither touches the job surface.
+**Ruling 39a/40's honest hosts, 42c's document retarget, 45a's `euagenda.eu`
+exclusion and 39b's accepted cost are all untouched: none of them is a date or a
+place rule.**
+
+## ONE THING FOR THE MANAGER, NOT DECIDED BY B
+
+The event DATE column has never been scored as a rate. Now that two rows are
+wrong in it, B states the denominator so a later A does not have to re-derive it:
+**8 of the 14 pool rows render a date at all, and 2 of those 8 are wrong (25%).**
+Recorded as an observation. **B does not add it to the census** — that is the
+manager's call, and A22-01 and A22-02 are already counted individually.
+
+---
