@@ -270,14 +270,101 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 08:41 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 08:35 UTC — ROUND 13 B IS
-                  COMPLETE (all four items, one commit each, each pushed
-                  immediately, plus this summary).** Claimed the lock cleanly
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 08:58 UTC — ROUND 13 C IS
+                  COMPLETE. All four items, one commit each, each pushed
+                  immediately.** Claimed the lock cleanly after
+                  `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3).
+
+                  **THE GATE WAS CONFIRMED COLD BEFORE THE FIRST EDIT** and
+                  reproduced the stated baseline exactly: **1160 tests, 1159
+                  passing**, the one failure being `benchmark.test.ts`'s live
+                  flake; `tsc` clean; `eslint` 1 standing error at
+                  `quiz.tsx:46`.
+
+                  **WHAT LANDED — three code items, one docs correction, one
+                  deliberate no-build:**
+                  1. **B13-02 (non-posting pool class)** — three parts in
+                     `isListingPage`, B's 51/51 design verbatim.
+                  2. **B13-01 Gap A** — one clause consulting
+                     `CAREERS_INDEX_TITLE_RE` on employer candidates, B's 19/21
+                     design. **Gap B not attempted**, per B's instruction and
+                     Ruling 42a.
+                  3. **B13-03 (`flogen.org` banner strip)** — B's 17/17 design,
+                     landed per Ruling 42's declined opt-out.
+                  4. **§2's tier note corrected** per Ruling 42b.
+                  5. **B13-04 — nothing built**, per Ruling 42c.
+
+                  **NEGATIVE PROOF ON EVERY NEW TEST, revert → fail → restore:
+                  66 tests added, 0 deleted, 0 edited; 29 of them fail on the
+                  reverted source** (B13-02 14 of 33, B13-01 8 of 14, B13-03 7
+                  of 19). The remainder are must-keeps, which by design pass
+                  both before and after — that is what "zero regressions"
+                  means, and it is stated so the numbers are not misread.
+
+                  **⚠ ONE CORRECTION THE NEXT ROUND MUST HAVE, ESTABLISHED BY
+                  EXECUTION AFTER THE CODE LANDED: RULING 42a's FACTUAL PREMISE
+                  IS WRONG. `openmc.discourse.group` STILL RENDERS
+                  `Announcements`.** Ruling 42a says Gap A "turns it into
+                  honest omission", and C's brief carried that forward as
+                  "openmc's expected render: employer omitted". **It does not
+                  and it is not.** Run through the real entry point after Gap A
+                  landed, all three live title shapes still yield an employer:
+                  `… - Page 2 - Announcements - OpenMC` → **`Announcements`**;
+                  the page-1 form `… - Announcements - OpenMC` →
+                  **`Announcements`**; `… - Page 2 - Users - OpenMC Discourse`
+                  → **`Users`**. **This is not a failure of the landed code —
+                  it is what B measured and said plainly:** D5 scored **19/21
+                  precisely because it fails both openmc shapes**, and B wrote
+                  "**Closes Gap A. Does not touch Gap B**" and "no single change
+                  closes both". Gap A closes the BARE-LABEL case (`Careers`),
+                  which is a different string class. **`Announcements` is a
+                  site CATEGORY name; `CAREERS_INDEX_TITLE_RE` does not contain
+                  it and must not be widened to reach it** (that is Ruling 37's
+                  trap and 42a's own out-of-scope line). **Consequence for the
+                  manager, flagged not decided: Ruling 42a's stated
+                  self-reopening condition — "a wrong-data value may not sit
+                  under a cosmetic trigger" — is live in substance. Gap A
+                  landed but did not change the value's class.** P1 is still
+                  open on its merits and should be ruled again with this fact in
+                  hand. Verified in a throwaway harness outside `src/`, deleted
+                  before this commit; working tree confirmed clean.
+
+                  **WHAT ROUND 14's A SHOULD EXPECT TO SEE CHANGE:** the job
+                  pool **shrinks by 4 of 20 (~20%)**; `flogen.org` renders
+                  **`SIPS 2026`** (NOT `SIPS 2026 by FLOGEN Stars Outreach` —
+                  that is the page `<title>`, which B proved never reaches the
+                  pipeline, so no fix at this layer can produce it); the
+                  `Careers`-in-employer-slot shape can no longer occur, though
+                  it was **latent, never observed live**, so its absence is not
+                  by itself evidence of anything.
+
+                  **FINAL GATE: 90 files / 1226 tests, 1225 passing** — only
+                  `benchmark.test.ts`, the standing live flake, same assertion
+                  as the cold baseline. `tsc --noEmit` clean. `eslint` 1 error,
+                  `quiz.tsx:46`. **The three named blast-radius files were run
+                  individually as required: `eventweb.test.ts` 121/121,
+                  `enrich.test.ts` 25/25 (the SolarPACES lock, plus its own
+                  assertion run solo by name: 1 passed / 24 skipped),
+                  `scoring.test.ts` 71/71.**
+
+                  **No credential read, printed, logged or written. No live
+                  pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`. No
+                  branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. No test deleted or rewritten.** Full detail in
+                  §4's four "Round 13 — Agent C" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 13 B finished @
+                  2026-08-14 08:35 UTC — ROUND 13 B WAS COMPLETE** (all four
+                  items, one commit each, each pushed immediately, plus its
+                  summary). Claimed the lock cleanly
                   (`b3d23f7`) after `git pull --ff-only` and confirming
                   `git branch --show-current` reads
                   `feature/summary-report-revamp`. **B changed no code, deleted
@@ -417,11 +504,164 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 08:35 UTC — ROUND 13 B IS
                   deadline sentence gone from all five). All four tally lines
                   delivered. Full detail in §4's four "Round 13 — Agent A" parts
                   and in the manager's verification.
-ROUND:            13 — **A COMPLETE and B COMPLETE.** Round 12 is fully complete
-                  (seven landed fixes across two C sessions). Next is **round 13
-                  C**, after the manager's verification of round 13 B and its
-                  three `POLICY` rulings.
-WHOSE TURN:       **C — Implementer, round 13.** B's guide is four entries,
+ROUND:            13 — **COMPLETE. A, B and C all done.** Three code fixes
+                  landed (B13-02, B13-01 Gap A, B13-03), §2's tier note
+                  corrected per Ruling 42b, and B13-04 deliberately not built
+                  per Ruling 42c. Next is **round 14 A**, after the manager's
+                  verification of round 13 C — which should also re-rule P1,
+                  since Ruling 42a's premise did not survive execution (see
+                  STOPPED BECAUSE).
+WHOSE TURN:       **A — Reviewer, round 14.** Remeasure live, per §2's standing
+                  method: the fixture score AND the real-data findings, five
+                  independent pulls, majority value scored and the minority
+                  value always stated (Ruling 39d/41a make that disclosure the
+                  standing method note). **A does not change code and does not
+                  diagnose causes.**
+
+                  **READ THIS FIRST — §2's TIER NOTE CHANGED THIS ROUND
+                  (Ruling 42b), and it changes what you write in your
+                  evidence-limits paragraph.** The old line "a real-data run
+                  produces Tier 0 only, with no enrichment" **is struck.** The
+                  page-fetch enrichment tier **runs on every live pull and needs
+                  no API key**; only the LLM report enrichment is dark. **Say
+                  "page-fetch enrichment ran, LLM enrichment did not."** Your
+                  past numbers are not in question — only the label was wrong.
+
+                  **THREE FIXES LANDED THIS ROUND AND EACH IS A PREDICTION YOU
+                  CAN FALSIFY:** B13-02 (non-posting pool class), B13-01 Gap A
+                  (careers-section label in the employer slot), B13-03
+                  (`flogen.org` banner strip). **Tests are not evidence the live
+                  value changed** — which is exactly why the gate is yours.
+
+                  **WATCH POINTS — WRITTEN AS QUESTIONS, BECAUSE NO FIXTURE CAN
+                  SETTLE ANY OF THEM. These are the reason this round is not
+                  routine.**
+
+                  1. **THE POOL SHRANK ON PURPOSE. Did it shrink by the RIGHT
+                     four, and did anything real go with them?** B13-02 was
+                     designed to remove **4 of 20 job-pool items — about 20% on
+                     round 13's sample.** **A smaller pool this round is the fix
+                     working, not the pipeline degrading**, and it must not be
+                     logged as a regression. **Your job is the other half of
+                     that claim:** count how many items the pool lost, and
+                     **spot-check that nothing real was lost with them** — walk
+                     the surviving items and say whether any of them is a
+                     listing/feed/section page that should have been dropped,
+                     and whether any host that used to yield a real posting has
+                     gone silent. The four that should be gone are
+                     `linkedin.com/jobs/molten-salt-jobs`,
+                     `lco-cdo.org/en/author/lco_admin/feed`, and both
+                     `jobs.battery.com/jobs?jobTypes=` views. **Report the
+                     count AND the judgement, not just the count.**
+                  2. **`flogen.org` — MUST-CONFIRM, and the expected value is
+                     named in advance so it cannot be graded generously.**
+                     **The expected render is `SIPS 2026`.** **It is NOT
+                     `SIPS 2026 by FLOGEN Stars Outreach`** — that string is the
+                     page's `<title>` element, which B proved by execution never
+                     reaches any stage of the pipeline, so **no fix at this
+                     layer can produce it and its absence is not a failure.**
+                     The one thing that must not appear is the banner
+                     `WELCOME TO SIPS 2026`. If something else entirely appears,
+                     that is a finding — the strip's fallback is byte-identical
+                     to today's value, so a *changed* value that is neither
+                     `SIPS 2026` nor the banner means something other than this
+                     fix moved.
+                  3. **`openmc.discourse.group` — THE EXPECTED RENDER IS STILL
+                     `Announcements`, AND YOUR BRIEF'S PREDECESSOR SAID
+                     OTHERWISE. Do not score it as a regression.** Ruling 42a
+                     assumed Gap A would turn this into honest omission. **C
+                     verified by execution after landing that it does not:** all
+                     three live title shapes still render an employer
+                     (`Announcements`, `Announcements`, `Users`). This matches
+                     B's own measurement (D5 scored 19/21 *because* it fails
+                     both openmc shapes). **So: expect `Announcements`, record
+                     it as the loop's remaining wrong value, and leave it in
+                     whatever tally the manager assigns it.** The open question
+                     for you is narrower and factual: **does a SECOND, DISTINCT
+                     forum-thread-rendered-as-posting appear anywhere in the
+                     pool?** Ruling 39c's trigger fires on that and nothing
+                     else. **State the answer affirmatively — present/absent,
+                     with the count — because a threshold cannot fire on
+                     silence.**
+                  4. **`Careers` in the employer slot — can you find it at all?**
+                     B13-01 Gap A closed a **LATENT** gap: no round has ever
+                     observed this value live. **Its absence proves nothing**,
+                     so do not log it as a fix confirmed. The honest question:
+                     does any employer render this round consist of a bare
+                     careers-section word? If yes, that is a real finding about
+                     the guard; if no, say "not observed, as in every prior
+                     round".
+                  5. **RULING 41c — HUNT B12-03's THREE HOSTS BY NAME.** They
+                     are `battery2030.eu`, `isea.rwth-aachen.de` and `adt.media`.
+                     All three churned out of the pool, so that fix is
+                     test-proven and **live-unmeasured across two rounds**.
+                     **Do targeted checks rather than waiting for pool luck, and
+                     disclose them as targeted** so they are never confused with
+                     an organic pool sample.
+                  6. **RULING 42c — ONE NEW DISCLOSED COLUMN ON THE EVENT PASS,
+                     and it settles three open questions at once.** For **each
+                     event**, record two things: **(a) the pool URL's KIND —
+                     page or document** (a PDF/DOC/PPT-style target counts as a
+                     document); and **(b) whether the SITE ROOT carries a name
+                     the render lacks.** Disclose it as a new column with its
+                     method. This is what turns the document-URL retarget (P3)
+                     and B13-04's three candidate causes from argument into
+                     evidence. **Also capture the raw provider snippet for any
+                     host that renders a bare hostname** — same purpose.
+                  7. **`euagenda.eu`: FLAGGED, NOT COUNTED, and DO NOT RETRY IT
+                     THIS ROUND.** Ruling 38c defers it to **round 15**. It must
+                     not enter any denominator.
+
+                  **THE FOUR TALLY LINES — ALL FOUR EVERY ROUND, ALL FOUR
+                  STATED AFFIRMATIVELY (present/absent with a count), because a
+                  threshold cannot fire on silence:**
+                  - **Ruling 33 (short-acronym collision).** **DO NOT EXPECT
+                     THIS TO FALL TO ZERO, and do not score it as unclosed if it
+                     does not.** Ruling 41b's arithmetic was **amended** on B's
+                     evidence: the `lco-cdo` acronym instance sits on the
+                     **coordinator posting — a real posting** — not on the RSS
+                     feed B13-02 dropped. **A real posting will keep appearing.**
+                     Ruling 33 remains an accepted cost with a tally, excluded
+                     from open-defect counts.
+                  - **Ruling 34a — TWO LINES, employer-side and event-side,
+                     same definition** (a correctly-spelled real name that is not
+                     the actual entity). Re-list both by name every round; both
+                     excluded from open-defect counts.
+                     `careerservices.upenn.edu` is the employer-side member;
+                     `batteryinnovationsummit.com`'s `"The Battery Saloon"` is
+                     the event-side founding member. **If the event-side line
+                     reaches a SECOND distinct instance, say so loudly** — per
+                     Ruling 42b that is the trigger that makes the enrichment
+                     title cross-check a viable design avenue.
+                  - **Ruling 37 (colonless-label run-on).** Baseline is the one
+                     `careers.gevernova.com` instance. **Its escalation fires
+                     only on a SECOND, DIFFERENT instance** — round 12 A read it
+                     that way, the manager did not overturn it, so keep that
+                     reading and say so.
+                  - **Rulings 36 / 39c — STATE BOTH THRESHOLDS AFFIRMATIVELY.**
+                     Ruling 36 counts **persistence** (its defect states wrong
+                     data); Ruling 39c fires on a **second distinct
+                     forum-thread instance**. Give the present/absent answer and
+                     the count for each, in words, even when the answer is
+                     "absent".
+
+                  **STILL EXCLUDED, DO NOT REOPEN:** `careerservices.upenn.edu`
+                  (34a), `batteryinnovationsummit.com` (39b — its acceptance
+                  stands; only its premise moved, per 42b),
+                  `careers.gevernova.com`'s run-on (37), the `lco-cdo.org` LCO
+                  acronym (33, as amended by 41b), same-page contamination (29),
+                  `ecs.confex.com`'s bare host (39a/40, behaving as designed),
+                  and `euagenda.eu` until round 15 (38c).
+
+                  **Also unchanged and still open for the manager:** B11-04's
+                  flag and B8-03's `usajobs.ts` fallback, both under MANAGER
+                  CARRY-FORWARD below — **plus the reopened P1** described in
+                  watch point 3 and in STOPPED BECAUSE above.
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 13 C
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **C — Implementer, round 13.** B's guide is four entries,
                   B13-01 through B13-04, in §4, plus B's summary entry which
                   carries this list in full. **Work them in the order below.**
                   **C changes code; C does not re-measure and does not re-derive
@@ -29654,3 +29894,105 @@ shape; **Ruling 42c settles it by measurement, not by building: round 14's A
 adds the disclosed column, and only then does anyone act.** C's job on this item
 was nothing. Logged as done, not as skipped.
 
+
+---
+
+### Round 13 — Agent C (turn summary, and ONE CORRECTION: Ruling 42a's premise did not survive execution — `openmc.discourse.group` still renders `Announcements`)
+
+**STATUS: TURN COMPLETE.** Four items, four commits, each pushed immediately.
+`WHOSE TURN` advanced to **A, round 14**; lock released to `free`.
+
+---
+
+#### THE CORRECTION, AND IT IS THE MOST IMPORTANT THING IN THIS ENTRY
+
+**Ruling 42a states that B13-01 Gap A "turns `Announcements` into honest
+omission". It does not. C's brief carried that forward as a fact to hand round
+14's A — "openmc's expected render: employer omitted, not `Announcements`" —
+and writing that into §1 unchecked would have made round 14's A grade a
+correctly-behaving system as broken.**
+
+**Established by execution AFTER Gap A landed**, through the real entry point
+`webResultToRawJobItem`, on all three live title shapes:
+
+| title shape | in pool? | employer rendered |
+|---|---|---|
+| `… - Page 2 - Announcements - OpenMC` | yes | **`Announcements`** |
+| `… - Announcements - OpenMC` (page-1 form) | yes | **`Announcements`** |
+| `… - Page 2 - Users - OpenMC Discourse` | yes | **`Users`** |
+
+**This is not a defect in the landed code, and B said so plainly in advance —
+the ruling is what drifted, not the implementation.** B's D5 scored **19/21
+precisely because it fails both openmc shapes**; B wrote "**Closes Gap A. Does
+not touch Gap B**" and "**no single change closes both**". Gap A closes the
+BARE-LABEL class (`Careers`), a different string class entirely.
+`CAREERS_INDEX_TITLE_RE` does not contain `Announcements`, **and it must not be
+widened to reach it** — that is Ruling 37's trap, and 42a's own text puts Gap B
+out of scope. **C did not widen anything.**
+
+**What follows, flagged for the manager and NOT decided by C:** Ruling 42a
+carries its own self-reopening condition — *"If Gap A fails to land, this ruling
+reopens automatically — a wrong-data value may not sit under a cosmetic
+trigger."* **Gap A landed, but it did not do what the ruling assumed, so the
+condition is met in substance if not in letter: the wrong-data value is still
+there, still sitting under Ruling 39c's cosmetic-style trigger.** P1 should be
+ruled again with this fact in hand. §1's `WHOSE TURN: A` block and its
+`STOPPED BECAUSE` both carry the corrected expectation so round 14's A cannot
+be misled by the old one.
+
+**Method:** throwaway harness **outside `src/`** (`web/zz-r13c/`, its own vitest
+config, include pattern `zz-r13c/**/*.probe.ts`) so the standing gate could not
+collect it. **Deleted before this commit; `git status --untracked-files=all`
+confirmed clean.** No live pull, no page fetch, no credential read.
+
+---
+
+#### THE TURN IN NUMBERS
+
+| item | design | tests added | negative proof (fail on revert) |
+|---|---|---|---|
+| B13-02 non-posting pool class | B's 51/51 | 33 | **14 of 33** |
+| B13-01 Gap A employer label | B's 19/21 | 14 | **8 of 14** |
+| B13-03 `flogen.org` banner strip | B's 17/17 | 19 | **7 of 19** |
+| §2 tier note (Ruling 42b) | docs | — | — |
+| B13-04 | nothing to build | — | — |
+| **total** | | **66** | **29** |
+
+**0 tests deleted. 0 existing assertions edited.** The 37 new tests that pass on
+the reverted source are the must-keeps — they assert that nothing regressed, so
+passing both before and after is exactly what they are for.
+
+**Gate, cold baseline → final:** 1160/1159 → **1226 tests / 1225 passing**. The
+single failure is `benchmark.test.ts`'s live flake, the same assertion in both.
+`tsc --noEmit` clean throughout; `eslint` 1 standing error at `quiz.tsx:46`
+throughout.
+
+**Blast-radius files run individually as required:** `eventweb.test.ts` 121/121,
+**`enrich.test.ts` 25/25 — the SolarPACES lock, plus its own assertion run solo
+by name (1 passed / 24 skipped)** — and `scoring.test.ts` 71/71.
+
+---
+
+#### DEVIATIONS FROM THE BRIEF — TWO, BOTH RECORDED IN THEIR OWN §4 ENTRIES
+
+1. **The openmc expected-render correction above.** The brief instructed C to
+   carry "employer omitted, not `Announcements`" to round 14's A. **C carried
+   the verified value instead and recorded why.**
+2. **B13-03's veto 3 is written as the guard pair called directly**
+   (`isChromeSegment` + `looksLikeEventTitle`) rather than by calling
+   `bestEventTitleSegment`, which would be infinite recursion — this file's own
+   `recoverFromNarrative` note records that exact lesson. Strictly narrower, so
+   it cannot introduce a wrong value. Detail in the B13-03 entry.
+
+**No third deviation.** No design was widened inline; §3's stop-and-record rule
+did not need to fire on any item, because every shape B's matrices spanned was
+handled by B's design as written.
+
+**Security floor honoured throughout:** no credential read, printed, logged or
+written; no live pipeline pull; no page fetched; `PEER_PROFILE_SNAPSHOT_PATH`
+never set; no branch, worktree or PR created; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+untouched; every throwaway harness deleted before its commit; branch name read
+from the output of every push.
+
+**§1 is advanced to round 14's A in this same commit, and the turn lock is
+released.**
