@@ -24754,3 +24754,138 @@ Files C will touch: `web/src/lib/events/sources/eventweb.ts` and
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-05: the two long-standing hosts — `euchems2026.eu` has a fixable cause and a design; `batteryinnovationsummit.com` has NO guard-side fix and I am refusing to invent one)
+
+**STATUS: DONE.** A's items 6 and 7. **History checked first, as the brief
+required**, before re-deriving anything: `euchems2026.eu` was already traced by
+round 9's B (§4, the "shape 3" paragraph of round 9 B's entry) and I reproduced
+that trace rather than repeating the work; `batteryinnovationsummit.com` was
+ground-truthed by round 9 A's direct fetch (§4, its item 10 row) and I re-used
+that ground truth. Throwaway harness outside `src/`, deleted before this commit.
+No product code touched.
+
+---
+
+**ITEM 6 — `euchems2026.eu` renders `ECC102026 POSTERS v2`. Cause confirmed
+unchanged since round 9, reproduced this round by execution.**
+
+The result's URL points at a served PDF. The title stage correctly rejects the
+filename (`DOCUMENT_FILENAME_RE`, B8-06) — confirmed:
+`bestEventTitleSegment("ECC102026-POSTERS-v2.pdf", url) === undefined`. Execution
+then reaches `nameFromUrlSlug` (`eventweb.ts:573-593`), whose **first act is to
+strip a trailing extension**:
+
+```
+.replace(/\.\w{2,5}$/, "")
+```
+
+so the guard that exists specifically to reject a document filename **can never
+see one at this stage** — the extension is removed before any check runs. Full
+chain reproduced: `webResultToRawEventItem` with that title and URL returns
+`name === "ECC102026 POSTERS v2"`. Round 9's B described this exact laundering
+("a filename, just without the dot and three letters"); it is unchanged and this
+round confirms it on a different document from the same host, which is the point
+— the host rotates the document and the mechanism produces a new filename each
+time.
+
+**Fix design.** In `nameFromUrlSlug`, when the chosen path part carries an
+extension **from the existing document/media list** (reuse `DOCUMENT_FILENAME_RE`
+and `EMBEDDED_FILENAME_RE`'s own alternation — do not write a third list), return
+`undefined` instead of stripping it. A served document's filename is not the
+event's name, and the file already asserts that in two places; this makes the
+slug stage agree with them.
+
+- **Closed?** Yes — a fixed list of file extensions, the same one B8-06 and
+  B11-03 already use. No open class is sampled.
+- **What renders when it fires (Ruling 32):** execution continues to the snippet
+  stage and then to the honest URL host — `euchems2026.eu`. **No rejected value is
+  reinserted**: the value being suppressed is the slug's own derivative, and the
+  fallback below it is B9-04 Fix 1's host, which no guard rejected. Reader
+  outcome: a bare organiser hostname instead of a document filename presented as
+  a conference name. Ruling 23's standard says that is the right direction.
+- **Blast radius:** `nameFromUrlSlug` is module-private, called once
+  (`eventweb.ts:661`). Existing assertion to re-run:
+  `eventweb.test.ts:81-88`, which asserts a slug WITHOUT an extension still
+  works (`"Rivertown materials summit 2026"`) — unaffected by construction, and C
+  should keep it as the must-survive.
+
+---
+
+**ITEM 7 — `batteryinnovationsummit.com` renders `The Battery Saloon`. I made ONE
+targeted fetch, and the answer is that there is nothing to guard.**
+
+A's log records the rendered value but not the page's title, and round 9's fetch
+recorded the page's self-declared name but not its `<title>` either — so this
+trace genuinely required the page, which is the one case the security floor
+permits. One request, output clipped programmatically to the title tags only, no
+block of third-party text read into context, nothing directed at an agent in what
+came back.
+
+```
+<title>      "The Battery Saloon | Battery & Energy Storage Summits"
+og:title     "The Battery Saloon"
+```
+
+Fed both through the shipped pipeline:
+
+```
+eventNameFrom("The Battery Saloon", "", url)                          -> "The Battery Saloon"   <-- matches the live render exactly
+eventNameFrom("The Battery Saloon | Battery & Energy Storage Summits", "", url) -> "Battery & Energy Storage Summits"
+```
+
+**So the search provider is handing Peer the page's `og:title`, not its
+`<title>`.** `"The Battery Saloon"` arrives as a single segment. Through every
+guard: not generic, not an index, not a filename, not markup, not a date, not a
+location, not narration, not a host brand (confirmed `false`), 3 words, and it
+reads as a perfectly plausible event name. **It passes because there is nothing
+wrong with it as a string.** Round 9's direct fetch established that "Battery
+Saloon" is a logo/nav/footer brand element and the event's real name is "The
+Battery Innovation Summit Series" — knowledge that exists **only outside the
+string**.
+
+**RECOMMENDATION: no fix. This is Ruling 34a's class, on the event side.** It is
+a real, correctly-spelled name that is the wrong name, separable from the right
+answer only by information the pipeline does not have at Tier 0. Any guard narrow
+enough to reject `"The Battery Saloon"` would be a denylist of one host, and any
+guard wide enough to be principled would reject real short event names. **A
+refused design with evidence beats a landed regression**, and this is that.
+
+**`POLICY — manager decides`, two questions, both small:**
+1. **Classify item 7 as an accepted cost of Ruling 34a's class** (a correct name
+   that is the wrong name), carried in a tally rather than as an open fix item —
+   or keep it open. I recommend accepting it; it has been unchanged and unfixable
+   for three rounds and it is exactly the shape 34a was written about.
+2. **The only route that could ever fix it is the enrichment tier**, which reads
+   the page itself and would see both the `<title>`'s second segment and the
+   page's own self-declared name. That tier is dark (`feedAiApiKey` empty) and A
+   has named it an evidence gap for three rounds. Worth recording as the standing
+   answer for this whole class rather than re-derived each round.
+
+---
+
+**ONE SMALL INCIDENTAL FINDING, recorded as a lead because it is cheap, closed,
+and I found it by execution while tracing item 7 — NOT a fix I am scheduling.**
+
+`EVENT_SIGNAL_RE` (`eventweb.ts:78-79`) has no plural forms:
+
+```
+looksLikeEvent("Battery Summit")  === true
+looksLikeEvent("Battery Summits") === false
+```
+
+The same is true of `conference`, `symposium`, `workshop`, `seminar`, `congress`,
+`meeting`, `convention` and the rest — none carries an optional `s`. This is a
+**positive** signal, so the cost is silent: a page whose text only ever says
+"summits" or "conferences" is less likely to be recognised as an event page at
+all, and a plural-named segment loses the `looksLikeEvent` preference tier it
+should win. It is a one-character-per-noun change and adding a plural to a list
+of nouns samples no open class. **Left as a lead for a future round, not folded
+into any entry above**, because I have no live evidence of a wrong value caused by
+it and this loop's standing practice (Rulings 32/34b) is to land what is
+confirmed.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
