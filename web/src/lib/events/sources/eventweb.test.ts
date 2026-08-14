@@ -73,9 +73,10 @@ describe("eventNameFrom", () => {
       "Rivertown Summit was originally planned for 2020 but was delayed due to a global outbreak.";
     const snippet =
       "Rivertown Summit is a two-day materials science conference held every spring.";
-    expect(eventNameFrom(title, snippet)).toBe(
-      "Rivertown Summit is a two-day materials science conference held every spring.",
-    );
+    // B12-01 (round 12, §1aa Ruling 40): restated, not deleted. The snippet
+    // stage used to return the whole sentence; it now returns the name inside
+    // it. Strictly better in the same direction — a sentence is never a name.
+    expect(eventNameFrom(title, snippet)).toBe("Rivertown Summit");
   });
 
   it("falls through to the URL slug when both title and snippet fail every check", () => {
@@ -94,7 +95,9 @@ describe("eventNameFrom", () => {
         "The International Battery Summit brings researchers together.",
         "https://example.com/events/registration-deadline-extended-march-2026",
       ),
-    ).toBe("The International Battery Summit brings researchers together.");
+      // B12-01 (round 12, §1aa Ruling 40): restated. The determiner stays on —
+      // Ruling 39a point 4 is binding and this design strips none.
+    ).toBe("The International Battery Summit");
   });
 
   // B9-04 Fix 1 (round 9, Ruling 32): this test used to assert "Home" — one
@@ -328,7 +331,10 @@ describe("eventNameFrom", () => {
           "March 15-18, 2027",
           "The International Battery Seminar brings together researchers.",
         ),
-      ).toBe("The International Battery Seminar brings together researchers.");
+        // B12-01 (round 12, §1aa Ruling 40): restated to the name inside the
+        // sentence. What this test guards — that execution continues PAST the
+        // bare date to the snippet — is unchanged.
+      ).toBe("The International Battery Seminar");
     });
   });
 
@@ -353,7 +359,10 @@ describe("eventNameFrom", () => {
           "Orlando, FL",
           "The International Battery Seminar brings together researchers.",
         ),
-      ).toBe("The International Battery Seminar brings together researchers.");
+        // B12-01 (round 12, §1aa Ruling 40): restated to the name inside the
+        // sentence. What this test guards — that a location-only title falls
+        // through to the snippet — is unchanged.
+      ).toBe("The International Battery Seminar");
     });
 
     // The "should match nothing" hardest case, and the reason this check is
@@ -382,7 +391,11 @@ describe("eventNameFrom", () => {
     it("rejects a bare 'Call for Papers' title with no other segment, continuing to the snippet", () => {
       expect(
         eventNameFrom("Call for Papers", "The 250th ECS Meeting welcomes abstract submissions."),
-      ).toBe("The 250th ECS Meeting welcomes abstract submissions.");
+        // B12-01 (round 12, §1aa Ruling 40): restated. B11-02 wrote this test
+        // and its asserted "correct" answer was itself a wrong event name —
+        // the real name is "The 250th ECS Meeting", not a sentence about it.
+        // This is the assertion that made the class visible.
+      ).toBe("The 250th ECS Meeting");
     });
 
     // Must-survive: a longer, real sentence that legitimately CONTAINS the
@@ -660,7 +673,13 @@ describe("eventNameFrom", () => {
           "Call for Papers",
           "250th ECS Meeting (October 25-29, 2026). Invited speakers present keynote lectures.",
         ),
-      ).toBe("250th ECS Meeting (October 25-29, 2026).");
+        // B12-01 (round 12, §1aa Ruling 40): restated, and this is the NINTH
+        // such assertion — B12-01's design counted eight, because it enumerated
+        // the ones asserting a SENTENCE. This one asserted a name with a
+        // parenthetical date and a full stop welded on, which is the same
+        // defect wearing different clothes. The span stops at "(October"
+        // because an opening bracket is not a name token.
+      ).toBe("250th ECS Meeting");
     });
 
     // The narrative sentence on its own, with nothing better beside it. The
@@ -692,6 +711,168 @@ describe("eventNameFrom", () => {
           "https://example.org/cfp",
         ),
       ).toBe("example.org");
+    });
+  });
+
+  // B12-01 (round 12, §1aa Ruling 40): the sequel to B11-02 above, same host,
+  // same stage. B11-02's guard was not bypassed — it ran and correctly said
+  // "not narration", because the stage's own CONTRACT was to return a whole
+  // sentence and this file asserted that nine times. So this item changes what
+  // the stage RETURNS: the leading NAME SPAN inside the fragment, or nothing.
+  // Those nine assertions are restated above, each commented `B12-01`.
+  //
+  // Ruling 40 resolved the item's one open question: the event-kind test is
+  // PHRASE-level over the joined span, not word-level, because both codebase
+  // enumerations the design draws on carry multi-word kinds. The first attempt
+  // was stopped for exactly that — see the must-recover cases at the end.
+  describe("leading name span (B12-01)", () => {
+    // THE live defect this item exists for, verbatim from round 12 A's log.
+    // Every narrative check in `looksLikeEventTitle` passes it: it is a copular
+    // predication ("are due" — an adjective, not a participle), so no verb
+    // inventory can see it. The span rule stops at "Abstracts", one word.
+    it("drops the live deadline sentence and falls through to the honest host", () => {
+      const rendered = eventNameFrom(
+        "Call for Papers",
+        "Abstracts are due no later than Friday, 4 September 2026 at 11:59 PM Eastern Standard Time.",
+        "https://www.ecs.confex.com/ecs/250/cfp.cgi",
+      );
+      expect(rendered).toBe("ecs.confex.com");
+      // Why step 1 is anchored to the START, verified rather than assumed: an
+      // unanchored "longest Title-Case run anywhere" finds this inside the very
+      // sentence the item exists to reject.
+      expect(rendered).not.toBe("Friday, 4 September 2026");
+    });
+
+    // The SHARPENED must-reject. Its first version ended "...no late work will
+    // be accepted", which `NARRATIVE_VERB_RE` catches — so it passed pre-fix
+    // for the wrong reason and proved nothing about the span rule. Rewritten to
+    // clear all four narrative checks, so only the span rule can stop it.
+    it("drops a deadline sentence that clears every narrative check", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "The deadline falls on Friday and nothing later than that counts.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    it("drops a sentence whose leading span is a page label and its joiners", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Registration for the conference opens in May.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    it("drops a submission-instruction sentence", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Papers must reach the committee by 30 June.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    it("drops a venue-change sentence", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "This year the meeting moves to Lisbon.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    it("drops a logistics sentence", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Delegates receive a printed programme on arrival.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    // ruggedthz.com's failure mode 2, the mid-sentence prose fragment a
+    // provider snippet can start on. Nothing capitalised leads it, so the span
+    // is empty before the walk takes a single step.
+    it("drops a fragment that starts mid-sentence in lower case", () => {
+      expect(
+        eventNameFrom(
+          "Home | Events",
+          "sessions, even if breakfast occasionally became more of a debate than a meal.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    // The two-word floor. A lone event-kind noun is a topic, not a name — this
+    // is the check that stops the rule claiming "Workshop" as an event's name.
+    it("drops a span of a single event-kind word", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Workshop registration closes at noon on the final day.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    // Trailing joiners are dropped BEFORE the two-word floor is applied, so
+    // "Symposium on the" counts as one word and not three.
+    it("drops trailing joiners before applying the two-word floor", () => {
+      expect(
+        eventNameFrom(
+          "Call for Papers",
+          "Symposium on the future of grid storage begins in June.",
+          "https://example.com/cfp",
+        ),
+      ).toBe("example.com");
+    });
+
+    // THE DOCUMENTED HONEST MISS, asserted rather than hidden. Every token is
+    // Title-Case and "Conference" is an event kind, so this survives the span
+    // rule unchanged — it passes both pre- and post-fix, which is the whole
+    // point of writing it down. internationalbatteryseminar.com's carousel
+    // label has its own cause and its own fix (B12-04); B12-01 neither fixes it
+    // nor makes it worse, and this test is what will fail loudly if a future
+    // round ever believes otherwise.
+    it("does NOT fix a Title-Case widget label — the honest miss, stated in the suite", () => {
+      expect(eventNameFrom("Home", "Conference Image Gallery Carousel")).toBe(
+        "Conference Image Gallery Carousel",
+      );
+    });
+
+    // MUST-RECOVER, and this is the regression that stopped B12-01's first
+    // attempt. The design's noun list was single-word (`roundtable`), the real
+    // name says `Round Table`, and the kind test is a hard veto — so a correct,
+    // live-derived event name became "Untitled event", the one direction
+    // Rulings 23/26 forbid. Ruling 40's phrase-level test is what recovers it.
+    // The same fixture is asserted independently in events/scoring.test.ts.
+    it("recovers a name whose event kind is two words (the Round Table regression)", () => {
+      expect(
+        eventNameFrom(
+          "Meeting Summary",
+          "2026 International Round Table on Titanium Production in Molten Salts. Registration is open.",
+        ),
+      ).toBe("2026 International Round Table on Titanium Production in Molten Salts.");
+    });
+
+    // MUST-RECOVER, second kind. `lecture series` appears in NO single-word
+    // form anywhere in either enumeration, so this name is recoverable only
+    // through the phrase list — it is the case that fails if that list is ever
+    // quietly reduced back to single words.
+    it("recovers a name whose event kind is only ever spelled as a phrase", () => {
+      expect(
+        eventNameFrom(
+          "Meeting Summary",
+          "Molten Salt Lecture Series on Reactor Chemistry begins in autumn.",
+        ),
+      ).toBe("Molten Salt Lecture Series on Reactor Chemistry");
     });
   });
 
@@ -729,7 +910,11 @@ describe("eventNameFrom", () => {
           "Home",
           "Speaker Photo.jpeg?sfvrsn=2fdd4033_1) [...] Conference Image Gallery Carousel. The International Battery Seminar brings researchers together.",
         ),
-      ).toBe("The International Battery Seminar brings researchers together.");
+        // B12-01 (round 12, §1aa Ruling 40): restated to the name inside the
+        // sentence. What this test guards — that the scraped image chrome loses
+        // to the real name — is unchanged; B11-03's filter still rejects the
+        // chrome fragment before B12-01's span rule ever sees it.
+      ).toBe("The International Battery Seminar");
     });
 
     // thebatteryshowsouth.com's live repro, verbatim.
@@ -743,7 +928,10 @@ describe("eventNameFrom", () => {
           "Home",
           "[...] ## 2026 Keynote Speakers. The Battery Show South returns to Atlanta this year.",
         ),
-      ).toBe("The Battery Show South returns to Atlanta this year.");
+        // B12-01 (round 12, §1aa Ruling 40): restated. The determiner stays on
+        // — "The Battery Show South" is the event's actual name, and B12-01's
+        // own mid-design correction is why no determiner strip exists here.
+      ).toBe("The Battery Show South");
     });
 
     // THE must-survive case, and the reason the hash floor is {2,6} rather
@@ -1045,6 +1233,9 @@ describe("webResultToRawEventItem", () => {
       Date.parse("2026-01-01T00:00:00Z"),
     );
     expect(item?.name).not.toMatch(/\bwas\b/i);
-    expect(item?.name).toBe("Rivertown Summit convenes battery researchers every spring in Ohio.");
+    // B12-01 (round 12, §1aa Ruling 40): restated to the name inside the
+    // sentence. What this test guards — that the narrative TITLE never becomes
+    // the event name — is unchanged and still asserted on the line above.
+    expect(item?.name).toBe("Rivertown Summit");
   });
 });

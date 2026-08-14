@@ -502,20 +502,67 @@ interface ChromeSegmentOptions {
  * `events/mapper.ts`). Used by TWO items, which is why it lives up here:
  * B12-03's welded-label strip and B12-04's host-brand exemption.
  *
- * KNOWN LIMITATION, recorded rather than fixed: this list is single-word, while
- * both enumerations it is drawn from also carry MULTI-WORD kinds —
- * `round table`, `hack day`, `lecture series`, `networking event`. In both
- * current uses the miss is SAFE, because in both the failure direction is "do
- * nothing": B12-03 leaves the segment unstripped, B12-04 leaves it rejected as
- * chrome exactly as today. The cost is a missed fix, never a wrong value.
- *
- * It is NOT safe in B12-01, which uses the same list as a hard veto on whether a
- * name exists AT ALL — there a two-word event kind turns a correct name into
- * `"Untitled event"`. That is why B12-01 is stopped and recorded rather than
- * landed. Whoever resolves it should reconcile all uses in this one place.
+ * This list is single-word. Both enumerations it is drawn from ALSO carry
+ * MULTI-WORD kinds, which `EVENT_KIND_PHRASE_RE` below now covers; the two are
+ * used together only where a miss would be unsafe. See that comment for which
+ * use takes which, and why — that is the reconciliation the round-12 note here
+ * asked for, done in this one place.
  */
 const EVENT_KIND_NOUN_RE =
   /\b(?:conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exposition|exhibition|forum|convention|show|school|hackathon|roundtable|fair)\b/i;
+
+/**
+ * The MULTI-WORD half of the same closed enumeration, added by B12-01 under
+ * §1aa Ruling 40. Every phrase here is COPIED from one of the two sources the
+ * comment above names, at implementation time, spelled as that source spells it
+ * — none is added from memory or invention:
+ *
+ *  - from `EVENT_SIGNAL_RE` (this file): `round ?table`, `career (?:fair|expo)`,
+ *    `job fair`, `hiring fair`, `recruiting (?:fair|event)`, `hack day`,
+ *    `society meeting`, `gordon research`.
+ *  - from `eventKindIn` (`events/mapper.ts`):
+ *    `(?:career|student|graduate|campus) (?:fair|expo)`,
+ *    `(?:job|hiring|recruiting|recruitment) (?:fair|expo|event)`, `hack day`,
+ *    `trade show`, `lecture series`, `networking event`, `annual meeting`.
+ *
+ * The two fair/expo families are written in `eventKindIn`'s wider spelling,
+ * which is a superset of `EVENT_SIGNAL_RE`'s four. `EVENT_SIGNAL_RE`'s other
+ * multi-word entries — `call for papers` and `abstract submission` — are
+ * DELIBERATELY ABSENT: they are page labels, not event kinds, and admitting
+ * that class is exactly why Ruling 40 rejected reusing the whole regex here
+ * (it would qualify `"Registration Desk Hours"` as an event's name).
+ *
+ * Several phrases are already implied by a single word above (`annual meeting`
+ * by `meeting`, `trade show` by `show`, the fair families by `fair`). They are
+ * kept anyway, because the instruction was to copy the sources rather than to
+ * filter them, and because the list stays correct if the single-word one is
+ * ever narrowed.
+ *
+ * WHICH USE TAKES WHICH, and the failure direction that decides it:
+ *  - `leadingNameSpan` (B12-01) tests BOTH, phrase-level over the joined span,
+ *    because there the kind test is a hard veto on whether a name exists at all
+ *    — a two-word kind missing from the list turned
+ *    `"2026 International Round Table on Titanium Production in Molten Salts"`
+ *    into `"Untitled event"`, which is why B12-01's first attempt was stopped.
+ *  - `stripWeldedPageTypeLabel` (B12-03) and `isChromeSegment`'s host-brand
+ *    exemption (B12-04) keep the single-word list ALONE, unchanged. In both of
+ *    those the failure direction is already "do nothing" (leave the segment
+ *    unstripped; leave it rejected as chrome), so a missed kind costs a missed
+ *    fix and never a wrong value. Widening them is a separate change with its
+ *    own evidence, not a side effect of this one.
+ *
+ * THE FAILURE DIRECTION OF THIS LIST ITSELF, stated explicitly because Ruling
+ * 40 turns on it: a kind that is NOT listed here means the span is DROPPED, and
+ * execution falls through to `eventNameFrom`'s honest URL-host last resort
+ * (B9-04 Fix 1) — so a miss costs a MISSED RECOVERY and can NEVER produce a
+ * wrong value. That is what makes an openly-maintained list acceptable here and
+ * not in §1x Ruling 37's verb list, whose misses mutilated correct sentences.
+ * A's standing honest-host count is the tally that surfaces the misses: a bare
+ * hostname rendered over a page whose name carries an unlisted kind is the
+ * evidence that extends this list.
+ */
+const EVENT_KIND_PHRASE_RE =
+  /\b(?:round ?table|(?:career|student|graduate|campus) (?:fair|expo)|(?:job|hiring|recruiting|recruitment) (?:fair|expo|event)|hack day|trade show|lecture series|networking event|annual meeting|society meeting|gordon research)\b/i;
 
 function isChromeSegment(
   segment: string,
@@ -659,6 +706,94 @@ export function looksLikeEventTitle(candidate: string): boolean {
   if (MULTI_SENTENCE_RE.test(trimmed)) return false;
   if (trimmed.split(/\s+/).length > MAX_TITLE_WORDS) return false;
   return true;
+}
+
+/**
+ * A token that can be part of an event's NAME: a capitalised or digit-led word
+ * (`Battery`, `ECS`, `2026`, `Battery2030+`) or an ordinal (`250th`).
+ */
+const NAME_SPAN_TOKEN_RE = /^(?:[A-Z0-9][\w&.'’+-]*|\d+(?:st|nd|rd|th))$/;
+
+/**
+ * Closed list of words a real event name may contain in lower case. Anything
+ * else ends the span, which is what stops a name running on into the sentence
+ * that carries it.
+ */
+const NAME_SPAN_JOINERS = new Set([
+  "of", "for", "on", "and", "the", "in", "at", "de", "du", "des", "und", "&",
+]);
+
+const MIN_NAME_SPAN_WORDS = 2;
+
+/**
+ * B12-01 (round 12, §1aa Ruling 40): the snippet stage stops returning the
+ * SENTENCE and returns the NAME INSIDE it, or nothing.
+ *
+ * B12-01 established that `ecs.confex.com` did not slip past B11-02's guard —
+ * the guard ran and correctly returned "not narration". The snippet stage's
+ * *contract* was to hand back a whole sentence, and the suite asserted that
+ * nine times, so every fix that only tightened WHICH sentences qualify still
+ * left the slot holding a sentence, and a sentence is never a name. That is why
+ * this changes what the stage RETURNS. All nine of those assertions are
+ * restated to the better value (the name inside the sentence they asserted);
+ * none is deleted, per §2.
+ *
+ * Five steps, every one of them a veto:
+ *  1. Walk tokens from the START of the candidate. Anchoring matters and was
+ *     verified, not assumed: an unanchored "longest span anywhere" finds
+ *     `"Friday, 4 September 2026"` inside the live deadline sentence this item
+ *     exists to reject.
+ *  2. Drop trailing joiners ("Registration for the" -> "Registration").
+ *  3. Require >= 2 words AND an event kind, tested PHRASE-LEVEL over the joined
+ *     span against both halves of the closed enumeration. See
+ *     `EVENT_KIND_PHRASE_RE` for the list, its two sources, and the failure
+ *     direction that makes an open-ended list acceptable at this step.
+ *  4. Re-run the shipped `looksLikeEventTitle` on the result — reuse, not a new
+ *     parallel check (Ruling 35). That function is UNCHANGED by this item.
+ *  5. Anything that fails returns nothing: the candidate is DROPPED, never
+ *     substituted. When every candidate is dropped, `eventNameFrom` falls
+ *     through to its existing honest URL-host last resort (B9-04 Fix 1). No new
+ *     fallback is added and no rejected value is reinserted anywhere — Ruling
+ *     32's mandatory question, answered by construction.
+ *
+ * Deliberately NO leading-determiner strip (Ruling 39a point 4, binding):
+ * `"The Battery Show South"` and `"The 250th ECS Meeting"` are perfectly good
+ * names with their article left on. The determiner strip belongs only in
+ * `recoverFromNarrative` (B12-02), where the article is demonstrably a sentence
+ * artefact.
+ *
+ * ONE HONEST MISS, asserted in the suite rather than hidden:
+ * `"Conference Image Gallery Carousel"` survives this — every token is
+ * Title-Case and `Conference` is an event kind. That host
+ * (`internationalbatteryseminar.com`) has its own cause and its own fix,
+ * B12-04; this item does not fix it and does not make it worse.
+ */
+function leadingNameSpan(candidate: string): string | undefined {
+  const span: string[] = [];
+  for (const token of candidate.trim().split(/\s+/).filter(Boolean)) {
+    if (NAME_SPAN_TOKEN_RE.test(token)) {
+      span.push(token);
+      continue;
+    }
+    if (span.length > 0 && NAME_SPAN_JOINERS.has(token.toLocaleLowerCase())) {
+      span.push(token);
+      continue;
+    }
+    break;
+  }
+  while (
+    span.length > 0 &&
+    NAME_SPAN_JOINERS.has(span[span.length - 1].toLocaleLowerCase())
+  ) {
+    span.pop();
+  }
+  if (span.length < MIN_NAME_SPAN_WORDS) return undefined;
+  const joined = span.join(" ");
+  if (!EVENT_KIND_NOUN_RE.test(joined) && !EVENT_KIND_PHRASE_RE.test(joined)) {
+    return undefined;
+  }
+  if (!looksLikeEventTitle(joined)) return undefined;
+  return joined;
 }
 
 /** Human-readable event name recovered from a deep event URL's slug. */
@@ -1001,9 +1136,17 @@ export function eventNameFrom(
     .split(/(?<=[.!?])\s+|\s+[|·–—]\s+|\n/)
     .map((part) => part.trim())
     .filter((part) => part.length >= 20 && part.length <= 120);
-  const nameLike = substantial.filter(
-    (part) => !isChromeSegment(part, host) && looksLikeEventTitle(part),
-  );
+  //
+  // B12-01 (round 12, §1aa Ruling 40): B11-02's hard pre-filter above is
+  // UNTOUCHED and still runs first; `leadingNameSpan` is chained onto its
+  // output, so a fragment must clear every guard this loop has built AND then
+  // yield a name span. It can only ever narrow a candidate to its own leading
+  // name or drop it — it never introduces a string the pre-filter did not
+  // already accept.
+  const nameLike = substantial
+    .filter((part) => !isChromeSegment(part, host) && looksLikeEventTitle(part))
+    .map((part) => leadingNameSpan(part))
+    .filter((part): part is string => part !== undefined);
   const eventLike = nameLike.filter((part) => looksLikeEvent(part));
   const pool = eventLike.length > 0 ? eventLike : nameLike;
   if (pool.length > 0) {

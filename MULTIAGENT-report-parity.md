@@ -270,18 +270,59 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 07:19 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **IN PROGRESS @ 2026-08-14 07:19 UTC — a focused Agent C is
-                  landing B12-01 per §1aa Ruling 40 (option (a), phrase-level
-                  event kinds) BEFORE round 13 A starts.** `WHOSE TURN: A`
-                  (round 13) still stands and is unchanged by this turn; this
-                  is the landing turn Ruling 40's "Landing instructions"
-                  paragraph authorises, not a new round. Only B12-01's code,
-                  its tests, and §1/§4 bookkeeping are in scope.
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 07:31 UTC — B12-01 IS
+                  LANDED, per §1aa Ruling 40 (option (a), phrase-level event
+                  kinds). A focused Agent C, one item, one commit.**
+                  `WHOSE TURN: A` (round 13) stands and was not changed by this
+                  turn — this is the landing turn Ruling 40's own "Landing
+                  instructions" paragraph authorises, not a new round.
+
+                  **Full detail in §4**: "Round 12 — Agent C (B12-01 LANDED per
+                  Ruling 40…)", the last entry in the file. This is the short
+                  version.
+
+                  **The delta from the version round 12 C built and stopped is
+                  step 3 alone** — the event-kind test is now PHRASE-level over
+                  the joined span, seeded with the ten multi-word kinds copied
+                  from the two cited sources at implementation time
+                  (`EVENT_SIGNAL_RE`'s kind-nouns and `eventKindIn`). Five are
+                  genuinely new coverage: `round table` (spaced), `hack day`,
+                  `lecture series`, `networking event`, `gordon research`.
+                  `call for papers` and `abstract submission` are deliberately
+                  EXCLUDED as page labels — that class is exactly why Ruling 40
+                  rejected option (b). Everything else is C's built version
+                  verbatim: no determiner strip, `looksLikeEventTitle`
+                  unchanged, one call site, the honest host fallback untouched.
+                  **B12-03 and B12-04 keep the single-word list alone and are
+                  unchanged by construction.**
+
+                  **THE REGRESSION THAT STOPPED THE FIRST ATTEMPT IS NOW A
+                  PASSING TEST.** `"2026 International Round Table on Titanium
+                  Production in Molten Salts"` recovers in full. Proved twice by
+                  execution: 19 of 102 assertions fail against pre-fix code
+                  (9 restated + 10 of 12 new), and — the proof that actually
+                  matters here — with the phrase list temporarily removed the
+                  name reverts to `"Untitled event"` character-for-character in
+                  both test files, then recovers when it is restored.
+
+                  **Gate: 1159 of 1160, the only failure the documented
+                  `benchmark.test.ts` live flake; typecheck clean; lint the one
+                  standing `quiz.tsx:46` error. SolarPACES lock run on its own:
+                  25 of 25, unchanged. Both `scoring.test.ts` files run
+                  explicitly: 102 of 102.** The escape clause did NOT fire —
+                  the full suite was run BEFORE any assertion was restated, so a
+                  degradation could not hide inside an edit, and none appeared.
+
+                  **The report gate is unchanged and NOT MET. C cannot move it**
+                  (§2). Only round 13's A can.
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 07:12 UTC — ROUND 12 C IS COMPLETE (six items).
                   ---
                   Previous entry, kept for continuity: finished the turn @
                   2026-08-14 07:12 UTC — ROUND 12 C IS
@@ -572,13 +613,15 @@ WHOSE TURN:       **A — Reviewer, round 13.** Remeasure live, per §2's standi
                   standing method note). A does not change code and does not
                   diagnose causes.
 
-                  **Six fixes landed this round and every one of them is a
+                  **SEVEN fixes landed this round and every one of them is a
                   prediction A can falsify.** In B's own order: B12-02
                   (`ruggedthz.com`), B12-03 (`battery2030.eu`,
                   `isea.rwth-aachen.de`, `adt.media`), B12-04
                   (`internationalbatteryseminar.com`), B12-05
                   (`euchems2026.eu`), B12-06 (`openmc.discourse.group`),
-                  B12-07 (`talents.vaia.com`). Each has tests; **tests are not
+                  B12-07 (`talents.vaia.com`), and — landed last, after round
+                  12 C closed, per §1aa Ruling 40 — **B12-01
+                  (`ecs.confex.com`)**. Each has tests; **tests are not
                   evidence the live value changed**, which is exactly why the
                   gate is A's to move and nobody else's.
 
@@ -589,17 +632,32 @@ WHOSE TURN:       **A — Reviewer, round 13.** Remeasure live, per §2's standi
                      rather than a nil result.** Ruling 39a requires counting
                      **every honest-host render and judging, per instance,
                      whether the reader is better off.** Round 12 A measured
-                     the rate at ZERO (0 of 85 renders). **B12-01 — which was
-                     supposed to create those instances — did NOT land**, so
-                     the question is now sharper, not moot: **B12-05 also
-                     creates honest-host renders** (`euchems2026.eu` should now
-                     render its bare hostname instead of a document filename),
-                     and B12-06 creates honest ABSENCE on the employer side
-                     (`openmc.discourse.group` should show no employer line at
-                     all rather than `Page 2`). Count both, and say per
-                     instance whether the reader is better off than with the
-                     wrong value that stood there before. A nil result is a
-                     finding; so is a rise.
+                     the rate at ZERO (0 of 85 renders). **THREE landed items
+                     now create these instances, not two — B12-01 landed after
+                     round 12 C closed** (§1aa Ruling 40; see §4's last entry):
+                     - **B12-01 (`ecs.confex.com`) — the item that was always
+                       going to move this metric.** Its expected render under
+                       this fix: **the deadline sentence
+                       (`"Abstracts are due no later than Friday, 4 September
+                       2026 at 11:59 PM Eastern Standard Time."`) MUST BE
+                       GONE.** What stands in its place is **either a recovered
+                       real event name or the bare host `ecs.confex.com`** —
+                       which of the two depends on whether that pull's snippet
+                       carries a leading name span with a listed event kind, and
+                       **EITHER outcome is a finding to record per instance**,
+                       not a pass/fail. The one thing that must not appear is
+                       the sentence. Do not grade a bare host as a failure and
+                       do not grade a recovered name as an unqualified win —
+                       Ruling 39a wants the per-instance reader judgement, and
+                       this is the first host where there is one to make.
+                     - **B12-05** (`euchems2026.eu` should now render its bare
+                       hostname instead of a document filename).
+                     - **B12-06** creates honest ABSENCE on the employer side
+                       (`openmc.discourse.group` should show no employer line at
+                       all rather than `Page 2`).
+                     Count all three, and say per instance whether the reader is
+                     better off than with the wrong value that stood there
+                     before. A nil result is a finding; so is a rise.
                   2. **`ruggedthz.com` — MUST-CONFIRM, and the expected value is
                      named in advance so A cannot grade it generously.** The
                      expected render is **`2026 Crystal Engineering GRC`**. B12-02
@@ -627,15 +685,14 @@ WHOSE TURN:       **A — Reviewer, round 13.** Remeasure live, per §2's standi
                      (Ruling 38c). Do not retry it this round and do not let it
                      enter any denominator.
 
-                  **ONE THING FOR THE MANAGER BEFORE A STARTS, because it is a
-                  ruling request and not a measurement: B12-01 did not land.**
-                  See §4 "Round 12 — Agent C (B12-01…)" — the approved design
-                  turns a correct event name into `"Untitled event"`, the cause
-                  is a class (single-word noun list vs. multi-word event kinds),
-                  and three resolutions are recorded with their costs. A does
-                  not need it resolved to remeasure — `ecs.confex.com` will
-                  simply still render the deadline sentence, which A should
-                  report as the unchanged open defect it is.
+                  **SUPERSEDED — B12-01 HAS SINCE LANDED, so ignore any earlier
+                  text saying otherwise.** Round 12 C stopped it (the approved
+                  design turned a correct event name into `"Untitled event"`);
+                  the manager ruled it as §1aa Ruling 40; a focused C landed it
+                  on 2026-08-14. **`ecs.confex.com` will NOT still render the
+                  deadline sentence** — see watch point 1 above for what A
+                  should expect instead and how to score it. Detail in §4's last
+                  entry, "Round 12 — Agent C (B12-01 LANDED per Ruling 40…)".
 
                   **Also unchanged and still open for the manager:** B11-04's
                   flag and B8-03's `usajobs.ts` fallback, both listed under
@@ -26626,3 +26683,269 @@ lint error only.
 **Manager's turn continues: a focused C lands B12-01 per Ruling 40, then
 round 13 A.**
 
+
+---
+
+### Round 12 鈥?Agent C (B12-01 LANDED per Ruling 40: `ecs.confex.com` 鈥?the phrase-level kind test, and the Round Table regression is now a passing must-recover test)
+
+**STATUS: LANDED.** A focused C, spawned by the manager between round 12 and
+round 13 for this one item only. Lock claimed (`722ccf0`,
+`LAPTOP-3CL10CG5 @ 2026-08-14 07:19 UTC`) after `git pull --ff-only` and
+confirming `git branch --show-current` reads `feature/summary-report-revamp` 鈥?checked, not assumed. `WHOSE TURN: A` (round 13) was not touched and still
+stands; this is the landing turn Ruling 40's own "Landing instructions"
+paragraph authorises, not a new round.
+
+**The delta from the version round 12 C built and stopped is step 3 ALONE.**
+Everything else is that version verbatim: no determiner strip (Ruling 39a point
+4), `looksLikeEventTitle` unchanged, one call site, B11-02's hard pre-filter
+untouched and still running first, and the honest URL-host fallback
+(B9-04 Fix 1) untouched. C's preserved evidence was reused, not rebuilt 鈥?all
+nine restated assertions reproduced their recorded values byte-for-byte on the
+first run.
+
+---
+
+**1. THE PHRASE LIST 鈥?exact contents, and the source of every entry.**
+
+New constant `EVENT_KIND_PHRASE_RE` in `web/src/lib/events/sources/eventweb.ts`,
+sitting directly beneath the existing single-word `EVENT_KIND_NOUN_RE`. Every
+phrase was **copied from the source file at implementation time**, spelled as
+that source spells it. Nothing was added from memory or invention.
+
+```
+round ?table
+(?:career|student|graduate|campus) (?:fair|expo)
+(?:job|hiring|recruiting|recruitment) (?:fair|expo|event)
+hack day
+trade show
+lecture series
+networking event
+annual meeting
+society meeting
+gordon research
+```
+
+Provenance, phrase by phrase:
+
+- `round ?table` 鈥?`EVENT_SIGNAL_RE` (`eventweb.ts:79`), verbatim.
+- `career (fair|expo)` 鈥?`EVENT_SIGNAL_RE`; written in `eventKindIn`'s wider
+  spelling `(career|student|graduate|campus) (fair|expo)`
+  (`events/mapper.ts:54`), which is a strict superset of it.
+- `job fair`, `hiring fair`, `recruiting (fair|event)` 鈥?`EVENT_SIGNAL_RE`;
+  likewise superseded by `eventKindIn`'s wider
+  `(job|hiring|recruiting|recruitment) (fair|expo|event)` (`mapper.ts:58`).
+- `hack day` 鈥?in BOTH sources, identical spelling (`eventweb.ts:79`,
+  `mapper.ts:62`).
+- `society meeting` 鈥?`EVENT_SIGNAL_RE`.
+- `gordon research` 鈥?`EVENT_SIGNAL_RE`.
+- `trade show` 鈥?`eventKindIn` (`mapper.ts:64`).
+- `lecture series` 鈥?`eventKindIn` (`mapper.ts:66`).
+- `networking event` 鈥?`eventKindIn` (`mapper.ts:69`).
+- `annual meeting` 鈥?`eventKindIn` (`mapper.ts:71`).
+
+**TWO multi-word entries in `EVENT_SIGNAL_RE` are DELIBERATELY EXCLUDED, and
+this is the only judgement call in the list: `call for papers` and
+`abstract submission`.** They are page labels, not event kinds. Ruling 40's own
+words are "`EVENT_SIGNAL_RE`'s **kind-nouns**", and admitting that class is
+precisely why the ruling rejected option (b) 鈥?round 12 C proved by execution
+that the whole regex qualifies `"Registration Desk Hours"` as an event's name.
+The regex's other page labels (`registration`, `keynote`, `cfp`, `proceedings`)
+are single-word and so were never in scope for this change; none of them is in
+B's single-word list either.
+
+**Five of the ten phrases are genuinely new coverage; five are already implied
+by a single word in `EVENT_KIND_NOUN_RE`** (`annual meeting`/`society meeting`
+by `meeting`, `trade show` by `show`, the two fair/expo families by `fair`).
+The redundant ones are kept anyway, because Ruling 40 said copy the sources
+rather than filter them, and because the list stays correct if the single-word
+list is ever narrowed. **The genuinely new coverage is: `round table` (spaced),
+`hack day`, `lecture series`, `networking event`, `gordon research`.**
+
+**One finding, recorded not acted on: `webinar` and `meetup` are SINGLE-word
+kinds present in `eventKindIn` but absent from B's single-word list.** Ruling 40
+changed only the multi-word dimension and said single-word kinds stay, so they
+were left alone. Their absence falls to the honest fallback in the documented
+direction 鈥?a missed recovery, never a wrong value 鈥?and A's honest-host count
+is where they would surface. Flagged for the manager; no code written.
+
+---
+
+**2. WHERE IT ATTACHES, AND WHAT IT DELIBERATELY DOES NOT TOUCH.**
+
+`leadingNameSpan`'s step 3 tests **both** halves of the enumeration,
+phrase-level over the joined span:
+`EVENT_KIND_NOUN_RE.test(joined) || EVENT_KIND_PHRASE_RE.test(joined)`.
+
+**`stripWeldedPageTypeLabel` (B12-03) and `isChromeSegment`'s host-brand
+exemption (B12-04) keep the single-word list ALONE, byte-identical.** That is a
+deliberate choice, not an oversight, and it is written into the code comment:
+in both of those the failure direction is already "do nothing" (leave the
+segment unstripped; leave it rejected as chrome), so a missed kind costs a
+missed fix and never a wrong value. Widening them is a separate change with its
+own evidence, not a side effect of this one. This is the reconciliation the
+round-12 comment asked for ("whoever resolves it should reconcile all uses in
+this one place"), done in that one place 鈥?and it means **B12-03 and B12-04
+cannot have regressed by construction.**
+
+**The code comment states the failure direction explicitly, in Ruling 40's own
+terms:** a kind that is not listed means the span is **DROPPED**, execution
+falls through to the honest URL-host last resort, so a miss costs a **missed
+recovery and can never produce a wrong value** 鈥?which is what makes an
+openly-maintained list acceptable here and not in 搂1x Ruling 37's verb list,
+whose misses mutilated correct sentences. The comment names **A's standing
+honest-host count as the tally that surfaces missed kinds**: a bare hostname
+rendered over a page whose name carries an unlisted kind is the evidence that
+extends the list.
+
+---
+
+**3. NEGATIVE PROOF ON THE FINAL SHAPE 鈥?run by execution, source reverted and
+restored.**
+
+`git checkout -- eventweb.ts`, run `eventweb.test.ts`, restore.
+
+**19 of 102 assertions fail against pre-fix code**, and the composition is
+exactly as intended:
+
+- **9 restated assertions** 鈥?every one genuinely changed, proving none was
+  already passing for another reason.
+- **10 of the 12 new tests.**
+- **2 new tests pass on BOTH sides by design, and are reported separately
+  rather than counted as proof** 鈥?the documented honest miss, and the Round
+  Table must-recover (pre-fix the stage returned that sentence verbatim, which
+  happens to be the right answer, so only the *first attempt's* shape breaks
+  it 鈥?see the sharper proof below).
+
+**THE SHARPER NEGATIVE PROOF, and the one that actually matters for Ruling 40.**
+The Round Table case does not discriminate against pre-fix code; it
+discriminates against **the version C stopped**. So the phrase test was
+temporarily disabled in place (`EVENT_KIND_PHRASE_RE` dropped from step 3,
+single-word list only 鈥?the first attempt's exact shape) and the suite re-run:
+
+```
+events/scoring.test.ts > recovers a real event name when the page title is generic
+  Expected: "2026 International Round Table on Titanium Production in Molten Salts."
+  Received: "Untitled event"
+
+eventweb.test.ts > leading name span (B12-01) > recovers a name whose event kind is two words
+  Expected: "2026 International Round Table on Titanium Production in Molten Salts."
+  Received: "Untitled event"
+
+eventweb.test.ts > leading name span (B12-01) > recovers a name whose event kind is only ever spelled as a phrase
+  Expected: "Molten Salt Lecture Series on Reactor Chemistry"
+  Received: "Untitled event"
+```
+
+**The regression reproduced character-for-character, then the phrase list was
+restored and all three pass.** That is direct, executable evidence that option
+(a) fixes the exact thing that stopped the first attempt.
+
+---
+
+**4. THE TESTS 鈥?12 new, 9 restated, none deleted.**
+
+New `describe("leading name span (B12-01)")` in `eventweb.test.ts`, placed
+directly after the B11-02 block because it is that item's sequel on the same
+host and the same stage.
+
+**Nine must-reject (all fail pre-fix, all fall to the honest host):** the live
+deadline sentence verbatim from round 12 A's log; the **sharpened**
+`"鈥nd nothing later than that counts."` (kept exactly as C sharpened it 鈥?its
+first version ended "will be accepted", which `NARRATIVE_VERB_RE` catches, so it
+passed pre-fix for the wrong reason and proved nothing about the span rule); a
+page-label-plus-joiners span; a submission-instruction sentence; a venue-change
+sentence; a logistics sentence; `ruggedthz.com`'s mid-sentence lower-case
+fragment; the two-word floor; and the trailing-joiner drop.
+
+The live-deadline test also asserts `not.toBe("Friday, 4 September 2026")` 鈥?the
+executable proof that step 1's **start-anchoring** is load-bearing, since an
+unanchored "longest Title-Case run anywhere" finds that string inside the very
+sentence the item exists to reject.
+
+**One documented honest miss, asserted rather than hidden:**
+`"Conference Image Gallery Carousel"` survives unchanged and passes on both
+sides. B12-01 does not fix `internationalbatteryseminar.com`'s carousel label
+and does not make it worse; that host has its own fix (B12-04).
+
+**Two must-recover.** The titanium **Round Table** case Ruling 40 named, and one
+extra: a `lecture series` name. **That second test is the only thing in this turn
+beyond the brief, and it is purely additive** 鈥?`lecture series` has no
+single-word form anywhere in either enumeration, so it is the test that fails if
+the phrase list is ever quietly reduced back to single words. Without it the
+entire new list would be locked by a single assertion.
+
+**The nine restated assertions**, each commented `B12-01`, all to strictly
+better values, none deleted (搂2):
+
+| new value | was |
+|---|---|
+| `Rivertown Summit` | `鈥s a two-day materials science conference held every spring.` |
+| `The International Battery Summit` | `鈥rings researchers together.` |
+| `The International Battery Seminar` | `鈥rings together researchers.` (three sites) |
+| `The 250th ECS Meeting` | `鈥elcomes abstract submissions.` 鈥?B11-02's own test |
+| `250th ECS Meeting` | `250th ECS Meeting (October 25-29, 2026).` 鈥?**the ninth**, which B's count of eight missed |
+| `The Battery Show South` | `鈥eturns to Atlanta this year.` 鈥?B11-03's own test |
+| `Rivertown Summit` | `鈥onvenes battery researchers every spring in Ohio.` |
+
+Determiners stay on throughout, per Ruling 39a point 4.
+
+---
+
+**5. VERIFICATION 鈥?all five mandatory checks.**
+
+1. **Negative proof on the final shape: 19 of 102**, composition above, plus the
+   sharper first-attempt proof in section 3.
+2. **SolarPACES lock (`web/src/lib/opportunities/enrich.test.ts`), run on its
+   own: `Test Files  1 passed (1) / Tests  25 passed (25)` 鈥?25/25, unchanged.**
+   Confirmed rather than assumed, as standing practice requires, even though
+   B12-01 provably cannot reach it (`leadingNameSpan` is new and called from one
+   place; `looksLikeEventTitle` is untouched).
+3. **`scoring.test.ts` run explicitly, BOTH files** (`events/scoring.test.ts` +
+   `jobs/scoring.test.ts` 鈥?the missed second file twice in this loop):
+   **102 passed (102)**. The Round Table fixture lives in
+   `events/scoring.test.ts:555-562` and passes untouched.
+4. **Full gate: `npx vitest run` 鈫?90 files, `Tests  1 failed | 1159 passed
+   (1160)`.** The single failure is `benchmark.test.ts`'s documented live flake,
+   the only allowed one. Test count rose 1148 鈫?1160, which is the 12 new tests
+   exactly. **`npx tsc --noEmit` clean (exit 0). `npx eslint` 鈫?`1 problem
+   (1 error, 0 warnings)`**, the standing `src/components/persona/quiz.tsx:46`.
+5. **The escape clause did NOT fire. No case anywhere in the suite showed a
+   currently-correct name degrading.** The full suite was run BEFORE any
+   assertion was restated, precisely so a degradation could not hide inside an
+   edit: that run failed exactly 9 event-name assertions plus the benchmark
+   flake, all nine to better values, with the Round Table fixture already
+   passing. Nothing was widened or narrowed inline.
+
+---
+
+**6. WHAT A SHOULD EXPECT LIVE 鈥?a prediction, not a reassurance.**
+
+`ecs.confex.com`: **the deadline sentence must be GONE.** What replaces it is
+either a recovered real name (if some fragment of that page's snippet carries a
+leading name span with a listed kind) or the bare host `ecs.confex.com`.
+**Either outcome is a finding for A to record per Ruling 39a's per-instance
+accounting**, and neither can be graded generously 鈥?the one thing that must not
+appear is the sentence.
+
+**B12-01 is now a THIRD creator of honest-host instances**, alongside B12-05
+(`euchems2026.eu`) and B12-06 (`openmc.discourse.group`'s honest employer
+absence). Round 12 A measured the honest-host rate at ZERO (0 of 85 renders);
+this item is the one that was always going to move it. A counts every instance
+and says, per instance, whether the reader is better off than with the wrong
+value that stood there before.
+
+**One known limitation, stated so nobody discovers it as a surprise:** a
+sentence that opens with a page label followed by joiners and then a capitalised
+kind word 鈥?`"Registration for the Symposium opens in May."` 鈥?yields the span
+`"Registration for the Symposium"`. That is still wrong, but it is wrong鈫抴rong
+(pre-fix the reader got the whole sentence), never correct鈫抴rong, so it is not a
+regression and not something to patch inline. Recorded for the manager.
+
+**Files touched: two.** `web/src/lib/events/sources/eventweb.ts` (one new
+constant, one new function, one chained call in the snippet stage) and
+`web/src/lib/events/sources/eventweb.test.ts`. No harness was ever created
+inside the repo; `git status --untracked-files=all` shows only those two files.
+No live fetch, no credentials, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, no
+worktree, no PR.
+
+---
