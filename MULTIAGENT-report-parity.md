@@ -56814,3 +56814,386 @@ file and `cat` from bash — **NOT PowerShell**.
 **THE HAND-OFF:** `WHOSE TURN: B — round 23` stands as A wrote it. B's work list is the four ranked items **A23-01 through A23-04** re-ranked under §2 (wrong data first), **plus Ruling 61b's place-half design**. Expected mechanics notes for B, from A's own isolation work: A23-01 is the dash/pipe splitter (six-instance shape, table in part 2 — establish one mechanism before writing entries); A23-02 is one row wearing two defects (an aggregator title with date+country glued in, and dateless survival of the expiry check — establish whether one gap or two); A23-04's mechanism is already recorded in round 22's item 9. **Ruling 60a's deferral stands untouched (strike count ONE, design not authorized); Rulings 58a–d and 59–61 are decided — nothing is re-raised.** The gate stays `GATE (0%): NOT MET` — only round 24's A census can move it, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 23 — Agent B (item 1 of 4: **A23-03 — THE EVENT PLACE COLUMN, plus RULING 61b's PLACE-HALF DESIGN. Verdict: ONE gap, and A UNDERCOUNTED IT — B's own live pull carries a FOURTH contamination A never saw. Four design drafts were built and ALL FOUR were killed by their own matrix before the fifth was recommended.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 1 of 4. **DESIGN ONLY — B changes no code
+(§2).** Turn lock claimed (`82e9639`, `LAPTOP-3CL10CG5 @ 2026-08-14 23:35 UTC`)
+after `git pull` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed. **The claiming push was ACCEPTED (`409b033..82e9639`), so the race was
+won rather than assumed.**
+
+**METHOD.** One live pull per surface in one process with a no-op `PoolCache`,
+through `buildDailyEventPool()`/`buildDailyJobPool()` and the shipped mappers. A
+`fetch` interceptor stored provider **RESPONSE** bodies and page HTML only —
+**never the request init, which is what carries the key.** Then every ingestion-
+kept event row was replayed OFFLINE through `webResultToRawEventItem` and its
+page captured through Peer's own `fetchPageHtml`, so **every verdict below is
+recomputable without re-hitting a third party.** **`euagenda.eu` was NOT fetched
+(Ruling 45a) — it is skipped by name in the capture loop and the skip is logged.
+Ruling 41c's three hosts were NOT hunted (45b): nothing searches for them; only
+rows the provider itself offered were touched.** `PEER_PROFILE_SNAPSHOT_PATH`
+NOT used; page-fetch enrichment ran, LLM enrichment did not (42b). Keys
+confirmed by **boolean presence check only**. Harness outside `src/`
+(`web/zz-r23b/`, own vitest config, include pattern `zz-r23b/**/*.probe.ts`),
+**deleted before the first commit**; results in this session's scratchpad,
+outside the repository.
+
+**THE CORPUS: 150 unique offered event rows, 49 ingestion-kept, 41 with page
+HTML** (7 pages returned `null`, 1 skipped by 45a). That is the corpus round 22
+B said the place half had to wait for, and it now exists.
+
+---
+
+## PART 1 — **A's THREE CONTAMINATIONS ARE ALL LIVE. AND THERE IS A FOURTH.**
+
+Every one of A's three reproduces in B's own pull, with the same evidence:
+
+| host | rendered | the ONLY qualifying mention, clipped programmatically | verdict |
+|---|---|---|---|
+| `flogen.org` | `Geneva` | `…Plenary Lecture at the United Nations Meetings in [Geneva] in February 2022…` | **WRONG — A CONFIRMED** |
+| `storageusa.solarenergyevents.com` | `Durham` | `…Visit Website. × Based in [Durham], N.C., FlexGen is a leading integration…` | **WRONG — A CONFIRMED** |
+| `nanoge.org` | `Chicago, IL, United States` | `…Department of Physics, Illinois Institute of Technology, [Chicago], IL, 60616, USA…` | **WRONG — A CONFIRMED** |
+| **`sdle.co.il`** | **`Oslo, Norway`** | `…Local Battery Training in Israel Our Conferences 7th [Oslo] Battery Days Conference, Oslo, Norway…` | **WRONG — AND A DID NOT SEE IT** |
+
+**`sdle.co.il`'s row is named `Turkey Battery Technologies Summit 2026` and Peer
+renders its place as `Oslo, Norway`.** The mention is inside the organiser's own
+**navigation list of its OTHER conferences.** The host was not in A's pool (offer
+sets drift between pulls), so this is not an error of A's measurement — but it
+means **the column's contamination rate is not 3 of 7, it is 4 of 8 (50.0%) on
+B's pull**, and B reports the worse number rather than inheriting the better one.
+
+**`nanoge.org` is the MAJORITY reading in B's pull, not the minority.** A
+disclosed it 2 of 5. B saw it 1 of 1. Recorded as agreement on the value and a
+difference in frequency, not as a correction to A.
+
+**THE MECHANISM, NAMED AT THE LINE.** `findVenueCity`
+(`web/src/lib/opportunities/structured-extract.ts:1448`), called by
+`extractBodyTextPlace` (`:1485`), scans **the whole page body** — nav bars,
+footers, exhibitor directories, speaker lists, biographies — for any of the
+`CONFERENCE_CITIES` gazetteer entries (`:570`), accepts a mention when
+`CITY_PROXIMITY_CUE_RE` (`:1326`) matches the 120 characters before it **or**
+`hasTrailingStateCode` (`:1339`) matches the 12 after, and then takes **the
+earliest accepted mention in the document.** `isHistoricalMention` (`:1380`)
+removes past-EDITION framing and nothing else.
+
+**So the selection rule is: the first city on the page that sits after the word
+`in`.** `Based in Durham`, `Meetings in Geneva`, `Technology, Chicago, IL` and
+`7th Oslo Battery Days` all satisfy it. **Nothing anywhere asks whose city it
+is.** That is one mechanism and one gap, not four findings — confirmed by
+execution, not asserted.
+
+---
+
+## PART 2 — **RULING 61b's DESIGN. FOUR DRAFTS BUILT LITERALLY, FOUR KILLED BY THEIR OWN MATRIX.**
+
+Every draft was run against **all 41 captured pages**, scored
+unchanged/lost/moved/invented against the shipped value. A mirror of the shipped
+private helpers was written first and **checked against `extractBodyTextPlace`
+on all 41 pages: 1 disagreement in 41**, and it is explained — `openlivinglabdays.com`,
+where `findCurrentVenueClause` (`:1400`) fired and returned a non-gazetteer city.
+Round 22's lesson (a counter that disagrees with the extractor it guards is a
+latent second defect) is therefore discharged rather than assumed.
+
+### DRAFT 1 — REJECTED. **B's own round-22 spec, taken LITERALLY.**
+
+*Place from the whole-page scan only when the page carries a single event
+identity; otherwise only the block bearing the item's own name may donate; no
+block, no place.* Identity counted as JSON-LD `Event` records plus `<h1>`
+headings.
+
+| | |
+|---|---|
+| unchanged | **38** |
+| lost | 3 |
+| moved / invented | 0 / 0 |
+
+**It looks clean and it is nearly VACUOUS ON THE DEFECT.** It removes
+`storageusa`'s `Durham` and **leaves `flogen.org`'s `Geneva`, `nanoge.org`'s
+`Chicago` and `sdle.co.il`'s `Oslo` exactly where they are** — 1 of 4
+contaminations closed. **B's own prior specification does not survive contact
+with the corpus it asked for, and B says so plainly rather than shipping it
+because B wrote it.**
+
+### DRAFT 2 — REJECTED. **The date half's ambiguity test, translated: demand ownership only where the page is provably ambiguous about WHERE.**
+
+Count the distinct qualifying cities; one → keep; two or more → the item's own
+name block must donate.
+
+| | |
+|---|---|
+| unchanged | **28** |
+| **lost** | **13** |
+| moved / invented | 0 / 0 |
+
+**It closes all four contaminations and destroys `Aachen`, `Detroit` and
+`Jakarta` — three of the four CORRECT pool values.** The reason is round 22's
+draft-2 lesson repeating itself: **the ownership witness is not available.** The
+name-block lookup fails on ordinary conference sites because the event's own
+name is in a banner image, a `<title>`, or a heading that does not contain the
+provider-derived name string. **A design that fixes the defect and mutilates
+correct common cases must not ship. REJECTED.**
+
+### DRAFT 3 — REJECTED. **A's control as a rule: the winning mention must sit beside a venue word.**
+
+| | |
+|---|---|
+| unchanged | 32 |
+| lost | 8 |
+| **moved** | **1** |
+
+**It loses `internationalbatteryseminar.com`'s correct `Orlando`, MOVES
+`battery-power.eu` from the correct `Aachen` to `Karlsruhe`, and STILL LEAVES
+`nanoge.org`'s `Chicago`** — because the vocabulary that has to contain
+*Convention Centre* also contains *Institute*, and `Illinois Institute of
+Technology, Chicago` is exactly that shape. **A's control is a real observation
+and a bad rule: the venue words in the correct cases are PROPER NOUNS
+(`Eurogress`, `JIExpo Kemayoran`, `Huntington Place`, `Messe`), not a closed
+class.** REJECTED, and A's lead is reported as measured-and-failed rather than
+quietly dropped.
+
+### DRAFT 4 — REJECTED. Draft 3 then draft 2. **unchanged 26, lost 14, moved 1.** Worst of both.
+
+---
+
+## PART 3 — **THE RECOMMENDATION. Five clauses, every one load-bearing by ABLATION on live rows.**
+
+The insight the four rejections paid for: **the wrong answers are never "unowned
+text was read". They are "a city was read out of a sentence about a DIFFERENT
+entity — a company's seat, a person's institution, another event."** So the gate
+is a co-witness test plus a small closed set of "this belongs to someone else"
+markers, and **nothing depends on finding a DOM block.**
+
+A qualifying mention (the ones `findVenueCity` already accepts) is **admitted**
+only when at least one POSITIVE holds and no NEGATIVE holds. Window = the 200
+characters before the city and the 120 after — **the same text the shipped cue
+already reads, widened, so no new region of the page is scanned.**
+
+**POSITIVE — the event itself is present in the window.**
+
+- **`P_date`** — a month-day token *and* a year ≥ the current year, anywhere in
+  the window. *(The event's own dates sit next to its own venue: `OCTOBER 12-15,
+  2026 Huntington Place Detroit, MI`.)*
+- **`P_name`** — a distinctive token of the item's own name (≥ 4 characters, not
+  in a closed stop-list of event words) appears in the window.
+- **`P_venue`** — a venue proper-noun word (`convention|congres|congress|
+  exhibition|expo|centre|center|hotel|hall|arena|resort|stadium|pavilion|palace|
+  auditorium|messe|fairground|plaza|theatre|place`) in the 40 characters before.
+
+**NEGATIVE — the window says the city belongs to someone else.**
+
+- **`N_seat`** — `based|headquartered|head office|hq|offices|branch|subsidiary|
+  founded|incorporated|registered` in the 40 characters before. *(An exhibitor's
+  head office.)*
+- **`N_otherevent`** — the city is immediately followed by another event's name
+  (`day|days|week|summit|forum|expo|congress|conference|symposium|meeting|show`).
+  *(A nav list of the organiser's other conferences.)*
+- **`N_pastyear`** — every year token in the same clause is before the current
+  year. *(A 2022 UN meeting in a biography.)*
+
+**ONE MECHANICAL POINT C MUST NOT SKIP, BECAUSE IT COST B A FALSE SILENCE.**
+The shipped-style window `[^.]{0,N}$` **cannot cross an abbreviation period.**
+`will be held Oct. 11-14 in Denver` and `Based in Durham, N.C.` both contain a
+period that is not a sentence end, and B's first build silenced
+`npaonline.org`'s **correct, current `Denver`** because of it. The fix is to
+collapse a period **not followed by space-plus-capital** before testing — an
+abbreviation dot, never a sentence boundary. With that one change the false
+silence disappears and nothing else moves.
+
+### **THE MEASURED MATRIX — all 41 captured ingestion-kept pages**
+
+| | count |
+|---|---|
+| rows unchanged | **33** |
+| places lost | **8** |
+| places moved to a different value | **0** |
+| places newly invented | **0** |
+
+**ALL FOUR LIVE POOL CONTAMINATIONS ARE REMOVED. ZERO CORRECT POOL VALUES ARE
+LOST.** `Aachen`, `Detroit`, `Jakarta`, `Orlando` and `Stuttgart` all survive.
+
+**THE 8 LOSSES, EVERY ONE NAMED AND GROUND-TRUTHED:**
+
+| host | value lost | what it actually was |
+|---|---|---|
+| `flogen.org` | `Geneva` | **wrong** — 2022 UN meeting in a biography |
+| `storageusa.solarenergyevents.com` | `Durham` | **wrong** — an exhibitor's head office |
+| `nanoge.org` | `Chicago` | **wrong** — a speaker's postal affiliation |
+| `sdle.co.il` | `Oslo` | **wrong** — another of the organiser's conferences |
+| `iongroup.com` | `Boston` | meaningless — the row is a careers page (`Join Our Passionate Team`) listing office cities |
+| `cns1.rc.fas.harvard.edu` | `Portland` | meaningless — the row is a publications list |
+| `iupac.org` | `Victoria` | **wrong twice over** — a **2016** event, and `Victoria` is the Australian STATE; the city is Lorne |
+| `abilities.com` | `Los Angeles` | **CORRECT — and this is the one real cost.** It is the true venue of a **March 2017** event; `N_pastyear` removes it |
+
+**SO: 7 of the 8 losses were wrong or meaningless values, and the ONE correct
+value lost belongs to a nine-year-old row that should not be in a live pool at
+all. Correct CURRENT values lost: ZERO. Correct POOL values lost: ZERO.**
+
+### **VACUITY, STATED AGAINST B's OWN INTEREST**
+
+Ablation, one clause removed at a time, everything else on:
+
+| clause | rows that change without it |
+|---|---|
+| `P_name` | **7** — `internationalbatteryseminar.com`, `bluecurrent.com`, `techinsights.com`, `behavioralpolicy.org`, `cisummit-crc.asce.org`, `date-conference.com`, `ilaglobalconference.org` |
+| `N_pastyear` | **4** — `flogen.org`, `abilities.com`, `cns1…`, `iupac.org` |
+| `P_date` | **2** — `volta.foundation`, `annexushealth.com` |
+| `N_seat` | **1** — `storageusa.solarenergyevents.com` |
+| `N_otherevent` | **1** — `sdle.co.il` |
+| **`P_venue`** | **0 — VACUOUS on the live corpus.** Earned only by a constructed case (`at the Palais des Congres in Lyon`, which every other clause misses). **It can only ADMIT a value that would otherwise be silent, so its failure direction is the status quo — but it is not free, because a venue word can also sit in an exhibitor's blurb. B recommends shipping it and says plainly that the live corpus does not require it.** |
+| `P_label`, `P_verb`, `N_affil` | **0 — VACUOUS, and B recommends NOT shipping them.** `P_label` (`Venue:` / `Location:`) and `P_verb` (`will be held in`) are fully covered by `P_date`/`P_name`/`P_venue` on every live row; `N_affil` (university/institute + postcode) is covered because **no positive clause fires on an affiliation window in the first place.** A clause with neither a live case nor a constructed one is not earned. |
+
+### **WHAT THE FIELD SHOWS WHEN EVERY CANDIDATE IS REJECTED**
+
+**Nothing new.** `extractBodyTextPlace` returns `undefined`; the chain at
+`structured-extract.ts:1628-1630` is already `structured?.place ?? metaPlace ??
+bodyTextPlace`, so the body scan is **already last** and its absence leaves
+`place` undefined. `mergeOpportunityPlace` (`enrich.ts:249`, called at `:293`)
+then returns the item's own place, which for an `eventweb` row **is undefined at
+ingestion — `webResultToRawEventItem` sets no `place` field at all.**
+`location` falls to `item.location`, which is the string
+`"See event page"` the ingestion mapper already writes. **The fallback is the
+silence the build already renders, and `solarpaces.org` proves it is reachable
+today.** No new rendering shape is introduced.
+
+**AND THE ONE FALLBACK C MUST NOT ADD.** Ruling 26's `|| host` lesson applies
+here exactly: **do not let a rejected city fall through to a COUNTRY.**
+`extractPlaceFromText` (`:1509`) already does that — city first, then a bare
+gazetteer country behind a `VENUE_CUE_RE`. If the guard is placed inside
+`findVenueCity` and `extractPlaceFromText` is left alone, a page whose city was
+rejected can still publish its country. **The guard must sit where both readers
+see it, or the country arm must be gated by the same test.**
+
+---
+
+## PART 4 — **ADVERSARIAL CASES, INCLUDING THE HARDEST REAL SHAPE**
+
+Ruling 61b names the `nanoge.org` programme page as the hardest real shape. It
+is a **1.28 MB** conference programme in which **twenty-three cities appear**;
+`Chicago` is the twentieth by frequency and is chosen only because its postal
+address is the earliest one carrying a state code. **Under the design the page
+renders SILENCE**, and so does a constructed reduction of it.
+
+| case | shipped | design |
+|---|---|---|
+| `The molten salt congress will be held in Lyon, France.` | `Lyon` | **`Lyon`** |
+| `Join us at the Palais des Congres in Lyon for three days.` | `Lyon` | **`Lyon`** |
+| `OCTOBER 12-15, 2027 Huntington Place Detroit, MI` | `Detroit` | **`Detroit`** |
+| `The 2026 NPA Annual Conference will be held Oct. 11-14 in Denver, CO.` | `Denver` | **`Denver`** — the abbreviation-period case |
+| `SSI24 will convene in Kyoto for five days of talks.` | `Kyoto` | **`Kyoto`** |
+| `The congress will be held in Lyon. A partner event will be held in Tokyo.` | `Lyon` | **`Lyon`** — first reading kept, not silenced |
+| `Based in Durham, N.C., FlexGen is a leader.` | `Durham` | **silence** |
+| `Sponsor profile: Acme is headquartered in Boston…` | `Boston` | **silence** |
+| `Prof. Ada Lee, Illinois Institute of Technology, Chicago, IL, 60616, USA.` | `Chicago` | **silence** |
+| `…Plenary Lecture at the United Nations Meetings in Geneva in February 2022.` | `Geneva` | **silence** |
+| `Our Conferences 7th Oslo Battery Days Conference, Oslo, Norway` | *(none)* | **silence** |
+| `Austin … Berlin Boston, MA Brussels Budapest` (a careers office list) | `Boston` | **silence** |
+| the `nanoge.org` affiliation run, reduced | `Chicago` | **silence** |
+| `…ONE DAY ONLY on Friday, March 24, 2017 at the Los Angeles Convention Center.` | `Los Angeles` | **silence** — the one honest cost, stated above |
+
+**THE BOUNDARY CONDITIONS, STATED AS WHAT THE CLAUSES MUST NOT MATCH** (round 22
+C found four literal-reading traps in B's last guide; these exist so it finds
+fewer):
+
+1. **`N_pastyear` is scoped to ONE CLAUSE — and B tested the wider scope rather
+   than asserting it.** Widened to the whole 320-character window it changes
+   **ZERO rows on this corpus.** **B had written that it would silence
+   `thebatteryshow.com` and that was WRONG; the measurement is reported instead
+   of the prediction.** The narrow scope is kept on principle — a copyright year
+   or a past-edition link sitting near a correct current venue would trip the
+   wider form — but **this corpus does not contain that shape, so the narrowing
+   is UNPROVED here and C should not treat it as measured.**
+2. **`N_otherevent` must be anchored at the START of the text following the
+   city. MEASURED: unanchored, it breaks 10 of 41 rows** — `thebatteryshow.com`,
+   `thebatteryshow.eu`, `ibatterysummit.com`, `openlivinglabdays.com`,
+   `techinsights.com`, `annexushealth.com`, `naco.org`, `ilaglobalconference.org`
+   all go silent, and **`battery-power.eu` MOVES from the correct `Aachen` to
+   `Karlsruhe`** while `2026.cgo.org` moves from `Sydney` to `Salt Lake City`.
+3. **`P_name` must exclude generic event words.** Without the stop-list,
+   `conference` and `summit` match everywhere and the clause admits everything —
+   it becomes a no-op that hides the other clauses' failures. **And it must
+   require ≥ 4 characters**: `NPA` and `SSI` as tokens would match inside
+   ordinary words.
+4. **`P_venue` must not contain `university`, `institute`, `college`, `school`,
+   `department` or `laboratory`.** Those are exactly the affiliation shape;
+   including them was what killed draft 3 and left `nanoge.org` contaminated.
+5. **The negatives must be evaluated AFTER the positives and must VETO.
+   MEASURED: let a positive rescue a mention a negative rejected and SIX rows
+   come back wrong** — `flogen.org` `Geneva`, `sdle.co.il` `Oslo`,
+   `storageusa` `Durham`, `abilities.com` `Los Angeles`, `cns1…` `Washington`,
+   `iupac.org` `Victoria`. **Three of the four contaminations re-open.** This is
+   the single easiest clause to mis-read as `pos || !neg`.
+6. **The guard belongs in `findVenueCity`'s acceptance loop, not in
+   `extractBodyTextPlace`'s caller.** Placed at the caller it cannot see which
+   mention won, so it can only discard the whole answer, and the "first
+   admissible mention" behaviour that keeps `Lyon` in the two-rival-statement
+   case is lost.
+
+---
+
+## PART 5 — **TESTS AT RISK, GREPPED NOT REMEMBERED**
+
+`grep -rn "extractBodyTextPlace|extractPlaceFromText|extractOpportunityPageDetails"
+--include=*.test.ts` returns **exactly two files**:
+
+- **`web/src/lib/opportunities/structured-extract.test.ts` — 41 references, of
+  which 22 are direct `extractBodyTextPlace`/`extractPlaceFromText` calls.**
+  These are the ones that will move: they assert a place from **short constructed
+  fixtures** (`"<body>The conference will be hosted in Aurora, Canada.</body>"`,
+  `:480`; `:267`, `:288-296`, `:389-403`, `:427-435`, `:452-497`). **On a
+  fixture that short there is no date, no repeated event name and often no venue
+  word, so the design silences most of them.** They are asserting the OLD
+  contract and must be restated, not deleted.
+- **`web/src/lib/opportunities/enrich.test.ts` — 1 reference**, plus **17 `place`
+  references** overall on the enrichment path.
+
+**And four more that B would have missed without grepping the CONSUMERS rather
+than the extractor:**
+
+- **`web/src/lib/opportunities/place-flow.test.ts`** — 2 tests, and the first is
+  literally *"keeps Chicago and online status for a hybrid event through
+  mapping"*. **Its input is `ccfddl`'s structured `place` string, not page HTML.**
+- **`web/src/lib/events/sources/ccfddl.test.ts` DOES NOT EXIST** — and that is
+  the risk, not a relief: **`ccfddl.ts:147` calls `extractPlaceFromText(place)`
+  on a SHORT STRUCTURED FIELD (`"Chicago, IL + Virtual"`).** No positive clause
+  fires on it. **If the guard is placed inside `findVenueCity`, ccfddl's
+  structured place goes silent and only `place-flow.test.ts` will catch it.**
+  **THE GUARD MUST BE SCOPED TO THE WHOLE-PAGE SCAN AND MUST NOT APPLY TO
+  `extractPlaceFromText`'s short structured input.** This is the single largest
+  blast-radius fact in this entry.
+- **`web/src/lib/opportunities/facets.test.ts`** (12 `place` references) and
+  **`web/src/lib/events/card.test.ts`** (6) — both render place into a facet
+  button or a tile.
+- **`web/src/lib/events/scoring.test.ts`** (7) — location preference scoring
+  reads `place`, so silencing a place can change ORDER, not only a tile.
+- **`web/src/lib/opportunities/enrich.test.ts` holds the SolarPACES lock (53 of
+  53). Run it solo after this item, as round 22 C did.**
+
+**Blast radius:** `place` reaches the event card's location line, plate 03's
+tiles, the facet counts (`countOpportunityFacets`), location-preference scoring,
+and the job surface through the same `extractOpportunityPageDetails` call
+(`enrich.ts:421`). **It does not touch dedup, the required-topic gate, any host
+list, or any standing ruling's own instrument.**
+
+---
+
+## **B's RECOMMENDATION, AND IT IS NOT OPTIMISM**
+
+**The matrix is as clean as the date half's and cleaner on one axis: 33 of 41
+unchanged (80.5%) against the date half's 44 of 50 (88.0%), but ZERO moved
+against the date half's 2, ZERO invented against its 0, and every one of the 8
+losses is a value that was wrong, meaningless, or attached to a row nine years
+stale.** The date half's own matrix lost 4 and moved 2; this one loses 8 and
+moves 0. **B recommends the manager approve implementation of the five
+load-bearing clauses plus `P_venue`, and explicitly NOT `P_label`, `P_verb` or
+`N_affil`.**
+
+**One thing B will not dress up:** the corpus is **41 pages from ONE pull**, not
+five. A's five-pull discipline is A's instrument and B did not have the budget to
+repeat it here; the value variance A itself measured on this column
+(`nanoge.org`, 2 of 5) means **a second pull could move a row or two.** The four
+contaminations are stable — three of them A measured 5 of 5 — but the 33/8/0/0
+split is a one-pull number and is labelled as one.
+
+---
