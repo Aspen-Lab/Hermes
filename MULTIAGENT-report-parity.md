@@ -50259,3 +50259,126 @@ Consulted as a sixth disjunct beside `endsWithTitleEcho`, so it **rejects a cand
 **A LIMITATION B RECORDS RATHER THAN HIDES.** When the truncated fragment is rejected, `bestCombination` does **not** promote a complete sentence in its place in the second probe case — because the preceding complete sentence fails `scoreSentences`'s existing **positive-content floor** (B8-05), not because of this change. **The floor is untouched by this item and B does not propose widening it here.** The consequence is that the fallback renders rather than a different real sentence, and B says so rather than implying a better summary appears.
 
 **B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
+
+---
+
+### Round 21 — Agent B (item 5 of 5: **RULING 57b's MANDATORY DESIGN — the full-phrase company-name collision guard. FIVE CONJUNCTS, EVERY ONE PROVED LOAD-BEARING BY MUTATION; 17 of 17 adversarial; ONE row fires out of 13 live pool rows and 49 admitted offered rows — the same row 52b has counted three rounds running.**)
+
+**STATUS: DONE.** Fifth of five. **B changed no code, deleted no test, edited no test. B designs; C implements.**
+
+---
+
+## THE MECHANISM — WHY THE ROW IS ADMITTED, READ OFF THE LIVE ITEM
+
+Captured from **B's own live pulls, 2 of 2, byte-identical both times:**
+
+| field | value |
+|---|---|
+| `title` | `2027 Summer Investment Internship` |
+| `company` | **`Battery Ventures`** |
+| `description` | *"Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies. …"* |
+| `matchedKeywords` | **`["battery"]`** — one topic, and it is the collision |
+| `tags` | `["web job listing", "employbl.com"]` |
+
+**THE GATE OPENS ON THE FIRM'S OWN SELF-DESCRIPTION, NOT ON THE COMPANY FIELD — and that matters, because it kills the obvious fix.** `scoreJobs` builds the facade with `text: "${company}\n${description}"` and `summary: "${title} ${description.slice(0,300)}"`. `scoreKeyword(..., {scope:"titleAndSummary"})` reads **title + gateText + tags** — **the company field is NOT in the gate scope at all.** Somebody already decided an employer's name must not open the gate. **It leaks in because the ADVERT REPEATS THE NAME AS PROSE**: `battery` matches inside the description slice, `requiredScoped.matched = ["battery"]`, `isGenericTerm("battery")` is false, and `passesRequiredGate`'s first branch returns true on that single specific scoped match.
+
+**So "keep the company name out of the haystack" is already done and is not the fix.** Recorded so nobody proposes it.
+
+---
+
+## THE DESIGN — `isOwnerNameTopicCollision(item, requiredTopics)`
+
+Consulted in **both** scorers at the required gate, immediately after `passesRequiredGate`, as a `continue` in the same loop `isExpiredPosting` already uses. **FIVE conjuncts. Every one closed. All five must hold.**
+
+| # | conjunct | closed because |
+|---|---|---|
+| **2** | a required topic is a **proper sub-span** of the owner's own name — present as a whole-word span **and** the owner name has strictly more word tokens than the topic | reuses the shipped `canonicalize` / `expandTerm` word-boundary machinery; no new vocabulary |
+| **3** | **no OTHER required topic** matches the item's title + description | set arithmetic over the profile's own topic list |
+| **4** | the collision topic **does not appear in the item's TITLE** | same matcher, narrower field |
+| **5** | the collision topic appears **exactly once** in title + description | a count, not a grammar |
+| **6** | the owner's name **ends in an investment-vehicle word** — `ventures, capital, partners, holdings, equity, fund(s), investments, advisors/advisers, asset management` | a finite naming convention for investment vehicles, the same kind of closed list `SEASON_COHORT_LABEL_RE` and `NAV_CHROME_SEGMENT_RE` already ship |
+
+**THE COLLISION TOPIC IS CHOSEN BY THE OWNER NAME, NEVER BY LIST ORDER — and B got this wrong first.** B's first draft took `matched[0]`, which made the verdict depend on **where the topic sits in the user's own profile list** rather than on any property of the item. With `battery` last in this profile's list, every corroborating topic sorted ahead of it and silently rescued rows for the wrong reason. **Rewritten to select the topic that is actually inside the owner's name.** The superseded verdicts are used nowhere.
+
+**CONJUNCT 6 IS THE HEART OF IT, AND IT IS WHAT MAKES THE MUST-KEEP CLASS SURVIVE BY CONSTRUCTION.** Ruling 57b's hard requirement is that *real, on-topic employers whose names legitimately contain a topic word must survive*. A name ending in `Ventures` / `Capital` / `Partners` **asserts a financial line of business**, so the topic word in it is a brand. A name ending in `Global` / `Solutions` / `Resourcers` / `Technologies` **asserts an operating business**, so the topic word may genuinely describe what the firm does — **and those are admitted, unconditionally, as the status quo.** **The distinguishing signal is the owner's line of business, NOT the topic word**, exactly as 57b required.
+
+**NOT A HOST LIST AND NOT A DENYLIST OF ONE FIRM.** `Battery Ventures`, `employbl.com` and `battery.com` appear nowhere in it. It is asserted on two constructed siblings on unrelated topics — **`Molten Salt Capital` and `Ion Exchange Partners` both fire** — which is Ruling 32's headline requirement.
+
+### Both surfaces
+
+- **Jobs:** `ownerName` = `item.company`, `title` = `item.title`, `description` = `item.description`.
+- **Events:** `ownerName` = the first entry of `item.organisations`, `title` = `item.name`, `description` = `item.description`. The event scorer reads `item` directly at the gate today (`isExpiredPosting`'s neighbour on the jobs side; the date checks on the events side), so **no facade change is needed on either surface.**
+
+---
+
+## THE ADVERSARIAL TABLE — **17 of 17**, hardest shapes first
+
+| shape | owner | title | want | verdict — and WHICH conjunct decides it |
+|---|---|---|---|---|
+| **the measured admission**, live 2 of 2 | `Battery Ventures` | `2027 Summer Investment Internship` | **FIRE** | **all five hold** |
+| **HARDEST must-keep: on-topic operating company, topic mentioned ONCE** | `Ion Exchange Global` | `Process Chemist` | KEEP | **c6** — tail is not an investment vehicle |
+| operating company with a topic name, single mention | `Molten Salt Solutions` | `Maintenance Technician` | KEEP | **c6** |
+| on-topic employer, topic in the ROLE TITLE | `Battery Resourcers` | `Battery Materials Process Engineer` | KEEP | c4 |
+| on-topic employer, topic repeated in the body | `Battery Resourcers` | `Process Engineer, Cathode Recycling` | KEEP | c5 |
+| **finance firm but the ROLE is genuinely on topic** | `Battery Ventures` | `Battery Technology Analyst` | KEEP | **c4** |
+| **finance firm, topic twice in the body only** | `Battery Ventures` | `Technical Associate` | KEEP | **c5** |
+| **finance firm, a SECOND required topic corroborates** | `Battery Ventures` | `Investment Associate` | KEEP | **c3** |
+| two required topics matched | `Battery Ventures` | `Investment Internship` | KEEP | c3 |
+| owner name has NO topic, the body does | `Sequoia Capital` | `Research Associate` | KEEP | **c2** |
+| owner name **IS** the topic, nothing more | `Molten Salt` | `Research Chemist` | KEEP | c2 |
+| **no owner name at all** (the honest-silence rows) | — | `Molten Salt Systems Engineer/Scientist` | KEEP | c2 |
+| sibling collision on another topic | `Molten Salt Capital` | `Summer Analyst Programme` | **FIRE** | all five |
+| sibling collision on another topic | `Ion Exchange Partners` | `Operations Associate` | **FIRE** | all five |
+
+---
+
+## THE LIVE MEASUREMENT
+
+| corpus | rows | fires |
+|---|---|---|
+| **live job POOL rows** (2 pulls, deduplicated) | **13** | **1** — the measured admission, and nothing else |
+| **live OFFERED rows that Peer admits** | **49** | **1** — the same row |
+| adversarial table | 17 | 3 fire, 14 keep, **17/17 correct** |
+
+**Not one real row other than the target is touched, on either corpus.**
+
+---
+
+## VACUITY — **MUTATION RUN ON EVERY CONJUNCT, AND B REPORTS THE ONE THAT FAILED**
+
+Each conjunct switched off in turn against the 17-row table (Ruling 53b):
+
+| dropped | score | what breaks |
+|---|---|---|
+| none (control) | 17/17 | — |
+| **conjunct 1** *(“the item names an owner”)* | **17/17** | **NOTHING — IT IS VACUOUS** |
+| conjunct 2 | 16/17 | `Sequoia Capital` wrongly fires |
+| conjunct 3 | 15/17 | both corroborated-by-a-second-topic must-keeps wrongly fire |
+| conjunct 4 | 16/17 | `Battery Technology Analyst` wrongly fires |
+| conjunct 5 | 15/17 | both topic-repeated must-keeps wrongly fire |
+| conjunct 6 | 15/17 | **both on-topic operating companies wrongly fire** |
+
+**B's FIRST DRAFT HAD SIX CONJUNCTS AND FOUR OF THEM WERE VACUOUS.** Mutation found it, not inspection. Three were fixed by adding cases that only that conjunct protects (`MK-c2/c3/c4/c5 SHARP`, written specifically to break the guard).
+
+**THE SIXTH IS GENUINELY REDUNDANT AND B RECOMMENDS DELETING IT RATHER THAN DRESSING IT UP.** Conjunct 1 asked "does the item name an owner". It can never be the deciding check, because **conjunct 2 requires a topic to be a sub-span of the owner name and an empty name has no sub-spans** — so c1 is structurally subsumed. **C ships FIVE conjuncts, not six.** A guard clause no test can turn red is exactly what Ruling 53b exists to catch, and B is not going to leave one in the design it just wrote.
+
+---
+
+## WHAT RENDERS ON REJECTION
+
+**The item leaves the pool.** The check sits at the required gate, before scoring, before mapping and before any card view model exists — so there is **no card, no employer line, no summary and no facet count** derived from it. It is the same statement `passesRequiredGate` and `isExpiredPosting` already make, and it needs no new render path. **A reader simply never sees a private-equity internship in a battery researcher's job report.**
+
+**AND THE POOL DOES NOT SHRINK BY ONE IN PRACTICE.** `buildJobPool` selects a top-N from a larger scored set; removing one row promotes the next. B measured 13 unique pool rows across two pulls with one firing, so **the reader loses a wrong card and gains a real one.**
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Misses fall to ADMISSION — the status quo — exactly as Ruling 57b requires, and every conjunct fails that way.** An investment vehicle named outside the closed tail list survives (`Battery Group`, `Battery Advisors LLC` with the suffix after the tail word). An advert that mentions its own name twice survives. A collision where the profile happens to carry a second matching topic survives.
+- **There is no path by which this guard drops a posting whose role content carries the topic** — c4 and c5 both stop it, and both are asserted.
+- **The three DROPPED 52b instances A recorded are unaffected:** `jobs.battery.com` (×2) and `ziprecruiter.com` already drop on `LISTING_SECTION_TITLE_RE` and the aggregator branch, before this gate is reached. **This guard adds nothing to them and takes nothing away.**
+
+## TWO THINGS B RECORDS AGAINST ITS OWN CASE
+
+1. **THE EVENT SURFACE SHIPS WITH NO LIVE WITNESS, AND B WILL NOT PRETEND OTHERWISE.** A's event-side 52b count this round is **1 instance, 0 admitted** (`ionexchangeglobal.com` → `Careers`, dropped). **B ran no event pull this round**, so the event-side wiring is **designed and unwitnessed**. Ruling 55c's standard says constructed evidence does not discharge a debt, and B applies that standard to itself: **grade it `designed, organically unwitnessed on the event surface`, and let the next A look for it.** It ships on both surfaces because Ruling 57b requires both — not because B measured both.
+2. **THIS DOES NOT DECIDE THE OPEN `POLICY` ON RULING 33, AND B DOES NOT TOUCH IT.** 33 is the **short-acronym** class (`LCO` vs `lco-cdo.org`) and it stays exactly where it is — **an accepted cost, not widened, not narrowed**. This guard requires the topic to be a *proper sub-span of a longer owner name* plus four more conjuncts, so it cannot reach a bare three-character acronym. **A's four deliberately-uncounted rows (`iongroup.com`, `ionis.com`, `ertel-ionstream.com`, `naukri.com`) are outside it too, and B checked each by name rather than assuming.**
+
+**B RAISES NO NEW `POLICY — manager decides` AND DECIDES NONE OF THE THREE OPEN ONES.**
