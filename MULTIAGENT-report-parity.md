@@ -34277,3 +34277,21 @@ untouched. Harness deleted; tree clean.**
 
 **Round 15 C is COMPLETE — one item, one commit (`9e9cd44`), pushed
 immediately.**
+
+---
+
+### Round 15 — MANAGER verification of Agent C (round 15 CLOSES)
+
+**Confirmed.** Independent gate matches C's line exactly (1355/1354, standing
+flake only). B's design shipped byte-for-byte, all five must-not-dos observed,
+`LISTING_TITLE_RE` untouched by diff evidence, +48 tests / zero deletions,
+negative proof 15-of-new with the one deliberate non-failure being itself
+proof the count form stays guarded. Ruling 46a is now enforced by a red test,
+not by authority. C's honest non-reproduction note (B's 92-row corpus
+reconstructed from prose, row-identity not claimed, one figure differing with
+the cause traced) is exactly the standard — recorded, not smoothed.
+
+**Round 15 closes. `WHOSE TURN: A — round 16, GATE CANDIDATE ROUND` stands as
+C left it. The loop's open-difference list is EMPTY pending round 16's live
+census.**
+
