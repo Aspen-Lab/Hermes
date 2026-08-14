@@ -25173,3 +25173,142 @@ cases in `jobweb.test.ts`.
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-08: the employer value is UNSTABLE across pulls — traced to the search provider's own title, plus a correction to B12-07's blast-radius list)
+
+**STATUS: DONE.** A's item 9, and the manager's verification named it a
+methodology finding, not just a defect: "B traces the mechanism first; whether
+A's census method changes is a manager call AFTER the cause is known." That is
+exactly the scope I have kept to — **I have not redesigned A's census method and
+I am not recommending a change to it.** Throwaway harness outside `src/`, deleted
+before this commit. No product code touched.
+
+---
+
+**0. CORRECTION TO B12-07, RECORDED HERE BECAUSE §4 IS APPEND-ONLY.**
+
+B12-07's "tests at risk" list is **incomplete and I found it out after
+committing.** Grepping properly for every test file that exercises
+`looksLikeHostBrand`:
+
+```
+web/src/lib/opportunities/shared.test.ts          <-- exists (B12-07 hedged "if present"; it does)
+web/src/lib/opportunities/employer-identity.test.ts  <-- MISSED
+web/src/lib/jobs/scoring.test.ts                  <-- named, and it is the twice-missed file
+web/src/lib/jobs/sources/jobweb.test.ts
+web/src/lib/events/sources/eventweb.test.ts
+```
+
+And there is a **second production consumer B12-07 did not name**:
+`web/src/lib/opportunities/employer-identity.ts` imports `looksLikeHostBrand`
+directly and uses it inside `resolveEmployerIdentity`, which is called from
+`web/src/lib/jobs/sources/himalayas.ts:5` and `web/src/lib/opportunities/enrich.ts:10`
+— i.e. B8-04's structured/declared employer tiers. **C must treat B12-07 as
+touching three consumers, not two**, and must run all five test files above. The
+design itself is unchanged; only its blast-radius statement was wrong.
+
+---
+
+**1. THE MECHANISM — where the variance enters. It is NOT Peer's processing.**
+
+Reproduced by execution on the exact shape A recorded, same URL both times:
+
+```
+title "Postdoctoral Research Associate at Savannah River National Laboratory"
+   -> company = "Savannah River National Laboratory"
+title "Postdoctoral Research Associate - Talents by Vaia"
+   -> company = "Talents by Vaia"
+same url = true      same item id = true      same input twice = same output
+```
+
+and the `terra.do` direction, same posting:
+
+```
+title "Postdoctoral Researcher at Idaho National Laboratory"  -> "Idaho National Laboratory"
+title "Postdoctoral Researcher"                               -> undefined
+```
+
+**Both of A's observed directions reproduce from the title alone.** Peer's own
+processing is deterministic — the same title in gives the same employer out,
+verified — and `webResultToRawJobItem` derives the employer from **the provider's
+title string and nothing else** (`jobweb.ts:314-330`). The URL is used for the
+host, the id, and the path guards; it is **never read for the employer**, even
+here, where the URL path literally contains
+`/companies/savannah-river-national-laboratory/`.
+
+**So the variance enters upstream, in the search API's own result payload.** The
+provider returns a different `title` for the same URL on different calls
+(sometimes the page `<title>`, sometimes its `og:title`, sometimes a
+reconstruction), and Peer faithfully turns each into a different employer. This
+is the same upstream behaviour B12-05 confirmed independently on the event side,
+where the provider hands over `og:title` rather than `<title>` — **one upstream
+property, showing up as two separate symptoms on two different fields.**
+
+**2. AN AMPLIFIER A COULD NOT SEE FROM THE RENDER — the employer feeds the dedup
+key.**
+
+`jobDedupKey` (`web/src/lib/jobs/dedup.ts:24-27`) is
+`normalized(title) :: normalized(company)`. By execution on the two variants of
+the *same posting*:
+
+```
+"associate national postdoctoral research river savannah::national river savannah"
+"associate postdoctoral research::talents vaia"
+```
+
+**Completely different keys.** So an unstable title does not only change the
+employer shown — it changes whether this record collapses with its duplicate at
+all. A's part 2 recorded a `linkedin.com` duplicate of this exact posting sitting
+in the same pool; **which of the two survives dedup can flip between pulls for
+the same reason the employer does.** That is a second reader-facing consequence,
+and it is invisible from a single render.
+
+**3. WHAT THIS MEANS FOR THE READER, AND WHAT IT DOES NOT.**
+
+- Reader-facing: yes. A reader can open the same job on two days and see two
+  different employers, or the same job attributed to two different sources. A's
+  framing is confirmed, not just a measurement artefact.
+- **Not a bug in any guard.** Every value observed is what the shipped code
+  correctly derives from the input it was given. There is no rejection path to
+  fix here — which is why this entry ends in options rather than a design.
+
+**4. OPTIONS — `POLICY — manager decides`. Stated as options because choosing
+between them is not B's call.**
+
+1. **Do nothing. Accept upstream variance as a property of the source.** Cheapest
+   and honest; the field is already allowed to be silent. Cost: the employer stays
+   a coin-flip on hosts whose provider title varies, and every single-pull census
+   number keeps carrying the caveat A raised.
+2. **Read the employer from the URL when the URL states it and the title does
+   not.** The evidence is right there: `/companies/<slug>/` is a common,
+   structurally closed board convention, and A used exactly this slug as ground
+   truth. This would make `talents.vaia.com` render the *correct* employer rather
+   than merely falling silent after B12-07. **Risk, named honestly:** it is a new
+   extraction source, not a guard, and this loop's history (round 6's broken parse,
+   Ruling 34a's warning) says a new undesigned extractor landed in one turn is how
+   regressions ship. If the manager wants it, it should be its own designed and
+   adversarially-tested item in a future round, not bolted onto B12-07.
+3. **Prefer the title variant that yields an employer, by caching per URL.** I
+   raise it only to reject it: it would make Peer's output depend on pull history,
+   which is harder to reason about than the variance it fixes, and the pool cache
+   already exists for a different purpose.
+
+**My recommendation, since one is asked for: option 1 now, option 2 as a
+candidate for a future round's B if a later census shows the employer field is
+still the weakest of the three.** B12-07 already converts this host's wrong value
+into honest silence, which is the part that is safe to do now.
+
+**5. ON A's CENSUS METHOD — explicitly NOT redesigned, as instructed.** The facts
+the manager needs to make that call: the variance is upstream and per-pull; it
+affects the employer value AND the dedup key; A's five-independent-process method
+is what surfaced it and a single-pull census cannot see it; and A's own
+disclosure (majority value scored, minority value always stated) is already the
+right shape for reporting it. No change proposed.
+
+**6. TESTS AT RISK.** None — this entry proposes no code change. The correction
+in section 0 applies to B12-07's item, not to this one.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
