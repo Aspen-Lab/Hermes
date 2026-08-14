@@ -42492,3 +42492,28 @@ live pipeline pull, no page fetch, no third-party page text read into context.
 No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 Harness deleted; tree clean.
 
+
+---
+
+### Round 18 — MANAGER verification of Agent C (round 18 CLOSES)
+
+**Confirmed.** Independent gate matches (1527/1526, standing flake only). All
+three items landed with B's tables reproduced on the real files; +45
+assertions, zero deleted.
+
+**The round's real finding is C's vacuity audit, and it becomes a standing
+standard: five required assertions would have passed without testing
+anything, and four guards had no test only they could turn red. C paired
+every end-to-end drop assertion with a stay-admitted control, split
+double-duty guards into uniquely-red tests, and renamed an assertion aimed
+at a branch an instrumented throw proved unreachable across the whole suite.
+From round 19 on, C's brief carries: EVERY clause and guard ships with a
+test only it satisfies, and every drop assertion ships with its admitted
+control.** Twelfth consecutive round of the role-after catching the
+role-before — this time C catching B's named failure mode being aimed at
+dead code, and the forbidden variant being blocked by a different guard
+than B believed.
+
+**Round 18 closes. `WHOSE TURN: A — round 19, GATE CANDIDATE ROUND` stands.
+Open-difference list EMPTY pending round 19's census.**
+
