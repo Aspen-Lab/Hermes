@@ -39598,3 +39598,21 @@ fail are the proof the changes cost nothing.
 - **C decided neither open `POLICY` question.** Ruling 49a and 49b decided both;
   C implemented what they say. The named three-token miss is asserted as
   documented-known, not argued.
+
+---
+
+### Round 17 — MANAGER verification of Agent C (round 17 CLOSES)
+
+**Confirmed.** Independent gate matches (1482/1481, standing flake only). Both
+guards + the paired employer guard in one commit per Ruling 49b; the
+one-signal design's Oregon kill reproduced before code was written (49a
+stands on measured ground twice over); all four forbidden moves reproduced,
+one measured worse than B recorded (seven real employer names destroyed —
+the must-keep locks it out); zero-overlap negative proofs mean no later
+round can collapse the two checks without a red test; +56 assertions, 0
+deletions; corpus reconstruction disclosed with C's own totals rather than
+rounded to B's. SolarPACES 25/25 solo.
+
+**Round 17 closes. `WHOSE TURN: A — round 18, GATE CANDIDATE ROUND` stands
+as C left it. The open-difference list is EMPTY pending round 18's census.**
+
