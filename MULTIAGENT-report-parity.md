@@ -24889,3 +24889,141 @@ confirmed.
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-06: `openmc.discourse.group` renders `Page 2` — the employer slot has no concept of site navigation chrome, which the event side has had since round 5)
+
+**STATUS: DONE.** A's item 1, ranked worst single value of the round. Reproduced
+by execution. Throwaway harness outside `src/`, deleted before this commit. No
+product code touched.
+
+---
+
+**1. THE TRACE.**
+
+`webResultToRawJobItem` (`jobs/sources/jobweb.ts:243-342`) builds the employer
+from exactly two places, both inside the **provider's title string**: the
+`at <Employer>` capture (`:314-316`) and the title split
+`parts.slice(1)` (`:318`). The candidate list is then filtered by `.find()`
+against six rejection tests and **the first survivor wins** (`:320-329`).
+
+`"Page 2"` is checked against all six:
+
+```
+KNOWN_JOB_BOARD_DOMAINS.includes  -> no
+SEASON_COHORT_LABEL_RE            -> no   (spring/summer/…/class of/cohort/bare year)
+looksLikeBareLocation             -> no
+looksLikeHostBrand(…, "openmc.discourse.group") -> no ("page2" is no label's prefix)
+looksLikeTopicLabel               -> no
+looksLikeHostBoilerplatePhrase    -> no   (posted on / posted by / listing on / see more jobs at)
+```
+
+Six rejections, none applicable, so it survives and — being the first
+post-role segment — wins. Reproduced end to end on all three plausible Discourse
+title shapes for a paginated thread; every one returns `company === "Page 2"`:
+
+```
+"Job vacancies looking for OpenMC skills - Page 2 - Users - OpenMC Discourse"  -> "Page 2"
+"Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse"          -> "Page 2"
+"Job vacancies looking for OpenMC skills | Page 2 | OpenMC"                    -> "Page 2"
+```
+
+*(A's log records the URL's `?page=2` and the value but not the provider's exact
+title; the reconstruction is stated as a reconstruction, and it reproduces the
+observed value byte-for-byte on every shape tested, which is as close to
+confirmation as this item can get without a fetch it does not need.)*
+
+**2. ONE GAP OR SEVERAL — one gap, and naming it correctly matters.**
+
+This is **not** "a missing pagination rule". The event side has had a whole
+family of chrome checks since round 5 — `isGenericPageTitle`,
+`isAllGenericWords`, `isEventIndexPage`, the filename and markup regexes, the
+bare-date and bare-location checks — whose shared job is "this segment is site
+furniture, not a name". `GENERIC_TITLE_WORD_RE` on the event side even lists
+`page` explicitly. **The employer slot has no member of that family at all.** Its
+six tests are all "is this a specific known-bad *kind of name*", not "is this
+navigation".
+
+That is why Ruling 32's shape shows up here in its plainest form: the slot is
+filled by whatever survives, and nothing was ever asked to recognise furniture.
+
+**3. FIX DESIGN — adversarially tested.**
+
+Add the missing family member: a whole-segment navigation-chrome check, in the
+same style as this file's own `SEASON_COHORT_LABEL_RE` (anchored, closed,
+narrow).
+
+```
+NAV_CHROME_SEGMENT_RE =
+  /^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back)$/i
+```
+
+**This is a genuinely closed class** — the vocabulary of pagination and
+navigation controls is finite and does not grow the way a verb list does. It is
+not Ruling 37's trap.
+
+**Adversarial results:**
+
+```
+REJECT  "Page 2"          REJECT  "Page 12 of 40"    REJECT  "3 of 10"
+REJECT  "Next"            REJECT  "Home"
+keep    "Home Depot"                    keep  "Page Industries"
+keep    "First Solar"                   keep  "Next Energy Technologies"
+keep    "Idaho National Laboratory"     keep  "Tesla"        keep  "trawa"
+keep    "Battery Ventures"              keep  "Las Cumbres Observatory"
+keep    "Savannah River National Laboratory"
+```
+
+The four hardest must-survive cases are real companies whose names **begin with**
+one of the rejected words. The `^…$` whole-segment anchor is what saves them, and
+it is the same anchor `SEASON_COHORT_LABEL_RE` and `CAREERS_INDEX_TITLE_RE`
+already use in this file. Verified, not assumed.
+
+**4. WHAT RENDERS WHEN EVERY CANDIDATE IS REJECTED — Ruling 32, answered from
+the render side.**
+
+`.find()` returns `undefined`, `company` is `undefined`, and the UI **omits the
+line entirely** — `job-card.tsx:87` and `feed-tile.tsx:535` both guard with
+`job.companyOrLab && …`. There is no placeholder string and nothing rejected is
+reinserted. For this posting the reader would see the role and the source with no
+employer line, instead of being told the employer is `Page 2`. On Ruling 23/26's
+standard that is the correct direction, and it matches this field's own existing
+behaviour — A's part 2 census already has six null employers rendering exactly
+this way.
+
+**5. A SECOND, INDEPENDENT OBSERVATION — recorded as a lead, deliberately NOT
+folded into this fix.**
+
+The deeper question is whether this result should be a job card at all: it is a
+**forum thread listing several vacancies**, which is what `isListingPage`
+(`jobweb.ts:213-227`) exists to drop — "you cannot apply to '60 Molten Salt
+Jobs'". `LISTING_TITLE_RE` does not match this title (checked: none of its four
+alternatives fire), and `LISTING_URL_RE` is only consulted on
+`AGGREGATOR_HOSTS`, which a Discourse forum is not.
+
+I am **not** recommending a fix there this round. Every rule I could write for
+"this title is a thread listing vacancies rather than one posting" either
+enumerates phrasings (open class — Ruling 37's trap) or drops real postings whose
+titles legitimately say "vacancies". `POLICY — manager decides` if it is worth a
+future round: one narrow, genuinely closed option exists — **a `page=N` query
+parameter with N ≥ 2 is never a single posting** — but it only catches page-2
+links, not the underlying "a forum thread is not a posting" problem, so it is a
+partial measure and I flag it rather than propose it.
+
+**6. TESTS AT RISK.**
+
+- `webResultToRawJobItem` is exported; grepped for callers — `jobweb.ts`'s own
+  two search functions and `web/src/lib/jobs/sources/jobweb.test.ts`.
+- The new regex is module-private and additive; no shared function changes, so
+  the **event side cannot be affected**.
+- C must run `web/src/lib/jobs/sources/jobweb.test.ts`,
+  `web/src/lib/jobs/mapper.test.ts`, and — because it has been the missed second
+  file twice in this loop — **`web/src/lib/jobs/scoring.test.ts`**. Full gate:
+  `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+Files C will touch: `web/src/lib/jobs/sources/jobweb.ts` and
+`web/src/lib/jobs/sources/jobweb.test.ts`.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
