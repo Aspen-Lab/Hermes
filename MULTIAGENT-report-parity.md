@@ -31801,3 +31801,148 @@ scoped to `web/` is clean of it by construction.
 Commit follows immediately.
 
 ---
+
+### Round 14 — Agent C (B14-02: the display-stage bracket strip LANDED — B's 10/10 table as tests, the order negative-proven in BOTH directions, the rejected upstream widening locked out by a must-keep, and ONE MEASURED CORRECTION to B's table)
+
+**STATUS: DONE.** Second of round 14 C's two items. Same session, same lock
+(`daf1d64`). Branch re-read in the push output.
+
+---
+
+#### WHAT LANDED — B's DESIGN, VERBATIM
+
+`web/src/lib/jobs/summarize.ts`: `LEADING_BRACKET_REMNANT_RE` (`/^\s*\]+\s*/`)
+and `stripLeadingBracketRemnant`, placed beside `stripLeadingLabel`, and the
+display line in `scoreSentences`'s return becomes
+
+```
+text: stripLeadingLabel(stripLeadingBracketRemnant(text)),
+```
+
+**Bracket first, then label, exactly as B measured.** Scoring is untouched:
+every check in `scoreSentences` still runs against the original, unstripped
+`text`, so `hasUnbalancedBracket`'s `[`-vs-`]` count — and therefore
+`sectionScore` — cannot move. That was B's second reason for placing it here
+rather than upstream, and it is preserved rather than merely quoted.
+
+**THE UPSTREAM WIDENING WAS NOT LANDED IN ANY FORM**, per §1 and B's own
+measurement. It is now locked out by a test rather than only by a comment: see
+the must-keep below.
+
+---
+
+#### THE ONE PLACE I DEPART FROM B's GUIDE — MEASURED, DISCLOSED, AND NOT WIDENED
+
+**B's adversarial table row 2 predicted that `"] What you'll do: Support…"`
+would render as `"Support…"` — that bracket-first makes B10-07 fix 2 reach this
+string. IT DOES NOT, and I found it because the test failed rather than by
+reading ahead.**
+
+The reason is in `LEADING_LABEL_RE`, **not in B14-02**: that rule is
+`/^[A-Z][a-zA-Z]*(?:[\s-][A-Za-z]+){0,2}:\s*/`, so `What you'll do:` fails it
+**twice over** — on the apostrophe in `you'll` (`[A-Za-z]+` cannot cross it) and
+on the three-word run (only two continuation words are allowed). `What you will
+do:` fails it too, for the second reason alone. Verified directly against the
+shipped pattern.
+
+**B14-02's OWN CONTRACT IS UNAFFECTED: the bracket goes.** Only B's secondary
+claim about the downstream label was wrong, and B10-07 fix 2 *is* genuinely made
+reachable — just on labels the shipped rule can actually match.
+
+**PER THE ESCAPE CLAUSE I STOPPED AND RECORDED RATHER THAN WIDENING INLINE.**
+Widening `LEADING_LABEL_RE` to reach apostrophes or a third continuation word is
+a **different item on a different rule with no adversarial measurement behind
+it**, and it would carry a real risk this round has not paid for: every extra
+word the label rule may swallow is a word it may delete from a real sentence.
+**I did not touch it. The manager decides whether it is worth an item.**
+
+Both behaviours are now asserted:
+- the ORDER is pinned by `"] Role Overview: We're hiring…"` → `"We're hiring…"`,
+  a label the shipped rule genuinely matches, so the load-bearing claim is
+  tested rather than assumed;
+- the apostrophe case is asserted at its **measured** value (bracket stripped,
+  label retained) with a comment naming the limit and saying why nothing was
+  widened.
+
+The shipped doc comment carries the same correction, so B's table row is not
+re-derived from this file as if it were true.
+
+---
+
+#### TESTS ADDED — B's 10/10 TABLE, PLUS THE TWO PROPERTIES
+
+**+14 tests, 0 deleted, 0 restated** (B's "zero tests at risk" read was correct
+— nothing existing failed at any point on this item).
+
+In `summarize.test.ts`, a new `a sentence opening with a bare bracket remnant
+(B14-02)` block:
+- **The live reproduction end to end through `cleanJobDescription` +
+  `summarizeJob`** — the mapper's own path. Asserts no `]` survives **and that
+  both sentences survive INTACT**, because this is a repair and nothing but the
+  bracket may be lost. The import of `cleanJobDescription` carries a comment
+  saying why summarising the raw source instead would prove nothing.
+- **The space-preceded control**, asserted still clean. This is what makes the
+  diagnosis a diagnosis: the defect is one missing space.
+- **The order test** and **the disclosed apostrophe correction** above.
+- **The `]]` doubled form.**
+- **The two must-keep bracketed prose sentences** — a legitimate bracketed clause
+  survives untouched. These are the two cases that rule out the upstream
+  widening, and they are in this file as well as the cleanup file deliberately.
+- **The three unchanged behaviours**: both of B10-07 fix 2's own cases and an
+  ordinary sentence with no prefix.
+- **Ruling 32's render-side answer, asserted rather than argued**: the degenerate
+  `]`/`] ` sentences return `""` because `MIN_SENTENCE_LENGTH` rejects them
+  before scoring ever runs, and a real sentence stays longer than 38 characters
+  after the strip. **This change cannot empty a summary.**
+
+In `job-cleanup.test.ts`, **the must-keep B asked for**: `cleanJobDescription`
+**still does not strip `".]"`**, asserted on
+`"Applicants must hold a PhD [or equivalent.] Candidates should apply early…"`
+with `toBe(raw)`. Its comment records that the widening was measured and
+rejected — it orphans the `[` and manufactures the very unmatched-bracket
+artifact the rule family exists to remove (Ruling 40's stated reason) — **and
+addresses the reader who is about to re-propose it.**
+
+---
+
+#### NEGATIVE PROOF — BOTH DIRECTIONS, 4 + 1
+
+1. **The change itself:** reverted the display line to `stripLeadingLabel(text)`
+   → **4 of the new assertions failed**; restored, 44 pass.
+2. **The ORDER, proven separately because B calls it load-bearing:** swapped to
+   `stripLeadingBracketRemnant(stripLeadingLabel(text))` → **exactly the order
+   test failed**, the other bracket tests staying green. That is the correct
+   signature — the order test is the only one that can see the difference, and
+   it does. Restored.
+
+---
+
+#### GATE AFTER ITEM 2
+
+- `npx vitest run` — **90 files / 1307 tests, 1306 passing.** Sole failure
+  `benchmark.test.ts`, the standing live-search flake. **+81 across the round
+  from the 1226 cold baseline, 0 deleted.**
+- `npx tsc --noEmit` — **clean.**
+- `npx eslint` — **exactly 1 error, the standing `quiz.tsx:46`.**
+- **Named runs:** `scoring.test.ts`, `job-cleanup.test.ts`, `summarize.test.ts`
+  and `jobweb.test.ts` together — **256 passed**, zero failures.
+- **`enrich.test.ts` run SOLO — 25 tests, 25 passed.** SolarPACES lock intact.
+
+**Expected render change for round 15 A:** the gevernova job summary renders
+**today's sentences MINUS the leading bracket** — byte-identical apart from the
+deleted characters. Not a new value, not a placeholder, and the summary can
+never come back empty. **The job CARD is the surface to check** — B established
+that the detail page already renders this clean, because it re-cleans the
+summary while the card does not.
+
+**No credential read, printed, logged or written. No live pipeline pull, no page
+fetch, no `PEER_PROFILE_SNAPSHOT_PATH`. No branch, worktree or PR. No test
+deleted. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No harness inside
+the repository at any point** — the only probe this turn used lived in the
+session scratchpad outside it.
+
+**Round 14 C is COMPLETE: two items, one commit each, both pushed immediately.**
+
+Commit follows immediately.
+
+---

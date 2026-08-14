@@ -78,6 +78,28 @@ describe("orphaned formatting artifacts (B9-03)", () => {
     expect(cleaned).toContain("WBL@lco. Internships");
   });
 
+  // B14-02 MUST-KEEP (round 14): `ISOLATED_BRACKET_REMNANT_RE` DELIBERATELY
+  // STILL DOES NOT STRIP `".]"` — a `]` with no whitespace before it. Round 14
+  // found the live shape that defeats this rule (`careers.gevernova.com`) and
+  // fixed it at the DISPLAY stage in `summarize.ts` instead, because widening
+  // this rule to reach a `]` after a sentence boundary was measured and
+  // REJECTED: by the time it runs, `stripUnbalancedBrackets` has already
+  // balanced the text, so deleting a `]` ORPHANS the `[` of a legitimate
+  // bracketed clause and MANUFACTURES the very unmatched-bracket artifact this
+  // rule family exists to remove. Ruling 40's stated reason for rejecting a fix
+  // that creates the class it removes.
+  //
+  // This assertion exists so a later round does not "complete" B9-03 by
+  // widening the rule here. If you are reading it because you were about to:
+  // the two sentences below are what you would break.
+  it("deliberately leaves a bracket with no whitespace before it — the widening was measured and rejected (B14-02)", () => {
+    const raw =
+      "Applicants must hold a PhD [or equivalent.] Candidates should apply early to be considered.";
+    const cleaned = cleanJobDescription(raw);
+    expect(cleaned).toContain("[or equivalent.]");
+    expect(cleaned).toBe(raw);
+  });
+
   // The www.aiu.edu live repro: a dash sitting where a bullet, colon, or
   // connector word most likely stood in the source markup.
   it("strips a dash orphaned immediately after a preposition (www.aiu.edu shape)", () => {

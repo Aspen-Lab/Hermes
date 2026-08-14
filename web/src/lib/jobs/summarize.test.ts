@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { highlightSegments, summarizeJob } from "./summarize";
+// B14-02 (round 14): the live reproduction must run through the SAME path the
+// mapper uses — `summarizeJob(cleanJobDescription(source), …)` — because the
+// whole finding is that the cleaner DID run and still could not see the
+// bracket. Summarising the raw source instead would prove nothing.
+import { cleanJobDescription } from "@/lib/opportunities/job-cleanup";
 
 const REAL_POSTING_FIXTURES = [
   {
@@ -276,6 +281,141 @@ describe("summarizeJob", () => {
       expect(summary).toBe(
         "You will support the team as follows: design, build, and test new battery cell chemistries.",
       );
+    });
+  });
+
+  // B14-02 (round 14): `careers.gevernova.com` rendered a summary whose TWO
+  // SENTENCES EACH OPENED WITH A BARE `]`. In the source each `]` sits
+  // immediately after a sentence-ending `.` with NO whitespace between them, so
+  // `job-cleanup.ts`'s `ISOLATED_BRACKET_REMNANT_RE` (`/\s+\]\s+/g`) — a shipped
+  // rule written for exactly this junk — structurally cannot match it. The
+  // cleaner ran; it could not see the bracket. Both brackets land at index 0 of
+  // their own sentence after `splitSentences` trims, so it is ONE cause, not
+  // two, and the space that appeared around the second one in the render is
+  // manufactured by `bestCombination`'s `.join(" ")`.
+  describe("a sentence opening with a bare bracket remnant (B14-02)", () => {
+    // THE LIVE REPRODUCTION, end to end through the real path the mapper uses:
+    // `cleanJobDescription` then `summarizeJob`. The two short bracketed
+    // lead-ins fall below MIN_SENTENCE_LENGTH and are never selected, so the
+    // reader sees only the two `]`-led sentences — which is exactly what round
+    // 14 A measured.
+    it("strips the leading bracket from the gevernova shape, end to end", () => {
+      const raw =
+        "[Overview.] You have a passion for battery technology, energy, and new product development. [The role.] Support engineering teams developing new battery technology for use in the Utilities, Datacenter, and Defense industries.";
+      const summary = summarizeJob(cleanJobDescription(raw), ["battery"]);
+      expect(summary).not.toContain("]");
+      // The sentences themselves must survive INTACT — this is a repair, not a
+      // rejection, so nothing but the bracket may be lost.
+      expect(summary).toContain(
+        "You have a passion for battery technology, energy, and new product development.",
+      );
+      expect(summary).toContain("Support engineering teams developing new battery technology");
+    });
+
+    // THE CONTROL, and it is what makes the diagnosis a diagnosis rather than a
+    // fit: the identical text with ONE SPACE added before each bracket already
+    // renders clean today, because the shipped upstream rule can finally see
+    // whitespace. The defect is one missing space.
+    it("leaves the space-preceded control clean, as it already was", () => {
+      const raw =
+        "[Overview. ] You have a passion for battery technology, energy, and new product development. [The role. ] Support engineering teams developing new battery technology for use in the Utilities, Datacenter, and Defense industries.";
+      const summary = summarizeJob(cleanJobDescription(raw), ["battery"]);
+      expect(summary).not.toContain("]");
+    });
+
+    // THE ORDER IS LOAD-BEARING. `LEADING_LABEL_RE` is `^[A-Z]…`, so a leading
+    // `]` blocks it: label-first would strip nothing at all here, then remove
+    // the bracket and leave the label standing. Bracket-first makes B10-07
+    // fix 2 reachable — that fix's own intent, blocked by the bracket rather
+    // than scoped away from it. This assertion is what pins the order.
+    it("strips BOTH the bracket and the label, in that order", () => {
+      const description =
+        "] Role Overview: We're hiring a battery scientist to develop new cell chemistries for grid storage.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).not.toContain("]");
+      expect(summary).not.toMatch(/Role Overview:/);
+      expect(summary).toBe(
+        "We're hiring a battery scientist to develop new cell chemistries for grid storage.",
+      );
+    });
+
+    // B14-02, DISCLOSED CORRECTION TO B's TABLE ROW 2 — MEASURED, NOT WIDENED.
+    // B's guide predicted `"] What you'll do: Support…"` would render as
+    // `"Support…"`, i.e. that bracket-first makes B10-07 fix 2 reach this
+    // string too. IT DOES NOT, and the reason is in `LEADING_LABEL_RE`, not in
+    // B14-02: that rule is `[A-Za-z]+` with up to TWO continuation words, so
+    // `What you'll do:` fails it twice over — on the apostrophe in `you'll` and
+    // on the three-word run. `What you will do:` fails it too.
+    //
+    // B14-02's own contract is UNAFFECTED and is asserted here: the bracket
+    // goes. Only B's secondary claim about the downstream label was wrong.
+    // Widening `LEADING_LABEL_RE` to reach apostrophes or a third word is a
+    // DIFFERENT item on a DIFFERENT rule with no adversarial measurement behind
+    // it, so it was deliberately NOT done inline. Recorded for the manager.
+    it("strips the bracket but leaves an apostrophe-bearing label — LEADING_LABEL_RE's limit, not B14-02's", () => {
+      const description =
+        "] What you'll do: Support engineering teams developing new battery technology for use in the Utilities and Defense industries.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).not.toContain("]");
+      expect(summary).toBe(
+        "What you'll do: Support engineering teams developing new battery technology for use in the Utilities and Defense industries.",
+      );
+    });
+
+    it("strips a doubled bracket remnant", () => {
+      const description =
+        "]] Support engineering teams developing new battery technology for use in the Utilities and Defense industries.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary).not.toContain("]");
+      expect(summary).toBe(
+        "Support engineering teams developing new battery technology for use in the Utilities and Defense industries.",
+      );
+    });
+
+    // THE MUST-KEEPS, AND THEY ARE THE POINT. A bracketed clause inside real
+    // prose is legitimate English and must survive untouched. These are the two
+    // cases that rule out the upstream widening: a rule reaching a `]` after a
+    // sentence boundary ORPHANS the `[` of a clause like these, manufacturing
+    // the very unmatched-bracket artifact the rule family exists to remove.
+    it.each([
+      "The bracket [see below] is part of a real sentence and must survive intact for the battery reader.",
+      "Applicants must hold a PhD [or equivalent] in materials science or battery electrochemistry.",
+    ])("leaves a legitimate bracketed clause untouched: %s", (description) => {
+      expect(summarizeJob(description, ["battery"])).toBe(description);
+    });
+
+    // The pre-existing behaviours this change must not disturb — B10-07 fix 2's
+    // own two cases and an ordinary sentence with no prefix at all.
+    it.each([
+      [
+        "Multi-Level: This is a multi-level posting and you will be placed at the appropriate battery level dependent on degree field.",
+        "This is a multi-level posting and you will be placed at the appropriate battery level dependent on degree field.",
+      ],
+      [
+        "Role Overview: We're hiring a battery scientist to develop new cell chemistries for grid storage applications.",
+        "We're hiring a battery scientist to develop new cell chemistries for grid storage applications.",
+      ],
+      [
+        "Interface with the advanced research center on battery testing results and report findings to the engineering team.",
+        "Interface with the advanced research center on battery testing results and report findings to the engineering team.",
+      ],
+    ])("is unchanged for %s", (description, expected) => {
+      expect(summarizeJob(description, ["battery"])).toBe(expected);
+    });
+
+    // RULING 32 FROM THE RENDER SIDE: THIS CAN NEVER EMPTY A SUMMARY. A
+    // degenerate `]`-only sentence is unreachable — MIN_SENTENCE_LENGTH (40)
+    // rejects it before scoring ever runs — and a real sentence clears that
+    // floor on its UNSTRIPPED text, so at least 38 characters always remain.
+    it.each(["] ", "]"])("cannot empty the summary: the degenerate %p never reaches scoring", (description) => {
+      expect(summarizeJob(description, ["battery"])).toBe("");
+    });
+
+    it("keeps a real sentence non-empty after the strip", () => {
+      const description =
+        "] Support engineering teams developing new battery technology for use in the Utilities and Defense industries.";
+      const summary = summarizeJob(description, ["battery"]);
+      expect(summary.length).toBeGreaterThan(38);
     });
   });
 });

@@ -125,6 +125,90 @@ function stripLeadingLabel(text: string): string {
   return text.replace(LEADING_LABEL_RE, "");
 }
 
+/**
+ * B14-02 (round 14): `careers.gevernova.com` rendered a job summary whose TWO
+ * SENTENCES EACH OPENED WITH A BARE `]`.
+ *
+ * THE CAUSE, ESTABLISHED BY EXECUTION RATHER THAN INFERRED: in the source text
+ * each `]` sits IMMEDIATELY after a sentence-ending `.` with NO WHITESPACE
+ * between them (`".]"`), so `job-cleanup.ts`'s `ISOLATED_BRACKET_REMNANT_RE`
+ * (`/\s+\]\s+/g`) — a rule written for exactly this junk — structurally cannot
+ * match it. `cleanJobDescription` DID run; it simply could not see the bracket.
+ * The space that appeared around the second bracket in the rendered string does
+ * not exist in the source at all: `splitSentences`' own `.trim()` puts the
+ * bracket at position 0 of its sentence, and `bestCombination`'s `.join(" ")`
+ * manufactures the separator. **Both brackets are at index 0 of their own
+ * sentence — ONE cause, not two.** The control proves it: the identical text
+ * with one space added before each bracket already renders clean today.
+ *
+ * The complete set of source shapes that can defeat the upstream rule is CLOSED,
+ * because `cleanJobText` normalises every whitespace run to a single space
+ * before it runs — only a non-whitespace predecessor can defeat it. `.`/`!`/`?`
+ * produce this sentence-initial defect; `:`/`-`/`,` produce a mid-sentence
+ * variant no round has ever observed.
+ *
+ * **WHY HERE AND NOT IN `cleanJobDescription`, WHICH LOOKS LIKE THE OBVIOUS
+ * HOME** — the same trace `stripLeadingLabel` above already recorded, landing
+ * the same way for the same reasons:
+ *  1. The defect is a property of the SENTENCE, not of the description. The
+ *     bracket only reaches position 0 after `splitSentences` cuts and trims;
+ *     there is no "leading bracket" in the description to strip.
+ *  2. Placed here it CANNOT BLIND SCORING. Every check in `scoreSentences` runs
+ *     against the original, unstripped `text`; only the returned display text is
+ *     stripped. This matters concretely rather than theoretically:
+ *     `sectionOpenerHasReadableContent` calls `hasUnbalancedBracket`, which
+ *     counts `[` against `]`, so stripping upstream would change that count and
+ *     silently move `sectionScore` on every bracket-bearing sentence.
+ *  3. Unconditional is right here on B9-03's own reasoning: it made the bracket
+ *     rule unconditional because no legitimate English prose uses a bare,
+ *     space-surrounded `]`. A sentence that BEGINS with a bare `]` is the
+ *     stronger case of the same argument.
+ *
+ * **THE UPSTREAM WIDENING WAS MEASURED AND REJECTED — DO NOT LAND IT IN ANY
+ * FORM.** Widening `ISOLATED_BRACKET_REMNANT_RE` to
+ * `/(?:\s+|(?<=[.!?]))\]\s+/g` does fix the live shape, and it also ORPHANS THE
+ * `[` OF A LEGITIMATE BRACKETED CLAUSE: by the time that rule runs
+ * `stripUnbalancedBrackets` has already balanced the text, so deleting a `]`
+ * MANUFACTURES the very unmatched-bracket artifact the whole rule family exists
+ * to remove — Ruling 40's stated reason for rejecting a fix that creates the
+ * class it removes. `job-cleanup.test.ts` carries a must-keep asserting the
+ * upstream rule still does not strip `".]"`, so this is not re-proposed.
+ *
+ * **THE ORDER IS LOAD-BEARING: BRACKET FIRST, THEN LABEL.** `LEADING_LABEL_RE`
+ * is `^[A-Z]…`, so a leading `]` blocks it entirely: label-first would strip
+ * nothing, then remove the bracket and leave the label standing.
+ * `"] Role Overview: We're hiring…"` renders today with BOTH junk prefixes and
+ * bracket-first yields `"We're hiring…"`. **This makes B10-07 fix 2 reachable in
+ * one more case, which is that fix's own intent — it was blocked by the bracket,
+ * not scoped away from it. Disclosed and deliberate.**
+ *
+ * MEASURED CORRECTION TO B14-02's GUIDE, RECORDED RATHER THAN PATCHED AROUND:
+ * B's table predicted `"] What you'll do: Support…"` would also lose its label.
+ * It does not — `LEADING_LABEL_RE` allows `[A-Za-z]+` and at most TWO
+ * continuation words, so `What you'll do:` fails it on the apostrophe AND on the
+ * three-word run. That is a limit of the LABEL rule, not of this one; the
+ * bracket still goes. Widening `LEADING_LABEL_RE` is a different item on a
+ * different rule with no adversarial measurement behind it and was deliberately
+ * NOT done here. Both behaviours are asserted in `summarize.test.ts`.
+ *
+ * Ruling 32, both directions: this is a REPAIR, not a rejection, so no rejection
+ * path can produce a substitute value. When it fires the result is today's
+ * sentence minus its leading bracket — byte-identical apart from the deleted
+ * characters, never a hostname or a placeholder. When it does not fire the
+ * result is today's value exactly. **It can never empty a summary:** a sentence
+ * only reaches this line after clearing `MIN_SENTENCE_LENGTH` on its UNSTRIPPED
+ * text, so at least 38 characters always remain.
+ *
+ * Named limitation, unobserved and deliberately not covered: the `^` anchor does
+ * not touch the mid-sentence variant, and the only design that would reach it is
+ * the rejected widening above. Failure direction: the status quo.
+ */
+const LEADING_BRACKET_REMNANT_RE = /^\s*\]+\s*/;
+
+function stripLeadingBracketRemnant(text: string): string {
+  return text.replace(LEADING_BRACKET_REMNANT_RE, "");
+}
+
 const ROLE_RE =
   /\b(?:in this role|you will|you(?:'|’)ll|responsible for|we(?:'|’)re hiring|develop|design|build|research|analy[sz]e|lead|manage)\b/i;
 
@@ -193,7 +277,10 @@ function scoreSentences(
 
       return {
         index,
-        text: stripLeadingLabel(text),
+        // B14-02: bracket FIRST, then label. The order is load-bearing — a
+        // leading `]` blocks `LEADING_LABEL_RE`'s `^[A-Z]` anchor, so
+        // label-first would leave both prefixes on `"] What you'll do: …"`.
+        text: stripLeadingLabel(stripLeadingBracketRemnant(text)),
         score: matchedCount * 6 + positionScore + sectionScore + roleScore + readableLengthScore,
       };
     })
