@@ -222,10 +222,19 @@ function looksLikeHostBoilerplatePhrase(candidate: string): boolean {
  *
  * Ruling 32's question, answered from the render side: when every candidate is
  * rejected, `.find()` returns `undefined`, `company` is `undefined`, and the UI
- * **omits the employer line entirely** — both `job-card.tsx` and `feed-tile.tsx`
- * guard on `job.companyOrLab`. No placeholder, nothing rejected reinserted, and
- * it is this field's own existing behaviour: round 12 A's census already has six
- * null employers rendering exactly that way.
+ * **omits the employer line entirely**. No placeholder, nothing rejected
+ * reinserted, and it is this field's own existing behaviour: round 12 A's census
+ * already has six null employers rendering exactly that way.
+ *
+ * CORRECTION (B13-01, round 13): this comment originally named TWO render
+ * sites. There are **FOUR**, and all four omit rather than substitute —
+ * `cards/job-card.tsx:87` and `cards/feed-tile.tsx:535` guard on
+ * `job.companyOrLab`; `cards/briefing-hero.tsx:133` and
+ * `cards/briefing-quick-hit.tsx:49` build an array and
+ * `.filter(Boolean).join(" · ")`, so the separator disappears with the value
+ * and no dangling middle dot is left behind. Checked in the components, not
+ * assumed. Anything added to the candidate veto chain below inherits this
+ * same honest-omission behaviour on all four.
  */
 const NAV_CHROME_SEGMENT_RE =
   /^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back)$/i;
@@ -455,7 +464,43 @@ export function webResultToRawJobItem(
           !looksLikeTopicLabel(p, topics) &&
           !looksLikeHostBoilerplatePhrase(p) &&
           // B12-06: the family member this slot never had — see above.
-          !looksLikeNavChrome(p),
+          !looksLikeNavChrome(p) &&
+          // B13-01 Gap A (round 13): a BARE careers-section label reaching the
+          // employer slot. `Battery Research Scientist - Careers - Idaho
+          // National Laboratory` rendered the employer as `Careers`.
+          //
+          // Nothing is invented here: `CAREERS_INDEX_TITLE_RE` is defined at
+          // the top of this same file, is already anchored end to end, and is
+          // already asserted by six tests through `isListingPage` — it was
+          // simply never consulted on an employer CANDIDATE, only on a whole
+          // title and on `roleTitle`. `stripTrailingCareersChrome`'s own doc
+          // comment already states the intent ("a candidate that IS only this
+          // word ... is the guards above's business, not this one's") — the
+          // intent was documented and the guard was missing. This is it.
+          //
+          // The whole-segment anchor is why this costs nothing: all four
+          // anchored trap names (`Home Depot`, `Page Industries`, `First
+          // Solar`, `Next Energy Technologies`) and every other protected
+          // employer survive, because a real company whose name merely
+          // CONTAINS one of these words is not matched. Measured 19/21 on B's
+          // matrix, the best of six designs, regressing nothing.
+          //
+          // EVIDENCE CLASS, recorded honestly rather than dressed up: Gap A is
+          // LATENT, not live. Round 13 A's census contains no `Careers`
+          // employer render; B found this by executing the chain against
+          // breadcrumb shapes. It landed because it costs nothing and closes a
+          // gap this file's own comment already says should be closed.
+          //
+          // Failure direction: a careers-section label not in the list
+          // survives — the status quo, never a new wrong value.
+          //
+          // NOT FIXED HERE, deliberately: the `openmc.discourse.group`
+          // `Announcements` render (Gap B). It is a site CATEGORY name, an
+          // OPEN class with no string-side signal separating it from a real
+          // employer, and every candidate design either misses it or deletes
+          // correct employers. Ruling 42a rules it deferred to Ruling 39c's
+          // forum-thread drop. Do not widen this clause to reach it.
+          !CAREERS_INDEX_TITLE_RE.test(p),
       ),
   );
   return {

@@ -29385,3 +29385,81 @@ cold baseline. `npx tsc --noEmit` → clean. `npx eslint` → **1 error,
 
 Commit follows immediately; pushed on the same breath.
 
+---
+
+### Round 13 — Agent C (B13-01 Gap A ONLY: the careers-section label in the employer slot — and B12-06's two-render-site comment corrected to four)
+
+**STATUS: DONE.** Second of round 13 C's items. Same session, same lock.
+
+**GAP B WAS NOT ATTEMPTED, AS INSTRUCTED.** B's own instruction and Ruling 42a
+both put it out of scope; no guard for `Announcements` was designed, drafted or
+tested, and no assertion for it exists in the new tests. The code comment says
+so explicitly so a later round does not read the omission as an oversight.
+
+---
+
+#### WHAT LANDED
+
+`web/src/lib/jobs/sources/jobweb.ts`, **one clause** added to the existing
+`.find()` predicate in `webResultToRawJobItem`, B's 19/21 design verbatim:
+`!CAREERS_INDEX_TITLE_RE.test(p)`. Nothing new was invented — the regex is
+defined at the top of the same file, already anchored end to end, and already
+asserted by six tests through `isListingPage`; it was simply never consulted on
+an employer CANDIDATE.
+
+**THE COMMIT MESSAGE AND THE CODE COMMENT BOTH STATE THAT GAP A IS LATENT, NOT
+LIVE**, per the brief. Round 13 A's census contains no `Careers` employer
+render; B found it by executing the chain against breadcrumb shapes. It must not
+be logged as a live-confirmed defect by any later round.
+
+---
+
+#### B's CORRECTION TO B12-06's RENDER-SITE COUNT — CARRIED, AND VERIFIED FIRST-HAND
+
+B12-06's doc comment named **two** render sites. B corrected it to **four**. C
+does not take a correction on trust when it is a two-minute code check, so all
+four were read in the components before the comment was rewritten:
+
+| render site | how the employer is omitted |
+|---|---|
+| `cards/job-card.tsx:87` | `job.companyOrLab && …` guard |
+| `cards/feed-tile.tsx:535` | same guard |
+| `cards/briefing-hero.tsx:133` | array + `.filter(Boolean).join(" · ")` |
+| `cards/briefing-quick-hit.tsx:49` | array + `.filter(Boolean).join(" · ")` |
+
+**B's correction is right on all four.** On rejection the employer line is
+**omitted on all four sites**, and on the two briefing sites the separator
+disappears with the value, so there is no dangling middle dot. The stale
+two-site comment is rewritten in place with a `CORRECTION (B13-01, round 13)`
+marker naming what it used to say, rather than silently edited.
+
+---
+
+#### TESTS — 14 added, 0 deleted, 0 edited. **NEGATIVE-PROOFED: 8 of 14 fail with the clause disabled.**
+
+Six bare section labels in a breadcrumb (the employer must be the real one, not
+the label); one omission case (only the label survives → `company` undefined);
+six anchored must-keeps including the four B12-06 trap names plus **`Careers
+Australia Group`** and **`Open Society Foundations`** — real-shaped names
+BEGINNING with a rejected word, which is what makes the whole-segment anchor
+load-bearing; and one `at`-captured case, because the `at` capture feeds the
+same veto chain and a guard that only covered punctuation segments would be
+half a fix.
+
+**Negative proof:** with the single clause commented out and the tests left in
+place, **8 failed / 106 passed of 114**. The 8 are exactly the must-rejects; the
+**6 must-keeps correctly passed on the disabled source too**, which is the
+point — they assert that nothing regressed, so passing both before and after is
+what "zero regressions" means. Source restored from a scratchpad copy, grepped
+to confirm no temporary marker survived, re-run: **114 passed**.
+
+---
+
+#### GATE AFTER THIS ITEM
+
+`npx vitest run` → **90 files / 1207 tests, 1206 passing**; only failure is
+`benchmark.test.ts`, the standing live flake. `npx tsc --noEmit` → clean.
+`npx eslint` → **1 error, `quiz.tsx:46`**, unchanged.
+
+Commit follows immediately; pushed on the same breath.
+

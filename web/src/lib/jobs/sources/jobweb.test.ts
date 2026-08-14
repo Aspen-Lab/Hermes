@@ -530,6 +530,78 @@ describe("listing titles hidden behind site chrome", () => {
   });
 });
 
+// B13-01 Gap A (round 13): a BARE careers-section label reached the employer
+// slot. `CAREERS_INDEX_TITLE_RE` — the closed, anchored list that names exactly
+// this class — is defined in the same source file and was applied only to the
+// whole title and to `roleTitle`, never to an employer candidate.
+//
+// EVIDENCE CLASS: this gap is LATENT, not live. Round 13 A's census contains no
+// `Careers` employer render; B found it by executing the chain against
+// breadcrumb shapes. Recorded here so no later round logs it as a
+// live-confirmed defect.
+//
+// GAP B (`Announcements` on openmc.discourse.group) IS NOT FIXED and must not
+// be — Ruling 42a defers it to Ruling 39c's forum-thread drop. There is no
+// assertion for it here, deliberately.
+describe("careers-section label in the employer slot (B13-01 Gap A)", () => {
+  it.each(["Careers", "Jobs", "Vacancies", "Employment", "Open Positions", "Join our team"])(
+    "does not mistake the bare section label %s for the employer",
+    (label) => {
+      const item = webResultToRawJobItem({
+        title: `Battery Research Scientist - ${label} - Idaho National Laboratory`,
+        url: "https://inl.test/careers/job/9940",
+        snippet: "Open position in battery R&D. Apply now.",
+      });
+      expect(item?.company).toBe("Idaho National Laboratory");
+    },
+  );
+
+  it("omits the employer when the section label is the only candidate", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist - Careers",
+      url: "https://inl.test/careers/job/9941",
+      snippet: "Open position in battery R&D. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    // Ruling 32 from the render side, and B13-01 corrected B12-06's count:
+    // FOUR render sites omit the employer line rather than substituting
+    // anything — job-card.tsx:87 and feed-tile.tsx:535 guard on
+    // `companyOrLab`; briefing-hero.tsx:133 and briefing-quick-hit.tsx:49
+    // `.filter(Boolean).join(" · ")`, so the separator goes with the value.
+    expect(item?.company).toBeUndefined();
+  });
+
+  // MUST-KEEP, AND THE REASON THE REGEX'S WHOLE-SEGMENT ANCHOR IS LOAD-BEARING.
+  // Every one of these is a real company whose name CONTAINS a word the list
+  // rejects on its own. An unanchored version would delete all of them.
+  it.each([
+    "Home Depot",
+    "Page Industries",
+    "First Solar",
+    "Next Energy Technologies",
+    "Careers Australia Group",
+    "Open Society Foundations",
+  ])("keeps the real employer %s through the new clause", (company) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Scientist - ${company}`,
+      url: "https://example.test/careers/job/9942",
+      snippet: "Open position in battery R&D. Apply now.",
+    });
+    expect(item?.company).toBe(company);
+  });
+
+  // The `at`-captured employer path reaches the same veto chain, so the guard
+  // must hold there too rather than only on punctuation segments.
+  it("does not accept a section label captured after 'at'", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist at Careers",
+      url: "https://example.test/careers/job/9943",
+      snippet: "Open position in battery R&D. Apply now.",
+    });
+    expect(item?.company).toBeUndefined();
+  });
+});
+
 // B13-02 (round 13): four items in round 13 A's live pool were not job
 // postings at all. NONE of isListingPage's five existing checks fired on ANY
 // of them — verified by execution before the design, not assumed. They are
