@@ -50003,3 +50003,86 @@ const OWNER_INDEX_TITLE_RE =
 **ONE THING B REPORTS AGAINST ITS OWN CONVENIENCE.** B's first target table scored `Research positions at CERN` as a REGRESSION under every candidate **including the control** — which would have read as the shipped code already destroying its own named must-keep. It was **B's invented URL**, not the guard: `/postings/12345` is not in `JOB_PATH_RE` (`position|positions` are; `posting|postings` are not), so the row died at the path gate. Corrected to a `/jobs/` URL it is KEPT by every candidate. **The superseded table is used nowhere.**
 
 **B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
+
+---
+
+### Round 21 — Agent B (item 2 of 5: **A21-02, the dead apply link. RULING 57a's QUESTION IS ANSWERED — YES, LINK INTEGRITY IS MEASURABLE AT INGESTION BY A CLOSED SIGNAL, WITH ZERO FETCHES. And the shipped code does not merely miss it: it positively counts the empty id as a posting id.**)
+
+**STATUS: DONE.** Second of five. **B changed no code, deleted no test, edited no test.** Same method and same three-way control fidelity as item 1 (shipped suite **387/387**, **115** live offered rows **0 mismatches**, **28** target rows **0 mismatches**).
+
+---
+
+## THE REPRODUCTION
+
+A's row replayed through the genuinely imported shipped module, on **A's recorded strings**:
+
+| | value |
+|---|---|
+| `linkPosting` | `https://www.jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id=` |
+| `isListingPage(wholeTitle / roleSegment)` | **`false` / `false`** |
+| admitted | **yes** |
+| rendered `roleTitle` | `research associate in molten salt & nuclear graphite ...` |
+| rendered `company` | `undefined` |
+
+**The title splits into ONE part** — the literal ellipsis is not a separator — so face 2 never reaches the employer chain at all.
+
+---
+
+## RULING 57a's QUESTION, ANSWERED: **YES, AND IT COSTS NOTHING**
+
+**THE CLOSED SIGNAL IS IN THE URL PEER ALREADY HAS: an identifier-named query parameter with an EMPTY value, on a path that carries no posting identifier of its own.** No fetch, no provider field, no per-row cost. It is decided from `parsed.search` at the moment `webResultToRawJobItem` already parses the URL.
+
+**AND THE SHIPPED CODE'S CURRENT READING IS WORSE THAN A MISS — IT IS AN AFFIRMATIVE WRONG ANSWER, MEASURED:**
+
+```
+const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
+```
+
+`[?&](?:…|id)=` matches `?Id=` **whether or not anything follows it.** Executed on the recorded URL, `POSTING_ID_RE.test("/Job/GetJobAdvertDocument?Id=")` is **`true`** — the shipped guard positively believes this dead URL *carries* a posting identifier. On any `AGGREGATOR_HOSTS` member that belief is the single thing that keeps `isListingPage`'s last line (`return !POSTING_ID_RE.test(pathAndQuery)`) from dropping the row. **`jobs.manchester.ac.uk` is not an aggregator, so this is LATENT rather than the cause here — recorded honestly as latent, in the class B13-01 Gap A and B16-02's `View` employer were recorded.**
+
+---
+
+## THE MEASUREMENT
+
+Candidate `i2emptyid` — one new closed check, consulted immediately after the existing protocol check:
+
+```
+const EMPTY_IDENTIFIER_PARAM_RE =
+  /[?&](?:[\w-]*id|jk|gh_jid|req|requisition|vacancy)=(?:&|$)/i;
+function hasEmptyPostingIdentifier(pathAndQuery: string): boolean {
+  if (!EMPTY_IDENTIFIER_PARAM_RE.test(pathAndQuery)) return false;
+  return !/\d{4,}/.test(pathAndQuery.split("?")[0] ?? "");   // confirming token
+}
+```
+
+| corpus | result |
+|---|---|
+| shipped `jobweb.test.ts` against the candidate copy | **387/387** |
+| target table (28 rows) | **23/28 vs the control's 22 — A21-02 DROPPED, nothing else moved** |
+| **115 live offered rows** | **0 changes** |
+
+**THE SECOND CONJUNCT IS LOAD-BEARING AND IT IS EARNED BY A LIVE ROW, NOT INVENTED.** `careers.inl.gov/…/job/1515?lastSelectedFacet=` is in **this round's own live offered capture** and carries an **empty query parameter**. It survives because `lastSelectedFacet` is not identifier-named **and** the path carries `1515`. Executed row by row: the guard fires on `?Id=` (empty) and on the constructed `?jk=` and `?requisition=&src=rss`, and stays quiet on `?Id=88123`, `?lastSelectedFacet=`, `?jobTypes=Intern`, `/posting/7317952` and `/jobs/internship`.
+
+---
+
+## THE FETCH ROUTE, PRICED HONESTLY AND REFUSED
+
+Ruling 57a asked B to price a fetch design rather than wave at it. **A per-row HEAD/GET would be the only way to catch a link that is well-formed but 404s** — a shape this closed signal cannot see. The price, from this round's own numbers: **115 offered rows per pull**, so **115 extra round trips on every cache-miss build**, each with `page-fetch.ts`'s 2 MB ceiling and its own timeout, on a path that already fetches pages for enrichment. **B does not recommend it, and Ruling 57a's own wording forbids it.** Recorded so the boundary is explicit: **this item closes the EMPTY-IDENTIFIER shape only. A well-formed URL that happens to 404 is NOT covered, and B says so rather than implying link integrity is now solved.**
+
+---
+
+## ONE ROW, TWO FACES — **ONE FIX, AND B SAYS WHAT HAPPENS TO FACE 2**
+
+**The drop removes both faces at once**, because the row never becomes an item. **Face 2's MECHANISM is not fixed and B will not pretend it is:** a truncated all-lowercase title with a literal ellipsis on a fifth host. **No repair is even available for THIS row** — B19-02 recovers a truncated `<title>` from an `<h1>` or a separator boundary, and A measured the response body at **9 bytes**, so there is no `<h1>` and no separator to read. **A dead link is a wrong ITEM, not a wrong FIELD, and Ruling 23 ranks the item.** If a later round sights the truncated-title shape on a host whose page is *alive*, that is B19-02's territory and a separate item.
+
+## WHAT RENDERS ON REJECTION
+
+**The item leaves the pool.** The check sits before every field is derived, so `webResultToRawJobItem` returns `null` — no card, no title, no employer, no summary. **A reader loses a card that could not be applied to, which is the whole complaint.**
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Measured cost: ZERO** — 387 shipped assertions unchanged, 115 live offered rows unchanged, 27 of 28 target rows unchanged.
+- **Failure direction: a dead link whose URL is well-formed survives — the status quo, never a new wrong value.** The guard cannot invent a card; it can only remove one that carries an empty identifier.
+- **Not a host rule.** `jobs.manchester.ac.uk` appears nowhere in it; it is asserted on the constructed `?jk=` and `?requisition=` shapes on unrelated hosts, matching Ruling 32's headline.
+
+**B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
