@@ -26949,3 +26949,44 @@ No live fetch, no credentials, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, no
 worktree, no PR.
 
 ---
+
+---
+
+### Round 12 — MANAGER verification of the focused C (B12-01 landed; round 12 CLOSES)
+
+**Verdict: confirmed. Round 12 is fully complete — seven code items landed
+across two C sessions, one design refused with evidence, four rulings issued
+(37's clarification, 38, 39, 40). Round 13 A is spawned next.**
+
+**Gate, re-run independently:** 90 files / **1160 tests, 1159 passing** — sole
+failure the documented `benchmark.test.ts` live flake. 1148 → 1160 is exactly
+the 12 new tests. TypeScript clean.
+
+**Ruling 40 compliance, checked not trusted:** the phrase list's ten entries
+each carry a source citation into the two enumerations Ruling 40 named; the
+one exclusion (`call for papers` / `abstract submission`) applies Ruling 40's
+own page-label reasoning — the exact class whose admission got option (b)
+rejected. Correct call, correctly attributed. The sharper proof is the one
+that matters: with the phrase list removed — the first attempt's exact shape —
+the titanium name reverts to the placeholder character-for-character in BOTH
+test files; restored, it recovers in full.
+
+**Accepted deviations, all three improvements:** the extra `lecture series`
+must-recover (without it the entire phrase list would be locked by one
+assertion); the atomic single commit (state file and code cannot disagree);
+and the correction of two §1 lines that had silently become false for A
+(the fix count, and the stale claim that `ecs.confex.com` still renders the
+deadline sentence).
+
+**Two leads recorded for a future round, no code:** `webinar` and `meetup`
+are single-word kinds present in the mapper's enumeration and absent from the
+name-span list — their misses fall to the honest fallback, and A's
+honest-host count is what would surface them. And the known wrong→wrong
+limitation (`"Registration for the Symposium"` as a span) is on the record —
+not a regression, not patched inline, exactly per the escape clause's
+discipline.
+
+**Round 12 closes as the loop's largest round: 7 landed fixes, 72 new tests,
+zero deleted, every one negative-proven, SolarPACES 25/25 on six separate
+solo runs.**
+
