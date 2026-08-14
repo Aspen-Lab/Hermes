@@ -28916,3 +28916,249 @@ page fetched, no pipeline pull run, no branch created, no PR opened,
 `euchems2026.eu`.
 
 Commit follows immediately.
+
+---
+
+### Round 13 — Agent B (B13-03: `flogen.org` — NO stage sees the clean title and NO guard eats it; and a standing loop-wide claim about the enrichment tier is WRONG, which changes what is testable)
+
+**STATUS: DONE.** Third of round 13 B's four items. Same session, same lock.
+Harness outside `src/`, deleted before this commit. **No live pull, no page
+fetch, no credential read.** **B changes no code** (§2).
+
+---
+
+#### FIRST, THE THING THAT AFFECTS EVERY ROUND FROM HERE: **THE ENRICHMENT TIER IS NOT DARK. IT RUNS ON EVERY LIVE PULL, AND IT NEEDS NO API KEY.**
+
+**§2's own method note and every round's evidence-limits paragraph since round 4
+say the same thing: "`feedAiApiKey` is EMPTY — so a real-data run produces Tier 0
+only, with no enrichment." Round 13 A repeated it three times. It is not
+correct, and the mistake is a name collision between two different modules.**
+
+Traced from the code:
+
+- **`buildDailyEventPool()` and `buildDailyJobPool()` — the exact entry points §2
+  tells A to call — both pass `{ enrichDetails: true }`**
+  (`events/pipeline.ts:210`, `jobs/pipeline.ts:209`).
+- That runs `enrichEventCandidates()` / `enrichJobCandidates()`
+  (`opportunities/enrich.ts:102` and `:199`), which call
+  `fetchPagesConcurrently()` on the **top 40 scored candidates' own URLs** and
+  then extract JSON-LD, Open Graph and declared-name signals from the fetched
+  HTML — **and can OVERRIDE `item.name`** (`enrich.ts:164-172`).
+- **`fetchPageHtml()` (`page-fetch.ts:58`) is a plain `fetch` with a
+  User-Agent. There is no API key anywhere on that path.**
+- **`feedAiApiKey` gates a DIFFERENT module**: `opportunities/enrichment.ts`
+  (note the `-ment`), whose `canAttemptOpportunityEnrichment()`
+  (`enrichment.ts:1001`) governs the **LLM report enrichment** shown on a detail
+  page. That one is genuinely dark. The **page-fetch enrichment tier is not.**
+
+**What this changes, stated conservatively — I am reporting the code, and A's
+numbers are not in question:**
+
+1. **A's live measurements already include the page-fetch tier.** Every event
+   name A has ever scored is post-enrichment, not pre-enrichment. No number
+   A reported is wrong; what is wrong is the label on the mechanism.
+2. **A fix placed on the enrichment path IS testable by A's standing method
+   today.** Rulings 39b and B12-05's entry both record "the enrichment tier is
+   the only route that could ever fix this class" as a reason to stop work
+   (`batteryinnovationsummit.com`'s `og:title` is the named example). **That
+   reasoning rested on the tier being unreachable, and it is reachable.** I am
+   not reopening Ruling 39b — that is the manager's call — but the premise
+   under it has moved and somebody should know.
+3. Item 4 below depends on this directly.
+
+**`POLICY — manager decides` (small, but it should be ruled before round 14's A
+writes another evidence-limits paragraph):** §2's key-presence note and the
+standing "every run is Tier 0" line need correcting in place, and the manager
+should say whether Ruling 39b's reasoning is affected.
+
+---
+
+#### THE TRACE — **no stage sees the clean title, and no guard eats it. It never arrives.**
+
+The brief asked which stage sees `SIPS 2026 by FLOGEN Stars Outreach` and which
+guard eats it. **Established by execution: neither question has an answer,
+because the string never reaches any guard.**
+
+**The elimination is clean.** I ran the page's own `<title>` through
+`bestEventTitleSegment` and through `eventNameFrom`, with the live URL:
+
+```
+bestEventTitleSegment("SIPS 2026 by FLOGEN Stars Outreach", flogenUrl)
+  -> "SIPS 2026 by FLOGEN Stars Outreach"     (accepted, unchanged)
+eventNameFrom(same, "", flogenUrl)
+  -> "SIPS 2026 by FLOGEN Stars Outreach"
+```
+
+**It passes every guard.** So if any stage had that string, that string would be
+the render. The render is `WELCOME TO SIPS 2026`. **Therefore no stage has it.**
+
+Where the banner comes from, both routes ending in the same place:
+- **Ingestion:** the search provider hands Peer the page's `og:title` /`<h1>`
+  (A's own fetch confirms both are `WELCOME TO SIPS 2026`), not its `<title>`.
+- **Enrichment:** the tier above fetches the page, and
+  `extractOpportunityPageDetails` reads **JSON-LD `name`** and **`og:title`** —
+  `structured-extract.ts` **contains no `<title>` parse at all** (grepped: zero
+  matches for a title-element read). So Peer downloads the page carrying the
+  clean name and **never looks at the element the name is in.**
+
+**That is the real, nameable gap, and it is not the one anybody expected:
+the name-recovery chain has three sources (JSON-LD name, a declared-name
+sentence, `og:title`) and the single most standard place a page states its own
+name is not one of them.** Recorded as a finding in its own right — it is bigger
+than this host.
+
+**Why I am NOT recommending "add `<title>` as a fourth source" as this item's
+fix:** it would have to be preferred **over** `og:title` to help here, since
+`og:title` is accepted first and wins. Demoting `og:title` — the tag whose entire
+purpose is to carry the canonical name — on the evidence of one host is the wrong
+trade, and I have no data on how often the two disagree. **Recorded as a lead for
+a future round, with the measurement that would justify it: A capturing, for each
+event host, whether `<title>` and `og:title` differ and which is better.**
+
+---
+
+#### THE BRIEF'S TWO PROPOSED HOMES ARE BOTH WRONG, AND I CAN SHOW IT
+
+The brief asked whether B12-02's sibling recovery or B12-01's span logic is the
+natural home. **Neither. Both are structurally unavailable here, proven by
+execution rather than argued:**
+
+- **B12-01's `leadingNameSpan` DROPS this value rather than repairing it.** Run
+  with the banner reaching the snippet stage,
+  `eventNameFrom("Home", "WELCOME TO SIPS 2026 will be held…", flogenUrl)`
+  returns **`flogen.org`** — the bare host. The span walks
+  `WELCOME`/`TO`/`SIPS`/`2026`, then fails step 3 because the joined span carries
+  no event-kind noun, so the candidate is dropped and execution falls to the
+  honest host. **Putting this item in B12-01's home makes the render strictly
+  worse**: today the reader at least learns the event is SIPS 2026.
+- **B12-02's sibling recovery cannot fire.** It needs siblings — this title is a
+  single segment with no separator — and it needs slug corroboration. Measured:
+  the URL path `/sips2026` normalises to the single token `sips2026`, while
+  `SIPS 2026` normalises to `sips` + `2026`, so **`isSlugCorroborated` is `false`
+  and always will be on this host**, because the slug has no separator to split
+  on.
+
+**The natural home is a third relative neither the brief nor A named: B12-03's
+welded-label strip** (`stripWeldedPageTypeLabel`, `eventweb.ts`). Same shape —
+edit an accepted candidate rather than add or remove one — same place in
+`bestEventTitleSegment`, and **that one attachment point covers BOTH routes**,
+because the enrichment path also runs its `og:title` through
+`bestEventTitleSegment` (`enrich.ts:166`).
+
+---
+
+#### FIX DESIGN B13-03 — a banner lead-in strip. **17/17 on the adversarial matrix.**
+
+A sibling of `stripWeldedPageTypeLabel`, applied to the chosen segment in
+`bestEventTitleSegment`, with its own vocabulary and its own corroboration
+requirement:
+
+```
+const BANNER_LEAD_IN_RE = /^welcome\s+to\s+(?:the\s+)?/i;
+```
+Strip it; then **three vetoes**, and the fallback is *do not modify*:
+1. remainder non-empty;
+2. remainder carries an **event-kind noun OR a year** — the same disjunction
+   `recoverFromNarrative` step 4 already uses (`!YEAR_RE.test(rest) &&
+   !looksLikeEvent(rest)`), reused rather than re-invented (Ruling 35);
+3. remainder still passes the shipped `bestEventTitleSegment` unchanged.
+
+**`to` IS MANDATORY, AND THIS IS LOAD-BEARING. My first draft made it optional
+and my own traps destroyed three of four real names:**
+
+| trap | optional-`to` draft | recommended form |
+|---|---|---|
+| `Welcome Reception and Poster Session` | → `Reception and Poster Session` ❌ | untouched ✅ |
+| `Welcome Week Careers Fair 2026` | → `Week Careers Fair 2026` ❌ | untouched ✅ |
+| `Welcome Home Veterans Summit 2026` | → `Home Veterans Summit 2026` ❌ | untouched ✅ |
+| `Welcome Center Open House` | untouched (no corroboration) | untouched ✅ |
+
+`Welcome` is a perfectly ordinary first word of a real event name. `Welcome to`
+never is. **C must not "simplify" the `to` back to optional.**
+
+**ADVERSARIAL RESULT: 17 of 17.** Repairs A's live value and four constructed
+variants; leaves untouched the four `Welcome`-initial traps, three
+uncorroborated banners (`Welcome to Our Site`, `Welcome to the Department of
+Chemistry`, `Welcome to FLOGEN` — all correctly left alone because nothing
+corroborates the remainder), and five live-confirmed correct names including
+`2026 Crystal Engineering GRC` (B12-02), `32nd SolarPACES Conference` (the
+regression lock's own value), `International Battery Seminar` (B12-04) and
+`The Battery Show North America` (whose leading article must survive, per Ruling
+39a point 4).
+
+**Ruling 37 compliance, answered directly:** the vocabulary is a **single
+two-word phrase**, not a grammatical class. It cannot be "widened without being
+closed" because there is nothing to widen — `welcome to` either prefixes the
+string or it does not.
+
+**What renders when every check rejects — and the answer here is different from
+every other item this round, which is the point.** This is a **repair, not a
+selection**: every check is a veto and the fallback is `return segment`
+unchanged. **When it does not fire, the render is byte-identical to today's.
+Nothing is rejected, nothing is dropped, no fallback is reached, and there is no
+path by which this item can produce a bare hostname or `"Untitled event"`.**
+That is the same failure-direction property B12-03's own comment claims for
+`stripWeldedPageTypeLabel`, and it is why this design is safe in a way a
+rejection-based one would not be.
+
+**Tests at risk — grepped, and the grep corrected my own first answer.** Three
+files reach this code:
+
+- **`events/sources/eventweb.test.ts`** — 10+ direct `bestEventTitleSegment`
+  call sites, plus B10-03's must-survive `"Call for Papers now open for the 2026
+  Battery Symposium"` and B12-03's load-bearing `for the` anchor.
+- **`opportunities/enrich.test.ts`** — **this is where the SolarPACES regression
+  lock lives** (`enrich.test.ts:265`, asserting `32nd SolarPACES Conference`),
+  and it reaches `bestEventTitleSegment` through `enrich.ts`'s name chain. That
+  value is in my matrix as a must-not-touch and is untouched. *(Reading it also
+  confirmed the enrichment finding above from the test side: that fixture's
+  `og:title` is `"Abstract submission deadline extended"` and the correct name
+  comes from `declaredEventName` — the tier is exercised, with no key.)*
+- **`events/scoring.test.ts` — YES, IT IS AT RISK, and my first answer was that
+  it was not.** It imports `eventNameFrom` from `./sources/eventweb`
+  (`scoring.test.ts:13-23`) and asserts event names at six call sites. **This is
+  the identical twice-missed file the brief warns about, and
+  `scoring.test.ts:576-581` carries a comment from B9-04 recording that it was
+  missed once before for exactly this reason.** I checked the strings: none of
+  the six begins `Welcome to`, so none is reachable — but C must run this file,
+  not assume it.
+
+**Grepped all three for `welcome`: exactly one hit anywhere** —
+`eventweb.test.ts:393`'s snippet `"The 250th ECS Meeting welcomes abstract
+submissions."`, which is a snippet and does not begin with the phrase. Not
+reachable.
+
+**Tests C should add:** A's live value as a must-repair; the four
+`Welcome`-initial traps as must-survive **with a comment saying the optional-`to`
+draft failed three of them**; the three uncorroborated banners; and the
+SolarPACES lock value re-asserted through this path.
+
+---
+
+#### RANKING HONESTY — this is the item that could legitimately be declined
+
+**A has recorded `flogen.org` for five rounds as "not confirmed false as to
+identity". That reading is right: the reader learns the event is SIPS 2026.
+This is a cosmetic, information-preserving defect — the same category Ruling 37
+declined to fix.** I am not hiding that parallel to get the item landed.
+
+**What separates it from Ruling 37's run-on, and why I recommend landing it
+anyway:** Ruling 37's fix required enumerating the verbs English allows after a
+plural subject — an open class whose misses **mutilated correct sentences**. This
+one is a fixed two-word phrase whose misses **change nothing at all**. Thirteen
+confirmed mutilation shapes killed Ruling 37's design; this one has **zero** on
+seventeen adversarial cases. **The arithmetic that decided Ruling 37 points the
+opposite way here.** If the manager still declines it as cosmetic, that is a
+defensible call and the design is on the record for whenever the host recurs.
+
+---
+
+**Cleanup:** `web/zz-r13b/` deleted before this commit; `git status
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched. No credential read, printed, logged or written. No
+page fetched, no pipeline pull run, no branch created, no PR opened,
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+**Not done yet (item 4, same session, next):** `euchems2026.eu`.
+
+Commit follows immediately.
