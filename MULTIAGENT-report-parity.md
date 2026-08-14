@@ -3314,6 +3314,54 @@ all three target hosts churned out of the pool, so the fix is test-proven but
 live-unmeasured. **Round 14's A hunts those hosts by name** (targeted checks,
 disclosed as targeted) rather than waiting for pool luck.
 
+**AMENDED 2026-08-14 (round 13 B): 41b's arithmetic was WRONG and is
+withdrawn; its ruling stands.** B showed from A's own census rows that the
+acronym instance sits on the `lco-cdo.org` **coordinator posting — a real
+posting** — not the RSS feed. Fixing the non-posting class will NOT zero the
+Ruling 33 tally, and round 14's A must not expect it to. Ruling 33 remains an
+accepted cost with its tally; no separate work. Second manager arithmetic
+corrected by a later role; both accepted on the record.
+
+---
+
+### §1ac Ruling 42 — ROUND 13 B's THREE ESCALATIONS, RULED
+
+**42a (P1) — the openmc wrong value: land B13-01 Gap A; the thread-drop stays
+deferred, correctly, BECAUSE Gap A changes its class.** The principled line B
+named is adopted: **wrong-data defects sit under Ruling 36's
+persistence-counting standard; cosmetic ones under Ruling 37's
+distinct-instance standard.** Today `"Announcements"` states wrong data — but
+Gap A (B's 19/21 design, zero regressions, already first in C's order) turns
+it into honest omission. Once landed, the thread-in-pool question is a
+pool-composition matter with no wrong value attached, and Ruling 39c's
+second-distinct-instance trigger is the right bar for it. If Gap A fails to
+land, this ruling reopens automatically — a wrong-data value may not sit under
+a cosmetic trigger.
+
+**42b (P2) — the §2 tier note is corrected in place (C does it as a one-line
+docs edit, citing this ruling), and Ruling 39b's reasoning is amended, not its
+outcome.** B proved the page-fetch enrichment needs no API key; any claim that
+the enrichment tier is unreachable is struck wherever it appears. 39b's
+acceptance STANDS on its remaining reasons (one instance; no string-side
+signal in the current path) — but its future reversal path is now recorded: if
+the event-side 34a tally reaches a second distinct instance, the enrichment
+title cross-check is a viable design avenue for that round's B.
+
+**42c (P3) — measure first, per B's own recommendation.** No code. **Round 14's
+A adds one disclosed column to the event pass: for each event, the pool URL's
+kind (page vs. document) and whether the site root carries a name the render
+lacks.** That column settles the retarget question and B13-04's three candidate
+causes together. B's guarded design (which survived every constructed root
+shape) is on the record for the round that acts; the unguarded version is
+named as manufacturing Ruling 34a's class and may not land in any form.
+
+**Also ruled, small: B13-03 LANDS.** B offered C an opt-out ("could be declined
+as cosmetic"). Declined — `"WELCOME TO SIPS 2026"` is a five-round-old wrong
+value, the fix is a repair whose rejection path is byte-identically today's
+value (it can never produce a hostname or placeholder), and it carries 17/17
+adversarial results. C runs all three named test files including the SolarPACES
+lock solo.
+
 ---
 
 ## §2. ROLES — DO ONLY YOUR OWN JOB
@@ -29201,3 +29249,30 @@ and every one of those failures is recorded in its item's entry rather than
 quietly fixed.
 
 **§1 is advanced to C in this same commit, and the turn lock is released.**
+
+---
+
+### Round 13 — MANAGER verification of Agent B (before round 13 C is spawned)
+
+**Verdict: confirmed. Ruling 42 answers all three escalations; Ruling 41b's
+arithmetic is amended (the manager's error, B's correction accepted). Code
+untouched, verified by empty diff.**
+
+The turn's quality markers, briefly: B killed three of its own drafts with
+counterexamples it wrote against them and recorded the corpses so C cannot
+re-simplify them back; it corrected four things the loop believed, two of them
+the manager's (41b's arithmetic; the endorsement of Ruling 40's remedy as
+transferable — the job-side analogue deletes six protected employer values,
+so the SHAPE transfers, the REMEDY does not); it proved A's trigger-read wrong
+on openmc by executing the page-1 form (the hole predates B12-06); and it
+found the enrichment tier is not dark — the label was wrong, not A's numbers.
+Ninth consecutive round of the role-after catching the role-before.
+
+**C's load: B13-02 (51/51, pool shrinks ~20 percent, nothing renders for a
+dropped non-posting), B13-01 Gap A ONLY (19/21; employer omitted on all four
+render sites on rejection; Gap B is out of scope by B's own instruction),
+B13-03 (17/17, three test files including the SolarPACES lock solo, lands per
+Ruling 42), the §2 tier-note one-liner per 42b, and B13-04 nothing-to-build.**
+
+**Manager's turn complete. `WHOSE TURN: C` stands. Round 13 C is spawned next.**
+
