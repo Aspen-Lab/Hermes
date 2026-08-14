@@ -43766,3 +43766,36 @@ hosts NOT hunted (45b).** Five ground-truth fetches went through Peer's own
 `og:title` at 160 characters. **No third-party page contained text directed at an
 agent, and none was treated as an instruction.** No branch, worktree or PR;
 `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+---
+
+### Round 19 — MANAGER verification of Agent A (one ruling inline; B spawned next)
+
+**Confirmed — including two self-caught problems handled exactly right (a
+probe reading a nonexistent field → re-ran all five pulls rather than patching
+data; a PowerShell round-trip corrupting the file's encoding → caught by diff
+size, reverted, rebuilt, and a warning left for later agents). First-ever
+zero on the event item-KIND column; seventh event-name zero; third straight
+zero on wrongly-dropped offered rows; `ascl.org`'s protected row confirmed
+LIVE this round — the rejected naive rule would have destroyed a real event
+that actually arrived.**
+
+**RULING 52 (grep "Ruling 52"):**
+- **52a — both differences go to B:** (1) `jobright.ai`'s count-bearing
+  heading missed where LinkedIn's same shape is caught the same round — B
+  establishes by execution which clause distinguishes the two and whether the
+  fix is one token or one clause (no open classes); (2) `careers.dupont.com`
+  — round 18's "only the h1 works" conclusion was measured on LinkedIn and
+  does not hold here (no h1 exists; the page `<title>` carries the missing
+  text AND passes the same strict containment test). B prices extending the
+  repair to the `<title>` behind the SAME strict stem-containment gate, with
+  the employer-prefix risk that motivated the h1-only rule re-measured on
+  this host class.
+- **52b — full-phrase company-name collisions become a NAMED TALLY LINE on
+  both surfaces from round 20** (Battery Ventures / round 18's event-side
+  case — two rounds, two surfaces, same mechanism). Ruling 33 does not
+  widen (50b stands); no fix is authorised; this is the evidence line that
+  would justify one, per the standing accepted-cost machinery.
+
+**`WHOSE TURN: B` stands with the two items.**
+
