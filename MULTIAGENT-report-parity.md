@@ -29276,3 +29276,112 @@ Ruling 42), the §2 tier-note one-liner per 42b, and B13-04 nothing-to-build.**
 
 **Manager's turn complete. `WHOSE TURN: C` stands. Round 13 C is spawned next.**
 
+---
+
+### Round 13 — Agent C (B13-02: the non-posting pool class — three parts inside `isListingPage`, B's 51/51 design verbatim, both killed drafts preserved as regression locks)
+
+**STATUS: DONE.** First of round 13 C's items, worked in the manager's order.
+Turn lock claimed after `git pull --ff-only` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed, per §3.
+
+**GATE CONFIRMED COLD BEFORE THE FIRST EDIT**, exactly as the brief requires:
+**90 files / 1160 tests, 1159 passing**, the single failure
+`benchmark.test.ts > enriches at least half the pool…` (the known live-search
+flake, `cityCoverage 0.4285… < 0.5`); `npx tsc --noEmit` clean; `npx eslint`
+**1 error, `src/components/persona/quiz.tsx:46`**, the standing one. The stated
+baseline reproduced exactly.
+
+---
+
+#### WHAT LANDED — B's design verbatim, all three parts in `isListingPage()`
+
+`web/src/lib/jobs/sources/jobweb.ts`. One item, one fix, per Ruling 32.
+
+1. **Part 1 — the count form learns a thousands separator.** Only the first
+   alternative's leading number changed:
+   `\d{1,5}` → `(?:\d{1,3}(?:,\d{3})+|\d{1,5})`. Every other alternative is
+   byte-identical.
+2. **Part 2 — `FEED_PATH_RE`**, a new closed check, tested **first** in
+   `isListingPage` as B specified.
+3. **Part 3 — `LISTING_SECTION_TITLE_RE`**, a new closed check, `for` absent
+   from the preposition list and the section word plural.
+
+**BOTH OF B's KILLED DRAFTS ARE PRESERVED, NOT RE-SIMPLIFIED — this was the
+brief's explicit warning and it is honoured in two places each: a doc comment
+naming the failure, and a test that fails if anyone undoes it.**
+- The alternation shape carries a comment stating the tidier
+  `\d{1,3}(?:,\d{3})*` loses `1000+ …` and `12345 vacancies`, **plus three
+  live regression tests** (`1000+`, `12345`, `999`) that fail if it is
+  "tidied".
+- `for`'s absence carries a comment naming the three real role titles it
+  destroyed, **plus those three titles asserted as must-keeps**.
+
+**Nothing was widened inline.** Every case B's matrix spanned was already
+covered by B's design; no shape appeared that the design missed, so §3's
+stop-and-record rule did not fire on this item.
+
+---
+
+#### WHAT RENDERS WHEN A NON-POSTING IS DROPPED — **NOTHING, AND THE POOL SHRINKS. Stated here because the brief requires C to say it.**
+
+A dropped non-posting produces **no card, no placeholder, no substitution and
+no backfill**. `isListingPage` returning true makes `webResultToRawJobItem`
+return `null`; both search functions filter nulls before returning; the item
+never reaches dedup, scoring, the mapper or any card. `buildDailyJobPool` ends
+with a `.slice()` **cap**, never a top-up.
+
+**THE POOL-SHRINK COUNT, for round 14's A: this drops 4 of 20 pool items — a
+~20% reduction on round 13's sample. That is the fix working, not the pipeline
+degrading.** The four, each carried by exactly one part with no overlap:
+
+| A's live instance | rendered as | carried by |
+|---|---|---|
+| `linkedin.com/jobs/molten-salt-jobs` | `1,000+ Molten Salt jobs in United States` | part 1 (count) |
+| `lco-cdo.org/en/author/lco_admin/feed/` | `lco-cdo` (bare host slug) | part 2 (feed) |
+| `jobs.battery.com/jobs?jobTypes=Intern` | `Intern Jobs at Battery Ventures Companies` | part 3 (section) |
+| `jobs.battery.com/jobs?jobTypes=` | `Jobs at Battery Ventures Companies` | part 3 (section) |
+
+**This also drops the two board views and the LinkedIn search page and the RSS
+feed item A named — all four of Finding 4, and nothing else.**
+
+**`openmc.discourse.group` STAYS IN THE POOL and is asserted as an explicit
+must-keep** with a comment saying Ruling 39c owns that drop and its trigger has
+not fired. This design does not do 39c's deferred work by the back door.
+
+---
+
+#### TESTS — 33 added, 0 deleted, 0 edited. **NEGATIVE-PROOFED: 14 of 33 fail on the reverted source.**
+
+`web/src/lib/jobs/sources/jobweb.test.ts`, one new `describe` block. **No test
+was deleted and no existing assertion was changed** — the file's 67 pre-existing
+tests are untouched.
+
+**Negative proof, run as the standard requires (revert → fail → restore):** with
+`jobweb.ts` reverted via `git checkout --` and the new tests left in place,
+**14 failed / 86 passed of 100**. The 14 are exactly the must-reject cases (2
+count, 7 feed, 5 section); **the 19 must-keeps correctly still passed on the old
+source**, which is the point — they assert nothing regressed, so they must pass
+both before and after. Source restored from a scratchpad copy and re-run: **100
+passed**.
+
+The 33: 2 live count instances + 3 killed-draft regression locks; 1 live feed
+instance + 6 syndication conventions + 4 feed-token-in-slug must-keeps; 2 live
+board views + 3 section forms + 3 `for`-preposition must-keeps + 3 trap
+must-keeps (`Jobs Data Analyst at…`, `Research positions at CERN`, `Career
+Development Scientist at Acme`); the openmc must-keep; 5 live-confirmed real
+postings from A's own census including the `lco-cdo.org` **coordinator posting**
+(the Ruling 41b-amended one — verified untouched by every part, which is why
+Ruling 33's tally will not zero out).
+
+---
+
+#### GATE AFTER THIS ITEM
+
+`cd web && npx vitest run` → **90 files / 1193 tests, 1192 passing**; the only
+failure is `benchmark.test.ts`, the standing live flake, same assertion as the
+cold baseline. `npx tsc --noEmit` → clean. `npx eslint` → **1 error,
+`quiz.tsx:46`**, unchanged.
+
+Commit follows immediately; pushed on the same breath.
+

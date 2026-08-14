@@ -529,3 +529,161 @@ describe("listing titles hidden behind site chrome", () => {
     expect(item!.title).toBe("Battery Research Scientist");
   });
 });
+
+// B13-02 (round 13): four items in round 13 A's live pool were not job
+// postings at all. NONE of isListingPage's five existing checks fired on ANY
+// of them — verified by execution before the design, not assumed. They are
+// THREE distinct holes in that one function, and each addition below carries
+// exactly one of A's instances, with no overlap.
+//
+// WHAT RENDERS WHEN ONE OF THESE IS DROPPED: NOTHING. isListingPage returning
+// true makes webResultToRawJobItem return null; both search functions filter
+// nulls before returning; the item never reaches dedup, scoring, the mapper or
+// any card. There is no placeholder, no substitution and no backfill —
+// buildDailyJobPool ends with a `.slice()` CAP, never a top-up. The pool
+// simply shrinks (4 of 20 items on round 13's sample, ~20%). That is the fix
+// working, not the pipeline degrading: those four occupied slots a real
+// posting could have had.
+describe("non-posting pool items (B13-02)", () => {
+  describe("hole 1 — a count with a thousands separator", () => {
+    // A's live instance: linkedin.com/jobs/molten-salt-jobs rendered this as
+    // its role title. `1000+ …` fired today; ONE COMMA defeated the whole
+    // alternative.
+    it("rejects a live thousands-separated aggregate count", () => {
+      expect(
+        isListingPage(
+          "1,000+ Molten Salt jobs in United States",
+          "linkedin.com",
+          "/jobs/molten-salt-jobs",
+        ),
+      ).toBe(true);
+    });
+
+    it("rejects a five-digit thousands-separated count", () => {
+      expect(
+        isListingPage(
+          "10,000 Battery Engineer positions in Germany",
+          "example.test",
+          "/jobs",
+        ),
+      ).toBe(true);
+    });
+
+    // REGRESSION LOCK on the alternation shape. These three are the cases B's
+    // own first draft (`\d{1,3}(?:,\d{3})*`) silently lost — with the comma
+    // group optional, `\d{1,3}` can never consume a 4- or 5-digit run. If a
+    // later round "tidies" the regex into a single group, these fail.
+    it.each([
+      "1000+ Molten Salt jobs in United States",
+      "12345 vacancies",
+      "999 Battery Openings",
+    ])("still rejects the plain-number count form: %s", (title) => {
+      expect(isListingPage(title, "example.test", "/jobs")).toBe(true);
+    });
+  });
+
+  describe("hole 2 — a syndication endpoint is never one posting", () => {
+    // A's live instance: an author RSS feed ingested as a job, whose role
+    // title rendered as the bare host slug `lco-cdo`.
+    it("rejects a live author RSS feed URL", () => {
+      expect(
+        isListingPage("lco-cdo", "lco-cdo.org", "/en/author/lco_admin/feed/"),
+      ).toBe(true);
+    });
+
+    it.each([
+      "/blog/feed",
+      "/rss/",
+      "/news/atom",
+      "/updates.rss",
+      "/index.xml",
+      "/news/?feed=rss2",
+    ])("rejects the syndication endpoint %s", (pathAndQuery) => {
+      expect(
+        isListingPage("Battery Research Scientist", "example.test", pathAndQuery),
+      ).toBe(true);
+    });
+
+    // MUST-KEEP: real-shaped posting slugs that merely CONTAIN a feed token as
+    // a substring. This is why the check is anchored to whole path segments —
+    // an unanchored version deletes all four of these real postings.
+    it.each([
+      "/jobs/feedstock-process-engineer",
+      "/careers/rss-platform-engineer",
+      "/jobs/atomic-layer-deposition-scientist",
+      "/jobs/feeder-line-technician",
+    ])("keeps a real posting whose slug contains a feed token: %s", (pathAndQuery) => {
+      expect(
+        isListingPage("Battery Research Scientist", "example.test", pathAndQuery),
+      ).toBe(false);
+    });
+  });
+
+  describe("hole 3 — a title that names a section, not a role", () => {
+    // A's two live instances: two views of one board's listing page.
+    it.each([
+      ["Intern Jobs at Battery Ventures Companies", "/jobs?jobTypes=Intern"],
+      ["Jobs at Battery Ventures Companies", "/jobs?jobTypes="],
+    ])("rejects the live board listing view: %s", (title, pathAndQuery) => {
+      expect(isListingPage(title, "jobs.battery.com", pathAndQuery)).toBe(true);
+    });
+
+    it.each([
+      "Vacancies at CERN",
+      "Careers with Acme Materials",
+      "Openings in Materials Science",
+    ])("rejects the section-title form: %s", (title) => {
+      expect(isListingPage(title, "example.test", "/jobs")).toBe(true);
+    });
+
+    // MUST-KEEP, AND THE REASON `for` IS NOT IN THE PREPOSITION LIST. B's
+    // first draft included it and these three real role titles were destroyed
+    // — 3 of 15. Do not add `for` back.
+    it.each([
+      "Jobs for Veterans Program Manager",
+      "Job for a Battery Engineer",
+      "Career for Life Coordinator",
+    ])("keeps a real role title using the preposition 'for': %s", (title) => {
+      expect(isListingPage(title, "example.test", "/careers/role")).toBe(false);
+    });
+
+    // MUST-KEEP traps: a role that BEGINS with `Jobs` (the preposition must
+    // follow the section word immediately), and `positions`, deliberately
+    // absent from the section-word list because real postings use it.
+    it.each([
+      "Jobs Data Analyst at the Bureau of Labor Statistics",
+      "Research positions at CERN",
+      "Career Development Scientist at Acme",
+    ])("keeps the real posting title: %s", (title) => {
+      expect(isListingPage(title, "example.test", "/careers/role")).toBe(false);
+    });
+  });
+
+  // MUST-KEEP, DELIBERATE AND LOAD-BEARING: the openmc forum thread stays IN
+  // the pool. Dropping forum threads is RULING 39c's item and it is DEFERRED —
+  // its trigger (a second, distinct forum-thread instance) has not fired. This
+  // design must not do 39c's work by the back door, so the thread is asserted
+  // here as a must-keep. If a future change makes this fail, that change is
+  // taking a deferred decision without a ruling.
+  it("keeps the openmc forum thread in the pool — Ruling 39c owns that drop, not B13-02", () => {
+    expect(
+      isListingPage(
+        "Job vacancies looking for OpenMC skills - Page 2 - OpenMC Discourse",
+        "openmc.discourse.group",
+        "/t/job-vacancies/1234?page=2",
+      ),
+    ).toBe(false);
+  });
+
+  // Eleven live-confirmed real postings from round 13 A's own census must all
+  // still survive all three additions.
+  it.each([
+    ["Postdoctoral Research Associate - Talents by Vaia", "talents.vaia.com", "/companies/savannah-river-national-laboratory/jobs/1234"],
+    ["Project and Website Coordinator", "lco-cdo.org", "/en/jobs/project-and-website-coordinator/"],
+    ["2027 Summer Investment Internship", "employbl.com", "/jobs/2027-summer-investment-internship-battery-ventures-1410243"],
+    ["Battery Research Scientist", "careers.inl.gov", "/job/12345"],
+    ["Internship Battery R&D", "hyetlithium.com", "/careers/internship-battery-research"],
+  ])("keeps the live posting %s", (title, host, pathAndQuery) => {
+    expect(isListingPage(title, host, pathAndQuery)).toBe(false);
+  });
+});

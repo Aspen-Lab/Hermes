@@ -36,13 +36,52 @@ export const NON_JOB_PATH_RE =
  * job-shaped heuristic (job-ish URL, hiring language, a role in the title) but
  * are not postings — you cannot apply to "60 Molten Salt Jobs". They are the
  * jobs-side equivalent of the social-media noise the events adapter denies.
+ *
+ * B13-02 part 1 (round 13): the leading count could not read a thousands
+ * separator, so `1,000+ Molten Salt jobs in United States` (live, linkedin.com)
+ * sailed through while the identical `1000+ …` was caught. Only this first
+ * alternative's number changed; every other alternative is byte-identical.
+ *
+ * THE ALTERNATION SHAPE IS LOAD-BEARING — DO NOT "TIDY" IT INTO
+ * `\d{1,3}(?:,\d{3})*`. B measured that tidier form and it silently LOSES two
+ * shapes the pre-B13-02 regex already caught (`1000+ …`, `12345 vacancies`),
+ * because with the comma group optional `\d{1,3}` can never consume a 4- or
+ * 5-digit run. Shipped 6/9, the tidy draft 7/9 with two NEW misses, this form
+ * 9/9 with zero false fires. The regression cases are asserted below.
  */
 export const LISTING_TITLE_RE =
-  /(?:^|\s)\d{1,5}[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|\b(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
+  /(?:^|\s)(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|\b(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
 
 /** Query-string or path shapes that mean "this is a search result listing". */
 export const LISTING_URL_RE =
   /\/(?:job-search|jobsearch|search|browse|listings?|q-[\w-]*jobs?)(?:\/|$|\.)|[?&](?:q|query|keywords?|search|k)=/i;
+
+/**
+ * B13-02 part 2 (round 13): a syndication endpoint is a list of many items by
+ * definition, never one posting. `lco-cdo.org/en/author/lco_admin/feed/` — an
+ * author RSS feed — was ingested as a job and rendered the bare host slug
+ * `lco-cdo` as its role title; `isListingPage` had no concept of a feed at all,
+ * and the item did not even arrive through `JOB_PATH_RE` (it entered on
+ * `JOB_TEXT_RE` matching "vacancies" in its text).
+ *
+ * Closed by construction, which is Ruling 37's bar: this enumerates the
+ * standardised RSS/Atom endpoint conventions — a finite set fixed by the
+ * syndication specs and by what CMSs emit — not a grammatical class English
+ * keeps extending. Nothing about a real posting URL is drawn from that
+ * vocabulary.
+ *
+ * THE WHOLE-SEGMENT ANCHORING IS LOAD-BEARING, and the four hardest
+ * counterexamples are why: `/jobs/feedstock-process-engineer`,
+ * `/careers/rss-platform-engineer`, `/jobs/atomic-layer-deposition-scientist`
+ * and `/jobs/feeder-line-technician` are real-shaped posting slugs carrying a
+ * feed token as a substring. All four are untouched, and all four are asserted
+ * below. Same anchoring discipline `NAV_CHROME_SEGMENT_RE` uses.
+ *
+ * Failure direction: an unlisted feed convention survives — the status quo,
+ * never a wrong value.
+ */
+const FEED_PATH_RE =
+  /(?:^|\/)(?:feed|rss|atom)(?:\/|$)|\.(?:rss|atom|xml)$|[?&]feed=/i;
 
 /** Aggregators whose deep links are fine but whose listing pages are noise. */
 const AGGREGATOR_HOSTS = [
@@ -64,6 +103,42 @@ const AGGREGATOR_HOSTS = [
  */
 export const CAREERS_INDEX_TITLE_RE =
   /^\s*(?:careers?|jobs?|vacancies|open(?:ings?)?|open positions?|current openings?|job openings?|work (?:with|for) us|join (?:us|our team)|employment|opportunities)\s*$/i;
+
+/**
+ * B13-02 part 3 (round 13): a title that NAMES A SECTION rather than a role.
+ * `Jobs at Battery Ventures Companies` and `Intern Jobs at Battery Ventures
+ * Companies` (live, `jobs.battery.com`) are one board's listing views, not
+ * postings. `LISTING_TITLE_RE` already knows the `jobs at …` shape but only
+ * when the title also ends in a `| host.tld` tail — the tail is the gap. The
+ * LEADING ANCHOR here is what makes the tail unnecessary: it is the difference
+ * between this check and `LISTING_TITLE_RE`'s unanchored alternative.
+ *
+ * TWO NARROWINGS, EACH FORCED BY A COUNTEREXAMPLE B WROTE TO BREAK ITS OWN
+ * FIRST DRAFT. C MUST NOT SIMPLIFY THEM BACK OUT:
+ *  1. `for` is DELIBERATELY NOT in the preposition list. With it, the check
+ *     false-fires on three plausible real role titles — `Jobs for Veterans
+ *     Program Manager`, `Job for a Battery Engineer`, `Career for Life
+ *     Coordinator`. Measured: 3 of 15 real postings destroyed with it, 0 of 15
+ *     without, and no loss of catch (8/8 listings still fire). All three are
+ *     asserted below as must-keeps.
+ *  2. The section word must be PLURAL. Strictly narrower at no cost — same 8/8
+ *     catch — and it removes the whole singular-role-title risk class.
+ *
+ * The deliberate trap `Jobs Data Analyst at the Bureau of Labor Statistics` — a
+ * real posting whose role BEGINS with `Jobs` — does not fire, because the
+ * preposition must follow the section word immediately. `Research positions at
+ * CERN` does not fire either: `positions` is deliberately absent from the list,
+ * since a real posting legitimately uses it.
+ *
+ * Ruling 39c's host-list preference was tested and is NOT what landed, for two
+ * recorded reasons: Ruling 32's headline is "stop fixing it one site at a
+ * time", and the host route's safety rests on an unmeasured assumption about
+ * `jobs.battery.com`/`linkedin.com` posting-URL shapes. If a later round finds
+ * a board listing view with no section-form title, the host list is the right
+ * second tool — kept here as a tested lead so it is not re-derived.
+ */
+const LISTING_SECTION_TITLE_RE =
+  /^\s*(?:[\w&/-]+\s+)?(?:jobs|vacancies|openings|careers)\s+(?:at|in|near|with)\b/i;
 
 /** A posting URL almost always carries a numeric or long opaque identifier. */
 const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
@@ -249,14 +324,27 @@ function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
  * ("/Jobs/Battery-Research-Scientist/-in-San-Jose,CA") are indistinguishable
  * from postings by path shape alone. Employer sites are left alone so a real
  * posting at `/careers/internship-battery-research` still gets through.
+ *
+ * B13-02 (round 13) added three checks here, all in this one function because
+ * this function is already this class's one home (Ruling 32). None of the five
+ * pre-existing checks fired on ANY of round 13 A's four non-posting pool items;
+ * each of the three additions carries exactly one of them, with no overlap.
+ *
+ * The single elegant rule — "require `POSTING_ID_RE` on every host" — was
+ * considered and is NOT available: it drops
+ * `hyetlithium.com/careers/internship-battery-research`, a real posting this
+ * file's own tests already require to survive, and the doc comment above says
+ * so deliberately. Recorded so nobody re-proposes it.
  */
 export function isListingPage(
   title: string,
   host: string,
   pathAndQuery: string,
 ): boolean {
+  if (FEED_PATH_RE.test(pathAndQuery)) return true;
   if (LISTING_TITLE_RE.test(title)) return true;
   if (CAREERS_INDEX_TITLE_RE.test(title)) return true;
+  if (LISTING_SECTION_TITLE_RE.test(title)) return true;
 
   const isAggregator = AGGREGATOR_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
