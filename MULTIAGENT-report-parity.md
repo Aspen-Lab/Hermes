@@ -270,15 +270,149 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          **LAPTOP-3CL10CG5 @ 2026-08-14 11:24 UTC** — Agent A, round
-                  16, GATE CANDIDATE ROUND. Claimed after `git pull --ff-only`
-                  and confirming `git branch --show-current` reads
-                  `feature/summary-report-revamp`.
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:19 UTC — ROUND 15 C IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:51 UTC — ROUND 16 A IS
+                  COMPLETE.** All four parts, one commit each, each pushed
+                  immediately (`16ca900`, `20208f2`, `a48876a`, this one).
+                  Claimed the lock cleanly (`c2b91f6`) after `git pull
+                  --ff-only` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **A changed no code, deleted no
+                  test, and touched no file except this one.** Harness lived
+                  outside `src/` (`web/zz-r16a/`, own vitest config) and was
+                  deleted before EVERY one of the four commits; tree confirmed
+                  clean each time.
+
+                  **METHOD, AND IT WAS A REAL LIVE PASS.** Five independent
+                  pulls per surface in five separate processes, no-op
+                  `PoolCache`, `buildDailyEventPool()`/`buildDailyJobPool()`
+                  then the mappers — the exact entry points §2 names.
+                  **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Keys checked as
+                  booleans only. **Per Ruling 42b the tier statement is
+                  "page-fetch enrichment ran, LLM enrichment did not."**
+                  Summaries read from the JOB CARD's own view model
+                  (`jobCardView().summaryText`), the surface the brief named.
+
+                  **HEADLINE: EVERY VALUE COLUMN ON BOTH SURFACES IS CLEAN,
+                  B15-01 DID EXACTLY WHAT IT WAS DESIGNED TO DO, AND THE GATE IS
+                  STILL NOT A CANDIDATE — BECAUSE A MADE A MEASUREMENT NO PRIOR
+                  ROUND HAD MADE AND IT FOUND A CLASS FIFTEEN ROUNDS COULD NOT
+                  SEE.**
+
+                  **THE NEW MEASUREMENT, AND IT IS THE ROUND'S MAIN RESULT.**
+                  Rounds 13–15 all answered "did the guard over-fire?" by
+                  replaying **the items that were in the pool**. **An item the
+                  guard dropped is by definition not in the pool, so that check
+                  is structurally incapable of finding an over-fire.** A scored
+                  **all 298 rows the provider offered** through the shipped
+                  `isListingPage()`. **33 drop; 31 correctly; TWO ARE REAL
+                  SINGLE POSTINGS** — `careers.inl.gov`'s `Molten Salt R&D
+                  Engineer` (the profile's strongest topic, on the employer's own
+                  careers system) and `lensa.com`'s Kairos Power internship.
+                  **Both mechanisms isolated to ONE TOKEN by execution.** Both
+                  rules **pre-date B15-01**, so this has been happening every
+                  round and was simply never measured.
+
+                  **B15-01 — CONFIRMED, AND GRADED IN TWO PARTS RATHER THAN
+                  ONE.** No aggregate listing page of any kind is in any of the
+                  five pools **while the provider offered six in all five runs**
+                  — the guard fired. **But all six carried a leading count**, so
+                  all six would have dropped through the pre-existing
+                  `LISTING_TITLE_RE` alone, and **the countless shape B15-01
+                  exists for did not recur.** `linkedin.com/jobs/molten-salt-jobs`
+                  **came back WITH its count** — the manager's third note under
+                  Ruling 46 confirmed from the other side. **Targeted replay
+                  settles it: round 15's exact live instance now DROPS where it
+                  was KEPT, and the count-free `molten-salt-jobs` form the brief
+                  named DROPS too.** Class live-confirmed; B15-01's own shape
+                  `targeted-confirmed, organically unmeasured`.
+
+                  **B14-02 — STILL OWED, second round running.** Zero `]` on any
+                  card, any posting, any run, but the bracket-bearing INPUT shape
+                  did not recur. Targeted replay renders both sentences clean,
+                  non-empty and byte-identical to the spaced control.
+                  **NOT an open difference.**
+
+                  **PER-SURFACE NUMBERS:** event names **0 of 11 → 0 of 14 (0%),
+                  FOURTH consecutive zero** — and three items round 15 could only
+                  zero by ABSENCE (Ruling 36's host, the SolarPACES lock,
+                  B13-03's `flogen.org` URL) were **present and measured** this
+                  round. Employer **0 of 8 → 0 of 6 non-null (0%), second
+                  consecutive zero**. Job summaries **3 of 12 bearing (25.0%)
+                  with ZERO open defects, second consecutive clean column**. Job
+                  item shape **1 of 16 (6.3%) → 1 of 12 (8.3%)** — a DIFFERENT
+                  item. **NEW COLUMN: offered rows the guard wrongly drops, 2 of
+                  298 (0.7%).** **ZERO within-round variance on every column of
+                  both surfaces, third round running.** Fixture score not re-run
+                  and not inherited as fresh.
+
+                  **THE TWO OPEN DIFFERENCES, RANKED** (wrong data above missing
+                  data, Ruling 23): **1. `lco.global/about/interns` — an
+                  internships PROGRAMME INDEX in the job pool, role title the bare
+                  word `Internships`, 5 of 5 pulls.** Recorded as "an observation,
+                  not a defect claim" by rounds 13, 14 and 15 and **never ruled
+                  on**; not an accepted cost and not on A's exclusion list. §2
+                  forbids dropping something because it has appeared three times,
+                  and a 0% bar cannot carry an unruled difference silently.
+                  **The item is admitted on `matchedTerms: ["LCO"]` — Ruling 33's
+                  3-character collision operating on ITEM ADMISSION rather than
+                  summary content, a surface 33's tally does not reach. A records
+                  it and counts it in neither tally twice.**
+                  **2. The shipped guard drops real single postings** (above).
+
+                  **FOUR TALLIES, ALL AFFIRMATIVE.** **Ruling 33: 0 of 3,
+                  cumulative 2 of 31 — NOT closed**, and its zero sits beside the
+                  live-collision observation above. **Ruling 34a employer: 0 of 6,
+                  running r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8, r16 0/6,
+                  cumulative 4 of 54 — and THIS ZERO IS A THIRD THING, NAMED: the
+                  host is PRESENT and its value changed UPSTREAM**, neither a fix
+                  nor churn, and it can revert on any pull. **Event side: 1 of 14
+                  (`The Battery Saloon` 5/5, root `og:title` re-confirmed
+                  verbatim), running r13 1/14, r14 1/13, r15 1/11, r16 1/14,
+                  cumulative 4 of 52 — SECOND DISTINCT INSTANCE ABSENT, so Ruling
+                  42b's cross-check does NOT fire, fourth round running.**
+                  **Ruling 37: 1 of 3, baseline only, no second distinct instance,
+                  FIFTH round running — and RULING 44's label-miss sub-count reads
+                  ZERO distinct instances on the same reasoning round 15 applied
+                  (`What you'll do` carries NO COLON live, so `LEADING_LABEL_RE`
+                  never applies and it is already counted as the run-on).**
+                  **Rulings 46a and 46b: ZERO live sightings each, first round
+                  counted, NEITHER reopened** — and checked against the 298
+                  offered provider rows as well as the pool, the first time a
+                  named cost could be checked against the provider's own offer
+                  list. **Ruling 36: STAYS CLOSED, zero, fourth consecutive round
+                  — and MEASURED this round, not absent.** **Ruling 39c is no
+                  longer a tally**; zero forum threads in the pool and zero
+                  offered.
+
+                  **ONE NEW `POLICY — manager decides`: should the
+                  all-offered-rows over-fire scan become part of A's standing
+                  method?** It cost one extra pull and found a class fifteen
+                  rounds of the pool-survivor check could not. **A recommends yes
+                  and records that it is the manager's call.**
+
+                  **A METHOD CORRECTION AGAINST ITSELF, recorded rather than
+                  quietly fixed:** A's first job probe read `job.title`/`job.url`,
+                  which are not fields on the `Job` type (`roleTitle`/
+                  `linkPosting` are). **A threw that pass away and re-ran all five
+                  pulls** rather than reconstructing the missing columns.
+
+                  **No credential read, printed, logged or written. No
+                  `PEER_PROFILE_SNAPSHOT_PATH`. `euagenda.eu` NOT fetched (45a).
+                  Ruling 41c's three hosts NOT hunted (45b). Direct fetches
+                  clipped programmatically to `<title>`/first `<h1>`/`og:title` at
+                  160 chars; provider rows retained host, URL and a 120-char title
+                  only. No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test
+                  deleted or edited. Harness deleted; tree clean.** Full detail in
+                  §4's four "Round 16 — Agent A" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 15 C finished @
+                  2026-08-14 11:19 UTC — ROUND 15 C WAS
                   COMPLETE.** One item (B15-01), two commits (`9e9cd44` the
                   code, `a3bd0b6` the log), each pushed immediately. Claimed the
                   lock cleanly (`5d4c884`) after `git pull --ff-only` and
@@ -923,16 +1057,147 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:19 UTC — ROUND 15 C IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **15 — COMPLETE. A, B AND C ALL DONE. ROUND 16 OPENS WITH
-                  A.** Round 15 found one unexplained difference, B designed
-                  against it, C landed it. **Round 15 A recorded ZERO wrong
-                  values on either surface — the first clean sweep on all three
-                  value columns in this loop's history — and its single open item
-                  was a wrong ITEM, not a wrong value. That item now has a
-                  shipped fix.** **Round 16 is therefore the realistic
-                  gate-candidate round**, which is why A's brief below is written
-                  as one.
-WHOSE TURN:       **A — round 16, GATE CANDIDATE ROUND.** Re-measure both
+ROUND:            **16 — A IS DONE. B IS NEXT.** Round 16 was briefed as the
+                  realistic gate-candidate round and A applied the condition
+                  exactly as written. **Every value column on both surfaces is
+                  clean and B15-01 works — but TWO unexplained differences
+                  remain, so the hand-off is B, not the manager.** One of the two
+                  is a class no prior round could have seen, because every prior
+                  over-fire check replayed only pool SURVIVORS.
+WHOSE TURN:       **B — Investigator, round 16.** A's list is **TWO** numbered
+                  differences, ranked, in §4's "Round 16 — Agent A (part 4…)"
+                  entry, with the full evidence in parts 1–3. **B finds causes and
+                  writes a fix guide; B does not change code** (§2). Ruling 31's
+                  adversarial bar, Ruling 32's "what renders on rejection"
+                  question, and the open-class trap forbidden as always.
+
+                  **1. `lco.global/about/interns` — AN INTERNSHIPS PROGRAMME INDEX
+                  IS IN THE JOB POOL, RENDERED AS A JOB.** Role title renders the
+                  bare word `Internships`; employer `Las Cumbres Observatory`
+                  (correct); no summary. **5 of 5 pulls.** Ground truth fetched
+                  this round: the page's `<title>` is `Internships - Las Cumbres
+                  Observatory`, its `<h1>` the bare `Internships`.
+
+                  **THREE THINGS A MEASURED SO B DOES NOT RE-DERIVE THEM:**
+                  - **The shipped guard KEEPS this URL on replay** —
+                    `isListingPage("Internships", "lco.global", "/about/interns")`
+                    is `false`. **This is an UNDER-catch, not a mis-fire**, and it
+                    is Ruling 32's class in `isListingPage()`'s home — where
+                    B13-02, B14-01 and B15-01 all landed.
+                  - **The item is admitted on a 3-character acronym.**
+                    `matchedTerms` is exactly `["LCO"]`; `LCO` is a literal entry
+                    in the profile's topic list meaning **lithium cobalt oxide**,
+                    while `lco.global` is the **Las Cumbres Observatory**. **This
+                    is Ruling 33's collision class operating on ITEM ADMISSION
+                    rather than summary content.** **Ruling 33 is an ACCEPTED COST
+                    and B must NOT design against the matcher** — it is on the
+                    exclusion list, its stated reason (the blast radius reaches
+                    ranking) applies with MORE force upstream, and A recorded the
+                    observation without scoring it. **The page-KIND route is the
+                    one A's evidence supports.**
+                  - **What renders on rejection: the item leaves the pool
+                    entirely**, as B15-01's class does. Pool is twelve,
+                    `MAX_OPPORTUNITY_POOL_ITEMS` is 200, so the cap is not binding
+                    and nothing backfills.
+
+                  **THIS SHAPE HAS BEEN RECORDED THREE TIMES AND RANKED ZERO
+                  TIMES.** Rounds 13, 14 and 15 each logged it as "an observation,
+                  not a defect claim." **It has never been ruled on, it is not an
+                  accepted cost, and it is not on A's exclusion list.** A ranked it
+                  because §2 forbids dropping something for having appeared three
+                  times and a 0% bar cannot carry an unruled difference silently.
+
+                  **2. THE SHIPPED LISTING-PAGE GUARD DROPS REAL SINGLE POSTINGS —
+                  2 of the 298 rows the provider offered.** `careers.inl.gov`'s
+                  `Molten Salt R&D Engineer` (a single requisition on Idaho
+                  National Laboratory's own careers system, matching the profile's
+                  strongest topic) and `lensa.com`'s Kairos Power
+                  `Chemical and Materials Engineering Internship - Summer 2027`.
+                  **Neither is recoverable from any other row in the pool.**
+
+                  **A ALREADY ISOLATED BOTH MECHANISMS TO ONE TOKEN BY EXECUTION —
+                  DO NOT RE-DERIVE THEM.**
+                  - `Molten Salt R&D Engineer - Search Jobs` @
+                    `careers.inl.gov/…/job/1515?…` → **DROP**; **the identical
+                    title with the trailing ` - Search Jobs` site chrome removed →
+                    KEPT**; that chrome on an unrelated title, host and path →
+                    DROP; ` - View Jobs` in the same position → KEPT. **Host and
+                    path are irrelevant — it is a TITLE rule firing on the site's
+                    own `<title>` chrome, not on the page's kind.**
+                  - `Chemical and Materials Engineering Internship - Summer 2027
+                    job in Albuquerque at Kairos Power | Lensa` @
+                    `lensa.com/job-v1/…/<32-char hash>` → **DROP**; **removing
+                    ` job in Albuquerque` → KEPT**; removing ` | Lensa` → still
+                    DROP; removing ` at Kairos Power` → still DROP; a numeric
+                    posting id in the path → still DROP; a non-aggregator host →
+                    still DROP. **But `Battery Engineer job in Albuquerque` alone
+                    → KEPT**, so the fragment is **necessary and not sufficient**.
+                    A stopped there; the residue is B's.
+
+                  **THREE WARNINGS BEFORE B DESIGNS ANYTHING:**
+                  - **Both rules PRE-DATE B15-01** — its `isTopicLandingPage`
+                    needs the URL's final segment to end in a plural job noun and
+                    neither URL does. **This is a new MEASUREMENT, not a new
+                    defect, and not a regression from round 15.**
+                  - **The obvious move — strip site chrome before the title rules
+                    run — is the class of widening that has burned this loop
+                    twice.** B14-01's naive token-only variant scored **46/58 and
+                    destroyed eight real posting URLs**; B15-01's naive widening
+                    scored **71/92 and failed four shipped must-keeps**. **Measure
+                    it; do not assume it.**
+                  - **Do not build a host list** for `careers.inl.gov` or
+                    `lensa.com` (Ruling 32's headline complaint). The
+                    ` - Search Jobs` chrome is an applicant-tracking-system
+                    convention, not one site's quirk.
+                  - **Ruling 32's question has an unusual answer here: these items
+                    do not render wrongly — they do not render at all.** The cost
+                    is invisible to a reader, which is exactly why it survived
+                    fifteen rounds.
+
+                  **A STATES THIS FINDING'S LIMITS, AND B SHOULD NOT OVERSTATE
+                  THEM EITHER:** it rests on **ONE targeted pull** (a disclosed
+                  sixth, excluded from every census number), not five. **2 of 298
+                  offered rows (0.7%), 2 of 33 drops (6.1%).** **A claims two
+                  named, replay-reproducible instances and a method — not a rate.**
+
+                  **WHAT B MUST NOT TREAT AS OPEN:** `careerservices.upenn.edu`
+                  (34a — **and note it rendered SILENCE this round, from an
+                  upstream change, not a fix**), `batteryinnovationsummit.com`'s
+                  `The Battery Saloon` (39b — **second-instance trigger did NOT
+                  fire, so the enrichment cross-check is NOT authorised**),
+                  `careers.gevernova.com`'s colonless run-on (37 — the run-on
+                  only; **its bracket is FIXED and confirmed**), Ruling 44's
+                  label-miss (**A counted ZERO distinct instances**), the
+                  `lco-cdo.org` `LCO` acronym and the matcher generally (33 —
+                  **see difference 1's second bullet**), same-page contamination
+                  (29, parked), `ecs.confex.com`'s and `euchems2026.eu`'s honest
+                  hosts (39a/40), the document-URL retarget (42c, stays unbuilt),
+                  **`euagenda.eu` (45a — PERMANENTLY excluded; do not fetch it)**,
+                  Ruling 41c's three hosts (45b — not a standing duty), and
+                  **46a's false fire and 46b's two titles, both at ZERO live
+                  sightings and NEITHER reopened.**
+
+                  **STILL OPEN FOR THE MANAGER, NOT B's:** B11-04's flag and
+                  B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD below;
+                  **round 13's unresolved `POLICY — manager decides` on five-pull
+                  majority scoring**, on which A has added the strongest evidence
+                  yet (**zero within-round variance for a third round, but THREE
+                  employer values moved BETWEEN rounds with no code touching that
+                  path**); round 14 C's `LEADING_LABEL_RE` widening question;
+                  round 15 B's question on the shipped section rule's two dropped
+                  titles; the `@`-separator employer at
+                  `befjobs.breakthroughenergy.org` (absent this round); and
+                  **NEW from A — whether the all-offered-rows over-fire scan
+                  should become part of A's standing method. A recommends yes.**
+
+                  **GATE (0%): NOT MET.** A does not close it and B does not set
+                  it (§2); the manager re-measures independently before anything
+                  closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 16 A
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **A — Reviewer, round 16, GATE CANDIDATE ROUND.** Re-measure both
                   surfaces live by §2's standing method (five independent pulls
                   per surface, no-op `PoolCache`,
                   `buildDailyEventPool()`/`buildDailyJobPool()` then the mappers;
@@ -2161,25 +2426,36 @@ LAST DIFFERENCE:  **This is round 13 A's own live reading, taken AFTER all
                   §4 "Round 12 — Agent A (part N)" entries; the ranked
                   headline is in "(part 4: summary across parts 1–4, ranked
                   difference list, three tallies, gate verdict)."
-GATE (0%):        **NOT MET — round 15 A's own live verdict, and THE GATE IS NOT
+GATE (0%):        **NOT MET — round 16 A's own live verdict, and THE GATE IS NOT
                   A CANDIDATE. Neither B nor C can close or move this**;
                   producing a fix guide is not evidence a difference is gone, and
-                  neither is landing the fix — only round 16's A's live
+                  neither is landing the fix — only round 17's A's live
                   measurement can change this line.
-                  **ONE open difference remains** (ranked list in §4, "Round 15 —
-                  Agent A (part 4…)"): **`linkedin.com/jobs/ion-exchange-resin-jobs`,
-                  an aggregate search-results page in the job pool rendered as a
-                  job**, at a 1-in-5 observed pull frequency. It is a wrong
-                  **item**, not a wrong value — **there are ZERO wrong values on
-                  either surface this round**, the first clean sweep on all three
-                  value columns in this loop's history.
-                  **Round 15 was briefed as a gate-candidate round and A applied
-                  the condition honestly: zero unexplained differences was
-                  required, one was found, so the hand-off is B and NOT the
-                  manager.** A deliberately did not call an intermittent listing
-                  page cosmetic to clear the gate — §2 forbids exactly that, and
-                  a card that promises a job and opens a search page is not
-                  cosmetic.
+                  **TWO open differences remain** (ranked list in §4, "Round 16 —
+                  Agent A (part 4…)"): **1. `lco.global/about/interns`, an
+                  internships PROGRAMME INDEX in the job pool rendered as a job,
+                  5 of 5 pulls** — recorded as an observation by rounds 13, 14 and
+                  15 and **never ruled on**; **2. the shipped listing-page guard
+                  DROPS REAL SINGLE POSTINGS — 2 of the 298 rows the provider
+                  offered**, found by a measurement no prior round had made.
+                  **THERE ARE ZERO WRONG VALUES ON EITHER SURFACE, for the second
+                  consecutive round** — event names 0 of 14, employers 0 of 6,
+                  job summaries 0 open defects. **What remains is one wrong ITEM
+                  in the pool and two right items kept OUT of it.**
+                  **Round 16 was briefed as the realistic gate-candidate round and
+                  A applied the condition exactly as written: zero unexplained
+                  differences was required, two were found, so the hand-off is B
+                  and NOT the manager.** A deliberately did not call either
+                  difference cosmetic to clear the gate — §2 forbids exactly that.
+                  A card that promises a job and opens an internships index is not
+                  cosmetic, and a guard that silently deletes the round's most
+                  on-topic vacancy is the opposite of cosmetic.
+                  **THE REASON THE SECOND DIFFERENCE IS NEW IS A METHOD FACT WORTH
+                  KEEPING:** rounds 13–15 all tested for over-fire by replaying
+                  **pool survivors**, and an item the guard dropped is by
+                  definition not among them. **A scored all 298 offered provider
+                  rows instead.** Whether that becomes standing method is a
+                  `POLICY — manager decides` item; A recommends yes.
                   The named accepted costs (`careerservices.upenn.edu` per Ruling
                   34a; `batteryinnovationsummit.com` per Ruling 39b;
                   `careers.gevernova.com`'s run-on per Ruling 37; Ruling 44's
@@ -34975,3 +35251,237 @@ string quoted above is the pipeline's own rendered output, not scraped page text
 verdict.
 
 Commit follows immediately.
+
+---
+
+### Round 16 — Agent A (part 4: summary across parts 1–3, the ranked difference list, and the GATE VERDICT — the gate is NOT a candidate, and the reason is a measurement no prior round had made)
+
+**STATUS: DONE. Round 16 A is COMPLETE.** Fourth of four parts, same session.
+Parts 1–3 are banked in `16ca900`, `20208f2` and `a48876a` and are **not** re-run.
+
+---
+
+## PER-SURFACE NUMBERS, AGAINST ROUND 15
+
+| column | round 15 | round 16 | reading |
+|---|---|---|---|
+| **Event names wrong** | 0 of 11 (0%) | **0 of 14 (0%)** | **FOURTH consecutive zero — and on a larger, more informative sample.** Three items round 15 could only zero by ABSENCE (Ruling 36's host, the SolarPACES lock, B13-03's `flogen.org` URL) were **present and measured** this round |
+| **Employer wrong (non-null)** | 0 of 8 (0%) | **0 of 6 (0%)** | **SECOND consecutive zero.** Ruling 34a's only instance is present in the pool and renders honest silence rather than the wrong institution |
+| **Job summaries: bearing / carrying an open defect** | 4 of 16 bearing, **0** open | **3 of 12 bearing (25.0%), 0 open** | **SECOND consecutive clean summary column** |
+| **Job items that are not single postings** | 1 of 16 (6.3%) | **1 of 12 (8.3%)** | **Still not zero — a DIFFERENT item.** Round 15's was the LinkedIn listing page, now fixed; this round's is `lco.global/about/interns` |
+| **Offered provider rows the guard wrongly drops** | *not measured by any prior round* | **2 of 298 (0.7%)** | **NEW COLUMN, and it is why the gate is not a candidate** |
+
+**Fixture score: not re-run this round.** No fresh fixture number is claimed and
+none is inherited as if fresh. Per Ruling 23 the real-data gate is the operative
+one, and it is the one measured here.
+
+**Within-round variance: ZERO on every column of both surfaces, third round
+running.** **Between-round variance moved three employer values with no code
+touching that path** (part 2's variance note). The evidence on round 13's
+unresolved five-pull majority-scoring policy now points clearly at the
+**between-round** axis, not the within-round one.
+
+---
+
+## B15-01: WHAT A CAN AND CANNOT CONFIRM
+
+**Confirmed live as a class:** no aggregate listing page of any kind is in any of
+the five pools, **while the provider offered six of them in all five runs**
+(298 provider rows per run, byte-identical across runs). The guard fired.
+
+**NOT confirmable organically this round, and A says so rather than banking a
+flattering result:** **all six live listing rows carried a leading count**, so all
+six would have dropped through the pre-existing `LISTING_TITLE_RE` alone. **The
+countless shape B15-01 exists for did not recur.** Most pointedly,
+`linkedin.com/jobs/molten-salt-jobs` — the very URL round 15 B proved was being
+KEPT when the count was omitted — **came back this round WITH its count.** That is
+the manager's third note under Ruling 46 confirmed from the other side: **this
+shape's rendering flips between rounds, so round-over-round comparison on it
+measures LinkedIn's weather as much as Peer's code.**
+
+**Confirmed by targeted replay, disclosed as targeted:** round 15's exact live
+instance (`Ion Exchange Resin jobs in United States` @ `/jobs/ion-exchange-resin-jobs`)
+now **DROPS** where it was KEPT, **and the count-free `molten-salt-jobs` form the
+brief specifically named DROPS too.** **B15-01 did what it was designed to do.**
+
+**Grade: class live-confirmed; B15-01's own shape `targeted-confirmed, organically
+unmeasured`.** Two different strengths, reported as two.
+
+---
+
+## RANKED DIFFERENCE LIST — TWO OPEN ITEMS
+
+**What a reader would notice first goes first. Wrong data ranks above missing
+data, per Ruling 23.**
+
+### 1. `lco.global/about/interns` — AN INTERNSHIPS PROGRAMME INDEX IS IN THE JOB POOL, RENDERED AS A JOB. 5 of 5 pulls.
+
+- **What the plate has:** a job report for **one** posting — one role, one
+  employer, one application.
+- **What the build has:** a card whose role title is the bare word
+  **`Internships`**, employer `Las Cumbres Observatory`, no summary, in **every
+  one of the five pulls.**
+- **Ground truth, fetched this round rather than inherited:** the page's `<title>`
+  is `Internships - Las Cumbres Observatory` and its `<h1>` is the bare
+  `Internships`. **It is a programme index, not a vacancy.**
+
+**WHY THIS IS BEING RANKED NOW AFTER THREE ROUNDS OF BEING RECORDED AS "AN
+OBSERVATION, NOT A DEFECT CLAIM".** Rounds 13, 14 and 15 each recorded this shape
+and each explicitly declined to rank it; round 14 counted it in the item-shape
+column without ranking it, and round 15 could not count it because the host had
+churned out. **It has never been ruled on. It is not an accepted cost, it is not
+on A's exclusion list, and no ruling covers it.** §2 says plainly: *do not stop
+reporting something because it has already appeared in three rounds.* **This is
+the gate-candidate round, and an unruled difference cannot be carried silently
+past a 0% bar.** A ranks it and lets the manager rule.
+
+**TWO MEASURED FACTS FOR B, AND NO DIAGNOSIS (§2):**
+- **The item is admitted on a 3-character acronym.** Its `matchedTerms` is exactly
+  `["LCO"]`, and `LCO` is a literal entry in the profile's own topic list, where it
+  means **lithium cobalt oxide**; `lco.global` is the **Las Cumbres Observatory**.
+  **This is Ruling 33's collision class operating on ITEM ADMISSION rather than on
+  summary content** — a surface Ruling 33's tally does not reach. **A counted it
+  in neither tally twice** (part 3 says exactly where it is and is not counted).
+- **The shipped guard KEEPS this URL on replay** (`isListingPage` returns `false`
+  for `Internships` @ `lco.global/about/interns`), so this is an
+  under-catch, not a mis-fire, and it lives in Ruling 32's class and
+  `isListingPage()`'s home — the same home B13-02, B14-01 and B15-01 all landed
+  in.
+
+**Ruling 32's mandatory question, answered from A's side:** on rejection the item
+would **leave the pool entirely** (the same behaviour B15-01's class has), not
+render an empty field. The pool is twelve and `MAX_OPPORTUNITY_POOL_ITEMS` is 200,
+so nothing backfills and the cap is not binding.
+
+### 2. THE SHIPPED LISTING-PAGE GUARD DROPS REAL SINGLE POSTINGS. 2 of the 298 rows the provider offered.
+
+- **What the plate has:** the reader's most relevant real vacancies.
+- **What the build has:** **`careers.inl.gov`'s `Molten Salt R&D Engineer`** —
+  a single requisition on Idaho National Laboratory's own careers system, matching
+  the profile's strongest topic — **is dropped before it can become an item**, and
+  so is **`lensa.com`'s Kairos Power `Chemical and Materials Engineering
+  Internship - Summer 2027`**. Neither is recoverable from any other row in the
+  pool.
+
+**THIS IS A NEW MEASUREMENT, NOT A NEW DEFECT, AND THE DISTINCTION IS THE POINT.**
+Rounds 13, 14 and 15 all answered "did the guard over-fire?" by replaying the
+items **that were in the pool** plus a few historical must-keeps. **An item the
+guard dropped is by definition not in the pool, so that check is structurally
+incapable of finding this class.** Round 16 A scored **every one of the 298 rows
+the provider offered** through `isListingPage()` directly. **33 drop; 31 of the 33
+are correct; these two are not.** Both rules involved **pre-date B15-01** —
+B15-01's `isTopicLandingPage` requires the URL's final segment to end in a plural
+job noun and neither URL does — **so this has been happening in every prior round
+and was simply never measured.**
+
+**THE MECHANISM IS ISOLATED TO ONE TOKEN IN EACH CASE, BY EXECUTION, SO B DOES
+NOT RE-DERIVE IT:**
+
+| case | live verdict | the one change that flips it |
+|---|---|---|
+| `Molten Salt R&D Engineer - Search Jobs` @ `careers.inl.gov/…/job/1515?…` | **DROP** | **remove the trailing ` - Search Jobs` site chrome → KEPT.** That chrome on an unrelated title, host and path → DROP. ` - View Jobs` in the same position → KEPT. **Host and path are irrelevant; it is a TITLE rule firing on the site's own `<title>` chrome, not on the page's kind** |
+| `Chemical and Materials Engineering Internship - Summer 2027 job in Albuquerque at Kairos Power | Lensa` @ `lensa.com/job-v1/…/<32-char hash>` | **DROP** | **remove ` job in Albuquerque` → KEPT.** Removing ` | Lensa` → still DROP; removing ` at Kairos Power` → still DROP; a numeric posting id in the path → still DROP; a non-aggregator host → still DROP. **But `Battery Engineer job in Albuquerque` alone → KEPT**, so the fragment is **necessary and not sufficient** — it fires in combination with something else in the longer title, and **A stops there because the residue is B's to diagnose** |
+
+**THREE WARNINGS A OWES B BEFORE ANY DESIGN, from this loop's own history:**
+- **The obvious move — strip site chrome before the title rules run — is exactly
+  the class of widening that has burned this loop repeatedly.** B14-01's naive
+  token-only variant scored 46/58 and destroyed eight real posting URLs; B15-01's
+  naive widening scored 71/92 and failed four shipped must-keeps. **Measure it; do
+  not assume it.**
+- **Do not build a host list** for `careers.inl.gov` or `lensa.com` (Ruling 32's
+  headline complaint). The `- Search Jobs` chrome is an applicant-tracking-system
+  convention, not one site's quirk.
+- **Ruling 32's question is mandatory and its answer here is the opposite of
+  usual:** these items do not render wrongly — **they do not render at all.** The
+  cost of the current behaviour is invisible to a reader, which is precisely why it
+  survived fifteen rounds.
+
+**A ALSO STATES THIS FINDING'S LIMITS PLAINLY.** It rests on **one targeted pull**
+(the sixth, disclosed and excluded from every census number), not five. **The
+frequency is 2 of 298 offered rows (0.7%) and 2 of 33 drops (6.1%) in that one
+pull**, and a second pull could return a different offer set. **A does not claim a
+rate; A claims two named, reproducible-by-replay instances and a method that found
+them.**
+
+---
+
+## WHAT IS *NOT* ON THIS LIST, AND WHY
+
+- **B14-02** — `targeted-confirmed, organically unmeasured` for a second round.
+  Zero `]` on any card in any run, but the bracket-bearing INPUT shape did not
+  recur, so organic evidence cannot falsify the fix; the targeted replay renders
+  both sentences clean, non-empty and byte-identical to the spaced control.
+  **Owed: one live sighting. NOT an open difference**, exactly as the brief
+  directs. Manager's carry list.
+- **The named accepted costs**, counted in their tallies and excluded from the
+  difference count as their rulings require: `careerservices.upenn.edu` (34a —
+  and it rendered silence this round), `The Battery Saloon` (39b),
+  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's label-miss,
+  the `lco-cdo.org` `LCO` acronym (33), same-page contamination (29),
+  `ecs.confex.com`'s and `euchems2026.eu`'s honest hosts (39a/40), the
+  document-URL retarget (42c), **`euagenda.eu` (45a — permanently excluded, NOT
+  fetched, NOT retested)**, Ruling 41c's three hosts (45b — **NOT hunted**), and
+  **46a's false fire and 46b's two titles, both counted at ZERO live sightings.**
+- **`grad.wisc.edu`'s dated announcement post** — a borderline A declined to
+  count, following rounds 13–14's explicit walk rather than reversing it on
+  weaker evidence. **The doubt is recorded in part 2, not resolved.**
+
+---
+
+## STILL OPEN FOR THE MANAGER, NOT A's
+
+B11-04's flag and B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD;
+round 13's unresolved `POLICY — manager decides` on five-pull majority scoring
+(**A has added the strongest evidence yet, and it points at the between-round
+axis**); the `@`-separator employer at `befjobs.breakthroughenergy.org` (absent
+this round); round 14 C's `LEADING_LABEL_RE` widening question; and round 15 B's
+question whether the shipped section rule dropping `PhD openings in
+Electrochemistry at TU Delft` and `Green Jobs in Ontario Programme Lead` deserves
+an item (**still zero live sightings**).
+
+**ONE NEW ITEM FOR THE MANAGER, `POLICY — manager decides`:** **should the
+all-offered-rows over-fire scan become part of A's standing method?** It cost one
+extra pull and it found a class fifteen rounds of the pool-survivor check could
+not. A recommends yes and records that it is the manager's call, not A's.
+
+---
+
+## THE GATE VERDICT
+
+**GATE (0%): NOT MET. THE GATE IS NOT A CANDIDATE.**
+
+**Round 16 was briefed as the realistic gate-candidate round and A applied the
+condition exactly as written: zero unexplained differences on both surfaces was
+required. TWO were found, so the hand-off is B and NOT the manager.**
+
+**A did not round down and did not call either difference cosmetic to clear the
+bar.** A card that promises a job and opens an internships index is not cosmetic,
+and a guard that silently deletes the round's most on-topic vacancy is the
+opposite of cosmetic — it is the failure mode this loop has spent three rounds
+paying matrix points to avoid, and it went unmeasured because nobody had looked in
+the only place it could be seen.
+
+**The honest summary of round 16: every value column on both surfaces is clean —
+event names, employers and job summaries are all at zero for the second or fourth
+consecutive round, and B15-01 did exactly what it was designed to do. What
+remains is not a wrong value anywhere. It is one wrong ITEM in the pool and two
+right items kept OUT of it.**
+
+**A never closes the gate (§2, Ruling 30).** Even had the count been zero, the
+verdict would have been a candidate for the manager's independent re-measurement,
+never a close.
+
+**Cleanup and security, for the whole turn.** Harness lived outside `src/`
+(`web/zz-r16a/`, its own vitest config) and was **deleted before every one of A's
+four commits**; `git status --porcelain --untracked-files=all` confirmed clean each
+time. **A changed no code, deleted no test, edited no test, and touched no file
+except this one.** No credential read, printed, logged or written — presence
+checked as a boolean only. **No `PEER_PROFILE_SNAPSHOT_PATH`; the live pass was
+real.** `euagenda.eu` NOT fetched. Direct fetches clipped programmatically to
+`<title>`/`<h1>`/`og:title` at 160 characters; provider rows retained host, URL and
+a 120-character title only. **No third-party page contained text directed at an
+agent, and none was treated as an instruction.** No branch, worktree or PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Result JSON lives outside the
+repository.
+
+**Round 16 A is COMPLETE — four parts, four commits, each pushed immediately.**
