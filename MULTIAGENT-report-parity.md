@@ -3653,6 +3653,32 @@ does not reach the snippet stage — verify anyway, per standing practice).
 
 ---
 
+### §1ab Ruling 41 — ROUND 13 A's PER-RUN VARIANCE FLAG: THE METHOD STANDS, WITH BOTH READINGS ALWAYS STATED. AND TWO CONNECTED FACTS NAMED.
+
+**41a — A's census method does not change.** A found the upstream variance is
+**per-run**, not per-host (one run carried employers for every varying host at
+once), so majority scoring may score the degraded response. The fix candidates
+are all worse than the disease: preferring the employer-bearing run reintroduces
+option 3's pull-history dependence (rejected in 39d); more runs cost more than
+they tell. **The standing method is: majority value scored, AND the presence
+reading stated alongside it whenever they differ** — A already did exactly this
+(0 of 12 by majority / 1 of 12 by presence, both on the record). Ruling 39d's
+option 2 (URL-derived employer) remains the future designed item and would
+mostly dissolve the question; nothing is bolted on now.
+
+**41b — two of A's findings are one item, named so B does not treat them
+separately.** The Ruling 33 tally's first non-zero since round 9 (`lco-cdo`) IS
+difference 2's non-posting class — an RSS feed item scored as a job. If B's
+design for difference 2 drops non-postings from the pool, the acronym instance
+disappears with it. Ruling 33 stays an accepted cost; no separate work.
+
+**41c — B12-03's evidence gap is a standing instruction, not a loose end:**
+all three target hosts churned out of the pool, so the fix is test-proven but
+live-unmeasured. **Round 14's A hunts those hosts by name** (targeted checks,
+disclosed as targeted) rather than waiting for pool luck.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
@@ -28346,3 +28372,32 @@ but for the first time in this loop it was close, and the direction is
 unambiguous: ten wrong values became one.**
 
 §1 is advanced to **B** in the same commit.
+
+---
+
+### Round 13 — MANAGER verification of Agent A (before round 13 B is spawned)
+
+**Verdict: A's measurement stands. Ten wrong values became one, with zero
+regressions across seven simultaneous fixes — the loop's best round-over-round
+result. Ruling 41 answers A's method flag and names two connections. Gate NOT
+MET (four open differences), and the character of what remains has changed.**
+
+**Code untouched, verified by empty diff.** Both prediction-checks paid off on
+live data: `ruggedthz.com` renders Ruling 36's predicted string byte-identical
+in 5 of 5 pulls with neither old failure mode appearing, and the SolarPACES
+lock's asserted name was confirmed live for the first time since round 11.
+
+**The reading note for the record: the remaining four differences are mostly a
+NEW CLASS, not residue of the old ones.** Items 3 and 4 are "a knowable better
+name exists and is not being used" — under-extraction, not wrong-value
+insertion. Item 2 (4 of 20 job items are not postings at all — an RSS feed, a
+search page, two board views, one shape) is a pool-composition class no prior
+round measured. Only item 1 (`Announcements`, 1 pull in 5) is a wrong value in
+the old sense, and A correctly recognised its shape as Ruling 40's
+one-layer-up pattern on the job side. The honest-host cost was counted per
+instance as Ruling 39a requires: every instance judged better or neutral,
+none misleading — the designed cost is being paid and is worth paying.
+
+**Manager's turn complete. `WHOSE TURN: B` stands. Round 13 B is spawned next
+with four items and Ruling 41's connections in hand.**
+
