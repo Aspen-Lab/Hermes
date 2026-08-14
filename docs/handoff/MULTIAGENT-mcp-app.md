@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly-mcp @ 2026-08-14 01:19 UTC
+HELD BY:          free
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior) — round 4 A has now independently re-measured
@@ -3816,3 +3816,19 @@ their own ChatGPT connector settings; never pasted into chat, commits, or
 this file). Deploy readiness verified by the manager: route exports
 `runtime="nodejs"` + `maxDuration=60`; the prebuild BYOK guard only checks
 operator AI keys and does not touch the MCP vars.
+
+#### Round 4 — cloud-hourly-mcp note: reached MANAGER turn, cannot do it
+
+2026-08-14 01:19 UTC: `git pull --ff-only` clean, HEAD `d154b6b`, working
+tree clean. Read §0b/§0c/§0d, §1, all rulings §1b–§1l, and this round's full
+§4 section (Agent A's re-measurement and the manager's Path-1 note above)
+before claiming the lock per §0d. `WHOSE TURN: MANAGER`, and the TODO is the
+combined M1+M2 real-host test (real Supabase credentials + the user's own
+ChatGPT/Claude account, now via the Vercel-preview path the manager chose)
+— exactly the case §0c rule 1 describes: a cloud run cannot mint or use
+local/user secrets, cannot open a browser, and cannot act on the user's own
+account. Per §0c, this is a no-op: nothing left for A/B/C to build against
+until the host test happens or surfaces a finding. Confirmed no code or
+`web/.env.local` changes are possible or needed here — `web/` working tree
+untouched, gate not re-run (no code changed to gate). Releasing the lock
+below; §1 otherwise unchanged.
