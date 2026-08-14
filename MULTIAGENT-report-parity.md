@@ -41872,3 +41872,124 @@ disclosed — round 19's A grades all three targeted-confirmed.**
 **`WHOSE TURN: C` stands — three independent items, three commits, B's named
 failure modes binding.**
 
+---
+
+### Round 18 — Agent C (item 1: the earnings-call page leaves the EVENT pool — B18-01, Ruling 51a)
+
+**STATUS: COMPLETE.** Claimed the turn lock (`c873fc3`, `LAPTOP-3CL10CG5 @
+2026-08-14 15:02 UTC`) after `git pull --ff-only` (already up to date) and
+confirming `git branch --show-current` reads `feature/summary-report-revamp` —
+checked, not assumed, per §3. Read §1's whole `WHOSE TURN: C` block, §2, §3, the
+three round-18 B entries and the manager's Ruling 51 before touching anything.
+Harness lived **outside `src/`** (`web/zz-r18c/`, own vitest config, include
+pattern `zz-r18c/**/*.probe.ts`) and was **deleted before this commit**;
+`git status --porcelain --untracked-files=all` confirmed clean.
+
+**COLD BASELINE CONFIRMED, NOT INHERITED:** 90 files / **1482 tests, 1481
+passing**, sole failure the standing `benchmark.test.ts` live-search flake
+(`expected undefined to be 'Chicago'`). **B's corrected figure is right and
+round-17 C's 1426/1425 was stale.**
+
+**PROVENANCE STATED, NOT IMPLIED.** B's harness was deleted before B's commits,
+so **row-for-row identity with B is NOT claimed.** C's corpus is reconstructed
+from B's prose — every row B named by string is present verbatim, the rest
+rebuilt to the shapes B described plus every real event name this loop has
+already sighted. **C's must-keep total is 46, against B's 94; C reports `/46`
+and does not round to B's number.**
+
+**B's TABLE REPRODUCES, EXACTLY, ON THE REAL SHIPPED GATE.** Scored through the
+real `isEarningsCallPage` and the real `webResultToRawEventItem`, no
+re-declaration:
+
+| corpus | n | caught | false fires |
+|---|---|---|---|
+| `specterfi.com` rows | 5 | **5** | — |
+| earnings-call rows on other hosts | 5 | **3** | — |
+| hand-built adversarial positives | 5 | **5** | — |
+| **must-keeps (46 rows, ALL 46 confirmed ADMITTED by the shipped gate)** | 46 | — | **0 (0.0%)** |
+
+**The 2 of 5 missed are B's exact two named under-catches** — `balchem.com` and
+`roberthalf.com`, reachable only by bare "conference call" — and they are
+**asserted as documented-known**, not left to be rediscovered.
+
+**FOUR MEASUREMENTS C RAN THAT MATTER MORE THAN THE TOTALS:**
+
+1. **THE FORBIDDEN NAIVE RULE IS WORSE THAN B MEASURED.** Adding bare
+   `conference call` to the real regex catches the other-finance corpus 5/5 —
+   and **destroys THREE real events in C's must-keep corpus**, including
+   B's named live `ascl.org` row. B recorded one live false fire; on 46
+   must-keeps the true cost is 3. **+2 catches for 3 destroyed real events.**
+2. **THE SNIPPET VARIANT FALSE-FIRES EXACTLY 3 TIMES, ON EXACTLY B's THREE
+   HOSTS** (`samsungsdi.com`, `cmcsa.com`, `investor.bankofamerica.com`).
+   Reproduced by applying the same shipped predicate to `title + snippet`.
+   **All three are now shipped must-keeps.**
+3. **CLAUSE DECOMPOSITION, ON THE REAL FILE.** Artefact clause alone:
+   specterfi **4/5**, other-finance **2/5**, FF 0 — B recorded 4/5 and 1/5, and
+   **C reports its own 2/5 rather than rounding to B's**, naming the
+   reconstruction difference. Occasion clause on title+path alone: **5/5, 3/5,
+   FF 0** — B's redundancy disclosure reproduces exactly.
+4. **A CORRECTION TO B's ASSERTION SPEC, FOUND BY EXECUTION: FOUR OF B's ELEVEN
+   ASSERTIONS WOULD HAVE PASSED VACUOUSLY AS WRITTEN.** Several of these rows
+   carry no event-signal word in their title and a nav-chrome snippet, so
+   `looksLikeEvent` already drops them — **an end-to-end `toBeNull()` on them
+   proves nothing** (round 14's precedent, which the brief itself cites). **C
+   did not quietly work around it.** Every end-to-end `toBeNull()` in the
+   shipped test is now **paired with a CONTROL** — the identical row with the
+   vocabulary removed from BOTH title and URL path — asserted `not.toBeNull()`.
+   **If a control ever stops being admitted, the assertion has gone vacuous and
+   the test says so by going red.** All 46 must-keeps were likewise confirmed
+   admitted before being asserted.
+
+**TWO ASSERTIONS EXIST THAT B DID NOT SPECIFY, AND THE REASON IS A MEASURED
+GAP.** The first negative-proof pass found that **disabling the artefact clause
+turned ZERO tests red, and disabling the occasion-on-title clause turned ZERO
+tests red** — every real row carries the vocabulary in both its title and its
+URL path, so the clauses are over-determined on real data. **Ruling 51a keeps
+both clauses; without a test each, a future round could have deleted one and
+nothing would have said so.** C added each clause's own REACHABLE case: a
+call-artefact title on a clean path (`Conference Call` is not `Concall`, so the
+occasion regex cannot see it), and an earnings-occasion title with no trailing
+artefact noun on a clean path. **All three clauses now have exactly one test
+that only they satisfy** — round 17 C's standard, that no later round can
+collapse them without failing a red test.
+
+**NEGATIVE PROOF, ONE CLAUSE AT A TIME, EVERY RESTORE `diff`ed BYTE-IDENTICAL
+BEFORE THE NEXT. No revert was scripted with `perl -pi`** (round 16 C's recorded
+hazard):
+
+| reverted | assertions red |
+|---|---|
+| the call line in `webResultToRawEventItem` | **7** |
+| the URL-path clause | **1** — B's named assertion, and only it |
+| the artefact clause | **1** — and only it |
+| the occasion-on-title clause | **1** — and only it |
+
+**RULING 32 — WHAT RENDERS ON REJECTION: nothing, by construction.**
+`webResultToRawEventItem` returns `null`, so the row never reaches the
+accumulator, dedup, scoring, enrichment or the mapper. No substitute value, no
+hostname fallback, no placeholder. The pool is one card smaller and the card
+lost is a stock-research page.
+
+**WHAT C DID NOT DO, all as directed:** no host list, no `specterfi.com` entry,
+no bare `/concalls/` rule; no bare `conference call` in any position; no snippet
+input; `EVENT_SIGNAL_RE`, `GENERIC_PAGE_TITLE_RE`, `EVENT_INDEX_TITLE_RE`,
+`NEWS_TITLE_RE`, `PAPER_TITLE_RE` and `isNewsArticleTitle` all untouched; the
+existing `urlPathPhrase` helper reused rather than duplicated; Ruling 33 not
+reopened. **Both clauses landed per Ruling 51a.**
+
+**THE GATE:** `npx vitest run` **90 files / 1501 tests, 1500 passing** — sole
+failure the standing `benchmark.test.ts` live-search flake, **the same assertion
+and the same message as the cold baseline**. `npx tsc --noEmit` clean; `npx
+eslint` exactly the one standing `quiz.tsx:46` error. `eventweb.test.ts` and
+`scoring.test.ts` by name **209/209**; `enrich.test.ts` solo **25/25**, the
+SolarPACES lock intact. **Test count 1482 → 1501: +19 new assertions, ZERO
+deleted, ZERO rewritten, ZERO existing lines changed** — the source diff is 88
+insertions and 2 modified lines (the import list and the one new call line).
+`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.
+
+**Security and cleanup.** No credential read, printed, logged or written. No
+live pipeline pull, no page fetch, no third-party page text read into context.
+**`euagenda.eu` NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b).**
+No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+No test deleted or edited. Harness deleted; tree clean.
+

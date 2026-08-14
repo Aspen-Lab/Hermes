@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bestEventTitleSegment,
   eventNameFrom,
+  isEarningsCallPage,
   looksLikeEventTitle,
   webResultToRawEventItem,
 } from "./eventweb";
@@ -1347,5 +1348,251 @@ describe("banner lead-in strip (B13-03)", () => {
         "https://example.org/event",
       ),
     ).toBe("Battery Conference 2026");
+  });
+});
+
+// B18-01 (round 18, Rulings 50b + 51a): A COMPANY'S EARNINGS CALL WAS IN THE
+// EVENT POOL. `specterfi.com/companies/1539/concalls/Feb2026` — a stock
+// research page for "Ion Exchange (India) Limited Q3 & 9M FY26 Earnings
+// Conference Call" — was in the live event pool on 5 pulls out of 5 and
+// rendered as the event card `1539 Feb2026 Concall Summary`, where `1539` is
+// the site's internal company ID.
+//
+// It is admitted because `looksLikeEvent` sees the word "conference" inside
+// "Conference Call". The name extraction is FAITHFUL — this is a page-KIND
+// defect, not a naming defect, which is why the fix is a gate and not a
+// rename, and why Ruling 33's matcher is deliberately not reopened.
+//
+// EVERY END-TO-END `toBeNull()` HERE IS PAIRED WITH A CONTROL. C measured that
+// several of these rows are dropped by `looksLikeEvent` for reasons that have
+// nothing to do with this rule, which would make a bare `toBeNull()` pass
+// VACUOUSLY (round 14's two vacuous tests are the precedent). The control is
+// the identical row with the finance vocabulary removed from BOTH the title and
+// the URL path: it must be ADMITTED. If a control ever stops being admitted the
+// paired assertion has gone vacuous and this test says so by going red.
+describe("earnings-call page gate (B18-01)", () => {
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  function expectDroppedByThisRule(row: {
+    title: string;
+    url: string;
+    snippet: string;
+    controlTitle: string;
+    controlUrl: string;
+  }) {
+    // The rule fires on the real row.
+    expect(isEarningsCallPage(row.title, row.url)).toBe(true);
+    // The control — same row, vocabulary removed — is genuinely admitted, so
+    // the drop below cannot be attributed to any other check.
+    expect(isEarningsCallPage(row.controlTitle, row.controlUrl)).toBe(false);
+    expect(
+      webResultToRawEventItem(
+        { title: row.controlTitle, url: row.controlUrl, snippet: row.snippet },
+        NOW,
+      ),
+    ).not.toBeNull();
+    // And the real row leaves the pool at ingestion.
+    expect(
+      webResultToRawEventItem({ title: row.title, url: row.url, snippet: row.snippet }, NOW),
+    ).toBeNull();
+  }
+
+  // `Feb2026` yields no year token — `\b(20\d{2})\b` cannot match inside it —
+  // which is what let these rows survive the past-event anchor check in the
+  // first place and reach a reader.
+  it("drops the rendered og:title form", () => {
+    expectDroppedByThisRule({
+      title: "1539 Feb2026 Concall Summary",
+      url: "https://specterfi.com/companies/1539/concalls/Feb2026",
+      snippet: "Registration and investor conference details for the quarter.",
+      controlTitle: "1539 Feb2026 Research Summary",
+      controlUrl: "https://specterfi.com/companies/1539/quarters/Feb2026",
+    });
+  });
+
+  // B's load-bearing correction to A: the string the INGESTION gate reads is
+  // the PROVIDER's title, and the provider does not hand Peer the og:title.
+  // The og:title form above is what RENDERS. Both are covered on purpose.
+  it("drops the provider title form, which is the string the gate actually reads", () => {
+    expectDroppedByThisRule({
+      title: "1539 Feb2026 Conference Call Summary | Specter",
+      url: "https://specterfi.com/companies/1539/concalls/Feb2026",
+      snippet: "Home Companies Screeners Watchlist Login",
+      controlTitle: "1539 Feb2026 Research Conference Summary | Specter",
+      controlUrl: "https://specterfi.com/companies/1539/quarters/Feb2026",
+    });
+  });
+
+  it("drops the form carrying the company's full legal name", () => {
+    expectDroppedByThisRule({
+      title: "Ion Exchange (India) Ltd Feb2026 Conference Call Summary",
+      url: "https://specterfi.com/companies/1539/concalls/Feb2026",
+      snippet: "Home Companies Screeners Watchlist Login",
+      controlTitle: "Ion Exchange (India) Ltd Feb2026 Research Conference Summary",
+      controlUrl: "https://specterfi.com/companies/1539/quarters/Feb2026",
+    });
+  });
+
+  // THE PATH CLAUSE'S OWN ASSERTION. This provider title is truncated before
+  // its vocabulary, so no title rule can reach it — only the URL path can.
+  // Revert the path clause and this is the test that goes red.
+  it("drops a title truncated before its vocabulary, by the URL path alone", () => {
+    expectDroppedByThisRule({
+      title: "Associated Alcohols & Breweries Ltd Nov2025 ... - SpecterFi",
+      url: "https://specterfi.com/companies/303/concalls/Nov2025",
+      snippet: "Registration and investor conference details for the quarter.",
+      controlTitle: "Associated Alcohols & Breweries Ltd Nov2025 ... - SpecterFi",
+      controlUrl: "https://specterfi.com/companies/303/quarters/Nov2025",
+    });
+  });
+
+  // THE OCCASION-ON-TITLE CLAUSE'S OWN ASSERTION, added for the same measured
+  // reason as the artefact one below: every real row carries the vocabulary in
+  // BOTH its title and its URL path, so disabling the title clause alone turned
+  // nothing red. This row is occasion-only — "Earnings Conference Call" has no
+  // trailing artefact noun after it, so the artefact regex cannot match — and
+  // its path is clean. THE THREE CLAUSES NOW EACH HAVE A TEST THAT ONLY THEY
+  // SATISFY, so no later round can collapse them without failing a red test.
+  it("drops an earnings-occasion title whose URL path carries no vocabulary", () => {
+    expectDroppedByThisRule({
+      title: "Adani Enterprises Q4 FY26 Earnings Conference Call",
+      url: "https://www.adanienterprises.com/investors/quarterly-update",
+      snippet: "A conference archive page for investors and analysts.",
+      controlTitle: "Adani Enterprises Q4 FY26 Research Conference",
+      controlUrl: "https://www.adanienterprises.com/investors/quarterly-update",
+    });
+  });
+
+  // THE ARTEFACT CLAUSE'S OWN ASSERTION, AND IT EXISTS BECAUSE C MEASURED THAT
+  // NOTHING ELSE PROTECTED IT. B disclosed that on the measured corpus the
+  // artefact clause is REDUNDANT — the occasion clause alone reaches the same
+  // 5/5 and 3/5 — and C reproduced that: with the artefact clause disabled and
+  // this test absent, ZERO assertions went red, so a future round could have
+  // deleted a clause Ruling 51a deliberately kept and no test would have said
+  // so. This is the clause's REACHABLE case: a sibling site whose TITLE says
+  // "Conference Call Summary" while its URL path carries none of the
+  // vocabulary. "Conference Call" is not "Concall", so the occasion regex does
+  // not match this title, and the path has nothing in it — only the artefact
+  // clause can see this row.
+  it("drops a call-artefact title whose URL path carries no vocabulary", () => {
+    expectDroppedByThisRule({
+      title: "Northwind Chemicals Q2 FY27 Conference Call Summary",
+      url: "https://example.com/research/northwind-q2-fy27",
+      snippet: "A conference archive page for investors and analysts.",
+      controlTitle: "Northwind Chemicals Q2 FY27 Conference Programme Summary",
+      controlUrl: "https://example.com/research/northwind-q2-fy27",
+    });
+  });
+
+  // NOT A `specterfi.com` RULE. The class spans five other hosts the shipped
+  // gate also admits (`scribd.com`, `adanienterprises.com`, `piindustries.com`,
+  // `balchem.com`, `roberthalf.com`), which is why no host list and no bare
+  // `/concalls/` path rule was offered — that would close one row and leave the
+  // class open (Ruling 40).
+  it("drops the same shape on an unrelated host", () => {
+    expectDroppedByThisRule({
+      title: "Acme Corp Q3 FY26 Earnings Call Transcript",
+      url: "https://example.com/ir/earnings-call-transcript-q3",
+      snippet: "A conference transcript archive for investors.",
+      controlTitle: "Acme Corp Q3 FY26 Research Summit Transcript",
+      controlUrl: "https://example.com/ir/research-summit-transcript-q3",
+    });
+  });
+
+  // MUST-KEEPS. Every row is asserted `not.toBeNull()` explicitly and carries
+  // no past date, so none of them can pass for the wrong reason.
+  it.each([
+    [
+      // THE LIVE ROW THAT KILLED THE NAIVE RULE. Bare `conference call` catches
+      // 12 of 12 positives and deletes this real scholarly event, where
+      // "Conference" and "Call for Papers" are adjacent by accident. C
+      // reproduced it on the real file: adding bare `conference call` destroys
+      // THREE real events in this corpus to buy 2 extra catches. DO NOT ADD IT
+      // IN ANY POSITION.
+      "2026 YCC Conference Call for Papers (and Student Awards)",
+      "https://ascl.org/meetings/ycc2026",
+      "Abstract submissions open for the 2026 meeting.",
+    ],
+    [
+      // WHY `quarterly results` IS NOT IN THE VOCABULARY. It earned zero on
+      // real data and was the single term that failed the adversarial set.
+      "Quarterly Results Review Seminar Series — Physics Dept",
+      "https://example.edu/physics/seminars/quarterly-review",
+      "Weekly seminar series hosted by the department.",
+    ],
+    [
+      // A real scholarly event whose title names the very same company. The
+      // fix must key on the page KIND, never on the company name.
+      "Ion Exchange (India) Limited Sponsored Student Workshop",
+      "https://example.edu/workshops/ion-exchange-student",
+      "A sponsored hands-on workshop for graduate students.",
+    ],
+    [
+      "Webcast: Live Conference Call with the Keynote Speakers",
+      "https://example.org/summit/keynote-webcast",
+      "Join the keynote session from anywhere.",
+    ],
+    [
+      // `analysts meet` and `investor day` were both measured alone, earned
+      // nothing on real data, and were cut.
+      "Analyst Meeting on Molten Salt Corrosion Data",
+      "https://example.org/meetings/molten-salt-analysis",
+      "A technical meeting on corrosion measurements.",
+    ],
+    [
+      "Investor Day for University Spin-out Founders Conference",
+      "https://example.edu/entrepreneurship/investor-day",
+      "A day of talks for founders and researchers.",
+    ],
+    [
+      "Conference Calls for Abstracts Now Open — Materials Week",
+      "https://example.org/materials-week/abstracts",
+      "Abstract submission is open for Materials Week.",
+    ],
+  ])("keeps the real event %s", (title, url, snippet) => {
+    expect(isEarningsCallPage(title, url)).toBe(false);
+    expect(webResultToRawEventItem({ title, url, snippet }, NOW)).not.toBeNull();
+  });
+
+  // THE SNIPPET IS DELIBERATELY NOT AN INPUT. C measured the forbidden variant
+  // on the real predicate: applied to `title + snippet` it false-fires on three
+  // real admitted rows, on the three hosts B named. These are real events whose
+  // snippet merely MENTIONS a company's earnings call.
+  it.each([
+    [
+      "Samsung SDI Battery Technology Symposium 2027",
+      "https://www.samsungsdi.com/events/battery-day",
+      "Company news: the fourth quarter earnings call is scheduled separately.",
+    ],
+    [
+      "Comcast NBCUniversal Research Symposium",
+      "https://corporate.cmcsa.com/events/research-symposium",
+      "See also the company's quarterly earnings conference call webcast.",
+    ],
+    [
+      "Bank of America Sustainable Materials Forum",
+      "https://investor.bankofamerica.com/events/materials-forum",
+      "Investor relations also publishes the earnings call transcript.",
+    ],
+  ])("keeps an event whose SNIPPET mentions an earnings call: %s", (title, url, snippet) => {
+    expect(isEarningsCallPage(title, url)).toBe(false);
+    expect(webResultToRawEventItem({ title, url, snippet }, NOW)).not.toBeNull();
+  });
+
+  // THE NAMED UNDER-CATCH, asserted as documented-known rather than left to be
+  // rediscovered. Both are reachable only by bare "conference call", the
+  // rejected rule. The failure direction is deliberate: a miss leaves the row
+  // exactly where it is today; a false fire deletes a real event.
+  it.each([
+    [
+      "Conference Call for Fourth Quarter and Full Year 2026 Financial Results",
+      "https://www.balchem.com/investors/news/conference-call-q4",
+    ],
+    [
+      "Investor Center: Quarterly Conference Calls",
+      "https://www.roberthalf.com/us/en/investor-center/quarterly-calls",
+    ],
+  ])("documents the accepted under-catch: %s", (title, url) => {
+    expect(isEarningsCallPage(title, url)).toBe(false);
   });
 });

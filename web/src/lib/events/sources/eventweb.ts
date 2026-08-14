@@ -301,6 +301,92 @@ export function isPaperPageTitle(title: string): boolean {
   return PAPER_TITLE_RE.test(title.trim());
 }
 
+/**
+ * B18-01 (round 18, Ruling 50b/51a): a SHAREHOLDER-REPORTING OCCASION IS NOT A
+ * SCHOLARLY EVENT. `specterfi.com/companies/1539/concalls/Feb2026` — a stock
+ * research page for "Ion Exchange (India) Limited Q3 & 9M FY26 Earnings
+ * Conference Call" — sat in the live event pool 5 pulls out of 5, rendering as
+ * the event card `1539 Feb2026 Concall Summary`, where `1539` is the site's
+ * internal company ID.
+ *
+ * THE ADMISSION MECHANISM, ESTABLISHED BY EXECUTION, NOT INFERRED: the gate's
+ * front door is `looksLikeEvent(title + snippet)` and `EVENT_SIGNAL_RE` lists
+ * `conference`. "Conference Call" contains it. Nothing downstream ever asks
+ * whether the page is a shareholder-reporting occasion rather than a scholarly
+ * one. The topic collision that made it RELEVANT (`ion exchange` matching the
+ * company's legal name rather than the chemistry) is a separate question and
+ * is NOT what admitted it — this is a page-KIND defect, so the fix belongs at
+ * the page-kind gate and not in the matcher.
+ *
+ * FAILURE DIRECTION, STATED DELIBERATELY, because it is the whole safety
+ * argument: a MISS leaves the row exactly where it is today (status quo, no new
+ * wrong value); a FALSE FIRE deletes a real event. So this is tuned for ZERO
+ * false fires with under-catching as the accepted, named failure direction —
+ * Ruling 40's own accepted shape, and the identical contract `isListingPage`
+ * already runs under on the job surface. It is NOT Ruling 37's open-class trap:
+ * there, a miss produced a WRONG value (a mutilated sentence).
+ *
+ * **BARE `conference call` IS DELIBERATELY ABSENT AND MUST NOT BE ADDED IN ANY
+ * POSITION.** Measured on live data it catches 12 of 12 positives and then
+ * deletes a real scholarly event: `ascl.org`'s "2026 YCC Conference Call for
+ * Papers (and Student Awards)", where "Conference" and "Call for Papers" are
+ * adjacent by accident. Asserted as a must-keep below.
+ *
+ * Every candidate term was measured ALONE and seven were cut for earning
+ * nothing on real data — and the cut also removed the only adversarial false
+ * fire (`quarterly results`, which killed "Quarterly Results Review Seminar
+ * Series — Physics Dept"). The evidence-minimal list and the safe list are the
+ * same list. Do not re-add `earnings webcast`, `earnings release`,
+ * `analysts meet`, `investor day`, `investor call`, `investor webcast` or
+ * `quarterly results`.
+ *
+ * NO HOST LIST AND NO URL-ONLY RULE: the shipped gate also admits earnings-call
+ * pages on `scribd.com`, `adanienterprises.com`, `piindustries.com`,
+ * `balchem.com` and `roberthalf.com`. A `specterfi.com` entry or a bare
+ * `/concalls/` path rule would close one row and leave the class open — the
+ * exact move Ruling 40 rejects.
+ */
+const EARNINGS_CALL_PAGE_RE =
+  /\b(?:concalls?|earnings\s+(?:conference\s+)?call|results\s+conference\s+call)\b/i;
+
+/**
+ * The page names itself an ARTEFACT of a call — a page KIND, not an event.
+ *
+ * Ruling 51a landed this clause alongside the occasion clause above with the
+ * redundancy disclosed rather than hidden: on the measured corpus the occasion
+ * clause alone already reaches the same 5/5 and 3/5. It is kept because it
+ * independently catches 4 of 5 and 1 of 5 with zero false fires across 94
+ * must-keeps, and because it is the only clause that reaches a sibling site
+ * whose TITLE says "Conference Call Summary" while its path carries none of the
+ * vocabulary. Redundancy on the measured corpus is not redundancy on the
+ * reachable class.
+ */
+const CALL_ARTEFACT_TITLE_RE =
+  /\b(?:conference\s+call|concall|earnings\s+call)\s+(?:summary|transcript|highlights|recap|notes)\b/i;
+
+/**
+ * The URL is a SECOND INPUT, and that is shipped precedent rather than a new
+ * idea: `isNewsArticleTitle` already feeds `urlPathPhrase(url)` to an anchored
+ * subset of its own regex (B12-03 gap B). The same helper is reused; there is
+ * deliberately no second copy of it.
+ *
+ * Only the OCCASION regex is applied to the path — the artefact regex is a
+ * title shape and has no business matching a slug. The path clause is what
+ * catches a provider title truncated before its vocabulary
+ * ("Associated Alcohols & Breweries Ltd Nov2025 ... - SpecterFi").
+ *
+ * The SNIPPET is deliberately not an input: measured, the snippet variant
+ * false-fires 3 times on real admitted rows.
+ */
+export function isEarningsCallPage(title: string, url?: string): boolean {
+  const phrase = urlPathPhrase(url);
+  return (
+    EARNINGS_CALL_PAGE_RE.test(title) ||
+    CALL_ARTEFACT_TITLE_RE.test(title) ||
+    (phrase !== undefined && EARNINGS_CALL_PAGE_RE.test(phrase))
+  );
+}
+
 export function isEventIndexPage(title: string): boolean {
   return EVENT_INDEX_TITLE_RE.test(title.trim());
 }
@@ -1267,6 +1353,8 @@ export function webResultToRawEventItem(
   // B12-03 gap B: the URL is now a second input — see isNewsArticleTitle.
   if (isNewsArticleTitle(title, url)) return null;
   if (isPaperPageTitle(title)) return null;
+  // B18-01: a company's earnings call is not a scholarly event.
+  if (isEarningsCallPage(title, url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;
   const startDate = extractEventDate(text);
