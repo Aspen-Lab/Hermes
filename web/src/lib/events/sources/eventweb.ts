@@ -495,6 +495,28 @@ interface ChromeSegmentOptions {
   skipHostBrand?: boolean;
 }
 
+/**
+ * A closed list of event-kind NOUNS — the words English uses to name a scholarly
+ * gathering. Genuinely finite, unlike a verb list (§1x Ruling 37), and already
+ * enumerated twice in this codebase (`EVENT_SIGNAL_RE` above, `eventKindIn` in
+ * `events/mapper.ts`). Used by TWO items, which is why it lives up here:
+ * B12-03's welded-label strip and B12-04's host-brand exemption.
+ *
+ * KNOWN LIMITATION, recorded rather than fixed: this list is single-word, while
+ * both enumerations it is drawn from also carry MULTI-WORD kinds —
+ * `round table`, `hack day`, `lecture series`, `networking event`. In both
+ * current uses the miss is SAFE, because in both the failure direction is "do
+ * nothing": B12-03 leaves the segment unstripped, B12-04 leaves it rejected as
+ * chrome exactly as today. The cost is a missed fix, never a wrong value.
+ *
+ * It is NOT safe in B12-01, which uses the same list as a hard veto on whether a
+ * name exists AT ALL — there a two-word event kind turns a correct name into
+ * `"Untitled event"`. That is why B12-01 is stopped and recorded rather than
+ * landed. Whoever resolves it should reconcile all uses in this one place.
+ */
+const EVENT_KIND_NOUN_RE =
+  /\b(?:conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exposition|exhibition|forum|convention|show|school|hackathon|roundtable|fair)\b/i;
+
 function isChromeSegment(
   segment: string,
   host: string | undefined,
@@ -514,9 +536,35 @@ function isChromeSegment(
     return true;
   }
   if (options?.skipHostBrand || !host) return false;
-  return (
-    looksLikeHostBrand(trimmed, host) || looksLikeArticledHostBrand(trimmed, host)
-  );
+  const isBrand =
+    looksLikeHostBrand(trimmed, host) || looksLikeArticledHostBrand(trimmed, host);
+  // B12-04 (round 12): the host-brand check destroys the correct name whenever
+  // an event is named after its own domain — `"International Battery Seminar"`
+  // on `internationalbatteryseminar.com` normalises to the DNS label exactly, so
+  // the guard fires and the title stage returns nothing, which is the only
+  // reason that host's render comes from the snippet at all. This is the mirror
+  // image of B12-02: that host defeats the check by having a domain that looks
+  // NOTHING like its name, this one by having a domain that IS its name. Neither
+  // is fixable by widening the check, which is also why Rulings 33/34a declined
+  // that direction twice.
+  //
+  // The exemption is deliberately here in `isChromeSegment` and NOT in
+  // `looksLikeHostBrand`: that function is shared with the job side, where
+  // B5-03's job-board-brand fix and B8-02's every-label fix both depend on its
+  // current behaviour. Editing it would put the employer field at risk to solve
+  // an event-side problem. Scoping it to the event side's own wrapper costs
+  // nothing and leaves the job side provably untouched.
+  //
+  // It defers to `isEventIndexPage` by construction — that check has already
+  // returned `true` above if it fires, so a directory site cannot reach here.
+  //
+  // The exemption can only ever UN-reject. When it does not fire the segment
+  // stays chrome and the existing chain runs exactly as today (Ruling 32): slug
+  // -> snippet -> honest URL host -> "Untitled event". It adds no fallback and
+  // reinserts nothing — the value it admits is the page's own title segment,
+  // which no other guard rejected.
+  if (isBrand && EVENT_KIND_NOUN_RE.test(trimmed)) return false;
+  return isBrand;
 }
 
 /**
@@ -790,23 +838,6 @@ const WELDED_LABEL =
   "(?:call\\s+for\\s+(?:papers|abstracts)|cfp|registration|programme|program|agenda|schedule)";
 const WELDED_LABEL_FRONT_RE = new RegExp(`^${WELDED_LABEL}\\s+for\\s+(?:the\\s+)?`, "i");
 const WELDED_LABEL_BACK_RE = new RegExp(`[\\s:–—-]+${WELDED_LABEL}$`, "i");
-
-/**
- * The remainder must still NAME an event, by a closed list of event-kind nouns.
- *
- * KNOWN LIMITATION, recorded rather than fixed here: this list is single-word,
- * while this codebase's own event-kind enumerations (`EVENT_SIGNAL_RE` above,
- * `eventKindIn` in `events/mapper.ts`) also carry MULTI-WORD kinds —
- * `round table`, `hack day`, `lecture series`, `networking event`. A title whose
- * kind is named in two words therefore fails this test and is simply NOT
- * stripped. That direction is safe: the fallback is "leave the segment alone",
- * so the cost is a missed fix, never a wrong value. It is NOT safe in B12-01,
- * which uses the same list as a hard veto on whether a name exists at all —
- * which is why B12-01 is stopped and recorded rather than landed. Whoever
- * resolves that should reconcile both uses in one place.
- */
-const EVENT_KIND_NOUN_RE =
-  /\b(?:conference|symposium|workshop|seminar|colloquium|congress|meeting|summit|expo|exposition|exhibition|forum|convention|show|school|hackathon|roundtable|fair)\b/i;
 
 /** B12-03 gap A. Returns the segment with a welded label removed, or unchanged. */
 function stripWeldedPageTypeLabel(segment: string): string {

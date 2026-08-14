@@ -26024,3 +26024,87 @@ B12-01 reconciles them in one place instead of finding this one by accident.
 - `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
   error (`quiz.tsx:46`), none added.
 - **No existing test assertion changed or deleted.**
+
+---
+
+### Round 12 — Agent C (B12-04: `internationalbatteryseminar.com` — the exemption landed on the event side only, and Ruling 39's SolarPACES lead is now a test)
+
+**STATUS: LANDED.** Commit follows this entry. B's design implemented exactly as
+written, in the place B insisted on and not the place that looked simpler.
+
+**What landed**, in `web/src/lib/events/sources/eventweb.ts`: `isChromeSegment`'s
+host-brand branch no longer treats a brand match as chrome when the candidate
+contains an event-kind noun. Everything else about the check is untouched.
+
+**The placement is the item.** The exemption is in `isChromeSegment`, **NOT** in
+`looksLikeHostBrand`. That shared function is what B5-03's job-board-brand fix
+and B8-02's every-label fix both stand on, and editing it would have put the
+employer field at risk to solve an event-side problem. **`looksLikeHostBrand` is
+byte-identical to what it was** — verified by running
+`web/src/lib/jobs/sources/jobweb.test.ts` on its own: **48 of 48 passing.**
+
+**It defers to `isEventIndexPage` for free, by construction.** That check has
+already returned `true` several lines above if it fires, so a directory site
+cannot reach the exemption at all. B's residual-risk note is therefore covered by
+structure rather than by a second check, and is asserted as a test rather than
+left as prose.
+
+**The exemption can only ever UN-reject** — when it does not fire the segment
+stays chrome and the chain runs exactly as today (Ruling 32). It adds no fallback
+and reinserts nothing: the value it admits is the page's own title segment, which
+no other guard rejected.
+
+**One code-organisation change, recorded because it moved a line B12-03 wrote.**
+The event-kind noun list is now used by two items, so it moved up the file to sit
+just above `isChromeSegment`, its first user, with a comment naming both users
+and carrying the multi-word limitation forward. Same regex, same behaviour; only
+its position and its comment changed.
+
+**TESTS — 7 new**, all in `eventweb.test.ts`.
+
+Negative proof by execution (source rolled back to its post-B12-03 state, tests
+run, source restored): **2 of 7 FAIL** — the live repro and the same segment
+alone. **The other 5 are must-survive or current-behaviour cases** and pass on
+both sides by design: `The Engine` @ `engine.xyz`, `Climatebase` @
+`climatebase.org`, `10times` @ `10times.com` (B5-06's and B5-03's own repros, the
+fixes this exemption could plausibly have undone), the events-directory case, and
+the SolarPACES pair below.
+
+**B's note about the existing assertion is confirmed and is now asserted both
+ways.** `eventweb.test.ts`'s B10-02 case uses this exact title with **no URL**,
+which is precisely why it passed all along and never exercised the defect. The
+new test passes the real URL, and that single difference is what fails against
+pre-fix code.
+
+**RULING 39's SOLARPACES LEAD IS ACTED ON, because its own condition fired.**
+The ruling says: "if the guard family is touched again, a year-less variant test
+is the cheap way to make that fragility visible before it bites." B12-04 touches
+that family, so the variant is now a test. It asserts both halves:
+`"SolarPACES 2026"` @ `solarpaces.org` survives, bare `"SolarPACES"` does **not**
+— and **B12-04 does not change that**, because `SolarPACES` names no event kind
+so the exemption cannot reach it either. Recorded as the CURRENT behaviour, with
+a comment saying plainly that it is not a behaviour anyone should want. A future
+round that touches `looksLikeHostBrand` now finds this stated instead of
+rediscovering it.
+
+**Interaction with B12-01, restated since B12-01 did not land.** B noted that
+B12-04 is what actually closes A's item 6 live value, and that remains true and
+is now the only thing closing it: with the title stage succeeding, this host
+never reaches the snippet stage, so `"Conference Image Gallery Carousel"` is
+unreachable here regardless of B12-01's status. B12-01's honest miss on that
+string therefore costs nothing on this host.
+
+**GATE after this item:**
+- `web/src/lib/opportunities/enrich.test.ts` (**the SolarPACES regression lock**,
+  which lives there and NOT under `events/`), run on its own:
+  **25 of 25 passing, unchanged.**
+- `web/src/lib/events/scoring.test.ts` (the twice-missed second file), run:
+  **71 of 71 passing.**
+- `web/src/lib/jobs/sources/jobweb.test.ts`, run as B asked, as proof the shared
+  function was left alone: **48 of 48 passing.**
+- Full: `npx vitest run` → **90 files / 1110 tests, 1109 passing.** 1103 → 1110
+  is exactly the 7 new tests. The only failure is `benchmark.test.ts`'s
+  documented live flake, unchanged from the cold baseline.
+- `npx tsc --noEmit` clean. `npx eslint` → exactly the one standing pre-existing
+  error (`quiz.tsx:46`), none added.
+- **No existing test assertion changed or deleted.**

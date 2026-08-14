@@ -489,6 +489,84 @@ describe("eventNameFrom", () => {
     });
   });
 
+  // B12-04 (round 12): an event named after its own domain. The host-brand
+  // check normalises "International Battery Seminar" to
+  // "internationalbatteryseminar" and asks whether any DNS label starts with
+  // it — the label IS that string, so the guard fires and the correct name,
+  // which is sitting right there in the page's own title, is thrown away. The
+  // title stage then returns nothing, the root URL has no deep slug to mine,
+  // and the render falls all the way through to the snippet.
+  //
+  // Mirror image of B12-02: that host defeats the brand check by having a
+  // domain that looks NOTHING like its name; this one by having a domain that
+  // IS its name. Same check, opposite failure, and neither is fixable by
+  // widening the check.
+  describe("event named after its own domain (B12-04)", () => {
+    // THE live repro. Note the existing B10-02 assertion higher up uses this
+    // same title with NO url — which is why it passed all along and never
+    // exercised the defect. The URL is the entire difference.
+    it("keeps a name that matches its own host when the name is an event kind", () => {
+      expect(
+        eventNameFrom(
+          "March 15-18, 2027 | Orlando, FL | International Battery Seminar",
+          "",
+          "https://www.internationalbatteryseminar.com/",
+        ),
+      ).toBe("International Battery Seminar");
+    });
+
+    // The same segment on its own, so the outcome cannot come from the
+    // sibling tie-break.
+    it("keeps a lone host-matching segment that names an event kind", () => {
+      expect(
+        bestEventTitleSegment(
+          "International Battery Seminar",
+          "https://www.internationalbatteryseminar.com/",
+        ),
+      ).toBe("International Battery Seminar");
+    });
+
+    // MUST STAY REJECTED. Every one of these is a real site brand that matches
+    // its host and names no kind of event, so the exemption cannot reach it.
+    // These are B5-06's and B5-03's own repros — the fixes this exemption
+    // could plausibly have undone.
+    it.each([
+      ["The Engine", "https://engine.xyz/events/123"],
+      ["Climatebase", "https://climatebase.org/events/123"],
+      ["10times", "https://10times.com/events/123"],
+    ])("still rejects the site's own brand: %s", (segment, url) => {
+      expect(bestEventTitleSegment(segment, url)).toBeUndefined();
+    });
+
+    // The exemption defers to isEventIndexPage by construction — that check
+    // returns true before the host-brand branch is ever reached — so an events
+    // DIRECTORY whose brand contains an event noun is still rejected. This is
+    // the residual risk B named, asserted rather than left as prose.
+    it("still rejects an events directory whose own brand names an event kind", () => {
+      expect(
+        bestEventTitleSegment("Upcoming Battery Conferences", "https://batteryconferences.com/"),
+      ).toBeUndefined();
+    });
+
+    // §1z Ruling 39's recorded lead, acted on because its own condition fired:
+    // "if the guard family is touched again, a year-less variant test is the
+    // cheap way to make that fragility visible before it bites."
+    //
+    // The SolarPACES regression lock survives the host-brand check ONLY because
+    // its title carries a trailing year, which makes the candidate longer than
+    // the DNS label and trips looksLikeHostBrand's one-directional rule. These
+    // two assertions state that plainly: with the year it survives, without the
+    // year it does not — and B12-04 does NOT change that, because "SolarPACES"
+    // names no event kind so the exemption cannot reach it either. Recorded as
+    // the CURRENT behaviour, not as a behaviour anyone should want.
+    it("shows the SolarPACES lock still depends on its trailing year", () => {
+      expect(bestEventTitleSegment("SolarPACES 2026", "https://www.solarpaces.org/")).toBe(
+        "SolarPACES 2026",
+      );
+      expect(bestEventTitleSegment("SolarPACES", "https://www.solarpaces.org/")).toBeUndefined();
+    });
+  });
+
   // B11-02 (round 11, Rulings 32/35): the sequel to B10-03 above, same host.
   // Once "Call for Papers" is correctly rejected as a title segment,
   // execution reaches the snippet-mining stage — which filtered candidates
