@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   bestEventTitleSegment,
+  clusterEventDays,
   eventNameFrom,
+  extractEventDate,
+  extractEventDayCandidates,
   isEarningsCallPage,
   looksLikeEventTitle,
+  ownedTitleSpan,
   webResultToRawEventItem,
 } from "./eventweb";
 
@@ -1665,5 +1669,198 @@ describe("earnings-call page gate (B18-01)", () => {
     ],
   ])("documents the accepted under-catch: %s", (title, url) => {
     expect(isEarningsCallPage(title, url)).toBe(false);
+  });
+});
+
+// A22-01 (round 22, `ans.org`): the page's own event was `April 16, 2026` —
+// already past — but Peer rendered the date and city of a DIFFERENT event
+// advertised in a `Conference Spotlight` block on the same calendar page
+// (`August 24-27, 2026`, `Dallas, TX`). `extractEventDate` takes the FIRST
+// month-day token in the string and stops, and the sibling's token sat 339
+// characters before the selected item's own heading. The wrong date is also
+// why a finished event survived the expiry check.
+describe("ambiguous snippets must prove which date is theirs (A22-01)", () => {
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  describe("extractEventDayCandidates", () => {
+    it("collects every reading the text offers, not just the first", () => {
+      const days = extractEventDayCandidates(
+        "Conference Spotlight August 24-27, 2026 Dallas, TX # Molten Salt Research Reactor Tour Thursday, April 16, 2026",
+      );
+      expect(days.map((day) => day.slice(0, 10))).toEqual(
+        expect.arrayContaining(["2026-08-24", "2026-04-16"]),
+      );
+    });
+
+    // THE INVARIANT B REQUIRED IN WRITING. B's own cluster counter was built
+    // from COPIES of the regexes and disagreed with the shipped extractor on
+    // two live rows — a counter that can disagree with the extractor it guards
+    // is a latent second defect. These are built from `.source` of the very
+    // same constants, so the two cannot drift; this case is what would catch
+    // it if someone later reintroduces a copy.
+    it.each([
+      "Battery Summit November 29 - December 4, 2026 in Boston",
+      "Workshop on 31 October 2026 at the institute",
+      "Symposium Sept. 3, 2027 programme published",
+      "Meeting April 16, 2026 and Conference Spotlight August 24, 2026",
+      "Annual review held in 2026 with sessions on May 7, 2026",
+    ])("yields at least one candidate whenever extractEventDate yields a value: %s", (text) => {
+      if (extractEventDate(text)) {
+        expect(extractEventDayCandidates(text).length).toBeGreaterThanOrEqual(1);
+      }
+    });
+  });
+
+  describe("clusterEventDays", () => {
+    it("treats one conference's own run as a single reading", () => {
+      expect(
+        clusterEventDays([
+          "2026-10-12T12:00:00.000Z",
+          "2026-10-13T12:00:00.000Z",
+          "2026-10-15T12:00:00.000Z",
+        ]),
+      ).toHaveLength(1);
+    });
+
+    it("treats a sibling event months away as a second reading", () => {
+      expect(
+        clusterEventDays(["2026-04-16T12:00:00.000Z", "2026-08-24T12:00:00.000Z"]),
+      ).toHaveLength(2);
+    });
+
+    it("keeps a multi-week programme together rather than splitting it", () => {
+      // Chained from the previous day, not the cluster's first: this fails
+      // toward today's behaviour, which is the safe direction for a design
+      // whose other branch DELETES a date.
+      expect(
+        clusterEventDays([
+          "2026-10-01T12:00:00.000Z",
+          "2026-10-20T12:00:00.000Z",
+          "2026-11-05T12:00:00.000Z",
+        ]),
+      ).toHaveLength(1);
+    });
+  });
+
+  describe("ownedTitleSpan", () => {
+    it("returns the span the item's own heading introduces, stopping at the next heading", () => {
+      const span = ownedTitleSpan(
+        "# Conference Spotlight\nAugust 24-27, 2026 Dallas, TX\n# Molten Salt Research Reactor Tour\nThursday, April 16, 2026\n# Other Business\nMay 1, 2026",
+        "Molten Salt Research Reactor Tour",
+      );
+      expect(span).toContain("April 16, 2026");
+      expect(span).not.toContain("August 24");
+      expect(span).not.toContain("May 1");
+    });
+
+    it("is silent when the snippet never names the item", () => {
+      expect(
+        ownedTitleSpan("Registration is open for two upcoming meetings.", "Molten Salt Research Reactor Tour"),
+      ).toBeUndefined();
+    });
+
+    it("never matches the caller's own prepended copy of the title", () => {
+      // The span is searched over the SNIPPET alone. Searching `title +
+      // snippet` would match at offset 0 on every row and prove nothing, which
+      // would make the whole witness test vacuous.
+      expect(ownedTitleSpan("", "Molten Salt Research Reactor Tour")).toBeUndefined();
+    });
+  });
+
+  describe("the rule end to end", () => {
+    it("keeps a single-reading snippet exactly as it renders today", () => {
+      // The 44-of-50 majority. This is the control that stops the fix from
+      // being a blanket ban on snippet dates.
+      const item = webResultToRawEventItem(
+        {
+          title: "Advanced Battery Materials Conference 2026",
+          url: "https://example.com/events/advanced-battery-materials",
+          snippet: "The conference runs October 12-15, 2026 in Boston with tutorials.",
+        },
+        NOW,
+      );
+      expect(item?.startDate?.slice(0, 10)).toBe("2026-10-12");
+    });
+
+    it("reads the item's own date when a calendar page offers two readings", () => {
+      // The `ans.org` repro, with the witness present.
+      const item = webResultToRawEventItem(
+        {
+          title: "Molten Salt Research Reactor Tour",
+          url: "https://example.com/calendar/molten-salt-tour",
+          snippet:
+            "# Conference Spotlight\nAugust 24-27, 2026 Dallas, TX\n# Molten Salt Research Reactor Tour\nThursday, April 16, 2027 — meeting and tour.",
+        },
+        NOW,
+      );
+      expect(item?.startDate?.slice(0, 10)).toBe("2027-04-16");
+    });
+
+    it("is silent when two readings are offered and neither is proven to be the item's", () => {
+      const item = webResultToRawEventItem(
+        {
+          title: "Molten Salt Research Reactor Tour",
+          url: "https://example.com/calendar/molten-salt-tour",
+          snippet:
+            "Upcoming meetings: the summit runs August 24-27, 2027 in Dallas and the review follows on December 3, 2027.",
+        },
+        NOW,
+      );
+      expect(item).not.toBeNull();
+      expect(item?.startDate).toBe("");
+    });
+
+    // THE INTENDED DEPARTURE, ASSERTED RATHER THAN ASSUMED (Ruling 60b).
+    // Both `ans.org` and `batteryinnovationsummit.com` move to a date that is
+    // already past, and a past anchor expires the row at `:1367`. Round 23 A
+    // must read these two disappearances as this fix working, NOT as churn.
+    it("lets a finished event correctly disappear once it stops borrowing a future date", () => {
+      const item = webResultToRawEventItem(
+        {
+          title: "Molten Salt Research Reactor Tour",
+          url: "https://example.com/calendar/molten-salt-tour",
+          snippet:
+            "# Conference Spotlight\nAugust 24-27, 2026 Dallas, TX\n# Molten Salt Research Reactor Tour\nThursday, April 16, 2026 — meeting and tour.",
+        },
+        Date.parse("2026-07-01T00:00:00Z"),
+      );
+      // The mechanism, stated in the assertion: the sibling's August date used
+      // to be the expiry anchor and it was in the future, so a finished event
+      // stayed in the pool. With the item's own April date read instead, the
+      // newest anchor is past and the row leaves.
+      expect(item).toBeNull();
+    });
+
+    it("does not treat a labelled deadline as a rival reading of the event day", () => {
+      // C's one correction to draft 3's step 1, and the case that caught it:
+      // "the conference runs X, abstracts are due Y" is the commonest honest
+      // snippet there is, and counting the deadline token as a second
+      // candidate event day would have silenced every one of those rows.
+      const item = webResultToRawEventItem(
+        {
+          title: "Advanced Battery Materials Conference 2026",
+          url: "https://example.com/events/advanced-battery-materials",
+          snippet:
+            "The conference runs September 14, 2026 in Boston. Abstract submissions deadline: August 14, 2026.",
+        },
+        NOW,
+      );
+      expect(item?.startDate?.slice(0, 10)).toBe("2026-09-14");
+      expect(item?.deadline?.slice(0, 10)).toBe("2026-08-14");
+    });
+
+    it("invents no date it was not given", () => {
+      const item = webResultToRawEventItem(
+        {
+          title: "Molten Salt Research Reactor Tour",
+          url: "https://example.com/calendar/molten-salt-tour",
+          snippet:
+            "Upcoming meetings: the summit runs August 24-27, 2027 in Dallas and the review follows on December 3, 2027.",
+        },
+        NOW,
+      );
+      expect(item?.startDate).not.toContain("2027-08");
+      expect(item?.startDate).not.toContain("2027-12");
+    });
   });
 });

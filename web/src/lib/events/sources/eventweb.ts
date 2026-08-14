@@ -60,6 +60,97 @@ export function extractEventDate(text: string): string | undefined {
   return undefined;
 }
 
+// A22-01 (round 22 C, Ruling 59a draft 3): THE CANDIDATE COUNTER.
+//
+// `extractEventDate` above takes the FIRST month-day token in the whole string
+// and stops. On `ans.org` — a conference CALENDAR page — the first token was a
+// DIFFERENT event's, advertised in a `Conference Spotlight` block 339
+// characters before the selected item's own heading, so Peer rendered another
+// event's date and the finished event survived the expiry check on it.
+//
+// The defect is never "unowned text was read". It is "unowned text was read,
+// there was more than one thing it could have meant, and the tie was broken by
+// POSITION". So ownership is demanded exactly there and nowhere else — which is
+// what separates this from the draft that gated every snippet field on a title
+// witness and destroyed 18 correct dates.
+//
+// BUILT FROM THE SHIPPED CONSTANTS, NOT COPIES. B's own counter was written
+// from copies and disagreed with the shipped extractor on two rows. The global
+// variants below are compiled from `.source` of the very regexes
+// `extractEventDate` uses, so the two cannot drift apart; the invariant
+// (`extractEventDate` returning a value implies at least one candidate) is
+// asserted in `eventweb.test.ts` AND made harmless at runtime by the
+// `candidates.length === 0` fall-through at the call site.
+const MONTH_DAY_RE_G = new RegExp(MONTH_DAY_RE.source, "gi");
+const DATE_DMY_RE_G = new RegExp(DATE_DMY_RE.source, "gi");
+
+/** Every event day the text could be read as offering. */
+export function extractEventDayCandidates(text: string): string[] {
+  const days: string[] = [];
+  for (const match of text.matchAll(MONTH_DAY_RE_G)) {
+    const after = text.slice((match.index ?? 0) + match[0].length);
+    const year = after.match(YEAR_RE)?.[1] ?? text.match(YEAR_RE)?.[1];
+    if (!year) continue;
+    const day = parseDateToken(`${match[1]} ${match[2]}, ${year}`);
+    if (day) days.push(day);
+  }
+  for (const match of text.matchAll(DATE_DMY_RE_G)) {
+    const day = parseDateToken(`${match[2]} ${match[1]}, ${match[3]}`);
+    if (day) days.push(day);
+  }
+  return days;
+}
+
+// A conference's own run ("October 12-15", "November 29 - December 4") is ONE
+// reading of the text; a sibling event four months away is a second. 21 days is
+// wide enough to hold any single event's own range and far short of the gap to
+// another event on the same hub page. Chaining from the previous day rather
+// than the cluster's first means a genuine multi-week programme stays one
+// cluster — which fails toward today's behaviour, the safe direction.
+const CLUSTER_WINDOW_MS = 21 * 24 * 60 * 60 * 1000;
+
+/** Groups candidate days into distinct readings of the text. */
+export function clusterEventDays(days: string[]): string[][] {
+  const sorted = [...new Set(days)]
+    .map((day) => Date.parse(day))
+    .filter((ms) => Number.isFinite(ms))
+    .sort((a, b) => a - b);
+  const clusters: number[][] = [];
+  for (const day of sorted) {
+    const current = clusters[clusters.length - 1];
+    if (current && day - current[current.length - 1] <= CLUSTER_WINDOW_MS) current.push(day);
+    else clusters.push([day]);
+  }
+  return clusters.map((cluster) => cluster.map((ms) => new Date(ms).toISOString()));
+}
+
+function normalizeWitness(value: string): string {
+  return value.replace(/[^a-z0-9]+/gi, " ").trim().toLocaleLowerCase();
+}
+
+/**
+ * The span of a snippet that the item's own title introduces, running to the
+ * next heading. Ownership witness for an ambiguous snippet: only a date inside
+ * this span belongs to the selected item.
+ *
+ * Searched over the SNIPPET ALONE, never `title + snippet` — the title is
+ * prepended to that string by the caller, so a search over the whole thing
+ * would match its own copy at offset 0 and prove nothing.
+ */
+export function ownedTitleSpan(snippet: string, title: string): string | undefined {
+  const wanted = normalizeWitness(title);
+  if (wanted.length < 8) return undefined;
+  const lines = snippet.split(/\r?\n|(?=#{1,6}\s)/g);
+  const start = lines.findIndex((line) => normalizeWitness(line).includes(wanted));
+  if (start < 0) return undefined;
+  const span: string[] = [lines[start]];
+  for (const line of lines.slice(start + 1)) {
+    if (/^\s*#{1,6}\s/.test(line)) break;
+    span.push(line);
+  }
+  return span.join("\n");
+}
+
 /** Best-effort CFP deadline from snippet text. */
 export function extractDeadline(text: string): string | undefined {
   const match = text.match(DEADLINE_RE);
@@ -1357,8 +1448,39 @@ export function webResultToRawEventItem(
   if (isEarningsCallPage(title, url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (!looksLikeEvent(text)) return null;
-  const extractedDate = extractEventDate(text);
+  // A22-01 (round 22 C, Ruling 59a draft 3): position may decide the date only
+  // when the text offers ONE reading of it. Two or more readings and the
+  // snippet is ambiguous, so the item must prove which one is its own — its
+  // title standing as a line, with the date inside that heading's span. No
+  // witness, no date. B's measured matrix over all 50 ingestion-kept rows of a
+  // live pull: 44 unchanged, 4 dates lost (none of them in the pool), 2 moved,
+  // 0 invented.
+  //
+  // The `candidates.length === 0` arm is the counter's own safety net: if the
+  // counter ever disagrees with the extractor it guards, the row falls through
+  // to today's behaviour instead of losing a date to a bookkeeping mismatch.
+  const firstReading = extractEventDate(text);
   const deadline = extractDeadline(text);
+  // A DEADLINE TOKEN IS NOT A RIVAL READING OF THE EVENT DAY, and this is C's
+  // one correction to draft 3's step 1 rather than a preference. Item 1 above
+  // already established that a token the deadline extractor owns has a
+  // different ROLE; counting it as a second candidate event day manufactures
+  // ambiguity out of the commonest honest snippet there is — "the conference
+  // runs X, abstracts are due Y" — and would silence every one of those rows.
+  // Caught by item 1's own must-keep control going red, and B's measured
+  // matrix (4 losses across 50 rows) could not have held with those rows
+  // counted, so the correction restores B's numbers rather than departing from
+  // them.
+  const candidates = extractEventDayCandidates(text).filter(
+    (day) => !deadline || Date.parse(day) !== Date.parse(deadline),
+  );
+  const clusters = clusterEventDays(candidates);
+  const ownedSpan =
+    clusters.length > 1 ? ownedTitleSpan(result.snippet ?? "", title) : undefined;
+  const extractedDate =
+    clusters.length > 1 && candidates.length > 0
+      ? ownedSpan && extractEventDate(ownedSpan)
+      : firstReading;
   // A22-02 (round 22 C): one token cannot be both the day the event happens
   // and the day its call for papers closes. DEADLINE_RE only matches a date
   // that a "deadline"/"submissions due"/"abstracts due" phrase introduces,

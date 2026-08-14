@@ -54608,3 +54608,118 @@ wide** — B measured exactly one summary in the pool and it was the wrong
 posting's, so any second silence is new information.
 
 ---
+
+### Round 22 — Agent C (item 3 of 6: **A22-01 — `ans.org`. Draft 3's date clustering, DATE HALF ONLY. Position may decide the date only when the text offers ONE reading of it.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 3 of 6. The widest change in the round.
+
+---
+
+## WHAT CHANGED — `web/src/lib/events/sources/eventweb.ts`
+
+Three exported helpers plus a rewritten date selection in
+`webResultToRawEventItem`. `extractEventDate` itself is **untouched** — it is
+still the thing that reads a date out of a string; what changed is which string
+it is given.
+
+| new export | what it does |
+|---|---|
+| `extractEventDayCandidates` | every event day the text could be read as offering |
+| `clusterEventDays` | groups those days into distinct readings, 21-day window |
+| `ownedTitleSpan` | the span of the SNIPPET that the item's own heading introduces |
+
+Selection: one reading (or none) → today's value, unchanged. **Two or more
+readings → the item must prove which is its own**, by standing as a heading in
+the snippet, and the date is read from that span alone. No witness, no date.
+
+## BUILT FROM THE SHIPPED CONSTANTS, AS B REQUIRED IN WRITING
+
+`MONTH_DAY_RE_G` / `DATE_DMY_RE_G` are compiled from **`.source` of the very
+regexes `extractEventDate` uses**, not copies. B's own counter was written from
+copies and disagreed with the shipped extractor on two live rows; that class of
+drift is now impossible by construction. **The invariant B asked for is asserted
+directly** — `eventweb.test.ts`'s `yields at least one candidate whenever
+extractEventDate yields a value`, five texts — **and made harmless at runtime
+besides**: the `candidates.length === 0` arm at the call site falls through to
+today's behaviour, so a counter/extractor mismatch could never cost a date.
+
+## **C's ONE CORRECTION TO DRAFT 3, AND IT WAS CAUGHT BY A TEST, NOT BY TASTE**
+
+**A DEADLINE TOKEN IS NOT A RIVAL READING OF THE EVENT DAY.** Draft 3's step 1
+says "collect every candidate event day in `title + snippet`". Implemented
+literally, item 1's own must-keep control went **RED**: the snippet
+`"The conference runs September 14, 2026 in Boston. Abstract submissions
+deadline: August 14, 2026."` has two tokens 31 days apart, so it read as
+ambiguous and **lost its correct date**.
+
+That is the commonest honest snippet on the event surface, and silencing it
+would be a wrong drop of exactly the kind this design exists to prevent.
+**Item 1 had already established that a token the deadline extractor owns has a
+different ROLE**, so counting it as a rival event day contradicts the clause
+shipped one commit earlier. **And B's own matrix could not have held with those
+rows counted** — 4 losses across 50 rows is not compatible with silencing every
+"runs X, due Y" snippet — so the correction **restores B's measured numbers
+rather than departing from them.** Candidates are now filtered against the
+deadline instant before clustering.
+
+**Escape clause NOT triggered**: this narrows an input to what the design says
+it is about, in the direction of today's behaviour. No guard was widened.
+
+## THE CLUSTER WINDOW, AND WHY IT CHAINS
+
+21 days, chained from the **previous** day rather than the cluster's first. A
+genuine multi-week programme therefore stays ONE cluster and keeps today's
+value. That is the deliberate failure direction: the other branch DELETES a
+date, so every ambiguity in the clustering itself must fall toward the status
+quo.
+
+## THE TWO INTENDED DEPARTURES — ASSERTED, NOT ASSUMED (Ruling 60b)
+
+`eventweb.test.ts`'s `lets a finished event correctly disappear once it stops
+borrowing a future date` **asserts the mechanism end to end**: with the sibling
+event's future August token no longer serving as the expiry anchor, the item's
+own past April date becomes the newest anchor and `:1367` drops the row. **This
+is the case round 23 A should read `ans.org` and `batteryinnovationsummit.com`
+against.** Both leave the pool. **Neither is churn and neither reverses Ruling
+39b** — 39b accepted a wrong NAME on a live row, and the manager approved this
+side effect explicitly.
+
+## TESTS — **16 ADDED, NONE DELETED, NONE EDITED**
+
+One `describe` block in `eventweb.test.ts` with four sub-blocks: the candidate
+counter (2 cases incl. the invariant), the clusterer (3), the witness span (3),
+and the rule end to end (7). **B's tests-at-risk list named five files; C ran
+all of them plus every caller of `webResultToRawEventItem` and
+`extractEventDate` — `events/scoring.test.ts`, `events/mapper.test.ts`,
+`events/card.test.ts`, `opportunities/place-flow.test.ts`,
+`structured-extract.test.ts` — and NOT ONE MOVED.** Recorded because B expected
+several to.
+
+## NEGATIVE PROOFS — two reverts
+
+| reverted | red count |
+|---|---|
+| selection back to first-token-wins | **4 failed / 158 passed** — `reads the item's own date when a calendar page offers two readings`, `is silent when two readings are offered…`, `lets a finished event correctly disappear…`, `invents no date it was not given` |
+| deadline exclusion removed | **2 failed / 160 passed** — item 1's control `does not touch a row whose event date and deadline are different days`, plus `does not treat a labelled deadline as a rival reading` |
+
+The single-reading control (`keeps a single-reading snippet exactly as it
+renders today`) passes both ways **by design** — it is the 44-of-50 majority and
+its job is to prove the fix is not a blanket ban.
+
+## THE GATE AFTER THIS ITEM
+
+**91 files / 1687 tests, 1686 passing** (+18: 16 new cases plus the 2 that
+`it.each` expands). Sole failure the standing `benchmark.test.ts` flake.
+`npx tsc --noEmit` clean. `npx eslint` exactly the one standing `quiz.tsx:46`
+error. **`enrich.test.ts` SOLO: 53 of 53 — SolarPACES holds** (run because this
+item touches the event side).
+
+## WHAT C DID NOT BUILD, AND WHY — STATED SO IT IS NOT MISREAD AS FORGOTTEN
+
+**The PLACE half is not here (Ruling 60c).** `ans.org`'s city still comes from
+a whole-page body scan with no scope resolver on the event path at all. It is
+deferred, evidence-gated, and its one witness leaves the pool under this very
+fix — which is precisely why 60c ties its reopening to a NEW live witness or a
+manager-ordered capture round.
+
+---
