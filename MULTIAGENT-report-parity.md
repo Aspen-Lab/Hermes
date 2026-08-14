@@ -275,7 +275,30 @@ HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 13:56 UTC
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 13:52 UTC — ROUND 17 C IS
+STOPPED BECAUSE:  **IN PROGRESS — round 18 A, PART 1 OF 4 BANKED @ 2026-08-14
+                  14:05 UTC.** Lock claimed cleanly (`82bff5f`). **Part 1 (the
+                  event surface) is committed.** Five independent live pulls,
+                  five separate processes, no-op `PoolCache`, no
+                  `PEER_PROFILE_SNAPSHOT_PATH`. **16 items in all five runs,
+                  zero variance on membership AND values — sixth consecutive
+                  round of event-surface stability. Event-NAME wrong-rate 0 of
+                  15 (0%), SIXTH consecutive zero. The SolarPACES regression
+                  lock is LIVE-CONFIRMED again after round 17 could not measure
+                  it.** **ONE NEW EVENT-SURFACE DIFFERENCE: `specterfi.com` — a
+                  company's QUARTERLY EARNINGS CALL summary in the event pool,
+                  5 of 5, rendered name `1539 Feb2026 Concall Summary` (`1539`
+                  is the site's internal company ID), admitted because the
+                  company's legal name is "Ion Exchange (India) Limited" and the
+                  profile's topic is `ion exchange`. Ruling 33's tally does NOT
+                  fire — the matched term is 12 characters, not a short
+                  acronym.** **STILL TO DO: parts 2 (job pool + round 17's three
+                  expected effects + the offered-row scan with BOTH 48b columns
+                  + employer + item shape), 3 (summaries + all tallies), 4
+                  (ranked list + gate verdict).** Detail in §4's "Round 18 —
+                  Agent A (part 1…)".
+                  ---
+                  Previous entry, kept for continuity: **finished the turn @
+                  2026-08-14 13:52 UTC — ROUND 17 C WAS
                   COMPLETE.** **ONE commit for the code, per Ruling 49b**
                   (`909b6bf`), pushed immediately, plus this hand-off. Claimed
                   the lock cleanly (`703d09c`) after `git pull --ff-only` and
@@ -39616,3 +39639,146 @@ rounded to B's. SolarPACES 25/25 solo.
 **Round 17 closes. `WHOSE TURN: A — round 18, GATE CANDIDATE ROUND` stands
 as C left it. The open-difference list is EMPTY pending round 18's census.**
 
+
+---
+
+### Round 18 — Agent A (part 1: the event surface. SIXTH consecutive zero on name fidelity — AND A BRAND-NEW HOST THAT IS NOT AN EVENT AT ALL, admitted on a company NAME that collides with a research topic. The SolarPACES lock is live-confirmed again after a round away.)
+
+**STATUS: PARTIAL BY DESIGN.** Round 18 A is pre-split into four parts, the same
+discipline rounds 9–17 used, so a real finding banks even if the session dies.
+This entry is **part 1 only**. Parts 2 (job pool, round 17's three expected
+effects, the offered-row scan with BOTH 48b columns, employer field, item shape),
+3 (job summaries + all tallies) and 4 (summary / ranked list / gate verdict) are
+**not yet done**. **No gate verdict is set here, and A never closes the gate in
+any case.**
+
+Claimed the turn lock (`82bff5f`, `LAPTOP-3CL10CG5 @ 2026-08-14 13:56 UTC`) after
+`git pull --ff-only` (already up to date; the :24 cloud run did not contest it)
+and confirming `git branch --show-current` reads `feature/summary-report-revamp` —
+checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: A — round 18, GATE CANDIDATE ROUND` block, §2, §3, all four round-17
+A parts, both round-17 B entries, round-17 C's entry and all three round-17
+manager verifications, plus the rulings the brief cites, before touching anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+`jsearchApiKey` absent and `feedAiApiKey` empty). **Per §2 as corrected by Ruling
+42b the tier statement is: PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT DID NOT.**
+The struck "Tier 0 only" wording appears nowhere in this entry.
+**Five independent live pulls in five separate processes** (Ruling 39d/41a's
+standing method), each with a no-op `PoolCache` (`get` always `null`, `set` a
+no-op) to force a genuinely fresh pull, calling `buildDailyEventPool()` then
+`scoredEventToEvent()` — the exact entry points §2 names.
+**`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Throwaway harness lived **outside
+`src/`** (`web/zz-r18a/`, its own vitest config, include pattern
+`zz-r18a/**/*.probe.ts`) so the standing gate could not collect it; **deleted
+before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**Reproducibility: 16 items in every one of the five runs, 16 unique hosts in the
+union, and every one of the 16 returned a byte-identical name in all five runs —
+zero variance on MEMBERSHIP and on VALUES.** **SIXTH consecutive round of total
+event-surface stability**, and the membership wobble round 17 recorded on the JOB
+surface has no counterpart here. No majority / minority split arose on this
+surface, so **Ruling 39d/41a's minority-disclosure clause has nothing to disclose
+here** — stated explicitly rather than left silent, because a silent disclosure
+line and an empty one look identical.
+
+**Ground truth** came from a direct fetch of the live page extracting ONLY
+`<title>`, the first `<h1>` and `og:title`, **clipped programmatically to 160
+characters** — no large block of third-party text was read into context, per the
+security floor. **No fetched page contained text directed at an agent.**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `solarpaces.org` | `32nd SolarPACES Conference` | **CORRECT — AND THE SOLARPACES REGRESSION LOCK IS LIVE-CONFIRMED AGAIN, after round 17 could not confirm it at all.** The pool URL is a news post whose `<title>` is `Abstract submission deadline extended - SolarPACES` and whose `<h1>` is `Abstract submission deadline extended`; **the render names the CONFERENCE, not the headline.** Round 17 A recorded that this host had left the pool and explicitly refused to inherit round 16's confirmation as fresh — **this round it is measured again, and it holds.** Ruling 28's deferred residual is not present |
+| `ecs.confex.com` | `ecs.confex.com` | **HONEST HOST — accepted, Ruling 39a/40, on A's exclusion list.** `<title>` is `Call for Papers`, `<h1>` is `Call for Abstracts`; both correctly rejected and nothing else on the page names an event. Not a wrong value. Byte-identical to rounds 14–18 |
+| **`specterfi.com`** | `1539 Feb2026 Concall Summary` | **NAME IS FAITHFUL — `og:title` is that string VERBATIM (its `<title>` is the longer `1539 Feb2026 Conference Call Summary / Specter`) — BUT THE ITEM IS NOT AN EVENT.** Fully detailed as Finding A below; **counted in the new item-shape line, NOT in the name column**, and A says plainly that the name column's zero is not a claim this row is fine |
+| `euagenda.eu` | *(not measured)* | **PERMANENTLY EXCLUDED BY NAME — Ruling 45a. NOT fetched, NOT retested, NOT counted.** Listed so the exclusion stays visible, exactly as the rule requires. *(Recorded without scoring: its render is again a full event name. A does not treat that as evidence in either direction, because 45a forbids the measurement that would confirm it.)* |
+| `10times.com` | `Solid-State Battery Summit (Aug 2026), Chicago USA` | CORRECT (unchanged r10–r16, absent r17, back and byte-identical now). **Direct fetch returns 403**, as in rounds 14–16; ground truth rests on the six prior rounds that established it, stated as a limit rather than glossed |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT — RULING 36 MEASURED, NOT ABSENT, sixth consecutive round.** `<title>` is `Ruggiero Group Attends the 2026 Crystal Engineering GRC - Ruggiero Research Lab`, `<h1>` the same sentence without the brand; the render drops BOTH the `Ruggiero Group Attends the` lead-in and the site brand. **Both historical failure modes absent** |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13–r18); `<title>` and `og:title` are both `Home - International Battery Summit`, the `Home - ` chrome correctly dropped |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged); first segment of `<title>`/`og:title`, the `Advanced Battery & EV Tech` marketing tail dropped |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (unchanged r13–r18); `<title>` is `Home page - Energy Storage Summit USA 2026`, chrome dropped. Its `<h1>` is the year-less `Energy Storage Summit USA` and the render correctly prefers the fuller title |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the event-side 34a tally, NOT a defect. Root `og:title` re-confirms it is that string **verbatim**, sixth round running (its `<title>` is the longer `The Battery Saloon / Battery & Energy Storage Summits`) |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT — **B12-04 still holding, SIXTH consecutive round**; first segment of `<title>`. Its `<h1>` is a marketing slogan (`Leading the Charge in…`) and the render correctly does **not** prefer it |
+| `flogen.org` | `SIPS 2026` | **CORRECT — B13-03's banner strip CONFIRMED LIVE for the third consecutive round**, because the pool again holds `flogen.org/sips2026`, the exact URL B13-03 was measured on. `<title>` is `SIPS 2026 by FLOGEN Stars Outreach`; **`og:title` AND `<h1>` are both `WELCOME TO SIPS 2026`, and the banner form appears nowhere in the render** |
+| `nanoge.org` | `SSI24` | **CORRECT.** `<title>` is `nanoGe - SSI24 - Conference Program`; chrome dropped on **both** sides, and `og:title` is the bare `Conference Program`, which is correctly NOT preferred |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | **CORRECT — third consecutive round on its own domain.** `<title>` and `og:title` byte-identical to the render; its `<h1>` is a marketing sentence and is correctly not preferred |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged r10–r18). **Its static HTML carries no `<title>`, no `<h1>` and no `og:title` at all** (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the eight prior rounds that established it — stated as a limit, not glossed |
+| `advancedautobat.com` | `26th Advanced Automotive Battery Conference (AABC)` | **CORRECT — back after four rounds away and byte-identical to r9–r13.** `<title>` is `26th Advanced Automotive Battery Conference (AABC) / December 7-10, 2026 / San Diego, CA`; the render is the first segment and the date/city tail is correctly dropped. Its `<h1>` is a registration-deadline marketing sentence and is correctly **not** preferred |
+
+**TALLY: 12 CORRECT, 0 CONFIRMED WRONG NAME, 1 HONEST HOST, 1 ACCEPTED COST
+(Ruling 39b), 1 NOT-AN-EVENT (`specterfi.com`, Finding A), 1 EXCLUDED BY NAME
+(`euagenda.eu`, Ruling 45a).** Denominator excludes `euagenda.eu` per 45a; **the
+accepted cost, the honest host and the not-an-event row ARE all counted in the
+denominator**, as every prior round has counted the first two.
+**Round 18's event-NAME wrong-rate is 0 of 15 (0%) — the SIXTH consecutive
+zero.** Round 17 was 0 of 13; round 16 0 of 14; round 15 0 of 11; round 14 0 of
+13; round 13 0 of 14; round 12 was 8 of 17 (47.1%).
+
+**AND A STATES THE LIMIT OF THAT ZERO BEFORE ANYONE READS IT AS A CLOSE.** The
+name column measures **name fidelity** — does the render name the thing the page
+is about. `specterfi.com` passes that test and still should not be in an event
+pool at all. **A does not let a column definition delete a difference**, so it is
+ranked in part 4 and counted in a new line below rather than folded into the
+zero.
+
+---
+
+## FINDING A — A NEW EVENT-SURFACE ITEM-SHAPE LINE: **1 of 15 (6.7%) POOL ITEMS IS NOT AN EVENT.** IT IS A COMPANY'S QUARTERLY EARNINGS CALL.
+
+`https://www.specterfi.com/companies/1539/concalls/Feb2026` is in the pool
+**5 of 5** and is **brand new to this loop** — the host appears nowhere in this
+file's 39,000 lines before today.
+
+- **What it actually is, from the item's own rendered description:** *"Ion
+  Exchange (India) Limited Q3 & 9M FY26 Earnings Conference Call (February
+  2026)"*. It is a **financial earnings-call summary on a stock-research site** —
+  the URL path is `/companies/<numeric-id>/concalls/<month>` — not a conference,
+  workshop, seminar or school a researcher can attend.
+- **The rendered event name is `1539 Feb2026 Concall Summary`.** `1539` is the
+  site's internal **company ID**. So the reader is shown a database identifier and
+  a month code where a conference name belongs. **The extraction is faithful; the
+  page simply has no event name to extract, because it is not an event.**
+- **THE ADMISSION ROUTE IS A COMPANY NAME COLLIDING WITH A RESEARCH TOPIC.**
+  `matchedTerms` is `["ion exchange"]`, and the match is on the **company's legal
+  name — Ion Exchange (India) Limited** — not on the ion-exchange chemistry the
+  profile means. **This is Ruling 33's collision class operating on ITEM
+  ADMISSION, but the matched term is 12 characters, so RULING 33's TALLY DOES NOT
+  FIRE and A does not inflate it.** Stated so the two are never confused: 33 is
+  about acronyms under 5 characters; this is a full-phrase collision, which 33's
+  tally cannot reach and which no ruling currently covers.
+- **It is the event-surface twin of the job surface's programme-page class** that
+  rounds 16 and 17 closed — an item that renders faithfully and is the wrong KIND
+  of thing. A notes the parallel and **makes no recommendation about how it should
+  be handled**; that is Ruling 32's and the manager's question, not A's.
+- **One difference, two faces (not an event; a database-ID name), COUNTED ONCE**,
+  exactly as round 17 A counted the CATL row once with three faces.
+
+**Composition, read before the numbers.**
+- **Zero regressions.** Every host that rendered a correct name in round 17 and is
+  still in the pool rendered the identical name this round.
+- **Heavy but mostly favourable churn: two out, four in, pool 14 → 16.** Left:
+  `ans.org` (round 17's document-URL row) and `euchems2026.eu` (round 17's second
+  honest host). Entered: **`solarpaces.org` — which is why the SolarPACES lock
+  could be measured live again** — `10times.com` and `advancedautobat.com` (both
+  returning after rounds away with byte-identical values), and
+  **`specterfi.com`, Finding A**.
+- **BOTH OF ROUND 17's DOCUMENT-URL ROWS LEFT, AND A SAYS WHAT THAT COSTS.**
+  Round 17's `ans.org` observation (a PDF URL that still resolved a real
+  conference name) and its `euchems2026.eu` counterexample are **not re-measured
+  this round**; round 17's record stands as history and is **not inherited as a
+  round-18 result.** The honest-host count fell from two to one for that reason
+  alone, not because anything was fixed.
+
+**No credential read, printed, logged or written. No `PEER_PROFILE_SNAPSHOT_PATH`.
+`euagenda.eu` NOT fetched (45a). Ruling 41c's three hosts NOT hunted (45b). No
+branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+test deleted or edited. Harness deleted before this commit; tree clean.**
+
+**Not done yet (parts 2–4, same session, continuing next):** the job pool with
+round 17's three expected effects, the offered-row scan with BOTH 48b columns,
+the employer field and item shape; then summaries and all tallies; then the
+summary, ranked difference list and gate verdict.
