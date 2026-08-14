@@ -46832,3 +46832,296 @@ wrongly-dropped zero; round 19's shape defect closed.**
 **`WHOSE TURN: B` stands — the Rome pair, plus round 20 C inherits the
 mangled-text hygiene item zero already queued.**
 
+
+---
+
+### Round 20 — Agent B (item 1 of 2: A20-01. **`Online` does NOT win at the card — it wins at the PAGE EXTRACTOR, and it wins because schema.org's HYBRID mode is stored as `isOnline: true`.** The build already contradicts itself: the Format facet for this same row reads `hybrid` while the card reads `Online`.)
+
+**STATUS: DONE.** First of round 20 B's two items (Ruling 54a). Item 2 (A20-02,
+the hotel-as-city) follows in this same session as its own commit. **B changed no
+code, deleted no test, edited no test, and touched no file except this one.**
+
+Claimed the turn lock (`03d9c53`, `LAPTOP-3CL10CG5 @ 2026-08-14 17:37 UTC`) after
+`git pull --ff-only` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed, per §3; the branch name is re-read in the output of every push. Read §1's
+whole `WHOSE TURN: B` block, §2, §3, all four "Round 20 — Agent A" entries and the
+manager's verification carrying Ruling 54, before touching anything.
+
+**Method.** Throwaway harness lived **outside `src/`** (`web/zz-r20b/`, its own
+vitest config, include pattern `zz-r20b/**/*.probe.ts`) so the standing gate could
+not collect it; **deleted before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Every candidate is **a real copy of
+the shipped file with one textual edit** (round 19 B's method), and the byte-identical
+control copy was proved faithful **twice**: the **shipped test suite runs green
+against it** (`card.test.ts` 2/2, `structured-extract.test.ts` 41/41,
+`enrich.test.ts` 53/53 — 96 assertions against controls) **and every control verdict
+is asserted equal to the genuinely imported shipped function on every live row**
+(0 mismatches of 17). State file appended by writing the entry to a scratchpad file
+and `cat`-ing it in from bash — **NOT PowerShell** (the recorded hazard).
+
+---
+
+## FIRST, TWO CORRECTIONS TO THE RECORD — BOTH AGAINST B's CONVENIENCE
+
+**1. B's brief says "A did NOT fetch the page." A DID fetch it.** §4's own round-20
+part-1 entry states: *"Three hosts are NEW this round (`imlb.org`, `ans.org`,
+`chemistryworldconference.com`) and for those A fetched ground truth through Peer's
+own `fetchPageHtml`, clipped PROGRAMMATICALLY to `<title>` / first `<h1>` /
+`og:title` at 200 characters each."* What is true is the *substance* of the brief:
+**A did not read `place` or `isOnline` off the page.** B records the correction
+because it changes the standing: a fetch of this host is already inside this round's
+established security envelope, so B's own single targeted fetch is a repeat of an
+approved action, not a new one.
+
+**2. A20-02 is NOT invisible today.** A writes that the hotel-as-city is *"currently
+MASKED by A20-01"* and that *"no reader can see it today."* **Measured: the LOCATION
+FACET BUTTON for this row already reads `NH Villa Carpegna`.** `facets.ts:319` sets
+`location: locationLabel(item)` and `facets.ts:88` is
+`cleanLabel(item.place?.city) ?? cleanLabel(item.place?.country)` — the city slot,
+not the location string, so `isOnline` never suppresses it. A hotel name is sitting
+in the Location filter list on the live pool right now. **A's ranking still stands
+and B does not re-rank** — the card tile is the louder defect — but "invisible" is
+wrong, and it matters, because it means item 2 is a live defect on its own surface
+and not merely a latent one.
+
+---
+
+## THE TRACE — WHERE `Online` WINS. MEASURED, LAYER BY LAYER.
+
+One targeted fetch through Peer's **own** `fetchPageHtml` of the exact pool URL A
+recorded (`/program/scientific-sessions/ion-exchange-chromatography`) — a recorded
+path, not a guessed one (round 15 A's binding correction). Every value below is a
+derived boolean or a short field computed programmatically; **no page body entered
+context, and no page text was treated as an instruction.**
+
+| # | layer | file:line | what it does to this record |
+|---|---|---|---|
+| 1 | ingestion | `events/sources/eventweb.ts:1379` | `isOnline = /\b(online\|virtual\|hybrid)\b/i.test(title + snippet)`. **Not load-bearing here** — A did not record the snippet, and layer 2 sets the flag regardless |
+| 2 | **page extractor** | `opportunities/structured-extract.ts:1614-1617` | `isOnline: meta.isOnline \|\| attendanceMode.includes("online") \|\| attendanceMode.includes("mixed")`. **MEASURED: `meta.isOnline` is `false`, the og text contains no `online`/`virtual`/`hybrid` token at all, and `eventAttendanceMode` is `https://schema.org/MixedEventAttendanceMode`. `.includes("mixed")` is the ONLY clause that fires. THIS IS WHERE `true` IS BORN.** |
+| 3 | enrich merge | `opportunities/enrich.ts:339` | `isOnline: item.isOnline \|\| structured?.isOnline \|\| false` — a **latching OR**. Once true, nothing downstream can clear it |
+| 4 | mapper | `events/mapper.ts:136,138` | copies the flag through; `location` is already `formatOpportunityPlace(place)` from `enrich.ts:294` |
+| 5 | **card** | `events/card.ts:38` | `event.isOnline ? "Online" : event.location` — the flag suppresses the venue **unconditionally** |
+
+**THE GAP, IN ONE SENTENCE.** schema.org has **three** attendance modes — Offline,
+Online and **Mixed** — and Peer's record has a **two-valued** `isOnline` boolean, so
+`Mixed` (which means *"there is a physical venue **and** an online option"*) is
+stored as if it meant *"there is no physical venue"*, and every render site then uses
+that flag to delete the venue.
+
+**This is a record-structure gap, not a host-strings gap.** No `chemistryworldconference.com`
+string appears anywhere in the diagnosis or the design. The signal is
+`MixedEventAttendanceMode`, a closed schema.org enum value the codebase already reads.
+
+---
+
+## THE BUILD ALREADY CONTRADICTS ITSELF — AND THE RULE THAT FIXES THIS IS ALREADY SHIPPED
+
+`facets.ts:294-312`, `opportunityFormat`, already computes the missing third value:
+
+```
+if (surface === "events") {
+  if (!item.isOnline) return "in-person";
+  const hasPhysicalPlace = Boolean(
+    cleanLabel(item.place?.city) || cleanLabel(item.place?.region) || cleanLabel(item.place?.country),
+  );
+  return hasPhysicalPlace ? "hybrid" : "online";
+}
+```
+
+**Measured on the live pool: this row's Format facet is `hybrid`. Its card tile is
+`Online`. Same row, same run, two answers.** It is the only row of 17 the facet
+calls `hybrid`; every other row is `in-person`. `facets.test.ts` already carries a
+passing hybrid test (*"sanitizes selections and lets hybrid events match online and
+city"*), so the concept is live and covered — **it simply never reached the card.**
+
+That settles the design question without inventing anything: **the card should ask
+the question the facet layer already asks.**
+
+---
+
+## THE DESIGN — AND THE TWO ALTERNATIVES B PRICED AND REJECTED
+
+### REJECTED — fix it at the extractor (drop `attendanceMode.includes("mixed")`)
+
+One line, fixes all six render sites at once, and **it is wrong**: it *deletes*
+information. After it, a hybrid event is indistinguishable from a purely offline one,
+so `opportunityFormat` would classify this row `in-person` — **a regression on the
+Format facet, which is currently right.** It would also change `locationFit`
+(`shared.ts:171,178`), the relevance score through `scoring.ts:244`, and
+`preferredFeeTier` (`app/events/[id]/page.tsx:527`), which today correctly offers a
+hybrid event's online ticket. **Rejected on measured consequences, not taste.**
+
+### REJECTED — add a three-valued `attendance` field to the record
+
+Models the domain honestly and is probably where this ends up eventually. It touches
+`types/index.ts`, `events/types.ts`, all four sources, the mapper, the card, the
+report page, facets, the store and every fixture. **Out of proportion to a two-item
+round; named so a later round can pick it up rather than rediscover it.**
+
+### RECOMMENDED — ask the facet layer's question at the render site
+
+The single edit in `events/card.ts`'s `locationView`, replacing line 38:
+
+```
+const hasPhysicalPlace = Boolean(
+  event.place?.city?.trim() || event.place?.region?.trim() || event.place?.country?.trim(),
+);
+const place =
+  event.isOnline && !hasPhysicalPlace
+    ? "Online"
+    : event.location.trim() || (event.isOnline ? "Online" : "Location not listed");
+```
+
+**It is a strict superset of today's behaviour with exactly ONE changed branch.**
+`!isOnline` is untouched. `isOnline && !hasPhysicalPlace` is untouched. Only
+`isOnline && hasPhysicalPlace` — the hybrid case — is new.
+
+**C should not copy the predicate.** `opportunityFormat` already owns it. **Export
+`hasPhysicalPlace(place)` from `facets.ts`, have `opportunityFormat` call the exported
+function (a pure refactor, zero behaviour change, provable by the shipped
+`facets.test.ts`), and call it from the card.** One definition, so the card and the
+facet can never drift apart again.
+
+---
+
+## THE MUST-KEEP, MEASURED — 7 GENUINELY-ONLINE SHAPES, ALL HOLD
+
+Every row below is built from **the source's own construction code**, not invented:
+`eventweb.ts:1387`, `ccfddl.ts:146`, `confstech.ts:67`, `researchseminars.ts:82`.
+
+| shape | `isOnline` | `place` | `location` | shipped | recommended |
+|---|---|---|---|---|---|
+| eventweb, genuinely online | true | none | `"Online"` | `Online` | **`Online`** |
+| ccfddl, genuinely online | true | none | `"Online"` | `Online` | **`Online`** |
+| confstech online, no city | true | none | `"Online"` | `Online` | **`Online`** |
+| researchseminars online talk | true | never set | `"Online"` | `Online` | **`Online`** |
+| eventweb online, enrichment FAILED, location empty | true | none | `""` | `Online` | **`Online`** |
+| online with an **empty** place object (all blanks) | true | `{city:"  ",region:""}` | `"Online"` | `Online` | **`Online`** |
+| ccfddl online where the source's place text was `Online` | true | none | `"Online"` | `Online` | **`Online`** |
+| offline with a real city | false | Chicago/IL/US | full | `Chicago, IL, United States` | **identical** |
+| offline, no place | false | none | `"See event page"` | `See event page` | **identical** |
+| offline, nothing at all | false | none | `""` | `Location not listed` | **identical** |
+| **HYBRID — the Rome shape** | true | Rome/Italy | `"Rome, Italy"` | `Online` | **`Rome, Italy`** ← the fix |
+| **HYBRID — confstech online WITH a city** | true | Rome/Italy | `"Rome, Italy"` | `Online` | **`Rome, Italy`** ← the fix |
+| **HYBRID — ccfddl `"Chicago, IL + Virtual"`** | true | Chicago/IL/US | `"Online"` | `Online` | `Online` ← **UNDER-CATCH, see below** |
+
+**2 of 13 change, and BOTH are hybrid. Zero must-keep breaks. Zero offline rows move.**
+The empty-place-object row is the deliberate adversarial one: a place whose components
+are all whitespace must not count as physical, and it does not, because the predicate
+trims.
+
+**THE NAMED UNDER-CATCH, FOUND BY EXECUTION AND NOT GUESSED.** `ccfddl.ts:146` is
+`location: isOnline ? "Online" : place` — **the source itself overwrites the venue
+string with the literal `"Online"` before enrichment ever runs**, while still setting
+`place` from the same text. So a ccfddl hybrid row renders `Online` under the
+recommended fix too. It is a **different defect in a different file**, it has **zero
+sightings in this round's live pool** (`ccfddl` contributed no row), and B does **not**
+fold it in. **Recorded as a documented known-remaining case (Rulings 37/40 — the miss
+falls to an honest fallback, which is today's exact string).**
+
+---
+
+## THE LIVE CORPUS — 1 OF 17 REAL ROWS CHANGES, AND IT IS THE TARGET
+
+**One live event-pool pull** through `buildDailyEventPool()` with a **no-op
+`PoolCache`** (`get` always `null`, `set` a no-op) to force a genuinely fresh pull —
+the standing Ruling 39d/41a method. `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+**Page-fetch enrichment ran; LLM enrichment did not** (Ruling 42b's wording). Every
+row mapped with the real `scoredEventToEvent()` and rendered through the real
+`eventCardView()`.
+
+**17 rows. 16 byte-identical. 1 changed: `chemistryworldconference.com`,
+`"Online · Preferred"` → `"NH Villa Carpegna, Italy · Preferred"`.**
+
+Every one of the other 16 rows is `isOnline: false`, so **this round's live pool
+contains NO genuinely-online event and the must-keep has NO live witness.** B says
+that plainly rather than implying the live run proved it: the must-keep evidence
+above is **constructed from each source's own code**, and the live run proves only
+the **no-regression** half. That is a real limit on this item's evidence.
+
+**And it is only half a repair.** With item 2 still open the tile reads
+`NH Villa Carpegna, Italy` — one wrong location swapped for another, exactly as A
+predicted. See the interaction table in item 2's entry.
+
+---
+
+## WHAT RENDERS ON REJECTION, AT EACH LAYER
+
+| where it fails | record state | what the tile renders |
+|---|---|---|
+| ingestion regex misses / page never fetched | `isOnline` false, `place` none | `See event page` — unchanged today |
+| page fetched, no JSON-LD, no og place, no gazetteer city | `isOnline` may be true, `place` **undefined** | **`Online`** — the predicate is false, so the shipped branch is taken verbatim |
+| place has only a country | `{country:"Italy"}`, `location` `"Italy"` | **`Italy`** — thin, but true and not `Online` |
+| place present but `location` is the honest placeholder | `{country:"Italy"}`, `location` `"See event page"` | **`See event page`** — Peer's own existing honest placeholder |
+| everything present | Rome/Italy | **`Rome, Italy`** |
+
+**No branch invents a value, and every rejection lands on a string the codebase
+already ships.**
+
+---
+
+## TESTS AT RISK: **ZERO — MEASURED, NOT GREPPED**
+
+Callers of `eventCardView` grepped by name: `components/cards/event-card.tsx:36` and
+`lib/events/card.test.ts`. Nothing else. **The shipped `card.test.ts` runs 2/2 green
+against the candidate copy.**
+
+**But B flags what that green actually means (Ruling 53b territory):
+`card.test.ts` has NO test where `isOnline` is `true`. The branch this item changes
+is UNTESTED TODAY.** So:
+
+- The **new** contract (`isOnline && hasPhysicalPlace` → the venue) will have a
+  uniquely-red test — C must write it, and reverting the edit must turn it red.
+- The **must-keep** (`isOnline && !hasPhysicalPlace` → `Online`) **cannot be uniquely
+  red**: the shipped code passes it too. It is a lock, not negative proof, and C
+  should label it as such rather than presenting it as coverage of the change.
+
+**Score movement: ZERO, structurally.** `card.ts` is a pure view function. The only
+place-derived scoring input is `locationFit(item.location, item.isOnline, ...)` at
+`scoring.ts:244`, reached from the mapper — neither of which this edit touches.
+`relevanceScore`, `matchedTerms`, `locationFit` and the Format facet are all
+byte-identical before and after.
+
+---
+
+## THE ONE SCOPE QUESTION — `POLICY — manager decides`
+
+**`isOnline ? "Online" : location` appears at SIX render sites, not one:**
+`events/card.ts:38`; `app/events/[id]/page.tsx:634` (the report's **Where** fact) and
+`:1715` (the report **subtitle**); `components/cards/feed-tile.tsx:472`;
+`components/cards/briefing-hero.tsx:113`; `components/cards/briefing-quick-hit.tsx:48`.
+
+A measured `eventCardView()`, so A20-01 as written is the card. **But plate 03 is the
+event REPORT, and the report carries the identical collapse at `page.tsx:634` and
+`:1715` — so a card-only fix leaves the same wrong value on the surface this loop
+exists to measure, and A20-01 returns next round on the report.**
+
+**B's recommendation: fix the card AND the two report sites, all three through the one
+exported predicate. B does NOT decide it** — widening past A's measured surface is the
+manager's call (the round-18 "take the fix, decline the widening" precedent cuts the
+other way here, because the report is *in* the plate scope, not outside it). **The
+three feed/briefing sites are out of plate scope; B recommends leaving them and
+recording the inconsistency.**
+
+**A SECOND, SEPARATE COPY QUESTION B EXPLICITLY DOES NOT ANSWER.**
+`page.tsx:656` (`detail: isOnline ? undefined : "in person"`) and `page.tsx:1728`
+(`isOnline ? "online" : "in person"`) print the **format word**, not the location. For
+a hybrid event both are now incomplete. Saying `"hybrid"` there would be **inventing
+plate copy**, which B will not do. **Flagged, not designed.**
+
+---
+
+**No credential read, printed, logged or written — boolean presence only
+(`tavilyApiKey` present: `true`). ONE page fetch, through Peer's own `fetchPageHtml`,
+of the exact URL A recorded; only derived booleans and short fields were retained and
+no page body entered context. `euagenda.eu` NOT fetched (45a — and it independently
+returned `null` in the corpus loop, which is recorded and not counted); Ruling 41c's
+three hosts NOT hunted (45b); no job-side host fetched.** No third-party page
+contained text directed at an agent and none was treated as an instruction. No branch,
+worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted
+or edited. Harness deleted before this commit; tree clean.
+
+**Not done yet (item 2, same session, next):** A20-02 — where the hotel name reaches
+`place.city`, whether it is the same gap as item 1, the design, and the
+one-gap-or-several verdict.
