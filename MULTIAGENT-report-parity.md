@@ -33897,3 +33897,185 @@ most thorough this loop has run.**
 
 **`WHOSE TURN: C` stands — one item, B's five must-not-dos binding.**
 
+
+---
+
+### Round 15 — Agent C (B15-01 lands as recommended, 89/92. The design was RE-MEASURED BY EXECUTION before a line was written, Ruling 46a's refusal was independently confirmed, and the one false fire is priced in a test rather than a comment.)
+
+**STATUS: DONE.** Round 15 C's only item. Lock claimed cleanly (`5d4c884`)
+after `git pull --ff-only` and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`; the branch name was re-read in the output of
+every push (§3). **No test deleted, no test rewritten, no existing assertion
+touched.** Harness lived outside `src/` (`web/zz-r15c/`, its own vitest config)
+and was **deleted before the item's commit**; `git status --porcelain
+--untracked-files=all` confirmed the tree carried only the two intended files.
+
+**COLD BASELINE CONFIRMED BEFORE ANY EDIT, NOT INHERITED:** 90 files / **1307
+tests, 1306 passing**, sole failure the standing `benchmark.test.ts`
+live-search flake (`cityCoverage 0.467 < 0.5`). Round 14 C's figure was not
+assumed; it was re-run.
+
+---
+
+#### 1. THE DESIGN WAS RE-MEASURED BEFORE IT WAS WRITTEN — and B's numbers hold
+
+Round 14 C's precedent: replay B's matrix against the rule BEFORE the product
+code exists. Done, in a standalone probe importing the REAL `isListingPage`
+(so the "shipped control" column cannot drift on a transcription error).
+
+**PROVENANCE, STATED PLAINLY: B's harness was deleted before B's commit, so
+the 92 ROWS ARE NOT RECOVERABLE BYTE-FOR-BYTE.** They were reconstructed from
+B's §4 prose — its category counts, every case it names by string, and every
+counterexample it credits for a conjunct. **Row-for-row identity with B's table
+is NOT claimed and must not be read into the numbers below.** The reconstruction
+came to 30 must-drop / 63 must-keep once the second letter-case variant was
+added, so the totals are `/93` where B's are `/92`.
+
+| design | C's reconstruction | B's recorded figure | agreement |
+|---|---|---|---|
+| V0 shipped control | 78/93, **0 false fires**, 15 misses | 79/92, 0 false fires, 13 misses | same shape: the shipped guard under-catches and over-fires on nothing |
+| **V1 count optional (the naive widening)** | **72/93, 21 FALSE FIRES, 0 misses** | 71/92, **19 false fires** | **CONFIRMED, including the four shipped must-keeps B named by string** |
+| V6 + `careers`/`positions`/`opportunities` | 88/93, 3 false fires | 79/92, 10 false fires | direction confirmed; C's trap corpus is thinner, see below |
+| **V15 = B15-01, RECOMMENDED** | **90/93, 1 false fire, 2 misses** | **89/92, 1 false fire, 2 misses** | **EXACT — and the three named limits are the SAME THREE CASES** |
+| V16 + a letter-case test | 90/93, 0 false fires, **3 misses** | 88/92, 0 false fires, 4 misses | **CONFIRMED: it buys the false fire back with an extra MISS** |
+
+**THE FOUR SHIPPED MUST-KEEPS THE NAIVE WIDENING DESTROYS ARE EXACTLY THE FOUR
+B NAMED**, reproduced by execution rather than taken on trust: `Jobs for
+Veterans Program Manager`, `Job for a Battery Engineer`, `Jobs Data Analyst at
+the Bureau of Labor Statistics`, `Research positions at CERN`. **The count does
+not become optional. `LISTING_TITLE_RE` is byte-identical in the shipped diff.**
+
+**RULING 46a IS CONFIRMED ON EVIDENCE, NOT ACCEPTED ON AUTHORITY.** The
+letter-case variant was built and scored alongside the recommended one. It
+removes the false fire and immediately **misses `Ion Exchange Resin Jobs in
+United States`** — the Title-Case render. That is the trade B described and the
+manager endorsed, observed directly. **It is now a shipped test** (see below),
+so a later round that "improves" toward zero false fires breaks a red test
+rather than drifting silently.
+
+**ONE HONEST DISAGREEMENT IN THE RECONSTRUCTION, RECORDED RATHER THAN
+SMOOTHED:** C's V6 row scores 88/93 where B recorded 79/92, and C's V6 does NOT
+false-fire on `Research positions at CERN` itself — because in C's corpus that
+title sits on `/careers/role`, a path whose leaf cannot reach the leaf rule at
+all. B evidently paired it with a matching slug. **B's qualitative claim is
+still reproduced** (adding those words false-fires on `Research positions in
+Chemistry at ETH` and `Funding opportunities in Battery Science`), but the
+**exact 79/92 figure is not reproduced and is not claimed to be.** This is a
+gap in C's reconstruction, not a defect found in B's work.
+
+---
+
+#### 2. WHAT SHIPPED — verbatim, and nothing simplified out
+
+`web/src/lib/jobs/sources/jobweb.ts`: the new `isTopicLandingPage()` helper with
+its three regexes, placed immediately above `AGGREGATOR_HOSTS`, and **one line**
+in `isListingPage()`:
+
+```ts
+  if (FEED_PATH_RE.test(pathAndQuery)) return true;
+  if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
+  if (isTopicLandingPage(title, pathAndQuery)) return true; // B15-01
+  if (LISTING_TITLE_RE.test(title)) return true;
+```
+
+**B's code landed BYTE-FOR-BYTE.** All four conjuncts present; none simplified.
+`careers`, `positions` and `opportunities` absent from all three lists. No host
+list — `linkedin.com` appears nowhere in the design, and the identical shape on
+`jobboard.test` is asserted as a must-drop. **All five of B's must-not-dos
+observed.**
+
+**Three doc comments were added or extended**, because the reasoning is the
+thing a later round will lack:
+1. The full `isTopicLandingPage` block — every conjunct with the score it
+   carries, the measured kill of each rejected route, the named false fire with
+   its zero-in-150-postings frequency, both named misses, Ruling 46a's refusal
+   with C's own re-measurement, and Ruling 32's "what renders on rejection".
+2. **`LISTING_TITLE_RE`'s comment now records that B15-01 deliberately did NOT
+   touch it** and why (B's test-to-add 7), so the count is not re-litigated.
+3. `isListingPage`'s own comment notes that B14-01 and B15-01 landed in the same
+   home for the same reason — both are page-KIND rules that run before the
+   employer chain.
+
+---
+
+#### 3. TESTS — **+48, ZERO DELETED, ZERO REWRITTEN**
+
+`jobweb.test.ts` 181 → **229**. One new `describe` block nested inside the
+existing `non-posting pool items (B13-02)` block, since this item is the same
+class continued.
+
+- **A's live instance** as a must-drop, with its recorded URL and title.
+- **The countless sibling of B13-02's own target**, with the comment recording
+  that this shape was KEPT before today — the proof B13-02 was count-dependent
+  and that round 14's confirmation of it was weather.
+- **Eleven countless-class must-drops** as an `it.each`, including the
+  different-host row that proves this is not a host list.
+- **Twenty open-class traps** as must-keeps, the four HARD ones first.
+- **The two other files that call `webResultToRawJobItem`** replayed as
+  must-keeps, `job-cleanup.test.ts`'s fixture URL included because it is not a
+  literal in that file and could only ever be checked by hand.
+- **Seven round-15 census postings** using A's recorded titles, **marked
+  `RECORDED-TITLE` in a comment** because A's log does not carry their exact
+  live paths — per A's own correction that a guessed path is bad input rather
+  than evidence.
+- **Ruling 46a's Title-Case case**, asserted so the refusal cannot be traded
+  away quietly.
+- **The one false fire asserted `.toBe(true)`** with a comment stating plainly
+  that it is a real posting shape this rule destroys, its measured frequency of
+  zero, and that a LIVE SIGHTING by A is what reopens the trade — not taste.
+- **The two misses asserted `.toBe(false)`** with their reasons.
+- **Ruling 32 answered from the render side** — `webResultToRawJobItem` returns
+  `null` on the live shape — **plus its counterpart**, a real posting on the
+  SAME host still returning non-null. That second test is what stops the block
+  going vacuous, which is the failure mode B14-01 found the hard way.
+
+**TESTS AT RISK: ZERO, AND B's SWEEP WAS RIGHT.** Every existing assertion in
+all three caller files passed on the first run after the edit. **Nothing was
+patched around, because nothing needed to be** — unlike round 14, C has no
+correction to make to B's table this round.
+
+**NEGATIVE PROOF: disabling the single new line fails 15 of the new
+assertions**; restoring it returns 229/229. **One row deliberately does NOT
+fail — `1,000+ Ion Exchange Resin jobs in United States`** — because it still
+drops through `LISTING_TITLE_RE`, exactly as its label says. That row proves the
+count form is still guarded by the untouched regex.
+
+---
+
+#### 4. FINAL GATE
+
+**90 files / 1355 tests, 1354 passing** — sole failure the standing
+`benchmark.test.ts` live-search flake, byte-identical to the cold baseline's.
+**+48 tests across the round, 0 deleted, 0 restated.** `npx tsc --noEmit` clean
+(exit 0). `npx eslint` exactly the one standing `quiz.tsx:46`
+`react-hooks/set-state-in-effect` error.
+
+**`scoring.test.ts` and `job-cleanup.test.ts` RUN BY NAME** (both call the
+touched entry point): 37 passed together; 304 passed alongside `jobweb.test.ts`
+and `summarize.test.ts`. **`enrich.test.ts` RUN SOLO: 25 tests, 25 passed — the
+SolarPACES lock is intact.**
+
+---
+
+#### 5. NO DEVIATION FROM B's GUIDE, AND ONE THING C DID NOT DO
+
+**No deviation.** The code is B's verbatim, all five must-not-dos observed, all
+three named limits asserted in the direction B specified. **The escape clause
+did not fire** — no shape appeared that B's cases had not spanned.
+
+**C did not touch, reopen or design against anything on A's exclusion list**,
+and specifically not the two plausible real titles the SHIPPED section rule
+already drops (`PhD openings in Electrochemistry at TU Delft`, `Green Jobs in
+Ontario Programme Lead`). Ruling 46b records them as a named A-countable cost
+of B13-02 part 3, not this design's, and not reopened. **Noted for round 16 A
+only: the second of those two is dropped by the shipped guard today AND would
+be dropped by B15-01 independently — so if A ever sights it live, the reopening
+evidence points at two rules, not one.** No design work was done on it.
+
+**No credential read, printed, logged or written. No live pipeline pull, no page
+fetch, no `PEER_PROFILE_SNAPSHOT_PATH`. No third-party page text read into
+context. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+untouched. Harness deleted; tree clean.**
+
+**Round 15 C is COMPLETE — one item, one commit (`9e9cd44`), pushed
+immediately.**
