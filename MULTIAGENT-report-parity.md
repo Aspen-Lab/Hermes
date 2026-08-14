@@ -41336,3 +41336,214 @@ and byte counts were retained, each clipped programmatically. **No third-party
 page contained text directed at an agent, and none was treated as an
 instruction.** No branch, worktree or PR. **No test deleted or edited; B changed
 no code.** Harness deleted before this commit; tree clean.
+
+---
+
+### Round 18 — Agent B (item 3: the leading search-snippet date stamp — Ruling 50c, second half)
+
+**STATUS: COMPLETE.** **B changed no code** (§2). Harness outside `src/`
+(`web/zz-r18b/`), deleted before this commit; tree confirmed clean.
+
+**`LEADING_LABEL_RE` IS NOT TOUCHED, NOT WIDENED, AND NOT RE-PROPOSED.** Ruling
+44 settled that rule and the brief forbids folding the two together. This is a
+**new, separate strip for a shape that has no colon in it**, sitting beside the
+two shipped siblings rather than inside either.
+
+#### WHAT B COULD AND COULD NOT REPRODUCE
+
+Same five live job pulls as item 2 (12/11/13/11/11 rows). **`careers.inl.gov` is
+present in all five**, and its summary reads *"Idaho National Laboratory is
+hiring a Molten Salt R&D engineer to work in our Advanced Technology of Molten
+Salts department."* in 2 of 5 and is empty in 3 of 5 — **the date stamp appears
+in ZERO of the five.** A saw it 1 of 5. **So B could not reproduce it live
+either, and says so before designing anything.** Provider snippet variance, the
+same upstream class as item 2.
+
+**BUT A SECOND, DISTINCT INSTANCE EXISTS ON A DIFFERENT HOST, AND B FOUND IT
+WITHOUT LOOKING FOR IT.** A ten-query sweep of ordinary job searches returned
+**96 real provider snippets**; exactly one carries the shape, and it is **not
+INL**:
+
+> `carleton.edu` — *"Apr 1, 2026 — Summer R&D Internship Opportunity – application deadline February 28. …"*
+
+**Same shape, different host, different posting.** The class is real and is not
+one site's furniture. **This is evidence for the manager's tally, not a tally
+change — B does not move Ruling 44's sub-count or Ruling 37's, which are A's to
+count.**
+
+**AND IT IS THE BEST ADVERSARIAL CASE IN THE ROUND, BECAUSE THE SENTENCE BEHIND
+THE STAMP CONTAINS A REAL DATE** (*"application deadline February 28"*). The
+leading stamp is the search engine's **indexing** date; the date that matters to
+a reader is inside the prose. **Any strip that reached the second date would be
+the B10-07 fix-2 failure repeating, and this one demonstrably does not.**
+
+#### THE MECHANISM, PROVEN END TO END THROUGH THE SHIPPED FUNCTIONS
+
+Ran the real `cleanJobDescription` then the real `summarizeJob` on the INL
+string. **Result: `STAMP SURVIVES TODAY: true`** — the rendered summary opens
+`"Apr 29, 2026 — Idaho National Laboratory is hiring…"`. Confirmed, not inferred.
+
+Why nothing reaches it:
+
+1. The stamp arrives inside the **provider snippet** (`item.description`). The
+   mapper's `summarySource` is `item.pageText ?? item.description`, and the INL
+   rows have **no `pageText`** (`fetchedPostingScope` is unset on all five).
+2. `cleanJobText`'s leading-junk strip is `^[\s….·•|/\\:;-]+` — it removes
+   leading punctuation, and the stamp begins with the letter `A`.
+3. `splitSentences` finds no `.!?` before the end, so **the stamp is at index 0
+   of sentence 0** — exactly where a strip can reach it.
+4. **`LEADING_LABEL_RE` requires a literal `:` and this ends in an em dash.**
+   A's diagnosis is confirmed on the code.
+
+#### THE DESIGN
+
+```ts
+/**
+ * Item 3 (round 18). A search provider prefixes its snippet with the date it
+ * indexed the page — "Apr 29, 2026 — <first sentence>". That date is the
+ * SEARCH ENGINE's, never the posting's, and it opens the rendered summary.
+ * `LEADING_LABEL_RE` cannot reach it: that rule requires a literal colon.
+ *
+ * THE LOOKAHEAD IS LOAD-BEARING, NOT DECORATION. Without it this rule eats the
+ * first half of a real date RANGE — "Jun 1, 2026 — Aug 15, 2026 summer
+ * internship…" would render as "Aug 15, 2026 summer internship…", inventing a
+ * start date. Measured: the no-lookahead form mutilates 3 of 8 real sentence
+ * shapes, the em-dash-only form 2 of 8, this form 0 of 8.
+ *
+ * EM/EN DASH ONLY, DELIBERATELY. A plain hyphen is how ordinary prose writes a
+ * date range; the snippet convention is an em dash. Named under-catch.
+ *
+ * Ruling 32: a REPAIR, not a rejection. When it does not fire the value is
+ * today's exactly. It cannot empty the field — a sentence only reaches this
+ * line after clearing MIN_SENTENCE_LENGTH (40) on its UNSTRIPPED text, and the
+ * longest possible match ("September 30, 2026 — ") is 21 characters, so at
+ * least 19 always remain.
+ */
+const LEADING_DATE_STAMP_RE =
+  /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},\s+\d{4}\s+[—–]\s+(?!(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b)(?=[A-Za-z])/;
+
+function stripLeadingDateStamp(text: string): string {
+  return text.replace(LEADING_DATE_STAMP_RE, "");
+}
+```
+
+**PLACEMENT — `web/src/lib/jobs/summarize.ts`, one existing line changed, in
+`scoreSentences`'s returned object:**
+
+```ts
+        // B14-02 + item 3: bracket, THEN date stamp, THEN label. Each prefix
+        // blocks the next rule's `^` anchor, so the order is load-bearing.
+        text: stripLeadingLabel(stripLeadingDateStamp(stripLeadingBracketRemnant(text))),
+```
+
+**THE SAME PLACEMENT ARGUMENT `stripLeadingLabel` AND `stripLeadingBracketRemnant`
+ALREADY RECORDED, AND IT STILL HOLDS.** Applied to the **display text only**,
+after scoring. Every check in `scoreSentences` — `SECTION_RE`,
+`sectionOpenerHasReadableContent`, `ROLE_RE`, `matchedCount`,
+`MIN_SENTENCE_LENGTH`, `endsWithTitleEcho` — still runs against the original,
+unstripped sentence. **Putting it in `cleanJobDescription` would blind scoring**,
+which is the trap both siblings' comments document.
+
+#### THE ORDER IS PROVEN, NOT ASSERTED
+
+| input | today (b→l) | **proposed (b→s→l)** | alt (b→l→s) | alt (s→b→l) |
+|---|---|---|---|---|
+| `] Apr 29, 2026 — Role Overview: We're hiring…` | `Apr 29, 2026 — Role Overview: We're hiring…` | **`We're hiring…`** | `Role Overview: We're hiring…` | `Apr 29, 2026 — Role Overview: …` |
+| `Apr 29, 2026 — Idaho National Laboratory is hiring…` | *(unchanged)* | **`Idaho National Laboratory is hiring…`** | same | same |
+| `] Role Overview: We're hiring…` | `We're hiring…` | **`We're hiring…`** | same | same |
+
+**Only the proposed order cleans the three-prefix case.** `s` last leaves the
+label; `s` first fails because the leading `]` blocks its `^` anchor — **the
+identical reason B14-02 already gives for bracket-before-label.** The chain is
+one rule: each prefix hides the next.
+
+#### ADVERSARIAL SET — Ruling 31's bar
+
+**MUST-KEEP, 8 of 8 untouched byte-for-byte:**
+
+| sentence | why it is dangerous |
+|---|---|
+| `Jun 1, 2026 — Aug 15, 2026 summer internship…` | **a real date RANGE** — killed V1 and V2 |
+| `May 1, 2026 - June 30, 2026 is the funded period…` | plain-hyphen range |
+| `Apr 29, 2026 is the application deadline…` | leading date with no dash |
+| `Applications open Apr 29, 2026 — apply early…` | the shape mid-sentence |
+| `Feb 28, 2026 — 2027 academic year appointments…` | **dash followed by a bare year** |
+| `Role Overview: We're hiring…` | the label sibling must be unaffected |
+| `In this role you will develop actinide separation chemistry…` | ordinary prose |
+| `The successful candidate will design ion exchange columns…` | ordinary prose |
+
+**MUST-STRIP, 3 of 3 correct**, including the carleton.edu row, whose
+`application deadline February 28` survives intact.
+
+**CANDIDATE COMPARISON, the number that justifies the lookahead:**
+
+| variant | strips | **mutilates a real sentence** |
+|---|---|---|
+| any dash, no lookahead | 3/3 | **3 of 8** |
+| em/en dash only | 3/3 | **2 of 8** |
+| **em/en dash + not-a-date lookahead (proposed)** | **3/3** | **0 of 8** |
+
+**REAL CORPUS: 96 provider snippets, the rule fires on exactly 1** — the
+carleton.edu row — and **1 snippet contains the shape anywhere at all**, the
+same one. **Zero collateral on real data.**
+
+#### RULING 32 — WHAT RENDERS ON REJECTION
+
+**When the rule does not fire, the summary is today's value byte-for-byte.**
+When it does, the summary is that same sentence minus the leading stamp —
+**never a hostname, never a placeholder, never empty.** The field cannot be
+emptied: `MIN_SENTENCE_LENGTH` (40) is enforced on the **unstripped** text and
+the longest possible match is 21 characters, so **at least 19 characters always
+remain**. **It can only ever delete characters it matched at position 0**; there
+is no substitution path at all.
+
+#### PRICING THE MINORITY ROW — the brief's explicit instruction
+
+A ranked this **1 of 5**; B measured **0 of 5** live and found a second distinct
+host in a separate corpus. **B's pricing: the minority question does not gate
+this item, and B says why rather than deferring.** Round 13's unresolved
+`POLICY — manager decides` matters when a fix has a cost that must be weighed
+against how often the defect appears. **This fix has no measured cost:** zero
+mutilations on 8 adversarial shapes, zero collateral on 96 real snippets,
+structurally incapable of emptying a field, and inert on every string it does
+not match. **A change whose downside is measured at zero does not need the
+frequency question answered.** The `POLICY` remains open and remains the
+manager's; it is simply not load-bearing here — **the same call round 18 A made
+about it, for the same reason.**
+
+#### WHAT C MUST NOT DO
+
+- **Do not touch `LEADING_LABEL_RE`.** Ruling 44 settled it; this is a separate
+  rule for a colonless shape.
+- **Do not widen the dash class to a plain hyphen.** Measured: it mutilates a
+  real funded-period sentence.
+- **Do not drop the negative lookahead.** It is the difference between 0 and 3
+  mutilations, and one of the three invents a start date.
+- **Do not move the strip into `cleanJobDescription` or `cleanJobText`.** Both
+  siblings record why: it blinds `SECTION_RE`/`sectionScore` before scoring runs.
+- **Do not reorder the three strips.** The table above is the proof.
+- **Do not add an `index === 0` guard.** It was considered and is **not**
+  recommended: neither shipped sibling has one, and no false fire has ever been
+  observed at any index. **Recorded as the available tightening if a future
+  round ever finds a mid-text instance** — a lead, not a design.
+
+#### REQUIRED ASSERTIONS (`web/src/lib/jobs/summarize.test.ts`)
+
+1. The INL string → summary opens `Idaho National Laboratory is hiring…`, no stamp.
+2. The carleton.edu string → stamp gone **and `application deadline February 28` still present** (assert the substring, not just the prefix).
+3. **MUST-KEEP:** `Jun 1, 2026 — Aug 15, 2026 summer internship…` → **unchanged**, with a comment naming this as the case that rejected the no-lookahead form.
+4. **MUST-KEEP:** `Feb 28, 2026 — 2027 academic year appointments…` → **unchanged**.
+5. **MUST-KEEP:** `May 1, 2026 - June 30, 2026 is the funded period…` → **unchanged** (plain hyphen).
+6. **MUST-KEEP:** `Applications open Apr 29, 2026 — apply early…` → **unchanged** (not at position 0).
+7. `] Apr 29, 2026 — Role Overview: We're hiring…` → `We're hiring…` — **the three-prefix order test**.
+8. A `Sept 3, 2026 — …` form strips (the four-letter month abbreviation).
+9. **MUST-KEEP:** every existing `summarize.test.ts` assertion still passes unchanged — this rule is purely additive.
+10. **NEGATIVE PROOF:** remove the lookahead alone → assertions 3 and 4 go red, nothing else does.
+
+**Security and cleanup.** No credential read, printed, logged or written —
+boolean presence only. No `PEER_PROFILE_SNAPSHOT_PATH`. **`euagenda.eu` NOT
+fetched (45a); Ruling 41c's three hosts NOT hunted (45b).** Provider rows
+retained a 160-char title, a 300-char URL and a 600-char snippet only. **No
+third-party page contained text directed at an agent, and none was treated as an
+instruction.** No branch, worktree or PR. **No test deleted or edited; B changed
+no code.** Harness deleted before this commit; tree clean.
