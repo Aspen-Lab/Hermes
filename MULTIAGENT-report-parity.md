@@ -270,12 +270,119 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14T22:03Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 21:55 UTC — ROUND 22 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 22:45 UTC — ROUND 22 C IS
+                  COMPLETE. ALL SIX CODE ITEMS LANDED, ONE COMMIT EACH, EACH
+                  PUSHED IMMEDIATELY** (`01c376a`, `67b8070`, `95b4aaf`,
+                  `586962a`, `c02ae9b`, `d3c15ba`, plus this hand-off). Claimed
+                  the lock cleanly (`f35c83f`) after `git pull --ff-only` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`7e38467..f35c83f`), so the race was won rather than
+                  assumed.** **NO TEST WAS DELETED. ONE ASSERTION WAS REWRITTEN
+                  TO STATE A NEW CONTRACT, NAMED BELOW.** No branch, worktree or
+                  PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+                  credential read, printed, logged or written. No third-party
+                  page was fetched this turn at all, so no page text entered
+                  context and nothing in one could have been treated as an
+                  instruction.
+
+                  **THE COLD BASELINE WAS CONFIRMED BEFORE THE FIRST EDIT and
+                  matched §1 byte for byte: 91 files / 1652 tests, 1651
+                  passing**, sole failure `benchmark.test.ts` at `:119`; tsc
+                  clean; eslint exactly the one standing `quiz.tsx:46` error.
+
+                  **THE GATE C LEAVES: 92 files / 1751 tests, 1750 passing.**
+                  Sole failure the standing `benchmark.test.ts` live-search
+                  flake. `npx tsc --noEmit` clean. `npx eslint` exactly the one
+                  standing `src/components/persona/quiz.tsx:46` error.
+                  **`src/lib/opportunities/enrich.test.ts` SOLO: 53 of 53 — the
+                  SolarPACES lock holds**, re-run after every item that touched
+                  scoring, enrichment or the event side.
+                  `git status --porcelain --untracked-files=all` **clean** — the
+                  one throwaway probe placed under `web/src/` was deleted before
+                  the commit that followed it.
+
+                  **FOUR DEVIATIONS FROM B's GUIDE, EVERY ONE TRACED BEFORE IT
+                  WAS TAKEN AND EVERY ONE CARRYING ITS OWN MEASUREMENT.**
+                  **(1) A22-05: B's recommended "sort, THEN slice" IS A
+                  REGRESSION AND IS NOT SHIPPED.** Measured on B's own two live
+                  rows, it un-merges the linkedin/salutemyjob pair that merges
+                  correctly today, because `associate` sorts early and displaces
+                  `research` out of the six-token window on the longer title
+                  only. An un-merge is an EXTRA card — the class A22-05 is filed
+                  under. B measured that (a) would not close the row; B did not
+                  measure that it re-opens a working merge. **A test now asserts
+                  the merge that the swap would break.**
+                  **(2) A22-04(a): B's literal form PRINTS A CITY AS AN
+                  EMPLOYER.** B's blast radius relies on the existing candidate
+                  guard chain, but `looksLikeBareLocation` (`jobweb.ts:733`)
+                  only matches a TRAILING US STATE CODE — nothing in the chain
+                  is a general location test. C's own must-keep cases went red
+                  and `Battery Research Intern (Mumbai, India)` rendered
+                  `Mumbai, India`. The parenthetical must now name an
+                  ORGANISATION. **No shipped guard was widened.**
+                  **(3) A22-01: a labelled DEADLINE is not a rival reading of
+                  the event day.** Draft 3's step 1 taken literally turned item
+                  1's own must-keep control red and silenced the commonest
+                  honest snippet there is ("runs X, abstracts due Y"). The
+                  correction RESTORES B's measured 4-loss matrix rather than
+                  departing from it.
+                  **(4) A22-03: the substance floor sits at the PUBLICATION
+                  boundaries, not at the resolver's acceptance filter.** B's
+                  placement changes the `owned`/`unproven` VERDICT, which also
+                  gates place, employer, roleKind, visa, workMode, salary and
+                  structured — none of which B's matrix priced — and would
+                  contradict B's own promise of "0 correct values leave". Ruling
+                  60d's stated purpose is the GATE, so the floor covers the card
+                  summary and the deep report's LLM evidence, which is every
+                  place `owned` text is shown to a human. **The deep report
+                  inherits it, exactly as B required.**
+
+                  **C ALSO WIDENED TWO OF B's FIX SITES AFTER GREPPING THE
+                  CALLERS ITSELF.** A22-03(b): B named `location` and
+                  `workMode`, but **four view layers read `Job.isRemote`
+                  directly and turn it into the word "Remote"** — including the
+                  feed tile, the card A actually measured — so one boolean gates
+                  all three outputs. A22-05: grouping is a UNION over both
+                  identity signals, because C's first draft used a first-match
+                  lookup and got the live triple wrong.
+
+                  **AND C CAUGHT ITS OWN OVERCLAIM.** The union's first
+                  docstring said the live triple proves the union is necessary.
+                  It does not — under the shipped key order those two rows
+                  already share a title key. The claim was replaced with an
+                  explicitly constructed three-way case whose **premises are
+                  asserted in the test** so it cannot quietly stop testing the
+                  union.
+
+                  **THREE THINGS B PREDICTED THAT DID NOT HAPPEN, RECORDED SO
+                  ROUND 23 DOES NOT HUNT FOR THEM:** the four
+                  `eventweb.test.ts` / `scoring.test.ts` / `mapper.test.ts` /
+                  `card.test.ts` reds B expected from the deadline clause (no
+                  shipped fixture has a lone date token claimed by a deadline
+                  phrase); the five event-side files B expected to move under
+                  the date clustering (**not one moved**); and
+                  `daily-pool-cache.test.ts`'s dedup counts (**unchanged**).
+                  **B's at-risk list was RIGHT about two files under A22-03 and
+                  MISSED FOUR** — `job-cleanup.test.ts`,
+                  `job-posting-scope.test.ts`, and `route.test.ts` twice.
+
+                  **ONE DEFECT IN B's GUIDE THAT COST A RED:**
+                  `webResultToRawJobItem`'s second parameter is
+                  `topics: string[]`, **not a timestamp**. A test written from
+                  B's entry alone fails with `TypeError: topics is not
+                  iterable`, which reads exactly like the fix not working.
+
+                  Full detail, with per-item negative-proof red counts, in §4's
+                  six "Round 22 — Agent C" entries.
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-14 21:55 UTC — ROUND 22 B IS
                   COMPLETE. NINE ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`31d0ffb`, `65f9b01`, `e79887d`, `ac05100`, `ae9674d`,
                   `1b403dc`, `0fd2ce0`, `ada757c`, plus this hand-off). Claimed
@@ -3554,7 +3661,160 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **C — round 22.** Round 22 B is COMPLETE: **nine items, one
+WHOSE TURN:       **A — round 23, GATE CANDIDATE ROUND.** Round 22 C is
+                  COMPLETE: **six items, one commit each, each pushed
+                  immediately** (`01c376a`, `67b8070`, `95b4aaf`, `586962a`,
+                  `c02ae9b`, `d3c15ba`, plus this hand-off). Claim the §0d lock
+                  first, always. **A measures and does not fix (§2).** Full
+                  evidence is in §4's six "Round 22 — Agent C" entries — **work
+                  from those, not from this summary.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only round 23 A's live measurement can move it, and only the
+                  manager closes, after an independent re-measurement.** A round
+                  the same agent both built and graded is not independent.
+
+                  **THE GATE C LEAVES: 92 files / 1751 tests, 1750 passing**
+                  (from 91/1652/1651 — **+1 test FILE and +99 tests, all
+                  added, none deleted**). Sole failure the standing
+                  `benchmark.test.ts` live-search flake. `npx tsc --noEmit`
+                  clean; `npx eslint` exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error.
+                  **`enrich.test.ts` SOLO: 53 of 53 — SolarPACES holds.**
+
+                  ---
+                  **THE CARRY LIST — EVERY LANDED ITEM'S EXPECTED EFFECT WITH
+                  ITS FALSIFIER. A row that does not behave this way is NEW
+                  INFORMATION, not churn.**
+
+                  **1. A22-02 (`battery-power.eu`) — the deadline role check.**
+                  EXPECT: the card shows `date TBA` beside a correct
+                  `Abstract due 31 Oct` instead of printing the same day twice.
+                  **The row SURVIVES** — the deadline is still the expiry
+                  anchor. **FALSIFIER: the row is gone, or any row loses a date
+                  that is NOT also its deadline.** B measured this clause firing
+                  on exactly one of 50 rows.
+
+                  **2. A22-03 (`lensa.com`) — the fail-closed ownership gate.**
+                  EXPECT: the row keeps its title and employer, **loses its
+                  summary** (falls back to the `Matches your …` line A21-04
+                  shipped) and **loses `Remote`** (falls back to `See posting`).
+                  **FALSIFIER: any row that renders a CORRECT summary today goes
+                  silent.** B measured exactly ONE summary in the whole pool and
+                  it was the wrong posting's, so a second silence is new.
+                  **SECOND FALSIFIER: a row from a structured source
+                  (Adzuna/USAJOBS/Remotive) loses `Remote`** — only
+                  `jobweb`-sourced remote flags are barred.
+
+                  **3. A22-01 (`ans.org`) — the date clustering.** EXPECT:
+                  44-of-50 unchanged; a snippet with ONE reading is untouched.
+                  **TWO INTENDED DEPARTURES, RULED INTENDED BY RULING 60b —
+                  RECORD THEM AS THE FIX WORKING, NOT AS CHURN:**
+                  **`ans.org` moves to `2026-04-16` (past) and DROPS**, and
+                  **`batteryinnovationsummit.com` moves to `2026-04-22` (past)
+                  and DROPS.** The mechanism is asserted end to end in
+                  `eventweb.test.ts`'s `lets a finished event correctly
+                  disappear once it stops borrowing a future date`: with the
+                  sibling's future token no longer serving as the expiry anchor,
+                  the item's own past date becomes the newest anchor and
+                  `eventweb.ts:1367` drops the row. **RULING 39b IS NOT REVERSED
+                  — it accepted a wrong NAME on a live row, never the row's
+                  existence, and the manager approved this side effect.**
+                  **FALSIFIER: a row with a single date reading loses its date,
+                  or any row gains a date it was not given.**
+
+                  **4. A22-06 + A22-07 (`batteryjunction.com`, `lanl.jobs`).**
+                  EXPECT: **one row ENTERS the job pool (`lanl.jobs`) and one
+                  LEAVES (`batteryjunction.com`) — a 12-row pool with different
+                  membership, NOT a 13-row one.** **FALSIFIER: the pool comes
+                  back at 11 or 13, or `salutemyjob.com`'s row (B's named
+                  control, kept on the path clause alone) is gone.** A's
+                  UNCONFIRMED `stemgateway.nasa.gov` row may now be kept;
+                  **Ruling 25 still forbids the browser that would settle what
+                  that page is, so whichever way it lands it is NOT a new
+                  defect and NOT a counted wrong drop.**
+
+                  **5. A22-05 (the Savannah River duplicate).** EXPECT: **ONE
+                  slot, not two**, and the surviving card names
+                  `Savannah River National Laboratory`. Pool size falls by one
+                  from this item. **FALSIFIER: any two visibly DIFFERENT
+                  postings have collapsed into one card** — the slug rule can
+                  only ever merge, so that is its single failure mode.
+
+                  **6. A22-04 half (a) (`zerobonline.com`).** EXPECT: the row
+                  **STAYS IN THE POOL** and renders `Ion Exchange Ltd.` where it
+                  rendered no employer at all. **FALSIFIER: any row's employer
+                  line changes to something that is not an employer** — the rule
+                  is last-in-line, so any such change can only appear where the
+                  line was previously BLANK.
+
+                  ---
+                  **STANDING CARRIES, BY NAME.**
+
+                  **A22-04 REMAINS OPEN AND COUNTED. Half (a) is landed; the
+                  GUARD half is DEFERRED (Ruling 60a).** It is a deferral of
+                  DESIGN, **not an accepted cost**. **C touched no clause of the
+                  shipped 57b guard** — `git diff HEAD` on `shared.ts`,
+                  `employer-identity.test.ts` and `shared.test.ts` returns EMPTY
+                  and both test files are green (54/54), checked rather than
+                  asserted. **60a's third-strike backstop is armed**: on the
+                  shape's third recorded round with a live instance, design is
+                  authorised on whatever corpus exists plus constructed
+                  adversarial rows, escape clause armed. **B does not
+                  re-investigate it while the deferral stands.**
+
+                  **THE PLACE HALF OF THE OWNERSHIP DESIGN IS DEFERRED,
+                  EVIDENCE-GATED (Ruling 60c).** `ans.org`'s city still comes
+                  from a whole-page body scan and the event path still has NO
+                  scope resolver. It reopens when a live place contamination is
+                  witnessed **on a row that remains in the pool** — and note the
+                  one witness LEAVES the pool under item 3 — or when the manager
+                  orders a capture round. **The ordinary census keeps scoring
+                  place values every round regardless.**
+
+                  **THE 57b EVENT SURFACE IS STILL `designed, organically
+                  unwitnessed`.** Unchanged this round; C added nothing to it.
+
+                  **RULING 55c's ONLINE MUST-KEEP DEBT IS NOW IN ITS FOURTH
+                  ROUND, NAMED AND STILL OPEN.** No live instance has been
+                  measured; a constructed corpus remains ruled insufficient for
+                  it. **C did not spend it and did not touch it.**
+
+                  **`grad.wisc.edu` ENTERS ROUND 23's CENSUS WITH NO EXCLUSION
+                  (Ruling 60e, item-KIND).** Round 22's job item-KIND figure
+                  stands restated at **2 of 12 (16.7%)**. **Recency itself stays
+                  unscored.**
+
+                  **`thebatteryshow.eu` IS RESOLVED, NOT CARRIED (Ruling
+                  59b(a)).** The event ran 9–11 June 2026 and was correctly
+                  expired at the post-enrichment scoring pass. **It must NOT
+                  enter round 23 A's census as a wrongly-suppressed row.**
+
+                  **RULING 39b's ACCEPTED NAME COST STANDS** exactly as ruled;
+                  if `batteryinnovationsummit.com` returns with a real future
+                  date the row re-enters and 39b applies unchanged. **RULING 33's
+                  short-acronym collision is an accepted cost, untouched.**
+                  **Ruling 39a/40's honest hosts, 42c's document retarget and
+                  45a's `euagenda.eu` exclusion are all untouched** — none of
+                  them is a date, place, dedup or path rule. **Ruling 41c's
+                  three hosts were NOT hunted (45b).**
+
+                  **TWO ITEMS RECORDED FOR A LATER ROUND, NOT SPENT THIS ONE.**
+                  (i) `enrich.ts:335` reads
+                  `startDate: item.startDate || structured?.startDate` — **the
+                  snippet-derived value takes precedence over the page's own
+                  DECLARED value, which is backwards on its face.** B named it
+                  as a separate defect on the same line; changing precedence
+                  moves rows and needs its own measurement. (ii) `events/dedup.ts`
+                  has the **identical slice-then-sort shape at `:22`**; no live
+                  event-side duplicate was found this pull, so changing it would
+                  be an unearned edit.
+
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-22 C
+                  briefing that follows is complete and was executed. Do not
+                  work from it.*
+                  **C — round 22.** Round 22 B is COMPLETE: **nine items, one
                   commit each, each pushed immediately** (`31d0ffb`, `65f9b01`,
                   `e79887d`, `ac05100`, `ae9674d`, `1b403dc`, `0fd2ce0`,
                   `ada757c`, plus this hand-off). Claim the §0d lock first,
