@@ -782,3 +782,204 @@ describe("job detail enrichment", () => {
     ).toBeUndefined();
   });
 });
+
+// B18-02 (round 18, Rulings 50c + 51c): THE PROVIDER-TRUNCATED ROLE TITLE.
+// A job card's role title rendered as `Actinide Chemistry/Ion Exchange Postdoc
+// Research ...` on 5 pulls out of 5, while the posting's own page carries the
+// whole thing in its first <h1>. The truncation is the PROVIDER's — the same
+// string arrives on four different hosts (`linkedin.com`, `talent.com`,
+// `xtalks.com`, `bebee.com`), so it is not one site's quirk.
+//
+// THIS IS NOT B4-01's R8 EVENT FIX PORTED, AND THAT WAS SETTLED BY EXECUTION:
+// the job path never calls `extractOpportunityPageDetails`; that function
+// refuses a typed name unless `kind === "event"`; and `enrichJobCandidates`
+// returns early on an `unproven` scope, which is what A's row actually is. A
+// straight port would have been INERT on the exact row it was meant to fix.
+//
+// The repair never REPLACES a title — it only EXTENDS one the page
+// demonstrably continues. The <h1> must literally BEGIN with the truncated
+// stem, which is what makes it a per-field ownership witness rather than a
+// guess.
+describe("provider-truncated role title repair (B18-02)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  const TRUNCATED = "Actinide Chemistry/Ion Exchange Postdoc Research ...";
+  const FULL = "Actinide Chemistry/Ion Exchange Postdoc Research Associate";
+
+  function truncatedJob(overrides: Partial<RawJobItem> = {}): RawJobItem {
+    return {
+      ...job(30),
+      title: TRUNCATED,
+      company: "Savannah River National Laboratory",
+      url: "https://jobs.example.com/role",
+      ...overrides,
+    };
+  }
+
+  /**
+   * A page that FETCHES but whose posting scope is `unproven` — no selected
+   * posting owner anywhere in it. This is A's actual row: all three live
+   * `linkedin.com` rows measured `unproven`, 3 of 3, so the repair has to
+   * survive the early return or it can never reach the defect.
+   */
+  function unprovenPageWithHeading(heading: string): string {
+    return (
+      `<html><body><h1>${heading}</h1>` +
+      `<script>${"a".repeat(6 * 1024)}</script>` +
+      `<div id="root"></div></body></html>`
+    );
+  }
+
+  function stubPage(html: string | null) {
+    const fetchMock = vi.fn().mockResolvedValue(
+      html === null
+        ? new Response("Forbidden", { status: 403 })
+        : new Response(html, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  it("extends a truncated title from the page's own first heading", async () => {
+    stubPage(usablePage(`<h1>${FULL}</h1>`));
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(FULL);
+  });
+
+  // THE ASSERTION THAT FAILS IF THE REPAIR IS PLACED BELOW THE EARLY RETURN.
+  // This is A's actual row, and the reason the event fix's position is
+  // unreachable here.
+  it("survives the unproven-scope early return", async () => {
+    stubPage(unprovenPageWithHeading(FULL));
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.fetchedPostingScope).toBe("unproven");
+    expect(enriched.title).toBe(FULL);
+  });
+
+  // THE EMPLOYER-PREFIXED PAGE TITLE. LinkedIn's own <title> and og:title both
+  // take this shape, which is exactly why they are NOT used as inputs: they do
+  // not begin with the stem, so the containment test rejects them. A naive
+  // "prefer the page's title" port would have corrupted the card here.
+  it("refuses a heading prefixed by the employer", async () => {
+    stubPage(
+      unprovenPageWithHeading(
+        "Savannah River National Laboratory hiring Actinide Chemistry/Ion Exchange Postdoc Research Associate in Aiken, SC",
+      ),
+    );
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(TRUNCATED);
+  });
+
+  it("refuses a heading belonging to a different posting", async () => {
+    stubPage(
+      unprovenPageWithHeading("Molten Salt Electrochemistry Postdoctoral Researcher"),
+    );
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(TRUNCATED);
+  });
+
+  it("leaves a title with no ellipsis alone even when the heading differs", async () => {
+    stubPage(unprovenPageWithHeading("A Completely Different Role Title Here"));
+    const [enriched] = await enrichJobCandidates([
+      truncatedJob({ title: "Actinide Chemistry Postdoc Research Associate" }),
+    ]);
+    expect(enriched.title).toBe("Actinide Chemistry Postdoc Research Associate");
+  });
+
+  it("leaves the title alone when the page has no heading at all", async () => {
+    stubPage(`<html><body><div id="root"></div></body></html>`);
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(TRUNCATED);
+  });
+
+  // No page fetched means no witness, so `if (!html) return item;` correctly
+  // does NOT carry a repair — the one return path of the four that must not.
+  it("leaves the title alone when the page does not fetch", async () => {
+    stubPage(null);
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(TRUNCATED);
+  });
+
+  it("handles the single-character ellipsis identically to three dots", async () => {
+    stubPage(unprovenPageWithHeading("Research Associate in Molten Salt Chemistry"));
+    const [enriched] = await enrichJobCandidates([
+      truncatedJob({ title: "Research Associate…" }),
+    ]);
+    expect(enriched.title).toBe("Research Associate in Molten Salt Chemistry");
+  });
+
+  // THE 12-CHARACTER STEM FLOOR. Without it, a provider's generic `Jobs ...`
+  // would be "extended" by any heading that happens to start `Jobs at …`.
+  // DO NOT RELAX THIS.
+  it("refuses to extend a stem shorter than twelve characters", async () => {
+    stubPage(unprovenPageWithHeading("Jobs at Acme Corporation — Browse All Openings"));
+    const [enriched] = await enrichJobCandidates([truncatedJob({ title: "Jobs ..." })]);
+    expect(enriched.title).toBe("Jobs ...");
+  });
+
+  // B NAMED THE THIRD RETURN PATH AS THE ROUND'S MOST LIKELY MISTAKE, AND C
+  // MEASURED THAT IT IS NOT REACHABLE — SO THIS TEST IS HONEST ABOUT WHAT IT
+  // ACTUALLY COVERS. Reverting that line to a bare `item` turns NOTHING red,
+  // and an instrumented `throw` in its place never fired across the whole
+  // 1311-test `src/lib/` suite: whenever the scope is owned, `pageText` is
+  // non-empty, so `hasExtractedJobSignal` is always true and the branch
+  // short-circuits away. The line still carries the repair (it is correct if
+  // that contract ever changes) but NO test protects it and none can. What
+  // this test does cover is the FINAL MERGED OBJECT on a scope-owned page that
+  // carries nothing else new — proven by the negative proof, where removing
+  // `title` from that object turns this test red.
+  it("keeps the repair on a scope-owned posting with nothing else new", async () => {
+    stubPage(
+      usablePage(
+        `<h1>${FULL}</h1><script type="application/ld+json">{ "@type": "JobPosting" }</script>`,
+      ).replace(/<main>[\s\S]*<\/main>/, "<main>Short.</main>"),
+    );
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(FULL);
+  });
+
+  // MUST-KEEP, AND IT IS THE CLAIM THE BRIEF ASKED ABOUT. The employer chain
+  // has ZERO exposure — `resolveEmployerIdentity` takes no title argument at
+  // all, so this is not "the risk is small", it is "the code path does not
+  // exist". Asserted on the VALUE, not on "does not throw".
+  it("leaves the resolved employer identical to the unrepaired row", async () => {
+    stubPage(usablePage(`<h1>${FULL}</h1>`));
+    const [repaired] = await enrichJobCandidates([truncatedJob()]);
+
+    vi.unstubAllGlobals();
+    stubPage(usablePage("<h1>Some Unrelated Heading</h1>"));
+    const [unrepaired] = await enrichJobCandidates([truncatedJob()]);
+
+    expect(repaired.title).toBe(FULL);
+    expect(unrepaired.title).toBe(TRUNCATED);
+    expect(repaired.company).toBe(unrepaired.company);
+    expect(repaired.company).toBe("Savannah River National Laboratory");
+  });
+
+  // THE SCOPE CALL IS UNAFFECTED, WHICH IS THE WHOLE REASON THE REPAIR SITS
+  // AFTER IT. `resolveJobPostingScope` takes the title as an ownership witness,
+  // so repairing FIRST would widen which pages may donate pageText, employer
+  // and the summary — measured as a real cost for zero measured gain on real
+  // rows. Ruling 51c keeps that widening as a recorded lead, not part of this
+  // item. This asserts the ownership verdict is the truncated title's.
+  it("does not let the repair widen the posting scope", async () => {
+    stubPage(unprovenPageWithHeading(FULL));
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.fetchedPostingScope).toBe("unproven");
+    expect(enriched.pageText).toBeUndefined();
+  });
+
+  // NAMED UNDER-CATCH, asserted as documented-known. The repair fires on 1 of
+  // the 4 real truncated rows: `talent.com` and `bebee.com` return null from
+  // `fetchPageHtml`, and `xtalks.com` fetches but has no <h1> at all. On all
+  // three the result is today's value exactly. It is also bounded by
+  // MAX_ENRICHMENT_CANDIDATES — rows past position 40 never get a page.
+  it("documents the accepted under-catch: a page with no heading is left alone", async () => {
+    stubPage(usablePage("<p>No heading anywhere on this page.</p>"));
+    const [enriched] = await enrichJobCandidates([truncatedJob()]);
+    expect(enriched.title).toBe(TRUNCATED);
+  });
+});

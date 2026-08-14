@@ -76,6 +76,71 @@ function hasExtractedJobSignal(
   );
 }
 
+/**
+ * B18-02 (round 18, Ruling 50c/51c). A search provider hands Peer its own
+ * TRUNCATED title — `Actinide Chemistry/Ion Exchange Postdoc Research ...` —
+ * while the posting's own page carries the whole thing in its first `<h1>`
+ * (`… Postdoc Research Associate`). The job card rendered the ellipsis on 5
+ * pulls out of 5. The defect is multi-host: 4 of 10 provider rows on one
+ * targeted query were truncated, on `linkedin.com`, `talent.com`, `xtalks.com`
+ * and `bebee.com` — the identical string on all four.
+ *
+ * THIS IS NOT B4-01's R8 EVENT FIX PORTED. There is nothing to port, and that
+ * was established by execution, not assumed. Three independent reasons, any one
+ * of which is fatal: the job path never calls `extractOpportunityPageDetails`;
+ * that function refuses to produce a typed name unless `kind === "event"`; and
+ * — decisively — `enrichJobCandidates` RETURNS EARLY on an unproven posting
+ * scope, and all three live `linkedin.com` rows are `unproven`, 3 of 3. A fix
+ * placed where the event fix lives could never see the row.
+ *
+ * THE OWNERSHIP WITNESS IS THE STRING ITSELF. The repair never REPLACES a
+ * title; it only EXTENDS a title the page demonstrably continues. The heading
+ * must literally BEGIN with the truncated stem, so a different posting's
+ * heading — or this page's own employer-prefixed `<title>` — cannot satisfy it.
+ * That is why this is safe without a page-level scope proof: it is a per-field
+ * witness, the same heading-equality idea `selectedDomScopes` already uses,
+ * weakened from equality to prefix precisely because the ellipsis is what makes
+ * equality impossible.
+ *
+ * ONLY THE `<h1>` WORKS, AND THAT IS FORCED RATHER THAN PREFERRED. LinkedIn's
+ * `<title>` and `og:title` are EMPLOYER-PREFIXED (`Savannah River National
+ * Laboratory hiring …`), so they do not begin with the stem and the containment
+ * test rejects them. The natural "prefer the page title" port produces nothing
+ * here, and using them as a fallback would import site brand (`… - EV.Careers`)
+ * into role titles. Do not add them.
+ *
+ * FAILURE DIRECTION: every rejection leaves today's value untouched. The
+ * function's only non-identity return is the heading, which is required to be
+ * strictly longer than the stem it extends, so it is structurally incapable of
+ * shortening or blanking a title.
+ */
+const TRUNCATED_TITLE_RE = /\s*(?:\.\.\.|…)\s*$/;
+
+function firstHeadingText(html: string): string | undefined {
+  const match = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  if (!match) return undefined;
+  const text = match[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text || undefined;
+}
+
+function extendTruncatedTitle(
+  providerTitle: string,
+  heading: string | undefined,
+): string {
+  if (!heading) return providerTitle;
+  if (!TRUNCATED_TITLE_RE.test(providerTitle)) return providerTitle;
+  const stem = providerTitle.replace(TRUNCATED_TITLE_RE, "").trim();
+  // The 12-character floor and the strict-prefix test below are what make this
+  // a witness rather than a guess. Do not relax either: without the floor,
+  // `Jobs ...` would be "extended" by any heading that happens to start
+  // `Jobs at …`.
+  if (stem.length < 12) return providerTitle;
+  const norm = (value: string) => value.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+  if (!norm(heading).startsWith(norm(stem))) return providerTitle;
+  if (heading.length <= stem.length) return providerTitle;
+  return heading.replace(/\s+/g, " ").trim();
+}
+
 export function formatOpportunityPlace(
   place: OpportunityPlace | undefined,
 ): string {
@@ -222,8 +287,25 @@ export async function enrichJobCandidates(
     const html = pages[index];
     if (!html) return item;
     const scope = tryExtract(() => resolveJobPostingScope(html, { url: item.url, title: item.title })) ?? { status: "unproven" as const };
+    // B18-02: computed AFTER the scope call ON PURPOSE, and this is the item's
+    // real design decision rather than an accident of ordering.
+    // `resolveJobPostingScope` takes the title as an ownership witness
+    // (`titleMatches`), so feeding it a REPAIRED title would change the
+    // ownership contract. B measured both sides: a control page whose only
+    // ownership witness is its heading resolves `unproven` with the truncated
+    // title and `owned` with the repaired one — so repairing first genuinely
+    // widens which pages may donate `pageText`, `employer` and the summary —
+    // while across all four real truncated rows the scope is UNCHANGED either
+    // way. Take the fix, decline the widening: computed here, ownership is
+    // byte-identical by construction. The `owned`-widening is a recorded lead
+    // for a future round with its own evidence (Ruling 51c) and is deliberately
+    // NOT bolted on here.
+    const title = tryExtract(() => extendTruncatedTitle(item.title, firstHeadingText(html))) ?? item.title;
+    // The repair must sit ABOVE this early return: an unproven scope is A's
+    // actual row (all three live `linkedin.com` rows are unproven, 3 of 3), so
+    // a repair placed below it could never reach the defect it exists to fix.
     if (scope.status === "unproven") {
-      return { ...item, fetchedPostingScope: "unproven" as const };
+      return { ...item, title, fetchedPostingScope: "unproven" as const };
     }
     const structured = scope.status === "owned" ? scope.structured : undefined;
     const structuredDetails = structured
@@ -262,9 +344,28 @@ export async function enrichJobCandidates(
       : employer.status === "none"
         ? item.company
         : employer.company;
-    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && company === item.company) return item;
+    // B18-02: this line returned a bare `item` as shipped, which would
+    // SILENTLY DISCARD the repair on any posting whose page yielded no other
+    // new signal and no new company. Carrying the title here is defensive, and
+    // C RECORDS THE MEASURED CAVEAT RATHER THAN OVERSTATING THE COVERAGE: as
+    // the code stands today this branch is UNREACHABLE. `pageText` is
+    // `scope.text` whenever the scope is owned, and `resolveJobPostingScope`
+    // only ever returns `owned` with a non-empty `text` (both of its
+    // construction sites guard on it), so `hasExtractedJobSignal` is always
+    // true by the time control reaches here and the `&&` short-circuits.
+    // Verified by execution, not by reading: replacing this return with a
+    // `throw` never fired across the whole 1311-test `src/lib/` suite. So NO
+    // TEST CAN COVER THIS LINE — it is kept because it is correct if
+    // `hasExtractedJobSignal`'s contract ever changes, not because a red test
+    // protects it. Of the four return paths, `if (!html) return item;` above is
+    // the one that deliberately does NOT carry a repair: no page was fetched,
+    // so there is no witness.
+    if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && company === item.company) {
+      return { ...item, title };
+    }
     return {
       ...item,
+      title,
       place,
       location: formatOpportunityPlace(place) || item.location,
       // Web-discovered postings arrive with no date at all, which left the

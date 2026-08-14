@@ -41993,3 +41993,91 @@ live pipeline pull, no page fetch, no third-party page text read into context.
 No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 No test deleted or edited. Harness deleted; tree clean.
 
+---
+
+### Round 18 — Agent C (item 2: the h1-stem title repair — B18-02, Ruling 51c)
+
+**STATUS: COMPLETE.** Harness outside `src/` (`web/zz-r18c/`), deleted before
+this commit; `git status --porcelain --untracked-files=all` confirmed clean.
+**No test deleted, no test rewritten** — including the existing
+`toEqual([{ ...original, fetchedPostingScope: "unproven" }])` assertion, which
+still passes untouched because the repair is a no-op on a title with no
+ellipsis.
+
+**B's BLAST-RADIUS TABLE REPRODUCES ON THE REAL SHIPPED CONSUMERS, INCLUDING
+THE NUMBER B REFUSED TO ROUND AWAY.** Measured by execution, not reasoned
+about:
+
+| consumer | truncated | repaired | verdict |
+|---|---|---|---|
+| `resolveEmployerIdentity` | `{status:"none"}` | `{status:"none"}` | **byte-identical; the function takes ONE argument and `EmployerIdentityEvidence` has no title field at all** |
+| `classifyRoleKind` | `postdoc` | `postdoc` | unchanged |
+| `scoreJobs` | 0.7993 | 0.7982 | **moves DOWN by 0.0011 — B measured −0.001 and the direction and magnitude both reproduce** |
+| `matchedKeywords` | `["ion exchange"]` | `["ion exchange"]` | identical |
+| `webResultToRawJobItem` | admitted | admitted | the longer title does not trip `isListingPage` |
+
+**THE EMPLOYER CLAIM IS CONFIRMED IN ITS STRONG FORM.** It is not "the risk is
+small" — `resolveEmployerIdentity`'s arity is 1 and no title field exists on its
+evidence type, so **the code path does not exist.** Asserted on the VALUE, not
+on "does not throw", per B's instruction.
+
+**THE ONE PLACE C CONTRADICTS B, AND IT IS B's OWN NAMED FAILURE MODE #2.**
+B named the third return path — `if (!hasExtractedJobSignal(…) && company ===
+item.company) return item;` — as "the trap", the single thing most likely to be
+got wrong, with assertion 9 written to fail if C got it wrong. **C made the
+change B specified, then measured whether the assertion actually covers it, and
+it does not: THE BRANCH IS UNREACHABLE.** Reverting the line to a bare `item`
+turns **ZERO** assertions red. Proven positively rather than by absence:
+replacing that return with a `throw` **never fired across the entire 1311-test
+`src/lib/` suite** (the only failure under instrumentation was the standing
+benchmark flake). **The structural reason:** `pageText` is `scope.text` whenever
+the scope is owned, and `resolveJobPostingScope` only ever returns `owned` with
+a non-empty `text` — both of its construction sites guard on it — so
+`hasExtractedJobSignal` is always true by the time control reaches that line and
+the `&&` short-circuits. **The change is kept** (it is correct if that contract
+ever changes) **but C states plainly that no test protects it and none can, and
+renamed the assertion to say what it really covers** — the final merged object,
+which the negative proof does turn red. **A test whose name claims a trap it
+does not exercise is round 14's vacuous-test failure with better wording.**
+
+**NEGATIVE PROOF, ONE EDIT AT A TIME, EVERY RESTORE `diff`ed BYTE-IDENTICAL
+BEFORE THE NEXT. No revert scripted with `perl -pi`:**
+
+| reverted | assertions red |
+|---|---|
+| the containment (strict-prefix) test | **2** — B's named assertions 3 and 4, and only those |
+| the repair on the `unproven` early return | **2** |
+| `title` on the final merged object | **3** |
+| the 12-character stem floor | **1** |
+| the third return path | **0 — unreachable, see above** |
+
+**PLACEMENT AFTER THE SCOPE CALL, AS DIRECTED, AND ASSERTED.** A test now
+asserts the ownership verdict stays `unproven` with `pageText` undefined on the
+repaired row, so the repair provably does not widen page ownership. **Ruling
+51c's `owned`-widening stays a recorded lead and was NOT bolted on.**
+
+**WHAT C DID NOT DO:** no `<title>` or `og:title` input (measured: they are
+employer-prefixed and fail the containment test); no
+`extractOpportunityPageDetails` call on the job path; no de-duplication item
+(dedup runs before enrichment regardless); `enrichEventCandidates` untouched;
+the stem floor and strict-prefix test both left exactly as designed.
+
+**NAMED UNDER-CATCH, ASSERTED AS DOCUMENTED-KNOWN:** the repair fires on 1 of
+the 4 real truncated rows. `talent.com` and `bebee.com` return `null` from
+`fetchPageHtml`; `xtalks.com` fetches but has no `<h1>`. On all three the result
+is today's value exactly, and it is bounded by `MAX_ENRICHMENT_CANDIDATES = 40`.
+
+**THE GATE:** `npx vitest run` **90 files / 1514 tests, 1513 passing** — sole
+failure the standing `benchmark.test.ts` flake, same assertion and same message
+as the cold baseline. `tsc --noEmit` clean; `eslint` exactly the one standing
+`quiz.tsx:46` error. **`enrich.test.ts` SOLO 38/38** (was 25/25 — the SolarPACES
+lock intact); `scoring.test.ts` + `job-cleanup.test.ts` by name **37/37**.
+**Test count 1501 → 1514: +13 new assertions, zero deleted, zero rewritten.**
+`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.
+
+**Security and cleanup.** No credential read, printed, logged or written. No
+live pipeline pull, no page fetch, no third-party page text read into context.
+**`euagenda.eu` NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b).**
+No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+Harness deleted; tree clean.
+
