@@ -270,12 +270,135 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 11:53 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:51 UTC — ROUND 16 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 12:19 UTC — ROUND 16 B IS
+                  COMPLETE.** Both items, one commit each, each pushed
+                  immediately (`6ccc0fb`, `c745caf`) plus this hand-off.
+                  Claimed the lock cleanly (`7d573f4`) after `git pull
+                  --ff-only` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **B changed no code, deleted no
+                  test, edited no test, and touched no file except this one.**
+                  Harness lived outside `src/` (`web/zz-r16b/`, own vitest
+                  config) and was deleted before both commits; `git status
+                  --porcelain --untracked-files=all` confirmed clean each time.
+
+                  **HEADLINE: BOTH ITEMS HAVE A MEASURED FIX GUIDE, BOTH LAND IN
+                  ONE FILE, AND BOTH CAME OUT SMALLER THAN THE BRIEF EXPECTED —
+                  BUT ITEM 2 IS THREE EDITS, NOT TWO, BECAUSE RULING 32's
+                  QUESTION FOUND A THIRD GAP THAT MAKES THE OBVIOUS FIX ACTIVELY
+                  WORSE ON ITS OWN.**
+
+                  **METHOD, STATED BEFORE THE RESULTS.** Every candidate was
+                  scored by execution against a matrix that **REPLAYS B13-02's,
+                  B14-01's and B15-01's own must-drop and must-keep corpora —
+                  163 shipped rows** — plus new cases per item. **The harness
+                  re-declares `isListingPage`'s private internals, so it carries
+                  a FIDELITY GATE: the re-declaration is asserted to agree with
+                  the SHIPPED function on all 163 rows before any variant is
+                  scored**, and the shipped function is separately replayed
+                  against its own contract. Both gates green. **No live pull, no
+                  page fetch, no credential read, no
+                  `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.
+                  `euagenda.eu` NOT fetched (45a).**
+
+                  **ITEM 1 (47b) — `lco.global/about/interns`. THE BRIEF ASKED
+                  FOR A CLOSED URL SIGNAL; THE ANSWER IS A TITLE RULE, AND EVERY
+                  URL ROUTE WAS MEASURED FIRST AND LOSES.** The item is **not a
+                  new class**: `internships` is **one plural noun missing from
+                  the shipped, whole-title-anchored `CAREERS_INDEX_TITLE_RE` that
+                  already drops the bare word `Opportunities`.** Adding it scores
+                  **184/184 END TO END with ZERO false fires and ZERO tests at
+                  risk**, against a 177/184 baseline. **All three URL routes are
+                  worse**: unconditional `/about/` destroys two real postings,
+                  the conditional form breaks B14-01's own `/about/t/team`
+                  must-keep, and the leaf-word form is the brief's forbidden
+                  phrase vocabulary in a URL costume **and cannot reach an
+                  employer's own `/careers/internships` index**. **The title
+                  route also leaves B14-01's 43-case matrix byte-for-byte
+                  green.** The legitimacy question is answered structurally: this
+                  file already drops `Careers`, `Vacancies`, `Open Positions` and
+                  `Opportunities`, all of them real places to really apply —
+                  **legitimacy of the destination is not the criterion; naming a
+                  role is.**
+
+                  **ITEM 2 (47c) — TWO GAPS, NOT ONE, PROVED BY EXECUTION BEFORE
+                  ANY DESIGN.** INL fires `LISTING_TITLE_RE` **alternative 4**
+                  on the site's own trailing `Search Jobs` chrome; Kairos/Lensa
+                  fires **alternative 1** because **the YEAR `2027` is read as a
+                  job COUNT** — that is the residue A left, and it is the same
+                  arithmetic B14-01 recorded when it cut NodeBB. **Each
+                  narrowing fixes exactly one instance and leaves the other
+                  dropped.** **THE SHIPPED BASELINE IS WORSE THAN A COULD SEE:
+                  181/191 with TEN FALSE FIRES**, not two — `- Find Jobs` and
+                  `- Browse Jobs` also destroy real postings, and the year class
+                  reaches four more shapes. **B claims no new rate; A's 2 of 298
+                  offered rows (0.7%) stands as the only measured frequency and
+                  the eight extra shapes are CONSTRUCTED.** Recommended design
+                  (anchor alternative 4 to the title start + a bare-year
+                  lookahead on alternative 1): **190/191 with ZERO false fires
+                  and one named, priced miss.** **A's warning discharged with a
+                  number rather than accepted on authority: the
+                  strip-site-chrome-first design scores 184/191 with SIX false
+                  fires.** **B15-01 and B13-02 are NOT re-litigated — this
+                  NARROWS the alternative they forbade widening, and B13-02's
+                  five-shape count-form lock is preserved by execution.**
+
+                  **THE THIRD GAP, AND IT IS THE ROUND'S REAL FINDING.** Ruling
+                  32's question runs backwards on this item, so B asked what
+                  renders when the postings come BACK. **Kairos renders
+                  `Kairos Power` — clean. INL renders the employer `Search`.**
+                  `parts.slice(1)` offers `Search Jobs`, it clears all eight
+                  vetoes, and `stripTrailingCareersChrome` removes the trailing
+                  ` Jobs`. **Landing the drop narrowing alone converts a missing
+                  item into a WRONG VALUE, which Ruling 23 ranks worse.** **AND
+                  THE DEFECT IS ALREADY LIVE WITHOUT ANY CHANGE:
+                  `Battery Research Scientist - View Jobs` is KEPT by the shipped
+                  guard today and renders the employer `View`** — evidence class
+                  **LATENT, not live**, reproduced by executing the chain, never
+                  sighted in a census. Fixed in `NAV_CHROME_SEGMENT_RE` (B12-06's
+                  family, whose stated job is "this segment is site furniture,
+                  not a name"): **41/41, zero real employers destroyed, including
+                  B12-06's four hardest and eight adversarial company names built
+                  from the same verbs.** **The strip cannot be the fix — proved
+                  by execution, it returns the original when it would empty the
+                  candidate.**
+
+                  **TESTS AT RISK: ZERO ON BOTH ITEMS, PROVEN EXHAUSTIVELY
+                  RATHER THAN SAMPLED.** Both item-2 narrowings are pure TITLE
+                  rules and read neither host nor path, so the title axis is the
+                  only axis a verdict can move on — which makes a literal sweep
+                  COMPLETE for this change rather than a sample of a
+                  cross-product. **9,606 distinct string literals across 337
+                  files: ONE verdict change, and it is a SNIPPET that never
+                  reaches `isListingPage`.** Its test still passes under the new
+                  design, confirmed by execution. **Both items together, end to
+                  end against the 163 shipped rows: zero must-drops missed, zero
+                  must-keeps destroyed.**
+
+                  **TWO `POLICY — manager decides`:** (1) whether gap 2C belongs
+                  inside item 2 or is its own numbered item — B treated it as
+                  inside because Ruling 32 makes it mandatory and the drop
+                  narrowing alone produces a wrong value, but the `- View Jobs`
+                  case exists today with no change at all and is not on A's list;
+                  (2) whether Ruling 47a's offered-row scan should record the
+                  TITLES of rows dropped CORRECTLY, not only wrongly — B could
+                  not price item 2's named miss against real data because A's 31
+                  correct drops are recorded only as a count. **B recommends yes
+                  to both.**
+
+                  **RULING 33 IS NOT TOUCHED.** Item 1 is a page-KIND fix; the
+                  `matchedTerms: ["LCO"]` admission route A recorded is
+                  deliberately left alone, exactly as the brief directs.
+
+                  Full detail in §4's two "Round 16 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 16 A finished @
+                  2026-08-14 11:51 UTC — ROUND 16 A WAS
                   COMPLETE.** All four parts, one commit each, each pushed
                   immediately (`16ca900`, `20208f2`, `a48876a`, this one).
                   Claimed the lock cleanly (`c2b91f6`) after `git pull
@@ -1057,14 +1180,166 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:51 UTC — ROUND 16 A IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **16 — A IS DONE. B IS NEXT.** Round 16 was briefed as the
-                  realistic gate-candidate round and A applied the condition
-                  exactly as written. **Every value column on both surfaces is
-                  clean and B15-01 works — but TWO unexplained differences
-                  remain, so the hand-off is B, not the manager.** One of the two
-                  is a class no prior round could have seen, because every prior
-                  over-fire check replayed only pool SURVIVORS.
-WHOSE TURN:       **B — Investigator, round 16.** A's list is **TWO** numbered
+ROUND:            **16 — A AND B ARE DONE. C IS NEXT.** A's two ranked
+                  differences both have a fix guide. **Both land in
+                  `web/src/lib/jobs/sources/jobweb.ts` and nowhere else**, and
+                  between them they are FOUR one-line edits: one for item 1,
+                  three for item 2.
+WHOSE TURN:       **C — Implementer, round 16.** Work through B's guide in
+                  order. **Full evidence in §4's two "Round 16 — Agent B"
+                  entries; the numbered fix guides are part 7 of each.** Every
+                  design below was measured by execution against a matrix that
+                  REPLAYS B13-02's, B14-01's and B15-01's own must-drop and
+                  must-keep corpora — 163 shipped rows — so a regression shows
+                  up as a score, not as a surprise in `vitest`.
+
+                  **ITEM 1 (Ruling 47b) — `lco.global/about/interns`. ONE EDIT.**
+                  Add `internships` to `CAREERS_INDEX_TITLE_RE` (currently line
+                  323), **PLURAL ONLY**, beside `opportunities`. **This is not a
+                  new vocabulary — it is one token missing from a shipped,
+                  whole-title-anchored list that already drops the bare word
+                  `Opportunities`.** Scored **184/184 END TO END, zero false
+                  fires, zero tests at risk.**
+                  **DO NOT add a URL rule.** All three URL routes were measured
+                  and all three are worse: the unconditional `/about/` rule
+                  destroys two real postings, the conditional one breaks
+                  B14-01's own `/about/t/team` must-keep, and the leaf-word form
+                  cannot reach an employer's own `/careers/internships` index.
+                  **DO NOT add the singular** — priced at one destroyed real
+                  posting. **DO NOT invert B14-01's `lco.global/about/interns`
+                  must-keep row**; it carries a role title and must stay green,
+                  because that is the proof this is a title rule.
+
+                  **ITEM 2 (Ruling 47c) — the two wrongly-dropped real postings.
+                  THREE EDITS, LAND THEM TOGETHER.** B established BY EXECUTION
+                  that A's two instances are **TWO INDEPENDENT GAPS** — INL
+                  fires `LISTING_TITLE_RE` alternative 4 on the site's own
+                  trailing `Search Jobs` chrome; Kairos/Lensa fires alternative
+                  1 because **the YEAR `2027` is read as a job COUNT** (that is
+                  the residue A left). Neither narrowing fixes the other.
+                  - **EDIT 1** — alternative 1: insert
+                    `(?!(?:19|20)\d{2}(?![\d+]))` immediately after `(?:^|\s)`.
+                  - **EDIT 2** — alternative 4: replace its leading `\b` with
+                    `^\s*`.
+                  - **EDIT 3** — `NAV_CHROME_SEGMENT_RE`: add the ATS
+                    action-control alternatives (verb + job noun, whole-segment
+                    anchored). **Verbatim regexes for all three are in §4 item
+                    2, part 7.**
+                  Scored **190/191 with ZERO false fires** against a baseline of
+                  181/191 with **TEN**. **DEPENDENCY: edits 1 and 2 without edit
+                  3 make things WORSE, not better** — see below.
+
+                  **THE ONE DEPENDENCY THAT MATTERS, AND IT IS NOT OPTIONAL.**
+                  Ruling 32's question run backwards found a THIRD gap: when the
+                  INL posting comes back, its employer renders **`Search`** —
+                  `parts.slice(1)` offers `Search Jobs`, it clears all eight
+                  vetoes, and `stripTrailingCareersChrome` removes the trailing
+                  ` Jobs`. **Landing edits 1–2 alone converts a missing item into
+                  a wrong value, which Ruling 23 ranks WORSE.** Edit 3 is what
+                  makes the field render honest silence instead. **The strip
+                  cannot be the fix** — it returns the original when it would
+                  empty the candidate; proved by execution.
+                  **AND THIS DEFECT IS ALREADY LIVE WITHOUT ANY CHANGE:**
+                  `Battery Research Scientist - View Jobs` is KEPT by the
+                  shipped guard today and renders the employer **`View`**.
+                  Evidence class **LATENT, not live** — reproduced by executing
+                  the chain, never sighted in a census.
+
+                  **TESTS AT RISK: ZERO ON BOTH ITEMS, and the proof is
+                  exhaustive rather than sampled.** Both item-2 narrowings are
+                  pure TITLE rules and read neither host nor path, so the title
+                  axis is the only axis a verdict can move on. **9,606 distinct
+                  string literals across 337 files in `web/src` were swept: ONE
+                  verdict change, and it is a SNIPPET** (`jobweb.test.ts:1155`)
+                  that never reaches `isListingPage`. Its test still passes
+                  under the new design — confirmed by execution, not by reading.
+                  `LISTING_TITLE_RE` has no code caller outside `jobweb.ts`;
+                  `NAV_CHROME_SEGMENT_RE` is private with one call site;
+                  `CAREERS_INDEX_TITLE_RE` has two call sites, both in that
+                  file. **Both items together, end to end against the 163
+                  shipped rows: zero must-drops missed, zero must-keeps
+                  destroyed** — and item 1's fix does not drop item 2's
+                  recovered Kairos posting.
+
+                  **WHAT C MUST NOT DO, collected in one place:** do not strip
+                  site chrome before the title rules (measured: 184/191 with SIX
+                  false fires — A's warning, discharged with a number); do not
+                  build a host list for `careers.inl.gov`, `lensa.com` or
+                  `lco.global` (Ruling 32's headline complaint); do not make
+                  `LISTING_TITLE_RE`'s leading count optional (B15-01's refusal,
+                  71/92 with 19 false fires — **this change NARROWS that
+                  alternative, it does not widen it**); do not add a letter-case
+                  test (Ruling 46a); do not add the plural narrowing to
+                  alternative 1 (it buys nothing on top of the lookahead and is
+                  the WORSE of the two gap-2B instruments on its own); do not
+                  touch `isTopicLandingPage`, `LISTING_SECTION_TITLE_RE`,
+                  `TRAILING_CAREERS_CHROME_RE`, or `CAREERS_INDEX_TITLE_RE`'s
+                  existing entries; **do not delete or weaken a test** (§2 — if
+                  an assertion must change, rewrite it to state the new contract
+                  and say in a comment which item changed it. **B found none that
+                  needs changing.**)
+
+                  **THE NAMED COSTS C MUST ASSERT IN A TEST RATHER THAN LEAVE IN
+                  A COMMENT**, following B14-01's and B15-01's pattern:
+                  **item 2's one named miss** — `Acme Corporation - Search Jobs`
+                  on a non-aggregator host is NOT dropped, because that title and
+                  A's real INL posting are the same shape and no structural test
+                  separates them; and **item 1's plural narrowing** — the bare
+                  singular `Internship` is KEPT. Ten required assertions for item
+                  2 and seven for item 1 are listed in §4, part 7 of each entry,
+                  including Ruling 31's hardest-case requirement.
+
+                  **B13-02's COUNT-FORM REGRESSION LOCK IS PRESERVED BY
+                  EXECUTION, NOT BY ARGUMENT.** All five locked shapes still drop
+                  under the new alternative 1, and `2000+ Battery Jobs in
+                  Germany` / `20000 Battery Jobs` should be added as the
+                  lookahead's own release conditions. One expected miss did NOT
+                  materialise and C should not "fix" it: `1999 jobs in Berlin`
+                  still drops, through `LISTING_SECTION_TITLE_RE`'s optional
+                  one-word prefix.
+
+                  **TWO `POLICY — manager decides` ITEMS B RAISES, NEITHER
+                  BLOCKING C:** (1) whether gap 2C belongs inside item 2 or is
+                  its own numbered item — B treated it as inside, because Ruling
+                  32 makes it mandatory and edits 1–2 alone produce a wrong
+                  value, but the `- View Jobs` case is a defect that exists today
+                  with no change at all and is not on A's list; (2) whether A's
+                  new offered-row scan (Ruling 47a) should record the TITLES of
+                  the rows it drops CORRECTLY, not only the ones it drops
+                  wrongly — B could not price item 2's named miss against real
+                  data because A's 31 correct drops are recorded only as a count.
+                  **B recommends yes to both.**
+
+                  **STILL OPEN FOR THE MANAGER, NOT C's, carried forward
+                  unchanged:** B11-04's flag and B8-03's `usajobs.ts` fallback
+                  under MANAGER CARRY-FORWARD below; round 13's unresolved
+                  `POLICY — manager decides` on five-pull majority scoring; round
+                  14 C's `LEADING_LABEL_RE` widening question; round 15 B's
+                  question on the shipped section rule's two dropped titles; the
+                  `@`-separator employer at `befjobs.breakthroughenergy.org`; and
+                  A's new recommendation that the all-offered-rows over-fire scan
+                  become standing method (adopted as Ruling 47a).
+
+                  **WHAT C MUST NOT TREAT AS OPEN**, unchanged from A's list:
+                  `careerservices.upenn.edu` (34a), `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's
+                  label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33 — **item 1 is a page-KIND fix and deliberately
+                  does NOT touch item admission**), same-page contamination (29),
+                  `ecs.confex.com`'s and `euchems2026.eu`'s honest hosts
+                  (39a/40), the document-URL retarget (42c), **`euagenda.eu`
+                  (45a — permanently excluded, do not fetch)**, Ruling 41c's
+                  three hosts (45b), and 46a's false fire and 46b's two titles.
+
+                  **THE GATE STAYS AS A LEFT IT: `GATE (0%): NOT MET`.** C does
+                  not set it and B did not (§2). After C lands both items the
+                  hand-off is A for a fresh census, and only the manager closes
+                  (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 16 B
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **B — Investigator, round 16.** A's list is **TWO** numbered
                   differences, ranked, in §4's "Round 16 — Agent A (part 4…)"
                   entry, with the full evidence in parts 1–3. **B finds causes and
                   writes a fix guide; B does not change code** (§2). Ruling 31's
