@@ -43799,3 +43799,321 @@ that actually arrived.**
 
 **`WHOSE TURN: B` stands with the two items.**
 
+
+### Round 19 — Agent B (item 1: `jobright.ai`'s search page kept while LinkedIn's same shape drops — Ruling 52a, first half. THE CLAUSE IS `isTopicLandingPage`, AND THE FIX IS ONE CLAUSE / THREE TOKENS, NOT ONE TOKEN — PROVED BY EXECUTION, BECAUSE EACH TOKEN ALONE LEAVES A's LIVE ROW KEPT.)
+
+**STATUS: COMPLETE.** **B changed no code, deleted no test, edited no test, and
+touched no file except this one** (§2). Harness lived outside `src/`
+(`web/zz-r19b/`, own vitest config, include pattern `zz-r19b/**/*.probe.ts`)
+and was **deleted before this commit**; `git status --porcelain
+--untracked-files=all` confirmed clean. **No live pull, no page fetch, no
+credential read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.**
+State file appended with `cat >>` from bash, per round 19 A's recorded
+PowerShell hazard.
+
+---
+
+#### 0. THE FIDELITY CHECK, STATED BEFORE ANY NUMBER
+
+Every candidate is a **real copy of the shipped `jobweb.ts`** with one textual
+substitution applied by a build script — not a re-declaration of the regexes in
+a probe file. The control copy `v0` is byte-identical to the shipped file, and
+its fidelity is proved **twice**:
+
+1. **The shipped `jobweb.test.ts` runs against it: 356 of 356 pass.**
+2. **Every `v0` verdict in the matrix below is asserted equal to the verdict of
+   the genuinely imported `isListingPage` / `webResultToRawJobItem`** — 47 of
+   47 rows, as a test that would fail loudly if the copy drifted.
+
+---
+
+#### 1. WHICH CLAUSE DISTINGUISHES THE TWO ROWS — MEASURED, NOT REASONED
+
+`isListingPage` has eight independent clauses. Both rows were run through every
+one of them separately. **The two rows are separated by TWO DIFFERENT CLAUSES,
+and this is the finding that sizes the item:**
+
+| clause | jobright row | linkedin row (A's same-batch drop) | linkedin countless (B15-01's target) |
+|---|---|---|---|
+| `FEED_PATH_RE` | false | false | false |
+| **`isTopicLandingPage`** (B15-01) | **false** | **false** | **TRUE — this is what drops it** |
+| **`LISTING_TITLE_RE`** (B13-02) | **false** | **TRUE — this is what drops it** | false |
+| `CAREERS_INDEX_TITLE_RE` | false | false | false |
+| `LISTING_SECTION_TITLE_RE` | false | false | false |
+| `isOwnerSectionIndexTitle` | false | false | false |
+| `isHostBrandProgrammePage` | false | false | false |
+| aggregator tail | host not on the list | host not on the list | host not on the list |
+| **shipped verdict** | **KEEP** | **DROP** | **DROP** |
+
+**SO THE "SAME SHAPE, DIFFERENT OUTCOME" PAIRING A REPORTED IS NOT ONE RULE
+FIRING INCONSISTENTLY.** LinkedIn's row drops on the **leading count**
+(`1,000+`), which is `LISTING_TITLE_RE`'s first alternative. **The jobright
+title carries no count at all** — the page's own `(1000+)` sits in its `<h1>`,
+and **no code path shows the `<h1>` to `isListingPage`**: the guard is called
+from `webResultToRawJobItem` at ingestion, on the provider's title and URL only,
+and the page is not fetched until enrichment, which never re-gates. **A's
+`(1000+)` heading is evidence for the reader and for us; it is not evidence the
+shipped rule can ever reach.**
+
+**THE CLAUSE THAT SHOULD HAVE CAUGHT IT IS `isTopicLandingPage`** — B15-01's
+URL/title-agreement rule, built for exactly `<query> jobs in <place>` at
+`/jobs/<query>-jobs`. It fails on **two of its four conjuncts**, both for the
+same reason:
+
+| conjunct | jobright | why |
+|---|---|---|
+| 1. leaf ends in a plural job noun | **FAIL** | the leaf is `internship,-battery-engineering-(summer-2026)-jobs-in-united-states`; `TOPIC_LANDING_LEAF_RE`'s class is `[a-z0-9-]`, which excludes comma and parentheses |
+| 2. title carries `<content word> <job noun> in/near` | **FAIL** | the token before `Jobs` is `2026)`; `TOPIC_LANDING_TITLE_RE`'s class is `[\w&/-]`, which excludes the closing parenthesis |
+| 3. de-slugified leaf is the title's opening phrase | **would PASS** | `internship, battery engineering (summer 2026) jobs` is exactly the title's opening — the restated-query signature, character for character |
+| 4. leaf carries no function word | **would PASS** | none in the head |
+
+**CONJUNCT 3 — B15-01's own "strongest single conjunct" — IS SATISFIED
+EXACTLY, PUNCTUATION AND ALL.** This host slugifies losslessly: it keeps the
+commas and parentheses the title carries. **The only thing standing between the
+shipped rule and this row is that two character classes were written from three
+examples that happened to contain no punctuation.**
+
+---
+
+#### 2. ONE TOKEN OR ONE CLAUSE? **ONE CLAUSE, THREE TOKENS. ESTABLISHED BY EXECUTION.**
+
+The manager's question, answered with a table rather than an opinion. Each
+candidate is a real copy of the file with only the named token changed:
+
+| candidate | leaf head class | leaf tail class | title token class | A19-01 verdict |
+|---|---|---|---|---|
+| v0 shipped | `[a-z0-9-]` | `[a-z0-9-]` | `[\w&/-]` | **KEEP** |
+| v1 leaf only | widened | widened | shipped | **KEEP** |
+| v2 title only | shipped | shipped | widened | **KEEP** |
+| **v9 both** | **widened** | **widened** | **widened** | **DROP** |
+
+**Neither single token moves A's row.** A one-token fix is inert here, and a
+later round must not "simplify" this back to one edit.
+
+**AND THE OPEN FORM BUYS NOTHING.** A variant using `[^/]` for the leaf and
+`\S` for the title token — no character class at all — scores **identically to
+the closed list on every row of the corpus: same catches, same two false fires,
+same zero misses.** So the closed enumerated list is free, and it is what B
+recommends. **No open class is needed and none is proposed.**
+
+---
+
+#### 3. THE RECOMMENDED CHANGE — B19-01. Two constants, five characters, one clause.
+
+`web/src/lib/jobs/sources/jobweb.ts`, the two `TOPIC_LANDING_*` constants
+(currently at lines 337 and 343). **`isTopicLandingPage`'s body does not
+change. `LISTING_TITLE_RE` is not touched — not one byte** (B13-02's and
+B15-01's count locks stand by construction, exactly as B15-01 preserved
+B13-02's).
+
+```ts
+/** The final path segment, and the head of it up to a job noun. */
+const TOPIC_LANDING_LEAF_RE =
+  /^([a-z0-9,.&()-]*?-(?:jobs|vacancies|openings))(?:-[a-z0-9,.&()-]+)?$/i;
+/** `<content word> <job noun> in|near …` — the search-results title grammar. */
+const TOPIC_LANDING_TITLE_RE =
+  /(?:^|\s)(?!(?:of|for|and|or|to|with|in|on|at|the|a|an|&)\s)[\w&/,.()-]+\s+(?:jobs|vacancies|openings)\s+(?:in|near)\b/i;
+```
+
+**THE CLASS IS CLOSED AND EVERY ADDED CHARACTER IS EARNED BY A ROW.** The five
+are comma, dot, ampersand and the two parentheses — the ASCII punctuation a
+lossless slugifier passes through. Apostrophe, plus and percent were measured
+and are **deliberately excluded**: no row in the corpus reaches them, so they
+would be vacuous characters, and round 18 C's standard forbids shipping a token
+no test can turn red.
+
+**WHY NOT SOMEWHERE ELSE — THE ROUTES MEASURED AND REJECTED, so they are not
+re-proposed:**
+
+- **Adding `jobright.ai` to `AGGREGATOR_HOSTS`.** Dead on a number, not on
+  taste: run through the shipped tail, the aggregator branch tests
+  `LISTING_URL_RE` (no match on `/jobs/…`) and then
+  `!POSTING_ID_RE.test(path)` — and the path contains `2026`, four digits, so
+  `POSTING_ID_RE` matches and the branch returns **false**. **The host list
+  would not catch this row even if it were allowed**, and Ruling 32's headline
+  complaint is that it is not.
+- **Making `LISTING_TITLE_RE`'s leading count optional.** Ruling 46a and
+  B15-01's 71/92 / 19-false-fires measurement. Not re-litigated, not re-run.
+- **A `(1000+)`-in-the-heading rule.** Structurally impossible: the guard runs
+  at ingestion and never sees the page.
+
+---
+
+#### 4. THE ADVERSARIAL MATRIX — 47 rows, 18 must-drop / 29 must-keep, scored END TO END through `webResultToRawJobItem`
+
+Scored through the real ingestion gate, not through `isListingPage` alone —
+which matters, because several of A's offered rows drop on the **role-segment**
+call site rather than the whole-title one.
+
+| design | score | false fires | misses |
+|---|---|---|---|
+| **v0 shipped (control)** | **40/47** | **0** | 7 — including A's live row on both title forms |
+| v1 leaf token only | 42/47 | 2 | 5 — **A's row still KEPT** |
+| v2 title token only | 40/47 | 0 | 7 — **A's row still KEPT** |
+| v10 two tokens (leaf tail left shipped) | 44/47 | 2 | 1 |
+| **v9 THREE TOKENS — RECOMMENDED** | **45/47** | **2** | **0** |
+| v4/v7 open classes (`[^/]`, `\S`) | 45/47 | 2 | 0 — **identical; buys nothing** |
+
+**THE 18 MUST-DROPS.** A19-01 in both title forms (bare, and with the
+`| Jobright` tail, because the provider may hand over either and the whole-title
+call sees the tail); the same shape on two unrelated hosts and with three
+different punctuation marks (**this is not a host rule and the matrix proves
+it**); B15-01's live instance; B13-02's target in **both** its countless and
+counted forms; the locale slug tail; and **seven of round 19 A's own named
+correctly-dropped offered rows** (`indeed.com`, `glassdoor.com`, `merl.com`,
+`jobs.merck.com`, `norcocollege.edu`, `careers.na.panasonic.com`,
+`ionenviromgt.net`) — **all seven still drop under v9.**
+
+**THE 29 MUST-KEEPS.** All nine of round 15 B's named must-keeps that this
+clause can reach (`Manager, Green Jobs in Ontario`, `Green Jobs Program
+Manager`, `Youth Jobs Coordinator in Ontario`, `Director of Green Jobs in
+Boston`, `Head of Green Jobs in Ontario`, `Battery Engineer at Rocket Jobs in
+Berlin`, `Head of Jobs in Manchester`, `Jobs Data Analyst at the Bureau of
+Labor Statistics`, `Research positions at CERN`); round 16's bare-singular
+`Internship`; round 17's `Acme Fellowship Program` at an unrelated host;
+**seven of round 19 A's own pool rows**, including **Ruling 49a's Oregon
+must-keep** and A's `UNRESOLVED` `grad.wisc.edu` row; the two rows the other
+test callers use (`scoring.test.ts`'s QuantumScape posting,
+`job-cleanup.test.ts`'s fixture); and **eight traps written to break B's own
+draft.**
+
+**PROVENANCE, DISCLOSED RATHER THAN IMPLIED.** A's log records the rendered
+title and host for its pool rows but **not their exact live paths**. Those seven
+rows are marked **`RECORDED-TITLE`**: the title is A's, the path is constructed
+in the host's own shape. Round 15 B's convention, kept.
+
+---
+
+#### 5. THE PRICE — TWO FALSE FIRES, AND THE MEASUREMENT THAT SAYS WHAT KIND OF PRICE IT IS
+
+Both new false fires are traps B wrote against its own design:
+
+| new false fire | what it is |
+|---|---|
+| `Manager, Green Jobs in Ontario` at `/jobs/manager,-green-jobs` | B15-01's own named accepted cost, **in its comma form** |
+| `Senior Engineer, Green Jobs in Ontario at Hydro One` at `/jobs/senior-engineer,-green-jobs` | the same, with the employer **after** the location so conjunct 3 still matches |
+
+**AND HERE IS THE MEASUREMENT THAT DECIDES HOW TO READ THEM: THE
+UN-PUNCTUATED TWIN OF EACH ONE ALREADY DROPS UNDER THE SHIPPED RULE TODAY.**
+
+| new false fire | un-punctuated twin | shipped verdict on the twin |
+|---|---|---|
+| `Manager, Green Jobs in Ontario` at `/jobs/manager,-green-jobs` | `Manager Green Jobs in Ontario` at `/jobs/manager-green-jobs` | **ALREADY DROPS** |
+| `Senior Engineer, Green Jobs in Ontario at Hydro One` at `/jobs/senior-engineer,-green-jobs` | `Senior Engineer Green Jobs in Ontario at Hydro One` at `/jobs/senior-engineer-green-jobs` | **ALREADY DROPS** |
+
+**So this change does not create a new failure MODE. It removes punctuation as
+an ACCIDENTAL SHIELD over a cost B15-01 already named, priced and shipped** —
+"a role title that is a function-word-free noun phrase ending in a bare plural
+job noun, rendered `<phrase> in <place>`, with a slug that is exactly that
+phrase, IS a search query grammatically; no structural test separates them."
+B15-01's measured frequency for that class — **zero real postings across rounds
+8–15's censuses (150+ observed)** — is the frequency that applies, and round 19
+adds no counterexample: **none of A's named pool rows or named offered rows has
+a title ending in a bare plural job noun before a location.** B states the limit
+of that: A's log names rows rather than listing all 96, so this is a check of
+the named rows, not of all 96.
+
+**BOTH FALSE FIRES ARE CONSTRUCTED. THE CATCH IS LIVE, 5 OF 5.** Same asymmetry
+B15-01 itself shipped on.
+
+---
+
+#### 6. RULING 32 — WHAT RENDERS ON REJECTION, IN BOTH DIRECTIONS
+
+**WHEN THE RULE FIRES:** `isListingPage` returns `true`,
+`webResultToRawJobItem` returns `null`, and **the item never exists.** It is not
+scored, not enriched, not de-duplicated, not mapped. **The reader sees one fewer
+job card in the daily job report — 15 where there were 16.** No placeholder, no
+empty row, no gap, nothing rejected reinserted. This is the same rendering every
+one of this clause's earlier catches produces and it is unchanged by this item.
+
+**WHEN THE RULE DOES NOT FIRE — today's behaviour, unchanged:** the row stays,
+and a reader gets a card headed `Internship, Battery Engineering (summer 2026)
+Jobs in United States` **whose link opens a list of a thousand postings rather
+than a vacancy.** Ruling 23 ranks that above missing data, which is why the item
+is ranked first.
+
+**FAILURE DIRECTION IF THE RULE IS WRONG IN THE OTHER DIRECTION:** a widened
+character class can only ever make the four conjuncts *reachable*; conjuncts 3
+and 4 still have to agree. **A shape outside those conjuncts survives — the
+status quo, never a new wrong value.** No field is filled by this change and no
+value is substituted.
+
+---
+
+#### 7. TESTS AT RISK — EXECUTED, NOT GREPPED
+
+`isListingPage` and `webResultToRawJobItem` have **five** test callers, found by
+grep and then all five actually run:
+
+| caller | how checked | result |
+|---|---|---|
+| `web/src/lib/jobs/sources/jobweb.test.ts` (356 tests) | a copy of the real suite, imports rewritten to each candidate, run in full | **356/356 pass on v0, v1, v2, v3, v4, v9, v10 — every variant** |
+| `web/src/lib/jobs/scoring.test.ts` | its two `webResultToRawJobItem` rows put in the matrix | **KEEP under v9** |
+| `web/src/lib/opportunities/job-cleanup.test.ts` | its fixture row put in the matrix | **KEEP under v9** |
+| `web/src/lib/opportunities/daily-search-budget.test.ts` | imports the adapter, not the guard; grepped for listing-shaped rows | **none — no exposure** |
+| `web/src/lib/opportunities/query-budget.test.ts` | same | **none — no exposure** |
+
+**ZERO TESTS AT RISK.** The shipped suite contains no punctuation-bearing slug,
+which is *why* it stays green — stated plainly so it is not read as coverage.
+
+---
+
+#### 8. REQUIRED ASSERTIONS (`web/src/lib/jobs/sources/jobweb.test.ts`), WITH THE VACUITY AUDIT DONE IN ADVANCE
+
+Round 18 C found five of B's assertions vacuous. B checked reachability by
+execution first, and **reports one token that CANNOT be isolated** rather than
+letting C discover it.
+
+1. **A19-01, the live row:** `Internship, Battery Engineering (summer 2026) Jobs in United States` at `jobright.ai/jobs/internship,-battery-engineering-(summer-2026)-jobs-in-united-states` gives `webResultToRawJobItem` returning `null`.
+2. **The same with the `| Jobright` tail** returns `null`. (The whole-title call site sees the tail; the role-segment call does not.)
+3. **Same shape, unrelated host** (`jobboard.test`) returns `null`. **This is the "not a host rule" lock.**
+4. **LEAF-HEAD token's own case:** `Internship, Battery Engineering Jobs in United States` at `/jobs/internship,-battery-engineering-jobs-in-united-states` returns `null`.
+5. **LEAF-TAIL token's own case:** `Battery Engineering Jobs in United States, Remote` at `/jobs/battery-engineering-jobs-in-united-states,-remote` returns `null`.
+6. **The dot/ampersand characters' own case:** `R&D Scientist, M.S. Level Jobs in Ohio` at `/jobs/r&d-scientist,-m.s.-level-jobs-in-ohio` returns `null`.
+7. **ADMITTED CONTROL for 1–6** (Ruling 51's paired-control standard): the identical rows with the URL slug NOT agreeing with the title (`/jobs/some-other-role-12345`) assert `not.toBeNull()`, so a future vacuity turns this red instead of hiding.
+8. **MUST-KEEP, round 15 B's set, all nine** assert `not.toBeNull()`, by name.
+9. **MUST-KEEP, Ruling 49a's Oregon row** asserts `not.toBeNull()`.
+10. **MUST-KEEP, conjunct-4 still reachable with punctuation beside the function word:** `Head of R&D, Green Jobs in Ontario` at `/jobs/head-of-r&d,-green-jobs` asserts `not.toBeNull()`. **This is the assertion that fails if a later round "tidies" the function-word check.**
+11. **NAMED ACCEPTED COST, asserted so the price sits in a test and not only in a comment:** `Manager, Green Jobs in Ontario` at `/jobs/manager,-green-jobs` returns `null`, with a comment naming it as B15-01's cost in its comma form and recording that the un-punctuated twin already drops.
+12. **NAMED UNDER-CATCH:** a non-ASCII slug (`Ingénieur Batterie Jobs in France` at `/jobs/ingénieur-batterie-jobs-in-france`) asserts `not.toBeNull()`, **and it is not fixable by any character class**: `new URL()` percent-encodes the path before the rule ever sees it (`/jobs/ing%C3%A9nieur-batterie-jobs-in-france`), so conjunct 3 can never agree. Measured, not assumed.
+
+**THE NEGATIVE PROOF, ONE EDIT AT A TIME — AND THE ONE TOKEN THAT HAS NO
+ISOLATING TEST, NAMED IN ADVANCE:**
+
+| token reverted alone | rows that go RED |
+|---|---|
+| leaf **head** class | assertions 1, 2, 3, 4, 5, 6 — **and 4 and 6 go red for this token ONLY** |
+| leaf **tail** class | **assertion 5 only** — a clean, uniquely-red test |
+| **title** token class | **assertions 1 and 2 only — and they also go red when the leaf head is reverted** |
+
+**THE TITLE TOKEN CANNOT BE ISOLATED, AND THAT IS STRUCTURAL RATHER THAN A GAP
+IN B's CORPUS.** Conjunct 3 requires the de-slugified leaf head to be the
+title's opening phrase, so the title's word before the job noun is always the
+leaf head's second-to-last segment. **A title token carrying punctuation forces
+a leaf head carrying the same punctuation.** B tried and failed to build a
+separating row and says so rather than shipping an assertion that looks
+isolating and is not. **C should record the title token as "load-bearing,
+proved by a combined revert, no isolating test exists" — not invent one.**
+
+---
+
+#### 9. `POLICY — manager decides` — NONE RAISED BY THIS ITEM
+
+B decides none of the three still open (Ruling 33's full-phrase collisions,
+Ruling 51b's five-pull majority scoring, Ruling 51c's `owned`-widening lead).
+**None of the three is touched by this item.** The one judgement call this item
+does contain — whether removing punctuation as an accidental shield over
+B15-01's named accepted cost is worth a live 5-of-5 catch — B answers **yes**
+and shows the arithmetic (2 constructed false fires whose twins already drop, 1
+live catch, 0 misses, 0 tests at risk), rather than deferring a question the
+evidence already settles.
+
+**Security and cleanup.** No credential read, printed, logged or written. No
+live pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`. No third-party page
+text read into context. **`euagenda.eu` NOT fetched (45a); Ruling 41c's three
+hosts NOT hunted (45b).** No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No test deleted or
+edited; B changed no code.** Harness deleted before this commit; tree clean.
+
+---
