@@ -57433,3 +57433,181 @@ a correct employer where there is silence today can therefore REMOVE a row**, as
 count after this item, not assume it is invariant.
 
 ---
+
+### Round 23 — Agent B (item 3 of 4: **A23-02 — `10times.com`. TWO gaps, not one, in two different functions — and the SECOND ONE HAS NO HONEST CLOSURE ON THIS ROW'S OWN EVIDENCE. `POLICY — manager decides` on that half, with where B looked.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 3 of 4. Method as stated in item 1.
+
+---
+
+## PART 1 — **THE LIMIT FIRST: `10times.com` WAS NOT OFFERED IN B's PULL.**
+
+B searched all **150 unique offered event rows** of its own pull: **no
+`10times.com` row exists**, and no row of any host renders the name A recorded.
+**Every verdict below is REPLAY, not organic confirmation, and one input is
+RECONSTRUCTED rather than recorded**: A's entry records the RENDERED name
+(`Solid-State Battery Summit (Aug 2026), Chicago USA`) and the URL
+(`10times.com/e1z2-0h5z-3pgr`) but **not the provider TITLE**. B therefore
+replayed **three** candidate titles — the bare shape and the two chrome variants
+`| 10times` and `- 10Times` — so the verdict cannot depend on which one the
+provider sent. **All three produce the identical result.**
+
+B did confirm the surrounding ground truth organically: **six offered siblings
+for the same summit are in B's own corpus** (`cambridgeenertech.com` — whose own
+title reads `Solid-State Battery Summit | August 11-12, 2026` —
+`battery-tech.net`, `quintustechnologies.com`, `djk.co.jp`, `facebook.com`,
+`vendelux.com`), **and every one of them is correctly dropped.** A's "eight
+siblings" and B's six are the same finding measured on two different pulls.
+
+---
+
+## PART 2 — **ONE GAP OR TWO? TWO. Established by execution.**
+
+| | gap (a) — the NAME | gap (b) — the EXPIRY EVASION |
+|---|---|---|
+| where | `bestEventTitleSegment` → `eventNameFrom`, `web/src/lib/events/sources/eventweb.ts:1264` / `:1327` | the expiry anchor in `webResultToRawEventItem`, `eventweb.ts:1497-1512` |
+| what fails | the listing furniture is INSIDE one segment, so no split reaches it | the date is a MONTH-YEAR, and every date reader requires a DAY |
+| measured | `bestEventTitleSegment("Solid-State Battery Summit (Aug 2026), Chicago USA \| 10times")` returns **`Solid-State Battery Summit (Aug 2026), Chicago USA`** — the `\| 10times` host-brand chrome IS correctly stripped, the parenthetical month-year and the `, Chicago USA` tail are NOT | `extractEventDate` and `extractEventDayCandidates` both return **nothing** for `Aug 2026` and `August 2026`; add a day (`Aug 11 2026`) and both return `2026-08-11` |
+| a case the OTHER gap does not cover | a FUTURE listing (`(Dec 2027), Berlin Germany`) shows the name defect and no expiry defect | a finished event whose title carries no month at all shows the expiry defect and no name defect |
+
+**Two functions, two failure conditions, two independent case sets. TWO GAPS.**
+They meet only on this one row, where the same string carries both.
+
+**THE SURVIVAL PATH, TRACED LINE BY LINE AND CONFIRMED BY EXECUTION.** With the
+dateless snippet: `extractEventDate` → `undefined`; `extractDeadline` →
+`undefined`; `anchor` is empty; the bare-year backstop then runs
+(`eventweb.ts:1503-1512`) and asks whether **every** `20\d{2}` token in the text
+is before the current year. The only year token is **`2026` — the current
+year** — so the backstop does not fire and the row is **KEPT**. Replayed with
+the day-level date its six siblings carry, the identical row is **DROPPED**.
+**A's reading is exactly right: the date guard works, and the row that evades it
+is the one carrying the least information.**
+
+---
+
+## PART 3 — **GAP (a), THE NAME. Closable, with boundaries.**
+
+**Fix direction:** strip listing furniture from the CHOSEN segment, in the same
+place and the same shape as the two strips already there —
+`stripWeldedPageTypeLabel` and `stripBannerLeadIn`, both applied at
+`eventweb.ts:1317-1321` **after** selection, and both with the doc comment
+explaining why after-selection is deliberate (*"the label is part of why a
+segment wins the longest-wins tie-break"*). **A third strip composes with them
+the way B13-03 composed with B12-03; the vocabularies are disjoint.**
+
+Two shapes, both end-anchored:
+
+1. **A trailing parenthetical whose whole content is a month and/or a year** —
+   `(Aug 2026)`, `(August 2026)`, `(2026)`, `(Aug 11-12, 2026)`.
+2. **A trailing `, <City> <COUNTRY>` tail** where the country is a gazetteer
+   country token in caps or title case.
+
+**BOUNDARY CONDITIONS — what these clauses must NOT match:**
+
+- **Never a parenthetical that carries WORDS.** `(Hybrid)`, `(Virtual)`,
+  `(Formerly Battery Show Asia)` and `(ICMS 2026)` are part of the name. The
+  content must be **only** month/year/digit/punctuation tokens.
+- **Never a leading or mid-string parenthetical.** `EUCHEMS (Molten Salts) 2026`
+  is a name; only an end-anchored one is furniture. This is the same reasoning
+  round 22 C recorded for the employer parenthetical, and it points the opposite
+  way here — which is why the two must not share a constant.
+- **Never strip a city that is the whole of the name's distinguishing content.**
+  `Battery Show Detroit` and `Oslo Battery Days Conference` are names, not
+  name-plus-tail. The clause requires the **comma**: `<name>, <City> <COUNTRY>`,
+  not `<name> <City>`.
+- **The strip must leave a non-empty, still-event-like remainder.** If stripping
+  empties the segment or leaves something `looksLikeEventTitle` rejects,
+  **keep the original** — a wrong name is bad, an empty name is worse.
+- **It must run AFTER selection, never before.** Run before, it changes which
+  segment wins the longest-wins tie-break at `:1316`, which is a different and
+  unmeasured change.
+
+**WHAT THE FIELD SHOWS WHEN EVERY CANDIDATE IS REJECTED:** unchanged. This strip
+edits an already-chosen segment; it never rejects one. If the strip does not
+apply, today's name ships. **Failure direction is the status quo.**
+
+---
+
+## PART 4 — **GAP (b), THE EXPIRY EVASION. B BUILT THE OBVIOUS FIX AND IT DOES NOT WORK.**
+
+The obvious fix is a MONTH-GRANULARITY anchor: read `Aug 2026` as a date claim
+and expire the row when that month is over. **B worked it through and it does
+not close this row.** The measurement date is **14 August 2026**. `Aug 2026`
+ends on **31 August 2026**, which is in the future. **A month-granularity anchor
+KEEPS this row.** It would have closed it on 1 September and not one day before.
+
+**So the row cannot be expired by anything written on it.** The evidence that
+the summit is over exists only on the SIX SIBLING ROWS, and Peer has no
+cross-row reasoning anywhere in either pipeline — B checked: `webResultToRawEventItem`
+sees one `WebResult` at a time, and the only cross-row step in the whole event
+path is the dedup map at `eventweb.ts:1634`, which keys on `item.id` and reads
+no dates.
+
+**WHERE B LOOKED, before calling this POLICY:**
+
+1. **The row's own snippet** — A records it as carrying no date token. B cannot
+   re-read it; the row was not offered.
+2. **The page** — `10times.com` answers **403 behind a challenge**. A recorded
+   it and B did not re-fetch to re-confirm a 403, because Ruling 25 forbids the
+   browser that would settle the page and a second 403 adds nothing.
+3. **A month-granularity anchor** — worked through above. **Does not close it.**
+4. **The six sibling rows** — no mechanism exists to use them, and building one
+   is a new architecture, not a fix.
+5. **Dropping dateless rows generally** — **measured and rejected. NINE of the
+   14 event pool rows carry `Date not listed`**, including `solarpaces.org`,
+   `flogen.org`, `nanoge.org`, `grc.org` and `ruggedthz.com`. **A rule that
+   drops dateless rows empties two thirds of the pool.** Ruling 55c's bar
+   (a guard that DROPS rows needs a higher standard) forbids it outright.
+
+**B's RECOMMENDATION: `POLICY — manager decides` on gap (b), and B recommends
+DEFERRING it.** There is one honest partial that B does recommend shipping *with
+gap (a)*, because it costs nothing and removes the self-contradiction A named:
+
+**When the strip in gap (a) removes a month-year from the name, hand that
+month-year to the date field as a MONTH-GRANULARITY value rather than throwing
+it away.** The card then reads `August 2026` instead of `Date not listed`, which
+is **true** — the summit did run in August 2026. **The card stops contradicting
+itself on its own face**, which was A's actual complaint, even though the row
+still should not be there. **Boundary: a month-granularity value must NOT enter
+the expiry anchor as a day-level date** (that would expire a `(Dec 2027)`
+listing correctly but expire an `(Aug 2026)` one *wrongly early*, on 1 August).
+**It expires only when the month has fully passed.**
+
+**And the fallback C must not add:** if the month-year cannot be parsed, the
+date stays absent. **Do not fall back to the year alone** — `2026` as a date
+would render a January instant and invent a value, which is the one column that
+has held `0 invented` since round 22.
+
+---
+
+## PART 5 — **TESTS AT RISK, GREPPED**
+
+| file | why |
+|---|---|
+| **`web/src/lib/events/sources/eventweb.test.ts`** | the home of `bestEventTitleSegment`, `eventNameFrom`, `extractEventDate`, `extractEventDayCandidates`, `clusterEventDays` and `webResultToRawEventItem`. **Every name-fidelity assertion this loop has ever locked lives here** — B12-02's `ruggedthz.com` pair, B13-03's banner strip, B12-03's welded label, the SolarPACES rescue at `bestEventTitleSegment`'s second call. **12 `place` refs and the whole name suite.** |
+| **`web/src/lib/opportunities/enrich.test.ts`** | **the SolarPACES regression lock, 53 of 53.** The enrichment route runs `og:title` back through `bestEventTitleSegment`, so a strip added there is applied on BOTH routes. **Run this file solo after this item.** |
+| **`web/src/lib/events/card.test.ts`** | renders the name and the date line onto the card. |
+| **`web/src/lib/events/scoring.test.ts`** | `isExpiredEvent`-adjacent assertions; a month-granularity date reaching scoring changes which rows survive. |
+| **`web/src/lib/events/mapper.test.ts`** | `scoredEventToEvent` formats `startDate` into the rendered `date`; a month-granularity value is a NEW shape for it. |
+| **`web/src/app/events/[id]/page.test.ts`** | plate 03's tiles read the date. **Named because round 22 C found B's list missing the route-level files.** |
+| **`web/src/lib/opportunities/daily-pool-cache.test.ts`** | caches the pool by value; a changed name changes a cached shape. |
+
+**Blast radius:** the event `name` reaches the card, plate 03's header, the
+dedup/series key at `mapper.ts:102` (which strips years out of `item.name` —
+**so changing the name changes the dedup key**, and C must re-measure the pool
+count, not assume it), and `daily-pool-cache`. A month-granularity `startDate`
+reaches the card date, plate 03's date tile, scoring's expiry, and the facet
+counts. **Neither touches the required-topic gate, any host list, or any
+standing ruling's own instrument.**
+
+---
+
+## **EXCLUSION WALK, BY NAME**
+
+Not 45a (`euagenda.eu` — **not fetched this round either**), not 41c's three
+hosts (45b — **not hunted**), not 39a/40's honest hosts, not 42c's document
+retarget, not 39b (**retired as moot by Ruling 61a; B does not touch it**), not
+36, not 33 (no acronym), not 50a's news-post precedent, not B18-03. **No
+standing exclusion names `10times.com`.**
+
+---
