@@ -54339,3 +54339,33 @@ accepted cost (item 8) and Ruling 33's definition (untouched anywhere).
 **Turn lock released (`HELD BY: free`) in this entry's final commit, per §0d.**
 
 ---
+
+### Round 22 — MANAGER verification of Agent B, RULING 60a–e, and the hand-off to C
+
+**Date: 2026-08-14. Checked against the file and against source where source could settle it, not inherited from B's summary.**
+
+**THE TURN IS VERIFIED.** Ten commits, lock claimed first (`84450df`) and released in the hand-off (`1ad85f4`); **all eight item appends verified pure by numstat** (161/0, 120/0, 104/0, 137/0, 113/0, 116/0, 197/0, 159/0); the hand-off's three deleted lines are exactly the §1 in-place update. B changed no code, so the gate figures stand as A left them. Tree clean; the `zz-r22b` harness confirmed gone.
+
+**FOUR OF B's LOAD-BEARING CITATIONS RE-READ IN SOURCE BY THE MANAGER, ALL FOUR EXACT:** `mapper.ts:133` tests `=== "unproven"` and passes `undefined` straight to `item.pageText ?? item.description` — the fail-open gate, confirmed; `jobweb.ts:1109` is the two-clause OR (`!JOB_PATH_RE.test(pathname) && !JOB_TEXT_RE.test(text)`) that makes A22-06 and A22-07 one line, confirmed; `jobweb.ts:1128`'s separator class `([-–—|·])` carries no `(`, so a parenthetical employer never becomes a candidate, confirmed; `events/scoring.ts:216` is `if (hasParsedDate && !hasFuture) continue;`, the line that lawfully expired `thebatteryshow.eu`, confirmed.
+
+**THE METHOD IS ACCEPTED**: B reproduced A's census row-for-row before investigating it; both rejected drafts were killed by their own measured matrices rather than by argument; the recommended draft 3 carries a 50-row matrix with every loss named and zero pool-date casualties; and B's check-A finding — **A's part 1 called `thebatteryshow.eu` a "future" event and it ran 9–11 June 2026, two months past, measured against the page's own structured record** — is accepted as an amendment-grade correction that edits nothing in A's entry (the log is history; the correction lives in B's item 9 and here). The role-after-catches-role-before streak continues.
+
+---
+
+## RULING 60 — THE ROUND-22 B FLAGS, ALL DECIDED. BINDING.
+
+**60a. A22-04's guard half — B's RECOMMENDATION IS ACCEPTED AS WRITTEN, WITH A NAMED BACKSTOP.** C ships **(a) only**: the parenthetical employer becomes an ordinary candidate through the **existing** guard chain, closing a wrong silence (Ruling 32 class) — it does not close A22-04 and nobody claims it does. **(b) — a subject-matter-contradiction guard — is DEFERRED**: four rows is not a matrix, B searched this pull's 99 offered job rows and 138 offered event rows and found no fifth instance, and a constructed corpus is already ruled insufficient (55c precedent). **The shape is recorded; a later A that measures more live instances earns the matrix.** Backstop, per Ruling 36's third-strike precedent: **on the shape's third recorded round with a live instance, design is authorized** on whatever corpus exists plus constructed adversarial rows, escape clause armed — the deferral has an end and cannot become a quiet forever. **Until then A22-04 stays OPEN and counted — it is a deferral of design, NOT an accepted cost** — and B does not re-investigate it while the deferral stands.
+
+**60b. `batteryinnovationsummit.com` (The Battery Saloon, Ruling 39b's named accepted cost) — THE DROP IS APPROVED AS A LAWFUL SIDE EFFECT.** 39b accepted a wrong NAME on a live row; it never guaranteed the row's existence. B ground-truthed the page: **no `<h1>`, no JSON-LD, not one date token — the shipped `2026-11-05` has no evidence behind it at all**, and the only evidenced date (the snippet's own block, `April 22–24, 2026`) is past. An unevidenced future date is exactly the wrong-data class this loop exists to kill; the honest outcome is the same as `ans.org`'s — the row leaves. **39b is neither reversed nor widened**: if the host returns with a real future date, the row re-enters and 39b's accepted name cost stands exactly as ruled. Round 23 A should expect BOTH departures and record them as the fix's intended effect, not as churn.
+
+**60c. THE PLACE HALF OF THE OWNERSHIP DESIGN — DEFERRED, EVIDENCE-GATED, exactly as B specified.** The date half plus item 3's role check ship now. The place half's specification is recorded in B's item 8 and **reopens when a live place contamination is witnessed on a row that remains in the pool** (the one witness, `ans.org`, leaves the pool under the date fix), or when the manager orders a capture round to build its matrix the way the date half's was built. It is a recorded design lead with a trigger, not a silent carry — and the ordinary census keeps scoring place values every round regardless.
+
+**60d. THE MINIMUM-SUBSTANCE FLOOR IS CONFIRMED PART OF C's ITEM 1(b) THIS ROUND.** Two independent witnesses established it: draft 2's `owned` verdicts on 4-, 7- and 147-character junk blocks, and 59b(b)'s resolver certifying an 83-character blog headline. Ownership is about to become the thing that AUTHORIZES publication (that is the whole design); an `owned` that means almost nothing would convert the fail-closed gate into a rubber stamp. The floor lands with the gate, in the same commit family, per B's Part 4 order.
+
+**60e. B's RESTATEMENT OF ROUND 22's JOB ITEM-KIND FIGURE TO 2 OF 12 IS ENDORSED.** The manager-ordered diagnostic (59b(b)) resolved the row that rounds 19, 20 and 22 excluded from the denominator as UNRESOLVED; with the exclusion ended, one number per round must hold, and B's execution-backed measurement is adopted as that number. A's original 1 of 12 was correct under the then-standing exclusion — this is a resolution, not a correction of A. **Round 23 A carries `grad.wisc.edu` in the census with no exclusion**, and 59b(a)'s row (`thebatteryshow.eu`) as **resolved — correctly expired at the post-enrichment scoring pass — not carried.**
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 22` stands as B wrote it. C's work list is B's §1 order with B's item 8 Part 4 governing the build sequence of the design-derived pieces; **the place half (60c) and the A22-04 guard half (60a) are NOT C items**; 59b carries no code at all. The gate stays `GATE (0%): NOT MET` — only round 23 A's live measurement can move it, and only the manager closes, after an independent re-measurement.
+
+---
