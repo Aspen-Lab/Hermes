@@ -53479,3 +53479,116 @@ unaffected. One row enters the job pool (`lanl.jobs`) and one leaves
 different membership, not a 13-row one.**
 
 ---
+
+### Round 22 — Agent B (item 6 of 9: **A22-05 — the dedup key never looks at the URL, and it reads only the FIRST SIX title words BEFORE sorting them. That is why two of three copies collapsed and the third did not.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 6 of 9. Method as stated in item 1.
+
+## **CLASSIFICATION: EXTRA.** One vacancy, two cards, one wasted slot in twelve.
+
+## THE KEY, AND THE THREE LIVE KEYS IT PRODUCED
+
+`web/src/lib/jobs/dedup.ts:24-28`:
+
+```ts
+export function jobDedupKey(item: RawJobItem): string {
+  const title   = normalizeToken(item.title).slice(0, 6).sort().join(" ");
+  const company = normalizeToken(item.company ?? "").slice(0, 3).sort().join(" ");
+  return `${title}::${company}`;
+}
+```
+
+`normalizeToken` (`:16`) lowercases, replaces every non-alphanumeric with a
+space, and **drops tokens of 2 characters or fewer**. **B executed the shipped
+function on the three live rows:**
+
+| host | offered title | key |
+|---|---|---|
+| `linkedin.com` | `Actinide Chemistry/Ion Exchange Postdoc Research Associate` | `actinide chemistry exchange ion postdoc research::` |
+| `salutemyjob.com` | `Actinide Chemistry/Ion Exchange Postdoc Research ...` | `actinide chemistry exchange ion postdoc research::` |
+| `talents.vaia.com` | `Actinide Chemistry & Ion Exchange Postdoc at Savannah River National Laboratory` | `actinide chemistry exchange ion postdoc savannah::national river savannah` |
+
+`dedupJobs` run on the live corpus keeps `linkedin` **and** `talents.vaia`, and
+correctly collapses `salutemyjob` into `linkedin`. **That is A's "partial dedup",
+explained exactly.**
+
+## TWO INDEPENDENT REASONS THE VAIA COPY ESCAPES, AND BOTH MUST BE NAMED
+
+1. **The 6-token window is applied BEFORE the sort, so it is position-sensitive.**
+   The vaia title appends the employer inline (`… at Savannah River National
+   Laboratory`); `at` is dropped as a 2-character token, so the sixth surviving
+   token becomes `savannah` instead of `research`. **One word different in slot
+   six, and the key is different.** Sorting after slicing gives the *appearance*
+   of order-independence without the substance.
+2. **The company half is `""` on two rows and populated on the third.** An empty
+   company is treated as a distinguishing VALUE rather than as "unknown", so a
+   row that names its employer can never match the identical row that does not.
+
+## THE THING THE KEY NEVER LOOKS AT
+
+**The URL.** All three rows carry the same posting slug —
+`actinide-chemistry-ion-exchange-postdoc-research-associate` on `salutemyjob` and
+`linkedin`, `actinide-chemistry-ion-exchange-postdoc` on `vaia` — and the same
+employer in the path (`savannah-river-national-laboratory` on `vaia`,
+`at-savannah-river-national-laboratory` on `linkedin`). **The single strongest
+identity signal available is discarded before the key is built.**
+
+## FIX DIRECTION — ranked, with the cheap one first, and B recommends the cheap one
+
+**(a) RECOMMENDED — make the title half order-independent: sort, THEN slice.**
+`normalizeToken(item.title).sort().slice(0, 6).join(" ")`. On the live rows this
+makes vaia's key `actinide chemistry exchange ion laboratory national` — **still
+different**, because the appended employer adds four more tokens. So (a) alone
+does NOT close this row, and B says so rather than shipping a plausible-looking
+non-fix. **It is still worth doing** as a correctness repair to a function whose
+own shape claims order-independence it does not have — but it is not the fix.
+
+**(b) THE ACTUAL FIX — a second key, on the URL slug, checked alongside the
+first.** Two items collide if EITHER the existing key matches OR their URL slugs
+share a normalized posting-name span. The slug is the aggregator's own copy of
+the employer's title and is far more stable than a rendered heading.
+
+**(c) REJECTED, RECORDED SO IT IS NOT RE-PROPOSED — token-overlap similarity
+(Jaccard over full title token sets).** B did not measure it on a corpus wide
+enough to defend a threshold, and a threshold-based collapse **destroys a real
+posting when it false-fires**, which is the asymmetry `FORUM_THREAD_URL_RE`'s own
+doc comment (`:209-212`) already settled for this codebase: a drop's false fire
+costs a whole item. **Do not ship a similarity score without the matrix.**
+
+## WHAT THE FIELD SHOWS WHEN THE MERGE HAPPENS — and why the survivor is the wrong one today
+
+`dedupJobs` keeps the FIRST item at a key and only replaces it on strictly higher
+`SOURCE_PRIORITY` (`:43-45`). Both `linkedin` and `salutemyjob` are `jobweb`
+(priority 1), so **the survivor is decided by arrival order, not by quality.**
+Today that gives the `linkedin` row, which renders **no employer at all**, while
+the `vaia` row it failed to merge with renders `Savannah River National
+Laboratory` correctly.
+
+**So C must decide the tie-break as part of (b), and B names the rule: at equal
+source priority, prefer the item that carries a non-null `company`.** Otherwise
+the fix trades two cards for one WORSE card, and the reader loses the employer
+line they can see today. **That is the failure mode this item is most likely to
+ship with, and it is why the tie-break is not optional.**
+
+## TESTS AT RISK
+
+- **`web/src/lib/jobs/scoring.test.ts`** — the only test file that exercises
+  `dedupJobs`. There is **no `dedup.test.ts`**; C should add one rather than
+  leaving a shared key function covered only through a scoring test.
+- `web/src/lib/events/scoring.test.ts` — the event twin (`dedupEvents`,
+  `web/src/lib/events/dedup.ts`) has the **identical `slice-then-sort` shape at
+  `:22`**. B did not find a live event-side duplicate this pull, so **do not
+  change the event side in this item** — it would be an unearned edit. Recorded
+  so a later round finds it already named.
+- `web/src/lib/opportunities/daily-pool-cache.test.ts` — asserts
+  `beforeDedup`/`afterDedup` counts; a changed key moves them.
+
+## BLAST RADIUS
+
+`jobDedupKey` runs on **every** raw item from every source, not just `jobweb`, so
+a widened key can silently merge two genuinely different postings from Adzuna or
+USAJOBS. **That is the one way this item can create wrong data rather than remove
+it**, and it is why (b) requires the URL slug to agree rather than loosening the
+title test. Pool size falls by one; nothing else in the pipeline reads the key.
+
+---
