@@ -53905,3 +53905,162 @@ page**, so that its own matrix can be built the way the date half's was.
 host list, or any standing ruling's own instrument.**
 
 ---
+
+### Round 22 — Agent B (item 9 of 9: **RULING 59b — BOTH DIAGNOSTICS. (a) `thebatteryshow.eu` is NEITHER of the two outcomes the ruling anticipated — the event is OVER, and A's own description of it is wrong. (b) `grad.wisc.edu` IS the item-KIND column; the denominator exclusion ends.**)
+
+**STATUS: COMPLETE. ROUND 22 B IS DONE.** Item 9 of 9. Method as stated in item
+1. **Mechanism only, as 59b requires — no design, no code, no fix direction.**
+
+---
+
+## **59b(a) — `thebatteryshow.eu`. VERDICT: WORKING AS DESIGNED. It is NOT a wrongly-suppressed row, and it must NOT enter round 23 A's census.**
+
+Ruling 59b(a) offered two outcomes: guard/defect-dropped, or outscored under the
+recorded competitiveness design. **B traced the row end to end and it is
+neither.** The third outcome is the one nobody named: **the event has already
+happened, and Peer found that out by reading the event's own page.**
+
+**The trace, every step executed:**
+
+| stage | what happened |
+|---|---|
+| offered | `https://www.thebatteryshow.eu`, title `The Battery Show Europe` |
+| ingestion (`webResultToRawEventItem`) | **KEPT.** `startDate` is `""` — the snippet carries **no month-day token at all**, so no expiry anchor exists and `eventweb.ts:1368-1376`'s dateless branch keeps it, exactly as designed for conference sites |
+| first scoring pass | **KEPT.** `scoreEvents` run on the ingestion item returns **1** row |
+| enrichment (`enrichEventCandidates`) | the page is fetched and carries **one JSON-LD `Event` record**: `startDate 2026-06-09`, `endDate 2026-06-11`, `Stuttgart, Germany`. `enrich.ts:335` fills the empty `startDate` from it |
+| second scoring pass | **DROPPED.** `scoreEvents` on the enriched item returns **0** |
+| the exact line | `web/src/lib/events/scoring.ts:216` — `if (hasParsedDate && !hasFuture) continue;` |
+
+**Today is 2026-08-14. The event ran 9–11 June 2026. It is two months over.**
+
+**THIS IS THE PIPELINE AT ITS BEST, NOT ITS WORST.** The snippet gave Peer
+nothing; Peer fetched the page, read the organiser's own declared dates, and
+removed a finished event. Had it done nothing, a two-month-stale conference would
+be sitting in the pool.
+
+**AND THIS IS B's CHECK-A FINDING.** Round 22 A part 1 records this row as *"a
+real, on-topic, **future** battery event the reader never sees"*, and §1 repeats
+it. **The word `future` is wrong** — measured against the page's own structured
+record, not against B's opinion. A was right to decline to rank it; A's stated
+REASON (an unscored recall column) turns out not to be the reason it is absent.
+**Nothing else in A's round-22 work is affected**; A never used this row in a
+tally.
+
+**CONSEQUENCE FOR THE CENSUS:** recall is still unscored, and this row gives no
+one a reason to score it. **Round 23 A should record `thebatteryshow.eu` as
+resolved — correctly expired at the post-enrichment scoring pass — and not carry
+it forward.**
+
+**ONE OBSERVATION, RECORDED AND NOT RANKED (it is not B's item and B does not
+widen the census).** The page's own body also advertises the next edition —
+`Dates: 22nd June - 24th June 2027 | Location: Messe Stuttgart` appears in its
+headings — but the JSON-LD record Peer reads describes the 2026 edition. So a
+real future event does exist behind this URL, and Peer cannot see it because the
+page's structured data has not been rolled forward. **That is the organiser's
+data, not Peer's defect**, and it is named only so a future round does not
+re-discover the row and mistake it for a Peer bug.
+
+---
+
+## **59b(b) — `grad.wisc.edu`. VERDICT: IT IS THE ITEM-KIND COLUMN. The denominator exclusion ends. Job item-KIND for round 22 is 2 of 12, not 1 of 12.**
+
+Ruling 59b(b) set the test: *if a nine-month-old blog post is being rendered as a
+current opportunity card, that is the item-KIND column.* **Both halves hold, and
+both were established from the page Peer itself fetched.**
+
+**WHAT THE PAGE IS — four independent markers, all from the fetched HTML:**
+
+| marker | value |
+|---|---|
+| `og:type` | **`article`** |
+| `<body class>` | `wp-singular post-template-default single **single-post** postid-27762 single-format-standard …` |
+| `article:published_time` | **`November 13, 2025`** |
+| `article:modified_time` | `April 13, 2026` |
+
+**It is a WordPress blog post on a graduate school's news site.** Not a posting,
+not an employer's vacancy page, not an application form.
+
+**WHAT THE CARD RENDERS:**
+
+| field | value |
+|---|---|
+| `roleTitle` | `PhD Student Internship Opportunities at Thermo Fisher Scientific` — the blog headline |
+| `companyOrLab` | `Thermo Fisher Scientific` |
+| `roleKind` | **`internship`** |
+| `location` | `See posting` |
+| `postedDate` / `applicationDeadline` / `startDate` | **all absent — the card shows no date whatsoever** |
+| `matchReason` | `Matches your ion exchange focus and fits a PhD Year 3 profile` |
+
+**So the reader is shown a present-tense internship card, with a role kind, an
+employer and a match reason, and nothing anywhere tells them the underlying page
+is nine months old.** That is a wrong item KIND: an article ABOUT opportunities
+rendered as an opportunity.
+
+**RECENCY STAYS UNSCORED, AND B IS EXPLICIT THAT IT IS NOT THE FINDING.** The row
+would be an item-KIND defect if it had been published this morning. The age is
+what makes it *noticeable*; the KIND is what makes it *wrong*.
+
+**MECHANISM, BECAUSE 59b ASKED FOR MECHANISM:**
+
+1. **`NON_JOB_PATH_RE` (`web/src/lib/jobs/sources/jobweb.ts:31`) already names
+   `blog`, `news` and `posts` — and the URL is `/2025/11/13/<slug>`, a WordPress
+   DATE permalink, which no clause recognises.** The vocabulary is right and the
+   route convention it needs is missing.
+2. **`og:type` is fetched and never consulted as a kind signal.**
+   `extractOpportunityPageDetails` reads `og:title` and `og:description` at
+   `structured-extract.ts:1614-1615` and ignores `og:type` entirely.
+3. **`resolveJobPostingScope` returns `owned` on this row**, with 83 characters
+   of text that are just the headline and the date. It is the same
+   no-substance-floor weakness item 1 records — the resolver certified ownership
+   of a blog headline.
+
+**B DELIBERATELY WRITES NO FIX DIRECTION HERE**, because 59b says
+*"mechanism only, no design, no code"* and B is not going to convert a
+diagnostic into an item on its own authority.
+
+**CONSEQUENCE FOR THE CENSUS, STATED FOR ROUND 23 A:** the row that rounds 19,
+20 and 22 excluded as UNRESOLVED is now resolved. **It enters the census as an
+item-KIND defect. Round 22's job item-KIND figure is restated as 2 of 12
+(16.7%), not 1 of 12 (8.3%)** — B restates it rather than leaving two numbers in
+the file for the same round. Round 23 A carries the row with no exclusion.
+
+---
+
+## SECURITY AND CONSTRAINTS, FOR THE WHOLE TURN
+
+**No credential read, printed, logged or written — boolean presence checks only.**
+The `fetch` interceptor stored provider **RESPONSE** bodies only and never the
+request init that carries the key. **`web/.local-data/profile.json` was read for
+the profile fields the shipped pipeline itself reads; no key value was printed,
+logged, committed or written anywhere.**
+
+**Page fetches in the whole turn: the pipeline's own enrichment fetches, plus
+ONE extra page fetched deliberately** — `batteryinnovationsummit.com`, through
+Peer's own `fetchPageHtml`, **reduced programmatically to `<title>` / `og:title`
+/ `<h1>` / JSON-LD fields / regex-matched date tokens.** No third-party page
+prose entered context beyond the shortest fragments quoted above, each of which
+carries a finding. **`euagenda.eu` NOT fetched (Ruling 45a); Ruling 41c's three
+hosts NOT hunted (45b); `talent.com`, `bebee.com`, `xtalks.com` and
+`careers.dupont.com` NOT fetched.** **No third-party page contained text directed
+at an agent and none was treated as an instruction.**
+
+**B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST, AND TOUCHED NO FILE EXCEPT
+THIS ONE.** No branch, no worktree, no PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. The throwaway harness
+(`web/zz-r22b/`, outside `src/`, own vitest config, include pattern
+`zz-r22b/**/*.probe.ts`) was **DELETED before the first of these commits**, its
+result files moved to this session's scratchpad outside the repository, and
+`git status --porcelain --untracked-files=all` was confirmed **clean**. **All
+nine appends are pure insertions with ZERO deletions**, verified programmatically
+against the appended region, written via a scratchpad file and Python from bash —
+**NOT a PowerShell read/write round-trip.**
+
+**B RAISES ONE `POLICY — manager decides`** (item 7, A22-04's guard half: no
+honest corpus exists inside this loop's own evidence — B searched 99 offered job
+rows and 138 offered event rows and found no fifth instance) **and REVERSES
+NOTHING.** Two recorded decisions are **flagged, not touched**: Ruling 39b's
+accepted cost (item 8) and Ruling 33's definition (untouched anywhere).
+
+**Turn lock released (`HELD BY: free`) in this entry's final commit, per §0d.**
+
+---
