@@ -48606,3 +48606,268 @@ location test file are accepted as in-scope completions.
 A's first job: the live pull confirming `Rome, Italy`, plus Ruling 55c's
 online-must-keep debt.**
 
+
+### Round 21 — Agent A (part 1: the event surface. **THE ROME ACCEPTANCE CHECK IS DISCHARGED — BOTH ROUND-20 FIXES ARE CONFIRMED ON THE REAL LIVE PAGE** — but the host is absent from the pool, so the confirmation is targeted, not organic. NINTH consecutive zero on name fidelity, THIRD on item-KIND, and **Ruling 55c's debt CARRIES for a second round**.)
+
+**STATUS: PARTIAL BY DESIGN.** Round 21 A is pre-split into four parts, the same
+discipline rounds 9–20 used, so a real finding banks even if the session dies.
+This entry is **part 1 only**. Parts 2 (job pool, the offered-row scan with BOTH
+48b columns, employer field, item shape), 3 (job summaries + all tallies) and 4
+(summary / ranked list / gate verdict) are **not yet done**. **No gate verdict is
+set here, and A never closes the gate in any case (Ruling 30).**
+
+Claimed the turn lock (`220a490`, `LAPTOP-3CL10CG5 @ 2026-08-14 18:36 UTC`) after
+`git pull --ff-only` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed, per §3. The claiming push was **accepted** (`dc18fdb..220a490`), so the
+race was won rather than assumed. Read §1's whole `WHOSE TURN: A — round 21, GATE
+CANDIDATE ROUND` block, §2, §3, the three round-20 C entries, the round-20 manager
+verification carrying **Ruling 56**, and the rulings the brief cites, before
+touching anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all present;
+`feedAiApiKey` empty). **Per §2 as corrected by Ruling 42b the tier statement is:
+PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT DID NOT.** The struck "Tier 0 only"
+wording appears nowhere in this entry. **Five independent live pulls in five
+separate processes** (Ruling 39d/41a's standing method), each with a no-op
+`PoolCache` (`get` always `null`, `set` a no-op) to force a genuinely fresh pull,
+calling `buildDailyEventPool()` then `scoredEventToEvent()` — the exact entry
+points §2 names. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Throwaway harness
+lived **outside `src/`** (`web/zz-r21a/`, its own vitest config, include pattern
+`zz-r21a/**/*.probe.ts`) so the standing gate could not collect it; **deleted
+before this commit**, tree confirmed clean with `git status --porcelain
+--untracked-files=all`. Result JSON is in this session's scratchpad, outside the
+repository.
+
+**Every render value in this entry is read through the SHIPPED render sites** —
+`eventCardView()` for the card, and **`buildEventFacts()` (`page.tsx:628`) for
+plate 03's WHERE tile**, which is the surface this loop exists to measure. The
+subtitle's venue segment is computed with the identical expression `page.tsx:1722`
+uses. Facet values come from the shipped `opportunityFacetValues()`.
+
+**Reproducibility: 16 items in every one of the five runs, 16 unique hosts in the
+union, and EVERY column — `name`, `type`, `place`, `location`, `isOnline`, the card
+label, the report WHERE tile, the subtitle venue, the Format facet and the Location
+facet — was byte-identical across all five runs. Zero variance on MEMBERSHIP and
+zero on VALUES. NINTH consecutive round of total event-surface stability.** No
+majority / minority split arose on this surface, so **Ruling 39d/41a's
+minority-disclosure clause has nothing to disclose here** — stated explicitly
+rather than left silent, because a silent disclosure line and an empty one look
+identical.
+
+---
+
+## THE HEADLINE — **THE ACCEPTANCE CHECK ROUND 20 B WROTE AND C DID NOT DISCHARGE IS NOW DISCHARGED. BOTH FIXES WORK ON THE REAL PAGE.**
+
+**AND A LEADS WITH THE LIMIT RATHER THAN THE RESULT:
+`chemistryworldconference.com` IS ABSENT FROM ALL FIVE POOLS, AND IT WAS NOT
+OFFERED EITHER** — zero of the **150 unique offered event rows (160 raw)** from
+A's disclosed sixth pull carry that host. **So absence is not a Peer drop and the
+check could not be discharged organically.** Exactly the discipline rounds 18–20 A
+applied to `specterfi.com` and `jobright.ai`: absence proves nothing, so the row
+was **replayed against the live page through the shipped code**.
+
+**THE REPLAY, ON THE PAGE AS IT STANDS TODAY** (round 20's own recorded pool URL,
+fetched through Peer's **own** `fetchPageHtml`, clipped programmatically):
+
+| measured | round 20 recorded | round 21 measures |
+|---|---|---|
+| page still carries `MixedEventAttendanceMode` | yes | **yes — the round-20 INPUT IS INTACT, the page did not change** |
+| `isOnline` | `true` | **`true`** — unchanged, so B20-01's branch is genuinely exercised |
+| `place` | `{city:"NH Villa Carpegna", region:"Italy", country:"Italy"}` | **`{city:"Rome", country:"Italy"}` — THE HOTEL NAME IS GONE** |
+| card `locationLabel` | `Online · Preferred` | **`Rome, Italy`** |
+| report **WHERE tile** (plate 03) | `Online` | **`Rome, Italy`**, detail `in person` |
+| report subtitle venue | `Online` | **`Rome, Italy`** |
+| **Location facet button** | `NH Villa Carpegna` | **`Rome`** |
+| Format facet chip | `hybrid` | **`hybrid`** |
+
+**BOTH HALVES OF THE BRIEF'S STATED EXPECTATION ARE MET, AND THE
+SELF-CONTRADICTION IS GONE.** Round 20 B's finding was that the build contradicted
+itself — the Format chip said `hybrid` while the card said `Online`. **Measured
+today the chip says `hybrid` and the card says `Rome, Italy`: they agree, and they
+agree on the true value.** The brief's acceptance sentence — *"renders `Rome,
+Italy · …` on the card and `Rome` in the Location facet"* — **is satisfied.**
+
+**AND A REPLAYED ROUND 20's OWN RECORDED SHAPE AS A CONTROL, so the change is
+attributed rather than assumed.** Feeding the pre-fix record
+(`isOnline: true` + the hotel place) through today's shipped render sites still
+produces **`NH Villa Carpegna, Italy`**. So the improvement comes from the
+extractor's new place value, not from the render site alone — **and feeding
+today's correct place with `isOnline` forced true still produces `Rome, Italy`,
+which is the render-site fix doing its own half.** Neither fix is carrying the
+other on this row.
+
+**GRADE, STATED PLAINLY AND NOT UPGRADED: `targeted-confirmed on the REAL LIVE
+PAGE, organically unoffered`.** It is stronger than a fixture replay — the page
+was fetched live this round and the shipped extractor ran on it — but **it is not
+an organic pool row and A does not write it up as one.** If the host returns to a
+pool, the confirmation becomes organic and should be re-stated then.
+
+**A REPORTS A PROBE BUG OF ITS OWN, AGAINST ITS OWN CONVENIENCE.** A's first
+replay passed the **URL** into `extractOpportunityPageDetails(html, kind)`'s second
+parameter, which is `kind`. That silently emptied the typed-JSON-LD filter, so
+`isOnline` read `false` and the whole `attendanceMode` layer was skipped — and it
+would have produced a **flattering but wrong** story (a row that no longer
+triggers the hybrid path at all). A caught it by checking the signature against
+the only real caller (`enrich.ts:287`, which passes `"event"`), re-ran, and the
+table above is the corrected measurement. **The superseded numbers are not used
+anywhere.** Round 19 A recorded a probe bug of the same class; recording them is
+what keeps the census honest.
+
+---
+
+## RULING 55c's DEBT — **ITS OWN LINE, NOT FOLDED INTO ANYTHING. THE DEBT CARRIES, SECOND ROUND RUNNING.**
+
+**ZERO of the 16 live rows is a genuinely-online event.** Every one carries
+`isOnline: false` and every one is classified `in-person` by the shipped Format
+facet. **Round 20's pool contained no genuinely-online event either, so the
+must-keep — that a genuinely-online event still renders `Online` — has now gone
+TWO rounds with no live witness.**
+
+**A confirmed the must-keep by construction and says plainly that this does NOT
+discharge the debt.** A record with `isOnline: true` and no place renders
+**`Online`**, `isOnlineOnly` true, Format `online`. **That is exactly the
+constructed evidence Ruling 55c says is insufficient** — it is the same class C
+already shipped as seven tests. **An absent witness is not a confirmation. The
+debt is carried forward, named, for the next A.**
+
+---
+
+## THE NAME-FIDELITY TABLE
+
+**Ground truth** for the previously-established hosts rests on the six-to-eleven
+prior rounds that established each, plus this round's own five-run byte-identity;
+**none of those values moved.** **`euchemsil2026.com` is NEW this round** and was
+ground-truthed through Peer's own `fetchPageHtml`, **clipped PROGRAMMATICALLY to
+`<title>` / first `<h1>` / `og:title` at 200 characters** — no third-party page
+body entered context.
+
+| host | rendered name | verdict |
+|---|---|---|
+| `euchemsil2026.com` | `EUCHEMSIL 2026: 30th EUCHEMS Meeting` | **CORRECT — NEW HOST, and the strongest row in the table: byte-identical to the page's own `<title>`** |
+| `ans.org` | `Molten Salt Research Reactor Tour` | **CORRECT — byte-identical to the page `<h1>`**, second round running. Its `<title>` is the breadcrumb `Tours -- ANS / Conferences / ANS Student Conference 2026 (Sold out) / Tours` and the render again took the heading, not the breadcrumb |
+| `solarpaces.org` | `32nd SolarPACES Conference` | **CORRECT — THE SOLARPACES REGRESSION LOCK IS LIVE-CONFIRMED FOR THE FOURTH ROUND RUNNING.** The pool URL is again a news post (`/abstract-submission-deadline-extended-to-march-30`) and the render still names the CONFERENCE |
+| `ecs.confex.com` | `ecs.confex.com` | **HONEST HOST — accepted, Ruling 39a/40, on A's exclusion list.** Byte-identical to rounds 14–21. Not a wrong value |
+| `euagenda.eu` | *(not measured)* | **PERMANENTLY EXCLUDED BY NAME — Ruling 45a. NOT fetched, NOT retested, NOT counted.** Listed so the exclusion stays visible. Its render is again `The First European Conference on Molten Salt Reactor ...`, **ending in a literal ellipsis. THIRD round recorded, still not counted**, because 45a forbids the fetch that would establish ground truth |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT — RULING 36 MEASURED, NOT ABSENT, ninth consecutive round.** Both historical failure modes absent; the host was in the pool 5 of 5 with the byte-identical correct name |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13–r21) |
+| `euchems2026.eu` | `euchems2026.eu` | **HONEST HOST (39a/40) *and* the DOCUMENT-URL RETARGET (42c) — both standing exclusions, by name.** Its pool URL is the raw posters PDF (`/wp-content/uploads/2026/07/ECC102026-POSTERS-v2.pdf`), confirmed this round as a real 509KB PDF with no `<title>`, `<h1>` or `og:title` at all. Not a wrong value. **One NEW observation on this row is recorded below and NOT counted** |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (unchanged r13–r21) |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the event-side 34a tally, NOT a defect. Ninth round running |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT — **B12-04 still holding, NINTH consecutive round** |
+| `flogen.org` | `SIPS 2026` | **CORRECT — B13-03's banner strip CONFIRMED LIVE for the sixth consecutive round**, the pool again holding `flogen.org/sips2026`, the exact URL B13-03 was measured on |
+| `nanoge.org` | `SSI24` | CORRECT (unchanged r18–r21) |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | **CORRECT — sixth consecutive round on its own domain** |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (r10–r20, absent r20's pool only in the disclosed sixth pull, present and byte-identical here). Its static HTML carries no `<title>`, `<h1>` or `og:title` (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the eleven prior rounds — stated as a limit, not glossed |
+
+**TALLY: 13 CORRECT, 0 CONFIRMED WRONG NAME, 2 HONEST HOSTS, 1 ACCEPTED COST
+(Ruling 39b), 1 EXCLUDED BY NAME (`euagenda.eu`, Ruling 45a).** Denominator
+excludes `euagenda.eu` per 45a; **the accepted cost and both honest hosts ARE
+counted in the denominator**, as every prior round has counted them.
+**Round 21's event-NAME wrong-rate is 0 of 15 (0%) — the NINTH consecutive zero.**
+Round 20 was 0 of 16; r19 0 of 14; r18 0 of 15; r17 0 of 13; r16 0 of 14; r15 0 of
+11; r14 0 of 13; r13 0 of 14; r12 was 8 of 17 (47.1%).
+
+---
+
+## THE EVENT ITEM-KIND COLUMN (Ruling 50a): **0 of 15 (0%) — A THIRD CONSECUTIVE ZERO. IT HOLDS.**
+
+The brief asks A to *"say plainly whether each holds a further round."* **On the
+event side it does.**
+
+**Every one of the 15 counted rows is a thing a researcher can attend, or a real
+conference's own page.** A checked each row's KIND separately from its NAME. The
+rows worth stating the reasoning for:
+
+- **`solarpaces.org` and `ruggedthz.com` are NEWS POSTS by URL and both render a
+  real CONFERENCE name.** Not counted as wrong KIND, on the settled precedent that
+  has scored both CORRECT since round 16: **the item a reader gets is the
+  conference.**
+- **`ans.org` is a TOUR inside the ANS Student Conference 2026**, and
+  `nanoge.org`'s URL is a conference PROGRAMME page. A sub-event and a page *of*
+  an event are still the event, so both are CORRECT — round 20's precedent
+  applied unchanged.
+- **`euchems2026.eu` is a POSTERS PDF.** Its KIND is the document-URL retarget
+  class, **already a standing exclusion (42c)** and also an honest host (39a/40).
+  **Named here rather than letting a zero hide it**, exactly as round 19 A named
+  it.
+
+**ONE NEW OBSERVATION ON THAT SAME EXCLUDED ROW, RECORDED AND DELIBERATELY NOT
+COUNTED.** `euchems2026.eu` renders a plate-03 header chip reading **`Hackathon`**
+(`page.tsx:1885` → `eventTypeLabel(event.type)`), for what its own URL shows is a
+chemistry-congress posters PDF. **A does NOT count it and does NOT rank it**, for
+one stated reason: the row is named twice over on A's standing exclusion list —
+as an honest host (39a/40) and as the document-URL retarget (42c) — and **every
+wrong value on it flows from the excluded fact that Peer is reading a PDF instead
+of a page.** Manufacturing a fresh open difference out of an excluded row is the
+mirror image of the stretching exclusion 8 forbids. **It is recorded for the
+manager as an observation, not as a difference, and A does not use it to hold the
+gate.**
+
+---
+
+## THE EVENT SIDE OF RULING 34a: **1 of 15, and it is the SAME named accepted cost, NINTH round running**
+
+`batteryinnovationsummit.com` → `The Battery Saloon` (Ruling 39b). Running: r13
+1/14, r14 1/13, r15 1/11, r16 1/14, r17 1/13, r18 1/15, r19 1/15, r20 1/16, r21
+1/15, **cumulative 9 of 126 — a second distinct instance is ABSENT, so Ruling 42b
+does NOT fire, ninth round running.**
+
+---
+
+## RULING 52b, EVENT SIDE — **1 instance, DROPPED, ZERO ADMISSIONS**
+
+The full tally with its running count is in part 3; the event half is recorded
+here with the surface it belongs to. From the disclosed sixth-pull offered-row
+capture (**150 unique offered event rows, 160 raw**):
+
+| offered row | 52b? | outcome |
+|---|---|---|
+| `ionexchangeglobal.com` → `Careers` | **YES** — profile topic `ion exchange` matches **`Ion Exchange Global`**, the company's own name, in full | **DROPPED** — absent from all five event pools |
+
+**Event-side 52b: 1 instance, 0 admissions.** Round 20's second event-side
+instance (`Job Postings Archive - Ion Exchange`) was **not offered** this round.
+
+**EIGHT ROWS DELIBERATELY NOT COUNTED, because the brief forbids inflating the
+line.** `ibatterysummit.com`, `batteryinnovationsummit.com`,
+`internationalbatteryseminar.com`, `battery-power.eu`, `thebatteryshow.com`,
+`thebatteryshow.eu`, `thebatteryshowsouth.com` and `battery-tech.net` all carry
+the topic `battery` in the host **because they are genuinely battery events** —
+the match is on the SUBJECT, which is correct relevance, not a company-name
+collision. Round 20's event-side table excluded the same class for the same
+reason.
+
+---
+
+**Composition, read before the numbers.**
+- **ZERO REGRESSIONS.** Every host that rendered a correct name in round 20 and
+  is still in the pool rendered the identical name this round.
+- **Pool 17 → 16: four out, three in.** Left: `imlb.org`, `10times.com`,
+  `chemistryworldconference.com` **(the round-20 finding's host — see the replay
+  above)** and, from round 20's disclosed sixth pull only, nothing else. Entered:
+  **`euchemsil2026.com`** (new to this loop, ground-truthed above), plus
+  `euchems2026.eu` and `grc.org` returning.
+- **The event surface produced NO open difference this round.** Five of six event
+  columns are at zero, the sixth is a named accepted cost, and the one round-20
+  difference is confirmed repaired on the real page.
+
+**No credential read, printed, logged or written — boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`. `euagenda.eu` NOT fetched (45a). Ruling 41c's three
+hosts NOT hunted (45b).** Ground-truth fetches went through Peer's own
+`fetchPageHtml` and were **clipped programmatically to `<title>` / first `<h1>` /
+`og:title` at 200 characters**; offered rows retained a 160-character title, a
+300-character URL and a 600-character snippet only. The offered-row capture reads
+only the search provider's own RESPONSE body — **the request init, which carries
+the key, is never touched, logged or written.** No third-party page contained
+text directed at an agent, and none was treated as an instruction. No branch,
+worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test
+deleted or edited. Harness deleted before this commit; tree clean.
+
+**Not done yet (parts 2–4, same session, continuing next):** the job pool with the
+offered-row scan and BOTH 48b columns, the employer field and job item shape; then
+summaries and all tallies including Ruling 52b's full reading; then the summary,
+ranked difference list and gate verdict.
+
+---
