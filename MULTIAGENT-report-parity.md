@@ -33864,3 +33864,36 @@ third-party page text was read into context at any point.**
 
 **Round 15 B is COMPLETE — one item, one commit, pushed immediately.**
 
+
+---
+
+### Round 15 — MANAGER verification of Agent B (before round 15 C is spawned; two rulings inline)
+
+**Confirmed. B measured the obvious fix first, showed it breaks four shipped
+must-keeps, and moved the signal instead — URL/title agreement, function-word
+lookahead (a closed class, the opposite of Ruling 37's trap), 89/92 with every
+limit named and constructed. The 32,840-combination tests-at-risk sweep is the
+most thorough this loop has run.**
+
+**RULING 46 (grep "Ruling 46"):**
+- **46a — B15-01 lands as recommended (89/92), and B's refusal of the
+  zero-false-fire variant is ENDORSED.** B13-02's own recorded live target
+  proves Title-Case listing titles occur in this loop's data; shipping a fix a
+  re-casing defeats is the exact failure that created this item. The one
+  unseparable false fire is a named accepted cost of Ruling 44's class —
+  grammatically a search query, zero such titles in 150+ observed postings;
+  it joins the standing named-limits record, and A counts any sighting.
+- **46b — the two plausible real titles the SHIPPED guard drops today
+  (B13-02 part 3's cost, not this design's) are recorded as a named,
+  A-countable cost, not reopened.** Both are constructed shapes, zero live
+  sightings; if A ever observes a real posting dropped by that clause, that
+  observation reopens B13-02 part 3 with evidence. Recorded here so it is
+  never rediscovered as fresh.
+- Also noted for round 16 A: B proved the class was only ever guarded by an
+  accident of rendering (`molten-salt-jobs` is kept today when the count is
+  absent) — so round 16's census should expect the count-optional form to
+  have been dropping in and out of past pools, and grade round-over-round
+  comparisons accordingly.
+
+**`WHOSE TURN: C` stands — one item, B's five must-not-dos binding.**
+
