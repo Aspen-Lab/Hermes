@@ -40813,3 +40813,260 @@ held.**
 
 **`WHOSE TURN: B` stands with three items.**
 
+
+---
+
+### Round 18 — Agent B (item 1: the `specterfi.com` earnings call in the EVENT pool — Ruling 50b)
+
+**STATUS: COMPLETE.** Claimed the turn lock (`1fa0bee`, `LAPTOP-3CL10CG5 @ 2026-08-14
+14:26 UTC`) after `git pull --ff-only` (already up to date) and confirming
+`git branch --show-current` reads `feature/summary-report-revamp` — checked, not
+assumed, per §3. Read §1's whole `WHOSE TURN: B` block, §2, §3, Rulings 31/32/37/
+40/44, all four round-18 A parts and the manager's Ruling 50 before touching
+anything. **B changed no code** (§2). Harness lived **outside `src/`**
+(`web/zz-r18b/`, own vitest config, include pattern `zz-r18b/**/*.probe.ts`) and
+was **deleted before this commit**; tree confirmed clean.
+
+**THE HONEST HEADLINE FIRST: THE ROW CHURNED OUT OF THE PROVIDER BEFORE B COULD
+SEE IT LIVE, AND B SAYS SO BEFORE REPORTING ANY NUMBER.** Five independent live
+event pulls in five separate processes, no-op `PoolCache`, `buildDailyEventPool()`
+then `scoredEventToEvent()` — the exact entry points §2 names.
+`PEER_PROFILE_SNAPSHOT_PATH` was NOT used; keys checked as booleans only.
+**`specterfi.com` appears in ZERO of the 171 de-duplicated raw provider rows
+across all five pulls (136 distinct hosts, no finance host of any kind).** Pool
+sizes 15/15/16/14/15. **So B could not reproduce A's 5-of-5 sighting live, and B
+does not pretend otherwise** — the same standard A applied to itself on
+EnerSys/CATL. Everything below rests on **TARGETED retrieval, disclosed as
+targeted** (Ruling 41c's precedent): three by-name provider queries returned
+**twelve real `specterfi.com` concall rows**, and those rows — real provider
+data, not B's imagination — are the corpus.
+
+**A IS CONFIRMED ON THE FACT, AND CORRECTED ON ONE DETAIL.** A direct fetch
+(HTTP 200, clipped programmatically to `<title>`/`og:title`/first `<h1>` at 160
+chars) reads:
+
+- `og:title` = **`1539 Feb2026 Concall Summary`** — **A's rendered name, exactly
+  as A reported it. Confirmed.**
+- `<title>` = `1539 Feb2026 Conference Call Summary | Specter`
+- first `<h1>` = **empty**
+
+**THE CORRECTION THAT MATTERS FOR THE FIX'S SHAPE:** the string the INGESTION
+GATE reads is the **provider's** title, and the provider does **not** hand Peer
+the `og:title`. Replayed through the shipped `webResultToRawEventItem`, the
+provider row `1539 Feb2026 Conference Call Summary | Specter` is admitted and
+ingests as **`1539 Feb2026 Conference Call Summary`**; the `og:title` form
+arrives later, at enrichment. **A's "og:title verbatim" is right about what
+RENDERS and would have been the wrong string to design a gate against.** Both
+strings are covered by the design below; this is recorded so C does not test only
+one of them.
+
+**THE ADMISSION MECHANISM, ESTABLISHED BY EXECUTION.** The gate's front door is
+`looksLikeEvent(title + snippet)`, and `EVENT_SIGNAL_RE` lists **`conference`**.
+"Conference Call" contains it. That is the whole of it — no filter downstream
+asks whether the page is a *shareholder-reporting* occasion rather than a
+scholarly one. **The topic collision A identified (`ion exchange` vs `Ion
+Exchange (India) Limited`) decides RELEVANCE, not ADMISSION** — the item clears
+`webResultToRawEventItem` on the word "conference" alone, regardless of topic.
+So the fix belongs at the page-KIND gate, not in the matcher, and Ruling 50b's
+refusal to widen Ruling 33 is independently correct on the code.
+
+**THE GATE ALREADY REJECTS 7 OF THE 12 — MEASURED, NOT ASSUMED.** Those seven
+carry a parseable past date in the snippet and die on the existing past-event
+anchor check. **Five are admitted today**, and they are the work. Note the reason
+the surviving five survive, because it is load-bearing for the test C writes:
+their snippets are site nav chrome, so no date parses, and `Feb2026` yields no
+year token (`\b(20\d{2})\b` cannot match inside `Feb2026`).
+
+**THE CLASS IS BIGGER THAN ONE SITE, WHICH IS WHY NO HOST LIST AND NO URL-ONLY
+RULE IS OFFERED.** A wider finance sweep found the shipped gate also admitting
+earnings-call pages on **`scribd.com`, `adanienterprises.com`,
+`piindustries.com`, `balchem.com` and `roberthalf.com`**. A `specterfi.com` host
+entry, or a bare `/concalls/` path rule, would close A's one row and leave the
+class open — the exact move Ruling 40 rejects.
+
+#### THE ANSWER TO RULING 50b's QUESTION: YES, A CLOSED STRUCTURAL SIGNAL EXISTS — AND IT IS NOT THE OBVIOUS ONE
+
+**THE OBVIOUS SIGNAL IS THE ONE THAT FAILS, AND B MEASURED IT FIRST.** Bare
+`\bconference\s+calls?\b` over title+snippet catches 12 of 12 positives — **and
+deletes a real scholarly event on the first pass over live data:**
+`ascl.org` / *"2026 YCC Conference Call for Papers (and Student Awards)"*, where
+"Conference" and "Call for Papers" are adjacent by accident. **That is precisely
+the must-keep class Ruling 50b names, and it fell to the naive rule immediately.
+Bare "conference call" is REJECTED and must not be re-proposed.**
+
+**WHY THE SURVIVING SIGNAL IS CLOSED AND NOT RULING 37's TRAP.** Ruling 37's verb
+list sampled an open class *and its misses produced wrong output* (mutilated
+sentences). Here the failure directions are reversed and that is the whole
+argument: **a miss leaves the item exactly where it is today (status quo, no new
+wrong value); a false fire deletes a real event.** That is Ruling 40's own
+accepted shape — "ordinary, accountable coverage when its misses fall to an
+honest fallback" — and it is the identical contract `isListingPage` already runs
+under on the job surface. The rule must therefore be tuned for **zero false
+fires**, with under-catching the accepted, named failure direction.
+
+**EVERY TERM WAS MEASURED ON ITS OWN AND SEVEN WERE CUT FOR EARNING NOTHING.**
+This is the step that turned a plausible list into a closed one:
+
+| term (measured alone) | catches | false fires | verdict |
+|---|---|---|---|
+| `(conference call\|concall\|earnings call) (summary\|transcript\|highlights\|recap\|notes)` | 6 | 0 | **KEEP** |
+| `concalls?` | 5 | 0 | **KEEP** |
+| `earnings call` | 2 | 0 | **KEEP** |
+| `earnings conference call` | 1 | 0 | **KEEP** |
+| `results conference call` | 1 | 0 | **KEEP** |
+| `earnings webcast` | 0 | 0 | CUT — earns nothing |
+| `earnings release` | 0 | 0 | CUT — earns nothing |
+| `analysts? meet` | 0 | 0 | CUT — earns nothing |
+| `investor day` | 0 | 0 | CUT — earns nothing |
+| `investor call` | 0 | 0 | CUT — earns nothing |
+| `investor webcast` | 0 | 0 | CUT — earns nothing |
+| `quarterly results` | 0 | 0 | CUT — earns nothing |
+
+**THE CUT IS NOT COSMETIC: `quarterly results` WAS THE ONLY TERM THAT FAILED THE
+ADVERSARIAL SET** (*"Quarterly Results Review Seminar Series — Physics Dept"*).
+Removing every term that earned nothing on real data **also removed the sole
+false fire.** The evidence-minimal list and the safe list turned out to be the
+same list, and that is the strongest reason to believe the class is genuinely
+closed rather than merely trimmed.
+
+#### THE DESIGN — two constants, one predicate, one call line
+
+```ts
+/**
+ * A shareholder-reporting occasion is not a scholarly event. A company's
+ * quarterly earnings call clears `looksLikeEvent` on the single word
+ * "conference" and then renders as a conference card.
+ *
+ * FAILURE DIRECTION, STATED DELIBERATELY: a miss leaves the row exactly where
+ * it is today; a false fire deletes a real event. Tuned for zero false fires,
+ * under-catching accepted (Ruling 40's standard).
+ *
+ * BARE `conference call` IS DELIBERATELY ABSENT AND MUST NOT BE ADDED: measured
+ * on live data it deletes "2026 YCC Conference Call for Papers".
+ */
+const EARNINGS_CALL_PAGE_RE =
+  /\b(?:concalls?|earnings\s+(?:conference\s+)?call|results\s+conference\s+call)\b/i;
+
+/** The page names itself an ARTEFACT of a call — a page KIND, not an event. */
+const CALL_ARTEFACT_TITLE_RE =
+  /\b(?:conference\s+call|concall|earnings\s+call)\s+(?:summary|transcript|highlights|recap|notes)\b/i;
+
+export function isEarningsCallPage(title: string, url?: string): boolean {
+  const phrase = urlPathPhrase(url);
+  return (
+    EARNINGS_CALL_PAGE_RE.test(title) ||
+    CALL_ARTEFACT_TITLE_RE.test(title) ||
+    (phrase !== undefined && EARNINGS_CALL_PAGE_RE.test(phrase))
+  );
+}
+```
+
+**PLACEMENT: `web/src/lib/events/sources/eventweb.ts`, one line in
+`webResultToRawEventItem`, immediately after the existing `isPaperPageTitle`
+call:**
+
+```ts
+  if (isPaperPageTitle(title)) return null;
+  if (isEarningsCallPage(title, url)) return null;   // item 1
+```
+
+**THE URL IS A SECOND INPUT, AND THAT IS SHIPPED PRECEDENT, NOT A NEW IDEA.**
+`isNewsArticleTitle` already feeds `urlPathPhrase(url)` to an anchored subset of
+its own regex (B12-03 gap B). **Reuse the existing `urlPathPhrase` helper; do not
+write a second one.** **Only `EARNINGS_CALL_PAGE_RE` is applied to the path** —
+the artefact regex is a title shape and has no business matching a slug.
+
+#### SCORES — the shipped gate is the scorer, every row is real
+
+| corpus | n | caught | false fires |
+|---|---|---|---|
+| `specterfi.com` rows the shipped gate **admits today** | 5 | **5** | — |
+| earnings-call rows on **other hosts**, admitted today | 5 | **3** | — |
+| **live rows admitted today** (5 pulls, deduped) | 52 | — | **0** |
+| **real company-named rows** admitted today (targeted sweep) | 25 | — | **0** |
+| **TOTAL real admitted must-keeps** | **77** | — | **0 (0.0%)** |
+| hand-built adversarial must-keeps | 17 | — | **0** |
+| hand-built adversarial positives | 5 | **5** | — |
+
+**NEGATIVE PROOF, one clause disabled at a time:** title-artefact alone
+`specterfi 4/5, other-finance 1/5, FF 0`; occasion-on-title-and-path alone
+`specterfi 5/5, other-finance 3/5, FF 0`. **DISCLOSED HONESTLY: on this corpus
+the artefact clause is REDUNDANT — the occasion clause alone reaches the same 5/5
+and 3/5.** It is kept because it independently catches 4 of 5 and 1 of 5 with
+zero false fires, and it is the only clause that reaches a sibling site whose
+title says "Conference Call Summary" while its path does not carry the
+vocabulary. **If the manager prefers strict minimalism, occasion-only is a
+defensible landing and B says so rather than hiding the redundancy.**
+
+**THE 2 OF 5 DELIBERATELY MISSED, NAMED:** `balchem.com` (*"Conference Call for
+Fourth Quarter and Full Year 2026 Financial Results"*) and `roberthalf.com`
+(*"Investor Center: Quarterly Conference Calls"*). **Both are reachable only by
+bare "conference call", the rejected rule.** Named under-catch, not silent.
+
+#### RULING 32 — WHAT RENDERS ON REJECTION
+
+**The item leaves the event pool at ingestion and NOTHING BACKFILLS IT.**
+`webResultToRawEventItem` returns `null`, so the row is never pushed into
+`fetchImpl`'s accumulator; it never reaches dedup, scoring, enrichment or the
+mapper. **There is no substitute value, no hostname fallback, no placeholder** —
+this is a DROP, not a repair, so Ruling 32's "what value replaces it" question
+has the answer "none, by construction."
+
+**Does another candidate take the slot? NO — established from the code and the
+measurement, not assumed.** `eventweb` slices to `req.perSourceLimit ?? 80`, and
+the five live pulls produced only **52 admitted rows deduped across all five** —
+nowhere near the cap. **So the source is not slot-limited: dropping this row
+makes the pool one item smaller; it does not promote a different event.** The
+reader sees one fewer card, and the card they lose is a stock-research page.
+
+**AND THE ONE NUMBER B CANNOT GIVE, STATED PLAINLY:** the pool-level delta on
+live data is **0 of 52**, because the row was absent from all five pulls. **That
+is "absent from this round's data", NOT "the rule changes nothing"** — the
+distinction A drew on Rulings 46a/46b, applied here to B's own weaker evidence.
+**Round 19's A should treat item 1 as `targeted-confirmed`, not live-confirmed.**
+
+#### WHAT C MUST NOT DO
+
+- **No host list, no `specterfi.com` entry, no bare `/concalls/` URL rule** — the
+  class spans five other hosts, measured.
+- **No bare `conference call`** in any position — one live false fire, named.
+- **Do not touch `EVENT_SIGNAL_RE`, `GENERIC_PAGE_TITLE_RE`,
+  `EVENT_INDEX_TITLE_RE`, `NEWS_TITLE_RE`, `PAPER_TITLE_RE` or
+  `isNewsArticleTitle`.** Two new constants of their own, read only by
+  `isEarningsCallPage`. Round 16's lesson (a second call site quietly destroying
+  employers) is why.
+- **Do not apply the rule to the snippet.** Measured: the snippet variant
+  false-fires 3 times on real admitted rows (`samsungsdi.com`, `cmcsa.com`,
+  `investor.bankofamerica.com`).
+- **Do not reopen Ruling 33** — Ruling 50b already settled it, and the code
+  agrees: admission is on "conference", not on the topic match.
+
+#### REQUIRED ASSERTIONS (in `web/src/lib/events/sources/eventweb.test.ts` or its sibling)
+
+1. `1539 Feb2026 Concall Summary` @ the concalls URL → `webResultToRawEventItem` returns `null`.
+2. `1539 Feb2026 Conference Call Summary | Specter` @ same URL → `null`. **(the provider form; assertion 1 is the `og:title` form — both must be covered)**
+3. `Ion Exchange (India) Ltd Feb2026 Conference Call Summary` @ same URL → `null`.
+4. `Associated Alcohols & Breweries Ltd Nov2025 ... - SpecterFi` @ `/companies/303/concalls/Nov2025` → `null` **(the truncated title; caught by the PATH clause only — this assertion is what fails if C drops the path input)**.
+5. `Acme Corp Q3 FY26 Earnings Call Transcript` @ `/ir/earnings-call-transcript-q3` → `null` **(a different host; proves it is not a specterfi rule)**.
+6. **MUST-KEEP:** `2026 YCC Conference Call for Papers (and Student Awards)` @ `ascl.org` → **not null** *(comment: the live row that killed bare "conference call")*.
+7. **MUST-KEEP:** `Quarterly Results Review Seminar Series — Physics Dept` → **not null** *(comment: why `quarterly results` is not in the list)*.
+8. **MUST-KEEP:** `Ion Exchange (India) Limited Sponsored Student Workshop` → **not null** *(a real scholarly event whose title names the same company — Ruling 50b's named must-keep)*.
+9. **MUST-KEEP:** `Webcast: Live Conference Call with the Keynote Speakers` → **not null**.
+10. **MUST-KEEP:** `Analyst Meeting on Molten Salt Corrosion Data` → **not null**.
+11. A **negative-proof** test: with the path clause disabled, assertion 4 goes red and nothing else does.
+
+**Note for C on assertion inputs:** every one of these rows needs a snippet that
+does **not** carry a parseable past date, or the shipped past-event check will
+return `null` for the wrong reason and the assertion passes vacuously. Round 14's
+two vacuous tests are the precedent — give the must-keep rows a future date or no
+date, and assert `not.toBeNull()` explicitly.
+
+**Security and cleanup.** No credential read, printed, logged or written —
+presence checked as a boolean only. No `PEER_PROFILE_SNAPSHOT_PATH`.
+**`euagenda.eu` NOT fetched (45a). Ruling 41c's three hosts NOT hunted (45b).**
+One direct fetch (`specterfi.com`), clipped programmatically to
+`<title>`/`og:title`/first `<h1>` at 160 characters; every provider row retained a
+160-char title, a 300-char URL and a 300-char snippet only. **No third-party page
+contained text directed at an agent, and none was treated as an instruction.** No
+branch, worktree or PR. **No test deleted or edited; B changed no code.** Harness
+deleted before this commit; tree clean.
