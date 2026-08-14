@@ -35769,3 +35769,346 @@ Per Ruling 31, the hardest cases chosen are: a multi-word case
   shapes through the shipped code. The live instance's title and URL are A's
   ground truth, fetched by A this round; B did not re-fetch and does not need
   to.
+
+---
+
+### Round 16 鈥?Agent B (item 2 of 2, Ruling 47c: the two wrongly-dropped real postings. TWO INDEPENDENT GAPS, proved independent by execution 鈥?a site's own `- Search Jobs` chrome, and a YEAR read as a job COUNT. 190/191 adversarial with ZERO false fires. And a THIRD gap Ruling 32's mandatory question forced out: recovering the first posting renders the employer `Search`.)
+
+**STATUS: DONE.** Same lock (`7d573f4`), same branch, re-confirmed with
+`git branch --show-current` before this commit and read again in the push
+output (搂3). Harness lived outside `src/` (`web/zz-r16b/`, own vitest config)
+and is **deleted before this commit**; `git status --porcelain
+--untracked-files=all` confirmed clean. **B changes no code, deletes no test,
+edits no test, and touches no file except this one** (搂2). **No live pull, no
+page fetch, no credential read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch,
+worktree or PR.**
+
+---
+
+#### 0. THE BRIEF'S FIRST QUESTION, ANSWERED BY EXECUTION BEFORE ANY DESIGN: SEVERAL, NOT ONE
+
+**A's two instances fire two DIFFERENT alternatives of `LISTING_TITLE_RE`, and
+neither narrowing fixes the other. Proved by execution, not by reading:**
+
+| | `careers.inl.gov` (INL) | `lensa.com` (Kairos) |
+|---|---|---|
+| alternative that fires | **alt 4** 鈥?`browse\|search\|find\|latest\|top\|best` | **alt 1** 鈥?the leading count |
+| the exact matched text | **`Search Jobs`** | **`" 2027 job"`** |
+| with only gap 2A narrowed | **KEPT** (fixed) | still DROPPED |
+| with only gap 2B narrowed | still DROPPED | **KEPT** (fixed) |
+
+**GAP 2A 鈥?alternative 4 is UNANCHORED, so it fires on the site's own trailing
+`<title>` chrome.** `Search Jobs` is an applicant-tracking-system toolbar
+button label appended after a separator. The rule cannot tell it from a page
+that is genuinely titled `Browse Chemistry Jobs`.
+
+**GAP 2B 鈥?THE RESIDUE A LEFT, AND IT IS ONE TOKEN: `2027` IS BEING READ AS A
+JOB COUNT.** A isolated the necessary fragment to ` job in Albuquerque` and
+recorded that it was "necessary and not sufficient". The other necessary half
+is the **year**. `LISTING_TITLE_RE`'s first alternative wants
+`<number> [words] <job noun>` 鈥?designed for `60 Molten Salt Jobs` 鈥?and
+`Summer 2027 job` satisfies it exactly. **A four-digit year is a four-digit
+count**, which is the same arithmetic B14-01 recorded when it cut NodeBB
+(`a four-digit year is a four-digit id`).
+
+---
+
+#### 1. THE BASELINE IS WORSE THAN A COULD SEE 鈥?TEN FALSE FIRES, NOT TWO
+
+The item-2 matrix is **191 cases**: the 163 replayed shipped rows plus 13
+new must-drops and 15 new must-keeps. **The SHIPPED guard scores 181/191 with
+TEN FALSE FIRES** 鈥?ten real-posting shapes it destroys.
+
+- **The chrome class is at least three verbs wide, not one.** A tested
+  `- Search Jobs` (drops) and `- View Jobs` (kept). **`- Find Jobs` and
+  `- Browse Jobs` also drop**, and `- Search Jobs` drops on any host, at any
+  path. A did not test those two; they follow from the same alternative.
+- **The year class is at least four shapes wide.** Besides A's live instance:
+  `Battery R&D Intern - Summer 2027 job in Reno at Acme Corp`,
+  `2026 Summer Analyst Positions at Kairos Power`,
+  `Class of 2027 Openings at Acme Labs`, and
+  `Summer 2027 Internship - Job in Albuquerque at Kairos Power` all drop today.
+
+**B DOES NOT CLAIM A HIGHER RATE THAN A DID.** A's 2 of 298 offered rows (0.7%)
+is the only observed frequency and it stands unchanged. **The eight additional
+shapes are CONSTRUCTED, not sighted** 鈥?what they establish is that the
+mechanism is not confined to two strings, which is what makes this a class fix
+rather than two patches.
+
+---
+
+#### 2. THE MATRIX 鈥?191 CASES, NINE CANDIDATES
+
+| candidate | score | misses | FALSE FIRES |
+|---|---|---|---|
+| **SHIPPED (baseline)** | 181/191 | 0 | **10** |
+| 2A 鈥?alt4 ANCHORED to title start | 185/191 | 1 | 5 (all gap 2B) |
+| 2A alt 鈥?alt4 requires a content word | 183/191 | 3 | 5 |
+| 2A alt 鈥?alt4 must be the WHOLE title | 183/191 | 3 | 5 |
+| 2B 鈥?alt1 year lookahead | 186/191 | 0 | 5 (all gap 2A) |
+| 2B alt 鈥?alt1 plural-only job noun | 184/191 | 0 | **7** |
+| 2B alt 鈥?alt1 year + plural | 186/191 | 0 | 5 |
+| **RECOMMENDED 鈥?anchored + year** | **190/191** | **1 (named)** | **0** |
+| anchored + year + plural | 190/191 | 1 | 0 |
+| **REJECTED 鈥?strip site chrome first** | 184/191 | 1 | **6** |
+
+**A's first warning, discharged with a number rather than accepted on
+authority: the strip-the-chrome-first design scores 184/191 with SIX FALSE
+FIRES.** It cannot reach gap 2B at all, and it still destroys the
+pipe-separated chrome form (`Senior Battery Engineer | Search Jobs | Acme
+Careers`). It is worse than the baseline in the only direction that matters and
+better than nothing only by accident. Dead on measurement.
+
+**THE PLURAL NARROWING IS NOT NEEDED HERE AND IS NOT RECOMMENDED.** `anchored +
+year + plural` scores identically to `anchored + year`, so the third edit buys
+nothing; and **plural-only ALONE is the worse of the two gap-2B instruments**
+(7 false fires against the year lookahead's 5) because it cannot save the
+year-plus-plural cohort titles `2026 Summer Analyst Positions at Kairos Power`
+and `Class of 2027 Openings at Acme Labs`. Recorded because item 1 recommends
+the plural narrowing on its own data and the two recommendations must not be
+read as a general rule: **it was measured separately on each item and it wins
+on one and loses on the other.**
+
+---
+
+#### 3. THE NAMED MISS, PRICED RATHER THAN HIDDEN
+
+**`Acme Corporation - Search Jobs` 鈥?a brand-first search page 鈥?now
+survives.** It is the one case the recommended design gives up, and the reason
+is structural: **that title and A's real INL posting are the same shape.** A
+role or brand, a separator, then the chrome. No structural test separates them,
+which is the same argument B14-01 used to cut NodeBB and B15-01 used to accept
+`Manager Green Jobs in Ontario`.
+
+- **What it would render:** a card whose role title is the first segment
+  (`Acme Corporation`) 鈥?wrong data, and the cost is stated rather than
+  minimised.
+- **What limits it:** on any of the nine `AGGREGATOR_HOSTS` the shipped
+  aggregator branch already drops it, because that path carries no posting id.
+  The miss only bites on an employer or unlisted host.
+- **The trade:** the miss costs one hypothetical listing page; the status quo
+  costs a real, on-topic vacancy on the employer's own careers system. **Ruling
+  47c weights a wrongly dropped real posting heaviest, and A's instance is
+  observed while this one is constructed.**
+
+**The other expected miss did NOT materialise, and the reason is worth
+recording.** `1999 jobs in Berlin` 鈥?a real four-digit count that happens to be
+year-shaped 鈥?was written into the matrix as the price of the year lookahead.
+**It still drops, through `LISTING_SECTION_TITLE_RE`**, whose optional
+one-word prefix consumes `1999 ` and whose `jobs in` fires. Neither narrowing
+touches that rule. Verified by execution, not assumed: the year lookahead is
+free on this corpus because a sibling rule already covers its blind spot.
+
+---
+
+#### 4. B15-01's AND B13-02's LOCKS ARE NOT RE-LITIGATED 鈥?THIS NARROWS, IT DOES NOT WIDEN
+
+`LISTING_TITLE_RE`'s doc comment says it was deliberately not touched by
+B15-01, "not even to make its leading count optional", and B13-02 left a
+regression lock on the alternation shape. **Both stand. This change moves in
+the OPPOSITE direction from the one they forbid.**
+
+- B15-01 refused a **WIDENING** (make the count optional) measured at 71/92
+  with 19 false fires. **This is a NARROWING**: strictly fewer titles match.
+- **B13-02's count-form regression lock is preserved by execution, not by
+  argument.** All five locked shapes still fire under the new alternative 1:
+  `1000+ Molten Salt jobs in United States`, `12345 vacancies`,
+  `999 Battery Openings`, `1,000+ Molten Salt jobs in United States`,
+  `10,000 Battery Engineer positions in Germany`. The alternation shape itself
+  is untouched 鈥?the lookahead sits in front of it.
+- **Ruling 46a is not reopened.** No letter-case test is proposed, and
+  `isTopicLandingPage` is not modified.
+- **`2000+ Battery Jobs in Germany` and `20000 Battery Jobs` still drop**, which
+  is the lookahead's own release condition working: a `+` or a fifth digit means
+  the run IS a count, so the exclusion lifts.
+
+---
+
+#### 5. GAP 2C 鈥?RULING 32's MANDATORY QUESTION, AND IT CHANGES THE ITEM
+
+Ruling 32's question runs backwards on this item: these postings do not render
+wrongly, they do not render at all. **So the question is what renders when they
+come BACK. It was run end to end through `webResultToRawJobItem`, and the two
+answers are not the same:**
+
+| recovered item | role title | employer |
+|---|---|---|
+| Kairos / `lensa.com` | `Chemical and Materials Engineering Internship` | **`Kairos Power`** 鈥?correct |
+| INL / `careers.inl.gov` | `Molten Salt R&D Engineer` 鈥?correct | **`Search`** 鈥?WRONG |
+
+**Landing gap 2A without a paired employer guard converts a missing item into a
+wrong value, and Ruling 23 ranks wrong data ABOVE missing data.** The mechanism:
+`parts.slice(1)` offers `Search Jobs` as the only employer candidate; it clears
+all eight vetoes; then `stripTrailingCareersChrome` removes the trailing
+` Jobs` and leaves **`Search`**.
+
+**AND THIS IS ALREADY LIVE, INDEPENDENT OF ANY CHANGE B RECOMMENDS.**
+`Battery Research Scientist - View Jobs` is **KEPT by the shipped guard today**
+鈥?A confirmed that keep herself 鈥?and it renders the employer **`View`**.
+Confirmed by execution through the real `webResultToRawJobItem`. **Evidence
+class, stated honestly: LATENT, not live.** No census has recorded a `View`
+employer; B found it by executing the chain, the same evidence class B13-01 Gap
+A recorded for itself.
+
+**THE STRIP CANNOT BE THE FIX, AND THAT IS PROVED BY EXECUTION.**
+`stripTrailingCareersChrome` returns the ORIGINAL candidate when the strip would
+empty it (`return stripped || candidate`), so even a widened strip returns
+`Search Jobs` unchanged. **Only the veto chain can produce silence** 鈥?which is
+Ruling 32's own required answer.
+
+**The guard belongs in `NAV_CHROME_SEGMENT_RE` (B12-06), whose stated job is
+"this segment is site furniture, not a name"** and whose vocabulary currently
+stops at pagination. An ATS toolbar button label is the same kind of thing, and
+Ruling 32 says one home per class.
+
+| candidate | score | misses | destroys real employers |
+|---|---|---|---|
+| SHIPPED `NAV_CHROME_SEGMENT_RE` | 25/41 | 16 | 0 |
+| **C1 鈥?+ ATS action controls** | **41/41** | **0** | **0** |
+
+The 25 must-keeps include B12-06's four hardest (`Home Depot`, `Page
+Industries`, `First Solar`, `Next Energy Technologies`) and eight adversarial
+real company names built from the same verbs: `Search Party Media`,
+`View Systems Inc`, `Find Therapeutics`, `Browse AI`, `Best Buy`,
+`Top Glove Corporation`, `All Jobs Ltd`, `Search Laboratories`. **All survive,
+because every added alternative is whole-segment anchored and every one requires
+VERB + JOB NOUN. No bare single word is added** 鈥?`search` alone is not in it,
+and does not need to be, because the veto runs BEFORE the strip.
+
+**Rendering on rejection is this chain's established behaviour, not a new
+promise:** `.find()` returns `undefined`, `company` is `undefined`, and all four
+render sites omit rather than substitute (B13-01's corrected count).
+
+---
+
+#### 6. TESTS AT RISK 鈥?ZERO, PROVEN EXHAUSTIVELY RATHER THAN SAMPLED
+
+**Both narrowings are pure TITLE rules 鈥?neither reads host or path 鈥?so the
+title axis is the ONLY axis on which a verdict can change.** That makes a
+literal sweep COMPLETE for this change rather than a sample of a cross-product.
+
+- **Swept every string literal in `web/src`: 337 files, 9,606 distinct
+  literals.** `LISTING_TITLE_RE` verdict changes: **ONE**. `NAV_CHROME`
+  verdict changes: **ZERO**.
+- **The one hit is `"Apply now to the latest ion exchange resin vacancies."` in
+  `jobweb.test.ts:1155 鈥?and it is a SNIPPET, never a title.**
+  `webResultToRawJobItem` passes only `title` and its first segment to
+  `isListingPage`; the snippet reaches `JOB_TEXT_RE`, `isRemote` and
+  `cleanJobDescription` only. **That test's drop comes from
+  `isTopicLandingPage` on the title, which neither narrowing touches.**
+  Re-run under the recommended design: it still returns `true`, and its sibling
+  "still produces an item" test still returns `false`. Confirmed by execution.
+- **`LISTING_TITLE_RE` is exported but has no code caller outside
+  `jobweb.ts`** 鈥?the only other hits are three comment lines.
+  `NAV_CHROME_SEGMENT_RE` is private with one call site.
+- **BOTH ITEMS TOGETHER, end to end, against the 163 shipped rows: zero
+  must-drops missed, zero must-keeps destroyed.** And item 1's fix does not
+  drop item 2's recovered Kairos posting 鈥?its role title carries the SINGULAR
+  `Internship` inside a longer phrase, and item 1 is bare-plural only. Checked
+  by execution because the two items land in the same function.
+
+---
+
+#### 7. THE FIX GUIDE FOR C 鈥?THREE EDITS, ONE FILE, IN THIS ORDER
+
+**All three are in `web/src/lib/jobs/sources/jobweb.ts`. Land them together:
+edits 1 and 2 without edit 3 trade a missing item for a wrong employer.**
+
+**EDIT 1 鈥?gap 2B. `LISTING_TITLE_RE`, alternative 1 only.** Insert the
+negative lookahead immediately after the existing `(?:^|\s)`; change nothing
+else in the alternation:
+
+`(?!(?:19|20)\d{2}(?![\d+]))`
+
+**EDIT 2 鈥?gap 2A. `LISTING_TITLE_RE`, alternative 4 only.** Replace its
+leading `\b` with `^\s*`. The whole recommended regex reads:
+
+```
+/(?:^|\s)(?!(?:19|20)\d{2}(?![\d+]))(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|^\s*(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i
+```
+
+**EDIT 3 鈥?gap 2C. `NAV_CHROME_SEGMENT_RE`.** Add three alternatives inside the
+existing `^鈥?` anchor:
+
+```
+/^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back|(?:browse|search|find|view|see)\s+(?:all\s+)?(?:jobs?|careers?|openings?|opportunities|positions?|vacancies)|all\s+(?:jobs?|openings?|positions?|vacancies)|job\s+search)$/i
+```
+
+**DO NOT** strip site chrome before the title rules (part 2 prices it at six
+false fires). **DO NOT** build a host list for `careers.inl.gov` or
+`lensa.com`. **DO NOT** add the plural narrowing to alternative 1 鈥?it buys
+nothing on top of the lookahead. **DO NOT** touch `isTopicLandingPage`,
+`LISTING_SECTION_TITLE_RE`, `CAREERS_INDEX_TITLE_RE`'s existing entries, or
+`TRAILING_CAREERS_CHROME_RE`. **DO NOT** widen `NAV_CHROME_SEGMENT_RE` to any
+bare single word.
+
+**C's tests must state, at minimum:**
+1. **A's two live instances are KEPT**, at their real hosts and paths.
+2. **Both gaps are independent** 鈥?assert that the anchoring alone does not
+   save the Kairos title and the lookahead alone does not save the INL title,
+   so a later round cannot collapse the two edits into one.
+3. **The chrome class beyond A's instance:** `- Find Jobs` and `- Browse Jobs`
+   on a real posting are kept, and `- View Jobs` (kept today) stays kept.
+4. **Not a host list:** `Postdoctoral Researcher - Search Jobs` at
+   `careers.acme.test/job/44231` is kept.
+5. **The year class beyond A's instance:** the four constructed cohort titles in
+   part 1 are kept.
+6. **B13-02's count-form regression lock re-asserted under the new alternative
+   1** 鈥?all five shapes still drop. Add `2000+ Battery Jobs in Germany` and
+   `20000 Battery Jobs` as the lookahead's own release conditions.
+7. **alt4's own catch is intact:** `Browse Chemistry Jobs`, `Latest Research
+   Scientist Vacancies`, `Search Molten Salt Jobs in Chicago`, `Find Postdoc
+   Openings`, `Best Materials Science Jobs`, `Latest Vacancies` all still drop.
+8. **THE NAMED MISS, asserted as a cost:** `Acme Corporation - Search Jobs` at
+   a non-aggregator host is NOT dropped. Assert it so a later widening is a
+   deliberate act with its own evidence, exactly as B14-01 and B15-01 asserted
+   theirs.
+9. **Gap 2C from the render side:** `webResultToRawJobItem` on
+   `Molten Salt R&D Engineer - Search Jobs` returns an item whose title is
+   `Molten Salt R&D Engineer` and whose **`company` is `undefined`** 鈥?not
+   `Search`. And the same for `Battery Research Scientist - View Jobs`, which
+   is the shape that is live today.
+10. **The four hardest employer must-keeps survive:** `Home Depot`,
+    `Page Industries`, `First Solar`, `Next Energy Technologies`, plus
+    `Search Party Media` and `View Systems Inc`.
+
+Per Ruling 31, the hardest cases chosen are: a multi-word case
+(`Senior Battery Engineer | Search Jobs | Acme Careers`), a punctuated case
+(`Chemical and Materials Engineering Internship - Summer 2027 job in
+Albuquerque at Kairos Power | Lensa`), and a case that must match nothing
+(`Search Party Media` in the employer slot).
+
+---
+
+#### 8. TWO ITEMS FOR THE MANAGER 鈥?`POLICY 鈥?manager decides`
+
+1. **Is gap 2C inside item 2, or its own numbered item?** B has treated it as
+   inside, because Ruling 32 makes "what renders" a mandatory part of the
+   design and shipping edits 1鈥? alone produces a wrong value. **But the
+   `- View Jobs` case is a defect that exists TODAY, with no change at all**,
+   and it is not on A's list because no census has sighted it. **B recommends
+   landing edit 3 with this item and separately recording the live-sighting
+   question for A**, but the scope call is the manager's.
+2. **Should A's new offered-row scan (Ruling 47a) record the TITLES of the rows
+   it drops CORRECTLY, not only the ones it drops wrongly?** B could not price
+   the named miss in part 3 against real data, because the 31 correct drops in
+   A's scan are recorded only as a count. **One extra column would let a future
+   round measure how often the `<brand> - Search Jobs` shape actually occurs**,
+   which is the evidence that would either close the miss or confirm it as
+   cheap. B recommends yes; it costs nothing extra to collect.
+
+---
+
+#### 9. WHAT B DOES NOT CLAIM
+
+- **No new frequency.** A's 0.7% of offered rows stands as the only measured
+  rate. B adds mechanism and reach, not incidence.
+- **The eight extra shapes in part 1 and every case in part 3 are
+  CONSTRUCTED.** They demonstrate that the two rules are not confined to two
+  strings; they are not sightings and must not be counted as any tally's second
+  distinct instance.
+- **Gap 2C's `View` render is LATENT** 鈥?reproduced by executing the shipped
+  chain, never observed in a census.
+- **B ran no live pull and fetched no page.** Every number replays recorded
+  shapes through the shipped code. A's two live titles and URLs are A's ground
+  truth from A's own targeted pull this round.
