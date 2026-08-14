@@ -50804,3 +50804,80 @@ The one-word edit reverted, shipped suite re-run:
 **C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
 
 ---
+
+### Round 21 — Agent C (item 2 of 6: **A21-02, the dead apply link. SHIPPED — the zero-fetch closed signal, consulted before any field is derived.** B's row-by-row table reproduces exactly. **AND THE LATENT AGGREGATOR HOLE IS CLOSED WITHOUT TOUCHING `POSTING_ID_RE`, because the new check runs AHEAD of it** — measured, not argued.)
+
+**STATUS: DONE.** **NO TEST DELETED. NO ASSERTION EDITED.** Nine assertions ADDED. `POSTING_ID_RE` **NOT edited**, per §1's item-2 instruction. Branch re-read before the commit and in the push output (§3). Harness moved out of the repository before the commit and the gate re-run; `git status --porcelain --untracked-files=all` showed only the two source files.
+
+---
+
+## RE-MEASUREMENT FIRST — B's TABLE REPRODUCES ROW FOR ROW
+
+Control copy verdict-identical to the **genuinely imported** shipped module on every row. A21-02 reproduces: **the dead link is ADMITTED**. And B's latent finding re-executed — `POSTING_ID_RE.test("/Job/GetJobAdvertDocument?Id=")` is **`true`**, the shipped guard positively believing an empty identifier IS one.
+
+| URL | want | measured |
+|---|---|---|
+| `…/Job/GetJobAdvertDocument?Id=` (A21-02) | drop | **drop** |
+| `…/job/apply?jk=` | drop | **drop** |
+| `…/job/apply?requisition=&src=rss` | drop | **drop** |
+| `…/Job/Get?Id=88123` | keep | keep |
+| **LIVE** `careers.inl.gov/job/1515?lastSelectedFacet=` | keep | keep |
+| `…/job/44231?jobTypes=Intern` | keep | keep |
+| `postdocjobs.com/posting/7317952` | keep | keep |
+| `ev.careers/jobs/internship` | keep | keep |
+
+**Shipped suite against the candidate copy: 392/392 — zero assertions move.** Only the three dead-link rows change verdict against the control.
+
+---
+
+## **THE LATENT HOLE IS CLOSED BY THIS ITEM — AND `POSTING_ID_RE` IS NOT TOUCHED**
+
+§1 forbids editing `POSTING_ID_RE` here. **It did not need editing, and C proves that by execution rather than asserting the two instructions are compatible.** On an aggregator host `isListingPage` ends `return !POSTING_ID_RE.test(pathAndQuery)`, and that regex matches the empty `?id=` — so the row was kept for an affirmatively wrong reason. **`hasEmptyPostingIdentifier` is consulted immediately after the protocol check, BEFORE `isListingPage` is ever called**, so the row never reaches that line:
+
+| `indeed.com/viewjob?id=` | shipped | with the fix |
+|---|---|---|
+| admitted | **yes — the latent wrong answer, live today** | **no** |
+
+Asserted in the shipped suite. **The regex keeps its other call sites and its behaviour; the hole is closed upstream of it.**
+
+---
+
+## VACUITY — **BOTH CONJUNCTS LOAD-BEARING, AND B's REASON FOR THE SECOND NEEDED CORRECTING**
+
+Each conjunct switched off in turn against the table:
+
+| mutant | what breaks |
+|---|---|
+| conjunct 1 off (any empty parameter, not just identifier-named) | an empty NON-identifier param on a **slug** path (`/jobs/battery-scientist?lastSelectedFacet=`) is **wrongly dropped** |
+| conjunct 2 off (no confirming id in the path) | a posting whose id is in the **PATH** (`/job/88123?reqId=`) is **wrongly dropped** |
+
+**C REPORTS A CORRECTION TO B AGAINST C's OWN CONVENIENCE.** B wrote that conjunct 2 "is earned by a LIVE row", `careers.inl.gov/job/1515?lastSelectedFacet=`. **Re-measured, that row survives EVERY mutant** — conjunct 1 rejects it because `lastSelectedFacet` is not identifier-named, *and* conjunct 2 rejects it because `/job/1515` carries a four-digit token. **It is doubly protected, so it cannot be the uniquely-red case for either conjunct**, and C's first mutation table was wrong for exactly that reason before execution corrected it. **The live row proves the SHAPE is real — healthy job URLs do carry empty query parameters — but each conjunct's uniquely-red case is CONSTRUCTED, and C says so rather than inheriting B's stronger wording.** All three rows are asserted in the shipped suite, the live one included, so the double protection is now recorded rather than rediscovered.
+
+---
+
+## WHAT RENDERS ON REJECTION, AND THE BOUNDARY STATED PLAINLY
+
+**The item leaves the pool** — the check precedes every derived field, so no card, title, employer or summary is built. **Both of A's faces go at once**; face 2's mechanism (a truncated all-lowercase title) is **NOT** fixed, and with a nine-byte body there is no `<h1>` and no separator for B19-02's recovery to read. A dead link is a wrong ITEM, not a wrong FIELD.
+
+**THE FETCH ROUTE IS PRICED AND REFUSED** (Ruling 57a): 115 offered rows per pull means 115 extra round trips per cache-miss build. **This item closes the EMPTY-IDENTIFIER shape only. A well-formed URL that 404s is NOT covered** — recorded in the module doc comment so no later round reads link integrity as solved.
+
+**Not a host rule.** `jobs.manchester.ac.uk` appears nowhere in the code or the assertions; every drop is asserted on unrelated constructed hosts plus `indeed.com`.
+
+---
+
+## THE NEGATIVE PROOF
+
+| | tests | passing | red |
+|---|---|---|---|
+| with the fix | 401 | **401** | — |
+| **call site removed** | 401 | **397** | **exactly 4 — the three drops and the aggregator hole** |
+
+The five "keeps" are **ADMITTED CONTROLS** and stay green either way, by design. Item 1's assertion is unaffected.
+
+---
+
+**GATE AFTER ITEM 2: 91 files / 1610 tests, 1609 passing.** Sole failure the standing `benchmark.test.ts` flake at **`:109`**. `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error. Named runs: `scoring.test.ts` (jobs+events) + `job-cleanup.test.ts` + `jobweb.test.ts` **509/509**; **`enrich.test.ts` SOLO 53/53 — the SolarPACES lock is intact.**
+
+**C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
+
+---

@@ -623,7 +623,54 @@ function isHostBrandProgrammePage(title: string, host: string): boolean {
   return looksLikeHostBrand(m[1] ?? "", host);
 }
 
-/** A posting URL almost always carries a numeric or long opaque identifier. */
+/**
+ * ROUND 21, ITEM 2 (A21-02): A LINK A READER CANNOT FOLLOW.
+ *
+ * `jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id=` shipped as a card with a
+ * working-looking apply link. The `Id` is EMPTY and the response body is nine
+ * bytes — no title, no heading, no posting. It is the first link-integrity
+ * defect this loop has recorded.
+ *
+ * **THE SIGNAL IS CLOSED AND COSTS ZERO FETCHES:** an identifier-NAMED query
+ * parameter with an EMPTY value, on a path that carries no posting identifier
+ * of its own. Both facts are already in the URL Peer has parsed.
+ *
+ * **TWO CONJUNCTS, EACH LOAD-BEARING ON ITS OWN SHARP CASE** (measured by
+ * mutation; the round-21 live row `careers.inl.gov/job/1515?lastSelectedFacet=`
+ * turned out to be protected by BOTH, so neither conjunct could be proved on
+ * it and each needed its own case):
+ * - drop conjunct 1 and an empty NON-identifier parameter on a slug path
+ *   (`/jobs/battery-scientist?lastSelectedFacet=`) is wrongly dropped;
+ * - drop conjunct 2 and a posting whose id is in the PATH
+ *   (`/job/88123?reqId=`) is wrongly dropped.
+ *
+ * **THE FETCH ROUTE IS PRICED AND REFUSED** (Ruling 57a): catching a
+ * well-formed URL that merely 404s needs a per-row HEAD/GET — 115 extra round
+ * trips per cache-miss build on round 21's own offered-row count. **This item
+ * closes the EMPTY-IDENTIFIER shape only; a well-formed URL that 404s is NOT
+ * covered, and that boundary is stated rather than implied.**
+ *
+ * Failure direction: a dead link whose URL is well-formed survives — the
+ * status quo, never a new wrong value. The guard can only remove a card.
+ */
+const EMPTY_IDENTIFIER_PARAM_RE =
+  /[?&](?:[\w-]*id|jk|gh_jid|req|requisition|vacancy)=(?:&|$)/i;
+function hasEmptyPostingIdentifier(pathAndQuery: string): boolean {
+  if (!EMPTY_IDENTIFIER_PARAM_RE.test(pathAndQuery)) return false;
+  return !/\d{4,}/.test(pathAndQuery.split("?")[0] ?? "");
+}
+
+/**
+ * A posting URL almost always carries a numeric or long opaque identifier.
+ *
+ * **KNOWN AND DELIBERATELY LEFT ALONE (round 21, item 2):** `[?&](?:…|id)=`
+ * matches `?Id=` whether or not anything follows it, so on an AGGREGATOR host
+ * this regex positively believes an empty identifier IS an identifier — the one
+ * thing keeping `isListingPage`'s last line from dropping the row. **That hole
+ * is closed by `hasEmptyPostingIdentifier` running BEFORE `isListingPage`, not
+ * by editing this regex**, which has other call sites and was ranked by B as a
+ * latent finding rather than a defect. Asserted in the suite on `indeed.com`.
+ */
 const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
 
 /**
@@ -999,6 +1046,11 @@ export function webResultToRawJobItem(
     return null;
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  // Round 21, item 2 (A21-02). Before any field is derived: a link a reader
+  // cannot follow is a wrong ITEM, not a wrong field.
+  // Round 21, item 2 (A21-02). Before any field is derived: a link a reader
+  // cannot follow is a wrong ITEM, not a wrong field.
+  if (hasEmptyPostingIdentifier(`${parsed.pathname}${parsed.search}`)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (NON_JOB_PATH_RE.test(parsed.pathname)) return null;
   if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;

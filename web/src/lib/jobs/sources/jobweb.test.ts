@@ -2031,6 +2031,52 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
   });
 });
 
+// ROUND 21, ITEM 2 (A21-02): A LINK A READER CANNOT FOLLOW.
+// `jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id=` carried an EMPTY id and
+// a nine-byte body. The signal is closed and costs zero fetches: an
+// identifier-NAMED parameter with an EMPTY value, on a path carrying no posting
+// identifier of its own. This is NOT a host rule — the host appears nowhere in
+// it, and it is asserted here on unrelated constructed hosts.
+describe("a posting URL with an empty identifier is not reachable (A21-02)", () => {
+  const admits = (url: string) =>
+    webResultToRawJobItem({
+      title: "Research Associate in Molten Salt Chemistry",
+      url,
+      snippet: "We are hiring a research scientist. Apply now.",
+    }) !== null;
+
+  it.each([
+    ["the measured dead link", "https://www.jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id="],
+    ["an empty jk on another host", "https://boards.acme.test/job/apply?jk="],
+    ["an empty requisition that is not the last param", "https://boards.acme.test/job/apply?requisition=&src=rss"],
+  ])("drops %s", (_label, url) => {
+    expect(admits(url)).toBe(false);
+  });
+
+  // Each of these is red under a DIFFERENT mutant, so neither conjunct is
+  // decoration. The live round-21 row `/job/1515?lastSelectedFacet=` is
+  // protected by BOTH conjuncts at once, which is why it cannot stand in for
+  // either and each has its own case here.
+  it.each([
+    ["conjunct 1 sharp: empty NON-identifier param on a slug path", "https://careers.inl.gov/jobs/battery-scientist?lastSelectedFacet="],
+    ["conjunct 2 sharp: identifier-named empty param, real id in the PATH", "https://careers.acme.test/job/88123?reqId="],
+    ["the live round-21 row, doubly protected", "https://careers.inl.gov/job/1515?lastSelectedFacet="],
+    ["a populated identifier", "https://jobs.acme.test/Job/Get?Id=88123"],
+    ["a populated non-identifier param", "https://jobs.acme.test/job/44231?jobTypes=Intern"],
+  ])("keeps %s", (_label, url) => {
+    expect(admits(url)).toBe(true);
+  });
+
+  // THE LATENT HOLE B RECORDED, CLOSED WITHOUT EDITING POSTING_ID_RE.
+  // On an aggregator host `isListingPage` ends `return !POSTING_ID_RE.test(...)`
+  // and POSTING_ID_RE MATCHES the empty `?id=`, so the shipped code kept such a
+  // row for an affirmatively wrong reason. The new check runs before
+  // `isListingPage` is ever called, so the row never reaches that line.
+  it("closes the aggregator empty-id hole ahead of POSTING_ID_RE", () => {
+    expect(admits("https://www.indeed.com/viewjob?id=")).toBe(false);
+  });
+});
+
 // B17-02 (round 17, Rulings 48a + 49b): A LIST OF PROGRAMME AREAS IN THE
 // EMPLOYER SLOT. Landed in the SAME commit as B17-01 because B17-01 removes the
 // only page a census has ever sighted this value on — land the drop alone and
