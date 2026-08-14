@@ -35513,3 +35513,259 @@ isolated to one token.**
 
 **`WHOSE TURN: B` stands with these two items. Gate NOT MET, correctly.**
 
+
+---
+
+### Round 16 鈥?Agent B (item 1 of 2, Ruling 47b: `lco.global/about/interns` 鈥?the closed structural signal that drops it is NOT a URL rule. It is ONE PLURAL NOUN missing from a shipped, whole-title-anchored vocabulary that already drops the bare word `Opportunities`. 184/184 end to end, ZERO false fires, ZERO tests at risk. Every URL route was measured and every one is worse.)
+
+**STATUS: DONE.** Lock claimed cleanly (`7d573f4`) after `git pull --ff-only`
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`; branch name re-read in the push output (搂3).
+Harness lives outside `src/` (`web/zz-r16b/`, its own vitest config) and is
+**deleted before this commit**; `git status --porcelain
+--untracked-files=all` confirmed clean. **B changes no code, deletes no test,
+edits no test, and touches no file except this one** (搂2). **No live pull, no
+page fetch, no credential read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch,
+worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+---
+
+#### 0. THE HARNESS HAS A FIDELITY GATE, SO A TRANSCRIPTION SLIP CANNOT MOVE A SCORE
+
+Variants cannot be measured by importing the shipped `isListingPage` 鈥?its six
+checks are private and its regexes are not individually swappable. So the
+harness re-declares them. **That re-declaration is then asserted, by execution,
+to agree with the SHIPPED `isListingPage` on every one of the 163 corpus rows
+before any variant is scored**, and the shipped function is separately replayed
+against its own contract (65 must-drop / 98 must-keep, all green). Both gates
+pass. A copy-paste error in a regex therefore fails loudly instead of silently
+inflating a candidate. Recorded because this loop has twice been burned by a
+measurement that measured the wrong thing.
+
+**THE CORPUS IS THE REPLAYED PRIOR WORK THE BRIEF REQUIRED**, not a fresh
+invention: every `isListingPage` assertion in `jobweb.test.ts` 鈥?B13-02's three
+holes and its `for`/`positions`/`Jobs Data Analyst` must-keeps, B14-01's 15
+must-drops and 43 must-keeps including its NodeBB named miss, B15-01's 13
+must-drops, 20 open-class traps, 2 cross-file rows, 7 census postings, 1 named
+false fire and 2 named misses.
+
+---
+
+#### 1. WHAT THE ITEM ACTUALLY IS 鈥?AND WHY "IS IT A LEGITIMATE PROGRAMME PAGE?" IS THE WRONG QUESTION
+
+Run end to end through `webResultToRawJobItem`, today's live shape produces
+exactly what A recorded:
+
+| field | value today |
+|---|---|
+| role title | **`Internships`** |
+| employer | `Las Cumbres Observatory` (correct) |
+| summary | absent |
+| link | `lco.global/about/interns` |
+
+**The card promises a vacancy and names no role.** A reader learns nothing from
+it: not the field, not the term, not the closing date, not whether it is even
+open.
+
+**The brief asked whether this is instead a legitimate programme page needing
+different handling. The shipped code already answers that, and the answer is
+that legitimacy of the DESTINATION is not the criterion this file uses.**
+`CAREERS_INDEX_TITLE_RE` 鈥?shipped, anchored `^鈥?`, asserted by six tests 鈥?already drops the bare titles `Careers`, `Jobs`, `Open Positions`, `Vacancies`,
+`Employment`, `Join our team` and **`Opportunities`**. Every one of those pages
+is a real place a real person can really apply. They are dropped anyway,
+because **a card whose whole role title is a section label tells the reader
+nothing.** `Internships` is the same kind of word as `Opportunities`, in the
+same grammatical slot, doing the same job.
+
+**So this is not a new class needing a new rule. It is an OMISSION in a closed
+vocabulary this file already ships.** Verified by execution:
+`CAREERS_INDEX_TITLE_RE.test("Opportunities")` is `true`;
+`CAREERS_INDEX_TITLE_RE.test("Internships")` is `false`.
+
+**This also answers the brief's "no phrase vocabularies" constraint honestly
+rather than by assertion.** The constraint exists because B13-02/B14-01/B15-01
+each had to avoid inventing an open-ended list of phrases. Adding one plural
+noun to an existing whole-title-anchored list of section labels invents no
+vocabulary 鈥?the list is already there, already anchored, already the
+recognised home of exactly this shape, and it grows by one token. **A NEW list
+would have been the trap. Completing a shipped one is not.**
+
+---
+
+#### 2. THE MATRIX 鈥?184 CASES, SEVEN CANDIDATES, MEASURED NOT ASSUMED
+
+163 shipped rows plus 7 item-1 must-drops and 14 item-1 must-keeps. Scores are
+single-call (`isListingPage` once) unless the row says END TO END.
+
+| candidate | score | misses | FALSE FIRES |
+|---|---|---|---|
+| **SHIPPED (baseline)** | 177/184 | all 7 item-1 shapes | 0 |
+| **T1 鈥?`internships` added, PLURAL ONLY** | **182/184** | 2 (both recovered end to end, below) | **0** |
+| T2 鈥?`internships?`, singular allowed too | 181/184 | 2 | **1** 鈥?destroys the bare singular `Internship` |
+| U1 鈥?URL: `/about/` unconditional | 177/184 | 3 | **4** 鈥?incl. two REAL POSTINGS under `/about/` |
+| U2 鈥?URL: `/about/` and no job-path segment | 179/184 | 3 | **2** |
+| U3 鈥?URL: leaf is `interns`/`internship(s)`, no job-path | 181/184 | 2 | 1 |
+| T1 + U2 | 182/184 | 0 | 2 |
+| T1 + U3 | 183/184 | 0 | 1 |
+
+**T1 ALONE, SCORED END TO END: 184/184. ZERO misses, ZERO false fires.** The
+baseline on the same end-to-end basis is 177/184.
+
+**Why the end-to-end number is the honest one, and not a way of flattering the
+candidate.** `webResultToRawJobItem` calls `isListingPage` **twice** 鈥?once on
+the whole title, once on the first separator-delimited segment 鈥?and the file's
+own comment says why ("`CAREER | Acme Corp` clears a whole-title test and then
+renders as the bare word `CAREER`, so the segment needs the same test"). T1's
+two single-call misses are `Internships - Las Cumbres Observatory` and
+`Internships | Las Cumbres Observatory`: **the exact shapes that second call
+exists for.** The card renders `Internships`, and `Internships` is what the
+second call tests. Both are caught. This is the shipped call pattern doing its
+job, not a special case built for this item.
+
+---
+
+#### 3. WHY EVERY URL ROUTE LOSES, WITH THE NUMBERS
+
+The brief's own suggestion was a URL rule, as B13-02/B14-01/B15-01 did. **It was
+measured first, and it loses on its own terms.**
+
+- **U1 (`/about/` unconditional) has FOUR false fires**, two of which are
+  ordinary real postings: `/about/careers/battery-engineer` and
+  `/about/jobs/1234`. Employers really do file careers pages under `/about/`.
+  This is the drop-side asymmetry B14-01 named 鈥?a false fire here destroys a
+  whole real posting.
+- **U2 (`/about/` only when no job-path segment) fixes those two and still
+  breaks `/about/t/team`** 鈥?one of B14-01's own 43 adversarial must-keeps,
+  written to prove that rule required a confirming structural token.
+- **U3 (leaf is `interns`/`internships`) is the best URL route at 181/184** and
+  is still worse than T1, for two independent reasons. **(a) It is exactly the
+  thing the brief forbids, wearing a URL costume** 鈥?a hand-written vocabulary
+  of leaf words, indistinguishable in kind from a phrase list. **(b) It cannot
+  reach the shape that matters most: an employer's own `/careers/internships`
+  index.** U3 requires no job-path segment, so `/careers/internships` 鈥?the
+  single most common URL an internships index has 鈥?survives it. T1 drops it on
+  the title, whatever the path.
+
+**And the decisive structural difference: T1 does not touch B14-01's matrix at
+all.** Every URL route inverts `["lco.global/about/interns", "lco.global",
+"/about/interns"]`, a shipped must-keep in B14-01's 43-case block. T1 leaves
+that row and all 42 of its siblings byte-for-byte green, because that row
+carries the role title `Battery Research Scientist` and T1 only reads titles.
+
+---
+
+#### 4. WHY PLURAL-ONLY, MEASURED RATHER THAN INHERITED
+
+B13-02 part 3 already established this narrowing for `LISTING_SECTION_TITLE_RE`
+("the section word must be PLURAL. Strictly narrower at no cost"). **It was
+re-measured here rather than assumed, and the cost of ignoring it is now a
+number: T2 (singular allowed) has ONE FALSE FIRE, on the bare title
+`Internship`.** A real posting can be titled the bare singular; an index page is
+titled the plural. Plural-only keeps every item-1 must-drop and removes the
+whole singular-role risk class 鈥?the same arithmetic, confirmed on this item's
+own data instead of carried over on faith.
+
+---
+
+#### 5. RULING 32's QUESTION 鈥?WHAT RENDERS ON REJECTION
+
+**Nothing. The item leaves the pool entirely**, exactly as B13-02's, B14-01's
+and B15-01's class does: `isListingPage` returning `true` makes
+`webResultToRawJobItem` return `null`, both search functions filter nulls, and
+`buildDailyJobPool` ends in a `.slice()` CAP, never a top-up. **No placeholder,
+no substitution, no backfill.** A's census puts the pool at twelve against a
+`MAX_OPPORTUNITY_POOL_ITEMS` of 200, so the cap is nowhere near binding and
+nothing is pulled in behind it. The pool shrinks by one.
+
+**There is no second render site to check.** The employer value
+(`Las Cumbres Observatory`) is correct today and is derived from an item that
+will no longer exist 鈥?it cannot be left stranded, because it is never
+computed.
+
+**One deliberate side effect, named rather than discovered later.**
+`CAREERS_INDEX_TITLE_RE` has two call sites in this file: `isListingPage`, and
+the employer-candidate veto chain (`!CAREERS_INDEX_TITLE_RE.test(p)`, B13-01
+Gap A). Adding `internships` therefore also vetoes an employer candidate that
+is the bare word `Internships`. **That is correct and desirable** 鈥?a segment
+reading `Internships` is a section label in the employer slot too 鈥?and it
+inherits that chain's established honest-omission behaviour: `.find()` returns
+`undefined`, the field is absent, and all four render sites omit rather than
+substitute (B13-01's own corrected count, checked in the components).
+
+---
+
+#### 6. TESTS AT RISK 鈥?ZERO, BY GREP AND BY EXECUTION
+
+- **`CAREERS_INDEX_TITLE_RE` has no caller outside `jobweb.ts`.** Grepped
+  across `web/src`: the only hits are its own definition, its two call sites,
+  and comments.
+- **No test anywhere asserts on a bare plural `Internships` title or company.**
+  Grepped every `"internship"`/`"internships"` string literal in `web/src`: all
+  nine hits are the SINGULAR `internship` used as a `roleKind` enum value or a
+  display label (`role-kind.ts`, `facets.test.ts`, `job-posting-scope.test.ts`,
+  `types/index.ts`, two UI label maps). **T1 is plural-only, so none of them can
+  change verdict even in principle.**
+- **All 163 shipped corpus rows keep their verdicts under T1** 鈥?asserted by
+  execution, not by reading.
+
+---
+
+#### 7. THE FIX GUIDE FOR C 鈥?ONE LINE
+
+**Item 1 (Ruling 47b). File: `web/src/lib/jobs/sources/jobweb.ts`, the
+`CAREERS_INDEX_TITLE_RE` definition (currently line 323).**
+
+Add `internships` to the existing alternation, **plural only**, beside
+`opportunities`. Nothing else in the file changes 鈥?not `LISTING_TITLE_RE`, not
+`NON_JOB_PATH_RE`, not `isListingPage`'s check order, not the employer chain.
+
+**Do NOT add a URL rule for `/about/`, `/interns`, or `lco.global`.** All three
+were measured (part 3) and all three are worse; a host list is Ruling 32's
+headline complaint and the leaf-vocabulary form is the brief's own forbidden
+shape in a URL costume.
+
+**Do NOT add the singular.** Part 4 prices it at one destroyed real posting.
+
+**C's tests must state, at minimum:**
+1. The live instance: `isListingPage("Internships", "lco.global",
+   "/about/interns")` is `true`.
+2. **The end-to-end route, which is the one that matters:**
+   `webResultToRawJobItem` on the full `<title>` `Internships - Las Cumbres
+   Observatory` at that URL returns `null`. This is what proves the fix reaches
+   the shape the reader actually sees, via the second `isListingPage` call.
+3. **Not-a-host-list:** the same bare title drops at
+   `observatory.example/education/internships` and at `acme.test/careers`.
+4. **The generality the URL routes could not reach:** `Internships` at
+   `acme.test/careers/internships` drops.
+5. **The plural narrowing priced as a must-keep:** the bare singular
+   `Internship` at `acme.test/careers/internship-2027` is KEPT.
+6. **Six internship-posting must-keeps** survive: `Internship Battery R&D`,
+   `Molten Salt Electrochemistry Summer Internship`, `Chemical and Materials
+   Engineering Internship`, `2027 Summer Investment Internship`,
+   `Internships in Battery Science at Acme`, `Summer Internships 2027`.
+7. **B14-01's `/about/interns` must-keep row stays as it is** 鈥?role title
+   `Battery Research Scientist` at `lco.global/about/interns` still KEEPS. Do
+   not invert it. It is the proof that this fix is a title rule and not a URL
+   rule, and Ruling 47b is not authority to drop that URL on its path.
+
+Per Ruling 31, the hardest cases chosen are: a multi-word case
+(`Internships in Battery Science at Acme`), a punctuated case
+(`Internships - Las Cumbres Observatory`), and a case that must match nothing
+(the bare singular `Internship`).
+
+---
+
+#### 8. WHAT B DOES NOT CLAIM
+
+- **Frequency is one round's observation repeated, not a rate.** The shape is
+  5-of-5 pulls in each of rounds 13, 14, 15 and 16 鈥?one page, on one host,
+  four rounds running. **B claims a named, replay-reproducible instance and a
+  class argument, not a population estimate.**
+- **The class argument is the load-bearing part, and it is structural:** the
+  shipped vocabulary already drops six sibling section labels. This is not
+  "another site to fix" (Ruling 32's complaint); it is the same rule reaching
+  one more word.
+- **No live pull was run.** Every number here comes from replaying recorded
+  shapes through the shipped code. The live instance's title and URL are A's
+  ground truth, fetched by A this round; B did not re-fetch and does not need
+  to.
