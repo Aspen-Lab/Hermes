@@ -55313,3 +55313,341 @@ BLANK, which makes it easy to spot.
 **ROUND 22 IS CLOSED.** A (seven differences, two declined observations, one reading question) → manager (Ruling 59) → B (nine items: seven investigations, one two-draft-killing design, two diagnostics; one POLICY flag) → manager (Ruling 60) → C (six commits, four accepted deviations, +99 tests) → manager (this entry). **No POLICY item carries past this close undecided.** `WHOSE TURN: A — round 23, GATE CANDIDATE ROUND` stands exactly as C wrote it, with the full carry list (both intended event departures; A22-04 open with the guard half deferred and 60a's third-strike backstop armed; the place half deferred and evidence-gated; the 57b event surface still `designed, organically unwitnessed`; Ruling 55c's debt in its FOURTH round; `grad.wisc.edu` in the census; `thebatteryshow.eu` resolved; all tallies and exclusions by name). **The gate stays `GATE (0%): NOT MET` — only round 23 A's live measurement can move it, and only the manager closes, after an independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
 
 ---
+
+---
+
+### Round 23 — Agent A (part 1: the event surface. **THE GATE IS NOT A CANDIDATE. A22-02 IS CONFIRMED WORKING ON ITS OWN LIVE ROW, ONE OF THE TWO INTENDED DEPARTURES HAPPENED AND THE OTHER DID NOT — AND SCORING THE PLACE COLUMN, WHICH RULING 60c ORDERS SCORED EVERY ROUND, PRODUCES THREE CONFIRMED CONTAMINATIONS ON ROWS THAT STAY IN THE POOL. Name fidelity's ten-round zero BREAKS on a new host.**)
+
+**STATUS: PARTIAL BY DESIGN.** Round 23 A is pre-split into four parts, the
+discipline rounds 9–22 used. This entry is **part 1 only**. Parts 2 (job pool,
+the six landed round-22 items, the 48b scan), 3 (job summaries + all tally
+lines) and 4 (ranked list + gate verdict) are **not yet done**. **No gate verdict
+is set here, and A never closes the gate in any case (Ruling 30).**
+
+Claimed the turn lock (`c112cc2`, `LAPTOP-3CL10CG5 @ 2026-08-14 22:49 UTC`)
+after `git pull` (already up to date) and confirming `git branch --show-current`
+reads `feature/summary-report-revamp` — checked, not assumed, per §3. **The
+claiming push was ACCEPTED (`084b674..c112cc2`), so the race was won rather than
+assumed.** Read §1's whole `WHOSE TURN: A — round 23, GATE CANDIDATE ROUND`
+block including THE GATE RULE and the six-item carry list, §2, §3, **Rulings
+59a–b and 60a–e in full**, and all six "Round 22 — Agent C" entries plus the
+round-22 manager close before touching anything.
+
+**Method.** Live keys reconfirmed present by **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all present;
+`feedAiApiKey` EMPTY). Per §2 as corrected by Ruling 42b: **PAGE-FETCH ENRICHMENT
+RAN, LLM ENRICHMENT DID NOT.** The struck "Tier 0 only" wording appears nowhere.
+**Five independent live pulls in five separate processes** (Ruling 39d/41a), each
+with a no-op `PoolCache` to force a genuinely fresh pull, calling
+`buildDailyEventPool()` then `scoredEventToEvent()`, then the shipped render
+sites: `eventCardView()` for the card and **`buildEventFacts()` (`page.tsx:628`)
+for plate 03's tiles**. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** A `fetch`
+interceptor stored the provider **RESPONSE** bodies only — **never the request
+init, which is what carries the key** — and computed each offered row's keep/drop
+verdict INSIDE the interceptor on the UNTOUCHED snippet, which is round 22 A's
+own recorded harness lesson. Throwaway harness lived **outside `src/`**
+(`web/zz-r23a/`, own vitest config, include pattern `zz-r23a/**/*.probe.ts`);
+**deleted before this commit**, tree confirmed with
+`git status --porcelain --untracked-files=all`. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**No third-party page text was pasted.** Ground truth was taken by fetching
+through a plain `fetch` and clipping **PROGRAMMATICALLY** to `<title>` / first
+`<h1>` / `og:title` / `og:description` / JSON-LD head at 200–600 characters, or
+by returning a **single 90-character fragment** around one token. **Nothing in
+any fetched page was treated as an instruction to A**, and none of the pages
+read this round appeared to contain text aimed at an agent.
+
+---
+
+## REPRODUCIBILITY — **14 ROWS IN 5 OF 5 PULLS, ZERO MEMBERSHIP VARIANCE. ONE VALUE VARIANCE, DISCLOSED BY NAME.**
+
+Offered rows: **160 raw / 149 unique in every one of the five pulls, 51 unique
+kept and 98 unique dropped at ingestion, identical every time.** Every scored
+column on 13 of the 14 rows was **byte-identical across all five runs**.
+
+**THE ONE MINORITY VALUE, DISCLOSED AS RULING 39d/41a REQUIRES:** `nanoge.org`'s
+`SSI24` renders `place = Chicago, IL, United States` in **runs 1 and 2** and
+renders **silence (`See event page`) in runs 3, 4 and 5**. Both readings are
+stated, per Ruling 41c. **The majority reading is silence; the minority reading
+is a confirmed contamination (below).** The ingestion snippet is byte-identical
+in all five runs and contains **no city token at all**, so the value is added
+after ingestion, on the page-fetch enrichment path.
+
+**Composition against round 22: 15 rows to 14. Two OUT, one IN.**
+
+- **`ans.org` LEFT — INTENDED DEPARTURE #1, RULED INTENDED BY RULING 60b, AND IT
+  HAPPENED.** The row was **offered again this round** and dropped at the
+  ingestion mapper (`webResultToRawEventItem` returns `null`), 5 of 5. **Recorded
+  as the fix working, NOT as churn and NOT as a new difference.**
+- **`thebatteryshow.eu` was offered and kept at ingestion but reached NO pool** —
+  correctly expired at the post-enrichment scoring pass, exactly as Ruling
+  59b(a) resolved it. **NOT carried, NOT counted a wrongly-suppressed row.**
+- **`euchemsil2026.com` and `ecs.confex.com` did not return.** `rsc.org`'s
+  `EUCHEMSIL 2026` was offered again and dropped again (past start), unchanged
+  from round 22.
+- **`10times.com` ENTERED — and it is this part's first new difference (A23-02).**
+
+---
+
+## **INTENDED DEPARTURE #2 DID NOT HAPPEN, AND A REPORTS THAT PLAINLY RATHER THAN RECORDING WHAT §1 PREDICTED**
+
+**`batteryinnovationsummit.com` IS STILL IN THE POOL, 5 of 5.** Ruling 60b
+expected it to move to `2026-04-22` (past) and DROP. It did not drop. **What
+happened instead is the other half of the same fix: its `startDate` went to `""`
+and the card now renders `Date not listed`.**
+
+**This is not a defect and A does not rank it**, because the row now prints
+nothing false: the shipped `2026-11-05` that Ruling 60b called *"an unevidenced
+future date"* is **gone**, which is the outcome 60b wanted; only the mechanism
+differs. **But the prediction is falsified and the record must say so**, because
+§1 told round 23 to expect two departures and only one arrived.
+
+**AND ONE OF RULING 60b's LOAD-BEARING PREMISES IS CONTRADICTED BY THIS PULL.**
+60b records that B ground-truthed the page and found **"no `<h1>`, no JSON-LD,
+not one date token"**. A fetched the same URL this round: it returns
+**`<title>` = `The Battery Saloon | Battery & Energy Storage Summits`** and
+**`og:title` = `The Battery Saloon`**, and this round's provider snippet carries
+**an explicit future date token with a city**. **So Ruling 39b's "wrong name" is,
+on today's page, the site's own `og:title`** — the name Peer renders is the name
+the page gives itself. A states this as a measured observation and does **not**
+propose reversing 39b: **that is the manager's call.** Filed as
+**`POLICY — manager decides`, one line, gate unaffected** (it removes no
+difference and adds none).
+
+Its `reportSummary` is `page-owned` and is **byte-identical to the page's own
+`og:description`.** Correct.
+
+---
+
+## THE NAME-FIDELITY TABLE — **1 OF 13 WRONG (7.7%). THE TEN-ROUND ZERO BREAKS, ON A HOST THAT HAS NEVER BEEN IN THIS POOL BEFORE.**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `solarpaces.org` | `32nd SolarPACES Conference` | **CORRECT — THE SOLARPACES REGRESSION LOCK IS LIVE-CONFIRMED FOR A SIXTH ROUND.** The pool URL is again a news post (`/abstract-submission-deadline-extended-to-march-30`) and the render still names the CONFERENCE |
+| `euagenda.eu` | *(not measured)* | **PERMANENTLY EXCLUDED BY NAME — Ruling 45a. NOT fetched, NOT retested, NOT counted.** Its render again ends in a literal ellipsis — **FIFTH round recorded, still not counted**, because 45a forbids the fetch that would establish ground truth |
+| **`10times.com`** | **`Solid-State Battery Summit (Aug 2026), Chicago USA`** | **WRONG — A23-02. An aggregator's SEO listing title, with a month-year and a city plus country baked INTO THE NAME FIELD** |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT — RULING 36 MEASURED, NOT ABSENT, ELEVENTH consecutive round.** Both historical failure modes absent |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13 to r23) |
+| `euchems2026.eu` | `euchems2026.eu` | **HONEST HOST (39a/40) *and* the DOCUMENT-URL RETARGET (42c) — both standing exclusions, by name.** Counted in the denominator, not a wrong value |
+| `nanoge.org` | `SSI24` | **CORRECT on the name.** *(Its PLACE is not — see A23-03. Name and place are scored separately and A does not let one carry the other)* |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | **CORRECT — byte-identical to the page's own `<title>` AND `og:title`, re-verified live this round** |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged) |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | **CORRECT on the name.** *(Its PLACE is not — A23-03)* |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the 34a event line, NOT a defect. ELEVENTH round running. **See the `POLICY` line above: it is now the page's own `og:title`** |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT — **B12-04 still holding, ELEVENTH consecutive round** |
+| `flogen.org` | `SIPS 2026` | **CORRECT — B13-03's banner strip CONFIRMED LIVE for an eighth round**, the pool again holding `flogen.org/sips2026`. *(Its PLACE is not — A23-03)* |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (r10 to r23). Its static HTML carries no `<title>`, `<h1>` or `og:title` (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the thirteen prior rounds — stated as a limit, not glossed |
+
+**TALLY: 10 CORRECT, 1 CONFIRMED WRONG, 1 HONEST HOST, 1 ACCEPTED COST (39b), 1
+EXCLUDED BY NAME (45a).** Denominator excludes `euagenda.eu` per 45a; the
+accepted cost and the honest host ARE counted, as every prior round has counted
+them. **Round 23's event-NAME wrong rate is 1 of 13 (7.7%).** r22 0/14, r21 0/15,
+r20 0/16, r19 0/14, r18 0/15, r17 0/13, r16 0/14, r15 0/11, r14 0/13, r13 0/14;
+r12 was 8 of 17. **The zero run ends at TEN, and it ends on a host no prior round
+of this loop has ever pooled — not on a regression of anything that was fixed.**
+
+---
+
+## THE EVENT ITEM-KIND COLUMN (Ruling 50a): **0 of 13 (0%) — A FIFTH CONSECUTIVE ZERO. IT HOLDS.**
+
+Every counted row is a thing a researcher can attend, or a real conference's own
+page. `solarpaces.org` and `ruggedthz.com` are NEWS POSTS by URL and both render
+a real CONFERENCE name — not counted wrong, on the precedent settled since round
+16. `nanoge.org` is a conference PROGRAMME page and `euchems2026.eu` is a POSTERS
+PDF (42c, standing exclusion) — a page *of* an event is still the event.
+**`10times.com` is an aggregator's listing page FOR a real event, so it too is an
+event in this column and A does NOT double-count it here** — what is wrong with
+that row is its name and the fact that the event is over, both counted once,
+under A23-02.
+
+---
+
+## **THE EVENT DATE COLUMN — 4 NON-EMPTY, 4 CORRECT, ZERO WRONG. AND A22-02 IS CONFIRMED WORKING ON ITS OWN LIVE ROW.**
+
+| host | rendered | ground truth | verdict |
+|---|---|---|---|
+| `solarpaces.org` | `Sep 15 – 18, 2026` | the page's own words: *"…will take place on September 15-18, 2026 in Bad Neuenahr-Ahrweil…"* | **CORRECT** |
+| `ibatterysummit.com` | `2026-08-26` | the page's own `og:description`: *"26 – 28 August 2026 JIEXPO Convention Centre…"* | **CORRECT** |
+| `thebatteryshow.com` | `2026-10-12` | the page's own banner: *"OCTOBER 12-15, 2026 Huntington Place Detroit, MI"* | **CORRECT** |
+| `internationalbatteryseminar.com` | `2027-03-15` | the page's own `<title>`, which names March 15-18, 2027 in Orlando, FL | **CORRECT** |
+| the other nine | `Date not listed` | — | **SILENT, NOT WRONG** |
+
+### **A22-02 — CONFIRMED WORKING, ORGANICALLY, ON `battery-power.eu` ITSELF. 5 of 5.**
+
+§1's item 1 expected `date TBA` beside a correct `Abstract due 31 Oct`, with the
+**row surviving**. Measured: `startDate = ""`, `deadline = 2026-10-31`, **row
+present in all five pools.** The card renders `Date not listed` and the deadline
+is retained. **The report no longer prints the same day twice.**
+
+**ITS FALSIFIER WAS RUN AND DID NOT FIRE:** *the row is gone, or any row loses a
+date that is NOT also its deadline.* **NO.** The row is present 5 of 5, and the
+four dated rows above all kept dates that no deadline phrase claims. Replayed
+through the shipped ingestion mapper for completeness: a `"Deadline 31 October
+2026 … Submit your papers by October 31, 2026"` snippet yields
+`startDate = ""` plus `deadline = 2026-10-31`; **the must-keep control
+`"runs 9 April 2027, abstracts due 31 October 2026"` yields BOTH values
+correctly** (`2027-04-09` and `2026-10-31`), which is the commonest honest
+snippet there is and is exactly what C's deviation 3 was protecting.
+
+### **A22-01 — CONFIRMED. NO DATE WAS INVENTED ANYWHERE, AND B's MATRIX PROMISE OF 0 HOLDS.**
+
+Not one of the 14 rows gained a date it was not given: the four dated rows are
+each evidenced by the page's own words above, and the other nine are silent.
+**FALSIFIER — *a row with a single date reading loses its date*: NO.** Replayed
+through the shipped mapper, a single-reading snippet
+(`"takes place March 15-18, 2027 in Orlando, FL"`) keeps `2027-03-15`, and the
+live `internationalbatteryseminar.com` row carries it organically. The ambiguous
+multi-reading shape (`ans.org`'s own recorded snippet) returns **`null`**.
+
+---
+
+## **A23-03 — THE EVENT PLACE COLUMN, SCORED AS RULING 60c ORDERS. 3 OF 7 NON-NULL VALUES ARE WRONG (42.9%), AND ALL THREE ARE ON ROWS THAT STAY IN THE POOL.**
+
+**Ruling 60c: *"The ordinary census keeps scoring place values every round
+regardless"*, and the place half reopens *"when a live place contamination is
+witnessed on a row that remains in the pool"*. This is that witness — three
+times over, two of them 5 of 5.** No prior round of this loop scored this column
+across the pool; round 22 scored it on `ans.org` alone, and `ans.org` has left.
+
+| host | rendered place | evidence, taken as a single fragment of 90 characters or fewer | verdict |
+|---|---|---|---|
+| `ibatterysummit.com` | `Jakarta` | *"…JIEXPO Convention Centre & Theatre, Jakarta…"* — a venue statement | **CORRECT** |
+| `battery-power.eu` | `Aachen` | *"…will gather at the Eurogress in Aachen…"* — a venue statement | **CORRECT** |
+| `thebatteryshow.com` | `Detroit, United States` | *"OCTOBER 12-15, 2026 Huntington Place Detroit, MI"* — a venue statement | **CORRECT** |
+| `internationalbatteryseminar.com` | `Orlando, FL` | the page's own `<title>` | **CORRECT** |
+| **`flogen.org`** | **`Geneva`** | the ONLY occurrence of `Geneva` in the whole 39 KB page is *"…Lecture at the United Nations Meetings in Geneva in February 2022…"* | **WRONG — a 2022 event mentioned in an organiser's biography. 5 of 5** |
+| **`storageusa.solarenergyevents.com`** | **`Durham`** | the ONLY occurrence of `Durham` in a 347 KB page is *"…Based in Durham, N.C., FlexGen is a leading integratio…"* | **WRONG — an EXHIBITOR'S HEAD OFFICE. 5 of 5** |
+| **`nanoge.org`** | **`Chicago, IL, United States`** | every occurrence is an author affiliation: *"…Illinois Institute of Technology, Chicago, IL, 60616, USA…"* | **WRONG — A SPEAKER'S INSTITUTION. 2 of 5 (minority), silent 3 of 5** |
+| the other seven | *(silent)* | — | **SILENT, NOT WRONG** |
+
+**THE NUMBER THAT MAKES THE MECHANISM UNARGUABLE.** The `nanoge.org` page is a
+**1.28 MB conference programme listing every speaker's affiliation.** A counted
+the city tokens in it programmatically: **twenty-three different cities appear.**
+`London` 135 times, `Seoul` 48, `Aachen` 46, `Tokyo` 43, `Barcelona` 41,
+`Madrid` 28 — and **`Chicago` SEVEN times**, first appearing 3.3% of the way
+through. **Peer selected the twentieth-most-frequent city on the page as the
+event's venue.** Whatever rule chose it, the choice is not evidence-based.
+
+**And the contrast is the finding, not the individual rows.** Every CORRECT value
+above sits next to a venue word — *Convention Centre*, *Eurogress in*,
+*Huntington Place*. Every WRONG value is a bare city token lifted out of a
+sentence about something else: an exhibitor, a biography, an affiliation.
+`solarpaces.org` is the control that proves silence is reachable: its page says
+*"in Bad Neuenahr-Ahrweiler"* and Peer renders **`See event page`** — an honest
+silence on a row where the honest answer was available.
+
+**This is ONE ranked difference (A23-03) with three live instances, not three
+findings**, because it is one column and one mechanism.
+
+---
+
+## **RULING 55c — THE ONLINE MUST-KEEP DEBT. FOURTH ROUND, NAMED, STILL UNDISCHARGED.**
+
+**ZERO of the 14 live event rows is genuinely online — every one carries
+`isOnline: false`, in all five pulls.** The must-keep still has **no live
+witness**, and A did **not** discharge it by construction, because 55c rules
+constructed evidence insufficient and round 21 already tried that. **An absent
+witness is not a confirmation.**
+
+**The nearest witness this round is the strongest one yet, and it is recorded
+because it is evidence the debt is dischargeable rather than impossible:**
+`cambridgeenertech.com`'s `Solid-State Battery Summit` was OFFERED and its own
+snippet reads **`Attend: In-Person or Online`** — a genuinely
+online-attendable event, in the offered corpus, seen by Peer's ingestion. **It
+dropped correctly: the event ran 11–12 August 2026 and today is 14 August.** So
+the shape exists in the wild and arrived expired, for a second consecutive round.
+
+---
+
+## **RULING 57b — THE EVENT SURFACE: `designed, organically unwitnessed`, MEASURED NOT ABSENT. UNCHANGED.**
+
+The guard was evaluated against every pool row in all five pulls: **it fires ZERO
+times.** The zero is structural, not luck: **13 of the 14 event pool rows carry
+no organiser name at all**, so conjunct 1 cannot be reached. The one row that has
+names (`ibatterysummit.com` gives `Carsurin` and `SaranaLab`) contains no profile
+topic. **Grade unchanged.** *(The job surface's 57b grade is measured in part 2
+and it MOVED.)*
+
+---
+
+## **RULING 48b — THE OFFERED-ROW SCAN, EVENT SURFACE: 149 UNIQUE OFFERED, 98 DROPPED, ZERO WRONGLY DROPPED (0.0%).**
+
+Second round of this series (r22 was its first: 149 / 98 / 0). Every drop that
+could plausibly have been a real future on-topic event was ground-truthed
+through a fetch rather than waved past:
+
+| dropped row | why the drop is CORRECT |
+|---|---|
+| `imlb.org` — IMLB 2026 | the page's own words: *"Jun 14- 19, 2026"* in Montréal — **past** |
+| `nac.naatbatt.org` — NAATBatt 2026 | its own snippet: *"…Tucson, Arizona, from February 9–12, 2026"* — **past** |
+| `pyro.byu.edu/moses` — MoSES | the page speaks of MoSES 2026 in the past tense (*"slides from MoSES 2026"*) — **past** |
+| `flibe.com`, `joint-research-centre.ec.europa.eu`, `linkedin.com` — EUROMOST 2026 | *"held May 26–29, 2026 in Baden-Baden"* — **past**; and two of the three are a news post and a project page, not the event |
+| `thebatteryshowsouth.com` | its own title names *"Charlotte, April 22-23"* — **past** |
+| `cambridgeenertech.com` twice, `battery-tech.net`, `quintustechnologies.com`, `djk.co.jp`, `facebook.com` | all the same **finished** 11–12 August 2026 summit |
+| `bioprocessingsummit.com`, `cambridgeenertech.com/battery-safety` | *"August 12-13, 2026"* — **past by two days** |
+| `sae.org`, `events.ringcentral.com`, `events.ornl.gov`, `grc.org/2022…`, `tms.org` | past events, or a technical-programme sub-page |
+| the remaining ~80 | journal papers, social posts, career fairs, an events index, oncology and semiconductor conferences, recruiter listings — off-topic or not events |
+
+**A DOES NOT CLAIM A ZERO IT DID NOT MEASURE:** the nine ground-truth fetches
+above are named, and the ~80 obvious drops were classified from the offered title
+and snippet A already held, not re-fetched.
+
+---
+
+## **THE ROW THAT SHOULD NOT BE THERE — A23-02, IN FULL. 5 of 5.**
+
+`10times.com/e1z2-0h5z-3pgr`, rendered name
+**`Solid-State Battery Summit (Aug 2026), Chicago USA`**, `Date not listed`,
+`See event page`.
+
+**THE EVENT FINISHED TWO DAYS BEFORE THIS MEASUREMENT.** Ground truth is not one
+source but **eight offered siblings for the same summit**, every one naming
+**11–12 August 2026** — `cambridgeenertech.com` (the organiser's own site,
+twice), `battery-tech.net`, `quintustechnologies.com`, `bluecurrent.com`,
+`djk.co.jp`, `facebook.com`, `linkedin.com`. **Peer dropped every single one of
+them, correctly, on the past date.** The aggregator's row survived **because its
+snippet carries no date token at all**, so the expiry check had nothing to fire
+on. Peer's own fetcher cannot settle it either: the URL answers **403** behind a
+challenge page, so the name has only the provider title behind it.
+
+**So the pool's date guard is working, and the row that evades it is the one with
+the least information.** Scored field by field, as Ruling 29 requires:
+
+| field | value | verdict |
+|---|---|---|
+| **row existence** | present 5 of 5 | **WRONG — the event is over** |
+| **`name`** | `Solid-State Battery Summit (Aug 2026), Chicago USA` | **WRONG — listing furniture inside the name field.** Counted in the name tally above |
+| `date` | `Date not listed` | silent — and the silence is *why* the row survives |
+| `place` | `See event page` | silent, **although the row's own snippet names the InterContinental Chicago Magnificent Mile** |
+
+**The card therefore contradicts itself on its own face**, which is the same
+complaint round 22 made about `battery-power.eu`: the name says August 2026 in
+Chicago while the date and place fields say they do not know. **Counted ONCE, as
+one ranked difference.**
+
+**Exclusion walk by name.** Not 45a (`euagenda.eu`), not 41c's three hosts, not
+39a/40's honest hosts, not 42c's document retarget, not 39b, not 36, not 33
+(no acronym), not 50a's news-post precedent (this is not a news post), not
+B18-03, not the `ccfddl.ts:146` hybrid under-catch. **No standing exclusion names
+`10times.com` and no prior round has ever pooled it.**
+
+---
+
+## **WHAT PART 1 LEAVES FOR PART 4's RANKED LIST**
+
+- **A23-02** — `10times.com`: a finished event in the pool, with listing
+  furniture in its name. Event surface, 5 of 5. **WRONG DATA / EXTRA.**
+- **A23-03** — the event PLACE column: three confirmed contaminations
+  (`flogen.org` 5/5, `storageusa.solarenergyevents.com` 5/5, `nanoge.org` 2/5).
+  **WRONG DATA. And it is Ruling 60c's stated reopening trigger, met.**
+- **One `POLICY — manager decides` line**, adding and removing nothing:
+  Ruling 39b's accepted wrong name is, on today's page, the site's own
+  `og:title`.
+
+**A22-02 and A22-01 are both CONFIRMED WORKING on this surface, every falsifier
+§1 named was run, and not one fired.** Intended departure #1 (`ans.org`)
+**happened**; intended departure #2 (`batteryinnovationsummit.com`) **did not**,
+and the row is honest anyway.
+
+**Turn lock NOT released — parts 2, 3 and 4 follow.**
