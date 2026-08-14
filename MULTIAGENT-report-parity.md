@@ -38192,3 +38192,348 @@ new coverage, not regression.
 needed — the standing bars (closed structural signals, adversarial tables,
 what-renders-on-rejection, no open classes) govern.**
 
+---
+
+### Round 17 — Agent B (item 1 of 2: the brochure-page class. THE ONE-SIGNAL ANSWER IS NO, AND IT IS SETTLED BY EXECUTION RATHER THAN BY TASTE — the unified rule destroys a LIVE-SIGHTED real posting from this loop's own round 11 census. TWO closed signals score 91/92 with ZERO false fires. And the obvious home for the fix is the WRONG home: it silently deletes correct employers.)
+
+**STATUS: DONE.** Lock claimed cleanly (`b9ba97e`) after `git pull --ff-only`
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`; branch name re-read in the push output (§3).
+Harness lives outside `src/` (`web/zz-r17b/`, its own vitest config) and is
+**deleted before this commit**; `git status --porcelain --untracked-files=all`
+confirmed clean. **B changes no code, deletes no test, edits no test, and
+touches no file except this one** (§2). **No live pull, no page fetch, no
+credential read, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+---
+
+#### 0. THE METHOD IS BETTER THAN ROUND 16's AND THE REASON IS STRUCTURAL, NOT EFFORT
+
+Round 16 B had to **re-declare** `isListingPage`'s private internals to swap a
+regex, then add a fidelity gate to prove the re-declaration matched the shipped
+function. **This round needed neither, and that is a property of the change
+shape rather than a better harness.** Every candidate here is **ADDITIVE** — a
+new `if (signal(...)) return true;` placed among the existing checks — so a
+variant is exactly `shippedIsListingPage(...) || signal(...)`. **The SHIPPED
+function is called on every row. Nothing is transcribed, so a transcription slip
+cannot exist.**
+
+End to end, `webResultToRawJobItem` calls `isListingPage` **twice** (whole title,
+then the first separator-delimited segment) and the split is independent of the
+guard, so with an additive signal the item drops iff
+`shipped returns null || signal(title) || signal(roleTitle)`. **Every score below
+is END TO END on that basis, with the first term computed by running the real
+`webResultToRawJobItem`.**
+
+**A's own method correction was adopted rather than re-learned:** every row is
+scored with a real job-ish snippet and the profile's real topics, so a `null`
+can never be the TEXT gate masquerading as a guard drop.
+
+---
+
+#### 1. THE BASELINE, REPRODUCED EXACTLY — A's MEASUREMENT HOLDS
+
+| row | call 1 (whole title) | call 2 (role segment) | shipped render |
+|---|---|---|---|
+| `EnerSys Internship Program: Powering Future Innovators` @ `enersys.com/en/careers/enersys-internship-program` | **false** | **false** | title = the whole string, **employer absent** |
+| `CATL Internships - Battery Cell, R&D & Gigafactory Programs - EV.Careers` @ `ev.careers/catl-internships` | **false** | **false** | title `CATL Internships`, **employer `Battery Cell, R&D & Gigafactory Programs`** |
+
+**Both of A's claims reproduce byte for byte against the shipped code**,
+including the wrong employer value. Note the EnerSys title carries **no
+separator this file splits on** — a colon is not in `[-–—|·]` — so both calls
+see the identical string and the card renders the marketing tagline as part of
+the role.
+
+---
+
+#### 2. THE BRIEF'S QUESTION, ANSWERED BY EXECUTION: **ONE SIGNAL IS NOT AVAILABLE**
+
+The unified idea is real and B built it rather than dismissing it: **normalise
+away a marketing tagline (anything after a colon) and a `Program(me)` suffix,
+then ask whether what remains is a careers-section label with an owner's name in
+front.** That single statement reaches both pages. It was implemented as **S3**,
+scored, and it **DESTROYS A REAL POSTING THIS LOOP HAS ALREADY SIGHTED LIVE**:
+
+> `M.S. Internship Program – Oregon Center for Electrochemistry` @
+> `electrochemistry.uoregon.edu` — **round 11 A's own census, direct-fetch
+> confirmed that session, scored CORRECT, described in A's own words as an
+> "own-domain research center hosting its own internship posting".**
+
+It is not constructed and it is not B's invention. Both its full title and the
+role segment the card actually renders (`M.S. Internship Program`) fire S3,
+because `M.S.` is an owner-shaped token and `Internship Program` is the
+normalised section label. **The unified signal cannot tell EnerSys's brochure
+from Oregon's posting, because grammatically they are the same string.**
+
+**S3 scores 82/92 with SEVEN false fires** — the two Oregon rows, a real
+internship posting with a colon subtitle, and four `Head of …` role titles.
+**The baseline scores 81/92 with ZERO false fires.** A one-signal design is
+therefore worth **+1 net** while destroying **7 real postings**: dead on the
+same asymmetry B14-01 named and round 16 B re-applied — *a miss costs the status
+quo, a drop's false fire destroys a whole real posting.*
+
+**VERDICT: TWO SIGNALS, and the second one is not a patch — it carries a
+CONFIRMING STRUCTURAL TOKEN the first one does not need.** Same discipline
+`FORUM_THREAD_URL_RE` uses (every alternative requires a numeric id or a literal
+filename) and `NAV_CHROME_SEGMENT_RE` uses (every alternative requires verb +
+job noun).
+
+---
+
+#### 3. THE MATRIX — 92 CASES, ELEVEN CANDIDATES, END TO END
+
+11 must-drop (4 live rows + 7 constructed class siblings) and 81 must-keep. The
+must-keep set is the load-bearing half: 13 live-sighted postings including the
+Oregon row and round 17 A's own census, round 16's 8 shipped internship
+must-keeps plus its priced bare singular, 26 new adversarial shapes, and 25
+replayed shipped rows from B13-02 / B15-01 / round 16 item 2 and the two
+cross-file callers.
+
+| candidate | score | misses | FALSE FIRES |
+|---|---|---|---|
+| **SHIPPED (baseline)** | 81/92 | 11 | 0 |
+| S1 — owner + PLURAL section label | 82/92 | 6 | **4** (all `Head of …`) |
+| **S1f — S1 + function-word exclusion** | **86/92** | 6 | **0** |
+| S1w — S1f with a 3-token owner budget | 87/92 | 5 | **0** |
+| S1a — one token + `internships` only | 85/92 | 7 | 0 |
+| S2 — programme + marketing tagline | 84/92 | 7 | **1** |
+| **S3 — THE ONE UNIFIED SIGNAL** | 82/92 | 3 | **7** |
+| **S4 — host-brand echo** | **89/92** | 3 | **0** |
+| S4c — host-brand echo, colon REQUIRED | 85/92 | 7 | 0 |
+| U1 — URL leaf is a section label | 83/92 | 6 | **3** |
+| S1 + S4 | 87/92 | 1 | 4 |
+| **RECOMMENDED — S1f + S4** | **91/92** | **1 (named)** | **0** |
+| S1w + S4 | **92/92** | 0 | 0 |
+| S1 + S2 | 85/92 | 2 | 5 |
+| S1 + S2 + S4 | 86/92 | 1 | 5 |
+
+**S2 (the tagline route) is measured and NOT recommended, with its cost named:**
+it destroys `Internship Program: Battery Characterization Track` — a real
+posting whose colon introduces a track, not a slogan. **S4 reaches the same page
+with zero cost**, because it does not ask what follows the colon; it asks
+whether the name in front of the section label is *the host's own brand*.
+
+**THE URL ROUTE LOSES AGAIN, and the numbers are this round's, not round 16's
+carried over:** U1 has **three false fires**, one of which is round 16 item 2's
+own named accepted cost (`Acme Corporation - Search Jobs`) and one of which is
+an ordinary posting whose slug merely ends in `-internships`. It also cannot
+reach EnerSys at all. **No URL rule, no host list, no leaf vocabulary.**
+
+---
+
+#### 4. THE `of` TRAP — THE FALSE FIRE B WROTE TO BREAK ITS OWN FIRST DRAFT
+
+S1's first form allowed any one or two leading tokens. **It destroys four real
+role titles**, and they are ordinary HR and university roles, not exotica:
+`Head of Careers`, `Head of Careers - Imperial College London`,
+`Manager of Vacancies`, `Head of Internships`.
+
+**The narrowing is not invented — it is already in this file.**
+`TOPIC_LANDING_FUNCTION_WORD_RE` ships a closed function-word list for exactly
+this purpose ("a query is a noun phrase; a role title uses function words"), and
+`LISTING_SECTION_TITLE_RE` deliberately excludes `for` on the same reasoning.
+**S1f forbids the owner tokens from being function words. Four false fires → zero,
+no catch lost.** Note also that `positions` is deliberately **absent** from the
+section-noun list, because `Research positions at CERN` is a shipped must-keep —
+the same exclusion `LISTING_SECTION_TITLE_RE` already makes.
+
+---
+
+#### 5. **THE FINDING THAT MATTERS MOST FOR C: THE OBVIOUS HOME IS THE WRONG HOME**
+
+Round 16's item 1 was one word added to `CAREERS_INDEX_TITLE_RE`, so the obvious
+move is to widen that same regex again. **Measured, it silently deletes correct
+employer values.**
+
+`CAREERS_INDEX_TITLE_RE` has **two** call sites: `isListingPage`, and the
+employer-candidate veto chain (B13-01 Gap A). A brand-prefixed section label in
+the **employer** slot is not furniture — it is a real employer with careers
+chrome attached, and `stripTrailingCareersChrome` exists precisely to recover it.
+Executed against the shipped chain:
+
+| employer segment | shipped render | S1f would veto? | S1w would veto? |
+|---|---|---|---|
+| `Idaho National Laboratory Careers` | `Idaho National Laboratory` **(SHIPPED TEST)** | no | **YES — breaks it** |
+| `Alphabet, Inc. Careers` | `Alphabet, Inc.` **(SHIPPED TEST)** | no | no |
+| `Tesla Careers` | `Tesla` | **YES** | **YES** |
+| `Kairos Power Careers` | `Kairos Power` | **YES** | **YES** |
+
+**So: the two new checks MUST be their own constants, consulted ONLY by
+`isListingPage`. Do not add them to `CAREERS_INDEX_TITLE_RE`.** This is the
+opposite of round 16's item 1 and the reason is a real distinction, not a
+special case: a **bare** section label is a section label in either slot, but a
+**brand-prefixed** one is a company name wearing a suffix. Round 16 C's change
+stays exactly as it is.
+
+**This is also why the 3-token owner budget is NOT recommended even though it
+scores 92/92**: its only extra catch is one constructed row, and it is one edit
+away from breaking a shipped assertion if a later round ever moves it into the
+shared regex.
+
+---
+
+#### 6. RULING 32's QUESTION — WHAT RENDERS ON REJECTION
+
+**Nothing. Both items leave the pool entirely.** `isListingPage` returning `true`
+makes `webResultToRawJobItem` return `null`, both search functions filter nulls,
+and `buildDailyJobPool` ends in a `.slice()` CAP, never a top-up. **No
+placeholder, no substitution, no backfill.** A's census puts the pool at
+thirteen against a `MAX_OPPORTUNITY_POOL_ITEMS` of 200, so the cap is nowhere
+near binding and nothing is pulled in behind it. **The pool shrinks by one on
+the majority census, by two counting the minority row.**
+
+**Nothing is stranded on either page.** EnerSys's employer field is already
+honest silence, so there is no correct value being discarded. CATL's employer
+value is *wrong*, so the drop removes a wrong value rather than a right one —
+which is the opposite direction from round 16's item 2 and is why **Ruling 48a
+does not fire on the drop itself.** It fires on something else; that is item 2.
+
+**Neither new check has a second call site**, so unlike round 16's item 1 there
+is no employer-slot side effect at all.
+
+---
+
+#### 7. TESTS AT RISK — ZERO, BY GREP AND BY EXECUTION
+
+- **Callers of `isListingPage` / `webResultToRawJobItem` / `CAREERS_INDEX_TITLE_RE`
+  across `web/src`: four files** — `jobweb.ts` itself, `jobweb.test.ts`,
+  `jobs/scoring.test.ts`, `opportunities/job-cleanup.test.ts`. Both cross-file
+  rows are in the must-keep corpus above and both survive.
+- **STRING SWEEP: 1016 distinct string literals from those three test files ×
+  19 hosts = 19,304 combinations.** Signal S4 fires on **zero**. Signal S1f
+  fires on **six**, and **every one was resolved by execution, not by reading**:
+  four (`12345 vacancies`, `999 Battery Openings`, `Find Postdoc Openings`,
+  `Latest Vacancies`) are **already `true` on the shipped guard** and are
+  asserted as must-DROPS, so the verdict cannot change. The other two
+  (`Find Careers`, `View Openings`) are **never used as a title** — they appear
+  only as employer SEGMENTS inside `Battery Research Scientist - <chrome>`, and
+  the shipped end-to-end run on both keeps the posting and renders honest
+  silence, which neither new check touches.
+- **Zero verdict changes on any shipped assertion.**
+
+---
+
+#### 8. THE FIX GUIDE FOR C — TWO CHECKS, ONE FILE, ONE COMMIT
+
+**File: `web/src/lib/jobs/sources/jobweb.ts`.** Add two new module-level helpers
+near `CAREERS_INDEX_TITLE_RE` / `LISTING_SECTION_TITLE_RE`, then two lines in
+`isListingPage`. **`looksLikeHostBrand` is ALREADY imported at line 2 — no new
+import.**
+
+```ts
+// B17-01a: an owner's name in front of a careers-section label.
+const OWNER_INDEX_TITLE_RE =
+  /^\s*([\w&.'’-]+)(?:\s+([\w&.'’-]+))?\s+(?:internships|careers|vacancies|opportunities|openings)\s*$/i;
+const INDEX_OWNER_FUNCTION_WORD_RE = /^(?:of|for|and|or|to|with|in|on|at|the|a|an)$/i;
+function isOwnerSectionIndexTitle(title: string): boolean {
+  const m = OWNER_INDEX_TITLE_RE.exec(title);
+  if (!m) return false;
+  return ![m[1], m[2]].some((w) => w && INDEX_OWNER_FUNCTION_WORD_RE.test(w));
+}
+
+// B17-01b: the site's OWN brand in front of a programme designation.
+const BRAND_PROGRAMME_TITLE_RE =
+  /^\s*([\w&.'’-]+)\s+(?:(?:internship|graduate|apprenticeship|co-?op|fellowship|placement|trainee)s?\s+program(?:me)?s?|internships|careers|vacancies|opportunities|openings)\s*(?::[^:]*)?$/i;
+function isHostBrandProgrammePage(title: string, host: string): boolean {
+  const m = BRAND_PROGRAMME_TITLE_RE.exec(title);
+  if (!m) return false;
+  return looksLikeHostBrand(m[1] ?? "", host);
+}
+```
+
+In `isListingPage`, **immediately after the `LISTING_SECTION_TITLE_RE` line and
+before the aggregator block**:
+
+```ts
+  if (isOwnerSectionIndexTitle(title)) return true;        // B17-01a
+  if (isHostBrandProgrammePage(title, host)) return true;  // B17-01b
+```
+
+**DO NOT:**
+- **Do not add either shape to `CAREERS_INDEX_TITLE_RE`** — part 5 prices it at
+  two silently deleted correct employers, one of them a shipped assertion.
+- **Do not add a URL rule, a leaf vocabulary, or a host list** (part 3: U1 has
+  three false fires and cannot reach EnerSys).
+- **Do not widen the owner budget to three tokens** — part 3 shows it buys one
+  constructed row; part 5 shows why the narrower form is the safer artefact.
+- **Do not add `positions` to the section-noun list** — `Research positions at
+  CERN` is a shipped must-keep and `LISTING_SECTION_TITLE_RE` already excludes
+  it for that reason.
+- **Do not use the colon-tagline as a signal on its own** (S2): it destroys
+  `Internship Program: Battery Characterization Track`.
+- **Do not touch round 16 C's `internships` word, `LISTING_TITLE_RE`,
+  `NON_JOB_PATH_RE`, or `isListingPage`'s existing check order.**
+
+**C's tests must state, at minimum:**
+1. **The two live instances at their real hosts and paths**, both calls:
+   `isListingPage("CATL Internships", "ev.careers", "/catl-internships")` is
+   `true`; `isListingPage("EnerSys Internship Program: Powering Future
+   Innovators", "enersys.com", "/en/careers/enersys-internship-program")` is
+   `true`.
+2. **End to end**, the shape the reader sees: `webResultToRawJobItem` on the
+   full offered CATL title returns `null` — this is what proves the fix reaches
+   the render via the second `isListingPage` call.
+3. **The EnerSys `<h1>` form drops too** (`EnerSys Internship Program`, no
+   colon), so a title change upstream does not reopen the item.
+4. **NOT A HOST LIST:** `Acme Internships` drops at `acme.test/careers/internships`
+   AND at `northvolt.test/students`.
+5. **THE LIVE MUST-KEEP, and it is the most important assertion in the block:**
+   `M.S. Internship Program – Oregon Center for Electrochemistry` at
+   `electrochemistry.uoregon.edu` is **KEPT**, and so is its role segment
+   `M.S. Internship Program`. Comment it as round 11 A's live-sighted posting
+   and as the reason the unified one-signal design was refused.
+6. **THE `of` TRAP, four rows:** `Head of Careers`,
+   `Head of Careers - Imperial College London`, `Manager of Vacancies`,
+   `Head of Internships` are all **KEPT**.
+7. **The host-brand narrowing is load-bearing:**
+   `EnerSys Summer Internship - Battery Chemistry` at `enersys.com` is **KEPT**,
+   and `Acme Internship` at `acme.test` is **KEPT** (singular, no programme
+   suffix).
+8. **Round 16's priced singular still holds:** the bare `Internship` is KEPT,
+   and all eight of B16-01's internship must-keeps including
+   `Internship Programme Lead` are KEPT.
+9. **The employer-slot non-interference, asserted end to end:**
+   `Battery Research Scientist - Tesla Careers` still renders `Tesla`, and
+   `Battery Research Scientist - Idaho National Laboratory Careers` still
+   renders `Idaho National Laboratory`. **These fail if C puts the new shapes in
+   `CAREERS_INDEX_TITLE_RE`, which is the point.**
+10. **THE NAMED MISS, asserted so a later widening is a deliberate act rather
+    than a drift:** `Idaho National Laboratory Internships` — a three-token
+    owner — is **NOT dropped**. The 3-token budget that catches it scores 92/92
+    on this corpus and is recorded here as a measured, available widening; it is
+    refused today because the miss costs the status quo and the widening is one
+    careless edit away from a shipped assertion.
+
+Per Ruling 31, the hardest cases chosen are: a **multi-word** case
+(`Idaho National Laboratory Internships`, asserted as the named miss), a
+**punctuated** case (`M.S. Internship Program – Oregon Center for
+Electrochemistry`, asserted as a must-keep), and a case that **must match
+nothing** (`Head of Careers`).
+
+---
+
+#### 9. WHAT B DOES NOT CLAIM
+
+- **Frequency is two observations, not a rate.** EnerSys is 5 of 5 on one round
+  and one host; CATL is **1 of 5** and A said so. **The seven class siblings are
+  CONSTRUCTED, never sighted** — what they establish is that the mechanism is
+  not confined to two strings, which is what makes this a class fix rather than
+  two patches.
+- **No live pull, no page fetch.** Every number replays recorded shapes through
+  the shipped code. The two live titles and both URLs are A's ground truth,
+  fetched by A this round.
+- **B does not re-litigate round 16's design and did not measure a revert.**
+  Confirmed rather than assumed: the shipped `internships` word is what drops
+  `lco.global`, and neither new check overlaps it.
+- **`POLICY — manager decides`, raised not decided: is
+  `M.S. Internship Program – Oregon Center for Electrochemistry` actually a
+  posting?** Round 11 A fetched it and scored it CORRECT, and no round since has
+  ranked it. B has treated that verdict as binding and built the design around
+  keeping it — which is what forced two signals instead of one. **If the manager
+  rules it a brochure page of this very class, the one-signal design becomes
+  available and the recommendation changes.** B does not reverse a prior A on no
+  new evidence (§2), and flags it rather than quietly re-scoring it.
+
+---
+
