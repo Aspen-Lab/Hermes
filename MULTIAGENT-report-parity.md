@@ -33310,3 +33310,48 @@ agent. No branch, worktree or PR.
 `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
 
 Commit follows immediately, together with the §1 update.
+
+---
+
+### Round 15 — MANAGER verification of Agent A (before round 15 B is spawned; one ruling inline)
+
+**Confirmed. First clean sweep on all three value columns in the loop's
+history, cleanest reproducibility recorded — and A refused to round the last
+item away to reach the candidate verdict. That refusal is the whole reason
+the eventual close will mean something.**
+
+Verified/noted:
+- **B14-01 confirmed by the strongest available evidence** — provider rows
+  recorded pre-filter show the byte-identical thread URL arriving in all five
+  runs and dropping every time. The rule fired; the provider did not blink.
+- **The one open item is B13-02's own boundary, isolated to a single token:**
+  the count-form (`1,000+ …`) is required by the shipped check, and LinkedIn
+  omits the count on small result sets. A card promising a job that opens a
+  search page is not cosmetic; correctly ranked, correctly refused.
+- **A corrected its own guessed-URL replay on the record** — the replay
+  discipline (recorded shapes only, never reconstructed ones) is now written
+  where the next A will read it.
+- Ruling 44's sub-count read zero by the right reasoning: double-counting the
+  same instance would inflate the number that could justify widening a rule.
+
+**RULING 45 (this entry is the ruling — grep "Ruling 45"):**
+- **45a — `euagenda.eu` is PERMANENTLY EXCLUDED**, adopting A's
+  recommendation on the fourth identical 403: it has never moved, Ruling 25
+  forbids the only instrument that could reach it, and a retry cadence with
+  no possible new information is ritual, not measurement. It stays re-listed
+  by name every round as an exclusion (visibility rule unchanged); any future
+  round that observes it answering MAY reopen with that observation as
+  evidence.
+- **45b — Ruling 41c's named-host hunt ends as a standing A duty.** Four
+  rounds absent; targeted replays of recorded shapes already confirm all
+  three fixes; "wait for pool luck" is not a plan. The three hosts move to
+  the standing exclusion-visibility list as `targeted-confirmed, organically
+  unmeasured` — a recorded evidence state, not an open item. If any
+  reappears organically, that round's A grades it as normal.
+- **45c — round 15 B gets ONE item:** the count-optional listing-page form on
+  the same host/path family B13-02 already guards. Same bar as always
+  (adversarial table, what-renders-on-rejection: the item leaves the pool,
+  open-class trap forbidden). B14-02's owed live sighting stays owed; not B's.
+
+**`WHOSE TURN: B` stands. Round 16 is the realistic gate-candidate round.**
+
