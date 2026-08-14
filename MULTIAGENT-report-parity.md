@@ -36551,3 +36551,187 @@ and in §1's `WHOSE TURN: C` block was observed. Nothing on A's exclusion list
 was touched, reopened or designed against — **in particular Ruling 33 is NOT
 touched: this is a page-KIND fix and the `matchedTerms: ["LCO"]` admission route
 is deliberately left exactly as it is.**
+
+---
+
+### Round 16 — Agent C (item 2 of 2, Rulings 47c + 48a: the two wrongly-dropped real postings AND the paired employer guard, ONE change. B's independence claim, its 190/191 and its 41/41 all reproduce against the REAL shipped functions. +51 tests, 0 deleted, 0 rewritten. THREE separate negative proofs, one per edit: 7 / 12 / 9.)
+
+**STATUS: DONE.** Same lock (`79cb041`), same branch, re-confirmed with
+`git branch --show-current` before this commit and read again in the push
+output (§3). Harness lived outside `src/` (`web/zz-r16c/`, own vitest config)
+and is **deleted before this commit**; `git status --porcelain
+--untracked-files=all` confirmed clean. **NO TEST DELETED, NO TEST REWRITTEN,
+NO EXISTING ASSERTION TOUCHED** — the only edit to an existing line in
+`jobweb.test.ts` is its import statement, which gained `LISTING_TITLE_RE`.
+No live pull, no page fetch, no credential read, no
+`PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.
+
+---
+
+#### 1. THE THREE EDITS LANDED TOGETHER, AS RULING 48a REQUIRES
+
+All three in `web/src/lib/jobs/sources/jobweb.ts`, one commit:
+
+- **EDIT 1 — gap 2B.** `LISTING_TITLE_RE` alternative 1: the negative lookahead
+  `(?!(?:19|20)\d{2}(?![\d+]))` inserted immediately after `(?:^|\s)`. Nothing
+  else in the alternation changed.
+- **EDIT 2 — gap 2A.** `LISTING_TITLE_RE` alternative 4: leading `\b` replaced
+  with `^\s*`.
+- **EDIT 3 — gap 2C.** `NAV_CHROME_SEGMENT_RE`: the ATS action-control
+  alternatives, whole-segment anchored, every one requiring VERB + JOB NOUN.
+
+Verbatim as B specified them. **`isTopicLandingPage`,
+`LISTING_SECTION_TITLE_RE`, `TRAILING_CAREERS_CHROME_RE` and
+`CAREERS_INDEX_TITLE_RE`'s existing entries are untouched.** No host list. No
+chrome stripped before the title rules. No plural narrowing on alternative 1.
+No bare single word added to `NAV_CHROME_SEGMENT_RE`.
+
+---
+
+#### 2. C RE-MEASURED EVERY LOAD-BEARING CLAIM BY EXECUTION AGAINST THE REAL FUNCTIONS
+
+Same method as item 1: **C applies the candidate to the real file and scores the
+real `isListingPage` and `webResultToRawJobItem`.** Nothing re-declared, so no
+fidelity gate is needed. **Provenance again stated rather than implied: B's
+harness was deleted before B's commit, so B's 191 rows are NOT recoverable
+byte-for-byte.** C reconstructed a 26-row item-2 corpus from B's prose;
+**row-for-row identity is NOT claimed** and C's totals are `/26`.
+
+**ONE BOOKKEEPING DIFFERENCE, RECORDED RATHER THAN SMOOTHED.** B counted the
+named miss (`Acme Corporation - Search Jobs`) as a must-DROP row, so B's
+recommended design reads 190/191 with **one miss**. C classifies the same row as
+a documented-known KEEP, because that is what the shipped assertion states. The
+underlying verdicts are identical; only the label differs, which is why C's
+false-fire counts run one higher than B's on the partial designs.
+
+| candidate | C's score | misses | FALSE FIRES | B's claim |
+|---|---|---|---|---|
+| **SHIPPED (baseline)** | 15/26 | 0 | **11** | 181/191, 10 false fires — **reproduces** |
+| edit 2 alone (anchor) | 21/26 | 0 | **5, ALL gap 2B** | 185/191, 5 all gap 2B — **reproduces exactly** |
+| edit 1 alone (lookahead) | 20/26 | 0 | **6, ALL gap 2A** | 186/191, 5 all gap 2A — **reproduces** |
+| **BOTH + edit 3 (SHIPPED NOW)** | **26/26** | **0** | **0** | 190/191, 0 false fires — **reproduces** |
+
+**B's INDEPENDENCE CLAIM IS THE ROUND'S LOAD-BEARING ONE AND IT REPRODUCES
+EXACTLY.** With only the anchoring, the INL posting is saved and **Kairos is
+still destroyed**, along with four more year-class shapes. With only the
+lookahead, Kairos is saved and **INL is still destroyed**, along with four more
+chrome shapes. **Neither edit alone is a fix, and a later round cannot collapse
+them into one without failing a red test.**
+
+**A's WARNING ABOUT THE BURNED MOVE IS DISCHARGED WITH A TEST, NOT JUST A
+NUMBER.** B priced strip-the-chrome-first at 184/191 with six false fires. C did
+not rebuild that design — it is not what ships — but **locked it out**:
+`Senior Battery Engineer | Search Jobs | Acme Careers` is now a shipped
+must-keep, and it is the case that design cannot pass. The chrome sits in the
+MIDDLE of the title, so no trailing strip reaches it, and any design that leaves
+alternative 4 unanchored destroys the posting. **Confirmed by execution: that row
+is a FALSE FIRE on the shipped baseline and on the lookahead-only variant, and
+passes only once the anchoring is in.**
+
+---
+
+#### 3. GAP 2C — RULING 32's QUESTION, ANSWERED FROM THE RENDER SIDE BEFORE AND AFTER
+
+Run end to end through the real `webResultToRawJobItem`:
+
+| item | BEFORE this change | AFTER |
+|---|---|---|
+| INL `Molten Salt R&D Engineer - Search Jobs` | **dropped entirely** | title `Molten Salt R&D Engineer`, **employer ABSENT** |
+| `Battery Research Scientist - View Jobs` | kept, **employer `View`** | title unchanged, **employer ABSENT** |
+| Kairos `…Internship - Summer 2027 job…` | **dropped entirely** | title `Chemical and Materials Engineering Internship`, **employer `Kairos Power`** |
+
+**B's `Search` prediction is confirmed and so is the fix.** Without edit 3 the
+recovered INL posting renders the employer `Search` — C reproduced that by
+running the chain with edit 3 reverted, and **9 assertions fail in exactly that
+state**. Landing edits 1–2 alone would have traded a missing item for a wrong
+one, which Ruling 23 ranks worse.
+
+**AND THE `View` DEFECT WAS LIVE BEFORE THIS ROUND, CONFIRMED INDEPENDENTLY.**
+C reproduced `company: "View"` against the **untouched shipped code** at the very
+start of the turn, before any edit was written. **Evidence class unchanged and
+stated honestly: LATENT, not live** — reproduced by executing the chain, never
+sighted in a census. Round 17's A looks for it live (Ruling 48a).
+
+**ALL TWELVE EMPLOYER MUST-KEEPS SURVIVE** — B12-06's four hardest (`Home
+Depot`, `Page Industries`, `First Solar`, `Next Energy Technologies`) and the
+eight adversarial names built from the same verbs (`Search Party Media`,
+`View Systems Inc`, `Find Therapeutics`, `Browse AI`, `Best Buy`,
+`Top Glove Corporation`, `All Jobs Ltd`, `Search Laboratories`). B's 41/41
+reproduces qualitatively: **zero real employers destroyed.**
+
+---
+
+#### 4. THE TESTS — +51 ASSERTIONS, 0 DELETED, 0 REWRITTEN
+
+All ten of B's required statements are asserted, plus one the brief named
+separately (item 11):
+
+1. **A's two live instances KEPT**, at their real hosts and paths.
+2. **The two gaps are independent** — asserted structurally (the INL title
+   contains no digit at all; the Kairos title does not open with a listing verb),
+   so the assertion states WHY rather than only that.
+3. **The chrome class beyond A's instance** — `- Find Jobs`, `- Browse Jobs`
+   kept, and `- View Jobs` (kept today) stays kept.
+4. **Not a host list** — the same shape on an unrelated employer host.
+5. **The strip-first lockout** (above), which is also Ruling 31's hardest
+   multi-word case.
+6. **The year class beyond A's instance** — all four constructed cohort titles.
+7. **B13-02's five locked count forms re-asserted** under the new alternative 1.
+8. **The lookahead's own release conditions** — `2000+ Battery Jobs in Germany`
+   and `20000 Battery Jobs` still drop, plus `1999 jobs in Berlin`, the expected
+   miss that did not materialise because `LISTING_SECTION_TITLE_RE` covers it.
+9. **Alternative 4's own catch intact** — six titles that OPEN with a listing
+   verb still drop.
+10. **THE NAMED MISS ASSERTED AS A COST** — `Acme Corporation - Search Jobs` on
+    a non-aggregator host is NOT dropped, with the trade written beside it.
+11. **THE 9,606-STRING SWEEP'S ONE VERDICT CHANGE, ASSERTED AS BENIGN.** The
+    snippet at the old `jobweb.test.ts:1155` is the sweep's single hit; the
+    assertion states both halves — the literal's verdict really did change, AND
+    the item carrying it still drops, on its title, through a rule neither
+    narrowing touches. The sweep's finding is now true by test rather than by
+    memory.
+
+Plus the gap-2C render-side block: the three before/after renders above, the
+twelve employer must-keeps, and seven segment-level assertions proving the added
+vocabulary actually fires (so the block cannot go vacuous if the title rules
+move again — the failure mode B14-01 found).
+
+**NEGATIVE PROOF, RUN THREE TIMES — ONE PER EDIT, EACH BY REVERT-AND-RESTORE,
+EACH RESTORED AND VERIFIED BYTE-IDENTICAL WITH `diff` BEFORE THE NEXT:**
+
+| edit reverted | assertions that FAIL |
+|---|---|
+| **EDIT 1** — the year lookahead | **7** |
+| **EDIT 2** — alternative 4's anchor | **12** |
+| **EDIT 3** — the ATS action controls | **9** |
+
+The overlaps are themselves the pairing evidence: the independence assertion
+fails on 1 and on 2, and the INL employer render fails on 2 and on 3 — because
+without the anchoring there is no recovered posting whose employer could be
+wrong. **Every revert was restored and the file `diff`ed against the saved final
+state before continuing.**
+
+*(Method note, recorded because it nearly caused a silent error: two attempts to
+do these reverts with `perl -pi` MANGLED the regex's backslashes — `\s` became
+`s`, `\d` became `d`. Both were caught immediately by `diff` against a saved
+copy, and every subsequent revert was done with an exact-match string edit
+instead. Nothing mangled reached a commit or a measurement. Recorded so the next
+agent does not reach for a stream editor on a backslash-dense line.)*
+
+---
+
+#### 5. THE GATE AFTER ITEM 2 — AND THE TURN
+
+**90 files / 1426 tests, 1425 passing** — sole failure the standing
+`benchmark.test.ts` live-search flake. Baseline was 1355/1354, so **+71 tests
+across the turn** (item 1 +20, item 2 +51), **0 deleted, 0 rewritten**.
+`npx tsc --noEmit` clean. `npx eslint` exactly the one standing `quiz.tsx:46`
+error. **`jobs/scoring.test.ts` and `opportunities/job-cleanup.test.ts` run BY
+NAME: 37 together.** **`enrich.test.ts` run SOLO: 25 tests, 25 passed — the
+SolarPACES lock is intact.**
+
+**NO DEVIATION. The escape clause did not fire** — no shape appeared that B's
+cases had not spanned. Every "do not" in B's guide and in §1's `WHOSE TURN: C`
+block was observed. **Nothing on A's exclusion list was touched, reopened or
+designed against**, including Ruling 46a's false fire and 46b's two titles, and
+**Ruling 33 is not touched by either item.**

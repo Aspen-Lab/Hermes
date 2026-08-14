@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isListingPage, webResultToRawJobItem } from "./jobweb";
+import { isListingPage, LISTING_TITLE_RE, webResultToRawJobItem } from "./jobweb";
 
 describe("job aggregator listing pages", () => {
   it.each([
@@ -1269,5 +1269,299 @@ describe("internships programme index is not a posting (B16-01, Ruling 47b)", ()
     ["Process Engineer", "/about/jobs/1234"],
   ])("keeps the real posting a `/about/` URL rule would destroy: %s", (title, pathAndQuery) => {
     expect(isListingPage(title, "acme.test", pathAndQuery)).toBe(false);
+  });
+});
+
+// B16-02 (round 16, Rulings 47c and 48a): THE LISTING GUARD WAS DESTROYING REAL
+// SINGLE POSTINGS, AND FIFTEEN ROUNDS COULD NOT SEE IT. Every earlier round
+// asked "did the guard over-fire?" by replaying the items IN THE POOL — but an
+// item the guard drops is by definition not in the pool, so that check is
+// structurally incapable of finding an over-fire. Round 16 A scored all 298 rows
+// the provider OFFERED and found two real postings being destroyed: 0.7%.
+//
+// THREE EDITS, ONE CHANGE, AND RULING 48a MAKES THAT MANDATORY RATHER THAN
+// TIDY. The two title narrowings fix independent gaps; the employer guard exists
+// because recovering a posting is not a win if it comes back with a wrong
+// employer. Landing the title fixes alone would trade a MISSING item for a WRONG
+// one, which Ruling 23 ranks worse.
+const INL_URL =
+  "https://careers.inl.gov/psc/hrprd/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL/job/1515?Page=HRS_APP_JBPST_FL";
+const INL_PATH =
+  "/psc/hrprd/EMPLOYEE/HRMS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL/job/1515?Page=HRS_APP_JBPST_FL";
+const KAIROS_TITLE =
+  "Chemical and Materials Engineering Internship - Summer 2027 job in Albuquerque at Kairos Power | Lensa";
+const KAIROS_PATH = "/job-v1/a1b2c3d4e5f60718293a4b5c6d7e8f90";
+
+describe("the listing guard must not destroy real postings (B16-02, Ruling 47c)", () => {
+  // 1. A's TWO LIVE INSTANCES, at their real hosts and paths. These are the
+  // whole item.
+  it("keeps the real INL requisition behind its site's `- Search Jobs` chrome", () => {
+    expect(
+      isListingPage("Molten Salt R&D Engineer - Search Jobs", "careers.inl.gov", INL_PATH),
+    ).toBe(false);
+  });
+
+  it("keeps the real Kairos Power internship whose title carries a YEAR", () => {
+    expect(isListingPage(KAIROS_TITLE, "lensa.com", KAIROS_PATH)).toBe(false);
+  });
+
+  // 2. THE TWO GAPS ARE INDEPENDENT, AND THIS IS ASSERTED SO A LATER ROUND
+  // CANNOT COLLAPSE THE TWO EDITS INTO ONE. Measured by execution, each edit
+  // applied alone against the real function:
+  //   - anchoring alternative 4 alone  -> INL saved, Kairos STILL dropped, and
+  //     four more year-class shapes still destroyed (5 false fires).
+  //   - the year lookahead alone       -> Kairos saved, INL STILL dropped, and
+  //     four more chrome shapes still destroyed (6 false fires).
+  // Together: zero. The two titles below are the evidence, and they fire
+  // DIFFERENT alternatives of the same regex — the INL title has no number at
+  // all, the Kairos title does not begin with a listing verb.
+  it("the two gaps fire different alternatives — neither edit alone is sufficient", () => {
+    // The INL title contains no digit run, so the year lookahead is irrelevant
+    // to it; only the anchoring saves it.
+    expect(/\d/.test("Molten Salt R&D Engineer - Search Jobs")).toBe(false);
+    // The Kairos title does not open with a listing verb, so the anchoring is
+    // irrelevant to it; only the year lookahead saves it.
+    expect(/^\s*(?:browse|search|find|latest|top|best)\b/i.test(KAIROS_TITLE)).toBe(false);
+    // And both are kept now.
+    expect(
+      isListingPage("Molten Salt R&D Engineer - Search Jobs", "careers.inl.gov", INL_PATH),
+    ).toBe(false);
+    expect(isListingPage(KAIROS_TITLE, "lensa.com", KAIROS_PATH)).toBe(false);
+  });
+
+  // 3. THE CHROME CLASS BEYOND A's INSTANCE — at least three verbs wide. A
+  // tested `- Search Jobs` (dropped) and `- View Jobs` (kept); `- Find Jobs` and
+  // `- Browse Jobs` were being destroyed too and A never tested them.
+  it.each([
+    "Battery Research Scientist - Search Jobs",
+    "Battery Research Scientist - Find Jobs",
+    "Battery Research Scientist - Browse Jobs",
+    "Battery Research Scientist - View Jobs",
+  ])("keeps a real posting behind trailing ATS chrome: %s", (title) => {
+    expect(isListingPage(title, "careers.acme.test", "/job/44231")).toBe(false);
+  });
+
+  // 4. NOT A HOST LIST — Ruling 32's headline complaint. The `- Search Jobs`
+  // chrome is an applicant-tracking-system convention, not one site's quirk, so
+  // the fix is asserted on a host unrelated to A's instance.
+  it("keeps the same shape on an unrelated employer host", () => {
+    expect(
+      isListingPage("Postdoctoral Researcher - Search Jobs", "careers.acme.test", "/job/44231"),
+    ).toBe(false);
+  });
+
+  // 5. THE STRIP-THE-CHROME-FIRST DESIGN IS LOCKED OUT BY THIS ROW. It is the
+  // obvious fix, it is the class of widening that has burned this loop twice,
+  // and it was measured at 184/191 with SIX false fires. This title is why:
+  // the chrome is in the MIDDLE, so no trailing strip can reach it, and any
+  // design that leaves alternative 4 unanchored destroys the posting. Per
+  // Ruling 31 this is also the item's hardest multi-word case.
+  it("keeps a posting whose chrome is mid-title — the strip-first design's own victim", () => {
+    expect(
+      isListingPage(
+        "Senior Battery Engineer | Search Jobs | Acme Careers",
+        "careers.acme.test",
+        "/job/44231",
+      ),
+    ).toBe(false);
+  });
+
+  // 6. THE YEAR CLASS BEYOND A's INSTANCE — at least four shapes wide. All four
+  // are CONSTRUCTED, not sighted: A's 2 of 298 remains the only measured rate.
+  it.each([
+    ["Battery R&D Intern - Summer 2027 job in Reno at Acme Corp", "/jobs/9912"],
+    ["2026 Summer Analyst Positions at Kairos Power", "/careers/9913"],
+    ["Class of 2027 Openings at Acme Labs", "/careers/9914"],
+    ["Summer 2027 Internship - Job in Albuquerque at Kairos Power", "/jobs/9915"],
+  ])("keeps a real posting whose title carries a year: %s", (title, pathAndQuery) => {
+    expect(isListingPage(title, "acme.test", pathAndQuery)).toBe(false);
+  });
+
+  // 7. B13-02's COUNT-FORM REGRESSION LOCK, RE-ASSERTED UNDER THE NEW
+  // ALTERNATIVE 1. The lookahead sits in FRONT of the alternation and the
+  // alternation shape is byte-identical, but "it should still work" is not
+  // evidence — these five run again here.
+  it.each([
+    "1000+ Molten Salt jobs in United States",
+    "1,000+ Molten Salt jobs in United States",
+    "12345 vacancies",
+    "999 Battery Openings",
+    "10,000 Battery Engineer positions in Germany",
+  ])("still drops B13-02's locked count form: %s", (title) => {
+    expect(isListingPage(title, "example.test", "/jobs")).toBe(true);
+  });
+
+  // 8. THE LOOKAHEAD'S OWN RELEASE CONDITIONS. It excludes a BARE four-digit
+  // year and nothing else: a `+` suffix or a fifth digit means the run really is
+  // a count, so the exclusion lifts. Without these two rows the lookahead could
+  // be widened into "ignore any four-digit number" without a red test.
+  it.each(["2000+ Battery Jobs in Germany", "20000 Battery Jobs"])(
+    "still drops a genuine count that looks year-shaped: %s",
+    (title) => {
+      expect(isListingPage(title, "example.test", "/jobs")).toBe(true);
+    },
+  );
+
+  // The expected miss that did NOT materialise, and C should not "fix" it: a
+  // real four-digit count that IS year-shaped still drops, through
+  // `LISTING_SECTION_TITLE_RE`'s optional one-word prefix. Neither narrowing
+  // touches that rule. Asserted because it is load-bearing for the trade above.
+  it("still drops `1999 jobs in Berlin` — a sibling rule already covers the blind spot", () => {
+    expect(isListingPage("1999 jobs in Berlin", "example.test", "/jobs")).toBe(true);
+  });
+
+  // 9. ALTERNATIVE 4's OWN CATCH IS INTACT. The anchoring narrows WHERE the
+  // verb may appear, not WHICH verbs count — a page genuinely titled as a
+  // listing still drops.
+  it.each([
+    "Browse Chemistry Jobs",
+    "Latest Research Scientist Vacancies",
+    "Search Molten Salt Jobs in Chicago",
+    "Find Postdoc Openings",
+    "Best Materials Science Jobs",
+    "Latest Vacancies",
+  ])("still drops a title that OPENS with a listing verb: %s", (title) => {
+    expect(isListingPage(title, "example.test", "/careers")).toBe(true);
+  });
+
+  // 10. THE NAMED MISS, ASSERTED AS A COST RATHER THAN BURIED IN A TOTAL —
+  // B14-01's and B15-01's pattern. A brand-first search page now survives,
+  // because that title and A's real INL posting are THE SAME SHAPE: a name, a
+  // separator, then the chrome. No structural test separates them, which is the
+  // same argument B14-01 used to cut NodeBB. On the nine AGGREGATOR_HOSTS the
+  // aggregator branch still drops it; the miss only bites on an employer or
+  // unlisted host. The trade: this costs one hypothetical listing page, the
+  // status quo costs a real on-topic vacancy on an employer's own system — and
+  // A's instance is OBSERVED while this one is CONSTRUCTED.
+  //
+  // Asserted so that widening this later is a deliberate act with its own
+  // evidence rather than a drift.
+  it("does NOT drop a brand-first search page — a deliberate, named, priced miss", () => {
+    expect(isListingPage("Acme Corporation - Search Jobs", "acme.test", "/careers")).toBe(false);
+  });
+
+  // 11. THE STRING SWEEP'S ONE VERDICT CHANGE, ASSERTED AS BENIGN RATHER THAN
+  // LEFT AS A CLAIM. Both narrowings are pure TITLE rules — neither reads host
+  // or path — so the title axis is the only axis a verdict can move on, which
+  // makes a literal sweep COMPLETE for this change rather than a sample. B swept
+  // 9,606 distinct string literals across 337 files in `web/src` and found
+  // exactly ONE whose `LISTING_TITLE_RE` verdict changes: the SNIPPET below,
+  // from the B15-01 block above. It is never a title.
+  //
+  // `webResultToRawJobItem` passes only `title` and its first separator-
+  // delimited segment to `isListingPage`; a snippet reaches `JOB_TEXT_RE`,
+  // `isRemote` and `cleanJobDescription` and nothing else. The verdict change is
+  // therefore unreachable, and the test that uses this snippet still drops its
+  // item — through `isTopicLandingPage` on the TITLE, which neither narrowing
+  // touches. Asserted here so the sweep's single finding stays true by test
+  // rather than by memory.
+  it("the string sweep's one verdict change is on a SNIPPET that never reaches this rule", () => {
+    const snippet = "Apply now to the latest ion exchange resin vacancies.";
+    // The verdict on the literal did change — this is the sweep's one hit.
+    expect(LISTING_TITLE_RE.test(snippet)).toBe(false);
+    // And it is unreachable: the item carrying it still drops, on its title.
+    const item = webResultToRawJobItem({
+      title: "Ion Exchange Resin jobs in United States",
+      url: "https://www.linkedin.com/jobs/ion-exchange-resin-jobs",
+      snippet,
+    });
+    expect(item).toBeNull();
+  });
+});
+
+// GAP 2C — THE PAIRED EMPLOYER GUARD. Ruling 48a: this lands in the SAME change
+// as the two narrowings above, because recovering a posting that comes back with
+// a wrong employer is not a fix. Ruling 32's question, run from the render side.
+describe("ATS action controls in the employer slot (B16-02 gap 2C, Ruling 48a)", () => {
+  // 1. THE PAIRING ITSELF: the recovered INL posting renders its real role title
+  // AND an ABSENT employer — not `Search`. Without this guard `parts.slice(1)`
+  // offers `Search Jobs`, it clears all eight existing vetoes, and
+  // `stripTrailingCareersChrome` removes the trailing ` Jobs`, leaving `Search`.
+  it("renders the recovered INL posting with no employer rather than `Search`", () => {
+    const item = webResultToRawJobItem({
+      title: "Molten Salt R&D Engineer - Search Jobs",
+      url: INL_URL,
+      snippet: "Idaho National Laboratory is hiring. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.title).toBe("Molten Salt R&D Engineer");
+    expect(item!.company).toBeUndefined();
+  });
+
+  // 2. THE SHAPE THAT IS LIVE TODAY WITH NO CHANGE AT ALL. `- View Jobs` was
+  // KEPT by the shipped guard before this round (`view` is not in the title
+  // rule's verb list) and rendered the employer `View`. Evidence class: LATENT,
+  // not live — reproduced by executing the chain, never sighted in a census.
+  it("renders `- View Jobs` with no employer rather than `View` — live before this round", () => {
+    const item = webResultToRawJobItem({
+      title: "Battery Research Scientist - View Jobs",
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a battery research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.title).toBe("Battery Research Scientist");
+    expect(item!.company).toBeUndefined();
+  });
+
+  // 3. THE OTHER RECOVERED POSTING COMES BACK CLEAN AND UNCHANGED. This is the
+  // counterpart that stops the block above being read as "the guard blanks
+  // employers": the Kairos posting keeps its real employer.
+  it("renders the recovered Kairos posting with its real employer intact", () => {
+    const item = webResultToRawJobItem({
+      title: KAIROS_TITLE,
+      url: `https://lensa.com${KAIROS_PATH}`,
+      snippet: "Kairos Power is hiring interns. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe("Kairos Power");
+  });
+
+  // 4. B12-06's FOUR HARDEST MUST-KEEPS, PLUS EIGHT ADVERSARIAL REAL COMPANY
+  // NAMES BUILT FROM THE VERY SAME VERBS. This is the whole reason every added
+  // alternative is whole-segment anchored and requires VERB + JOB NOUN: no bare
+  // single word is added, and `search` alone is deliberately NOT in the list.
+  // It does not need to be, because this veto runs BEFORE the trailing-chrome
+  // strip.
+  it.each([
+    "Home Depot",
+    "Page Industries",
+    "First Solar",
+    "Next Energy Technologies",
+    "Search Party Media",
+    "View Systems Inc",
+    "Find Therapeutics",
+    "Browse AI",
+    "Best Buy",
+    "Top Glove Corporation",
+    "All Jobs Ltd",
+    "Search Laboratories",
+  ])("keeps the real employer name: %s", (company) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Scientist - ${company}`,
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a battery research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe(company);
+  });
+
+  // 5. THE ADDED VOCABULARY ACTUALLY FIRES, asserted at the segment level so the
+  // block above cannot go vacuous if the title rules change again.
+  it.each([
+    "Search Jobs",
+    "Browse Jobs",
+    "Find Careers",
+    "View Openings",
+    "See All Jobs",
+    "All Positions",
+    "Job Search",
+  ])("rejects the ATS action control `%s` in the employer slot", (chrome) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Scientist - ${chrome}`,
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a battery research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBeUndefined();
   });
 });

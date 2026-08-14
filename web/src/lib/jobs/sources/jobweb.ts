@@ -57,9 +57,62 @@ export const NON_JOB_PATH_RE =
  * The fix went into `isTopicLandingPage` instead, so the count-form regression
  * lock above stands BY CONSTRUCTION rather than by re-testing. Do not
  * re-litigate the count.
+ *
+ * B16-02 (round 16, Ruling 47c): TWO NARROWINGS. Round 16 A did the measurement
+ * fifteen rounds had never done — it scored ALL 298 rows the provider OFFERED,
+ * not just the ones that survived into the pool — and found this regex DESTROYING
+ * REAL SINGLE POSTINGS: `careers.inl.gov`'s `Molten Salt R&D Engineer` (the
+ * profile's strongest topic, on the employer's own careers system) and
+ * `lensa.com`'s Kairos Power internship. **An item this guard drops is by
+ * definition not in the pool, so every earlier round's "did it over-fire?" check
+ * was structurally incapable of finding them.** 2 of 298 offered rows (0.7%).
+ *
+ * **THESE ARE TWO INDEPENDENT GAPS FIRING TWO DIFFERENT ALTERNATIVES, AND
+ * NEITHER NARROWING FIXES THE OTHER — proved by execution, both by B and again
+ * by C before this edit was written.** They are asserted separately below so a
+ * later round cannot collapse them into one.
+ *
+ *  1. **ALTERNATIVE 4 WAS UNANCHORED, so it fired on a site's own trailing
+ *     `<title>` CHROME.** `Molten Salt R&D Engineer - Search Jobs` is one
+ *     requisition with an applicant-tracking-system toolbar button label glued
+ *     on after a separator. The rule could not tell it from a page genuinely
+ *     titled `Browse Chemistry Jobs`. Now anchored with `^\s*`: the listing
+ *     verb must OPEN the title. The class is at least three verbs wide —
+ *     `- Find Jobs` and `- Browse Jobs` were destroyed too, and `- View Jobs`
+ *     survived only because `view` is not in the verb list.
+ *  2. **A FOUR-DIGIT YEAR WAS BEING READ AS A JOB COUNT.** Alternative 1 wants
+ *     `<number> [words] <job noun>` — designed for `60 Molten Salt Jobs` — and
+ *     `Summer 2027 job` satisfies it exactly. Same arithmetic B14-01 recorded
+ *     when it cut NodeBB: a four-digit year is a four-digit id. The lookahead
+ *     excludes a bare `19xx`/`20xx` run and NOTHING ELSE — **a `+` suffix or a
+ *     fifth digit releases it, because those mean the run really IS a count**
+ *     (`2000+ Battery Jobs in Germany`, `20000 Battery Jobs`, both asserted).
+ *
+ * **THE SHIPPED BASELINE WAS WORSE THAN A COULD SEE: TEN false-fire shapes, not
+ * two.** The eight beyond A's two live instances are CONSTRUCTED, not sighted —
+ * A's 0.7% stands as the only measured rate. What they establish is that this is
+ * a class, not two strings.
+ *
+ * **THIS NARROWS; IT DOES NOT WIDEN, so B15-01's and B13-02's locks above are
+ * untouched and are NOT re-litigated.** B15-01 refused to make the leading count
+ * OPTIONAL (71/92, 19 false fires); this moves in the opposite direction —
+ * strictly fewer titles match. B13-02's five locked count shapes all still fire,
+ * verified by execution rather than by argument, because the lookahead sits in
+ * FRONT of the alternation and the alternation shape is byte-identical.
+ *
+ * **THE OBVIOUS FIX — STRIP SITE CHROME BEFORE THE TITLE RULES RUN — IS DEAD ON
+ * A NUMBER, NOT ON TASTE: 184/191 with SIX false fires.** It cannot reach the
+ * year gap at all, and it still destroys the pipe-separated chrome form
+ * `Senior Battery Engineer | Search Jobs | Acme Careers`, because that chrome is
+ * not trailing. That title is asserted below as a must-keep and is the lock:
+ * any design that leaves alternative 4 unanchored fails it.
+ *
+ * **NO HOST LIST** for `careers.inl.gov` or `lensa.com` — Ruling 32's headline
+ * complaint. The `- Search Jobs` chrome is an ATS convention, not one site's
+ * quirk, and the fix is asserted on unrelated hosts.
  */
 export const LISTING_TITLE_RE =
-  /(?:^|\s)(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|\b(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
+  /(?:^|\s)(?!(?:19|20)\d{2}(?![\d+]))(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|^\s*(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
 
 /** Query-string or path shapes that mean "this is a search result listing". */
 export const LISTING_URL_RE =
@@ -498,9 +551,48 @@ function looksLikeHostBoilerplatePhrase(candidate: string): boolean {
  * and no dangling middle dot is left behind. Checked in the components, not
  * assumed. Anything added to the candidate veto chain below inherits this
  * same honest-omission behaviour on all four.
+ *
+ * B16-02 gap 2C (round 16, Ruling 47c/48a): THE ATS ACTION CONTROLS. This is
+ * the PAIRED half of the two title narrowings above and it is NOT optional —
+ * Ruling 48a requires it to land in the same change, for a reason that is a
+ * measurement rather than a preference.
+ *
+ * **RECOVERING A DROPPED POSTING IS NOT A WIN IF IT COMES BACK WRONG.** Ruling
+ * 32's mandatory question ("what renders?") runs backwards on that item: those
+ * postings did not render wrongly, they did not render at all — so the question
+ * is what renders when they come BACK. Run end to end: the Kairos posting
+ * returns clean (`Kairos Power`), but `Molten Salt R&D Engineer - Search Jobs`
+ * returns the employer **`Search`**. `parts.slice(1)` offers `Search Jobs`, it
+ * clears all eight existing vetoes, and `stripTrailingCareersChrome` then
+ * removes the trailing ` Jobs`. **Landing the drop fix alone would convert a
+ * MISSING item into a WRONG one, and Ruling 23 ranks wrong data ABOVE missing
+ * data.** This is what makes the field render honest silence instead.
+ *
+ * **AND THE DEFECT IS ALREADY LIVE WITHOUT ANY OF THIS ROUND'S CHANGES:**
+ * `Battery Research Scientist - View Jobs` is KEPT by the shipped guard today
+ * (`view` was never in the title rule's verb list) and renders the employer
+ * **`View`**. Confirmed by executing the real chain, by B and again by C.
+ * **EVIDENCE CLASS, STATED HONESTLY: LATENT, NOT LIVE** — no census has ever
+ * recorded a `View` employer. Same class B13-01 Gap A recorded for itself.
+ * Round 17's A looks for this shape live as its own line (Ruling 48a).
+ *
+ * **THE STRIP CANNOT BE THE FIX, AND THAT IS PROVED RATHER THAN ASSERTED.**
+ * `stripTrailingCareersChrome` returns the ORIGINAL candidate when the strip
+ * would empty it (`return stripped || candidate`), so even a widened strip hands
+ * back `Search Jobs` unchanged. **Only the veto chain can produce silence** —
+ * which is Ruling 32's own required answer.
+ *
+ * EVERY ADDED ALTERNATIVE IS WHOLE-SEGMENT ANCHORED AND EVERY ONE REQUIRES
+ * VERB + JOB NOUN. **No bare single word is added** — `search` alone is NOT in
+ * here and does not need to be, because this veto runs BEFORE the strip. That is
+ * what lets eight adversarial real company names built from the very same verbs
+ * survive (`Search Party Media`, `View Systems Inc`, `Find Therapeutics`,
+ * `Browse AI`, `Best Buy`, `Top Glove Corporation`, `All Jobs Ltd`,
+ * `Search Laboratories`), alongside B12-06's own four hardest. Scored 41/41,
+ * zero real employers destroyed, against a 25/41 baseline. All asserted below.
  */
 const NAV_CHROME_SEGMENT_RE =
-  /^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back)$/i;
+  /^(?:page\s+\d+(?:\s+of\s+\d+)?|\d+\s+of\s+\d+|next|previous|prev|first|last|next\s+page|previous\s+page|home|back|(?:browse|search|find|view|see)\s+(?:all\s+)?(?:jobs?|careers?|openings?|opportunities|positions?|vacancies)|all\s+(?:jobs?|openings?|positions?|vacancies)|job\s+search)$/i;
 
 function looksLikeNavChrome(candidate: string): boolean {
   return NAV_CHROME_SEGMENT_RE.test(candidate.trim());
