@@ -270,603 +270,238 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 08:02 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 08:24 UTC — ROUND 13 A IS
-                  COMPLETE (all four parts, one commit each, each pushed
-                  immediately).** Claimed the lock cleanly (`4d17a33`; the hourly
-                  cloud run did not contest it) and confirmed the branch reads
-                  `feature/summary-report-revamp` before touching anything.
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 08:35 UTC — ROUND 13 B IS
+                  COMPLETE (all four items, one commit each, each pushed
+                  immediately, plus this summary).** Claimed the lock cleanly
+                  (`b3d23f7`) after `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`. **B changed no code, deleted
+                  no test, and touched no file except this one** — verified by
+                  `git show --stat` on every commit of the turn.
 
-                  **Full detail in §4**: "Round 13 — Agent A (part 1…)" through
-                  "(part 4: summary across parts 1–3, ranked difference list,
-                  four tally lines, gate verdict)". This block is the short
-                  version.
+                  **Full detail in §4**: "Round 13 — Agent B (B13-01…)" through
+                  "(summary across B13-01–04…)". This block is the short version.
 
-                  **THE HEADLINE: SEVEN FIXES LANDED IN ROUND 12 AND SIX ARE
-                  CONFIRMED LIVE. TEN WRONG VALUES BECAME ONE.** Round 12 found
-                  ten live-confirmed wrong values in nine ranked items. Round 13
-                  finds **one wrong value** (at a 1-in-5 observed pull
-                  frequency) **plus three non-wrong-data differences.**
+                  **THE HEADLINE: THREE FIXES DESIGNED AND ADVERSARIALLY TESTED
+                  — 85 of 85 cases across three matrices — ONE ITEM DELIBERATELY
+                  LEFT UNBUILT, AND FOUR CORRECTIONS TO THINGS THE LOOP
+                  CURRENTLY BELIEVES.** Three of B's own designs were killed or
+                  narrowed by counterexamples B wrote against them; every one of
+                  those failures is recorded in its item's entry rather than
+                  quietly fixed.
 
-                  **BOTH HEADLINE PREDICTIONS WERE MET BYTE-FOR-BYTE.**
-                  `ruggedthz.com` renders **`2026 Crystal Engineering GRC`** —
-                  the exact string Ruling 36 predicted three rounds ago — in
-                  **5 of 5** pulls, and **NEITHER of the host's two failure modes
-                  appeared in any pull**. `ecs.confex.com`'s deadline sentence is
-                  **GONE** from all five; the honest host stands in its place.
+                  **ONE-GAP-OR-SEVERAL, all four answered by EXECUTION before
+                  any design was written:**
+                  1. **`openmc.discourse.group` — TWO gaps, and only one is
+                     A's.** A's mechanism read is exactly right and reproduces;
+                     **A's TRIGGER read does not survive execution.** The same
+                     title with the pagination segment absent (Discourse's page-1
+                     form) **still renders `Announcements`** — so B12-06 did not
+                     open this hole, it exposed one that was always there. That
+                     single fact kills three of the four obvious fix directions.
+                  2. **Non-posting pool items — THREE holes, all inside ONE
+                     function** (`isListingPage`). None of its five existing
+                     checks fires on any of A's four instances. One item, one
+                     fix, per Ruling 32.
+                  3. **`flogen.org` — ZERO guards involved.** The clean title
+                     never reaches any stage.
+                  4. **`euchems2026.eu` — ZERO gaps in the title/slug chain.**
+                     The chain already recovers the real name the moment the
+                     snippet carries it in a usable shape.
 
-                  **Per surface: R13 event names 0 of 14 confirmed wrong (0%)**,
-                  down from 8 of 17 (47.1%); **employer field 0 of 12 non-null
-                  wrong by the standing majority method (0%)**, down from 3 of 10
-                  (30%); **R4 job summaries 6 of 20 bearing (30%) with ZERO open
-                  defects**, the second consecutive round that has been true and
-                  on double the sample. **Fixture not re-run; no fixture number
-                  is claimed.**
+                  **FOUR CORRECTIONS, each of which changes what somebody would
+                  otherwise do:**
+                  - **The Ruling 40 contract change does NOT transfer to the
+                    employer field.** Measured over a 21-case matrix: the
+                    job-side analogue of B12-01's positive test (require an
+                    organisation-KIND noun) **deletes six of nineteen protected
+                    employer values**, five live-confirmed correct — `Tesla`,
+                    `Thermo Fisher Scientific`, `LCO-CDO`, `Las Cumbres
+                    Observatory`, `Home Depot`, `First Solar`. An event's name
+                    usually contains its kind; an organisation's name usually
+                    does not. **A flagged the parallel without claiming it —
+                    correctly. The manager's verification note endorsed the
+                    remedy as well as the shape; on this evidence the shape holds
+                    and the remedy does not.**
+                  - **RULING 41b's FACTUAL PREMISE IS WRONG.** The Ruling 33
+                    acronym instance is on the `lco-cdo.org` **coordinator
+                    posting — a real job posting** — not on the RSS feed. Shown
+                    from A's own two census rows and A's own quoted summary
+                    (which names the Project and Website Coordinator role in its
+                    own text). **41b's RULING stands and B did no work on Ruling
+                    33; its ARITHMETIC does not.** Dropping non-postings removes
+                    **one item, not two findings**, and **round 14's A must not
+                    expect Ruling 33's tally to fall to zero.**
+                  - **THE ENRICHMENT TIER IS NOT DARK, AND EVERY ROUND'S
+                    EVIDENCE-LIMITS PARAGRAPH SINCE ROUND 4 HAS SAID IT IS.**
+                    `buildDailyEventPool()` and `buildDailyJobPool()` — the exact
+                    entry points §2 tells A to call — both pass
+                    `{ enrichDetails: true }`, which fetches the top 40
+                    candidates' own pages and can override the name. **That path
+                    uses no API key.** `feedAiApiKey` gates a **different
+                    module** (`enrichment.ts`, the LLM report enrichment), which
+                    is genuinely dark. **A's numbers are not in question — the
+                    label on the mechanism is.** Consequence: **a fix placed on
+                    the enrichment path IS testable by A's standing method
+                    today.**
+                  - **Neither home the brief proposed for `flogen.org` is
+                    available**, both proven by execution: B12-01's span logic
+                    makes the render **strictly worse** (it drops the value to a
+                    bare host); B12-02's slug corroboration **can never fire** on
+                    this host, because `/sips2026` is one unhyphenated token.
+                    The natural home is a third relative — B12-03's welded-label
+                    strip family.
 
-                  **ZERO REGRESSIONS ON ANY SURFACE — the most important safety
-                  result here.** Every event host correct in round 12 that
-                  reappeared renders a byte-identical correct name; every correct
-                  employer is correct again; every summary is byte-identical to
-                  its prior citation. Seven fixes landed in one round and not one
-                  of them cost a correct value.
+                  **THE THREE DESIGNS, with their adversarial results and what
+                  renders on rejection:**
+                  - **B13-02 (non-posting class) — 51/51.** Three parts in
+                    `isListingPage`: the count form learns a thousands separator,
+                    a closed syndication-endpoint check, and a leading
+                    section-title form. **What renders when it fires: NOTHING —
+                    the item never enters the pool and the pool shrinks.** No
+                    placeholder, no backfill (`buildDailyJobPool` ends in a cap,
+                    not a top-up).
+                  - **B13-01 Gap A (careers-section label in the employer slot)
+                    — 19/21, the best of six designs, zero regressions.** Reuses
+                    `CAREERS_INDEX_TITLE_RE`, already in the same file and never
+                    consulted here, though `stripTrailingCareersChrome`'s own
+                    comment says it should be. **What renders on rejection:
+                    nothing — the employer line is omitted on ALL FOUR render
+                    sites** (`job-card`, `feed-tile`, `briefing-hero`,
+                    `briefing-quick-hit`; B12-06's comment named only two).
+                    **Flagged honestly as LATENT, not live.**
+                  - **B13-03 (`flogen.org` banner strip) — 17/17.** **What
+                    renders on rejection: byte-identically today's value** — it
+                    is a repair, not a selection, so it can never produce a bare
+                    hostname or `"Untitled event"`.
 
-                  **THE FOUR OPEN DIFFERENCES, ranked (full list in §4 part 4):**
-                  1. **Employer, `openmc.discourse.group` renders
-                     `Announcements` in 1 pull of 5** — the only value anywhere
-                     that states something false. B12-06 worked (`Page 2` is gone
-                     from every pull), but the page title carries FOUR segments,
-                     two of them navigation, and with the pagination segment
-                     removed the forum-category segment took the slot.
-                     **Ruling 26's and Ruling 32's pattern reappearing inside the
-                     stage that was just guarded** — structurally the same repeat
-                     round 12 saw on `ecs.confex.com`, which Ruling 40 closed on
-                     the event side by returning *nothing* rather than the next
-                     candidate. A notes the parallel and does NOT claim it as the
-                     fix; the cause is B's.
-                  2. **Four of 20 job pool items are not single postings** — an
-                     author RSS feed rendering the role title `lco-cdo`, a
-                     LinkedIn search page rendering `1,000+ Molten Salt jobs in
-                     United States`, and two views of one job board's listing
-                     page. One shape, grouped per Ruling 32. **Explicitly NOT
-                     Ruling 29's parked contamination and NOT Ruling 39c's
-                     trigger** — see §4.
-                  3. **`flogen.org` renders `WELCOME TO SIPS 2026`**, fifth
-                     round — and this round there is direct evidence it is
-                     under-extraction: the page's own `<title>` is
-                     `SIPS 2026 by FLOGEN Stars Outreach`. Never ruled an
-                     accepted cost, so it is carried open rather than retired.
-                  4. **`euchems2026.eu` renders the bare host over a KNOWABLE
-                     name** — the real name ("10th EuChemS Chemistry Congress")
-                     is on that site's root page; the pool holds a poster PDF
-                     URL. Under-extraction in its honest direction.
+                  **B13-04: NO CODE, and that is the outcome rather than an
+                  omission.** Three candidate causes for the empty input, none
+                  confirmed, and A's log cannot distinguish them. **One new
+                  structural finding recorded as a lead with a named trigger: the
+                  snippet stage's 120-character / 20-word pre-filter still
+                  encodes the contract B12-01 REPLACED**, so a real name sitting
+                  at the front of a long unpunctuated run is discarded before any
+                  guard sees it — measured on identical text at two lengths.
+                  **Not recommended for landing blind: relaxing an input filter
+                  widens what reaches `leadingNameSpan`, whose known wrong→wrong
+                  limitation A currently measures at zero.**
 
-                  **THE HONEST-HOST / HONEST-ABSENCE COUNT (Ruling 39a) — a real
-                  number this round where round 12 measured ZERO.** Event side:
-                  **2 of 14 names are a bare hostname (2 of 70 renders)**; no
-                  `"Untitled event"` anywhere. Employer side: **8 of 20 postings
-                  silent by majority.** **Every instance judged per-instance:
-                  none is unreadable, none is misleading, and ZERO are findings.**
-                  The rise is the designed cost, paid and accounted.
+                  **THREE `POLICY — manager decides`, none of which blocks C:**
+                  **P1** — does the openmc forum thread escalating from "noise"
+                  to **the loop's only remaining wrong value** justify lifting
+                  Ruling 39c's deferral early, when 39c's own trigger (a second
+                  distinct instance) has not fired? **P2** — §2's "every run is
+                  Tier 0" note needs correcting in place, and the manager should
+                  say whether Ruling 39b's premise has moved. **P3** — the
+                  document-URL fetch retarget costs **zero additional network
+                  requests** and is **not** blocked by Ruling 25, but is a
+                  behaviour change on one instance in one round; **B recommends
+                  measure first.**
 
-                  **ALL FOUR TALLY LINES DELIVERED:** Ruling 33 **1 of 6**
-                  (running 1/4, 0/3, 0/4, 0/3, 1/6 — cumulative 2 of 20), its
-                  first non-zero since round 9 and **the identical `lco-cdo.org`
-                  posting recurring byte-identically**, so persistence not
-                  prevalence — **but Ruling 33's own "this only matters if the
-                  shape recurs" clause now has a fact attached, reported and not
-                  decided**; Ruling 34a **employer side 0 of 12** by the standing
-                  method (1 of 12 by presence-in-any-pull, both stated; running
-                  1/9, 1/10, 0/12) and **event side 1 of 14**, first reading of
-                  that line; Ruling 37 **1 of 6, baseline only, escalation does
-                  NOT fire** (the manager's dated clarification applied); and both
-                  threshold checks answered affirmatively — **Ruling 36's host is
-                  CLOSED**, **Ruling 39c's forum-thread second instance is
-                  ABSENT so 39c stays deferred**.
-
-                  **ONE NEW `POLICY — manager decides`, and it affects every
-                  future census rather than this one:** the employer variance is a
-                  **per-RUN property, not per-host**. Run 1 alone rendered
-                  employers for all three varying hosts; runs 2–5 and the
-                  supplementary sixth pull were silent on all three. **Round 12's
-                  run 1 behaved the same way.** Two consecutive rounds of the
-                  first pull being the information-richest one means majority
-                  scoring may be scoring the degraded upstream response. A
-                  reports the correlation and does **not** change the method —
-                  Ruling 39d stands until the manager rules.
-
-                  **Evidence gaps, named as gaps:** **B12-03 is NOT
-                  live-confirmable** — all three of its target hosts churned out
-                  of the pool, so its tests pass but its render is unmeasured;
-                  the enrichment tier is still dark (`feedAiApiKey` empty);
-                  `euagenda.eu` excluded by name per Ruling 38c, not fetched, and
-                  absent from the pool anyway.
-
-                  **Also confirmed live and worth keeping visible: the SolarPACES
-                  regression lock**, present in 5 of 5 and rendering `32nd
-                  SolarPACES Conference`, byte-identical to the value the lock
-                  asserts — round 12 could only record it as a gap.
-
-                  **GATE: NOT MET, and A does not close it in any case** (§2).
-                  Four open differences, listed above. **But the direction is
-                  unambiguous and this is the closest the loop has been.**
+                  **GATE: NOT MET, and B does not set it in any case** (§2).
                   ---
-                  Previous entry, kept for continuity: round 13 A parts 1, 2 AND
-                  3 of 4 banked @ 2026-08-14 08:14 UTC.**
-                  **Part 3 (R4 job summaries): 6 of 20 postings summary-bearing
-                  (30%); ZERO open defects among the six** — four clean, two
-                  named accepted costs. Second consecutive round with no open
-                  summary defect, now on a wider sample. **Ruling 33's tally is
-                  1 of 6, its first non-zero reading since round 9** — and it is
-                  the IDENTICAL `lco-cdo.org` posting recurring byte-identically,
-                  so by Ruling 37's dated clarification this is persistence, not
-                  prevalence. **Ruling 33's own "this only matters if the shape
-                  recurs" clause now has a fact attached to it; A reports that
-                  and does not decide it.** **Ruling 37's tally is 1 of 6, the
-                  gevernova baseline only — NO second distinct instance, the
-                  escalation does NOT fire.** B10-07 fix 2 confirmed live for a
-                  third round on two separate postings; fix 1 not observed
-                  (fourth round). Parts 1–2 detail below. Part 4 next in the same
-                  session. **No gate verdict is set yet.**
-                  ---
-                  **Part 2 (employer field): 0 of 12 non-null employer values
-                  wrong by the standing majority method (0%), down from round
-                  12's 3 of 10 (30%).** `talents.vaia.com` renders **`Savannah
-                  River National Laboratory`** — B12-07 confirmed live, 5 of 5.
-                  `openmc.discourse.group`'s `Page 2` is GONE (B12-06 confirmed)
-                  — but in **1 pull of 5** the next chrome segment of the same
-                  title, **`Announcements`**, took the slot: reported as an open
-                  defect at 1-in-5 frequency even though majority-scoring hides
-                  it. Honest-absence count, employer side: **8 of 20 postings,
-                  every instance judged neutral-or-better, zero findings.**
-                  **Ruling 39c does NOT fire** — one forum thread in the pool,
-                  the known one, no second distinct instance. **NEW `POLICY —
-                  manager decides` (Finding 3): the employer variance is a
-                  per-RUN property, not per-host** — run 1 alone rendered
-                  employers for all three varying hosts, and round 12's run 1 did
-                  the same, so majority scoring may be scoring the degraded
-                  upstream response. Ruling 34a employer line: **0 of 12** by the
-                  standing method, 1 of 12 by presence-in-any-pull; both stated.
-                  Part 1 detail below. Parts 3–4 next in the same session. **No
-                  gate verdict is set yet.**
-                  ---
-                  Part 1 (R13 event names) is
-                  complete and in §4 as "Round 13 — Agent A (part 1…)".
-                  **Headline: event-name wrong-rate is 0 of 14 (0%), down from
-                  round 12's 8 of 17 (47.1%), with ZERO regressions.**
-                  `ruggedthz.com` renders **`2026 Crystal Engineering GRC`** —
-                  byte-identical to Ruling 36's predicted string, 5 of 5 runs,
-                  and NEITHER of the host's two failure modes appeared.
-                  `ecs.confex.com`'s deadline sentence is GONE (bare host
-                  stands); `euchems2026.eu`'s filename is GONE (bare host
-                  stands); `internationalbatteryseminar.com` renders its real
-                  name. Honest-host count, event side: **2 of 14 renders, both
-                  judged BETTER for the reader, zero findings.** B12-03 is NOT
-                  live-confirmable (all three target hosts absent) — an evidence
-                  gap, not a pass. SolarPACES lock confirmed LIVE for the first
-                  time since round 11. Parts 2–4 (employer field, job summaries,
-                  summary/tallies/gate) are next in the same session. **No gate
-                  verdict is set yet.**
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 07:31 UTC — B12-01 IS
-                  LANDED, per §1aa Ruling 40 (option (a), phrase-level event
-                  kinds). A focused Agent C, one item, one commit.**
-                  `WHOSE TURN: A` (round 13) stands and was not changed by this
-                  turn — this is the landing turn Ruling 40's own "Landing
-                  instructions" paragraph authorises, not a new round.
+                  Previous entry, kept for continuity: **round 13 A finished @
+                  2026-08-14 08:24 UTC — ten wrong values became one, with ZERO
+                  regressions across seven simultaneous fixes.** Event names 0 of
+                  14 confirmed wrong; employer field 0 of 12 wrong by the
+                  standing majority method; R4 job summaries 6 of 20 bearing with
+                  zero open defects. Both headline predictions met byte-for-byte
+                  (`ruggedthz.com` renders `2026 Crystal Engineering GRC` in 5 of
+                  5 with neither old failure mode appearing; `ecs.confex.com`'s
+                  deadline sentence gone from all five). All four tally lines
+                  delivered. Full detail in §4's four "Round 13 — Agent A" parts
+                  and in the manager's verification.
+ROUND:            13 — **A COMPLETE and B COMPLETE.** Round 12 is fully complete
+                  (seven landed fixes across two C sessions). Next is **round 13
+                  C**, after the manager's verification of round 13 B and its
+                  three `POLICY` rulings.
+WHOSE TURN:       **C — Implementer, round 13.** B's guide is four entries,
+                  B13-01 through B13-04, in §4, plus B's summary entry which
+                  carries this list in full. **Work them in the order below.**
+                  **C changes code; C does not re-measure and does not re-derive
+                  causes** (§2). **Run the gate after EVERY item and commit per
+                  item**, pushing immediately:
+                  `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+                  `benchmark.test.ts` is the known live-search flake, excluded by
+                  standing ruling.
 
-                  **Full detail in §4**: "Round 12 — Agent C (B12-01 LANDED per
-                  Ruling 40…)", the last entry in the file. This is the short
-                  version.
+                  **1. B13-02 — the non-posting pool class. LAND THIS FIRST.**
+                  `web/src/lib/jobs/sources/jobweb.ts`, three parts inside
+                  `isListingPage()`. Biggest reader impact of the round (4 of 20
+                  pool items). **No dependencies. 51/51 adversarial.**
+                  **READ B's TWO DRAFT-FAILURE WARNINGS BEFORE WRITING A LINE** —
+                  B's own first drafts failed both: the count form must be the
+                  **alternation** `(?:\d{1,3}(?:,\d{3})+|\d{1,5})`, never the
+                  tidier `\d{1,3}(?:,\d{3})*` (which silently loses two shapes
+                  the shipped regex catches today); and the section-title form
+                  must **exclude the preposition `for`** and require the
+                  **plural** section word (the looser draft destroyed three real
+                  role titles). **`openmc.discourse.group` must stay IN the pool
+                  — it is Ruling 39c's, deferred** — assert it as an explicit
+                  must-keep with a comment saying so.
 
-                  **The delta from the version round 12 C built and stopped is
-                  step 3 alone** — the event-kind test is now PHRASE-level over
-                  the joined span, seeded with the ten multi-word kinds copied
-                  from the two cited sources at implementation time
-                  (`EVENT_SIGNAL_RE`'s kind-nouns and `eventKindIn`). Five are
-                  genuinely new coverage: `round table` (spaced), `hack day`,
-                  `lecture series`, `networking event`, `gordon research`.
-                  `call for papers` and `abstract submission` are deliberately
-                  EXCLUDED as page labels — that class is exactly why Ruling 40
-                  rejected option (b). Everything else is C's built version
-                  verbatim: no determiner strip, `looksLikeEventTitle`
-                  unchanged, one call site, the honest host fallback untouched.
-                  **B12-03 and B12-04 keep the single-word list alone and are
-                  unchanged by construction.**
+                  **2. B13-01 — the careers-section label in the employer slot.**
+                  Same file, one clause added to the existing `.find()`
+                  predicate. **19/21, zero regressions. No functional dependency
+                  on item 1**; ordered second only because it edits the same
+                  file. **LAND GAP A ONLY. C must NOT attempt a guard for Gap B
+                  (`Announcements`)** — every direction was tried and measured,
+                  and each either misses the defect or costs correct employers;
+                  it is P1 above. **Say in the commit message that Gap A is
+                  LATENT, not live** — B found it by execution, not in A's
+                  census, and it must not be logged as a live-confirmed defect.
 
-                  **THE REGRESSION THAT STOPPED THE FIRST ATTEMPT IS NOW A
-                  PASSING TEST.** `"2026 International Round Table on Titanium
-                  Production in Molten Salts"` recovers in full. Proved twice by
-                  execution: 19 of 102 assertions fail against pre-fix code
-                  (9 restated + 10 of 12 new), and — the proof that actually
-                  matters here — with the phrase list temporarily removed the
-                  name reverts to `"Untitled event"` character-for-character in
-                  both test files, then recovers when it is restored.
+                  **3. B13-03 — the `flogen.org` banner lead-in strip.**
+                  `web/src/lib/events/sources/eventweb.ts`, a sibling of
+                  `stripWeldedPageTypeLabel`. **17/17. No dependency on items 1
+                  or 2**; ordered last because it carries the round's highest
+                  test blast radius. **`to` is MANDATORY in the pattern — do not
+                  simplify it to optional**, the optional draft mutilated three
+                  real event names. **THREE test files reach this code and all
+                  three must be run individually as well as in the full suite:**
+                  `events/sources/eventweb.test.ts`;
+                  **`opportunities/enrich.test.ts`, where the SolarPACES
+                  regression lock lives (`enrich.test.ts:265`)**; and
+                  **`events/scoring.test.ts` — the twice-missed file, which DOES
+                  import `eventNameFrom` from `eventweb.ts`
+                  (`scoring.test.ts:13-23`), and whose own comment at `:576-581`
+                  records it being missed once before for exactly this reason.**
+                  **This item could legitimately be declined as cosmetic** (B
+                  says so itself, and A has read this host as "not confirmed
+                  false" for five rounds) — if the manager declines it, C does
+                  not land it.
 
-                  **Gate: 1159 of 1160, the only failure the documented
-                  `benchmark.test.ts` live flake; typecheck clean; lint the one
-                  standing `quiz.tsx:46` error. SolarPACES lock run on its own:
-                  25 of 25, unchanged. Both `scoring.test.ts` files run
-                  explicitly: 102 of 102.** The escape clause did NOT fire —
-                  the full suite was run BEFORE any assertion was restated, so a
-                  degradation could not hide inside an edit, and none appeared.
+                  **4. B13-04 — NO CODE. Build nothing for `euchems2026.eu`.**
+                  The title and slug stages are both correct and the snippet
+                  stage already recovers the name when the snippet carries it.
+                  **C's job on this item is nothing, and that is the outcome.**
 
-                  **The report gate is unchanged and NOT MET. C cannot move it**
-                  (§2). Only round 13's A can.
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 07:12 UTC — ROUND 12 C IS COMPLETE (six items).
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 07:12 UTC — ROUND 12 C IS
-                  COMPLETE. Six of seven code items LANDED; one STOPPED AND
-                  RECORDED rather than landed, and that one is the headline.**
-                  The turn was killed mid-way by a transient 529 and resumed by
-                  the same identity; the lock was refreshed, not re-claimed.
-                  One commit per item, pushed immediately, nothing batched.
+                  **WHAT C MUST NOT TREAT AS OPEN:** Gap B / `Announcements`
+                  (P1), the enrichment-tier note (P2), the document-URL retarget
+                  (P3), `careerservices.upenn.edu` (Ruling 34a),
+                  `batteryinnovationsummit.com` (Ruling 39b),
+                  `careers.gevernova.com`'s run-on (Ruling 37), the `lco-cdo.org`
+                  LCO acronym (Ruling 33 — **and note the 41b correction: it is
+                  on the real posting, so B13-02 does not remove it**), same-page
+                  contamination (Ruling 29), `euagenda.eu` (Ruling 38c, retry due
+                  round 15), and `ecs.confex.com`'s bare host (Rulings 39a/40,
+                  behaving as designed).
 
-                  **Full detail in §4**: "Round 12 — Agent C (B12-02…)" through
-                  "(B12-08: NO CODE, by Ruling 39d)". This block is the short
-                  version.
-
-                  **LANDED: B12-02, B12-03, B12-04, B12-05, B12-06, B12-07.**
-                  Cold baseline confirmed before the first edit (1088 tests,
-                  only the documented `benchmark.test.ts` live flake failing);
-                  final gate **1147 of 1148**, same single flake. Every new test
-                  was negative-proved by execution (source reverted, tests run,
-                  source restored) and the must-survive cases are reported
-                  separately rather than counted as proof.
-
-                  **NOT LANDED, and this is what the manager most needs to
-                  read: B12-01.** Ruling 39a approved it and C built it exactly
-                  as designed — every value B predicted reproduced byte-for-byte
-                  — but running it against the suite showed it turns
-                  **`"2026 International Round Table on Titanium Production in
-                  Molten Salts"` into `"Untitled event"`.** A correct name
-                  replaced by a placeholder is the one direction Ruling 23/26
-                  forbids. **Cause: the design's closed event-kind noun list is
-                  single-word, while this codebase's own event-kind
-                  enumerations (`EVENT_SIGNAL_RE`, `eventKindIn`) — the very
-                  sources B12-01 cites to argue the list is closed — also carry
-                  MULTI-WORD kinds** (`round table`, `hack day`,
-                  `lecture series`, `networking event`, `annual meeting`), all
-                  of which already appear in this repo's own fixtures as real
-                  names. Adding the one missing word would close one test and
-                  leave the class open, which is Ruling 32's named defect
-                  committed inside the very item whose argument is that
-                  per-instance patching is wrong. **Stopped per §1's standing
-                  clause, three resolutions with costs recorded, C recommends
-                  none.** Nothing of it is in the tree. Nothing else on B's list
-                  depended on it, so it blocked nothing.
-
-                  **THE SAME LIST IS NOW LIVE IN TWO PLACES AND IS SAFE THERE,
-                  which is the distinction that decided the call:** B12-03 and
-                  B12-04 both use it, and in both the failure direction is "do
-                  nothing" (leave the segment unstripped; leave it rejected as
-                  chrome), so a two-word event kind costs a missed fix and never
-                  a wrong value. In B12-01 it is a hard veto on whether a name
-                  exists at all. Both uses are named in the code comment so
-                  whoever resolves B12-01 reconciles them in one place.
-
-                  **Two things landed that no item asked for, both cheap and
-                  both recorded:** Ruling 39's SolarPACES lead was acted on
-                  because its own condition fired (B12-04 touches that guard
-                  family), so a year-less variant test now states in the suite
-                  that the lock survives only because its title carries a year;
-                  and B12-01's count of eight restated assertions is **nine** —
-                  B counted the assertions that asserted a sentence, and
-                  B11-02's other test asserted a name with a parenthetical date
-                  welded on.
-
-                  **Gate: unchanged and NOT MET. C cannot move it** (§2) — a
-                  passing suite is not evidence a live difference is gone. Only
-                  round 13's A can change that line.
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 06:12 UTC — ROUND 12 B IS
-                  COMPLETE. Eight entries (B12-01–08) cover all nine of A's
-                  ranked items.
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 06:12 UTC — ROUND 12 B IS
-                  COMPLETE. Eight entries (B12-01–08) cover all nine of A's
-                  ranked items. THE MANDATORY `ruggedthz.com` DESIGN WAS BUILT
-                  AND IT SURVIVED ITS ADVERSARIAL PASS** — after its first
-                  version was killed by a counterexample B built to break it.
-                  **No product code was touched.** One commit per item, pushed
-                  immediately, nothing batched. Every harness lived outside
-                  `src/` under its own vitest config and was deleted before its
-                  commit.
-
-                  **Full detail in §4**: "Round 12 — Agent B (B12-01…)" through
-                  "(summary across B12-01–08…)". This block is the short
-                  version, and C's ordered work list is in the summary entry.
-
-                  **THE TWO STRUCTURAL FINDINGS THAT SHOULD DRIVE THE
-                  MANAGER'S READING:**
-                  1. **Three of A's nine items are the SAME shared function
-                     (`looksLikeHostBrand`) failing in three different
-                     directions** — it cannot connect `Ruggiero Research Lab`
-                     to `ruggedthz.com` (too different), it destroys
-                     `International Battery Seminar` on
-                     `internationalbatteryseminar.com` (identical), and it never
-                     sees `Talents by Vaia` on `talents.vaia.com` (the brand
-                     spans two DNS labels, and B8-02 fixed *which* label is
-                     checked, not *one label at a time*). One function, three
-                     genuinely different fixes, **two of which must land in a
-                     specific order** (B12-04 before B12-07).
-                  2. **`ecs.confex.com` did not slip past B11-02's guard — the
-                     guard ran and correctly returned "not narration".** The
-                     snippet stage is *designed* to return a whole sentence and
-                     **the suite asserts that eight times**, including
-                     B11-02's own test at `eventweb.test.ts:384`, whose asserted
-                     "correct" answer is itself a wrong event name. All four of
-                     `looksLikeEventTitle`'s narrative checks are **verb
-                     inventories** — §1x Ruling 37's open-class-in-a-closed-list
-                     trap, already inside the shipped code. No filter fixes
-                     this; the stage has to change what it *returns*.
-
-                  **Gate: unchanged and NOT MET. B cannot move it** (§2) — a fix
-                  guide is not evidence a difference is gone. Only round 13's A
-                  can change that line.
-                  ---
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-14 05:34 UTC — ROUND 12 A COMPLETE (all four parts).
-                  The loop was paused by the
-                  user on 2026-08-13 and resumed 2026-08-14; **both resume
-                  clocks are back ON** (laptop hourly cron + cloud routine
-                  re-enabled). Part 1 was banked before the pause
-                  (`5e7b80a`); parts 2, 3 and 4 were done on resume and each
-                  committed and pushed on its own.
-
-                  **Full detail in §4**: "Round 12 — Agent A (part 1…)"
-                  through "(part 4: summary across parts 1–4, ranked
-                  difference list, three tallies, gate verdict)". This block
-                  is the short version.
-
-                  **THE HEADLINE FOR B, AND IT CHANGES B's AUTHORISATION:
-                  RULING 36's THIRD-STRIKE THRESHOLD FIRED.** See the
-                  `WHOSE TURN: B` block below — its first line.
-
-                  **Ten live-confirmed wrong values in nine ranked items,
-                  plus one cross-cutting stability difference.** Per field:
-                  R13 event names **8 of 17 wrong (47.1%)**, employer field
-                  **3 of 10 non-null wrong (30%), of which 1 is the accepted
-                  UPenn residual → 2 of 10 open (20%)**, R4 job summaries
-                  **3 of 16 postings summary-bearing (18.8%) with ZERO open
-                  defects — the first round that has been true.**
-
-                  **Read the composition before the numbers.** Both
-                  wrong-rates rose, and **neither rise is a fix coming
-                  undone**: every host that rendered a correct value in
-                  round 11 and reappeared this round rendered a correct
-                  value again, on both fields, with zero regressions. Every
-                  new wrong value is on a host **no prior round has ever
-                  measured**. Round 11's two fixes (B11-02, B11-03) are both
-                  confirmed live to have removed their exact target strings.
-
-                  **All three mandatory checks were answered explicitly, and
-                  two of them could not fire on silence:**
-                  1. **Honest-host cost: ZERO.** 0 of 17 event names is a
-                     bare hostname, in all five runs (0 of 85 renders); no
-                     `"Untitled event"` either. B11-02's predicted price was
-                     **not paid on this sample** — so there is no
-                     per-instance reader comparison to make, because there
-                     are no instances. A nil result, stated as a finding.
-                  2. **Ruling 36's third strike: FIRED.** Full statement
-                     below.
-                  3. **`euagenda.eu`: THIRD consecutive 403.** Named as a
-                     persistent-blocking host rather than retried silently a
-                     fourth time. **A's recommendation to the manager
-                     (recommendation, not ruling): re-test it cheaply once
-                     every fourth round and carry it flagged-not-counted in
-                     between**, rather than either retrying every round or
-                     permanently writing the host off. Ruling 25 forbids a
-                     headless browser, so no other access route exists
-                     inside the loop's rules.
-
-                  **Three tallies delivered:** Ruling 33 **0 of 3** (running
-                  r9 1/4, r10 0/3, r11 0/4, r12 0/3 — cumulative 1 of 14);
-                  Ruling 34a **1 of 10** (running r11 1/9, r12 1/10 —
-                  cumulative 2 of 19, both the same posting on the same
-                  URL); Ruling 37 **1 of 3, first round of this tally**, and
-                  it is the baseline `careers.gevernova.com` instance —
-                  **NO recurrence beyond it, so Ruling 37's escalation does
-                  NOT fire.** Two `POLICY` boundary calls flagged for the
-                  manager, both listed under MANAGER CARRY-FORWARD below.
-
-                  **One new cross-cutting finding worth the manager's
-                  attention:** the employer value for a single posting is
-                  **not stable across pulls minutes apart** — `terra.do` and
-                  `talents.vaia.com` each rendered a correct employer in one
-                  run and a wrong or null value in others, tracking a change
-                  in the upstream title. So **every single-pull employer
-                  census this loop has run, including round 11's, may have
-                  scored a varying host on whichever value it drew.**
-
-                  ---
-
-                  Previous entry, kept for continuity: finished the turn @
-                  2026-08-13 16:17 UTC — round 11 C complete. Claimed the lock cleanly (no race; the hourly
-                  cloud run did not contest it), confirmed the branch reads
-                  `feature/summary-report-revamp` before touching anything,
-                  then read §1's whole `WHOSE TURN: C` block, §1v Ruling 35
-                  **including its dated amendment**, §1w Ruling 36, §2, §3,
-                  all six B11 entries plus B's summary, and the manager's
-                  verification of B — before editing a line. Committed and
-                  pushed after every single item; nothing batched.
-
-                  **Full detail in §4**: "Round 11 — Agent C (B11-02…)"
-                  through "(B11-06…)". This block is the short version.
-
-                  **Two fixes landed, one deliberately NOT landed.**
-                  - **B11-02 — LANDED** (`949bb90`). `eventNameFrom`'s
-                    snippet-mining stage now runs the same
-                    `isChromeSegment`/`looksLikeEventTitle` pair the
-                    title-segment stage has always used, as a hard
-                    pre-filter ahead of the `looksLikeEvent` preference
-                    tier. Closes `ecs.confex.com`, and closes B11-01's
-                    enumeration shape 4 (the empty-filter discard) for free,
-                    because the filter now runs BEFORE the preference tier
-                    so the ternary can only ever fall back to already-guarded
-                    candidates. Three new tests, **all three verified by
-                    execution to FAIL against the pre-fix code** — including
-                    the two-candidate 40-vs-42-character tie-break, the one
-                    case in the whole suite that would have caught this live
-                    regression before it shipped. One logged deviation: took
-                    B's own offered style option and extracted `hostFromUrl`
-                    so both stages derive the host from one function instead
-                    of two copies that must agree.
-                  - **B11-03 — LANDED** (`bd3f076`), on top of B11-02 in the
-                    same session as required. Two new closed-shape regexes in
-                    `isChromeSegment`: embedded filename+querystring, and
-                    Markdown heading/bracket-ellipsis. Closes
-                    `internationalbatteryseminar.com` and
-                    `thebatteryshowsouth.com`. Six new tests; **the four
-                    must-reject cases verified by execution to FAIL against
-                    B11-02-only code**, which demonstrates the dependency B
-                    described rather than asserting it. The `{2,6}` hash
-                    floor is kept and is now protected by a must-survive
-                    test. **The manager's blast-radius warning is answered
-                    explicitly: the SolarPACES regression-lock passes
-                    unchanged, 25 of 25, verified by running it.** It lives
-                    in `web/src/lib/opportunities/enrich.test.ts` — recorded
-                    because there is no such file under `events/`.
-                  - **B11-04 — NOT LANDED. §1w Ruling 36's eighth-shape
-                    condition fired, and it fired eight times.** B's seven
-                    cases reproduced exactly — B's verification is confirmed
-                    correct, not disputed. But all five of B's adversarial
-                    cases happen to continue with a verb that is on the
-                    guard's closed list, and **eight further sentences of
-                    ordinary job-posting English are mutilated**, most
-                    decisively `"The role reports to the Director of
-                    Engineering."` → `"reports to the Director of
-                    Engineering."`. That shape is close to boilerplate in
-                    real postings and today's shipped code renders it
-                    correctly. The structural point: every other closed list
-                    in this codebase enumerates a genuinely finite set (file
-                    extensions, heading markers); this one enumerates *the
-                    verbs English allows after a plural noun subject*, which
-                    is an open class wearing a closed list's clothes. Ruling
-                    36 forbade widening it inline, and having seen why, that
-                    instruction looks right. **Stopped and recorded, per the
-                    ruling. `summarize.ts` is untouched.** New `POLICY` flag
-                    below.
-                  - **B11-05 — ruled, not skipped.** No code, by Ruling 36,
-                    which settled it before this turn began. Logged as ruled
-                    so it is not mistaken for a quiet drop.
-                  - **B11-06 — no action**, as instructed. Stays open for
-                    round 12's A.
-
-                  **Gate at the end of the turn:** 90 files / 1076 tests,
-                  **1075 passing**. The only failure is
-                  `benchmark.test.ts`'s documented live-search flake (it RUNS
-                  and flakes on this laptop, where the live keys are present,
-                  and SKIPS in the credential-less cloud — both normal).
-                  `npx tsc --noEmit` clean. `npx eslint` reports exactly the
-                  one standing pre-existing error (`quiz.tsx:46`), none
-                  added. **No existing test assertion was changed or
-                  deleted this turn** — nine tests added, zero rewritten.
-                  Baseline was confirmed cold before the first edit
-                  (1067/1066) rather than inherited.
-
-                  **READ THIS BEFORE THE BLOCKS FURTHER DOWN THIS SECTION.**
-                  The four `ROUND 7 … SUPERSEDES …` blocks below (including
-                  one claiming "GATE MET" / "Loop complete") remain
-                  **history, not state**, per Ruling 30. The lines above and
-                  below, down to this code fence's end, are the only
-                  current ones.
-ROUND:            13 — **A COMPLETE (all four parts).** Round 12 is fully
-                  complete (seven landed fixes across two C sessions). Next is
-                  **round 13 B**, after the manager's verification of round 13 A.
-WHOSE TURN:       **B — Investigator, round 13.** A's ranked list is FOUR items,
-                  in §4 "Round 13 — Agent A (part 4…)". This is the shortest
-                  list any round has handed B, and the shape of the round is
-                  different from every prior one: **six of round 12's seven fixes
-                  are confirmed live and there were ZERO regressions**, so B is
-                  not investigating a fix that came undone. B does not change
-                  code (§2).
-
-                  **1. `openmc.discourse.group` renders `Announcements` in 1
-                  pull of 5 — the ONLY wrong value found anywhere this round, and
-                  the only item that states something false. Take it first.**
-                  B12-06 worked: `Page 2` is gone from every pull. The page's
-                  `<title>` is `Job vacancies looking for OpenMC skills - Page 2 -
-                  Announcements - OpenMC` — four segments, two of them site
-                  navigation. **A recorded, as an observation and explicitly NOT
-                  as a design: this is structurally the same repeat Ruling 40
-                  closed on the event side by making the stage return NOTHING
-                  rather than the next candidate.** Whether that reading holds
-                  here is B's to establish, not to inherit — Ruling 35's
-                  amendment is the precedent for checking a handed-down reading
-                  by execution rather than adopting it (it scored 1 of 3).
-                  **The 1-in-5 frequency is itself evidence B should account
-                  for**, and it interacts with the new POLICY flag below.
-
-                  **2. Four of 20 job pool items are not single job postings —
-                  one shape, four instances.** An author RSS feed
-                  (`lco-cdo.org/en/author/lco_admin/feed`, role title renders as
-                  the bare slug `lco-cdo`), a LinkedIn search-results page
-                  (`1,000+ Molten Salt jobs in United States`), and two views of
-                  one board's listing page (`jobs.battery.com`, carried with a
-                  standing caveat since round 11). **Grouped as one shape per
-                  Ruling 32 — do NOT write four host patches.** Two boundaries A
-                  fixed in advance so B does not have to re-derive them: this is
-                  **NOT Ruling 29's parked same-page contamination** (that is
-                  fields bleeding between listings; this is a non-posting page
-                  ingested as a posting), and it is **NOT Ruling 39c's forum-thread
-                  trigger** (none of the four is a forum thread; 39c stays
-                  deferred). **Ruling 39c's own recorded preference — a host-list
-                  addition over phrase matching, which samples an open class —
-                  is the nearest existing guidance.**
-
-                  **3. `flogen.org` renders `WELCOME TO SIPS 2026`, fifth
-                  consecutive round.** New this round: direct evidence it is
-                  under-extraction rather than an unavoidable limit — the page's
-                  `<h1>` and `og:title` are that string, but its `<title>` is
-                  **`SIPS 2026 by FLOGEN Stars Outreach`**, which carries the
-                  clean name. Never ruled an accepted cost, so it is open.
-
-                  **4. `euchems2026.eu` renders the bare host over a KNOWABLE
-                  name.** B12-05 removed the wrong value and that is a real
-                  improvement; the residual is that the true name ("10th EuChemS
-                  Chemistry Congress") is published on that site's root page and
-                  the pool holds a poster-PDF URL instead. **Ranked last because
-                  nothing false is stated** — read Ruling 40's failure-direction
-                  paragraph before proposing anything here, and note A's finding
-                  that the kind (`congress`) is ALREADY in the single-word list,
-                  so **this is not evidence for extending the phrase list.**
-
-                  **WHAT B MUST NOT TREAT AS OPEN — every one of these is ruled
-                  or parked, and re-guiding any of them wastes the round:**
-                  `careerservices.upenn.edu` (Ruling 34a),
-                  `batteryinnovationsummit.com`'s `The Battery Saloon` (Ruling
-                  39b), `careers.gevernova.com`'s run-on (Ruling 37), the
-                  `lco-cdo.org` LCO acronym (Ruling 33), same-page contamination
-                  (Ruling 29), `euagenda.eu` (Ruling 38c — flagged, not counted,
-                  retry due in round 15), and **`ecs.confex.com`'s bare host**,
-                  which A verified is the honest fallback behaving exactly as
-                  Rulings 39a/40 approved — the page carries no name anywhere a
-                  stage could reach it.
-
-                  **THE EVIDENCE GAP B SHOULD KNOW ABOUT BEFORE PLANNING:
-                  B12-03 is NOT live-confirmable.** All three of its target hosts
-                  (`battery2030.eu`, `isea.rwth-aachen.de`, `adt.media`) churned
-                  out of the pool. Its tests pass; its render is unmeasured. **Not
-                  a defect and not a fix item — a gap for round 14's A to close.**
-                  The enrichment/rescue tier also remains dark
-                  (`feedAiApiKey` empty), so every live run is Tier 0.
-
-                  **ONE NEW `POLICY — manager decides` FLAG SITS UNDER ITEM 1 AND
-                  THE MANAGER SHOULD RULE IT BEFORE B RELIES ON ANY FREQUENCY
-                  NUMBER** — see MANAGER CARRY-FORWARD below: A found the
-                  employer variance is a **per-RUN** property, not per-host, in
-                  two consecutive rounds.
-
+                  **FOR ROUND 14's A, recorded now so it is not lost:** the job
+                  pool will **shrink by about 20% if B13-02 lands** — that is the
+                  fix working, not the pipeline degrading; **Ruling 33's tally
+                  must NOT be expected to fall to zero**; **two cheap new columns
+                  would settle three open questions at once** (the raw provider
+                  snippet for any bare-hostname render, and a count of pool items
+                  carrying a document URL); B12-03's three hosts are still
+                  unconfirmed live (Ruling 41c); `euagenda.eu` stays excluded
+                  until round 15.
                   ---
                   *Superseded, kept only as history (Ruling 30): the round 13 A
                   instructions that follow are complete and were executed. Do not
@@ -1414,10 +1049,12 @@ LAST DIFFERENCE:  **This is round 13 A's own live reading, taken AFTER all
                   §4 "Round 12 — Agent A (part N)" entries; the ranked
                   headline is in "(part 4: summary across parts 1–4, ranked
                   difference list, three tallies, gate verdict)."
-GATE (0%):        **NOT MET — round 13 A's own live verdict. B cannot close or
-                  move this**; producing a fix guide is not evidence a difference
-                  is gone, and only round 14's A's live measurement can change
-                  this line. **Four open differences remain** (ranked list in §4,
+GATE (0%):        **NOT MET — round 13 A's own live verdict. Neither B nor C can
+                  close or move this**; producing a fix guide is not evidence a
+                  difference is gone, and neither is landing the fix — only round
+                  14's A's live measurement can change this line. Round 13 B has
+                  since designed three of the four (one deliberately unbuilt),
+                  which changes nothing here. **Four open differences remain** (ranked list in §4,
                   "Round 13 — Agent A (part 4…)"): one live-confirmed wrong value
                   at a 1-in-5 observed pull frequency
                   (`openmc.discourse.group` → `Announcements`), one item-shape
@@ -29381,3 +29018,186 @@ page fetched, no pipeline pull run, no branch created, no PR opened,
 follows.
 
 Commit follows immediately.
+
+---
+
+### Round 13 — Agent B (summary across B13-01–04, with C's recommended order and its dependencies)
+
+**STATUS: DONE. All four items investigated, one commit each, each pushed
+immediately.** Turn lock claimed at `b3d23f7` and released in this commit.
+**B changed no code, deleted no test, and touched no file except this one** —
+verified by `git show --stat` on every commit of this turn.
+
+---
+
+#### THE HEADLINE: **THREE FIXES DESIGNED AND ADVERSARIALLY TESTED (85 of 85 cases across three matrices), ONE ITEM DELIBERATELY LEFT UNBUILT, AND FOUR CORRECTIONS TO THINGS THE LOOP CURRENTLY BELIEVES.**
+
+**One-gap-or-several, all four answered by execution before any design:**
+
+| item | verdict | detail |
+|---|---|---|
+| 1 `openmc.discourse.group` | **TWO gaps, and only one is A's** | one is fixable and new; the live one has no closed string-side signal |
+| 2 non-posting pool items | **THREE holes, all in ONE function** | one item, one fix, per Ruling 32 |
+| 3 `flogen.org` | **ZERO guards involved** | the clean title never reaches any stage |
+| 4 `euchems2026.eu` | **ZERO gaps in the title/slug chain** | the chain already recovers the name; three candidate causes for the input |
+
+**The corrections, because each one changes what somebody would otherwise do:**
+
+1. **The Ruling 40 contract change does NOT transfer to the employer field.**
+   Measured: the job-side analogue of B12-01's positive test deletes **six of
+   nineteen** protected employer values, five of them live-confirmed correct.
+   An event's name usually contains its kind; an organisation's name usually
+   does not. A flagged the parallel without claiming it — correctly.
+2. **Ruling 41b's factual premise is wrong.** The Ruling 33 acronym instance is
+   on the `lco-cdo.org` **coordinator posting**, a real posting, not on the RSS
+   feed — shown from A's own two census rows and A's own summary quote. Dropping
+   non-postings removes **one item, not two findings**. 41b's ruling stands; its
+   arithmetic does not.
+3. **The enrichment tier is NOT dark.** `buildDailyEventPool` and
+   `buildDailyJobPool` both pass `{ enrichDetails: true }`; the page-fetch
+   enrichment needs **no API key**; `feedAiApiKey` gates a different module.
+   Every live measurement since round 4 already included this tier, and a fix
+   placed on it **is** testable today.
+4. **Neither of the two homes the brief proposed for `flogen.org` is available.**
+   B12-01's span logic makes the render strictly worse (bare host); B12-02's
+   slug corroboration can never fire on an unhyphenated slug. Both proven by
+   execution.
+
+---
+
+#### C's WORK LIST — recommended order, with dependencies
+
+**Land in this order. Run the gate after EVERY item and commit per item (§3).
+Gate: `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+`benchmark.test.ts` is the known live-search flake, excluded by standing ruling.**
+
+**1. B13-02 — the non-posting pool class. LAND THIS FIRST.**
+   `web/src/lib/jobs/sources/jobweb.ts`, all three parts inside
+   `isListingPage()`. Biggest reader impact of the round (4 of 20 pool items).
+   **No dependencies.** **51/51 adversarial.**
+   - **Read the two draft-failure warnings in the B13-02 entry before writing a
+     line.** The count-form rewrite must be the **alternation**
+     `(?:\d{1,3}(?:,\d{3})+|\d{1,5})`, not the tidier `\d{1,3}(?:,\d{3})*` — the
+     tidy form silently loses `1000+ … jobs` and `12345 vacancies`, both of
+     which the shipped regex catches today. And part 3's preposition list must
+     **exclude `for`** and require the **plural** section word; the looser draft
+     destroyed three real role titles.
+   - `openmc.discourse.group` must stay **in** the pool — it is Ruling 39c's,
+     deferred. Assert it as an explicit must-keep with a comment saying so.
+   - Tests at risk: `jobweb.test.ts` only. `scoring.test.ts` imports
+     `JOB_PATH_RE`/`NON_JOB_PATH_RE` from this file — **neither is touched**.
+
+**2. B13-01 — the careers-section label in the employer slot.**
+   Same file, one clause added to the existing `.find()` predicate. **19/21
+   adversarial, zero regressions.** **No functional dependency on item 1** —
+   ordered second only because it edits the same file and the diffs are cleaner
+   sequentially.
+   - **Land only Gap A.** Gap B (`Announcements`) is escalated as POLICY below
+     and **C must not attempt a guard for it**; every direction was tried and
+     measured, and each either misses the defect or costs correct employers.
+   - **Honest evidence class, and C should say so in the commit message:** Gap A
+     is **latent, not live** — found by execution against breadcrumb shapes, not
+     observed in A's census. It is worth landing because it costs nothing and
+     closes a gap `stripTrailingCareersChrome`'s own comment already points at,
+     but it is not a live-confirmed defect and must not be logged as one.
+
+**3. B13-03 — the `flogen.org` banner lead-in strip.**
+   `web/src/lib/events/sources/eventweb.ts`, a sibling of
+   `stripWeldedPageTypeLabel`. **17/17 adversarial.** **No dependency on items 1
+   or 2** (different file, different surface). Ordered last because it carries
+   the round's highest test-blast-radius.
+   - **`to` is MANDATORY in the pattern. Do not simplify it to optional** — the
+     optional draft mutilated `Welcome Reception and Poster Session`,
+     `Welcome Week Careers Fair 2026` and `Welcome Home Veterans Summit 2026`.
+   - **THREE test files reach this code and all three must be run:**
+     `events/sources/eventweb.test.ts`, **`opportunities/enrich.test.ts` (the
+     SolarPACES regression lock lives here, `enrich.test.ts:265`)**, and
+     **`events/scoring.test.ts` — the twice-missed file, which DOES import
+     `eventNameFrom` from `eventweb.ts` (`scoring.test.ts:13-23`) and whose own
+     comment at `:576-581` records it being missed once before for exactly this
+     reason.** Run all three individually as well as in the full suite.
+   - **It could legitimately be declined as cosmetic** (see the ranking-honesty
+     section of the B13-03 entry — A has read this host as "not confirmed false"
+     for five rounds). If the manager declines it, the design stays on the
+     record; C should not land it against a ruling.
+
+**4. B13-04 — NO CODE. Do not build anything for `euchems2026.eu`.**
+   The title and slug stages are both correct and the snippet stage already
+   recovers the name when the snippet carries it. Three candidate causes, none
+   confirmed. **C's job here is nothing**, and that is the item's outcome, not an
+   omission.
+
+---
+
+#### `POLICY — manager decides` — THREE, and the first one gates nothing but should be ruled before round 14
+
+**P1 — the `openmc.discourse.group` employer (B13-01 Gap B).**
+Ruling 39c deferred the forum-thread drop on the arithmetic of *one instance
+that was merely a non-posting*. That instance is now **the loop's only remaining
+wrong value on any surface**. 39c's stated trigger (a second, distinct instance)
+has **not** fired. **Does a known instance escalating from "noise" to "wrong
+data" justify lifting the deferral early?** The manager has drawn this line
+before and drawn it both ways — Ruling 36 counts persistence *because* its defect
+states wrong data; Ruling 37 does not *because* its defect is cosmetic. This
+defect states wrong data but sits under a trigger written on Ruling 37's side.
+**If the manager declines, the right outcome is a named accepted cost with a
+one-line tally, not an open defect nobody may fix and nobody may close.**
+
+**P2 — the enrichment tier's status (B13-03).**
+**§2's method note and every round's evidence-limits paragraph say "every run is
+Tier 0, no enrichment". That is not what the code does.** The page-fetch
+enrichment tier runs on every live pull with no API key. Two things follow for
+the manager: (a) §2's note needs correcting in place so round 14's A stops
+repeating it; (b) **Rulings 39b and B12-05's entry both cite "the enrichment tier
+is the only route that could fix this class" as a reason to stop work** — that
+reasoning rested on the tier being unreachable. **I am not reopening 39b; the
+manager should say whether its premise has moved.**
+
+**P3 — the document-URL fetch retarget (B13-04).**
+Pointing the *already-happening* enrichment fetch at the site root when the
+item's URL is a document costs **zero additional network requests** and is **not
+blocked by Ruling 25**. Guarded with `looksLikeEvent` it survives every root
+shape I could construct; unguarded it **manufactures Ruling 34a's class**
+(measured: `University of Dublin` and `Elsevier` both pass the name guards).
+**But it is a behaviour change on the evidence of one instance in one round,
+below Rulings 32/34b's bar. My recommendation is measure first** — one extra
+column in A's next pass (how many pool items carry a document URL, and what the
+raw provider snippet was for any bare-hostname render) turns this into an
+evidence-backed decision and also settles B13-04's three candidate causes.
+
+---
+
+#### THINGS ROUND 14's A MUST BE TOLD IN ADVANCE
+
+1. **The job pool will SHRINK by about 20% if B13-02 lands** (4 of 20 items on
+   round 13's sample). **That is the fix working, not the pipeline degrading.**
+2. **Ruling 33's tally must NOT be expected to fall to zero.** Per the Ruling 41b
+   correction, the acronym instance is on a real posting that B13-02 does not
+   touch.
+3. **Two cheap new columns would settle three open questions at once:** the raw
+   provider snippet for any host rendering a bare hostname (settles B13-04's
+   three causes and the long-run finding), and a count of pool items carrying a
+   document URL (settles P3).
+4. **B12-03's three hosts are still unconfirmed live** — Ruling 41c already makes
+   hunting them by name round 14 A's job.
+5. **`euagenda.eu` stays excluded** (Ruling 38c) until round 15.
+
+---
+
+**Method integrity for the whole turn, recorded once.** Every verdict above was
+established by **executing the real code through its real entry points**
+(`webResultToRawJobItem`, `isListingPage`, `eventNameFrom`,
+`bestEventTitleSegment`, `looksLikeEvent`) in a throwaway harness that lived
+**outside `src/`** under its own vitest config (`web/zz-r13b/`, include pattern
+`zz-r13b/**/*.probe.ts`), so the standing gate could not collect it. **The
+harness was deleted before every one of the five commits in this turn, and
+`git status --untracked-files=all` scoped to `web/` was confirmed clean each
+time.** **No live pipeline pull was run. No third-party page was fetched. No
+credential was read, printed, logged or written.** No product code was touched,
+no test was deleted or edited, no branch or worktree was created, no PR was
+opened, and `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` was not touched. Three of
+my own designs were killed or narrowed by counterexamples I wrote against them,
+and every one of those failures is recorded in its item's entry rather than
+quietly fixed.
+
+**§1 is advanced to C in this same commit, and the turn lock is released.**
