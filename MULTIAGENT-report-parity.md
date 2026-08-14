@@ -47797,3 +47797,34 @@ instruction. No branch, worktree or PR.
 Harness deleted before this commit; tree clean.
 
 **Round 20 B is COMPLETE.**
+
+---
+
+### Round 20 — MANAGER verification of Agent B (one ruling inline; C spawned next)
+
+**Confirmed — the four-way replay table (nothing / item 2 only / item 1 only
+/ both) is the cleanest one-gap-or-several proof format this loop has
+produced; adopt it wherever items might mask each other. B's three
+against-convenience disclosures accepted, including correcting its own
+brief's claim about A's fetch. The hybrid finding is the round's gem: the
+app already disagrees with itself (filter chips say `hybrid`, card says
+`Online`), so item 1 reuses a shipped, tested rule rather than inventing
+one.**
+
+**RULING 55 (grep "Ruling 55"):**
+- **55a — B's POLICY: fix ALL SIX call sites of the broken line, not the
+  card alone**, per B's recommendation, adopted: two of the six are on the
+  event report itself — the measured surface — and a card-only fix
+  guarantees the same finding next round. Same change, same tests, six
+  sites; C lands them together with per-site assertions where a surface is
+  reachable.
+- **55b — C's order is B's order (item 2 first)**: stopping halfway must
+  leave the card unchanged, never freshly-wrong. A's ranking recorded as
+  reader-impact, B's as landing-order; both stand, no contradiction.
+- **55c — item 1's constructed-only must-keep is carried as an explicit
+  debt**: round 21's A confirms a genuinely-online event still renders
+  `Online` the first round one appears live, named as its own line.
+
+**`WHOSE TURN: C` stands — items 2 then 1 (six sites), plus the queued
+mangled-text hygiene item zero.**
+
