@@ -57197,3 +57197,239 @@ contaminations are stable — three of them A measured 5 of 5 — but the 33/8/0
 split is a one-pull number and is labelled as one.
 
 ---
+
+### Round 23 — Agent B (item 2 of 4: **A23-01 — `lanl.jobs`. ONE gap, and A's own table is wrong on one row: the six instances are FIVE from the splitter and ONE from a DIFFERENT expression. They share one selection chain, and that chain has no positive test that a candidate names an organisation.**)
+
+**STATUS: PARTIAL BY DESIGN.** Item 2 of 4. Method as stated in item 1.
+
+---
+
+## PART 1 — **A's ISOLATION RE-CHECKED BY EXECUTION. IT HOLDS, AND ITS TABLE DOES NOT.**
+
+All six titles A recorded in part 2 were replayed verbatim through the shipped
+`webResultToRawJobItem` (`web/src/lib/jobs/sources/jobweb.ts:1118`). **All six
+reproduce byte for byte:**
+
+| offered title (A's, verbatim) | rendered `company` | reproduced? |
+|---|---|---|
+| `Nuclear Materials and Molten Salt Technologist 1 - Research Technologist 1 \| Los Alamos, NM \| Los Alamos National Laboratory` | `Research Technologist 1` | **YES** |
+| `Careers Open application - Internship battery R&D` | `Internship battery R&D` | **YES** |
+| `Graduate Intern – Focused Ion Beam, Electron Microscopy ...` | `Focused Ion Beam, Electron Microscopy ...` | **YES** |
+| `Vertex Pharmaceuticals \| Careers \| Co-ops` | `Co-ops` | **YES** |
+| `Jobs and Internships - Youth & Young Adult Programs ...` | `Youth & Young Adult Programs ...` | **YES** |
+| `xFU(s)ION Internship Applicant Call - PIRE at CSE` | `CSE` | **YES** |
+
+**A's core claim is CONFIRMED and A's mechanism claim is CORRECTED.** A part 2
+says *"the same splitter produced these 'employers'"*. **It did not produce
+`CSE`.** B decomposed every case and recorded which candidate slot won:
+
+| title | winning slot |
+|---|---|
+| `lanl.jobs` | `employerSegments[0]` = `parts[1]` |
+| `Careers Open application …` | `employerSegments[0]` |
+| `Graduate Intern – Focused Ion Beam …` | `employerSegments[0]` |
+| `Vertex Pharmaceuticals \| Careers \| Co-ops` | `employerSegments[1]` = `parts[2]` |
+| `Jobs and Internships – Youth & Young Adult …` | `employerSegments[0]` |
+| **`xFU(s)ION … - PIRE at CSE`** | **`titleEmployer`, the `at <X>` capture at `jobweb.ts:1218` — NOT the splitter** |
+
+The splitter's own decomposition on `lanl.jobs` is exact and worth putting in the
+record so C does not re-derive it:
+
+```
+parts       ["Nuclear Materials and Molten Salt Technologist 1",
+             "Research Technologist 1", "Los Alamos, NM",
+             "Los Alamos National Laboratory"]
+separators  ["-", "|", "|"]        usesChromeSeparator = true
+employerSegments  ["Research Technologist 1", "Los Alamos, NM",
+                   "Los Alamos National Laboratory"]
+titleEmployer  undefined     parenthetical  undefined
+```
+
+**The employer is `parts[3]`. Peer prints `parts[1]`.** Confirmed:
+A22-04(a)'s parenthetical rule cannot be involved — `parenthetical` is
+`undefined`, exactly as A said.
+
+---
+
+## PART 2 — **ONE GAP OR SEVERAL? ONE. Established by execution, not by convenience.**
+
+Two producers feed **one** candidate list, and the list is resolved by **one**
+expression — `jobweb.ts:1274-1279`:
+
+```
+const company = stripTrailingCareersChrome(
+  [titleEmployer, ...employerSegments, parentheticalEmployer]
+    .map(cleanJobSubtitlePart)
+    .find((p) => p && !KNOWN_JOB_BOARD_DOMAINS… && !SEASON_COHORT_LABEL_RE…
+                 && !looksLikeBareLocation… && !looksLikeHostBrand…
+                 && … && !CAREERS_INDEX_TITLE_RE.test(p)),
+```
+
+**`.find()` takes the FIRST candidate that survives a chain of TEN NEGATIVE
+guards, and there is no eleventh guard that asks whether the survivor names an
+ORGANISATION.** Every one of the six is that same failure: a string that is not
+an employer was not on any rejection list, and position decided.
+
+**The proof that the missing test is the gap — and not a seventh rejection rule
+— is already in this file.** Round 22 C added the ONE candidate source that
+carries a positive test: `parentheticalEmployer` is admitted only when
+`ORG_DESIGNATOR_RE` matches, and C's own entry records **why**: without it,
+`Battery Research Intern (Mumbai, India)` rendered `Mumbai, India`, because
+`looksLikeBareLocation` (`:733`) *"only matches a TRAILING US STATE CODE —
+nothing in the chain is a general location test."* **The chain's blindness is
+already a recorded finding. A23-01 is that same blindness on the two OLDER
+candidate sources.** One gap, one fix site, **one entry.**
+
+### **THE SIX SPLIT INTO TWO OUTCOMES, AND C MUST NOT CONFLATE THEM**
+
+| shape | rows | the honest answer |
+|---|---|---|
+| **The employer IS in the string, at another position** | `lanl.jobs` (employer is the LAST segment), `Vertex Pharmaceuticals \| Careers \| Co-ops` (employer is `parts[0]`, the ROLE slot, so it is never a candidate at all) | **a different value** |
+| **No employer anywhere in the string** | `Careers Open application …`, `Graduate Intern – Focused Ion Beam …`, `Jobs and Internships – Youth & Young Adult …`, and `PIRE at CSE` | **SILENCE** |
+
+**Four of the six can only ever be fixed by rendering nothing.** Ruling 32
+settled that silence is the acceptable outcome; `terra.do` in this very round is
+A's own recorded example of it.
+
+---
+
+## PART 3 — **B's OWN LIVE CORPUS. THE SHAPE IS WIDER THAN A MEASURED, AND THE LIVE ROW IS NOT REPRODUCIBLE THIS PULL.**
+
+**B states the limit first.** `lanl.jobs` **was offered again** in B's pull, and
+the provider's title this time is **`Nuclear Materials and Molten Salt
+Technologist 1`** — the dash tail is gone. The row renders **`company:
+undefined`**, an honest silence. **So A23-01's live instance is NOT organically
+reproducible in B's pull; every verdict above rests on REPLAY of A's own
+recorded string, and B says which rather than implying an organic confirmation.**
+The provider title drifts between pulls; that is not an error in A's
+measurement.
+
+**Running the shipped derivation over all 96 unique offered job rows of B's pull
+produced 31 non-empty employers, and FOUR MORE non-employers A's table does not
+contain:**
+
+| offered title | rendered `company` | what it is | reached a pool? |
+|---|---|---|---|
+| `Co-op, Internships and Summer Research Programs - Chemistry` | `Chemistry` | a university department | no |
+| `Cooperative Education - Chemical Engineering - University of Michigan` | `Chemical Engineering` | a department — **and the employer is the LAST segment again** | no |
+| `Nuclear Engineering Internship Summer 2027 - Career Services` | `Career Services` | a careers office | **kept at ingestion** |
+| `Nuclear Engineering Internship - Summer 2027 at Kairos Power, Alameda, California, United States \| Intern Insider` | `Kairos Power, Alameda, California, United States` | the right employer **with a full address welded on** | **kept at ingestion** |
+
+**So the shape is at least TEN instances across two pulls, not six.** In B's own
+pull **zero of them reached a pool** — every pool employer B measured (`INL`,
+`Thermo Fisher Scientific`, `Oregon Center for Electrochemistry`, `Tesla`,
+`Idaho National Laboratory`) is correct. **The defect is live in A's pull and
+latent in B's. Both are reported.**
+
+---
+
+## PART 4 — **FIX DIRECTION, WITH ITS BOUNDARY CONDITIONS**
+
+**The target: the `.find()` at `jobweb.ts:1274`. Nothing above it changes.**
+
+**(a) PREFER THE LAST SEGMENT, NOT THE FIRST — but only among segments, and only
+when more than one survives.** `employerSegments` is currently consumed in
+document order. In every live case where the employer IS present it is the
+**last** surviving segment: `lanl.jobs` (`Los Alamos National Laboratory`),
+`Battery Research Scientist - Careers - Idaho National Laboratory`,
+`Cooperative Education - Chemical Engineering - University of Michigan`,
+`Molten Salt Chemistry Summer 2025 Internship - INL Careers`.
+**Boundary conditions:**
+- **It must NOT reorder `titleEmployer` or `parentheticalEmployer`.** Those two
+  are positionally justified already (`at <X>` names an employer explicitly; the
+  parenthetical is end-anchored on purpose and round 22 C placed it LAST
+  deliberately). Reversing the whole array re-opens A22-04(a).
+- **It must NOT apply when only one segment survives.** With one survivor,
+  first and last are the same and the change is a no-op — which is the honest
+  description of four of the six rows: **reordering alone fixes NOTHING for
+  them.**
+- **`Vertex Pharmaceuticals | Careers | Co-ops` still renders `Co-ops` under
+  (a).** The employer is `parts[0]`, which the code reserves for `roleTitle`.
+  **B does not recommend promoting `parts[0]` to a candidate**: it would make
+  the ROLE a candidate employer on every ordinary `Role - Employer` title, which
+  is the entire population. **This row stays open under (a) and B says so.**
+
+**(b) THE POSITIVE TEST — the actual gap, and the reason (a) alone is not
+enough.** A candidate that survives the ten negatives must additionally look
+like an organisation before it may be printed. **B has NOT built and measured
+this clause and will not pretend otherwise** — it is the wider change, it can
+turn correct names into silences, and its cost has to be measured against a
+corpus of correct employers, which the 31 rows above supply. **Recommendation:
+C builds it against those 31 rows as its must-keep set, and ships it only if
+every one of `INL`, `Tesla`, `Thermo Fisher Scientific`, `Battery Ventures`,
+`GSK US`, `J&J`, `BMS`, `BD`, `Johnson & Johnson`, `Sandia National
+Laboratories`, `Idaho National Laboratory`, `Oregon Center for Electrochemistry`,
+`Ionis Pharmaceuticals`, `Department of Energy` and `Oak Crest` survives.**
+Note what that list contains: **three two-letter and three-letter acronyms
+(`BD`, `J&J`, `BMS`) and one bare place-shaped name (`Oak Crest`)** — any
+designator-vocabulary rule of the `ORG_DESIGNATOR_RE` kind **will delete them — `ORG_DESIGNATOR_RE` (`jobweb.ts:748`) matches none of `BD`, `J&J`, `BMS`, `Tesla`, `INL` or `Oak Crest`, so reusing it here would delete SIX of the fifteen.**
+That is why (b) is a separate, measured decision and not a one-line addition.
+
+**(c) THE CHEAP, BOUNDED CLAUSES that need no organisation test at all**, each
+with a live case and each unable to produce a new wrong value:
+- **A candidate ending in a literal ellipsis (`...` or `…`) is a TRUNCATED
+  provider string, not a name.** Live: `Focused Ion Beam, Electron Microscopy
+  ...` and `Youth & Young Adult Programs ...`. **Boundary: it must be
+  END-anchored** — `Johnson & Johnson … Careers` mid-string is a different
+  shape, and the file already has `TRUNCATED_TITLE_RE` (`enrich.ts:160`, used at `:225`) as the
+  precedent instrument.
+- **A candidate that is a bare CAREERS-OFFICE label.** `CAREERS_INDEX_TITLE_RE`
+  already rejects `Careers`; it does not reject `Career Services`. **Boundary:
+  whole-segment anchor only**, exactly as B13-01 Gap A set it, so a real
+  employer whose name merely CONTAINS the word survives.
+- **A candidate carrying a full address tail.** `Kairos Power, Alameda,
+  California, United States` — the employer is correct up to the first comma
+  followed by a gazetteer place. **Boundary: trim, never reject**; rejecting
+  would replace a mostly-right name with silence, which this loop ranks as
+  worse only when the value is wrong, and here it is not.
+
+**WHAT THE FIELD SHOWS WHEN EVERY CANDIDATE IS REJECTED:** `company` is
+`undefined`, `scoredJobToJob` leaves `companyOrLab` unset, and the card renders
+**no employer line** — the exact state `terra.do`, `careers.inl.gov` and eight
+other rows are in today. **There is no fallback to the host, the board name, or
+the URL slug, and C must not add one** (Ruling 26's `|| host` is the named
+precedent for why).
+
+---
+
+## PART 5 — **TESTS AT RISK, GREPPED**
+
+`grep -rn "company" --include=*.test.ts` across `web/src`, by file:
+
+| file | `company` refs |
+|---|---|
+| **`web/src/lib/jobs/sources/jobweb.test.ts`** | **84** — the splitter's own suite; **the Ruling 49a lock (`M.S. Internship Program – Oregon Center for Electrochemistry`) and round 21 item 3's `postdocjobs.com` pair live here** |
+| `web/src/lib/jobs/scoring.test.ts` | 28 |
+| `web/src/lib/jobs/dedup.test.ts` | 15 |
+| `web/src/lib/opportunities/job-posting-scope.test.ts` | 9 |
+| `web/src/lib/opportunities/enrich.test.ts` | 8 — **and it holds the SolarPACES lock, 53 of 53** |
+| `web/src/lib/jobs/sources/adzuna.test.ts` | 8 |
+| `web/src/lib/jobs/mapper.test.ts` | 5 |
+| `web/src/lib/opportunities/employer-identity.test.ts` | 5 |
+| `web/src/lib/opportunities/facets.test.ts` | 4 — employer facet counts |
+| `web/src/lib/opportunities/job-cleanup.test.ts` | 1 |
+| `web/src/lib/opportunities/daily-pool-cache.test.ts` | 1 |
+| **`web/src/app/api/jobs/report/route.test.ts`** and **`web/src/app/jobs/[id]/page.test.ts`** | both render the employer — **the two files round 22 C found missing from B's list, named here without being asked** |
+
+**Re-verified live this round and MUST stay green:** `M.S. Internship Program –
+Oregon Center for Electrochemistry` → `Oregon Center for Electrochemistry`
+(en-dash-only, `usesChromeSeparator = false`, Ruling 49a's lock — **and it is
+structurally IDENTICAL to `Graduate Intern – Focused Ion Beam …`, which must go
+SILENT: same separator, same segment count, opposite required outcome. That pair
+is the whole difficulty of this item in two lines**); `Molten Salt Chemical and
+Electrochemical Engineering – MSR Fuel Cycle - PostdocJobs.com` → `undefined`;
+`Battery Research Intern (Mumbai, India)` → `undefined`; `Molten Salt Postdoc
+(Summer 2027)` → `undefined`; `Opening For Marketing Intern (Ion Exchange Ltd.)`
+→ `Ion Exchange Ltd.`; `Battery Research Scientist - Careers - Idaho National
+Laboratory` → `Idaho National Laboratory`.
+
+**Blast radius:** `company` feeds the card's employer line, plate 02's facts,
+the employer facet, `employer-identity`'s dedup key (A22-05), Ruling 57b's
+collision guard input, and `job-posting-scope`'s ownership signal. **It cannot
+move a row into or out of a pool by itself — but through 57b it CAN**, because
+`isOwnerNameTopicCollision` reads the owner name and drops the row. **Surfacing
+a correct employer where there is silence today can therefore REMOVE a row**, as
+`employbl.com` demonstrated organically this round. C must re-measure the pool
+count after this item, not assume it is invariant.
+
+---
