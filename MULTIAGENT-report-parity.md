@@ -47125,3 +47125,375 @@ or edited. Harness deleted before this commit; tree clean.
 **Not done yet (item 2, same session, next):** A20-02 — where the hotel name reaches
 `place.city`, whether it is the same gap as item 1, the design, and the
 one-gap-or-several verdict.
+
+---
+
+### Round 20 — Agent B (item 2 of 2: A20-02. **The hotel reaches `place.city` because the page's own JSON-LD puts the venue name in the locality slot — and the SAME record names it as the venue one line above, so the contradiction is inside a single JSON object.** The correct city, `Rome`, is already being found by a lower layer that never runs. **VERDICT: TWO GAPS, proved by execution.**)
+
+**STATUS: DONE. ROUND 20 B IS COMPLETE.** Second of two items (Ruling 54a). Item 1
+is banked in `c1c9580` and is **not** re-run. **B changed no code, deleted no test,
+edited no test, and touched no file except this one.** Harness rebuilt outside `src/`
+(`web/zz-r20b/`, own vitest config, include pattern `zz-r20b/**/*.probe.ts`) and
+**deleted before this commit**; tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Branch re-read before the commit and
+in the push output (§3). Appended from bash with `cat >>` — **NOT PowerShell**.
+
+---
+
+## THE ANSWER: THE PAGE DECLARES THE VENUE TWICE, AND PEER READS THE WRONG COPY
+
+One JSON-LD `Event` node on the page. Its `location` is a `Place`:
+
+| field | value |
+|---|---|
+| `location.@type` | `Place` |
+| `location.name` | **`NH Villa Carpegna`** ← this is the VENUE, correctly labelled |
+| `location.address.@type` | `PostalAddress` |
+| `location.address.streetAddress` | `Via Pio IV, 6, 00165 Roma RM, Italy` |
+| `location.address.addressLocality` | **`NH Villa Carpegna`** ← the venue name AGAIN, in the CITY slot |
+| `location.address.addressRegion` | **`Italy`** ← the country, in the REGION slot |
+| `location.address.postalCode` | `00165` |
+| `location.address.addressCountry` | `Italy` |
+
+**`extractPlace` (`structured-extract.ts:950-961`) reads ONLY `address`. It never
+looks at `location.name`** — so the one field that proves the locality slot is
+holding a venue name is discarded before anything can use it.
+
+`sanitizePlace` then accepts the value without complaint:
+`plausiblePlaceName("NH Villa Carpegna")` → 3 words, 17 characters, at least one
+letter, no sentence punctuation → **PASSES**. Nothing in the file asks whether a
+locality is a locality.
+
+**And the correct answer is already on the page, computed, and thrown away.**
+`extractOpportunityPageDetails:1610-1613` is a three-branch `??` chain:
+
+```
+place:
+  sanitizePlace(structured?.place) ??      <- branch 1: JSON-LD. WINS. gives the hotel
+  sanitizePlace(metaPlace) ??               <- branch 2: og tags. measured: undefined
+  sanitizePlace(extractBodyTextPlace(html)) <- branch 3: NEVER RUNS. gives {city: "Rome", country: "Italy"}
+```
+
+**Measured, all three branches in isolation on the real page:** branch 1
+`{city:"NH Villa Carpegna", region:"Italy", country:"Italy"}`; branch 2 `undefined`;
+**branch 3 `{city:"Rome", country:"Italy"}` — right.** Branch 3 got there through
+`findVenueCity` against the 454-name `CONFERENCE_CITIES` gazetteer plus the
+proximity cue, then `countryAfterCity`. The `findCurrentVenueClause` path fired
+**0 times** (isolated separately), so `Rome` is the gazetteer walk's own answer, not
+a lucky clause match.
+
+**`event.location` is derived from `place`, not the other way round.**
+`enrich.ts:294` is `location = formatOpportunityPlace(place) || item.location`, and
+`formatOpportunityPlace` de-duplicates components — which is the only reason the
+string reads `NH Villa Carpegna, Italy` and not `NH Villa Carpegna, Italy, Italy`.
+**So the hotel is the single upstream cause of both the wrong facet button and the
+wrong `location` string.**
+
+---
+
+## ONE GAP OR SEVERAL — **TWO. MEASURED END TO END, NOT REASONED.**
+
+Replaying `enrich.ts:293-294` and `:339` exactly, on the real page, under each
+extractor variant, then rendering through the real `eventCardView()`:
+
+| extractor | `isOnline` | `place` | `location` | **card TODAY** | **card with item 1** |
+|---|---|---|---|---|---|
+| shipped | `true` | `{NH Villa Carpegna, Italy, Italy}` | `"NH Villa Carpegna, Italy"` | **`Online`** | `NH Villa Carpegna, Italy` |
+| **item 2 only** | `true` | `{Rome, Italy}` | `"Rome, Italy"` | **`Online`** | **`Rome, Italy`** |
+| item 2 (merge form) | `true` | `{Rome, Italy, Italy}` | `"Rome, Italy"` | **`Online`** | **`Rome, Italy`** |
+
+Read the two columns:
+
+- **Item 2 alone changes NOTHING on the card.** The tile still says `Online`, because
+  `isOnline` is still `true` and `card.ts:38` still suppresses the venue.
+- **Item 1 alone swaps one wrong location for another** — `NH Villa Carpegna, Italy`.
+  **A predicted this and A was right.**
+- **Only both together render `Rome, Italy`.**
+
+**They live in different functions, in different files, and neither can close the
+other: item 1 is a flag/render precedence gap, item 2 is a field-provenance gap.**
+Ruling 54a's separation is confirmed by execution.
+
+**Item 2 is NOT vacuous on its own, and this is where B corrects A.** A wrote that
+item 2 is invisible today. **It is visible today, on a different surface: the Location
+FACET BUTTON reads `NH Villa Carpegna`** (`facets.ts:319` → `:88`, which reads
+`place.city` and never consults `isOnline`). **So item 2 alone repairs a live,
+user-facing wrong value — just not the one A measured.**
+
+**THEREFORE B INVERTS A's WORK ORDER, AND SAYS WHY.** Ruling 54a binds the
+*separation* (two items, neither closed by implication); it does not bind the order.
+§2 asks B for "the order C should work."
+
+- **Do item 2 FIRST.** If C is stopped after one item, the card is unchanged
+  (`Online`, today's behaviour) and the facet button is repaired. **No new wrong value
+  is introduced.**
+- **Do item 1 SECOND.** If C is stopped after item 1 having not done item 2, the card
+  reads a hotel name — a *fresh* wrong value on the surface this loop measures.
+- **The round is not finished until both land.** Acceptance check for C, on a live
+  pull: `chemistryworldconference.com`'s `locationLabel` reads **`Rome, Italy · …`**
+  and its Location facet button reads **`Rome`**.
+
+---
+
+## THE DESIGN — ONE CLOSED, STRUCTURAL, SELF-CONTAINED TEST
+
+The single edit in `structured-extract.ts`'s `extractPlace`:
+
+```
+const locality = nonEmptyString(address.addressLocality);
+const venueName = nonEmptyString(locationRecord.name);
+// schema.org Place.name IS the venue. When the locality slot repeats it
+// verbatim, the slot holds a venue name and the whole address record is
+// unreliable, so fail it closed and let the lower layers answer instead of
+// publishing a hotel as a city. Same policy findCurrentVenueClause already
+// applies to a venue-only clause at :1396-1397.
+if (locality && venueName && canonicalize(locality) === canonicalize(venueName)) {
+  return undefined;
+}
+
+return sanitizePlace({
+  city: locality,
+  region: nonEmptyString(address.addressRegion),
+  country: countryName(address.addressCountry),
+});
+```
+
+**Why this shape and no other:**
+
+- **It is a comparison of one record against itself.** No host name, no word list, no
+  gazetteer, no open character class. **By construction it cannot fire on a page whose
+  `Place` record is well-formed**, because a well-formed record's venue name and
+  locality are different strings.
+- **It reuses the file's own precedent verbatim.** `findCurrentVenueClause:1396-1397`
+  already discards a whole clause when its "city" is a facility name, with the comment
+  *"A venue-only phrase has no separately proved municipal WHERE value."* This applies
+  the same policy to the branch that had no equivalent guard.
+- **`canonicalize` is the file's existing normalizer** — already imported, already
+  used by `matchCountryToken`, `findGazetteerMatch` and `countryAfterCity`.
+- **Failing the whole branch closed (rather than blanking just the city) is what lets
+  branch 3 answer.** Blanking only the city leaves `{region:"Italy", country:"Italy"}`,
+  which is still truthy, so the `??` chain would still stop at branch 1 and the tile
+  would read `Italy` instead of `Rome, Italy`. **Measured, not assumed.**
+
+### THE MUST-KEEP IS ALREADY IN THE REPOSITORY, AS A REAL MEASURED FIXTURE
+
+`web/src/lib/opportunities/__fixtures__/dlr-emea2026-workshop.html` — a real page,
+already shipped, already asserted on — carries **exactly the well-formed counterpart**:
+
+| field | DLR fixture (must survive) | the Rome record (must be rejected) |
+|---|---|---|
+| `location.name` | `DLR Institute of Networked Energy Systems` | `NH Villa Carpegna` |
+| `address.addressLocality` | **`Oldenburg`** | **`NH Villa Carpegna`** |
+| same string? | **NO** → guard silent, `Oldenburg` survives | **YES** → guard fires |
+
+**The guard cuts between a correct `Place` record and a broken one, on two real pages,
+and the correct one is a fixture this repo has been asserting on for rounds.** That is
+the strongest form of must-keep evidence available for this item and B did not have to
+construct it.
+
+---
+
+## THREE ALTERNATIVES PRICED. ONE REJECTED ON A MEASURED TEST BREAK.
+
+### REJECTED — per-component merge of the three layers (`mergePlaceLayers`)
+
+Keeps the JSON-LD country and fills missing components from lower layers using the
+existing `mergeOpportunityPlace` idiom. It produces the right city here **and it
+independently improved a second real row** (`thebatteryshow.com` gained
+`region: "MI"`, correct for Detroit). **But it BREAKS A SHIPPED TEST:**
+
+> `structured-extract.test.ts:322`, *"uses structured and Open Graph places before the
+> body fallback"* — expects `{city:"Berlin", region: undefined, country:"Germany"}`,
+> **gets `region: "France"`.**
+
+The og layer parsed `Paris, France` into `{city:"Paris", region:"France"}` — its
+"region" is a **country** — and the merge pulled `France` into a Berlin address.
+**That is precisely the cross-contamination the `??` chain's strict precedence exists
+to prevent, and it is the class `countryAfterCity`'s own comment warns about
+(*"A wrong country is worse than no country, because the user filters on it"*).**
+Rejected on evidence, not taste. It also leaves `region: "Italy"` on the target
+record, where the recommended form removes it.
+
+### REJECTED — require the locality to be in `CONFERENCE_CITIES`
+
+454 names is nowhere near a world gazetteer; this would discard thousands of
+legitimate small localities to catch one broken record. B4-02's own note already
+records gazetteer coverage as an open limitation. **Rejected as over-broad.**
+
+### REJECTED — `addressRegion === addressCountry` as the test
+
+The record does trip it (`region` and `country` are both `Italy`), and it is a real
+signal of a broken address. **But it is insufficient on its own: the test only touches
+`region`, so dropping it leaves `{city:"NH Villa Carpegna", country:"Italy"}` — the
+hotel is still the city.** Named because it is a genuine second signal a later round
+could add as a *record-hygiene* fix; **it does not solve this item.**
+
+### AVAILABLE BUT NOT USED — `streetAddress` names the real city
+
+`"Via Pio IV, 6, 00165 Roma RM, Italy"` contains `Roma`. Reading it would need a
+free-form street-address parser **and** `Roma` → `Rome` aliasing that the gazetteer
+does not carry. **An open-ended parser is exactly what Ruling 35/37 discipline says
+not to build when an honest fallback already reaches the right answer** — branch 3
+already does. **Named and declined.**
+
+---
+
+## SCORED ON REAL DATA — 1 OF 16 PAGES, AND IT IS THE TARGET
+
+Every URL from the same live pool (17 rows) re-fetched through Peer's own
+`fetchPageHtml` and run through the shipped extractor, the control copy, and both
+candidates.
+
+| | pages changed | detail |
+|---|---|---|
+| control copy vs shipped | **0 of 16** | fidelity proof |
+| **recommended form** | **1 of 16** | `chemistryworldconference.com`: `{NH Villa Carpegna, Italy, Italy}` → **`{Rome, Italy}`** |
+| merge form | 2 of 16 | same, plus `thebatteryshow.com` `+region:"MI"` — and it breaks a shipped test |
+
+`euagenda.eu` returned `null` from the fetcher and is **not counted** (it is
+permanently excluded by Ruling 45a in any case; the `null` is recorded, not used).
+Every other page — `ans.org`, `nanoge.org`, `thebatteryshow.com`, `sdle.co.il`,
+`ibatterysummit.com`, `storageusa.solarenergyevents.com`,
+`internationalbatteryseminar.com`, `battery-power.eu`, `flogen.org` and the five that
+yield no place at all — is **byte-identical** under the recommended form.
+
+---
+
+## WHAT RENDERS ON REJECTION, AT EACH LAYER — AND THE ONE REAL COST
+
+| where it fails | resulting `place` | `location` | tile, with item 1 shipped |
+|---|---|---|---|
+| guard fires, branch 3 finds a gazetteer city | `{Rome, Italy}` | `"Rome, Italy"` | **`Rome, Italy`** |
+| guard fires, branch 3 finds only a country | `{country:"Italy"}` | `"Italy"` | **`Italy`** — thin but true |
+| **guard fires, branch 3 finds nothing at all** | **`undefined`** | `"See event page"` | **`Online`** ← **the cost** |
+| guard silent (well-formed record) | unchanged | unchanged | unchanged |
+| no JSON-LD at all | unchanged | unchanged | unchanged |
+
+**THE COST, STATED PLAINLY.** On a page that puts its venue name in the locality slot
+**and** whose body text names no gazetteer city, Peer loses the `country` it publishes
+today, ends with no `place`, and — because item 1's predicate is then false — the card
+returns to saying `Online`. **That is a return to today's exact behaviour, not a new
+failure mode**, and it is the honest-absence trade this codebase has taken repeatedly
+(Rulings 32/35/37: a wrong confident answer converted into an honest absent one is
+progress). **B does not call it negligible.** It had **zero occurrences in 16 real
+pages**, which is evidence, not proof.
+
+---
+
+## TESTS AT RISK: **ZERO — MEASURED BY RUNNING THE REAL SUITES**
+
+Not grepped and inferred — the shipped suites were run against the candidate copies:
+
+| suite | control | **recommended form** | merge form |
+|---|---|---|---|
+| `structured-extract.test.ts` | 41/41 | **41/41** | **40/41 — FAILS** |
+| `enrich.test.ts` | 53/53 | **53/53** | 53/53 |
+| `card.test.ts` (item 1) | 2/2 | **2/2** | n/a |
+
+**283 of 284 assertions green across all seven candidate runs; the single failure is
+the merge form's, and it is the reason the merge form is rejected.**
+
+Callers grepped by name for completeness: `extractOpportunityPageDetails` is called
+from exactly one production site, `enrich.ts:287`, plus its own test file. `extractPlace`
+is module-private. **No fixture anywhere in the repo has a `Place` node whose `name`
+equals its `addressLocality`** — checked; the only fixture with a `Place.name` at all
+is the DLR one, and its two values differ, which is why it survives.
+
+**NEGATIVE PROOF (Ruling 53b), predicted structurally so C can check rather than
+discover:**
+
+- The guard **will** have a uniquely-red test — a `Place` whose `name` equals its
+  `addressLocality`, asserting the place falls through to the body-text city.
+  Reverting the edit must turn it red.
+- **The DLR fixture is a LOCK, not negative proof.** It passes today and passes after;
+  C must label it that way rather than presenting it as coverage of the change.
+- The `locality && venueName &&` conjunct guards need their own cases (a `Place` with
+  a `name` and no locality; a locality and no `name`) — both must leave the shipped
+  path untouched.
+
+---
+
+## SCORE MOVEMENT: **ZERO ON THE REAL PROFILE, AND UPWARD IF IT EVER MOVES**
+
+`locationFit(item.location, item.isOnline, profile.locations)` at `scoring.ts:244` is
+the only place-derived scoring input. Measured against **the real profile's own
+preference list**, which contains **0 entries** — so `locationFit` short-circuits to
+`1` for every row and **the score does not move at all**. Against an illustrative
+non-empty set the change is favourable, not costly:
+
+| value | `locationFit(["rome"])` | `locationFit(["chicago"])` |
+|---|---|---|
+| shipped `"NH Villa Carpegna, Italy"` | 0.85 | 0.85 |
+| **recommended `"Rome, Italy"`** | **1** | 0.85 |
+| rejection floor `"See event page"` | 0.85 | 0.85 |
+
+**Unlike round 19's item 2, there is no score cost to disclose here.** `matchedKeywords`,
+`typedOpportunityName`, `typedOpportunityDescription`, `startDate`, `endDate` and
+`isOnline` are all identical under every candidate — checked, not assumed.
+
+---
+
+## FIX GUIDE FOR C — THE ORDER TO WORK IN
+
+1. **A20-02 first** (`structured-extract.ts`, `extractPlace`). The venue-name guard
+   above. Gate. This repairs the Location facet button and changes nothing on the card.
+2. **A20-01 second** (`facets.ts` export + `events/card.ts:38`). Export
+   `hasPhysicalPlace(place)` from `facets.ts`, have `opportunityFormat` call it (pure
+   refactor, no behaviour change, provable by the shipped `facets.test.ts`), and use it
+   in `locationView`. Gate.
+3. **Then the two report sites, if the manager rules the widening in** —
+   `app/events/[id]/page.tsx:634` and `:1715`, through the same exported predicate.
+   **`POLICY — manager decides`, raised in item 1's entry.** Plate 03 is the event
+   REPORT, so leaving those two makes A20-01 reappear next round on the report surface.
+4. **Do NOT touch** `page.tsx:527` (`preferredFeeTier`), `:656`, `:1728`,
+   `shared.ts`'s `locationFit`, `scoring.ts:244`, `ccfddl.ts:146`, or the three
+   feed/briefing render sites. Each is named above with its reason.
+5. **Acceptance, on a live pull:** `chemistryworldconference.com` renders
+   `Rome, Italy · …` on the card and `Rome` in the Location facet.
+
+---
+
+## `POLICY — manager decides`: B RAISES ONE, AND DECIDES NONE OF THE FOUR OPEN
+
+**NEW (raised in item 1, restated here so the hand-off carries it):** the **render-site
+scope** — card only, or card plus the two event-REPORT sites. B recommends including
+the report and states the reason (plate 03 *is* the report), but widening past A's
+measured surface is the manager's call.
+
+**Untouched and undecided by B**, exactly as A left them: Ruling 33's full-phrase
+collisions (52b is its evidence line); Ruling 51b's five-pull majority scoring;
+Ruling 51c's `owned`-widening. **B also does not decide the format-word copy question**
+(`page.tsx:656` / `:1728` saying `"in person"` for a hybrid) — writing `"hybrid"` there
+would be inventing plate copy.
+
+**B raises nothing about Ruling 54b or 54c**; both are accepted as ruled and neither
+touches these two items.
+
+---
+
+## THE GATE, RE-RUN BY B AFTER DELETING THE HARNESS
+
+`cd web && npx vitest run && npx tsc --noEmit && npx eslint`, run with the tree
+confirmed clean:
+
+- **90 files / 1573 tests, 1572 passing** — byte-for-byte what round 19 C left and
+  round 20 A re-measured. **B changed no code, so this is a confirmation that the
+  harness left nothing behind, not a result.**
+- Sole failure the standing `benchmark.test.ts` live-search flake, presenting at
+  **`:109`** (`expected false to be true`, the survivor check) — **the same one of its
+  three recorded forms round 20 A saw. Still ONE flake, ONE test. Not a new defect.**
+- `npx tsc --noEmit`: **clean.** `npx eslint`: exactly the one standing `quiz.tsx:46`
+  error.
+- `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used.
+
+**No credential read, printed, logged or written — boolean presence only. ONE live
+event-pool pull (no-op cache) and page fetches through Peer's own `fetchPageHtml` of
+pool URLs only; every retained value is a derived boolean or a short field, and no page
+body entered context. `euagenda.eu` NOT fetched deliberately (45a) and independently
+returned `null`; Ruling 41c's three hosts NOT hunted (45b); no job-side host fetched.**
+No third-party page contained text directed at an agent and none was treated as an
+instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or edited.
+Harness deleted before this commit; tree clean.
+
+**Round 20 B is COMPLETE.**
