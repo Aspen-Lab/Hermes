@@ -24214,3 +24214,230 @@ must-reject / must-survive cases).
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-02: `ruggedthz.com` — THE MANDATORY ITEM. Design built, adversarially tested, and it SURVIVED — after its first version was killed by my own counterexample)
+
+**STATUS: DONE. THE DESIGN SURVIVED THE ADVERSARIAL PASS.** This is the item
+§1w Ruling 36's pre-set third-strike threshold authorises and requires (§1y
+Ruling 38 confirms the authorisation is automatic; A fired it with 5-of-5
+in-pool presence across rounds 9 + 11 + 12). Everything below is established by
+**execution against the shipped code** in a throwaway harness outside `src/`,
+**deleted before this commit**. No product code touched. No live fetch — the
+exact `<title>` is already in §4 (round 9 A fetched it directly and quoted it
+verbatim).
+
+**Dependency: NONE. B12-02 does not depend on B12-01** and can land first. It
+touches the **title-segment stage** and the **URL-slug stage**; B12-01 touches
+the **snippet stage**. They meet only at the shipped guard pair, which neither
+changes.
+
+---
+
+**1. THE HOST'S TITLE STRUCTURE — designed against this, not against one string,
+per §1y Ruling 38's binding addition.**
+
+The real `<title>`, from round 9 A's own direct fetch:
+
+```
+"Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero Research Lab"
+```
+
+Split on the shipped separator set, then each half through the shipped guards:
+
+```
+segment 1  "Ruggiero Group Attends the 2026 Crystal Engineering GRC"
+             looksLikeEventTitle = false   <-- PRESENT_NARRATIVE_RE rejects it
+segment 2  "Ruggiero Research Lab"
+             looksLikeEventTitle = true, isChromeSegment = false,
+             looksLikeHostBrand("Ruggiero Research Lab","ruggedthz.com") = false
+bestEventTitleSegment(...) === "Ruggiero Research Lab"
+```
+
+**The structure, stated as structure:** this host publishes *one blog post per
+event attended*. Every such title is `<narrative sentence naming the event> –
+<the lab's own brand>`. The brand half always survives; the naming half is
+always rejected. **The name the reader wants is only ever in the rejected
+half.** That is why Ruling 36's lead is right and why widening the host-brand
+check cannot work here even in principle — the brand half is a perfectly
+well-formed organisation name and there is nothing wrong with it except that it
+is not an event.
+
+**Failure mode 2, reproduced.** A's fifth pull rendered
+`"sessions, even if breakfast occasionally became more of an aspiration than a
+reality."`. Reproduced end to end against shipped code: with a chrome-only title
+and that fragment in the snippet,
+`eventNameFrom("Home | Events", "…sessions, even if breakfast…", <the real url>)`
+returns **exactly that fragment**. So mode 2 is *the same page* with a title the
+provider returned differently that minute; the title stage returns nothing, the
+URL-slug stage is correctly rejected (B10-04's casing fix working —
+`bestEventTitleSegment("Ruggiero group attends the 2026 crystal engineering grc")`
+!== itself, confirmed), and the snippet stage supplies the fragment. **One design
+must therefore attach at TWO points, and it does.**
+
+---
+
+**2. THE DESIGN — `recoverFromNarrative`, with slug corroboration.**
+
+Given a segment the narrative guard rejected:
+
+1. **Locate the verb using the guard that already found it.** `PRESENT_NARRATIVE_RE`
+   (`eventweb.ts:555-556`) matches `<1–5-word subject> <verb>`. Take the text
+   **after** the match — nothing is parsed from scratch. For the real host:
+   `"the 2026 Crystal Engineering GRC"`.
+2. Strip one leading determiner (`the|a|an|its|our|their|his|her`). Here the
+   `the` is demonstrably a sentence artefact, which is why the strip belongs
+   **here** and not in B12-01.
+3. Re-run **the shipped guard pair** (`!isChromeSegment(rest, host) &&
+   looksLikeEventTitle(rest)`) on the remainder. Nothing new is invented.
+4. Require the remainder to contain a **4-digit year** *or* pass the shipped
+   `looksLikeEvent`. Both are existing, genuinely closed tests — a year regex,
+   and a fixed vocabulary of event nouns. **Neither samples an open class**
+   (Ruling 37's trap, checked deliberately).
+5. **Require the page's own URL slug to corroborate it**: every alphanumeric
+   word of the remainder must appear as a whole word in the URL path. For the
+   real host the slug is
+   `ruggiero-group-attends-the-2026-crystal-engineering-grc`, which contains
+   `2026`, `crystal`, `engineering` and `grc`. **This step is the one that makes
+   the design safe, and I only added it after my first version failed — see
+   section 3.**
+6. **Use the recovery ONLY when no surviving sibling segment is itself
+   corroborated by that same slug.** If a sibling is corroborated, the existing
+   selection runs completely unchanged.
+
+**Attachment points — both are required:**
+- `bestEventTitleSegment` (`eventweb.ts:615-647`) — covers failure mode 1.
+- `eventNameFrom`'s URL-slug stage (`eventweb.ts:661-664`) — after `fromSlug`
+  fails its existing re-guard, try the recovery on `fromSlug` before falling to
+  the snippet. Covers failure mode 2. Confirmed by execution: the recovery on
+  the slug-derived sentence returns `"2026 crystal engineering grc"`.
+  **Casing note:** lowercase, because `nameFromUrlSlug` only capitalises the
+  first character — consistent with that function's existing documented
+  behaviour, and far better than the breakfast fragment. C may apply the same
+  first-character capitalisation; that is cosmetic, not load-bearing.
+
+**IMPLEMENTATION TRAP, flagged because I hit it in the harness:** the guard-pair
+re-check in step 3 must call `isChromeSegment` + `looksLikeEventTitle`
+**directly**. Calling `bestEventTitleSegment` from inside itself is infinite
+recursion. I used `bestEventTitleSegment` in the harness only because
+`isChromeSegment` is not exported; C is in the same file and must not copy that
+shortcut.
+
+---
+
+**3. ADVERSARIAL RESULTS — Ruling 31's bar. THE FIRST VERSION FAILED AND I
+KILLED IT. Reported in full, because a design that was never in danger was never
+really tested.**
+
+**V1 (recovery always pre-empts the ordinary selection) — REJECTED.** It fixes
+the real host, but I built this counterexample and it broke:
+
+```
+title "SolarPACES Announces the 2026 Call Deadline – SolarPACES 2026"
+url   https://solarpaces.org/solarpaces-announces-the-2026-call-deadline
+  shipped -> "SolarPACES 2026"      (CORRECT)
+  V1      -> "2026 Call Deadline"   (REGRESSION — a real name replaced by a label)
+```
+
+That is exactly the brief's "a real org name that legitimately IS the event
+host's name" case, and V1 destroys it. **Step 6 exists because of this
+counterexample**: in that title the *sibling* is slug-corroborated, so the
+recovery must stand down. With step 6 in place (V3), the same input returns
+`"SolarPACES 2026"` unchanged.
+
+**V3, full matrix, run against shipped code:**
+
+```
+-- THE REAL HOST, failure mode 1 (4 of 5 runs)
+   shipped "Ruggiero Research Lab"          V3 "2026 Crystal Engineering GRC"   FIXED
+-- counterexample above (corroborated sibling IS the event)
+   shipped "SolarPACES 2026"                V3 "SolarPACES 2026"                SAFE
+-- MUST-SURVIVE: org name that legitimately IS the host org
+   "Gordon Research Conferences Presents the 2026 Crystal Engineering GRC – Gordon Research Conferences"
+   shipped "Gordon Research Conferences"    V3 "2026 Crystal Engineering GRC"   CORRECT (the event, not the org)
+-- MUST-SURVIVE: narrative segment contains NO event name
+   "Ruggiero Group Presents Its Annual Review – Ruggiero Research Lab"
+   shipped "Ruggiero Research Lab"          V3 unchanged                        SAFE (step 4 blocks it)
+-- MUST-SURVIVE: narrative tail is a place, no year, no keyword
+   "Ruggiero Group Visits Berlin And Munich – Ruggiero Research Lab"
+   shipped "Ruggiero Research Lab"          V3 unchanged                        SAFE
+-- MUST-SURVIVE: correct short sibling, longer UNcorroborated tail
+   "…Attends The Big Crystal Engineering Gathering In Boston – SSI24"  (url /ssi24)
+   shipped "SSI24"                          V3 "SSI24"                          SAFE (step 5 blocks it)
+-- MUST-SURVIVE: real conference sibling
+   "Acme Corp Presents Summer Fun – Acme Battery Symposium 2026"
+   shipped "Acme Battery Symposium 2026"    V3 unchanged                        SAFE
+-- MUST-SURVIVE: no narrative segment at all
+   "Call for papers - Battery Conference 2027"
+   shipped "Battery Conference 2027"        V3 unchanged                        SAFE
+-- MUST-SURVIVE: SolarPACES lock shape, plain
+   shipped "SolarPACES 2026"                V3 unchanged                        SAFE
+-- MUST-SURVIVE: eventNameFrom called with NO url
+   shipped "Ruggiero Research Lab"          V3 unchanged                        SAFE (no slug -> no recovery)
+-- HARD: chrome-only sibling, title stage otherwise empty
+   "…Attends the 2026 Crystal Engineering GRC – Home"
+   shipped undefined                        V3 "2026 Crystal Engineering GRC"   IMPROVED
+```
+
+**One residual, reported rather than hidden.** Constructed case
+`"Ruggiero Group Attends A Long Series Of 2026 Meetings – Ruggiero Research Lab"`
+with a matching slug: V3 returns `"Long Series Of 2026 Meetings"` where shipped
+returns `"Ruggiero Research Lab"`. **Both are wrong**, so this is not a
+regression in reader terms, but it is a new wrong string and I am not going to
+pretend otherwise. It requires a title whose narrative tail contains a year, is
+fully slug-corroborated, and names no real event — I could not construct a
+plausible real-world instance, only this deliberate one.
+
+**No existing test changes.** The only test in the suite carrying this shape is
+`eventweb.test.ts:204-211`
+(`eventNameFrom("Ruggiero Group Attends the 2026 Crystal Engineering GRC | Crystal Engineering Symposium", "")`
+→ `"Crystal Engineering Symposium"`). It passes **no URL**, so there is no slug,
+so no recovery fires and the assertion is untouched — confirmed by execution as
+the "no url" row above. `eventweb.test.ts:549` and `:572` assert
+`looksLikeEventTitle` directly and that function is not modified at all.
+
+---
+
+**4. WHAT RENDERS WHEN THE DESIGN FINDS NOTHING — Ruling 32's mandatory
+question.**
+
+**Nothing changes.** Every one of steps 3–6 is a *veto*: if any fails, the
+function returns `undefined` and execution continues down the existing chain
+exactly as it does today — surviving sibling segment, then URL slug, then
+snippet, then the honest URL host (`eventweb.ts:717-724`), then `"Untitled
+event"`. **The design adds no fallback and reinserts no rejected value**: the
+recovery is a *substring of a rejected segment*, never the rejected segment
+itself, and it is admitted only after passing the same guard pair that rejected
+its parent. Confirmed by execution on all six must-survive rows above, where V3
+returns byte-identical output to shipped code.
+
+---
+
+**5. TESTS AT RISK — by grepping for callers.**
+
+- `bestEventTitleSegment` is exported; callers are `eventNameFrom` (same file)
+  and its own tests. Grepped: no other production caller.
+- `eventNameFrom` is called from `webResultToRawEventItem` (`eventweb.ts:760`)
+  and its tests.
+- `PRESENT_NARRATIVE_RE` and `looksLikeEventTitle` are **not modified**, so
+  `web/src/lib/opportunities/event-details.ts:30` and
+  `web/src/lib/opportunities/enrich.ts` are unaffected by construction.
+- C must still run **`web/src/lib/opportunities/enrich.test.ts`** (the SolarPACES
+  regression lock — it lives there, not under `events/`, and this loop has
+  recorded that fact twice because it is easy to miss) and
+  **`web/src/lib/events/scoring.test.ts`** (the missed second file twice
+  already). Full gate: `cd web && npx vitest run && npx tsc --noEmit &&
+  npx eslint`.
+
+New tests C should add, each verified to FAIL against pre-fix code before being
+counted (this loop's own standard): the real host's title → the recovered name;
+the `SolarPACES Announces…` counterexample → unchanged (this is the one that
+proves step 6 is load-bearing); the no-URL case → unchanged; the "no event name
+in the narrative" case → unchanged; and the slug-stage case for failure mode 2.
+
+Files C will touch: `web/src/lib/events/sources/eventweb.ts` and
+`web/src/lib/events/sources/eventweb.test.ts`.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
