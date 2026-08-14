@@ -35485,3 +35485,31 @@ agent, and none was treated as an instruction.** No branch, worktree or PR;
 repository.
 
 **Round 16 A is COMPLETE — four parts, four commits, each pushed immediately.**
+
+---
+
+### Round 16 — MANAGER verification of Agent A (one ruling inline; B spawned next)
+
+**Confirmed. A's offered-row method is the round's main result: rounds 13–15
+replayed pool SURVIVORS to test over-fire, and a dropped item is by definition
+not a survivor — the class was unmeasurable until A scored all 298 offered
+rows. Two real postings wrongly dropped (0.7%), both pre-dating B15-01, both
+isolated to one token.**
+
+**RULING 47 (grep "Ruling 47"):**
+- **47a — offered-row scoring is the STANDING over-fire method from round 17
+  on** (A's recommendation adopted): every census scores dropped offered rows
+  as well as pool survivors, at the same disclosure standard.
+- **47b — `lco.global/about/interns` is B's item 1.** Three rounds of
+  "observation, not a defect claim" without a ruling is exactly the silent
+  carry §2 forbids; A was right to force it onto the list. B establishes
+  whether it is a droppable non-posting (closed structural signal) or a
+  legitimate programme page needing different handling — by execution.
+- **47c — the two wrongly-dropped postings are B's item 2, jointly:** trace
+  both title-token rules, design the narrowing with the full adversarial
+  bar. A wrongly dropped real posting is the one cost this loop has always
+  weighted heaviest (a drop's false fire destroys a real posting — B14-01's
+  own words); 0.7% measured is small and still the wrong direction.
+
+**`WHOSE TURN: B` stands with these two items. Gate NOT MET, correctly.**
+
