@@ -50736,3 +50736,71 @@ Compared as a sequence, not as a total (round 20 C's rule — a total hides two 
 **C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.** **Recorded for the manager, not as a request to re-scope:** Ruling 56a called this repair free, and it was not — a later hygiene item of this class should check whether the damaged bytes are read by the code around them before being queued as free.
 
 ---
+
+### Round 21 — Agent C (item 1 of 6: **A21-01, the `ev.careers` category page. SHIPPED — one word, one list, exactly as B specified.** B's control-fidelity numbers re-measured by execution FIRST and all three reproduce; both larger designs re-refused on re-executed numbers rather than on B's say-so.)
+
+**STATUS: DONE.** **NO TEST DELETED. NO ASSERTION EDITED.** Five assertions ADDED. Branch re-read before the commit and in the push output (§3).
+
+**HARNESS.** `web/zz-r21c/`, outside `src/`, own vitest config, include pattern `zz-r21c/**/*.probe.ts`. Candidates are **real copies of the shipped file with one textual edit** (B's method), the single rewrite being `../types` → `@/lib/jobs/types` so a copy outside `src/` resolves the same modules. **Moved out of the repository before this commit and the gate re-run after it**; `git status --porcelain --untracked-files=all` shows only the two source files.
+
+---
+
+## RE-MEASUREMENT FIRST — **ALL THREE OF B's FIDELITY NUMBERS REPRODUCE**
+
+| check | B recorded | C re-measured |
+|---|---|---|
+| shipped `jobweb.test.ts` against the byte-identical control copy | **387/387** | **387/387** |
+| control copy vs the **genuinely imported** shipped module, verdict for verdict on the target rows | 0 mismatches | **0 mismatches** |
+| A21-01's reproduction (both `isListingPage` calls, admission, `roleTitle`, `company`) | `false` / `false` / admitted / `Internship EV Jobs` / `undefined` | **identical, character for character** |
+
+**The live-offered-row corpus (115 rows) is NOT re-measured and C says so plainly** — it needs a live pull, which is A's standing method and costs a real network round trip per row. C re-measured everything that is reproducible offline and did not launder B's number as its own.
+
+---
+
+## THE EDIT
+
+One word added to `OWNER_INDEX_TITLE_RE`'s section-noun list in `jobweb.ts`, **and to nothing else**:
+
+```
+-  …\s+(?:internships|careers|vacancies|opportunities|openings)\s*$/i;
++  …\s+(?:internships|jobs|careers|vacancies|opportunities|openings)\s*$/i;
+```
+
+**BOTH LARGER DESIGNS RE-REFUSED ON RE-EXECUTED NUMBERS, NOT ON B's SAY-SO.**
+
+| candidate | shipped suite | target rows | A21-01 |
+|---|---|---|---|
+| `control` | 387/387 | baseline | **KEPT (the defect)** |
+| **`i1jobs`** — one word, one list | **387/387** | **only A21-01 moves** | **DROPPED** |
+| `i1jobsboth` — also `BRAND_PROGRAMME_TITLE_RE` | 387/387 | **verdict-identical to `i1jobs`** | DROPPED |
+| `i1brandjobs` — host-brand rule | not rebuilt | — | **cannot fire** |
+
+- **`i1jobsboth` is asserted verdict-identical to `i1jobs`**, so the second edit is a byte no test can turn red — Ruling 53b's complaint, confirmed by execution rather than inherited.
+- **`i1brandjobs` was not rebuilt, and C re-executed B's REASON instead of the candidate:** `looksLikeHostBrand("EV", "ev.careers")` is **`false`**, asserted directly. The rule cannot reach this row, so building it would measure nothing. **Recorded so a later round does not re-propose it.**
+
+---
+
+## THE NEGATIVE PROOF
+
+The one-word edit reverted, shipped suite re-run:
+
+| | tests | passing | red |
+|---|---|---|---|
+| with the fix | 392 | **392** | — |
+| **fix reverted** | 392 | **391** | **exactly one — the new A21-01 assertion, and nothing else** |
+
+**Uniquely red.** **The four must-keep assertions are ADMITTED CONTROLS, not evidence** — they pass before and after by design; their job is to prove the edit is narrow, not to prove it works. C states that rather than counting nine assertions as if all nine were load-bearing.
+
+**Must-keeps asserted in the shipped suite** (they now fail loudly if a later round widens this list): a role that BEGINS with `Jobs` (`Jobs Data Analyst at the Bureau of Labor Statistics`), a role that contains it (`Green Jobs Analyst`), an employer whose NAME ends in it (`Battery Technician - Sunshine Jobs`), and **`Research positions at CERN` — the file's own named exclusion, proving `positions` stayed out of the list.**
+
+**The named three-token miss is untouched and still missed** (`Idaho National Laboratory Internships`), asserted as before. This item does not re-open B17-01.
+
+**The doc comment records the item, the inconsistency argument, and both refused designs**, so a later round does not re-derive them.
+
+---
+
+**GATE AFTER ITEM 1: 91 files / 1601 tests, 1600 passing** — the five new assertions are the whole difference from the 1596/1595 baseline. Sole failure the standing `benchmark.test.ts` flake at **`:109`**. `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error. Named runs: **`jobweb.test.ts` 392/392**, `scoring.test.ts` (jobs) + `scoring.test.ts` (events) + `job-cleanup.test.ts` + `jobweb.test.ts` together **500/500**, and **`enrich.test.ts` SOLO 53/53 — the SolarPACES lock is intact.**
+
+**C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
+
+---

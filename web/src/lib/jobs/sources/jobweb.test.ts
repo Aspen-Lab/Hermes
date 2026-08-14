@@ -1996,6 +1996,39 @@ describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
       isListingPage("Idaho National Laboratory Internships", "inl.gov", "/internships"),
     ).toBe(false);
   });
+
+  // 11. ROUND 21, ITEM 1 (A21-01). `jobs` was missing from
+  // OWNER_INDEX_TITLE_RE's section-noun list while being present in every other
+  // section-noun list in the module. `ev.careers/jobs/internship` is a category
+  // page that rendered as a single job card on 5 of 5 live pulls.
+  // THIS ASSERTION IS UNIQUELY RED WITHOUT THE ONE-WORD EDIT: reverted, this
+  // test and only this test fails (measured, 386/387).
+  it("drops an owner-section index title ending in `Jobs` (A21-01)", () => {
+    expect(
+      isListingPage("Internship EV Jobs", "ev.careers", "/jobs/internship"),
+    ).toBe(true);
+    expect(
+      webResultToRawJobItem({
+        title: "Internship EV Jobs - EV.Careers",
+        url: "https://ev.careers/jobs/internship",
+        snippet:
+          "Find the best electric vehicle Internship jobs on EV.Careers today.",
+      }),
+    ).toBeNull();
+  });
+
+  // The must-keeps that make the edit narrow rather than a blanket. A real role
+  // that merely CONTAINS `Jobs`, or an employer whose NAME ends in `Jobs`, is a
+  // vacancy and must survive. `positions` stays out of the list (see the module
+  // doc comment): `Research positions at CERN` is a shipped must-keep.
+  it.each([
+    "Jobs Data Analyst at the Bureau of Labor Statistics",
+    "Green Jobs Analyst",
+    "Battery Technician - Sunshine Jobs",
+    "Research positions at CERN",
+  ])("keeps a real vacancy containing `Jobs`: %s (A21-01)", (title) => {
+    expect(isListingPage(title, "acme.test", "/jobs/44231")).toBe(false);
+  });
 });
 
 // B17-02 (round 17, Rulings 48a + 49b): A LIST OF PROGRAMME AREAS IN THE

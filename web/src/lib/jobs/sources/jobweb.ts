@@ -582,9 +582,26 @@ const LISTING_SECTION_TITLE_RE =
  *
  * Failure direction: a brochure shape outside these two grammars survives —
  * the status quo, never a new wrong value.
+ *
+ * **ROUND 21, ITEM 1 (A21-01): `jobs` ADDED TO THE SECTION-NOUN LIST HERE, AND
+ * TO NOTHING ELSE.** `Internship EV Jobs` (@ `ev.careers/jobs/internship`) is a
+ * category page that rendered as a single job card on 5 of 5 pulls; the page's
+ * own `og:description` says it lists many employers' jobs. The omission was an
+ * INCONSISTENCY, not a decision, and this file's own comments prove it: `jobs`
+ * is already in `CAREERS_INDEX_TITLE_RE`, `LISTING_SECTION_TITLE_RE` and
+ * `TRAILING_CAREERS_CHROME_RE`, and the one word that IS deliberately excluded
+ * (`positions`, five lines above) is recorded as such. Nothing was ever
+ * recorded about `jobs`.
+ *
+ * Measured before shipping: 387/387 shipped assertions unchanged, and the two
+ * larger designs were both refused ON A NUMBER rather than on taste — adding
+ * `jobs` to `BRAND_PROGRAMME_TITLE_RE` as well scores identically, so no test
+ * can turn it red; and a host-brand rule cannot reach this row at all, because
+ * `looksLikeHostBrand("EV", "ev.careers")` is false. Both re-executed by round
+ * 21 C, not taken on trust.
  */
 const OWNER_INDEX_TITLE_RE =
-  /^\s*([\w&.'’-]+)(?:\s+([\w&.'’-]+))?\s+(?:internships|careers|vacancies|opportunities|openings)\s*$/i;
+  /^\s*([\w&.'’-]+)(?:\s+([\w&.'’-]+))?\s+(?:internships|jobs|careers|vacancies|opportunities|openings)\s*$/i;
 /** A role title uses function words; an owner's name does not. CLOSED class. */
 const INDEX_OWNER_FUNCTION_WORD_RE =
   /^(?:of|for|and|or|to|with|in|on|at|the|a|an)$/i;
