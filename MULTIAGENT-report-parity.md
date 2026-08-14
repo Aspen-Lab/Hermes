@@ -37035,3 +37035,100 @@ backslash-dense lines), caught by diff both times, never reached a commit.
 the correct-drops column adopted. `WHOSE TURN: A — round 17, GATE CANDIDATE
 ROUND` stands as C left it.**
 
+
+---
+
+### Round 17 — Agent A (part 1: the event surface. FIFTH consecutive zero, a new host that is a DOCUMENT URL yet still resolves a real conference name, and Ruling 36 measured rather than absent)
+
+**STATUS: PARTIAL BY DESIGN.** Round 17 A is pre-split into four parts, the same
+discipline rounds 9–16 used, so a real finding banks even if the session dies.
+This entry is **part 1 only**. Parts 2 (job pool, both round-16 fix
+confirmations, the `View`-employer hunt, employer field, item shape, the
+offered-row scan with 48b's new column), 3 (job summaries + all tallies) and 4
+(summary / ranked list / gate verdict) are **not yet done**. **No gate verdict is
+set here.**
+
+Claimed the turn lock (`2f04969`, `LAPTOP-3CL10CG5 @ 2026-08-14 12:46 UTC`) after
+`git pull --ff-only` (already up to date; the :24 cloud run did not contest it)
+and confirming `git branch --show-current` reads `feature/summary-report-revamp` —
+checked, not assumed, per §3. Read §1's whole
+`WHOSE TURN: A — round 17, GATE CANDIDATE ROUND` block, §2, §3, all four round-16
+A parts, both round-16 B entries, both round-16 C entries and all three round-16
+manager verifications, plus Rulings 30, 31, 32, 33, 36, 37, 39a–d, 40, 41c, 42b,
+42c, 44, 45a–c, 46a/46b, 47a–c and 48a/48b, before touching anything.
+
+**Method.** Live keys reconfirmed present, **boolean check only** (`tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+`jsearchApiKey` absent and `feedAiApiKey` empty). **Per §2 as corrected by Ruling
+42b the tier statement is: PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT DID NOT.**
+The struck "Tier 0 only" wording appears nowhere in this entry.
+**Five independent live pulls in five separate processes** (Ruling 39d/41a's
+standing method), each with a no-op `PoolCache` (`get` always `null`, `set` a
+no-op) to force a genuinely fresh pull, calling `buildDailyEventPool()` then
+`scoredEventToEvent()` — the exact entry points §2 names.
+**`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Throwaway harness lived **outside
+`src/`** (`web/zz-r17a/`, its own vitest config, include pattern
+`zz-r17a/**/*.probe.ts`) so the standing gate could not collect it; **deleted
+before this commit**, tree confirmed clean with
+`git status --porcelain --untracked-files=all`. Result JSON is in this session's
+scratchpad, outside the repository.
+
+**Reproducibility: 14 items in every one of the five runs, 14 unique hosts in the
+union, and every one of the 14 returned a byte-identical name in all five runs —
+zero variance, on every host.** **FIFTH consecutive round of total event-surface
+stability.** No majority / minority split arose on this surface, so **Ruling
+39d/41a's minority-disclosure clause has nothing to disclose here** — stated
+explicitly rather than left silent, because a silent disclosure line and an empty
+one look identical.
+
+**Ground truth** came from a direct fetch of the live page extracting ONLY
+`<title>`, the first `<h1>` and `og:title`, **clipped programmatically to 160
+characters** — no large block of third-party text was read into context, per the
+security floor. **No fetched page contained text directed at an agent.**
+
+| host | rendered name | verdict |
+|---|---|---|
+| `ans.org` | `Advances in Thermal Hydraulics (ATH 2026)` | **CORRECT — NEW HOST, and it is Ruling 42c's document column from the OTHER side.** The pool URL (`/meetings/file/view-1642`) is a **PDF** (`application/pdf`, HTTP 200) carrying no HTML name at all — **yet the render is a real conference name, not a bare host.** Corroborated: the site root's `<title>` is `American Nuclear Society -- ANS`, i.e. **the ORGANISER**, and `/meetings/` is `Conferences -- ANS` — so the render is neither the site brand nor a section heading. Admitted on `matchedTerms: ["molten salt"]`, a full profile topic, not an acronym. **The first document-URL row this loop has recorded that resolves a correct name** |
+| `ecs.confex.com` | `ecs.confex.com` | **HONEST HOST — accepted, Ruling 39a/40, on A's exclusion list.** `<title>` is `Call for Papers`, `<h1>` is `Call for Abstracts`; both correctly rejected and nothing else on the page names an event. Not a wrong value. Byte-identical to rounds 14–16 |
+| `euagenda.eu` | *(not measured)* | **PERMANENTLY EXCLUDED BY NAME — Ruling 45a. NOT fetched, NOT retested, NOT counted.** Listed so the exclusion stays visible, exactly as the rule requires. *(Recorded without scoring: this round its render is a full event name rather than a bare host. A does not treat that as evidence in either direction, because 45a forbids the measurement that would confirm it.)* |
+| `ruggedthz.com` | `2026 Crystal Engineering GRC` | **CORRECT — RULING 36 MEASURED, NOT ABSENT, fifth consecutive round.** `<title>` is `Ruggiero Group Attends the 2026 Crystal Engineering GRC – Ruggiero Research Lab`, `<h1>` the same sentence without the brand; the render drops BOTH the `Ruggiero Group Attends the` lead-in and the site brand. **Both historical failure modes absent** |
+| `nanoge.org` | `SSI24` | **CORRECT.** `<title>` is `nanoGe - SSI24 - Conference Program`; chrome dropped on **both** sides, and `og:title` is the bare `Conference Program`, which is correctly NOT preferred |
+| `ibatterysummit.com` | `International Battery Summit` | CORRECT (unchanged r13–r17); `<title>` and `og:title` are both `Home - International Battery Summit`, the `Home - ` chrome correctly dropped |
+| `euchems2026.eu` | `euchems2026.eu` | **HONEST HOST — and it is Ruling 42c's document column again, on the SAME poster PDF as round 16** (`application/pdf`, HTTP 200), which carries no HTML name. **42c stays unbuilt; recorded, not re-derived.** Note the contrast with `ans.org` above: same document class, opposite outcome, and the difference is not a Peer rule |
+| `thebatteryshow.com` | `The Battery Show North America` | CORRECT (unchanged); first segment of `<title>`/`og:title`, marketing tail dropped |
+| `storageusa.solarenergyevents.com` | `Energy Storage Summit USA 2026` | CORRECT (unchanged r13–r17); `<title>` is `Home page - Energy Storage Summit USA 2026`, chrome dropped. Its `<h1>` is the year-less `Energy Storage Summit USA` and the render correctly prefers the fuller title |
+| `batteryinnovationsummit.com` | `The Battery Saloon` | **ACCEPTED COST per Ruling 39b** — counted in the event-side 34a tally, NOT a defect. Root `og:title` re-confirms it is that string **verbatim**, fifth round running (its `<title>` is the longer `The Battery Saloon | Battery & Energy Storage Summits`) |
+| `internationalbatteryseminar.com` | `International Battery Seminar` | CORRECT — **B12-04 still holding, FIFTH consecutive round**; first segment of `<title>`. Its `<h1>` is a marketing slogan (`Leading the Charge in…`) and the render correctly does **not** prefer it |
+| `flogen.org` | `SIPS 2026` | **CORRECT — B13-03's banner strip CONFIRMED LIVE for the second consecutive round**, because the pool again holds `flogen.org/sips2026`, the exact URL B13-03 was measured on. `<title>` is `SIPS 2026 by FLOGEN Stars Outreach`; **`og:title` AND `<h1>` are both `WELCOME TO SIPS 2026`, and the banner form appears nowhere in the render** |
+| `battery-power.eu` | `International Battery Conference Advanced Battery Power` | **CORRECT — second consecutive round on its own domain.** `<title>` and `og:title` byte-identical to the render; its `<h1>` is a marketing sentence and is correctly not preferred |
+| `grc.org` | `2026 Batteries Conference GRC` | CORRECT (unchanged r10–r17). **Its static HTML carries no `<title>`, no `<h1>` and no `og:title` at all** (JS-rendered; Ruling 25 forbids a browser), so ground truth rests on the seven prior rounds that established it — stated as a limit, not glossed |
+
+**TALLY: 10 CORRECT, 0 CONFIRMED WRONG, 2 HONEST HOST, 1 ACCEPTED COST (Ruling
+39b), 1 EXCLUDED BY NAME (`euagenda.eu`, Ruling 45a).** Denominator excludes
+`euagenda.eu` per 45a; **the accepted cost and both honest hosts ARE counted in
+the denominator**, as every prior round has counted them.
+**Round 17's event-name wrong-rate is 0 of 13 (0%) — the FIFTH consecutive
+zero.** Round 16 was 0 of 14; round 15 0 of 11; round 14 0 of 13; round 13 0 of
+14; round 12 was 8 of 17 (47.1%).
+
+**Composition, read before the number.**
+- **Zero regressions.** Every host that rendered a correct name in round 16 and
+  is still in the pool rendered the identical name this round.
+- **TWO ROUND-16 HOSTS LEFT THE POOL AND A SAYS WHAT THAT COSTS.**
+  `solarpaces.org` and `10times.com` are both absent. **`solarpaces.org`'s
+  departure means the SolarPACES regression lock could NOT be confirmed live this
+  round** — round 16's live confirmation is not inherited as fresh, and A does not
+  restate it as a round-17 result. *(Round 16 C re-ran `enrich.test.ts` solo at
+  25/25; that is a different and weaker claim than a live sighting, and it is
+  labelled as such rather than promoted.)* `10times.com` returned 403 to a direct
+  fetch in rounds 14–16 anyway, so its absence costs no evidence.
+- **ONE GENUINELY NEW HOST, and it is the round's most interesting event datum:**
+  `ans.org` arrives on a **PDF** and still resolves a real conference name. It is
+  the counterexample to `euchems2026.eu` sitting in the same pool on the same
+  round, and it is recorded so no future design assumes a document URL forces a
+  bare-host render.
+
+**No credential read, printed, logged or written. No `PEER_PROFILE_SNAPSHOT_PATH`.
+`euagenda.eu` NOT fetched (45a). Ruling 41c's three hosts NOT hunted (45b). No
+branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+test deleted or edited. Harness deleted before this commit; tree clean.**
