@@ -41,7 +41,7 @@ describe("streamPaperReport", () => {
       {
         type: "stage",
         stage: "reading",
-        label: "Reading 路",
+        label: "Reading ·",
         pct: 35,
       },
       { type: "error", message: "stopped" },
@@ -49,7 +49,21 @@ describe("streamPaperReport", () => {
     const bytes = new TextEncoder().encode(
       expected.map((event) => JSON.stringify(event)).join("\n"),
     );
-    const unicodeStart = bytes.indexOf(0xe8);
+    // Round 21 C, hygiene item 0 (Ruling 56a). The label above carried U+8DEF,
+    // a mangled middle dot: this file was written as UTF-8 and read back
+    // through a Chinese code page, and gb18030 encodes U+8DEF as C2 B7 --
+    // exactly the UTF-8 bytes of U+00B7. Restored to U+00B7 from that
+    // round-trip, not from taste.
+    // The sentinel below moved with it, because it names the FIRST BYTE of the
+    // multi-byte character this test deliberately splits across chunks: U+8DEF
+    // is E8 B7 AF, U+00B7 is C2 B7. Leaving 0xe8 would make indexOf return -1
+    // and the chunks would not reassemble.
+    // MEASURED, not assumed: the restored two-byte character keeps this test's
+    // power. Dropping `{ stream: true }` from the decoder turns this test --
+    // and only this test -- red under BOTH the old three-byte character and
+    // the restored one. Verdicts before and after the repair: 4 passed, 4
+    // passed, identical mark for mark.
+    const unicodeStart = bytes.indexOf(0xc2);
     const fetchMock = vi.fn().mockResolvedValue(
       chunkedResponse([
         bytes.slice(0, 7),

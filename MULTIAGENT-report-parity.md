@@ -50667,3 +50667,72 @@ online debt enters its third round — round 22 A's line, named.**
 
 **`WHOSE TURN: C` stands — hygiene item first, then B's ordered list.**
 
+
+### Round 21 — Agent C (item 0 of 6: the inherited `report-stream.test.ts` hygiene repair, Ruling 56a. **DONE, AND NO VERDICT CHANGED — 4 before, 4 after, identical mark for mark.** The lost character was RECOVERED BY AN EXACT ROUND-TRIP, not guessed. **AND C REPORTS THE THING THE QUEUE DID NOT KNOW: THIS REPAIR IS NOT FREE — the damaged bytes are LOAD-BEARING TEST INPUT, and the naive character-only repair FAILS THE TEST.**)
+
+**STATUS: DONE.** First of round 21 C's six items (item 0 + B's five). **NO TEST DELETED. NO ASSERTION EDITED. NO BEHAVIOUR CHANGED. NO PRODUCT CODE CHANGED.** Branch re-read before the commit and in the push output (§3). Appended from bash with `cat >>` — **NOT PowerShell**, which is the write path that caused the damage being repaired.
+
+---
+
+## THE RECOVERY — AN EXACT ROUND-TRIP, WHICH IS STRONGER THAN ROUND 20's EVIDENCE
+
+`report-stream.test.ts:44` read `label: "Reading <U+8DEF>"` — bytes `E8 B7 AF`.
+
+**`gb18030` encodes `U+8DEF` as `C2 B7`, and `C2 B7` is exactly the UTF-8 encoding of `U+00B7`, the middle dot.** Executed both directions, not asserted. That is round 20 C's mechanism in its two-byte form: UTF-8 written out, read back through a Chinese code page. Round 20's damage was the three-byte `E2 80 xx` family; this is the two-byte `C2 xx` family, and the round-trip here is **exact and unique**, so no taste was involved. Ruling 56a's own wording ("the same mangled middle dot") is confirmed by execution rather than adopted.
+
+**The mangling predates the commit.** `git show 13f28ca:` carries the mangled bytes *and* the matching sentinel, so the damage happened at file-write time and the sentinel was written to match what was already on disk — the same shape round 20 C found in `909b6bf`.
+
+---
+
+## WHAT C FOUND THAT THE QUEUE DID NOT KNOW: **THE BYTES ARE LOAD-BEARING, SO THIS IS NOT ROUND 20's CLASS**
+
+Round 20's item 0 was safe because **no contract rode on the damaged bytes** — C proved it by running the Oregon assertion three ways (en dash, em dash, ASCII hyphen), all 387/387. **Here a contract DOES ride on them**, and the item was queued as "free" without anyone knowing that:
+
+```
+const unicodeStart = bytes.indexOf(0xe8);          // names the FIRST BYTE of the character
+bytes.slice(7, unicodeStart + 1), bytes.slice(unicodeStart + 1, unicodeStart + 2), bytes.slice(unicodeStart + 2)
+```
+
+The test deliberately splits a multi-byte character across stream chunks, and the sentinel hard-codes that character's first byte. **`U+8DEF` is `E8 B7 AF`; `U+00B7` is `C2 B7`.**
+
+| variant | `indexOf` | chunks reassemble | verdict |
+|---|---|---|---|
+| control (shipped, `U+8DEF` + `0xe8`) | 84 | **yes** | 4 passed |
+| **character repaired ALONE** (`U+00B7`, sentinel left at `0xe8`) | **-1** | **NO** — `slice(7,0)` is empty and byte 0 is re-emitted | **WOULD FAIL** |
+| **character + sentinel** (`U+00B7` + `0xc2`) | 84 | **yes** | **4 passed** |
+
+**So the repair Ruling 56a describes — character only — changes a verdict, and the escape clause would have fired.** C did not discover this by running it blind; the chunk arithmetic was modelled byte by byte first, then confirmed. **The sentinel moved with the character because it *names* the character; that is one mechanical consequence of the string repair, not a second edit with its own opinion.**
+
+---
+
+## THE ONE REAL OBJECTION, MEASURED RATHER THAN WAVED AWAY
+
+Restoring a **two**-byte character where a **three**-byte one stood removes one intra-character split point: `E8|B7|AF` is broken at two boundaries, `C2|B7` at one. **That is a coverage question, and C answered it by mutation instead of by argument.**
+
+`report-stream.ts:52` is mutated to drop `{ stream: true }` from `decoder.decode(value)` — the single bug this arrangement exists to catch, since the buffering is `TextDecoder`'s and not hand-rolled:
+
+| test file under the mutant | result |
+|---|---|
+| shipped three-byte character | **RED — and uniquely: 1 failed, 3 passed** |
+| **restored two-byte character** | **RED — identically: 1 failed, 3 passed** |
+
+**Both catch it, and both catch it alone.** The restored character retains the test's full power against the only defect the split can detect. `report-stream.ts` was restored immediately and `git diff --stat` confirms **only the test file is modified**.
+
+---
+
+## THE PROOF THAT NOTHING MOVED
+
+| | tests | pass | fail | verdict sequence |
+|---|---|---|---|---|
+| before | 4 | 4 | 0 | — |
+| after | 4 | 4 | 0 | **IDENTICAL, mark for mark** |
+
+Compared as a sequence, not as a total (round 20 C's rule — a total hides two compensating changes). **No test name changed**, because the repaired character is in a test *input*, not in a test name.
+
+**The file now carries exactly two non-ASCII bytes, `C2 B7`, and decodes as valid UTF-8** — verified programmatically, not by eye. **The new comment is deliberately pure ASCII and names the characters by codepoint**, so the write path that caused this damage cannot re-introduce it.
+
+**GATE AFTER ITEM 0: 91 files / 1596 tests, 1595 passing** — unchanged from the cold baseline; sole failure the standing `benchmark.test.ts` flake at **`:109`** (`expected false to be true`). `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error.
+
+**C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.** **Recorded for the manager, not as a request to re-scope:** Ruling 56a called this repair free, and it was not — a later hygiene item of this class should check whether the damaged bytes are read by the code around them before being queued as free.
+
+---
