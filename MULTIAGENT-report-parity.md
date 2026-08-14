@@ -30252,3 +30252,249 @@ then job summaries with Rulings 33 and 37; then the summary, ranked difference
 list, four tally lines and gate verdict.
 
 Commit follows immediately.
+
+---
+
+### Round 14 — Agent A (part 2: employer field, B13-02's POOL-SHRINK ACCOUNTING with the judgement as well as the count, and the `Careers`-in-employer-slot question)
+
+**STATUS: DONE.** Second of round 14 A's four parts. Part 1 is banked in
+`ea9a699` and is **not** re-run. Parts 3 and 4 follow in this same session. **No
+gate verdict is set here.**
+
+**Method.** Same discipline as part 1: **five independent live pulls in five
+separate processes** (Ruling 39d/41a's standing method), no-op `PoolCache`,
+calling `buildDailyJobPool()` then `scoredJobToJob()` — the exact entry points §2
+names. **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Live keys reconfirmed
+present, boolean check only. **Page-fetch enrichment ran; LLM enrichment did
+not** (Ruling 42b's wording). Harness outside `src/` under its own vitest config;
+**deleted before part 1's commit**. **Parts 2 and 3 read the same five pulls, not
+ten** — the same deliberate, disclosed efficiency choice rounds 12 and 13 made,
+and for the same reason: employer and summary are two columns of one
+`scoredJobToJob()` output, so a second pull set would measure a different
+minute's pool and make the two parts' denominators disagree for no gain.
+
+**Reproducibility: pool sizes 10, 14, 14, 14, 14; 14 unique postings in the
+union. EVERY ONE OF THE 14 RETURNED A BYTE-IDENTICAL EMPLOYER VALUE — AND A
+BYTE-IDENTICAL ROLE TITLE — IN EVERY RUN IT APPEARED IN. Zero employer variance,
+on every host.** Round 13 had three hosts varying (`openmc.discourse.group`,
+`careerservices.upenn.edu`, `terra.do`); **this round none of them varies.**
+**Ruling 39d/41a's minority-disclosure clause therefore has nothing to disclose
+on the employer column** — stated explicitly, because a silent disclosure line
+and an empty one look identical. *(Run 1 was again the odd run — 10 items where
+every later run had 14 — but this time the four extra items are additions in runs
+2–5, not employer-column differences. Round 13's Finding 3 correlation is
+therefore NOT reproduced on the employer field this round, and that is worth the
+manager's attention as much as the correlation itself was.)*
+
+**Census — 14 unique postings, 9 non-null employer values, 5 silent.** Ground
+truth from the posting's own URL slug, its own title, its own summary text, or a
+same-pool duplicate.
+
+| host | rendered employer | evidence checked | verdict |
+|---|---|---|---|
+| `careers.gevernova.com` | *(null)* 5/5 | own-domain subdomain; title names GE Vernova | not counted (standing host-brand trade-off, unchanged r11–r13) |
+| `careerservices.upenn.edu` | **`University of Pennsylvania` 5/5** | identical URL rounds 9–13 all cited; URL slug names Oak Ridge National Laboratory as the real employer | **RULING 34a ACCEPTED COST — counted in the employer-side 34a tally, NOT reported as a defect. It has RETURNED TO MAJORITY. See Finding 2** |
+| `employbl.com` | `Battery Ventures` 5/5 | URL slug names it | CORRECT (unchanged r11–r13) |
+| `ev.careers` | `Tesla` 5/5 | title "…at Tesla" | CORRECT (unchanged r11–r13) |
+| `grad.wisc.edu` | `Thermo Fisher Scientific` 4/4 | title "…at Thermo Fisher Scientific" | CORRECT (unchanged r11–r13) |
+| `inl.referrals.selectminds.com` (`…-10104`) | `Idaho National Laboratory` 5/5 | host is INL's own referral-system instance | CORRECT (unchanged r13) |
+| `lco.global` | `Las Cumbres Observatory` 5/5 | organisation's own domain | CORRECT as to employer (unchanged r11–r13). **The ITEM's page-kind is a new observation — see Finding 4** |
+| `linkedin.com` (SRNL postdoc) | *(null)* 4/4 | URL names the employer; title does not | not counted (unchanged r12/r13) |
+| `linkedin.com` (INL postdoc) | *(null)* 5/5 | same | not counted (unchanged r12/r13) |
+| `mykelly.com` | *(null)* 4/4 | **NEW HOST.** Kelly is a staffing agency placing at a client site; the posting's own summary refers to "our core ion exchange resin technology" without naming the client | **HONEST SILENCE AND CORRECTLY SO** — naming `Kelly` would be exactly Ruling 26's host-brand defect. See Finding 3 |
+| `openmc.discourse.group` | **`Announcements` 5/5** | page title's third segment is the forum CATEGORY name | **WRONG — THE LOOP'S KNOWN REMAINING WRONG VALUE (Ruling 43). It has ESCALATED FROM 1-IN-5 TO 5-IN-5. See Finding 1** |
+| `postdocjobs.com` | *(null)* 5/5 | round 11 A's own direct fetch established the real employer is Argonne National Laboratory and that the title carries BOTH guarded shapes | **B10-01 + B9-02b confirmed still holding — FOURTH consecutive round of honest silence** |
+| `talents.vaia.com` | `Savannah River National Laboratory` 4/4 | URL slug `/companies/savannah-river-national-laboratory/`; corroborated by the same posting's LinkedIn duplicate in the same pool | CORRECT — B12-07 still holding, second consecutive round |
+| `terra.do` | **`Idaho National Laboratory` 5/5** | title "…at Idaho National Laboratory" | **CORRECT, and NEWLY SO BY MAJORITY** — null-by-majority in r12 and r13. See Finding 2 |
+
+**1 of 9 non-null employer values is wrong (11.1%), by the majority scoring
+Ruling 39d/41a makes standard.** Round 13 was 0 of 12 (0%); round 12 was 3 of 10
+(30%); round 11 was 1 of 9 (11.1%); rounds 8/9/10 were 62.5% / 27.3% / 20%.
+
+**A does not present this as a regression caused by round 13's fixes, and says
+why in the same breath.** The single wrong value is `openmc.discourse.group`'s
+`Announcements` — **the value Ruling 43 already names as open and assigns to
+round 14's B.** Round 13 scored the same host's same value as a 1-in-5 minority
+disclosure; this round it is the majority. **The value did not change; its
+frequency did**, and frequency here is an upstream-variance property (Ruling
+39d), not a code property. **Nothing round 13 landed touched this path** —
+B13-01's Gap A closes a different string class, exactly as B measured (19/21,
+failing both openmc shapes by design) and as C verified by execution after
+landing.
+
+---
+
+**FINDING 1 — `openmc.discourse.group`: `Announcements` IN 5 OF 5, AND THE SHAPE
+THAT PRODUCED IT IS NAMED. This is the known open item, reported affirmatively,
+not scored as a regression.**
+
+Per the brief, A states which of the three live title shapes appears:
+- **The shape observed in all five runs is the PAGINATED `Announcements` form** —
+  the pool URL is `openmc.discourse.group/t/job-vacancies-looking-for-openmc-skills/1727?page=2`,
+  whose title carries the pagination segment followed by the forum-category
+  segment. **The employer renders as `Announcements`.**
+- **The `Users` shape did NOT appear in any of the five runs.** The third shape
+  C recorded (`… - Page 2 - Users - OpenMC Discourse`) is absent from this pool.
+- **The role title is clean** (`Job vacancies looking for OpenMC skills`) and
+  B12-06's pagination guard is still doing its job — **`Page 2` appears nowhere**,
+  in any run, in any field. The defect is one segment further along, exactly
+  where B and C said it was.
+
+**Reader impact, stated plainly and worse than round 13's version of it:** in
+round 13 one reader in five was told this employer is a forum category. **This
+round every reader is.** A records the escalation without diagnosing it (that is
+B's job under Ruling 43) and without proposing a fix.
+
+**FINDING 2 — TWO OF ROUND 13's THREE "IMPROVEMENTS" WERE UPSTREAM VARIANCE, AND
+ROUND 13 A SAID SO IN ADVANCE. ONE HAS REVERTED TO WORSE, ONE HAS SETTLED TO
+BETTER, AND THAT IS THE STRONGEST AVAILABLE EVIDENCE THAT MAJORITY SCORING ON
+FIVE PULLS IS MEASURING WEATHER ON THESE HOSTS.**
+
+Round 13 A wrote of `careerservices.upenn.edu`: *"this is the upstream variance
+of Finding 3, and it can revert on any future pull."* It reverted.
+
+| host | round 13 (majority) | round 14 (majority) | direction |
+|---|---|---|---|
+| `careerservices.upenn.edu` | silent 4/5 | **`University of Pennsylvania` 5/5** | **WORSE** — the wrong-institution value is back and is now unanimous |
+| `openmc.discourse.group` | silent 4/5 | **`Announcements` 5/5** | **WORSE** — 1-in-5 became 5-in-5 |
+| `terra.do` | silent 4/5 | **`Idaho National Laboratory` 5/5** | **BETTER** — the correct value is now unanimous |
+
+**No code targeted any of these three hosts in round 13.** All three moved
+anyway, all three in the same direction (more employer data present rather than
+less), and all three moved to unanimity rather than to a new split. **A reports
+this as measurement, not as a method change** — Ruling 39d set five-pull majority
+scoring as standing and it stays until the manager says otherwise. But it is now
+the second consecutive round in which this loop's headline employer number is
+driven mostly by which way the upstream wind blew, and **round 13's
+`POLICY — manager decides` flag on exactly this question is unresolved and is
+carried forward unchanged.**
+
+**FINDING 3 — THE SILENT-EMPLOYER COUNT (Ruling 39a), WITH THE PER-INSTANCE
+READER JUDGEMENT THE RULING REQUIRES. 5 of 14 postings show no employer line.**
+Round 13 was 8 of 20. Judged against what stood there in round 13:
+1. **`careers.gevernova.com` — unchanged**, null in rounds 11–14. Own-domain
+   host-brand trade-off. No comparison to make; reader is not misled.
+2. **`postdocjobs.com` — unchanged and good**, fourth consecutive round of honest
+   silence with B10-01's and B9-02b's guards holding.
+3–4. **The two `linkedin.com` postdoc items — unchanged/neutral**, null in rounds
+   12, 13 and 14. The URL names the employer and the title does not; the reader
+   loses a fact but is told nothing false.
+5. **`mykelly.com` — NEW, and the reader is BETTER OFF than the alternative.**
+   This is a staffing-agency posting. The only organisation name anywhere in the
+   host or title is the agency's own, and rendering it would place a staffing
+   firm in the employer slot for a client's laboratory role — **precisely Ruling
+   26's host-brand defect, and precisely the class Ruling 34a's `careerservices.`
+   observation flagged as an aggregator.** Silence here is the correct answer and
+   the guards produced it without anyone targeting this host.
+
+**Zero of the five silences is misleading and none is unreadable. No silent
+instance is a finding this round.**
+
+**FINDING 4 — THE POOL-SHRINK ACCOUNTING: THE COUNT AND THE JUDGEMENT, WHICH THE
+BRIEF ASKED FOR SEPARATELY AND WHICH ANSWER DIFFERENTLY.**
+
+**THE COUNT. Round 13's union was 20 unique postings; round 14's is 14. Net −6.
+Thirteen of round 13's twenty carried over, seven left, and one host is new
+(`mykelly.com`).**
+
+**Of the seven that left, FOUR are exactly B13-02's four named targets:**
+`linkedin.com/jobs/molten-salt-jobs`, `lco-cdo.org/en/author/lco_admin/feed`,
+`jobs.battery.com/jobs?jobTypes=Intern` and `jobs.battery.com/jobs?jobTypes=`.
+**All four are absent from all five pulls.**
+
+**Absence alone cannot separate "the guard fired" from "the item churned", so A
+asked the shipped guard directly** rather than inferring. The exact (title, host,
+path+query) shapes round 13 A's own census recorded for those four items were
+replayed through the shipped `isListingPage()`:
+
+| replayed shape | shipped guard says |
+|---|---|
+| `1,000+ Molten Salt jobs in United States` @ `linkedin.com/jobs/molten-salt-jobs` | **REJECT** |
+| `lco-cdo` @ `lco-cdo.org/en/author/lco_admin/feed` | **REJECT** |
+| `Intern Jobs at Battery Ventures Companies` @ `jobs.battery.com/jobs?jobTypes=Intern` | **REJECT** |
+| `Jobs at Battery Ventures Companies` @ `jobs.battery.com/jobs?jobTypes=` | **REJECT** |
+
+**All four reject. Combined with all four being absent from all five live pulls,
+that is as close to proof as this surface allows. B13-02 is CONFIRMED — the pool
+shrank by the RIGHT four.** *(One transparency note on method: A's first replay
+used a guessed LinkedIn title and the guard KEPT it; A then corrected the input
+to the string round 13's census actually recorded — `1,000+ Molten Salt jobs in
+United States`, whose thousands separator is precisely what B13-02's count form
+was built for — and it rejects. The first result was A's bad input, not a guard
+gap, and it is recorded rather than quietly dropped.)*
+
+**THE JUDGEMENT — did anything real go with them? NO, and this was tested rather
+than assumed.** The other **three** departures are organic churn:
+`inl.referrals…-10103`, `jobs.polymer.co` and **`lco-cdo.org`'s coordinator
+posting**. Six real postings were replayed through the same shipped guard as
+must-keeps:
+
+| replayed must-keep | shipped guard says |
+|---|---|
+| INL real posting (`…-10104`) | keep |
+| **`lco-cdo.org` coordinator posting** | **keep** |
+| `openmc.discourse.group` thread (Ruling 39c defers its drop) | **keep** — the explicit must-keep C was told to assert |
+| `employbl.com` real posting | keep |
+| `mykelly.com` real posting (new host) | keep |
+| `jobs.polymer.co` real posting (r13, churned out) | keep |
+
+**Every real posting is kept, including both hosts that went silent this round.**
+So **no host that used to yield a real posting was silenced by the guard** —
+`jobs.polymer.co` and `lco-cdo.org` are absent through search-result churn, and
+the guard would admit them today. **B13-02 over-fired on nothing.**
+
+**THE SPOT-CHECK OF SURVIVORS — is any surviving item a listing/feed/section page
+that should have been dropped?** Walking all 14: **twelve are unambiguous single
+vacancy pages.** The other two:
+- **`openmc.discourse.group` — a forum thread, and it is IN the pool BY DESIGN.**
+  Ruling 39c defers the drop and C was ordered to assert it as a must-keep. Not a
+  miss.
+- **`lco.global/about/interns`, whose role title renders as `Internships` — a
+  NEW OBSERVATION, reported as observation and not as a defect claim.** This is
+  an internships *programme index* on the organisation's own domain, not a single
+  vacancy. **It is NOT a miss by B13-02**, whose three parts target counted
+  search-result pages, syndication endpoints and leading plural section titles —
+  none of which this shape is. It is a fourth non-posting shape, distinct from
+  round 13's Finding 4 three, and it has been in the pool unremarked since round
+  11. **A records it so it is not rediscovered as fresh in three rounds, and
+  makes no recommendation** — whether one page-kind instance justifies anything
+  is Ruling 32's and the manager's question, not A's.
+
+**FINDING 5 — `Careers` IN THE EMPLOYER SLOT: NOT OBSERVED, AS IN EVERY PRIOR
+ROUND, AND THAT PROVES NOTHING.** B13-01 Gap A closed a **latent** gap. Across
+all five pulls and all 14 postings, **no employer render consists of a bare
+careers-section word** — the nine non-null values are seven real organisation
+names, one wrong-institution name (34a) and one forum category. **Stated the way
+the brief demanded: "not observed, as in every prior round." A does NOT log Gap A
+as a fix confirmed live**, because its absence is exactly what every round before
+the fix also showed.
+
+**RULING 39c's DEFERRED TRIGGER — ANSWERED AFFIRMATIVELY, BECAUSE A THRESHOLD
+CANNOT FIRE ON SILENCE. IT DOES NOT FIRE.** The trigger is a second
+forum-thread-rendered-as-posting instance. **PRESENT: exactly one — 
+`openmc.discourse.group`, the same thread on the same URL rounds 12 and 13 cited,
+in all five runs. SECOND DISTINCT INSTANCE: ABSENT, count zero.** No other host
+in any of the five pools is a forum. The other non-posting shapes in this pool
+(the `lco.global` internships index) are **not** forum threads and A does not
+stretch the ruling's wording to reach them. **Ruling 39c's own trigger stays
+unfired — but note it is no longer the only route to this item: Ruling 43 has
+already authorised and required round 14's B to design the fix, independently of
+39c.**
+
+**Evidence limits, named as limits.** `lco-cdo.org` and `jobs.polymer.co` left
+the pool, so round 13's two unfetchable-ground-truth items did not need
+re-fetching. `mykelly.com`'s client employer is not named anywhere in the host,
+title or summary, so "the real employer" for that posting is **unknown to A** —
+the silence is judged correct on the aggregator argument, not on knowing the
+answer. LLM report enrichment remains dark (`feedAiApiKey` empty); page-fetch
+enrichment ran.
+
+**Cleanup:** harness deleted before part 1's commit; working tree confirmed clean
+scoped to `web/`. **No product code touched. No credential printed, logged or
+written.** No `PEER_PROFILE_SNAPSHOT_PATH`. No branch, worktree or PR.
+
+**Not done yet (parts 3–4, same session, continuing next):** job summaries with
+Rulings 33 and 37; then the summary, ranked difference list, four tally lines and
+gate verdict.
+
+Commit follows immediately.
