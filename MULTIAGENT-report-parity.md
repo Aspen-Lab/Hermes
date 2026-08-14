@@ -24617,3 +24617,140 @@ conference's page.
 
 Harness deleted; `git status --untracked-files=all` clean before this commit.
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent B (B12-04: `internationalbatteryseminar.com` — the correct name IS in the title, and the host-brand guard rejects it because the event's name IS its own domain)
+
+**STATUS: DONE.** A's item 5, and A's own sharpening question was exactly right:
+"the correct name is present in the page's own `<title>` and is not what
+renders." Traced by execution. Throwaway harness outside `src/`, deleted before
+this commit. No product code touched.
+
+---
+
+**1. THE TRACE.**
+
+A's quoted title, each segment through the shipped guards with the real host:
+
+```
+"International Battery Seminar"   survivesGuards=false  looksLikeHostBrand=TRUE   looksLikeEvent=true
+"March 15-18, 2027"               survivesGuards=false  (isBareDateSegment, B9-04)
+"Orlando, FL"                     survivesGuards=false  (isBareLocationSegment, B10-02)
+
+bestEventTitleSegment(title, "https://www.internationalbatteryseminar.com/") === undefined
+bestEventTitleSegment(title)  /* same title, NO url */                       === "International Battery Seminar"
+```
+
+**Those two lines are the whole finding.** The only thing separating the correct
+name from the render is the presence of the URL, and the only guard the URL
+switches on is the host-brand check. `looksLikeHostBrand` normalises the
+candidate to `internationalbatteryseminar` and asks whether any DNS label starts
+with it — the label **is** `internationalbatteryseminar`, so it matches.
+
+The title stage therefore returns nothing, `nameFromUrlSlug` has no deep slug on
+a bare root URL, and execution reaches the snippet stage, which supplies
+`"Conference Image Gallery Carousel"`. **This is why the render comes from the
+snippet at all** — and it is the only explanation consistent with A's observation
+that the title path yields nothing while the title visibly contains the name.
+*Caveat stated honestly: A quoted the page's own `<title>` from a direct fetch; I
+did not separately observe what string the search provider hands the pipeline for
+this URL. The trace explains the observed render exactly, but it is an
+explanation of the mechanism, not a captured provider payload.*
+
+**2. THIS IS A CLASS, NOT ONE HOST — and it is the mirror image of B12-02.**
+
+An event whose page title is its own bare name, on a domain spelled the same
+way, is rejected **every time**. Confirmed by execution on the one host that is
+supposed to be protected:
+
+```
+looksLikeHostBrand("SolarPACES",      "solarpaces.org") === TRUE
+looksLikeHostBrand("SolarPACES 2026", "solarpaces.org") === false
+```
+
+**SolarPACES survives only because its title carries a trailing year**, which
+makes the candidate longer than the DNS label and trips `looksLikeHostBrand`'s
+deliberate one-directional rule. Drop the year and the regression lock's own host
+would fail the same way. That is a fragile place for a lock to be standing, and
+it is worth the manager knowing.
+
+Where B12-02's host defeats the brand check by having a domain that looks nothing
+like its name, this host defeats it by having a domain that IS its name. Same
+check, opposite failure. Neither is fixable by widening the check — which is also
+why Rulings 33/34a were right to decline that direction twice.
+
+**3. FIX DESIGN — a narrow exemption on the EVENT SIDE ONLY.**
+
+In `isChromeSegment` (`eventweb.ts:454-476`), do not treat a host-brand match as
+chrome when the candidate **names an event kind**: it contains an event-kind noun
+from the same closed list B12-01 uses, and `isEventIndexPage` does not already
+reject it. Everything else about the check is untouched.
+
+**Critically: the exemption goes in `isChromeSegment`, NOT in
+`looksLikeHostBrand`.** That function is shared with the job side (B5-03's
+job-board-brand fix and B8-02's every-label fix both depend on its current
+behaviour). Editing it would put the employer field at risk for an event-side
+problem. Scoping the exemption to the event side's own wrapper costs nothing and
+keeps the job side provably untouched.
+
+**Adversarial results, run against shipped code:**
+
+```
+"International Battery Seminar" @ internationalbatteryseminar.com  hostBrand=true  -> KEPT     FIXED
+"The Engine"                    @ engine.xyz        (B5-06's own repro)            -> still rejected
+"Climatebase"                   @ climatebase.org   (B5-03's job-board shape)      -> still rejected
+"10times"                       @ 10times.com                                       -> still rejected
+"Ruggiero Research Lab"         @ ruggedthz.com                                     -> unaffected (never matched)
+"SolarPACES 2026"               @ solarpaces.org                                    -> unaffected (never matched)
+```
+
+Every must-stay-rejected case stays rejected, because none of them contains an
+event-kind noun. The exemption is doing exactly one job.
+
+**Residual risk, named:** an events **directory** site whose own brand contains an
+event noun (something like a hypothetical `batteryconferences.com` titled
+"Battery Conferences") would now survive this check. `isEventIndexPage`'s
+`upcoming|browse|all … events/conferences` branches and `isGenericPageTitle`
+already own that class, which is why the exemption defers to `isEventIndexPage`
+— but the cover is not total. I judge the trade clearly worth it: today the check
+silently destroys the correct name for any event named after its own domain,
+which is an extremely common way for a conference series to be published.
+
+**What renders when the design finds nothing (Ruling 32):** unchanged. The
+exemption can only ever *un-reject*; when it does not fire, the segment stays
+chrome and the existing chain runs exactly as today (slug → snippet → honest URL
+host → `"Untitled event"`). It introduces no fallback and reinserts nothing —
+the value it admits is the page's own title segment, which no other guard
+rejected.
+
+**Note on interaction with B12-01:** if B12-01 also lands, this host's title
+stage now succeeds, so the snippet stage is never reached and `"Conference Image
+Gallery Carousel"` — which B12-01's `leadingNameSpan` does *not* catch, as that
+entry records honestly — becomes unreachable on this host. **B12-04 is what
+actually closes item 6's live value.** The two are independent but complementary;
+either order works.
+
+**4. TESTS AT RISK.**
+
+- `isChromeSegment` is module-private; its callers are `bestEventTitleSegment`
+  and `eventNameFrom`'s snippet stage, both in the same file.
+- **`looksLikeHostBrand` is NOT modified**, so `jobs/sources/jobweb.ts:326` and
+  everything B5-03/B8-02 built is untouched by construction. Say so in the commit.
+- Existing assertions to re-run and confirm unchanged:
+  `eventweb.test.ts:342-346` (`eventNameFrom("March 15-18, 2027 | Orlando, FL |
+  International Battery Seminar", "")` → `"International Battery Seminar"` — note
+  it passes **no URL**, so it never exercised the defect; C should add the same
+  case **with** the real URL, which is the test that fails against pre-fix code),
+  and `eventweb.test.ts:318` (`"SolarPACES 2026"`).
+- Run **`web/src/lib/opportunities/enrich.test.ts`** (the SolarPACES regression
+  lock lives there, not under `events/`), **`web/src/lib/events/scoring.test.ts`**
+  (the twice-missed second file), and **`web/src/lib/jobs/sources/jobweb.test.ts`**
+  as proof the shared function was left alone. Full gate:
+  `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+Files C will touch: `web/src/lib/events/sources/eventweb.ts` and
+`web/src/lib/events/sources/eventweb.test.ts`.
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
