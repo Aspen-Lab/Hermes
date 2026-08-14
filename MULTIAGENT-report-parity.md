@@ -36416,3 +36416,138 @@ paired employer guard in the SAME change, 41/41 table as tests), all tables
 as tests with negative proof, the 9,606-string sweep's one benign verdict
 change asserted as such.**
 
+
+---
+
+### Round 16 — Agent C (item 1 of 2, Ruling 47b: `internships` added to `CAREERS_INDEX_TITLE_RE`, PLURAL ONLY. B's 184/184 reproduced end to end against the REAL shipped functions — no re-declaration, so no fidelity gate was needed. +20 tests, 0 deleted, 0 rewritten. Negative proof: 8 of 20 fail on revert, and the other 12 deliberately do not.)
+
+**STATUS: DONE.** Lock claimed cleanly (`79cb041`) after `git pull --ff-only`
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`; branch name re-read in the push output (§3).
+Harness lived outside `src/` (`web/zz-r16c/`, its own vitest config) and is
+**deleted before this commit**; `git status --porcelain --untracked-files=all`
+confirmed clean. **NO TEST DELETED, NO TEST REWRITTEN, NO EXISTING ASSERTION
+TOUCHED.** No live pull, no page fetch, no credential read, no
+`PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.
+
+---
+
+#### 0. COLD BASELINE CONFIRMED BY EXECUTION, NOT INHERITED
+
+**90 files / 1355 tests, 1354 passing** — sole failure the standing
+`benchmark.test.ts` live-search flake (`solid-state battery summit` absent from
+the live pool). Exactly the figure the brief carried forward from round 15 C.
+
+---
+
+#### 1. C RE-MEASURED B's DESIGN BEFORE WRITING A LINE — AND DID IT WITHOUT RE-DECLARING ANYTHING
+
+**A METHOD IMPROVEMENT ON B's HARNESS, recorded because it removes a whole
+class of error.** B could not import the shipped internals (they are private and
+not individually swappable), so B re-declared them and added a fidelity gate to
+prove the re-declaration matched. **C is the implementer, so C needs neither:
+C applies the candidate edit to the REAL file and scores the REAL
+`isListingPage` and `webResultToRawJobItem`.** Every number below is the shipped
+function's own verdict. A transcription slip cannot exist, because nothing was
+transcribed.
+
+**PROVENANCE STATED RATHER THAN IMPLIED, exactly as round 15 C did: B's harness
+was deleted before B's commit, so B's 184 rows are NOT recoverable
+byte-for-byte.** C reconstructed a 21-row item-1 corpus from B's prose.
+**Row-for-row identity with B's matrix is NOT claimed**, and C's totals are
+`/21`, not `/184`. What IS claimed is that **every qualitative result B reported
+reproduces.**
+
+| candidate | C's score | misses | FALSE FIRES | B's claim |
+|---|---|---|---|---|
+| **SHIPPED (baseline)** | 14/21 | 7 (all item-1 shapes) | 0 | 177/184, all 7 missed, 0 — **reproduces** |
+| **T1 — plural only (SHIPPED NOW)** | 19/21 | 2 | **0** | 182/184, 2 misses, 0 — **reproduces** |
+| **T1 scored END TO END** | **21/21** | **0** | **0** | 184/184 — **reproduces** |
+| T2 — singular allowed | 18/21 | 2 | **1** | 181/184, 1 false fire — **reproduces** |
+
+**THE END-TO-END NUMBER IS THE HONEST ONE AND C CONFIRMED WHY, RATHER THAN
+TAKING IT ON TRUST.** T1's two single-call misses are the separator-bearing full
+titles `Internships - Las Cumbres Observatory` and `Internships | Las Cumbres
+Observatory`. Run through the real `webResultToRawJobItem`, **both return
+`null`** — caught by the SECOND `isListingPage` call, on the first
+separator-delimited segment, which this file's own comment says exists for
+exactly this shape. **The card renders `Internships`, and `Internships` is what
+the second call tests.** Not a special case built for this item.
+
+**THE BASELINE RENDER WAS CONFIRMED AGAINST A's CENSUS BEFORE THE FIX WENT IN.**
+`webResultToRawJobItem` on `Internships - Las Cumbres Observatory` @
+`lco.global/about/interns` returned an item with title `Internships` and company
+`Las Cumbres Observatory` — **byte-identical to what A recorded live in 5 of 5
+pulls**, which is the strongest available confirmation that the corpus row is
+the real shape and not a paraphrase of it.
+
+**THE PLURAL NARROWING WAS PRICED BY EXECUTION, NOT ACCEPTED ON AUTHORITY.** C
+temporarily shipped T2 (`internships?`) and scored it: **one false fire, on the
+bare title `Internship`** — B's exact result, on B's exact string. The variant
+was reverted immediately and **the destroyed posting is now a shipped
+must-keep**, so adding the singular later fails a red test instead of drifting.
+
+---
+
+#### 2. WHAT LANDED — ONE WORD
+
+`web/src/lib/jobs/sources/jobweb.ts`, `CAREERS_INDEX_TITLE_RE`: `internships`
+added to the existing alternation, beside `opportunities`, **plural only**.
+Nothing else in the file changed — not `LISTING_TITLE_RE`, not `NON_JOB_PATH_RE`,
+not `isListingPage`'s check order, not the employer chain, not any existing
+entry in this regex.
+
+**NO URL RULE WAS ADDED** for `/about/`, `/interns`, or `lco.global`. **NO HOST
+LIST. NO SINGULAR.** The doc comment above the regex now carries B's three
+measured URL-route rejections and the singular's price, so the next round finds
+the reasoning at the code rather than four thousand lines away in this file.
+
+---
+
+#### 3. THE TESTS — +20 ASSERTIONS, 0 DELETED, 0 REWRITTEN
+
+All seven of B's required statements are asserted, plus one B did not ask for
+(item 8 below), in a new `describe` block in `jobweb.test.ts`:
+
+1. The live instance drops at its real host and path.
+2. **The end-to-end route** — all three live render shapes produce no item.
+3. **Not a host list** — the same bare title drops at three unrelated hosts.
+4. **The generality no URL route could reach** — `/careers/internships` drops.
+5. **The plural narrowing priced as a must-keep** — bare singular `Internship`
+   is KEPT.
+6. **Eight real internship postings survive**, including Ruling 31's hardest
+   cases: a multi-word title BEGINNING with the added plural (`Internships in
+   Battery Science at Acme`) and the plural inside a longer role (`Research
+   Internships Coordinator`).
+7. **B14-01's `/about/interns` must-keep row restated here rather than trusted
+   at a distance** — a real role title on the very URL this item is about still
+   KEEPS. This is the proof B16-01 is a title rule, not a URL rule.
+8. **ADDED BY C, not in B's list:** the two real postings the unconditional
+   `/about/` URL route would have destroyed (`/about/careers/battery-engineer`,
+   `/about/jobs/1234`) are asserted as must-keeps. B measured them and rejected
+   the route; without an assertion the rejection lives only in prose, and the
+   route can be reintroduced by a later round that never reads it.
+
+**NEGATIVE PROOF, BY REVERT-AND-RESTORE.** With the one word removed:
+**8 of the 20 new assertions FAIL** — the live instance, all three end-to-end
+renders, all three not-a-host-list rows, and the `/careers/internships` row.
+**The other 12 deliberately do NOT fail**, and that is itself the result: they
+are the must-keeps, and their passing in BOTH states is the proof this change
+costs nothing. The word was restored and the suite re-run green.
+
+---
+
+#### 4. THE GATE AFTER ITEM 1
+
+**90 files / 1375 tests, 1374 passing** (+20, exactly the assertions added) —
+sole failure the standing `benchmark.test.ts` flake. `npx tsc --noEmit` clean.
+`npx eslint` exactly the one standing `quiz.tsx:46` error.
+**`jobs/scoring.test.ts` and `opportunities/job-cleanup.test.ts` run BY NAME:
+37 together.** **`enrich.test.ts` run SOLO: 25 tests, 25 passed — the SolarPACES
+lock is intact.**
+
+**NO DEVIATION. The escape clause did not fire.** Every "do not" in B's guide
+and in §1's `WHOSE TURN: C` block was observed. Nothing on A's exclusion list
+was touched, reopened or designed against — **in particular Ruling 33 is NOT
+touched: this is a page-KIND fix and the `matchedTerms: ["LCO"]` admission route
+is deliberately left exactly as it is.**

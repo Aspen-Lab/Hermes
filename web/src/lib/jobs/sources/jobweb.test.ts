@@ -1170,3 +1170,104 @@ describe("non-posting pool items (B13-02)", () => {
     });
   });
 });
+
+// B16-01 (round 16, Ruling 47b): AN INTERNSHIPS PROGRAMME INDEX IS NOT A
+// POSTING. `lco.global/about/interns` reached the job pool in 5 of 5 pulls in
+// each of rounds 13, 14, 15 and 16, rendering the bare word `Internships` as
+// its role title — a card that promises a vacancy and names no role.
+//
+// THE FIX IS ONE WORD ADDED TO `CAREERS_INDEX_TITLE_RE`, NOT A URL RULE, and
+// that is the load-bearing design decision this block exists to lock. All three
+// URL routes were scored and all three are worse; the reasons are in the regex's
+// own doc comment. The route below reaches an index on ANY host at ANY path,
+// which no URL route could.
+describe("internships programme index is not a posting (B16-01, Ruling 47b)", () => {
+  // 1. THE LIVE INSTANCE, at its real host and path.
+  it("drops the live `lco.global/about/interns` index", () => {
+    expect(isListingPage("Internships", "lco.global", "/about/interns")).toBe(true);
+  });
+
+  // 2. THE END-TO-END ROUTE, WHICH IS THE ONE THAT MATTERS. The reader never
+  // sees the bare word — they see the site's full `<title>`. It is the SECOND
+  // `isListingPage` call in `webResultToRawJobItem` (on the first
+  // separator-delimited segment) that catches these, exactly as this file's own
+  // comment says that call exists to do. Without it the fix would not reach the
+  // shape A actually measured.
+  it.each([
+    ["hyphen separator", "Internships - Las Cumbres Observatory"],
+    ["pipe separator", "Internships | Las Cumbres Observatory"],
+    ["bare title", "Internships"],
+  ])("produces no item at all for the live render (%s)", (_label, title) => {
+    const item = webResultToRawJobItem({
+      title,
+      url: "https://lco.global/about/interns",
+      snippet: "Applications are open for our summer internship programme.",
+    });
+    expect(item).toBeNull();
+  });
+
+  // 3. NOT A HOST LIST — Ruling 32's headline complaint. The same bare title
+  // drops wherever it appears.
+  it.each([
+    ["observatory.example", "/education/internships"],
+    ["acme.test", "/careers"],
+    ["some-employer.example", "/jobs"],
+  ])("drops the same bare title at %s%s", (host, pathAndQuery) => {
+    expect(isListingPage("Internships", host, pathAndQuery)).toBe(true);
+  });
+
+  // 4. THE GENERALITY NO URL ROUTE COULD REACH: an employer's own
+  // `/careers/internships` index — the single most common URL this shape has.
+  // The best-scoring URL candidate (leaf is `interns`/`internships` and no
+  // job-path segment) survives this exact case, which is why it lost.
+  it("drops an employer's own /careers/internships index", () => {
+    expect(isListingPage("Internships", "acme.test", "/careers/internships")).toBe(true);
+  });
+
+  // 5. THE PLURAL NARROWING, PRICED AS A MUST-KEEP RATHER THAN LEFT IN A
+  // COMMENT. Allowing the singular scores ONE FALSE FIRE, and this is it: a
+  // real posting can be titled the bare singular. Measured, not inherited —
+  // B13-02 part 3 established the same narrowing for `LISTING_SECTION_TITLE_RE`
+  // and it was re-scored on this item's own data. DO NOT ADD THE SINGULAR.
+  it("KEEPS the bare singular `Internship` — the priced cost of plural-only", () => {
+    expect(isListingPage("Internship", "acme.test", "/careers/internship-2027")).toBe(false);
+  });
+
+  // 6. REAL INTERNSHIP POSTINGS SURVIVE. Per Ruling 31 the hardest cases are
+  // included deliberately: a multi-word case whose title BEGINS with the added
+  // plural (`Internships in Battery Science at Acme`), and a case carrying the
+  // plural inside a longer role (`Research Internships Coordinator`).
+  it.each([
+    "Internship Battery R&D",
+    "Molten Salt Electrochemistry Summer Internship",
+    "Chemical and Materials Engineering Internship",
+    "2027 Summer Investment Internship",
+    "Internships in Battery Science at Acme",
+    "Summer Internships 2027",
+    "Research Internships Coordinator",
+    "Internship Programme Lead",
+  ])("keeps the real internship posting: %s", (title) => {
+    expect(isListingPage(title, "acme.test", "/careers/1234")).toBe(false);
+  });
+
+  // 7. B14-01's OWN `/about/interns` MUST-KEEP ROW, RESTATED HERE RATHER THAN
+  // TRUSTED AT A DISTANCE. It carries a real role title on the very URL this
+  // item is about, and it must stay green: it is the proof that B16-01 is a
+  // TITLE rule and not a URL rule. Ruling 47b is not authority to drop this URL
+  // on its path.
+  it("keeps a real posting on the very URL this item is about (B14-01's row)", () => {
+    expect(
+      isListingPage("Battery Research Scientist", "lco.global", "/about/interns"),
+    ).toBe(false);
+  });
+
+  // 8. THE TWO REAL POSTINGS THE UNCONDITIONAL `/about/` URL ROUTE WOULD HAVE
+  // DESTROYED, asserted so that route cannot be reintroduced quietly. Employers
+  // really do file careers pages under `/about/`.
+  it.each([
+    ["Battery Engineer", "/about/careers/battery-engineer"],
+    ["Process Engineer", "/about/jobs/1234"],
+  ])("keeps the real posting a `/about/` URL rule would destroy: %s", (title, pathAndQuery) => {
+    expect(isListingPage(title, "acme.test", pathAndQuery)).toBe(false);
+  });
+});

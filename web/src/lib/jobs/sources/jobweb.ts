@@ -319,9 +319,53 @@ const AGGREGATOR_HOSTS = [
  * Titles that name a careers section rather than a role. An employer's
  * "/careers" index passes every job-shaped heuristic but is not something the
  * user can apply to.
+ *
+ * B16-01 (round 16, Ruling 47b): `internships` added, and it is ONE WORD — not
+ * a new class and not a new vocabulary. `lco.global/about/interns` is an
+ * internships PROGRAMME INDEX that reached the job pool in 5 of 5 pulls in each
+ * of rounds 13, 14, 15 and 16, rendering the bare word `Internships` as its
+ * role title. The card promises a vacancy and names no role: not the field, not
+ * the term, not the closing date, not whether it is even open.
+ *
+ * WHY THE TITLE AND NOT THE URL, measured rather than argued. The obvious fix
+ * is a URL rule, as B13-02/B14-01/B15-01 all shipped. All three URL routes were
+ * scored and all three are WORSE: `/about/` unconditional has FOUR false fires,
+ * two of them ordinary real postings (`/about/careers/battery-engineer`,
+ * `/about/jobs/1234`) — employers really do file careers pages under `/about/`;
+ * the conditional form still breaks B14-01's own `/about/t/team` must-keep; and
+ * the leaf-word form (`/interns`, `/internships`) is a hand-written vocabulary
+ * in a URL costume that STILL cannot reach the shape that matters most, an
+ * employer's own `/careers/internships` index. This title rule reaches it on any
+ * host at any path. Scored 184/184 end to end against the shipped corpus, zero
+ * false fires, against a 177/184 baseline.
+ *
+ * LEGITIMACY OF THE DESTINATION IS NOT THIS RULE'S CRITERION, and the list
+ * above is the proof: `Careers`, `Vacancies`, `Open Positions` and
+ * `Opportunities` are all real places a real person can really apply. They are
+ * dropped anyway, because a card whose whole role title is a section label
+ * tells the reader nothing. `Internships` is the same kind of word as
+ * `Opportunities`, in the same grammatical slot, doing the same job.
+ *
+ * **PLURAL ONLY, AND THE SINGULAR IS PRICED RATHER THAN ASSUMED.** Allowing
+ * `internships?` has ONE FALSE FIRE, on the bare title `Internship` — a real
+ * posting can be titled the bare singular; an index page is titled the plural.
+ * Same narrowing B13-02 part 3 established for `LISTING_SECTION_TITLE_RE`,
+ * re-measured on this item's own data rather than carried over on faith. The
+ * singular is asserted below as a must-keep. **Do not add it.**
+ *
+ * B14-01's `lco.global/about/interns` must-keep row is deliberately UNTOUCHED
+ * and still KEEPS, because it carries the role title `Battery Research
+ * Scientist` — that row is the proof this is a title rule and not a URL rule,
+ * and Ruling 47b is not authority to drop that URL on its path.
+ *
+ * One deliberate side effect, named rather than discovered later: this regex
+ * has a SECOND call site, the employer-candidate veto chain (B13-01 Gap A), so
+ * a segment reading the bare word `Internships` is now vetoed in the employer
+ * slot too. That is correct — a section label is a section label in either
+ * slot — and it inherits that chain's established honest-omission behaviour.
  */
 export const CAREERS_INDEX_TITLE_RE =
-  /^\s*(?:careers?|jobs?|vacancies|open(?:ings?)?|open positions?|current openings?|job openings?|work (?:with|for) us|join (?:us|our team)|employment|opportunities)\s*$/i;
+  /^\s*(?:careers?|jobs?|vacancies|open(?:ings?)?|open positions?|current openings?|job openings?|work (?:with|for) us|join (?:us|our team)|employment|opportunities|internships)\s*$/i;
 
 /**
  * B13-02 part 3 (round 13): a title that NAMES A SECTION rather than a role.
