@@ -49153,3 +49153,204 @@ tally lines with running counts; then the summary, ranked difference list and ga
 verdict.
 
 ---
+
+### Round 21 — Agent A (part 3: R4 job summaries, and ALL TALLY LINES with running counts. **THE SIX-ROUND CLEAN SUMMARY COLUMN BREAKS** — a summary that stops mid-sentence at a preposition — and **Ruling 37's baseline row is ABSENT from the pool for the first time in ten rounds.**)
+
+**STATUS: DONE.** Third of round 21 A's four parts, continuing the same session as
+part 2. Part 4 follows. **No gate verdict is set here.**
+
+**Method.** The **same five fresh live job-pool pulls part 2 used**, read on a
+different column — the **job CARD's** `summaryText` rather than its role title or
+employer. Five separate processes, no-op `PoolCache`, no
+`PEER_PROFILE_SNAPSHOT_PATH`, results written outside the repository, harness
+deleted before this commit. The efficiency choice and its reason are in part 2's
+method note.
+
+**A DEFINITION MADE EXPLICIT, because the card view hides it.**
+`jobCardView().summaryText` is `job.summary?.trim() || job.matchReason`, so **a card
+always shows something.** "Summary-bearing" throughout this loop means a real
+page-derived `job.summary`, **not** the `Matches your …` fallback. A counted it
+that way, and says so, so the number stays comparable to rounds 11–20.
+
+**Contract checked, not assumed.** `LEADING_LABEL_RE` still requires a **literal
+trailing colon**; `LEADING_BRACKET_REMNANT_RE` is still the bracket-remnant shape.
+**Ruling 44 stands and round 20 C touched neither** — round 20's items were on
+`structured-extract.ts`'s address guard, `facets.ts`'s exported predicates and the
+six render sites, none of which is on the summary path.
+
+**Summary-bearing counts: 3 of 17 in the MAJORITY (17.6%)**, the same postings in
+every run in which they appear, byte-identical text. Round 20 was 3 of 11 (27.3%),
+r19 3 of 16 (18.8%), r18 3 of 12 (25.0%), r17 2 of 13 (15.4%), r16 3 of 12 (25.0%),
+r15 4 of 16 (25.0%), r14 4 of 14 (28.6%), r13 6 of 20 (30%). Different days and
+different pools each time, so this is reported as **this round's own number, not a
+trend.**
+
+---
+
+## THE THREE BEARING SUMMARIES, IN FULL, WITH THEIR VERDICTS
+
+| host | summary | verdict |
+|---|---|---|
+| `careers.inl.gov` (`/job/1930`) | *"Idaho National Laboratory is hiring a well-qualified Postdoctoral Research Associate to perform laboratory-based research and development of"* | **OPEN DEFECT — IT STOPS MID-SENTENCE, AT A PREPOSITION.** The last word is `of`. There is no ellipsis, no full stop, no closing clause. A reader is handed a sentence that simply stops |
+| `jobs.polymer.co` | *"Mantel is looking for a Fall Engineering Intern excited to join a promising carbon capture startup working on the development of molten salts as a novel CO2 sorbent material."* | **CLEAN AS A SUMMARY.** Faithful, complete, correctly extracted. The **Spring/Fall mismatch against the card's own role title (`Spring Engineering Internship…`) is the standing exclusion A must not treat as open**, and it is a SOURCE mismatch, not a summary defect. Named so the exclusion stays visible |
+| `employbl.com` | *"Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies. During our 10-week paid summer internship program, you will earn up to $2,500 per week."* | **CLEAN AS A SUMMARY.** Faithful, readable, correctly extracted. Its *relevance* rests on a company-name collision — that is Ruling 52b's line below, and it is **not** a summary defect |
+
+**ONE OPEN DEFECT IN THE SUMMARY COLUMN. THE SIXTH-CONSECUTIVE-CLEAN RUN ENDS AT
+SIX.** Rounds 15–20 each closed this column clean; round 21 does not.
+
+**A CHECKED THE EXCLUSION LIST BY NAME BEFORE CALLING IT OPEN.** It is **not**
+Ruling 37 (that is `careers.gevernova.com`'s colonless run-on, a *leading* label
+with no colon — this has no leading label at all and the defect is at the END).
+It is **not** Ruling 44's label-miss (same reason). It is **not** B18-03's
+em/en-dash-only date-stamp restriction (there is no date stamp). It is **not**
+round 20's `careers.inl.gov` wobble — that was a *majority/minority split between a
+complete sentence and the fallback*, and this is a single, stable, byte-identical
+value present in every run the row appears in. **Different posting
+(`/job/1930`, not `/job/1515`), different shape, no exclusion covers it.**
+
+**AND A REPORTS THE ROW THAT MAKES THIS AWKWARD FOR ITS OWN CASE.** The same host's
+OTHER posting (`/job/1515`, the row round 20 scored) renders the **fallback**
+`Matches your molten salt focus` this round rather than its source-owned sentence.
+**So on one host, one card degrades gracefully and the other truncates.** A does
+not fold these into one finding, and does not claim the truncation is the wobble
+returning — they are different postings with different behaviours and the
+distinction is B's to explain.
+
+---
+
+## ALL TALLY LINES, WITH RUNNING COUNTS, STATED AFFIRMATIVELY EVEN AT ZERO
+
+### **RULING 52b — FULL-PHRASE COMPANY-NAME COLLISIONS. ROUND 21: 7 INSTANCES, 1 ADMITTED, 6 DROPPED. CUMULATIVE ADMISSIONS 3 ACROSS r19–r21 — THE SAME FIRM ALL THREE TIMES.**
+
+The brief's definition, applied exactly: **a profile topic matching a COMPANY'S OWN
+NAME in full.** Not the short-acronym class — that stays Ruling 33, and **33 does
+NOT widen.**
+
+**JOB SURFACE — 6 instances, 1 ADMITTED**
+
+| row | the collision | outcome |
+|---|---|---|
+| `employbl.com` → `2027 Summer Investment Internship` | topic **`battery`** matched **`Battery Ventures`**, a private-equity firm's own name | **ADMITTED — in the majority pool, 5 of 5. THE ROUND'S ONE ADMISSION, and the THIRD across r19–r21, all the same firm** |
+| `jobs.battery.com` → `Intern Jobs at Battery Ventures Companies` | same firm, same mechanism | **DROPPED** |
+| `jobs.battery.com` → `Jobs at Battery Ventures Companies \| Battery Ventures` | same firm | **DROPPED** |
+| `ziprecruiter.com` → `Internship Battery Ventures Jobs in California (NOW HIRING)` | same firm, reached through an aggregator | **DROPPED** |
+| `ionexchangeglobal.com` → `Careers` | topic **`ion exchange`** matched **`Ion Exchange Global`** | **DROPPED** |
+| `ionenviromgt.net` → `CAREER \| Ion Exchange` | topic **`ion exchange`** matched **`Ion Exchange`** | **DROPPED** |
+
+**EVENT SURFACE — 1 instance, 0 ADMITTED** (the table is in part 1):
+`ionexchangeglobal.com` → `Careers`, **DROPPED** from all five event pools.
+
+**ROUND 21 TOTAL: 7 instances, 1 ADMITTED, 6 DROPPED. CUMULATIVE ADMISSIONS: 3
+across r19–r21.** Round 20 measured 8 instances, 1 admitted, 7 dropped; round 19's
+own §4 measurement carries the same firm as the first admission. **The admitted row
+is the SAME company, the SAME topic and the SAME mechanism in all three rounds** —
+which is the sharpest thing this line has said yet, and the manager's `POLICY` on
+whether Ruling 33 should reach this class is **still open. A does not decide it and
+does not widen the rule on its own authority.**
+
+**FOUR ROWS DELIBERATELY NOT COUNTED, because the brief forbids inflating the
+line.** `iongroup.com` → `Career - Join Our Passionate Team` (topic `ion exchange`
+vs the three-character `ION` — **Ruling 33's short-acronym class, not 52b**);
+`ionis.com` → `Undergraduate & Graduate Intern Programs - Ionis Pharmaceuticals`
+(same class); `ertel-ionstream.com` → `Jobs \| Ertel IonStream GmbH` (`IonStream`
+is not `ion exchange` in full); `naukri.com` → `Ion Exchange Jobs` (an aggregator
+**topic**-search page — the match is on the subject, not on a company name). **No
+fix is authorised by this line; it is the evidence a fix would rest on.**
+
+### **RULING 33 — 0 of 3, cumulative 2 of 46. NOT CLOSED.**
+
+Three short-acronym-class instances were offered (`iongroup.com`, `ionis.com`,
+`ertel-ionstream.com`) and **none reached any pool**. Running r9 1/4, r10 0/3, r11
+0/4, r12 0/3, r13 1/6, r14 0/4, r15 0/4, r16 0/3, r17 0/2, r18 0/3, r19 0/3, r20
+0/4, r21 0/3 → **cumulative 2 of 46 — NOT closed.** **Nothing under 5 characters
+was matched anywhere on either surface, FIFTH consecutive round.** The `lco-cdo.org`
+`LCO` acronym and the matcher generally remain the standing exclusion.
+
+### **RULING 34a — employer (job side): 3 of 8 non-null, cumulative 8 of 83.**
+
+Full table and both mechanisms are in part 2, Finding 3. Running r11 1/9, r12 1/10,
+r13 0/12, r14 1/9, r15 1/8, r16 0/6, r17 1/6, r18 0/6, r19 0/5, r20 0/4, r21 3/8.
+**`careerservices.upenn.edu`'s named accepted cost is ABSENT for the FOURTH round
+running — and this round the HOST IS PRESENT (5 of 5) and renders honest silence**,
+which is a stronger statement than the previous three rounds could make.
+
+### **EVENT NAME (fidelity): 0 of 15 — NINTH consecutive zero.** Table in part 1.
+
+### **EVENT SIDE OF 34a: 1 of 15**, the same named accepted cost
+(`batteryinnovationsummit.com` → `The Battery Saloon`, Ruling 39b), NINTH round
+running; **cumulative 9 of 126 — a second distinct instance is ABSENT, so Ruling
+42b does NOT fire.**
+
+### **JOB SUMMARIES: 1 OPEN DEFECT. The six-round clean run ENDS.** Table above.
+
+### **RULING 37: the BASELINE ROW IS ABSENT FROM THE POOL — 0 of 3 bearing. FIRST TIME IN TEN ROUNDS.**
+
+`careers.gevernova.com`'s colonless run-on has been the sole occupant of this line
+for nine consecutive rounds. **This round the host is NOT in any of the five pools**
+— though it **was offered twice** (`/ge-vernova-nuclear-engineering-intern-summer-2027/job/R5048563`
+and `/ge-vernova-battery-engineering-technology-intern-summer-2027/job/R5049890`),
+so this is an absence from the POOL, not from the provider. **A reports 0 of 3 and
+explicitly does NOT record it as a fix**: nothing was changed, the row simply did
+not make the pool. **Ruling 44's label-miss sub-count is ZERO**, and there is **no
+candidate string that is both a 37 run-on and a 44 label-miss**, so nothing is
+counted twice.
+
+### **RULINGS 46a AND 46b: ZERO live sightings each, SIXTH round counted — and MEASURED rather than merely absent.**
+
+Every named string was replayed against the **shipped** `isListingPage` and the
+**shipped** `webResultToRawJobItem` this round:
+
+| replayed string | whole-title | ingestion |
+|---|---|---|
+| **46a's named false fire** — `Manager Green Jobs in Ontario` @ `/jobs/manager-green-jobs` | **DROP** | **null** — the accepted cost still costs exactly what it was priced at. **Zero live sightings across rounds 8–21** |
+| **46a's Title-Case lock** — `Ion Exchange Resin Jobs in United States` @ `linkedin.com/jobs/ion-exchange-resin-jobs` | **DROP** | **null** — the letter-case test Ruling 46a refused is still not needed |
+| **46b title 1** — `EnerSys Internship Program: Powering Future Innovators` | **DROP** | **null** |
+| **46b title 2** — `CATL Internships` @ `ev.careers/catl-internships` | **DROP** | **null** |
+| **46b named miss 1** — `LinkedIn \| Ion Exchange Resin jobs in United States` | keep | ADMITTED — **still a miss, still in the SAFE direction**, exactly as documented |
+| **46b named miss 2** — `Ion Exchange Resin jobs` | keep | ADMITTED — **still a miss, still safe** |
+
+**A zero means "absent from this round's data", not "the rule stopped working" —
+and this round the replay proves the second half.** **Both of 46b's own targets now
+DROP**, which is worth stating beside part 2's Finding 1: **the guard catches 46b's
+two recorded `ev.careers`-class titles and misses a third one live.** A reports
+both facts together rather than letting the flattering one stand alone.
+
+**AND A CORRECTS ITS OWN FIRST ATTEMPT.** A's first replay pass used an
+**invented** title for the `hyetlithium.com` must-keep rather than the recorded one,
+and it dropped — which would have read as a regression. Re-run with **the real
+offered title** (`Careers Open application - Internship battery R&D`, from this
+round's own 102 rows), it is **KEPT and ADMITTED**, as the shipped code's own doc
+comment requires. **Replays must use recorded strings; A used a guess once and says
+so.**
+
+### **RULING 36 (`ruggedthz.com`): STAYS CLOSED, zero, NINTH consecutive round, MEASURED not absent** — the host was in the pool 5 of 5 with the byte-identical correct name `2026 Crystal Engineering GRC`.
+
+### **RULING 39c: NOT MEASURABLE this round.** No forum thread was offered. Replayed and the clause isolation reproduces three for three — **`targeted-confirmed, organically unoffered`**. Part 2, Finding 5.
+
+### **B14-02: still owed, SEVENTH round running. Zero `]` on any card value across all 17 majority rows in five runs.** Every string column of the card view model was scanned, not sampled. **NOT an open difference**, graded `targeted-confirmed, organically unmeasured`.
+
+### **RULING 55c: the online-must-keep debt CARRIES, SECOND round.** Its own line is in part 1 and it is not folded into anything here.
+
+---
+
+**THE FIXTURE SCORE WAS NOT RE-RUN THIS ROUND AND IS NOT INHERITED AS FRESH**, the
+same disclosure rounds 13–20 made. The plate inventory is carried forward from the
+rounds that established it; **A did not re-read the PDF this round and says so
+rather than implying a fresh reading.** **§1d exclusions 7 and 8 are re-listed by
+name, as §1d requires every round:** exclusion 7 — REGISTER BY's permanently empty
+sub-line (Ruling 10); exclusion 8 — the six data-model gaps **(c)** ELIGIBILITY
+row, **(d)** TEAM row, **(e)** `· reposted from employer site`, **(f)** `streamed
+keynotes`, **(g)** venue name in the event SUBTITLE, **(h)** `plus four nights`.
+**None of this round's four differences is any of them**, and part 2 says why for
+each.
+
+**No credential read, printed, logged or written — boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`.** No third-party page contained text directed at an
+agent and none was treated as an instruction. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or edited.
+Harness deleted before this commit; tree clean.
+
+**Not done yet (part 4, same session, continuing next):** the summary across parts
+1–3, the ranked difference list, and the gate verdict.
+
+---
