@@ -1565,3 +1565,286 @@ describe("ATS action controls in the employer slot (B16-02 gap 2C, Ruling 48a)",
     expect(item!.company).toBeUndefined();
   });
 });
+
+// B17-01 (round 17, Rulings 49a/49b): AN EMPLOYER'S OWN INTERNSHIP/PROGRAMME
+// BROCHURE PAGE, admitted as if it were a vacancy. Two live instances in round
+// 17 A's census. TWO additive checks, deliberately NOT merged into one and
+// deliberately NOT added to `CAREERS_INDEX_TITLE_RE` 鈥?see the constants' doc
+// comment for both measurements. C re-measured B's whole matrix by execution on
+// a 95-row corpus (11 must-drop, 84 must-keep) before writing a line:
+// baseline 84/95 with 11 misses and zero false fires, the shipped result
+// 94/95 with ONE named miss and ZERO false fires.
+describe("employer programme-brochure pages are not vacancies (B17-01)", () => {
+  // 1. THE TWO LIVE INSTANCES, at their real hosts and paths, BOTH shipped
+  // `isListingPage` calls. Before this item all four of these returned false.
+  it.each([
+    [
+      "EnerSys Internship Program: Powering Future Innovators",
+      "enersys.com",
+      "/en/careers/enersys-internship-program",
+    ],
+    ["CATL Internships", "ev.careers", "/catl-internships"],
+  ])("drops the live brochure page: %s", (title, host, pathAndQuery) => {
+    expect(isListingPage(title, host, pathAndQuery)).toBe(true);
+  });
+
+  // 2. END TO END, which is what proves the fix reaches the render: the CATL
+  // title carries separators, so the WHOLE-title call still returns false and
+  // it is the SECOND `isListingPage` call 鈥?on the role segment 鈥?that drops
+  // it. The shipped call pattern doing the job its own comment says it exists
+  // for. Asserted at both levels so neither can go vacuous.
+  it("drops the full offered CATL title end to end, via the second call", () => {
+    const full =
+      "CATL Internships - Battery Cell, R&D & Gigafactory Programs - EV.Careers";
+    expect(isListingPage(full, "ev.careers", "/catl-internships")).toBe(false);
+    expect(isListingPage("CATL Internships", "ev.careers", "/catl-internships")).toBe(
+      true,
+    );
+    expect(
+      webResultToRawJobItem({
+        title: full,
+        url: "https://ev.careers/catl-internships",
+        snippet: "Apply now for this internship; applications are open.",
+      }),
+    ).toBeNull();
+  });
+
+  // 3. THE `<h1>` FORM DROPS TOO, so a title change upstream does not reopen
+  // the item 鈥?the EnerSys page's `<h1>` is the colonless string.
+  it("drops the EnerSys <h1> form, with no marketing tagline", () => {
+    expect(
+      isListingPage(
+        "EnerSys Internship Program",
+        "enersys.com",
+        "/en/careers/enersys-internship-program",
+      ),
+    ).toBe(true);
+  });
+
+  // 4. NOT A HOST LIST. The same title drops on an unrelated host at an
+  // unrelated path: check (a) is a pure title rule.
+  it.each([
+    ["acme.test", "/careers/internships"],
+    ["northvolt.test", "/students"],
+  ])("drops `Acme Internships` at %s%s 鈥?not a host list", (host, pathAndQuery) => {
+    expect(isListingPage("Acme Internships", host, pathAndQuery)).toBe(true);
+  });
+
+  // 5. THE LIVE MUST-KEEP, AND IT IS THE MOST IMPORTANT ASSERTION IN THIS
+  // BLOCK. Round 11 A fetched this posting directly, scored it CORRECT, and
+  // called it "an own-domain research center hosting its own internship
+  // posting". The tempting UNIFIED one-signal design 鈥?strip the tagline and
+  // the `Program(me)` suffix, then test for an owner in front of a section
+  // label 鈥?reaches both brochure pages with one statement AND DESTROYS BOTH
+  // OF THESE ROWS, because grammatically the Oregon posting and the EnerSys
+  // brochure are the same string. C reproduced that destruction by execution.
+  // Ruling 49a refused to reclassify this page to make the one-signal design
+  // available. If these two ever go red, the one-signal design has been
+  // reintroduced.
+  it.each([
+    "M.S. Internship Program 鈥?Oregon Center for Electrochemistry",
+    "M.S. Internship Program",
+  ])("keeps round 11 A's live-sighted Oregon posting: %s", (title) => {
+    expect(
+      isListingPage(title, "electrochemistry.uoregon.edu", "/internships"),
+    ).toBe(false);
+  });
+
+  // 6. THE `of` TRAP 鈥?the false fires B wrote to break its own first draft,
+  // and two more C added. Ordinary HR and university role titles, not exotica.
+  // Six false fires without the closed function-word exclusion, zero with it,
+  // and no catch is lost either way.
+  it.each([
+    "Head of Careers",
+    "Head of Careers - Imperial College London",
+    "Manager of Vacancies",
+    "Head of Internships",
+    "Head Of Careers",
+    "Director of Internships",
+  ])("keeps the real `of` role title: %s", (title) => {
+    expect(isListingPage(title, "example.test", "/jobs/1234")).toBe(false);
+  });
+
+  // 7. THE HOST-BRAND NARROWING IS LOAD-BEARING. Check (b) is a TITLE/HOST
+  // RELATION, not a host list: the identical shape at an unrelated host is
+  // kept, and a real posting on the very host that carries the brochure is
+  // kept. The singular with no programme suffix is kept on its own host too.
+  it.each([
+    [
+      "a real posting on the brochure's OWN host",
+      "EnerSys Summer Internship - Battery Chemistry",
+      "enersys.com",
+    ],
+    ["the same shape at an UNRELATED host", "Acme Fellowship Program", "othersite.test"],
+    ["鈥ith a colon tail, unrelated host", "Acme Internships: Apply Now", "othersite.test"],
+    ["a programme designation, unrelated host", "Acme Graduate Programme", "example.test"],
+    ["the singular with no programme suffix", "Acme Internship", "acme.test"],
+  ])("keeps %s", (_label, title, host) => {
+    expect(isListingPage(title, host, "/careers/1234")).toBe(false);
+  });
+
+  // 8. ROUND 16's PRICED SINGULAR AND ALL EIGHT OF B16-01's INTERNSHIP
+  // MUST-KEEPS STILL HOLD. Round 16 C bought the bare singular by execution at
+  // the cost of one destroyed posting; neither new check may re-spend it.
+  it.each([
+    "Internship",
+    "Internship Battery R&D",
+    "Molten Salt Electrochemistry Summer Internship",
+    "Chemical and Materials Engineering Internship",
+    "2027 Summer Investment Internship",
+    "Internships in Battery Science at Acme",
+    "Summer Internships 2027",
+    "Research Internships Coordinator",
+    "Internship Programme Lead",
+  ])("keeps round 16's internship must-keep: %s", (title) => {
+    expect(isListingPage(title, "acme.test", "/careers/1234")).toBe(false);
+  });
+
+  // 9. THE EMPLOYER-SLOT NON-INTERFERENCE, ASSERTED END TO END. These three
+  // fail if the new shapes are ever moved into `CAREERS_INDEX_TITLE_RE`, which
+  // has a SECOND call site in the employer veto chain. THAT IS THE POINT OF
+  // THEM. C measured the widening on the real file: at a two-token owner budget
+  // it turns `Tesla Careers` and `Kairos Power Careers` into silence; at three
+  // tokens it additionally breaks the shipped `Idaho National Laboratory
+  // Careers` assertion 鈥?THREE shipped tests red in total.
+  it.each([
+    ["Tesla Careers", "Tesla"],
+    ["Kairos Power Careers", "Kairos Power"],
+    ["Idaho National Laboratory Careers", "Idaho National Laboratory"],
+  ])("still renders the real employer behind `%s`", (segment, expected) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Scientist - ${segment}`,
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a battery research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe(expected);
+  });
+
+  // 10. THE NAMED MISS, asserted so a later widening is a DELIBERATE ACT rather
+  // than a drift. A three-token owner is not caught. The three-token budget
+  // that catches it scores 95/95 on C's corpus against the shipped 94/95, and
+  // it is refused because the miss costs only the status quo while the widened
+  // form is one careless edit away from the shipped assertion above.
+  it("does NOT drop a three-token owner 鈥?a deliberate, named miss", () => {
+    expect(
+      isListingPage("Idaho National Laboratory Internships", "inl.gov", "/internships"),
+    ).toBe(false);
+  });
+});
+
+// B17-02 (round 17, Rulings 48a + 49b): A LIST OF PROGRAMME AREAS IN THE
+// EMPLOYER SLOT. Landed in the SAME commit as B17-01 because B17-01 removes the
+// only page a census has ever sighted this value on 鈥?land the drop alone and
+// the defect stops being visible without stopping being real. C re-measured:
+// 4/4 caught, 0 of 46 real employer names destroyed.
+describe("programme-area lists are not employers (B17-02)", () => {
+  const render = (title: string) =>
+    webResultToRawJobItem({
+      title,
+      url: "https://ev.careers/jobs/44231",
+      snippet: "We are hiring a battery cell engineer. Apply now.",
+    });
+
+  // 1. THE LIVE VALUE IS VETOED, asserted on the KEPT REAL-POSTING FORM. An
+  // assertion on the brochure row would be vacuous 鈥?B17-01 drops that page 鈥?  // and would pass for the wrong reason. This is the row that proves the wrong
+  // value is a property of the BOARD'S TITLE TEMPLATE, not of the brochure.
+  it("renders no employer for the live programme-area list on a real posting", () => {
+    const item = render(
+      "Battery Cell Engineer - Battery Cell, R&D & Gigafactory Programs - EV.Careers",
+    );
+    expect(item).not.toBeNull();
+    expect(item!.title).toBe("Battery Cell Engineer");
+    expect(item!.company).toBeUndefined();
+  });
+
+  // 2. ALL THREE COORDINATORS FIRE, and the British spelling fires.
+  it.each([
+    ["the comma + ampersand form", "Engineering, Science & Technology Programs"],
+    ["the bare `and` form", "Science and Engineering Programs"],
+    ["the British spelling", "Graduate, Placement & Internship Programmes"],
+  ])("vetoes %s", (_label, segment) => {
+    const item = render(`Senior Materials Scientist - ${segment} - EV.Careers`);
+    expect(item).not.toBeNull();
+    expect(item!.company).toBeUndefined();
+  });
+
+  // 3. A VETO, NOT A BLANKET: a real employer later in the chain still wins.
+  it("still renders a real employer that sits earlier in the same title", () => {
+    const item = render(
+      "Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs - EV.Careers",
+    );
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe("CATL");
+  });
+
+  // 4. THE SHIPPED STRIP IS UNTOUCHED, END TO END. The first draft of this
+  // guard also allowed `careers` / `vacancies` / `openings` in the trailing-noun
+  // list and destroyed FIVE real employers, one of them the shipped
+  // `Alphabet, Inc.` assertion 鈥?a real company name with a comma plus trailing
+  // careers chrome is the same shape. Those words are
+  // `TRAILING_CAREERS_CHROME_RE`'s territory. C reproduced all five by
+  // execution. Do not widen the list.
+  it.each([
+    ["Alphabet, Inc. Careers", "Alphabet, Inc."],
+    ["Idaho National Laboratory Careers", "Idaho National Laboratory"],
+    ["Baker, Smith & Co Careers", "Baker, Smith & Co"],
+    ["Johnson & Johnson Careers", "Johnson & Johnson"],
+    ["Smith, Jones & Partners Vacancies", "Smith, Jones & Partners Vacancies"],
+    ["Procter & Gamble Openings", "Procter & Gamble Openings"],
+  ])("keeps the careers-chrome employer `%s`", (segment, expected) => {
+    const item = webResultToRawJobItem({
+      title: `Research Fellow - ${segment}`,
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a research fellow. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe(expected);
+  });
+
+  // 5. THE COORDINATION REQUIREMENT IS LOAD-BEARING. The first five real names
+  // below end in a plural programme noun and carry no comma, ampersand or
+  // `and`. Dropping the coordination conjunct destroys every one of them 鈥?C
+  // measured it. 6. THE COORDINATION-COMMA TRAPS follow: real names that DO
+  // carry the coordinator but do not end in a programme noun. 7. `United
+  // Nations Development Programme` is the hardest "must match nothing" case
+  // (Ruling 31) 鈥?the SINGULAR is deliberately not in the list.
+  it.each([
+    "Advanced Technology Programs",
+    "Head Start Programs",
+    "Youth Programs",
+    "Special Programs",
+    "Wildlife Conservation Programs",
+    "Baker, Smith & Co",
+    "Johnson & Johnson",
+    "Marks & Spencer",
+    "Ernst & Young",
+    "R&D Systems",
+    "United Nations Development Programme",
+    "Head Start Program",
+  ])("keeps the real employer name `%s`", (segment) => {
+    const item = webResultToRawJobItem({
+      title: `Battery Research Scientist - ${segment}`,
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a battery research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
+    expect(item!.company).toBe(segment);
+  });
+
+  // 8. THE FORBIDDEN REPAIR IS LOCKED OUT BY A TEST, NOT A COMMENT. Adding
+  // `programs?` to `TRAILING_CAREERS_CHROME_RE` turns the live value into
+  // `Battery Cell, R&D & Gigafactory` 鈥?a DIFFERENTLY WRONG value, which is
+  // Ruling 48a's named forbidden move. C measured that widening on the real
+  // file: it produces three differently-wrong values AND destroys SEVEN real
+  // names, including `United Nations Development Programme` above. The strip
+  // can never produce silence anyway, because it returns the ORIGINAL candidate
+  // when the strip would empty it. Only the veto chain can.
+  it("never renders the trailing-chrome-stripped form of the live value", () => {
+    const item = render(
+      "Battery Cell Engineer - Battery Cell, R&D & Gigafactory Programs - EV.Careers",
+    );
+    expect(item!.company).not.toBe("Battery Cell, R&D & Gigafactory");
+    expect(item!.company).toBeUndefined();
+  });
+});

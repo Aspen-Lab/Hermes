@@ -456,6 +456,108 @@ export const CAREERS_INDEX_TITLE_RE =
 const LISTING_SECTION_TITLE_RE =
   /^\s*(?:[\w&/-]+\s+)?(?:jobs|vacancies|openings|careers)\s+(?:at|in|near|with)\b/i;
 
+/**
+ * B17-01 (round 17, Ruling 49a): AN EMPLOYER'S OWN INTERNSHIP/PROGRAMME
+ * BROCHURE PAGE, admitted as if it were a vacancy. Two live instances, both in
+ * round 17 A's census: `enersys.com/en/careers/enersys-internship-program`
+ * (5 of 5 pulls, role title `EnerSys Internship Program: Powering Future
+ * Innovators`) and `ev.careers/catl-internships` (1 of 5, role title
+ * `CATL Internships`). Both are BROCHURES — they name a programme and no role,
+ * no field, no term, no closing date, and nothing to apply to. Same class
+ * B16-01 closed on `lco.global`, arriving in two shapes its whole-title,
+ * bare-word vocabulary could never reach: one carries a brand BEFORE the noun,
+ * the other a marketing tagline AFTER a colon.
+ *
+ * **TWO CHECKS, NOT ONE, AND THE SPLIT IS SETTLED BY EXECUTION RATHER THAN BY
+ * TASTE.** The tempting unified rule — normalise away the tagline and the
+ * `Program(me)` suffix, then test for a section label with an owner in front —
+ * reaches both pages with one statement. It also **DESTROYS `M.S. Internship
+ * Program – Oregon Center for Electrochemistry`**, a posting round 11 A fetched
+ * directly, scored CORRECT, and described as "an own-domain research center
+ * hosting its own internship posting". Both its full title and the segment the
+ * card renders (`M.S. Internship Program`) fire the unified rule, because
+ * grammatically the Oregon posting and the EnerSys brochure ARE THE SAME
+ * STRING. Measured by B on 92 rows and re-measured by C on 95: the unified rule
+ * is worth **+1 net while destroying real postings**, dead on the asymmetry
+ * B14-01 named — a miss costs the status quo, a false fire destroys a whole
+ * real posting. Ruling 49a refused to reclassify the Oregon page to make the
+ * one-signal design available: that would be rounding the corpus to fit the
+ * fix. **Do not merge these two checks.**
+ *
+ * **THE SECOND CHECK IS NOT A PATCH ON THE FIRST — IT CARRIES A CONFIRMING
+ * STRUCTURAL TOKEN THE FIRST DOES NOT NEED**, the same discipline
+ * `FORUM_THREAD_URL_RE` (an id or a filename) and `NAV_CHROME_SEGMENT_RE`
+ * (verb + job noun) already ship. Check (a) needs no host relation because a
+ * bare `<Owner> Internships` is a section label whoever hosts it. Check (b)
+ * admits the far looser `<X> Internship Program` shape ONLY when `<X>` is the
+ * site's own brand, so it is a TITLE/HOST RELATION AND NOT A HOST LIST —
+ * `Acme Fellowship Program` at an unrelated host is kept, and is asserted.
+ *
+ * **THE `of` TRAP.** Check (a)'s unnarrowed form destroys four ordinary HR and
+ * university role titles — `Head of Careers`, `Head of Careers - Imperial
+ * College London`, `Manager of Vacancies`, `Head of Internships` (C measured
+ * six on a corpus carrying two more). The narrowing is not invented:
+ * `TOPIC_LANDING_FUNCTION_WORD_RE` above already ships a closed function-word
+ * list for exactly this reasoning ("a query is a noun phrase; a role title uses
+ * function words"), and `LISTING_SECTION_TITLE_RE` excludes `for` on the same
+ * grounds. Six false fires → zero, no catch lost. `positions` is deliberately
+ * absent from the section-noun list for the same reason it is absent above:
+ * `Research positions at CERN` is a shipped must-keep.
+ *
+ * **THESE ARE THEIR OWN CONSTANTS, READ ONLY BY `isListingPage`, AND THAT IS
+ * LOAD-BEARING RATHER THAN STYLISTIC.** The obvious move is to widen
+ * `CAREERS_INDEX_TITLE_RE` again, as B16-01 did. That regex has a SECOND call
+ * site — the employer-candidate veto chain — where a brand-prefixed section
+ * label is NOT furniture but a real employer with careers chrome attached,
+ * which `stripTrailingCareersChrome` exists to recover. Measured on the shipped
+ * chain: widening it turns `Tesla Careers` → `Tesla` and `Kairos Power Careers`
+ * → `Kairos Power` into SILENCE, and breaks the shipped `Idaho National
+ * Laboratory Careers` assertion outright. A BARE section label is a section
+ * label in either slot; a BRAND-PREFIXED one is a company name wearing a
+ * suffix. Two end-to-end assertions below fail if these shapes are ever moved
+ * into the shared regex, which is the point of them.
+ *
+ * **THE NAMED MISS, RECORDED SO A LATER WIDENING IS A DELIBERATE ACT RATHER
+ * THAN A DRIFT:** a THREE-token owner (`Idaho National Laboratory
+ * Internships`) is NOT caught. The three-token budget that catches it scores
+ * 95/95 on C's corpus against the recommended design's 94/95, and it is
+ * refused today for one reason: the miss costs only the status quo, while the
+ * widened form is one careless edit away from breaking the shipped
+ * `Idaho National Laboratory Careers` employer assertion if a later round ever
+ * moves it into the shared regex. Asserted below as a known miss.
+ *
+ * ROUTES MEASURED AND REJECTED, so they are not re-proposed: a URL rule / leaf
+ * vocabulary / host list (three false fires, one of them B16-02's own named
+ * accepted cost, and it cannot reach EnerSys at all); the colon tagline as a
+ * signal on its own (it destroys `Internship Program: Battery Characterization
+ * Track`, a real posting whose colon introduces a track rather than a slogan).
+ *
+ * Failure direction: a brochure shape outside these two grammars survives —
+ * the status quo, never a new wrong value.
+ */
+const OWNER_INDEX_TITLE_RE =
+  /^\s*([\w&.'’-]+)(?:\s+([\w&.'’-]+))?\s+(?:internships|careers|vacancies|opportunities|openings)\s*$/i;
+/** A role title uses function words; an owner's name does not. CLOSED class. */
+const INDEX_OWNER_FUNCTION_WORD_RE =
+  /^(?:of|for|and|or|to|with|in|on|at|the|a|an)$/i;
+
+/** (a) An owner's name in front of a plural careers-section label. */
+function isOwnerSectionIndexTitle(title: string): boolean {
+  const m = OWNER_INDEX_TITLE_RE.exec(title);
+  if (!m) return false;
+  return ![m[1], m[2]].some((w) => w && INDEX_OWNER_FUNCTION_WORD_RE.test(w));
+}
+
+const BRAND_PROGRAMME_TITLE_RE =
+  /^\s*([\w&.'’-]+)\s+(?:(?:internship|graduate|apprenticeship|co-?op|fellowship|placement|trainee)s?\s+program(?:me)?s?|internships|careers|vacancies|opportunities|openings)\s*(?::[^:]*)?$/i;
+
+/** (b) The SITE'S OWN brand in front of a programme designation. */
+function isHostBrandProgrammePage(title: string, host: string): boolean {
+  const m = BRAND_PROGRAMME_TITLE_RE.exec(title);
+  if (!m) return false;
+  return looksLikeHostBrand(m[1] ?? "", host);
+}
+
 /** A posting URL almost always carries a numeric or long opaque identifier. */
 const POSTING_ID_RE = /\d{4,}|[?&](?:jk|jobId|gh_jid|id)=/i;
 
@@ -599,6 +701,72 @@ function looksLikeNavChrome(candidate: string): boolean {
 }
 
 /**
+ * B17-02 (round 17, Ruling 48a's paired half, landed in the SAME commit as
+ * B17-01 by Ruling 49b): A LIST OF PROGRAMME AREAS sitting where a company name
+ * belongs. `ev.careers` renders the employer `Battery Cell, R&D & Gigafactory
+ * Programs` where the real employer is CATL — a description of what a board
+ * covers, not an organisation. Sighted live by round 17 A (minority, 1 of 5,
+ * reported rather than let majority scoring delete it).
+ *
+ * **WHY THIS LANDS WITH THE DROP RATHER THAN AFTER IT, AND RULING 48a RUNS
+ * BACKWARDS HERE.** 48a's literal trigger is a drop fix RESURRECTING an item
+ * with a wrong value; that is not what happens this round — B17-01 removes the
+ * brochure page that carries this value, so nothing is converted into anything.
+ * It fires on the consequence instead. **The wrong value is a property of that
+ * board's `<title>` template, not of the brochure page**, and it lands on
+ * ordinary vacancies too: executed on the shipped chain,
+ * `Battery Cell Engineer - Battery Cell, R&D & Gigafactory Programs -
+ * EV.Careers` — a real posting shape on the same board — renders the identical
+ * wrong employer. **Land B17-01 alone and this defect stops being VISIBLE
+ * without stopping being REAL**: the only row a census could ever sight it on
+ * has left the pool. Ruling 49b: a hidden defect is worse than a deferred one.
+ *
+ * **THE OBVIOUS REPAIR IS THE FORBIDDEN MOVE, MEASURED RATHER THAN ASSERTED.**
+ * Adding `programs?` to `TRAILING_CAREERS_CHROME_RE` turns
+ * `Battery Cell, R&D & Gigafactory Programs` into `Battery Cell, R&D &
+ * Gigafactory` — a DIFFERENTLY WRONG value, which is exactly what Ruling 48a
+ * forbids. It cannot ever produce silence either, because
+ * `stripTrailingCareersChrome` returns the ORIGINAL candidate when the strip
+ * would empty it. **Only the veto chain can produce silence**, which is Ruling
+ * 32's own required answer. A must-keep below locks that widening out.
+ *
+ * **THE COORDINATION REQUIREMENT IS LOAD-BEARING AND MEASURED.** A list of
+ * programme areas is a COORDINATED phrase — it carries `,` or `&` or `and`. A
+ * real company name that merely ends in `Programs` does not. Dropping that
+ * conjunct destroys five real names (`Advanced Technology Programs`,
+ * `Head Start Programs`, `Youth Programs`, `Special Programs`,
+ * `Wildlife Conservation Programs`), all asserted below as must-keeps. Same
+ * "require a confirming structural token" discipline as
+ * `NAV_CHROME_SEGMENT_RE` above.
+ *
+ * **THE TRAILING-NOUN LIST IS ONLY `programs` / `programmes`, AND A STRING
+ * SWEEP FOUND THE NARROWING RATHER THAN INSPECTION.** The first draft also
+ * allowed `careers` / `vacancies` / `openings` and fired on
+ * `Research Fellow - Alphabet, Inc. Careers` — A SHIPPED ASSERTION expecting
+ * the employer `Alphabet, Inc.` — because a real company name with a comma plus
+ * trailing careers chrome is the same shape. Those words are
+ * `TRAILING_CAREERS_CHROME_RE`'s territory and a candidate ending in one of
+ * them is a real employer with chrome attached, which the strip recovers
+ * correctly today. `programs` / `programmes` are the two words nothing owns.
+ * Five destroyed real employers → zero.
+ *
+ * **NOT A HOST RULE.** `ev.careers` also hosts postings that render the correct
+ * employer `Tesla` in this very round's census; Ruling 32's headline complaint
+ * is "stop fixing it one site at a time".
+ *
+ * Failure direction: an uncoordinated programme-area label survives — the
+ * status quo. And this is a VETO, not a blanket: a real employer later in the
+ * chain still wins, which is asserted (`… - CATL - <vetoed> - EV.Careers`
+ * renders `CATL`).
+ */
+const PROGRAMME_AREA_LIST_RE =
+  /^[^,&]*(?:,|\s&\s|\sand\s)[^,]*\s(?:programmes|programs)$/i;
+
+function looksLikeProgrammeAreaList(candidate: string): boolean {
+  return PROGRAMME_AREA_LIST_RE.test(candidate.trim());
+}
+
+/**
  * A trailing chrome word left on an otherwise-real employer candidate that
  * has already cleared every guard below (B9-02a/R13) — "Idaho National
  * Laboratory Careers" names the real employer with a careers-page suffix
@@ -715,6 +883,8 @@ export function isListingPage(
   if (LISTING_TITLE_RE.test(title)) return true;
   if (CAREERS_INDEX_TITLE_RE.test(title)) return true;
   if (LISTING_SECTION_TITLE_RE.test(title)) return true;
+  if (isOwnerSectionIndexTitle(title)) return true; // B17-01a
+  if (isHostBrandProgrammePage(title, host)) return true; // B17-01b
 
   const isAggregator = AGGREGATOR_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
@@ -826,6 +996,11 @@ export function webResultToRawJobItem(
           !looksLikeHostBoilerplatePhrase(p) &&
           // B12-06: the family member this slot never had — see above.
           !looksLikeNavChrome(p) &&
+          // B17-02 (round 17, Rulings 48a + 49b): a list of PROGRAMME AREAS
+          // where a company name belongs. See the constant's doc comment above
+          // for why the strip cannot be the fix and why the coordination
+          // requirement and the two-word trailing list are both load-bearing.
+          !looksLikeProgrammeAreaList(p) &&
           // B13-01 Gap A (round 13): a BARE careers-section label reaching the
           // employer slot. `Battery Research Scientist - Careers - Idaho
           // National Laboratory` rendered the employer as `Careers`.

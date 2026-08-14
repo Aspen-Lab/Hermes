@@ -39065,3 +39065,271 @@ sweep that caught B's own first draft are both on record.**
 **`WHOSE TURN: C` stands — one entry, two additive constants, the paired
 guard, five must-not-dos from B's entry binding.**
 
+
+---
+
+### Round 17 鈥?Agent C (ONE COMMIT, both items, per Ruling 49b. B's tables re-measured by execution against the REAL shipped functions before a line was written: the recommended design reproduces at 94/95 with ZERO false fires and ONE named miss, the unified one-signal design DESTROYS THE OREGON POSTING exactly as B said, and all four forbidden moves reproduce 鈥?one of them worse than B measured.)
+
+**STATUS: DONE.** Lock claimed cleanly (`703d09c`) after `git pull --ff-only`
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`; branch name re-read in the output of every
+push (搂3). **NO TEST DELETED, NO TEST REWRITTEN, NO EXISTING ASSERTION
+TOUCHED** 鈥?the diff on `jobweb.ts` is **175 insertions and ZERO deletions**,
+and `jobweb.test.ts` is append-only (its import line was already sufficient; it
+was not edited). Harness lived outside `src/` (`web/zz-r17c/`, its own vitest
+config) and was **deleted before the commit**; `git status --porcelain
+--untracked-files=all` confirmed clean. **No credential read, no live pull, no
+page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+**COLD BASELINE CONFIRMED, NOT INHERITED:** 90 files / **1426 tests, 1425
+passing**, sole failure the standing `benchmark.test.ts` live-search flake
+(`expected undefined to be 'Chicago'`). Exactly the baseline the brief names.
+
+---
+
+#### 0. METHOD 鈥?NOTHING WAS TRANSCRIBED THAT COULD BE EXECUTED INSTEAD
+
+C is the implementer, so C needed neither a re-declaration nor a fidelity gate:
+**every number below is the REAL `isListingPage` / `webResultToRawJobItem`
+answering for itself.** Additive candidates were scored as
+`shipped(...) || signal(...)`, so the shipped function ran on every row.
+**DESTRUCTIVE candidates 鈥?the four forbidden moves 鈥?were applied to the REAL
+FILE, measured, then reverted and `diff`ed byte-identical before the next.**
+Reverts were done by hand, never with `perl -pi` (round 16 C recorded that it
+mangled the regex backslashes twice).
+
+**PROVENANCE, STATED RATHER THAN IMPLIED.** B's harness was deleted before B's
+commits, so **B's rows are NOT recoverable byte-for-byte and row-for-row
+identity is NOT claimed.** C reconstructed the corpus from B's prose. Every
+string B named explicitly is present verbatim; the filler rows are C's own.
+**C's corpus is 95 rows against B's 92 (11 must-drop, 84 must-keep) 鈥?three
+must-keeps harder 鈥?and C's totals are `/95` and `/46`, not `/92` and `/43`.**
+Every row was scored with a real job-ish snippet and the profile's real topics
+(round 17 A's own method correction), so a `null` can never be the TEXT gate
+masquerading as a guard drop.
+
+---
+
+#### 1. THE BASELINE REPRODUCES B's, INCLUDING THE MISS COUNT
+
+| | C's 95-row corpus | B's 92-row corpus |
+|---|---|---|
+| SHIPPED (baseline) | **84/95, 11 misses, 0 false fires** | 81/92, 11 misses, 0 false fires |
+
+**The eleven misses are the same eleven items** 鈥?the four live rows plus the
+seven class siblings. Both live rows reproduce byte for byte on the shipped
+code: **all four `isListingPage` calls returned `false`** and both pages
+rendered as vacancies.
+
+---
+
+#### 2. THE ONE-SIGNAL DESIGN DESTROYS THE OREGON POSTING. REPRODUCED.
+
+C built the unified rule and ran it rather than accepting B's verdict on
+authority 鈥?normalise away the colon tagline and the `Program(me)` suffix, then
+test for a section label with an owner in front:
+
+```
+S3 鈥?THE ONE UNIFIED SIGNAL      91/95   misses 1   FALSE FIRES 3
+      FALSE FIRE: M.S. Internship Program 鈥?Oregon Center for Electrochemistry
+      FALSE FIRE: M.S. Internship Program
+      FALSE FIRE: Acme Internships: Apply Now  @othersite.test
+```
+
+**Both Oregon rows die 鈥?the full title and the segment the card actually
+renders.** That is B's load-bearing finding and it reproduces exactly. Ruling
+49a's refusal to reclassify the page therefore stands on measured ground.
+**C's S3 shows THREE false fires where B recorded seven; C says so rather than
+rounding to B's number.** The difference is a reconstruction artefact: C's S3
+composes the function-word-narrowed owner test, so the four `Head of 鈥 rows do
+not reach it, and C's corpus carries a different colon-subtitle row. **The
+verdict is identical and the reason is identical 鈥?the unified signal cannot
+tell EnerSys's brochure from Oregon's posting, because grammatically they are
+the same string.**
+
+#### THE FULL MATRIX, C's OWN RUN
+
+| candidate | score | misses | FALSE FIRES |
+|---|---|---|---|
+| SHIPPED (baseline) | 84/95 | 11 | 0 |
+| S1 鈥?owner + plural label | 84/95 | 5 | **6** (all `of`-shaped) |
+| S1f 鈥?S1 + function-word exclusion | 90/95 | 5 | **0** |
+| S1w 鈥?S1f, 3-token owner budget | 91/95 | 4 | 0 |
+| S2 鈥?programme + tagline | 84/95 | 9 | **2** |
+| **S3 鈥?THE ONE UNIFIED SIGNAL** | 89/95 | 3 | **3, TWO OF THEM OREGON** |
+| S4 鈥?host-brand echo | 90/95 | 5 | **0** |
+| S1 + S4 | 88/95 | 1 | **6** |
+| **SHIPPED 鈥?S1f + S4** | **94/95** | **1 (named)** | **0** |
+| S1w + S4 | 95/95 | 0 | 0 |
+| S1f + S2 + S4 | 92/95 | 1 | **2** |
+
+**S2's named cost reproduces:** it destroys
+`Internship Program: Battery Characterization Track`, and C's corpus turned up a
+second victim of the same shape, `Co-op Program: Spring 2027 Cohort`.
+**S1's `of` trap reproduces and C's corpus is strictly harder** 鈥?six false
+fires, B's four plus `Head Of Careers` (different case) and
+`Director of Internships`. **All six go to zero with the closed function-word
+exclusion and no catch is lost.** S1w's 95/95 is real and is still refused; part
+4 is why.
+
+---
+
+#### 3. THE SHIPPED RESULT 鈥?94/95, ONE NAMED MISS, ZERO FALSE FIRES
+
+After both checks landed, the **SHIPPED** function scores **94/95 with a single
+miss**, and the miss is the one B named: `Idaho National Laboratory Internships`,
+a three-token owner. **The end-to-end call pattern behaves exactly as B
+predicted:**
+
+| row | call 1 (whole title) | call 2 (role segment) | end to end |
+|---|---|---|---|
+| `EnerSys Internship Program: Powering Future Innovators` | **true** | true | **null** |
+| `EnerSys Internship Program` (the `<h1>` form) | **true** | true | **null** |
+| `CATL Internships - Battery Cell, R&D & Gigafactory Programs - EV.Careers` | **false** | **true** | **null** |
+| `CATL Internships` | **true** | true | **null** |
+
+**Row 3 is the one that matters:** the whole-title call still returns `false`
+and it is the SECOND `isListingPage` call that drops it 鈥?the shipped call
+pattern doing the job its own comment says it exists for. Asserted at both
+levels so neither assertion can go vacuous.
+
+---
+
+#### 4. THE FORBIDDEN MOVES, ALL FOUR MEASURED ON THE REAL FILE
+
+**(a) WIDENING `CAREERS_INDEX_TITLE_RE` 鈥?B's headline warning, confirmed, and
+worse at three tokens.** With a two-token owner prefix added to that shared
+regex:
+
+| employer segment | shipped render | after the widening |
+|---|---|---|
+| `Tesla Careers` | `Tesla` | **silence** |
+| `Kairos Power Careers` | `Kairos Power` | **silence** |
+| `Idaho National Laboratory Careers` | `Idaho National Laboratory` **(SHIPPED TEST)** | `Idaho National Laboratory` |
+| `Alphabet, Inc. Careers` | `Alphabet, Inc.` **(SHIPPED TEST)** | `Alphabet, Inc.` |
+
+B's table reproduces row for row. **At a THREE-token prefix 鈥?the S1w budget 鈥?`Idaho National Laboratory Careers` also collapses to silence and THREE SHIPPED
+TESTS GO RED**, measured by running the real suite. That is the concrete reason
+the 95/95 variant is refused and the reason the two new checks are their own
+constants read only by `isListingPage`.
+
+**(b) `programs?` ADDED TO `TRAILING_CAREERS_CHROME_RE` 鈥?the forbidden repair,
+and it is WORSE than B measured.** B recorded three differently-wrong values.
+Run on the real file with the veto disabled, it produces those three **AND
+DESTROYS SEVEN REAL EMPLOYER NAMES**:
+
+| input | after the widened strip |
+|---|---|
+| `Battery Cell, R&D & Gigafactory Programs` | `Battery Cell, R&D & Gigafactory` *(differently wrong)* |
+| `Engineering, Science & Technology Programs` | `Engineering, Science & Technology` *(differently wrong)* |
+| `Graduate, Placement & Internship Programmes` | `Graduate, Placement & Internship` *(differently wrong)* |
+| `Advanced Technology Programs` | `Advanced Technology` **(REAL NAME DESTROYED)** |
+| `Head Start Programs` / `Head Start Program` | `Head Start` **(REAL NAMES DESTROYED)** |
+| `Youth Programs` / `Special Programs` / `Wildlife Conservation Programs` | `Youth` / `Special` / `Wildlife Conservation` **(REAL NAMES DESTROYED)** |
+| `United Nations Development Programme` | `United Nations Development` **(B's OWN "must match nothing" CASE DESTROYED)** |
+
+**7 of 46 real names destroyed.** A test now locks this out by name.
+
+**(c) E1 鈥?the wider trailing-noun list. FIVE destroyed, and they are B's exact
+five.** Allowing `careers` / `vacancies` / `openings` in the guard's trailing
+noun list turns `Alphabet, Inc. Careers` (**a shipped assertion**),
+`Baker, Smith & Co Careers`, `Johnson & Johnson Careers`,
+`Smith, Jones & Partners Vacancies` and `Procter & Gamble Openings` all into
+silence. **5 of 46.** The narrowing to `programs` / `programmes` is structural,
+not cosmetic: those are the two words `TRAILING_CAREERS_CHROME_RE` does not
+already own.
+
+**(d) E2 鈥?dropping the coordination requirement. FIVE destroyed, B's exact
+five:** `Advanced Technology Programs`, `Head Start Programs`, `Youth Programs`,
+`Special Programs`, `Wildlife Conservation Programs`. **5 of 46.**
+
+Every revert was `diff`ed byte-identical against a saved copy before the next
+measurement, and again at the end.
+
+---
+
+#### 5. ITEM 2 鈥?4/4 CAUGHT, 0 OF 46 DESTROYED, AND RULING 32's ANSWER
+
+| | before | after |
+|---|---|---|
+| must-veto caught | **0 of 4** | **4 of 4** |
+| real employer names destroyed | 0 of 46 | **0 of 46** |
+
+**Ruling 32's question 鈥?what renders when the veto fires 鈥?measured, not
+reasoned:**
+
+| row | title | employer |
+|---|---|---|
+| `Battery Cell Engineer - Battery Cell, R&D & Gigafactory Programs - EV.Careers` | `Battery Cell Engineer` | **ABSENT** |
+| `Senior Materials Scientist - Engineering, Science & Technology Programs - EV.Careers` | `Senior Materials Scientist` | **ABSENT** |
+| `Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs - EV.Careers` | `Battery Cell Engineer` | **`CATL`** |
+
+**The third row is the proof this is a veto and not a blanket** 鈥?a real
+employer later in the chain still wins. B's render table reproduces exactly.
+
+**B's dependency warning was honoured:** item 2's assertions are written on the
+**KEPT real-posting form**, never on the brochure row, because item 1 drops that
+page and an assertion on it would be vacuous and would pass for the wrong
+reason. Confirmed by execution: the full CATL brochure title now returns `null`
+end to end.
+
+---
+
+#### 6. NEGATIVE PROOF 鈥?ONE PER EDIT, AND NEITHER CHECK ALONE IS A FIX
+
+Each edit reverted in turn, suite run, restored, `diff`ed byte-identical:
+
+| edit reverted | new assertions RED | which rows |
+|---|---|---|
+| check (a) `isOwnerSectionIndexTitle` | **3** | both CATL rows + `Acme Internships` on the unrelated host |
+| check (b) `isHostBrandProgrammePage` | **2** | both EnerSys rows |
+| the B17-02 employer guard | **5** | the live value, all three coordinator forms, the forbidden-strip lock |
+
+**The two checks have ZERO overlap** 鈥?(a) carries the brand-before-noun rows,
+(b) carries the tagline rows, and neither covers the other's. **That is the
+structural proof they are not redundant and cannot be collapsed by a later
+round without failing a red test.** The must-keeps that deliberately do NOT
+fail are the proof the changes cost nothing.
+
+---
+
+#### 7. THE GATE
+
+- **`npx vitest run`: 90 files / 1482 tests, 1481 passing.** Sole failure the
+  standing `benchmark.test.ts` live-search flake, the **same assertion and same
+  message as the cold baseline** (`expected undefined to be 'Chicago'`, the
+  Solid-State Battery Summit city). **`32nd SolarPACES Conference` resolves its
+  real name in that same run** 鈥?the SolarPACES line is clean and the flake is
+  the Chicago city assertion, unchanged.
+- **`npx tsc --noEmit`: clean.**
+- **`npx eslint`: exactly the one standing `quiz.tsx:46` error.**
+- **`scoring.test.ts` + `job-cleanup.test.ts` BY NAME: 37/37.**
+- **`enrich.test.ts` SOLO: 25/25** 鈥?the SolarPACES lock holds. *(Note for the
+  next agent: the file is `src/lib/opportunities/enrich.test.ts`; there is no
+  `src/lib/events/enrich.test.ts`.)*
+- **Test count 1426 鈫?1482: +56 new assertions, zero deleted, zero rewritten.**
+- **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used** 鈥?the live benchmark was not
+  skipped.
+
+---
+
+#### 8. WHAT C DOES NOT CLAIM
+
+- **Row-for-row identity with B's corpus is not claimed** and cannot be; B's
+  harness was deleted before B's commits. C's totals are `/95` and `/46`.
+- **C did not redesign anything B priced.** No URL rule, no leaf vocabulary, no
+  host list, no unified signal, no colon-tagline signal, no three-token owner
+  budget, no `positions` in the section-noun list, no `programs?` in the strip,
+  no `careers`/`vacancies`/`openings` in the employer guard's trailing list, no
+  coordination requirement dropped. Each was measured; each has a number above.
+- **Round 16 C's `internships` word, `LISTING_TITLE_RE`, `NON_JOB_PATH_RE` and
+  `isListingPage`'s existing check order are untouched.** The diff adds lines
+  and deletes none.
+- **The evidence class is unchanged from B's.** EnerSys is 5 of 5 on one round
+  and one host; CATL is 1 of 5 and a **MINORITY** row; the seven class siblings
+  are CONSTRUCTED. The kept-posting form item 2 is asserted on carries a real
+  recorded employer segment with a constructed host and role title.
+- **C decided neither open `POLICY` question.** Ruling 49a and 49b decided both;
+  C implemented what they say. The named three-token miss is asserted as
+  documented-known, not argued.
