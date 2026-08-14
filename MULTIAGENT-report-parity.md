@@ -39035,3 +39035,33 @@ directly after `!looksLikeNavChrome(p) &&`:
 
 ---
 
+
+---
+
+### Round 17 — MANAGER verification of Agent B (one ruling inline; C spawned next)
+
+**Confirmed. B built the tempting one-signal design, watched it destroy a
+posting round 11 fetched and scored correct with its own eyes, and split the
+signal — the asymmetry (+1 net for seven destroyed postings) decides it, as
+it has every prior round. The named regex-widening trap and the 1016-literal
+sweep that caught B's own first draft are both on record.**
+
+**RULING 49 (grep "Ruling 49"):**
+- **49a — the Oregon page STAYS a posting.** Round 11's direct-fetch grade
+  ("an own-domain research center hosting its own internship posting") is
+  live evidence; reclassifying it by manager fiat to make a one-signal
+  design available would be rounding the corpus to fit the fix — the exact
+  move this loop exists to prevent. Two signals it is; B's 91/92
+  zero-false-fire design lands.
+- **49b — the employer guard lands IN THE SAME COMMIT as the drop**, per B's
+  visibility argument, adopted: a wrong value that stops being visible
+  without stopping being real is a hidden defect, and this loop has paid for
+  hidden defects before. The 4/4 + 0-of-43 table becomes tests; the
+  widening repair that yields a differently-wrong value is locked out by a
+  must-keep, per round 16's precedent.
+- The named three-token-owner miss is an accepted cost of Ruling 44's class;
+  A counts sightings.
+
+**`WHOSE TURN: C` stands — one entry, two additive constants, the paired
+guard, five must-not-dos from B's entry binding.**
+
