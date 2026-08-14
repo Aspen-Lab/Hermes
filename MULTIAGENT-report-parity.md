@@ -270,14 +270,140 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 12:23 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 12:19 UTC — ROUND 16 B IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 12:42 UTC — ROUND 16 C IS
                   COMPLETE.** Both items, one commit each, each pushed
-                  immediately (`6ccc0fb`, `c745caf`) plus this hand-off.
+                  immediately (`bb8b820`, `97d3802`) plus this hand-off.
+                  Claimed the lock cleanly (`79cb041`) after `git pull
+                  --ff-only` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **NO TEST DELETED, NO TEST
+                  REWRITTEN, NO EXISTING ASSERTION TOUCHED** — the only change
+                  to an existing line in `jobweb.test.ts` is its import
+                  statement. Harness lived outside `src/` (`web/zz-r16c/`, own
+                  vitest config) and was deleted before BOTH commits;
+                  `git status --porcelain --untracked-files=all` confirmed clean
+                  each time.
+
+                  **HEADLINE: BOTH ITEMS LANDED EXACTLY AS B DESIGNED THEM, AND
+                  C RE-MEASURED EVERY LOAD-BEARING NUMBER BY EXECUTION AGAINST
+                  THE REAL SHIPPED FUNCTIONS BEFORE WRITING A LINE. B's
+                  INDEPENDENCE CLAIM — THE ONE THING THAT MADE ITEM 2 THREE
+                  EDITS INSTEAD OF TWO — REPRODUCES EXACTLY.**
+
+                  **COLD BASELINE CONFIRMED, NOT INHERITED:** 90 files / **1355
+                  tests, 1354 passing**, sole failure the standing
+                  `benchmark.test.ts` live-search flake.
+
+                  **A METHOD IMPROVEMENT ON B's HARNESS, and it removes a whole
+                  class of error.** B had to re-declare `isListingPage`'s private
+                  internals and add a fidelity gate to prove the re-declaration
+                  matched. **C is the implementer, so C needs neither: C applied
+                  each candidate to the REAL file and scored the REAL
+                  `isListingPage` and `webResultToRawJobItem`.** Every number
+                  below is the shipped function's own verdict — a transcription
+                  slip cannot exist, because nothing was transcribed.
+                  **Provenance stated rather than implied, as round 15 C did:
+                  B's harness was deleted before B's commit, so B's rows are NOT
+                  recoverable byte-for-byte.** C reconstructed 21-row and 26-row
+                  corpora from B's prose; **row-for-row identity is NOT claimed**
+                  and C's totals are `/21` and `/26`.
+
+                  **ITEM 1 (47b) — ONE WORD, AND B's 184/184 REPRODUCES END TO
+                  END.** `internships` added to `CAREERS_INDEX_TITLE_RE`,
+                  **PLURAL ONLY**. Baseline 14/21 with all seven item-1 shapes
+                  missed; T1 **19/21 single-call with ZERO false fires**;
+                  **21/21 END TO END**, because the two single-call misses are
+                  the separator-bearing full titles and the SECOND
+                  `isListingPage` call catches both — the shipped call pattern
+                  doing the job its own comment says it exists for. **The
+                  baseline render was confirmed against A's census first:
+                  `webResultToRawJobItem` returned title `Internships`, company
+                  `Las Cumbres Observatory` — byte-identical to what A recorded
+                  live.** **THE SINGULAR WAS PRICED BY EXECUTION, NOT ACCEPTED
+                  ON AUTHORITY:** C temporarily shipped `internships?` and
+                  scored it at **one false fire, on the bare title
+                  `Internship`** — B's exact result on B's exact string. It was
+                  reverted immediately and **the destroyed posting is now a
+                  shipped must-keep.** **NO URL RULE, NO HOST LIST, NO
+                  SINGULAR.**
+
+                  **ITEM 2 (47c + 48a) — THREE EDITS, ONE COMMIT, AND THE
+                  INDEPENDENCE CLAIM IS THE ROUND'S LOAD-BEARING RESULT.**
+                  Baseline **15/26 with ELEVEN false fires**; **edit 2 alone
+                  (anchor) 21/26 — five false fires, ALL gap 2B, Kairos still
+                  destroyed**; **edit 1 alone (lookahead) 20/26 — six false
+                  fires, ALL gap 2A, INL still destroyed**; **all three together
+                  26/26 with ZERO false fires.** B's table reproduces row for
+                  row. **Neither narrowing alone is a fix, and no later round can
+                  collapse them without failing a red test.**
+
+                  **GAP 2C CONFIRMED FROM BOTH SIDES.** Before the change, C
+                  reproduced `company: "View"` against the **untouched shipped
+                  code**, before writing any edit — the latent defect is real.
+                  After: **INL renders its real role title with the employer
+                  ABSENT (not `Search`), `- View Jobs` renders ABSENT (not
+                  `View`), and Kairos renders `Kairos Power`.** All twelve
+                  adversarial employer must-keeps survive — B12-06's four
+                  hardest plus the eight names built from the same verbs.
+                  **Evidence class unchanged and stated honestly: LATENT, not
+                  live.**
+
+                  **THE BURNED MOVE IS LOCKED OUT BY A TEST, NOT A COMMENT.**
+                  `Senior Battery Engineer | Search Jobs | Acme Careers` is now a
+                  shipped must-keep — the chrome sits MID-title, so no trailing
+                  strip reaches it, and any design leaving alternative 4
+                  unanchored destroys it. **Confirmed by execution: that row is a
+                  false fire on the shipped baseline and on the lookahead-only
+                  variant, and passes only once the anchoring is in.**
+
+                  **+71 TESTS, 0 DELETED, 0 REWRITTEN. NEGATIVE PROOF RUN FOUR
+                  TIMES, ONE PER EDIT:** item 1's word **8 of 20 fail**; item 2's
+                  year lookahead **7**; its alternative-4 anchor **12**; its ATS
+                  action controls **9**. **The overlaps are themselves the
+                  pairing evidence** — the INL employer render fails on both the
+                  anchor and the guard, because without the anchor there is no
+                  recovered posting whose employer could be wrong. **Every revert
+                  was restored and `diff`ed byte-identical before the next.**
+                  **The must-keeps that deliberately do NOT fail are the proof
+                  the changes cost nothing.**
+
+                  **ONE METHOD CORRECTION AGAINST ITSELF, recorded rather than
+                  quietly fixed:** two attempts to script the reverts with
+                  `perl -pi` MANGLED the regex's backslashes. **Both were caught
+                  immediately by `diff` against a saved copy**, and every later
+                  revert used an exact-match string edit. **Nothing mangled ever
+                  reached a commit or a measurement.**
+
+                  **FINAL GATE: 90 files / 1426 tests, 1425 passing** — sole
+                  failure the standing `benchmark.test.ts` flake. `npx tsc
+                  --noEmit` clean; `npx eslint` exactly the one standing
+                  `quiz.tsx:46` error. **`jobs/scoring.test.ts` and
+                  `opportunities/job-cleanup.test.ts` run BY NAME: 37 together.
+                  `enrich.test.ts` run SOLO: 25 tests, 25 passed — the SolarPACES
+                  lock is intact.**
+
+                  **NO DEVIATION. The escape clause did not fire** — no shape
+                  appeared that B's cases had not spanned. Every "do not" in B's
+                  guide and in §1's C block was observed. **Nothing on A's
+                  exclusion list was touched, reopened or designed against, and
+                  Ruling 33 is not touched by either item.**
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`.
+                  No third-party page text read into context. No branch,
+                  worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Tree clean.** Full detail in §4's two "Round 16 —
+                  Agent C" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 16 B finished @
+                  2026-08-14 12:19 UTC — ROUND 16 B WAS
+                  COMPLETE.** Both items, one commit each, each pushed
+                  immediately (`6ccc0fb`, `c745caf`) plus its hand-off.
                   Claimed the lock cleanly (`7d573f4`) after `git pull
                   --ff-only` and confirming `git branch --show-current` reads
                   `feature/summary-report-revamp`; branch name re-read in the
@@ -1185,7 +1311,162 @@ ROUND:            **16 — A AND B ARE DONE. C IS NEXT.** A's two ranked
                   `web/src/lib/jobs/sources/jobweb.ts` and nowhere else**, and
                   between them they are FOUR one-line edits: one for item 1,
                   three for item 2.
-WHOSE TURN:       **C — Implementer, round 16.** Work through B's guide in
+WHOSE TURN:       **A — Reviewer, round 17. GATE CANDIDATE ROUND.** Both of
+                  round 16's items landed and both are measured, so for the
+                  first time since round 15 A goes in with **no known open
+                  difference on either surface**. A's job is the standing live
+                  census (§2) plus the four checks below. **A does not close
+                  the gate — see THE GATE RULE at the end.**
+
+                  **WHAT ROUND 16 C CHANGED, AND THE EXACT EFFECT A SHOULD
+                  EXPECT TO SEE LIVE.** Two items, three edits, all in
+                  `web/src/lib/jobs/sources/jobweb.ts`, full detail in §4's two
+                  "Round 16 — Agent C" entries.
+
+                  **1. THE INTERNSHIPS INDEX SHOULD BE GONE.**
+                  `lco.global/about/interns` — role title the bare word
+                  `Internships`, present in 5 of 5 pulls in each of rounds 13,
+                  14, 15 and 16 — **should be ABSENT from the job pool.** One
+                  word (`internships`, plural only) was added to
+                  `CAREERS_INDEX_TITLE_RE`. **Nothing replaces it; the pool
+                  shrinks by one** (the item leaves entirely, and
+                  `MAX_OPPORTUNITY_POOL_ITEMS` is 200, so nothing backfills).
+                  **If it is still there, that is a finding.** **Ruling 33 was
+                  NOT touched** — the `matchedTerms: ["LCO"]` admission route is
+                  exactly as it was, deliberately, so a `lco-cdo.org` item
+                  admitted on the acronym is still expected and still excluded.
+
+                  **2. TWO REAL POSTINGS SHOULD NOW BE PRESENT, WITH CLEAN
+                  EMPLOYERS.** `careers.inl.gov`'s `Molten Salt R&D Engineer`
+                  and `lensa.com`'s Kairos Power
+                  `Chemical and Materials Engineering Internship` were being
+                  DESTROYED by the shipped guard — 2 of the 298 rows the
+                  provider offered. Both should now survive if the provider
+                  offers them again. **Expected renders, verified end to end by
+                  execution: INL renders its real role title with the employer
+                  field ABSENT; Kairos renders `Kairos Power`.**
+
+                  **3. NO `Search` AND NO `View` IN THE EMPLOYER SLOT,
+                  ANYWHERE — AND THIS IS A NAMED LINE ON A's LIST (Ruling
+                  48a).** `Battery Research Scientist - View Jobs` was KEPT by
+                  the shipped guard **before** round 16 and rendered the employer
+                  **`View`**. That defect was **LATENT, not live** — reproduced
+                  by executing the chain, never sighted in any census. It is now
+                  guarded in `NAV_CHROME_SEGMENT_RE`. **A looks for the `View`
+                  shape live this round as its own line** and records it as
+                  either a sighting or a zero. A zero here is a real result, not
+                  an absence of work: it is the first round the class could be
+                  looked for at all.
+
+                  **4. RULING 48b — A's OFFERED-ROW SCAN GAINS ONE COLUMN, AND
+                  IT STARTS THIS ROUND.** Ruling 47a made the all-offered-rows
+                  over-fire scan standing method. **48b adds: record the TITLES
+                  of the rows the guard drops CORRECTLY, not only the ones it
+                  drops wrongly.** Round 16 A's 31 correct drops were recorded
+                  only as a count, and that is exactly why B could not price
+                  item 2's one accepted cost against real data. **One extra
+                  column, collected on a scan A is already running.** It is the
+                  only way an accepted cost on a drop rule can ever be priced
+                  against real data rather than argued.
+
+                  **THE ONE ACCEPTED COST ROUND 16 BOUGHT, so A recognises it
+                  rather than re-reports it as new:** a brand-first search page
+                  (`Acme Corporation - Search Jobs`) on a non-aggregator host is
+                  NOT dropped. It is asserted as a shipped test with its trade
+                  written beside it. **It is CONSTRUCTED, never sighted.** 48b's
+                  new column is what would let a future round price it. **If A
+                  sights this shape live, that observation reopens the trade —
+                  and nothing else does.**
+
+                  **CARRY THESE FORWARD AS THE TALLIES, WITH THEIR RUNNING
+                  COUNTS.** All from round 16 A, unchanged:
+                  - **Ruling 33: 0 of 3, cumulative 2 of 31 — NOT closed.**
+                  - **Ruling 34a employer: 0 of 6 non-null; running r11 1/9,
+                    r12 1/10, r13 0/12, r14 1/9, r15 1/8, r16 0/6, cumulative
+                    4 of 54.** Round 16's zero was a THIRD thing and is named as
+                    such: the host was PRESENT and its value changed UPSTREAM —
+                    neither a fix nor churn, and it can revert on any pull.
+                  - **Event side: 1 of 14 (`The Battery Saloon`, 5/5, root
+                    `og:title` re-confirmed verbatim); running r13 1/14, r14
+                    1/13, r15 1/11, r16 1/14, cumulative 4 of 52.** **A SECOND
+                    DISTINCT INSTANCE IS STILL ABSENT, so Ruling 42b's
+                    cross-check does NOT fire — fourth round running.**
+                  - **Ruling 37: 1 of 3, baseline only, no second distinct
+                    instance, FIFTH round running.** **Ruling 44's label-miss
+                    sub-count reads ZERO distinct instances** on round 15's
+                    reasoning (`What you'll do` carries NO COLON live, so
+                    `LEADING_LABEL_RE` never applies and it is already counted
+                    as the run-on).
+                  - **Rulings 46a and 46b: ZERO live sightings each, first round
+                    counted, NEITHER reopened.**
+                  - **Ruling 36: STAYS CLOSED, zero, fourth consecutive round —
+                    and MEASURED, not absent.**
+                  - **Ruling 39c is no longer a tally**; zero forum threads in
+                    the pool and zero offered.
+
+                  **THE THRESHOLDS, AFFIRMED AND UNCHANGED.** Per-surface
+                  numbers to beat or hold, from round 16 A: **event names 0 of
+                  14 (0%), fourth consecutive zero**; **employer 0 of 6 non-null
+                  (0%), second consecutive zero**; **job summaries 3 of 12
+                  bearing (25.0%) with ZERO open defects, second consecutive
+                  clean column**; **job item shape 1 of 12 (8.3%)** — and that
+                  one item was the internships index, which item 1 should now
+                  remove; **offered rows wrongly dropped 2 of 298 (0.7%)**,
+                  which item 2 should now take to zero. **Zero within-round
+                  variance on every column of both surfaces, third round
+                  running** — a fourth would make it the strongest
+                  reproducibility claim this loop has. Five independent pulls
+                  per surface in separate processes, no-op `PoolCache`, the
+                  entry points §2 names. **`PEER_PROFILE_SNAPSHOT_PATH` is NOT
+                  used.** Keys checked as booleans only, never printed. Per
+                  Ruling 42b the tier statement is **"page-fetch enrichment ran,
+                  LLM enrichment did not."** Summaries read from the JOB CARD's
+                  own view model (`jobCardView().summaryText`). Fixture score is
+                  not inherited as fresh. **Replay a host only with the path a
+                  census actually recorded — a GUESSED path is bad input, not
+                  evidence.**
+
+                  **WHAT A MUST NOT TREAT AS OPEN**, by name and unchanged:
+                  `careerservices.upenn.edu` (34a), `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37), Ruling 44's
+                  label-miss, the `lco-cdo.org` `LCO` acronym and the matcher
+                  generally (33), same-page contamination (29),
+                  `ecs.confex.com`'s and `euchems2026.eu`'s honest hosts
+                  (39a/40), the document-URL retarget (42c), **`euagenda.eu`
+                  (45a — permanently excluded, DO NOT FETCH)**, Ruling 41c's
+                  three hosts (45b), and **46a's false fire and 46b's two
+                  titles.** Plus round 16's own named cost above.
+
+                  **STILL OPEN FOR THE MANAGER, NOT A's:** B11-04's flag and
+                  B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD
+                  below; round 13's unresolved `POLICY — manager decides` on
+                  five-pull majority scoring; round 14 C's `LEADING_LABEL_RE`
+                  widening question; round 15 B's question on the shipped
+                  section rule's two dropped titles
+                  (`PhD openings in Electrochemistry at TU Delft`,
+                  `Green Jobs in Ontario Programme Lead`); and the
+                  `@`-separator employer at `befjobs.breakthroughenergy.org`.
+
+                  **THE GATE RULE, VERBATIM AND BINDING: zero unexplained
+                  differences → `WHOSE TURN: MANAGER — independent re-measurement
+                  before any close`; A never closes.** Ruling 30 is why: round
+                  7's close was provisional because the verification was not
+                  independent. **A sets `GATE (0%): MET` and STOPS.** If any
+                  unexplained difference remains, the hand-off is B with a ranked
+                  list, exactly as round 15 went. Do not round down, do not call a
+                  difference cosmetic to clear the gate, and do not stop reporting
+                  something because it has appeared in three rounds. A difference
+                  A believes should not be closed is marked
+                  `POLICY — manager decides` with the gate left NOT MET — never
+                  quietly dropped.
+
+                  **THE GATE STAYS AS A LEFT IT: `GATE (0%): NOT MET`.** C does
+                  not set it and did not (§2).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 16 C
+                  instructions that follow are complete and were executed. Do not
+                  work from them.*
+                  **C — Implementer, round 16.** Work through B's guide in
                   order. **Full evidence in §4's two "Round 16 — Agent B"
                   entries; the numbered fix guides are part 7 of each.** Every
                   design below was measured by execution against a matrix that
