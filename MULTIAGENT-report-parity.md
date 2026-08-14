@@ -42081,3 +42081,102 @@ live pipeline pull, no page fetch, no third-party page text read into context.
 No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 Harness deleted; tree clean.
 
+---
+
+### Round 18 — Agent C (item 3: the leading date-stamp summary strip — B18-03)
+
+**STATUS: COMPLETE.** Harness outside `src/` (`web/zz-r18c/`), deleted before
+this commit; tree confirmed clean. **`LEADING_LABEL_RE` IS UNTOUCHED — Ruling 44
+stands.** The only change to an existing line is the one strip-chain call in
+`scoreSentences`.
+
+**B's THREE TABLES ALL REPRODUCE ON THE REAL FUNCTIONS.** Everything was scored
+through the real `cleanJobDescription` then the real `summarizeJob` — the exact
+order `mapper.ts` uses, for B14-02's reason.
+
+**CANDIDATE COMPARISON, row for row:**
+
+| variant | strips | mutilates a real sentence |
+|---|---|---|
+| any dash, no lookahead | 3/3 | **3 of 8** |
+| em/en dash only, no lookahead | 3/3 | **2 of 8** |
+| **proposed (em/en + not-a-date lookahead)** | **3/3** | **0 of 8** |
+
+**And the worst mutilation is the one B named: without the lookahead,
+`"Jun 1, 2026 — Aug 15, 2026 summer internship…"` renders as
+`"Aug 15, 2026 summer internship…"` — the rule INVENTS a start date.**
+
+**STRIP ORDER, PROVEN NOT ASSERTED.** The three-prefix case
+`"] Apr 29, 2026 — Role Overview: We're hiring…"` renders as
+`"We're hiring an engineer for ion exchange work."` — bracket → date → label is
+the only order that clears all three, for the anchor-blocking reason B14-02
+already documents.
+
+**ATTRIBUTION, MEASURED THE CLEAN WAY.** Rather than eyeballing the outputs, C
+captured every row's rendering with the strip in the chain and with it removed
+and diffed them: **exactly 5 of 14 rows change, and they are exactly the 3
+must-strips plus the 2 date-bearing order cases. ZERO of the 8 must-keeps move
+by a single byte.** The `Role Overview:` row is altered by the pre-existing
+label sibling, not by this rule, and the diff proves it.
+
+**TWO CORRECTIONS TO B's ASSERTION SPEC, BOTH FOUND BY NEGATIVE PROOF, BOTH
+RECORDED RATHER THAN WORKED AROUND.**
+
+1. **"THE LOOKAHEAD" IS TWO GUARDS DOING TWO DIFFERENT JOBS, AND B's PROSE
+   TREATS THEM AS ONE.** B's assertions 3 and 4 were both meant to fail when
+   "the lookahead" is removed. They do not fail together. Removing the
+   NOT-A-DATE lookahead turns exactly **1** red — the date range. The bare-year
+   case (`"Feb 28, 2026 — 2027 academic year appointments…"`) is held by the
+   separate positive `(?=[A-Za-z])` guard, and removing THAT turns exactly **1**
+   red — the bare year. **Each guard now has its own uniquely-red test.**
+2. **THE EM/EN DASH RESTRICTION HAD NO TEST PROTECTING IT.** Widening the dash
+   class to a plain hyphen — a move B explicitly forbids — turned **ZERO**
+   assertions red, because B's plain-hyphen must-keep
+   (`"May 1, 2026 - June 30, 2026 is the funded period…"`) is actually held by
+   the not-a-date lookahead: what follows its hyphen IS a date. **A forbidden
+   move that no test blocks is not forbidden in practice.** C added the row that
+   genuinely pins it — a hyphen span whose tail is prose, the scraped
+   employment-history shape (`"Jan 15, 2026 - Present: Research Engineer…"`) —
+   which loses its start date entirely under the widened class. **The existing
+   must-keep is kept and its comment now says which guard really holds it.**
+
+**NEGATIVE PROOF, ONE GUARD AT A TIME, EVERY RESTORE `diff`ed BYTE-IDENTICAL
+BEFORE THE NEXT. No revert scripted with `perl -pi`:**
+
+| reverted | assertions red |
+|---|---|
+| the strip removed from the chain | **5** |
+| the not-a-date lookahead | **1** — the date range, and only it |
+| the `(?=[A-Za-z])` guard | **1** — the bare year, and only it |
+| the em/en dash restriction (widened to a hyphen) | **1** — the hyphen span, and only it |
+| the order changed to bracket → label → date | **1** — the three-prefix case |
+
+**RULING 32: THE FIELD CANNOT BE EMPTIED, AND IT IS ASSERTED RATHER THAN
+ARGUED.** A sentence only reaches the strip after clearing
+`MIN_SENTENCE_LENGTH` (40) on its UNSTRIPPED text, and the longest possible
+match (`"September 30, 2026 — "`) is 21 characters, so at least 19 always
+remain. There is no substitution path at all — the rule can only delete
+characters it matched at position 0.
+
+**WHAT C DID NOT DO:** `LEADING_LABEL_RE` untouched (Ruling 44); the dash class
+not widened; the strip not moved into `cleanJobDescription` or `cleanJobText`
+(it would blind `SECTION_RE`/`sectionScore` before scoring runs); the order not
+changed; **no `index === 0` guard** — considered and left as the recorded
+tightening for a future round that finds a mid-text instance. **Ruling 51b: the
+five-pull majority question stays deferred and C did not decide it.**
+
+**THE GATE:** `npx vitest run` **90 files / 1527 tests, 1526 passing** — sole
+failure the standing `benchmark.test.ts` flake, same assertion and same message
+as the cold baseline. `tsc --noEmit` clean; `eslint` exactly the one standing
+`quiz.tsx:46` error. **`32nd SolarPACES Conference` resolves its real name in
+that run — the SolarPACES line is clean.** `scoring.test.ts` +
+`job-cleanup.test.ts` + `summarize.test.ts` by name **88/88**; `enrich.test.ts`
+solo **38/38**. **Test count 1514 → 1527: +13 new assertions, zero deleted, zero
+rewritten.** `PEER_PROFILE_SNAPSHOT_PATH` was NOT used.
+
+**Security and cleanup.** No credential read, printed, logged or written. No
+live pipeline pull, no page fetch, no third-party page text read into context.
+**`euagenda.eu` NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b).**
+No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+Harness deleted; tree clean.
+

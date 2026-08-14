@@ -209,6 +209,59 @@ function stripLeadingBracketRemnant(text: string): string {
   return text.replace(LEADING_BRACKET_REMNANT_RE, "");
 }
 
+/**
+ * B18-03 (round 18, Ruling 50c): a search provider prefixes its snippet with
+ * the date it INDEXED the page — `"Apr 29, 2026 — <first sentence>"` — and that
+ * stamp opens the rendered job summary. `careers.inl.gov` shipped it; a second,
+ * distinct instance was found on `carleton.edu`, so the class is real and is
+ * not one site's furniture.
+ *
+ * **THE DATE IS THE SEARCH ENGINE'S, NEVER THE POSTING'S.** On the carleton row
+ * the date that actually matters to a reader — `application deadline February
+ * 28` — sits inside the prose, behind the stamp. Any strip that reached the
+ * SECOND date would be the B10-07 fix-2 failure repeating.
+ *
+ * **`LEADING_LABEL_RE` IS NOT TOUCHED, NOT WIDENED, AND NOT RE-PROPOSED.**
+ * Ruling 44 settled that rule. This is a separate strip for a shape that has no
+ * colon in it, sitting beside the two siblings rather than inside either.
+ *
+ * **THE NEGATIVE LOOKAHEAD IS THE WHOLE FIX, NOT DECORATION.** Without it the
+ * rule eats the first half of a real date RANGE: `"Jun 1, 2026 — Aug 15, 2026
+ * summer internship…"` would render as `"Aug 15, 2026 summer internship…"`,
+ * INVENTING a start date. Measured across 8 real sentence shapes: the
+ * no-lookahead form mutilates 3, the em-dash-only form 2, this form 0 — while
+ * all three still strip 3 of 3 true stamps. Do not drop it.
+ *
+ * **EM/EN DASH ONLY, DELIBERATELY.** A plain hyphen is how ordinary prose
+ * writes a date range (`"May 1, 2026 - June 30, 2026 is the funded period…"`);
+ * the snippet convention is an em dash. Named under-catch — do not widen the
+ * dash class.
+ *
+ * **THE STRIP ORDER IS PROVEN BY TABLE, NOT ASSERTED: bracket → date → label.**
+ * Each prefix blocks the next rule's `^` anchor, the identical reason B14-02
+ * already records for bracket-before-label. `s` last leaves the label standing;
+ * `s` first fails because a leading `]` blocks its own anchor. Only this order
+ * cleans the three-prefix case.
+ *
+ * Ruling 32: a REPAIR, not a rejection. When it does not fire the value is
+ * today's byte for byte. **It cannot empty the field** — a sentence only reaches
+ * this line after clearing `MIN_SENTENCE_LENGTH` (40) on its UNSTRIPPED text,
+ * and the longest possible match (`"September 30, 2026 — "`) is 21 characters,
+ * so at least 19 always remain. It can only ever delete characters it matched
+ * at position 0; there is no substitution path at all.
+ *
+ * Named tightening deliberately NOT taken: an `index === 0` guard. Neither
+ * shipped sibling has one and no false fire has ever been observed at any
+ * index. Recorded as the available move if a future round finds a mid-text
+ * instance — a lead, not a design.
+ */
+const LEADING_DATE_STAMP_RE =
+  /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},\s+\d{4}\s+[—–]\s+(?!(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b)(?=[A-Za-z])/;
+
+function stripLeadingDateStamp(text: string): string {
+  return text.replace(LEADING_DATE_STAMP_RE, "");
+}
+
 const ROLE_RE =
   /\b(?:in this role|you will|you(?:'|’)ll|responsible for|we(?:'|’)re hiring|develop|design|build|research|analy[sz]e|lead|manage)\b/i;
 
@@ -277,10 +330,10 @@ function scoreSentences(
 
       return {
         index,
-        // B14-02: bracket FIRST, then label. The order is load-bearing — a
-        // leading `]` blocks `LEADING_LABEL_RE`'s `^[A-Z]` anchor, so
-        // label-first would leave both prefixes on `"] What you'll do: …"`.
-        text: stripLeadingLabel(stripLeadingBracketRemnant(text)),
+        // B14-02 + B18-03: bracket, THEN date stamp, THEN label. The order is
+        // load-bearing — each prefix blocks the next rule's `^` anchor, so any
+        // other order leaves one of the three standing.
+        text: stripLeadingLabel(stripLeadingDateStamp(stripLeadingBracketRemnant(text))),
         score: matchedCount * 6 + positionScore + sectionScore + roleScore + readableLengthScore,
       };
     })

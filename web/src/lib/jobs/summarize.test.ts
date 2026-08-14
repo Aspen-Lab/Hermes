@@ -462,3 +462,134 @@ describe("highlightSegments", () => {
     ]);
   });
 });
+
+// B18-03 (round 18, Ruling 50c): THE LEADING SEARCH-SNIPPET DATE STAMP.
+// A search provider prefixes its snippet with the date it INDEXED the page —
+// "Apr 29, 2026 — <first sentence>" — and that stamp opened the rendered job
+// summary on `careers.inl.gov`. A second, distinct instance was found on
+// `carleton.edu`, so the class is real and is not one site's furniture.
+//
+// `LEADING_LABEL_RE` IS NOT TOUCHED. Ruling 44 settled that rule; it needs a
+// literal colon and this shape ends in an em dash. This is a separate strip for
+// a colonless shape, sitting beside the two shipped siblings.
+//
+// Everything here runs through the SAME path the mapper uses —
+// `summarizeJob(cleanJobDescription(source), …)` — for B14-02's reason: the
+// whole finding is that the cleaner DID run and still could not see the stamp.
+describe("leading date-stamp strip (B18-03)", () => {
+  const TERMS = ["ion exchange", "molten salt", "internship", "engineer"];
+  const render = (text: string) => summarizeJob(cleanJobDescription(text), TERMS);
+
+  it("strips the stamp from the live INL summary", () => {
+    expect(
+      render(
+        "Apr 29, 2026 — Idaho National Laboratory is hiring a Molten Salt R&D engineer to work in our Advanced Technology of Molten Salts department.",
+      ),
+    ).toBe(
+      "Idaho National Laboratory is hiring a Molten Salt R&D engineer to work in our Advanced Technology of Molten Salts department.",
+    );
+  });
+
+  // THE SECOND HOST, AND THE ROUND'S BEST ADVERSARIAL CASE: the sentence behind
+  // the stamp contains a REAL date. The leading stamp is the search engine's
+  // indexing date; the date a reader actually needs is inside the prose. Assert
+  // the substring, not just the prefix — a rule that reached the second date
+  // would be the B10-07 fix-2 failure repeating.
+  it("strips the carleton.edu stamp and leaves the real deadline inside the sentence", () => {
+    const out = render(
+      "Apr 1, 2026 — Summer R&D Internship Opportunity for students, application deadline February 28 for all engineer applicants.",
+    );
+    expect(out.startsWith("Summer R&D Internship Opportunity")).toBe(true);
+    expect(out).toContain("application deadline February 28");
+  });
+
+  it("strips a four-letter month abbreviation", () => {
+    expect(
+      render(
+        "Sept 3, 2026 — The successful candidate will design ion exchange columns for a molten salt loop.",
+      ),
+    ).toBe("The successful candidate will design ion exchange columns for a molten salt loop.");
+  });
+
+  // MUST-KEEPS. Each is asserted byte-for-byte unchanged, and each is a shape
+  // that a wider rule really does mutilate — C reproduced every one of these on
+  // the real file before writing the test.
+  it.each([
+    [
+      // THE CASE THAT REJECTED THE NO-LOOKAHEAD FORM, and the worst of them:
+      // without the lookahead this renders as "Aug 15, 2026 summer
+      // internship…", INVENTING a start date the posting never gave.
+      "a real date range",
+      "Jun 1, 2026 — Aug 15, 2026 summer internship in ion exchange separations for an engineer.",
+    ],
+    [
+      // THE SECOND CASE THE LOOKAHEAD SAVES. Measured: the em-dash-only form
+      // without the lookahead mutilates this one and the range above, 2 of 8.
+      "a dash followed by a bare year",
+      "Feb 28, 2026 — 2027 academic year appointments for the ion exchange internship.",
+    ],
+    [
+      // A plain-hyphen date range. Note for whoever reads this next: C measured
+      // that this row is held by the NOT-A-DATE lookahead, not by the dash
+      // class — widening the class alone leaves it intact. The row below is the
+      // one that actually pins the dash restriction.
+      "a plain-hyphen range",
+      "May 1, 2026 - June 30, 2026 is the funded period for this molten salt engineer internship.",
+    ],
+    [
+      // WHY THE DASH CLASS IS NOT WIDENED TO A PLAIN HYPHEN, and the ONLY row
+      // in this file that pins it. A hyphen is how ordinary prose and scraped
+      // employment-history lines write a span; the snippet convention is an em
+      // dash. Widen the class and this loses its start date entirely.
+      "a hyphen span whose tail is prose rather than a date",
+      "Jan 15, 2026 - Present: Research Engineer on ion exchange separations for molten salt systems.",
+    ],
+    [
+      "a leading date with no dash at all",
+      "Apr 29, 2026 is the application deadline for the ion exchange internship programme.",
+    ],
+    [
+      "the same shape mid-sentence rather than at position 0",
+      "Applications open Apr 29, 2026 — apply early for the molten salt engineer internship.",
+    ],
+    [
+      "ordinary prose",
+      "In this role you will develop actinide separation chemistry for molten salt systems.",
+    ],
+  ])("leaves %s untouched", (_label, sentence) => {
+    // Asserting the exact string also proves the sentence was SELECTED — an
+    // empty summary would fail here rather than passing vacuously.
+    expect(render(sentence)).toBe(sentence);
+  });
+
+  // THE STRIP ORDER IS PROVEN, NOT ASSERTED: bracket → date → label. Each
+  // prefix blocks the next rule's `^` anchor, the identical reason B14-02
+  // already records for bracket-before-label. Only this order cleans the
+  // three-prefix case; `s` last leaves the label standing and `s` first is
+  // blocked by the leading `]`.
+  it("clears all three prefixes in the load-bearing order", () => {
+    expect(
+      render("] Apr 29, 2026 — Role Overview: We're hiring an engineer for ion exchange work."),
+    ).toBe("We're hiring an engineer for ion exchange work.");
+  });
+
+  // THE LABEL SIBLING IS UNAFFECTED — Ruling 44 stands and this rule is
+  // additive beside it, not a widening of it.
+  it("leaves the label sibling behaving exactly as before", () => {
+    expect(
+      render("] Role Overview: We're hiring an engineer to develop ion exchange separations."),
+    ).toBe("We're hiring an engineer to develop ion exchange separations.");
+  });
+
+  // RULING 32: THE FIELD CANNOT BE EMPTIED, and this is structural rather than
+  // lucky. A sentence only reaches the strip after clearing MIN_SENTENCE_LENGTH
+  // (40) on its UNSTRIPPED text, and the longest possible match
+  // ("September 30, 2026 — ") is 21 characters, so at least 19 always remain.
+  it("cannot empty a summary it fires on", () => {
+    const out = render(
+      "September 30, 2026 — Engineer wanted for ion exchange work in our lab.",
+    );
+    expect(out.length).toBeGreaterThan(18);
+    expect(out).toBe("Engineer wanted for ion exchange work in our lab.");
+  });
+});
