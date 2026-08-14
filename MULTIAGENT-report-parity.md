@@ -270,20 +270,79 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 06:42 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **ROUND 12 C IS IN PROGRESS — resumed after a transient 529
-                  killed the first C session mid-turn.** Same identity, same
-                  turn, lock refreshed rather than re-claimed. **Landed so far:
-                  B12-02 (ruggedthz sibling-segment recovery) at `808c5ed`**,
-                  with its §4 entry and tests; the working tree was verified
-                  clean after the kill and the interrupted B12-01 attempt had
-                  been reverted cleanly, leaving nothing behind. Remaining, in
-                  order: B12-01, B12-03, B12-04, B12-05, B12-06, B12-07 (B12-08
-                  is NO CODE per Ruling 39d).
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 07:12 UTC — ROUND 12 C IS
+                  COMPLETE. Six of seven code items LANDED; one STOPPED AND
+                  RECORDED rather than landed, and that one is the headline.**
+                  The turn was killed mid-way by a transient 529 and resumed by
+                  the same identity; the lock was refreshed, not re-claimed.
+                  One commit per item, pushed immediately, nothing batched.
+
+                  **Full detail in §4**: "Round 12 — Agent C (B12-02…)" through
+                  "(B12-08: NO CODE, by Ruling 39d)". This block is the short
+                  version.
+
+                  **LANDED: B12-02, B12-03, B12-04, B12-05, B12-06, B12-07.**
+                  Cold baseline confirmed before the first edit (1088 tests,
+                  only the documented `benchmark.test.ts` live flake failing);
+                  final gate **1147 of 1148**, same single flake. Every new test
+                  was negative-proved by execution (source reverted, tests run,
+                  source restored) and the must-survive cases are reported
+                  separately rather than counted as proof.
+
+                  **NOT LANDED, and this is what the manager most needs to
+                  read: B12-01.** Ruling 39a approved it and C built it exactly
+                  as designed — every value B predicted reproduced byte-for-byte
+                  — but running it against the suite showed it turns
+                  **`"2026 International Round Table on Titanium Production in
+                  Molten Salts"` into `"Untitled event"`.** A correct name
+                  replaced by a placeholder is the one direction Ruling 23/26
+                  forbids. **Cause: the design's closed event-kind noun list is
+                  single-word, while this codebase's own event-kind
+                  enumerations (`EVENT_SIGNAL_RE`, `eventKindIn`) — the very
+                  sources B12-01 cites to argue the list is closed — also carry
+                  MULTI-WORD kinds** (`round table`, `hack day`,
+                  `lecture series`, `networking event`, `annual meeting`), all
+                  of which already appear in this repo's own fixtures as real
+                  names. Adding the one missing word would close one test and
+                  leave the class open, which is Ruling 32's named defect
+                  committed inside the very item whose argument is that
+                  per-instance patching is wrong. **Stopped per §1's standing
+                  clause, three resolutions with costs recorded, C recommends
+                  none.** Nothing of it is in the tree. Nothing else on B's list
+                  depended on it, so it blocked nothing.
+
+                  **THE SAME LIST IS NOW LIVE IN TWO PLACES AND IS SAFE THERE,
+                  which is the distinction that decided the call:** B12-03 and
+                  B12-04 both use it, and in both the failure direction is "do
+                  nothing" (leave the segment unstripped; leave it rejected as
+                  chrome), so a two-word event kind costs a missed fix and never
+                  a wrong value. In B12-01 it is a hard veto on whether a name
+                  exists at all. Both uses are named in the code comment so
+                  whoever resolves B12-01 reconciles them in one place.
+
+                  **Two things landed that no item asked for, both cheap and
+                  both recorded:** Ruling 39's SolarPACES lead was acted on
+                  because its own condition fired (B12-04 touches that guard
+                  family), so a year-less variant test now states in the suite
+                  that the lock survives only because its title carries a year;
+                  and B12-01's count of eight restated assertions is **nine** —
+                  B counted the assertions that asserted a sentence, and
+                  B11-02's other test asserted a name with a parenthetical date
+                  welded on.
+
+                  **Gate: unchanged and NOT MET. C cannot move it** (§2) — a
+                  passing suite is not evidence a live difference is gone. Only
+                  round 13's A can change that line.
+                  ---
+                  Previous entry, kept for continuity: finished the turn @
+                  2026-08-14 06:12 UTC — ROUND 12 B IS
+                  COMPLETE. Eight entries (B12-01–08) cover all nine of A's
+                  ranked items.
                   ---
                   Previous entry, kept for continuity: finished the turn @
                   2026-08-14 06:12 UTC — ROUND 12 B IS
@@ -494,11 +553,90 @@ STOPPED BECAUSE:  **ROUND 12 C IS IN PROGRESS — resumed after a transient 529
                   **history, not state**, per Ruling 30. The lines above and
                   below, down to this code fence's end, are the only
                   current ones.
-ROUND:            12 — **A COMPLETE, B COMPLETE.** Rounds 10 and 11 (A, B, C,
-                  manager verification) are fully complete. Next is
-                  **round 12 C**, after the manager's verification of round
-                  12 B.
-WHOSE TURN:       **C — Implementer, round 12.** B's guide is eight entries,
+ROUND:            12 — **A, B and C ALL COMPLETE.** Rounds 10 and 11 are fully
+                  complete. Next is **round 13 A**, after the manager's
+                  verification of round 12 C.
+WHOSE TURN:       **A — Reviewer, round 13.** Remeasure live, per §2's standing
+                  method: the fixture score AND the real-data findings, five
+                  independent pulls, majority value scored and the minority
+                  value always stated (Ruling 39d makes that disclosure the
+                  standing method note). A does not change code and does not
+                  diagnose causes.
+
+                  **Six fixes landed this round and every one of them is a
+                  prediction A can falsify.** In B's own order: B12-02
+                  (`ruggedthz.com`), B12-03 (`battery2030.eu`,
+                  `isea.rwth-aachen.de`, `adt.media`), B12-04
+                  (`internationalbatteryseminar.com`), B12-05
+                  (`euchems2026.eu`), B12-06 (`openmc.discourse.group`),
+                  B12-07 (`talents.vaia.com`). Each has tests; **tests are not
+                  evidence the live value changed**, which is exactly why the
+                  gate is A's to move and nobody else's.
+
+                  **WATCH POINTS — questions no fixture can settle. These are
+                  the reason this round's remeasurement is not routine.**
+
+                  1. **THE HONEST-HOST COUNT, and it is now a real number
+                     rather than a nil result.** Ruling 39a requires counting
+                     **every honest-host render and judging, per instance,
+                     whether the reader is better off.** Round 12 A measured
+                     the rate at ZERO (0 of 85 renders). **B12-01 — which was
+                     supposed to create those instances — did NOT land**, so
+                     the question is now sharper, not moot: **B12-05 also
+                     creates honest-host renders** (`euchems2026.eu` should now
+                     render its bare hostname instead of a document filename),
+                     and B12-06 creates honest ABSENCE on the employer side
+                     (`openmc.discourse.group` should show no employer line at
+                     all rather than `Page 2`). Count both, and say per
+                     instance whether the reader is better off than with the
+                     wrong value that stood there before. A nil result is a
+                     finding; so is a rise.
+                  2. **`ruggedthz.com` — MUST-CONFIRM, and the expected value is
+                     named in advance so A cannot grade it generously.** The
+                     expected render is **`2026 Crystal Engineering GRC`**. B12-02
+                     attaches at two points because the host has two confirmed
+                     failure modes, and A's own pulls saw both — so **check
+                     which mode each pull hits** and report the value for each,
+                     not a single majority. Anything other than the expected
+                     string is a finding even if it is better than last round's.
+                  3. **The TWO-LINE Ruling 34a tally, new from this round.**
+                     Ruling 39b splits it: **employer-side and event-side, same
+                     definition** — a correctly-spelled real name that is not
+                     the actual entity. Both lines re-listed by name every
+                     round, both excluded from open-defect counts.
+                     `batteryinnovationsummit.com`'s `"The Battery Saloon"` is
+                     the founding event-side member; `careerservices.upenn.edu`
+                     remains the employer-side one.
+                  4. **Ruling 33's tally** (short-acronym collision, cumulative
+                     1 of 14 across r9–r12) **and Ruling 37's tally**
+                     (colonless-label run-on, 1 of 3 in its first round, the
+                     baseline `careers.gevernova.com` instance). **Ruling 37's
+                     escalation fires only on a SECOND, DIFFERENT instance** —
+                     round 12 A read it that way and the manager did not
+                     overturn the reading, so keep it and say so.
+                  5. **`euagenda.eu`: flagged, NOT counted, until round 15**
+                     (Ruling 38c). Do not retry it this round and do not let it
+                     enter any denominator.
+
+                  **ONE THING FOR THE MANAGER BEFORE A STARTS, because it is a
+                  ruling request and not a measurement: B12-01 did not land.**
+                  See §4 "Round 12 — Agent C (B12-01…)" — the approved design
+                  turns a correct event name into `"Untitled event"`, the cause
+                  is a class (single-word noun list vs. multi-word event kinds),
+                  and three resolutions are recorded with their costs. A does
+                  not need it resolved to remeasure — `ecs.confex.com` will
+                  simply still render the deadline sentence, which A should
+                  report as the unchanged open defect it is.
+
+                  **Also unchanged and still open for the manager:** B11-04's
+                  flag and B8-03's `usajobs.ts` fallback, both listed under
+                  MANAGER CARRY-FORWARD below.
+
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 12 C
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **C — Implementer, round 12.** B's guide is eight entries,
                   B12-01 through B12-08, in §4. **Work them in the order
                   below, not in A's ranked order** — B re-ordered them for
                   dependencies and one of them is blocked. C changes code; C
