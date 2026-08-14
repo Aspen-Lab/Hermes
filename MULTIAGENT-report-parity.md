@@ -32663,3 +32663,181 @@ context.** No branch, worktree or PR;
 all four tally lines; then the summary, ranked difference list and gate verdict.
 
 Commit follows immediately.
+
+---
+
+### Round 15 — Agent A (part 3: R4 job summaries, and ALL FOUR TALLY LINES with running counts — including Ruling 44's new label-miss sub-count on its first round)
+
+**STATUS: DONE.** Third of round 15 A's four parts, continuing the same session
+as part 2. Part 4 follows. **No gate verdict is set here.**
+
+**Method.** The **same five fresh live job-pool pulls part 2 used**, read on a
+different column — the **job CARD's** `summaryText` rather than its employer.
+Five separate processes, no-op `PoolCache`, no `PEER_PROFILE_SNAPSHOT_PATH`,
+results written outside the repository, harness deleted before part 1's commit.
+The efficiency choice and its reason are recorded in part 2's method note. **For
+each non-empty summary the posting's own `matchedKeywords` were captured
+alongside the displayed text**, so Ruling 33's tally rests on what the pipeline
+itself matched rather than on a guess about which term did the work.
+
+**Contract checked, not assumed.** `LEADING_LABEL_RE` still reads
+`/^[A-Z][a-zA-Z]*(?:[\s-][A-Za-z]+){0,2}:\s*/` — the same literal-trailing-colon
+requirement rounds 11–14 all cited, **unchanged by round 14 C per Ruling 44**, so
+B10-07 fix 2's contract is unchanged and this round's reading is directly
+comparable. The newly shipped `LEADING_BRACKET_REMNANT_RE` (`/^\s*\]+\s*/`) sits
+**before** it in `scoreSentences`' return, as B designed and C landed.
+
+**Summary-bearing counts, per run rather than averaged:** run 1 **3 of 12**, run 2
+**3 of 13**, run 3 **3 of 13**, run 4 **4 of 15**, run 5 **3 of 13**.
+**Union: 4 summary-bearing postings out of 16 unique (25.0%).** Round 14 was 4 of
+14 (28.6%), round 13 6 of 20 (30%), round 12 3 of 16 (18.8%), round 11 4 of 14
+(28.6%), round 10 3 of 13 (23.1%), round 9 4 of 29 (13.8%) — different days and
+different pool sizes each time, so this is reported as this round's own number,
+not a trend.
+
+**REPRODUCIBILITY IS TOTAL AGAIN ON THIS FIELD.** All four summaries are
+byte-identical in every run they appear in. **Round 14's one varying summary
+(`careers.gevernova.com`, two values) does not vary this round — it returns one
+value in 5 of 5.** **Ruling 39d/41a's minority-disclosure clause therefore has
+nothing to disclose on this column**, stated explicitly.
+
+**Per-posting result, all 4, none averaged:**
+
+1. `inl.referrals.selectminds.com` (`…-10104`), matched `"molten salt"`: *"This
+   is a multi-level posting and you will be placed at the appropriate level
+   dependent on degree field and level of education."* **CLEAN. B10-07 fix 2
+   confirmed live for the FIFTH consecutive round** on this host and sentence —
+   round 10 found it carrying a `"Multi-Level:"` prefix; the prefix is absent in
+   rounds 11–15. No meaning lost. Byte-identical in 5 of 5.
+2. `employbl.com`, matched `"battery"`: *"Battery is a private equity and venture
+   capital firm with over 40 years of heritage investing in category-leading
+   technology companies. During our 10-week paid summer internship program, you
+   will earn up to $2,500 per week."* **CLEAN, two full sentences, byte-identical
+   to rounds 11–14.** Round 10's stacked-chrome defect on this exact host **stays
+   gone for the fifth consecutive round.**
+3. `salutemyjob.com`, matched `"ion exchange"`: *"The candidate should have a
+   thorough background in liquid-liquid separations and the use of various ion
+   exchange technologies. Develop novel solutions and creative proposals to
+   secure additional research funding."* **CLEAN. NEW HOST, no defect.** Two
+   well-formed sentences, no label remnant, no bracket, no run-on. Present in the
+   1 run this posting appears in.
+4. `careers.gevernova.com`, matched `"battery"`: *"What you’ll do Support
+   engineering teams developing new battery technology for use in the Utilities,
+   Datacenter, and Defense industries. Interface with the advanced research
+   center on testing results."* **This is the colonless-heading run-on, and per
+   §1x Ruling 37 it is an ACCEPTED COST — counted in the tally below, NOT
+   reported as a defect and NOT on the difference list.** Same host, same
+   posting, same bytes as rounds 11–14, including the typographic apostrophe
+   round 13 noted. **5 of 5 this round — no second value, and specifically no
+   bracket-bearing variant** (part 2 covers what that does and does not prove).
+
+**OPEN DEFECTS AMONG THE FOUR: ZERO.** Round 14 had one (the `]` remnant, now
+fixed and shipped); rounds 12 and 13 had zero. **The summary column is clean this
+round.**
+
+**Fix 1 watch (B10-07 fix 1 — a bare section label can no longer clear the
+positive-content floor alone): not confirmed to fire, and nothing broken to
+report.** No bare or junk section-label fragment with zero keyword match and zero
+readable content survived into any of the four summaries. Consistent with fix 1
+working and equally consistent with this pool not drawing that shape. **"Not
+observed", not "confirmed still firing"** — sixth round running with no such
+fragment.
+
+**Fix 2 watch (did the strip ever remove a label that carried real meaning?): not
+observed, fifth consecutive round.** The confirmed live strip (item 1) costs
+nothing. The label that survives (item 4) is a case of the strip **not** firing,
+not of it over-firing. No over-stripping regression found.
+
+---
+
+## ALL FOUR TALLY LINES, WITH RUNNING COUNTS, STATED AFFIRMATIVELY EVEN AT ZERO
+
+**RULING 33 — the short-acronym collision. Round 15: 0 of 4. Cumulative 2 of 28
+(7.1%).**
+
+The matched keyword evidence for the four surviving summaries was
+`"molten salt"` (11 characters), `"battery"` (7) ×2, and `"ion exchange"` (12).
+**None is an acronym under 5 characters.**
+
+**Running: r9 1/4, r10 0/3, r11 0/4, r12 0/3, r13 1/6, r14 0/4, r15 0/4 →
+cumulative 2 of 28.**
+
+**AND THE ZERO IS AGAIN CHURN, NOT A FIX — the same warning round 14 A issued,
+and it still applies.** `lco-cdo.org`'s coordinator posting — the only posting
+that has ever produced this collision — **is absent from all five pulls for the
+second consecutive round.** Round 14 established positively that the shipped
+`isListingPage()` **keeps** that posting on replay, so it is admissible today and
+can return on any pull. **Ruling 33 is NOT closed, must NOT be scored as closed,
+and its zero this round carries no information about the defect.** It remains an
+accepted cost with a tally, excluded from open-defect counts.
+
+**RULING 34a — BOTH LINES, same definition (a correctly-spelled real name that is
+not the actual entity).**
+
+- **Employer side: 1 of 8** — `careerservices.upenn.edu` rendering
+  `University of Pennsylvania` for an Oak Ridge National Laboratory posting,
+  **5/5, on the identical URL rounds 9–15 all cited**. Unanimous for the second
+  consecutive round.
+  **Running: r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8 → cumulative 4 of 48
+  (8.3%).**
+- **Event side: 1 of 11** — `batteryinnovationsummit.com` rendering
+  `The Battery Saloon`, **5/5**, with the root `og:title` re-confirmed as that
+  string **verbatim** by direct fetch this round.
+  **Running: r13 1/14, r14 1/13, r15 1/11 → cumulative 3 of 38 (7.9%).**
+  **SECOND DISTINCT INSTANCE: ABSENT, count zero — so Ruling 42b's
+  enrichment-title cross-check does NOT fire**, third round running. Stated
+  affirmatively because a threshold cannot fire on silence.
+
+**RULING 37 — the colonless-label run-on, PLUS Ruling 44's label-miss count,
+which joins this line for the first time this round.**
+
+- **The run-on: 1 of 4** — `careers.gevernova.com`'s `"What you’ll do Support
+  engineering teams…"`, the same host, the same posting, the same bytes as rounds
+  11–14, now in 5 of 5 runs rather than 4 of 5. **The ruling's own baseline
+  instance, counted as an accepted cost and explicitly NOT reported as a defect.**
+- **THE TRIGGER DOES NOT FIRE, answered affirmatively: NO second DISTINCT
+  instance exists.** Per the ruling's dated 2026-08-14 clarification a second
+  instance means **a different posting or a different host**. There is neither —
+  no second host shows the shape, no second posting on any host shows it, and the
+  three other summaries this round (two of them on **new** hosts,
+  `salutemyjob.com` and the unchanged pair) are free of it. **Baseline only, for
+  the FOURTH round running.**
+- **RULING 44's NEW SUB-COUNT — labels the strip cannot reach. Round 15: 0
+  distinct instances, and the reasoning matters more than the digit.** Ruling 44
+  defines the miss as a leading label `LEADING_LABEL_RE` cannot strip because it
+  contains an apostrophe or runs past three words. **`What you’ll do` is exactly
+  that shape — but in the LIVE render it carries NO COLON**, and
+  `LEADING_LABEL_RE` requires a literal trailing colon before it can apply at
+  all. **So the one candidate string in this round's data is not a label-rule
+  miss; it is already counted, one line above, as Ruling 37's run-on.** Counting
+  it twice would inflate the very number that could someday justify widening the
+  label rule. **Distinct label-miss instances observed: ZERO. Second distinct
+  instance: absent. Does not fire. First round this sub-count is kept, and A
+  records the definition it applied so round 16 counts the same thing.**
+
+**RULING 36 — `ruggedthz.com`. STAYS CLOSED. Round 15: zero instances, THIRD
+consecutive round at zero — but by ABSENCE this round, and A will not dress that
+up as a confirmation.** The host is **absent from all five event pulls**
+(part 1's churn list). Round 14 confirmed it live at `2026 Crystal Engineering
+GRC`, 5/5, with both historical failure modes absent; **this round there was no
+render to check.** Reported at zero rather than dropped, as the brief directs,
+**with the distinction between "measured correct" and "not present to measure"
+stated rather than blurred.**
+
+**RULING 39c — NO LONGER A TALLY.** Its item was taken by Ruling 43 and shipped
+as B14-01, which part 2 confirms fired 5 of 5. **Recorded here so it is not
+counted twice**, exactly as the brief instructs. For completeness: **zero forum
+threads of any kind are in this round's job pool**, on any run.
+
+**Cleanup:** no harness remains (deleted before part 1's commit;
+`git status --porcelain --untracked-files=all` confirmed clean). Result JSON lives
+outside the repository. **No product code touched. No credential printed, logged,
+or written anywhere. No third-party page was fetched in this part at all** —
+every string quoted above is the pipeline's own rendered output, not scraped page
+text.
+
+**Not done yet (part 4, same session, continuing next):** the summary across
+parts 1–3 — ranked difference list, the combined per-surface numbers, and the
+gate verdict.
+
+Commit follows immediately.
