@@ -276,6 +276,51 @@ export type HighlightSegment = {
   matched: boolean;
 };
 
+/**
+ * ROUND 21, ITEM 4 (A21-04): A SUMMARY THAT STOPS MID-SENTENCE.
+ *
+ * `careers.inl.gov/job/1930` published *"…to perform laboratory-based research
+ * and development of"* — last word `of`, no ellipsis, no full stop,
+ * byte-identical in every run the row appeared in.
+ *
+ * **THE TRUNCATION IS NOT PEER'S.** Every layer on the summary path was traced
+ * and none cuts mid-sentence: `extractPageText` drops WHOLE paragraphs,
+ * `cleanJobDescription` has no slice, the length constants here REJECT rather
+ * than trim, and `jobCardView` only falls back. The unfinished sentence arrives
+ * already unfinished. **Peer's own defect is narrower and it is right here:**
+ * `splitSentences`' `|$` alternative makes an unterminated trailing fragment a
+ * first-class sentence, and nothing downstream ever asks whether a sentence it
+ * is about to publish actually FINISHES.
+ *
+ * **THIS REJECTS A CANDIDATE, IT NEVER TRIMS ONE** — the shape every other
+ * check in that block already has.
+ *
+ * **"ENDS ON A FUNCTION WORD" IS THE LOAD-BEARING NARROWING, NOT A DETAIL.**
+ * Rejecting every unterminated sentence would be a wrong drop: scraped advert
+ * text is full of headings and final lines with no terminal punctuation and
+ * they are complete. Measured — widen it that way and
+ * `We are hiring a research scientist to develop molten salt electrochemistry
+ * methods` is wrongly lost. A sentence ending on a preposition, conjunction or
+ * article is unambiguously unfinished. The vocabulary is the CLOSED
+ * function-word class this codebase already ships twice over
+ * (`INDEX_OWNER_FUNCTION_WORD_RE`, `TOPIC_LANDING_FUNCTION_WORD_RE`).
+ *
+ * The leading `[^.!?…]` protects a DELIBERATELY elided list (`… thermal storage
+ * and…`), which is terminated on purpose. Note that `and more…` cannot prove
+ * that character either way — its last word is not a function word — so it is
+ * an admitted control rather than evidence.
+ *
+ * Failure direction: an unfinished sentence ending on a CONTENT word survives —
+ * the status quo, never a new wrong value. This check can only remove a
+ * summary; it can never write one.
+ */
+const DANGLING_TAIL_RE =
+  /[^.!?…]\s+(?:of|for|and|or|to|with|in|on|at|the|a|an|from|by|as|into|than|that|which|but)\s*$/i;
+
+function endsOnDanglingFunctionWord(sentence: string): boolean {
+  return DANGLING_TAIL_RE.test(sentence);
+}
+
 function splitSentences(description: string): string[] {
   return (description.match(/[^.!?]+(?:[.!?]+|$)/g) ?? [])
     .map((sentence) => sentence.replace(/^#+\s*/, "").replace(/\s+/g, " ").trim())
@@ -300,7 +345,9 @@ function scoreSentences(
         text.length > MAX_SENTENCE_LENGTH ||
         NOISE_RE.test(text) ||
         looksLikeScrapedChrome(text) ||
-        endsWithTitleEcho(text, jobTitle)
+        endsWithTitleEcho(text, jobTitle) ||
+        // Round 21, item 4 (A21-04): a sentence that does not finish.
+        endsOnDanglingFunctionWord(text)
       ) {
         return null;
       }

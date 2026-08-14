@@ -50969,3 +50969,87 @@ Asserted in the shipped suite: **Ruling 49a's Oregon lock renders `Oregon Center
 **C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.**
 
 ---
+
+### Round 21 — Agent C (item 4 of 6: **A21-04, the summary that stops at `of`. SHIPPED — a closed-class dangling-tail check, rejecting a candidate and never trimming one.** B's tables reproduce. **AND B's RECORDED LIMITATION IS NARROWED BY MEASUREMENT: a complete sibling IS promoted when it clears the existing floor.**)
+
+**STATUS: DONE.** **NO TEST DELETED. NO ASSERTION EDITED.** Eight assertions ADDED. **B8-05's positive-content floor NOT touched and NOT widened**, per §1. Branch re-read before the commit and in the push output (§3).
+
+---
+
+## RE-MEASUREMENT FIRST — B's TWO FIDELITY NUMBERS REPRODUCE
+
+| check | B recorded | C re-measured |
+|---|---|---|
+| shipped `summarize.test.ts` against the control copy | **51/51** | **51/51** |
+| control copy vs the **genuinely imported** `summarizeJob`, output for output | 7 of 7 identical | **identical on every probe row** |
+| A21-04's reproduction | A's exact recorded string | **identical, character for character**, both alone and after a complete sentence |
+
+---
+
+## THE UPSTREAM FINDING — **LOGGED AS RULED-PENDING, NOT SKIPPED**
+
+B traced the truncation layer end to end and concluded **the cut is not Peer's**: `extractPageText` drops WHOLE paragraphs, `cleanJobDescription` has no slice, the length constants REJECT rather than trim, and the card view only falls back. **B specified NO CODE for that finding** — its consequence was the diagnosis, not an edit. C therefore **implemented only what B's guide specifies (the `scoreSentences` disjunct) and records the upstream finding as RULED-PENDING rather than skipped**: the JSON-LD `JobPosting.description` fallback that B names as the likely source is untouched, unmeasured live this round, and is nobody's work item until a manager rules it one. **It is written into the module doc comment so round 22 inherits it as a finding rather than rediscovering it.**
+
+---
+
+## THE EDIT
+
+A sixth disjunct in `scoreSentences`'s existing rejection block, beside `endsWithTitleEcho`. **It REJECTS a candidate; it never TRIMS one** — the shape every other check in that block already has, and C asserted that property directly (the output is the whole sentence or nothing).
+
+**Shipped `summarize.test.ts`: 51/51 against the control copy AND 51/51 against the candidate. Zero shipped assertions move.**
+
+---
+
+## VACUITY — BOTH NARROWINGS MUTATED, AND ONE OF B's MUST-KEEPS TURNS OUT TO BE A CONTROL
+
+| mutant | what breaks |
+|---|---|
+| **"ends on a FUNCTION WORD" widened to "anything unterminated"** | `We are hiring a research scientist to develop molten salt electrochemistry methods` — **unterminated but COMPLETE — is wrongly lost** |
+| **the leading `[^.!?…]` guard character removed** | a deliberately ELIDED list (`… thermal storage and…`) is **wrongly rejected** |
+
+**C REPORTS A CORRECTION TO B's EVIDENCE.** B offered `… and more…` as the case that earns the `[^.!?…]` guard character. **Re-measured, it cannot earn it either way** — its last word is `more`, a content word, so neither the real check nor the mutant reaches it. It survives under both and is an **ADMITTED CONTROL**. The sharp case is a list elided **after a function word** (`… thermal storage and…`), which C constructed and asserted. **Same shape as items 2 and 3: a must-keep B named as evidence turned out to be doubly safe, and only execution showed it.**
+
+---
+
+## **B's RECORDED LIMITATION IS RE-MEASURED AND NARROWED — IN PEER's FAVOUR**
+
+B recorded, against its own case, that when the fragment is rejected `bestCombination` does **not** promote a complete sentence in its place, because the preceding sentence fails B8-05's positive-content floor.
+
+**Measured, that is true only when the sibling actually fails the floor:**
+
+| the sibling in front of the fragment | with the fix |
+|---|---|
+| clears the B8-05 floor (carries a matched keyword / role word) | **the complete sentence IS promoted and rendered** |
+| fails the floor (no keyword, no role word, no section opener) | **`""`, and the card falls back to `matchReason`** — B's case, confirmed |
+
+**So the reader more often gets a real sentence than B predicted, and B's limitation stands only for the floorless case.** Both branches are asserted in the shipped suite. **The floor itself is untouched and C does not propose widening it** — that remains B's declined lead.
+
+---
+
+## WHAT RENDERS ON REJECTION, AND THE COST
+
+`summarizeJob` returns `""`, the mapper maps it to `undefined`, and the card falls back to the **`Matches your … focus`** match reason — **a shape A recorded THIS ROUND on the SAME HOST's other posting** (`/job/1515`), so it is witnessed, not argued.
+
+- **Measured cost: ZERO** — 51 shipped assertions unchanged; every must-keep unchanged.
+- **Failure direction: an unfinished sentence ending on a CONTENT word survives — the status quo, never a new wrong value.** The check can only remove a summary; it can never write one.
+- **Not a host rule.** `careers.inl.gov` appears nowhere in it.
+- **The cost named plainly:** a reader loses a real, if unfinished, sentence and may get a generic one instead. Under Ruling 23 that is the correct trade — a sentence that stops at `of` is **wrong**, not merely short.
+
+---
+
+## THE NEGATIVE PROOF
+
+| | tests | passing | red |
+|---|---|---|---|
+| with the fix | 59 | **59** | — |
+| **disjunct removed** | 59 | **56** | **exactly 3 — the dangling tail alone, the promotion case, and the floorless fallback** |
+
+The five must-keeps are **ADMITTED CONTROLS** and stay green either way, by design.
+
+---
+
+**GATE AFTER ITEM 4: 91 files / 1630 tests, 1629 passing.** Sole failure the standing `benchmark.test.ts` flake — **and it presented in TWO of its three recorded forms within this one session**: `:119` (`expected undefined to be 'Chicago'`, round 18 C's form) in the full run, and `:109` (`expected false to be true`) on a solo re-run minutes later. **That is the recorded behaviour of this flake, not a new failure**, and C states both rather than quoting whichever looked more familiar. `npx tsc --noEmit` clean; `npx eslint` exactly the one standing `quiz.tsx:46` error. Named runs: `scoring.test.ts` (jobs and events) plus `job-cleanup.test.ts` plus `jobweb.test.ts` plus `summarize.test.ts` **580/580**; **`enrich.test.ts` SOLO 53/53 — the SolarPACES lock is intact.**
+
+**C RAISES NO NEW `POLICY` ON THIS ITEM AND DECIDES NONE OF THE THREE OPEN ONES.** The upstream-truncation finding is **RULED-PENDING** and is flagged here for the manager's round-close, not decided by C.
+
+---

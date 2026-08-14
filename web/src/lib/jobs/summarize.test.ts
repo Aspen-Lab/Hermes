@@ -593,3 +593,58 @@ describe("leading date-stamp strip (B18-03)", () => {
     expect(out).toBe("Engineer wanted for ion exchange work in our lab.");
   });
 });
+
+// ROUND 21, ITEM 4 (A21-04): A SUMMARY THAT STOPS MID-SENTENCE.
+// `careers.inl.gov/job/1930` published a sentence whose last word was `of`.
+// The truncation happens UPSTREAM of Peer — no layer here cuts mid-sentence —
+// so the fix is not to repair the text but to stop publishing a sentence that
+// does not finish. It REJECTS a candidate; it never trims one.
+// Not a host rule: `careers.inl.gov` appears nowhere in it.
+describe("a summary sentence that does not finish is rejected (A21-04)", () => {
+  const KW = ["battery", "molten salt", "research"];
+  const TAIL =
+    "Idaho National Laboratory is hiring a well-qualified Postdoctoral Research Associate to perform laboratory-based research and development of";
+
+  it("rejects the measured dangling tail", () => {
+    expect(summarizeJob(TAIL, KW)).toBe("");
+  });
+
+  it("rejects it with a complete sentence in front of it, and promotes the complete one", () => {
+    const complete =
+      "Idaho National Laboratory operates a molten salt research programme for the Department of Energy.";
+    expect(summarizeJob(`${complete} ${TAIL}`, KW)).toBe(complete);
+  });
+
+  // B recorded that no complete sibling is promoted. Re-measured: that holds
+  // only when the sibling fails the EXISTING B8-05 positive-content floor.
+  // The floor is untouched by this item and is NOT widened here.
+  it("falls back to nothing when the only sibling fails the B8-05 floor", () => {
+    const floorless =
+      "The campus is located near the river and has ample parking available.";
+    expect(summarizeJob(`${floorless} ${TAIL}`, KW)).toBe("");
+  });
+
+  // THE LOAD-BEARING NARROWING. Rejecting every UNTERMINATED sentence would be
+  // a wrong drop; these are complete and must survive. The first is red under a
+  // "reject anything unterminated" widening — measured.
+  it.each([
+    "We are hiring a research scientist to develop molten salt electrochemistry methods",
+    "What you will do Support engineering teams developing new battery cell chemistries and manufacturing processes across the business",
+    "You will lead the design and development of advanced molten salt reactor components.",
+    "We work on molten salt reactors, battery chemistry, thermal storage and more…",
+  ])("keeps the complete sentence: %s", (text) => {
+    expect(summarizeJob(text, KW)).not.toBe("");
+  });
+
+  // The leading `[^.!?…]` guard: a DELIBERATELY elided list is terminated on
+  // purpose. `and more…` cannot prove this character either way (its last word
+  // is not a function word), so this is the sharp case.
+  it("keeps a deliberately elided list ending in a function word plus ellipsis", () => {
+    expect(
+      summarizeJob(
+        "Our programme covers molten salt chemistry, battery research, thermal storage and…",
+        KW,
+      ),
+    ).not.toBe("");
+  });
+});
