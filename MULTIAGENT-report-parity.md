@@ -44117,3 +44117,16 @@ hosts NOT hunted (45b).** No branch, worktree or PR.
 edited; B changed no code.** Harness deleted before this commit; tree clean.
 
 ---
+
+---
+
+### USER RULED, 2026-08-14 (recorded by the manager; grep "user reaffirmed the gate")
+
+**The user reaffirmed the strict Ruling-23 gate.** Presented with the option
+to close on "zero wrong values, stable across many rounds" and downgrade the
+pool-composition tail to low-cadence maintenance, the user chose to KEEP the
+0%-of-all-differences standard. The loop continues round by round until a
+census finds zero unexplained differences, followed by the manager's
+independent re-measurement. No agent proposes re-scoping the gate again;
+this question is settled by the user.
+
