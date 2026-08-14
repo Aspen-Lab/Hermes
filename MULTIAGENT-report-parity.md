@@ -37016,3 +37016,22 @@ cases had not spanned. Every "do not" in B's guide and in §1's `WHOSE TURN: C`
 block was observed. **Nothing on A's exclusion list was touched, reopened or
 designed against**, including Ruling 46a's false fire and 46b's two titles, and
 **Ruling 33 is not touched by either item.**
+
+---
+
+### Round 16 — MANAGER verification of Agent C (round 16 CLOSES)
+
+**Confirmed.** Independent gate matches (1426/1425, standing flake only).
+Both items landed with every table re-measured by execution before a line was
+written; the singular variant priced by temporarily shipping it and now
+locked out by a red test; the burned move locked out by a mid-title
+must-keep; gap 2C reproduced from both sides (the latent `View` employer
+confirmed against untouched code BEFORE the fix); +71 tests, 0 deleted; four
+reverts each diffed byte-identical after restore; SolarPACES 25/25 solo. The
+perl-mangling near-miss is recorded as a method note (exact-match edits on
+backslash-dense lines), caught by diff both times, never reached a commit.
+
+**Round 16 closes: 2 designs, 2 landed, the offered-row method now standing,
+the correct-drops column adopted. `WHOSE TURN: A — round 17, GATE CANDIDATE
+ROUND` stands as C left it.**
+
