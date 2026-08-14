@@ -3435,7 +3435,11 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — round 23.** Round 22 A is COMPLETE: **four parts, one
+WHOSE TURN:       **B — round 22.** *(A's hand-off wrote "round 23"; normalized
+                  by the manager to the standing convention — a failed gate
+                  candidate keeps its round, exactly as rounds 17, 18 and 19
+                  did, and the seven items are already numbered A22-xx. Nothing
+                  else in A's hand-off changed.)* Round 22 A is COMPLETE: **four parts, one
                   commit each, each pushed** (`82a92ed`, `13a21ba`, `cc4de73`,
                   plus A's hand-off). Claim the §0d lock first, always. **B
                   investigates causes and writes a fix guide; B does not change
@@ -52925,5 +52929,31 @@ programmatically against the appended region (Ruling 56b's standard), written
 via a scratchpad file and `cat` from bash — **NOT PowerShell**.
 
 **Turn lock released (`HELD BY: free`) in this entry's final commit, per §0d.**
+
+---
+
+### Round 22 — MANAGER verification of Agent A, RULING 59a–b, and the hand-off to B
+
+**Date: 2026-08-14. Checked against the file and by execution where execution was possible, not inherited from A's summary.**
+
+**THE TURN IS VERIFIED.** Four parts, one commit each, each pushed (`82a92ed`, `13a21ba`, `cc4de73`, `af80a37`), lock claimed first (`7068f70`) and released in the final commit. **Every append verified pure by numstat**: parts 1–3 are 354/0, 322/0 and 273/0 insertions-only; part 4's four deleted lines are exactly the §1 in-place update, as they should be. **The gate figures A reports — 91 files / 1652 tests, 1651 passing, `benchmark.test.ts` `:109` the sole failure, `tsc` clean, `eslint` one standing error — are byte-identical to the manager's own independent run at the round-21 close, and A changed no code in between**, so the manager accepts them without a third run. Tree clean; the `zz-r22a` harness confirmed gone. **A's self-caught probe defect — the harness was trimming text before scoring, which the real code does not do, caught and rewritten BEFORE any number entered the record — is the measurement discipline working and is noted with approval.**
+
+**THE POSITIVE CONFIRMATIONS ARE ACCEPTED**: all five round-21 items verified on the rendered result (four by replay of round 21's recorded strings, their hosts not re-offered; A21-03 organically live); all ten falsifiers clean, including Ruling 58d's watch; the TENTH consecutive zero-variance event round; the employer column at 0 of 4; the first-ever event-side 48b scan, 0 wrong drops in 149 offered rows. **The seven-item census stands as A ranked it. None of the seven is covered by a standing exclusion, and A's tallies are complete with running counts (33: cumulative 2 of 56, definition unchanged; 52b: cumulative 4 admissions, this round's checked against 58a's escape clause by executing the shipped guard on the live row — NOT a guard defect, the guard could not fire by design).**
+
+**ONE NORMALIZATION, RECORDED:** A's hand-off wrote `WHOSE TURN: B — round 23`. The standing convention (rounds 17, 18, 19 — every failed gate candidate) keeps the fix cycle in the measurement's round, and the items already carry A22-xx numbers. §1 now reads **`B — round 22`**; A's entries are untouched.
+
+---
+
+## RULING 59 — THE TWO QUESTIONS A NAMED FOR THE MANAGER. BINDING.
+
+**59a. The Ruling 29 reading — A's READING IS CONFIRMED, AND 29's PRE-SCHEDULED ARCHITECTURE ITEM NOW FIRES.** Ruling 29's binding text says the same-page ownership class is "IN SCOPE and remains in the real-data gate"; its close was a **sequencing decision, "not permission to leave the defect permanently unresolved."** The round-22 brief's "must not treat as open" line referred to DECIDED policy questions (round 8's wait-or-not on the `hiringcafe.com` repro), and cannot convert a ruled-in-scope defect class into an exclusion — no ruling may be repealed by a brief's summary of it, and where a brief conflicts with the file, **the file wins** (standing precedent). **Ranks 2 (A22-03) and 3 (A22-01) STAND.** Consequently, per Ruling 29's own schedule ("if contamination remains, the next B gets one explicitly scheduled architecture item"): **round 22 B owes the posting-scoped ownership design** — one owned text source per selected item, keyed to the item's own title/URL/structured record, consumed by downstream extractors; **B must name the fallback when no owned block can be identified and PROVE the fallback prefers silence over attributing another item's facts.** B establishes **by execution** whether A22-03 (job summary/location) and A22-01 (event date/city) share one mechanism or are two, and the design spans exactly what the evidence proves — no more. **Design only: C implements nothing of it until the design and its fallback proof exist**, per 29's own sequencing.
+
+**59b. The two deliberately-unranked observations — A's DECLINE IS CONFIRMED, THE CENSUS IS NOT WIDENED, AND NEITHER OBSERVATION DIES.** Recall (candidate → pool) and recency remain UNSCORED columns; adding either would re-scope a gate the user has ruled settled, and A was right to refuse on its own authority. Each observation instead gets **one bounded DIAGNOSTIC, assigned to round 22 B — establish mechanism by execution, no design, no code:**
+- **(a) `thebatteryshow.eu`** — establish where candidate → pool lost it. **If a guard or defect dropped it, it enters round 23 A's census as a wrongly-suppressed row** — a defect-caused suppression of a true row is a wrong OUTCOME in the census we already run, not a new column. **If it was outscored** under the recorded competitiveness design (§1b), it is working-as-designed: recorded once, not a difference, and A may decline this class without a fresh ruling each time.
+- **(b) `grad.wisc.edu`** — resolve the row that rounds 19, 20 and 22 all excluded from the job item-KIND denominator as UNRESOLVED. Establish what the page is and what the card renders. **If a nine-month-old blog post is being rendered as a current opportunity card, that is the item-KIND column — a column this loop already scores — and the row enters round 23 A's census with the denominator exclusion ended.** Recency itself stays unscored either way.
+
+**ONE NOTE FOR B ON A22-04** (`zerobonline.com`, the fourth 52b admission): A executed the shipped 57b guard on the live row — it returns `false` and could not do otherwise (null `company`; no investment-vehicle tail). **This is a NEW SHAPE, not a guard defect.** Any treatment that touches the guard is a fresh design with its own adversarial table and the standing escape clause — **never a conjunct widened inline.**
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 22`. B's work list is the seven ranked items A22-01–A22-07 **plus Ruling 59a's architecture design and Ruling 59b's two diagnostics**, re-ranked by B under §2's priority (wrong data first). The gate stays `GATE (0%): NOT MET` — only a later A census can move it, and only the manager closes, after an independent re-measurement.
 
 ---
