@@ -32150,3 +32150,30 @@ session scratchpad outside it.
 Commit follows immediately.
 
 ---
+
+---
+
+### Round 14 — MANAGER verification of Agent C (round 14 CLOSES; one small ruling inline)
+
+**Confirmed.** Independent gate: matches C's line (sole failure the standing
+flake). Both items landed verbatim from B's verified designs; negative proofs
+sharp (22 failures on one disabled line; the order-reversal test isolating
+exactly the order); SolarPACES 25/25 solo; the two vacuous tests are not just
+repointed but given `not.toBeNull()` so they cannot go silent the same way
+again; the rejected upstream widening is locked out by a test, not a comment.
+
+**C's POLICY flag, ruled here (this entry is the ruling — grep "Ruling 44"):
+RULING 44 — `LEADING_LABEL_RE` stays as shipped. The apostrophe/three-word
+label miss is a named accepted cost of Ruling 37's class** (cosmetic; the
+bracket still strips; widening the label rule swallows words a real sentence
+may need — C measured the risk and correctly refused inline). It joins Ruling
+37's tally line — same definition, one line, A counts labels the strip
+cannot reach. If that tally ever shows a second distinct instance, the future
+B designs against the label grammar with Ruling 31's bar. Eleventh
+consecutive round of the role-after catching the role-before — this time C
+catching B's table row by letting the failing test speak.
+
+**Round 14 closes: 2 designs, 2 landed, +81 tests, 0 deleted. The loop's open
+wrong-value count is ZERO pending round 15's live confirmation. `WHOSE TURN:
+A — round 15, GATE CANDIDATE ROUND` stands as C left it.**
+
