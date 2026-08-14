@@ -2750,6 +2750,58 @@ designs, not authorisation:**
   over deletion — a wrong insertion reads odd; a wrong deletion destroys the
   sentence's subject. Same discriminator problem, far cheaper failure.
 
+**CLARIFIED 2026-08-14 (round 12 A asked; the manager answers in place rather
+than leaving two readings loose):** "recurrence beyond the single instance"
+means **a second, DISTINCT instance — a different posting or a different
+host**. The baseline instance persisting byte-identical across rounds is
+persistence, not prevalence, and for a cosmetic, information-preserving defect
+persistence alone never fires this trigger — unlike Ruling 36's third-strike
+rule, which counts persistence deliberately because its defect states wrong
+data. A's round-12 reading (one baseline instance, no second → does not fire)
+was correct.
+
+---
+
+### §1y Ruling 38 — THREE SMALL CALLS FROM ROUND 12 A, RULED TOGETHER
+
+Round 12 A flagged two boundary questions and one process recommendation
+rather than deciding them. All three are ruled here.
+
+**38a — `"Talents by Vaia"` scores OUT of Ruling 34a's tally, and A's scoring
+stands: 1 of 10, cumulative 2 of 19.** The tally exists to measure the one
+shape that has **no guard-side fix** — a real third-party institution's
+correctly-spelled name, distinguishable only by knowledge external to the
+string. An aggregator's own brand in its own employer slot is the opposite: it
+is Ruling 26's host-brand class, guards for it already exist, and its survival
+is a **defect in those guards' coverage** (B investigates it as A's item 4).
+Mixing a fixable defect into the unfixable-shape tally would inflate exactly
+the number that could someday justify building the risky cross-check. Keep
+them separate.
+
+**38b — Ruling 37's trigger: clarified in place above.** The dated
+clarification appended to Ruling 37 is the ruling; recorded here only so the
+round-12 sequence is complete. Does not fire this round.
+
+**38c — `euagenda.eu` moves to a slow retry cadence.** Three consecutive
+rounds of identical 403s is a pattern, not luck. Adopted from A's own
+recommendation: **carry it `flagged — persistently blocked, not counted` in
+rounds 13 and 14, and retry the direct fetch in round 15**; if still blocked,
+retry every third round thereafter. It stays OUT of the wrong-value counts
+while blocked (it is unverifiable, not wrong), and stays listed by name every
+round per the exclusion-visibility rule. Ruling 25 (no headless browser)
+stands — there is no other route, and that is the accepted state.
+
+**Not ruled here because no ruling is needed: Ruling 36's third strike
+FIRED.** `ruggedthz.com` is confirmed in-pool, same host, same mechanism,
+rounds 9 + 11 + 12. Per Ruling 36's own pre-set threshold, **round 12's B is
+authorised and required to design the fix** — the authorisation is automatic,
+that was the point of setting the threshold in advance. A's addition is
+binding on that design: the fifth pull rendered a different failure mode
+(a lowercase mid-sentence narrative fragment), so **B designs against the
+host's title structure, not against one observed string**, with Ruling 36's
+recorded lead (recover the name from the rejected sibling segment) as the
+starting point and Ruling 31's adversarial-test standard as the bar.
+
 ---
 
 ## §2. ROLES — DO ONLY YOUR OWN JOB
@@ -23843,3 +23895,48 @@ product code was touched at any point in this turn. No test was deleted, no bran
 created, no PR opened.
 
 Commit follows immediately; §1 is advanced to B in the same commit.
+
+---
+
+### Round 12 — MANAGER verification of Agent A (before round 12 B is spawned)
+
+**Verdict: A's measurement stands, all four parts. The two boundary calls it
+flagged instead of deciding are ruled (§1y Ruling 38), its Ruling 37 reading is
+confirmed correct, and Ruling 36's third strike fired automatically — B designs
+the `ruggedthz.com` fix this round. Code untouched, verified by empty diff.**
+
+**What this round's numbers actually say, so nobody misreads the two rises:**
+event names 33.3%→47.1% and employer 11.1%→30% both moved the wrong way ON
+PAPER, and A demonstrated both are **pool churn**: every host correct in round
+11 that reappeared is correct again; every new wrong value sits on a host no
+prior round ever measured. Zero regressions. Round 11's two structural fixes
+both confirmed live to have removed their exact targets. Meanwhile **R4 job
+summaries hit ZERO open defects for the first time in the loop's history** —
+the field that started at 4-of-4 chrome in round 8.
+
+**A's method discipline, worth naming because it is the standard now:** five
+independent pipeline pulls per surface, each in its own process; no hand-fed
+values anywhere; the honest-host cost reported as a measured ZERO (0 of 85
+renders) rather than skipped as "nothing to report"; the third-strike check
+stated affirmatively with presence counts (5 of 5 pulls) rather than left to
+inference; and evidence gaps named as gaps (SolarPACES host absent from the
+pool — the fixture lock still passes, but "not confirmable live this round" is
+recorded instead of silently assumed).
+
+**A also found something no round has had before — item 9, employer values
+UNSTABLE across pulls minutes apart** (`terra.do`, `talents.vaia.com`), tracking
+upstream title changes. Its own honest corollary: every single-pull employer
+census this loop has run, including round 11's, may have scored a varying host
+on whichever value it happened to draw. That is a measurement-methodology
+finding, not just a defect — B traces the mechanism first; whether A's census
+method changes is a manager call AFTER the cause is known.
+
+**Structurally the round's most important item is 2:** `ecs.confex.com`'s slot
+was taken by a SECOND narrative sentence of the same class B11-02 just guarded
+against — inside the newly-guarded stage. Ruling 26's pattern recurring one
+layer deeper. B must trace how the new guard passed it before anything else on
+the event side is patched.
+
+**Manager's turn complete. `WHOSE TURN: B` stands as A left it, with the third
+strike in its first line. Round 12 B is spawned next.**
+
