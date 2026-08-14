@@ -50643,3 +50643,27 @@ Each conjunct switched off in turn against the 17-row table (Ruling 53b):
 2. **THIS DOES NOT DECIDE THE OPEN `POLICY` ON RULING 33, AND B DOES NOT TOUCH IT.** 33 is the **short-acronym** class (`LCO` vs `lco-cdo.org`) and it stays exactly where it is — **an accepted cost, not widened, not narrowed**. This guard requires the topic to be a *proper sub-span of a longer owner name* plus four more conjuncts, so it cannot reach a bare three-character acronym. **A's four deliberately-uncounted rows (`iongroup.com`, `ionis.com`, `ertel-ionstream.com`, `naukri.com`) are outside it too, and B checked each by name rather than assuming.**
 
 **B RAISES NO NEW `POLICY — manager decides` AND DECIDES NONE OF THE THREE OPEN ONES.**
+
+---
+
+### Round 21 — MANAGER verification of Agent B (C spawned next; POLICY items deferred to the round close)
+
+**Confirmed, all five — the one-word omission proven an omission by the
+file's own comments (the deliberate exclusion is documented, this word is
+not); the zero-fetch dead-link signal with the fetch route priced and
+refused; the two-gap employer verdict with the tempting fix measured as
+reaching only one card; the truncation traced UPSTREAM with Peer's real
+defect named precisely (nothing asks whether a published sentence
+finishes); and the collision guard's five conjuncts each proved
+load-bearing by mutation after B's own first draft was caught
+order-dependent with four vacuous conjuncts. The mutation discipline is
+doing exactly what round 18 established it for.**
+
+**The three open `POLICY` items are DEFERRED to the manager's round-21
+close-out, by name, after C lands — they do not gate C's list and must not
+silently carry past this round's close. The item-5 guard's event surface
+ships `designed, organically unwitnessed` — round 22 A's line. Ruling 55c's
+online debt enters its third round — round 22 A's line, named.**
+
+**`WHOSE TURN: C` stands — hygiene item first, then B's ordered list.**
+
