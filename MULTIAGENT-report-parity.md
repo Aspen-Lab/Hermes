@@ -270,12 +270,95 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 09:29 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 09:24 UTC — ROUND 14 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 09:55 UTC — ROUND 14 B IS
+                  COMPLETE.** Both items, one commit each, each pushed
+                  immediately. Claimed the lock cleanly (`dc4dc7b`) after
+                  `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **B changed no code, deleted no
+                  test, and touched no file except this one.** Harness lived
+                  outside `src/` (`web/zz-r14b/`, own vitest config) and was
+                  deleted before each of the two commits.
+
+                  **HEADLINE: BOTH ITEMS HAVE A LANDABLE DESIGN. RULING 43's
+                  MANDATORY DESIGN IS DONE AND THE THREAD-AS-NON-POSTING LEAD
+                  WON ON EXECUTION; THE `]`-REMNANT IS ONE CAUSE, NOT TWO, AND
+                  A's THREE CODE-POINT FACTS WERE REPRODUCED BYTE-FOR-BYTE.**
+
+                  **1. B14-01 — `openmc.discourse.group` (Ruling 43).
+                  LEAD 2 WINS.** Gap B was re-killed with two fresh
+                  counterexamples of B's own rather than inherited: the shipped
+                  title-side check does not fire **even with `for` re-added**
+                  (the preposition is not adjacent — `vacancies looking for`),
+                  and the breadcrumb rule still deletes B12-07's won
+                  `Savannah River National Laboratory`. **The fix is a closed
+                  URL-structural rule in `isListingPage()`, which runs at
+                  `jobweb.ts:409` — BEFORE the employer chain at `:451`.**
+                  **57/58 adversarial** (43 must-keep incl. 20 real postings
+                  from A's censuses, 15 must-drop), **zero false fires**, one
+                  deliberate named miss. **TITLE-INDEPENDENT: all five recorded
+                  title shapes drop from one URL rule, including the `Users`
+                  shape that did not appear this round** — which is how Ruling
+                  43's "both observed shapes, not one string" is satisfied.
+                  **FOUR TESTS AT RISK, all in `jobweb.test.ts`: two fail
+                  loudly and TWO PASS WHILE SILENTLY TESTING NOTHING.**
+
+                  **2. B14-02 — `careers.gevernova.com`'s `]` remnant. CAUSE
+                  ESTABLISHED, NOT GUESSED.** Each `]` sits immediately after a
+                  sentence-ending `.` with **no whitespace between them**, so a
+                  pattern requiring `\s+` before the bracket structurally cannot
+                  match. **Both brackets are at index 0 of their own sentence —
+                  ONE cause.** The space A measured around the second bracket
+                  **does not exist in the source**: `splitSentences`' `.trim()`
+                  puts the bracket at position 0 and `bestCombination`'s
+                  `.join(" ")` manufactures the separator. **A's 205 chars,
+                  indices 0 and 82, and code points `2e 20 5d 20 53` were all
+                  reproduced exactly from one constructed source**, with a
+                  control (one space added) rendering clean. **The path does NOT
+                  bypass `cleanJobDescription` and the bracket is NOT introduced
+                  afterwards.** Fix is a display-stage strip in `summarize.ts`,
+                  **10/10 adversarial, zero tests at risk.**
+
+                  **THREE FINDINGS THE MANAGER SHOULD SEE THAT NOBODY ASKED FOR:**
+                  - **The job CARD renders `job.summary` RAW (`card.ts:95` →
+                    `job-card.tsx:106`) while the DETAIL page re-cleans it
+                    (`page.tsx:935`)** — so the same job is broken on one surface
+                    and clean on the other. That asymmetry is why a shipped rule
+                    "written for exactly this shape" looked like it should have
+                    caught it.
+                  - **B9-03's own shipped test uses the SPACE-preceded variant**
+                    (`job-cleanup.test.ts:73`), which is why four rounds of green
+                    tests never surfaced the spaceless sibling. Same pattern
+                    B13-02 found in hole 1.
+                  - **The `]`-defect and Ruling 37's run-on come from DIFFERENT
+                    SOURCE FIELDS** — the majority summary is built from the
+                    provider snippet, the minority from `item.pageText`. A was
+                    right that they must not be merged, and this is the code-level
+                    reason.
+
+                  **ONE DISCLOSED DEPARTURE:** B14-01 is **neither** a host list
+                  **nor** phrase matching, so it is not the shape Ruling 39c
+                  named as preferred. B states the departure openly with its
+                  reasoning (39c's own stated REASON — avoiding an open class —
+                  endorses a URL-route rule; a host list fixes one site, which is
+                  Ruling 32's headline complaint, and would not have closed this
+                  item since Discourse is a platform, not a site).
+                  **No `POLICY — manager decides` item on either entry.**
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch. No branch, worktree or PR. No
+                  test deleted or edited. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Harness deleted; tree clean.** Full detail in §4's
+                  two "Round 14 — Agent B" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 14 A finished @
+                  2026-08-14 09:24 UTC — ROUND 14 A WAS
                   COMPLETE.** All four parts, one commit each, each pushed
                   immediately. Claimed the lock cleanly (`5a89d4c`) after
                   `git pull --ff-only` and confirming
@@ -419,12 +502,109 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 09:24 UTC — ROUND 14 A IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            14 — **A is COMPLETE. B is next.** Round 13's four items are
-                  all confirmed or honestly accounted for on live data, with zero
-                  collateral anywhere. **Two open differences remain** (see
-                  `WHOSE TURN`), one of them already assigned to B by Ruling 43
-                  and one of them new this round.
-WHOSE TURN:       **B — Investigator, round 14.** A's list is TWO numbered
+ROUND:            14 — **A and B are both COMPLETE. C is next.** A's two open
+                  differences both have a designed, adversarially-tested fix in
+                  §4: B14-01 (Ruling 43's mandatory openmc design) and B14-02
+                  (the `]`-remnant). **Neither depends on the other.** The gate
+                  is NOT MET and C does not set it.
+WHOSE TURN:       **C — Implementer, round 14.** B's guide is TWO entries,
+                  B14-01 and B14-02, in §4 under "Round 14 — Agent B". **Work
+                  them in the order below. C changes code; C does not
+                  re-measure and does not re-derive causes** (§2). **Run the
+                  gate after EVERY item and commit per item**, pushing
+                  immediately:
+                  `cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+                  `benchmark.test.ts` is the known live-search flake, excluded
+                  by standing ruling.
+
+                  **1. B14-01 — the openmc forum thread leaves the pool.
+                  LAND THIS FIRST.** `web/src/lib/jobs/sources/jobweb.ts`: one
+                  new `FORUM_THREAD_URL_RE` constant beside `FEED_PATH_RE`, and
+                  one line added to `isListingPage()`. **This closes the loop's
+                  ONLY remaining wrong value on any surface, and Ruling 43
+                  requires it.** **57/58 adversarial; the full matrix, both
+                  rejected narrowings and the naive version's 8 false fires are
+                  in B's entry.**
+                  **READ B's THREE WARNINGS BEFORE WRITING A LINE:**
+                  - **Every alternative must keep its confirming structural
+                    token** — a numeric id or a literal forum-script filename.
+                    The naive token-only form (`/t/`, `/topic/`, `/forum/` …)
+                    scores **46/58 and destroys eight real posting URLs**.
+                  - **Do NOT add NodeBB/Invision's `/topic/<id>`**, even though
+                    it scores one point higher. B cut it deliberately: its
+                    false-fire shape (`/topic/12-month-battery-fellowship`) is
+                    structurally identical to its true-fire shape and no digit
+                    floor separates them. **Assert the miss** so a later
+                    widening is a deliberate act.
+                  - **Do NOT anchor the Discourse alternative to `^\/t\/`.** B
+                    measured it: 55/58, because it stops catching subfolder
+                    Discourse installs **and the suite's own forum URL**.
+                  **FOUR TESTS AT RISK, ALL IN `jobweb.test.ts`, AND TWO OF THEM
+                  GO GREEN WHILE TESTING NOTHING — C MUST HANDLE ALL FOUR:**
+                  `:740` (the `Ruling 39c owns that drop` must-keep) and `:178`
+                  (`expect(item).not.toBeNull()`) **fail loudly**; `:145` and
+                  `:129` **keep passing while B12-06's pagination guard stops
+                  being exercised at all**, because the item becomes `null`.
+                  Per §3, rewrite the assertions with a comment naming Ruling 43
+                  and B14-01 — **never delete a test.** B's entry names the exact
+                  remedy for each. **`scoring.test.ts` and `job-cleanup.test.ts`
+                  also call `webResultToRawJobItem`; B read every `url:` in both
+                  and neither uses a forum-shaped URL, so neither is affected.**
+
+                  **2. B14-02 — the `]` remnant leaves the job card.**
+                  `web/src/lib/jobs/summarize.ts`: one new
+                  `LEADING_BRACKET_REMNANT_RE` + helper, and one call added
+                  inside `scoreSentences`'s return beside `stripLeadingLabel`.
+                  **No functional dependency on item 1** (different file,
+                  different stage); ordered second only because item 1 carries
+                  the wrong value. **10/10 adversarial. ZERO tests at risk** —
+                  B checked every caller and every bracket assertion in
+                  `summarize.test.ts` and `job-cleanup.test.ts`.
+                  **TWO WARNINGS:**
+                  - **The ORDER IS LOAD-BEARING: bracket strip FIRST, then
+                    `stripLeadingLabel`.** `LEADING_LABEL_RE` is `^[A-Z]…`, so a
+                    leading `]` blocks it. Bracket-first also makes B10-07 fix 2
+                    reachable on `"] What you'll do: …"` — **that is disclosed
+                    and intended**, not a side effect to be undone.
+                  - **Do NOT "complete" B9-03 by widening
+                    `ISOLATED_BRACKET_REMNANT_RE` in `job-cleanup.ts` instead.**
+                    B measured that route: it orphans the `[` of a legitimate
+                    bracketed clause, **manufacturing the very class the rule
+                    family exists to remove**, and it would also change
+                    `hasUnbalancedBracket`'s count and silently move
+                    `sectionScore`. Add the must-keep assertion B names so a
+                    later round does not re-propose it.
+
+                  **WHAT C MUST NOT DO:** do not re-measure (that is round 15
+                  A's job), do not set the gate (§2, Ruling 30), do not touch
+                  `euagenda.eu` (38c — retest is round 15 A's), and do not treat
+                  any of `careerservices.upenn.edu` (34a),
+                  `batteryinnovationsummit.com`'s `The Battery Saloon` (39b),
+                  `careers.gevernova.com`'s colonless run-on (37 — **the run-on
+                  only; the bracket IS item 2**), the `lco-cdo.org` `LCO`
+                  acronym (33), same-page contamination (29) or
+                  `ecs.confex.com`'s bare host (39a/40) as open.
+
+                  **STILL OPEN FOR THE MANAGER, unchanged and NOT C's:**
+                  B11-04's flag and B8-03's `usajobs.ts` fallback under MANAGER
+                  CARRY-FORWARD below; **round 13's unresolved
+                  `POLICY — manager decides` on five-pull majority scoring**
+                  (deferred by the manager to the gate candidate round);
+                  Ruling 42c's document-URL retarget (**stays unbuilt** — A's
+                  column came back one-sided); B12-03's three hosts
+                  (`targeted-confirmed, organically unmeasured`); and
+                  **B14-01's disclosed departure from Ruling 39c's stated
+                  host-list preference** — B recorded the evidence rather than
+                  substituting its own preference, and the manager may overrule.
+
+                  **GATE (0%): NOT MET.** Neither A nor B closes it and C does
+                  not set it (§2); the manager re-measures independently before
+                  anything closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 14 B
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **B — Investigator, round 14.** A's list is TWO numbered
                   differences, in §4's "Round 14 — Agent A (part 4…)" entry,
                   with the full evidence in parts 1–3. **B finds causes and
                   writes a fix guide; B does not change code** (§2). Ruling 31's
