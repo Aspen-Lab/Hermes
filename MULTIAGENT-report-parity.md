@@ -50086,3 +50086,90 @@ Ruling 57a asked B to price a fetch design rather than wave at it. **A per-row H
 - **Not a host rule.** `jobs.manchester.ac.uk` appears nowhere in it; it is asserted on the constructed `?jk=` and `?requisition=` shapes on unrelated hosts, matching Ruling 32's headline.
 
 **B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
+
+---
+
+### Round 21 — Agent B (item 3 of 5: **A21-03, the three wrong employers. TWO GAPS, NOT THREE — A's two mechanisms are two gaps, and the SECOND ONE CLOSES BOTH `postdocjobs.com` CARDS WITH A SINGLE EDIT, exactly as A asked.**)
+
+**STATUS: DONE.** Third of five. **B changed no code, deleted no test, edited no test.** Same method and same three-way control fidelity (shipped suite **387/387**; **115** live offered rows and **28** target rows, **0 mismatches each**).
+
+---
+
+## THE REPRODUCTION — ALL THREE WRONG VALUES REPRODUCE BYTE-FOR-BYTE
+
+| host | rendered `company` on the genuinely imported shipped module |
+|---|---|
+| `befjobs.breakthroughenergy.org` | **`Breakthrough Energy Fellows Job Board`** |
+| `postdocjobs.com/posting/7317952` | **`Molten Salt Chemical and Electrochemical ...`** |
+| `postdocjobs.com/posting/7317954` | **`MSR Fuel Cycle`** |
+
+**Identical to A's three recorded values, character for character.**
+
+---
+
+## GAP 1 — **THE EMPLOYER CHAIN HAS NO MEMBER THAT RECOGNISES A BOARD NAMING ITSELF**
+
+The title splits to `["Summer Engineering Internship @ Mantel", "Breakthrough Energy Fellows Job Board"]`. The second segment clears **all nine** existing vetoes: it is not a `KNOWN_JOB_BOARD_DOMAINS` string (it is a NAME, not a domain), not a season label, not a bare location, not a host brand, not a topic label, not a boilerplate sentence, not nav chrome, not a programme-area list, not a bare careers index. **Ruling 32's shape in its plainest form: the slot is filled by whatever survives, and nothing was ever asked "is this the board rather than the employer".**
+
+`looksLikeHostBoilerplatePhrase` is the nearest family member and its own doc comment explains why it cannot reach this — it matches a **sentence** (`Job posted on …`, `See more jobs at …`), and this is a **name**.
+
+**Candidate `i3board`** adds one whole-segment-anchored veto beside `looksLikeNavChrome`, requiring **a job/career word IMMEDIATELY followed by a board noun, at the end of the segment**:
+
+```
+/\b(?:jobs?|careers?|vacanc(?:y|ies)|hiring|talent|recruit(?:ment|ing))\s+(?:board|portal|site|hub|exchange|network|directory)$/i
+```
+
+**The adjacency requirement is the confirming structural token** and the two hardest must-keeps are why: **`Board of Regents`** (this file's own doc comment already names it as the reason a trailing-word strip is forbidden) and **`National Labor Relations Board`** — both real employers ending in `Board`, both **asserted and both surviving**, because neither has a job word immediately in front of it.
+
+**WHAT B DID *NOT* RECOMMEND, AND WHY.** A observed that the real employer `Mantel` is available twice over — in the role title after `@` and in the URL path. **Teaching `titleEmployer` the `@` separator is a SEPARATE, LARGER change and B refuses to bundle it**, for Ruling 48a's exact reason read forwards: recovering a value is not a win if it comes back wrong, and `@` is a far looser separator than the shipped `at ` capture (handles, address fragments, `9am @ HQ`). **The veto alone produces honest silence, which is Ruling 32's own required answer and B6-03's decided behaviour.** Recorded as a measured, deliberately-declined lead so a later round takes it up as its own item rather than re-deriving it.
+
+---
+
+## GAP 2 — **AN EN-DASH ROLE TAIL IS TREATED AS AN EMPLOYER SEGMENT. ONE EDIT, BOTH CARDS.**
+
+```
+const parts = title.split(/\s+[-–—|·]\s+/);
+```
+
+**Hyphen, en dash, em dash, pipe and middot are all collapsed into one separator class, so the split cannot tell a role-internal dash from site chrome.** Both `postdocjobs.com` titles are `<role> – <specialisation> - <site boilerplate>` — **two different separator kinds in one title** — and `parts.slice(1)` hands the specialisation to the employer slot first.
+
+**Candidate `i3endash`** keeps the separators when splitting and drops en/em-dash-introduced segments from the employer pool **only when the title ALSO uses a chrome separator**:
+
+- `Postdoctoral Appointee – Molten Salt … - Job posted on PostdocJobs.com` → candidates become `["Job posted on PostdocJobs.com"]` → vetoed by the existing boilerplate check → **silence.**
+- `Postdoctoral Researcher – MSR Fuel Cycle - Job posted on PostdocJobs.com` → **silence.**
+
+**THE "ALSO USES A CHROME SEPARATOR" CONJUNCT IS LOAD-BEARING AND THE HARDEST MUST-KEEP PROVES IT:** `M.S. Internship Program – Oregon Center for Electrochemistry` — **Ruling 49a's lock** — uses an en dash and NOTHING else, so nothing is excluded and it **still renders `Oregon Center for Electrochemistry`**. Asserted. So is the constructed twin `Battery Scientist – Acme Energy Ltd` → `Acme Energy Ltd`, and the shipped em-dash title `Postdoctoral Researcher — Battery Materials`.
+
+**THIS IS THE ONE-MECHANISM FIX A ASKED FOR.** A reported the two cards separately because a reader sees two, and named the shared mechanism so B would fix it once. **B fixes it once.**
+
+---
+
+## THE MEASUREMENT — AND `MSR Fuel Cycle` IS WHY THE OBVIOUS FIX IS THE WRONG ONE
+
+| candidate | shipped suite | target table (28) | live offered (115) | fixes |
+|---|---|---|---|---|
+| `control` | 387/387 | 22/28 | — | — |
+| `i3ellipsis` | 387/387 | 23/28 | 0 changes | 7317952 only |
+| `i3board` | 387/387 | 23/28 | 0 changes | the board name only |
+| `i3endash` | 387/387 | **24/28** | 0 changes | **BOTH `postdocjobs` cards** |
+| **`i3boardendash`** | **387/387** | **25/28** | **0 changes** | **all three values** |
+| `i3all` (+`i3ellipsis`) | 387/387 | **25/28 — no gain** | 0 changes | all three |
+
+**THE TEMPTING FIX IS MEASURED AND REFUSED.** `looksLikeTopicLabel` was built for the string `Molten Salt Chemical and Electrochemical Engineering` — this file's own doc comment names it — and it fails here for one reason found by execution: **the value is TRUNCATED, and the literal `...` is a token that is not in `FIELD_LABEL_CONTINUATION_WORD_RE`'s closed vocabulary, so the `words.every(…)` conjunct fails.** Confirmed both ways: the untruncated title renders **silence** on the shipped module today, and `i3ellipsis` (one filter on that token) restores the catch. **But it reaches only ONE of the two cards** — `MSR Fuel Cycle` has no topic prefix at all — so **it is not the fix for A21-03.**
+
+**RECORDED AS A LATENT, ZERO-COST CLOSURE, HONESTLY CLASSED.** `i3ellipsis` costs nothing on all three corpora and closes a real hole (a truncated field label reaching the slot through a hyphen-only title would still land). **Evidence class: LATENT, not live — no census has recorded that shape, and with `i3endash` shipped these two rows never reach the check.** Same class B13-01 Gap A and B16-02's `View` employer were recorded in. **C may land it in the same commit; it closes nothing on its own and must not be counted as closing A21-03.**
+
+---
+
+## WHAT RENDERS ON REJECTION
+
+**`.find()` returns `undefined`, `company` is `undefined`, and all four render sites omit the employer line entirely** — `job-card.tsx:87` and `feed-tile.tsx:535` guard on `job.companyOrLab`; `briefing-hero.tsx:133` and `briefing-quick-hit.tsx:49` build an array and `.filter(Boolean).join(" · ")`, so the separator disappears with the value and no dangling middle dot is left. **This item inherits that behaviour unchanged; it adds no new render path.** Ten of the eighteen rows in A's own census already render exactly that way.
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Measured cost: ZERO.** 387 shipped assertions, 115 live offered rows, and the 25 non-target rows of the table all unchanged.
+- **Both edits are VETOES, not blankets:** a real employer later in the chain still wins. `Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs - EV.Careers` still renders **`CATL`**, asserted.
+- **Failure direction for both: an unlisted board noun, or a role tail introduced by a hyphen rather than a dash, survives — the status quo, never a new wrong value.**
+- **Neither is a host rule.** `postdocjobs.com` and `befjobs.breakthroughenergy.org` appear in neither; both are asserted on unrelated constructed hosts.
+
+**B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
