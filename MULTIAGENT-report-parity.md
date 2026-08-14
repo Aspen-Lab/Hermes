@@ -49922,3 +49922,84 @@ differences, employer at its worst count since round 11.**
 **`WHOSE TURN: B` stands — five items (four differences + the 57b design),
 plus round 21 C inherits the queued `report-stream` hygiene item (56a).**
 
+
+---
+
+### Round 21 — Agent B (item 1 of 5: **A21-01, the `ev.careers` search page. ONE GAP, NOT SEVERAL — `jobs` is missing from ONE of the file's five section-noun lists, and the omission is an INCONSISTENCY the file's own comments prove was never decided.**)
+
+**STATUS: DONE.** First of round 21 B's five items (Ruling 57). **B changed no code, deleted no test, edited no test, and touched no file except this one.**
+
+**METHOD — EVERY CANDIDATE IS A REAL COPY OF THE SHIPPED FILE WITH ONE TEXTUAL EDIT** (rounds 19/20 B's method), and the byte-identical control copy is proved faithful **three separate ways** before any candidate verdict is used:
+1. the **shipped `jobweb.test.ts` runs green against the control copy — 387/387**, byte-for-byte the number round 20 C recorded;
+2. every control verdict is **asserted equal to the genuinely imported shipped module** on all **115 live offered rows** — **0 mismatches**;
+3. and on all **28 rows of the target table** — **0 mismatches**.
+
+**LIVE DATA: two independent job-pool pulls in two separate processes**, no-op `PoolCache`, `PEER_PROFILE_SNAPSHOT_PATH` **NOT** used, page-fetch enrichment ran and LLM enrichment did not (42b's wording). **12 pool rows both times, identical membership and identical values — zero variance across the two.** A sixth-style offered-row capture wrapped `fetch` and recorded **115 unique offered rows**; **it reads only the provider's RESPONSE body, never the request init that carries the key.**
+
+---
+
+## THE REPRODUCTION — A's ROW REPRODUCES EXACTLY, INCLUDING BOTH GUARD VERDICTS
+
+Replayed through the **genuinely imported shipped** `isListingPage` and `webResultToRawJobItem`, using **A's recorded strings** (round 19 A's rule, restated by round 21 A's own third disclosure):
+
+| | value |
+|---|---|
+| `isListingPage(wholeTitle, "ev.careers", "/jobs/internship")` | **`false`** |
+| `isListingPage(roleSegment, …)` | **`false`** |
+| admitted by `webResultToRawJobItem` | **yes** |
+| rendered `roleTitle` | **`Internship EV Jobs`** |
+| rendered `company` | `undefined` |
+
+**Both shipped calls return FALSE exactly as A measured.** Both Ruling 46b controls were replayed in the same run and **both still DROP** (`EnerSys Internship Program: Powering Future Innovators`, `CATL Internships`), so 46b's own targets are confirmed not to be what is failing.
+
+---
+
+## THE ANSWER: **ONE GAP.** `jobs` IS ABSENT FROM `OWNER_INDEX_TITLE_RE` — AND THE FILE'S OWN COMMENTS PROVE THE ABSENCE WAS NEVER A DECISION
+
+The title `Internship EV Jobs` is a **two-token owner slot plus a plural careers-section noun** — precisely `isOwnerSectionIndexTitle`'s grammar (B17-01a). It survives for one reason only:
+
+```
+const OWNER_INDEX_TITLE_RE =
+  /^\s*([\w&.'’-]+)(?:\s+([\w&.'’-]+))?\s+(?:internships|careers|vacancies|opportunities|openings)\s*$/i;
+```
+
+**`jobs` is not in that list.** Nor is it in `BRAND_PROGRAMME_TITLE_RE`'s. It **is** in every other section-noun list in the same file:
+
+- `CAREERS_INDEX_TITLE_RE` — `(?:careers?|jobs?|vacancies|open(?:ings?)?|…)`
+- `LISTING_SECTION_TITLE_RE` — `(?:jobs|vacancies|openings|careers)\s+(?:at|in|near|with)`
+- `TRAILING_CAREERS_CHROME_RE` — `(?:careers?|jobs?|employment|job\s+openings?)$`
+
+**AND THE ONE WORD THAT WAS DELIBERATELY EXCLUDED IS NAMED AS SUCH.** `OWNER_INDEX_TITLE_RE`'s own doc comment says in terms: *"`positions` is deliberately absent from the section-noun list … `Research positions at CERN` is a shipped must-keep."* **It says nothing whatever about `jobs`.** A word that was excluded on purpose is recorded; `jobs` is not. **This is an inconsistency, not a decision — which is exactly what Ruling 32 says this class looks like, and it is the same home B13-02, B14-01, B15-01, round 16's item 1 and B19-01 all landed in.**
+
+**ONE GAP, NOT SEVERAL, AND THAT IS MEASURED RATHER THAN ASSERTED.** The single-token edit drops the row on its own; nothing else in the chain has to move.
+
+---
+
+## THE MEASUREMENT — THREE CANDIDATES, AND THE NARROWER ONE IS DEAD ON A NUMBER
+
+| candidate | edit | shipped suite | target table (28) | live offered (115) | A21-01 |
+|---|---|---|---|---|---|
+| `control` | none | **387/387** | 22/28 baseline | 0 changes | KEPT (the defect) |
+| **`i1jobs`** | **`jobs` added to `OWNER_INDEX_TITLE_RE` only** | **387/387** | **23/28** | **0 changes** | **DROPPED** |
+| `i1jobsboth` | same, **plus** `BRAND_PROGRAMME_TITLE_RE` | 387/387 | 23/28 | 0 changes | DROPPED |
+| `i1brandjobs` | a NEW host-brand rule `<W1> <W2> jobs` requiring `looksLikeHostBrand` | 387/387 | **22/28 — NO CATCH** | 0 changes | **KEPT** |
+
+**THE NARROWER, MORE "PRINCIPLED" DESIGN IS REFUSED ON A NUMBER, NOT ON TASTE.** `i1brandjobs` reproduces check (b)'s title/host-relation discipline and looks like the more conservative choice — and it **does not fire at all**, because `looksLikeHostBrand("EV", "ev.careers")` is false. **Recorded so a later round does not re-propose it.**
+
+**`i1jobsboth` IS REFUSED FOR BEING BIGGER AT NO GAIN.** It scores identically to `i1jobs` on all three corpora, so the second edit is a byte no test can turn red — Ruling 53b's own complaint. **C ships `i1jobs`: one word, one list.**
+
+---
+
+## WHAT RENDERS ON REJECTION (Ruling 32's mandatory question)
+
+**The item leaves the pool entirely** — `isListingPage` runs *before* the employer chain and before any field is derived, so `webResultToRawJobItem` returns `null` and no card, no employer and no summary is ever built from it. **No placeholder, nothing reinserted.** That is the identical behaviour B13-02/B15-01/B19-01 already ship on this path, and it is why this class is fixed here rather than downstream.
+
+## THE COST, AND WHICH DIRECTION IT FAILS IN
+
+- **Measured cost: ZERO on every corpus available.** 387 shipped assertions unchanged; 115 live offered rows unchanged; 27 of 28 target rows unchanged.
+- **Adversarial must-keeps, all asserted and all surviving:** `Research positions at CERN` (the file's own named exclusion — **`positions` stays out of the list**), `Jobs Data Analyst at the Bureau of Labor Statistics` (a real role that BEGINS with `Jobs`), `Green Jobs Analyst`, `Battery Technician - Sunshine Jobs` (an employer whose NAME ends in `Jobs`), `M.S. Internship Program – Oregon Center for Electrochemistry` (Ruling 49a's lock), `Internship battery R&D` @ `hyetlithium.com`, and `Senior Battery Engineer | Search Jobs | Acme Careers`.
+- **Failure direction: a section-label grammar outside these two token budgets survives — the status quo, never a new wrong value.** The three-token owner miss B17-01 recorded (`Idaho National Laboratory Internships`) is **untouched and still missed**; this item does not re-open it.
+
+**ONE THING B REPORTS AGAINST ITS OWN CONVENIENCE.** B's first target table scored `Research positions at CERN` as a REGRESSION under every candidate **including the control** — which would have read as the shipped code already destroying its own named must-keep. It was **B's invented URL**, not the guard: `/postings/12345` is not in `JOB_PATH_RE` (`position|positions` are; `posting|postings` are not), so the row died at the path gate. Corrected to a `/jobs/` URL it is KEPT by every candidate. **The superseded table is used nowhere.**
+
+**B RAISED NO NEW `POLICY` ON THIS ITEM AND DECIDED NONE OF THE OPEN ONES.**
