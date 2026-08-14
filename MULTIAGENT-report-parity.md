@@ -270,12 +270,121 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 10:45 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 10:39 UTC — ROUND 15 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 11:03 UTC — ROUND 15 B IS
+                  COMPLETE.** One item (Ruling 45c), one commit, pushed
+                  immediately. Claimed the lock cleanly (`70c7086`) after
+                  `git pull --ff-only` and confirming `git branch
+                  --show-current` reads `feature/summary-report-revamp`;
+                  branch name re-read in the push output (§3). **B changed no
+                  code, deleted no test, and touched no file except this one.**
+                  Harness lived outside `src/` (`web/zz-r15b/`, own vitest
+                  config) and was deleted before the commit; tree clean.
+
+                  **HEADLINE: THE ITEM HAS A LANDABLE DESIGN AT 89/92, THE
+                  COUNT DOES NOT BECOME OPTIONAL, AND `LISTING_TITLE_RE` IS NOT
+                  TOUCHED AT ALL. THE SIGNAL MOVES TO A URL/TITLE AGREEMENT
+                  RULE — a generated search page RESTATES ITS OWN QUERY, and a
+                  real posting's title is a role, not a query.**
+
+                  **ONE NEW FACT THAT MAKES THE ITEM BIGGER THAN A's LIST SAID,
+                  FOUND BY EXECUTION:** `Molten Salt jobs in United States` @
+                  `/jobs/molten-salt-jobs` — **B13-02's OWN NAMED TARGET, on its
+                  own URL — IS STILL KEPT TODAY** whenever LinkedIn omits the
+                  count. Round 14 A's confirmation of that target was real but
+                  **weather-dependent**; the class has only ever been guarded by
+                  an accident of rendering. Recorded so no later round reads
+                  round 14's B13-02 confirmation as stronger than it was.
+
+                  **THE NAIVE WIDENING IS DEAD ON A NUMBER, NOT ON A's
+                  WARNING.** Making the count optional scores **71/92 with 19
+                  FALSE FIRES**, and **four of the nineteen are shapes the
+                  shipped suite ALREADY ASSERTS as must-keeps** (`Jobs Data
+                  Analyst at the Bureau of Labor Statistics`, `Jobs for Veterans
+                  Program Manager`, `Job for a Battery Engineer`, `Research
+                  positions at CERN`). It fails existing tests immediately. Two
+                  other title-side routes were measured and also rejected
+                  (widening the section rule's leading budget: 83/92, 7 false
+                  fires; a bare title rule with no URL confirmation: 84/92, 6).
+
+                  **THE DESIGN: one new check, `isTopicLandingPage()`, called
+                  from `isListingPage()` beside `FEED_PATH_RE` and
+                  `FORUM_THREAD_URL_RE` — the same home B13-02 and B14-01 both
+                  landed in (Ruling 32).** Four conjuncts, each forced by a
+                  counterexample that killed the draft without it: the URL's
+                  final segment ends in a plural job noun; the title carries
+                  `<content word> <noun> in|near` behind a FUNCTION-WORD
+                  negative lookahead (function words are a CLOSED class — the
+                  opposite of Ruling 37's trap); **the leaf de-slugified is the
+                  OPENING PHRASE of the title** (the strongest conjunct, and
+                  what saves `Battery Engineer at Rocket Jobs in Berlin`); and
+                  the leaf carries no function word anywhere (what saves
+                  `Director of Green Jobs in Boston`). **`careers`, `positions`
+                  and `opportunities` are deliberately absent from every list —
+                  adding them scores 79/92 with 10 false fires, one of them an
+                  existing must-keep test.** **No host list; the identical shape
+                  drops on a different host in the matrix.**
+
+                  **92-CASE MATRIX: 29 must-drop / 63 must-keep, thirteen
+                  designs scored.** Recommended design **89/92**, with **ONE
+                  named false fire and TWO named misses, all three constructed
+                  and all three disclosed rather than buried.** The false fire
+                  (`Manager Green Jobs in Ontario` @ `/jobs/manager-green-jobs`)
+                  is **unseparable — a function-word-free noun phrase ending in
+                  a bare plural job noun IS a search query grammatically**, the
+                  same argument B14-01 used to cut NodeBB. **Measured frequency:
+                  ZERO such titles in rounds 8–15's censuses (150+ postings).**
+
+                  **B REFUSED THE ZERO-FALSE-FIRE VARIANT AND SAYS WHY.** A
+                  letter-case test removes the false fire (88/92, 0 false fires)
+                  but **misses the Title-Case form — and B13-02's own recorded
+                  live target `Intern Jobs at Battery Ventures Companies` proves
+                  Title-Case listing titles occur in this loop's real data.**
+                  Shipping a fix a re-casing defeats is exactly the failure that
+                  created this item. **This is the one place a manager could
+                  reasonably overrule B, and it is flagged as such rather than
+                  hidden.**
+
+                  **WHAT RENDERS ON REJECTION: NOTHING — the item leaves the
+                  pool**, as A's brief named in advance. Traced, not assumed:
+                  `isListingPage` true → `webResultToRawJobItem` returns `null`
+                  (`jobweb.ts:489`/`:497`) → both search functions filter nulls
+                  (`:623`/`:656`). No placeholder, no substitution, no backfill;
+                  `MAX_OPPORTUNITY_POOL_ITEMS` is **200** (`facets.ts:10`) so the
+                  cap is not binding. **~1 of 16 items on round 15's sample.**
+
+                  **TESTS AT RISK: ZERO, PROVEN RATHER THAN SAMPLED.** Every
+                  string literal in `jobweb.test.ts`, `scoring.test.ts` and
+                  `job-cleanup.test.ts` was extracted, classified and
+                  **CROSS-PRODUCTED — 32,840 combinations — and 0 change
+                  verdict.** The cross-product is deliberate over-approximation
+                  so no `it.each` tuple shape can hide. **No test fails and no
+                  test goes silently vacuous** (the failure mode B14-01 found),
+                  because no call newly returns `null`. `job-cleanup.test.ts`'s
+                  fixture URL was checked by hand as well, since it is not a
+                  literal in the file.
+
+                  **ONE `POLICY — manager decides` ITEM, AND IT IS NOT THIS
+                  ONE.** Two plausible real-posting titles are dropped by the
+                  SHIPPED guard today via B13-02 part 3 — `PhD openings in
+                  Electrochemistry at TU Delft` and `Green Jobs in Ontario
+                  Programme Lead`. **Not caused by this design, no
+                  recommendation made**, recorded so it is not rediscovered as
+                  fresh. Whether it deserves an item is the manager's call.
+
+                  **No credential read, printed, logged or written. No live
+                  pipeline pull, no page fetch, no `PEER_PROFILE_SNAPSHOT_PATH`.
+                  No third-party page text read into context. No branch,
+                  worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Tree clean.** Full detail in §4's "Round 15 — Agent
+                  B (B15-01…)" entry.
+                  ---
+                  Previous entry, kept for continuity: **round 15 A finished @
+                  2026-08-14 10:39 UTC — ROUND 15 A WAS
                   COMPLETE.** All four parts, one commit each, each pushed
                   immediately (`eae697a`, `23e022b`, `8aea773`, this one).
                   Claimed the lock cleanly (`6536e7f`) after
@@ -738,7 +847,87 @@ ROUND:            **15 — A IS COMPLETE. B's TURN.** **The gate-candidate
                   loop's history. The one open item is a wrong ITEM, not a wrong
                   value.** **Round 16 is the realistic gate-candidate round** if
                   it lands and holds.
-WHOSE TURN:       **B — Investigator, round 15.** A's list is **ONE** numbered
+WHOSE TURN:       **C — Implementer, round 15. ONE ITEM.** B's guide is §4's
+                  "Round 15 — Agent B (B15-01, Ruling 45c…)" entry. **Work it in
+                  order and run the gate after it**
+                  (`cd web && npx vitest run && npx tsc --noEmit && npx eslint`).
+                  `benchmark.test.ts` is the standing live-search flake;
+                  `quiz.tsx:46` is the one standing lint error. **Never delete a
+                  test to make a change pass** (§3) — rewrite the assertion and
+                  comment which item changed it.
+
+                  **B15-01 — the countless listing page leaves the pool.**
+                  B's recommended design is the **V15** row of its own matrix,
+                  **89/92**. The code B wrote is in the guide verbatim: a new
+                  `isTopicLandingPage()` helper plus **one line** in
+                  `isListingPage()`, beside `FEED_PATH_RE` and
+                  `FORUM_THREAD_URL_RE`.
+
+                  **THE FIVE THINGS C MUST NOT DO, each measured by B:**
+                  - **Do NOT touch `LISTING_TITLE_RE`.** B deliberately left it
+                    byte-identical so B13-02's count-form regression lock stands
+                    by construction. **Making the count optional scores 71/92
+                    and FAILS FOUR EXISTING MUST-KEEP TESTS.**
+                  - **Do NOT simplify any of the four conjuncts out.** B scored
+                    each partial design: url-leaf alone 79/92, +title rule
+                    84/92, +leaf-is-title-prefix 86/92, +no-function-word-in-leaf
+                    88/92, +slug-tail 89/92. Every conjunct is carrying weight.
+                  - **Do NOT add `careers`, `positions` or `opportunities`** to
+                    any of the three lists — 79/92 with 10 false fires, one of
+                    them the shipped suite's own `Research positions at CERN`.
+                  - **Do NOT add a letter-case test** to remove the one false
+                    fire — it misses the Title-Case form, which B13-02's own
+                    recorded live target proves occurs.
+                  - **Do NOT build a host list** for `linkedin.com` (A's brief,
+                    Ruling 32).
+
+                  **ASSERT THE THREE NAMED LIMITS, do not quietly fix them.**
+                  Two misses (`LinkedIn | …` brand-first, and the no-location
+                  title) assert `.toBe(false)`; the one false fire (`Manager
+                  Green Jobs in Ontario` @ `/jobs/manager-green-jobs`) asserts
+                  `.toBe(true)` **with a comment saying plainly that it is a real
+                  posting shape this rule destroys.** B14-01's named-miss pattern,
+                  extended to a named cost.
+
+                  **TESTS AT RISK: ZERO, and B proved it rather than sampling** —
+                  32,840 title×path combinations across `jobweb.test.ts`,
+                  `scoring.test.ts` and `job-cleanup.test.ts`, none changing
+                  verdict. **If ANY existing test fails, B's measurement was
+                  wrong — record that in §4 rather than patching around it**
+                  (round 14 C's correction to B's table is the model).
+
+                  **RUN `scoring.test.ts` and `job-cleanup.test.ts` BY NAME** —
+                  both call the touched entry point — and **`enrich.test.ts`
+                  SOLO** to confirm the SolarPACES lock, exactly as round 14 C
+                  did. **Confirm the cold baseline before your first edit; do
+                  not inherit round 14 C's 1307/1306 figure.**
+
+                  **WHAT C MUST NOT TREAT AS OPEN:** everything in A's exclusion
+                  list, unchanged — `careerservices.upenn.edu` (34a), `The
+                  Battery Saloon` (39b), `careers.gevernova.com`'s colonless
+                  run-on (37), Ruling 44's label-miss, the `lco-cdo.org` `LCO`
+                  acronym (33), same-page contamination (29), `ecs.confex.com`'s
+                  bare host (39a/40), the document-URL retarget (42c),
+                  `euagenda.eu` (now PERMANENTLY excluded, Ruling 45a), and
+                  Ruling 41c's three hosts (no longer a standing duty, Ruling
+                  45b). **B14-02's owed live sighting is not C's either.**
+
+                  **STILL OPEN FOR THE MANAGER, NOT C's:** B11-04's flag and
+                  B8-03's `usajobs.ts` fallback under MANAGER CARRY-FORWARD
+                  below; round 13's unresolved `POLICY — manager decides` on
+                  five-pull majority scoring; the `@`-separator employer at
+                  `befjobs.breakthroughenergy.org`; and **NEW from B — whether
+                  the SHIPPED section rule dropping `PhD openings in
+                  Electrochemistry at TU Delft` and `Green Jobs in Ontario
+                  Programme Lead` deserves an item.**
+
+                  **GATE (0%): NOT MET.** C does not set it (§2); A remeasures,
+                  then the manager re-measures independently (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 15 B
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **B — Investigator, round 15.** A's list is **ONE** numbered
                   difference, in §4's "Round 15 — Agent A (part 4…)" entry, with
                   the full evidence in parts 1–3. **B finds causes and writes a
                   fix guide; B does not change code** (§2). Ruling 31's
@@ -33354,4 +33543,324 @@ Verified/noted:
   open-class trap forbidden). B14-02's owed live sighting stays owed; not B's.
 
 **`WHOSE TURN: B` stands. Round 16 is the realistic gate-candidate round.**
+
+---
+
+### Round 15 — Agent B (B15-01, Ruling 45c: the countless listing page — THE COUNT DOES NOT BECOME OPTIONAL. The signal moves to a URL/title AGREEMENT rule, 89/92 adversarial, ZERO tests at risk proven by a 32,840-combination sweep. And B13-02's OWN named target is still kept today whenever LinkedIn omits the count.)
+
+**STATUS: DONE.** Round 15 B's only item (Ruling 45c). Lock claimed cleanly
+(`70c7086`) after `git pull --ff-only` and confirming `git branch
+--show-current` reads `feature/summary-report-revamp`. Harness lived outside
+`src/` (`web/zz-r15b/`, own vitest config) and was **deleted before this
+commit**; `git status --porcelain --untracked-files=all` scoped to `web/`
+confirmed clean. **B changes no code, deletes no test, and touches no file
+except this one** (§2). **No live pull, no page fetch, no credential read, no
+`PEER_PROFILE_SNAPSHOT_PATH`, no branch, worktree or PR.**
+
+---
+
+#### 0. A's ISOLATION REPRODUCED — AND ONE FACT A's REPLAY DID NOT REACH
+
+A's three-row table was re-run through the shipped `isListingPage()` and
+reproduces byte-for-byte. **A fourth row was added, and it is the finding that
+changes the size of this item:**
+
+| replayed shape | shipped `isListingPage` |
+|---|---|
+| `1,000+ Molten Salt jobs in United States` @ `/jobs/molten-salt-jobs` | **DROP** |
+| `1,000+ Ion Exchange Resin jobs in United States` @ `/jobs/ion-exchange-resin-jobs` | **DROP** |
+| `Ion Exchange Resin jobs in United States` @ `/jobs/ion-exchange-resin-jobs` | **KEEP** (A's live instance) |
+| **`Molten Salt jobs in United States` @ `/jobs/molten-salt-jobs`** | **KEEP — NEW** |
+
+**B13-02's OWN NAMED TARGET IS STILL KEPT TODAY ON ITS OWN URL whenever
+LinkedIn omits the count.** Round 14 A confirmed that target as dropped, and it
+was — but only because that day's render carried `1,000+`. **The fix that
+closed it was never count-independent, and round 14's confirmation was
+weather.** So this is not "one new page slipped through": it is that the whole
+class has only ever been guarded by an accident of rendering. Recorded because
+it raises the item's value and because a later round must not read round 14's
+B13-02 confirmation as stronger than it was.
+
+---
+
+#### 1. THE NAIVE WIDENING IS DEAD ON MEASUREMENT, NOT ON A's WARNING
+
+A's brief said "measure the widening; do not assume it." Measured. Making the
+leading count optional in `LISTING_TITLE_RE`'s first alternative scores
+**71/92 with 19 FALSE FIRES** — and **four of the nineteen are shapes the
+shipped suite ALREADY ASSERTS as must-keeps**: `Jobs Data Analyst at the Bureau
+of Labor Statistics`, `Jobs for Veterans Program Manager`, `Job for a Battery
+Engineer`, and `Research positions at CERN`. **It does not merely risk the
+open-class trap; it fails four existing tests immediately.** Killed, with a
+number, not with a judgement.
+
+**Two other title-side routes were measured and are also rejected:**
+- **Widening `LISTING_SECTION_TITLE_RE`'s leading allowance from one word to
+  four** (the shape that would reach `<3 words> jobs in <place>`): **83/92, 7
+  false fires**, including `Head of Careers at Imperial College London` and
+  `Head of Jobs in Manchester`. `jobs` and `careers` are ordinary English nouns
+  in real role titles; a leading-word budget is exactly Ruling 37/40's trap.
+- **A bare title rule `<noun> in|near`** with no URL confirmation: **84/92, 6
+  false fires.** The shipped file already judged this insufficient — that is
+  why `LISTING_TITLE_RE`'s third alternative demands a `| host.tld` tail.
+
+**THE COUNT DOES NOT BECOME OPTIONAL. `LISTING_TITLE_RE` IS NOT TOUCHED AT ALL**
+— its alternation shape stays byte-identical, so B13-02's documented regression
+lock (`1000+ …`, `12345 vacancies`) is preserved by construction rather than by
+re-testing.
+
+---
+
+#### 2. FIX DESIGN B15-01 — the signal moves to URL/TITLE AGREEMENT. One new check inside `isListingPage()`.
+
+**The insight the measurement forced: a generated search-results page RESTATES
+ITS OWN QUERY.** Its URL slug is the query (`ion-exchange-resin-jobs`) and its
+title is that same query followed by a location (`Ion Exchange Resin jobs in
+United States`). **A real posting's title is a role, not a query** — and even
+when a role legitimately ends in the word "jobs", the two rarely agree
+*exactly*, because a board inserts an employer (`… at Rocket Jobs …`) or
+punctuation (`Manager, Green Jobs`) that the slug does not carry.
+
+```ts
+/** The final path segment, and the head of it up to a job noun. */
+const TOPIC_LANDING_LEAF_RE =
+  /^([a-z0-9-]*?-(?:jobs|vacancies|openings))(?:-[a-z0-9-]+)?$/i;
+/** A query is a noun phrase. A role title uses function words. CLOSED class. */
+const TOPIC_LANDING_FUNCTION_WORD_RE =
+  /(?:^|-)(?:of|for|and|or|to|with|in|on|at|the|a|an)(?:-|$)/i;
+/** `<content word> <job noun> in|near …` — the search-results title grammar. */
+const TOPIC_LANDING_TITLE_RE =
+  /(?:^|\s)(?!(?:of|for|and|or|to|with|in|on|at|the|a|an|&)\s)[\w&/-]+\s+(?:jobs|vacancies|openings)\s+(?:in|near)\b/i;
+
+function isTopicLandingPage(title: string, pathAndQuery: string): boolean {
+  const leaf = (pathAndQuery.split("?")[0] ?? "").split("/").filter(Boolean).pop();
+  if (!leaf) return false;
+  const match = TOPIC_LANDING_LEAF_RE.exec(leaf);
+  if (!match) return false;
+  const head = match[1] ?? "";
+  if (TOPIC_LANDING_FUNCTION_WORD_RE.test(head)) return false;
+  const phrase = head.replace(/-/g, " ").toLowerCase();
+  if (!title.trim().toLowerCase().startsWith(`${phrase} `)) return false;
+  return TOPIC_LANDING_TITLE_RE.test(title);
+}
+```
+
+applied as one line in `isListingPage()`, beside the two existing structural
+rules (`jobweb.ts:432-434`):
+
+```ts
+  if (FEED_PATH_RE.test(pathAndQuery)) return true;
+  if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
+  if (isTopicLandingPage(title, pathAndQuery)) return true;   // B15-01
+  if (LISTING_TITLE_RE.test(title)) return true;
+```
+
+**FOUR CONJUNCTS, AND EVERY ONE OF THEM WAS FORCED BY A COUNTEREXAMPLE THAT
+KILLED THE DRAFT WITHOUT IT. C MUST NOT SIMPLIFY ANY OF THEM OUT.**
+
+1. **The URL's final segment ends in a plural job noun.** Alone: **79/92, 10
+   false fires** — it destroys `Director of Green Jobs`, `Manager, Green Jobs`,
+   `Head of Jobs in Manchester`, `Battery Engineer at Rocket Jobs`.
+2. **The title carries `<content word> <noun> in|near`.** The function-word
+   negative lookahead is what separates a compound query (`Resin jobs`) from a
+   prepositional role title (`Head of Jobs`). Adding it to conjunct 1 lifts the
+   score from 79 to **84/92**.
+3. **The leaf, de-slugified, is the OPENING PHRASE of the title.** This is the
+   restated-query signature and it is the single strongest conjunct: it lifts
+   **84 → 86/92** and it is what saves `Battery Engineer at Rocket Jobs in
+   Berlin` (the slug says `battery-engineer-rocket-jobs`, the title says
+   `battery engineer at rocket jobs` — the employer's `at` breaks the match).
+4. **The leaf carries no function word anywhere.** Lifts **86 → 88/92** and is
+   what saves `Director of Green Jobs in Boston` and `Head of Green Jobs in
+   Ontario`, whose slugs carry `of` even though the word next to the noun does
+   not. Allowing a slug tail after the noun (LinkedIn's locale form
+   `<query>-jobs-<place>`) then closes the last miss at **89/92**.
+
+**`careers`, `positions` and `opportunities` are DELIBERATELY ABSENT from every
+list**, and this is measured, not stylistic: adding `careers`/`positions` scores
+**79/92 with 10 false fires**, one of which is the shipped suite's own
+`Research positions at CERN` must-keep. Same arithmetic B13-02 used to exclude
+the preposition `for`, and B13-02's own recorded reason ("real postings
+legitimately use `positions`") applies unchanged.
+
+**THIS IS NOT A HOST LIST AND NOT PHRASE MATCHING** — A's brief forbids the
+first and Ruling 37 forbids the second. `linkedin.com` appears nowhere in the
+design; the matrix carries the identical shape on `jobboard.test` and it drops
+there too.
+
+---
+
+#### 3. THE ADVERSARIAL MATRIX — 92 cases, 29 must-drop / 63 must-keep
+
+| design | score | what it costs |
+|---|---|---|
+| **V0 shipped (control)** | 79/92 | 13 misses, 0 false fires — the item |
+| **V1 count optional (the naive widening)** | **71/92** | **19 FALSE FIRES, four of them existing must-keep tests** |
+| V2 section-title leading budget 1 → 4 words | 83/92 | 7 false fires (`Head of Careers …`) |
+| V3 url leaf incl. `-careers` | 77/92 | 12 false fires |
+| V4 url leaf, `careers` cut | 79/92 | 10 false fires |
+| V5 url leaf + title `in\|near\|at` | 82/92 | 7 false fires (`at` admits `Jobs at <Employer>`) |
+| V6 V5 + `careers`/`positions` | 79/92 | 10 false fires, incl. an existing must-keep |
+| V7 title only, no URL | 84/92 | 6 false fires |
+| V10 url leaf + title + function-word lookahead | 84/92 | 5 false fires |
+| V11 V10 + end-of-title allowed instead of `in\|near` | 81/92 | 8 false fires — **do not widen this way** |
+| V13 + leaf-is-title-prefix | 86/92 | 3 false fires |
+| V14 + no function word in leaf | 88/92 | 1 false fire, 1 miss |
+| **B15-01 (V15) — RECOMMENDED** | **89/92** | **1 named false fire, 2 named misses** |
+| V16 = V15 + a letter-case test | 88/92 | 0 false fires but **4 misses** — rejected, see below |
+
+**THE 29 MUST-DROPS.** A's live instance; A's count-re-added replay; B13-02's
+four named targets; B14-01's forum thread; the shipped suite's six count-form
+and section-form must-rejects, its `jobs, Employment` form, its Indeed query
+page and its bare careers index; **and eleven countless-class shapes** —
+including the countless sibling of B13-02's own target, a trailing slash, a
+query tail, two further topics, a `vacancies` noun, an `openings` noun, the same
+shape on a different host, a locale slug tail, a board tail whose brand has no
+dot, and two letter-case variants. **All 29 drop under B15-01 except the two
+named misses below.**
+
+**THE 63 MUST-KEEPS.** All twenty real postings B14-01's shipped block already
+asserts; the two other files that call `webResultToRawJobItem`
+(`job-cleanup.test.ts`'s fixture, `scoring.test.ts`'s QuantumScape posting) and
+two more suite URLs; **seven round-15 census postings using the titles A
+actually recorded** (`Actinide Chemistry & Ion Exchange Postdoc`, `Battery R&D
+Intern @ LiftOFF Technology`, and five more — **marked `RECORDED-TITLE` in the
+harness because their exact live paths are not in the log, per A's own
+guessed-URL correction**); nine shipped-suite must-keeps that already guard this
+class; and **sixteen open-class traps written to break my own draft** — real
+roles containing `Jobs`/`Careers`/`positions`/`opportunities`, an employer brand
+ending in `Jobs`, and the four HARD traps whose slug ends at the noun.
+
+---
+
+#### 4. THE THREE NAMED LIMITS — stated, not buried in the total
+
+**ONE FALSE FIRE, AND IT IS UNSEPARABLE.** `Manager Green Jobs in Ontario` @
+`/jobs/manager-green-jobs` **drops**. A role title that is a function-word-free
+noun phrase ending in a bare plural job noun, rendered `<phrase> in <place>`,
+with a slug that is exactly that phrase, **is grammatically identical to a
+search query** — no structural test separates them, which is the same argument
+B14-01 used to cut NodeBB's `/topic/<digits>-<slug>`. **Measured frequency:
+across rounds 8–15's censuses (150+ observed postings) ZERO titles end in a bare
+plural job noun before a location.** The nearest real shapes all survive: the
+comma form `Manager, Green Jobs in Ontario`, the natural order `Green Jobs
+Program Manager`, and `Youth Jobs Coordinator in Ontario` are all kept.
+
+**TWO MISSES, both constructed, both the safe direction (status quo):**
+- `LinkedIn | Ion Exchange Resin jobs in United States` — brand-first titles put
+  the query in the second segment, and `webResultToRawJobItem` only re-tests the
+  FIRST segment (`jobweb.ts:497`). Closing it means changing that call pattern,
+  which is a wider blast radius than a constructed case earns.
+- `Ion Exchange Resin jobs` with no location — the title rule requires `in`/
+  `near`. Allowing end-of-title instead scores **81/92 with 8 false fires**
+  (V11), so this miss is bought deliberately.
+
+**WHY V16 (a letter-case test) IS REJECTED, on evidence rather than taste.**
+Requiring the noun to be lowercase after a capitalised word removes the false
+fire and scores 88/92 — but it **misses the Title-Case form**, and **B13-02's
+own recorded live target `Intern Jobs at Battery Ventures Companies` proves
+Title-Case listing titles occur in this loop's real data.** Shipping a fix that
+a re-casing defeats is precisely the failure that created this item, so the
+trade is refused with the reason on the record.
+
+**THE ASYMMETRY, restated because it points BOTH ways here.** B14-01's rule is
+that a drop's false fire destroys a whole real posting, so give up a matrix
+point rather than keep the risk — which argues for V16. **The measured
+frequencies argue the other way:** V15's false-fire shape has NEVER been
+observed, while V16's miss shape HAS occurred in a sibling form. **I recommend
+V15 and say plainly that this is the one place a manager could reasonably
+overrule me**, exactly as B14-01 recorded its departure from Ruling 39c's
+host-list preference rather than quietly substituting its own.
+
+---
+
+#### 5. RULING 32's MANDATORY QUESTION — WHAT RENDERS ON REJECTION
+
+**NOTHING. The item leaves the pool, which is the answer A's brief named in
+advance.** Traced, not assumed: `isListingPage` returning `true` makes
+`webResultToRawJobItem` return `null` (`jobweb.ts:489` and `:497`); both search
+functions filter nulls (`jobweb.ts:623`, `:656`); the item never reaches dedup,
+scoring, the mapper or any card. **No placeholder, no substitution, no
+backfill.** `buildDailyJobPool` ends in `.slice(0, MAX_OPPORTUNITY_POOL_ITEMS)`
+— and per A's round-15 correction that constant is **200**
+(`facets.ts:10`), so the cap is nowhere near binding and the pool is simply
+however many items survive. **On round 15's sample this removes 1 of 16 items
+(~6%).**
+
+**When it does NOT fire: exactly today's behaviour** — the page stays in the
+pool with an empty employer and no summary. Never a new wrong value.
+
+**The accepted cost, stated rather than hidden:** if a real vacancy is ever
+titled as a bare query-shaped noun phrase and slugged the same way, this drops
+it. What such a page renders TODAY is a card promising a job that opens a search
+results page — wrong data, which Ruling 23 ranks above missing data.
+
+---
+
+#### 6. TESTS AT RISK — **ZERO, and this is proven rather than sampled**
+
+Callers grepped, not guessed. **`isListingPage` and `webResultToRawJobItem` have
+no non-test caller outside `jobweb.ts`.** The three files the brief names are
+the complete caller set: `jobweb.test.ts`, `scoring.test.ts` (3 call sites),
+`job-cleanup.test.ts` (1 call site, its URL coming from
+`__fixtures__/job-extraction-artifacts.json`).
+
+**The sweep: every string literal in all three files was extracted, classified
+as path-like or title-like, and CROSS-PRODUCTED — 32,840 combinations — and
+each was evaluated under both the shipped guard and B15-01.** The cross-product
+is deliberate over-approximation: it covers every `it.each` tuple shape without
+parsing any of them, so a zero result is a guarantee, not a sample.
+
+**Result: 0 of 32,840 change verdict.** No test fails, and — the failure mode
+B14-01 found the hard way — **no test goes silently vacuous either**, because
+no `webResultToRawJobItem` call newly returns `null`. The `job-cleanup.test.ts`
+fixture was additionally checked by hand (`/careers/job/42`, title
+`…Research in Reno at American Battery - Apply now!`) because its URL is not a
+literal in the file: it does not fire.
+
+**TESTS C SHOULD ADD:**
+1. A's live instance as a must-drop, with its recorded URL and title.
+2. **The countless sibling of B13-02's own target** (`Molten Salt jobs in United
+   States` @ `/jobs/molten-salt-jobs`) with a comment recording that this shape
+   is KEPT today — it is the proof that B13-02 was count-dependent.
+3. An `it.each` of the eleven countless-class must-drops.
+4. An `it.each` of the sixteen open-class traps as must-keeps, plus a replay of
+   B14-01's twenty real postings through the new rule.
+5. **The two named misses asserted `.toBe(false)`** with comments, so a later
+   widening is a deliberate act (B14-01's NodeBB pattern).
+6. **The one named false fire asserted `.toBe(true)` with a comment saying
+   plainly that it is a REAL POSTING SHAPE this rule destroys** — the cost
+   belongs in a test where it is measured, not only in a doc comment.
+7. A comment on `LISTING_TITLE_RE` recording that B15-01 deliberately did NOT
+   touch it, so the count-form regression lock is not re-litigated.
+
+---
+
+#### 7. ONE OBSERVATION THAT IS NOT THIS ITEM — **`POLICY — manager decides`**
+
+While building the trap corpus I found **two plausible real-posting titles the
+SHIPPED guard already drops today**, both via B13-02 part 3's
+`LISTING_SECTION_TITLE_RE`, neither caused by anything in this design:
+
+- `PhD openings in Electrochemistry at TU Delft` @ `/vacancies/phd-openings`
+- `Green Jobs in Ontario Programme Lead` @ `/jobs/green-jobs-ontario-programme-lead`
+
+Both are `<one word> <section noun> <preposition>` and both fire the leading
+anchor. **I make no recommendation and did not design against them** — a
+multi-vacancy "PhD openings" advertisement is arguably a listing and arguably a
+posting, and that is a judgement, not a measurement. **Recorded so it is not
+rediscovered as fresh** (the same handling A gave `lco.global/about/interns` and
+the `@`-separator employer). **Whether it deserves an item is the manager's
+call.**
+
+---
+
+**Cleanup:** `web/zz-r15b/` deleted before this commit; `git status --porcelain
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched or deleted. No credential read, printed, logged or
+written. No page fetched, no pipeline pull run, no branch or worktree created,
+no PR opened; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+third-party page text was read into context at any point.**
+
+**Round 15 B is COMPLETE — one item, one commit, pushed immediately.**
 
