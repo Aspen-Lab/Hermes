@@ -23940,3 +23940,277 @@ the event side is patched.
 **Manager's turn complete. `WHOSE TURN: B` stands as A left it, with the third
 strike in its first line. Round 12 B is spawned next.**
 
+
+---
+
+### Round 12 — Agent B (B12-01: `ecs.confex.com` — the guard B11-02 installed has a CLASS-level hole, and the class is bigger than the guard)
+
+**STATUS: DONE. This was the required-first item** (§1 `WHOSE TURN: B` item 2, and
+the manager's verification: "B must trace how the new guard passed it before
+anything else on the event side is patched"). Everything below is established by
+**execution against the shipped code**, in a throwaway harness outside `src/`
+(`web/zz-b12/`, with its own vitest config so the standard gate could never
+collect it), **deleted before this commit** — `git status --untracked-files=all`
+clean. No product code touched. No live fetch; A's part-1 log already quotes
+every string this needed.
+
+Claimed the lock (`7b3c7ed`, `LAPTOP-3CL10CG5 @ 2026-08-14 05:40 UTC`) after
+`git pull --ff-only` and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed. Read §1 in full, §1w /
+§1x (including its dated clarification) / §1y, §2, §3, §1s–§1v, all four
+"Round 12 — Agent A" parts and the manager's verification, before touching
+anything.
+
+---
+
+**1. WHICH CHECK, WHICH BRANCH — the exact answer, by execution.**
+
+The live value is
+`"Abstracts are due no later than Friday, 4 September 2026 at 11:59 PM Eastern Standard Time."`
+(91 chars, 16 words). Fed to the shipped functions:
+
+```
+looksLikeEventTitle(s)      === true    <-- IT PASSES THE GUARD
+  NARRATIVE_VERB_RE.test    === false
+  HEADLINE_PASSIVE_RE.test  === false
+  PRESENT_NARRATIVE_RE.test === false
+  MULTI_SENTENCE_RE.test    === false
+  word count 16             <= MAX_TITLE_WORDS (20)
+looksLikeEvent(s)           === false
+isChromeSegment(s, host)    === false   (no branch fires)
+```
+
+For contrast, round 11's string, same call:
+
+```
+looksLikeEventTitle("Invited speakers present keynote lectures.") === false
+  PRESENT_NARRATIVE_RE.test === true    <-- this is what caught it
+```
+
+**So the branch that passed it is: none.** B11-02 wired
+`!isChromeSegment(...) && looksLikeEventTitle(...)` into the snippet stage of
+`eventNameFrom` (`web/src/lib/events/sources/eventweb.ts:699-701`) and that
+wiring works exactly as designed — the guard *ran*. It returned `true` because
+**`looksLikeEventTitle` does not model this sentence's shape at all.**
+
+Why round 11's sentence was caught and this one is not, stated precisely:
+`PRESENT_NARRATIVE_RE` (`eventweb.ts:555-556`) matches a 1–5-word subject
+followed by a verb from the closed list
+`attends|announces|hosts|presents|joins|visits`. `"Invited speakers present …"`
+hits `present`. `"Abstracts are due …"` is a **copular predication** — subject +
+`are` + an *adjective*, not a participle — so `NARRATIVE_VERB_RE`
+(`eventweb.ts:505-506`) also misses it, because that pattern requires the word
+after `are` to end in `-ed`/`-en` and `"due"` does not.
+
+Then `looksLikeEvent` is `false`, so `eventLike` is empty and — per B11-02's own
+deliberate change — `pool` falls back to the hard-filtered `nameLike`, which
+contains this sentence, and `reduce`'s longest-wins tie-break returns it. Full
+chain reproduced end to end: `eventNameFrom("Call for Papers", <snippet>,
+"https://ecs.confex.com/…")` returns the sentence verbatim;
+`bestEventTitleSegment("Call for Papers", …)` returns `undefined`, so B10-03's
+title-stage guard is confirmed still working and the title path still yields
+nothing, exactly as A observed.
+
+---
+
+**2. ONE GAP OR SEVERAL — ESTABLISHED BY EXECUTION, AND IT IS ONE GAP, WIDER
+THAN THE SENTENCE.** Ruling 32 asked for this before per-host entries.
+
+**Finding 2a — all four narrative checks are verb-inventory checks, and the
+inventory is a sample of an open class.** `NARRATIVE_VERB_RE`,
+`HEADLINE_PASSIVE_RE` and `PRESENT_NARRATIVE_RE` each name specific verbs or
+participles; `MULTI_SENTENCE_RE` only fires when a *second* sentence follows.
+Any English sentence whose main verb is not on one of those lists passes.
+Confirmed by execution — every one of these clears `looksLikeEventTitle` today:
+
+```
+"Registration for the conference opens in May."       -> true
+"The deadline falls on Friday."                       -> true
+"Papers must reach the committee by 30 June."         -> true
+"This year the meeting moves to Lisbon."              -> true
+"Delegates receive a printed programme on arrival."   -> true
+"sessions, even if breakfast occasionally became…"    -> true   (ruggedthz mode 2)
+```
+
+**This is §1x Ruling 37's own lesson, already sitting inside
+`looksLikeEventTitle` and pointing the other way.** Ruling 37 refused
+`SUBJECT_CONTINUATION_RE` because it enumerated "the verbs English allows after
+a plural noun subject" — an open class in a closed list's clothing. The three
+narrative regexes here are the same construction. Widening them is therefore
+**not a fix direction I will recommend**: each new verb buys one host and the
+next round finds another. That is exactly what rounds 9 → 11 → 12 have now
+demonstrated three times on this one host.
+
+**Finding 2b — and this is the bigger half. The snippet stage's *contract* is to
+return a whole SENTENCE. The test suite asserts it eight times.** Grepped and
+read every one; all are in `web/src/lib/events/sources/eventweb.test.ts`:
+
+| line | asserted event name |
+|---|---|
+| 76–78 | `"Rivertown Summit is a two-day materials science conference held every spring."` |
+| 94–97 | `"The International Battery Summit brings researchers together."` |
+| 329–331 | `"The International Battery Seminar brings together researchers."` |
+| 354–356 | `"The International Battery Seminar brings together researchers."` |
+| 384–385 | `"The 250th ECS Meeting welcomes abstract submissions."` — **B11-02's own test** |
+| 489–491 | `"The International Battery Seminar brings researchers together."` — **B11-03's own test** |
+| 503–505 | `"The Battery Show South returns to Atlanta this year."` — **B11-03's own test** |
+| 632 | `"Rivertown Summit convenes battery researchers every spring in Ohio."` |
+
+Read line 384 again: the shipped, tested, *intended* answer for a page whose
+title is `"Call for Papers"` is the full sentence
+`"The 250th ECS Meeting welcomes abstract submissions."` — **which is itself a
+wrong event name by A's own standard.** The real name is `250th ECS Meeting`.
+
+**So `ecs.confex.com` did not slip past a guard. It landed in a slot the code is
+designed to fill with a sentence.** Every fix that only tightens *which*
+sentences qualify leaves the slot holding a sentence, and a sentence is never a
+name. That is the class-level hole, and it explains Ruling 26's pattern
+recurring "one layer deeper" better than a missing regex does.
+
+---
+
+**3. FIX DIRECTION — designed and adversarially tested, per Ruling 31.**
+
+**Rejected first, with the evidence, so nobody re-derives it:** a "reject a
+candidate that ends in sentence-terminal punctuation" guard
+(`/\w{3,}[.!?]["'’)\]]*$/`). Built it and ran it. It rejects all eight bad
+sentences cleanly and survives `U.S. Battery Conference 2026`,
+`Dr. Meyer Memorial Symposium` and `Deutsche Gesellschaft für Materialkunde
+e.V.` — but it also rejects `Battery Ventures Inc.` and `Conference on Materials
+Sci.`, **and it turns all eight table rows above into failures with nothing
+better to put in their place**, because it can only ever delete. Correct
+diagnosis, wrong instrument.
+
+**RECOMMENDED — `leadingNameSpan`: the snippet stage stops returning the
+sentence and returns the NAME INSIDE it, or nothing.** Built it and ran it
+against the shipped code.
+
+Rule, closed at every step:
+1. Walk tokens from the **start** of the candidate. Keep a token while it is a
+   name token — `^(?:[A-Z0-9][\w&.'’+-]*|\d+(?:st|nd|rd|th))$` — or, once the
+   span is non-empty, a joiner from the closed list
+   `of|for|on|and|the|in|at|de|du|des|und|&`. Stop at the first token that is
+   neither.
+2. Drop trailing joiners.
+3. Require ≥2 words, **and** require one word to be an event-kind **noun** from
+   a closed list (`conference|symposium|workshop|seminar|colloquium|congress|
+   meeting|summit|expo|exposition|exhibition|forum|convention|show|school|
+   hackathon|roundtable|fair`).
+4. Re-run the shipped `looksLikeEventTitle` on the result.
+5. If anything fails, return nothing — **the candidate is dropped, not
+   substituted**.
+
+**This is a closed list of event-kind NOUNS, not of verbs.** That distinction is
+the whole point of Ruling 37's lesson: the set of nouns English uses to name a
+scholarly gathering is genuinely finite, and this codebase already enumerates it
+twice (`EVENT_SIGNAL_RE`, and `eventKindIn` in `events/mapper.ts`). No open
+class is being sampled.
+
+**Adversarial results — the eight currently-asserted sentences, run through it:**
+
+```
+"Rivertown Summit is a two-day materials science conference…"   -> "Rivertown Summit"
+"The International Battery Summit brings researchers together." -> "International Battery Summit"
+"The International Battery Seminar brings together researchers."-> "International Battery Seminar"
+"The 250th ECS Meeting welcomes abstract submissions."          -> "250th ECS Meeting"
+"The Battery Show South returns to Atlanta this year."          -> "Battery Show South"
+"Rivertown Summit convenes battery researchers every spring…"   -> "Rivertown Summit"
+```
+
+**Every one is a strictly better name than the sentence the test asserts
+today.** The eight assertions get **restated to the better value**, not deleted
+— §2's own rule ("rewrite the assertion to state the new contract and say in a
+comment which item changed it"). No test is lost.
+
+**Must-reject, all confirmed returning nothing:**
+
+```
+"Abstracts are due no later than Friday, 4 September 2026 at…"  -> undefined  <-- the live defect
+"Invited speakers present keynote lectures."                    -> undefined
+"Registration for the conference opens in May."                 -> undefined
+"The deadline falls on Friday."                                 -> undefined
+"Papers must reach the committee by 30 June."                   -> undefined
+"Delegates receive a printed programme on arrival."             -> undefined
+"sessions, even if breakfast occasionally became more of…"      -> undefined  <-- ruggedthz mode 2
+```
+
+The deadline sentence dies at step 3: its leading span is the single word
+`"Abstracts"`, which has fewer than two words and no event-kind noun. Note this
+is why step 1 is **anchored to the start** — an unanchored "longest span
+anywhere" would have found `"Friday, 4 September 2026"` in that same sentence.
+Verified, not assumed.
+
+**One honest miss, reported rather than hidden:** `"Conference Image Gallery
+Carousel"` (item 6's live value) **survives** — every token is Title-Case and
+`Conference` is an event-kind noun. This design does not fix
+`internationalbatteryseminar.com` and does not make it worse. That host has its
+own cause, traced separately in B12-04.
+
+**One refinement I changed my own mind on mid-test, recorded because it
+matters:** my first version stripped a leading determiner, which turned `"The
+Battery Show South"` into `"Battery Show South"` — dropping a word that is
+genuinely part of that event's name. **Recommendation: do NOT strip the
+determiner in this design.** `"The 250th ECS Meeting"` is a perfectly good name
+with its `The` left on. The determiner strip belongs only in B12-02, where the
+`the` is demonstrably a sentence artefact.
+
+---
+
+**4. WHAT RENDERS WHEN EVERY CANDIDATE IS REJECTED — Ruling 32's mandatory
+question, answered, and it carries a real price.**
+
+When `leadingNameSpan` returns nothing for every snippet fragment, `pool` is
+empty and execution falls through to the existing honest last resort at
+`eventweb.ts:717-724` — the **URL host**, then the literal `"Untitled event"` if
+there is no URL. Confirmed by execution: `eventNameFrom("Home | Events", "",
+"https://ruggedthz.com/…")` returns `"ruggedthz.com"` today. **No rejected value
+is reinserted anywhere** — B9-04 Fix 1 already removed that path, and this
+design adds no new fallback of its own (Ruling 35's standard).
+
+**The price, stated plainly:** for `ecs.confex.com` this fix renders
+`ecs.confex.com` instead of a deadline sentence. **That is B11-02's predicted
+honest-host cost finally being paid** — A measured it at exactly ZERO this round
+(0 of 85 renders), and this design is what creates instances of it. I judge the
+trade correct on Ruling 23/26's own standard (honest silence beats confident
+wrong data): a reader who sees a bare conference-platform hostname learns "we
+don't know", where today they are told the event is called *"Abstracts are due
+no later than Friday…"*. **But it is a real, deliberate cost on a
+currently-zero metric, so I flag it rather than decide it.**
+
+**`POLICY — manager decides`:** this design **deliberately restates eight
+assertions that two already-landed fixes (B11-02, B11-03) wrote or depend on**,
+and trades a measured-zero honest-host rate for the removal of a defect class.
+Both facts are exactly the kind of call §2 reserves for the manager. C should
+not land B12-01 until the manager rules; **B12-02 (`ruggedthz.com`) does not
+depend on it and can land first** — see that entry's own dependency note.
+
+---
+
+**5. TESTS AT RISK — named by grepping for callers, not guessed.**
+
+`looksLikeEventTitle` is exported and has four call sites outside its own file's
+tests:
+- `eventweb.ts:636` (title stage) and `:700` (snippet stage) — **this design
+  touches only the snippet stage**, so the title stage is unaffected by
+  construction.
+- `web/src/lib/opportunities/event-details.ts:30` — structured extraction.
+- `web/src/lib/opportunities/enrich.ts` (via the shared guard pair) — **this is
+  where the SolarPACES regression lock lives, in
+  `web/src/lib/opportunities/enrich.test.ts`, NOT under `events/`.** It has been
+  the missed second file before; naming it explicitly.
+
+Because `leadingNameSpan` is a **new** function called only from
+`eventNameFrom`'s snippet stage, and `looksLikeEventTitle` itself is unchanged,
+`event-details.ts` and `enrich.ts` are untouched. C must still run
+`enrich.test.ts` and confirm 25/25, and must run
+`web/src/lib/events/scoring.test.ts` — **`scoring.test.ts` has been the missed
+second file twice in this loop.** Full gate as always:
+`cd web && npx vitest run && npx tsc --noEmit && npx eslint`.
+
+Files C will touch: `web/src/lib/events/sources/eventweb.ts` (a new function plus
+one line in the snippet stage) and
+`web/src/lib/events/sources/eventweb.test.ts` (eight restated assertions plus new
+must-reject / must-survive cases).
+
+Harness deleted; `git status --untracked-files=all` clean before this commit.
+Commit follows immediately.
