@@ -55289,3 +55289,27 @@ last-in-line, any such change can only appear where the line was previously
 BLANK, which makes it easy to spot.
 
 ---
+
+### Round 22 — MANAGER verification of Agent C and the ROUND-22 CLOSE
+
+**Date: 2026-08-14. Every check below was re-executed by the manager, not inherited from C's log.**
+
+**THE GATE, INDEPENDENTLY RE-RUN:** `cd web && npx vitest run` → **92 files / 1751 tests, 1750 passing** — exactly C's figure (+1 file, +99 tests over the 91/1652/1651 baseline; the new file is `jobs/dedup.test.ts`). Sole failure the standing `benchmark.test.ts` flake. `npx tsc --noEmit` clean. `npx eslint` exactly the one standing `quiz.tsx:46` error, 0 warnings. **`src/lib/opportunities/enrich.test.ts` SOLO: 53/53 — the SolarPACES lock is intact.**
+
+**RULING 60a's BOUNDARY, VERIFIED BY RANGE DIFF, NOT BY TRUST:** `git diff 7e38467..HEAD` on `shared.ts`, `shared.test.ts` and `employer-identity.test.ts` is **EMPTY** — no clause of the 57b guard and none of its tests moved, exactly as 60a ordered.
+
+**NO TEST DELETED, PROVEN BY NUMSTAT:** seven test files grew (+939 lines); the 8 removed lines are the documented assertion rewrites C's entries name, each commented with its item. Nothing shrank beyond them.
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (union form, recorded as such):** `eventweb.ts` restored to its pre-`01c376a` source with all shipped tests kept → the deadline role-check test goes red ("leaves the event date absent when it is the same instant as the deadline") **together with the clustering tests items 1 and 3 both landed in that file** — the union of both items' recorded proofs, which is what a whole-file restore should show. Source restored → **162/162 green**, tree clean. The new tests demand the new code.
+
+**C's FOUR DEVIATIONS FROM B's GUIDE — ALL FOUR TRACED, MEASURED FIRST, AND ACCEPTED:**
+1. **A22-05:** B's "sort, then slice" swap is a REGRESSION on B's own two live rows — it un-merges a pair that merges correctly today, and an un-merge is an extra card, the exact class A22-05 is filed under. Not shipped; a test now guards the merge the swap would have broken. **C catching B, on B's own evidence — accepted.**
+2. **A22-04(a):** B's literal parenthetical form would have rendered `Mumbai, India` as an employer (`looksLikeBareLocation` only matches a trailing US state code). C requires the parenthetical to NAME AN ORGANISATION, through the existing chain, no shipped guard widened. **Accepted — this is the guard-the-path discipline applied to B's own fix direction.**
+3. **A22-01:** draft 3's step 1 taken literally counts a LABELLED deadline as a rival date reading, turning item 1's control red and silencing every "runs X, abstracts due Y" snippet. C's correction restores B's own measured 4-loss matrix. **Accepted.**
+4. **A22-03:** the substance floor placed at the resolver's verdict (B's placement) would also gate place, employer, roleKind, visa, workMode and salary — costs B's matrix never priced, contradicting B's own "0 correct values leave". C placed the floor at the PUBLICATION BOUNDARIES (the card summary and the deep report's LLM evidence), which is Ruling 60d's stated purpose. **Accepted — 60d's intent is what ships, and the ruling's wording is satisfied by the boundary placement.**
+
+**ALSO ON THE RECORD:** C found four render sites reading `Job.isRemote` directly that B's fix list missed, and four test files missing from B's at-risk list — the gate caught what the guide did not, which is what the gate is for. C corrected one overclaim of its own before landing it. **Two leads C recorded — `enrich.ts:335`'s backwards precedence and `events/dedup.ts` carrying A22-05's identical shape — are ACKNOWLEDGED AS EVIDENCE-GATED LEADS, not scheduled: each reopens when a census difference names its mechanism, per the 58c pattern. Round 23 A does not treat them as open items.**
+
+**ROUND 22 IS CLOSED.** A (seven differences, two declined observations, one reading question) → manager (Ruling 59) → B (nine items: seven investigations, one two-draft-killing design, two diagnostics; one POLICY flag) → manager (Ruling 60) → C (six commits, four accepted deviations, +99 tests) → manager (this entry). **No POLICY item carries past this close undecided.** `WHOSE TURN: A — round 23, GATE CANDIDATE ROUND` stands exactly as C wrote it, with the full carry list (both intended event departures; A22-04 open with the guard half deferred and 60a's third-strike backstop armed; the place half deferred and evidence-gated; the 57b event surface still `designed, organically unwitnessed`; Ruling 55c's debt in its FOURTH round; `grad.wisc.edu` in the census; `thebatteryshow.eu` resolved; all tallies and exclusions by name). **The gate stays `GATE (0%): NOT MET` — only round 23 A's live measurement can move it, and only the manager closes, after an independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
