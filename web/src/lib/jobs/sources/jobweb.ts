@@ -48,6 +48,15 @@ export const NON_JOB_PATH_RE =
  * because with the comma group optional `\d{1,3}` can never consume a 4- or
  * 5-digit run. Shipped 6/9, the tidy draft 7/9 with two NEW misses, this form
  * 9/9 with zero false fires. The regression cases are asserted below.
+ *
+ * B15-01 (round 15) DELIBERATELY DID NOT TOUCH THIS REGEX — not one byte, and
+ * specifically NOT the leading count in the first alternative. Round 15 A found
+ * a listing page that survives precisely because the count was absent, and the
+ * obvious repair is to make that count optional. It was measured: 71/92, 19
+ * FALSE FIRES, four of them shapes this suite already asserts as must-keeps.
+ * The fix went into `isTopicLandingPage` instead, so the count-form regression
+ * lock above stands BY CONSTRUCTION rather than by re-testing. Do not
+ * re-litigate the count.
  */
 export const LISTING_TITLE_RE =
   /(?:^|\s)(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|\b(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
@@ -161,6 +170,137 @@ const FEED_PATH_RE =
  */
 const FORUM_THREAD_URL_RE =
   /(?:^|\/)t\/(?:[\w%.~-]+\/)?\d+(?:\/\d+)?(?:\/|$|\?)|(?:^|\/)(?:viewtopic|showthread|viewforum|forumdisplay)\.php(?:$|[?&])|(?:^|\/)threads\/[\w%.~-]*?\.\d+(?:\/|$|\?)/i;
+
+/**
+ * B15-01 (round 15, Ruling 45c/46a): A GENERATED SEARCH-RESULTS PAGE RESTATES
+ * ITS OWN QUERY. `linkedin.com/jobs/ion-exchange-resin-jobs` rendered
+ * `Ion Exchange Resin jobs in United States` as a job card — no employer, no
+ * summary, and a link that opens a search page rather than a vacancy.
+ *
+ * THE COUNT WAS THE ONLY THING GUARDING THIS CLASS, AND IT IS AN ACCIDENT OF
+ * RENDERING. `LISTING_TITLE_RE`'s first alternative needs a numeric run before
+ * the job noun, and the board omits the count when the result set is small.
+ * B proved by replay that B13-02's OWN named target
+ * (`Molten Salt jobs in United States` @ `/jobs/molten-salt-jobs`) is still
+ * KEPT today whenever that count is absent — so round 14's confirmation of
+ * B13-02 was weather, not coverage. The countless form is asserted below.
+ *
+ * `LISTING_TITLE_RE` IS DELIBERATELY NOT TOUCHED — not even to make its
+ * leading count optional. That naive widening was MEASURED at 71/92 with 19
+ * FALSE FIRES, four of which are shapes this suite ALREADY ASSERTS as
+ * must-keeps (`Jobs Data Analyst at the Bureau of Labor Statistics`,
+ * `Jobs for Veterans Program Manager`, `Job for a Battery Engineer`,
+ * `Research positions at CERN`). It fails existing tests immediately. Leaving
+ * that regex byte-identical is what preserves B13-02's count-form regression
+ * lock by construction rather than by re-testing. Two other title-side routes
+ * were also measured and rejected: widening `LISTING_SECTION_TITLE_RE`'s
+ * leading budget from one word to four (83/92, 7 false fires, including
+ * `Head of Careers at Imperial College London`), and a bare `<noun> in|near`
+ * title rule with no URL confirmation (84/92, 6 false fires — which is why
+ * `LISTING_TITLE_RE`'s third alternative demands a `| host.tld` tail).
+ *
+ * So the signal moves off the count and onto URL/TITLE AGREEMENT: the URL slug
+ * IS the query, and the title is that same query followed by a location. A real
+ * posting's title is a ROLE, not a query — and even when a role legitimately
+ * ends in the word "jobs", the two rarely agree EXACTLY, because a board
+ * inserts an employer (`… at Rocket Jobs …`) or punctuation
+ * (`Manager, Green Jobs`) that the slug does not carry.
+ *
+ * FOUR CONJUNCTS. EVERY ONE WAS FORCED BY A COUNTEREXAMPLE THAT KILLED THE
+ * DRAFT WITHOUT IT — DO NOT SIMPLIFY ANY OF THEM OUT:
+ *  1. The URL's final segment ends in a plural job noun. ALONE: 79/92 with 10
+ *     false fires — it destroys `Director of Green Jobs`, `Manager, Green
+ *     Jobs`, `Head of Jobs in Manchester`, `Battery Engineer at Rocket Jobs`.
+ *  2. The title carries `<content word> <job noun> in|near`. The FUNCTION-WORD
+ *     negative lookahead separates a compound query (`Resin jobs`) from a
+ *     prepositional role title (`Head of Jobs`). 79 → 84/92. Function words are
+ *     a CLOSED class fixed by grammar — the opposite of Ruling 37's open-class
+ *     trap, and the same bar `FEED_PATH_RE` and `FORUM_THREAD_URL_RE` cleared.
+ *  3. The leaf, de-slugified, is the OPENING PHRASE of the title. The
+ *     restated-query signature and the strongest single conjunct: 84 → 86/92.
+ *     It is what saves `Battery Engineer at Rocket Jobs in Berlin`, whose slug
+ *     says `battery-engineer-rocket-jobs` while the title's `at` breaks the
+ *     match.
+ *  4. The leaf carries no function word ANYWHERE. 86 → 88/92, and it is what
+ *     saves `Director of Green Jobs in Boston` and `Head of Green Jobs in
+ *     Ontario`, whose slugs carry `of` even though the word beside the noun
+ *     does not. Allowing a slug tail after the noun (the locale form
+ *     `<query>-jobs-<place>`) then closes the last miss at 89/92.
+ *
+ * `careers`, `positions` and `opportunities` ARE DELIBERATELY ABSENT FROM ALL
+ * THREE LISTS, and that is measured rather than stylistic: adding them scores
+ * 79/92 with 10 false fires, one of them this suite's own `Research positions
+ * at CERN` must-keep. Same arithmetic B13-02 used to exclude the preposition
+ * `for`, and its recorded reason — real postings legitimately use `positions`
+ * — applies unchanged.
+ *
+ * THIS IS NOT A HOST LIST AND NOT PHRASE MATCHING. `linkedin.com` appears
+ * nowhere; the identical shape on `jobboard.test` is asserted below and drops
+ * there too. A host list is Ruling 32's headline complaint.
+ *
+ * THE ONE FALSE FIRE IS NAMED, NOT HIDDEN: `Manager Green Jobs in Ontario` @
+ * `/jobs/manager-green-jobs` drops. A role title that is a function-word-free
+ * noun phrase ending in a bare plural job noun, rendered `<phrase> in <place>`,
+ * with a slug that is exactly that phrase, IS a search query grammatically —
+ * no structural test separates them. Same argument B14-01 used to cut NodeBB.
+ * Measured frequency: across rounds 8–15's censuses (150+ observed postings)
+ * ZERO titles end in a bare plural job noun before a location. The nearest real
+ * shapes all survive and are asserted: the comma form `Manager, Green Jobs in
+ * Ontario`, the natural order `Green Jobs Program Manager`, and `Youth Jobs
+ * Coordinator in Ontario`. It is asserted below as a named accepted cost so the
+ * price sits in a test rather than only in a comment.
+ *
+ * A LETTER-CASE TEST IS REJECTED — RULING 46a, DO NOT "IMPROVE" TOWARD IT.
+ * Requiring the job noun to be lowercase removes that false fire and scores
+ * 88/92 with zero false fires, but it MISSES THE TITLE-CASE FORM, and B13-02's
+ * own recorded live target `Intern Jobs at Battery Ventures Companies` proves
+ * Title-Case listing titles occur in this loop's real data. Shipping a fix that
+ * a re-casing defeats is precisely the failure that created this item. Round 15
+ * C re-measured this by execution before writing the code: the letter-case
+ * variant turns the one false fire into a THIRD miss on
+ * `Ion Exchange Resin Jobs in United States`. The manager ENDORSED B's refusal
+ * (Ruling 46a); the trade is not open to a later round without new evidence.
+ *
+ * TWO NAMED MISSES, both constructed, both the safe direction (status quo), and
+ * both asserted below so a later widening is a deliberate act:
+ *  1. `LinkedIn | Ion Exchange Resin jobs in United States` — brand-first
+ *     titles put the query in the SECOND segment, and `webResultToRawJobItem`
+ *     only re-tests the FIRST. Closing it means changing that call pattern — a
+ *     wider blast radius than a constructed case earns.
+ *  2. `Ion Exchange Resin jobs` with no location. Allowing end-of-title instead
+ *     of `in`/`near` scores 81/92 with 8 false fires; the miss is bought
+ *     deliberately.
+ *
+ * Accepted cost, stated rather than hidden: if a real vacancy is ever titled as
+ * a bare query-shaped noun phrase and slugged the same way, this drops it. What
+ * such a page renders TODAY is a card promising a job that opens a search
+ * results page — wrong data, which Ruling 23 ranks ABOVE missing data.
+ *
+ * Failure direction when it does NOT fire: exactly today's behaviour — the page
+ * stays in the pool with an empty employer and no summary. Never a new wrong
+ * value.
+ */
+/** The final path segment, and the head of it up to a job noun. */
+const TOPIC_LANDING_LEAF_RE =
+  /^([a-z0-9-]*?-(?:jobs|vacancies|openings))(?:-[a-z0-9-]+)?$/i;
+/** A query is a noun phrase. A role title uses function words. CLOSED class. */
+const TOPIC_LANDING_FUNCTION_WORD_RE =
+  /(?:^|-)(?:of|for|and|or|to|with|in|on|at|the|a|an)(?:-|$)/i;
+/** `<content word> <job noun> in|near …` — the search-results title grammar. */
+const TOPIC_LANDING_TITLE_RE =
+  /(?:^|\s)(?!(?:of|for|and|or|to|with|in|on|at|the|a|an|&)\s)[\w&/-]+\s+(?:jobs|vacancies|openings)\s+(?:in|near)\b/i;
+
+function isTopicLandingPage(title: string, pathAndQuery: string): boolean {
+  const leaf = (pathAndQuery.split("?")[0] ?? "").split("/").filter(Boolean).pop();
+  if (!leaf) return false;
+  const match = TOPIC_LANDING_LEAF_RE.exec(leaf);
+  if (!match) return false;
+  const head = match[1] ?? "";
+  if (TOPIC_LANDING_FUNCTION_WORD_RE.test(head)) return false;
+  const phrase = head.replace(/-/g, " ").toLowerCase();
+  if (!title.trim().toLowerCase().startsWith(`${phrase} `)) return false;
+  return TOPIC_LANDING_TITLE_RE.test(title);
+}
 
 /** Aggregators whose deep links are fine but whose listing pages are noise. */
 const AGGREGATOR_HOSTS = [
@@ -417,6 +557,10 @@ function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
  * this function is already this class's one home (Ruling 32). None of the five
  * pre-existing checks fired on ANY of round 13 A's four non-posting pool items;
  * each of the three additions carries exactly one of them, with no overlap.
+ * B14-01 (round 14) and B15-01 (round 15) landed in the same home for the same
+ * reason: `FORUM_THREAD_URL_RE` and `isTopicLandingPage` are both page-KIND
+ * rules, and both run BEFORE the employer chain, so a wrong value cannot be
+ * derived from an item that never exists.
  *
  * The single elegant rule — "require `POSTING_ID_RE` on every host" — was
  * considered and is NOT available: it drops
@@ -431,6 +575,7 @@ export function isListingPage(
 ): boolean {
   if (FEED_PATH_RE.test(pathAndQuery)) return true;
   if (FORUM_THREAD_URL_RE.test(pathAndQuery)) return true;
+  if (isTopicLandingPage(title, pathAndQuery)) return true; // B15-01
   if (LISTING_TITLE_RE.test(title)) return true;
   if (CAREERS_INDEX_TITLE_RE.test(title)) return true;
   if (LISTING_SECTION_TITLE_RE.test(title)) return true;

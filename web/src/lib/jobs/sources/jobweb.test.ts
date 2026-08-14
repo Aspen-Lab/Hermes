@@ -956,4 +956,217 @@ describe("non-posting pool items (B13-02)", () => {
       expect(item).toBeNull();
     });
   });
+
+  // B15-01 (round 15, Rulings 45c and 46a): a GENERATED SEARCH-RESULTS PAGE
+  // restates its own query — its URL slug IS the query, and its title is that
+  // same query followed by a location. A real posting's title is a ROLE.
+  //
+  // B's adversarial matrix is 92 cases (29 must-drop / 63 must-keep) and the
+  // shipped design scored 89/92 on it, with ONE named false fire and TWO named
+  // misses. All three are asserted at the bottom of this block rather than
+  // buried in the total — B14-01's named-miss pattern extended to a named cost.
+  //
+  // `LISTING_TITLE_RE` IS NOT TOUCHED, so the count-form regression lock in the
+  // "hole 1" block above still stands. The naive repair — making that leading
+  // count optional — was measured at 71/92 with 19 false fires, FOUR of which
+  // are must-keeps this very file already asserts. Do not re-litigate it.
+  describe("countless topic landing pages are not postings (B15-01, Ruling 45c)", () => {
+    // A's LIVE INSTANCE, round 15, 1 of 5 pulls: an aggregate search-results
+    // page sitting in the job pool, rendering an empty employer and no summary.
+    it("drops round 15 A's live countless listing page", () => {
+      expect(
+        isListingPage(
+          "Ion Exchange Resin jobs in United States",
+          "linkedin.com",
+          "/jobs/ion-exchange-resin-jobs",
+        ),
+      ).toBe(true);
+    });
+
+    // THE PROOF THAT B13-02 WAS COUNT-DEPENDENT, AND THE REASON THIS ITEM IS
+    // BIGGER THAN ONE PAGE. This is B13-02's OWN named target on its OWN URL,
+    // with the leading count absent. Before B15-01 it was KEPT — so round 14
+    // A's confirmation of B13-02 was an accident of that day's rendering, not
+    // coverage. A later round must not read that confirmation as stronger than
+    // it was.
+    it("drops the COUNTLESS form of B13-02's own named target", () => {
+      expect(
+        isListingPage(
+          "Molten Salt jobs in United States",
+          "linkedin.com",
+          "/jobs/molten-salt-jobs",
+        ),
+      ).toBe(true);
+    });
+
+    // THE ELEVEN COUNTLESS-CLASS MUST-DROPS. Note `jobboard.test`: the rule is
+    // NOT a host list, and the identical shape drops on a different host. That
+    // is A's brief and Ruling 32's headline complaint.
+    it.each([
+      ["A's count re-added (still drops via LISTING_TITLE_RE)", "1,000+ Ion Exchange Resin jobs in United States", "linkedin.com", "/jobs/ion-exchange-resin-jobs"],
+      ["a trailing slash", "Ion Exchange Resin jobs in United States", "linkedin.com", "/jobs/ion-exchange-resin-jobs/"],
+      ["a query tail", "Ion Exchange Resin jobs in United States", "linkedin.com", "/jobs/ion-exchange-resin-jobs?position=1"],
+      ["another topic", "Solid State Battery jobs in Canada", "linkedin.com", "/jobs/solid-state-battery-jobs"],
+      ["the `near` preposition", "Lithium Ion jobs near Boston", "linkedin.com", "/jobs/lithium-ion-jobs"],
+      ["the `vacancies` noun", "Battery Research vacancies in Germany", "linkedin.com", "/jobs/battery-research-vacancies"],
+      ["the `openings` noun", "Fuel Cell openings in Japan", "linkedin.com", "/jobs/fuel-cell-openings"],
+      ["THE SAME SHAPE ON A DIFFERENT HOST — not a host list", "Ion Exchange Resin jobs in United States", "jobboard.test", "/jobs/ion-exchange-resin-jobs"],
+      ["a locale slug tail", "Ion Exchange Resin jobs in United States", "linkedin.com", "/jobs/ion-exchange-resin-jobs-united-states"],
+      ["a board tail whose brand carries no dot", "Ion Exchange Resin jobs in United States - JobBoard", "jobboard.test", "/jobs/ion-exchange-resin-jobs"],
+      ["an all-lowercase render", "ion exchange resin jobs in united states", "linkedin.com", "/jobs/ion-exchange-resin-jobs"],
+    ])("drops %s", (_label, title, host, pathAndQuery) => {
+      expect(isListingPage(title, host, pathAndQuery)).toBe(true);
+    });
+
+    // RULING 46a's EVIDENCE, ASSERTED SO IT CANNOT BE TRADED AWAY QUIETLY.
+    // A letter-case test (require the job noun lowercase) removes this block's
+    // one false fire and scores 88/92 with ZERO false fires — but it MISSES
+    // this Title-Case form. B13-02's own recorded live target `Intern Jobs at
+    // Battery Ventures Companies` proves Title-Case listing titles occur in
+    // this loop's real data, so shipping a fix a re-casing defeats is exactly
+    // the failure that created this item. The manager ENDORSED the refusal
+    // (Ruling 46a). If someone later adds the case test, THIS test fails —
+    // which is the point.
+    it("drops the TITLE-CASE render — why Ruling 46a refused a letter-case test", () => {
+      expect(
+        isListingPage(
+          "Ion Exchange Resin Jobs in United States",
+          "linkedin.com",
+          "/jobs/ion-exchange-resin-jobs",
+        ),
+      ).toBe(true);
+    });
+
+    // THE OPEN-CLASS TRAPS — real role titles that contain the job nouns, an
+    // employer brand ending in `Jobs`, and the HARD cases whose slug itself
+    // ends at the noun. These are why all four conjuncts are load-bearing: the
+    // URL-leaf test ALONE scores 79/92 and destroys the first five of these.
+    it.each([
+      ["a role using `of` in the slug", "Director of Green Jobs in Boston", "example.test", "/jobs/director-of-green-jobs"],
+      ["another `of` slug", "Head of Green Jobs in Ontario", "example.test", "/jobs/head-of-green-jobs"],
+      ["`Head of Jobs`", "Head of Jobs in Manchester", "example.test", "/jobs/head-of-jobs"],
+      ["the COMMA form — punctuation the slug cannot carry", "Manager, Green Jobs in Ontario", "example.test", "/jobs/manager-green-jobs"],
+      ["an EMPLOYER BRAND ending in `Jobs`", "Battery Engineer at Rocket Jobs in Berlin", "example.test", "/jobs/battery-engineer-rocket-jobs"],
+      ["the natural word order", "Green Jobs Program Manager", "example.test", "/jobs/green-jobs-program-manager"],
+      ["`Youth Jobs Coordinator`", "Youth Jobs Coordinator in Ontario", "example.test", "/jobs/youth-jobs-coordinator"],
+      ["a slug tail after the noun on a REAL role", "Green Jobs Coordinator in Ontario", "example.test", "/jobs/green-jobs-coordinator"],
+      ["`Jobs Board Administrator`", "Battery Jobs Board Administrator", "example.test", "/jobs/battery-jobs-board-administrator"],
+      ["`careers` is NOT in any list", "Head of Careers at Imperial College London", "example.test", "/jobs/head-of-careers"],
+      ["`careers` again", "Careers Adviser in Manchester", "example.test", "/jobs/careers-adviser"],
+      ["`positions` is NOT in any list", "Research positions in Chemistry at ETH", "example.test", "/jobs/research-positions"],
+      ["`opportunities` is NOT in any list", "Funding opportunities in Battery Science", "example.test", "/jobs/funding-opportunities"],
+      ["a brand ending in `Jobs`, comma form", "Senior Engineer, Rocket Jobs", "example.test", "/jobs/senior-engineer-rocket-jobs"],
+      ["`Smart Jobs Inc`", "Software Engineer at Smart Jobs Inc", "example.test", "/jobs/software-engineer-smart-jobs"],
+      ["the noun not followed by `in`/`near`", "Battery Jobs Fair Coordinator", "example.test", "/jobs/battery-jobs"],
+      ["`Vacancies Manager`", "Vacancies Manager at Acme Materials", "example.test", "/jobs/vacancies-manager"],
+      ["`Openings Coordinator`", "Openings Coordinator in Berlin", "example.test", "/jobs/openings-coordinator"],
+      ["the topic word WITHOUT the job noun in the slug", "Ion Exchange Chemist in United States", "linkedin.com", "/jobs/ion-exchange-chemist"],
+      ["a real molten-salt role", "Molten Salt Reactor Engineer in Idaho", "linkedin.com", "/jobs/molten-salt-reactor-engineer"],
+    ])("keeps %s", (_label, title, host, pathAndQuery) => {
+      expect(isListingPage(title, host, pathAndQuery)).toBe(false);
+    });
+
+    // THE TWO OTHER FILES THAT CALL `webResultToRawJobItem`, replayed here.
+    // B proved zero tests at risk by cross-producting every string literal in
+    // `jobweb.test.ts`, `scoring.test.ts` and `job-cleanup.test.ts` — 32,840
+    // combinations, none changing verdict. These two are the concrete rows:
+    // `job-cleanup.test.ts`'s fixture URL is not a literal in that file, so it
+    // could only ever be checked by hand.
+    it.each([
+      ["job-cleanup.test.ts's fixture", "…Research in Reno at American Battery - Apply now!", "americanbattery.example", "/careers/job/42"],
+      ["scoring.test.ts's QuantumScape posting", "Battery R&D Scientist - QuantumScape", "careers.quantumscape.com", "/jobs/battery-rd-scientist"],
+    ])("keeps %s", (_label, title, host, pathAndQuery) => {
+      expect(isListingPage(title, host, pathAndQuery)).toBe(false);
+    });
+
+    // ROUND 15 A's OWN CENSUS POSTINGS, using the titles A actually recorded.
+    // Marked RECORDED-TITLE because A's log does not carry their exact live
+    // paths — the paths here are plausible reconstructions, per A's own
+    // correction that a GUESSED path is bad input rather than evidence.
+    it.each([
+      ["RECORDED-TITLE talents.vaia.com", "Actinide Chemistry & Ion Exchange Postdoc", "talents.vaia.com", "/companies/savannah-river-national-laboratory/jobs/1234"],
+      ["RECORDED-TITLE befjobs.breakthroughenergy.org", "Battery R&D Intern @ LiftOFF Technology", "befjobs.breakthroughenergy.org", "/companies/liftoff-technology/jobs/1234"],
+      ["RECORDED-TITLE grad.wisc.edu", "Graduate Assistantship at Thermo Fisher Scientific", "grad.wisc.edu", "/funding/graduate-assistantship-battery-research/"],
+      ["RECORDED-TITLE terra.do", "Battery Systems Engineer at Idaho National Laboratory", "terra.do", "/climate-jobs/battery-systems-engineer/"],
+      ["RECORDED-TITLE ev.careers", "Internship, Battery Engineering (Summer 2026) at Tesla", "ev.careers", "/jobs/battery-cell-engineer-1234"],
+      ["RECORDED-TITLE magnet.me", "Battery Engineer in Amsterdam at AquaBattery", "magnet.me", "/jobs/battery-engineer-1234"],
+      ["RECORDED-TITLE climatetechlist.com", "Battery Data Scientist", "climatetechlist.com", "/job/mantel-battery-data-scientist-1234"],
+    ])("keeps %s", (_label, title, host, pathAndQuery) => {
+      expect(isListingPage(title, host, pathAndQuery)).toBe(false);
+    });
+
+    // THE ONE NAMED FALSE FIRE — A REAL POSTING SHAPE THIS RULE DESTROYS.
+    // The cost belongs in a test where it is measured, not only in a doc
+    // comment. A role title that is a function-word-free noun phrase ending in
+    // a bare plural job noun, rendered `<phrase> in <place>`, with a slug that
+    // is exactly that phrase, IS a search query grammatically — no structural
+    // test separates them. Same argument B14-01 used to cut NodeBB.
+    //
+    // Measured frequency: ZERO such titles across rounds 8–15's censuses (150+
+    // observed postings). The nearest real shapes all survive and are asserted
+    // in the must-keep block above. If round 16 A ever SIGHTS this shape live,
+    // that observation is what reopens the trade — not taste (Ruling 46a).
+    it("DROPS `Manager Green Jobs in Ontario` — a named, accepted cost, not a win", () => {
+      expect(
+        isListingPage("Manager Green Jobs in Ontario", "example.test", "/jobs/manager-green-jobs"),
+      ).toBe(true);
+    });
+
+    // THE TWO NAMED MISSES, asserted so that widening this rule later is a
+    // deliberate act with its own evidence rather than a drift. Both are
+    // constructed, and both fail in the SAFE direction — the status quo, never
+    // a new wrong value.
+    it("does NOT drop a brand-first title — a deliberate, named miss", () => {
+      // `webResultToRawJobItem` re-tests only the FIRST `|`-separated segment
+      // (see the second `isListingPage` call there), so a query in the second
+      // segment is out of reach. Closing this means changing that call pattern
+      // — a wider blast radius than a constructed case earns.
+      expect(
+        isListingPage(
+          "LinkedIn | Ion Exchange Resin jobs in United States",
+          "linkedin.com",
+          "/jobs/ion-exchange-resin-jobs",
+        ),
+      ).toBe(false);
+    });
+
+    it("does NOT drop a location-less query title — a deliberate, named miss", () => {
+      // Allowing end-of-title instead of requiring `in`/`near` scores 81/92
+      // with 8 false fires. The miss is bought deliberately.
+      expect(
+        isListingPage(
+          "Ion Exchange Resin jobs",
+          "linkedin.com",
+          "/jobs/ion-exchange-resin-jobs",
+        ),
+      ).toBe(false);
+    });
+
+    // RULING 32's MANDATORY QUESTION, ANSWERED FROM THE RENDER SIDE: nothing is
+    // rendered, because the item never exists. `isListingPage` true makes
+    // `webResultToRawJobItem` return null and both search functions filter
+    // nulls, so the page never reaches dedup, scoring, the mapper or any card.
+    // No placeholder, no substitution, no backfill — and no top-up either, since
+    // `MAX_OPPORTUNITY_POOL_ITEMS` is 200 and the pool is nowhere near the cap.
+    it("produces no item at all when it fires, so no empty employer can render", () => {
+      const item = webResultToRawJobItem({
+        title: "Ion Exchange Resin jobs in United States",
+        url: "https://www.linkedin.com/jobs/ion-exchange-resin-jobs",
+        snippet: "Apply now to the latest ion exchange resin vacancies.",
+      });
+      expect(item).toBeNull();
+    });
+
+    // The counterpart: when the rule does NOT fire, behaviour is exactly what
+    // it is today — a real posting on the same host and the same path family
+    // still becomes an item. This is what stops the block above going vacuous.
+    it("still produces an item for a real posting on the same host", () => {
+      const item = webResultToRawJobItem({
+        title: "Battery Research Scientist at Acme",
+        url: "https://www.linkedin.com/jobs/view/battery-research-scientist-at-acme-4123456789",
+        snippet: "We are hiring a battery research scientist. Apply now.",
+      });
+      expect(item).not.toBeNull();
+    });
+  });
 });
