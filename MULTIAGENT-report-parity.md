@@ -23314,3 +23314,131 @@ and 37 tallies; then the summary across parts 1–4, the ranked difference list 
 the gate verdict. No gate verdict is set by this entry.
 
 Commit follows immediately.
+
+---
+
+### Round 12 — Agent A (part 3: R4 job summaries, scored against B10-07 fixes 1 and 2 and Ruling 37's acceptance, plus Rulings 33 and 37 tallies)
+
+**STATUS: DONE.** Third of round 12 A's four parts, continuing the same session
+as part 2. Part 4 (summary across parts 1–4, ranked difference list, gate
+verdict) follows.
+
+**Method.** Same five fresh live job-pool pulls part 2 used, read on a different
+column — `scoredJobToJob()`'s `summary` rather than its `companyOrLab`. Five
+separate processes, no-op `PoolCache`, no `PEER_PROFILE_SNAPSHOT_PATH`, results
+written outside the repository, scaffold deleted before part 2's commit. The
+efficiency choice and its reason are recorded in part 2's method note. For each
+non-empty summary the posting's own `matchedKeywords` were recorded alongside the
+displayed text, so the acronym tally rests on what the pipeline itself matched
+rather than on a guess about which term did the work.
+
+**Contract checked, not assumed.** `LEADING_LABEL_RE`
+(`web/src/lib/jobs/summarize.ts:122`) still reads
+`/^[A-Z][a-zA-Z]*(?:[\s-][A-Za-z]+){0,2}:\s*/` — the same literal-trailing-colon
+requirement round 11 A cited, so fix 2's contract is unchanged and this round's
+reading is directly comparable to round 11's.
+
+**Summary-bearing counts, per run rather than averaged:** run 1 3 of 14, run 2
+2 of 14, run 3 3 of 14, run 4 3 of 15, run 5 3 of 15. **Union: 3 summary-bearing
+postings out of 16 unique (18.8%).** Round 11 was 4 of 14 (28.6%), round 10 3 of
+13 (23.1%), round 9 4 of 29 (13.8%) — different days and different pool sizes
+each time, so this is reported as this round's own number, not a trend. Run 2's
+count is 2 only because the `inl.referrals.selectminds.com` posting was absent
+from that run's pool entirely, not because its summary disappeared.
+
+**Reproducibility is total on this field: all three summaries are byte-identical
+in every run they appear in, and all three are byte-identical to round 11 A's own
+citations.** Unlike the employer field (part 2, Finding 4), the summary field
+showed zero run-to-run variance this round.
+
+**Per-posting result, all 3, none averaged:**
+
+1. `inl.referrals.selectminds.com`, matched `"molten salt"`: *"This is a
+   multi-level posting and you will be placed at the appropriate level dependent
+   on degree field and level of education."* **CLEAN. Fix 2 confirmed live for
+   the second consecutive round on this exact host and sentence.** Round 10 found
+   this same sentence carrying a `"Multi-Level:"` prefix; the prefix is absent in
+   round 11 and absent again today. No meaning lost — the sentence states "this
+   is a multi-level posting" in its own words, so the stripped label was
+   redundant with the text it introduced.
+2. `careers.gevernova.com`, matched `"battery"`: *"What you'll do Support
+   engineering teams developing new battery technology for use in the Utilities,
+   Datacenter, and Defense industries. Interface with the advanced research
+   center on testing results."* **This is the colonless-heading run-on, and per
+   §1x Ruling 37 it is an ACCEPTED COST — counted in the tally below, NOT
+   reported as a defect and NOT on the difference list.** Byte-identical to round
+   11's citation, same host, same posting. The information is all present and
+   correct; only the missing separator between the heading and the first sentence
+   is awkward. Recorded exactly as the ruling directs: as the tally's baseline
+   instance, persisting, with no judgment re-litigated.
+3. `employbl.com`, matched `"battery"`: *"Battery is a private equity and venture
+   capital firm with over 40 years of heritage investing in category-leading
+   technology companies. During our 10-week paid summer internship program, you
+   will earn up to $2,500 per week."* **CLEAN, two full sentences, byte-identical
+   to round 11.** Round 10's own stacked-chrome defect on this exact host (a
+   `"Qualifications:"` colon-label, a bare `###` heading marker and an orphaned
+   opening bracket) — round 10's ranked item #6 — **stays gone for the second
+   consecutive round.** Round 11 could not cleanly separate "fix 1 worked" from
+   "the page's content simply differed on that pull"; a second identical clean
+   reading makes the coincidence reading less likely, but it still is not proof,
+   and A does not claim it as one.
+
+**Fix 1 watch (B10-07 fix 1 — a bare section label can no longer clear the
+positive-content floor alone): not confirmed to fire, and nothing broken to
+report.** No bare or junk section-label fragment — zero keyword match, zero
+readable content — survived into any of the three summaries. That is consistent
+with fix 1 working and equally consistent with this pool simply not drawing that
+shape. **"Not observed", not "confirmed still firing"** — the same standard this
+loop has always applied to an absent shape. Three rounds running now with no such
+fragment surviving.
+
+**Fix 2 watch (the blast-radius question — did the strip ever remove a label that
+carried real meaning, leaving the summary worse?): not observed, second
+consecutive round.** The one confirmed live strip (item 1 above) cost nothing.
+The one label that survives (item 2) is a case of the strip **not** firing, not
+of it over-firing. No over-stripping regression found.
+
+**RULING 33's ACRONYM TALLY — round 12.** The matched keyword evidence for the
+three surviving summaries was `"molten salt"` (11 characters), `"battery"` (7),
+and `"battery"` (7). **None is an acronym under 5 characters. Tally this round:
+0 of 3.**
+**Running: round 9 = 1 of 4; round 10 = 0 of 3; round 11 = 0 of 4; round 12 =
+0 of 3. Cumulative 1 of 14 (7.1%).** Three consecutive zero rounds since the
+single round-9 LCO instance. By Ruling 33's own standard for revisiting, this
+remains a single anecdote and the accepted cost stands — the frequency data the
+ruling asked for now exists across four rounds and it points the same way the
+ruling did.
+
+**RULING 37's RUN-ON TALLY — round 12, the first round this tally is kept.**
+Surviving summaries showing a colonless heading run into the following sentence:
+**1 of 3** — `careers.gevernova.com`'s `"What you'll do Support engineering
+teams…"`, byte-identical to round 11's citation. **This is the ruling's own
+baseline instance, counted as an accepted cost and explicitly not reported as a
+defect.**
+
+**The trigger question Ruling 37 actually asks, answered plainly: NO recurrence
+beyond the single `careers.gevernova.com` instance.** No second host shows the
+shape; no second posting on the same host shows it; the one instance is not merely
+the same host but the same posting rendering the same bytes. **Ruling 37's
+escalation to a future B does not fire this round.** One reading worth surfacing
+for the manager rather than deciding silently: the ruling's word is "recurrence
+beyond the single instance," which A reads as *a second, different instance* —
+not as *the known instance appearing again*. Under the other reading (Ruling 36's
+strike-counting style, where the same host in a second round counts), this would
+be strike two of an unstated threshold. **A reports 1 of 3, no new instance, and
+flags the reading; A does not fire or clear a threshold the ruling did not set
+numerically.** `POLICY — manager decides` on that reading only.
+
+**Cleanup:** no scaffold remains (deleted before part 2's commit; `git status`
+confirmed clean under `web/src` with `--untracked-files=all`). Result JSON lives
+outside the repository. No product code touched. No credential printed, logged,
+or written anywhere. No third-party page was fetched in this part — every string
+quoted above is the pipeline's own rendered output, not scraped page text.
+
+**Not done yet (part 4, same session, continuing next):** the summary across
+parts 1–4 — ranked difference list folding in part 1's banked event-name census,
+the honest-host cost verdict, Ruling 36's third-strike statement, `euagenda.eu`'s
+outcome, all three tally lines, and the gate verdict. No gate verdict is set by
+this entry.
+
+Commit follows immediately.
