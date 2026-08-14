@@ -31112,3 +31112,325 @@ page fetched, no pipeline pull run, no branch created, no PR opened, and
 `careers.gevernova.com` `]`-remnant trace.
 
 Commit follows immediately.
+
+---
+
+### Round 14 — Agent B (B14-02: the `careers.gevernova.com` `]`-remnant — ONE cause, not two; A's three code-point facts reproduced BYTE-FOR-BYTE from a single source shape; the summary path does NOT bypass `cleanJobDescription` and the bracket is NOT introduced afterwards)
+
+**STATUS: DONE.** Second of round 14 B's two items. Same session, same lock
+(`dc4dc7b`). Harness outside `src/` (`web/zz-r14b/`, own vitest config), deleted
+before this commit. **No live pull, no page fetch, no credential read.** **B
+changes no code** (§2).
+
+---
+
+#### THE ANSWER TO A's THREE QUESTIONS, ALL ESTABLISHED BY EXECUTION
+
+**Q: does this summary path bypass `cleanJobDescription`? — NO.** `mapper.ts:133-138`
+is `summarizeJob(cleanJobDescription(summarySource), item.matchedKeywords, roleTitle)`.
+The cleaner ran. It is the only summary path in the codebase — `summarizeJob` has
+exactly one non-test caller.
+
+**Q: is the bracket introduced after cleaning? — NO.** Nothing downstream of
+`cleanJobDescription` inserts a `]`: `splitSentences` only splits/trims,
+`stripLeadingLabel` only deletes, `bestCombination` joins with a space, `card.ts`
+`.trim()`s. The bracket **survives** cleaning.
+
+**Q: is the rule anchored to interior whitespace and blind to a string-INITIAL
+bracket? — YES about the anchoring, but that is NOT the mechanism, and the
+difference matters.** `ISOLATED_BRACKET_REMNANT_RE` (`/\s+\]\s+/g`) does require a
+leading whitespace run. But **the bracket is never string-initial in the
+description** — `cleanJobDescription("] hello")` returns `"hello"`, because
+`stripUnbalancedBrackets` deletes a closing bracket with an empty stack. Measured.
+**Every `]` that survives cleaning therefore has a `[` partner earlier in the
+text.** The brackets become *sentence*-initial later, not *string*-initial ever.
+
+---
+
+#### THE CAUSE, IN ONE SENTENCE
+
+**In the source text each `]` sits IMMEDIATELY after a sentence-ending `.`, with
+no whitespace between them (`".]"`), so a pattern that requires `\s+` before the
+bracket structurally cannot match it — and the space A measured on each side of
+the second bracket does not exist in the source at all: `splitSentences`' own
+`.trim()` puts the bracket at position 0 of its sentence, and `bestCombination`'s
+`.join(" ")` manufactures the separator between the two selected sentences.**
+
+**Both brackets are at index 0 of their own sentence. ONE cause, not two.** A was
+right to leave the question open and right that a `\s+`-led pattern cannot match
+at index 0; the piece that made the second occurrence look like a different
+phenomenon is that **the summariser inserted the space A measured around it.**
+
+---
+
+#### THE REPRODUCTION — A's THREE INDEPENDENT MEASUREMENTS, ALL THREE MATCHED
+
+Constructed source (the shape a scraped ATS page produces when a bracketed
+section closes on a sentence boundary):
+
+```
+[Overview.] You have a passion for battery technology, energy, and new product
+development. [The role.] Support engineering teams developing new battery
+technology for use in the Utilities, Datacenter, and Defense industries.
+```
+
+Run through the real functions — `cleanJobDescription()` then `summarizeJob()`
+with `matchedKeywords = ["battery"]`:
+
+| A measured | this reproduction |
+|---|---|
+| 205 characters | **205** |
+| first `]` at index 0 | **index 0** |
+| second `]` at index 82 | **index 82** |
+| code points `2e 20 5d 20 53` | **`2e 20 5d 20 53`** |
+
+**Four facts, four exact matches, from one source shape.** The two short
+bracketed lead-ins (`[Overview.`, `[The role.`) fall below `MIN_SENTENCE_LENGTH`
+(40) and are never selected, so the reader sees only the two `]`-led sentences —
+which is precisely what A saw.
+
+**CONTROL, and it is what proves the diagnosis rather than merely fitting it:**
+the identical text with **one space added before each bracket**
+(`[Overview. ]`) produces a **clean 201-character summary with zero brackets**.
+The shipped rule works perfectly the moment it can see whitespace. **The defect
+is one missing space.**
+
+**The competing hypothesis was tested and is NOT the cause.** Two space-surrounded
+brackets sharing one whitespace run (`… ] ] …`), which `/\s+\]\s+/g` genuinely
+cannot match twice because the first match consumes the separator the second
+needs, produces a completely different render (`[a] [b] Requirements You have…`).
+Ruled out by execution, recorded so it is not re-proposed.
+
+---
+
+#### THE COMPLETE SET OF SOURCE SHAPES THAT CAN DEFEAT THE RULE — CLOSED, NOT A SAMPLE
+
+`cleanJobText` normalises **every** whitespace run to a single space **before**
+`stripOrphanedFormattingArtifacts` runs, so only a non-whitespace predecessor can
+defeat the rule. Enumerated by execution:
+
+| character before `]` | bracket in summary | sentence-initial |
+|---|---|---|
+| `.` `!` `?` | **yes** | **YES — this is the observed defect** |
+| newline, tab, multiple spaces | no (rule fires) | — |
+| `:` `-` `,` | yes | no — mid-sentence |
+
+**That is the whole space.** Three characters produce A's shape; whitespace of
+any kind is already handled; three punctuation marks produce a *different*,
+**never-observed** mid-sentence variant.
+
+---
+
+#### WHY 1 OF 5 PULLS — the mechanism that fits, graded honestly
+
+`mapper.ts:133-135`: `summarySource = item.pageText ?? item.description`.
+**`item.pageText` is written only by the page-fetch enrichment**
+(`enrich.ts:235`, `scope.status === "owned" ? scope.text : undefined`), which per
+Ruling 42b runs on every live pull but still depends on a live `fetch` succeeding
+and the scope proving `owned`. **When it is absent the summary is built from the
+provider snippet instead.**
+
+**A's own evidence supports this independently and I did not have to assume it:
+the majority and minority summaries share not one sentence.** The majority (4/5)
+is `"What you'll do Support engineering teams… Interface with the advanced
+research center on testing results."`; the minority (1/5) is the `]`-led pair.
+**Two different source texts, not two different processings of one text.** A full
+fetched page carries many `[`…`]` structures; a ~200-character provider snippet
+almost never carries a matched pair spanning a sentence boundary.
+
+**GRADED: this is the mechanism that fits every observation, not a proven fact.**
+I ran no live pull (ground rules), so I cannot state which field run 3 used.
+**What would confirm it in one line: round 15's A records, for the gevernova
+item, whether `fetchedPostingScope === "owned"` on each pull.** Recorded as a
+cheap, disclosed check rather than a claim.
+
+---
+
+#### WHERE IT RENDERS — AND THE ASYMMETRY THAT EXPLAINS WHY A SHIPPED RULE "FOR EXACTLY THIS SHAPE" LOOKED LIKE IT SHOULD HAVE CAUGHT IT
+
+Verified by execution on the reproduced summary, and by reading every render site
+rather than assuming:
+
+- **THE JOB CARD SHOWS THE BRACKETS.** `card.ts:95` is
+  `summaryText: job.summary?.trim() || job.matchReason`, rendered raw at
+  `job-card.tsx:106`. **No re-clean. This is the surface A measured.**
+- **THE JOB DETAIL PAGE DOES NOT.** `jobs/[id]/page.tsx:935` is
+  `cleanJobDescription(job.summary)` — and because both brackets are **unmatched
+  inside the summary string** (their `[` partners were in unselected sentences),
+  `stripUnbalancedBrackets` deletes them. Measured: the same summary renders
+  clean there.
+- **Nowhere else.** `feed-tile.tsx:545` shows `job.matchReason`, not the summary;
+  the briefing cards carry no job summary; `card.ts:85` passes the summary to
+  `jobPrestige()` as a score input, not to the reader. **One reader-facing
+  surface, and it is the unguarded one.**
+
+**AND THE REASON FOUR ROUNDS OF GREEN TESTS NEVER SURFACED THIS.** B9-03's own
+shipped test (`job-cleanup.test.ts:73-79`) uses
+`"…Career Services Staff at WBL@lco. ] Internships…"` — **a SPACE-preceded
+bracket**, the one variant the rule handles. The live round-14 shape is its
+spaceless sibling. **Same pattern B13-02 found in hole 1: a passing test that
+passes for a reason narrower than the rule it appears to protect.**
+
+---
+
+#### FIX DESIGN B14-02 — `web/src/lib/jobs/summarize.ts`, at the DISPLAY stage, beside `stripLeadingLabel`
+
+```
+const LEADING_BRACKET_REMNANT_RE = /^\s*\]+\s*/;
+
+function stripLeadingBracketRemnant(text: string): string {
+  return text.replace(LEADING_BRACKET_REMNANT_RE, "");
+}
+```
+
+and in `scoreSentences`'s return (`summarize.ts:196`):
+
+```
+text: stripLeadingLabel(stripLeadingBracketRemnant(text)),
+```
+
+**WHY HERE AND NOT IN `cleanJobDescription`, WHICH IS THE OBVIOUS HOME.** This is
+the same trace B10-07 fix 2 already did and recorded in this file's own doc
+comment (`summarize.ts:107-120`), and it lands the same way for the same reason:
+
+1. **The defect is a property of the SENTENCE, not of the description.** The
+   bracket only reaches position 0 after `splitSentences` cuts and trims. There is
+   no "leading bracket" in the description to strip.
+2. **Placed here it cannot blind scoring.** Every check in `scoreSentences` —
+   `MIN_SENTENCE_LENGTH`, `NOISE_RE`, `looksLikeScrapedChrome`,
+   `endsWithTitleEcho`, `matchedCount`, `SECTION_RE`,
+   `sectionOpenerHasReadableContent`, `ROLE_RE`, `readableLengthScore` — runs
+   against the **original, unstripped** `text`; only the returned display `text`
+   is stripped. Verified by reading the function, not assumed. **This matters
+   concretely: `sectionOpenerHasReadableContent` calls `hasUnbalancedBracket`,
+   which counts `[` against `]`. Stripping upstream would change that count and
+   silently move `sectionScore` on every bracket-bearing sentence.**
+3. **`unconditional` is right here, on B9-03's own reasoning.** B9-03 made the
+   bracket rule unconditional because "no legitimate English prose uses a bare,
+   space-surrounded `]`", and made the dash rule conditional because a dash has a
+   legitimate space-surrounded use. **A sentence that BEGINS with a bare `]` is
+   the stronger case of the same argument** — no English sentence opens with a
+   closing bracket. Same precedent, applied where it is strongest.
+
+**THE ORDER IS LOAD-BEARING AND I MEASURED IT.** Bracket **first**, then label.
+`LEADING_LABEL_RE` is `^[A-Z]…`, so a leading `]` blocks it: today
+`"] What you'll do: Support engineering teams…"` renders with **both** junk
+prefixes. Bracket-first yields `"Support engineering teams…"`. **Disclosed as a
+deliberate consequence rather than left for C to discover: this makes B10-07
+fix 2 reachable in one more case, which is that fix's own intent — it was
+blocked by the bracket, not scoped away from it.** Label-first leaves the label.
+
+**ADVERSARIAL RESULT — 10/10, and the must-keeps are the point.**
+
+| sentence | today | with B14-02 |
+|---|---|---|
+| `] You have a passion for battery technology…` | unchanged (the defect) | **`You have a passion…`** |
+| `] What you'll do: Support engineering teams…` | unchanged | **`Support engineering teams…`** |
+| `]] Support engineering teams…` | unchanged | **`Support engineering teams…`** |
+| `Multi-Level: This is a multi-level posting…` | stripped (B10-07 fix 2) | **identical** |
+| `Role Overview: We're hiring a battery scientist…` | stripped | **identical** |
+| `Interface with the advanced research center…` | untouched | **identical** |
+| **`The bracket [see below] is part of a real sentence and must survive.`** | untouched | **UNTOUCHED** |
+| **`Applicants must hold a PhD [or equivalent] in materials science…`** | untouched | **UNTOUCHED** |
+| `] ` / `]` (degenerate) | unchanged | `""` — **unreachable**, `MIN_SENTENCE_LENGTH` (40) rejects them before scoring |
+
+---
+
+#### THE ALTERNATIVE I REJECTED, WITH ITS MEASURED COST
+
+**G2 — widen `ISOLATED_BRACKET_REMNANT_RE` to `/(?:\s+|(?<=[.!?]))\]\s+/g` so
+`cleanJobDescription` catches it upstream.** It does fix the live shape. **It also
+damages legitimate prose, measured:**
+
+- `"Applicants must hold a PhD [or equivalent.] Candidates should apply early."`
+  → `"…a PhD [or equivalent. Candidates should apply early."` — **the `[` is
+  orphaned.** By the time this rule runs, `stripUnbalancedBrackets` has already
+  balanced the text, so deleting a `]` *manufactures* the unmatched-bracket
+  artifact the whole rule family exists to remove.
+- `"He arrived late.] The meeting had already started."` → a legitimate bracketed
+  sentence loses its closer.
+
+**A fix that creates the class it removes is Ruling 40's stated reason for
+rejecting option (b). G2 does not land in any form.**
+
+---
+
+#### RULING 32's MANDATORY QUESTION — WHAT RENDERS WHEN THIS DOES AND DOES NOT FIRE
+
+**B14-02 is a REPAIR, not a rejection, so there is no rejection path that can
+produce a substitute value** — the same property Ruling 42 approved B13-03 on.
+
+- **Fires:** today's sentence minus its leading bracket. **Byte-identical to
+  today's value apart from the deleted characters.** It can never emit a
+  hostname, a placeholder, or a different string.
+- **Does not fire:** today's value exactly.
+- **Can it empty the summary?** No. A sentence only reaches this line after
+  clearing `MIN_SENTENCE_LENGTH` (40) on its **unstripped** text, so at least 38
+  characters always remain. `summarizeJob`'s `""` return is reachable only when
+  no sentence scores at all, which this change cannot cause.
+
+**NAMED LIMITATION, unobserved and deliberately not covered:** the `^`-anchored
+strip does not touch the mid-sentence variant (`]` after `:`/`-`/`,`) that the
+enumeration above found. **No round has observed it**, and the only design that
+would reach it is G2, which is rejected above. **Failure direction: the status
+quo, never a new value.**
+
+---
+
+#### TESTS AT RISK — NONE. STATED AFFIRMATIVELY BECAUSE "no findings" needs evidence.
+
+Every caller checked, not assumed. **`summarizeJob` has one non-test caller
+(`mapper.ts:137`).** In `summarize.test.ts` (324 lines) the only bracket
+assertion is line 236, `expect(summary).not.toMatch(/Qualifications:|###|\[/)` —
+it tests an **opening** `[`, which B14-02 does not touch, and it asserts the
+sentence is **excluded**, which is a scoring outcome B14-02 cannot change because
+scoring sees the unstripped text. **`job-cleanup.ts` is not modified, so all of
+B9-03's assertions — including `job-cleanup.test.ts:73`'s space-preceded
+remnant — are untouched.** `enrich.test.ts` (the SolarPACES lock) and
+`scoring.test.ts` neither import nor exercise `summarizeJob`.
+
+**Tests C should ADD:** the reproduction source above asserted end to end through
+`cleanJobDescription` + `summarizeJob` (assert no `]` in the summary and that the
+two sentences survive intact); the space-preceded control asserted as still clean;
+`"] What you'll do: Support…"` asserting BOTH prefixes go; the two must-keep
+bracketed prose sentences; and the `]]` double form. **C should also add one
+`job-cleanup.test.ts` must-keep** asserting `cleanJobDescription` still does
+**not** strip `".]"` — recording deliberately that the upstream rule is unchanged
+and that G2 was rejected, so a later round does not "complete" B9-03 by widening
+it.
+
+---
+
+#### WHERE THIS SITS RELATIVE TO RULING 37 — CONFIRMED SEPARATE
+
+A said it must not be absorbed into Ruling 37's accepted cost on the same
+posting, and the trace confirms that at the code level rather than by assertion:
+**Ruling 37's run-on is a scoring/selection artifact in the MAJORITY summary,
+sourced from the provider snippet; B14-02's bracket is a formatting artifact in
+the MINORITY summary, sourced from the fetched page.** Different source field,
+different mechanism, different file. **They cannot be one item.** Ruling 37's
+tally is unaffected by B14-02 landing.
+
+---
+
+#### ORDER FOR C, AND THE DEPENDENCY
+
+**B14-01 first, B14-02 second. There is no functional dependency between them** —
+different files (`jobweb.ts` vs `summarize.ts`), different stages (ingest vs
+render). B14-01 is ordered first because it carries the loop's only remaining
+wrong value and its test blast radius is the larger of the two. **B14-02 touches
+no test that currently exists**, so it is the cheaper of the pair.
+
+---
+
+**No `POLICY — manager decides` item on this entry.**
+
+**Cleanup:** `web/zz-r14b/` deleted before this commit; `git status
+--untracked-files=all` scoped to `web/` confirmed clean. **No product code
+touched. No test touched. No credential read, printed, logged or written. No page
+fetched, no pipeline pull run, no branch created, no PR opened, and
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` was not touched.**
+
+**Round 14 B is COMPLETE: two items, two designs, one commit each.**
+
+Commit follows immediately.
