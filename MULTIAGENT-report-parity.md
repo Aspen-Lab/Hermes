@@ -270,12 +270,158 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 10:18 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-14 10:14 UTC — ROUND 14 C IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 10:39 UTC — ROUND 15 A IS
+                  COMPLETE.** All four parts, one commit each, each pushed
+                  immediately (`eae697a`, `23e022b`, `8aea773`, this one).
+                  Claimed the lock cleanly (`6536e7f`) after
+                  `git pull --ff-only` and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; branch name re-read in the
+                  output of every push (§3). **A changed no code, deleted no
+                  test, and touched no file except this one.** Harness lived
+                  outside `src/` (`web/zz-r15a/`, own vitest config) and was
+                  deleted before the turn's first commit; tree clean.
+
+                  **METHOD, AND IT WAS A REAL LIVE PASS.** Five independent
+                  pulls per surface in five separate processes, no-op
+                  `PoolCache`, `buildDailyEventPool()`/`buildDailyJobPool()`
+                  then the mappers — the exact entry points §2 names.
+                  **`PEER_PROFILE_SNAPSHOT_PATH` was NOT used.** Keys checked
+                  as booleans only. **Per Ruling 42b the tier statement is
+                  "page-fetch enrichment ran, LLM enrichment did not."**
+                  **Summaries were read from the JOB CARD's own view model
+                  (`jobCardView().summaryText`), not the detail page** — the
+                  surface the brief named.
+
+                  **HEADLINE: BOTH ROUND-14 FIXES BEHAVE AS DESIGNED, THERE ARE
+                  ZERO WRONG VALUES ON EITHER SURFACE FOR THE FIRST TIME IN THIS
+                  LOOP'S HISTORY, AND THE GATE IS STILL NOT A CANDIDATE —
+                  BECAUSE ONE NEW DIFFERENCE APPEARED THAT IS A WRONG ITEM
+                  RATHER THAN A WRONG VALUE.**
+
+                  **B14-01 — CONFIRMED LIVE BY THE STRONGEST EVIDENCE THIS
+                  SURFACE ALLOWS.** `openmc.discourse.group` is **absent from
+                  all five pools** — **while the search provider returned the
+                  byte-identical URL and the byte-identical paginated
+                  `Announcements` title in ALL FIVE RUNS** (observed by wrapping
+                  `fetch` to record provider rows before any Peer filtering, at
+                  zero extra API cost — the cheap check B asked for). **That
+                  separates "the rule fired" from "the provider stopped
+                  returning it", and the rule fired.** All three recorded title
+                  shapes — including the `Users` shape absent since round 13 —
+                  drop from the one URL rule on replay. Ruling 43's item is
+                  closed on live data.
+
+                  **B14-02 — `targeted-confirmed, organically unmeasured`, and A
+                  does NOT upgrade that.** **Zero `]` on any card, any posting,
+                  any run** — but the bracket-bearing INPUT shape did not recur,
+                  so organic evidence cannot falsify the fix. The targeted replay
+                  of round 14's recorded source renders both sentences clean,
+                  non-empty, byte-identical apart from the deleted characters;
+                  the spaced control renders identically. **Owed: one live
+                  sighting. NOT an open difference.**
+
+                  **POOL-SHRINK ACCOUNTING: THERE WAS NO SHRINK.** Job union
+                  **14 → 16 (+2)**; per-run 12/13/13/15/13 against round 14's
+                  10/14/14/14/14. **The designed drop is exactly one item and
+                  exactly one item is gone.** **All 16 live items replay as KEPT
+                  through the shipped guard**, plus six historical must-keeps —
+                  **B14-01 over-fired on nothing.** *(One correction to the
+                  brief's premise: `MAX_OPPORTUNITY_POOL_ITEMS` is 200, so the
+                  `.slice()` cap is nowhere near binding — the conclusion was
+                  right, the mechanism was not the cap.)*
+
+                  **PER-SURFACE NUMBERS:** event names **0 of 13 → 0 of 11
+                  (0%), THIRD consecutive zero** (`euagenda.eu` excluded per
+                  38c); employer **1 of 9 (11.1%) → 0 of 8 non-null (0%)**; job
+                  summaries **4 of 16 bearing (25.0%) with ZERO carrying an open
+                  defect** (round 14: 1 of 4); job item shape **2 of 14 (14.3%)
+                  → 1 of 16 (6.3%)**. **ZERO run-to-run variance on every column
+                  of both surfaces — the cleanest reproducibility recorded.**
+                  Fixture score not re-run and not inherited as fresh.
+
+                  **THE ONE OPEN DIFFERENCE:
+                  `linkedin.com/jobs/ion-exchange-resin-jobs` — AN AGGREGATE
+                  SEARCH-RESULTS PAGE IN THE JOB POOL**, rendering role title
+                  `Ion Exchange Resin jobs in United States`, in **1 of 5**
+                  pulls. **The mechanism is isolated to ONE TOKEN and was
+                  measured, not guessed:** the shipped guard **drops**
+                  `1,000+ Molten Salt jobs in United States` @
+                  `/jobs/molten-salt-jobs` (B13-02's own target) and **keeps**
+                  `Ion Exchange Resin jobs in United States` @
+                  `/jobs/ion-exchange-resin-jobs`; re-add a leading count and it
+                  drops again. **Same host, same path family, same title
+                  grammar — the only difference is the number in front.**
+                  Ruling 32's class, same home (`isListingPage()`), two shipped
+                  precedents to design against.
+
+                  **FOUR TALLIES, ALL AFFIRMATIVE.** **Ruling 33: 0 of 4,
+                  cumulative 2 of 28 — AND THE ZERO IS AGAIN CHURN, NOT A FIX**
+                  (the only posting that ever produced it is absent a second
+                  round; the guard keeps it on replay). **NOT closed.**
+                  **Ruling 34a employer side: 1 of 8 (`careerservices.upenn.edu`
+                  5/5), running r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8,
+                  cumulative 4 of 48; event side: 1 of 11 (`The Battery Saloon`
+                  5/5, root `og:title` re-confirmed verbatim), running r13 1/14,
+                  r14 1/13, r15 1/11, cumulative 3 of 38 — SECOND DISTINCT
+                  INSTANCE ABSENT, so Ruling 42b's cross-check does NOT fire.**
+                  **Ruling 37: 1 of 4, baseline only, no second distinct
+                  instance, does not fire, FOURTH round running — and RULING
+                  44's new label-miss sub-count reads ZERO distinct instances,
+                  because the one candidate (`What you'll do`) carries NO COLON
+                  live, so `LEADING_LABEL_RE` never applies and it is already
+                  counted as the run-on. Counting it twice would inflate the
+                  number that could justify widening the label rule.**
+                  **Ruling 36: STAYS CLOSED, zero, third consecutive round — but
+                  by ABSENCE this round** (host churned out); the distinction
+                  from round 14's measured-correct zero is stated, not blurred.
+                  **Ruling 39c is no longer a tally** (its item shipped as
+                  B14-01); zero forum threads of any kind in the pool.
+
+                  **`euagenda.eu` RETEST DONE (38c): HTTP 403 AGAIN, FOURTH
+                  IDENTICAL RESULT. A RECOMMENDS PERMANENT EXCLUSION** rather
+                  than the every-third-round cadence — it has never once moved
+                  and Ruling 25 forbids the only instrument that could get behind
+                  it. If the cadence is kept, the next retry is round 18.
+                  **POLICY — manager decides.**
+
+                  **RULING 41c — all three hosts hunted by name again, all three
+                  still correct on replay, FOURTH consecutive round absent from
+                  the pool. Disclosed as targeted. A grades them
+                  `targeted-confirmed, organically unmeasured` and does not close
+                  them.** `isea.rwth-aachen.de`'s root was **unreachable from
+                  this machine** on two attempts (round 14: HTTP 200) — reported
+                  as measured, not diagnosed. **A also records a method
+                  correction against itself: its FIRST `adt.media` replay used a
+                  GUESSED URL path and the build KEPT the item; with the path
+                  round 12's census actually recorded, it drops. A's bad input,
+                  not a guard gap — recorded rather than quietly dropped.**
+
+                  **ONE FACT FOR THE MANAGER ON THE UNRESOLVED MAJORITY-SCORING
+                  POLICY:** this round had **zero within-round variance on every
+                  column of both surfaces**, which cuts against round 14's worry
+                  that the headline number tracks upstream weather — **but one
+                  host still moved BETWEEN rounds** (`talents.vaia.com`, correct
+                  → silent, proven upstream by replay, with B12-07's wrong value
+                  absent). Between-round variance is alive; within-round variance
+                  was not.
+
+                  **No credential read, printed, logged or written. No
+                  `PEER_PROFILE_SNAPSHOT_PATH`. Direct fetches clipped
+                  programmatically to `<title>`/first `<h1>`/`og:title` at 160
+                  chars; provider rows retained host, URL and a 120-char title
+                  only. No branch, worktree or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test
+                  deleted or edited. Harness deleted; tree clean.** Full detail
+                  in §4's four "Round 15 — Agent A" entries.
+                  ---
+                  Previous entry, kept for continuity: **round 14 C finished @
+                  2026-08-14 10:14 UTC — ROUND 14 C WAS
                   COMPLETE.** Both items landed, one commit each, each pushed
                   immediately (`8f4cb98`, `ea84cac`). Claimed the lock cleanly
                   (`daf1d64`) after `git pull --ff-only` and confirming
@@ -583,12 +729,108 @@ STOPPED BECAUSE:  **finished the turn @ 2026-08-14 10:14 UTC — ROUND 14 C IS
                   Ruling 42a's premise did not survive execution is what produced
                   Ruling 43. Full detail in §4's five "Round 13 — Agent C"
                   entries and the manager's verification.
-ROUND:            **15 — ROUND 14 IS CLOSED. A, B AND C ALL COMPLETE.** Both of
-                  round 14 A's open differences now have a SHIPPED, tested fix.
-                  **Round 15 is a GATE CANDIDATE ROUND: if A finds zero
-                  unexplained differences, the loop's remaining work is the
-                  manager's independent re-measurement, not a close.**
-WHOSE TURN:       **A — Reviewer, round 15. GATE CANDIDATE ROUND.** Standing
+ROUND:            **15 — A IS COMPLETE. B's TURN.** **The gate-candidate
+                  condition was NOT met**: A found **one** unexplained
+                  difference, so per A's own brief the hand-off is B with a
+                  ranked list, **not** the manager. **Both round-14 fixes behave
+                  as designed and there are ZERO wrong values on either surface
+                  — the first clean sweep on all three value columns in this
+                  loop's history. The one open item is a wrong ITEM, not a wrong
+                  value.** **Round 16 is the realistic gate-candidate round** if
+                  it lands and holds.
+WHOSE TURN:       **B — Investigator, round 15.** A's list is **ONE** numbered
+                  difference, in §4's "Round 15 — Agent A (part 4…)" entry, with
+                  the full evidence in parts 1–3. **B finds causes and writes a
+                  fix guide; B does not change code** (§2). Ruling 31's
+                  adversarial bar, Ruling 32's "what renders on rejection"
+                  question, and the open-class trap forbidden as always.
+
+                  **1. `linkedin.com/jobs/ion-exchange-resin-jobs` — AN
+                  AGGREGATE SEARCH-RESULTS PAGE IS IN THE JOB POOL, RENDERED AS
+                  A JOB.** Role title renders `Ion Exchange Resin jobs in United
+                  States`; employer and summary both empty. **1 of 5 pulls.**
+
+                  **A ALREADY ISOLATED THE MECHANISM TO ONE TOKEN BY EXECUTION —
+                  DO NOT RE-DERIVE IT.** Replayed through the shipped
+                  `isListingPage()`:
+                  - `1,000+ Molten Salt jobs in United States` @
+                    `/jobs/molten-salt-jobs` → **DROP** (B13-02's own named
+                    target)
+                  - `Ion Exchange Resin jobs in United States` @
+                    `/jobs/ion-exchange-resin-jobs` → **KEEP**
+                  - `1,000+ Ion Exchange Resin jobs in United States` @ the same
+                    path → **DROP**
+
+                  **Same host, same path family, same title grammar; the only
+                  difference is the leading count.** `LISTING_TITLE_RE`'s first
+                  alternative requires a numeric run before the
+                  `jobs|vacancies|openings|positions|opportunities` noun, and
+                  LinkedIn omits the count when the result set is small.
+
+                  **THREE WARNINGS BEFORE B DESIGNS ANYTHING:**
+                  - **The naive widening — making the count optional — is
+                    exactly the loosening that has burned this loop before.**
+                    B14-01 measured its own naive token-only variant at
+                    **46/58, destroying eight real posting URLs**; B13-02's own
+                    first draft lost two shapes by "tidying" the count form.
+                    **Measure the widening; do not assume it.**
+                  - **This is Ruling 32's class and it belongs in
+                    `isListingPage()`** — the same home B13-02 and B14-01 both
+                    landed in. **Do not build a host list for `linkedin.com`**:
+                    the same countless shape is available on every job board,
+                    and a host list is Ruling 32's headline complaint.
+                  - **Ruling 32's question is mandatory here: what renders on
+                    rejection?** The correct answer is that the item leaves the
+                    pool entirely, as B14-01's does — not that a field goes
+                    empty.
+
+                  **WHAT B MUST NOT TREAT AS OPEN:** `careerservices.upenn.edu`
+                  (34a), `batteryinnovationsummit.com`'s `The Battery Saloon`
+                  (39b — **and its second-instance trigger did NOT fire, so the
+                  enrichment cross-check is NOT authorised**),
+                  `careers.gevernova.com`'s colonless run-on (37 — the run-on
+                  only; **its bracket is FIXED and confirmed**), Ruling 44's
+                  label-miss (accepted cost, **and A counted ZERO distinct
+                  instances**), the `lco-cdo.org` `LCO` acronym (33 — **and note
+                  it zeroed by CHURN, not by fix**), same-page contamination
+                  (29, parked), `ecs.confex.com`'s bare host (39a/40 — **absent
+                  from the pool this round**), the document-URL retarget (42c,
+                  stays unbuilt), and **`euagenda.eu` (38c) — its retest is DONE
+                  for this round; do not re-fetch it.**
+
+                  **THREE THINGS A MEASURED THAT CHANGE WHAT A DESIGN WOULD DO,
+                  recorded so B does not re-derive them:**
+                  - **B14-01 fired 5 of 5 while the provider kept offering the
+                    row** — so the URL-route instrument is proven live, and it
+                    is the natural shape to reason from for this item.
+                  - **All 16 live pool items and six historical must-keeps replay
+                    as KEPT** through the shipped guard, so there is no existing
+                    over-fire to work around — the guard's current failure
+                    direction is purely under-catching.
+                  - **`befjobs.breakthroughenergy.org` names its employer after
+                    an `@` rather than ` at `** — recoverable and unrecovered,
+                    one instance. **An observation, not a defect claim and not an
+                    instruction to build.**
+
+                  **STILL OPEN FOR THE MANAGER, unchanged and NOT B's:** B11-04's
+                  flag and B8-03's `usajobs.ts` fallback under MANAGER
+                  CARRY-FORWARD below; **round 13's unresolved
+                  `POLICY — manager decides` on five-pull majority scoring**, on
+                  which A has added the strongest evidence yet (zero within-round
+                  variance on every column, but one host still moved between
+                  rounds); **A's recommendation that `euagenda.eu` be excluded
+                  PERMANENTLY rather than retested every third round**; and
+                  B12-03's three hosts, now `targeted-confirmed, organically
+                  unmeasured` for a second round and absent for a fourth.
+
+                  **GATE (0%): NOT MET.** A does not close it and B does not set
+                  it (§2); the manager re-measures independently before anything
+                  closes (Ruling 30).
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round 15 A
+                  instructions that follow are complete and were executed. Do
+                  not work from them.*
+                  **A — Reviewer, round 15. GATE CANDIDATE ROUND.** Standing
                   method (§2): a REAL live pull through
                   `buildDailyEventPool()`/`buildDailyJobPool()` plus the mappers,
                   five pulls per surface, the fixture score reported separately.
@@ -1529,26 +1771,36 @@ LAST DIFFERENCE:  **This is round 13 A's own live reading, taken AFTER all
                   §4 "Round 12 — Agent A (part N)" entries; the ranked
                   headline is in "(part 4: summary across parts 1–4, ranked
                   difference list, three tallies, gate verdict)."
-GATE (0%):        **NOT MET — round 13 A's own live verdict. Neither B nor C can
-                  close or move this**; producing a fix guide is not evidence a
-                  difference is gone, and neither is landing the fix — only round
-                  14's A's live measurement can change this line. Round 13 B has
-                  since designed three of the four (one deliberately unbuilt),
-                  which changes nothing here. **Four open differences remain** (ranked list in §4,
-                  "Round 13 — Agent A (part 4…)"): one live-confirmed wrong value
-                  at a 1-in-5 observed pull frequency
-                  (`openmc.discourse.group` → `Announcements`), one item-shape
-                  defect covering 4 of 20 job pool items, and two event-name
-                  under-extractions (`flogen.org`, `euchems2026.eu`). The five
-                  named accepted costs (`careerservices.upenn.edu` per Ruling
+GATE (0%):        **NOT MET — round 15 A's own live verdict, and THE GATE IS NOT
+                  A CANDIDATE. Neither B nor C can close or move this**;
+                  producing a fix guide is not evidence a difference is gone, and
+                  neither is landing the fix — only round 16's A's live
+                  measurement can change this line.
+                  **ONE open difference remains** (ranked list in §4, "Round 15 —
+                  Agent A (part 4…)"): **`linkedin.com/jobs/ion-exchange-resin-jobs`,
+                  an aggregate search-results page in the job pool rendered as a
+                  job**, at a 1-in-5 observed pull frequency. It is a wrong
+                  **item**, not a wrong value — **there are ZERO wrong values on
+                  either surface this round**, the first clean sweep on all three
+                  value columns in this loop's history.
+                  **Round 15 was briefed as a gate-candidate round and A applied
+                  the condition honestly: zero unexplained differences was
+                  required, one was found, so the hand-off is B and NOT the
+                  manager.** A deliberately did not call an intermittent listing
+                  page cosmetic to clear the gate — §2 forbids exactly that, and
+                  a card that promises a job and opens a search page is not
+                  cosmetic.
+                  The named accepted costs (`careerservices.upenn.edu` per Ruling
                   34a; `batteryinnovationsummit.com` per Ruling 39b;
-                  `careers.gevernova.com`'s run-on per Ruling 37;
-                  `lco-cdo.org`'s LCO acronym per Ruling 33; `ecs.confex.com`'s
-                  honest host per Rulings 39a/40) are excluded from that count,
-                  as their rulings require. Per §2's own instruction the gate is
-                  set to MET only on zero unexplained differences, **and A never
-                  closes it in any case — the manager re-measures independently
-                  before anything closes.**
+                  `careers.gevernova.com`'s run-on per Ruling 37; Ruling 44's
+                  label-miss; `lco-cdo.org`'s LCO acronym per Ruling 33;
+                  `ecs.confex.com`'s honest host per Rulings 39a/40) are
+                  **counted in their tallies and excluded from that count**, as
+                  their rulings require; `euagenda.eu` stays excluded per 38c
+                  with its retest done and still 403. Per §2's own instruction
+                  the gate is set to MET only on zero unexplained differences,
+                  **and A never closes it in any case — the manager re-measures
+                  independently before anything closes.**
                   **This is not a failure of round 12's work — it is the
                   opposite, and the distinction is the round's main result.**
                   Six of the seven landed fixes are confirmed live, both
@@ -32841,3 +33093,220 @@ parts 1–3 — ranked difference list, the combined per-surface numbers, and th
 gate verdict.
 
 Commit follows immediately.
+
+---
+
+### Round 15 — Agent A (part 4: summary across parts 1–3, the ranked difference list, and the GATE VERDICT — the gate is NOT a candidate, and one item is why)
+
+**STATUS: DONE. ROUND 15 A IS COMPLETE.** Written so B does not have to
+reassemble three separate entries. Full method, evidence and limits are in parts
+1–3; this part carries only what B and the manager need to act.
+
+---
+
+## THE HEADLINE, STATED BEFORE THE NUMBERS
+
+**BOTH ROUND-14 FIXES BEHAVE AS DESIGNED, THE LOOP'S LAST KNOWN WRONG VALUE IS
+GONE FROM EVERY SURFACE, AND THE GATE IS STILL NOT A CANDIDATE — BECAUSE ONE NEW
+DIFFERENCE APPEARED THAT NOBODY HAS SEEN BEFORE.**
+
+**There are ZERO wrong values on either surface this round.** Event names: 0 of
+11. Employer: 0 of 8 non-null. Job summaries: 0 open defects in 4. That is the
+first round in this loop's history with a clean sweep on all three value columns.
+
+**And it is not enough, because the one open difference is not a wrong value — it
+is a wrong ITEM.** A listing page is being presented to the reader as a job.
+
+---
+
+## PER-SURFACE NUMBERS, ROUND 15 vs ROUND 14
+
+| measure | round 14 | round 15 | direction |
+|---|---|---|---|
+| **Event names wrong** | 0 of 13 (0%) | **0 of 11 (0%)** | held — **third consecutive zero** |
+| **Employer wrong** (non-null) | 1 of 9 (11.1%) | **0 of 8 (0%)** | **BETTER — B14-01 removed the one wrong value** |
+| **Job summaries bearing** | 4 of 14 (28.6%) | **4 of 16 (25.0%)** | comparable; different day, different pool |
+| **Job summaries carrying an open defect** | 1 of 4 | **0 of 4** | **BETTER — B14-02's class is gone** |
+| **Job items that are not single postings** | 2 of 14 (14.3%) | **1 of 16 (6.3%)** | **BETTER, but not zero — see difference 1** |
+| **Event pool / job pool size (union)** | 14 / 14 | **12 / 16** | event churn; **job pool GREW by 2** |
+| **Run-to-run variance** | zero on employer; one summary varied | **ZERO ON EVERY COLUMN, BOTH SURFACES** | best recorded |
+
+**Fixture score: not re-run this round and NOT inherited as fresh.** Stated
+explicitly so no reader treats an old fixture number as current.
+
+---
+
+## THE RANKED DIFFERENCE LIST — ONE ITEM
+
+**1. `linkedin.com/jobs/ion-exchange-resin-jobs` — AN AGGREGATE SEARCH-RESULTS
+PAGE IS IN THE JOB POOL, RENDERED AS A JOB.** Observed live in **1 of 5 pulls**
+(run 4). Role title renders `Ion Exchange Resin jobs in United States`; employer
+and summary are both empty.
+
+- **What the plate has:** a card that names one vacancy the reader can apply to.
+- **What the build has:** a card that names a search query, opening a results
+  page.
+- **Which is wrong:** the build. The item should not be in the pool.
+- **The measured mechanism, isolated to one token** (A measures; B diagnoses):
+  the shipped guard **drops** `1,000+ Molten Salt jobs in United States` at
+  `/jobs/molten-salt-jobs` — one of B13-02's own four named targets — and
+  **keeps** `Ion Exchange Resin jobs in United States` at
+  `/jobs/ion-exchange-resin-jobs`. Re-add a leading count to the same title and
+  it drops again. **Same host, same path family, same title grammar; the only
+  difference is the number in front.**
+- **Why it is ranked first:** it is the only open item, and a reader clicking a
+  job card and landing on a search page is the most visible failure left on
+  either surface.
+- **What B should know before designing:** this is **Ruling 32's class** — the
+  same "non-posting in the pool" home B13-02 and B14-01 both landed in, which is
+  `isListingPage()`. It is **not** Ruling 39c's forum item (that is closed and
+  shipped) and **not** a new host. **Ruling 31's adversarial bar and the
+  open-class trap apply as always**, and B should note that the naive widening —
+  making the count optional — is exactly the kind of loosening that destroyed
+  eight real posting URLs when B14-01 measured its own naive variant, so it needs
+  measuring rather than assuming.
+
+**THAT IS THE WHOLE LIST. There is no difference 2.**
+
+---
+
+## POSITIVE CONFIRMATIONS — stated plainly, because a one-item list reads as if nothing else was checked
+
+- **B14-01 (`openmc.discourse.group`) — CONFIRMED LIVE, and by the strongest
+  evidence this surface allows.** Absent from all five pools **while the search
+  provider returned the byte-identical URL and the byte-identical `Announcements`
+  title in all five runs.** The rule fired; the row did not churn away. All three
+  recorded title shapes — including the `Users` shape absent since round 13 —
+  drop from the one URL rule on replay. **Ruling 43's item is closed on live
+  data.**
+- **B14-02 (`careers.gevernova.com`'s `]`) — `targeted-confirmed, organically
+  unmeasured`, and A will not upgrade that.** Zero brackets on any card, any
+  posting, any run — **but the bracket-bearing input shape did not recur**, so
+  the organic evidence cannot falsify the fix. The targeted replay of round 14's
+  recorded source renders both sentences clean, non-empty, byte-identical apart
+  from the deleted characters. **Owed: one live sighting. Not an open
+  difference.**
+- **B12-07 (`talents.vaia.com`) — still holding.** Its wrong value
+  (`Talents by Vaia`) is absent; the employer went silent through **upstream
+  variance**, proven by replay, not through a regression.
+- **B13-02's four targets — all still absent**, and the guard still rejects them
+  on replay.
+- **B12-04 (`internationalbatteryseminar.com`) — third consecutive correct
+  round.** **B10-01 + B9-02b (`postdocjobs.com`) — fifth consecutive round of
+  honest silence.** **B10-07 fix 2 (`inl.referrals…`) — fifth consecutive clean
+  round.** **Round 10's `employbl.com` stacked-chrome defect — fifth consecutive
+  round gone.**
+- **Zero regressions on either surface.** Every host that rendered correctly in
+  round 14 and reappeared renders byte-identically correctly today.
+- **All sixteen live job items replay as KEPT through the shipped guard**, so
+  neither B13-02 nor B14-01 has started over-firing on real postings.
+
+---
+
+## THE FOUR TALLIES, IN ONE PLACE (full reasoning in part 3)
+
+- **Ruling 33** — round 15: **0 of 4**; **cumulative 2 of 28**. **The zero is
+  CHURN, not a fix** — the only posting that has ever produced the collision is
+  absent for a second round and the shipped guard keeps it on replay. **NOT
+  closed.**
+- **Ruling 34a, employer side** — **1 of 8** (`careerservices.upenn.edu`, 5/5);
+  running r11 1/9, r12 1/10, r13 0/12, r14 1/9, r15 1/8 → **cumulative 4 of 48**.
+- **Ruling 34a, event side** — **1 of 11** (`The Battery Saloon`, 5/5, root
+  `og:title` re-confirmed verbatim); running r13 1/14, r14 1/13, r15 1/11 →
+  **cumulative 3 of 38**. **Second distinct instance ABSENT → Ruling 42b's
+  enrichment cross-check does NOT fire.**
+- **Ruling 37** — **1 of 4**, the baseline only, **no second distinct instance,
+  does not fire, FOURTH round running.** **Ruling 44's label-miss sub-count joins
+  this line and reads ZERO distinct instances** — the one candidate string
+  (`What you’ll do`) carries **no colon** in the live render, so
+  `LEADING_LABEL_RE` never applies to it and it is already counted as the run-on.
+  **Counting it twice would inflate the number that could justify widening the
+  label rule.**
+- **Ruling 36** — **STAYS CLOSED, zero instances, third consecutive round — but
+  by ABSENCE this round**, the host having churned out of the event pool. The
+  distinction from round 14's measured-correct zero is stated, not blurred.
+- **Ruling 39c** — **no longer a tally**; its item shipped as B14-01. Recorded so
+  it is not counted twice. Zero forum threads of any kind in the job pool.
+
+---
+
+## THE TWO EXCLUSIONS AND ONE RECOMMENDATION THE MANAGER MUST RULE ON
+
+- **`euagenda.eu` (Ruling 38c) — RETEST DONE THIS ROUND, STILL HTTP 403, FOURTH
+  IDENTICAL RESULT.** **A recommends PERMANENT exclusion rather than the
+  every-third-round cadence**, on the evidence that it has never once moved and
+  Ruling 25 forbids the only instrument that could get behind it. **If the
+  manager keeps the cadence, the next retry is round 18.** **POLICY — manager
+  decides.**
+- **Ruling 41c's three hosts (`battery2030.eu`, `isea.rwth-aachen.de`,
+  `adt.media`) — hunted by name again, all three still correct on replay,
+  disclosed as targeted.** **Fourth consecutive round absent from the pool**, so
+  "wait for pool luck" has now failed four times. A grades them
+  `targeted-confirmed, organically unmeasured` and does not close them.
+  `isea.rwth-aachen.de`'s root was **unreachable from this machine** on two
+  attempts (round 14: HTTP 200) — reported as measured, not diagnosed.
+
+---
+
+## STILL OPEN FOR THE MANAGER, CARRIED FORWARD UNCHANGED — NOT A's TO DECIDE
+
+- B11-04's flag and B8-03's `usajobs.ts` fallback (MANAGER CARRY-FORWARD in §1).
+- **Round 13's unresolved `POLICY — manager decides` on five-pull majority
+  scoring**, deferred by the manager to this round. **A adds evidence that now
+  points one way: this round had ZERO run-to-run variance on every column of both
+  surfaces** — the cleanest reproducibility the loop has recorded. Round 14's
+  worry was that the headline number tracked upstream weather; this round there
+  was no weather. **One host still moved between rounds (`talents.vaia.com`,
+  correct → silent), so between-round variance is alive even though
+  within-round variance is gone.**
+- **Ruling 44** is issued and applied; its sub-count is kept from this round on.
+- **NEW, and A flags it rather than deciding it:** `befjobs.breakthroughenergy.org`
+  names its employer after an **`@`** rather than ` at `, so the value is
+  recoverable and unrecovered. **One instance, one host, no recommendation** —
+  recorded so it is not rediscovered as fresh, exactly as `lco.global/about/interns`
+  was recorded in round 14.
+
+---
+
+## GATE VERDICT
+
+**GATE (0%): NOT MET. THE GATE IS NOT A CANDIDATE THIS ROUND.**
+
+A found **one unexplained difference**, so the gate-candidate condition —
+**zero** unexplained differences on both surfaces — **is not satisfied**, and A
+follows the brief exactly: **`WHOSE TURN: B`, with the ranked list above.**
+
+**A did not write `GATE (0%): MET`, did not write "gate met", did not write "loop
+complete", and did not set the manager hand-off** — those were reserved for a
+zero finding, and the finding is not zero. **A never closes the gate** (§2,
+Ruling 30), and that rule is stated here precisely because this was the round it
+would have been tempting to bend: every value column came back clean, and a
+looser reader could have called one intermittent listing page cosmetic and
+declared victory. **It is not cosmetic — it is a card that promises a job and
+delivers a search page — and §2 forbids calling a difference cosmetic in order to
+clear the gate.**
+
+**How close this is, stated honestly so the manager can plan:** the loop's open
+work is **one item, in the one function that is already this class's home**, with
+two shipped precedents (B13-02, B14-01) to design against. **Round 16 is the
+realistic gate-candidate round** if that item lands and holds.
+
+---
+
+**Round 15 A is COMPLETE: four parts, one commit each, each pushed immediately.**
+Claimed the lock cleanly (`6536e7f`) after `git pull --ff-only` and confirming
+`git branch --show-current` reads `feature/summary-report-revamp`; branch name
+re-read in the output of every push (§3). **A changed no code, deleted no test,
+and touched no file except this one.** Harness lived outside `src/`
+(`web/zz-r15a/`, own vitest config) and was deleted before the turn's first
+commit; tree confirmed clean.
+
+**No credential read, printed, logged or written — boolean presence only. No
+`PEER_PROFILE_SNAPSHOT_PATH`. Direct fetches clipped programmatically to
+`<title>`/first `<h1>`/`og:title` at 160 characters; the provider-row observation
+retained host, URL and a 120-character title only. No large block of third-party
+text was read into context, and no fetched page contained text directed at an
+agent. No branch, worktree or PR.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.**
+
+Commit follows immediately, together with the §1 update.
