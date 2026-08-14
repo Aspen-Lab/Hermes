@@ -1010,6 +1010,80 @@ function stripWeldedPageTypeLabel(segment: string): string {
   return segment;
 }
 
+/**
+ * B13-03 (round 13): the BANNER LEAD-IN. `flogen.org` rendered
+ * `WELCOME TO SIPS 2026` — a page's greeting banner standing where its event
+ * name belongs, for five rounds.
+ *
+ * WHY THE FIX IS HERE AND NOT WHERE ANYBODY EXPECTED. B established by
+ * execution that **no stage ever sees the clean title and no guard eats it**:
+ * the page's own `<title>` (`SIPS 2026 by FLOGEN Stars Outreach`) passes every
+ * guard untouched, so if any stage had it, it would be the render. It never
+ * arrives — the provider hands Peer the page's `og:title`/`<h1>`, and the
+ * enrichment path reads JSON-LD `name` and `og:title` and never parses a
+ * `<title>` element at all. Both routes end at this same function, which is
+ * why one attachment point covers both: the enrichment path also runs its
+ * `og:title` through `bestEventTitleSegment`.
+ *
+ * Two nearer-looking homes were tried and are both structurally unavailable,
+ * recorded so they are not re-proposed: B12-01's `leadingNameSpan` DROPS this
+ * value to the bare host `flogen.org` rather than repairing it (the span
+ * carries no event-kind noun), which is strictly worse than today; and
+ * B12-02's sibling recovery cannot fire, because the title has no separator to
+ * split on and the slug `sips2026` has none either, so `isSlugCorroborated` is
+ * false on this host and always will be.
+ *
+ * `to` IS MANDATORY AND IT IS LOAD-BEARING. C MUST NOT SIMPLIFY IT TO
+ * OPTIONAL. B's first draft made it optional and B's own traps destroyed three
+ * of four real event names — `Welcome Reception and Poster Session` →
+ * `Reception and Poster Session`, `Welcome Week Careers Fair 2026` → `Week
+ * Careers Fair 2026`, `Welcome Home Veterans Summit 2026` → `Home Veterans
+ * Summit 2026`. `Welcome` is a perfectly ordinary first word of a real event
+ * name; `Welcome to` never is. All four traps are asserted in the suite.
+ *
+ * Ruling 37's bar, answered directly: the vocabulary is a SINGLE TWO-WORD
+ * PHRASE, not a grammatical class. It cannot be "widened without being closed"
+ * because there is nothing to widen — `welcome to` either prefixes the string
+ * or it does not.
+ *
+ * Ruling 32's mandatory question, and the answer here is unlike every other
+ * item this round: this is a REPAIR, not a selection. Every check below is a
+ * VETO and the fallback is `return segment` unchanged. **When it does not
+ * fire, the render is byte-identical to today's value. There is no path by
+ * which this can produce a bare hostname, `"Untitled event"`, or any
+ * placeholder** — nothing is rejected, nothing is dropped, no fallback is
+ * reached. That is the same failure-direction property `stripWeldedPageTypeLabel`
+ * above claims, and it is why this design is safe in a way a rejection-based
+ * one would not be.
+ *
+ * IMPLEMENTATION NOTE, and it is this file's own recorded lesson: veto 3 is
+ * "the remainder must still pass what `bestEventTitleSegment` accepts", and it
+ * is written as the guard pair DIRECTLY — `isChromeSegment` +
+ * `looksLikeEventTitle` — exactly as `recoverFromNarrative` step 3 does, and
+ * for the identical reason recorded there: calling `bestEventTitleSegment`
+ * from here would be infinite recursion, since it is this function's own
+ * caller. Veto 2 reuses `recoverFromNarrative` step 4's disjunction verbatim
+ * rather than re-inventing a corroboration test (Ruling 35).
+ */
+const BANNER_LEAD_IN_RE = /^welcome\s+to\s+(?:the\s+)?/i;
+
+function stripBannerLeadIn(segment: string, host: string | undefined): string {
+  if (!BANNER_LEAD_IN_RE.test(segment)) return segment;
+  const remainder = segment.replace(BANNER_LEAD_IN_RE, "").trim();
+  // 1. Non-empty.
+  if (!remainder) return segment;
+  // 2. The remainder must actually look like an event's name, by one of two
+  //    closed tests — the same disjunction `recoverFromNarrative` step 4 uses.
+  //    This is what leaves `Welcome to Our Site`, `Welcome to the Department of
+  //    Chemistry` and `Welcome to FLOGEN` alone: nothing corroborates them.
+  if (!YEAR_RE.test(remainder) && !looksLikeEvent(remainder)) return segment;
+  // 3. The remainder must still pass the shipped guard pair unchanged.
+  if (isChromeSegment(remainder, host) || !looksLikeEventTitle(remainder)) {
+    return segment;
+  }
+  return remainder;
+}
+
 export function bestEventTitleSegment(
   title: string,
   url?: string,
@@ -1056,8 +1130,17 @@ export function bestEventTitleSegment(
     // Deliberately last, after selection: the label is part of why a segment
     // wins the longest-wins tie-break, so stripping earlier would change which
     // segment is picked, which is not what this fix is for.
-    return stripWeldedPageTypeLabel(
-      pool.reduce((best, part) => (part.length > best.length ? part : best)),
+    // B13-03: strip a banner lead-in off the CHOSEN segment, after the welded
+    // label. Same place and same "edit an accepted candidate" shape as
+    // B12-03's strip above; the two vocabularies are disjoint, so composing
+    // them is strictly better than either alone and neither can undo the
+    // other. This one attachment point also covers the enrichment route,
+    // which runs its own `og:title` back through this function.
+    return stripBannerLeadIn(
+      stripWeldedPageTypeLabel(
+        pool.reduce((best, part) => (part.length > best.length ? part : best)),
+      ),
+      host,
     );
   }
 

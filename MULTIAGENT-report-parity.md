@@ -29463,3 +29463,129 @@ to confirm no temporary marker survived, re-run: **114 passed**.
 
 Commit follows immediately; pushed on the same breath.
 
+
+---
+
+### Round 13 — Agent C (B13-03: the `flogen.org` banner lead-in strip — LANDED per Ruling 42, three named test files run individually, SolarPACES lock 25/25)
+
+**STATUS: DONE.** Third of round 13 C's items. Same session, same lock.
+
+**THE OPT-OUT WAS NOT TAKEN.** B offered C the option of declining this as
+cosmetic. **Ruling 42 declines the opt-out and orders it landed**, so it landed.
+C did not re-litigate B's ranking-honesty section or the manager's call.
+
+---
+
+#### WHAT LANDED
+
+`web/src/lib/events/sources/eventweb.ts`, a sibling of
+`stripWeldedPageTypeLabel`, applied to the CHOSEN segment in
+`bestEventTitleSegment` — B's 17/17 design: strip
+`/^welcome\s+to\s+(?:the\s+)?/i`, then three vetoes with `return segment` as
+the fallback: (1) the remainder is non-empty; (2) it carries a year OR an
+event-kind signal — the same disjunction `recoverFromNarrative` step 4 already
+uses, reused not re-invented, per Ruling 35; (3) it still passes the shipped
+guard pair.
+
+**`to` IS MANDATORY AND IT STAYED MANDATORY.** The doc comment names all three
+real event names B's optional-`to` draft mutilated, and **all four
+`Welcome`-initial traps are asserted as must-survive**, so simplifying it back
+breaks the suite rather than the reader.
+
+**THE REJECTION PATH IS BYTE-IDENTICALLY TODAY'S VALUE, exactly as the brief
+requires.** Every check is a veto; the function returns `segment` unchanged.
+There is **no path by which this item can produce a hostname, a placeholder, or
+`"Untitled event"`** — nothing is rejected, nothing is dropped, no fallback is
+reached. This is a repair, not a selection.
+
+**ONE IMPLEMENTATION DECISION, RECORDED RATHER THAN MADE SILENTLY.** B's veto 3
+reads "remainder still passes the shipped `bestEventTitleSegment` unchanged".
+Written literally that is **infinite recursion** — `bestEventTitleSegment` is
+this function's own caller, and this file already carries that exact lesson at
+`recoverFromNarrative`'s implementation note, which B itself hit in round 12. So
+veto 3 is written the way that note prescribes: the guard pair
+(`isChromeSegment` + `looksLikeEventTitle`) called DIRECTLY. This is strictly
+NARROWER than a looser reading — more vetoes means more "do not modify" — so it
+cannot introduce a wrong value; the worst case is that it repairs less than B
+intended. It repaired every case in B's matrix.
+
+**Attachment order:** welded-label strip first, banner strip second. The two
+vocabularies are disjoint, so neither can undo the other, and composing them is
+strictly better than either alone — asserted by a test
+(`Welcome to the Battery Conference 2026 Call for Papers` becomes
+`Battery Conference 2026`).
+
+---
+
+#### **THE EXPECTED RENDER, STATED FOR ROUND 14's A SO IT IS NOT GRADED WRONG**
+
+**`flogen.org` should now render `SIPS 2026`.**
+
+**It should NOT render `SIPS 2026 by FLOGEN Stars Outreach`.** That string is
+the page's `<title>` element, and B established by execution that **it never
+reaches any stage of the pipeline** — the provider hands Peer the
+`og:title`/`<h1>` (`WELCOME TO SIPS 2026`), and the enrichment path reads
+JSON-LD `name` and `og:title` and never parses a `<title>` element at all. **No
+fix at this layer can produce the `<title>` string**, so A must not score its
+absence as a failure. The banner is removed; what is left is what the pipeline
+actually has.
+
+---
+
+#### TESTS — 19 added, 0 deleted, 0 edited. **NEGATIVE-PROOFED: 7 of 19 fail on the reverted source.**
+
+`eventweb.test.ts`: the live value; four constructed banner variants; the four
+`Welcome`-initial traps; the uncorroborated banners; five live-confirmed correct
+names including `32nd SolarPACES Conference` and `The Battery Show North
+America` (whose leading article must survive, Ruling 39a point 4); one
+`eventNameFrom` case so the repair is asserted at the reader-facing entry point
+and not only at the helper; and the composition case.
+
+**Negative proof:** source stashed, tests left in place gave **7 failed / 114
+passed of 121**; the 7 are the repairs and the composition case, and **the 12
+must-keeps passed on the old source too**, which is what "mutilates nothing"
+means. Restored, **121 passed**.
+
+**ONE ASSERTION OF MINE WAS WRONG AND I FIXED THE ASSERTION, NOT THE CODE —
+recorded because a silent adjustment here would be exactly the kind of thing
+this loop exists to catch.** B's matrix lists `Welcome to the Department of
+Chemistry` as "correctly left alone". The strip does leave it alone. But
+`bestEventTitleSegment` returns **`undefined`** for that whole string, not the
+string itself — the segment is rejected upstream by the function's own shipped
+guards, before this strip is ever reached. **I verified this is identical before
+and after B13-03 by stashing the source change and re-running**, so it is the
+status quo and not a regression. The test now asserts the real contract (the
+strip never manufactures `Department of Chemistry` from it) with a comment
+explaining why this one case reads differently from its two siblings. **B's
+design is not affected; only my expectation was.**
+
+---
+
+#### THE THREE NAMED TEST FILES, RUN INDIVIDUALLY AS THE BRIEF REQUIRES
+
+| file | result |
+|---|---|
+| `src/lib/events/sources/eventweb.test.ts` | **121 passed (121)** |
+| `src/lib/opportunities/enrich.test.ts` — **the SolarPACES lock** | **25 passed (25)** |
+| `src/lib/events/scoring.test.ts` — the twice-missed file | **71 passed (71)** |
+
+**THE SOLARPACES LINE: `enrich.test.ts` — 25 passed (25), run solo.** The lock's
+own assertion (`expect(enriched.name).toBe("32nd SolarPACES Conference")`, in
+the test named "uses one current body declaration instead of a deadline
+headline") was **additionally run on its own by name: 1 passed, 24 skipped.**
+That value is in B's matrix as a must-not-touch and it is untouched.
+
+`scoring.test.ts` — the file whose own comment records it being missed once
+before for exactly this reason — was run by name and is green. It does import
+`eventNameFrom` from `eventweb.ts`, so it was genuinely at risk; none of its six
+asserted names begins `Welcome to`, which is why it does not move.
+
+---
+
+#### GATE AFTER THIS ITEM
+
+`npx vitest run` gave **90 files / 1226 tests, 1225 passing**; only failure is
+`benchmark.test.ts`, the standing live flake. `npx tsc --noEmit` clean.
+`npx eslint` gave **1 error, `quiz.tsx:46`**, unchanged.
+
+Commit follows immediately; pushed on the same breath.

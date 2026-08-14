@@ -1239,3 +1239,113 @@ describe("webResultToRawEventItem", () => {
     expect(item?.name).toBe("Rivertown Summit");
   });
 });
+
+// B13-03 (round 13): the BANNER LEAD-IN. `flogen.org` rendered
+// `WELCOME TO SIPS 2026` — a page's greeting banner standing where its event
+// name belongs — for five rounds.
+//
+// The mechanism, established by B through execution: the page's own <title>
+// (`SIPS 2026 by FLOGEN Stars Outreach`) passes every guard untouched, so no
+// stage ever HAS it. The provider hands Peer the og:title/<h1> instead, and
+// the enrichment path reads JSON-LD name and og:title and never parses a
+// <title> element at all. Both routes end at bestEventTitleSegment, which is
+// why this one attachment point covers both.
+//
+// EXPECTED RENDER AFTER THIS FIX: `SIPS 2026`. NOT
+// `SIPS 2026 by FLOGEN Stars Outreach` — that string is the page <title> and
+// it never reaches the pipeline, so no fix at this layer can produce it.
+//
+// This is a REPAIR, not a selection: every check is a veto and the fallback is
+// the segment unchanged. When it does not fire the render is byte-identical to
+// today's, and there is no path by which it can produce a bare hostname or a
+// placeholder.
+describe("banner lead-in strip (B13-03)", () => {
+  it("repairs the live flogen.org value", () => {
+    expect(
+      bestEventTitleSegment("WELCOME TO SIPS 2026", "https://www.flogen.org/sips2026/"),
+    ).toBe("SIPS 2026");
+  });
+
+  it.each([
+    ["Welcome to SIPS 2026", "SIPS 2026"],
+    ["Welcome to the SIPS 2026", "SIPS 2026"],
+    ["WELCOME TO THE 2027 BATTERY CONFERENCE", "2027 BATTERY CONFERENCE"],
+    ["Welcome to the International Battery Symposium", "International Battery Symposium"],
+  ])("repairs the banner variant %s", (title, expected) => {
+    expect(bestEventTitleSegment(title, "https://example.org/event")).toBe(expected);
+  });
+
+  // MUST-SURVIVE, AND THE REASON `to` IS MANDATORY IN THE PATTERN.
+  // B's FIRST DRAFT MADE `to` OPTIONAL AND THESE THREE REAL EVENT NAMES WERE
+  // MUTILATED — `Welcome Reception and Poster Session` became `Reception and
+  // Poster Session`, `Welcome Week Careers Fair 2026` became `Week Careers
+  // Fair 2026`, `Welcome Home Veterans Summit 2026` became `Home Veterans
+  // Summit 2026`. `Welcome` is an ordinary first word of a real event name;
+  // `Welcome to` never is. DO NOT SIMPLIFY `to` TO OPTIONAL.
+  it.each([
+    "Welcome Reception and Poster Session",
+    "Welcome Week Careers Fair 2026",
+    "Welcome Home Veterans Summit 2026",
+    "Welcome Center Open House",
+  ])("leaves the Welcome-initial real event name untouched: %s", (title) => {
+    expect(bestEventTitleSegment(title, "https://example.org/event")).toBe(title);
+  });
+
+  // MUST-SURVIVE: banners whose remainder nothing corroborates. Veto 2 (a year
+  // OR an event-kind signal, the same disjunction recoverFromNarrative uses)
+  // stops the strip firing, so the outcome is byte-identical to today's.
+  it.each(["Welcome to Our Site", "Welcome to FLOGEN"])(
+    "leaves an uncorroborated banner untouched: %s",
+    (title) => {
+      expect(bestEventTitleSegment(title, "https://example.org/page")).toBe(title);
+    },
+  );
+
+  // `Welcome to the Department of Chemistry` is B's third uncorroborated
+  // banner, asserted separately because its shipped outcome is `undefined`,
+  // not the input string — the WHOLE segment is rejected upstream by
+  // bestEventTitleSegment's own guards, before this strip is ever reached.
+  // VERIFIED IDENTICAL BEFORE AND AFTER B13-03 (checked by stashing the source
+  // change and re-running), so this is the status quo, not a regression. What
+  // matters for this item is the same thing B's matrix recorded: the strip
+  // does not fire, and in particular it never manufactures a name here.
+  it("does not manufacture a name from an uncorroborated department banner", () => {
+    const result = bestEventTitleSegment(
+      "Welcome to the Department of Chemistry",
+      "https://example.org/page",
+    );
+    expect(result).not.toBe("Department of Chemistry");
+    expect(result).toBeUndefined();
+  });
+
+  // MUST-SURVIVE: live-confirmed correct names from earlier rounds' fixes.
+  // `32nd SolarPACES Conference` is the value the enrich.test.ts regression
+  // lock asserts; `The Battery Show North America`'s leading article must
+  // survive per Ruling 39a point 4.
+  it.each([
+    "2026 Crystal Engineering GRC",
+    "32nd SolarPACES Conference",
+    "International Battery Seminar",
+    "The Battery Show North America",
+    "Advanced Battery Power Conference 2026",
+  ])("leaves the live-confirmed correct name untouched: %s", (title) => {
+    expect(bestEventTitleSegment(title, "https://example.org/event")).toBe(title);
+  });
+
+  it("reaches the reader through eventNameFrom, not only the segment helper", () => {
+    expect(
+      eventNameFrom("WELCOME TO SIPS 2026", "", "https://www.flogen.org/sips2026/"),
+    ).toBe("SIPS 2026");
+  });
+
+  // The two strips compose: B12-03's welded label comes off first, then this
+  // one. Neither vocabulary can undo the other.
+  it("composes with the welded page-type label strip", () => {
+    expect(
+      bestEventTitleSegment(
+        "Welcome to the Battery Conference 2026 Call for Papers",
+        "https://example.org/event",
+      ),
+    ).toBe("Battery Conference 2026");
+  });
+});
