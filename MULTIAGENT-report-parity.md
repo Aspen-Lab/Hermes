@@ -3412,11 +3412,23 @@ fees present may collapse when a real event has one, or none.
   is the working precedent — copy its profile-loading shape.** It also honours a
   `PEER_PROFILE_SNAPSHOT_PATH` override.
 - **Keys present as of 2026-08-05:** `tavilyApiKey` (event search),
-  `adzunaAppKey` + `usajobsApiKey` (job search). **`feedAiApiKey` is EMPTY** —
-  so a real-data run produces **Tier 0 only**, with no enrichment. That is
-  fine and expected: everything plate 02 and plate 03 show above the locked
-  block is Tier 0. Render real items at Tier 0, say so in your log, and keep
-  using the hand-built fixture for the enriched states.
+  `adzunaAppKey` + `usajobsApiKey` (job search). **`feedAiApiKey` is EMPTY.**
+  **CORRECTED 2026-08-14 per §1ac Ruling 42b — the old wording here ("so a
+  real-data run produces Tier 0 only, with no enrichment") IS STRUCK, and no
+  round may repeat it.** B13-03 proved from the code that
+  **`feedAiApiKey` gates only the LLM report enrichment (`enrichment.ts`, note
+  the `-ment`). The PAGE-FETCH ENRICHMENT TIER IS NOT DARK: it runs on every
+  live pull and needs no API key** — `buildDailyEventPool()`/`buildDailyJobPool()`
+  both pass `{ enrichDetails: true }`, and the fetch on that path is a plain
+  `fetch` with a User-Agent. **A's past numbers are NOT in question — every
+  event name A has ever scored was already post-page-fetch-enrichment; only the
+  label on the mechanism was wrong.** Consequences for A: say
+  "page-fetch enrichment ran, LLM enrichment did not" rather than "Tier 0
+  only", and **treat a fix placed on the page-fetch enrichment path as testable
+  by the standing live method** — it is reachable today. Ruling 39b's acceptance
+  still stands on its remaining reasons; only its premise moved (42b).
+  Everything plate 02 and plate 03 show above the locked block is still Tier 0,
+  so keep using the hand-built fixture for the LLM-enriched states.
 
 **Security, unchanged and absolute:** the key is read from that file at
 runtime and used. **Never print it, never echo it into a log, never write it
@@ -29589,3 +29601,56 @@ asserted names begins `Welcome to`, which is why it does not move.
 `npx eslint` gave **1 error, `quiz.tsx:46`**, unchanged.
 
 Commit follows immediately; pushed on the same breath.
+
+---
+
+### Round 13 — Agent C (item 4: the §2 tier-note correction per Ruling 42b; and B13-04: nothing to build, which is the outcome)
+
+**STATUS: DONE.** Both closed here. Same session, same lock.
+
+---
+
+#### ITEM 4 — §2's TIER NOTE IS CORRECTED IN PLACE
+
+**Its own commit, not folded into B13-03's.** The brief left the choice to C and
+logged it either way; separating them keeps a docs correction independently
+revertible from a code change, and keeps each commit's diff readable.
+
+**What was struck, verbatim:** *"so a real-data run produces Tier 0 only, with
+no enrichment."* **What replaced it** cites §1ac Ruling 42b by name and states
+the corrected fact: `feedAiApiKey` gates only the LLM report enrichment
+(`enrichment.ts`, the `-ment` module); **the page-fetch enrichment tier is not
+dark — it runs on every live pull and needs no API key.**
+
+**Scope check, done rather than assumed:** §2 was grepped for every other
+occurrence of the claim. **There is exactly one, and it is the one corrected.**
+No other live section repeats it. §4's round log carries the old wording in
+several places and **was deliberately NOT touched — it is append-only history
+(§3), and rewriting it is the one thing this loop forbids outright.** The
+correction is stated where it governs future behaviour.
+
+**Two consequences written into the note so round 14's A acts on them:** say
+"page-fetch enrichment ran, LLM enrichment did not" rather than "Tier 0 only";
+and **treat a fix placed on the page-fetch enrichment path as testable by the
+standing live method**, because it is reachable today. Ruling 39b's acceptance
+still stands on its remaining reasons — only its premise moved, exactly as 42b
+says.
+
+**No credential was read, printed, logged or written** at any point in this
+turn; this item is a prose edit and touched no key-bearing code path.
+
+**Gate after this item** (docs-only, run anyway because the standard is
+binding): **1226 tests / 1225 passing**, only the `benchmark.test.ts` live
+flake; `tsc` clean; `eslint` 1 standing error at `quiz.tsx:46`.
+
+---
+
+#### B13-04 — NOTHING TO BUILD, AND THAT IS THE OUTCOME
+
+**No code was written for `euchems2026.eu`, and none should have been.** B
+established the title and slug stages are both correct and that the chain
+already recovers the real name the moment the snippet carries it in a usable
+shape; **Ruling 42c settles it by measurement, not by building: round 14's A
+adds the disclosed column, and only then does anyone act.** C's job on this item
+was nothing. Logged as done, not as skipped.
+
