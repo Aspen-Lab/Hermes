@@ -60705,3 +60705,302 @@ what the byte-identical table above measures rather than asserts.
 one commit each, each pushed immediately.
 
 ---
+
+### Round 24 — Agent B (item 2 of 3: **A24-01 — `cambridgeenertech.com`. ONE mechanism, three faces, and the index-page detector A's brief assumes is missing HAS BEEN SHIPPED ALL ALONG AND ALREADY RUNS ON THIS ROW. It is END-ANCHORED, and a site-chrome tail walks straight past it. B's own five live pulls COULD NOT REPRODUCE THE POOL ROW — and B says so before quoting the mechanism, which is proven deterministically instead.**)
+
+**Date: 2026-08-15. Everything below is EXECUTED.** One 5-pull live census
+(150 offered rows, union-deduped on `url + title` per round 24 A's own corrected
+key) plus function-level probes. Throwaway files deleted before this commit. B
+changed no shipped code. **No credential printed, logged or written; presence
+checked as a boolean only.**
+
+---
+
+## FIRST, THE THING THAT CHANGES THE ITEM: **PEER ALREADY HAS AN INDEX-PAGE DETECTOR, IT ALREADY RUNS ON THIS EXACT ROW, AND THE SHIPPED TEST SUITE ALREADY ASSERTS THE RIGHT ANSWER FOR IT.**
+
+- **`isEventIndexPage`** — `web/src/lib/events/sources/eventweb.ts:485-487`,
+  regex `EVENT_INDEX_TITLE_RE` at **`:344-345`**.
+- It is called at **`web/src/lib/events/sources/eventweb.ts:1596`**, the
+  **fourth** check in `webResultToRawEventItem`, and returning `true` drops the
+  whole row.
+- **`web/src/lib/events/scoring.test.ts:598` ALREADY ASSERTS
+  `isEventIndexPage("Upcoming Energy Storage Conferences") === true`.** The
+  contract for this page is not being invented here. It is shipped, tested, and
+  correct.
+
+**So nothing is missing. Something is ESCAPING.**
+
+## THE MECHANISM — **ONE GAP, ONE ANCHOR CHARACTER, PROVEN IN BOTH DIRECTIONS ON THE SAME URL**
+
+`EVENT_INDEX_TITLE_RE`'s third alternative is
+
+```
+^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events?|conferences?|seminars?|workshops?)\s*$
+```
+
+**It is END-ANCHORED (`\s*$`).** The title must FINISH at the plural noun. Add a
+site-chrome tail and the match dies. Executed, same URL
+(`/cet/conferences`), the two titles Peer has actually been handed:
+
+| title | `isEventIndexPage` | row |
+|---|---|---|
+| `Upcoming Energy Storage Conferences` **(B's five live pulls)** | **`true`** | **DROPPED — 0 of 5 in the pool** |
+| `Upcoming Energy Storage Conferences \| Provided by Cambridge EnerTech` **(A's window)** | **`false`** | **ADMITTED — A's 5 of 5** |
+
+**The two strings differ ONLY by the chrome tail, and the guard's verdict flips
+on it.** That is the whole defect, and it is a natural experiment rather than an
+argument.
+
+**AND THE SAME PREDICATE IS ALREADY APPLIED PER-SEGMENT ONE FUNCTION AWAY.**
+`isChromeSegment` (`web/src/lib/events/sources/eventweb.ts:748-765`) calls
+**`isEventIndexPage(trimmed)` at `:756`** on **each title segment**. So the name
+picker ALREADY classifies `Upcoming Energy Storage Conferences` as an index
+segment, rejects it, and falls through to segment 2. **The row-admission check
+at `:1596` is strictly WEAKER than the naming check at `:756` that sits above
+it in the same file.** The system already knows this page is an index; it just
+never concludes that the PAGE is one.
+
+## **ONE MECHANISM, THREE FACES — ESTABLISHED, NOT ASSUMED**
+
+- **(a) NAME `Provided by Cambridge EnerTech` — DOWNSTREAM, and measurably so.**
+  `bestEventTitleSegment` picks the provider-attribution segment **only because
+  segment 1 was rejected as an index by `:756`**. Executed controls: when
+  segment 1 is a real event name the picker takes it every time —
+  `… | Provided by Cambridge EnerTech` → **`Battery Safety Summit`**;
+  `… | Presented by Acme Events` → `Energy Storage Summit`;
+  `… | Organised by Acme Events` and `… | Hosted by Acme Events` → the real
+  name. **"Provided by X" is NOT a general name-selection defect.** It surfaces
+  on this row and only this row because the index segment vacated the slot.
+- **(b) ITEM KIND — the primary defect, and the only one with its own
+  mechanism.** Everything else is its shadow.
+- **(c) PLACE `Chicago, IL, United States` and `isOnline: true` — DOWNSTREAM.**
+  Both are read out of an index page's body (`isOnline` is a bare
+  `/\b(online|virtual|hybrid)\b/i` test over the result text, which any page
+  listing many conferences satisfies). **No index page, no body, no values.**
+
+**VERDICT: ONE mechanism. A's "one row, three faces, counted once" reading is
+CORRECT, and it is now established by execution rather than adopted.**
+
+**A SECOND PATH TO THE SAME NAME, RECORDED SO NO ROUND REDISCOVERS IT.**
+Enrichment re-runs the page's own `og:title` back through the same picker
+(`web/src/lib/opportunities/enrich.ts:307, 330, 335`). So the rendered name is
+consistent with either the provider title or the page's `<title>` — **both go
+through `selectEventTitleSegment`, both hit `:756`, both vacate segment 1.**
+Whichever supplied it, ADMISSION is still gated at `:1596`, which is where the
+fix belongs.
+
+## **THE HONEST LIMIT, STATED BEFORE THE FIX, NOT AFTER**
+
+**B's five live pulls could NOT reproduce the pool row.** Pool size 12 in all
+five; `cambridgeenertech.com` absent from all five; the index page offered in
+every pull under the CLEAN title, which the shipped guard already drops. The
+host's three real event pages were offered every time
+(`Solid-State Battery Summit | August 11-12, 2026`,
+`Solid-State Battery Conference | August 11-12, 2026`,
+`Battery Safety Summit | August 12-13, 2026 | Chicago, IL`) and all correctly
+expired as past.
+
+**This does NOT weaken A24-01 and B will not let it be read that way.** A's
+observation was five-of-five in its own window; the provider's title for this
+URL varies between windows, exactly as A's own 16/16/17 pool-movement finding
+predicts. **The mechanism does not depend on catching the row live: it is
+deterministic at the function level and B measured it in both directions.**
+**A24-01 IS REAL AND INTERMITTENT — gated on a provider-title variant, not on
+anything Peer controls.** That makes it *more* dangerous, not less: it cannot be
+regression-tested by a live pull, only by the string.
+
+---
+
+## THE FIX DIRECTION — **MAKE `:1596` AS SMART AS `:756`, USING THE FILE'S OWN SPLITTER**
+
+**Feed the title's FIRST SEGMENT to `isEventIndexPage` as a second derived
+input.** This is shipped precedent in this very file, not a new idea:
+`isEarningsCallPage` (`:476-483`) and `isNewsArticleTitle` (`:389-393`) both
+feed a **second derived input** (`urlPathPhrase(url)`) to their own regex for
+exactly this reason.
+
+**C MUST REUSE THE SHIPPED SPLITTER, VERBATIM, NOT INVENT ONE.** It is
+`selectEventTitleSegment`'s own, at
+**`web/src/lib/events/sources/eventweb.ts:1427`**:
+
+```
+title.split(/\s+[-|·–—]\s+/).map((part) => part.trim()).filter(Boolean)
+```
+
+Executed on A's title it yields exactly
+`["Upcoming Energy Storage Conferences", "Provided by Cambridge EnerTech"]`.
+
+### **FIRST SEGMENT ONLY. `ANY SEGMENT` IS KILLED BY ITS OWN MATRIX.**
+
+B built and measured three variants. **The `any segment` variant is DEAD** and
+the control that killed it is named:
+
+| control (a REAL single event) | `any segment` | **`first segment`** |
+|---|---|---|
+| **`Battery Safety Summit 2026 \| Upcoming Conferences`** — a real event whose site chrome names the organiser's own events hub | **`true` → WRONGLY DROPPED** | **`false` → correctly KEPT** |
+
+**A page's SUBJECT is its first segment; everything after is chrome.** That is
+the same reading `selectEventTitleSegment` already takes, so the two checks stay
+consistent instead of drifting.
+
+### THE ADVERSARIAL RESULT — **150 REAL OFFERED TITLES, FIVE LIVE PULLS**
+
+| | index hits | **new drops** | **drops LOST** |
+|---|---|---|---|
+| shipped | 2 | — | — |
+| **first segment** | **3** | **1** | **0** |
+
+**The single new drop is `Events - Gateway for Accelerated Innovation in
+Nuclear` (`gain.inl.gov`) — first segment `Events`.** That is a genuine events
+hub and a correct drop. **ZERO real event pages are lost, and ZERO drops the
+shipped guard already makes are given up.**
+
+**Admitted controls that MUST survive and DO, all executed:**
+`Conference Overview | The Battery Show South` (**a real, live, correctly-kept
+pool row whose first segment is the bare generic noun `Conference`**);
+`Sessions and Tracks | Advanced Battery Conference 2026`;
+`Programme | 32nd SolarPACES Conference`;
+`Co-located Workshops | The Battery Show North America`;
+`Battery Workshops 2026`;
+`Upcoming Battery Technology Conference 2026 | Chicago, IL`;
+`All-Solid-State Battery Symposium 2026 | Tokyo`;
+`26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA`;
+`Battery Safety Summit | August 12-13, 2026 | Chicago, IL`;
+`Solid-State Battery Summit | August 11-12, 2026`;
+`Turkey Battery Technologies Summit 2026 – October 21-22, 2026`;
+`Solid-State Battery Summit (Aug 2026), Chicago USA`.
+**Sibling sessions, tracks and co-located workshops on a single event's own
+page are exactly the class the brief named, and none of them moves.**
+
+### **THE ONE MEASURED FALSE POSITIVE, NAMED — AND IT IS ALREADY IN THE SHIPPED GUARD**
+
+**`All Solid State Battery Workshop`** — executed: **the SHIPPED regex already
+drops it** (`upcoming|browse|all` + filler + singular `Workshop` + end).
+**"All-solid-state battery" is a core term in this corpus** — the pool's own
+headline row is a *Solid-State Battery Summit*. The hyphenated spelling escapes
+(a hyphen is not `\s`); the unhyphenated one does not. **The first-segment
+change EXTENDS that existing over-reach to the chrome-tailed form
+`All Solid State Battery Workshop | Tokyo 2026`.**
+
+**B's recommendation — and B flags it rather than smuggling it:** ship the
+first-segment input **and, in the same edit, narrow alternative 3's noun from
+`(?:events?|conferences?|seminars?|workshops?)` to the PLURAL forms
+`(?:events|conferences|seminars|workshops)`.** An index lists many; a singular
+noun is a single event's page.
+
+Measured, so it is a decision and not a preference:
+
+- **On the 150-row live corpus the plural variant is IDENTICAL to the
+  first-segment variant** — same 3 hits, same 1 new drop, **0 drops lost**.
+  It costs nothing measured.
+- It **removes** the pre-existing over-reach rather than extending it: both
+  `All Solid State Battery Workshop` forms are KEPT.
+- It still drops A's title, the clean title, and every index control.
+- **Vacuity discipline, honestly applied:** the first-segment input is
+  **load-bearing and witnessed** (it flips A's exact title and adds a correct
+  live drop). **The plural narrowing has NO live witness** — it is earned by a
+  named domain risk and zero measured cost, nothing stronger. **`POLICY —
+  manager decides` on the narrowing alone; the first-segment input stands on
+  its own.**
+- **It is NOT a reversal of a recorded decision.** The comment at `:337-343`
+  names two witnesses, `Events for July 2026` (alternative 1) and
+  `Nuclear and Applied Materials Research Group` (alternative 4); the singular
+  arm of alternative 3 has none. And it narrows a ROW-DROPPING guard, which is
+  the direction **Ruling 55c's** bar points.
+
+### **DOES THE PLACE GUARD NEED ANY CHANGE? NO. NOT ONE CLAUSE.**
+
+The manager asked B to price this with numbers, so here they are:
+
+- **The row never reaches the place extractor.** `isEventIndexPage` is check
+  **4 of 6** in `webResultToRawEventItem` (`:1596`); the date anchor is ~70
+  lines later (`:1664-1669`) and enrichment later still. **A kind fix removes
+  the row before any place is read.**
+- **62a's five-pull census — the check 62a itself commissioned — PASSED**: four
+  named contaminations silenced 5/5, **correct venues lost ZERO**.
+- `Chicago` at **4** occurrences sits between the guard's live classes (silenced
+  at **1**, kept at **6–22**). **Moving a boundary that just passed its own
+  commissioned census, to chase a row that a kind fix deletes, is precisely
+  what the brief forbids.** B does not propose it.
+- **RECORDED FOR 62a's FUTURE CORPUS, so the datapoint is not lost:** a
+  non-venue-anchored city at **4 occurrences in a 29 kB index page**. If a
+  boundary move is ever justified on other evidence, this is a data point in it
+  — it is not evidence on its own.
+
+### **THE KIND FIX AND 62b's DEFERRED GAP (b) DO NOT INTERACT, AND B WILL NOT RE-OPEN (b) BY THE BACK DOOR**
+
+A observed that the host's real dated pages expired while the undated index
+survived. **Executed, the two are independent:** the index check runs at
+position 4, **before any date logic exists in the function**. A kind fix removes
+an index page whether it is dated or not, and removes **nothing** that is dateless
+and genuinely a single event. **62b(b) — a dateless row surviving because it has
+no date to expire — is untouched, unclosed, and nothing here claims otherwise.**
+
+### WHAT THE FIELD SHOWS WHEN THE CHECK CANNOT DECIDE
+
+**THE ROW KEEPS.** `isEventIndexPage` returning `false` is admission — today's
+behaviour exactly. The check **only ever removes a whole row**; it never edits a
+value, never renders a partial card, and adds no fallback. **A miss costs one
+wrong row; it can never cost a wrong value in a right row.** That is 62c's own
+shape and the floor Ruling 55c demands.
+
+### KNOWN LIMITS OF THE RECOMMENDED FIX, STATED SO C DOES NOT "FIX" THEM
+
+- **A pipe with no surrounding spaces does not split** — the shipped splitter
+  requires `\s+…\s+`. `Upcoming Conferences|Cambridge EnerTech` would still
+  escape. **Unwitnessed in 150 offered rows. Do NOT widen the splitter** — that
+  would change name selection everywhere it is used, for no measured gain.
+- **`SIPS 2026 - Department of Materials` is dropped today** by alternative 4
+  (`department\s+of`, unanchored) and stays dropped under every variant.
+  **Pre-existing, asserted by `web/src/lib/events/scoring.test.ts:597`, NOT
+  touched here.** Recorded because `flogen.org` renders `SIPS 2026` as a
+  correct, kept pool row and a title of that shape would lose it.
+
+### TESTS AT RISK — **GREPPED, NOT REMEMBERED**
+
+- **`web/src/lib/events/scoring.test.ts:592-610`** — the `isEventIndexPage`
+  table. **`:598` already asserts the clean title `true` and STAYS GREEN.**
+  **C ADDS the chrome-tailed variant to the same table** — that is the
+  regression test for this item, and it is a string test, which is the only
+  kind that can hold an intermittent provider title.
+  **`:604-609`'s four must-keeps stay green** — verify, do not assume.
+- **`web/src/lib/events/sources/eventweb.test.ts:573-581`** — asserts an events
+  directory whose brand names an event kind is still rejected. Unchanged.
+- **`web/src/lib/events/benchmark.test.ts` — THE ONE THAT ACTUALLY BREAKS, AND
+  NOBODY HAS NAMED IT:**
+  - **`:104-110`** asserts the top five contains `cambridgeenertech.com`
+    **OR** a `solid-state battery summit` name. The `||` arm survives on
+    `10times.com`. **At risk, probably green.**
+  - **`:111-119` asserts `summit?.place?.city === "Chicago"`.** It looks for a
+    `cambridgeenertech.com` row first, then falls back to a
+    `solid-state battery summit` row **whose city is already `Chicago`**. **If
+    the index row is dropped and the `10times.com` row's place is silenced —
+    which Ruling 62a's guard already does, measured 5/5 — `summit` is
+    `undefined` and this assertion fails.** **THIS IS A REAL, PREDICTED
+    BREAKAGE and C must expect it.**
+  - **It is the SAME structural fault Ruling 63b named**: an assertion that
+    demands a specific city be PRESENT, satisfied today by a value the design
+    now removes. **It is credential-gated and excluded from the gate, so it does
+    not gate — but C must restate it with the item named, never delete it.**
+    Item 3 below designs the city assertion's replacement; **this `Chicago`
+    assertion is its neighbour and B flags it to the manager as in the same
+    class.**
+- **NOT at risk:** the job side. `isEventIndexPage` is event-only;
+  `web/src/lib/jobs/sources/jobweb.ts:858` merely *mentions* it in a comment.
+
+### BLAST RADIUS
+
+**One function, one added input, event-side only.** `isEventIndexPage` has
+exactly **two** callers in `src/`: `:756` (name selection, untouched) and
+`:1596` (row admission, the fix). **If C changes `isEventIndexPage` ITSELF
+rather than the call at `:1596`, the first-segment test would also run inside
+`isChromeSegment` — measured as harmless but strictly wider than needed.
+Prefer the change at the CALL SITE**, keeping `isEventIndexPage`'s own contract
+(and its shipped test table) exactly as it is. **The plural narrowing, if the
+manager approves it, DOES touch the regex and therefore both callers** — that is
+the honest cost of that half and the reason it is filed as POLICY.
+
+**ITEM 2 STOPS HERE.** Item 3 (Ruling 63b's commissioned restatement) follows,
+one commit, pushed immediately.
+
+---
