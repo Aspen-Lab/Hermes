@@ -73174,3 +73174,241 @@ widening is a deliberate act.**
 - **`stemgateway.nasa.gov`** is untouched by this and stays named-and-not-counted.
 
 ---
+
+---
+
+### Round 27 — Agent B (item 3 of 7: **A27-01 — ONE MECHANISM, THREE FACES: THE INDEX CHECK IS THE ONLY EVENT-SIDE KIND GUARD THAT NEVER READS THE URL. THE FIX IS A SECOND, TWO-SIGNAL PREDICATE THAT LEAVES `isEventIndexResult`'s CONTRACT BYTE-UNTOUCHED. B's OWN FIRST DRAFT WAS KILLED BY ITS OWN ADVERSARIAL SWEEP, AND THE SECOND SURVIVES 14 OF 14 MUST-KEEPS INCLUDING 64b's. THE BARE-HOST NAME IS REPRODUCED BY EXECUTION AND IS A SEPARATE, RECORDED DESIGN.**)
+
+**STATUS: COMPLETE.** Item 3 of seven. B changed no code; harness deleted before
+this commit.
+
+---
+
+## **THE MECHANISM — ONE, NOT THREE, AND IT IS A MISSING INPUT RATHER THAN A MISSING WORD**
+
+Each of the three rows was run through **every one of the four kind guards
+`webResultToRawEventItem` applies before any value is derived.** **All four
+return `false` on all three rows** — `isEventIndexPage`, `isEventIndexResult`,
+`isNewsArticleTitle`, `isPaperPageTitle`, `isEarningsCallPage`.
+
+**Why each escapes, read from `EVENT_INDEX_TITLE_RE`'s own four alternatives:**
+
+- Alternatives **1 and 2** are `^`-anchored on the index noun — the title must
+  START with `events`/`conferences`. `Battery Events` and
+  `Annexus Health Conferences: ...` start with a topic and a brand.
+- Alternative **3** requires a lead verb (`upcoming|browse|all`) AND is
+  `$`-anchored. Neither row has one.
+- Alternative **4** is the research-group vocabulary. Not applicable.
+- **`Career - Join Our Passionate Team` has no event-side index vocabulary at
+  all** — and **the event surface has no careers guard whatsoever**, where the
+  job side has `CAREERS_INDEX_TITLE_RE`.
+
+**THE ONE THING ALL THREE SHARE IS THE THING NOTHING LOOKS AT: the URL path is a
+BARE HUB NOUN with no item below it — `/event`, `/conferences`, `/careers`.**
+**`isNewsArticleTitle(title, url)` and `isEarningsCallPage(title, url)` BOTH take
+the URL as a second input already. The index check is the only one of the four
+that does not.** That is the mechanism: **one missing input, three faces** — and
+it is the event-side twin of the job side's `POSTING_ID_RE` requirement, which
+asks the same question ("does this URL identify ONE item?") and has done since
+round 13.
+
+### **WHAT B REPRODUCED, AND WHAT B COULD NOT**
+
+Run through the shipped `webResultToRawEventItem`:
+
+- **`volta.foundation/event` — ADMITTED.** Reproduced.
+- **`iongroup.com/careers` — ADMITTED, name `Join Our Passionate Team`, type
+  `conference`.** Reproduced **exactly as A recorded it**, field for field.
+- **`annexushealth.com/conferences` — B could NOT reproduce the admission**, because
+  B does not hold the provider's snippet and B's constructed one fails
+  `looksLikeEvent`. **The GUARD GAP is reproduced (all five kind guards return
+  `false` on that title); the ADMISSION is A's measurement and B does not claim
+  to have re-witnessed it.** Stated rather than blurred.
+
+### **THE BARE-HOST NAME — REPRODUCED BY EXECUTION**
+
+`eventNameFrom("Battery Events", "", "https://volta.foundation/event")` returns
+**`"volta.foundation"`**. With a chrome-only snippet, the same. With a real title
+segment (`Solid-State Battery Summit`) the real name wins. With no URL at all it
+returns `"Untitled event"`. **A's bare-host render is confirmed, and it is a
+SEPARATE code path from admission** (`eventweb.ts:1643-1652`, B9-04 Fix 1).
+
+---
+
+## **B's FIRST DRAFT WAS WRONG AND ITS OWN SWEEP KILLED IT — RECORDED BECAUSE THE KILL IS THE EVIDENCE**
+
+Draft 1 was a fifth alternative on `EVENT_INDEX_TITLE_RE`: *a plural index noun
+as the last word of the title's first segment.* It catches both index rows and
+respects 64b (plural-only, so `All Solid State Battery Workshop` is safe by
+construction). **Then B swept it over 1 747 string literals in five event test
+files. Three newly matched, and TWO OF THEM ARE SHIPPED MUST-KEEPS:**
+
+- **`Co-located Workshops | The Battery Show North America`** —
+  `scoring.test.ts:664`, in the `admits the real event page` list, asserted
+  **`isEventIndexResult(...) === false`**. Draft 1 drops it.
+- **`DLR Events | Events for July 2026`** — `scoring.test.ts:703`, a row that is
+  deliberately ADMITTED so `eventNameFrom` can recover the real workshop name
+  from its URL slug. Draft 1 drops it.
+
+**`DLR Events` and `Battery Events` are structurally IDENTICAL — `<Word> Events`.
+NO TITLE-ONLY RULE CAN SEPARATE THEM.** That is the finding that forced draft 2,
+and it is why the URL is not a convenience here but the only available
+discriminator.
+
+---
+
+## **THE DESIGN — A SECOND PREDICATE, BOTH SIGNALS REQUIRED**
+
+**A NEW function `isEventHubResult(title, url)`, called at row admission only,
+alongside the existing four. `isEventIndexResult` and `isEventIndexPage` are NOT
+touched** — which the shipped test *"leaves the raw predicate's own contract
+alone"* (`scoring.test.ts:686`) exists to protect, and which is round 24 B's
+priced blast radius.
+
+**SIGNAL 1 — the URL is a bare hub.** The path's final segment, ignoring a
+trailing slash, is one of
+`event(s) | conference(s) | seminar(s) | workshop(s) | symposium/symposia |
+calendar | agenda | career(s) | jobs`, **with nothing below it.**
+
+**SIGNAL 2 — the title agrees.** Taking the title's head (cut at the first `:`,
+`|`, or SPACED dash): it either **ends in a PLURAL index noun**
+(`events|conferences|seminars|workshops|symposia`) **or begins with
+`careers?`**.
+
+**BOTH must hold.** Either alone is measurably unsafe — signal 2 alone drops
+`Co-located Workshops`, signal 1 alone drops a single-event site whose own page
+sits at `/conference`.
+
+**FIVE CLAUSES, EACH NON-VACUOUS:**
+
+1. **Plural only in signal 2.** **This is Ruling 64b's boundary, honoured by
+   construction**: `All Solid State Battery Workshop` and
+   `All Solid-State Battery Workshop` are SINGULAR, so signal 2 can never fire on
+   them. **Measured: both survive.** Remove the plural requirement and 64b
+   regresses immediately.
+2. **The head is cut at a SPACED dash, never a bare hyphen.** Remove the space
+   requirement and `Co-located Workshops` becomes head `Co` — a different rule
+   with different behaviour.
+3. **Terminal path segment, end-anchored.** Remove the anchor and
+   `event.dlr.de/en/event/emea2026-workshop-...` drops — the exact row the
+   shipped slug-recovery test depends on.
+4. **`careers?` in BOTH signals.** Remove it from signal 1 and `iongroup.com`
+   survives; remove it from signal 2 and the path clause alone would drop a real
+   event hosted under a `/careers` path.
+5. **`url` optional, and the predicate returns `false` without one.** **Measured:
+   with no URL it fires on ZERO of all 19 corpus titles.** This is what makes
+   every existing one-argument assertion safe *by construction* rather than by
+   inspection.
+
+---
+
+## **THE ADVERSARIAL CORPUS — MEASURED**
+
+**MUST DROP — 5 of 5 drop.** A27-01's three, plus the two hub rows the shipped
+tests already drop (`cambridgeenertech.com/cet/conferences`,
+`gain.inl.gov/news/events`) — **kept in the corpus deliberately, to prove the new
+predicate agrees with the old one rather than fighting it.** Three of the five
+are NOT caught by `isEventIndexResult` today; two are, and the redundancy is
+harmless.
+
+**MUST KEEP — 14 of 14 survive, ZERO wrongly dropped.** The whole of
+`scoring.test.ts`'s `admits the real event page` list with plausible real URLs,
+**including `Co-located Workshops | The Battery Show North America` and
+`DLR Events | Events for July 2026` — the two that killed draft 1** — plus
+**64b's pair**, plus two deliberately hostile cases: **a single-event site whose
+own page sits at a bare `/conference` path**
+(`solarpaces.org/conference`, `thebatteryshowsouth.com/en/conference`). **Both
+survive, because their titles are singular and signal 2 never fires.**
+
+**URL SWEEP — 122 URL literals across four event test files; 5 hit signal 1.**
+Four are `bestEventTitleSegment` or enrichment fixtures — **name-selection or
+enrichment call sites the new predicate never runs in.** The one that IS a real
+row-admission call, `webResultToRawEventItem` with
+`International Battery Power Conference 2026` at `example.com/conference`, was
+run end to end: **signal 2 does not fire (the head ends in `2026`), and the row
+is still admitted.** **Zero at-risk rows.**
+
+---
+
+## **WHAT RENDERS WHEN THE INPUT IS MISSING OR UNDECIDABLE**
+
+- **No URL** → the predicate returns `false` and nothing changes. **It can only
+  ever DROP a row it is certain about; it never creates or alters a value.**
+- **A hub path with a singular/topic title** (`/conference` + `Battery Power
+  Conference 2026`) → **admitted, exactly as today.** The undecidable case
+  admits, which is the direction `jobweb.ts:757-761` records and Ruling 55c
+  points.
+- **A plural title on a specific path** (`DLR Events | Events for July 2026` at a
+  slug URL) → **admitted, exactly as today**, and its name is still recovered
+  from the slug.
+- **Dropped rows render nothing at all** — `webResultToRawEventItem` returns
+  `null`, which is one fewer card, never a different value.
+
+---
+
+## **THE BARE-HOST NAME: DOES FIXING ADMISSION KILL IT?**
+
+**FOR THESE THREE ROWS, YES — completely. A dropped row has no name.**
+
+**IN GENERAL, NO.** `eventNameFrom`'s URL-host last resort is reachable by **any**
+row whose title segments and snippet segments are all rejected, including rows
+the hub predicate never touches. **So the bare host can still render on some
+future row.**
+
+**B FLAGS IT AND DOES NOT REVERSE IT (§1b).** It is a **recorded design** with
+its rationale in the source: B9-04 Fix 1 chose the host precisely because
+*"the URL host is never itself a value a guard rejected"* — re-splitting the
+title would hand back a string a guard had just refused, which is Ruling 26's own
+failure shape — and **Ruling 35 explicitly closed the question with "no new
+fallback needed designing."** It is the event-side twin of the job side's
+`See posting` placeholder.
+
+**WHAT B RECOMMENDS INSTEAD OF A SECOND GUARD:** nothing this round. **The honest
+open question is measurement, not design** — no round of this loop has yet
+witnessed a bare host on a **rendered** report row (A's census: 0 of 5 for all
+three of these). **If a later A census ever renders one, that is the moment to
+price a name-path guard, and it will then have a witness.** Recorded so it is not
+re-derived as new.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`src/lib/events/scoring.test.ts`** — owns the index-detector corpus. The
+  `admits the real event page` block (**line 653-679, 15 titles**) and the
+  drop block above it, plus **line 686-694** (`leaves the raw predicate's own
+  contract alone`) and **line 697** (the SIPS org-tail cost). **NONE is at risk:
+  every one calls `isEventIndexResult`/`isEventIndexPage` with ONE argument, and
+  the new predicate is a different function that returns `false` without a URL.**
+- **`src/lib/events/sources/eventweb.test.ts`** — line 1228-1240 (the chrome-tailed
+  conference index, must-drop: **the new predicate agrees**), line 1304-1330
+  (`example.com/conference`, must-keep: **measured unaffected**), lines 1400-1470
+  (`bestEventTitleSegment` with `/event` URLs: **name selection, not admission**).
+- **`src/lib/opportunities/enrich.test.ts`** line 221
+  (`solarpaces.example.org/conference`) — an **enrichment** test; the predicate
+  does not run there.
+- **NEW TESTS C OWES** (additions only):
+  1. `isEventHubResult("Battery Events", "https://volta.foundation/event")` is
+     **`true`**, and the same row through `webResultToRawEventItem` is **`null`**.
+  2. `isEventHubResult("Career - Join Our Passionate Team", "https://iongroup.com/careers")`
+     is **`true`** — the careers face.
+  3. **THE BOUNDARIES THAT MUST NOT MOVE, asserted, not assumed:**
+     `Co-located Workshops | The Battery Show North America` at a slug URL is
+     **`false`**; `DLR Events | Events for July 2026` at its workshop slug is
+     **`false`**; **`All Solid State Battery Workshop` at any URL is `false`**
+     (Ruling 64b's own witness, restated on the NEW predicate so a later widening
+     reds a test).
+  4. `isEventHubResult(title)` with **no URL** is `false` for every title in the
+     corpus — the clause that protects every existing assertion.
+
+---
+
+## **WHAT B DOES NOT CLAIM**
+
+**Not that any rendered event value is wrong** — A's census says every rendered
+column is zero and B has no contrary measurement. **This closes an INGESTION
+admission that only top-N competition was holding off a reader.** A's own
+falsifier (ii) — a ruling that ingestion admissions are out of scope unless they
+render — would retire the whole item, and **B would accept that ruling too.**
+
+---
