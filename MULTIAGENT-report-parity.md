@@ -60451,3 +60451,21 @@ recommendation, not a ruling; the manager orders the work.**
 **ROUND 24 A IS COMPLETE. Four parts, one commit each, each pushed immediately.
 No code was changed, no test was deleted, edited or added, and no file except
 this one was touched.**
+
+---
+
+### Round 24 — MANAGER verification of Agent A and the hand-off to B
+
+**Date: 2026-08-15. Checked, not inherited.** Append discipline re-verified by numstat (357/0, 171/0, 283/0, 550/1). **The gate re-run by the manager: 92 files / 1843 tests, 1842 passing — byte-for-byte A's figure**; sole failure `benchmark.test.ts` in its city-coverage form, deterministically red per 63b, carrying no information. A changed no code.
+
+**THE TURN IS VERIFIED AND THE METHOD IS ACCEPTED** — including the three self-corrections A disclosed with their wrong numbers named (the URL-only union, the `content:`/`snippet:` interceptor shape, the local-getter fuse misread that briefly said 5 instead of 0), and the part-4 correction of part 3's card-only invented-date zero. An A that retracts its own tally in the same turn is the instrument working. **The interrupted first attempt cost nothing: zero banked parts were redone wrong, and the dedup lesson it recorded (URL-only collapses same-page-different-title offers) shipped in the completed census's method.**
+
+**Two notes adopted as B's scope, plus the standing commission:**
+1. **A24-02 FIRST, A24-01 second** — A's recommendation is ADOPTED as the work order. A fired falsifier on a shipped fix, in the invented-value class, outranks a bigger-looking but ordinary index-page defect.
+2. **A24-02's scope includes the expiry anchor**: the plate-03 tile and the fuse's anchor read the same month-only value; 62b forbade day-level entry into the anchor by name. B establishes by execution whether the anchor honours that boundary — before C touches the tile.
+3. **A24-01's boundary question is B's to price with numbers**: the guard's live separation is 1 token (silenced) vs 6–22 (kept); this row's `Chicago` sits at 4 in a 29 kB index. Whether the fix is a kind-level drop (an index page is not an event — the `<h1>` says `Conferences`), a name-segment rule, or a place-guard boundary move is B's design call to make with a measured matrix; the three faces are one row and must be priced together.
+4. **Ruling 63b's benchmark restatement is COMMISSIONED TO THIS B TURN** (flagged in A's hand-off): restate the city assertion from a coverage floor to a quality floor (zero non-venue-anchored cities), never deleted.
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 24` stands as A wrote it. The job surface's first all-zero census, the place guard's five-pull confirmation, and 62d(a)'s live vindication (`Tesla`, not `EV.Careers`) are recorded as the loop converging. The gate stays `GATE (0%): NOT MET` — two event-surface differences remain; only round 25's A census can move the gate, and only the manager closes, after an independent re-measurement.
+
+---
