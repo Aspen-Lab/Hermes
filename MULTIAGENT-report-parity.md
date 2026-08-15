@@ -69026,3 +69026,27 @@ never the reverse.** No row gains a remote claim it did not have.
 
 **ITEM 4 COMPLETE. ROUND 26 B IS COMPLETE — four items, four commits, each
 pushed immediately.**
+
+---
+
+### Round 26 — MANAGER verification of Agent B, RULING 72a–c, and the hand-off to C
+
+**Date: 2026-08-15. Checked, not inherited.** Eight commits, per-item banking held through a mid-turn API-limit kill and resume with zero loss. **The gate re-run by the manager: 93 files / 1894 tests, 1894 passing — zero failures.** B changed no code.
+
+**THE METHOD IS ACCEPTED, and it is the strongest B turn of the loop:** the six A26-02 rows re-captured LIVE rather than scored from A's paraphrases ("you can't feed a paraphrase to a predicate"); the January clock-rollback proof that the expiry check and nothing else refuses them; A26-01's mechanism corrected by execution (the build never STRIPS an at-Employer clause — it AMPUTATES titles at the first dash/pipe, so provider punctuation, not host behaviour, decides; three hosts affected, not one; 23/24 adversarial, the one miss B's own wrong expectation on an impossible input, named); the visual list dispositioned item by item with the shipped components actually rendered (two "differences" proven fixture artifacts); the heading finding UPGRADED from flattened to INVERTED; and item 4's vacuous live window disclosed instead of banking a meaningless zero.
+
+---
+
+## RULING 72 — THE ROUND-26 B DISPOSITIONS, DECIDED. BINDING.
+
+**72a. A26-02 IS CLOSED AS A STANDARD CLARIFICATION.** Zero of six survive 71b — all six fail 71b(c) (every evidenced date already past at measurement; the clock-rollback proof establishes the expiry check as the sole refusing mechanism, which is the design working). **The 48b wrongly-dropped column restates to ZERO and the loop's unbroken zero is intact.** Round 27 A cites 71b by number.
+
+**72b. THE PROGRESS-BAR DECISION IS REVERSED ON CORRECTED PLATE EVIDENCE (V26-J07).** The build's own comment says the plate has no progress bar; B pulled the PDF's vector shapes and **the bar is there — filled 0.671 against the plate's own "6 of 9" = 0.667.** Per the §1b precedent (treat the plate as correct and the record as wrong), the recorded decision falls. **The bar enters C's visual work as a designed item on B's extracted geometry**; the standing escape clause covers any thinness in the design — stop and record, never improvise. The visual work list for C is therefore **B's 14 designed items PLUS the bar: 15.**
+
+**72c. ITEM 4's USER-VISIBLE FACET CHANGE IS APPROVED.** The conversion makes server and client agree byte-identically (counts, filter membership, ledger); one ledger write moves, always from a claim to a silence; **the `Online` facet count DROPS — and that is the fix working, because today clicking `Online` returns a job that does not look online.** Round 27 A expects the drop and reads it as intended, not as churn. The three struck visual items (V26-J05 = three binding §1d exclusions A did not carry; J01/J09 = fixture artifacts proven by rendering the shipped component) are ACCEPTED as struck.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 26` stands as B wrote it, order: **item zero — Ruling 70's `64c` assertion fix; item one — A26-01's title fix at the mapper (B's design, 23/24 adversarial, 3 of 43 live titles change); then the visual work cheapest-first (the serif adoption first — 5 elements, 3 files, zero new tokens; then the heading hierarchy INVERSION; the timeline track and fact-tile band pairs from the PDF's vector geometry, the one-milestone divide-by-zero named; the bar per 72b; the remainder per B's designs); then the 68b facet conversion (72c).** Bank per item — this is the loop's largest C turn; a part-banked list is expected. The gate stays `GATE (0%): NOT MET`.
+
+---
