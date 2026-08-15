@@ -77240,3 +77240,238 @@ return unmapped `WebResult[]`.** A single shared `searchGemini` returning
 `RawJobItem` would not fit eventweb, and one returning `RawEventItem` would not
 fit jobweb. The design returns `WebResult[]` and leaves each surface's mapping
 call exactly where it is.
+
+---
+
+### Round 28 — Agent B — ITEM 1 (A28-01): the conjoined section label. MECHANISM ESTABLISHED, ONE RULE DESIGNED INSIDE ROUND 16's FRAME, ZERO FALSE FIRES ON 1,632 STRINGS
+
+**B changed no code.** Throwaway probes lived in `web/zz-r28b/`, deleted before
+this commit. **No banned API called.** The only network calls in this item were
+two plain page fetches (allowed).
+
+#### 1.1 A's CENSUS IS CONFIRMED ON THE POINT THAT MATTERS, AND B DISCLOSES ITS OWN INSTRUMENT FAULT FIRST
+
+**B's first pass was wrong and B says so before using any of it.** A recorded the
+nineteen rows as *title + host*, **not full URL**. B reconstructed plausible URLs
+and ran the shipped `webResultToRawJobItem` over them: only **9 of 19** were
+admitted, against A's measured **19 of 19, 5 of 5 each**. **The reconstruction is
+what is wrong, not A's census** — admission tracks `JOB_PATH_RE` on the real path,
+and B's guessed paths only sometimes carry it. **Every URL-dependent number in
+B's first pass is discarded.** The same fault also produced one bogus must-keep
+failure (`Cathode Engineering Intern` at a host with no `/job` in the path) which
+is an artefact of B's fixture and not a defect in the shipped code.
+
+**What survives is URL-independent and is the finding.** `isListingPage`'s five
+**title-side** limbs — `LISTING_TITLE_RE`, `CAREERS_INDEX_TITLE_RE`,
+`LISTING_SECTION_TITLE_RE`, `isOwnerSectionIndexTitle` (B17-01a) and
+`isHostBrandProgrammePage` (B17-01b) — were run over all nineteen titles. **Four
+of the five read the title alone; only the host-brand check reads anything else.**
+
+**NOT ONE OF THEM FIRES ON ANY OF THE EIGHTEEN NEW SHAPES.** The single row
+`isListingPage` catches is `grad.wisc.edu`'s `Funding & Jobs` — the
+DOCUMENTED-KNOWN row A named but did not re-rank. **A's claim that this is the
+class in new shapes rather than a fix failing is CONFIRMED BY EXECUTION.**
+
+#### 1.2 THE MECHANISM — NOT ONE, AND NOT NINETEEN. TWO SHAPES COVER SIXTEEN
+
+Read against the file's own recorded vocabulary, the eighteen fall into shapes,
+and the reason each escapes is structural rather than accidental:
+
+- **`CAREERS_INDEX_TITLE_RE` is a WHOLE-TITLE, SINGLE, BARE section word.**
+  `Internships` fires. **`Internships & Co-ops` does not** — the moment a second
+  noun is conjoined, the anchored alternation cannot match.
+- **`isOwnerSectionIndexTitle` allows 1–2 owner tokens and then exactly ONE
+  plural section label.** `Battelle Internships` would fire; **`Battelle
+  Internships and Co-ops` does not**, because the conjunction and the second noun
+  fall outside the pattern.
+- **`isHostBrandProgrammePage` requires the SITE'S OWN BRAND in front.**
+  `Summer Internship Program` at `oppenheimer.com` does not fire, because
+  `Summer` is not the host brand — and that host relation is exactly the
+  narrowing Ruling 49a made load-bearing.
+
+**SHAPE ONE — THE CONJOINED SECTION LABEL: 13 of the 19.** Two or more
+careers-section or audience nouns joined by `&` or `and`, whole title, optionally
+with 1–2 owner/modifier tokens in front and a trailing section noun behind:
+`Internships & Co-ops`, `Internships & Co-ops Jobs`, `Internships & Co-ops Job
+Opportunities`, `Internships and co-ops`, `Battelle Internships and Co-ops`,
+`Internships & Fellowships`, `Internships & Research Opportunities`, `Jobs and
+Internships`, `Research Careers & Internships`, `Students and Graduates`,
+`Students And Graduates I EMD Group`, `Internships & Entry Level Jobs`, and
+already-caught `Funding & Jobs`.
+
+**SHAPE TWO — MODIFIER + PROGRAMME: 4 of the 19**, and **B does not design for
+it, on Ruling 49a's own recorded measurement.** `Summer Internship Program`,
+`Summer Internship Program (SIP)`, `Science Undergraduate Laboratory Internships
+(SULI)`, `Undergraduate & Graduate Intern Programs`. A rule of the form
+`^<modifier> Internship Program$` **destroys `M.S. Internship Program`** — the
+segment the card renders for the Oregon Center for Electrochemistry posting,
+which round 11 A fetched, scored CORRECT, and which Ruling 49a refused to
+reclassify in order to make a one-signal design available. **The file's own words:
+"grammatically the Oregon posting and the EnerSys brochure ARE THE SAME STRING…
+Do not merge these two checks."** B follows that and **records shape two as a
+NAMED, ACCEPTED MISS**, in the same manner as B17-01's own three-token-owner miss.
+The parenthetical-acronym variant (`… (SIP)`, `… (SULI)`) was considered and is
+refused for the same reason: real postings carry acronyms
+(`Postdoctoral Research Associate (PDRA)`), so it is a new signal class buying
+two rows at unmeasured risk.
+
+**TWO SINGLETONS, NEITHER DESIGNED FOR.** `Talent Network` (`oak-crest.org`) is
+neither shape and matches no section vocabulary in the file — a bare euphemism,
+and a one-row vocabulary addition is precisely what Ruling 32's headline forbids.
+`2027 AI College Jobs` (`github.com/speedyapply/…`) is an **aggregator listing
+repository**, a different class from an employer's programme index; it belongs
+with `wayup.com` under the listing/aggregator machinery, not here.
+
+#### 1.3 THE NAMEABLE GAP IS **NOT ESTABLISHED**, AND B SAYS WHERE IT LOOKED
+
+A's cheapest lead — `careers.jnj.com/…/co-ops` DROPPED while
+`careers.cisco.com/…/internships-and-co-ops` ADMITTED — **cannot be resolved from
+the record.** **A recorded no title for the jnj row**, only the verdict and the
+phrase "dropped as a co-op programme page" (§4 round 28 A part 2, and the
+round-25 tally line at `72667`). B searched §4 for every `jnj` mention (five
+hits, none carrying a title) and then fetched the page directly: **`careers.jnj.com`
+returns HTTP 403 with a bot-challenge body**, so the provider title cannot be
+recovered. Four plausible reconstructions (`Co-ops`, `Co-Ops`, `Careers`,
+`J&J Co-op Program`) were run through the shipped guards; only the bare `Careers`
+drops, and only via `CAREERS_INDEX_TITLE_RE`. **That is a hypothesis, not a
+finding, and B does not bank it. The design does not depend on it.**
+
+**One incidental fact worth recording, because it bears on item 0.**
+`careers.cisco.com`'s own page title is **`Careers at Cisco`**, not the
+`Internships & Co-ops Jobs` A recorded — so the recorded title came from the
+search provider, not from the page. Under item 0's page-title design that row
+would arrive as `Careers at Cisco` and be dropped by the **already-shipped**
+`LISTING_SECTION_TITLE_RE`. **The two items interact and C should expect the
+A28-01 corpus to shift when the provider swaps.**
+
+#### 1.4 THE DESIGN — ONE NEW CONSTANT, INSIDE ROUND 16's FRAME, CITED
+
+Round 16's recorded design (B16-01 / Ruling 47b, `jobweb.ts:492-543`) binds this
+item in four ways, and the design obeys all four:
+
+1. **"WHY THE TITLE AND NOT THE URL, measured rather than argued."** All three URL
+   routes were scored in round 16 and all three were worse; the leaf-word form is
+   "a hand-written vocabulary in a URL costume". **This design is a TITLE rule.
+   B proposes no URL clause and no host list.**
+2. **"LEGITIMACY OF THE DESTINATION IS NOT THIS RULE'S CRITERION."** These pages
+   are real places a real person can really apply. They are dropped anyway,
+   because a card whose whole role title is a section label tells the reader
+   nothing. **The same criterion, unchanged.**
+3. **"PLURAL ONLY… Do not add it."** The section nouns stay plural. **B adds no
+   singular.**
+4. **B17-01's placement rule, `jobweb.ts:631-641`: "THESE ARE THEIR OWN
+   CONSTANTS, READ ONLY BY `isListingPage`, AND THAT IS LOAD-BEARING RATHER THAN
+   STYLISTIC."** Widening `CAREERS_INDEX_TITLE_RE` would also change the
+   **employer-candidate veto chain** (B13-01 Gap A, confirmed live at
+   `jobweb.ts:1437`), turning `Tesla Careers` and `Kairos Power Careers` into
+   silence. **The new rule is its OWN constant with ONE call site, inside
+   `isListingPage`. It is NOT added to any existing regex.**
+
+**THE RULE.** A whole title that is nothing but careers-section or audience nouns
+joined by a conjunction:
+
+- **conjuncts**: `internships | jobs | careers | vacancies | opportunities |
+  openings | fellowships | co-ops` (all already shipped in this file's own lists)
+  plus `students | graduates | undergraduates`;
+- **shape**: `^ [owner/modifier ×0–2] <noun> (& | and) [owner/modifier ×0–2]
+  <noun> [trailing section noun | program(me)s] $`, anchored at both ends;
+- **the `of` trap narrowing, carried forward from 49a**: the owner/modifier tokens
+  **before the first section noun** may not be function words
+  (`of|for|and|or|to|with|in|on|at|the|a|an`). **B's own first draft applied that
+  veto to the first three tokens of the whole title, which vetoed the conjunction
+  itself and cost 5 catches — disclosed here because it was caught by measurement,
+  not by reading.**
+- **the title HEAD, not the raw string**: applied to the segment before the first
+  ` | `, ` - ` or `: ` separator, which is how round 27 C's own item-3 design took
+  a title head. This is what reaches `Students And Graduates I EMD Group`, whose
+  tail is an OCR'd pipe.
+
+**`positions` is deliberately absent**, for the third time in this file and for
+the same recorded reason: `Research positions at CERN` is a shipped must-keep.
+
+**WHAT ADMITS WHEN THE RULE CANNOT DECIDE:** nothing changes. The rule can only
+**remove** a card; a programme page outside this grammar survives exactly as it
+does today. **Failure direction is the status quo, never a new wrong value** —
+the same sentence B17-01 and A21-02 already ship.
+
+**VACUITY CHECK.** The clause is not vacuously true: it is **false** on 37 of 37
+real role titles below and on 1,594 of 1,595 harvested corpus strings, and
+**true** on 12 rows it is built for. It is not vacuously false either: 12 live
+rows fire it.
+
+#### 1.5 ADVERSARIAL MEASUREMENT — THE NUMBERS
+
+**Corpus A — A's nineteen.** **12 newly caught** (13 including the already-caught
+`Funding & Jobs`), **7 missed**, every miss named in §1.2 with a reason.
+
+**Corpus B — 37 real role titles that must survive.** All of this file's recorded
+must-keeps (`M.S. Internship Program – Oregon Center for Electrochemistry` and
+its rendered segment `M.S. Internship Program`; `Internship Program: Battery
+Characterization Track`; the bare `Internship`; `Acme Fellowship Program`;
+`Research positions at CERN`; `Head of Careers`, `Head of Careers - Imperial
+College London`, `Manager of Vacancies`, `Head of Internships`; `Jobs for
+Veterans Program Manager`, `Job for a Battery Engineer`, `Career for Life
+Coordinator`; `Jobs Data Analyst at the Bureau of Labor Statistics`; `Idaho
+National Laboratory Careers`, `Tesla Careers`, `Kairos Power Careers`;
+`Battery Research Scientist` @ `lco.global`; the LANL must-keep
+`Nuclear Materials and Molten Salt Technologist 1`) **plus 18 traps B wrote to
+break its own rule** (`Internships and Co-ops Coordinator`, `Internships & Co-ops
+Program Manager`, `Head of Internships and Careers`, `Director of Careers and
+Opportunities`, `Jobs and Internships Manager`, `Students and Graduates Programme
+Lead`, `Research Careers & Internships Officer`, `Graduate Research Assistant`,
+`Undergraduate Research Assistant`, `Student Worker - Battery Lab`, `Research &
+Development Engineer`, `Sales & Marketing Manager`, `Careers and Employability
+Adviser`, `Vacancies and Recruitment Officer`, `Postdoctoral Research Associate
+(PDRA)`, `Research Scientist (Batteries)`, `Summer Research Intern -
+Photovoltaics`, `Graduate Engineer - Molten Salt`).
+**FALSE FIRES: 0 of 37.** The end anchor is what does the work — every trap
+carries a real role noun after the conjoined labels.
+
+**Corpus C — the repo's own suites.** Every quoted string of 4–120 characters was
+harvested from `jobweb.test.ts`, `eventweb.test.ts`, `enrich.test.ts` and
+`employer-clause.ts`: **1,595 candidate strings. The rule fires on exactly ONE.**
+
+**A NARROWER VARIANT WAS MEASURED AND IS REFUSED ON A NUMBER, not on taste.**
+Requiring at least one conjunct to be a *careers-section* noun (so audience-only
+titles are excluded) scores **10 of 19 instead of 12**, at **the same zero false
+fires**. It buys no measured safety and costs `Students and Graduates` and
+`Students And Graduates I EMD Group`. **Recorded here so a later round does not
+re-derive it.** If the manager prefers the narrower class on principle rather than
+on measurement, the two rows become named misses and nothing else changes.
+
+#### 1.6 THE ONE TEST AT RISK — AND IT MUST BE REPAIRED, NOT DELETED
+
+The single firing corpus string is **`"Jobs and Internships - Youth & Young Adult
+Programs ..."` at `web/src/lib/jobs/sources/jobweb.test.ts:2516`** — A28-01's own
+`nps.gov` row, already in the suite as a fixture for **A23-01(c) clause 1**
+(`describe("A23-01(c) — bounded employer-candidate rejections")`), which asserts
+`employerOf(title)` is `undefined`.
+
+**Measured on the shipped code: that row is currently ADMITTED, with
+`company === undefined`** — so the assertion is real today. **Under the new rule
+`webResultToRawJobItem` returns `null`, `?.company` is `undefined`, and the test
+STILL PASSES — vacuously.** It would pass because the row is gone, not because
+the employer is silent.
+
+**C must give clause 1 a title that is not a listing page** (the other two rows in
+the same `it.each` — the `Graduate Intern – Focused Ion Beam…` pair — are
+unaffected and show the shape), **or add a second, uniquely-red assertion.
+Never delete it, and never loosen it.** This is the item's whole test risk.
+`jobweb.test.ts` is **123 tests / 2,725 lines**; `eventweb.test.ts` (150 / 2,330)
+is untouched — this rule is job-side only.
+
+#### 1.7 PRICE FOR C
+
+**One file: `web/src/lib/jobs/sources/jobweb.ts`.** One new constant, one small
+predicate, one line added to `isListingPage`, and a doc comment in this file's
+recorded style carrying: round 16's four bindings and why the rule is not a
+widening of `CAREERS_INDEX_TITLE_RE`; the two shapes and the four-row shape-two
+miss with Ruling 49a's reason; the two singletons; the narrower variant refused
+on 10-vs-12 at equal safety; the `of`-trap narrowing and B's own first-draft
+failure. **~20 source lines plus ~45 comment lines.** Plus the clause-1 repair in
+`jobweb.test.ts`. **Tests: ~20–25 new assertions** — the 12 catches, the 7 named
+misses asserted AS misses, the 37 must-keeps, and one mutation witness per
+narrowing (drop the end anchor → `Internships and Co-ops Coordinator` dies; drop
+the function-word veto → `Head of Internships and Careers` dies; drop the title-head
+split → `Students And Graduates I EMD Group` survives). **Estimate: +20/-0 source
+lines, +25 tests, 1 test repaired.**
