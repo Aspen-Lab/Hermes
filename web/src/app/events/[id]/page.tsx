@@ -1972,8 +1972,27 @@ export function EventReport({
         </header>
 
         {/* B-05. Plate 03's six-tile fact row, which the build did not have. */}
+          {/* V26-J04 / V26-E04 (round 26 C). THE FACT-TILE BAND. Plates 02 and 03
+              carry BYTE-IDENTICAL geometry here, pulled from the PDF's own vector
+              rectangles: one backing rect at x 79.5, w 453.0, fill `#2a1709`, with
+              FOUR lighter tiles laid on it (`#f1e8d9`) at x 79.5 / 192.8 / 306.8 /
+              420.0 and 0.75 pt gaps between them. The gaps ARE the rules — the dark
+              backing showing through — so `gap-px` over `bg-border` reproduces them
+              with no divider element, no per-tile border and no new token.
+
+              FOUR COLUMNS, CAPPED THERE, on both surfaces: the plate is 4-up on both,
+              against the build's 7-up job and 6-up event.
+
+              `grid-cols-2` at the narrowest width is a DISCLOSED DEVIATION — the plate
+              has no narrow breakpoint to copy, and a single column of full-width tiles
+              is not a band at all.
+
+              The short second row carries NO backing rect on either plate, so rules
+              must never trail into empty slots. A CSS grid with `gap-px` does that for
+              free: a short final row simply ends, because there is no next cell to gap
+              against. */}
         {facts.length > 0 && (
-          <dl className="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
             {facts.map((fact) => (
               <ReportFactTile
                 key={fact.key}

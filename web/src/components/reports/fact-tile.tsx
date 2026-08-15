@@ -31,10 +31,34 @@ export function ReportFactTile({
   return (
     <div
       {...{ [attribute]: fact.key }}
+      /*
+        V26-J04 / V26-E04 (round 26 C). THE TILE LOST ITS OWN BORDER AND RADIUS.
+        Plates 02 and 03 both draw the fact row as ONE dark backing rectangle
+        (x 79.5, w 453.0, `#2a1709`) with four LIGHTER tiles laid on it
+        (`#f1e8d9`), separated by 0.75 pt gaps — the backing surface showing
+        through as hairline rules. There is no per-tile border and no rounding.
+        The band's frame and rules now live on the WRAPPER `<dl>`; this tile is
+        just a fill.
+
+        A's "the tiles have no fill" is the one detail B corrected: they ARE
+        filled, lighter than the page. What they lack is a border and a radius.
+
+        THE TONE VARIANTS BECOME FILL-ONLY. A border on one tile inside a
+        rule-divided band reads as a mistake. The `text-accent` / `text-red`
+        VALUE colours below are untouched — those are the plate's own red
+        `APPLY BY` and blue `VISA` values and they carry the meaning.
+
+        THIS ELEMENT MUST STAY A BARE `<div>` WITH NO NESTED WRAPPER BEFORE ITS
+        `<dd>`s. Three assertions in `events/[id]/page.test.ts` capture a tile
+        with `/<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/` — anchored
+        on the element and terminated by the FIRST `</div>`. Adding a wrapper
+        ends the captured block early and reds those tests for a reason that has
+        nothing to do with the band.
+      */
       className={cn(
-        "min-w-0 rounded-xl border border-border bg-surface px-4 py-3",
-        fact.tone === "accent" && "border-accent/25 bg-accent/5",
-        fact.tone === "danger" && "border-red/25 bg-red/5",
+        "min-w-0 bg-surface px-4 py-3",
+        fact.tone === "accent" && "bg-accent/5",
+        fact.tone === "danger" && "bg-red/5",
       )}
     >
       {/* V26-J10 (round 26 C). Plates 02 and 03 use the SAME

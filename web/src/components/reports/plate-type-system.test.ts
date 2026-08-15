@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { CareerStage, Event, Job } from "@/types";
 import { JobReport } from "@/app/jobs/[id]/page";
 import { EventReport } from "@/app/events/[id]/page";
+import { ReportFactTile } from "@/components/reports/fact-tile";
 
 /**
  * **V26-J02 / V26-E02 — THE SERIF ADOPTION.** (Round 26 A's largest visual
@@ -478,5 +479,177 @@ describe("value stability across the heading hierarchy change", () => {
     ]) {
       expect(html).toContain(value);
     }
+  });
+});
+
+/**
+ * **V26-J04 / V26-E04 — THE FACT-TILE BAND.** Plate 02 = pp. 2–4 (row at
+ * p2 y≈691.5); plate 03 = pp. 4–9 (row at p4 y≈691.5). **The two plates' vector
+ * rectangles are identical to the tenth of a point:** one backing rect at
+ * x 79.5, w 453.0, fill `#2a1709`, carrying FOUR lighter tiles (`#f1e8d9`) at
+ * x 79.5 / 192.8 / 306.8 / 420.0 with **0.75 pt gaps**.
+ *
+ * **The gaps ARE the rules** — the dark backing showing through — so the honest
+ * translation is `gap-px` over `bg-border`, not a border per tile and not a
+ * divider element.
+ *
+ * **A's "the tiles have no fill" is the one detail B corrected: they ARE filled,
+ * lighter than the page. What they lack is a border and a radius.**
+ *
+ * **THE BEST NEWS IN B's ROUND, RE-STATED HERE BECAUSE IT IS WHAT MAKES THIS
+ * CHEAP:** B mapped both tile sets to their plate slots key by key, in source
+ * order — **7 for 7 on plate 02 and 6 for 6 on plate 03, no reordering.** Not
+ * one tile merges, splits or is orphaned, and there is no `POLICY` item here.
+ * The data layer was already exactly right; only the column count and the tile
+ * chrome were wrong.
+ */
+describe("V26-J04 / V26-E04 — the band is one framed surface with hairline rules", () => {
+  it("frames the band once on the wrapper and gives no tile its own border", () => {
+    for (const html of [renderJob(), renderEvent()]) {
+      const band = /<dl[^>]*class="([^"]*)"/.exec(html)?.[1] ?? "";
+      expect(band).toContain("gap-px");
+      expect(band).toContain("bg-border");
+      expect(band).toContain("border-border");
+      expect(band).toContain("overflow-hidden");
+      expect(band).toContain("rounded-xl");
+      // and no tile carries the old per-tile chrome
+      expect(html).not.toContain("rounded-xl border border-border bg-surface");
+    }
+  });
+
+  it("caps the band at the plate's FOUR columns on both surfaces", () => {
+    for (const html of [renderJob(), renderEvent()]) {
+      const band = /<dl[^>]*class="([^"]*)"/.exec(html)?.[1] ?? "";
+      expect(band).toContain("sm:grid-cols-4");
+      // the build's old counts, on both surfaces
+      expect(band).not.toContain("grid-cols-7");
+      expect(band).not.toContain("grid-cols-6");
+      expect(band).not.toContain("grid-cols-3");
+      // DISCLOSED DEVIATION: 2-up at the narrowest width, because the plate has
+      // no narrow breakpoint and one full-width column is not a band.
+      expect(band).toContain("grid-cols-2");
+    }
+  });
+
+  it("keeps the tile a BARE <div> with no nested wrapper — B's element-anchored boundary", () => {
+    // Three assertions in `events/[id]/page.test.ts` capture a tile with
+    // `/<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/` — terminated by
+    // the FIRST `</div>`. A wrapper ends the capture early and reds them for a
+    // reason that has nothing to do with the band.
+    const html = renderJob();
+    const tile =
+      /<div[^>]*data-job-fact="employment-type"[^>]*>[\s\S]*?<\/div>/.exec(
+        html,
+      )?.[0] ?? "";
+    expect(tile).toContain("<dt");
+    expect(tile).toContain("<dd");
+    expect(tile).toContain("Full time");
+  });
+
+  it("keeps every tile hook byte-identical", () => {
+    expect(renderJob()).toContain('data-job-fact="employment-type"');
+    expect(renderJob()).toContain('data-job-fact="work-mode"');
+  });
+});
+
+/**
+ * The empty and partial states, taken from the plate rather than invented: the
+ * short second row carries NO backing rect on either plate, so rules must never
+ * trail into empty slots.
+ */
+describe("the band's empty and partial states", () => {
+  it("renders no band at all when there are no facts", () => {
+    // Every tile is conditionally pushed, so this is a real shape.
+    const html = renderJob(
+      plateJob({
+        employmentType: undefined,
+        workMode: undefined,
+        location: undefined,
+        salary: undefined,
+        visa: undefined,
+      } as Partial<Job>),
+    );
+    expect(html).not.toContain("<dl");
+  });
+
+  it("draws no rule into an empty slot on a short row", () => {
+    // A CSS grid with `gap-px` gets this right for free: a short final row
+    // simply ends, because there is no next cell to gap against. The assertion
+    // that matters is that no blank filler tile is rendered to square the grid.
+    const html = renderJob();
+    const tiles = [...html.matchAll(/data-job-fact="/g)];
+    const cells = [...(/<dl[^>]*>([\s\S]*?)<\/dl>/.exec(html)?.[1] ?? "").matchAll(
+      /<div\b/g,
+    )];
+    expect(cells).toHaveLength(tiles.length);
+  });
+
+  it("keeps a tile's sub-line when it has one and renders nothing when it does not", () => {
+    const html = renderJob();
+    const tile =
+      /<div[^>]*data-job-fact="employment-type"[^>]*>[\s\S]*?<\/div>/.exec(
+        html,
+      )?.[0] ?? "";
+    expect(tile).not.toContain("data-report-fact-detail");
+    expect(tile).not.toContain("undefined");
+  });
+});
+
+/**
+ * **STANDARD 7 AND B's HARDEST BOUNDARY: NO TILE VALUE MAY CHANGE.** The fix
+ * touches `className` strings and one grid class per surface; `ReportFact`'s
+ * shape and every construction site are untouched.
+ */
+describe("value stability across the band change", () => {
+  it("still renders every tile label and value", () => {
+    const html = renderJob();
+    for (const value of ["Type", "Full time", "Location", "Los Altos, CA"]) {
+      expect(html).toContain(value);
+    }
+  });
+
+  it("keeps the tone fills and DROPS the tone borders, on the shipped tile itself", () => {
+    // C's first version of this case gated on a deadline tile the fixture
+    // never produced, so it was VACUOUS — the mutation that re-added the tone
+    // border came back GREEN. Caught by running the mutation. Fixed by
+    // rendering the shipped tile directly with each tone, which cannot be
+    // gated away by a fixture.
+    for (const [tone, fill, border] of [
+      ["accent", "bg-accent/5", "border-accent/25"],
+      ["danger", "bg-red/5", "border-red/25"],
+    ] as const) {
+      const html = renderToStaticMarkup(
+        createElement(ReportFactTile, {
+          fact: { key: "deadline", label: "Apply by", value: "12 Sep", tone },
+          attribute: "data-job-fact",
+        }),
+      );
+      // the FILL stays — it is how the plate distinguishes the tile
+      expect(html).toContain(fill);
+      // the BORDER goes — one bordered tile inside a rule-divided band reads
+      // as a mistake
+      expect(html).not.toContain(border);
+      expect(html).not.toContain("rounded-xl");
+      // and the VALUE colour survives, because it carries the plate's own red
+      // `APPLY BY` meaning
+      expect(html).toMatch(/text-(accent|red)/);
+    }
+  });
+
+  it("keeps the tile a single un-nested <div>, so element-anchored captures still work", () => {
+    // B named this as the one place a purely cosmetic edit can red a green
+    // test: three assertions in `events/[id]/page.test.ts` capture a tile
+    // with a regex terminated by the FIRST `</div>`.
+    const html = renderToStaticMarkup(
+      createElement(ReportFactTile, {
+        fact: { key: "fee", label: "Fee", value: "Free", detail: "student rate" },
+        attribute: "data-event-fact",
+      }),
+    );
+    const captured =
+      /<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/.exec(html)?.[0] ?? "";
+    // the capture must still reach BOTH the label and the value
+    expect(captured).toContain("Fee");
+    expect(captured).toContain("Free");
   });
 });

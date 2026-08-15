@@ -69740,3 +69740,125 @@ for on an extraction.
 
 **ITEM 4 COMPLETE — V26-J03 and V26-E03 both close. Item 5, the fact-tile band
 pair, follows.**
+
+### Round 26 — Agent C (item 5 of 15+: **THE FACT-TILE BAND — V26-J04 AND V26-E04 BOTH CLOSE. SEVEN BORDERED CARDS AND SIX BECOME ONE RULE-DIVIDED BAND AT THE PLATES' FOUR COLUMNS, WITH THE HAIRLINE RULES BUILT THE WAY THE PLATE DRAWS THEM — AS GAPS IN THE BACKING SURFACE. B's ELEMENT-ANCHORED TRAP WAS AVOIDED AND IS NOW LOCKED BY A TEST THAT REDS AT 3. AND A SECOND VACUOUS ASSERTION OF C's OWN WAS CAUGHT BY MUTATION AND REPLACED.**)
+
+**STATUS: item 5, banked on its own commit.** Three files: both report pages,
+`components/reports/fact-tile.tsx`, plus tests appended to the existing plate
+file. **No test deleted, none edited.** No credential printed, logged or written;
+no scaffold in the repo.
+
+---
+
+## PLATE CITATION
+
+`Peer-design-spec-original.pdf`, **plate 02 = pp. 2–4 (row at p2 y≈691.5)**,
+**plate 03 = pp. 4–9 (row at p4 y≈691.5)**. B pulled the vector rectangles and
+**the two plates are identical to the tenth of a point**: one backing rect at
+x 79.5, w 453.0, fill `#2a1709`, carrying **FOUR** lighter tiles (`#f1e8d9`) at
+x 79.5 / 192.8 / 306.8 / 420.0, with **0.75 pt gaps**.
+
+**Said plainly: the band is one continuous dark surface with four lighter tiles
+laid on it, and the gaps ARE the rules.** So the honest translation is `gap-px`
+over `bg-border` — **no divider element, no per-tile border, no new token.**
+
+**A's "the tiles have no fill" is the one detail B corrected: they ARE filled,
+lighter than the page. What they lack is a border and a radius.**
+
+## WHY THIS WAS CHEAPER THAN ITS DESCRIPTION — B's TILE MAPPING
+
+B mapped both tile sets to their plate slots key by key, **in source order**:
+**7 for 7 on plate 02** (`SALARY`/`TYPE`/`LOCATION`/`STARTS`/`APPLY BY`/
+`POSTED`/`VISA`) and **6 for 6 on plate 03** (`DATES`/`WHERE`/`FEE`/
+`ABSTRACT DUE`/`REGISTER BY`/`SCALE`), **with no reordering needed**. Not one
+tile merges, splits or is orphaned, and **there is no `POLICY` item here.** The
+data layer was already exactly right; only the column count and the tile chrome
+were wrong. **C changed no construction site and no `ReportFact` field.**
+
+## WHAT SHIPPED
+
+| | before | after |
+|---|---|---|
+| tile chrome | `rounded-xl border border-border bg-surface` | **`bg-surface` only** |
+| tone variants | `border-accent/25 bg-accent/5` / `border-red/25 bg-red/5` | **fill-only** — `bg-accent/5` / `bg-red/5` |
+| job grid | `grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7` | `grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4` |
+| event grid | `grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6` | **the same band string** |
+
+**The `text-accent` / `text-red` VALUE colours are untouched** — those are the
+plate's own red `APPLY BY` and blue `VISA` values and they carry the meaning; it
+is only the BORDERS that go, because one bordered tile inside a rule-divided band
+reads as a mistake.
+
+**DISCLOSED DEVIATION: `grid-cols-2` at the narrowest width**, not
+`grid-cols-1`. The plate has no narrow breakpoint to copy, and a single column of
+full-width tiles is not a band at all. B chose this reading and said so; C ships
+it and repeats the disclosure in the markup.
+
+## **B's ELEMENT-ANCHORED TRAP — AVOIDED, THEN LOCKED**
+
+B flagged the one place a purely cosmetic edit can red a green test:
+`events/[id]/page.test.ts` captures a tile at `:546`, `:573` and `:628` with
+`/<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/` — **anchored on the
+element and terminated by the FIRST `</div>`.** So the tile must stay a bare
+`<div>` and **must not gain a nested `<div>` wrapper before its `<dd>`s**.
+
+C kept it bare, and **mutation B6 adds the wrapper and reds at 3** — the exact
+three assertions B named. The constraint is now enforced by a test rather than
+remembered from a log, and the boundary is written into `fact-tile.tsx`'s own
+comment.
+
+## THE NEGATIVE PROOFS — SIX MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **32 of 32 passing** in the plate file:
+
+| # | mutation | red |
+|---|---|---|
+| B1 | revert the tile — per-tile border and radius back | **1 failed** |
+| B2 | revert the JOB band to 7-up with gutters | **2 failed** |
+| B3 | revert the EVENT band to 6-up with gutters | **2 failed** |
+| B4 | drop `gap-px` — the hairline rules disappear | **1 failed** |
+| B5 | keep the tone BORDER inside the ruled band | **1 failed** (after the fix below) |
+| **B6** | **wrap the tile body in a nested `<div>` — B's element-anchored trap** | **3 failed** |
+
+## **C's SECOND VACUOUS ASSERTION, CAUGHT THE SAME WAY AND DISCLOSED**
+
+**B5 came back GREEN on the first run.** The tone test was gated on
+`if (html.includes('data-job-fact="deadline"'))` — and the fixture never produced
+a deadline tile, so the body never executed. **A test that cannot run is not a
+test.** Replaced with a direct render of the shipped `ReportFactTile` at each
+tone, which no fixture can gate away; B5 now reds at 1.
+
+**That is the SECOND vacuous assertion C has written and caught in this round
+(the first was the timeline's dot-colour check).** Both were found the same way —
+by running the mutation rather than trusting the assertion's name — and both are
+recorded rather than quietly repaired. **The lesson generalises: a gated
+assertion inside an `if` is a vacuity risk by construction, and the round's own
+standard is what caught it.**
+
+## EMPTY / PARTIAL STATES — FROM THE PLATE, NOT INVENTED
+
+The short second row carries **no backing rect on either plate**, which is the
+empty-state rule taken from the source: **rules render only between adjacent
+occupied tiles and never trail into empty slots.** A CSS grid with `gap-px` gets
+this right for free — a short final row simply ends, because there is no next
+cell to gap against. Asserted: **the band renders exactly as many cells as there
+are facts, with no blank filler tile to square the grid.** Also asserted: **zero
+facts renders no band at all** (the `{facts.length > 0 && …}` guards on both
+surfaces are kept), and a tile with no `detail` renders no sub-line and no
+placeholder.
+
+## STANDARD 7 — VALUE STABILITY
+
+Every tile label and value still renders. **`ReportFact`'s shape and every
+construction site (`jobs:566-660`, `events:650-715`) are untouched** — B's
+hardest boundary, and the diff shows no edit inside those ranges.
+
+## GATE AFTER THE ITEM
+
+**96 files / 1959 tests, 1959 PASSING — ZERO FAILURES** (was 96 / 1949; **+10
+tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
+`quiz.tsx:46` error. **The band was run through the full suite before any new
+test was added and all 1949 prior tests passed** — including the three
+element-anchored tile assertions.
+
+**ITEM 5 COMPLETE — V26-J04 and V26-E04 both close. Six items landed (0–5).**
