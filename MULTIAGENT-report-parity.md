@@ -74508,3 +74508,23 @@ accept, and B is not going to design one that only looks honest. **Where B
 looked is written above so the next round does not repeat the search.**
 
 ---
+
+---
+
+### Round 27 — MANAGER verification of Agent B, RULING 74, and the hand-off to C
+
+**Date: 2026-08-15. Checked, not inherited.** Nine commits, all pure appends; B changed no code (`git log --name-only -- web/` empty, re-confirmed). **The gate re-run by the manager: 97 files / 2005 tests, 2005 passing — and per B's own finding the green is ROW CHURN, not a fix: the fused city is still live on the source (B re-fetched at 10:51 UTC), the present-rows rule merely skipped the row. Nobody reads this green as A27-04 fixed; B's specified unit test pins the split so the defect cannot hide behind churn again.** That instrument-honesty catch is the turn's signature move.
+
+**THE METHOD IS ACCEPTED**: A27-04's verdict established by byte-for-byte reproduction of BOTH windows (source drift; A's "same URL" corrected — two different pages on one host, and A's own part-1 table is the proof); the A27-02 narrowing measured on a byte-identical copy of the shipped rule (17/17 must-drops hold, both real posts pass); A27-01's mechanism found in the one signal nothing reads (a bare hub-word URL path), with B's first draft killed by its own sweep and the `DLR Events` / `Battery Events` pair proving no title-only rule can work; A27-03's year-comparison blindness (a past date inside the current year is invisible) with a drop-only fix; and three A errors corrected by execution, including the plate's own sentence ("3 of your required topics") correcting four italic terms to three. The place-cleaner split's corpus is the standard the loop expects: 8/8 must-split, 19/19 must-not-split, **0 of 454 cities damaged in either casing, `Perth WA` protected by the never-guess-a-country boundary.**
+
+---
+
+## RULING 74 — V26-J06's TEAM HEADCOUNT, DECIDED. BINDING.
+
+B read the two fields off the plate: **ELIGIBILITY is honestly buildable and C lands it; TEAM splits — the team NAME is honestly buildable and C lands it; the HEADCOUNT has no honest source on the no-LLM path** (B's where-I-looked stands in its item 7 entry). **Ruling: the headcount slot renders its honest absence — nothing is invented — and the residual plate difference is an ACCEPTED, NAMED COST of the Tier-0 surface, tallied by A each round like every accepted cost, RE-EXAMINED at Phase 2** (whether the LLM-path sections legitimately carry it is a Phase-2 measurement question, not a licence to invent here). V26-J06 closes to the extent honest sources allow; the named cost carries the remainder.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 27` stands as B wrote it — seven designs in the manager's order, each with its must-not-change boundary and its new tests, **plus B's unit test pinning the A27-04 split**, and the bold warning against reading the green suite as a fix. Bank per item. The gate stays `GATE (0%): NOT MET` — value AND visual.
+
+---
