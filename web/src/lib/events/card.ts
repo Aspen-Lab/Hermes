@@ -1,5 +1,5 @@
 import type { Event } from "@/types";
-import { daysUntil, formatDate, parseDate } from "@/lib/format";
+import { daysUntil, formatDate, isMonthGranularity, parseDate } from "@/lib/format";
 import { eventPrestige } from "@/lib/opportunities/prestige";
 import { eventUrgency, type UrgencyBucket } from "@/lib/opportunities/urgency";
 import { matchQuality } from "@/lib/opportunities/match-quality";
@@ -29,6 +29,13 @@ export type EventCardView = {
 
 function dateLabel(event: Event): string {
   if (!parseDate(event.date)) return "Date not listed";
+  // A23-02 / Ruling 62b. A month-granularity claim renders at the granularity
+  // it was evidenced at — "Aug 2026", not "Aug 1, 2026". Printing a day the
+  // page never stated would invent a value, which is the one column that has
+  // held zero since round 22.
+  if (isMonthGranularity(event.date)) {
+    return formatDate(event.date, "monthYear") ?? "Date not listed";
+  }
   const start = formatDate(event.date, "medium") ?? "Date not listed";
   return event.endDate && parseDate(event.endDate)
     ? `${start}–${formatDate(event.endDate, "medium") ?? "Date not listed"}`

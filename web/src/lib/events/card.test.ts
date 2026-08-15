@@ -164,3 +164,20 @@ describe("B20-01 — a hybrid event keeps its venue on the card", () => {
     ).toBe("Online");
   });
 });
+
+// A23-02 / Ruling 62b. A month-granularity date renders at the granularity it
+// was evidenced at. Printing "Aug 1, 2026" from "2026-08" would invent a day
+// the page never stated.
+describe("month-granularity dates on the card", () => {
+  it("renders `Aug 2026`, not a first-of-the-month instant", () => {
+    const view = eventCardView(
+      { ...event, date: "2026-08", endDate: undefined },
+      now,
+    );
+    expect(view.dateLabel).toBe("Aug 2026");
+  });
+
+  it("still renders a day-level date in full", () => {
+    expect(eventCardView(event, now).dateLabel).toBe("Sep 10, 2026–Sep 12, 2026");
+  });
+});

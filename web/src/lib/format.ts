@@ -16,10 +16,51 @@ const DAY_MS = 86_400_000;
 export function parseDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  const d = dateOnly
-    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+  if (dateOnly) {
+    const d = new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  // A23-02 / Ruling 62b. A MONTH-GRANULARITY claim ("2026-08"): the month is
+  // evidenced, the day is not. Built as a LOCAL date for the same reason the
+  // date-only branch above is — `new Date("2026-08")` is UTC midnight, which
+  // renders as the PREVIOUS MONTH in western timezones.
+  const monthOnly = MONTH_GRANULARITY_RE.exec(iso.trim());
+  const d = monthOnly
+    ? new Date(Number(monthOnly[1]), Number(monthOnly[2]) - 1, 1)
     : new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * A23-02 / Ruling 62b. A date the page evidenced only to the MONTH — the shape
+ * a listing title's `(Aug 2026)` supports and nothing finer.
+ */
+export const MONTH_GRANULARITY_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+export function isMonthGranularity(iso: string | null | undefined): boolean {
+  return Boolean(iso && MONTH_GRANULARITY_RE.test(iso.trim()));
+}
+
+/**
+ * A23-02 / Ruling 62b. THE LAST INSTANT AT WHICH A DATE CLAIM CAN STILL BE
+ * TRUE, which is what every expiry test actually wants.
+ *
+ * For a day-level date this is just `Date.parse`. For a month-granularity one
+ * it is the END of that month, and the difference is the whole point of the
+ * ruling: `Date.parse("2026-08")` is 1 August, so an expiry test reading it
+ * directly would retire an August event on the FIRST of August — expiring a
+ * live row wrongly early, which is worse than the late expiry it replaces.
+ * A month-granularity value expires ONLY when its month has fully passed.
+ */
+export function dateClaimEndMs(iso: string | null | undefined): number {
+  if (!iso) return NaN;
+  const trimmed = iso.trim();
+  const monthOnly = MONTH_GRANULARITY_RE.exec(trimmed);
+  if (monthOnly) {
+    // First instant of the NEXT month, minus one — local, matching parseDate.
+    return new Date(Number(monthOnly[1]), Number(monthOnly[2]), 1).getTime() - 1;
+  }
+  return Date.parse(trimmed);
 }
 
 export type DateStyle = "full" | "medium" | "short" | "monthYear";

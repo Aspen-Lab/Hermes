@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  dateClaimEndMs,
   daysUntil,
   formatCount,
   formatDate,
@@ -9,6 +10,7 @@ import {
   formatDaysLeft,
   formatMatchPct,
   formatTimeAgo,
+  isMonthGranularity,
   parseDate,
 } from "./format";
 
@@ -112,5 +114,39 @@ describe("formatMatchPct", () => {
     expect(formatMatchPct(-0.2)).toBe(0);
     expect(formatMatchPct(null)).toBeNull();
     expect(formatMatchPct(undefined)).toBeNull();
+  });
+});
+
+// A23-02 / Ruling 62b. A date evidenced only to the month.
+describe("month-granularity date claims", () => {
+  it("recognises the shape and nothing else", () => {
+    expect(isMonthGranularity("2026-08")).toBe(true);
+    expect(isMonthGranularity("2026-08-11")).toBe(false);
+    expect(isMonthGranularity("2026")).toBe(false);
+    expect(isMonthGranularity("2026-13")).toBe(false);
+    expect(isMonthGranularity(undefined)).toBe(false);
+  });
+
+  it("parses to the first of the month as a LOCAL date", () => {
+    const d = parseDate("2026-08");
+    expect(d?.getFullYear()).toBe(2026);
+    expect(d?.getMonth()).toBe(7);
+    expect(d?.getDate()).toBe(1);
+  });
+
+  it("ends the claim at the END of the month, never the start", () => {
+    // The whole point of the ruling: reading `2026-08` as a day-level date puts
+    // its expiry at 1 August, which would retire a live August event wrongly
+    // early.
+    expect(dateClaimEndMs("2026-08")).toBeGreaterThan(
+      new Date(2026, 7, 31, 23, 0).getTime(),
+    );
+    expect(dateClaimEndMs("2026-08")).toBeLessThan(new Date(2026, 8, 1).getTime());
+  });
+
+  it("is identical to Date.parse for every day-level value", () => {
+    expect(dateClaimEndMs("2026-08-11T12:00:00.000Z")).toBe(
+      Date.parse("2026-08-11T12:00:00.000Z"),
+    );
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bestEventTitleSegment,
+  bestEventTitleSegmentDetailed,
   clusterEventDays,
   eventNameFrom,
   extractEventDate,
@@ -376,10 +377,23 @@ describe("eventNameFrom", () => {
     // merely ENDS in a city/state must survive. A's own live, already-
     // correct 10times.com example, named explicitly per B10-02's own
     // instruction rather than a synthetic case.
+    // A23-02 gap (a) / Ruling 62b RESTATEMENT (not a deletion). What THIS test
+    // guards is unchanged and still asserted below: the bare-location check is
+    // anchored to the WHOLE segment, so a real name is never REJECTED for
+    // ending in a place. What changed is that the aggregator's date and city
+    // are now recognised as listing FURNITURE and stripped off the accepted
+    // segment — A ranked the old value as the defect, since the card printed a
+    // date inside the name while also calling the event undated.
     it("does not reject a real event name merely because it ends in a city/state", () => {
+      // Not rejected — accepted, then trimmed of its furniture.
       expect(
         bestEventTitleSegment("Solid-State Battery Summit (Aug 2026), Chicago USA"),
-      ).toBe("Solid-State Battery Summit (Aug 2026), Chicago USA");
+      ).toBe("Solid-State Battery Summit");
+      // And a name whose city is its own distinguishing content, with no comma
+      // in front of it, is untouched — the boundary that keeps the two apart.
+      expect(bestEventTitleSegment("The Battery Show Detroit")).toBe(
+        "The Battery Show Detroit",
+      );
     });
   });
 
@@ -1862,5 +1876,160 @@ describe("ambiguous snippets must prove which date is theirs (A22-01)", () => {
       expect(item?.startDate).not.toContain("2027-08");
       expect(item?.startDate).not.toContain("2027-12");
     });
+  });
+});
+
+// A23-02 / Ruling 62b — THE LISTING-FURNITURE STRIP AND THE MONTH-GRANULARITY
+// PARTIAL.
+//
+// `10times.com` rendered `Solid-State Battery Summit (Aug 2026), Chicago USA`
+// as the event NAME while the card's date line read "Date not listed" — one
+// card contradicting itself on its own face. Gap (a) removes the furniture;
+// the partial hands the removed month-year to the date field at the
+// granularity the page actually evidenced.
+//
+// The expiry evasion — gap (b) — is DEFERRED by 62b and is NOT closed here.
+describe("A23-02 — listing furniture in the event name", () => {
+  it("strips the aggregator's date and city off the chosen segment", () => {
+    expect(
+      bestEventTitleSegment("Solid-State Battery Summit (Aug 2026), Chicago USA"),
+    ).toBe("Solid-State Battery Summit");
+  });
+
+  it("composes with the two strips already on the chosen segment", () => {
+    // Host chrome is split off first, the welded/banner strips run, and this
+    // one runs last on what survives. Three disjoint vocabularies.
+    expect(
+      bestEventTitleSegment(
+        "Solid-State Battery Summit (Aug 2026), Chicago USA | 10times",
+      ),
+    ).toBe("Solid-State Battery Summit");
+  });
+
+  it.each([
+    "Molten Salt Congress (Hybrid)",
+    "Molten Salt Congress (Virtual)",
+    "Battery Show Asia (Formerly Battery Show Japan)",
+    "Molten Salt Congress (ICMS 2026)",
+  ])("never strips a parenthetical carrying WORDS — `%s`", (title) => {
+    expect(bestEventTitleSegment(title)).toBe(title);
+  });
+
+  it("never strips a leading or mid-string parenthetical", () => {
+    expect(bestEventTitleSegment("EUCHEMS (Molten Salts) 2026")).toBe(
+      "EUCHEMS (Molten Salts) 2026",
+    );
+    // The end-anchor's own case: a DATE-shaped parenthetical that is not at the
+    // end. Unanchored, everything after it is dropped with it.
+    expect(bestEventTitleSegment("Molten Salt Congress (2026) Proceedings")).toBe(
+      "Molten Salt Congress (2026) Proceedings",
+    );
+  });
+
+  it("requires the COMMA before a place tail", () => {
+    // B's boundary: `<name>, <City> <COUNTRY>` is furniture; `<name> <City>` is
+    // a name. Without the comma requirement this loses its venue words.
+    expect(bestEventTitleSegment("Molten Salt Congress Lyon France")).toBe(
+      "Molten Salt Congress Lyon France",
+    );
+  });
+
+  it("requires the tail to end in a COUNTRY, not merely follow a comma", () => {
+    expect(bestEventTitleSegment("Molten Salt Congress, Volume 3")).toBe(
+      "Molten Salt Congress, Volume 3",
+    );
+  });
+
+  it.each([
+    "The Battery Show Detroit",
+    "Oslo Battery Days Conference 2027",
+  ])("never strips a city that IS the name — `%s` (no comma)", (title) => {
+    expect(bestEventTitleSegment(title)).toBe(title);
+  });
+
+  it("keeps the original when stripping would leave nothing at all", () => {
+    // A wrong name is bad; an empty one is worse. The remainder must be
+    // non-empty and must still read as an event, or the original ships.
+    expect(bestEventTitleSegment("(Aug 2026)")).toBe("(Aug 2026)");
+    expect(bestEventTitleSegment("Molten Salt Congress, Lyon France")).toBe(
+      "Molten Salt Congress",
+    );
+  });
+
+  it("keeps the original when the place strip would leave site chrome behind", () => {
+    // The same guard on the other strip: `Conference Programme` does not pass
+    // the shipped chrome/event-title pair, so the tail stays rather than
+    // promoting chrome into the name slot.
+    expect(bestEventTitleSegment("Conference Programme, Lyon France")).toBe(
+      "Conference Programme, Lyon France",
+    );
+  });
+
+  it("strips a day-range parenthetical too", () => {
+    expect(
+      bestEventTitleSegment("Solid-State Battery Summit (Aug 11-12, 2026)"),
+    ).toBe("Solid-State Battery Summit");
+  });
+
+  // THE MONTH-GRANULARITY PARTIAL.
+  it("hands the removed month-year to the date field at MONTH granularity", () => {
+    expect(
+      bestEventTitleSegmentDetailed(
+        "Solid-State Battery Summit (Aug 2026), Chicago USA",
+      ),
+    ).toEqual({ segment: "Solid-State Battery Summit", monthYear: "2026-08" });
+  });
+
+  it("NEVER falls back to a year alone — an unparseable month leaves the date absent", () => {
+    // `2026` as a date would render a January instant and INVENT a value. The
+    // invented-date column has held zero since round 22 and stays zero.
+    expect(
+      bestEventTitleSegmentDetailed("Solid-State Battery Summit (2026)"),
+    ).toEqual({ segment: "Solid-State Battery Summit", monthYear: undefined });
+  });
+
+  it("does not overwrite a day-level date the snippet already evidenced", () => {
+    const item = webResultToRawEventItem(
+      {
+        title: "Solid-State Battery Summit (Aug 2026), Chicago USA",
+        url: "https://10times.com/e1z2-0h5z-3pgr",
+        snippet:
+          "The Solid-State Battery Summit runs August 11-12, 2026 in Chicago.",
+      },
+      Date.parse("2026-06-01T00:00:00Z"),
+    );
+    expect(item?.startDate).toBe("2026-08-11T12:00:00.000Z");
+  });
+
+  it("publishes the month-granularity date when nothing finer exists", () => {
+    const item = webResultToRawEventItem(
+      {
+        title: "Solid-State Battery Summit (Aug 2026), Chicago USA",
+        url: "https://10times.com/e1z2-0h5z-3pgr",
+        snippet: "Solid-State Battery Summit conference listing.",
+      },
+      Date.parse("2026-06-01T00:00:00Z"),
+    );
+    expect(item?.name).toBe("Solid-State Battery Summit");
+    expect(item?.startDate).toBe("2026-08");
+  });
+
+  it("expires a month-granularity row only once its month has FULLY passed", () => {
+    const row = (now: string) =>
+      webResultToRawEventItem(
+        {
+          title: "Solid-State Battery Summit (Aug 2026), Chicago USA",
+          url: "https://10times.com/e1z2-0h5z-3pgr",
+          snippet: "Solid-State Battery Summit conference listing.",
+        },
+        Date.parse(now),
+      );
+    // Mid-month: still live. Reading "2026-08" as a day-level date would put it
+    // at 1 August and retire it here — wrongly EARLY, the failure 62b names.
+    expect(row("2026-08-15T00:00:00Z")).not.toBeNull();
+    // First of the month: still live.
+    expect(row("2026-08-01T12:00:00Z")).not.toBeNull();
+    // The month is over: gone.
+    expect(row("2026-09-02T00:00:00Z")).toBeNull();
   });
 });

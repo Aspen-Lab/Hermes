@@ -758,3 +758,28 @@ describe("owner-name topic collisions leave the event pool (Ruling 57b)", () => 
     expect(scored.map((s) => s.id)).toEqual(["op"]);
   });
 });
+
+// A23-02 / Ruling 62b. The scoring pass's own expiry gate must read a
+// month-granularity start at MONTH granularity. Reading `2026-08` as a
+// day-level date puts it at 1 August, so a live August row would be dropped
+// from the pool on the first of its own month — expiring it wrongly EARLY,
+// which is the failure the ruling names.
+describe("month-granularity expiry in the scoring pass", () => {
+  it("keeps a month-granularity row mid-month", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-08-15T00:00:00Z"));
+    expect(scored.map((s) => s.id)).toEqual(["m"]);
+  });
+
+  it("keeps it on the first of the month", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-08-01T12:00:00Z"));
+    expect(scored.map((s) => s.id)).toEqual(["m"]);
+  });
+
+  it("drops it once the month has fully passed", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-09-02T00:00:00Z"));
+    expect(scored).toHaveLength(0);
+  });
+});

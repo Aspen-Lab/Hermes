@@ -7,12 +7,16 @@ import {
   MONTH_PATTERN,
   urlHashId,
 } from "@/lib/opportunities/shared";
-import { US_STATE_CODES } from "@/lib/opportunities/structured-extract";
+import {
+  COUNTRY_NAMES,
+  US_STATE_CODES,
+} from "@/lib/opportunities/structured-extract";
 import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
 } from "@/lib/opportunities/query-budget";
 import { classifyEventType } from "../mapper";
+import { dateClaimEndMs } from "@/lib/format";
 
 // Web discovery for academic events. The curated feeds (ccfddl, confs.tech)
 // are CS-heavy; this adapter is what finds a materials-science symposium or a
@@ -1261,7 +1265,156 @@ function stripBannerLeadIn(segment: string, host: string | undefined): string {
   return remainder;
 }
 
+/**
+ * A23-02 gap (a) / Ruling 62b — THE LISTING-FURNITURE STRIP.
+ *
+ * `10times.com` rendered the event name as
+ * `Solid-State Battery Summit (Aug 2026), Chicago USA` — a listing aggregator's
+ * row, with the date and the city welded on where the NAME belongs. The `|
+ * 10times` host chrome is already stripped correctly; the furniture INSIDE the
+ * chosen segment is what no split reaches, because it is not on a separator.
+ *
+ * This is the THIRD strip on the chosen segment, composing with
+ * `stripWeldedPageTypeLabel` and `stripBannerLeadIn` exactly as B13-03 composed
+ * with B12-03 — three disjoint vocabularies, none able to undo another.
+ *
+ * Two END-ANCHORED shapes, and the boundaries are what keep them honest:
+ *  - a trailing parenthetical whose whole content is month/year/day/punctuation
+ *    tokens. NEVER one carrying WORDS: `(Hybrid)`, `(Virtual)`, `(ICMS 2026)`
+ *    and `(Formerly Battery Show Asia)` are part of the name.
+ *  - a trailing `, <place> <COUNTRY>` tail. THE COMMA IS REQUIRED, which is what
+ *    leaves `Battery Show Detroit` and `Oslo Battery Days Conference` alone —
+ *    there the city IS the name's distinguishing content.
+ *
+ * Never leading or mid-string: `EUCHEMS (Molten Salts) 2026` is a name. And if
+ * a strip would empty the segment or leave something that no longer reads as an
+ * event, the ORIGINAL is kept — a wrong name is bad, an empty one is worse.
+ *
+ * The month-year it removes is not thrown away: it is handed to the date field
+ * as a MONTH-GRANULARITY value (Ruling 62b's approved partial), so the card
+ * stops contradicting itself by showing a date in a name it also calls undated.
+ * A parenthetical carrying ONLY a year strips but yields NO date —
+ * **never a year-only fallback**, which would invent a January instant.
+ */
+const TRAILING_PARENTHETICAL_RE = /\s*\(([^()]{1,48})\)\s*$/;
+const TRAILING_PLACE_TAIL_RE = /\s*,\s*([^,()]{2,48}?)\s*$/;
+
+/**
+ * Country tokens a listing tail may end on. `COUNTRY_NAMES` carries the formal
+ * names; these are the postal abbreviations it does not. VACUITY, stated: only
+ * `USA` is earned by the live row (`…, Chicago USA`); the other three are the
+ * same closed class and cost nothing, because a missing token means no strip,
+ * which is today's name.
+ */
+const COUNTRY_ABBREVIATIONS = ["USA", "U.S.A.", "UK", "U.K."];
+
+const MONTH_TOKEN_RE =
+  /^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)(?:uary|ruary|ch|il|e|y|ust|tember|ober|ember)?$/i;
+
+const MONTH_INDEX: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
+/**
+ * True only when every token is a month name, a year, a day number or bare
+ * punctuation — the test that separates `(Aug 11-12, 2026)` from `(ICMS 2026)`.
+ * Returns the month-granularity date when a month AND a year are both present,
+ * and `null` for a date-shaped parenthetical that names no month.
+ */
+function readDateOnlyParenthetical(content: string): { monthYear: string | null } | undefined {
+  const tokens = content.split(/[\s,\-–—/.]+/).filter(Boolean);
+  if (tokens.length === 0) return undefined;
+
+  let month: number | undefined;
+  let year: number | undefined;
+  for (const token of tokens) {
+    if (MONTH_TOKEN_RE.test(token)) {
+      month ??= MONTH_INDEX[token.slice(0, 3).toLowerCase()];
+      continue;
+    }
+    if (/^\d{4}$/.test(token)) {
+      year ??= Number(token);
+      continue;
+    }
+    if (/^\d{1,2}(?:st|nd|rd|th)?$/i.test(token)) continue;
+    // Anything else is a WORD, so the parenthetical is part of the name.
+    return undefined;
+  }
+  if (!year && !month) return undefined;
+  return {
+    monthYear:
+      month && year ? `${year}-${String(month).padStart(2, "0")}` : null,
+  };
+}
+
+function endsInCountry(tail: string): boolean {
+  const trimmed = tail.trim();
+  if (COUNTRY_ABBREVIATIONS.some((abbr) => trimmed.toUpperCase().endsWith(abbr))) {
+    return true;
+  }
+  const lower = trimmed.toLowerCase();
+  return COUNTRY_NAMES.some((name) => lower.endsWith(` ${name.toLowerCase()}`));
+}
+
+function stripListingFurniture(
+  segment: string,
+  host: string | undefined,
+): { segment: string; monthYear?: string } {
+  let current = segment;
+  let monthYear: string | undefined;
+
+  const keeps = (remainder: string) =>
+    Boolean(remainder) &&
+    !isChromeSegment(remainder, host) &&
+    looksLikeEventTitle(remainder) &&
+    (YEAR_RE.test(remainder) || looksLikeEvent(remainder));
+
+  const placeMatch = current.match(TRAILING_PLACE_TAIL_RE);
+  if (placeMatch && endsInCountry(placeMatch[1])) {
+    const remainder = current.slice(0, placeMatch.index).trim();
+    if (keeps(remainder)) current = remainder;
+  }
+
+  const parenMatch = current.match(TRAILING_PARENTHETICAL_RE);
+  if (parenMatch) {
+    const read = readDateOnlyParenthetical(parenMatch[1]);
+    if (read) {
+      const remainder = current.slice(0, parenMatch.index).trim();
+      if (keeps(remainder)) {
+        current = remainder;
+        monthYear = read.monthYear ?? undefined;
+      }
+    }
+  }
+
+  return { segment: current, monthYear };
+}
+
+export function bestEventTitleSegmentDetailed(
+  title: string,
+  url?: string,
+  options?: ChromeSegmentOptions,
+): { segment: string; monthYear?: string } | undefined {
+  const selected = selectEventTitleSegment(title, url, options);
+  if (!selected) return undefined;
+  return stripListingFurniture(selected, hostFromUrl(url));
+}
+
+/**
+ * The name every existing caller already asks for. Unchanged in shape; it now
+ * carries A23-02's furniture strip, and `…Detailed` above is the same work with
+ * the removed month-year kept rather than discarded.
+ */
 export function bestEventTitleSegment(
+  title: string,
+  url?: string,
+  options?: ChromeSegmentOptions,
+): string | undefined {
+  return bestEventTitleSegmentDetailed(title, url, options)?.segment;
+}
+
+function selectEventTitleSegment(
   title: string,
   url?: string,
   options?: ChromeSegmentOptions,
@@ -1490,13 +1643,27 @@ export function webResultToRawEventItem(
   // the card falls back to the "date TBA" this function already documents
   // below. Cannot delete a row: the expiry anchor below takes the max of the
   // two, and the two are equal here.
-  const startDate =
+  const dayLevelStart =
     extractedDate && deadline && Date.parse(extractedDate) === Date.parse(deadline)
       ? undefined
       : extractedDate;
+  // A23-02 / Ruling 62b, THE APPROVED PARTIAL. The month-year the name strip
+  // removed is a date claim the page made about this very event, so it is
+  // handed to the date field rather than thrown away — but only as a
+  // MONTH-GRANULARITY value, and only when nothing finer was extracted. The
+  // card then reads "Aug 2026" instead of "Date not listed", which is TRUE, and
+  // the self-contradiction of a name carrying a date the card calls unknown is
+  // gone. This does not close the expiry evasion and nothing here claims it
+  // does: the row still leaves only when its month has fully passed.
+  const nameDetail = bestEventTitleSegmentDetailed(title, url);
+  const startDate = dayLevelStart ?? nameDetail?.monthYear;
+  // Expiry reads the LAST INSTANT the claim can still be true. For a day-level
+  // date that is `Date.parse`; for a month-granularity one it is the end of the
+  // month. Entering `2026-08` as a day-level date would expire an August row on
+  // 1 August — wrongly EARLY, which is worse than the late expiry it replaces.
   const anchor = [startDate, deadline]
     .filter((d): d is string => Boolean(d))
-    .map((d) => Date.parse(d));
+    .map((d) => dateClaimEndMs(d));
   // A parsed date that's already in the past means the page describes a
   // finished event — drop it.
   if (anchor.length > 0 && Math.max(...anchor) < now) return null;
@@ -1518,7 +1685,7 @@ export function webResultToRawEventItem(
     source: "eventweb",
     name,
     type: classifyEventType(title, result.snippet ?? ""),
-    startDate: startDate && Date.parse(startDate) > now ? startDate : "",
+    startDate: startDate && dateClaimEndMs(startDate) > now ? startDate : "",
     location: isOnline ? "Online" : "See event page",
     isOnline,
     deadline: deadline && Date.parse(deadline) > now ? deadline : undefined,

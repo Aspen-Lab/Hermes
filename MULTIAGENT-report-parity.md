@@ -58501,3 +58501,184 @@ harness is **DELETED** and `git status --porcelain --untracked-files=all` is
 **clean**.
 
 ---
+
+### Round 23 — Agent C (item 3 of 4: **A23-02 LANDED — gap (a)'s listing-furniture strip AND Ruling 62b's month-granularity partial. The card stops contradicting itself. THE EXPIRY EVASION IS NOT CLOSED AND NOTHING HERE CLAIMS IT IS.**)
+
+**STATUS: LANDED.** Item 3 of 4.
+
+---
+
+## PART 1 — **GAP (a): THE THIRD STRIP ON THE CHOSEN SEGMENT**
+
+`10times.com` rendered the event NAME as
+`Solid-State Battery Summit (Aug 2026), Chicago USA` while the card's date line
+read `Date not listed` — one card contradicting itself on its own face. The
+`| 10times` host chrome was already stripped correctly; the furniture INSIDE the
+chosen segment is what no split reaches, because it sits on no separator.
+
+Shipped as `stripListingFurniture`, composing with `stripWeldedPageTypeLabel`
+and `stripBannerLeadIn` in the same place and the same shape B13-03 composed
+with B12-03 — **three disjoint vocabularies, none able to undo another, all
+AFTER selection** so the longest-wins tie-break is untouched.
+
+Two END-ANCHORED shapes, and **every boundary 62b named is shipped and proved**:
+
+| boundary | fixture that proves it |
+|---|---|
+| never a parenthetical carrying WORDS | `(Hybrid)`, `(Virtual)`, `(Formerly Battery Show Japan)`, **`(ICMS 2026)`** |
+| never leading or mid-string | `EUCHEMS (Molten Salts) 2026`; `Molten Salt Congress (2026) Proceedings` |
+| never a city that IS the name — the COMMA is required | `The Battery Show Detroit`; `Oslo Battery Days Conference 2027`; `Molten Salt Congress Lyon France` |
+| the tail must end in a gazetteer COUNTRY | `Molten Salt Congress, Volume 3` |
+| a non-empty, still-event-like remainder or KEEP the original | `(Aug 2026)`; `Conference Programme, Lyon France` |
+
+**THE SIGNATURE CHANGE, AND WHY NO EXISTING CALLER MOVED.** The selection body
+is now a private `selectEventTitleSegment`; `bestEventTitleSegment` keeps its
+exact signature and delegates, and a sibling `bestEventTitleSegmentDetailed`
+returns the same work **with the removed month-year kept rather than
+discarded.** Every existing caller and test reaches the same function it always
+did.
+
+**VACUITY, STATED: only `USA` is earned by the live row.** `COUNTRY_NAMES`
+carries the formal country names but not the postal abbreviations, so a
+four-token list (`USA`, `U.S.A.`, `UK`, `U.K.`) sits beside it. A missing token
+means NO STRIP, which is today's name — the failure direction is the status quo.
+
+## PART 2 — **RULING 62b's APPROVED PARTIAL: THE MONTH-GRANULARITY DATE**
+
+The month-year the strip removes is a date claim the page made **about this very
+event**, so it is handed to the date field rather than thrown away — **at the
+granularity the page actually evidenced, and no finer.**
+
+- **New shape:** `startDate: "2026-08"`. The card reads **`Aug 2026`**.
+- **`dateClaimEndMs` is the whole mechanism** (`format.ts`): the LAST INSTANT at
+  which a date claim can still be true. For a day-level date it is exactly
+  `Date.parse`; for a month-granularity one it is the END of the month. **This
+  is the trap 62b names: `Date.parse("2026-08")` is 1 AUGUST, so an expiry test
+  reading it directly retires a live August row on the first of its own month —
+  wrongly EARLY, which is worse than the late expiry it replaces.** Applied at
+  both expiry sites: ingestion (`eventweb.ts`) and the scoring pass
+  (`scoring.ts:208`).
+- **NEVER a year-only fallback.** A parenthetical carrying only `(2026)` still
+  strips, and still yields **no date**. `2026` as a date would render a January
+  instant and INVENT a value; that column has held zero since round 22 and stays
+  zero. Uniquely red.
+- **It never overwrites a finer date.** `dayLevelStart ?? monthYear`, in that
+  order, and reversing it is uniquely red.
+- **`parseDate` builds the month value as a LOCAL date**, for the same reason
+  its date-only branch does: `new Date("2026-08")` is UTC midnight, which
+  renders as the PREVIOUS MONTH in western timezones. Uniquely red.
+
+**ONE COSMETIC DEVIATION, TRACED.** 62b's text says the card reads
+`August 2026`; C ships **`Aug 2026`**, the existing `monthYear` style, so the
+date line matches the short-month style every other event date on the same card
+already uses. The ruling's substance — the GRANULARITY — is unchanged; only the
+month's spelling differs, and a new long-month style would have made this one
+row read differently from its neighbours.
+
+**WHAT IS NOT CLOSED, SAID PLAINLY.** Gap (b), the expiry evasion, is DEFERRED
+by 62b and **this item does not close it.** The `10times.com` row still sits in
+the pool through August 2026 and leaves on 1 September. **That residual is
+62b's accepted, time-bounded cost, and it is now the new standing tally line
+for A** (stated affirmatively: a pool row whose month-granularity date has
+fully passed and which REMAINS is a defect — the fuse failed). C built no
+cross-row inference, no dateless-row purge, and no fake precision.
+
+## PART 3 — **NEGATIVE PROOFS. FOURTEEN ABLATIONS, THIRTEEN UNIQUELY RED.**
+
+| ablation | red |
+|---|---|
+| strip OFF entirely | **9** |
+| `dateClaimEndMs` returns the month's START not its END | **4** |
+| month-year partial OFF | **2** |
+| expiry reads the month as a DAY (scoring pass) | **2** |
+| place tail: country test dropped | **2** |
+| `parseDate` month branch built as UTC (day-shift) | **2** |
+| parenthetical: WORDS allowed | **1** |
+| parenthetical NOT end-anchored | **1** |
+| non-empty/event-like guard off (parenthetical strip) | **1** |
+| non-empty/event-like guard off (place strip) | **1** |
+| month-year OVERWRITES a day-level date | **1** |
+| YEAR-ONLY fallback added | **1** |
+| expiry reads the month as a DAY (ingestion) | **1** |
+| card renders a month value at DAY granularity | **1** |
+| **place tail: comma requirement removed** | **0 — and C reports it as 0** |
+
+**THE ONE ZERO, AND WHY IT CANNOT BE REBUILT HONESTLY.** The comma is what
+DEFINES where the tail starts; every no-comma variant matches from the first
+whitespace and therefore leaves a ONE-WORD remainder, which the non-empty/
+event-like guard rejects anyway. So the clause is structurally load-bearing —
+without it there is no principled tail boundary — but **no single-line ablation
+of it produces a red, and C says so rather than inventing one.** The assertion
+itself (`Molten Salt Congress Lyon France` is untouched) still ships.
+
+**FIVE MORE DECORATIONS C CAUGHT IN ITS OWN TESTS AND REBUILT** before these
+numbers: two fixtures were being answered by an unrelated guard, and three were
+silenced by the absence of any positive rather than by the clause under test.
+
+## PART 4 — **THE MANDATORY POOL-COUNT RE-MEASUREMENT (dedup-key change)**
+
+**DONE.** B is right that the key moves — and it moves on BOTH halves:
+
+| | name half of the key | year half |
+|---|---|---|
+| before | `aug battery chicago solid state summit` | `` (empty — no date) |
+| after | `battery solid state summit` | **`2026`** |
+
+A throwaway harness **outside `src/`** (`web/zz-r23c/`, own vitest config,
+**DELETED before this commit**) ran the defect row, its `cambridgeenertech.com`
+sibling and four ordinary rows through the **shipped** ingestion, dedup and
+scoring passes:
+
+| | ingested | after dedup | **in the pool** |
+|---|---|---|---|
+| **before** | 4 of 6 | 4 | **3** |
+| **after** | 4 of 6 | 4 | **3** |
+
+**THREE NAMES CLEANED, THREE DATES SURFACED AT MONTH GRANULARITY, ZERO ROWS
+MOVED.** The `cambridgeenertech.com` sibling is dropped at INGESTION in both
+runs, which reproduces B's finding that all six siblings are correctly dropped —
+so the collision the new key could cause **has no second row to collide with.**
+`new Date("2026-08").getUTCFullYear()` is 2026, identical to a day-level August
+date, so the year half of the key cannot drift from a dated sibling either.
+
+## PART 5 — **THE GATE**
+
+`cd web && npx vitest run`: **92 files / 1822 tests, 1821 passing** (+28 on item
+3). `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing
+`quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 53 of 53 — the
+SolarPACES lock holds**, which matters here because the enrichment route runs
+`og:title` back through `bestEventTitleSegment`, so this strip lands on BOTH
+routes.
+
+**Sole failure remains `benchmark.test.ts`** — item 1's measured effect, with
+its own `POLICY — manager decides` in that entry.
+
+**TESTS: 28 ADDED, ONE RESTATED, ZERO DELETED.** The restatement is
+`eventweb.test.ts`'s *"does not reject a real event name merely because it ends
+in a city/state"* — **A's own live row, asserting the OLD name.** What that test
+guards is unchanged and still asserted: the bare-location check is anchored to
+the WHOLE segment, so a real name is never REJECTED for ending in a place. What
+changed is that the aggregator's furniture is now trimmed off the ACCEPTED
+segment, and the test now carries `The Battery Show Detroit` beside it as the
+boundary that keeps the two shapes apart.
+
+**Blast radius, re-grepped rather than inherited:** every file B's at-risk table
+names was run — `eventweb.test.ts`, `enrich.test.ts`, `card.test.ts`,
+`scoring.test.ts`, `mapper.test.ts`, `events/[id]/page.test.ts`,
+`daily-pool-cache.test.ts` — plus `format.test.ts`, which B's table does not
+name and which is where the new shape's own contract lives. **`dedup.ts` reads
+`startDate` through `new Date(...).getUTCFullYear()` and is unaffected;
+`mapper.ts:102`'s series key strips years from the NAME and now sees a shorter,
+cleaner one, which is the intended effect.**
+
+**EXCLUSION WALK, BY NAME.** Not 45a, not 41c's three hosts (45b), not 39a/40,
+not 42c, not 39b (retired as moot by 61a), not 36, not 33, not 50a, not B18-03.
+**No standing exclusion names `10times.com`.**
+
+**SECURITY.** No credential read, printed, logged or written. **C made no live
+third-party fetch in this item** — the harness ran entirely on constructed
+provider results. The harness is **DELETED**;
+`git status --porcelain --untracked-files=all` shows only the eight files this
+item edits.
+
+---

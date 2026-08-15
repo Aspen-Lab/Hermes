@@ -21,6 +21,7 @@ import {
   toScoringItem,
 } from "@/lib/opportunities/shared";
 import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
+import { dateClaimEndMs } from "@/lib/format";
 import type { RawItem } from "@/lib/sources/types";
 import type { EventType, PreferenceLedger } from "@/types";
 import type { EventSourceId, RawEventItem, ScoredEventItem } from "./types";
@@ -205,9 +206,13 @@ export function scoreEvents(
     // Skip events that are entirely over. Web items often carry no parseable
     // date (shown as "date TBA"); trust the dated-future search query rather
     // than dropping them.
-    const startMs = item.startDate ? Date.parse(item.startDate) : NaN;
+    // A23-02 / Ruling 62b. `dateClaimEndMs`, not `Date.parse`: a
+    // month-granularity start ("2026-08") is only over when its MONTH is over,
+    // and reading it as a day-level date would drop a live August row on
+    // 1 August. Identical to `Date.parse` for every day-level value.
+    const startMs = item.startDate ? dateClaimEndMs(item.startDate) : NaN;
     const deadlineMs = item.deadline ? Date.parse(item.deadline) : NaN;
-    const endMs = item.endDate ? Date.parse(item.endDate) : startMs;
+    const endMs = item.endDate ? dateClaimEndMs(item.endDate) : startMs;
     const hasParsedDate =
       Number.isFinite(endMs) || Number.isFinite(deadlineMs);
     const hasFuture =
