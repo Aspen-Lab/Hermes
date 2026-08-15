@@ -270,8 +270,8 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:14 UTC (Agent A, round 28 —
-                  part 1 of 4 banked; refreshed after a transient API-limit
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:34 UTC (Agent A, round 28 —
+                  parts 1-2 of 4 banked; refreshed after a transient API-limit
                   death, not re-claimed)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
@@ -75785,3 +75785,335 @@ so rather than reading a green live lock as a pass.
 **A raises NO new `POLICY — manager decides` on this surface.** Part 2 takes the
 job surface, item 2, item 7's four apply rows, Ruling 74's named cost and all
 remaining tallies.
+
+### Round 28 — Agent A (part 2: **THE JOB SURFACE VALUE CENSUS, ITEMS 2 / 5 / 6 / 7, AND ALL REMAINING TALLIES. ITEM 2 IS WITNESSED ON THE RENDERED SURFACE — the LANL vacancy renders 5 of 5 with its grade intact while ALL FOURTEEN aggregator count-forms still drop. ITEMS 5, 6 AND 7 ARE CONFIRMED LANDED, ITEM 5 ON LIVE ROWS AND ITEMS 6 AND 7 ON PLATE-SHAPED FIXTURES BECAUSE LIVE DATA NEVER REACHES THEM. RULING 74's HEADCOUNT IS TALLIED AS AN ACCEPTED NAMED COST, NOT RANKED. AND ONE RANKED DIFFERENCE IS FILED — A28-01: NINETEEN internship-PROGRAMME and careers-INDEX pages ADMITTED AT INGESTION, 5 of 5 each, the exact class the file has closed twice before, arriving in nineteen new shapes. A ALSO DISCLOSES TWO DEFECTS IN ITS OWN INSTRUMENT AND RE-RAN ALL FIVE JOB PULLS RATHER THAN CAVEATING THE NUMBERS.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 2 of four. Parts 3-4 are the VISUAL census.
+**No gate verdict is set here** (Ruling 30).
+
+---
+
+## **A DISCLOSES TWO DEFECTS IN ITS OWN INSTRUMENT BEFORE QUOTING A JOB FIGURE, AND RE-RAN ALL FIVE PULLS**
+
+**DEFECT 1 — the wrong field names on the RAW item.** A's first inspection of the
+admitted rows read `RawJobItem.roleTitle` / `.companyOrLab`. **The raw item
+carries `title` and `company`** (`jobs/types.ts:25-30`); `roleTitle` /
+`companyOrLab` are the *mapped* `Job`'s names. The mapped title came back
+`undefined` on **49 of 49** admitted rows. **Caught by self-check, not by
+inspection** — a corpus in which every single row fails to map cannot be the
+build's behaviour, because twelve of those rows visibly render.
+
+**DEFECT 2, AND IT IS THE MORE DANGEROUS ONE — the inspection re-ran the shipped
+admission predicate with an EMPTY snippet.** That is not the input the real
+admission saw. On the empty snippet **14 of 49 rows were REFUSED**, so the
+instrument was contradicting the census it was supposed to explain. **A did not
+reconcile the two by argument. A moved the mapping INSIDE the live pull process,
+where the untouched provider snippet is the input, and re-ran all five job
+pulls.** On the corrected instrument the mapped title is non-null on **45 of
+45**.
+
+**EVERY JOB FIGURE IN THIS ENTRY COMES FROM THE CORRECTED WINDOW ONLY.** The
+earlier window's numbers appear nowhere. This is the **third consecutive round**
+in which A's own instrument was the first thing A falsified.
+
+---
+
+## REPRODUCIBILITY — **12 JOB ROWS IN 5 OF 5. ZERO MEMBERSHIP VARIANCE, ZERO VALUE VARIANCE, ZERO VERDICT FLIPS.**
+
+| | measured |
+|---|---|
+| pool items per pull | 12 / 12 / 12 / 12 / 12 |
+| rendered rows per pull | **12 / 12 / 12 / 12 / 12** |
+| union of rendered rows | **12** |
+| minority rows (< 5 of 5) | **0** |
+| offered rows per pull | 102 / 102 / 102 / 102 / 102 |
+| `beforeDedup` per pull | 181 / 181 / 181 / 181 / 181 |
+| source errors per pull | `{}` x5 |
+| render errors over **60 row-renders** | **0** |
+| **value variance** across all 5-of-5 rows on 16 fields (incl. `roleTitle`, `companyOrLab`, `place`, `visa`, `eligibility`, `team`, `roleKind`) | **0** |
+| offered-row admission **verdict flips** | **0** |
+
+Sources fetched: `remotive` 16, `arbeitnow` 60, `himalayas` 60, `jobweb` 43;
+`adzuna` 0 and `usajobs` 0 (both keys present, both returned nothing for these
+queries — recorded, not treated as an error, since `errors` is empty). Snippet
+lengths **min 113, max 1503, 69 of 102 over 400 characters.**
+
+---
+
+## **RULING 48b — THE JOB WRONGLY-DROPPED COLUMN IS `0`, AND §1's PREDICTION HOLDS**
+
+**57 of 102 offered rows dropped.** All 57 were adjudicated against the four 71b
+limbs; **51 fail limb (a)** on their own URL and title (aggregator search-result
+pages, careers indexes, social listings), **45 fail limb (b)**, and after the
+automated pass exactly **two** rows survived to manual adjudication:
+
+1. **`stemgateway.nasa.gov/…/battery-material-intern`** — **NAMED AND NOT
+   COUNTED per §1, now its SEVENTH round.**
+2. **`acs.org/events/all-events/topochemical-ene-azide-cycloaddition-reaction.html`**
+   — an ACS **event** page offered into the job corpus. Not a vacancy at all, so
+   it fails limb (a). **Correct drop.**
+
+**`RULING 48b — JOBS: 102 offered / 45 admitted / 57 dropped / 0 WRONGLY
+DROPPED`.** **§1 predicted this column would measure `0` once item 2 landed, and
+it does — measured, not argued.** 48b is therefore **ZERO ON BOTH SURFACES**, the
+loop's unbroken zero intact.
+
+---
+
+## **ITEM 2 (A27-02) — WITNESSED ON THE RENDERED SURFACE, WITH ITS FALSIFIER TESTED FOURTEEN WAYS**
+
+| check | result |
+|---|---|
+| `lanl.jobs` `Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs` **offered** | 5 of 5 |
+| **admitted** | **5 of 5** |
+| **RENDERED** in the report pool | **5 of 5** |
+| the rendered role title | **`Nuclear Materials and Molten Salt Technologist 1`** — **the grade `1` is KEPT**, confirmed in the static markup, not inferred |
+| employer | **honestly SILENT** — 62d(a)'s correct behaviour, exactly as §1 said to expect |
+| visa fact | `Not stated` |
+
+**THE FALSIFIER — "any B13-02 count form surviving" — DOES NOT FIRE.** Sixteen
+offered titles carry a leading count; **fourteen are refused 5 of 5** (`1,000
+Nuclear Engineering Summer Intern Jobs`, `7,000+ Research Intern jobs`,
+`574 Battery internship jobs`, `50 Molten Salt Jobs`, `252 Battery Intern jobs`,
+`191 …`, `407 …`, `74 …`, `15 …`, `25 …`, `600 …`, `1,000+ …`, `1000+ …`,
+`Now Hiring: 50 …`). The two admitted are **not count forms at all** — the
+leading digits are YEARS (`2026 Chemical Engineering Internships`,
+`2027 Artificial Intelligence Internship & New Grad Positions`), and both are
+separately named under A28-01 below. **The narrowing did not open the hole it was
+warned about.**
+
+**ITEM 2's RESIDUAL (a) — the constructed separator-led count on a non-aggregator
+host: ZERO instances in 102 offered rows.** Still constructed, still never
+sighted.
+
+**THE SANDIA HALF IS AN ABSENCE AND A SAYS SO.** §1 asks for `Research
+Technologist 3 - Sandia Jobs`. **That row was NOT offered this window.** What was
+offered from `sandia.gov` is the `Internships & Co-ops` INDEX page — a different
+row entirely, and one A files under A28-01. **The Sandia shape is unwitnessed,
+not confirmed.**
+
+---
+
+## **ITEM 5 (V27-01) — LANDED, AND WITNESSED BOTH LIVE AND ON THE PLATE'S OWN SHAPE**
+
+| falsifier | measured |
+|---|---|
+| any `<em>` on the **EVENT** report | **0** across **60** live event renders **and** 0 on every plate-shaped event fixture |
+| an `<em>` carrying a `text-*` or `font-*` class | **0** across all 60 live job renders and all fixtures |
+| the prose's WORDS changing | **no** — the sentence is the shipped `matchReason`, with `<em>` wrapping terms inside it |
+
+**LIVE: 60 of 60 job renders carry exactly one `<em class="italic">`**, wrapping
+that row's own matched term (`molten salt`, `battery`, `ion exchange`), e.g.
+`Matches your <em class="italic">molten salt</em> focus.`
+
+**ON PLATE 02's OWN THREE-TERM SHAPE the component reproduces the plate
+exactly** — `Matches 3 of your required topics:` followed by **three** separate
+`<em class="italic">` spans (`interfacial resistance`, `solid state battery`,
+`impedance`). **B's "three terms, not four spans" correction is confirmed by
+rendering**, and the wrap comes free because terms, not spans, are italicised.
+
+**THE EVENT BYTE-IDENTITY IS PROVEN AS A LITERAL STRING EQUALITY**: the same
+event fixture rendered with `matchedTerms` **absent**, **three terms**, and
+**empty** produces **three byte-identical strings**. A job with `matchedTerms`
+undefined renders **zero** `<em>` — the unpassed call site is unchanged.
+
+**ONE THING A CAUGHT IN ITS OWN FIXTURE AND DISCLOSES:** A's first plate fixture
+supplied a `matchReason` that already ended in a full stop, and the render showed
+`impedance..`. **That is A's fixture, not the build** — checked against live:
+**ZERO doubled periods across all 60 live job renders.**
+
+---
+
+## **ITEM 6 (V27-02) — LANDED. ORGANICALLY UNWITNESSED, SO A EXERCISED IT ON A FIXTURE RATHER THAN BANKING SILENCE**
+
+**LIVE: ZERO visa attributions rendered on 60 of 60 job renders**, because
+**no live row carries `visa.evidence`** — every visa state this window is
+`not-stated`. **A does not read that silence as a pass.**
+
+**Rendered through the shipped `JobReport` on a fixture that HAS evidence, all
+five falsifiers are tested and none fires:**
+
+`<cite data-visa-attribution="true" class="not-italic">— from the job description</cite>`
+
+- it sits **INSIDE the `<blockquote>`**, immediately after the closing quote,
+  **with an explicit space** — inline, not detached;
+- the quote's own run is `font-reading text-body leading-7 text-text-muted`, and
+  the `<cite>` **adds no size or colour class of its own**, so it renders at the
+  quote's size and colour, which is exactly what the plate shows;
+- **`block` ABSENT, `text-caption` ABSENT, `text-text-faint` ABSENT, `mt-1`
+  ABSENT**;
+- **`not-italic` PRESENT** (the plate's attribution is upright `Georgia`);
+- **`data-visa-attribution` PRESENT**;
+- **"an attribution rendering with no quote" is structurally impossible** — the
+  `<cite>` is a child of the `<blockquote>`, verified on the `wont-sponsor`
+  fixture too.
+
+---
+
+## **ITEM 7 (V26-J06) — LANDED, ALL FOUR ROWS, AND RULING 74's COST IS TALLIED NOT RANKED**
+
+**LIVE: zero of 12 rows carry `eligibility`, `team` or `applicationMaterials`**,
+so the whole `To apply, have ready` section is silent on every live row. **That
+is B4-07 (R5)'s recorded design** — the section gates on `materials` because the
+heading promises what to *prepare* — **not a new difference**, and A names it as
+a carried design so no later round rediscovers it. **§1 warned to expect silence
+and the silence is the design working.**
+
+**Rendered on a plate-shaped fixture, all four rows appear in plate 02's order:**
+
+| row | rendered value |
+|---|---|
+| `MATERIALS` | `CV, Cover letter, Two references` |
+| `ELIGIBILITY` | `PhD awarded by start date` |
+| `TEAM` | `Energy & Materials` |
+| `SEEN ON` | `Web search` |
+
+Each carries `data-apply-row` and the shared `REPORT_LABEL_CLASS`
+(`text-caption font-semibold uppercase tracking-[0.18em] text-text-faint`) — so
+the plate's uppercase label step is one token, not four call sites.
+
+**EVERY FALSIFIER TESTED, NONE FIRES:**
+
+- **`ELIGIBILITY` built from `keyRequirements`?** **NO.** The fixture's
+  `keyRequirements` are `Solid-state electrolyte synthesis / Impedance
+  spectroscopy / Cell prototyping`; the row reads `PhD awarded by start date`.
+- **`TEAM` reading the employer name?** **NO.** Employer is `Northvolt`; the row
+  reads `Energy & Materials` and contains no `Northvolt`.
+- **a truncated clause?** **NO** — both values render whole.
+- **a headcount appearing?** **NO** — zero digit-plus-noun headcounts anywhere,
+  live or fixture.
+- **each row hiding when absent?** **YES**, tested one at a time: dropping
+  `eligibility` removes only that row; dropping `team` removes only that row;
+  dropping `sourceId` removes only `SEEN ON`.
+
+### **RULING 74's NAMED COST — TALLIED, NOT RANKED, ROUND 1 OF ITS TALLY**
+
+**Plate 02's `TEAM` reads `Energy & Materials, 14 researchers`. Peer renders
+`Energy & Materials`.** The headcount's absence is an **ACCEPTED, NAMED COST**
+under Ruling 74 and is **counted as a cost, never as a defect**. **A did not
+attempt to close it and did not invent a number.** Re-examined at Phase 2 per the
+ruling.
+
+**ITEM 7's RESIDUAL (b) — the looser `TEAM_LABEL_PATTERN` vocabulary
+(`User group: …`): ZERO false fires**, though with `team` never populated live
+this window the residual is **unexercised, not cleared.**
+
+---
+
+## **A28-01 — THE ONE RANKED VALUE DIFFERENCE. NINETEEN PROGRAMME / INDEX PAGES ADMITTED AT INGESTION, 5 OF 5, NONE REACHING A READER**
+
+**WHAT THE PLATE HAS:** plate 02 is one job — a single vacancy with a role title,
+an employer and an apply column.
+
+**WHAT THE BUILD HAS:** of the **45** rows admitted into the job pool, **19 are
+not vacancies at all.** Each is admitted **5 of 5** and each maps to a role title
+that is *itself* a programme or index name:
+
+| mapped role title | url |
+|---|---|
+| `Internships & Co-ops` | `sandia.gov/careers/careers/students-and-postdocs/internships-co-ops` |
+| `Internships & Co-ops Jobs` | `careers.cisco.com/global/en/internships-and-co-ops` |
+| `Internships & Co-ops Job Opportunities` | `careers.dupont.com/us/en/internships-co-ops-landing` |
+| `Internships and co-ops` | `us.gsk.com/en-us/careers/early-careers/internships-and-co-ops` |
+| `Battelle Internships and Co-ops` | `jobs.battelle.org/us/en/internships` |
+| `Internships & Fellowships` | `energy.gov/internships-fellowships` |
+| `Internships & Research Opportunities` | `cpp.edu/sci/resources/internships-research-opportunities.shtml` |
+| `Jobs and Internships` | `nps.gov/subjects/youthprograms/jobs-and-internships.htm` |
+| `Research Careers & Internships` | `clevelandresearch.com/careers` |
+| `Science Undergraduate Laboratory Internships (SULI)` | `science.osti.gov/wdts/suli` |
+| `Students and Graduates` | `fbijobs.gov/students-and-graduates` |
+| `Students And Graduates I EMD Group` | `careers.emdgroup.com/us/en/students-and-graduates` |
+| `Summer Internship Program` | `oppenheimer.com/careers/internships` |
+| `Summer Internship Program (SIP)` | `training.nih.gov/research-training/pb/sip` |
+| `Talent Network` | `oak-crest.org/talent-network` |
+| `Undergraduate & Graduate Intern Programs` | `ionis.com/careers/intern-program` |
+| `2026 Chemical Engineering Internships` | `wayup.com/s/internships/chemical-engineering` (aggregator listing) |
+| `2027 Artificial Intelligence Internship & New Grad Positions` | `github.com/speedyapply/2027-AI-College-Jobs` (a code-repo listing) |
+| `PhD Student Internship Opportunities at Thermo Fisher …` | `grad.wisc.edu/2025/11/13/…` — **DOCUMENTED-KNOWN since round 23, named not re-ranked as new** |
+
+**WHICH ONE IS MISSING OR WRONG: the build's, and it is WRONG, not missing** — a
+programme index is being treated as a vacancy at ingestion.
+
+**A STATES PLAINLY WHAT THIS DOES AND DOES NOT COST TODAY.** **NONE of the
+nineteen reaches a reader this window.** All **12** rendered rows are genuine
+single vacancies, verified by url and by mapped title. The nineteen are held off
+the report by **top-N competition alone**, which is a recorded design (§1b) and
+therefore not a guarantee.
+
+**WHY A FILES IT RATHER THAN LETTING TOP-N ABSORB IT — three reasons, stated so
+the manager can overrule on the record:**
+
+1. **The loop's own precedent is exactly this.** Round 27 A filed **A27-01** for
+   three EVENT hub pages admitted at ingestion, said in terms that *none of the
+   three reaches a reader*, and the manager ranked it, B designed for it and C
+   shipped `isEventHubResult`. **Part 1 of this round measured that fix working.**
+   The job surface is the same shape and A will not grade it by a softer standard
+   than the event surface it just graded.
+2. **This class has been closed twice already and this is its third return.** The
+   file records it at round 16 (`lco.global/about/interns`) and again later
+   (`enersys.com`, `CATL`), each time as *employer-run internship PROGRAMME index
+   pages admitted as vacancies*, and each fix was a **closed-vocabulary,
+   whole-title** rule. **None of these nineteen titles is any of those strings.**
+   A says that plainly so B does not begin by re-litigating round 16's design.
+3. **The class is partly caught already, which makes the gap nameable rather than
+   speculative.** `careers.jnj.com/en/early-career-programs/co-ops` is **DROPPED**
+   this window as a co-op programme page — the same shape as
+   `careers.cisco.com/…/internships-and-co-ops`, which is **ADMITTED**.
+
+**A does NOT mark this `POLICY — manager decides`** — it is an ordinary, closable
+defect with nineteen named rows, a named surface and a named precedent. **A also
+does not claim it is a regression: `jobweb.ts`'s admission is not what round 27
+changed except at `LISTING_TITLE_RE`'s first alternative, and none of these
+nineteen is a count form.**
+
+---
+
+## **STANDING TALLIES — JOB SURFACE, WITH RUNNING COUNTS**
+
+- **Ruling 34a — `careerservices.upenn.edu` PRESENT and SILENT: SEVENTH ROUND.**
+  Renders `Postdoctoral Research Associate` with **no employer**, 5 of 5. The
+  admitted control holds.
+- **Ruling 62d(a) — CORRECT for a SIXTH round.** **7 of 12** rendered rows carry
+  **no** employer, every one an honest silence. The **4** distinct employers that
+  do render are all real and all correct: `Kairos Power`, `INL`, `Tesla`,
+  `Savannah River National Laboratory`.
+- **Ruling 62d(b) + 63a's REOPEN TRIGGER — NOW REACHABLE, AND NOT PULLED.** §1 is
+  right that item 2 made it reachable: the LANL row is in the pool 5 of 5. **Zero
+  employer values across 60 row-renders are a host, a topic label or chrome.**
+  The LANL row's employer is honestly silent, which is 62d(a) working, **not a new
+  defect** — exactly as §1 predicted.
+- **A26-01 (round 26 item 1) — ORGANICALLY CONFIRMED AGAIN.** `ev.careers` renders
+  `Internship, Battery Engineering (Summer 2026)` with employer `Tesla` — the
+  ` at Tesla` clause stripped from the title and correctly relocated.
+- **Ruling 57b — job surface `organically witnessed`, witness REPEATS**
+  (`employbl.com` offered and admitted, pooled **0 of 5**).
+- **Ruling 71a — the struck route kicker: CONFIRMED ABSENT.** `/JOBS/[ID]`
+  appears in **0 of 60** job renders and 0 of all fixtures.
+- **Ruling 52b — ONE instance, ADMITTED and CORRECT** (`Opening For Marketing
+  Intern (Ion Exchange Ltd.)` on `zerobonline.com` — the topic is the whole owner
+  name). **THE STRIKE COUNT REMAINS ONE.**
+- **Rulings 37, 44, 33, B18-03: ZERO** on this surface too.
+- **A25-01 remains CLOSED** — no recurrence.
+- **THRESHOLDS UNCHANGED AND UNTOUCHED:** `OPPORTUNITY_MIN_SCORE` 0.35,
+  `MIN_SCORE` 0.35, `MAX_POSTING_AGE_DAYS` 270, `MAX_ENRICHMENT_CANDIDATES` 40,
+  `MAX_OPPORTUNITY_POOL_ITEMS` 200, `RESULTS_PER_SEARCH` 10.
+
+**EXCLUSIONS RE-LISTED BY NAME:** `stemgateway.nasa.gov` (**offered, drops, NAMED
+AND NOT COUNTED**, seventh round); `grad.wisc.edu` (**DOCUMENTED-KNOWN**, named
+inside A28-01, not counted twice); B18-02's `bebee.com` (**not offered this
+window**); 42a's Gap B (not reached).
+
+---
+
+## **PART 2's VERDICT ON THE JOB SURFACE**
+
+**ONE unexplained VALUE difference on the job surface: A28-01.** Everything else
+measures clean — twelve rendered rows stable 5 of 5, zero value variance, zero
+render errors, 48b at zero, item 2 witnessed end to end, items 5, 6 and 7 landed
+with every falsifier tested.
+
+**THE VALUE DIMENSION THEREFORE DOES NOT READ ZERO, and A says so before the
+visual census rather than after.** Parts 3-4 take the visual dimension.
+
+**Ruling 74's headcount is TALLIED as an accepted named cost and is NOT part of
+that count.**
