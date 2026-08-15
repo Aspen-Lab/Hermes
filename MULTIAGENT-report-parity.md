@@ -270,14 +270,124 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 — Agent B, round 28 (RESUMED) — claimed
-                  2026-08-15 15:25 UTC, refreshed 2026-08-15 16:52 UTC
-                  (same holder, same turn; refreshed after a stream-watchdog
-                  stall, not re-claimed)
+HELD BY:          free
+                  (released by round 28 B @ 2026-08-15 16:55 UTC in this entry's
+                  own commit. Held 15:25–16:55 UTC; refreshed once at 16:52 after
+                  a stream-watchdog stall, same holder, not re-claimed.)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 16:55 UTC — ROUND 28 B IS
+                  COMPLETE. ALL FOUR ITEMS DONE, NONE UNSTARTED, ONE COMMIT
+                  EACH, EACH PUSHED THE MOMENT IT WAS MADE** (`b9c9216`,
+                  `ddadcef`, `b486cd5`, `0774213`, plus a self-correction
+                  `f373740`, the lock claim `5e6bcf0` and this close-out).
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`171630f..5e6bcf0`), so the race was won rather than
+                  assumed.** B was killed once by a stream watchdog and resumed by
+                  REFRESHING the lock timestamp rather than re-claiming. No
+                  branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+                  **B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST AND ADDED
+                  NO TEST — `git log --name-only` over the whole turn, scoped to
+                  `web/`, is EMPTY.** The throwaway harness lived OUTSIDE
+                  `web/src/` (`web/zz-r28b/`) and was deleted before every
+                  commit, `git status --porcelain --untracked-files=all`
+                  verified clean each time.
+
+                  **RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA, USAJOBS
+                  OR JSEARCH CALL, FOR ANY PURPOSE.** The only network traffic was
+                  Vertex Gemini grounding calls (allowed, unlimited) and plain
+                  keyless page fetches. **No credential printed, logged, committed
+                  or written anywhere — boolean presence checks only;
+                  `.env.local` was NEVER `cat`-ed.** No third-party page text
+                  pasted; no fetched page contained text directed at an agent.
+
+                  **ITEM 0 — THE GEMINI PROVIDER IS DESIGNED FROM A LIVE PROBE,
+                  AND THE PROBE BROKE ONE OF RULING 75's OWN ASSUMPTIONS.**
+                  **Redirect resolution CONFIRMED BY EXECUTION, 64 of 64** — HEAD
+                  with `redirect:"manual"` returns 302 + `Location` at ~300 ms
+                  p50, full path and query preserved, target never fetched; a
+                  corrupted token returns **404 with no `Location` in ~300 ms**,
+                  so the DROP rule is decidable rather than a guess. **BUT
+                  `groundingChunks[].web.title` IS THE REGISTRABLE DOMAIN, 64 of
+                  64 — not a page title.** Replaying the live rows through the
+                  SHIPPED admission: domain-as-title admits **31 of 40 job rows
+                  with a bare hostname as the role title** (`lanl.jobs`,
+                  `indeed.com`, `pnnl.gov`…), manufacturing **A22-01 / 62d(b) /
+                  63a / A26-01 at scale**; page-title-after-redirect admits 16 and
+                  keeps the **LANL must-keep `Nuclear Materials and Molten Salt
+                  Technologist 1`**. Three more measured facts: **controlled
+                  generation is REFUSED with the Search tool (400)**, so
+                  `genConfig` cannot be reused; **a strict output format is NOT
+                  honoured** (the model wrote prose — grounding metadata is the
+                  only reliable channel); **`maxOutputTokens` throttles CHUNK
+                  COUNT, not latency** (none→13 chunks/7.4 s, 256→3, 64→0).
+                  **ONE `POLICY — manager decides`: `withSourceTimeout` defaults
+                  to 8000 ms and one grounding call measured 10697 ms — on the
+                  shipped budget the gemini surface returns NOTHING.** B proposes a
+                  25000 ms per-source override at the two call sites, not a global
+                  change. **`canUseLocalServerProvider` is NOT touched.**
+
+                  **ITEM 1 — A28-01's MECHANISM IS ESTABLISHED AND ONE RULE IS
+                  DESIGNED INSIDE ROUND 16's FRAME.** **NONE of `isListingPage`'s
+                  five title-side limbs fires on any of A's eighteen new shapes**
+                  (`grad.wisc.edu` is the one already caught) — a CONJOINED
+                  section label escapes all three structurally.
+                  **12 of 19 caught, ZERO false fires on 37 recorded must-keeps
+                  and traps, and ZERO on 1,595 strings harvested from the shipped
+                  suites bar one.** Shape two (modifier + programme, 4 rows) is
+                  **REFUSED on Ruling 49a's own measurement** — it destroys
+                  `M.S. Internship Program` — and recorded as a named accepted
+                  miss. **ONE TEST GOES VACUOUS: `jobweb.test.ts:2516`
+                  (A23-01(c) clause 1) is ADMITTED today with `company`
+                  undefined and would pass by being `null` — C repairs it, never
+                  deletes it.** **B DISCLOSED ITS OWN INSTRUMENT FAULT** (A
+                  recorded titles + hosts, not URLs; B's reconstruction gave 9/19
+                  against A's 19/19, and every URL-dependent number was discarded).
+                  **A's nameable jnj/cisco gap is NOT ESTABLISHED** — A recorded no
+                  title and the page returns 403; said plainly, not banked.
+
+                  **ITEM 2 — A's SIX VERIFIED, THREE MORE FOUND, AND THE REASON
+                  THE CENSUS MISSED THEM IS NAMED.** Four code sites, six rendered
+                  labels — the count reconciles. **ONE CORRECTION TO A:** the
+                  `Cheapest way in, for you` label is **`text-accent`**, not
+                  `text-text-faint`, which is why the shared constant cannot be
+                  dropped on it verbatim. **THREE SITES A MISSED:**
+                  `jobs/[id]/page.tsx:1456` and `:1463`, and
+                  **`timeline-track.tsx:196`, which routes the shared constant
+                  through `cn()` — executed, `twMerge` STRIPS `text-caption`,
+                  the exact trap the constant's own doc comment forbids in
+                  capitals.** **AND B FOUND WHY V26-J10 "CLOSED" WHILE SIX LABELS
+                  DRIFTED: its sweeping assertion matches `<h2>` ONLY, and all six
+                  sites are `<p>` / `<th>` / `<h3>` / `<span>`.**
+
+                  **ITEM 3 — THE TOKEN ALREADY EXISTS AND A NEW HEX WOULD BREAK
+                  THE THEME SYSTEM.** `#5b4bbf` appears **once** in the whole
+                  build and it is a COMMENT — V26-E05's own note recording that
+                  the plate's violet is copied via `ReportBadge tone="accent"` →
+                  `text-accent`, shipped on the four `Tier 0` badges. **A
+                  RECORDED DECISION: B flags it, does not reverse it.**
+                  `globals.css` seeds every report colour from one of **six**
+                  user-chosen accents and `#5b4bbf` is none of them, so a fixed
+                  token would be the only frozen hue on the report. **Named cost
+                  stated plainly: under the default `ember` accent the label
+                  renders orange, not violet — a cost every `Tier 0` badge already
+                  pays.** **B ALSO CORRECTED ITS OWN ENTRY BEFORE ANY AGENT READ
+                  IT** (`f373740`): the "currently unasserted" line was wrong —
+                  three assertions exist in `events/[id]/page.test.ts`, all on TEXT
+                  rather than class, and that file is added as a test-at-risk file
+                  B had failed to name.
+
+                  **THE GATE STAYS `GATE (0%): NOT MET` — B sets no `MET` line
+                  and never can (Ruling 30).** **Turn lock released
+                  (`HELD BY: free`) in this entry's own commit.**
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **RESUMED BY THE USER @ 2026-08-15 (after the ~13:1x UTC
                   pause). Round 28 B spawns FRESH with FOUR items: ITEM ZERO is
                   RULING 75's Gemini search-provider design (quota-capped APIs
@@ -5742,6 +5852,126 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **C — round 28.** Round 28 B is COMPLETE: **FOUR §4 ENTRIES,
+                  FOUR ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
+                  (`b9c9216`, `ddadcef`, `b486cd5`, `0774213`), plus one
+                  self-correction (`f373740`) and this close-out. **NONE
+                  UNSTARTED.** Claim the §0d lock first, always.
+
+                  **THE BASELINE C MUST CONFIRM COLD: `npx vitest run` 97 files /
+                  2066 tests, 2066 PASSING — ZERO failures.** `tsc --noEmit`
+                  clean; `eslint src` exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error and **0 warnings**.
+                  **B added, deleted and edited NOTHING** — `git log --name-only`
+                  scoped to `web/` over B's whole turn is **EMPTY**, so the suite
+                  is byte-identical to round 28 A's close.
+
+                  ---
+                  **C's WORK LIST — FOUR ITEMS, IN B's BANKING ORDER. ITEM 0 IS
+                  BY FAR THE LARGEST AND SHOULD BE TAKEN FIRST AND ALONE.**
+
+                  **0. RULING 75 — THE `gemini` WEB-SEARCH PROVIDER.** Full design
+                  in §4 "Round 28 — Agent B — ITEM 0". **Read §0.2 before writing a
+                  line**: four measured facts break the obvious implementation.
+                  (a) `groundingChunks[].web.title` is the **registrable domain**,
+                  64 of 64 — **never pass it through as a title**; B measured that
+                  doing so admits 31 of 40 job rows with a bare hostname as the
+                  role title. (b) `responseMimeType: "application/json"` is
+                  **refused with the Search tool (400)**, so `providers/gemini.ts`'s
+                  `genConfig`/`callModel` **cannot be reused** — the adapter needs
+                  its own config path. (c) a strict output format is **not
+                  honoured**; the grounding metadata is the only reliable channel
+                  and the answer text must never become a snippet. (d)
+                  `maxOutputTokens` throttles **chunk count**, not latency.
+                  **Three stages, all mandatory: GROUND → RESOLVE the redirect
+                  (302 + `Location`, HEAD, `redirect:"manual"`, target never
+                  fetched; anything else DROPS the row) → recover TITLE and
+                  SNIPPET from the page (`og:title` else `<title>`;
+                  `og:description`/meta description else the EMPTY STRING). No
+                  title → DROP.** Return `WebResult[]` — **jobweb's search
+                  functions return already-mapped `RawJobItem[]` and eventweb's
+                  return unmapped `WebResult[]`, so one shared return type is the
+                  only thing that fits both.** Provider order: explicit preference
+                  → `gemini` when `GOOGLE_VERTEX_PROJECT` is set and Tavily is not
+                  enabled → `brave` → `tavily`. **`canUseLocalServerProvider` is
+                  NOT touched, called or copied — `registry.test.ts` must stay
+                  byte-unchanged.** **eventweb and jobweb do not read
+                  `webSearch.provider` today and must start.** Dedup MUST run
+                  AFTER redirect resolution (the redirect tokens are per-call and
+                  opaque — 64 of 64 unique). **`benchmark.test.ts`'s gate
+                  (`hasLiveKey`, `:36`) must move off the Tavily key.**
+                  **ONE `POLICY — MANAGER DECIDES` IS OPEN AND C MUST NOT DECIDE
+                  IT ALONE: `withSourceTimeout` defaults to 8000 ms and one
+                  grounding call measured 10697 ms — at 8000 ms this provider
+                  returns NOTHING.** B proposes a **25000 ms per-source override at
+                  the two call sites**, never a global default change. **Priced: 1
+                  new file, ~11 edited files, +250/-40 source lines, +45–60 tests.
+                  Expect it to fill a turn.**
+
+                  **1. A28-01 — THE CONJOINED SECTION LABEL.** One new constant in
+                  `jobs/sources/jobweb.ts`, **its own constant with ONE call site
+                  inside `isListingPage`.** **DO NOT widen
+                  `CAREERS_INDEX_TITLE_RE`** — it has a second call site (the
+                  employer-candidate veto, `jobweb.ts:1437`) and widening it turns
+                  `Tesla Careers` and `Kairos Power Careers` into silence.
+                  Round 16's four bindings hold: title rule not URL rule, plural
+                  only, legitimacy is not the criterion, own constant. **Shape two
+                  (modifier + programme) is REFUSED on Ruling 49a's own
+                  measurement and is a NAMED MISS — do not implement it.**
+                  **ONE TEST GOES VACUOUS AND MUST BE REPAIRED, NEVER DELETED:
+                  `jobweb.test.ts:2516`, A23-01(c) clause 1.** Priced: +20 source
+                  lines, ~45 comment lines, +25 tests, 1 test repaired.
+
+                  **2. V28-01 — THE LABEL-STEP RESIDUE, SEVEN LINES.** Split
+                  `REPORT_LABEL_STEP` out of `REPORT_LABEL_CLASS`, **keeping
+                  `REPORT_LABEL_CLASS`'s value byte-identical** so all 27 existing
+                  sites and all three existing assertions are unmoved. **NEVER
+                  ROUTE EITHER CONSTANT THROUGH `cn()` — B executed it and
+                  `twMerge` strips `text-caption`; `timeline-track.tsx:196` is in
+                  that trap TODAY and is the seventh site.** Two sites keep
+                  `text-accent` and must not be repainted. **Widen
+                  `plate-type-system.test.ts`'s V26-J10 sweep off `<h2>`** — that
+                  element scoping is why six labels drifted through a full census.
+                  Priced: 5 files, ~9 lines, +16 tests.
+
+                  **3. V28-02 — THE LOCKED-BLOCK LABEL COLOUR.** `text-accent`,
+                  **not a new `#5b4bbf` token** — V26-E05 already recorded that
+                  mapping and `globals.css` seeds every colour from one of six
+                  user-chosen accents. **Lands on the SAME LINE as item 2's step
+                  (`tier-upgrade-block.tsx:22`) — take items 2 and 3 together
+                  there.** Priced: 1 line, +4 tests. **B flagged but did NOT fold
+                  in** a possible second instance on the `NEW` badge
+                  (`events/[id]/page.tsx:2084`, neutral tone) — **C does not touch
+                  it; it is for A's next census.**
+
+                  ---
+                  **STANDING ITEMS C MUST CARRY, BY NAME:** **Ruling 48b is ZERO ON
+                  BOTH SURFACES** — events `150 / 41 / 109 / 0`, jobs
+                  `102 / 45 / 57 / 0`, `stemgateway.nasa.gov` NAMED AND NOT COUNTED
+                  (seventh round). **RULING 74's TEAM headcount is an ACCEPTED,
+                  NAMED COST — tally it, never fix it, never invent the number.**
+                  **A27-04's split is ORGANICALLY UNWITNESSED for a SECOND
+                  round.** **Items 6 and 7 are LANDED-but-UNWITNESSED.** **Ruling
+                  55c's online debt: TWELFTH round undischarged.** **Ruling 57b
+                  event surface `designed, organically unwitnessed`, TENTH round.**
+                  **The 62b fuse ZERO BY CONSTRUCTION, LOADED and UNTESTED, SIXTH
+                  round, NOT banked.** **A22-04 at STRIKE ONE; Ruling 52b's strike
+                  count REMAINS ONE.** **63a's trigger is REACHABLE and NOT
+                  PULLED — item 0 is the one change that could pull it, which is
+                  why the title design is not negotiable.** **THRESHOLDS
+                  UNCHANGED.** **RULING 75 STANDS: no Tavily, Adzuna, USAJobs or
+                  JSearch call, for any purpose, including C's own verification.**
+                  **The corpus WILL break at this round (Ruling 75 requirement 5) —
+                  record it, and score no cross-provider row comparison as drift.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.**
+                  Phase 1's bar is **VALUE parity AND VISUAL parity** (Rulings 66b
+                  and 69). **Only a later A census can move it, and only the
+                  MANAGER closes, after an independent re-measurement** (Ruling 30).
+                  **NEITHER B NOR C CAN CLOSE OR MOVE THIS LINE.**
+
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **B — round 28.** Round 28 A is COMPLETE: **FOUR §4 ENTRIES,
                   FOUR PARTS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`cdc76e1`, `46648c1`, `e220d8b`, plus this close-out). Claim the
