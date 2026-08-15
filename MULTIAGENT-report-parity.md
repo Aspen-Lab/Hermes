@@ -62372,3 +62372,324 @@ sweep that only reports its hits reads as if it were only run there.
 **PART 1 STOPS HERE.** The job pool, both landed round-23/24 job items and the
 48b offered-row scan follow in part 2; all tally lines in part 3; the ranked list
 and the gate verdict in part 4.
+
+### Round 25 — Agent A (part 2: the job pool and the 48b offered-row scan, both surfaces. **THE JOB SURFACE'S ALL-ZERO CENSUS DOES NOT REPEAT. ONE DIFFERENCE: A22-03(b)'s RENDER-BOUNDARY GATE HAS A SIXTH CONSUMER NOBODY GREPPED — THE REASON LINE — AND IT IS TELLING THE READER AN ALBUQUERQUE INTERNSHIP IS REMOTE-FRIENDLY, ON A22-03(b)'s OWN NAMED ROW. Both drop columns are ZERO on 149 + 100 offered rows. And A corrects the loop's reading of Ruling 57b's job-surface witness by EXECUTING the guard it has been credited to.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 2 of four. Part 1 (`a44acd2`) is committed
+and pushed. Parts 3 and 4 are not yet done.
+
+Method, security and the harness self-correction are stated in part 1 and are
+not repeated. **The same five method-correct pulls back every figure here.**
+
+---
+
+## REPRODUCIBILITY — **11 ROWS IN 5 OF 5 PULLS. ZERO MEMBERSHIP VARIANCE AND ZERO VALUE VARIANCE.**
+
+Membership 11/11/11/11/11, union 11. **No minority row exists on this surface
+either, so Ruling 39d/41a's disclosure clause has nothing to disclose** — stated
+explicitly. Value variance was checked over a serialised tuple of every scored
+column (role title, employer, location, place, remote flag, work mode, posted
+date, deadline, summary, role kind): **0 of 11 rows moved.**
+
+**This is stronger than round 24, which carried 15 union / 13 majority with
+disclosed variance.** Offered rows: **100 unique `url ::: title` pairs per pull,
+identical in all five; 51 kept at ingestion, 49 dropped.** `beforeDedup` 186 /
+`afterDedup` 179. Source counts identical every pull (`remotive` 18,
+`arbeitnow` 60, `himalayas` 60, `jobweb` 48, `adzuna` 0, `usajobs` 0); **zero
+source errors.**
+
+**A states the two zeros rather than letting them pass as noise:** `adzuna` and
+`usajobs` both fetched **0** items in all five pulls, with **no error recorded**.
+Their keys are present (boolean check). A does not diagnose it — that is not A's
+job — but **a source returning zero without an error is recorded here by name so
+no later round discovers it as a surprise.** It is not counted as a difference:
+no reader-visible value is wrong because of it, and the pool is full.
+
+---
+
+## **A25-01 — `lensa.com`: THE REPORT TELLS THE READER AN ALBUQUERQUE INTERNSHIP IS `remote-friendly`, WHILE EVERY OTHER SURFACE ON THE SAME PAGE CORRECTLY REFUSES TO SAY `Remote`. Job surface, 5 of 5.**
+
+**THIS IS A22-03(b)'s OWN NAMED ROW, AND ITS OWN NAMED FAILURE MODE, AT A
+CONSUMER THAT FIX DID NOT REACH.**
+
+| | value |
+|---|---|
+| host | `lensa.com` |
+| url | `lensa.com/job-v1/kairos-power/albuquerque-nm/chemical-engineering-intern/<32-char hash>` |
+| **provider title (ground truth, offered corpus)** | **`Chemical and Materials Engineering Internship - Summer 2027 job in Albuquerque at Kairos Power \| Lensa`** |
+| rendered role title | `Chemical and Materials Engineering Internship` — CORRECT |
+| rendered employer | `Kairos Power` — **CORRECT** |
+| rendered location | **no `Remote` anywhere** — CORRECT, this is A22-03(b) working |
+| rendered `workMode` | **`null`** — CORRECT |
+| **rendered "Why Peer sent this to you"** | **`Matches your molten salt focus, fits a PhD Year 3 profile, and remote-friendly.`** | **WRONG** |
+
+**5 of 5, byte-identical in every pull, and present in the rendered report
+markup** — A checked the string in `renderToStaticMarkup(JobReport)` output, not
+only in the field.
+
+**WHY THIS IS THE SAME CLASS AS A24-02, ONE ROUND LATER, STATED PLAINLY:**
+
+1. **The row is A22-03(b)'s own witness.** The shipped comment at
+   `jobs/mapper.ts:164-171` names it: *"`lensa.com`'s snippet carried another
+   posting's `Remote Alameda, CA`, so an Albuquerque internship rendered as
+   remote."* The fix gates the RENDER boundary — `rendersRemote = item.isRemote
+   && item.source !== "jobweb"` — and it works: `location`, `Job.isRemote` and
+   `workMode` are all correctly silent on this row today.
+2. **The reason line reads the RAW flag, upstream of that boundary.** It is
+   assembled at scoring time and does not go through the mapper at all. A does
+   not diagnose further — that is B's — but A names the render site so B is not
+   sent hunting: the string is produced where `matchReason` is built and is
+   rendered by the report's **"Why Peer sent this to you"** section.
+3. **Round 24 C's implementer explicitly grepped the callers for A22-03(b) and
+   found FOUR view layers reading `Job.isRemote`** (feed tile, briefing hero,
+   briefing quick-hit, job card) — §1 records that widening as C's own catch.
+   **The reason line is a FIFTH consumer, and it reads a DIFFERENT field: the
+   pre-boundary `item.isRemote`, not the gated `Job.isRemote`.** A grep of the
+   gated field could not have found it.
+4. **It is a factual claim, not a match score.** "fits a PhD Year 3 profile" is a
+   statement about fit and A does not count it. **"remote-friendly" is a
+   statement about the posting**, and the posting says Albuquerque.
+
+**EXCLUSION WALK BY NAME — none covers it.** Not 45a, 45b, 39a/40, 42c, 36, 33,
+50a's news-post precedent, 39b/61a, 57b, B18-02's three named under-catch hosts,
+B18-03, `stemgateway.nasa.gov`, 42a's Gap B, or §1d's exclusions 7 and 8.
+**A22-03(b) itself does not cover it either — that ruling is the FIX, and an
+unreached consumer of the value it gates is not an accepted cost of it. No
+ruling in this file accepts a reason line contradicting the location it sits
+beside.**
+
+**WHY IT DID NOT APPEAR IN ROUND 24's ALL-ZERO JOB CENSUS: `lensa.com` WAS NOT
+IN ROUND 24's POOL.** Round 24's own 58b list names its job hosts and this is
+not among them; the row RETURNED this round. **A says that rather than implying
+a regression — nothing changed in the code, the row came back.**
+
+---
+
+## THE EMPLOYER COLUMN (Ruling 34a) — **0 OF 4 NON-NULL WRONG (0.0%)**
+
+| host | rendered employer | verdict |
+|---|---|---|
+| `lensa.com` | `Kairos Power` | **CORRECT** — the provider title's own `at Kairos Power` segment, and the URL slug agrees |
+| `inl.referrals.selectminds.com` | `INL` | **CORRECT** — Idaho National Laboratory, on INL's own referral host |
+| `ev.careers` | **`Tesla`** | **CORRECT — 62d(a)'s HELD HALF VINDICATED LIVE FOR A SECOND ROUND.** The title is `Internship, Battery Engineering (Summer 2026) at Tesla`; had "prefer the last surviving segment" shipped, this would render `EV.Careers` |
+| `climatechangejobs.com` | `Idaho National Laboratory` | **CORRECT** — title is `… Postdoctoral Researcher at Idaho National Laboratory`; the same `at X` reading, on a second host |
+
+**Seven of eleven rows render honest silence**: `terra.do`, `lanl.jobs`,
+`careers.gevernova.com`, `careerservices.upenn.edu`, `careers.inl.gov`,
+`tesla.com`, `linkedin.com`. **Not one renders an aggregator's or a careers
+office's name.**
+
+- **The named accepted cost, `careerservices.upenn.edu`, IS PRESENT AND RENDERS
+  SILENCE** — a stronger statement than an absence, and the **third consecutive
+  round** it has been present-and-silent rather than present-and-wrong. Its
+  posting is an Oak Ridge National Laboratory role hosted on Penn's careers
+  site; rendering `University of Pennsylvania` is exactly the 34a defect, and
+  Peer renders nothing.
+- **`tesla.com`'s row confirms A23-01(c)'s ELLIPSIS CLAUSE LIVE for a second
+  round.** Its title is `Internship, Mechanical Design Engineer, Battery ...` —
+  truncated by the provider — and **the employer resolves to `null` rather than
+  to a fragment.** The truncated title itself is B18-02's documented-known
+  class, **not re-ranked as new.**
+- **`linkedin.com`'s row is the sharper silence**: the posting is Savannah River
+  National Laboratory's, named only in the URL slug, and Peer declines to guess.
+
+**Cumulative 34a jobs: 9 of 108** (was 9 of 104; +4 non-null this round).
+
+---
+
+## **RULING 63a — THE SEGMENT-ORDER CLASS. THE REOPEN TRIGGER IS *NOT* PULLED.**
+
+63a's reopen trigger is **a POOL instance**. This round:
+
+- **`lanl.jobs` is pooled 5 of 5 with a SILENT employer.** Its provider title
+  again arrives without the dash tail that produced the class, so **the honest
+  reason is the provider, not a fix** — the same reading round 24 recorded, and
+  A repeats it rather than upgrading it.
+- **ZERO segment-order instances reached the pool.** In the OFFERED corpus the
+  class is quiet this round too: A found **no new instance** of the
+  `<role> - <not-the-employer>` shape carrying a wrong employer into a pooled
+  row. **The corpus therefore does NOT grow this round — it stands at the four
+  instances round 24 recorded, and A says so rather than padding it.**
+
+**62d(b) / 63a stay DEFERRED. Nothing changes.**
+
+---
+
+## THE JOB ITEM-SHAPE COLUMN — **0 OF 11 WRONG (0.0%)**
+
+**Every one of the eleven pool rows is a single vacancy with its own posting
+URL.** No programme page, no plural-openings page, no careers index, no search
+result page reached the pool. Checked row by row against the URL shape and the
+rendered title; the full list is in the employer table above.
+
+---
+
+## THE SUMMARY COLUMN (Rulings 37, 44, B18-03) — **ZERO PAGE-OWNED SUMMARIES THIS ROUND**
+
+**All 11 rows fall back to `Matches your …`** — A21-04's shipped fallback,
+reached through A22-03(a)'s fail-closed publication gate. **Zero rows publish
+another posting's text.**
+
+- **Ruling 37: 0 of 0 page-owned summaries.** Its own baseline host,
+  `careers.gevernova.com`, **is in the pool and does NOT publish a page-owned
+  summary this round** — it falls back like the rest. So the run-on citation
+  rounds 11–24 recorded is **not present**, and A records that as an absence
+  rather than as a fix. **No second host, no second posting: Ruling 37's
+  escalation to a future B does NOT fire.**
+- **Ruling 44's sub-count: ZERO.**
+- **B18-03's leading date stamp: ZERO**, including its named plain-hyphen
+  under-catch, which was searched for specifically.
+
+---
+
+## **RULING 48b — THE OFFERED-ROW SCAN, BOTH SURFACES, BOTH COLUMNS**
+
+| surface | offered (unique `url ::: title`) | correctly dropped | **wrongly dropped** |
+|---|---|---|---|
+| **EVENTS** | **149** | **98 (65.8%)** | **0 (0.0%)** |
+| **JOBS** | **100** | **49 (49.0%)** | **0 (0.0%)** |
+
+**Zero is not a vacancy on either surface — A walked the candidates and fetched
+ground truth for the ones that could plausibly be real.**
+
+### Events — the 34 dropped rows naming a conference-ish thing, walked
+
+Every one is a social post, a login or registration page, a paper, an index or
+schedule sub-page, an off-topic subject, or a **past** event. **Five were
+plausible enough to need ground truth and A fetched them:**
+
+| dropped row | fetched evidence | verdict |
+|---|---|---|
+| `imlb.org` — International Meeting on Lithium Batteries | its own page states **`Jun 14- 19, 2026`** | **correctly dropped — PAST** |
+| `nac.naatbatt.org` — NAATBatt Annual Conference 2026 | states **`February 9-12, 2026`** | **correctly dropped — PAST** |
+| `pyro.byu.edu/moses` — Molten Salt Electrochemistry Symposium | only date token on the page is **`May 22, 2026`** | **correctly dropped — PAST** on the only date it states |
+| `battery-tech.net/…/solid-state-battery-summit-2026` | its own description states **August 11–12**, Chicago | **correctly dropped — PAST** |
+| `cambridgeenertech.com` ×3 (part 1) | titles carry **August 11-13, 2026** | **correctly dropped — PAST** |
+
+**TWO rows could NOT be verified and A names them rather than counting them
+either way:** `ttc-ensco.com/ttc-battery-safety-summit` returned **HTTP 403**,
+and `sae.org/events/battery-electrification-summit` returned SAE's generic
+site shell with no event content and no date (a JS-rendered page; Ruling 25
+forbids a browser). **Neither is counted as a wrongly-dropped row, because A has
+no evidence either is a future event — and neither is counted as correctly
+dropped either. Recorded by name so a later round with better evidence can
+settle them.**
+
+### Jobs — all 49 dropped rows walked
+
+**NOT ONE IS A SINGLE VACANCY.** Every dropped row is an aggregator search page
+(`indeed.com`, `ziprecruiter.com`, `linkedin.com/jobs/<query>`, `naukri.com`), a
+careers-index page (`ionexchangeglobal.com/careers`, `iongroup.com/careers`,
+`aquabattery.com/career`, `mortonsalt.com/careers`, `vrtx.com/careers/…`), a
+programme or co-op page (`merl.com` plural openings, `jobs.cpchem.com`,
+`careers.jnj.com`, `energy.sandia.gov`, `pnnl.gov/wdts-internships`), a
+directory (`pathwaystoscience.org`, `scholarshipdb.net`), or an article
+(`extern.com/post/…`, `simplify.jobs/l/…`).
+
+- **`stemgateway.nasa.gov` was offered and DROPS**; per §1 it is **NOT a new
+  defect and NOT a counted wrong drop** — recorded, not counted, for a **fourth**
+  round.
+- **`jobs.battery.com` — `Intern Jobs at Battery Ventures Companies` — is a
+  search page and drops correctly.** It is also a Ruling 52b sighting; see below.
+
+---
+
+## **RULING 52b — FULL-PHRASE COMPANY-NAME COLLISIONS. 2 INSTANCES, ZERO ADMITTED. CUMULATIVE STAYS 5.**
+
+| instance | host | outcome |
+|---|---|---|
+| `Battery Ventures` | `jobs.battery.com` (search page) | dropped at ingestion |
+| **`Battery Ventures`** | **offered as `2027 Summer Investment Internship - Battery Ventures`** | **KEPT at ingestion, reached NO pool in any of the five pulls** |
+| `Ion Exchange` | `naukri.com`, `ionenviromgt.net`, `ziprecruiter.com` | all dropped at ingestion (search/careers pages) |
+
+**Cumulative admissions: 5 → 5. No new admission.** Round 24's admitted
+`Ion Exchange` row (`bebee.com`) is **not in this round's pool** — that host was
+not pooled at all.
+
+**MUST-KEEPS RE-VERIFIED BY EXECUTION, not assumed:** the shipped guard
+`isOwnerNameTopicCollision` (`shared.ts:285`) returns **`false`** for
+`Ion Exchange Global`, `Molten Salt Solutions`, `Battery Resourcers`,
+`Ion Exchange Ltd.`, and for all four of this round's live non-null employers
+(`Kairos Power`, `INL`, `Tesla`, `Idaho National Laboratory`). **All survive.**
+
+**Per 58a/60a the guard-defect vs deferred-shape distinction does not arise this
+round — there is no admission to classify — so THE STRIKE COUNT REMAINS ONE and
+A22-04 is untouched and still open.**
+
+---
+
+## **RULING 57b — AND A CORRECTION TO THE LOOP'S READING OF ITS JOB-SURFACE WITNESS, MADE BY EXECUTING THE GUARD RATHER THAN CREDITING IT**
+
+- **EVENT SURFACE: `designed, organically unwitnessed` — UNCHANGED, MEASURED NOT
+  ABSENT. SEVENTH round in this state.** Zero fires across every pool row in all
+  five pulls, and **12 of the 13 rows carry no organiser name at all**, so
+  conjunct 1 cannot be reached.
+- **JOB SURFACE — A EXECUTED THE GUARD ON THE LIVE ITEM AND IT RETURNS
+  `false`.** Round 24 A recorded the `Battery Ventures` row as offered-and-
+  unpooled and said explicitly *"A did NOT execute the guard on the live item
+  this round, so A does not re-assert which line removed it."* **A executed it
+  this round, on the shipped call shape (`ownerName` + `title` + `description`,
+  not a bare name), against this round's real required topics:**
+
+  | item | `isOwnerNameTopicCollision` |
+  |---|---|
+  | `{ownerName: "Battery Ventures", title: "2027 Summer Investment Internship - Battery Ventures"}` | **`false`** |
+  | `{ownerName: "Ion Exchange", title: "Eagerness to learn and develop technical expertise."}` (round 24's admitted shape) | **`false`** |
+
+  **So the collision guard is NOT what keeps the `Battery Ventures` row out of
+  the pool.** Conjunct 3 blocks it — the collision topic is present in the
+  item's own TITLE, which is exactly what conjunct 3 exists to respect. **The
+  OUTCOME is still correct: the reader never sees an investment-firm internship.
+  But the mechanism credited for it is not the one operating.**
+
+  **A does not re-rank Ruling 57b's job-surface status — that is the manager's
+  call, and A is not asking for one. A records the measurement, because
+  `organically witnessed` is a claim about a guard firing, and on this round's
+  evidence this row is not the witness for it.** A also records the discipline
+  point against itself: **A's own first execution passed a bare owner name with
+  no title, which returns `false` for a different reason (conjunct 4 counts zero
+  occurrences in an empty body). That run was unfaithful to the call site and is
+  reported here with its shape named, not quoted as a result.**
+
+---
+
+## **RULING 55c — THE ONLINE MUST-KEEP DEBT. SEVENTH ROUND, NAMED, STILL UNDISCHARGED — AND A SAYS WHERE IT LOOKED.**
+
+55c needs a **genuinely-online event rendering `Online`**, discharged on first
+live appearance; constructed evidence is ruled insufficient by 55c itself.
+
+**Where A looked, mechanically, across the final window:**
+
+- **All 13 event pool rows: ZERO carry `isOnline: true`**, and **zero render the
+  word `Online` anywhere in their rendered report markup** — checked in the
+  markup, not only in the field. Round 24's single `isOnline` row was
+  `cambridgeenertech.com`, which A refused to discharge the debt on because it
+  was simultaneously ranking it wrong; **that row is not in this pool at all, so
+  even that unusable candidate is gone.**
+- **All 149 offered event rows**, title-matched for
+  `online|virtual|webinar|remote|livestream|hybrid`: **ONE match, and it does not
+  qualify** — `… WQA Fly-In on May 18-19 – WC&P Online`, where `Online` is part
+  of a trade **magazine's** name (Water Conditioning & Purification Online), the
+  event is off-topic, and its stated dates are past.
+
+**No honest source appeared. SEVENTH round, undischarged, and the search is
+recorded rather than asserted.**
+
+---
+
+## POSITIVE CONFIRMATIONS ON THIS SURFACE
+
+| item | expected | measured |
+|---|---|---|
+| **A22-03(b)** — snippet-derived `remote` may not render | no `Remote` on the `lensa.com` row's location or work mode | **CONFIRMED ORGANICALLY, 5 of 5, ON ITS OWN ROW** — and **falsified at a sixth consumer**, which is A25-01 |
+| **A23-01(c)** — the ellipsis clause | a truncated title yields a `null` employer | **CONFIRMED LIVE** on `tesla.com`; the careers-office and address-tail clauses are **UNWITNESSED — absence, not a pass** |
+| **62d(a)'s held half** | `at X` reads X | **VINDICATED ON TWO LIVE ROWS** — `ev.careers` → `Tesla`, `climatechangejobs.com` → `Idaho National Laboratory` |
+| **62c's admitted control** | `careerservices.upenn.edu` present and silent | **CONFIRMED, third consecutive round** |
+| **A21-03** | `postdocjobs.com` honest silence | **not offered this round — absence, not a pass** |
+| **A22-07** | `lanl.jobs` pooled | still pooled, 5 of 5 |
+| **A23-04** | `grad.wisc.edu` out | **not offered this round — absence, not a pass.** A does not re-claim last round's organic confirmation |
+
+---
+
+**PART 2 STOPS HERE.** All tally lines with running counts follow in part 3; the
+ranked difference list and the gate verdict in part 4.
