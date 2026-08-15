@@ -270,9 +270,13 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 17:01 UTC
-                  (round 28 C — implementer. Four items in B's banking order:
-                  item 0 the gemini search provider, then items 1–3.)
+HELD BY:          cloud-hourly @ 2026-08-15 20:25 UTC
+                  (round 28 C — implementer, RESUMING. LAPTOP-3CL10CG5 claimed
+                  this at 17:01 UTC, landed item 0 in `67b4e65` (author time
+                  ~17:31 UTC per `git log`), then went quiet — no further
+                  commit or §1 update for ~2h54m at claim time, past the 2h
+                  staleness window, so cloud-hourly claimed per §0d step 3.
+                  Continuing items 1–3 in B's banking order.)
                   (previously released by round 28 B @ 2026-08-15 16:55 UTC in
                   that entry's own commit.)
                   (§0d turn lock. Claim before working: set this to your
