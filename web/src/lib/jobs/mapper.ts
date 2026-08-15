@@ -224,6 +224,10 @@ export function scoredJobToJob(
     startDateFlexible: item.startDateFlexible,
     contractLength: item.contractLength,
     applicationMaterials: item.applicationMaterials,
+    // V26-J06 / Ruling 74. Plain passthroughs, like the three fields above:
+    // extraction already happened upstream in `extractJobDetails`.
+    eligibility: item.eligibility,
+    team: item.team,
     roleKind: item.roleKind,
     visa: visaForAuthorisedCountries(item, authorisedCountries),
     relevanceScore: item.score,

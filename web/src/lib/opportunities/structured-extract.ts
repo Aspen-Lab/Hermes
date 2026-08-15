@@ -30,6 +30,16 @@ export interface JsonLdOpportunity {
    * renders it the same way regardless of which source found it.
    */
   employmentType?: string;
+  /**
+   * V26-J06 / Ruling 74. schema.org `JobPosting.educationRequirements` (or
+   * `qualifications`) — the posting's own statement of who may apply.
+   */
+  educationRequirements?: string;
+  /**
+   * V26-J06 / Ruling 74. schema.org `JobPosting.employmentUnit` — the
+   * department or unit inside the hiring organisation. Plate 02's `TEAM` name.
+   */
+  employmentUnit?: string;
   /** Provenance retained only for selected-posting ownership checks. */
   url?: string;
   description?: string;
@@ -1086,6 +1096,16 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   // "full_time" does — a presentation normalization, not a guess: it never
   // changes which employment type was stated, only its letter case.
   const employmentType = nonEmptyString(node.employmentType)?.toLowerCase();
+  // V26-J06 / Ruling 74 (round 27, item 7). Two more properties off a
+  // JobPosting record this function ALREADY parses — no new fetch, no new
+  // parse. `educationRequirements` and `qualifications` are schema.org's own
+  // statements of who may apply; `employmentUnit` is "the department or unit
+  // within the hiring organization", which is exactly plate 02's `TEAM` name.
+  // Both may arrive as a bare string or as a nested record, the same two
+  // shapes `hiringOrganization` already handles above.
+  const educationRequirements =
+    kind === "job" ? namedValue(node.educationRequirements ?? node.qualifications) : undefined;
+  const employmentUnit = kind === "job" ? namedValue(node.employmentUnit) : undefined;
   const url = kind === "job" ? nonEmptyString(node.url) : undefined;
   const description = nonEmptyString(node.description);
   const organization = kind === "job"
@@ -1109,7 +1129,23 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
     ...(url ? { url } : {}),
     ...(description ? { description } : {}),
     ...(hiringOrganization ? { hiringOrganization } : {}),
+    ...(educationRequirements ? { educationRequirements } : {}),
+    ...(employmentUnit ? { employmentUnit } : {}),
   };
+}
+
+/**
+ * V26-J06. A schema.org property that may be a bare string or a nested record
+ * carrying its own `name` — the two shapes `hiringOrganization` already deals
+ * with. Nothing is normalised beyond whitespace: these values are published as
+ * the employer's own words.
+ */
+function namedValue(value: unknown): string | undefined {
+  const direct = nonEmptyString(value);
+  if (direct) return direct;
+  const record = firstRecord(value);
+  if (!record) return undefined;
+  return nonEmptyString(record.name) ?? nonEmptyString(record.credentialCategory);
 }
 
 function walkJsonLd(value: unknown, output: JsonLdOpportunity[]): void {

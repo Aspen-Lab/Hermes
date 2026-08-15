@@ -75161,3 +75161,119 @@ independent rather than one broad check counted four times.
 standing `quiz.tsx:46` error, 0 warnings.**
 
 ---
+
+### Round 27 — Agent C (item 7 of 7: **V26-J06 / RULING 74 — `ELIGIBILITY` AND THE `TEAM` NAME LAND. THE HEADCOUNT RENDERS ITS HONEST ABSENCE AND IS COMMENTED AS RULING 74's ACCEPTED, NAMED COST IN FOUR PLACES, WITH A TEST THAT REDS IF ANYONE "FIXES" IT INTO INVENTION.**)
+
+**STATUS: COMPLETE.** Item 7 of seven — the last. Code plus this entry in one
+commit. **Plate 02's `TO APPLY, HAVE READY` column now renders 4 of its 4 rows.**
+
+## **WHAT SHIPPED — FIVE FILES, ONE FIELD PATH EACH, NO NEW LAYOUT**
+
+- **`structured-extract.ts`** — `JsonLdOpportunity` gains
+  `educationRequirements` (falling back to `qualifications`) and
+  `employmentUnit`, both read in `extractOpportunity` **off a JobPosting record
+  the function already parses**. A small `namedValue()` helper handles the bare
+  string / nested-record pair, the same two shapes `hiringOrganization` already
+  deals with.
+- **`job-details.ts`** — `eligibility` and `team` on `JobPageDetails`, plus two
+  closed label vocabularies and one `extractLabeledClause` helper built on the
+  **shipped `lineWindows`** input. **Structured first, labelled line second** —
+  the same precedence `applicationDeadline` already uses.
+- **`jobs/types.ts`, `types/index.ts`, `mapper.ts`, `enrich.ts`** — plain
+  pass-throughs, in the exact shape `applicationMaterials` already takes.
+- **`jobs/[id]/page.tsx`** — two more entries in the existing `applyRows` array,
+  **in the plate's own order: MATERIALS, ELIGIBILITY, TEAM, SEEN ON.** **No new
+  component and no new styling**; the `<dl>`, the `data-apply-row` hook and
+  V26-J10's unified label step are all inherited unchanged.
+
+## **RULING 74's NAMED COST, WRITTEN WHERE IT CANNOT BE MISSED**
+
+The plate reads `Energy & Materials, 14 researchers`. **Peer publishes
+`Energy & Materials` and stops.** That is commented as Ruling 74's accepted cost
+in **four** places — the `JobPageDetails.team` doc comment, the `Job.team` doc
+comment, the `applyRows` construction, and the `<dl>`'s own block comment — each
+naming the four dead ends (no schema.org team-size property;
+`numberOfEmployees` describes the whole employer so it would be a WRONG number,
+not a partial one; a number lifted from prose is A22-01's exact mechanism; an
+LLM guess is a fabricated fact about a real employer) and each saying **do not
+"fix" this into invention.**
+
+**AND IT HAS A TEST, NOT ONLY A COMMENT.** A fixture carrying
+`employmentUnit: "Energy & Materials"`, `numberOfEmployees: 14` on the employer,
+**AND the prose sentence `our team of 14 researchers`** asserts the extracted
+value is exactly `Energy & Materials` **and contains no digit at all.** A render
+test asserts the same from the other side. **A later round that wires a
+headcount in from any of the three tempting sources reds immediately.**
+
+## **THE TWO BOUNDARIES THAT BITE — BOTH ASSERTED, BOTH AT TWO LAYERS**
+
+- **NEVER from `keyRequirements`.** The plate-shaped fixture populates it, and
+  the report renders **no `ELIGIBILITY` row**.
+- **NEVER the employer name as the `TEAM`.** There is deliberately no
+  `?? hiringOrganization` anywhere in the expression, and a fixture with an
+  employer and no unit renders **no `TEAM` row** — asserted at the extractor
+  AND at the render.
+
+**Ruling 69 is honoured by construction: neither field reads enrichment.** Both
+come from Tier-0 sources only, so every A census can witness them.
+
+## **DROP RATHER THAN TRUNCATE, AND WHY THAT IS THE ONLY SAFE OVERFLOW**
+
+`qualifications` is routinely a multi-paragraph blob. Both the structured and
+the labelled-line paths cap at **80 characters and DROP**, because **a truncated
+eligibility clause can invert its own meaning** — "PhD not required for
+candidates who…" cut at the cap says the opposite of the sentence the employer
+wrote. Silence is the only honest overflow.
+
+## **B's PREDICTED RED DID NOT MATERIALISE, AND C CHECKED RATHER THAN ASSUMED**
+
+B warned that `job-details.test.ts`'s whole-object `toEqual` assertions were the
+one place a green suite goes red on an additive change. **All of them stayed
+green**, because none of their fixtures carries an eligibility or unit label or
+either JSON-LD property. **No shipped test was restated or loosened in this
+item.** Separately, **a repo-wide grep found NO shipped test asserting the
+apply-row set at all**, so the restatement B flagged as V26-J06's own witness
+was not owed — the new blocks are pure additions.
+
+## **THE NEW TESTS — +9 in `job-details.test.ts` (20 -> 29), +6 in `plate-type-system.test.ts` (73 -> 79), ZERO deletions**
+
+Extractor: structured `educationRequirements`; a nested credential record; the
+labelled-line fallback with **no JSON-LD at all**; **all five labels** in the
+closed eligibility vocabulary; silence when the posting says nothing; the
+blob-length drop; `employmentUnit`; **no employer fallback**; **no headcount**.
+Render: all four rows in the plate's order; each absent row hidden; no
+`ELIGIBILITY` from `keyRequirements`; no `TEAM` from the employer; the name
+without a headcount; **and value stability** — a job carrying neither field
+renders exactly what it rendered before.
+
+## **NEGATIVE PROOFS — SIX MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **both fields dropped from the extractor's returned object** | **6 failed / 710 passed** across `src/lib/opportunities` + `src/components/reports` |
+| 2 | **the labelled-line fallback removed for eligibility** | **2 failed / 27 passed** |
+| 3 | **truncate instead of drop, both paths** | **1 failed / 28 passed** |
+| 4 | **`?? hiringOrganization` added to `team`** (Ruling 26's shape) | **1 failed / 28 passed** |
+| 5 | **the two rows removed from the RENDER**, extractor untouched | **2 failed / 77 passed** |
+| 6 | **the structured source removed** from `extractOpportunity` | **4 failed / 25 passed** |
+
+**Mutations 5 and 6 are the pair that matters:** one proves the render is
+exercised, the other proves the structured layer is — a single broad test could
+not have separated them.
+
+## **THE GATE AFTER ITEM 7**
+
+`npx vitest run` **97 files / 2066 tests, 2066 PASSING — ZERO failures**
+(2051 -> 2066, **+15**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 56 of 56.**
+
+**ONE RESIDUAL NAMED RATHER THAN HIDDEN:** `TEAM_LABEL_PATTERN`'s vocabulary
+(`department|group|team|division|unit`) is broad enough that a page printing
+`User group: …` would be read as a team name. It is a closed list as B designed
+it, it requires an explicit `:` or dash, and the whole 2 066-test corpus shows
+no false fire — **but it is the loosest of the two vocabularies and round 28
+should watch it.** **B's own expectation stands and C repeats it: this row will
+be SILENT on most postings, because `employmentUnit` is rarely populated in the
+wild and no hit rate has been measured.**
+
+---

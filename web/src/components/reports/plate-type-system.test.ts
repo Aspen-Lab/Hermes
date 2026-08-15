@@ -1345,3 +1345,115 @@ describe("V27-02 — the visa attribution is part of the quote's own run", () =>
     );
   });
 });
+
+/**
+ * **V26-J06 / RULING 74 (round 27, item 7) — PLATE 02's FOUR APPLY ROWS.**
+ *
+ * Plate 02's `TO APPLY, HAVE READY` column: `MATERIALS`, `ELIGIBILITY`,
+ * `TEAM`, `SEEN ON`. Two of the four had no field behind them, which is the
+ * half of V26-J06 round 26 C escape-claused as a value-side extraction gap.
+ *
+ * **RULING 74 IS THE REASON THE `TEAM` ROW IS SHORTER THAN THE PLATE's.** The
+ * plate reads `Energy & Materials, 14 researchers`; Peer publishes the NAME
+ * and renders the headcount's HONEST ABSENCE. No schema.org property carries a
+ * team size, `numberOfEmployees` describes the whole employer (a WRONG number,
+ * not a partial one), a number lifted from prose is A22-01's exact mechanism,
+ * and an LLM guess is a fabricated fact about a real employer. That residual
+ * difference is an ACCEPTED, NAMED COST tallied by A each round, re-examined at
+ * Phase 2 — **not a gap for a later round to close by inventing the count.**
+ *
+ * NOTE FOR THE RECORD: a repo-wide grep found **no shipped test asserting the
+ * apply-row set** before this block, so nothing was restated here — these are
+ * pure additions.
+ */
+describe("V26-J06 — the apply rows reach plate 02's four", () => {
+  /**
+   * Plate 02's MATERIALS row reads `CV, 1-page research statement, 3
+   * references`. The section is gated on materials specifically (B4-07), so
+   * every fixture here carries them — an absent row must never be confounded
+   * with an absent SECTION.
+   */
+  const MATERIALS = ["Curriculum vitae", "Research statement"];
+
+  function applyRowLabels(html: string): string[] {
+    return [...html.matchAll(/data-apply-row="([^"]*)"/g)].map((m) => m[1]);
+  }
+
+  it("renders all four of the plate's rows, in the plate's own order", () => {
+    const html = renderJob(
+      plateJob({
+        applicationMaterials: MATERIALS,
+        eligibility: "PhD awarded by start date",
+        team: "Energy & Materials",
+        sourceId: "adzuna",
+      }),
+    );
+    expect(applyRowLabels(html)).toEqual([
+      "materials",
+      "eligibility",
+      "team",
+      "seen on",
+    ]);
+    expect(html).toContain("PhD awarded by start date");
+    expect(html).toContain("Energy &amp; Materials");
+  });
+
+  it("hides each absent row rather than printing it empty", () => {
+    // The block's own standing rule, and the clause a later change would
+    // replace with a "not stated" placeholder.
+    const html = renderJob(
+      plateJob({ applicationMaterials: MATERIALS, sourceId: "adzuna" }),
+    );
+    expect(applyRowLabels(html)).toEqual(["materials", "seen on"]);
+    expect(html).not.toContain('data-apply-row="eligibility"');
+    expect(html).not.toContain('data-apply-row="team"');
+  });
+
+  it("does NOT build ELIGIBILITY out of keyRequirements", () => {
+    // `keyRequirements` is PEER's own derived skills list, not a statement the
+    // employer made about who may apply. Rendering it here would turn a Peer
+    // inference into an employer promise — the exact class B-19's attribution
+    // exists to prevent. The plate-shaped fixture already populates it.
+    const html = renderJob(
+      plateJob({ applicationMaterials: MATERIALS, sourceId: "adzuna" }),
+    );
+    expect(html).toContain('data-apply-row="materials"');
+    expect(html).not.toContain('data-apply-row="eligibility"');
+  });
+
+  it("does NOT restate the employer as the TEAM when the unit is absent", () => {
+    // Ruling 26's failure shape, asserted at the render as well as at the
+    // extractor: the employer is already in the header.
+    const html = renderJob(
+      plateJob({
+        applicationMaterials: MATERIALS,
+        companyOrLab: "Toyota Research Institute",
+        sourceId: "adzuna",
+      }),
+    );
+    expect(html).not.toContain('data-apply-row="team"');
+  });
+
+  it("renders the TEAM name WITHOUT a headcount — Ruling 74's named cost", () => {
+    // Asserted so the accepted cost is visible in the suite rather than only
+    // in a comment, and so inventing the count later reds a test.
+    const html = renderJob(
+      plateJob({
+        applicationMaterials: MATERIALS,
+        team: "Energy & Materials",
+        sourceId: "adzuna",
+      }),
+    );
+    expect(html).toContain("Energy &amp; Materials");
+    expect(html).not.toContain("14 researchers");
+    expect(html).not.toContain("Energy &amp; Materials,");
+  });
+
+  it("changes no rendered VALUE on a job that carries neither field", () => {
+    // The two rows are additive: a job without them renders exactly what it
+    // rendered before this item.
+    const html = renderJob(plateJob({ applicationMaterials: MATERIALS }));
+    expect(html).toContain("Curriculum vitae");
+    expect(applyRowLabels(html)).toEqual(["materials"]);
+  });
+});

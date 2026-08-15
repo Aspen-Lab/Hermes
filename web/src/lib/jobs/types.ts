@@ -60,6 +60,10 @@ export interface RawJobItem {
   startDateFlexible?: Job["startDateFlexible"];
   contractLength?: Job["contractLength"];
   applicationMaterials?: Job["applicationMaterials"];
+  /** V26-J06 / Ruling 74. Populated only upstream during enrichment. */
+  eligibility?: Job["eligibility"];
+  /** V26-J06 / Ruling 74. The unit NAME only — never a headcount. */
+  team?: Job["team"];
   /**
    * B4-11. Populated only upstream during enrichment, when the posting's own
    * fetched-page text explicitly says "hybrid" or "on-site"/"in-person" — no

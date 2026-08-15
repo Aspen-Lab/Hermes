@@ -29,6 +29,43 @@ export interface JobPageDetails {
    * that check can never see this signal no matter what the real page says.
    */
   workMode?: Job["workMode"];
+  /**
+   * V26-J06 / Ruling 74 (round 27, item 7). Plate 02's `ELIGIBILITY` row —
+   * one short clause stating who may apply (`PhD awarded by start date`).
+   *
+   * The posting's OWN words, clipped, never paraphrased. Peer clips; it does
+   * not rewrite. Five boundaries, and the two that bite are the negatives:
+   * NEVER from `keyRequirements` (that is Peer's own derived skills list, and
+   * printing it here would turn a Peer inference into an employer promise) and
+   * NEVER from LLM enrichment (Ruling 69 fixes the measurement profile to
+   * no-LLM, so a field that only exists under enrichment is unwitnessable by
+   * every A census). Absent means the row does not render at all.
+   */
+  eligibility?: string;
+  /**
+   * V26-J06 / Ruling 74. Plate 02's `TEAM` row reads
+   * `Energy & Materials, 14 researchers` — a unit NAME and a HEADCOUNT, two
+   * facts with very different evidence.
+   *
+   * **THIS FIELD IS THE NAME HALF ONLY, AND THE HEADCOUNT'S ABSENCE IS AN
+   * ACCEPTED, NAMED COST UNDER RULING 74 — NOT AN OVERSIGHT.** No schema.org
+   * property carries a team size; `Organization.numberOfEmployees` describes
+   * the whole employer, so publishing it here would be a WRONG number rather
+   * than a partial one; a number lifted from prose is A22-01's exact mechanism
+   * (`our team of 14 researchers` versus `14 open positions`); Peer counts no
+   * people on the job side; and an LLM guess is a fabricated fact about a real
+   * employer. **Do not "fix" this by inventing the count.** Ruling 74 re-opens
+   * it at Phase 2 as a measurement question about the LLM path.
+   *
+   * One boundary specific to this field: it must NEVER fall back to the
+   * employer name. `TEAM: Toyota Research Institute` would restate the
+   * employer already in the header — a duplicate dressed as a new fact, which
+   * is Ruling 26's own failure shape.
+   *
+   * Expect it to be SILENT on most postings: `employmentUnit` is rarely
+   * populated in the wild and B measured no hit rate for it.
+   */
+  team?: string;
 }
 
 const MONTHS: Readonly<Record<string, number>> = {
@@ -263,6 +300,50 @@ function extractLabeledDate(
   return undefined;
 }
 
+/**
+ * V26-J06 / Ruling 74. Closed label vocabularies — the same discipline
+ * `DEADLINE_LABEL_PATTERN` uses. A grammatical class English keeps extending
+ * would fail Ruling 37's bar; these are the labels postings actually print.
+ */
+const ELIGIBILITY_LABEL_PATTERN =
+  "(?:eligibility(?:\\s+requirements?)?|who\\s+can\\s+apply|who\\s+may\\s+apply|(?:minimum|basic)\\s+qualifications)";
+const TEAM_LABEL_PATTERN = "(?:department|group|team|division|unit)";
+
+/**
+ * V26-J06 / Ruling 74. The plate's values are ONE SHORT CLAUSE
+ * (`PhD awarded by start date`, `Energy & Materials`), and `qualifications` is
+ * routinely a multi-paragraph blob. So: take the text after the label up to
+ * the first sentence end, and **DROP rather than truncate** when it is too
+ * long. A truncated eligibility clause can invert its own meaning — "PhD not
+ * required for candidates who…" cut at the cap says the opposite of the
+ * sentence the employer wrote — so silence is the only safe overflow.
+ *
+ * Same clip-to-clause shape `extractLabeledDate` above already uses, and the
+ * same `lineWindows` input, so nothing new is scanned.
+ */
+const MAX_APPLY_ROW_CHARS = 80;
+
+function extractLabeledClause(
+  text: string,
+  labelPattern: string,
+): string | undefined {
+  const pattern = new RegExp(
+    `(?:^|[\\s>|·])${labelPattern}\\s*(?::|[-–—])\\s*([^.;!?\\n]+)`,
+    "i",
+  );
+  for (const window of lineWindows(text)) {
+    const raw = pattern.exec(window)?.[1];
+    if (!raw) continue;
+    const clause = raw.replace(/\s+/g, " ").trim().replace(/[,;:]+$/, "");
+    if (!clause) continue;
+    // Drop rather than truncate. See the note above.
+    if (clause.length > MAX_APPLY_ROW_CHARS) continue;
+    if (!/\p{L}/u.test(clause)) continue;
+    return clause;
+  }
+  return undefined;
+}
+
 function extractContractLength(text: string): string | undefined {
   const matches = CONTRACT_PATTERNS.flatMap((pattern) => {
     const localPattern = new RegExp(pattern.source, pattern.flags);
@@ -363,6 +444,24 @@ export function extractJobDetails(
     (item) => item.employmentType,
   )?.employmentType;
   const workMode = extractWorkMode(visibleText);
+  // V26-J06 / Ruling 74. Structured first, labelled line second — the same
+  // precedence `applicationDeadline` above already uses. Both are capped, and
+  // an over-long structured blob is dropped by the same rule as a labelled
+  // one, so `qualifications` cannot print a wall of text into a one-line row.
+  const eligibility =
+    withinApplyRowCap(
+      jobOpportunities.find((item) => item.educationRequirements)
+        ?.educationRequirements,
+    ) ?? extractLabeledClause(visibleText, ELIGIBILITY_LABEL_PATTERN);
+  // The TEAM NAME only. There is deliberately no `?? hiringOrganization`
+  // anywhere in this expression: an absent unit renders nothing rather than
+  // restating the employer already in the report header (Ruling 26's shape).
+  // The HEADCOUNT half is Ruling 74's accepted, named cost — see the field's
+  // own doc comment; do not add a source for it here.
+  const team =
+    withinApplyRowCap(
+      jobOpportunities.find((item) => item.employmentUnit)?.employmentUnit,
+    ) ?? extractLabeledClause(visibleText, TEAM_LABEL_PATTERN);
 
   return {
     ...(applicationDeadline ? { applicationDeadline } : {}),
@@ -373,5 +472,14 @@ export function extractJobDetails(
     ...(salary ? { salary } : {}),
     ...(employmentType ? { employmentType } : {}),
     ...(workMode ? { workMode } : {}),
+    ...(eligibility ? { eligibility } : {}),
+    ...(team ? { team } : {}),
   };
+}
+
+/** V26-J06 / Ruling 74. Same drop-rather-than-truncate rule, structured side. */
+function withinApplyRowCap(value: string | undefined): string | undefined {
+  const clause = value?.replace(/\s+/g, " ").trim();
+  if (!clause || clause.length > MAX_APPLY_ROW_CHARS) return undefined;
+  return /\p{L}/u.test(clause) ? clause : undefined;
 }

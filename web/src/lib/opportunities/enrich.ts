@@ -504,6 +504,11 @@ export async function enrichJobCandidates(
       contractLength: item.contractLength ?? details?.contractLength,
       applicationMaterials:
         item.applicationMaterials ?? details?.applicationMaterials,
+      // V26-J06 / Ruling 74. Same prefer-existing-then-fall-back shape as
+      // every field around it. No source adapter sets either today, so in
+      // practice these arrive from `extractJobDetails` or not at all.
+      eligibility: item.eligibility ?? details?.eligibility,
+      team: item.team ?? details?.team,
       // B4-11. JSON-LD JobPosting.baseSalary/employmentType, extracted
       // upstream in extractJobDetails alongside every other field this merge
       // already prefers-existing-then-falls-back-to. Adzuna/USAJobs already

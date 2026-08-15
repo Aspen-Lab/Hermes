@@ -255,3 +255,179 @@ describe("normalizeJobDate", () => {
     ).toBeUndefined();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────
+// V26-J06 / RULING 74 (round 27, item 7). PLATE 02's `ELIGIBILITY` AND `TEAM`.
+//
+// Plate 02's `TO APPLY, HAVE READY` column has four labelled rows —
+// MATERIALS, ELIGIBILITY, TEAM, SEEN ON. Only two had a field behind them.
+//
+// `ELIGIBILITY` is the posting's own clause about who may apply.
+// `TEAM` is the unit NAME only: the plate also carries `, 14 researchers`,
+// and Ruling 74 rules that the headcount's absence is an ACCEPTED, NAMED COST
+// because no honest source for it exists on the no-LLM path.
+// ───────────────────────────────────────────────────────────────────────
+describe("V26-J06 — eligibility and team", () => {
+  it("reads eligibility from schema.org educationRequirements, verbatim", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "educationRequirements": "PhD awarded by start date"
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+    `;
+    expect(
+      extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).eligibility,
+    ).toBe("PhD awarded by start date");
+  });
+
+  it("reads eligibility from a nested credential record", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "educationRequirements": {
+            "@type": "EducationalOccupationalCredential",
+            "credentialCategory": "Doctorate in a physical science"
+          }
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+    `;
+    expect(
+      extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).eligibility,
+    ).toBe("Doctorate in a physical science");
+  });
+
+  it("falls back to a labelled line when there is no JSON-LD at all", () => {
+    const html = `
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+      <p>Eligibility: PhD awarded by start date</p>
+    `;
+    expect(
+      extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).eligibility,
+    ).toBe("PhD awarded by start date");
+  });
+
+  it("accepts every label in the closed eligibility vocabulary", () => {
+    for (const label of [
+      "Eligibility",
+      "Eligibility requirements",
+      "Who can apply",
+      "Minimum qualifications",
+      "Basic qualifications",
+    ]) {
+      const html = `
+        <p>A postdoctoral position in solid-state electrolytes.</p>
+        <p>${label}: PhD awarded by start date</p>
+      `;
+      expect(
+        extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).eligibility,
+      ).toBe("PhD awarded by start date");
+    }
+  });
+
+  it("stays silent when the posting says nothing about who may apply", () => {
+    const html = `
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+      <p>Please submit a cover letter and curriculum vitae.</p>
+    `;
+    const details = extractJobDetails(html, new Date("2026-11-10T12:00:00Z"));
+    expect(details.eligibility).toBeUndefined();
+    expect(details.team).toBeUndefined();
+  });
+
+  it("DROPS a blob-length qualifications value rather than truncating it", () => {
+    // A truncated eligibility clause can invert its own meaning, so silence is
+    // the only safe overflow. `qualifications` is routinely a multi-paragraph
+    // blob, which is why this clause exists at all.
+    const blob =
+      "Candidates must hold a doctorate in chemistry, materials science, "
+      + "physics or a closely related discipline, and must have demonstrated "
+      + "experience with electrochemical characterisation techniques.";
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "qualifications": ${JSON.stringify(blob)}
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+    `;
+    expect(
+      extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).eligibility,
+    ).toBeUndefined();
+  });
+
+  it("reads the team NAME from schema.org employmentUnit", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "hiringOrganization": { "@type": "Organization", "name": "Toyota Research Institute" },
+          "employmentUnit": { "@type": "Organization", "name": "Energy & Materials" }
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+    `;
+    expect(extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).team).toBe(
+      "Energy & Materials",
+    );
+  });
+
+  it("NEVER falls back to the employer name when the unit is absent", () => {
+    // Ruling 26's own failure shape: a fallback that reinserts a value another
+    // slot already owns. `TEAM: Toyota Research Institute` would restate the
+    // employer already in the report header as if it were a new fact.
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "hiringOrganization": { "@type": "Organization", "name": "Toyota Research Institute" }
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+    `;
+    expect(
+      extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).team,
+    ).toBeUndefined();
+  });
+
+  it("publishes NO headcount — Ruling 74's accepted, named cost, asserted", () => {
+    // The plate reads `Energy & Materials, 14 researchers`. Peer publishes the
+    // NAME and stops. This is the assertion that reds if a later round wires a
+    // headcount in from prose, from `numberOfEmployees`, or from an LLM.
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          "title": "Battery Researcher",
+          "employmentUnit": { "@type": "Organization", "name": "Energy & Materials" },
+          "hiringOrganization": {
+            "@type": "Organization",
+            "name": "Toyota Research Institute",
+            "numberOfEmployees": 14
+          }
+        }
+      </script>
+      <p>A postdoctoral position in solid-state electrolytes.</p>
+      <p>You will join our team of 14 researchers working on molten salts.</p>
+    `;
+    const team = extractJobDetails(html, new Date("2026-11-10T12:00:00Z")).team;
+    expect(team).toBe("Energy & Materials");
+    expect(team).not.toMatch(/\d/);
+  });
+});

@@ -1022,10 +1022,29 @@ export function JobReport({
    */
   const workMode = workModeLabel(job);
   // B-17. Plate 02's labelled rows, built only from fields that exist.
+  // V26-J06 / Ruling 74 (round 27, item 7). The plate's own order —
+  // MATERIALS, ELIGIBILITY, TEAM, SEEN ON — with the same rule every row here
+  // already follows: an absent field HIDES rather than printing empty. No
+  // placeholder, no "not stated", no empty <dd>.
+  //
+  // **THE `TEAM` ROW RENDERS ITS HEADCOUNT'S HONEST ABSENCE, AND THAT IS
+  // RULING 74's ACCEPTED, NAMED COST — NOT A GAP TO CLOSE.** Plate 02 reads
+  // `Energy & Materials, 14 researchers`; this row will read
+  // `Energy & Materials`. No schema.org property carries a team size,
+  // `numberOfEmployees` describes the whole employer (so it would be a WRONG
+  // number, not a partial one), a number lifted from prose is A22-01's exact
+  // mechanism, and an LLM guess is a fabricated fact about a real employer.
+  // Ruling 74 re-examines it at Phase 2. **Do not "fix" this into invention.**
+  const eligibility = clean(job.eligibility);
+  // No `?? company` anywhere below: an absent unit renders nothing rather than
+  // restating the employer that is already in the header (Ruling 26's shape).
+  const team = clean(job.team);
   const applyRows: Array<{ label: string; value: string }> = [
     materials.length > 0
       ? { label: "Materials", value: materials.join(", ") }
       : undefined,
+    eligibility ? { label: "Eligibility", value: eligibility } : undefined,
+    team ? { label: "Team", value: team } : undefined,
     jobSourceLabel(job.sourceId)
       ? { label: "Seen on", value: jobSourceLabel(job.sourceId)! }
       : undefined,
@@ -1336,11 +1355,16 @@ export function JobReport({
               </h2>
               {/*
                 B-17. Plate 02 has labelled rows — MATERIALS / ELIGIBILITY /
-                TEAM / SEEN ON — not a bare list. Only MATERIALS and SEEN ON
-                have a field behind them today; ELIGIBILITY and TEAM would need
-                new extraction, and the plate's own rule is that an absent field
-                hides rather than prints empty. The shape is here so they can
-                slot in when the data exists.
+                TEAM / SEEN ON — not a bare list.
+
+                V26-J06 / Ruling 74 (round 27, item 7): all four now have a
+                field behind them. `ELIGIBILITY` and `TEAM` come from
+                `extractJobDetails` (schema.org `educationRequirements` /
+                `qualifications` and `employmentUnit` first, a closed
+                labelled-line vocabulary second) and each hides when absent,
+                which is this block's own standing rule. The `TEAM` row carries
+                the unit NAME only — see `applyRows` above for why the plate's
+                headcount is Ruling 74's accepted, named cost.
               */}
               <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-3">
                 {applyRows.map((row) => (

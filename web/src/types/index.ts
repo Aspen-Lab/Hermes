@@ -234,6 +234,19 @@ export interface Job {
   startDateFlexible?: boolean;
   contractLength?: string;
   applicationMaterials?: string[];
+  /**
+   * V26-J06 / Ruling 74. Plate 02's `ELIGIBILITY` row — the posting's own
+   * clause about who may apply. Never derived from `keyRequirements` (Peer's
+   * own skills list) and never from LLM enrichment.
+   */
+  eligibility?: string;
+  /**
+   * V26-J06 / Ruling 74. Plate 02's `TEAM` row, NAME HALF ONLY. The plate
+   * also carries a headcount (`, 14 researchers`); no honest source for it
+   * exists on the no-LLM path, so its absence is an ACCEPTED, NAMED COST
+   * under Ruling 74 and must not be "fixed" by inventing a number.
+   */
+  team?: string;
   roleKind?: RoleKind;
   visa?: {
     state: "sponsors" | "not-stated" | "wont-sponsor";
