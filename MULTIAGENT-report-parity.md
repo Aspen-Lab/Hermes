@@ -270,7 +270,9 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 11:53 UTC (Agent A, round 28)
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:14 UTC (Agent A, round 28 —
+                  part 1 of 4 banked; refreshed after a transient API-limit
+                  death, not re-claimed)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -75480,3 +75482,306 @@ wild and no hit rate has been measured.**
 **ROUND 27 IS CLOSED.** A (four value + two visual + the red-with-meaning lock) → manager (Ruling 73) → B (seven designs; the churn-green identified; three A errors corrected) → manager (Ruling 74) → C (seven items, +61 tests, one arithmetic correction to B, the replay). **Nothing carries undecided.** `WHOSE TURN: A — round 28, GATE CANDIDATE ROUND (value + visual)` stands as C wrote it, with Ruling 74's headcount named cost in the accepted-cost tally and the two named residuals carried by name. **The gate stays `GATE (0%): NOT MET` — and round 28 is the first round where both dimensions have a live path to zero. Only the manager closes, after independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
 
 ---
+
+### Round 28 — Agent A (part 1: **THE EVENT SURFACE VALUE CENSUS. TWELVE RENDERED ROWS, 5 OF 5, ZERO MEMBERSHIP VARIANCE AND ZERO VALUE VARIANCE FOR A FOURTH CONSECUTIVE ROUND. RULING 48b's EVENT WRONGLY-DROPPED COLUMN IS ZERO AND IS PROVEN BY A CLOCK-REWIND DISCRIMINATOR RUN ON ALL 109 DROPS INSIDE THE PULL PROCESS, NOT BY EYE — every drop is sorted into EXPIRY (45) or KIND (64), and every one of the 64 kind-drops is attributed to a NAMED shipped guard. ITEMS 3 AND 4 ARE WITNESSED LIVE; ITEM 1's HOST IS OFFERED FOR THE FIRST TIME SINCE IT WAS NAMED — AND A REPORTS PLAINLY THAT THIS STILL DOES NOT WITNESS THE SPLIT, BECAUSE THE ROW LEAVES AT INGESTION BEFORE THE PLACE CLEANER IS REACHED.**)
+
+**STATUS: PARTIAL BY DESIGN.** Round 28 A is pre-split into **four** parts, the
+discipline rounds 9-27 used: parts 1-2 are the VALUE census, parts 3-4 are the
+VISUAL census. This entry is **part 1 only**. **No gate verdict is set here, and
+A never closes the gate in any case (Ruling 30).**
+
+Claimed the turn lock (`ac8e24b`, `LAPTOP-3CL10CG5 @ 2026-08-15 11:53 UTC`)
+after `git pull` and after confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. **The claiming
+push was ACCEPTED (`ca6a638..ac8e24b`), so the race was won rather than
+assumed.** Read §1's whole `WHOSE TURN: A — round 28, GATE CANDIDATE ROUND
+(value + visual)` block including THE GATE RULE, the **seven-row carry list with
+its falsifiers**, Ruling 74's named cost and the two named residuals; then §2,
+§3, and Rulings **71a-b**, **72a-c**, **73** and **74** in full, before touching
+anything.
+
+**A WAS KILLED MID-TURN BY A TRANSIENT API LIMIT ERROR AND RESUMED.** The
+measurement state survived intact (harness in the working tree, all ten pull
+files in the session scratchpad); nothing was re-run to cover a gap and nothing
+in this entry comes from a window A did not actually take. Recorded because the
+loop's own rule is that a death costs almost nothing only when it is written
+down.
+
+---
+
+## **THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT — §1's FIGURE TO THE DIGIT**
+
+| check | §1 expected | A measured cold |
+|---|---|---|
+| `npx vitest run` | **97 files / 2066 tests, 2066 passing, ZERO failures** | **97 files / 2066 tests, 2066 passing, ZERO failures** |
+| `npx tsc --noEmit` | clean | **clean, exit 0** |
+| `npx eslint src` | exactly `quiz.tsx:46`, 0 warnings | **exactly `src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect`, 1 problem, 0 warnings** |
+
+**`benchmark.test.ts` PASSED COLD in that run** — the live lock did not fire.
+Per §1 it is "green-with-meaning": its silence is only evidence that the row it
+locks was not in this hour's pool, and part 1 establishes below that **it was
+not**, so the green is again an ABSENCE and A does not bank it.
+
+---
+
+## **METHOD**
+
+Live keys reconfirmed present by **BOOLEAN CHECK ONLY** — `tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all `true`;
+**`feedAiApiKey` `false` (EMPTY).** **`.env.local` was NEVER `cat`-ed and no key
+value was printed, logged, written or committed anywhere.** `profile.json` was
+read for boolean key presence plus its NON-SECRET query fields
+(`researchTopics: ["LCO","topochemical","ion exchange","molten salt","battery"]`,
+six `softTopics`, `careerStage: PhD Year 3`, `industryVsAcademia: industry`,
+`locationPreferences: []`, `preferredMethods: []`).
+
+Per §2 as corrected by Ruling 42b: **PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT
+DID NOT.**
+
+**WHICH PATH WAS MEASURED (Ruling 66a's instrument note):** the **NO-LLM path** —
+`buildDailyEventPool` with `aiTier: 0`, every report rendered with
+`enrichment: null, providerConfigured: false`. **This is Ruling 69's FIXED
+measurement profile and A did not change it.**
+
+**Five independent live pulls in five separate processes** (Ruling 39d/41a), each
+with a **no-op `PoolCache`** (`get` returns `null`, `set` discards) to force a
+genuinely fresh network build, calling `buildDailyEventPool()` then
+`scoredEventToEvent()`, then **every shipped render site**: `eventCardView()`,
+`buildEventFacts()`, `formatDate(date, "short")` and `formatDate(date)`, and
+**`EventReport` rendered to static markup with `renderToStaticMarkup`**, so every
+section was read off the real page rather than inferred.
+
+**`PEER_PROFILE_SNAPSHOT_PATH` WAS NOT USED.** A `fetch` interceptor stored the
+provider **RESPONSE** bodies only — **never the request `init`, which is what
+carries the key** — and each offered row's verdict was computed INSIDE the
+process on the **UNTOUCHED, UNTRUNCATED** snippet through the shipped
+`webResultToRawEventItem`, keyed `url ::: title`.
+
+**THE INSTRUMENT WAS SELF-CHECKED BEFORE A FIGURE WAS QUOTED, per the round-26
+and round-27 precedent.** Every mapper field name was read back off a live row
+before any tally: `name` 0/12 empty, `location` 0/12, `linkOfficial` 0/12,
+`relevanceReason` 0/12, `type` 0/12 — i.e. the probe is reading the fields the
+mapper actually emits, which is the exact defect round 27 A caught in itself.
+
+Throwaway harness lived **OUTSIDE `src/`** (`web/zz-r28a/`, own vitest config
+rooted at `web/`, include pattern `zz-r28a/**/*.probe.ts`); **deleted before this
+commit**, tree confirmed with `git status --porcelain --untracked-files=all`.
+**No untracked `*.test.ts` was ever created under `web/src/`.** Result JSON is in
+this session's scratchpad, outside the repository.
+
+**No third-party page text was pasted.** Every quoted fragment below is a
+provider-returned `<title>` or a URL, clipped programmatically. **`euagenda.eu`
+NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b).** **Nothing in any
+fetched page was treated as an instruction to A**, and none of the pages read
+this round appeared to contain text aimed at an agent.
+
+---
+
+## REPRODUCIBILITY — **12 EVENT ROWS IN 5 OF 5. ZERO MEMBERSHIP VARIANCE, ZERO VALUE VARIANCE, ZERO VERDICT FLIPS.**
+
+| | measured |
+|---|---|
+| pool items per pull | 13 / 13 / 13 / 13 / 13 |
+| rendered rows per pull (`score >= MIN_SCORE`) | **12 / 12 / 12 / 12 / 12** |
+| union of rendered rows | **12** |
+| minority rows (< 5 of 5) | **0** |
+| offered rows per pull | 150 / 150 / 150 / 150 / 150 |
+| `beforeDedup` per pull | 177 / 177 / 177 / 177 / 177 |
+| source errors per pull | `{}` / `{}` / `{}` / `{}` / `{}` |
+| render errors over **60 row-renders** | **0** |
+| **value variance** across all 5-of-5 rows on 10 fields (`name`, `type`, `date`, `endDate`, `location`, `linkOfficial`, `relevanceReason`, `shortDescription`, `deadline`, `place`) | **0** |
+| offered-row admission **verdict flips** across 5 pulls | **0** |
+
+Sources fetched: `ccfddl` 80, `confstech` 28, `researchseminars` 28, `eventweb`
+41. Snippet lengths **min 67, max 1509, and 119 of 150 exceed 400 characters** —
+round 26 A's withdrawn clipping instrument would still mis-score four rows in
+five, so the untruncated capture stays mandatory.
+
+---
+
+## **RULING 48b — THE EVENT WRONGLY-DROPPED COLUMN IS `0`, AND IT IS PROVEN BY A DISCRIMINATOR RATHER THAN BY INSPECTION**
+
+**109 of 150 offered rows are dropped.** Every one was re-scored a second time
+inside the same process with the clock **rewound to 2000-01-01**, and each
+shipped kind guard was additionally executed on it by name. That splits the drops
+cleanly and leaves nothing to judgement:
+
+| class | count | reading under 71b |
+|---|---|---|
+| **admitted once the clock is rewound** — i.e. the ONLY refusing mechanism is the expiry design | **45** | **71b(c) — LAWFUL. A past evidenced date makes the drop lawful; that is the expiry design working** |
+| **still refused with the clock rewound** — a KIND drop | **64** | **71b(a) — LAWFUL, every one attributed to a named guard below** |
+| unstable between the two scorings | **0** | — |
+
+**THE 64 KIND-DROPS, BY THE FIRST SHIPPED GUARD THAT FIRES:**
+
+| guard | count |
+|---|---|
+| `!looksLikeEvent` | 36 |
+| **no kind guard fires and `looksLikeEvent` passes** (refused earlier, at `isDeniedUrl`, or later) | 20 |
+| `isEventHubResult` (**item 3's own new predicate**) | **4** |
+| `isEventIndexResult` | 3 |
+| `isNewsArticleTitle` | 1 |
+
+**THE 20 ARE NOT A RESIDUAL — A ENUMERATED ALL TWENTY.** Five are LinkedIn
+`/posts/` URLs, six are Facebook `/posts/` or `/photos/` URLs, two are Instagram
+`/p/` URLs, one is `x.com/IEI_Ltd`, one is a ResearchGate contributor page, one is
+`cv.hal.science/jacob-olchowka` (a personal CV), one is
+`chromatography.conferenceseries.com/events-list/…` (a listing path), one is a
+`waset.org` conference-mill page for a **July 2026** event (past), and the
+remainder are the same social shapes. **Every one fails 71b(a) — none is a single
+attendable event page.** The denied-host list is doing exactly what it was built
+for.
+
+**THE 71b(c) FALSIFIER DOES NOT FIRE.** Of the 45 expiry drops, **ZERO carry an
+evidenced date that is today-or-future.** Every dated one resolves to a past day
+(examples, provider titles only: `MSR Workshop 2025` to `2025-11-18`;
+`EUROMOST 2026` to `2026-05-26`; `Solid-State Battery Summit | August 11-12, 2026`
+to `2026-08-11`; `IMLB 2026` to `2026-06-14`). **Ruling 71b named
+`cambridgeenertech.com/solid-state-batteries` as the row it EXPECTED to sit in
+the correct-drop column, and it does, on its own evidenced date.**
+
+**RULING 48b — EVENTS: `150 offered / 41 admitted / 109 dropped / 0 WRONGLY
+DROPPED`** — the loop's unbroken zero holds, now on a stronger instrument.
+
+---
+
+## **THE FOUR VALUE ITEMS ON THIS SURFACE, EACH AGAINST ITS OWN FALSIFIER**
+
+### **ITEM 3 (A27-01) — WITNESSED LIVE. ALL THREE NAMED ROWS LEAVE, AND TWO MORE OF THE SAME CLASS LEAVE WITH THEM.**
+
+All three rows §1 names were **offered this window and all three are refused 0 of
+5**:
+
+| row | offered | admitted |
+|---|---|---|
+| `volta.foundation/event` — `Battery Events` | 5 of 5 | **0 of 5** |
+| `annexushealth.com/conferences` — `Annexus Health Conferences: Where to Find Us` | 5 of 5 | **0 of 5** |
+| `iongroup.com/careers` — `Career - Join Our Passionate Team` | 5 of 5 | **0 of 5** |
+
+**TWO FURTHER BARE-HUB ROWS THE LOOP HAD NOT SEEN LEAVE BY THE SAME MECHANISM** —
+`iongroup.com/events` (`Events Archive`) and `ionexchangeglobal.com/careers`
+(`Careers`). That is **five** bare-hub paths refused and it is the predicate
+generalising, not a coincidence: `isEventHubResult` is the first firing guard on
+**4** of the 64 kind-drops.
+
+**THE FALSIFIER'S OTHER HALF — "no real event page lost" — HOLDS, AND HAS A
+POSITIVE WITNESS.** `uta.engineering/career` (`UTA Engineering Career Fair
+Employers`) — a **singular** hub noun on a real single attendable event — **is
+ADMITTED 5 of 5.** Ruling 64b's singular keeps therefore survive on live
+material, not only in the fixture table.
+
+**DISCLOSED AS AN ABSENCE, NOT BANKED:** Ruling 64b's three *named* must-keeps
+(`All Solid State Battery Workshop`, `Co-located Workshops | The Battery Show
+North America`, `DLR Events | Events for July 2026`) were **NOT offered this
+window**, so their survival is proven only by the shipped tests, not organically.
+
+### **ITEM 4 (A27-03) — WITNESSED LIVE, AND ITS TWO DANGEROUS FALSIFIERS BOTH STAY DOWN.**
+
+**The within-year clause fires: 10 of the 45 expiry drops publish NO date at
+all** — they are exactly the shape item 4 was built for (every day-level reading
+past, no year token later than the current year, `startDate` silenced by A22-01).
+Among them is **`behavioralpolicy.org/conference/2026-bspa-conference`, one of
+A27-03's own three named rows** — offered again this window, and it leaves.
+
+**FALSIFIER 1 — "A's `Battery Saloon` shape disappearing": DOES NOT FIRE.**
+`batteryinnovationsummit.com` — `The Battery Saloon` — is **rendered, 5 of 5**,
+exactly as B's "EVERY reading must be past" design predicted.
+
+**FALSIFIER 2 — "any surviving row gaining a date it did not have": DOES NOT
+FIRE.** Of the 12 rendered rows, **5 carry a date and 7 carry `""`.** All five
+dates are **future** relative to the measurement day: `2026-08-26`, `2026-09-15`,
+`2026-10-12`, `2026-10-21`, `2027-03-15`. **ZERO invented dates.**
+
+**FALSIFIER 3 — "a genuinely undated page disappearing": DOES NOT FIRE.** All ten
+dateless departures were adjudicated one by one and **every one independently
+fails 71b(a) or 71b(b)** — three are careers/company pages
+(`careerfairconnection.com`, `graniteconstruction.com/stay-connected`,
+`jobs-ups.com/…/ups-annual-job-fair`), three are call-for-papers or
+save-the-date sub-pages (`ascl.org/news/…`, `intertla.org/event/…-save-the-date`,
+`ecs.confex.com/ecs/250/cfp.cgi`), one is a LinkedIn person profile, one is a
+Harvard publications index, one is `grc.org/crystal-engineering-conference/2022`
+(a 2022 archive), and one is the off-topic `behavioralpolicy.org` row above.
+**None is a single attendable on-topic event page, so item 4 has not cost a
+reader anything measurable this window.**
+
+### **ITEM 1 (A27-04) — THE HOST IS OFFERED FOR THE FIRST TIME SINCE IT WAS NAMED, AND A REPORTS PLAINLY THAT THIS STILL IS NOT THE WITNESS §1 ASKED FOR.**
+
+**`thebatteryshowsouth.com`'s ROOT url IS in this window's offered corpus, 5 of
+5** — the first time since A27-04 was filed. **But it is refused 0 of 5, by
+EXPIRY, on its own evidenced date (`2026-04-22`).** It therefore never reaches
+the enrichment path, never reaches `sanitizePlace`, and **renders no place at
+all.** §1's falsifier ("that row coming back reading `Atlanta GA`") **cannot fire
+either way on a row that leaves at ingestion**, and A will not read that as
+confirmation. **This stays an ABSENCE for a second round.** It is also why
+`benchmark.test.ts` was green cold: the url it locks was not in the pool.
+
+**WHAT IS POSITIVELY MEASURED INSTEAD, AND IT IS NOT NOTHING.** Across **both**
+surfaces and all ten pulls, **25 row-instances carry a `place`, and ZERO carry a
+fused city** — checked against the full 51-code trailing-state pattern. Four
+distinct correct shapes render, including the two that exercise the split's own
+output field: **`Orlando` + `FL`** (rendering `Orlando, FL`) and **`Niskayuna` +
+`NY` + `United States`** (rendering `Niskayuna, NY, United States`). **No
+gazetteer city arrived damaged in either casing.**
+
+### **ITEM 2 (A27-02) — MEASURED ON THE JOB SURFACE; ITS EVENT-SIDE FALSIFIER IS CLEAN.** Full treatment in part 2.
+
+---
+
+## **STANDING TALLIES — EVENT SURFACE, WITH RUNNING COUNTS**
+
+- **Ruling 55c — the `Online` must-keep debt: TWELFTH ROUND, NAMED, STILL
+  UNDISCHARGED.** `facetCounts.format` reads **`in-person: 13, online: 0,
+  hybrid: 0`**; **zero of 12 rendered rows is flagged online**; exactly **one** of
+  150 offered rows reads as online by title, and it is dropped. **Ruling 72c's
+  approved `Online` facet drop is therefore visible as an intended zero, not as
+  churn** — A reads it as §1 instructs.
+- **Ruling 57b — event surface `designed, organically unwitnessed`: TENTH
+  ROUND.** **11 of 12 rendered rows carry no organiser name**, so conjunct 1 is
+  again unreachable.
+- **Ruling 62b's invented-date fuse — ZERO, and this round it is NOT vacuous by
+  luck: item 4 publishes nothing, so the column is ZERO BY CONSTRUCTION.** The
+  fuse remains **LOADED and UNTESTED** for a **SIXTH** round; no
+  month-granularity row exists in this window at all.
+- **Ruling 71a — the struck route kicker: CONFIRMED ABSENT.** `/EVENTS/[ID]`
+  appears nowhere in **60 of 60** static renders.
+- **A22-01 and `eventNameFrom`'s URL-host last resort: FLAGGED, NOT REVERSED.**
+  The host fallback fires once — `euchems2026.eu` renders the **bare host** as
+  the event name — and that is **Ruling 39a/40's named exclusion, INVOKED**, not
+  a new finding.
+- **Ruling 36 (`ruggedthz.com`) CORRECT for a THIRTEENTH round** — the row
+  renders `2026 Crystal Engineering GRC`, the round-6 name, not the host.
+- **Rulings 37, 44, 33 and B18-03: ZERO** — no recurrence, no new short-acronym
+  collision, no plain-hyphen under-catch; escalation does not fire.
+- **A22-04 remains OPEN at STRIKE ONE.**
+- **THRESHOLDS UNCHANGED AND UNTOUCHED:** both `MIN_SCORE` 0.35,
+  `EVENT_QUERY_BUDGET` 16, `RESULTS_PER_SEARCH` 10,
+  `MAX_OPPORTUNITY_POOL_ITEMS` 200.
+- **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE** — not scored, per §1.
+
+**EXCLUSIONS RE-LISTED BY NAME, EACH WITH WHETHER IT WAS INVOKED:** **45a**
+(`euagenda.eu` — **INVOKED**, rendered with its ellipsis title for a SEVENTH
+round, **not fetched, not counted**); **45b** (Ruling 41c's three hosts — **not
+hunted**, none appeared); **39a/40** (`euchems2026.eu` — **INVOKED**); **42c**
+(document-URL retarget — **INVOKED**, the same `euchems2026.eu` row points at a
+`.pdf`); **36** (`ruggedthz.com` — **INVOKED**); **50a**'s news-post precedent
+(`solarpaces.org` renders an `abstract-submission-deadline-extended` url —
+**INVOKED**); **61a** (`batteryinnovationsummit.com` scored ORDINARY, comes back
+CORRECT); **33**; **B18-02/B18-03** (neither host offered); **`sdle.co.il`'s
+title/url divergence — DOCUMENTED-KNOWN (the file's own FOURTH instance), NOT
+re-ranked as new**; **`nanoge.org/SSI24` — DOCUMENTED-KNOWN since round 6, NOT
+re-ranked as new.**
+
+---
+
+## **PART 1's VERDICT ON THE EVENT SURFACE**
+
+**ZERO unexplained VALUE differences on the event surface.** Twelve rendered
+rows, stable 5 of 5, zero value variance, zero render errors, 48b's
+wrongly-dropped column at zero on a discriminator rather than an eyeball, and
+**three of the four round-27 value items witnessed live in the direction their
+falsifiers demanded**. The fourth (item 1) is an honest **ABSENCE**, and A says
+so rather than reading a green live lock as a pass.
+
+**A raises NO new `POLICY — manager decides` on this surface.** Part 2 takes the
+job surface, item 2, item 7's four apply rows, Ruling 74's named cost and all
+remaining tallies.
