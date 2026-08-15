@@ -461,6 +461,175 @@ describe("V26-J10 — one label step, not two", () => {
       expect(classes).not.toContain("text-micro");
     }
   });
+
+  // Round 28 item 2 (V28-01): the sweep above only ever looked at `<h2>`,
+  // which is why six labels on FOUR OTHER element kinds (`<p>`, `<th>`,
+  // `<h3>`, `<span>`) drifted while this block reported closed. Widened to
+  // every element carrying `uppercase` together with a `tracking-[…]` — a
+  // label step cannot come back through a fifth element type either.
+  it("leaves no second label step on ANY uppercase-tracked LABEL of either report — widened past <h2>", () => {
+    // `data-report-badge` is excluded by name: V28-01's own boundary keeps
+    // the badge role out of this item (its plate counterpart is a different
+    // typeface entirely, `Consolas 8.25`, not `SegoeUI-Semibold`), so its
+    // `text-micro` / `tracking-[0.14em]` is not the residue this sweeps for.
+    const html = renderJob() + renderEvent();
+    const trackedElements = [
+      ...html.matchAll(/<[a-z][a-z0-9]*\b[^>]*>/g),
+    ]
+      .map((m) => m[0])
+      .filter(
+        (tag) =>
+          !tag.includes("data-report-badge") &&
+          /class="[^"]*\buppercase\b[^"]*"/.test(tag) &&
+          /class="[^"]*tracking-\[[^"]*"/.test(tag),
+      )
+      .map((tag) => /class="([^"]*)"/.exec(tag)?.[1] ?? "");
+    expect(trackedElements.length).toBeGreaterThan(0);
+    for (const classes of trackedElements) {
+      expect(classes).not.toContain("text-micro");
+      expect(classes).not.toContain("tracking-[0.16em]");
+      expect(classes).not.toContain("tracking-[0.14em]");
+    }
+  });
+});
+
+/**
+ * **V28-01 (round 28, item 2) — THE LABEL-STEP RESIDUE.** `REPORT_LABEL_CLASS`
+ * closed four call sites' worth of drift (V26-J10 above); six RENDERED labels
+ * across four further call sites were still on the old step because
+ * V26-J10's own guard swept `<h2>` only, and none of these six is an `<h2>`.
+ * See the doc comment above `REPORT_LABEL_STEP`
+ * (`components/reports/report-section.tsx`) for the split design.
+ */
+describe("V28-01 — the label-step residue: labels V26-J10's own sweep could not see", () => {
+  function renderJobWithEnrichment(
+    job: Job,
+    enrichment: Parameters<typeof JobReport>[0]["enrichment"],
+  ): string {
+    return renderToStaticMarkup(
+      createElement(JobReport, {
+        job,
+        isSaved: false,
+        isApplied: false,
+        isInterested: false,
+        nowMs: NOW,
+        enrichment,
+        providerConfigured: false,
+        onToggleSave: () => undefined,
+        onAppliedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+  }
+
+  it("puts the tier-upgrade block's label on the shared step, `text-accent` — a deliberately tinted callout", () => {
+    // `TierUpgradeBlock` renders when the provider is not configured; the
+    // job report's own `JOB_TIER_UPGRADE_ITEMS` is non-empty by construction.
+    const classes = classesOfTagContaining(
+      renderJob(),
+      "p",
+      "Also in this report with an AI key",
+    );
+    expect(classes).toContain("text-caption");
+    expect(classes).toContain("tracking-[0.18em]");
+    expect(classes).toContain("text-accent");
+    expect(classes).not.toContain("text-micro");
+    expect(classes).not.toContain("text-text-faint");
+  });
+
+  it("puts the event report's cheapest-way-in callout on the shared step, `text-accent`", () => {
+    const classes = classesOfTagContaining(
+      renderEvent(
+        plateEvent({
+          fees: [{ label: "Early bird", standard: "$620", student: "$180" }],
+        }),
+      ),
+      "p",
+      "Cheapest way in, for you",
+    );
+    expect(classes).toContain("text-caption");
+    expect(classes).toContain("tracking-[0.18em]");
+    expect(classes).toContain("text-accent");
+    expect(classes).not.toContain("text-micro");
+    expect(classes).not.toContain("tracking-[0.16em]");
+  });
+
+  it("puts the fee table's four column headers on the shared step", () => {
+    const html = renderEvent(
+      plateEvent({
+        fees: [{ label: "Early bird", standard: "$620", student: "$180", deadline: "2027-06-01" }],
+      }),
+    );
+    for (const header of ["Item", "Standard", "Student", "Deadline"]) {
+      const classes = classesOfTagContaining(html, "th", header);
+      expect(classes).toContain("text-caption");
+      expect(classes).toContain("tracking-[0.18em]");
+      expect(classes).not.toContain("text-micro");
+      expect(classes).not.toContain("tracking-[0.14em]");
+    }
+  });
+
+  it("puts both roster-tail headings on the shared step — one component, two titles", () => {
+    const html = renderEvent(
+      plateEvent({
+        organisations: [{ name: "Acme Battery Co", descriptor: "Exhibitor" }],
+        people: [{ name: "Dr. A. Researcher", role: "Speaker", institution: "MIT" }],
+      }),
+    );
+    for (const label of ["Every other organisation attending", "Every other speaker"]) {
+      const classes = classesOfTagContaining(html, "h3", label);
+      expect(classes).toContain("text-caption");
+      expect(classes).toContain("tracking-[0.18em]");
+      expect(classes).not.toContain("tracking-[0.16em]");
+    }
+  });
+
+  it("puts the sponsorship-read block's two labels on the shared step, colour split correctly", () => {
+    const html = renderJobWithEnrichment(plateJob(), {
+      sponsorshipRead: { likelihood: "Plausible", basis: "Inferred from role history." },
+    });
+    // "Posting evidence" is the quoted-evidence label: stays `text-accent`,
+    // the same deliberate tint as the tier-upgrade block and the callout.
+    const evidenceClasses = classesOfTagContaining(html, "span", "Posting evidence");
+    expect(evidenceClasses).toContain("text-caption");
+    expect(evidenceClasses).toContain("tracking-[0.18em]");
+    expect(evidenceClasses).toContain("text-accent");
+    expect(evidenceClasses).not.toContain("text-micro");
+    // "Peer inference" is the ordinary faint label — no colour change here.
+    const inferenceClasses = classesOfTagContaining(
+      html,
+      "p",
+      "Peer inference — verify with the employer",
+    );
+    expect(inferenceClasses).toContain("text-caption");
+    expect(inferenceClasses).toContain("tracking-[0.18em]");
+    expect(inferenceClasses).toContain("text-text-faint");
+    expect(inferenceClasses).not.toContain("text-micro");
+  });
+});
+
+/**
+ * **V28-02 (round 28, item 3) — THE LOCKED-BLOCK LABEL COLOUR.** The plate's
+ * `#5b4bbf` is the accent's own value in the plate's theme (V26-E05's own
+ * comment, already shipped on the four `Tier 0` badges) — not a new fixed
+ * hex, which would be the only frozen hue in a six-accent user-selectable
+ * system. See §3.2 of round 28 B's item-3 write-up.
+ */
+describe("V28-02 — the locked-block label takes the accent token, not a new hex", () => {
+  it("is `text-accent`, not `text-text-faint`", () => {
+    const classes = classesOfTagContaining(
+      renderJob(),
+      "p",
+      "Also in this report with an AI key",
+    );
+    expect(classes).toContain("text-accent");
+    expect(classes).not.toContain("text-text-faint");
+  });
+
+  it("introduces no fixed hex anywhere in the two opportunity reports", () => {
+    const html = renderJob() + renderEvent();
+    expect(html).not.toContain("5b4bbf");
+  });
 });
 
 /** Standard 7 again — the hierarchy move must not touch a rendered value. */

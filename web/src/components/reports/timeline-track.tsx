@@ -193,7 +193,12 @@ export function ReportTimelineTrack({
               <span aria-hidden className={cn("mt-0.5", dotClass(point.accent))} />
             )}
             <div className="min-w-0">
-              <span className={cn("block", REPORT_LABEL_CLASS)}>
+              {/* Round 28 item 2 (V28-01): this WAS the `cn()` trap
+                  REPORT_LABEL_CLASS's own doc comment warns about in
+                  capitals — `twMerge` read `text-caption` as a colour and
+                  silently dropped it. Template-literal composition, not a
+                  `cn` repair, per the constant's own instruction. */}
+              <span className={`block ${REPORT_LABEL_CLASS}`}>
                 {point.label}
               </span>
               {/*

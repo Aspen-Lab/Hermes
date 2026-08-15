@@ -58,6 +58,7 @@ import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
   REPORT_LABEL_CLASS,
+  REPORT_LABEL_STEP,
   ReportSection as SharedReportSection,
 } from "@/components/reports/report-section";
 import {
@@ -1032,7 +1033,9 @@ const ReportSection = SharedReportSection;
 function CheapestCallout({ cheapest }: { cheapest: CheapestWay }) {
   return (
     <aside className="mt-10 rounded-2xl border border-accent/20 bg-accent/8 px-5 py-4">
-      <p className="text-micro font-semibold uppercase tracking-[0.16em] text-accent">
+      {/* Round 28 item 2 (V28-01): step matches every other report label;
+          colour stays `text-accent` — this callout is deliberately tinted. */}
+      <p className={`${REPORT_LABEL_STEP} text-accent`}>
         Cheapest way in, for you
       </p>
       <p className="mt-1.5 text-title font-semibold text-heading">
@@ -1165,7 +1168,8 @@ function CostsTable({
                 <th
                   key={header}
                   scope="col"
-                  className="border-b border-border px-4 py-3 text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
+                  // Round 28 item 2 (V28-01): the fee table's own label step.
+                  className={`border-b border-border px-4 py-3 ${REPORT_LABEL_CLASS}`}
                 >
                   {header}
                 </th>
@@ -1321,7 +1325,8 @@ function RosterTail({
   return (
     <div data-roster-tail={kind} className="mt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-caption font-semibold uppercase tracking-[0.16em] text-text-faint">
+        {/* Round 28 item 2 (V28-01): shared step, tracking was `0.16em`. */}
+        <h3 className={REPORT_LABEL_CLASS}>
           {title} · {entries.length}
         </h3>
         <div className="flex items-center gap-2">

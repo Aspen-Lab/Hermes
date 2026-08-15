@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { REPORT_LABEL_STEP } from "./report-section";
 
 export interface TierUpgradeItem {
   title: string;
@@ -19,7 +20,11 @@ export function TierUpgradeBlock({
   return (
     <aside className="mt-14 overflow-hidden rounded-2xl border border-border bg-bg-secondary/50">
       <div className="border-b border-border px-5 py-4 sm:px-6">
-        <p className="text-micro font-semibold uppercase tracking-[0.18em] text-text-faint">
+        {/* Round 28 items 2+3 (V28-01/V28-02): the step matches every other
+            report label (`REPORT_LABEL_STEP`, not the old `text-micro`), and
+            the colour is `text-accent` — the token this label's plate
+            counterpart already resolves to (V26-E05), not a fixed hex. */}
+        <p className={`${REPORT_LABEL_STEP} text-accent`}>
           Also in this report with an AI key
         </p>
       </div>

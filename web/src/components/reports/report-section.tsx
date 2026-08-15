@@ -156,6 +156,22 @@ export function ReportSection({
  * does. The pre-existing code avoided the trap by writing these as literal
  * strings and never routing them through `cn` — the trap is new only to callers
  * that reach for `cn` by habit.
+ *
+ * **ROUND 28 ITEM 2 (V28-01): SPLIT OFF THE COLOUR.** `REPORT_LABEL_CLASS`
+ * bundled five things — size, weight, case, tracking AND colour — but two
+ * call sites (`app/events/[id]/page.tsx`'s "Cheapest way in, for you",
+ * `app/jobs/[id]/page.tsx`'s "Posting evidence") carry `text-accent`
+ * DELIBERATELY: they are tinted callouts, and the plate's own callout is
+ * tinted. Dropping this constant onto them verbatim would repaint them
+ * `text-text-faint` and destroy a real distinction while fixing a size.
+ * `REPORT_LABEL_STEP` is the step alone; `REPORT_LABEL_CLASS`'s VALUE stays
+ * byte-identical to what shipped before this split, so every existing call
+ * site renders byte-for-byte unchanged and no existing assertion moves.
+ * **The `cn()` trap above applies to `REPORT_LABEL_STEP` too, more sharply**
+ * — a bare step has no colour in it to make a `twMerge` conflict visible, so
+ * losing it is even easier to miss. Compose it with a template literal, same
+ * as the full class.
  */
-export const REPORT_LABEL_CLASS =
-  "text-caption font-semibold uppercase tracking-[0.18em] text-text-faint";
+export const REPORT_LABEL_STEP =
+  "text-caption font-semibold uppercase tracking-[0.18em]";
+export const REPORT_LABEL_CLASS = `${REPORT_LABEL_STEP} text-text-faint`;

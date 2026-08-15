@@ -39,6 +39,7 @@ import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
   REPORT_LABEL_CLASS,
+  REPORT_LABEL_STEP,
   ReportSection as SharedReportSection,
 } from "@/components/reports/report-section";
 import { ReportFactTile } from "@/components/reports/fact-tile";
@@ -1453,14 +1454,17 @@ export function JobReport({
           <div className="grid gap-3 md:grid-cols-2">
             {visaEvidence && (
               <blockquote className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted">
-                <span className="mb-2 block text-micro font-semibold uppercase tracking-[0.14em] text-accent">
+                {/* Round 28 items 2+3 (V28-01/V28-02): shared step, colour
+                    stays `text-accent` — this quote is deliberately tinted. */}
+                <span className={`mb-2 block ${REPORT_LABEL_STEP} text-accent`}>
                   Posting evidence
                 </span>
                 “{visaEvidence}”
               </blockquote>
             )}
             <div className="rounded-xl border border-border bg-bg-secondary/50 px-5 py-4">
-              <p className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
+              {/* Round 28 item 2 (V28-01): shared step. */}
+              <p className={REPORT_LABEL_CLASS}>
                 Peer inference — verify with the employer
               </p>
               <p className="mt-2 text-title font-semibold text-heading">

@@ -270,19 +270,82 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-15 20:25 UTC
-                  (round 28 C — implementer, RESUMING. LAPTOP-3CL10CG5 claimed
-                  this at 17:01 UTC, landed item 0 in `67b4e65` (author time
-                  ~17:31 UTC per `git log`), then went quiet — no further
-                  commit or §1 update for ~2h54m at claim time, past the 2h
-                  staleness window, so cloud-hourly claimed per §0d step 3.
-                  Continuing items 1–3 in B's banking order.)
-                  (previously released by round 28 B @ 2026-08-15 16:55 UTC in
-                  that entry's own commit.)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 20:47 UTC — ROUND 28 C IS
+                  COMPLETE. Cloud-hourly claimed the lock at 20:25 UTC (stale
+                  after LAPTOP-3CL10CG5 went quiet ~2h54m post-item-0; claiming
+                  push `382e399` accepted, race won not assumed) and landed
+                  items 1–3 in B's banking order, one commit each, each pushed
+                  immediately** (`12c9b23` item 1, plus items 2+3's commit —
+                  see §4 for exact hashes). **Item 0 was already landed by
+                  LAPTOP-3CL10CG5 in `67b4e65` before this turn resumed; all
+                  four of B's items are now banked.** No branch, worktree or
+                  PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **NO BANNED API CALLED, NO CREDENTIAL TOUCHED — this turn's
+                  three items were pure code/test changes with zero network
+                  traffic.** `benchmark.test.ts` SKIPS in this sandbox (no
+                  `.local-data/profile.json`; exactly what §0c predicts for a
+                  cloud run and not chased or faked).
+
+                  **TWO SELF-CAUGHT ERRORS, both corrected before the commit
+                  that would have shipped them** (§4 has the full account):
+                  item 1 initially mis-listed `Tesla Careers`/`Kairos Power
+                  Careers` as bare-title must-keeps for the new rule (they are
+                  must-keeps for a DIFFERENT, pre-existing predicate); item 2's
+                  widened element sweep initially caught the report badge's own
+                  legitimate `text-micro`, which item 2's own boundary
+                  explicitly excludes.
+
+                  **ONE UNVERIFIABLE FACT CARRIED FORWARD, NOT GUESSED AT:**
+                  the A28-01 corpus row `careers.emdgroup.com`'s recorded title
+                  contains a literal capital `I` where the title-head design
+                  needs a `|` (verified `od -c`) — no live credentials in this
+                  run to refetch the real page and settle which is the
+                  transcription artifact. Flagged in the test and here for the
+                  next agent with live access.
+
+                  **THE GATE, COLD (start of this turn) AND AT CLOSE, BOTH
+                  UNDER `TZ=America/Chicago`** (the sandbox defaults to UTC;
+                  `jobs/card.test.ts`'s `postedLabel` fixture is TZ-sensitive —
+                  an environment artifact, not a regression, not this turn's to
+                  fix): cold 98 files / 2199 tests, 2199 passing, 1 skipped.
+                  At close: 2207 tests, 2207 passing, same 1 skipped. `tsc
+                  --noEmit` clean throughout. `eslint src`: the same one
+                  standing `quiz.tsx:46` error, 0 warnings, unchanged.
+
+                  **`npm ci` NEEDED A LOCAL WORKAROUND, NOT COMMITTED:** the
+                  tracked `package-lock.json` has several `resolved:` entries
+                  pointing at `registry.npmmirror.com`, unreachable through
+                  this sandbox's egress policy (403). Installed against a
+                  temporary copy with those URLs rewritten to
+                  `registry.npmjs.org`, then restored the tracked lockfile
+                  byte-identical before any commit (`git status --short
+                  package-lock.json` confirmed clean each time). Worth a look
+                  by whichever session generated the mirror URLs — if it
+                  recurs, `web/package-lock.json` may need regenerating
+                  against the standard registry.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER verification of Agent C`,
+                  then A for round 29's measurement pass.** C does not verify
+                  its own turn (HANDOFF-ABC.md §4's core discipline). A's
+                  real-search pass needs live credentials this sandbox does
+                  not have (§0c) — the laptop session or `chatgpt-local`
+                  should pick up both steps. **The gate stays `GATE (0%): NOT
+                  MET`** (only A sets `MET`, only the user-driven manager
+                  verification closes it — Ruling 30).
+
+                  **ONE OPEN ITEM, NOT C's TO DECIDE, CARRIED FROM ITEM 0'S
+                  OWN HAND-OFF:** whether to raise `feed/pipeline.ts`'s
+                  hard-coded 8000 ms paper-surface web-search timeout to match
+                  the two opportunity call sites' approved 25000 ms (Ruling
+                  76a covered only the two, not this one).
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 16:55 UTC — ROUND 28 B IS
                   COMPLETE. ALL FOUR ITEMS DONE, NONE UNSTARTED, ONE COMMIT
                   EACH, EACH PUSHED THE MOMENT IT WAS MADE** (`b9c9216`,
@@ -78221,3 +78284,25 @@ refused **by the posting id alone**.
 **Test corpus, run against `isListingPage` directly (not sampled — the full lists B named):** 12 catches (the shape-one rows minus the already-caught `Funding & Jobs`, which needs no new assertion here), 6 named misses (shape two's 4 + the 2 singletons — `Funding & Jobs` is the corpus's 7th name-missed-by-this-rule-alone row per B's count, but it is already caught by pre-existing code and is not re-tested here), and all 37 of Corpus B (19 must-keeps + 18 traps), asserted false. All green on first correct run (after the two corrections above).
 
 **HAND-OFF: `WHOSE TURN: C — round 28` continues. Item 1 banked; items 2–3 (V28-01 label-step residue + V28-02 locked-block colour, both landing on `report-section.tsx`/`tier-upgrade-block.tsx`) remain, in B's banking order.**
+
+---
+
+### Round 28 — Agent C (cloud-hourly) — ITEMS 2 + 3 (V28-01 + V28-02): the label-step residue and the locked-block colour, LANDED TOGETHER
+
+**C changed no test's assertion direction; no test deleted or loosened.** No network calls, no banned API. Taken together on `tier-upgrade-block.tsx:22`, exactly as B's item-3 write-up asked ("C should take items 2 and 3 together on this line rather than editing it twice").
+
+**WHAT LANDED, per B's design exactly.** `components/reports/report-section.tsx`: split `REPORT_LABEL_CLASS` into `REPORT_LABEL_STEP` (size/weight/case/tracking) + the unchanged `REPORT_LABEL_CLASS` (`${REPORT_LABEL_STEP} text-text-faint`) — value byte-identical to what shipped, so none of the 27 existing call sites move. Seven call sites updated: `tier-upgrade-block.tsx:22` → `` `${REPORT_LABEL_STEP} text-accent` `` (items 2+3 on one line — the step AND the colour); `events/[id]/page.tsx`'s "Cheapest way in, for you" → same `text-accent` form (site 2); the fee table's four `<th>` → `REPORT_LABEL_CLASS` (site 3); `RosterTail`'s heading (site 4, one component, two render sites — "Every other organisation attending" / "Every other speaker") → `REPORT_LABEL_CLASS`; `jobs/[id]/page.tsx`'s "Posting evidence" → `` `${REPORT_LABEL_STEP} text-accent` `` and "Peer inference — verify with the employer" → `REPORT_LABEL_CLASS`; `timeline-track.tsx:196` → the `cn()` trap itself, repaired by replacing `cn("block", REPORT_LABEL_CLASS)` with a template literal per the constant's own doc-comment instruction, never by patching inside `cn`.
+
+**Boundary respected exactly as B drew it:** the badge (`report-badge.tsx`) untouched — different typeface entirely on the plate (`Consolas 8.25`, not `SegoeUI-Semibold`); the roster search `<input>` untouched (no `uppercase`, no tracking, not a label); no size token's MEANING changed, only which call sites use which token.
+
+**ONE SELF-CAUGHT ERROR.** The widened element sweep (below) initially asserted `not.toContain("text-micro")`/`tracking-[0.14em]` across *every* uppercase-tracked element in both reports, and it went red on `report-badge.tsx`'s own `text-micro`/`tracking-[0.14em]` — correct shipped behaviour, wrongly swept in. Narrowed the sweep to exclude `data-report-badge` elements by name, with a comment citing V28-01's own stated boundary, rather than loosening the assertion generally.
+
+**TESTS — `components/reports/plate-type-system.test.ts`.** The existing `V26-J10` sweep (`<h2>`-only, the mechanical reason six labels on four other element kinds could drift while it reported closed) is now a SEPARATE, additional assertion sweeping every element carrying `uppercase` + `tracking-[…]` (badge excluded, named above) — the old `<h2>`-only test is kept unchanged beside it rather than replaced, so neither loses coverage. New `describe` blocks for V28-01 (5 tests: the tier-upgrade label, the event callout, the fee-table headers, both roster-tail headings, the sponsorship-read pair with its split colour) and V28-02 (2 tests: `text-accent` not `text-text-faint`; no `5b4bbf` anywhere in either rendered report) — all render the SHIPPED components via `renderJob`/`renderEvent`/a new `renderJobWithEnrichment`, not a markup fixture, per this file's own stated discipline. Fee/roster/enrichment fixture shapes (`fees`, `organisations`, `people`, `JobEnrichment.sponsorshipRead`) were confirmed against `types/index.ts` and `enrichment.ts` before use, not guessed.
+
+**THE GATE, COLD AND AT CLOSE (`TZ=America/Chicago`).** Cold (start of items 2+3, i.e. after item 1's close): 98 files / 2199 tests, 2199 passing, 1 skipped. At close: 2207 tests, 2207 passing, same 1 skipped (`benchmark.test.ts`'s live pass — no local profile in this sandbox). `tsc --noEmit` clean. `eslint src`: the same one standing `quiz.tsx:46` error, 0 warnings — unchanged throughout.
+
+**HAND-OFF: ROUND 28 C IS COMPLETE.** All four of B's items are now banked (item 0 by the laptop session, items 1–3 by this cloud run). Nothing of B's banking order remains. **C does not verify its own turn** — that would be the exact "measures and fixes together" failure HANDOFF-ABC.md §4 names. Per this file's own established pattern (every prior role's close is followed by a separate "MANAGER verification of Agent X" entry before the next role starts), **`WHOSE TURN: MANAGER verification of Agent C`, then the hand-off to A for round 29's measurement pass.** A's real-search pass needs live credentials this sandbox does not have (§0c) — the laptop session or `chatgpt-local` should pick up both the manager-verification step and A's turn.
+
+**ONE OPEN ITEM CARRIED FORWARD, UNCHANGED FROM ITEM 0's HAND-OFF, NOT DECIDED BY C:** whether to raise `feed/pipeline.ts`'s hard-coded 8000 ms paper-surface web-search timeout to match the two opportunity call sites' 25000 ms (Ruling 76a approved only the two, not this one) — still open for the manager.
+
+**A DISCLOSURE FROM item 1, RESTATED SO IT IS NOT MISSED IN A DIFFERENT AGENT'S READ:** the A28-01 corpus row `careers.emdgroup.com`'s recorded title (`"Students And Graduates I EMD Group"`) is transcribed with a plain capital `I`, not the `|` the title-head design relies on splitting at (verified byte-for-byte with `od -c`, §4 item 1 above). C used a corrected fixture with a literal pipe rather than guess at the real live string. **Whichever agent next has live search credentials should refetch this specific page's title and confirm which is the transcription artifact** — this is not a code defect, only an unresolved fact about a plate/log transcription.
