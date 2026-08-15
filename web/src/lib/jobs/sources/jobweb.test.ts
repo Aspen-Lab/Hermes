@@ -2522,12 +2522,33 @@ describe("A23-01(c) — bounded employer-candidate rejections", () => {
     )?.company;
 
   // CLAUSE 1 — the truncated provider string.
+  //
+  // Round 28 item 1 (B28-01): the middle row was
+  // `"Jobs and Internships - Youth & Young Adult Programs ..."` — its own
+  // head, "Jobs and Internships", is now a conjoined-section-label match, so
+  // `webResultToRawJobItem` returns `null` before clause 1 is ever reached
+  // and `employerOf` reads `undefined` off a null item, not off a real one
+  // whose candidate was rejected. Swapped to a role-shaped head so the row
+  // still reaches clause 1's own code and the assertion stays non-vacuous;
+  // the trailing truncated segment is untouched.
   it.each([
     "Graduate Intern – Focused Ion Beam, Electron Microscopy ...",
-    "Jobs and Internships - Youth & Young Adult Programs ...",
+    "Battery Research Intern - Youth & Young Adult Programs ...",
     "Graduate Intern – Focused Ion Beam, Electron Microscopy …",
   ])("renders silence for the truncated candidate in `%s`", (title) => {
     expect(employerOf(title)).toBeUndefined();
+  });
+
+  it("is not itself a listing page, so clause 1 is the reason the employer is silent", () => {
+    // The uniquely-red half of the repair above: without this, a future
+    // change that dropped clause 1 entirely would still pass the `it.each`
+    // above if the row were dropped upstream by `isListingPage` instead.
+    const item = webResultToRawJobItem({
+      title: "Battery Research Intern - Youth & Young Adult Programs ...",
+      url: "https://careers.acme.test/job/44231",
+      snippet: "We are hiring a research scientist. Apply now.",
+    });
+    expect(item).not.toBeNull();
   });
 
   it("is END-anchored — a mid-string ellipsis is a different shape", () => {
@@ -2643,6 +2664,112 @@ describe("A23-01(c) — bounded employer-candidate rejections", () => {
       .toBe("Oregon Center for Electrochemistry");
     expect(employerOf("Graduate Intern – Focused Ion Beam, Electron Microscopy ..."))
       .toBeUndefined();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────
+// B28-01 / A28-01 (round 28, item 1; Ruling 76b). THE CONJOINED SECTION
+// LABEL. See the doc comment above `isConjoinedSectionLabelTitle` in
+// jobweb.ts for the full design. This block is the vacuity check named
+// there: false on all 37 must-keeps/traps below, false on the 6 named
+// misses, true on the 12 catches it is built for.
+// ───────────────────────────────────────────────────────────────────────
+describe("B28-01 — the conjoined section label", () => {
+  const HOST = "example.test";
+  const PATH = "/careers/role";
+
+  it.each([
+    "Internships & Co-ops",
+    "Internships & Co-ops Jobs",
+    "Internships & Co-ops Job Opportunities",
+    "Internships and co-ops",
+    "Battelle Internships and Co-ops",
+    "Internships & Fellowships",
+    "Internships & Research Opportunities",
+    "Jobs and Internships",
+    "Research Careers & Internships",
+    "Students and Graduates",
+    // A28-01's own `careers.emdgroup.com` row, corrected: §4 round 28 A/B's
+    // transcription reads "Students And Graduates I EMD Group" (a plain
+    // capital I, not a pipe) — no live credentials in this run to refetch
+    // the real page title, so this fixture uses the separator the design
+    // itself names (` | `) rather than guessing at an unverified live
+    // string. Flagged here rather than silently matched either way.
+    "Students And Graduates | EMD Group",
+    "Internships & Entry Level Jobs",
+  ])("catches `%s`", (title) => {
+    expect(isListingPage(title, HOST, PATH)).toBe(true);
+  });
+
+  // Shape two (modifier + bare programme) is REFUSED on Ruling 49a's own
+  // measurement — a rule reaching these would also destroy
+  // `M.S. Internship Program`, asserted as a must-keep below. Named misses,
+  // not designed for.
+  it.each([
+    "Summer Internship Program",
+    "Summer Internship Program (SIP)",
+    "Science Undergraduate Laboratory Internships (SULI)",
+    "Undergraduate & Graduate Intern Programs",
+    // Two singletons: neither shape, no vocabulary addition for a one-row
+    // miss (Ruling 32's headline).
+    "Talent Network",
+    "2027 AI College Jobs",
+  ])("misses `%s` — named, not designed for", (title) => {
+    expect(isListingPage(title, HOST, PATH)).toBe(false);
+  });
+
+  // Corpus B: this file's own recorded must-keeps (19), plus 18 traps B
+  // wrote to break its own rule — end-anchored, so every trap carries a
+  // real role noun after the conjoined labels.
+  it.each([
+    // must-keeps
+    "M.S. Internship Program – Oregon Center for Electrochemistry",
+    "M.S. Internship Program",
+    "Internship Program: Battery Characterization Track",
+    "Internship",
+    "Acme Fellowship Program",
+    "Research positions at CERN",
+    "Head of Careers",
+    "Head of Careers - Imperial College London",
+    "Manager of Vacancies",
+    "Head of Internships",
+    "Jobs for Veterans Program Manager",
+    "Job for a Battery Engineer",
+    "Career for Life Coordinator",
+    "Jobs Data Analyst at the Bureau of Labor Statistics",
+    "Idaho National Laboratory Careers",
+    // `Tesla Careers` / `Kairos Power Careers` are deliberately NOT asserted
+    // here as bare `isListingPage` titles: measured, they already return
+    // `true` via the pre-existing `isOwnerSectionIndexTitle` (B17-01a, an
+    // owner token in front of a bare section word) — unrelated to this
+    // item, which never sees a conjunction in either string. Their
+    // must-keep status is about the EMPLOYER SEGMENT inside a longer title
+    // (`Battery Research Scientist - Tesla Careers`), asserted above at
+    // "9. THE EMPLOYER-SLOT NON-INTERFERENCE". Neither string contains `&`
+    // or `and`, so B28-01's own rule cannot reach either one either way.
+    "Battery Research Scientist",
+    "Nuclear Materials and Molten Salt Technologist 1",
+    // traps
+    "Internships and Co-ops Coordinator",
+    "Internships & Co-ops Program Manager",
+    "Head of Internships and Careers",
+    "Director of Careers and Opportunities",
+    "Jobs and Internships Manager",
+    "Students and Graduates Programme Lead",
+    "Research Careers & Internships Officer",
+    "Graduate Research Assistant",
+    "Undergraduate Research Assistant",
+    "Student Worker - Battery Lab",
+    "Research & Development Engineer",
+    "Sales & Marketing Manager",
+    "Careers and Employability Adviser",
+    "Vacancies and Recruitment Officer",
+    "Postdoctoral Research Associate (PDRA)",
+    "Research Scientist (Batteries)",
+    "Summer Research Intern - Photovoltaics",
+    "Graduate Engineer - Molten Salt",
+  ])("keeps `%s` — a real role title, not a section label", (title) => {
+    expect(isListingPage(title, HOST, PATH)).toBe(false);
   });
 });
 

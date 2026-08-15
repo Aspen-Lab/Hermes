@@ -704,6 +704,80 @@ function isHostBrandProgrammePage(title: string, host: string): boolean {
 }
 
 /**
+ * B28-01 (round 28, item 1; Ruling 76b): A28-01's CONJOINED SECTION LABEL.
+ * A whole title that is nothing but careers-section or audience nouns joined
+ * by `&`/`and` — `Internships & Co-ops`, `Battelle Internships and Co-ops`,
+ * `Students and Graduates` — is the same class B16-01/B17-01 already close,
+ * arriving in a shape none of the five existing title-side checks reads:
+ * `CAREERS_INDEX_TITLE_RE` is a bare SINGLE section word, so a second noun
+ * joined by a conjunction escapes it; `isOwnerSectionIndexTitle` allows one
+ * trailing section noun, not two joined by a conjunction; and
+ * `isHostBrandProgrammePage` requires the site's OWN brand in front, which a
+ * bare `Summer Internship Program` does not carry. This is designed INSIDE
+ * round 16's frame (B16-01/Ruling 47b): a TITLE rule, no URL clause and no
+ * host list (destination legitimacy is not the criterion — these are real
+ * places a real person can apply, dropped because the title itself names no
+ * role); the section nouns stay PLURAL; and it is its OWN constant with ONE
+ * call site inside `isListingPage`, never folded into `CAREERS_INDEX_TITLE_RE`
+ * — that regex has a second call site, the employer-candidate veto chain
+ * (B13-01 Gap A), where widening it would turn `Tesla Careers` and
+ * `Kairos Power Careers` into silence.
+ *
+ * SHAPE TWO — a modifier directly in front of a bare `Internship Program`
+ * (`Summer Internship Program`, `Science Undergraduate Laboratory
+ * Internships (SULI)`) — is MEASURED AND REFUSED, on Ruling 49a's own
+ * evidence: a rule of the form `^<modifier> Internship Program$` DESTROYS
+ * `M.S. Internship Program`, the segment round 11 A fetched and scored
+ * CORRECT for the Oregon Center for Electrochemistry posting. Recorded as a
+ * named accepted miss, not designed for.
+ *
+ * THE `of`-TRAP NARROWING, carried forward from B17-01/49a: an owner or
+ * modifier token BEFORE either noun may not be a function word
+ * (`of|for|and|or|to|with|in|on|at|the|a|an`) — `INDEX_OWNER_FUNCTION_WORD_RE`
+ * above is that same closed class, reused rather than redefined. Without it,
+ * `Head of Careers` and `Director of Careers and Opportunities` would fire;
+ * with it, neither can, because `of` can be neither a modifier nor a noun and
+ * nothing else in the title is section vocabulary.
+ *
+ * THE TITLE HEAD, NOT THE RAW STRING. Applied to the segment before the
+ * title's first ` | `, ` - ` or `: ` separator — the same head the card
+ * itself renders once the raw title is split (`webResultToRawJobItem`'s own
+ * `roleTitle`, below). A trailing `- Youth & Young Adult Programs ...` on an
+ * otherwise ordinary role title must not make the WHOLE title read as a
+ * section label.
+ *
+ * `positions` IS DELIBERATELY ABSENT from the noun list, the third time in
+ * this file and for the same reason: `Research positions at CERN` is a
+ * shipped must-keep.
+ *
+ * FAILURE DIRECTION: the rule can only REMOVE a card. A programme page
+ * outside this grammar survives exactly as it does today — no admission
+ * changes, ever, on this clause.
+ */
+const CONJOINED_SECTION_NOUN_RE =
+  "(?:internships|jobs|careers|vacancies|opportunities|openings|fellowships|co-ops|students|graduates|undergraduates)";
+const CONJOINED_SECTION_TRAILING_RE = "(?:programs|programmes)";
+const CONJOINED_SECTION_MODIFIER_RE =
+  "(?!(?:of|for|and|or|to|with|in|on|at|the|a|an)\\b)[\\w&.'’-]+";
+const CONJOINED_SECTION_LABEL_RE = new RegExp(
+  "^\\s*" +
+    `(?:${CONJOINED_SECTION_MODIFIER_RE}\\s+){0,2}${CONJOINED_SECTION_NOUN_RE}` +
+    "\\s+(?:&|and)\\s+" +
+    `(?:${CONJOINED_SECTION_MODIFIER_RE}\\s+){0,2}${CONJOINED_SECTION_NOUN_RE}` +
+    `(?:\\s+(?:${CONJOINED_SECTION_MODIFIER_RE}\\s+){0,2}(?:${CONJOINED_SECTION_NOUN_RE}|${CONJOINED_SECTION_TRAILING_RE}))?` +
+    "\\s*$",
+  "i",
+);
+/** The segment before the title's first ` | `, ` - ` or `: ` separator. */
+function conjoinedSectionLabelHead(title: string): string {
+  const idx = title.search(/\s\|\s|\s-\s|:\s/);
+  return (idx === -1 ? title : title.slice(0, idx)).trim();
+}
+function isConjoinedSectionLabelTitle(title: string): boolean {
+  return CONJOINED_SECTION_LABEL_RE.test(conjoinedSectionLabelHead(title));
+}
+
+/**
  * ROUND 21, ITEM 2 (A21-02): A LINK A READER CANNOT FOLLOW.
  *
  * `jobs.manchester.ac.uk/Job/GetJobAdvertDocument?Id=` shipped as a card with a
@@ -1223,6 +1297,7 @@ export function isListingPage(
   if (LISTING_SECTION_TITLE_RE.test(title)) return true;
   if (isOwnerSectionIndexTitle(title)) return true; // B17-01a
   if (isHostBrandProgrammePage(title, host)) return true; // B17-01b
+  if (isConjoinedSectionLabelTitle(title)) return true; // B28-01 / A28-01
 
   const isAggregator = AGGREGATOR_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
