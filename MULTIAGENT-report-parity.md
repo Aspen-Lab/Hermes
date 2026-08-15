@@ -67026,3 +67026,173 @@ lived outside `src/` and was deleted before every commit, verified with
 **THE HAND-OFF:** `WHOSE TURN: B — round 26` stands as A wrote it. **B's work list, in the manager's order:** (1) **A26-02 re-scored under 71b**, then priced only for surviving rows; (2) **A26-01** (why `ev.careers` keeps the ` at Tesla` clause its three sibling hosts strip — one mechanism or two, then the fix direction); (3) **THE VISUAL LIST — 18 items, B prices and designs in A's ranking**: the serif adoption first (V26-J02/E02 — the largest finding and plausibly the cheapest; the family is loaded and tokenised, the reports never opt in), then plate 03's heading hierarchy, the timeline track pair, the fact-tile band pair, the missing `WHAT THE ROLE IS` section, and the remainder — each with plate citation, component location, fix direction with boundary conditions, tests at risk; **group cross-surface pairs as single mechanisms where execution shows they are**; (4) **the 68b raw-reader pricing** (ledger write, facetCounts ×2, server filter, `facets.ts:338` divergence — measured matrices). **Ruling 70's `64c` assertion fix stays item zero of round 26 C.** Budget-low: bank per item in this order; the visual designs are the round's bulk. The gate stays `GATE (0%): NOT MET`.
 
 ---
+
+### Round 26 — Agent B (item 1 of 4: **A26-02 RE-SCORED UNDER RULING 71b BY EXECUTION. ZERO OF SIX SURVIVE — ALL SIX FAIL 71b(c) ON THEIR OWN PROVIDER-EVIDENCED DATES, AND THE REFUSING MECHANISM IS PROVEN TO BE THE EXPIRY CHECK BY REWINDING `now`. A26-02 CLOSES AS A STANDARD CLARIFICATION AND THE 48b WRONGLY-DROPPED COLUMN RESTATES TO ZERO. NO FIX IS PRICED. One new observation is filed instead: a FINISHED event is INGESTION-KEPT, dateless, because the A22-01 ambiguity guard voided its date.**)
+
+**STATUS: item 1 of 4, banked on its own commit.** B changed no code. Throwaway
+harness lived at `web/zz-r26b/` (own vitest config rooted at `web/`,
+`*.probe.ts` include pattern), **deleted before this commit**; no untracked
+`*.test.ts` was ever created under `web/src/`. **No credential printed, logged,
+committed or written anywhere** — `.env.local` was NEVER `cat`-ed (a boolean
+presence check reported all six of its keys ABSENT); `profile.json` was read for
+BOOLEAN key presence plus its NON-SECRET query fields only, and every secret was
+redacted at the point of reading.
+
+---
+
+## THE INSTRUMENT — A LIVE RE-CAPTURE, NOT A RE-READING OF A's TABLE
+
+71b demands the six rows be re-scored **by execution**, and A's part-2 table
+records each row's provider TITLE verbatim but PARAPHRASES its snippet. A
+paraphrase cannot be fed to a predicate, so B re-captured the corpus rather than
+scoring A's prose.
+
+- Queries built by the **shipped** `templateEventQueries` on the **real
+  profile's** own fields, sliced to the shipped `EVENT_QUERY_BUDGET` (**16**) at
+  the shipped `RESULTS_PER_SEARCH` (**10**) — Ruling 69's no-LLM path, so the
+  query set is deterministic and reproducible.
+- **Snippets stored UNTRUNCATED.** A's own disclosed 400-char clipping defect is
+  not repeated: `snipLen` is printed per row and every named row's snippet is
+  **906–1333 chars**, i.e. every one of them would have been clipped by the
+  first-window instrument A withdrew.
+- **Two independent pulls, ~1 minute apart in wall clock, each a fresh set of 16
+  live searches.** Union **150** rows (A: 149) / **54 ingestion-kept** / **96
+  dropped**. **Every verdict below is byte-identical across both pulls.**
+- Scoring is the **shipped** `webResultToRawEventItem` on the provider's
+  untouched strings. Nothing in `web/src/` was edited.
+
+---
+
+## THE FOUR 71b LIMBS, ROW BY ROW. **(c) IS DECISIVE AND ALL SIX FAIL IT.**
+
+Measurement instant: **`2026-08-15T07:14:34Z`** (printed by the probe, not
+assumed).
+
+| # | url | date the PROVIDER's own strings evidence | past at measurement? | (a) single attendable page | (b) on-topic | **(c) TODAY-OR-FUTURE** | (d) mechanism, not competition | **71b verdict** |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `cambridgeenertech.com/solid-state-batteries` | **`August 11-12, 2026`**, in its own title; extracted `2026-08-11` | **yes, by 4 days** | yes | yes | **FAIL** | expiry (proven below) | **CORRECT DROP** |
+| 2 | `pyro.byu.edu/moses` | abstract deadline **`May 22, 2026`** AND the schedule's own **`Day 1 - July 21`** → extracted deadline `2026-05-22`, day candidate `2026-07-21` | **yes, both** | yes | yes | **FAIL** | expiry on the deadline anchor | **CORRECT DROP** |
+| 3 | `rsc.org/events/find-an-event/euchemsil-2026` | **`26–31 July 2026`** in the snippet's own `Date` block; extracted `2026-07-26` | **yes** | yes | yes | **FAIL** | expiry | **CORRECT DROP** |
+| 4 | `ans.org/meetings/student2026/calendar/event-1993` | **`Thursday, April 16, 2026 | 5:00AM–5:00PM CDT`**; extracted `2026-04-16` | **yes** | yes | yes | **FAIL** | **NOT DROPPED AT ALL this window — see the observation below** | **NOT A WRONG DROP** |
+| 5 | `nac.naatbatt.org` | **`from February 9–12, 2026`**; extracted `2026-02-09` | **yes** | homepage-as-event | yes | **FAIL** | expiry | **CORRECT DROP** |
+| 6 | `imlb.org` | **`Jun 14- 19, 2026`** / `from June 14 to 19, 2026`; extracted `2026-06-14` | **yes** | homepage-as-event | yes | **FAIL** | expiry | **CORRECT DROP** |
+| + | `sae.org/events/battery-electrification-summit` (A recorded it, deliberately did NOT count it) | **`April 7-8, 2026 | Online`** | **yes** | — | — | **FAIL** | expiry | **CORRECT DROP** — A's decision not to count it is vindicated on a second, independent ground |
+
+**A's ROW-1 EXPECTATION IN 71b IS CONFIRMED EXACTLY AS THE MANAGER PREDICTED**,
+and B adds that **the same fate applies to all five siblings** — which the
+ruling did not predict.
+
+**LIMB (a) AND LIMB (b) ARE SATISFIED BY EVERY ROW. THAT IS SAID AFFIRMATIVELY,
+NOT SKIPPED**: A's characterisation of these six as real, named, on-topic single
+event pages is CORRECT, and none of them is an index, hub, article or listing.
+**A's judgement of the rows was sound; only the standard was wrong.** The
+counter-falsifier A named (a ruling that conference *homepages* are out of
+scope, which would retire rows 5 and 6) is **MOOT** — those two rows fail (c)
+anyway, so no homepage ruling is needed and the manager should not spend one.
+
+---
+
+## LIMB (d), PROVEN RATHER THAN ASSERTED: **REWIND `now` AND ALL SIX COME BACK**
+
+A dropped row could in principle be refused by any of the nine refusal points in
+`webResultToRawEventItem` (`web/src/lib/events/sources/eventweb.ts:1656`).
+Naming "expiry" from a code read would be a guess. **B isolated the line by
+changing ONE input and nothing else:** the identical captured rows were
+re-scored with `now = 2026-01-05T00:00:00Z`.
+
+| url | at real `now` (2026-08-15) | at `now = 2026-01-05` |
+|---|---|---|
+| `cambridgeenertech.com/solid-state-batteries` | `null` | **KEPT**, `startDate` `2026-08-11T12:00:00.000Z`, name `Solid-State Battery Summit` |
+| `pyro.byu.edu/moses` | `null` | **KEPT**, name `Molten Salt Electrochemistry Symposium (MoSES)` |
+| `rsc.org/…/euchemsil-2026` | `null` | **KEPT**, `startDate` `2026-07-26T12:00:00.000Z`, name `EUCHEMSIL 2026` |
+| `nac.naatbatt.org` | `null` | **KEPT**, `startDate` `2026-02-09T12:00:00.000Z`, name `NAATBatt Annual Conference 2026` |
+| `imlb.org` | `null` | **KEPT**, `startDate` `2026-06-14T12:00:00.000Z` |
+| `sae.org/…/battery-electrification-summit` | `null` | **KEPT**, `startDate` `2026-04-07T12:00:00.000Z` |
+
+**Every refusal inverts on the clock alone.** The refusing line is therefore
+`eventweb.ts:1741` — `if (anchor.length > 0 && Math.max(...anchor) < now) return null;`
+— and nothing else: not `isDeniedUrl`, not `isEventIndexResult`, not
+`looksLikeEvent`, none of which reads the clock. **This is an ingestion
+MECHANISM (limb d is satisfied) and it is the expiry design working exactly as
+71b(c) says a lawful drop looks.**
+
+**One row-level nuance, stated rather than smoothed over.** Row 2
+(`pyro.byu.edu/moses`) is refused on its **DEADLINE** anchor, not its event-day
+anchor: `extractEventDate` and `extractDeadline` both return `2026-05-22`, so
+A22-02's rule voids the start date and the deadline alone anchors expiry. Its
+evidenced **event** day, `Day 1 - July 21`, is **also** past, so (c) fails on
+either reading and the verdict does not depend on which anchor one prefers.
+
+---
+
+## **VERDICT — A26-02 CLOSES. THE COLUMN RESTATES TO ZERO. NO FIX IS PRICED.**
+
+**Ruling 48b for round 26 should read `events 149 / 99 dropped / 0 WRONGLY
+DROPPED`**, i.e. **the loop's unbroken zero is NOT broken after all** and round
+25 A's zero was not merely correct-under-the-old-reading but correct under 71b
+too. **A's disclosure was the right call and cost nothing**: A said plainly that
+round 25 scored the same corpus at zero, said it had no evidence the build had
+changed, and filed the standard as `POLICY` rather than banking a regression —
+and the ruling that disclosure triggered is what resolved it. **No regression
+exists, no fix is designed, and B recommends the column be restated rather than
+left non-zero.**
+
+**What A26-02 actually was, in one line:** the six rows are genuine, on-topic,
+single event pages whose events had **already happened**, and Peer refusing a
+finished event is the product working.
+
+---
+
+## **B26-OBS-01 — THE MIRROR DEFECT, FOUND WHILE EXECUTING LIMB (d). FILED AS AN OBSERVATION FOR A TO RANK, NOT AS A DIFFERENCE B RANKS.**
+
+Row 4 did not drop this window. **It is INGESTION-KEPT with `startDate: ""` —
+a FINISHED event (April 16 2026) admitted to the corpus as an undated one.** The
+mechanism, traced:
+
+1. This window the provider's title is the **breadcrumb**
+   `Tours -- ANS / Conferences / ANS Student Conference 2026 (Sold out) / Tours`,
+   not the page heading.
+2. The snippet carries **two** day candidates — the tour's own `2026-04-16` and
+   `2026-08-24`, the latter from the page's unrelated `Conference Spotlight`
+   chrome (`2026 Nuclear Energy Conference & Expo`, `August 24–27, 2026`). Two
+   clusters ⇒ A22-01's ambiguity guard fires and demands the title's own span.
+3. `ownedTitleSpan` cannot find that breadcrumb standing as a line in the
+   snippet, so `extractedDate` is `undefined`, `startDate` is `undefined`, and
+   **`anchor` is EMPTY**.
+4. With an empty anchor the expiry check at `:1741` is skipped, and the
+   all-years-past net at `:1750` cannot fire either — **every year token in the
+   text is `2026`, the current year.** The row is kept.
+
+**PROVEN BY EXECUTION, one input changed:** feeding the SAME captured snippet
+with **A's recorded title** `Molten Salt Research Reactor Tour` returns
+**`null` (dropped)**; the breadcrumb title returns **KEPT, `startDate: ""`**.
+
+**THIS ALSO SETTLES WHETHER A's INSTRUMENT WAS DEFECTIVE — IT WAS NOT.** A
+recorded this row's title as `Molten Salt Research Reactor Tour` and B's two
+windows both return the breadcrumb. **The provider's title moved between
+windows; both readings are honest reports of different provider strings**, and
+the row's verdict is title-dependent. **B raises no doubt about A's part-2
+figures on this basis.**
+
+**Why this is an observation and not a ranked difference:** B does not rank —
+that is A's role — and the row would still have to clear scoring and top-N to
+reach a report, which B did not measure. **What B asserts is bounded and
+falsifiable:** at INGESTION, on a live captured corpus, twice, a page whose own
+snippet evidences a past date is admitted with an empty date. **Falsifier:** a
+future window in which this url returns `null` at ingestion while the provider's
+title is still the breadcrumb form. **Named risk if a later round designs a fix
+here:** the ambiguity guard is a RECORDED design (A22-01 / Ruling 59a draft 3,
+whose own measured matrix was 44 unchanged / 4 dates lost / 2 moved / 0
+invented) and B is flagging it, **not** reversing it.
+
+**Adjacent measurement, offered because 71b explicitly de-fangs it:** of the
+**54** ingestion-kept rows this window, **41 (75.9%) carry no `startDate` at
+all.** 71b says dateless pool rows are governed by the dateless-branch design
+and **do not** convert a past-dated drop into a wrong one, so **B does not use
+this number to argue A26-02 and it changes nothing above.** It is recorded only
+because B26-OBS-01 shows the dateless population has at least one member that is
+dateless for the wrong reason.
+
+---
+
+**ITEM 1 COMPLETE. Item 2 (A26-01) follows on its own commit.**
