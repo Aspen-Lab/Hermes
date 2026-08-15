@@ -75464,3 +75464,19 @@ be SILENT on most postings, because `employmentUnit` is rarely populated in the
 wild and no hit rate has been measured.**
 
 ---
+
+---
+
+### Round 27 — MANAGER verification of Agent C and the ROUND-27 CLOSE
+
+**Date: 2026-08-15. Every check re-executed by the manager, not inherited.**
+
+**THE GATE, INDEPENDENTLY RE-RUN: 97 files / 2066 tests, 2066 passing — zero failures** (+61 over 2005, zero deletions, zero loosenings, one comment restated). `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error; **`enrich.test.ts` SOLO: 56/56.**
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (item 4):** `eventweb.ts` restored to its pre-`9d1a573` source with shipped tests kept → **1 red / 196 passed** (the within-year clause's uniquely-red test); restored → 197/197 green, tree clean.
+
+**THE TURN IS ACCEPTED**: the capture-and-replay pool re-measurement is the round's proof-of-work — **all six of B's named event rows offered and all six leave; a SEVENTH row checked clause-by-clause and found to be the same class, not an unspanned shape; the LANL vacancy joins and 48b's job column measures back to zero; and B's flagged discrepancy settles in A's favour** (`behavioralpolicy.org` admitted before, dropped after — A's record was right, B's single-token reconstruction incomplete). C corrected B's arithmetic (the token cap is SEVEN, found by C's own test going red), disclosed five self-caught vacuous assertions including one of B's OWN designed tests (the byte-identity test not uniquely red at the event call site — rebuilt), and item 1's unwitnessed live half is recorded as an absence with the mutation as its proof, exactly per the evidence rules.
+
+**ROUND 27 IS CLOSED.** A (four value + two visual + the red-with-meaning lock) → manager (Ruling 73) → B (seven designs; the churn-green identified; three A errors corrected) → manager (Ruling 74) → C (seven items, +61 tests, one arithmetic correction to B, the replay). **Nothing carries undecided.** `WHOSE TURN: A — round 28, GATE CANDIDATE ROUND (value + visual)` stands as C wrote it, with Ruling 74's headcount named cost in the accepted-cost tally and the two named residuals carried by name. **The gate stays `GATE (0%): NOT MET` — and round 28 is the first round where both dimensions have a live path to zero. Only the manager closes, after independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
