@@ -61631,3 +61631,84 @@ The brief asked for a re-measurement because a new drop changes composition. **A
 **ITEM 2 STOPS HERE.** Item 3 (the 63b restatement + 64c) follows, one commit, pushed immediately.
 
 ---
+
+### Round 24 — Agent C (item 3 of 3: **RULING 63b's RESTATEMENT + RULING 64c, one test file, ZERO source files. BOTH commissioned assertions now PASS and both are proven falsifiable by mutation on the live pool. THE FILE IS STILL RED — at a THIRD assertion of the identical class that 64c did not scope, which C did NOT touch, PROVED pre-existing by reverting items 1 and 2, and files as POLICY.**)
+
+**Date: 2026-08-15. Every clause below was EXECUTED against the live pool, and every claim of falsifiability was proven by MUTATION rather than asserted.** **No credential printed, logged, committed or written anywhere; presence checked as a boolean only, by the `hasLiveKey` guard that already exists.**
+
+---
+
+## WHAT SHIPPED — `web/src/lib/events/benchmark.test.ts`, and nothing else
+
+**Zero source files. Zero shipped behaviour. No threshold moved.** The file stays `describe.skipIf(!hasLiveKey)` and stays **EXCLUDED FROM THE GATE**, exactly as before.
+
+### (a) The coverage floor → **the named-row value lock** (63b)
+
+`expect(cityCoverage).toBeGreaterThanOrEqual(0.5)` is **RESTATED, NOT DELETED**. The ratio is still computed and still `console.info`-ed as an observability metric; it is simply no longer asserted, and **the absence of any lower bound on `withCity` is COMMENTED rather than merely left out. A pool with ZERO cities is a PASS.**
+
+Two adjudicated lists now sit at module scope with their provenance:
+
+- **`CONTAMINATION_HOSTS`** — 62a's four named rows (`flogen.org`, `storageusa.solarenergyevents.com`, `nanoge.org`, `sdle.co.il`) must render **NO city**. Silence is asserted as a VALUE, not tolerated as an absence.
+- **`VENUE_ANCHORED_CITY`** — each host must render **its own** city: `battery-power.eu` → `Aachen`, `ibatterysummit.com` → `Jakarta`, `thebatteryshow.com` → `Detroit`, `thebatteryshowsouth.com` → `Atlanta`, `internationalbatteryseminar.com` → `Orlando`, `advancedautobat.com` → `San Diego`. **This wires up 62a's OWN FALSIFIER — "any correct, current venue lost" — which no assertion in this file covered at all.**
+
+**SIX HOSTS, NOT FIVE, AND C RECONCILES THE TWO SOURCES RATHER THAN PICKING ONE.** B's item-3 design named `thebatteryshowsouth.com`; C's brief named `battery-power.eu`. **Both are separately adjudicated correct-and-kept rows** — `battery-power.eu` → `Aachen` with the token appearing ×22 in its own page (round 24 A's census, and round 23's), `thebatteryshowsouth.com` → `Atlanta`. C locks the UNION. An absent row is skipped, so the extra entry costs nothing and loses no adjudicated ground.
+
+**Aliveness:** `expect(namedRowsExercised).toBeGreaterThan(0)` — a floor on TEST EXERCISE, not on FIELD VALUES. It creates no pressure to render a city anywhere and fails only when the benchmark has quietly stopped testing anything.
+
+**THE MAINTENANCE RULE IS IN THE SOURCE, not just here:** when a named row's correct venue genuinely changes between editions, the expected value is RESTATED with the round and the reason named — never deleted, never loosened to "any city".
+
+### (b) The `Chicago` hard-assert → **the dated-page contract** (64c)
+
+The old block asserted the OLD WORLD TWICE OVER, and both quoted arms are reproduced verbatim in the source comment so nothing is lost: its first arm was satisfied by `cambridgeenertech.com/cet/conferences`, **the index page item 2 now drops by KIND**; its fallback demanded a `solid-state battery summit` row already carrying `Chicago`, **a city 62a's guard rightly silences (5 of 5)**. New contract: **if that host is in the pool at all, its row must be one of the host's DATED EVENT PAGES and not `/cet/conferences`, and must not be named after a provider-attribution phrase. No row anywhere is required to prove a city.**
+
+---
+
+## NEGATIVE PROOFS — **BY MUTATION, ON THE LIVE POOL. A TEST-ONLY ITEM HAS NO SOURCE TO REVERT, SO EACH CLAUSE WAS MADE TO FAIL ON PURPOSE.**
+
+| mutation | result |
+|---|---|
+| aliveness floor `> 0` → `> 99` | **RED**: `expected 8 to be greater than 99` — **and it reveals the real number: 8 named rows exercised this pull**, against B's measured 5. Seven rows of headroom on a floor of 1. |
+| contamination clause demands a city instead of silence | **RED**: `expected 'flogen.org -> (silent)' to be 'flogen.org -> MUST-RENDER-A-CITY'` |
+| `ibatterysummit.com` expectation changed `Jakarta` → `Nowhere` | **RED**: `expected 'ibatterysummit.com -> Jakarta' to be 'ibatterysummit.com -> Nowhere'` |
+| 64c clause pointed at a host that IS in the pool, polarity inverted | **RED** at its own line, naming the row's URL — **the loop body executes and the assertion can fail; it simply has no `cambridgeenertech.com` row to run against in this window** |
+
+**The host is prefixed into BOTH sides of every value assertion on purpose**, so a failure names the offending row instead of printing a bare `expected undefined to be 'Detroit'`. All three failures above did exactly that.
+
+**VACUITY DISCIPLINE, HONESTLY APPLIED.** Assertion 1 fails the moment the guard stops silencing a known contamination — a real regression the old floor could not see. Assertion 2 fails if the guard over-reaches and takes a correct venue — 62a's own named falsifier, previously uncovered. **The 64c clause is MECHANICALLY LIVE but ORGANICALLY UNEXERCISED this window**, and C states that rather than counting it as a pass.
+
+---
+
+## **THE FILE IS STILL RED — AND THE RED HAS MOVED TO A THIRD ASSERTION NOBODY HAS RULED ON. `POLICY — manager decides.`**
+
+**Both commissioned assertions PASS.** The failure is now `benchmark.test.ts:225`, which is the top-five assertion B flagged as *"At risk, probably green"*:
+
+```
+expect(topFive.some((item) =>
+  hostname(item.linkOfficial).endsWith("cambridgeenertech.com")
+  || /solid[-\s]?state battery summit/i.test(item.name))).toBe(true);
+```
+
+**It is not green. It is red, and it is red for exactly the reason 63b condemned: it demands that a specific row be PRESENT in a live pool.** This window's top five is `solarpaces.org`, `flogen.org`, `euagenda.eu`, `ruggedthz.com`, `ibatterysummit.com` — the `10times.com` row that carried the `||` arm is simply not in it today.
+
+**C DID NOT CAUSE IT, AND PROVED THAT RATHER THAN CLAIMING IT.** The restated benchmark was re-run with **items 1 AND 2's source files checked out at the pre-item-1 commit** (`format.ts`, `card.ts`, `events/[id]/page.tsx`, `eventweb.ts`): **still red at `:225`, same pool, same 14 survivors.** Independently, item 2's paired live measurement showed the pool identical reverted vs fixed, twice.
+
+**C DID NOT TOUCH IT EITHER, AND THAT IS DELIBERATE.** Ruling 64c scoped this item to exactly two assertions by name. B flagged this third one but designed no replacement for it. **Restating a third assertion on C's own authority is precisely the unilateral widening the escape clause forbids**, and it is a row-selection contract, not a value contract, so the named-row-lock shape does not obviously transfer. **It is recorded here, red, with its cause measured, for the manager to rule on in round 25.**
+
+**Note the consequence for the 64c clause:** `:225` fails BEFORE the 64c block at `:258`, so **while this red stands, the 64c restatement cannot execute at all.** Its falsifiability is proven by mutation (above) rather than by a live pass. Whatever the manager rules on `:225` unblocks it.
+
+---
+
+## WHAT DID NOT MOVE — stated affirmatively
+
+- **NO TEST DELETED.** Both commissioned assertions were replaced IN PLACE with `A23-03 / Ruling 62a / Ruling 63b` and `Ruling 64c` named in their comments, and the old code is quoted verbatim inside the 64c comment so the previous contract is still readable.
+- **The file stays credential-gated (`describe.skipIf(!hasLiveKey)`) and stays EXCLUDED FROM THE GATE.** A SKIP is not a PASS and is not read as one.
+- **Every assertion is presence-tolerant.** Named rows absent from a given day's pull are skipped, never demanded. Measured: 8 of the 10 named rows present this pull, 2 absent and skipped, no false red.
+- **NO SOURCE FILE, NO THRESHOLD, NO SHIPPED BEHAVIOUR.** `MIN_SCORE`, `OPPORTUNITY_MIN_SCORE`, `MAX_POSTING_AGE_DAYS`, `MAX_ENRICHMENT_CANDIDATES` untouched. The place guard is untouched; 62a's boundaries are exactly where round 23 left them.
+
+## THE GATE AFTER ITEM 3 — **THE FIGURE C LEAVES**
+
+**92 files / 1877 tests, 1876 passing.** `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing `src/components/persona/quiz.tsx:46` error, 0 warnings**. **`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds.** **Sole failure: `benchmark.test.ts:225`, live/credential-gated and EXCLUDED FROM THE GATE — the top-five presence assertion described above, NOT the city-coverage floor, which now passes.**
+
+**ITEM 3 STOPS HERE, AND C's TURN IS COMPLETE — three items, three commits, each pushed immediately.**
+
+---
