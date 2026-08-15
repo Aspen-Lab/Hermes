@@ -59067,3 +59067,27 @@ lived OUTSIDE `src/` and is **DELETED**;
 files.
 
 ---
+
+### Round 23 — MANAGER verification of Agent C, RULING 63a–b, and the ROUND-23 CLOSE
+
+**Date: 2026-08-15. Every check below re-executed by the manager, not inherited.**
+
+**THE GATE, INDEPENDENTLY RE-RUN:** `cd web && npx vitest run` → **92 files / 1843 tests, 1842 passing** — exactly C's figure (+92 tests over 1751; none deleted, proven by numstat: eight test files grew +879/−8, the 8 being the documented restatements — 7 in `structured-extract.test.ts` per 62a's restate-never-delete order, 1 in `eventweb.test.ts`). Sole failure `benchmark.test.ts`. `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error. **`enrich.test.ts` SOLO: 56/56 — THE SOLARPACES LOCK'S NEW FIGURE** (moved from 53 because C added three tests to the file; flagged so no round reads it as a regression). **The 57b guard files: range-diff EMPTY across C's turn — untouched a third consecutive round.**
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (A23-03, union form):** `structured-extract.ts` restored to its pre-`f6a4533` source with all shipped tests kept → **22 of 80 red** (the guard's own tests plus the restated fixtures asserting new-contract silences — the union a whole-file restore should show); source restored → **80/80 green**, tree clean. The new tests demand the new code.
+
+**C's DEVIATIONS, ALL TRACED AND ACCEPTED:** `Aug 2026` short-month rendering (matches the card's existing date style); the US-state-code arm of the address trim removed as **measured unreachable** (stronger than unearned); B's blast radius corrected — the place guard is EVENT-ONLY, the job path never calls `findVenueCity`; and **ten decorations found in C's own tests and rebuilt before any red count was quoted** — the discipline applied to the discipline.
+
+---
+
+## RULING 63 — THE TWO POLICY ITEMS C FILED, DECIDED. BINDING.
+
+**63a. THE HELD HALF (a) — C's STOP IS APPROVED, AND (a) IS FOLDED INTO THE DEFERRED (b).** Built exactly as 62d approved it, last-segment preference renders the job board `EV.Careers` as the employer of a CATL vacancy on the file's own locked test — two surviving segments, structurally identical to `lanl.jobs`, and nothing shipped can tell an employer tail from a board tail. **The escape clause fired and worked: stopped, recorded, no boundary invented, no locked test rewritten.** The measurement establishes that (a) and (b) are INSEPARABLE — ordering without the positive organisation test trades one wrong employer for another — so **(a) ceases to exist as a separate item and folds into 62d's deferred (b) design, whose recorded corpus now owns the `EV.Careers`/CATL pair.** The reopen trigger is unchanged (the shape on a pool row in any census). `lanl.jobs`'s `Research Technologist 1` and the Michigan row **REMAIN OPEN — latent, not accepted** — watched by the ordinary 34a employer column every round.
+
+**63b. THE BENCHMARK'S CITY-COVERAGE FLOOR — SUPERSEDED BY DESIGN, AND ITS RESTATEMENT IS COMMISSIONED, NOT LEFT TO DRIFT.** C measured cause, not variance: 0.4375 three runs with the guard, passing twice with a one-line revert, passing cold. **A coverage floor ("≥ half the pool must show a city") is structurally a pressure to keep exactly the wrong values Ruling 62a exists to remove — C named it as Ruling 32's shape and that reading is CONFIRMED.** Rulings: (1) the benchmark stays excluded from the gate exactly as before; (2) **its city-coverage presentation is now recorded as DETERMINISTICALLY RED while the place guard stands — it carries no information and no round chases it as a regression**; the other presentations remain the live flake they were; (3) C's refusal to touch the threshold was correct — a C does not move a benchmark's contract; (4) **per Ruling 61c's own rule, the restatement is COMMISSIONED to the NEXT B turn**: restate the city assertion from a COVERAGE floor to a QUALITY floor (zero non-venue-anchored cities rendered — the property the design actually promises), never deleted, restated with the item named. If the loop reaches its final close before another B turn exists, the commission discharges at the close as a named hand-back item in the completion report — it is test hygiene, not report parity, and it does not gate.
+
+---
+
+**ROUND 23 IS CLOSED.** A (four differences, one POLICY) → manager (Ruling 61) → B (four items, four-draft-killing place design, one POLICY) → manager (Ruling 62) → C (four items, one half held by the escape clause, two POLICY filed) → manager (this entry). **Ruling 63a–b empties the deferred list — nothing carries past this close undecided.** `WHOSE TURN: A — round 24, GATE CANDIDATE ROUND` stands exactly as C wrote it, with every carry (the 62b fuse tally at zero; the four place silences and the `abilities.com` named cost; the `upenn` admitted control; A22-04 open at strike one; 63a's folded deferral with its corpus; the one-pull caveat with round 24 A's five-pull named as the check; 57b's event surface `designed, organically unwitnessed`; **Ruling 55c's online debt, FIFTH round, named**; all tallies, thresholds and exclusions by name; the gate rule verbatim). **The gate stays `GATE (0%): NOT MET` — only round 24 A's live measurement can move it, and only the manager closes, after an independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
