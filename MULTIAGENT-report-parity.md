@@ -275,15 +275,21 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **PAUSED BY THE USER @ 2026-08-15 ~13:1x UTC — the whole loop
-                  is on hold by direct user instruction ("暂停工作"). Round 28
-                  B had claimed the lock (`e09da9c`) and banked NOTHING — its
-                  three items are ALL UNSTARTED; the manager stopped the agent,
-                  deleted its scratch harness (`web/zz-r28b/`), and released the
-                  lock. The resume clocks are OFF (no local cron; the cloud
-                  routine disabled by the manager). ON RESUME: spawn Agent B for
-                  round 28 fresh from §1's three-item list — nothing to pick up
-                  part-way. Nothing below this line changes the pause.**
+STOPPED BECAUSE:  **RESUMED BY THE USER @ 2026-08-15 (after the ~13:1x UTC
+                  pause). Round 28 B spawns FRESH with FOUR items: ITEM ZERO is
+                  RULING 75's Gemini search-provider design (quota-capped APIs
+                  are BANNED — no Tavily/Adzuna/USAJobs/JSearch calls by any
+                  agent; the Vertex Gemini grounding adapter replaces the search
+                  seam; read Ruling 75 in full before anything), then the three
+                  standing items (A28-01, V28-01, V28-02) exactly as filed.
+                  `tavilyEnabled` is false in the measurement profile, keys
+                  retained. Resume clocks back ON (manager).**
+                  ---
+                  *Superseded, kept only as history — the pause record:*
+                  **PAUSED BY THE USER @ 2026-08-15 ~13:1x UTC — round 28 B had
+                  claimed the lock (`e09da9c`) and banked NOTHING; the manager
+                  stopped the agent, deleted its scratch harness, released the
+                  lock, and turned the clocks off.**
                   ---
                   *Superseded, kept only as history:*
                   **finished the turn @ 2026-08-15 12:58 UTC — ROUND 28 A IS
