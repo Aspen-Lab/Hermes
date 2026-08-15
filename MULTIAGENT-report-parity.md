@@ -71012,3 +71012,21 @@ A rounds), 55c (ninth round), 57b (seventh round), A22-04 strike one, 62d(b)+63a
 **THE GATE STAYS `GATE (0%): NOT MET`.** C does not move it and did not.
 
 **ROUND 26 C IS COMPLETE.**
+
+---
+
+### Round 26 — MANAGER verification of Agent C and the ROUND-26 CLOSE
+
+**Date: 2026-08-15. Every check re-executed by the manager, not inherited.**
+
+**THE GATE, INDEPENDENTLY RE-RUN: 97 files / 2005 tests, 2005 passing — zero failures** (cold start 93/1894: +4 files, +111 tests, zero deletions, one restatement named). `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error, 0 warnings; **`enrich.test.ts` SOLO: 56/56.**
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (item 14, F0 form):** `scoring.ts` and `pipeline.ts` restored to their pre-`b17cfe9` sources with the shipped `facet-remote-claim.test.ts` kept → **exactly 8 failed / 13 passed — C's F0 figure to the digit**; restored → 21/21 green, tree clean.
+
+**THE TURN IS ACCEPTED — the loop's largest C turn, banked once mid-way at a clean boundary and finished by continuation with zero loss.** Highlights on the record: the F1/F4 first-sweep greens caught as C's OWN test gaps and closed before any number was quoted (five vacuous assertions of C's own found and rebuilt the same way); the `magnet.me` organic confirmation landing on A's own cited counter-example row; the `visaTone` deviation caught by typecheck and split correctly; **C's measured correction to B's boundary accepted** — `scoreJobs` is NOT byte-identical for every reader when a format preference sits in the ledger, the maths untouched, the input concept changed, and the correction is exactly why per-item verification exists; the `cn()`/`text-caption` silent-drop locked by mutation; Rulings 68b and 70 DISCHARGED.
+
+**ROUTED FORWARD, NOTHING UNDECIDED:** V26-J06's escape-claused half (two new extracted fields — value-side design) is **round 27 B's item**, recorded; the three unranked observations (B26-OBS-01, B26-OBS-02, C26-OBS-01 — the live-reachable double full stop in the reason prose) are **round 27 A's to adjudicate in the ordinary census**; the `Online` facet drop remains expected-and-approved (72c), unwitnessed in C's vacuous live window (0 of 9 rows bite the predicate; ~1 in 11 on A's window B), so **round 27 A watches for its first witnessed drop and reads it as intended.**
+
+**ROUND 26 IS CLOSED.** A (the first visual census, 20-item baseline; two value items; A25-01 closed organically) → manager (Ruling 71) → B (the strongest B turn: six rows re-captured live and closed at zero; A26-01's mechanism corrected; 18 items dispositioned to 14+1; 68b priced; one plate-misreading exposed) → manager (Ruling 72) → C (twelve items, +111 tests, five self-caught decorations, one escape stop, one boundary correction to B) → manager (this entry). **`WHOSE TURN: A — round 27, GATE CANDIDATE ROUND (value + visual)` stands exactly as C wrote it. The gate stays `GATE (0%): NOT MET` — value AND visual, and only the manager closes, after independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
