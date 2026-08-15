@@ -55,6 +55,7 @@ import {
   type TierUpgradeItem,
 } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
+import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
   REPORT_LABEL_CLASS,
   ReportSection as SharedReportSection,
@@ -1010,47 +1011,18 @@ function CheapestCallout({ cheapest }: { cheapest: CheapestWay }) {
   );
 }
 
+// V26-J03 / V26-E03 (round 26 C). This component was one of TWO copies of the
+// same shape — the job report carried the other, inline, differing only in a
+// data hook and one breakpoint. Both are now `ReportTimelineTrack`, so the
+// plates' continuous track with its filled `Posted -> Today` segment lands on
+// both surfaces from one place. NO DATE LOGIC MOVED: the track reads the
+// `accent` flag the milestone builder already sets, and nothing else.
 function DeadlineTimeline({
   milestones,
 }: {
   milestones: DeadlineMilestone[];
 }) {
-  if (milestones.length === 0) return null;
-  return (
-    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {milestones.map((milestone, index) => (
-        <li
-          key={milestone.key}
-          data-deadline-milestone={milestone.key}
-          className="relative rounded-xl border border-border bg-surface px-4 py-3"
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "h-2.5 w-2.5 rounded-full bg-text-faint/40",
-                milestone.accent && "bg-accent",
-              )}
-              aria-hidden
-            />
-            <span className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-              {milestone.label}
-            </span>
-          </div>
-          {milestone.value && (
-            <p className="mt-2 text-body-sm font-semibold text-heading">
-              {milestone.value}
-            </p>
-          )}
-          {index < milestones.length - 1 && (
-            <span
-              className="absolute -right-3 top-1/2 hidden w-3 border-t border-border sm:block"
-              aria-hidden
-            />
-          )}
-        </li>
-      ))}
-    </ol>
-  );
+  return <ReportTimelineTrack milestones={milestones} />;
 }
 
 type PriceCandidate = {

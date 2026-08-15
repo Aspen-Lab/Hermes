@@ -36,6 +36,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
+import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
   REPORT_LABEL_CLASS,
   ReportSection as SharedReportSection,
@@ -1071,38 +1072,14 @@ export function JobReport({
           sectionKey="timeline"
           className="break-inside-avoid"
         >
-          <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {timeline.map((point, index) => (
-              <li
-                key={point.key}
-                className="relative rounded-xl border border-border bg-surface px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "h-2.5 w-2.5 rounded-full bg-text-faint/40",
-                      point.accent && "bg-accent",
-                    )}
-                    aria-hidden
-                  />
-                  <span className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-                    {point.label}
-                  </span>
-                </div>
-                {point.value && (
-                  <p className="mt-2 text-body-sm font-semibold text-heading">
-                    {point.value}
-                  </p>
-                )}
-                {index < timeline.length - 1 && (
-                  <span
-                    className="absolute -right-3 top-1/2 hidden w-3 border-t border-border lg:block"
-                    aria-hidden
-                  />
-                )}
-              </li>
-            ))}
-          </ol>
+          {/* V26-J03 (round 26 C). Was four bordered boxes written inline here,
+              byte-identical to the event report's `DeadlineTimeline`. Now the one
+              shared track, so plate 02's continuous rule with its filled
+              `Posted -> Today` segment and plate 03's render from one component.
+              The job surface also GAINS the `data-deadline-milestone` hook the
+              event surface already had, so both are testable the same way — an
+              addition, not a rename. */}
+          <ReportTimelineTrack milestones={timeline} />
         </ReportSection>
       )}
 

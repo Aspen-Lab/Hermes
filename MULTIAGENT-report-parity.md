@@ -69612,3 +69612,131 @@ tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
 
 **ITEM 3 COMPLETE — V26-E01 and V26-J10 both close. Four of the round's items
 are now landed (0, 1, 2, 3) and the visual baseline moves 15 → 12 remaining.**
+
+### Round 26 — Agent C (item 4 of 15+: **THE TIMELINE TRACK — V26-J03 AND V26-E03 BOTH CLOSE. TWO BYTE-IDENTICAL COPIES BECOME ONE COMPONENT; FOUR BORDERED BOXES BECOME ONE CONTINUOUS TRACK WITH A FILLED SEGMENT, BUILT ON THE PDF's OWN VECTOR RECTANGLES. THE ONE-MILESTONE DIVIDE-BY-ZERO B NAMED SHIPS GUARDED WITH ITS OWN TEST. NO DATE LOGIC MOVED. AND C's OWN FIRST DOT-COLOUR ASSERTION WAS VACUOUS — CAUGHT BY MUTATION, FIXED, DISCLOSED.**)
+
+**STATUS: item 4, banked on its own commit.** Four files: the new
+`components/reports/timeline-track.tsx`, both report pages, one new test file.
+**No test deleted, none edited.** No credential printed, logged or written; no
+scaffold in the repo.
+
+---
+
+## PLATE CITATION AND WHY THE NUMBERS ARE EXACT
+
+`Peer-design-spec-original.pdf`, **plate 02 = pp. 2–4 (track at p3 y=213.0)**,
+**plate 03 = pp. 4–9 (track at p5 y=276.8)**. A read the plates as images and as
+text spans — **neither instrument can see a rule or a bar, because those are
+vector drawings.** B pulled the rectangles, and the geometry is **identical on
+both plates**: track x 79.5, w 453.0, h 4.5, `#e9dfcc`; fill from 79.5;
+four dot pairs, ring 12.8 × 12.8, inner 8.2 × 8.2.
+
+**THE ONE RULE BOTH PLATES SHARE, and it is the whole design:** the orange
+segment runs from the track's left end **to the CENTRE of the `Today` dot**.
+Plate 02's fill ends at 161.3 against a dot centre of 161.2; plate 03's ends at
+133.5 against 133.5. **Exact on both.**
+
+## WHAT SHIPPED
+
+One `ReportTimelineTrack` at `components/reports/timeline-track.tsx`; both inline
+copies deleted. `DeadlineTimeline` survives as a three-line delegate so the event
+page's call site is unchanged, and **the job surface GAINS the
+`data-deadline-milestone` hook the event surface already had** — an addition, not
+a rename, so both surfaces are now testable the same way.
+
+**NO DATE LOGIC MOVED, AND THIS IS CHECKABLE FROM THE DIFF.** Both milestone
+builders (`buildTimeline` on the job page, the event milestone builder) are
+untouched. The track reads **one field**: `accent`, which already marked `today`
+on both surfaces. **No date is read, none compared, none formatted, and `nowMs`
+is never consulted by the track.**
+
+**B's CORRECTION TO A IS BUILT IN AND LOCKED.** A wrote that `Today` carries a
+LARGER orange dot; measured, **every inner dot is 8.2 × 8.2 on both plates and
+`Today` differs in COLOUR ONLY.** No size variant exists in the component and a
+mutation that adds one goes red.
+
+## TWO DISCLOSED DEVIATIONS, BOTH B's, BOTH CARRIED FORWARD IN THE CODE
+
+1. **Even dot spacing.** The plates' own spacing is neither even nor
+   date-proportional — plate 02's centres are 79.5 / 161.2 / 341.9 / 532.2
+   (gaps 81.7, 180.7, 190.3) against intervals of ~17 / 38 / 108 days. B checked
+   for proportionality and found none: it is hand-placement, which is not a
+   buildable rule. **Even distribution keeps the plate's visual grammar and needs
+   no date maths**, which is exactly what the boundary demands.
+2. **The narrow width.** The deck has no narrow variant, so the plate cannot
+   settle it. A track cannot wrap, so below `sm` the milestones become a
+   **vertical rail** — the track rotated onto the list's left edge with the dots
+   on it and the labels to the right. B recommended this shape by name.
+
+Both are written into the component's own doc comment, not just this log.
+
+## THE NEGATIVE PROOFS — NINE MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **14 of 14 passing**:
+
+| # | mutation | red |
+|---|---|---|
+| **T1** | **remove the one-milestone guard (`hasTrack` always true)** | **1 failed** |
+| T2 | fill from `index / count` instead of `index / (count - 1)` | **3 failed** |
+| **T3** | **floor the fill at 8% "so it looks alive" — the thing B forbade** | **3 failed** |
+| T4 | make the accent dot LARGER — A's uncorrected reading | **1 failed** |
+| T5 | paint every dot accent | **1 failed** (after the fix below) |
+| T8 | paint every dot faint | **1 failed** |
+| T6 | render the value line unconditionally | **1 failed** |
+| T7 | go back to a bordered box per milestone | **1 failed** |
+
+**T1 is the one B asked for by name.** With the guard removed,
+`accentIndex / (count - 1)` divides by zero on a one-milestone row and writes
+`NaN%` into a style attribute. The test asserts no track, no fill, no `NaN`, and
+that the milestone is still rendered rather than swallowed. **This is not
+hypothetical**: on the job surface `posted`, `deadline` and `start` are each
+conditional while `today` is unconditional.
+
+## **C's OWN VACUOUS ASSERTION, CAUGHT BY MUTATION AND DISCLOSED**
+
+**T5 came back GREEN on the first run.** The test "paints exactly one dot accent
+and the rest faint" was reading the `data-timeline-dot` attribute — which is
+derived from the *same* `accent` flag as the colour — so a mutation that painted
+**every dot `bg-accent`** left it passing. **The test measured the hook, not what
+the reader sees.** Fixed to assert the colour CLASSES; T5 now reds at 1, and T8
+(the opposite mutation, every dot faint) reds at 1 too. **Recorded rather than
+quietly repaired, because it is the same fault class as Ruling 70's unfailable
+assertion, found the same way — by running the mutation instead of trusting the
+assertion's name.**
+
+## EMPTY AND PARTIAL STATES — ALL OF B's, EACH WITH A TEST
+
+- **One milestone** — no track, no fill, no `NaN`; dot and label still render.
+- **Zero milestones** — renders nothing; the existing guards stay as a belt.
+- **Accent FIRST (the event surface's normal case)** — fill is `0%`, **not
+  special-cased into a token sliver**; T3 proves the special-case is caught.
+- **Accent LAST** — fill is `100%`.
+- **No accent at all** — fill is `0%`.
+- **A label with no value** (`today` on both surfaces) — the dot and label
+  render, **no `<p>`, no dash, no placeholder, no `undefined`**.
+- **Two milestones** — even distribution still works.
+
+## THE ELEMENT-ANCHORED-TEST BOUNDARY B FLAGGED
+
+B warned that `events/[id]/page.test.ts` matches tiles with
+`/<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/` — element-anchored and
+terminated by the FIRST `</div>`. **That constraint belongs to the fact-tile band
+(item 5) and this item does not touch `fact-tile.tsx`.** The timeline's own
+at-risk assertion, `data-deadline-milestone="[a-z]+"` at `:648`, **survives
+unchanged** — the hook is preserved and the full suite confirms it.
+
+## STANDARD 7 — VALUE STABILITY
+
+Every milestone label and value still renders, asserted on the job surface's full
+four-milestone set. **Zero rendered values changed.**
+
+## GATE AFTER THE ITEM
+
+**96 files / 1949 tests, 1949 PASSING — ZERO FAILURES** (was 95 / 1935; **+1
+file, +14 tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
+`quiz.tsx:46` error. **The extraction was run through the full suite BEFORE any
+new test was added and all 1935 prior tests passed**, which is the check B asked
+for on an extraction.
+
+**ITEM 4 COMPLETE — V26-J03 and V26-E03 both close. Item 5, the fact-tile band
+pair, follows.**
