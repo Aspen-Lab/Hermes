@@ -61004,3 +61004,195 @@ the honest cost of that half and the reason it is filed as POLICY.
 one commit, pushed immediately.
 
 ---
+
+### Round 24 — Agent B (item 3 of 3: **RULING 63b's COMMISSIONED RESTATEMENT. THREE CANDIDATE QUALITY FLOORS WERE BUILT AND TWO WERE KILLED BY THEIR OWN MATRIX AS PROVABLY VACUOUS — one of them against B's own first preference. The surviving design is a NAMED-ROW VALUE LOCK, and it is the shape this loop has already shipped twice. B also found a SECOND assertion in the same file, in the SAME class as the one 63b named, that NOBODY has flagged.**)
+
+**Date: 2026-08-15. Every candidate below was EXECUTED against the live pool
+before being recommended or killed.** Throwaway probes deleted before this
+commit. B changed no shipped code. **Key presence checked as a boolean only;
+never printed, logged or written.**
+
+---
+
+## THE CURRENT NUMBER, MEASURED THIS ROUND
+
+`web/src/lib/events/benchmark.test.ts:83-84, 102`:
+
+```
+const cityCoverage = survivors.length > 0 ? withCity.length / survivors.length : 0;
+expect(cityCoverage).toBeGreaterThanOrEqual(0.5);
+```
+
+**Live, this round: 4 of 12 = `0.333`. The floor FAILS.** Round 23 C measured
+`0.4375`. **It has moved FURTHER from the floor, not closer** — because the
+place guard is working better as the pool turns over, which is exactly Ruling
+63b's point: **the floor and the design pull in opposite directions, and the
+design is winning.**
+
+---
+
+## **TWO CANDIDATE QUALITY FLOORS, BUILT AND KILLED BY EXECUTION. B REPORTS THEM BECAUSE THE KILLS ARE THE FINDING.**
+
+**CANDIDATE 1 — "a rendered city must not sit on an online-only row."**
+**KILLED: STRUCTURALLY VACUOUS, CANNOT EVER FAIL.**
+`isOnlineOnly` (`web/src/lib/opportunities/facets.ts:319-324`) is
+`isOnline && !hasPhysicalPlace(place)`. **A row that has a city HAS a physical
+place, so `isOnlineOnly` is `false` by construction.** Executed over the live
+pool: `candidateOnlineOnly_everTrue: false`, and it could not be otherwise.
+**This was B's own first preference and it is dead.**
+
+**CANDIDATE 2 — "a rendered city must appear in the row's own `location`
+string" (and its wider cousin, "in the name, location or description").**
+**KILLED: TAUTOLOGICAL. `location` IS COMPOSED FROM `place`.**
+`web/src/lib/opportunities/enrich.ts:300` —
+`const location = formatOpportunityPlace(place) || item.location;` — and
+`formatOpportunityPlace` (`:240-249`) is literally
+`[place.city, place.region, place.country].join(", ")`. **Executed: zero
+violations across every rendered city, and zero is the only possible answer.**
+The live data shows the join happening in plain sight: `Jakarta`,
+`Detroit, United States`, `San Diego, CA`, `Orlando, FL`. **And decisively: it
+would NOT have caught A24-01** — that row rendered `Chicago, IL, United States`
+in BOTH fields, in agreement, both wrong.
+
+**A THIRD SHAPE, KILLED ON SIGHT:** "re-derive the city from the row's page and
+check it matches." That re-runs `extractBodyTextPlace`
+(`web/src/lib/opportunities/structured-extract.ts:1736-1758`) — **the very
+function the guard lives inside** (`findVenueCity`, `:1689-1732`, guard at
+`:1720`). **Asserting a function against itself is the purest vacuity there is.**
+
+**THE HONEST CONCLUSION B WILL NOT DRESS UP: there is no non-vacuous LIVE
+oracle for "venue-anchored".** Deciding it requires knowing where the event
+actually is, which is the thing being extracted. **The deterministic proof of
+the property already exists and is not being asked to move**: Ruling 62a's six
+clauses are ablation-tested with fixtures in
+`web/src/lib/opportunities/structured-extract.test.ts`, where round 23 C
+established every clause and boundary is **uniquely red under ablation**.
+**That is where "zero non-venue-anchored cities" is PROVEN. The live benchmark's
+job is the half only it can do: catching the shipped pipeline regressing on
+rows we have already adjudicated.**
+
+---
+
+## **THE RESTATED ASSERTION — A NAMED-ROW VALUE LOCK, CONDITIONAL ON PRESENCE**
+
+**Precedent, twice in this loop, not invention:** 62c's
+`careerservices.upenn.edu` **ADMITTED CONTROL** and the **SolarPACES regression
+lock** are both exactly this shape — a named row with an expected value,
+asserted whenever it appears.
+
+### What it MEASURES
+For every pool row whose host is on an adjudicated list, the **value** of
+`place.city` — not how many rows have one.
+
+### What it ASSERTS
+1. **Ruling 62a's four named contamination hosts render NO city.**
+   `flogen.org`, `storageusa.solarenergyevents.com`, `nanoge.org`, `sdle.co.il`
+   → `place?.city` is falsy. **Silence is the correct value, and it is asserted
+   as a value rather than tolerated as an absence.**
+2. **The venue-anchored hosts render THEIR OWN city, exactly.**
+   `advancedautobat.com` → `San Diego`; `ibatterysummit.com` → `Jakarta`;
+   `internationalbatteryseminar.com` → `Orlando`; `thebatteryshow.com` →
+   `Detroit`; `thebatteryshowsouth.com` → `Atlanta`. **This is 62a's falsifier
+   — "any correct, current venue lost" — wired directly into the suite.**
+3. **The lock is alive.** At least **one** named host was exercised this run.
+
+### What it TOLERATES — **and this is the whole point of the restatement**
+- **ZERO cities in the whole pool is a PASS.** There is **no lower bound on
+  `withCity`**, and its absence is commented, not merely deleted.
+- **Any pool composition, any pool size, any host set.** Every named row is
+  skipped when absent. **Measured across 5 live pulls: 5 of the 9 named hosts
+  were present (1 contamination + 4 venue-anchored) and 4 were absent and
+  skipped — with no red.**
+- **Any coverage ratio.** The ratio is still `console.info`-ed as an
+  observability metric, exactly as today; it is simply **no longer asserted**.
+
+### **ADVERSARIALLY TESTED BEFORE RECOMMENDING — 5 LIVE PULLS, ALL GREEN**
+
+| pull | contamination rows present | venue rows present |
+|---|---|---|
+| 1–5 (identical) | `storageusa.solarenergyevents.com` → **SILENT ✓** | `ibatterysummit.com` → `Jakarta` ✓, `thebatteryshow.com` → `Detroit` ✓, `advancedautobat.com` → `San Diego` ✓, `internationalbatteryseminar.com` → `Orlando` ✓ |
+
+**5 rows exercised per pull, 5 of 5 pulls green, 0 false reds.** The other four
+named hosts were not in the pool and were skipped — **which is the live-safety
+mechanism doing its job, measured rather than hoped for.**
+
+### **VACUITY DISCIPLINE ON B's OWN DESIGN, APPLIED HONESTLY**
+
+- Assertion 1 **can fail**: it fails the moment the guard stops silencing a
+  known contamination. That is a real regression the current floor cannot see.
+- Assertion 2 **can fail**: it fails if the guard over-reaches and takes a
+  correct venue — 62a's own named falsifier, which no assertion in the file
+  currently covers at all.
+- Assertion 3 (**"the lock is alive"**) is the one that needs defending, because
+  a floor is what 63b just condemned. **It is a floor on TEST EXERCISE, not on
+  FIELD VALUES.** It creates no pressure to render a city — it fails only when
+  the benchmark has quietly stopped testing anything. **Measured at 5 per pull,
+  so a floor of 1 has four rows of headroom.** That distinction is the reason
+  it is not the shape Ruling 32 forbids.
+
+### **THE MAINTENANCE RULE THIS DESIGN NEEDS, STATED UP FRONT**
+
+A conference legitimately moves city between editions. **When a named row's
+correct venue genuinely changes, the expected value is RESTATED with the round
+and the reason named — never deleted, never loosened to "any city".** That is
+Ruling 61c's own rule applied to the artefact it created, and without it this
+lock rots into a nuisance within three rounds.
+
+---
+
+## **THE SECOND ASSERTION IN THE SAME FILE, SAME CLASS, NEVER FLAGGED — `POLICY — manager decides`**
+
+`web/src/lib/events/benchmark.test.ts:111-119`:
+
+```
+const summit = survivors.find((item) => hostname(item.url).endsWith("cambridgeenertech.com"))
+  ?? survivors.find((item) => /solid[-\s]?state battery summit/i.test(item.name)
+       && item.place?.city === "Chicago");
+expect(summit?.place?.city).toBe("Chicago");
+```
+
+**This asserts that a specific city IS PRESENT — Ruling 32's shape and Ruling
+63b's exact diagnosis, one assertion below the one 63b named.** And it is
+now **entangled with BOTH of this round's items**:
+
+- **A24-01:** its first arm is satisfied by `cambridgeenertech.com` — **the
+  index page**. When item 2's fix lands, that arm goes away.
+- **A24-02 / 62a:** its fallback arm needs a `solid-state battery summit` row
+  **whose city is already `Chicago`**. The live `10times.com` row's place is
+  **silenced by the place guard, measured 5 of 5**. **So `summit` becomes
+  `undefined` and `expect(undefined).toBe("Chicago")` FAILS.**
+
+**B's recommendation, filed as POLICY because 63b commissioned only the CITY
+assertion:** restate this one in the same named-row-lock shape — assert that
+**if** a `cambridgeenertech.com` row is in the pool it is one of the host's
+**dated event pages** and not `/cet/conferences`, and **drop the requirement
+that any row prove `Chicago`**. **The manager decides; C must not quietly
+delete it, and C must expect it red after either fix lands.**
+
+---
+
+## WHAT THE FIELD SHOWS — **NOTHING. THIS ITEM TOUCHES NO FIELD.**
+
+**It is test hygiene, not report parity, and per Ruling 63b IT DOES NOT GATE.**
+No user-visible behaviour changes. No threshold in `src/` moves. **`MIN_SCORE`,
+`OPPORTUNITY_MIN_SCORE`, `MAX_POSTING_AGE_DAYS` and
+`MAX_ENRICHMENT_CANDIDATES` are untouched by this item, and B moved none of
+them.**
+
+## TESTS AT RISK
+
+**One file: `web/src/lib/events/benchmark.test.ts`.** It is **credential-gated**
+(`describe.skipIf(!hasLiveKey)`, `:53`) and **excluded from the gate** — so it
+is invisible on a machine without a key, and **C must not read a SKIP as a
+PASS.** It stays excluded. **NEVER DELETED — the coverage line is REPLACED in
+place, with `A23-03 / Ruling 62a / Ruling 63b` named in the comment**, per the
+commission's own words.
+
+## BLAST RADIUS
+
+**One test file. Zero source files. Zero shipped behaviour.**
+
+**ITEM 3 STOPS HERE, AND B's TURN IS COMPLETE — three items, three commits,
+each pushed immediately.**
+
+---
