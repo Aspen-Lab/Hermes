@@ -64902,3 +64902,165 @@ pool, including one containing neither flagship row.**
 **Standing consequences:** round-end reports state progress per phase; rounds-remaining estimates name Phase 1 and Phase 2 separately; nothing in Phase 2 starts before Phase 1's gate closes unless the user re-orders it.
 
 ---
+
+### Round 25 — Agent C (item 1 of 3: **A25-01 / RULING 68b — THE REASON LINE NOW GOES THROUGH THE SHARED GATED PREDICATE. THE SCORE IS PROVEN BYTE-IDENTICAL ON SIX ROWS BY REVERT-AND-REMEASURE, AND ON A CAPTURED LIVE POOL RE-SCORED BOTH WAYS. THE THREE COMMISSIONED RAW READERS ARE UNTOUCHED. AND C DISCLOSES THAT THIS WINDOW'S LIVE POOL CANNOT WITNESS THE FIX AT ALL.**)
+
+**STATUS: COMPLETE.** Item 1 of three. **NO TEST DELETED. NO EXISTING TEST
+EDITED — all four new cases are pure ADDITIONS.** No branch, worktree or PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No credential printed,
+logged, committed or written anywhere — `.env.local` was NEVER `cat`-ed;
+`profile.json` was read by the throwaway pool probe only, and no value from it
+appears in this entry or in any commit.** The throwaway harness lived OUTSIDE
+`src/` (`web/zz-r25c/`, own vitest config, `*.probe.ts` include pattern) and was
+**deleted before the gate re-run and before this commit**;
+`git status --porcelain --untracked-files=all` verified.
+
+---
+
+## WHAT SHIPPED — three files, and the boundary held on every one
+
+**(a) NEW: `web/src/lib/jobs/remote-claim.ts`** — one exported function,
+`rendersRemoteClaim({ isRemote, source })`, returning
+`item.isRemote && item.source !== "jobweb"`. **This is A22-03(b)'s inline
+expression MOVED, not re-derived** — same operator, same operands, same value.
+Its only import is a TYPE (`JobSourceId`), so **its runtime dependency count is
+zero and so is the cycle risk**, which is the reason B specified a new module
+rather than a `mapper.ts` export.
+
+**(b) `web/src/lib/jobs/mapper.ts`** — `const rendersRemote = item.isRemote &&
+item.source !== "jobweb"` becomes `const rendersRemote = rendersRemoteClaim(item)`.
+Behaviour identical; the comment says so.
+
+**(c) `web/src/lib/jobs/scoring.ts`** — `if (item.isRemote)` becomes
+`if (rendersRemoteClaim(item))` inside `reasonFor()`. **The old line is quoted
+in the comment**, with A's live `lensa.com` measurement recorded beside it.
+
+**THE THREE UNTOUCHED DELIBERATE RAW READERS, WALKED BY NAME AND VERIFIED
+UNCHANGED IN THE DIFF:** `mapper.ts`'s `locationFit(location, item.isRemote, …)`,
+`scoring.ts`'s `locationFit(item.location, item.isRemote, …)`, and `enrich.ts`'s
+`isRemote: item.isRemote` passthrough. **A22-03(b)'s recorded decision is
+respected, not reversed.**
+
+**THE FOUR RULING 68b DEFERRALS, ALSO WALKED BY NAME AND VERIFIED UNTOUCHED:**
+the preference-ledger write in `scoring.ts`, the two `facetCounts` call sites in
+`jobs/pipeline.ts`, the server-side facet filter in `jobs/pipeline.ts`, and
+`facets.ts`'s duck-typed `opportunityFormat`. **`git diff --stat` names three
+files; none of those four is among them.** They are commissioned, priced, to
+round 26 B. **The new module's own doc comment names all four and states in
+writing that converting them now is scope violation rather than tidiness** — so
+the next agent finds the boundary at the code, not only in this file.
+
+---
+
+## THE PRICED BOUNDARIES — **VERIFIED BY MEASUREMENT, EACH ONE**
+
+### (1) THE SCORE CANNOT MOVE — measured, not argued
+
+Six rows scored on the REVERTED source, then on the FIXED source, same fixture,
+same clock:
+
+| row | reason BEFORE | reason AFTER | score BEFORE | score AFTER |
+|---|---|---|---|---|
+| **jobweb + remote (the A25-01 shape)** | `Matches your machine learning focus and remote-friendly` | **`Matches your machine learning focus`** | `0.7545560085694348` | **`0.7545560085694348`** |
+| jobweb + NOT remote | `Matches your machine learning focus` | unchanged | `0.7230560085694349` | `0.7230560085694349` |
+| remotive + remote | `… and remote-friendly` | **unchanged** | `0.7615560085694348` | `0.7615560085694348` |
+| himalayas + remote | `… and remote-friendly` | **unchanged** | `0.7615560085694348` | `0.7615560085694348` |
+| **jobweb topic-less (the edge)** | **`Remote-friendly`** | **`Matched by web search`** | `0.325` | `0.325` |
+| remotive topic-less (the control) | `Remote-friendly` | **unchanged** | `0.332` | `0.332` |
+
+**SIX ROWS, SIX BYTE-IDENTICAL SCORES. EXACTLY TWO REASON LINES MOVED, AND BOTH
+ARE `jobweb` + remote.** This is the structural fact B read off the code
+confirmed by execution: `score` is finished before `reasonFor` is called and
+nothing reads the returned string back.
+
+### (2) NO EXISTING TEST GOES RED
+
+`npx vitest run src/lib/jobs/` immediately after the source change, before a
+single test was added: **13 files / 651 tests, 651 passing.** B's prediction
+that `scoring.test.ts`'s `"focus and remote-friendly"` assertion stays green
+because its fixture is `source: "remotive"` is **confirmed by execution**, and
+the mutation matrix below proves it is a live must-keep lock rather than a
+coincidence.
+
+### (3) THE REACHABLE EDGE IS ENCODED, NOT DISCOVERED
+
+`jobweb` + `isRemote:true` + no keyword match + no career-stage clause read
+**`Remote-friendly`** — the rejected claim standing alone as the entire sentence
+— and now reads **`Matched by web search`**, which is pre-existing text. **No
+new text, no placeholder, nothing invented, nothing reinserted (Ruling 26
+satisfied).** It is locked by its own test **with an admitted control**: the
+identical shape on `remotive` still produces the standalone `Remote-friendly`,
+so the case is proving the SOURCE gate rather than merely the empty-parts
+fallback.
+
+---
+
+## THE FOUR ADDED CASES
+
+1. **`drops the remote clause from a jobweb reason line without moving the
+   score`** — the clause is gone; the join collapses to the one-clause sentence;
+   both scores pinned to the values measured on the REVERTED source; and
+   `remote.score !== notRemote.score`, which locks the raw flag STILL feeding
+   `locationFit`.
+2. **`keeps the remote clause on sources that own the flag`** — `remotive`,
+   `himalayas` and `adzuna`, the source name prefixed into both sides so a
+   failure names the row.
+3. **`falls back to the web-search wording when the remote clause was the only
+   reason`** — the reachable edge, plus its `remotive` admitted control.
+4. The pre-existing `produces a human-readable match reason` is **adopted as a
+   free must-keep lock** and named as such in the new comment block.
+
+---
+
+## NEGATIVE PROOFS — **REVERT, THEN TWO DIRECTED MUTATIONS. EXACT RED COUNTS.**
+
+| # | change | result |
+|---|---|---|
+| **R** | **`scoring.ts` reverted to `if (item.isRemote)`**, everything else in place | **`scoring.test.ts`: 2 FAILED / 43 passed (45).** `expected 'Matches your machine learning focus a…' to be 'Matches your machine learning focus'` and `expected 'Remote-friendly' to be 'Matched by web search'` |
+| **M1** | **over-gate the SCORE**: `locationFit(item.location, rendersRemoteClaim(item), …)` | **1 FAILED / 44 passed (45)** — `expected 0.7230560085694349 to be 0.7545560085694348`. **This is the proof that the pinned-score clause is not decoration:** it is the assertion that catches a future C gating at the score instead of at the reason line. |
+| **M2** | **over-gate ALL SOURCES**: predicate's `!== "jobweb"` replaced with a match on no real source | **5 FAILED / 59 passed (64)** across `scoring.test.ts` + `mapper.test.ts` — my `keeps the remote clause on sources that own the flag`, my edge case's `remotive` control (`expected 'Meets your job filters' to be 'Remote-friendly'`), **B's predicted free lock `produces a human-readable match reason`**, and two pre-existing mapper locks. |
+
+**VACUITY DISCIPLINE, AND THE ADMITTED CONTROLS NAMED AS THE STANDARD
+REQUIRES.** Cases 1 and 3 have uniquely-red cases under revert **R**. **Case 2
+and the two score clauses pass under R in BOTH directions and C does not count
+them as proof on their own** — they are controls whose failure mode points the
+OTHER way (over-reach), and **M1 and M2 are the mutations that make each of them
+uniquely red.** Every clause shipped has a case that only it turns red, in one
+direction or the other, and every one of those cases was executed.
+
+---
+
+## THE LIVE JOB-POOL RE-MEASUREMENT — **AND THE DISCLOSURE THAT MATTERS MORE THAN THE NUMBER**
+
+**The naive before/after comparison is confounded and C says so rather than
+quoting it:** two consecutive live pulls in the same session returned **12** and
+**15** rows. The live search moves between calls, so a pool count measured
+before the fix and after it cannot isolate the fix.
+
+**SO THE MEASUREMENT WAS MADE DETERMINISTIC.** One live pool was captured to
+JSON (**12 rows**), then re-scored through the shipped `scoreJobs` **twice — once
+on the fixed source, once on the reverted source** — and the two outputs diffed:
+
+**`diff` reports NO DIFFERENCE. Identical row count (12), identical 12 scores,
+identical 12 reason lines.** That is the assertion the brief asked for, made on
+real rows rather than on constructed ones.
+
+**AND HERE IS THE HONEST PART.** All **12** rows in that pool are `source:
+jobweb` with **`isRemote: false`** — **ZERO rows carried the raw remote flag.**
+So the identity above is real but **weak evidence**: this window's pool contains
+nothing the fix could have changed. **A25-01's own row class is ABSENT from the
+live pool in C's window, and `lensa.com` did not return.** The fix is therefore
+**designed and targeted-confirmed by tests, ORGANICALLY UNWITNESSED in C's
+window** — the same status language Ruling 57b uses — and **C states that
+instead of reporting "pool unchanged" as if it were confirmation.** The next A's
+census is what can witness it, and only if a `jobweb` + remote row returns.
+
+---
+
+## THE GATE AFTER ITEM 1
+
+**92 files / 1880 tests, 1880 passing** (**+3**, all additions). `npx tsc
+--noEmit` **clean**. `npx eslint src` **exactly the one standing
+`src/components/persona/quiz.tsx:46` error, 0 warnings.**
+**`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds after a
+scoring-side change.**

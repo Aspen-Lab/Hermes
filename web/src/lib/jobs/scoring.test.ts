@@ -128,6 +128,117 @@ describe("scoreJobs", () => {
     expect(scored[0].matchReason).not.toContain(" · ");
   });
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // A25-01 / A22-03(b) / RULING 68b — THE REASON LINE'S REMOTE CLAUSE.
+  //
+  // A22-03(b) drew the render boundary at `mapper.ts`: a `jobweb` row's
+  // `isRemote` is set at ingestion from a page-scoped search SNIPPET, which can
+  // carry a NEIGHBOURING posting's text, so that row does not get to make a
+  // remote claim to the reader. Round 25 A then measured the claim reaching the
+  // reader anyway at a SIXTH consumer — the deep report's "Why Peer sent this
+  // to you" line, which is assembled HERE at scoring time from the raw flag.
+  // Live on `lensa.com`, 5 of 5, byte-identical in the rendered markup: the
+  // line read `… and remote-friendly` on a posting whose own provider title
+  // says `job in Albuquerque`, while the same page's location and work-mode
+  // surfaces correctly rendered no `Remote` at all.
+  //
+  // The four cases below are all ADDITIONS. **The pre-existing assertion above
+  // ("focus and remote-friendly") is a free must-keep lock for this fix** — its
+  // fixture is `source: "remotive"`, so it stays green and catches an
+  // over-gating that silences the honest sources.
+  // ══════════════════════════════════════════════════════════════════════════
+  it("drops the remote clause from a jobweb reason line without moving the score", () => {
+    const base = {
+      id: "jobweb:1",
+      source: "jobweb" as const,
+      location: "Albuquerque, NM",
+      url: "https://lensa.com/job",
+    };
+    const now = Date.parse("2026-08-15T00:00:00Z");
+    const profile = { topics: ["machine learning"], locations: ["Boston"] };
+    const [remote] = scoreJobs([job({ ...base })], profile, now);
+    const [notRemote] = scoreJobs(
+      [job({ ...base, isRemote: false })],
+      profile,
+      now,
+    );
+
+    // (1) THE CLAIM IS GONE, and the existing two-clause join collapses to the
+    // one-clause sentence rather than inventing any replacement text.
+    expect(remote.matchReason).toBe("Matches your machine learning focus");
+    expect(remote.matchReason).not.toContain("remote-friendly");
+
+    // (2) THE SCORE DID NOT MOVE. Both numbers were measured on the REVERTED
+    // source before this fix landed and are byte-identical after it: `score` is
+    // finished at the top of the push and `reasonFor` is called inside the same
+    // object literal, with nothing reading the returned string back.
+    expect(remote.score).toBe(0.7545560085694348);
+    expect(notRemote.score).toBe(0.7230560085694349);
+
+    // (3) THE RAW FLAG STILL FEEDS THE SCORE, which is the boundary this fix
+    // must NOT cross: `locationFit(item.location, item.isRemote, …)` is
+    // A22-03(b)'s deliberate raw reader. If a later change gates at INGESTION
+    // or at `locationFit` instead of here, these two collapse to one number and
+    // this line goes red.
+    expect(remote.score).not.toBe(notRemote.score);
+  });
+
+  it("keeps the remote clause on sources that own the flag", () => {
+    const now = Date.parse("2026-08-15T00:00:00Z");
+    const profile = { topics: ["machine learning"], locations: ["Boston"] };
+    // `remotive.ts` and `himalayas.ts` hard-code `isRemote: true` from the
+    // source's own structured record. The gate is on the SOURCE, not on the
+    // flag, and these are the rows that prove it did not over-reach.
+    for (const source of ["remotive", "himalayas", "adzuna"] as const) {
+      const [scored] = scoreJobs(
+        [job({ id: `${source}:1`, source, location: "Albuquerque, NM" })],
+        profile,
+        now,
+      );
+      expect(`${source}: ${scored.matchReason}`).toBe(
+        `${source}: Matches your machine learning focus and remote-friendly`,
+      );
+    }
+  });
+
+  it("falls back to the web-search wording when the remote clause was the only reason", () => {
+    // **THE REACHABLE EDGE round 25 B named so C would lock it rather than
+    // discover it.** When the clause was the row's ONLY reason, dropping it
+    // empties `parts` and the PRE-EXISTING empty-parts fallback fires instead.
+    // Measured on the reverted source, this exact row read `Remote-friendly` —
+    // the rejected claim standing alone as the whole sentence. It now reads
+    // `Matched by web search`, which is existing text, invents nothing, and
+    // reinserts nothing (Ruling 26 satisfied).
+    const now = Date.parse("2026-08-15T00:00:00Z");
+    const barista = {
+      title: "Barista",
+      description: "Make coffee.",
+      location: "Albuquerque, NM",
+    };
+    // `applyFloor: false` because a reason-less row scores below the floor and
+    // would otherwise be dropped before it could be read.
+    const [web] = scoreJobs(
+      [job({ id: "jobweb:1", source: "jobweb", ...barista })],
+      { topics: [] },
+      now,
+      { applyFloor: false },
+    );
+    expect(web.matchReason).toBe("Matched by web search");
+    expect(web.score).toBe(0.325);
+
+    // THE ADMITTED CONTROL: the identical shape on a source that owns the flag
+    // still produces the standalone `Remote-friendly` sentence, so this case
+    // is proving the SOURCE gate and not merely the empty-parts fallback.
+    const [owned] = scoreJobs(
+      [job({ id: "remotive:9", source: "remotive", ...barista })],
+      { topics: [] },
+      now,
+      { applyFloor: false },
+    );
+    expect(owned.matchReason).toBe("Remote-friendly");
+    expect(owned.score).toBe(0.332);
+  });
+
   it("does not let a method-only web posting pass a battery required-topic gate", () => {
     const aiRole = job({
       id: "jobweb:ai",

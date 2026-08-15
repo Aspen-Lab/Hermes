@@ -23,6 +23,7 @@ import {
   toScoringItem,
 } from "@/lib/opportunities/shared";
 import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
+import { rendersRemoteClaim } from "./remote-claim";
 import type { RawItem } from "@/lib/sources/types";
 import type {
   CareerStage,
@@ -293,7 +294,22 @@ function reasonFor(
     parts.push(`Matches your ${matched.slice(0, 3).join(", ")} focus`);
   }
   if (careerFit >= 0.85 && stage) parts.push(`fits a ${stage} profile`);
-  if (item.isRemote) parts.push("remote-friendly");
+  // A25-01 / RULING 68b. **THIS LINE READ `if (item.isRemote)`.** A22-03(b)
+  // drew the render boundary at `mapper.ts` — a `jobweb` row's `isRemote` comes
+  // from a search snippet that can belong to a NEIGHBOURING posting — but the
+  // reason line is assembled HERE, at scoring time, from the raw flag, so the
+  // claim reached the reader anyway. Measured live by round 25 A on
+  // `lensa.com`: the report's "Why Peer sent this to you" read
+  // `… and remote-friendly` on a posting whose own provider title says
+  // `job in Albuquerque`, while the same page's location and work-mode
+  // surfaces correctly showed no `Remote` at all — 5 of 5, byte-identical.
+  // The predicate is now shared with `mapper.ts` rather than re-derived.
+  //
+  // **NO SCORE MOVES, AND THAT IS STRUCTURAL, NOT HOPEFUL:** `score` is
+  // finished before `reasonFor` is called, and nothing reads the returned
+  // string back. `locationFit(item.location, item.isRemote, …)` below is
+  // A22-03(b)'s DELIBERATE raw reader and is untouched.
+  if (rendersRemoteClaim(item)) parts.push("remote-friendly");
   if (parts.length === 0) {
     parts.push(
       item.source === "jobweb" ? "Matched by web search" : "Meets your job filters",

@@ -12,6 +12,7 @@ import {
   cleanJobSubtitlePart,
   cleanJobTitle,
 } from "@/lib/opportunities/job-cleanup";
+import { rendersRemoteClaim } from "./remote-claim";
 import type { ScoredJobItem } from "./types";
 
 const MAX_SIGNALS = 8;
@@ -174,7 +175,11 @@ export function scoredJobToJob(
   // `scoring.ts`'s own, so no score moves. What changes is only what the
   // reader is shown. `item.workMode`, which enrichment derives from OWNED page
   // text, still wins outright when present — the honest source is unaffected.
-  const rendersRemote = item.isRemote && item.source !== "jobweb";
+  // A25-01 / RULING 68b: the expression that used to sit inline here is now the
+  // shared predicate in `./remote-claim`, so the reason line built at scoring
+  // time draws the same boundary instead of a second copy of it. Same value,
+  // same behaviour — `rendersRemoteClaim` IS this expression, moved.
+  const rendersRemote = rendersRemoteClaim(item);
   const location =
     cleanJobSubtitlePart(item.location) ??
     (rendersRemote ? "Remote" : "See posting");
