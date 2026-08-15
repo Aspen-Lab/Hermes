@@ -68136,3 +68136,345 @@ grep -rn "data-deadline-milestone|data-job-fact|data-event-fact|
 
 **CLUSTER 2 COMPLETE — 4 more of the 18 (V26-J03, V26-E03, V26-J04, V26-E04);
 8 of 18 designed so far. Cluster 3 (the remaining ten) follows.**
+
+### Round 26 — Agent B (item 3, cluster 3 of 3: **THE REMAINING TEN — AND FOUR OF THEM SHOULD NOT BE ON THE LIST. V26-J05 IS THREE BINDING §1d EXCLUSIONS. V26-J01 AND V26-J09 ARE FIXTURE ARTIFACTS — BOTH RENDER CORRECTLY AT TIER 0 THE MOMENT THEIR FIELD IS POPULATED, PROVEN BY RENDERING THE SHIPPED COMPONENT. V26-J07 IS A RECORDED DECISION TAKEN ON A FALSE PREMISE — the build's own comment says "a progress bar the plate does not have" and THE PDF's VECTOR DRAWINGS SHOW THE BAR, filled to 0.671 against a stated `6 of 9`. B RECOMMENDS THE BASELINE MOVE FROM 18 TO 14, WITH 1 POLICY. The six genuine items are designed.**)
+
+**STATUS: item 3 cluster 3 of 3 — ITEM 3 COMPLETE, all 18 items dispositioned.**
+B changed no code. Harness deleted before this commit. No credential printed,
+logged, committed or written anywhere.
+
+---
+
+# **PART A — THE FOUR ITEMS THAT SHOULD COME OFF THE LIST**
+
+**B does not strike items — A ranks and the manager strikes. Each of these is a
+RECOMMENDATION with the evidence attached, and none of them is B reversing a
+recorded decision.**
+
+## **V26-J05 — STRIKE. IT IS §1d EXCLUSIONS 1, 2 AND 3, ALL THREE BINDING.**
+
+A ranked three sub-findings: two plate rows missing, one non-plate row present.
+**All three are already decided, by name, in the manager's own binding ruling
+table, and the build cites the ruling in its own comment**
+(`src/app/jobs/[id]/page.tsx:45-52`):
+
+> *"Two of the plate's four are deliberately absent under manager ruling §1d:
+> 'How competitive this actually is' (Peer presents, the reader judges) and 'The
+> role in three clean sentences' (merged into 'What the role is')."*
+
+and at `:62-63`, on the extra row:
+
+> *"Not on the plate. Ruling §1d keeps it: Phase 9 built it, it quotes the
+> posting verbatim, and the plate predates the feature."*
+
+| A's sub-finding | §1d | ruling |
+|---|---|---|
+| `How competitive this actually is` missing | **exclusion 1** | *"Stay deleted, and do NOT restore the promise."* — the user's explicit instruction that Peer presents facts and the reader judges. **§1b re-affirms it**: *"The competitiveness verdict stays deleted."* |
+| `The role in three clean sentences` missing | **exclusion 2** | *"Stay merged, promise stays out."* |
+| `What this employer actually asks for` extra | **exclusion 3** | *"Keep. … Do not delete real content to match a mock."* |
+
+**§1d's own consequence clause is addressed to A by name:** *"Items 1–5 are
+settled. They are differences from the plate that will never be closed. **A must
+exclude them from the percentage** — remove them from the denominator … Say in
+each round's log how many elements were excluded by ruling."*
+
+**A applied §1d correctly on the VALUE surface** — part 2's exclusion list
+re-lists "§1d exclusions 7 and 8" and applies them — **and did not carry §1d
+across to the new VISUAL surface, which is how V26-J05 got ranked.** That is a
+first-census oversight and B flags it as one, not as carelessness: exclusions 1–3
+had never had a visual list to be applied to before. **Every future visual census
+must walk §1d 1–6 the same way the value census walks 7 and 8.**
+
+**Recommendation: STRIKE V26-J05 in full. Do not price it. `competitiveness §1b`
+is on B's own never-reverse list and B is not touching it.**
+
+## **V26-J01 — STRIKE OR DOWNGRADE. THE SECTION IS BUILT, SHIPS, AND RENDERS AT TIER 0. PROVEN BY EXECUTION.**
+
+A ranked this first on the job surface: *"the left `<section data-section="what-the-role-is">`
+does not appear in the markup at all on the no-LLM path, with a fully-populated
+plate-shaped row."*
+
+**B rendered the SHIPPED `JobReport` through `renderToStaticMarkup` on the no-LLM
+path (`enrichment: null`, `providerConfigured: false`) five times, changing one
+field at a time:**
+
+| render | `summary` | `data-section="what-the-role-is"` | `data-role-bullet` count |
+|---|---|---|---|
+| (1) A's shape — every other field populated, **no `summary`** | absent | **false** | 0 |
+| (2) **identical row + `summary` populated** | 3 sentences | **TRUE** | **3** |
+| (3) `summary` populated, no materials | 2 sentences | **TRUE** | 2 |
+| (4) `summary` a single sentence | 1 sentence | **TRUE** | 1 |
+
+**The section is not LLM-gated.** `jobs/[id]/page.tsx:939`:
+
+```ts
+const roleBullets = enrichment?.roleSummary?.length
+  ? enrichment.roleSummary
+  : splitIntoBullets(roleSummary);   // roleSummary = cleanJobDescription(job.summary)
+```
+
+**The Tier-0 branch is the `else`, it is built, and it produces exactly the
+plate's three bullets from the posting's own sentences.** A's fixture did not set
+`summary`, so the `else` had nothing to split.
+
+**WHY `summary` IS EMPTY ON REAL ROWS, AND WHY THAT IS THE PRODUCT WORKING.**
+`mapper.ts:156-162` publishes a summary only when
+`fetchedPostingScope === "owned"` **and** the body has posting substance — **that
+is A22-03(a)'s FAIL-CLOSED gate, a recorded decision from round 22 C**, whose own
+comment records the measurement: *"B measured the whole live pool: ONE summary
+existed, it was the wrong posting's, and this removes exactly it."* So the
+section is absent on live rows because **Peer refuses to print posting prose it
+cannot prove it owns.**
+
+**And plate 02's own explainer text endorses exactly that**, measured verbatim
+from the PDF (`SegoeUI 10.88`, `#7d6a56`):
+
+> *"Fields Peer can't find are hidden rather than shown empty."*
+
+**So plate 10's "complete, shorter report, never a skeleton with holes in it" is
+SATISFIED, not violated** — the hole would be a `What the role is` heading over
+nothing.
+
+**Recommendation: STRIKE, or at most downgrade to an observation about
+`fetchedPostingScope` coverage.** **B is NOT proposing to loosen the ownership
+gate** — that is a recorded decision and loosening it re-opens the exact defect
+it closed.
+
+## **V26-J09 — STRIKE. THE CHIP DOES NOT LOSE THE WORD; THE FIELD WAS ABSENT. PROVEN BY EXECUTION.**
+
+| render | fields | header chips rendered |
+|---|---|---|
+| `employmentType: "full-time"` **+** `contractLength: "3 years"` | both | **`["Full-time · 3 years", "Visa sponsorship"]`** — **the plate's exact string** |
+| `contractLength: "3 years"`, `employmentType` **absent** (A's shape) | one | `["3 years", "Visa sponsorship"]` |
+
+`jobs/[id]/page.tsx:924-932` joins the two with a middot, and the code's own
+comment at `:920` names the target string: *"together in one header chip
+('Full-time · 3 years')"*.
+
+**Recommendation: STRIKE as a render difference. If it is worth keeping at all,
+it belongs on the VALUE list as `employmentType` coverage — how often the
+extractor populates it — which is A's instrument, not B's.**
+
+## **V26-J07 — `POLICY — manager decides`. A RECORDED DECISION RESTING ON A FALSE PREMISE, AND B FLAGS IT RATHER THAN REVERSING IT.**
+
+`jobs/[id]/page.tsx:1097-1103`, the build's own comment:
+
+> *"The build had a different heading, **a progress bar the plate does not
+> have**, and a two-column split … **The progress bar is gone under say-it-once:
+> the count line already states the ratio.**"*
+
+**A says the plate has a bar. The build says it does not. Neither a page image
+nor a text-span dump settles it, because a bar is a DRAWING. B extracted the
+PDF's vector rectangles for the skills region of plate 02 (p3):**
+
+| y | x | w | h | fill | |
+|---|---|---|---|---|---|
+| **283.5** | 79.5 | **453.0** | 4.5 | `#e9dfcc` | the **track** |
+| **283.5** | 79.5 | **303.8** | 4.5 | `#ff520d` | the **filled segment** |
+
+**303.8 / 453.0 = 0.6706. The plate's own counter on the line above reads
+`6 of 9 you already have`. 6 / 9 = 0.6667.** The two agree to within half a
+percent, and the geometry is identical to the timeline track measured in cluster
+2 (same x, same width, same height, same two-rect construction).
+
+**This is a progress bar filled to the matched fraction. A IS RIGHT AND THE
+BUILD'S COMMENT IS FACTUALLY WRONG.**
+
+**B does not reverse it.** The removal was a recorded decision and §1b's
+instruction is exact: *"If any other 'deliberate' decision looks wrong against
+the plate, mark it `POLICY — manager decides` and say so; do not reverse it
+yourself."* **So: `POLICY — manager decides`, with the measurement attached.**
+
+**Priced conditionally, so the manager can decide with a number in hand.** If
+restored: **two `<div>`s inside the existing `ReportSection`, between the counter
+line and the chip row** — an outer `h-1 rounded-full bg-border` and an inner
+`h-1 rounded-full bg-accent` at `width: matched/(matched+unmatched) * 100%`.
+**Zero new data** (`skills.matched.length` and `skills.unmatched.length` are both
+already in scope at `:1112-1113`), zero new tokens, **and it is the same
+component cluster 2 extracts for the timeline** — so if the track lands first
+this is a second call site, not a second component. **Empty state:** `skills` is
+already gated (`{skills && …}`); with zero matched the bar renders empty rather
+than absent, which is the honest reading of `0 of 9`.
+
+**A's second sub-finding in V26-J07 is NOT policy-blocked and should ship
+regardless:** the plate right-aligns `6 of 9 you already have` **on the label
+line**, and the build puts it on its own line beneath, left-aligned. **That is an
+ordinary layout fix** — the `ReportSection` heading row becomes
+`flex items-baseline justify-between`, exactly the same change cluster 1 makes
+for `Who'll be in the room`'s counter, so **one shared heading-row treatment
+lands both.**
+
+---
+
+# **PART B — THE SIX GENUINE ITEMS, DESIGNED**
+
+## **V26-E07 — `At this event ·` → `At this event:` (and `Speaking ·` → `Speaking:`). THE CHEAPEST ITEM IN THE ENTIRE LIST.**
+
+- **Plate 03:** a bold lead-in, then **a colon and a space**, then the
+  continuation in a lighter tone — a definition shape.
+- **Build:** `events/[id]/page.tsx:1585` `At this event · {item.atEvent}` and
+  `:1668` `Speaking · {item.speaking}`.
+- **Fix:** replace ` · ` with `: ` at those two lines. **Two characters, two
+  lines, one file.**
+- **Boundary:** the middot is the correct separator everywhere else on both
+  surfaces (the subtitle triple, the fact-tile sub-lines, the roster
+  `descriptor · booth N`, the chip `Full-time · 3 years`). **This is not a
+  global middot policy** — only these two label-introducing lead-ins change.
+- **Empty state:** both are already guarded (`{clean(item.atEvent) && …}`), so a
+  missing value renders neither the label nor the colon. **No dangling colon is
+  reachable.**
+- **Tests at risk:** grep `"At this event"` / `"Speaking"` across the test tree
+  before editing — **any assertion that matches the middot form must be updated
+  in place, never deleted**, and the updated assertion is the fix's own witness.
+
+## **V26-E06 — REMOVE THE STAR FROM HIGHLIGHTED ORG AND PERSON CARDS.**
+
+- **Plate 03:** highlighted cards carry **only** a right-aligned tinted
+  descriptor badge. **Stars appear only on the `EVERY OTHER …` roster rows**,
+  where the control's stated purpose is *"star anyone Peer got wrong"*.
+- **Build, confirmed:** the highlighted org card at `events/[id]/page.tsx:~1590`
+  renders `<StarButton active={starred} … onClick={() => onToggleStar(key)} />`
+  **inside the same `flex items-start justify-between` card that already carries
+  the descriptor badge.** The person card mirrors it.
+- **Fix:** drop the `StarButton` from the two highlighted-card branches only.
+  **The roster-tail `StarButton` (`:1277-1286`) and the star state
+  (`ROSTER_STARS_KEY`, `:67`, `:830-863`) are UNTOUCHED.**
+- **Boundary — and this one is load-bearing:** **do not delete the star state or
+  the toggle.** A highlighted card and a roster row can be the same entity, so a
+  starred roster row must keep its star after the highlighted card stops showing
+  one. **The fix removes a CONTROL from one render site; it removes no data and
+  no capability.**
+- **Empty state:** none — removing an element cannot create one. The card's
+  `justify-between` must be checked so the descriptor badge does not jump to the
+  centre when the star leaves; the badge should stay right-aligned.
+- **A's supporting argument is worth keeping in the log** because it is a
+  product argument, not a taste one: the control's own explanation ("it moves to
+  the top here") **is meaningless on a card that is already at the top.**
+
+## **V26-E05 — GIVE `WHAT ACTUALLY HAPPENS THERE` ITS `NEW` BADGE AND ITS EXPLAINER NOTE.**
+
+- **Plate 03 §9:** the label carries a `NEW` badge (`Consolas 8.25`, violet
+  `#5b4bbf`), and **beneath the chips** sits an explainer note with a left orange
+  rule.
+- **Build:** `events/[id]/page.tsx:2027` renders `<ReportSection title="What
+  actually happens there">`, then the description, then straight into
+  `<div className="mt-4 flex flex-wrap gap-2">` of `data-activity-chip` chips.
+  **No badge, no note.**
+- **THE FIX IS A COPY, NOT AN INVENTION — and that is the whole argument for
+  ranking it cheap.** The job report's structurally identical section already has
+  both, ten lines apart in the sibling file: `jobs/[id]/page.tsx:1107-1110`
+  renders `<ReportBadge>New</ReportBadge>` + `<ReportBadge tone="accent">Tier
+  0</ReportBadge>` in a `<p className="-mt-2 mb-4 flex flex-wrap items-center
+  gap-2">`, and `:1134-1138` renders the note as
+  `<p className="mt-4 text-caption leading-5 text-text-faint">`.
+- **Boundary — the note's WORDS must be written for events, not copied.** The
+  job note says *"Highlighted chips come from your Required and Explore topics…
+  worth seeing before you spend an evening on the application."* **Pasting that
+  onto the event surface would state something false** (there is no application).
+  The plate's own event note is about activities lining up with the reader's
+  topics. **The chip semantics do transfer** — `data-activity-chip="matched"`
+  already mirrors `data-skill-requirement="matched"` — so the note can describe
+  the same rule in the event's own words.
+- **The plate's note carries a LEFT ORANGE RULE** which the job build does not
+  have; adding `border-l-2 border-accent/50 pl-4` to **both** notes closes A's
+  observation on both surfaces at once.
+- **Empty states:** the chip block is already gated
+  (`{activities.length > 0 && …}`); **the note and the badge must be gated on the
+  same condition**, or an event with no activities renders an explainer about
+  chips that are not there. **This is the one way this cheap item can ship
+  wrong.**
+
+## **V26-J08 / V26-E08 — FOUR CHIP ROLES WHERE THE BUILD HAS TWO. ONE MECHANISM, TWO SURFACES.**
+
+- **Plate 02:** `Postdoc` amber `#a8642a` · `Full-time · 3 years` neutral outline
+  `#7d6a56` · **`Visa sponsorship` BLUE `#2b5c8f`** · `91% match` orange
+  `#a33206`. **Plate 03:** `Industry summit` amber · `+ career fair` neutral ·
+  `CCF-B` neutral fill · `88% match` orange.
+- **Build:** `HeaderChip` (`jobs/[id]/page.tsx:758-778`) has exactly **three**
+  tones and only two are used on the header row —
+  `border-accent/25 bg-accent/10 text-accent` (accent) and
+  `border-border bg-surface text-text-muted` (neutral); the third, `danger`, only
+  fires for `wont-sponsor`. `visaTone` (`:281-286`) returns **`"accent"`** for
+  `sponsors`, **which is why the visa chip and the match chip render
+  identically.**
+- **Fix:** add two tones to `HeaderChip` — **`info`** (the plate's blue, for the
+  positive visa state) and **`kind`** (the plate's amber, for the role/event
+  kind) — then point `visaTone`'s `sponsors` branch at `info` and the
+  `job.roleKind` / event-kind chip at `kind`. **The match chip keeps `accent` and
+  the type chip keeps neutral, so two of the four are already right.**
+- **Boundary:** **A scored this as ROLE ASSIGNMENT, not palette fidelity, and the
+  fix must stay on that side of the line.** Use existing semantic tokens
+  (`text-tag` / `text-link` families) rather than hard-coding the plate's hexes —
+  palette fidelity is explicitly out of the round's scope and the app is
+  multi-theme (`colorTheme: "system:ember"` in the live profile), so a literal
+  hex would break in five other themes. **What must change is that four
+  categories get four distinguishable signals**; which exact hue is the theme's
+  business.
+- **`danger` must keep firing for `wont-sponsor`.** The plate has no
+  won't-sponsor chip to copy, and turning a red warning blue would be a real
+  regression. **Only the `sponsors` branch moves.**
+- **Empty state:** every chip is already individually gated; the header row
+  itself is gated on any-chip-present (`jobs:988-993`). No new state.
+- **A's own caveat stands and B repeats it:** the `CCF-B` rank chip was never
+  exercised by A's fixture, so **V26-E08 is scored on three chips, not four**,
+  and the design should not assume a fourth event tone until one is measured.
+
+## **V26-J06 — HALF FIXTURE ARTIFACT, HALF GENUINE, AND THE GENUINE HALF NEEDS DATA THAT DOES NOT EXIST.**
+
+**`SEEN ON` is BUILT and is NOT LLM-gated — proven by execution.** With
+`sourceId` set, the render returns `apply rows = ["materials","seen on"]`;
+without it, `["materials"]`. `applyRows` (`jobs/[id]/page.tsx:965-972`) pushes
+`Seen on` whenever `jobSourceLabel(job.sourceId)` resolves, and `jobSourceLabel`
+(`:123`) falls back to the raw id, so **any row carrying a `sourceId` renders the
+row.** A's fixture did not set one. **A's sharpest sub-point — "Peer always knows
+which source a row came from; it is never missing data" — is right, and the build
+already agrees with it.**
+
+**`ELIGIBILITY` and `TEAM` are genuinely absent, and the build says why in its
+own comment at `:1176-1179`: they have no field behind them.** So closing them is
+**not a render fix** — it needs two new extracted fields, which is an extraction
+change on the value side. **B prices this half THIN and says so: it is the only
+item in the whole 18 that cannot be closed by changing presentation**, and it
+should be re-scoped as a value-surface item (an extractor gap) rather than a
+visual one, or deferred behind the gate.
+
+**Recommendation: keep V26-J06 on the list at ONE row (`ELIGIBILITY`/`TEAM`),
+re-scoped as an extraction item; the `SEEN ON` half comes off.**
+
+---
+
+# **THE DISPOSITION OF ALL 18, IN ONE TABLE**
+
+| item | B's disposition |
+|---|---|
+| V26-J02 / V26-E02 serif | **GENUINE — designed** (cluster 1) |
+| V26-E01 heading hierarchy | **GENUINE — designed, and upgraded: INVERTED, not flattened** (cluster 1) |
+| V26-J10 two label steps | **GENUINE — designed, folds into the hierarchy** (cluster 1) |
+| V26-J03 / V26-E03 timeline | **GENUINE — designed as one shared track** (cluster 2) |
+| V26-J04 / V26-E04 fact tiles | **GENUINE — designed; 1:1 slot mapping, no `POLICY`** (cluster 2) |
+| V26-J08 / V26-E08 chips | **GENUINE — designed** |
+| V26-E05 happenings badge + note | **GENUINE — designed** |
+| V26-E06 star on highlighted cards | **GENUINE — designed** |
+| V26-E07 middot → colon | **GENUINE — designed, cheapest in the list** |
+| V26-J06 apply rows | **HALF** — `SEEN ON` comes off (fixture artifact); `ELIGIBILITY`/`TEAM` re-scoped as an extraction item |
+| **V26-J05 locked block** | **STRIKE — §1d exclusions 1, 2 and 3, binding** |
+| **V26-J01 `WHAT THE ROLE IS`** | **STRIKE — renders at Tier 0; the ownership gate (A22-03a) is the product working, and plate 02's own text endorses hiding what Peer can't find** |
+| **V26-J09 employment-type chip** | **STRIKE — renders `Full-time · 3 years` when the field exists** |
+| **V26-J07 progress bar** | **`POLICY — manager decides`** — recorded removal, false premise, measurement attached; the counter's right-alignment half ships regardless |
+
+**B RECOMMENDS THE VISUAL BASELINE MOVE FROM 18 TO 14 GENUINE ITEMS, PLUS 1
+`POLICY`, WITH 3 STRUCK. B does not move it — A ranks and the manager strikes.**
+
+**WHY THIS IS NOT B TALKING THE NUMBER DOWN.** Every strike rests on either a
+binding ruling the manager already wrote (V26-J05) or on the shipped component
+rendering the plate's own output under execution (V26-J01, V26-J09) — **and B
+raised the other direction too**, correcting A's "flattened" to the worse
+"inverted", finding that the plate's serif prose has no italic on plate 03, that
+the `Today` dot is not larger, and that the build's progress-bar comment is
+false. **The list got shorter where the build was already right and harder where
+it was not.**
+
+---
+
+**ITEM 3 COMPLETE — all 18 dispositioned, 14 designed or re-scoped, 3 recommended
+struck, 1 `POLICY`. Item 4 (the 68b raw-reader pricing) follows.**
