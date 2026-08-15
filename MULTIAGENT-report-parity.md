@@ -74725,3 +74725,95 @@ the moment this lands. The rendered title will **keep its grade**
 **`stemgateway.nasa.gov` is untouched and stays named-and-not-counted.**
 
 ---
+
+### Round 27 — Agent C (item 3 of 7: **A27-01 — `isEventHubResult(title, url)` SHIPS AS A SEPARATE PREDICATE. `isEventIndexResult` AND `isEventIndexPage` ARE BYTE-UNTOUCHED. THE TWO MUST-KEEPS THAT KILLED B's TITLE-ONLY DRAFT ARE NOW STANDING TESTS ON THE NEW PREDICATE, SO A LATER TITLE-ONLY ATTEMPT REDS BEFORE IT SHIPS.**)
+
+**STATUS: COMPLETE.** Item 3 of seven. Code plus this entry in one commit.
+
+## **WHAT SHIPPED**
+
+`src/lib/events/sources/eventweb.ts`, immediately below `isEventIndexResult`:
+
+- `EVENT_HUB_PATH_SEGMENT_RE` — the closed hub vocabulary, matched against the
+  **TERMINAL** path segment only.
+- `EVENT_HUB_TITLE_TAIL_RE` — **PLURAL index nouns only**, as the head's last
+  whole token.
+- `EVENT_HUB_TITLE_HEAD_RE` — `^careers?\b`.
+- `isEventHubResult(title, url?)` — **BOTH signals required**, `url` optional,
+  **`false` without one**, and `false` on an unparseable URL.
+- One call in `webResultToRawEventItem`, immediately after `isEventIndexResult`.
+
+**`isEventIndexResult` and `isEventIndexPage` ARE NOT TOUCHED — not one
+character.** The shipped *"leaves the raw predicate's own contract alone"* test
+still passes unchanged, which is what it exists for.
+
+**THE HEAD IS TAKEN WITH THE SHIPPED `titleSegments` SPLITTER**, plus a cut at
+the first colon. **No new splitting rule was written**, so admission and name
+selection cannot drift apart — the same reuse discipline `isEventIndexResult`
+itself uses. **This is a small addition to B's text**, which described the head
+as *"cut at the first `:`, `|`, or SPACED dash"*: those are exactly what
+`titleSegments` already cuts, so C reused it rather than restating it.
+
+## **THE NEW TESTS — `eventweb.test.ts`, +9 blocks (304 -> 313 across `src/lib/events`), ZERO deletions, ZERO edits**
+
+1. **`Battery Events` @ `volta.foundation/event`** — `true`, **and the row is
+   `null` through the shipped `webResultToRawEventItem`**, so the drop is
+   asserted end to end and not only on the predicate.
+2. **`Career - Join Our Passionate Team` @ `iongroup.com/careers`** — `true`.
+3. **`Annexus Health Conferences: ...` @ `annexushealth.com/conferences`** —
+   `true`. **Recorded honestly: B could not re-witness this row's ADMISSION
+   (it lacks the provider's snippet); the GUARD GAP is what reproduces, and
+   that is what this asserts.**
+4. **Agreement with the shipped index check** on the two hub rows it already
+   drops (`cambridgeenertech.com/cet/conferences`, `gain.inl.gov/news/events`).
+5. **The two must-keeps that killed the title-only draft** —
+   `Co-located Workshops | The Battery Show North America` and
+   `DLR Events | Events for July 2026` at its real workshop slug.
+6. **Ruling 64b's witness on the NEW predicate** — both spellings of
+   `All Solid State Battery Workshop`, against **three hostile hub URLs each**.
+7. **Single-event sites at bare hub paths** — `solarpaces.org/conference`,
+   `thebatteryshowsouth.com/en/conference`, and the sweep's one real
+   row-admission call `example.com/conference`.
+8. **No URL, and an unparseable URL** — `false` for all nine corpus titles.
+9. **The shipped-splitter clause**, labelled **CONSTRUCTED, not sighted.**
+
+## **NEGATIVE PROOFS — SIX MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+Baseline for every row: **313 of 313 passing across `src/lib/events`.**
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **predicate forced to `false`** (whole item disabled) | **5 failed / 308 passed** |
+| 2 | **signal 2's nouns allowed SINGULAR** | **2 failed / 311 passed** — *64b regresses immediately, exactly as B said* |
+| 3 | **ANY path segment instead of the TERMINAL one** | **1 failed / 312 passed** — *the DLR slug row* |
+| 4 | **`careers?` removed from signal 1** | **1 failed / 312 passed** |
+| 5 | **signal 2 dropped (signal 1 alone)** | **4 failed / 309 passed** |
+| 6 | **head cut at a BARE hyphen instead of the shipped splitter** | **2 failed / 311 passed** |
+
+**MUTATION 5 IS THE ONE WORTH READING.** Dropping signal 2 reds not only this
+item's own blocks but **two unrelated shipped date tests** — because their
+fixtures sit at hub-shaped URLs and the row stops existing. **That is the
+measured proof that signal 1 alone is unsafe**, and it is stronger than B's
+argument for it.
+
+**Mutation 4's mirror — `careers?` removed from signal 2 — has NO uniquely-red
+case in this corpus and is DISCLOSED as such**: the only measured careers row
+(`iongroup.com`) has `careers` in its path too, so signal 1 covers it. The
+clause is kept because signal 1 alone at a `/careers` path would drop a real
+event hosted under one, which is B's reason; **C names it as an admitted control
+rather than claiming a proof it does not have.**
+
+## **THE GATE AFTER ITEM 3**
+
+`npx vitest run` **97 files / 2030 tests, 2030 PASSING — ZERO failures**
+(2021 -> 2030, **+9**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 56 of 56**
+— run because this is an event-side change.
+
+**FLAGGED, NOT REVERSED (§1b):** `eventNameFrom`'s URL-host last resort. Fixing
+admission removes the bare host FOR THESE THREE ROWS and not in general. It is a
+recorded design (B9-04 Fix 1 / Ruling 35); **no round has yet witnessed a bare
+host on a RENDERED row**, so there is nothing to price yet. Named here so round
+28 does not rediscover it.
+
+---

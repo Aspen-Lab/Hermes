@@ -539,6 +539,96 @@ export function isEventIndexResult(title: string): boolean {
 }
 
 /**
+ * A27-01 (round 27, item 3). THE INDEX CHECK IS THE ONLY EVENT-SIDE KIND GUARD
+ * THAT NEVER READS THE URL — one missing input, three faces.
+ *
+ * Three listing/hub pages were admitted at ingestion 5 of 5:
+ * `volta.foundation/event` (`Battery Events`, which then rendered the BARE HOST
+ * as its name), `annexushealth.com/conferences` and `iongroup.com/careers`
+ * (`Career - Join Our Passionate Team` — and the event surface has no careers
+ * guard at all, where the job side has `CAREERS_INDEX_TITLE_RE`). Every one of
+ * the five shipped kind guards returns `false` on all three, because
+ * `EVENT_INDEX_TITLE_RE`'s alternatives are anchored on the index noun leading
+ * the title, and these titles lead with a topic, a brand or a bare "Career".
+ *
+ * **A TITLE-ONLY RULE IS PROVABLY IMPOSSIBLE HERE, AND THAT IS MEASURED RATHER
+ * THAN ASSUMED.** A fifth alternative on `EVENT_INDEX_TITLE_RE` — "a plural
+ * index noun ending the first segment" — was swept over 1 747 string literals
+ * in the event test files and it drops TWO SHIPPED MUST-KEEPS:
+ * `Co-located Workshops | The Battery Show North America` and
+ * `DLR Events | Events for July 2026`. **`DLR Events` and `Battery Events` are
+ * the same shape, `<Word> Events`.** No rule reading only the title can
+ * separate them, so the URL is not a convenience here — it is the only
+ * available discriminator.
+ *
+ * BOTH SIGNALS ARE REQUIRED, and either alone is measurably unsafe: signal 2
+ * alone drops `Co-located Workshops`; signal 1 alone drops a single-event site
+ * whose own page sits at a bare `/conference`.
+ *
+ * FIVE CLAUSES:
+ *
+ *  1. **Signal 2's index nouns are PLURAL ONLY.** This is Ruling 64b's boundary
+ *     honoured by construction — `All Solid State Battery Workshop` is
+ *     SINGULAR, so the signal can never fire on it whatever its URL.
+ *  2. **The head is taken with the SHIPPED `titleSegments` splitter** (spaced
+ *     separators only), plus a cut at the first colon. No new splitting rule is
+ *     written, so a bare hyphen inside `Co-located` is not a separator — the
+ *     same reading `selectEventTitleSegment` already takes.
+ *  3. **Signal 1 is the TERMINAL path segment.** A hub noun with an item below
+ *     it is a real page: `event.dlr.de/en/event/emea2026-workshop-...` must
+ *     survive, and the shipped slug-recovery test depends on it.
+ *  4. **`careers?` sits in BOTH signals.** In signal 1 alone it would not reach
+ *     `iongroup.com`; in signal 2 alone the path clause would drop a real event
+ *     hosted under a `/careers` path.
+ *  5. **`url` is optional and the predicate returns `false` without one.** That
+ *     is what makes every existing one-argument assertion on
+ *     `isEventIndexResult`/`isEventIndexPage` safe BY CONSTRUCTION rather than
+ *     by inspection — and those two keep their contracts byte-untouched, which
+ *     is what the shipped "leaves the raw predicate's own contract alone" test
+ *     exists to protect.
+ *
+ * Failure direction: a hub path with a singular or topic title is ADMITTED,
+ * exactly as today. The undecidable case admits — a guard that DROPS is held to
+ * a higher bar than one that admits. A dropped row renders nothing at all; this
+ * predicate never edits a value.
+ *
+ * NOT CLOSED BY THIS, AND FLAGGED RATHER THAN REVERSED: `eventNameFrom`'s
+ * URL-host last resort (B9-04 Fix 1 / Ruling 35) is a separate, recorded design
+ * and stays reachable by any row whose segments are all rejected. Dropping
+ * these three rows removes their bare-host names, not the mechanism. No round
+ * has yet witnessed a bare host on a RENDERED row; when one is witnessed, that
+ * is the moment to price a name-path guard.
+ */
+const EVENT_HUB_PATH_SEGMENT_RE =
+  /^(?:events?|conferences?|seminars?|workshops?|symposium|symposia|calendar|agenda|careers?|jobs)$/i;
+
+const EVENT_HUB_TITLE_TAIL_RE =
+  /(?:^|\s)(?:events|conferences|seminars|workshops|symposia)$/i;
+
+const EVENT_HUB_TITLE_HEAD_RE = /^careers?\b/i;
+
+export function isEventHubResult(title: string, url?: string): boolean {
+  if (!url) return false;
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  const segments = path.split("/").filter(Boolean);
+  const terminal = segments[segments.length - 1];
+  if (terminal === undefined || !EVENT_HUB_PATH_SEGMENT_RE.test(terminal)) {
+    return false;
+  }
+  const beforeColon = title.split(":")[0];
+  const head = (titleSegments(beforeColon)[0] ?? title.trim()).replace(
+    /[.,;!?]+$/,
+    "",
+  );
+  return EVENT_HUB_TITLE_TAIL_RE.test(head) || EVENT_HUB_TITLE_HEAD_RE.test(head);
+}
+
+/**
  * Best available human-readable event name from a search result.
  *
  * Page titles arrive in three shapes: a clean event name, an event name with
@@ -1666,6 +1756,10 @@ export function webResultToRawEventItem(
   // place extraction, so an index page leaves by KIND and never reaches the
   // place guard at all.
   if (isEventIndexResult(title)) return null;
+  // A27-01: the same question the index check asks, but with the URL as a
+  // second input — see isEventHubResult. A separate predicate, so
+  // isEventIndexResult's own contract stays byte-unchanged.
+  if (isEventHubResult(title, url)) return null;
   // B12-03 gap B: the URL is now a second input — see isNewsArticleTitle.
   if (isNewsArticleTitle(title, url)) return null;
   if (isPaperPageTitle(title)) return null;

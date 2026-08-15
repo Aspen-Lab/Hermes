@@ -7,6 +7,7 @@ import {
   extractEventDate,
   extractEventDayCandidates,
   isEarningsCallPage,
+  isEventHubResult,
   looksLikeEventTitle,
   ownedTitleSpan,
   webResultToRawEventItem,
@@ -2067,5 +2068,150 @@ describe("A23-02 — listing furniture in the event name", () => {
     expect(row("2026-08-01T12:00:00Z")).not.toBeNull();
     // The month is over: gone.
     expect(row("2026-09-02T00:00:00Z")).toBeNull();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────
+// A27-01 (round 27, item 3). THE BARE HUB URL.
+//
+// Three listing/hub pages were admitted at ingestion 5 of 5 in round 27 A's
+// census. Every one of the five shipped kind guards returns `false` on all
+// three. The one thing they share is the thing nothing looked at: the URL path
+// is a bare hub noun with no item below it.
+//
+// A TITLE-ONLY RULE IS IMPOSSIBLE, and that is the load-bearing finding: a
+// draft fifth alternative on `EVENT_INDEX_TITLE_RE` (a plural index noun
+// ending the first segment) drops two SHIPPED MUST-KEEPS, because `DLR Events`
+// and `Battery Events` are the same shape. Both are asserted below on the NEW
+// predicate, so any later attempt to make this a title rule reds a test.
+// ───────────────────────────────────────────────────────────────────────
+describe("A27-01: isEventHubResult", () => {
+  const NOW = Date.parse("2026-08-15T00:00:00Z");
+
+  it("drops the bare hub that rendered its own host as an event name", () => {
+    expect(isEventHubResult("Battery Events", "https://volta.foundation/event")).toBe(true);
+    // And the row leaves at admission, so nothing downstream can name it.
+    expect(
+      webResultToRawEventItem(
+        {
+          title: "Battery Events",
+          url: "https://volta.foundation/event",
+          snippet: "Upcoming battery conferences and workshops.",
+        },
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it("drops a careers hub — the face the event surface had no guard for at all", () => {
+    expect(
+      isEventHubResult("Career - Join Our Passionate Team", "https://iongroup.com/careers"),
+    ).toBe(true);
+  });
+
+  it("drops a brand-led conferences hub", () => {
+    expect(
+      isEventHubResult(
+        "Annexus Health Conferences: where to find us",
+        "https://annexushealth.com/conferences",
+      ),
+    ).toBe(true);
+  });
+
+  it("agrees with the shipped index check on the rows it already drops", () => {
+    // Kept in the corpus deliberately: the new predicate must AGREE with the
+    // old one rather than fight it.
+    expect(
+      isEventHubResult(
+        "Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech",
+        "https://www.cambridgeenertech.com/cet/conferences",
+      ),
+    ).toBe(true);
+    expect(
+      isEventHubResult(
+        "Events - Gateway for Accelerated Innovation in Nuclear",
+        "https://gain.inl.gov/news/events",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps the two must-keeps that killed the title-only draft", () => {
+    // `Co-located Workshops` — signal 2 fires, signal 1 does not. BOTH are
+    // required, and this row is why.
+    expect(
+      isEventHubResult(
+        "Co-located Workshops | The Battery Show North America",
+        "https://www.thebatteryshow.com/en/co-located-workshops.html",
+      ),
+    ).toBe(false);
+    // `DLR Events` — the hub noun is present but has an ITEM below it. The
+    // shipped slug-recovery test depends on this row surviving.
+    expect(
+      isEventHubResult(
+        "DLR Events | Events for July 2026",
+        "https://event.dlr.de/en/event/emea2026-workshop-on-battery-technology/",
+      ),
+    ).toBe(false);
+  });
+
+  it("honours Ruling 64b by construction — a SINGULAR index noun never fires", () => {
+    // 64b's own witness, restated on the new predicate. The URL is the most
+    // hostile one available: a bare hub path.
+    for (const url of [
+      "https://example.test/workshops",
+      "https://example.test/workshop",
+      "https://example.test/conferences",
+    ]) {
+      expect(isEventHubResult("All Solid State Battery Workshop", url)).toBe(false);
+      expect(isEventHubResult("All Solid-State Battery Workshop", url)).toBe(false);
+    }
+  });
+
+  it("keeps a single-event site whose own page sits at a bare hub path", () => {
+    // Signal 1 alone would drop both of these. They are the reason signal 2
+    // exists.
+    expect(
+      isEventHubResult("32nd SolarPACES Conference", "https://www.solarpaces.org/conference"),
+    ).toBe(false);
+    expect(
+      isEventHubResult(
+        "Conference Overview | The Battery Show South",
+        "https://www.thebatteryshowsouth.com/en/conference",
+      ),
+    ).toBe(false);
+    // The one real row-admission call site in the URL sweep: the head ends in
+    // a year, so signal 2 never fires and the row is still admitted.
+    expect(
+      isEventHubResult(
+        "International Battery Power Conference 2026",
+        "https://example.com/conference",
+      ),
+    ).toBe(false);
+  });
+
+  it("returns false with no url at all — every one-argument assertion is safe by construction", () => {
+    for (const title of [
+      "Battery Events",
+      "Career - Join Our Passionate Team",
+      "Annexus Health Conferences: where to find us",
+      "Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech",
+      "Events - Gateway for Accelerated Innovation in Nuclear",
+      "Co-located Workshops | The Battery Show North America",
+      "DLR Events | Events for July 2026",
+      "All Solid State Battery Workshop",
+      "32nd SolarPACES Conference",
+    ]) {
+      expect(isEventHubResult(title)).toBe(false);
+      expect(isEventHubResult(title, "not a url")).toBe(false);
+    }
+  });
+
+  it("takes the head with the SHIPPED splitter — a bare hyphen is not a separator", () => {
+    // CONSTRUCTED, not sighted, and labelled as such. `Co-located Workshops` on
+    // a bare hub path IS a hub row and drops; cut the head at the bare hyphen
+    // instead and the head becomes `Co`, which fires nothing. The shipped
+    // `titleSegments` splitter requires SPACED separators and is reused rather
+    // than re-written, so name selection and admission cannot drift apart.
+    expect(isEventHubResult("Co-located Workshops", "https://example.test/workshops")).toBe(true);
   });
 });
