@@ -70455,3 +70455,192 @@ logged, committed or written anywhere — `.env.local` was NEVER `cat`-ed;
 Every throwaway probe lived **outside** `web/src` (its own config, `*.probe.ts`
 include) or outside the repo entirely, and **`git status --porcelain
 --untracked-files=all` was verified clean before every commit.**
+
+### Round 26 — Agent C (item 14 of 15: **THE 68b RAW-READER CONVERSION LANDS. ALL FOUR SITES CONVERTED THROUGH ROUND 25's SHARED PREDICATE; `facets.ts` AND THE EVENT SURFACE UNTOUCHED; B's RE-SELECT TRAP AVOIDED AND LOCKED BY ITS OWN MUTATION. THE LIVE POOL IS VACUOUS AGAIN — 0 OF 9 — AND C DOES NOT BANK THE ZERO, EXACTLY AS B DID NOT. AND B's "NO SCORE MAY MOVE" BOUNDARY IS CORRECTED BY MEASUREMENT: FOR A READER WHOSE LEDGER CARRIES A FORMAT PREFERENCE, THE SCORE DOES MOVE — AND IT MUST.**)
+
+**STATUS: item 14, banked on its own commit. RULING 68b IS DISCHARGED.** Four
+files: `lib/jobs/remote-claim.ts` (one exported helper), `lib/jobs/pipeline.ts`
+(three sites), `lib/jobs/scoring.ts` (one site), and one new test file.
+**No test deleted, none edited.** Probe lived at `web/zz-r26c/` with its own
+config and a `*.probe.ts` include, **deleted before this commit**. No credential
+printed, logged or written — `.env.local` NEVER `cat`-ed; `profile.json` read for
+boolean key presence only.
+
+---
+
+## THE GATE, CONFIRMED COLD BEFORE THE FIRST EDIT
+
+**96 files / 1984 tests, 1984 PASSING — ZERO FAILURES**, exactly §1's carried
+figure.
+
+## THE FOUR SITES, CONVERTED
+
+| site | file · what | shape |
+|---|---|---|
+| 1 | `pipeline.ts` fresh-pool `facetCounts` | `countOpportunityFacets("jobs", items.map(withRenderedRemote))` |
+| 2 | `pipeline.ts` cached-pool `facetCounts` | same, on `rescored` |
+| 3 | `pipeline.ts` server facet filter | **filter on a projection, re-select the originals by `id`** |
+| 4 | **`scoring.ts:345`** the preference-ledger write | `opportunityFacetPreferenceConcepts("jobs", withRenderedRemote(item))` |
+
+**B's corrected citation is confirmed at the file: the ledger write is
+`scoring.ts:345`, not `:329`.**
+
+**BOUNDARIES HELD, EACH VERIFIED FROM THE DIFF:** `git diff --stat` on
+`src/lib/opportunities/facets.ts` is **EMPTY**; on `src/lib/events/` **EMPTY**;
+on `src/app/page.tsx` **EMPTY**. `facets.test.ts` SOLO **11 of 11 untouched-green**,
+which is the check B named — if it had gone red, the fix would have leaked into
+the shared function.
+
+## **B's ONE TRAP, AVOIDED AND THEN LOCKED**
+
+`pipeline.ts`'s filter return **is the row list that goes on to the score floor
+and top-N**, so a naive `.map()` would hand every downstream reader a rewritten
+`isRemote` and corrupt the three DELIBERATE raw readers A22-03(b) protects. The
+shipped code builds an id set from the projection and **re-selects from `scored`**:
+
+```ts
+const facetFilteredIds = new Set(
+  filterOpportunitiesByFacets("jobs", scored.map(withRenderedRemote), req.facets)
+    .map((item) => item.id),
+);
+const facetFiltered = scored.filter((item) => facetFilteredIds.has(item.id));
+```
+
+**Mutation F5 replaces exactly that with the naive `.map()` and goes RED.** The
+trap is now enforced rather than remembered.
+
+## THE NEGATIVE PROOFS — EIGHT MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **21 of 21 passing**. Each applied alone, restored from byte-identical
+backups:
+
+| # | mutation | red |
+|---|---|---|
+| **F0** | **FULL REVERT — all four sites back to the raw flag** | **8 failed / 13 passed** |
+| F1 | site 1 only (fresh-pool counts) | **1 failed** |
+| F2 | site 2 only (cached-pool counts) | **4 failed** |
+| F3 | site 3 only (server filter) | **2 failed** |
+| F4 | site 4 only (the ledger write) | **1 failed** |
+| **F5** | **the trap: naive `.map()` instead of re-selecting the originals** | **1 failed** |
+| F6 | invert the predicate — a row GAINS a claim | **10 failed** |
+| F7 | mutate in place instead of spreading | **6 failed** |
+
+## **TWO COVERAGE GAPS IN C's OWN FIRST DRAFT, FOUND BY MUTATION AND CLOSED**
+
+**F1 and F4 both came back GREEN on the first sweep, and neither was a code
+defect — both were tests that did not reach their site:**
+
+1. **Site 1 was unreachable from a seeded cache.** The matrix tests seed a pool
+   cache, so the pipeline takes the CACHED path and never builds a fresh pool.
+   A fresh pool cannot be built in a unit test without hitting the network, so
+   the gap is closed with a **CONTRACT assertion**: every
+   `countOpportunityFacets` call in `pipeline.ts` must contain
+   `withRenderedRemote`. It is a real lock — F1 reds it — and it is labelled as
+   a contract assertion rather than dressed up as behavioural.
+2. **Site 4 was only exercised through the helper, not through the scorer.**
+   Closed behaviourally: the concepts at `:345` become
+   `facade.metadata.preferenceSignals`, which the ledger-affinity term reads, so
+   **a reader whose ledger LIKES `facet:format:online` is the behavioural handle
+   on this site.** F4 now reds at 1.
+
+**That is SEVEN vacuous or unreachable assertions C has caught across this round,
+every one by running the mutation rather than trusting the assertion's name.**
+
+## **A CORRECTION TO B's BOUNDARY, MEASURED RATHER THAN ASSUMED**
+
+B wrote: *"`scoreJobs`'s numeric output must be byte-identical after the
+change."* **Executed, that is true for one class of reader and false for
+another, and the difference matters:**
+
+- **A reader whose ledger says NOTHING about format: scores byte-identical.**
+  Asserted across all five matrix rows, `undefined` ledger vs `{}`.
+- **A reader whose ledger carries a format preference: THE SCORE MOVES, AND IT
+  MUST.** With a ledger that likes `facet:format:online`, the `jobweb` remote row
+  used to inherit that affinity from a claim the reader was never shown. After
+  the conversion it scores **exactly equal to the `jobweb` row that never claimed
+  remote** — which is the whole point of the item.
+
+**The scoring MATHS is untouched; the INPUT CONCEPT changes, which is the fix.**
+**Admitted control asserted alongside it:** `remotive-remote`, whose `isRemote`
+comes from a structured field of its own record, **still inherits the online
+preference and still outscores the in-person rows.** The conversion silences only
+the unowned claim.
+
+**Recorded prominently so round 27 does not read a moved score here as a
+regression** — B's boundary was right about the mechanism and too strong as
+stated, and the ledger path is exactly where it does not hold.
+
+## **THE LIVE RE-MEASUREMENT — VACUOUS AGAIN, AND NOT BANKED**
+
+Shipped `buildDailyJobPool`, Ruling 69's no-LLM profile:
+
+| | value |
+|---|---|
+| pool rows | **9** |
+| rows the predicate bites on (`source === "jobweb" && isRemote`) | **0 of 9** |
+| server `format` BEFORE conversion | `{in-person: 9, online: 0, hybrid: 0}` |
+| server `format` AFTER conversion | `{in-person: 9, online: 0, hybrid: 0}` |
+| client `format` (gated) | `{in-person: 9, online: 0, hybrid: 0}` |
+| server equals client | **true** |
+
+**EVERY ONE OF THOSE ZEROES IS VACUOUS AND C DOES NOT BANK THEM, exactly as B
+did not.** With no row carrying the defect's shape, "server equals client" proves
+the instrument ran, not that the conversion is safe. **The constructed matrix is
+the evidence; the live window is not.**
+
+**ROWS ARE UNCHANGED, WHICH IS THE PART THAT IS NOT VACUOUS: 9 rows in, 9 rows
+out, and the facet totals sum identically before and after** — the conversion
+moves a row between buckets and can never drop one.
+
+**THE DEFECT REMAINS REACHABLE** — round 26 A's own window B carried
+`jobweb:1g2eds8` (`lensa.com`, raw `isRemote: true`, an Albuquerque internship)
+in 4 of 5 pulls of an 11-row pool, roughly **one row in eleven**. Two consecutive
+vacuous windows are a sampling accident, not evidence the population is empty.
+**A future round measuring zero here must check whether any row bites before
+reporting it.**
+
+## **WHAT CHANGES FOR THE READER — RULING 72c, RESTATED AT LANDING**
+
+**The `Online` facet count drops by one per affected row, and `In person` gains
+one.** On the constructed matrix: server `online` **3 → 2**, `in-person`
+**1 → 2**, and the converted server now equals the client exactly. **That is the
+fix, not a side effect** — today clicking `Online` returns a row that does not
+look online: the card says `See posting`, the chip is absent, and the reason line
+carries no `remote-friendly`. **The count does not become smaller and worse; it
+becomes true.** And the direction is the safe one: **a row is only ever moved
+from a claim to a SILENCE, never the reverse** — asserted directly, because
+`rendersRemoteClaim` can only turn `true` into `false`.
+
+**THE `hybrid` ESCAPE HATCH SURVIVES.** `opportunityFormat` tests
+`/\bhybrid\b/i` against `location` and returns **before** it reads `isRemote`, so
+a `jobweb` row that stated its own format in a field it owns keeps it. **The
+conversion cannot silence a row that spoke for itself.**
+
+## **ONE DEVIATION FROM B's DESIGN, TRACED**
+
+B specified a **"three-line local helper"**. Two files need it —
+`jobs/pipeline.ts` (three sites) and `jobs/scoring.ts` (one) — so a local helper
+would have been written **twice**, which is the duplication this round has spent
+four items removing, and Ruling 32 asks for the predicate to be named once rather
+than re-derived. **`withRenderedRemote` is exported from `remote-claim.ts`
+instead, beside the predicate it wraps.** Same behaviour, one spelling; the
+module's own doc comment already named these sites and promised this change.
+
+## TESTS AT RISK — B's LIST WALKED
+
+- **`facets.test.ts` SOLO: 11 of 11, untouched.** The check B named, and it
+  passes because `facets.ts` was not edited.
+- **`scoring.test.ts` SOLO: 45 of 45, untouched** — no assertion pinned a ledger
+  concept for a `jobweb` remote row, so nothing needed restating.
+- `store/feed-opportunity-pool.test.ts` and `store/feed.test.ts` green in the
+  full suite; the client was not changed.
+- **`enrich.test.ts` SOLO: 56 of 56.**
+
+## GATE AFTER THE ITEM
+
+**97 files / 2005 tests, 2005 PASSING — ZERO FAILURES** (was 96 / 1984; **+1
+file, +21 tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
+`quiz.tsx:46` error, **0 warnings**.
+
+**ITEM 14 COMPLETE. RULING 68b IS DISCHARGED. ROUND 26 C IS COMPLETE — TWELVE
+ITEMS, TWELVE COMMITS.**

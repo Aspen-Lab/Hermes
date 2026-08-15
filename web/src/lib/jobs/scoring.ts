@@ -23,7 +23,7 @@ import {
   toScoringItem,
 } from "@/lib/opportunities/shared";
 import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
-import { rendersRemoteClaim } from "./remote-claim";
+import { rendersRemoteClaim, withRenderedRemote } from "./remote-claim";
 import type { RawItem } from "@/lib/sources/types";
 import type {
   CareerStage,
@@ -342,7 +342,17 @@ export function scoreJobs(
         preferenceSignals: item.preferenceSignals,
       });
       facade.metadata.preferenceSignals = normalizePreferenceConcepts([
-        ...opportunityFacetPreferenceConcepts("jobs", item),
+        // RULING 68b. THE PREFERENCE-LEDGER WRITE, and the strongest of the four
+        // arguments for converting. The ledger is the memory that decides what Peer
+        // shows NEXT; on the raw flag a `jobweb` row silently taught it "this reader
+        // likes online roles" on the strength of a claim the reader was never shown
+        // — the card says `See posting`, the chip is absent, and the reason line
+        // carries no `remote-friendly` (A25-01). Exactly ONE write moves, and it
+        // moves from a claim to a SILENCE, never the reverse.
+        //
+        // READ-ONLY: the facade is already a copy, and `withRenderedRemote` spreads
+        // rather than mutating, so no `RawJobItem` is touched and no score moves.
+        ...opportunityFacetPreferenceConcepts("jobs", withRenderedRemote(item)),
         ...conceptsFromRawItem(facade),
       ]);
       return [item.id, facade] as const;

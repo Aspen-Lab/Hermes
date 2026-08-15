@@ -49,3 +49,40 @@ export function rendersRemoteClaim(item: {
 }): boolean {
   return item.isRemote && item.source !== "jobweb";
 }
+
+/**
+ * **RULING 68b, DISCHARGED (round 26 B priced it, round 26 C landed it).** The
+ * three remaining raw readers named above are now converted, and this is the
+ * one-line change the comment promised.
+ *
+ * **THE DEFECT IT FIXES, IN ONE SENTENCE:** `opportunityFormat`
+ * (`opportunities/facets.ts:337`) decides `online` vs `in-person` from
+ * `isRemote`, and its parameter type `FacetableOpportunity` **has no `source`
+ * field** — so it cannot tell whether the flag it was handed is the RAW one or
+ * the GATED one. The server passed `ScoredJobItem` (raw); the client passed the
+ * mapped `Job` card (gated). **The same row was `online` on the server and
+ * `in-person` on the client, and neither side could detect it.**
+ *
+ * The fix is to make both callers pass the same MEANING of `isRemote`, **not**
+ * to make the callee smarter: `opportunityFormat` is shared with the EVENT
+ * surface, where `isRemote` is never read, so teaching it about `source` would
+ * push a jobs-only concept into a shared function and demand a field the client
+ * shape does not carry. **`facets.ts` is deliberately NOT touched.**
+ *
+ * **NEVER MUTATES.** It returns a spread copy handed to exactly one callee, so
+ * the three DELIBERATE raw readers A22-03(b) protects — `mapper.ts`'s and
+ * `scoring.ts`'s `locationFit(…, item.isRemote, …)` and `enrich.ts`'s
+ * passthrough — keep seeing the raw flag and **no score moves.**
+ *
+ * **DEVIATION FROM B's DESIGN, TRACED (round 26 C):** B specified a "three-line
+ * local helper". Two files need it — `jobs/pipeline.ts` (three sites) and
+ * `jobs/scoring.ts` (one) — so a local helper would have been written TWICE,
+ * which is the duplication this loop has spent four items removing, and Ruling
+ * 32 asks for the predicate to be named once rather than re-derived. It lives
+ * here instead, beside the predicate it wraps. Same behaviour, one spelling.
+ */
+export function withRenderedRemote<
+  T extends { isRemote: boolean; source: JobSourceId },
+>(item: T): T {
+  return { ...item, isRemote: rendersRemoteClaim(item) };
+}
