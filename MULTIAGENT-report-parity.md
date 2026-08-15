@@ -65519,3 +65519,29 @@ were re-applied from the entry above and re-verified green (63 of 63) before the
 commit. **Nothing was lost and nothing else was touched** — but the safe way to
 undo a mutation is the reverse string edit, not `git checkout`, and the next C
 should know that.
+
+---
+
+### Round 25 — MANAGER verification of Agent C, RULING 70, and the ROUND-25 CLOSE
+
+**Date: 2026-08-15. Every check re-executed by the manager, not inherited.**
+
+**THE GATE, INDEPENDENTLY RE-RUN: 93 files / 1894 tests, 1894 passing — ZERO failures.** The first fully-green gate in this loop's history: item zero's restatement retired the benchmark flake class, so **from this close forward ANY red anywhere is a real regression** (68d's "1876 or 1877" language is superseded, exactly as C recorded). `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error; **`enrich.test.ts` SOLO: 56/56.**
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (item 2, badge half):** the events report page restored to its pre-`b4a0019` source with all shipped tests kept → **exactly 3 red / 60 passed** — C's figure to the digit; restored → 63/63 green, tree clean.
+
+**C's DEVIATIONS, BOTH ACCEPTED:** the predicate EXTRACTED rather than repointed (`canUseAiTools` was itself a hand-written copy of the feed expression — repointing at a duplicate preserves the drift that caused the defect; the extraction kills the class); the chip strings moved into a pure function because **B's fix as written was untestable** (JSX in a page component with no test file — reverting would have turned nothing red; now it turns three). The deterministic pool re-measurement (captured pool re-scored through fixed and reverted sources — identical 12 rows/scores/reason-lines) is the right instrument for a confounded live window, and the honest caveat stands: **item 1 is `designed, targeted-confirmed by tests, organically unwitnessed`** — round 26 A watches for its first live remote row. C's handling of the mid-turn Ruling 69 (read, correctly judged non-rescoping, flagged as observed content) is per protocol.
+
+---
+
+## RULING 70 — 64c's UNFAILABLE ASSERTION. BINDING.
+
+C executed the 64c index-page assertion both ways and proved its `$`-anchored regex is tested against a subject with ` (index page readmitted?)` APPENDED — the anchor is unreachable, so the assertion can never fail: a decoration wearing a value lock's name, inside the ruling-commissioned block itself. **C was right not to touch it** (B listed 64c's block as must-not-change; widening item zero is what the escape clause forbids) — and right that round 24 C's polarity-inversion mutation could not have caught it.
+
+**Ruling: the one-line fix (test the regex against the RAW subject, the pattern already present in the same file) is COMMISSIONED AS ITEM ZERO OF THE NEXT CODE TURN** — round 26 C if the round produces one, else discharged at the phase-1 close as a named hand-back. Proof obligation on landing: the corrected assertion goes RED when pointed at an index-page URL form and GREEN on the raw flagship rows — the mutation C already ran, now as the shipped test's own negative proof.
+
+---
+
+**ROUND 25 IS CLOSED.** A (event surface's first all-zero census; one job difference; two flags) → manager (Ruling 67) → B (the 66a DISPLAY verdict on live execution; nine sites for A's one; the Battery Ventures reversal; the flake diagnosis; Ruling 65's design) → manager (Ruling 68, including the manager's own 67a corrected) → C (three items, +17 tests net, the first fully-green gate) → manager (this entry, Ruling 70). **Nothing carries past this close undecided.** `WHOSE TURN: A — round 26, GATE CANDIDATE ROUND — AND THE FIRST VISUAL CENSUS (Ruling 66b)` stands exactly as C wrote it. **The gate stays `GATE (0%): NOT MET` — phase 1's bar is now value parity AND visual parity (66b/69), and only the manager closes, after independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
