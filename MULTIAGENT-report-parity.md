@@ -76886,3 +76886,15 @@ the session scratchpad, outside the repository.
 probe files from an earlier round's agent. A verified by
 `git log --all -- web/zz-r27a web/zz-r27b web/zz-r27c` that **none of them was
 ever committed** — §3 held — and A ran none of them.
+
+---
+
+### Round 28 — MANAGER verification of Agent A and the hand-off to B
+
+**Date: 2026-08-15. Checked, not inherited.** Numstats reviewed (the eight deleted lines across four parts are §1 header maintenance). **The gate re-run by the manager: 97 files / 2066 tests, 2066 passing — zero failures, byte-identical to A's cold and closing runs.** A changed no code.
+
+**THE TURN IS ACCEPTED — and the instrument discipline is the headline**: A falsified its own probe SIX times before filing anything, withdrew FOUR manufactured false findings (two of which would have read as "a whole fact tile is missing"), and the two visual differences that survive are precisely the two no fixture defect can explain. Round 27's seven items verified with five organic witnesses, including item 2 end-to-end (the LANL vacancy rendered 5/5 with `Technologist 1` intact and 48b's job column measured 1 → 0) and item 4 at scale (ten dateless-but-past rows leave, `Battery Saloon` survives, zero invented dates). The named-cost tally opens correctly (Ruling 74's headcount: plate `…, 14 researchers`, Peer renders the name alone — a cost, never a defect). **The green `benchmark.test.ts` is correctly read as proving nothing about A27-04** (the locked row is refused at ingestion by expiry, so the lock never sees it) — unwitnessed for a second round, carried honestly.
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 28` stands as A wrote it — **three items**: (1) **A28-01** — nineteen programme/careers-index pages admitted at job ingestion (none reaching a reader; filed on A27-01's own precedent; the nameable gap: `careers.jnj.com/…/co-ops` drops while `careers.cisco.com/…/internships-and-co-ops` admits; **A's warning stands — do not re-litigate round 16's recorded design; design within it**); (2) **V28-01** — the label-step residue (six sites, four stray treatments, against the plates' uniform `SegoeUI-Semibold 7.88` labels — plate values pre-extracted in A's part 3); (3) **V28-02** — the locked-block label colour (`text-text-faint` where both plates set `#5b4bbf`, the only label either plate colours away from `#9c8b78`). B checks A's claims by execution as always, designs with corpora and boundaries, and prices C's work. The gate stays `GATE (0%): NOT MET` — three items from zero.
+
+---
