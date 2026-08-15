@@ -798,6 +798,8 @@ function FactTile({ fact }: { fact: JobFact }) {
  */
 function ReportSection(props: {
   title: string;
+  /** V26-J07: plate 02 right-aligns a section's counter on the label line. */
+  subtitle?: string;
   children: ReactNode;
   className?: string;
   sectionKey?: string;
@@ -1104,21 +1106,71 @@ export function JobReport({
 
       {/* B-10. Plate 02: one heading with NEW and TIER 0 badges, the line
           "6 of 9 you already have", ONE flat wrapping row of chips, then the
-          footnote. The build had a different heading, a progress bar the plate
-          does not have, and a two-column split into "Matched" and "Not matched"
-          lists — which turned a glance into a comparison exercise. The progress
-          bar is gone under say-it-once: the count line already states the
-          ratio. */}
+          footnote. The build had a different heading and a two-column split
+          into "Matched" and "Not matched" lists — which turned a glance into
+          a comparison exercise. Both are correctly gone.
+
+          **V26-J07 / RULING 72b (round 26). THE REST OF B-10's COMMENT WAS
+          FACTUALLY WRONG AND IS CORRECTED HERE.** It read "a progress bar the
+          plate does not have" and "the progress bar is gone under
+          say-it-once". THE PLATE HAS THE BAR. Neither a page image nor a
+          text-span dump can settle it, because a bar is a vector DRAWING;
+          round 26 B pulled the rectangles for this region of plate 02 (p3):
+
+            y 283.5  x 79.5  w 453.0  h 4.5  #e9dfcc   <- the track
+            y 283.5  x 79.5  w 303.8  h 4.5  #ff520d   <- the filled segment
+
+          303.8 / 453.0 = 0.6706, against the plate's OWN counter one line
+          above reading `6 of 9 you already have` = 0.6667. They agree to
+          within half a percent, and the construction is identical to the
+          timeline track measured on the same plate.
+
+          Per the §1b precedent — treat the plate as correct and the record as
+          wrong — Ruling 72b REVERSED the removal. The bar is restored below
+          on B's extracted geometry, with zero new data: both counts are
+          already in scope. The comment is corrected rather than deleted so
+          the reversal is legible to the next reader. */}
       {skills && (
-        <ReportSection title="Skills they ask for" sectionKey="skills">
+        <ReportSection
+          title="Skills they ask for"
+          sectionKey="skills"
+          // V26-J07, second half. Plate 02 right-aligns this counter ON THE
+          // LABEL LINE; the build printed it on its own line beneath. Passing
+          // it as the section subtitle uses the one shared heading-row
+          // treatment, so the job report and the event roster now agree.
+          subtitle={`${skills.matched.length} of ${
+            skills.matched.length + skills.unmatched.length
+          } you already have`}
+        >
           <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
             <ReportBadge>New</ReportBadge>
             <ReportBadge tone="accent">Tier 0</ReportBadge>
           </p>
-          <p className="text-caption text-text-faint">
-            {skills.matched.length} of{" "}
-            {skills.matched.length + skills.unmatched.length} you already have
-          </p>
+          {/* V26-J07 / Ruling 72b. The bar, on B's extracted geometry: one
+              track and one fill, the fill at the matched fraction — the
+              plate's 303.8/453.0 = 0.671 against its own stated 6 of 9 =
+              0.667. Zero new data and zero new tokens. `aria-hidden` because
+              the counter above states the same ratio in words, so a screen
+              reader would otherwise hear it twice. */}
+          <div
+            aria-hidden
+            data-skills-progress
+            className="mb-4 h-1 w-full overflow-hidden rounded-full bg-border"
+          >
+            <div
+              data-skills-progress-fill
+              className="h-1 rounded-full bg-accent"
+              style={{
+                width: `${
+                  skills.matched.length + skills.unmatched.length > 0
+                    ? (skills.matched.length /
+                        (skills.matched.length + skills.unmatched.length)) *
+                      100
+                    : 0
+                }%`,
+              }}
+            />
+          </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {skills.matched.map((skill) => (
               <span

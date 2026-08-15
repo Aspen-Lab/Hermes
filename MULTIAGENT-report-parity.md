@@ -69862,3 +69862,116 @@ test was added and all 1949 prior tests passed** — including the three
 element-anchored tile assertions.
 
 **ITEM 5 COMPLETE — V26-J04 and V26-E04 both close. Six items landed (0–5).**
+
+### Round 26 — Agent C (item 6 of 15+: **THE SKILLS PROGRESS BAR — V26-J07 CLOSES UNDER RULING 72b. THE BAR IS RESTORED ON B's EXTRACTED VECTOR GEOMETRY AND THE BUILD'S FALSE COMMENT IS CORRECTED IN PLACE RATHER THAN DELETED, SO THE REVERSAL STAYS LEGIBLE. THE COUNTER'S RIGHT-ALIGNMENT HALF SHIPS WITH IT, AND — AS B PREDICTED — ONE SHARED HEADING-ROW TREATMENT LANDS BOTH SURFACES. THIRD VACUITY OF THE ROUND CAUGHT BY MUTATION AND RESTATED HONESTLY.**)
+
+**STATUS: item 6, banked on its own commit.** Three files:
+`app/jobs/[id]/page.tsx`, `components/reports/report-section.tsx`, and the plate
+test file. **No test deleted, none edited.** No credential printed, logged or
+written; no scaffold in the repo.
+
+---
+
+## PLATE CITATION AND THE REVERSAL
+
+`Peer-design-spec-original.pdf`, **plate 02 = pp. 2–4; the bar is at p3
+y=283.5.** The build's own comment said *"a progress bar the plate does not
+have"* and *"the progress bar is gone under say-it-once"*. **Neither a page image
+nor a text-span dump can settle that, because a bar is a vector DRAWING** —
+which is exactly why A and the build disagreed for so long. B pulled the
+rectangles:
+
+```
+y 283.5  x 79.5  w 453.0  h 4.5  #e9dfcc   <- the track
+y 283.5  x 79.5  w 303.8  h 4.5  #ff520d   <- the filled segment
+```
+
+**303.8 / 453.0 = 0.6706**, against the plate's own counter one line above
+reading `6 of 9 you already have` = **0.6667** — agreement to within half a
+percent, on a construction identical to the timeline track measured on the same
+plate. **Ruling 72b reversed the removal on that evidence, per the §1b precedent:
+treat the plate as correct and the record as wrong.**
+
+## WHAT SHIPPED
+
+**The bar**: one track (`h-1 rounded-full bg-border`) and one fill
+(`h-1 rounded-full bg-accent`) at `matched / (matched + unmatched) * 100%`,
+between the badge row and the chip row. **Zero new data** — both counts were
+already in scope — **and zero new tokens.** `aria-hidden`, because the counter
+states the same ratio in words and a screen reader would otherwise hear it twice.
+
+**The false comment is CORRECTED IN PLACE, NOT DELETED.** The two sentences that
+were factually wrong are replaced by the measurement, the arithmetic, the ruling
+number and the reason — so the next reader sees a reversal with its evidence
+rather than an unexplained bar. **The rest of B-10's comment, which was correct
+(the heading and the two-column split are rightly gone), is preserved verbatim.**
+
+**THE COUNTER'S RIGHT-ALIGNMENT HALF SHIPPED WITH IT, AND B's PREDICTION HELD.**
+B said V26-J07's second half was never policy-blocked and that **one shared
+heading-row treatment would land both it and `Who’ll be in the room`'s counter.**
+That is exactly what happened: `ReportSection`'s heading row is now a wrapping
+baseline flex pair at **both** levels, the skills counter is passed as the
+section's `subtitle`, and **the job report and the event roster now agree without
+a second implementation.** It wraps at narrow widths rather than truncating.
+
+## THE NEGATIVE PROOFS — SIX MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **40 of 40 passing** in the plate file:
+
+| # | mutation | red |
+|---|---|---|
+| **P1** | **remove the bar — the recorded removal restored** | **1 failed** |
+| P2 | fill from `unmatched` instead of `matched` | **3 failed** |
+| P4 | drop `aria-hidden` — the ratio announced twice | **1 failed** |
+| P5 | counter back to its own line beneath | **1 failed** |
+| **P6** | **restore the false comment** | **1 failed** |
+| **P3** | **drop the divide-by-zero guard** | **GREEN — see below** |
+
+**P6 is worth naming.** The correction is asserted as a CONTRACT, not a
+rendering: the source must no longer contain *"a progress bar the plate does not
+have"*, must carry `303.8`, and must cite `RULING 72b`. **A later round cannot
+quietly restore the false premise without a red test.**
+
+## **THE THIRD VACUITY OF THE ROUND, CAUGHT AND RESTATED**
+
+**P3 came back GREEN.** C had written a "never divides by zero" lock; the
+mutation that removes the guard did not fail it. The reason is structural:
+**`skillComparison` returns `null` when zero requirements survive its
+plausibility filter (`page.tsx:742`), and the whole section is gated on that
+null** — so `matched + unmatched` is **always at least 1** when the bar renders,
+and **the guard is unreachable by construction.**
+
+**The guard is KEPT** (it is free, and the timeline's own divide-by-zero in item
+4 *was* reachable, so the shape is worth defending) **but it is now labelled
+DEFENSIVE and the case asserts the reachable fact instead**: a report with no
+plausible requirement renders no skills section at all, which is the plate's own
+*"Fields Peer can't find are hidden rather than shown empty"* rule.
+
+**That is three vacuous assertions C has written and caught in this round** — the
+timeline's dot colour, the fact-tile's gated tone check, and this one. **All
+three were found by running the mutation rather than trusting the assertion's
+name, and all three are recorded rather than quietly repaired.** The pattern is
+worth stating for round 27: **an assertion that is gated, or that reads a hook
+derived from the same flag as the thing it claims to check, is a vacuity risk by
+construction.**
+
+## EMPTY / PARTIAL STATES
+
+- **Zero matched** — the bar renders **EMPTY rather than absent**, which is B's
+  stated design and the honest reading of `0 of 9`. Asserted.
+- **All matched** — fills completely. Asserted.
+- **No plausible requirement** — the whole section is hidden, per the plate.
+  Asserted.
+
+## STANDARD 7 — VALUE STABILITY
+
+The counter's words are unchanged (`6 of 9 you already have`); only its position
+moved. Every skill chip still renders. **Zero rendered values changed.**
+
+## GATE AFTER THE ITEM
+
+**96 files / 1967 tests, 1967 PASSING — ZERO FAILURES** (was 96 / 1959; **+8
+tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
+`quiz.tsx:46` error.
+
+**ITEM 6 COMPLETE — V26-J07 closes. Seven items landed (0–6).**

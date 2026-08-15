@@ -103,34 +103,26 @@ export function ReportSection({
       data-job-section={sectionKey}
       className={cn("mt-12 print:break-inside-avoid", className)}
     >
-      {/* B-14. Plate 03's roster carries a sub-line under its heading. At L2 the
-          plate puts that counter RIGHT-ALIGNED ON THE HEADING'S OWN LINE, so the
-          row becomes a baseline-aligned flex pair — and it WRAPS at narrow
-          widths rather than truncating, because a counter that says "5 of 34
-          exhibitors" is useless clipped. At L3 the sub-line stays a block
-          underneath, exactly as before. */}
-      {isGroup ? (
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          {heading}
-          {subtitle && (
-            <p data-section-subtitle className="text-body-sm text-text-muted">
-              {subtitle}
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
-          {heading}
-          {subtitle && (
-            <p
-              data-section-subtitle
-              className="mt-1.5 text-body-sm text-text-muted"
-            >
-              {subtitle}
-            </p>
-          )}
-        </>
-      )}
+      {/* B-14 / V26-J07 (round 26 C). **ONE HEADING-ROW TREATMENT, BOTH
+          LEVELS.** Both plates put a section's counter RIGHT-ALIGNED ON THE
+          HEADING'S OWN LINE — plate 03's `5 of 34 exhibitors and 3 of 18
+          speakers concern you` beside `Who’ll be in the room`, and plate 02's
+          `6 of 9 you already have` beside `SKILLS THEY ASK FOR`. The build put
+          both on their own line beneath, left-aligned. B priced the L2 case with
+          the promotion and noted the L3 case (V26-J07's second half) is an
+          ordinary layout fix that ships regardless — and that ONE shared
+          treatment lands both, which is what this is.
+
+          It WRAPS at narrow widths rather than truncating: a counter reading
+          "5 of 34 exhibitors" is useless clipped. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        {heading}
+        {subtitle && (
+          <p data-section-subtitle className="text-body-sm text-text-muted">
+            {subtitle}
+          </p>
+        )}
+      </div>
       <div className="mt-4">{children}</div>
     </section>
   );

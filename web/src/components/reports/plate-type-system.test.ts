@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -651,5 +652,124 @@ describe("value stability across the band change", () => {
     // the capture must still reach BOTH the label and the value
     expect(captured).toContain("Fee");
     expect(captured).toContain("Free");
+  });
+});
+
+/**
+ * **V26-J07 / RULING 72b — THE SKILLS PROGRESS BAR.** Plate 02 = pp. 2–4; the
+ * bar is at p3 y=283.5.
+ *
+ * **A RECORDED DECISION THAT RESTED ON A FALSE PREMISE.** The build's own
+ * comment said *"a progress bar the plate does not have"* and *"the progress bar
+ * is gone under say-it-once"*. Neither a page image nor a text-span dump can
+ * settle that, **because a bar is a vector DRAWING** — which is why round 26 B
+ * pulled the rectangles instead:
+ *
+ * ```
+ * y 283.5  x 79.5  w 453.0  h 4.5  #e9dfcc   <- the track
+ * y 283.5  x 79.5  w 303.8  h 4.5  #ff520d   <- the filled segment
+ * ```
+ *
+ * **303.8 / 453.0 = 0.6706**, against the plate's OWN counter one line above
+ * reading `6 of 9 you already have` = **0.6667**. They agree to within half a
+ * percent, and the construction is identical to the timeline track on the same
+ * plate. Per the §1b precedent — treat the plate as correct and the record as
+ * wrong — **Ruling 72b reversed the removal.**
+ */
+describe("V26-J07 — the skills progress bar, restored on the plate's own geometry", () => {
+  const withSkills = (matched: number, unmatched: number) =>
+    plateJob({
+      matchedTerms: Array.from({ length: matched }, (_, i) => `Matched ${i + 1}`),
+      keyRequirements: [
+        ...Array.from({ length: matched }, (_, i) => `Matched ${i + 1}`),
+        ...Array.from({ length: unmatched }, (_, i) => `Gap ${i + 1}`),
+      ],
+    } as Partial<Job>);
+
+  const fill = (html: string) => {
+    const el = /<div[^>]*data-skills-progress-fill[^>]*>/.exec(html)?.[0];
+    return el ? /width:\s*([^;"]+)/.exec(el)?.[1]?.trim() : undefined;
+  };
+
+  it("renders one track and one fill", () => {
+    const html = renderJob(withSkills(6, 3));
+    // `\b` would also match `data-skills-progress-fill`, because the hyphen is
+    // a word boundary — a negative lookahead is what actually counts the track.
+    expect([...html.matchAll(/data-skills-progress(?!-)/g)]).toHaveLength(1);
+    expect([...html.matchAll(/data-skills-progress-fill/g)]).toHaveLength(1);
+  });
+
+  it("fills to the matched fraction — the plate's own 6 of 9", () => {
+    // 6 / 9 = 0.6667, against the plate's measured 303.8 / 453.0 = 0.6706.
+    const html = renderJob(withSkills(6, 3));
+    expect(html).toContain("6 of 9 you already have");
+    expect(fill(html)).toBe("66.66666666666666%");
+  });
+
+  it("renders the bar EMPTY rather than absent when nothing is matched", () => {
+    // B's stated empty state: with zero matched the bar renders empty, which is
+    // the honest reading of `0 of 9`.
+    const html = renderJob(withSkills(0, 9));
+    expect(html).toContain("data-skills-progress");
+    expect(fill(html)).toBe("0%");
+  });
+
+  it("fills completely when everything is matched", () => {
+    expect(fill(renderJob(withSkills(4, 0)))).toBe("100%");
+  });
+
+  /**
+   * **ADMITTED CONTROL — GREEN BOTH WAYS, AND SAID SO.** The bar carries a
+   * divide-by-zero guard, and C first wrote this as a lock. Running the mutation
+   * that removes the guard came back **GREEN**, which is how the truth was
+   * found: `skillComparison` returns `null` when zero requirements survive its
+   * plausibility filter (`page.tsx:742`), and the whole section is gated on that
+   * null. **So `matched + unmatched` is always at least 1 when the bar renders,
+   * and the guard is UNREACHABLE BY CONSTRUCTION.**
+   *
+   * The guard is KEPT — it is free, and the timeline's own divide-by-zero
+   * (item 4) was reachable, so the shape is worth defending — but it is
+   * labelled defensive rather than dressed up as a lock. This case asserts the
+   * REACHABLE fact instead: a report with no plausible requirements renders no
+   * skills section at all, which is the plate's own "hide rather than show
+   * empty" rule.
+   */
+  it("hides the whole section when no requirement survives, so the bar never divides by zero", () => {
+    const html = renderJob(withSkills(0, 0));
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("data-skills-progress");
+    expect(html).not.toContain("Skills they ask for");
+  });
+
+  it("hides the bar from screen readers, because the counter already says it in words", () => {
+    const bar = /<div[^>]*data-skills-progress\b[^>]*>/.exec(
+      renderJob(withSkills(6, 3)),
+    )?.[0];
+    expect(bar).toContain("aria-hidden");
+  });
+
+  it("puts the counter on the heading row, not on its own line beneath", () => {
+    // V26-J07's second half, which was never policy-blocked. The plate
+    // right-aligns `6 of 9 you already have` on the label line.
+    const html = renderJob(withSkills(6, 3));
+    expect(html).toContain("data-section-subtitle");
+    const row =
+      /<div class="flex flex-wrap items-baseline justify-between[^"]*">[\s\S]*?<\/div>/.exec(
+        html.slice(html.indexOf("Skills they ask for") - 400),
+      )?.[0] ?? "";
+    expect(row).toContain("Skills they ask for");
+    expect(row).toContain("you already have");
+  });
+
+  it("corrects the build's false comment rather than deleting it", () => {
+    // Not a rendering assertion — a contract assertion. The reversal must stay
+    // legible to the next reader, per Ruling 72b.
+    const source = readFileSync(
+      new URL("../../app/jobs/[id]/page.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(source).not.toContain("a progress bar the plate does not have");
+    expect(source).toContain("303.8");
+    expect(source).toContain("RULING 72b");
   });
 });
