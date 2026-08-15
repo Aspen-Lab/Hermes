@@ -10,7 +10,11 @@ export type SourceId =
   | "web"
   | "hn";
 
-export type WebSearchProvider = "auto" | "brave" | "tavily";
+// RULING 75 — `gemini` joins the union. Vertex Gemini with Google Search
+// grounding is the replacement search engine while the quota-capped APIs are
+// suspended; `sources/gemini-search.ts` is the adapter and owns the resolution
+// order all three surfaces share.
+export type WebSearchProvider = "auto" | "brave" | "tavily" | "gemini";
 
 export interface SourceQuery {
   topics: string[];

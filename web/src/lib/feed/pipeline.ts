@@ -1,5 +1,6 @@
 import { bySourceId } from "@/lib/sources";
 import type { SourceId, RawItem } from "@/lib/sources/types";
+import { geminiWebSearchOptions } from "@/lib/sources/gemini-search";
 import { scoreItems } from "@/lib/scoring";
 import type { ScoredItem } from "@/lib/scoring/types";
 import { dedupItems } from "./dedup";
@@ -119,13 +120,26 @@ export async function runFeedPipeline(
           avoid: brief.avoid,
           timeWindow: brief.timeWindow,
           limit: perSourceLimit,
+          // RULING 75 — the Tavily branch is exactly as it shipped. The gemini
+          // branch is what keeps the paper surface's web source alive with the
+          // quota-capped providers suspended.
+          //
+          // **NAMED, DISCLOSED COST:** this pipeline has its OWN
+          // `withSourceTimeout` with a hard-coded 8000 ms and no override
+          // parameter, and RULING 76a approved the raise at the TWO opportunity
+          // call sites ONLY. C implements exactly what was approved, so a
+          // grounded paper search that outruns 8 s reports the source as timed
+          // out and the surface renders honestly empty. Widening this without a
+          // ruling is not C's call — it is carried to the manager instead.
           webSearch:
-            s === "web" && req.searchConnectors?.tavily?.enabled
-              ? {
-                  provider: "tavily",
-                  tavilyApiKey: req.searchConnectors.tavily.apiKey,
-                }
-              : undefined,
+            s !== "web"
+              ? undefined
+              : req.searchConnectors?.tavily?.enabled
+                ? {
+                    provider: "tavily",
+                    tavilyApiKey: req.searchConnectors.tavily.apiKey,
+                  }
+                : geminiWebSearchOptions(req.searchConnectors),
         }),
       ),
     ),

@@ -5,6 +5,12 @@ import {
   RESULTS_PER_SEARCH,
 } from "@/lib/opportunities/query-budget";
 import {
+  geminiSearchDeadline,
+  isGeminiSearchAvailable,
+  resolveWebSearchProvider,
+  searchGemini,
+} from "@/lib/sources/gemini-search";
+import {
   cleanJobDescription,
   cleanJobSubtitlePart,
   cleanJobTitle,
@@ -1563,6 +1569,32 @@ async function searchBrave(
   }
 }
 
+/**
+ * RULING 75 — the gemini branch. This surface maps INSIDE its search functions
+ * (eventweb maps in `fetchImpl`), so the mapping call stays here and
+ * `searchGemini`'s shared `WebResult` contract is what makes one adapter fit
+ * both surfaces.
+ *
+ * **No `denyHosts` is passed.** `AGGREGATOR_HOSTS` is the obvious candidate and
+ * it is exactly the wrong one: this surface does not DENY those hosts, it
+ * REQUIRES a posting id on them, so pre-screening them away would drop rows the
+ * shipped rule admits. Only outright, title-independent denies may pre-screen.
+ */
+async function searchGeminiJobs(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+  topics: string[],
+): Promise<RawJobItem[]> {
+  const results = await searchGemini(query, {
+    maxResults: limit,
+    deadlineAt,
+  });
+  return results
+    .map((r) => webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.snippet }, topics))
+    .filter((item): item is RawJobItem => item !== null);
+}
+
 function resolveKeys(query: JobsQuery): { tavily?: string; brave?: string } {
   return {
     tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
@@ -1570,20 +1602,44 @@ function resolveKeys(query: JobsQuery): { tavily?: string; brave?: string } {
   };
 }
 
+/**
+ * RULING 75 requirement 2. Like eventweb, this surface used a bare ternary and
+ * **never read `webSearch.provider`**; uniformity means it starts. The order
+ * lives once in `sources/gemini-search.ts`.
+ */
+export function resolveSearchProvider(
+  query: JobsQuery,
+): "gemini" | "brave" | "tavily" | null {
+  const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
+  const keys = resolveKeys(query);
+  return resolveWebSearchProvider(query.webSearch?.provider, {
+    geminiAvailable: isGeminiSearchAvailable(),
+    braveKeyPresent: Boolean(keys.brave),
+    tavilyKeyPresent: Boolean(keys.tavily),
+    requestTavilyKeyPresent: Boolean(requestTavilyKey),
+  });
+}
+
 async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
   const keys = resolveKeys(query);
-  if (!keys.tavily && !keys.brave) return [];
+  const provider = resolveSearchProvider(query);
+  if (!provider) return [];
 
   const searches = query.queries.slice(0, JOB_QUERY_BUDGET);
   if (searches.length === 0) return [];
   // Providers bill per search, not per result — see RESULTS_PER_SEARCH.
   const perQuery = RESULTS_PER_SEARCH;
 
+  // One shared deadline for the whole fan-out — see eventweb for why.
+  const deadlineAt = geminiSearchDeadline();
   const resultSets = await Promise.all(
     searches.map((q) => {
       const jobQuery = `${q} position opening apply`;
-      return keys.tavily
-        ? searchTavily(jobQuery, keys.tavily, perQuery, query.topics)
+      if (provider === "gemini") {
+        return searchGeminiJobs(jobQuery, query.limit, deadlineAt, query.topics);
+      }
+      return provider === "tavily"
+        ? searchTavily(jobQuery, keys.tavily!, perQuery, query.topics)
         : searchBrave(jobQuery, keys.brave!, perQuery, query.topics);
     }),
   );
@@ -1599,9 +1655,6 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
 export const jobweb: JobSourceAdapter = {
   id: "jobweb",
-  enabled: (query) => {
-    const keys = resolveKeys(query);
-    return Boolean(keys.tavily || keys.brave);
-  },
+  enabled: (query) => resolveSearchProvider(query) !== null,
   fetch: fetchImpl,
 };

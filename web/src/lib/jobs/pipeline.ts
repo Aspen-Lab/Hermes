@@ -4,6 +4,10 @@
 // keyed sources and LLM query generation enable themselves via env/BYOK.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import {
+  GEMINI_SOURCE_TIMEOUT_MS,
+  geminiWebSearchOptions,
+} from "@/lib/sources/gemini-search";
 import { enrichJobCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
@@ -133,15 +137,27 @@ async function buildJobPool(
     careerStage: req.careerStage,
     industryPreference: req.industryVsAcademia,
     limit: req.perSourceLimit ?? DEFAULT_PER_SOURCE_LIMIT,
+    // RULING 75 — see the matching comment in `events/pipeline.ts`. The Tavily
+    // branch is untouched; the gemini branch is what turns this surface back on.
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      : undefined,
+      : geminiWebSearchOptions(req.searchConnectors),
     apiKeys: req.apiKeys,
   };
 
   const active = jobSources.filter((source) => source.enabled(query));
   const results = await Promise.allSettled(
-    active.map((source) => withSourceTimeout(source.id, source.fetch(query))),
+    active.map((source) =>
+      withSourceTimeout(
+        source.id,
+        source.fetch(query),
+        // RULING 76a — per-source override for `jobweb` on the gemini provider
+        // only. Never a global default change.
+        source.id === "jobweb" && query.webSearch?.provider === "gemini"
+          ? GEMINI_SOURCE_TIMEOUT_MS
+          : undefined,
+      ),
+    ),
   );
 
   const fetched: Partial<Record<JobSourceId, number>> = {};

@@ -15,6 +15,12 @@ import {
   EVENT_QUERY_BUDGET,
   RESULTS_PER_SEARCH,
 } from "@/lib/opportunities/query-budget";
+import {
+  geminiSearchDeadline,
+  isGeminiSearchAvailable,
+  resolveWebSearchProvider,
+  searchGemini,
+} from "@/lib/sources/gemini-search";
 import { classifyEventType } from "../mapper";
 import { dateClaimEndMs } from "@/lib/format";
 
@@ -1971,6 +1977,29 @@ async function searchBrave(
   }
 }
 
+/**
+ * RULING 75 — the gemini branch. `searchGemini` returns the same unmapped
+ * `WebResult[]` Tavily and Brave are normalised to, so `webResultToRawEventItem`
+ * stays exactly where it is in `fetchImpl` and this surface's admission rules
+ * are untouched. `DENY_HOSTS` is forwarded as a stage-2b pre-screen: it is an
+ * outright, title-independent deny (see its call site below), so skipping those
+ * hosts before a page fetch cannot change which rows are admitted.
+ */
+async function searchGeminiEvents(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+): Promise<WebResult[]> {
+  return searchGemini(query, {
+    denyHosts: DENY_HOSTS,
+    // The same three the Tavily branch excludes, so the offered corpus stays
+    // comparable across providers.
+    excludeDomains: ["arxiv.org", "openalex.org", "semanticscholar.org"],
+    maxResults: limit,
+    deadlineAt,
+  });
+}
+
 function resolveKeys(query: EventsQuery): { tavily?: string; brave?: string } {
   return {
     tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
@@ -1978,9 +2007,30 @@ function resolveKeys(query: EventsQuery): { tavily?: string; brave?: string } {
   };
 }
 
+/**
+ * RULING 75 requirement 2. This surface used a bare
+ * `keys.tavily ? tavily : brave` ternary and **never read
+ * `webSearch.provider` at all** — "all three surfaces uniform" therefore means
+ * ADDING preference reading here, not extending a switch. The order itself
+ * lives once in `sources/gemini-search.ts`.
+ */
+export function resolveSearchProvider(
+  query: EventsQuery,
+): "gemini" | "brave" | "tavily" | null {
+  const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
+  const keys = resolveKeys(query);
+  return resolveWebSearchProvider(query.webSearch?.provider, {
+    geminiAvailable: isGeminiSearchAvailable(),
+    braveKeyPresent: Boolean(keys.brave),
+    tavilyKeyPresent: Boolean(keys.tavily),
+    requestTavilyKeyPresent: Boolean(requestTavilyKey),
+  });
+}
+
 async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
   const keys = resolveKeys(query);
-  if (!keys.tavily && !keys.brave) return [];
+  const provider = resolveSearchProvider(query);
+  if (!provider) return [];
 
   const searches = query.queries.slice(0, EVENT_QUERY_BUDGET);
   if (searches.length === 0) return [];
@@ -1994,13 +2044,19 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
 
   const now = Date.now();
   const all: RawEventItem[] = [];
+  // One shared deadline for the whole fan-out, so sixteen concurrent queries
+  // stop recovering page titles at the same moment instead of each starting a
+  // fresh budget (RULING 76a's 25 s source cap is what they are fitting into).
+  const deadlineAt = geminiSearchDeadline();
   // Run the daily allocation concurrently so the source's wall-clock timeout
   // cannot strand later, more specific queries.
   const resultSets = await Promise.all(
     searches.map((q) =>
-      keys.tavily
-        ? searchTavily(q, keys.tavily, perQuery)
-        : searchBrave(q, keys.brave!, perQuery),
+      provider === "gemini"
+        ? searchGeminiEvents(q, query.limit, deadlineAt)
+        : provider === "tavily"
+          ? searchTavily(q, keys.tavily!, perQuery)
+          : searchBrave(q, keys.brave!, perQuery),
     ),
   );
   for (const results of resultSets) {
@@ -2017,9 +2073,6 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
 
 export const eventweb: EventSourceAdapter = {
   id: "eventweb",
-  enabled: (query) => {
-    const keys = resolveKeys(query);
-    return Boolean(keys.tavily || keys.brave);
-  },
+  enabled: (query) => resolveSearchProvider(query) !== null,
   fetch: fetchImpl,
 };

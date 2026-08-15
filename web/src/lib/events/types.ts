@@ -11,6 +11,7 @@ import type {
 } from "@/types";
 import type { SearchConnectors } from "@/lib/feed/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
+import type { WebSearchProvider } from "@/lib/sources/types";
 
 export type EventSourceId =
   | "ccfddl"
@@ -58,6 +59,9 @@ export interface EventsQuery {
   queries: string[];
   limit: number;
   webSearch?: {
+    // RULING 75 — this surface never read a provider preference before; the
+    // ruling's "all three surfaces uniform" requires it to start.
+    provider?: WebSearchProvider;
     tavilyApiKey?: string;
   };
 }

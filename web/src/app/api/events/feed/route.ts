@@ -52,13 +52,25 @@ function parseAiTier(input: unknown): 0 | 1 | 2 | undefined {
 
 function parseSearchConnectors(input: unknown): SearchConnectors | undefined {
   if (!input || typeof input !== "object") return undefined;
-  const tavilyRaw = (input as Record<string, unknown>).tavily;
-  if (!tavilyRaw || typeof tavilyRaw !== "object") return undefined;
-  const tavily = tavilyRaw as Record<string, unknown>;
-  const enabled = typeof tavily.enabled === "boolean" ? tavily.enabled : undefined;
-  const apiKey = cleanOptionalString(tavily.apiKey);
-  if (enabled === undefined && apiKey === undefined) return undefined;
-  return { tavily: { enabled, apiKey } };
+  const raw = input as Record<string, unknown>;
+  const tavilyRaw = raw.tavily;
+  let tavily: SearchConnectors["tavily"];
+  if (tavilyRaw && typeof tavilyRaw === "object") {
+    const value = tavilyRaw as Record<string, unknown>;
+    const enabled = typeof value.enabled === "boolean" ? value.enabled : undefined;
+    const apiKey = cleanOptionalString(value.apiKey);
+    if (enabled !== undefined || apiKey !== undefined) tavily = { enabled, apiKey };
+  }
+  // RULING 75 — the gemini connector carries no key (the credential is the
+  // server's own Vertex project) and only ever expresses an OPT-OUT.
+  const geminiRaw = raw.gemini;
+  let gemini: SearchConnectors["gemini"];
+  if (geminiRaw && typeof geminiRaw === "object") {
+    const enabled = (geminiRaw as Record<string, unknown>).enabled;
+    if (typeof enabled === "boolean") gemini = { enabled };
+  }
+  if (!tavily && !gemini) return undefined;
+  return { ...(tavily ? { tavily } : {}), ...(gemini ? { gemini } : {}) };
 }
 
 function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {

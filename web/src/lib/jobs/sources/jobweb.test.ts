@@ -1,9 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// RULING 75 (round 28 C, item 0). Only `searchGemini` is stood in for; the
+// provider-order helpers stay REAL.
+const geminiSearchMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/sources/gemini-search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/sources/gemini-search")>()),
+  searchGemini: geminiSearchMock,
+}));
+
 import {
   isListingPage,
   JOB_PATH_RE,
+  jobweb,
   LISTING_TITLE_RE,
   NON_JOB_PATH_RE,
+  resolveSearchProvider,
   webResultToRawJobItem,
 } from "./jobweb";
 
@@ -2721,5 +2732,179 @@ describe("A27-02: a segment separator between the count and the count-noun", () 
     // still bridge and an eighth does not — measured, not assumed.
     expect(LISTING_TITLE_RE.test("60 a b c d e f g Jobs")).toBe(true);
     expect(LISTING_TITLE_RE.test("60 a b c d e f g h Jobs")).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RULING 75 (round 28 C, item 0) — THE PROVIDER SEAM ON THIS SURFACE.
+//
+// Same shape as eventweb's block, and the same two defects: this adapter never
+// read `webSearch.provider`, and with Tavily disabled it was dark. The one job
+// surface-specific rule is at the bottom — **no aggregator pre-screen**.
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("RULING 75 — jobweb provider resolution", () => {
+  const baseQuery = {
+    topics: ["molten salt"],
+    queries: ["molten salt postdoc"],
+    locations: [],
+    limit: 60,
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function withoutKeys(): void {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+  }
+
+  it("was DARK before this item: no keys, no webSearch block, no source", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
+    expect(jobweb.enabled(baseQuery)).toBe(false);
+  });
+
+  it("comes back on when Vertex is present and the query asks for gemini", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    const query = { ...baseQuery, webSearch: { provider: "gemini" as const } };
+    expect(resolveSearchProvider(query)).toBe("gemini");
+    expect(jobweb.enabled(query)).toBe(true);
+  });
+
+  it("picks gemini on auto when Tavily is not enabled", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(resolveSearchProvider(baseQuery)).toBe("gemini");
+  });
+
+  it("still yields to a caller-supplied Tavily key", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(
+      resolveSearchProvider({ ...baseQuery, webSearch: { tavilyApiKey: "caller-key" } }),
+    ).toBe("tavily");
+  });
+
+  it("keeps the shipped behaviour exactly when Vertex is absent", () => {
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
+    vi.stubEnv("TAVILY_API_KEY", "env-tavily");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    expect(resolveSearchProvider(baseQuery)).toBe("tavily");
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "env-brave");
+    expect(resolveSearchProvider(baseQuery)).toBe("brave");
+    expect(jobweb.enabled(baseQuery)).toBe(true);
+  });
+
+  it("an aggregator row still reaches the shipped posting-id rule, not a pre-screen", () => {
+    // ADMISSION-NEUTRALITY, PROVED RATHER THAN ARGUED. The gemini adapter is
+    // deliberately given NO deny list on this surface: `AGGREGATOR_HOSTS` does
+    // not deny, it REQUIRES a posting id. These two rows are the control pair —
+    // both on the same aggregator host, admitted and refused by the posting id
+    // alone. A host pre-screen would have silenced both.
+    const admitted = webResultToRawJobItem(
+      {
+        title: "Postdoctoral Researcher, Molten Salt Chemistry",
+        url: "https://www.indeed.com/viewjob?jk=abc123def456",
+        snippet: "Apply now for this research position.",
+      },
+      ["molten salt"],
+    );
+    const refused = webResultToRawJobItem(
+      {
+        title: "Postdoctoral Researcher, Molten Salt Chemistry",
+        url: "https://www.indeed.com/q-molten-salt-jobs.html",
+        snippet: "Apply now for this research position.",
+      },
+      ["molten salt"],
+    );
+    expect(admitted).not.toBeNull();
+    expect(refused).toBeNull();
+  });
+});
+
+// RULING 75 — STAGE 2b's BOUNDARY, PROVED AT THE SEAM.
+// The job surface hands the gemini adapter NO deny list, and that omission is
+// the design. `AGGREGATOR_HOSTS` is the obvious candidate and exactly the wrong
+// one: this surface does not DENY those hosts, it REQUIRES a posting id on
+// them, so pre-screening would drop rows the shipped rule admits. If a deny
+// list ever appears in these options, this test is what says so.
+describe("RULING 75 — jobweb hands the gemini adapter NO deny list", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    geminiSearchMock.mockReset();
+  });
+
+  it("passes no denyHosts and no excludeDomains", async () => {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    geminiSearchMock.mockResolvedValue([]);
+
+    await jobweb.fetch({
+      topics: ["molten salt"],
+      queries: ["molten salt postdoc"],
+      locations: [],
+      limit: 60,
+      webSearch: { provider: "gemini" },
+    });
+
+    expect(geminiSearchMock).toHaveBeenCalledTimes(1);
+    const options = geminiSearchMock.mock.calls[0][1] as Record<string, unknown>;
+    expect(options.denyHosts).toBeUndefined();
+    expect(options.excludeDomains).toBeUndefined();
+  });
+
+  it("suffixes the job query the same way every other provider is suffixed", async () => {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    geminiSearchMock.mockResolvedValue([]);
+
+    await jobweb.fetch({
+      topics: ["molten salt"],
+      queries: ["molten salt postdoc"],
+      locations: [],
+      limit: 60,
+      webSearch: { provider: "gemini" },
+    });
+
+    expect(geminiSearchMock.mock.calls[0][0]).toBe("molten salt postdoc position opening apply");
+  });
+
+  it("maps a grounded row through the SHIPPED admission, unchanged", async () => {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    geminiSearchMock.mockResolvedValue([
+      {
+        title: "Nuclear Materials and Molten Salt Technologist 1",
+        url: "https://lanl.jobs/search/jobdetails/nuclear-materials/992",
+        snippet: "Los Alamos National Laboratory is hiring.",
+      },
+      {
+        // The listing page the shipped rule refuses. It arrives with a real
+        // page title, and it is still refused — the provider swap moved the
+        // TITLE SOURCE, not the admission rules.
+        title: "60 Molten Salt Jobs, Employment July 22, 2026 (9 New Openings)",
+        url: "https://www.indeed.com/q-molten-salt-jobs.html",
+        snippet: "Browse openings.",
+      },
+    ]);
+
+    const rows = await jobweb.fetch({
+      topics: ["molten salt"],
+      queries: ["molten salt postdoc"],
+      locations: [],
+      limit: 60,
+      webSearch: { provider: "gemini" },
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].title).toBe("Nuclear Materials and Molten Salt Technologist 1");
   });
 });

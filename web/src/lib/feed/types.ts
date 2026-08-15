@@ -12,8 +12,20 @@ export interface TavilySearchConnector {
   apiKey?: string;
 }
 
+/**
+ * RULING 75 — the Vertex Gemini search provider. It carries **no key**: the
+ * credential is the server's own Vertex project, exactly as the LLM path
+ * already uses it. `enabled` is an OPT-OUT — absent means "use it when Vertex
+ * credentials are present and Tavily is not enabled", which is the ruling's
+ * resolution order stated as a default.
+ */
+export interface GeminiSearchConnector {
+  enabled?: boolean;
+}
+
 export interface SearchConnectors {
   tavily?: TavilySearchConnector;
+  gemini?: GeminiSearchConnector;
 }
 
 export interface FeedRequest extends ScoringProfile {

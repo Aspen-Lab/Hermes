@@ -1,15 +1,28 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// RULING 75 (round 28 C, item 0). Only `searchGemini` is stood in for; the
+// provider-order helpers stay REAL, so the resolution tests below still test
+// shipped code rather than a stub.
+const geminiSearchMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/sources/gemini-search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/sources/gemini-search")>()),
+  searchGemini: geminiSearchMock,
+}));
+
 import {
   bestEventTitleSegment,
   bestEventTitleSegmentDetailed,
   clusterEventDays,
+  DENY_HOSTS,
   eventNameFrom,
+  eventweb,
   extractEventDate,
   extractEventDayCandidates,
   isEarningsCallPage,
   isEventHubResult,
   looksLikeEventTitle,
   ownedTitleSpan,
+  resolveSearchProvider,
   webResultToRawEventItem,
 } from "./eventweb";
 
@@ -2326,5 +2339,111 @@ describe("A27-03: a page whose every reading is past inside the current year", (
       );
       expect(item?.startDate).toBe("");
     }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RULING 75 (round 28 C, item 0) — THE PROVIDER SEAM ON THIS SURFACE.
+//
+// This adapter used a bare `keys.tavily ? tavily : brave` ternary and **never
+// read `webSearch.provider` at all**, so "all three surfaces uniform" meant
+// ADDING preference reading here. These tests pin the two things that were
+// actually broken: the surface was DARK with Tavily disabled, and it had no way
+// to be told which provider to use.
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("RULING 75 — eventweb provider resolution", () => {
+  const baseQuery = { topics: ["molten salt"], queries: ["molten salt conference"], limit: 80 };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function withoutKeys(): void {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+  }
+
+  it("was DARK before this item: no keys, no webSearch block, no source", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
+    expect(eventweb.enabled(baseQuery)).toBe(false);
+  });
+
+  it("comes back on when Vertex is present and the query asks for gemini", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    const query = { ...baseQuery, webSearch: { provider: "gemini" as const } };
+    expect(resolveSearchProvider(query)).toBe("gemini");
+    expect(eventweb.enabled(query)).toBe(true);
+  });
+
+  it("picks gemini on auto when Tavily is not enabled", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(resolveSearchProvider(baseQuery)).toBe("gemini");
+  });
+
+  it("still yields to a caller-supplied Tavily key", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(
+      resolveSearchProvider({ ...baseQuery, webSearch: { tavilyApiKey: "caller-key" } }),
+    ).toBe("tavily");
+  });
+
+  it("an explicit brave preference wins over an available Vertex project", () => {
+    withoutKeys();
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "brave-key");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(
+      resolveSearchProvider({ ...baseQuery, webSearch: { provider: "brave" as const } }),
+    ).toBe("brave");
+  });
+
+  it("keeps the shipped behaviour exactly when Vertex is absent", () => {
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
+    vi.stubEnv("TAVILY_API_KEY", "env-tavily");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    expect(resolveSearchProvider(baseQuery)).toBe("tavily");
+    expect(eventweb.enabled(baseQuery)).toBe(true);
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "env-brave");
+    expect(resolveSearchProvider(baseQuery)).toBe("brave");
+  });
+});
+
+// RULING 75 — STAGE 2b, PROVED AT THE SEAM RATHER THAN ARGUED.
+// The event surface forwards `DENY_HOSTS` as a pre-screen because that list is
+// an OUTRIGHT, title-independent deny (see its call site in the adapter), so
+// skipping those hosts before a page fetch cannot change an admission.
+describe("RULING 75 — eventweb hands the gemini adapter its deny list", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    geminiSearchMock.mockReset();
+  });
+
+  it("forwards DENY_HOSTS and the three excluded research domains", async () => {
+    vi.stubEnv("TAVILY_API_KEY", "");
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    geminiSearchMock.mockResolvedValue([]);
+
+    await eventweb.fetch({
+      topics: ["molten salt"],
+      queries: ["molten salt conference"],
+      limit: 80,
+      webSearch: { provider: "gemini" },
+    });
+
+    expect(geminiSearchMock).toHaveBeenCalledTimes(1);
+    const options = geminiSearchMock.mock.calls[0][1] as Record<string, unknown>;
+    expect(options.denyHosts).toBe(DENY_HOSTS);
+    expect(options.excludeDomains).toEqual([
+      "arxiv.org",
+      "openalex.org",
+      "semanticscholar.org",
+    ]);
   });
 });

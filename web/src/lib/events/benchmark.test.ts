@@ -34,7 +34,25 @@ const profilePath =
 const profile = fs.existsSync(profilePath)
   ? (JSON.parse(fs.readFileSync(profilePath, "utf8")) as ProfileSnapshot)
   : undefined;
-const hasLiveKey = Boolean(profile?.tavilyApiKey?.trim());
+/**
+ * RULING 75 / RULING 76d — **THE GATE MOVES OFF THE TAVILY KEY.**
+ *
+ * It used to read `Boolean(profile?.tavilyApiKey?.trim())`, and that was wrong
+ * the moment Ruling 75 disabled Tavily: the KEY is still on disk, so the gate
+ * stayed TRUE and the benchmark kept RUNNING with the web source switched off.
+ * Round 28 A found exactly that — a green that was an ABSENCE. The gate now
+ * asks the only question that matters: **is there a live search path at all?**
+ *
+ * Tavily counts only when it is both keyed AND enabled. Gemini counts when the
+ * server's Vertex project is reachable — the same credential the LLM path uses,
+ * carried into the test process by `vitest.config.ts` (Vitest does not load env
+ * files on its own; measured, see that file). With neither, the suite SKIPS
+ * rather than passing on an empty pool.
+ */
+const tavilySearchLive =
+  Boolean(profile?.tavilyApiKey?.trim()) && profile?.tavilyEnabled !== false;
+const geminiSearchLive = Boolean(process.env.GOOGLE_VERTEX_PROJECT);
+const hasLiveSearchPath = tavilySearchLive || geminiSearchLive;
 
 function hostname(url: string | undefined): string {
   if (!url) return "";
@@ -97,7 +115,7 @@ const VENUE_ANCHORED_CITY: ReadonlyArray<readonly [string, string]> = [
   ["advancedautobat.com", "San Diego"],
 ];
 
-describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
+describe.skipIf(!hasLiveSearchPath)("events live relevance benchmark", () => {
   it(
     // TITLE RESTATED by round 25 C, item ZERO (Ruling 65 / 68d), because the
     // contract underneath it changed twice and the name had stopped describing
@@ -125,6 +143,10 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
             enabled: profile?.tavilyEnabled !== false,
             apiKey: profile?.tavilyApiKey,
           },
+          // RULING 75 — the request now carries the gemini provider. When the
+          // profile disables Tavily the pipeline takes this branch and the live
+          // pool comes from Vertex Gemini grounding.
+          gemini: { enabled: true },
         },
       });
       const survivors = pool.items;
@@ -149,6 +171,16 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
         withCity: withCity.length,
         survivors: survivors.length,
         ratio: cityCoverage,
+      });
+      // RULING 75 requirement 3 (Ruling 69's measurement-profile pattern). The
+      // provider is REPORTED BY THE RUN rather than remembered, so a method line
+      // that says `searchProvider: gemini` can be copied from a window that
+      // actually took it. The corpus BREAKS at this round: Google's results are
+      // not Tavily's, and no cross-provider row comparison is drift.
+      console.info("EVENT_BENCHMARK_SEARCH_PROVIDER", {
+        searchProvider: tavilySearchLive ? "tavily" : "gemini",
+        eventwebFetched: pool.fetched.eventweb ?? 0,
+        eventwebError: pool.errors.eventweb ?? null,
       });
 
       expect(survivors.length).toBeGreaterThan(0);

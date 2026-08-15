@@ -78027,3 +78027,173 @@ change cannot affect `html.indexOf` on the text or a `not.toContain` on the text
 **THE HAND-OFF:** `WHOSE TURN: C — round 28` stands as B wrote it — four items in banking order, **item 0 (the gemini provider: 1 new file, ~11 edited, +250/−40, +45–60 tests, the page-title-after-redirect channel, the 76a timeout, provider order per Ruling 75) is a full turn on its own — bank it, then continue items 1–3 by budget or continuation.** The gate stays `GATE (0%): NOT MET`.
 
 ---
+
+### Round 28 — Agent C — ITEM 0 (RULING 75 + 76a/76d): the `gemini` web-search provider, LANDED, and GREEN ON LIVE DATA
+
+**THE ACCEPTANCE TEST RULING 76d NAMED IS GREEN.** `benchmark.test.ts` ran the
+live pipeline on the gemini provider and reported
+`EVENT_BENCHMARK_SEARCH_PROVIDER { searchProvider: 'gemini', eventwebFetched: 26,
+eventwebError: null }`, 6 survivors, aliveness floor passed, 27.8 s. **The top-five
+names it produced are PAGE TITLES, not hostnames** — `Molten Salt Electrochemistry
+Symposium (MoSES)` (`pyro.byu.edu`), `EUCHEMSIL 2026: 30th EUCHEMS Meeting`,
+`International Battery Summit`, `EV Battery Recycling and Reuse Conference 2026`.
+Regime B is confirmed on live data at C's own hand, not inherited.
+
+**RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA, USAJOBS OR JSEARCH CALL,
+FOR ANY PURPOSE.** The only network traffic was Vertex Gemini grounding and plain
+keyless page/redirect fetches. **No credential printed, logged, committed or
+written — boolean presence checks only; `.env.local` was NEVER `cat`-ed** (its
+variable NAMES were listed to confirm which exist; no value was read or shown).
+The throwaway probe lived in `web/zz-r28c/`, outside `src/`, and was deleted
+before this commit — `git status --porcelain --untracked-files=all` verified.
+
+#### 0.1 THE GATE, COLD AND AT CLOSE
+
+**COLD, BEFORE ANY EDIT: 97 files / 2066 tests, 2065 passing — the SOLE red was
+`benchmark.test.ts`'s aliveness floor (`expected 0 to be greater than 0`, 1.7 s),
+exactly the red RULING 76d predicted and authorised.** `tsc --noEmit` clean;
+`eslint src` exactly the one standing `src/components/persona/quiz.tsx:46` error,
+0 warnings.
+
+**AT CLOSE: 98 files / 2146 tests, 2146 PASSING — ZERO failures, INCLUDING the
+live benchmark on the gemini provider.** `tsc --noEmit` clean; `eslint src`
+exactly the same one error, 0 warnings. **`enrich.test.ts` SOLO: 56 of 56.**
+**`registry.test.ts` is BYTE-UNCHANGED and green — `canUseLocalServerProvider`
+was not touched, called or copied.** Net: **+80 tests, one new file, 17 edited.**
+
+#### 0.2 C REPRODUCED B's FOUR DESIGN-BREAKING FACTS BEFORE WRITING A LINE
+
+One grounded `gemini-2.5-flash` call, live Vertex, 2026-08-15:
+
+| B measured | C measured | verdict |
+|---|---|---|
+| chunk member kinds `web` only | `["web"]`, keys `uri,title,domain` | reproduced |
+| every uri a grounding redirect | 5 of 5 | reproduced |
+| **`web.title` IS the domain, 64/64** | **5 of 5 — `byu.edu`, `grc.org`, `programmaster.org`** | reproduced |
+| 302 + `Location`, ~300 ms | 302 + `Location`, 406–481 ms, hosts `pyro.byu.edu`, `www.grc.org` | reproduced |
+| corrupted token to 404, no `Location` | 404, no `Location` | reproduced |
+| one call 3364–12087 ms against an 8000 ms wall | **10012 ms** | reproduced |
+
+**The recorded fixture in `gemini-search.test.ts` is C's own probe output,
+clipped** — three rows, redirect tokens truncated to 24 characters, so no live
+token is committed.
+
+#### 0.3 WHAT LANDED
+
+**NEW — `web/src/lib/sources/gemini-search.ts`.** Three stages, drop-on-undecidable
+throughout. GROUND (one `generateContent` per query, `tools:[{googleSearch:{}}]`,
+**no `responseMimeType`** — controlled generation is refused with the Search tool,
+so `genConfig` is not reused — and **no `maxOutputTokens`**, which throttles chunk
+count rather than latency). RESOLVE (`HEAD` plus `redirect:"manual"`; anything that
+is not a 302 with a `Location` **DROPS**; the target is never fetched). PRE-SCREEN.
+TITLE and SNIPPET from the page (`og:title` else `<title>`; `og:description` else
+meta description else the **empty string**). **No title, no row.** The model's prose
+is never a snippet — the answer text is not read at all.
+
+**EDITED (17).** `sources/types.ts` (`"gemini"` joins the union);
+`sources/web-search.ts` (key gate, fan-out branch, `resolveProvider` delegates to
+the shared order); `events/sources/eventweb.ts` and `jobs/sources/jobweb.ts` (a new
+exported `resolveSearchProvider`, a three-way fan-out, `enabled()` on the resolved
+provider, **and the preference reading these two surfaces did not have**);
+`events/types.ts` and `jobs/types.ts` (`provider?`); `feed/types.ts`
+(`GeminiSearchConnector`); the **three** route parsers; `events/pipeline.ts`,
+`jobs/pipeline.ts`, `feed/pipeline.ts`; `vitest.config.ts`; `benchmark.test.ts`;
+the two surface test files.
+
+**RULING 76a IMPLEMENTED EXACTLY AS APPROVED** — 25000 ms passed at the TWO
+opportunity `withSourceTimeout` call sites, and only when the resolved provider is
+`gemini`. Every other source keeps its 8000 ms.
+
+#### 0.4 NEGATIVE PROOFS — EXACT RED COUNTS, EVERY ONE RE-RUN
+
+| # | clause falsified | red |
+|---|---|---|
+| N1 | title falls back to the hostname when the page has none | **2** (`gemini-search.test.ts`) |
+| N2 | redirect accepts any status, not only 302 | **1** |
+| N3 | an unresolved token is passed through as the row url | **1** (see 0.5 — it took a second test) |
+| N4 | `gemini` demoted below brave/tavily in the auto order | **1** |
+| N5 | the per-query chunk cap removed | **1** |
+| N6 | the soft deadline removed | **1** |
+| N9 | eventweb stops forwarding `DENY_HOSTS` | **1** (`eventweb.test.ts`) |
+| N10 | jobweb given `AGGREGATOR_HOSTS` as a pre-screen | **1** (`jobweb.test.ts`) |
+| **N8** | **RULING 76a's 25 s override removed** | **1, ON LIVE DATA — the benchmark fails `expected 0 to be greater than 0` in 8218 ms.** The 8000 ms wall is not an argument, it is a measured kill. |
+| N7 | the pipelines' gemini branch reverted | **the COLD BASELINE IS this proof** — 2065/2066 with exactly this assertion red |
+
+#### 0.5 TWO THINGS C GOT WRONG FIRST AND SAYS SO
+
+**(a) A VACUOUS CLAUSE, CAUGHT BY THE NEGATIVE PROOF AND FIXED.** "Drops the
+unresolvable row and keeps the resolvable one" looked like the drop rule's test
+and **was green with the drop rule removed**: the redirect token became the url,
+its page fetch found nothing, and the row died to the NO-TITLE rule instead. A
+second test now gives the token's own page a real title, so the row survives if
+and only if the drop rule is gone. **Without the falsification run this would have
+shipped as a proof of nothing.**
+
+**(b) ONE CHANGE IS NOT INDEPENDENTLY FALSIFIABLE AND IS NOT CLAIMED AS PROVED.**
+The benchmark gate moved off `Boolean(profile?.tavilyApiKey?.trim())` — the gate
+round 28 A showed was TRUE while the search path was dark. Both the old and the
+new gate evaluate TRUE on this machine (the Tavily key is still on disk and Vertex
+is present), so **no red distinguishes them here.** Its value is future: with
+Tavily disabled and no Vertex the suite now SKIPS honestly instead of failing, and
+Tavily counts only when keyed AND enabled. **Recorded as a reasoned change with no
+red behind it, not banked as a falsified one.**
+
+#### 0.6 DEVIATIONS FROM B's DESIGN, TRACED
+
+1. **ONE SHARED `resolveWebSearchProvider` INSTEAD OF THREE PER-SURFACE COPIES.**
+   B priced `resolveKeys` becoming `resolveSearchProvider` in each surface. Each
+   surface still has its own thin `resolveSearchProvider`, but the ORDER lives
+   once in `gemini-search.ts`. Reason: Ruling 75 requires the three surfaces to be
+   *uniform*, and three copies of an order cannot be kept uniform by inspection.
+   Cost: `web-search.ts` now imports its order from the gemini module.
+2. **A SOFT INTERNAL DEADLINE (21 s) INSIDE THE 25 s SOURCE CAP.** Not in B's
+   design. Reason: `withSourceTimeout` REJECTS the whole source, so one slow page
+   past 25 s turns the census to ZERO — and B's own arithmetic (about 6 s ground
+   plus 1.2 s resolve plus up to 27 s of titles on a 16-query fan-out) reaches
+   that cliff. Stopping title recovery at the deadline returns the rows that did
+   resolve. It weakens no rule: a row past the deadline has no page title, and a
+   row with no page title drops like any other. Tested (N6).
+3. **`vitest.config.ts` NOW LOADS THE `GOOGLE_` ENV NAMES.** Not in B's price.
+   Reason, measured not assumed: **Vitest does NOT copy env files into
+   `process.env`** — probed, `GOOGLE_VERTEX_PROJECT` read back `false` inside a
+   test while `node --env-file` loaded the same file fine. Without this the live
+   benchmark could only ever SKIP, and Ruling 76d's acceptance test would be
+   unreachable. **Deliberately narrowed to the `GOOGLE_` prefix** so no other
+   suite inherits `PEER_DIGEST_PROVIDER` or any other operator credential;
+   `registry.test.ts` verified byte-unchanged and green.
+4. **A PER-QUERY CHUNK CAP OF 10 AND STAGE-3 CONCURRENCY OF 16.** B's adversarial
+   item 8 asked for one or the other and demanded that a cap be documented and
+   tested rather than slipped in. Both are here, both commented, the cap tested
+   (N5).
+
+#### 0.7 NAMED, DISCLOSED COSTS — TALLIED, NOT HIDDEN
+
+1. **THE PAPER SURFACE'S WEB SOURCE KEEPS THE 8000 ms WALL.** `feed/pipeline.ts`
+   has its OWN `withSourceTimeout` with a hard-coded 8000 ms and **no override
+   parameter**, and RULING 76a approved the raise at the TWO opportunity call
+   sites ONLY. C implemented exactly what was approved. **Consequence: a grounded
+   paper search that outruns 8 s reports the source timed out and the paper web
+   surface renders honestly empty.** Widening a manager ruling is not C's call —
+   **this is carried to the manager as an OPEN DECISION.**
+2. **THE PAGE-TITLE CHANNEL LOSES ABOUT 12.5% OF ROWS** (B measured 47 of 64
+   titles recovered; 13 x 403, 3 x 404, 1 unfetchable host, 8 of the 17 on
+   aggregator hosts and one a posting that is *gone*). The genuine loss is
+   bot-blocked real pages. **A named cost of the honest title, tallied here.**
+3. **THE OFFERED CORPUS BREAKS AT THIS ROUND** (Ruling 75 requirement 5). Google's
+   results are not Tavily's. **Trend tables mark the provider change and NO
+   cross-provider row comparison is scored as drift.**
+4. **`RESULTS_PER_SEARCH` IS ADVISORY ON THIS PROVIDER** — 4 to 13 chunks arrived
+   against a requested 10. Nothing asserts on it.
+5. **NON-`web` GROUNDING CHUNK KINDS REMAIN UNWITNESSED, NOT CLEARED** — 0 of 64
+   for B and 0 of 5 for C. The filter is written for them anyway and tested.
+
+#### 0.8 THE BOUNDARY THAT WAS NOT CROSSED
+
+**`canUseLocalServerProvider()` is NOT touched, called or copied.** Gemini
+availability is `Boolean(process.env.GOOGLE_VERTEX_PROJECT)` and nothing else.
+`registry.test.ts` is byte-unchanged and passes — the check B named as the tell.
+**`jobweb` is given NO deny list**, because `AGGREGATOR_HOSTS` requires a posting
+id rather than denying, and pre-screening it would drop rows the shipped rule
+admits. Both facts are pinned by tests at the seam (N9, N10) plus an
+admission-neutrality control pair on `indeed.com` — one row admitted and one
+refused **by the posting id alone**.
