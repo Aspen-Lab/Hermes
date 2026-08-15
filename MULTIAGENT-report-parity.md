@@ -72964,3 +72964,213 @@ to be landed only with its own constructed test. **It is named here so it is not
 rediscovered as new in round 28.**
 
 ---
+
+---
+
+### Round 27 — Agent B (item 2 of 7: **A27-02 — THE AGGREGATE-LISTING FILTER'S FALSE POSITIVE. THE NARROWING IS ONE SUB-PATTERN: THE RUN BETWEEN THE COUNT AND THE COUNT-NOUN MUST BE MADE OF WORD-INITIAL TOKENS, WHICH IS EXACTLY THE TREATMENT THE SHIPPED REGEX ALREADY GIVES A PIPE. MEASURED ON THE SHIPPED REGEX, REPRODUCED BYTE-IDENTICALLY: 17-TITLE MUST-DROP CORPUS LOSES NOTHING, BOTH NAMED REAL POSTS PASS, AND `LISTING_TITLE_RE` HAS EXACTLY ONE CALL SITE SO 49a CANNOT BE REACHED.**)
+
+**STATUS: COMPLETE.** Item 2 of seven. B changed no code; harness deleted before
+this commit.
+
+---
+
+## **A's ISOLATION CONFIRMED, AND LOCATED TO THE EXACT SUB-PATTERN**
+
+The refusing limb is **`LISTING_TITLE_RE`'s FIRST alternative**
+(`src/lib/jobs/sources/jobweb.ts:146`), read at `jobweb.ts:1173` inside
+`isListingPage`. Its shape is:
+
+```
+(?:^|\s) <not-a-bare-year> <count> [+]? \s+ [\w\s,&/-]{0,40} \b(jobs?|vacancies|openings?|positions?|opportunities)\b
+```
+
+**The run `[\w\s,&/-]{0,40}` includes the HYPHEN and the SPACE, so it bridges a
+title's own segment separator.** On
+`Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs` the engine reads
+the job-grade `1` as the count, walks the run `- LANL ` straight across the
+` - ` separator, and lands on `Jobs`. **That is the whole defect.** A's seven
+controls all follow from it, and B reproduces the two that matter: on the shipped
+`isListingPage`, **the LANL title returns `true` (dropped) and the same title
+with the digit removed returns `false` (kept)**; **`Research Technologist 3 -
+Sandia Jobs` returns `true` on `sandia.gov`, a non-aggregator host, so it is not
+host-specific** — A's claim, re-measured.
+
+**B REPRODUCED `LISTING_TITLE_RE` BYTE-IDENTICALLY BEFORE MEASURING ANYTHING**
+(`SHIPPED.source === LISTING_TITLE_RE.source`, 350 chars each). Every number
+below is from the real pattern, not a paraphrase of it.
+
+---
+
+## **THE ANSWER TO "WHAT IS THE TRUE AGGREGATE SHAPE"**
+
+**It is count-noun ADJACENCY WITHIN ONE SEGMENT — not magnitude, and not
+position.** Each of the three candidates the brief names, tested:
+
+- **Magnitude fails.** `999 Battery Openings` and `12345 vacancies` are shipped
+  must-drops, and a real aggregate can say `5 Jobs`. A floor would lose them.
+- **Position fails.** `Explore 60 Molten Salt Jobs` is a real aggregate whose
+  count is mid-title, and only six lead words (`browse|search|find|latest|top|
+  best`) are covered by alternative 4. Requiring the count to start the title
+  would open a hole wider than the one being closed.
+- **Adjacency holds.** In a genuine aggregate the number QUANTIFIES the noun, so
+  everything between them is one noun phrase: `Molten Salt`, `Battery Engineer`,
+  `Postdoc`, `Full-Time`, or nothing. **In the false positive a segment separator
+  sits between them, which means the number and the noun belong to different
+  parts of the title.**
+
+**AND THE SHIPPED REGEX ALREADY AGREES — for the PIPE.** `[\w\s,&/-]` does not
+contain `|`, so **`1,200 | Engineering Jobs` is ALREADY admitted by the shipped
+rule today** (measured: `isListingPage(..., "example.test", "/jobs")` is
+`false`). **The narrowing does not invent a policy. It gives the hyphen the
+treatment the pipe already has.**
+
+---
+
+## **THE NARROWING, IN ONE LINE**
+
+**Replace alternative 1's run `[\w\s,&/-]{0,40}` with
+`(?:[\w][\w,&/-]*(?:\s+[\w][\w,&/-]*){0,6}\s+)?` — every token in the run must
+BEGIN with a word character, so a standalone separator can never appear between
+the count and the noun, while hyphenated words (`Full-Time`, `Entry-Level`) and
+`R&D` still pass.** Nothing else in `LISTING_TITLE_RE` changes; the year
+lookahead, the count alternation and alternatives 2-4 are untouched.
+
+**FOUR CLAUSES, EACH NON-VACUOUS:**
+
+1. **`[\w]` first in every token.** Remove it and the run swallows ` - ` again —
+   the defect returns. This is the whole fix.
+2. **`[\w,&/-]*` inside a token (hyphen kept).** Remove the hyphen and
+   `500 Entry-Level Battery R&D Jobs` and `1,200 Full-Time Jobs` stop dropping —
+   measured, both drop today and must keep dropping.
+3. **`{0,6}` token cap.** Removing the bound removes the reach limit the shipped
+   `{0,40}` provided; a runaway run could bridge half a title.
+4. **The whole group `?`-optional plus the trailing `\s+`.** Remove either and
+   `12345 vacancies` / `999 Battery Openings` (empty run) stop dropping —
+   measured, both are shipped must-drops.
+
+---
+
+## **THE ADVERSARIAL CORPUS — BUILT FROM THE SHIPPED TESTS' OWN MUST-DROPS**
+
+**MUST DROP — 17 titles.** Thirteen are lifted from `jobweb.test.ts`'s own
+`it.each` blocks (the B13-02 count-form regression lock and its two re-assertions
+at lines 12-16, 688-692 and 1650-1668), plus A's own `1,200 Engineering Jobs`
+control and three constructed hyphen-inside-a-word cases.
+
+| | shipped drops | proposed drops |
+|---|---|---|
+| **all 17** | **16** | **16** |
+| **REGRESSIONS (dropped today, admitted after)** | — | **ZERO** |
+
+The one title neither alternative 1 catches is `1999 jobs in Berlin` — **by
+design**: the shipped year lookahead excludes it and `LISTING_SECTION_TITLE_RE`
+catches it instead. **Measured through the whole `isListingPage`: still `true`
+with alternative 1 disabled.** The shipped test comment says exactly this, and it
+still holds.
+
+**MUST ADMIT — 18 titles**, including every real posting title in the shipped
+keep-lists, all four year-carrying keeps, `Research positions at CERN`, and
+**Ruling 49a's whole pair** (`M.S. Internship Program`,
+`M.S. Internship Program – Oregon Center for Electrochemistry`,
+`Battery Scientist – Acme Energy Ltd`,
+`Graduate Intern – Focused Ion Beam, Electron Microscopy ...`).
+
+| | refused today | refused after |
+|---|---|---|
+| **all 18** | **3** | **1** |
+
+**THE TWO FIXED ARE EXACTLY THE TWO NAMED REAL POSTS:**
+`Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs` and
+`Research Technologist 3 - Sandia Jobs`. **And measured through EVERY limb of
+`isListingPage` with alternative 1 neutralised, both return `false` — so no other
+limb was also dropping them, and the narrowing alone is sufficient.**
+
+---
+
+## **WHAT ADMITS WHEN THE FILTER CANNOT DECIDE — THE FILTER'S OWN DIRECTION, QUOTED FROM ITS OWN FILE**
+
+`jobweb.ts:757-761` records the direction for exactly this class:
+a second call site *"where widening it would start DROPPING rows, and Ruling 55c
+holds a row-dropping guard to a higher standard than this one has met."*
+**A guard that DROPS is held to a higher bar than a guard that admits, so the
+undecidable case ADMITS.** That is why the narrowing is the right direction of
+travel and why B proposes no compensating widening anywhere else.
+
+**Admission is not the end of the road, and this is the layered design the
+manager's hand-off names.** A row this filter admits still faces, in order:
+`hasEmptyPostingIdentifier`, `NON_JOB_PATH_RE`, the `JOB_PATH_RE`/`JOB_TEXT_RE`
+pair, the other seven limbs of `isListingPage`, and — **on the nine
+`AGGREGATOR_HOSTS`** — `LISTING_URL_RE` plus the `POSTING_ID_RE` requirement.
+**Measured: `1,200 - Engineering Jobs` on `indeed.com/q-engineering-jobs.html`
+still drops with alternative 1 disabled, through the URL limb.**
+
+---
+
+## **THE TWO RESIDUALS, NAMED RATHER THAN HIDDEN**
+
+**RESIDUAL 1 — a separator-led count on a NON-aggregator host.**
+`1,200 - Engineering Jobs` at `example.test/jobs` drops today and would be
+**admitted** after. **CONSTRUCTED, not sighted** — it appears in no live corpus
+this loop has measured, and **the identical shape with a pipe is already admitted
+today**, so the narrowing does not create the class, it enlarges it by one
+separator. The backstop is the aggregator-host limb above.
+
+**RESIDUAL 2 — a grade digit with NO separator at all.**
+`Technologist 1 LANL Jobs` is refused today and **stays refused** after.
+**Genuinely undecidable from the title alone**: the count-noun reading is
+grammatical. **B does not propose a second clause for it**, because the only
+clause that would work (number-noun agreement: a `1` in front of a PLURAL noun is
+not a count) is **earned by no measured row** — this loop's own standard, stated
+in `jobweb.test.ts`'s own comment: *"All four are CONSTRUCTED, not sighted."*
+**It is named here so round 28 does not rediscover it as new, and so a later
+widening is a deliberate act.**
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`LISTING_TITLE_RE` HAS EXACTLY ONE CALL SITE IN SHIPPED CODE:
+  `jobweb.ts:1173`, inside `isListingPage`** (repo-wide grep; the other nine hits
+  are comments). **Therefore the employer-candidate chain — where Ruling 49a and
+  Ruling 33 live — cannot be reached by this change at all.** This is the
+  provable version of "49a is fine", and it is why the narrowing is safe in a way
+  that widening `CAREERS_INDEX_TITLE_RE` (which does have two call sites) would
+  not be.
+- **`src/lib/jobs/sources/jobweb.test.ts`** — the file that owns the corpus.
+  Blocks that exercise alternative 1 directly: **line 11-19** (5 aggregate
+  titles), **line 688-693** (B13-02's three-title alternation lock), **line
+  1650-1659** (the same five re-asserted), **line 1660-1668** (the two
+  year-shaped counts), **line 1673** (`1999 jobs in Berlin`), **line 46-53** (the
+  end-to-end Indeed drop). **Measured: every one of them still drops.**
+- **`src/lib/jobs/sources/jobweb.test.ts` lines 1329-1338, 2145-2155, 2626-2636**
+  — Ruling 49a's locks. **Not at risk: none of those titles contains a digit
+  followed by a count noun, and the constant they exercise is a different one.**
+- **NEW TESTS C OWES** (additions only — never delete a test):
+  1. `isListingPage("Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs", "lanl.jobs", <the jobdetails path>)` is **`false`** — A27-02's own row.
+  2. The same for `Research Technologist 3 - Sandia Jobs` on `sandia.gov` — **proves it is not host-specific**, which is the half A measured.
+  3. **The boundary that must NOT move:** `1,200 - Engineering Jobs` on
+     `indeed.com/q-engineering-jobs.html` is still **`true`** — the aggregator
+     backstop, asserted so the admission-side judgement is locked rather than
+     assumed.
+  4. `500 Entry-Level Battery R&D Jobs` and `1,200 Full-Time Jobs` still
+     **`true`** — the hyphen-inside-a-word clause, which is the clause a later
+     "tidy-up" would delete first.
+
+---
+
+## **KNOCK-ONS WHEN THIS LANDS — SAID NOW, NOT DISCOVERED IN ROUND 28**
+
+- **Ruling 48b's JOB wrongly-dropped column goes 1 → 0** and the row enters the
+  pool, subject to top-N.
+- **62d(b) + 63a's trigger becomes REACHABLE AGAIN.** §1 records that the trigger
+  is unpulled *"because the tail that would fire the trigger is the same tail
+  that gets it DROPPED."* **That stops being true the moment this lands.**
+  Measured on the shipped chain with the digit removed: the row is kept, the
+  title cleans to `Nuclear Materials and Molten Salt Technologist`, **and the
+  employer renders as HONEST SILENCE (no candidate survives the veto chain)** —
+  which is 62d(a)'s correct behaviour, not a new defect. **With the digit the
+  rendered title will keep its grade (`... Technologist 1`), which is right: the
+  digit is part of the role name.**
+- **`stemgateway.nasa.gov`** is untouched by this and stays named-and-not-counted.
+
+---
