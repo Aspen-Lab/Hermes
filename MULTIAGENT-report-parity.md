@@ -74636,3 +74636,92 @@ row must read `thebatteryshowsouth.com -> Atlanta`, and **its falsifier is that
 same row coming back reading `Atlanta GA`.**
 
 ---
+
+### Round 27 — Agent C (item 2 of 7: **A27-02 — `LISTING_TITLE_RE`'s FIRST ALTERNATIVE IS NARROWED TO WORD-INITIAL TOKENS, EXACTLY AS B WROTE IT. ALL 482 SHIPPED `jobweb` TESTS STAY GREEN WITHOUT ONE EDIT. AND C's OWN "EMPTY RUN" ASSERTION WAS CAUGHT AS DECORATION BY MUTATION AND IS DISCLOSED AND RESTATED, NOT QUIETLY DROPPED.**)
+
+**STATUS: COMPLETE.** Item 2 of seven. Code plus this entry in one commit.
+
+## **WHAT SHIPPED — ONE SUB-PATTERN, NOTHING ELSE**
+
+`src/lib/jobs/sources/jobweb.ts`. Alternative 1's run
+`[\w\s,&/-]{0,40}` becomes `(?:[\w][\w,&/-]*(?:\s+[\w][\w,&/-]*){0,6}\s+)?`
+— **B's string, character for character.** The year lookahead, the count
+alternation and alternatives 2, 3 and 4 are **byte-unchanged**. A long docstring
+block now sits under the existing `LISTING_TITLE_RE` comment recording the
+mechanism, the pipe precedent, the four clauses, both residuals by name, and the
+direction rule (a guard that DROPS is held higher than a guard that ADMITS).
+
+**`CAREERS_INDEX_TITLE_RE` was not touched** — B's warning that it has two call
+sites while `LISTING_TITLE_RE` has one.
+
+## **THE SHIPPED CORPUS SURVIVES WITH ZERO EDITS — THE STRONGEST BOUNDARY AVAILABLE**
+
+**`jobweb.test.ts` had 482 tests before this change and 482 of 482 passed
+immediately after it, with NOTHING deleted, loosened or restated.** That file is
+where the whole must-drop corpus lives — B13-02's five-title alternation lock and
+both of its re-assertions, the two year-shaped counts, `1999 jobs in Berlin`, the
+end-to-end Indeed drop, alternative 4's six listing verbs, Ruling 49a's three
+locks and the string-sweep block. **B predicted the corpus would lose nothing;
+it lost nothing.**
+
+## **THE NEW TESTS — +7 blocks (482 -> 489), ZERO deletions, ZERO edits to existing blocks**
+
+1. **The LANL row** — `Nuclear Materials and Molten Salt Technologist 1 - LANL
+   Jobs` on `lanl.jobs` at A's own recorded `/search/jobdetails/...` path is now
+   **`false`**. This is A27-02's own row and 48b's wrongly-dropped job.
+2. **The Sandia row** — `Research Technologist 3 - Sandia Jobs` on `sandia.gov`
+   is **`false`**: proves the defect was never host-specific.
+3. **The aggregator backstop** — `1,200 - Engineering Jobs` on
+   `indeed.com/q-engineering-jobs.html` is still **`true`**. Residual 1's price,
+   asserted rather than assumed.
+4. **The hyphen-inside-a-word clause** — `500 Entry-Level Battery R&D Jobs` and
+   `1,200 Full-Time Jobs` still **`true`**.
+5. **The empty run** — see the disclosure below.
+6. **The reach cap** — asserted at the rule itself.
+
+**ONE CORRECTION TO B's ARITHMETIC, MEASURED.** B describes `{0,6}` as the cap.
+The pattern is **one leading token PLUS up to six more, so the true bound is
+SEVEN tokens, not six** — `60 a b c d e f g Jobs` still bridges and
+`60 a b c d e f g h Jobs` does not. C's first draft asserted six and **went red
+on its own test**, which is how the off-by-one was found. The assertion now
+states the real bound. **Nothing about the fix changes; only the description of
+it was wrong.**
+
+## **ONE DECORATION OF C's OWN, CAUGHT BY MUTATION AND DISCLOSED**
+
+C's first version of the empty-run test asserted only through `isListingPage`.
+**Making the group MANDATORY left the entire file GREEN — 489 of 489 — so that
+assertion proved nothing about the clause it was written for.** Probed at the
+rule itself: `LISTING_TITLE_RE.test("12345 vacancies")` is `true` shipped, `true`
+narrowed, and **`false` mandatory** — a sibling limb was dropping that title
+anyway and masking the clause end to end. **The test now asserts the RULE first**
+(uniquely red) **and keeps the chain assertion as a named ADMITTED CONTROL.**
+**`999 Battery Openings` is explicitly labelled a non-witness for optionality**
+— its run is not empty — rather than being left to look like evidence.
+
+## **NEGATIVE PROOFS — FOUR MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+Baseline for every row: **489 of 489 passing.**
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **the run reverted to the shipped `[\w\s,&/-]{0,40}`** | **3 failed / 486 passed** (LANL, Sandia, the reach cap) |
+| 2 | **hyphen removed from the in-token class** | **2 failed / 487 passed** |
+| 3 | **`{0,6}` replaced by `*`** | **1 failed / 488 passed** |
+| 4 | **the group made mandatory** (`?` removed) | **1 failed / 488 passed** — *and 0 failed before the test was restated; that is the disclosure above* |
+
+## **THE GATE AFTER ITEM 2**
+
+`npx vitest run` **97 files / 2021 tests, 2021 PASSING — ZERO failures**
+(2014 -> 2021, **+7**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.**
+
+**KNOCK-ONS, RESTATED SO ROUND 28 EXPECTS THEM:** Ruling 48b's JOB
+wrongly-dropped column goes **1 -> 0** and the LANL row should enter the pool
+**when it is offered**, subject to top-N. **62d(b) + 63a's trigger becomes
+REACHABLE again** — §1's recorded reason for it being unpulled stops being true
+the moment this lands. The rendered title will **keep its grade**
+(`... Technologist 1`), which is right: the digit is part of the role name.
+**`stemgateway.nasa.gov` is untouched and stays named-and-not-counted.**
+
+---

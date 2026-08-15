@@ -142,9 +142,51 @@ export const NON_JOB_PATH_RE =
  * **NO HOST LIST** for `careers.inl.gov` or `lensa.com` — Ruling 32's headline
  * complaint. The `- Search Jobs` chrome is an ATS convention, not one site's
  * quirk, and the fix is asserted on unrelated hosts.
+ *
+ * ───────────────────────────────────────────────────────────────────────
+ * A27-02 (round 27, item 2). ALTERNATIVE 1's RUN IS NARROWED TO
+ * WORD-INITIAL TOKENS.
+ *
+ * The old run `[\w\s,&/-]{0,40}` contained the HYPHEN and the SPACE, so it
+ * bridged a title's own segment separator. On the real, on-topic vacancy
+ * `Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs` the engine
+ * read the job-GRADE `1` as a count, walked `- LANL ` straight across the
+ * ` - `, landed on `Jobs`, and dropped a single national-laboratory posting as
+ * an aggregate listing. Not host-specific: `Research Technologist 3 - Sandia
+ * Jobs` on `sandia.gov` reproduced it.
+ *
+ * The true aggregate shape is count-noun ADJACENCY WITHIN ONE SEGMENT, not
+ * magnitude and not position. Magnitude fails (`5 Jobs` is a real aggregate and
+ * `999 Battery Openings` is a shipped must-drop); position fails (`Explore 60
+ * Molten Salt Jobs` counts mid-title). In a genuine aggregate everything
+ * between the number and the noun is one noun phrase; in the false positive a
+ * separator sits between them, which means the two belong to different parts of
+ * the title.
+ *
+ * **THIS INVENTS NO POLICY — IT GIVES THE HYPHEN THE TREATMENT THE PIPE ALREADY
+ * HAD.** `[\w\s,&/-]` never contained `|`, so `1,200 | Engineering Jobs` was
+ * already admitted by this rule before the change.
+ *
+ * Every token must BEGIN with a word character; `[\w,&/-]*` inside a token
+ * keeps `Full-Time`, `Entry-Level` and `R&D` dropping; `{0,6}` keeps the reach
+ * bounded the way `{0,40}` did; the group is optional with a trailing `\s+` so
+ * the empty run (`12345 vacancies`) still fires. Strictly fewer titles match —
+ * the same direction of travel as the year lookahead above.
+ *
+ * KNOWN, BOUNDED RESIDUALS, named rather than hidden. (1) A separator-led count
+ * on a NON-aggregator host (`1,200 - Engineering Jobs` at `example.test/jobs`)
+ * is now admitted; it is CONSTRUCTED, not sighted, the pipe form was already
+ * admitted, and on the nine `AGGREGATOR_HOSTS` the URL limb still drops it —
+ * asserted below. (2) A grade digit with NO separator (`Technologist 1 LANL
+ * Jobs`) is refused today and stays refused: undecidable from the title alone,
+ * and no measured row earns a further clause.
+ *
+ * Direction, from this file's own precedent at the second `isListingPage` call
+ * site: a guard that DROPS is held to a higher bar than a guard that ADMITS, so
+ * the undecidable case admits and faces the later layers.
  */
 export const LISTING_TITLE_RE =
-  /(?:^|\s)(?!(?:19|20)\d{2}(?![\d+]))(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+[\w\s,&/-]{0,40}\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|^\s*(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
+  /(?:^|\s)(?!(?:19|20)\d{2}(?![\d+]))(?:\d{1,3}(?:,\d{3})+|\d{1,5})[+]?\s+(?:[\w][\w,&/-]*(?:\s+[\w][\w,&/-]*){0,6}\s+)?\b(?:jobs?|vacancies|openings?|positions?|opportunities)\b|\bjobs?,\s*employment\b|\b(?:jobs?|vacancies|openings?|positions?)\s+(?:in|near|at|for)\b.*\|\s*[\w.-]+\.\w+\s*$|^\s*(?:browse|search|find|latest|top|best)\s+[\w\s]{0,20}\b(?:jobs?|vacancies|openings?)\b/i;
 
 /** Query-string or path shapes that mean "this is a search result listing". */
 export const LISTING_URL_RE =

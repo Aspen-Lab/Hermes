@@ -2634,3 +2634,92 @@ describe("A23-01(c) — bounded employer-candidate rejections", () => {
       .toBeUndefined();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────
+// A27-02 (round 27, item 2). THE AGGREGATE FILTER'S FALSE POSITIVE.
+//
+// `LISTING_TITLE_RE`'s first alternative used the run `[\w\s,&/-]{0,40}`
+// between the count and the count-noun. That class holds the HYPHEN and the
+// SPACE, so it bridged a title's own segment separator: on a real, single,
+// on-topic Los Alamos vacancy the engine read the job GRADE `1` as a count,
+// walked `- LANL ` across the ` - `, landed on `Jobs`, and dropped the row.
+// Offered 5 of 5, dropped 5 of 5, pooled 0 of 5 in round 27 A's census.
+//
+// The run is now made of WORD-INITIAL tokens, which is exactly the treatment
+// the shipped class already gave the PIPE (`|` was never in it, so
+// `1,200 | Engineering Jobs` was already admitted before this change).
+//
+// The whole shipped must-drop corpus above is unchanged and still green; these
+// blocks pin the two rows that MOVE and the two boundaries that MUST NOT.
+// ───────────────────────────────────────────────────────────────────────
+describe("A27-02: a segment separator between the count and the count-noun", () => {
+  const LANL_PATH =
+    "/search/jobdetails/nuclear-materials-and-molten-salt-technologist-1---research-technologist-1/9afb00cb";
+
+  it("admits the real LANL vacancy whose job grade was read as a count", () => {
+    expect(
+      isListingPage(
+        "Nuclear Materials and Molten Salt Technologist 1 - LANL Jobs",
+        "lanl.jobs",
+        LANL_PATH,
+      ),
+    ).toBe(false);
+  });
+
+  it("admits the same shape on an unrelated host — it was never host-specific", () => {
+    // A's own control. `sandia.gov` is not an aggregator and shares no
+    // vocabulary with `lanl.jobs`; the defect was in the title rule alone.
+    expect(
+      isListingPage(
+        "Research Technologist 3 - Sandia Jobs",
+        "sandia.gov",
+        "/careers/job/12345",
+      ),
+    ).toBe(false);
+  });
+
+  it("still drops a separator-led count on an AGGREGATOR host — the backstop", () => {
+    // Residual 1, priced rather than hidden. This exact title on a
+    // NON-aggregator host is now admitted (constructed, never sighted, and the
+    // pipe form was already admitted). On the nine `AGGREGATOR_HOSTS` the URL
+    // limb still drops it, so the admission-side judgement is locked here
+    // rather than assumed.
+    expect(
+      isListingPage("1,200 - Engineering Jobs", "indeed.com", "/q-engineering-jobs.html"),
+    ).toBe(true);
+  });
+
+  it.each(["500 Entry-Level Battery R&D Jobs", "1,200 Full-Time Jobs"])(
+    "still drops a genuine aggregate whose noun phrase contains a hyphen or ampersand: %s",
+    (title) => {
+      // The `[\w,&/-]*` tail inside each token. This is the clause a later
+      // tidy-up would delete first, so it gets its own red case.
+      expect(isListingPage(title, "example.test", "/jobs")).toBe(true);
+    },
+  );
+
+  it("keeps the empty run firing — the count-noun may follow the count directly", () => {
+    // The group is optional and carries its own trailing `\s+`; make it
+    // MANDATORY and `12345 vacancies` stops matching this rule.
+    //
+    // DISCLOSED VACUITY, FOUND BY MUTATION: asserting this through
+    // `isListingPage` alone is DECORATION — with the group made mandatory the
+    // whole file stayed green, because a sibling limb drops that title too.
+    // The clause is only uniquely red at the rule itself, so the rule is what
+    // is asserted first. The chain assertion below is kept as an ADMITTED
+    // CONTROL: it records the end-to-end verdict, not this clause.
+    expect(LISTING_TITLE_RE.test("12345 vacancies")).toBe(true);
+    expect(isListingPage("12345 vacancies", "example.test", "/jobs")).toBe(true);
+    // `999 Battery Openings` has a token in its run, so it is NOT a witness
+    // for optionality — it is here as the shipped B13-02 must-drop it is.
+    expect(isListingPage("999 Battery Openings", "example.test", "/jobs")).toBe(true);
+  });
+
+  it("bounds the run's reach at six tokens", () => {
+    // The `{0,6}` cap replaces the reach limit the `{0,40}` characters
+    // provided. It is one leading token plus up to six more, so SEVEN tokens
+    // still bridge and an eighth does not — measured, not assumed.
+    expect(LISTING_TITLE_RE.test("60 a b c d e f g Jobs")).toBe(true);
+    expect(LISTING_TITLE_RE.test("60 a b c d e f g h Jobs")).toBe(false);
+  });
+});
