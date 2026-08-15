@@ -1218,6 +1218,42 @@ describe("eventNameFrom", () => {
 });
 
 describe("webResultToRawEventItem", () => {
+  // A24-01. THE ROW LEAVES BY KIND, AND IT LEAVES BEFORE ANY VALUE IS READ.
+  // The index check is 4 of 6 in this function — ahead of the date anchor and
+  // far ahead of enrichment — so the wrong NAME ("Provided by Cambridge
+  // EnerTech", the only segment left once the picker rejected the index
+  // segment) and the wrong PLACE (Chicago, another event's city, read from a
+  // page listing many) never get a chance to be computed. One mechanism, three
+  // faces, one fix. The place guard is NOT touched and needs no clause.
+  it("drops a chrome-tailed conference index as a whole row, before any value is read", () => {
+    expect(
+      webResultToRawEventItem(
+        {
+          title: "Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech",
+          url: "https://www.cambridgeenertech.com/cet/conferences",
+          snippet:
+            "Browse our upcoming conferences. Battery Safety Summit, Chicago, IL, United States. Online and in person.",
+        },
+        Date.parse("2026-08-15T00:00:00Z"),
+      ),
+    ).toBeNull();
+  });
+
+  it("still admits a real event page whose site chrome names an events hub", () => {
+    // The `any segment` variant's own killer, asserted at ROW level rather than
+    // only at the predicate: a miss here would cost a real event.
+    const item = webResultToRawEventItem(
+      {
+        title: "Battery Safety Summit 2026 | Upcoming Conferences",
+        url: "https://example.com/events/battery-safety-summit-2026",
+        snippet: "Join researchers for the annual summit on battery safety.",
+      },
+      Date.parse("2026-01-01T00:00:00Z"),
+    );
+    expect(item).not.toBeNull();
+    expect(item?.name).toBe("Battery Safety Summit 2026");
+  });
+
   it("keeps a punctuated search snippet scoreable but untagged for reports", () => {
     const item = webResultToRawEventItem(
       { title: "Battery Summit 2026", url: "https://example.com/battery", snippet: "Battery research sessions are included." },

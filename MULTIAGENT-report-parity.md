@@ -61540,3 +61540,94 @@ B predicted it and it is exactly so: `reportShortDate("2026-08", NOW)` now retur
 **ITEM 1 STOPS HERE.** Item 2 (A24-01 + 64b) and item 3 (the 63b restatement + 64c) follow, one commit each, each pushed immediately.
 
 ---
+
+### Round 24 — Agent C (item 2 of 3: **A24-01 + RULING 64b — the first-segment feed and the plural narrowing, ONE commit family. The fix lands at ROW ADMISSION in a NEW predicate, so `isEventIndexPage`'s shipped contract and its whole test table are untouched and the name picker widens by nothing. B's adversarial table is encoded as a STRING table, because the row is intermittent. THE PLURAL NARROWING CARRIES ITS OWN THREE UNIQUELY-RED CASES — it is not the unwitnessed half it was filed as.**)
+
+**Date: 2026-08-15. Everything below is EXECUTED.** **No credential printed, logged, committed or written anywhere; presence checked as a boolean only, by the harness that already does it.**
+
+---
+
+## WHAT SHIPPED — `web/src/lib/events/sources/eventweb.ts`, three edits, event-side only
+
+1. **`titleSegments(title)` — the shipped splitter EXTRACTED, not re-invented.** B's direction was explicit: reuse `selectEventTitleSegment`'s own `title.split(/\s+[-|·–—]\s+/).map(trim).filter(Boolean)` VERBATIM. C pulled that exact expression out into a named function and `selectEventTitleSegment` now calls it. **Two callers, ONE definition** — a copied regex would have drifted, which is the whole failure mode item 1 just finished repairing in `format.ts`. B's known limit (a pipe with no surrounding spaces does not split) is recorded in the new function's own comment so no future round "fixes" it.
+2. **`isEventIndexResult(title)` — NEW, exported, and the only thing row admission calls.** It is `isEventIndexPage(title) || isEventIndexPage(firstSegment)`.
+3. **`EVENT_INDEX_TITLE_RE`'s BROWSE alternative now requires the PLURAL noun** — `(?:events|conferences|seminars|workshops)`. Ruling 64b, shipped in the same commit family exactly as ordered.
+
+**`webResultToRawEventItem`'s check 4 of 6 now reads `isEventIndexResult(title)`.**
+
+### **WHY A NEW PREDICATE RATHER THAN AN EDIT TO `isEventIndexPage` — C RESOLVES A TENSION IN B's OWN ENTRY AND SAYS SO**
+
+B's entry pulls two ways. Its BLAST RADIUS says *"Prefer the change at the CALL SITE, keeping `isEventIndexPage`'s own contract (and its shipped test table) exactly as it is"*; its TESTS AT RISK says *"C ADDS the chrome-tailed variant to the same table"* — but the chrome-tailed variant can only be `true` in that table if `isEventIndexPage` ITSELF changes, which is the thing the blast radius forbids.
+
+**Both halves are satisfiable at once, and this is how:** a second exported predicate composed FROM `isEventIndexPage`. Then
+
+- `isEventIndexPage`'s contract is byte-identical and its shipped table (`scoring.test.ts:592-610`) is **untouched and green, verified not assumed** — including all four must-keeps at `:604-609`;
+- `isChromeSegment` still asks `isEventIndexPage` about whole segments, so **name selection widens by nothing** — B's measured-harmless-but-wider outcome is avoided rather than accepted;
+- the chrome-tailed variant gets a table of its own, which is where the regression test belongs.
+
+**This is a deviation in FORM, not in effect, and it is logged here rather than mentioned afterwards.**
+
+---
+
+## NEGATIVE PROOFS — **PER HALF, REVERTED AND RE-RUN, EXACT RED COUNTS**
+
+Two files in scope: `scoring.test.ts` and `eventweb.test.ts` — **280 tests with this item's additions present.**
+
+| revert | red | what goes red |
+|---|---|---|
+| **the whole source file** | **21** | 18 of these are the two new tables failing to import a missing export — **a compile-level red that carries no information, and C names it rather than banking 21 as a score.** The informative reverts are the three below. |
+| **the call site only** (`isEventIndexResult` → `isEventIndexPage` at check 4) | **1** | `drops a chrome-tailed conference index as a whole row, before any value is read` — the ROW-level proof |
+| **the first-segment feed only** (predicate kept, body reduced to `isEventIndexPage(title)`) | **3** | the row-level test; `drops the index page: Upcoming Energy Storage Conferences \| Provided by Cambridge EnerTech`; `drops the index page: Events - Gateway for Accelerated Innovation in Nuclear` |
+| **the 64b plural narrowing only** (first-segment feed kept) | **3** | `keeps a single event whose name starts with a browse word and ends singular`; `admits the real event page: All Solid State Battery Workshop`; **`admits the real event page: All Solid State Battery Workshop \| Tokyo 2026`** |
+
+### **THE PLURAL NARROWING IS NOT VACUOUS, AND THAT CHANGES ITS STANDING**
+
+B filed 64b honestly as *"NO live witness — earned by a named domain risk and zero measured cost, nothing stronger."* **Executed, it has three uniquely-red cases, and the THIRD is the one that matters:**
+**`All Solid State Battery Workshop | Tokyo 2026` is KEPT only because both halves shipped together.** With the first-segment feed alone, its first segment is `All Solid State Battery Workshop` and the un-narrowed singular arm drops it — **the first-segment input would have EXTENDED the pre-existing over-reach to the chrome-tailed form, exactly as B predicted it would.** So the narrowing is not a nice-to-have riding along: **it is the clause that stops this item from costing a real event page, and its falsifier fires the moment it is removed.** That is why 64b's "ships WITH item 2, same commit family" is the right call and not merely a convenient one.
+
+**Vacuity discipline, stated affirmatively:** both halves are load-bearing, each has its own red, and neither is decoration. **`isEventIndexPage`'s own table is UNCHANGED and green** — asserted, since a silent break there would have been this item's most likely casualty.
+
+---
+
+## B's ADVERSARIAL TABLE, ENCODED AS TESTS — **AND ENCODED AS STRINGS ON PURPOSE**
+
+**THE INTERMITTENCY IS THE REASON.** `cambridgeenertech.com/cet/conferences` is handed to Peer under a title that VARIES between windows: A's window recorded the chrome-tailed form, B's five pulls saw only the clean form, and C's own paired live runs this round saw the host not at all. **A24-01 cannot be regression-tested by a live pull. It is tested by the recorded STRING, and `scoring.test.ts` says so in its own comment so no later round replaces it with a pull.**
+
+**3 DROPS asserted** (`isEventIndexResult === true`): A's exact recorded title; the clean title B's pulls saw, so that arm is not given up; and **`Events - Gateway for Accelerated Innovation in Nuclear`** — B's single new drop across 150 live offered titles, a genuine events hub.
+
+**15 ADMITTED CONTROLS asserted** (`isEventIndexResult === false`), every named row from B's list: `Battery Safety Summit 2026 | Upcoming Conferences` (the control that killed the `any segment` variant, now asserted at BOTH predicate and ROW level); `Conference Overview | The Battery Show South`; `Sessions and Tracks | Advanced Battery Conference 2026`; `Programme | 32nd SolarPACES Conference`; `Co-located Workshops | The Battery Show North America`; `Battery Workshops 2026`; `Upcoming Battery Technology Conference 2026 | Chicago, IL`; `All-Solid-State Battery Symposium 2026 | Tokyo`; `26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA`; `Battery Safety Summit | August 12-13, 2026 | Chicago, IL`; `Solid-State Battery Summit | August 11-12, 2026`; `Turkey Battery Technologies Summit 2026 – October 21-22, 2026`; `Solid-State Battery Summit (Aug 2026), Chicago USA`; plus 64b's two `All Solid State Battery Workshop` forms. **0 drops lost, 0 real event pages lost — reproduced, not inherited.**
+
+**`SIPS 2026 - Department of Materials` is asserted STILL DROPPED**, by alternative 4's unanchored `department\s+of`. Pre-existing, unchanged by this item, and recorded in the test itself because `flogen.org` renders `SIPS 2026` as a correct kept pool row — the cost exists identically before and after.
+
+---
+
+## THE POOL RE-MEASUREMENT — **PAIRED, BACK TO BACK, TWICE. THE FIX REMOVES NOTHING IN THIS WINDOW.**
+
+The brief asked for a re-measurement because a new drop changes composition. **A single after-figure would have been worthless** — the pool moved from 12 survivors at this session's cold baseline (~22:30 local) to 14 an hour later, with no code change between them. So C measured it PAIRED: revert, pull, restore, pull, twice.
+
+| | reverted | fixed |
+|---|---|---|
+| run 1 | **14 survivors, 4 with city, 0.286** | **14 survivors, 4 with city, 0.286** |
+| run 2 | **14 survivors, 4 with city, 0.286** | **14 survivors, 4 with city, 0.286** |
+
+**IDENTICAL, all four runs. ZERO rows lost, ZERO rows changed.** Neither `cambridgeenertech.com` nor `gain.inl.gov` was offered in this window, so the fix had nothing to act on — **which is the honest reading, and it agrees exactly with B's own five pulls, which also could not reproduce the row.** **The 12 → 14 pool move is turnover, PROVEN so by the paired identity rather than assumed.** The city ratio's 0.333 → 0.286 drift is the same turnover and is not a regression.
+
+**The falsifier for this item is therefore NOT a pool count.** It is: *the recorded chrome-tailed string, or any first-segment index title, being ADMITTED again.* That is what the string table watches, and it cannot be defeated by a quiet window.
+
+---
+
+## WHAT DID NOT MOVE — stated affirmatively
+
+- **THE PLACE GUARD IS NOT TOUCHED. Not one clause.** The row leaves by KIND at check 4 of 6, which runs **before any date logic and long before any place is read** — asserted at row level, not argued. 62a's boundaries, its four silences and its five kept venues are exactly as round 23 left them. **`Chicago` at 4 occurrences is NOT used to move any boundary**, per B and per 64b.
+- **THE NAMING CHAIN IS NOT TOUCHED.** `bestEventTitleSegment`, `isChromeSegment` and `selectEventTitleSegment` behave identically — `titleSegments` is a pure extraction and `eventweb.test.ts`'s whole name-picker suite is green, including `:573-581`'s events-directory rejection and the site-chrome tables.
+- **62b's DEFERRED GAP (b) IS UNTOUCHED AND UNCLOSED.** The index check runs before any date logic exists in the function, so it removes an index page whether dated or not, and removes nothing that is dateless and genuinely a single event. Nothing here claims otherwise.
+- **NO THRESHOLD MOVED. NO TEST DELETED. NO TEST EDITED** — every test-file change is a pure addition, and `isEventIndexPage`'s shipped table is byte-identical.
+- **The job side is untouched** — `isEventIndexResult` is event-only; `jobs/sources/jobweb.ts:858` merely mentions the predicate in a comment.
+
+## THE GATE AFTER ITEM 2
+
+**92 files / 1877 tests, 1876 passing** (+23 on item 1's 1854: 6 in `scoring.test.ts`, 2 in `eventweb.test.ts`, and the `it.each` rows they expand to). **Sole failure `benchmark.test.ts`, city coverage 0.286 — deterministically red per Ruling 63b, not chased; item 3 restates it.** `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing `quiz.tsx:46` error, 0 warnings**. **`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds after a second event-side change.**
+
+**ITEM 2 STOPS HERE.** Item 3 (the 63b restatement + 64c) follows, one commit, pushed immediately.
+
+---

@@ -15,6 +15,7 @@ import {
   DENY_PATH_RE,
   eventNameFrom,
   isEventIndexPage,
+  isEventIndexResult,
   isNewsArticleTitle,
   extractDeadline,
   extractEventDate,
@@ -607,6 +608,91 @@ describe("event index and org pages", () => {
     "EMEA2026: Workshop on Ion Exchange Membranes for Energy Applications",
   ])("keeps a real event: %s", (title) => {
     expect(isEventIndexPage(title)).toBe(false);
+  });
+
+  // A24-01 / RULING 64b. THE SINGULAR ARM OF THE BROWSE ALTERNATIVE IS GONE.
+  // "All-solid-state battery" is a core term in this corpus — the pool's own
+  // headline row is a Solid-State Battery Summit — so a single event named
+  // `All Solid State Battery Workshop` was being dropped as if it were an
+  // index. The HYPHENATED spelling escaped only because a hyphen is not `\s`.
+  it("keeps a single event whose name starts with a browse word and ends singular", () => {
+    // Before the narrowing this was `true` — a real event dropped by name.
+    expect(isEventIndexPage("All Solid State Battery Workshop")).toBe(false);
+    // Already kept, by accident of spelling. Now kept for a reason.
+    expect(isEventIndexPage("All-Solid-State Battery Workshop")).toBe(false);
+    // The PLURAL still drops. An index lists many.
+    expect(isEventIndexPage("Upcoming Energy Storage Conferences")).toBe(true);
+    expect(isEventIndexPage("All Battery Workshops")).toBe(true);
+    expect(isEventIndexPage("Browse Battery Events")).toBe(true);
+  });
+});
+
+// A24-01. ROW ADMISSION vs the raw predicate. `isEventIndexPage`'s own contract
+// above is UNCHANGED and its table stays green; `isEventIndexResult` is what
+// `webResultToRawEventItem` calls, and it feeds the title's FIRST SEGMENT in as
+// a second derived input.
+//
+// This is a STRING table on purpose. A24-01 is INTERMITTENT — the provider's
+// title for `cambridgeenertech.com/cet/conferences` varies between windows, and
+// round 24 B's own five live pulls could not reproduce the pool row at all. The
+// mechanism is deterministic even when the row is not, so the regression test
+// replays the recorded STRING and never a live pull.
+describe("A24-01: index-page admission reads the first title segment", () => {
+  it.each([
+    // The row A24-01 was filed on, in the exact string A's window recorded.
+    "Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech",
+    // Same page, same URL, the title B's five pulls saw. Already dropped by the
+    // shipped guard — this arm must not be given up.
+    "Upcoming Energy Storage Conferences",
+    // The ONE new drop across 150 live offered titles: a genuine events hub.
+    "Events - Gateway for Accelerated Innovation in Nuclear",
+  ])("drops the index page: %s", (title) => {
+    expect(isEventIndexResult(title)).toBe(true);
+  });
+
+  it.each([
+    // THE CONTROL THAT KILLED THE `any segment` VARIANT: a real event whose
+    // site chrome names the organiser's own events hub. `any segment` drops it.
+    "Battery Safety Summit 2026 | Upcoming Conferences",
+    // A real, live, correctly-kept pool row whose FIRST segment is the bare
+    // generic noun "Conference".
+    "Conference Overview | The Battery Show South",
+    // Sibling sessions, tracks and co-located workshops on one event's own page
+    // — the class the brief named. None of them moves.
+    "Sessions and Tracks | Advanced Battery Conference 2026",
+    "Programme | 32nd SolarPACES Conference",
+    "Co-located Workshops | The Battery Show North America",
+    "Battery Workshops 2026",
+    "Upcoming Battery Technology Conference 2026 | Chicago, IL",
+    "All-Solid-State Battery Symposium 2026 | Tokyo",
+    "26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA",
+    "Battery Safety Summit | August 12-13, 2026 | Chicago, IL",
+    "Solid-State Battery Summit | August 11-12, 2026",
+    "Turkey Battery Technologies Summit 2026 – October 21-22, 2026",
+    "Solid-State Battery Summit (Aug 2026), Chicago USA",
+    // Ruling 64b's own witness, and the chrome-tailed form the first-segment
+    // input would otherwise have EXTENDED the old over-reach to.
+    "All Solid State Battery Workshop",
+    "All Solid State Battery Workshop | Tokyo 2026",
+  ])("admits the real event page: %s", (title) => {
+    expect(isEventIndexResult(title)).toBe(false);
+  });
+
+  it("leaves the raw predicate's own contract alone", () => {
+    // The first-segment input lives at ROW ADMISSION only. `isChromeSegment`
+    // still asks `isEventIndexPage` about whole segments, so nothing widens in
+    // name selection — the blast radius round 24 B priced.
+    expect(
+      isEventIndexPage("Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech"),
+    ).toBe(false);
+    expect(isEventIndexPage("Events - Gateway for Accelerated Innovation in Nuclear")).toBe(false);
+  });
+
+  it("keeps dropping SIPS-shaped org tails, which alternative 4 owns unanchored", () => {
+    // Pre-existing and NOT touched here. Recorded because `flogen.org` renders
+    // `SIPS 2026` as a correct, kept pool row, and a title of this shape loses
+    // it — a cost that exists before and after this item, unchanged.
+    expect(isEventIndexResult("SIPS 2026 - Department of Materials")).toBe(true);
   });
 });
 

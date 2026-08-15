@@ -340,9 +340,23 @@ function isGenericPageTitle(candidate: string): boolean {
  * event you can attend — the events-side equivalent of a job-board search
  * page. "Events for July 2026" and "Nuclear and Applied Materials Research
  * Group" both reached a live top-5 before this filter existed.
+ *
+ * A24-01 / RULING 64b (round 24 C). The BROWSE alternative — the third one,
+ * `(?:upcoming|browse|all) … <noun>` — now requires the PLURAL noun. An index
+ * lists MANY; a singular noun is a single event's own page. The witness is this
+ * corpus's own vocabulary: `All Solid State Battery Workshop` is a real event
+ * shape here (the pool's headline row is a *Solid-State Battery Summit*), and
+ * the singular arm dropped it. The hyphenated spelling escaped by accident —
+ * a hyphen is not `\s` — and the unhyphenated one did not, which is a coin
+ * toss, not a policy. The alternative's own recorded witnesses
+ * (`Events for July 2026`, `Nuclear and Applied Materials Research Group`)
+ * belong to alternatives 1 and 4 and are untouched; the singular arm had no
+ * witness at all. Measured on 150 live offered titles over 5 pulls by round 24
+ * B: identical to the un-narrowed variant — same hits, 0 drops lost.
+ * This narrows a ROW-DROPPING guard, which is the direction Ruling 55c points.
  */
 export const EVENT_INDEX_TITLE_RE =
-  /^\s*(?:all\s+|upcoming\s+|past\s+|our\s+)?events?\b(?:\s+(?:for|in|calendar|archive|list|listing)\b|\s*$)|^\s*(?:events?|conferences?|seminars?)\s+(?:calendar|archive|listings?|schedule)\b|^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events?|conferences?|seminars?|workshops?)\s*$|\b(?:research\s+group|research\s+laboratory|research\s+center|research\s+centre|department\s+of|faculty\s+of)\b/i;
+  /^\s*(?:all\s+|upcoming\s+|past\s+|our\s+)?events?\b(?:\s+(?:for|in|calendar|archive|list|listing)\b|\s*$)|^\s*(?:events?|conferences?|seminars?)\s+(?:calendar|archive|listings?|schedule)\b|^\s*(?:upcoming|browse|all)\s+[\w\s]{0,30}\b(?:events|conferences|seminars|workshops)\s*$|\b(?:research\s+group|research\s+laboratory|research\s+center|research\s+centre|department\s+of|faculty\s+of)\b/i;
 
 /**
  * B12-03 gap B (round 12): the news-article filter's VOCABULARY is not missing
@@ -484,6 +498,44 @@ export function isEarningsCallPage(title: string, url?: string): boolean {
 
 export function isEventIndexPage(title: string): boolean {
   return EVENT_INDEX_TITLE_RE.test(title.trim());
+}
+
+/**
+ * A24-01 (round 24). ROW ADMISSION's version of the check above, and the only
+ * one `webResultToRawEventItem` uses.
+ *
+ * `EVENT_INDEX_TITLE_RE`'s browse alternative is END-ANCHORED, so a site-chrome
+ * tail walks straight past it: the SAME `/cet/conferences` page was dropped
+ * when the provider handed Peer `Upcoming Energy Storage Conferences` and
+ * ADMITTED when it handed over
+ * `Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech`.
+ * A natural experiment, not an argument — and once admitted, the index page
+ * supplied a NAME (`Provided by Cambridge EnerTech`, the only segment left
+ * after the picker rejected segment 1) and a PLACE (`Chicago, IL` — another
+ * event's city, read out of a page listing many). One mechanism, three faces.
+ *
+ * So the FIRST SEGMENT becomes a second derived input, exactly as
+ * `isEarningsCallPage` and `isNewsArticleTitle` already feed themselves
+ * `urlPathPhrase(url)`. `isChromeSegment` has classified segments this way at
+ * its own call to `isEventIndexPage` all along — row admission was strictly
+ * WEAKER than the naming check sitting above it in this same file.
+ *
+ * **FIRST SEGMENT ONLY.** An `any segment` variant is dead, killed by its own
+ * control: `Battery Safety Summit 2026 | Upcoming Conferences` is a REAL event
+ * whose site chrome names the organiser's events hub, and `any segment` drops
+ * it. A page's SUBJECT is its first segment; everything after is chrome — the
+ * same reading `selectEventTitleSegment` already takes, so the two stay
+ * consistent instead of drifting.
+ *
+ * `isEventIndexPage`'s own contract is deliberately UNCHANGED so the name
+ * picker at `isChromeSegment` keeps testing whole segments and nothing widens
+ * there. A miss here falls to ADMISSION: this check only ever removes a whole
+ * row, never edits a value and never renders a partial card.
+ */
+export function isEventIndexResult(title: string): boolean {
+  if (isEventIndexPage(title)) return true;
+  const first = titleSegments(title)[0];
+  return first !== undefined && isEventIndexPage(first);
 }
 
 /**
@@ -1414,20 +1466,36 @@ export function bestEventTitleSegment(
   return bestEventTitleSegmentDetailed(title, url, options)?.segment;
 }
 
+/**
+ * B5-06/R13 gap 3, the first half. The split only ever recognised a pipe,
+ * middle dot, en dash or em dash — a plain ASCII hyphen ("Deadline
+ * extended - SiteName") was never a recognised separator at all, so a title
+ * using one stayed a single, unsplit segment no matter what else the name
+ * picker did to it.
+ *
+ * A24-01 (round 24 C). EXTRACTED from `selectEventTitleSegment`, unchanged, so
+ * `isEventIndexResult` below can reuse the SHIPPED splitter rather than
+ * hand-roll a second one that drifts. Two callers, one definition.
+ *
+ * KNOWN LIMIT, recorded by round 24 B so no future round "fixes" it: a pipe
+ * with NO surrounding spaces does not split, so
+ * "Upcoming Conferences|Cambridge EnerTech" stays one segment and escapes.
+ * Unwitnessed across 150 offered rows, and widening the separator would change
+ * name selection everywhere this runs, for no measured gain.
+ */
+function titleSegments(title: string): string[] {
+  return title
+    .split(/\s+[-|·–—]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 function selectEventTitleSegment(
   title: string,
   url?: string,
   options?: ChromeSegmentOptions,
 ): string | undefined {
-  // B5-06/R13 gap 3, the first half. The split only ever recognised a pipe,
-  // middle dot, en dash or em dash — a plain ASCII hyphen ("Deadline
-  // extended - SiteName") was never a recognised separator at all, so a
-  // title using one stayed a single, unsplit segment no matter what else
-  // this function did to it.
-  const segments = title
-    .split(/\s+[-|·–—]\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const segments = titleSegments(title);
 
   // B5-06/R13 gap 2. host is undefined when eventNameFrom is called without
   // a URL (some tests, and any future caller that doesn't have one) — the
@@ -1593,7 +1661,11 @@ export function webResultToRawEventItem(
   const url = result.url?.trim();
   if (!title || !url) return null;
   if (isDeniedUrl(url)) return null;
-  if (isEventIndexPage(title)) return null;
+  // A24-01: the first title segment is a second derived input here — see
+  // isEventIndexResult. This check is 4 of 6 and runs BEFORE any date logic or
+  // place extraction, so an index page leaves by KIND and never reaches the
+  // place guard at all.
+  if (isEventIndexResult(title)) return null;
   // B12-03 gap B: the URL is now a second input — see isNewsArticleTitle.
   if (isNewsArticleTitle(title, url)) return null;
   if (isPaperPageTitle(title)) return null;
