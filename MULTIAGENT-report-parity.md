@@ -74817,3 +74817,103 @@ host on a RENDERED row**, so there is nothing to price yet. Named here so round
 28 does not rediscover it.
 
 ---
+
+### Round 27 — Agent C (item 4 of 7: **A27-03 — ONE CLAUSE INSIDE THE `anchor.length === 0` ARM. IT DROPS ONLY AND PUBLISHES NOTHING. TWO OF C's OWN FIXTURES WERE VACUOUS AND MUTATION CAUGHT BOTH — INCLUDING THE CLASS FIXTURE ITSELF, WHICH WAS BEING DROPPED BY THE SHIPPED PAST-ANCHOR CHECK RATHER THAN BY THE NEW CLAUSE.**)
+
+**STATUS: COMPLETE.** Item 4 of seven. Code plus this entry in one commit.
+
+## **WHAT SHIPPED**
+
+`src/lib/events/sources/eventweb.ts`, inside the existing `anchor.length === 0`
+arm, immediately after the shipped bare-year check and reusing that check's own
+`years` and `currentYear`:
+
+```
+candidates.length > 0
+  && candidates.every((day) => dateClaimEndMs(day) < now)
+  && !years.some((y) => y > currentYear)   ->  return null
+```
+
+**Nothing else changed. There is no line in this item that assigns a date** —
+`startDate` is `""` on every surviving row before and after, which is asserted
+directly (see test 5). Month-granularity rows never reach this arm, because a
+month-granularity `startDate` makes the anchor non-empty. **A22-01 is flagged,
+not reversed:** it still decides what is PUBLISHED; this decides only whether the
+row has EXPIRED, from evidence that guard already produced forty lines above and
+then never consulted again.
+
+## **B's BOUNDARY PREDICTIONS ALL HELD, WITH NOTHING RESTATED**
+
+**All 304 existing `src/lib/events` tests passed the moment the clause landed** —
+including every one of the five end-to-end blocks in
+`describe("ambiguous snippets must prove which date is theirs (A22-01)")`, and
+the one B singled out at its pinned `NOW = 2026-01-01` (both readings are 2027,
+so the clause is doubly blocked). **No shipped test was deleted, loosened or
+restated in this item.**
+
+## **TWO VACUOUS FIXTURES OF C's OWN, BOTH CAUGHT BY MUTATION, BOTH DISCLOSED**
+
+**(a) THE CLASS FIXTURE ITSELF WAS DECORATION.** C's first
+`drops a page whose every day-level reading is past` used a snippet that
+CONTAINED the title. `ownedTitleSpan` then found a witness, A22-01 published the
+date, the anchor was non-empty, and **the SHIPPED past-anchor check dropped the
+row** — so the assertion passed with the whole new clause disabled. **Mutation 1
+was green at first, which is how this was found.** The fixture now uses a title
+that does not appear in its snippet, and mutation 1 reds.
+
+**(b) TWO CONTROL FIXTURES NEVER REACHED THE CODE AT ALL.** C's first
+`Battery Saloon` snippet failed `looksLikeEvent` (no event vocabulary) and its
+first future-year snippet had only ONE date cluster, so the date was published
+and the row left on the shipped anchor. **Both were rebuilt to reach the arm**,
+and the two requirements are now written into the test file as a standing note
+so the next fixture author does not repeat them.
+
+## **THE NEW TESTS — `eventweb.test.ts`, +5 blocks (313 -> 318 across `src/lib/events`), ZERO deletions**
+
+1. **The class** — two past clusters in the current year, no future year: `null`.
+2. **A's control** — one past cluster plus one future: NOT null, `startDate ""`.
+3. **The dateless branch** — zero candidates: NOT null, `startDate ""`.
+4. **The future-year escape** — two past clusters plus a `2027` token: NOT null.
+5. **"Does not reverse A22-01"** — every surviving snippet in this block has
+   `startDate === ""`. This is the assertion that catches a future change that
+   starts publishing here.
+
+## **NEGATIVE PROOFS — FOUR MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+Baseline for every row: **318 of 318 passing across `src/lib/events`.**
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **the whole clause disabled** | **1 failed / 317 passed** — *and 0 failed before the fixture was rebuilt; that is disclosure (a)* |
+| 2 | **`every` weakened to "the earliest reading is past"** | **2 failed / 316 passed** — *A's control dies, exactly as B predicted* |
+| 3 | **the future-year escape removed** | **2 failed / 316 passed** |
+| 4 | **the `candidates.length > 0` guard removed** | **25 failed / 293 passed** |
+
+**MUTATION 4 IS THE ONE TO READ.** `[].every(...)` is vacuously TRUE, so without
+that guard **every dateless page in the repository's corpus is deleted** — 25
+tests across two files, including the whole "keeps a date-less event page" family
+and several rows that have nothing to do with this item. **The dateless branch is
+not merely untouched; it is one character away from being destroyed, and that
+character now has a 25-test lock behind it.**
+
+## **THE GATE AFTER ITEM 4**
+
+`npx vitest run` **97 files / 2035 tests, 2035 PASSING — ZERO failures**
+(2030 -> 2035, **+5**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 56 of 56.**
+
+**B's `behavioralpolicy.org` DISCREPANCY — C CONFIRMS B's READING AND CANNOT
+SETTLE IT EITHER.** On A's recorded single token the shipped code drops that row
+before this arm is reached, and C reproduced that exact mechanism while
+debugging its own fixture (a) — a single cluster publishes its date and the
+shipped past-anchor check fires. **So A's recorded evidence still does not
+reproduce A's recorded outcome, and neither B nor C has the provider snippet
+that would settle it. It stays open for round 28 to re-measure live.** **The
+class is confirmed on the other two rows either way.**
+
+**THROWAWAY SCAFFOLD:** a probe harness lived at `web/zz-r27c/` (own vitest
+config rooted at `web/`, `*.probe.ts` include, OUTSIDE `web/src/`) and was
+**deleted before this commit**; `git status --porcelain --untracked-files=all`
+verified clean.
+
+---

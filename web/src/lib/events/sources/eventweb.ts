@@ -1842,6 +1842,51 @@ export function webResultToRawEventItem(
     const years = [...text.matchAll(/\b(20\d{2})\b/g)].map((m) => Number(m[1]));
     const currentYear = new Date(now).getUTCFullYear();
     if (years.length > 0 && years.every((y) => y < currentYear)) return null;
+    // A27-03 (round 27, item 4). THE BLINDNESS THIS ARM HAD INSIDE THE CURRENT
+    // YEAR.
+    //
+    // The dates on these pages are not unread. Peer extracts every token; then
+    // A22-01 above correctly refuses to PUBLISH one, because two or more
+    // readings with no owned title span is genuine ambiguity. The anchor is
+    // therefore empty and the only surviving expiry test is the bare-year arm
+    // directly above — which compares YEARS. A page that says "the 2026
+    // conference was held June 8, 2026", read in August 2026, has every scrap
+    // of its evidence pointing at the past and not one year token older than
+    // this one, so nothing here could see it. Measured: every candidate day
+    // returns `past = true` while the bare-year arm returns `false`.
+    //
+    // This clause reads the finer evidence the function already computed forty
+    // lines above and then never consulted again.
+    //
+    // **IT PUBLISHES NOTHING.** There is no line here that assigns a date;
+    // `startDate` stays `""` on every surviving row, so Ruling 62b's
+    // invented-date column stays ZERO by construction, no year-only fallback is
+    // created, and month-granularity rows never reach this arm at all (a
+    // month-granularity `startDate` makes the anchor non-empty). A22-01 still
+    // decides what is PUBLISHED — this decides only whether the row has
+    // EXPIRED, from evidence that guard already produced. A recorded design is
+    // flagged, not reversed.
+    //
+    // **`every`, NOT "the earliest".** A's own control, `The Battery Saloon`,
+    // carries a past cluster AND a future one; written the other way this
+    // clause would delete a live event. The word is load-bearing and it has its
+    // own test.
+    //
+    // **THE FUTURE-YEAR ESCAPE COSTS SOMETHING AND IS KEPT ANYWAY.** Without
+    // it, "our 2026 congress was held May 5; the 2027 edition follows" — a real
+    // next-edition page — would drop. The clause can only ever ADMIT relative
+    // to the rule without it, which is the safer direction for a row-DROPPING
+    // guard. Its named price: a genuinely finished page that mentions any later
+    // year survives, dateless, exactly as it does today.
+    //
+    // The dateless branch is untouched: zero candidates and this cannot fire.
+    if (
+      candidates.length > 0 &&
+      candidates.every((day) => dateClaimEndMs(day) < now) &&
+      !years.some((y) => y > currentYear)
+    ) {
+      return null;
+    }
   }
 
   const isOnline = /\b(online|virtual|hybrid)\b/i.test(text);

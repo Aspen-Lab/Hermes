@@ -2215,3 +2215,116 @@ describe("A27-01: isEventHubResult", () => {
     expect(isEventHubResult("Co-located Workshops", "https://example.test/workshops")).toBe(true);
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────
+// A27-03 (round 27, item 4). WITHIN-YEAR EXPIRY BLINDNESS.
+//
+// The dates on these pages are read. A22-01 then correctly refuses to PUBLISH
+// one, because two readings with no owned title span is real ambiguity. That
+// leaves the expiry anchor empty, and the only surviving test compared YEARS —
+// so a page whose every date is past, inside the current year, was kept.
+//
+// The fix DROPS ONLY. It publishes nothing: `startDate` is `""` on every
+// surviving row before and after, so 62b's invented-date column stays zero by
+// construction. These blocks pin the class AND the three boundaries that must
+// not move.
+// ───────────────────────────────────────────────────────────────────────
+describe("A27-03: a page whose every reading is past inside the current year", () => {
+  const NOW = Date.parse("2026-08-15T00:00:00Z");
+
+  // TWO THINGS EVERY FIXTURE IN THIS BLOCK HAS TO GET RIGHT, both found by C's
+  // own first draft going wrong, and written down so the next one does not
+  // repeat them:
+  //  (a) the snippet must carry EVENT VOCABULARY, or `looksLikeEvent` drops the
+  //      row long before any date logic runs;
+  //  (b) the TITLE MUST NOT APPEAR IN THE SNIPPET. If it does, `ownedTitleSpan`
+  //      hands A22-01 a witness, the date IS published, the anchor is non-empty
+  //      and the SHIPPED past-anchor check drops the row — so the fixture would
+  //      pass with this whole clause deleted. That is exactly what C's first
+  //      draft did, and the mutation run is what caught it.
+  it("drops a page whose every day-level reading is past in the current year", () => {
+    const item = webResultToRawEventItem(
+      {
+        title: "Molten Salt Research Reactor Tour",
+        url: "https://example.com/events/molten-salt-tour",
+        snippet:
+          "Past meetings: the conference ran June 8, 2026 in Philadelphia and the review followed on March 3, 2026.",
+      },
+      NOW,
+    );
+    expect(item).toBeNull();
+  });
+
+  it("keeps A's control — one past reading and one future one is NOT finished", () => {
+    // THE WORD `every` IS LOAD-BEARING. Written as "the earliest reading is
+    // past" this clause would delete a live event. This block is what stops a
+    // later round simplifying it.
+    const item = webResultToRawEventItem(
+      {
+        title: "The Battery Saloon",
+        url: "https://example.com/events/battery-saloon",
+        snippet:
+          "This conference previously ran April 22-24, 2026. The next session of the conference is November 5, 2026.",
+      },
+      NOW,
+    );
+    expect(item).not.toBeNull();
+    // AND IT PUBLISHES NOTHING: the ambiguity guard's silence is intact.
+    expect(item?.startDate).toBe("");
+  });
+
+  it("leaves the dateless branch exactly where it was — zero candidates cannot fire this", () => {
+    // Ruling 62b's recorded design, locked so it cannot be purged by accident.
+    const item = webResultToRawEventItem(
+      {
+        title: "Advanced Battery Materials Summit",
+        url: "https://example.com/events/advanced-battery-materials-summit",
+        snippet:
+          "An international summit on battery materials. Registration is open; the programme will be announced.",
+      },
+      NOW,
+    );
+    expect(item).not.toBeNull();
+    expect(item?.startDate).toBe("");
+  });
+
+  it("keeps a finished page that names a LATER year — the escape, with its price", () => {
+    // A real next-edition page. The clause can only ever ADMIT relative to the
+    // rule without it, which is the safer direction for a row-dropping guard.
+    // Its named cost: a genuinely finished page mentioning any later year
+    // survives, dateless, exactly as it does today.
+    const item = webResultToRawEventItem(
+      {
+        title: "International Battery Congress",
+        url: "https://example.com/events/international-battery-congress",
+        snippet:
+          "Our 2026 congress was held May 5, 2026 and the workshop ran March 2, 2026. The 2027 edition follows.",
+      },
+      NOW,
+    );
+    expect(item).not.toBeNull();
+    expect(item?.startDate).toBe("");
+  });
+
+  it("does not reverse A22-01 — no surviving row gains a date it did not have", () => {
+    // The whole item asserted from the other side: across every snippet above
+    // that survives, `startDate` is the empty string. Nothing in this clause
+    // assigns a date, and this is the assertion that would catch it if
+    // something later did.
+    for (const snippet of [
+      "This conference previously ran April 22-24, 2026. The next session of the conference is November 5, 2026.",
+      "Our 2026 congress was held May 5, 2026 and the workshop ran March 2, 2026. The 2027 edition follows.",
+      "An international summit on battery materials. Registration is open; the programme will be announced.",
+    ]) {
+      const item = webResultToRawEventItem(
+        {
+          title: "Molten Salt Research Reactor Tour",
+          url: "https://example.com/events/molten-salt-tour",
+          snippet,
+        },
+        NOW,
+      );
+      expect(item?.startDate).toBe("");
+    }
+  });
+});
