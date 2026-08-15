@@ -831,6 +831,138 @@ describe("facet label consistency", () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────
+// A27-04 (round 27, item 1). THE FUSED CITY.
+//
+// `thebatteryshowsouth.com`'s root page serves, in its only JSON-LD block,
+// `addressLocality: "Atlanta GA"` with NO `addressRegion` — the site fuses the
+// two itself; nothing in Peer joins them. `sanitizePlace` found no comma to
+// split on, `plausiblePlaceName` accepted a 2-word 10-char string, and the
+// fused value reached a rendered card, a WHERE tile and a facet button.
+//
+// The live benchmark caught it, but that assertion is guarded by "assert on
+// rows PRESENT; never demand presence" — a pull that does not offer the host
+// skips it, and the suite went green with the defect still live at source.
+// THAT IS WHY THIS BLOCK EXISTS: a live lock that can skip is not a lock. The
+// cases below are deterministic and pin the shape from both sides.
+// ───────────────────────────────────────────────────────────────────────
+describe("A27-04: a space-fused trailing US state code", () => {
+  it("splits the fused city off the state and keeps the country untouched", () => {
+    expect(
+      sanitizePlace({ city: "Atlanta GA", country: "United States" }),
+    ).toEqual({ city: "Atlanta", region: "GA", country: "United States" });
+  });
+
+  it("splits every shape in the must-split corpus", () => {
+    const mustSplit: ReadonlyArray<[string, string, string]> = [
+      ["Atlanta GA", "Atlanta", "GA"],
+      ["Washington DC", "Washington", "DC"],
+      ["New York NY", "New York", "NY"],
+      ["Kansas City MO", "Kansas City", "MO"],
+      ["Salt Lake City UT", "Salt Lake City", "UT"],
+      // An all-caps source still splits: only the CODE's case is checked.
+      ["SAN DIEGO CA", "SAN DIEGO", "CA"],
+      ["Perth WA", "Perth", "WA"],
+      // Whitespace is normalised before the match, so a double space splits
+      // and the head comes back single-spaced.
+      ["Atlanta  GA", "Atlanta", "GA"],
+    ];
+    for (const [input, city, region] of mustSplit) {
+      expect(sanitizePlace({ city: input })).toEqual({
+        city,
+        region,
+        country: undefined,
+      });
+    }
+  });
+
+  it("leaves every shape in the must-not-split corpus exactly as it is", () => {
+    const mustNotSplit = [
+      "Atlanta",
+      // Clause 1 — the code's case is the guard. Make the pattern
+      // case-insensitive and these two split.
+      "Atlanta Ga",
+      "atlanta ga",
+      // No head to keep: the pattern needs whitespace before the code.
+      "GA",
+      "Cologne",
+      "São Paulo",
+      "Rio de Janeiro",
+      "Ho Chi Minh City",
+      "Frankfurt am Main",
+      // Clause 2 — a spelt-out region is not a code, so nothing splits.
+      "Atlanta Georgia",
+      "Stratford upon Avon",
+      "Newcastle upon Tyne",
+      "Aix en Provence",
+      "La Paz",
+      "Los Angeles",
+      "Santa Fe",
+      "Port au Prince",
+      "Ciudad de Mexico",
+      "Palo Alto",
+    ];
+    for (const input of mustNotSplit) {
+      expect(sanitizePlace({ city: input })?.city).toBe(input);
+    }
+  });
+
+  it("only splits on the closed 51-code list, never a bare two-letter tail", () => {
+    // Clause 2. "KA" is Karnataka — a real subdivision code, and not one of
+    // the 51 this list knows. Half-parsing it would invent a US-shaped region.
+    expect(sanitizePlace({ city: "Bengaluru KA" })?.city).toBe("Bengaluru KA");
+    expect(sanitizePlace({ city: "Bengaluru KA" })?.region).toBeUndefined();
+  });
+
+  it("refuses a split that would leave a head which is not a name", () => {
+    // Clause 3. Both of these read as a place today; a split would turn one
+    // into an empty city and the other into a numeric one.
+    expect(sanitizePlace({ city: "X GA" })?.city).toBe("X GA");
+    expect(sanitizePlace({ city: "2026 GA" })?.city).toBe("2026 GA");
+  });
+
+  it("never overwrites a region the source spelt out itself", () => {
+    // Clause 4 — `region ??=`, never `=`.
+    expect(
+      sanitizePlace({ city: "Atlanta GA", region: "Georgia" }),
+    ).toEqual({ city: "Atlanta", region: "Georgia", country: undefined });
+  });
+
+  it("never infers a country from the state code", () => {
+    // The clause that bites: "WA" is Western Australia as readily as
+    // Washington. `parseStructuredLocation` may add "United States" when it
+    // pops a code out of a COMMA-delimited field; on a space-fused string
+    // that would be a guess.
+    expect(sanitizePlace({ city: "Perth WA", country: "Australia" })).toEqual({
+      city: "Perth",
+      region: "WA",
+      country: "Australia",
+    });
+    expect(sanitizePlace({ city: "Perth WA" })?.country).toBeUndefined();
+  });
+
+  it("damages none of Peer's own 454 gazetteer cities, in either casing", () => {
+    // The strongest boundary available: every city name Peer itself believes
+    // in, run through the sanitiser as written AND upper-cased.
+    expect(CONFERENCE_CITIES.length).toBeGreaterThan(400);
+    for (const city of CONFERENCE_CITIES) {
+      expect(sanitizePlace({ city })?.city).toBe(city);
+      const shouted = city.toUpperCase();
+      expect(sanitizePlace({ city: shouted })?.city).toBe(shouted);
+    }
+  });
+
+  it("leaves the comma branch's own behaviour alone", () => {
+    // The space branch is an `else` of the comma branch, so a comma-form
+    // address cannot reach it. Guards the shipped case above from this item.
+    expect(sanitizePlace({ city: "Columbia, SC, United States" })).toEqual({
+      city: "Columbia",
+      region: "SC",
+      country: "United States",
+    });
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────
 // B20-02 (A: event A20-02). The self-distrusting address guard.
 //
 // A real page declared its venue TWICE: `Place.name` = "NH Villa Carpegna"

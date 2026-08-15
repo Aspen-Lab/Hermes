@@ -909,6 +909,51 @@ export function plausiblePlaceName(value: string | undefined): string | undefine
 }
 
 /**
+ * A27-04 (round 27, item 1). A city ending in a real, uppercase US state code
+ * with only a SPACE between them — "Atlanta GA" — is the defect
+ * `sanitizePlace`'s own docstring already names one comma away: the locality
+ * slot is holding more than a locality. The SOURCE emits it fused
+ * (`thebatteryshowsouth.com`'s JSON-LD carries `addressLocality: "Atlanta GA"`
+ * with no `addressRegion` at all) and Peer published it faithfully, so the
+ * split belongs here, at the one sanitiser every layer already passes through,
+ * rather than in a new event-only guard.
+ *
+ * Four things it deliberately will NOT do:
+ *
+ *  1. Match a lower-case tail. "Atlanta Ga" and "atlanta ga" stay whole — the
+ *     same decision `hasTrailingStateCode` records below, for the same reason
+ *     ("in" the preposition versus "IN" the state). The case-sensitive pattern
+ *     IS that guard; there is no second runtime uppercase check because a
+ *     case-sensitive match cannot produce a lower-case code for it to catch.
+ *  2. Match a bare `[A-Z]{2}` tail. Only the closed 51-code list splits, so
+ *     "Bengaluru KA" is left whole rather than half-parsed into a wrong region.
+ *  3. Leave behind a head that is not itself a name. "X GA" and "2026 GA" keep
+ *     their whole string, so a split can never manufacture an empty or numeric
+ *     city out of a value that reads as a place today.
+ *  4. Infer a country. `parseStructuredLocation` may add "United States" when
+ *     it pops a state code out of a COMMA-delimited feed field; on a
+ *     space-fused string that would be a guess, and "Perth WA" is Western
+ *     Australia. Silence over a guess, per this file's standing precedent.
+ *
+ * Measured over all 454 `CONFERENCE_CITIES`, as written and upper-cased: zero
+ * damaged, both times.
+ */
+const FUSED_STATE_CODE_RE = new RegExp(
+  `^(.*\\S)\\s+(${US_STATE_CODES.join("|")})$`,
+);
+
+function splitTrailingStateCode(
+  value: string,
+): { city: string; region: string } | undefined {
+  const match = value.trim().replace(/\s+/g, " ").match(FUSED_STATE_CODE_RE);
+  if (!match) return undefined;
+  const head = match[1].trim();
+  // The head must survive as a name in its own right.
+  if (head.length < 2 || !/\p{L}/u.test(head)) return undefined;
+  return { city: head, region: match[2] };
+}
+
+/**
  * Drop implausible components so a bad value never reaches a facet button, and
  * make equivalent places produce identical labels.
  *
@@ -940,6 +985,16 @@ export function sanitizePlace(
       if ((US_STATE_CODES as readonly string[]).includes(segment.toUpperCase())) {
         region ??= segment.toUpperCase();
       }
+    }
+  } else if (city) {
+    // A27-04. Same defect, space-separated instead of comma-separated. See
+    // `splitTrailingStateCode` above for the four things it will not do.
+    const split = splitTrailingStateCode(city);
+    if (split) {
+      city = split.city;
+      // `??=`, never `=`: a source that spelt its own region out
+      // ("Atlanta GA" alongside region "Georgia") keeps its own word.
+      region ??= split.region;
     }
   }
 

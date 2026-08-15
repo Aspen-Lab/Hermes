@@ -74528,3 +74528,111 @@ B read the two fields off the plate: **ELIGIBILITY is honestly buildable and C l
 **THE HAND-OFF:** `WHOSE TURN: C — round 27` stands as B wrote it — seven designs in the manager's order, each with its must-not-change boundary and its new tests, **plus B's unit test pinning the A27-04 split**, and the bold warning against reading the green suite as a fix. Bank per item. The gate stays `GATE (0%): NOT MET` — value AND visual.
 
 ---
+
+### Round 27 — Agent C (item 1 of 7: **A27-04 — THE FUSED CITY IS SPLIT AT `sanitizePlace`. B's DESIGN LANDED AS WRITTEN, WITH ONE TRACED DEVIATION. THE DETERMINISTIC UNIT LOCK B ASKED FOR EXISTS AND IT IS PROVEN NON-VACUOUS SIX WAYS BY MUTATION — INCLUDING THE ONE MUTATION THAT MATTERS, DISABLING THE WHOLE BRANCH.**)
+
+**STATUS: COMPLETE.** Item 1 of seven. Code plus this entry in one commit.
+
+**COLD BASELINE CONFIRMED BEFORE THE FIRST EDIT**, exactly §1's figure:
+`npx vitest run` **97 files / 2005 tests, 2005 PASSING, ZERO failures**
+(including `benchmark.test.ts`); `tsc --noEmit` clean; `eslint src` exactly the
+one standing `src/components/persona/quiz.tsx:46` error, **0 warnings**.
+**C did NOT read that green as evidence A27-04 was fixed** — B's warning is
+correct and C reproduced its ground: `sanitizePlace({ city: "Atlanta GA" })`
+returned the fused string unchanged on the shipped code, which is the first
+mutation recorded below (four tests red with the branch disabled).
+
+---
+
+## **WHAT SHIPPED**
+
+**`src/lib/opportunities/structured-extract.ts`** — one module-private helper
+plus one `else` arm, both exactly where B put them:
+
+- `FUSED_STATE_CODE_RE` = `` `^(.*\S)\s+(${US_STATE_CODES.join("|")})$` ``,
+  built **without the `i` flag**.
+- `splitTrailingStateCode(value)` — normalise whitespace, match, require the
+  head to be **>= 2 chars and to contain a letter**, else return nothing.
+- Inside `sanitizePlace`, as the **`else if (city)` of the existing comma
+  branch** — so a comma-form address structurally cannot reach it —
+  `city = split.city` and **`region ??= split.region`**. **No country is
+  touched anywhere in the arm.**
+
+**ONE DEVIATION FROM B, TRACED BEFORE IT WAS TAKEN.** B's design says *"require
+`code === code.toUpperCase()`"*. **C implemented the case-sensitivity in the
+PATTERN (no `i` flag) and did NOT add the separate runtime re-check, because a
+case-sensitive match cannot return a lower-case code for that check to catch —
+it would have been strictly unreachable code.** The clause B wanted is fully
+present and fully tested (mutation 2 below turns it red); only the redundant
+second copy of it is absent. The shipped `hasTrailingStateCode` carries both,
+and its comment is cited in the new docstring so the precedent is visible rather
+than silently departed from. **Recorded here so round 28 does not rediscover the
+absent line as an omission.**
+
+**Also recorded: the helper is MODULE-PRIVATE, not exported.** B asked for "a
+named helper, so the job side can reuse it later"; B's own optional second site
+(`parseStructuredLocation`) is **in this same file**, so a private function is
+already reusable there and the module's public surface does not widen.
+
+## **THE NEW TESTS — `structured-extract.test.ts`, +9 blocks, ZERO deletions, ZERO edits to any existing block**
+
+The file goes **80 -> 89** `it` blocks. The one existing `sanitizePlace` case
+B named as at-risk (`Columbia, SC, United States`, line 817) is **untouched and
+still green**, and the new block **re-asserts it a second time** under this
+item's own name, so a future change to the space arm that leaked into the comma
+arm goes red with A27-04 in the failure text.
+
+1. **The shipped case** — `{ city:"Atlanta GA", country:"United States" }` ->
+   `{ city:"Atlanta", region:"GA", country:"United States" }`.
+2. **The must-split corpus, 8 of 8**, each with its expected head AND region:
+   `Atlanta GA`, `Washington DC`, `New York NY`, `Kansas City MO`,
+   `Salt Lake City UT`, `SAN DIEGO CA`, `Perth WA`, `Atlanta<double space>GA`.
+   **Each asserts `country: undefined` as part of a whole-object `toEqual`**,
+   which is what makes the no-country-inference clause red from this block too.
+3. **The must-not-split corpus, 19 of 19** — B's list verbatim.
+4. **The closed-list clause** — `Bengaluru KA` keeps its whole string **and**
+   gets **no region** (both halves asserted; a half-parse is the failure shape).
+5. **The head-survives clause** — `X GA` and `2026 GA` keep their whole strings.
+6. **The `??=` clause** — `{ city:"Atlanta GA", region:"Georgia" }` keeps
+   **`Georgia`**, the source's own word.
+7. **The country clause** — `Perth WA` + `Australia` keeps **`Australia`**; a
+   bare `Perth WA` comes back **country-less**.
+8. **The gazetteer sweep** — all **454** `CONFERENCE_CITIES`, **as written AND
+   upper-cased**, asserted unchanged. This is B's second falsifier, encoded as a
+   standing test rather than a one-off measurement.
+9. **The comma branch's own behaviour**, re-asserted under this item.
+
+## **NEGATIVE PROOFS — SIX MUTATIONS, EACH REVERTED, EXACT RED COUNTS RECORDED**
+
+Baseline for every row: **89 of 89 passing** in the file.
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **whole branch disabled** (`else if (city && false)`) | **4 failed / 85 passed** |
+| 2 | **pattern made case-insensitive** (`"i"` flag added) | **1 failed / 88 passed** |
+| 3 | **closed list replaced by `[A-Z]{2}`** | **1 failed / 88 passed** |
+| 4 | **head-survives guard deleted** | **1 failed / 88 passed** |
+| 5 | **`region =` instead of `region ??=`** | **1 failed / 88 passed** |
+| 6 | **`country ??= "United States"` added** (the `parseStructuredLocation` behaviour B forbade here) | **3 failed / 86 passed** |
+
+**Every clause B specified has a uniquely-red case. No admitted controls in this
+item** — the gazetteer sweep is green both before and after the change by
+design, and it is banked as a **BOUNDARY** (it proves the fix damages nothing),
+**not as a witness that the fix works**; mutation 1 is that witness.
+
+## **THE GATE AFTER ITEM 1**
+
+`npx vitest run` **97 files / 2014 tests, 2014 PASSING — ZERO failures**
+(2005 -> 2014, **+9, all new, none removed**). `tsc --noEmit` clean.
+`eslint src` **exactly the one standing `quiz.tsx:46` error, 0 warnings**.
+**`enrich.test.ts` SOLO: 56 of 56** — run because this is a place-side change,
+per the brief's rule.
+
+**THE LIVE LOCK:** `benchmark.test.ts` is green, and **C does not bank that as
+proof**, for exactly the reason B gave — the row can be absent. **The proof of
+item 1 is mutation 1.** The live lock's expected effect is recorded in the carry
+list at §1: when `thebatteryshowsouth.com`'s ROOT url next enters the pool, the
+row must read `thebatteryshowsouth.com -> Atlanta`, and **its falsifier is that
+same row coming back reading `Atlanta GA`.**
+
+---
