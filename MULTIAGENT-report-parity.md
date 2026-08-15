@@ -73412,3 +73412,187 @@ falsifier (ii) — a ruling that ingestion admissions are out of scope unless th
 render — would retire the whole item, and **B would accept that ruling too.**
 
 ---
+
+---
+
+### Round 27 — Agent B (item 4 of 7: **A27-03 — THE DATES ARE NOT UNREAD. THEY ARE READ, THEN DELIBERATELY SILENCED BY A22-01, AND THE EXPIRY CHECK THAT SHOULD CATCH THEM IS YEAR-GRANULAR SO IT CANNOT SEE A PAST DATE INSIDE THE CURRENT YEAR. THE FIX PUBLISHES NOTHING AND ADDS NO DATE ANYWHERE. A's OWN CONTROL AND THE DATELESS BRANCH BOTH SURVIVE BY CONSTRUCTION — AND B FLAGS A DISCREPANCY IN A's EVIDENCE FOR ONE OF THE THREE ROWS.**)
+
+**STATUS: COMPLETE.** Item 4 of seven. B changed no code; harness deleted before
+this commit.
+
+---
+
+## **WHERE THE DATES ARE: NOT ON THE PAGE, NOT IN STRUCTURED DATA — IN THE SNIPPET, AND ALREADY EXTRACTED**
+
+**Peer reads every one of them.** `extractEventDayCandidates` — the shipped
+counter, compiled from the very regexes `extractEventDate` uses so the two cannot
+drift — returns all of them. Measured on A's own recorded tokens:
+**`careerfairconnection.com` 6 candidates / 2 clusters; `cns1.rc.fas.harvard.edu`
+2 candidates / 2 clusters.**
+
+**So this is not an extraction gap. It is a DISPOSAL gap**, and it happens in two
+steps at `eventweb.ts:1699-1751`:
+
+1. **Two or more clusters and no owned title span → A22-01's ambiguity guard
+   silences the date.** `extractedDate` is `undefined`. **This is correct and is a
+   recorded design (Ruling 59a draft 3) — B flags it and does not reverse it.**
+2. **`anchor` is therefore EMPTY, so the only expiry test left is the BARE-YEAR
+   arm** (`eventweb.ts:1745-1750`): *"if every year token in the text is in the
+   past, treat it as finished."* **Every token on all three rows says `2026`,
+   which IS the current year, so the arm cannot fire.**
+
+**THE ONE-SENTENCE MECHANISM, MEASURED:** for
+`The 2026 BSPA Conference was held June 8, 2026.` at `2026-08-15`, **every
+candidate day is past (`true`) while the bare-year arm returns `false`** — because
+it compares YEARS, and the year has not finished yet. **The row is kept, dateless,
+and every scrap of evidence it has says it is over.**
+
+**Nothing was thrown away by the ambiguity guard that the expiry check could not
+have used.** The candidates are computed 40 lines above and then simply not
+consulted again.
+
+---
+
+## **WHAT B REPRODUCED — AND THE DISCREPANCY IN A's EVIDENCE THAT B REPORTS RATHER THAN SMOOTHS**
+
+Rebuilt from A's own recorded tokens and run through the shipped
+`webResultToRawEventItem` at A's own census clock:
+
+| row | shipped result | matches A |
+|---|---|---|
+| `careerfairconnection.com` | **ADMITTED, `startDate: ""`** | **yes** |
+| `cns1.rc.fas.harvard.edu` | **ADMITTED, `startDate: ""`** | **yes** |
+| `behavioralpolicy.org` | **DROPPED (`null`)** | **NO** |
+
+**`behavioralpolicy.org` is the flag.** A's table gives it **exactly one** date
+token, `June 8, 2026`. **One token is one cluster, so the ambiguity guard never
+fires, `extractEventDate` returns that day, the anchor is past, and the shipped
+code DROPS the row.** A recorded it as admitted 5 of 5.
+
+**Both cannot be true of the same input.** Either that snippet carries **more
+date evidence than A's table shows** (a second, distant token, or a deadline
+phrase that removes the only candidate), or the row entered by a path A did not
+trace. **B cannot settle it without the provider's snippet, so B does not claim
+A is wrong — B claims the recorded evidence does not reproduce the recorded
+outcome, and names it for C to re-measure live.** **The CLASS is confirmed on the
+other two rows, which is what A ranked.**
+
+---
+
+## **THE FIX — ONE CLAUSE, INSIDE THE ARM THAT ALREADY EXISTS FOR EXACTLY THIS QUESTION**
+
+**Site: `webResultToRawEventItem`, the `if (anchor.length === 0)` block
+(`eventweb.ts:1741-1751`).** That block already asks *"is this dateless page
+actually finished?"* and already answers it from year tokens. **The clause adds
+the finer evidence the function already holds:**
+
+> **When no date could be published, but the text DID offer day-level readings,
+> and EVERY one of them is already past, and NO year token in the text is later
+> than the current year — the page describes a finished event. Drop it.**
+> Otherwise, behave exactly as today.
+
+**WHAT THIS DOES NOT DO, AND WHY IT SITS INSIDE 62b's BOUNDARIES:**
+
+- **IT PUBLISHES NOTHING.** `startDate` stays `""` on every surviving row. **No
+  date is written, no year-only fallback is created, no month-granularity value
+  is invented.** The row is either dropped or kept exactly as it renders today.
+  **62b's invented-date column stays at ZERO by construction — there is no line
+  in this design that assigns a date.**
+- **IT DOES NOT TOUCH MONTH-GRANULARITY.** 62b's approved partial
+  (`nameDetail?.monthYear`) produces a non-empty `startDate`, which means
+  `anchor` is NOT empty, which means this clause never runs on those rows.
+  **Month granularity stays where the evidence is month-granular, unchanged.**
+- **IT DOES NOT REVERSE A22-01.** The guard still decides what is PUBLISHED. This
+  decides only whether the row has EXPIRED, from evidence the guard already
+  produced. **A recorded decision is flagged, not reversed.**
+- **IT IS THE EXPIRY DESIGN THE BRIEF ASKS FOR:** a page whose own evidence dates
+  it past drops.
+
+---
+
+## **THE BOUNDARIES, MEASURED**
+
+| case | candidates | every one past | future year token | proposed |
+|---|---|---|---|---|
+| `careerfairconnection.com` | **6** | **yes** | no | **DROP** |
+| `cns1.rc.fas.harvard.edu` | **2** | **yes** | no | **DROP** |
+| `behavioralpolicy.org` (A's tokens) | 1 | yes | no | **DROP** |
+| **A's own control — `The Battery Saloon`** (one past cluster, one future) | **2** | **NO** | no | **KEEP** |
+| **a genuinely undated page** | **0** | — | — | **KEEP** |
+| **past day + a `2027` token ("the next edition follows")** | 1 | yes | **yes** | **KEEP** |
+
+**A's CONTROL SURVIVES BY CONSTRUCTION, NOT BY LUCK.** `The Battery Saloon`
+carries `April 22-24, 2026` (past) **and** `November 5, 2026` (future). **The rule
+is EVERY candidate past, not the first one** — precisely so this row keeps
+rendering `Date not listed` and inventing nothing, exactly as A measured. Writing
+the rule as "the earliest reading is past" would kill it, which is why the word
+is load-bearing.
+
+**THE DATELESS BRANCH IS NOT PURGED.** A page with **zero** candidates takes the
+identical path it takes today: the bare-year arm, then admission. **Measured: a
+genuinely undated summit is kept, `startDate: ""`.** The recorded dateless design
+is untouched.
+
+**THE FUTURE-YEAR CLAUSE IS THE ONE THAT COSTS SOMETHING AND B KEEPS IT ANYWAY.**
+Without it, *"our 2026 congress was held May 5, 2026; the 2027 edition
+follows"* — a real "next edition" page — would drop. **The clause can only ever
+ADMIT relative to the rule without it, so it is strictly the safer direction**, and
+it is the direction `jobweb.ts:757-761` and Ruling 55c both point for a
+row-DROPPING guard. **Its cost is named: a page that is genuinely finished but
+mentions any later year survives.** That residue is smaller than the one it
+prevents.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+**`src/lib/events/sources/eventweb.test.ts`, `describe("ambiguous snippets must
+prove which date is theirs (A22-01)")` — the block that owns this code path.**
+25 `webResultToRawEventItem` call sites in the file; the four end-to-end ones in
+this block are the exposure:
+
+- **`keeps a single-reading snippet exactly as it renders today`** (line ~1823) —
+  one cluster, so the anchor is non-empty and the clause never runs. **Safe.**
+- **`reads the item's own date when a calendar page offers two readings`** — an
+  owned span is found, anchor non-empty. **Safe.**
+- **`is silent when two readings are offered and neither is proven to be the
+  item's`** (line ~1851) — **THE ONE THAT MATTERS**: it asserts the row is NOT
+  null with `startDate === ""`, which is exactly the state this clause acts on.
+  **Measured at the file's own fixed `NOW = 2026-01-01`: both readings are 2027,
+  so `every candidate past` is `false` AND a future year token is present —
+  DOUBLY protected, and the clause does not fire.** **Green, and the `NOW` is
+  pinned so it cannot drift.**
+- **`lets a finished event correctly disappear once it stops borrowing a future
+  date`** — asserts `null`; the clause can only agree. **Safe.**
+- **`does not treat a labelled deadline as a rival reading`** — anchor non-empty.
+  **Safe.**
+- **`extractEventDayCandidates` and `clusterEventDays` unit blocks** (lines
+  1735-1793) — **not touched at all; the clause only READS them.**
+- **`src/lib/events/benchmark.test.ts`** — asserts on city values, not dates.
+  **Not at risk.**
+
+**NEW TESTS C OWES** (additions only):
+1. A snippet with **two past clusters in the CURRENT year** and no future year
+   token is **`null`** — A27-03's own class, and the assertion that would have
+   caught it.
+2. **A's control, asserted as a control:** one past cluster plus one future
+   cluster is **NOT null with `startDate === ""`**. **This is the test that stops
+   a later round "simplifying" the rule to `the earliest reading is past`.**
+3. **The dateless branch, asserted:** zero candidates and no year tokens is
+   **NOT null**. Ruling 62b's recorded design, locked so it cannot be purged by
+   accident.
+4. **The future-year escape, asserted:** a past day token plus a `2027` token is
+   **NOT null** — the clause whose deletion would silently widen the guard.
+
+---
+
+## **WHAT B DOES NOT CLAIM**
+
+**Not that a reader lost anything.** A's census says none of the three reaches a
+report; B has no contrary measurement. **This closes an INGESTION admission whose
+only barrier today is top-N competition.** And **B did not re-measure the live
+corpus** — every figure here comes from the shipped functions run on A's own
+recorded tokens, which is why the `behavioralpolicy.org` discrepancy is reported
+rather than resolved.
+
+---
