@@ -63620,3 +63620,287 @@ this one was touched.**
 **THE HAND-OFF:** `WHOSE TURN: B — round 25` stands as A corrected it. **B's work list, in the manager's order: (1) Ruling 66a — the AI-tier contract** (establish by execution what `aiTier` the client sends on `/api/jobs/feed` and `/api/events/feed` and from which UI state; where each pipeline consults `resolveProvider`; detection vs pinning; then design the fix to the user's contract — a hooked key means jobs/events engage Tier 1/2 — plus the census blast-radius report the ruling requires; the manager rules on the measurement-profile change before any A measures the LLM path); **(2) A25-01** (the reason line built at scoring time from the raw flag — A22-03(b)'s sixth consumer; fix direction through the gated flag; tests at risk grepped); **(3) Ruling 65's benchmark `:225` restatement design** (same treatment class as 63b/64c — B designs the restated contract, C implements); **plus 67a's bounded mechanism question.** The gate stays `GATE (0%): NOT MET` — and per Ruling 66b this round's verdict is the last measured on value parity alone; round 26 A opens the visual census.
 
 ---
+
+### Round 25 — Agent B (item 1: **RULING 66a — THE AI-TIER CONTRACT. ESTABLISHED BY LIVE EXECUTION AGAINST THE RUNNING DEV SERVER. THE VERDICT IS *NOT* THE ONE THE RULING ANTICIPATED: THE JOB AND EVENT PIPELINES ARE *ALREADY* ENGAGING THE LLM ON LOCALHOST. WHAT IS BROKEN IS THE *DISPLAY* — AND ONE BADGE BECOMES A LIE THE MOMENT ENRICHMENT LANDS.**)
+
+**STATUS: COMPLETE.** Item 1 of four. Claimed the §0d turn lock (`c0932c5`,
+`LAPTOP-3CL10CG5 @ 2026-08-15 04:42 UTC`) after `git pull` (already up to date)
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed. **The claiming push was
+ACCEPTED (`08820a4..c0932c5`), so the race was won rather than assumed.**
+
+**B CHANGED NO CODE.** No test deleted, edited or added. The throwaway harness
+lived OUTSIDE `src/` (`web/zz-r25b/`, own vitest config, `*.probe.ts` include
+pattern) and was **deleted before this commit**;
+`git status --porcelain --untracked-files=all` clean, verified.
+**No credential printed, logged, committed or written anywhere.** `.env.local`
+was **never `cat`-ed** — only the variable NAMES were listed, by a regex that
+captures the name and discards everything after `=`. The one env VALUE quoted
+below (`PEER_DIGEST_PROVIDER=gemini`) is a provider identifier, not a secret.
+
+---
+
+## THE HEADLINE, BEFORE THE WIRING
+
+**Ruling 66a asked B to establish whether the failure is DETECTION or PINNING.
+It is NEITHER, and it is not SERVER POLICY either. Executed against the user's
+own running dev server on port 3000, the AI path is LIVE right now.**
+
+A live `POST /api/jobs/report` with **no `llmOverride`** returned
+**`{"enrichment":{},"noLlm":false,"sourceReadStatus":"failed"}`**. `noLlm:false`
+is only reachable past `route.ts:62`'s `if (!provider?.generateJsonText)` guard
+— so `resolveProvider(null)` **returned a real provider**, the local Vertex
+Gemini, and `generateJsonText` **was actually called**. (`enrichment:{}` is
+empty only because the probe's fake posting URL could not be fetched.)
+
+**So the user's report is a TRUE observation of a FALSE indicator.** The chip
+says Tier 0; the pipelines are not on the no-AI path. **The defect is real, it
+is just one layer up from where the ruling expected it.**
+
+---
+
+## (1) WHAT `aiTier` THE CLIENT SENDS, AND FROM WHICH UI STATE
+
+**One builder serves both surfaces:** `web/src/store/feed.ts:356`
+`opportunityRequestBody(profile, surface, excludeIds)` — used by
+`fetchRealEvents` (`feed.ts:415`, `POST /api/events/feed`) and `fetchRealJobs`
+(`feed.ts:446`, `POST /api/jobs/feed`). Nothing else builds those two bodies.
+
+The tier expression is `feed.ts:388`:
+
+```
+aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0
+```
+
+- `feed.ts:366-367` — `hasUserLlmOverride = profile.feedAiProvider !== "default" && Boolean(feedAiApiKey)`
+- `feed.ts:368-370` — `hasLocalDeveloperProvider = process.env.NODE_ENV === "development" && profile.feedAiProvider === "default"`
+- `feed.ts:400-402` — `llmOverride` is sent **only** when `hasUserLlmOverride`, so the local-dev path sends `aiTier: 2` with **no** override, exactly as intended.
+
+**EXECUTED, not reasoned.** A probe called the shipped builder with the user's
+real profile shape under both `NODE_ENV` values:
+
+| NODE_ENV / profile | jobs `aiTier` | events `aiTier` | `llmOverride` sent | `canAttemptOpportunityEnrichment` | `reportProviderConfigured` |
+|---|---|---|---|---|---|
+| **development / local-dev (THE USER'S STATE)** | **2** | **2** | no | **true** | **false** |
+| development / BYOK | 2 | 2 | yes | true | true |
+| production / local-dev | 0 | 0 | no | false | false |
+| production / BYOK | 2 | 2 | yes | true | true |
+
+**The user's live profile is the first row**, read as booleans/enum only:
+`feedAiProvider` is `"default"`, `feedAiApiKey` is **absent**, `tavilyApiKey`
+present. `web/.env.local` carries the NAMES `GOOGLE_VERTEX_PROJECT`,
+`GOOGLE_VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS` and
+`PEER_DIGEST_PROVIDER`.
+
+**So the client sends `aiTier: 2` on BOTH feeds today.** The papers builder
+(`feed.ts:242`) additionally gates on `aiPaperSearchEnabled`; **the
+jobs/events builder deliberately does not**, and that asymmetry is the whole
+story below.
+
+---
+
+## (2) WHERE EACH PIPELINE CONSULTS `resolveProvider`, AND WHAT SHORT-CIRCUITS IT
+
+**There are TWO independent AI paths per surface, and the loop has been
+conflating them.**
+
+**PATH A — the FEED route (query generation only).**
+`app/api/jobs/feed/route.ts:134` and `app/api/events/feed/route.ts:119` both read:
+
+```
+const aiProvider = requestedAiTier >= 2 ? resolveProvider(llmOverride) : null;
+```
+
+**This IS a server-policy short-circuit: `resolveProvider` is never called at
+all unless the client already asked for tier ≥ 2.** With `aiTier: 0` the local
+credentials are not merely unused — they are never looked at. Downstream,
+`lib/jobs/pipeline.ts:124` and `lib/events/pipeline.ts:129` spend the tier on
+exactly one thing: `generateSearchQueries(...)` versus `templateJobQueries(...)`.
+**Tier 2 on the feed buys LLM-refined SEARCH QUERIES and nothing else.** No
+report field is written by a model on this path.
+
+**PATH B — the deep REPORT route (the content the census scores).**
+`app/api/jobs/report/route.ts:61` and `app/api/events/report/route.ts:113`:
+
+```
+const provider = resolveProvider(body.llmOverride ?? null);
+```
+
+**No tier gate at all.** The client gate is
+`lib/opportunities/enrichment.ts:997` `canAttemptOpportunityEnrichment`, which
+already carries the local-dev branch — `feedAiProvider === "default"` →
+`process.env.NODE_ENV === "development"` — and `enrichment.ts:979-986` fires the
+fetch with `loader(undefined)`, i.e. no override, letting the server resolve its
+own local provider. **This path is correct and it is running.**
+
+`registry.ts:100-107` then resolves BYOK → `canUseLocalServerProvider()` →
+`resolveLocalServerProvider()`, which returns `providers["gemini"]` from
+`PEER_DIGEST_PROVIDER` at `registry.ts:76-77` before it ever reaches the
+`GOOGLE_VERTEX_PROJECT` branch at `:80`.
+
+---
+
+## (3) THE VERDICT — **DISPLAY, not detection, not pinning, not server policy**
+
+**Detection is NOT broken.** `hasLocalDeveloperProvider` sees the local path and
+`canAttemptOpportunityEnrichment` sees it too — both measured `true`.
+
+**Nothing is PINNED.** No chip state feeds `aiTier`. The chip and the tier are
+computed from **two different expressions that never meet**:
+
+| | expression | user's value |
+|---|---|---|
+| **what the chip SHOWS** (`app/page.tsx:487`) | `aiSearchActive = aiPaperSearchEnabled && canUseAiTools` | **false → renders `Auto` / `Tier 0`** (`page.tsx:822-823`) |
+| **what the feeds SEND** (`store/feed.ts:388`) | `hasUserLlmOverride \|\| hasLocalDeveloperProvider` | **true → `aiTier: 2`** |
+
+`aiPaperSearchEnabled` initialises to **`false`** (`store/feed.ts:649`) and is a
+**PAPERS-surface toggle**; the jobs/events builder never reads it. **So the chip
+is reporting the papers surface's AI state while claiming to describe the whole
+mode, and its tooltip — `"Auto search uses Tier 0 fixed scoring and no AI API."`
+(`page.tsx:811`) — is FALSE for jobs and events whenever the dev path or BYOK is
+live.**
+
+**The four `Tier 0` badges on the deep reports are a SEPARATE, CORRECT thing and
+must not be touched by this fix.** `jobs/[id]/page.tsx:1108`,
+`events/[id]/page.tsx:1516`, `:1580`, `:2155` are **hard-coded literals** —
+per-section provenance labels the plates require (`events/[id]/page.tsx:2152-2153`
+cites Ruling 11: *"Plate 03 badges this heading TIER 0"*). They say "this
+section was computed without a model", not "the app is in Tier 0 mode".
+**Three of the four stay true forever. ONE does not — see the blast radius.**
+
+**POLICY — manager decides (ONE item, and it is the whole of item 1's fix
+question).** The ruling's contract — *"a hooked key means the JOB and EVENT
+pipelines engage their Tier 1/2 LLM stages"* — is **already met on localhost, on
+both paths**. What is left is a display contract the ruling states in its own
+words (*"A mode chip reading 'Tier 0' must not pin jobs/events to the no-AI path
+while a key is present"*) but which no code change can satisfy without deciding
+**what the chip is for**. B does not pick; B prices the two candidates below.
+
+---
+
+## (4) THE FIX DESIGN, WITH BOUNDARY CONDITIONS
+
+**FIX 1 (required either way) — the chip must stop claiming a tier it does not
+govern.** `page.tsx:822-823` and the tooltip at `:806-812` must be computed from
+the same predicate the feeds use, or must be scoped to papers in its own words.
+Two candidates:
+
+- **(a) SPLIT THE LABEL.** Keep the toggle as the papers control, and render the
+  tier text from `canUseAiTools` rather than `aiSearchActive` — so a hooked key
+  reads **`Tier 2`** even while the papers toggle is off, and the tooltip drops
+  the phrase "and no AI API".
+- **(b) SCOPE THE LABEL.** Leave the logic alone and rename the chip so it never
+  claims to describe jobs/events.
+
+**(a) is the one that satisfies 66a's own words**; (b) satisfies them only by
+narrowing the claim. **Manager's call.**
+
+**FIX 2 (the one the census forces) — `events/[id]/page.tsx:1516` and `:1580`
+must stop hard-coding `Tier 0` on the "Who'll be in the room" sub-headings.**
+Those two sections are the only place a model-written string can render **under
+a badge that says it was not**: `judgedAttendees[].why` merges in at `:1422` and
+`:1438` and renders at `:1544` / `:1618`. The badge must become conditional on
+whether that card's reason came from `tier0Reason` or from `judgment?.why` —
+**per card, not per section**, because the merge is per card.
+
+**BOUNDARY CONDITIONS — what must NOT change:**
+
+1. **`canUseLocalServerProvider()` (`registry.ts:34`) is untouched, and so is its
+   comment.** That is a RECORDED DECISION (deployed users must never get an
+   operator-funded fallback) and this item **flags nothing against it** — it is
+   working exactly as designed, and the `production/local-dev` row of the table
+   above is the proof: tier **0**, `canAttemptEnrichment` **false**. **No fix
+   here may widen it, and no fix may send server env keys to a client.** The
+   whole design already keeps the key server-side: the local path sends **no**
+   `llmOverride` and the server resolves its own.
+2. **The three honest `Tier 0` badges must stay literal** —
+   `jobs/[id]/page.tsx:1108` ("Skills they ask for", fed by `skillComparison`),
+   `events/[id]/page.tsx:2155` ("What it costs you"), and
+   `why-peer-sent-this.tsx:59` on BOTH surfaces. None of them reads enrichment.
+   **A fix that makes these conditional has over-reached.**
+3. **Nothing may start sending `llmOverride` on the local-dev path.** It is
+   absent by design (`feed.ts:400-402`) and that absence is what keeps the key
+   on the server.
+4. **The papers surface must not change tier behaviour.** Its builder's extra
+   `aiPaperSearchEnabled` gate is deliberate and out of scope.
+
+**WHEN THE KEY IS INVALID OR QUOTA-DEAD — the fallback, named.** This is already
+built and it is fail-closed in the right direction: `report/route.ts:102-111`
+catches **any** provider throw and returns `enrichment: null, noLlm: false`;
+`parseJobEnrichment` / `parseEventEnrichment` return a **non-null `{}`** when the
+model returns garbage; and **every** render site is gated on the field itself, so
+`{}` renders **byte-identically to Tier 0**. **No empty section is ever drawn and
+no placeholder is invented — the report degrades to the extracted text it already
+had.** The one visible difference is the page-reading note
+(`enrichment.ts:73-82`), which reads *"…found no requirements or duties it could
+quote."* instead of the read-failed wording. **Nothing reinserts a value a gate
+rejected (Ruling 26 satisfied).** **If FIX 2 lands, the badge must follow this
+same path — a card that falls back to `tier0Reason` must show `Tier 0` again.**
+
+---
+
+## (5) THE CENSUS BLAST RADIUS — **RULING 66a's REQUIRED REPORT**
+
+**Eleven enrichment fields. SEVEN ADD sections that do not exist at Tier 0; FOUR
+change the PROVENANCE of text Tier 0 already renders; ONE is dead payload.**
+
+**CLASS A — sections that appear ONLY on the LLM path (absent at Tier 0, so a
+census that measures them has no Tier 0 baseline to compare against):**
+
+| surface | section | field |
+|---|---|---|
+| jobs | **"What this employer actually asks for"** (`jobs/[id]/page.tsx:1205`) | `specificRequirements` |
+| jobs | **"What the person would actually do"** (`:1223`) | `specificDuties` |
+| jobs | **"Sponsorship read"** (`:1267`) | `sponsorshipRead` |
+| jobs | **"What to emphasise in your application"** (`:1293`) | `emphasise` |
+| events | **"What each talk is actually about"** (`events/[id]/page.tsx:2032`) | `talkSummaries` |
+| events | **"A day-by-day plan for you"** (`:2061`) | `plan` |
+| events | **"Is your work a fit for the poster call"** (`:2118`) | `posterFit` |
+
+**CLASS B — fields that CHANGE THE CLASS of text the census ALREADY scores.
+These are the ones that move a measured column:**
+
+| # | field | section the census already scores | what changes |
+|---|---|---|---|
+| **B1** | `roleSummary` | jobs **"What the role is"** (`jobs/[id]/page.tsx:1148`) | **REPLACES wholesale.** Tier 0 is `splitIntoBullets(cleanJobDescription(job.summary))` — extracted posting prose. Tier 1/2 is three model-written bullets. **Every job row's role text becomes LLM-written.** |
+| **B2** | `sponsorshipRead` | jobs — the standalone **visa evidence blockquote** (`:1042-1053`) | **SUPPRESSES a Tier 0 block.** `:1041` kills the quote when the field is present, re-hosts the same `visaEvidence` inside the LLM section under "Posting evidence", and **DROPS the Tier 0 attribution `— from the job description` (`:1047-1052`)**. A census scoring visa attribution loses its anchor. |
+| **B3** | `condensedDescription` | events **"What actually happens there"** (`events/[id]/page.tsx:1981`) | **REPLACES outright** — `enrichment.ts:234` `if (condensed) return condensed;` is the first branch, ahead of the extractive fallback. |
+| **B4** | `judgedAttendees[].why` | events **"Who'll be in the room"** (`:1506`), sub-sections **Organisations** (`:1515`) / **People** (`:1579`) | **MERGES, Tier 0 wins per card** (`:1422`, `:1438` — `tier0Reason ?? judgment?.why`). But it also **PROMOTES rows out of the tail into cards** (`:1461-1466`), so **pool membership of the roster changes**, not just text. **AND this is the ONE Class-B site sitting under a hard-coded `Tier 0` badge (`:1516`, `:1580`) — see FIX 2.** |
+
+**CLASS C — dead payload.** `competitiveness` is **never rendered** (its section
+was deleted by P10.6 and `jobs/[id]/page.test.ts:645,656` asserts it stays gone).
+Its only effect is flipping `hasEnrichment`, which hides the "Also in this report
+with an AI key" upsell block (`jobs/[id]/page.tsx:1318`,
+`events/[id]/page.tsx:2177`). **Worth naming because a census that starts
+scoring enrichment JSON would score a field the reader never sees.**
+
+**CLASS D — the inverse.** `TierUpgradeBlock` renders **only when enrichment is
+absent**. Once Tier 1/2 engages it **disappears from every report**, on both
+surfaces. **A census that has been counting it as a present element will record
+it as a loss.**
+
+**WHAT THIS MEANS FOR THE INSTRUMENT — the thing the manager must rule on
+BEFORE any A measures the LLM path:**
+
+1. **A's standing method line dies on contact.** §2 as corrected by Ruling 42b
+   says *"page-fetch enrichment ran, LLM enrichment did not"*. **That has been
+   FALSE on the deep-report path for as long as the dev server has had these env
+   vars** — the report route has never had a tier gate. **Every past census
+   measured the FEED pool (where `aiTier` only buys queries), not a rendered deep
+   report with enrichment. A must from now on state WHICH path it measured, per
+   surface, and whether enrichment was non-null per row.**
+2. **The four Class-B columns stop being extraction measurements.** Judging
+   "is this field right?" on LLM prose is a different instrument from judging it
+   on extracted text — the existing rulings (32, 26, 62a) are all written about
+   extraction.
+3. **Class A adds seven never-before-scored sections to the difference surface**,
+   and Class D removes one element every report currently carries.
+4. **Ruling 66b's visual census (round 26 A) will render these sections for the
+   first time** if the dev server has a key — so the visual baseline itself
+   depends on which path round 26 A runs. **These two rulings collide and the
+   manager should sequence them explicitly.**
+
+**B RAISES ONE `POLICY — manager decides` (stated once, above): which chip
+contract to adopt — (a) split the label so it reports the real tier, or (b)
+scope the label to papers.** B recommends **(a)** as the only one that meets
+66a's own wording, and notes FIX 2 is required under either.
