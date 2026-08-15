@@ -73596,3 +73596,203 @@ recorded tokens, which is why the `behavioralpolicy.org` discrepancy is reported
 rather than resolved.
 
 ---
+
+---
+
+### Round 27 — Agent B (item 5 of 7: **V27-01 PER RULING 73 — THE PLATE-FAITHFUL ITALIC VARIANT. THE PDF IS RE-MEASURED AND IT CORRECTS A's READING: FOUR SPANS, BUT **THREE TERMS** — `interfacial resistance` IS ONE TERM WRAPPED ACROSS A LINE, AND THE PLATE'S OWN SENTENCE SAYS "3 of your required topics". THE MATCHER IS ALREADY SHIPPED (`highlightSegments`) AND ALREADY HANDLES EVERY BOUNDARY THE RULING NAMES. THE EVENT PATH'S BYTE-IDENTITY IS TESTABLE AS A LITERAL STRING EQUALITY.**)
+
+**STATUS: COMPLETE.** Item 5 of seven. B changed no code.
+
+---
+
+## **THE PLATE, RE-EXTRACTED FROM THE PDF's OWN SPANS — AND ONE CORRECTION TO A**
+
+`Peer-design-spec-original.pdf`, **plate 02 = p.3**, the
+`WHY PEER SENT THIS TO YOU` block, every span between y 630 and 700:
+
+| y | x | font | size | colour | text |
+|---|---|---|---|---|---|
+| 633.1 | 79.5 | SegoeUI-Semibold | 7.88 | `#9c8b78` | `W H Y  P E E R  S E N T  T H I S  TO  YO U` |
+| 635.1 | 233.4 | Consolas | 7.5 | `#2b5c8f` | `TIER 0` |
+| 655.1 | 79.5 | **Georgia** | **12.75** | `#4d3a28` | `Matches 3 of your required topics ·` |
+| 655.1 | 285.1 | **Georgia-Italic** | **12.75** | `#4d3a28` | **`solid-state electrolytes`** |
+| 655.1 | 413.1 | Georgia | 12.75 | `#4d3a28` | `, ` |
+| 655.1 | 419.6 | **Georgia-Italic** | **12.75** | `#4d3a28` | **`interfacial`** |
+| 676.1 | **79.5** | **Georgia-Italic** | **12.75** | `#4d3a28` | **`resistance`** |
+| 676.1 | 137.2 | Georgia | 12.75 | `#4d3a28` | `, ` |
+| 676.1 | 143.8 | **Georgia-Italic** | **12.75** | `#4d3a28` | **`operando imaging`** |
+| 676.1 | 250.2 | Georgia | 12.75 | `#4d3a28` | ` · at postdoc level, in California, which you` |
+| 696.3 | 79.5 | Georgia | 12.75 | `#4d3a28` | `filtered toward 4 times this week.` |
+
+**RULING 73's `Georgia-Italic 12.75` IS CONFIRMED. AND SO IS SOMETHING THE
+RULING DOES NOT SAY: the italic spans carry the SAME SIZE AND THE SAME COLOUR
+(`#4d3a28`) as the prose around them. The only difference is the slant.** No
+tint, no size step. That is a boundary the design must state, because "emphasise
+the topic" invites a colour change that the plate does not have.
+
+### **THE CORRECTION: FOUR SPANS, THREE TERMS**
+
+**A recorded the italics as four topic names:** `solid-state electrolytes`,
+`interfacial`, `resistance`, `operando imaging`. **The x-coordinates show
+otherwise.** `interfacial` ends the line at x 419.6; `resistance` **begins the
+next line at x 79.5, the left margin** — and the `, ` separators sit before
+`interfacial` and after `resistance`, never between them. **They are one term,
+`interfacial resistance`, wrapped.**
+
+**The plate's own sentence settles it: `Matches 3 of your required topics`.
+THREE terms, four spans.** A's span count is literally true and its reading of
+it is not; B corrects the reading and keeps the count.
+
+**WHY THIS MATTERS TO THE DESIGN AND IS NOT PEDANTRY:** an implementation that
+italicises *spans* would need two elements for one term and would have to know
+where the line breaks. **An implementation that italicises *terms* gets the wrap
+for free**, because an inline element wraps natively. **Unlike
+`HighlightedText`'s background chip — which needs `box-decoration-clone`
+precisely because a background breaks at a line end — italic needs no such
+clause.** Stated so nobody adds one.
+
+---
+
+## **THE DESIGN — ONE COMPONENT, ONE NEW INPUT, ZERO NEW MATCHING LOGIC**
+
+**`WhyPeerSentThis` gains two optional props and stays one component:**
+
+- **`surface?: "job" | "event"`** — the variant input Ruling 73 requires.
+  **Defaulted so that anything that does not pass it renders exactly as today.**
+- **`matchedTerms?: string[]`** — passed by the JOB call site only
+  (`src/app/jobs/[id]/page.tsx:1446`). The EVENT call site
+  (`src/app/events/[id]/page.tsx:2296`) passes neither.
+
+**The prose `<p>` renders in one of exactly two ways:**
+
+- **`surface === "job"` AND `matchedTerms` non-empty** → the sentence is split by
+  the SHIPPED segmenter and each matched run is wrapped in `<em className="italic">`
+  (or an `<em>` with the build's own italic utility). **Nothing else changes** —
+  same `font-reading text-body-lg leading-8 text-text` on the paragraph, no
+  colour, no size.
+- **anything else** → **the single plain string it renders today.**
+
+### **WHERE `matchedTerms` MEETS THE PROSE — TRACED, NOT ASSUMED**
+
+`jobs/scoring.ts:456` writes **`matchedKeywords: reasonMatches`** and, on the
+next line, **`matchReason: reasonFor(item, reasonMatches, …)`** — **the same
+array**. `reasonFor` (line 294) builds
+**`Matches your ${matched.slice(0, 3).join(", ")} focus`**. **So the terms are in
+the prose verbatim, from one source, and the plate's "3 topics" is the same
+`slice(0, 3)`.** `mapper.ts:237` carries them onto the row as `matchedTerms`.
+**`events/scoring.ts:297-298` does the identical thing** — which is exactly why
+the surface, not the data, must gate the italic.
+
+**Terms beyond the first three are on the row but not in the sentence. They
+simply do not match, and nothing is invented.** That is the honest behaviour, not
+a gap.
+
+### **THE MATCHING BOUNDARY — ALREADY SHIPPED, ALREADY CORRECT**
+
+**`highlightSegments(text, terms)` in `src/lib/jobs/summarize.ts:442` is the
+build's own segmenter**, already used by `HighlightedText` on the job card. **B
+recommends REUSING it and writing no new matcher** (Ruling 32's own direction —
+one home per class). Read from its source, it already answers every boundary
+Ruling 73 names:
+
+| boundary | what it does | line |
+|---|---|---|
+| **case** | matches with `giu` — case-INSENSITIVE — and slices the ORIGINAL text, so the prose's own casing is preserved and never rewritten | 450, 485 |
+| **word boundary** | requires a non-word character on each side, **but only on the side where the term itself starts/ends with a word character** — so `R&D` and hyphen-edged terms still match | 456-461 |
+| **overlap** | terms sorted **longest-first**, all intervals collected, then **MERGED** — overlapping matches become one run, so **nested or double emphasis is impossible by construction** | 443-444, 468-477 |
+| **empty / blank / duplicate terms** | trimmed, empties dropped, de-duplicated through a `Set` | 443 |
+| **regex metacharacters in a term** | escaped | 434-436, 450 |
+| **no terms, or none present in the text** | returns **one unmatched segment** — i.e. the plain sentence, **no `<em>` at all** | 446, 466 |
+
+**RULING 73's "empty `matchedTerms` → no italic anywhere" is therefore satisfied
+by the segmenter's own early return, not by a new branch.**
+
+**RULING 73's "nothing but matched-term spans italicises" is satisfied because
+only `segment.matched === true` runs get an `<em>`, and the merge step
+guarantees those runs are exactly the term occurrences.**
+
+---
+
+## **THE BYTE-IDENTITY TEST FOR THE EVENT PATH**
+
+The repository already renders whole reports to a markup **string**
+(`renderToStaticMarkup(createElement(EventReport, …))` in
+`src/components/reports/plate-type-system.test.ts`). **So byte-identity is a
+literal string comparison and needs no new infrastructure.**
+
+**THE TEST, IN THREE ASSERTIONS — the first is the one Ruling 73 asks for:**
+
+1. **`expect(renderEvent(withMatchedTerms)).toBe(renderEvent(withoutMatchedTerms))`**
+   — render the EVENT report twice from fixtures differing **only** in
+   `matchedTerms`, and assert the two markup strings are **identical**.
+   **This proves the SURFACE gates the italic, not the data** — which is the
+   whole content of Ruling 73's boundary, and it is the assertion that fails the
+   instant someone gates on `matchedTerms.length` instead.
+2. **`expect(renderEvent()).not.toContain("<em")`** — **THE SHIPPED ASSERTION AT
+   `plate-type-system.test.ts:218`, KEPT VERBATIM.** It is already correct under
+   Ruling 73 and **must not be deleted**. **Its DOC COMMENT above it must be
+   restated** to name Ruling 73 — the comment currently says italic here *"would
+   invent an emphasis plate 03 does not have"*, which is still true of plate 03
+   and no longer the reason the EVENT surface has none.
+3. **`expect(classesOfTagContaining(renderEvent(), "p", <the prose>)).not.toContain("italic")`**
+   — also already shipped at line 217, also kept.
+
+**AND THE JOB SIDE'S OWN THREE:**
+
+4. The job prose contains **exactly as many `<em>` elements as there are distinct
+   matched terms present in the sentence**, and each `<em>`'s text is one of
+   them.
+5. **The non-matched text carries NO `<em>`** — assert the separators (`, `) and
+   the tail (`focus`) sit outside every `<em>`. **This is the "nothing but
+   matched-term spans" boundary, asserted rather than assumed.**
+6. **`matchedTerms: []` on the JOB surface renders ZERO `<em>`** — the empty
+   case, which is the clause a later "simplification" removes first.
+
+---
+
+## **WHAT RENDERS WHEN THE INPUT IS MISSING OR UNDECIDABLE**
+
+- **No `matchedTerms`, or an empty array** → the plain sentence, byte-identical
+  to today, on **both** surfaces.
+- **Terms present but none occur in the prose** → the plain sentence. **No
+  emphasis is invented and no text is added.**
+- **A term that occurs only as part of a longer word** (`ion` inside `precision`)
+  → **not italicised**, by the word-boundary rule.
+- **Two terms overlapping** (`solid-state` and `solid-state electrolytes`) → **one
+  `<em>` covering the longer run.** Never two, never nested.
+- **The event surface, always** → plain, whatever the data says.
+- **`surface` not passed at all** → plain, so any future third call site is safe
+  by default rather than by review.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`src/components/reports/plate-type-system.test.ts`** — the only file that
+  asserts on this component's typography. **Line 195-201** (event prose is
+  `font-reading`) — unaffected. **Line 211-219** (`does NOT italicise the event
+  prose`) — **STAYS GREEN AND STAYS SHIPPED; only its comment is restated, with
+  Ruling 73 named and the reason for the event surface's non-italic updated.**
+  **Never delete it: it is now the byte-identity guard's second limb.**
+- **`src/lib/jobs/summarize.test.ts`** — owns `highlightSegments`. **Not
+  modified; the design only calls it.** Any change to it would be a change to the
+  job card's highlighting too, which is the reason to reuse rather than fork.
+- **`src/components/cards/job-card.tsx:106`** — the other `highlightSegments`
+  consumer. **Untouched.**
+- **The two call sites**: `jobs/[id]/page.tsx:1446` gains two props;
+  `events/[id]/page.tsx:2296` gains none. **Any job-report ordering assertion
+  keyed on `sectionKey="why-peer-sent-this"` is unaffected — the prop stays.**
+
+---
+
+## **VACUITY, STATED AGAINST THE DESIGN's OWN INTEREST**
+
+**Assertion 2 alone would be vacuous** if the italic were gated on
+`matchedTerms.length`, because the event fixtures might simply have no terms.
+**Assertion 1 is what makes it non-vacuous** — it forces the event fixture to
+CARRY terms and still produce identical bytes. **A test suite that ships only
+assertion 2 has not tested Ruling 73's boundary at all**, and this is exactly the
+failure mode round 27 A's own method note warns about: *check what an assertion
+actually locks, not what its name says.*
+
+---
