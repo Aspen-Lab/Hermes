@@ -61440,3 +61440,103 @@ each pushed immediately.**
 **THE HAND-OFF:** `WHOSE TURN: C — round 24` stands as B wrote it, order **A24-02 → A24-01 (+64b) → 63b restatement (+64c)**. B's §4 fix directions govern; 64a is NOT on C's list. The gate stays `GATE (0%): NOT MET` — only round 25's A census can move it, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 24 — Agent C (item 1 of 3: **A24-02 — the month-granularity branch CONSOLIDATED into the shared formatter. All five wrong render sites converge on the card's answer in one change; the card's private copy is DELETED and its own test is the credential. Every day-level value is byte-identical, measured on B's four real pool shapes. ONE ESCAPE-CLAUSE STOP FILED (a YEAR-ONLY value renders `Dec 31, 2025`) and site 8 is NOT LATENT — it is off by a whole day TODAY on a real pool shape, which C measured rather than inherited.**)
+
+**Date: 2026-08-15. Everything below is EXECUTED.** Cold baseline confirmed before the first edit: **92 files / 1843 tests, 1842 passing**, sole failure `benchmark.test.ts:102` city coverage **0.333** (4 of 12) — byte-for-byte A's, B's and the manager's figure. `npx tsc --noEmit` clean; `npx eslint src` exactly the one standing `src/components/persona/quiz.tsx:46` error, 0 warnings. **No credential printed, logged, committed or written anywhere.**
+
+---
+
+## WHAT SHIPPED — three clauses in `web/src/lib/format.ts`, one deletion in `card.ts`, one convention fix on plate 03
+
+1. **`formatDate` (`format.ts`)** — a month-granularity ISO OVERRIDES the requested style to `monthYear`. `medium`, `short`, `full` and `monthYear` all return **`Aug 2026`**. This is the clause that fixes render sites 1, 3, 4, 5 and 6 at once, because every one of them reaches `formatDate`.
+2. **`formatWeekdayRange`** — a month-granularity start returns **`null`**. Plate 03's `detail: … ?? undefined` consumes it, so the sub-line DISAPPEARS instead of printing `Sat`.
+3. **`formatDateRange`** — a month-granularity start returns the month-year form and IGNORES the end.
+4. **`web/src/lib/events/card.ts`** — the private `if (isMonthGranularity(event.date))` early return is **GONE**. `card.test.ts:169-181` is unchanged and green through the shared path, which is the proof the behaviour survived the move.
+5. **`web/src/app/events/[id]/page.tsx`** — site 8's raw `new Date(event.date).getTime()` becomes `parseDate(event.date)?.getTime() ?? NaN`.
+
+**B's fix direction was followed exactly, with ONE addition C flags rather than smuggles** (see the deviation section below).
+
+---
+
+## NEGATIVE PROOFS — **PER CLAUSE, REVERTED AND RE-RUN, EXACT RED COUNTS**
+
+Four files in scope: `format.test.ts`, `card.test.ts`, `report-date.test.ts`, `events/[id]/page.test.ts` — **96 tests with this item's additions present.**
+
+| revert | red | the tests that go red |
+|---|---|---|
+| **ALL THREE source files** | **5** | report-date `renders a month-granularity claim as its month`; format `renders the month for EVERY style`; format `drops the weekday sub-line entirely`; format `ignores the end`; page `renders a month-granularity date as its month on every plate-03 surface` |
+| **clause 1 alone** (`formatDate` override) | **5** | the four format/report/page ones above **PLUS `card.test.ts`'s own month test** — because the card's private copy is gone, its green now DEPENDS on the shared path. **That is the credential B named, and it is now load-bearing rather than decorative.** |
+| **clause 2 alone** (`formatWeekdayRange`) | **2** | format `drops the weekday sub-line`; page `…on every plate-03 surface` |
+| **clause 3 alone** (`formatDateRange`) | **1** | format `ignores the end` |
+| **clause 4 alone** (the card's end-suppression guard) | **1** | card `ignores an end date on a month-granularity start` |
+| **site 8, `?? NaN` dropped** | **1** | page `computes the subtitle duration from the LOCAL date…` |
+| **site 8, raw `new Date()` restored** | **0** | **NONE — stated plainly. See the next section; this is the one clause with no TZ-independent falsifier, and C does not claim one.** |
+
+**Every clause carries a uniquely-red case except the raw-`new Date()` half of site 8**, which cannot be falsified deterministically because the defect IS a UTC-offset artefact and vanishes at offset 0.
+
+**THE BYTE-IDENTITY BLOCK IS A GUARD, NOT A PROOF, AND IS LABELLED AS ONE IN THE SOURCE.** `format.test.ts`'s `leaves every day-level value byte-identical` is green both before and after by design. It exists because B named a single day-level byte moving as a failed fix, and it re-asserts B's four measured live pool shapes: `Sep 15 – 18, 2026` / `Tue – Fri`; `Dec 7 – 10, 2026` / `Mon – Thu`; `Oct 12 – 15, 2026` / `Mon – Thu`; `Mar 15, 2027` / `Mon`. **All four reproduce EXACTLY.** `page.test.ts:530-533`'s `Mar 8 – 11, 2027` / `Mon – Thu` is untouched and green, as B predicted for a day-level fixture.
+
+---
+
+## **SITE 8 IS NOT LATENT. B UNDERSTATED IT, AND C MEASURED THE DIFFERENCE RATHER THAN ADOPTING B's READING.**
+
+B recorded site 8 as *"LATENT, not firing"* on the grounds that the live month-granularity row's `endDate` is `""`. **That is true for the MONTH-granularity row and false for the pool at large.** `daysUntil` parses its own argument as LOCAL; the raw `new Date()` parsed the other end of the same range as UTC. **Two conventions on one range.** Executed at this machine's own offset (UTC−5 in August, UTC−6 in December):
+
+| start | end | OLD (`new Date`) | NEW (`parseDate`) |
+|---|---|---|---|
+| `2026-08` | `2026-08-04` | 4 days | 4 days |
+| `2026-08` | `2026-08-04T14:24:00.000Z` | **5 days** | **4 days** |
+| **`2026-12-07`** | **`2026-12-10T12:00:00.000Z`** | **5 days** | **4 days** |
+| `2026-12-07` | `2026-12-10` | 4 days | 4 days |
+
+**Row 3 is built from B's OWN measured pool shapes** — `2026-12-07`+end is one of B's four, and a `T12:00:00.000Z` end is the pool's own vocabulary (`2026-09-15T12:00:00.000Z`, `2026-10-12T12:00:00.000Z`). **A DAY-LEVEL row with a timed end renders a subtitle duration one day too long TODAY.** It is not month-granularity-only, and it was not waiting on an `endDate`.
+
+**WHY NO TEST SHIPS FOR IT, STATED RATHER THAN HIDDEN.** The two expressions differ by exactly `utcOffset/24` days before `Math.round`, so **at offset 0 they are identical, and any assertion on the rendered string would be green in UTC and red here** — a flake, not a proof. `web/vitest.config.ts` pins no `TZ`. So C ships a **CONVENTION PIN** (`2026-08` + `2026-08-04` → `· 4 days`, green both ways at |offset| < 12h), labelled as exactly that in the test comment, and records the executed table above as the real evidence. **A round that wants this deterministic must pin `TZ` in the vitest config — a config change nobody has commissioned, so C did not make it unasked.**
+
+The `?? NaN` half IS deterministic and IS proven: without it, `parseDate(...)?.getTime()` hands `daysUntil` an `undefined` that its own default parameter turns into `Date.now()`, printing a duration measured from TODAY for a row whose start date could not be read at all. **1 red.** The raw `new Date()` produced `NaN` and therefore no segment; the replacement must too, and does.
+
+---
+
+## **ESCAPE CLAUSE — ONE STOP FILED. A YEAR-ONLY VALUE. NOT WIDENED.**
+
+While writing the "fills nothing" clause C asserted `formatDate("2026")` is null. **It is not.** Executed: **`formatDate("2026")` returns `Dec 31, 2025`** — it falls past both `parseDate` branches into a raw `new Date("2026")` = UTC midnight, 1 January, which lands in the PREVIOUS YEAR in a behind-UTC zone. **An invented day AND a wrong year, in the shared formatter, in one value.**
+
+**This is a shape B's cases did not span, so C STOPPED and did not widen inline.** Reachability was MEASURED, not guessed:
+
+- `readDateOnlyParenthetical` (`eventweb.ts:1325-1348`) emits a month-year **only when it has BOTH a month and a year**, and `null` otherwise — so a year-only parenthetical cannot become a `startDate`.
+- `extractEventDate` requires a month-day shape, so `dayLevelStart` cannot be year-only either.
+- The two year-ish render paths already ask for `monthYear` and are therefore unaffected in both directions: `search-result-card.tsx:207` and `formatDayAge` (`format.ts:161`).
+
+**VERDICT: LATENT AND UNREACHABLE in the shipped pipeline as of round 24.** `format.test.ts` now carries `expect(formatDate("2026")).not.toBeNull()` with a comment naming it **recorded, not endorsed** — it locks today's answer so the shape cannot start moving unnoticed. **No fix is proposed and none was attempted. A future round with a live witness should design one.** Filed as a manager NOTE, not a request for a ruling — nothing this round depends on it.
+
+---
+
+## **THE ONE DEVIATION FROM B's DIRECTION, TRACED AND FLAGGED BEFORE IT IS ASKED ABOUT**
+
+B wrote: "DELETE the card's private branch (`card.ts:36-38`)". **Deleting it outright causes a silent regression B's entry did not anticipate**, and C traced it before deviating: that early return also suppressed the END date, and the card's own `–` join sits directly below it. With the branch simply removed, a month-granularity row carrying an `endDate` renders **`Aug 2026–Sep 12, 2026`** — a range from a month to a day.
+
+**C deleted the FORMATTER copy — which is the duplication B was killing — and KEPT the end-suppression as an explicit guard**, so the card agrees with `formatDateRange`'s decision instead of contradicting it. It ships its own uniquely-red case (`card.test.ts` `ignores an end date on a month-granularity start`, **1 red** when reverted). **Unwitnessed live** — the one such row's `endDate` is `""`, as B measured — **but it is a regression guard on behaviour that already existed, not a new clause built on no witness.** Vacuity discipline governs NEW behaviour; preserving today's is the opposite of widening.
+
+---
+
+## THE `reportShortDate` YEAR — STATED, NOT DELETED
+
+B predicted it and it is exactly so: `reportShortDate("2026-08", NOW)` now returns **`Aug 2026`**, which **carries a year inside the one-year horizon where its day-level neighbour `reportShortDate("2026-09-15", NOW)` prints `Sep 15` with none.** Both are asserted in the SAME test, side by side, so the inconsistency is documented rather than discovered by a later round. **The alternative is a bare `Aug`, ambiguous across years — worse.** Same class of trade the manager already accepted for `Aug 2026` over 62b's literal `August 2026`. **The year is NOT deleted.**
+
+## WHAT DID NOT MOVE — stated affirmatively rather than left unmentioned
+
+- **THE EXPIRY ANCHOR IS UNTOUCHED.** `parseDate`'s first-of-month materialisation, `dateClaimEndMs`, and both anchor call sites (`scoring.ts:209-215`, `eventweb.ts:1664-1669`) are byte-identical. **B's edge tests are KEPT**: `format.test.ts`'s `ends the claim at the END of the month, never the start` still asserts `> 31 Aug 23:00` and `< 1 Sep 00:00` — the kept/dropped pair B simulated — and `eventweb.test.ts:2004-2030`'s ingestion twin is untouched and green. **No day-level entry into the anchor, no year-only fallback; neither was approached.**
+- **NO THRESHOLD MOVED.** `MIN_SCORE`, `OPPORTUNITY_MIN_SCORE`, `MAX_POSTING_AGE_DAYS`, `MAX_ENRICHMENT_CANDIDATES` untouched.
+- **64a's SCORING ORDER IS NOT TOUCHED.** `scoreUrgency` (`scoring.ts:84`) still reads `Date.parse(item.startDate)`; `scoring.ts:125-126` is unchanged. It is a recorded lead, not C's work this round, and C did not drift into it.
+- **NO TEST DELETED, AND NO EXISTING TEST EDITED** — every change to a test file is a pure ADDITION. `report-date.test.ts`'s three original tests and `card.test.ts`'s two month tests are byte-identical.
+- **`formatDateRange` with BOTH ends month-granularity in DIFFERENT months is NOT BUILT.** Such a row renders the START's month, which is true. Marked in source as deliberately unbuilt, per B's boundary.
+- **The `eventweb.ts:1688` narrow residue B recorded** (a passed month claim blanked to `""` while a future deadline keeps the row) is untouched — it is ingestion, not rendering.
+
+## THE GATE AFTER ITEM 1
+
+**92 files / 1854 tests, 1853 passing** (+11 tests: 7 in `format.test.ts`, 1 in `card.test.ts`, 1 in `report-date.test.ts`, 2 in `page.test.ts`). **Sole failure `benchmark.test.ts` in its city-coverage form, 0.333, deterministically red per Ruling 63b — not chased; item 3 restates it.** `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing `quiz.tsx:46` error, 0 warnings**. **`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds after an event-side change.**
+
+**ITEM 1 STOPS HERE.** Item 2 (A24-01 + 64b) and item 3 (the 63b restatement + 64c) follow, one commit each, each pushed immediately.
+
+---

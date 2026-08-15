@@ -180,4 +180,17 @@ describe("month-granularity dates on the card", () => {
   it("still renders a day-level date in full", () => {
     expect(eventCardView(event, now).dateLabel).toBe("Sep 10, 2026–Sep 12, 2026");
   });
+
+  // A24-02. The private branch above moved into `formatDate`, and the early
+  // return it used to sit behind also suppressed the END. The card keeps its
+  // own "–" join, so it keeps that suppression explicitly: a month-granularity
+  // start has no day to range FROM, exactly as `formatDateRange` decided.
+  // Unwitnessed live (the one such row's endDate is ""), but this is a
+  // regression guard on behaviour that already existed, not a new clause.
+  it("ignores an end date on a month-granularity start", () => {
+    expect(
+      eventCardView({ ...event, date: "2026-08", endDate: "2026-09-12" }, now)
+        .dateLabel,
+    ).toBe("Aug 2026");
+  });
 });

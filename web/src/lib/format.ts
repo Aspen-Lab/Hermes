@@ -72,14 +72,36 @@ const DATE_STYLE_OPTS: Record<DateStyle, Intl.DateTimeFormatOptions> = {
   monthYear: { month: "short", year: "numeric" },
 };
 
-/** Absolute date — "Sunday, July 19, 2026" / "Jul 19, 2026" / "Jul 19" / "Jul 2026". */
+/**
+ * Absolute date — "Sunday, July 19, 2026" / "Jul 19, 2026" / "Jul 19" / "Jul 2026".
+ *
+ * A24-02 / Ruling 62b. A MONTH-GRANULARITY claim ("2026-08") renders at the
+ * granularity the page evidenced, whatever style the caller asked for.
+ * `parseDate` deliberately materialises such a claim as the FIRST of the month
+ * — that anchor is what every consumer needs and it does not move — but
+ * PRINTING that anchor's day states a fact the page never made.
+ *
+ * Three properties this override must keep, each with its own test:
+ *  - it keys on `MONTH_GRANULARITY_RE`, the shipped predicate, NEVER on "the
+ *    date is the 1st" — a real event starting on 1 August still prints
+ *    "Aug 1, 2026";
+ *  - it is ONE-DIRECTIONAL, widening only: a day-level value asked for
+ *    "monthYear" still gets "monthYear", and no day-level value moves a byte;
+ *  - it FILLS nothing — an unparseable value still returns `null`.
+ *
+ * Before round 24 this branch lived privately inside the event card
+ * (`lib/events/card.ts`). Five other render sites did not have it and printed
+ * an invented day; the branch lives here now so there is exactly one copy,
+ * which is what this module's header has demanded from the start.
+ */
 export function formatDate(
   iso: string | null | undefined,
   style: DateStyle = "medium",
 ): string | null {
   const d = parseDate(iso);
   if (!d) return null;
-  return d.toLocaleDateString("en-US", DATE_STYLE_OPTS[style]);
+  const effective: DateStyle = isMonthGranularity(iso) ? "monthYear" : style;
+  return d.toLocaleDateString("en-US", DATE_STYLE_OPTS[effective]);
 }
 
 /**
@@ -94,6 +116,13 @@ export function formatDateRange(
 ): string | null {
   const start = parseDate(startIso);
   if (!start) return null;
+  // A24-02 / Ruling 62b. A month-granularity start has no day to range FROM,
+  // so there is no range to print — it renders its own month and IGNORES the
+  // end. Both ends month-granularity in DIFFERENT months is deliberately NOT
+  // built: no live row has that shape, and inventing "Aug – Sep 2026" on no
+  // witness is an unearned clause. Such a row renders the START's month,
+  // which is true.
+  if (isMonthGranularity(startIso)) return formatDate(startIso);
   const end = parseDate(endIso);
   if (!end || end.getTime() <= start.getTime()) return formatDate(startIso);
 
@@ -116,6 +145,12 @@ export function formatWeekdayRange(
 ): string | null {
   const start = parseDate(startIso);
   if (!start) return null;
+  // A24-02 / Ruling 62b. A MONTH has no weekday. `null` is what the report
+  // tile's `detail: … ?? undefined` already consumes, so the sub-line
+  // DISAPPEARS rather than printing the weekday of a first-of-the-month
+  // anchor the page never stated. The card said "Aug 2026" while plate 03
+  // said "Aug 1, 2026 / Sat" — a day of month AND a day of week, both invented.
+  if (isMonthGranularity(startIso)) return null;
   const weekday = (d: Date) =>
     d.toLocaleDateString("en-US", { weekday: "short" });
   const end = parseDate(endIso);

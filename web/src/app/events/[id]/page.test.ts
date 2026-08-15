@@ -556,6 +556,54 @@ describe("EventReport", () => {
     expect(html).toContain("92 days left");
   });
 
+  // A24-02 / Ruling 62b. THE ROUTE-LEVEL PROOF. Plate 03 held THREE of the five
+  // wrong render sites: the DATES tile's value, its weekday sub-line, and the
+  // deadline strip's "Event" milestone. The card said "Aug 2026" the whole time.
+  it("renders a month-granularity date as its month on every plate-03 surface", () => {
+    const html = renderReport(
+      baseEvent({
+        date: "2026-08",
+        endDate: "",
+        deadline: "",
+        registrationDeadline: "",
+        location: "San Diego, US",
+      }),
+    );
+    const datesTile = html.match(
+      /<div[^>]*data-event-fact="dates"[^>]*>[\s\S]*?<\/div>/,
+    )?.[0];
+
+    // Reverted: the tile value reads "Aug 1, 2026" and the strip reads "Aug 1".
+    expect(datesTile).toContain("Aug 2026");
+    expect(html).not.toContain("Aug 1, 2026");
+    expect(html).not.toContain(">Aug 1<");
+    // Reverted: the sub-line reads "Sat" — a day of WEEK invented from a
+    // month-only value. `formatWeekdayRange` returns null, so it disappears.
+    expect(datesTile).not.toContain("Sat");
+  });
+
+  it("computes the subtitle duration from the LOCAL date, and from nothing at all when the date is unreadable", () => {
+    // A24-02, site 8 — the last raw `new Date()` on this path. Its effect is
+    // invisible at small UTC offsets (Math.round absorbs them), so the FIRST
+    // assertion is a CONVENTION PIN rather than a proof: it is green both ways
+    // at |offset| < 12h and red beyond it. Stated, not dressed up.
+    expect(
+      renderReport(
+        baseEvent({ date: "2026-08", endDate: "2026-08-04", location: "San Diego, US" }),
+      ),
+    ).toContain("San Diego, US · in person · 4 days");
+    // The SECOND assertion IS uniquely red: `parseDate(...)?.getTime()` alone,
+    // without the `?? NaN`, hands `daysUntil` an `undefined` that its default
+    // parameter turns into Date.now() — printing a duration measured from
+    // TODAY for a row whose start date could not be read at all. The raw
+    // `new Date()` produced NaN here and no segment; so must the replacement.
+    const unreadable = renderReport(
+      baseEvent({ date: "", endDate: "2027-03-11", location: "San Diego, US" }),
+    );
+    expect(unreadable).toContain("San Diego, US · in person");
+    expect(unreadable).not.toContain(" days");
+  });
+
   it("hides the scale tile when no crowd size was extracted", () => {
     // B-05, updated by B4-10: expectedSize now has a real extractor
     // (event-details.ts), but it only ever sets the field when the page

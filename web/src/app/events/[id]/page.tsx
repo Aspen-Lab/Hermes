@@ -28,6 +28,7 @@ import {
   formatDaysLeft,
   formatMatchPct,
   formatWeekdayRange,
+  parseDate,
 } from "@/lib/format";
 import { reportShortDate } from "@/components/reports/report-date";
 import { cleanOwnedEventReportSummary } from "@/lib/events/mapper";
@@ -1728,8 +1729,20 @@ export function EventReport({
   // B-16. Plate 03's subtitle: venue · format · duration. "streamed keynotes"
   // is not a field, so the format segment says only what Peer knows. Duration
   // is derived from the two dates rather than invented.
+  // A24-02 / Ruling 62b. Was `new Date(event.date).getTime()` — the ONE raw
+  // `new Date()` left on this path, and the exact UTC trap `parseDate`'s own
+  // header warns about: `new Date("2026-08")` and `new Date("2026-12-07")` are
+  // UTC midnight and land on the PREVIOUS day (or month) in a behind-UTC zone,
+  // while `daysUntil` parses the OTHER end of the same range as LOCAL. Two
+  // conventions on one range. LATENT rather than firing — the live
+  // month-granularity row's `endDate` is "" so the branch is skipped — and its
+  // effect is invisible at small UTC offsets because `Math.round` absorbs
+  // them, which is precisely why it must be closed before an `endDate`
+  // arrives rather than after. `?? NaN` keeps an unparseable start producing
+  // NO duration segment, exactly as the raw `new Date()` did; without it
+  // `daysUntil`'s default would silently measure from NOW.
   const eventDays = event.endDate
-    ? daysUntil(event.endDate, new Date(event.date).getTime()) + 1
+    ? daysUntil(event.endDate, parseDate(event.date)?.getTime() ?? NaN) + 1
     : undefined;
   const subtitle = [
     location,
