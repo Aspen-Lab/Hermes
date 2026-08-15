@@ -270,11 +270,48 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 02:57 UTC — Agent B, round 24
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 03:23 UTC — ROUND 24 B IS
+                  COMPLETE. THREE ITEMS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`cdafa16`, `7265c79`, `9ef1cab`, plus this
+                  final commit). Claimed the lock cleanly (`e28326e`) after
+                  `git pull` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`2633c2f..e28326e`), so the race was won rather
+                  than assumed.** **B CHANGED NO SHIPPED CODE, DELETED NO TEST,
+                  EDITED NO TEST, AND TOUCHED NO FILE EXCEPT THIS ONE.** All
+                  three appends were pure insertions verified by `--numstat`
+                  (236/0, 299/0, 192/0), written via scratchpad files and
+                  `cat >>` from bash — **NOT PowerShell.** Every throwaway
+                  probe under `web/src/` was deleted before its commit and
+                  `git status` is clean of them, verified twice. No branch,
+                  worktree or PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. **No credential printed, logged, committed or
+                  written anywhere — presence checked as a boolean only.**
+
+                  **THE GATE, RUN COLD BY B AFTER CLEANUP: 92 files / 1843
+                  tests, 1842 passing** — byte-for-byte A's and the manager's
+                  figure. Sole failure `benchmark.test.ts:102`, city coverage
+                  **0.333** (4 of 12), deterministically red per 63b, not
+                  chased. `npx tsc --noEmit` clean; `npx eslint src` exactly
+                  the one standing `src/components/persona/quiz.tsx:46` error,
+                  0 warnings.
+
+                  **B CORRECTS A ON ONE PREMISE AND UNDERCOUNTS ON ANOTHER,
+                  AND SAYS SO BEFORE QUOTING ANY FIX.** (1) A24-01's
+                  index-page detector **is not missing — it SHIPPED long ago,
+                  it ALREADY RUNS on this row, and the shipped test suite
+                  ALREADY asserts the right answer for the clean title**;
+                  the defect is one end-anchor. (2) A24-02 is **five wrong
+                  render sites, not one** — A named the tile's two and missed
+                  three more, one of them on plate 03's own page.
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 02:55 UTC — ROUND 24 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`04b7080`, `f5bc9c1`, `3f81b94`, plus this
@@ -4180,6 +4217,191 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **C — round 24.** Round 24 B is COMPLETE: **three items, one
+                  commit each, each pushed immediately** (`cdafa16`, `7265c79`,
+                  `9ef1cab`, plus this hand-off). Claim the §0d lock first,
+                  always. **B changed no shipped code and deleted every
+                  throwaway probe before committing.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement.**
+
+                  **THE BASELINE C MUST CONFIRM COLD: 92 files / 1843 tests,
+                  1842 passing.** `npx tsc --noEmit` clean; `npx eslint src`
+                  exactly the one standing `src/components/persona/quiz.tsx:46`
+                  error, 0 warnings. **The sole failure is
+                  `benchmark.test.ts:102` in its CITY-COVERAGE form —
+                  DETERMINISTICALLY RED per Ruling 63b, measured at 0.333 (4 of
+                  12) this round, DOWN from round 23 C's 0.4375. DO NOT CHASE
+                  IT, DO NOT FIX IT, DO NOT REPORT IT AS NEW — item 3 below
+                  RESTATES it.** A third number is a real regression.
+
+                  ---
+                  **C's WORK ORDER — THE ORDER THE MANAGER ADOPTED, UNCHANGED:
+                  A24-02 FIRST, THEN A24-01, THEN THE 63b RESTATEMENT.**
+
+                  **ITEM 1 — A24-02. ONE GAP, ONE LINE — BUT FIVE WRONG RENDER
+                  SITES, NOT ONE.** The month-only value `2026-08` is
+                  materialised as the 1st of the month by `parseDate`
+                  (`web/src/lib/format.ts:16-32`), which is CORRECT and must
+                  not change — it is the anchor. **The gap is that the
+                  granularity is then discarded, and the ONLY branch that
+                  recovers it is PRIVATE to the card**
+                  (`web/src/lib/events/card.ts:30-43`). The shared formatters
+                  are granularity-blind, so every consumer that did not
+                  hand-roll its own branch prints an invented day. **Executed:
+                  tile value `Aug 1, 2026` (`page.tsx:629`); tile sub-line `Sat`
+                  (`page.tsx:652`); PLATE 03's OWN DEADLINE STRIP `Aug 1`
+                  (`page.tsx:723`) — A DID NOT NAME THIS; feed tile `Aug 1`
+                  (`feed-tile.tsx:470`); briefing quick-hit `Aug 1`
+                  (`briefing-quick-hit.tsx:50`); briefing hero `Aug 1, 2026`
+                  (`briefing-hero.tsx:115`) — A NAMED NONE OF THE LAST THREE.**
+                  **FIX IN `format.ts`, NOT AT THE TILE** (round 22 C's
+                  four-missed-render-sites lesson): month-granularity overrides
+                  the requested style to `monthYear` in `formatDate`;
+                  `formatWeekdayRange` returns `null`; `formatDateRange` returns
+                  the month-year and ignores the end. **Then DELETE the card's
+                  private branch — its test at `card.test.ts:169-181` must stay
+                  GREEN through the shared path, and that green is the proof.**
+                  **BOUNDARY: every day-level value BYTE-IDENTICAL — B measured
+                  four real pool shapes, `identical: true` on all four. Key on
+                  `MONTH_GRANULARITY_RE`, NEVER on "the date is the 1st".**
+
+                  **THE EXPIRY ANCHOR IS CLEAN AND C CHANGES NOTHING THERE.**
+                  B proved it on a simulated clock at BOTH edges 62b named:
+                  kept 15 Aug, kept 31 Aug 23:00, **DROPPED 1 Sep 00:01**,
+                  dropped 15 Sep. `dateClaimEndMs("2026-08")` = 31 Aug
+                  23:59:59.999. **62b's fuse is no longer merely "loaded but
+                  untested" — its mechanism is tested; what September still
+                  tests is whether the live pool agrees.**
+
+                  **TWO MORE CONSUMERS, ONE LATENT AND ONE A POLICY CALL.**
+                  `page.tsx:1732` uses RAW `new Date(event.date)` — **the same
+                  UTC-midnight bug A found in its own harness and retracted**;
+                  latent only because this row has no `endDate`. Use
+                  `parseDate(...)`. **AND THE SCORING ORDER, WHICH NOBODY HAS
+                  LOOKED AT:** `scoreUrgency` (`scoring.ts:84`) reads
+                  `Date.parse("2026-08")` as **14.7 days in the PAST**, so the
+                  row scores **0.35 — EXACTLY WHAT A DATELESS ROW SCORES** —
+                  against **0.824** if the same claim were day-level at its
+                  month end. **The row is systematically under-ranked for its
+                  whole evidenced month.** Mechanical fix is `dateClaimEndMs`,
+                  the function the anchor already uses. **`POLICY — manager
+                  decides`: it is a RANKING change and Ruling 60c's column does
+                  not measure order.**
+
+                  **ITEM 2 — A24-01. ONE MECHANISM, THREE FACES, AND THE
+                  DETECTOR IS NOT MISSING.** `isEventIndexPage`
+                  (`eventweb.ts:485-487`) already runs at `eventweb.ts:1596`,
+                  and **`scoring.test.ts:598` ALREADY ASSERTS
+                  `isEventIndexPage("Upcoming Energy Storage Conferences")` is
+                  `true`.** The regex's third alternative is **END-ANCHORED**,
+                  so a site-chrome tail walks past it. **Executed both ways on
+                  the SAME URL: clean title → `true`, dropped; A's
+                  chrome-tailed title → `false`, admitted.** The NAME and PLACE
+                  faces are DOWNSTREAM — `isChromeSegment` ALREADY calls the
+                  same predicate per segment (`eventweb.ts:756`), rejects
+                  segment 1 as an index, and falls to the attribution segment.
+                  **The row-admission check is strictly WEAKER than the naming
+                  check above it.**
+                  **FIX: feed the title's FIRST SEGMENT to `isEventIndexPage`
+                  at the CALL SITE `:1596`, reusing the shipped splitter
+                  VERBATIM from `eventweb.ts:1427` (`/\s+[-|·–—]\s+/`).**
+                  **`ANY SEGMENT` IS DEAD — killed by its own control:
+                  `Battery Safety Summit 2026 | Upcoming Conferences`, a REAL
+                  event whose chrome names the organiser's hub, is wrongly
+                  dropped by it and correctly kept by first-segment.**
+                  **MEASURED ON 150 REAL OFFERED TITLES ACROSS 5 LIVE PULLS: 1
+                  new drop (`gain.inl.gov`'s `Events` hub — correct), 0 drops
+                  lost, 0 real event pages lost.** Twelve admitted controls
+                  survive, including the live pool row
+                  `Conference Overview | The Battery Show South`.
+                  **ONE NAMED FALSE POSITIVE, and it is ALREADY in the shipped
+                  guard: `All Solid State Battery Workshop`** — a live risk in
+                  this corpus's own vocabulary. **B recommends narrowing
+                  alternative 3's noun to PLURAL in the same edit (0 measured
+                  cost, removes the over-reach instead of extending it) and
+                  FILES IT AS `POLICY — manager decides`, because it touches
+                  the regex and therefore both callers.** The first-segment
+                  input stands on its own.
+                  **THE PLACE GUARD NEEDS NO CHANGE — NOT ONE CLAUSE.** The row
+                  leaves at check 4 of 6, ~70 lines before any date or place
+                  logic; 62a's five-pull census PASSED; `Chicago` at 4 is
+                  RECORDED into 62a's corpus for future work and is not
+                  evidence on its own. **62b's deferred gap (b) IS NOT RE-OPENED
+                  — the index check runs before any date logic exists in the
+                  function, so kind and dateless-survival do not interact.**
+                  **WHEN THE CHECK CANNOT DECIDE THE ROW KEEPS** — admission,
+                  today's behaviour, never a partial render.
+
+                  **B'S HONEST LIMIT, STATED IN THE ENTRY: B's five live pulls
+                  COULD NOT REPRODUCE THE POOL ROW** (pool 12, no
+                  `cambridgeenertech.com`, index page offered under the clean
+                  title every time). **The provider's title for this URL varies
+                  between windows — A24-01 IS REAL AND INTERMITTENT.** That
+                  makes it untestable by a live pull and testable only by the
+                  string, which is why the regression test is a STRING test in
+                  `scoring.test.ts`'s existing table.
+
+                  **ITEM 3 — RULING 63b's RESTATEMENT. TWO CANDIDATE QUALITY
+                  FLOORS WERE BUILT AND KILLED AS PROVABLY VACUOUS**, one of
+                  them B's own first preference (`isOnlineOnly` is `false` by
+                  construction whenever a city exists; and `location` IS
+                  composed from `place` at `enrich.ts:300`, so a
+                  city-in-location check is a tautology that **would not have
+                  caught A24-01**). **There is no non-vacuous LIVE oracle for
+                  "venue-anchored", and B says so rather than dressing one up**
+                  — the deterministic proof already lives in
+                  `structured-extract.test.ts`, uniquely red under ablation.
+                  **THE RESTATED ASSERTION IS A NAMED-ROW VALUE LOCK** (62c's
+                  `upenn` admitted control and the SolarPACES lock are the
+                  shipped precedent): 62a's four contamination hosts must render
+                  NO city; the five venue-anchored hosts must render THEIR OWN
+                  city; **zero cities in the whole pool is a PASS and the
+                  coverage floor's absence is COMMENTED, not merely deleted.**
+                  **Validated on 5 live pulls: 5 named rows exercised per pull,
+                  5 of 5 green, 0 false reds**, the other 4 skipped by the
+                  presence guard. **NEVER DELETED — replaced in place with
+                  `A23-03 / Ruling 62a / Ruling 63b` named.** It stays
+                  credential-gated and excluded from the gate; **a SKIP is not
+                  a PASS.**
+
+                  **AND A SECOND ASSERTION IN THE SAME FILE THAT NOBODY HAS
+                  FLAGGED — `POLICY — manager decides`.**
+                  `benchmark.test.ts:111-119` asserts
+                  `summit?.place?.city === "Chicago"`. **Its first arm is
+                  satisfied TODAY by the index page (item 2 removes it) and its
+                  fallback arm needs a summit row already carrying `Chicago`,
+                  which the place guard silences 5 of 5. C MUST EXPECT IT RED
+                  after either fix lands.** It is Ruling 32's shape, one
+                  assertion below the one 63b named. **C does not delete it.**
+
+                  ---
+                  **CARRIED FORWARD UNCHANGED, EVERY ITEM BY NAME.** Ruling
+                  63a's reopen trigger NOT pulled; 62d's held half (a) folded
+                  into the deferred (b) and vindicated live (`Tesla`, not
+                  `EV.Careers`); A22-04 open at STRIKE ONE; **Ruling 55c's
+                  online must-keep debt, SIXTH round, named, STILL
+                  UNDISCHARGED**; Ruling 57b job surface `organically
+                  witnessed`, event surface `designed, organically
+                  unwitnessed`, SIXTH round; Ruling 37 baseline only; Ruling 44
+                  zero; B18-03 zero; Ruling 33 cumulative 2 of 81. **THE 62b
+                  FUSE STAYS AT ZERO** and self-discharges 1 September.
+                  **EXCLUSIONS WALKED BY NAME: 45a (`euagenda.eu` — B did NOT
+                  fetch it), 45b (41c's three hosts — NOT hunted), 39a/40, 42c,
+                  36, 33, 50a, 39b/61a, B18-02's three named under-catch
+                  hosts, 42a's Gap B.** **THRESHOLDS UNCHANGED — `MIN_SCORE`,
+                  `OPPORTUNITY_MIN_SCORE`, `MAX_POSTING_AGE_DAYS`,
+                  `MAX_ENRICHMENT_CANDIDATES` (40). B MOVED NONE.**
+
+                  **B raises THREE `POLICY — manager decides`:** the
+                  `scoreUrgency` ranking change (item 1), the plural narrowing
+                  of the index regex (item 2), and the `Chicago` assertion
+                  (item 3). Full evidence in §4's three "Round 24 — Agent B"
+                  entries — **work from those, not from this summary.**
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **B — round 24.** Round 24 A is COMPLETE: **four parts, one
                   commit each, each pushed immediately** (`04b7080`, `f5bc9c1`,
                   `3f81b94`, plus the hand-off). Claim the §0d lock first,
