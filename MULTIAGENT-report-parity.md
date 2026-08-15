@@ -77633,3 +77633,120 @@ lines**, plus **~14-16 new assertions** in `components/reports/plate-type-system
 site: the step present, the old step absent). **Estimate: +9/-9 source lines,
 +16 tests.** Small, and the risk is concentrated entirely in the `cn` trap —
 **if C reaches for `cn()` anywhere in this item, the item silently does nothing.**
+
+---
+
+### Round 28 — Agent B — ITEM 3 (V28-02): the locked-block label colour. THE TOKEN ALREADY EXISTS, AND A NEW HEX WOULD BREAK THE THEME SYSTEM
+
+**B changed no code.**
+
+#### 3.1 THE BUILD SIDE, CONFIRMED
+
+`components/reports/tier-upgrade-block.tsx:22` renders
+`Also in this report with an AI key` as
+`text-micro font-semibold uppercase tracking-[0.18em] text-text-faint`.
+**`text-text-faint` is `#94877c`** (`app/globals.css:27`, "taupe label gray") —
+the same muted colour as every ordinary section label. **A's finding is
+confirmed.** It is **one component on three surfaces** — events
+(`page.tsx:2301`), jobs (`page.tsx:1503`) and papers
+(`app/papers/[id]/page.tsx:50`) — **one call site, counted once**, exactly as A
+filed it.
+
+#### 3.2 DO NOT ADD A `#5b4bbf` TOKEN. THE ANSWER IS ALREADY IN THE FILE
+
+**B searched the whole build for the hex.** `grep -rn "5b4bbf"` across
+`web/src`, the Tailwind config and every CSS file returns **exactly one hit, and
+it is a comment, not a colour**: `app/events/[id]/page.tsx:2075`, inside round 26
+C's V26-E05 note —
+
+> *"Plate 03 §9 badges this label `NEW` (`Consolas 8.25`, violet `#5b4bbf`)
+> exactly as plate 02 badges the job report's structurally identical skills
+> section — which already had it. **THIS IS A COPY, NOT AN INVENTION.**"*
+
+**So the loop has already decided how the plate's violet is expressed in the
+build, and the answer is the accent token.** `ReportBadge`
+(`components/reports/report-badge.tsx:25-29`) renders `tone="accent"` as
+`bg-accent/10 text-accent`, and that is what the shipped `Tier 0` badges use at
+`app/events/[id]/page.tsx:1546`, `:1582`, `:1633` and `:1677`. **This is a
+RECORDED DECISION. B flags it and does not reverse it (standard 5).**
+
+**And a new fixed hex would break something real.** `app/globals.css:106-119`
+shows the report's colours are **seeded from a user-chosen accent**:
+`html[data-accent]` takes one of **six** values — `ember`, `rose`, `marigold`,
+`sage`, `indigo`, `violet` — and every other colour is mixed from that seed.
+`#5b4bbf` **is not any of the six seeds** (the `violet` seed is `#7a3fd9`). A
+`--color-lock: #5b4bbf` token would be the **only fixed hue on the report**, and
+it would sit wrong against five of the six accents a user can pick. **Refused, and
+refused on the file's own structure rather than on taste.**
+
+#### 3.3 THE DESIGN
+
+**`tier-upgrade-block.tsx:22` becomes `` `${REPORT_LABEL_STEP} text-accent` ``** —
+item 2's step, item 3's colour, **one line carrying both items**. C should take
+items 2 and 3 together on this line rather than editing it twice.
+
+**BOUNDARY — ONLY THE LOCKED-BLOCK LABEL:**
+
+- Only the `<p>` at `:22`. **The block's other text is untouched**: the 🔒 glyph
+  (`text-caption text-text-faint`, `:33`), each item's `<h3>`
+  (`text-body-sm text-heading`, `:40`) and its `<p>`
+  (`text-caption text-text-muted`, `:43`) all stay exactly as they are.
+- **No other label gains a colour.** Every site keeping `text-text-faint` in item
+  2 keeps it. This item moves one colour on one line.
+- **Both plates carry this label, and one component serves both** — plus the
+  papers report, which A did not census. The papers surface gets the same colour
+  because it is the same component; **that is a side effect, named here rather
+  than discovered later.**
+
+#### 3.4 THE ADVERSARIAL CASE, AND A NAMED COST
+
+**Under the default `ember` accent the label renders hot orange (`#ff520d`), not
+the plate's violet.** B states that plainly rather than letting `text-accent`
+imply exact parity. **It is nonetheless the right answer**, for the reason the
+build already accepted at V26-E05: the plate is one frozen screenshot taken under
+one accent, and the build's colour system is user-selectable by design. **The
+cost is already being paid by every `Tier 0` badge on both reports**; this item
+adds no new cost, it stops one label from being the odd one out. If the manager
+wants exact plate parity instead, that is a decision about the whole accent
+system, not about this label — **and it would have to reopen V26-E05, which B
+will not do unasked.**
+
+**WHAT RENDERS IF UNDECIDABLE:** nothing. There is no data condition here — the
+label is static text on a component that returns `null` when the block does not
+show (`:17`, `providerConfigured || items.length === 0`). The change cannot
+produce a wrong value; it can only change one colour.
+
+**VACUITY CHECK.** Asserting the label contains `text-accent` is uniquely red
+today — the shipped class is `text-text-faint`. The paired assertion
+(`not.toContain("text-text-faint")` on that element) is also red today, and both
+would survive a mutation that merely appended `text-accent` without removing the
+old colour.
+
+#### 3.5 TESTS AT RISK — GREPPED
+
+- `grep -rn "Also in this report" web/src --include=*.test.*` returns **nothing**
+  — **the locked-block label is currently UNASSERTED on either surface.** That is
+  why both its size and its colour drifted. C adds the assertions.
+- `components/reports/plate-type-system.test.ts` (79 tests) is where they belong,
+  beside item 2's.
+- **No existing assertion reads `text-text-faint` on this element**, so nothing
+  goes red that should not.
+
+#### 3.6 ONE THING B FLAGS RATHER THAN FOLDS IN
+
+`app/events/[id]/page.tsx:2084` renders `<ReportBadge>New</ReportBadge>` with the
+**default `neutral` tone**, which is `bg-bg-secondary text-text-faint` — **not the
+accent.** V26-E05's own comment says plate 03 badges that label violet and that
+the build copies it, but the call site takes the neutral tone while the four
+`Tier 0` badges take `tone="accent"`. **That is the same difference as V28-02,
+one element over, on a BADGE rather than a label.** It is outside this item's
+stated boundary and outside item 2's (badges are excluded there), and **A did not
+file it**, so B does not fold it in and does not count it. **Recorded for A's next
+census to confirm against plate 03 §9 — either the badge is neutral by design and
+V26-E05's comment overstates, or it is a second instance.**
+
+#### 3.7 PRICE FOR C
+
+**One file, one line** (`components/reports/tier-upgrade-block.tsx:22`), taken
+together with item 2's step on the same line. **~4 new assertions.**
+**Estimate: +1/-1 source line, +4 tests.** The smallest item of the four.
