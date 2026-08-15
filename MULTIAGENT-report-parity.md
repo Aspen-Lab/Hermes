@@ -270,11 +270,59 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-15 21:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 21:4x UTC — MANAGER
+                  VERIFICATION OF ROUND 28 C IS COMPLETE, RUN BY cloud-hourly.**
+                  Claimed the lock (`free` → `cloud-hourly @ 2026-08-15 21:26
+                  UTC`, `73082fd`) after `git pull` confirmed it was free and
+                  `git branch --show-current` read
+                  `feature/summary-report-revamp`.
+
+                  **EVERY CHECK RE-EXECUTED FROM A CLEAN INSTALL, NOTHING
+                  INHERITED FROM C's OWN CLAIMS.** Same `registry.npmmirror.com`
+                  403 C hit; same workaround (temp copy rewritten to
+                  `registry.npmjs.org`, tracked `package-lock.json` restored
+                  byte-identical before any commit, confirmed clean). Under
+                  `TZ=America/Chicago`: **97 files / 1 skipped (98), 2207
+                  tests / 1 skipped (2208) — exact match to C's claimed
+                  close.** `tsc --noEmit` clean. `eslint src`: the same one
+                  standing `quiz.tsx:46` error, 0 warnings, unchanged.
+                  `git diff` over C's whole turn shows **zero removed
+                  `it`/`test`/`describe` blocks.** Spot-checked the actual
+                  source (not just the stat) for both commits — the
+                  `CONJOINED_SECTION_*` family in `jobweb.ts`, the
+                  `REPORT_LABEL_STEP`/`REPORT_LABEL_CLASS` split and all
+                  seven call sites (including `timeline-track.tsx`'s `cn()`
+                  trap actually replaced with a template literal), and that
+                  `5b4bbf` appears nowhere outside comments and one negative
+                  test assertion — all match the §4 write-up exactly.
+
+                  **VERDICT: C's TURN IS ACCEPTED.** No discrepancy found
+                  between the log and the tree.
+
+                  **THE ONE OPEN ITEM — WHETHER TO RAISE
+                  `feed/pipeline.ts`'s 8000 ms PAPER-SURFACE TIMEOUT TO
+                  25000 ms — IS LEFT OPEN, NOT RULED ON.** It is a live
+                  user-facing behaviour trade-off this cloud run will not
+                  decide unilaterally overnight with no one reviewing it.
+                  Carried forward for the user or the laptop session; does
+                  not block round 29.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 29's measurement pass.`**
+                  A's real-search pass needs live credentials in
+                  `web/.local-data/profile.json` that this sandbox does not
+                  have (§0c) — the laptop session or `chatgpt-local` should
+                  pick it up. **The gate stays `GATE (0%): NOT MET`** (Ruling
+                  30 — only the user-driven manager, after A's independent
+                  live re-measurement, closes it). Turn lock released
+                  (`HELD BY: free`) in this entry's own commit. Full
+                  verification write-up in §4.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 20:47 UTC — ROUND 28 C IS
                   COMPLETE. Cloud-hourly claimed the lock at 20:25 UTC (stale
                   after LAPTOP-3CL10CG5 went quiet ~2h54m post-item-0; claiming
@@ -78306,3 +78354,23 @@ refused **by the posting id alone**.
 **ONE OPEN ITEM CARRIED FORWARD, UNCHANGED FROM ITEM 0's HAND-OFF, NOT DECIDED BY C:** whether to raise `feed/pipeline.ts`'s hard-coded 8000 ms paper-surface web-search timeout to match the two opportunity call sites' 25000 ms (Ruling 76a approved only the two, not this one) — still open for the manager.
 
 **A DISCLOSURE FROM item 1, RESTATED SO IT IS NOT MISSED IN A DIFFERENT AGENT'S READ:** the A28-01 corpus row `careers.emdgroup.com`'s recorded title (`"Students And Graduates I EMD Group"`) is transcribed with a plain capital `I`, not the `|` the title-head design relies on splitting at (verified byte-for-byte with `od -c`, §4 item 1 above). C used a corrected fixture with a literal pipe rather than guess at the real live string. **Whichever agent next has live search credentials should refetch this specific page's title and confirm which is the transcription artifact** — this is not a code defect, only an unresolved fact about a plate/log transcription.
+
+---
+
+### Round 28 — MANAGER verification of Agent C (cloud-hourly)
+
+**Date: 2026-08-15, 21:26–21:4x UTC. Every check re-executed by this session, nothing inherited from C's own write-up.** Claimed the turn lock (`free` → `cloud-hourly @ 2026-08-15 21:26 UTC`, commit `73082fd`) after `git pull` confirmed `HELD BY: free` and `git branch --show-current` read `feature/summary-report-revamp`, per §0d.
+
+**THE GATE, INDEPENDENTLY RE-RUN FROM A CLEAN INSTALL, NOT INHERITED.** `npm ci` hit the same `registry.npmmirror.com` 403 C documented; installed against a temporary copy with those `resolved:` URLs rewritten to `registry.npmjs.org`, then restored the tracked `package-lock.json` byte-identical before touching anything else (`git status --short package-lock.json` empty, confirmed before this entry was written). Under `TZ=America/Chicago` (matching C's own run, for the same `jobs/card.test.ts` reason): **`npx vitest run` → 97 files passed, 1 skipped (98), 2207 tests passed, 1 skipped (2208)** — exact match to C's claimed close-state count. `npx tsc --noEmit` → clean, zero output. `npx eslint src` → exactly the one standing `src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect` error, 0 warnings — unchanged, as claimed.
+
+**DIFFS RE-READ AGAINST THE LOG, NOT TAKEN ON FAITH.** `git show 12c9b23 --stat` and `git show b9f1d51 --stat` match the files and line counts item 1 and items 2+3 claim. `git diff 382e399..b9f1d51 -- '*.test.ts'` shows **zero removed `it(`/`test(`/`describe(` blocks across C's entire turn** — corroborates "no test deleted, no test loosened." Spot-checked the substance, not just the stat:
+- `jobweb.ts` carries `CONJOINED_SECTION_NOUN_RE` / `_TRAILING_RE` / `_MODIFIER_RE` / `_LABEL_RE`, `conjoinedSectionLabelHead()`, `isConjoinedSectionLabelTitle()`, and the one new `isListingPage` line, tagged `// B28-01 / A28-01` — matches item 1's description exactly.
+- `report-section.tsx` defines `REPORT_LABEL_STEP` and `REPORT_LABEL_CLASS = \`${REPORT_LABEL_STEP} text-text-faint\`` — value byte-identical to the pre-round-28 constant, as claimed.
+- All seven call sites C named are present with the exact forms claimed, including `timeline-track.tsx:201` now reading `` `block ${REPORT_LABEL_CLASS}` `` (template literal, not `cn()`) — the trap is actually closed, not just described as closed.
+- `grep -rn 5b4bbf src/` returns **only comments and one negative test assertion** (`.not.toContain("5b4bbf")`) — no rendered call site carries the fixed hex, matching V28-02's claim.
+
+**VERDICT: C's TURN IS ACCEPTED.** Every reproducible claim reproduced; no discrepancy found between the §4 write-up and the actual tree. This session found nothing C got wrong, which is itself worth recording plainly rather than manufacturing a finding to look independent.
+
+**THE ONE OPEN ITEM IS LEFT OPEN, NOT RULED ON HERE.** Raising `feed/pipeline.ts`'s hard-coded 8000 ms paper-surface timeout to 25000 ms is a live-behaviour trade-off (more tolerance for a slow grounded call vs. a slower honest-empty on a real user-facing surface) that this cloud run has no standing to decide unilaterally overnight with no one reviewing it — it is **carried forward for the user or the laptop session to rule on**, not resolved by invented authority. It does not block round 29.
+
+**THE GATE STAYS `GATE (0%): NOT MET`.** This entry closes manager verification, not the loop's gate (Ruling 30 — only the user-driven manager, after A's live re-measurement, closes that). `WHOSE TURN:` advances to **A — round 29's measurement pass**, which needs the live search credentials in `web/.local-data/profile.json` that this sandbox does not have (§0c) — the laptop session or `chatgpt-local` should pick it up. Turn lock released (`HELD BY: free`) in this entry's own commit.
