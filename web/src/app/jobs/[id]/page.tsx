@@ -36,6 +36,10 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
+import {
+  REPORT_LABEL_CLASS,
+  ReportSection as SharedReportSection,
+} from "@/components/reports/report-section";
 import { ReportFactTile } from "@/components/reports/fact-tile";
 import { ReportBadge } from "@/components/reports/report-badge";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
@@ -783,30 +787,25 @@ function FactTile({ fact }: { fact: JobFact }) {
   return <ReportFactTile fact={fact} attribute="data-job-fact" />;
 }
 
-function ReportSection({
-  title,
-  children,
-  className,
-  sectionKey,
-}: {
+/**
+ * V26-E01 / V26-J10 (round 26 C). The body of this component moved to
+ * `components/reports/report-section.tsx` — it was DEFINED TWICE, here and at
+ * `app/events/[id]/page.tsx`, so a heading-level prop added to one copy would
+ * have done nothing on the other surface. This thin wrapper keeps the job
+ * report's own `animate-fade-in-up` entrance and leaves every call site in this
+ * file untouched.
+ */
+function ReportSection(props: {
   title: string;
   children: ReactNode;
   className?: string;
   sectionKey?: string;
 }) {
   return (
-    <section
-      data-job-section={sectionKey}
-      className={cn(
-        "mt-12 animate-fade-in-up print:break-inside-avoid",
-        className,
-      )}
-    >
-      <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
-    </section>
+    <SharedReportSection
+      {...props}
+      className={cn("animate-fade-in-up", props.className)}
+    />
   );
 }
 
@@ -1157,7 +1156,13 @@ export function JobReport({
         <div className="mt-10 grid gap-8 md:grid-cols-2" data-role-and-materials>
           {roleBullets.length > 0 && (
             <section data-section="what-the-role-is">
-              <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
+              {/* V26-J10 (round 26 C). The plate has ONE label step; the build
+                  had two. These two headings used the smaller one
+                  (`text-micro` 10.5 px / 0.16em) while every other section
+                  label used `text-caption` 11.5 px / 0.18em. Unified onto the
+                  shared constant — the token itself is app-wide and its MEANING
+                  is not changed, only which token this call site uses. */}
+              <h2 className={REPORT_LABEL_CLASS}>
                 What the role is
               </h2>
               <ul className="mt-4 space-y-3">
@@ -1186,7 +1191,13 @@ export function JobReport({
               applyRows's own construction is unchanged. */}
           {materials.length > 0 && (
             <section data-section="to-apply-have-ready">
-              <h2 className="text-micro font-semibold uppercase tracking-[0.16em] text-text-faint">
+              {/* V26-J10 (round 26 C). The plate has ONE label step; the build
+                  had two. These two headings used the smaller one
+                  (`text-micro` 10.5 px / 0.16em) while every other section
+                  label used `text-caption` 11.5 px / 0.18em. Unified onto the
+                  shared constant — the token itself is app-wide and its MEANING
+                  is not changed, only which token this call site uses. */}
+              <h2 className={REPORT_LABEL_CLASS}>
                 To apply, have ready
               </h2>
               {/*
@@ -1202,7 +1213,8 @@ export function JobReport({
                   <div key={row.label} className="contents">
                     <dt
                       data-apply-row={row.label.toLowerCase()}
-                      className="pt-0.5 text-micro font-semibold uppercase tracking-[0.14em] text-text-faint"
+                      /* V26-J10 — the plate uses the same label step here. */
+                      className={`pt-0.5 ${REPORT_LABEL_CLASS}`}
                     >
                       {row.label}
                     </dt>

@@ -69458,3 +69458,157 @@ enums). `eslint src` exactly the one standing `quiz.tsx:46` error.
 
 **ITEM 2 COMPLETE — V26-J02 and V26-E02 both close. Item 3, the heading
 hierarchy INVERSION, follows.**
+
+### Round 26 — Agent C (item 3 of 15+: **THE HEADING HIERARCHY INVERSION — V26-E01 AND V26-J10 BOTH CLOSE, AS ONE HIERARCHY AND NOT FOUR PATCHES. `ReportSection` WAS DEFINED TWICE AND IS NOW DEFINED ONCE, WITH EVERY EXISTING CALL SITE'S OUTPUT UNCHANGED AND ALL 1925 PRIOR TESTS STILL GREEN. AND C HIT A SILENT CLASS-DROPPING TRAP THAT WOULD HAVE SHIPPED THE FIX LOOKING RIGHT AND BEING WRONG — `tailwind-merge` EATS `text-caption`. PROVEN, FIXED, DOCUMENTED AT THE CONSTANT, AND LOCKED BY A MUTATION.**)
+
+**STATUS: item 3, banked on its own commit.** Five files: the new
+`components/reports/report-section.tsx`, both report pages,
+`components/reports/fact-tile.tsx`, and the test file. **No test deleted, none
+edited** — 10 tests added to the existing plate file. No credential printed,
+logged or written; no scaffold in the repo.
+
+---
+
+## PLATE CITATION AND THE FINDING
+
+`Peer-design-spec-original.pdf`, **plate 03 = pp. 4–9**. B's three measured
+levels: **L1** `Georgia 21` `#2b180a` (the title); **L2** `Georgia 15.75`
+`#2b180a`, sentence case, serif — **`Who’ll be in the room`, the ONLY member on
+either plate**; **L3** `SegoeUI-Semibold 7.88`, letter-spaced uppercase
+`#9c8b78` — everything else, **including `Organisations` and `People`**.
+
+**A called it FLATTENED. B measured it as INVERTED, and B was right — the build
+had two sub-title levels assigned backwards.** The plate's largest sub-head
+rendered at the build's smallest step (11.5 px uppercase faint sans) and two of
+the plate's smallest labels rendered at the build's largest (17.5 px semibold
+dark). **A patch that only promoted the roster heading would have left
+`Organisations` shouting over its own parent**, which is exactly why B upgraded
+this from one line to a hierarchy.
+
+## WHAT SHIPPED
+
+**THE EXTRACTION FIRST, BECAUSE NOTHING ELSE WAS REACHABLE WITHOUT IT.**
+`ReportSection` was **defined twice** — once in each report page, as two
+independent copies — and `Who’ll be in the room` reaches its `<h2>` through the
+EVENT copy. A `level` prop on one copy would have silently done nothing on the
+other surface. It now lives at `components/reports/report-section.tsx` with
+`level?: "section" | "group"` **defaulting to `"section"`, so every existing
+call site keeps its exact current output**. The job page keeps a three-line
+local wrapper that adds its own `animate-fade-in-up` entrance, so **not one call
+site in either file changed.**
+
+| move | what |
+|---|---|
+| **PROMOTE** | `Who’ll be in the room` → L2: `font-display`, `text-[22px]`, `text-heading`, **no `uppercase`, no tracking** |
+| **DEMOTE ×2** | `Organisations`, `People` → the L3 label step; `<h3>` element and `ReportBadge` child both kept |
+| **UNIFY ×4 (V26-J10)** | `What the role is`, `To apply, have ready`, the fact-tile `<dt>` labels, the apply-row `<dt>` labels → the one label step |
+
+**THE L2 STEP IS 22 px, WHICH IS B's RECOMMENDATION, SHIPPED AS AN ARBITRARY
+VALUE AND NOT A NEW TOKEN.** B derived it two independent ways that agree within
+2% (`15.75/21 = 0.750` × 30 px ⇒ 22.5; `15.75/7.88 = 2.00` × 11.5 px ⇒ 23.0).
+`text-[22px]` is the same technique both report `<h1>`s already use, so **no
+token is added and no token's meaning changes** — which is also V26-J10's own
+constraint, since `text-caption`/`text-micro` are app-wide.
+
+**B's CORRECTION 2 HONOURED: NO 19.5 px STEP IS BUILT.** The two `Georgia 19.5`
+spans on plate 03 read `Event report` and `Events widen past conferences`, sit
+exactly on the plate boundaries, and are the DECK's own slide titles — the same
+class as Ruling 71a's route kicker. The component's doc comment records this so
+a later round does not build the step by mistake.
+
+**B-14's FIXED-HEADING CONTRACT HELD.** The heading STRING is untouched, curly
+apostrophe and all; **the sentence case comes from the ABSENCE of `uppercase`**,
+not from a re-cased literal. A test asserts the exact string survives.
+
+---
+
+## **THE TRAP THAT WOULD HAVE SHIPPED A FIX THAT LOOKED RIGHT AND WAS WRONG**
+
+Composing the label class with the codebase's own `cn()` helper **silently drops
+the font size.** `cn` is `twMerge(clsx(...))`, and `tailwind-merge` does not
+know `text-caption` is a size — it reads it as a text COLOUR, sees
+`text-text-faint` later in the same string, and discards `text-caption` as the
+loser of a conflict that does not exist. **Executed, not guessed:**
+
+```
+twMerge("text-caption font-semibold uppercase tracking-[0.18em] text-text-faint")
+  -> "font-semibold uppercase tracking-[0.18em] text-text-faint"
+```
+
+**C hit this on three call sites at once** (both demotions and the apply-row
+label) and caught it **only because a test asserted the size was present** — the
+rendered page would have looked plausible and been a step off the plate. All
+call sites now compose with a template literal; the constant carries the warning
+and the reproduction; and **mutation H8 below re-introduces the `cn()` form and
+goes red**, so the trap is locked rather than remembered. **The pre-existing
+build was never affected** — it wrote these as literal strings and never routed
+them through `cn`. The trap is new only to callers who reach for `cn` by habit,
+which is precisely what C did.
+
+---
+
+## THE NEGATIVE PROOFS — EIGHT MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **22 of 22 passing** in the plate file. Each applied alone, restored
+from byte-identical backups:
+
+| # | mutation | red |
+|---|---|---|
+| H1 | revert the PROMOTION (`level="group"` removed) | **3 failed** |
+| **H2** | **revert BOTH demotions (label constant back to the 17.5 px step)** | **6 failed** |
+| H3 | build L2 as a bigger LABEL — keep `uppercase` | **1 failed** |
+| H4 | build L2 sans instead of serif | **1 failed** |
+| **H5** | **put L2 back at the build's smallest step — the inversion restored** | **2 failed** |
+| H6 | V26-J10 revert: job section headings back to `text-micro` | **2 failed** |
+| H7 | V26-J10 revert: fact-tile label back to `text-micro` | **1 failed** |
+| **H8** | **the tailwind-merge trap: route the label class through `cn()`** | **1 failed** |
+
+**H3 and H4 matter most.** They prove the L2 step is a LEVEL and not just a
+bigger label: all four properties that separate it from L3 — serif, sentence
+case, no tracking, darkest colour — carry their own red. **H5 restores the
+inversion exactly** and the suite says so.
+
+## EMPTY / PARTIAL STATES, PER B's DESIGN
+
+- **L2 with no counter**: `subtitle` was already optional; the promoted row is a
+  wrapping baseline-aligned flex pair, so the heading renders alone with no
+  dangling separator and no empty child. **It WRAPS at narrow widths rather than
+  truncating** — a counter reading "5 of 34 exhibitors" is useless clipped.
+- **`Organisations` present, `People` absent**: both were already independently
+  gated and **the demotion changed no gate**. Asserted as a complete shape: one
+  demoted label under the L2 heading reads as one group in the room, and the
+  absent one renders nothing.
+- **Neither present**: the whole section is gated upstream, so the L2 heading
+  never renders alone.
+
+## THE EXTRACTION'S OWN RISK, DISCHARGED THE WAY B ASKED
+
+B named the extraction — not the styling — as the real risk, and asked for the
+suite **before and after** rather than only after. **Before: 1925 passing.
+Immediately after the extraction and before any test was added: 1925 passing,
+zero failures.** Every `data-*` hook, every element name and every section
+ordering assertion survived untouched.
+
+## STANDARD 7 — VALUE STABILITY
+
+A test asserts every roster value still renders on the same fixture: both
+organisation and person names, the descriptor line and the role line. **Zero
+rendered values changed.**
+
+## THREE FIXTURE CORRECTIONS, ALL C's OWN, ALL CAUGHT BY RENDERING
+
+The roster would not render until the fixture used the fields the shipped
+component actually reads: **a roster row becomes a CARD only when it carries a
+`relevance` string or is starred** (`organisationReason` → `concerns`), and
+`EventOrg` carries `descriptor`, not the invented `whatTheyDo`. **Three times in
+this item the fixture was wrong and the code was right** — B's lesson, earning
+its keep again.
+
+## GATE AFTER THE ITEM
+
+**95 files / 1935 tests, 1935 PASSING — ZERO FAILURES** (was 95 / 1925; **+10
+tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
+`quiz.tsx:46` error.
+
+**ITEM 3 COMPLETE — V26-E01 and V26-J10 both close. Four of the round's items
+are now landed (0, 1, 2, 3) and the visual baseline moves 15 → 12 remaining.**

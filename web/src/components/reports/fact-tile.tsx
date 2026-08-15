@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { REPORT_LABEL_CLASS } from "@/components/reports/report-section";
 
 /**
  * B-05 / B-06. The tile shape both reports' fact rows use: a label, a value,
@@ -36,9 +37,11 @@ export function ReportFactTile({
         fact.tone === "danger" && "border-red/25 bg-red/5",
       )}
     >
-      <dt className="text-micro font-semibold uppercase tracking-[0.14em] text-text-faint">
-        {fact.label}
-      </dt>
+      {/* V26-J10 (round 26 C). Plates 02 and 03 use the SAME
+          `SegoeUI-Semibold 7.88` label step for tile labels as for section
+          labels; the build used a second, smaller one here. Unified onto the
+          shared constant. One component, so this lands on BOTH surfaces. */}
+      <dt className={REPORT_LABEL_CLASS}>{fact.label}</dt>
       <dd
         className={cn(
           "mt-1 break-words text-body-sm font-semibold text-heading",

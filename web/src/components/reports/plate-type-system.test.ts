@@ -295,3 +295,188 @@ describe("value stability across the type-system change", () => {
     }
   });
 });
+
+/**
+ * **V26-E01 — THE HEADING HIERARCHY INVERSION.** (Plate 03 = pp. 4–9.)
+ *
+ * A reported the hierarchy as FLATTENED. B measured it as **INVERTED**, which is
+ * worse and changes the fix from one patch to two moves:
+ *
+ * | plate level | plate treatment | member | build BEFORE |
+ * |---|---|---|---|
+ * | L2 | `Georgia 15.75` `#2b180a`, sentence case | the roster heading — the plates' ONLY L2 | the SMALLEST step, 11.5 px uppercase faint sans |
+ * | L3 | `SegoeUI-Semibold 7.88`, letter-spaced upper, `#9c8b78` | `Organisations`, `People` | the LARGEST sub-head, 17.5 px semibold dark |
+ *
+ * So the plate's largest sub-head rendered at the build's smallest step and two
+ * of its smallest labels at the build's largest. **Promoting one without
+ * demoting the others leaves `Organisations` shouting over its own parent**,
+ * which is why both moves are asserted together.
+ */
+describe("V26-E01 — the heading hierarchy is un-inverted", () => {
+  const ROSTER_HEADING = "Who’ll be in the room";
+
+  const rosterEvent = () =>
+    plateEvent({
+      organisations: [
+        {
+          name: "Toyota Research Institute",
+          descriptor: "Solid-state cell research.",
+          relevance: "Runs the interfaces programme you cite.",
+        },
+      ],
+      people: [
+        {
+          name: "Dr Ada Okafor",
+          role: "Principal Scientist",
+          relevance: "Published the operando imaging method you use.",
+        },
+      ],
+    } as Partial<Event>);
+
+  it("PROMOTES the roster heading to the plate's L2 serif sub-head", () => {
+    const classes = classesOfTagContaining(
+      renderEvent(rosterEvent()),
+      "h2",
+      ROSTER_HEADING,
+    );
+    // all four properties that make it a LEVEL rather than a bigger label
+    expect(classes).toContain("font-display"); // serif, not sans
+    expect(classes).not.toContain("uppercase"); // sentence case
+    expect(classes).not.toContain("tracking-["); // no letter-spacing
+    expect(classes).toContain("text-heading"); // the plate's darkest text
+    expect(classes).toContain("text-[22px]");
+  });
+
+  it("keeps the heading STRING untouched — the sentence case comes from CSS, not a re-cased literal", () => {
+    // B-14's fixed-heading contract. Plate 03's wording, curly apostrophe and
+    // all. A string edit here is what that contract forbids.
+    expect(renderEvent(rosterEvent())).toContain(ROSTER_HEADING);
+  });
+
+  it("DEMOTES 'Organisations' and 'People' to the plate's L3 label step", () => {
+    const html = renderEvent(rosterEvent());
+    for (const label of ["Organisations", "People"]) {
+      const classes = classesOfTagContaining(html, "h3", label);
+      expect(classes).toContain("uppercase");
+      expect(classes).toContain("tracking-[0.18em]");
+      expect(classes).toContain("text-text-faint");
+      // the build's largest sub-head step must be gone from these two
+      expect(classes).not.toContain("text-title");
+    }
+  });
+
+  it("keeps the L2 heading strictly larger than the L3 labels beneath it", () => {
+    // The inversion in one assertion: whatever the steps are, the parent must
+    // not be the smaller of the two.
+    const html = renderEvent(rosterEvent());
+    const parent = classesOfTagContaining(html, "h2", ROSTER_HEADING);
+    const child = classesOfTagContaining(html, "h3", "Organisations");
+    expect(parent).toContain("text-[22px]");
+    expect(child).toContain("text-caption");
+    expect(parent).not.toContain("text-caption");
+  });
+
+  it("leaves every other section heading at L3, so only ONE heading is promoted", () => {
+    const html = renderEvent(rosterEvent()) + renderJob();
+    const promoted = [...html.matchAll(/data-report-heading-level="group"/g)];
+    expect(promoted).toHaveLength(1);
+  });
+
+  it("accepts one demoted label under the L2 heading as a complete shape", () => {
+    // `Organisations` present, `People` absent — both are independently gated
+    // and the demotion changed no gate.
+    const html = renderEvent(
+      plateEvent({
+        organisations: [
+          {
+            name: "Toyota Research Institute",
+            descriptor: "Solid-state cell research.",
+            relevance: "Runs the interfaces programme you cite.",
+          },
+        ],
+      } as Partial<Event>),
+    );
+    expect(html).toContain("Organisations");
+    expect(classesOfTagContaining(html, "h3", "Organisations")).toContain(
+      "uppercase",
+    );
+    expect(html).not.toContain("People</h3>");
+  });
+});
+
+/**
+ * **V26-J10 — THE PLATE HAS ONE LABEL STEP; THE BUILD HAD TWO.** Rows 14, 15,
+ * 17 and 18 of B's heading table: the `What the role is` and `To apply, have
+ * ready` headings, the fact-tile labels and the apply-row labels all used
+ * `text-micro` 10.5 px at `0.14–0.16em` while every other section label used
+ * `text-caption` 11.5 px at `0.18em`. The plate uses the same
+ * `SegoeUI-Semibold 7.88` for all of them.
+ *
+ * **FIXED BY CHANGING WHICH TOKEN THE CALL SITES USE, NEVER WHAT THE TOKENS
+ * MEAN** — `text-caption` and `text-micro` are used across the whole app.
+ */
+describe("V26-J10 — one label step, not two", () => {
+  it("puts the job report's section headings on the single label step", () => {
+    const html = renderJob();
+    for (const label of [
+      "What the role is",
+      "Skills they ask for",
+      "Why Peer sent this to you",
+    ]) {
+      const classes = classesOfTagContaining(html, "h2", label);
+      expect(classes).toContain("text-caption");
+      expect(classes).toContain("tracking-[0.18em]");
+      expect(classes).not.toContain("text-micro");
+    }
+  });
+
+  it("puts the fact-tile labels on the same step — one component, BOTH surfaces", () => {
+    const classes = classesOfTagContaining(renderJob(), "dt", "Type");
+    expect(classes).toContain("text-caption");
+    expect(classes).toContain("tracking-[0.18em]");
+    expect(classes).not.toContain("text-micro");
+  });
+
+  it("leaves no second label step on any section heading of either report", () => {
+    const html = renderJob() + renderEvent();
+    const sectionHeadings = [...html.matchAll(/<h2\b[^>]*class="([^"]*)"/g)].map(
+      (m) => m[1],
+    );
+    expect(sectionHeadings.length).toBeGreaterThan(0);
+    for (const classes of sectionHeadings) {
+      expect(classes).not.toContain("text-micro");
+    }
+  });
+});
+
+/** Standard 7 again — the hierarchy move must not touch a rendered value. */
+describe("value stability across the heading hierarchy change", () => {
+  it("still renders every roster value", () => {
+    const html = renderEvent(
+      plateEvent({
+        organisations: [
+          {
+            name: "Toyota Research Institute",
+            descriptor: "Solid-state cell research.",
+            relevance: "Runs the interfaces programme you cite.",
+          },
+        ],
+        people: [
+          {
+            name: "Dr Ada Okafor",
+            role: "Principal Scientist",
+            relevance: "Published the operando imaging method you use.",
+          },
+        ],
+      } as Partial<Event>),
+    );
+    for (const value of [
+      "Toyota Research Institute",
+      "Solid-state cell research.",
+      "Dr Ada Okafor",
+      "Principal Scientist",
+    ]) {
+      expect(html).toContain(value);
+    }
+  });
+});

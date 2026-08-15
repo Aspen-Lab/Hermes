@@ -56,6 +56,10 @@ import {
 } from "@/components/reports/tier-upgrade-block";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import {
+  REPORT_LABEL_CLASS,
+  ReportSection as SharedReportSection,
+} from "@/components/reports/report-section";
+import {
   ReportFactTile,
   type ReportFact,
 } from "@/components/reports/fact-tile";
@@ -985,32 +989,13 @@ function EventActionRow({
   );
 }
 
-function ReportSection({
-  title,
-  subtitle,
-  children,
-  className,
-}: {
-  title: string;
-  subtitle?: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("mt-12 print:break-inside-avoid", className)}>
-      <h2 className="text-caption font-semibold uppercase tracking-[0.18em] text-text-faint">
-        {title}
-      </h2>
-      {/* B-14. Plate 03's roster carries a sub-line under its heading. */}
-      {subtitle && (
-        <p data-section-subtitle className="mt-1.5 text-body-sm text-text-muted">
-          {subtitle}
-        </p>
-      )}
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
+// V26-E01 / V26-J10 (round 26 C). This component's body moved to
+// `components/reports/report-section.tsx`; it was defined identically here and
+// on the job report, and `Who’ll be in the room` reaches its `<h2>` through
+// THIS copy — so the heading level had to live in one place to be reachable
+// from both surfaces. Re-exported under the local name so every call site in
+// this file is unchanged.
+const ReportSection = SharedReportSection;
 
 function CheapestCallout({ cheapest }: { cheapest: CheapestWay }) {
   return (
@@ -1529,6 +1514,12 @@ function RosterSection({
     <ReportSection
       // B-14. Fixed heading from plate 03.
       title="Who’ll be in the room"
+      // V26-E01 (round 26 C). THE PROMOTION. Plate 03 sets this heading — and
+      // only this heading, on either plate — in `Georgia 15.75` `#2b180a`,
+      // sentence case: the deck's one L2 sub-head. It rendered here at the
+      // build's SMALLEST step, 11.5 px uppercase faint sans. The string is not
+      // touched; the sentence case comes from dropping `uppercase`.
+      level="group"
       subtitle={`${counts.join(" and ")} concern you`}
       className="mt-14"
     >
@@ -1536,7 +1527,17 @@ function RosterSection({
         {organisations.length > 0 && (
           <div>
             {organisationCards.length > 0 && (
-              <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
+              // V26-E01 (round 26 C). THE DEMOTION. Plate 03 sets
+              // `Organisations` at exactly the LABEL size — the same
+              // `SegoeUI-Semibold 7.88` as every section label — while the
+              // build rendered it at 17.5 px semibold dark, its largest
+              // sub-head step. Promoting `Who’ll be in the room` without this
+              // would have left `Organisations` shouting over its own parent.
+              // The `<h3>` element and the `ReportBadge` child both stay: the
+              // badge sits on this line in the plate too.
+              <h3
+                className={`flex flex-wrap items-center gap-2 ${REPORT_LABEL_CLASS}`}
+              >
                 Organisations
                 {organisationsAllTier0 && (
                   <ReportBadge tone="accent">Tier 0</ReportBadge>
@@ -1612,7 +1613,11 @@ function RosterSection({
         {people.length > 0 && (
           <div>
             {peopleCards.length > 0 && (
-              <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
+              // V26-E01 (round 26 C). THE SECOND DEMOTION — same plate
+              // measurement, same reasoning as `Organisations` above.
+              <h3
+                className={`flex flex-wrap items-center gap-2 ${REPORT_LABEL_CLASS}`}
+              >
                 People
                 {peopleAllTier0 && <ReportBadge tone="accent">Tier 0</ReportBadge>}
               </h3>
