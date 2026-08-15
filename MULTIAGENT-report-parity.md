@@ -270,11 +270,110 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 10:57 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 12:05 UTC — ROUND 27 C IS
+                  COMPLETE. ALL SEVEN ITEMS DONE, NONE UNSTARTED, ONE COMMIT
+                  EACH, EACH PUSHED THE MOMENT IT WAS MADE** (`e38f122`,
+                  `b07e0a6`, `ffef168`, `9d1a573`, `b94fb34` (the pool
+                  re-measurement), `50fa7a2`, `44f4387`, `e87f07b`, plus the lock
+                  claim `1a58fa9` and this close-out). Claimed the lock after
+                  `git pull` and after confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`5cb066a..1a58fa9`), so the race was won rather than
+                  assumed.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **THE COLD BASELINE WAS CONFIRMED BEFORE THE FIRST EDIT AND C
+                  DID NOT READ ITS GREEN AS A FIX.** 97 files / 2005 tests, 2005
+                  passing; `tsc` clean; `eslint` the one standing `quiz.tsx:46`
+                  error. C reproduced B's warning on the shipped code —
+                  `sanitizePlace({ city: "Atlanta GA" })` returned the fused
+                  string unchanged — and that reproduction is item 1's first
+                  mutation.
+
+                  **THE GATE AT CLOSE: `npx vitest run` 97 files / 2066 tests,
+                  2066 PASSING — ZERO failures, INCLUDING `benchmark.test.ts`.**
+                  `tsc --noEmit` clean; `eslint src` **exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error, 0 warnings.**
+                  **+61 tests, ZERO test deletions, ZERO test loosenings, and
+                  exactly ONE existing test's COMMENT restated** (the event
+                  no-italic lock, restated to name Ruling 73 — its assertion is
+                  byte-unchanged). `enrich.test.ts` SOLO **56 of 56** after every
+                  place-, scoring- and event-side change; `benchmark.test.ts`
+                  (SolarPACES) SOLO **1 of 1**;
+                  `job-details.test.ts` **29 of 29**;
+                  `plate-type-system.test.ts` **79 of 79**.
+
+                  **THE POOL RE-MEASUREMENT IS THE TURN'S STRONGEST RESULT, AND
+                  IT WAS TAKEN DETERMINISTICALLY RATHER THAN AS TWO CONFOUNDED
+                  LIVE PULLS.** One live pull captured **234 unique offered
+                  rows**; the SAME rows were then replayed through the admission
+                  functions **reverted** and **restored**, and the restored pass
+                  reproduced its first figure exactly. **EVENTS 54 -> 47: seven
+                  rows leave, ZERO join. JOBS 45 -> 46: one row joins, ZERO
+                  leave.** **ALL SIX of A27-01's and A27-03's NAMED rows were
+                  offered this window and ALL SIX left**; the seventh departure
+                  (`exchangeetf.com`) was checked clause by clause and is a
+                  FOURTH instance of A27-03's own class, not an unspanned shape.
+                  **The one joiner is the LANL vacancy — A27-02's own row —
+                  so Ruling 48b's JOB wrongly-dropped column is measured back to
+                  ZERO on a live window rather than argued to it.**
+
+                  **AND THE MEASUREMENT SETTLES B's FLAGGED DISCREPANCY IN A's
+                  FAVOUR.** `behavioralpolicy.org` was offered again, is ADMITTED
+                  before and DROPPED after, and its URL slug rules item 3 out —
+                  so A's recorded outcome was right and what was incomplete was
+                  the single-token reconstruction B had to work from.
+
+                  **FIVE VACUOUS ASSERTIONS OF C's OWN WERE CAUGHT BY MUTATION
+                  AND ALL FIVE ARE DISCLOSED**: item 2's empty-run test (green
+                  under its own mutation — a sibling limb masked it end to end);
+                  item 4's CLASS fixture (dropped by the SHIPPED past-anchor
+                  check, not by the new clause) and two of its control fixtures
+                  (one failed `looksLikeEvent`, one had a single date cluster);
+                  and **item 5's byte-identity test, which is B's own design and
+                  is NOT uniquely red for the component's gate** — the event call
+                  site passes no `matchedTerms`, so swapping the gate to the data
+                  left it green. **All five were rebuilt or joined by a second,
+                  uniquely-red assertion; nothing was deleted.**
+
+                  **TWO DEVIATIONS FROM B, BOTH TRACED BEFORE THEY WERE TAKEN:**
+                  item 1's case-sensitivity lives in the PATTERN and the separate
+                  `code === code.toUpperCase()` re-check is absent because it is
+                  unreachable; item 3 takes the title head with the SHIPPED
+                  `titleSegments` splitter plus a colon cut rather than a new
+                  rule. **ONE CORRECTION TO B's ARITHMETIC:** item 2's token cap
+                  is **SEVEN**, not six — one leading token plus `{0,6}` — found
+                  by C's own test going red.
+
+                  **THREE ADMITTED CONTROLS NAMED RATHER THAN COUNTED AS PROOF:**
+                  item 1's 454-city gazetteer sweep (a boundary, green both ways
+                  by design — mutation 1 is the witness); item 2's `999 Battery
+                  Openings` (not a witness for optionality); item 3's
+                  `careers?`-in-signal-2 clause (no uniquely-red case in this
+                  corpus, kept for B's stated reason).
+
+                  **No credential printed, logged, committed or written
+                  anywhere.** `profile.json` was read for the search key, which
+                  was assigned into `process.env` and **never displayed — only
+                  its BOOLEAN presence was**; **`.env.local` was NEVER `cat`-ed.**
+                  Every probe lived OUTSIDE `web/src/` (`web/zz-r27c/`, own
+                  vitest config rooted at `web/`, `*.probe.ts` include) and was
+                  **deleted before every commit**, with
+                  `git status --porcelain --untracked-files=all` verified clean
+                  each time; the captured provider rows were written to the OS
+                  temp scratchpad, never into the repository.
+
+                  **THE GATE STAYS `GATE (0%): NOT MET` — C cannot move it and
+                  does not (Ruling 30).** **Turn lock released
+                  (`HELD BY: free`) in this entry's own commit.**
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 10:52 UTC — ROUND 27 B IS
                   COMPLETE. ALL SEVEN ITEMS DONE, NONE UNSTARTED, ONE COMMIT
                   EACH, EACH PUSHED THE MOMENT IT WAS MADE** (`ddc159a`,
@@ -5435,6 +5534,94 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **A — round 28, GATE CANDIDATE ROUND (value + visual).**
+                  Round 27 C is COMPLETE: **SEVEN §4 ENTRIES, SEVEN ITEMS, ONE
+                  COMMIT EACH, EACH PUSHED IMMEDIATELY** (`e38f122`, `b07e0a6`,
+                  `ffef168`, `9d1a573`, `b94fb34`, `50fa7a2`, `44f4387`,
+                  `e87f07b`). Claim the §0d lock first, always.
+
+                  **THE BASELINE A MUST CONFIRM COLD: `npx vitest run` 97 files /
+                  2066 tests, 2066 PASSING - ZERO failures, INCLUDING
+                  `benchmark.test.ts`.** `tsc --noEmit` clean; `eslint src`
+                  exactly the one standing `src/components/persona/quiz.tsx:46`
+                  error and **0 warnings**; `enrich.test.ts` solo **56 of 56**;
+                  `benchmark.test.ts` solo **1 of 1**. **+61 tests over round 27,
+                  ZERO deletions, ZERO loosenings, one COMMENT restated.**
+
+                  ---
+                  **THE CARRY LIST - EVERY LANDED ITEM'S EXPECTED EFFECT WITH ITS
+                  FALSIFIER. READ EACH AS INTENDED, NOT AS CHURN.**
+
+                  | item | expected effect | **falsifier** |
+                  |---|---|---|
+                  | **1 - A27-04** | a fused `Atlanta GA` splits to `Atlanta` + `GA`; `thebatteryshowsouth.com`'s ROOT url, when next offered, renders `Atlanta`, and `formatOpportunityPlace` prints `Atlanta, GA, United States` | **that row coming back reading `Atlanta GA`** - or ANY gazetteer city, in either casing, arriving damaged. **NOT witnessed live this round: the host was not offered, so this is an ABSENCE and C did not bank it.** The proof is the unit mutation |
+                  | **2 - A27-02** | the LANL vacancy and the Sandia shape ENTER the pool when offered, subject to top-N; **48b's JOB wrongly-dropped column 1 -> 0**; the rendered title KEEPS its grade (`... Technologist 1`) | any B13-02 count form surviving; `1,200 - Engineering Jobs` on an aggregator surviving; or the LANL row dropped again when offered. **WITNESSED: it joined the pool in C's own re-measurement** |
+                  | **3 - A27-01** | `volta.foundation/event`, `annexushealth.com/conferences` and `iongroup.com/careers` LEAVE at admission; **one fewer card, never a different value** | `All Solid State Battery Workshop`, `Co-located Workshops` + chrome, `DLR Events` at its workshop slug, or a single-event site at a bare `/conference` disappearing. **WITNESSED: all three left** |
+                  | **4 - A27-03** | a page whose EVERY extracted reading is past inside the current year LEAVES; **`startDate` stays `""` on every surviving row and NO date is published anywhere** | any surviving row gaining a date it did not have; A's `Battery Saloon` shape (one past cluster + one future) disappearing; or a genuinely undated page disappearing. **WITNESSED: four rows left, including all three A named** |
+                  | **5 - V27-01** | the JOB report's `Why Peer sent this` prose italicises exactly its matched terms, slant only, same size and colour; **plate 03 is byte-identical to before** | any `<em>` on the EVENT report; an `<em>` carrying a `text-*` or `font-*` class; or the prose's WORDS changing |
+                  | **6 - V27-02** | the visa attribution runs INLINE at the quote's own size and colour | `block`/`text-caption`/`text-text-faint`/`mt-1` returning; `not-italic` disappearing; the attribution rendering hard against the closing quote with no space; or an attribution rendering with no quote |
+                  | **7 - V26-J06** | plate 02's apply column renders **4 of 4 rows**: MATERIALS, ELIGIBILITY, TEAM, SEEN ON, each hiding when absent | an `ELIGIBILITY` row built from `keyRequirements`; a `TEAM` row reading the employer name; a truncated clause; **or a headcount appearing** |
+
+                  **RULING 74's NAMED COST ENTERS A's ACCEPTED-COST TALLY.** Plate
+                  02's `TEAM` reads `Energy & Materials, 14 researchers`; Peer
+                  renders `Energy & Materials`. **The headcount's honest absence
+                  is an ACCEPTED, NAMED COST, not an open difference** - count it
+                  as a cost, never as a defect, and **do not close it by
+                  inventing the number.** Ruling 74 re-examines it at Phase 2.
+                  **It has four source comments and two tests behind it.**
+
+                  **EXPECT MOST `TEAM` ROWS TO BE SILENT.** `employmentUnit` is
+                  rarely populated in the wild and no hit rate has been measured.
+                  A silent row is the design working, not a miss.
+
+                  ---
+                  **STANDING ITEMS A MUST CARRY, BY NAME:**
+                  **Ruling 48b - events `149 / 51 kept / 98 dropped / 0 WRONGLY
+                  DROPPED`; jobs, with item 2 landed, the wrongly-dropped column
+                  should now measure `0` (the LANL row is A27-02's own, and it
+                  entered the pool in C's re-measurement) plus
+                  `stemgateway.nasa.gov` NAMED AND NOT COUNTED, sixth round.**
+                  **62d(b) + 63a's trigger IS NOW REACHABLE** - §1's recorded
+                  reason ("the tail that would fire the trigger is the same tail
+                  that gets it dropped") **stopped being true when item 2
+                  landed**; A should expect the LANL row to render an HONEST
+                  SILENT employer, which is 62d(a)'s correct behaviour, not a new
+                  defect. **The 62b fuse - ZERO and VACUOUS, LOADED and UNTESTED,
+                  FIFTH A round, NOT banked; item 4 publishes nothing, so the
+                  invented-date column stays ZERO BY CONSTRUCTION.** **Ruling
+                  55c's online must-keep debt - ELEVENTH round undischarged: C's
+                  own 13-row event pool carried ZERO `Online` rows.** **Ruling
+                  57b - event surface `designed, organically unwitnessed`, NINTH
+                  round.** **A22-04 at STRIKE ONE.** **62d(a) CORRECT for a FIFTH
+                  round; 34a `careerservices.upenn.edu` PRESENT and SILENT, SIXTH
+                  round.** **Rulings 37, 44, 33 and B18-03 all ZERO. A25-01
+                  CLOSED.** **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE.**
+                  **Ruling 71a's struck route kicker confirmed ABSENT.**
+                  **A22-01 and `eventNameFrom`'s URL-host last resort are both
+                  FLAGGED, NOT REVERSED** - recorded designs, untouched by C.
+                  **THRESHOLDS UNCHANGED:** `OPPORTUNITY_MIN_SCORE` 0.35, both
+                  `MIN_SCORE` 0.35, `MAX_POSTING_AGE_DAYS` 270,
+                  `MAX_ENRICHMENT_CANDIDATES` 40, `MAX_OPPORTUNITY_POOL_ITEMS` 200,
+                  `EVENT_QUERY_BUDGET` 16, `RESULTS_PER_SEARCH` 10.
+
+                  **TWO NEW RESIDUALS C NAMES SO ROUND 28 DOES NOT REDISCOVER
+                  THEM AS NEW:** (a) item 2's residual 1 - a separator-led count
+                  on a NON-aggregator host (`1,200 - Engineering Jobs` at
+                  `example.test/jobs`) is now ADMITTED; CONSTRUCTED, never
+                  sighted, and the pipe form was already admitted before this
+                  round; (b) item 7's `TEAM_LABEL_PATTERN` vocabulary is the
+                  looser of the two - a page printing `User group: ...` would
+                  read as a team name. No false fire across 2 066 tests, but
+                  watch it.
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.**
+                  Phase 1's bar is **VALUE parity AND VISUAL parity** (Rulings 66b
+                  and 69). **Only a later A census can move it, and only the
+                  MANAGER closes, after an independent re-measurement** (Ruling 30).
+                  **NEITHER B NOR C CAN CLOSE OR MOVE THIS LINE.**
+
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **C — round 27.** Round 27 B is COMPLETE: **SEVEN §4 ENTRIES,
                   SEVEN ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`ddc159a`, `6f33c7b`, `f36f37a`, `49b07f5`, `ba7f672`,
