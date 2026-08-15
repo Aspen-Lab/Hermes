@@ -64886,3 +64886,19 @@ standing `src/components/persona/quiz.tsx:46` error, 0 warnings.**
 
 **THE FLAKE CLASS IS RETIRED: after this item the benchmark passes on any honest
 pool, including one containing neither flagship row.**
+
+---
+
+### USER DIRECTIVE — RULING 69. THE TWO-PHASE PLAN AND THE MEASUREMENT-PROFILE ANSWER. BINDING.
+
+**Date: 2026-08-15. Source: the user, directly, in the manager session. USER RULED — no agent re-scopes it. (Pushed mid-turn per the §0d late-ruling precedent; round 25 C's banked items are unaffected.)**
+
+**The goal is BOTH tiers at their best: Tier 0 AND Tier 1/2 each polished to done.** Sequencing, as the user ordered it:
+
+**PHASE 1 (current, unchanged): finish Tier 0 under this loop.** The census keeps measuring the NO-LLM path exactly as every round so far has (measurement profile: `feedAiApiKey` empty; the 66a blast-radius fields stay out of scope). Phase 1's bar is the standing gate — zero VALUE differences on both surfaces PLUS the VISUAL census (66b) at zero against `Peer-design-spec-original.pdf` — closed only by the manager after independent re-measurement. **This answers 66a's open measurement-profile question: the profile does NOT change before the Tier-0 gate closes.**
+
+**PHASE 2 (after Phase 1 closes): the Tier 1/2 DEEP REPORT campaign — a fresh ABC cycle on the same machinery.** Scope: the LLM-path deep report (B's round-25 item 1 catalogue: eleven fields — seven LLM-only sections, four provenance changes — plus whatever its first A census finds), measured against the SAME design template, with value rigor AND visual rigor. **Measurement channel: the user's Vercel Gemini hookup** — already PROVEN LIVE this round (`POST /api/jobs/report` → `noLlm:false` through the local Vertex Gemini path). **Phase 2's kickoff checklist, owed by the manager before its first A turn:** (1) a smoke check that the Gemini path produces every catalogued LLM section on a real row (the "落实" step — the link confirmed as the standing measurement channel, by boolean/behavioral checks only, never printing a credential); (2) a phase-2 measurement-profile line written into §1 (key engaged, which tier, which provider) so every census states its path; (3) the phase-2 baseline census (its round 1 A) establishes the ranked list the campaign works down, exactly as this loop's round 1 did.
+
+**Standing consequences:** round-end reports state progress per phase; rounds-remaining estimates name Phase 1 and Phase 2 separately; nothing in Phase 2 starts before Phase 1's gate closes unless the user re-orders it.
+
+---
