@@ -270,11 +270,161 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 05:43 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:14 UTC — ROUND 26 A IS
+                  COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`b40211d`, `a094194`, `20714c5`, plus this final
+                  commit). Claimed the lock cleanly (`36ca09f`) after `git pull`
+                  (already up to date) and confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`e85badc..36ca09f`), so the race was won rather than
+                  assumed.** **A CHANGED NO CODE, DELETED NO TEST, EDITED NO
+                  TEST AND ADDED NO TEST** — `git log 20714c5..HEAD -- web/src/`
+                  and the whole round's log over `web/` are **EMPTY**; every
+                  commit touches `MULTIAGENT-report-parity.md` and nothing else,
+                  verified by `--numstat` as pure insertions (307/0, 285/0,
+                  221/0, 327/0). No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  credential printed, logged, committed or written anywhere —
+                  `.env.local` was NEVER `cat`-ed; `profile.json` was read for
+                  BOOLEAN PRESENCE ONLY.** Throwaway harness lived OUTSIDE `src/`
+                  (`web/zz-r26a/`, own vitest config rooted at `web/`,
+                  `*.probe.ts` include pattern) and was **deleted before every
+                  commit and before the gate re-run**; `git status --porcelain
+                  --untracked-files=all` verified clean each time. **No untracked
+                  `*.test.ts` was ever created under `web/src/`.**
+
+                  **THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT AND
+                  RE-CONFIRMED AFTER THE HARNESS WAS DELETED: 93 files / 1894
+                  tests, 1894 PASSING — ZERO FAILURES**, exactly §1's figure.
+                  `tsc` **clean**; `eslint src` **exactly the one standing
+                  `quiz.tsx:46` error, 0 warnings**; **`enrich.test.ts`
+                  (`src/lib/opportunities/enrich.test.ts`) SOLO: 56 of 56.**
+                  Ruling 68d's "1876 OR 1877" language is superseded and A did
+                  not invoke it.
+
+                  **A DISCLOSED A DEFECT IN ITS OWN 48b INSTRUMENT BEFORE
+                  QUOTING A DROP FIGURE AND RE-RAN ALL FIVE PULLS RATHER THAN
+                  CAVEATING THE NUMBER.** The first window stored each offered
+                  row's snippet CLIPPED TO 400 CHARACTERS and judged admission on
+                  the clipped text; the shipped predicates read the whole
+                  snippet. Caught by self-check — **two rows provably IN THE POOL
+                  came back `dropped`** — plus two verdicts flipping. Fixed and
+                  re-run: **zero flips, zero pool-row disagreements.** **Every
+                  48b figure comes from the corrected window only.** The row
+                  columns were unaffected, so **A has TWO independent live
+                  windows and reports both.**
+
+                  **THE EVENT SURFACE MEASURES ZERO VALUE DIFFERENCES for a
+                  SECOND consecutive round** — names 0/12, item-kind 0/12, place
+                  0/12 (0 of 4 non-null, zero correct venues lost), invented
+                  dates 0/12 scored on card AND plate-03 tile AND feed
+                  tile/quick-hit/hero. 12 rows in 5 of 5 in **both** windows,
+                  **zero membership variance, zero value variance, zero drift
+                  between windows.**
+
+                  **A25-01 IS ORGANICALLY CONFIRMED — the witness §1 asked A to
+                  watch for arrived.** `lensa.com` came back in window B:
+                  `jobweb`, **raw `isRemote: true`**, an **Albuquerque** Kairos
+                  Power internship — the same host and the same shape as the
+                  original defect. Its rendered *"Why Peer sent this to you"*
+                  reads `Matches your molten salt focus and fits a PhD Year 3
+                  profile.` — **no `remote-friendly`** — and the report agrees
+                  with itself (`isRemote: false`, no `Remote` chip). 4 of 5
+                  pulls; **the one absence is disclosed as a minority row by
+                  name.** **Falsifier (i) had NO MATERIAL** (every pool row on
+                  both windows is `jobweb`) — unfalsified, not vindicated.
+                  **Falsifier (ii) IS NOT MEASURABLE BY A's LIVE INSTRUMENT and
+                  A refuses the false alarm:** with identical membership and
+                  every other column byte-identical, `relevanceScore` still moves
+                  across pulls (4 of 12 events; 1 of 12 then 10 of 10 jobs), so
+                  the noise floor is non-zero with nothing changed. **No future
+                  round should read a live score move as that falsifier firing.**
+
+                  **TWO RANKED VALUE DIFFERENCES.** **A26-01 — `ev.careers`
+                  states the employer TWICE, adjacent:** the title renders
+                  `Internship, Battery Engineering (Summer 2026) at Tesla` and
+                  the subtitle immediately beneath renders `Tesla`. The build
+                  already strips the ` - EV.Careers` brand tail and already reads
+                  `Tesla` out of that same ` at Tesla` clause for the employer
+                  field, then leaves the clause in the title — **and strips the
+                  identical shape on `magnet.me` and both `linkedin.com` rows in
+                  the same pull.** 5 of 5, both windows. **This is the TITLE
+                  column, not 62d(a)'s employer question, which is CORRECT for a
+                  third round.** **A26-02 — the 48b wrongly-dropped column is
+                  NON-ZERO FOR THE FIRST TIME IN THIS LOOP'S HISTORY:** six
+                  named, dated, on-topic events refused at ingestion 5 of 5 —
+                  `cambridgeenertech.com/solid-state-batteries` (`Solid-State
+                  Battery Summit | August 11-12, 2026`), `pyro.byu.edu/moses`,
+                  `rsc.org/…/euchemsil-2026`, `ans.org/…/event-1993` (a dated,
+                  priced, capacity-limited tour), `nac.naatbatt.org`, `imlb.org`
+                  — **while eight of the twelve rows that DID reach the pool
+                  carry no date at all.** **A DISCLOSES that round 25 A scored
+                  the SAME 149-row corpus at zero**, states it has no evidence
+                  the build changed, ranks the item anyway because the rows are
+                  unambiguous, and files the standard itself as `POLICY`.
+
+                  **THE FIRST VISUAL / LAYOUT CENSUS (RULING 66b) IS DONE, AND
+                  THE BASELINE IS 20 ITEMS — 11 on plate 02, 9 on plate 03.**
+                  **Plates located and CITED so no later round re-hunts:
+                  plate 02 = PDF pp. 2 (y≥378.9) – 4 (y<400.6); plate 03 = PDF
+                  pp. 4 (y≥400.6) – 9 (y<588.9); the deck is 20 pages and A read
+                  all 20.** The type system was measured, not eyeballed — every
+                  size, weight, family and hex taken from the PDF's own text
+                  spans. Both reports rendered through the SHIPPED components to
+                  static markup on Ruling 69's fixed no-LLM profile, against
+                  **PLATE-SHAPED FIXTURES** (so a missing section cannot be
+                  confounded with an empty field) **and** the round's real live
+                  rows.
+
+                  **THE LARGEST SINGLE FINDING: NEITHER REPORT USES THE SERIF
+                  FAMILY ANYWHERE.** `grep font-display|font-reading|font-serif`
+                  over both report pages returns **NOTHING**, while the plates
+                  set **five** elements in it — both titles, both *"Why Peer sent
+                  this"* prose blocks, the job's role bullets, the visa quote,
+                  and plate 03's `Who'll be in the room`. **The build ships the
+                  family, loads it, and its own `globals.css` says prose "opts
+                  INTO serif" — the reports never opt in.** **Runner-up on
+                  plate 03: the heading hierarchy is FLATTENED** — `Who'll be in
+                  the room` is the plates' only `Georgia 15.75` heading and
+                  renders byte-identically to every 11.5 px uppercase faint
+                  label, so the page loses its only structural break. **Both
+                  timelines render as four bordered boxes instead of a
+                  continuous track with dots and a filled progress segment (one
+                  mechanism, two surfaces). Both fact-tile bands render as
+                  separate rounded bordered cards with gutters instead of one
+                  rule-divided band, at the wrong column counts (7-up job, 3-up
+                  event, against the plate's 4-up).** Plus: `WHAT THE ROLE IS`
+                  absent entirely; the job locked block missing two plate rows
+                  and carrying one non-plate row; `TO APPLY, HAVE READY` down to
+                  one row of four; no skills progress bar; the event happenings
+                  section missing both its `NEW` badge and its explainer note;
+                  stars on highlighted cards the plate keeps bare; `At this
+                  event:` rendered with a middot.
+
+                  **SCOPE STATED OPENLY:** structural and typographic
+                  differences are scored; **pixel-exact colour and font-file
+                  fidelity are NOT**, and are recorded as observations with the
+                  measured hexes. **A names the one judgement call it made** —
+                  the serif items are scored as HIERARCHY (a two-family system
+                  collapsed to one), and **if the manager reads them as font
+                  fidelity the counts become 10 and 8.** **Eight positive
+                  observations are recorded too** — the event locked block, the
+                  cheapest-way callout and both rosters match the plate closely
+                  — so the list is not read as uniformly negative.
+
+                  **TWO `POLICY — manager decides`:** (1) is the `/JOBS/[ID]` /
+                  `/EVENTS/[ID]` route kicker app UI or deck chrome (one ruling
+                  settles V26-J11 and V26-E09); (2) the wrongly-dropped standard
+                  behind A26-02. **RULING 70's `64c` assertion is UNTOUCHED and
+                  still commissioned as item zero of round 26 C.**
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:36 UTC — ROUND 25 C IS
                   COMPLETE. THREE ITEMS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`ee80407`, `8ddd0c3`, `b4a0019`, plus this final
@@ -4725,6 +4875,175 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **B — round 26.** Round 26 A is COMPLETE: **four parts, one
+                  commit each, each pushed immediately** (`b40211d`, `a094194`,
+                  `20714c5`, plus this hand-off). Claim the §0d lock first,
+                  always. **A changed no code and touched no file but this one.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement. NEITHER B NOR C CAN CLOSE
+                  OR MOVE THIS LINE** — landing a fix is not evidence a difference
+                  is gone.
+
+                  **THE BASELINE B MUST CONFIRM COLD: 93 files / 1894 tests, 1894
+                  PASSING. ZERO FAILURES.** tsc clean; `eslint src` exactly the
+                  one standing `src/components/persona/quiz.tsx:46` error, 0
+                  warnings; `enrich.test.ts`
+                  (`src/lib/opportunities/enrich.test.ts`) solo 56 of 56.
+                  **`benchmark.test.ts` is NO LONGER A FLAKE and stays EXCLUDED
+                  FROM THE GATE; a SKIP is not a PASS. From here ANY red anywhere
+                  is a real regression.**
+
+                  ---
+                  **WHAT ROUND 26 A MEASURED — 2 VALUE DIFFERENCES AND, FOR THE
+                  FIRST TIME, A 20-ITEM VISUAL BASELINE. WORK FROM §4's FOUR
+                  "Round 26 — Agent A" ENTRIES, NOT FROM THIS SUMMARY.**
+
+                  **THE VISUAL BASELINE IS NOW PART OF THE GATE (66b/69). It is
+                  non-empty, so the gate cannot close until it is.** A's part 3
+                  carries the plate citations (plate 02 = PDF pp. 2–4, plate 03 =
+                  PDF pp. 4–9, with exact y-bounds), the measured type scale, and
+                  both surfaces' section checklists — **B should not re-derive
+                  any of it.**
+
+                  **THE TWO VALUE ITEMS.**
+                  **A26-01 — `ev.careers` states the employer TWICE.** Title
+                  `Internship, Battery Engineering (Summer 2026) at Tesla`,
+                  subtitle `Tesla`, on consecutive lines. The ` - EV.Careers`
+                  brand tail is already stripped and `Tesla` is already read out
+                  of the ` at Tesla` clause for the employer field. **The same
+                  shape IS stripped on `magnet.me` and both `linkedin.com` rows
+                  in the same pull** — so B's job is to find why the hosts
+                  diverge. **62d(a)'s employer question is NOT reopened; it is
+                  correct for a third round.**
+                  **A26-02 — six real, dated, on-topic events refused at
+                  ingestion, 5 of 5**, named in part 2 with their provider titles
+                  and snippets. **A disclosed that round 25 A scored the same
+                  149-row corpus at zero and filed the standard as `POLICY`** —
+                  the manager should rule on the bar before B prices a fix, or B
+                  should price it conditionally.
+
+                  **THE VISUAL ITEMS, RANKED, WITH THE CHEAPEST-TO-LAND FLAGGED.**
+                  **V26-J02 / V26-E02 — the serif is never used.** Both report
+                  pages contain zero `font-display` / `font-reading` /
+                  `font-serif` classes; the plates set five elements in the
+                  serif. **The family is already loaded and tokenised. This is
+                  the largest visual finding and plausibly the cheapest fix in
+                  the list — B should price it first.**
+                  **V26-E01 — the heading hierarchy is flattened**;
+                  `Who'll be in the room` is the plates' only larger serif
+                  heading and renders as an ordinary uppercase faint label.
+                  **V26-J03 / V26-E03 — both timelines are four bordered boxes**,
+                  not a track with dots and a filled `Posted → Today` segment.
+                  **One mechanism, two surfaces — price together.**
+                  **V26-J04 / V26-E04 — both fact-tile bands are separate
+                  rounded bordered cards with gutters** where the plates render
+                  one rule-divided band, **and the column counts are wrong**
+                  (`xl:grid-cols-7` job, `lg:grid-cols-3 xl:grid-cols-6` event,
+                  against the plates' 4-up).
+                  **V26-J01 — `WHAT THE ROLE IS` is absent entirely** on the
+                  no-LLM path with a fully-populated row, which **plate 10
+                  forbids by name.**
+                  **V26-J05 — the JOB locked block** is missing `How competitive
+                  this actually is` and `The role in three clean sentences`,
+                  carries a non-plate `What this employer actually asks for`, and
+                  is not in the plate's order. **The EVENT locked block matches
+                  exactly — do not touch it.**
+                  **V26-J06** `TO APPLY, HAVE READY` renders one row of four
+                  (`SEEN ON` is provider attribution Peer always holds);
+                  **V26-J07** no skills progress bar and the counter is on the
+                  wrong line; **V26-J08 / V26-E08** two chip treatments where the
+                  plates have four, visa rendered accent-orange not blue;
+                  **V26-J09** the chip loses `Full-time`; **V26-J10** two label
+                  type-steps where the plate has one; **V26-E05** the happenings
+                  section has neither its `NEW` badge nor its explainer note
+                  **while the job's equivalent section has both**; **V26-E06**
+                  highlighted org/person cards carry a star the plate keeps bare;
+                  **V26-E07** `At this event:` / `Speaking:` render with a
+                  middot.
+
+                  ---
+                  **COMMISSIONED, DEFERRED AND OPEN — CARRIED SO NOTHING IS LOST.**
+                  **(i) RULING 70's `64c` INDEX-PAGE ASSERTION IS STILL
+                  UNFAILABLE and is ITEM ZERO OF ROUND 26 C.** A confirmed it
+                  untouched.
+                  **(ii) THE THREE RAW-READER CONVERSIONS (Ruling 68b) ARE STILL
+                  ROUND 26 B's, PRICED, NOT C's** — the preference-ledger write
+                  (`scoring.ts:329`), the `facetCounts` sites
+                  (`jobs/pipeline.ts:172/233`), the server-side facet filter
+                  (`jobs/pipeline.ts:254`), and `facets.ts:338`'s duck-typed
+                  divergence. **They are NOT differences and A did not rank
+                  them** — no rendered value lied this round.
+                  **(iii) TWO `POLICY — manager decides`:** the `/JOBS/[ID]` /
+                  `/EVENTS/[ID]` route kicker (app UI or deck chrome — one ruling
+                  settles V26-J11 and V26-E09); and A26-02's wrongly-dropped
+                  standard.
+                  **(iv) RULING 69's PHASE 2** — the Tier 1/2 deep-report
+                  campaign — **starts only after Phase 1's gate closes.**
+
+                  **A25-01 IS CLOSED BY AN ORGANIC WITNESS** (`lensa.com`,
+                  Kairos Power, Albuquerque, raw `isRemote: true`, reason line
+                  clean, 4 of 5 with the absence disclosed).
+                  **A METHODOLOGICAL CORRECTION EVERY LATER ROUND INHERITS:
+                  `relevanceScore` IS NOT A STABLE LIVE OBSERVABLE.** With
+                  identical membership and every other column byte-identical it
+                  still moves across independent pulls. **A25-01's falsifier (ii)
+                  cannot be tested live** — only by deterministic replay, which
+                  round 25 C already ran byte-identical. **Do not raise a false
+                  alarm off a live score move.**
+                  **THE 62b FUSE AND 64a's TRIGGER READ ZERO AND THE ZERO IS
+                  VACUOUS, THIRD A ROUND RUNNING.** No month-granularity row
+                  exists in either window; `10times.com` is absent from the pool
+                  AND from all 149 offered rows. **LOADED and UNTESTED — A does
+                  not bank it**, and notes B and C both saw the row within an
+                  hour of round 25, so the trigger is reachable on the hour scale.
+                  **RULING 57b: the JOB surface is `organically witnessed` (the
+                  `lensa.com` row exercises it); the EVENT surface is still
+                  `designed, organically unwitnessed`, SEVENTH round, 11 of 12
+                  rows carry no organiser name.**
+                  **RULING 55c's online must-keep debt — NINTH round,
+                  UNDISCHARGED, and named rather than dropped.** A looked at all
+                  12 pool rows (every one `isOnline: false`) and all 149 offered
+                  rows.
+                  **A22-04 IS OPEN AT STRIKE ONE.**
+                  **RULING 62d(b) + 63a — the folded deferral. Neither half is
+                  closed; 63a's reopen trigger was NOT pulled** (`lanl.jobs`
+                  pooled 5 of 5 with a silent employer, and the honest reason is
+                  that the provider's title carried no dash tail to fire on).
+
+                  ---
+                  **TALLIES, WITH RUNNING COUNTS.** Event names **0 of 12**;
+                  item-KIND **0 of 12**; place **0 of 12 / 0 of 4 non-null**,
+                  correct venues lost **ZERO**, city coverage **0.333 (4 of 12)**
+                  vs 0.385 (r25); invented dates **0 of 12**; job employer **0 of
+                  4 non-null**, cumulative 34a **9 of 119**; 34a events
+                  cumulative **11 of 193**; job item-shape **0 of 11**; job
+                  REASON-LINE **0 of 11 — A25-01 closes**; Ruling 33 **0 new,
+                  cumulative 2 of 104**; 52b **0 instances, 0 admitted,
+                  cumulative 5**; **48b events 149 / 99 dropped / 6 WRONGLY
+                  DROPPED, jobs 123 / 71 dropped / 0**; 58b events 149→50,
+                  jobs 123→52. Ruling 37 zero, 44 zero, B18-03 zero. Thresholds
+                  unchanged: `OPPORTUNITY_MIN_SCORE` 0.35, `MIN_SCORE` (events)
+                  0.35, `MAX_POSTING_AGE_DAYS` 270,
+                  `MAX_ENRICHMENT_CANDIDATES` 40.
+                  **EXCLUSIONS WALKED BY NAME: 45a (`euagenda.eu` NOT fetched;
+                  its ellipsis render recorded a NINTH round), 45b (41c's three
+                  hosts NOT hunted), 39a/40 and 42c (both invoked for
+                  `euchems2026.eu`, whose `Hackathon` chip is RECORDED AND
+                  DELIBERATELY NOT RANKED), 36 (`ruggedthz.com` CORRECT, 14th
+                  round), 33, 50a (`solarpaces.org` CORRECT), 39b/61a
+                  (`The Battery Saloon` scored ORDINARY and CORRECT, 3rd round),
+                  34a (`careerservices.upenn.edu` present and SILENT, 4th round),
+                  37 (`careers.gevernova.com`), 44, B18-02's three hosts
+                  (`xtalks.com` NOT closed), B18-03, `stemgateway.nasa.gov`
+                  (offered and drops, 5th round), 42a's Gap B, and §1d exclusions
+                  7 and 8.** **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+                  Full evidence in §4's four "Round 26 — Agent A" entries —
+                  **work from those, not from this summary.**
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **A — round 26, GATE CANDIDATE ROUND — AND THE FIRST VISUAL
                   CENSUS (Ruling 66b).** Round 25 C is COMPLETE: **three items,
                   one commit each, each pushed immediately** (`ee80407`,
@@ -11159,6 +11478,8 @@ NOTE:      **Two lessons from this round, worth carrying forward:**
 | 22 | **0% fixture (not re-measured — unchanged since round 8; no fixture-affecting code landed in round 21, and the gate re-run confirms zero shipped-assertion movement) / real data NOT MET** | **The gate was a CANDIDATE round and it did not close.** All five round-21 fixes confirmed on the rendered result — A21-01, A21-02, A21-03, A21-04 and Ruling 57b's guard — four by replay of round 21's own recorded strings (their hosts were not offered again) and A21-03 **organically** on a live pool row. **All ten falsifiers §1 named were run and not one fired**, including Ruling 58d's watch (a complete but unterminated sentence still survives), Ruling 49a's Oregon lock, Ruling 46b's two titles, and B17-01's named three-token miss (still missed). **SEVEN new unexplained differences, both surfaces, none a round-21 item returning**: a retail shop's product category page rendered as a job card (`batteryjunction.com`); an aggregator card whose summary and location belong to a different posting (`lensa.com`); an event rendering another event's date and city while already being over (`ans.org`); the same Savannah River vacancy filling two of twelve job slots; a Mumbai marketing internship admitted because the employer is named `Ion Exchange` (`zerobonline.com`); a call-for-papers deadline rendered as the event's own date (`battery-power.eu`); and a real single on-topic Los Alamos vacancy dropped at ingestion (`lanl.jobs`). **Tallies:** event names 0 of 14 (tenth consecutive zero); event item-KIND 0 of 14 (fourth); job item-KIND 1 of 12; 34a employer 0 of 4 non-null (round 21's 3 of 8 all fixed), cumulative 8 of 87; 34a event 1 of 14, cumulative 10 of 140; Ruling 33 0 of 10, cumulative 2 of 56; Ruling 52b 12 instances / 1 admitted / cumulative 4 — **the first admission that is not `Battery Ventures`, and checked against Ruling 58a's escape clause: NOT a guard defect**; Ruling 48b jobs 59 of 101 correctly dropped and **1 confirmed wrongly dropped, ending a five-round zero**; Ruling 48b **events, the first event-side scan of this loop, 98 of 149 correctly dropped and 0 wrongly dropped**; Ruling 39c measurable and passing live for the first time in several rounds; Rulings 46a/46b/36 and B14-02 all measured, not merely absent. **Ruling 55c's online must-keep debt carries a third round with no live witness.** Ruling 57b's event surface measured and `designed, organically unwitnessed`. Full gate 91 files / 1652 tests, 1651 passing (byte-for-byte round 21 C's), sole failure the standing benchmark flake at `:109`; typecheck clean; lint exactly the one standing `quiz.tsx:46` error. **A raised no new `POLICY` and treated Ruling 58a–d as decided. Gate not met; hand-off is B.** Measured by an A subagent that built none of round 21's work. |
 | 23 | **0% fixture (not re-measured — round 22 DID land code, and A traced why the carry is still honest: five of the six touched files are ingestion or report-API paths no plate render reads, and the sixth, `jobs/mapper.ts`, reads `item.source`, a field a hand-built fixture never has; the gate re-run shows zero shipped-assertion movement) / real data NOT MET** | **The gate was a CANDIDATE round and it did not close.** **All SIX round-22 fixes confirmed on the rendered result** — A22-01, A22-02, A22-05 and A22-07 **organically, on live pool rows**; A22-03, A22-06 and A22-04(a) **by replay of round 22's own recorded strings**, their three hosts not offered again. **The fixes cleaned up after themselves:** the job-side wrongly-dropped column returns to zero (`lanl.jobs` is now pooled), the job summary column comes back clean, the job pool reached zero membership AND zero value variance, and Ruling 57b's job surface is `organically witnessed` for the first time. **FOUR unexplained differences, two per surface, none a round-22 item returning:** `lanl.jobs` renders the job grade `Research Technologist 1` as the hiring organisation while the real employer is the LAST segment of the same offered title — a **six-instance splitter shape** in this round's own corpus (A23-01); `10times.com` puts an event that **finished two days earlier** in the pool with `(Aug 2026), Chicago USA` glued into its NAME, surviving *because* its snippet carries no date token while **eight offered siblings** naming 11–12 August 2026 were all correctly dropped (A23-02); the event PLACE column, scored across the pool for the first time, is **3 of 7 non-null values contaminated** — a 2022 UN meeting from a biography, an exhibitor's head office, and a speaker's affiliation on a 1.28 MB programme page carrying **twenty-three cities**, of which Peer picked the twentieth-most-frequent — **which is RULING 60c's stated reopening trigger, met** (A23-03); and `grad.wisc.edu`, a nine-month-old `@type: Article` blog post still rendered as a live internship card, **resolved by 59b(b), endorsed by 60e, never ranked and never fixed** (A23-04). **ONE §1 PREDICTION WAS WRONG AND A SAID SO:** of Ruling 60b's two intended departures, `ans.org` left and **`batteryinnovationsummit.com` did not** — it stays with its unevidenced future date **gone**, replaced by honest silence, so 60b's purpose is reached by a different mechanism; not ranked. **ONE FALSIFIER READS AS FIRED, ARITHMETIC SHOWN NOT EXPLAINED AWAY:** the job pool came back at **11**, not 12; `12 − 4 + 3 = 11` closes exactly, three departures are simple non-offer and the fourth is A22-05 merging as designed. **Tallies:** event names **1 of 13 — the ten-round zero BREAKS**, on a host never pooled before; event item-KIND 0 of 13 (fifth consecutive zero); event DATE 4 non-empty, 4 correct, zero wrong; event PLACE 3 of 7 wrong (first full scoring); job item-KIND 1 of 11; 34a employer **1 of 4 non-null**, cumulative 9 of 91; 34a event 1 of 13, cumulative 11 of 153; Ruling 33 **0 of 12**, cumulative 2 of 68; Ruling 52b **11 instances, 0 ADMITTED**, cumulative 4 unchanged — **neither a 58a guard defect nor a new 60a strike, so the third-strike backstop does NOT advance and design is NOT authorised**; Ruling 37's baseline row **returns** to the pool byte-identical after two rounds absent (accepted cost, not a difference); Ruling 44 zero; Ruling 48b **0 wrongly dropped on BOTH surfaces** (jobs 54 of 97 correctly dropped, events 98 of 149); Rulings 46a/46b/36 and B14-02 measured not absent; **Ruling 39c NOT measurable live — replay pass only, and A calls it that.** **Ruling 55c's online must-keep debt carries a FOURTH round with no live witness.** **One `POLICY — manager decides`, adding and removing no difference:** Ruling 39b's accepted wrong name is, on today's page, the site's own `og:title`. Full gate 92 files / 1751 tests, 1750 passing (byte-for-byte round 22 C's), sole failure the standing benchmark flake at `:109`; typecheck clean; lint exactly the one standing `quiz.tsx:46` error. **Gate not met; hand-off is B.** Measured by an A subagent that built none of round 22's work. |
 | 24 | **0% fixture (not re-measured — round 23 landed code, and A traced why the carry is still honest: the four touched paths are the event place guard, the event name/date strip, the job employer candidate chain and the job post-enrichment kind gate, none of which a hand-built fixture's fully-populated, well-formed values reach; the gate re-run shows zero shipped-assertion movement) / real data NOT MET** | **The gate was a CANDIDATE round and it did not close.** **All FOUR round-23 fixes confirmed on the rendered result, TWO of them ORGANICALLY ON THE EXACT ROWS THEY WERE BUILT FOR.** **A23-03: all four of Ruling 62a's named contaminations were IN THE POOL and all four render SILENCE, 5 of 5** (`flogen.org`, `storageusa.solarenergyevents.com`, `nanoge.org`, `sdle.co.il`), **correct venues lost ZERO** — the five-pull census 62a commissioned is done and the design passes; ground truth separates the classes quantitatively (silenced cities appear ONCE in their pages, kept venues 6–22 times). **A23-02: `10times.com` renders `Solid-State Battery Summit` + `Aug 2026` on the card, 5 of 5**, and the strip works on hosts nobody built it for (`advancedautobat.com` keeps `(AABC)` and gains a correct date AND city). **A23-04 confirmed on BOTH SIDES AT ONCE: `grad.wisc.edu` offered, kept at ingestion, pooled 0 of 5; the `careerservices.upenn.edu` ADMITTED CONTROL holds 5 of 5.** **A23-01(c)'s ellipsis clause confirmed live; its careers-office and address-tail clauses had NO witness and A calls that absence, not a pass.** **Ruling 63a's reopen trigger NOT pulled — four instances in the offered corpus, ZERO on a pool row; `lanl.jobs` is pooled 5 of 5 with a SILENT employer and A says the honest reason: the provider's title lost its dash tail, so the shape is unfalsified, not vindicated.** **62d's held half (a) VINDICATED BY A LIVE ROW** — `… at Tesla - EV.Careers` renders `Tesla`. **TWO unexplained differences, BOTH event-surface, both 5 of 5; the JOB SURFACE MEASURES ZERO:** **A24-01** `cambridgeenertech.com` — a conference INDEX page rendered as one event, with the provider attribution phrase `Provided by Cambridge EnerTech` as its NAME and `Chicago, IL, United States` (another event's city, 4 tokens in a 29 kB index) as its PLACE, the first new wrong city since the place guard landed; one row, three faces, counted once. **A24-02** `10times.com` — the card says `Aug 2026` and **plate 03's own tile says `Aug 1, 2026` with the sub-line `Sat`**, a day of month AND a day of week invented from a month-only value: **§1's own named A23-02 falsifier, "any invented date anywhere", FIRING**, on the row 62b shipped for, and the only row of 17 where card and tile disagree. **A DISCLOSED TWO DEFECTS IN ITS OWN HARNESS AND ONE IN ITS OWN FIRST TALLY, WITH THE WRONG NUMBERS NAMED, AND RE-DERIVED EVERY FIGURE** (URL-only offered-row key; `content:` where the shipped `WebResult` is `snippet:`; a `new Date()` local-getter bug that made the 62b fuse read 5 defects instead of 0). **A also corrected its own part-3 invented-date line in part 4 rather than silently** — that line was measured on the card only. **A measured the pool MOVING between windows ~40 minutes apart (16/16/17 event rows, materially different membership, each window internally stable at 5/5) — the clearest evidence this loop has produced for the five-pull discipline.** **Tallies:** event names **1 of 16**; event item-KIND **1 of 16** (zero run ends at three); event PLACE **1 of 16 counted / 1 of 6 non-null, correct venues lost ZERO** (first five-pull scoring under the guard); **invented dates 1 of 17, on plate 03**; job employer **0 of 5 non-null**, cumulative 34a **9 of 104**; 34a events 0, cumulative **11 of 169**; job item-shape **0 of 15**; Ruling 33 0 new, cumulative **2 of 81**, neither widened nor narrowed, asserted by execution; **Ruling 52b 2 instances / 1 ADMITTED (`Ion Exchange` on `bebee.com`) / cumulative 5 — checked against 58a BY EXECUTION: guard returns `false` and could not do otherwise (the topic is the WHOLE owner name, not a proper sub-span), the value is CORRECT, 62d's must-keeps name `Ion Exchange Ltd.` — a DEFERRED SHAPE, not a guard defect, so THE STRIKE COUNT REMAINS ONE**; Ruling 37 baseline only, escalation does NOT fire; Ruling 44 zero; B18-03 zero including its named plain-hyphen under-catch; Ruling 48b **0 wrongly dropped on BOTH surfaces** (events 99 of 152 correctly dropped, jobs 71 of 126). **THE NEW 62b FUSE LINE, FIRST READING: ZERO** — one month-granularity row exists and its month has not fully passed, so its presence is the accepted time-bounded cost; **the fuse is LOADED but not yet TESTED, and the first round that can falsify it is the first after 31 August.** **Ruling 55c's online must-keep debt carries a SIXTH round with no live witness**, and A recorded where it looked (all 17 pool rows, all 152 offered rows). **Ruling 57b: job surface `organically witnessed`, witness repeats; event surface `designed, organically unwitnessed`, sixth round, 16 of 17 rows carry no organiser name.** **Ruling 61a honoured: `batteryinnovationsummit.com` scored ORDINARY and comes back CORRECT; 39b stays retired.** Full gate 92 files / 1843 tests, 1842 passing (byte-for-byte round 23 C's), **sole failure `benchmark.test.ts` in its CITY-COVERAGE form — DETERMINISTICALLY RED per Ruling 63b, not chased and not reported as new**; `enrich.test.ts` solo 56 of 56; typecheck clean; lint exactly the one standing `quiz.tsx:46` error. **A raised NO new `POLICY`. Gate not met; hand-off is B.** Measured by an A subagent that built none of round 23's work. |
+| 25 | *(row not maintained at the time — see §4's four "Round 25 — Agent A" entries and the round-25 manager close)* | Event surface's FIRST all-zero census; one job difference (A25-01, the `remote-friendly` reason line on an Albuquerque internship); gate not met. |
+| 26 | **0% fixture (not re-measured — rounds 24–25 landed code on the event place/name paths, the job remote-claim predicate and the AI-tier display, none of which a fully-populated hand-built fixture reaches; the gate re-run shows zero shipped-assertion movement) / real data NOT MET — AND, FOR THE FIRST TIME, A VISUAL BASELINE OF 20 ITEMS** | **THE FIRST VISUAL / LAYOUT CENSUS (Ruling 66b) IS DONE AND THE GATE DOES NOT CLOSE.** **Plates located and cited: plate 02 = PDF pp. 2 (y≥378.9) – 4 (y<400.6); plate 03 = PDF pp. 4 (y≥400.6) – 9 (y<588.9); 20-page deck, all 20 read.** Type scale measured from the PDF's own text spans, not eyeballed. Both reports rendered through the SHIPPED components to static markup on Ruling 69's fixed no-LLM profile, against **plate-shaped fixtures** (so a missing section cannot be confounded with an empty field) **and** the round's real live rows. **VISUAL BASELINE: 20 items — 11 on plate 02, 9 on plate 03.** **Largest finding: NEITHER REPORT USES THE SERIF FAMILY ANYWHERE** — `grep font-display|font-reading|font-serif` over both report pages returns NOTHING, while the plates set five elements in it (both titles, both "Why Peer sent this" prose blocks, the job's role bullets, the visa quote, plate 03's `Who'll be in the room`); the build ships, loads and documents the family and the reports never opt in. **Runner-up: plate 03's heading hierarchy is FLATTENED** — `Who'll be in the room` is the plates' only larger serif heading and renders byte-identically to every 11.5 px uppercase faint label. **Both timelines render as four bordered boxes instead of a continuous track with dots and a filled `Posted → Today` segment (one mechanism, two surfaces); both fact-tile bands render as separate rounded bordered cards with gutters instead of one rule-divided band, at the wrong column counts (7-up job, 3-up event, against the plates' 4-up).** Also: `WHAT THE ROLE IS` absent entirely on the no-LLM path with a fully-populated row (**plate 10 forbids exactly this**); the JOB locked block missing two plate rows and carrying one non-plate row, out of order (**the EVENT locked block matches exactly**); `TO APPLY, HAVE READY` down to one row of four; no skills progress bar and the counter on the wrong line; the event happenings section missing both its `NEW` badge and its explainer note **while the job's equivalent has both**; stars on highlighted org/person cards the plate keeps bare; `At this event:` rendered with a middot. **Scope stated openly: structural and typographic differences scored; pixel-exact colour and font-file fidelity NOT scored, recorded as observations with the measured hexes — and A names its one judgement call (the serif items are scored as HIERARCHY, a two-family system collapsed to one; read as font fidelity the counts become 10 and 8).** **Eight positive observations recorded** (the event locked block, the cheapest-way callout and both rosters match closely) so the list is not read as uniformly negative. **VALUE: 2 differences.** **A26-01** — `ev.careers` states the employer TWICE, adjacent (title `… at Tesla`, subtitle `Tesla`), though the build already strips the brand tail and already reads `Tesla` out of that same clause, **and strips the identical shape on `magnet.me` and both `linkedin.com` rows in the same pull**; 62d(a)'s employer question is NOT reopened and is CORRECT for a third round. **A26-02** — **the 48b wrongly-dropped column is NON-ZERO FOR THE FIRST TIME IN THIS LOOP'S HISTORY**: six named, dated, on-topic events refused at ingestion 5 of 5 (`cambridgeenertech.com/solid-state-batteries`, `pyro.byu.edu/moses`, `rsc.org/…/euchemsil-2026`, `ans.org/…/event-1993`, `nac.naatbatt.org`, `imlb.org`) while **eight of the twelve rows that DID reach the pool carry no date at all** — **and A discloses that round 25 A scored the SAME 149-row corpus at zero**, ranks it anyway, and files the standard as `POLICY`. **A25-01 IS CLOSED BY AN ORGANIC WITNESS**: `lensa.com` returned carrying raw `isRemote: true` on an Albuquerque Kairos Power internship — the same host and shape as the defect — and its reason line reads `Matches your molten salt focus and fits a PhD Year 3 profile.` with **no `remote-friendly`**; 4 of 5, the absence disclosed as a minority row. **Falsifier (i) had NO MATERIAL** (every pool row on both windows is `jobweb`) — unfalsified, not vindicated. **A DISCLOSED A DEFECT IN ITS OWN 48b INSTRUMENT BEFORE QUOTING A DROP FIGURE** (snippets clipped to 400 chars, so admission was judged on text the shipped predicates never see; caught by self-check when two rows provably IN the pool came back `dropped`) **and re-ran all five pulls rather than caveating the number** — corrected window: zero verdict flips, zero pool-row disagreements. **AND A CORRECTS THE LOOP'S INSTRUMENT: `relevanceScore` IS NOT A STABLE LIVE OBSERVABLE** — with identical membership and every other column byte-identical it still moves across independent pulls, so **A25-01's falsifier (ii) cannot be tested live** and no later round should raise a false alarm off a score move. **Event surface: ZERO value differences for a second consecutive round** — names 0/12, item-KIND 0/12, place 0/12 (0 of 4 non-null, zero correct venues lost, city coverage 0.333), invented dates 0/12 scored on card AND plate-03 tile AND feed tile/quick-hit/hero; 12 rows 5 of 5 in **both** windows with zero membership variance, zero value variance and zero drift between windows. **62b fuse and 64a trigger read ZERO and the zero is VACUOUS, third A round running** — no month-granularity row in either window, `10times.com` absent from the pool and from all 149 offered rows; **LOADED and UNTESTED, and A does not bank it.** Ruling 55c's online debt **NINTH** round undischarged, named; 57b job surface `organically witnessed`, event surface `designed, organically unwitnessed` **SEVENTH** round; A22-04 at strike one; 63a's reopen trigger NOT pulled with the honest reason. Full gate **93 files / 1894 tests, 1894 passing — ZERO failures**, confirmed cold and re-confirmed after the harness was deleted; `enrich.test.ts` solo 56 of 56; typecheck clean; lint exactly the one standing `quiz.tsx:46` error. **A raised TWO `POLICY — manager decides`** (the `/JOBS/[ID]` / `/EVENTS/[ID]` route kicker — app UI or deck chrome, one ruling settles both; and A26-02's wrongly-dropped standard). **Ruling 70's `64c` assertion UNTOUCHED and still item zero of round 26 C.** **Gate not met; hand-off is B.** |
 
 ---
 
@@ -66358,3 +66679,330 @@ static markup with `renderToStaticMarkup`, on the **NO-LLM path**
 system is measured to the half-point and to the hex; both surfaces' section
 inventories and orders are written as checklists. **Part 4 carries the ranked
 V26-xx difference lists, per surface, and the gate verdict.**
+
+### Round 26 — Agent A (part 4 — **THE RANKED DIFFERENCE LISTS AND THE GATE VERDICT. THE FIRST VISUAL BASELINE: 11 JOB-SURFACE ITEMS AND 9 EVENT-SURFACE ITEMS, PLUS 2 RANKED VALUE DIFFERENCES. THE LARGEST SINGLE FINDING IS THAT NEITHER REPORT USES THE SERIF FAMILY ANYWHERE — the build ships the family, loads it, and documents it, and the two report pages never opt in. THE GATE DOES NOT CLOSE.**)
+
+**STATUS: COMPLETE.** Part 4 of four. **A sets no `GATE (0%): MET` line — A never
+closes the gate (Ruling 30); the manager closes, after an independent
+re-measurement.**
+
+---
+
+## **THE HEADLINE, STATED ONCE AND PLAINLY**
+
+**This is a BASELINE census. Nothing visual has ever been measured in this loop,
+so a long list is the honest outcome and A has not compressed it.** The lists
+below are **20 visual items** — **11 on plate 02, 9 on plate 03** — ranked by
+what a reader notices first, each specific enough for B to locate the component
+without re-deriving A's work, and each with a falsifier.
+
+**Scope, per the round's own terms:** structural and typographic differences are
+**scored** — sections missing, reordered or merged; hierarchy flattened; labels
+styled differently; groupings broken; chrome absent or extra. **Pixel-exact
+colour and font-file fidelity is NOT scored this first round**, and is recorded
+as observations at the end. **One judgement A states openly:** the serif items
+below are scored as **HIERARCHY**, not as font-file fidelity — the plates use two
+type families to separate display and prose from UI, the build collapses that to
+one, and collapsing a two-family system into one is a hierarchy change. **If the
+manager reads that as font fidelity instead, V26-J02 and V26-E02 move to the
+observation list and the counts become 10 and 8.**
+
+---
+
+## **THE RANKED VISUAL LIST — PLATE 02, THE JOB REPORT (11 ITEMS)**
+
+### **V26-J01 — `WHAT THE ROLE IS` IS ABSENT. The plate's two-column block renders as ONE column.**
+- **Plate:** a two-column block; left column headed `W H AT  T H E  RO L E  I S`
+  carrying **three serif bullets with orange dot markers**; right column
+  `TO  A P P LY,  H AV E  R E A D Y`.
+- **Build:** the wrapper renders (`data-role-and-materials` is present) but the
+  left `<section data-section="what-the-role-is">` **does not appear in the
+  markup at all** on the no-LLM path, with a fully-populated plate-shaped row.
+  The reader gets a two-column grid with one column in it.
+- **Why this is first:** a missing SECTION outranks every styling difference, and
+  **plate 10 forbids exactly this** — *"a report with no key is a complete,
+  shorter report, never a skeleton with holes in it."*
+- **Falsifier:** the section appearing in the no-LLM markup with a populated row.
+
+### **V26-J02 — THE REPORT IS SET ENTIRELY IN THE SANS FAMILY. Plate 02 sets FOUR elements in the serif.**
+- **Plate:** `<h1>` title `Georgia 21`; the `WHY PEER SENT THIS TO YOU` prose
+  `Georgia 12.75` with `Georgia-Italic` topic names; the role bullets
+  `Georgia 12`; the visa evidence quote `Georgia 10.5`.
+- **Build:** `grep -n "font-display\|font-reading\|font-serif"` over
+  `src/app/jobs/[id]/page.tsx` returns **NOTHING**. The `<h1>` is
+  `text-[30px] font-semibold … lg:text-[36px]` with no family class, so it
+  inherits the sans default. **The build already owns the family** —
+  `--font-display` and `--font-reading` are defined in `globals.css`, Newsreader
+  is loaded in `layout.tsx`, and `globals.css` says in its own comment that
+  *"long-form prose opts INTO serif"*. **The report never opts in.**
+- **Falsifier:** any of the four elements rendering with the reading/display
+  family.
+
+### **V26-J03 — THE TIMELINE IS FOUR BORDERED BOXES, NOT A TRACK.**
+- **Plate:** one continuous horizontal rule carrying four dots; the
+  `Posted → Today` segment **filled orange**; `Today` a larger orange dot; the
+  other two grey; **the four labels sit BENEATH the track**, outer ones aligned
+  to the edges.
+- **Build:** `<ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">` of
+  `<li class="relative rounded-xl border border-border bg-surface px-4 py-3">` —
+  four separate cards, each with its own label above its own value, joined only
+  by a 3-px `border-t` stub between cards. **There is no track, no progress fill
+  and no dot row.** At `sm` it wraps to a 2×2 block, which is not a timeline
+  shape at all.
+- **Falsifier:** a single continuous track element with a filled segment ending
+  at `Today`.
+
+### **V26-J04 — THE FACT TILES ARE SEPARATE CARDS; THE PLATE IS ONE CONTINUOUS RULE-DIVIDED BAND. And the column count is wrong at wide widths.**
+- **Plate:** seven tiles in **one band**, four per row over two rows, columns
+  separated by **thin vertical rules** and rows by a single horizontal rule.
+  **No per-tile border, no rounding, no fill, no gap.**
+- **Build:** `ReportFactTile` renders
+  `rounded-xl border border-border bg-surface px-4 py-3` per tile, inside
+  `<dl class="mt-10 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4
+  xl:grid-cols-7">`. Every tile is its own boxed card with a `gap-2` gutter, and
+  **at `xl` all seven sit on ONE row** where the plate wraps four-per-row.
+- **Falsifier:** tiles rendering borderless inside a shared bordered band with
+  divider rules, capped at four columns.
+
+### **V26-J05 — THE LOCKED BLOCK'S ROW SET AND ORDER BOTH DIFFER: two plate rows missing, one non-plate row present.**
+- **Plate, in order:** `How competitive this actually is` / `Sponsorship read
+  when the posting is silent` / `The role in three clean sentences` / `What to
+  emphasise in your application`. **Four rows.**
+- **Build, in order:** `Sponsorship read when the posting is silent` / `What this
+  employer actually asks for` / `What to emphasise in your application`. **Three
+  rows.** Missing: `How competitive this actually is` (the plate's **first**
+  row) and `The role in three clean sentences`. Extra: `What this employer
+  actually asks for`.
+- **Falsifier:** four rows in the plate's order.
+
+### **V26-J06 — `TO APPLY, HAVE READY` RENDERS ONE ROW OF FOUR.**
+- **Plate:** `MATERIALS`, `ELIGIBILITY`, `TEAM`, `SEEN ON` — four definition
+  rows. `SEEN ON` is the provider attribution (`Adzuna · reposted from employer
+  site`).
+- **Build:** `[...matchAll(/data-apply-row="([a-z ]+)"/g)]` on the plate-shaped
+  render returns **`['materials']`** — one row. **`SEEN ON` is the sharpest of
+  the three**, because Peer always knows which source a row came from; it is
+  never missing data.
+- **Falsifier:** four `data-apply-row` values in the markup.
+
+### **V26-J07 — THE SKILLS PROGRESS BAR IS ABSENT, AND THE COUNTER IS ON THE WRONG LINE.**
+- **Plate:** the label line carries `S K I L L S  T H E Y  A S K  F O R` + `NEW`
+  + `TIER 0` on the left and **`6 of 9 you already have` RIGHT-ALIGNED on the
+  same line**; **immediately beneath sits a horizontal PROGRESS BAR** filled to
+  the matched fraction.
+- **Build:** the badges are on their own line, then
+  `<p class="text-caption text-text-faint">0 of 9 you already have</p>` on a
+  second line, **left-aligned**, then the chips. **No bar element exists in the
+  markup.**
+- **Falsifier:** a bar element between the counter and the chips, and the
+  counter right-aligned on the label line.
+
+### **V26-J08 — THE HEADER CHIP ROW HAS TWO TREATMENTS WHERE THE PLATE HAS FOUR, AND THE VISA CHIP IS THE WRONG COLOUR ROLE.**
+- **Plate:** `Postdoc` amber fill (`#a8642a`), `Full-time · 3 years` neutral
+  outline (`#7d6a56`), **`Visa sponsorship` BLUE (`#2b5c8f`)**, `91% match`
+  orange (`#a33206`).
+- **Build:** every chip is the same pill; only two classes exist —
+  `border-border bg-surface text-text-muted` (neutral) and
+  `border-accent/25 bg-accent/10 text-accent` (accent). **`Visa sponsorship` and
+  `91% match` both render accent-orange**, and the role-kind chip renders
+  neutral. **This is scored as ROLE ASSIGNMENT, not palette fidelity** — the
+  plate gives four categories four distinct signals and the build gives them two.
+- **Falsifier:** four distinguishable chip treatments with visa on its own.
+
+### **V26-J09 — THE CHIP ROW LOSES THE EMPLOYMENT-TYPE WORD.**
+- **Plate:** `Full-time · 3 years`. **Build:** `3 years`. The contract length
+  survives; the employment type does not reach the chip.
+- **Falsifier:** the chip reading `Full-time · 3 years` on a row that states both.
+
+### **V26-J10 — SECTION LABELS AND TILE LABELS USE TWO DIFFERENT TYPE STEPS; THE PLATE USES ONE.**
+- **Plate:** every letter-spaced uppercase label — route kicker, tile labels,
+  section labels, the locked-block label — is the **same** step:
+  `SegoeUI-Semibold 7.88`.
+- **Build:** section headings are `text-caption` (11.5 px) with
+  `tracking-[0.18em]`; tile and apply-row labels are `text-micro` (10.5 px) with
+  `tracking-[0.14em]`. **Two steps and two tracking values where the plate has
+  one of each.**
+- **Falsifier:** one shared label token across both.
+
+### **V26-J11 — THE `/JOBS/[ID]` ROUTE KICKER IS ABSENT. `POLICY — manager decides.`**
+- The plate shows it inside the card frame, top-left, in the label step. It may
+  be **deck chrome** — a caption on the mock rather than app UI. **A does not
+  decide it**, records it so it is not silently dropped, and notes that plate 03
+  carries the same element (`/EVENTS/[ID]`), so one ruling settles both.
+
+---
+
+## **THE RANKED VISUAL LIST — PLATE 03, THE EVENT REPORT (9 ITEMS)**
+
+### **V26-E01 — THE HEADING HIERARCHY IS FLATTENED: `Who'll be in the room` renders as an ordinary small uppercase label.**
+- **Plate:** it is the **only `Georgia 15.75` heading in either plate** — a
+  distinct, larger, serif, sentence-case level that separates "the room" from the
+  label-level sections around it. Plate 03 therefore has **TWO heading levels**.
+- **Build:** `<h2 class="text-caption font-semibold uppercase tracking-[0.18em]
+  text-text-faint">Who’ll be in the room</h2>` — **byte-identical styling to
+  `Two deadlines, one event` and every other section**. Uppercased, 11.5 px,
+  faint, sans. **The build has ONE heading level.** The plate's biggest
+  organising move on this page is gone.
+- **Why this is first on this surface:** it is the difference a reader notices
+  before any other — the page loses its only structural break.
+- **Falsifier:** the heading rendering at a larger, non-uppercased, serif step
+  distinct from the label sections.
+
+### **V26-E02 — THE REPORT IS SET ENTIRELY IN THE SANS FAMILY. Plate 03 sets the title and the `WHY PEER SENT THIS TO YOU` prose in the serif.**
+- Same mechanism and same evidence as V26-J02: `grep` for
+  `font-display|font-reading|font-serif` over `src/app/events/[id]/page.tsx`
+  returns **NOTHING**. Listed separately because it is a separate file and a
+  separate fix.
+- **Falsifier:** either element rendering with the reading/display family.
+
+### **V26-E03 — `TWO DEADLINES, ONE EVENT` IS FOUR BORDERED BOXES, NOT A TRACK.**
+- Identical to V26-J03 and the same markup shape
+  (`<ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">` of
+  `rounded-xl border border-border bg-surface` items, with
+  `data-deadline-milestone` hooks). **One mechanism, two surfaces** — B should
+  price them together.
+- **Falsifier:** as V26-J03.
+
+### **V26-E04 — THE FACT TILES ARE SEPARATE CARDS, AND THE GRID IS 3-UP / 6-UP WHERE THE PLATE IS 4-UP.**
+- **Plate:** six tiles, **four per row over two rows**, in one rule-divided band.
+- **Build:** `<dl class="mt-8 grid grid-cols-1 gap-2 sm:grid-cols-2
+  lg:grid-cols-3 xl:grid-cols-6">` of the same bordered `ReportFactTile`. **At
+  `lg` the plate's four-across row becomes three-across**, which re-flows the
+  whole band and breaks the plate's `DATES · WHERE · FEE · ABSTRACT DUE`
+  grouping.
+- **Falsifier:** borderless tiles in a shared band, four per row.
+
+### **V26-E05 — `WHAT ACTUALLY HAPPENS THERE` HAS NO `NEW` BADGE AND NO EXPLAINER NOTE.**
+- **Plate:** the label carries a `NEW` badge (`Consolas 8.25`, violet), and
+  beneath the chips sits an explainer note with a left orange rule
+  (*"Highlighted because they line up with your topics…"*).
+- **Build:** the section renders `<h2>` then straight into
+  `<div class="mt-4 flex flex-wrap gap-2">` of chips. **No badge, no note.** The
+  job report's equivalent section (`Skills they ask for`) has **both**, so the
+  inconsistency is inside the build, not just against the plate.
+- **Falsifier:** the badge and the note both present.
+
+### **V26-E06 — HIGHLIGHTED ORGANISATION AND PERSON CARDS CARRY A STAR TOGGLE THE PLATE DOES NOT PUT ON THEM.**
+- **Plate:** highlighted cards (Toyota, QuantumScape, Argonne; Haruko Ishimura,
+  Elena Vasquez-Ortiz) carry **only** a right-aligned tinted descriptor badge.
+  **Stars appear only on the `EVERY OTHER …` roster rows**, where their purpose
+  is "star anyone Peer got wrong".
+- **Build:** every highlighted card renders a `☆` as well as its badge. The
+  control's own explanation ("it moves to the top here") is meaningless on a card
+  that is already at the top.
+- **Falsifier:** no star control inside a highlighted org/person card.
+
+### **V26-E07 — `At this event:` AND `Speaking:` RENDER AS `At this event ·` AND `Speaking ·`.**
+- **Plate:** a bold lead-in followed by a **colon and a space**, with the
+  continuation in a lighter tone — a definition shape.
+- **Build:** a bold lead-in followed by a **middot**, which reads as a list
+  separator between two peers rather than a label introducing its value.
+- **Falsifier:** a colon in both render sites.
+
+### **V26-E08 — THE HEADER CHIP ROW HAS TWO TREATMENTS WHERE THE PLATE HAS FOUR.**
+- Same mechanism as V26-J08: plate 03 gives `Industry summit` amber,
+  `+ career fair` neutral outline, `CCF-B` neutral fill and `88% match` orange;
+  the build has only neutral and accent.
+- **Falsifier:** four distinguishable treatments.
+
+### **V26-E09 — THE `/EVENTS/[ID]` ROUTE KICKER IS ABSENT. `POLICY — manager decides`, same ruling as V26-J11.**
+
+---
+
+## **OBSERVATIONS — RECORDED, NOT RANKED, BECAUSE THE ROUND'S SCOPE EXCLUDES THEM**
+
+1. **Palette fidelity is NOT scored this round**, per the round's own terms. For
+   the record, the plates' measured hexes are: text `#2b180a` / `#4d3a28` /
+   `#7d6a56` / `#9c8b78`; accent orange `#a33206` and `#ff520d`; urgency red
+   `#b3402a`; visa blue `#2b5c8f`; badge violet `#5b4bbf`; chip amber `#a8642a`.
+   The build renders through semantic tokens (`text-accent`, `text-red`,
+   `text-tag`, `text-text-faint`). **A did not compare them and does not claim
+   they differ.**
+2. **Font-file fidelity is NOT scored.** The deck is set in Georgia / Segoe UI /
+   Consolas because that is what the deck's author had; the build ships
+   Newsreader / Inter / Roboto Mono as their intended equivalents.
+   **V26-J02 / V26-E02 are about the build not using its OWN serif at all**, not
+   about which serif.
+3. **The `Why Peer sent this to you` prose appends a full stop unconditionally**,
+   so a reason that already ends in one renders `…this week..`. **It did not fire
+   on any of the 24 live rows** (Tier-0 reasons are template-built and carry no
+   terminal period), so it is not reachable on the measured profile and is not
+   ranked. Recorded because an enriched reason would reach it.
+4. **The event subtitle's first segment is the LOCATION string; the plate's is
+   the VENUE NAME.** Peer has no venue field distinct from `location`, so this is
+   reach, not error, and is not ranked.
+5. **The `CCF-B` rank chip could not be exercised** by A's plate-shaped fixture
+   (no rank field was set), so V26-E08 is scored on the three chips that did
+   render. Not a claim about rank chips.
+6. **The `Cheapest way in, for you` callout MATCHES the plate well** — a filled
+   `rounded-2xl border border-accent/20 bg-accent/8` panel with an accent
+   uppercase label and a `text-title font-semibold` body. Recorded as a positive
+   so the list is not read as uniformly negative.
+7. **The event locked block MATCHES plate 03 exactly** — four rows, plate's
+   wording, plate's order. **Only the JOB locked block differs** (V26-J05).
+8. **The roster sections match plate 03 closely** — `Filter this list`, the
+   star hint with its filled orange star, hairline-separated rows with
+   `name` + faint `descriptor`, and both closing footnotes verbatim. **Nothing is
+   collapsed**, exactly as the plate demands.
+
+---
+
+## **THE COMBINED RANKED LIST — WHAT B RECEIVES**
+
+**VALUE (from part 2):**
+- **A26-01** — `ev.careers`: the employer is stated twice, adjacent, because the
+  ` at Tesla` clause is read for the employer field and left in the role title.
+  5 of 5, both windows.
+- **A26-02** — the 48b wrongly-dropped column is non-zero for the first time: six
+  named, dated, on-topic events refused at ingestion, with the round-25
+  judgement discrepancy disclosed.
+
+**VISUAL — plate 02 (11):** V26-J01 … V26-J11, above.
+**VISUAL — plate 03 (9):** V26-E01 … V26-E09, above.
+
+**TWO `POLICY — manager decides` ITEMS, NEITHER DECIDED BY A:**
+1. **V26-J11 / V26-E09** — is the `/JOBS/[ID]` route kicker app UI or deck
+   chrome? One ruling settles both.
+2. **The scoring standard behind A26-02** — A applied a stricter reading of
+   "wrongly dropped" than round 25 A applied to the same 149-row corpus, and says
+   so rather than presenting it as a regression.
+
+**ONE ITEM CARRIED, NOT RANKED:** **Ruling 70's `64c` index-page assertion is
+still unfailable** and is commissioned as **item zero of round 26 C**. A did not
+touch it and confirms it is untouched.
+
+---
+
+## **THE GATE SUITE, RE-RUN AFTER DELETING THE HARNESS**
+
+| check | result |
+|---|---|
+| `npx vitest run` | **93 files / 1894 tests, 1894 passing — ZERO failures** |
+| `npx tsc --noEmit` | **clean** |
+| `npx eslint src` | **exactly `src/components/persona/quiz.tsx:46`, 0 warnings** |
+| `enrich.test.ts` solo | **56 of 56 — the SolarPACES lock holds** |
+
+**No test was deleted, edited or added. `git log` for this round touches
+`MULTIAGENT-report-parity.md` and nothing else** — A changed no code, per §2.
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No credential printed,
+logged, committed or written anywhere; `.env.local` was NEVER `cat`-ed and
+`profile.json` was read for BOOLEAN PRESENCE ONLY.** Every throwaway scaffold
+lived outside `src/` and was deleted before every commit, verified with
+`git status --porcelain --untracked-files=all`.
+
+---
+
+## **THE GATE VERDICT**
+
+**`GATE (0%): NOT MET.`**
+
+- **VALUE differences: 2** (A26-01, A26-02). The event surface's value columns
+  are all zero for a second round; the 48b column is not.
+- **VISUAL differences: 20** (11 + 9). **This is the baseline Ruling 66b
+  commissioned, and it is non-empty, so the gate cannot close on it by
+  definition.**
+- **A does not round down, does not reclassify a difference as cosmetic to clear
+  the bar, and has not compressed the list.** Ruling 66b's own instruction —
+  *"expect the ranked list to be long and do not compress it"* — was followed.
+
+**A sets no `MET` line and never can (Ruling 30).** The next turn is B's.
