@@ -270,12 +270,145 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-14 23:35 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-15 01:32 UTC — ROUND 23 A IS
+STOPPED BECAUSE:  **finished the turn @ 2026-08-14 23:05 UTC — ROUND 23 B IS
+                  COMPLETE. FOUR ITEMS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`5a65377`, `4ecb253`, `00d7a6d`, plus this
+                  hand-off). Claimed the lock cleanly (`82e9639`) after
+                  `git pull` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`409b033..82e9639`), so the race was won rather than
+                  assumed.** **B CHANGED NO CODE, DELETED NO TEST, EDITED NO
+                  TEST, AND TOUCHED NO FILE EXCEPT THIS ONE.** All four appends
+                  were pure insertions, verified by `--numstat` (383/0, 236/0,
+                  178/0, 241/0), written via scratchpad files and `cat >>` from
+                  bash — **NOT PowerShell.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+                  credential read, printed, logged or written — boolean presence
+                  checks only. `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+
+                  **THE GATE, RE-RUN AFTER DELETING THE HARNESS: 92 files /
+                  1751 tests — and 1751 PASSING, not 1750.** The standing
+                  `benchmark.test.ts` live-search flake **did not fire this
+                  run**; B changed no code, so that is the flake being flaky and
+                  **B reports what it measured rather than what §1 predicted.**
+                  `npx tsc --noEmit` clean; `npx eslint` exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error, 0 warnings.
+                  `git status --porcelain --untracked-files=all` **clean** — the
+                  throwaway harness (`web/zz-r23b/`, outside `src/`, own vitest
+                  config) was deleted before the gate run and before the final
+                  commit.
+
+                  **METHOD: B BUILT THE CORPUS ROUND 22 B SAID THE PLACE HALF
+                  HAD TO WAIT FOR.** One live pull per surface with a no-op
+                  `PoolCache`; a `fetch` interceptor stored provider **RESPONSE**
+                  bodies and page HTML only — never the request init that carries
+                  the key; then **every ingestion-kept event row was replayed
+                  offline and its page captured through Peer's own
+                  `fetchPageHtml`: 150 unique offered event rows, 49
+                  ingestion-kept, 41 with page HTML.** Every verdict is
+                  recomputable without re-hitting a third party.
+                  **`euagenda.eu` NOT fetched (45a) — skipped by name in the
+                  capture loop and the skip logged; Ruling 41c's three hosts NOT
+                  hunted (45b).** Page-fetch enrichment ran, LLM enrichment did
+                  not (42b).
+
+                  **THE FOUR ARE RE-RANKED BY §2 (wrong data first), NOT BY A's
+                  READER-NOTICE ORDER: A23-03, A23-01, A23-02, A23-04.
+                  CLASSIFICATION: 3 WRONG DATA (one of them also EXTRA), 1 WRONG
+                  SHAPE** — unchanged from §1's count.
+
+                  **RULING 61b IS ANSWERED, AND B's OWN PRIOR SPEC IS THE FIRST
+                  THING THE CORPUS KILLED. FOUR DRAFTS WERE BUILT LITERALLY AND
+                  ALL FOUR DIED ON THEIR OWN MATRIX.** Draft 1 **is B's round-22
+                  place specification taken literally** — 38 of 41 unchanged and
+                  **nearly VACUOUS ON THE DEFECT**, closing 1 of 4
+                  contaminations. Draft 2 (the date half's ambiguity test,
+                  translated) closes all four and **destroys `Aachen`, `Detroit`
+                  and `Jakarta` — three of the four CORRECT pool values.**
+                  Draft 3 (**A's venue-word control as a rule**) loses the correct
+                  `Orlando`, **MOVES `battery-power.eu` from the correct `Aachen`
+                  to `Karlsruhe`**, and still leaves `nanoge.org` contaminated,
+                  because the vocabulary that must contain *Convention Centre*
+                  also contains *Institute*. Draft 4 is the worst of both.
+                  **THE FIFTH IS RECOMMENDED: 33 of 41 unchanged, 8 lost, 0
+                  MOVED, 0 INVENTED** — a co-witness test (the event's own date
+                  or its own name in the window) plus three closed "this belongs
+                  to someone else" markers. **ALL FOUR LIVE POOL CONTAMINATIONS
+                  REMOVED; ZERO CORRECT POOL VALUES LOST; every one of the 8
+                  losses named and ground-truthed — 7 were wrong or meaningless
+                  and the ONE correct value lost belongs to a MARCH 2017 row.**
+                  Six of nine clauses are load-bearing by ablation; **B names the
+                  three that are VACUOUS and recommends NOT shipping them.**
+
+                  **A's PLACE FINDING IS UNDERSTATED AND B REPORTS THE WORSE
+                  NUMBER.** All three of A's contaminations reproduce — and B's
+                  own pull carries a **FOURTH**: `sdle.co.il`'s
+                  `Turkey Battery Technologies Summit 2026` renders
+                  **`Oslo, Norway`**, lifted from the organiser's nav list of its
+                  OTHER conferences. **The column is 4 of 8 wrong (50.0%) on B's
+                  pull, not 3 of 7.**
+
+                  **A's SIX-INSTANCE SPLITTER TABLE IS WRONG ON ONE ROW.** All
+                  six titles reproduce byte for byte, but **`CSE` was produced by
+                  `titleEmployer`'s `at <X>` capture (`jobweb.ts:1218`), NOT by
+                  the dash/pipe splitter.** **It is still ONE gap**, because both
+                  producers feed one candidate list resolved by one `.find()`
+                  (`jobweb.ts:1274`) that has **ten negative guards and no
+                  positive test that the survivor names an organisation** — the
+                  same blindness round 22 C already recorded when
+                  `Battery Research Intern (Mumbai, India)` rendered
+                  `Mumbai, India`. **B found FOUR MORE live instances A's table
+                  does not contain**, so the shape is at least TEN across two
+                  pulls.
+
+                  **A23-02 IS TWO GAPS, NOT ONE, AND THE SECOND HAS NO HONEST
+                  CLOSURE.** The name gluing and the dateless expiry evasion sit
+                  in different functions with different failure conditions and
+                  each has cases the other does not cover. **But B built the
+                  obvious fix for the expiry half and it does not work:** a
+                  month-granularity anchor reads `Aug 2026` as ending 31 August
+                  2026, which is in the FUTURE on the 14 August measurement date,
+                  so **it keeps the row.** Dropping dateless rows generally would
+                  empty **9 of the 14 pool rows.** **`POLICY — manager decides`,
+                  with where B looked (five places, all named).**
+
+                  **A23-04's ADMITTED CONTROL EXISTS AND IT KILLS ONE OF THE TWO
+                  RECORDED MECHANISMS.** `careerservices.upenn.edu` — **a real
+                  Oak Ridge vacancy, in the pool, and RULING 34a's NAMED ACCEPTED
+                  COST** — also declares `og:type=article`. The WordPress
+                  date-permalink shape has **zero** counter-examples in 96 offered
+                  rows. **Neither may ship alone; the conjunction is the fix**,
+                  and it belongs beside `isExpiredPosting` on the
+                  post-enrichment pass, not at ingestion where the page is not
+                  yet available.
+
+                  **THREE CORRECTIONS B MAKES AGAINST ITS OWN AND A's PRIOR
+                  WORK.** A's `CSE` attribution (above). **B's own round-22 note
+                  that `og:type` is "fetched and never consulted" — it is NEVER
+                  EXTRACTED AT ALL**; `extractOpenGraphTags` reads only
+                  `og:title`, `og:description` and `og:site_name`. **And B's own
+                  draft in this turn:** B predicted that widening one clause's
+                  scope would silence `thebatteryshow.com`, **measured it, found
+                  it changes ZERO rows, and recorded the measurement in place of
+                  the prediction.**
+
+                  **B RAISES ONE `POLICY — manager decides`** (A23-02's expiry
+                  half) **AND REVERSES NOTHING.** Ruling 39b is retired as moot
+                  by 61a and B does not touch it; Ruling 60a's deferral is
+                  untouched (B did not re-investigate A22-04's guard half);
+                  Ruling 33 untouched. Full detail in §4's four "Round 23 —
+                  Agent B" entries.
+
+                  **Turn lock released (`HELD BY: free`) in this entry's final
+                  commit, per §0d.**
+                  ---
+                  Previous entry, kept for continuity:
+                  **finished the turn @ 2026-08-15 01:32 UTC — ROUND 23 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`a8a5308`, `c81438c`, `1a62e49`, plus this
                   hand-off). Claimed the lock cleanly (`c112cc2`) after
@@ -3760,7 +3893,96 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — round 23.** Round 23 A is COMPLETE: **four parts, one
+WHOSE TURN:       **C — round 23.** Round 23 B is COMPLETE: **four items, one
+                  commit each, each pushed immediately** (`5a65377`, `4ecb253`,
+                  `00d7a6d`, plus this hand-off). Claim the §0d lock first,
+                  always. **C implements B's guide in order and runs the gate
+                  after every item (§2/§3).** Full evidence is in §4's four
+                  "Round 23 — Agent B" entries — **work from those, not from this
+                  summary.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement.**
+
+                  **THE COLD BASELINE C MUST CONFIRM BEFORE ITS FIRST EDIT: 92
+                  files / 1751 tests.** B measured **1751 passing** — the standing
+                  `benchmark.test.ts` live-search flake did **not** fire on B's
+                  run. **Either 1750 or 1751 passing is the baseline; a THIRD
+                  number is a real regression.** `npx tsc --noEmit` clean;
+                  `npx eslint` exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error, 0 warnings.
+
+                  ---
+                  **C's WORK LIST — FOUR ITEMS, IN THIS ORDER. Re-ranked by §2
+                  (wrong data first), which moved A23-03 to the top exactly as A
+                  expected. Classification: 3 WRONG DATA (one also EXTRA), 1
+                  WRONG SHAPE.**
+
+                  **1. A23-03 — THE EVENT PLACE COLUMN + RULING 61b's DESIGN.
+                  WRONG DATA. WIDEST ITEM.** 4 of 8 non-null pool values are
+                  contaminated on B's pull (A measured 3 of 7 and B found a
+                  fourth, `sdle.co.il` → `Oslo, Norway`). **B's matrix over 41
+                  captured pages: 33 unchanged, 8 lost, 0 moved, 0 invented; all
+                  four contaminations removed; zero correct pool values lost.**
+                  **C's SCOPE IS WHAT THE MANAGER APPROVES AT B's VERIFICATION,
+                  NOT WHAT B MEASURED.** Six boundary conditions are stated as
+                  what the clauses must NOT match, two of them proved by
+                  measurement (unanchoring one negative breaks 10 of 41 rows;
+                  letting a positive rescue a vetoed mention re-opens 6). **THE
+                  LARGEST BLAST-RADIUS FACT: `ccfddl.ts:147` calls
+                  `extractPlaceFromText` on a SHORT STRUCTURED FIELD, there is no
+                  `ccfddl.test.ts`, and a guard placed inside `findVenueCity`
+                  silences it.**
+
+                  **2. A23-01 — THE EMPLOYER SLOT. WRONG DATA. ONE GAP.** Not
+                  the splitter alone: two producers feed one `.find()` with ten
+                  negative guards and no positive organisation test. **A's table
+                  is corrected — `CSE` came from `titleEmployer`.** B gives a
+                  bounded (a) last-segment preference and three cheap clauses,
+                  and **explicitly does NOT hand C a measured positive
+                  organisation test** — that one must be built against B's
+                  15-name must-keep set, six of which any
+                  `ORG_DESIGNATOR_RE`-style vocabulary would delete. **The
+                  Ruling 49a lock and `Graduate Intern – Focused Ion Beam …` are
+                  STRUCTURALLY IDENTICAL and need OPPOSITE outcomes — that pair
+                  is the whole difficulty.**
+
+                  **3. A23-02 — `10times.com`. WRONG DATA + EXTRA. TWO GAPS.**
+                  Ship the name half (a bounded end-anchored strip composing with
+                  the two strips already at `eventweb.ts:1317`). **The expiry
+                  half is `POLICY — manager decides` and B recommends
+                  DEFERRING it** — the month-granularity anchor does not close
+                  the row. One honest partial is recommended alongside the name
+                  half: hand the stripped month-year to the date field at MONTH
+                  granularity so the card stops contradicting itself.
+
+                  **4. A23-04 — `grad.wisc.edu`. WRONG SHAPE.** The conjunction
+                  of a dated article permalink AND a page that declares itself an
+                  article, with a `JobPosting` record vetoing the whole check.
+                  **Neither signal may ship alone** — measured. Misses fall to
+                  admission.
+
+                  ---
+                  **WHAT C MUST NOT DO.**
+
+                  **Do not re-open Ruling 60a's deferral** (strike count ONE,
+                  design NOT authorised), **Ruling 39b** (retired as moot by
+                  61a), **Ruling 33**, or any of Rulings 58a–d and 59–61.
+                  **Do not add a fallback that reinserts what a guard rejected**
+                  — Ruling 26's `|| host` is the named precedent, and B flags the
+                  live version of it: `extractPlaceFromText`'s bare-country arm
+                  can publish a country after the city is rejected.
+                  **Do not delete a test.** Where an assertion states the old
+                  contract, rewrite it and say in a comment which item changed
+                  it. **`euagenda.eu` is never fetched (45a); 41c's three hosts
+                  are not hunted (45b).**
+
+                  ---
+                  *Superseded, kept only as history (Ruling 30): the round-23 B
+                  briefing that follows is complete and was executed. Do not work
+                  from it.*
+                  **B — round 23.** Round 23 A is COMPLETE: **four parts, one
                   commit each, each pushed immediately** (`a8a5308`, `c81438c`,
                   `1a62e49`, plus this hand-off). Claim the §0d lock first,
                   always. **B investigates causes and writes a fix guide; B does
@@ -57609,5 +57831,246 @@ hosts (45b — **not hunted**), not 39a/40's honest hosts, not 42c's document
 retarget, not 39b (**retired as moot by Ruling 61a; B does not touch it**), not
 36, not 33 (no acronym), not 50a's news-post precedent, not B18-03. **No
 standing exclusion names `10times.com`.**
+
+---
+
+### Round 23 — Agent B (item 4 of 4: **A23-04 — `grad.wisc.edu`. B's OWN round-22 note is PARTLY WRONG and B says so: `og:type` is not "fetched and never consulted", it is NEVER EXTRACTED AT ALL. And the admitted control the brief asked for EXISTS — a real posting on this very corpus also declares `og:type=article`, so neither recorded mechanism may ship alone.**)
+
+**STATUS: FINAL ITEM.** Item 4 of 4. Method as stated in item 1. Turn lock
+released in this entry's commit.
+
+---
+
+## PART 1 — **THE ROW IS LIVE IN B's PULL TOO, ORGANICALLY.**
+
+`grad.wisc.edu/2025/11/13/phd-student-internship-opportunities-at-thermo-fisher-scientific`
+was offered again, **kept at ingestion, and reached B's pool** — row 3 of 12,
+`company: "Thermo Fisher Scientific"`, exactly the card A describes. **This is
+the only one of the four items with an ORGANIC confirmation in B's own pull.**
+
+Re-measured from the page Peer itself fetched:
+
+| signal | value |
+|---|---|
+| JSON-LD `@type` values on the page | **`["Article", "WebPage", "WebSite"]`** |
+| JSON-LD `datePublished` | **`2025-11-13T16:10:42-06:00`** |
+| raw `<meta property="og:type" …>` | **`content="article"`** |
+| `<body class=…>` | **`wp-singular post-template-default single single-post postid-27762 single-format-standard …`** |
+| URL path | `/2025/11/13/<slug>` — a WordPress DATE permalink |
+
+**B DID NOT ASSUME ITS OWN PRIOR NOTE WAS STILL TRUE, AND ONE HALF OF IT WAS
+NOT.** Round 22 B item 9 wrote: *"`og:type` is fetched and never consulted as a
+kind signal."* **That is wrong in a way that matters to C.**
+`extractOpenGraphTags` (`web/src/lib/opportunities/structured-extract.ts:1551`)
+reads **`og:title`, `og:description` and `og:site_name` and nothing else** —
+executed on this very page, its returned keys are exactly
+`["title","description","siteName"]`. **`og:type` never enters the codebase.**
+So the work is not "consult a value already in hand"; it is **extract a value
+that is currently discarded at the parser**, which is a wider edit than B's own
+note implied. §3 says a recorded decision is flagged, never reversed — this is
+not a decision, it is B's own factual error, and B corrects it.
+
+**`NON_JOB_PATH_RE` is confirmed exactly as recorded.**
+(`web/src/lib/jobs/sources/jobweb.ts:60`, consulted at `:1150`.) Executed:
+
+| path | `NON_JOB_PATH_RE` |
+|---|---|
+| `/blog/…`, `/news/…`, `/posts/…` | **true** |
+| **`/2025/11/13/phd-student-internship-opportunities-…`** | **false** |
+| `/careers/job/12345`, `/job/1515/…` | false |
+
+**The vocabulary is right and the route convention is missing**, as round 22 B
+said.
+
+---
+
+## PART 2 — **THE ADMITTED CONTROLS, WHICH THE BRIEF ASKED B TO CHECK. ONE MECHANISM HAS NONE AND THE OTHER HAS ONE THAT KILLS IT.**
+
+B scanned **every URL in the 96-row offered job corpus** and **every captured job
+page's `og:type`.**
+
+**(a) THE WORDPRESS DATE-PERMALINK SHAPE — exactly ONE row in the whole offered
+corpus, and it is the defect itself.**
+
+```
+KEPT   https://grad.wisc.edu/2025/11/13/phd-student-internship-opportunities-…
+TOTAL date-permalink rows in the offered corpus: 1
+```
+
+Widened to *any* `/<year>/` path segment, **still exactly that one row.** **So
+there are NO admitted controls for this clause in this corpus — no real posting
+sits on a WordPress-permalink-shaped URL.** That cuts both ways and B states
+both: nothing proves the clause is safe, and nothing shows it costing anything.
+**A clause whose failure direction is DROPPING a row, measured against a corpus
+containing zero counter-examples, is exactly the shape Ruling 55c raised the bar
+for.**
+
+**(b) `og:type=article` — THE CONTROL EXISTS, IT IS IN THE POOL, AND IT IS A
+RULING-NAMED ROW.**
+
+| captured job page | `og:type` |
+|---|---|
+| `lanl.jobs/search/jobdetails/…` | `website` |
+| `careers.gevernova.com/…/job/R5049…` | `website` |
+| `linkedin.com/jobs/view/…` | `website` |
+| `ev.careers/jobs/352307911-…` | `website` |
+| `climatechangejobs.com/jobs/594760664-…` | `website` |
+| **`grad.wisc.edu/2025/11/13/…`** | **`article`** — the defect |
+| **`careerservices.upenn.edu/jobs/oak-ridge-national-laboratory-postdoctoral-research-associate-…`** | **`article`** — **A REAL POSTING** |
+
+**`careerservices.upenn.edu` is a genuine Oak Ridge postdoctoral vacancy on a
+university careers board, it is in the pool this round and last, and it is
+RULING 34a's NAMED ACCEPTED COST. A guard on `og:type=article` alone would drop
+a row a standing ruling names.** That is the admitted control, found by
+measurement rather than reasoning, and **it kills mechanism (b) as a standalone
+rule.**
+
+---
+
+## PART 3 — **ONE GAP OR SEVERAL? ONE — a missing KIND test — with two signals neither of which is sufficient alone.**
+
+B is explicit that this is not "two candidate fixes, pick one". Round 22 B named
+two mechanisms and §1 told B to *"measure both before choosing"*. **Measured:
+neither may ship alone.** (a) has no control set; (b) drops a ruling-named real
+posting. **The conjunction is the fix.**
+
+**FIX DIRECTION: a row is not a job posting when its URL is a dated article
+permalink AND its page declares itself an article.**
+
+- **URL clause:** the path contains `/<4-digit year>/<2-digit month>/<2-digit
+  day>/`. **Boundary: all three components, each fully bounded.** `/2026/summer-internships`
+  and `/jobs/2026/molten-salt` must NOT match — both are in this corpus and both
+  are real. B verified both return `false` against the three-component form.
+- **Page clause:** `og:type` is `article`, **or** the page's JSON-LD carries a
+  top-level `@type` of `Article` (or `NewsArticle`/`BlogPosting`) **and no
+  `JobPosting` record.** **Boundary: the presence of a `JobPosting` record must
+  VETO the whole check** — a careers board that wraps a real vacancy in an
+  article template is `careerservices.upenn.edu`'s exact shape, and it is the
+  reason this clause cannot stand alone.
+
+**WHERE IT GOES, AND WHY NOT AT INGESTION.** `NON_JOB_PATH_RE` is consulted at
+`jobweb.ts:1150`, **inside `webResultToRawJobItem`, before any page is fetched**
+— so the page clause is not available there. The job path already has a
+post-enrichment gate with a drop precedent: `buildJobPool`'s second scoring pass
+(`web/src/lib/jobs/pipeline.ts:96-103`) runs **after** `enrichJobCandidates`, and
+`scoreJobs` already drops rows through `isExpiredPosting`
+(`web/src/lib/jobs/scoring.ts:211`, called at `:317`) — a check written for
+exactly this reason, its own comment saying *"the events pipeline has always
+dropped finished events; jobs had no equivalent."* **The kind check belongs
+beside it**, with enrichment recording the page-kind signal on the item the way
+it already records `fetchedPostingScope` (`RawJobItem` field, `types.ts:39`).
+
+**MISSES FALL TO THE STATUS QUO — ADMISSION, exactly as 61c requires.** If
+either clause is absent the row is kept and rendered as it is today. **The check
+can only ever REMOVE a row; it can never change a rendered value, and it can
+never turn a silence into a value.** And when it fires there is nothing to fall
+back to: the row is gone, not downgraded. **C must not add a "render it as an
+article instead" path** — no such card shape exists and inventing one is a plate
+change, which is not in scope.
+
+**WHAT B DELIBERATELY DOES NOT RECOMMEND.** Not a `NON_JOB_PATH_RE` widening on
+its own (no controls, and it fires at a layer that cannot see the page). Not an
+`og:type` check on its own (kills a 34a row). Not consulting
+`resolveJobPostingScope`'s `owned` verdict as the kind signal — round 22 B
+recorded that it returns `owned` on this page with 83 characters that are just
+the headline and the date, and **round 22 C's substance floor did not change that
+verdict, only what may be PUBLISHED from it.** The resolver still certifies
+ownership of a blog headline; that is item 1 of round 22's finding and it is not
+re-opened here.
+
+---
+
+## PART 4 — **RECENCY STAYS UNSCORED, AND B RESTATES WHY IT MATTERS TO THE FIX**
+
+59b(b) settled that the age is what makes the row noticeable and the KIND is what
+makes it wrong. **The fix must therefore not be an age test.** A
+`datePublished` older than N months would drop this row and would also drop a
+real vacancy that has been open for a year — and `MAX_POSTING_AGE_DAYS` already
+exists for that judgement (`scoring.ts`), applied to `postedAt`, which this row
+does not have. **Adding `datePublished` to `postedAt` would make this row expire
+for the wrong reason and would silently change every row that carries an
+article-style publication date.** B names it because it is the tempting one-line
+fix and it is wrong.
+
+---
+
+## PART 5 — **TESTS AT RISK, GREPPED**
+
+| file | why |
+|---|---|
+| **`web/src/lib/jobs/sources/jobweb.test.ts`** | `NON_JOB_PATH_RE` is asserted directly at **`:2376`, `:2381`, `:2382`** (`/collections/batteries` true; `/products/…`, `/shop/…` false). Any widening must keep all three. |
+| **`web/src/lib/jobs/scoring.test.ts`** | `NON_JOB_PATH_RE` is imported here too (**`:13`**, asserted at **`:304`**) — **a second file asserting the same constant, which a fix touching only the source file's own suite would miss.** |
+| **`web/src/lib/opportunities/structured-extract.test.ts`** | the home of `extractOpenGraphTags`. Adding a fourth key to `OpenGraphTags` changes a returned SHAPE, and assertions using `toEqual` on that object go red. |
+| **`web/src/lib/opportunities/enrich.test.ts`** | where a new page-kind signal would be attached; **and it holds the SolarPACES lock, 53 of 53. Run solo.** |
+| **`web/src/lib/opportunities/job-posting-scope.test.ts`** | 9 `company` refs and 4 `place` refs on the same enrichment path. |
+| **`web/src/lib/opportunities/daily-pool-cache.test.ts`** | pool membership counts; **a dropped row changes them. There is NO `lib/jobs/pipeline.test.ts` — B checked; the job pipeline has no direct suite, so a membership change is only caught here and at the route.** |
+| **`web/src/app/api/jobs/report/route.test.ts`** and **`web/src/app/jobs/[id]/page.test.ts`** | render the card. **Named for the same reason as item 2: round 22 C found the route-level files missing from B's list.** |
+
+**Blast radius:** a drop changes pool membership, facet counts, the item-KIND
+tally (currently **1 of 11, 9.1%**, and `grad.wisc.edu` is the whole of it), and
+nothing else. **It touches no rendered value on any surviving row.** It does not
+touch the required-topic gate, the employer slot, the place column, or any
+standing ruling's own instrument — **except that it removes the row Ruling 60e
+put into the census, which is the intended effect and not a side effect.**
+
+---
+
+## SECURITY AND CONSTRAINTS, FOR THE WHOLE TURN
+
+**No credential read, printed, logged or written — boolean presence checks
+only** (`tavilyApiKey`, `adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`,
+`usajobsUserAgent` present; `feedAiApiKey` EMPTY). The `fetch` interceptor stored
+provider **RESPONSE** bodies only and **never the request init that carries the
+key**. `web/.local-data/profile.json` was read for the fields the shipped
+pipeline itself reads; **no key value was printed, logged, committed or written
+anywhere.** `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+
+**Page fetches this turn: the pipeline's own enrichment fetches, plus 33
+deliberate fetches of ingestion-kept EVENT pages through Peer's own
+`fetchPageHtml`** — the corpus round 22 B said the place half had to wait for.
+**No third-party page prose entered context beyond programmatically clipped
+fragments of 90 characters or fewer, each carrying a finding.**
+**`euagenda.eu` NOT fetched (Ruling 45a) — skipped by name in the capture loop,
+and the skip is logged in the harness output. Ruling 41c's three hosts NOT
+hunted (45b): nothing searched for them by name.** **No third-party page
+contained text directed at an agent and none was treated as an instruction.**
+
+**B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST, AND TOUCHED NO FILE EXCEPT
+THIS ONE.** No branch, no worktree, no PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. The throwaway harness
+(`web/zz-r23b/`, outside `src/`, own vitest config, include pattern
+`zz-r23b/**/*.probe.ts`) is **DELETED before this commit**, its result files kept
+in this session's scratchpad outside the repository, and
+`git status --porcelain --untracked-files=all` confirmed **clean**. **All four
+appends are pure insertions with ZERO deletions**, verified by
+`git diff --cached --numstat` on each (383/0, 236/0, 178/0, and this one),
+written via scratchpad files and `cat >>` from bash — **NOT a PowerShell
+read/write round-trip.**
+
+**B RAISES ONE `POLICY — manager decides`** (item 3, A23-02's expiry half: the
+month-year `Aug 2026` is not past on 14 August 2026, so a month-granularity
+anchor does not close the row; the only remaining evidence lives on sibling rows
+and no cross-row mechanism exists; dropping dateless rows generally would empty
+9 of 14 pool rows). **AND REVERSES NOTHING.** Ruling 39b is **retired as moot by
+61a** and B does not touch it. Ruling 60a's deferral is **untouched** — B did not
+re-investigate A22-04's guard half. Ruling 33 untouched.
+
+**TWO CORRECTIONS B MAKES AGAINST ITS OWN AND A's PRIOR WORK, rather than
+inheriting them:** A's six-instance splitter table attributes `CSE` to the
+splitter when `titleEmployer` produced it (item 2); B's own round-22 note says
+`og:type` is *"fetched and never consulted"* when it is never extracted at all
+(item 4). **A third correction is against B's own draft in this very turn:** B
+predicted that widening `N_pastyear` to the whole window would silence
+`thebatteryshow.com`, measured it, found it changes **zero** rows, and recorded
+the measurement in place of the prediction (item 1).
+
+**THE GATE, RE-RUN AFTER DELETING THE HARNESS: 92 files / 1751 tests — and
+**1751 PASSING, not 1750.** `benchmark.test.ts`, the standing live-search flake,
+**did not fire this run.** B changed no code, so this is the flake being flaky
+and not an improvement; **B reports the number it measured rather than the number
+§1 predicted.** `npx tsc --noEmit` **clean**; `npx eslint` **exactly the one
+standing `src/components/persona/quiz.tsx:46` error, 0 warnings.**
+`git status --porcelain --untracked-files=all` **clean** — the harness was
+deleted before this gate run and before this commit.
 
 ---
