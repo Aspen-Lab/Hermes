@@ -67196,3 +67196,274 @@ dateless for the wrong reason.
 ---
 
 **ITEM 1 COMPLETE. Item 2 (A26-01) follows on its own commit.**
+
+### Round 26 — Agent B (item 2 of 4: **A26-01 — THE MECHANISM IS ONE, NOT TWO, AND IT IS NOT THE ONE A NAMED. THE BUILD NEVER STRIPS AN ` at <Employer>` CLAUSE FROM ANY TITLE ON ANY HOST — IT ONLY EVER AMPUTATES ONE AS A SIDE EFFECT OF THE CHROME-SEPARATOR SPLIT. A's "the same shape IS stripped on `magnet.me` and both `linkedin.com` rows" IS CORRECTED BY EXECUTION. The defect is also WIDER than A measured: THREE hosts state the employer twice this window, not one. Fix designed, adversarially tested at 23 of 24 constructed cases plus a full live sweep, blast radius measured at 3 of 43 rendered titles and ONE existing test, which it passes.**)
+
+**STATUS: item 2 of 4, banked on its own commit.** B changed no code. Harness at
+`web/zz-r26b/` (own config, `*.probe.ts`), **deleted before this commit**. No
+credential printed, logged, committed or written anywhere.
+
+---
+
+## WHAT A SAID, AND WHAT EXECUTION SAYS
+
+A wrote: *"The same `at X` shape IS stripped elsewhere in this very window —
+`magnet.me` renders `ION Exchange Membrane Expert` from a title reading `… in
+Amsterdam at AquaBattery`, and both `linkedin.com` rows render bare role names
+from employer-suffixed pages. So the behaviour is inconsistent between hosts, on
+the same shape, in the same pull."*
+
+**A's OBSERVATION is right — the rendered outputs do differ. A's INFERENCE about
+why is wrong, and the difference matters, because a fix aimed at "make
+`ev.careers` behave like `magnet.me`" would be aimed at a strip that does not
+exist.**
+
+**THERE IS EXACTLY ONE TITLE RULE IN THE WHOLE JOB PATH**
+(`web/src/lib/jobs/sources/jobweb.ts:1253-1263`, rendered at `:1450`):
+
+```
+const splitParts = title.split(/\s+([-–—|·])\s+/);
+const parts = splitParts.filter((_, i) => i % 2 === 0);
+…
+const roleTitle = parts[0]?.trim() || title;
+```
+
+**The rendered title is the provider's title up to its first chrome separator.
+Nothing anywhere removes an ` at <Employer>` clause.** `cleanJobTitle`
+(`web/src/lib/opportunities/job-cleanup.ts:39`) only strips unbalanced brackets,
+leading punctuation and repeated whitespace. So:
+
+> **An ` at <Employer>` clause survives in the rendered title if and only if it
+> lies BEFORE the first ` - `/` – `/` — `/` | `/` · ` in the provider's title.
+> It is never stripped; it is only ever amputated.**
+
+**PROVEN BY EXECUTION — the shipped `webResultToRawJobItem` fed A's own recorded
+strings:**
+
+| input (A's recorded string) | rendered title | company |
+|---|---|---|
+| `Internship, Battery Engineering (Summer 2026) at Tesla - EV.Careers` | `Internship, Battery Engineering (Summer 2026) at Tesla` | `Tesla` |
+| **`ION Exchange Membrane Expert in Amsterdam at AquaBattery \| Magnet.me`** — A's own recorded GROUND-TRUTH `<title>` | **`ION Exchange Membrane Expert in Amsterdam at AquaBattery`** — **THE TAIL IS NOT REMOVED** | `AquaBattery` |
+| `ION Exchange Membrane Expert - Magnet.me` — the shape that WOULD produce A's observed render | `ION Exchange Membrane Expert` | `undefined` |
+
+**So `magnet.me` did not have its clause stripped. It was never offered one.**
+A's ground-truth column is the page's fetched `<title>`; the string Peer actually
+consumed is the search provider's OFFERED title, and on that row the two are not
+the same string. **A compared a fetched `<title>` against a rendered title and
+read the gap as build behaviour. It is provider behaviour.**
+
+**`linkedin.com` is the same story, and B has it live.** This window's offered
+title for the SRNL posting is **`Actinide Chemistry/Ion Exchange Postdoc
+Research ...`** — provider-truncated, **carrying no clause at all**, while the
+URL slug still reads `…-at-savannah-river-national-laboratory-4420461653`. Fed
+the untruncated shape, the build **keeps** the clause:
+`Actinide Chemistry/Ion Exchange Postdoc Research Associate at Savannah River
+National Laboratory`, company `Savannah River National Laboratory`. **The other
+six `linkedin.com` rows this window are category pages that `isListingPage`
+drops before any title is rendered.**
+
+**The two shapes that decide everything, constructed and executed:**
+
+| provider title | rendered title | company | why |
+|---|---|---|---|
+| `Battery Engineer at Acme Labs - JobBoard` | **`Battery Engineer at Acme Labs`** | `Acme Labs` | clause is BEFORE the separator ⇒ survives (the `ev.careers` shape) |
+| `Battery Engineer - Summer 2027 at Acme Labs \| Intern Insider` | **`Battery Engineer`** | `Acme Labs` | clause is AFTER the separator ⇒ amputated (the `interninsider.me` shape) |
+
+**ONE MECHANISM. The hosts do not diverge — the provider's title punctuation
+does.**
+
+---
+
+## **THE DEFECT IS WIDER THAN A MEASURED: THREE HOSTS, NOT ONE**
+
+B swept the **whole live offered job corpus** — 12 shipped `templateJobQueries`
+at the shipped `JOB_QUERY_BUDGET`/`RESULTS_PER_SEARCH`, **112 offered rows,
+union 96, 43 rendered by the shipped mapper**.
+
+**10 offered rows carry an ` at <Cap>` clause. 4 still carry it after
+rendering. 3 of those 4 ALSO carry the identical employer in the company
+field — the reader is told the employer twice, adjacent:**
+
+| host | rendered title | company | duplicated? |
+|---|---|---|---|
+| `ev.careers` | `Internship, Battery Engineering (Summer 2026) at Tesla` | `Tesla` | **YES — A26-01 itself** |
+| `grad.wisc.edu` | `PhD Student Internship Opportunities at Thermo Fisher Scientific` | `Thermo Fisher Scientific` | **YES — a SECOND host** |
+| `careers.jnj.com` | `Internships at J&J` | `J&J` | **YES — a THIRD host** |
+| `q-chem.com` | `Summer at Q-Chem` | **`Q`** | no — and see B26-OBS-02 |
+
+**A26-01 IS A CLASS, NOT AN `ev.careers` QUIRK**, and any fix must be written
+for the class. A saw one instance because A scored the POOL (11 rows) and this
+is visible across the OFFERED corpus (43 rendered).
+
+---
+
+## **B26-OBS-02 — A SECOND, SEPARATE FINDING IN THE SAME SWEEP. FILED AS AN OBSERVATION FOR A TO RANK.**
+
+`q-chem.com`'s offered title `Summer at Q-Chem` renders **`company: "Q"`**. The
+`titleEmployer` capture at `jobweb.ts:1301-1303` is a run of Title-Case words
+over the class `[A-Z][\w&.,'’]*`, and **`-` is not in that class**, so the
+capture stops dead at the hyphen and hands a **one-letter fragment** to the
+employer slot. **This is a WRONG VALUE in the employer column, not a silence.**
+Not ranked by B (B does not rank), and B did **not** measure whether this row
+reaches the pool — it is an ingestion-level observation. **Falsifier:** a future
+window where `q-chem.com`, or any hyphenated employer, renders its full name.
+**Named risk if fixed:** widening that character class is exactly the move the
+file's own B8-01 comment says was tried and rejected for the space case; a
+hyphen is narrower than a space but the same argument applies and a fix must be
+measured, not assumed.
+
+---
+
+## **THE FIX DIRECTION — ESTABLISHED, NOT ASSUMED**
+
+**Where it must NOT go, and why, stated first.**
+
+- **NOT at ingestion in `jobweb.ts`**, even though that is where provenance is
+  perfect (`titleEmployer` is a named local). Two reasons, both measured from
+  source: **(1) enrichment can put the clause back.**
+  `extendFromPageTitle` / `extendTruncatedTitle`
+  (`web/src/lib/opportunities/enrich.ts:215-239`) REPLACE a `…`-truncated
+  provider title with the page's own `<title>` — precisely the string shape that
+  carries ` at <Employer> | Brand`. The `linkedin.com` row above is a live
+  candidate for exactly that. An ingestion-time strip runs before enrichment and
+  would be silently undone. **(2) Coverage**: `titleEmployer` exists only on the
+  `jobweb` source; the other six sources set `company` from structured provider
+  fields, so an ingestion fix cannot reach them at all.
+- **NOT by touching 62d(a)'s parenthetical path or the employer guard chain.**
+  The fix below reads `company` and never writes it. **62d(a) is correct for a
+  third round and is not reopened.**
+
+**Where it goes.** `web/src/lib/jobs/mapper.ts` — the one place that holds the
+FINAL title and the FINAL company for EVERY source, and which runs **after**
+`enrichJobCandidates` (`web/src/lib/jobs/pipeline.ts:96`, then `scoredJobToJob`
+at `:29`). Following round 25 C's own precedent (`lib/jobs/remote-claim.ts`), the
+rule belongs in a small shared module — call it
+`web/src/lib/jobs/employer-clause.ts` — so a test can lock the invariant
+directly rather than through a component.
+
+**The rule, in full, exactly as B executed it:**
+
+```ts
+export function stripRedundantEmployerClause(
+  roleTitle: string,
+  company: string | undefined,
+): string {
+  const employer = company?.trim();
+  if (!employer) return roleTitle;
+  const clause = new RegExp(`\\s+\\bat\\s+${escapeRegExp(employer)}\\s*$`);
+  const stripped = roleTitle.replace(clause, "").trim();
+  return stripped ? stripped : roleTitle;
+}
+```
+
+**Call site:** `mapper.ts:189`'s `roleTitle` field only.
+
+**ORDERING CONSTRAINT C MUST HONOUR, AND IT IS LOAD-BEARING.**
+`mapper.ts:161` passes `roleTitle` into `summarizeJob(...)` as its title-echo
+check, and `mapper.ts:132`'s own comment records that this ordering was
+deliberately established in B5-07/R4. **The stripped value must NOT be
+substituted before that call** — the echo check compares against page prose that
+may legitimately contain the employer, and shortening its input would weaken a
+check nobody asked to weaken. **Strip at the field, keep `roleTitle` itself
+untouched.**
+
+**WHY IT IS A REDUNDANCY TEST AND NOT A PROVENANCE TEST.** B considered keying
+the strip on "the title clause is the candidate that WON the employer slot",
+which is knowable at ingestion. It is rejected: it is unavailable at the mapper,
+it needs the guard chain restructured, and **it is not what the defect is.** The
+defect is that **the reader sees the same employer twice on two consecutive
+lines**. If the title ends in ` at X` and the field beside it reads exactly `X`,
+the duplication is present *however* `X` was derived — so the test should read
+the duplication, not its history. **The strip can only ever remove a substring
+the adjacent field provably repeats; it can never invent one, and it never
+touches the employer field.**
+
+---
+
+## **BOUNDARY CONDITIONS — WHAT MUST NOT CHANGE, EACH EXECUTED**
+
+23 of 24 constructed cases pass. **The one failure is B's own expectation, not
+the design, and B says so rather than quietly deleting the case:** input
+`" at Tesla"` (leading space) with company `Tesla` returns the input UNCHANGED
+because the strip would empty the title — which is the documented behaviour B
+wanted; B wrote the expected value as the trimmed form. **The input is also
+unreachable in the real pipeline**, because `cleanJobTitle` already trims and
+strips leading punctuation before the mapper ever sees a title.
+
+| boundary | case | result |
+|---|---|---|
+| **no employer field ⇒ never fire** — the clause is then the reader's ONLY source of the employer | `Research in Reno at American Battery` / `undefined` | **unchanged** |
+| **clause employer ≠ field ⇒ never fire** | `Summer at Q-Chem` / `Q` | **unchanged** |
+| **another candidate won the slot ⇒ never fire** | `Battery Engineer at Careers` / `Acme Labs` | **unchanged** |
+| **mid-title clause ⇒ never fire** (end-anchored on purpose: a mid-title `at X` is far more often a qualifier or a place) | `Battery Engineer at Tesla (Remote)` / `Tesla` | **unchanged** |
+| **case must match ⇒ never fire on a different casing** | `Battery Engineer at TESLA` / `Tesla` | **unchanged** |
+| **word boundary** — a word merely ENDING in `at` is not the preposition | `Battery Engineer format Tesla` / `Tesla` | **unchanged** |
+| **substring that is not a clause** | `Battery Engineer, Format Cells` / `Format Cells` | **unchanged** |
+| **a truncated title (the enrichment path) cannot match**, because the clause is end-anchored and `…` is not | `Actinide … Research ...` / `Savannah River National Laboratory` | **unchanged** |
+| **a company value that itself contains ` at `** must not corrupt the title | `Co-op` / `McKelvey School of Engineering at Washington University in St. Louis` | **unchanged** |
+| **regex metacharacters in the employer name MUST be escaped** | `Analyst at C.H. Robinson`; `Engineer at Acme (US) Inc.` | **both strip correctly** |
+| **stripping must never empty the title** | `at Tesla` / `Tesla` | **unchanged (original kept)** |
+| **whitespace on either side** | title with trailing spaces; company with a trailing space | **both strip correctly** |
+
+**WHAT RENDERS WHEN DATA IS MISSING** (the standard, answered directly):
+**`company === undefined` is the common case — 40 of 43 rendered rows this
+window — and the function returns the title byte-identical on every one of
+them.** There is no empty state to design: the fix has exactly one output shape
+(a shorter title) and one fallback (the input, unchanged). **It never renders a
+placeholder and it never invents a word.**
+
+---
+
+## **BLAST RADIUS, MEASURED**
+
+**LIVE SWEEP over every offered row of the live corpus: 43 rendered, 3 titles
+change, 40 unchanged.** The three are exactly `ev.careers`, `grad.wisc.edu` and
+`careers.jnj.com` above. **Zero collateral changes.**
+
+**TESTS AT RISK — GREPPED, NOT REMEMBERED.** The fix writes `roleTitle` at the
+mapper, so `jobweb.test.ts` (2636 lines, the whole ingestion corpus) is
+**structurally out of range** — that is a second argument for this call site.
+Grepping every test that touches the field:
+
+- **`web/src/lib/opportunities/job-cleanup.test.ts:49` — THE ONLY EXISTING TEST
+  IN RANGE, AND IT IS A FREE MUST-KEEP THE DESIGN ALREADY SATISFIES.** It
+  asserts `roleTitle` is `Research in Reno at American Battery` **and, two lines
+  later, that `companyOrLab` is `undefined`.** So an existing test already
+  encodes the single most important boundary — *do not strip the clause when it
+  is the reader's only source of the employer* — and it passes unchanged.
+  **Executed, not assumed.**
+- **`web/src/lib/opportunities/enrich.test.ts:1079-1081`** asserts
+  `card.roleTitle` equals `Process R&D Senior Scientist job in Wilmington,
+  Delaware, United States of America`. It does not end in an ` at <company>`
+  clause; executed against the most hostile company value (`Dupont`), the title
+  comes back **byte-identical**.
+- **Out of range, each checked rather than waved past:** `dedup.test.ts:46` and
+  `scoring.test.ts:701` both carry ` at <Employer>` titles but operate on
+  `RawJobItem` **before** the mapper; `job-posting-scope.test.ts:24/129` and
+  `enrich.test.ts:1104` are page-text/`<title>` witnesses, also pre-mapper;
+  `employer-identity.test.ts:15` is prose, not a title.
+- **Route-level files walked by name** (`app/api/jobs/report/route.test.ts:28`,
+  `app/jobs/[id]/page.test.ts:42/606`, `app/saved/page.test.tsx:38`) —
+  every `roleTitle` fixture is a bare role name with no ` at ` clause.
+
+**Cheapest honest summary: one shared module, one call site, one existing test in
+range, and it already passes.**
+
+---
+
+## **FALSIFIERS FOR THE FIX, NAMED**
+
+- **It landed:** `ev.careers` renders `Internship, Battery Engineering (Summer
+  2026)` with the subtitle still reading `Tesla` — and `grad.wisc.edu` and
+  `careers.jnj.com` do the same, which is the stronger witness because they were
+  never the reported row.
+- **It over-reached:** any row whose title loses a clause while its employer
+  field is empty (A's own second falsifier, re-pointed at the real mechanism).
+  The `job-cleanup.test.ts:49` lock fails first if this happens.
+- **It under-reached:** an enrichment-extended title that re-acquires the clause
+  after the strip. **This is why the call site is the mapper and not ingestion**,
+  and a test should assert the enriched path specifically.
+
+---
+
+**ITEM 2 COMPLETE. Item 3 — the visual design clusters — follows.**
