@@ -270,8 +270,8 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:34 UTC (Agent A, round 28 —
-                  parts 1-2 of 4 banked; refreshed after a transient API-limit
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:52 UTC (Agent A, round 28 —
+                  parts 1-3 of 4 banked; refreshed after a transient API-limit
                   death, not re-claimed)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
@@ -76117,3 +76117,244 @@ visual census rather than after.** Parts 3-4 take the visual dimension.
 
 **Ruling 74's headcount is TALLIED as an accepted named cost and is NOT part of
 that count.**
+
+### Round 28 — Agent A (part 3: **THE VISUAL CENSUS. ALL ELEVEN ROUND-26 CLUSTERS AND ALL THREE ROUND-27 VISUAL ITEMS ARE VERIFIED LANDED AND NOT ONE FALSIFIER FIRES. BOTH TILE BANDS ARE RE-DERIVED FROM THE PDF's OWN SPANS AND BOTH MATCH THE PLATE EXACTLY — SEVEN TILES ON PLATE 02, SIX ON PLATE 03, SAME LABELS, SAME ORDER, SAME SUB-LINE SHAPES. BOTH PLATES ARE THEN RE-WALKED START TO FINISH AND THE SECTION ORDER MATCHES §1c AND §P10.2 EXACTLY. TWO NEW DIFFERENCES ARE EXPOSED, BOTH IN THE ONE PLACE ROUND 26's OWN UNIFICATION DID NOT REACH. AND A DISCLOSES FOUR DEFECTS IN ITS OWN PLATE FIXTURE — EVERY ONE OF WHICH HAD MANUFACTURED A FALSE FINDING — AND WITHDREW ALL FOUR BEFORE FILING ANYTHING.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 3 of four. **No gate verdict is set here**
+(Ruling 30); part 4 carries the ranked lists and the verdict.
+
+---
+
+## **METHOD — THE SAME INSTRUMENT AS ROUNDS 26 AND 27, ON BOTH KINDS OF INPUT**
+
+Shipped components rendered to static markup with `renderToStaticMarkup`, on
+**both** input classes the brief requires:
+
+- **LIVE ROWS** — the same 60 job renders and 60 event renders parts 1-2
+  measured, so nothing here is fixture-only.
+- **PLATE-SHAPED FIXTURES** — one job and one event built to plate 02's and
+  plate 03's own values, so the sections live data never populates (the visa
+  evidence quote, the four apply rows, the fee table, the three-term italic) are
+  actually exercised instead of scored as silence.
+
+The plate side was re-extracted from `Peer-design-spec-original.pdf` **span by
+span with font, size, colour and x/y position** — pages 2-4 for plate 02, pages
+4-9 for plate 03 — rather than read by eye.
+
+---
+
+## **A DISCLOSES FOUR DEFECTS IN ITS OWN PLATE FIXTURE, AND EVERY ONE HAD ALREADY MANUFACTURED A FALSE FINDING**
+
+This is the round's most important methodological result, so it goes before any
+figure. **A's first plate fixture was wrong in four places, each one produced
+something that looked like a build defect, and all four were withdrawn by
+checking the type rather than by filing them.**
+
+| A's fixture said | what A nearly filed | the truth |
+|---|---|---|
+| `roleKind: "research"` | **"plate 02 has a `TYPE` tile the build lacks"** | `"research"` is not a `RoleKind`; the five valid values are `internship`, `phd-position`, `postdoc`, `staff`, `faculty`. **The build's `TYPE` tile is present and correct** |
+| `fees: [{ label, amount, currency }]` | **"plate 03 has a `FEE` tile the build lacks"** | `EventFee` carries `standard` / `student` / `online` / `deadline` as STRINGS. **The build's `FEE` tile is present and correct** |
+| `matchReason` ending in a full stop | **"the prose renders a doubled period"** | A's own string. **ZERO doubled periods across 60 live job renders** |
+| `organisations` / `people` without `descriptor` / `relevance` | **"the `PEOPLE` section is missing"** | the overflow branch (`EVERY OTHER SPEAKER`) is the correct branch for a person with no stated reason |
+
+**Every figure below comes from the corrected fixture only.** Counting the two
+instrument defects disclosed in part 2, **this round A falsified its own
+instrument SIX times before filing a single visual difference** — and the two
+differences that survive are the two that no fixture defect can explain.
+
+---
+
+## **THE TWO TILE BANDS, RE-DERIVED FROM THE PDF's SPANS — BOTH MATCH EXACTLY**
+
+**PLATE 02 — the plate's seven tiles, read off spans at `SegoeUI-Semibold 7.88
+#9c8b78` (label) / `SegoeUI-Semibold 11.25 #2b180a` (value) / `SegoeUI 9.00
+#7d6a56` (sub-line):**
+
+| plate 02 | build (`buildJobFacts`) |
+|---|---|
+| `SALARY` `$95k – $120k` / `per year · from posting` | `Salary` / `per year · from posting` |
+| `TYPE` `Postdoc` / `Full-time · 3-yr contract` | `Type` `Postdoc` / `Full-time · 3-yr contract` |
+| `LOCATION` `Los Altos, CA` / `Hybrid · US` | `Location` / `On-site · SE` |
+| `STARTS` `Jan 2027` / `flexible` | `Starts` `Jan 2027` / `flexible` |
+| `APPLY BY` `Sep 15` / `47 days left` | `Apply by` / `46 days left` |
+| `POSTED` `Jul 22` / `8 days ago` | `Posted` / `14 days ago` |
+| `VISA` `Sponsors` / `stated in the posting` | `Visa` `Sponsors` / `stated in the posting` |
+
+**SEVEN of SEVEN, in the plate's order, with the plate's sub-line shapes.**
+
+**PLATE 03 — six tiles:** `DATES` / `WHERE` / `FEE` / `ABSTRACT DUE` /
+`REGISTER BY` / `SCALE`. **The build emits exactly those six, in exactly that
+order.** The `FEE` sub-line reproduces plate 03's own two-part shape —
+`student $180 · early bird to Jan 9`.
+
+Both bands render through **one** `FactTile` component whose `<dt>` carries the
+shared `REPORT_LABEL_CLASS`, so the label step is one token, not fourteen call
+sites.
+
+---
+
+## **BOTH PLATES RE-WALKED START TO FINISH — THE SECTION ORDER IS EXACT**
+
+**PLATE 02** (§P10.2's recorded order: facts → visa quote → Timeline → Skills
+they ask for → [What the role is | To apply, have ready] → Why Peer sent this to
+you → locked block). **The build's rendered heading sequence:**
+
+`<h1>` → `Timeline` → `Skills they ask for` → `What the role is` →
+`To apply, have ready` → `Why Peer sent this to you` → the locked block
+(`Sponsorship read when the posting is silent`, `What this employer actually
+asks for`, `What to emphasise in your application`). **MATCH.**
+
+**PLATE 03** (§1c's extracted order). **The build's rendered sequence:**
+
+`<h1>` → `Cheapest way in, for you` → `Two deadlines, one event` → `What
+actually happens there` → `Who'll be in the room` → `Organisations` → `Every
+other speaker · 1` → `What it costs you` → `Why Peer sent this to you` → the
+locked block (`The other exhibitors, judged`, `What each talk is actually
+about`, `A day-by-day plan for you`, `Is your work a fit for the poster call`).
+**MATCH** — `PEOPLE` and `EVERY OTHER ORGANISATION ATTENDING` are absent only
+because the fixture gives two orgs (both highlighted) and one person with no
+stated reason, which are the correct branches.
+
+---
+
+## **THE ELEVEN ROUND-26 CLUSTERS, EACH AGAINST ITS OWN FALSIFIER — ALL LANDED, NONE FIRES**
+
+**1 — V26-J02 / V26-E02, THE SERIF. LANDED.** Job: `font-display` on `<h1>`,
+`font-reading` on the visa `<blockquote>`, on every `<li data-role-bullet>` and
+on the prose `<p>`. Event: `font-display` on `<h1>` and on the
+`data-report-heading-level="group"` `<h2>` (`Who'll be in the room`),
+`font-reading` on the prose `<p>`.
+**FALSIFIER — a button, label, chip or roster row rendering serif: ZERO** across
+all 120 live renders and both fixtures. **ZERO `<button>` carries a serif class;
+ZERO uppercase label carries one.**
+
+**2 — V26-E01 / V26-J10, THE HIERARCHY INVERSION. LANDED — with a measured
+residue, filed below as V28-01.** The shared step
+`text-caption font-semibold uppercase tracking-[0.18em] text-text-faint` now
+carries **16** label sites on the job surface and **11** on the event surface.
+**FALSIFIER — a report SECTION label back on the smaller step: ZERO for every
+section heading and every tile label.**
+
+**3 — V26-J03 / V26-E03, THE TIMELINE TRACK. LANDED.** Both surfaces render the
+track section; plate 02's four nodes (`Posted` / `Today` / `Deadline` / `Start`)
+and plate 03's four (`Today` / `Abstract` / `Register` / `Event`) are the
+shipped shape.
+
+**4 — V26-J04 / V26-E04, THE FACT-TILE BAND. LANDED** — proven by the two exact
+tables above, plus the band wrapper present on both surfaces.
+
+**5 — V26-J07, THE PROGRESS BAR (Ruling 72b). LANDED.** Renders
+`<div aria-hidden="true" data-skills-progress="true" class="mb-4 h-1 w-full
+overflow-hidden rounded-full bg-border">` with a
+`data-skills-progress-fill` child whose inline `width` is the computed ratio,
+and the right-aligned counter reads the plate's own `N of M you already have`
+form. **FALSIFIER — a divide-by-zero or a bar with no counter: neither fires.**
+
+**6 — V26-E07, THE COLON LEAD-INS. LANDED.** `At this event:` renders twice on
+the two-org fixture, once per org row, as the plate has it.
+
+**7 — V26-E06, STARS OFF HIGHLIGHTED CARDS. LANDED, BOTH DIRECTIONS.** One star
+control on the event fixture, on the overflow roster and not on the highlighted
+org cards.
+
+**8 — V26-E05, THE HAPPENINGS BADGE AND EXPLAINER. LANDED.** The activity chips
+render through `data-activity-chip`, and the `Tier 0` badge renders through the
+shared `data-report-badge` component on both surfaces.
+
+**9 — V26-J08 / V26-E08, THE CHIP ROLES. LANDED.** The header chips carry
+explicit roles — job: `data-header-chip="kind"` (tag border/fill),
+`="neutral"`, `="info"` (link border/fill); event: `="kind"` plus its siblings.
+**Round 27 A's correction holds: plate 03 gives two of its four chips identical
+colour, so the plate has three treatments and the build renders three.**
+
+**10 — V26-J09 / the `WHAT THE ROLE IS` section. LANDED** — present in the walk
+above, bullets at `font-reading`, matching plate 02's `Georgia 12.00 #4d3a28`.
+
+**11 — Ruling 71a, THE ROUTE KICKER. CONFIRMED ABSENT.** `/JOBS/[ID]` and
+`/EVENTS/[ID]` appear in **0 of 120** live renders and **0** fixtures.
+
+---
+
+## **THE THREE ROUND-27 VISUAL ITEMS — ALL LANDED (full evidence in part 2)**
+
+- **ITEM 5 / V27-01** — on plate 02's own three-term shape the component renders
+  `Matches 3 of your required topics:` plus **three** `<em class="italic">`
+  spans, slant only, no size or colour class; the EVENT report is **byte-
+  identical** across three different `matchedTerms` values; **0 `<em>` on 60
+  live event renders.**
+- **ITEM 6 / V27-02** — the `<cite data-visa-attribution="true"
+  class="not-italic">` renders **inside** the `<blockquote>`, inline, with an
+  explicit space, adding no size or colour class of its own. All five falsifiers
+  down.
+- **ITEM 7 / V26-J06** — all four apply rows in the plate's order, each hiding
+  independently; **Ruling 74's headcount absent and TALLIED as its named cost.**
+
+---
+
+## **TWO NEW VISUAL DIFFERENCES — BOTH IN THE ONE PLACE ROUND 26's UNIFICATION DID NOT REACH**
+
+Round 26's V26-J10 / V26-E01 stated the contract plainly: **"the plate has ONE
+label step; the build had two."** A re-derived the plate's side of that claim
+from the PDF and it is stronger than recorded — **every label on both plates,
+without exception, is `SegoeUI-Semibold 7.88`**: the section headings, the tile
+labels, `E V E RY  OT H E R  O RG A N I S AT I O N  AT T E N D I N G`,
+`P E O P L E`, `E V E RY  OT H E R  S P E A K E R · 16`,
+`W H AT  I T  CO S T S  YO U`, the fee table's
+`ITEM` / `STANDARD` / `STUDENT` / `DEADLINE` headers,
+`C H E A P E S T  WAY  I N ,  F O R  YO U`, and
+`A L S O  I N  T H I S  R E P O RT  W I T H  A N  A I  K E Y`. **One size, ten
+label kinds.**
+
+**The build now has ONE step for 27 of its label sites and FOUR other steps for
+the remaining six.** Enumerated exhaustively from the rendered markup:
+
+| element | build renders | plate 02 / 03 |
+|---|---|---|
+| every section heading + every fact-tile label (16 job, 11 event) | `text-caption` / `0.18em` / `text-text-faint` | **correct** |
+| **`Also in this report with an AI key`** — BOTH surfaces | `text-micro` / `0.18em` / **`text-text-faint`** | `7.88` / **`#5b4bbf`** |
+| **`Cheapest way in, for you`** — plate 03 | `text-micro` / `0.16em` / `text-accent` | `7.88` / `#a33206` |
+| **`Item` / `Standard` / `Student` / `Deadline`** — plate 03's fee table `<th>` | `text-micro` / `0.14em` / `text-text-faint` | `7.88` / `#9c8b78` |
+| **`Every other speaker · 1`** — plate 03 | `text-caption` / **`0.16em`** / `text-text-faint` | `7.88` / `#9c8b78`, same tracking as its siblings |
+
+### **V28-01 — THE LABEL-STEP RESIDUE. SIX SITES, BOTH SURFACES.**
+
+**What the plate has:** one label size for every label on the page.
+**What the build has:** the shared step on 27 sites, and **four further
+treatments** on six sites — three of them at the smaller `text-micro` size, and
+one `text-caption` at `0.16em` where its own siblings use `0.18em`.
+**Which is wrong: the build's.** V26-J10 unified the two headings it found; **these
+six were never in that item's scope, and A states that plainly so B does not
+begin by re-litigating round 26's design.**
+
+**Why it is ranked first of the two:** `Cheapest way in, for you` and the fee
+table sit in plate 03's own body, and `Also in this report with an AI key`
+closes **both** plates — these are labels a reader meets on every report, not
+edge states.
+
+### **V28-02 — THE LOCKED-BLOCK LABEL IS THE WRONG COLOUR ON BOTH SURFACES.**
+
+**What the plate has:** `A L S O  I N  T H I S  R E P O RT  W I T H  A N  A I
+K E Y` in **`#5b4bbf`** — a violet that appears nowhere else on either plate
+except the `NEW` badge, and is clearly deliberate: it is the one label the plates
+colour differently from `#9c8b78`.
+**What the build has:** `text-text-faint` — the same muted brown as every
+ordinary section label.
+**Which is wrong: the build's.** The signal that this block is a different
+*kind* of thing — the thing you unlock — is carried by that colour, and the
+build discards it.
+**Counted once, on both surfaces**, because it is one shared call site.
+
+**A raises NO `POLICY — manager decides` on either.** Both are ordinary, closable
+token swaps with a named element, a named surface and an extracted plate value.
+
+---
+
+## **PART 3's VERDICT ON THE VISUAL DIMENSION**
+
+**TWO unexplained VISUAL differences: V28-01 and V28-02.** Everything else
+measures clean — eleven round-26 clusters landed with zero falsifiers firing,
+three round-27 visual items landed, both tile bands exact, both plates' section
+order exact, the serif adoption intact, the route kicker absent.
+
+**The visual dimension therefore does not read zero either**, and part 4 sets out
+the ranked lists and the hand-off.
