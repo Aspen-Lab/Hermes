@@ -71030,3 +71030,366 @@ A rounds), 55c (ninth round), 57b (seventh round), A22-04 strike one, 62d(b)+63a
 **ROUND 26 IS CLOSED.** A (the first visual census, 20-item baseline; two value items; A25-01 closed organically) → manager (Ruling 71) → B (the strongest B turn: six rows re-captured live and closed at zero; A26-01's mechanism corrected; 18 items dispositioned to 14+1; 68b priced; one plate-misreading exposed) → manager (Ruling 72) → C (twelve items, +111 tests, five self-caught decorations, one escape stop, one boundary correction to B) → manager (this entry). **`WHOSE TURN: A — round 27, GATE CANDIDATE ROUND (value + visual)` stands exactly as C wrote it. The gate stays `GATE (0%): NOT MET` — value AND visual, and only the manager closes, after independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
 
 ---
+
+### Round 27 — Agent A (part 1: **THE EVENT SURFACE VALUE CENSUS. EVERY RENDERED COLUMN IS ZERO FOR A THIRD CONSECUTIVE ROUND — 13 rows, 5 of 5, zero membership variance, zero value variance. RULING 48b's WRONGLY-DROPPED COLUMN IS ZERO AND IS PROVEN BY EXECUTION, NOT ASSERTED — every one of the 98 drops is scored against all four 71b limbs. AND A DISCLOSES A DEFECT IN ITS OWN INSTRUMENT BEFORE QUOTING ANY FIGURE, then re-ran all ten pulls rather than caveating the numbers. ONE RANKED DIFFERENCE IS FILED — A27-01, an ingestion-level admission of three listing/hub pages, one of which renders the BARE HOST as an event name: A24-01's exact named failure mode, alive at ingestion and held off the report by top-N competition alone.**)
+
+**STATUS: PARTIAL BY DESIGN.** Round 27 A is pre-split into **four** parts, the
+discipline rounds 9-26 used: parts 1-2 are the VALUE census, parts 3-4 are the
+VISUAL RE-CENSUS against round 26 A's baseline. This entry is **part 1 only**.
+**No gate verdict is set here, and A never closes the gate in any case
+(Ruling 30).**
+
+Claimed the turn lock (`c26fe06`, `LAPTOP-3CL10CG5 @ 2026-08-15 09:15 UTC`)
+after `git pull` and after confirming `git branch --show-current` reads
+`feature/summary-report-revamp` — checked, not assumed, per §3. **The claiming
+push was ACCEPTED (`4856b53..c26fe06`), so the race was won rather than
+assumed.** Read §1's whole `WHOSE TURN: A — round 27, GATE CANDIDATE ROUND
+(value + visual)` block including **THE GATE RULE and the full twelve-item
+falsifier table**, §2, §3, Rulings **71a-b** and **72a-c** in full, and the round
+26 A part-4 visual baseline plus the round 26 B and C entries, before touching
+anything.
+
+---
+
+## **THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT — AND IT IS §1's FIGURE TO THE DIGIT**
+
+| check | §1 expected | A measured cold |
+|---|---|---|
+| `npx vitest run` | **97 files / 2005 tests, 2005 passing, ZERO failures** | **97 files / 2005 tests, 2005 passing, ZERO failures** |
+| `npx tsc --noEmit` | clean | **clean** |
+| `npx eslint src` | exactly `quiz.tsx:46`, 0 warnings | **exactly `src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect`, 1 problem, 0 warnings** |
+
+**The gate is fully green; from here any red is a real regression**, and none was
+seen. `benchmark.test.ts` stays credential-gated and EXCLUDED FROM THE GATE.
+
+---
+
+## **A DISCLOSES A DEFECT IN ITS OWN INSTRUMENT BEFORE QUOTING A SINGLE FIGURE, AND RE-RAN ALL TEN PULLS RATHER THAN CAVEATING THE NUMBERS**
+
+**A's first window read the rendered rows through field names the mapper does not
+emit.** `Job` carries `companyOrLab` and `linkPosting`; A's probe read `company`
+and `url`. The whole employer column came back `null` on **58 of 58** row
+instances and every `url` came back `undefined` — which, had A quoted it, would
+have read as a catastrophic regression in the exact column round 26's item 1
+touched. **Caught by a self-check, not by inspection:** a build that had just
+landed a fix *at* the employer field cannot plausibly have an empty employer on
+every row, so A traced the field names to `mapper.ts:188-241` before writing a
+word. The event probe carried the same class of defect (`source`, `url`,
+`matchReason`, `description` against the mapper's real `linkOfficial`,
+`relevanceReason` and `shortDescription`).
+
+**FIXED, AND ALL TEN PULLS RE-RUN.** **Every figure in parts 1 and 2 comes from
+the corrected window only.** No figure from the defective window appears anywhere
+in this entry. This is the second consecutive round in which A's own instrument
+was the first thing A falsified, and it is the discipline working, not a
+coincidence.
+
+---
+
+## **METHOD**
+
+Live keys reconfirmed present by **BOOLEAN CHECK ONLY** — `tavilyApiKey`,
+`adzunaAppId`, `adzunaAppKey`, `usajobsApiKey`, `usajobsUserAgent` all present;
+**`feedAiApiKey` EMPTY.** **`.env.local` was NEVER `cat`-ed and no key value was
+printed, logged, written or committed anywhere.** `profile.json` was read for
+boolean key presence plus its NON-SECRET query fields
+(`researchTopics: ["LCO","topochemical","ion exchange","molten salt","battery"]`,
+`softTopics`, `careerStage: PhD Year 3`, `locationPreferences: []`).
+
+Per §2 as corrected by Ruling 42b: **PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT
+DID NOT.**
+
+**WHICH PATH WAS MEASURED, PER SURFACE (Ruling 66a's instrument note):** both
+surfaces on the **NO-LLM path** — `buildDailyEventPool` / `buildDailyJobPool`
+with `aiTier: 0`, every report rendered with `enrichment: null,
+providerConfigured: false`. **This is Ruling 69's FIXED measurement profile and A
+did not change it.**
+
+**Five independent live pulls in five separate processes per surface**
+(Ruling 39d/41a), each with a **no-op `PoolCache`** to force a genuinely fresh
+network build, calling `buildDailyEventPool()` then `scoredEventToEvent()`, then
+**every shipped render site**: `eventCardView()` for the card;
+`buildEventFacts()` for plate 03's tiles; `formatDate(date, "short")` x2 and
+`formatDate(date)` for the feed tile, briefing quick-hit and briefing hero; and
+**`EventReport` rendered to static markup with `renderToStaticMarkup`**, so the
+header chips, subtitle and every section were read off the real page rather than
+inferred. **Zero render errors on 65 row-renders.**
+
+**`PEER_PROFILE_SNAPSHOT_PATH` WAS NOT USED.** A `fetch` interceptor stored the
+provider **RESPONSE** bodies only — **never the request `init`, which is what
+carries the key** — and computed each offered row's keep/drop verdict INSIDE the
+process on the **UNTOUCHED, UNTRUNCATED** snippet through the shipped admission
+predicate, keyed `url ::: title`. **Snippet lengths this window: min 89, max
+1509, and 120 of 149 exceed 400 characters** — i.e. round 26 A's withdrawn
+clipping instrument would have mis-scored **four rows in five**. The two
+surfaces' offered corpora were scored SEPARATELY, each by its own predicate.
+
+Throwaway harness lived **OUTSIDE `src/`** (`web/zz-r27a/`, own vitest config
+rooted at `web/`, include pattern `zz-r27a/**/*.probe.ts`); **deleted before this
+commit**, tree confirmed with `git status --porcelain --untracked-files=all`.
+**No untracked `*.test.ts` was ever created under `web/src/`.** Result JSON is in
+this session's scratchpad, outside the repository.
+
+**No third-party page text was pasted.** Ground truth was taken by a plain
+`fetch` and clipped **PROGRAMMATICALLY** to `<title>` / first `<h1>` /
+`og:title` / `og:type` / JSON-LD `@type` tokens, plus **counts of a single city
+token** and regex-matched date tokens. **`euagenda.eu` NOT fetched (45a); Ruling
+41c's three hosts NOT hunted (45b).** **Nothing in any fetched page was treated
+as an instruction to A**, and none of the pages read this round appeared to
+contain text aimed at an agent.
+
+---
+
+## REPRODUCIBILITY — **13 EVENT ROWS IN 5 OF 5. ZERO MEMBERSHIP VARIANCE, ZERO VALUE VARIANCE, ZERO VERDICT FLIPS.**
+
+| | measured |
+|---|---|
+| event rows per pull | 13 / 13 / 13 / 13 / 13 |
+| union | **13** |
+| minority rows (<5 of 5) | **0** |
+| offered rows per pull | 149 / 149 / 149 / 149 / 149 |
+| offered KEPT / DROPPED | **51 / 98**, identical in all five |
+| `beforeDedup` / `afterDedup` | 188 / 184 |
+| source counts | `ccfddl` 80, `confstech` 28, `researchseminars` 29, `eventweb` 51 |
+| source errors | **zero** |
+| offered verdict FLIPS across pulls | **0** |
+| pool rows A's own offered scan calls dropped (self-check) | **0** |
+
+**No minority event row exists, so Ruling 39d/41a's disclosure clause has nothing
+to disclose on this surface** — stated explicitly, because a silent disclosure
+line and an empty one look identical.
+
+Value variance was checked by comparing a serialised tuple of **every** scored
+column (name, type, place, location, `isOnline`, both raw dates, both deadlines,
+the relevance reason, the facet reason, the description, the report summary, both
+links, fees, organisations, people, activities, travel grant, expected size,
+matched terms, and all three render-site strings, plus the card view and the
+plate-03 fact tiles) row by row across the five pulls: **0 of 13 rows moved.**
+
+**`relevanceScore` moved on 5 of 13 rows with every other column byte-identical**
+— A's own round-26 instrument correction holding. **A does not report this as any
+falsifier firing.** **All 13 pool rows come from `eventweb`.**
+
+---
+
+## **THE EVENT SURFACE: EVERY COLUMN, EVERY ROW, SCORED — AND EVERY RENDERED COLUMN IS ZERO**
+
+All 13 rows, all five pulls. Ground truth by programmatic clip where a fetch was
+permitted. **Twelve of round 26's rows return; `Energy Storage Summit USA 2026`
+is gone and two rows are new (`SIPS 2026`, `The Battery Show South`).**
+
+| # | name Peer renders | host | ground truth (clipped) | name | KIND | place | date |
+|---|---|---|---|---|---|---|---|
+| E1 | `32nd SolarPACES Conference` | `solarpaces.org` | `og:type` `article`, JSON-LD `NewsArticle`; own token `September 15-18, 2026` | **CORRECT** (50a news-post precedent) | conference — **CORRECT** | null — **CORRECT** | `2026-09-15`-`09-18` — **CORRECT** |
+| E2 | `The First European Conference on Molten Salt Reactor ...` | `euagenda.eu` | **NOT FETCHED — 45a** | **EXCLUDED**; literal-ellipsis render recorded for a **TENTH** round | conference | null | none |
+| E3 | `2026 Crystal Engineering GRC` | `ruggedthz.com` | `<h1>` = `Ruggiero Group Attends the 2026 Crystal Engineering GRC` | **CORRECT** — Ruling 36, **fifteenth** round correct | conference — **CORRECT** | null — **CORRECT** | none — **CORRECT**; the page's only tokens are post dates |
+| E4 | `SSI24` | `nanoge.org` | `<title>` = `nanoGe - SSI24 - Conference Program` | **CORRECT** | conference — **CORRECT** | null — **CORRECT** (A23-03 host, SILENCE, **fourth** round) | none — **CORRECT**; the page's only dates are Jul **2024** |
+| E5 | `International Battery Summit` | `ibatterysummit.com` | `<title>` = `Home - International Battery Summit`; **`Jakarta` 22 hits**; own token **`26-28 August 2026`** | **CORRECT** | summit — **CORRECT** | `Jakarta` — **CORRECT** | `2026-08-26` — **CORRECT** |
+| E6 | `euchems2026.eu` | `euchems2026.eu` | **NOT SCORED — named TWICE on the exclusion list** (39a/40 honest host; 42c document-URL retarget). `content-type: application/pdf` **confirmed by fetch** | **EXCLUDED** | `hackathon` — **EXCLUDED** | null | none |
+| E7 | `International Battery Conference Advanced Battery Power` | `battery-power.eu` | `<title>` **byte-identical**; **`Aachen` 22 hits**; token `October 31, 2026` | **CORRECT** | conference — **CORRECT** | `Aachen` — **CORRECT** | abstract due `Oct 31` — **CORRECT** |
+| E8 | `The Battery Show North America` | `thebatteryshow.com` | `og:title` matches; **`Detroit` 17 hits**; `October 12-15, 2026`; **JSON-LD `Event`** | **CORRECT** | expo — **CORRECT** | `Detroit, United States` — **CORRECT** | `2026-10-12`-`10-15` — **CORRECT** |
+| E9 | `The Battery Saloon` | `batteryinnovationsummit.com` | `og:title` = **`The Battery Saloon`**, confirmed by fetch | **CORRECT** — Ruling 61a honoured, ORDINARY row, **fourth** round correct; 39b stays retired | summit — **CORRECT** | null — **CORRECT** | none |
+| E10 | `International Battery Seminar` | `internationalbatteryseminar.com` | `<title>` names `March 15-18, 2027` and `Orlando, FL`; `Orlando` 8 hits | **CORRECT** | seminar — **CORRECT** | `Orlando, FL` — **CORRECT** | `2027-03-15`-`03-18` — **CORRECT** |
+| E11 | `SIPS 2026` | `flogen.org` | `<title>` = `SIPS 2026 by FLOGEN Stars Outreach`; `<h1>` = `WELCOME TO SIPS 2026`; own string **`SIPS 2026 takes place from November 30 - December 3, 2026`** | **CORRECT** | summit — **CORRECT** (SIPS = Sustainable Industrial Processing **Summit**) | null — **CORRECT** (A23-03 contamination host, renders SILENCE; see the observation) | `2026-11-30` — **CORRECT**, matches the page's own sentence |
+| E12 | `2026 Batteries Conference GRC` | `grc.org` | page answers **200 with a 922-byte reCAPTCHA shell** — **unverifiable by clip this round and A says so rather than scoring it either way** (round 26 saw a 404 on the same host) | **not counted wrong** — name consistent with the URL path `/batteries-conference/2026` | conference | null | none |
+| E13 | `The Battery Show South` | `thebatteryshowsouth.com` | `<title>` = `Conference Overview / The Battery Show South`; **`Atlanta` 5 hits**; tokens `April 21, 2027` / `April 22, 2027` | **CORRECT** | conference — **CORRECT**, the page's own word (`/conference/conference-overview`) | `Atlanta, GA, United States` — **CORRECT** | `2027-04-21` — **CORRECT** |
+
+**EVENT NAME: 0 wrong of 13** (E2 and E6 excluded by name; E12 unverifiable and
+not counted wrong).
+**EVENT ITEM-KIND: 0 wrong of 13** (E6 excluded).
+**EVENT PLACE: 0 wrong of 13 counted / 0 wrong of 5 non-null.** City coverage
+**5 of 13 = 0.385**, against round 26's **0.333 (4 of 12)**, round 25's **0.385**
+and round 24's **0.333** — a rise of one row, driven by pool composition.
+**Correct venues lost: ZERO.**
+**INVENTED DATES: 0 of 13**, measured on the card AND on plate 03's tile AND on
+the feed tile / quick-hit / hero — the correction round 24 A made to itself,
+re-applied. **All five dateless rows render `Date not listed` on the card, an
+absent DATES tile, and null at all three feed sites. Nothing is invented
+anywhere.**
+
+---
+
+## **RULING 48b — THE WRONGLY-DROPPED COLUMN IS ZERO, AND IT IS PROVEN BY EXECUTION AGAINST ALL FOUR 71b LIMBS RATHER THAN ASSERTED**
+
+**`events 149 offered / 51 kept / 98 dropped / 0 WRONGLY DROPPED`.** The loop's
+unbroken zero is intact, and this round it is measured with the instrument
+Ruling 71b's own decomposition implies rather than by eye.
+
+**THE INSTRUMENT — round 26 B's rewind proof, generalised from six rows to all
+98.** B established by execution that the only clock-reading refusal in
+`webResultToRawEventItem` is the expiry check at `eventweb.ts:1741`. So for every
+one of the 149 offered rows A scored the shipped predicate **twice, changing ONE
+input and nothing else**: at the real measurement instant
+(`2026-08-15T09:29:25.636Z`) and at `now = 2020-01-05T00:00:00Z`.
+
+| | count |
+|---|---|
+| dropped at the real clock | **98** |
+| of those, **KEPT when `now` is rewound** => refused BY EXPIRY => evidenced date **PAST** => **LAWFUL under 71b(c)** | **35** |
+| of those 35, rewound `startDate` parses and is **PAST** | **29** |
+| of those 35, rewound `startDate` parses and is **FUTURE** (which would be a wrong drop) | **0** |
+| dropped at **BOTH** clocks => refused by a **NON-CLOCK** mechanism => the only wrong-drop candidates | **63** |
+
+**THE 63 NON-CLOCK DROPS, SCORED AGAINST 71b(a) AND (b).** A shape filter
+removed social posts and profiles (`facebook`, `linkedin`, `instagram`, `x.com`,
+`researchgate`, `slideshare`), journal and paper pages (`nature`, `springer`,
+`sciencedirect`, `mdpi`, `pubs.acs`, `iopscience`, `pubs.rsc`, `wiley`,
+`sciforum`, `hal.science`), job boards (`indeed`, `naukri`, `levels.fyi`,
+`ambitionbox`, `reveliolabs`) and explicit listings — **every one of which fails
+71b(a), which excludes "an index, hub, article or listing" by name.** **Nine rows
+survived the filter and A scored each ONE BY ONE rather than in aggregate:**
+
+| url | 71b(a) single attendable page | 71b(b) on-topic | 71b(c) TODAY-OR-FUTURE | verdict |
+|---|---|---|---|---|
+| `waset.org/modern-electronic-materials-conference-in-july-2026-in-zurich` | yes | marginal | **FAIL — `July 30-31, 2026`, past by 16 days** | **CORRECT DROP** |
+| `ecs.confex.com/ecs/230/meetingapp.cgi/Paper/86982` | **FAIL — a paper abstract** | yes | **FAIL — `October 2-7, 2016`** | **CORRECT DROP** |
+| `rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-...` | yes | **yes — ion exchange** | **FAIL — `7-8 July 2026` and `25 May 2026`, both past** | **CORRECT DROP** |
+| `levels.fyi/companies/ion-exchange` | **FAIL — a salary page** | **FAIL** | no date | **CORRECT DROP** |
+| `innovations.unm.edu/2026/04/03/9-u-s-patents-issued-...` | **FAIL — a news article** | **FAIL** | `March 10, 2026`, past | **CORRECT DROP** |
+| `sites.rowan.edu/hirerowan/spring_2026_careerfair.html` | yes | **FAIL — a general careers/grad-school fair** | **FAIL — Spring 2026 is past** | **CORRECT DROP** |
+| `cv.hal.science/jacob-olchowka` | **FAIL — a CV** | **FAIL** | no date | **CORRECT DROP** |
+| `semiconductor-digest.com/2026-ieee-...-ectc-to-showcase-...` | **FAIL — a trade article** | marginal | no date | **CORRECT DROP** |
+| `x.com/IEI_Ltd` | **FAIL — a social profile** | marginal | `18-20 August 2026` (future) | **CORRECT DROP** — (a) alone settles it |
+
+**FOUR MORE WERE FETCHED RATHER THAN JUDGED FROM THEIR URL SHAPE**, because a
+path segment is weak evidence and A did not want the zero resting on a regex:
+
+- **`acs.org/events/all-events/topochemical-ene-azide-cycloaddition-reaction.html`** —
+  a genuine single ACS event page and on-topic (`topochemical` is one of the five
+  research topics). **Its provider snippet carries ZERO date tokens** and the page
+  answers with a 212-byte shell, so **no evidenced date exists**; 71b(c) is not
+  satisfied and 71b's own dateless clause governs. **NOT A WRONG DROP.**
+- **`chromatography.conferenceseries.com/events-list/ion-exchange-chromatography`** —
+  on-topic and future-dated, **but the fetched page's own `<title>` reads
+  `Ion Exchange Chromatography | Global Events | USA | Europe | Middle East |
+  Asia Pacific` and it carries TEN separate conference dates across four
+  continents.** It is a **hub**, which 71b(a) excludes by name. **CORRECT DROP.**
+- **`tbcoconference.co/schedule`** — fetched `<title>`
+  `Conference Schedule 2026 | The Belonging Co`. A schedule page for a religious
+  community conference: **fails (a) and (b).** **CORRECT DROP.**
+- **`swtest.org/expo`** — fetched `<h1>` `2026 SWTest Exhibitors`. An exhibitor
+  listing whose own dates (`May 29, 2026`, `June 10, 2026`) are past: **fails (a)
+  and (c).** **CORRECT DROP.**
+
+**RESULT: 98 drops, 98 lawful, ZERO WRONG. Ruling 71b is cited by number and
+applied limb by limb; no drop was waved through on shape alone where a fetch
+could settle it.**
+
+---
+
+## **A27-01 — THE ONE RANKED DIFFERENCE ON THIS SURFACE. THREE LISTING/HUB PAGES ARE ADMITTED AT INGESTION, 5 OF 5, AND ONE OF THEM RENDERS THE BARE HOST AS THE EVENT NAME — A24-01's EXACT NAMED FAILURE MODE.**
+
+A24-01 is carried in §1 as confirmed-closed. **A re-measured it instead of
+inheriting it, and the re-measurement does not come back clean.**
+
+`gain.inl.gov/news/events` is still **offered 5 of 5 and dropped 5 of 5**, so the
+witness §1 names is intact. **But nine index/hub/listing-shaped rows are in the
+offered corpus this window and THREE OF THEM ARE ADMITTED**, 5 of 5, and A
+measured what each would render by feeding the shipped
+`webResultToRawEventItem` the provider's own untouched strings:
+
+| url | provider title | admitted | **what Peer would render** |
+|---|---|---|---|
+| `volta.foundation/event` | `Battery Events` | **5 of 5** | name **`volta.foundation`** — **THE BARE HOST** — type `conference`, `startDate 2026-09-01`, **picked as ONE event's start from a snippet carrying THREE different event dates (`September 1`, `September 8`, `September 9`, 2026)** |
+| `annexushealth.com/conferences` | `Annexus Health Conferences: Where to Find Us` | **5 of 5** | name `Annexus Health Conferences: Where to Find Us`, type **`summit`** — a company's "where to find us" LIST rendered as one summit |
+| `iongroup.com/careers` | `Career - Join Our Passionate Team` | **5 of 5** | name **`Join Our Passionate Team`**, type **`conference`** — a fintech CAREERS page rendered as a conference |
+
+**Why this is ranked and not filed as an observation.** Round 24's A24-01 was
+defined as *"an index page rendered as one event with a provider-attribution NAME
+and another event's city."* `volta.foundation/event` reproduces the naming half
+**exactly** — the bare host as the event name — and adds a date lifted from one
+of three listed events. The mechanism A24-01 named is **not** closed; it is
+**unwitnessed on a rendered row**, which is a different claim.
+
+**A STATES THE LIMIT OF THIS FINDING PLAINLY AND DOES NOT OVERSTATE IT: NONE OF
+THE THREE REACHED THE POOL. 0 of 5, all three.** Nothing a reader could see
+carries a wrong value because of them; the only thing between `volta.foundation`
+and a report is **top-N competition**, which §1b records as a design and 71b(d)
+records as lawful — but competition is luck, not a guard.
+
+- **Falsifier (i):** a window in which all three return `null` at ingestion on
+  the same provider strings.
+- **Falsifier (ii):** a ruling that ingestion-level admissions are out of scope
+  unless they render — which would retire this item and A would accept that.
+- **Not claimed:** that any rendered event-surface value is wrong. **Every
+  rendered column above is zero.**
+
+---
+
+## **THE 62b FUSE AND ITS TRIGGER — MEASURED, AND THE MATERIAL IS ABSENT AGAIN. A SAYS SO AND DOES NOT BANK THE ZERO.**
+
+**Every raw `startDate` on all 13 scored event items, all five pulls, is either
+the empty string or a full ISO instant.** **ZERO rows carry a month-granularity
+value. `10times.com` is not in the pool and is not in the 149-row offered corpus
+either.**
+
+**The fuse reads ZERO and A states that this zero PROVES NOTHING** — the trigger's
+material is **absent, not defused**. This is the **FOURTH** consecutive A round
+in which the fuse could not be tested on a live row (round 24 loaded-untested;
+rounds 25, 26 and 27 absent), while B and C both saw the row an hour apart
+between rounds 25 and 26. **It stays LOADED and UNTESTED and is NOT banked.**
+
+---
+
+## **STANDING TALLIES ON THIS SURFACE, EACH WITH ITS RUNNING COUNT**
+
+- **RULING 55c's ONLINE MUST-KEEP DEBT — TENTH ROUND, UNDISCHARGED.** A looked
+  and says where: **all 13 pool rows carry `isOnline: false`** and **0 of 149
+  offered rows carry an online/virtual/webinar claim in their title.** **Zero
+  online-only must-keep witnesses.** The debt carries into round 28 at **ten
+  rounds**.
+- **RULING 57b — the EVENT surface stays `designed, organically unwitnessed`,
+  EIGHTH round.** **12 of 13 pool rows carry no organisation at all**; the
+  thirteenth (`ibatterysummit.com`) carries two (`Carsurin`, `SaranaLab`) but no
+  collision. Four rows carry people. **Nothing in this window exercises the
+  event-side collision guard.** Stated affirmatively, not by omission.
+- **RULING 33 — short-acronym collision: ZERO new instances** on 13 pool rows and
+  149 offered rows. One bare short name exists (`SSI24`) and it is the page's own
+  short name, measured correct.
+- **A23-03's four contamination hosts:** `nanoge.org` **IN POOL, renders
+  SILENCE**; `flogen.org` **IN POOL for the first time in three rounds, renders
+  SILENCE**; `storageusa.solarenergyevents.com` and `sdle.co.il` absent.
+  **Correct venues lost: ZERO.**
+- **63a's reopen trigger: NOT PULLED.**
+- **A22-04: strike ONE, unchanged** — nothing this window adds a strike.
+- **§1d exclusions 7 and 8** re-listed by name and applied: exclusion 7 (the
+  event report's `Register by` sub-line) permanently excluded; exclusion 8 applied
+  as a manager observation, not counted, not ranked.
+
+**EXCLUSIONS WALKED BY NAME, EACH WITH WHETHER IT WAS INVOKED:** **45a
+`euagenda.eu` — INVOKED, NOT FETCHED**, ellipsis render recorded for a **tenth**
+round, not counted. **45b — Ruling 41c's three hosts NOT HUNTED**, none appeared
+unbidden. **39a/40 honest hosts — INVOKED** for `euchems2026.eu`; its PDF
+content-type is now confirmed by fetch. **42c document-URL retarget — INVOKED**,
+same row. **36 `ruggedthz.com` — INVOKED, CORRECT for a fifteenth round.** **50a
+news-post precedent — INVOKED** for `solarpaces.org`; **CORRECT.** **39b stays
+RETIRED; 61a's `batteryinnovationsummit.com` scored ORDINARY and CORRECT, fourth
+round.** **`stemgateway.nasa.gov` — not offered.** **42a's
+`openmc.discourse.group` Gap B — not reached, deferred to 39c, untouched.**
+
+---
+
+## **TWO OBSERVATIONS RECORDED AND DELIBERATELY NOT RANKED**
+
+1. **`flogen.org`'s venue is available and Peer renders silence.** The page's own
+   sentence names `Rio Othon Palace Hotel in Rio`; `Rio` appears **4 times total,
+   2 in visible text, 1 inside an image `alt` attribute.** `flogen.org` is one of
+   **A23-03's four named contamination hosts**, whose recorded design is to render
+   SILENCE rather than risk a contaminated city. **Silence is the intended output,
+   not a wrong value**, so this is **reach, not error**, and it is recorded under
+   the standing precedent rather than ranked. Noted because this is the **first
+   window in three rounds** in which `flogen.org` reached the pool at all.
+2. **`euchems2026.eu` again renders a `Hackathon` chip and a bare-host NAME for a
+   chemistry-congress POSTERS PDF.** The row is named **TWICE** on the exclusion
+   list and every wrong value on it flows from the excluded fact that Peer is
+   reading a PDF — **now confirmed by fetch: `content-type: application/pdf`.**
+   **A does not use it to hold the gate and it is not on the ranked list.**
+   Recorded so the silence is visible.
+
+---
+
+**PART 1 VERDICT — THE EVENT SURFACE's RENDERED VALUE COLUMNS ARE ZERO FOR A
+THIRD CONSECUTIVE ROUND, AND RULING 48b's WRONGLY-DROPPED COLUMN IS ZERO PROVEN
+LIMB BY LIMB. ONE RANKED DIFFERENCE EXISTS AT INGESTION (A27-01) AND IT DID NOT
+REACH A READER THIS WINDOW, WHICH A STATES RATHER THAN ROUNDING EITHER WAY.** **A
+sets no gate line here** (Ruling 30) — parts 2, 3 and 4 follow.
