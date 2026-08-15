@@ -9,6 +9,7 @@ import {
   sanitizePlace,
   extractJsonLdOpportunities,
   extractMetaOpportunityDetails,
+  declaresArticleKind,
   extractOpenGraphTags,
   extractOpportunityPageDetails,
 } from "./structured-extract";
@@ -1011,5 +1012,88 @@ describe("B20-02 — a Place whose locality repeats its own venue name", () => {
       region: undefined,
       country: "Germany",
     });
+  });
+});
+
+// A23-04 / Ruling 62c — DOES THE PAGE DECLARE ITSELF AN ARTICLE?
+//
+// Half of a conjunction. Alone this signal drops `careerservices.upenn.edu`, a
+// real Oak Ridge vacancy Ruling 34a names, because its careers board renders
+// vacancies through an article template. The URL clause in `jobs/scoring.ts` is
+// the other half; see `isNonJobArticle` for the pair.
+describe("A23-04 — the page's own kind declaration", () => {
+  const page = (head: string) => `<html><head>${head}</head><body><p>x</p></body></html>`;
+  const jsonLd = (json: string) =>
+    page(`<script type="application/ld+json">${json}</script>`);
+
+  it("reads og:type, which was never extracted before this item", () => {
+    expect(extractOpenGraphTags(page('<meta property="og:type" content="article">')).type)
+      .toBe("article");
+    expect(declaresArticleKind(page('<meta property="og:type" content="article">')))
+      .toBe(true);
+  });
+
+  it("does not fire on the og:type every real posting page carries", () => {
+    // Five captured job pages all declare `website`.
+    expect(declaresArticleKind(page('<meta property="og:type" content="website">')))
+      .toBe(false);
+    expect(declaresArticleKind(page("<title>A job</title>"))).toBe(false);
+  });
+
+  it.each(["Article", "NewsArticle", "BlogPosting"])(
+    "reads a top-level JSON-LD `%s`",
+    (type) => {
+      expect(declaresArticleKind(jsonLd(`{"@type":"${type}"}`))).toBe(true);
+    },
+  );
+
+  it("reads the WordPress @graph shape, which is the measured one", () => {
+    // The real page's types were ["Article","WebPage","WebSite"].
+    expect(
+      declaresArticleKind(
+        jsonLd('{"@graph":[{"@type":"Article"},{"@type":"WebPage"},{"@type":"WebSite"}]}'),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not read an Article NESTED inside another record", () => {
+    // A page's own declaration about itself is top-level. A quoted or embedded
+    // article is not the page.
+    expect(
+      declaresArticleKind(jsonLd('{"@type":"WebPage","mainEntity":{"@type":"Article"}}')),
+    ).toBe(false);
+  });
+
+  it("a JobPosting record VETOES the whole check", () => {
+    // Ruling 55c's floor: a page carrying a machine-readable vacancy is a
+    // vacancy, whatever its template says. Both signals are present here.
+    expect(
+      declaresArticleKind(
+        page(
+          '<meta property="og:type" content="article">' +
+            '<script type="application/ld+json">{"@type":"JobPosting","title":"Postdoc"}</script>',
+        ),
+      ),
+    ).toBe(false);
+    expect(
+      declaresArticleKind(
+        jsonLd('{"@graph":[{"@type":"Article"},{"@type":"JobPosting","title":"Postdoc"}]}'),
+      ),
+    ).toBe(false);
+  });
+
+  it("a malformed JSON-LD block decides nothing either way", () => {
+    // On its own it proves nothing.
+    expect(declaresArticleKind(jsonLd("{not json"))).toBe(false);
+    // And it must not discard a VALID declaration that follows it — the same
+    // tolerance `extractJsonLdOpportunities` already has.
+    expect(
+      declaresArticleKind(
+        page(
+          '<script type="application/ld+json">{not json</script>' +
+            '<script type="application/ld+json">{"@type":"Article"}</script>',
+        ),
+      ),
+    ).toBe(true);
   });
 });

@@ -1232,3 +1232,70 @@ describe("provider-truncated role title repair (B18-02)", () => {
     });
   });
 });
+
+// A23-04 / Ruling 62c. Enrichment RECORDS the page's kind on the item the way
+// it already records `fetchedPostingScope`. Recording is not deciding: the
+// check that reads it lives at the post-enrichment gate and needs the URL
+// clause to agree before any row is removed.
+describe("A23-04 — enrichment records the page kind", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("records `article` when the page declares itself one", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          '<html><head><meta property="og:type" content="article"></head><body>' +
+            `<main>${"University news about internships. ".repeat(200)}</main>` +
+            "</body></html>",
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const [enriched] = await enrichJobCandidates([job(21)]);
+    expect(enriched.fetchedPageKind).toBe("article");
+  });
+
+  it("records nothing for an ordinary posting page", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          '<html><head><meta property="og:type" content="website"></head><body>' +
+            usablePage(
+              '<script type="application/ld+json">{"@type":"JobPosting","title":"Solid-State Battery Research Scientist 22"}</script>',
+            ) +
+            "</body></html>",
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const [enriched] = await enrichJobCandidates([job(22)]);
+    expect(enriched.fetchedPageKind).toBeUndefined();
+  });
+
+  it("records it even when the page cannot prove it owns the posting", async () => {
+    // Computed ABOVE the `unproven` early return: a page that fails the
+    // ownership test can still declare itself an article, and a signal recorded
+    // below that return could never reach those rows.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          '<html><head><meta property="og:type" content="article"></head>' +
+            "<body><p>Nothing here proves ownership.</p></body></html>",
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const [enriched] = await enrichJobCandidates([job(23)]);
+    expect(enriched.fetchedPostingScope).toBe("unproven");
+    expect(enriched.fetchedPageKind).toBe("article");
+  });
+});

@@ -58682,3 +58682,132 @@ provider results. The harness is **DELETED**;
 item edits.
 
 ---
+
+### Round 23 — Agent C (item 4 of 4: **A23-04 LANDED — the conjunction kind check, exactly as Ruling 62c designed it. `og:type` is now EXTRACTED for the first time; the `careerservices.upenn.edu` admitted control ships and stays in the pool.**)
+
+**STATUS: LANDED. FINAL ITEM.** Item 4 of 4. Turn lock released in this entry's
+commit.
+
+---
+
+## PART 1 — **WHAT SHIPPED**
+
+A row is not a job posting when **BOTH** hold:
+
+1. **its URL path is a fully-bounded three-component date permalink** —
+   `/(?:19|20)\d{2}/(?:0[1-9]|1[0-2])/(?:0[1-9]|[12]\d|3[01])/`, every component
+   bounded by slashes on both sides;
+2. **and the page DECLARES ITSELF an article** — `og:type=article`, or a
+   TOP-LEVEL JSON-LD `Article`/`NewsArticle`/`BlogPosting`;
+
+and **no `JobPosting` record vetoes it.**
+
+**`og:type` IS NOW EXTRACTED, AND THAT IS THE WIDER EDIT B's CORRECTION
+PREDICTED.** `extractOpenGraphTags` read `og:title`, `og:description` and
+`og:site_name` and nothing else. Round 22 B recorded this signal as *"fetched
+and never consulted"*; round 23 B corrected its own note by executing the parser
+— it was never EXTRACTED at all — and C confirms the correction was the load-
+bearing one: a fourth key had to be added to `OpenGraphTags`, not merely read.
+
+**WHERE IT LANDS.** `isNonJobArticle` sits beside `isExpiredPosting` in
+`jobs/scoring.ts`, consulted in the same loop, one line below it. Enrichment
+records the page-kind signal on the item as `fetchedPageKind`, exactly the way
+`fetchedPostingScope` is recorded (`types.ts`), because the page only exists
+during enrichment and the check runs afterwards.
+
+**RECORDED ABOVE THE `unproven` EARLY RETURN, and that is a decision, not an
+accident.** A page that cannot prove it owns a posting can still declare itself
+an article; a signal written below that return could never reach those rows.
+Same reasoning B18-02 used for the title repair, and it has its own test.
+
+**THE FAILURE DIRECTION, WHICH IS THE WHOLE SAFETY ARGUMENT.** Every miss —
+an unfetched page, a page that declares nothing, a permalink one component short
+— falls to **ADMISSION**, which is exactly what ships today. The check can only
+ever REMOVE a row. It changes no rendered value, turns no silence into a value,
+and **C added no "render it as an article" card path**: no such card shape
+exists and inventing one is a plate change, which is not in scope.
+
+## PART 2 — **THE ADMITTED CONTROL, SHIPPED AS A TEST**
+
+**`careerservices.upenn.edu` — a genuine Oak Ridge postdoctoral vacancy, in the
+pool, and RULING 34a's NAMED ACCEPTED COST — declares `og:type=article`**,
+because its careers board renders vacancies through an article template. It
+ships as a test asserting the row is KEPT, and that test is uniquely red the
+moment the URL clause is removed.
+
+**That is what makes the conjunction the fix rather than a preference.** The URL
+clause has ZERO counter-examples in 96 offered rows, which means it also has
+zero controls — precisely the shape Ruling 55c raised the bar for. The page
+clause has a control and that control KILLS it as a standalone rule. **Each half
+is the other's control**, and the `JobPosting` veto is the floor beneath both: a
+page carrying a machine-readable vacancy is a vacancy, whatever its template
+says.
+
+## PART 3 — **NEGATIVE PROOFS. TEN ABLATIONS, ALL TEN UNIQUELY RED.**
+
+| ablation | red |
+|---|---|
+| URL clause dropped — the page clause alone | **6** (led by *KEEPS careerservices.upenn.edu*) |
+| `og:type` never extracted (B's own correction, reversed) | **3** |
+| page clause dropped — the URL clause alone | **2** |
+| URL clause loosened to two components | **2** |
+| kind recorded BELOW the `unproven` early return | **2** |
+| kind check removed from the gate | **1** |
+| URL clause not fully bounded (no trailing slash) | **1** |
+| `JobPosting` veto removed | **1** |
+| JSON-LD walk made DEEP (a nested `Article` counts) | **1** |
+| a malformed JSON-LD block discards the page | **1** |
+
+**THE NEAR-MISS URLS ARE ASSERTED BY NAME**, two of them real rows B verified:
+`/2026/summer-internships`, `/jobs/2026/molten-salt`, plus `/2026/11/…` and
+`/2026/11/13-…`, which are what the "fully bounded, three components" wording
+actually buys.
+
+**WHAT C DELIBERATELY DID NOT BUILD**, following B: no `NON_JOB_PATH_RE`
+widening (it fires at ingestion, where the page is not available); no `og:type`
+check on its own; **no age test** — 59b(b) settled that the KIND is what makes
+the row wrong, and adding `datePublished` to `postedAt` would expire this row
+for the wrong reason and silently change every row carrying a publication date;
+and `resolveJobPostingScope`'s `owned` verdict is untouched — round 22's finding
+that it certifies a blog headline is **not re-opened here.**
+
+## PART 4 — **THE GATE**
+
+`cd web && npx vitest run`: **92 files / 1843 tests, 1842 passing** (+21 on item
+4). `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing
+`quiz.tsx:46` error, 0 warnings.**
+
+**`enrich.test.ts` SOLO: 56 of 56.** **THE NUMBER MOVED FROM 53 AND C SAYS WHY
+RATHER THAN LETTING ROUND 24 READ IT AS A REGRESSION: C added THREE tests to
+that file for the page-kind recording.** The SolarPACES lock is one of the 56
+and is green; the lock is the assertion, not the count.
+
+**Sole failure remains `benchmark.test.ts`** — item 1's measured effect, with its
+own `POLICY — manager decides` in that entry.
+
+**Blast radius, re-grepped:** a drop changes pool membership, facet counts and
+the item-KIND tally (currently 1 of 11, and `grad.wisc.edu` is the whole of it).
+It touches no rendered value on any surviving row. **A fourth key on
+`OpenGraphTags` is a returned SHAPE change**, so every `toEqual` on that object
+was re-run: the `cambridge-solid-state-battery-summit.html` fixture assertion is
+green because that page carries no `og:type`. **Expected live effect: the
+`grad.wisc.edu` row leaves the pool; the `upenn` row stays.**
+
+**EXCLUSION WALK, BY NAME.** Not 45a, not 41c's three hosts (45b), not 39a/40,
+not 42c, not 39b (retired as moot by 61a), not 36, not 33, not 42a's Gap B, not
+50a's news-post precedent, not B18-03. **Ruling 34a's row is not excluded — it
+is the ADMITTED CONTROL and it stays in the pool.**
+
+**SECURITY.** No credential read, printed, logged or written; boolean presence
+checks only. `PEER_PROFILE_SNAPSHOT_PATH` NOT used. **C made no live third-party
+fetch in this item** — every fixture is constructed, and the only network
+traffic in this whole turn was `benchmark.test.ts`, a shipped suite member run
+as the gate requires. **No third-party page text was pasted anywhere. No fetched
+page contained text directed at an agent, and none was treated as an
+instruction.** No branch, worktree or PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Every throwaway harness
+lived OUTSIDE `src/` and is **DELETED**;
+`git status --porcelain --untracked-files=all` shows only this item's seven
+files.
+
+---

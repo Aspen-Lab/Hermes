@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   isExpiredPosting,
+  isNonJobArticle,
   scoreCareerFit,
   scoreIndustryFit,
   scoreJobs,
@@ -519,5 +520,84 @@ describe("owner-name topic collisions leave the job pool (Ruling 57b)", () => {
     });
     const scored = scoreJobs([operating], { topics: ["ion exchange"] });
     expect(scored.map((s) => s.id)).toEqual(["op"]);
+  });
+});
+
+// A23-04 / Ruling 62c — THE ARTICLE-KIND CHECK.
+//
+// `grad.wisc.edu/2025/11/13/phd-student-internship-opportunities-at-thermo-
+// fisher-scientific` is a university NEWS ITEM about somebody else's
+// internships, and it reached the pool with `Thermo Fisher Scientific` printed
+// as its employer. It is a conjunction because neither half survives alone:
+// the URL clause has zero counter-examples and therefore zero controls, and the
+// page clause alone drops a real Oak Ridge vacancy that Ruling 34a names.
+describe("A23-04 — a dated article is not a job posting", () => {
+  const article = (url: string) =>
+    job({ url, fetchedPageKind: "article" as const });
+
+  it("drops the measured row", () => {
+    expect(
+      isNonJobArticle(
+        article(
+          "https://grad.wisc.edu/2025/11/13/phd-student-internship-opportunities-at-thermo-fisher-scientific",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  // THE ADMITTED CONTROL, and it is the reason the page clause cannot ship
+  // alone. A real vacancy, in the pool, named by Ruling 34a, that ALSO declares
+  // `og:type=article` because its careers board uses an article template.
+  it("KEEPS careerservices.upenn.edu — a real vacancy that declares itself an article", () => {
+    expect(
+      isNonJobArticle(
+        article(
+          "https://careerservices.upenn.edu/jobs/oak-ridge-national-laboratory-postdoctoral-research-associate-molten-salt",
+        ),
+      ),
+    ).toBe(false);
+  });
+
+  // Both are REAL rows in the offered corpus. A looser URL clause eats them.
+  it.each([
+    "https://example.test/2026/summer-internships",
+    "https://example.test/jobs/2026/molten-salt",
+    "https://example.test/2026/11/molten-salt-postdoc",
+    "https://example.test/2026/11/13-molten-salt",
+  ])("does not match the near-miss URL `%s`", (url) => {
+    expect(isNonJobArticle(article(url))).toBe(false);
+  });
+
+  it("needs BOTH halves — a date permalink that declares nothing is admitted", () => {
+    expect(
+      isNonJobArticle(job({ url: "https://grad.wisc.edu/2025/11/13/some-post" })),
+    ).toBe(false);
+  });
+
+  it("falls to admission when no page was fetched at all", () => {
+    // `fetchedPageKind` absent is the normal case: enrichment is capped at 40
+    // candidates and some fetches return nothing.
+    expect(
+      isNonJobArticle(job({ url: "https://grad.wisc.edu/2025/11/13/some-post" })),
+    ).toBe(false);
+  });
+
+  it("removes the row from the pool, and only that row", () => {
+    const blog = job({
+      id: "jobweb:blog",
+      url: "https://grad.wisc.edu/2025/11/13/phd-student-internship-opportunities",
+      fetchedPageKind: "article" as const,
+      title: "PhD Student Internship Opportunities at Thermo Fisher Scientific",
+      description: "Machine learning internships are open.",
+    });
+    const upenn = job({
+      id: "jobweb:upenn",
+      url: "https://careerservices.upenn.edu/jobs/oak-ridge-postdoctoral-research-associate",
+      fetchedPageKind: "article" as const,
+      title: "Postdoctoral Research Associate, Machine Learning",
+      description: "Machine learning postdoctoral research.",
+    });
+    const scored = scoreJobs([blog, upenn], { topics: ["machine learning"] });
+    expect(scored.map((s) => s.id)).toEqual(["jobweb:upenn"]);
   });
 });

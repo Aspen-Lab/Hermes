@@ -37,6 +37,14 @@ export interface RawJobItem {
   pageText?: string;
   /** A fetched page was read but did not prove ownership of this posting. */
   fetchedPostingScope?: "owned" | "unproven";
+  /**
+   * A23-04 / Ruling 62c. The fetched page's own declaration of what KIND of
+   * thing it is. Recorded here the way `fetchedPostingScope` is, because the
+   * page is only available during enrichment and the check that reads it runs
+   * afterwards. Absent means "not fetched, or not an article" — both of which
+   * fall to ADMISSION.
+   */
+  fetchedPageKind?: "article";
   url: string;
   postedAt?: string;
   employmentType?: string;

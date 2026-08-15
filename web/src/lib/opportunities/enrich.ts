@@ -10,7 +10,10 @@ import { extractJobDetails } from "./job-details";
 import { resolveEmployerIdentity } from "./employer-identity";
 import { resolveJobPostingScope } from "./job-posting-scope";
 import { fetchPagesConcurrently } from "./page-fetch";
-import { extractOpportunityPageDetails } from "./structured-extract";
+import {
+  declaresArticleKind,
+  extractOpportunityPageDetails,
+} from "./structured-extract";
 import { extractVisaState } from "./visa";
 
 export const MAX_ENRICHMENT_CANDIDATES = 40;
@@ -383,6 +386,16 @@ export async function enrichJobCandidates(
   const enriched = candidates.map((item, index) => {
     const html = pages[index];
     if (!html) return item;
+    // A23-04 / Ruling 62c. The page's own kind declaration, recorded on the
+    // item the way `fetchedPostingScope` is. It must be computed ABOVE the
+    // `unproven` early return below, for the same reason the title repair is:
+    // a page that cannot prove ownership can still declare itself an article,
+    // and a signal recorded below that return could never reach those rows.
+    // Recording is not deciding — the check that reads it runs at the
+    // post-enrichment gate and needs the URL clause to agree.
+    const pageKind = tryExtract(() => declaresArticleKind(html))
+      ? ("article" as const)
+      : undefined;
     const scope = tryExtract(() => resolveJobPostingScope(html, { url: item.url, title: item.title })) ?? { status: "unproven" as const };
     // B18-02: computed AFTER the scope call ON PURPOSE, and this is the item's
     // real design decision rather than an accident of ordering.
@@ -411,7 +424,12 @@ export async function enrichJobCandidates(
     // actual row (all three live `linkedin.com` rows are unproven, 3 of 3), so
     // a repair placed below it could never reach the defect it exists to fix.
     if (scope.status === "unproven") {
-      return { ...item, title, fetchedPostingScope: "unproven" as const };
+      return {
+        ...item,
+        title,
+        fetchedPostingScope: "unproven" as const,
+        ...(pageKind ? { fetchedPageKind: pageKind } : {}),
+      };
     }
     const structured = scope.status === "owned" ? scope.structured : undefined;
     const structuredDetails = structured
@@ -467,11 +485,12 @@ export async function enrichJobCandidates(
     // the one that deliberately does NOT carry a repair: no page was fetched,
     // so there is no witness.
     if (!hasExtractedJobSignal(structuredDetails, details, visa, pageText) && company === item.company) {
-      return { ...item, title };
+      return { ...item, title, ...(pageKind ? { fetchedPageKind: pageKind } : {}) };
     }
     return {
       ...item,
       title,
+      ...(pageKind ? { fetchedPageKind: pageKind } : {}),
       place,
       location: formatOpportunityPlace(place) || item.location,
       // Web-discovered postings arrive with no date at all, which left the

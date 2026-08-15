@@ -208,6 +208,42 @@ const LEADING_YEAR_RE = /^\s*(20\d{2})\b/;
  * The events pipeline has always dropped finished events; jobs had no
  * equivalent, which surfaced a "Summer 2025 Internship" in mid-2026.
  */
+/**
+ * A23-04 / Ruling 62c. A WordPress-style DATE PERMALINK: three fully-bounded
+ * components, `/<yyyy>/<mm>/<dd>/`. Nothing looser will do, and B verified both
+ * near-misses against real rows in this corpus: `/2026/summer-internships` and
+ * `/jobs/2026/molten-salt` are genuine postings and must NOT match.
+ */
+const DATE_PERMALINK_RE =
+  /\/(?:19|20)\d{2}\/(?:0[1-9]|1[0-2])\/(?:0[1-9]|[12]\d|3[01])\//;
+
+/**
+ * A23-04 / Ruling 62c. TRUE when the row is not a job posting at all: a blog
+ * post that a search provider offered as a vacancy. `grad.wisc.edu`'s
+ * `/2025/11/13/phd-student-internship-opportunities-at-thermo-fisher-scientific`
+ * is a university news item about somebody else's internships, and it reached
+ * the pool with `Thermo Fisher Scientific` printed as its employer.
+ *
+ * IT IS A CONJUNCTION, AND NEITHER HALF MAY SHIP ALONE — B measured both.
+ * The URL clause has ZERO counter-examples in 96 offered rows, which means it
+ * also has zero controls, and Ruling 55c raised the bar for exactly that shape.
+ * The page clause on its own drops `careerservices.upenn.edu`, a real Oak Ridge
+ * vacancy that Ruling 34a names. Together, each is the other's control.
+ *
+ * IT CAN ONLY EVER REMOVE A ROW. It changes no rendered value, invents no card
+ * shape, and turns no silence into a value. A miss — an unfetched page, an
+ * article that declares nothing, a permalink one component short — falls to
+ * ADMISSION, which is exactly what ships today.
+ */
+export function isNonJobArticle(item: RawJobItem): boolean {
+  if (item.fetchedPageKind !== "article") return false;
+  try {
+    return DATE_PERMALINK_RE.test(new URL(item.url).pathname);
+  } catch {
+    return false;
+  }
+}
+
 export function isExpiredPosting(item: RawJobItem, now = Date.now()): boolean {
   if (item.postedAt) {
     const posted = Date.parse(item.postedAt);
@@ -315,6 +351,9 @@ export function scoreJobs(
     // Drop postings that have clearly aged out. A posting the user cannot
     // apply to is worse than no posting: it burns a slot and reads as staleness.
     if (isExpiredPosting(item, now)) continue;
+    // A23-04 / Ruling 62c. Beside the expiry drop, and post-enrichment for the
+    // same reason: the page-kind signal only exists once a page has been read.
+    if (isNonJobArticle(item)) continue;
 
     const requiredScoped = scoreKeyword(facade, profile.topics, {
       scope: "titleAndSummary",

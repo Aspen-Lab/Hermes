@@ -41,6 +41,13 @@ export interface OpenGraphTags {
   title?: string;
   description?: string;
   siteName?: string;
+  /**
+   * A23-04 / Ruling 62c. `og:type` — the page's own statement of what KIND of
+   * thing it is. Round 22 B recorded this as "fetched and never consulted";
+   * round 23 B corrected its own note by executing the parser: it was never
+   * EXTRACTED at all, so this key is new rather than newly read.
+   */
+  type?: string;
 }
 
 export interface MetaOpportunityDetails {
@@ -1842,9 +1849,72 @@ export function extractOpenGraphTags(html: string): OpenGraphTags {
       tags.description = value;
     }
     if (key === "og:site_name" && !tags.siteName) tags.siteName = value;
+    if (key === "og:type" && !tags.type) tags.type = value;
   }
 
   return tags;
+}
+
+/**
+ * A23-04 / Ruling 62c. TRUE when the page DECLARES ITSELF AN ARTICLE.
+ *
+ * This is one half of a conjunction and is useless alone — B measured why.
+ * `careerservices.upenn.edu` is a genuine Oak Ridge postdoctoral vacancy, in
+ * the pool, and Ruling 34a's named accepted cost, and it ALSO declares
+ * `og:type=article`, because its careers board renders vacancies through an
+ * article template. A guard on this signal by itself would drop a row a
+ * standing ruling protects. The URL clause is what makes the pair safe, and
+ * this clause is what gives the URL clause the control set it does not have.
+ *
+ * A `JobPosting` record VETOES OUTRIGHT, before either signal is read. That is
+ * the floor Ruling 55c demands of anything that can DROP a row: a page that
+ * carries a machine-readable vacancy is a vacancy, whatever its template says.
+ */
+const ARTICLE_JSONLD_TYPES = new Set(["article", "newsarticle", "blogposting"]);
+
+function jsonLdTypeNames(record: unknown): string[] {
+  if (!isRecord(record)) return [];
+  const type = record["@type"];
+  if (typeof type === "string") return [type];
+  if (Array.isArray(type)) return type.filter((t): t is string => typeof t === "string");
+  return [];
+}
+
+export function declaresArticleKind(html: string): boolean {
+  // The veto, first and unconditionally.
+  if (extractJsonLdOpportunities(html).some((item) => item.kind === "job")) {
+    return false;
+  }
+
+  if (extractOpenGraphTags(html).type?.trim().toLowerCase() === "article") {
+    return true;
+  }
+
+  for (const block of jsonLdBlocks(html)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(block);
+    } catch {
+      // A malformed block must not decide the page's kind either way.
+      continue;
+    }
+    // TOP-LEVEL only: the block's own record(s), plus `@graph` members, which
+    // is how WordPress emits the shape this exists for. Not an arbitrarily deep
+    // walk — a nested `Article` inside some other record is not the page's own
+    // declaration about itself.
+    const roots = Array.isArray(parsed) ? parsed : [parsed];
+    const records = roots.flatMap((root) =>
+      isRecord(root) && Array.isArray(root["@graph"])
+        ? [root, ...root["@graph"]]
+        : [root],
+    );
+    for (const record of records) {
+      for (const name of jsonLdTypeNames(record)) {
+        if (ARTICLE_JSONLD_TYPES.has(name.trim().toLowerCase())) return true;
+      }
+    }
+  }
+  return false;
 }
 
 export function extractMetaOpportunityDetails(
