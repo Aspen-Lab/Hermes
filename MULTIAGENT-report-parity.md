@@ -62693,3 +62693,357 @@ recorded rather than asserted.**
 
 **PART 2 STOPS HERE.** All tally lines with running counts follow in part 3; the
 ranked difference list and the gate verdict in part 4.
+
+### Round 25 — Agent A (part 3: **ALL TALLY LINES IN ONE PLACE WITH RUNNING COUNTS, EVERY ONE STATED AFFIRMATIVELY EVEN AT ZERO, AND EVERY EXCLUSION RE-LISTED BY NAME.** A opens by correcting THREE things it wrote in part 2 — one arithmetic convention, one round count, and one live row it called an absence when it was in fact offered and is a confirmation.)
+
+**STATUS: PARTIAL BY DESIGN.** Part 3 of four. Parts 1 (`a44acd2`) and 2
+(`818b2ae`) are committed and pushed. Part 4 (ranked list + gate verdict) is not
+yet done.
+
+**Every figure here is measured this round on the final, method-correct five-pull
+window described in part 1. Nothing is carried from A's superseded first window,
+and nothing is estimated.**
+
+---
+
+## **0. A CORRECTS ITSELF, THREE TIMES, BEFORE QUOTING ANY RUNNING COUNT**
+
+Parts 1 and 2 are append-only history and stay exactly as written. These are the
+corrections, in the same turn, rather than silent fixes.
+
+**(a) THE 34a JOB CUMULATIVE DENOMINATOR. Part 2 wrote "9 of 108 (+4 non-null
+this round)". THAT IS THE WRONG CONVENTION and the number is wrong.** Every
+prior round has advanced this denominator by **all majority job rows**, not by
+the non-null subset: round 23 → 24 moved it 91 → 104, which is **+13 = round
+24's thirteen majority rows**, while round 24's *non-null* count was five.
+**The correct figure is 104 + 11 = `9 of 115`.** Part 2's `9 of 108` is
+retracted here and appears nowhere below.
+
+**(b) RULING 57b's EVENT-SURFACE ROUND COUNT. Part 2 wrote "SEVENTH round".
+§1 says round 24 was the seventh, so round 25 is the EIGHTH** — and A follows §1
+per the check-me clause. **A also names the discrepancy rather than papering
+over it: round 24 A's own part 3 called round 24 the "Sixth round in this
+state", while round 24 C's hand-off block in §1 called it the SEVENTH.** The two
+disagree by one. **A adopts §1's count (so: EIGHTH) and flags the off-by-one for
+the manager to settle, because a status whose age nobody can state is a status
+nobody is really tracking.** Ruling 55c's count has no such problem — the closes
+trace cleanly FOURTH (r22) → FIFTH (r23) → SIXTH (r24) → **SEVENTH (r25)**.
+
+**(c) `grad.wisc.edu` IS OFFERED, AND IT IS A CONFIRMATION, NOT AN ABSENCE.**
+Part 2's positive-confirmations table says *"not offered this round — absence,
+not a pass"*. **That is wrong, and the truth is better than what A wrote:**
+
+| | measured |
+|---|---|
+| offered | **5 of 5** — `PhD Student Internship Opportunities at Thermo Fisher Scientific` |
+| kept at ingestion | **true, 5 of 5** |
+| reached the pool | **0 of 5** |
+
+**This is A23-04's article-kind conjunction CONFIRMED ORGANICALLY, on its own
+row, for a second consecutive round — offered, admitted at ingestion, and
+correctly kept out of the pool.** The admitted control on the other side,
+`careerservices.upenn.edu`, holds **5 of 5**. A had this data and read the wrong
+column; the correction is recorded here with the wrong claim named.
+
+---
+
+## **1. RULING 62b — THE STANDING FUSE TALLY. SECOND READING: ZERO. AND A STATES WHY THAT ZERO IS WEAKER THAN LAST ROUND'S.**
+
+**Stated affirmatively, in the ruling's own terms: a pool row whose
+month-granularity date has FULLY PASSED and which remains in the pool is a
+censusable DEFECT. Round 25 reading: ZERO such rows.**
+
+- **Month-granularity rows in the pool: ZERO of 13.**
+- **Month-granularity rows in the OFFERED corpus: ZERO of 149.**
+- **`10times.com` — the only host that has ever produced one in this loop — was
+  NOT OFFERED AT ALL, 0 of 5.**
+
+**So the zero is real but it is VACUOUS, and A says so rather than banking it.**
+Round 24's zero was measured against one live month-granularity row whose month
+had not yet passed; **round 25's is measured against no such row at all.** The
+fuse has nothing to expire.
+
+**THE MECHANISM WAS THEREFORE RE-CONFIRMED BY REPLAY at both edges, because a
+live pull tested nothing about it this round:** `dateClaimEndMs("2026-08")`
+resolves to **31 Aug 2026 23:59:59.999 local** — **alive** at 31 Aug 23:00,
+**dead** at 1 Sep 00:01. C left the anchor byte-identical and its edge tests in
+place, and both edges execute correctly today.
+
+**THE FIRST FALSIFIABLE LIVE READING IS STILL THE FIRST ROUND AFTER 31 AUGUST,
+and it now additionally requires a month-granularity row to be offered at all.**
+**62b gap (b), the expiry evasion itself, is NOT closed and nothing here claims
+it is.**
+
+---
+
+## **2. RULING 34a — TWO LINES, BOTH AT ZERO**
+
+Definition unchanged: *how many rendered values were a real, correctly-spelled
+institution name that was NOT the actual employer.*
+
+- **JOBS: 0 of 4 non-null employer values (0%).** The four are `Kairos Power`,
+  `INL`, `Tesla`, `Idaho National Laboratory` — **every one correct**, and two of
+  them (`Tesla`, `Idaho National Laboratory`) are 62d(a)'s held half vindicated
+  live on two different hosts. Seven rows render honest silence.
+  **Cumulative: 9 of 115** (was 9 of 104; **+11 majority job rows**).
+  **Second consecutive all-correct employer column.**
+- **EVENTS: 0 (0%).** Only one pool row carries an organiser name at all —
+  `ibatterysummit.com` → `Carsurin`, `SaranaLab`, both genuine partners of that
+  summit, unchanged from round 24. **Cumulative: 11 of 181** (was 11 of 169;
+  **+12 counted event rows**, the denominator excluding `euagenda.eu` per 45a as
+  every round has).
+
+---
+
+## **3. RULING 33 — THE SHORT-ACRONYM COLLISION. ZERO NEW INSTANCES.**
+
+**Cumulative: 2 of 92** (was 2 of 81; +11 job rows). **Definition unchanged, and
+the ruling is NEITHER WIDENED NOR NARROWED — asserted by execution, not by
+assertion:** the shipped collision guard returns **`false`** for bare `LCO`,
+`ION` and `MSR` against this round's required topics, exactly as rounds 22–24
+recorded.
+
+`INL` renders as an employer once and is **correct** (Idaho National Laboratory,
+on INL's own referral host); the guard executed against `INL` returns **`false`**
+too. **No new acronym instance exists to file, under this ruling or any other.**
+
+---
+
+## **4. RULING 37 — THE COLONLESS HEADING RUN-ON. ZERO, INCLUDING THE BASELINE.**
+
+**0 of 0 page-owned summaries.** **No row in the whole job pool publishes a
+page-owned summary this round** — all 11 fall back to `Matches your …`, A21-04's
+shipped fallback reached through A22-03(a)'s fail-closed publication gate.
+
+- **`careers.gevernova.com` — Ruling 37's OWN BASELINE ACCEPTED COST — IS IN THE
+  POOL and does NOT publish a page-owned summary this round.** The
+  `What you'll do Support engineering teams …` citation rounds 11–24 recorded is
+  **absent**. **A records this as an absence, NOT as a fix**: nothing landed on
+  that path, and the honest reading is that the page-fetch enrichment did not
+  produce owned text for this pull.
+- **NO RECURRENCE AND NO NEW INSTANCE. Ruling 37's escalation to a future B does
+  NOT fire.**
+
+**RULING 44's SUB-COUNT: ZERO.**
+
+**B18-03's leading date stamp: ZERO.** No summary in the pool opens with a
+`Mon D, YYYY —` stamp. **The named under-catch (a plain-hyphen stamp) was also
+searched for and is ZERO** — a measured zero on both the fixed shape and its
+documented gap.
+
+**Zero rows publish another posting's text.**
+
+---
+
+## **5. RULING 52b — FULL-PHRASE COMPANY-NAME COLLISIONS. 2 INSTANCE FAMILIES, ZERO ADMITTED. CUMULATIVE STAYS 5.**
+
+| instance | host / shape | outcome |
+|---|---|---|
+| `Battery Ventures` | `2027 Summer Investment Internship - Battery Ventures` | **KEPT at ingestion, reached NO pool, 5 of 5** |
+| `Battery Ventures` | `jobs.battery.com` search page | dropped at ingestion |
+| `Ion Exchange` | `naukri.com`, `ionenviromgt.net`, `ziprecruiter.com` | all dropped at ingestion |
+
+**Cumulative admissions: 5 → 5. NO NEW ADMISSION.** Round 24's admitted
+`Ion Exchange` row (`bebee.com`) is not in this round's pool — **`bebee.com` was
+not offered at all, 0 of 5.**
+
+**MUST-KEEPS RE-VERIFIED BY EXECUTION:** `Ion Exchange Global`,
+`Molten Salt Solutions`, `Battery Resourcers`, `Ion Exchange Ltd.` — all
+**`false`**, all survive; and all four live non-null employers likewise.
+
+**Per 58a/60a the guard-defect vs deferred-shape distinction DOES NOT ARISE this
+round — there is no admission to classify. THE STRIKE COUNT REMAINS ONE.
+A22-04 is untouched and still open at STRIKE ONE.**
+
+---
+
+## **6. RULING 57b — THE COLLISION GUARD, BOTH SURFACES**
+
+- **EVENT SURFACE: `designed, organically unwitnessed` — UNCHANGED, MEASURED NOT
+  ABSENT. EIGHTH round in this state** (per §1's count; see correction (b)).
+  Zero fires across every pool row in all five pulls, and **12 of the 13 rows
+  carry no organiser name at all**, so conjunct 1 cannot be reached.
+- **JOB SURFACE: the row is there, and the guard is NOT what removes it.**
+  `2027 Summer Investment Internship - Battery Ventures` is offered and reaches
+  no pool in any of the five pulls — the same organic shape rounds 23 and 24
+  recorded. **But A executed the shipped guard on the shipped call shape this
+  round and it returns `false`** (part 2 has the table; conjunct 3 blocks it,
+  because the collision topic sits in the item's own title). **The outcome is
+  correct and the reader is not harmed. The mechanism credited for it is not the
+  one operating, and A records that rather than repeating an inherited claim.**
+  **A does not re-rank the status — that is the manager's call.**
+
+---
+
+## **7. RULING 55c — THE ONLINE MUST-KEEP DEBT. SEVENTH ROUND, NAMED, STILL UNDISCHARGED — AND A SAYS WHERE IT LOOKED.**
+
+55c needs a **genuinely-online event rendering `Online`**, discharged on first
+live appearance; constructed evidence is ruled insufficient by 55c itself.
+
+**Where A looked, mechanically, across the final window:**
+
+- **All 13 event pool rows: ZERO carry `isOnline: true`, and ZERO render the
+  word `Online` anywhere in their rendered report markup** — checked in the
+  markup, not only in the field.
+- **All 149 offered event rows**, title-matched for
+  `online|virtual|webinar|remote|livestream|hybrid`: **ONE match, and it does not
+  qualify** — `… WQA Fly-In on May 18-19 – WC&P Online`, where `Online` belongs
+  to a trade **magazine's** name, the subject is off-topic, and the stated dates
+  are past.
+- **Round 24's single `isOnline` candidate (`cambridgeenertech.com`) is not in
+  this pool at all** — so even the unusable candidate A refused to discharge on
+  is gone.
+
+**No honest source appeared. SEVENTH round, undischarged, and the search is
+recorded rather than asserted.**
+
+---
+
+## **8. RULING 48b — THE OFFERED-ROW SCAN, BOTH SURFACES, BOTH COLUMNS**
+
+| surface | offered (unique `url ::: title`) | correctly dropped | **wrongly dropped** |
+|---|---|---|---|
+| **EVENTS** | **149** | **98 (65.8%)** | **0 (0.0%)** |
+| **JOBS** | **100** | **49 (49.0%)** | **0 (0.0%)** |
+
+Full walk in part 2. **One addition measured after part 2 was committed, and it
+strengthens the event column:** `thebatteryshowsouth.com` — offered in all five
+pulls as `The Battery Show South 2026 | Charlotte, April 22-23` — is **dropped at
+ingestion, 5 of 5, and correctly: April 22–23 is past.** It was a round-24 POOL
+row, so this is the same host leaving by date rather than disappearing, and its
+provider title now names Charlotte where round 24's row rendered Atlanta.
+**Because the row is not in the pool, no place is rendered from it and no place
+column is affected** — recorded so a later round does not read the Atlanta →
+Charlotte move as a silent value change.
+
+**Two event drops remain UNVERIFIABLE and are counted in neither column**:
+`ttc-ensco.com` (HTTP 403) and `sae.org/events/battery-electrification-summit`
+(JS shell, no date; Ruling 25 forbids a browser). Named, not counted.
+
+---
+
+## **9. THE COLUMNS, ROUND OVER ROUND**
+
+| column | r23 | r24 | **r25** |
+|---|---|---|---|
+| event NAME wrong | 1 of 13 (7.7%) | 1 of 16 (6.3%) | **0 of 12 (0.0%)** |
+| event ITEM-KIND wrong | 0 of 13 | 1 of 16 (6.3%) | **0 of 12 (0.0%)** |
+| event PLACE wrong | 3 of 7 non-null | 1 of 16 / 1 of 6 non-null | **0 of 12 / 0 of 4 non-null. Correct venues lost: ZERO** |
+| **invented dates** | 0 | **1 of 17 on plate 03** | **0 of 13 — scored on the REPORT PAGE, not the card** |
+| job EMPLOYER wrong | 1 of 4 non-null | 0 of 5 non-null | **0 of 4 non-null** |
+| job ITEM-SHAPE wrong | 1 of 11 | 0 of 15 | **0 of 11** |
+| **job REASON-LINE wrong** | *(never scored)* | *(never scored)* | **1 of 11 — A25-01** |
+| job wrongly-dropped | 0 | 0 | **0** |
+| event wrongly-dropped | 0 | 0 | **0** |
+| Ruling 33 | 2 of 68 | 2 of 81 | **2 of 92** |
+| Ruling 34a jobs | 9 of 91 | 9 of 104 | **9 of 115** |
+| Ruling 34a events | 11 of 153 | 11 of 169 | **11 of 181** |
+| Ruling 52b admissions | 4 | 5 | **5 — no new admission** |
+| Ruling 37 | baseline only | baseline only | **0 of 0 — the baseline itself publishes nothing this round** |
+| Ruling 44 sub-count | 0 | 0 | **0** |
+| **62b fuse** | *(line created)* | 0 — first reading | **0 — second reading, and VACUOUS: no month-granularity row exists** |
+
+**THE ONE NEW ROW IN THIS TABLE IS DELIBERATE.** The job reason line has never
+been a scored column in this loop. **A adds it because that is where this
+round's only difference lives, and hiding a finding by not having a column for
+it is the opposite of what §2 asks.** The count is stated as 1 of 11, not folded
+into the summary column, because A22-03(a)'s summary gate is a different
+mechanism and measures clean.
+
+---
+
+## **10. RULING 58b — BETWEEN-ROUND MOVEMENT EVIDENCE, BOTH SURFACES**
+
+- **Events: 17 → 13.** **Out 5:** `10times.com` (**not offered, 0 of 5**),
+  `advancedautobat.com` (**not offered**), `cambridgeenertech.com` (**its index
+  row not offered; its three real event pages offered and correctly dropped as
+  past**), `sdle.co.il` (**not offered**), `thebatteryshowsouth.com` (**offered,
+  dropped at ingestion as past**). **In 1:** `battery-power.eu`, returning — it
+  was round 24's single departure, recorded then as "not offered".
+  **17 − 5 + 1 = 13, closes exactly.**
+- **Jobs: 14 named hosts in round 24 → 11.** **Retained 8:** `inl.referrals`,
+  `terra.do`, `lanl.jobs`, `careers.gevernova.com`, `careerservices.upenn.edu`,
+  `careers.inl.gov`, `ev.careers`, `linkedin.com`. **Out 6:** the SECOND
+  `inl.referrals` row, `postdocjobs.com`, `bebee.com` ×2, `salutemyjob.com`
+  (**offered and kept at ingestion, pooled 0 of 5 — it is the same Savannah
+  River posting as the `linkedin.com` pool row, correctly deduped to ONE slot;
+  round 21 A ranked the double-fill as a defect and it does NOT recur**),
+  `magnet.me`. **In 3:** `lensa.com`, `tesla.com`, `climatechangejobs.com`.
+  **14 − 6 + 3 = 11, closes exactly** against round 24's named list. Round 24
+  quoted a union of 15 against 14 named hosts; A uses the named list and says so.
+- **WITHIN-TURN STABILITY, recorded because round 24's turn was the opposite:**
+  A ran two complete five-pull windows roughly six minutes apart (the first
+  discarded for the harness defect in part 1). **The event pool read 13 rows with
+  identical membership in BOTH windows, and the job pool read 13 then 11** — the
+  first window's two extra rows were single-pull minority rows that did not
+  return. **Every window was internally stable at 5/5, and the reported window
+  has zero minority rows on either surface.**
+
+---
+
+## **11. EXCLUSIONS RE-LISTED BY NAME, EACH WITH WHETHER IT WAS INVOKED**
+
+- **45a — `euagenda.eu`: NOT fetched, NOT retested, NOT counted.** Its render
+  again ends in a literal ellipsis: **seventh round recorded, still not counted.**
+- **45b — Ruling 41c's three hosts: NOT hunted.**
+- **39a/40 — honest hosts:** `euchems2026.eu` invoked, counted in the
+  denominator, not a wrong value.
+- **42c — the document-URL retarget:** `euchems2026.eu` invoked. **Its
+  `Hackathon` header chip recurs unchanged in all five pulls and is a STANDING
+  MANAGER OBSERVATION, not counted and not ranked** (§1d exclusion 8 applied).
+- **36 — `ruggedthz.com`:** invoked; measured CORRECT for a **thirteenth** round.
+- **33 — the short-acronym collision:** invoked; zero new instances.
+- **50a's news-post precedent:** invoked for `solarpaces.org` and
+  `ruggedthz.com`, both CORRECT.
+- **39b: RETIRED by 61a and NOT invoked.** `batteryinnovationsummit.com` scored
+  as an **ordinary** row and comes back **CORRECT** — its `og:title` is
+  `The Battery Saloon`, confirmed by fetch this round, which is what Peer
+  renders. **Second round under 61a.**
+- **B18-02's three named under-catch hosts:** `bebee.com`, `talent.com` and
+  `xtalks.com` **all not offered, not fetched.** The truncated-title class is
+  witnessed instead on `tesla.com` (`… Battery ...`) and is
+  **DOCUMENTED-KNOWN, NOT re-ranked as new.**
+- **B18-03:** invoked; zero instances, including its named plain-hyphen
+  under-catch.
+- **`stemgateway.nasa.gov`:** invoked; **offered and drops, 5 of 5, not
+  counted** per §1 — a **fourth** round.
+- **42a's `openmc.discourse.group` Gap B:** not reached this round; deferred to
+  39c, untouched.
+- **§1d exclusions 7 and 8 re-listed:** exclusion 7 (the event report's
+  `Register by` sub-line) permanently excluded from parity scoring; exclusion 8
+  applied in both directions — A declined to stretch any exclusion over A25-01,
+  and declined to manufacture a fresh difference out of `euchems2026.eu`.
+- **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+---
+
+## **12. CARRIES RESTATED, EACH BY NAME**
+
+- **A22-04 IS STILL OPEN. The third-strike backstop stands at STRIKE ONE** —
+  there is no 52b admission this round, so nothing advances the count.
+- **62d(b) / 63a stay DEFERRED. The corpus does NOT grow this round** — zero new
+  segment-order instances in the offered corpus, and **ZERO on a pool row, so
+  63a's reopen trigger is NOT pulled.** It stands at the four instances round 24
+  recorded. 62d(a)'s held half is **vindicated on two live rows** (`Tesla`,
+  `Idaho National Laboratory`).
+- **RULING 64a — THE SCORING-ORDER LEAD. NOT REOPENED, AND A STATES WHY IT
+  COULD NOT BE.** Its reopen trigger is *an on-topic month-granularity row
+  failing top-N on the date component*. **There is no month-granularity row in
+  the pool OR in the 149-row offered corpus this round**, so the trigger is
+  **unreachable, not merely unpulled** — A says which of the two it is. Nothing
+  is claimed about the under-score either way. A owes nothing new.
+- **62a's `abilities.com` accepted cost: not offered, so not re-incurred and not
+  re-verified.**
+- **RULING 65's `benchmark.test.ts:225`: CARRIED BY NAME, EXPECTED, NOT CHASED.**
+  It is the third stale assertion, commissioned to the next code turn. A did not
+  touch it, did not move a threshold, and does not report it as new.
+- **Thresholds unchanged and untouched by A**, verified by reading the shipped
+  constants rather than assuming: `OPPORTUNITY_MIN_SCORE` **0.35**,
+  `MAX_POSTING_AGE_DAYS` **270**, `MAX_ENRICHMENT_CANDIDATES` **40**.
+  **`git log 0a747f3..HEAD -- web/src/` is EMPTY** — not one source file changed
+  since round 24 C's last commit, so what A measured is exactly what C left.
+
+---
+
+**PART 3 STOPS HERE.** Part 4 — the ranked difference list, the gate suite and
+the gate verdict — follows in the final commit.
