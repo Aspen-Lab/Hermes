@@ -67006,3 +67006,23 @@ lived outside `src/` and was deleted before every commit, verified with
   *"expect the ranked list to be long and do not compress it"* — was followed.
 
 **A sets no `MET` line and never can (Ruling 30).** The next turn is B's.
+
+---
+
+### Round 26 — MANAGER verification of Agent A, RULING 71a–b, and the hand-off to B
+
+**Date: 2026-08-15. Checked, not inherited.** Numstats pure (307/0, 285/0, 221/0, 649/1). A changed no code (`git log e85badc..HEAD -- web/` empty, re-confirmed). **The first visual census is ACCEPTED as the phase-1 visual baseline**: plates located and cited with page/coordinate bounds so no later round re-hunts; the type system measured from the PDF's own spans, not eyeballed; the build rendered through the SHIPPED components against plate-shaped fixtures AND live rows (the fixture/live split is what keeps "missing section" and "empty field" apart); scope stated openly (structure and typography scored; pixel colour/font-file fidelity recorded as observations); the serif judgement call named with both counts; eight positive observations recorded. **A25-01 is CLOSED on an organic witness** (`lensa.com` returned carrying the defect's exact shape and the reason line is clean) — and A's disclosure that `relevanceScore` is not a stable live observable retires that falsifier class honestly. The 48b instrument's 400-char clipping was caught by A's own control and ALL FIVE pulls re-run — the discipline working.
+
+---
+
+## RULING 71 — THE TWO POLICY ITEMS, DECIDED. BINDING.
+
+**71a. THE ROUTE KICKER (`/JOBS/[ID]` · `/EVENTS/[ID]`) IS DECK CHROME, NOT APP UI.** The bracketed segment is template syntax — a design-file annotation orienting the deck's reader to which route the plate specifies, not copy a shipped product renders to a user. **V26-J11 and V26-E09 are STRUCK from the visual baseline as non-items** (the baseline becomes **18 — 10 on plate 02, 8 on plate 03**). Recorded so no later round re-raises it; the user may overrule.
+
+**71b. THE 48b WRONGLY-DROPPED STANDARD, FIXED BY DECOMPOSITION.** A drop is WRONG if and only if the dropped row is **(a)** a single attendable event page (not an index, hub, article or listing), **(b)** on-topic, **(c)** whose evidenced date is TODAY-OR-FUTURE at measurement time — a past evidenced date makes the drop LAWFUL, that is the expiry design working — and **(d)** dropped by an ingestion/scoring mechanism rather than losing a top-N competition (competitiveness is a recorded design, §1b). Dateless pool rows are governed by the dateless-branch design and their presence does not convert a past-dated drop into a wrong one. **Round 25 A's zero was correct under the then-standing reading — no regression is implied, exactly as A disclosed.** From this ruling forward 48b's column cites this standard by number. **Round 26 B's FIRST task on A26-02: re-score the six named rows against 71b by execution** (establish each row's evidenced date against the measurement date — `cambridgeenertech.com/solid-state-batteries`'s own recorded title reads `August 11-12, 2026`, already past at measurement, and is EXPECTED to move to the correct-drop column); **only the rows that survive 71b are the item B prices a fix for.** If none survive, A26-02 closes as a standard clarification and the column restates to zero.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 26` stands as A wrote it. **B's work list, in the manager's order:** (1) **A26-02 re-scored under 71b**, then priced only for surviving rows; (2) **A26-01** (why `ev.careers` keeps the ` at Tesla` clause its three sibling hosts strip — one mechanism or two, then the fix direction); (3) **THE VISUAL LIST — 18 items, B prices and designs in A's ranking**: the serif adoption first (V26-J02/E02 — the largest finding and plausibly the cheapest; the family is loaded and tokenised, the reports never opt in), then plate 03's heading hierarchy, the timeline track pair, the fact-tile band pair, the missing `WHAT THE ROLE IS` section, and the remainder — each with plate citation, component location, fix direction with boundary conditions, tests at risk; **group cross-surface pairs as single mechanisms where execution shows they are**; (4) **the 68b raw-reader pricing** (ledger write, facetCounts ×2, server filter, `facets.ts:338` divergence — measured matrices). **Ruling 70's `64c` assertion fix stays item zero of round 26 C.** Budget-low: bank per item in this order; the visual designs are the round's bulk. The gate stays `GATE (0%): NOT MET`.
+
+---
