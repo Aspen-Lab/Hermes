@@ -59448,3 +59448,174 @@ turn is the clearest evidence yet for it.
 immediately. **A sets no gate verdict, and the gate rule is unchanged:
 `GATE (0%): NOT MET`; only the manager closes, after an independent
 re-measurement.**
+
+### Round 24 — Agent A (part 2: the job pool, both landed round-23 job items, and the 48b offered-row scan. **A23-04 IS CONFIRMED ORGANICALLY ON BOTH SIDES — `grad.wisc.edu` reaches the pool 0 of 5 while the `upenn` ADMITTED CONTROL holds 5 of 5. A23-01(c)'s ellipsis clause is confirmed live. RULING 63a's REOPEN TRIGGER IS NOT PULLED — and A says why, because the reason is the provider, not a fix. The employer column reads ZERO wrong.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 2 of four. Part 1 (event surface) is
+committed (`04b7080`). Parts 3 (all tally lines) and 4 (ranked list + gate
+verdict) are not yet done.
+
+**Method, identical to part 1**, including **both harness defects disclosed
+there — the URL-only offered-row key and the `content:`/`snippet:` field-name
+mismatch — fixed before any figure below was derived.** Five independent live
+pulls in five separate processes, no-op `PoolCache`, `buildDailyJobPool()` then
+`scoredJobToJob()` then the shipped `jobCardView()` and **plate 02's own
+`buildJobFacts()` (`page.tsx:549`)**. `PEER_PROFILE_SNAPSHOT_PATH` NOT used.
+Page-fetch enrichment ran, LLM enrichment did not (42b). Keys confirmed by
+boolean check only. **The job pulls were run immediately after the event pulls so
+both surfaces sit in the same measurement window.**
+
+---
+
+## REPRODUCIBILITY — **15 UNION ROWS, 13 MAJORITY. MEMBERSHIP VARIANCE IS REAL THIS ROUND AND IS DISCLOSED ROW BY ROW.**
+
+Per-pull pool sizes: **11 / 11 / 13 / 13 / 13.** Union 15.
+
+**Ruling 39d/41a disclosure — the minority rows, by name:**
+
+- **`bebee.com` (the Savannah River actinide posting) — 1 of 5.** Renders
+  `Actinide Chemistry/Ion Exchange Postdoc Research ...` with a silent employer.
+- **`careers.inl.gov` — the SAME posting under two URLs**, one carrying a
+  truncated query string (`?lastSelectedFacet=`) 4 of 5 and the full query string
+  1 of 5. **Same role, same render, same silence — one posting, two keys.**
+  Counted once in every column below.
+
+**Majority rows (3 of 5 or better): 13.** Every scored column on every majority
+row was **byte-identical across the pulls in which the row appeared** — the
+variance this round is membership, not value.
+
+Offered rows: **126 unique `url ::: title` pairs across the five pulls; 55 kept
+at ingestion, 71 dropped.** Per pull 98–105. `beforeDedup` 182–185,
+`afterDedup` 179–182. **Zero source errors.** Sources reaching the pool: all 15
+rows are `jobweb`; `adzuna` and `usajobs` returned 0 again, `remotive`,
+`arbeitnow` and `himalayas` contributed to the candidate set but no survivor.
+
+---
+
+## **A23-04 — THE ARTICLE-KIND CONJUNCTION. CONFIRMED ORGANICALLY, AND BOTH HALVES OF THE TEST ARE LIVE THIS ROUND. THIS IS THE CLEANEST OF THE FOUR.**
+
+| what Ruling 62c required | measured |
+|---|---|
+| **`grad.wisc.edu` LEAVES the pool** | **CONFIRMED. It was OFFERED and KEPT AT INGESTION in all five pulls** — its ingestion employer resolves to `Thermo Fisher Scientific`, so the row was genuinely live and genuinely available — **and it reaches the pool in 0 of 5 pulls.** The check removes it at the post-enrichment gate, exactly where 62c placed it |
+| **`careerservices.upenn.edu` — the ADMITTED CONTROL — MUST STAY** | **CONFIRMED. In the pool 5 of 5.** The falsifier §1 named (`careerservices.upenn.edu` disappearing) **DID NOT FIRE** |
+| no other row leaves through the kind check unless its page genuinely self-declares an article without a `JobPosting` record | **No unexplained departure.** Every other round-23 row absent this round is absent because it was **not offered**, not because it was dropped after enrichment — checked against the offered union, not assumed |
+
+**This is an organic confirmation on both sides at once: the row the fix targets
+is present-and-removed, and the row the fix must not touch is present-and-kept.
+A cannot ask for a better shape of evidence than that.**
+
+**The event-KIND tally §1 predicted would go "from 1 of 11 to zero" is ZERO on
+the job surface this round** — no job row is a blog post, news item or index
+page.
+
+---
+
+## **A23-01(c) — THE THREE BOUNDED CLAUSES. THE ELLIPSIS CLAUSE IS CONFIRMED LIVE. THE CAREERS-OFFICE CLAUSE HAS A NEW LIVE WITNESS IT DOES NOT REACH. THE ADDRESS TRIM HAD NO WITNESS AND A SAYS SO.**
+
+| clause | measured |
+|---|---|
+| **end-anchored ellipsis candidate goes silent** | **CONFIRMED ORGANICALLY. Zero employers anywhere in the corpus end in a literal ellipsis**, and the two offered titles that DO end in one (`Actinide Chemistry/Ion Exchange Postdoc Research ...`, both `bebee.com`) resolve to **`company: null`** — the candidate is vetoed and the slot goes silent, which is the designed outcome |
+| **`Career Services` whole-segment label goes silent** | **NO `Career Services` INSTANCE WAS OFFERED**, so the clause itself is unwitnessed this round. **BUT A NEW MEMBER OF THE SAME CLASS IS LIVE IN THE OFFERED CORPUS AND IS NOT REACHED:** `Chemical and Materials Engineering Internship – Career Connections Center University of Florida` produces the employer **`Career Connections Center University of Florida`** — a careers-office label, exactly the shape 62d(c) exists to stop, under a different office name. **The clause is anchored on the literal phrase `Career Services`, so a sibling office name walks through.** LATENT — it reached no pool |
+| **address tail TRIMMED, never rejected** | **NO WITNESS THIS ROUND.** The `Kairos Power, Alameda, …` shape was not offered in this window. **Absence, not a pass** — A does not record an unwitnessed clause as confirmed |
+| **62d's must-keeps** | **NONE MOVED.** `Idaho National Laboratory` and `INL` both render (`inl.referrals.selectminds.com`); `Ion Exchange` renders as an employer on `bebee.com` and is **correct** — 62d's own must-keep list names `Ion Exchange Ltd.` **No real employer went silent** |
+
+---
+
+## **RULING 63a — THE SEGMENT-ORDER CLASS. THE REOPEN TRIGGER IS *NOT* PULLED, AND THE HONEST REASON IS THE PROVIDER, NOT A FIX.**
+
+**`lanl.jobs` IS IN THE POOL, 5 OF 5** — the row A22-07's fix put there, still
+arriving. **Its employer renders SILENCE, not `Research Technologist 1`.**
+
+**A does not record that as the defect being fixed, because it is not.** The
+provider's offered title this round is, in all five pulls, exactly:
+
+> `Nuclear Materials and Molten Salt Technologist 1`
+
+**The dash tail is simply gone from what Peer was handed.** Round 23's title
+carried four segments (`… - Research Technologist 1 | Los Alamos, NM | Los Alamos
+National Laboratory`); this round's carries one. **There is no second segment for
+the splitter to prefer, so the shape had no material to fire on.** §1's own rule
+applies — *when a fix's target is gone, what stands in its place is the finding*
+— and what stands in its place is: **63a's class is unfalsified this round, not
+vindicated.** The employer that three markers named in round 23 is still not
+rendered; it is merely absent rather than wrong.
+
+**THE OFFERED-CORPUS SCAN 63a ORDERS — "record any instance, pool or offered".
+FOUR INSTANCES, ALL OFFERED, NONE POOLED:**
+
+| offered title | rendered `company` | what it actually is |
+|---|---|---|
+| `xFU(s)ION Internship Applicant Call - PIRE at CSE` | `CSE` | a department acronym — **63a's own recorded corpus row, still live** |
+| `Careers Open application - Internship battery R&D` | `Internship battery R&D` | a job title — recorded round 23, still live |
+| `Summer Research Intern - Medicinal Chemistry (Graduate Student level) @ Septerna \| …` | `Medicinal Chemistry (Graduate Student level) @ Septerna` | **a role description, with the real employer sitting inside it after the `@`. NEW instance of the class** |
+| `Chemical and Materials Engineering Internship – Career Connections Center University of Florida` | `Career Connections Center University of Florida` | **a careers office. NEW instance, and it is also the (c) gap above** |
+
+**ZERO of the four reached a pool. THE REOPEN TRIGGER — "the shape on a POOL row
+in any census" — IS NOT PULLED.** 63a stays deferred, folded into 62d(b),
+exactly as ruled. **A records the four instances so the deferred design's corpus
+keeps growing with real strings rather than invented ones.**
+
+**AND THE HELD HALF (a) IS VINDICATED BY A LIVE ROW, WHICH IS WORTH RECORDING.**
+The offered title `Internship, Battery Engineering (Summer 2026) at Tesla -
+EV.Careers` produces the employer **`Tesla`** — the FIRST surviving segment —
+and `ev.careers` sits in the pool 5 of 5 rendering `Tesla`. **Had 62d's approved
+"prefer the last surviving segment" shipped, this row would render `EV.Careers`.
+C's escape-clause stop was correct, and this round supplies the live proof C
+could only show on a locked test.**
+
+---
+
+## THE JOB CENSUS — **15 UNION ROWS, EVERY COLUMN SCORED, MINORITY ROWS MARKED**
+
+| # | host (pulls) | roleTitle | employer | verdict |
+|---|---|---|---|---|
+| 1 | `inl.referrals.selectminds.com` (5/5) | `Molten Salt Electrochemistry Summer Internship` | `INL` | CORRECT |
+| 2 | `inl.referrals.selectminds.com` (4/5) | `Molten Salt Flowloop Internship` | `INL` | CORRECT |
+| 3 | `lanl.jobs` (5/5) | `Nuclear Materials and Molten Salt Technologist 1` | *(silent)* | **CORRECT on every rendered value — and see 63a above for why the silence is not a fix** |
+| 4 | `careers.gevernova.com` (5/5) | `GE Vernova Battery Engineering & Technology Intern` | *(silent)* | CORRECT. **Its summary is RULING 37's baseline accepted cost, back again — see part 3** |
+| 5 | `careerservices.upenn.edu` (5/5) | `Postdoctoral Research Associate` | *(silent)* | **RULING 34a's NAMED ACCEPTED COST — and it renders SILENCE, not the wrong institution.** Also A23-04's ADMITTED CONTROL, holding |
+| 6 | `careers.inl.gov` (4/5 + 1/5, one posting) | `Molten Salt R&D Engineer` | *(silent)* | CORRECT |
+| 7 | `postdocjobs.com` (5/5) | `Molten Salt Chemical and Electrochemical Engineering` | *(silent)* | CORRECT — **A21-03's live confirmation holds for a third round** |
+| 8 | `terra.do` (5/5) | `Molten Salt Systems Engineer/Scientist` | *(silent)* | CORRECT — honest silence |
+| 9 | `ev.careers` (5/5) | `Internship, Battery Engineering (Summer 2026) at Tesla` | `Tesla` | **CORRECT — ground-truthed in round 23 against the page's own `og:title`, and the board tail did NOT win** |
+| 10 | `linkedin.com` (4/5) | `Molten Salt Electrochemistry Postdoctoral Researcher` | *(silent)* | CORRECT |
+| 11 | `salutemyjob.com` (4/5) | `Actinide Chemistry/Ion Exchange Postdoc Research Associate` | *(silent)* | **CORRECT — and note the FULL, UN-TRUNCATED title**, on the same posting `bebee.com` renders truncated |
+| 12 | `bebee.com` (4/5) | `Trainee R&D : Resins Development & Applications` | `Ion Exchange` | **CORRECT. Ruling 52b's collision shape with a genuinely correct value** — see part 3 |
+| 13 | `magnet.me` (4/5) | `ION Exchange Membrane Expert in Amsterdam at AquaBattery` | `AquaBattery` | **CORRECT — from the page's own title, and the board tail `Magnet.me` did NOT win** |
+| 14 | `bebee.com` (1/5, MINORITY) | `Actinide Chemistry/Ion Exchange Postdoc Research ...` | *(silent)* | **TRUNCATED TITLE — and `bebee.com` is one of B18-02's THREE NAMED UNDER-CATCH HOSTS. DOCUMENTED-KNOWN, NOT RE-RANKED AS NEW**, per round 18's binding instruction |
+| 15 | `careers.inl.gov` (1/5, MINORITY) | `Molten Salt R&D Engineer` | *(silent)* | same posting as #6 |
+
+**THE EMPLOYER COLUMN: 5 NON-NULL VALUES, 0 WRONG.** `INL` ×2,
+`Ion Exchange`, `Tesla`, `AquaBattery` — every one correct. **10 rows render
+honest silence.** **Zero job rows render a wrong employer this round**, against
+round 23's `Research Technologist 1`.
+
+---
+
+## **RULING 48b — THE OFFERED-ROW SCAN, BOTH COLUMNS. WRONGLY DROPPED: 0 of 126 (0.0%).**
+
+**Correctly dropped: 71 of 126 (56.3%).** The drop set is, by title, dominated by
+exactly the classes the guards exist for — aggregator search-result pages
+(`915 Ion Exchange jobs in India`, `252 Battery Intern jobs in United States`,
+`50 Molten Salt Jobs, Employment`), salary-listing pages
+(`$16-$50/hr … (NOW HIRING)`, `$107k-$173k …`), bare careers-index pages
+(`Careers`, `CAREER | Ion Exchange`, `Jobs | Ertel IonStream GmbH`), and
+programme pages (`Internships - Panasonic Energy Careers`).
+
+**WRONGLY DROPPED: ZERO, and zero is not a vacancy — A walked every candidate.**
+Four dropped rows name something a researcher might want; **none is a single
+vacancy**:
+
+- `enersys.com` — `EnerSys Internship Program: …` — a **programme** page.
+- `merl.com` — `Internship Openings | …` — **plural**, an index.
+- `jobs.cpchem.com` — `Intern, Co-Op and Graduate Rotation Programs` — a
+  **programmes** page.
+- **`stemgateway.nasa.gov` — `Engagement Opening: Battery Material Intern` —
+  offered, and it DROPS. Per §1, whichever way it lands it is NOT a new defect
+  and NOT a counted wrong drop. Recorded, not counted**, for a third round.
+
+---
+
+**PART 2 STOPS HERE.** Part 3 (every tally line with running counts, stated
+affirmatively even at zero, with every exclusion re-listed by name) and part 4
+(the ranked list and the gate verdict) follow, one commit each.
