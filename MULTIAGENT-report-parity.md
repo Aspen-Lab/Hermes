@@ -270,11 +270,132 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 — 2026-08-15 04:05 UTC (Agent A, round 25)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 04:35 UTC — ROUND 25 A IS
+                  COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`a44acd2`, `818b2ae`, `e5721ff`, plus this
+                  final commit). Claimed the lock cleanly (`b13ac86`) after
+                  `git pull` and confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`005f0d8..b13ac86`), so the race was won rather than
+                  assumed.** **A CHANGED NO CODE, DELETED NO TEST, EDITED NO
+                  TEST, ADDED NO TEST, AND TOUCHED NO FILE EXCEPT THIS ONE** —
+                  `git log 0a747f3..HEAD -- web/src/` is **EMPTY**. All four
+                  appends were pure insertions verified by `--numstat` (365/0,
+                  321/0, 354/0, and this one), written via scratchpad files and
+                  `cat >>` from bash — **NOT PowerShell.** No branch, worktree or
+                  PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  credential printed, logged, committed or written anywhere —
+                  presence checked as a boolean only.** The throwaway harness
+                  lived OUTSIDE `src/` (`web/zz-r25a/`, own vitest config,
+                  `*.probe.ts` include pattern) and was **deleted before the gate
+                  re-run and before every commit**;
+                  `git status --porcelain --untracked-files=all` clean, verified
+                  each time. **No untracked `*.test.ts` was ever created under
+                  `web/src/`.**
+
+                  **A DISCLOSES ONE DEFECT IN ITS OWN HARNESS AND CORRECTS ITSELF
+                  THREE TIMES, ALL BEFORE QUOTING A FIGURE.** The harness read
+                  the JOB columns through the wrong field names (`applyUrl`,
+                  `postedAt`, `deadline`, `whyRelevant` for `linkPosting`,
+                  `postedDate`, `applicationDeadline`, `matchReason`), so the
+                  first window could not have scored 34a, 37, 44 or B18-03 at
+                  all. **All five pulls were re-run and ONLY the corrected window
+                  is reported, for either surface.** Part 3 then corrects three
+                  things part 2 wrote: **the 34a job cumulative denominator
+                  (`9 of 115`, not the `9 of 108` part 2 wrote — the convention
+                  advances by all majority rows, not the non-null subset);
+                  Ruling 57b's event round count (EIGHTH per §1, with the
+                  one-round disagreement between round 24 A and round 24 C
+                  flagged); and `grad.wisc.edu`, which part 2 called an absence
+                  and which is in fact OFFERED, KEPT at ingestion and POOLED 0 OF
+                  5 — A23-04 confirmed organically for a second round.**
+
+                  **THE COLD BASELINE WAS CONFIRMED BEFORE THE FIRST
+                  MEASUREMENT: 92 files / 1877 tests, 1876 passing**, sole
+                  failure `benchmark.test.ts:225` — exactly the number and the
+                  line §1 named. tsc clean; eslint exactly the one standing
+                  `quiz.tsx:46` error.
+
+                  **THE GATE A LEAVES, RE-RUN AFTER DELETING THE HARNESS: 92
+                  files / 1877 tests, 1876 passing.** `npx tsc --noEmit`
+                  **clean**. `npx eslint src` **exactly the one standing
+                  `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO:
+                  56 of 56 — the SolarPACES lock holds.** **The sole failure is
+                  `benchmark.test.ts:225`, EXPECTED per Ruling 65, carried by
+                  name, NOT chased, NOT fixed, NOT reported as new. No third
+                  number appeared and nothing else is red.**
+
+                  **BOTH ROUND-24 FIXES ARE CONFIRMED, AND A24-01 IS CONFIRMED
+                  *ORGANICALLY* — better than §1 expected.** `gain.inl.gov`'s
+                  `Events` hub was **offered 5 of 5 and dropped 5 of 5**, and a
+                  **negative control** proves the first-segment feed is what does
+                  it: `EVENT_INDEX_TITLE_RE` on the whole title is **`false`**,
+                  `isEventIndexResult` is **`true`**. Neither B nor C could
+                  reproduce a live row for this fix. The `cambridgeenertech.com`
+                  half closes by **STRING REPLAY, 6 of 6 verdicts correct**
+                  including both `All Solid State Battery Workshop` spellings and
+                  the chrome-tail control; **its index row was NOT offered and A
+                  states that as an ABSENCE, not a pass.**
+
+                  **A24-02 CLOSES BY STRING REPLAY AT ALL SEVEN RENDER SITES, AND
+                  ON THE REPORT PAGE'S OWN MARKUP.** `10times.com` was not
+                  offered at all, and **there is NO month-granularity row in the
+                  pool or in the 149-row offered corpus.** Replayed:
+                  card / tile value / tile sub-line / deadline strip / feed tile /
+                  briefing quick-hit / briefing hero all render **`Aug 2026`**,
+                  the sub-line **disappears**, and the rendered `EventReport`
+                  markup contains **zero `Aug 1`** and **zero weekday tokens**.
+                  **Every day-level value is byte-identical on four shapes taken
+                  from THIS round's live pool, and a real 1 August still prints
+                  `Aug 1, 2026` / `Sat`.** The named falsifier does not fire.
+
+                  **62a's AND 64c's FALSIFIERS WERE RUN AND NEITHER FIRED:**
+                  three of four named contaminations present and **SILENT 5 of
+                  5**; four of six adjudicated venues present and each rendering
+                  **its own city 5 of 5**; **ZERO adjudicated venues lost.**
+
+                  **THE EVENT SURFACE MEASURES ZERO DIFFERENCES — every column,
+                  the first time in this loop.** Name **0 of 12**, item-kind
+                  **0 of 12**, place **0 of 12 / 0 of 4 non-null**, invented dates
+                  **0 of 13 — scored on the REPORT PAGE, not the card**, which is
+                  the miss round 24 corrected in itself. **13 rows, 5 of 5, zero
+                  membership AND zero value variance.**
+
+                  **THE GATE DOES NOT CLOSE, ON ONE JOB-SURFACE DIFFERENCE.**
+                  **A25-01 — `lensa.com`:** the report's *"Why Peer sent this to
+                  you"* line reads **`… and remote-friendly`** on a posting whose
+                  own provider title says **`job in Albuquerque`**, while the same
+                  page's location and work-mode surfaces correctly render **no
+                  `Remote` at all**. **5 of 5, byte-identical, verified in the
+                  rendered markup.** It is **A22-03(b)'s own named row and its own
+                  named failure mode, at a SIXTH consumer** — the reason line is
+                  assembled at scoring time from the RAW pre-boundary flag, not
+                  the gated `Job.isRemote` that round 24 C's caller grep covered.
+                  **`lensa.com` was not in round 24's pool, so nothing regressed —
+                  the row returned.** No standing exclusion covers it.
+
+                  **A RAISES NO NEW `POLICY` ITEM, AND FLAGS TWO THINGS WITHOUT
+                  RANKING THEM.** (1) **Ruling 57b's job-surface witness does not
+                  survive execution:** run on the shipped call shape against the
+                  live `Battery Ventures` item, `isOwnerNameTopicCollision`
+                  returns **`false`** (conjunct 3 blocks it). The row still never
+                  reaches the pool and the reader is not harmed, so it is NOT a
+                  parity defect — but the mechanism credited for it is not the one
+                  operating. **A records the measurement and leaves the status to
+                  the manager.** A also discloses that its own first execution
+                  passed a bare owner name with no title, which returns `false`
+                  for a different reason, and reports that shape rather than
+                  quoting it as a result. (2) **57b's event round count is off by
+                  one in this file** (round 24 A "sixth" vs round 24 C's §1
+                  "SEVENTH"); A adopted §1 and named the discrepancy.
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 03:59 UTC — ROUND 24 C IS
                   COMPLETE. THREE ITEMS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`1c8552f`, `24978bc`, `0a747f3`, plus this
@@ -4312,6 +4433,167 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **B — round 25.** Round 25 A is COMPLETE: **four parts, one
+                  commit each, each pushed immediately** (`a44acd2`, `818b2ae`,
+                  `e5721ff`, plus this hand-off). Claim the §0d lock first,
+                  always. **A changed no code and touched no file but this one.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement.** Round 25 was a gate
+                  candidate and it did **not** close: **ONE unexplained
+                  difference**, on the job surface, 5 of 5, covered by no
+                  standing exclusion. **Neither B nor C can close or move this
+                  line** — producing a fix guide is not evidence a difference is
+                  gone, and neither is landing the fix.
+
+                  **THE BASELINE B MUST CONFIRM COLD: 92 files / 1877 tests,
+                  1876 passing.** `npx tsc --noEmit` clean; `npx eslint src`
+                  exactly the one standing `src/components/persona/quiz.tsx:46`
+                  error, 0 warnings. **The sole failure is
+                  `benchmark.test.ts:225` — EXPECTED per Ruling 65, credential-
+                  gated, EXCLUDED FROM THE GATE. DO NOT CHASE IT, DO NOT REPORT
+                  IT AS NEW.** A third number, or a red anywhere else, is a real
+                  regression.
+
+                  ---
+                  **THE ONE DIFFERENCE — B's WHOLE SCOPE UNLESS THE MANAGER SAYS
+                  OTHERWISE.**
+
+                  **A25-01 — `lensa.com`: the report's *"Why Peer sent this to
+                  you"* line says `… and remote-friendly` about an Albuquerque
+                  internship, while the SAME page's location and work-mode
+                  surfaces correctly render no `Remote` at all.** 5 of 5,
+                  byte-identical, verified in the rendered markup and not only in
+                  the field. Ground truth is the provider's own offered title:
+                  `Chemical and Materials Engineering Internship - Summer 2027
+                  job in Albuquerque at Kairos Power | Lensa`, slug
+                  `/kairos-power/albuquerque-nm/…`.
+
+                  **THIS IS A22-03(b)'s OWN NAMED ROW AND ITS OWN NAMED FAILURE
+                  MODE, AT A SIXTH CONSUMER.** That fix gates the RENDER boundary
+                  and it WORKS — `location`, `Job.isRemote` and `workMode` are all
+                  correctly silent on this row today, confirmed organically this
+                  round. **The reason line is assembled at SCORING time from the
+                  RAW pre-boundary flag, not the gated `Job.isRemote` that round
+                  24 C's caller grep covered.** Nobody was careless: a grep of the
+                  gated field could not have reached it.
+
+                  **A's NOTE FOR B, EXPLICITLY NOT A DIAGNOSIS:** the same raw
+                  flag also feeds `locationFit` and the score, which A22-03(b)
+                  deliberately left untouched. **So "gate it at the source" may
+                  move a score, and B should price that before recommending it.**
+                  Treat this as ONE mechanism with ONE render site, not a sweep.
+
+                  **`lensa.com` WAS NOT IN ROUND 24's POOL — the row RETURNED.
+                  NOTHING REGRESSED, and B should not go looking for a change
+                  that never happened.**
+
+                  ---
+                  **RULING 65's STANDING COMMISSION IS NOW DUE, AND B IS THE NEXT
+                  CODE TURN UNLESS THE MANAGER ROUTES IT ELSEWHERE.**
+                  `benchmark.test.ts:225`, the TOP-FIVE PRESENCE assertion, is
+                  **COMMISSIONED FOR RESTATEMENT as ITEM ZERO of the next code
+                  turn** — restated to the new contract, item named, **never
+                  deleted**, same treatment as 63b/64c. **While it is red the 64c
+                  block below it cannot execute.**
+
+                  ---
+                  **TWO THINGS A FLAGS FOR THE MANAGER, NOT RANKED AS
+                  DIFFERENCES AND NOT B's TO FIX.**
+                  **(i) RULING 57b's JOB-SURFACE WITNESS DOES NOT SURVIVE
+                  EXECUTION.** Run on the shipped call shape (`ownerName` +
+                  `title` + `description`) against the live
+                  `2027 Summer Investment Internship - Battery Ventures` item,
+                  `isOwnerNameTopicCollision` returns **`false`** — conjunct 3
+                  blocks it, because the collision topic sits in the item's own
+                  title. **The row still reaches no pool and the reader is not
+                  harmed, so this is NOT a parity defect**, but `organically
+                  witnessed` is a claim about a guard firing and this row is not
+                  the witness for it. **The manager owns the status.**
+                  **(ii) 57b's EVENT-SURFACE ROUND COUNT IS OFF BY ONE IN THIS
+                  FILE** — round 24 A wrote "sixth", round 24 C's §1 block wrote
+                  "SEVENTH". A adopted §1 (round 25 = EIGHTH) per the check-me
+                  clause and names the discrepancy rather than picking quietly.
+
+                  ---
+                  **CARRIED FORWARD, EVERY ITEM BY NAME.**
+                  **BOTH ROUND-24 FIXES ARE CONFIRMED AND NEITHER FALSIFIER
+                  FIRED.** A24-01 has an **ORGANIC** witness for the first time
+                  (`gain.inl.gov`, offered and dropped 5 of 5, with a negative
+                  control proving the first-segment feed did it) plus a 6-of-6
+                  string replay; **its `cambridgeenertech.com` index row was not
+                  offered — an ABSENCE, not a pass.** A24-02 replays clean at all
+                  **seven** render sites and on the rendered report markup (zero
+                  `Aug 1`, zero weekday tokens), with every day-level value
+                  byte-identical and a real 1 August still printing its day and
+                  weekday.
+                  **THE 62b FUSE READS ZERO — AND THE ZERO IS VACUOUS.** There is
+                  **no month-granularity row in the pool OR in the 149 offered
+                  rows**, and `10times.com` was not offered at all, so the fuse
+                  had nothing to expire. The mechanism was re-proven by replay at
+                  both edges (`dateClaimEndMs("2026-08")` → 31 Aug 23:59:59.999
+                  local; alive at 31 Aug 23:00, dead at 1 Sep 00:01).
+                  **The first falsifiable live reading is still the first round
+                  after 31 August, and now also needs such a row to be offered.**
+                  **RULING 64a — THE SCORING-ORDER LEAD: NOT REOPENED, and the
+                  trigger is UNREACHABLE rather than unpulled**, for the same
+                  reason. Evidence-gated, NOT open, do not re-raise.
+                  **RULING 62d(b) + 63a — the folded deferral. TRIGGER NOT
+                  PULLED: zero pool instances AND zero new offered instances, so
+                  the corpus does NOT grow — it stands at round 24's four.**
+                  62d(a)'s held half is **vindicated on TWO live rows** (`Tesla`,
+                  `Idaho National Laboratory`).
+                  **A22-04 IS OPEN AT STRIKE ONE.** No 52b admission this round,
+                  so nothing advances the count.
+                  **RULING 55c's ONLINE MUST-KEEP DEBT — SEVENTH ROUND, NAMED,
+                  STILL UNDISCHARGED**, with the search recorded: zero of 13 pool
+                  rows online, zero rendering `Online` in markup, and one of 149
+                  offered titles matching the online vocabulary — a trade
+                  magazine's name on a past, off-topic row.
+                  **RULING 57b: the EVENT surface is `designed, organically
+                  unwitnessed` — EIGHTH round (see (i) and (ii) above).**
+                  **Ruling 37 ZERO — including its own baseline, which is in the
+                  pool and publishes no page-owned summary this round (recorded
+                  as an ABSENCE, not a fix); Ruling 44 zero; B18-03 zero.**
+
+                  **TALLIES, ROUND 25 A's, CARRIED WITH RUNNING COUNTS AND
+                  STATED AFFIRMATIVELY EVEN AT ZERO.** Event names **0 of 12**;
+                  event item-KIND **0 of 12**; event PLACE **0 of 12 counted / 0
+                  of 4 non-null, correct venues lost ZERO**; invented dates **0
+                  of 13, scored on the REPORT PAGE**; job employer **0 of 4
+                  non-null**, cumulative 34a **9 of 115**; 34a events **0**,
+                  cumulative **11 of 181**; job item-shape **0 of 15 → 0 of 11**;
+                  **job REASON-LINE 1 of 11 — a NEW column A added because that
+                  is where this round's only difference lives**; Ruling 33 **0
+                  new, cumulative 2 of 92**; Ruling 52b **2 instance families,
+                  ZERO admitted, cumulative held at 5**; 48b **events 149 offered
+                  / 98 dropped / 0 wrongly dropped; jobs 100 offered / 49 dropped
+                  / 0 wrongly dropped**, both walked rather than sampled, with
+                  **two unverifiable event drops named and counted in neither
+                  column** (`ttc-ensco.com` HTTP 403; `sae.org` JS shell).
+                  **58b: events 17 → 13 (out 5, in 1, closes exactly); jobs 14
+                  named → 11 (out 6, in 3, closes exactly).**
+
+                  **THRESHOLDS UNCHANGED, VERIFIED BY READING THE CONSTANTS —
+                  `OPPORTUNITY_MIN_SCORE` 0.35, `MAX_POSTING_AGE_DAYS` 270,
+                  `MAX_ENRICHMENT_CANDIDATES` 40. `git log 0a747f3..HEAD --
+                  web/src/` is EMPTY**, so what A measured is exactly what round
+                  24 C left.
+                  **EXCLUSIONS WALKED BY NAME: 45a (`euagenda.eu` — not fetched,
+                  seventh ellipsis round recorded, not counted), 45b (41c's three
+                  hosts — NOT hunted), 39a/40, 42c (`euchems2026.eu`'s
+                  `Hackathon` chip recurs — STANDING MANAGER OBSERVATION, not
+                  counted, not ranked), 36, 33, 50a, 39b/61a, B18-02's three
+                  named under-catch hosts (none offered), B18-03,
+                  `stemgateway.nasa.gov` (offered, drops, not counted — fourth
+                  round), 42a's Gap B, and §1d exclusions 7 and 8.**
+                  **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+                  Full evidence in §4's four "Round 25 — Agent A" entries —
+                  **work from those, not from this summary.**
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **A — round 25, GATE CANDIDATE ROUND.** Round 24 C is
                   COMPLETE: **three items, one commit each, each pushed
                   immediately** (`1c8552f`, `24978bc`, `0a747f3`, plus this
@@ -63059,3 +63341,219 @@ the gate verdict — follows in the final commit.
 **66b. DEEP-REPORT ART STYLE AND LAYOUT PARITY.** The user rules: the job/event deep report's visual style and layout (typography, hierarchy, spacing, composition) is still far from the design template — **`Peer-design-spec-original.pdf`, repo root; the same plates this loop has always scored VALUES against.** **USER RULED: the census EXPANDS. Art-style/layout parity with the PDF template joins value parity as a scored dimension for the job/event deep reports, and both the ABC agents and the manager's verification treat the alignment as a first-class emphasis from now on.** Mechanics: the first full VISUAL census is **the next A turn that begins after this ruling lands** (round 26 A, given round 25 A is already past measurement); A measures plate-by-plate visual/layout differences (structure, type hierarchy, spacing, chrome) as a ranked list with value-parity rigor — rendered DOM/geometry against the PDF plates, each difference specific enough for B to act; B diagnoses to component/CSS; C implements; the manager verifies with the PDF plates open. **The gate's zero-differences bar includes the visual dimension once its first census establishes the baseline list.** Value-parity tallies and trends continue unchanged in parallel.
 
 ---
+
+### Round 25 — Agent A (part 4: summary across parts 1–3, the RANKED DIFFERENCE LIST, and the GATE VERDICT — **BOTH ROUND-24 FIXES ARE CONFIRMED, ONE OF THEM ORGANICALLY ON A LIVE ROW NEITHER B NOR C COULD REPRODUCE. THE EVENT SURFACE MEASURES ZERO DIFFERENCES ACROSS EVERY COLUMN. AND THE GATE DOES NOT CLOSE, ON ONE — a fix from round 22 whose value has a sixth consumer, telling the reader an Albuquerque internship is remote-friendly.**)
+
+**STATUS: COMPLETE.** Part 4 of four. Parts 1 (`a44acd2`), 2 (`818b2ae`) and 3
+(`e5721ff`) are committed and pushed.
+
+---
+
+## THE HEADLINE, STATED BEFORE THE NUMBERS
+
+**Both of round 24's fixes work, and one of them is confirmed better than §1
+expected.**
+
+- **A24-01 is confirmed ORGANICALLY.** `gain.inl.gov`'s `Events` hub was offered
+  in all five pulls and dropped in all five — and a negative control proves the
+  first-segment feed is what does it: the whole title is **not** an index title
+  (`EVENT_INDEX_TITLE_RE` → `false`), its first segment **is**
+  (`isEventIndexResult` → `true`). Neither B nor C could reproduce a live row for
+  this fix; **this round has one.** The `cambridgeenertech.com` half closes by
+  string replay, six of six, and A says plainly that its absence is an absence.
+- **A24-02 closes by string replay at all seven render sites**, including the
+  report page swept as rendered markup: **`Aug 1` appears zero times and no
+  weekday token appears anywhere.** Its own row is absent — there is no
+  month-granularity row in the pool or in the 149-row offered corpus.
+- **The named falsifiers for both fixes were run and neither fired.** No real
+  single-event page is dropped by kind; no day-level date moved a byte; a real
+  1 August still prints `Aug 1, 2026` and `Sat`.
+- **62a's and 64c's falsifiers were also run and neither fired**: three named
+  contaminations silent 5 of 5, four adjudicated venues rendering their own city
+  5 of 5, **zero adjudicated venues lost.**
+
+**The event surface measures ZERO differences — name, item-kind, place, invented
+dates and the drop column are all zero, and the invented-date zero is scored on
+the report page rather than the card, which is the miss round 24 corrected in
+itself.** The event surface has not been all-zero at once before in this loop.
+
+**And the gate does not close, on one difference, on the job surface.**
+
+---
+
+## PER-SURFACE NUMBERS, ROUND 25 vs ROUND 24
+
+| | r24 | **r25** |
+|---|---|---|
+| event pool rows | 17, 5 of 5 | **13, 5 of 5, zero membership and zero value variance** |
+| job pool rows | 15 union / 13 majority, variance disclosed | **11, 5 of 5, zero membership and zero value variance** |
+| event NAME wrong | 1 of 16 | **0 of 12** |
+| event ITEM-KIND wrong | 1 of 16 | **0 of 12** |
+| event PLACE wrong | 1 of 6 non-null | **0 of 4 non-null; correct venues lost ZERO** |
+| **invented dates** | 1 of 17 — on plate 03 | **0 of 13 — scored on the report page** |
+| job EMPLOYER wrong | 0 of 5 non-null | **0 of 4 non-null** |
+| job ITEM-SHAPE wrong | 0 of 15 | **0 of 11** |
+| **job REASON-LINE wrong** | *(never scored)* | **1 of 11** |
+| wrongly dropped, both surfaces | 0 / 0 | **0 / 0**, on 149 + 100 offered rows |
+
+---
+
+## THE RANKED DIFFERENCE LIST — **ONE ITEM**
+
+Ranked per §2 by **what a reader would notice first**. With one item there is no
+ordering question, and A does not pad the list to make the round look thorough:
+**parts 1–3 record what else was checked and came back clean, and the positive
+confirmations below are there so a one-item list does not read as a one-item
+census.**
+
+---
+
+### **A25-01 — `lensa.com`: THE REPORT TELLS THE READER AN ALBUQUERQUE INTERNSHIP IS `remote-friendly`, WHILE EVERY OTHER SURFACE ON THE SAME PAGE CORRECTLY REFUSES TO SAY `Remote`. Job surface, 5 of 5. RANK 1.**
+
+**THIS IS A22-03(b)'s OWN NAMED ROW AND ITS OWN NAMED FAILURE MODE, AT A
+CONSUMER THAT FIX DID NOT REACH.**
+
+| face | rendered | ground truth (the provider's own offered title) |
+|---|---|---|
+| role title | `Chemical and Materials Engineering Internship` | CORRECT |
+| employer | `Kairos Power` | CORRECT |
+| location | **no `Remote` anywhere** | CORRECT — A22-03(b) working |
+| `workMode` | **`null`** | CORRECT |
+| **"Why Peer sent this to you"** | **`Matches your molten salt focus, fits a PhD Year 3 profile, and remote-friendly.`** | **WRONG** — the offered title is `… - Summer 2027 **job in Albuquerque** at Kairos Power \| Lensa`, and the URL slug is `/kairos-power/albuquerque-nm/…` |
+
+**5 of 5, byte-identical in every pull, and verified present in the rendered
+report markup rather than only in the field.**
+
+**WHY IT MATTERS MORE THAN A ONE-ITEM LIST SUGGESTS:**
+
+1. **The report contradicts itself on one screen.** The location surfaces
+   correctly decline to claim remote; the reason line, a few centimetres away,
+   claims it. Ruling 32 named "this field must not be empty" as the defect
+   itself, and this is its mirror — a field that was correctly emptied, and a
+   second field that filled the same claim back in.
+2. **It is the same shape as A24-02, one round later.** A value with N consumers;
+   the fix reached N−1. Round 24 C's implementer **explicitly grepped the callers
+   for A22-03(b)** and found four view layers reading `Job.isRemote` — §1 records
+   that widening as C's own catch. **The reason line reads a different field:
+   the raw pre-boundary flag, not the gated one.** A grep of the gated field
+   could not have found it, which is worth saying because it means nobody was
+   careless.
+3. **It is a factual claim about the posting, not a match score.** A scored
+   "fits a PhD Year 3 profile" as a fit statement and did **not** count it. A
+   counts this one because it asserts something about the job.
+
+**EXCLUSION WALK BY NAME — none covers it.** Not 45a, 45b, 39a/40, 42c, 36, 33,
+50a's news-post precedent, 39b/61a, 57b, B18-02's three named under-catch hosts,
+B18-03, `stemgateway.nasa.gov`, 42a's Gap B, or §1d's exclusions 7 and 8.
+**A22-03(b) is the FIX, not an exclusion, and no ruling in this file accepts a
+reason line contradicting the location beside it.**
+
+**WHY ROUND 24's ALL-ZERO JOB CENSUS DID NOT SEE IT: `lensa.com` WAS NOT IN
+ROUND 24's POOL.** The row returned this round. **Nothing regressed** — A says
+that explicitly so B does not go looking for a change that never happened.
+
+**A NOTE FOR B, NOT A DIAGNOSIS.** The reason string is assembled at scoring
+time and rendered by the report's **"Why Peer sent this to you"** section; the
+render-boundary gate A22-03(b) installed lives in the mapper, downstream. **How
+to reconcile the two is B's to price, not A's to move** — and A notes only that
+the same raw flag also feeds `locationFit` and the score, which A22-03(b)
+deliberately left untouched, so "gate it everywhere" is not obviously free.
+
+---
+
+## POSITIVE CONFIRMATIONS — stated plainly, because a one-item list reads as if nothing else was checked
+
+| item | expected by §1 | measured |
+|---|---|---|
+| **A24-01** — index page leaves by KIND | `/cet/conferences` absent; `gain.inl.gov` drops when offered; both `All Solid State Battery Workshop` spellings KEPT | **CONFIRMED — and ORGANICALLY on `gain.inl.gov`, offered 5 of 5, dropped 5 of 5, with a negative control proving the first-segment feed did it.** The `cambridgeenertech.com` half closes by STRING REPLAY, **6 of 6 verdicts correct**; its index row was not offered, stated as an ABSENCE |
+| **A24-02** — month granularity everywhere | `Aug 2026` at every site, no day, no weekday | **CONFIRMED BY REPLAY AT ALL SEVEN SITES, plus the report page swept as markup: zero `Aug 1`, zero weekday tokens.** Day-level values byte-identical on four shapes taken from THIS round's live pool; a real 1 August still prints its day and weekday |
+| **63b + 64c** — the benchmark's named-row value lock | contamination hosts silent; adjudicated venues render their own city | **BOTH HALVES CONFIRMED LIVE, 5 of 5.** Three of four contaminations present and silent; four of six adjudicated venues present and correct. **62a's own falsifier — an adjudicated venue LOST — does not fire** |
+| **62b fuse** | zero, pre-September | **ZERO — and A states the zero is VACUOUS**: no month-granularity row exists anywhere this round, so the fuse had nothing to expire. Mechanism re-proven by replay at both edges instead |
+| **Ruling 64a** — scoring-order lead | evidence-gated, do not re-raise | **NOT REOPENED, and the trigger is UNREACHABLE rather than unpulled** — no month-granularity row in the pool or the offered corpus |
+| **Ruling 63a** — segment-order class | score 34a normally; a POOL instance is the trigger | **TRIGGER NOT PULLED. Zero pool instances, and zero NEW offered instances — the corpus does not grow** |
+| **A22-03(b)** — snippet `remote` may not render | no `Remote` on the `lensa.com` row | **CONFIRMED ORGANICALLY on its own row** — and **falsified at a sixth consumer**, which is A25-01 |
+| **A23-04** — article-kind conjunction | `grad.wisc.edu` out, `upenn` in | **CONFIRMED ORGANICALLY ON BOTH SIDES for a second round.** Offered and kept at ingestion, pooled 0 of 5; the admitted control holds 5 of 5 |
+| **A23-01(c)** — the ellipsis clause | employer resolves to `null` | **CONFIRMED LIVE** on `tesla.com`; the careers-office and address-tail clauses **UNWITNESSED — absence, not a pass** |
+| **62d(a)'s held half** | `at X` reads X | **VINDICATED ON TWO LIVE ROWS** — `ev.careers` → `Tesla`, `climatechangejobs.com` → `Idaho National Laboratory` |
+| **Ruling 61a** — `batteryinnovationsummit.com` | ordinary row, expected CORRECT | **CORRECT, second round.** `og:title` is `The Battery Saloon`, confirmed by fetch. 39b not invoked |
+| **A22-05** — the duplicate-posting grouping | one slot per vacancy | **CONFIRMED.** The Savannah River posting is offered on two hosts (`linkedin.com`, `salutemyjob.com`) and fills **ONE** pool slot. Round 21 ranked the double-fill as a defect; **it does not recur** |
+
+**Other standing checks, measured not absent:** SolarPACES lock **8th round**;
+Ruling 36 (`ruggedthz.com`) **13th**; B12-04
+(`internationalbatteryseminar.com`) **13th**; B13-03's banner strip
+(`flogen.org`) **10th**, `<h1>` confirmed by fetch; 62c's `upenn` admitted
+control **3rd**; A22-07 (`lanl.jobs` pooled) still working; A22-03(a)'s
+fail-closed summary gate — **11 of 11 rows fall back to `Matches your …`, zero
+publish another posting's text**; B18-03 zero including its named under-catch.
+
+---
+
+## THE GATE SUITE
+
+- **`cd web && npx vitest run`: 92 files / 1877 tests, 1876 passing** —
+  byte-for-byte the baseline §1 named, confirmed **cold before any measurement**
+  and again **after the harness was deleted.**
+- **The sole failure is `benchmark.test.ts:225`, the TOP-FIVE PRESENCE
+  assertion** (`expected false to be true`). **Per Ruling 65 this is EXPECTED,
+  it is commissioned for restatement to the next code turn, and A CARRIES IT BY
+  NAME — A did NOT chase it, did NOT fix it, and does NOT report it as new.**
+  A moved no threshold. **The file stays EXCLUDED FROM THE GATE.** No third
+  number appeared and nothing else is red.
+- **`npx tsc --noEmit`: clean.**
+- **`npx eslint src`: exactly the one standing `src/components/persona/quiz.tsx:46`
+  error, 0 warnings.**
+- **`enrich.test.ts` SOLO: 56 of 56** — **the SolarPACES lock holds.**
+- **`git status --porcelain --untracked-files=all`: clean.** The throwaway
+  harness (`web/zz-r25a/`, outside `src/`, own vitest config, `*.probe.ts`
+  include pattern) was **deleted before the gate re-run and before every commit
+  of this turn.** **No untracked `*.test.ts` was ever created under
+  `web/src/`.**
+- **`git log 0a747f3..HEAD -- web/src/` is EMPTY** — A changed no source file,
+  and neither did anything else since round 24 C's last commit.
+
+---
+
+## GATE VERDICT
+
+**`GATE (0%): NOT MET`.** **ONE unexplained difference, on the job surface, not
+covered by any standing exclusion, 5 of 5.** The event surface measures **zero**
+differences across every column it has — the first time in this loop it has been
+all-zero at once — but the gate is a single bar across both surfaces and it is
+not cleared.
+
+**A does not round down and does not reclassify.** A25-01 could be argued into
+the "summary" bucket, where the column reads clean, or waved off as a phrase
+rather than a field. **It is neither: it is a rendered factual claim about a
+posting, it is wrong, and A gave it its own column in part 3 rather than let a
+missing column hide it.**
+
+**A raises NO new `POLICY — manager decides` item.** A25-01 is an ordinary,
+closable defect with a named row and a named render site.
+
+**TWO THINGS A FLAGS FOR THE MANAGER WITHOUT RANKING THEM AS DIFFERENCES:**
+
+1. **Ruling 57b's job-surface witness does not survive execution.** A ran the
+   shipped guard on the shipped call shape against the live `Battery Ventures`
+   item and it returns **`false`** — conjunct 3 blocks it. The row still never
+   reaches the pool and the reader is not harmed, so this is **not** a parity
+   defect. But `organically witnessed` is a claim about a guard firing, and on
+   this evidence this row is not the witness for it. **The manager owns the
+   status; A owns the measurement.**
+2. **Ruling 57b's event-surface round count is off by one in this file** — round
+   24 A wrote "sixth", round 24 C's §1 block wrote "SEVENTH". A adopted §1
+   (making round 25 the eighth) per the check-me clause and names the
+   discrepancy rather than quietly picking one.
+
+**A does not close the gate in any case (Ruling 30); the hand-off is B.**
+
+**Recommended scope for B, as a recommendation and not a ruling:** treat A25-01
+as **one mechanism with one render site**, not a sweep. A's own note is that the
+raw flag also feeds `locationFit` and the score, which A22-03(b) deliberately
+left alone — so the cheap-looking fix ("gate it at the source") may move a score,
+and B should price that before recommending it. **The manager orders the work.**
+
+---
+
+**ROUND 25 A IS COMPLETE. Four parts, one commit each, each pushed immediately.
+No code was changed, no test was deleted, edited or added, and no file except
+this one was touched.**
