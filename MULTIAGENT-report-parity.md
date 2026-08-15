@@ -73949,3 +73949,213 @@ method note. **The four tests above are what turn this one into a locked
 attribute instead of a re-findable one.**
 
 ---
+
+---
+
+### Round 27 — Agent B (item 7 of 7: **V26-J06's ESCAPE-CLAUSED HALF — THE TWO FIELDS, EXTRACTED FROM THE PLATE ITSELF. `ELIGIBILITY` IS DESIGNABLE AND HONEST. `TEAM` SPLITS: ITS NAME HALF IS DESIGNABLE, ITS HEADCOUNT HALF HAS NO HONEST SOURCE ANYWHERE B LOOKED AND IS MARKED `POLICY — manager decides`.**)
+
+**STATUS: COMPLETE.** Item 7 of seven. B changed no code.
+
+---
+
+## **WHAT THE TWO FIELDS ACTUALLY ARE — READ OFF THE PLATE, NOT INFERRED**
+
+`Peer-design-spec-original.pdf`, **plate 02 = p.3**, the `TO APPLY, HAVE READY`
+column, every span in the block (labels at x 311.2, values at x 373.6):
+
+| label — `SegoeUI 9.38` `#9c8b78` | value — `SegoeUI 10.5` `#4d3a28` |
+|---|---|
+| `MATERIALS` | `CV, 1-page research statement, 3 references` |
+| **`ELIGIBILITY`** | **`PhD awarded by start date`** |
+| **`TEAM`** | **`Energy & Materials, 14 researchers`** |
+| `SEEN ON` | `Adzuna · reposted from employer site` |
+
+**So the two missing fields are:**
+
+1. **`ELIGIBILITY` — one short clause stating who may apply**, expressed as a
+   requirement about the applicant (`PhD awarded by start date`). **One value,
+   one line.**
+2. **`TEAM` — a composite of TWO facts**: a group/unit **name**
+   (`Energy & Materials`) and a **headcount** (`14 researchers`), joined by a
+   comma. **This is not one field. It is two, and they have very different
+   evidence.** That distinction is the whole of this item.
+
+---
+
+## **`ELIGIBILITY` — DESIGNABLE, HONEST, AND IT REUSES A SHIPPED PATTERN**
+
+**Field:** `JobPageDetails.eligibility?: string` in
+`src/lib/opportunities/job-details.ts`, carried by `enrich.ts` onto the item the
+same way `applicationMaterials` already is (`enrich.ts:505-506`), and surfaced as
+a third `applyRows` entry at `jobs/[id]/page.tsx:1025`.
+
+**SOURCE 1 — structured, preferred.** schema.org `JobPosting` carries
+**`educationRequirements`** and **`qualifications`**. `extractJsonLdOpportunities`
+already parses the JobPosting record for this page (it is where `validThrough`,
+`baseSalary`, `employmentType` and `hiringOrganization` come from), so this is
+**one more property off a record already in hand** — not a new fetch, not a new
+parse.
+
+**SOURCE 2 — labelled line, the fallback.** The same `visibleText` input
+`extractApplicationMaterials` and `extractLabeledDate` already use, with a
+**CLOSED label vocabulary**: `Eligibility`, `Eligibility requirements`,
+`Who can apply`, `Minimum qualifications`, `Basic qualifications`. **Take the
+text after the label up to the first sentence end**, exactly the shape
+`extractLabeledDate` already uses for `DEADLINE_LABEL_PATTERN`.
+
+**FIVE BOUNDARIES, EACH NON-VACUOUS:**
+
+1. **The posting's own words, verbatim, never paraphrased.** The plate's value is
+   a clause the employer wrote. Peer clips; it does not rewrite.
+2. **A hard length cap and a one-clause rule.** `qualifications` is routinely a
+   multi-paragraph HTML blob. **Without a cap this prints a wall of text into a
+   one-line `<dd>`.** Cap it (the `MAX_PLACE_CHARS`-style precedent exists in
+   this codebase) and **drop rather than truncate mid-word** — a truncated
+   eligibility clause can invert its meaning.
+3. **NEVER derive it from `keyRequirements`.** That field is **Peer's own derived
+   skills list** (`jobs/mapper.ts:54`), not a statement about who may apply.
+   Rendering it under `ELIGIBILITY` would turn a Peer inference into an employer
+   promise — the exact class B-19's attribution exists to prevent, and the exact
+   shape §1's own "no invented specifics" rule forbids.
+4. **NEVER derive it from LLM enrichment.** `enrichment.specificRequirements`
+   exists (`page.tsx:1338`) and is tempting. **Ruling 69 fixes the measurement
+   profile to no-LLM**, so a field that only exists under enrichment would be
+   unwitnessable by every A census. **Tier 0/1 sources only.**
+5. **Absent → the row does not render.** The build's own comment at
+   `page.tsx:1301-1306` already states the plate's rule: *"an absent field hides
+   rather than prints empty."* **No placeholder, no "not stated", no empty
+   `<dd>`.**
+
+**WHAT RENDERS WHEN IT IS MISSING:** nothing. The `<dl>` has one fewer row and
+the section still renders, because it is gated on `materials.length > 0`
+(B4-07's own gate), not on row count.
+
+---
+
+## **`TEAM` — THE NAME IS DESIGNABLE. THE HEADCOUNT IS NOT, AND B SAYS SO.**
+
+### **THE NAME HALF — thin but honest**
+
+**SOURCE 1 — structured.** schema.org `JobPosting.employmentUnit` is *"the
+department or unit within the hiring organization"* — precisely the plate's
+`Energy & Materials`. **Same record, one more property.**
+
+**SOURCE 2 — labelled line.** A closed vocabulary on the same visible text:
+`Department`, `Group`, `Team`, `Division`, `Unit`. Same clip-to-clause shape.
+
+**BOUNDARIES:** all five of `ELIGIBILITY`'s apply unchanged, **plus one more that
+is specific to this field: it must NOT fall back to the employer name.** If the
+unit is absent, `TEAM: Toyota Research Institute` would restate the employer that
+already appears in the header — a duplicate dressed as a new fact. **That is
+Ruling 26's own failure shape (a fallback that reinserts a value another slot
+already owns), and it is the single most likely wrong implementation of this
+row.**
+
+**VACUITY, STATED AGAINST THE DESIGN's INTEREST:** **`employmentUnit` is rarely
+populated in the wild and B has measured no hit rate for it.** The labelled-line
+fallback is likewise unmeasured. **B expects this row to be silent on most
+postings** and says so now rather than letting a later round discover a field
+that never fires. **If C lands it, it must land with the same "named and not
+counted" honesty `stemgateway.nasa.gov` gets.**
+
+### **THE HEADCOUNT HALF — `POLICY — manager decides`. HERE IS WHERE B LOOKED.**
+
+**`14 researchers` has no honest source, and B enumerates the search rather than
+asserting the conclusion:**
+
+- **schema.org `JobPosting`** — B walked the property set the codebase already
+  reads (`name`, `datePosted`, `validThrough`, `baseSalary`, `employmentType`,
+  `hiringOrganization`, `description`) and the wider vocabulary. **There is no
+  team-size property.** `Organization.numberOfEmployees` exists but describes the
+  **whole employer**, not the hiring unit — **`Toyota Research Institute` has far
+  more than 14 people, so publishing it under `TEAM` would be a wrong number, not
+  a partial one.**
+- **The posting's prose.** A phrase like *"our team of 14 researchers"* is
+  extractable in principle. **But a number near a noun is not a claim about the
+  team**, and the corpus is full of rivals: *"14 open positions"*, *"14 postdocs
+  since 2019"*, *"a group of 14 papers"*. **This is exactly the mechanism A22-01
+  was written for on the date side** — unowned text read, more than one thing it
+  could mean, tie broken by position — and this loop has already paid for that
+  once.
+- **Peer's own data.** Nothing counts people at an employer. The event surface's
+  `extractEventRoster` counts organisations and people **for an event page**, and
+  there is no job-side equivalent. **Borrowing it would be inventing a headcount
+  from a different page kind.**
+- **Enrichment.** An LLM could guess it. **Ruling 69 puts that out of scope, and
+  a guessed headcount is a fabricated fact about a real employer — the worst
+  class of value error this loop tracks.**
+
+**SO: `POLICY — manager decides`, and the decision is a narrow one.** With
+`ELIGIBILITY` and the `TEAM` name landed, `data-apply-row` reads
+**`["materials", "eligibility", "team", "seen on"]` — 4 of plate 02's 4 rows** —
+but the `TEAM` row's VALUE will read `Energy & Materials` where the plate reads
+`Energy & Materials, 14 researchers`.
+
+**THE QUESTION FOR THE MANAGER, STATED SO IT CAN BE ANSWERED IN ONE LINE:**
+**is a name-only `TEAM` row a CLOSE of V26-J06, or does J06 stay open until a
+headcount source exists?** **Ruling 62b's own precedent says a TRUE partial is
+acceptable** (a month-granularity date shipped instead of a full one, and the
+card reads `Aug 2026` rather than nothing). **B recommends the same reading here
+— ship the true half, keep the row — but B does not decide it**, because it is a
+plate-fidelity judgement with a recorded partial-acceptance precedent on one side
+and an explicit plate value on the other. **§1b applies.**
+
+---
+
+## **WHERE THEY RENDER — NO NEW LAYOUT AT ALL**
+
+`applyRows` (`jobs/[id]/page.tsx:1025`) is already a
+`Array<{ label, value }>` rendered by a `<dl className="grid
+grid-cols-[auto_1fr] gap-x-4 gap-y-3">` at line 1319, with
+`data-apply-row={row.label.toLowerCase()}` on every `<dt>`. **The two new rows
+are two more entries in that array, inserted in the plate's own order — MATERIALS,
+ELIGIBILITY, TEAM, SEEN ON.** **No new component, no new styling, and the
+`REPORT_LABEL_CLASS` step V26-J10 unified is inherited unchanged.** The build's
+own comment at line 1302-1306 says the shape was left here for exactly this.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`data-apply-row` has ONE occurrence in shipped source**
+  (`jobs/[id]/page.tsx:1324`) and is the hook every apply-row assertion uses.
+  **Any test asserting the rendered set is `["materials", "seen on"]` must be
+  RESTATED to the new set with the item named — never deleted.** That restatement
+  is V26-J06's own witness.
+- **`src/lib/opportunities/job-details.test.ts`** — owns `extractJobDetails`.
+  The two new fields are **additive** to the returned object (the same
+  `...(x ? { x } : {})` spread every existing field uses), so **an existing
+  `toEqual` on the whole object WILL red if it does not expect the new key.**
+  **That is the one place a green suite can turn red on an additive change** —
+  C should check for object-equality assertions there first, and restate rather
+  than loosen them.
+- **`src/lib/opportunities/enrich.test.ts` (55 blocks, the solo gate)** — the
+  carry-through at `enrich.ts:505` is the pattern being copied; the same
+  object-equality caution applies.
+- **`src/components/reports/plate-type-system.test.ts`** — asserts the label
+  TYPOGRAPHY, not the row set. **Unaffected by adding rows.**
+- **NEW TESTS C OWES** (additions only):
+  1. A page whose JSON-LD carries `educationRequirements` renders an
+     `ELIGIBILITY` row with **the posting's own words**.
+  2. A page with a labelled `Eligibility:` line and **no** JSON-LD renders the
+     same row — the fallback.
+  3. **A page with NEITHER renders NO `ELIGIBILITY` row** — the hide-when-absent
+     rule, which is the clause a later change would replace with a placeholder.
+  4. **`keyRequirements` populated and eligibility absent renders NO
+     `ELIGIBILITY` row** — boundary 3, asserted, because this is the tempting
+     wrong fallback.
+  5. **An employer name present and `employmentUnit` absent renders NO `TEAM`
+     row** — the Ruling-26 boundary, asserted.
+  6. **A blob-length `qualifications` value renders NO row rather than a
+     truncated one** — boundary 2.
+
+---
+
+## **THE HONEST SUMMARY OF THIS ITEM**
+
+**One of the two fields is closable now. The other is closable by half.** B has
+not found a way to publish `14 researchers` that this loop's own standards would
+accept, and B is not going to design one that only looks honest. **Where B
+looked is written above so the next round does not repeat the search.**
+
+---
