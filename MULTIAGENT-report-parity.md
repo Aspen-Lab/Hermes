@@ -67467,3 +67467,326 @@ range, and it already passes.**
 ---
 
 **ITEM 2 COMPLETE. Item 3 — the visual design clusters — follows.**
+
+### Round 26 — Agent B (item 3, cluster 1 of 3: **THE TYPE SYSTEM — V26-J02 / V26-E02 (the serif) AND V26-E01 / V26-J10 (the heading and label levels). FOUR OF THE 18, PRICED AND DESIGNED. A's PLATE MEASUREMENTS ARE RE-VERIFIED FROM THE PDF's OWN SPANS AND ARE EXACT. ONE CORRECTION AND ONE UPGRADE: plate 03's serif prose carries NO italic (plate 02's does), and the heading hierarchy is not FLATTENED — it is INVERTED, which changes the fix from one patch to a two-move hierarchy.**)
+
+**STATUS: item 3 cluster 1 of 3, banked on its own commit.** B changed no code.
+Harness `web/zz-r26b/` **deleted before this commit**. No credential printed,
+logged, committed or written anywhere.
+
+---
+
+## **A's PLATE MEASUREMENTS, RE-VERIFIED FROM THE PDF — EXACT, NOT APPROXIMATE**
+
+B did not take the type scale on trust. Every span on plates 02 and 03 was
+re-extracted with its family, size and colour and the serif spans isolated.
+
+| plate | total spans | **Georgia spans** | families present |
+|---|---|---|---|
+| 02 (PDF pp. 2–4) | 115 | **20** | `Georgia` 16, `Georgia-Italic` 4, `SegoeUI` 37, `SegoeUI-Semibold` 46, `SegoeUISymbol` 8, `Consolas` 4 |
+| 03 (PDF pp. 4–9) | 324 | **8** | `Georgia` 8, `SegoeUI` 146, `SegoeUI-Semibold` 119, `SegoeUISymbol` 45, `Consolas` 6 |
+
+**A's five serif elements, each confirmed at A's stated size and hex:**
+
+| element | plate | measured | A said | verdict |
+|---|---|---|---|---|
+| report `<h1>` | 02 | `Georgia 21.0` `#2b180a`, 2 spans (`Postdoctoral Researcher —` / `Solid-State Battery Interfaces`) | `Georgia 21` | **exact** |
+| report `<h1>` | 03 | `Georgia 21.0` `#2b180a`, 1 span | `Georgia 21` | **exact** |
+| `Who'll be in the room` | 03 | `Georgia 15.75` `#2b180a`, **exactly 1 span in the whole plate** | `Georgia 15.75` | **exact** |
+| `WHY PEER SENT THIS` prose | 02 | `Georgia 12.75` `#4d3a28` ×5 **plus `Georgia-Italic 12.75` ×4** (`solid-state electrolytes`, `interfacial`, `resistance`, `operando imaging`) | `Georgia 12.75`, italic topics | **exact** |
+| `WHY PEER SENT THIS` prose | 03 | `Georgia 12.75` `#4d3a28` ×2 — **ZERO italic spans** | A's type table says italic topics for "02 **&** 03" | **CORRECTION — see below** |
+| `WHAT THE ROLE IS` bullets | 02 | `Georgia 12.0` `#4d3a28` ×7 spans (3 bullets over 7 lines) | `Georgia 12` | **exact** |
+| visa evidence quote | 02 | `Georgia 10.5` `#9c8b78` ×2, attribution inline in the same span | `Georgia 10.5` | **exact** |
+
+**CORRECTION 1 — plate 03's serif prose has NO italic.** The italic topic
+names are a **plate-02-only** treatment. A's part-3 type table generalises them
+to both surfaces. **The event report's prose must NOT be given italic topic
+names**; doing so would invent an emphasis the plate does not have. Small, but
+it is exactly the kind of thing a fix copies across surfaces by reflex.
+
+**CORRECTION 2 — two `Georgia 19.5` spans on plate 03 are DECK CHROME, not
+report content.** They read `Event report` (p4 y=400.6) and `Events widen past
+conferences` (p9 y=588.9) — **the deck's own slide titles, sitting exactly on
+the plate boundaries A cited.** By Ruling 71a's own reasoning (the route kicker
+is an annotation to the deck's reader, not app copy) these are the same class.
+**C must not build a `19.5` heading step.** Recorded so no later round mistakes
+it for a report level.
+
+**THE BUILD SIDE, RE-CONFIRMED:** `grep -c "font-display\|font-reading\|font-serif"`
+returns **0** on `src/app/jobs/[id]/page.tsx` and **0** on
+`src/app/events/[id]/page.tsx`. Confirmed a second way — every one of B's five
+static renders of the shipped `JobReport` reports
+`serif class anywhere? false`. **A's largest finding stands.**
+
+---
+
+# **CLUSTER 3a — THE SERIF ADOPTION (V26-J02, V26-E02)**
+
+## **WHY THIS IS THE CHEAPEST LARGE WIN, MEASURED**
+
+**The build already owns the family, already loads it, already documents the
+rule, and already OBEYS the rule on a sibling report.**
+
+- `globals.css:99` `--font-reading: var(--font-newsreader), "Iowan Old Style", Georgia, "Times New Roman", serif;`
+- `globals.css:103` `--font-display: var(--font-newsreader), Georgia, serif;`
+- `layout.tsx:4/37` loads `Newsreader`.
+- `globals.css:279` states the rule in the build's own words: *"Sans is the UI
+  default; long-form prose opts INTO serif with the `font-reading` utility."*
+- **AND THE PAPER REPORT ALREADY OPTS IN.** `src/app/papers/[id]/page.tsx` uses
+  `font-reading` at lines **1272, 1421, 1603, 1674**; `app/page.tsx`,
+  `persona/page.tsx`, `profile/page.tsx` and `changelog/page.tsx` all use one or
+  both utilities.
+
+**So the two opportunity reports are the ONLY report surfaces in the app that
+never opt in.** The fix is not "introduce a serif" — it is **"apply the app's
+own existing, documented, already-used convention to two files that were
+missed."** That is why B prices it first: **no token, no font, no config, no new
+component. Five class additions.**
+
+## **THE EXACT ELEMENT LIST — WHAT GETS `font-reading`, AND NOTHING ELSE**
+
+| # | element | file · line today | class today | add |
+|---|---|---|---|---|
+| 1 | job report `<h1>` | `src/app/jobs/[id]/page.tsx:1007` | `text-[30px] font-semibold leading-[1.15] tracking-[-0.015em] text-heading lg:text-[36px]` | `font-display` |
+| 2 | event report `<h1>` | `src/app/events/[id]/page.tsx:1967` | `text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]` | `font-display` |
+| 3 | `Why Peer sent this to you` prose — **BOTH surfaces at once** | `src/components/reports/why-peer-sent-this.tsx`, the `<p className="text-body-lg leading-8 text-text">` | — | `font-reading` |
+| 4 | `What the role is` bullets | `src/app/jobs/[id]/page.tsx:1153` `<li … className="relative pl-5 text-body-lg leading-8 text-text">` | — | `font-reading` |
+| 5 | visa evidence quote | `src/app/jobs/[id]/page.tsx:1042` `<blockquote className="mt-4 border-l-2 border-accent/50 pl-4 text-body leading-7 text-text-muted">` | — | `font-reading` |
+
+**`WhyPeerSentThis` is ONE component used by BOTH reports** — so element 3 is a
+single edit that lands V26-J02's prose half and the whole of V26-E02's prose
+half simultaneously. **Three files, five class additions, and both items close.**
+
+**`font-display` for the titles, `font-reading` for the prose**, because that is
+what the two tokens are for and what every other page in the app already does
+(`page.tsx:1347` and `persona/page.tsx:14` both use `font-display` on an `<h1>`;
+`papers/[id]` uses `font-reading` on body prose).
+
+## **BOUNDARY — WHAT MUST NOT CHANGE, TAKEN FROM THE PLATES' OWN SANS SPANS**
+
+**The plates are a TWO-family system and the sans half is the larger half.** B
+extracted every non-serif span so C has the boundary as data rather than as
+advice: **plate 02 has 95 non-serif spans, plate 03 has 316.** Everything in the
+list below stays sans, and **no `font-reading`/`font-display` class may be added
+to any of it**:
+
+- **Every letter-spaced uppercase label** — `SegoeUI-Semibold 7.88`: the tile
+  labels (`SAL ARY`, `T YPE`, `LOCATION`, `STARTS`, `APPLY BY`, `POSTED`,
+  `VISA`, `DATES`, `WHERE`, `FEE`, `ABSTRACT DUE`, `REGISTER BY`, `SCALE`), the
+  section labels (`T I M E L I N E`, `S K I L L S T H E Y A S K F O R`,
+  `W H AT T H E RO L E I S`, `TO A P P LY, H AV E R E A D Y`,
+  `W H Y P E E R S E N T T H I S TO YO U`, `C H E A P E S T WAY I N, F O R YO U`,
+  `T W O D E A D L I N E S, O N E E V E N T`,
+  `W H AT AC T UA L LY H A P P E N S T H E R E`, `O RG A N I S AT I O N S`,
+  `P E O P L E`, `E V E RY OT H E R …`, `W H AT I T CO S T S YO U`), the
+  locked-block label in violet `#5b4bbf`, and the cost table's header row
+  (`ITEM`/`STANDARD`/`STUDENT`/`DEADLINE`).
+- **The subtitle** (`SegoeUI 11.25` `#7d6a56`) — `Toyota Research Institute ·
+  Los Altos, CA · Hybrid (3 days on-site)` and `San Diego Convention Center · in
+  person, streamed keynotes · 4 days`.
+- **Every fact-tile VALUE** (`SegoeUI-Semibold 11.25`) and **sub-line**
+  (`SegoeUI 9.0`).
+- **Every button** (`SegoeUI-Semibold 10.5`), **every header chip**
+  (`SegoeUI-Semibold 9.38`), **every skill chip**.
+- **Every roster row** — names (`SegoeUI-Semibold 10.12`), descriptors
+  (`SegoeUI 9.38`), org/person body sentences (`SegoeUI 10.5`).
+- **The `CHEAPEST WAY IN` callout body** (`SegoeUI-Semibold 12.0`) — note this
+  is a SANS emphasis step, **not** serif, despite being the page's most
+  prominent sentence. A fix that "serifs the prose" by rule would get this
+  wrong.
+- **Every explainer note** (`SegoeUI 10.12` / `10.88`), **the locked-block row
+  titles and descriptions** (`10.5` / `9.75`), **the timeline milestone labels**
+  (`SegoeUI 8.62`), **the badges** (`Consolas`), **the stars and ticks**
+  (`SegoeUISymbol`).
+
+**THE ONE-LINE TEST C CAN RUN:** after the fix, `font-reading|font-display`
+should appear **exactly five times** across the two page files plus the shared
+component — never inside `ReportSection`, `ReportFactTile`, `HeaderChip`,
+`ReportBadge`, the action rows or any roster component.
+
+## **EMPTY / PARTIAL STATES**
+
+**There are none to design, and that is a property of the fix, not an
+oversight.** Every one of the five elements is already inside an existing
+conditional render (`{visaEvidence && …}`, `{roleBullets.length > 0 && …}`,
+`WhyPeerSentThis` returns `null` when both fields are empty, and the `<h1>`
+renders a title that is never empty by construction). **Adding a class to an
+element that already exists cannot create a new empty state**, cannot render a
+placeholder and cannot invent content.
+
+## **TESTS AT RISK — GREPPED**
+
+Grepping every test that asserts on these elements' class strings:
+`grep -rn "font-reading\|font-display\|font-serif" web/src --include=*.test.*`
+returns **NOTHING**. The `<h1>` class string is asserted nowhere; the report
+tests match on `data-*` hooks and text content (`page.test.ts` matches
+`data-report-action-row`, `data-feedback-control`, `data-opportunity-feedback-pair`).
+**Blast radius: zero existing assertions.** The correct new test is a positive
+one — assert each of the five elements carries the family class — because a
+class addition that silently fails to land is otherwise invisible.
+
+---
+
+# **CLUSTER 3b — THE HEADING HIERARCHY (V26-E01) AND THE LABEL STEPS (V26-J10)**
+
+## **THE UPGRADE TO A's FINDING: THE HIERARCHY IS NOT FLATTENED. IT IS INVERTED.**
+
+A wrote *"The build has ONE heading level."* **Executed, that is not right — and
+the truth is worse.** The build has **two** sub-title levels; they are assigned
+**backwards** relative to the plate.
+
+**PLATE 03's THREE LEVELS, measured:**
+
+| level | treatment | which headings |
+|---|---|---|
+| **L1** | `Georgia 21` `#2b180a` | the report title |
+| **L2** | `Georgia 15.75` `#2b180a`, **sentence case, serif** | **`Who'll be in the room` — the ONLY member, on either plate** |
+| **L3** | `SegoeUI-Semibold 7.88`, letter-spaced UPPERCASE, `#9c8b78` (violet `#5b4bbf` for the locked block) | **everything else** — including **`O RG A N I S AT I O N S`** and **`P E O P L E`** |
+
+**THE BUILD's LEVELS:**
+
+| build treatment | px | which headings |
+|---|---|---|
+| `<h1> text-[30px]/[32px]` | 30 / 32 | the report titles |
+| `text-caption uppercase tracking-[0.18em] text-text-faint` | **11.5** | `ReportSection`'s `<h2>` — **which is what renders `Who'll be in the room`** (`events/[id]/page.tsx:1001`, via `:1531`) |
+| `text-caption uppercase tracking-[0.16em] text-text-faint` | 11.5 | the roster-tail `<h3>` (`:1336`) |
+| **`text-title font-semibold text-heading`** | **17.5** | **`Organisations` (`:1539`) and `People` (`:1615`)** |
+| `text-micro uppercase tracking-[0.16em] text-text-faint` | 10.5 | the job page's `what-the-role-is` / `to-apply-have-ready` `<h2>`s (`jobs/[id]/page.tsx:1147`, `:1174`) |
+
+**So the plate's LARGEST sub-head renders at the build's SMALLEST step, and two
+of the plate's SMALLEST labels render at the build's LARGEST sub-head step.**
+`Who'll be in the room` (plate: 2.0× the label size, serif, sentence case)
+renders at **11.5 px uppercase faint sans**, while `Organisations` (plate:
+exactly the label size) renders at **17.5 px semibold dark**. **A patch that only
+promotes `Who'll be in the room` leaves `Organisations` still shouting over it.
+Both moves are required, which is why this is a hierarchy design and not a
+one-line change.**
+
+## **THE HEADING TABLE — EVERY HEADING ON BOTH PAGES WITH ITS PLATE-ASSIGNED LEVEL**
+
+**This is the deliverable the brief asked for: C lands a hierarchy, not a patch.**
+
+| # | heading (build) | where | build step today | **plate level** | move |
+|---|---|---|---|---|---|
+| 1 | job `<h1>` role title | `jobs:1007` | 30/36 px | **L1** | none (add `font-display`, cluster 3a) |
+| 2 | event `<h1>` event name | `events:1967` | 32/40 px | **L1** | none (add `font-display`) |
+| 3 | **`Who'll be in the room`** | `events:1531` → `ReportSection` `events:1001` | L3 (11.5 px upper) | **L2** | **PROMOTE** |
+| 4 | `Organisations` | `events:1539` | 17.5 px semibold dark | **L3** | **DEMOTE** |
+| 5 | `People` | `events:1615` | 17.5 px semibold dark | **L3** | **DEMOTE** |
+| 6 | `Every other organisation attending · 31` | `events:1599` → `:1336` | L3 (11.5, tracking `.16`) | **L3** | tracking only |
+| 7 | `Every other speaker · 16` | `events:1682` → `:1336` | L3 | **L3** | tracking only |
+| 8 | `Star anyone Peer got wrong` | `events:1353` | L3 | **L3** | none |
+| 9 | `Two deadlines, one event` | `events:2021` | L3 | **L3** | none |
+| 10 | `What actually happens there` | `events:2027` | L3 | **L3** | none |
+| 11 | `What it costs you` | `events:2197` | L3 | **L3** | none |
+| 12 | `Timeline` | `jobs:1058` | L3 | **L3** | none |
+| 13 | `Skills they ask for` | `jobs:1105` | L3 | **L3** | none |
+| 14 | **`What the role is`** | `jobs:1147` | **`text-micro` 10.5** | **L3** | **UNIFY to the one label step (V26-J10)** |
+| 15 | **`To apply, have ready`** | `jobs:1174` | **`text-micro` 10.5** | **L3** | **UNIFY (V26-J10)** |
+| 16 | `Why Peer sent this to you` | `why-peer-sent-this.tsx` | L3 | **L3** | none |
+| 17 | fact-tile `<dt>` labels | `fact-tile.tsx` | **`text-micro` 10.5, tracking `.14`** | **L3** — the plate uses the SAME `7.88` for tile labels as for section labels | **UNIFY (V26-J10)** |
+| 18 | apply-row labels | `jobs:~1188` | `text-micro` | **L3** | **UNIFY (V26-J10)** |
+| 19 | `What each talk is actually about` talk titles | `events:2085` | 17.5 px | **not on the plate** — Tier-2 content | **leave; out of the Tier-0 scope** |
+
+**V26-J10 IS THEREFORE NOT A SEPARATE FIX — it is rows 14/15/17/18 of this same
+table.** The plate has exactly **one** label step (`7.88`, one tracking); the
+build has two (`text-caption` 11.5 `/0.18em` and `text-micro` 10.5 `/0.14–0.16em`).
+**Landing the hierarchy lands V26-J10 for free, and B recommends they ship
+together rather than as two items.**
+
+## **THE L2 STEP — DERIVED TWO INDEPENDENT WAYS, WHICH AGREE**
+
+The plate is a mock at its own scale, so B did not convert points to pixels.
+**Two ratios, taken from the plate and applied to the build's own type:**
+
+1. **Against the title:** plate L2 / plate L1 = `15.75 / 21 = 0.750`. Build L1 =
+   30 px ⇒ **22.5 px**.
+2. **Against the label:** plate L2 / plate L3 = `15.75 / 7.88 = 2.00`. Build L3 =
+   `text-caption` 11.5 px ⇒ **23.0 px**.
+
+**Two derivations from different anchors agree within 2%.** **B recommends a
+22 px step.** The existing `--text-title-lg` is **19.5 px** — the closest token
+in the scale and **the zero-new-token fallback** if the manager prefers not to
+add one; it is 13% under both derivations and B says so rather than pretending
+it is the measured answer.
+
+**The L2 treatment, in full:** `font-display` (serif — it is the plate's second
+serif element), **sentence case, NOT uppercase**, **no letter-spacing**,
+`text-heading` (the plate's `#2b180a`, the darkest text colour, versus L3's
+`#9c8b78` faint). **Every one of those four properties differs from L3, which is
+what makes it a level rather than a bigger label.**
+
+## **THE STRUCTURAL PROBLEM C MUST SOLVE FIRST, AND IT IS NOT OBVIOUS**
+
+**`ReportSection` is DEFINED TWICE — `jobs/[id]/page.tsx:786` and
+`events/[id]/page.tsx:988` — as two independent copies of the same component.**
+`Who'll be in the room` reaches its `<h2>` through the event copy. **A `level`
+prop added to only one copy silently does nothing on the other surface**, and
+V26-J10's label unification has to land in both.
+
+**B's recommendation:** extract `ReportSection` into
+`src/components/reports/report-section.tsx` with a `level?: "section" | "group"`
+prop (default `"section"` = L3, so **every existing call site keeps its exact
+current output**), import it in both pages, and pass `level="group"` at
+`events:1531` only. **This is the same "one component, one spelling" argument the
+build already makes in `why-peer-sent-this.tsx`'s own doc comment**, so it is the
+codebase's own convention rather than B's preference.
+
+**The demotion of `Organisations`/`People` is separate and simpler:** they are
+plain `<h3>`s at `events:1539` and `:1615`; swap
+`text-title font-semibold text-heading` for the shared L3 label class. **Keep
+the `<h3>` element and keep the `ReportBadge` children** — the badge sits on the
+same line in the plate too.
+
+## **BOUNDARY CONDITIONS**
+
+- **The heading TEXT does not change.** `Who'll be in the room` is a fixed string
+  from plate 03 (`events:1531`'s own comment says so) and the `’` is a curly
+  apostrophe. **Do not re-case it in markup** — the uppercase is a CSS
+  `uppercase` today, so removing that class restores the plate's sentence case
+  with no string edit. **A string edit here would break the B-14 fixed-heading
+  contract.**
+- **The subtitle counter stays where it is.** Plate 03 puts
+  `5 of 34 exhibitors and 3 of 18 speakers concern you` **right-aligned on the
+  same line as the heading**; the build renders it as a block underneath
+  (`events:1006`). B prices that as part of the L2 promotion — the promoted
+  heading row becomes `flex items-baseline justify-between` — but flags that
+  **at narrow widths it must wrap to its own line, not truncate.**
+- **Only ONE heading in either plate is L2.** If a later round finds a second
+  candidate, that is a new measurement, not an extension of this one.
+- **Nothing outside the two report pages moves.** The `text-caption` and
+  `text-micro` tokens are used across the whole app; **V26-J10 must be fixed by
+  changing which token these call sites USE, never by changing what the tokens
+  MEAN.**
+
+## **EMPTY / PARTIAL STATES**
+
+- **`Who'll be in the room` with no counter**: `subtitle` is already optional in
+  `ReportSection`; the promoted row must render the heading alone without a
+  dangling separator or an empty flex child.
+- **`Organisations` present, `People` absent** (or the reverse): both are already
+  independently gated (`organisations.length > 0`, `people.length > 0`); the
+  demotion changes no gate. **A single demoted L3 label under an L2 heading is a
+  valid, complete shape** — it reads as one group in the room rather than two.
+- **`Who'll be in the room` with neither**: the whole section is already gated
+  upstream; the L2 heading never renders alone.
+
+## **TESTS AT RISK — GREPPED**
+
+- `grep -rn "text-title\|text-caption\|text-micro" web/src --include=*.test.*` —
+  **no test asserts any of these class names.**
+- `grep -rn "Who’ll be in the room\|Who'll be in the room" web/src --include=*.test.*` —
+  the heading is matched by **text**, not by class, wherever it is asserted, so
+  a purely presentational change cannot break it.
+- **The real risk is the `ReportSection` extraction, not the styling.** Any test
+  that asserts on the `<h2>`/`<h3>` element name or on section ordering
+  (`data-job-section`, `data-report-section`) must keep passing; the extraction
+  must preserve the element names and every `data-*` hook **byte for byte**.
+  That is a mechanical requirement, and it is the one place C should run the
+  suite before and after rather than only after.
+
+---
+
+**CLUSTER 1 COMPLETE — 4 of the 18 items (V26-J02, V26-E02, V26-E01, V26-J10).
+Cluster 2 (the timeline track and the fact-tile band, both cross-surface pairs)
+and cluster 3 (the remaining ten) follow on their own commits.**
