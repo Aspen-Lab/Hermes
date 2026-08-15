@@ -270,11 +270,134 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 07:11 UTC (Agent B, round 26)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 07:47 UTC — ROUND 26 B IS
+                  COMPLETE. ALL FOUR ITEMS DONE, NONE UNSTARTED. SIX §4 ENTRIES,
+                  SIX COMMITS, EACH PUSHED IMMEDIATELY** (`85cd6cf`, `68c557f`,
+                  `c09cc05`, `5de109b`, `9be0c0e`, `fbede86`, plus this final
+                  commit). Claimed the lock cleanly (`5439a6b`) after `git pull`,
+                  after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`, and **the claiming push was
+                  ACCEPTED (`29ece05..5439a6b`), so the race was won rather than
+                  assumed.** **B CHANGED NO CODE, DELETED NO TEST, EDITED NO TEST
+                  AND ADDED NO TEST** — `git log 29ece05..HEAD -- web/` is
+                  **EMPTY**; every commit touches
+                  `MULTIAGENT-report-parity.md` and nothing else. No branch,
+                  worktree or PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. **No credential printed, logged, committed or
+                  written anywhere — `.env.local` was NEVER `cat`-ed (a boolean
+                  presence check reported all six of its keys ABSENT);
+                  `profile.json` was read for BOOLEAN key presence plus its
+                  NON-SECRET query fields only, with every secret redacted at the
+                  point of reading.** Throwaway harness lived OUTSIDE `src/`
+                  (`web/zz-r26b/`, own vitest config rooted at `web/`,
+                  `*.probe.ts` include pattern) and was **deleted before every
+                  commit and before the gate run**; `git status --porcelain
+                  --untracked-files=all` verified clean each time. **No untracked
+                  `*.test.ts` was ever created under `web/src/`.**
+
+                  **THE GATE, RE-RUN AFTER DELETING THE HARNESS: 93 files / 1894
+                  tests, 1894 PASSING — ZERO FAILURES**, exactly §1's figure and
+                  unchanged, as it must be for a turn that edited no source.
+
+                  **ITEM 1 — A26-02 CLOSES AT ZERO SURVIVORS.** Re-scored under
+                  Ruling 71b **by execution**, not by re-reading A's table: A's
+                  entry records each title verbatim but PARAPHRASES the snippets,
+                  and a paraphrase cannot be fed to a predicate. Two fresh live
+                  captures (16 shipped queries, union 150 rows, snippets stored
+                  **UNTRUNCATED** — every named row's snippet is 906–1333 chars,
+                  so every one would have been clipped by the instrument A itself
+                  withdrew). **All six rows FAIL limb (c): every one carries a
+                  provider-evidenced date already PAST at the measurement
+                  instant.** **Limb (d) proven rather than asserted — rewind `now`
+                  to 2026-01-05 and all six come back KEPT**, so the only refusing
+                  line is `eventweb.ts:1741`, the expiry check, which is exactly
+                  what 71b(c) calls lawful. **Limbs (a) and (b) hold for every
+                  row — A's reading of the ROWS was sound; only the standard was
+                  wrong.** A's disclosure is what produced the ruling that
+                  resolved it. **48b restates to `events 149 / 99 dropped / 0`.**
+
+                  **ITEM 2 — A26-01's MECHANISM IS CORRECTED AND THE ITEM IS
+                  WIDER THAN MEASURED.** The build has ONE title rule — the
+                  provider's title up to its first chrome separator — and
+                  **never strips an ` at <Employer>` clause on any host.** Fed
+                  A's own recorded `magnet.me` `<title>`, the shipped mapper
+                  **KEEPS** the tail; this window's `linkedin.com` title is
+                  provider-truncated and carries no clause at all. **The hosts do
+                  not diverge; the provider's punctuation does.** **THREE hosts
+                  state the employer twice this window** (`ev.careers`,
+                  `grad.wisc.edu`, `careers.jnj.com`), 4 of 10 offered `at`-clause
+                  rows keeping the clause. Fix designed at the MAPPER (reasons
+                  measured: enrichment can re-add the clause; `titleEmployer`
+                  exists only on `jobweb`), **23 of 24 adversarial cases pass —
+                  the one failure is B's own expectation on an unreachable input
+                  and B says so** — **3 of 43 live titles change, zero
+                  collateral**, and **exactly ONE existing test is in range
+                  (`job-cleanup.test.ts:49`), which already encodes the most
+                  important boundary and passes untouched.**
+
+                  **ITEM 3 — ALL 18 VISUAL ITEMS DISPOSITIONED, IN THREE CLUSTER
+                  ENTRIES. B RECOMMENDS THE BASELINE MOVE 18 → 14 GENUINE + 1
+                  `POLICY`, WITH 3 STRUCK — and B does not strike, it
+                  recommends.** **V26-J05 is §1d exclusions 1/2/3, all binding**
+                  (A applied §1d on the value surface and did not carry it to the
+                  new visual surface). **V26-J01 and V26-J09 are FIXTURE
+                  ARTIFACTS proven by rendering the shipped component** — `WHAT
+                  THE ROLE IS` renders three bullets at Tier 0 the moment
+                  `summary` is set, and the chip renders `Full-time · 3 years`
+                  the moment `employmentType` is set. **V26-J07 is `POLICY`: the
+                  build's comment says the plate has no progress bar and the
+                  PDF's vector rectangles show one, filled 303.8/453.0 = 0.671
+                  against the plate's own `6 of 9` = 0.667 — a recorded decision
+                  on a FALSE PREMISE, flagged not reversed, per §1b.** **The
+                  list got shorter where the build was already right and harder
+                  where it was not:** the heading hierarchy is **INVERTED, not
+                  flattened** (the plate's largest sub-head renders at the
+                  build's smallest step and two of its smallest labels at the
+                  largest); plate 03's serif prose has **no italic**; the `Today`
+                  dot is **not larger**, only orange; the fact tiles **are
+                  filled**. **A's type scale is otherwise exact to the half-point
+                  and the hex and B confirms it.** **Both fact-tile sets map 1:1
+                  to their plate slots in order, so no tile merges, splits or is
+                  orphaned and there is NO `POLICY` in that item**; **the
+                  timeline's fill state is already in the data** (`accent` marks
+                  `today` on both surfaces) **so no date logic moves.** Two
+                  implementation traps named ahead of C: the fact-tile tests are
+                  **element-anchored regexes**, and the track **divides by zero**
+                  on a one-milestone row.
+
+                  **ITEM 4 — THE 68b PRICING, WITH ITS VACUITY DISCLOSED
+                  FIRST.** The live pool carries **0 of 16** rows the predicate
+                  bites on, so every live zero is vacuous and **B does not bank
+                  it** — while noting the defect IS reachable, because A's own
+                  window B carried one in 4 of 5 pulls of an 11-row pool. On a
+                  constructed matrix carrying the defect's shape plus four
+                  admitted controls: **the conversion makes the server's facet
+                  counts, its filter membership and its ledger writes agree with
+                  the client BYTE-IDENTICALLY**, and moves **exactly one row and
+                  one ledger write**, always from a claim to a silence and never
+                  the reverse. **The `hybrid` escape hatch survives.** **The
+                  conversion DOES change user-visible facet counts and B states
+                  it as a finding rather than hiding it — the count does not
+                  become smaller and worse, it becomes true.** `facets.ts` is
+                  deliberately NOT touched. **One commissioned citation is wrong
+                  and is corrected: the ledger write is `scoring.ts:345`, not
+                  `:329`.**
+
+                  **TWO NEW OBSERVATIONS FILED FOR A TO RANK, NEITHER RANKED BY
+                  B:** **B26-OBS-01**, a finished event ingestion-KEPT with an
+                  empty date because the A22-01 ambiguity guard voided it (proven
+                  title-dependent; A22-01 is a recorded design and B flags rather
+                  than reverses); **B26-OBS-02**, `q-chem.com` rendering
+                  `company: "Q"` because the `titleEmployer` capture class has no
+                  hyphen — a wrong VALUE, not a silence.
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:14 UTC — ROUND 26 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`b40211d`, `a094194`, `20714c5`, plus this final
@@ -4875,10 +4998,187 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — round 26.** Round 26 A is COMPLETE: **four parts, one
-                  commit each, each pushed immediately** (`b40211d`, `a094194`,
-                  `20714c5`, plus this hand-off). Claim the §0d lock first,
-                  always. **A changed no code and touched no file but this one.**
+WHOSE TURN:       **C — round 26.** Round 26 B is COMPLETE: **six §4 entries,
+                  six commits, each pushed immediately** (`85cd6cf`, `68c557f`,
+                  `c09cc05`, `5de109b`, `9be0c0e`, `fbede86`, plus this
+                  hand-off). Claim the §0d lock first, always. **B changed no
+                  code and touched no file but this one.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement. NEITHER B NOR C CAN CLOSE
+                  OR MOVE THIS LINE.**
+
+                  **THE BASELINE C MUST CONFIRM COLD: 93 files / 1894 tests,
+                  1894 PASSING. ZERO FAILURES.** tsc clean; `eslint src` exactly
+                  the one standing `src/components/persona/quiz.tsx:46` error;
+                  `enrich.test.ts` solo 56 of 56. **B re-ran the full suite after
+                  deleting its harness and it is unchanged — B added, edited and
+                  deleted NO test and NO source file.**
+
+                  ---
+                  **C's ORDER FOR ROUND 26. ITEM ZERO IS UNCHANGED AND STILL
+                  FIRST.**
+
+                  **ITEM 0 — RULING 70's `64c` INDEX-PAGE ASSERTION.** Still
+                  unfailable, still commissioned, untouched by A and by B.
+
+                  **ITEM 1 — A26-01, THE ONLY VALUE FIX IN THE ROUND.** B's item
+                  2 entry carries the design. **Land it at
+                  `web/src/lib/jobs/mapper.ts`, NOT at ingestion** — the reasons
+                  are measured, not stylistic (enrichment can re-add the clause;
+                  `titleEmployer` exists only on the `jobweb` source). New shared
+                  module `lib/jobs/employer-clause.ts` exporting
+                  `stripRedundantEmployerClause(roleTitle, company)`; call it at
+                  `mapper.ts:189`'s `roleTitle` FIELD, **after**
+                  `summarizeJob(...)` at `:161`, which must keep receiving the
+                  UNSTRIPPED title. **A26-02 IS CLOSED AND NEEDS NO FIX** — see
+                  below.
+
+                  **ITEM 2 — THE VISUAL WORK, IN B's PRICED ORDER.** Cheapest
+                  first, and the first one is genuinely cheap:
+                  **(a) THE SERIF ADOPTION (V26-J02/E02) — 3 files, 5 class
+                  additions, zero new tokens.** The exact element list is in B's
+                  cluster-1 entry; `WhyPeerSentThis` is ONE component used by
+                  both reports, so one edit lands both surfaces' prose.
+                  **(b) V26-E07 — two characters on two lines** (`events/[id]/page.tsx:1585`
+                  and `:1668`, ` · ` → `: `).
+                  **(c) V26-E06 — drop `StarButton` from the two highlighted-card
+                  branches only**; the roster star and its state stay.
+                  **(d) V26-E05 — copy the job section's `NEW` badge and
+                  explainer note onto the event happenings section**, gated on
+                  the same condition as the chips, with the note's WORDS written
+                  for events (the job's wording is false there).
+                  **(e) THE HEADING HIERARCHY (V26-E01 + V26-J10).** Extract
+                  `ReportSection` (defined TWICE) into
+                  `components/reports/report-section.tsx` with a `level` prop
+                  defaulting to today's output; **promote `Who'll be in the room`
+                  and DEMOTE `Organisations`/`People`** — B measured the
+                  hierarchy as INVERTED, not flattened, so both moves are needed.
+                  **(f) THE FACT-TILE BAND (V26-J04/E04)** — `gap-px` over
+                  `bg-border`, capped at `grid-cols-4`; **both tile sets map 1:1
+                  to plate slots so NO tile merges, splits or is orphaned.**
+                  **(g) THE TIMELINE TRACK (V26-J03/E03)** — one shared component
+                  replacing two byte-identical copies; **the fill state is
+                  already in the data (`accent === true` marks `today` on both
+                  surfaces) so NO DATE LOGIC MOVES.**
+                  **(h) V26-J08/E08 — two new `HeaderChip` tones** (`info` for
+                  the positive visa state, `kind` for role/event kind), via
+                  semantic tokens, never literal hexes.
+                  **EVERY ONE of the above has boundary conditions, empty/partial
+                  states and grepped tests-at-risk in B's three cluster entries.
+                  Two traps are named there and C should read them before
+                  writing: the fact-tile tests are ELEMENT-ANCHORED regexes that
+                  break if the tile stops being a bare `<div>`, and the timeline
+                  track DIVIDES BY ZERO on a one-milestone row.**
+
+                  **ITEM 3 — THE 68b RAW-READER CONVERSION.** Four call sites,
+                  one three-line helper, `facets.ts` NOT touched. **The trap is
+                  `jobs/pipeline.ts:254`: its return value feeds the score floor
+                  and top-N, so it must filter on a projection and RE-SELECT THE
+                  ORIGINAL OBJECTS — a naive `.map()` corrupts the three
+                  deliberate raw readers A22-03(b) protects.** Note the
+                  commission's citation `scoring.ts:329` is **wrong; the site is
+                  `scoring.ts:345`.** **This conversion CHANGES USER-VISIBLE
+                  FACET COUNTS and that is intended** — B measured it and states
+                  it rather than hiding it.
+
+                  ---
+                  **WHAT B SETTLED, SO C DOES NOT RE-OPEN IT.**
+
+                  **A26-02 IS CLOSED. ZERO OF SIX ROWS SURVIVE RULING 71b.**
+                  Re-scored by execution on a fresh live capture, twice,
+                  untruncated. **All six fail 71b(c)** — every one has a
+                  provider-evidenced date already PAST at the measurement instant
+                  (`2026-08-15T07:14:34Z`): `August 11-12, 2026`, `May 22` +
+                  `July 21`, `26–31 July`, `April 16`, `February 9–12`,
+                  `June 14–19`. **Limb (d) proven by rewinding `now` to
+                  2026-01-05 — all six come back KEPT, so the ONLY refusing line
+                  is the expiry check at `eventweb.ts:1741`.** Limbs (a) and (b)
+                  are satisfied by every row: **A's judgement of the rows was
+                  sound; only the standard was wrong.** **Ruling 48b for round 26
+                  should be restated `events 149 / 99 dropped / 0 WRONGLY
+                  DROPPED`** and the loop's unbroken zero is intact.
+
+                  **A26-01's MECHANISM IS NOT THE ONE A NAMED, and the item is
+                  WIDER.** The build **never strips** an ` at <Employer>` clause
+                  on any host; it only ever **amputates** one as a side effect of
+                  splitting the title at its first chrome separator. `magnet.me`
+                  and `linkedin.com` were never offered a clause to strip — fed
+                  A's own recorded `magnet.me` `<title>`, the shipped mapper
+                  **keeps** the tail. **THREE hosts state the employer twice this
+                  window, not one** (`ev.careers`, `grad.wisc.edu`,
+                  `careers.jnj.com`).
+
+                  **FOUR VISUAL ITEMS SHOULD COME OFF THE LIST. B RECOMMENDS
+                  18 → 14 GENUINE + 1 `POLICY`, WITH 3 STRUCK. B does not strike
+                  — the manager does.**
+                  **(i) V26-J05 — STRIKE. It is §1d exclusions 1, 2 AND 3, all
+                  binding**, and the build cites §1d in its own comment.
+                  §1d's consequence clause is addressed to A by name and says to
+                  remove them from the denominator. **A applied §1d on the value
+                  surface and did not carry it to the new visual surface** —
+                  every future visual census must walk §1d 1–6.
+                  **(ii) V26-J01 — STRIKE.** `WHAT THE ROLE IS` **renders at
+                  Tier 0**, three bullets, the moment `job.summary` is populated;
+                  proven by five static renders of the shipped component. A's
+                  fixture had no `summary`. It is empty on live rows because of
+                  A22-03(a)'s ownership gate — **the product working** — and
+                  plate 02's own text says *"Fields Peer can't find are hidden
+                  rather than shown empty."*
+                  **(iii) V26-J09 — STRIKE.** With `employmentType` set the chip
+                  renders **`Full-time · 3 years`**, the plate's exact string.
+                  The FIELD was absent, not the word.
+                  **(iv) V26-J07 — `POLICY — manager decides`.** The build's own
+                  comment says *"a progress bar the plate does not have"*.
+                  **B extracted the PDF's vector rectangles: track w=453.0, fill
+                  w=303.8 → 0.671, against the plate's own stated `6 of 9` =
+                  0.667.** **The plate HAS the bar and the recorded removal rests
+                  on a false premise.** Per §1b, B flags and does not reverse.
+                  Priced conditionally in B's cluster-3 entry. **Its second half
+                  — the counter's right-alignment — is not policy-blocked and
+                  ships with the heading-row work.**
+                  **V26-J06 is HALF struck:** `SEEN ON` renders whenever
+                  `sourceId` is set (fixture artifact); `ELIGIBILITY`/`TEAM` have
+                  no field at all and are re-scoped as an EXTRACTION item — the
+                  only one of the 18 that presentation cannot close.
+
+                  **CORRECTIONS TO A's PLATE MEASUREMENTS, ALL RE-MEASURED FROM
+                  THE PDF's OWN SPANS AND DRAWINGS.** A's type scale is otherwise
+                  **exact to the half-point and the hex** and B confirms it.
+                  **(1) Plate 03's serif prose carries NO italic** — the italic
+                  topic names are plate-02-only; do not add them to the event
+                  report. **(2) The `Today` dot is NOT larger** — every inner dot
+                  is 8.2 × 8.2 on both plates; only its COLOUR differs.
+                  **(3) The fact tiles ARE filled** (`#f1e8d9`); what they lack is
+                  a border and a radius. **(4) Two `Georgia 19.5` spans on plate
+                  03 are DECK CHROME** (`Event report`, `Events widen past
+                  conferences`, sitting exactly on the plate boundaries) — same
+                  class as Ruling 71a's route kicker; **do not build a 19.5
+                  step.** **(5) The heading hierarchy is INVERTED, not
+                  flattened.**
+
+                  **TWO NEW OBSERVATIONS FOR A TO RANK — B DOES NOT RANK.**
+                  **B26-OBS-01:** `ans.org/…/event-1993` is INGESTION-KEPT with
+                  `startDate: ""` although its own snippet evidences a PAST date
+                  — the A22-01 ambiguity guard voids the date (two clusters, one
+                  from unrelated page chrome), `ownedTitleSpan` cannot recover it
+                  from a breadcrumb title, and with an empty anchor neither
+                  expiry net can fire. **A finished event seated as an undated
+                  one.** Proven title-dependent by execution. **A22-01 is a
+                  recorded design; B flags, does not reverse.**
+                  **B26-OBS-02:** `q-chem.com`'s `Summer at Q-Chem` renders
+                  `company: "Q"` — the `titleEmployer` capture class at
+                  `jobweb.ts:1301-1303` has no hyphen, so it stops dead. A wrong
+                  VALUE, not a silence.
+
+                  **THE 68b LIVE MATRIX IS VACUOUS AND B DOES NOT BANK IT** —
+                  0 of 16 rows carried the predicate's shape this window. **The
+                  defect is reachable: A's own window B carried one
+                  (`jobweb:1g2eds8`, `lensa.com`, raw `isRemote: true`) in 4 of 5
+                  pulls of an 11-row pool, so roughly one row in eleven.** A
+                  future round measuring zero here must check whether any row
+                  bites before reporting it.
 
                   **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
                   Only a later A census can move it, and only the manager closes,
