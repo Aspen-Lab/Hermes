@@ -270,11 +270,81 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 08:58 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 09:09 UTC — ROUND 26 C IS
+                  COMPLETE. ALL TWELVE ITEMS DONE, NONE UNSTARTED.** Twelve commits,
+                  each PUSHED the moment it was made (`be186e5`, `05e28ec`,
+                  `0b413ef`, `a87669f`, `3f0c22d`, `2f0863b`, `0969518`, `b8adf0e`,
+                  `009341d`, `b17cfe9`, plus two lock commits and this close-out).
+                  **The turn was banked out at item 10 and resumed at item 14 with
+                  zero loss, which is the per-item banking rule doing its job.**
+                  Both lock claims were made after `git pull` and after confirming
+                  `git branch --show-current` reads `feature/summary-report-revamp`,
+                  and **both claiming pushes were ACCEPTED (`aad9b80..4e6eb55`,
+                  `009341d..d4d6b3b`), so each race was won rather than assumed.**
+                  
+                  **THE GATE, RE-RUN AT CLOSE: 97 files / 2005 tests, 2005 PASSING —
+                  ZERO FAILURES** (round start, confirmed COLD: 93 / 1894).
+                  `tsc --noEmit` clean. `eslint src` **exactly the one standing
+                  `quiz.tsx:46` error, 0 warnings.** **+4 files, +111 tests, ZERO
+                  test deletions, ONE existing test RESTATED with its item named**
+                  (`events/[id]/page.test.ts`'s 30-organisation roster case, restated
+                  by V26-E06, and the restatement is that item's own witness).
+                  `enrich.test.ts` SOLO **56 of 56**; `job-cleanup.test.ts` SOLO **6
+                  of 6**; `facets.test.ts` SOLO **11 of 11 UNTOUCHED-GREEN** (the
+                  check B named for item 14); `scoring.test.ts` SOLO **45 of 45**;
+                  `benchmark.test.ts` (SolarPACES) SOLO **1 of 1**.
+                  
+                  **TWELVE ITEMS LANDED: 0** (Ruling 70's `64c` assertion), **1**
+                  (A26-01 at the mapper), **NINE VISUAL ITEMS** (the serif adoption,
+                  the heading-hierarchy INVERSION with V26-J10, the timeline track,
+                  the fact-tile band, the progress bar per 72b, the colon lead-ins,
+                  the stars off highlighted cards, the happenings badge and note, the
+                  four chip roles), **and 14** (the 68b facet conversion). **ALL 14
+                  OF RULING 72b's DESIGNED VISUAL ITEMS PLUS THE BAR ARE LANDED
+                  EXCEPT V26-J06's re-scoped half, which is ESCAPE-CLAUSED because it
+                  needs two new EXTRACTED FIELDS — a value-side design, not a render
+                  fix. RULING 68b IS DISCHARGED.**
+                  
+                  **BOTH POOL RE-MEASUREMENTS TAKEN.** After item 1: **14 rows, 14
+                  rendered, exactly 3 titles change, zero collateral** — and
+                  `magnet.me`'s AquaBattery row, A's own cited counter-example,
+                  arrived STILL CARRYING the clause, confirming B's mechanism
+                  correction organically. After item 14: **9 rows, 9 rows out, facet
+                  totals identical before and after — but 0 of 9 rows bite the
+                  predicate, so THE LIVE FACET ZEROES ARE VACUOUS AND C DOES NOT BANK
+                  THEM, exactly as B did not.** The constructed matrix is the
+                  evidence. **The defect remains reachable — A's window B carried one
+                  in 4 of 5 pulls of an 11-row pool, ~1 row in 11 — so two vacuous
+                  windows are a sampling accident, not an empty population.**
+                  
+                  **SEVEN VACUOUS OR UNREACHABLE ASSERTIONS OF C's OWN WERE CAUGHT BY
+                  MUTATION AND ALL SEVEN ARE DISCLOSED**, plus two more found in B's
+                  designs (the redundant `\s+`/`\b` pair and an unreachable
+                  never-empty guard), both KEPT and relabelled defensive. **TWO
+                  DEVIATIONS FROM B, BOTH TRACED BEFORE THEY WERE TAKEN:** `visaTone`
+                  feeds the VISA fact tile as well as the header chip (the chip got
+                  its own mapping; the tile did not move), and `withRenderedRemote`
+                  is EXPORTED from `remote-claim.ts` rather than written as a local
+                  helper in two files. **ONE CORRECTION TO A BOUNDARY, MEASURED:**
+                  B's *"no score may move"* holds only for readers whose ledger says
+                  nothing about format. **ONE NEW OBSERVATION: C26-OBS-01.**
+                  
+                  **No credential printed, logged, committed or written anywhere —
+                  `.env.local` was NEVER `cat`-ed; `profile.json` was read for BOOLEAN
+                  key presence only and no value was printed.** Every probe lived
+                  OUTSIDE `web/src` (own config, `*.probe.ts` include) or outside the
+                  repo entirely, and **`git status --porcelain --untracked-files=all`
+                  was verified clean before every commit.** No branch, worktree or
+                  PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **Turn
+                  lock released (`HELD BY: free`) in this entry's final commit.**
+                  
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **out of budget @ 2026-08-15 08:53 UTC, items 0-10 DONE,
                   item 14 (the 68b facet conversion) UNSTARTED — banked at a CLEAN
                   ITEM BOUNDARY, exactly as the brief planned for.** Eight commits,
@@ -5067,6 +5137,169 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **A — round 27, GATE CANDIDATE ROUND (value + visual).**
+                  Round 26 C is COMPLETE: **twelve items, twelve commits, each pushed
+                  immediately.** Claim the §0d lock first, always.
+                  
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.**
+                  Phase 1's bar is **VALUE parity AND VISUAL parity** (Rulings 66b and
+                  69). **Only a later A census can move it, and only the MANAGER
+                  closes, after an independent re-measurement** (Ruling 30, THE GATE
+                  RULE, and the user's reaffirmed strict gate). **NEITHER B NOR C CAN
+                  CLOSE OR MOVE THIS LINE, AND A DOES NOT CLOSE IT EITHER.**
+                  
+                  **THE BASELINE A MUST CONFIRM COLD: 97 files / 2005 tests, 2005
+                  PASSING. ZERO FAILURES.** `tsc --noEmit` clean; `eslint src`
+                  exactly the one standing `src/components/persona/quiz.tsx:46`
+                  `react-hooks/set-state-in-effect` error and **0 warnings**;
+                  `enrich.test.ts` solo **56 of 56**. (Round 26 C started from 93 /
+                  1894: **+4 files, +111 tests, ZERO deletions, ONE test RESTATED**.)
+                  
+                  ---
+                  **THE CARRY LIST — EVERY LANDED ITEM'S EXPECTED EFFECT WITH ITS
+                  FALSIFIER. A SHOULD EXPECT EACH OF THESE AND READ THEM AS INTENDED,
+                  NOT AS CHURN.**
+                  
+                  **ITEM 0 — Ruling 70's `64c` assertion.** Effect: the assertion now
+                  tests the RAW url and fires on an index page. **Falsifier:** a
+                  `cambridgeenertech.com/cet/conferences` row in the pool that does
+                  NOT red the suite. *(C also corrected the ruling's framing: the old
+                  form was unfailable on the two BARE index forms, not on all four —
+                  a query/fragment URL tripped it by accident.)*
+                  
+                  **ITEM 1 — A26-01.** Effect: **3 of 43 rendered titles lose a
+                  redundant ` at <Employer>` clause; nothing else moves.** Measured
+                  live at **3 of 14 pool rows, zero collateral, zero rows lost, every
+                  employer field intact.** **Falsifier:** a title losing a clause
+                  while its employer field is EMPTY (`job-cleanup.test.ts:49` reds
+                  first), or `ev.careers` / `grad.wisc.edu` / `careers.jnj.com` still
+                  stating the employer twice. **`magnet.me`'s AquaBattery row —
+                  A's own named row — arrived STILL CARRYING the clause and is now
+                  stripped, which confirmed B's mechanism correction organically.**
+                  
+                  **ITEM 2 — V26-J02 / V26-E02, the serif.** Effect: both `<h1>`s,
+                  both `Why Peer sent this` prose blocks, the role bullets and the
+                  visa quote render in the serif; **plate 03's prose has NO italic**.
+                  **Falsifier:** any label, chip, button, roster row or the
+                  `CHEAPEST WAY IN` callout rendering serif; or italic on the event
+                  prose. Plate 02 = pp. 2-4, plate 03 = pp. 4-9.
+                  
+                  **ITEM 3 — V26-E01 / V26-J10, the hierarchy INVERSION.** Effect:
+                  `Who’ll be in the room` is the ONLY promoted heading, at 22 px
+                  serif sentence case; `Organisations`/`People` drop to the label
+                  step; four `text-micro` label sites unify. **Falsifier:** a second
+                  promoted heading; `Organisations` rendering larger than its parent;
+                  any `text-micro` on a section heading. **NO 19.5 px STEP EXISTS —
+                  B's CORRECTION 2: those plate spans are DECK CHROME.**
+                  
+                  **ITEM 4 — V26-J03 / V26-E03, the timeline track.** Effect: one
+                  continuous track with a filled segment on BOTH surfaces; the fill
+                  ends at the `Today` dot; **one-milestone rows render no track**.
+                  **Falsifier:** four bordered boxes returning; a `NaN%` width; an
+                  accent dot LARGER than the others (B's correction to A — `Today`
+                  differs in COLOUR only); any date logic inside the track.
+                  
+                  **ITEM 5 — V26-J04 / V26-E04, the fact-tile band.** Effect: one
+                  rule-divided band at **4 columns** on both surfaces, no per-tile
+                  border or radius, **every tile value unchanged** (B mapped 7/7 and
+                  6/6 to plate slots — no tile merges, splits or is orphaned).
+                  **Falsifier:** a 7-up or 6-up grid; a per-tile border; a blank
+                  filler tile; any tile VALUE moving.
+                  
+                  **ITEM 6 — V26-J07, the progress bar (Ruling 72b).** Effect: a bar
+                  at the matched fraction, and `6 of 9 you already have` right-aligned
+                  on the heading row. **Falsifier:** the bar absent; the counter back
+                  on its own line; the words *"a progress bar the plate does not
+                  have"* back in the source (a test asserts they are gone).
+                  
+                  **ITEM 7 — V26-E07.** Effect: `At this event:` and `Speaking:`.
+                  **Falsifier:** the middot returning on those two lines — **or the
+                  middot disappearing anywhere else, which is over-reach.**
+                  
+                  **ITEM 8 — V26-E06.** Effect: **no star on highlighted org/person
+                  cards**; the roster tail keeps every star. **Falsifier:** a star on
+                  a highlighted card; **or a roster row LOSING its star, which would
+                  mean data or capability was removed.**
+                  
+                  **ITEM 9 — V26-E05.** Effect: the happenings section carries a `NEW`
+                  badge and an explainer note with a left orange rule, **and the job
+                  note gains the rule too**. **Falsifier:** either rendering when
+                  there are no activity chips; or the event note mentioning an
+                  "application" (there is none on that surface).
+                  
+                  **ITEM 10 — V26-J08 / V26-E08.** Effect: four distinguishable header
+                  chip roles; visa ≠ match. **Falsifier:** the visa chip matching the
+                  match chip; `wont-sponsor` rendering anything but `danger`; a
+                  literal plate hex in the markup (**palette fidelity is OUT of
+                  scope; the app is multi-theme**); **or the VISA FACT TILE changing
+                  tone** — it must not, and a test says so.
+                  
+                  **ITEM 14 — RULING 68b / 72c, THE FACET CONVERSION.** Effect: **the
+                  `Online` facet count DROPS and `In person` gains, one per affected
+                  row (~1 row in 11 on a live pool shaped like A's window B). THIS IS
+                  APPROVED AND EXPECTED — READ IT AS THE FIX, NOT AS CHURN.** Server
+                  and client now agree byte-identically on counts, filter membership
+                  and ledger writes; exactly ONE ledger write moves, always from a
+                  claim to a SILENCE. **Falsifier:** server and client facet counts
+                  disagreeing on any row; a row GAINING a remote claim; the `hybrid`
+                  escape hatch failing (a `jobweb` row whose own location says
+                  "Hybrid" must keep `hybrid`); or `facets.ts` / `events/` /
+                  `app/page.tsx` appearing in the diff — **all three are untouched.**
+                  
+                  **AND ONE CORRECTION TO B's BOUNDARY, MEASURED: `scoreJobs` IS NOT
+                  BYTE-IDENTICAL FOR EVERY READER.** With a ledger carrying a format
+                  preference the score DOES move — the unowned `jobweb` remote row
+                  stops inheriting an `online` affinity it never showed the reader.
+                  **The scoring MATHS is untouched; the INPUT CONCEPT changes, which
+                  is the fix.** With no format entry in the ledger the output IS
+                  byte-identical. **Do not read a moved score here as a regression.**
+                  
+                  ---
+                  **FOR ROUND 27 B, NOT A: V26-J06's SURVIVING HALF.**
+                  `ELIGIBILITY`/`TEAM` have **no field behind them**; closing them
+                  needs TWO NEW EXTRACTED FIELDS, which is a **VALUE-surface
+                  extraction design**, not a render fix. B priced that half THIN and
+                  called it the only one of the 18 that cannot be closed by changing
+                  presentation. C invoked the escape clause rather than widening
+                  inline. **The `SEEN ON` half is a fixture artifact and comes off.**
+                  
+                  **THREE OBSERVATIONS ARE UNRANKED AND ARE FOR A:**
+                  **B26-OBS-01** — a finished event ingestion-KEPT with an empty date,
+                  voided by the A22-01 ambiguity guard (a recorded design; B flagged
+                  rather than reversed). **B26-OBS-02** — `q-chem.com` rendering
+                  `company: "Q"` because the `titleEmployer` capture class has no
+                  hyphen: a WRONG VALUE, not a silence. **C26-OBS-01, new** — a
+                  **live-reachable DOUBLE FULL STOP** in the `Why Peer sent this to
+                  you` prose on the JOB surface: `why-peer-sent-this.tsx:44` appends
+                  a period unconditionally and `job.matchReason` already ends in one
+                  (`mapper.ts:214` passes it straight through). Filed, not fixed —
+                  a value change outside C's items. **Falsifier:** a window whose
+                  match reasons carry no trailing period.
+                  
+                  **STANDING ITEMS A MUST CARRY, BY NAME:** the **62b fuse** (still
+                  LOADED and UNTESTED, vacuous THREE A rounds running, not banked);
+                  **Ruling 55c's online debt — NINTH round undischarged**; **57b**
+                  job surface `organically witnessed`, event surface `designed,
+                  organically unwitnessed`, **SEVENTH** round; **A22-04 at strike
+                  one**; **62d(b) + 63a deferral** (63a's reopen trigger NOT pulled);
+                  **§1d exclusions 1-6 must be walked on the VISUAL surface too** —
+                  that omission is what put V26-J05 on the list, and it was struck;
+                  **Ruling 71b** cited by number for A26-02; **48b restates to
+                  `events 149 / 99 dropped / 0 WRONGLY DROPPED`** and the loop's
+                  unbroken zero is intact; **A25-01 closed on an organic witness**;
+                  **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE** (A's own round-26
+                  instrument correction — do not raise an alarm off a score move).
+                  
+                  **A METHOD NOTE C EARNED THE HARD WAY AND HANDS FORWARD: RUN THE
+                  MUTATION, DO NOT TRUST THE ASSERTION'S NAME.** C wrote **seven**
+                  vacuous or unreachable assertions across this turn and caught every
+                  one that way. The three shapes: an assertion **gated inside an
+                  `if`**; a **bare-substring** hook check (`toContain("data-x")` is
+                  satisfied by `data-x-REMOVED`); and one reading a **hook derived
+                  from the same flag** as the thing it claims to check.
+                  
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **C — round 26, CONTINUATION. PICK UP AT ITEM 14, THE 68b
                   FACET CONVERSION (Ruling 72c). IT IS THE ONLY UNSTARTED ITEM.**
                   Claim the §0d lock first, always. Items 0-10 are DONE and banked
@@ -70644,3 +70877,138 @@ file, +21 tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
 
 **ITEM 14 COMPLETE. RULING 68b IS DISCHARGED. ROUND 26 C IS COMPLETE — TWELVE
 ITEMS, TWELVE COMMITS.**
+
+### Round 26 — Agent C (TURN CLOSE: **ROUND 26 C IS COMPLETE — TWELVE ITEMS, TWELVE COMMITS, NONE UNSTARTED. THE TURN WAS BANKED OUT AT ITEM 10 AND RESUMED AT ITEM 14 WITH ZERO LOSS. RULING 68b IS DISCHARGED, RULING 70 IS DISCHARGED, AND ALL 14 OF RULING 72b's DESIGNED VISUAL ITEMS PLUS THE BAR ARE LANDED EXCEPT V26-J06's RE-SCOPED HALF. §1 GOES TO `A — round 27, GATE CANDIDATE ROUND (value + visual)`.**)
+
+**STATUS: COMPLETE.** The lock is released in this commit.
+
+---
+
+## THE TWELVE ITEMS
+
+| # | item | landed |
+|---|---|---|
+| 0 | Ruling 70's `64c` unfailable assertion | ✔ |
+| 1 | A26-01 — the redundant employer clause, at the mapper | ✔ |
+| 2 | V26-J02 / V26-E02 — the serif adoption | ✔ |
+| 3 | V26-E01 / V26-J10 — the heading hierarchy INVERSION | ✔ |
+| 4 | V26-J03 / V26-E03 — the timeline track | ✔ |
+| 5 | V26-J04 / V26-E04 — the fact-tile band | ✔ |
+| 6 | V26-J07 — the progress bar (Ruling 72b) | ✔ |
+| 7 | V26-E07 — the colon lead-ins | ✔ |
+| 8 | V26-E06 — the star off highlighted cards | ✔ |
+| 9 | V26-E05 — the happenings badge and note | ✔ |
+| 10 | V26-J08 / V26-E08 — four chip roles | ✔ |
+| 14 | Ruling 68b / 72c — the facet conversion | ✔ |
+| — | **V26-J06's surviving half** | **ESCAPE CLAUSE — for round 27 B as a VALUE-side extraction design** |
+
+## FINAL GATE
+
+| | round start (cold) | close |
+|---|---|---|
+| test files | **93** | **97** |
+| tests | **1894** | **2005** |
+| failures | **0** | **0** |
+| `tsc --noEmit` | clean | **clean** |
+| `eslint src` | 1 error, 0 warnings | **1 error (`quiz.tsx:46`), 0 warnings** |
+
+**+4 files, +111 tests, ZERO test deletions, ONE existing test RESTATED with its
+item named.** Solo runs at close: `enrich.test.ts` **56/56**;
+`job-cleanup.test.ts` **6/6**; **`facets.test.ts` 11/11 UNTOUCHED-GREEN** (B's
+named check for item 14 — a red there would have meant the fix leaked into the
+shared function); `scoring.test.ts` **45/45**; `benchmark.test.ts` **1/1**.
+
+## WHAT THE ROUND ACTUALLY MOVED
+
+**The value surface**: one fix (A26-01), 3 of 43 rendered titles.
+**The visual surface**: nine of the fourteen designed items plus the bar — the
+serif system, the heading hierarchy, both cross-surface pairs, the bar, and the
+four small ones. **The facet surface**: server and client stop disagreeing about
+the same row.
+
+**Three components were extracted from duplicated code as a side effect of doing
+the work properly**: `ReportSection` (was defined twice), `ReportTimelineTrack`
+(was written twice), and the shared `REPORT_LABEL_CLASS`. **Each extraction was
+run through the full suite BEFORE any new test was added**, and every prior test
+passed each time — which is the check B asked for.
+
+## **THE METHOD NOTE THIS TURN EARNED, AND IT IS THE MOST USEFUL THING C HAS TO HAND FORWARD**
+
+**RUN THE MUTATION. DO NOT TRUST THE ASSERTION'S NAME.**
+
+C wrote **seven** vacuous or unreachable assertions across this turn and caught
+**every one** by running the mutation rather than reading the test. All seven are
+disclosed in their own item entries. **Three shapes recur:**
+
+1. **A gated assertion** — a body inside `if (html.includes(…))` that the fixture
+   never satisfies. Two of the seven.
+2. **A bare-substring hook check** — `toContain("data-x")` is satisfied by
+   `data-x-REMOVED`, so the mutation that removes the element passes.
+3. **A hook derived from the same flag as the thing being checked** — asserting
+   `data-timeline-dot="accent"` proves nothing about the dot's COLOUR, because
+   both come from the same boolean.
+
+Two more of the same class were found in **B's own designs** (a redundant
+`\s+`/`\b` pair where neither half carries a uniquely-red case, and a never-empty
+guard reachable only by an input `cleanJobTitle` prevents). **Both were KEPT and
+relabelled defensive rather than deleted** — a guard that costs nothing is worth
+having; a guard that lies about being tested is not.
+
+**This is the same fault class Ruling 70 punished at item ZERO of this very
+turn** — a decoration wearing a value lock's name. Finding six more of them
+downstream says the fault is systemic, not incidental.
+
+## DEVIATIONS FROM B's DESIGNS — TWO, BOTH TRACED BEFORE THEY WERE TAKEN
+
+1. **`visaTone` (V26-J08).** B said point its `sponsors` branch at `info`. It
+   also feeds the VISA FACT TILE, whose `tone` admits only `accent | danger` —
+   the typecheck caught it. Moving it would have retinted a tile no item asked to
+   change, which standard 7 forbids. **A separate `visaChipTone` was added; the
+   tile did not move**, and a test asserts it.
+2. **`withRenderedRemote` (item 14).** B specified a "three-line local helper".
+   Two files need it, so a local helper would have been written twice — the
+   duplication this round spent four items removing, and Ruling 32 asks for the
+   predicate to be named once. **Exported from `remote-claim.ts` instead**, beside
+   the predicate it wraps.
+
+## ONE CORRECTION TO A B BOUNDARY, MEASURED RATHER THAN ASSUMED
+
+B wrote that `scoreJobs`'s numeric output must be **byte-identical** after the
+conversion. **Executed: true for a reader whose ledger says nothing about format;
+FALSE for a reader whose ledger carries a format preference — and it must be,
+because the whole point is that the row stops claiming to be online.** The
+scoring MATHS is untouched; the INPUT CONCEPT changes. **Recorded prominently so
+round 27 does not read a moved score here as a regression.**
+
+## TWO TOOLING TRAPS, RECORDED FOR THE NEXT WRITER
+
+1. **`cn()` silently drops `text-caption`.** `cn` is `twMerge(clsx(...))`, and
+   `tailwind-merge` reads `text-caption` as a text COLOUR, then discards it when
+   `text-text-faint` follows. Hit three call sites at once and caught **only**
+   because a test asserted the size was present. Proven, documented at the
+   constant, and locked by a mutation.
+2. **JSX comments.** `{/* … */}` cannot precede an element inside
+   `{cond && ( … )}` — the branch holds one expression and the file stops
+   parsing (hit three times). `// …` inside a JSX opening tag is not a comment.
+
+## THE OBSERVATION C FILED
+
+**C26-OBS-01** — a **live-reachable double full stop** in the `Why Peer sent this
+to you` prose on the JOB surface. `why-peer-sent-this.tsx:44` appends a period
+unconditionally and `job.matchReason` already ends in one (`mapper.ts:214` passes
+it straight through). **Filed, not fixed** — a value change outside C's items.
+Joins **B26-OBS-01** and **B26-OBS-02** as unranked, all three for round 27 A.
+
+## HAND-OFF
+
+**§1 now reads `WHOSE TURN: A — round 27, GATE CANDIDATE ROUND (value +
+visual)`**, carrying the full falsifier table for all twelve landed items, the
+V26-J06 escape-clause note addressed to round 27 B, the three unranked
+observations, and every standing item by name — **62b fuse (loaded, vacuous three
+A rounds), 55c (ninth round), 57b (seventh round), A22-04 strike one, 62d(b)+63a,
+§1d 1-6 on the VISUAL surface, Ruling 71b, 48b at zero, A25-01 closed, and the
+`relevanceScore`-is-not-stable instrument correction.**
+
+**THE GATE STAYS `GATE (0%): NOT MET`.** C does not move it and did not.
+
+**ROUND 26 C IS COMPLETE.**
