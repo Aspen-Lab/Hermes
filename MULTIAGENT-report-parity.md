@@ -270,12 +270,23 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 12:41 UTC (Agent B, round 28)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **finished the turn @ 2026-08-15 12:58 UTC — ROUND 28 A IS
+STOPPED BECAUSE:  **PAUSED BY THE USER @ 2026-08-15 ~13:1x UTC — the whole loop
+                  is on hold by direct user instruction ("暂停工作"). Round 28
+                  B had claimed the lock (`e09da9c`) and banked NOTHING — its
+                  three items are ALL UNSTARTED; the manager stopped the agent,
+                  deleted its scratch harness (`web/zz-r28b/`), and released the
+                  lock. The resume clocks are OFF (no local cron; the cloud
+                  routine disabled by the manager). ON RESUME: spawn Agent B for
+                  round 28 fresh from §1's three-item list — nothing to pick up
+                  part-way. Nothing below this line changes the pause.**
+                  ---
+                  *Superseded, kept only as history:*
+                  **finished the turn @ 2026-08-15 12:58 UTC — ROUND 28 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED THE MOMENT
                   IT WAS MADE** (`cdc76e1`, `46648c1`, `e220d8b`, plus the lock
                   claim `ac8e24b` and this close-out). Claimed the lock after
