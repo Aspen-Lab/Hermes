@@ -270,11 +270,145 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 05:07 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:36 UTC — ROUND 25 C IS
+                  COMPLETE. THREE ITEMS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`ee80407`, `8ddd0c3`, `b4a0019`, plus this final
+                  commit). Claimed the lock cleanly (`6f4ac03`) after `git pull`
+                  (already up to date) and confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`2856e10..6f4ac03`), so the race was won rather than
+                  assumed.** **NO TEST WAS DELETED. NO EXISTING TEST WAS EDITED
+                  except the ONE assertion and ONE title item zero was
+                  COMMISSIONED to restate in place — every other test change is
+                  a pure ADDITION (+17).** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  credential printed, logged, committed or written anywhere —
+                  `.env.local` was NEVER `cat`-ed; `profile.json` was read for
+                  BOOLEAN PRESENCE ONLY.** Every throwaway harness lived OUTSIDE
+                  `src/` (`web/zz-r25c/`, own vitest config, `*.probe.ts`
+                  include pattern) and was **deleted before every gate re-run and
+                  before every commit**; `git status --porcelain
+                  --untracked-files=all` verified clean of scaffolds each time.
+
+                  **THE COLD BASELINE C CONFIRMED BEFORE THE FIRST EDIT: 92
+                  files / 1877 tests, 1877 PASSING — B's figure, not A's**, tsc
+                  clean, eslint exactly the one standing `quiz.tsx:46` error.
+                  **The benchmark was NOT skipped: run solo it executed LIVE for
+                  7.05 s and PASSED.** A third reading of Ruling 68d's flake —
+                  **A red, B green, C green** — and C did not chase it.
+
+                  **THE GATE C LEAVES: 93 files / 1894 tests, 1894 PASSING**
+                  (**+17**: 0 on item zero, +3 on item 1, +14 on item 2; +1
+                  file). `npx tsc --noEmit` **clean**. `npx eslint src`
+                  **exactly the one standing `src/components/persona/quiz.tsx:46`
+                  error, 0 warnings.** **`enrich.test.ts` SOLO: 56 of 56 — the
+                  SolarPACES lock holds after a scoring-side change.**
+                  **`benchmark.test.ts` ran LIVE and PASSED inside the full run.
+                  ZERO FAILURES ANYWHERE.**
+
+                  **ITEM 0 — `benchmark.test.ts:225` RESTATED; THE FLAKE CLASS
+                  IS RETIRED.** One test file, zero source files. Measures the
+                  named flagship rows PRESENT in `survivors`; asserts `score >=
+                  MIN_SCORE` (non-vacuous because the pool is built
+                  `applyFloor:false`) plus the index-page and
+                  provider-attribution value locks; **ZERO PRESENT ROWS IS A
+                  PASS**, and pool composition, rank and top-five membership are
+                  asserted nowhere. **THE TRAP WAS NOT WALKED INTO: 63b's
+                  `toBeGreaterThan(0)` is NOT copied** — the count is
+                  `console.info`-ed as `EVENT_BENCHMARK_FLAGSHIP_ROWS` and
+                  asserted by nothing. **The title was restated too, and C says
+                  so.** **The block is ORGANICALLY EXERCISED, not merely
+                  mechanically live:** 1 flagship row this window,
+                  `10times.com` / `Solid-State Battery Summit`, score **0.4726**
+                  against a 0.35 floor. **Falsifiability proven TWICE: three
+                  live mutations on the real pool (each RED, each naming the
+                  row) and nine constructed-pool cases** including a below-floor
+                  row (RED), the index page in all four URL forms (RED), a
+                  provider-attribution name (RED), **a DATED
+                  `cambridgeenertech.com` page as the admitted control (PASS)**,
+                  **zero rows and an empty pool (PASS)**, and the forbidden
+                  exercise floor demonstrated THROWING and then not shipped.
+
+                  **ITEM 1 — A25-01's REASON LINE NOW GOES THROUGH THE SHARED
+                  PREDICATE.** New module `lib/jobs/remote-claim.ts` exporting
+                  `rendersRemoteClaim`; `mapper.ts` and `scoring.ts` both import
+                  it. **THE SCORE IS BYTE-IDENTICAL ON SIX ROWS, MEASURED ON THE
+                  REVERTED SOURCE THEN THE FIXED ONE** — `0.7545560085694348`,
+                  `0.7230560085694349`, `0.7615560085694348` ×2, `0.325`,
+                  `0.332`. **Exactly two reason lines moved, both `jobweb` +
+                  remote.** No existing test went red (13 files / 651 tests green
+                  before a single test was added). **The reachable edge is
+                  encoded, not discovered:** `Remote-friendly` → `Matched by web
+                  search`, with a `remotive` admitted control that still says
+                  `Remote-friendly`. Negative proofs: **revert → 2 red / 43
+                  passed**; **over-gate the SCORE → 1 red**; **over-gate ALL
+                  SOURCES → 5 red**, including B's predicted free must-keep lock.
+                  **THE THREE COMMISSIONED RAW READERS AND `facets.ts:338` ARE
+                  UNTOUCHED — `git diff --stat` names three files and none is
+                  theirs**, and the new module's own comment names all four and
+                  says converting them now is scope violation.
+
+                  **ITEM 2 — THE 66a DISPLAY FIX, WITH TWO TRACED DEVIATIONS.**
+                  New module `lib/feed/ai-tier.ts` holds `feedsUseAi` once; the
+                  chip and `store/feed.ts`'s opportunity builder both call it,
+                  **so the chip's tier text and the feeds' `aiTier` are provably
+                  the same boolean and a test fails if they ever stop being.**
+                  The chip's **label stays on the papers toggle** (it is the
+                  button's own pressed state); only the **tier and tooltip** move.
+                  The roster's `Tier 0` badge is now **per card**: a heading
+                  keeps it only while every card beneath it is Tier 0, and a
+                  mixed section labels each card (`Tier 0` / `Tier 2`).
+                  **`canUseLocalServerProvider` and the registry are UNTOUCHED —
+                  `git diff --stat -- web/src/lib/llm/` is EMPTY**, and a test
+                  locks `feedsUseAi === false` in production without a key.
+                  **The three honest `Tier 0` badges stay literal.** Negative
+                  proofs: **chip reverted → 3 red / 7 passed**; **badge reverted
+                  → 3 red / 60 passed.** **DEVIATIONS, LOGGED NOT BURIED:** (1)
+                  the predicate was EXTRACTED rather than repointed, because
+                  `canUseAiTools` was itself a hand-written copy and repointing
+                  at a duplicate leaves the drift that caused this defect; (2)
+                  the chip's three strings were moved into a pure `aiModeChip`
+                  because **B's fix was UNTESTABLE as written** — the chip is JSX
+                  in a page component with no test file, so reverting the tier
+                  token would have turned NO test red. Both cost one extra
+                  touched file (`store/feed.ts`), verified green by its own
+                  existing tests before any test was added.
+
+                  **RULING 69 ARRIVED MID-TURN AND C CHECKED IT BEFORE ITEM 2.**
+                  It does not re-scope item 2 — *"PHASE 1 (current, unchanged)"*
+                  and *"round 25 C's banked items are unaffected"* — and its "66a
+                  blast-radius fields stay out of scope" governs what the CENSUS
+                  measures. **But it makes one property load-bearing: because
+                  Phase 1 keeps measuring the no-LLM path, item 2's badge change
+                  had to be a byte-for-byte NO-OP there. It is, and an assertion
+                  says so.**
+
+                  **C RAISES ONE `POLICY — manager decides` AND ONE PROCESS
+                  NOTE.** (1) **64c's OWN INDEX-PAGE CLAUSE IS UNFAILABLE** — it
+                  asserts a `$`-anchored regex against a subject with
+                  ` (index page readmitted?)` appended, so the anchor can never
+                  be reached; executed both ways, raw URL `true`, decorated
+                  `false`, on all four URL forms. **C did NOT fix it** — B's item
+                  3 lists 64c's block under "WHAT MUST NOT CHANGE" and item zero
+                  was scoped to `:225`; **restating a fourth assertion on C's own
+                  authority is the widening the escape clause forbids**, which is
+                  the same call round 24 C made about `:225` itself. Round 24 C's
+                  polarity-inversion mutation could not have caught it. **The fix
+                  is one line and item zero's new block is already written that
+                  way, in the same file.** 64c's NAME clause is fine. (2) While
+                  reverting a mutation, `git checkout --` on
+                  `events/[id]/page.tsx` discarded item 2's uncommitted edits to
+                  that file; they were re-applied and re-verified green before
+                  the commit. **Nothing lost — but undo a mutation with the
+                  reverse string edit, not `git checkout`.**
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:05 UTC — ROUND 25 B IS
                   COMPLETE. FOUR ITEMS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`7c716d2`, `872fbcd`, `58fb03e`, `613e18b`, plus
@@ -4591,6 +4725,154 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **A — round 26, GATE CANDIDATE ROUND — AND THE FIRST VISUAL
+                  CENSUS (Ruling 66b).** Round 25 C is COMPLETE: **three items,
+                  one commit each, each pushed immediately** (`ee80407`,
+                  `8ddd0c3`, `b4a0019`, plus this hand-off). Claim the §0d lock
+                  first, always.
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement. NEITHER B NOR C CAN CLOSE
+                  OR MOVE THIS LINE** — landing a fix is not evidence a difference
+                  is gone.
+
+                  **THE BASELINE A MUST CONFIRM COLD: 93 files / 1894 tests, 1894
+                  PASSING. ZERO FAILURES.** tsc clean; `eslint src` exactly the
+                  one standing `src/components/persona/quiz.tsx:46` error, 0
+                  warnings; `enrich.test.ts` solo 56 of 56. **`benchmark.test.ts`
+                  IS NO LONGER A FLAKE — item zero retired that class, and it now
+                  passes on any honest pool, including one containing neither
+                  flagship row. Ruling 68d's "1876 OR 1877" language is
+                  SUPERSEDED: from here a red anywhere is a real regression.**
+                  The file still stays credential-gated and EXCLUDED FROM THE
+                  GATE; a SKIP is not a PASS.
+
+                  ---
+                  **ROUND 26 A's DOUBLE DUTY — THIS IS THE ROUND THAT CHANGES
+                  WHAT THE LOOP MEASURES.**
+                  **(1) THE ORDINARY VALUE CENSUS**, as every round so far, on
+                  the **NO-LLM path** — Ruling 69 fixes this: `feedAiApiKey`
+                  empty, the 66a blast-radius fields out of scope, **the
+                  measurement profile does NOT change before the Tier-0 gate
+                  closes.** That question is ANSWERED and is no longer open.
+                  **(2) THE FIRST VISUAL / LAYOUT CENSUS (Ruling 66b), against
+                  `Peer-design-spec-original.pdf` at the repo root, PLATE BY
+                  PLATE — plate 02 is the job report, plate 03 is the event
+                  report — RANKED WITH VALUE-PARITY RIGOR.** Same discipline as
+                  the value census: every difference named, ranked, and given a
+                  falsifier. **This is the baseline; nothing visual has ever been
+                  measured, so expect the ranked list to be long and do not
+                  compress it.**
+
+                  ---
+                  **WHAT LANDED THIS ROUND, EACH WITH ITS EXPECTED EFFECT AND ITS
+                  FALSIFIER. A MEASURES; C's WORD IS NOT EVIDENCE.**
+
+                  **ITEM 0 — the `:225` restatement (65 / 68d).** *Expected
+                  effect:* the benchmark no longer flips red when the live pool
+                  happens to lack `cambridgeenertech.com` and the Solid-State
+                  Battery Summit. *Falsifier:* a benchmark red that is NOT a
+                  score/index-page/attribution failure on a PRESENT flagship row
+                  — that would mean the restatement re-introduced a presence
+                  demand. Also watch `EVENT_BENCHMARK_FLAGSHIP_ROWS`: **a count
+                  of 0 is a PASS and must never be reported as a defect.**
+
+                  **ITEM 1 — A25-01's reason line (68b).** *Expected effect:* a
+                  `jobweb` row's *"Why Peer sent this to you"* no longer says
+                  `remote-friendly`; a row whose ONLY reason was that clause now
+                  reads `Matched by web search`. *Falsifiers, both named:* (i) a
+                  `remotive`/`himalayas`/`adzuna`/`usajobs`/`jsearch`/
+                  `arbeitnow` row that STOPS saying `remote-friendly` — the fix
+                  over-reached; (ii) **any job score changing at all.**
+                  **A MUST RE-MEASURE THIS ORGANICALLY, BECAUSE C COULD NOT.**
+                  C's captured live pool was **12 rows, ALL `jobweb`, ALL
+                  `isRemote: false` — ZERO rows carried the raw flag**, and
+                  `lensa.com` did not return. Re-scoring that captured pool on
+                  the fixed and reverted sources was **byte-identical**, which
+                  proves no harm but witnesses nothing. **Status: designed,
+                  targeted-confirmed (tests), ORGANICALLY UNWITNESSED in C's
+                  window.**
+
+                  **ITEM 2 — the 66a display fix (68a).** *Expected effect:* with
+                  a provider reachable the mode chip reads **`Tier 2`** and its
+                  tooltip no longer says "no AI API"; **with no key nothing
+                  changes at all.** On the event report the roster's `Tier 0`
+                  badge is per card. *Falsifiers:* (i) **any visual difference on
+                  the no-LLM path** — item 2 must be a byte-for-byte no-op there,
+                  and round 26 A's visual baseline depends on it; (ii) the chip
+                  and the feeds ever disagreeing again; (iii) a deployed
+                  (production, no key) reader getting tier 2.
+
+                  ---
+                  **COMMISSIONED, DEFERRED, AND OPEN — CARRIED SO NOTHING IS
+                  LOST.**
+                  **(i) THREE RAW-READER CONVERSIONS FOR ROUND 26 B (Ruling
+                  68b), PRICED, NOT C's:** the preference-ledger write
+                  (`scoring.ts:329`), the `facetCounts` sites
+                  (`jobs/pipeline.ts:172/233`), the server-side facet filter
+                  (`jobs/pipeline.ts:254`), and `facets.ts:338`'s duck-typed
+                  divergence — **the one that makes server and client disagree
+                  about the same row.** Round 26 B prices each with a measured
+                  matrix (facet counts before/after; filter membership
+                  before/after; ledger effects). **C left them untouched and the
+                  new `lib/jobs/remote-claim.ts` names all four in its own
+                  comment**, so converting them is a one-line change once priced.
+                  **(ii) 64c's INDEX-PAGE CLAUSE IS UNFAILABLE — `POLICY —
+                  manager decides`,** and it is NEW this round. See §1's
+                  `STOPPED BECAUSE` and item 0's §4 entry for the executed proof.
+                  C did not fix it; the escape clause forbids widening item
+                  zero's scope to a fourth assertion.
+                  **(iii) RULING 69's PHASE 2** — the Tier 1/2 deep-report ABC
+                  campaign — **starts only after Phase 1's gate closes**, and the
+                  manager owes its three-part kickoff checklist first.
+
+                  **THE 62b FUSE LINE AND RULING 64a's TRIGGER ARE REACHABLE
+                  AGAIN — DO NOT CARRY "VACUOUS / UNREACHABLE" FORWARD.** Round
+                  25 A recorded both on a window with no month-granularity row.
+                  **B saw one an hour later and C saw it again:** `10times.com` /
+                  `Solid-State Battery Summit` carrying `date: '2026-08'` was
+                  live in C's own benchmark run. **Round 26 A re-checks both by
+                  measurement.** City coverage read **0.385 (5 of 13)** for both
+                  B and C, against round 24's 0.333.
+
+                  **RULING 57b: the JOB surface is `organically witnessed`
+                  (RESTORED by Ruling 68c — 67a's withdrawal is itself
+                  withdrawn, on the SHIPPED call order with a negative control);
+                  the EVENT surface is still `designed, organically
+                  unwitnessed`.**
+                  **RULING 55c's online must-keep debt — EIGHTH round,
+                  UNDISCHARGED, and named rather than dropped.**
+                  **A22-04 IS OPEN AT STRIKE ONE.**
+                  **RULING 62d(b) + 63a — the folded deferral. Neither half is
+                  closed; 63a's reopen trigger was NOT pulled again this round;
+                  the corpus carries unchanged.**
+
+                  ---
+                  **CARRIED FORWARD FROM ROUND 25 A, UNCHANGED BY B OR C.** Both
+                  round-24 fixes CONFIRMED, A24-01 organically on `gain.inl.gov`.
+                  The event surface measured **ZERO** differences across every
+                  column. Tallies: event names **0 of 12**; item-KIND **0 of 12**;
+                  place **0 of 12 / 0 of 4 non-null**; invented dates **0 of 13**;
+                  job employer **0 of 4 non-null**, cumulative 34a **9 of 115**;
+                  34a events cumulative **11 of 181**; job item-shape **0 of 11**;
+                  **job REASON-LINE 1 of 11 — A25-01, now FIXED, and round 26 A
+                  re-measures it**; Ruling 33 **0 new, cumulative 2 of 92**; 52b
+                  **zero admitted, cumulative 5**; 48b **events 149/98/0, jobs
+                  100/49/0**; 58b **events 17→13, jobs 14→11**. Ruling 37 zero, 44
+                  zero, B18-03 zero. Thresholds unchanged: `OPPORTUNITY_MIN_SCORE`
+                  0.35, `MIN_SCORE` (events) 0.35, `MAX_POSTING_AGE_DAYS` 270,
+                  `MAX_ENRICHMENT_CANDIDATES` 40.
+                  **EXCLUSIONS WALKED BY NAME: 45a (`euagenda.eu` NOT fetched),
+                  45b (41c's three hosts NOT hunted), 39a/40, 42c, 36, 33, 50a,
+                  39b/61a, B18-02's three hosts, B18-03,
+                  `stemgateway.nasa.gov`, 42a's Gap B, and §1d exclusions 7 and
+                  8.** **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+                  Full evidence in §4's three "Round 25 — Agent C" entries —
+                  **work from those, not from this summary.**
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **C — round 25.** Round 25 B is COMPLETE: **four items, one
                   commit each, each pushed immediately** (`7c716d2`, `872fbcd`,
                   `58fb03e`, `613e18b`, plus this hand-off). Claim the §0d lock
