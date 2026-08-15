@@ -69164,3 +69164,150 @@ fires" and be caught out by the query-string case.
 live-gated block whose loop is empty this window, so no counted test moves.**
 
 **ITEM 0 COMPLETE. Item 1 — A26-01's title fix at the mapper — follows.**
+
+### Round 26 — Agent C (item 1 of 15+: **A26-01 LANDS AT THE MAPPER, EXACTLY WHERE B DESIGNED IT. 19 NEW TESTS, ONE SHARED MODULE, ONE FIELD. THE LIVE RE-MEASUREMENT CONFIRMS B's COUNT — 3 TITLES CHANGE — AND ORGANICALLY CONFIRMS B's CORRECTION OF A's MECHANISM, BECAUSE `magnet.me`'s AquaBattery ROW ARRIVES THIS WINDOW STILL CARRYING THE CLAUSE A BELIEVED IT STRIPS. AND TWO OF B's DESIGNED CLAUSES TURN OUT NOT TO CARRY UNIQUELY-RED CASES; C MEASURED IT AND SAYS SO RATHER THAN CLAIMING SIX INDEPENDENT LOCKS.**)
+
+**STATUS: item 1, banked on its own commit.** Three files:
+`web/src/lib/jobs/employer-clause.ts` (new), `web/src/lib/jobs/mapper.ts` (one
+field + one import), `web/src/lib/jobs/employer-clause.test.ts` (new, 19 tests).
+**No test deleted, none edited.** `facets.ts`, `jobweb.ts`, the employer guard
+chain and 62d(a)'s parenthetical path are **untouched**. Live probe lived at
+`web/zz-r26c/` with its own config and a `*.probe.ts` include, and was
+**deleted before this commit** — `git status --porcelain --untracked-files=all`
+shows only the three files above. No credential printed, logged or written.
+
+---
+
+## WHAT SHIPPED
+
+`stripRedundantEmployerClause(roleTitle, company)`, B's rule verbatim, in a
+standalone module with **zero imports** (round 25 C's `./remote-claim`
+precedent, so a test locks the invariant directly rather than through a
+component). Called at **`mapper.ts`'s `roleTitle` FIELD only**:
+
+```ts
+roleTitle: stripRedundantEmployerClause(roleTitle, company),
+```
+
+**THE ORDERING CONSTRAINT IS HONOURED AND, MORE IMPORTANTLY, LOCKED.** `roleTitle`
+itself is untouched, so `summarizeJob(...)` above still receives the UNSTRIPPED
+title for its B5-07/R4 title-echo check. C did not take that on trust: the test
+`still hands summarizeJob the UNSTRIPPED title, so the echo check keeps working`
+feeds an owned body whose last sentence ends by echoing the FULL title
+(`… Opening For Internship, Battery Engineering (Summer 2026) at Tesla.`).
+`summarize.ts:348` drops an echoing sentence outright (`return null`), so **if a
+later round moves the call above `summarizeJob`, that junk sentence starts
+appearing in the summary and this test goes red.** The constraint now has a
+witness instead of a comment.
+
+---
+
+## THE NEGATIVE PROOFS — ELEVEN MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **19 of 19 passing**. Each mutation applied alone, suite re-run, file
+restored from a byte-identical backup:
+
+| # | mutation | red |
+|---|---|---|
+| **M6** | **module FULL REVERT — the function returns its input** | **8 failed / 11 passed** |
+| **M0** | **call-site revert — `roleTitle` passed through unstripped** | **2 failed / 17 passed** |
+| M1 | drop `escapeRegExp` | **1 failed** |
+| M2 | drop the never-empty guard (`stripped ? stripped : roleTitle`) | **1 failed** |
+| M3 | drop `company?.trim()` | **1 failed** |
+| M4 | drop `.trim()` on the result | **1 failed** |
+| M5 | drop the `if (!employer) return roleTitle` guard | **2 failed** |
+| M7 | drop the `\s*$` end anchor (over-reach) | **2 failed** |
+| M8 | add the `i` flag (over-reach) | **1 failed** |
+| **M9** | **drop `\s+` before `at`, keep `\b`** | **GREEN — 19 passed** |
+| **M10** | **drop `\b`, keep `\s+`** | **GREEN — 19 passed** |
+| **M11** | **drop BOTH `\s+` and `\b`** | **1 failed** |
+
+**M6's 8 decomposes exactly**: 3 live-row strips + `escapeRegExp` + employer-trim
++ result-trim (6 module cases) + 2 mapper-level cases. The 11 that survive are
+the 8 admitted controls plus the two "unchanged" boundary locks plus the mapper's
+non-redundant case — **which is why they are labelled ADMITTED CONTROLS in their
+own `describe` and are not counted as proof the fix landed.** They exist for A's
+own second falsifier (over-reach), which is the more expensive failure.
+
+---
+
+## **TWO CORRECTIONS TO B's DESIGN, BOTH FOUND BY EXECUTION, BOTH LOGGED**
+
+**(1) `\s+` AND `\b` ARE REDUNDANT WITH EACH OTHER. NEITHER CARRIES A
+UNIQUELY-RED CASE.** B's rule reads `\s+\bat\s+`, and C's first instinct was to
+claim a lock for each. M9/M10/M11 above say otherwise: **either one alone blocks
+`Battery Engineer format Tesla`, and only removing BOTH turns it red.** The test
+now states that the case locks the PAIR, and the module comment says the same,
+because a later round citing either half as load-bearing would be citing a
+decoration — **the exact fault Ruling 70 punished one item ago.** **Both clauses
+are KEPT**: they are B's executed design, they cost nothing, and `\s+` does bound
+the shape marginally harder (`\bat` alone would also fire after a non-word
+character, `Battery Engineer/at Tesla`).
+
+**(2) THE NEVER-EMPTY GUARD NEEDS A LEADING SPACE TO BE REACHED AT ALL, AND C's
+FIRST TEST CASE DID NOT REACH IT.** `stripRedundantEmployerClause("at Tesla",
+"Tesla")` returns its input for a completely different reason — the pattern
+requires whitespace BEFORE `at`, so on a trimmed title it never matches. M2 came
+back GREEN and that is how it was caught. **`" at Tesla"` is the only shape that
+reaches the guard** — which is precisely B's case 24, the one B recorded as its
+own wrong expectation on an unreachable input, **and B was right on both counts**:
+the guard's only witness is an input `cleanJobTitle` cannot produce. The test now
+asserts BOTH strings and comments why each is unchanged for a different reason.
+**The clause is defensive, it is genuinely locked, and it is labelled defensive.**
+
+---
+
+## LIVE RE-MEASUREMENT — B's COUNT CONFIRMED, AND B's MECHANISM CONFIRMED ORGANICALLY
+
+Shipped `buildDailyJobPool` on Ruling 69's fixed no-LLM profile
+(`aiTier: 0`, `topN: 50`). **Pool 14 rows, 14 rendered. EXACTLY 3 rendered
+titles differ from the provider's raw title, and all three differences are
+exactly the redundant clause — zero collateral, zero rows lost, every employer
+field intact:**
+
+| rendered title, before → after | company |
+|---|---|
+| `Spring Engineering Internship at Mantel Capture, Inc` → `Spring Engineering Internship` | `Mantel Capture, Inc` |
+| **`ION Exchange Membrane Expert in Amsterdam at AquaBattery` → `ION Exchange Membrane Expert in Amsterdam`** | `AquaBattery` |
+| `Internship, Battery Engineering (Summer 2026) at Tesla` → `Internship, Battery Engineering (Summer 2026)` | `Tesla` |
+
+**THE SECOND ROW IS THE ROUND'S BEST WITNESS AND IT ARRIVED ON ITS OWN.**
+`magnet.me`'s AquaBattery posting is **the exact row A cited as PROOF that the
+build already strips this shape on other hosts.** This window it arrives
+untruncated, and the shipped build **kept the clause** — which is what B
+predicted by execution and A predicted the opposite of. **B's correction of the
+mechanism is now confirmed organically, on A's own named row, rather than only on
+constructed input.**
+
+**SCOPE STATED HONESTLY: this is 3 of 14 POOL rows, not B's 3 of 43 OFFERED-corpus
+rows.** B swept the whole offered corpus (112 offered, union 96, 43 rendered); C
+measured the shipped pool, which is what a reader actually sees. The hosts differ
+from B's three (`grad.wisc.edu` and `careers.jnj.com` are not in this window's
+pool; `magnet.me` and `mantelcapture.com` are) — **the CLASS is confirmed on five
+distinct hosts across the two measurements, which is stronger than either alone.**
+The count landing on 3 in both is a coincidence of window size and is not offered
+as a match.
+
+---
+
+## TESTS AT RISK — B's LIST WALKED, EACH EXECUTED
+
+- **`job-cleanup.test.ts:49` — the one existing test in range. SOLO: 6 of 6
+  PASSING, untouched.** It asserts `roleTitle` is `Research in Reno at American
+  Battery` with `companyOrLab` `undefined`, so it already encoded the single most
+  important boundary and it still does.
+- **`enrich.test.ts` SOLO: 56 of 56.** Its `Process R&D Senior Scientist …` title
+  comes back byte-identical, as B measured.
+- `dedup.test.ts`, `scoring.test.ts`, `job-posting-scope.test.ts`,
+  `employer-identity.test.ts`, and the four route-level files B walked by name —
+  **all green in the full gate; none needed an edit.**
+
+---
+
+## GATE AFTER THE ITEM
+
+**94 files / 1913 tests, 1913 PASSING — ZERO FAILURES** (was 93 / 1894; **+1
+file, +19 tests, net +19**). `tsc --noEmit` clean. `eslint src` exactly the one
+standing `quiz.tsx:46` error.
+
+**ITEM 1 COMPLETE. The visual work follows, cheapest-first per B's designs.**

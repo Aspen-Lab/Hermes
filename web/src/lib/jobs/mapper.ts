@@ -12,6 +12,7 @@ import {
   cleanJobSubtitlePart,
   cleanJobTitle,
 } from "@/lib/opportunities/job-cleanup";
+import { stripRedundantEmployerClause } from "./employer-clause";
 import { rendersRemoteClaim } from "./remote-claim";
 import type { ScoredJobItem } from "./types";
 
@@ -186,7 +187,14 @@ export function scoredJobToJob(
 
   return {
     id: item.id,
-    roleTitle,
+    // A26-01 (round 26 C, item 1). The employer is stated twice on two adjacent
+    // lines — title `… at Tesla` over subtitle `Tesla` — on three hosts this
+    // window (`ev.careers`, `grad.wisc.edu`, `careers.jnj.com`). The strip lands
+    // HERE, at the field, and NOT on `roleTitle` itself: `summarizeJob(...)`
+    // above takes `roleTitle` as its title-echo check, an ordering B5-07/R4
+    // established deliberately and which is commented at :132. Shortening that
+    // input would weaken a check nobody asked to weaken.
+    roleTitle: stripRedundantEmployerClause(roleTitle, company),
     companyOrLab: company,
     location,
     place: item.place,
