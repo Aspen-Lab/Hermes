@@ -61981,3 +61981,29 @@ expect(topFive.some((item) =>
 **ITEM 3 STOPS HERE, AND C's TURN IS COMPLETE — three items, three commits, each pushed immediately.**
 
 ---
+
+### Round 24 — MANAGER verification of Agent C, RULING 65, and the ROUND-24 CLOSE
+
+**Date: 2026-08-15. Every check re-executed by the manager, not inherited.**
+
+**THE GATE, INDEPENDENTLY RE-RUN:** `cd web && npx vitest run` → **92 files / 1877 tests, 1876 passing** — exactly C's figure (+34 tests over 1843; test numstat across the turn shows additions everywhere except `benchmark.test.ts`'s 157/10, the ten replaced lines being exactly the two commissioned restatements, documented in place). Sole failure: **`benchmark.test.ts:225`** — the third stale assertion, below. `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error; **`enrich.test.ts` SOLO: 56/56 — the SolarPACES lock holds.** The 57b guard files: range-diff empty again.
+
+**ONE NEGATIVE PROOF RE-EXECUTED BY THE MANAGER (item 2, whole-file form):** `eventweb.ts` restored to its pre-`24978bc` source with all shipped tests kept → **1 red in `eventweb.test.ts`** (the call-site test), restored → **183/183 green**, tree clean. C's finer per-clause counts (first-segment 3, narrowing 3, and the compile-red caveat named rather than banked) are accepted from its log — a C that separates compile-noise from information in its own negative proofs is the discipline working.
+
+**C's DEVIATIONS AND STOPS, ALL ACCEPTED:** the composed predicate `isEventIndexResult` (B's entry pulled two ways; only composition satisfied both — traced first, logged prominently); the card's explicit end-suppression guard (a bare deletion would print `Aug 2026–Sep 12, 2026` — caught by construction before it shipped); the site-8 correction of B's "latent" (a real 5-days-vs-4 render on a timed-end row, fixed with a convention pin honestly labelled as TZ-dependent); and the escape-clause stop on `formatDate("2026")` returning `Dec 31, 2025` — **measured unreachable, locked at today's answer, not fixed** — exactly what the clause is for.
+
+**THE POOL RE-MEASUREMENT IS ACCEPTED AS DESIGNED:** paired back-to-back runs, reverted and fixed, four runs identical (14 survivors, 4 with city) — the 12→14 move since the cold baseline is provider turnover, proven by the identity, not a fix effect. Neither target row was offered; **both A24 fixes therefore close by string-replay this round, and round 25 A's live census is their organic check.**
+
+---
+
+## RULING 65 — THE BENCHMARK'S THIRD STALE ASSERTION (`benchmark.test.ts:225`). BINDING.
+
+C found the top-five **presence** assertion red for the same stale-world reason as the two 64c restated — its expectations describe the pre-guard world — and **correctly did not touch it: 64c scoped exactly two assertions, and C does not widen a ruling's scope inline.** While it stands, the restated 64c block below it cannot execute.
+
+**Ruling: the assertion is COMMISSIONED FOR RESTATEMENT — same treatment as 63b/64c (restated to the new contract, item named, never deleted) — as ITEM ZERO of the NEXT code turn**, whichever comes first: round 25 C if the round produces one, or the round-25 B turn if the manager routes it there. **If the loop reaches its final close before another code turn exists, it discharges at the close as a named hand-back item in the completion report** — it is gate-excluded test hygiene, not report parity, and it does not gate. Round 25 A treats the benchmark's `:225` red as EXPECTED and carries it by name.
+
+---
+
+**ROUND 24 IS CLOSED.** A (two differences, three self-corrections disclosed) → manager (order + anchor scope) → B (three items, five render sites for A's one, the anchor proven clean on a simulated clock, two of its own designs killed; three POLICY) → manager (Ruling 64) → C (three items, +34 tests, one escape stop, one POLICY) → manager (this entry, Ruling 65). **Nothing carries past this close undecided.** `WHOSE TURN: A — round 25, GATE CANDIDATE ROUND` stands exactly as C wrote it, with the full carry list. **The gate stays `GATE (0%): NOT MET` — only round 25 A's live measurement can move it, and only the manager closes, after an independent re-measurement, per Ruling 30, THE GATE RULE, and the user's reaffirmed strict gate.**
+
+---
