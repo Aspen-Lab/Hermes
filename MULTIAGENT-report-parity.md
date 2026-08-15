@@ -63598,3 +63598,25 @@ and B should price that before recommending it. **The manager orders the work.**
 **ROUND 25 A IS COMPLETE. Four parts, one commit each, each pushed immediately.
 No code was changed, no test was deleted, edited or added, and no file except
 this one was touched.**
+
+---
+
+### Round 25 — MANAGER verification of Agent A, RULING 67a–b, and the hand-off to B
+
+**Date: 2026-08-15. Checked, not inherited.** Append discipline verified by numstat (365/0, 321/0, 354/0, 499/1, and the 46/6 §1 correction — the 6 exactly the hand-off block being corrected to carry Ruling 66). **The gate re-run by the manager: 92 files / 1877 tests, 1876 passing — byte-for-byte A's figure**; sole failure `benchmark.test.ts:225`, expected per Ruling 65, carried by name. A changed no code (`git log 0a747f3..HEAD -- web/src/` empty, re-confirmed).
+
+**THE TURN IS VERIFIED AND THE METHOD IS ACCEPTED** — including the mid-turn ruling handled exactly per the §0d late-ruling protocol (A re-claimed, corrected §1's hand-off to B's THREE items, and exempted itself from 66b by the ruling's own effective-date clause — all correct); the report-page render check that round 24 missed, run properly this round (all seven sites, static markup, zero invented days, zero weekday tokens on the month row); the event surface's FIRST all-zero census; three self-corrections disclosed with wrong numbers named; and the reason-line column ADDED to the tally sheet rather than letting a missing column hide A25-01. **The vacuous-zero discipline on the 62b fuse (no month row exists → the zero proves nothing → mechanism re-proven by replay instead) is exactly right.**
+
+---
+
+## RULING 67 — THE TWO UNRANKED FLAGS, DECIDED. BINDING.
+
+**67a. RULING 57b's JOB-SURFACE STATUS IS CORRECTED — THE ROUND-23 "ORGANICALLY WITNESSED" CREDIT IS WITHDRAWN.** A executed the shipped guard on the live `Battery Ventures` item in the shipped call shape: `isOwnerNameTopicCollision` returns **`false`** (conjunct 3 blocks it). The row still never reaches a pool and no reader is harmed — but **the mechanism credited with the exclusion is not the one operating**. Canonical status, BOTH surfaces, from this ruling forward: **`designed, targeted-confirmed (tests), organically unwitnessed`**. The round-23 upgrade stays in the log as history with this correction pointing at it (a dated amendment, per the ruling-amendment convention). **One bounded question rides to round 25 B, mechanism only, no design: establish by execution what DOES drop the `Battery Ventures` row** — the ledger should credit the real mechanism, and if the guard turns out unreachable on live shapes, that fact belongs on the record; if B's budget is tight it may defer the question explicitly, never silently.
+
+**67b. 57b's EVENT-SIDE ROUND COUNT — RESOLVED BY RECOMPUTATION.** Round 24 A and round 24 C disagree by one; adjudicating two stale counters is worthless. **Canonical figure: round 25 A part 3's recomputed count, and every future carry quotes that line.** Discrepancy closed.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 25` stands as A corrected it. **B's work list, in the manager's order: (1) Ruling 66a — the AI-tier contract** (establish by execution what `aiTier` the client sends on `/api/jobs/feed` and `/api/events/feed` and from which UI state; where each pipeline consults `resolveProvider`; detection vs pinning; then design the fix to the user's contract — a hooked key means jobs/events engage Tier 1/2 — plus the census blast-radius report the ruling requires; the manager rules on the measurement-profile change before any A measures the LLM path); **(2) A25-01** (the reason line built at scoring time from the raw flag — A22-03(b)'s sixth consumer; fix direction through the gated flag; tests at risk grepped); **(3) Ruling 65's benchmark `:225` restatement design** (same treatment class as 63b/64c — B designs the restated contract, C implements); **plus 67a's bounded mechanism question.** The gate stays `GATE (0%): NOT MET` — and per Ruling 66b this round's verdict is the last measured on value parity alone; round 26 A opens the visual census.
+
+---
