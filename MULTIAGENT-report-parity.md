@@ -270,11 +270,169 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 04:42 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 05:05 UTC — ROUND 25 B IS
+                  COMPLETE. FOUR ITEMS, ONE COMMIT EACH, EACH PUSHED
+                  IMMEDIATELY** (`7c716d2`, `872fbcd`, `58fb03e`, `613e18b`, plus
+                  this final commit). Claimed the lock cleanly (`c0932c5`) after
+                  `git pull` (already up to date) and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`08820a4..c0932c5`), so the race was won rather than
+                  assumed.** **B CHANGED NO CODE, DELETED NO TEST, EDITED NO
+                  TEST, ADDED NO TEST, AND TOUCHED NO FILE EXCEPT THIS ONE** —
+                  `git log 0a747f3..HEAD -- web/src/` is **EMPTY**. All four
+                  appends were pure insertions verified by `--numstat` (284/0,
+                  175/0, 177/0, 129/0), written via scratchpad files and
+                  `cat >>` from bash — **NOT PowerShell.** No branch, worktree or
+                  PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  credential printed, logged, committed or written anywhere.
+                  `.env.local` was NEVER `cat`-ed — only variable NAMES were
+                  listed, by a regex that captures the name and discards
+                  everything after `=`; `feedAiApiKey` was checked as a BOOLEAN.**
+                  The throwaway harness lived OUTSIDE `src/` (`web/zz-r25b/`, own
+                  vitest config, `*.probe.ts` include pattern) and was **deleted
+                  before the gate re-run and before every commit**;
+                  `git status --porcelain --untracked-files=all` clean, verified.
+                  **No untracked `*.test.ts` was ever created under `web/src/`.**
+
+                  **B COULD NOT REPRODUCE §1's BASELINE, AND SAYS SO BEFORE
+                  ANYTHING ELSE. THE GATE B MEASURED COLD IS 92 FILES / 1877
+                  TESTS, 1877 PASSING — ZERO FAILURES**, not the `1876 passing`
+                  with a red `benchmark.test.ts:225` that §1, A and the manager
+                  all recorded. **B ran the benchmark SOLO to prove it had not
+                  merely been skipped: it executed LIVE for 7.15 s and PASSED**,
+                  because this hour's pool contained a `Solid-State Battery
+                  Summit` row (on `10times.com`) that satisfies `:225`'s second
+                  arm. **`:225` IS AN HOUR-TO-HOUR FLAKE, NOT A STANDING RED** —
+                  A measured red, B measured green, nothing changed between.
+                  `tsc` **clean**; `eslint src` **exactly the one standing
+                  `quiz.tsx:46` error, 0 warnings**; `enrich.test.ts` **SOLO
+                  56 of 56 — the SolarPACES lock holds.**
+
+                  **ITEM 1 — RULING 66a: THE VERDICT IS NEITHER DETECTION NOR
+                  PINNING NOR SERVER POLICY. IT IS DISPLAY. THE JOB AND EVENT
+                  PIPELINES ARE *ALREADY* RUNNING THE LLM ON LOCALHOST**, proven
+                  by a live `POST /api/jobs/report` with **no `llmOverride`**
+                  returning **`noLlm:false`** — only reachable past
+                  `route.ts:62`'s provider guard, so `resolveProvider(null)`
+                  resolved the local Vertex Gemini and `generateJsonText` was
+                  called. **The client sends `aiTier: 2` on BOTH feeds** — probed
+                  across both `NODE_ENV` values on the user's real profile shape.
+                  **The chip and the tier are two expressions that never meet:**
+                  the chip renders from `aiSearchActive = aiPaperSearchEnabled &&
+                  canUseAiTools` (`page.tsx:487`, `:822-823`), and
+                  `aiPaperSearchEnabled` is a **PAPERS** toggle defaulting to
+                  `false`, while the feeds send from `hasUserLlmOverride ||
+                  hasLocalDeveloperProvider` (`store/feed.ts:388`). **So the
+                  tooltip "Auto search uses Tier 0 fixed scoring and no AI API"
+                  is FALSE for jobs/events whenever a key is hooked.** **The four
+                  `Tier 0` ReportBadges are HARD-CODED per-section provenance
+                  labels the plates require (Ruling 11) and THREE MUST NOT BE
+                  TOUCHED**; the fourth pair (`events/[id]/page.tsx:1516`,
+                  `:1580`) is the one place model prose renders under a badge
+                  saying it did not. **`canUseLocalServerProvider` is respected
+                  and untouched — the `production/local-dev` probe row reads tier
+                  0 / enrichment false, so deployed-user safety already holds,
+                  and the local path sends NO override so no server key can
+                  leak.** **ONE `POLICY — manager decides`: which chip contract
+                  to adopt (B recommends making the tier text read the real
+                  predicate).**
+
+                  **THE CENSUS BLAST RADIUS IS PRICED, AS 66a REQUIRES: ELEVEN
+                  ENRICHMENT FIELDS — SEVEN ADD SECTIONS THAT DO NOT EXIST AT
+                  TIER 0, FOUR CHANGE THE PROVENANCE OF TEXT THE CENSUS ALREADY
+                  SCORES, ONE IS DEAD PAYLOAD, AND ONE ELEMENT DISAPPEARS.** The
+                  four that move measured columns: `roleSummary` (jobs "What the
+                  role is" — REPLACED wholesale), `sponsorshipRead` (SUPPRESSES
+                  the Tier 0 visa blockquote and DROPS its `— from the job
+                  description` attribution), `condensedDescription` (events "What
+                  actually happens there" — REPLACED), and `judgedAttendees[].why`
+                  (events "Who'll be in the room" — merges per card AND promotes
+                  rows out of the tail, changing roster MEMBERSHIP, under the
+                  hard-coded Tier 0 badge). `competitiveness` is never rendered.
+                  `TierUpgradeBlock` renders ONLY without enrichment, so it
+                  vanishes. **A's standing method line "page-fetch enrichment
+                  ran, LLM enrichment did not" HAS BEEN FALSE ON THE DEEP-REPORT
+                  PATH ALL ALONG — that route never had a tier gate. Every past
+                  census measured the FEED pool, where `aiTier` only buys search
+                  queries. THE MANAGER RULES ON THE MEASUREMENT PROFILE BEFORE
+                  ANY A MEASURES THE LLM PATH, and should sequence this against
+                  66b, because round 26 A's visual baseline depends on which path
+                  it renders.**
+
+                  **ITEM 2 — A25-01 REPRODUCED BYTE-IDENTICALLY, AND B
+                  CONTRADICTS A ON SCOPE.** Producing line **`scoring.ts:296`**,
+                  rendered at `app/jobs/[id]/page.tsx:1310-1314`. A's hand-off
+                  says "ONE mechanism with ONE render site, not a sweep"; **the
+                  sweep found NINE sites reading the flag and THREE MORE UNGATED
+                  RAW READERS** — `scoring.ts:329` (writes `facet:format:online`
+                  into the preference LEDGER), `jobs/pipeline.ts:172/233` (the
+                  `facetCounts` sent to the client) and `jobs/pipeline.ts:254`
+                  (server-side facet filtering). `facets.ts:338` is **duck-typed**,
+                  so the same function reads the RAW flag from the server pipeline
+                  and the GATED flag from `app/page.tsx:417` — **server and client
+                  disagree about the same row.** **B does NOT rank these as parity
+                  differences** (facet/ledger surfaces, not the deep report, and A
+                  measured nothing there) — **`POLICY — manager decides` whether
+                  they are in scope; B says not this round.** **Fix: one shared
+                  predicate in a new tiny module imported by both `mapper.ts` and
+                  `scoring.ts` (a new module, not a `mapper.ts` export, to keep
+                  cycle risk at zero). THE SCORE PROVABLY CANNOT MOVE — `score` is
+                  computed at `scoring.ts:421`, `reasonFor` at `:430`, and nothing
+                  in the score reads it.** **NO EXISTING TEST GOES RED:
+                  `scoring.test.ts:126`'s fixture is `source: "remotive"`, so it
+                  stays green and becomes a free must-keep lock.** **The reachable
+                  edge C must not be surprised by: a `jobweb` row whose ONLY
+                  clause was the remote one reads `Remote-friendly` TODAY and
+                  becomes `Matched by web search` after the fix — measured, not
+                  predicted, and it reinserts nothing (Ruling 26 holds).**
+
+                  **ITEM 3 — RULING 65's RESTATED `:225` CONTRACT IS DESIGNED,
+                  AND ITS PREMISE IS CORRECTED (see the baseline above).**
+                  **MEASURES** the named flagship rows PRESENT in `survivors`;
+                  **ASSERTS** `score >= MIN_SCORE` (**non-vacuous because the
+                  pool is built `applyFloor:false` at `events/pipeline.ts:94,
+                  109, 232`, so a named row CAN sit below the floor**) plus the
+                  index-page and provider-attribution value locks; **TOLERATES**
+                  zero present rows as a PASS, asserting nothing about pool
+                  composition, rank or top-five membership. **THE TRAP, NAMED: C
+                  MUST NOT COPY 63b's `expect(namedRowsExercised).toBeGreaterThan(0)`
+                  INTO THIS BLOCK** — these are the rows that go absent, so a
+                  floor of 1 IS the presence demand in disguise; count and
+                  `console.info` instead, asserting nothing. **The ranking claim
+                  cannot be made live-safe** (`topFive` is a sorted prefix, so any
+                  ordering assertion is tautological) **and goes to deterministic
+                  fixtures per 63b's own precedent.** The test's TITLE should be
+                  restated too — that is not a deletion.
+
+                  **ITEM 4 — 67a's BOUNDED QUESTION IS ANSWERED, NOT DEFERRED.
+                  THE GUARD *IS* THE OPERATING MECHANISM.**
+                  `isOwnerNameTopicCollision` returns **`true`** on the shipped
+                  item shape and its `continue` at `scoring.ts:375` drops the row.
+                  **A's `false` came from passing the PRE-SPLIT offered title:**
+                  `webResultToRawJobItem` (`jobweb.ts:1201`) splits the title
+                  first, so `Battery` leaves the title and lands in the owner
+                  slot — conjunct 1's exact case — and **conjunct 3 stops
+                  blocking.** All five conjuncts walked and passing. **Negative
+                  control run: no other gate drops the row** (`isExpiredPosting`
+                  false, `isNonJobArticle` false, `passesRequiredGate` true, and
+                  ingestion returns a live item on all five URL shapes) **and
+                  without the guard it scores 0.624 against a 0.35 floor, so it
+                  would REACH THE READER.** **Condition stated, not glossed: the
+                  guard fires only when the title splits into an employer segment
+                  — on the firm's OWN site no company parses and it returns
+                  `false`.** **B FLAGS 67a's WITHDRAWAL, DOES NOT REVERSE IT
+                  (`POLICY — manager decides`), and proposes a one-line
+                  settlement: the next A's live job pull records the row's
+                  OFFERED URL and its parsed `company`/`title`.** 67b untouched.
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 04:35 UTC — ROUND 25 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED
                   IMMEDIATELY** (`a44acd2`, `818b2ae`, `e5721ff`, plus this
@@ -4433,6 +4591,110 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **C — round 25.** Round 25 B is COMPLETE: **four items, one
+                  commit each, each pushed immediately** (`7c716d2`, `872fbcd`,
+                  `58fb03e`, `613e18b`, plus this hand-off). Claim the §0d lock
+                  first, always. **B changed no code and touched no file but this
+                  one.**
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.
+                  Only a later A census can move it, and only the manager closes,
+                  after an independent re-measurement. NEITHER B NOR C CAN CLOSE
+                  OR MOVE THIS LINE** — landing a fix is not evidence a difference
+                  is gone. Per Ruling 66b, round 25's verdict is the **last one
+                  measured on value parity alone**; round 26 A opens the visual
+                  census.
+
+                  **THE BASELINE C MUST CONFIRM COLD — AND IT IS NOT THE ONE §1
+                  CARRIED INTO THIS ROUND. B MEASURED 92 FILES / 1877 TESTS,
+                  1877 PASSING, ZERO FAILURES.** `tsc` clean; `eslint src`
+                  exactly the one standing `src/components/persona/quiz.tsx:46`
+                  error, 0 warnings; `enrich.test.ts` solo 56 of 56.
+                  **`benchmark.test.ts:225` is an HOUR-TO-HOUR LIVE FLAKE, not a
+                  standing red** — B ran it solo, live, 7.15 s, and it PASSED.
+                  **So C may see EITHER 1877 or 1876 passing and NEITHER is a
+                  regression. Do not chase it. Do not report it as new. It stays
+                  EXCLUDED FROM THE GATE.** A red anywhere else is a real
+                  regression.
+
+                  ---
+                  **C's WORK LIST, IN THE MANAGER'S ORDER. ITEM ZERO IS RULING
+                  65's, WHICH THE RULING ITSELF MAKES THE FIRST ITEM OF THE NEXT
+                  CODE TURN — AND THIS IS IT.**
+
+                  **(0) RESTATE `benchmark.test.ts:225` to the contract in B's
+                  item 3 entry.** Restated in place, item named, **NEVER
+                  DELETED**, old code quoted in the comment — the exact treatment
+                  63b and 64c received. **READ THE TRAP CLAUSE BEFORE WRITING A
+                  LINE: do NOT copy 63b's `toBeGreaterThan(0)` exercise floor
+                  into this block; count and `console.info` instead.** Restate the
+                  test's TITLE too, and say in the log that you did.
+
+                  **(1) A25-01 — the `remote-friendly` clause**, per B's item 2
+                  entry: one shared predicate in a NEW tiny module (not a
+                  `mapper.ts` export — cycle risk), imported by `mapper.ts:177`
+                  and `scoring.ts:296`. **Touch NOTHING at `mapper.ts:226`,
+                  `scoring.ts:397` or `enrich.ts:533`** — those are A22-03(b)'s
+                  deliberate raw readers and the score depends on them. **Add the
+                  three tests B names, including the reachable edge where a row
+                  goes from `Remote-friendly` to `Matched by web search`.** No
+                  existing test should go red; if one does, stop and say so.
+
+                  **(2) NOTHING ELSE WITHOUT A RULING.** Item 1's chip fix and
+                  item 2's three extra raw readers are both **`POLICY — manager
+                  decides`** and are **NOT C's to implement unruled.** Same for
+                  67a's status. **If the manager has ruled by the time C starts,
+                  the ruling is in a new `§1<letter>` section — read it; if it has
+                  not, C does items 0 and 1 and stops.**
+
+                  ---
+                  **WHAT B FOUND THAT CHANGES OTHER PEOPLE'S WORK — CARRIED SO IT
+                  IS NOT LOST.**
+                  **(i) THE LLM PATH HAS BEEN LIVE ON THE DEEP REPORT ALL ALONG.**
+                  `/api/jobs/report` and `/api/events/report` have **no tier
+                  gate**; a live probe with no override returned `noLlm:false`.
+                  **A's standing method line is false on that path** and the
+                  measurement profile is the manager's to rule on before round 26
+                  A measures anything.
+                  **(ii) THE LIVE POOL MOVED WITHIN AN HOUR OF A's CENSUS.**
+                  `10times.com` IS in B's live top five carrying **`date:
+                  '2026-08'` — a month-granularity row.** A recorded it as not
+                  offered, and on that basis recorded the **62b fuse's zero as
+                  VACUOUS** and **Ruling 64a's trigger as UNREACHABLE**. **Both
+                  are reachable now. The next A re-checks rather than carrying
+                  those words forward.** City coverage read **0.385 (5 of 13)**.
+                  **(iii) `isOwnerNameTopicCollision` FIRES on the shipped shape**
+                  — 67a's withdrawal rests on a pre-split title. Flagged for the
+                  manager, not reversed.
+
+                  ---
+                  **CARRIED FORWARD FROM ROUND 25 A, UNCHANGED BY B.** Both
+                  round-24 fixes CONFIRMED, A24-01 organically on `gain.inl.gov`.
+                  The event surface measured **ZERO** differences across every
+                  column. Tallies: event names **0 of 12**; item-KIND **0 of 12**;
+                  place **0 of 12 / 0 of 4 non-null**; invented dates **0 of 13**;
+                  job employer **0 of 4 non-null**, cumulative 34a **9 of 115**;
+                  34a events cumulative **11 of 181**; job item-shape **0 of 11**;
+                  **job REASON-LINE 1 of 11**; Ruling 33 **0 new, cumulative 2 of
+                  92**; 52b **zero admitted, cumulative 5**; 48b **events 149/98/0,
+                  jobs 100/49/0**; 58b **events 17→13, jobs 14→11**. A22-04 open at
+                  **strike one**. **Ruling 55c's online must-keep debt — SEVENTH
+                  round, undischarged.** **Ruling 57b: `designed,
+                  targeted-confirmed (tests), organically unwitnessed` on BOTH
+                  surfaces per 67a — but see (iii).** Ruling 37 zero, 44 zero,
+                  B18-03 zero. Thresholds unchanged: `OPPORTUNITY_MIN_SCORE`
+                  0.35, `MAX_POSTING_AGE_DAYS` 270, `MAX_ENRICHMENT_CANDIDATES`
+                  40.
+                  **EXCLUSIONS WALKED BY NAME: 45a (`euagenda.eu` NOT fetched),
+                  45b (41c's three hosts NOT hunted), 39a/40, 42c, 36, 33, 50a,
+                  39b/61a, B18-02's three hosts, B18-03,
+                  `stemgateway.nasa.gov`, 42a's Gap B, and §1d exclusions 7 and
+                  8.** **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+                  Full evidence in §4's four "Round 25 — Agent B" entries —
+                  **work from those, not from this summary.**
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **B — round 25.** Round 25 A is COMPLETE: **four parts, one
                   commit each, each pushed immediately** (`a44acd2`, `818b2ae`,
                   `e5721ff`, plus this hand-off). Claim the §0d lock first,
