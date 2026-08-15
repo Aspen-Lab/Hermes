@@ -72689,3 +72689,23 @@ pool at all); **`stemgateway.nasa.gov`** named and not counted, **fifth** round;
 **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE**; **A25-01 CLOSED**;
 **Ruling 71a's struck route kicker confirmed absent**; **§1d exclusions 1–6
 walked on the VISUAL surface**, which is the walk whose omission created V26-J05.
+
+---
+
+### Round 27 — MANAGER verification of Agent A, RULING 73, and the hand-off to B
+
+**Date: 2026-08-15. Checked, not inherited.** **The gate re-run by the manager: 97 files / 2005 tests, 2004 passing — the SOLE red is the live benchmark's value-lock test, failing on exactly the fused city A27-04 records.** That red is the round-25/26 restatement DOING ITS JOB — the first live value regression the suite has ever caught on its own — and it stays red until the defect is fixed or the row churns; it is NOT a flake and nobody chases it as one. `tsc` clean; `eslint` exactly `quiz.tsx:46`. A changed no code.
+
+**THE TURN IS ACCEPTED**: the refusing token of A27-02 isolated word-by-word by execution (a real Los Alamos molten-salt post refused because `…Technologist 1 - LANL Jobs` trips the aggregate-listing filter — the number and the word `Jobs` in one title — and the same shape breaks a Sandia title; NOT caused by round 26, the file untouched; provider title drift); A27-04 reported in BOTH windows rather than averaged; the three carried observations adjudicated (A27-03 files B26-OBS-01's class, confirmed and widened); all ELEVEN landed visual clusters verified with none of the twelve falsifiers firing; round 26 A's chip-description claim withdrawn on a direct plate measurement; A's own instrument defect caught and all ten pulls re-run before any number was quoted.
+
+---
+
+## RULING 73 — V27-01, DECIDED. BINDING.
+
+**THE PER-SURFACE ITALIC IS APPROVED — the shared component is not split, it becomes plate-faithful.** Plate 02 sets its four matched topic names in `Georgia-Italic`; plate 03 sets ZERO italic. C's recorded reason for uniform non-italic (don't invent an emphasis plate 03 lacks) was right about plate 03 and wrong about plate 02 — **surface-conditional emphasis is not invention, it is the spec.** `WhyPeerSentThis` stays ONE component and takes a surface/variant input: the JOB path italicises exactly the `matchedTerms` spans; the EVENT path renders byte-identically to today. **Boundaries for B's design:** only matched-term spans italicise, nothing else; empty `matchedTerms` → no italic anywhere; plate 03's render provably unchanged (a byte-identity test); the italic is the serif family's italic per the plate's own span (`Georgia-Italic 12.75` — verify against the PDF).
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 27` stands as A wrote it. **B's work list, in the manager's order:** (1) **A27-04** — the fused `Atlanta GA` city (the live lock is red on it; establish by execution whether source drift or a pipeline path fuses city+state, both of A's windows in evidence); (2) **A27-02** — the aggregate-listing filter's false positive (design the narrowing so `…Technologist 1 - LANL Jobs` and the Sandia shape pass while `1,200 Engineering Jobs` still drops — adversarial corpus from the offered rows, misses fall to admission-side judgement per the filter's own design); (3) **A27-01** — the three admitted listing/hub pages (one renders the bare host as the event name — A24-01's named failure mode via new shapes; establish one mechanism or several); (4) **A27-03** — finished pages admitted undated (B26-OBS-01's class, three pages; mind 62b's boundaries — no dishonest closure, no year-only fallback); (5) **V27-01 per Ruling 73** (the variant design with the byte-identity boundary); (6) **V27-02** — the visa quote's attribution runs inline at the quote's own size and colour per the plate; (7) **V26-J06's escape-claused half** — the two new extracted fields (value-side design: sources, extraction boundaries, honest fallbacks, tests at risk). Bank per item in this order. The gate stays `GATE (0%): NOT MET` — value AND visual.
+
+---
