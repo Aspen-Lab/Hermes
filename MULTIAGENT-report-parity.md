@@ -73796,3 +73796,156 @@ failure mode round 27 A's own method note warns about: *check what an assertion
 actually locks, not what its name says.*
 
 ---
+
+---
+
+### Round 27 — Agent B (item 6 of 7: **V27-02 — THE VISA ATTRIBUTION RUNS INLINE. THE PLATE'S TWO SPANS ARE RE-EXTRACTED AND A's READING IS EXACT: ONE CONTINUOUS `Georgia 10.5 #9c8b78` RUN THAT WRAPS MID-PHRASE. THE FIX IS THREE CLASS REMOVALS AND A SPACE, WITH THE `<cite>` ELEMENT AND ITS HOOK KEPT.**)
+
+**STATUS: COMPLETE.** Item 6 of seven. B changed no code.
+
+---
+
+## **THE PLATE, RE-EXTRACTED — AND THE WRAP IS THE PROOF**
+
+`Peer-design-spec-original.pdf`, **plate 02 = p.3**, every span between y 130 and
+175:
+
+| y | x-start | x-end | font | size | colour | text |
+|---|---|---|---|---|---|---|
+| **143.4** | 90.0 | **532.3** | **Georgia** | **10.5** | **`#9c8b78`** | `“TRI will sponsor work visas for this position, including H-1B and J-1 transfers.” — from the job` |
+| **160.6** | **90.0** | 142.3 | **Georgia** | **10.5** | **`#9c8b78`** | `description` |
+
+**TWO SPANS, ONE RUN.** The quote's closing curly quote, the em dash and
+`from the job` sit **in the same span as the quote itself**, at the same x-line;
+`description` starts the next line at **x 90.0, the same left margin as the
+quote's first line**. **The phrase `from the job description` is split by nothing
+but a line wrap.**
+
+**THAT IS THE WHOLE ARGUMENT AND IT IS NOT A JUDGEMENT CALL.** A detached
+caption cannot wrap mid-phrase out of its parent's own text run. **Every span is
+`Georgia 10.5 #9c8b78` — the same family, the same size, the same colour as the
+quotation.** **A's V27-02 description is confirmed span for span, including the
+colour.**
+
+---
+
+## **THE BUILD, AND THE THREE DEPARTURES**
+
+`src/app/jobs/[id]/page.tsx:1139-1144`:
+
+```
+<cite data-visa-attribution className="mt-1 block not-italic text-caption text-text-faint">
+  — from the job description
+</cite>
+```
+
+inside `<blockquote className="… font-reading text-body leading-7 text-text-muted">`.
+
+| the plate | the build | departure |
+|---|---|---|
+| same run, wraps mid-phrase | **`block`** — forced onto its own line | **flow** |
+| `Georgia 10.5`, identical to the quote | **`text-caption`**, one step below the quote's `text-body` | **size** |
+| `#9c8b78`, identical to the quote | **`text-text-faint`**, fainter than the quote's `text-text-muted` | **tone** |
+
+**`mt-1` is a fourth, and it only exists to space the block that should not be a
+block.**
+
+---
+
+## **THE FIX — SUBTRACTION, NOT ADDITION**
+
+**Remove `mt-1`, `block`, `text-caption` and `text-text-faint` from the `<cite>`,
+and put a single space before it in the flow.** The result:
+
+```
+“{visaEvidence}”{" "}
+<cite data-visa-attribution className="not-italic">— from the job description</cite>
+```
+
+**`<cite>` inherits `font-reading`, the size and the colour from the
+`<blockquote>` it already lives in — which is exactly what "same run" means in
+CSS.** Nothing is added; four utilities are deleted.
+
+**FOUR THINGS THAT MUST NOT CHANGE, EACH FOR A NAMED REASON:**
+
+1. **`not-italic` STAYS.** Browsers italicise `<cite>` by default. **The plate's
+   attribution is `Georgia`, NOT `Georgia-Italic`** — B checked the span's own
+   font name — **and plate 02's ONLY italic is the three matched topics in the
+   why-block (item 5).** Removing `not-italic` would put a fourth italic on the
+   plate that the plate does not have. **This is the clause a "tidy-up" deletes
+   first.**
+2. **The `<cite>` ELEMENT STAYS.** It carries the semantic that B-19 wrote the
+   attribution for — *the posting said this, not Peer* — and it is what a screen
+   reader announces. **The complaint is its styling, never its existence.**
+3. **`data-visa-attribution` STAYS.** It is the only stable hook a test has on
+   this element.
+4. **The explicit space stays explicit.** JSX collapses whitespace at a line
+   break, so `{" "}` (or the space inside the string) is load-bearing —
+   **without it the render is `transfers.”— from the job description`**, which is
+   a new defect, not a fix.
+
+---
+
+## **THE EMPTY STATE — ALREADY CORRECT, AND B SAYS SO RATHER THAN DESIGNING OVER IT**
+
+`page.tsx:1133` gates the WHOLE block:
+`{visaEvidence && !enrichment?.sponsorshipRead && ( … )}` — the `<cite>` lives
+**inside** that conditional. **No quote, no blockquote, no attribution.** And
+`visaEvidence` is `clean(job.visa?.evidence)` (line 1003), so an empty or
+whitespace-only evidence string is falsy and the block does not render.
+
+**There is no state in which the attribution can appear without the sentence it
+attributes.** **The fix does not touch that gate and must not introduce a second
+one** — a `<cite>` moved outside the conditional would be exactly the dishonesty
+B-19 wrote it to prevent.
+
+**The second render site** (`page.tsx:1405-1413`, inside `Sponsorship read`) is a
+DIFFERENT block with **no attribution at all** and is **out of scope**: it is
+gated on `enrichment?.sponsorshipRead`, it carries its own `Posting evidence`
+label, and **plate 02 does not show that block.** Named so it is not swept in by
+a "make all quotes consistent" reflex.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`src/components/reports/plate-type-system.test.ts:166-173`** — *"sets the
+  visa evidence quote in the reading serif"*. It reads the classes of the
+  **`<blockquote>`**, not the `<cite>`. **`font-reading` stays on the
+  blockquote, so this is green either way.**
+- **The same file, line ~285** — the value list asserting the job report still
+  contains `"sponsor work visas"`. **Text, not markup. Unaffected.**
+- **A repo-wide grep for `data-visa-attribution` and for the literal
+  `from the job description` across every `*.test.ts`/`*.test.tsx` returns
+  NOTHING.** **The attribution has NO test today** — which is how three
+  departures survived a full visual census.
+- **NEW TESTS C OWES** (additions only):
+  1. The `<cite data-visa-attribution>` **does NOT carry `block`,
+     `text-caption`, `text-text-faint` or `mt-1`** — the three departures, named
+     individually so a partial revert reds.
+  2. It **DOES carry `not-italic`** — boundary 1, which is the one a later
+     simplification removes.
+  3. The rendered job report contains the attribution **immediately after the
+     closing quotation mark, separated by exactly one space** — the flow
+     assertion, and the one that catches the collapsed-whitespace regression.
+  4. **A job with no `visa.evidence` renders NEITHER the blockquote NOR
+     `data-visa-attribution`** — the empty state, asserted rather than assumed.
+
+---
+
+## **WHY THIS IS NOT COSMETIC TRIVIA — AND WHY IT WAS MISSED**
+
+**B-19's own comment states the intent:** the attribution exists *"without it the
+sentence reads as Peer's own words, which is the one thing this block exists to
+avoid."* **A caption in a fainter, smaller type one line below is read as
+metadata about the quote; a phrase inside the quote's own run is read as part of
+the sentence.** The build's styling works against the reason the element was
+added.
+
+**AND THE MISS IS INSTRUCTIVE:** round 26 A recorded *"runs inline"* on the SPEC
+side and never scored the BUILD against it. **A spec attribute that is measured
+but never compared produces no finding** — the same shape as round 27 A's own
+method note. **The four tests above are what turn this one into a locked
+attribute instead of a re-findable one.**
+
+---
