@@ -1132,14 +1132,39 @@ export function JobReport({
           elements, and serif because it is the POSTING's prose, not chrome. */}
       {visaEvidence && !enrichment?.sponsorshipRead && (
         <blockquote className="mt-4 border-l-2 border-accent/50 pl-4 font-reading text-body leading-7 text-text-muted">
-          “{visaEvidence}”
+          “{visaEvidence}”{" "}
           {/* B-19. Plate 02 closes the quote with its source. Without it the
               sentence reads as Peer's own words, which is the one thing this
-              block exists to avoid: it is the posting's promise, not ours. */}
-          <cite
-            data-visa-attribution
-            className="mt-1 block not-italic text-caption text-text-faint"
-          >
+              block exists to avoid: it is the posting's promise, not ours.
+
+              V27-02 (round 27, item 6). THE ATTRIBUTION RUNS INLINE, AND THE
+              PLATE'S OWN WRAP IS THE PROOF. Plate 02 sets the closing quote
+              mark, the em dash and `from the job` in the SAME span as the
+              quotation, and `description` begins the next line at the
+              quotation's own left margin — a detached caption cannot wrap
+              mid-phrase out of its parent's text run. Every span is
+              `Georgia 10.5 #9c8b78`: same family, same size, same colour as the
+              quote.
+
+              THE FIX IS SUBTRACTION. `mt-1`, `block`, `text-caption` and
+              `text-text-faint` are gone; the `<cite>` now inherits
+              `font-reading`, the size and the colour from the blockquote it
+              already lives in, which is what "same run" means in CSS.
+
+              FOUR THINGS THAT MUST NOT CHANGE:
+                * `not-italic` STAYS — browsers italicise `<cite>` by default and
+                  the plate's attribution is `Georgia`, NOT `Georgia-Italic`.
+                  Plate 02's only italic is the matched topics in the why-block.
+                * the `<cite>` ELEMENT stays — it carries B-19's semantic.
+                * `data-visa-attribution` stays — the only stable test hook here.
+                * the space before it is EXPLICIT (`{" "}`) because JSX collapses
+                  whitespace at a line break; without it the render reads
+                  `transfers.”— from the job description`.
+
+              The empty state is already correct: this whole block is gated on
+              `visaEvidence`, so the attribution cannot appear without the
+              sentence it attributes. DO NOT ADD A SECOND GATE. */}
+          <cite data-visa-attribution className="not-italic">
             — from the job description
           </cite>
         </blockquote>

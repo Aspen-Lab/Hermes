@@ -1270,3 +1270,78 @@ describe("V27-01 — the italic is plate-02-only and gated on the surface", () =
     expect((job.match(/<em\b/g) ?? []).length).toBe(3);
   });
 });
+
+/**
+ * **V27-02 (round 27, item 6) — THE VISA ATTRIBUTION RUNS INLINE.**
+ *
+ * `Peer-design-spec-original.pdf` plate 02: the quotation's closing curly
+ * quote, the em dash and `from the job` sit in the **SAME span** as the
+ * quotation at `Georgia 10.5 #9c8b78`, and `description` begins the next line
+ * at the quotation's own left margin. **A detached caption cannot wrap
+ * mid-phrase out of its parent's text run** — that wrap is the whole proof.
+ *
+ * The build shipped it as `mt-1 block text-caption text-text-faint`: forced
+ * onto its own line, one size step down, one tone fainter. Three departures
+ * plus the spacing utility that only existed to serve the block.
+ *
+ * **THE ATTRIBUTION HAD NO TEST AT ALL BEFORE THIS BLOCK** — a repo-wide grep
+ * for `data-visa-attribution` and for the literal attribution string across
+ * every test file returned nothing, which is how three departures survived a
+ * full visual census. These four turn it into a locked attribute.
+ */
+describe("V27-02 — the visa attribution is part of the quote's own run", () => {
+  function openTagOf(html: string, hook: string): string {
+    const match = new RegExp(`<[a-z]+\\b[^>]*\\b${hook}\\b[^>]*>`).exec(html);
+    if (!match) throw new Error(`no element carrying ${hook} was rendered`);
+    return match[0];
+  }
+
+  it("carries none of the three departures, named one by one", () => {
+    // Named individually so a PARTIAL revert reds rather than passing.
+    const tag = openTagOf(renderJob(), "data-visa-attribution");
+    expect(tag).not.toContain("block");
+    expect(tag).not.toContain("text-caption");
+    expect(tag).not.toContain("text-text-faint");
+    expect(tag).not.toContain("mt-1");
+  });
+
+  it("keeps not-italic — the plate's attribution is Georgia, not Georgia-Italic", () => {
+    // Browsers italicise <cite> by default. Plate 02's ONLY italic is the
+    // matched topics in the why-block (V27-01). This is the clause a later
+    // tidy-up deletes first, so it gets its own assertion.
+    expect(openTagOf(renderJob(), "data-visa-attribution")).toContain("not-italic");
+    // And it is still a <cite>: the complaint was the styling, never the
+    // element, which carries B-19's "the posting said this, not Peer" semantic.
+    expect(renderJob()).toContain("<cite data-visa-attribution");
+  });
+
+  it("follows the closing quotation mark in the same flow, separated by one space", () => {
+    // The collapsed-whitespace regression this catches renders
+    // `transfers.”— from the job description`, which would be a new defect.
+    const html = renderJob();
+    expect(html).toMatch(/”\s<cite data-visa-attribution[^>]*>— from the job description<\/cite>/);
+    // The blockquote still opts into the reading serif, and the cite inherits
+    // family, size and colour from it rather than declaring its own.
+    const quoteClasses = classesOfTagContaining(html, "blockquote", "sponsor work visas");
+    expect(quoteClasses).toContain("font-reading");
+  });
+
+  it("renders neither the quote nor the attribution when there is no evidence", () => {
+    // The empty state, asserted rather than assumed. One gate, not two: the
+    // <cite> lives INSIDE the `visaEvidence` conditional, so an attribution
+    // without the sentence it attributes is impossible by construction.
+    const html = renderJob(
+      plateJob({ visa: { state: "not-stated", evidence: "  ", country: "US" } }),
+    );
+    expect(html).not.toContain("data-visa-attribution");
+    expect(html).not.toContain("sponsor work visas");
+  });
+
+  it("changes no rendered VALUE — the attribution text is exactly what it was", () => {
+    // A visual item may not move a value.
+    expect(renderJob()).toContain("— from the job description");
+    expect(renderJob()).toContain(
+      "We sponsor work visas for exceptional postdoctoral candidates.",
+    );
+  });
+});

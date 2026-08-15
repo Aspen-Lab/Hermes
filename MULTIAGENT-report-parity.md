@@ -75102,3 +75102,62 @@ requirement for a visual item.
 standing `quiz.tsx:46` error, 0 warnings.**
 
 ---
+
+### Round 27 — Agent C (item 6 of 7: **V27-02 — THE VISA ATTRIBUTION NOW RUNS INLINE. FOUR UTILITIES DELETED, ONE EXPLICIT SPACE ADDED, NOTHING ELSE. THE ELEMENT HAD NO TEST AT ALL BEFORE THIS COMMIT; IT NOW HAS FIVE, AND EVERY ONE OF THE FOUR MUST-NOT-CHANGE BOUNDARIES HAS ITS OWN RED CASE.**)
+
+**STATUS: COMPLETE.** Item 6 of seven. Code plus this entry in one commit.
+
+## **WHAT SHIPPED**
+
+`src/app/jobs/[id]/page.tsx`, the `visaEvidence` blockquote. The `<cite>`'s
+class list goes from `mt-1 block not-italic text-caption text-text-faint` to
+**`not-italic`**, and an **explicit `{" "}`** now sits between the closing
+quotation mark and the element. **It is pure subtraction plus one space.** The
+`<cite>` inherits `font-reading`, the size and the colour from the blockquote it
+already lives in — which is what "the same run" means in CSS.
+
+**ALL FOUR BOUNDARIES HELD:** `not-italic` kept, the `<cite>` element kept,
+`data-visa-attribution` kept, the space explicit. **The second render site at
+`Sponsorship read` was NOT touched** — different block, different gate, not on
+plate 02.
+
+## **THE NEW TESTS — +5 blocks (68 -> 73), ZERO deletions**
+
+**B's grep was right: there was NO test on this element anywhere in the
+repository**, which is exactly how three departures survived a full visual
+census. Now:
+
+1. **The three departures, named ONE BY ONE** (`block`, `text-caption`,
+   `text-text-faint`) plus `mt-1` — so a PARTIAL revert reds rather than passing.
+2. **`not-italic` present, and the element still a `<cite>`.**
+3. **The flow assertion** — a regex requiring the closing `”`, **exactly one
+   whitespace character**, then the `<cite>` — which is what catches the
+   collapsed-whitespace regression `transfers.”— from the job description`. Plus
+   the blockquote still carrying `font-reading`.
+4. **The empty state** — whitespace-only evidence renders NEITHER the quote nor
+   the hook. **One gate, not two.**
+5. **VALUE STABILITY** — the attribution text and the quoted sentence are
+   character-identical to before.
+
+## **NEGATIVE PROOFS — FOUR MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+Baseline for every row: **73 of 73 passing** in the file.
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **the four utilities put back** (`mt-1 block text-caption text-text-faint`) | **1 failed / 72 passed** |
+| 2 | **`not-italic` removed** | **1 failed / 72 passed** |
+| 3 | **the explicit `{" "}` removed** | **1 failed / 72 passed** |
+| 4 | **the `visaEvidence` gate weakened** | **1 failed / 72 passed** |
+
+**Every one of B's four named boundaries has its own uniquely-red case, and no
+mutation reds a test belonging to another boundary** — the assertions are
+independent rather than one broad check counted four times.
+
+## **THE GATE AFTER ITEM 6**
+
+`npx vitest run` **97 files / 2051 tests, 2051 PASSING — ZERO failures**
+(2046 -> 2051, **+5**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.**
+
+---
