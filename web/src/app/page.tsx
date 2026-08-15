@@ -11,6 +11,7 @@ import type {
   OpportunityFacetSelection,
 } from "@/types";
 import { activePaperTopicsKey, useFeedStore } from "@/store/feed";
+import { aiModeChip, feedsUseAi } from "@/lib/feed/ai-tier";
 import { apiFetch } from "@/lib/api";
 import { formatTimeAgo } from "@/lib/format";
 import { DotMatrixImage } from "@/components/dot-matrix-image";
@@ -477,14 +478,15 @@ function DiscoveryPage() {
 
   // Dashboard is an overview until a query turns it into combined search.
   const showFeedTiles = activeType !== "dashboard" || isSearchMode;
-  const canUseLocalDeveloperAi =
-    process.env.NODE_ENV === "development" &&
-    profile.feedAiProvider === "default";
-  const canUseAiTools =
-    canUseLocalDeveloperAi ||
-    (profile.feedAiProvider !== "default" &&
-      Boolean(profile.feedAiApiKey?.trim()));
+  // RULING 66a / 68a. This was a hand-written copy of `store/feed.ts`'s tier
+  // expression, and a copy is exactly what let the chip and the feeds disagree.
+  // Same value, one home — `lib/feed/ai-tier.ts` — so the chip's tier text and
+  // the feeds' `aiTier` are now provably the same boolean.
+  const canUseAiTools = feedsUseAi(profile);
   const aiSearchActive = aiPaperSearchEnabled && canUseAiTools;
+  // RULING 68a. The chip's three strings are computed in `lib/feed/ai-tier.ts`
+  // so they can be asserted; the JSX below only places them.
+  const aiChip = aiModeChip({ feedsUseAi: canUseAiTools, aiSearchActive });
   const shouldLoadPaperDigest =
     !isSearchMode &&
     activeType === "papers" &&
@@ -803,13 +805,13 @@ function DiscoveryPage() {
               onClick={() => setAiPaperSearchEnabled(!aiSearchActive)}
               disabled={isLoading || !canUseAiTools}
               aria-pressed={aiSearchActive}
-              title={
-                !canUseAiTools
-                  ? "Add your own AI key to enable AI search."
-                  : aiSearchActive
-                    ? "AI paper search uses your own key for planning and reranking."
-                    : "Auto search uses Tier 0 fixed scoring and no AI API."
-              }
+              // RULING 66a / 68a. The tooltip's third branch read "Auto search
+              // uses Tier 0 fixed scoring and no AI API." — FALSE for jobs and
+              // events whenever a provider is reachable. This button toggles
+              // `aiPaperSearchEnabled`, a PAPERS control, but the job and event
+              // feeds send their tier from the provider state alone and never
+              // read the papers toggle at all.
+              title={aiChip.title}
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-meta transition-[color,background-color,box-shadow,transform] duration-150 ease-snap active:scale-[0.94] disabled:opacity-55 disabled:cursor-wait ${
                 aiSearchActive
                   ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-accent)_28%,transparent)]"
@@ -819,8 +821,14 @@ function DiscoveryPage() {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M12 2l1.5 5L19 8.5 14.5 11 13 16l-2.5-4.5L6 10l4.5-1.5z" />
               </svg>
-              <span className="font-medium">{aiSearchActive ? "AI search" : "Auto"}</span>
-              <span className="opacity-60 text-micro">{aiSearchActive ? "Tier 2" : "Tier 0"}</span>
+              {/* The LABEL is this button's own pressed state and stays on the
+                  papers toggle. The TIER TEXT is a claim about the whole mode,
+                  so RULING 68a moves it onto `feedsUseAi` — the same predicate
+                  `store/feed.ts` sends the feeds' `aiTier` from. It read
+                  `aiSearchActive`, the papers toggle ANDed with that, so it
+                  showed "Tier 0" while jobs and events ran Tier 2. */}
+              <span className="font-medium">{aiChip.label}</span>
+              <span className="opacity-60 text-micro">{aiChip.tier}</span>
             </button>
 
             {/* AI key hookup */}

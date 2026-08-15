@@ -17,6 +17,7 @@ import type {
 import { apiFetch } from "@/lib/api";
 import { useProfileStore } from "@/store/profile";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
+import { feedsUseAi, hasUserLlmOverride } from "@/lib/feed/ai-tier";
 import type { FeedResponse } from "@/lib/feed/types";
 import type { EventsFeedResponse } from "@/lib/events/types";
 import type { JobsFeedResponse } from "@/lib/jobs/types";
@@ -363,11 +364,11 @@ export function opportunityRequestBody(
   const preferenceLedger = profile.preferenceLedger ?? {};
   const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
-  const hasUserLlmOverride =
-    profile.feedAiProvider !== "default" && Boolean(feedAiApiKey);
-  const hasLocalDeveloperProvider =
-    process.env.NODE_ENV === "development" &&
-    profile.feedAiProvider === "default";
+  // RULING 68a: these two reads were inline here and duplicated, in different
+  // words, at the dashboard chip — which is how the chip came to claim a tier
+  // it does not govern. Same expressions, one home. `hasUserLlmOverride` is
+  // still needed separately below because it alone may send an override.
+  const userLlmOverride = hasUserLlmOverride(profile);
   return {
     topics,
     softTopics: softTopics.length > 0 ? softTopics : undefined,
@@ -385,7 +386,7 @@ export function opportunityRequestBody(
       : {}),
     currentProject: profile.currentProject,
     topN: DEFAULT_OPPORTUNITY_TOP_N,
-    aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0,
+    aiTier: feedsUseAi(profile) ? 2 : 0,
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
       : undefined,
@@ -397,7 +398,10 @@ export function opportunityRequestBody(
       usajobsApiKey: profile.usajobsApiKey?.trim() || undefined,
       usajobsUserAgent: profile.usajobsUserAgent?.trim() || undefined,
     },
-    llmOverride: hasUserLlmOverride
+    // Unchanged: only the BYOK path may send an override. The local-developer
+    // path deliberately sends none and lets the server resolve its own
+    // provider, which is what keeps the key server-side.
+    llmOverride: userLlmOverride
       ? { provider: profile.feedAiProvider, apiKey: feedAiApiKey }
       : undefined,
     excludeIds: excludeIds.length > 0 ? excludeIds : undefined,

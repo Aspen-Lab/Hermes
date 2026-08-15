@@ -65064,3 +65064,176 @@ census is what can witness it, and only if a `jobweb` + remote row returns.
 `src/components/persona/quiz.tsx:46` error, 0 warnings.**
 **`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds after a
 scoring-side change.**
+
+### Round 25 — Agent C (item 2 of 3: **RULING 66a / 68a — THE DISPLAY FIX. THE CHIP NOW READS THE PREDICATE THE FEEDS SEND FROM, AND THE ROSTER'S `Tier 0` BADGE IS PER CARD. TWO DEVIATIONS FROM "THREE LINES", BOTH TRACED FIRST AND BOTH FOR THE SAME REASON: B's DESIGN WAS NOT TESTABLE AS WRITTEN. THE REGISTRY IS UNTOUCHED, PROVEN BY DIFF.**)
+
+**STATUS: COMPLETE.** Item 2 of three. **NO TEST DELETED. NO EXISTING TEST
+EDITED — all fourteen new cases are pure ADDITIONS.** No branch, worktree or
+PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No credential
+printed, logged, committed or written anywhere — `.env.local` was NEVER
+`cat`-ed.** The only key-shaped string in the new tests is the literal
+`not-a-real-key`, written by C. No scaffold survives;
+`git status --porcelain --untracked-files=all` verified before this commit.
+
+---
+
+## RULING 69 ARRIVED MID-TURN AND C CHECKED IT BEFORE WRITING A LINE OF ITEM 2
+
+The user's **Ruling 69** landed between C's item-1 and item-2 commits (the §0d
+late-ruling precedent; C's push delivered it). C read it and checked it against
+this item's scope rather than proceeding on the older brief. **It does not
+re-scope item 2**, and says so in its own words: *"PHASE 1 (current,
+unchanged)"* and *"round 25 C's banked items are unaffected"*. Its "the 66a
+blast-radius fields stay out of scope" governs what the **census measures**, not
+whether 68a's truth-telling layer ships.
+
+**AND IT MAKES ONE PROPERTY OF THIS ITEM LOAD-BEARING RATHER THAN INCIDENTAL:**
+because Phase 1 keeps measuring the no-LLM path, **the badge change must be a
+byte-for-byte no-op there** — otherwise it moves Ruling 66b's visual baseline
+before round 26 A takes it. It is, and there is an assertion that says so.
+
+---
+
+## (a) THE CHIP — **THE USER'S REPORT, TURNED INTO A CONTRACT**
+
+The chip rendered its tier from `aiSearchActive = aiPaperSearchEnabled &&
+canUseAiTools`. **`aiPaperSearchEnabled` is a PAPERS toggle that defaults to
+`false` and that the job/event request builder never reads**, so the chip
+reported the papers surface while claiming to describe the whole mode — and its
+tooltip said **"Auto search uses Tier 0 fixed scoring and no AI API"** while the
+feeds sent `aiTier: 2`.
+
+**WHAT SHIPPED:** a new module `web/src/lib/feed/ai-tier.ts` holding the
+predicate ONCE — `feedsUseAi(profile)` — plus `hasUserLlmOverride` and
+`hasLocalDeveloperProvider`. `store/feed.ts`'s opportunity builder and the
+dashboard chip now both call it. **The chip's tier text and the feeds' `aiTier`
+are provably the same boolean, and there is a test that fails if they ever stop
+being.**
+
+**THE SPLIT, STATED:** the chip's **label** (`AI search` / `Auto`) is the
+button's own pressed state and **stays on the papers toggle** — pressing it is
+what changes it, and moving that would be a different lie. Only the **tier** and
+the **tooltip** move onto `feedsUseAi`.
+
+**THE PAPERS BUILDER IS UNTOUCHED.** `store/feed.ts`'s *paper* request body
+keeps its own locals, which additionally gate on `aiPaperSearchEnabled`. That
+asymmetry is deliberate and out of scope (B's boundary condition 4); only the
+opportunity builder was converted.
+
+## (b) THE ROSTER BADGE — **PER CARD, BECAUSE THE MERGE IS PER CARD**
+
+`partitionEventRoster` merges `judgedAttendees[].why` into a card's `reason`
+whenever that card has no Tier 0 reason of its own, so the two roster
+sub-headings were the only place on either report where **model prose could
+render under a badge saying no model was used.**
+
+**WHAT SHIPPED:** each section computes `allTier0` over its own rendered cards.
+The heading keeps its `Tier 0` badge **only while every card beneath it is Tier
+0**; once any card carries a judgment the blanket claim is withdrawn and **each
+card states its own provenance** (`Tier 0` for a card that kept its own reason,
+`Tier 2` for one that took the model's). **A card that falls back to
+`tier0Reason` shows `Tier 0` again** — B's stated requirement, met literally.
+The two sections decide independently.
+
+## (c) THE BOUNDARY THAT WAS NOT CROSSED — **PROVEN BY DIFF, NOT ASSERTED**
+
+**`canUseLocalServerProvider` and the provider registry are UNTOUCHED.**
+`git diff --stat -- web/src/lib/llm/` is **EMPTY**. The recorded
+deployed-user-safety decision stands, and there is a test that fails if a later
+change tries to widen it: with `NODE_ENV=production` and no user key,
+`feedsUseAi` is **`false`** — B's `production/local-dev` probe row, now a lock.
+**The three honest `Tier 0` badges** — "Skills they ask for", "What it costs
+you", and `why-peer-sent-this` on both surfaces — **stay literal.** **Nothing
+started sending `llmOverride` on the local path**, and a test asserts that too.
+
+---
+
+## **TWO DEVIATIONS FROM B's DESIGN. BOTH TRACED FIRST, BOTH THE SAME ROOT CAUSE.**
+
+**B's design was three lines of JSX. C shipped a module, and says why rather
+than presenting it as what B asked for.**
+
+**DEVIATION 1 — the predicate was EXTRACTED, not merely repointed.** B's fix (a)
+says the chip's tier must compute from `canUseAiTools`. But `canUseAiTools` was
+itself a **hand-written copy** of `store/feed.ts`'s expression — the same logic
+in different words. Repointing the chip at a local duplicate satisfies the
+sentence and leaves the failure mode intact: **two copies that can drift are
+exactly what produced this defect.** Ruling 68a's own words are "the SAME
+predicate the feeds use", and Ruling 32 asks for a named predicate rather than a
+re-derivation. **So the expression has one home and both callers import it.**
+Cost: `store/feed.ts` is touched, which B's list did not name. **Verified safe by
+its own existing tests** — `store/` and `app/` ran green immediately after the
+change and before any test was added.
+
+**DEVIATION 2 — the chip's three strings were moved into a pure function
+(`aiModeChip`).** **C found B's fix (a) UNTESTABLE as written and did not ship
+it that way.** The chip is JSX inside the dashboard page component, which cannot
+be rendered in a unit test without standing up its whole store graph; there is
+no `page.test.tsx`. **Reverting the tier token would therefore have turned NO
+test red — the vacuity the standards forbid.** With the strings computed in
+`ai-tier.ts`, the revert is uniquely red, proven below. **This is also the
+mechanism that let the bug live as long as it did**, and the module comment says
+so.
+
+**Neither deviation changes what the reader sees** beyond the two strings 68a
+commissioned.
+
+---
+
+## NEGATIVE PROOFS — **EXACT RED COUNTS, EACH DIRECTION REVERTED SEPARATELY**
+
+| # | reverted change | result |
+|---|---|---|
+| **A** | **the chip's tier and tooltip put back on `aiSearchActive` / the old wording** | **`ai-tier.test.ts`: 3 FAILED / 7 passed (10).** `expected 'Tier 0' to be 'Tier 2'`; `expected 'AI paper search uses your own key for…' to contain 'job and event search use AI too'`; `expected 'true: Tier 2 / Tier 0' to be 'true: Tier 2 / Tier 2'` |
+| **B** | **both roster headings' badges made unconditional again** | **`events/[id]/page.test.ts`: 3 FAILED / 60 passed (63).** `expected [ 'Tier 0', 'Tier 2' ] to deeply equal [ 'Tier 2' ]`; `expected [ 'Tier 0', 'Tier 0', 'Tier 2' ] to deeply equal [ 'Tier 0', 'Tier 2' ]`; and the same on the independence case |
+
+**THE ADMITTED CONTROLS, NAMED AS THE STANDARD REQUIRES.** Three cases pass
+under BOTH reverts and C does not count them as proof on their own:
+
+1. **`keeps the roster heading's Tier 0 badge when every card is Tier 0`** — it
+   is the **Phase 1 no-op assertion**. Its whole job is to stay green in both
+   worlds, which is what proves Ruling 69's census and Ruling 66b's visual
+   baseline are undisturbed. Its uniquely-red case is the opposite direction: it
+   fails if a later change makes the badge conditional on something other than
+   the cards' provenance.
+2. **`reads Tier 0 and keeps today's wording when no provider is reachable`** —
+   the unchanged-reader control.
+3. **`is FALSE for a deployed reader with no key`** — the deployed-user-safety
+   control, red only if someone widens the local branch past development.
+
+**Every other clause shipped has a case that only it turns red, and all six were
+executed.**
+
+---
+
+## THE FOURTEEN ADDED CASES
+
+**`src/lib/feed/ai-tier.test.ts` (NEW, 10):** the predicate true for local-dev
+and for BYOK, false in production without a key, false on a blank/whitespace
+key; the chip's three string states; **the papers toggle provably unable to move
+the tier**; **the anti-drift identity — the chip's boolean equals both feeds'
+`aiTier` across both `NODE_ENV` values and both profile shapes**; and the
+override still leaving the client only on the BYOK path.
+
+**`src/app/events/[id]/page.test.ts` (+4):** all-Tier-0 keeps the heading badge;
+a model-written card withdraws it; a **mixed** roster labelled card by card
+(`['Tier 0', 'Tier 2']`); and the two sections deciding independently.
+
+---
+
+## THE GATE AFTER ITEM 2
+
+**93 files / 1894 tests, 1894 passing** (**+14**, all additions; +1 file).
+`npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one standing
+`src/components/persona/quiz.tsx:46` error, 0 warnings.**
+**`enrich.test.ts` SOLO: 56 of 56 — the SolarPACES lock holds.**
+**`benchmark.test.ts` ran live and PASSED inside the full run**, as item zero's
+restatement intends.
+
+**ONE PROCESS NOTE, RECORDED BECAUSE IT COULD HAVE COST WORK.** While reverting
+proof B, C used `git checkout --` on `events/[id]/page.tsx`, which discarded all
+of item 2's uncommitted edits to that file rather than just the mutation. They
+were re-applied from the entry above and re-verified green (63 of 63) before the
+commit. **Nothing was lost and nothing else was touched** — but the safe way to
+undo a mutation is the reverse string edit, not `git checkout`, and the next C
+should know that.

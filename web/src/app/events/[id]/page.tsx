@@ -1488,6 +1488,31 @@ function RosterSection({
 }) {
   if (organisations.length === 0 && people.length === 0) return null;
 
+  // ════════════════════════════════════════════════════════════════════════
+  // RULING 66a / 68a. **THE `Tier 0` BADGE ON THESE TWO SUB-HEADINGS WAS THE
+  // ONE PLACE MODEL PROSE COULD RENDER UNDER A LABEL SAYING IT DID NOT.**
+  //
+  // The other three `Tier 0` ReportBadges on the reports are honest forever —
+  // "Skills they ask for", "What it costs you" and `why-peer-sent-this` read
+  // no enrichment at all, and Ruling 11 requires them on the heading. These
+  // two are different: `partitionEventRoster` merges `judgedAttendees[].why`
+  // into a card's `reason` whenever that card has no Tier 0 reason of its own,
+  // so the text under the badge can be model-written.
+  //
+  // **THE MERGE IS PER CARD, SO THE PROVENANCE IS TOO.** The heading keeps its
+  // badge only while EVERY card beneath it is Tier 0; once any card carries a
+  // judgment the section is mixed, the blanket claim is withdrawn, and each
+  // card states its own provenance instead. A card that falls back to
+  // `tier0Reason` shows `Tier 0` again, which is the whole point.
+  //
+  // **THIS IS A NO-OP UNTIL ENRICHMENT LANDS.** With no `judgedAttendees` no
+  // card has a judgment, `allTier0` is true on both sections, and the markup
+  // is byte-identical to before — so Ruling 69's Phase 1 census and Ruling
+  // 66b's visual baseline see exactly the plate they saw yesterday.
+  // ════════════════════════════════════════════════════════════════════════
+  const organisationsAllTier0 = organisationCards.every((row) => !row.judgment);
+  const peopleAllTier0 = peopleCards.every((row) => !row.judgment);
+
   // B-14. Plate 03's sub-line counts how many of the room matter to YOU. The
   // build printed "· N judged" — a count of what the model processed, which is
   // Peer talking about its own machinery rather than about the reader.
@@ -1513,7 +1538,9 @@ function RosterSection({
             {organisationCards.length > 0 && (
               <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
                 Organisations
-                <ReportBadge tone="accent">Tier 0</ReportBadge>
+                {organisationsAllTier0 && (
+                  <ReportBadge tone="accent">Tier 0</ReportBadge>
+                )}
               </h3>
             )}
             <div className="mt-3 grid gap-2">
@@ -1543,6 +1570,16 @@ function RosterSection({
                       >
                         {reason ?? "You marked this organisation as important."}
                       </p>
+                      {/* RULING 68a. Only in a MIXED section — the heading has
+                          withdrawn its blanket claim, so each card says where
+                          its own reason came from. */}
+                      {!organisationsAllTier0 && (
+                        <p className="mt-1.5">
+                          <ReportBadge tone="accent">
+                            {judgment ? "Tier 2" : "Tier 0"}
+                          </ReportBadge>
+                        </p>
+                      )}
                       {clean(item.atEvent) && (
                         <p className="mt-1 text-caption text-text-faint">
                           At this event · {item.atEvent}
@@ -1577,7 +1614,7 @@ function RosterSection({
             {peopleCards.length > 0 && (
               <h3 className="flex flex-wrap items-center gap-2 text-title font-semibold text-heading">
                 People
-                <ReportBadge tone="accent">Tier 0</ReportBadge>
+                {peopleAllTier0 && <ReportBadge tone="accent">Tier 0</ReportBadge>}
               </h3>
             )}
             <div className="mt-3 grid gap-2">
@@ -1617,6 +1654,15 @@ function RosterSection({
                       >
                         {reason ?? "You marked this person as important."}
                       </p>
+                      {/* RULING 68a. Per-card provenance in a MIXED section —
+                          see the organisation card above. */}
+                      {!peopleAllTier0 && (
+                        <p className="mt-1.5">
+                          <ReportBadge tone="accent">
+                            {judgment ? "Tier 2" : "Tier 0"}
+                          </ReportBadge>
+                        </p>
+                      )}
                       {clean(item.speaking) && (
                         <p className="mt-1 text-caption text-text-faint">
                           Speaking · {item.speaking}

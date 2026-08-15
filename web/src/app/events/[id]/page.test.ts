@@ -1218,6 +1218,120 @@ describe("EventReport", () => {
     expect(html).not.toContain("Also in this report with an AI key");
   });
 
+  // ════════════════════════════════════════════════════════════════════════
+  // RULING 66a / 68a (round 25 C, item 2). **THE `Tier 0` BADGE ON THE ROSTER
+  // SUB-HEADINGS IS NOW PER CARD.**
+  //
+  // These two sub-headings were the only place on either report where model
+  // prose could render under a badge saying it had not been used:
+  // `partitionEventRoster` merges `judgedAttendees[].why` into a card's reason
+  // whenever that card has no Tier 0 reason of its own. The merge is per card,
+  // so the provenance claim is too — the heading keeps its badge only while
+  // every card beneath it is Tier 0.
+  //
+  // The other three `Tier 0` ReportBadges ("Skills they ask for", "What it
+  // costs you", `why-peer-sent-this`) read no enrichment and stay literal;
+  // making those conditional would be over-reach.
+  // ════════════════════════════════════════════════════════════════════════
+  function badgesUnder(html: string, heading: string): string[] {
+    const start = html.indexOf(`>${heading}`);
+    if (start === -1) return [];
+    const rest = html.slice(start);
+    // Bound the slice at whichever comes first: the NEXT sub-heading, or this
+    // section's own tail block. Without both bounds the organisations slice
+    // runs into the people section and reports its badges as well.
+    const end = Math.min(
+      ...[rest.indexOf("<h3", 1), rest.indexOf("Every other")]
+        .filter((index) => index > 0)
+        .concat(rest.length),
+    );
+    return [...rest.slice(0, end).matchAll(/data-report-badge[^>]*>([^<]*)</g)].map(
+      (m) => m[1],
+    );
+  }
+
+  it("keeps the roster heading's Tier 0 badge when every card is Tier 0", () => {
+    // THE UNCHANGED WORLD, and the one Ruling 69's Phase 1 census measures:
+    // no enrichment, so no card carries a judgment. The markup must be exactly
+    // what the plate has always shown.
+    const html = renderReport(
+      baseEvent({
+        organisations: [
+          { name: "Solid Power", relevance: "They work on the interface you study." },
+        ],
+        people: [
+          { name: "Dana Reyes", relevance: "They chair the session you asked about." },
+        ],
+      }),
+    );
+    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 0"]);
+    expect(badgesUnder(html, "People")).toEqual(["Tier 0"]);
+  });
+
+  it("withdraws the heading badge and labels the card when the model wrote its reason", () => {
+    // `Volta Lab` has no Tier 0 reason, so `judgedAttendees[].why` supplies it
+    // — the exact shape that used to sit under a badge reading `Tier 0`.
+    const html = renderReport(
+      baseEvent({ organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }] }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Volta Lab", worthIt: true, why: "Relevant interface work." },
+        ],
+      },
+    );
+    // The model's prose is on the page …
+    expect(html).toContain("Relevant interface work.");
+    // … and it is NOT under a blanket `Tier 0` claim any more.
+    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 2"]);
+  });
+
+  it("labels a mixed roster card by card, not by section", () => {
+    // THE CASE THAT FORCED "PER CARD, NOT PER SECTION": one card keeps its own
+    // Tier 0 reason while its neighbour takes the model's. A section-level
+    // badge cannot be true for both.
+    const html = renderReport(
+      baseEvent({
+        organisations: [
+          { name: "Solid Power", relevance: "They work on the interface you study." },
+          { name: "Volta Lab", descriptor: "Exhibitor" },
+        ],
+      }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Volta Lab", worthIt: true, why: "Relevant interface work." },
+        ],
+      },
+    );
+    // Sorted Tier 0 first by `byPriority`, so: the kept card, then the judged one.
+    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 0", "Tier 2"]);
+  });
+
+  it("decides each roster section's provenance independently", () => {
+    // The organisations went to the model; the people did not. Neither section
+    // may borrow the other's provenance.
+    const html = renderReport(
+      baseEvent({
+        organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }],
+        people: [
+          { name: "Dana Reyes", relevance: "They chair the session you asked about." },
+        ],
+      }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Volta Lab", worthIt: true, why: "Relevant interface work." },
+        ],
+      },
+    );
+    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 2"]);
+    expect(badgesUnder(html, "People")).toEqual(["Tier 0"]);
+  });
+
   it("renders the day plan in order, between the talks and the poster fit", () => {
     // B-04 / §1b Correction 1. Plate 03: "Which sessions to attend and who to
     // find, in order." Ordering is the feature, so the rows render exactly as
