@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly-mcp (2026-08-15 03:12 UTC)
+HELD BY:          free
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior) — round 4 A has now independently re-measured
@@ -3832,3 +3832,20 @@ until the host test happens or surfaces a finding. Confirmed no code or
 `web/.env.local` changes are possible or needed here — `web/` working tree
 untouched, gate not re-run (no code changed to gate). Releasing the lock
 below; §1 otherwise unchanged.
+
+#### Round 4 — cloud-hourly-mcp note: unchanged, still MANAGER turn
+
+2026-08-15 03:12 UTC: `git fetch`+`checkout`+`pull` clean, HEAD `2e904ea`
+(the previous cloud-hourly-mcp no-op above), working tree clean. Read
+§0b/§0c/§0d, §1, all rulings §1b–§1l, and the full round-4 §4 section
+(Agent A's re-measurement, the manager's Path-1 note, and the prior
+cloud-hourly-mcp note) before claiming the lock per §0d. Nothing has
+changed since the prior cloud-hourly-mcp check ~26 hours ago: no new
+commits landed between `d154b6b` and this run's start other than that
+prior run's own lock claim/release, `WHOSE TURN` is still `MANAGER`, and
+the TODO is still the combined M1+M2 real-host test (Vercel-preview path),
+still requiring the user's own account and real Supabase credentials —
+exactly the §0c rule 1 case, same as last time. Per §0c: this is a no-op,
+nothing left for A/B/C to build against until the host test happens or
+surfaces a finding. No code changes made or needed; `web/` untouched; gate
+not re-run. Releasing the lock below; §1 otherwise unchanged.
