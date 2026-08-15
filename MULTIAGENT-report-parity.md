@@ -271,7 +271,9 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 
 ```
 HELD BY:          LAPTOP-3CL10CG5 — Agent B, round 28 (RESUMED) — claimed
-                  2026-08-15 15:25 UTC
+                  2026-08-15 15:25 UTC, refreshed 2026-08-15 16:52 UTC
+                  (same holder, same turn; refreshed after a stream-watchdog
+                  stall, not re-claimed)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -76936,3 +76938,305 @@ ever committed** — §3 held — and A ran none of them.
 **Config action taken with this ruling:** `tavilyEnabled` set to `false` in the local measurement profile (keys retained, unused). **On resume, the manager inserts the provider swap as round 28 B's item zero; the three standing items follow it.**
 
 ---
+
+---
+
+### Round 28 — Agent B — ITEM 0 (RULING 75): the `gemini` web-search provider, DESIGNED FROM A LIVE PROBE
+
+**B changed no code.** Every number below was taken by execution against the live
+Vertex endpoint on 2026-08-15 between 15:3x and 16:4x UTC, from a throwaway
+harness in `web/zz-r28b/` that is deleted before this commit. No Tavily, Adzuna,
+USAJobs or JSearch call was made for any purpose. No credential printed, logged
+or written; `.env.local` was never `cat`-ed — only boolean presence checks.
+
+#### 0.1 THE SEAM, MAPPED BY READING ALL THREE SURFACES
+
+They are **not** the same seam, and the brief's shorthand hides two real
+differences C must not paper over.
+
+| | `sources/web-search.ts` (`web`) | `events/sources/eventweb.ts` | `jobs/sources/jobweb.ts` |
+|---|---|---|---|
+| provider choice | `resolveProvider()` — honours `webSearch.provider` (`"auto"`/`"brave"`/`"tavily"`) | **ternary only**: `keys.tavily ? searchTavily : searchBrave`. **`webSearch.provider` is NOT read here** | same ternary; `provider` NOT read |
+| search fn returns | `RawItem[]` (maps inside) | **`WebResult[]` = `{title?,url?,snippet?}`** — mapping happens in `fetchImpl` via `webResultToRawEventItem(result, now)` | **`RawJobItem[]`** — mapping happens **inside** the search fn via `webResultToRawJobItem({title,url,snippet}, topics)` |
+| queries | `buildSearchQueries` → dedup, `slice(0,4)`, each suffixed `" paper OR preprint OR arxiv"` | `query.queries.slice(0, EVENT_QUERY_BUDGET=16)`, verbatim | `query.queries.slice(0, JOB_QUERY_BUDGET=12)`, each suffixed `" position opening apply"` |
+| perQuery | `Math.max(3, ceil(min(limit,20)/nQueries))` | `RESULTS_PER_SEARCH = 10` | `RESULTS_PER_SEARCH = 10` |
+| fan-out | `Promise.allSettled` | `Promise.all` | `Promise.all` |
+| timeout / cache | 7000 ms, `revalidate 600` | 7000 ms, `revalidate 6h` | 7000 ms, `revalidate 3h` |
+| dedup key | `id = web:<url>` | `id = eventweb:urlHashId(url)` | jobweb id, then `slice(0, query.limit)` |
+| on failure | catch, returns `[]` | catch, returns `[]` | catch, returns `[]` |
+| `enabled` | `if (!braveKey && !tavilyKey) return []` inside `fetchImpl` | `enabled: Boolean(keys.tavily || keys.brave)` | same |
+
+**Two contract facts C must carry:** (a) jobweb's search function returns
+**already-mapped `RawJobItem`s**, eventweb's returns **unmapped `WebResult`s** —
+one `searchGemini` cannot return the same type to both; it must return
+`WebResult[]` and each surface keeps its own mapping call. (b) **eventweb and
+jobweb never read `webSearch.provider` at all** — Ruling 75 requirement 2
+("all three surfaces uniform") therefore requires *adding* preference-reading to
+two surfaces that do not have it, not just extending a switch.
+
+**And the seam is currently DEAD, which is why this item exists.** `.env.local`
+holds **no `BRAVE_SEARCH_API_KEY` and no `TAVILY_API_KEY`** (presence checked,
+values never read). The only Tavily key is the request-borne one, and both
+opportunity pipelines build `webSearch` **only** under
+`req.searchConnectors?.tavily?.enabled` (`events/pipeline.ts:137`,
+`jobs/pipeline.ts:136`). With `tavilyEnabled:false` in the measurement profile,
+`webSearch` is `undefined`, `resolveKeys` finds nothing, and **`eventweb.enabled()`
+and `jobweb.enabled()` both return `false`** — the web surfaces are entirely off,
+and the paper surface returns `[]` at `web-search.ts:38`. Vertex credentials
+**are** present (`GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION` and an
+existing ADC file).
+
+#### 0.2 THE GROUNDING PROBE — SEVEN MEASURED FACTS, FOUR OF THEM DESIGN-BREAKING
+
+Model `gemini-2.5-flash` on Vertex (`vertexai:true`, project + location from env),
+`tools: [{ googleSearch: {} }]`.
+
+1. **Grounding works and the shape is as Ruling 75 assumed.**
+   `candidates[0].groundingMetadata` carries `webSearchQueries`,
+   `searchEntryPoint`, `groundingChunks`, `groundingSupports`, `retrievalMetadata`.
+   `groundingChunks[].web = { uri, title, domain }`.
+
+2. **THE URIs ARE REDIRECTS AND THEY RESOLVE — 64 of 64.** Every `uri` is
+   `https://vertexaisearch.cloud.google.com/grounding-api-redirect/...`.
+   `fetch(uri, { method:"HEAD", redirect:"manual" })` returned **302 with a
+   `Location` header on 64 of 64 rows** across two fan-outs (24 event + 40 job),
+   full path and query preserved (`.../events/find-an-event/...`,
+   `.../battery-event/...`, `.../tradeshows/...`, `lanl.jobs/search/jobdetails/...`).
+   **HEAD is as good as GET** (both 302, both ~300 ms) — the target page is never
+   fetched by the resolution step. Latency at concurrency 8: **min 153 ms, p50
+   ~295–347 ms, max 606 ms; 64 rows resolved in 1.2–1.7 s wall.**
+   **Ruling 75 requirement 1 is CONFIRMED BY EXECUTION and it is cheap.**
+
+3. **AN UNRESOLVABLE REDIRECT HAS A CLEAN, CHEAP SIGNAL.** Three deliberately
+   corrupted tokens (truncated / empty / garbage) all returned **404 with no
+   `Location`**, in 275–452 ms. So the drop rule is decidable, not a guess:
+   `status !== 302 || !location` → **DROP**. No fake URL can ever be constructed
+   because there is nothing to construct one from.
+
+4. **`web.title` IS THE REGISTRABLE DOMAIN, NOT THE PAGE TITLE. 64 of 64.**
+   `title === domain` in every chunk of every query in both fan-outs —
+   `"uni-giessen.de"`, `"rsc.org"`, `"indeed.com"`, `"lanl.jobs"`. **This is the
+   item's central fact and it is not what Ruling 75 anticipated.** Tavily's
+   `title` and Brave's `title` are page titles; Gemini's is a hostname. Passing it
+   through would hand every title-reading guard in the loop a bare host.
+
+5. **CONTROLLED GENERATION IS REFUSED WITH GROUNDING.** Adding
+   `responseMimeType: "application/json"` returns **HTTP 400 INVALID_ARGUMENT —
+   "controlled generation is not supported with Search tool"**. This matters
+   twice: the adapter cannot ask for structured rows, **and it cannot reuse
+   `gemini.ts`'s `callModel`/`genConfig`, which set `responseMimeType:
+   "application/json"` unconditionally** (`providers/gemini.ts:84`). C needs a
+   separate config path, not a new argument to the existing one.
+
+6. **A STRICT OUTPUT FORMAT IS NOT HONOURED.** Given a system instruction
+   demanding one `TITLE ||| SNIPPET` line per source and "no prose, no preamble,
+   no numbering", the model returned **five paragraphs of prose** (12.1 s).
+   `groundingSupports` did not rescue it: 5 supports for 6 chunks, one support
+   mapping to **two** chunks, and support `segment.text` is the **model's own
+   sentence**, not the page's. **Treat prose-instead-of-format as a property of
+   the provider. The grounding metadata is the only reliable channel; the answer
+   text is not a parseable result list and the design must not depend on it.**
+
+7. **`maxOutputTokens` IS A RESULT-COUNT KNOB, NOT A LATENCY LEVER.** Same query,
+   three caps: **none → 7400 ms / 13 chunks; 256 → 3725 ms / 3 chunks; 64 →
+   2658 ms / 0 chunks.** Chunks accrue as the model writes, so truncating the text
+   truncates the evidence list. There is no cheap way to buy speed here.
+
+**Zero-result and no-search behaviour, probed:** a nonsense query
+(`"qxzzyw plorbnat frimbulator conference 2026 zzqqx"`) and a non-web question
+(`"What is 2 + 2?"`) both returned **`groundingMetadata` present with
+`groundingChunks` an EMPTY ARRAY** — no throw, no error field. **Non-`web` chunk
+kinds (`maps`, `retrievedContext`, `image`) exist in the SDK's `GroundingChunk`
+union and were 0 of 64 in these windows** — unobserved, not impossible; the
+design filters on `chunk.web` rather than assuming.
+
+**Result counts and latency, per query:** 4–13 chunks (event fan-out 24 chunks /
+6 queries; job fan-out 40 / 6). **`perQuery` has no lever on Gemini** — grounding
+returns what it returns and `RESULTS_PER_SEARCH = 10` is unenforceable in both
+directions. Per-call latency **3364–12087 ms**; six concurrent calls finished in
+**6107 ms (events) and 10697 ms (jobs)** wall.
+
+#### 0.3 THE DECIDING MEASUREMENT — THE TWO TITLE REGIMES, RUN THROUGH THE SHIPPED ADMISSION
+
+The live rows were replayed through the **shipped, unmodified**
+`webResultToRawEventItem` and `webResultToRawJobItem` under two title regimes.
+
+| | regime A — chunk title (= the domain) | regime B — page title recovered after redirect |
+|---|---|---|
+| EVENTS, 24 resolved rows | **6 admitted** | **6 admitted** |
+| — the names it produced | `pyro.byu.edu`, `rsc.org`, `euchemsil2026.com`, `ans.org`, plus 2 real | `Molten Salt Electrochemistry Symposium (MoSES)`, `EUCHEMSIL 2026`, `Materials and Chemistry for Molten Salt Systems`, ... |
+| JOBS, 40 resolved rows | **31 admitted** | **16 admitted** |
+| — the titles it produced | `lanl.jobs`, `selectminds.com`, `pnnl.gov`, `jobleads.com`, `terra.do`, `bebee.com`, `remoterocketship.com`, `trabajo.org`, ... | `Battery Materials and Components Postdoc at Los Alamos National Laboratory`, **`Nuclear Materials and Molten Salt Technologist 1`**, `Actinide Chemistry/Ion Exchange Postdoc Research Associate`, ... |
+
+**Regime A admits nearly twice as many job rows and every one of them is a bare
+hostname.** That is not a degradation, it is the manufacture, at scale, of the
+exact defect this loop already tracks by name: `eventNameFrom`'s host last resort
+(**A22-01, FLAGGED not reversed**), **62d(b) + 63a's "zero host / topic-label /
+chrome employers on 60 renders"**, and **A26-01**. Regime A would take 63a's
+trigger from *reachable and not pulled* to pulled on essentially every row.
+**Regime A is therefore rejected on measured evidence, not on taste.**
+
+**Regime B keeps the must-keeps.** `Nuclear Materials and Molten Salt
+Technologist 1` — round 27 item 2's own LANL row, the 49a/62d must-keep — is
+admitted under regime B and is a bare `lanl.jobs` under regime A.
+
+#### 0.4 THE DESIGN — `searchGemini`, THREE STAGES, DROP-ON-UNDECIDABLE THROUGHOUT
+
+**Stage 1 — GROUND.** One `generateContent` per query, `tools:[{googleSearch:{}}]`,
+**no `responseMimeType`** (fact 5), **no `maxOutputTokens`** (fact 7), own client
+built the way `providers/gemini.ts:getClient` builds it (`vertexai:true`, project
+plus location from env), own config path — **not** `genConfig`. Read
+`groundingMetadata.groundingChunks`, **keep only chunks with a `web` member**
+(non-web kinds exist in the union). Zero chunks means this query contributes
+zero rows and says so; no throw.
+
+**Stage 2 — RESOLVE (mandatory, Ruling 75 requirement 1).**
+`fetch(uri, { method:"HEAD", redirect:"manual", signal: AbortSignal.timeout(7000) })`.
+`status === 302 && location` → the row's URL is `location`, verbatim.
+**Anything else → the row is DROPPED.** Never the redirect URI, never the
+`domain`, never a reconstruction. The target page is never fetched here.
+Concurrency 8, matching `fetchPagesConcurrently`'s shipped default.
+
+**Stage 2b — HOST PRE-SCREEN, and its boundary.** Before paying for stage 3, drop
+rows whose resolved host is in **`page-fetch.ts`'s `UNFETCHABLE_HOSTS`** or, on the
+event surface only, **`eventweb.ts`'s `DENY_HOSTS`** — verified at
+`eventweb.ts:256` to be an **outright, title-independent** deny, so skipping them
+cannot change an admission. **`AGGREGATOR_HOSTS` is deliberately NOT in this
+pre-screen**: `jobweb.ts:1221` does not deny those hosts, it *requires a posting
+id* on them, so a host pre-screen there **would** change admissions. C must prove
+stage 2b admission-neutral by test, not by argument.
+
+**Stage 3 — TITLE AND SNIPPET, FROM THE PAGE OR NOT AT ALL.** `fetchPageHtml`
+(plain, keyless, allowed) on the resolved URL. **Title** = `og:title`, else
+`<title>`; **snippet** = the page's `og:description`/`meta description`.
+**No title → the row is DROPPED.** **No description → the snippet is the EMPTY
+STRING** — the shipped mappers already read `result.snippet ?? ""` and the
+dateless branch is explicitly untouched by an empty snippet.
+
+**The model's answer text is NEVER used as a snippet, and this is a hard line.**
+The event mapper runs `extractEventDate` / `extractDeadline` over the snippet and
+renders `description` from it; the job mapper runs `cleanJobDescription` and the
+employer clause over it. A model-written sentence is a *generated* claim about the
+page, so feeding it in would let a generated date become a rendered date — the
+precise invention round 27 item 4 was built to stop (**ZERO invented dates**).
+Page-derived text is what Tavily's `content` and Brave's `description` already
+are; that is the true analogue and the only honest one.
+
+**Measured cost of stage 3, on the 64 live rows:** **47 of 64 titles recovered
+(73%)** — 34 via `og:title`, 13 via `<title>`; p50 746 ms, p90 1862 ms, max
+2473 ms, 7.9 s wall at concurrency 8 with a 5 s per-page timeout. **The 17
+failures: 13 x HTTP 403, 3 x HTTP 404, 1 x unfetchable host.** **8 of the 17 are
+on `AGGREGATOR_HOSTS`** (`indeed.com` x5, `ziprecruiter.com` x3) and one is a
+404 on `careers.pnnl.gov/jobs/11978` — a posting that is *gone*, where dropping is
+correct. **The genuine loss is about 8 of 64 rows (12.5%)**: bot-blocked real pages
+(`tesla.com`, `climatebase.org`, `mykelly.com`). **That is a named, priced cost of
+this design and it must be tallied, not hidden.**
+
+**Provider resolution (Ruling 75 requirement 2), the exact order:**
+explicit `webSearch.provider` preference → **`gemini` when Vertex credentials are
+present AND Tavily is not enabled** → `brave` → `tavily`. `WebSearchProvider` in
+`sources/types.ts:13` gains `"gemini"`. **Vertex presence is
+`Boolean(process.env.GOOGLE_VERTEX_PROJECT)` and NOTHING ELSE** — in particular
+**`canUseLocalServerProvider()` is NOT touched, called or copied**; its
+deployed-user safety comment (`registry.ts:29-40`) governs *model spend* and is a
+recorded decision this design leaves exactly where it is. **B flags, does not
+reverse.** eventweb and jobweb must additionally start *reading*
+`webSearch.provider`, which they do not today (0.1).
+
+**When the provider fails entirely, the pipeline sees the shipped pattern and
+nothing else:** every stage catches to **an empty array**, the source reports
+**zero fetched**, `errors[sourceId]` carries the reason, and the report renders
+with that surface honestly empty. No partial row, no placeholder, no host-as-title.
+
+**Measurement profile and method lines (requirement 3):** `searchProvider: gemini`
+on the profile and on every A method line, Ruling 69's pattern.
+**Trend tables note the corpus break at this round (requirement 5)** and no
+cross-provider row comparison is scored as drift.
+
+#### 0.5 ADVERSARIAL PASS — EIGHT CONDITIONS, ANSWERED BEFORE RECOMMENDING
+
+1. **Zero-result query** — measured: empty `groundingChunks`, no throw. Query
+   contributes zero rows. Vacuity check: this is not "always true" — the same code
+   path returned 13 chunks on a neighbouring query in the same window.
+2. **Non-web grounding chunk** — 0 of 64 observed but present in the SDK union;
+   filtered by `chunk.web` presence. **Recorded as UNWITNESSED, not as cleared.**
+3. **Duplicate URLs across queries** — **the redirect tokens are opaque and
+   per-call: 64 of 64 grounding URIs were unique across queries.** So
+   **dedup-before-resolution is impossible** — every shipped dedup key
+   (`web:<url>`, `eventweb:urlHashId(url)`, jobweb's id) is computed from the
+   URL and would see 64 distinct rows. **Dedup MUST run after stage 2.** In these
+   two windows the resolved URLs were also 64/64 unique, so the collision is
+   **constructed, not sighted** — C must not read that as proof it cannot happen.
+4. **Timeout budget** — this is the design's worst problem and it is **not** the
+   7000 ms per-fetch value. `withSourceTimeout` (`opportunities/shared.ts:35`)
+   defaults to **8000 ms for the whole source**, and a single grounding call was
+   measured at **10697 ms**. A full event fan-out costs roughly **6 s ground plus
+   1.2 s resolve plus 7.9 s titles, about 15 s**. **On the shipped budget the gemini
+   surface returns NOTHING.** The budget must be raised for this source — B
+   proposes a per-source override of **25000 ms** passed at the two
+   `withSourceTimeout` call sites, not a global default change, so no other
+   source's behaviour moves. **POLICY — manager decides** whether a 25 s
+   opportunity-source budget is acceptable; the design is otherwise complete
+   either way, and at 8000 ms it is provably empty.
+5. **`perQuery` mapped to grounding** — one grounded call per query, and **the result cap
+   is not honoured in either direction** (4–13 observed against a request of 10).
+   `RESULTS_PER_SEARCH` becomes advisory on this provider; do not assert on it.
+6. **A row with no title** — dropped (0.4). The alternative, the domain, is
+   measured in 0.3 to manufacture 31 host-titled job rows.
+7. **A row whose redirect 404s** — dropped, measured signal, 275–452 ms.
+8. **Query-budget interaction** — 16 event queries x ~6 s each, concurrent, is
+   still ~6 s wall, but **16 x ~7 chunks, about 112 page fetches** at concurrency 8 and
+   p90 1.9 s, about **27 s**. C should raise the stage-3 concurrency (16) or cap rows
+   per query before fetching. **Capping rows before stage 3 changes which rows
+   exist and must be a documented, tested choice, not an implementation detail.**
+
+#### 0.6 TESTS AT RISK — GREPPED, NOT REMEMBERED
+
+- `web/src/lib/events/sources/eventweb.test.ts` — **150 tests, 2330 lines.**
+  Feeds `WebResult`-shaped fixtures to exported helpers; the adapter change does
+  not alter those functions, so the risk is the **`WebResult` type only**.
+- `web/src/lib/jobs/sources/jobweb.test.ts` — **123 tests, 2725 lines.** Same
+  shape of risk.
+- `web/src/lib/events/benchmark.test.ts` — **4 tests, 391 lines. The one that
+  MUST change (requirement 6).** Its gate is
+  `hasLiveKey = Boolean(profile?.tavilyApiKey?.trim())` (`:36`) and it passes
+  `searchConnectors.tavily.enabled = profile?.tavilyEnabled !== false` (`:125`).
+  **With `tavilyEnabled:false` the key is still present, so the gate is still TRUE
+  and the test still RUNS with the web source OFF** — which is exactly why A found
+  its green to be an ABSENCE. The gate must become Vertex-credential-based and the
+  request must carry the gemini provider.
+- `web/src/lib/opportunities/daily-search-budget.test.ts` (1 test, 112 lines),
+  `web/src/lib/opportunities/query-budget.test.ts` (2 tests, 52 lines),
+  `web/src/lib/feed/paper-daily-cache.test.ts` (1 test, 78 lines),
+  `web/src/app/welcome/completeness.test.ts` (15 tests, 185 lines) — all construct
+  `searchConnectors`/`tavilyEnabled` and see a widened type.
+- `web/src/lib/llm/providers/registry.test.ts` — **must stay byte-unchanged.** If
+  it moves, `canUseLocalServerProvider` was touched and the design was violated.
+
+#### 0.7 PRICE FOR C
+
+**New:** `web/src/lib/sources/gemini-search.ts` — the grounded client, redirect
+resolver, title/snippet recovery, `WebResult[]` out. ~220–280 lines with comments
+in this repo's style. **Edited:** `sources/types.ts` (one union member);
+`sources/web-search.ts` (`resolveProvider` plus one fan-out branch, ~25 lines);
+`events/sources/eventweb.ts` and `jobs/sources/jobweb.ts` (`resolveKeys` becomes
+`resolveSearchProvider`, the ternary becomes a three-way, and **new** preference
+reading, ~35 lines each); `feed/types.ts` plus the three route parsers (a `gemini`
+connector, ~15 lines each); `events/pipeline.ts`, `jobs/pipeline.ts`,
+`feed/pipeline.ts` (build `webSearch` when the gemini provider is available, not
+only when Tavily is enabled — **this is the change that turns the surfaces back
+on**); the two `withSourceTimeout` call sites (item 4 above, pending the
+manager). **Tests:** new adapter tests (mocked grounding payloads, the 302/404
+resolution split, the drop-on-no-title rule, the empty-chunks case, the non-web
+chunk filter) plus the benchmark gate. **Estimate: 1 new file, ~11 edited files,
++250/-40 source lines, +45–60 tests.** Item 0 is comfortably the largest single
+item this loop has priced; C should expect it to fill a turn on its own.
+
+**One correction to the brief:** it places `searchTavily` at `eventweb.ts:~1909`
+and its provider branch at `~1976–2002` — both correct — but describes
+`jobweb.ts` as "its equivalent". It is not equivalent in the way that matters:
+**jobweb's search functions return already-mapped `RawJobItem[]`, eventweb's
+return unmapped `WebResult[]`.** A single shared `searchGemini` returning
+`RawJobItem` would not fit eventweb, and one returning `RawEventItem` would not
+fit jobweb. The design returns `WebResult[]` and leaves each surface's mapping
+call exactly where it is.
