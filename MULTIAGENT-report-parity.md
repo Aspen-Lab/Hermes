@@ -61418,3 +61418,25 @@ commission's own words.
 each pushed immediately.**
 
 ---
+
+### Round 24 — MANAGER verification of Agent B, RULING 64a–c, and the hand-off to C
+
+**Date: 2026-08-15. Checked, not inherited.** Append discipline re-verified by numstat (236/0, 299/0, 192/0; the hand-off's §1 update). **Two of B's load-bearing claims re-read in source by the manager, both exact:** `EVENT_INDEX_TITLE_RE` exists at `eventweb.ts:344` and its browse-index alternative is END-ANCHORED (`…(?:events?|conferences?|seminars?|workshops?)\s*$`) — the chrome tail `| Provided by Cambridge EnerTech` walks past it exactly as B established; and the same alternative's `workshops?` matches the SINGULAR, so B's named false-positive risk (`All Solid State Battery Workshop`, this corpus's own vocabulary) is real in the shipped pattern. B changed no code; the gate stands (B's run: 1842/1843, the benchmark's city-coverage arm now 0.333 and moving AWAY from its floor because the place design is winning — 63b's point, measured).
+
+**THE METHOD IS ACCEPTED**: the anchor proven clean on a simulated clock at both 62b edges (kept 31 Aug 23:00, dropped 1 Sep 00:01) — the fuse's mechanism is now TESTED, not merely loaded; the render-site sweep that turned A's one wrong site into FIVE plus one latent plus one nobody had looked at; two of B's own candidate designs killed as vacuous/tautological before recommendation; the A24-01 `any segment` variant killed by its own control; and the honest limit stated (the Cambridge row is intermittent — regression-tested by the STRING, never by a live pull). **A's corrections are accepted on the record: the index-detector premise and the render-site count. The streak holds.**
+
+---
+
+## RULING 64 — THE THREE POLICY ITEMS B RAISED, DECIDED. BINDING.
+
+**64a. THE SCORING-ORDER QUESTION (a month-granularity row scores 0.35 like a dateless row, vs 0.824 day-level) — RECORDED LEAD, EVIDENCE-GATED. NOT C WORK THIS ROUND.** No rendered value lies, no wrong drop is witnessed, and ranking quality is not a census column — the same reasoning that kept recall unscored (59b) and shelved the `owned` widening (58c). B's measured numbers are the recorded corpus. **It REOPENS when a census witnesses an on-topic month-granularity row failing top-N on the date component, or a composition defect traced to the under-score — then B designs it properly.** Until then A owes nothing new; the ordinary membership census already watches composition.
+
+**64b. THE PLURAL NARROWING OF `EVENT_INDEX_TITLE_RE`'s BROWSE ALTERNATIVE — APPROVED, AND IT SHIPS WITH THE A24-01 FIX IN THE SAME COMMIT FAMILY.** Feeding first segments through the existing check raises the guard's exposure, and the corpus's own vocabulary carries the singular-`Workshop` false-positive risk B named. The narrowing (that alternative requires the PLURAL noun) and the first-segment feed land together; B's adversarial table governs (150 offered titles × 5 pulls: exactly 1 new drop — a genuine events hub — 0 drops lost, 0 real event pages lost); misses fall to ADMISSION; the standing escape clause is armed. The naming and place faces need no separate fix — the row leaves by KIND, and the place guard is untouched (B measured that too).
+
+**64c. THE BENCHMARK'S `Chicago` HARD-ASSERT — FOLDED INTO ITEM 3's RESTATEMENT.** Its first arm is satisfied today BY THE WRONG ROW (the index page), and its fallback demands a city the place guard rightly silences — it asserts the old world twice over. C restates BOTH benchmark assertions in one item, each with the item named, neither deleted: the coverage floor becomes B's named-row value lock (62a's four contamination hosts render no city; the five venue-anchored hosts render their own; a zero-city pool is a PASS), and the `Chicago` expectation is restated to the new contract. The benchmark stays excluded from the gate exactly as before; after this item its red presentations should carry information again.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 24` stands as B wrote it, order **A24-02 → A24-01 (+64b) → 63b restatement (+64c)**. B's §4 fix directions govern; 64a is NOT on C's list. The gate stays `GATE (0%): NOT MET` — only round 25's A census can move it, and only the manager closes, after an independent re-measurement.
+
+---
