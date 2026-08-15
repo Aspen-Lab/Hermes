@@ -72709,3 +72709,258 @@ walked on the VISUAL surface**, which is the walk whose omission created V26-J05
 **THE HAND-OFF:** `WHOSE TURN: B — round 27` stands as A wrote it. **B's work list, in the manager's order:** (1) **A27-04** — the fused `Atlanta GA` city (the live lock is red on it; establish by execution whether source drift or a pipeline path fuses city+state, both of A's windows in evidence); (2) **A27-02** — the aggregate-listing filter's false positive (design the narrowing so `…Technologist 1 - LANL Jobs` and the Sandia shape pass while `1,200 Engineering Jobs` still drops — adversarial corpus from the offered rows, misses fall to admission-side judgement per the filter's own design); (3) **A27-01** — the three admitted listing/hub pages (one renders the bare host as the event name — A24-01's named failure mode via new shapes; establish one mechanism or several); (4) **A27-03** — finished pages admitted undated (B26-OBS-01's class, three pages; mind 62b's boundaries — no dishonest closure, no year-only fallback); (5) **V27-01 per Ruling 73** (the variant design with the byte-identity boundary); (6) **V27-02** — the visa quote's attribution runs inline at the quote's own size and colour per the plate; (7) **V26-J06's escape-claused half** — the two new extracted fields (value-side design: sources, extraction boundaries, honest fallbacks, tests at risk). Bank per item in this order. The gate stays `GATE (0%): NOT MET` — value AND visual.
 
 ---
+
+---
+
+### Round 27 — Agent B (item 1 of 7: **A27-04 — THE FUSED CITY. VERDICT: SOURCE DRIFT, PROVEN BY EXECUTION, AND A's "SAME URL" IS WRONG — THE TWO WINDOWS ARE TWO DIFFERENT PAGES ON THE SAME HOST, AND B REPRODUCED BOTH BYTE-FOR-BYTE. THE FIX IS ONE STRUCTURAL SPLIT AT THE SHARED SANITISER, MEASURED CLEAN ON PEER'S OWN 454-CITY GAZETTEER.**)
+
+**STATUS: COMPLETE.** Item 1 of seven. B changed no code; the harness lived in
+`web/zz-r27b/` (own vitest config rooted at `web/`, `*.probe.ts` include) and is
+deleted before this commit.
+
+---
+
+## **THE VERDICT: SOURCE DRIFT. NOTHING IN PEER FUSES CITY AND STATE.**
+
+**Both of A's windows reproduce on demand, from the SAME live pipeline function
+(`extractOpportunityPageDetails(html, "event")`), because they are TWO DIFFERENT
+PAGES:**
+
+| page fetched (through the shipped `fetchPageHtml`, same UA, same limits) | JSON-LD blocks | `place` returned | matches A's |
+|---|---|---|---|
+| `https://www.thebatteryshowsouth.com/` (root) | **1** | **`{ city: "Atlanta GA", country: "United States" }`** | **window 2, exactly** |
+| `.../en/conference/conference-overview.html` | **0** | **`{ city: "Atlanta", region: "GA", country: "United States" }`** | **window 1, exactly** |
+
+**THE SOURCE ITSELF EMITS THE FUSED FORM.** The root page's single
+`application/ld+json` block carries, at `$.location.address`, a `PostalAddress`
+whose **`addressLocality` is the literal string `Atlanta GA`** and whose
+**`addressRegion` is ABSENT**, with `addressCountry: "US"`. The event record's
+own venue is `$.location.name = "Georgia World Congress Center"`,
+`startDate 2027-04-21`. **Peer publishes that string faithfully** — `extractPlace`
+reads `addressLocality` into `city`, `sanitizePlace` finds no comma to split on,
+and `plausiblePlaceName` accepts it (2 words, 10 chars, no sentence punctuation).
+Measured on the shipped function:
+`sanitizePlace({ city: "Atlanta GA", country: "United States" })` returns the
+fused city **unchanged**.
+
+**AND THE OVERVIEW PAGE HAS NO JSON-LD AT ALL**, so the `??` chain in
+`extractOpportunityPageDetails` falls through to `extractBodyTextPlace`, which
+finds the gazetteer city `Atlanta`, then `stateCodeAfterCity` reads the page's own
+`Atlanta, GA` (5 occurrences) into `region` and sets `country` — window 1's exact
+shape. **The comma is the only reason that page splits and the root does not.**
+
+### **THE CORRECTION B OWES AGAINST A's TEXT**
+
+**A wrote "Same URL, same build, same code — 33 minutes apart." THE URL IS NOT
+THE SAME, and A's own part-1 table proves it**: E13's recorded `<title>` is
+`Conference Overview / The Battery Show South`, which is the **overview page's**
+own `og:title` (the root's reads `The Battery Show South 2026 | Charlotte, April
+22-23`). **The census window held the overview page; the re-measurement held the
+root.** Everything else A reported stands: the value is wrong, it renders, and
+the live lock caught it. **The mechanism is not drift-in-time on one page, it is
+drift-in-URL between two pages of one host, only one of which carries structured
+data.** That distinction matters for the falsifier: A's falsifier ("this host
+returns `Atlanta` with `region` separate while the provider's snippet is
+unchanged") **would fire on any pull that happens to land the overview page, and
+would prove nothing.** B replaces it below.
+
+**Also recorded, and not a Peer defect:** the root page is internally inconsistent
+at source — its `og:title`/`og:description` advertise **Charlotte, NC, April
+2026** while its JSON-LD says **Atlanta GA, April 2027**. Peer reads the JSON-LD
+and ignores the meta tags here, which is the correct precedence.
+**`parseCityRegion` cannot fire on either meta string** (both carry digits, which
+its letters-only pattern rejects) — checked, not assumed.
+
+---
+
+## **THE FIX — ONE BRANCH, AT THE ONE PLACE EVERY LAYER ALREADY PASSES THROUGH**
+
+**Site: `sanitizePlace` (`src/lib/opportunities/structured-extract.ts:922`).**
+Its own docstring already names this exact defect class one comma away:
+*"A `city` that still carries a comma is a whole address, not a locality."* **The
+fused form is the same defect with the comma missing**, so it belongs in the same
+function, not in a new event-only guard (Ruling 32: stop fixing it one site at a
+time). Every layer already goes through it —
+`extractOpportunityPageDetails` sanitises all three of JSON-LD, meta and
+body-text; `parseStructuredLocation` ends in it; `jsearch.ts:61` calls it
+directly — **so one branch closes it on BOTH surfaces.**
+
+**The branch, as B recommends C write it** (a named helper, so the job side can
+reuse it later):
+
+- `FUSED_STATE_CODE_RE` = `^(.*\S)\s+(<the shipped US_STATE_CODES list, joined>)$`
+- `splitTrailingStateCode(value)`: normalise whitespace, match, **require
+  `code === code.toUpperCase()`**, **require the head to be >= 2 chars and to
+  contain a letter**; otherwise return nothing.
+- Inside `sanitizePlace`, **after** the existing comma branch and **only when the
+  city has no comma**: `city = head` and **`region ??= code`**.
+
+**FOUR CLAUSES AND WHY EACH ONE IS NOT VACUOUS:**
+
+1. **Case-sensitive uppercase code.** Remove it and `Atlanta Ga` / `atlanta ga`
+   split — measured, both are refused today and must stay refused. Same decision
+   `hasTrailingStateCode` (line 1346) already records, for the same reason
+   (`in` vs `IN`).
+2. **Closed 51-code list, never a free `[A-Z]{2}`.** Remove it and any two-letter
+   uppercase tail splits.
+3. **Head must survive (>= 2 chars, contains a letter).** Remove it and a bare
+   `GA` becomes an empty city. Measured: `GA` alone is **untouched**.
+4. **`region ??=`, never `=`.** Remove it and the code overwrites a source's own
+   spelt-out region. Measured: `{ city:"Atlanta GA", region:"Georgia" }` becomes
+   `{ city:"Atlanta", region:"Georgia" }` — the source's word kept.
+
+### **WHAT IT MUST NOT DO — AND THE COUNTRY IS THE ONE THAT BITES**
+
+**IT MUST NOT INFER A COUNTRY.** `parseStructuredLocation` (line 1293) does
+`country ??= "United States"` when it pops a state code, which is safe there
+because it is reading a comma-delimited feed field. **On a space-fused string it
+would be wrong: `Perth WA` is Western Australia.** Measured with the proposed
+branch: `{ city:"Perth WA", country:"Australia" }` becomes
+**`{ city:"Perth", region:"WA", country:"Australia" }`** — the region is right
+either way and **no country is touched**. A bare `Perth WA` with no country stays
+country-less. **Silence over a guess, per this codebase's own standing
+precedent.**
+
+### **IT CANNOT REINSERT WHAT A GUARD REJECTED (Ruling 26 / §1m), AND THIS IS PROVABLE, NOT ARGUED**
+
+The fix is a **pure string normalisation on a value the chain already accepted.**
+A fused city is already truthy, so `sanitizePlace(structured?.place)` already
+short-circuits the `??` chain **before** the change. **Therefore the fix can
+change the VALUE of the answer and can never change WHICH LAYER answers** — it
+cannot pull the body-text layer forward, and it cannot resurrect a city that
+Ruling 62a's ownership guard silenced, because a silenced city never reaches
+`sanitizePlace` at all. **62a's guard boundaries are untouched: no page is read,
+no cue is evaluated, no gazetteer is consulted.**
+
+### **IT CANNOT TURN A PLACE INTO SILENCE**
+
+The head is always a prefix of a string that already passed
+`plausiblePlaceName` — shorter, fewer words, same punctuation — **so it always
+passes too.** Measured across the whole before/after table: **not one row goes
+from a value to nothing.**
+
+---
+
+## **THE ADVERSARIAL CORPUS — MEASURED, NOT ASSERTED**
+
+**MUST SPLIT — 8 of 8 do:** `Atlanta GA`, `Washington DC`, `New York NY`,
+`Kansas City MO`, `Salt Lake City UT`, `SAN DIEGO CA` (all-caps source),
+`Perth WA`, `Atlanta<double space>GA`.
+
+**MUST NOT SPLIT — 19 of 19 are untouched:** `Atlanta`, `Atlanta Ga`,
+`atlanta ga`, `GA`, `Cologne`, `São Paulo`, `Rio de Janeiro`, `Ho Chi Minh City`,
+`Frankfurt am Main`, `Atlanta Georgia`, `Stratford upon Avon`,
+`Newcastle upon Tyne`, `Aix en Provence`, `La Paz`, `Los Angeles`, `Santa Fe`,
+`Port au Prince`, `Ciudad de Mexico`, `Palo Alto`.
+
+**THE STRONGEST BOUNDARY: PEER'S OWN GAZETTEER SWEEP.** The proposed predicate
+run over **all 454 entries of `CONFERENCE_CITIES`** — every city name Peer itself
+believes in — **as written AND upper-cased: ZERO damaged, both times.** A separate
+audit of the underlying risk (*any* gazetteer city whose final word is a state
+code in any casing) also returns **ZERO**. **The all-caps-source worry that
+motivated clause 1 has no live target in Peer's own vocabulary.**
+
+**BEFORE/AFTER ON THE SHIPPED FUNCTION — only the fused rows move:**
+
+| input `city` | today | with the branch |
+|---|---|---|
+| `Atlanta GA` | **`Atlanta GA`** | **`Atlanta` + `GA`** |
+| `Atlanta, GA` | `Atlanta` + `GA` | `Atlanta` + `GA` — **unchanged** |
+| `Columbia, SC, United States` | `Columbia` + `SC` + US | **unchanged** |
+| `Atlanta GA` with `region: "GA"` | **`Atlanta GA` + `GA`** | `Atlanta` + `GA` |
+| `Atlanta GA` with `region: "Georgia"` | **`Atlanta GA` + `Georgia`** | `Atlanta` + `Georgia` |
+| `Perth WA` + `Australia` | **`Perth WA`** | `Perth` + `WA` + `Australia` |
+| `Atlanta` / `GA` / `Atlanta Georgia` / region-only / absent | — | **all unchanged** |
+
+---
+
+## **WHAT RENDERS WHEN THE INPUT IS MISSING OR UNDECIDABLE**
+
+- **Fused and splittable** (`Atlanta GA`) — `Atlanta` in the card, the WHERE tile
+  and the subtitle; `formatOpportunityPlace` then prints
+  **`Atlanta, GA, United States`** — the exact string rounds 24, 25 and 26 all
+  recorded for this host.
+- **Fused and NOT splittable** (`Atlanta Georgia`, `Bengaluru KA`) — **unchanged
+  from today**: it renders as-is. **B does not widen the rule to "anything that
+  looks like an address", because the only closed, checkable vocabulary here is
+  the 51 US codes; a general rule would have to guess, and a guess is what these
+  rulings forbid.** Stated as a known, bounded residue rather than hidden.
+- **No place at all** — `event.location` is empty, so `card.ts:58` renders
+  **`Location not listed`** (or `Online` for an online-only row). **Untouched by
+  this fix, and it is the honest-silence branch that already exists.**
+- **City is only a state code** (`GA`) — untouched; no head to keep, nothing
+  invented.
+
+---
+
+## **THE LIVE LOCK GOES GREEN WHEN THIS LANDS — AND WHY, EXACTLY**
+
+`benchmark.test.ts:208-215` asserts, for every survivor on
+`thebatteryshowsouth.com`, that `<host> -> <place.city>` equals
+`<host> -> Atlanta`. **After the fix BOTH pages yield `city: "Atlanta"`** — the
+root by the new split, the overview page as it already does — **so the lock is
+green whichever URL the live search returns that hour.** **B endorses A's
+recommendation in full: do not weaken this test and do not delete it.** It is the
+only instrument in the repo that caught A27-04, and the fix makes it pass by
+being right rather than by being loosened.
+
+**THE HONEST CAVEAT:** the assertion is guarded by *"assert on rows PRESENT;
+never demand presence"* (line 193), so a pull that does not offer this host skips
+it and the file goes green **without exercising the fix**. `namedRowsExercised >
+0` keeps the FILE non-vacuous but not this ROW. **So the deterministic proof must
+be a unit test, not the live benchmark** — see below.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+- **`src/lib/opportunities/structured-extract.test.ts`** — the only file that
+  calls `sanitizePlace` directly (line 817 `Columbia, SC, United States`; line
+  826 the country-spelling loop). **Both are comma-form or single-token: neither
+  can change.** 77 `it(` blocks in the file.
+- **`src/lib/opportunities/place-flow.test.ts`** (2 blocks) — every fixture city
+  is `Chicago`, single token. **Not at risk.**
+- **`src/lib/opportunities/enrich.test.ts`** (55 blocks, the solo gate) and
+  **`src/lib/events/benchmark.test.ts`** — no fused fixture anywhere.
+- **A repo-wide grep for the fused shape in ANY `.ts`/`.tsx`** (a word run
+  followed by one of the real 51 codes) returns **exactly two hits, neither a
+  place**: `connector-panel.tsx:164` (`placeholder="Adzuna App ID"`, a UI string)
+  and `jobweb.test.ts:2459`, which is the **employer-designator** list
+  (`Aspen NV`, `Aspen SA`, ...). **`sanitizePlace` never sees an employer name,
+  so that list cannot be reached by this change** — and `Aspen Co.` is already
+  refused by `plausiblePlaceName`'s punctuation rule regardless.
+- **NEW TEST C OWES** (this is the non-vacuous lock, since the live one can
+  skip): a `structured-extract.test.ts` case asserting
+  `sanitizePlace({ city:"Atlanta GA", country:"United States" })` gives
+  `{ city:"Atlanta", region:"GA", country:"United States" }`, **plus** the four
+  must-not cases (`Atlanta Ga`, `GA`, `Atlanta Georgia`, and `Perth WA` keeping
+  `Australia`). **Never delete a test; this only adds.**
+
+---
+
+## **THE FALSIFIER — B's, REPLACING A's**
+
+**A's falsifier is untestable as written** (it fires on a page swap, not on a
+value change). **B's:** *the ROOT page of `thebatteryshowsouth.com` serving an
+`addressLocality` that is not `Atlanta GA` — i.e. the site fixing its own
+JSON-LD — while `sanitizePlace` still returns the fused string.* That would mean
+B measured the wrong page. **Checkable in one fetch, and it did not fire: the
+fused locality is live as of this turn.**
+
+**A SECOND FALSIFIER, FOR THE FIX ITSELF:** *any entry in `CONFERENCE_CITIES`, in
+any casing, that the split damages.* **Run over all 454: it does not fire.**
+
+---
+
+## **OPTIONAL SECOND SITE — FLAGGED, NOT SHIPPED BLIND**
+
+`parseStructuredLocation` (the JOB feeds' entry point) drops a fused
+`Aiken SC`-shaped part **silently today**: the head fails the gazetteer test, so
+the whole place returns nothing. Reusing `splitTrailingStateCode` there — **only
+when the head is not already a gazetteer city, and still WITHOUT inferring a
+country** — would recover those. **B rates this UNWITNESSED on the job surface
+this round** (A's job census shows no such row) and marks it **optional for C**,
+to be landed only with its own constructed test. **It is named here so it is not
+rediscovered as new in round 28.**
+
+---
