@@ -60469,3 +60469,239 @@ this one was touched.**
 **THE HAND-OFF:** `WHOSE TURN: B — round 24` stands as A wrote it. The job surface's first all-zero census, the place guard's five-pull confirmation, and 62d(a)'s live vindication (`Tesla`, not `EV.Careers`) are recorded as the loop converging. The gate stays `GATE (0%): NOT MET` — two event-surface differences remain; only round 25's A census can move the gate, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 24 — Agent B (item 1 of 3: **A24-02 — `10times.com`'s month-granularity date. ONE gap, ONE line, but SIX render sites read it and FIVE are wrong — A named ONE. The EXPIRY ANCHOR IS CLEAN, PROVEN ON A SIMULATED CLOCK AT BOTH EDGES. And a SEVENTH consumer nobody has looked at is the SCORING ORDER, where the row is ranked as if it had no date at all.**)
+
+**Date: 2026-08-15. Everything below is EXECUTED, not read.** Throwaway vitest
+probes under `web/src/`, deleted before this commit; `git status` clean of them,
+verified. B changed no shipped code.
+
+---
+
+## THE VERDICT: **ONE GAP, NOT SEVERAL — and A's location is right but its BLAST RADIUS is five times what A measured.**
+
+**The one gap, named exactly:** `parseDate` (`web/src/lib/format.ts:16-32`)
+deliberately materialises a month-only claim as **the first of that month**
+(`web/src/lib/format.ts:27-31`, a Ruling 62b comment says so in as many words).
+That is correct and must not change — it is the anchor every consumer needs.
+**The gap is that the granularity that produced it is then THROWN AWAY**, and
+the only place in the codebase that recovers it is a **private, local** branch
+inside the card (`web/src/lib/events/card.ts:30-43`,
+`if (isMonthGranularity(event.date))`). **The shared formatters in
+`format.ts` — the file whose own header says "This is the ONLY place these live
+— do not hand-roll a formatter inside a page or card" — are granularity-blind.**
+So every consumer that did not hand-roll its own branch prints a day.
+
+**Executed, on the live value `2026-08`:**
+
+| # | consumer | file:line | renders TODAY | verdict |
+|---|---|---|---|---|
+| 1 | plate 03 tile VALUE | `web/src/app/events/[id]/page.tsx:629` (`formatDateRange`) | **`Aug 1, 2026`** | **WRONG — A24-02 as A reported it** |
+| 2 | plate 03 tile SUB-LINE | `web/src/app/events/[id]/page.tsx:652` (`formatWeekdayRange`) | **`Sat`** | **WRONG — A24-02 as A reported it** |
+| 3 | plate 03 DEADLINE STRIP, "Event" milestone | `web/src/app/events/[id]/page.tsx:723` (`reportShortDate`) | **`Aug 1`** | **WRONG — A DID NOT NAME THIS. It is on plate 03 too.** |
+| 4 | feed tile | `web/src/components/cards/feed-tile.tsx:470` | **`Aug 1`** | **WRONG — A DID NOT NAME THIS** |
+| 5 | briefing quick-hit | `web/src/components/cards/briefing-quick-hit.tsx:50` | **`Aug 1`** | **WRONG — A DID NOT NAME THIS** |
+| 6 | briefing hero | `web/src/components/cards/briefing-hero.tsx:115` | **`Aug 1, 2026`** | **WRONG — A DID NOT NAME THIS** |
+| 7 | event CARD | `web/src/lib/events/card.ts:30-43` | **`Aug 2026`** | **CORRECT — the one hand-rolled branch** |
+
+**FIVE WRONG RENDER SITES, NOT ONE. Two of the three A missed are on plate 03's
+own page** (the deadline strip is the same report), and the other three put the
+same invented day in front of a reader who never opens the report. **This is
+round 22 C's four-missed-render-sites lesson repeating**, and it is the whole
+reason the fix does not belong in `buildEventFacts`.
+
+**Two further consumers, both real, neither a render:**
+
+8. **`web/src/app/events/[id]/page.tsx:1732` — `new Date(event.date)`, RAW.**
+   The subtitle's duration. **LATENT, not firing**: it is guarded by
+   `event.endDate`, and this row's `endDate` is `""` (measured). But `new
+   Date("2026-08")` is **UTC** midnight — executed, it lands on **31 July
+   19:00 local** in a behind-UTC zone. **That is byte-for-byte the bug round 24
+   A found in its own fuse harness and retracted.** It is one endDate away from
+   firing and it should be closed in the same pass.
+9. **THE SCORING ORDER — and nobody has looked at this.**
+   `scoreUrgency` (`web/src/lib/events/scoring.ts:74-91`) reads
+   `Date.parse(item.startDate)` at line 84. Executed at the run clock:
+
+   | input | days read | urgency |
+   |---|---|---|
+   | `2026-08` (the live value) | **−14.7** | **0.35** |
+   | `2026-08-31` (the same claim, day-level, at its own month end) | +16.5 | **0.824** |
+   | `""` (a genuinely dateless row) | — | **0.35** |
+
+   **A month-granularity row scores EXACTLY what a DATELESS row scores.** The
+   `days >= 0` branch never fires, because `Date.parse("2026-08")` is the FIRST
+   of the month and the first of August is in the past. **The row is
+   systematically under-ranked for the whole of its own evidenced month** — the
+   same class of error as the tile, one field over, and it moves what the reader
+   sees FIRST. `web/src/lib/events/scoring.ts:125-126` has the identical shape
+   and silently drops the "starts in N days" clause from the relevance reason
+   (silence, not invention — the lesser half).
+
+**CLEAN, checked and stated affirmatively rather than left unmentioned:**
+`web/src/lib/opportunities/facets.ts:272-290` (`monthLabel` matches
+`^(\d{4})-(\d{2})(?:-\d{2})?` — month granularity BY DESIGN, correct);
+`web/src/lib/events/dedup.ts:14` (`getUTCFullYear` on a UTC-midnight 1st stays
+in its own year — safe); `web/src/lib/format.ts:143` `formatTimeAgo` and
+`:161` `formatDayAge` (publication stamps; no month-granularity input exists
+on that path today — absence, not a pass).
+
+---
+
+## **THE EXPIRY ANCHOR: CLEAN. PROVEN AT BOTH EDGES ON A SIMULATED CLOCK, WHICH IS WHAT THE MANAGER SCOPED IN.**
+
+62b forbade day-level entry into the anchor **by name**. Executed
+`webResultToRawEventItem` on the `10times.com` shape at four clocks:
+
+| clock | row | `startDate` |
+|---|---|---|
+| **15 Aug 2026** | **KEPT** | `2026-08` |
+| **31 Aug 2026, 23:00** | **KEPT** | `2026-08` |
+| **1 Sep 2026, 00:01** | **DROPPED (`null`)** | — |
+| **15 Sep 2026** | **DROPPED (`null`)** | — |
+
+**Both edges are the ones 62b named.** It does **not** expire on 1 August (the
+wrongly-early failure 62b called "worse than the late expiry it replaces"), and
+it **does** fire on 1 September rather than lingering. `dateClaimEndMs("2026-08")`
+returns **31 Aug 23:59:59.999 local**, executed. Both anchor call sites use it —
+`web/src/lib/events/scoring.ts:209-215` and
+`web/src/lib/events/sources/eventweb.ts:1664-1669` — and neither reaches
+`Date.parse` on a start date.
+
+**THE ANCHOR IS NOT PART OF THIS ITEM. C changes nothing there.** And this
+upgrades A's own fuse line: A recorded the fuse as *"LOADED but not yet
+TESTED, and the first round that can falsify it is the first after 31 August."*
+**Its mechanism is now tested — on a simulated clock, at both edges.** What the
+first September round still tests is whether the *live* pool agrees with the
+simulation; the code path is no longer unexamined.
+
+**ONE NARROW RESIDUE, RECORDED, NOT RANKED.**
+`web/src/lib/events/sources/eventweb.ts:1688` blanks `startDate` to `""` when
+its claim has passed. It can only differ from the whole-row drop above when the
+row ALSO carries a still-future deadline — then the row survives with its month
+claim erased. No live row has that shape (measured across 150 offered rows).
+Recorded so a future round does not rediscover it as new.
+
+---
+
+## **THIS DOES NOT TOUCH 62b's DEFERRED GAP (b), AND B SAYS SO BEFORE BEING ASKED**
+
+62b(b) — the expiry *evasion*, a dateless row surviving because it has no date —
+is untouched here. Every finding above is about **how an EVIDENCED month is
+rendered and ranked**, not about whether an unevidenced row should live. No
+recommendation below removes a row, changes a pool count, or reads a date the
+page did not state.
+
+---
+
+## THE FIX DIRECTION — **IN THE SHARED FORMATTER, NOT AT THE TILE**
+
+**Put the granularity branch where `format.ts`'s own header already says it
+belongs.** Three changes, all in `web/src/lib/format.ts`:
+
+1. **`formatDate` (`:76-83`) — when the ISO is month-granularity, the requested
+   style is OVERRIDDEN to `monthYear`.** Executed model: `medium`, `short`,
+   `full` and `monthYear` all return **`Aug 2026`**. This alone fixes render
+   sites 1, 3, 4, 5 and 6 at once, because every one of them reaches
+   `formatDate`.
+2. **`formatWeekdayRange` (`:113-124`) — a month-granularity start returns
+   `null`.** A month has no weekday. `null` is what the tile's
+   `detail: … ?? undefined` already consumes, so the sub-line **disappears**
+   rather than showing a wrong or blank one.
+3. **`formatDateRange` (`:91-110`) — a month-granularity start returns the
+   month-year form and IGNORES the end.**
+
+**Then DELETE the card's private branch (`web/src/lib/events/card.ts:36-38`)** —
+it becomes dead weight the moment the shared formatter is right, and leaving two
+copies is how the two surfaces disagreed in the first place. **Its test stays
+and must stay green through the shared path** (`web/src/lib/events/card.test.ts:169-181`)
+— that is the proof the behaviour survived the move, so the test is a
+CREDENTIAL here, not a casualty.
+
+**Site 8 (`page.tsx:1732`) separately:** replace `new Date(event.date).getTime()`
+with `parseDate(event.date)?.getTime()`, which is local and already the file's
+own convention. Not cosmetic — it is the UTC trap, pre-loaded.
+
+**Site 9 (`scoreUrgency`, `scoring.ts:84`) is a POLICY call, not B's to ship
+silently.** The mechanical fix is `dateClaimEndMs(item.startDate)` — the same
+function the anchor already uses, in the same file, identical for every
+day-level value. That would score the row 0.824 instead of 0.35. **B recommends
+it and flags it: it is a RANKING change on a scored surface, and Ruling 60c's
+column does not measure order.** `POLICY — manager decides` on whether it ships
+with this item or gets its own.
+
+### BOUNDARY CONDITIONS — what must **NOT** change
+
+- **EVERY DAY-LEVEL VALUE IS BYTE-IDENTICAL. Executed on four real pool shapes**
+  (`2026-09-15T12:00:00.000Z`+end, `2026-12-07`+end,
+  `2026-10-12T12:00:00.000Z`+end, `2027-03-15T12:00:00.000Z` no end):
+  `Sep 15 – 18, 2026` / `Tue – Fri`; `Dec 7 – 10, 2026` / `Mon – Thu`;
+  `Oct 12 – 15, 2026` / `Mon – Thu`; `Mar 15, 2027` / `Mon`. **`identical: true`
+  on all four, every formatter.** A single day-level byte moving is a failed fix.
+- **The branch must key on `MONTH_GRANULARITY_RE` (`format.ts:38`) — the SHIPPED
+  predicate — never on "the date is the 1st".** A real event that starts on the
+  first of the month must keep `Aug 1, 2026`. That is the single most likely
+  wrong implementation and it is silent.
+- **`formatDate(iso, "monthYear")` on a DAY-level value stays a day-level
+  month-year** — the override is one-directional (widen only, never narrow).
+- **Nothing may FILL a field.** An unparseable value still returns `null` and the
+  tile is still dropped by `facts.filter(Boolean)`
+  (`web/src/app/events/[id]/page.tsx:714`).
+- **`formatDateRange` with BOTH ends month-granularity in DIFFERENT months is
+  NOT BUILT.** No live row has that shape (measured). Building `Aug – Sep 2026`
+  on no witness is an unearned clause; vacuity discipline says leave it. If it
+  ever appears it renders the start's month, which is true.
+
+### WHAT THE FIELD SHOWS WHEN EVERY CANDIDATE IS REJECTED
+
+**Unchanged from today, and deliberately so.** Unparseable date → `parseDate`
+returns `null` → `formatDate` returns `null` → **the DATES tile is not rendered
+at all**, the card says **`Date not listed`**, the milestone is omitted.
+**Never a year-only fallback, never a bare month with no year, never a
+placeholder.** That is 62b's own named boundary and this item does not move it.
+
+### TESTS AT RISK — **GREPPED, NOT REMEMBERED, INCLUDING ROUTE-LEVEL FILES**
+
+`grep -rln "formatDateRange|formatWeekdayRange|reportShortDate|isMonthGranularity|formatDate\(|buildEventFacts" src --include=*.test.ts*`
+returns exactly **three** files, plus the route-level sweep of `src/app/**`:
+
+- **`web/src/lib/format.test.ts`** — owns `formatDate`/`formatDateRange`/
+  `formatWeekdayRange` and the month-granularity block at **`:121-148`**.
+  **THE FILE C MUST EXTEND.** The new contract needs a positive test per style.
+- **`web/src/components/reports/report-date.test.ts`** (26 lines, 3 tests) —
+  the year-guard contract. **A month-granularity value now returns `Aug 2026`,
+  which CARRIES a year inside the one-year horizon where its day-level
+  neighbours print `Sep 15` with none.** That is a deliberate, flagged cosmetic
+  deviation of the same class the manager already accepted for `Aug 2026` vs
+  62b's literal `August 2026` — the alternative (`Aug`) is ambiguous across
+  years, which is worse. **C states it; C does not delete the year.**
+- **`web/src/lib/events/card.test.ts:169-181`** — the card's month test.
+  **MUST STAY GREEN UNCHANGED** through the shared path. Its green is the proof.
+- **`web/src/app/events/[id]/page.test.ts:530-533`** — asserts
+  `Mar 8 – 11, 2027` and `Mon – Thu` from a **day-level** fixture
+  (`date: "2027-03-08"`). **Must stay byte-identical.** The route-level file the
+  brief asked me to grep rather than remember: **it is at risk and it is
+  day-level, so a correct fix leaves it untouched.**
+- **`web/src/lib/events/sources/eventweb.test.ts:2004-2030`** — ingestion-level
+  month-granularity and expiry tests. **NOT at risk** (this item does not touch
+  ingestion), and its `:2017` expiry test is the shipped twin of the anchor
+  simulation above.
+- **NOT at risk:** `src/app/jobs/[id]/page.tsx:556,671` call
+  `formatDate(job.startDate, "monthYear")` — already month-style, unaffected.
+  `deadlines-board.tsx:251` and the report's `abstractDue`/`registerBy`
+  (`page.tsx:633-634`) read DEADLINES, which are day-level.
+
+### BLAST RADIUS
+
+**Wide by construction and that is the point.** `format.ts` is imported by the
+feed, papers, cards, both reports and the digest — changing it is exactly how
+five sites get fixed with one branch instead of five copies drifting apart
+again. **The change is gated on a regex that today matches ONE value in the
+entire live corpus** (`2026-08`, one row of twelve), so every other date in the
+app takes the unchanged path — which is what makes the wide radius safe, and
+what the byte-identical table above measures rather than asserts.
+
+**ITEM 1 STOPS HERE.** Item 2 (A24-01) and item 3 (the 63b restatement) follow,
+one commit each, each pushed immediately.
+
+---
