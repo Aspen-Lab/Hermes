@@ -74917,3 +74917,93 @@ config rooted at `web/`, `*.probe.ts` include, OUTSIDE `web/src/`) and was
 verified clean.
 
 ---
+
+### Round 27 — Agent C (**THE POOL RE-MEASUREMENT AFTER ITEMS 1-4 — DETERMINISTIC, CAPTURE-AND-REPLAY, ZERO PROVIDER CHURN. SIX OF THE SEVEN DEPARTURES ARE B's NAMED ROWS BY URL; THE SEVENTH IS A FOURTH INSTANCE OF THE SAME CLASS. THE LANL VACANCY ENTERS THE JOB POOL ORGANICALLY. AND THE MEASUREMENT SETTLES B's `behavioralpolicy.org` DISCREPANCY.**)
+
+**THE INSTRUMENT, AND WHY IT IS NOT A PAIRED LIVE PULL.** Two live pulls minutes
+apart are confounded by provider turnover — this loop has said so since round 25.
+Instead: **ONE live pull with the shipped code, capturing every raw row the
+providers offered, then the SAME captured rows replayed through the admission
+functions with items 2, 3 and 4 REVERTED and then RESTORED.** The row set is
+byte-identical across all three passes, so **every membership difference is the
+code and nothing else.** The AFTER pass was re-run after restoring and
+**reproduced its first figure exactly (47 / 46)**, which is the harness's own
+self-check.
+
+**THE WINDOW:** 273 raw provider results, **234 unique offered rows**, live at
+`2026-08-15 11:25 UTC`. Final scored pools: **13 event rows, 11 job rows** (the
+ingestion figures below are ADMISSIONS on offered rows, upstream of top-N).
+
+### **EVENTS — 54 admitted BEFORE, 47 AFTER. SEVEN LEAVE. ZERO JOIN.**
+
+| # | row | item | predicted by B? |
+|---|---|---|---|
+| 1 | `volta.foundation/event` | **3 (A27-01)** | **YES — by name** |
+| 2 | `annexushealth.com/conferences` | **3 (A27-01)** | **YES — by name** |
+| 3 | `iongroup.com/careers` | **3 (A27-01)** | **YES — by name** |
+| 4 | `careerfairconnection.com` | **4 (A27-03)** | **YES — by name** |
+| 5 | `cns1.rc.fas.harvard.edu/publications` | **4 (A27-03)** | **YES — by name** |
+| 6 | `behavioralpolicy.org/conference/2026-bspa-conference` | **4 (A27-03)** | **YES — by name** |
+| 7 | `exchangeetf.com/whats-new/exchange-2026-is-built-for-you` | **4 (A27-03)** | **NO — see below** |
+
+**ALL SIX OF A27-01's AND A27-03's NAMED ROWS WERE OFFERED IN THIS WINDOW AND
+ALL SIX LEFT.** That is organic confirmation on the originating rows themselves,
+not a constructed replay.
+
+**THE SEVENTH IS NOT AN ESCAPE-CLAUSE SHAPE — IT IS A FOURTH INSTANCE OF A27-03's
+CLASS, and C checked rather than assumed it.** Measured on the shipped helpers:
+`Exchange 2026 is built for you - Exchange` offers **two day-level readings,
+`2025-08-21` and `2026-03-15`, BOTH past at the capture instant**, two clusters,
+**no owned title span** (so A22-01 silences the date), and **year tokens
+`[2025, 2026]` with none later than the current year.** Every clause of the rule
+is satisfied on its own terms. **The page's own evidence says the event has
+happened.** It is the class widening organically, which is exactly what B said
+would happen — not a shape the design did not span.
+
+**FOUR MORE ROWS HIT ITEM 3's PREDICATE AND CHANGED NOTHING**, which is the
+predicate agreeing with the existing guards rather than fighting them:
+`gain.inl.gov/news/events`, `ionexchangeglobal.com/careers`,
+`ionenviromgt.net/career`, `mortonsalt.com/careers` — **all four were already
+being dropped before this round.**
+
+**NOTHING ELSE MOVED. ZERO ROWS JOINED THE EVENT SET.** A guard that only ever
+drops cannot add one, and the measurement says so rather than the design.
+
+### **JOBS — 45 admitted BEFORE, 46 AFTER. ONE JOINS. ZERO LEAVE.**
+
+**The one row is `lanl.jobs/search/jobdetails/nuclear-materials-and-molten-salt-technologist-1---research-technologist-1/9afb00cb-…` — A27-02's own row, the real single on-topic national-laboratory vacancy A ground-truthed by fetch.** It was offered again this window and it is now admitted. **Ruling 48b's JOB wrongly-dropped column is measured back to ZERO on a live window, not argued to it.**
+
+**ZERO job rows left.** The narrowing is strictly-fewer-matches by construction
+and the live window agrees.
+
+### **THIS SETTLES B's FLAGGED DISCREPANCY, IN A's FAVOUR**
+
+B could not reproduce `behavioralpolicy.org`'s ADMISSION from A's recorded single
+token and said so honestly. **The live row was offered again this window, and it
+is ADMITTED in the BEFORE pass and DROPPED in the AFTER pass — so A's recorded
+outcome was right, and what was incomplete was the single-token reconstruction B
+had to work from.** Its URL slug is a real page path, so item 3 cannot be what
+removes it; **it is item 4, on its own evidence.** **B's caution was correct
+practice and its conclusion was the conservative one; the live measurement is
+what settles it.**
+
+### **ITEM 1 — NO FUSED CITY IN THIS WINDOW, AND C DOES NOT BANK THE SILENCE**
+
+Every place on both final pools was checked for the space-fused shape (a city
+whose last word is a real state code with no comma):
+**ZERO on 13 event rows and 11 job rows.** The rows that carry a place render
+`Orlando, FL`, `Detroit, United States`, `Jakarta`, `Aachen`,
+`Niskayuna, NY, United States` — all correctly separated. **`thebatteryshowsouth.com`
+was not offered this window at all, so this is an ABSENCE, not a witness.**
+**Item 1's proof stays its mutation test.** Its live falsifier is unchanged and
+carried below.
+
+**THROWAWAY SCAFFOLD:** the harness lived at `web/zz-r27c/` (own vitest config
+rooted at `web/`, `*.probe.ts` include, OUTSIDE `web/src/`) and is **deleted**;
+`git status --porcelain --untracked-files=all` verified clean. **The captured
+rows were written to the OS temp scratchpad, never into the repository, and were
+never read into a transcript. No credential was printed, logged or written —
+the key was read from `profile.json` into `process.env` and only its BOOLEAN
+presence was ever displayed; `.env.local` was never `cat`-ed.**
+
+---
