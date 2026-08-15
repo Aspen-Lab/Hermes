@@ -270,8 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 — 2026-08-15 04:41 UTC (Agent A, round 25 —
-                  §1 correction only, carrying Ruling 66a–b into the hand-off)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -4458,8 +4457,48 @@ WHOSE TURN:       **B — round 25.** Round 25 A is COMPLETE: **four parts, one
                   regression.
 
                   ---
-                  **THE ONE DIFFERENCE — B's WHOLE SCOPE UNLESS THE MANAGER SAYS
-                  OTHERWISE.**
+                  **CORRECTION, WRITTEN AFTER A's PART 4 WAS BANKED. RULING
+                  66a–b LANDED MID-TURN (`6cbee6d`) AND A's FIRST HAND-OFF
+                  UNDER-STATED B's SCOPE. B's SCOPE IS THREE ITEMS, NOT ONE.**
+                  A re-claimed the §0d lock to fix this rather than leave §1
+                  untrue, and changed nothing else. **A's measurements are
+                  UNAFFECTED and stand exactly as banked — 66b says so in its own
+                  words: the first visual census is "the next A turn that begins
+                  after this ruling lands (round 26 A, given round 25 A is
+                  already past measurement)".**
+
+                  **B's THREE ITEMS, IN THE ORDER A SUGGESTS AND THE MANAGER
+                  ORDERS:**
+                  **(1) RULING 66a — THE AI-TIER CONTRACT (USER-RULED, ranked
+                  item).** Establish by execution what `aiTier` the client sends
+                  on `/api/jobs/feed` and `/api/events/feed` and from which UI
+                  state; where each pipeline consults `resolveProvider` and what
+                  short-circuits it at `aiTier: 0`; and whether the failure is
+                  DETECTION (Auto not seeing the local Gemini) or PINNING (a chip
+                  state overriding key presence). **Then price the census blast
+                  radius** — every census in this loop has run with
+                  `feedAiApiKey` EMPTY, so once Tier 1/2 engages the deep-report
+                  content changes class, **and the manager rules on the
+                  measurement-profile change BEFORE any A measures the LLM
+                  path.** A flags one consequence from its own instrument: **A's
+                  standing method line "page-fetch enrichment ran, LLM enrichment
+                  did not" (§2 as corrected by Ruling 42b) stops being true the
+                  moment this lands, and every A from that point must say which
+                  path it measured.**
+                  **(2) A25-01 — the one measured parity difference, below.**
+                  **(3) RULING 65's ITEM ZERO — `benchmark.test.ts:225`.**
+
+                  **RULING 66b IS *NOT* B's AND IS *NOT* A25's.** The first full
+                  VISUAL census (art style and layout against
+                  `Peer-design-spec-original.pdf`) belongs to **round 26 A**, by
+                  the ruling's own mechanics. **The gate's zero-differences bar
+                  gains the visual dimension once that first census establishes
+                  the baseline list — so round 25's `NOT MET` is now the last
+                  verdict measured on value parity alone, and A says that plainly
+                  rather than letting a later round discover the bar moved.**
+
+                  ---
+                  **THE ONE MEASURED PARITY DIFFERENCE — item (2) of B's three.**
 
                   **A25-01 — `lensa.com`: the report's *"Why Peer sent this to
                   you"* line says `… and remote-friendly` about an Albuquerque
@@ -4491,8 +4530,9 @@ WHOSE TURN:       **B — round 25.** Round 25 A is COMPLETE: **four parts, one
                   that never happened.**
 
                   ---
-                  **RULING 65's STANDING COMMISSION IS NOW DUE, AND B IS THE NEXT
-                  CODE TURN UNLESS THE MANAGER ROUTES IT ELSEWHERE.**
+                  **RULING 65's STANDING COMMISSION IS NOW DUE — item (3) of B's
+                  three — AND B IS THE NEXT CODE TURN UNLESS THE MANAGER ROUTES
+                  IT ELSEWHERE.**
                   `benchmark.test.ts:225`, the TOP-FIVE PRESENCE assertion, is
                   **COMMISSIONED FOR RESTATEMENT as ITEM ZERO of the next code
                   turn** — restated to the new contract, item named, **never
