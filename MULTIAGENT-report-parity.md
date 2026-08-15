@@ -71700,3 +71700,360 @@ credential-gated out of the gate.**
 **THREE RANKED VALUE DIFFERENCES: A27-02 (a reader loses a real job — ranked
 FIRST, because it is the only one that reaches a reader), A27-01, A27-03.** **A
 sets no gate line** (Ruling 30) — parts 3 and 4 follow.
+
+### Round 27 — Agent A (part 3 — **THE VISUAL RE-CENSUS: ALL ELEVEN LANDED CLUSTERS VERIFIED AGAINST THEIR FALSIFIERS, ON THE SAME INSTRUMENT AS ROUND 26 A's BASELINE. EVERY ONE IS LANDED AND NOT ONE FALSIFIER FIRES. B's TWO PLATE CORRECTIONS ARE RE-DERIVED INDEPENDENTLY FROM THE PDF's OWN SPANS AND BOTH HOLD. AND ROUND 26 A's OWN DESCRIPTION OF THE EVENT CHIP ROW IS CORRECTED BY MEASUREMENT — plate 03 gives two of its four chips IDENTICAL fills, so the build's three treatments are the plate's three, not a shortfall.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 3 of four. **Part 4 carries the ranked
+V27 list, the value-list correction, the gate suite result and the gate
+verdict.** **A sets no gate line here.**
+
+---
+
+## **THE INSTRUMENT — THE SAME ONE ROUND 26 A's BASELINE USED, RE-BUILT AND RE-RUN**
+
+1. **The spec side, quantitative.** Every text span in both plates extracted
+   from `Peer-design-spec-original.pdf` with its page, `x`, `y`, size, font name
+   and colour, plus every vector rectangle with its fill and stroke. **Plate
+   bounds are round 26 A's, re-verified:** plate 02 = **pp. 2–4** (p2 y≥378.9 →
+   p4 y<400.6), plate 03 = **pp. 4–9** (p4 y≥400.6 → p9 y<588.9). **115 spans /
+   89 rects on plate 02; 324 spans / 251 rects on plate 03.**
+2. **The build side, rendered.** The **SHIPPED** `JobReport` and `EventReport`
+   components rendered to static markup with `renderToStaticMarkup` against
+   **plate-shaped fixtures** (every field the plate states, populated) **AND**
+   against the **live rows** from parts 1–2 (55 job renders, 65 event renders,
+   **zero render errors**). **Eleven boundary fixtures** were rendered besides,
+   one per falsifier that names a state: one-milestone timelines, no-activity
+   events, no-skill jobs, all three visa states, no-summary, no-employment-type,
+   no-roster, and a forced-star fixture that exercises the highlighted
+   organisation AND person card branches.
+3. **The fixture/live split is what keeps "missing section" and "empty field"
+   apart** — round 26 A's own discipline, kept.
+
+Harness lived **outside `src/`** (`web/zz-r27a/`, own vitest config, `*.probe.ts`
+include) and was **deleted before this commit**; tree verified clean. **The PDF
+is FIRST-PARTY spec and no third-party page text was pasted.**
+
+---
+
+## **THE MEASURED TYPE SCALE — RE-DERIVED, AND IT REPRODUCES ROUND 26 A's TO THE HALF-POINT**
+
+| plate 02 | count | | plate 03 | count |
+|---|---|---|---|---|
+| `Georgia 21` | 2 | | `Georgia 21` | 1 |
+| `Georgia 12.75` | 5 | | `Georgia 19.5` | **4 — DECK CHROME, see below** |
+| `Georgia-Italic 12.75` | **4** | | `Georgia 15.75` | 1 |
+| `Georgia 12` | 7 | | `Georgia 12.75` | 2 |
+| `Georgia 10.5` | 2 | | **`Georgia-Italic`** | **ZERO** |
+| `SegoeUI-Semibold 7.88` | 15 | | `SegoeUI-Semibold 7.88` | 25 |
+| `Consolas` | 4 | | `Consolas` | 6 |
+
+### **B's CORRECTION 1 IS INDEPENDENTLY CONFIRMED: PLATE 03 CARRIES ZERO ITALIC.**
+Plate 02 carries **four** `Georgia-Italic` spans, all inside the
+`WHY PEER SENT THIS TO YOU` prose and all on **matched topic names**
+(`solid-state electrolytes`, `interfacial`, `resistance`, `operando imaging`).
+**Plate 03 carries none.** B measured this; A re-derived it from the span dump
+without consulting B's figure, and it agrees exactly.
+
+### **B's CORRECTION 2 IS INDEPENDENTLY CONFIRMED: THERE IS NO 19.5 px STEP.**
+The four `Georgia 19.5` spans on plate 03 are, verbatim and with their
+coordinates: `Event report` at **p4 y400.6** — the deck's own plate title, sitting
+exactly ON the plate boundary — and `Events widen past conferences` at **p9
+y588.9**, which is **plate 04's title.** **Both are the deck's chrome, not app
+UI.** No later round should look for a 19.5 px step.
+
+### **THE SERIF IS USED IN FIVE PLACES AND THE BUILD NOW USES IT IN FIVE PLACES**
+
+| element | plate | build renders |
+|---|---|---|
+| report `<h1>` | 02 & 03, `Georgia 21` | `font-display` on both `<h1>`s |
+| `Who’ll be in the room` | 03, `Georgia 15.75` | `font-display text-[22px] … leading-tight` |
+| `WHY PEER SENT THIS TO YOU` prose | 02 & 03, `Georgia 12.75` | `font-reading` (ONE shared component, BOTH surfaces) |
+| `WHAT THE ROLE IS` bullets | 02, `Georgia 12` | `font-reading` on all three `<li>` |
+| the visa evidence quote | 02, `Georgia 10.5` | `font-reading` on the `<blockquote>` |
+
+---
+
+## **THE ELEVEN LANDED CLUSTERS, EACH SCORED AGAINST §1's OWN FALSIFIER**
+
+### **ITEM 2 — V26-J02 / V26-E02, THE SERIF. LANDED.**
+- **Job surface: 6 serif elements** — `<h1>` (`font-display`), the visa
+  `<blockquote>`, three role `<li>`, the prose `<p>` (all `font-reading`).
+  **Event surface: 3** — `<h1>`, `Who’ll be in the room` (both `font-display`),
+  the prose `<p>` (`font-reading`).
+- **FALSIFIER — a label, chip, button, roster row or the `CHEAPEST WAY IN`
+  callout rendering serif: ZERO.** Checked directly: **0 `<button>` elements on
+  either surface carry a serif class**; the `Cheapest way in, for you` callout
+  renders `<aside class="mt-10 rounded-2xl border border-accent/20 bg-accent/8
+  px-5 py-4">` with a `text-micro … uppercase … text-accent` label and **no
+  serif class anywhere inside it** — correct, because it is chrome, not prose.
+- **FALSIFIER — italic on the event prose: ZERO.** `grep italic` over both report
+  files and the shared prose component returns only a `not-italic` reset on the
+  quote attribution and an `italic` on the two `not found` error screens, neither
+  of which is report prose. **Rendered markup: 0 italic on the event surface.**
+- **ONE THING THE FIX DID NOT CLOSE, AND A RAISES IT RATHER THAN LETTING THE
+  FALSIFIER'S SILENCE COVER IT: plate 02's FOUR ITALIC TOPIC NAMES ARE NOT
+  REPRODUCED.** See **V27-01** in part 4. **The falsifier §1 wrote only forbids
+  italic on the EVENT prose, so it cannot fire on this — which is exactly why A
+  looked past it.**
+
+### **ITEM 3 — V26-E01 / V26-J10, THE HIERARCHY INVERSION. LANDED.**
+- **`Who’ll be in the room` is the ONLY promoted heading**, rendering
+  `font-display text-[22px] font-semibold leading-tight text-heading` — serif,
+  sentence case, distinct from every label section. **Exactly one such heading
+  exists on the event surface and ZERO on the job surface**, which is correct:
+  plate 02 has no promoted sub-head.
+- **`Organisations` and `People` are DEMOTED to the label step** —
+  `text-caption font-semibold uppercase tracking-[0.18em] text-text-faint`, the
+  same token as every other section label. **`Organisations` no longer renders
+  larger than its parent.**
+- **FALSIFIER — any `text-micro` on a section heading: ZERO on both surfaces**
+  (9 job headings, 13 event headings, all inspected). The four label sites are
+  unified on one token.
+- **FALSIFIER — a second promoted heading: NONE.**
+
+### **ITEM 4 — V26-J03 / V26-E03, THE TIMELINE TRACK. LANDED.**
+- **One continuous track with a filled segment on BOTH surfaces.**
+  `data-timeline-track` present on both; the fill is
+  `data-timeline-fill="true" class="absolute left-0 top-1/2 h-1 -translate-y-1/2
+  rounded-full bg-accent"` with `style="width:33.33333333333333%"` (job, `Today`
+  at milestone 2 of 4) and `width:0%` (event, `Today` first).
+- **FALSIFIER — four bordered boxes returning: ZERO `<li>` carries
+  `rounded-xl` + `border-border` on either surface.**
+- **FALSIFIER — a `NaN%` width: ZERO.** `NaN` appears nowhere in either markup,
+  including the one-milestone fixtures.
+- **FALSIFIER — an accent dot LARGER than the others: DOES NOT FIRE.** All four
+  dots on each surface render **`h-2.5 w-2.5`**, byte-identical; the accent dot
+  differs **only** in `bg-accent` vs `bg-text-faint/40`. **B's correction to
+  round 26 A — `Today` differs in COLOUR only — holds on the rendered output.**
+- **The one-milestone guard ships and works: both one-milestone fixtures render
+  NO track at all**, and no `NaN`.
+- **FALSIFIER — date logic inside the track: none.** The track reads
+  `point.accent`, which the data already carries.
+
+### **ITEM 5 — V26-J04 / V26-E04, THE FACT-TILE BAND. LANDED.**
+- **Both surfaces render ONE rule-divided band:**
+  job `<dl class="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl border
+  border-border bg-border sm:grid-cols-4">`, event the same with `mt-8`. **The
+  rules are gaps in the backing surface (`gap-px` over `bg-border`) — the way the
+  plate draws them — and the border is on the BAND, not the tiles.**
+- **FALSIFIER — a 7-up or 6-up grid: DOES NOT FIRE. Capped at
+  `sm:grid-cols-4`** on both, exactly the plate's four-per-row.
+- **FALSIFIER — a per-tile border: ZERO.** Tile classes are only
+  `min-w-0 bg-surface px-4 py-3` and `min-w-0 px-4 py-3 bg-accent/5` (the visa
+  tile's tone). **No `border-border`, no `rounded-*` on any tile.**
+- **FALSIFIER — a blank filler tile: ZERO.**
+- **FALSIFIER — any tile VALUE moving: NO. The 1:1 plate mapping B measured is
+  reproduced exactly, IN ORDER:**
+
+| plate 02 slot | build `data-job-fact` | value rendered |
+|---|---|---|
+| SALARY | `salary` | present |
+| TYPE | `employment-type` | `Postdoc` / `Full-time · 3-yr contract` |
+| LOCATION | `work-mode` | `Los Altos, CA` / `Hybrid · US` |
+| STARTS | `start` | `Jan 2027` / `flexible` |
+| APPLY BY | `deadline` | `Sep 29` / `46 days left` |
+| POSTED | `posted` | `Jul 19` / `26 days ago` |
+| VISA | `visa` | `Sponsors` / `stated in the posting` |
+
+| plate 03 slot | build `data-event-fact` | value rendered |
+|---|---|---|
+| DATES | `dates` | `Mar 2 – 5, 2027` / `Tue – Fri` |
+| WHERE | `where` | `Yokohama, Japan` / `in person` |
+| FEE | `fee` | present |
+| ABSTRACT DUE | `abstract-due` | `Nov 14` / `92 days left` |
+| REGISTER BY | `register-by` | `Jan 19` |
+| SCALE | `scale` | `~1,800` / `last edition` |
+
+**7 of 7 and 6 of 6. Not one tile merges, splits or is orphaned.**
+
+### **ITEM 6 — V26-J07, THE PROGRESS BAR (RULING 72b). LANDED.**
+- **The bar exists:** `data-skills-progress="true" class="mb-4 h-1 w-full
+  overflow-hidden rounded-full bg-border"` wrapping
+  `data-skills-progress-fill="true" class="h-1 rounded-full bg-accent"
+  style="width:11.11111111111111%"` on a `1 of 9` fixture. **The geometry is the
+  matched fraction exactly** — 1/9 = 0.1111. Against 72b's extracted plate
+  vectors (track `w 453.0`, fill `w 303.8` ⇒ 0.6706, plate counter `6 of 9` ⇒
+  0.6667) the build's rule reproduces the plate's drawing to within the plate's
+  own tolerance.
+- **FALSIFIER — the counter back on its own line: DOES NOT FIRE.** The heading
+  row is `<div class="flex flex-wrap items-baseline justify-between gap-x-4
+  gap-y-1">` carrying `<h2>Skills they ask for</h2>` and
+  `<p data-section-subtitle>1 of 9 you already have</p>` **on one line**, with the
+  `New` and `Tier 0` badges — which is plate 02's own single line at y259.9.
+- **FALSIFIER — the bar rendering with no skills: DOES NOT FIRE** (the no-skills
+  fixture renders no bar).
+- **FALSIFIER — the words *"a progress bar the plate does not have"* back in the
+  source. A CHECKED THE ASSERTION RATHER THAN TRUSTING ITS NAME, AND REPORTS WHAT
+  IT ACTUALLY LOCKS.** The shipped test (`plate-type-system.test.ts:771`) reads
+  `app/jobs/[id]/page.tsx` and asserts the contiguous string is absent. **It is
+  absent — but only because the correction comment at `page.tsx:1172` wraps the
+  same words across a line break** (`… "a progress bar the` / `plate does not
+  have" …`). **The assertion is NOT vacuous — writing the phrase on one line
+  would red it — but it is weaker than it reads, and A says so rather than
+  banking it as a stronger lock than it is.** The substance is right: the comment
+  states the old text was FACTUALLY WRONG, cites `303.8` and `RULING 72b`, and
+  both of those are asserted too.
+
+### **ITEM 7 — V26-E07, THE COLON LEAD-INS. LANDED.**
+- **`At this event:` ×2 and `Speaking:` ×2** on the forced-star fixture, which is
+  the only fixture that renders both highlighted-card branches. **Zero middot
+  forms of either.**
+- **FALSIFIER — the middot disappearing elsewhere (over-reach): DOES NOT FIRE.**
+  **10 middots survive on the event surface and 6 on the job surface**, in
+  exactly the places the plate uses them: the subtitle
+  (`Yokohama, Japan · in person · 4 days`), the fee sub-line, the roster tail
+  counts (`Every other organisation attending · 5`), and every roster row's
+  `role · institution`. **The change is two characters on two lines, as designed.**
+
+### **ITEM 8 — V26-E06, STARS OFF HIGHLIGHTED CARDS. LANDED, BOTH DIRECTIONS.**
+- On the forced-star fixture, **4 highlighted cards render (2 organisations, 2
+  people) and every one carries ZERO star glyphs and ZERO buttons.**
+- **FALSIFIER — a roster row LOSING its star: DOES NOT FIRE.** The organisation
+  tail keeps **3 of 3** stars; on the full live-shaped fixture **9 of 9 plain
+  roster rows carry `☆`**, plus the two `★` glyphs inside the `Filter this
+  list` star hints — which plate 03 has, verbatim (`Star anyone Peer got wrong.
+  It moves to the top here…`).
+
+### **ITEM 9 — V26-E05, THE HAPPENINGS BADGE AND EXPLAINER. LANDED.**
+- The event happenings section carries a `ReportBadge` reading `New`
+  (`text-micro font-semibold uppercase tracking-[0.14em]` — so it renders as
+  **NEW**, plate 03's `Consolas 8.25` violet badge) and an explainer
+  `data-happenings-explainer="true" class="mt-4 border-l-2 border-accent/50 pl-4
+  text-caption leading-5 text-text-faint"` — **the left orange rule is there.**
+- **The JOB note gained the rule too**: `page.tsx:1255` renders the **identical**
+  class string on the skills note. **One treatment, both surfaces.**
+- **FALSIFIER — either rendering when there are no activity chips: DOES NOT
+  FIRE.** The no-activities fixture renders **no section at all**: 0 chips, 0
+  explainer, no heading.
+- **FALSIFIER — the event note mentioning an "application": DOES NOT FIRE.** The
+  event note reads *"Highlighted chips are the parts of this event that line up
+  with your Req…"*; the word `applicat` appears nowhere in it. The job note keeps
+  its own wording (*"…before you spend an evening on the application"*), which is
+  true there.
+- **Badge counts match the plates: 2 `TIER 0` on the job surface** (Skills, Why
+  Peer sent this) **and 4 on the event surface** (Organisations, People, What it
+  costs you, Why Peer sent this) — plate 02 has 2, plate 03 has 4.
+
+### **ITEM 10 — V26-J08 / V26-E08, THE CHIP ROLES. LANDED — AND ROUND 26 A's OWN DESCRIPTION OF PLATE 03 IS CORRECTED BY MEASUREMENT.**
+- **Job surface: FOUR distinct treatments, and visa ≠ match.**
+
+| build role | classes | plate 02 span colour | plate 02 backing fill |
+|---|---|---|---|
+| `kind` (`Postdoc`) | `border-tag/25 bg-tag-dim text-tag` | `#a8642a` | `#a76429` |
+| `neutral` (`Full-time · 3 years`) | `border-border bg-surface text-text-muted` | `#7d6a56` | `#e9dfcc` |
+| `info` (`Visa sponsorship`) | `border-link/25 bg-link-dim text-link` | **`#2b5c8f`** | **`#2a5c8f`** |
+| `accent` (`91% match`) | `border-accent/25 bg-accent/10 text-accent` | `#a33206` | `#ff520d` |
+
+  **Four plate categories, four plate fills, four build treatments, in order.**
+- **A CORRECTS ITS OWN ROUND-26 DESCRIPTION OF THE EVENT CHIP ROW.** Round 26 A
+  wrote that plate 03 gives `+ career fair` a *neutral outline* and `CCF-B` a
+  *neutral fill* — two distinct treatments. **The PDF says otherwise. Measured:**
+
+| plate 03 chip | span colour | backing fill |
+|---|---|---|
+| `Industry summit` | `#a8642a` | `#a76429` |
+| `+ career fair` | `#7d6a56` | `#e9dfcc` |
+| `CCF-B` | **`#7d6a56`** | **`#e9dfcc`** |
+| `88% match` | `#a33206` | `#ff520d` |
+
+  **`+ career fair` and `CCF-B` are IDENTICAL in both colour and fill. Plate 03
+  has THREE distinct chip treatments, not four — and the build renders exactly
+  THREE.** V26-E08 is fully landed; **the build was never short a treatment on
+  that surface, round 26 A mis-read the plate, and A withdraws that half of its
+  own item rather than leaving a phantom gap on the list.**
+- **FALSIFIER — `wont-sponsor` rendering anything but `danger`: DOES NOT FIRE.**
+  It renders `border-red/25 bg-red/10 text-red`.
+- **FALSIFIER — the VISA FACT TILE changing tone: DOES NOT FIRE, and A checked
+  all three states:** `sponsors` → `bg-accent/5`, `wont-sponsor` → `bg-red/5`,
+  `not-stated` → `bg-surface`. **The tile's tone tracks the visa STATE, which is
+  what it did before; the chip got its own mapping and the tile did not move.**
+- **FALSIFIER — a literal plate hex in the markup: ZERO.** Searched both
+  surfaces for all ten measured plate hexes: **NONE.** Palette fidelity stays out
+  of scope; the app is multi-theme.
+
+### **RULING 71a — THE ROUTE KICKER. CONFIRMED ABSENT AND CORRECTLY SO.**
+Neither `/jobs/[id]` nor `/events/[id]` appears in either rendered report.
+V26-J11 and V26-E09 are struck as deck chrome and stay struck.
+
+### **V26-J01 AND V26-J09 — B's FIXTURE-ARTIFACT VERDICT IS CONFIRMED BY EXECUTION.**
+- **V26-J01:** `what-the-role-is` **renders** on a fixture with `summary` set and
+  **vanishes** when `summary` is removed. **A fixture artifact, exactly as B
+  proved. Correctly struck.**
+- **V26-J09:** the chip reads **`Full-time · 3 years`** with `employmentType`
+  set, and the words vanish when it is removed. **Correctly struck.**
+
+### **V26-J05 — §1d EXCLUSIONS 1, 2 AND 3, APPLIED ON THE VISUAL SURFACE.**
+Plate 02's locked block has four rows; the build has three
+(`Sponsorship read when the posting is silent`, `What this employer actually asks
+for`, `What to emphasise in your application`). The two absent plate rows are
+**§1d exclusion 1** (`How competitive this actually is` — stay deleted, user
+instruction) and **§1d exclusion 2** (`The role in three clean sentences` — stay
+merged); the extra build row is **§1d exclusion 3** (the quoted-specifics
+sections — keep). **All three are binding and PERMANENTLY EXCLUDED FROM THE
+DENOMINATOR. The event locked block matches plate 03 exactly at four rows, in
+order.** This is the walk whose omission put V26-J05 on the round-26 list, and it
+is now done on both surfaces.
+
+### **V26-J06 — THE ESCAPE-CLAUSED HALF. OPEN-BY-ESCAPE, CONFIRMED, NOT A NEW FIND.**
+`data-apply-row` renders **`["materials", "seen on"]`** — **2 of plate 02's 4
+rows.** The `SEEN ON` half landed exactly as §1 said it would. **`ELIGIBILITY`
+and `TEAM` are still absent and still have no field behind them.** Recorded as
+**OPEN-BY-ESCAPE**, not as a new V27 item, and it is why the visual dimension
+cannot read zero this round.
+
+---
+
+## **THE FULL PLATE WALK — BOTH PLATES, START TO FINISH, AGAINST THE RENDERED REPORTS**
+
+Every span in both plates was dumped in reading order and matched to the build's
+section order. **The structures agree end to end:**
+
+- **Plate 02:** chip row → `<h1>` → subtitle → action row → 7 fact tiles → visa
+  quote → TIMELINE → SKILLS (label + NEW + TIER 0 + counter, one line; bar;
+  chips with `✓` on matched; note) → WHAT THE ROLE IS ‖ TO APPLY, HAVE READY →
+  WHY PEER SENT THIS (+TIER 0) → locked block. **The build renders this order
+  exactly**, with the two known deltas above (J05 excluded, J06 open-by-escape).
+- **Plate 03:** chip row → `<h1>` → subtitle → action row → 6 fact tiles →
+  CHEAPEST WAY IN → TWO DEADLINES → WHAT ACTUALLY HAPPENS (+NEW) → **Who'll be
+  in the room** + its `N of M … concern you` sub-line → ORGANISATIONS (+TIER 0)
+  → cards → EVERY OTHER … + `Filter this list` + star hint → roster → footnote →
+  PEOPLE (+TIER 0) → cards → tail → footnote → WHAT IT COSTS YOU (+TIER 0) →
+  cheapest-way line → cost table → footnote → WHY PEER SENT THIS (+TIER 0) →
+  locked block. **The build renders this order exactly.**
+- **The cost table's columns are the plate's:** `Item / Standard / Student /
+  Deadline`, with travel-grant and visa-invitation rows inside the table —
+  **§1d exclusion 6 honoured, no duplicate printing.**
+- **Both roster footnotes render verbatim**: *"Nothing is collapsed behind a
+  '+29' …"* and *"Full name, role and institution for everyone … Nobody is
+  collapsed."*
+
+**TWO THINGS THE WALK FOUND THAT THE BASELINE MISSED. Both are on plate 02, both
+are new, and they are carried into part 4 as V27-01 and V27-02.**
+
+---
+
+## **THREE OBSERVATIONS FROM THE WALK, RECORDED AND NOT RANKED**
+
+1. **The `People` label disappears when no person is highlighted.** With zero
+   highlighted people the build renders the speaker tail under
+   `Every other speaker · N` with no `People` parent label; `Organisations`
+   behaves identically. **A checked the history rather than assuming: the
+   `{peopleCards.length > 0 && …}` condition is byte-identical at `29ece05`, so
+   it PREDATES round 26 and was not introduced by the hierarchy fix.** Plate 03
+   always shows highlighted people, so **the plate has no state to compare
+   against** — not a measurable difference, recorded so the silence is visible.
+2. **The job subtitle's third segment reads `Hybrid` where the plate reads
+   `Hybrid (3 days on-site)`.** Peer has no field for the on-site day count.
+   **Reach, not error** — the standing precedent — and not ranked.
+3. **The event subtitle's first segment is the LOCATION string where plate 03's
+   is the VENUE NAME** (`San Diego Convention Center`). Unchanged from round 26 A
+   observation 4; Peer has no venue field distinct from `location`. **Reach, not
+   error**, and not ranked.
+
+---
+
+**PART 3 VERDICT — ALL ELEVEN LANDED CLUSTERS ARE VERIFIED LANDED AND NOT ONE OF
+§1's FALSIFIERS FIRES. B's two plate corrections both hold on independent
+re-derivation. One of round 26 A's OWN item descriptions is withdrawn as a
+plate misreading. V26-J06's escape-claused half is confirmed open. Two new
+plate-02 findings go to part 4.** **A sets no gate line here.**
