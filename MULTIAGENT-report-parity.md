@@ -64673,3 +64673,216 @@ count as canonical, per the ruling.
 **THE HAND-OFF:** `WHOSE TURN: C — round 25` stands as B wrote it, order: **item zero — the `:225` restatement (65/68d); item one — A25-01's reason line through the shared predicate (68b scope ONLY); item two — the 66a display fix (68a).** The three commissioned/deferred things (extra raw readers → round 26 B; visual census → round 26 A; 62b fuse + 64a trigger now reachable → round 26 A measures) ride the carry list. The gate stays `GATE (0%): NOT MET`.
 
 ---
+
+### Round 25 — Agent C (item 0 of 3: **RULING 65 / 68d — `benchmark.test.ts:225` RESTATED IN PLACE. ONE TEST FILE, ZERO SOURCE FILES. THE FLAKE CLASS IS RETIRED, AND THE BLOCK IS ORGANICALLY EXERCISED THE SAME HOUR IT LANDS. ALL THREE CLAUSES PROVEN FALSIFIABLE TWICE OVER — BY LIVE MUTATION ON THE REAL POOL *AND* BY A CONSTRUCTED POOL. PLUS ONE RECORDED FINDING C DID NOT FIX: 64c's OWN INDEX-PAGE CLAUSE IS UNFAILABLE.**)
+
+**STATUS: COMPLETE.** Item 0 of three. Claimed the §0d turn lock (`6f4ac03`,
+`LAPTOP-3CL10CG5 @ 2026-08-15 05:07 UTC`) after `git pull` (already up to date)
+and confirming `git branch --show-current` reads `feature/summary-report-revamp`
+— checked, not assumed. **The claiming push was ACCEPTED (`2856e10..6f4ac03`),
+so the race was won rather than assumed.**
+
+**NO TEST DELETED. NO SOURCE FILE TOUCHED. ONE ASSERTION AND ONE TITLE RESTATED
+IN PLACE, BOTH WITH THE ITEM NAMED AND THE OLD CODE QUOTED IN THE COMMENT** —
+the exact treatment 63b and 64c received. No branch, worktree or PR;
+`docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No credential printed,
+logged, committed or written anywhere — `.env.local` was NEVER `cat`-ed, and
+`profile.json` was read for BOOLEAN PRESENCE ONLY** (`tavilyApiKey` present:
+true; `feedAiApiKey` present: false; `feedAiProvider`: `default`). The throwaway
+harness lived OUTSIDE `src/` (`web/zz-r25c/`, own vitest config, `*.probe.ts`
+include pattern) and was **deleted before the gate re-run and before this
+commit**; `git status --porcelain --untracked-files=all` verified clean of
+scaffolds. **No untracked `*.test.ts` was ever created under `web/src/`.**
+
+---
+
+## THE COLD BASELINE — **CONFIRMED BEFORE THE FIRST EDIT, AND IT IS B's, NOT A's**
+
+`cd web && npx vitest run` — **92 files / 1877 tests, 1877 PASSING, ZERO
+failures.** `npx tsc --noEmit` **clean.** `npx eslint src` **exactly the one
+standing `src/components/persona/quiz.tsx:46` error, 0 warnings.**
+
+**So C measured the GREEN half of the coin, exactly as Ruling 68d permits, and
+did not chase it.** `hasLiveKey` is **true**, so the benchmark is not skipped:
+run SOLO before any edit it executed live for **7.05 s** and **PASSED**. Its own
+`EVENT_BENCHMARK_TOP5` shows why — this window's top five carries
+`{ name: 'Solid-State Battery Summit', host: '10times.com', date: '2026-08' }`,
+satisfying the old `:225`'s second arm. **A third independent reading of the
+flake: A red, B green, C green.**
+
+**TWO OF A's CARRIED WORDS ARE CONTRADICTED AGAIN IN C's OWN WINDOW, AND C
+STATES IT RATHER THAN LETTING IT RIDE.** The `10times.com` row is present and
+carries `date: '2026-08'` — **a MONTH-GRANULARITY row is live**, so **Ruling 62b's
+fuse line and Ruling 64a's trigger are REACHABLE**, not vacuous/unreachable as
+round 25 A recorded on its own window. **City coverage read 0.385 (5 of 13) —
+byte-for-byte B's figure**, against round 24's 0.333.
+
+---
+
+## WHAT SHIPPED — `web/src/lib/events/benchmark.test.ts`, and nothing else
+
+**Zero source files. Zero shipped behaviour. No threshold moved.** `MIN_SCORE`,
+`OPPORTUNITY_MIN_SCORE`, `MAX_POSTING_AGE_DAYS` and `MAX_ENRICHMENT_CANDIDATES`
+are untouched. The file stays `describe.skipIf(!hasLiveKey)` and stays
+**EXCLUDED FROM THE GATE**.
+
+### (a) The assertion — B's designed contract, implemented exactly
+
+The old block is quoted verbatim in the source comment. What replaced it:
+
+**MEASURES** the named flagship rows — host `cambridgeenertech.com` **or** a name
+matching `/solid[-\s]?state battery summit/i` — **that are PRESENT in
+`survivors`.** **`survivors`, not `topFive`, and C says why in the file:** only
+the scored rows still carry `.score`, and `.score` is the durable half.
+
+**ASSERTS per PRESENT row — three VALUE locks, no presence demand:**
+
+1. **`score >= MIN_SCORE` — the non-vacuous core.** Non-vacuous *because* the
+   pool is built `applyFloor: false` at `lib/events/pipeline.ts:94, 109, 232`,
+   so a named row genuinely CAN sit in `survivors` below the floor. **Proven
+   reachable on a constructed row, not asserted** — see proof B.
+2. **URL is not the conference INDEX page** — `/\/cet\/conferences\/?(?:[?#].*)?$/`.
+3. **Name is not a provider-attribution phrase.**
+
+**TOLERATES, commented in the file rather than merely left out:** **ZERO PRESENT
+ROWS IS A PASS**; pool composition, ranking position and top-five membership are
+asserted **nowhere**; **no city claim is added** — 63b's decision stands.
+
+**THE TRAP WAS READ BEFORE A LINE WAS WRITTEN AND IS NOT IN THE SHIPPED CODE.**
+63b's `expect(namedRowsExercised).toBeGreaterThan(0)` is **NOT** copied here.
+The flagship count is computed and `console.info`-ed as
+`EVENT_BENCHMARK_FLAGSHIP_ROWS` (with each row's host, name, score and
+`atOrAboveFloor`) and **asserted on by nothing** — the same disposition 63b gave
+`cityCoverage`. **Proof G below demonstrates the forbidden assertion FAILING on
+a zero-row pool, then does not ship it.**
+
+**THE RANKING CLAIM is not given a live substitute, and the file says that is a
+decision rather than an omission** — `topFive` is a filtered prefix of an
+already score-sorted array, so any ordering assertion is tautological, and any
+"must reach the top five" claim is a claim about what else the live search
+returned. Per 63b's precedent it belongs in the deterministic ablation fixtures.
+
+### (b) The TITLE — restated, and C says so as instructed
+
+`"enriches at least half the pool and resolves the Solid-State Battery Summit"`
+becomes **`"returns a live pool and locks the adjudicated and flagship rows that
+are present in it"`**. **BOTH halves of the old title had stopped describing the
+test**, and the comment above it says which ruling killed each: the first half
+named the city-coverage floor round 24 C restated away under 63b; the second
+named the presence demand this item restates. Restating a title is not deleting
+a test.
+
+---
+
+## THE BLOCK IS **ORGANICALLY EXERCISED**, NOT MERELY MECHANICALLY LIVE
+
+Round 24 C had to record its 64c clause as "mechanically live but organically
+unexercised". **This one is not.** Live run, this window:
+
+```
+EVENT_BENCHMARK_FLAGSHIP_ROWS { exercised: 1,
+  rows: [ { name: 'Solid-State Battery Summit', host: '10times.com',
+            score: 0.4726246614778261, atOrAboveFloor: true } ] }
+```
+
+**One flagship row present, scored 0.4726 against a 0.35 floor, all three
+clauses executed against it and green.**
+
+---
+
+## NEGATIVE PROOFS — **TWICE OVER. LIVE MUTATION ON THE REAL POOL, THEN A CONSTRUCTED POOL FOR THE SHAPES THE LIVE POOL CANNOT PRODUCE.**
+
+**A test-only item has no source to revert, so every clause was made to fail on
+purpose.** Live mutations, each run against the real pool, reverted immediately:
+
+| # | live mutation | result |
+|---|---|---|
+| 1 | clause 1's floor `MIN_SCORE` to `0.99` | **RED**: `10times.com -> Solid-State Battery Summit scored 0.4726246614778261, below MIN_SCORE 0.35: expected 0.4726246614778261 to be greater than or equal to 0.99` |
+| 2 | clause 2's regex retargeted at the live row's own URL | **RED**: `10times.com -> Solid-State Battery Summit readmitted the conference index page: expected 'https://10times.com/e1z2-0h5z-3pgr' not to match ...` |
+| 3 | clause 3's regex retargeted at the live row's own name | **RED**: `10times.com -> Solid-State Battery Summit is named after a provider attribution: expected 'Solid-State Battery Summit' not to match ...` |
+
+**Every failure NAMES THE ROW**, which is the file's established convention —
+but achieved through vitest's message argument rather than by decorating the
+subject string, **and mutation 2 is the proof that this matters**: the subject
+it printed is the RAW url `'https://10times.com/e1z2-0h5z-3pgr'`, so the
+`$`-anchor genuinely reaches the end of the URL. See the recorded finding below.
+
+**Constructed pool (`web/zz-r25c/item0.probe.ts`, 9 of 9, deleted before the
+commit) — the shapes today's live pool cannot produce:**
+
+| # | constructed shape | result |
+|---|---|---|
+| A | clean flagship row + one non-flagship row | **PASS**, exercised count `1` |
+| **B** | **flagship row with `score: 0.2`** | **RED on clause 1** — `scored 0.2, below MIN_SCORE 0.35`. **This is the proof that clause 1 is not vacuous: `applyFloor:false` makes a below-floor named row REACHABLE, and the clause catches it.** |
+| C | flagship row on `.../cet/conferences` | **RED on clause 2** |
+| C2 | the same, in trailing-slash, `?query` and `#hash` forms | **RED on clause 2, all three** |
+| D | flagship row named `Hosted by ...` | **RED on clause 3** |
+| E | a **DATED** `cambridgeenertech.com/cet/conferences/solid-state-battery-summit` page | **PASS** — the clause is a page-kind lock, **not a host blanket**, and this is its admitted control |
+| **F** | **zero flagship rows present, and an empty pool** | **PASS, exercised count `0`** — the tolerance clause, asserted rather than assumed |
+| **G** | **the forbidden `toBeGreaterThan(0)` applied to F's zero** | **THROWS.** The trap demonstrated failing, and then **not shipped** |
+| H | the recorded finding below | see next section |
+
+**VACUITY DISCIPLINE, CLAUSE BY CLAUSE.** Clause 1 has a uniquely-red case
+(proof B) and is the durable half of what `:225` existed for. Clause 2 has a
+uniquely-red case (C/C2) **and a named admitted control (E)** proving it does not
+degenerate into a host ban. Clause 3 has a uniquely-red case (D). **No clause
+ships without a case that only it turns red.**
+
+---
+
+## **RECORDED FINDING — 64c's OWN INDEX-PAGE CLAUSE IS UNFAILABLE. C DID NOT TOUCH IT. `POLICY — manager decides.`**
+
+While implementing clause 2, C checked whether to copy 64c's decorating idiom
+and found it **cannot work**. The shipped 64c block asserts:
+
+```
+expect(`${item.url} (index page readmitted?)`).not.toMatch(
+  /\/cet\/conferences\/?(?:[?#].*)?$/,
+);
+```
+
+**The regex is `$`-anchored and the subject has ` (index page readmitted?)`
+appended, so the anchor can never be reached.** Executed both ways
+(proof H): the raw URL matches **`true`**; the decorated string matches
+**`false`** — for the index URL, its trailing-slash form, and its query/hash
+forms. **`.not.toMatch` on a subject that can never match is an assertion with
+no failure mode.** Round 24 C's own mutation of this clause was a POLARITY
+inversion (`.not.toMatch` to `.toMatch`), which goes red for *any* row and so
+could not have detected this.
+
+**C DID NOT FIX IT, AND THAT IS DELIBERATE.** B's item-3 entry lists 64c's block
+(`:257-266`) under **"WHAT MUST NOT CHANGE"**, and the brief scopes item zero to
+`:225`. **Restating a fourth assertion on C's own authority is exactly the
+unilateral widening the escape clause forbids** — the same call round 24 C made
+about `:225` itself, which is how `:225` reached a ruling. **Recorded here for
+the manager; the fix is one line (assert on `item.url`, name the row through the
+message argument) and item zero's new block is already written that way, so the
+pattern to copy is in the same file.** Note the second-order effect: 64c's name
+clause is **fine** (it asserts on the bare `item.name`); only the URL clause is
+affected.
+
+---
+
+## WHAT DID NOT MOVE — stated affirmatively
+
+- **63b's block is untouched**, including its
+  `expect(namedRowsExercised).toBeGreaterThan(0)` floor, which is correct in its
+  own block and was NOT copied into the new one.
+- **64c's block is untouched**, the finding above notwithstanding.
+- **`expect(survivors.length).toBeGreaterThan(0)` stays** — the one honest
+  presence demand in the file, guarding the whole test.
+- **The denied-host universal stays.**
+- **No city claim added anywhere.** `cityCoverage` remains computed and
+  `console.info`-ed, asserted by nothing.
+- **The file stays credential-gated and EXCLUDED FROM THE GATE. A SKIP IS NOT A
+  PASS** — and this run was not a skip, it was a live 7 s execution.
+
+## THE GATE AFTER ITEM 0
+
+**92 files / 1877 tests, 1877 passing** — unchanged from the cold baseline; this
+item adds no test file and no test case, it restates one assertion inside an
+existing one. `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one
+standing `src/components/persona/quiz.tsx:46` error, 0 warnings.**
+
+**THE FLAKE CLASS IS RETIRED: after this item the benchmark passes on any honest
+pool, including one containing neither flagship row.**

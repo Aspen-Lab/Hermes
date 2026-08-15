@@ -99,7 +99,14 @@ const VENUE_ANCHORED_CITY: ReadonlyArray<readonly [string, string]> = [
 
 describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
   it(
-    "enriches at least half the pool and resolves the Solid-State Battery Summit",
+    // TITLE RESTATED by round 25 C, item ZERO (Ruling 65 / 68d), because the
+    // contract underneath it changed twice and the name had stopped describing
+    // it. It read "enriches at least half the pool and resolves the Solid-State
+    // Battery Summit": the first half named the city-coverage floor round 24 C
+    // restated away under 63b, and the second half named the top-five presence
+    // demand this round's item zero restates below. Restating a title is not
+    // deleting a test — leaving it would make the name lie about the contract.
+    "returns a live pool and locks the adjudicated and flagship rows that are present in it",
     async () => {
       const pool = await buildDailyEventPool({
         topics: profile?.researchTopics ?? [],
@@ -216,13 +223,112 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
       // the shape Ruling 32 forbids.
       expect(namedRowsExercised).toBeGreaterThan(0);
 
-      expect(
-        topFive.some(
-          (item) =>
-            hostname(item.linkOfficial).endsWith("cambridgeenertech.com") ||
-            /solid[-\s]?state battery summit/i.test(item.name),
-        ),
-      ).toBe(true);
+      // ══════════════════════════════════════════════════════════════════════
+      // RULING 65 / RULING 68d (round 25 C, ITEM ZERO; contract designed by
+      // round 25 B, item 3). THE TOP-FIVE PRESENCE ASSERTION, RESTATED IN
+      // PLACE — NOT DELETED. It read:
+      //
+      //   expect(
+      //     topFive.some(
+      //       (item) =>
+      //         hostname(item.linkOfficial).endsWith("cambridgeenertech.com") ||
+      //         /solid[-\s]?state battery summit/i.test(item.name),
+      //     ),
+      //   ).toBe(true);
+      //
+      // **IT WAS THE THIRD ASSERTION OF THE CLASS 63b AND 64c EACH REMOVED:**
+      // it demanded that a SPECIFIC ROW BE PRESENT in a LIVE pool. Its cost was
+      // not a standing red but something harder to reason about — an
+      // HOUR-TO-HOUR FLAKE. Round 24 C measured it RED; round 25 B measured it
+      // GREEN one hour later with nothing changed in between. Ruling 68d names
+      // the class and commissions this restatement to retire it.
+      //
+      // THE NEW CONTRACT — what it MEASURES, ASSERTS and TOLERATES.
+      //
+      // MEASURES: the named flagship rows — host `cambridgeenertech.com`, or a
+      // name matching /solid[-\s]?state battery summit/i — **that are actually
+      // PRESENT in `survivors`**. `survivors` rather than `topFive` because
+      // only the scored rows still carry `.score`, which is the durable half.
+      //
+      // ASSERTS, per PRESENT row — three VALUE locks, no presence demand:
+      //  (1) `score >= MIN_SCORE`. **THIS IS THE NON-VACUOUS CORE.** The pool
+      //      is built `applyFloor: false` at every stage (`lib/events/
+      //      pipeline.ts:94, 109, 232`), so a named row genuinely CAN sit in
+      //      `survivors` BELOW the floor — this can really fail, and it fails
+      //      exactly when the pipeline has started under-scoring the
+      //      benchmark's flagship topic. That is the durable half of what the
+      //      old line was built to catch, stated with no claim whatever about
+      //      pool composition.
+      //  (2) its URL is not the conference INDEX page — the page A24-01 drops
+      //      by KIND.
+      //  (3) its name is not a provider-attribution phrase.
+      // (2) and (3) mirror 64c's restated block below, but this matcher reaches
+      // rows 64c's does not: 64c filters on the HOST only, while this block
+      // also names rows by NAME regex. The row satisfying it today is
+      // `10times.com` — a host 64c's block never touches — so they are not
+      // duplicates.
+      //
+      // TOLERATES — commented rather than merely left out, so the next agent
+      // does not read the absence as an oversight:
+      //  * **ZERO PRESENT ROWS IS A PASS.** Nothing here demands that either
+      //    flagship reach the pool, the top five, or any rank.
+      //  * Pool composition, ranking position and top-five membership are
+      //    asserted NOWHERE. They oscillate hour to hour and this loop now has
+      //    two contradictory readings that prove it.
+      //  * No city claim is added anywhere — 63b's decision stands untouched.
+      //
+      // **THE TRAP, NAMED SO IT IS NOT WALKED INTO AGAIN** (Ruling 68d; B's
+      // item 3 states it): 63b's `expect(namedRowsExercised).toBeGreaterThan(0)`
+      // above is correct IN ITS OWN BLOCK — those rows measured 5–8 per pull.
+      // **It must NOT be copied here.** These are the rows that GO ABSENT
+      // (`cambridgeenertech.com` was measured NOT OFFERED by round 25 A), so a
+      // floor of 1 on them IS the presence demand wearing a counter's clothes.
+      // The count is therefore computed, `console.info`-ed, and **asserted on
+      // by nothing** — the same disposition 63b gave `cityCoverage` itself.
+      //
+      // THE RANKING CLAIM the old line partly carried is NOT given a live
+      // substitute, and that is a decision rather than an omission: `topFive`
+      // is a filtered prefix of an already score-sorted array, so any ordering
+      // assertion over it is TAUTOLOGICAL, and any "must reach the top five"
+      // claim is a claim about what ELSE the live search returned — the exact
+      // fault 63b and 64c both removed. Per 63b's own precedent that property
+      // is proven deterministically, in the ablation fixtures, not here.
+      // ══════════════════════════════════════════════════════════════════════
+      const flagshipRows = survivors.filter(
+        (item) =>
+          hostname(item.url).endsWith("cambridgeenertech.com") ||
+          /solid[-\s]?state battery summit/i.test(item.name),
+      );
+      console.info("EVENT_BENCHMARK_FLAGSHIP_ROWS", {
+        exercised: flagshipRows.length,
+        rows: flagshipRows.map((item) => ({
+          name: item.name,
+          host: hostname(item.url),
+          score: item.score,
+          atOrAboveFloor: item.score >= MIN_SCORE,
+        })),
+      });
+      for (const item of flagshipRows) {
+        const row = `${hostname(item.url)} -> ${item.name}`;
+        expect(
+          item.score,
+          `${row} scored ${item.score}, below MIN_SCORE ${MIN_SCORE}`,
+        ).toBeGreaterThanOrEqual(MIN_SCORE);
+        // The row is named through the MESSAGE argument, not by decorating the
+        // subject string. That is deliberate: this regex is `$`-anchored, and
+        // appending a label to the subject would push the anchor past the end
+        // of the URL and make the clause unfailable.
+        expect(
+          item.url,
+          `${row} readmitted the conference index page`,
+        ).not.toMatch(/\/cet\/conferences\/?(?:[?#].*)?$/);
+        expect(
+          item.name,
+          `${row} is named after a provider attribution`,
+        ).not.toMatch(
+          /^\s*(?:provided|presented|organised|organized|hosted)\s+by\b/i,
+        );
+      }
       // ══════════════════════════════════════════════════════════════════════
       // RULING 64c (round 24 C, item 3). THE `Chicago` HARD-ASSERT, RESTATED,
       // NOT DELETED. It read:
