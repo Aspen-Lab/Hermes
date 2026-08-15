@@ -264,7 +264,13 @@ describe("body-text place fallback", () => {
     );
 
     expect(CONFERENCE_CITIES.length).toBeGreaterThanOrEqual(300);
-    expect(extractBodyTextPlace(fixture)).toEqual({
+    // A23-03 / Ruling 62a RESTATEMENT. This real page still yields Chicago —
+    // it is one of the 33 of 41 rows B measured as UNCHANGED — but the whole-
+    // page scan now needs the item's own name, which is what `enrich.ts`
+    // supplies on every live row. B's ablation names this page under `P_name`.
+    expect(
+      extractBodyTextPlace(fixture, { eventName: "Solid-State Battery Summit" }),
+    ).toEqual({
       city: "Chicago",
       region: undefined,
       country: undefined,
@@ -291,16 +297,31 @@ describe("body-text place fallback", () => {
     ).toBeUndefined();
   });
 
-  it("adds an uppercase US state code and country without matching prose", () => {
+  // A23-03 / Ruling 62a RESTATEMENT (not a deletion). The state-code/country
+  // pairing this test was written for is unchanged; what changed is that the
+  // whole-page scan now also asks WHOSE city it is, and a one-sentence fixture
+  // carries no witness that the event itself is there. The pipeline always
+  // supplies the item's own name (`enrich.ts`), so the test supplies it too —
+  // and the second assertion pins the new contract on the same fixture.
+  it("adds an uppercase US state code and country when the event itself is the witness", () => {
     expect(
       extractBodyTextPlace(
-        "<body>The meeting venue is Chicago, IL, United States.</body>",
+        "<body>The Molten Salt Chemistry meeting venue is Chicago, IL, United States.</body>",
+        { eventName: "Molten Salt Chemistry Meeting" },
       ),
     ).toEqual({
       city: "Chicago",
       region: "IL",
       country: "United States",
     });
+  });
+
+  it("withholds the same address when nothing ties the city to this event", () => {
+    expect(
+      extractBodyTextPlace(
+        "<body>The meeting venue is Chicago, IL, United States.</body>",
+      ),
+    ).toBeUndefined();
   });
 
   it("uses structured and Open Graph places before the body fallback", () => {
@@ -391,9 +412,16 @@ describe("country must belong to the city", () => {
     expect(place?.country).toBeUndefined();
   });
 
+  // A23-03 / Ruling 62a RESTATEMENT. Same fixture, same mechanism (the country
+  // must sit directly after the city); the event's own name now has to be
+  // present for the whole-page scan to accept the mention at all. `Venue:` as a
+  // label is exactly the `P_label` clause B measured as VACUOUS and the manager
+  // declined to ship — an unearned clause does not ship, so this shape needs a
+  // real witness.
   it("keeps a country that directly follows the city", () => {
-    const html = "<html><body><p>Venue: Cologne, Germany</p></body></html>";
-    const place = extractBodyTextPlace(html);
+    const html =
+      "<html><body><p>Molten Salt Forum — Venue: Cologne, Germany</p></body></html>";
+    const place = extractBodyTextPlace(html, { eventName: "Molten Salt Forum" });
     expect(place?.city).toBe("Cologne");
     expect(place?.country).toBe("Germany");
   });
@@ -469,10 +497,17 @@ describe("country must belong to the city", () => {
   // Must not over-trigger: an event naming its OWN edition number alongside
   // its current, cued venue is not a past-edition mention and must still
   // resolve normally.
+  // A23-03 / Ruling 62a RESTATEMENT. The point of this test — a CURRENT year
+  // beside the venue must not read as a past edition — is now also the point of
+  // `N_pastyear`, so it is pinned against a fixed clock instead of the wall
+  // clock, and the event's own name supplies the witness the guard requires.
   it("still resolves a current venue that happens to be mentioned with its own edition number", () => {
     const html =
-      "<html><body><p>Join us for its 2026 edition, held in Austin, Texas.</p></body></html>";
-    const place = extractBodyTextPlace(html);
+      "<html><body><p>Join us for the Titanium Round Table's 2026 edition, held in Austin, Texas.</p></body></html>";
+    const place = extractBodyTextPlace(html, {
+      eventName: "Titanium Round Table",
+      now: new Date("2026-08-15T00:00:00Z"),
+    });
     expect(place?.city).toBe("Austin");
   });
 
@@ -500,6 +535,226 @@ describe("country must belong to the city", () => {
   it("rejects a historical complete city/region/country clause", () => {
     const html = "<body>Past editions were held in Aurora, Ontario, Canada (2014).</body>";
     expect(extractBodyTextPlace(html)).toBeUndefined();
+  });
+});
+
+// A23-03 / Ruling 62a — THE PLACE OWNERSHIP GUARD.
+//
+// Four live pool rows rendered a city lifted out of a sentence about a
+// DIFFERENT entity. The guard asks whether the EVENT ITSELF is present beside
+// the city (three positives) and whether the sentence says the city belongs to
+// someone else (three negatives, evaluated after the positives, vetoing).
+//
+// Every clock here is fixed. `P_date` and `N_pastyear` both read the current
+// year, and a test whose verdict flips on 1 January is not a test.
+describe("A23-03 — the place ownership guard", () => {
+  const NOW = new Date("2026-08-15T00:00:00Z");
+  const page = (body: string) => `<html><body><p>${body}</p></body></html>`;
+  const scan = (body: string, eventName?: string) =>
+    extractBodyTextPlace(page(body), { eventName, now: NOW });
+
+  // B's adversarial table, part 4 of item 1 — the values that MUST KEEP.
+  it("keeps a venue-anchored city (P_venue)", () => {
+    expect(scan("The molten salt congress will be held in Lyon, France.")?.city)
+      .toBe("Lyon");
+    expect(scan("Join us at the Palais des Congres in Lyon for three days.")?.city)
+      .toBe("Lyon");
+  });
+
+  it("keeps a city carrying the event's own future dates (P_date)", () => {
+    expect(scan("OCTOBER 12-15, 2027 Huntington Place Detroit, MI")?.city)
+      .toBe("Detroit");
+  });
+
+  it("keeps a city whose clause is cut only by an ABBREVIATION period", () => {
+    // The measured false silence: `[^.]`-style windows cannot cross "Oct.", and
+    // a first build of this guard silenced npaonline.org's correct Denver.
+    // Treat that dot as a sentence end and the clause loses the FUTURE year in
+    // front of it, keeping only the past one behind — so N_pastyear fires on a
+    // current venue.
+    expect(
+      scan(
+        "The 2027 NPA Annual Conference will be held Oct. 11-14 in Denver, CO, as it was in 2019.",
+      )?.city,
+    ).toBe("Denver");
+  });
+
+  it("keeps a city witnessed only by the event's own name (P_name)", () => {
+    expect(scan("SSI24 will convene in Kyoto for five days of talks.", "SSI24 Solid State Ionics")
+      ?.city).toBe("Kyoto");
+  });
+
+  it("keeps the FIRST admissible mention when a page carries two rival venue statements", () => {
+    expect(
+      scan(
+        "The congress will be held in Lyon. A partner congress will be held in Tokyo.",
+      )?.city,
+    ).toBe("Lyon");
+  });
+
+  it("rejects ONE mention, not the whole answer — the guard is inside the acceptance loop", () => {
+    // At the caller the guard cannot see WHICH mention won, so it could only
+    // discard everything. Here the sponsor's seat is rejected and the event's
+    // real venue, later on the same page, still wins.
+    expect(
+      scan(
+        "Our sponsor Acme is based in Boston. The Molten Salt Forum is hosted in Lyon.",
+        "Molten Salt Forum",
+      )?.city,
+    ).toBe("Lyon");
+  });
+
+  // The four live contaminations, each now silent.
+  it("N_seat — drops an exhibitor's head office (storageusa → Durham)", () => {
+    expect(scan("Based in Durham, N.C., FlexGen Congress is a leader.")).toBeUndefined();
+    expect(scan("Sponsor profile: Acme Congress is headquartered in Boston.")).toBeUndefined();
+  });
+
+  it("P_venue excludes affiliation words — drops a speaker's postal address (nanoge → Chicago)", () => {
+    expect(
+      scan("Prof. Ada Lee, Illinois Institute of Technology, Chicago, IL, 60616, USA."),
+    ).toBeUndefined();
+  });
+
+  it("N_pastyear — drops a finished meeting named in a biography (flogen → Geneva)", () => {
+    // The event's own name IS in the window, so a positive fires and only
+    // N_pastyear can silence this. Without the name it would be silent anyway,
+    // for want of any positive — which would make the test decoration.
+    expect(
+      scan(
+        "Plenary Lecture at the Molten Salt Forum Meetings in Geneva in February 2022.",
+        "Molten Salt Forum",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("N_otherevent — drops the organiser's OTHER conference (sdle → Oslo)", () => {
+    // The real shape, kept intact: "in Israel" is what satisfies the shipped
+    // proximity cue 40 characters later, and the item's own name ("Battery")
+    // is what satisfies P_name — so this mention IS accepted today and IS
+    // admitted by a positive. Only N_otherevent can silence it.
+    expect(
+      scan(
+        "Local Battery Training in Israel Our Conferences 7th Oslo Battery Days Conference, Oslo, Norway",
+        "Turkey Battery Technologies Summit 2026",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("drops a careers-page list of office cities with no witness at all", () => {
+    expect(scan("Austin Berlin Boston, MA Brussels Budapest")).toBeUndefined();
+  });
+
+  // THE ACCEPTED, NAMED COST (Ruling 62a): a correct venue is lost because the
+  // row is nine years stale. It should not be in a live pool at all.
+  it("accepts the abilities.com cost — a March 2017 venue goes silent", () => {
+    // This is the honest cost, stated at full strength: the row's OWN name and
+    // its OWN true venue are both present, and it is silenced anyway because
+    // every year in the clause has passed. A nine-year-old row should not be
+    // in a live pool.
+    expect(
+      scan(
+        "The Abilities Expo runs ONE DAY ONLY on Friday, March 24, 2017 at the Los Angeles Convention Center.",
+        "Abilities Expo",
+      ),
+    ).toBeUndefined();
+  });
+
+  // THE BOUNDARY CONDITIONS, each a uniquely-red case for one clause.
+  it("N_otherevent is START-anchored — unanchored it broke 10 of 41 rows", () => {
+    // The event word sits later in the window, not opening a name run off the
+    // city. Unanchored this went silent; anchored it must KEEP.
+    expect(
+      scan("OCTOBER 12-15, 2027 Huntington Place Detroit, MI — The Battery Show")
+        ?.city,
+    ).toBe("Detroit");
+  });
+
+  it("N_otherevent does not fire on lower-case prose after the city", () => {
+    expect(scan("The congress will be held in Lyon for three days of talks.")?.city)
+      .toBe("Lyon");
+  });
+
+  it("P_name ignores generic event words — without the stop-list it admits everything", () => {
+    // "annual" and "conference" are in every event's name and witness nothing.
+    // Drop the stop-list and this clause matches on every page, becoming a
+    // no-op that HIDES the other five clauses' failures.
+    expect(
+      scan(
+        "Our annual conference programme committee is located in Boston.",
+        "Annual Battery Conference",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("P_name requires tokens of four characters or more", () => {
+    // A three-letter acronym is too weak a witness to carry the whole gate.
+    expect(
+      scan("Our SSI sponsor liaison is located in Boston.", "SSI Molten Salt"),
+    ).toBeUndefined();
+  });
+
+  it("N_pastyear is scoped to ONE clause, so a stale year nearby cannot taint a current venue", () => {
+    // A copyright year or a past-edition link sitting near a correct current
+    // venue trips the window-wide form. Phrased to avoid "will be held in X,
+    // Country", which the separate current-venue clause answers before this
+    // guard is ever consulted.
+    expect(
+      scan(
+        "Copyright 2019 Molten Salt Forum. The Molten Salt Forum is hosted in Lyon.",
+        "Molten Salt Forum",
+      )?.city,
+    ).toBe("Lyon");
+  });
+
+  it("negatives VETO — a positive may not rescue a mention a negative rejected", () => {
+    // `pos || !neg` instead of `pos && !neg` brings six rows back wrong and
+    // re-opens three of the four contaminations. Both fixtures carry a strong
+    // POSITIVE and must still be silent.
+    expect(
+      scan("The Molten Salt Forum sponsor is based in Durham, N.C.", "Molten Salt Forum"),
+    ).toBeUndefined();
+    expect(
+      scan("Molten Salt Forum, October 12-15, 2027 — Our Conferences 7th Oslo Battery Days", "Molten Salt Forum"),
+    ).toBeUndefined();
+  });
+
+  it("every candidate rejected leaves the place ABSENT, never a country and never a host", () => {
+    // Ruling 26's `|| host` lesson. Silence is the state the build already
+    // renders (solarpaces.org proves it is reachable today).
+    expect(scan("Based in Durham, N.C., FlexGen Congress is a leader.")).toBeUndefined();
+  });
+
+  // THE EXEMPTION — the largest blast-radius fact in the item.
+  it("does not touch a provider's short structured place field (ccfddl)", () => {
+    // `ccfddl.ts:147` calls this on "Chicago, IL + Virtual". No positive clause
+    // can fire on a string that short, so guarding it would silence a field
+    // that was never ambiguous.
+    expect(extractPlaceFromText("Chicago, IL + Virtual")).toEqual({
+      city: "Chicago",
+      region: "IL",
+      country: "United States",
+    });
+  });
+
+  it("gates the bare-country arm by the SAME test when a page IS scanned", () => {
+    // Ruling 26: a city the guard just rejected must not publish its country
+    // through the back door. Exempt scope keeps the old contract; page scope
+    // requires the same witness.
+    expect(extractPlaceFromText("The workshop will be held in Germany.")?.country)
+      .toBe("Germany");
+    expect(
+      extractPlaceFromText("The workshop will be held in Germany.", {
+        scope: "page",
+        now: NOW,
+      }),
+    ).toBeUndefined();
+    expect(
+      extractPlaceFromText(
+        "The Molten Salt Forum will be held in Germany.",
+        { scope: "page", eventName: "Molten Salt Forum", now: NOW },
+      )?.country,
+    ).toBe("Germany");
   });
 });
 

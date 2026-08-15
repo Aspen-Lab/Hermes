@@ -283,8 +283,11 @@ export async function enrichEventCandidates(
   const enriched = candidates.map((item, index) => {
     const html = pages[index];
     if (!html) return item;
+    // A23-03 / Ruling 62a: the item's own name is the `P_name` co-witness —
+    // the guard asks whether the EVENT ITSELF is present beside the city, and
+    // this is the only place that knows what the event is called.
     const structured = tryExtract(() =>
-      extractOpportunityPageDetails(html, "event"),
+      extractOpportunityPageDetails(html, "event", { eventName: item.name }),
     );
     const details = tryExtract(() => extractEventDetails(html));
     const declaredEventName = tryExtract(() => extractDeclaredEventName(html));

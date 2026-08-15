@@ -58098,3 +58098,201 @@ deleted before this gate run and before this commit.
 **THE HAND-OFF:** `WHOSE TURN: C — round 23` stands as B wrote it, order **A23-03 → A23-01 → A23-02 → A23-04**, with this ruling scoping each item. The baseline C confirms cold is **92 files / 1751 tests, and either 1750 or 1751 passing** (the sole conditional failure being the standing `benchmark.test.ts` flake) — a third number is a real regression. The gate stays `GATE (0%): NOT MET` — only round 24's A census can move it, and only the manager closes, after an independent re-measurement.
 
 ---
+
+### Round 23 — Agent C (item 1 of 4: **A23-03 LANDED — the place ownership guard, six clauses, exactly as Ruling 62a scoped it. Every clause and every boundary condition is uniquely red under ablation. AND ONE THING B's TESTS-AT-RISK LIST DID NOT NAME: `benchmark.test.ts` CARRIES A CITY-COVERAGE FLOOR THAT THIS FIX DETERMINISTICALLY CROSSES. `POLICY — manager decides`, threshold NOT touched.**)
+
+**STATUS: LANDED.** Item 1 of 4. Turn lock claimed (`25a347f`,
+`LAPTOP-3CL10CG5 @ 2026-08-15 00:09 UTC`) after `git pull` (already up to date)
+and confirming `git branch --show-current` reads
+`feature/summary-report-revamp`. **The claiming push was ACCEPTED
+(`a5035bb..25a347f`), so the race was won rather than assumed.**
+
+**THE COLD BASELINE, CONFIRMED BEFORE THE FIRST EDIT: 92 files / 1751 tests,
+1751 PASSING** — the standing `benchmark.test.ts` flake did not fire on the cold
+run. `npx tsc --noEmit` clean; `npx eslint src` exactly the one standing
+`src/components/persona/quiz.tsx:46` error, 0 warnings. That is the second of
+the two admissible numbers, so the baseline is confirmed, not assumed.
+
+---
+
+## PART 1 — **WHAT SHIPPED, CLAUSE BY CLAUSE**
+
+Six clauses, in `web/src/lib/opportunities/structured-extract.ts`, evaluated
+inside `findVenueCity`'s acceptance loop. `P_label`, `P_verb` and `N_affil` are
+**NOT shipped**, per 62a's vacuity discipline.
+
+| clause | shipped as |
+|---|---|
+| `P_date` | a month-day token anywhere in the window **and** a year ≥ the current year |
+| `P_name` | a token of the item's own name, **≥ 4 characters**, not in a 46-word generic-event stop-list |
+| `P_venue` | a venue proper noun in the 40 characters before — the vocabulary 62a fixed, with `university`/`institute`/`college`/`school`/`department`/`laboratory` **excluded** |
+| `N_seat` | `based|headquartered|head office|hq|offices|branch|subsidiary|founded|incorporated|registered` in the 40 before |
+| `N_otherevent` | **START-anchored**: a run of at most four tokens after the city, every one of them initial-capital, reaching an event word |
+| `N_pastyear` | every year token **in the city's own clause** is before the current year |
+
+Window: 200 characters before, 120 after. **Negatives are evaluated AFTER the
+positives and they VETO (`positive && !negative`).**
+
+**THE `N_otherevent` ANCHOR, MADE CONCRETE.** 62a fixes the anchor but not the
+run length. C ships **"stop at the first token that is not part of a proper
+name"** — an initial-capital requirement, at most four tokens. That is what
+separates `Oslo Battery Days` (veto) from `Kyoto for five days of talks` (keep):
+`for` and `five` are lower case, so the run ends before the event word is
+reached. A pure "exactly one intervening word" reading also passes every one of
+B's cases; C chose the capitalisation test because it covers longer real event
+names with the same discriminator. **This is C's own reading of an underspecified
+boundary and it is flagged as such, not presented as B's measurement.**
+
+**THE ABBREVIATION PERIOD.** Collapsed with a **length-preserving** substitution
+(period → space) so every index computed against the raw text still addresses
+the same character. B's own note said the collapse cost it a false silence on
+`npaonline.org`'s correct Denver; in C's build the window is a plain character
+slice, so the collapse bites only in `N_pastyear`'s clause — which is exactly
+where it must, and it is uniquely red (below).
+
+## PART 2 — **THE SCOPING, WHICH IS THE ITEM'S LARGEST BLAST-RADIUS FACT**
+
+**`extractBodyTextPlace` IS the whole-page scan, so it FAILS SAFE INTO the
+guard** — its default scope is `page`, and a future caller that hands it a page
+gets the guard without having to know it exists. **`extractPlaceFromText`
+defaults to the EXEMPT scope**, because its only shipped caller
+(`ccfddl.ts:147`) hands it a provider's own short structured field
+(`"Chicago, IL + Virtual"`) on which no positive clause can fire.
+
+**`ccfddl.ts` IS NOT EDITED AT ALL** — the exemption is the default at the entry
+point it already calls, so there is no call site anyone can forget to update.
+The exemption is pinned by a test that goes red if the default is flipped.
+
+**RULING 26 IS SATISFIED STRUCTURALLY, NOT BY ASSERTION.** The bare-country arm
+behind `VENUE_CUE_RE` is gated by the SAME `ownsVenueMention` test whenever the
+scope IS a page, so a city the guard just rejected cannot publish its country
+through the back door. Pinned by a three-way test (exempt keeps the old
+contract; page scope without a witness is silent; page scope with the event's
+own name keeps `Germany`).
+
+**ONE CORRECTION TO B's BLAST-RADIUS CLAIM.** B item 1 wrote that the guard
+reaches *"the job surface through the same `extractOpportunityPageDetails` call
+(`enrich.ts:421`)"*. **It does not.** `extractOpportunityPageDetails` has
+exactly one shipped caller, `enrich.ts:287`, on the EVENT path; the job path
+takes its place from `resolveJobPostingScope`'s structured record, and
+`enrich.ts:90` carries a comment saying so in as many words (*"the job path
+never calls `extractOpportunityPageDetails`"*). **Grepped, not remembered. The
+blast radius is EVENT-ONLY and smaller than B's entry states.**
+
+## PART 3 — **NEGATIVE PROOFS. SIXTEEN ABLATIONS, EVERY ONE UNIQUELY RED.**
+
+Each row: the source reverted in exactly one place, the file re-run, the red
+count recorded. **A test that passes both ways is decoration, and C found five
+of its own and replaced them rather than reporting them as proofs.**
+
+| ablation | red |
+|---|---|
+| WHOLE GUARD OFF | **12** |
+| `positive \|\| !negative` — 62a's named misreading | **12** |
+| `P_name` off | **8** |
+| `P_venue` off | **5** |
+| `N_otherevent` unanchored (whole-window scan) | **5** |
+| `N_seat` off | **3** |
+| `P_date` off | **2** |
+| `N_pastyear` off | **2** |
+| `N_otherevent` off | **1** |
+| `N_pastyear` widened to the whole window | **1** |
+| `P_name` stop-list off | **1** |
+| `P_name` 4-character floor off | **1** |
+| `P_venue` with the affiliation words put back IN | **1** |
+| abbreviation-period collapse off | **1** |
+| guard moved to the CALLER (whole-answer discard) | **1** |
+| exemption removed (ccfddl guarded) | **1** |
+
+**THE FIVE DECORATIONS C CAUGHT IN ITS OWN TESTS, NAMED.** `N_pastyear`'s two
+fixtures, the anchoring fixture, the stop-list fixture and the 4-character
+fixture all passed with their clause switched OFF, because **no positive fired
+on them in the first place — they were being silenced by the absence of a
+witness, not by the negative they claimed to prove.** Each was rebuilt so a
+positive DOES fire and only the clause under test can silence it. **Two more
+were being answered by `findCurrentVenueClause` before the guard was ever
+consulted** — the `will be held in <City>, <Country>` shape short-circuits at
+`:1488` — and were rephrased to `is hosted in <City>`.
+
+## PART 4 — **THE GATE, AND THE ONE THING B's LIST DID NOT NAME**
+
+`cd web && npx vitest run`: **92 files / 1773 tests, 1772 passing** (+22 tests,
+all C's). `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 53 of 53 —
+the SolarPACES lock holds.** `place-flow.test.ts`, `facets.test.ts`,
+`card.test.ts`, `scoring.test.ts` together: **94 of 94, no change.**
+
+**THE SOLE FAILURE IS `benchmark.test.ts` — AND C DOES NOT GET TO CALL IT THE
+FLAKE, BECAUSE C MEASURED IT AND IT IS NOT.**
+
+| run | assertion | result |
+|---|---|---|
+| cold, before any edit | — | **PASSED** |
+| guard ON, run 1 | `cityCoverage` | **0.4375** (7 of 16) — FAIL |
+| guard ON, run 2 | `cityCoverage` | **0.4375** (7 of 16) — FAIL |
+| guard ON, run 3 | `cityCoverage` | **0.4375** (7 of 16) — FAIL |
+| guard OFF (one-line revert), run 1 | — | **PASSED** |
+| guard OFF, run 2 | — | **PASSED** |
+
+**Three stable runs each way. This is causal, not variance.** The guard removes
+at least one city from today's live 16-row pool and that crosses the test's
+`cityCoverage >= 0.5` floor.
+
+**WHAT C DID NOT DO: TOUCH THE THRESHOLD.** Lowering a floor to make one's own
+change pass is gate-softening, and this loop's whole method is that a threshold
+moves only by ruling.
+
+**BOTH TRUE THINGS, STATED TOGETHER.**
+
+1. **The test is excluded from the gate by standing ruling** (§3: *"`benchmark.test.ts` is a known live-search flake, excluded by standing ruling"*), and **`cityCoverage < 0.5` is one of its three recorded presentations** — it failed at **0.4666 in round 19 A, 0.467 in round 14, 0.4285 in a round-17-era run**, all with no place guard anywhere in the tree. So the gate figures are unaffected and this is not a new gate failure.
+2. **AND the floor is now in direct tension with Ruling 62a.** A coverage FLOOR is structurally a pressure to keep values the guard exists to remove — the exact shape **Ruling 32** named as the defect (*"this field must not be empty" is the defect*). 62a orders four wrong cities to become silence; a rule that says at least half the pool must show a city pushes the other way.
+
+**`POLICY — manager decides`:** does `benchmark.test.ts`'s `cityCoverage >= 0.5`
+survive Ruling 62a, and if so at what number? **C has not touched it, and C
+recommends nothing** — B's own corpus says the honest live rate after this fix
+is roughly 33 of 41 minus the losses, and **round 24 A's five-pull census is the
+instrument that can answer it. One live pool of 16 rows is not.**
+
+**AND THE FALSIFIER FOR THIS ITEM, STATED PLAINLY:** if round 24 A's census
+shows a **correct, current** venue lost on any pool row — not a stale one, not
+an office, not another event's — this design is wrong and the entry is wrong.
+B measured zero such losses on 41 pages; `abilities.com`'s March-2017 Los
+Angeles is the one correct value lost and it is **62a's named, accepted cost.**
+
+## PART 5 — **TESTS RESTATED, NEVER DELETED**
+
+**Four moved, all in `structured-extract.test.ts`, each commented with the item
+that changed it. ZERO deleted.**
+
+| test | restated to |
+|---|---|
+| *finds Chicago in the measured BlueCurrent body-only case* | same page, same answer, now supplied with the item's own name — the value `enrich.ts` passes on every live row. **B's ablation names this page under `P_name`, and it is one of the 33 of 41 UNCHANGED rows.** |
+| *adds an uppercase US state code and country without matching prose* | split in two: the pairing mechanism it was written for, now witnessed; **plus a new second test pinning the new contract — the same address with no witness is ABSENT** |
+| *keeps a country that directly follows the city* | same fixture and mechanism, with the event's own name present. This fixture is the `P_label` (`Venue:`) shape **that 62a declined to ship as vacuous** |
+| *still resolves a current venue mentioned with its own edition number* | pinned to a **fixed clock** — it asserts that a CURRENT year is not a past edition, and a test whose verdict flips on 1 January is not a test |
+
+**Every new test uses a fixed clock (`2026-08-15`)** for the same reason.
+
+**Blast radius re-grepped rather than inherited:** `extractBodyTextPlace` and
+`extractPlaceFromText` have exactly the callers B named plus none;
+`extractOpportunityPageDetails` has exactly one shipped caller and it is
+event-side. `place` reaches the card's location line, plate 03's tiles, the
+facet counts, and location-preference scoring — all four suites run and
+unchanged. **It does not touch dedup, the required-topic gate, any host list, or
+any standing ruling's own instrument.**
+
+**EXCLUSION WALK, BY NAME.** Not 45a (`euagenda.eu` — **not fetched; C made no
+live fetch of its own this item**), not 41c's three hosts (45b — **not hunted**),
+not 39a/40, not 42c, not 39b (retired as moot by 61a), not 36, not 33, not 50a,
+not B18-03. **No standing exclusion names any of the four contaminated hosts.**
+
+**SECURITY.** No credential read, printed, logged or written; no
+`.local-data/profile.json` value entered any output. `PEER_PROFILE_SNAPSHOT_PATH`
+NOT used. **C fetched no third-party page directly** — the only network traffic
+was `benchmark.test.ts`, a shipped suite member, run as the gate requires. **No
+third-party page text was pasted; the only page-derived strings in this entry
+are event names and city values Peer itself extracted.** The ablation harness
+lived **outside the repository**, in this session's scratchpad, and
+`git status --porcelain --untracked-files=all` is **clean**.
+
+---

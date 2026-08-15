@@ -1433,6 +1433,240 @@ function findCurrentVenueClause(text: string): CurrentVenueResult {
 }
 
 /**
+ * A23-03 / Ruling 62a — THE PLACE OWNERSHIP GUARD.
+ *
+ * The measured defect: `findVenueCity` accepts the first gazetteer city on the
+ * page that sits after a locational cue, and NOTHING anywhere asks WHOSE city
+ * it is. Four live pool rows were contaminated by that — a 2022 UN meeting in a
+ * speaker biography (`flogen.org` → Geneva), an exhibitor's head office
+ * (`storageusa` → Durham), a speaker's postal affiliation (`nanoge.org` →
+ * Chicago) and the organiser's OTHER conference in a nav list (`sdle.co.il` →
+ * Oslo, on a summit named for Turkey).
+ *
+ * The insight the design cost four rejected drafts: the wrong answers are never
+ * "unowned text was read", they are "a city was read out of a sentence about a
+ * DIFFERENT entity". So the gate is a co-witness test — is the EVENT ITSELF
+ * present beside the city? — plus a small closed set of "this belongs to
+ * someone else" markers. Nothing depends on finding a DOM block; the two drafts
+ * that needed one destroyed three of the four correct pool values, because on
+ * ordinary conference sites the event's own name lives in a banner image.
+ *
+ * Scope, and this is the largest blast-radius fact in the item: the guard runs
+ * on the WHOLE-PAGE scan only. `extractPlaceFromText` is handed SHORT
+ * STRUCTURED provider fields ("Chicago, IL + Virtual", `ccfddl.ts:147`) on which
+ * no positive clause can fire, so it defaults to the exempt scope and keeps its
+ * old contract exactly.
+ */
+interface PlaceOwnershipContext {
+  /** `text` with abbreviation periods neutralised; same length, so shared indices. */
+  collapsed: string;
+  /** The item's own name, for the `P_name` co-witness clause. */
+  eventName?: string;
+  currentYear: number;
+}
+
+export type PlaceScanScope = "page" | "structured-field";
+
+export interface PlaceScanOptions {
+  /**
+   * `page` runs the ownership guard, `structured-field` does not. The default
+   * differs per entry point on purpose: `extractBodyTextPlace` IS the
+   * whole-page scan and fails safe into the guard, while
+   * `extractPlaceFromText`'s callers pass a provider's own short place string.
+   */
+  scope?: PlaceScanScope;
+  eventName?: string;
+  /** Injectable clock — `P_date` and `N_pastyear` both read the current year. */
+  now?: Date;
+}
+
+const PLACE_OWNER_LOOKBEHIND = 200;
+const PLACE_OWNER_LOOKAHEAD = 120;
+/** `P_venue` and `N_seat` both read only the words immediately before the city. */
+const PLACE_OWNER_ADJACENT = 40;
+
+/**
+ * A period that is not a sentence end is an ABBREVIATION dot, and the shipped
+ * `[^.]{0,N}$` window style cannot cross one. B measured the cost: "will be held
+ * Oct. 11-14 in Denver" and "Based in Durham, N.C." both carry one, and a first
+ * build of this guard silenced `npaonline.org`'s CORRECT, current Denver
+ * because the clause was cut at "Oct.". Collapsing to a space rather than
+ * deleting keeps the string length identical, so every index computed against
+ * the raw text still points at the same character here.
+ */
+function collapseAbbreviationPeriods(text: string): string {
+  return text.replace(/\.(?![ \t]+[A-Z])(?!$)/g, " ");
+}
+
+const OWNER_MONTH_DAY_RE = new RegExp(
+  `\\b(?:${MONTH_PATTERN})\\b\\.?\\s{0,2}\\d{1,2}\\b|\\b\\d{1,2}\\s{0,2}(?:${MONTH_PATTERN})\\b`,
+  "i",
+);
+
+const OWNER_YEAR_RE = /\b(20\d{2})\b/g;
+
+/**
+ * `P_date` — the event's own dates sit next to its own venue: "OCTOBER 12-15,
+ * 2026 Huntington Place Detroit, MI". A month-day token alone is not enough (a
+ * biography's "in February 2022" has one); it must be joined by a year that has
+ * not already passed.
+ */
+function hasOwnDateWitness(window: string, currentYear: number): boolean {
+  if (!OWNER_MONTH_DAY_RE.test(window)) return false;
+  for (const match of window.matchAll(OWNER_YEAR_RE)) {
+    if (Number(match[1]) >= currentYear) return true;
+  }
+  return false;
+}
+
+/**
+ * Words that are in every event's name and therefore witness nothing. Without
+ * this stop-list `P_name` matches "conference" on every page and becomes a
+ * no-op that HIDES the other clauses' failures — B measured it as the clause's
+ * single most important boundary.
+ */
+const GENERIC_EVENT_NAME_TOKENS = new Set([
+  "annual", "asia", "association", "biennial", "centre", "center", "college",
+  "conference", "conferences", "congress", "convention", "days", "department",
+  "edition", "europe", "european", "event", "events", "exhibition", "expo",
+  "festival", "forum", "global", "hybrid", "institute", "international",
+  "laboratory", "meeting", "meetings", "national", "online", "program",
+  "programme", "school", "seminar", "series", "session", "sessions", "show",
+  "society", "summit", "symposium", "university", "virtual", "webinar", "week",
+  "workshop", "world",
+]);
+
+/**
+ * `P_name` — a distinctive token of the item's OWN name in the window. The
+ * ≥4-character floor is not cosmetic: "NPA" and "SSI" as bare tokens match
+ * inside ordinary words and would admit everything.
+ */
+function hasOwnNameWitness(window: string, eventName: string | undefined): boolean {
+  if (!eventName) return false;
+
+  for (const token of eventName.split(/[^A-Za-z0-9]+/)) {
+    if (token.length < 4) continue;
+    if (/^\d+$/.test(token)) continue;
+    if (GENERIC_EVENT_NAME_TOKENS.has(token.toLowerCase())) continue;
+    if (new RegExp(`\\b${escapeRegExp(token)}\\b`, "i").test(window)) return true;
+  }
+  return false;
+}
+
+/**
+ * `P_venue` — a venue proper noun directly in front of the city. It must NOT
+ * contain `university`, `institute`, `college`, `school`, `department` or
+ * `laboratory`: those are exactly the AFFILIATION shape, and including them was
+ * what killed draft 3 and left "Illinois Institute of Technology, Chicago"
+ * reading as a venue.
+ */
+const VENUE_PROPER_NOUN_RE =
+  /\b(?:convention|congres|congress|exhibition|expo|centre|center|hotel|hall|arena|resort|stadium|pavilion|palace|auditorium|messe|fairground|plaza|theatre|place)\b/i;
+
+/** `N_seat` — an exhibitor's or sponsor's head office, not the event's venue. */
+const ORG_SEAT_RE =
+  /\b(?:based|headquartered|head office|hq|offices|branch|subsidiary|founded|incorporated|registered)\b/i;
+
+const OTHER_EVENT_WORDS = new Set([
+  "conference", "congress", "day", "days", "expo", "forum", "meeting", "show",
+  "summit", "symposium", "week", "weeks",
+]);
+
+/**
+ * `N_otherevent` — the city opens ANOTHER event's name, the shape an
+ * organiser's nav list of its other conferences takes ("7th Oslo Battery Days
+ * Conference"). It is START-anchored and stops at the first token that is not
+ * part of a proper name: B measured the unanchored form breaking 10 of 41 rows
+ * and MOVING `battery-power.eu` off its correct Aachen. Requiring an initial
+ * capital is what separates "Oslo Battery Days" from the innocent "Kyoto for
+ * five days of talks".
+ */
+function namesAnotherEvent(following: string): boolean {
+  const run = following.match(
+    /^[ \t]*[A-Za-z][A-Za-z&'’-]*(?:[ \t]+[A-Za-z][A-Za-z&'’-]*){0,3}/,
+  );
+  if (!run) return false;
+
+  for (const token of run[0].trim().split(/[ \t]+/)) {
+    if (!/^[A-Z]/.test(token)) return false;
+    if (OTHER_EVENT_WORDS.has(token.toLowerCase())) return true;
+  }
+  return false;
+}
+
+/** The run of text around the city, cut at real sentence and list boundaries. */
+function clauseAround(collapsed: string, index: number, end: number): string {
+  const from = Math.max(0, index - PLACE_OWNER_LOOKBEHIND);
+  const to = Math.min(collapsed.length, end + PLACE_OWNER_LOOKAHEAD);
+  const before = collapsed.slice(from, index);
+  const after = collapsed.slice(end, to);
+  const openedAt = before.search(/[.!?;|•\n][^.!?;|•\n]*$/);
+  const closesAt = after.search(/[.!?;|•\n]/);
+  return (
+    (openedAt >= 0 ? before.slice(openedAt + 1) : before) +
+    collapsed.slice(index, end) +
+    (closesAt >= 0 ? after.slice(0, closesAt) : after)
+  );
+}
+
+/**
+ * `N_pastyear` — every year in the city's OWN clause has already gone by, so
+ * the sentence is about a finished event. Deliberately scoped to one clause: a
+ * copyright year or a past-edition link sitting near a correct current venue
+ * would trip a window-wide form. B measured the wider scope as changing zero
+ * rows on its corpus and recorded that the narrowing is therefore UNPROVED
+ * there — it is kept on principle, not on evidence.
+ */
+function isPastEditionClause(clause: string, currentYear: number): boolean {
+  const years = [...clause.matchAll(OWNER_YEAR_RE)].map((match) => Number(match[1]));
+  return years.length > 0 && years.every((year) => year < currentYear);
+}
+
+/**
+ * The six clauses, assembled. NEGATIVES ARE EVALUATED AFTER THE POSITIVES AND
+ * THEY VETO. This is the single easiest line in the item to mis-read as
+ * `positive || !negative`, and B measured that misreading: it brings SIX rows
+ * back wrong and re-opens three of the four contaminations.
+ */
+function ownsVenueMention(
+  ownership: PlaceOwnershipContext,
+  index: number,
+  end: number,
+): boolean {
+  const { collapsed, currentYear } = ownership;
+  const before = collapsed.slice(Math.max(0, index - PLACE_OWNER_LOOKBEHIND), index);
+  const adjacent = before.slice(-PLACE_OWNER_ADJACENT);
+  const after = collapsed.slice(end, end + PLACE_OWNER_LOOKAHEAD);
+  const window = before + collapsed.slice(index, end) + after;
+
+  const positive =
+    hasOwnDateWitness(window, currentYear) ||
+    hasOwnNameWitness(window, ownership.eventName) ||
+    VENUE_PROPER_NOUN_RE.test(adjacent);
+  if (!positive) return false;
+
+  if (ORG_SEAT_RE.test(adjacent)) return false;
+  if (namesAnotherEvent(after)) return false;
+  if (isPastEditionClause(clauseAround(collapsed, index, end), currentYear)) {
+    return false;
+  }
+  return true;
+}
+
+function placeOwnershipContext(
+  text: string,
+  options: PlaceScanOptions,
+  fallbackScope: PlaceScanScope,
+): PlaceOwnershipContext | undefined {
+  if ((options.scope ?? fallbackScope) !== "page") return undefined;
+  return {
+    collapsed: collapseAbbreviationPeriods(text),
+    eventName: options.eventName,
+    currentYear: (options.now ?? new Date()).getFullYear(),
+  };
+}
+
+/**
  * Same ranking as findGazetteerMatch (earliest qualifying position, longest
  * name on a tie) but a city only qualifies if some mention of it — not
  * necessarily its first — is preceded by a locational cue or immediately
@@ -1448,6 +1682,7 @@ function findCurrentVenueClause(text: string): CurrentVenueResult {
 function findVenueCity(
   text: string,
   cities: readonly string[],
+  ownership?: PlaceOwnershipContext,
 ): string | undefined {
   let best: { value: string; index: number; length: number } | undefined;
 
@@ -1468,6 +1703,14 @@ function findVenueCity(
       // genuine, non-historical cue.
       if (isHistoricalMention(preceding, text.slice(end, end + 40))) continue;
       if (CITY_PROXIMITY_CUE_RE.test(preceding) || hasTrailingStateCode(following)) {
+        // A23-03 / Ruling 62a. The guard lives HERE, inside the acceptance
+        // loop, not at the caller: at the caller it cannot see which mention
+        // won, so it could only discard the whole answer and would lose the
+        // "first admissible mention" behaviour that keeps Lyon when a page
+        // carries a second, rival venue statement. `continue`, not `break`,
+        // for the same reason the historical check uses it — a LATER mention
+        // of this same city may be the owned one.
+        if (ownership && !ownsVenueMention(ownership, index, end)) continue;
         if (
           !best ||
           index < best.index ||
@@ -1482,13 +1725,20 @@ function findVenueCity(
   return best?.value;
 }
 
-export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
+export function extractBodyTextPlace(
+  html: string,
+  options: PlaceScanOptions = {},
+): ExtractedPlace | undefined {
   const text = bodyText(html);
   const currentVenue = findCurrentVenueClause(text);
   if (currentVenue.status === "found") return currentVenue.place;
   if (currentVenue.status === "ambiguous") return undefined;
 
-  const city = findVenueCity(text, CONFERENCE_CITIES);
+  // A23-03: this function IS the whole-page scan, so it fails safe INTO the
+  // ownership guard. Only a caller that knows it holds a short structured
+  // provider field may opt out.
+  const ownership = placeOwnershipContext(text, options, "page");
+  const city = findVenueCity(text, CONFERENCE_CITIES, ownership);
   if (!city) return undefined;
 
   const region = stateCodeAfterCity(text, city);
@@ -1506,8 +1756,22 @@ export function extractBodyTextPlace(html: string): ExtractedPlace | undefined {
 const VENUE_CUE_RE =
   /\b(?:held|hosted|takes? place|taking place|venue|location|located)\b[^.]{0,40}$/i;
 
-export function extractPlaceFromText(text: string): ExtractedPlace | undefined {
-  const cityPlace = extractBodyTextPlace(text);
+/**
+ * A23-03 / Ruling 62a. This entry point defaults to the EXEMPT scope: its only
+ * shipped caller hands it a provider's own short structured place string
+ * ("Chicago, IL + Virtual", `ccfddl.ts:147`), on which no positive ownership
+ * clause can fire, so guarding it would silence a field that was never
+ * ambiguous. A caller that passes a whole page must say so — and when it does,
+ * the bare-country arm below is gated by the SAME test, because Ruling 26's
+ * lesson applies here exactly: a city the guard just rejected must not be
+ * allowed to publish its COUNTRY through the back door.
+ */
+export function extractPlaceFromText(
+  text: string,
+  options: PlaceScanOptions = {},
+): ExtractedPlace | undefined {
+  const scope = options.scope ?? "structured-field";
+  const cityPlace = extractBodyTextPlace(text, { ...options, scope });
   if (cityPlace) return cityPlace;
 
   const body = bodyText(text);
@@ -1517,7 +1781,17 @@ export function extractPlaceFromText(text: string): ExtractedPlace | undefined {
   const index = canonicalize(body).indexOf(canonicalize(country));
   if (index < 0) return undefined;
   const preceding = canonicalize(body).slice(Math.max(0, index - 60), index);
-  return VENUE_CUE_RE.test(preceding) ? { country } : undefined;
+  if (!VENUE_CUE_RE.test(preceding)) return undefined;
+
+  const ownership = placeOwnershipContext(body, options, "structured-field");
+  if (ownership) {
+    const rawIndex = body.toLowerCase().indexOf(country.toLowerCase());
+    if (rawIndex < 0) return undefined;
+    if (!ownsVenueMention(ownership, rawIndex, rawIndex + country.length)) {
+      return undefined;
+    }
+  }
+  return { country };
 }
 
 function jsonLdBlocks(html: string): string[] {
@@ -1591,6 +1865,7 @@ export function extractMetaOpportunityDetails(
 export function extractOpportunityPageDetails(
   html: string,
   kind?: JsonLdOpportunity["kind"],
+  options: PlaceScanOptions = {},
 ): OpportunityPageDetails {
   const jsonLd = extractJsonLdOpportunities(html);
   const typed = kind ? jsonLd.filter((item) => item.kind === kind) : [];
@@ -1627,7 +1902,7 @@ export function extractOpportunityPageDetails(
     place:
       sanitizePlace(structured?.place) ??
       sanitizePlace(metaPlace) ??
-      sanitizePlace(extractBodyTextPlace(html)),
+      sanitizePlace(extractBodyTextPlace(html, { ...options, scope: "page" })),
     isOnline:
       meta.isOnline ||
       attendanceMode.includes("online") ||
