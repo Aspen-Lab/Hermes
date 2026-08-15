@@ -76909,3 +76909,23 @@ ever committed** — §3 held — and A ran none of them.
 **THE HAND-OFF:** `WHOSE TURN: B — round 28` stands as A wrote it — **three items**: (1) **A28-01** — nineteen programme/careers-index pages admitted at job ingestion (none reaching a reader; filed on A27-01's own precedent; the nameable gap: `careers.jnj.com/…/co-ops` drops while `careers.cisco.com/…/internships-and-co-ops` admits; **A's warning stands — do not re-litigate round 16's recorded design; design within it**); (2) **V28-01** — the label-step residue (six sites, four stray treatments, against the plates' uniform `SegoeUI-Semibold 7.88` labels — plate values pre-extracted in A's part 3); (3) **V28-02** — the locked-block label colour (`text-text-faint` where both plates set `#5b4bbf`, the only label either plate colours away from `#9c8b78`). B checks A's claims by execution as always, designs with corpora and boundaries, and prices C's work. The gate stays `GATE (0%): NOT MET` — three items from zero.
 
 ---
+
+---
+
+### USER DIRECTIVE — RULING 75. QUOTA-CAPPED APIs ARE SUSPENDED FOR ALL TESTING; THE SEARCH PROVIDER MOVES TO VERTEX GEMINI. BINDING.
+
+**Date: 2026-08-15. Source: the user, directly. USER RULED — no agent re-scopes it. The loop is PAUSED; this ruling governs the resume.**
+
+**The problem:** Tavily's free quota is exhausted by testing. **The rule: from now until the user lifts it, NO agent turn may call ANY quota-capped external API — Tavily, Adzuna, USAJobs, JSearch — for any purpose, live pass included.** Keyless public sources (remotive, arbeitnow, himalayas; ccfddl, confs.tech, researchseminars) stay. Page fetches through `fetchPageHtml` (plain HTTP, no quota'd key) stay. The LLM path is already the user's Vertex Gemini (unlimited tokens) and stays.
+
+**The replacement, to be BUILT as the first work item on resume (inserted ahead of round 28 B's three standing items):** a third provider in the EXISTING web-search seam (`resolveProvider` in `web/src/lib/sources/web-search.ts` returns `"brave" | "tavily"` with a `webSearch.provider` preference; `eventweb.ts` and `jobweb.ts` carry the same seam per their own headers) — **`"gemini"`: Vertex Gemini with Google Search grounding, implementing the same result contract (title / url / snippet).** Design requirements B must satisfy:
+1. **Grounding returns Google REDIRECT URLs** (`vertexaisearch.cloud.google.com/grounding-api-redirect/…`), and this loop's guards read URL SHAPES — the adapter MUST resolve each redirect to its real target URL (read the 302 `Location`; never fetch the target) before anything downstream sees the row. A row whose redirect cannot be resolved is DROPPED, not passed through with a fake URL.
+2. Provider resolution order becomes: explicit preference → `gemini` when Vertex credentials are present and Tavily is disabled → `brave` → `tavily`. All three surfaces uniform.
+3. The measurement profile and every A method line state `searchProvider: gemini` (the Ruling 69 measurement-profile pattern).
+4. Adzuna/USAJobs/JSearch stay OFF in testing (they enable on key presence; the measurement path supplies no keys). They are structured APIs Gemini does not replace; the job surface runs on jobweb-over-gemini plus the keyless boards.
+5. **Recorded and expected: switching engines changes the OFFERED CORPUS** (Google's results ≠ Tavily's). Censuses will see different rows — the guards were built path-not-instance, so this is a robustness exercise, not a regression; but trend tables note the provider break at this round, and no cross-provider row comparison is scored as drift.
+6. The live benchmark runs on the new provider (its assertions are already present-rows/value-locks, provider-agnostic by design).
+
+**Config action taken with this ruling:** `tavilyEnabled` set to `false` in the local measurement profile (keys retained, unused). **On resume, the manager inserts the provider swap as round 28 B's item zero; the three standing items follow it.**
+
+---
