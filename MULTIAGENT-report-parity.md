@@ -64256,3 +64256,132 @@ present"), name the item in the comment, and say in the log that it did.
 4. **The denied-host universal (`:267-269`) stays.**
 5. **No city claim may be added anywhere** — 63b decided that and it stands.
 6. **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
+
+### Round 25 — Agent B (item 4: **RULING 67a's BOUNDED QUESTION — ANSWERED, NOT DEFERRED. THE GUARD *IS* THE OPERATING MECHANISM. IT RETURNS `true` ON THE SHIPPED ITEM SHAPE, AND A's `false` CAME FROM FEEDING IT THE *PRE-SPLIT* TITLE. B FLAGS 67a's WITHDRAWAL FOR THE MANAGER AND DOES NOT REVERSE IT.**)
+
+**STATUS: COMPLETE.** Item 4 of four — the bounded question, **mechanism only,
+no design**, as commissioned. **B changed no code.**
+
+---
+
+## THE ANSWER
+
+**`isOwnerNameTopicCollision` at `lib/jobs/scoring.ts:364-375` IS what drops the
+`Battery Ventures` row.** It is reachable on live shapes, it returns **`true`**
+on the shape the shipped pipeline actually passes it, and the `continue` at
+`:375` is the line that removes the row.
+
+**A's measurement was correct about the value it computed and wrong about the
+shape it computed it on — and B says which, because Ruling 67a's whole purpose
+is that the ledger credit the real mechanism.**
+
+---
+
+## WHY THE TWO EXECUTIONS DISAGREE — **THE TITLE IS SPLIT BEFORE SCORING EVER SEES IT**
+
+A ran the guard against the **offered** title,
+`2027 Summer Investment Internship - Battery Ventures`, passed whole as `title`.
+**The pipeline never passes that string to the guard.** By the time
+`scoreJobs` runs, `webResultToRawJobItem` (`lib/jobs/sources/jobweb.ts:1201`) has
+already **split the title on its separators** (`jobweb.ts` ~`:1247` onward) into
+a role title and an employer segment. `scoring.ts:364-375` then passes
+`ownerName: item.company` and `title: item.title` — **the POST-split values.**
+
+**EXECUTED on the shipped `webResultToRawJobItem`, with the user's real required
+topics (`LCO`, `topochemical`, `ion exchange`, `molten salt`, `battery`):**
+
+| offered URL | parsed `company` | parsed `title` | `isOwnerNameTopicCollision` |
+|---|---|---|---|
+| `jobs.lever.co/batteryventures/…` | `Battery Ventures` | `2027 Summer Investment Internship` | **`true`** |
+| `boards.greenhouse.io/batteryventures/…` | `Battery Ventures` | `2027 Summer Investment Internship` | **`true`** |
+| `linkedin.com/jobs/view/…battery-ventures…` | `Battery Ventures` | `2027 Summer Investment Internship` | **`true`** |
+| `batteryventures.com/careers/` | *(none parsed)* | `2027 Summer Investment Internship` | `false` |
+| `batteryventures.com/job/…` | *(none parsed)* | `2027 Summer Investment Internship` | `false` |
+
+**The split is the whole difference.** `Battery` leaves the title and lands in
+the owner slot — which is precisely the situation conjunct 1 is written for.
+
+**Walking the conjuncts on the shipped shape** (`lib/opportunities/shared.ts:285-334`):
+
+- **Conjunct 1** (`:297-311`) — `battery` is a proper sub-span of the owner
+  tokens `battery ventures`. **Passes.**
+- **Conjunct 2** (`:319-324`) — no OTHER required topic (`LCO`, `topochemical`,
+  `ion exchange`, `molten salt`) appears in title + description. **Passes.**
+- **Conjunct 3** (`:326-327`) — `if (wholeWordSpanCount(titleTokens, collisionTokens) > 0) return false;`
+  **THIS IS THE ONE A TRIPPED.** On the pre-split title, `titleTokens` contains
+  `battery`, so the guard returns `false`. On the shipped post-split title
+  (`2027 Summer Investment Internship`) it does **not**, and the conjunct
+  **passes.**
+- **Conjunct 4** (`:329-330`) — `battery` appears exactly once across title +
+  description. **Passes.**
+- **Conjunct 5** (`:332-333`) — `INVESTMENT_VEHICLE_TAIL_RE` (`:273-274`) matches
+  the `ventures` tail of `battery ventures`. **Passes.**
+
+**All five pass → `true` → `continue` at `scoring.ts:375` → the row never
+reaches a pool.** That is the operating mechanism, and it is the one Ruling 57b
+designed.
+
+---
+
+## THE NEGATIVE CONTROL — **B CHECKED THAT NOTHING ELSE WAS DOING THE WORK**
+
+Before crediting the guard, B walked **every other drop point in `scoreJobs`**
+against the same row, in the order they execute:
+
+| gate | line | result |
+|---|---|---|
+| `isExpiredPosting` | `scoring.ts:353` | **`false`** — does not drop it |
+| `isNonJobArticle` | `scoring.ts:356` | **`false`** — does not drop it |
+| `passesRequiredGate` | `scoring.ts:362` | **`true`** — admits it, matching on `battery` |
+| **`isOwnerNameTopicCollision`** | **`scoring.ts:364`** | **the only gate that fires** |
+| `score >= MIN_SCORE` | `scoring.ts:473` | **not reached — but would NOT have dropped it either** |
+
+**The last row is the load-bearing part of the control.** With the guard bypassed
+(the row run through `scoreJobs` on a shape where conjunct 3 blocks), it scores
+**0.624** against `MIN_SCORE` **0.35** and produces the reason
+**`Matches your battery focus`**. **So without this guard the row would NOT merely
+survive — it would score well and reach the reader.** Nothing else drops it, at
+ingestion or at scoring.
+
+**And the ingestion predicate does not drop it either** — all five URL shapes
+above returned a live `RawJobItem`, not `null`.
+
+---
+
+## THE ONE CONDITION ON THE ANSWER, STATED RATHER THAN GLOSSED
+
+**The guard fires only when the offered row's title actually splits into an
+employer segment** — i.e. when the row comes from a job board whose title carries
+the firm's name after a chrome separator. **On the firm's OWN site
+(`batteryventures.com/...`), no company is parsed, conjunct 1 has no owner tokens
+to match, and the guard returns `false`** — measured, in the table above.
+
+**B did not run a live pull and therefore cannot state which host offered the
+live row this round.** A's own record says the offered title was
+`2027 Summer Investment Internship - Battery Ventures` — a title in the split
+shape, which is the shape that makes the guard fire. **That is strong evidence
+but it is not the same as observing the live URL, and B will not upgrade it into
+a claim it did not measure.**
+
+---
+
+## WHAT B DOES **NOT** DO
+
+**B does not reverse Ruling 67a.** A recorded decision is flagged, never
+reversed. **This entry is the flag**, and it is a substantive one: 67a withdrew
+the round-23 `organically witnessed` credit and set the canonical status to
+`designed, targeted-confirmed (tests), organically unwitnessed` **on the basis of
+a `false` that came from a shape the pipeline does not produce.** On the shipped
+shape the guard fires.
+
+**`POLICY — manager decides`: whether 67a's withdrawal survives this evidence.**
+B's reading is that it should be revisited, with two honest caveats — the
+host-dependence above, and the fact that **B's execution is also a constructed
+shape**, built from A's recorded offered title and plausible URLs rather than
+from a live pull. **The cleanest resolution is cheap: the next A already runs a
+live job pull, and can record the `Battery Ventures` row's OFFERED URL and its
+parsed `company`/`title`, which settles it in one line.** B recommends the
+manager commission exactly that rather than rule on two constructed shapes.
+
+**Ruling 67b is untouched** — B recomputed nothing and quotes round 25 A part 3's
+count as canonical, per the ruling.
