@@ -68478,3 +68478,251 @@ it was not.**
 
 **ITEM 3 COMPLETE — all 18 dispositioned, 14 designed or re-scoped, 3 recommended
 struck, 1 `POLICY`. Item 4 (the 68b raw-reader pricing) follows.**
+
+### Round 26 — Agent B (item 4 of 4: **THE RULING 68b RAW-READER PRICING. ALL FOUR SITES MEASURED. THE LIVE POOL IS VACUOUS ON THIS PREDICATE — 0 OF 16 ROWS — AND B SAYS SO INSTEAD OF BANKING THE ZERO, THEN MEASURES A CONSTRUCTED MATRIX CARRYING THE DEFECT'S OWN SHAPE. THE ANSWER IS CLEAN: THE CONVERSION MAKES SERVER AND CLIENT AGREE EXACTLY, ON ALL THREE SURFACES, AND MOVES EXACTLY ONE ROW. AND YES — IT CHANGES USER-VISIBLE FACET COUNTS, WHICH IS STATED AS A FINDING, NOT HIDDEN.**)
+
+**STATUS: item 4 of 4 — B's ROUND 26 IS COMPLETE.** B changed no code. Harness
+`web/zz-r26b/` deleted before this commit. No credential printed, logged,
+committed or written anywhere.
+
+---
+
+## **THE FOUR SITES, RE-LOCATED FROM SOURCE. ONE CITATION IN THE COMMISSION IS OFF.**
+
+| commissioned as | actual | what it is |
+|---|---|---|
+| `scoring.ts:329` | **`web/src/lib/jobs/scoring.ts:345`** (imported at `:15`) | `...opportunityFacetPreferenceConcepts("jobs", item)` inside `scoreJobs`'s facade builder. **`:329` is inside `buildJobReason` and is a different thing.** Also: the function lives in **`@/lib/preferences/ledger:159`**, not in `facets.ts`. |
+| `jobs/pipeline.ts:172` | **exact** | `facetCounts: countOpportunityFacets("jobs", items)` — the fresh-pool return |
+| `jobs/pipeline.ts:233` | **exact** | `facetCounts: countOpportunityFacets("jobs", rescored)` — the cached-pool return |
+| `jobs/pipeline.ts:254` | **exact** | `filterOpportunitiesByFacets("jobs", scored, req.facets)` in `runJobsPipeline` |
+| `facets.ts:338` | **`facets.ts:325-338`**, the read itself at **`:337`** | `return item.isRemote ? "online" : "in-person";` inside `opportunityFormat` |
+
+**The file wins over the brief, per the standard. Recorded so no later round hunts `:329`.**
+
+---
+
+## **THE DIVERGENCE, ESTABLISHED STRUCTURALLY BEFORE IT WAS MEASURED**
+
+`opportunityFormat` takes a **`FacetableOpportunity`** (`facets.ts:22-32`), whose
+whole shape is `location`, `place`, `startDate`, `postedAt`, `date`,
+`postedDate`, `isOnline?`, `isRemote?`. **There is no `source` field.** So the
+function that decides `online` vs `in-person` **cannot tell whether the
+`isRemote` it was handed is the raw flag or the gated one** — and the two callers
+hand it different ones:
+
+- **SERVER** — `jobs/pipeline.ts:172`, `:233`, `:254` pass **`ScoredJobItem[]`**,
+  which is a `RawJobItem`, whose `isRemote` is the **RAW** flag set at ingestion
+  from a page-scoped snippet (`jobweb.ts:1453`).
+- **CLIENT** — `app/page.tsx:393` and `:418` pass the mapped **`Job`** card,
+  whose `isRemote` is `rendersRemoteClaim(item)` (`mapper.ts:182`, `:198`) — the
+  **GATED** flag. The card type carries `sourceId?`, **not** `source`, so the
+  provenance the predicate needs is not even on the client shape.
+
+**That is the duck-typed divergence in one sentence: the same row is `online` on
+the server and `in-person` on the client, and neither side can detect it.**
+
+---
+
+## **VACUITY DISCLOSED FIRST, BECAUSE THE LIVE NUMBER IS ZERO**
+
+B captured a live job corpus (12 shipped `templateJobQueries`, 112 offered rows,
+union 96, **16 scored rows**) and measured all four matrices on it:
+
+| matrix | live result |
+|---|---|
+| rows where `source === "jobweb" && isRemote` | **0 of 16** |
+| `format` counts, server vs client | **identical** — `{in-person:16, online:0, hybrid:0}` both |
+| filter membership `format:['online']` | **0 rows on both sides** |
+| ledger writes that change under conversion | **0 of 16** |
+
+**EVERY ONE OF THOSE ZEROES IS VACUOUS AND B DOES NOT BANK THEM.** With no row
+carrying the defect's shape, a zero difference proves the instrument ran, not
+that the conversion is safe.
+
+**The defect IS reachable on live data, and A's own round-26 evidence proves
+it:** A's window B carried **`jobweb:1g2eds8`** — `lensa.com`, `source: jobweb`,
+**raw `isRemote: true`**, an Albuquerque internship — in **4 of 5 pulls of an
+11-row pool.** So the population is roughly **one row in eleven**, not zero; B's
+window simply did not draw one. **A future round that measures zero here must
+check whether any row bites before reporting it.**
+
+---
+
+## **THE CONSTRUCTED MATRIX — THE DEFECT'S OWN SHAPE, PLUS FOUR CONTROLS**
+
+Five rows: A25-01's exact shape, and four rows the conversion must **not** touch.
+
+### **MATRIX 1 — `format` FACET COUNTS (`pipeline.ts:172` / `:233`)**
+
+| | `in-person` | `online` | `hybrid` |
+|---|---|---|---|
+| **SERVER, before (raw flag)** | 1 | **3** | 1 |
+| **SERVER, after conversion** | **2** | **2** | 1 |
+| **CLIENT (gated flag, unchanged)** | **2** | **2** | 1 |
+
+**→ AFTER THE CONVERSION THE SERVER'S COUNTS ARE BYTE-IDENTICAL TO THE
+CLIENT'S. The two stop disagreeing — that is the whole point of the item, and it
+is measured, not argued.**
+
+### **MATRIX 2 — SERVER FACET FILTER MEMBERSHIP (`pipeline.ts:254`), `format: ['online']`**
+
+| | rows returned |
+|---|---|
+| **before (raw)** | `jobweb-remote`, `remotive-remote`, `arbeitnow-remote`, `jobweb-hybrid-text` |
+| **after (converted)** | `remotive-remote`, `arbeitnow-remote`, `jobweb-hybrid-text` |
+| **client (gated)** | `remotive-remote`, `arbeitnow-remote`, `jobweb-hybrid-text` |
+
+**→ Exactly ONE row leaves — the `jobweb` row making an unowned remote claim —
+and the converted server membership equals the client's exactly.**
+
+### **MATRIX 3 — PREFERENCE-LEDGER WRITES (`scoring.ts:345`)**
+
+| row | before | after | changed |
+|---|---|---|---|
+| `jobweb-remote` | `facet:format:online` | **`facet:format:in-person`** | **YES** |
+| `jobweb-notremote` | `facet:format:in-person` | `facet:format:in-person` | no |
+| `remotive-remote` | `facet:format:online` | `facet:format:online` | no |
+| `arbeitnow-remote` | `facet:format:online` | `facet:format:online` | no |
+| `jobweb-hybrid-text` | `hybrid` + `online` + `in-person` | identical | no |
+
+**→ ONE ledger write moves, and it moves from a concept the reader was never
+shown to the one they were.** The ledger is the memory that decides what Peer
+shows next; today a `jobweb` row silently teaches it *"this reader likes online
+roles"* on the strength of a flag the reader never saw. **That is the strongest
+argument for converting this site, and it is a correctness argument, not tidiness.**
+
+### **MATRIX 4 — PER-ROW `format`**
+
+| row | server (raw) | server (converted) | client |
+|---|---|---|---|
+| `jobweb-remote` | **`online`** | **`in-person`** | **`in-person`** |
+| `jobweb-notremote` | `in-person` | `in-person` | `in-person` |
+| `remotive-remote` | `online` | `online` | `online` |
+| `arbeitnow-remote` | `online` | `online` | `online` |
+| `jobweb-hybrid-text` | `hybrid` | `hybrid` | `hybrid` |
+
+**THE `hybrid` ESCAPE HATCH SURVIVES, AND IT MATTERS.** `opportunityFormat` tests
+`/\bhybrid\b/i` against `item.location` and returns **before** it ever reads
+`isRemote` (`facets.ts:329-330`). So a `jobweb` row whose own location string
+says "Hybrid" keeps its `hybrid` facet on both sides, converted or not. **The
+conversion cannot silence a row that stated its own format in a field it owns.**
+
+---
+
+## **THE CONVERSION DESIGN — ONE LINE PER SITE, THROUGH ROUND 25's SHARED PREDICATE**
+
+`rendersRemoteClaim` (`web/src/lib/jobs/remote-claim.ts`) already exists, is
+already imported by `mapper.ts` and `scoring.ts`, has **zero runtime imports**,
+and its own doc comment names these three sites and says *"Converting them is a
+one-line change against this module when round 26 B has priced it."* **This is
+that pricing, and the module was right about the shape of the fix.**
+
+**Site by site, and the shape is the same each time — convert at the CALL, never
+inside `facets.ts`:**
+
+1. **`jobs/pipeline.ts:172`** — `countOpportunityFacets("jobs", items)` becomes
+   `countOpportunityFacets("jobs", items.map(withRenderedRemote))`.
+2. **`jobs/pipeline.ts:233`** — identical, on `rescored`.
+3. **`jobs/pipeline.ts:254`** — `filterOpportunitiesByFacets("jobs", scored, req.facets)`
+   becomes the same over `scored.map(withRenderedRemote)`. **CAUTION, and it is
+   the only trap in the item:** this call's return value **is the row list that
+   goes on to scoring-floor and top-N**, so it must return the ORIGINAL objects,
+   not the mapped copies — otherwise every downstream reader silently gets a
+   rewritten `isRemote` and the three DELIBERATE raw readers A22-03(b) protected
+   would be corrupted. **Filter on a projection, then re-select the originals by
+   `id`** (or give `filterOpportunitiesByFacets` a `format` override argument).
+   **A naive `.map()` here is a real regression and B is naming it before C
+   writes it.**
+4. **`jobs/scoring.ts:345`** — `opportunityFacetPreferenceConcepts("jobs", item)`
+   becomes the same over `withRenderedRemote(item)`. **Read-only — the facade is
+   built from a copy already, so no `RawJobItem` is mutated.**
+
+where `withRenderedRemote` is a three-line local helper:
+
+```ts
+const withRenderedRemote = <T extends { isRemote: boolean; source: JobSourceId }>(
+  item: T,
+): T => ({ ...item, isRemote: rendersRemoteClaim(item) });
+```
+
+**`facets.ts:337` IS NOT TOUCHED, AND THAT IS DELIBERATE.** `opportunityFormat`
+is shared with the EVENT surface, where `isRemote` is not even read
+(`facets.ts:332-335` branches to `isOnline`/`place` for events). Teaching it about
+`source` would push a jobs-only concept into a shared function and give it a
+field the client shape does not carry. **The duck-typing is fixed by making both
+callers pass the same MEANING of `isRemote`, not by making the callee smarter.**
+
+**OPTIONAL HARDENING, priced but not recommended for this change:** add
+`source?: JobSourceId` to `FacetableOpportunity` and have the client pass it, so
+a future drift is a type error rather than a silent divergence. **B leaves it
+out** because it widens a shared interface for a guard, and the four call-site
+conversions already make the two sides agree — measured above.
+
+---
+
+## **WHAT CHANGES FOR THE READER — STATED, NOT HIDDEN**
+
+**YES: THIS CHANGES USER-VISIBLE FACET COUNTS.** On the constructed matrix the
+`Online` count drops by one and `In person` gains one, per affected row; on a
+live pool shaped like A's window B that is **about one row in eleven**.
+
+**B's position, said plainly: that is the fix, not a side effect.** Today the
+facet panel offers an `Online` count that includes rows the reader will never see
+labelled remote — the card says `See posting`, the chip is absent, and the reason
+line no longer says `remote-friendly` (A25-01, closed on an organic witness this
+round). **Clicking `Online` today returns a row that does not look online.** After
+the conversion the count and the rows behind it are the same set.
+
+**The count does not become "smaller and worse" — it becomes true.** And the
+direction is the safe one: **a row is only ever moved from a claim to a silence,
+never the reverse.** No row gains a remote claim it did not have.
+
+---
+
+## **BOUNDARY CONDITIONS**
+
+- **NO SCORE MAY MOVE.** The three DELIBERATE raw readers A22-03(b) recorded stay
+  raw and stay untouched: `mapper.ts`'s `locationFit(location, item.isRemote, …)`,
+  `scoring.ts`'s `locationFit(item.location, item.isRemote, …)`, and
+  `enrich.ts`'s `isRemote: item.isRemote` passthrough. **`scoreJobs`'s numeric
+  output must be byte-identical after the change** — the conversion touches the
+  ledger CONCEPTS at `:345` and nothing in the scoring maths. **C should prove it
+  the way round 25 C proved A25-01: capture a pool, score it on reverted and
+  fixed sources, and diff the score strings.**
+- **`item.isRemote` is never mutated in place.** Every conversion is a spread
+  copy handed to one callee.
+- **The EVENT surface is untouched.** `events/pipeline.ts:173`, `:238` and `:261`
+  call the same three functions; `isRemote` is not read on that branch and no
+  event predicate exists. **A diff that touches `events/` has over-reached.**
+- **`app/page.tsx:393`/`:418` are untouched** — the client already passes the
+  gated flag, which is the correct one. **The fix moves the server to the
+  client's meaning, not the other way round.**
+
+---
+
+## **TESTS AT RISK — GREPPED**
+
+- **`web/src/lib/opportunities/facets.test.ts`** is the file to run first: it
+  exercises `opportunityFormat`, `countOpportunityFacets` and
+  `filterOpportunitiesByFacets` **directly, with hand-built items**. Because
+  `facets.ts` is NOT edited, **every one of those assertions is expected to stay
+  green untouched** — and if any goes red, the fix has leaked into the shared
+  function and must be pulled back to the call sites.
+- **`web/src/store/feed-opportunity-pool.test.ts`** and
+  **`web/src/store/feed.test.ts`** carry `companyOrLab`/facet fixtures on the
+  CLIENT side; the client is unchanged, so these are expected green.
+- **`web/src/lib/jobs/scoring.test.ts`** is the one that can legitimately move:
+  if any assertion pins a ledger concept for a `jobweb` + remote row, it will
+  need restating **in place, never deleting** — and that restatement is the
+  fix's own witness.
+- **The new tests should be three:** (1) server and client `format` counts are
+  equal for a pool containing a `jobweb` remote row; (2) the server filter and
+  the client filter return the same ids for `format:['online']`; (3) the
+  admitted control — a `remotive` remote row still counts and filters as
+  `online`. **All three fail on reverted source, which is what makes them
+  non-vacuous.**
+
+---
+
+**ITEM 4 COMPLETE. ROUND 26 B IS COMPLETE — four items, four commits, each
+pushed immediately.**
