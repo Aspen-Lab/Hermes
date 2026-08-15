@@ -77750,3 +77750,23 @@ V26-E05's comment overstates, or it is a second instance.**
 **One file, one line** (`components/reports/tier-upgrade-block.tsx:22`), taken
 together with item 2's step on the same line. **~4 new assertions.**
 **Estimate: +1/-1 source line, +4 tests.** The smallest item of the four.
+
+#### 3.8 CORRECTION TO §3.5, MADE BY B AGAINST ITS OWN ENTRY, BEFORE ANY OTHER AGENT READ IT
+
+**§3.5's sentence "the locked-block label is currently UNASSERTED on either
+surface" is WRONG and B withdraws it.** The grep that produced it was run and
+returned three hits, all in **`web/src/app/events/[id]/page.test.ts`** — `:1006`
+(the block renders after the `why` section), `:1239` and `:1420` (the block is
+ABSENT when a key is configured and when a key produced no result). B wrote the
+"unasserted" line before reading the grep output.
+
+**What is true, and it is the narrower claim the item actually needs:** those
+three assertions test **presence, absence and ordering of the label's TEXT.
+None of them reads a class.** So the label's SIZE and COLOUR are unasserted,
+which is why both drifted — but the label itself is not untested, and
+**`web/src/app/events/[id]/page.test.ts` is a test-at-risk file B failed to name.**
+
+**Does the design move it?** No. All three assertions match on the string
+`"Also in this report with an AI key"`, which this item does not change; a class
+change cannot affect `html.indexOf` on the text or a `not.toContain` on the text.
+**C must still run that file and confirm, rather than trusting this paragraph.**
