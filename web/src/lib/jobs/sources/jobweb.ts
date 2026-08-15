@@ -9,7 +9,10 @@ import {
   cleanJobSubtitlePart,
   cleanJobTitle,
 } from "@/lib/opportunities/job-cleanup";
-import { US_STATE_CODES } from "@/lib/opportunities/structured-extract";
+import {
+  COUNTRY_NAMES,
+  US_STATE_CODES,
+} from "@/lib/opportunities/structured-extract";
 
 // Web discovery for research and R&D positions across academic and industry
 // employers. Search providers reach public listings that frequently block
@@ -736,6 +739,86 @@ function looksLikeBareLocation(candidate: string): boolean {
 }
 
 /**
+ * A23-01(c) / Ruling 62d. A candidate the search provider TRUNCATED. Mirrors
+ * `TRUNCATED_TITLE_RE` (`enrich.ts:160`) rather than importing it: that one
+ * repairs a page title from its own heading, this one vetoes an employer
+ * candidate, and the two must be free to diverge. End-anchored, because a
+ * mid-string ellipsis is a different shape entirely.
+ */
+const TRUNCATED_CANDIDATE_RE = /(?:\.\.\.|…)\s*$/;
+
+/**
+ * A23-01(c) / Ruling 62d. A university or college CAREERS OFFICE, which posts
+ * other organisations' vacancies and is not the employer of any of them.
+ * `CAREERS_INDEX_TITLE_RE` already rejects the bare word `Careers` but not
+ * `Career Services`, the live render on
+ * `Nuclear Engineering Internship Summer 2027 - Career Services`.
+ *
+ * Deliberately a SEPARATE constant from `CAREERS_INDEX_TITLE_RE` and consulted
+ * only in the employer chain: that one has a second call site in
+ * `isListingPage`, where widening it would start DROPPING rows, and Ruling 55c
+ * holds a row-dropping guard to a higher standard than this one has met.
+ *
+ * VACUITY, STATED AGAINST C's OWN INTEREST: only `Career Services` is earned by
+ * a live row. The other three are the same closed class, and unlike
+ * `ORG_DESIGNATOR_RE` — whose every token can only ADMIT a name that is silent
+ * today — every token HERE can only REMOVE one, so the list is kept as short as
+ * the shape allows and is whole-segment anchored so no real name can match it.
+ */
+const CAREERS_OFFICE_LABEL_RE =
+  /^\s*careers?\s+(?:services?|centers?|centres?|offices?)\s*$/i;
+
+/**
+ * A23-01(c) / Ruling 62d. `Nuclear Engineering Internship - Summer 2027 at
+ * Kairos Power, Alameda, California, United States | Intern Insider` renders
+ * the RIGHT employer with a full postal address welded on. The instruction is
+ * TRIM, NEVER REJECT: rejecting would replace a mostly-right name with silence,
+ * and the name is not wrong, only long.
+ *
+ * Applied to the WINNER, after the guard chain — never to candidates. That
+ * ordering is load-bearing: trim `Cambridge, MA` before the chain runs and
+ * `looksLikeBareLocation` no longer sees the trailing state code it exists to
+ * catch, so a bare location would start rendering as an employer.
+ *
+ * The trigger is the LAST comma-part naming a gazetteer COUNTRY — not merely
+ * "some part looks place-ish". A firm called `Smith, Jones & Co` must not be
+ * cut down to `Smith`.
+ *
+ * A US-STATE-CODE ARM WAS BUILT AND REMOVED, because it is UNREACHABLE rather
+ * than merely unearned: any candidate ending `, MA` is rejected by
+ * `looksLikeBareLocation` before a winner exists to trim, and moving the trim
+ * earlier to reach it is the forbidden ordering above. `Acme Energy Ltd,
+ * Cambridge, MA` therefore stays silent — today's behaviour, asserted below so
+ * the interaction is recorded rather than rediscovered.
+ *
+ * THE MULTI-WORD HEAD REQUIREMENT IS THE CLAUSE'S OWN SAFETY BOUNDARY, and C
+ * added it after building the clause without one. A candidate that is ONLY an
+ * address — `Alameda, California, United States` — has a single-word head, and
+ * trimming it would print `Alameda` as an employer: still wrong, but no longer
+ * VISIBLY wrong to a census reading the column. Ruling 49b's principle is that
+ * a hidden defect is worse than a deferred one, so the whole address is left
+ * standing where there is no multi-word name in front of it. Cost, stated
+ * plainly: a genuine one-word employer with a full address welded on
+ * (`Tesla, Fremont, California, United States`) is NOT trimmed — a miss, which
+ * is the status quo, never a new wrong value.
+ */
+function trimEmployerAddressTail(candidate: string | undefined): string | undefined {
+  if (!candidate) return candidate;
+  const parts = candidate.split(",");
+  if (parts.length < 2) return candidate;
+
+  const tail = parts[parts.length - 1].trim();
+  const isCountry = COUNTRY_NAMES.some(
+    (name) => name.toLowerCase() === tail.toLowerCase(),
+  );
+  if (!isCountry) return candidate;
+
+  const head = parts[0].trim();
+  if (head.split(/\s+/).length < 2) return candidate;
+  return head;
+}
+
+/**
  * A22-04(a) (round 22 C): the closed vocabulary that lets a title's trailing
  * parenthetical name an EMPLOYER rather than a place or a qualifier. See the
  * call site in `webResultToRawJobItem` for why this is required and for the
@@ -1271,12 +1354,25 @@ export function webResultToRawJobItem(
   const parenthetical = title.match(/\(([^()]{2,60})\)\s*$/)?.[1];
   const parentheticalEmployer =
     parenthetical && ORG_DESIGNATOR_RE.test(parenthetical) ? parenthetical : undefined;
-  const company = stripTrailingCareersChrome(
-    [titleEmployer, ...employerSegments, parentheticalEmployer]
-      .map(cleanJobSubtitlePart)
-      .find(
-        (p) =>
-          p &&
+  // A23-01(a) IS NOT SHIPPED, AND THE REASON IS MEASURED — see the entry for
+  // round 23 C item 2. Ruling 62d approved "prefer the LAST surviving segment",
+  // but this file's own locked case
+  // `Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory Programs -
+  // EV.Careers` has TWO surviving segments — `CATL` and `EV.Careers` — and the
+  // last one is the JOB BOARD. `looksLikeHostBrand` cannot see it there because
+  // the posting's host is not the board's own domain, and `BOARD_SELF_NAME_RE`
+  // requires a board noun (`board|portal|site|…`) that `EV.Careers` does not
+  // carry. So the preference turns a CORRECT employer into a wrong one on a
+  // shape structurally identical to `lanl.jobs` — two survivors, same chain —
+  // which is the one trade this loop never makes. Held under the escape clause
+  // rather than widened inline; half (c) below is independent and ships.
+  const company = trimEmployerAddressTail(
+    stripTrailingCareersChrome(
+      [titleEmployer, ...employerSegments, parentheticalEmployer]
+        .map(cleanJobSubtitlePart)
+        .find(
+          (p) =>
+            p &&
           !KNOWN_JOB_BOARD_DOMAINS.some((d) => p.toLowerCase().includes(d)) &&
           !SEASON_COHORT_LABEL_RE.test(p) &&
           !looksLikeBareLocation(p) &&
@@ -1327,8 +1423,26 @@ export function webResultToRawJobItem(
           // employer, and every candidate design either misses it or deletes
           // correct employers. Ruling 42a rules it deferred to Ruling 39c's
           // forum-thread drop. Do not widen this clause to reach it.
-          !CAREERS_INDEX_TITLE_RE.test(p),
-      ),
+            !CAREERS_INDEX_TITLE_RE.test(p) &&
+          // A23-01(c) / Ruling 62d. A candidate ENDING in a literal ellipsis is
+          // a provider string the search API truncated, not a name. Live:
+          // `Focused Ion Beam, Electron Microscopy ...` and `Youth & Young
+          // Adult Programs ...`. END-ANCHORED on purpose — `Johnson & Johnson
+          // … Careers` mid-string is a different shape — and the precedent
+          // instrument is `TRUNCATED_TITLE_RE` (`enrich.ts:160`), which this
+          // mirrors rather than imports, because that one is a page-title
+          // repair and this one is a candidate veto.
+          !TRUNCATED_CANDIDATE_RE.test(p) &&
+          // A23-01(c) / Ruling 62d. A CAREERS-OFFICE label.
+          // `CAREERS_INDEX_TITLE_RE` above already rejects the bare word
+          // `Careers`; it does not reject `Career Services`, which is what
+          // `Nuclear Engineering Internship Summer 2027 - Career Services`
+          // renders as its employer. Whole-segment anchored, exactly as
+          // B13-01 Gap A set it, so a real employer whose name merely CONTAINS
+          // one of these words survives untouched.
+          !CAREERS_OFFICE_LABEL_RE.test(p),
+        ),
+    ),
   );
   return {
     id: `jobweb:${urlHashId(url)}`,

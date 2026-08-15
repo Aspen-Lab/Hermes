@@ -58296,3 +58296,208 @@ lived **outside the repository**, in this session's scratchpad, and
 `git status --porcelain --untracked-files=all` is **clean**.
 
 ---
+
+### Round 23 — Agent C (item 2 of 4: **A23-01 — HALF (c) LANDS IN FULL. HALF (a) IS HELD UNDER THE ESCAPE CLAUSE, AND THE REASON IS MEASURED, NOT ARGUED: 62d's approved "prefer the last surviving segment" TURNS A CORRECT EMPLOYER INTO A JOB BOARD'S NAME on this file's own locked case. `POLICY — manager decides`.**)
+
+**STATUS: PARTIALLY LANDED, AND C SAYS WHICH HALF AND WHY.** Item 2 of 4.
+Half (b) is DEFERRED by 62d and C **did not design, build, measure or test it** —
+the deferral is honoured exactly.
+
+---
+
+## PART 1 — **HALF (a) IS HELD. THE MEASUREMENT, FIRST.**
+
+C built (a) literally as 62d approved it: prefer the LAST surviving segment,
+only among segments, only when more than one survives, never reordering
+`titleEmployer` or `parentheticalEmployer`. The guard chain was lifted to a
+named predicate so the surviving segments could be counted before choosing.
+
+**It ships one red test, and the red test is right.**
+
+```
+FAIL  jobweb.test.ts > an en-dash role tail is not the employer (A21-03b)
+      > still renders a real employer behind chrome separators
+      expected 'EV.Careers' to be 'CATL'
+```
+
+The title is `Battery Cell Engineer - CATL - Battery Cell, R&D & Gigafactory
+Programs - EV.Careers`. Decomposed on the shipped chain:
+
+| segment | verdict |
+|---|---|
+| `CATL` | **survives — and it is the correct employer** |
+| `Battery Cell, R&D & Gigafactory Programs` | rejected by `looksLikeProgrammeAreaList` (B17-02) |
+| `EV.Careers` | **survives — and it is the JOB BOARD** |
+
+**TWO survivors, exactly like `lanl.jobs`. Same chain, same count, and the last
+one is the board.** Under (a), Peer prints `EV.Careers` as the employer of a
+CATL vacancy — **a correct value replaced by a wrong one, which is the single
+trade this loop never makes.**
+
+**WHY NOTHING IN THE SHIPPED CHAIN CATCHES IT, GREPPED RATHER THAN ASSUMED.**
+`looksLikeHostBrand` cannot see it because the posting's host is not the board's
+own domain — that is deliberate in the test, which exists to prove the vetoes
+are not blankets. `BOARD_SELF_NAME_RE` (`jobweb.ts:959`) requires a board NOUN
+(`board|portal|site|hub|exchange|network|directory`) at the end, and
+`EV.Careers` carries none. `CAREERS_INDEX_TITLE_RE` is whole-segment anchored
+and `EV.Careers` is not the bare word. **There is no existing signal, and the
+one that would separate `CATL` from `EV.Careers` is a positive test that a
+candidate names an ORGANISATION — which is half (b), DEFERRED by 62d.**
+
+**SO (a) AND (b) ARE NOT SEPARABLE THE WAY THE RULING ASSUMED.** B's evidence
+for (a) was four live titles in which the last surviving segment IS the
+employer; **B's corpus contained no case in which the last surviving segment is
+board chrome**, and this file's own locked test is exactly that case. **This is
+the escape clause verbatim — a shape B's cases did not span — so C stops and
+records rather than widening inline.** C did NOT invent a board-chrome boundary
+to rescue (a); that would be designing half (b) under another name, against
+62d.
+
+**WHAT C DID NOT DO, STATED SO IT IS NOT ASKED.** C did not restate, weaken or
+delete the CATL test. Its expected value is CORRECT — `CATL` is the employer —
+and rewriting a locked assertion so one's own change passes is the move this
+loop exists to prevent.
+
+**`POLICY — manager decides`, with the two paths C can see and a recommendation
+for neither:**
+1. **Pair (a) with (b)** — land them together, since (b) is what distinguishes
+   an organisation from a board name. This is the shape B's own analysis points
+   at (*"the actual gap, and the reason (a) alone is not enough"*).
+2. **Give (a) a board-chrome boundary of its own** — a new negative clause, with
+   its own vacuity statement, blast radius and must-keep matrix. That is a
+   designed-and-measured item, i.e. B's job, not a line C may add.
+
+**THE TWO ROWS (a) WOULD HAVE FIXED REMAIN OPEN AND NAMED:** `lanl.jobs`'s
+`Research Technologist 1` (employer is the last segment) and `Cooperative
+Education - Chemical Engineering - University of Michigan`. **Both are latent,
+not live** — B measured `lanl.jobs` rendering honest silence in its own pull
+because the provider title drifted, and neither reached a pool.
+
+## PART 2 — **HALF (c) LANDS IN FULL. THREE CLAUSES, EACH WITH A LIVE CASE.**
+
+| clause | shipped as | live case |
+|---|---|---|
+| truncated provider string | `TRUNCATED_CANDIDATE_RE = /(?:\.\.\.\|…)\s*$/`, **END-anchored**, mirroring `TRUNCATED_TITLE_RE` (`enrich.ts:160`) rather than importing it | `Focused Ion Beam, Electron Microscopy ...`; `Youth & Young Adult Programs ...` |
+| careers-office label | `CAREERS_OFFICE_LABEL_RE`, **whole-segment anchored**, a SEPARATE constant from `CAREERS_INDEX_TITLE_RE` | `Nuclear Engineering Internship Summer 2027 - Career Services` |
+| address tail | `trimEmployerAddressTail`, **TRIM never reject**, applied to the WINNER | `Kairos Power, Alameda, California, United States` → **`Kairos Power`** |
+
+**WHY THE CAREERS-OFFICE CLAUSE IS A SEPARATE CONSTANT AND NOT A WIDENING OF
+`CAREERS_INDEX_TITLE_RE`.** That regex has a SECOND call site, `isListingPage`,
+where it DROPS rows. Widening it there would put a row-dropping guard behind a
+one-row vocabulary, and **Ruling 55c holds a dropping guard to a higher standard
+than this clause has met.** The new constant is consulted only in the employer
+chain, where its worst case is a silence.
+
+**TWO THINGS C BUILT AND THEN REMOVED OR BOUNDED, AGAINST ITS OWN INTEREST.**
+
+- **A US-state-code arm of the trim: BUILT, MEASURED UNREACHABLE, REMOVED.**
+  Any candidate ending `, MA` is rejected by `looksLikeBareLocation` before a
+  winner exists to trim, and reaching it would require trimming CANDIDATES —
+  the ordering that blinds that very guard. **Not merely unearned: unreachable.**
+  `Acme Energy Ltd, Cambridge, MA` therefore stays silent, and that is now
+  asserted so the interaction is recorded rather than rediscovered.
+- **A MULTI-WORD HEAD REQUIREMENT: ADDED after C built the clause without one.**
+  A candidate that is ONLY an address (`Alameda, California, United States`)
+  would be trimmed to `Alameda` — **still wrong, but no longer VISIBLY wrong to
+  a census reading the column.** Ruling 49b's principle is that a hidden defect
+  is worse than a deferred one, so a single-word head blocks the trim. **Cost,
+  named: a genuine one-word employer with a full address (`Tesla, Fremont,
+  California, United States`) is not trimmed — a miss, the status quo, never a
+  new wrong value.**
+
+## PART 3 — **NEGATIVE PROOFS. EIGHT ABLATIONS.**
+
+| ablation | red |
+|---|---|
+| ellipsis clause off | **4** (including *holds the 49a pair apart*) |
+| careers-office clause off | **3** |
+| address trim off | **1** |
+| ellipsis clause NOT end-anchored | **1** |
+| careers-office NOT whole-segment anchored | **1** |
+| trim fires on ANY comma (country test removed) | **1** |
+| multi-word head requirement removed | **1** |
+| **trim moved BEFORE the guard chain** | **0 — and C reports it as 0** |
+
+**THE ONE ZERO, STATED PLAINLY RATHER THAN DRESSED UP.** Once the state-code arm
+was removed, moving the trim ahead of the chain stopped changing any measured
+outcome, so the after-the-chain placement has **no red case of its own.** It is
+kept as defence in depth — trimming candidates is the shape that WOULD blind
+`looksLikeBareLocation` if a state-code arm ever returned — and the test that
+used to claim it was an ordering proof has been **renamed to state what it
+actually asserts.** **C found four more decorations in its own tests before
+this and rebuilt them; this one cannot be rebuilt honestly, so it is labelled.**
+
+## PART 4 — **THE MANDATORY POOL-COUNT RE-MEASUREMENT (57b)**
+
+**DONE, AND DONE DETERMINISTICALLY RATHER THAN ON ONE NOISY LIVE PULL.** A
+throwaway harness **outside `src/`** (`web/zz-r23c/`, own vitest config, include
+pattern `zz-r23c/**/*.probe.ts`, **DELETED before this commit**) ran every title
+this item changes plus the must-keeps through the **shipped `scoreJobs` pass**,
+so Ruling 57b's collision guard was exercised on the real values.
+
+| | ingested | survivors |
+|---|---|---|
+| **before (three clauses reverted)** | 9 | **9** |
+| **after** | 9 | **9** |
+
+**FOUR EMPLOYER VALUES CHANGED, ZERO ROWS MOVED.**
+
+| title | before | after |
+|---|---|---|
+| `Graduate Intern – Focused Ion Beam …` | `Focused Ion Beam, Electron Microscopy ...` | **silence** |
+| `Jobs and Internships – Youth & Young Adult …` | `Youth & Young Adult Programs ...` | **silence** |
+| `… Summer 2027 - Career Services` | `Career Services` | **silence** |
+| `… at Kairos Power, Alameda, California, United States \| Intern Insider` | the whole address | **`Kairos Power`** |
+
+**AND THE DIRECTION IS MONOTONE, WHICH IS STRONGER THAN THE COUNT.** 57b fires
+only when a required topic is a PROPER sub-span of the owner name
+(`shared.ts:285`, `ownerTokens.length > topicTokens.length`). **Every one of
+(c)'s three clauses only ever REMOVES tokens from the owner name or removes the
+name entirely.** Removing tokens cannot create a sub-span that was not already
+there, so **(c) can only ever ADMIT a row through 57b, never remove one.** B's
+warning that surfacing an employer can REMOVE a row is correct and applies to
+half (b) and half (a) — **the two halves that did not ship.**
+
+Two 57b-shaped rows were probed on purpose: `Molten Salt Systems Inc, Fremont,
+California, United States` and `Battery Ventures, Boston, Massachusetts, United
+States`. Both trim, both still survive — conjunct 2 is satisfied by other topics
+in the snippet, so no collision.
+
+## PART 5 — **THE GATE**
+
+`cd web && npx vitest run`: **92 files / 1794 tests, 1793 passing** (+21 on
+item 2, all C's). `npx tsc --noEmit` **clean**. `npx eslint src` **exactly the
+one standing `quiz.tsx:46` error, 0 warnings.** **`enrich.test.ts` SOLO: 53 of
+53 — the SolarPACES lock holds.** `jobweb.test.ts` alone: **482 of 482.**
+
+**Sole failure is `benchmark.test.ts`, and it is item 1's measured effect, not
+item 2's** — item 2 touches no event-side code at all. See item 1's entry for
+the six-run paired measurement and the `POLICY — manager decides` it raises.
+
+**TESTS: 21 ADDED, ZERO DELETED, ZERO EXISTING ASSERTIONS WEAKENED.** The
+must-keep corpus 62d names is now asserted in one place —
+`Oregon Center for Electrochemistry`, `Idaho National Laboratory`,
+`Ion Exchange Ltd.`, `INL`, the `postdocjobs.com` pair,
+`Battery Research Intern (Mumbai, India)`, `Molten Salt Postdoc (Summer 2027)` —
+**including Ruling 49a's pair held apart in a single test**, because the same
+separator and the same segment count with opposite required outcomes is the
+whole difficulty of this item.
+
+**Blast radius, re-grepped:** `company` feeds the card's employer line, plate
+02's facts, the employer facet, `employer-identity`'s dedup key (A22-05),
+57b's collision input, and `job-posting-scope`'s ownership signal. **All 13
+files B's at-risk table names were run** — `route.test.ts` and `page.test.ts`
+included — as part of the full suite, and none moved.
+
+**EXCLUSION WALK, BY NAME.** Not 45a, not 41c's three hosts (45b), not 39a/40,
+not 42c, not 39b (retired as moot by 61a), not 36, not 33, not 42a's
+`openmc.discourse.group` `Announcements` Gap B — **deliberately not widened
+toward, as its own comment demands** — not 50a, not B18-03.
+
+**SECURITY.** No credential read, printed, logged or written; boolean presence
+checks only. `PEER_PROFILE_SNAPSHOT_PATH` NOT used. **C made no live third-party
+fetch in this item** — the harness ran entirely on constructed titles. The
+harness is **DELETED** and `git status --porcelain --untracked-files=all` is
+**clean**.
+
+---

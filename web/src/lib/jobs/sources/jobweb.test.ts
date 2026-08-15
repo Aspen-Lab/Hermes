@@ -2496,3 +2496,141 @@ describe("a parenthetical employer reaches the employer slot (A22-04a)", () => {
     expect(item).not.toBeNull();
   });
 });
+
+// A23-01(c) / Ruling 62d — THE THREE BOUNDED CLAUSES.
+//
+// Half (a) — "prefer the last surviving segment" — is NOT shipped and NOT
+// tested here; see round 23 C item 2 for the measurement that held it. Half (b)
+// — the positive organisation test — is DEFERRED by 62d and C does not design
+// it. The must-keep block at the end is the corpus that governs both.
+describe("A23-01(c) — bounded employer-candidate rejections", () => {
+  const employerOf = (title: string, url = "https://careers.acme.test/job/44231") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  // CLAUSE 1 — the truncated provider string.
+  it.each([
+    "Graduate Intern – Focused Ion Beam, Electron Microscopy ...",
+    "Jobs and Internships - Youth & Young Adult Programs ...",
+    "Graduate Intern – Focused Ion Beam, Electron Microscopy …",
+  ])("renders silence for the truncated candidate in `%s`", (title) => {
+    expect(employerOf(title)).toBeUndefined();
+  });
+
+  it("is END-anchored — a mid-string ellipsis is a different shape", () => {
+    // `Johnson & Johnson … Careers` mid-string must not be caught by a clause
+    // written for a tail the provider cut off.
+    expect(employerOf("Battery Scientist - Johnson … Johnson Ltd")).toBe(
+      "Johnson … Johnson Ltd",
+    );
+  });
+
+  // CLAUSE 2 — the careers-office label.
+  it.each([
+    "Nuclear Engineering Internship Summer 2027 - Career Services",
+    "Molten Salt Internship - Careers Office",
+    "Battery Internship - Career Center",
+  ])("renders silence for the careers office in `%s`", (title) => {
+    expect(employerOf(title)).toBeUndefined();
+  });
+
+  it("is WHOLE-SEGMENT anchored — a real name CONTAINING the phrase survives", () => {
+    // B13-01 Gap A's own anchor. These are employers, not offices, and both
+    // contain the office phrase in full.
+    expect(employerOf("Battery Scientist - Career Services International Ltd")).toBe(
+      "Career Services International Ltd",
+    );
+    expect(employerOf("Battery Scientist - Global Careers Office Solutions Inc")).toBe(
+      "Global Careers Office Solutions Inc",
+    );
+  });
+
+  // CLAUSE 3 — the address tail. TRIM, NEVER REJECT.
+  it("trims a postal address off an otherwise correct employer", () => {
+    expect(
+      employerOf(
+        "Nuclear Engineering Internship - Summer 2027 at Kairos Power, Alameda, California, United States | Intern Insider",
+      ),
+    ).toBe("Kairos Power");
+  });
+
+  it("leaves a state-code tail to the existing bare-location guard, which gets there first", () => {
+    // A state-code arm of the trim would be UNREACHABLE, not merely unearned:
+    // `looksLikeBareLocation` rejects any candidate ending `, MA` before a
+    // winner exists to trim, and moving the trim earlier to reach it is the
+    // forbidden ordering the next test pins. So this stays silent — today's
+    // behaviour, recorded rather than rediscovered.
+    expect(
+      employerOf("Battery Scientist - Acme Energy Ltd, Cambridge, MA"),
+    ).toBeUndefined();
+  });
+
+  it("does not cut a comma'd company name that has no place tail", () => {
+    // The trigger is the LAST comma-part naming a gazetteer COUNTRY, not merely
+    // the presence of a comma. Both heads here are multi-word, so the head
+    // requirement cannot be what is doing the work.
+    expect(employerOf("Battery Scientist - Smith Jones, Barnes & Partners")).toBe(
+      "Smith Jones, Barnes & Partners",
+    );
+    expect(employerOf("Battery Scientist - Smith, Jones & Co")).toBe(
+      "Smith, Jones & Co",
+    );
+  });
+
+  it("does not trim a candidate that is ONLY an address — the whole address stays visible", () => {
+    // Trimming here would print `Alameda` as an employer: still wrong, but no
+    // longer visibly wrong to a census reading the column. Ruling 49b — a
+    // hidden defect is worse than a deferred one.
+    expect(
+      employerOf("Battery Research Scientist - Alameda, California, United States"),
+    ).toBe("Alameda, California, United States");
+  });
+
+  it("still rejects a bare `City, ST` candidate outright", () => {
+    // A must-keep, not an ordering proof — and C states the difference rather
+    // than dressing it up. Once the state-code arm was removed, moving the trim
+    // ahead of the guard chain stopped changing any measured outcome, so the
+    // after-the-chain placement is defence in depth with no red case of its
+    // own. It is kept because trimming candidates is the shape that WOULD blind
+    // `looksLikeBareLocation` if the state-code arm ever returned.
+    expect(employerOf("Battery Research Scientist - Cambridge, MA")).toBeUndefined();
+  });
+
+  // THE MUST-KEEP CORPUS. Ruling 62d names these; they govern (b) when it is
+  // taken up, and they must not move now.
+  it.each([
+    [
+      "M.S. Internship Program – Oregon Center for Electrochemistry",
+      "Oregon Center for Electrochemistry",
+    ],
+    [
+      "Battery Research Scientist - Careers - Idaho National Laboratory",
+      "Idaho National Laboratory",
+    ],
+    ["Opening For Marketing Intern (Ion Exchange Ltd.)", "Ion Exchange Ltd."],
+    ["Molten Salt Chemistry Summer 2025 Internship - INL Careers", "INL"],
+  ])("keeps `%s`", (title, expected) => {
+    expect(employerOf(title)).toBe(expected);
+  });
+
+  it.each([
+    "Molten Salt Chemical and Electrochemical Engineering – MSR Fuel Cycle - PostdocJobs.com",
+    "Battery Research Intern (Mumbai, India)",
+    "Molten Salt Postdoc (Summer 2027)",
+  ])("keeps the honest silence for `%s`", (title) => {
+    expect(employerOf(title, "https://postdocjobs.com/posting/7317952")).toBeUndefined();
+  });
+
+  // Ruling 49a's pair, restated in one place because it is the whole difficulty
+  // of this item: SAME separator, SAME segment count, OPPOSITE outcome. Only a
+  // positive organisation test — deferred half (b) — can separate them, and the
+  // ellipsis clause is what carries the second one today.
+  it("holds the 49a pair apart", () => {
+    expect(employerOf("M.S. Internship Program – Oregon Center for Electrochemistry"))
+      .toBe("Oregon Center for Electrochemistry");
+    expect(employerOf("Graduate Intern – Focused Ion Beam, Electron Microscopy ..."))
+      .toBeUndefined();
+  });
+});
