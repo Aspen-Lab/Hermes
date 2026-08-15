@@ -270,11 +270,205 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 10:16 UTC (Agent B, round 27)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-15 10:52 UTC — ROUND 27 B IS
+                  COMPLETE. ALL SEVEN ITEMS DONE, NONE UNSTARTED, ONE COMMIT
+                  EACH, EACH PUSHED THE MOMENT IT WAS MADE** (`ddc159a`,
+                  `6f33c7b`, `f36f37a`, `49b07f5`, `ba7f672`, `5687416`,
+                  `a930a0f`, plus the lock claim `52f35b4` and this close-out).
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads `feature/summary-report-revamp`;
+                  **the claiming push was ACCEPTED (`5eae011..52f35b4`), so the
+                  race was won rather than assumed.** **B CHANGED NO CODE,
+                  DELETED NO TEST, EDITED NO TEST AND ADDED NO TEST** —
+                  `git log --name-only -- web/` over the whole round is **EMPTY**;
+                  every commit touches `MULTIAGENT-report-parity.md` and nothing
+                  else. No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  credential printed, logged, committed or written anywhere;
+                  `.env.local` was NEVER `cat`-ed.** Throwaway harness lived
+                  OUTSIDE `web/src/` (`web/zz-r27b/`, own vitest config rooted at
+                  `web/`, `*.probe.ts` include) and was **deleted before every
+                  commit**, with `git status --porcelain --untracked-files=all`
+                  verified clean each time.
+
+                  **THE GATE IS FULLY GREEN AND THAT IS NOT THE GOOD NEWS IT
+                  LOOKS LIKE — READ THE NEXT PARAGRAPH BEFORE ACTING ON IT.**
+                  `npx vitest run`: **97 files / 2005 tests, 2005 PASSING — ZERO
+                  failures, INCLUDING `benchmark.test.ts`.** `tsc --noEmit`
+                  clean; `eslint src` exactly the one standing `quiz.tsx:46`
+                  error, 0 warnings; `enrich.test.ts` solo **56 of 56**;
+                  `benchmark.test.ts` solo **1 of 1**.
+
+                  **THE LIVE LOCK WENT GREEN BY ROW CHURN, NOT BY A FIX, AND B
+                  PROVED IT RATHER THAN ASSUMING IT.** Re-fetched at
+                  `10:51 UTC`: `thebatteryshowsouth.com`'s ROOT page **still
+                  serves `"addressLocality": "Atlanta GA"` with no
+                  `addressRegion`**, and `sanitizePlace` **still passes that
+                  string through unchanged**. The defect A27-04 names is
+                  **UNFIXED**. The test is green only because this hour's live
+                  search did not put the ROOT url in the pool — and the file's
+                  own rule is *"assert on rows PRESENT; never demand presence"*.
+                  **The lock re-fires the moment that url comes back.** This is
+                  exactly what the round-27 manager entry predicted ("it stays
+                  red until the defect is fixed or the row churns"), and it is
+                  the strongest possible argument for item 1's DETERMINISTIC unit
+                  test: **a live lock that can skip is not a durable lock.**
+
+                  **SEVEN DESIGNS, ONE PER ITEM, EVERY ONE MEASURED ON THE
+                  SHIPPED CODE RATHER THAN DESCRIBED.**
+
+                  **ITEM 1 — A27-04: THE VERDICT IS SOURCE DRIFT, AND A's "SAME
+                  URL" IS CORRECTED.** Both of A's windows reproduce byte-for-byte
+                  from the shipped `extractOpportunityPageDetails`, **because they
+                  are TWO DIFFERENT PAGES**: the root (1 JSON-LD block →
+                  `{city:"Atlanta GA", country:"United States"}` = window 2) and
+                  `/en/conference/conference-overview.html` (**ZERO JSON-LD** → the
+                  body-text layer → `{city:"Atlanta", region:"GA", country:"United
+                  States"}` = window 1). **A's own part-1 table proves the url
+                  differed** — E13's recorded `<title>` is the OVERVIEW page's
+                  `og:title`. **NOTHING IN PEER FUSES CITY AND STATE.** Fix: one
+                  case-sensitive, closed-list trailing-state-code split in
+                  `sanitizePlace` (`region ??=`, **no country inference** — `Perth
+                  WA` stays Australian). **Measured: 8 of 8 must-split, 19 of 19
+                  must-not-split, and ZERO of all 454 `CONFERENCE_CITIES` damaged
+                  in either casing.** It **cannot change which layer answers**
+                  (a fused city was already truthy), **cannot reinsert a
+                  62a-silenced city**, and **cannot turn a place into silence**.
+                  **The lock goes green because the value becomes right.**
+
+                  **ITEM 2 — A27-02: NARROWED AT `LISTING_TITLE_RE`'s FIRST
+                  ALTERNATIVE.** The run `[\w\s,&/-]{0,40}` bridges the title's own
+                  segment separator, so a job-grade `1` reaches a trailing
+                  `- LANL Jobs`. Narrowing: **every token in that run must begin
+                  with a word character** — **exactly the treatment the shipped
+                  regex ALREADY gives a pipe** (`1,200 | Engineering Jobs` is
+                  admitted today, measured). **Measured on a byte-identical
+                  reproduction of the shipped regex (`.source` equal, 350 chars):
+                  a 17-title must-drop corpus built from `jobweb.test.ts`'s own
+                  `it.each` blocks loses NOTHING; an 18-title must-admit corpus
+                  goes 3 refusals → 1, and the two fixed are exactly the LANL and
+                  Sandia posts.** With alternative 1 neutralised **no other limb
+                  drops either real post**, so the narrowing alone suffices.
+                  **`LISTING_TITLE_RE` has exactly ONE shipped call site, so
+                  Ruling 49a's employer chain is unreachable — provable, not
+                  remembered.** Two residuals named; four tests specified.
+
+                  **ITEM 3 — A27-01: ONE MECHANISM, THREE FACES.** All five
+                  event-side kind guards return `false` on all three rows. **The
+                  one thing they share is the thing nothing looks at: the path is
+                  a bare hub noun with no item below it** (`/event`,
+                  `/conferences`, `/careers`). **`isNewsArticleTitle` and
+                  `isEarningsCallPage` already take the url as a second input;
+                  the index check is the only one that does not.** **B's own first
+                  draft was KILLED BY B's OWN SWEEP** over 1 747 string literals —
+                  it dropped two shipped must-keeps, and **`DLR Events` vs
+                  `Battery Events` proves no title-only rule can separate them.**
+                  Draft 2 is a SEPARATE two-signal predicate
+                  `isEventHubResult(title, url)`. **5 of 5 must-drops drop; 14 of
+                  14 must-keeps survive, including Ruling 64b's pair and two
+                  single-event sites at bare `/conference` paths; and with NO url
+                  it fires on ZERO titles, so every existing one-argument
+                  assertion is safe BY CONSTRUCTION.** **The bare-host name is
+                  reproduced by execution** (`eventNameFrom(...)` returns
+                  `volta.foundation`); it is a **recorded design** (B9-04 Fix 1 /
+                  Ruling 35) — **flagged, not reversed** — and fixing admission
+                  kills it for these three rows but not in general.
+
+                  **ITEM 4 — A27-03: THE DATES ARE READ, THEN SILENCED, THEN
+                  MISSED BY A YEAR-GRANULAR EXPIRY CHECK.** Peer extracts every
+                  token; A22-01 correctly refuses to publish a date; the anchor is
+                  then empty and the only surviving expiry test compares **YEARS**.
+                  **Measured: every candidate past = `true` while the bare-year arm
+                  = `false`.** Fix: one clause inside the arm that already asks
+                  this question — drop when every day-level reading is past AND no
+                  year token is later than the current year. **IT PUBLISHES
+                  NOTHING**; `startDate` stays `""` on every surviving row, so
+                  **62b's invented-date column stays ZERO by construction**,
+                  month-granularity is untouched, and A22-01 is flagged not
+                  reversed. **A's `Battery Saloon` control survives because the
+                  rule is EVERY reading past**; **the dateless branch is untouched
+                  at zero candidates.** **B FLAGS A DISCREPANCY IN A's EVIDENCE:
+                  on the one token A recorded for `behavioralpolicy.org` the
+                  shipped code DROPS the row, so A's evidence does not reproduce
+                  A's outcome there.** The class reproduces on the other two.
+
+                  **ITEM 5 — V27-01 PER RULING 73, AND THE PDF CORRECTS A's
+                  READING.** `Georgia-Italic 12.75` confirmed — **and the italic
+                  carries the SAME size and the SAME colour (`#4d3a28`) as the
+                  prose: slant only, no tint, no size step.** But it is **FOUR
+                  SPANS AND THREE TERMS**: `interfacial` ends a line at x 419.6 and
+                  `resistance` begins the next at the x 79.5 margin with the comma
+                  separators outside both, and **the plate's own sentence reads
+                  `Matches 3 of your required topics`.** An implementation that
+                  italicises TERMS gets the wrap free; one that italicises SPANS
+                  does not. Design: **one component, two optional props
+                  (`surface`, `matchedTerms`), both defaulted so an unpassed call
+                  site renders as today**, and **NO new matching logic** — the
+                  shipped `highlightSegments` already handles case, word
+                  boundaries, longest-first overlap MERGING, dedupe, escaping and
+                  the empty case. **`matchedKeywords` and `matchReason` are traced
+                  to the SAME array in scoring**, so the terms are in the prose
+                  verbatim. **Byte-identity test = a literal string equality
+                  between two EVENT renders differing only in `matchedTerms`**;
+                  the shipped `does NOT italicise the event prose` assertion is
+                  **kept verbatim**, only its comment restated.
+
+                  **ITEM 6 — V27-02: THE WRAP IS THE PROOF.** Plate 02's closing
+                  quote, em dash and `from the job` sit in the **SAME span** as the
+                  quotation at `Georgia 10.5 #9c8b78`, and `description` starts the
+                  next line at **the quote's own left margin**. **A detached
+                  caption cannot wrap mid-phrase out of its parent's text run.**
+                  A's reading confirmed span for span, colour included. Fix is
+                  **subtraction**: delete `mt-1`, `block`, `text-caption`,
+                  `text-text-faint` and add one explicit space. **Four things must
+                  NOT change** — `not-italic` stays (the plate's attribution is
+                  `Georgia`, NOT `Georgia-Italic`), the `<cite>` stays for B-19's
+                  semantic, `data-visa-attribution` stays, and the space must be
+                  explicit or JSX collapses it. Empty state already correct.
+                  **The attribution has NO test today, which is how three
+                  departures survived a full census**; four are specified.
+
+                  **ITEM 7 — V26-J06: `ELIGIBILITY` IS HONEST, `TEAM` SPLITS.**
+                  The plate's own spans: `ELIGIBILITY` = `PhD awarded by start
+                  date`; **`TEAM` = `Energy & Materials, 14 researchers` — a unit
+                  NAME and a HEADCOUNT joined by a comma, which is TWO fields with
+                  very different evidence.** `ELIGIBILITY` is designable on the
+                  shipped pattern (schema.org `educationRequirements`/
+                  `qualifications` off the JobPosting record already parsed, plus a
+                  closed labelled-line fallback), with five boundaries — the two
+                  that bite being **never derive it from `keyRequirements`** (Peer's
+                  own derived skills, not an employer promise) and **never from LLM
+                  enrichment** (Ruling 69). `TEAM`'s NAME half: same pattern via
+                  `employmentUnit`, plus **it must never fall back to the employer
+                  name** (Ruling 26's own failure shape). **`TEAM`'s HEADCOUNT half
+                  is `POLICY — manager decides`, with the whole search written
+                  out**: no schema.org property exists; `numberOfEmployees`
+                  describes the employer not the unit so it would be a WRONG
+                  number; a prose number is A22-01's exact mechanism; no job-side
+                  roster exists; an LLM guess is a fabricated fact about a real
+                  employer. **The narrow question: does a name-only `TEAM` row
+                  CLOSE J06, with Ruling 62b's true-partial precedent on one side?
+                  B recommends yes and does not decide it (§1b).**
+
+                  **THREE CORRECTIONS B MAKES TO WORK IT WAS HANDED, ALL AGAINST
+                  THE EASY READING:** (a) A's "same URL" on A27-04 — it is two
+                  pages; (b) A's "four italic topic names" — four spans, three
+                  terms, and the plate says so itself; (c) A's
+                  `behavioralpolicy.org` evidence does not reproduce its own
+                  outcome. **AND ONE AGAINST B's OWN WORK: item 3's first draft
+                  was wrong and B's own adversarial sweep is what caught it.**
+
+                  **THE GATE STAYS `GATE (0%): NOT MET` — B cannot move it and
+                  does not (Ruling 30).** **Turn lock released (`HELD BY: free`)
+                  in this entry's own commit.**
+
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 10:20 UTC — ROUND 27 A IS
                   COMPLETE. FOUR PARTS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`160d854`, `cdaf0b6`, `8d9fe00`, plus this final commit).
@@ -5241,6 +5435,161 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **C — round 27.** Round 27 B is COMPLETE: **SEVEN §4 ENTRIES,
+                  SEVEN ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
+                  (`ddc159a`, `6f33c7b`, `f36f37a`, `49b07f5`, `ba7f672`,
+                  `5687416`, `a930a0f`). Claim the §0d lock first, always.
+                  **B changed no code:** `git log --name-only -- web/` over the
+                  whole round is **EMPTY**.
+
+                  **THE BASELINE C MUST CONFIRM COLD — AND IT MOVED SINCE THE
+                  HAND-OFF TO B. READ THIS BEFORE RUNNING ANYTHING.**
+                  **`npx vitest run` now returns 97 files / 2005 tests, 2005
+                  PASSING — ZERO failures, INCLUDING `benchmark.test.ts`.**
+                  `tsc --noEmit` clean; `eslint src` exactly the one standing
+                  `src/components/persona/quiz.tsx:46` error and **0 warnings**;
+                  `enrich.test.ts` solo **56 of 56**; `benchmark.test.ts` solo
+                  **1 of 1**.
+
+                  **DO NOT READ THAT GREEN AS "A27-04 IS FIXED". IT IS NOT.**
+                  B re-fetched the page at `10:51 UTC`: the ROOT of
+                  `thebatteryshowsouth.com` **still serves
+                  `"addressLocality": "Atlanta GA"` with no `addressRegion`**, and
+                  `sanitizePlace` **still passes it through unchanged**. The lock
+                  is green only because this hour's live search did not put that
+                  url in the pool, and the file's own rule is *"assert on rows
+                  PRESENT; never demand presence"*. **It re-fires the moment the
+                  url returns. Do not weaken the test, do not delete it, and do
+                  not treat the green as evidence of anything.** **The
+                  deterministic proof of item 1 must be the NEW UNIT TEST, not the
+                  live benchmark.**
+
+                  ---
+                  **SEVEN DESIGNS, IN THE MANAGER'S OWN ORDER. EVERY ONE IS
+                  MEASURED ON THE SHIPPED CODE AND EVERY ONE CARRIES ITS
+                  MUST-NOT-CHANGE BOUNDARY AND ITS NEW TESTS. `MULTIAGENT-report-parity.md`
+                  §4 `Round 27 — Agent B` holds the full text; this is the index.**
+
+                  **1. A27-04 — `sanitizePlace`
+                  (`src/lib/opportunities/structured-extract.ts:922`).** Add a
+                  case-sensitive, closed-list **trailing state-code split**, after
+                  the existing comma branch and only when the city has no comma:
+                  `city = head`, **`region ??= code`**, **and NO country
+                  inference** (`Perth WA` must stay Australian). Four clauses, each
+                  with its own red test. **VERDICT: SOURCE DRIFT — the site emits
+                  the fused string; nothing in Peer fuses.** **Boundary measured:
+                  ZERO of all 454 `CONFERENCE_CITIES` damaged in either casing; 19
+                  of 19 must-not-split controls untouched.** **C OWES THE UNIT
+                  TEST** — the live one can skip.
+
+                  **2. A27-02 — `LISTING_TITLE_RE`'s FIRST ALTERNATIVE
+                  (`src/lib/jobs/sources/jobweb.ts:146`).** Replace the run
+                  `[\w\s,&/-]{0,40}` with
+                  `(?:[\w][\w,&/-]*(?:\s+[\w][\w,&/-]*){0,6}\s+)?` — **every token
+                  in the run must begin with a word character.** Nothing else in
+                  the regex changes. **This is the treatment the shipped regex
+                  already gives a pipe.** **MUST NOT CHANGE:** all 17 must-drop
+                  titles (four of them are the B13-02 alternation locks), and
+                  `1,200 - Engineering Jobs` on `indeed.com` must still drop
+                  through the aggregator limb. **`LISTING_TITLE_RE` has exactly ONE
+                  call site — do not touch `CAREERS_INDEX_TITLE_RE`, which has
+                  two.**
+
+                  **3. A27-01 — a NEW predicate `isEventHubResult(title, url)` in
+                  `eventweb.ts`, called at ROW ADMISSION only, alongside the
+                  existing four kind guards.** Both signals required: a **bare hub
+                  noun as the terminal path segment** AND a title head that
+                  **ends in a PLURAL index noun or begins with `careers?`**.
+                  **`isEventIndexResult` and `isEventIndexPage` KEEP THEIR
+                  ONE-ARGUMENT CONTRACTS UNTOUCHED** — the shipped test *"leaves
+                  the raw predicate's own contract alone"* exists to protect that.
+                  **MUST NOT CHANGE: Ruling 64b's `All Solid State Battery
+                  Workshop` pair, `Co-located Workshops | The Battery Show North
+                  America`, and `DLR Events | Events for July 2026`.** With no url
+                  the predicate returns `false`, which is what makes every existing
+                  assertion safe by construction.
+
+                  **4. A27-03 — ONE CLAUSE inside the `anchor.length === 0` arm
+                  (`eventweb.ts:1741-1751`).** Drop when the text offered day-level
+                  readings, **EVERY one is past**, and **no year token is later
+                  than the current year**. **IT PUBLISHES NOTHING — `startDate`
+                  stays `""` on every surviving row.** **MUST NOT CHANGE:** the
+                  A22-01 must-keep at `eventweb.test.ts` ~line 1851 (measured safe
+                  at its own pinned `NOW`), A's `Battery Saloon` control (one past
+                  cluster + one future = KEEP), and the **dateless branch at zero
+                  candidates**. **The word "EVERY" is load-bearing; "the earliest
+                  reading is past" would kill A's control.**
+
+                  **5. V27-01 PER RULING 73 — `why-peer-sent-this.tsx`.** Two
+                  optional props (`surface`, `matchedTerms`), **both defaulted so
+                  an unpassed call site renders as today**. Job path wraps the
+                  matched runs in `<em>`; **reuse `highlightSegments`
+                  (`src/lib/jobs/summarize.ts:442`) — write no new matcher.**
+                  **Italic ONLY: no colour change, no size change** — the plate's
+                  italic spans carry the same `12.75` and the same `#4d3a28` as the
+                  prose. **THE BYTE-IDENTITY TEST: render the EVENT report twice
+                  from fixtures differing ONLY in `matchedTerms` and assert the two
+                  markup strings are IDENTICAL.** The shipped
+                  `does NOT italicise the event prose` assertion is **kept
+                  verbatim; only its comment is restated to name Ruling 73.**
+                  **CORRECTION TO CARRY: four spans, THREE terms —
+                  `interfacial resistance` is one wrapped term, and the plate's own
+                  sentence says `Matches 3 of your required topics`.**
+
+                  **6. V27-02 — `jobs/[id]/page.tsx:1139-1144`.** Delete `mt-1`,
+                  `block`, `text-caption`, `text-text-faint`; add one **explicit**
+                  space before the `<cite>`. **KEEP `not-italic`** (the plate's
+                  attribution is `Georgia`, not `Georgia-Italic`), **keep the
+                  `<cite>` element**, **keep `data-visa-attribution`**. Empty state
+                  is already correct — the `<cite>` lives inside the `visaEvidence`
+                  gate; **do not add a second gate.** The second render site at
+                  `page.tsx:1405` is a DIFFERENT block and is **out of scope**.
+
+                  **7. V26-J06 — `ELIGIBILITY` is buildable; `TEAM` is HALF
+                  buildable and HALF `POLICY`.** `ELIGIBILITY`: schema.org
+                  `educationRequirements`/`qualifications` first, closed
+                  labelled-line fallback second, cap the length and **drop rather
+                  than truncate**, **never from `keyRequirements`**, **never from
+                  LLM enrichment (Ruling 69)**, **hide when absent**. `TEAM` NAME:
+                  `employmentUnit` + labelled-line, and **never fall back to the
+                  employer name**. **`TEAM` HEADCOUNT: `POLICY — manager decides`
+                  — B found no honest source and wrote out where it looked.**
+                  **C SHOULD NOT BUILD THE HEADCOUNT.** **WATCH `job-details.test.ts`
+                  FIRST: the new fields are additive to a returned object, and a
+                  whole-object `toEqual` there is the one place a green suite goes
+                  red on an additive change — restate it, never loosen it.**
+
+                  ---
+                  **STANDING ITEMS C MUST CARRY, BY NAME, UNCHANGED BY B:**
+                  **Ruling 48b — events `149 / 51 kept / 98 dropped / 0 WRONGLY
+                  DROPPED`; jobs `100 / 47 kept / 53 dropped / 1 WRONGLY DROPPED
+                  (A27-02)` plus `stemgateway.nasa.gov` NAMED AND NOT COUNTED,
+                  fifth round.** **Item 2 takes the job column back to ZERO when it
+                  lands, and it also makes 63a's trigger REACHABLE again** — §1's
+                  recorded reason ("the tail that would fire the trigger is the
+                  same tail that gets it dropped") stops being true. **The 62b
+                  fuse — ZERO and VACUOUS, LOADED and UNTESTED, FOURTH A round, NOT
+                  banked.** **Ruling 55c's online must-keep debt — TENTH round
+                  undischarged.** **Ruling 57b — event surface `designed,
+                  organically unwitnessed`, EIGHTH round.** **A22-04 at STRIKE
+                  ONE.** **62d(a) CORRECT for a FOURTH round; 34a
+                  `careerservices.upenn.edu` PRESENT and SILENT, FIFTH round.**
+                  **Rulings 37, 44, 33 and B18-03 all ZERO. A25-01 CLOSED.**
+                  **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE.**
+                  **Ruling 71a's struck route kicker confirmed ABSENT.**
+                  **THRESHOLDS UNCHANGED:** `OPPORTUNITY_MIN_SCORE` 0.35, both
+                  `MIN_SCORE` 0.35, `MAX_POSTING_AGE_DAYS` 270,
+                  `MAX_ENRICHMENT_CANDIDATES` 40, `MAX_OPPORTUNITY_POOL_ITEMS` 200,
+                  `EVENT_QUERY_BUDGET` 16, `RESULTS_PER_SEARCH` 10.
+
+                  **THE GATE RULE, VERBATIM AND UNCHANGED: `GATE (0%): NOT MET`.**
+                  Phase 1's bar is **VALUE parity AND VISUAL parity** (Rulings 66b
+                  and 69). **Only a later A census can move it, and only the
+                  MANAGER closes, after an independent re-measurement** (Ruling 30).
+                  **NEITHER B NOR C CAN CLOSE OR MOVE THIS LINE.**
+
+                  ---
+                  Previous entry, kept for continuity:
 WHOSE TURN:       **B — round 27.** Round 27 A is COMPLETE: **four parts, one
                   commit each, each pushed immediately** (`160d854`, `cdaf0b6`,
                   `8d9fe00`, plus this final commit). Claim the §0d lock first,
