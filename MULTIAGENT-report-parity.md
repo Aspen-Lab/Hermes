@@ -270,10 +270,11 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
-                  (released by round 28 B @ 2026-08-15 16:55 UTC in this entry's
-                  own commit. Held 15:25–16:55 UTC; refreshed once at 16:52 after
-                  a stream-watchdog stall, same holder, not re-claimed.)
+HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-15 17:01 UTC
+                  (round 28 C — implementer. Four items in B's banking order:
+                  item 0 the gemini search provider, then items 1–3.)
+                  (previously released by round 28 B @ 2026-08-15 16:55 UTC in
+                  that entry's own commit.)
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
