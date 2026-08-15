@@ -65852,3 +65852,288 @@ CONSECUTIVE ROUND.** Every column zero; both windows; 5 of 5; zero membership
 variance; zero value variance; zero drift between windows. **A sets no gate line
 here** (Ruling 30) — parts 2, 3 and 4 follow, and **part 3's visual census is
 where this round's event-surface findings actually are.**
+
+### Round 26 — Agent A (part 2: the job pool, the 48b offered-row scan on both surfaces, and **ALL TALLY LINES WITH RUNNING COUNTS**. **A25-01 IS ORGANICALLY CONFIRMED — `lensa.com` CAME BACK, CARRYING THE RAW REMOTE FLAG, AND ITS REASON LINE NO LONGER SAYS `remote-friendly`. TWO VALUE DIFFERENCES ARE MEASURED: an employer stated TWICE on the same header, and — for the FIRST TIME IN THIS LOOP'S HISTORY — a NON-ZERO 48b WRONGLY-DROPPED COLUMN, six named real events. A discloses that round 25 A scored the SAME 149-row corpus at zero.**)
+
+**STATUS: PARTIAL BY DESIGN.** Part 2 of four. Parts 3 and 4 (the FIRST VISUAL /
+LAYOUT census, Ruling 66b) follow. **No gate verdict is set here.**
+
+---
+
+## **A25-01 — ORGANICALLY CONFIRMED. §1 ASKED A TO WATCH FOR THE FIRST LIVE REMOTE `jobweb` ROW; IT ARRIVED, ON `lensa.com`, THE HOST THE DEFECT WAS FOUND ON.**
+
+§1 recorded item 1 as **`designed, targeted-confirmed by tests, ORGANICALLY
+UNWITNESSED`** — round 25 C's captured pool was 12 rows, all `jobweb`, all
+`isRemote: false`, and **`lensa.com` did not return**. **It returned in A's
+second window.**
+
+| | value |
+|---|---|
+| id | `jobweb:1g2eds8` |
+| source | **`jobweb`** |
+| **raw `isRemote`** | **`true`** — the flag A25-01 is about |
+| url | `lensa.com/job-v1/kairos-power/**albuquerque-nm**/chemical-engineering-intern/…` |
+| role title | `Chemical and Materials Engineering Internship` |
+| employer | `Kairos Power` |
+| present | **4 of 5 pulls** in window B (absent in pull 1 — **minority row, disclosed by name** per Ruling 39d/41a) |
+| score | `0.681379802523173`, **byte-identical in all four pulls it appears in** |
+
+**THE RENDERED "WHY PEER SENT THIS TO YOU", READ OFF THE STATIC MARKUP OF THE
+SHIPPED `JobReport`, IN ALL FOUR PULLS:**
+
+> `Matches your molten salt focus and fits a PhD Year 3 profile.`
+
+**It does NOT say `remote-friendly`.** And the rest of the report agrees with it:
+the row renders `isRemote: false`, `workMode: null`, `location: "See posting"`,
+and **no `Remote` chip in the header** — the same internal agreement whose
+absence *was* A25-01.
+
+**This is the same shape as the original defect on the same host**: an
+**Albuquerque, New Mexico** internship that carries the provider's raw remote
+flag. Round 25 A found exactly that and the reason line called it
+`remote-friendly`. **It no longer does. A25-01 moves from `targeted-confirmed,
+organically unwitnessed` to ORGANICALLY CONFIRMED.**
+
+**BOTH NAMED FALSIFIERS, HANDLED HONESTLY:**
+
+- **(i) "a `remotive`/`himalayas`/`adzuna`/`usajobs`/`jsearch`/`arbeitnow` row
+  that STOPS saying `remote-friendly`" — NO MATERIAL TO FIRE ON.** Those sources
+  fetched rows (`remotive` 18, `arbeitnow` 60, `himalayas` 60) but **every single
+  pool row on both windows is `jobweb`**; `adzuna` and `usajobs` returned 0.
+  **Unfalsified, NOT vindicated**, and A says so rather than banking the silence.
+- **(ii) "any job score changing at all" — NOT MEASURABLE BY A's LIVE
+  INSTRUMENT, and A refuses to report a false alarm off it.** Part 1 measured
+  the noise floor: with identical row membership and every other column
+  byte-identical, `relevanceScore` still moves across independent pulls (4 of 12
+  event rows; 1 of 12 then 10 of 10 job rows). **The instrument's own noise on
+  this column is non-zero with nothing changed**, so a live score move is not
+  evidence of anything. The correct instrument is round 25 C's deterministic
+  replay — captured pool re-scored through fixed and reverted sources —
+  **which already returned byte-identical.** A reports that and adds nothing.
+
+---
+
+## REPRODUCIBILITY — THE JOB SURFACE MOVED BETWEEN THE TWO WINDOWS, AND THAT IS THE FINDING, NOT A FAULT
+
+| | window A | window B (≈12 min later) |
+|---|---|---|
+| job rows per pull | 12 / 12 / 12 / 12 / 12 | **10 / 11 / 11 / 11 / 11** |
+| union | 12 | **11** |
+| minority rows (<5 of 5) | **0** | **1 — `jobweb:1g2eds8`, named above** |
+| offered rows per pull | 101 ×5 | **95 / 97 / 99 / 102 / 100**, union **123** |
+| `beforeDedup` / `afterDedup` | 181 / 174 | varies |
+| source counts | `remotive` 18, `arbeitnow` 60, `himalayas` 60, `adzuna` 0, `usajobs` 0, `jobweb` 43 | same shape |
+| source errors | **zero** | **zero** |
+
+**Value variance WITHIN each window: 0 of 12 (A) and 0 of 10 (B) rows moved** on
+every scored column except `relevanceScore` (see above). **Value drift BETWEEN
+the windows on the 9 rows shared by both: ZERO.** The membership change is the
+provider's, not the build's — and it is exactly why the five-pull discipline
+exists.
+
+**`adzuna` and `usajobs` returned 0 rows in all ten pulls despite both keys being
+present, with zero source errors reported.** Recorded as an observation, not
+ranked: it is a provider/quota condition, not a report-parity difference, and A
+does not investigate causes.
+
+---
+
+## **THE JOB SURFACE, ROW BY ROW — AND ONE DIFFERENCE**
+
+All rows, both windows, all render sites read off `JobReport`'s static markup.
+
+**EMPLOYER COLUMN (34a) — non-null values only, as the tally is defined:**
+
+| host | employer Peer renders | ground truth | verdict |
+|---|---|---|---|
+| `inl.referrals.selectminds.com` | `INL` | host is Idaho National Laboratory's own referral site; **fetch returned 503 and A says so rather than scoring a fetch it did not get** | **CORRECT on host evidence** |
+| `magnet.me` | `AquaBattery` | `<title>` = `ION Exchange Membrane Expert **in Amsterdam at AquaBattery** \| Magnet.me`; JSON-LD `JobPosting` | **CORRECT** — and note the role title correctly rendered `ION Exchange Membrane Expert` with the ` in Amsterdam at AquaBattery` tail REMOVED |
+| `ev.careers` | `Tesla` | offered title `Internship, Battery Engineering (Summer 2026) at Tesla - EV.Careers` | **employer value CORRECT — 62d(a)'s held half vindicated for a THIRD round**; had "prefer the last surviving segment" shipped this would read `EV.Careers`. **But see A26-01 below — the TITLE column is a different column and it is wrong.** |
+| `lensa.com` | `Kairos Power` | url path is `/kairos-power/albuquerque-nm/…` | **CORRECT** |
+
+**Eight of eleven rows render honest silence** — `terra.do`, `postdocjobs.com`,
+`lanl.jobs`, `careers.gevernova.com`, `careerservices.upenn.edu`,
+`careers.inl.gov`, `tesla.com`, `linkedin.com` ×2. **Not one renders an
+aggregator's or a careers office's name.**
+
+- **`careerservices.upenn.edu`, the NAMED ACCEPTED COST (34a), IS PRESENT AND
+  RENDERS SILENCE** — a **fourth** consecutive round present-and-silent rather
+  than present-and-wrong. Its posting is an Oak Ridge National Laboratory role
+  hosted on Penn's careers site; rendering `University of Pennsylvania` is
+  exactly the 34a defect, and Peer renders nothing.
+- **`tesla.com` confirms A23-01(c)'s ELLIPSIS CLAUSE LIVE for a THIRD round.**
+  Offered title `Internship, Mechanical Design Engineer, Battery ... - Tesla`,
+  provider-truncated; **the employer resolves to `null` rather than to a
+  fragment**, which is the shipped contract. The truncated title itself is
+  **B18-02's documented-known class, NOT re-ranked as new.**
+- **Ruling 63a's REOPEN TRIGGER IS NOT PULLED.** `lanl.jobs` is pooled 5 of 5
+  with a **SILENT** employer, and A gives the honest reason: the provider's
+  offered title this round is the bare
+  `Nuclear Materials and Molten Salt Technologist 1` with **no dash tail at
+  all**, so the shape had no material to fire on. **Unfalsified, not
+  vindicated** — the same reading round 24 A gave.
+
+---
+
+### **A26-01 — `ev.careers`: THE REPORT STATES THE EMPLOYER TWICE, ADJACENT, BECAUSE THE ` at Tesla` CLAUSE IS READ FOR THE EMPLOYER FIELD AND THEN LEFT IN THE ROLE TITLE. 5 OF 5, BOTH WINDOWS.**
+
+**What plate 02 has.** The header is two distinct surfaces: an `<h1>` role name
+(`Postdoctoral Researcher — Solid-State Battery Interfaces`) and, beneath it, a
+subtitle whose FIRST segment is the employer (`Toyota Research Institute · Los
+Altos, CA · Hybrid (3 days on-site)`). **The plate's title contains no
+employer.**
+
+**What the build renders**, read off `JobReport`'s static markup, verbatim, in
+order:
+
+> `Internship, Battery Engineering (Summer 2026) at Tesla`
+> `Tesla`
+
+**The reader is told the employer twice, on two consecutive lines.** The
+provider's offered title is `Internship, Battery Engineering (Summer 2026) at
+Tesla - EV.Careers`; the build **already rewrites it** (it strips the
+` - EV.Careers` brand tail) and **already reads `Tesla` out of that exact
+` at Tesla` clause** to populate the employer field — and then leaves the clause
+standing in the title.
+
+**This is not the 62d(a) question and A is not reopening it.** 62d(a) is about
+*which* string becomes the EMPLOYER, and it is correct. This is the TITLE column.
+
+**The same `at X` shape IS stripped elsewhere in this very window** — `magnet.me`
+renders `ION Exchange Membrane Expert` from a title reading `… in Amsterdam at
+AquaBattery`, and both `linkedin.com` rows render bare role names from
+employer-suffixed pages. **So the behaviour is inconsistent between hosts, on the
+same shape, in the same pull.**
+
+- **Offered 5 of 5, pooled 5 of 5, renders the duplication 5 of 5, both
+  windows.** Zero variance.
+- **Falsifier, named:** a future round in which `ev.careers`' title renders
+  without the ` at Tesla` clause while the employer field still reads `Tesla` —
+  that is the fix landing. **A second falsifier:** if `magnet.me` or a
+  `linkedin.com` row ever STARTS carrying its employer inside the title, the fix
+  over-reached.
+
+---
+
+### **A26-02 — THE 48b WRONGLY-DROPPED COLUMN IS NOT ZERO. SIX REAL, NAMED, DATED, ON-TOPIC EVENTS ARE REFUSED AT INGESTION, 5 OF 5 — WHILE EIGHT OF THE TWELVE ROWS THAT *DID* REACH THE POOL CARRY NO DATE AT ALL.**
+
+**Measured with the corrected instrument** (full untruncated snippet; zero
+verdict flips; zero pool rows the scan calls dropped). Each row below returns
+`null` from the **shipped** `webResultToRawEventItem` on the **provider's own
+untouched strings**, in **all five pulls**.
+
+| # | url | provider title | why this is an event Peer should have kept |
+|---|---|---|---|
+| 1 | `cambridgeenertech.com/solid-state-batteries` | **`Solid-State Battery Summit \| August 11-12, 2026`** | a named single event with **explicit dates in its own title**; snippet carries registration, final agenda, in-person/online and a Chicago group rate |
+| 2 | `pyro.byu.edu/moses` | **`Molten Salt Electrochemistry Symposium (MoSES)`** | a named symposium **directly on the reader's `molten salt` required topic**; snippet states an abstract deadline of May 22 2026 |
+| 3 | `rsc.org/events/find-an-event/euchemsil-2026` | **`EUCHEMSIL 2026`** | RSC's own single-event page; snippet is the event's scope statement, **molten salts and ionic liquids** |
+| 4 | `ans.org/meetings/student2026/calendar/event-1993` | **`Molten Salt Research Reactor Tour`** | a single dated event — snippet gives **`Thursday, April 16, 2026 \| 5:00AM–5:00PM CDT`, price $50, capacity 50** |
+| 5 | `nac.naatbatt.org` | **`NAATBatt Annual Conference 2026`** | snippet names the **17th Annual Meeting & Conference** and its venue |
+| 6 | `imlb.org` | **`IMLB 2026\|IMLB Meeting \| International Meeting on Lithium ...`** | snippet: "the premier international conference on the state of lithium battery science and technology" |
+
+**Not counted, recorded for completeness:** `sae.org/events/battery-electrification-summit`
+(`Battery & Electrification Summit`) also drops, but its snippet is site
+navigation chrome rather than event copy, so A does not count a row whose
+evidence is that thin.
+
+**THE CONTRAST THAT MAKES THIS MATERIAL.** The pool these six were refused
+entry to contains **eight rows carrying no date at all** (E2, E3, E4, E6, E9,
+E10, E12 and E7's start), including `SSI24`, whose own page's only dates are in
+**2024**. **Peer is turning away dated, named, on-topic events and seating
+undated ones.**
+
+**A DISCLOSES A SCORING-JUDGEMENT DISCREPANCY RATHER THAN LETTING IT PASS AS A
+BEHAVIOUR CHANGE.** Round 25 A reported this column as `events 149/98/0` — the
+**same 149-row offered corpus size**. A has no evidence the build changed; the
+most likely reading is that **these rows were present then and were scored as
+correctly-dropped**, and that this round's judgement is stricter. **A states
+that plainly, ranks the item anyway because the rows are unambiguous, and
+invites the manager to rule on the standard if it disagrees.** A does not
+quietly adopt a stricter bar and present it as a regression.
+
+**Falsifier, named:** any of the six rows appearing in a future pool — that is
+the fix landing. **Counter-falsifier:** a manager ruling that a conference
+*homepage* is out of scope by design would retire rows 5 and 6 and leave four;
+**it would not retire rows 1–4**, which are single dated event pages.
+
+---
+
+## **48b — THE OFFERED-ROW SCAN, BOTH SURFACES, CORRECTED INSTRUMENT**
+
+| surface | offered (union) | kept at ingestion | dropped | **wrongly dropped** |
+|---|---|---|---|---|
+| **events** | **149** | 50 | 99 | **6 — A26-02 above** |
+| **jobs** | **123** | 52 | 71 | **0** |
+
+**The job drop corpus was walked in full and is clean.** All 71 are aggregator
+search-result pages (`indeed`, `ziprecruiter`, `linkedin` category pages,
+`naukri`, `simplify.jobs`, `interninsider`), employer careers *hubs*
+(`xylem.com/careers`, `jobs.merck.com/student-opportunities`,
+`chab.ethz.ch/open-positions`, `jobs.thermofisher.com/interns`), or internship
+*programme* landing pages (`nasa.gov/internship-programs`,
+`theleadershipalliance.org`, `storagex.stanford.edu/education/internships`).
+**Not one individual vacancy is among them.** **`stemgateway.nasa.gov` is
+offered and drops, 5 of 5 — a FIFTH round, invoked and not counted.** **Round
+25's `Battery Ventures` reversal holds: `jobs.battery.com` and
+`ziprecruiter.com/Jobs/Internship-Battery-Ventures` both drop.**
+
+---
+
+## **ALL TALLY LINES, IN ONE PLACE, WITH RUNNING COUNTS. EVERY LINE STATED AFFIRMATIVELY EVEN AT ZERO.**
+
+| tally | this round | running / cumulative |
+|---|---|---|
+| **event names wrong** | **0 of 12** | zero for a **second** consecutive round |
+| **event item-KIND wrong** | **0 of 12** | zero for a **second** consecutive round |
+| **event PLACE wrong** | **0 of 12 counted / 0 of 4 non-null**; correct venues lost **ZERO** | zero under the guard for a **third** round; city coverage **0.333 (4 of 12)** vs 0.385 (r25) and 0.333 (r24) |
+| **invented dates** | **0 of 12**, scored on card **and** plate-03 tile **and** feed tile / quick-hit / hero | zero for a **second** consecutive round |
+| **job employer wrong (34a)** | **0 of 4 non-null** | cumulative 34a **9 of 119** |
+| **34a events** | **0** | cumulative **11 of 193** |
+| **job item-shape** | **0 of 11** | zero |
+| **job REASON-LINE** | **0 of 11 — A25-01 is FIXED and ORGANICALLY CONFIRMED this round** | the round-25 instance closes |
+| **Ruling 33 short-acronym collision** | **0 new** | cumulative **2 of 104** |
+| **Ruling 52b** | **0 instances, 0 admitted** | cumulative **5**; **A22-04 stays at STRIKE ONE** |
+| **Ruling 48b** | events **149 / 99 dropped / 6 WRONGLY DROPPED**; jobs **123 / 71 dropped / 0** | **first non-zero wrongly-dropped reading in the loop's history** |
+| **Ruling 58b** | events **149 → 50 kept**; jobs **123 → 52 kept** | — |
+| **Ruling 37** | **zero**; escalation does not fire | — |
+| **Ruling 44** | **zero** | — |
+| **B18-03** | **zero**, including its named plain-hyphen under-catch | — |
+| **62b fuse** | **ZERO — AND VACUOUS. No month-granularity row exists in either window; `10times.com` is absent from the pool AND from all 149 offered rows.** A does not bank this zero | **LOADED and UNTESTED, third A round running** |
+| **Ruling 64a trigger** | **not reachable this window**, same absent material | unchanged |
+| **Ruling 55c online must-keep debt** | **UNDISCHARGED**; A looked at all 12 pool rows (every one `isOnline: false`) and all 149 offered rows | **NINTH round** |
+| **Ruling 57b** | **job surface `organically witnessed`** (68c's restoration holds — the `lensa.com` witness above exercises the job-side path); **event surface `designed, organically unwitnessed`, 11 of 12 rows carry no organiser name** | event side **SEVENTH** round unwitnessed |
+| **Ruling 62d(b) + 63a folded deferral** | neither half closed; **63a's reopen trigger NOT pulled** (`lanl.jobs` silent, no dash tail to fire on); corpus carries unchanged | — |
+
+**THRESHOLDS, RE-READ FROM SOURCE, UNCHANGED:** `OPPORTUNITY_MIN_SCORE` **0.35**,
+`MIN_SCORE` (events) **0.35**, `MAX_POSTING_AGE_DAYS` **270**,
+`MAX_ENRICHMENT_CANDIDATES` **40**.
+
+---
+
+## **EXCLUSIONS RE-LISTED BY NAME FOR THE JOB SURFACE, EACH WITH WHETHER IT WAS INVOKED**
+
+- **34a `careerservices.upenn.edu`** — INVOKED; present and **SILENT**, fourth round.
+- **37 `careers.gevernova.com`'s colonless run-on** — INVOKED; the row is pooled
+  and its employer is **silent**; **zero** instances, escalation does not fire.
+- **44's label-miss** — INVOKED; **zero**.
+- **33 / 52b** — INVOKED; **zero new**, cumulative 2 of 104 and 5 respectively.
+- **B18-02's three named hosts** (`talent.com`, `bebee.com`, `xtalks.com`) —
+  **none offered, none fetched. `xtalks.com` is NOT recorded as closed.** The
+  truncated-title class is witnessed on `tesla.com` and is **documented-known,
+  not re-ranked.**
+- **B18-03's em/en-dash-only restriction** — INVOKED; **zero**.
+- **B19-01's non-ASCII-slug under-catch and B19-02's no-witness under-catch** —
+  neither fired; `jobright.ai` and `careers.dupont.com` both absent.
+- **`stemgateway.nasa.gov`** — INVOKED; offered, drops 5 of 5, **not counted**;
+  fifth round.
+- **63a's `lanl.jobs` shape** — INVOKED; trigger **not pulled**, reason given.
+- **§1d exclusions 7 and 8** — re-listed and applied.
+
+---
+
+**PART 2 VERDICT — THE JOB SURFACE'S ALL-ZERO CENSUS DOES NOT REPEAT, AND THE
+EVENT SURFACE'S DOES NOT SURVIVE THE 48b COLUMN.** **Two ranked value
+differences: A26-01** (the employer stated twice on the job header) **and
+A26-02** (six real dated events refused at ingestion, with the round-25
+judgement discrepancy disclosed). **A25-01 is closed by an organic witness.**
+Parts 3 and 4 — the first visual census — follow.
