@@ -363,9 +363,21 @@ describe.skipIf(!hasLiveKey)("events live relevance benchmark", () => {
       for (const item of survivors.filter((row) =>
         hostname(row.url).endsWith("cambridgeenertech.com"),
       )) {
-        expect(`${item.url} (index page readmitted?)`).not.toMatch(
-          /\/cet\/conferences\/?(?:[?#].*)?$/,
-        );
+        // RULING 70 (round 25 manager; landed round 26 C, item ZERO). This
+        // subject used to read `` `${item.url} (index page readmitted?)` ``.
+        // The regex is `$`-anchored, so appending a label pushed the anchor
+        // past the end of the URL and the clause COULD NEVER FAIL — a
+        // decoration wearing a value lock's name, inside the block Ruling 64c
+        // commissioned. The row is now named through the MESSAGE argument, the
+        // pattern already used by the flagship loop above, and the regex is
+        // tested against the RAW url. Negative proof: point this at
+        // `https://www.cambridgeenertech.com/cet/conferences` and it goes RED;
+        // on an event page (`/cet/conferences/solid-state-batteries`) it is
+        // GREEN. Under the old form BOTH were green.
+        expect(
+          item.url,
+          `${hostname(item.url)} -> ${item.name} readmitted the conference index page`,
+        ).not.toMatch(/\/cet\/conferences\/?(?:[?#].*)?$/);
         expect(item.name).not.toMatch(
           /^\s*(?:provided|presented|organised|organized|hosted)\s+by\b/i,
         );

@@ -69050,3 +69050,117 @@ pushed immediately.**
 **THE HAND-OFF:** `WHOSE TURN: C — round 26` stands as B wrote it, order: **item zero — Ruling 70's `64c` assertion fix; item one — A26-01's title fix at the mapper (B's design, 23/24 adversarial, 3 of 43 live titles change); then the visual work cheapest-first (the serif adoption first — 5 elements, 3 files, zero new tokens; then the heading hierarchy INVERSION; the timeline track and fact-tile band pairs from the PDF's vector geometry, the one-milestone divide-by-zero named; the bar per 72b; the remainder per B's designs); then the 68b facet conversion (72c).** Bank per item — this is the loop's largest C turn; a part-banked list is expected. The gate stays `GATE (0%): NOT MET`.
 
 ---
+
+### Round 26 — Agent C (item 0 of 15+: **RULING 70's `64c` ASSERTION IS FIXED AND PROVEN BOTH WAYS THROUGH THE SHIPPED TEST ITSELF. The subject is now the RAW url and the row is named through the MESSAGE argument — the pattern already present in the same file. AND ONE CORRECTION TO THE RULING'S OWN FRAMING: the old form was not blanket-unfailable, it was unfailable on exactly the two BARE index forms, which are the only shape A24-01 actually drops. Test-only; zero source files.**)
+
+**STATUS: item 0, banked on its own commit.** One file touched:
+`web/src/lib/events/benchmark.test.ts`. **No source file changed. No test
+deleted, none added — one assertion RESTATED with the item named in its own
+comment.** Throwaway probes lived OUTSIDE the repo entirely (scratchpad), so
+there was never a scaffold to delete; `git status --porcelain
+--untracked-files=all` clean at commit. No credential printed, logged, committed
+or written anywhere — `.env.local` was NEVER `cat`-ed; `profile.json` was read
+for BOOLEAN key presence only (`tavilyApiKey` non-empty → true, `tavilyEnabled`
+→ true) and no value was printed.
+
+---
+
+## THE GATE, CONFIRMED COLD BEFORE THE FIRST EDIT
+
+**93 files / 1894 tests, 1894 PASSING — ZERO FAILURES.** `tsc --noEmit` clean
+(exit 0). `eslint src` exactly the one standing
+`src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect` error, 1
+problem, 0 warnings. §1's figures are exact and unchanged.
+
+---
+
+## THE FIX
+
+`benchmark.test.ts:366` read:
+
+```ts
+expect(`${item.url} (index page readmitted?)`).not.toMatch(
+  /\/cet\/conferences\/?(?:[?#].*)?$/,
+);
+```
+
+and now reads, following `:321-324`'s own pattern **which already carries the
+comment explaining exactly this trap** (*"The row is named through the MESSAGE
+argument, not by decorating the subject string… appending a label to the subject
+would push the anchor past the end of the URL and make the clause unfailable"*):
+
+```ts
+expect(
+  item.url,
+  `${hostname(item.url)} -> ${item.name} readmitted the conference index page`,
+).not.toMatch(/\/cet\/conferences\/?(?:[?#].*)?$/);
+```
+
+**The file already knew.** The flagship loop twelve lines above states the rule
+in a comment; the 64c block written into the same file broke it. That is worth
+recording because it says the guard needed was not knowledge — it was execution.
+
+---
+
+## THE NEGATIVE PROOF — RUN THROUGH THE SHIPPED TEST, NOT BESIDE IT
+
+**The live loop is VACUOUS this window and C says so before quoting a proof.**
+`EVENT_BENCHMARK_FLAGSHIP_ROWS { exercised: 0, rows: [] }`; the live pool
+returned **13 survivors, top-5 `solarpaces.org` / `euagenda.eu` /
+`ruggedthz.com` / `nanoge.org` / `ibatterysummit.com`**, and
+**`cambridgeenertech.com` is not among them**, so the 64c loop body never
+executes on live data. **A green live run therefore proves NOTHING about this
+assertion, and is not offered as proof.**
+
+So the proof was taken by pointing the loop at a synthetic index-page row and
+running the real test file, twice, once per subject form:
+
+| the loop's row | subject form | result |
+|---|---|---|
+| `https://www.cambridgeenertech.com/cet/conferences` | **FIXED** (raw `item.url`) | **RED — 1 failed.** `AssertionError: cambridgeenertech.com -> MUTATION PROBE - index page readmitted the conference index page: expected 'https://www.cambridgeenertech.com/cet…' not to match /\/cet\/conferences\/?(?:[?#].*)?$/` |
+| the SAME row | **OLD** (label appended) | **GREEN — 1 passed** |
+
+**The same URL the block exists to refuse passed under the old form and fails
+under the new one.** The probe was removed and the file restored from a
+byte-identical backup before the commit; `grep -c "MUTATION PROBE"` on the
+committed file returns **0**.
+
+**And the direction that must stay green:** the regex against the raw event-page
+forms `/cet/conferences/solid-state-batteries`,
+`/cet/conferences/lithium-battery-materials` and `/battery-power` — **3 of 3 do
+NOT match, so 3 of 3 stay GREEN.** The fix fires on the index and only the
+index.
+
+---
+
+## **A CORRECTION TO RULING 70's OWN FRAMING — LOGGED RATHER THAN PARROTED**
+
+Ruling 70 says the anchor "is unreachable, so the assertion can never fail".
+**Executed, that is true of the shape that matters and too strong as a blanket
+statement.** Under the OLD form, across four index URL forms:
+
+| index form | old form could fail? | fixed form fails? |
+|---|---|---|
+| `…/cet/conferences` | **NO** | **YES** |
+| `…/cet/conferences/` | **NO** | **YES** |
+| `…/cet/conferences?track=2` | *yes, by accident* | **YES** |
+| `…/cet/conferences#agenda` | *yes, by accident* | **YES** |
+
+The two query/fragment forms could trip the old assertion only because
+`(?:[?#].*)?$`'s `.*` happily swallows the appended label — an accident of the
+alternation, not a working guard. **The two BARE forms could never fail, and
+those are the exact shape A24-01 drops and the exact shape Ruling 64c's comment
+names** (`cambridgeenertech.com/cet/conferences`). **So the defect is real and
+the commission is discharged; the reach was 2 of 4 forms, not 4 of 4, and the
+fix takes it to 4 of 4.** Recorded because a later round should not cite "never
+fires" and be caught out by the query-string case.
+
+---
+
+## GATE AFTER THE ITEM
+
+**93 files / 1894 tests, 1894 PASSING — ZERO FAILURES.** `tsc --noEmit` clean.
+**Unchanged from cold, as it must be: this item restates one assertion inside a
+live-gated block whose loop is empty this window, so no counted test moves.**
+
+**ITEM 0 COMPLETE. Item 1 — A26-01's title fix at the mapper — follows.**
