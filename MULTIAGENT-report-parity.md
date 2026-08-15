@@ -64079,3 +64079,180 @@ fourteen files above rather than reasoning about them. **C must ADD:** the
 `jobweb`-loses-the-clause assertion, a score-invariance assertion on that same
 row, and **the empty-parts edge above** — the shape that changes from
 `Remote-friendly` to `Matched by web search`. All three are pure additions.
+
+### Round 25 — Agent B (item 3: **RULING 65 — the restated `benchmark.test.ts:225` contract. AND A CORRECTION THAT CHANGES THE PREMISE: THE ASSERTION IS NOT DETERMINISTICALLY RED. IT RAN LIVE AND *PASSED* FOR B, ONE HOUR AFTER IT FAILED FOR A. THE GATE B MEASURED IS 1877 OF 1877, NOT 1876.**)
+
+**STATUS: COMPLETE.** Item 3 of four. **B changed no code and edited no test** —
+this entry is the DESIGN; C implements.
+
+---
+
+## THE CORRECTION FIRST, BECAUSE IT CHANGES WHAT THE RESTATEMENT IS FOR
+
+**§1's stated baseline is `92 files / 1877 tests, 1876 passing`, sole failure
+`benchmark.test.ts:225`. B COULD NOT REPRODUCE IT.**
+
+`cd web && npx vitest run` — **92 files / 1877 tests, 1877 PASSING. ZERO
+failures.** Run cold, before any of B's work, on an unmodified tree
+(`git status --porcelain --untracked-files=all` clean).
+
+**B then ran the benchmark SOLO to prove it had not merely been skipped**, and it
+executed live against the network for **7.15 s** and **PASSED**. Its own
+`EVENT_BENCHMARK_TOP5` console line shows why — the top five contained:
+
+```
+{ name: 'Solid-State Battery Summit', host: '10times.com', … date: '2026-08' }
+```
+
+**`:225`'s SECOND arm — `/solid[-\s]?state battery summit/i.test(item.name)` —
+MATCHED.** The assertion passed because a row satisfying it happened to be in
+this hour's live pool.
+
+**SO THE DIAGNOSIS IN RULING 65 IS HALF RIGHT AND THE HALF THAT IS WRONG MATTERS.**
+65 says the assertion "describes the pre-guard world", like 63b's and 64c's. Its
+STRUCTURAL fault is indeed the same one — **it demands that a specific row be
+PRESENT in a live pool.** But the consequence is not a permanent red: it is an
+**hour-to-hour FLAKE**, green when the live search returns a matching row and red
+when it does not. **A measured red; B measured green; nothing changed in
+between.** That is the fault demonstrating itself, and it is the strongest
+possible argument for the restatement — but it also means:
+
+- **The "sole failure" line in §1 is not a stable baseline and the next agent
+  should not treat a green `:225` as evidence anything was fixed.**
+- **The 64c block below it is NOT blocked today** — the whole test passed, so
+  64c's restated assertions executed. Ruling 65's "while it stands, the restated
+  64c block below it cannot execute" is true only on the red half of the coin.
+- **`benchmark.test.ts` staying EXCLUDED FROM THE GATE is vindicated**, and the
+  exclusion should be read as covering a flake, not a known-red line.
+
+**TWO MORE THINGS B's RUN SHOWS THAT ARE A's COLUMNS, NOT B's — FLAGGED, NOT
+SCORED.** In the same live top five: **`10times.com` IS in the pool**, and it
+carries **`date: '2026-08'` — a MONTH-GRANULARITY row.** Round 25 A recorded
+"`10times.com` was not offered at all" and "there is NO month-granularity row in
+the pool or in the 149-row offered corpus", and on that basis recorded **the 62b
+fuse's zero as VACUOUS** and **Ruling 64a's trigger as UNREACHABLE**. **One hour
+later the trigger is reachable.** B did not measure a census and does not
+restate A's tallies — **but the next A should re-check 62b and 64a rather than
+carry "vacuous/unreachable" forward on last round's pool.** City coverage also
+read **0.385 (5 of 13)**, against round 24's 0.333.
+
+---
+
+## WHAT `:225` IS TODAY
+
+`web/src/lib/events/benchmark.test.ts:219-225`:
+
+```
+expect(
+  topFive.some(
+    (item) =>
+      hostname(item.linkOfficial).endsWith("cambridgeenertech.com") ||
+      /solid[-\s]?state battery summit/i.test(item.name),
+  ),
+).toBe(true);
+```
+
+Context, read not remembered: `survivors = pool.items` (`:123`), and
+`topFive = survivors.filter(item => item.score >= MIN_SCORE).slice(0, 5).map(scoredEventToEvent)`
+(`:124-127`). The pool is built with `applyFloor: false` at every stage
+(`lib/events/pipeline.ts:94, 109, 232`), **so `survivors` can and does contain
+rows BELOW `MIN_SCORE`** — a fact the design below depends on.
+
+---
+
+## THE RESTATED CONTRACT — **what it MEASURES, ASSERTS, and TOLERATES**
+
+**MEASURES:** the named flagship rows — host `cambridgeenertech.com`, or a name
+matching `/solid[-\s]?state battery summit/i` — **that are actually PRESENT in
+`survivors`.**
+
+**ASSERTS, per present row (all three are value locks, none is a presence
+demand):**
+
+1. **It is not scored into irrelevance: `item.score >= MIN_SCORE`.** **This is
+   the non-vacuous core.** Because the pool is built with `applyFloor: false`, a
+   named row CAN sit in `survivors` below the floor — so this genuinely can fail,
+   and it fails exactly when the pipeline has started under-scoring the
+   benchmark's flagship topic. **This is the durable half of what `:225` was
+   built to catch, stated without any claim about pool composition.**
+2. **Its URL is not the conference INDEX page** — `not.toMatch(/\/cet\/conferences\/?(?:[?#].*)?$/)`.
+3. **Its name is not a provider-attribution phrase** —
+   `not.toMatch(/^\s*(?:provided|presented|organised|organized|hosted)\s+by\b/i)`.
+
+**(2) and (3) deliberately mirror 64c's own restated block at `:257-266`, but
+`:225`'s matcher reaches rows 64c's does not** — 64c filters on the HOST only,
+while `:225` also names rows by NAME regex. **B's live run proves that arm is not
+theoretical: the row that satisfied `:225` today was `10times.com`, a host 64c's
+block never touches.** So the two blocks are not duplicates.
+
+**TOLERATES — stated explicitly, in the file, so the next agent does not read
+the absence as an oversight:**
+
+- **ZERO PRESENT ROWS IS A PASS.** The assertion never demands that either
+  flagship reach the pool, the top five, or any rank. **This is the whole point
+  of the restatement.**
+- **Pool composition, ranking position and top-five membership are NOT
+  asserted.** They oscillate hour to hour — B has the two readings to prove it.
+- **A pool with zero cities remains a pass**, unchanged. This block adds no city
+  claim of any kind, so 63b's `withCity` decision is untouched.
+
+---
+
+## THE TRAP — **C MUST NOT COPY 63b's EXERCISE FLOOR INTO THIS BLOCK**
+
+63b's block ends with `expect(namedRowsExercised).toBeGreaterThan(0)`
+(`:217`), and it is correct THERE: A measured 5 named contamination/venue rows
+per pull, so a floor of 1 has four rows of headroom.
+
+**Copying that here would re-create exactly the red this restatement removes.**
+The `:225` rows are the ones that go absent — A measured
+`cambridgeenertech.com`'s index row as **NOT OFFERED**, and A24-01 now drops it
+by kind on purpose. **A floor of 1 on these rows IS the presence demand, wearing
+a counter's clothes.**
+
+**Instead: count the exercised rows and `console.info` the count** beside the
+existing `EVENT_BENCHMARK_TOP5` line, **asserting nothing on it.** Observability
+without a failure mode — the same disposition 63b gave `cityCoverage` itself
+(*"still computed and still console.info-ed … it is simply no longer ASSERTED"*).
+
+---
+
+## THE RANKING CLAIM — WHERE IT GOES, NAMED RATHER THAN DROPPED
+
+`:225`'s original content was partly *"the flagship ranks in the top five"*.
+**That claim cannot be made live-safe and C should not try.** `topFive` is a
+filtered prefix of an already score-sorted array, so any ordering assertion over
+it is **tautological** (vacuity discipline: rejected on those grounds, not on
+taste); and any "must reach the top five" assertion is a claim about what ELSE
+the live search returned, which is the precise fault 63b and 64c both removed.
+
+**Per 63b's own precedent** — *"That property is PROVEN deterministically
+instead, by the ablation fixtures"* — **the ranking claim belongs in a
+deterministic fixture test, not in this live benchmark.** C should say so in the
+comment and **not** invent a live substitute.
+
+---
+
+## THE TEST'S OWN TITLE
+
+The test is named **`"enriches at least half the pool and resolves the
+Solid-State Battery Summit"`** (`:102`). **After this restatement the second half
+of that title is no longer what the test asserts.** Restating a title is not
+deleting a test, and leaving it would make the name lie about the contract —
+**C should restate it** (e.g. to reflect "…and locks the named flagship rows when
+present"), name the item in the comment, and say in the log that it did.
+
+---
+
+## WHAT MUST NOT CHANGE
+
+1. **The assertion is RESTATED IN PLACE, NEVER DELETED**, with the old code
+   quoted in the comment — the exact treatment 63b and 64c received.
+2. **63b's block above (`:189-217`) and 64c's block below (`:257-266`) are
+   untouched**, including 63b's `toBeGreaterThan(0)` floor, which is correct in
+   its own block.
+3. **`expect(survivors.length).toBeGreaterThan(0)` (`:146`) stays** — it is the
+   one honest presence demand in the file, and it guards the whole test.
+4. **The denied-host universal (`:267-269`) stays.**
+5. **No city claim may be added anywhere** — 63b decided that and it stands.
+6. **`benchmark.test.ts` stays EXCLUDED FROM THE GATE.**
