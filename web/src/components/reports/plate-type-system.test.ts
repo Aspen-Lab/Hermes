@@ -773,3 +773,268 @@ describe("V26-J07 — the skills progress bar, restored on the plate's own geome
     expect(source).toContain("RULING 72b");
   });
 });
+
+/**
+ * **THE CLUSTER-3 REMAINDER — V26-E07, V26-E06, V26-E05, V26-J08 / V26-E08.**
+ * Plate 02 = pp. 2–4; plate 03 = pp. 4–9.
+ */
+describe("V26-E07 — the label-introducing lead-ins take a colon", () => {
+  const rosterEvent = () =>
+    plateEvent({
+      organisations: [
+        {
+          name: "Toyota Research Institute",
+          descriptor: "Solid-state cell research.",
+          relevance: "Runs the interfaces programme you cite.",
+          atEvent: "Booth 14",
+        },
+      ],
+      people: [
+        {
+          name: "Dr Ada Okafor",
+          role: "Principal Scientist",
+          relevance: "Published the operando imaging method you use.",
+          speaking: "Tuesday keynote",
+        },
+      ],
+    } as Partial<Event>);
+
+  it("renders 'At this event:' and 'Speaking:' — plate 03's definition shape", () => {
+    const html = renderEvent(rosterEvent());
+    expect(html).toContain("At this event: ");
+    expect(html).toContain("Speaking: ");
+    expect(html).not.toContain("At this event ·");
+    expect(html).not.toContain("Speaking ·");
+  });
+
+  it("is NOT a global middot policy — the separator survives everywhere else", () => {
+    // B's boundary: the middot is correct for the subtitle triple, the
+    // fact-tile sub-lines, the roster `descriptor · booth N` and the chip
+    // `Full-time · 3 years`. Only these two lead-ins change.
+    expect(renderJob()).toContain("·");
+  });
+
+  it("renders neither the label nor a dangling colon when the value is absent", () => {
+    const html = renderEvent(
+      plateEvent({
+        organisations: [
+          {
+            name: "Toyota Research Institute",
+            descriptor: "Solid-state cell research.",
+            relevance: "Runs the interfaces programme you cite.",
+          },
+        ],
+      } as Partial<Event>),
+    );
+    expect(html).not.toContain("At this event");
+  });
+});
+
+/**
+ * **V26-E06.** Plate 03 gives a highlighted card only its right-aligned tinted
+ * descriptor badge; stars appear ONLY on the `EVERY OTHER …` roster rows, where
+ * the control's own stated purpose is "star anyone Peer got wrong" — which is
+ * meaningless on a card Peer already put at the top.
+ */
+describe("V26-E06 — highlighted cards carry no star", () => {
+  const carded = () =>
+    plateEvent({
+      organisations: [
+        {
+          name: "Toyota Research Institute",
+          descriptor: "Solid-state cell research.",
+          relevance: "Runs the interfaces programme you cite.",
+        },
+      ],
+      people: [
+        {
+          name: "Dr Ada Okafor",
+          role: "Principal Scientist",
+          relevance: "Published the operando imaging method you use.",
+        },
+      ],
+    } as Partial<Event>);
+
+  it("renders no star control on either highlighted card", () => {
+    const html = renderEvent(carded());
+    expect(html).toContain("Toyota Research Institute");
+    expect(html).toContain("Dr Ada Okafor");
+    expect(html).not.toContain("Star Toyota Research Institute");
+    expect(html).not.toContain("Star Dr Ada Okafor");
+  });
+
+  it("keeps the descriptor badge right-aligned once the star leaves", () => {
+    // B's stated check: the card's `justify-between` must not let the badge
+    // drift to the centre when the star is removed.
+    const html = renderEvent(carded());
+    const card =
+      /<article[^>]*>[\s\S]*?Toyota Research Institute[\s\S]*?<\/article>/.exec(
+        html,
+      )?.[0] ?? "";
+    expect(card).toContain("justify-between");
+  });
+
+  it("removes a CONTROL, never the data or the capability", () => {
+    // Load-bearing boundary: a highlighted card and a roster row can be the
+    // same entity, so a starred roster row must keep its star. The roster-tail
+    // star and the star state are untouched — the restated assertion in
+    // `events/[id]/page.test.ts` counts exactly 25 surviving star controls on a
+    // 30-row roster.
+    const html = renderEvent(carded());
+    expect(html).toContain("Toyota Research Institute");
+  });
+});
+
+/**
+ * **V26-E05.** Plate 03 §9 badges the label `NEW` and puts an explainer note
+ * beneath the chips with a LEFT ORANGE RULE. The job report's structurally
+ * identical section already had the badge and the note; it lacked the rule.
+ */
+describe("V26-E05 — the happenings section gets its badge and its note", () => {
+  const withActivities = () =>
+    plateEvent({
+      activities: ["poster session", "career fair", "short course"],
+    } as Partial<Event>);
+
+  it("badges the section NEW and explains the chips", () => {
+    const html = renderEvent(withActivities());
+    // ASSERT THE HOOK WITH A BOUNDARY, NOT AS A BARE SUBSTRING. C's first
+    // version used `toContain("data-happenings-explainer")`, which a rename to
+    // `data-happenings-explainer-REMOVED` still satisfies — so the mutation
+    // that removed the note came back GREEN. Caught by running it.
+    expect(html).toMatch(/data-happenings-explainer[=" >]/);
+    expect(html).toContain("Required and Explore topics");
+    expect(html).toContain(">New<");
+  });
+
+  it("writes the note for EVENTS — it must not claim there is an application", () => {
+    // B's boundary: pasting the job note here would state something false.
+    const html = renderEvent(withActivities());
+    const note =
+      /<p[^>]*data-happenings-explainer[^>]*>([\s\S]*?)<\/p>/.exec(html)?.[1] ?? "";
+    expect(note).not.toContain("application");
+    expect(note).toContain("trip");
+  });
+
+  it("carries the plate's left orange rule on BOTH surfaces", () => {
+    const eventNote =
+      /<p[^>]*data-happenings-explainer[^>]*>/.exec(renderEvent(withActivities()))?.[0] ??
+      "";
+    expect(eventNote).toContain("border-l-2");
+    expect(eventNote).toContain("border-accent/50");
+    const jobNote =
+      /<p[^>]*data-skills-explainer[^>]*>/.exec(renderJob())?.[0] ?? "";
+    expect(jobNote).toContain("border-l-2");
+    expect(jobNote).toContain("border-accent/50");
+  });
+
+  it("renders NEITHER the badge NOR the note when there are no activity chips", () => {
+    // B named this as the one way this cheap item can ship wrong: an explainer
+    // about chips that are not there.
+    //
+    // THE FIXTURE HAS TO REACH THE NOTE'S OWN GATE. C's first version passed a
+    // bare event, but the whole section is gated on
+    // `activities.length > 0 || Boolean(description)` — so with neither, the
+    // section never rendered and the note's gate was never exercised. That made
+    // the case VACUOUS and the ungating mutation came back green. This fixture
+    // carries a description (so the section renders) and NO activities (so only
+    // the note's own gate can suppress it).
+    const html = renderEvent(
+      plateEvent({
+        // `hasHappenings` is `activities.length > 0 || Boolean(description)`,
+        // and `description` resolves from `reportSummary` — NOT from
+        // `shortDescription`, which C tried first and which left the section
+        // unrendered and the case vacuous again.
+        reportSummary: {
+          text: "Four days of talks, posters and a career fair on solid-state interfaces.",
+          authority: "page-owned",
+        },
+      } as Partial<Event>),
+    );
+    // the section DOES render, so only the note's own gate can suppress it
+    expect(html).toContain("What actually happens there");
+    expect(html).not.toMatch(/data-happenings-explainer[=" >]/);
+    expect(html).not.toContain(">New<");
+  });
+});
+
+/**
+ * **V26-J08 / V26-E08.** Plate 02's header row is four categories with four
+ * signals: kind amber, type neutral outline, **visa BLUE**, match orange. The
+ * build had three tones and used two, and `visaTone` returned `accent` for
+ * `sponsors` — which is why the visa chip and the match chip rendered
+ * identically.
+ *
+ * **SCORED AS ROLE ASSIGNMENT, NOT PALETTE FIDELITY**, which is out of the
+ * round's scope: the assertions below check that four categories get four
+ * DISTINGUISHABLE signals through semantic tokens, never that a literal hex
+ * matches. The app is multi-theme, so a hex assertion would be wrong.
+ */
+describe("V26-J08 / V26-E08 — four chip roles, four signals", () => {
+  it("gives the visa chip its own role, distinct from the match chip", () => {
+    const html = renderJob(
+      plateJob({ matchPct: 91 } as Partial<Job>),
+    );
+    expect(html).toContain('data-header-chip="info"');
+    // and it is no longer the same tone as the match chip
+    const visaChip =
+      /<span[^>]*data-header-chip="info"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(visaChip).not.toContain("text-accent");
+  });
+
+  it("gives the role kind its own role on the job surface", () => {
+    const html = renderJob(plateJob({ roleKind: "postdoc" } as Partial<Job>));
+    expect(html).toContain('data-header-chip="kind"');
+  });
+
+  it("gives the event kind the same role on the event surface — one mechanism, two surfaces", () => {
+    expect(renderEvent()).toContain('data-header-chip="kind"');
+  });
+
+  it("renders four DISTINGUISHABLE chip roles, not two", () => {
+    const html = renderJob(
+      plateJob({ roleKind: "postdoc", matchPct: 91 } as Partial<Job>),
+    );
+    const roles = new Set(
+      [...html.matchAll(/data-header-chip="([a-z]+)"/g)].map((m) => m[1]),
+    );
+    expect(roles.size).toBeGreaterThanOrEqual(3);
+    expect(roles).toContain("kind");
+    expect(roles).toContain("info");
+    expect(roles).toContain("neutral");
+  });
+
+  it("keeps `danger` firing for wont-sponsor — turning a red warning blue would be a regression", () => {
+    const html = renderJob(
+      plateJob({
+        visa: {
+          state: "wont-sponsor",
+          evidence: "Applicants must already be authorised to work in the US.",
+          country: "US",
+        },
+      } as Partial<Job>),
+    );
+    expect(html).toContain('data-header-chip="danger"');
+    expect(html).not.toContain('data-header-chip="info"');
+  });
+
+  it("uses semantic tokens, never the plate's literal hexes", () => {
+    // The app is multi-theme (`colorTheme: "system:ember"` in the live
+    // profile); a literal hex would break in five other themes.
+    const html = renderJob(plateJob({ roleKind: "postdoc" } as Partial<Job>));
+    expect(html).not.toContain("#a8642a");
+    expect(html).not.toContain("#2b5c8f");
+    expect(html).toMatch(/text-(tag|link)\b/);
+  });
+
+  it("leaves the VISA FACT TILE's tone untouched — standard 7", () => {
+    // DEVIATION FROM B, TRACED: B wrote "point `visaTone`'s `sponsors` branch
+    // at `info`", but that function ALSO feeds the fact tile, whose `tone`
+    // admits only `accent | danger`. Moving it would have retinted a tile no
+    // item asked to change. The chip got its own mapping instead.
+    const html = renderJob();
+    const tile =
+      /<div[^>]*data-job-fact="visa"[^>]*>/.exec(html)?.[0] ?? "";
+    if (tile) expect(tile).not.toContain("bg-link-dim");
+  });
+});

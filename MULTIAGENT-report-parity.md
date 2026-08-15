@@ -69975,3 +69975,159 @@ tests**). `tsc --noEmit` clean. `eslint src` exactly the one standing
 `quiz.tsx:46` error.
 
 **ITEM 6 COMPLETE — V26-J07 closes. Seven items landed (0–6).**
+
+### Round 26 — Agent C (items 7–10 of 15: **THE CLUSTER-3 REMAINDER, GROUPED AS B GROUPED IT — V26-E07, V26-E06, V26-E05 AND V26-J08/V26-E08 ALL CLOSE. AN EXISTING TEST IS RESTATED, NOT DELETED, AND THE RESTATEMENT IS THE ITEM'S OWN WITNESS. ONE DEVIATION FROM B's DESIGN, TRACED BEFORE IT WAS TAKEN AND CAUGHT BY THE TYPECHECK. TWO MORE VACUOUS ASSERTIONS OF C's OWN FOUND BY MUTATION AND FIXED. AND TWO NEW LINT WARNINGS C CREATED AND CLEANED BEFORE COMMITTING.**)
+
+**STATUS: items 7–10, banked on one commit — B designed and grouped these four
+together in cluster 3 and the manager's order lists them as one block.** Three
+files plus the plate test file. **No test deleted; ONE existing test restated
+with the item named.** No credential printed, logged or written; no scaffold in
+the repo.
+
+---
+
+## **V26-E07 — the two label-introducing lead-ins take a colon**
+
+Plate 03 uses a definition shape: a bold lead-in, a colon and a space, then the
+continuation. `At this event · {atEvent}` → `At this event: {atEvent}`;
+`Speaking · {speaking}` → `Speaking: {speaking}`. **Two characters, two lines,
+one file — the cheapest item in the entire list, exactly as B priced it.**
+
+**B's boundary held: this is NOT a global middot policy.** The middot stays
+correct for the subtitle triple, the fact-tile sub-lines, the roster
+`descriptor · booth N` and the chip `Full-time · 3 years`, and a test asserts the
+separator survives elsewhere. **No dangling colon is reachable** — both lines
+were already guarded on their value, and a test proves the label vanishes with it.
+
+## **V26-E06 — the star leaves the highlighted cards**
+
+Plate 03 gives a highlighted card only its right-aligned tinted descriptor badge;
+**stars appear only on the `EVERY OTHER …` roster rows**, where the control's own
+stated purpose is *"star anyone Peer got wrong"* — **which is meaningless on a
+card Peer already put at the top.** That is a product argument, not a taste one,
+and it is A's.
+
+**THE LOAD-BEARING BOUNDARY HELD: this removes a CONTROL from one render site,
+not data and not a capability.** `ROSTER_STARS_KEY`, `onToggleStar` and the
+roster-tail `StarButton` are all untouched, because **a highlighted card and a
+roster row can be the same entity** and a starred roster row must keep its star.
+
+**ONE EXISTING TEST WAS RESTATED, NOT DELETED**
+(`events/[id]/page.test.ts`, the 30-organisation roster case). It demanded every
+name appear exactly **twice** — once as the row's name and once inside the
+`StarButton`'s `aria-label` — so the five carded names now appear once. **The
+restatement IS the item's own witness**: it keeps what the assertion actually
+protected (**nobody is collapsed** — every one of the thirty still renders) and
+adds the new contract explicitly (5 × 1 + 25 × 2 mentions, and **exactly 25
+surviving star controls**). The comment names V26-E06 and says why.
+
+## **V26-E05 — the happenings section gets its badge and its note**
+
+Plate 03 §9 badges the label `NEW` and puts an explainer note beneath the chips
+**with a left orange rule**. **The fix is a COPY, not an invention** — the job
+report's structurally identical section already had the badge and the note.
+
+**THE WORDS ARE WRITTEN FOR EVENTS, AND B WAS RIGHT TO INSIST.** The job note
+ends *"before you spend an evening on the application"* — **pasting that onto the
+event surface would state something FALSE, because there is no application.** The
+chip semantics transfer, so the event note describes the same rule in the event's
+own terms and a test asserts it never says "application".
+
+**THE LEFT ORANGE RULE LANDED ON BOTH SURFACES**, closing A's observation on the
+job note too, which never had it.
+
+**Both the badge and the note are gated on the chips** — B named this as the one
+way this cheap item can ship wrong, and both gates carry their own mutation.
+
+## **V26-J08 / V26-E08 — four chip roles where the build had two**
+
+Plate 02's header row is four categories with four signals: kind amber, type
+neutral outline, **visa BLUE**, match orange. The build had three tones, used
+two, and `visaTone` returned `accent` for `sponsors` — **which is why the visa
+chip and the match chip rendered identically.** Two roles added: **`info`** for
+the positive visa state and **`kind`** for the role/event kind, on **both**
+surfaces from one design.
+
+**SCORED AS ROLE ASSIGNMENT, NOT PALETTE FIDELITY, AND THE CODE STAYS ON THAT
+SIDE OF THE LINE.** Semantic tokens (`tag`, `link`) only — **the app is
+multi-theme (the live profile runs `colorTheme: "system:ember"`), so a literal
+plate hex would break in five other themes.** A test asserts the hexes are
+absent and the token families present. **`danger` still fires for
+`wont-sponsor`**: the plate has no won't-sponsor chip and turning a red warning
+blue would be a real regression.
+
+### **DEVIATION FROM B's DESIGN — TRACED FIRST, LOGGED PROMINENTLY**
+
+B wrote *"point `visaTone`'s `sponsors` branch at `info`"*. **`visaTone` feeds
+TWO consumers — the header chip AND the VISA fact tile — and the typecheck caught
+it immediately** (`JobFact["tone"]` admits only `accent | danger`). Moving the
+function would have retinted a fact tile **no item asked to change**, which
+standard 7 forbids. **The chip got its own `visaChipTone` and `visaTone` is
+untouched.** B's intent — *only the `sponsors` branch of the CHIP moves* — is
+honoured exactly; only the mechanism differs, because B priced it without
+knowing the function was shared. Both functions carry the explanation, and a test
+asserts the fact tile did not move.
+
+---
+
+## THE NEGATIVE PROOFS — TEN MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **57 of 57** in the plate file (**120 of 120** including
+`events/[id]/page.test.ts`, where the restated assertion lives):
+
+| # | mutation | red |
+|---|---|---|
+| C1 | revert E07 — the middot back on both lead-ins | **1 failed** |
+| **C2** | **revert E06 — the star back on the highlighted card** | **2 failed** (one of them the restated assertion) |
+| C3 | remove the event explainer note | **3 failed** |
+| C4 | ungate the note — it renders with no chips | **1 failed** |
+| C9 | ungate the `NEW` badge | **1 failed** |
+| C5 | revert J08 — the visa chip back to `accent` | **2 failed** |
+| C6 | revert the `kind` tone on **both** surfaces | **3 failed** |
+| C7 | turn `wont-sponsor` blue — the regression B forbade | **2 failed** |
+| C8 | hard-code the plate's hex instead of a token | **1 failed** |
+
+## **TWO MORE VACUOUS ASSERTIONS OF C's OWN, FOUND BY MUTATION**
+
+**C3 and C4 both came back GREEN on the first run**, for two different reasons,
+and both are recorded:
+
+1. **`toContain("data-happenings-explainer")` is satisfied by
+   `data-happenings-explainer-REMOVED`.** A bare substring is not a hook check.
+   Fixed to `toMatch(/data-happenings-explainer[=" >]/)`.
+2. **The empty-state fixture never reached the note's own gate.** The whole
+   section is gated on `activities.length > 0 || Boolean(description)`, and
+   `description` resolves from `reportSummary` — **not** from `shortDescription`,
+   which C tried first. With neither, the section did not render at all and the
+   note's gate was never exercised. Fixed with a fixture that carries a
+   `reportSummary` and no activities, so **only** the note's own gate can
+   suppress it.
+
+**That is FIVE vacuous assertions C has written and caught across this round.**
+All five were found the same way — **by running the mutation instead of trusting
+the assertion's name** — and the pattern is now clear enough to hand forward:
+**a gated assertion, a bare-substring hook check, or an assertion that reads a
+hook derived from the same flag as the thing it claims to check, is a vacuity
+risk by construction.**
+
+## **TWO LINT WARNINGS C CREATED AND CLEANED BEFORE COMMITTING**
+
+Removing the `StarButton` left `starred` unused in both highlighted-card
+destructures — **two new `@typescript-eslint/no-unused-vars` warnings**, which
+would have moved the gate off "exactly the one standing error". Both bindings
+removed; **lint is back to 1 problem, 1 error, 0 warnings.** Recorded because a
+warning is a gate movement even when nothing is red.
+
+## STANDARD 7 — VALUE STABILITY
+
+No rendered value changed. The two lead-ins changed a SEPARATOR, not a value; the
+star removal removed a control; the badge and note ADD chrome; the chip tones
+changed colour roles only. **The VISA fact tile is explicitly asserted unmoved.**
+
+## GATE AFTER THE ITEMS
+
+**96 files / 1984 tests, 1984 PASSING — ZERO FAILURES** (was 96 / 1967; **+17
+tests**). `tsc --noEmit` clean. `eslint src` **exactly the one standing
+`quiz.tsx:46` error, 0 warnings.**
+
+**ITEMS 7–10 COMPLETE. Eleven of the round's items are landed (0–10).**

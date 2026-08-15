@@ -868,20 +868,51 @@ function useRosterStars(): [Set<string>, (key: string) => void] {
   return [stars, toggle];
 }
 
+/**
+ * V26-J08 / V26-E08 (round 26 C). FOUR CHIP ROLES WHERE THE BUILD HAD TWO.
+ *
+ * Plate 02's header row: `Postdoc` amber `#a8642a` · `Full-time · 3 years`
+ * neutral outline · **`Visa sponsorship` BLUE `#2b5c8f`** · `91% match` orange.
+ * Plate 03's: `Industry summit` amber · `+ career fair` neutral · `CCF-B`
+ * neutral · `88% match` orange. FOUR categories, four signals.
+ *
+ * The build had three tones and used two on the header row, and `visaTone`
+ * returned `accent` for `sponsors` — WHICH IS WHY THE VISA CHIP AND THE MATCH
+ * CHIP RENDERED IDENTICALLY. Two new roles fix it: `info` for the positive
+ * visa state and `kind` for the role/event kind.
+ *
+ * **SEMANTIC TOKENS, NEVER THE PLATE'S LITERAL HEXES.** A scored this as ROLE
+ * ASSIGNMENT, not palette fidelity, and palette fidelity is explicitly out of
+ * the round's scope. The app is multi-theme (the live profile runs
+ * `colorTheme: "system:ember"`), so a hard-coded hex would break in five other
+ * themes. What must change is that four categories get four DISTINGUISHABLE
+ * signals; which exact hue is the theme's business.
+ *
+ * **`danger` KEEPS FIRING FOR `wont-sponsor`.** The plate has no won't-sponsor
+ * chip to copy, and turning a red warning blue would be a real regression.
+ * Only the `sponsors` branch moves.
+ */
 function HeaderChip({
   children,
   accent = false,
+  tone,
 }: {
   children: ReactNode;
   accent?: boolean;
+  tone?: "info" | "kind";
 }) {
   return (
     <span
+      data-header-chip={accent ? "accent" : tone ?? "neutral"}
       className={cn(
         "inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-meta font-medium",
         accent
           ? "border-accent/25 bg-accent/10 text-accent"
-          : "border-border bg-surface text-text-muted",
+          : tone === "info"
+            ? "border-link/25 bg-link-dim text-link"
+            : tone === "kind"
+              ? "border-tag/25 bg-tag-dim text-tag"
+              : "border-border bg-surface text-text-muted",
       )}
     >
       {children}
@@ -1518,7 +1549,7 @@ function RosterSection({
             )}
             <div className="mt-3 grid gap-2">
               {organisationCards
-                .map(({ item, key, reason, judgment, starred }) => (
+                .map(({ item, key, reason, judgment }) => (
                   <article
                     key={key}
                     data-roster-row="organisation"
@@ -1555,15 +1586,23 @@ function RosterSection({
                       )}
                       {clean(item.atEvent) && (
                         <p className="mt-1 text-caption text-text-faint">
-                          At this event · {item.atEvent}
+                          At this event: {item.atEvent}
                         </p>
                       )}
                     </div>
-                    <StarButton
-                      active={starred}
-                      label={item.name}
-                      onClick={() => onToggleStar(key)}
-                    />
+                    {/* V26-E06 (round 26 C). The star is GONE from the highlighted
+                        card. Plate 03 gives a highlighted card only its right-aligned
+                        tinted descriptor badge; stars appear ONLY on the
+                        `EVERY OTHER …` roster rows, where the control's own stated
+                        purpose is "star anyone Peer got wrong" — which is meaningless
+                        on a card Peer already put at the top.
+                    
+                        THE STATE AND THE CAPABILITY ARE UNTOUCHED. `ROSTER_STARS_KEY`,
+                        `onToggleStar` and the roster-tail `StarButton` all stay: a
+                        highlighted card and a roster row can be the SAME entity, so a
+                        starred roster row must keep its star after the highlighted card
+                        stops showing one. This removes a CONTROL from one render site,
+                        not data and not a capability. */}
                   </article>
                 ))}
             </div>
@@ -1596,7 +1635,7 @@ function RosterSection({
             )}
             <div className="mt-3 grid gap-2">
               {peopleCards
-                .map(({ item, key, reason, judgment, descriptor, starred }) => (
+                .map(({ item, key, reason, judgment, descriptor }) => (
                   <article
                     key={key}
                     data-roster-row="person"
@@ -1642,15 +1681,23 @@ function RosterSection({
                       )}
                       {clean(item.speaking) && (
                         <p className="mt-1 text-caption text-text-faint">
-                          Speaking · {item.speaking}
+                          Speaking: {item.speaking}
                         </p>
                       )}
                     </div>
-                    <StarButton
-                      active={starred}
-                      label={item.name}
-                      onClick={() => onToggleStar(key)}
-                    />
+                    {/* V26-E06 (round 26 C). The star is GONE from the highlighted
+                        card. Plate 03 gives a highlighted card only its right-aligned
+                        tinted descriptor badge; stars appear ONLY on the
+                        `EVERY OTHER …` roster rows, where the control's own stated
+                        purpose is "star anyone Peer got wrong" — which is meaningless
+                        on a card Peer already put at the top.
+                    
+                        THE STATE AND THE CAPABILITY ARE UNTOUCHED. `ROSTER_STARS_KEY`,
+                        `onToggleStar` and the roster-tail `StarButton` all stay: a
+                        highlighted card and a roster row can be the SAME entity, so a
+                        starred roster row must keep its star after the highlighted card
+                        stops showing one. This removes a CONTROL from one render site,
+                        not data and not a capability. */}
                   </article>
                 ))}
             </div>
@@ -1918,7 +1965,7 @@ export function EventReport({
             {/* B3-04 / Ruling 19. The spec's own display label for this
                 kind, not a mechanical humanisation of the raw enum value --
                 see EVENT_TYPE_LABELS. */}
-            <HeaderChip>{eventTypeLabel(event.type)}</HeaderChip>
+            <HeaderChip tone="kind">{eventTypeLabel(event.type)}</HeaderChip>
             {/* B2-10 / Ruling 7. §1c's line for this row was a transcription
                 error — the plate's chip row is kind · secondary kind · rank ·
                 match %, with no separate online/in-person chip. The format
@@ -2024,6 +2071,19 @@ export function EventReport({
 
         {hasHappenings && (
           <ReportSection title="What actually happens there">
+            {/* V26-E05 (round 26 C). Plate 03 §9 badges this label `NEW`
+                (`Consolas 8.25`, violet `#5b4bbf`) exactly as plate 02 badges
+                the job report's structurally identical skills section — which
+                already had it. THIS IS A COPY, NOT AN INVENTION.
+            
+                GATED ON THE CHIPS, which is the one way this cheap item can
+                ship wrong: an event with no activities would otherwise carry a
+                `NEW` badge and an explainer about chips that are not there. */}
+            {activities.length > 0 && (
+              <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
+                <ReportBadge>New</ReportBadge>
+              </p>
+            )}
             {description && (
               <p className="text-body-lg leading-8 text-text">{description}</p>
             )}
@@ -2055,6 +2115,30 @@ export function EventReport({
                 old generic "Those are the ones". The plate's "looking at
                 industry" clause is left out on purpose — POLICY, see the
                 round-2 loop log. */}
+            {/* V26-E05 (round 26 C). Plate 03 §9 puts an explainer note
+                beneath the chips, with a LEFT ORANGE RULE. The job report's
+                equivalent note existed but had no rule; both now carry it, so
+                A's observation closes on both surfaces at once.
+            
+                THE WORDS ARE WRITTEN FOR EVENTS, NOT COPIED. The job note ends
+                "before you spend an evening on the application" — pasting that
+                here would state something FALSE, because there is no
+                application. The chip SEMANTICS transfer (`data-activity-chip`
+                already mirrors `data-skill-requirement`), so the rule is
+                described in the event's own terms.
+            
+                Gated on the chips, for the same reason as the badge above. */}
+            {activities.length > 0 && (
+              <p
+                data-happenings-explainer
+                className="mt-4 border-l-2 border-accent/50 pl-4 text-caption leading-5 text-text-faint"
+              >
+                Highlighted chips are the parts of this event that line up with
+                your Required and Explore topics. The plain ones are everything
+                else on the programme — worth a glance before you decide the
+                trip is worth it.
+              </p>
+            )}
             {happeningsNote && (
               <p
                 data-happenings-footnote

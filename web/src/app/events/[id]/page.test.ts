@@ -1057,9 +1057,30 @@ describe("EventReport", () => {
     expect(html.match(/data-roster-row="organisation"/g)).toHaveLength(30);
     expect(html.match(/data-roster-card="true"/g)).toHaveLength(5);
     expect(html.match(/data-roster-plain="true"/g)).toHaveLength(25);
+    // V26-E06 (round 26 C) RESTATED THIS ASSERTION — it is NOT deleted, and the
+    // restatement IS the item's own witness. It used to demand every name
+    // appear exactly TWICE: once as the row's own name and once inside the
+    // `StarButton`'s `aria-label`. **Plate 03 gives highlighted cards only a
+    // right-aligned tinted descriptor badge — stars appear ONLY on the
+    // `EVERY OTHER …` roster rows** — so the five carded names now appear ONCE
+    // and the twenty-five plain rows still appear twice.
+    //
+    // What this assertion actually protects is unchanged and is stated
+    // explicitly below: NOBODY IS COLLAPSED. Every one of the thirty is still
+    // rendered, and the roster tail keeps every one of its star controls.
+    let totalMentions = 0;
     for (let index = 1; index <= 30; index += 1) {
-      expect(html.match(new RegExp(`Battery Organisation ${index}(?!\\d)`, "g"))).toHaveLength(2);
+      const hits =
+        html.match(new RegExp(`Battery Organisation ${index}(?!\\d)`, "g")) ?? [];
+      expect(hits.length).toBeGreaterThanOrEqual(1);
+      totalMentions += hits.length;
     }
+    // 5 cards × 1 mention + 25 plain rows × 2 (name + star label)
+    expect(totalMentions).toBe(5 * 1 + 25 * 2);
+    // and the star CONTROL survives on exactly the rows the plate keeps it on
+    expect(html.match(/aria-label="(?:Star|Unstar) Battery Organisation/g)).toHaveLength(
+      25,
+    );
   });
 
   it("computes a Tier 0 paper-count descriptor for a person card, from local data only", () => {

@@ -283,10 +283,39 @@ function abbreviateContractLength(value: string): string {
   return `${match[1]}-${unit} contract`;
 }
 
-function visaTone(
-  state: VisaState,
-): "accent" | "danger" | undefined {
+/**
+ * The VISA FACT TILE's tone. Unchanged, and deliberately so.
+ *
+ * **DEVIATION FROM B's DESIGN, TRACED BEFORE IT WAS TAKEN (round 26 C,
+ * V26-J08).** B wrote *"point `visaTone`'s `sponsors` branch at `info`"* — but
+ * `visaTone` feeds TWO consumers, the header chip AND the fact tile, and the
+ * typecheck caught it immediately (`JobFact["tone"]` admits only
+ * `accent | danger`). Moving this function would have retinted a fact tile that
+ * no item asked to change, which standard 7 forbids: a visual commit must not
+ * move anything the value census reads.
+ *
+ * So the CHIP gets its own mapping below and this one is untouched. B's intent
+ * — "only the `sponsors` branch of the CHIP moves" — is honoured exactly; only
+ * the mechanism differs, because B priced it without knowing the function was
+ * shared.
+ */
+function visaTone(state: VisaState): "accent" | "danger" | undefined {
   if (state === "sponsors") return "accent";
+  if (state === "wont-sponsor") return "danger";
+  return undefined;
+}
+
+/**
+ * V26-J08. The HEADER CHIP's tone, which is the one the plate distinguishes.
+ * `sponsors` was rendering `accent` — identical to the `91% match` chip beside
+ * it — and plate 02 gives it its own blue. `wont-sponsor` KEEPS `danger`: the
+ * plate has no won't-sponsor chip to copy and turning a red warning blue would
+ * be a real regression.
+ */
+function visaChipTone(
+  state: VisaState,
+): "accent" | "danger" | "info" | "kind" | undefined {
+  if (state === "sponsors") return "info";
   if (state === "wont-sponsor") return "danger";
   return undefined;
 }
@@ -760,22 +789,51 @@ function skillComparison(job: Job): {
   };
 }
 
+/**
+ * V26-J08 / V26-E08 (round 26 C). FOUR CHIP ROLES WHERE THE BUILD HAD TWO.
+ *
+ * Plate 02's header row: `Postdoc` amber `#a8642a` · `Full-time · 3 years`
+ * neutral outline · **`Visa sponsorship` BLUE `#2b5c8f`** · `91% match` orange.
+ * Plate 03's: `Industry summit` amber · `+ career fair` neutral · `CCF-B`
+ * neutral · `88% match` orange. FOUR categories, four signals.
+ *
+ * The build had three tones and used two on the header row, and `visaTone`
+ * returned `accent` for `sponsors` — WHICH IS WHY THE VISA CHIP AND THE MATCH
+ * CHIP RENDERED IDENTICALLY. Two new roles fix it: `info` for the positive
+ * visa state and `kind` for the role/event kind.
+ *
+ * **SEMANTIC TOKENS, NEVER THE PLATE'S LITERAL HEXES.** A scored this as ROLE
+ * ASSIGNMENT, not palette fidelity, and palette fidelity is explicitly out of
+ * the round's scope. The app is multi-theme (the live profile runs
+ * `colorTheme: "system:ember"`), so a hard-coded hex would break in five other
+ * themes. What must change is that four categories get four DISTINGUISHABLE
+ * signals; which exact hue is the theme's business.
+ *
+ * **`danger` KEEPS FIRING FOR `wont-sponsor`.** The plate has no won't-sponsor
+ * chip to copy, and turning a red warning blue would be a real regression.
+ * Only the `sponsors` branch moves.
+ */
 function HeaderChip({
   children,
   tone,
 }: {
   children: ReactNode;
-  tone?: "accent" | "danger";
+  tone?: "accent" | "danger" | "info" | "kind";
 }) {
   return (
     <span
+      data-header-chip={tone ?? "neutral"}
       className={cn(
         "inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-meta font-medium",
         tone === "accent"
           ? "border-accent/25 bg-accent/10 text-accent"
           : tone === "danger"
             ? "border-red/25 bg-red/10 text-red"
-            : "border-border bg-surface text-text-muted",
+            : tone === "info"
+              ? "border-link/25 bg-link-dim text-link"
+              : tone === "kind"
+                ? "border-tag/25 bg-tag-dim text-tag"
+                : "border-border bg-surface text-text-muted",
       )}
     >
       {children}
@@ -993,10 +1051,10 @@ export function JobReport({
           job.visa ||
           matchPct !== null) && (
           <div className="mb-5 flex flex-wrap gap-2" aria-label="Job summary">
-            {job.roleKind && <HeaderChip>{ROLE_LABELS[job.roleKind]}</HeaderChip>}
+            {job.roleKind && <HeaderChip tone="kind">{ROLE_LABELS[job.roleKind]}</HeaderChip>}
             {contractChipText && <HeaderChip>{contractChipText}</HeaderChip>}
             {job.visa && (
-              <HeaderChip tone={visaTone(job.visa.state)}>
+              <HeaderChip tone={visaChipTone(job.visa.state)}>
                 {VISA_LABELS[job.visa.state]}
               </HeaderChip>
             )}
@@ -1192,7 +1250,10 @@ export function JobReport({
               </span>
             ))}
           </div>
-          <p className="mt-4 text-caption leading-5 text-text-faint">
+          <p
+            data-skills-explainer
+            className="mt-4 border-l-2 border-accent/50 pl-4 text-caption leading-5 text-text-faint"
+          >
             Highlighted chips come from your Required and Explore topics plus
             your project text. The plain ones are the gaps — worth seeing before
             you spend an evening on the application.
