@@ -63904,3 +63904,178 @@ BEFORE any A measures the LLM path:**
 contract to adopt — (a) split the label so it reports the real tier, or (b)
 scope the label to papers.** B recommends **(a)** as the only one that meets
 66a's own wording, and notes FIX 2 is required under either.
+
+### Round 25 — Agent B (item 2: **A25-01 — the `remote-friendly` clause. THE PRODUCING LINE IS `scoring.ts:296`, REPRODUCED BYTE-IDENTICALLY BY EXECUTION. THE SWEEP FOUND *THREE MORE* UNGATED RAW READERS BEYOND A's "ONE MECHANISM, ONE RENDER SITE" — SO THE SIXTH-CONSUMER PATTERN IS ACTUALLY AT NINE. AND THE FIX HAS A REACHABLE SIDE EFFECT A CAUTIOUS READING WOULD HAVE MISSED.**)
+
+**STATUS: COMPLETE.** Item 2 of four. **B changed no code**; the throwaway
+harness lived outside `src/` and was deleted before this commit.
+
+---
+
+## THE PRODUCING LINE — NAMED, AND REPRODUCED
+
+**`web/src/lib/jobs/scoring.ts:296`**
+
+```
+if (item.isRemote) parts.push("remote-friendly");
+```
+
+inside `reasonFor()` (`scoring.ts:285-304`), called at `scoring.ts:430` and
+assigned to `matchReason`. It renders through `mapper.ts:201`
+(`matchReason: item.matchReason`) into `Job.matchReason`, and is drawn by
+**`<WhyPeerSentThis reason={job.matchReason} …>` at `app/jobs/[id]/page.tsx:1310-1314`**
+— plate 02's *"Why Peer sent this to you"*.
+
+**REPRODUCED BY EXECUTION**, on the shipped `scoreJobs` with the user's real
+required topics and a `lensa.com`-shaped `jobweb` row:
+
+| shape | reason produced today |
+|---|---|
+| **jobweb + `isRemote:true` + topic match (THE A25-01 ROW)** | **`Matches your molten salt focus, fits a PhD Year 3 profile, and remote-friendly`** |
+| jobweb + `isRemote:false` + topic match | `Matches your molten salt focus and fits a PhD Year 3 profile` |
+| remotive + `isRemote:true` | `Matches your molten salt focus, fits a PhD Year 3 profile, and remote-friendly` |
+| himalayas + `isRemote:true` | `Matches your molten salt focus, fits a PhD Year 3 profile, and remote-friendly` |
+
+**Row 1 is byte-identical to what A measured in the rendered markup**, so A's
+finding is confirmed independently and A's ground truth stands.
+
+---
+
+## THE SWEEP — **A's SCOPE NOTE IS WRONG, AND THIS IS THE ONE PLACE B CONTRADICTS A**
+
+A's hand-off says: *"Treat this as ONE mechanism with ONE render site, not a
+sweep."* **B swept every consumer of the raw flag and that is not the shape of
+it.** The raw flag is `RawJobItem.isRemote` / `ScoredJobItem.isRemote`
+(`lib/jobs/types.ts:33`); the gated flag is `Job.isRemote` (`types/index.ts:210`),
+produced at `mapper.ts:177` by `rendersRemote = item.isRemote && item.source !== "jobweb"`.
+**Nine sites read one of the two. Round 24 C's caller grep covered the four
+GATED view layers. Here is the complete raw side:**
+
+| # | site | verdict |
+|---|---|---|
+| 1 | `lib/jobs/mapper.ts:177` | **THE GATE ITSELF** — produces `rendersRemote` |
+| 2 | `lib/jobs/mapper.ts:226` | `locationFit(location, item.isRemote, …)` — RAW, **deliberate**, A22-03(b) names it |
+| 3 | **`lib/jobs/scoring.ts:296`** | **RAW, UNGATED, RENDERED — A25-01** |
+| 4 | **`lib/jobs/scoring.ts:329`** | **RAW, UNGATED** — `opportunityFacetPreferenceConcepts("jobs", item)` → `opportunityFormat` → `facets.ts:338` → writes **`facet:format:online`** into the PREFERENCE LEDGER |
+| 5 | `lib/jobs/scoring.ts:397` | `locationFit(item.location, item.isRemote, …)` — RAW, **deliberate**, feeds the score |
+| 6 | `lib/opportunities/enrich.ts:533` | `isRemote: item.isRemote` — passthrough restatement, correctly commented |
+| 7 | **`lib/jobs/pipeline.ts:172` and `:233`** | **RAW, UNGATED** — `countOpportunityFacets("jobs", items)` over `ScoredJobItem[]` → the **`facetCounts`** returned to the client, which drive the format facet chip counts |
+| 8 | **`lib/jobs/pipeline.ts:254`** | **RAW, UNGATED** — `filterOpportunitiesByFacets("jobs", scored, req.facets)` filters the feed server-side on the raw flag |
+| 9 | `app/page.tsx:417` | `filterOpportunitiesByFacets("jobs", jobFilterPool, …)` over mapped `Job[]` — **GATED, correct** |
+
+**`facets.ts:338` (`return item.isRemote ? "online" : "in-person";`) is
+duck-typed** — `FacetableOpportunity` declares `isRemote?: boolean`
+(`facets.ts:22-32`), so the SAME function reads the RAW flag when the server
+pipeline calls it and the GATED flag when the page calls it.
+
+**THE CONSEQUENCE, STATED PLAINLY: for a `jobweb` row whose snippet leaked
+another posting's `Remote`, the SERVER counts it as `online` and the CLIENT
+counts the same row as `in-person`. They disagree about one row, on one screen.**
+And #4 teaches the persistent preference ledger that the reader likes `online`
+roles on the strength of a value the render boundary has already rejected.
+
+**B DOES NOT RANK #4/#7/#8 AS PARITY DIFFERENCES AND DOES NOT ASK C TO FIX THEM
+IN THIS ITEM.** They are dashboard-facet and ledger surfaces, not the deep
+report this loop scores, and **A measured no difference there.** But round 24 C
+caught the previous B understating a latent site, so they are named here in full
+rather than compressed into a clause. **`POLICY — manager decides`: whether the
+facet/ledger raw readers are in scope for this loop at all.** B's
+recommendation: **not this round** — close A25-01 first, and let a later A
+census decide by measuring the format facet, because a fix aimed at an
+unmeasured surface is exactly what Ruling 32 warns against.
+
+---
+
+## THE FIX DIRECTION
+
+**Gate `scoring.ts:296` through the SAME predicate the mapper uses, and give
+that predicate ONE name that both files import.**
+
+Recommended shape: a new one-function module, e.g.
+`web/src/lib/jobs/remote-claim.ts`, exporting the predicate currently inlined at
+`mapper.ts:177`; `mapper.ts` and `scoring.ts` both import it.
+
+**Why a new module and not an export from `mapper.ts`:** `scoring.ts` does not
+import `mapper.ts` today and `mapper.ts` does not import `scoring.ts`. Adding
+`scoring.ts → mapper.ts` would drag the whole mapper (summarize, visa, job-cleanup,
+job-posting-scope, ledger) into the scorer's import graph for one boolean. **A
+standalone module keeps the cycle risk at exactly zero** and gives Ruling 32 the
+single named predicate it asks for instead of a second copy that can drift.
+
+**THE SCORE PROVABLY CANNOT MOVE, AND THIS IS READ OFF THE CODE, NOT ASSUMED.**
+In `scoreJobs`, `score` is computed at `scoring.ts:421` and `reasonFor(...)` is
+called at `scoring.ts:430`; the return value is assigned to `matchReason` and is
+read by nothing in the score expression. **`locationFit` at `:397` and
+`mapper.ts:226` are untouched by this fix.** A's warning that "gate it at the
+source may move a score" is correct about the SOURCE — and this fix is not at the
+source. **A22-03(b)'s recorded decision to leave ingestion and `locationFit`
+alone is respected, not reversed.**
+
+---
+
+## WHAT THE FIELD SAYS WHEN THE CLAUSE IS REJECTED — **AND THE SIDE EFFECT C MUST NOT BE SURPRISED BY**
+
+**Normal case: the clause is simply OMITTED and the existing join collapses.**
+`joinReasonClauses` (`scoring.ts:279-283`) already handles two clauses with
+`and`, so the A25-01 row becomes
+**`Matches your molten salt focus and fits a PhD Year 3 profile`** — measured
+above as the `isRemote:false` row, so this is the shipped string, not a
+prediction. **No new text, no placeholder, nothing invented.**
+
+**THE REACHABLE EDGE — this is the part a careful reading still misses.** When
+the clause was the row's ONLY reason, removing it empties `parts`, and the
+**pre-existing** empty-parts fallback at `scoring.ts:297-301` fires instead:
+`item.source === "jobweb" ? "Matched by web search" : "Meets your job filters"`.
+
+**B CHECKED WHETHER THAT SHAPE IS REACHABLE RATHER THAN ASSERTING IT — IT IS.**
+Executed on the shipped `scoreJobs` with a topic-less profile, a `jobweb` row
+with `isRemote:true` and no keyword match produces, TODAY, the reason
+**`Remote-friendly`** — the clause standing alone as the entire sentence. **After
+the fix that row reads `Matched by web search`.** That is a real behaviour
+change on a reachable shape, it is the honest answer, and **it does not reinsert
+the rejected claim — Ruling 26 satisfied.** **C must lock it with a test rather
+than discover it.**
+
+---
+
+## BOUNDARY CONDITIONS — WHAT MUST **NOT** CHANGE
+
+1. **A non-`jobweb` row with `isRemote:true` MUST STILL SAY `remote-friendly`.**
+   `remotive.ts:48` and `himalayas.ts:84` hard-code `isRemote: true` from the
+   source's own structured record; `arbeitnow.ts:43`, `adzuna.ts:111`,
+   `usajobs.ts:76` and `jsearch.ts:67` set it from the item's OWN fields. **If
+   these go silent the fix has over-reached** — both are measured above as
+   must-keeps.
+2. **No score may move on any row.** Assert a `jobweb` + `isRemote:true` row's
+   `score` is byte-identical before and after.
+3. **`Job.isRemote`, `location` and `workMode` must keep rendering exactly as
+   they do now.** A confirmed all three correct on this row organically; this
+   fix must not touch `mapper.ts`'s outputs at all.
+4. **The empty-parts fallback text must not change** — it is pre-existing and
+   correct.
+5. **Nothing at `mapper.ts:226`, `scoring.ts:397` or `enrich.ts:533` may be
+   touched.**
+
+---
+
+## TESTS AT RISK — **GREPPED, NOT REMEMBERED**, route-level files included
+
+| file:line | what it asserts | risk |
+|---|---|---|
+| **`lib/jobs/scoring.test.ts:126`** | expects the reason to contain **`"focus and remote-friendly"`** | **CHECKED, AND IT STAYS GREEN — NO TEST NEEDS RESTATING FOR THIS FIX.** B read the fixture rather than leaving C to guess: `job()` at `scoring.test.ts:20-32` is `source: "remotive"` with `isRemote: true`, and `remotive !== "jobweb"`, so the clause is KEPT and the assertion is unaffected. **It becomes a free, pre-existing regression lock on boundary condition 1** — if a C over-gates the predicate to all sources, THIS is the assertion that catches it. |
+| `lib/jobs/scoring.test.ts:109-110, 211, 221, 253, 437, 475` | `isRemote: false` fixtures | safe — clause never fired |
+| `lib/jobs/mapper.test.ts:123-134` | the `jobweb` render gate returns `isRemote:false` | safe — mapper untouched |
+| `lib/jobs/mapper.test.ts:139-144` | the must-keep: structured source keeps `isRemote:true` | safe, and it is the mapper-side twin of boundary condition 1 |
+| `lib/jobs/mapper.test.ts:162-170` | **`locationFit` reads the RAW `item.isRemote`, not the rendered flag** | **safe, and it is the LOAD-BEARING guard on boundary condition 2** — if this goes red the fix reached the score |
+| `lib/jobs/mapper.test.ts:264-272` | `workMode` falls back to remote | safe |
+| `app/jobs/[id]/page.test.ts:167, 363-367, 384-385, 395-403` | report-level `isRemote` / `workMode` rendering | safe — all read the gated `Job` |
+| **`app/api/jobs/report/route.test.ts:31`** | route-level fixture, `isRemote: false` | **route-level file, checked as required** — safe |
+| `lib/opportunities/enrich.test.ts:32-39, 493` | `isRemote` passthrough | safe |
+| `lib/opportunities/facets.test.ts:63, 220-227` | `opportunityFormat` → `online` from `isRemote` | **safe ONLY because this item does not touch `facets.ts`** — if the manager later rules #4/#7/#8 in scope, these are the assertions that move |
+| `lib/opportunities/place-flow.test.ts:68-82`, `job-posting-scope.test.ts:198-226`, `store/feed.test.ts:102`, `feed-opportunity-pool.test.ts:39`, `cards/completion.test.tsx:29`, `dashboard/deadlines-board.test.tsx:25`, `saved/page.test.tsx:41`, `activity-ledger.test.ts:255`, `dedup.test.ts:23`, `card.test.ts:12`, `daily-pool-cache.test.ts:67`, `enrichment.test.ts:355`, `job-details.test.ts:181`, `jobweb.test.ts:1715` | fixtures and unrelated assertions | safe |
+
+**NO EXISTING TEST GOES RED UNDER THIS FIX** — B checked every one of the
+fourteen files above rather than reasoning about them. **C must ADD:** the
+`jobweb`-loses-the-clause assertion, a score-invariance assertion on that same
+row, and **the empty-parts edge above** — the shape that changes from
+`Remote-friendly` to `Matched by web search`. All three are pure additions.
