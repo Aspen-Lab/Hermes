@@ -64647,3 +64647,29 @@ manager commission exactly that rather than rule on two constructed shapes.
 
 **Ruling 67b is untouched** — B recomputed nothing and quotes round 25 A part 3's
 count as canonical, per the ruling.
+
+---
+
+### Round 25 — MANAGER verification of Agent B, RULING 68a–d, and the hand-off to C
+
+**Date: 2026-08-15. Checked, not inherited.** Numstats pure (284/0, 175/0, 177/0, 129/0; the hand-off's 1 deletion is the §1 update). B changed no code; `.env.local` never read, variable names only. **The 66a verdict is accepted on its live execution** (`POST /api/jobs/report` → `noLlm:false`, reachable only past the provider guard — the LLM ran), and the wiring is named to the line at every hop.
+
+**THE HEADLINE FINDINGS, ACCEPTED:** (1) the user's report was **a true reading of a false indicator** — jobs/events already engage the LLM on localhost; the chip renders a PAPERS toggle while claiming to describe the mode; (2) A25-01 is **nine sites, not one** — three more ungated raw readers, one of which makes server and client disagree about the same row; (3) the `Battery Ventures` question is **answered against round 25 A and against the manager's own Ruling 67a** — on the SHIPPED call order (split first, then guard) `isOwnerNameTopicCollision` returns **`true`** and `scoring.ts:375` drops the row; A's `false` came from the pre-split title; negative control: no other gate drops it, and without the guard it scores 0.624 against a 0.35 floor; (4) **the stated baseline is a flake, not a standing red** — B measured 1877/1877 with the benchmark PASSING live; `:225` is hour-to-hour, live-pool-dependent; (5) the live pool moved within the hour — a month-granularity row is back, so the 62b fuse line and 64a's trigger are **reachable again**; A's vacuity call was true at its window and is superseded by B's.
+
+---
+
+## RULING 68 — THE THREE POLICY ITEMS AND TWO CARRY CORRECTIONS, DECIDED. BINDING.
+
+**68a. THE 66a DISPLAY FIX IS APPROVED FOR THIS ROUND's C, exactly as B designed it:** the chip's tier text computes from the same predicate the feeds use (`canUseAiTools`), never from the papers toggle; the `Tier 0` badge at `events/[id]/page.tsx:1516`/`:1580` becomes conditional PER CARD (model prose renders under it); **`canUseLocalServerProvider` is not touched** — deployed-user safety holds by B's own probe row (production/local-dev → tier 0 / enrichment false) and the recorded registry decision stands. **Ruling 66a's CONTRACT is measured as ALREADY MET on the pipeline side; what ships is the truth-telling layer.** The user's second half ("if not, it should be") is discharged by evidence, not by new plumbing.
+
+**68b. A25-01's SCOPE — THE REASON LINE SHIPS NOW; THE THREE EXTRA RAW READERS ARE COMMISSIONED, PRICED, TO ROUND 26 B.** C lands B's shared predicate and converts the REASON LINE through it (priced: the score provably cannot move — computed at `:421`, `reasonFor` at `:430`, nothing reads back; no existing test goes red; the one reachable edge is `Remote-friendly` → `Matched by web search`). **The ledger write (`scoring.ts:329`), the facet counts (`pipeline.ts:172/233`), the server-side filter (`pipeline.ts:254`) and the `facets.ts:338` duck-type divergence are BEHAVIOR-RELEVANT conversions B named but did not price — they are NOT C's to improvise.** Round 26 B prices each with a measured matrix (facet counts before/after; filter membership before/after; ledger effects) and designs the conversions; the 61c rule is satisfied — commissioned, not silently carried.
+
+**68c. RULING 67a IS AMENDED — THE WITHDRAWAL IS WITHDRAWN.** The round-23 `organically witnessed` credit for 57b's job surface was RIGHT: the guard is the operating mechanism on the live row, established on the shipped call order with a negative control. **Canonical status: job surface `organically witnessed` (restored); event surface `designed, organically unwitnessed` (unchanged).** 67a stays in the log with this dated amendment pointing at it. Two process notes on the record: round 25 A's execution fed the PRE-SPLIT shape (the check-me clause exists for exactly this), and **the manager ruled 67a on A's measurement without demanding the shipped call order — the manager's own miss, caught by B one turn later.** The streak now includes B correcting a ruling the manager issued on bad evidence, which is the loop working.
+
+**68d. RULING 65's CARRY IS RESTATED:** `benchmark.test.ts:225` is an HOUR-TO-HOUR FLAKE (live-pool-dependent presence assertion), not a deterministic red. Baseline language from now on: **1876 OR 1877 of 1877; the sole conditional failure is the benchmark; any other red is a regression.** C's item zero (the restatement, B's designed contract: `score >= MIN_SCORE` plus index-page and provider-attribution value locks on named flagship rows PRESENT in `survivors`; zero present rows is a pass; NO exercise floor — here it would be the presence demand in disguise) proceeds and retires the flake class.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 25` stands as B wrote it, order: **item zero — the `:225` restatement (65/68d); item one — A25-01's reason line through the shared predicate (68b scope ONLY); item two — the 66a display fix (68a).** The three commissioned/deferred things (extra raw readers → round 26 B; visual census → round 26 A; 62b fuse + 64a trigger now reachable → round 26 A measures) ride the carry list. The gate stays `GATE (0%): NOT MET`.
+
+---
