@@ -67790,3 +67790,349 @@ same line in the plate too.
 **CLUSTER 1 COMPLETE — 4 of the 18 items (V26-J02, V26-E02, V26-E01, V26-J10).
 Cluster 2 (the timeline track and the fact-tile band, both cross-surface pairs)
 and cluster 3 (the remaining ten) follow on their own commits.**
+
+### Round 26 — Agent B (item 3, cluster 2 of 3: **THE TWO CROSS-SURFACE PAIRS — V26-J03/E03 (the timeline track) and V26-J04/E04 (the fact-tile band). FOUR MORE OF THE 18. A's "one mechanism, two surfaces" IS CONFIRMED BY MEASUREMENT ON BOTH — the plates' geometry is byte-for-byte the same and the build's two copies are byte-for-byte the same. THE BEST NEWS IN THE ROUND: BOTH TILE SETS MAP 1:1 TO THEIR PLATE SLOTS, IN ORDER, SO NOT ONE TILE MERGES, SPLITS OR IS ORPHANED — the band is a pure layout change with no `POLICY` item in it. AND THE FILL STATE THE TRACK NEEDS IS ALREADY IN THE DATA.**)
+
+**STATUS: item 3 cluster 2 of 3, banked on its own commit.** B changed no code.
+Harness deleted before this commit. No credential printed, logged, committed or
+written anywhere.
+
+---
+
+## **THE PLATES' GEOMETRY, EXTRACTED FROM THE PDF's OWN VECTOR DRAWINGS**
+
+A read the plates as images and as text spans. **Neither instrument can see a
+rule or a bar** — those are drawings. B extracted the drawing rectangles, which
+is why the numbers below are exact rather than described.
+
+### The fact-tile band — **IDENTICAL on both plates**
+
+| | plate 02 (p2 y≈691.5) | plate 03 (p4 y≈691.5) |
+|---|---|---|
+| backing rect | x **79.5**, w **453.0**, fill **`#2a1709`** | x **79.5**, w **453.0**, fill **`#2a1709`** |
+| tiles on row 1 | **4**, fill **`#f1e8d9`**, x = 79.5 / 192.8 / 306.8 / 420.0, w = 112.5 / 113.2 / 112.5 / 112.5 | **identical, to the tenth of a point** |
+| gap between tiles | **0.75 pt** (79.5+112.5 = 192.0; next starts 192.75) | **0.75 pt** |
+| row 2 | **3** tiles, **no backing rect** | **2** tiles, **no backing rect** |
+
+**What that geometry means, said plainly:** the band is **one continuous dark
+surface with four lighter tiles laid on it**, and the 0.75 pt gaps are the dark
+surface showing through as **hairline vertical rules**. There is **no per-tile
+border and no rounding** — A's reading is right. **A's "no fill" is the one
+detail to correct: the tiles ARE filled (`#f1e8d9`, lighter than the page's
+`#f6f0e7`).** What they lack is a border and a radius.
+
+**And the short second row carries NO backing rect on either plate** — so
+**rules render only between adjacent occupied tiles**, never trailing into empty
+slots. That is the empty-state rule, taken from the plate rather than invented.
+
+### The timeline track — **IDENTICAL on both plates**
+
+| | plate 02 (p3 y=213.0) | plate 03 (p5 y=276.8) |
+|---|---|---|
+| track | x **79.5**, w **453.0**, h **4.5**, fill **`#e9dfcc`** | **x 79.5, w 453.0, h 4.5, fill `#e9dfcc`** |
+| filled segment | x 79.5, w **81.8**, fill **`#ff520d`** | x 79.5, w **54.0**, fill **`#ff520d`** |
+| dots | **4 pairs**: outer ring 12.8×12.8 `#f6f0e7`, inner 8.2×8.2 | **4 pairs, same sizes** |
+| inner dot colours | grey `#9c8b78`, **orange `#ff520d`**, grey, grey | **orange `#ff520d`**, grey, grey, grey |
+| dot centres | 79.5 · **161.2** · 341.9 · 532.2 | **133.5** · 279.0 · 432.8 · 532.5 |
+
+**THE RULE THE TWO PLATES SHARE, and it is one rule:** the orange segment runs
+from the **track's left end to the centre of the `Today` dot** — plate 02's fill
+ends at 161.3 and its `Today` dot centre is 161.2; plate 03's fill ends at 133.5
+and its `Today` dot centre is 133.5. **Exact on both.** The `Today` dot is the
+only orange one; every other dot is grey.
+
+**CORRECTION TO A, ON BOTH SURFACES:** A wrote *"`Today` carries a **larger**
+orange dot."* **Measured, every inner dot is 8.2 × 8.2 and every outer ring is
+12.8 × 12.8 — on both plates. `Today` differs in COLOUR ONLY.** C must not build
+a size variant; doing so would add emphasis the plate does not have.
+
+---
+
+## **THE BUILD SIDE — THE PAIRS ARE REAL, AND THEY ARE DUPLICATED CODE**
+
+**The timeline is written TWICE, as two copies of one shape:**
+`src/app/jobs/[id]/page.tsx:1062-1091` (inline in the report) and
+`src/app/events/[id]/page.tsx:1028-1068` (`DeadlineTimeline`). Diffed, they are
+the same component: the same `<ol className="grid gap-3 sm:grid-cols-2
+lg:grid-cols-4">`, the same
+`<li className="relative rounded-xl border border-border bg-surface px-4 py-3">`,
+the same `h-2.5 w-2.5 rounded-full bg-text-faint/40` + `point.accent && "bg-accent"`
+dot, the same `text-micro font-semibold uppercase tracking-[0.14em]` label, the
+same `mt-2 text-body-sm font-semibold text-heading` value, and the same
+`absolute -right-3 top-1/2 hidden w-3 border-t border-border` connector stub.
+**The only differences are the `data-deadline-milestone` hook, which only the
+event copy carries, and the stub's breakpoint (`lg:block` job, `sm:block` event).**
+
+**The fact tile is already shared** — `src/components/reports/fact-tile.tsx`,
+`ReportFactTile`, used by both — **but the GRID is written twice**:
+`jobs/[id]/page.tsx:1034` `grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7`
+and `events/[id]/page.tsx:1996` `grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6`.
+
+**So A's "one mechanism, two surfaces" is right in substance and B sharpens it:
+the mechanism is DUPLICATED CODE, not a shared component. Both fixes are
+therefore an EXTRACTION first and a restyle second**, which is the same shape as
+cluster 1's `ReportSection` problem and the same argument
+`why-peer-sent-this.tsx`'s own doc comment already makes.
+
+---
+
+# **V26-J04 / V26-E04 — THE FACT-TILE BAND**
+
+## **THE FINDING THAT REMOVES THE ONLY `POLICY` RISK IN THIS CLUSTER**
+
+The brief warned that a tile-count change must map every existing value to a
+plate slot, and that any value with no slot is `POLICY`. **B checked both
+surfaces key by key, in source order, and there is no such value.**
+
+| plate 02 slot | build key | file · line | |
+|---|---|---|---|
+| `SALARY` | `salary` | `jobs:566` | ✓ |
+| `TYPE` | `employment-type` | `jobs:580` | ✓ |
+| `LOCATION` | `work-mode` | `jobs:602` | ✓ |
+| `STARTS` | `start` | `jobs:627` | ✓ |
+| `APPLY BY` | `deadline` | `jobs:635` | ✓ |
+| `POSTED` | `posted` | `jobs:643` | ✓ |
+| `VISA` | `visa` | `jobs:651` | ✓ |
+| *(8th slot, blank on the plate)* | — | — | ✓ |
+
+| plate 03 slot | build key | file · line | |
+|---|---|---|---|
+| `DATES` | `dates` | `events:650` | ✓ |
+| `WHERE` | `where` | `events:658` | ✓ |
+| `FEE` | `fee` | `events:666` | ✓ |
+| `ABSTRACT DUE` | `abstract-due` | `events:684` | ✓ |
+| `REGISTER BY` | `register-by` | `events:694` | ✓ |
+| `SCALE` | `scale` | `events:708` | ✓ |
+| *(7th and 8th slots, blank on the plate)* | — | — | ✓ |
+
+**SEVEN FOR SEVEN AND SIX FOR SIX, IN THE PLATE'S OWN ORDER, WITH NO
+REORDERING NEEDED.** **Not one tile merges, not one splits, not one value is
+orphaned, and there is NO `POLICY — manager decides` item here.** The
+difference is **purely the column count and the tile chrome**; the data layer is
+already exactly right. **That is why this item is cheaper than its description
+suggests.**
+
+## **THE DESIGN**
+
+**Structure — the band is the grid, not the tile.** The plate's rules are the
+backing surface showing through 0.75 pt gaps, so the honest translation uses the
+same trick rather than drawing borders:
+
+```
+<dl class="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl
+           border border-border bg-border sm:grid-cols-4">
+   … ReportFactTile … (each tile: bg-surface, NO border, NO rounding)
+</dl>
+```
+
+- **`gap-px` over `bg-border`** reproduces the plate's hairline rules with **no
+  new token, no divider element and no per-tile border** — the gap IS the rule.
+- **`grid-cols-4` at `sm` and above, capped there.** Plate: 4-up on both
+  surfaces. Kills `xl:grid-cols-7` (job) and `lg:grid-cols-3 xl:grid-cols-6`
+  (event) — **A's column-count finding, on both surfaces, in one class change
+  each.**
+- **`grid-cols-2` at the narrowest width**, not `grid-cols-1`: a single column of
+  full-width tiles is not a band at all, and 2-up keeps the shape legible on a
+  phone. **This is a disclosed deviation** — the plate has no narrow breakpoint
+  to copy, so B chose the reading that preserves the band, and says so.
+- **One `border` + `rounded-xl` + `overflow-hidden` on the WRAPPER** gives the
+  plate's single continuous frame; `overflow-hidden` is what keeps the corner
+  tiles from poking out of the radius.
+- **`ReportFactTile` loses `rounded-xl border border-border` and keeps
+  everything else** — the tone variants (`border-accent/25 bg-accent/5`,
+  `border-red/25 bg-red/5`) must become **fill-only** (`bg-accent/5`,
+  `bg-red/5`), since a border on one tile inside a rule-divided band reads as a
+  mistake. **The `text-accent` / `text-red` VALUE colours stay** — those are the
+  plate's own red `APPLY BY` and blue `VISA` values and they carry the meaning.
+
+## **BOUNDARY CONDITIONS**
+
+- **NO TILE VALUE MAY CHANGE.** The fix touches `className` strings and one grid
+  class per surface. **`ReportFact`'s shape, the `key`/`label`/`value`/`detail`/
+  `tone` fields and every construction site (`jobs:566-660`, `events:650-715`)
+  are untouched.** If a diff shows an edit inside those ranges, the fix has
+  over-reached.
+- **The `data-job-fact` / `data-event-fact` hooks must survive byte-identically**
+  — they are how the existing tests find tiles.
+- **The sub-line (`data-report-fact-detail`) stays.** The plate has it
+  (`SegoeUI 9.0`, `per year · from posting`, `47 days left`).
+- **Tile ORDER must not be re-sorted to fill the grid prettily.** The plate's
+  order is the reading order (`can I do this → what does it pay → where and when
+  → by when → where do I apply`), stated in plate 02's own explainer text.
+
+## **EMPTY / PARTIAL STATES — TAKEN FROM THE PLATE, NOT INVENTED**
+
+**Every tile is already conditionally pushed**, so real reports routinely have
+fewer than 7 or 6. The plate answers each case:
+
+- **Fewer tiles than the row holds** — plate 02's row 2 has 3 tiles and plate
+  03's has 2, and **neither carries a backing rect**. So: **the band must not
+  draw a rule into an empty slot and must not render blank filler tiles.** A CSS
+  grid with `gap-px` over `bg-border` does this correctly for free — a short
+  final row simply ends, because there is no next cell to gap against.
+- **Exactly ONE tile** — the wrapper's border alone renders, which is a single
+  bordered card. **That is acceptable and is what the plate's own logic implies**
+  (one occupied slot, no internal rules).
+- **ZERO tiles** — already guarded: `{facts.length > 0 && …}` at `jobs:1033`;
+  the event page must keep the equivalent guard. **The empty band never renders.**
+- **A tile with a value but no `detail`** — already handled inside
+  `ReportFactTile` (`{fact.detail && …}`); rows will be unequal height, and the
+  grid stretches them, which is what the plate shows (its row-1 tiles are all
+  70.5 pt tall regardless of sub-line).
+
+---
+
+# **V26-J03 / V26-E03 — THE TIMELINE TRACK**
+
+## **THE FILL STATE IS ALREADY IN THE DATA — NO DATE LOGIC MOVES**
+
+The brief's boundary is that the data is already correct and the fix is
+presentation only. **B can be more specific than that: the exact bit the track
+needs is already carried, on both surfaces.**
+
+| surface | milestones, in push order | which carries `accent: true` |
+|---|---|---|
+| job (`jobs:675-687`) | `posted` → **`today`** → `deadline` → `start` | **`today` (`jobs:683`)** |
+| event (`events:730-753`) | **`today`** → `submission` → `registration` → `event` | **`today` (`events:730`)** |
+
+**`accent === true` marks exactly the milestone the plates paint orange, on both
+surfaces, and `today` is the ONLY milestone that is pushed unconditionally.**
+
+So the track's rule is:
+
+> **Fill from the track's left end to the centre of the dot whose milestone has
+> `accent === true`. Paint that dot accent; paint every other dot faint.**
+
+**No date is read, no date is compared, no date is formatted differently, and
+`nowMs` is not consulted by the track at all.** The existing dot markup already
+does the colour half (`point.accent && "bg-accent"`); only the segment is new.
+
+## **THE DESIGN**
+
+Extract **one** shared `ReportTimelineTrack` into
+`src/components/reports/timeline-track.tsx`, taking the milestone array both
+pages already build, and delete both inline copies.
+
+**Markup shape:**
+
+```
+<div class="relative mt-6 pb-8">
+  <div class="absolute inset-x-0 top-1.5 h-1 rounded-full bg-border" />        ← the track
+  <div class="absolute left-0 top-1.5 h-1 rounded-full bg-accent"
+       style={{ width: `${fillPercent}%` }} />                                  ← the filled segment
+  <ol class="relative grid" style={{ gridTemplateColumns: `repeat(${n}, 1fr)` }}>
+     … one <li> per milestone: the dot, then the label beneath …
+  </ol>
+</div>
+```
+
+- **`fillPercent` is derived from the accent milestone's INDEX**, not from a
+  date: `accentIndex / (n - 1) * 100`, matching the plate's "fill ends at the
+  `Today` dot centre".
+- **Dots are all one size** (per the measurement above), `bg-accent` for the
+  accent one and `bg-text-faint/40` for the rest — **exactly the two classes the
+  build already uses**, moved from a box onto a track.
+- **Labels sit BENEATH the track** (the plate's `SegoeUI 8.62` `#9c8b78` row),
+  which the existing `text-micro … text-text-faint` class already matches once
+  V26-J10's label unification lands.
+- **The first and last dots pin to the track's ends and the middle ones
+  distribute evenly.** **DISCLOSED DEVIATION:** the plates' own dot spacing is
+  neither even nor date-proportional — plate 02's centres are 79.5 / 161.2 /
+  341.9 / 532.2 (gaps 81.7, 180.7, 190.3) and plate 03's first dot is inset from
+  the track start while plate 02's is not. **B checked whether the spacing is
+  proportional to the dates and it is not** (plate 02's intervals are ~17 / 38 /
+  108 days against ~0.43 / 0.95 / 1.00 of the width). It is hand-placement, which
+  is not a buildable rule. **Even distribution preserves the plate's visual
+  grammar and requires no date maths — which is exactly what the boundary
+  demands.** B states this rather than implying the plate was matched exactly.
+- **The `<ol>` and each `<li>` keep their `data-deadline-milestone` hooks**, and
+  the job copy should GAIN the equivalent hook so both surfaces are testable the
+  same way. That is an addition, not a rename.
+
+## **BOUNDARY CONDITIONS**
+
+- **NO DATE LOGIC MOVES.** `buildTimeline` (`jobs:~670-690`) and the event
+  milestone builder (`events:~725-755`) are **untouched**; the formatted strings,
+  the `report-date.ts` helpers and `nowMs` are all out of scope. **If a diff
+  touches either builder, the fix has over-reached.**
+- **The `accent` flag's MEANING must not change.** It marks `today` on both
+  surfaces; the track reads it, it does not redefine it.
+- **`sm:grid-cols-2` must go, not be re-tuned.** A's point that the current
+  layout "wraps to a 2×2 block, which is not a timeline shape at all" is right;
+  a track cannot wrap. **At narrow widths the track must stay a single row and
+  the labels must shrink or the milestones must stack VERTICALLY as a rail** —
+  B recommends the vertical rail below `sm` (track rotated to a left-hand
+  vertical line, dots down it, labels to the right), because that is the only
+  shape that keeps "one continuous track" true on a phone. **Flagged as a
+  design call the plate cannot settle**, since the deck has no narrow variant.
+
+## **EMPTY / PARTIAL STATES — AND ONE OF THEM IS COMMON**
+
+- **ONE milestone.** This is **not hypothetical**: on the job surface `posted`,
+  `deadline` and `start` are each conditional and `today` alone is
+  unconditional, so a row with none of the three renders a one-dot timeline.
+  **`accentIndex / (n-1)` divides by zero at `n = 1`.** The rule: **with one
+  milestone, render the dot and its label with NO track and NO fill** — a track
+  between one point and itself is meaningless. **C must special-case this or the
+  component will emit `NaN%`.** This is the single most likely way a naive
+  implementation ships broken, and it is why B is naming it explicitly.
+- **TWO or THREE milestones.** Even distribution still works; the fill still ends
+  at the accent dot. **On the event surface `today` is FIRST**, so `fillPercent`
+  is `0` — **the track renders entirely unfilled, which is correct** (nothing has
+  happened yet) and must not be special-cased into "fill a little bit so it looks
+  alive".
+- **The accent milestone is LAST** (job surface, where `today` is index 1 of 2
+  when only `posted` exists): `fillPercent` is `100` — **the whole track fills**,
+  which is correct.
+- **A milestone with a label but NO value.** `today` is exactly this — it is
+  pushed with no `value`. The existing markup already guards
+  (`{point.value && …}`), and the track must keep that guard: **the dot and label
+  render, the value line does not, and nothing renders a placeholder or a dash.**
+- **ZERO milestones** — unreachable, because `today` is unconditional; the
+  existing `{timeline.length > 0 && …}` / `if (milestones.length === 0) return null`
+  guards stay as a belt.
+
+---
+
+## **TESTS AT RISK — GREPPED, NOT REMEMBERED**
+
+```
+grep -rn "data-deadline-milestone|data-job-fact|data-event-fact|
+          rounded-xl border border-border|grid-cols-7|grid-cols-6" \
+     web/src --include=*.test.ts --include=*.test.tsx
+```
+
+- **`web/src/app/events/[id]/page.test.ts`** is the file that matters, and B read
+  the assertions rather than the hook names. It asserts
+  `html.match(/data-event-fact=/g)` **has length 6** (`:529`), that
+  `data-event-fact="scale"` is **absent** on a row without it (`:613`), and it
+  matches `data-deadline-milestone="[a-z]+"` (`:648`). **All three survive the
+  design unchanged**, which is why the design keeps the hooks rather than
+  renaming them to something tidier.
+- **ONE PRECISE BOUNDARY THE GREP TURNED UP:** `:546`, `:573` and `:628` match
+  each tile with the regex **`/<div[^>]*data-event-fact="fee"[^>]*>[\s\S]*?<\/div>/`**
+  — **element-anchored on `<div>` and terminated by the FIRST `</div>`.**
+  So the tile **must stay a `<div>`** (it is one today, in `fact-tile.tsx`) and
+  **must not gain a nested `<div>` wrapper before its `<dd>`s**, or the captured
+  block will end early and these assertions will fail for a reason that has
+  nothing to do with the band. **This is the one place C can break a green test
+  with a purely cosmetic edit**, so it is stated as a hard boundary rather than
+  left to be discovered.
+- **No test asserts the grid column classes** (`grid-cols-7`, `xl:grid-cols-6`)
+  or the tile's `rounded-xl border border-border` string. **The restyle is
+  therefore assertion-free**, and the correct new tests are positive ones: the
+  band has one wrapper border and no per-tile border; the track renders one fill
+  element whose width matches the accent index; **and the one-milestone case
+  renders no track at all.**
+- **The route-level files** (`app/api/jobs/report/route.test.ts`,
+  `app/jobs/[id]/page.test.ts`, `app/saved/page.test.tsx`) assert on action rows,
+  feedback controls and text — **none touches tiles or milestones.**
+- **The extraction is the risk, not the restyle.** Both timeline copies and both
+  grid sites must be replaced in the same change; leaving one behind produces two
+  surfaces that disagree, which is the exact defect class this loop exists to
+  catch.
+
+---
+
+**CLUSTER 2 COMPLETE — 4 more of the 18 (V26-J03, V26-E03, V26-J04, V26-E04);
+8 of 18 designed so far. Cluster 3 (the remaining ten) follows.**
