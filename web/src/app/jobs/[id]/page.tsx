@@ -1004,7 +1004,17 @@ export function JobReport({
           </div>
         )}
 
-        <h1 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.015em] text-heading lg:text-[36px]">
+        {/* V26-J02 (round 26 A/B; landed round 26 C). PLATE 02 sets the report
+            title in `Georgia 21.0` `#2b180a` — B re-extracted the PDF's own
+            spans and confirmed A's measurement exactly. The build has shipped,
+            loaded and DOCUMENTED the family since `globals.css:279` ("Sans is
+            the UI default; long-form prose opts INTO serif with the
+            `font-reading` utility") and the paper report already obeys it at
+            four call sites; the two opportunity reports were the only report
+            surfaces in the app that never opted in. `font-display` for titles,
+            `font-reading` for prose — the app's own existing convention, no new
+            token. */}
+        <h1 className="font-display text-[30px] font-semibold leading-[1.15] tracking-[-0.015em] text-heading lg:text-[36px]">
           {roleTitle}
         </h1>
         {(company || location || workMode) && (
@@ -1038,8 +1048,11 @@ export function JobReport({
         </dl>
       )}
 
+      {/* V26-J02, element 5. Plate 02 sets the visa evidence quote below in
+          `Georgia 10.5` `#9c8b78` — the smallest of the plate's five serif
+          elements, and serif because it is the POSTING's prose, not chrome. */}
       {visaEvidence && !enrichment?.sponsorshipRead && (
-        <blockquote className="mt-4 border-l-2 border-accent/50 pl-4 text-body leading-7 text-text-muted">
+        <blockquote className="mt-4 border-l-2 border-accent/50 pl-4 font-reading text-body leading-7 text-text-muted">
           “{visaEvidence}”
           {/* B-19. Plate 02 closes the quote with its source. Without it the
               sentence reads as Peer's own words, which is the one thing this
@@ -1152,7 +1165,9 @@ export function JobReport({
                   <li
                     key={point}
                     data-role-bullet
-                    className="relative pl-5 text-body-lg leading-8 text-text"
+                    /* V26-J02, element 4. Plate 02 sets the role bullets in
+                       `Georgia 12.0` `#4d3a28`, 7 spans over 3 bullets. */
+                    className="relative pl-5 font-reading text-body-lg leading-8 text-text"
                   >
                     <span
                       aria-hidden

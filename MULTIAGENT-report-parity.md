@@ -69311,3 +69311,150 @@ file, +19 tests, net +19**). `tsc --noEmit` clean. `eslint src` exactly the one
 standing `quiz.tsx:46` error.
 
 **ITEM 1 COMPLETE. The visual work follows, cheapest-first per B's designs.**
+
+### Round 26 — Agent C (item 2 of 15+: **THE SERIF ADOPTION — V26-J02 AND V26-E02 BOTH CLOSE. A's LARGEST VISUAL FINDING, LANDED IN 3 FILES AND 5 CLASS ADDITIONS WITH ZERO NEW TOKENS, EXACTLY AS B PRICED IT. 12 NEW TESTS THAT RENDER THE SHIPPED COMPONENTS. B's CORRECTION 1 (no italic on plate 03) IS LOCKED BY A TEST RATHER THAN A COMMENT. AND THE RENDERED MARKUP SURFACED A SEPARATE VALUE DEFECT, FILED AS C26-OBS-01 AND NOT FIXED.**)
+
+**STATUS: item 2, banked on its own commit.** Four files: the two report pages,
+the one shared prose component, and one new test file. **No test deleted, none
+edited.** Probes lived outside `src/`; `git status --porcelain
+--untracked-files=all` clean. No credential printed, logged or written.
+
+---
+
+## PLATE CITATION
+
+`Peer-design-spec-original.pdf` — **plate 02 = pp. 2–4, plate 03 = pp. 4–9**.
+B's span extraction: plate 02 carries **20 Georgia spans of 115**, plate 03
+**8 of 324**. The five elements and their measured treatments are reproduced in
+the test file's own header so the citation travels with the assertions.
+
+## WHAT SHIPPED — FIVE CLASS ADDITIONS, EXACTLY B's LIST
+
+| # | element | file | added |
+|---|---|---|---|
+| 1 | job report `<h1>` | `app/jobs/[id]/page.tsx` | `font-display` |
+| 2 | event report `<h1>` | `app/events/[id]/page.tsx` | `font-display` |
+| 3 | `Why Peer sent this to you` prose — **BOTH surfaces, ONE edit** | `components/reports/why-peer-sent-this.tsx` | `font-reading` |
+| 4 | `What the role is` bullets | `app/jobs/[id]/page.tsx` | `font-reading` |
+| 5 | visa evidence quote | `app/jobs/[id]/page.tsx` | `font-reading` |
+
+**Zero new tokens, zero new components, zero config.** `font-display` and
+`font-reading` already exist (`globals.css:99/103`), `Newsreader` is already
+loaded (`layout.tsx:4/37`), and `globals.css:279` already states the rule in the
+build's own words. The paper report already obeys it at four call sites. **This
+was the app's own documented convention applied to the two files that were
+missed** — which is why it was the cheapest item on an 18-item list and also the
+largest finding.
+
+**B's ONE-LINE BOUNDARY TEST, EXECUTED:** the family utilities appear in
+`className` attributes **exactly 5 times** across the two pages and the shared
+component, and **0 times** anywhere else under `components/reports/`.
+
+## **TWO JSX TRAPS C HIT AND FIXED, RECORDED SO THE NEXT VISUAL ITEM DOES NOT**
+
+Both were parse errors, both from placing a citation comment the obvious way:
+
+1. **`{/* … */}` cannot precede an element inside `{cond && ( … )}`** — the
+   parenthesised branch holds ONE expression, so the comment becomes a second
+   child and the file stops parsing. Put it **above** the `{cond && …}` line.
+2. **`// …` inside a JSX opening tag is not a comment** — it is parsed as text.
+   Use `/* … */` between attributes.
+
+Neither is exotic; both cost a full transform failure with a stack that points
+at the wrong line. **Every remaining visual item carries plate citations in
+markup, so this is the round's most reusable note.**
+
+## THE NEGATIVE PROOFS — SEVEN MUTATIONS, EACH WITH ITS EXACT RED COUNT
+
+Baseline **12 of 12 passing**. Each applied alone, suite re-run, files restored
+from byte-identical backups:
+
+| # | mutation | red |
+|---|---|---|
+| S1 | revert job `<h1>` `font-display` | **1 failed** |
+| S2 | revert event `<h1>` `font-display` | **1 failed** |
+| **S3** | **revert the shared prose `font-reading`** | **2 failed — ONE ON EACH SURFACE** |
+| S4 | revert the role bullets `font-reading` | **2 failed** |
+| S5 | revert the visa blockquote `font-reading` | **1 failed** |
+| S6 | **over-reach:** serif the section labels too | **2 failed** |
+| S7 | **over-reach:** italicise the shared prose | **1 failed** |
+
+**S3's 2 is the proof that matters**: one edit, two surfaces, and reverting it
+turns BOTH red — so "`WhyPeerSentThis` is one component used by both reports" is
+executed rather than asserted. **S6 and S7 are the over-reach guards**: S6 is
+the plates' two-family boundary (plate 02 has 95 non-serif spans, plate 03 has
+316 — a fix that "serifs the prose" by rule breaks it), and **S7 locks B's
+CORRECTION 1** — plate 02 carries four `Georgia-Italic` spans, plate 03 carries
+**zero**, so italic is plate-02-only and adding it to a SHARED component would
+invent an emphasis the event plate does not have.
+
+## THE FIXTURE-ARTIFACT LESSON, APPLIED — AND IT PAID TWICE
+
+Per round 26 B's method, every assertion renders the **shipped** `JobReport` and
+`EventReport` to static markup against **plate-shaped** fixtures. Two of C's own
+first-draft assertions failed **because the fixture was wrong, not the code**
+(`Timeline` needs data C had not supplied; `workMode` is an enum, not the plate's
+prose string) — **exactly the confound B warned about, caught by rendering
+rather than by grepping.** The class assertions are element-anchored: a helper
+pulls the single tag containing known text and reads ITS class list, so a serif
+class landing somewhere else entirely cannot satisfy them.
+
+## STANDARD 7 — VALUE STABILITY ASSERTED, NOT ASSUMED
+
+A CSS commit must not move the value census. Two tests assert every value the
+plates carry still renders on the same fixtures: the role title, employer,
+location, employment type, the visa evidence sentence, a skill chip and a
+summary bullet on the job surface; the event name and city on the event surface.
+**Zero rendered values changed.**
+
+## EMPTY / PARTIAL STATES
+
+**None to design, and that is a property of the fix.** All five elements already
+sit inside existing conditional renders (`{visaEvidence && …}`,
+`{roleBullets.length > 0 && …}`, `WhyPeerSentThis` returns `null` when both
+fields are empty, and both `<h1>`s render a title that is never empty by
+construction). **Adding a class to an element that already exists cannot create
+an empty state, render a placeholder or invent content.**
+
+## TESTS AT RISK — B's GREP RE-RUN
+
+`grep -rn "font-reading\|font-display\|font-serif" src --include=*.test.*`
+returned **nothing** before this item. **Blast radius: zero existing
+assertions**, and the full suite confirms it.
+
+---
+
+## **C26-OBS-01 — A NEW VALUE DEFECT, FOUND IN THE RENDERED MARKUP, FILED NOT FIXED**
+
+Rendering the shipped report printed the `Why Peer sent this to you` prose as:
+
+> `Matches your solid-state electrolyte focus..`
+
+**Two full stops.** `why-peer-sent-this.tsx:44` appends a period
+unconditionally — `` `${(body ?? facet)!}.` `` — and `reason` is
+`job.matchReason` passed straight through (`mapper.ts:214`,
+`matchReason: item.matchReason`). **This window's LIVE rows carry match reasons
+that already END in a period** (`Matches your battery research focus.` was in
+C's own item-1 pool capture), **so the double stop is live-reachable on the job
+surface, not a fixture artifact.** The event surface passes
+`event.relevanceReason` into the same line and is exposed to the same shape.
+
+**NOT FIXED, and the reason is the escape clause:** this is a rendered VALUE
+change on the value surface, it is not one of C's 15 designed items, and no
+census has measured it. **Filed for A to rank in round 27.** **Falsifier:** a
+window whose `matchReason` values carry no trailing period, which would make the
+defect unreachable rather than merely unobserved. **Named risk if fixed:** the
+`body && facet` branch builds a compound sentence and joins with an em dash, so
+a naive "strip the trailing period" would have to leave that branch alone.
+
+---
+
+## GATE AFTER THE ITEM
+
+**95 files / 1925 tests, 1925 PASSING — ZERO FAILURES** (was 94 / 1913; **+1
+file, +12 tests**). `tsc --noEmit` clean — **two fixture type errors were caught
+by the typecheck and fixed before the commit** (`workMode` and `visa.state` are
+enums). `eslint src` exactly the one standing `quiz.tsx:46` error.
+
+**ITEM 2 COMPLETE — V26-J02 and V26-E02 both close. Item 3, the heading
+hierarchy INVERSION, follows.**

@@ -1964,7 +1964,10 @@ export function EventReport({
               <HeaderChip accent>{matchPct}% match</HeaderChip>
             )}
           </div>
-          <h1 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]">
+          {/* V26-E02 (round 26 A/B; landed round 26 C). Plate 03 sets the
+              report title in `Georgia 21.0` `#2b180a`, one span, same treatment
+              as plate 02's. See the twin comment on the job report's `<h1>`. */}
+          <h1 className="font-display text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-heading lg:text-[40px]">
             {event.name}
           </h1>
           {/* B-16. Plate 03's subtitle — venue · format · duration. The

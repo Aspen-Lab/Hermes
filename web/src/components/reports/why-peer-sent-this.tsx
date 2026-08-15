@@ -59,7 +59,15 @@ export function WhyPeerSentThis({
         <ReportBadge tone="accent">Tier 0</ReportBadge>
       </p>
       <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
-        <p className="text-body-lg leading-8 text-text">{sentence}</p>
+        {/* V26-J02 / V26-E02, element 3 — ONE edit, BOTH surfaces, because this
+            component is shared. Plate 02 and plate 03 both set this prose in
+            `Georgia 12.75` `#4d3a28`.
+            **NO ITALIC.** B's CORRECTION 1: plate 02 carries four
+            `Georgia-Italic` spans on its topic names, plate 03 carries ZERO —
+            so italic is a plate-02-ONLY treatment, and since this component
+            renders BOTH surfaces, adding it here would invent an emphasis the
+            event plate does not have. Serif only. */}
+        <p className="font-reading text-body-lg leading-8 text-text">{sentence}</p>
       </div>
     </section>
   );
