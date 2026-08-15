@@ -77475,3 +77475,161 @@ narrowing (drop the end anchor → `Internships and Co-ops Coordinator` dies; dr
 the function-word veto → `Head of Internships and Careers` dies; drop the title-head
 split → `Students And Graduates I EMD Group` survives). **Estimate: +20/-0 source
 lines, +25 tests, 1 test repaired.**
+
+---
+
+### Round 28 — Agent B — ITEM 2 (V28-01): the label-step residue. A's SIX VERIFIED, THREE MORE FOUND, AND ONE OF THEM IS A TRAP THE CONSTANT'S OWN COMMENT WARNS ABOUT
+
+**B changed no code.** Every class string below was read out of the source by
+grep; the `twMerge` result was executed, not guessed.
+
+#### 2.1 A's SIX ARE CONFIRMED, AND THE COUNT RECONCILES
+
+The shared step is `REPORT_LABEL_CLASS` at
+`web/src/components/reports/report-section.tsx:160`:
+`"text-caption font-semibold uppercase tracking-[0.18em] text-text-faint"`.
+
+| # | site | class as shipped | renders |
+|---|---|---|---|
+| 1 | `components/reports/tier-upgrade-block.tsx:22` | `text-micro` `0.18em` `text-text-faint` | `Also in this report with an AI key` |
+| 2 | `app/events/[id]/page.tsx:1035` | `text-micro` `0.16em` **`text-accent`** | `Cheapest way in, for you` |
+| 3 | `app/events/[id]/page.tsx:1168` | `text-micro` `0.14em` `text-text-faint` | the fee table's `ITEM/STANDARD/STUDENT/DEADLINE` |
+| 4 | `app/events/[id]/page.tsx:1324` (`RosterTail`) | `text-caption` **`0.16em`** `text-text-faint` | `{title} · {n}` |
+
+**Four code sites, six rendered labels — A's "six sites" reconciles exactly.**
+Site 1 is one component used on **three** surfaces, not two: events
+(`page.tsx:2301`), jobs (`page.tsx:1503`) **and papers**
+(`app/papers/[id]/page.tsx:50`). Site 3 is one `.map()` emitting four `<th>`.
+Site 4 is one component used twice — `Every other organisation attending`
+(`:1611`) and `Every other speaker` (`:1706`).
+
+**ONE CORRECTION TO A.** A recorded site 2 as `text-micro / 0.16em` and stopped
+there. **Its colour is `text-accent`, not `text-text-faint`** — and that changes
+the design, because the shared constant bundles the colour in.
+
+#### 2.2 THREE SITES A DID NOT FIND, AND THE THIRD IS THE INTERESTING ONE
+
+- **`app/jobs/[id]/page.tsx:1456`** — `text-micro` `0.14em` **`text-accent`** —
+  renders `Posting evidence`, the label above the visa quote (round 27 item 6's
+  own block).
+- **`app/jobs/[id]/page.tsx:1463`** — `text-micro` `0.14em` `text-text-faint` —
+  renders `Peer inference — verify with the employer`.
+  **Both are uppercase semibold tracked labels on the JOB report, which is plate
+  02's surface. A's inventory searched the event side and the shared components
+  and missed the job page's own two.** A did not extract a plate counterpart for
+  either, so B files them as **same-kind build sites pending A's plate check**,
+  not as measured plate differences.
+- **`components/reports/timeline-track.tsx:196` — the shared constant is routed
+  through `cn()`, and `text-caption` IS SILENTLY DROPPED.** The site reads
+  `cn("block", REPORT_LABEL_CLASS)`. Executed:
+
+  `twMerge("block text-caption font-semibold uppercase tracking-[0.18em] text-text-faint")`
+  → `"block font-semibold uppercase tracking-[0.18em] text-text-faint"`.
+
+  **`text-caption` is gone.** This is precisely the trap
+  `REPORT_LABEL_CLASS`'s own doc comment names in capitals —
+  *"NEVER PASS THIS THROUGH `cn()`. IT SILENTLY LOSES ITS SIZE"* — with the same
+  worked example, written after round 26 C hit it on three call sites at once.
+  **One call site was left in the trap.** It is a seventh rendered label at the
+  wrong step, and unlike the other six it is not a token choice but a token
+  loss: the code says the right thing and the framework removes it.
+
+#### 2.3 THE DESIGN — SPLIT THE COLOUR OUT, MOVE NOTHING ELSE
+
+**The problem the obvious fix walks into.** `REPORT_LABEL_CLASS` bundles five
+things — size, weight, case, tracking **and colour**. Two of the sites above
+(`Cheapest way in, for you`, `Posting evidence`) carry `text-accent`
+**deliberately**: they are tinted callouts, and the plate's own callout is
+tinted. Dropping `REPORT_LABEL_CLASS` onto them verbatim would repaint them
+`text-text-faint` and destroy a real distinction while fixing a size.
+
+**The design, in one move:**
+
+```
+export const REPORT_LABEL_STEP =
+  "text-caption font-semibold uppercase tracking-[0.18em]";
+export const REPORT_LABEL_CLASS = `${REPORT_LABEL_STEP} text-text-faint`;
+```
+
+**`REPORT_LABEL_CLASS`'s value is byte-identical to what ships today**, so all 27
+existing sites render byte-for-byte unchanged and no existing assertion can move.
+Then:
+
+- sites 1, 3, 4 and `jobs:1463` → `REPORT_LABEL_CLASS` (via template literal);
+- sites 2 and `jobs:1456` → `` `${REPORT_LABEL_STEP} text-accent` ``;
+- `timeline-track.tsx:196` → `` `block ${REPORT_LABEL_CLASS}` `` — **the `cn()`
+  call is replaced by a template literal, not repaired inside `cn`.**
+
+**THE BOUNDARY — ONLY LABELS MOVE, AND THE EXCLUSIONS ARE NAMED:**
+
+- **The badge is NOT in this item.** `components/reports/report-badge.tsx:25` is
+  `text-micro / 0.14em` and carries `data-report-badge`. Its plate counterpart is
+  `Consolas 8.25` — **a different typeface**, not `SegoeUI-Semibold 7.88`. It is a
+  badge role, and the brief excludes it. Nothing about it changes.
+- **The roster search input is NOT a label.** `app/events/[id]/page.tsx:1337` is
+  `text-caption` on an `<input>`; it has no `uppercase`, no tracking and no
+  semibold. Untouched.
+- **No colour is changed by this item.** Sites keeping `text-text-faint` keep it;
+  sites carrying `text-accent` keep that. The locked-block label's colour is
+  **item 3's** business and is deliberately not decided here — but note that item
+  3 lands on site 1, so **C should take items 2 and 3 together on that one line.**
+- **No size token's MEANING changes.** V26-J10's recorded reason stands:
+  `text-caption` and `text-micro` are used across the whole app, so this is fixed
+  by changing which token these call sites USE, never by changing what the tokens
+  MEAN. **B does not re-litigate that.**
+
+**WHAT RENDERS IF A SITE IS UNDECIDABLE:** nothing moves. A label not on this list
+keeps exactly the class it has today. There is no sweep, no wildcard and no
+"every uppercase span" rule — seven named lines, each changed by hand.
+
+**VACUITY CHECK.** A test asserting only that `REPORT_LABEL_CLASS` contains
+`text-caption` is vacuous — it passes today. **The uniquely-red assertion is
+per-site**: for each of the seven, assert the rendered element's `class` contains
+`text-caption` and `tracking-[0.18em]` and does **not** contain `text-micro` or
+`tracking-[0.16em]` / `tracking-[0.14em]`. Each is red today for its own site.
+**And `timeline-track` needs a test that would have caught the `cn` trap**: assert
+the rendered class actually contains `text-caption`, which is red today even
+though the source code "looks" correct — that is the whole point of it.
+
+#### 2.4 TESTS AT RISK — GREPPED
+
+Searching for the strings this item touches:
+
+- **`web/src/components/reports/plate-type-system.test.ts` — 79 tests** (the path
+  is `components/reports/`, not `lib/reports/`). Its
+  `describe("V26-J10 — one label step, not two")` block is the guard, and
+  **B FOUND WHY THE RESIDUE SURVIVED A FULL CENSUS.** The block's sweeping
+  assertion reads:
+
+  ```
+  const sectionHeadings = [...html.matchAll(/<h2\b[^>]*class="([^"]*)"/g)]
+  … expect(classes).not.toContain("text-micro");
+  ```
+
+  **It sweeps `<h2>` elements ONLY.** Every one of the six sites is a different
+  element — `<p>` (sites 1, 2, `jobs:1463`), `<th>` (site 3), `<h3>` (site 4),
+  `<span>` (`jobs:1456`). **The sweep is element-scoped, so it could never have
+  seen any of them.** That is the mechanical reason V26-J10 "closed" while six
+  labels stayed on the old step, and it is the thing C must fix, not just the six
+  lines. **The sweep should widen from `<h2>` to every element carrying
+  `uppercase` together with a `tracking-[…]` — then the residue class cannot come
+  back through a fifth element type.** The two narrower tests above it
+  (`h2` headings by name, the `dt` fact-tile label) stay exactly as they are.
+- The three existing assertions are **byte-unchanged** by this design, because
+  `REPORT_LABEL_CLASS`'s value does not move.
+- `report-section.tsx`'s own doc comment must be extended to record the split and
+  to keep the `cn` warning attached to **both** constants — a bare
+  `REPORT_LABEL_STEP` is even easier to lose in `cn` than the full class, because
+  there is no colour in it to make the conflict visible.
+
+#### 2.5 PRICE FOR C
+
+**Files:** `components/reports/report-section.tsx` (the split + comment),
+`components/reports/tier-upgrade-block.tsx`,
+`components/reports/timeline-track.tsx` (the `cn` repair),
+`app/events/[id]/page.tsx` (three lines),
+`app/jobs/[id]/page.tsx` (two lines). **Five files, ~9 changed lines, ~25 comment
+lines**, plus **~14-16 new assertions** in `components/reports/plate-type-system.test.ts` and the widened element sweep (two per
+site: the step present, the old step absent). **Estimate: +9/-9 source lines,
++16 tests.** Small, and the risk is concentrated entirely in the `cn` trap —
+**if C reaches for `cn()` anywhere in this item, the item silently does nothing.**
