@@ -75007,3 +75007,98 @@ the key was read from `profile.json` into `process.env` and only its BOOLEAN
 presence was ever displayed; `.env.local` was never `cat`-ed.**
 
 ---
+
+### Round 27 — Agent C (item 5 of 7: **V27-01 / RULING 73 — THE PLATE-FAITHFUL ITALIC. ONE COMPONENT, TWO OPTIONAL PROPS, BOTH DEFAULTED; THE SHIPPED SEGMENTER REUSED AND NO NEW MATCHER WRITTEN; THREE TERMS NOT FOUR. AND B's OWN BYTE-IDENTITY TEST WAS FOUND NOT-UNIQUELY-RED BY MUTATION — IT IS KEPT, AND A SECOND ASSERTION THAT IS UNIQUELY RED NOW SITS BESIDE IT.**)
+
+**STATUS: COMPLETE.** Item 5 of seven. Code plus this entry in one commit.
+
+## **WHAT SHIPPED**
+
+**`src/components/reports/why-peer-sent-this.tsx`** — two optional props,
+`surface?: "job" | "event"` **defaulting to `"event"`** and
+`matchedTerms?: string[]`. The prose `<p>` renders either
+`highlightSegments(sentence, matchedTerms ?? [])` with each matched run in
+`<em className="italic">`, or the plain string. **The `<p>`'s own classes are
+byte-unchanged** (`font-reading text-body-lg leading-8 text-text`) — no colour,
+no size, no `box-decoration-clone`. **`highlightSegments` is imported, not
+re-written**: the case-insensitivity, the word boundaries that still admit
+`R&D`, the longest-first overlap MERGING, the de-duplication, the regex escaping
+and the empty-array early return are all the shipped segmenter's, so Ruling 73's
+"empty terms means no italic" is satisfied without a second branch.
+
+**`src/app/jobs/[id]/page.tsx`** — the job call site gains
+`surface="job" matchedTerms={job.matchedTerms}`. **The EVENT call site is
+untouched — not one character.**
+
+**THREE TERMS, NOT FOUR — B's CORRECTION CARRIED INTO THE SOURCE COMMENT AND THE
+TEST FIXTURE.** The fixture's reason is `reasonFor`'s own real shape,
+`Matches your <t1>, <t2>, <t3> focus`, and it renders **exactly three `<em>`
+elements.** The wrap is free because an inline element wraps natively.
+
+## **THE SHIPPED ASSERTION IS KEPT VERBATIM AND ITS COMMENT IS RESTATED**
+
+`does NOT italicise the event prose — plate 03 has zero italic spans` is
+**unchanged, character for character.** Its doc comment now names Ruling 73 and
+records that **the REASON changed**: it used to be "the component is shared, so
+italic anywhere is italic everywhere", which Ruling 73 retired. What keeps plate
+03 clean now is that **the gate is the SURFACE and never the data.**
+
+## **THE ONE THING C FOUND THAT B's DESIGN DID NOT — DISCLOSED, NOT PAPERED OVER**
+
+**B's byte-identity test is NOT uniquely red for the gate, and mutation proved
+it.** Swapping the component's gate from `surface === "job"` to
+`matchedTerms.length > 0` left `renders the event report byte-identically`
+**GREEN** — because the EVENT call site passes no `matchedTerms` at all, so the
+component never receives them on that path however it is gated.
+
+**The test is KEPT** — it locks the shipped WIRING end to end and it is the
+assertion Ruling 73 asked for by name. **A second assertion now sits beside it
+and IS uniquely red:** the component is asked **directly**, with
+`surface: "event"` AND the three terms handed to it, and must render no `<em>`;
+the identical call with `surface: "job"` must render exactly three. **That is
+Ruling 73's boundary tested at the place the boundary actually lives.**
+
+## **THE NEW TESTS — `plate-type-system.test.ts`, +11 blocks (57 -> 68), ZERO deletions, ONE comment restated**
+
+1. **Byte-identity** — two EVENT renders differing only in `matchedTerms` are
+   literally equal, and neither contains `<em>`.
+2. **Exactly the matched terms** on the job surface — `emTexts` equals the three
+   terms, in order.
+3. **Every unmatched run outside the emphasis** — the lead-in, both `, `
+   separators and ` focus.` are all plain, and no term text survives outside an
+   `<em>`.
+4. **Empty `matchedTerms`** — zero `<em>`, sentence intact.
+5. **Terms that do not occur** — zero `<em>`; nothing is invented.
+6. **Overlap merging** — `solid-state` plus `solid-state electrolytes` gives ONE
+   `<em>` covering the longer run, never a nested pair.
+7. **Word boundary** — `ion` italicises the standalone word and NOT the `ion`
+   inside `precision`.
+8. **Slant only** — every `<em>` open tag carries `italic` and **no `text-*` and
+   no `font-*` class**, so a later tint or size step reds.
+9. **VALUE STABILITY** — the italicised prose with every tag stripped is
+   **character-identical** to the plain prose AND to the source sentence. **A
+   visual commit may not move a value, and this is that assertion.**
+10. **No `surface` passed** — plain prose even with terms present.
+11. **The uniquely-red surface gate** (the disclosure above).
+
+## **NEGATIVE PROOFS — THREE MUTATIONS, EACH REVERTED, EXACT RED COUNTS**
+
+Baseline for every row: **68 of 68 passing** in the file.
+
+| # | mutation | red |
+|---|---|---|
+| 1 | **gate swapped to `matchedTerms.length > 0`** | **2 failed / 66 passed** — *and 1 failed before block 11 was added; that is the disclosure above* |
+| 2 | **the whole italic branch removed** (prose back to the bare string) | **6 failed / 62 passed** |
+| 3 | **`surface`/`matchedTerms` removed from the JOB CALL SITE**, component untouched | **5 failed / 63 passed** |
+
+**Mutation 3 matters on its own:** it proves the tests exercise the SHIPPED
+WIRING and not just the component in isolation, which is this loop's standing
+requirement for a visual item.
+
+## **THE GATE AFTER ITEM 5**
+
+`npx vitest run` **97 files / 2046 tests, 2046 PASSING — ZERO failures**
+(2035 -> 2046, **+11**). `tsc --noEmit` clean. `eslint src` **exactly the one
+standing `quiz.tsx:46` error, 0 warnings.**
+
+---

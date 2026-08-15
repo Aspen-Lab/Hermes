@@ -1447,6 +1447,8 @@ export function JobReport({
         reason={job.matchReason}
         facetReason={job.facetPreferenceReason}
         sectionKey="why-peer-sent-this"
+        surface="job"
+        matchedTerms={job.matchedTerms}
       />
 
       <TierUpgradeBlock

@@ -6,6 +6,7 @@ import type { CareerStage, Event, Job } from "@/types";
 import { JobReport } from "@/app/jobs/[id]/page";
 import { EventReport } from "@/app/events/[id]/page";
 import { ReportFactTile } from "@/components/reports/fact-tile";
+import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 
 /**
  * **V26-J02 / V26-E02 — THE SERIF ADOPTION.** (Round 26 A's largest visual
@@ -202,11 +203,22 @@ describe("V26-E02 — plate 03's serif elements opt in", () => {
   });
 
   /**
-   * **B's CORRECTION 1, LOCKED.** Plate 02 carries four `Georgia-Italic` spans
-   * on its topic names; **plate 03 carries ZERO.** Italic is a plate-02-only
-   * treatment. Because `WhyPeerSentThis` is ONE component rendering BOTH
-   * surfaces, adding italic to it would invent an emphasis plate 03 does not
-   * have — the exact reflex-copy this locks out.
+   * **B's CORRECTION 1, LOCKED — AND RESTATED UNDER RULING 73 (V27-01, round
+   * 27 item 5). THE ASSERTION IS UNCHANGED; ONLY THIS COMMENT MOVES.**
+   *
+   * Plate 02 carries four `Georgia-Italic` spans on its matched topic names —
+   * **three terms**, one of them wrapped across a line; **plate 03 carries
+   * ZERO.** Italic is a plate-02-only treatment.
+   *
+   * The reason this test states has CHANGED. It used to be "the component is
+   * shared, so italic anywhere is italic everywhere". Ruling 73 authorised a
+   * variant, so that is no longer true: `WhyPeerSentThis` now takes a `surface`
+   * prop and the JOB path does italicise. **What keeps plate 03 clean is that
+   * the gate is the SURFACE and never the data** — both scoring layers produce
+   * `matchedTerms`, so a data gate would italicise the event report too.
+   *
+   * **DO NOT DELETE THIS.** It is now the second limb of the byte-identity
+   * guard below, and it is what reds if someone gates on `matchedTerms.length`.
    */
   it("does NOT italicise the event prose — plate 03 has zero italic spans", () => {
     const classes = classesOfTagContaining(
@@ -1036,5 +1048,225 @@ describe("V26-J08 / V26-E08 — four chip roles, four signals", () => {
     const tile =
       /<div[^>]*data-job-fact="visa"[^>]*>/.exec(html)?.[0] ?? "";
     if (tile) expect(tile).not.toContain("bg-link-dim");
+  });
+});
+
+/**
+ * **V27-01 / RULING 73 (round 27, item 5) — THE PLATE-FAITHFUL ITALIC.**
+ *
+ * `Peer-design-spec-original.pdf` plate 02, the `WHY PEER SENT THIS TO YOU`
+ * block: **four `Georgia-Italic 12.75 #4d3a28` spans, THREE terms.**
+ * `interfacial` ends a line at x 419.6 and `resistance` begins the next at the
+ * x 79.5 left margin, with the `, ` separators outside both — one term,
+ * wrapped. The plate's own sentence says `Matches 3 of your required topics`.
+ * The italic carries the SAME size and SAME colour as the prose: slant only.
+ *
+ * Plate 03 carries ZERO italic spans, and `WhyPeerSentThis` renders BOTH
+ * reports — so the gate is the SURFACE, never the data. Both scoring layers
+ * write `matchedTerms`, so a data gate would emphasise plate 03 as well.
+ */
+describe("V27-01 — the italic is plate-02-only and gated on the surface", () => {
+  /** The plate's own sentence shape: `reasonFor` joins the first three terms. */
+  const PLATE_TERMS = [
+    "solid-state electrolytes",
+    "interfacial resistance",
+    "operando imaging",
+  ];
+  const PLATE_REASON =
+    "Matches your solid-state electrolytes, interfacial resistance, operando imaging focus";
+
+  /** The inner markup of the single tag containing a known piece of text. */
+  function innerOfTagContaining(html: string, tag: string, text: string): string {
+    const open = new RegExp(`<${tag}\\b[^>]*>`, "g");
+    for (const match of html.matchAll(open)) {
+      const start = match.index + match[0].length;
+      const end = html.indexOf(`</${tag}>`, start);
+      if (end < 0) continue;
+      const inner = html.slice(start, end);
+      if (inner.includes(text)) return inner;
+    }
+    throw new Error(`no <${tag}> containing ${JSON.stringify(text)} was rendered`);
+  }
+
+  function emTexts(inner: string): string[] {
+    return [...inner.matchAll(/<em\b[^>]*>([^<]*)<\/em>/g)].map((m) => m[1]);
+  }
+
+  /**
+   * **RULING 73's OWN BOUNDARY, AS A LITERAL STRING EQUALITY.** Two EVENT
+   * renders differing in NOTHING but `matchedTerms` must produce byte-identical
+   * markup. This is what fails the instant someone gates the italic on the data
+   * instead of the surface — and it is what makes the "no `<em>`" assertion
+   * above non-vacuous, because it forces the event fixture to CARRY terms.
+   */
+  it("renders the event report byte-identically with and without matchedTerms", () => {
+    const withTerms = renderEvent(
+      plateEvent({ relevanceReason: PLATE_REASON, matchedTerms: PLATE_TERMS }),
+    );
+    const withoutTerms = renderEvent(plateEvent({ relevanceReason: PLATE_REASON }));
+    expect(withTerms).toBe(withoutTerms);
+    // And neither carries an <em>, so the equality is not two italic renders.
+    expect(withTerms).not.toContain("<em");
+  });
+
+  it("italicises exactly the matched terms on the job surface", () => {
+    const inner = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: PLATE_TERMS })),
+      "p",
+      "operando imaging",
+    );
+    expect(emTexts(inner)).toEqual(PLATE_TERMS);
+  });
+
+  it("leaves every unmatched run outside the emphasis", () => {
+    // The `nothing but matched-term spans` half of Ruling 73, asserted rather
+    // than assumed: the lead-in, the separators and the tail are all plain.
+    const inner = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: PLATE_TERMS })),
+      "p",
+      "operando imaging",
+    );
+    const outside = inner.replace(/<em\b[^>]*>[^<]*<\/em>/g, "\u0000");
+    expect(outside).toContain("Matches your ");
+    expect(outside).toContain(", ");
+    expect(outside).toContain(" focus.");
+    for (const term of PLATE_TERMS) expect(outside).not.toContain(term);
+  });
+
+  it("renders no emphasis at all when matchedTerms is empty", () => {
+    const inner = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: [] })),
+      "p",
+      "operando imaging",
+    );
+    expect(inner).not.toContain("<em");
+    expect(inner).toContain("Matches your solid-state electrolytes");
+  });
+
+  it("renders no emphasis when the terms do not occur in the sentence", () => {
+    // Nothing is invented and no text is added: the prose is the plain string.
+    const inner = innerOfTagContaining(
+      renderJob(
+        plateJob({ matchReason: PLATE_REASON, matchedTerms: ["thermal runaway"] }),
+      ),
+      "p",
+      "operando imaging",
+    );
+    expect(inner).not.toContain("<em");
+  });
+
+  it("merges overlapping terms into ONE emphasis, never a nested pair", () => {
+    // `highlightSegments` sorts longest-first and merges intervals, so this is
+    // impossible by construction — asserted because it is the property that
+    // makes reusing the shipped segmenter the right call.
+    const inner = innerOfTagContaining(
+      renderJob(
+        plateJob({
+          matchReason: PLATE_REASON,
+          matchedTerms: ["solid-state", "solid-state electrolytes"],
+        }),
+      ),
+      "p",
+      "operando imaging",
+    );
+    expect(emTexts(inner)).toEqual(["solid-state electrolytes"]);
+  });
+
+  it("does not italicise a term that occurs only inside a longer word", () => {
+    const inner = innerOfTagContaining(
+      renderJob(
+        plateJob({
+          matchReason: "Matches your ion transport and precision imaging focus",
+          matchedTerms: ["ion"],
+        }),
+      ),
+      "p",
+      "and precision imaging focus",
+    );
+    // `ion` matches the standalone word and NOT the `ion` inside `precision`.
+    expect(emTexts(inner)).toEqual(["ion"]);
+    expect(inner).toContain("precision imaging");
+  });
+
+  it("carries no colour or size class into the emphasis — slant only", () => {
+    // The plate's italic spans are the SAME 12.75 and the SAME #4d3a28 as the
+    // prose. An <em> that also tinted or resized would be a different plate.
+    const inner = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: PLATE_TERMS })),
+      "p",
+      "operando imaging",
+    );
+    const openTags = [...inner.matchAll(/<em\b[^>]*>/g)].map((m) => m[0]);
+    expect(openTags.length).toBe(3);
+    for (const tag of openTags) {
+      expect(tag).toContain("italic");
+      expect(tag).not.toMatch(/text-(?:body|caption|micro|display|accent|text-)/);
+      expect(tag).not.toContain("font-");
+    }
+  });
+
+  it("changes no rendered VALUE — the words are identical with and without italic", () => {
+    // A visual item may not move a value. Strip every tag and comment from the
+    // italicised prose and it must equal the plain prose character for
+    // character: same words, same separators, same trailing period.
+    const strip = (s: string) => s.replace(/<!--.*?-->/g, "").replace(/<[^>]*>/g, "");
+    const italicised = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: PLATE_TERMS })),
+      "p",
+      "operando imaging",
+    );
+    const plain = innerOfTagContaining(
+      renderJob(plateJob({ matchReason: PLATE_REASON, matchedTerms: [] })),
+      "p",
+      "operando imaging",
+    );
+    expect(strip(italicised)).toBe(plain);
+    expect(strip(italicised)).toBe(`${PLATE_REASON}.`);
+  });
+
+  it("renders plain prose when no surface is passed — the default is the guard", () => {
+    // A future third call site is safe BY DEFAULT rather than by review.
+    const html = renderToStaticMarkup(
+      createElement(WhyPeerSentThis, {
+        reason: PLATE_REASON,
+        facetReason: undefined,
+        matchedTerms: PLATE_TERMS,
+      }),
+    );
+    expect(html).not.toContain("<em");
+    expect(html).toContain("Matches your solid-state electrolytes");
+  });
+
+  /**
+   * **THE DISCLOSURE THAT MADE THIS BLOCK NECESSARY.** The byte-identity test
+   * above is Ruling 73's own asked-for assertion and it locks the shipped
+   * WIRING — but on its own it is NOT uniquely red for the component's gate,
+   * because the event call site passes no `matchedTerms` at all, so the
+   * component never sees them there. Swapping the gate to
+   * `matchedTerms.length > 0` left the byte-identity test GREEN. Found by
+   * mutation, and this block is the fix: the component is asked directly, with
+   * the event surface named AND the terms present.
+   */
+  it("renders no italic on the EVENT surface even when the terms are handed to it", () => {
+    const html = renderToStaticMarkup(
+      createElement(WhyPeerSentThis, {
+        reason: PLATE_REASON,
+        facetReason: undefined,
+        surface: "event" as const,
+        matchedTerms: PLATE_TERMS,
+      }),
+    );
+    expect(html).not.toContain("<em");
+    // And the JOB surface with the identical inputs DOES italicise, so the
+    // assertion above is about the surface and not about the fixture.
+    const job = renderToStaticMarkup(
+      createElement(WhyPeerSentThis, {
+        reason: PLATE_REASON,
+        facetReason: undefined,
+        surface: "job" as const,
+        matchedTerms: PLATE_TERMS,
+      }),
+    );
+    expect((job.match(/<em\b/g) ?? []).length).toBe(3);
   });
 });
