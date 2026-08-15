@@ -66137,3 +66137,224 @@ differences: A26-01** (the employer stated twice on the job header) **and
 A26-02** (six real dated events refused at ingestion, with the round-25
 judgement discrepancy disclosed). **A25-01 is closed by an organic witness.**
 Parts 3 and 4 — the first visual census — follow.
+
+### Round 26 — Agent A (part 3 — **THE FIRST VISUAL / LAYOUT CENSUS, PART ONE: THE SPEC SIDE.** Plates located and bounded by PDF page and y-coordinate; the design facts extracted **QUANTITATIVELY** — every type size, weight, family and colour taken from the PDF's own text spans, not eyeballed — and written as a checklist B can act on without re-deriving A's work.)
+
+**STATUS: PARTIAL BY DESIGN.** Part 3 of four. **This entry establishes the
+MEASURE. Part 4 carries the ranked difference lists (V26-xx) and the gate
+verdict.** **A sets no gate line here.**
+
+---
+
+## **WHERE THE PLATES ARE — CITED SO NO LATER ROUND HAS TO HUNT AGAIN**
+
+`Peer-design-spec-original.pdf`, repo root. **20 pages, US Letter portrait
+(612 × 792 pt).** A read **all 20** once, per §1g. The deck numbers its own
+plates `01`–`12` in a `Consolas @ 9` kicker; **plate numbers are NOT PDF page
+numbers** and every past round's "plate 02 / plate 03" refers to the deck's
+numbering.
+
+| deck plate | title | **PDF pages** | exact bounds |
+|---|---|---|---|
+| 01 | Papers — the summary moves onto the card | 1–2 | p1 y≥344.4 → p2 y<378.9 |
+| **02** | **Job report** | **2 – 4** | **p2 y≥378.9 → p4 y<400.6** |
+| **03** | **Event report** | **4 – 9** | **p4 y≥400.6 → p9 y<588.9** |
+| 04 | Events widen past conferences | 9–10 | p9 y≥588.9 |
+| 05 | Saved — split by kind | 10–11 | — |
+| 06 | All becomes Dashboard | 11–12 | — |
+| 07 | Jobs — where and when, as a knob | 13–14 | — |
+| 08 | Visa sponsorship, stated honestly | 14–15 | — |
+| 09 | Internships get their own lane | 15–16 | — |
+| 10 | What a report contains with no AI key at all | 16–17 | — |
+| 11 | Work authorisation is a country list | 17–18 | — |
+| 12 | The "done" colour, across all six themes | 18–20 | — |
+
+**Plate 10 is load-bearing for this census and A read it in full.** Its rule,
+verbatim: *"a report with no key is a complete, shorter report, never a skeleton
+with holes in it."* **Plates 02 and 03 are therefore scored as Tier-0 targets in
+their entirety except for the explicitly locked block at the foot of each** —
+which is exactly Ruling 69's measurement profile, so the two agree and A did not
+have to choose.
+
+**Method.** Pages rendered to PNG at 2.2× and read visually, **and** every text
+span extracted with its `x`, `y`, size, font name and colour so that the type
+scale below is measured rather than described. Both instruments were used on
+every plate; where they disagreed the span data won.
+
+---
+
+## **THE MEASURED TYPE SCALE — PLATES 02 AND 03 SHARE ONE SYSTEM**
+
+**Three families. This is the spine of the whole design and it is the thing the
+build most departs from.**
+
+| family | role in the plates |
+|---|---|
+| **`Georgia`** (serif) | report titles, long-form prose, the role bullets, the evidence quote, and **one** section heading |
+| **`SegoeUI` / `-Semibold`** (sans) | every label, tile, chip, button, roster row and note |
+| **`Consolas`** (mono) | the plate-number kicker and the `NEW` / `TIER 0` badges — **and nothing else** |
+
+### The serif is used in FIVE places, and only five
+
+| element | plate | size | notes |
+|---|---|---|---|
+| report `<h1>` title | 02 & 03 | **`Georgia` 21** | `#2b180a` |
+| `Who'll be in the room` section heading | 03 | **`Georgia` 15.75** | a heading level that exists **nowhere else in either plate** |
+| `WHY PEER SENT THIS TO YOU` prose | 02 & 03 | **`Georgia` 12.75**, `#4d3a28` | topic names set in **`Georgia-Italic`** at the same size |
+| `WHAT THE ROLE IS` bullets | 02 | **`Georgia` 12**, `#4d3a28` | three bullets, orange dot markers |
+| the visa evidence quote | 02 | **`Georgia` 10.5**, `#9c8b78` | attribution `— from the job description` runs inline |
+
+### The sans scale
+
+| size / weight | colour | used for |
+|---|---|---|
+| `SegoeUI-Semibold` **11.25** | `#2b180a` heading · **`#b3402a` red** · **`#2b5c8f` blue** | **fact-tile VALUES** — red for urgency (`Sep 15`, `Oct 30`), blue for `Sponsors` |
+| `SegoeUI` **9** | `#7d6a56` | **fact-tile SUB-LINES** (`per year · from posting`, `47 days left`, `Mon – Thu`) |
+| `SegoeUI-Semibold` **7.88**, heavily letter-spaced | `#9c8b78` faint · **`#5b4bbf` violet** for the locked-block label · `#a33206` | **every SECTION LABEL and TILE LABEL** — rendered in the PDF as `/ J O B S / [ I D ]`, `SAL ARY`, `T YPE`, `T I M E L I N E`, `W H AT  T H E  RO L E  I S`, `A L S O  I N  T H I S  R E P O RT  W I T H  A N  A I  K E Y` |
+| `SegoeUI-Semibold` **10.5** | `#ffffff` on the primary button · `#4d3a28` on outline buttons · `#b5820f` on the applied state | **action-row buttons** |
+| `SegoeUI-Semibold` **9.38** | `#a8642a` amber · `#7d6a56` neutral · `#2b5c8f` blue · `#a33206` orange-red | **header chips** — kind, sub-kind, visa, `% match` |
+| `SegoeUI-Semibold` **12** | `#2b180a` | **the `CHEAPEST WAY IN, FOR YOU` callout body** — its own emphasis step, used nowhere else |
+| `SegoeUI-Semibold` **10.12** | `#2b180a` | **roster row NAMES** |
+| `SegoeUI` **9.38** | `#9c8b78` | roster row DESCRIPTORS, the `5 of 34 exhibitors…` counter, the `At this event:` continuation, the `MATERIALS`/`ELIGIBILITY`/`TEAM`/`SEEN ON` labels |
+| `SegoeUI` **10.5** | `#4d3a28` / `#7d6a56` | org- and person-card body sentences |
+| `SegoeUI` **10.12** | `#7d6a56` | the explainer notes under the chip groups |
+| `SegoeUI` **8.62** | `#9c8b78` | **timeline milestone labels** |
+| `SegoeUISymbol` **12.75** | **`#ff520d`** filled / `#9c8b78` empty | **roster star toggles** |
+| `SegoeUISymbol` **9.38** | `#a33206` | the **`✓`** on matched chips |
+| `Consolas` **8.25** | **`#5b4bbf` violet** | the **`NEW`** badge |
+| `Consolas` **7.5** | **`#2b5c8f` blue** | the **`TIER 0`** badge |
+
+---
+
+## **PLATE 02 — THE JOB REPORT: SECTION INVENTORY AND ORDER, AS A CHECKLIST**
+
+1. **`/ J O B S / [ I D ]`** route kicker, top-left of the card frame.
+2. **Chip row** — four chips: role kind (`Postdoc`, amber fill), employment type
+   (`Full-time · 3 years`, neutral outline), visa (`Visa sponsorship`, blue
+   fill), match (`91% match`, orange fill).
+3. **`<h1>` title**, serif 21, two lines, no employer in it.
+4. **Subtitle**, sans 11.25 `#7d6a56`: `employer · location · work mode`, middot-
+   separated triple.
+5. **Action row**: `Apply on employer site ↗` (**solid orange pill, white
+   text**), `Save` (outline pill), `✓ Mark as applied` (**amber-tinted pill with
+   a leading check**), then `Not interested` **pushed to the far right**.
+6. **Fact tiles — SEVEN, laid out FOUR PER ROW over TWO ROWS**, inside ONE
+   continuous band: `SALARY · TYPE · LOCATION · STARTS` / `APPLY BY · POSTED ·
+   VISA · (empty)`. **Columns are separated by thin VERTICAL RULES and the two
+   rows by a single horizontal rule. No per-tile border, no rounding, no fill,
+   no gap between tiles.** `APPLY BY`'s value is red; `VISA`'s is blue.
+7. **Visa evidence quote** — serif, left vertical rule (**blue**, matching the
+   VISA tile), attribution inline.
+8. **`T I M E L I N E`** — **a single continuous horizontal TRACK** with four
+   dots on it; the segment from `Posted` to `Today` is **filled orange** and
+   `Today` carries a **larger orange dot**; the remaining dots are grey. **The
+   four labels sit BENEATH the track**, first left-aligned, last right-aligned.
+9. **`S K I L L S  T H E Y  A S K  F O R`** + `NEW` + `TIER 0` badges on the same
+   line, with **`6 of 9 you already have` RIGHT-ALIGNED on that same line**;
+   then a **horizontal PROGRESS BAR** filled to the matched fraction; then the
+   chips — matched ones **orange-filled with a trailing `✓`**, gaps plain
+   outline; then the explainer note with a left orange rule.
+10. **A TWO-COLUMN BLOCK**: left = **`W H AT  T H E  RO L E  I S`**, three serif
+    bullets with orange dot markers; right = **`TO  A P P LY,  H AV E  R E A D Y`**,
+    a two-column definition list with **FOUR rows — `MATERIALS`, `ELIGIBILITY`,
+    `TEAM`, `SEEN ON`** (`SEEN ON` = provider attribution, e.g.
+    `Adzuna · reposted from employer site`).
+11. **Horizontal rule.**
+12. **`W H Y  P E E R  S E N T  T H I S  TO  YO U`** + `TIER 0` — serif prose
+    12.75 with italic topic names.
+13. **`A L S O  I N  T H I S  R E P O RT  W I T H  A N  A I  K E Y`** (violet
+    label) + `Connect a key` button right-aligned, over a tinted panel of
+    **FOUR** padlock rows, hairline-separated, each a semibold title + a lighter
+    one-line description. **In this order:** `How competitive this actually is`,
+    `Sponsorship read when the posting is silent`, `The role in three clean
+    sentences`, `What to emphasise in your application`.
+
+---
+
+## **PLATE 03 — THE EVENT REPORT: SECTION INVENTORY AND ORDER, AS A CHECKLIST**
+
+1. **`/ E V E N T S / [ I D ]`** route kicker.
+2. **Chip row** — four: kind (`Industry summit`, amber), sub-kind
+   (`+ career fair`, outline), rank (`CCF-B`, neutral), match (`88% match`,
+   orange).
+3. **`<h1>` title**, serif 21, one line.
+4. **Subtitle**: `venue · format · duration` — the plate's first segment is the
+   **VENUE NAME** (`San Diego Convention Center`), not the city.
+5. **Action row**: `Register ↗` (solid orange), `Submit abstract ↗` (outline),
+   `Save` (outline), `Not interested` far right.
+6. **Fact tiles — SIX, FOUR PER ROW over TWO ROWS**, same continuous rule-
+   separated band as plate 02: `DATES · WHERE · FEE · ABSTRACT DUE` /
+   `REGISTER BY · SCALE · (empty) · (empty)`. **`WHERE` carries the CITY +
+   COUNTRY (`San Diego, US`), not the venue.** `ABSTRACT DUE` is red. Sub-lines:
+   `Mon – Thu`, `in person · hybrid keynotes`, `student $180 · early bird to
+   Jan 9`, `92 days left`, `on-site registration available`, `last edition`.
+7. **`C H E A P E S T  WAY  I N,  F O R  YO U`** — a **FILLED orange-tinted
+   callout panel** with a left orange rule, an orange uppercase label, and a
+   **semibold sans 12** body. The only filled callout in either plate.
+8. **`T WO  D E A D L I N E S,  O N E  E V E N T`** — the same continuous track
+   as plate 02's timeline: `Today` / `Abstract Oct 30` / `Register Feb 20` /
+   `Event Mar 8`.
+9. **`W H AT  A C T UA L LY  H A P P E N S  T H E R E`** + **`NEW` badge** —
+   activity chips, matched ones orange-filled with `✓`; **then an explainer note
+   with a left orange rule.**
+10. **Horizontal rule.**
+11. **`Who'll be in the room`** — **a SERIF 15.75 section heading**, with the
+    counter `5 of 34 exhibitors and 3 of 18 speakers concern you` **right-
+    aligned on the same line**.
+12. **`O RG A N I S AT I O N S`** + `TIER 0` — highlighted org cards: tinted
+    panel, **left orange rule**, bold name left, **right-aligned tinted
+    descriptor badge** (`Hiring you looked at`, `Posts internships`,
+    `Matches 2 topics`), a body sentence, then **`At this event:`** in bold with
+    the rest lighter. **No star control on these cards.**
+13. **`E V E RY  OT H E R  O RG A N I S AT I O N  AT T E N D I N G  ·  3 1`** +
+    `Filter this list` (outline button, right) — a **filled-orange star in a
+    circle** beside the hint line, then the full roster: bold name, lighter
+    `descriptor · booth N`, right-aligned star, hairline between rows. A closing
+    grey footnote (`Nothing is collapsed behind a "+29" …`).
+14. **`P E O P L E`** + `TIER 0` — same card shape as organisations, plus a
+    `Speaking:` line; then `E V E RY  OT H E R  S P E A K E R  ·  1 6` with the
+    same roster shape and its own footnote.
+15. **`W H AT  I T  C O S T S  YO U`** + `TIER 0` — the cheapest-way sentence
+    restated with a left orange rule, then a **COST TABLE**: header band
+    `ITEM · STANDARD · STUDENT · DEADLINE` in letter-spaced faint uppercase, a
+    tinted first column with bold item names, and `Oct 30` in red. Closing grey
+    footnote.
+16. **`W H Y  P E E R  S E N T  T H I S  TO  YO U`** + `TIER 0` — serif prose.
+17. **`A L S O  I N  T H I S  R E P O RT  W I T H  A N  A I  K E Y`** + `Connect
+    a key`, **FOUR** padlock rows: `The other 29 exhibitors, judged`, `What each
+    talk is actually about`, `A day-by-day plan for you`, `Is your work a fit
+    for the poster call`.
+
+---
+
+## **HOW THE BUILD WAS RENDERED FOR COMPARISON, AND WHY THE FIXTURE IS THE RIGHT INSTRUMENT**
+
+Both reports were rendered through the **SHIPPED** components
+(`JobReport` / `EventReport` from `src/app/{jobs,events}/[id]/page.tsx`) to
+static markup with `renderToStaticMarkup`, on the **NO-LLM path**
+(`enrichment: null`, `providerConfigured: false`) — Ruling 69's fixed profile.
+
+**Two data sets, deliberately:**
+
+1. **PLATE-SHAPED FIXTURES.** Every value taken from plates 02 and 03 — the
+   Toyota postdoc and the International Battery Materials Summit 2027, with
+   salary, visa evidence, materials, all nine skills, both deadlines, six
+   activities, six fee rows, six organisations and four people populated.
+   **This is the load-bearing instrument for a STRUCTURAL census: without it a
+   section that is missing from the code is indistinguishable from a section
+   whose field happened to be empty on a live row.** A live pool in which eight
+   of twelve event rows carry no date at all cannot answer "is this section
+   built?".
+2. **THE ROUND'S REAL LIVE ROWS** — the 12 events and 12 jobs from part 1's
+   windows, rendered the same way, used to check that the fixture's findings are
+   not artefacts and to see what a real reader actually gets.
+
+**Throwaway harness** lived outside `src/` (`web/zz-r26a/`, own vitest config,
+`*.probe.ts` include pattern) and was **deleted before this commit**.
+
+---
+
+**WHAT PART 3 ESTABLISHES.** The plates are located, bounded and cited; the type
+system is measured to the half-point and to the hex; both surfaces' section
+inventories and orders are written as checklists. **Part 4 carries the ranked
+V26-xx difference lists, per surface, and the gate verdict.**
