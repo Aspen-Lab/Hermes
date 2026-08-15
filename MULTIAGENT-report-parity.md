@@ -78000,3 +78000,29 @@ which is why both drifted — but the label itself is not untested, and
 `"Also in this report with an AI key"`, which this item does not change; a class
 change cannot affect `html.indexOf` on the text or a `not.toContain` on the text.
 **C must still run that file and confirm, rather than trusting this paragraph.**
+
+---
+
+### Round 28 — MANAGER verification of Agent B (resumed turn), RULING 76a–d, and the hand-off to C
+
+**Date: 2026-08-15. Checked, not inherited.** Six commits including B's own on-the-record correction (`f373740`); `git log --name-only -- web/` empty — no code, no test touched; no banned API called. **The gate re-run by the manager: 2065 of 2066 — the sole red is the live benchmark's ALIVENESS floor (`survivors.length > 0` → got 0, in 1.7s): the live search path is DARK because Ruling 75's config action disabled Tavily and no replacement exists yet. That is the floor doing its job — see 76d.**
+
+**THE METHOD IS ACCEPTED — the probe turned assumptions into measurements**: the redirect verdict decidable at 64/64 (302+`Location` ~300ms; corrupted token → 404, no `Location` — so "drop unresolvable" is a rule, not a guess); **`groundingChunks[].web.title` is the DOMAIN, 64/64** — replaying live rows through the shipped, unmodified admission functions proves domain-as-title would manufacture 31 bare-hostname role titles in 40 rows (the A22-01/62d(b)/63a/A26-01 classes at scale), while page-title-after-redirect admits 16 and keeps the LANL must-keep; JSON mode refused alongside the Search tool (400); strict formats not honoured (grounding metadata is the only reliable channel — the answer prose is never a snippet); `maxOutputTokens` throttles chunk count, not latency. Item 1 designed INSIDE round 16's frame (12 of 19 caught; zero false fires on 37 recorded must-keeps/traps and 1,595 harvested strings). Five A errors and one brief error (the manager's own "jobweb is the equivalent" — it returns mapped `RawJobItem[]`, not `WebResult[]`) corrected on the record; two B faults self-disclosed with all tainted numbers discarded.
+
+---
+
+## RULING 76 — THE ROUND-28 B DECISIONS. BINDING.
+
+**76a. THE PER-SOURCE TIMEOUT OVERRIDE IS APPROVED**: 25000 ms at the TWO web-search call sites only, never a global change — B measured a grounding call at 10697 ms against the shipped 8000 ms default, and at the shipped budget the new provider provably returns nothing. The slower census is a priced, accepted consequence of Ruling 75.
+
+**76b. ITEM 1's SCOPE IS ACCEPTED AS DESIGNED**: the conjoined-section-label rule lands (12 of 19); **shape two's refusal STANDS on Ruling 49a's own measurement** (it would destroy `M.S. Internship Program`) — the seven uncaught rows are RECORDED NAMED MISSES, none reaching a reader, watched by the ordinary census, design evidence-gated. The vacuous-going test (`jobweb.test.ts:2516`) is repaired, never deleted.
+
+**76c. V28-02 RESOLVES TO THE EXISTING `text-accent` TOKEN** — the plate's `#5b4bbf` is the accent's value in the plate's own theme; a frozen hex would be the only invariant hue in a six-accent user-selectable system. B's reasoning is endorsed and the theme system is not special-cased.
+
+**76d. THE BENCHMARK'S CURRENT RED IS EXPECTED AND CARRIES INFORMATION**: the live pipeline is dark by Ruling 75's config action (Tavily disabled, no replacement landed). **It stays red until C's item 0 lands and MUST go green on the gemini provider — that green is item 0's acceptance test on live data.** Until then: the aliveness red is expected, not chased; ANY OTHER red is a regression. C's cold baseline: 2065/2066 with exactly this red.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 28` stands as B wrote it — four items in banking order, **item 0 (the gemini provider: 1 new file, ~11 edited, +250/−40, +45–60 tests, the page-title-after-redirect channel, the 76a timeout, provider order per Ruling 75) is a full turn on its own — bank it, then continue items 1–3 by budget or continuation.** The gate stays `GATE (0%): NOT MET`.
+
+---
