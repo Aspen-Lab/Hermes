@@ -270,11 +270,23 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly @ 2026-08-16 06:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **blocked: round 29 A's live-search pass needs credentials
+                  this cloud sandbox does not have @ 2026-08-16 06:26 UTC.**
+                  Neither `web/.local-data/profile.json` nor
+                  `GOOGLE_VERTEX_PROJECT`/ADC (the Ruling 75 replacement) is
+                  present. No product code touched, no measurement run. See
+                  §4 "Round 29 — cloud run reached A, cannot do the live
+                  pass" for the checks. **HAND-OFF UNCHANGED: `WHOSE TURN: A
+                  — round 29's measurement pass`**, for the laptop session or
+                  `chatgpt-local` to pick up. Turn lock released (`HELD BY:
+                  free`) in this entry's own commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-15 21:4x UTC — MANAGER
                   VERIFICATION OF ROUND 28 C IS COMPLETE, RUN BY cloud-hourly.**
                   Claimed the lock (`free` → `cloud-hourly @ 2026-08-15 21:26
@@ -78372,5 +78384,15 @@ refused **by the posting id alone**.
 **VERDICT: C's TURN IS ACCEPTED.** Every reproducible claim reproduced; no discrepancy found between the §4 write-up and the actual tree. This session found nothing C got wrong, which is itself worth recording plainly rather than manufacturing a finding to look independent.
 
 **THE ONE OPEN ITEM IS LEFT OPEN, NOT RULED ON HERE.** Raising `feed/pipeline.ts`'s hard-coded 8000 ms paper-surface timeout to 25000 ms is a live-behaviour trade-off (more tolerance for a slow grounded call vs. a slower honest-empty on a real user-facing surface) that this cloud run has no standing to decide unilaterally overnight with no one reviewing it — it is **carried forward for the user or the laptop session to rule on**, not resolved by invented authority. It does not block round 29.
+
+---
+
+### Round 29 — cloud run reached A, cannot do the live pass
+
+**2026-08-16 06:26 UTC, `cloud-hourly`.** Read `HANDOFF-ABC.md` in full, then `MULTIAGENT-report-parity.md` §0b, §0c, §0d, §1's current-state block, the §1b–§1t / §1v standing rulings (including Ruling 75, the 2026-08-15 user directive suspending Tavily/Adzuna/USAJobs/JSearch for all testing and moving the search provider to Vertex Gemini) through Ruling 76, §2, §3, and this round's own §4 lead-in (round 28 C's close and the round 28 manager verification immediately above). Claimed the turn lock (`free` → `cloud-hourly @ 2026-08-16 06:26 UTC`, commit `6c6c22f`) after `git pull` confirmed `HELD BY: free` and `git branch --show-current` read `feature/summary-report-revamp`, per §0d.
+
+§1 names the next job as **round 29 A — the real-data measurement pass**, which under Ruling 75 now runs on Vertex Gemini web-search grounding rather than Tavily, needing `GOOGLE_VERTEX_PROJECT` / `GOOGLE_VERTEX_LOCATION` plus valid Application Default Credentials. **Checked directly in this sandbox, not assumed:** `env | grep -i VERTEX` is empty, `~/.config/gcloud` does not exist, no `application_default_credentials.json` anywhere on disk, `web/.local-data/` is absent, and `web/.env.local` is absent. Neither the old profile-based keys nor the new Vertex credentials are present here, per §0c's first rule.
+
+**No product code touched. No measurement performed. No credential referenced.** Leaving §1 pointing at A, exactly as the round 28 manager-verification entry left it. Releasing the lock.
 
 **THE GATE STAYS `GATE (0%): NOT MET`.** This entry closes manager verification, not the loop's gate (Ruling 30 — only the user-driven manager, after A's live re-measurement, closes that). `WHOSE TURN:` advances to **A — round 29's measurement pass**, which needs the live search credentials in `web/.local-data/profile.json` that this sandbox does not have (§0c) — the laptop session or `chatgpt-local` should pick it up. Turn lock released (`HELD BY: free`) in this entry's own commit.
