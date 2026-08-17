@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          cloud-hourly-mcp @ 2026-08-17T14:19Z
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior) — round 4 A has now independently re-measured
