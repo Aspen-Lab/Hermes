@@ -3306,3 +3306,46 @@ describe("A29-04 — a careers section root is a path that ends at the section",
     expect(CAREERS_INDEX_TITLE_RE.test("Kairos Power Careers")).toBe(false);
   });
 });
+
+// Round 30, Ruling 81b (B's item 2, the V2 structural-guard extensions,
+// approved as written). `CAREERS_SECTION_SEGMENT_RE`'s two additions: a
+// static-page file extension tolerance, and the one witnessed compound
+// `career-paths?`. See the constant's own doc comment in jobweb.ts.
+describe("Round 30, Ruling 81b — the careers-section-segment V2 extension", () => {
+  it("catches the two live careers-explorer specimens B reproduced", () => {
+    expect(
+      isListingPage(
+        "Career Paths - MIT Department of Materials Science and Engineering",
+        "dmse.mit.edu",
+        "/about-us/career-paths/",
+      ),
+    ).toBe(true);
+    expect(
+      isListingPage(
+        "Careers and Outcomes - Materials Science Graduate Program",
+        "physics.missouristate.edu",
+        "/MaterialsScience/careers.htm",
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves the real geosi.com posting untouched", () => {
+    expect(
+      isListingPage(
+        "Battery Materials Scientist | Green Energy Origin (GEO)",
+        "geosi.com",
+        "/job-opening/battery-materials-scientist/",
+      ),
+    ).toBe(false);
+  });
+
+  it("does NOT catch a constructed `careers-advisor-job` posting path — the deliberate boundary", () => {
+    // B's own §2.3 adversarial check: a real `Career Advisor`-titled posting
+    // at a hyphen-qualified `careers`-shaped path must survive, because the
+    // extension is a closed exact-alternative list, not a hyphen-prefix or
+    // substring rule.
+    expect(
+      isListingPage("Career Advisor", "acme.com", "/careers-advisor-job/"),
+    ).toBe(false);
+  });
+});

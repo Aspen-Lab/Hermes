@@ -659,11 +659,35 @@ export function isEventIndexResult(title: string): boolean {
  * has yet witnessed a bare host on a RENDERED row; when one is witnessed, that
  * is the moment to price a name-path guard.
  */
+/**
+ * ROUND 30, RULING 81b (B's item 2, the V2 structural-guard extensions,
+ * approved as written). A live specimen reproduced the class Ruling 80b
+ * named ("a similar-conferences listing"): `electrochem.org/upcoming-
+ * meetings`, title `Upcoming Meetings - ECS`. `meetings?` was simply absent
+ * from both this list and `EVENT_HUB_TITLE_TAIL_RE` below.
+ *
+ * **THE HYPHEN-BOUNDED QUALIFIER-PREFIX ALTERNATIVE IS A CLOSED,
+ * ANCHORED ALTERNATIVE — NOT A SUBSTRING OR PREFIX RULE.** It reads
+ * `<alnum-run>-<one recognised word>`, the WHOLE terminal segment, nothing
+ * before the alnum run and nothing after the word. `upcoming-meetings`
+ * matches (one hyphen, one recognised word). A multi-hyphen slug like
+ * `co-located-workshops.html` (Ruling 64b's own must-keep) does NOT match:
+ * the character class excludes `-`, so the run before the (single) required
+ * literal hyphen can only ever be the segment's FIRST hyphen-delimited
+ * piece, and the remainder (`located-workshops.html`) is not itself one of
+ * the closed words — the alternative fails by construction, not by luck.
+ * The word list here is deliberately its OWN five words
+ * (`events?|conferences?|seminars?|workshops?|meetings?`), not the full
+ * eight-word list above — `careers?`/`jobs` are excluded from the hyphen
+ * form on purpose, so a hyphen-qualified careers path (the job side's own
+ * `careers-advisor-job` boundary case) cannot be reached from this side
+ * either.
+ */
 const EVENT_HUB_PATH_SEGMENT_RE =
-  /^(?:events?|conferences?|seminars?|workshops?|symposium|symposia|calendar|agenda|careers?|jobs)$/i;
+  /^(?:events?|conferences?|seminars?|workshops?|symposium|symposia|calendar|agenda|careers?|jobs|meetings?|[a-z0-9]+-(?:events?|conferences?|seminars?|workshops?|meetings?))$/i;
 
 const EVENT_HUB_TITLE_TAIL_RE =
-  /(?:^|\s)(?:events|conferences|seminars|workshops|symposia)$/i;
+  /(?:^|\s)(?:events|conferences|seminars|workshops|symposia|meetings)$/i;
 
 const EVENT_HUB_TITLE_HEAD_RE = /^careers?\b/i;
 

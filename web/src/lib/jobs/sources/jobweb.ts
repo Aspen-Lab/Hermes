@@ -1401,8 +1401,21 @@ function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
  * point — but **a site using a fully localised non-ASCII path would be a named
  * miss.** B did not sight one; neither did C.
  */
+/**
+ * ROUND 30, RULING 81b (B's item 2, the V2 structural-guard extensions,
+ * approved as written). Two live specimens reproduced the class Ruling 80b
+ * named ("a careers-explorer page"): `dmse.mit.edu/about-us/career-paths/`
+ * and `physics.missouristate.edu/MaterialsScience/careers.htm`. Both fail
+ * the ORIGINAL exact-equality anchor above for a shallow, structural reason,
+ * not a vocabulary gap: `career-paths` is the ONE witnessed compound of an
+ * already-recognised word, and `careers.htm` is an already-recognised word
+ * with a static-page file extension still attached. **Both extensions are
+ * additive to the closed vocabulary above, not a broadening of its shape** —
+ * they let the SAME recognised nouns survive a page-serving suffix, and add
+ * exactly the one compound actually seen live.
+ */
 const CAREERS_SECTION_SEGMENT_RE =
-  /^(?:careers?|jobs?|vacancy|vacancies|openings?|opportunities|employment|recruit|recruiting|recruitment|empleo|empleos|karriere|carrieres|vagas|werken-bij)$/i;
+  /^(?:(?:careers?|jobs?|vacancy|vacancies|openings?|opportunities|employment|recruit|recruiting|recruitment|empleo|empleos|karriere|carrieres|vagas|werken-bij)(?:\.html?|\.php|\.aspx?|\.jsp)?|career-paths?)$/i;
 
 /**
  * A29-04's conjunction, and **BOTH HALVES ARE LOAD-BEARING.**

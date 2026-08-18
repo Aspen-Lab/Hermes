@@ -2230,6 +2230,58 @@ describe("A27-01: isEventHubResult", () => {
   });
 });
 
+// Round 30, Ruling 81b (B's item 2, the V2 structural-guard extensions,
+// approved as written). `meetings?` added to both `EVENT_HUB_PATH_SEGMENT_RE`
+// and `EVENT_HUB_TITLE_TAIL_RE`, plus ONE hyphen-bounded qualifier-prefix
+// alternative in the path regex's closed list. See both constants' doc
+// comments in eventweb.ts.
+describe("Round 30, Ruling 81b — the event-hub V2 extension", () => {
+  it("catches the live similar-conferences-listing specimen B reproduced", () => {
+    expect(
+      isEventHubResult("Upcoming Meetings - ECS", "https://www.electrochem.org/upcoming-meetings"),
+    ).toBe(true);
+  });
+
+  it("does not regress A27-01's own recorded rows", () => {
+    // Ruling 64b's must-keep pair, replayed at their REAL asserted URLs.
+    expect(
+      isEventHubResult(
+        "Co-located Workshops | The Battery Show North America",
+        "https://www.thebatteryshow.com/en/co-located-workshops.html",
+      ),
+    ).toBe(false);
+    expect(
+      isEventHubResult(
+        "DLR Events | Events for July 2026",
+        "https://event.dlr.de/en/event/emea2026-workshop-on-battery-technology/",
+      ),
+    ).toBe(false);
+    // The SolarPACES bare-hub-path single-event control.
+    expect(
+      isEventHubResult("32nd SolarPACES Conference", "https://www.solarpaces.org/conference"),
+    ).toBe(false);
+  });
+
+  it("the hyphen-qualifier alternative is a closed, anchored alternative — not a substring rule", () => {
+    // Pair a title that DOES satisfy signal 2 (a plural tail word) with a
+    // multi-hyphen path, to isolate signal 1's own behaviour: if it wrongly
+    // matched a multi-hyphen slug, this row would become a false catch.
+    // The character class excludes `-`, so only the FIRST hyphen-delimited
+    // piece can ever be the qualifier, and the remainder
+    // (`located-workshops.html`) is not itself one of the five words — the
+    // alternative fails by construction. This is exactly why the real
+    // `co-located-workshops.html` must-keep above survives.
+    expect(
+      isEventHubResult("Upcoming Workshops", "https://example.test/co-located-workshops.html"),
+    ).toBe(false);
+    // A single, genuine hyphen-qualified compound DOES fire — this is the
+    // shape the alternative exists for, and it needs no title-side help.
+    expect(isEventHubResult("Upcoming Meetings", "https://example.test/upcoming-meetings")).toBe(
+      true,
+    );
+  });
+});
+
 // ───────────────────────────────────────────────────────────────────────
 // A27-03 (round 27, item 4). WITHIN-YEAR EXPIRY BLINDNESS.
 //

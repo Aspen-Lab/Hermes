@@ -82428,3 +82428,24 @@ Implemented as designed at `web/src/lib/jobs/sources/jobweb.ts`. `ROLE_TEXT_CAND
 **Ruling 75 obeyed absolutely: zero live calls, any provider.** Pure unit implementation and test execution, no network reached. No credential printed, logged, committed, or written.
 
 This commit touches only `web/src/lib/jobs/sources/jobweb.ts` and `web/src/lib/jobs/sources/jobweb.test.ts` (plus this file's own §4 append).
+
+### Round 30 — Agent C — ITEM 2 (Ruling 81b, the two V2 structural-guard extensions): **BOTH SIDES SHIPPED EXACTLY AS DESIGNED, ZERO REGRESSIONS ON EITHER SURFACE.**
+
+**Job side**, `web/src/lib/jobs/sources/jobweb.ts:1417` — `CAREERS_SECTION_SEGMENT_RE` extended (consulted by `isCareersSectionRoot`, `:1456`, unchanged): the real single-line regex is `/^(?:(?:careers?|jobs?|vacancy|vacancies|openings?|opportunities|employment|recruit|recruiting|recruitment|empleo|empleos|karriere|carrieres|vagas|werken-bij)(?:\.html?|\.php|\.aspx?|\.jsp)?|career-paths?)$/i` — B's wrapped V2 shape, collapsed to one line with identical semantics: every original word optionally followed by a static-page extension, OR the standalone compound `career-paths?`.
+
+**Event side**, `web/src/lib/events/sources/eventweb.ts:686-689` — `meetings?` added to `EVENT_HUB_PATH_SEGMENT_RE` alongside the one hyphen-bounded qualifier-prefix alternative `[a-z0-9]+-(?:events?|conferences?|seminars?|workshops?|meetings?)` (a closed, anchored alternative with its OWN five-word list, deliberately excluding `careers?`/`jobs` — verified by construction: the character class excludes `-`, so only the segment's FIRST hyphen-delimited piece can ever be the qualifier prefix, which is why a multi-hyphen slug like `co-located-workshops.html` cannot match); `meetings` added to `EVENT_HUB_TITLE_TAIL_RE`. `isEventHubResult` (`:694`) itself untouched.
+
+**NEW TESTS**, both files:
+
+- `jobweb.test.ts`, new `describe("Round 30, Ruling 81b — the careers-section-segment V2 extension", …)`: the two live specimens caught (`dmse.mit.edu/about-us/career-paths/`, `physics.missouristate.edu/MaterialsScience/careers.htm`), `geosi.com`'s real posting survives, the constructed `/careers-advisor-job/` boundary case (B's §2.3 adversarial check) stays NOT caught.
+- `eventweb.test.ts`, new `describe("Round 30, Ruling 81b — the event-hub V2 extension", …)`: the live specimen caught (`electrochem.org/upcoming-meetings`), Ruling 64b's must-keep pair and the SolarPACES control replayed at their real asserted URLs (unchanged), and a direct isolation test of the hyphen-qualifier alternative — a title that DOES satisfy the title-tail signal paired with the multi-hyphen `co-located-workshops.html` path stays `false` (proving the PATH half alone rejects the multi-hyphen slug, not a lucky title mismatch), while a genuine single-hyphen compound (`upcoming-meetings`) fires with no title-side help at all.
+
+**A29-04's own 10-row matrix** (`describe("A29-04 — a careers section root is a path that ends at the section", …)`) and **A27-01's own recorded rows** (`describe("A27-01: isEventHubResult", …)`, including Ruling 64b's must-keep pair and the SolarPACES control at their existing assertions) were RE-RUN, not just re-read: all pass unchanged, confirmed by executing the full suite, not by inspection alone.
+
+**Gate at this item's close:** `cd web && npx vitest run` — **99 files / 2293 tests, 2293 passing, ZERO failures.** `npx tsc --noEmit` — clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, zero new. No test deleted or weakened.
+
+**Ruling 75 obeyed absolutely: zero live calls, any provider.** Pure unit implementation and test execution, no network reached. No credential printed, logged, committed, or written.
+
+This commit touches only `web/src/lib/jobs/sources/jobweb.ts`, `web/src/lib/jobs/sources/jobweb.test.ts`, `web/src/lib/events/sources/eventweb.ts`, `web/src/lib/events/sources/eventweb.test.ts` (plus this file's own §4 append).
+
+**BOTH ROUND 30 C ITEMS ARE NOW BANKED.** See §1 for the close-out.
