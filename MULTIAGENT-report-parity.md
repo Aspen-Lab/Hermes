@@ -270,11 +270,91 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 30 + 2026-08-18 17:50 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-18 18:0x UTC — ROUND 30 C IS
+                  COMPLETE. BOTH COMMISSIONED ITEMS LANDED, TWO COMMITS, EACH
+                  PUSHED THE MOMENT IT WAS MADE.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`c1ac1f5`), so the race was won rather than
+                  assumed.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **ITEM 1 (`507a86c`): TWO OF THREE DESIGNED CLAUSES SHIPPED.**
+                  `ROLE_TEXT_CANDIDATE_RE` and `BOARD_DOMAIN_BRAND_RE` landed
+                  exactly as Ruling 81a specified, additive in the
+                  employer-candidate `.find()` chain
+                  (`jobweb.ts:1772-1773`). **The third, `CAREERS_OFFICE_HEAD_RE`,
+                  was implemented exactly as designed and then caught by the
+                  gate itself**: its required missing end-anchor (needed to
+                  reach past trailing text in `Career Connections Center
+                  University of Florida`) also vetoes the LOCKED must-keep
+                  `Career Services International Ltd` (B13-01 Gap A's own
+                  test). Per this round's own STOP protocol, withheld rather
+                  than redesigned — filed **`POLICY — manager decides`** in
+                  §4. `Career Connections Center University of Florida` stays
+                  a named, unaddressed residual, asserted honestly in the new
+                  tests as still rendering wrong rather than silence.
+
+                  **ITEM 2 (`f7929aa`): BOTH V2 EXTENSIONS SHIPPED EXACTLY AS
+                  DESIGNED, ZERO REGRESSIONS.** Job side —
+                  `CAREERS_SECTION_SEGMENT_RE` (`jobweb.ts:1417`) tolerates a
+                  static-page extension plus the witnessed compound
+                  `career-paths?`; both live specimens (`dmse.mit.edu`,
+                  `physics.missouristate.edu`) now caught, `geosi.com` and the
+                  constructed `careers-advisor-job` boundary both correctly
+                  survive. Event side — `meetings?` added to
+                  `EVENT_HUB_PATH_SEGMENT_RE`/`EVENT_HUB_TITLE_TAIL_RE`
+                  (`eventweb.ts:686-689`) plus the one hyphen-bounded
+                  qualifier-prefix alternative in its own closed five-word
+                  list; `electrochem.org/upcoming-meetings` now caught,
+                  Ruling 64b's must-keep pair and the SolarPACES control
+                  RE-RUN unchanged, and a dedicated isolation test proves the
+                  multi-hyphen slug (`co-located-workshops.html`) cannot match
+                  by construction, not by luck. A29-04's own 10-row matrix and
+                  A27-01's own recorded rows were RE-RUN as part of the full
+                  suite, not just re-read.
+
+                  **RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA,
+                  USAJOBS OR JSEARCH CALL, FOR ANY PURPOSE — in fact zero live
+                  calls of any kind.** This was a pure implementation and unit-
+                  test turn, per the round brief; no network was reached at
+                  all. No credential printed, logged, committed or written.
+
+                  **THE GATE, AT EACH ITEM'S CLOSE AND AGAIN AT THE END:**
+                  item 1 close — 99 files / 2287 tests, 2287 passing, zero
+                  failures. item 2 close (final) — **99 files / 2293 tests,
+                  2293 PASSING, ZERO failures** (27 new tests total across
+                  both items), `tsc --noEmit` clean both times, `eslint src`
+                  the one standing `quiz.tsx:46` error / 0 warnings, both
+                  times. **NO TEST WAS EVER DELETED OR WEAKENED TO MAKE
+                  ANYTHING PASS** — the one test at genuine risk (`Career
+                  Services International Ltd`) was protected by withholding
+                  the colliding clause, not by touching the test.
+
+                  **`POLICY — manager decides`, filed in §4 under item 1:**
+                  ship the two-of-three partial as this round's discharge of
+                  Ruling 81a (C's recommendation — the two shipped clauses are
+                  unconditionally clean and cost nothing measured; withholding
+                  the third loses only one of seven originally-targeted
+                  must-drops), or hold `CAREERS_OFFICE_HEAD_RE` for a future
+                  round to redesign around the collision (C is not permitted
+                  to improvise that redesign itself).
+
+                  **HAND-OFF: `WHOSE TURN: A — round 30, GATE CANDIDATE ROUND
+                  (value + visual, searchProvider: gemini, artefact duty 79e,
+                  EUCHEMSIL expiry-twin)`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this entry's own commit. Both items now
+                  shipped (partial + full), so A's gate-candidate census can
+                  finally measure against the actual code, not a
+                  approved-but-unimplemented design.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~18:0x UTC — ROUND 30 B
                   VERIFIED INDEPENDENTLY, RULINGS 81a-81d APPENDED (§4).**
                   Gate re-run cold by the manager: **99 files / 2266 tests,
