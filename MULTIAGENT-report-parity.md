@@ -83078,3 +83078,78 @@ Ranked by what a reader loses, worst first.
 
 **RULING 83f — sonnet quality, third data point, REPORTED TO THE USER per the standing instruction.** A's round-30 turn was methodologically disciplined (self-caught instrument defect, honest flake disclosure, correct hand-off under the non-zero rule) **but carried the two citation/argument defects of 83d — the first visible quality wobble since the downgrade.** Both conclusions survived the manager's independent re-derivation, so the cost was manager verification time, not a wrong record. Disposition: named, watched, reported; NOT silently re-upgraded — if the pattern recurs at B or C seats in round 31, the user decides the model question, not the manager.
 
+
+### Round 31 — Agent B — ITEM 1 (A30-01, job: `psi.ch` project/programme name in the employer slot): **DIAGNOSED — NO SHIPPED GUARD'S VOCABULARY COVERS "Project". A FOURTH BOUNDED, ADDITIVE VETO IS DESIGNED, KEYED ON STRUCTURE (a trailing multi-word descriptive parenthetical), NOT ON THE BARE WORD, ADVERSARIALLY CLEAN AGAINST THE FULL 21-ROW MUST-KEEP CORPUS PLUS NINE CONSTRUCTED REAL "Project"-NAMED ORGANISATIONS.**
+
+**B changed no code.** Executed the SHIPPED, exported `webResultToRawJobItem` (`web/src/lib/jobs/sources/jobweb.ts:1508`) directly on the exact recorded title/URL; the candidate veto itself was written and adversarially tested standalone in a throwaway harness (`web/zz-r31b/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load, `*.probe.ts` include) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after. No live pull was needed for this item (the recorded title/URL is real and already on record); Ruling 75 therefore not exercised here, nothing to report against it. No credential printed, logged, committed or written.
+
+## 1.0 CONFIRMED, EXECUTED, NOT TAKEN ON A's WORD
+
+```
+webResultToRawJobItem(
+  { title: "Summer Internship Opportunity - BALDER Project (Licensing Support for a Molten Salt Reactor)",
+    url: "https://www.psi.ch/en/ahl/summer-internship-2026",
+    snippet: "PSI is looking for a summer intern to support licensing work for a molten salt reactor project. Apply now for this internship opportunity." },
+  ["molten salt"],
+)
+```
+renders `title: "Summer Internship Opportunity"`, **`company: "BALDER Project (Licensing Support for a Molten Salt Reactor)"`** — byte-identical to A30-01.
+
+## 1.1 THE EXACT CANDIDATE PATH, TRACED
+
+Title split by `title.split(/\s+([-–—|·])\s+/)` (`jobweb.ts:1589`) on the single ASCII-hyphen separator: `parts = ["Summer Internship Opportunity", "BALDER Project (Licensing Support for a Molten Salt Reactor)"]`, `separators = ["-"]`. `usesChromeSeparator` is true (an ASCII hyphen is chrome, not `–`/`—`), so `employerSegments = ["BALDER Project (Licensing Support for a Molten Salt Reactor)"]` — the WHOLE trailing segment, parens and all, since `(` is not in the separator class. `titleEmployer` is undefined (the title contains no `at <Name>` shape). The title-level `parenthetical` capture (`/\(([^()]{2,60})\)\s*$/`, `jobweb.ts:1690`) DOES match — `"Licensing Support for a Molten Salt Reactor"` — but `parentheticalEmployer` stays undefined because that content fails `ORG_DESIGNATOR_RE` (no designator word). So the candidate array reaching `.find()` is `[undefined, "BALDER Project (Licensing Support for a Molten Salt Reactor)", undefined]`.
+
+**Checked against every one of the twelve existing guards in the `.find()` predicate (`jobweb.ts:1709-1786`), by inspection AND by the fact the executed render above proves none fired:** not a known job board (`KNOWN_JOB_BOARD_DOMAINS`), not a season/cohort label, not a bare location, not a host-brand match (`looksLikeHostBrand("BALDER Project (...)", "psi.ch")` — host label `psi` is 3 characters, candidate normalises to 40+, no run can start with it), not a topic label, not host boilerplate, not nav chrome, not a board self-name, not a programme-area list (no `,`/`&`/`and` before a trailing `programs?`), not `CAREERS_INDEX_TITLE_RE`, not `TRUNCATED_CANDIDATE_RE` (no trailing ellipsis), not `CAREERS_OFFICE_LABEL_RE`, **not `ROLE_TEXT_CANDIDATE_RE`** (`scientist|technologist|intern(?:ship)?s?|postdoc(?:toral)?|fellows?|researchers?|co-ops?` — "BALDER Project (Licensing Support for a Molten Salt Reactor)" contains none of these words; "Internship" lives in the ROLE segment, not this one), not `BOARD_DOMAIN_BRAND_RE` (no `.careers`/`.jobs` host suffix). **Every guard is confirmed innocent by name, matching A's own trace exactly** — this item adds nothing A didn't already establish here; it moves from "confirmed" to "diagnosed exact mechanism" and then to "designed fix."
+
+## 1.2 THE DESIGN — STRUCTURE, NOT THE BARE WORD "Project"
+
+The commissioning brief's own warning is binding: `ORG_DESIGNATOR_RE`'s doctrine forbids a heuristic that deletes real organisation names, and "Project" genuinely appears in real org names (`Project44`, `Project HOPE`, `Project Management Institute`, `Project Canary`, `The Manhattan Project` — none contain a trailing parenthetical in ordinary use). **A bare-word veto on "Project" was rejected without being built** — it would delete every one of those. The actual defect is narrower and structural: **a segment shaped `<label> Project (<long descriptive qualifier>)`**, where "Project" is the LAST word immediately before an opening parenthesis, and the parenthetical itself reads as a description (multiple words, no institutional designator) rather than a short qualifying tag (`(US)`, `(Ltd)`, `(PMI)`).
+
+```
+// jobweb.ts — new, additive, same priority level as the twelve existing guards
+const PROGRAMME_LABEL_TAIL_RE = /\bprojects?\s*\(([^()]{2,80})\)\s*$/i;
+
+// Deliberately NOT the shipped ORG_DESIGNATOR_RE (which is END-anchored, for
+// a different job — admitting a trailing parenthetical AS an employer name).
+// This is an UNANCHORED presence check over the same vocabulary, used to ask
+// "does this parenthetical smell like it is naming/describing an
+// institution ANYWHERE in it" — deliberately excludes "co" and "as" from the
+// shipped list, both high-collision bare short tokens unsafe unanchored.
+const ORG_DESIGNATOR_ANYWHERE_RE =
+  /\b(?:ltd|limited|inc|incorporated|llc|llp|plc|pvt|corp|corporation|gmbh|ag|sa|bv|nv|ab|oy|pty|university|universit[ee]|institute|institut|laboratory|laboratories|labs?|college|hospital|foundation|academy|centre|center)\b/i;
+
+function looksLikeProjectLabelWithDescription(candidate: string): boolean {
+  const m = candidate.match(PROGRAMME_LABEL_TAIL_RE);
+  if (!m) return false;
+  const inner = m[1].trim();
+  if (ORG_DESIGNATOR_ANYWHERE_RE.test(inner)) return false;   // e.g. "(... Institute)" -- let it through
+  return inner.split(/\s+/).filter(Boolean).length >= 3;      // a short tag ("(US)", "(PMI)") is not a description
+}
+```
+
+Added as `!looksLikeProjectLabelWithDescription(p) &&` at the END of the existing `.find()` predicate chain (`jobweb.ts:1786`) — additive, nothing reordered, nothing existing touched.
+
+## 1.3 EXECUTED, ADVERSARIALLY, FIVE SEPARATE ASSERTION GROUPS — ALL PASS
+
+| group | corpus | result |
+|---|---|---|
+| live specimen | `BALDER Project (Licensing Support for a Molten Salt Reactor)` | **caught** |
+| 21-row must-keep (round 30 B item 1 §1.0, verbatim) | `BD`, `J&J`, `BMS`, `Tesla`, `INL`, `Oak Crest`, `Thermo Fisher Scientific`, `Battery Ventures`, `GSK US`, `Johnson & Johnson`, `Sandia National Laboratories`, `Idaho National Laboratory`, `Oregon Center for Electrochemistry`, `Ionis Pharmaceuticals`, `Department of Energy`, `HyET Lithium`, `CATL`, `AquaBattery`, `Ion Exchange`, `Ion Exchange Ltd.`, `Kairos Power` | **0 of 21 false positives** |
+| adversarial: real orgs containing "Project" | `Project44`, `Project HOPE`, `Project Management Institute`, `The Manhattan Project`, `Project HOPE (Global Health)`, `Project Canary`, `Genome Research Project (Institute of Genomics)`, `XYZ Project (US)`, `XYZ Project (Ltd)` | **0 of 9 false positives** (the "Institute of Genomics" and "(Ltd)" rows are exactly why the designator check is unanchored and the 3-word floor exists — both were false positives on the first draft, caught by this adversarial pass, and fixed before banking) |
+| must-drop corpus (round 30 B item 1 §1.0, verbatim) | `Research Technologist 1`, `Internship battery R&D`, `Focused Ion Beam, Electron Microscopy ...`, `Co-ops`, `Youth & Young Adult Programs ...`, `CSE`, `Chemistry`, `Chemical Engineering`, `Career Services`, `Kairos Power, Alameda, California, United States`, `Medicinal Chemistry (Graduate Student level) @ Septerna`, `Career Connections Center University of Florida`, `Membrane Scientist for Electrodialysis`, `EV.Careers` | **0 of 14 touched** — none share the `Project (...)` shape; this veto is not their fix and does not claim to be |
+
+**One honest miss, named, not force-fit**: the first draft (designator check END-anchored, matching the shipped `ORG_DESIGNATOR_RE` verbatim) let `Genome Research Project (Institute of Genomics)` through as a false positive of the veto — "Institute" doesn't end that inner string, so the end-anchored test missed it, revealing the anchored form is the wrong tool for this different job. Fixed by making the designator check unanchored for this specific application; re-run, clean. This is recorded so a future reader does not "simplify" it back to the shipped `ORG_DESIGNATOR_RE` and reintroduce the false positive.
+
+## 1.4 FAILURE DIRECTION AND BLAST RADIUS
+
+**Silence, exactly Ruling 32's required answer — no invented value.** On the PSI row, once `employerSegments[0]` is vetoed, EVERY candidate in `[titleEmployer, ...employerSegments, parentheticalEmployer]` is undefined (there is no real institution name anywhere in this title for a lower-priority candidate to rescue — `PSI`/`Paul Scherrer Institute` never appears), so `company` becomes `undefined` and the card renders no employer line, the same honest-silence state A29-03's two rows are in today. **The veto can only ever REMOVE a candidate**, exactly the same direction as every other guard in this chain (round 30 B item 1 §1.5's own blast-radius argument applies unchanged): it cannot manufacture a new `isOwnerNameTopicCollision` (Ruling 57b) name out of nothing, and no recorded or live-witnessed row this loop has ever logged has a second surviving candidate behind a `Project (...)`-shaped one, so there is no evidence of a new 57b collision — but per the standing instruction, round 31 A must re-measure pool count after this ships, not assume invariance.
+
+## 1.5 TESTS AT RISK, GREPPED
+
+`web/src/lib/jobs/sources/jobweb.test.ts` — grepped for `Project`: **one hit**, `"Project and Website Coordinator"` (`jobweb.test.ts:814`, part of round 13 A's eleven-live-posting `isListingPage` must-keep matrix). This is a `roleTitle`/whole-title check (`isListingPage`), an entirely different function from the employer `.find()` chain this item touches, and the string has no trailing parenthetical, so `PROGRAMME_LABEL_TAIL_RE` cannot match it regardless. **Zero collision.** No other reference to "Project" exists in the suite.
+
+## 1.6 VERDICT
+
+**A bounded, additive, fourth veto is designed and adversarially clean**: 0 of 21 must-keeps touched, 0 of 9 constructed real "Project"-named organisations touched, 0 of 14 must-drops touched (not its job), catches the one live specimen, zero test collisions. Ships as an ordinary additive clause at the same priority as the twelve existing guards — no `POLICY — manager decides` needed on this item; it is a clean design with no honest alternative-reading residual, unlike round 30 B item 1's CSE-acronym case. Recommend: **C implements as written in §1.2.**
+
+Committed and pushed as its own item. Item 2 (A30-02 event, the `eventNameFrom` fallback chain + the `events.ornl.gov` secondary witness per Ruling 83c) follows.
