@@ -80632,3 +80632,104 @@ this one.**
 the seam.**
 
 **VERDICT: real, tiny, one seam, second pass measured idempotent on 4 of 4 adversarial cases, one indistinguishable-by-construction cost named. 1 of 716.**
+
+### Round 29 — Agent B — ITEM 7 (A29-07): the repository slide deck as a conference. **THE ROW REPRODUCES, AND THE DECISIVE SIGNAL IS PUBLISHED BY THE PAGE — BUT IT IS NOT AVAILABLE WHERE THE GUARD LIVES. THAT PLACEMENT PROBLEM IS THE ITEM.**
+
+**B changed no code.** Live fetch of `scholarsarchive.byu.edu/facpub/9603/` plus
+the shipped predicates.
+
+## **7.1 THE ROW REPRODUCES, EVERY PREDICATE AS A STATED**
+
+| check | measured |
+|---|---|
+| `pageTitleFromHtml` | `Instructional Slides from Molten Salt Electrochemistry Symposium (MoSE…` |
+| `isPaperPageTitle(title)` | **false** |
+| `looksLikeEvent(title)` | **true** — on the word `Symposium` inside the artefact's own name |
+| `og:type` | `article` |
+| **`bepress_citation_title` meta** | **PRESENT** |
+| shipped `webResultToRawEventItem` | **ADMITTED**, name = the slide deck's title |
+
+**A's attribution is exactly right.** The artefact is named after the event it
+was presented at, and a keyword test cannot tell "the thing" from "a thing
+produced at the thing".
+
+## **7.2 THE HONEST SIGNAL EXISTS AND THE PAGE PUBLISHES IT**
+
+`bepress_citation_title` is **Digital Commons / bepress institutional-repository
+markup**. A page that emits scholarly citation meta is declaring itself a
+**deposited artefact record**, which is precisely "not an event". It is
+publisher-declared, structural, and cannot be invented — the same class of
+evidence as item 1's `schema.org @type`.
+
+**AND HERE IS THE PROBLEM THAT MAKES THIS ITEM MORE THAN A ONE-LINER:**
+
+**`webResultToRawEventItem` NEVER SEES THE HTML.** Its whole input is
+`{title, url, snippet}` (`eventweb.ts:1752-1755`). **Every guard in that chain is
+title-and-URL only, by construction.** So a citation-meta test **cannot be added
+to the guard chain at all** — there is nothing there to test.
+
+**THE PAGE IS ALREADY FETCHED, ONE LAYER UP.** `searchGemini` holds the raw HTML
+at `gemini-search.ts:508-517` and throws it away after reading two fields.
+**So the placement question is real and it is C's design decision, not a
+detail:**
+
+- **OPTION A — drop the row in the ADAPTER.** `searchGemini` refuses a row whose
+  HTML declares citation meta. **Cost: the adapter starts making KIND decisions,
+  which it deliberately does not do today** — its contract is "a real URL and the
+  page's own title, or no row". That is a contract change and B flags it as one.
+  It also applies to all three surfaces at once, including papers, where a
+  repository record is **exactly what the paper surface WANTS**. **This option is
+  therefore wrong as stated** — B rejects it.
+- **OPTION B — the adapter passes the fact along, the guard decides.** The
+  `WebResult` contract gains an optional page-declared kind hint; the event
+  mapper refuses on it, the job mapper ignores it, the paper surface may welcome
+  it. **Each surface keeps its own policy, which is the design already in force.**
+  Cost: a shared type widens and three surfaces see it — the same shape of change
+  round 28 B priced for `WebSearchProvider`.
+- **OPTION C — a TITLE-side artefact-head rule, no HTML needed.** A title whose
+  HEAD is an artefact noun phrase describing something *produced at* an event
+  (`Slides from …`, `Proceedings of …`, `Poster from …`, `Presentation at …`) is
+  not the event. **Measured: `looksLikeEvent` is true for `Slides from the 2026
+  Battery Symposium` and `Proceedings of the Molten Salt Workshop` as well — so
+  the class is real and larger than one row.**
+
+**B RECOMMENDS OPTION C FIRST, WITH B AS THE FOLLOW-ON.** C is cheap, needs no
+contract change, sits in the layer where every other kind guard already lives,
+and is measurable against the existing title corpus. B is the structurally
+stronger answer and should be taken only if the manager wants the page-declared
+channel for other items too — **note that item 1's channel L (schema.org
+`@type: Event`) has the IDENTICAL placement problem and the IDENTICAL solution,
+so if both land, they should land as one contract change, not two.**
+
+**BOUNDARY CONDITIONS FOR OPTION C, STATED:**
+- **Anchored at the HEAD only.** `Molten Salt Electrochemistry Symposium (MoSES)
+  2026` — the REAL event, which A confirms renders correctly 5 of 5 from
+  `pyro.byu.edu/moses` — must not match, and it does not: its head is the event's
+  own name. **B checked this rather than assuming it.**
+- **The artefact noun must be followed by an attribution preposition**
+  (`from`/`of`/`at`/`presented at`). `Poster Session` is part of a real
+  conference programme and must not be caught by a bare `Poster`.
+- **Absent title ⇒ the row already drops on no-title. The rule cannot fire and
+  invents nothing.**
+- **It is a KIND rule, so a miss falls to ADMISSION** — an artefact this list
+  does not name is rendered, not silently deleted.
+
+**VACUITY CHECK: NOT VACUOUS.** It changes this row's verdict from ADMITTED to
+dropped and leaves the real MoSES row untouched — the two differ, so the rule
+discriminates.
+
+**RESIDUAL, NAMED:** an artefact whose title does **not** announce itself
+(a deposited deck simply titled `Molten Salt Electrochemistry Symposium 2026`)
+is invisible to option C and would need option B. **B did not sight one; it is
+recorded as unwitnessed, not as cleared.**
+
+**FREQUENCY:** A recorded **EVENT, 2 of 5**; one row.
+
+**TESTS AT RISK — GREPPED:** `web/src/lib/events/sources/eventweb.test.ts` — the
+`isPaperPageTitle` / `isEventIndexResult` / `isEventHubResult` cases, which a new
+sibling predicate sits beside. If option B is ever taken,
+`web/src/lib/sources/gemini-search.test.ts`,
+`web/src/lib/jobs/sources/jobweb.test.ts` and the paper surface's tests all see
+the widened `WebResult`.
+
+**VERDICT: row real, mechanism confirmed, and the finding beyond A's is that the decisive evidence sits in a layer the guard cannot reach. Recommend the title-side rule now; if the page-declared channel is wanted, land it once for this item and item 1's channel L together.**
