@@ -82581,3 +82581,124 @@ This commit touches only `web/src/lib/jobs/sources/jobweb.ts`, `web/src/lib/jobs
 
 **RULING 82d — sonnet quality note, second data point.** C implemented two items faithfully, executed the STOP protocol on a real structural collision instead of improvising a redesign, protected the locked test by withholding code rather than touching the test, and asserted its own item's failure honestly in the new suite. No quality degradation observed at the C seat either.
 
+
+
+### Round 30 — Agent A (part 1: **METHOD, THE COLD GATE, AND THE JOB SURFACE VALUE CENSUS. `searchProvider: gemini` ON EVERY PULL. A29-03 RE-MEASURED: BOTH ROWS NOW RENDER HONEST SILENCE, CONFIRMED BOTH BY DIRECT EXECUTION AND BY A LIVE RE-WITNESS. ZERO 57b COLLISIONS ACROSS 10 PULLS. ONE FRESH, UNEXPLAINED JOB-SURFACE FINDING.**)
+
+**STATUS: PARTIAL BY DESIGN**, mirroring the round-29 discipline: part 1 is method + job value, part 2 is event value + the EUCHEMSIL twin, part 3 is visual + the ranked lists + the gate verdict. **No gate verdict is set here, and A never closes the gate in any case (Ruling 30).**
+
+Claimed the turn lock (`c7e6ac6`, `LAPTOP-3CL10CG5 @ 2026-08-18 18:11 UTC`) after `git pull` and after confirming `git branch --show-current` reads `feature/summary-report-revamp`. **The claiming push was ACCEPTED**, so the race was won rather than assumed. Grepped `Round 30 — Agent A` first, per this round's own instruction — **zero prior entries existed**, so this is a fresh start, not a resume.
+
+## **THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT**
+
+| check | expected (§1 / Ruling 82) | A measured cold |
+|---|---|---|
+| `npx vitest run` | **99 files / 2293 tests, 2293 passing, ZERO failures** | **99 files / 2293 tests, 2293 passing, ZERO failures** |
+| `npx tsc --noEmit` | clean | **clean, exit 0** |
+
+## **METHOD**
+
+Live credentials reconfirmed by **BOOLEAN CHECK ONLY**: in `profile.json` `tavilyApiKey` `true`, `adzunaAppKey` `true`, `usajobsApiKey` `true`, `feedAiApiKey` `false`, **`tavilyEnabled: false`**; via `.env.local` `GOOGLE_VERTEX_PROJECT` `true`, `GOOGLE_VERTEX_LOCATION` `true`, `GOOGLE_APPLICATION_CREDENTIALS` `true`, and `TAVILY_API_KEY`/`BRAVE_API_KEY`/`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`/`USAJOBS_API_KEY`/`USAJOBS_USER_AGENT`/`JSEARCH_API_KEY`/`RAPIDAPI_KEY` ALL `false`. **`.env.local` was NEVER `cat`-ed and no key value was printed, logged, written or committed anywhere.** `profile.json`'s non-secret query fields: `researchTopics: ["LCO","topochemical","ion exchange","molten salt","battery"]`, `careerStage: PhD Year 3`, `industryVsAcademia: industry`, `locationPreferences: []`, `preferredMethods: []`, 6 `softTopics`, 8 `advisorSeedTexts`. Byte-for-byte the same environment round 29 A confirmed.
+
+**`searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }`** was passed explicitly on every pull (both surfaces), so `searchProvider: gemini` is forced by construction, not merely observed — matching Ruling 75's resolution order with `tavilyEnabled: false` already set in the profile.
+
+**RULING 75 obeyed by a fuse**: a `fetch` wrapper throws on any URL containing `tavily.com`, `adzuna.com`, `usajobs.gov`, `jsearch` or `rapidapi.com`. **Measured: 0 banned trips across all 10 job pulls and 5 event pulls.**
+
+**Two windows on the job surface, one on the event surface**, each five independent live pulls (Ruling 39d/41a), a no-op `PoolCache` forcing a genuinely fresh network build every time (`cacheHit: false` throughout). Each pull calls `buildDailyJobPool()`/`buildDailyEventPool()`, maps with `scoredJobToJob()`/`scoredEventToEvent()`, and is cross-checked against a direct call to the shipped, exported `webResultToRawJobItem` for row-level ground truth where needed. **The adapter is observed through its own exported seam**: `searchGemini` is wrapped with `vi.spyOn`, calling straight through to the shipped implementation and additionally recording the `{title, url, snippetLength, pageKind}` of every row it returns — nothing under `src/` was modified, and every value quoted below is the shipped code's own output.
+
+**A SELF-DISCLOSED INSTRUMENT DEFECT, CAUGHT BEFORE ANY FIGURE WAS BANKED — the exact same class round 29 A owned.** The first job-census run serialised `job.title`/`job.company`/`job.url`, but `Job` carries `roleTitle`/`companyOrLab`/`linkPosting`; every per-row field silently vanished from the persisted JSON (only `location`/`isRemote` survived). **Caught by inspection before quoting a single company value**, confirmed against `src/types/index.ts:204-227` directly, and the harness was corrected and **re-run in full** rather than patched around. The first run's per-pull AGGREGATE numbers (`fetched`, `errors`, `beforeDedup`, `afterDedup`, `poolItemCount`, `offeredCount`, `collisions`) do not depend on the broken field names and are kept below as a second, valid window; its per-row `namedChecks` are discarded as unreliable (guaranteed false negatives) and not quoted anywhere in this census.
+
+Throwaway harness lives **OUTSIDE `src/`** (`web/zz-r30a/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load, include pattern `zz-r30a/**/*.probe.ts`); **deleted before the final commit of this round**, `git status --porcelain --untracked-files=all` will be confirmed clean in part 3's close-out. Result JSON lives in this session's scratchpad, outside the repository, and its compact host-level tables are transcribed below per the artefact duty (Ruling 79e). **No third-party page text is pasted** — every quoted title is clipped to ≤60 characters or is a fully-loaded, independently-verifiable proper name already recorded in this file's own history.
+
+## **A29-03 RE-MEASURE (Ruling 82c) — BOTH ROWS NOW HONEST SILENCE, CONFIRMED TWO WAYS**
+
+**Direct execution first**, on the exact recorded titles, against the shipped (post round-30-C) `webResultToRawJobItem`:
+
+| title | pre-round-30 rendered `company` | round 30 A measured `companyOrLab` |
+|---|---|---|
+| `Careers Open application - Internship battery R&D - HyET Lithium` @ `hyetlithium.com` | `Internship battery R&D` (WRONG) | **`undefined` — honest silence** |
+| `Postdoctoral Appointee - Membrane Scientist for Electrodialysis - Job posted on PostdocJobs.com` @ `postdocjobs.com` | `Membrane Scientist for Electrodialysis` (WRONG) | **`undefined` — honest silence** |
+
+**Then LIVE re-witness, both rows, in this round's own job census (window 2):** the `hyetlithium.com` row (identical title, `https://hyetlithium.com/careers/internship-battery-research/`) appeared in pulls 1 and 4 of 5, rendering `companyOrLab: null` both times. The `postdocjobs.com` row (`https://www.postdocjobs.com/posting/7317952`) appeared in pulls 1, 3 and 4 of 5, rendering `companyOrLab: null` all three times. **No different wrong candidate was promoted in either row's place** — the reopen-trigger condition in the round brief ("if a DIFFERENT wrong candidate got promoted") did not fire.
+
+**One nuance worth recording exactly, because it corrects a plausible misreading of round 30 B's own language.** B's must-keep corpus (§1.0) names `HyET Lithium` as **"A29-03's rescue target"**, which could be read as predicting the veto would PROMOTE `HyET Lithium` into the company slot (a value-level rescue) rather than leaving it silent. **Measured, not assumed: `HyET Lithium` does NOT survive as the next candidate.** The title's second employer-segment, `HyET Lithium`, is independently vetoed by the PRE-EXISTING (not round-30) `looksLikeHostBrand` guard — `shared.ts:420-434` — because its normalised form (`hyetlithium`) equals the host's own label run (`hyetlithium.com`). This is the SAME already-documented cost the guard's own comment names (`shared.ts:398-402`: "a company posting under its own exact domain name … is rejected TODAY"), unrelated to round 30's new clauses. On the `postdocjobs.com` row, the second segment (`Job posted on PostdocJobs.com`) is independently vetoed by the pre-existing `HOST_BOILERPLATE_PHRASE_RE` (`jobweb.ts:1048-1049`), whose own doc comment literally uses **this exact phrase** as its worked example. **So both rows land on silence for a combination of the NEW round-30 veto (killing the wrong first candidate) and a DIFFERENT, older, already-priced guard (killing the second candidate) — not because no rescue was designed, but because the "rescue target" was never reachable to begin with, for a reason this loop already named and accepted five-plus rounds ago.** A29-03 is **ADDRESSED**, not a finding — the outcome (silence, not a wrong value) is exactly what the round-30 brief predicted, reached by a slightly different mechanism than a literal reading of "rescue" would suggest, stated here so a future reader is not surprised that `HyET Lithium` still does not render.
+
+## **POOL-COUNT / RULING 57b RE-MEASURE (round-30-specific duty)**
+
+**Structural argument first, then live confirmation.** `webResultToRawJobItem` was read in full at its current line numbers: the three round-30 vetoes (`ROLE_TEXT_CANDIDATE_RE`, `BOARD_DOMAIN_BRAND_RE`, and the withdrawn `CAREERS_OFFICE_HEAD_RE`) all live INSIDE the employer `.find()` predicate (`jobweb.ts:1709-1786`), which only ever changes the `company` FIELD of a row that has already survived every earlier hard gate. **A veto can never by itself cause `webResultToRawJobItem` to return `null`** — confirmed directly: both A29-03 rows above still returned a truthy `RawJobItem`, only `company` changed. So `beforeDedup` (the ingestion-level count) is structurally invariant to the new vetoes, by construction, not by assumption.
+
+**`afterDedup` is a different question, correctly flagged by B**: `dedup.ts:47` folds `item.company` into the dedup fingerprint, so a candidate that flips from a wrong string to `undefined` COULD change which rows collapse together. **Live-measured, both windows, 10 job pulls total**: `beforeDedup → afterDedup` deltas were 6, 4, 6, 3, 3 (window 1) and 5, 3, 4, 7, 3 (window 2) — small, and of the same order as ordinary cross-aggregator duplicate postings (the same PSI/HyET/GE Vernova/postdocjobs rows recur near-verbatim across `remotive`/`arbeitnow`/`himalayas`/`jobweb`). **No spike or anomaly attributable to the new vetoes was observed.**
+
+**Ruling 57b's own collision guard (`isOwnerNameTopicCollision`) was wrapped with a call-through spy** (`shared.ts:285`, invoked from `scoring.ts:394`) so every firing would be captured with its `(company, title)` pair. **Result: ZERO collisions fired across all 10 job pulls (both windows).** This directly answers B's own flagged risk ("promoting a lower-priority candidate … can newly surface a real organisation name that then collides with 57b") — **measured this round to be a non-event, not assumed invariant.** `poolItemCount` (the final scored pool, after the required-topic gate) moved between 0 and 11 per pull across both windows — driven almost entirely by the profile's narrow topic set (LCO/topochemical/ion exchange/molten salt/battery) filtering a ~140-170-row raw aggregate down to a handful of on-topic rows, the same shape round 29's job census showed; **not attributable to the round-30 vetoes**, which touch only the `company` field on rows that already pass the topic gate.
+
+**A real, live, unrelated flake was also measured, unprompted, and is recorded because Ruling 75's own doctrine says a failed live pass is reported, never hidden**: the `jobweb` (gemini) source hit its hard `withSourceTimeout` (25000 ms) and returned **zero** rows on 3 of the 10 job pulls (30%), and the `eventweb` source did the same on 1 of 5 event pulls (20%) — see part 2. This is `GEMINI_SOURCE_TIMEOUT_MS`'s own documented risk (`gemini-search.ts`'s comment: "one slow page fetch past 25 s turns a 60-row census into ZERO rows") now measured at a real live frequency for the first time this loop. **Not a round-30 regression** — the timeout constant and the source-timeout wrapper are both untouched by round 30's commits — but worth a name for whoever next prices Ruling 76a's budget.
+
+## **ONE FRESH, UNEXPLAINED JOB-SURFACE FINDING — A30-01**
+
+Witnessed **1 of 5** pulls (window 2, pull 1), real URL:
+
+> `Summer Internship Opportunity - BALDER Project (Licensing Support for a Molten Salt Reactor)` @ `https://www.psi.ch/en/ahl/summer-internship-2026`
+> renders `roleTitle: "Summer Internship Opportunity"`, **`companyOrLab: "BALDER Project (Licensing Support for a Molten Salt Reactor)"`**
+
+**This is a fresh instance of the same CLASS round 30's own vetoes exist to fight — a role/programme description landing in the employer slot — but it is a different SHAPE none of the three clauses reach.** Checked directly against the shipped chain, in order: not a known job board; not a bare location; not a host-brand match (`psi.ch` is 3 characters, the candidate is 40+); not a topic label, boilerplate phrase, nav-chrome, board self-name, or programme-area list (by inspection of each guard's own closed vocabulary); not `CAREERS_INDEX_TITLE_RE`, not `TRUNCATED_CANDIDATE_RE`, not `CAREERS_OFFICE_LABEL_RE`; **and NOT `ROLE_TEXT_CANDIDATE_RE`** — its vocabulary is `scientist|technologist|intern(ship)?s?|postdoc(toral)?|fellows?|researchers?|co-ops?`, and "BALDER Project (Licensing Support for a Molten Salt Reactor)" contains none of those words. It survives every existing guard and becomes the rendered employer. A does not investigate further (not A's job) — the observation is: a real institution (Paul Scherrer Institute, `psi.ch`) posted a real internship, and the card would show a project/programme name with a parenthetical qualifier as the employer, not an organisation name.
+
+## **JOB SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, WINDOW 2**
+
+86 unique hosts across 289 offered rows (5 pulls). Format: `host | first-seen title (≤60 chars) | offered-count | decision`. Decision is ground truth (row present in `pool.items` after full pipeline, any pull this window) — not per-row clause tracing (not attempted at this scale; the named rows above and below ARE clause-traced in prose).
+
+```
+lco.global | Director's Fund | x19 | not in final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x17 | not in final pool
+psi.ch | Summer Student Projects PSI Center for Nuclear Engineering a | x10 | ADMITTED (pool)
+acu.edu | NEXT Lab Internships | Abilene Christian University | x9 | not in final pool
+sites.utexas.edu | Opportunities | x9 | not in final pool
+ertel-ionstream.com | Jobs | Ertel IonStream GmbH | x9 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x9 | not in final pool
+grad.wisc.edu | PhD Student Internship Opportunities at Thermo Fisher Scient | x9 | not in final pool
+lco.edu | Internship Opportunities - Education for college students se | x9 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x8 | not in final pool
+researchersjob.com | Fully Funded Doctoral Position in Functional Oxide Thin Film | x7 | not in final pool
+stemgateway.nasa.gov | STEM Gateway | x7 | not in final pool
+job-boards.greenhouse.io | Nuclear Engineering Internship - Summer 2027 | x7 | not in final pool
+careers.gevernova.com | GE Vernova Battery Engineering & Technology Intern - Summer | x7 | ADMITTED (pool)
+climatechangejobs.com | Molten Salt Electrochemistry Postdoctoral Researcher at Idah | x5 | ADMITTED (pool)
+postdocjobs.com | Postdoctoral Appointee - Molten Salt Chemical and Electroche | x5 | ADMITTED (pool)
+energy.gov | Discover Science: Applications Open for Spring 2027 Undergra | x5 | not in final pool
+energy.sandia.gov | Energy Internship Programs | x5 | not in final pool
+evonik.com | Summer Internship Program in the U.S. | x5 | not in final pool
+faraday.ac.uk | PhD Internships | x5 | not in final pool
+pls.llnl.gov | Computational Chemistry and Materials Science (CCMS) Summer | x5 | not in final pool
+hyetlithium.com | Careers Open application - Internship battery R&D - HyET Lit | x4 | ADMITTED (pool, silent company — A29-03)
+interninsider.me | Electrical Engineering Intern - Energy Storage (Summer 2027) | x4 | not in final pool
+careers.abbvie.com | 2026 Electrochemical Reaction Engineering Intern (PhD) | x4 | not in final pool
+imr.osu.edu | BATTERI Internships | Ohio State | x4 | not in final pool
+talents.vaia.com | R&D Lab Internship: Hands-On Battery Materials Research in R | x4 | ADMITTED (pool)
+science.osti.gov | Science Undergraduate Laboratory... | U.S. DOE Office of Sci | x3 | not in final pool
+careers.dupont.com | Join Dupont for Internships & Co-ops | x3 | not in final pool
+jobright.ai | Jobright: Your AI Job Search Copilot | x3 | not in final pool
+builtin.com | Electrical Engineering Intern - Energy Storage (Summer 2027) | x3 | not in final pool
+careers.roche.com | Roche Internships for Scientific Exchange (RiSE) | x3 | not in final pool
+moltensaltsolutions.com | Careers | Molten Salt Solution | x3 | not in final pool
+loc.gov | Frequently Asked Questions | Overview | Internships and Fell | x3 | not in final pool
+quantumjobs.us | PhD Intern - Trapped-Ion Quantum Theory | Quantum Jobs USA | x3 | not in final pool
+jobs.thermofisher.com | Interns | Thermo Fisher Scientific | x3 | not in final pool
+reddit.com | Reddit | x2 | not in final pool
+bebee.com | Internship, Battery Materials, Battery Engineering (Winter/S | x2 | ADMITTED (pool)
+ev.careers | Internship, Battery Engineering (Summer 2026) at Tesla | x2 | ADMITTED (pool)
+aquabattery.com | Become Our Next ION Exchange Membrane Expert | x2 | not in final pool
+pathwaystoscience.org | Chemical: Directory of Internships, Research Opportunities, | x2 | not in final pool
+employer.circaworks.com | Internship, Battery Materials, Battery Engineering (Winter/S | x2 | not in final pool
+nlr.gov | Graduate Internships | NLR | x2 | not in final pool
+simplyhired.com | Top 59 Polymer & materials science internship Jobs | SimplyH | x2 | not in final pool
+energie-rs2e.com | Job, internship, PhD and postdoc positions | x2 | not in final pool
+careermine.com | Mining Engineer or Geoscience Co-Op/Intern - Summer 2027 - E | x2 | not in final pool
+careers.thehersheycompany.com | Future Opportunities Chemical Engineering Co-Op | x2 | not in final pool
+careerservices.upenn.edu | Postdoctoral Research Associate - Molten Salt Characterizati | x2 | not in final pool
+cefracor.org | AN OPEN POSTDOCTORAL RESEARCHER POSITION | x2 | ADMITTED (pool)
+interndock.com | Summer 2027 Internships - Live Roles by Type | Apply Now | x2 | not in final pool
+(36 further hosts offered exactly once, none admitted to the final pool except: app.joinhandshake.com [ADMITTED], foundry.lbl.gov [ADMITTED] — every remaining single-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+**Named-row sanity checks against this table**: `hyetlithium.com` and `postdocjobs.com` both ADMITTED with silent company (A29-03, confirmed above). `stemgateway.nasa.gov` — offered 7 times, not in final pool this window (round 29 A's own "NAMED, NOT COUNTED, eighth round" row; still not pooled, unchanged). No `CSE`, `@ Septerna`, `Career Connections … Florida`, or `EV.Careers`-bare-shape host appears anywhere in this window's offered corpus — see part 3's residual-watch-list restatement.
+
+Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface + EUCHEMSIL twin) follows.
