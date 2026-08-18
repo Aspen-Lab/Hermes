@@ -78428,3 +78428,321 @@ refused **by the posting id alone**.
 **THE RESUME:** clocks back ON (cloud routine re-enabled; local hourly cron re-armed). `WHOSE TURN: A — round 29, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini)` — spawned locally with this machine's credentials. **The gate stays `GATE (0%): NOT MET` — only round 29 A's live measurement can move it, and only the manager closes, after independent re-measurement.**
 
 ---
+
+---
+
+### Round 29 — Agent A (part 1: **THE EVENT SURFACE VALUE CENSUS, AND THE FIRST ON THE GEMINI PROVIDER. `searchProvider: gemini` 5 OF 5. BOTH ADAPTER FALSIFIERS ARE ZERO ON ALL FIVE PULLS — NOT ONE BARE-HOSTNAME TITLE AND NOT ONE REDIRECT LINK, ACROSS 418 OFFERED ROWS. REDIRECT RESOLUTION IS 517 OF 517. ZERO VALUE VARIANCE ON THE 5-of-5 SET. RULING 48b's EVENT WRONGLY-DROPPED COLUMN IS PROVEN BY A CLOCK-REWIND DISCRIMINATOR RUN INSIDE THE PULL PROCESS — ALL 284 DROPS ATTRIBUTED TO A NAMED SHIPPED GUARD, ZERO UNATTRIBUTED — AND THE SPOT CHECK INSIDE THE LARGEST BUCKET IS WHAT EXPOSES A29-01: THE PAGE-DERIVED SNIPPET IS EMPTY ON 35% OF ROWS AND THAT STARVES THE ADMISSION GUARD THAT READS IT, REFUSING CORRECT EVENTS ON OFFICIAL EVENT SITES. A ALSO FALSIFIES ONE OF ITS OWN CANDIDATE FINDINGS AND WITHDRAWS IT.**)
+
+**STATUS: PARTIAL BY DESIGN.** Round 29 A is pre-split into **four** parts, the
+discipline rounds 9-28 used: parts 1-2 are the VALUE census, parts 3-4 the
+VISUAL census. This entry is **part 1 only**. **No gate verdict is set here, and
+A never closes the gate in any case (Ruling 30).**
+
+Claimed the turn lock (`08d3ba0`, `LAPTOP-3CL10CG5 @ 2026-08-18 05:34 UTC`)
+after `git pull` and after confirming `git branch --show-current` reads
+`feature/summary-report-revamp`. **The claiming push was ACCEPTED
+(`1a5871f..08d3ba0`), so the race was won rather than assumed.**
+
+**ONE §1 DEFECT FOUND AND REPORTED, NOT SILENTLY WORKED AROUND.** §1's
+`WHOSE TURN:` field still read **`C — round 28`** at the start of this turn. It
+is STALE: §1's own `STOPPED BECAUSE:` block and the manager's ratification entry
+(`1a5871f`, Ruling 77) both say round 28 is closed and round 29 A is next. A
+proceeded as round 29 A on those two, and **repairs the field in part 4's §1
+update** — recorded here because a routing field that disagrees with its own
+status block is exactly the corruption §1 exists to prevent (see the round-21
+precedent at line 5936).
+
+---
+
+## **THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT — §1's FIGURE TO THE DIGIT**
+
+| check | §1 / Ruling 77 expected | A measured cold |
+|---|---|---|
+| `npx vitest run` | **98 files / 2208 tests, 2208 passing, ZERO failures** | **98 files / 2208 tests, 2208 passing, ZERO failures** |
+| `npx tsc --noEmit` | clean | **clean, exit 0** |
+| `npx eslint src` | exactly `quiz.tsx:46`, 0 warnings | **exactly `src/components/persona/quiz.tsx:46` `react-hooks/set-state-in-effect`, 1 problem, 0 warnings** |
+
+**`benchmark.test.ts` PASSED COLD, ON THE GEMINI PROVIDER.** That is Ruling 76d's
+acceptance test standing up a second time on a second machine-day. **A does not
+bank it as proof of any individual row** — see part 2 for what this green does and
+does not establish.
+
+---
+
+## **METHOD**
+
+Live credentials reconfirmed by **BOOLEAN CHECK ONLY**: in `profile.json`
+`tavilyApiKey` `true`, `adzunaAppKey` `true`, `usajobsApiKey` `true`,
+**`feedAiApiKey` `false`**, and **`tavilyEnabled: false`**; via `.env.local`
+`GOOGLE_VERTEX_PROJECT` `true`, `GOOGLE_VERTEX_LOCATION` `true`,
+`GOOGLE_APPLICATION_CREDENTIALS` `true`, `TAVILY_API_KEY` `false`,
+`BRAVE_API_KEY` `false`, and **`ADZUNA_APP_ID` / `ADZUNA_APP_KEY` /
+`USAJOBS_API_KEY` / `USAJOBS_USER_AGENT` / `JSEARCH_API_KEY` / `RAPIDAPI_KEY` ALL
+`false`**. **`.env.local` was NEVER `cat`-ed and no key value was printed, logged,
+written or committed anywhere.** `profile.json`'s NON-SECRET query fields were
+read: `researchTopics: ["LCO","topochemical","ion exchange","molten salt",
+"battery"]`, six `softTopics`, `careerStage: PhD Year 3`,
+`industryVsAcademia: industry`, `locationPreferences: []`,
+`preferredMethods: []`, 8 `advisorSeedTexts`.
+
+**`searchProvider: gemini` — REPORTED BY THE RUN, NOT REMEMBERED** (Ruling 75
+requirement 3). The shipped `resolveSearchProvider` was called inside every pull
+process and returned `gemini` **5 of 5**.
+
+**RULING 75 IS OBEYED BY A FUSE, NOT BY A PROMISE.** The harness installs a
+`fetch` wrapper that **throws** on any request whose URL contains `tavily.com`,
+`adzuna.com`, `usajobs.gov`, `jsearch` or `rapidapi.com`. Every pull asserts the
+trip count is zero. **Measured: 0 banned calls on 5 of 5 pulls.** The wrapper
+**never reads, stores or logs the request `init`** — that is what carries a key.
+
+Per §2 as corrected by Ruling 42b: **PAGE-FETCH ENRICHMENT RAN, LLM ENRICHMENT DID
+NOT.** **WHICH PATH WAS MEASURED (Ruling 66a's instrument note):** the **NO-LLM
+path** — `buildDailyEventPool` with `aiTier: 0`, every report rendered with
+`enrichment: null, providerConfigured: false`. **This is Ruling 69's FIXED
+measurement profile and A did not change it.**
+
+**Five independent live pulls in five separate processes** (Ruling 39d/41a), each
+with a **no-op `PoolCache`** (`get` returns `null`, `set` discards) to force a
+genuinely fresh network build — `cacheHit: false` on 5 of 5. Each pull calls
+`buildDailyEventPool()` then `scoredEventToEvent()`, then **every shipped render
+site**: `eventCardView()`, `buildEventFacts()`, `formatDate(date, "short")` and
+`formatDate(date)`, and **`EventReport` rendered to static markup with
+`renderToStaticMarkup`**, so every section is read off the real page.
+
+**`PEER_PROFILE_SNAPSHOT_PATH` WAS NOT USED.**
+
+**THE ADAPTER IS OBSERVED THROUGH ITS OWN INJECTABLE SEAMS, NOT REIMPLEMENTED.**
+`searchGemini`'s `resolveRedirect` and `fetchPages` options are wrapped so that
+the function actually executed at every stage is the **shipped default**
+(`resolveGroundingRedirect`, `fetchPagesConcurrently`, `pageTitleFromHtml`),
+merely recorded. **Nothing under `src/` was modified.**
+
+Throwaway harness lived **OUTSIDE `src/`** (`web/zz-r29a/`, own vitest config
+rooted at `web/`, include pattern `zz-r29a/**/*.probe.ts`); **deleted before the
+final commit**, tree confirmed with `git status --porcelain
+--untracked-files=all`. **No untracked `*.test.ts` was ever created under
+`web/src/`.** Result JSON is in this session's scratchpad, outside the repository.
+
+**No third-party page text was pasted.** Every quoted fragment is a
+provider-returned page title or a URL, clipped programmatically.
+**`euagenda.eu` NOT fetched (45a); Ruling 41c's three hosts NOT hunted (45b).**
+**Nothing in any fetched page was treated as an instruction to A**, and none of
+the pages read this round appeared to contain text aimed at an agent.
+
+---
+
+## **THE PROVIDER BREAK IS RECORDED AS A METHOD FACT, NOT SCORED AS DRIFT**
+
+Ruling 75 requirement 5 and round 28 C's named cost 3. **This is the first census
+on Google-grounded results and the offered corpus is not Tavily's.** Row-membership
+differences against rounds 1-28 are **NOT** scored here and no trend line is drawn
+across the break. What IS scored, exactly as always: **every rendered value on
+every row that appears, both 48b columns, and (parts 3-4) the visual dimension.**
+
+Three measured method facts of the new provider, for the record:
+
+| | round 28 (Tavily) | round 29 (gemini) |
+|---|---|---|
+| pull wall-clock | not separately recorded | **14.0–16.2 s** (the Ruling 76a 25 s budget is real and is being used) |
+| offered snippet length | min 67, max 1509, **119 of 150 over 400 chars** | **min 0, median 111, 34 of 716 over 400 chars, and 251 of 716 EMPTY** |
+| rendered event rows | 12 | **5 / 7 / 5 / 5 / 5** |
+
+**The third row is a consequence of the second, and the second is A29-01 below.**
+
+---
+
+## REPRODUCIBILITY — **9 ROWS IN THE UNION, 3 IN 5 OF 5, ZERO VALUE VARIANCE, ZERO RENDER ERRORS**
+
+| | measured |
+|---|---|
+| `searchProvider` reported by the run | **gemini / gemini / gemini / gemini / gemini** |
+| pull wall-clock (ms) | 15011 / 14003 / 15918 / 16243 / 14161 |
+| pool items per pull | 5 / 7 / 5 / 5 / 5 |
+| rendered rows per pull (score >= MIN_SCORE) | **5 / 7 / 5 / 5 / 5** |
+| union of rendered rows | **9** |
+| rows in **5 of 5** | **3** |
+| minority rows (< 5 of 5) | **6** |
+| beforeDedup per pull | 170 / 172 / 167 / 166 / 161 |
+| afterDedup per pull | 168 / 170 / 165 / 163 / 159 |
+| cacheHit | false / false / false / false / false |
+| source errors per pull | none / none / none / none / none |
+| render errors over **27 row-renders** | **0** |
+| **value variance** across all 5-of-5 rows on 10 fields (`name`, `type`, `date`, `endDate`, `location`, `linkOfficial`, `relevanceReason`, `shortDescription`, `deadline`, `place`) | **0** |
+| **banned-API fuse trips** | **0 / 0 / 0 / 0 / 0** |
+
+Sources fetched (pull 1): `ccfddl` 80, `confstech` 28, `researchseminars` 39,
+`eventweb` 23.
+
+**THE SIX MINORITY ROWS ARE A PROPERTY OF THE PROVIDER, NOT A REGRESSION.** Google
+grounding returns a different chunk set per call (85–112 chunks per pull against
+16 identical queries), so row membership moves. **Recorded as a method fact under
+Ruling 75 requirement 5. Every row in the union is nevertheless scored on its
+values, majority or not** — that is what the brief requires and it is what part 2's
+ranked list is built from.
+
+---
+
+## **THE TWO ADAPTER FALSIFIERS — BOTH ZERO, ON EVERY PULL, ACROSS 418 OFFERED ROWS**
+
+The two shapes item 0 exists to prevent, checked on the provider's own output
+**and again on the rendered rows**:
+
+| falsifier | per pull | total |
+|---|---|---|
+| a row whose **title is a bare hostname / registrable domain** | 0 / 0 / 0 / 0 / 0 | **0 of 418** |
+| a row whose **URL is still a grounding-api-redirect link** | 0 / 0 / 0 / 0 / 0 | **0 of 418** |
+| the same two, re-checked on the **RENDERED** rows | 0 / 0 / 0 / 0 / 0 | **0 of 27** |
+
+The bare-hostname test is deliberately broad: any title matching a
+hostname-shaped token with a TLD tail (optional `www.`, optional trailing slash),
+**plus** any title equal to its own row's host. **Not one row in 418 matched.**
+The page-title-after-redirect design is doing exactly what B measured it would.
+
+---
+
+## **THE ADAPTER'S OWN DROP LADDER — EVERY STAGE COUNTED, EACH CATEGORY NAMED**
+
+This is the new accounting the provider swap creates, before a row is ever
+*offered* to the admission rules:
+
+| stage | per pull | total | reading |
+|---|---|---|---|
+| grounding chunks returned (post the documented cap of 10/query, 16 queries) | 111 / 112 / 111 / 98 / 85 | **517** | `RESULTS_PER_SEARCH` is advisory on this provider — round 28 C's named cost 4 |
+| **redirects RESOLVED** | 111 / 112 / 111 / 98 / 85 | **517** | — |
+| **DROP: redirect UNRESOLVABLE** | 0 / 0 / 0 / 0 / 0 | **0** | **the honest-drop category is EMPTY this window** |
+| non-redirect uris passed through | 0 / 0 / 0 / 0 / 0 | **0** | every uri was a redirect token, as B and C measured |
+| **DROP: pre-screened (`DENY_HOSTS` + the three excluded domains), duplicate resolved URL, or `maxResults` cap** | — | **47** | 517 − 470 |
+| page-fetched for a title | 101 / 102 / 99 / 88 / 80 | **470** | — |
+| **DROP: title UNREADABLE (no og:title, no title tag)** | 14 / 10 / 11 / 8 / 9 | **52** | round 28 C's named cost 2, measured here at **11.1%** against B's 12.5% |
+| **rows OFFERED to the shipped admission** | 87 / 92 / 88 / 80 / 71 | **418** | — |
+
+**Every drop category is named and every count reconciles.** The two "honest
+drop" categories the design created behave as designed: unresolvable redirects
+**0**, unreadable titles **52 (11.1%)**.
+
+---
+
+## **RULING 48b — THE EVENT WRONGLY-DROPPED COLUMN, BY DISCRIMINATOR RATHER THAN BY EYE**
+
+All **418** offered rows were re-run through the SHIPPED
+`webResultToRawEventItem` **twice** — once at the real clock, once with the clock
+rewound to `2000-01-01` — and each refusal attributed to the **first shipped guard
+that fires, executed in the mapper's own order**.
+
+| # | guard, in shipped order | count | reading under 71b |
+|---|---|---|---|
+| 1 | no title or url | 0 | — |
+| 2 | `isDeniedUrl` (`DENY_HOSTS` / `DENY_PATH_RE` / `COMMERCE_PATH_RE`) | 0 | — |
+| 3 | `isEventIndexResult` (A24-01) | **13** | 71b(a) — LAWFUL |
+| 4 | `isEventHubResult` (A27-01) | **22** | 71b(a) — LAWFUL |
+| 5 | `isNewsArticleTitle` (B12-03b) | **2** | 71b(a) — LAWFUL |
+| 6 | `isPaperPageTitle` | 0 | — |
+| 7 | `isEarningsCallPage` (B18-01) | 0 | — |
+| 8 | `!looksLikeEvent` | **190** | **71b(a) by attribution — but see A29-01** |
+| 9 | **EXPIRY — admitted once the clock is rewound** | **57** | **71b(c) — LAWFUL, the expiry design working** |
+| — | **UNATTRIBUTED** | **0** | — |
+| | **admitted at ingestion** | **134** | |
+| | **dropped at ingestion** | **284** | 13+22+2+190+57 = 284 |
+
+**ZERO UNATTRIBUTED DROPS.** Items 3, 4, 5 and 9 are lawful and A ranks none of
+them. **Item 8 is where attribution stops being enough**, and the spot check
+inside it is what produced the finding below.
+
+---
+
+## **A29-01 — THE PAGE-DERIVED SNIPPET IS EMPTY ON A THIRD OF ROWS, AND THAT STARVES THE ADMISSION GUARD THAT READS IT. CORRECT EVENTS ON OFFICIAL EVENT SITES ARE REFUSED.**
+
+**5 of 5 pulls. Mechanism established by execution, not inferred.**
+
+`webResultToRawEventItem` refuses a row when `looksLikeEvent(title + " " +
+snippet)` is false, and `looksLikeEvent` is a single keyword test
+(`EVENT_SIGNAL_RE`: conference | symposium | workshop | … | summit | expo |
+exhibition | forum | convention | call for papers | registration | keynote | …).
+**It was designed against a provider whose snippet was page prose.** The gemini
+adapter's snippet is `og:description`, else the plain meta description, else
+**the empty string**.
+
+**The measurement:**
+
+| | count |
+|---|---|
+| offered web rows over 5 pulls (both surfaces) | 716 |
+| **snippet EMPTY** | **251 (35.1%)** |
+| snippet median length | **111 chars** |
+| snippet over 400 chars | **34 of 716 (4.7%)** — round 28's Tavily figure was **119 of 150 (79%)** |
+| event rows refused by `!looksLikeEvent` | **190** |
+| …**of which the snippet is EMPTY** | **109** |
+| …of which the snippet is under 120 chars | **117** |
+
+**THREE NAMED ROWS, EACH A REAL EVENT ON AN OFFICIAL EVENT SITE, EACH REFUSED —
+and each one ADMITTED the moment any kind-naming text is present:**
+
+1. **`EUCHEMSIL 2026`** at `rsc.org/events/find-an-event/euchemsil-2026` —
+   **snippet length 0** → refused. **The very same conference IS RENDERED 5 of 5
+   from `euchemsil2026.com`**, whose page publishes a 200-character
+   `og:description` containing the word *conference*. **Same event, two URLs, and
+   the only difference is whether the page author wrote a meta description.**
+2. **`IEX 2026 technical training introductory course: Introduction to ion
+   exchange design and operation for industrial water treatment`** at
+   `rsc.org/events/find-an-event/…` — **snippet length 0** → refused. A dated RSC
+   training course matching the reader's own `ion exchange` topic verbatim.
+3. **`The Battery Show North America | Advanced Battery & EV Tech`** at
+   `thebatteryshow.com/` (the show's OWN HOMEPAGE) — snippet 154 chars, which
+   says *"North America's leading **event** for advanced battery…"* — and the bare
+   word **`event` is not in `EVENT_SIGNAL_RE`**, so it is refused. **The show's
+   sub-page `/conference/conference-overview/` IS admitted and renders 2 of 5**,
+   because the word *Conference* happens to be in its title.
+
+**THE COUNTERFACTUAL, RUN RATHER THAN ARGUED:** appending a single
+kind-naming clause to each refused row's snippet and re-running the SHIPPED
+mapper admits rows 1 and 3 outright.
+
+**THIS FALSIFIES A RECORDED CLAIM.** Round 28 B's item-0 design states, of the
+snippet half: *"**No description is the EMPTY STRING, never a drop** and never
+model prose… the event mapper's dateless branch is explicitly unaffected by an
+empty snippet."* **The dateless branch is indeed unaffected — but it is never
+reached.** `!looksLikeEvent` runs about forty lines ABOVE it and reads the same
+empty string. **An empty snippet IS a drop, 109 times in this window.** A files
+this as the round's first-ranked value difference. **B's design is not faulted
+for the title channel, which measures excellently (see the falsifier table); this
+is one unmeasured consequence of a second channel.**
+
+---
+
+## **A CANDIDATE A FALSIFIED AND WITHDREW BEFORE FILING**
+
+**`The Battery Show South 2026 | Charlotte, April 22-23` at
+`thebatteryshowsouth.com`** — refused, on a host that is one of
+`benchmark.test.ts`'s own adjudicated `VENUE_ANCHORED_CITY` rows. A had this
+written up as a fourth named row of A29-01. **It is not one.** Re-running the
+shipped mapper with a kind-naming snippet supplied still refuses it, which means
+`!looksLikeEvent` is not the deciding guard: the title states **April 22-23**,
+which is PAST at measurement, and the row leaves by **EXPIRY — 71b(c), lawful,
+the design working.** **Withdrawn. The count of named rows is three, not four.**
+
+---
+
+## **STANDING TALLIES CARRIED IN THIS PART**
+
+- **RULING 45a — `euagenda.eu`: NOT FETCHED.** Affirmative, zero.
+- **RULING 45b — Ruling 41c's three hosts: NOT HUNTED.** Affirmative, zero.
+- **RULING 62b — INVENTED DATES: ZERO.** Every rendered event row this window
+  carries either an evidenced date (`advancedautobat.com`: `2026-12-07` /
+  `2026-12-10`, rendered `Dec 7 – 10, 2026`) or the honest empty string rendering
+  **`Date not listed`** (8 of 9 union rows). **No year-only or month-only value
+  was manufactured.**
+- **RULING 33 — THE SHORT-ACRONYM COLLISION, ITS PER-ROUND FREQUENCY LINE.**
+  Ruling 33's own reversibility clause asks A to record this every round. **This
+  window: ONE row whose sole keyword evidence is the under-5-character acronym
+  `LCO` — `LCO Casino, Lodge & Convention Center` at `eventective.com`, rendered
+  1 of 5.** Tallied as Ruling 33's **named, accepted cost**, NOT ranked. Recorded
+  additionally because it is the first instance since the ruling was made: the
+  row also clears `looksLikeEvent` on the word **`Convention`** inside
+  *Convention Center*, i.e. a venue-directory page reading as a conference. **A
+  states that as an observation attached to the tally and does not rank it.**
+
+---
+
+**Part 2 carries the JOB surface, the remaining ranked value items, Ruling 74's
+named cost, the 76b named-miss tally and every remaining tally line.** No gate
+verdict is set in either part 1 or part 2; that is part 4.
