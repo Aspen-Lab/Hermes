@@ -275,6 +275,36 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~18:0x UTC — ROUND 30 B
+                  VERIFIED INDEPENDENTLY, RULINGS 81a-81d APPENDED (§4).**
+                  Gate re-run cold by the manager: **99 files / 2266 tests,
+                  2266 passing, zero failures** — byte-identical to the
+                  round-29 baseline; `tsc --noEmit` clean. B's three commits
+                  touch only this file; citations spot-checked by reading the
+                  cited code, all substantively correct. **RULING 81a: item
+                  1's three-clause partial SHIPS** (option 1 — 79b discharged;
+                  the `CSE` collision, segment-order, and `@ Septerna`
+                  residuals named-and-watched under 79a's doctrine; A29-03
+                  moves to addressed-pending-re-measure when it lands).
+                  **RULING 81b: item 2's two V2 extensions APPROVED as
+                  written**; the schema.org-is-valueless finding is ratified
+                  as a correction to 80b's framing; "General 1" stays
+                  open-unwitnessed; the occupation-profile page-kind residual
+                  accepted as named. **RULING 81c: ROUTING AMENDED —
+                  `WHOSE TURN: C — round 30`, NOT A.** An approved-but-
+                  unimplemented design is a known difference; a gate-candidate
+                  census before it ships cannot reach double-zero. C
+                  implements BOTH items (item 1's three vetoes into the
+                  `.find()` chain at `jobweb.ts:1611-1687`; item 2's V2
+                  regexes into `isCareersSectionRoot` / `isEventHubResult`,
+                  plus the new tests both items' §4 entries specify), each as
+                  its own commit, pushed immediately. **A's gate-candidate
+                  turn (value + visual, searchProvider: gemini, artefact duty
+                  79e, EUCHEMSIL expiry-twin) follows C, obligations intact.**
+                  **RULING 81d: first sonnet-tier turn under 80c — no quality
+                  degradation observed.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-18 17:5x UTC — ROUND 30 B IS
                   COMPLETE. BOTH COMMISSIONED ITEMS LANDED, TWO COMMITS, EACH
                   PUSHED THE MOMENT IT WAS MADE.** Run by `LAPTOP-3CL10CG5`.
@@ -82364,3 +82394,21 @@ EVENT_HUB_TITLE_TAIL_RE_V2    = /(?:^|\s)(?:events|conferences|seminars|workshop
 ## **2.8 VERDICT**
 
 **Three of C's four named wrong shapes reproduced live with real URLs and real page fetches; the fourth ("General 1" chrome title) stays unwitnessed, named, not claimed either way.** `schema.org` is measured to carry zero discriminating signal on this sample — a correction to the ruling's own framing. The working signal is TITLE+URL structure, delivered as a bounded, adversarially-tested extension of the TWO structural guards this loop ALREADY shipped and approved for exactly this purpose (A29-04, A27-01) — a sibling of 62c's mechanism, not an extension of it, established by reading both rather than assumed from the family resemblance. One shape (the occupation-profile, two-segment path) stays a named residual rather than forcing a broader rule the corpus shows would cost a real "Career Advisor"-shaped posting. **Round 30 A scores whatever renders as the ordinary census, per Ruling 80b — this design's acceptance is the must-keep/must-drop corpus above, not a claim of having closed the class.**
+
+### Round 30 — MANAGER (independent verification of B; RULINGS 81a-81d; the round-30 routing amended)
+
+**Verification, run before any ruling, per the standing duty:**
+
+- **Gate, re-run cold by the manager:** `cd web && npx vitest run` — **99 files / 2266 tests, 2266 passing, ZERO failures.** Byte-identical to the round-29 baseline, which confirms B's "no shipped code changed" claim at the only level that matters. `npx tsc --noEmit` — clean, exit 0.
+- **Numstat:** B's three commits (`3f79f2e`, `c0bdd5e`, `e373ac6`) touch ONLY this file (1+78+218 lines) — zero product-code lines, matching the design-only mandate. Working tree clean; no `web/zz-r30b/` residue — the throwaway harness was deleted as claimed.
+- **Citation spot-checks (read, not trusted):** `isCareersSectionRoot` is at `jobweb.ts:1362` (B cited its doc block's 1358 — fine); `isEventHubResult` at `eventweb.ts:670` exactly, and `meetings?` is confirmed ABSENT from both `EVENT_HUB_PATH_SEGMENT_RE` (`:662`) and `EVENT_HUB_TITLE_TAIL_RE` (`:665`), exactly as item 2 claims; `ORG_DESIGNATOR_RE` (`jobweb.ts:953`) contains none of the six protected short names' tokens; the `@`-separator refusal doc comment (`jobweb.ts:1085-1091`) reads verbatim as item 1 §1.3 quotes it.
+- **The corpus attribution:** the four-instance table (`CSE`, `Internship battery R&D`, `@ Septerna`, `Career Connections Center University of Florida`) IS round 24 A's part 2 — the 63a offered-corpus scan. **B's correction of the brief's "round 26 B" attribution is RIGHT, and the mis-attribution was the MANAGER'S OWN ERROR in the commissioning brief. Owned.** One nit recorded for symmetry: B's corrective cite ("line 64587-64600 of this file") is itself ~130 lines shy of the table's true position (the table sits at ~64722-64729 as this manager's Read tool counts lines). The substance was verified; the line number was not load-bearing.
+
+**RULING 81a — item 1's `POLICY — manager decides`: OPTION (1). The three-clause partial SHIPS as this round's discharge of Ruling 79b's commission.** The reasoning, so the next agent does not re-derive it: the partial is adversarially clean on the full recorded corpus (0 of 21 must-keeps touched, constructed AND two live pulls), every clause is closed-vocabulary and additive, and the alternative — holding 79b open for a semantic/allowlist classifier — is exactly what the `ORG_DESIGNATOR_RE` warning and item 1's own five-axis execution argue cannot be built honestly on this corpus. **The three residuals (`CSE`-class acronym collision, the segment-order problem, the `@ Septerna` shape) are NAMED AND WATCHED under the same doctrine as `The Battery Saloon` (79a): a recorded cost, re-measured by every future A, never silently absorbed.** Shipping the partial also turns BOTH of A29-03's live wrong-render rows into honest silence — A29-03 moves to "addressed pending A's re-measure" when C lands the clause.
+
+**RULING 81b — item 2's design is APPROVED AS WRITTEN.** The schema.org finding is ratified as a CORRECTION to Ruling 80b's own framing: the ruling named "the schema.org record" as a signal in hand, and B measured it valueless on the live sample (1 of 11 pages declares a distinguishing type; the real rescue and the worst wrong shape carry identical generic furniture). The commission's framing does not bind the design when the measurement contradicts it — this is the loop working as intended, and the correction cost B nothing to report. The two V2 extensions ship exactly as specified (closed exact-alternative lists, the constructed `Career Advisor` boundary case deliberately unreached); the "General 1" chrome shape stays OPEN-UNWITNESSED with 42a's forum-pagination territory named as where the next measurer should look; the occupation-profile page-kind residual is ACCEPTED AS NAMED — its value-level wrongness is separately closed by item 1's `ROLE_TEXT_CANDIDATE_RE`, the cross-item consistency B itself pointed out.
+
+**RULING 81c — THE ROUND-30 ROUTING IS AMENDED: `WHOSE TURN: C — round 30`, NOT A.** B's hand-off followed the round-29 brief verbatim, and the brief was the manager's — but that brief was written before B's designs existed, and an approved-but-unimplemented design is a KNOWN difference. A gate-candidate census taken before the designs ship cannot reach double-zero and would spend a full A turn re-finding rows this file already names. Item 1's own text agrees ("round 30 A must re-measure pool count AFTER THIS SHIPS"). **C implements both items as round 30 C; A's gate-candidate turn (value + visual, searchProvider: gemini, artefact duty 79e, the EUCHEMSIL expiry-twin question) follows C.** The A-brief obligations transfer intact, none discharged by this amendment.
+
+**RULING 81d — sonnet quality note, for the record (Ruling 80c's first data point).** Round 30 B was the first sonnet-tier turn: two commissioned items, both adversarially tested against recorded AND fresh live evidence, one measured correction to a ruling's framing, one citation correction to the manager's brief, zero unsupported claims found by spot-check, Ruling 75 obeyed absolutely. No quality degradation observed; nothing to report to the user beyond this line.
+
