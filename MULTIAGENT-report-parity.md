@@ -270,11 +270,106 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 32 + 2026-08-18 21:43 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 32 B IS COMPLETE @ 2026-08-18 ~22:2x UTC — BOTH ITEMS
+                  DESIGNED, TWO COMMITS, EACH PUSHED ON LANDING.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`0314337`). Grepped `Round 32 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  round 31 A's three parts, round 31 B's three items, round
+                  31 C's two items, and Rulings 84a-84e/85/86a-86f in full
+                  before any live pull or code read. **B changed no product
+                  code anywhere** — both commits (`a681957` item 1, `90b21de`
+                  item 2) touch only this file; a throwaway harness
+                  (`web/zz-r32b/`) lived outside `web/src/` and was deleted
+                  before both commits, `git status --porcelain
+                  --untracked-files=all` confirmed clean each time; gate
+                  re-run cold after deletion: **99 files / 2348 tests, 2348
+                  passing, ZERO failures, unchanged from round 31's close.**
+
+                  **ITEM 1 (A31-01, job page-kind guard) — DESIGNED, THREE
+                  COMPONENTS, ONE `POLICY — manager decides`.** Ruling 86c's
+                  three mandatory traces executed: **`jobright.ai`
+                  LIVE-RECONFIRMED 3 of 5 re-pulls**, mechanism identified by
+                  execution — a genuine query-results/search page (the SAME
+                  `TOPIC_LANDING_LEAF_RE`-shaped URL round 19's own fix
+                  targets) whose offered TITLE is the site's own brand
+                  tagline rather than the per-query listing phrase, defeating
+                  `isTopicLandingPage`'s title-corroboration check without
+                  touching that function at all (Component C, additive,
+                  reuses `TOPIC_LANDING_LEAF_RE`/`looksLikeHostBrand`
+                  verbatim). This is NOT a genuine admit — it belongs in the
+                  must-drop class. `thrlab.tamu.edu` and `lco.cl` — **0 of 8
+                  live chances each this session** (5 dedicated + 3 wide-check
+                  pulls); Ruling 75 forbids hunting either by name, so both
+                  are left as NAMED, UNSHIPPED residuals rather than guessed
+                  at. `lco.cl`'s title shape ("Jobs - Las Campanas
+                  Observatory") reveals a real, source-verified vocabulary
+                  gap (existing title guards only read owner-BEFORE-noun
+                  order; this is noun-first, dash-separated) but B declined to
+                  design a guard for it — no adversarial corpus, and a
+                  visible false-silence risk on small orgs whose site
+                  template titles every page `"<Page> - <Site Name>"`,
+                  including genuine single postings. **`POLICY — manager
+                  decides`: is the `lco.cl` residual worth a future live
+                  re-witness, or does it stay a named-not-shipped
+                  observation?** Components A (`NON_JOB_HOSTS`, closed host
+                  list, Wikipedia) and B (`DATE_STRUCTURED_PATH_RE`,
+                  path-structure, `/YYYY/MM/DD/` research-blog paths) close
+                  the two ORIGINAL witnesses. 21 standalone adversarial tests
+                  plus two live-data sweeps (80 real ingestion-survivor rows
+                  across 3 fresh pulls, zero unexplained new rejections; two
+                  final-pool sweeps, zero collisions) — full corpus and
+                  citations in §4.
+
+                  **ITEM 2 (A31-02, malformed date) — BOTH SUB-QUESTIONS
+                  ANSWERED, NO POLICY NEEDED.** (a) Fetched the REAL
+                  `linevsystems.com` page through the pipeline's own fetch
+                  mechanism and read the raw JSON-LD directly: the malformed
+                  string originates verbatim from the page's OWN schema.org
+                  `Event.startDate`/`endDate` (both carry the identical
+                  malformation — `endDate` was not previously reported),
+                  passed through with ZERO validation at
+                  `structured-extract.ts:1121-1122`
+                  (`nonEmptyString(node.startDate)`) and never touched again
+                  until `parseDate` finally fails on it. Designed a bounded
+                  near-ISO normalizer (zero-pad + offset repair) that is
+                  PROVABLY LOSSLESS per Ruling 62b — every component is
+                  already stated in the source, only the zero-padding is
+                  missing — with an explicit component round-trip guard
+                  against calendar rollover. **One real bug was caught by the
+                  design's OWN adversarial test before banking**: a first
+                  draft using a plain `new Date()`+NaN check let a
+                  calendar-invalid "Feb 30" silently roll over to March 2nd
+                  (proved by execution, not assumed) — fixed by switching to
+                  the SAME component round-trip idiom
+                  `structured-extract.ts`'s own `isoDate()` helper already
+                  uses. 16 of 16 adversarial tests pass; zero collisions with
+                  the one existing exact-value JSON-LD test
+                  (`structured-extract.test.ts:28`). (b) Read the design
+                  spec's own text (pp.1-9, pypdf extraction): **"Fields Peer
+                  can't find are hidden rather than shown empty"** (PDF p.2,
+                  job report), explicitly inherited by the event report ("Same
+                  skeleton as the job report", PDF p.4). This is NOT
+                  ambiguous — the shipped `buildEventFacts` tile-omission
+                  behaviour already matches the spec verbatim; `card.ts`'s
+                  "Date not listed" is confirmed a deliberately different,
+                  shallower surface. **No code change recommended for part
+                  (b).**
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 32 verification
+                  and rulings before C spawns`**, per the standing brief (the
+                  manager always rules first, including on item 1's one
+                  `POLICY — manager decides` line). Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~22:1x UTC — ROUND 31 A
                   VERIFIED INDEPENDENTLY, RULINGS 86a-86f APPENDED (§4),
                   ROUND 31 CLOSED.** Gate re-run cold by the manager: **99
