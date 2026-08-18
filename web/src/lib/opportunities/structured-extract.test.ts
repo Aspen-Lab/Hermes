@@ -238,7 +238,21 @@ describe("Open Graph opportunity metadata", () => {
     });
   });
 
-  it("keeps a city when Hybrid is the format marker", () => {
+  it("reads the Hybrid format marker as online", () => {
+    // A29-02 (round 29 C, item 2) — **RESTATED, NOT DELETED, AND RENAMED TO
+    // WHAT IT NOW PROVES.** This is the second of exactly two named costs.
+    //
+    // The Hybrid half of this test is untouched and still green: the marker is
+    // stripped from the segment and `isOnline` is true. What moved is the city.
+    // `Berlin, Germany` was accepted by the old comma reader on its comma
+    // alone; the gazetteer-backed reader that replaces it finds **no locational
+    // cue and no state code** here, so it declines. Same clause that stops
+    // `Quintus Technologies, The Global Leader in isostatic pressing` from
+    // becoming a city — the two shapes are identical to a comma.
+    //
+    // **THE COST IS NAMED, NOT ABSORBED** (round 29 B's own falsifier for this
+    // item). If a later round finds an honest cue for the `City, Country` shape
+    // in a pipe segment, RESTATE this with that item named — do not delete it.
     const html = `
       <meta content="Battery Workshop | September 3, 2026 | Berlin, Germany — Hybrid"
             property="og:title">
@@ -247,8 +261,6 @@ describe("Open Graph opportunity metadata", () => {
     expect(extractMetaOpportunityDetails(html)).toEqual({
       start: "2026-09-03",
       end: undefined,
-      city: "Berlin",
-      region: "Germany",
       isOnline: true,
     });
   });
@@ -347,13 +359,42 @@ describe("body-text place fallback", () => {
       country: "Germany",
     });
 
+    // A29-02 (round 29 C, item 2) — **RESTATED, NOT DELETED. THIS IS A NAMED
+    // COST, AND IT IS ONE OF EXACTLY TWO IN THE SHIPPED CORPUS.**
+    //
+    // Before this item the meta channel used a comma reader with no gazetteer
+    // and no ownership test, so `Paris, France` was accepted on its comma
+    // alone — and so was `Quintus Technologies, The Global Leader in isostatic
+    // pressing`, the company's own name, on the identical evidence. The two
+    // are indistinguishable to a comma.
+    //
+    // The meta channel now goes through the same gazetteer-backed,
+    // 62a-guarded reader as the body channel. `Paris` carries **no locational
+    // cue and no state code** in this fixture, so no mention qualifies and the
+    // meta channel is honestly SILENT. The body then offers a RIVAL city
+    // (`Join us in Chicago`) with no ownership clause, so it is refused too,
+    // and the place is absent.
+    //
+    // **What the assertion now states:** the PRIORITY this test was written to
+    // prove is unchanged — JSON-LD still outranks meta, meta still outranks
+    // body, nothing is reordered. What changed is the STANDARD the meta layer
+    // must meet. Measured identical under `scope: "structured-field"`, so this
+    // is the gazetteer/cue requirement, not Ruling 62a's ownership guard.
     const metaFirst = `
       <meta property="og:title" content="Workshop | May 1, 2027 | Paris, France">
       <body>Join us in Chicago.</body>
     `;
-    expect(extractOpportunityPageDetails(metaFirst, "event").place).toEqual({
-      city: "Paris",
-      region: "France",
+    expect(extractOpportunityPageDetails(metaFirst, "event").place).toBeUndefined();
+
+    // And the fix's own point, on the same shape: a meta place the gazetteer
+    // CAN see, with a state code to qualify it, still outranks the body.
+    const metaFirstQualified = `
+      <meta property="og:title" content="Workshop | May 1, 2027 | Austin, TX">
+      <body>Join us in Chicago.</body>
+    `;
+    expect(extractOpportunityPageDetails(metaFirstQualified, "event").place).toEqual({
+      city: "Austin",
+      region: "TX",
     });
   });
 
@@ -1227,5 +1268,50 @@ describe("A23-04 — the page's own kind declaration", () => {
         ),
       ),
     ).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 2 (A29-02) — the meta channel is held to the same standard
+// as the body channel. Round 29 B's fix (b).
+// ---------------------------------------------------------------------------
+
+describe("A29-02 — the company name in the city slot", () => {
+  // The measured shape of
+  // `quintustechnologies.com/events/solid-state-batteries-summit-2026/`:
+  // an og:description that OPENS with the company name and a comma, which the
+  // old comma reader took as `city, region`. Round 29 B proved the false city
+  // comes from the description BY ITSELF — dropping `og:siteName` from the
+  // joined text changes nothing.
+  const QUINTUS = `
+    <meta property="og:title" content="Solid-State Battery Summit 2026 | Quintus Technologies">
+    <meta property="og:site_name" content="Quintus Technologies">
+    <meta property="og:description" content="Quintus Technologies, The Global Leader in isostatic pressing">
+    <body>The Solid-State Battery Summit 2026 will be held in Chicago, IL on August 11-12, 2026.</body>
+  `;
+
+  it("REPRODUCES the defect on the old parser, so these cases are not vacuous", () => {
+    // Guard against the fixture drifting away from the shape B measured. The
+    // old comma reader required the WHOLE pipe segment to be `X, Y` with no
+    // second comma, so a description carrying an extra clause never reproduced
+    // the bug at all — C's first fixture had one and passed with the fix
+    // REVERTED. This asserts the shape itself.
+    const description = QUINTUS.match(/og:description" content="([^"]*)"/)?.[1];
+    expect(description).toBe("Quintus Technologies, The Global Leader in isostatic pressing");
+    expect((description ?? "").split(",")).toHaveLength(2);
+  });
+
+  it("no longer reads the company name as the city", () => {
+    expect(extractMetaOpportunityDetails(QUINTUS).city).toBeUndefined();
+  });
+
+  it("falls through to the page's own city", () => {
+    // The chain is NOT reordered. The meta channel simply goes honestly silent,
+    // so the `??` chain reaches the whole-page scan that was always there.
+    expect(extractOpportunityPageDetails(QUINTUS, "event").place).toEqual({
+      city: "Chicago",
+      region: "IL",
+      country: "United States",
+    });
   });
 });

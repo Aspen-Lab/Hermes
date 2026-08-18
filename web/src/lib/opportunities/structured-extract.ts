@@ -1220,29 +1220,15 @@ function parseDateRange(text: string): Pick<MetaOpportunityDetails, "start" | "e
   return { start, end };
 }
 
-function parseCityRegion(
-  text: string,
-): Pick<MetaOpportunityDetails, "city" | "region"> {
-  const segments = text
-    .split("|")
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-
-  for (const segment of segments) {
-    const withoutFormat = segment
-      .replace(/\s*(?:\+|&)\s*(?:virtual|online)\s*$/i, "")
-      .replace(/\s*[-–—]?\s*hybrid\s*$/i, "")
-      .trim();
-    const match = withoutFormat.match(
-      /^([\p{L}][\p{L}\p{M} .'-]*?)\s*,\s*([\p{L}][\p{L}\p{M} .'-]*)$/u,
-    );
-    if (!match) continue;
-    const city = match[1].trim();
-    const region = match[2].trim();
-    if (city && region) return { city, region };
-  }
-  return {};
-}
+// A29-02 (round 29 C, item 2): `parseCityRegion` — the comma-shaped
+// `City, Region` reader with **no gazetteer and no ownership test** — WAS HERE.
+// It had exactly one call site, `extractMetaOpportunityDetails`, and that call
+// site now routes through the same 62a-guarded reader the body channel uses
+// (see `metaPlaceFrom`). Deleted rather than left dead: a second, weaker place
+// parser sitting unused in this file is precisely the thing that made the two
+// channels drift apart in the first place. Its behaviour, its two named costs
+// and the reason it was replaced are recorded on `metaPlaceFrom` and in §4's
+// round 29 C item 2 entry.
 
 function bodyText(html: string): string {
   const bodyMatch = html.match(/<body\b[^>]*>([\s\S]*?)<\/body\s*>/i);
@@ -2010,6 +1996,7 @@ export function declaresArticleKind(html: string): boolean {
 
 export function extractMetaOpportunityDetails(
   html: string,
+  options: PlaceScanOptions = {},
 ): MetaOpportunityDetails {
   const tags = extractOpenGraphTags(html);
   const text = [tags.title, tags.description, tags.siteName]
@@ -2018,9 +2005,55 @@ export function extractMetaOpportunityDetails(
 
   return {
     ...parseDateRange(text),
-    ...parseCityRegion(text),
+    ...metaPlaceFrom(text, options),
     isOnline: /\b(?:virtual|online|hybrid)\b/i.test(text),
   };
+}
+
+/**
+ * A29-02 (round 29 C, item 2). **THE META CHANNEL IS NOW HELD TO THE SAME
+ * STANDARD AS THE BODY CHANNEL, WHICH IS WHAT THE FILE ALREADY CLAIMED.**
+ *
+ * `quintustechnologies.com/events/solid-state-batteries-summit-2026/` rendered
+ * the city **`Quintus Technologies`** — the company's own name in the place
+ * slot — while the page's own body says `Chicago`. Round 29 B corrected A's
+ * mechanism by execution: dropping `og:siteName` from the joined text changes
+ * **nothing**; the false city comes from the **`og:description` BY ITSELF**,
+ * whose opening `<Proper Noun>, <rest>` the old comma reader took as
+ * `city, region`.
+ *
+ * **THE DEFECT WAS NEVER THE ORDER OF THE CHANNELS. IT WAS THAT THE FIRST
+ * CHANNEL WAS NEVER HELD TO A STANDARD AT ALL.** The meta channel used
+ * `parseCityRegion` — a comma-shaped reader with **no gazetteer and no
+ * ownership test** — while the body channel used the gazetteer-backed
+ * `extractBodyTextPlace` carrying Ruling 62a's guard. The boundary comment four
+ * lines below `place:` states the opposite intent verbatim ("every layer …
+ * held to the same 'is this actually a place name' standard"); this makes the
+ * code match it.
+ *
+ * **AND 62a's EXEMPTION WAS BEING APPLIED TO THE WRONG KIND OF INPUT.** The
+ * `structured-field` exemption exists because that entry point is handed a
+ * provider's **short structured field** (`"Chicago, IL + Virtual"`), on which no
+ * positive ownership clause can fire. **An `og:description` is not that** — it
+ * is page prose, 181 characters of it on this row. So this passes `page` scope:
+ * the same scope the whole-page scan uses, deliberately.
+ *
+ * **RULING 62a IS REACHED, NEVER REVERSED.** Not one clause of the ownership
+ * guard, its clause set or its `scope` contract is edited. What changes is
+ * **which text is handed to it** — the input side.
+ *
+ * **B's FALSIFIER, ANSWERED RATHER THAN ABSORBED — see §4's item 2 entry for
+ * the two adjudicated fixtures this costs and why each is priced the way it
+ * is.** Nothing is reordered, so a row whose meta place is correct AND
+ * gazetteer-visible keeps it and never loses it to the body scan.
+ */
+function metaPlaceFrom(
+  text: string,
+  options: PlaceScanOptions,
+): Pick<MetaOpportunityDetails, "city" | "region"> {
+  const place = extractBodyTextPlace(text, { ...options, scope: "page" });
+  if (!place?.city) return {};
+  return { city: place.city, region: place.region };
 }
 
 export function extractOpportunityPageDetails(
@@ -2034,7 +2067,7 @@ export function extractOpportunityPageDetails(
     ? typed[0]
     : jsonLd[0];
   const openGraph = extractOpenGraphTags(html);
-  const meta = extractMetaOpportunityDetails(html);
+  const meta = extractMetaOpportunityDetails(html, options);
   const metaPlace =
     meta.city || meta.region
       ? { city: meta.city, region: meta.region }

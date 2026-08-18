@@ -81515,3 +81515,103 @@ error, 0 warnings. **`enrich.test.ts` SOLO: 56/56.** **`benchmark.test.ts` SOLO:
 1 file, 1 test, PASSED, 22.7 s wall — a live gemini run, GREEN.**
 
 **Turn lock still HELD; item 2 next.**
+
+### Round 29 — Agent C — ITEM 2 (A29-02): **LANDED. The meta place channel now goes through the same 62a-guarded, gazetteer-backed reader as the body channel. TWO ADJUDICATED CITIES ARE THE PRICE, NAMED NOT ABSORBED.**
+
+**No live call of any kind; Ruling 75 not reachable by this item.** No credential
+touched. No third-party page text pasted.
+
+## **2.1 WHAT SHIPPED**
+
+`opportunities/structured-extract.ts`. `extractMetaOpportunityDetails` takes
+`PlaceScanOptions` and resolves its place through a new private
+`metaPlaceFrom`, which calls **`extractBodyTextPlace(text, {...options, scope:
+"page"})`** — round 29 B's fix **(b)**, verbatim. `extractOpportunityPageDetails`
+forwards its own `options` so the meta layer sees the same `eventName` and clock
+the body layer already sees.
+
+**NOTHING IS REORDERED.** JSON-LD still outranks meta, meta still outranks body.
+B's option (a) — reordering — was refused for the reason B gave: its cost is
+unbounded on the available evidence and it demotes a channel the design
+deliberately ranked. **What changed is the STANDARD the meta layer must meet,
+which is the input side of Ruling 62a's guard, not the guard.**
+
+**RULING 62a IS REACHED AND NOT REVERSED:** not one clause of the ownership
+guard, its clause set, or its `scope` contract is edited.
+
+## **2.2 `parseCityRegion` IS DELETED, AND THAT IS DELIBERATE**
+
+It had exactly **one** call site and that call site is gone; `eslint` flagged it
+as unused, and the gate's standard is one standing error and **zero warnings**.
+Leaving a second, weaker place parser dead in the same file is precisely what let
+the two channels drift apart. **A tombstone comment stands where it was**, naming
+what it did, why it went, and where its costs are recorded — so the next agent
+finds the decision rather than an absence.
+
+## **2.3 THE NEGATIVE PROOF**
+
+Reverted `metaPlaceFrom(text, options)` back to `parseCityRegion(text)`,
+re-run alone: **4 RED** of 92.
+
+| red test | why |
+|---|---|
+| `no longer reads the company name as the city` | the false city returns |
+| `falls through to the page's own city` | `Chicago` is lost again behind it |
+| `reads the Hybrid format marker as online` | the restated cost reappears |
+| `uses structured and Open Graph places before the body fallback` | ditto |
+
+## **2.4 A SECOND VACUOUS TEST C WROTE AND CAUGHT — DISCLOSED**
+
+C's first Quintus fixture gave `og:description` the value
+`Quintus Technologies, The Global Leader in isostatic pressing, invites you to a
+two-day summit…`. **That never reproduced the defect.** The old reader required
+the WHOLE pipe segment to match `^City, Region$` with **no second comma**, so the
+extra clause made the segment unmatchable and **both new tests passed with the
+fix reverted.** Caught by the mandated revert, not by reading. The fixture now
+carries the exact single-comma shape B measured, **and a third test asserts the
+fixture's shape itself** so it cannot silently drift back.
+
+## **2.5 THE COST, NAMED — B's OWN FALSIFIER, ANSWERED**
+
+B wrote: *"if switching the parser costs any adjudicated correct city, 62a's own
+named-cost pattern applies and the cost must be named, not absorbed."* **It costs
+exactly two, both in `structured-extract.test.ts`, both RESTATED WITH THE ITEM
+NAMED AND NEITHER DELETED:**
+
+| fixture | was | now |
+|---|---|---|
+| `Battery Workshop \| September 3, 2026 \| Berlin, Germany — Hybrid` | `city: Berlin, region: Germany` | **no city.** The Hybrid half is untouched and still green — `isOnline: true`. Test renamed to what it now proves. |
+| `Workshop \| May 1, 2027 \| Paris, France` over a body reading `Join us in Chicago` | `city: Paris, region: France` | **place absent.** Meta declines (no cue, no state code); the body's rival `Chicago` is refused by the ownership guard, as it was before. |
+
+**BOTH ARE THE SAME SHAPE: `City, Country` in a pipe segment with no locational
+cue and no US state code.** The gazetteer-backed reader has nothing to qualify
+the mention with, so it declines — **the identical clause that stops
+`Quintus Technologies, The Global Leader in isostatic pressing` from becoming a
+city. The two shapes are indistinguishable to a comma**, which is the whole
+reason the comma reader had to go.
+
+**AND THE ADMITTED CONTROL IS ASSERTED IN THE SAME TEST:** `Workshop | May 1,
+2027 | Austin, TX` over the same rival body **still yields `Austin, TX` from the
+meta layer** — so the priority the test was written to prove is demonstrably
+intact and the loss is confined to the unqualified shape.
+
+## **2.6 A MEASUREMENT B ASKED FOR AND C RAN: THE SCOPE MAKES NO DIFFERENCE**
+
+B recommended `page` scope and argued it doctrinally (an `og:description` is page
+prose, not a short structured field, so 62a's exemption was being applied to the
+wrong kind of input). C measured **both**: `structured-field` scope costs
+**the same two fixtures, no more and no fewer.** **So the loss is the
+gazetteer/cue requirement, NOT Ruling 62a's ownership guard** — a distinction
+worth having on the record, because it means a future rescue of the
+`City, Country` shape must come from the cue vocabulary and not from relaxing
+62a. C took `page` scope as B recommended, now on evidence rather than only on
+argument.
+
+## **2.7 THE GATE, AFTER THIS ITEM**
+
+**98 files / 2241 tests, 2241 passing, ZERO failures.** `tsc --noEmit` clean.
+`eslint src` back to exactly the one standing `quiz.tsx:46` error, **0
+warnings**. **`enrich.test.ts` — the SolarPaces lock — 56/56.** Three tests
+added, **two restated with the item named, none deleted.**
+
+**Turn lock still HELD; item 3 next.**
