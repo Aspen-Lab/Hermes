@@ -270,11 +270,98 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 32 + 2026-08-18 22:36 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 32 C IS COMPLETE @ 2026-08-18 ~22:4x UTC — BOTH
+                  ITEMS SHIPPED, THREE COMMITS TOTAL, EACH PUSHED ON
+                  LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
+                  `git pull` and after confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; the claiming push
+                  was ACCEPTED (`6ce6bf1`). Grepped `Round 32 — Agent C`
+                  first — zero prior entries existed, fresh start not a
+                  resume. Read Round 32 B's two item entries and Rulings
+                  87a-87d in full before writing any code.
+
+                  **ITEM 1 (A31-01, job page-kind guard, Ruling 87a) —
+                  Components A, B, C implemented VERBATIM, COMMIT `fff0ba1`
+                  (code+tests) + `c629635` (log entry — see process note
+                  below).** `NON_JOB_HOSTS`/`isNonJobHost` (Wikipedia, closed
+                  host list, suffix-matched), `DATE_STRUCTURED_PATH_RE`/
+                  `isDateStructuredResearchPath` (`/YYYY/MM/DD/` research
+                  paths, title-half safety net) wired immediately after
+                  `NON_JOB_PATH_RE`'s call site in `webResultToRawJobItem`;
+                  `isBrandOnlySearchResultsPage` (the live-confirmed
+                  jobright.ai brand-tagline bypass) wired as an additive
+                  clause inside `isListingPage`, alongside
+                  `isCareersSectionRoot`. `isTopicLandingPage` untouched. 19
+                  new tests covering B's full §1.2 corpus (5 must-catch, 11
+                  must-keep, 4 adversarial non-drops) — one specimen
+                  correction made during transcription (the "enersys.com
+                  brochure must-keep" needed the ACTUAL kept row, `"EnerSys
+                  Summer Internship - Battery Chemistry"` at
+                  `enersys.com/careers/1234`, not the similarly-named
+                  must-DROP specimen B's prose named literally). All
+                  assertions pre-verified in a throwaway probe file, deleted
+                  before commit, tree confirmed clean.
+
+                  **ITEM 2 (A31-02, malformed-date normalizer, Ruling 87b) —
+                  implemented VERBATIM, ONE COMMIT `3bdb824` (code+tests+log,
+                  correcting item 1's process deviation).**
+                  `NEAR_ISO_DATETIME_RE`/`normalizeNearIsoDateString`
+                  transcribed byte-for-byte including the component
+                  round-trip check, wired at `structured-extract.ts:1197-1198`
+                  wrapping both `startDate` and `endDate`. The Feb-30
+                  rollover re-executed and re-confirmed by this agent:
+                  `new Date("2026-02-30T09:00:00-04:00")` silently becomes
+                  `2026-03-02`, not `NaN` — the round-trip check is
+                  load-bearing, do-not-simplify note preserved in the doc
+                  comment. One citation fix during transcription: B's
+                  printed comment placed `isoDate()` "~40 lines above" the
+                  new function; in the actual file `isoDate()` sits BELOW
+                  (confirmed by grep), so the shipped doc comment says
+                  "further down this file" instead — wording only, zero
+                  logic change. 14 new tests via the public
+                  `extractJsonLdOpportunities` entry point covering B's full
+                  §2.3 must-FIX/must-NOT-touch table, including the Feb-30
+                  regression re-asserted as its own named test. Part (b): no
+                  code change, per Ruling 87b.
+
+                  **GATE, COLD, AFTER BOTH ITEMS: `npx vitest run` — 99 files
+                  / 2381 tests, 2381 passing, ZERO failures** (2348 baseline
+                  + 19 item-1 + 14 item-2, exact). `npx tsc --noEmit` clean.
+                  `npx eslint src` — exactly the one standing `quiz.tsx:46`
+                  error, unchanged. `git status --porcelain
+                  --untracked-files=all` confirmed clean before every
+                  commit; both throwaway probe files
+                  (`web/src/lib/jobs/sources/zz-r32c.probe.test.ts`,
+                  `web/src/lib/opportunities/zz-r32c2.probe.test.ts`) deleted
+                  before their respective commits. No credential anywhere;
+                  boolean presence only; `.env.local` never `cat`-ed; no
+                  `PEER_PROFILE_SNAPSHOT_PATH`; no live network calls (pure
+                  implementation turn, Ruling 75).
+
+                  **PROCESS DEVIATION, NAMED HONESTLY:** item 1 landed as TWO
+                  commits (code+tests, then the §4 log entry separately)
+                  instead of the standing one-commit-per-item pattern round
+                  31 C set (`45dd9a7` bundled code+tests+log together,
+                  confirmed by inspection). No functional consequence — both
+                  commits pushed, in order, complete — but not repeated:
+                  item 2 is one commit. The two residuals from Ruling 87a
+                  (`thrlab.tamu.edu`, `lco.cl`'s reversed-order title shape)
+                  were left exactly as ruled — named, unshipped, not
+                  guessed at.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 32, GATE CANDIDATE
+                  ROUND`** (value + visual, `searchProvider: gemini`,
+                  artefact duty, pool-count re-measure, standing watch list
+                  + round-32 residual additions: `thrlab.tamu.edu`, the
+                  `lco.cl` reversed-order shape). Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~00:0x UTC — ROUND 32 B
                   VERIFIED INDEPENDENTLY, RULINGS 87a-87d APPENDED (§4).**
                   Spot-checks by the manager's own execution: the Feb-30
