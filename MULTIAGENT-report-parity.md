@@ -84309,3 +84309,26 @@ Committed and pushed as its own item. §1 close-out follows as a separate commit
 
 **RULING 87d — sonnet, seventh data point: clean under adversity.** The turn absorbed a mid-turn account-limit death and resumed with zero loss; the jobright.ai mechanism was found by execution down to the exact clause; a 62b violation in B's OWN first draft was caught by B's OWN adversarial test and recorded rather than hidden; and twice B declined to design on absent evidence. The 83f watch stays quiet.
 
+
+
+### Round 32 — Agent C — ITEM 1 (A31-01, job page-kind guard, Ruling 87a — Components A, B, C implemented VERBATIM): **SHIPPED, COMMIT `fff0ba1`.**
+
+Implemented B's §1.1 design exactly as printed, no deviation. `web/src/lib/jobs/sources/jobweb.ts`:
+
+- **Component A** (`:83-86`) — `NON_JOB_HOSTS = ["wikipedia.org"] as const` + `isNonJobHost(host)`, the same suffix-match idiom `eventweb.ts`'s `isDeniedUrl` uses (`host === h || host.endsWith(\`.${h}\`)`). Doc comment preserves B's WHY-HOST-NOT-PATH reasoning (MediaWiki's `/wiki/` convention runs on unrelated sites).
+- **Component B** (`:100-108`) — `DATE_STRUCTURED_PATH_RE = /^\/\d{4}\/\d{2}\/\d{2}\//` + `isDateStructuredResearchPath(title, pathAndQuery)`, path match AND NOT `JOB_TEXT_RE.test(title)` — byte-identical to B's printed function. Doc comment names the title-half safety net as `isCareersSectionRoot`'s own pattern, reused not reinvented.
+- **Component C** (`:1533-1571`, placed directly after `isCareersSectionRoot`, before `isListingPage`) — `isBrandOnlySearchResultsPage(title, host, pathAndQuery)` transcribed byte-for-byte from B's printed code: leaf must match the already-shipped `TOPIC_LANDING_LEAF_RE`, title splits on first `:`, tail excluded if it carries `JOB_TEXT_RE` vocabulary, brand half tested via the already-shipped `looksLikeHostBrand`. `isTopicLandingPage` itself untouched — confirmed by diff, zero bytes changed in that function.
+
+**Wiring, exactly per B's §1.1:** Components A and B called in `webResultToRawJobItem` immediately after the `NON_JOB_PATH_RE` check (`:1659-1666`) — `if (isNonJobHost(host)) return null;` then `if (isDateStructuredResearchPath(title, pathAndQuery)) return null;`, same family, same failure direction (row → null, never a value change). Component C wired as one more additive clause inside `isListingPage` (`:1561-1564`), immediately after the `isCareersSectionRoot` call, same pattern.
+
+**Tests: 19 new, `jobweb.test.ts`, all of B's §1.2 corpus present.** Every candidate assertion was first verified in a throwaway probe file (`web/src/lib/jobs/sources/zz-r32c.probe.test.ts`, deleted before commit, `git status --porcelain --untracked-files=all` confirmed clean before every commit) before transcription into the real suite — one specimen substitution caught this way: B's own text names "enersys.com's shipped brochure must-keep" as part of the must-keep corpus, but the literal string `"EnerSys Internship Program: Powering Future Innovators"` is an EXISTING must-DROP (B17-01); the actual must-keep specimen the sanity check needs is item 7's real posting on the SAME host, `"EnerSys Summer Internship - Battery Chemistry"` at `enersys.com/careers/1234` (hyphen-separated, no colon) — substituted before banking, confirmed correct by execution both ways.
+
+- **Must CATCH, 5 of 5**: live `en.wikipedia.org/wiki/Topochemical_polymerization`, constructed `de.wikipedia.org` suffix case, live `foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/`, both live `jobright.ai` brand-tagline URLs (two different query slugs, same title).
+- **Must-keep, 0 of 11 false positives**: `psi.ch` BALDER (asserted non-null AND `company: undefined`, the honest-silence contract), `careers.gevernova.com`, `talents.vaia.com`, `hyetlithium.com`, `postdocjobs.com`, `ev.careers`/Tesla, `enovix.wd12.myworkdayjobs.com`, `bebee.com`, `jobright.ai`'s real-posting numeric-ID control (`jobweb.test.ts:1317`'s own admitted-control URL shape), `enersys.com`'s corrected brochure-host must-keep.
+- **Adversarial non-drops, 0 of 4**: `wikipedia` as a host substring not a suffix (`wikipedia.org.fake-mirror.test`), a date-structured path with real job vocabulary in the title (title safety net holds), a `"<Company>: <role>"` title at a non-listing-shaped URL, a brand-shaped colon title at a non-listing-slug URL.
+
+**Gate after this item**: `npx vitest run src/lib/jobs/sources/jobweb.test.ts` — 653/653 passing (634 baseline + 19 new). `npx tsc --noEmit` clean. Full-suite gate deferred to close-out per standard practice (run once after both items land).
+
+**Residuals untouched, exactly per Ruling 87a**: `thrlab.tamu.edu` stays a named, unshipped residual (no URL, no evidence to size a fix). `lco.cl`'s reversed-order title shape stays a named, unshipped structural observation (POLICY-ruled, not to be re-litigated absent a fresh ordinary-census re-witness).
+
+Item 2 (A31-02, malformed-date normalizer, Ruling 87b) follows as its own commit.
