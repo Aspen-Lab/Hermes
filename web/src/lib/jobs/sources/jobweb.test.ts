@@ -3035,3 +3035,67 @@ describe("RULING 75 — jobweb hands the gemini adapter NO deny list", () => {
     expect(rows[0].title).toBe("Nuclear Materials and Molten Salt Technologist 1");
   });
 });
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 1 (A29-01, job side) — family (ii) abstain-on-absence.
+// Ruling 79a. Each case is uniquely red without the clause.
+// ---------------------------------------------------------------------------
+
+describe("A29-01 — absence is not evidence (job side)", () => {
+  // THE PATH BELOW IS DELIBERATELY NOT JOB-SHAPED. `JOB_PATH_RE` matches
+  // `/opportunity/`, `/position/`, `/vacancy/` and six more, so a row on any of
+  // those admits today for reasons that have nothing to do with this clause —
+  // a test built on one would be VACUOUS and would pass with the clause
+  // reverted. `/listing/` matches neither `JOB_PATH_RE` nor `NON_JOB_PATH_RE`,
+  // and `Technologist` is not in `JOB_TEXT_RE`, so BOTH arms are genuinely
+  // silent here and only the abstain clause can decide the row.
+  const STARVED = {
+    title: "Nuclear Materials and Molten Salt Technologist 1",
+    url: "https://example.org/listing/48211",
+  };
+
+  it("ABSTAINS instead of refusing when the snippet is empty after trim", () => {
+    // The shipped disjunction refused on the second arm's SILENCE; a kind miss
+    // belongs on the ADMISSION side.
+    expect(webResultToRawJobItem({ ...STARVED, snippet: "  " })).not.toBeNull();
+  });
+
+  it("still REFUSES when a snippet is present and neither arm names a job", () => {
+    // The admitted control. A present description is tested exactly as before,
+    // however short — "absent" means EMPTY, never "short".
+    const item = webResultToRawJobItem({
+      ...STARVED,
+      snippet: "Our laboratory studies the chemistry of high temperature salts.",
+    });
+    expect(item).toBeNull();
+  });
+
+  it("keeps admitting on the TITLE alone when the snippet is empty", () => {
+    const item = webResultToRawJobItem({
+      title: "Postdoctoral Position in Molten Salt Electrochemistry",
+      url: "https://example.org/listing/48212",
+      snippet: "",
+    });
+    expect(item).not.toBeNull();
+  });
+
+  it("does NOT weaken the guards that still have evidence", () => {
+    // The boundary that keeps B's adversarial shapes dropping. `isListingPage`
+    // runs BELOW this gate and `NON_JOB_PATH_RE` ABOVE it; an empty snippet
+    // moves neither.
+    expect(
+      webResultToRawJobItem({
+        title: "60 Molten Salt Jobs, Employment July 22, 2026 (9 New Openings)",
+        url: "https://indeed.com/jobs",
+        snippet: "",
+      }),
+    ).toBeNull();
+    expect(
+      webResultToRawJobItem({
+        title: "Molten Salt Technologist Named Fellow",
+        url: "https://example.org/news/molten-salt-technologist-named-fellow",
+        snippet: "",
+      }),
+    ).toBeNull();
+  });
+});

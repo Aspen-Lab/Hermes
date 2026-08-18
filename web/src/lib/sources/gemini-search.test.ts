@@ -6,6 +6,7 @@ import {
   groundingWebChunks,
   isGeminiSearchAvailable,
   isPreScreenedOut,
+  pageDeclaresEventFromHtml,
   pageSnippetFromHtml,
   pageTitleFromHtml,
   resolveGroundingRedirect,
@@ -714,5 +715,140 @@ describe("RULING 76a — the per-source budget", () => {
     const before = Date.now();
     const deadline = geminiSearchDeadline();
     expect(deadline).toBeGreaterThan(before);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 1 (A29-01) — CHANNEL L's READER. Ruling 79a.
+//
+// `pageSnippetFromHtml` is NOT touched by this item and its cases above must
+// stay byte-unchanged: round 29 B measured every widening of the text channel
+// HARMFUL (0 of 3 rescues, manufactured date evidence, non-monotone). If a
+// snippet case ever moves, the text channel was widened after all.
+// ---------------------------------------------------------------------------
+
+describe("pageDeclaresEventFromHtml — channel L", () => {
+  const ld = (body: string) =>
+    `<html><head><script type="application/ld+json">${body}</script></head></html>`;
+
+  it("reads a scalar @type: Event", () => {
+    expect(pageDeclaresEventFromHtml(ld('{"@type":"Event","name":"X"}'))).toBe(true);
+  });
+
+  it("reads an @type array, which is how the named rescue publishes it", () => {
+    // `thebatteryshow.com` declares Event, Place, Organization and Schedule.
+    expect(
+      pageDeclaresEventFromHtml(
+        ld('{"@type":["Event","Place","Organization","Schedule"]}'),
+      ),
+    ).toBe(true);
+  });
+
+  it("reads a fully-qualified schema.org URL", () => {
+    expect(pageDeclaresEventFromHtml(ld('{"@type":"https://schema.org/Event"}'))).toBe(true);
+  });
+
+  it("accepts the closed subtype list", () => {
+    for (const type of [
+      "BusinessEvent",
+      "EducationEvent",
+      "ExhibitionEvent",
+      "Festival",
+      "SocialEvent",
+      "CourseInstance",
+    ]) {
+      expect(pageDeclaresEventFromHtml(ld(`{"@type":"${type}"}`))).toBe(true);
+    }
+  });
+
+  it("REFUSES the excluded types — this half is the load-bearing one", () => {
+    // `euchemsil2026.com` declares LocalBusiness and is deliberately excluded:
+    // a page describing a venue is not a page describing an event.
+    for (const type of [
+      "WebPage",
+      "Organization",
+      "BreadcrumbList",
+      "LocalBusiness",
+      "JobPosting",
+    ]) {
+      expect(pageDeclaresEventFromHtml(ld(`{"@type":"${type}"}`))).toBe(false);
+    }
+  });
+
+  it("does NOT match on a substring of some other vendor's type", () => {
+    // Deliberately not `endsWith("event")`: the KIND gate's boundary is closed.
+    expect(pageDeclaresEventFromHtml(ld('{"@type":"NonProfitEvent"}'))).toBe(false);
+    expect(pageDeclaresEventFromHtml(ld('{"@type":"EventVenueListing"}'))).toBe(false);
+  });
+
+  it("ignores an Event word that is not a JSON-LD @type declaration", () => {
+    expect(
+      pageDeclaresEventFromHtml(
+        '<html><body><p>@type Event</p><script>var x = {"@type":"Event"}</script></body></html>',
+      ),
+    ).toBe(false);
+  });
+
+  it("returns false on absent, empty and malformed input", () => {
+    expect(pageDeclaresEventFromHtml(null)).toBe(false);
+    expect(pageDeclaresEventFromHtml("")).toBe(false);
+    expect(pageDeclaresEventFromHtml(ld("{ this is not json"))).toBe(false);
+  });
+
+  it("survives a JSON-LD block too broken to parse", () => {
+    // Read by regex on purpose: a `JSON.parse` here would turn channel L off
+    // for the whole page on any truncated block, which is common in the wild.
+    expect(pageDeclaresEventFromHtml(ld('{"@type":"Event","name":"X"'))).toBe(true);
+  });
+});
+
+describe("searchGemini carries the page's declaration onto the row", () => {
+  const eventPage = (title: string, description: string, ld?: string) =>
+    `<html><head><title>${title}</title><meta name="description" content="${description}">${
+      ld ? `<script type="application/ld+json">${ld}</script>` : ""
+    }</head><body>x</body></html>`;
+
+  const run = (html: string) =>
+    searchGemini("battery show", {
+      ground: async () => [
+        {
+          uri: `${REDIRECT_PREFIX}bsna`,
+          title: "thebatteryshow.com",
+          domain: "thebatteryshow.com",
+        },
+      ],
+      resolveRedirect: async () => "https://www.thebatteryshow.com/",
+      fetchPages: async () => [html],
+    });
+
+  it("sets pageKind from the SAME buffer the title and snippet are read from", async () => {
+    // ROUND 29 C, ITEM 1 — the contract change's wiring. No extra fetch: the
+    // declaration comes off the one HTML buffer already in hand.
+    const rows = await run(
+      eventPage("The Battery Show North America", "Detroit.", '{"@type":["Event","Place"]}'),
+    );
+    expect(rows[0].pageKind).toBe("event");
+  });
+
+  it("leaves pageKind ABSENT when the page declares nothing", async () => {
+    // The row must stay byte-identical to what this adapter returned before
+    // the contract widened, so every non-declaring page is unaffected.
+    const rows = await run(eventPage("The Battery Show North America", "Detroit."));
+    expect(rows[0]).toEqual({
+      title: "The Battery Show North America",
+      url: "https://www.thebatteryshow.com/",
+      snippet: "Detroit.",
+    });
+    expect("pageKind" in rows[0]).toBe(false);
+  });
+
+  it("the adapter itself still makes NO kind decision", async () => {
+    // B item 7 §7.2 rejected option A (refusing in the adapter) because the
+    // paper surface WANTS a repository record. A declaration the event mapper
+    // would act on must not change what the adapter returns.
+    const rows = await run(
+      eventPage("Some Page", "x", '{"@type":"LocalBusiness"}'),
+    );
+    expect(rows).toHaveLength(1);
   });
 });

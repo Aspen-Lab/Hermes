@@ -1354,7 +1354,36 @@ export function webResultToRawJobItem(
   if (hasEmptyPostingIdentifier(`${parsed.pathname}${parsed.search}`)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (NON_JOB_PATH_RE.test(parsed.pathname)) return null;
-  if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;
+  // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), JOB SIDE.**
+  //
+  // A29-01: 63 job rows were refused HERE while carrying an empty snippet, and
+  // round 29 A proved 71 of 138 such rows admit once wording is supplied. This
+  // gate is already a disjunction, so the change is exact and small: when the
+  // snippet is EMPTY AFTER TRIM the text arm has nothing to read and **stops
+  // voting**. It neither admits nor refuses.
+  //
+  // **THE TITLE STILL VOTES.** `text` is unchanged, so a title that names the
+  // kind matches `JOB_TEXT_RE` and admits exactly as it does today. **"Absent"
+  // means EMPTY, never "short"** — a present description, however brief, is
+  // tested byte-for-byte as before.
+  //
+  // **THE GUARDS DO NOT WEAKEN TO NOTHING; ONE STARVED ARM STOPS VOTING.**
+  // `NON_JOB_PATH_RE` runs ABOVE this line and still refuses. `isListingPage`
+  // runs BELOW it, in both its arms, and still refuses — so B's adversarial
+  // listing-page shapes drop exactly as they did. `hasEmptyPostingIdentifier`
+  // and the URL checks above are untouched.
+  //
+  // No page-declared channel is read on this surface: channel L's `pageKind`
+  // is an EVENT declaration and this mapper deliberately ignores it (B item 7
+  // §7.2 — each surface keeps its own policy).
+  const snippetAbsent = (result.snippet ?? "").trim() === "";
+  if (
+    !snippetAbsent &&
+    !JOB_PATH_RE.test(parsed.pathname) &&
+    !JOB_TEXT_RE.test(text)
+  ) {
+    return null;
+  }
   if (isListingPage(title, host, `${parsed.pathname}${parsed.search}`)) return null;
 
   // Split "Postdoc in X - University of Y | board.com" style titles.

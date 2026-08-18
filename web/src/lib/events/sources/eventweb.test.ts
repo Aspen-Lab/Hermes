@@ -19,6 +19,7 @@ import {
   extractEventDate,
   extractEventDayCandidates,
   isEarningsCallPage,
+  isEventArtefactTitle,
   isEventHubResult,
   looksLikeEventTitle,
   ownedTitleSpan,
@@ -2445,5 +2446,217 @@ describe("RULING 75 — eventweb hands the gemini adapter its deny list", () => 
       "openalex.org",
       "semanticscholar.org",
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 1 (A29-01 + A29-07) — the one contract change: family (ii)
+// abstain-on-absence, channel L, and the title-side artefact-head rule.
+// Ruling 79a. Every case below is uniquely red without its own clause.
+// ---------------------------------------------------------------------------
+
+describe("A29-01 — absence is not evidence (event side)", () => {
+  const now = Date.parse("2026-08-18T00:00:00Z");
+
+  it("ABSTAINS instead of refusing when the snippet is empty after trim", () => {
+    // The clause's uniquely-red case: neither the title nor the (absent)
+    // snippet names the kind, so the shipped `!looksLikeEvent` arm refused it
+    // on text the row never had. It must now fall through to the dateless
+    // branch and be decided by guards that actually have evidence.
+    const item = webResultToRawEventItem(
+      {
+        title: "Molten Salt Chemistry 2027",
+        url: "https://example.org/molten-salt-chemistry-2027",
+        snippet: "   ",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
+  });
+
+  it("still REFUSES when a snippet is present and no arm names the kind", () => {
+    // The admitted control. "Absent" means EMPTY, never "short" — this is the
+    // boundary that keeps the abstain clause from becoming a blanket amnesty.
+    const item = webResultToRawEventItem(
+      {
+        title: "Molten Salt Chemistry 2027",
+        url: "https://example.org/molten-salt-chemistry-2027",
+        snippet: "A supplier of high purity salts for industrial customers.",
+      },
+      now,
+    );
+    expect(item).toBeNull();
+  });
+
+  it("keeps admitting on the TITLE alone when the snippet is empty", () => {
+    // The title never stopped voting; only the starved arm did.
+    const item = webResultToRawEventItem(
+      {
+        title: "International Molten Salt Symposium 2027",
+        url: "https://example.org/imss-2027",
+        snippet: "",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
+  });
+
+  it("does not hand extractEventDate one new character (Ruling 62b)", () => {
+    // 62b's falsifier, stated as a test rather than as a claim: the abstain
+    // clause changes WHICH rows survive the kind gate, never the text the date
+    // extractors read. A row that abstains with no date in its own title and
+    // no snippet must carry NO date, not an invented one.
+    const item = webResultToRawEventItem(
+      {
+        title: "Molten Salt Chemistry Programme",
+        url: "https://example.org/programme",
+        snippet: "",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
+    // The dateless branch's own shape, asserted as MEASURED rather than as
+    // expected: `startDate` is the empty string and `endDate` is undefined.
+    expect(item?.startDate).toBe("");
+    expect(item?.endDate).toBeUndefined();
+  });
+});
+
+describe("A29-01 — channel L: the page's own schema.org declaration", () => {
+  const now = Date.parse("2026-08-18T00:00:00Z");
+
+  it("ADMITS a page that declares @type: Event even with a present, kind-free snippet", () => {
+    // B's named rescue: `The Battery Show North America` publishes a
+    // 154-character description with no kind word AND declares `Event` in its
+    // JSON-LD. It was a VOCABULARY casualty, not an emptiness one, so the
+    // abstain clause cannot reach it and only channel L can.
+    const item = webResultToRawEventItem(
+      {
+        title: "The Battery Show North America",
+        url: "https://www.thebatteryshow.com/",
+        snippet:
+          "The largest advanced battery gathering in North America, bringing together engineers and buyers across the supply chain in Detroit.",
+        pageKind: "event",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
+  });
+
+  it("REFUSES the identical row when the page declares nothing", () => {
+    // Uniquely red for channel L: same title, same snippet, no declaration.
+    const item = webResultToRawEventItem(
+      {
+        title: "The Battery Show North America",
+        url: "https://www.thebatteryshow.com/",
+        snippet:
+          "The largest advanced battery gathering in North America, bringing together engineers and buyers across the supply chain in Detroit.",
+      },
+      now,
+    );
+    expect(item).toBeNull();
+  });
+
+  it("RULING 79a NAMED COST — `The Battery Saloon` is NOT rescued, on purpose", () => {
+    // `batteryinnovationsummit.com/` publishes a 157-character description with
+    // no kind word, no `og:site_name`, NO JSON-LD, and `extractPageText`
+    // returns 0 characters. Neither 78a family reaches it. The only measured
+    // rescue was channel H-prime, REFUSED by 79a (2 of 9 adversarial rows
+    // wrongly admitted). This test records the twice-adjudicated must-keep as a
+    // LOST, accepted cost of the Ruling 75 provider switch rather than leaving
+    // the loss silent. If a later round rescues it honestly, RESTATE this
+    // assertion with that item named — do not delete it.
+    const item = webResultToRawEventItem(
+      {
+        title: "The Battery Saloon",
+        url: "https://batteryinnovationsummit.com/",
+        snippet:
+          "Join industry leaders for two days of networking, deal-making and hard-won lessons from the frontier of energy storage in Nashville.",
+      },
+      now,
+    );
+    expect(item).toBeNull();
+  });
+});
+
+describe("A29-07 — an artefact produced at an event is not the event", () => {
+  const now = Date.parse("2026-08-18T00:00:00Z");
+
+  it("drops the repository slide deck that names its own symposium", () => {
+    const item = webResultToRawEventItem(
+      {
+        title:
+          "Instructional Slides from Molten Salt Electrochemistry Symposium (MoSES)",
+        url: "https://scholarsarchive.byu.edu/facpub/9603/",
+        snippet: "",
+      },
+      now,
+    );
+    expect(item).toBeNull();
+  });
+
+  it("keeps the REAL event whose head is its own name", () => {
+    // The admitted control, and the reason the rule is anchored at the head:
+    // `pyro.byu.edu/moses` renders correctly 5 of 5 and must not move.
+    expect(
+      isEventArtefactTitle("Molten Salt Electrochemistry Symposium (MoSES) 2026"),
+    ).toBe(false);
+  });
+
+  it("spans the class, not just the one row", () => {
+    expect(isEventArtefactTitle("Slides from the 2026 Battery Symposium")).toBe(true);
+    expect(isEventArtefactTitle("Proceedings of the Molten Salt Workshop")).toBe(true);
+    expect(isEventArtefactTitle("Poster presented at the 2026 Battery Summit")).toBe(true);
+    expect(isEventArtefactTitle("Presentation at the Nuclear Materials Conference")).toBe(true);
+  });
+
+  it("requires the attribution preposition — a bare artefact noun never fires", () => {
+    // `Poster Session` is part of a real conference programme.
+    expect(isEventArtefactTitle("Poster Session")).toBe(false);
+    expect(isEventArtefactTitle("Poster Session and Reception 2026")).toBe(false);
+    expect(isEventArtefactTitle("Presentation Skills Workshop")).toBe(false);
+  });
+
+  it("allows ONE leading modifier and no more", () => {
+    // One is needed by the live row (`Instructional Slides from …`); two would
+    // admit `Call for Posters at …`, a shape round 29 B never measured.
+    expect(isEventArtefactTitle("Instructional Slides from the MoSES Symposium")).toBe(true);
+    expect(isEventArtefactTitle("Call for Posters at the Battery Summit")).toBe(false);
+  });
+});
+
+describe("ROUND 29 C, ITEM 1 — the must-keep corpus round 29 B set as the acceptance", () => {
+  const now = Date.parse("2026-08-18T00:00:00Z");
+
+  it("EUCHEMSIL 2026 @ euchemsil2026.com does not move", () => {
+    // B §1.1: a 200-character og:description carrying no date, so it rides the
+    // DATELESS BRANCH. Nothing in this item may disturb that.
+    const item = webResultToRawEventItem(
+      {
+        title: "EUCHEMSIL 2026",
+        url: "https://euchemsil2026.com/",
+        snippet:
+          "The European Conference on Molten Salts and Ionic Liquids brings together researchers working on high temperature salt chemistry and ionic liquid systems.",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
+  });
+
+  it("Quintus stays ADMITTED — the non-monotonicity canary", () => {
+    // The row B used to falsify the rival "append page text to the snippet"
+    // family: it is ADMITTED today and REFUSED once 1200 characters of its own
+    // page text are appended. A widening that deletes currently-rendered rows
+    // is not a widening, which is why `pageSnippetFromHtml` was left alone.
+    const item = webResultToRawEventItem(
+      {
+        title: "Solid-State Battery Summit 2026 | Quintus Technologies",
+        url: "https://quintustechnologies.com/events/solid-state-batteries-summit-2026/",
+        snippet:
+          "Quintus Technologies, The Global Leader in isostatic pressing, invites you to a summit on solid-state battery manufacturing in Chicago.",
+      },
+      now,
+    );
+    expect(item).not.toBeNull();
   });
 });

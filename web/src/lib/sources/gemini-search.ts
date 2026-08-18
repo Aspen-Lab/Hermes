@@ -60,6 +60,27 @@ export interface WebResult {
   title?: string;
   url?: string;
   snippet?: string;
+  /**
+   * ROUND 29 C, ITEM 1 — **THE CONTRACT CHANGE, AND IT IS THE WHOLE POINT OF
+   * CHANNEL L.** Round 29 B's item 7 §7.2 established the placement problem
+   * exactly: `webResultToRawEventItem`'s entire input is `{title, url,
+   * snippet}`, so every guard in that chain is title-and-URL only *by
+   * construction* and a page-declared signal **cannot be tested there at all**
+   * — there is nothing to test. Meanwhile `searchGemini` already holds the raw
+   * HTML (`fetchPages` below) and throws it away after reading two fields.
+   *
+   * This optional field is B's **option B**: the adapter passes the page's own
+   * declaration along and **each surface keeps its own policy** — the event
+   * mapper admits on it, the job mapper ignores it, the paper surface may one
+   * day welcome it. The adapter itself still makes **no kind decision**; B's
+   * option A (refusing in the adapter) was rejected for exactly that reason and
+   * is not implemented.
+   *
+   * **It carries only what the publisher put in the markup.** It is never
+   * inferred from the host, the title, the URL or model prose, so it cannot be
+   * invented: the `@type` either is in the page's JSON-LD or it is not.
+   */
+  pageKind?: "event";
 }
 
 /**
@@ -434,6 +455,72 @@ export function pageSnippetFromHtml(html: string | null): string {
   return metaContent(html, ["og:description", "description"]) ?? "";
 }
 
+/**
+ * ROUND 29 C, ITEM 1 — **CHANNEL L. THE PAGE'S OWN `schema.org` `@type`.**
+ *
+ * **Why this is here and not next to the guard that uses it:** round 29 B's
+ * item 7 §7.2. The guard chain never sees the HTML; this function does, off the
+ * SAME buffer `pageTitleFromHtml` and `pageSnippetFromHtml` already read, so it
+ * costs **no extra fetch**.
+ *
+ * **Why a publisher declaration outranks a keyword:** "this page is an Event"
+ * is the publisher stating the kind, and it cannot be manufactured — it is in
+ * the markup or it is not. Round 29 B's §1.4 measured **zero** adversarial
+ * cost: no non-event page in B's set declares `@type: Event`.
+ *
+ * **THE TYPE LIST IS CLOSED, AND ITS EXCLUSIONS ARE THE LOAD-BEARING HALF.**
+ * `WebPage`, `Organization`, `BreadcrumbList`, `LocalBusiness` and `JobPosting`
+ * are **not** kind evidence. `euchemsil2026.com` declares `LocalBusiness` and is
+ * **deliberately** excluded — a page describing a venue is not a page
+ * describing an event. Widening this list past B's measured set is a new
+ * design, not a tidy-up.
+ *
+ * **Deliberately NOT a substring test on `…event`.** `structured-extract.ts`'s
+ * `opportunityKind` matches `type.endsWith("event")`, which is right for a
+ * page Peer has already decided to enrich and wrong for a KIND gate deciding
+ * whether a row exists at all — `NonProfitEvent`, `PastEvent` and any vendor's
+ * `FooEvent` would all become admissions on an unmeasured boundary.
+ */
+const SCHEMA_EVENT_TYPES: ReadonlySet<string> = new Set([
+  "event",
+  "businessevent",
+  "educationevent",
+  "exhibitionevent",
+  "festival",
+  "socialevent",
+  "courseinstance",
+]);
+
+const LD_JSON_BLOCK_RE =
+  /<script\b[^>]*\btype\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]{0,200000}?)<\/script\s*>/gi;
+const LD_TYPE_VALUE_RE = /"@type"\s*:\s*(?:"([^"]*)"|\[([^\]]*)\])/gi;
+
+/** `http://schema.org/Event` and `Event` are the same declaration. */
+function schemaTypeToken(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  const separator = Math.max(trimmed.lastIndexOf("/"), trimmed.lastIndexOf("#"));
+  return trimmed.slice(separator + 1).toLowerCase();
+}
+
+export function pageDeclaresEventFromHtml(html: string | null): boolean {
+  if (!html) return false;
+  for (const block of html.matchAll(LD_JSON_BLOCK_RE)) {
+    const body = block[1] ?? "";
+    for (const match of body.matchAll(LD_TYPE_VALUE_RE)) {
+      // A scalar `"@type": "Event"`, or an array `"@type": ["Event", "Place"]`
+      // — read by regex rather than `JSON.parse` on purpose: a malformed or
+      // truncated JSON-LD block is common in the wild, and a parse failure
+      // there would silently turn channel L off for the whole page.
+      const raw = match[1] ?? match[2] ?? "";
+      for (const candidate of raw.split(",")) {
+        const token = schemaTypeToken(candidate.replace(/["']/g, ""));
+        if (SCHEMA_EVENT_TYPES.has(token)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 async function mapWithConcurrency<T, R>(
   items: T[],
   limit: number,
@@ -513,7 +600,20 @@ export async function searchGemini(
     // to admit 31 of 40 job rows under a bare host name. An honest gap beats a
     // manufactured row.
     if (!title) return;
-    results.push({ title, url, snippet: pageSnippetFromHtml(pages[index] ?? null) });
+    // ROUND 29 C, ITEM 1 — channel L rides the SAME buffer as the two fields
+    // above. The adapter reads the declaration and passes it on; it does not
+    // act on it (B item 7 §7.2, option B). `pageKind` is left undefined when
+    // the page declares nothing, so a row from a page with no JSON-LD is
+    // byte-identical to what this adapter returned before this item.
+    const pageKind = pageDeclaresEventFromHtml(pages[index] ?? null)
+      ? ("event" as const)
+      : undefined;
+    results.push({
+      title,
+      url,
+      snippet: pageSnippetFromHtml(pages[index] ?? null),
+      ...(pageKind ? { pageKind } : {}),
+    });
   });
   return results;
 }

@@ -34,6 +34,13 @@ interface WebResult {
   title?: string;
   url?: string;
   snippet?: string;
+  /**
+   * ROUND 29 C, ITEM 1 — channel L. The page's own `schema.org` `@type`, read
+   * by the adapter off the HTML it already fetched (`sources/gemini-search.ts`,
+   * `pageDeclaresEventFromHtml`). **Optional and absent on every non-gemini
+   * provider**, so Tavily and Brave rows behave exactly as they did.
+   */
+  pageKind?: "event";
 }
 
 const MONTH =
@@ -414,6 +421,53 @@ export function isNewsArticleTitle(title: string, url?: string): boolean {
 
 export function isPaperPageTitle(title: string): boolean {
   return PAPER_TITLE_RE.test(title.trim());
+}
+
+/**
+ * A29-07 (round 29 C, item 1c — B's item 7 OPTION C). **A THING PRODUCED AT AN
+ * EVENT IS NOT THE EVENT.**
+ *
+ * `scholarsarchive.byu.edu/facpub/9603/` — a Digital Commons repository record
+ * titled `Instructional Slides from Molten Salt Electrochemistry Symposium
+ * (MoSES)…` — was ADMITTED as a conference, because `looksLikeEvent` is true on
+ * the word `Symposium` sitting inside the *artefact's* own name. A keyword test
+ * cannot tell "the thing" from "a thing produced at the thing"; the title's
+ * GRAMMAR can, and round 29 B measured the class to be larger than one row
+ * (`Slides from the 2026 Battery Symposium`, `Proceedings of the Molten Salt
+ * Workshop` are both `looksLikeEvent`-true today).
+ *
+ * **THE HEAD ANCHOR IS THE WHOLE RULE.** The real event
+ * `Molten Salt Electrochemistry Symposium (MoSES) 2026` — which renders
+ * correctly 5 of 5 from `pyro.byu.edu/moses` — must not match, and it cannot:
+ * its head is the event's own name, not an artefact noun. B checked that rather
+ * than assuming it.
+ *
+ * **THE ATTRIBUTION PREPOSITION IS THE SECOND HALF AND IT IS LOAD-BEARING.**
+ * `Poster Session` is part of a real conference programme; a bare `Poster` must
+ * never fire. The artefact noun only counts when the title goes on to say what
+ * it was produced *from / of / at*.
+ *
+ * **ONE optional leading modifier, no more.** The live row needs it
+ * (`Instructional Slides from …`). Two would admit `Call for Posters at …`,
+ * a shape B never measured — so the budget stops at one.
+ *
+ * **NOUN LIST HELD TO B's FOUR MEASURED SHAPES.** `talk`, `lecture`, `keynote`
+ * and `abstract` are all plausible siblings and NONE of them is implemented
+ * here: B's design spans slides / proceedings / poster / presentation and the
+ * escape clause forbids widening a design inline. **RESIDUAL, RECORDED NOT
+ * CLEARED:** an artefact whose title does not announce itself (a deposited deck
+ * titled simply `Molten Salt Electrochemistry Symposium 2026`) is invisible to
+ * this rule. B did not sight one.
+ *
+ * **It is a KIND rule, so a miss falls to ADMISSION** — an artefact this list
+ * does not name is rendered, not silently deleted. An absent title never
+ * reaches here: the row already drops on no-title.
+ */
+const EVENT_ARTEFACT_HEAD_RE =
+  /^(?:[a-z][a-z-]*\s+)?(?:slides?|proceedings|posters?|presentations?)\s+(?:presented\s+)?(?:from|of|at)\s+\S/i;
+
+export function isEventArtefactTitle(title: string): boolean {
+  return EVENT_ARTEFACT_HEAD_RE.test(title.trim());
 }
 
 /**
@@ -1769,10 +1823,64 @@ export function webResultToRawEventItem(
   // B12-03 gap B: the URL is now a second input — see isNewsArticleTitle.
   if (isNewsArticleTitle(title, url)) return null;
   if (isPaperPageTitle(title)) return null;
+  // A29-07 (round 29 C, item 1c): the artefact produced AT the event is not the
+  // event. Sits here, beside its sibling title-side kind predicates, because
+  // that is the layer where every other kind guard already lives — and because
+  // B's item 7 §7.2 proved the decisive page-declared signal cannot reach this
+  // chain at all without the contract change this same item makes.
+  if (isEventArtefactTitle(title)) return null;
   // B18-01: a company's earnings call is not a scholarly event.
   if (isEarningsCallPage(title, url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
-  if (!looksLikeEvent(text)) return null;
+  // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), AND THE
+  // PAGE'S OWN DECLARATION OUTRANKS A KEYWORD (channel L).**
+  //
+  // A29-01: 251 of round 29 A's 716 offered rows carry an EMPTY snippet, and
+  // 109 event rows were refused here while carrying one. The refusal was being
+  // read off text the row never had. `looksLikeEvent` is a KIND test, and the
+  // loop's doctrine puts a kind miss on the ADMISSION side, so a starved arm
+  // must ABSTAIN — neither admit nor refuse — and let the guards with evidence
+  // decide.
+  //
+  // **"ABSENT" MEANS EMPTY AFTER TRIM. NEVER "SHORT".** The median snippet is
+  // 111 characters; a short description is PRESENT and is tested exactly as it
+  // was. Two clauses, two separate reasons not to refuse:
+  //
+  //   1. `snippetAbsent` — the text arm has no snippet to read. **THE TITLE
+  //      STILL VOTES**: a title naming the kind admits through `looksLikeEvent`
+  //      exactly as it does today, and this clause only stops the *refusal* of
+  //      a row whose evidence was never supplied.
+  //   2. `pageKind === "event"` — channel L. The publisher declared the page an
+  //      Event in its own markup. Zero adversarial cost measured (B §1.4).
+  //
+  // **RULING 62b IS UNTOUCHED AND THAT IS DELIBERATE.** `text` is byte-for-byte
+  // what it was; neither clause adds a character to it. `extractEventDate` and
+  // `extractDeadline` below therefore read exactly the same string they always
+  // did, so **no furniture date can reach them** — which is precisely why B
+  // measured the rival "append page text to the snippet" family HARMFUL and
+  // refused it (§1.2: it manufactures date evidence, and it is non-monotone).
+  // `pageSnippetFromHtml` stays byte-for-byte as shipped.
+  //
+  // A row that abstains here falls through to the DATELESS BRANCH, which
+  // carries its own "every year token is past ⇒ drop" rule — so a stale row
+  // still leaves. Round 28 B's design always claimed the dateless branch was
+  // unaffected by an empty snippet; that claim was true only because the branch
+  // was never REACHED. This makes it true as written (see §1.5's amendment).
+  //
+  // **NAMED COST, RULING 79a — `The Battery Saloon` @ `batteryinnovationsummit.com/`
+  // IS NOT RESCUED AND IS NOT MEANT TO BE.** It publishes a 157-character
+  // description with no kind word, no `og:site_name`, NO JSON-LD, and
+  // `extractPageText` returns 0 characters (a JavaScript shell). Clause 1
+  // cannot fire — its snippet is PRESENT. Clause 2 cannot fire — there is no
+  // declaration to read. The only measured rescue was channel H-prime (the
+  // registrable host names the kind at a bare root), and 79a REFUSED it: it
+  // admits 2 of 9 adversarial rows, which is the wrong-admission direction this
+  // loop spent rounds eradicating. **The row is a recorded, accepted cost of
+  // the Ruling 75 provider switch. Do not rescue it here.** Re-examine only if
+  // the host ever publishes structured event data channel L can read.
+  const snippetAbsent = (result.snippet ?? "").trim() === "";
+  const pageDeclaresEvent = result.pageKind === "event";
+  if (!looksLikeEvent(text) && !snippetAbsent && !pageDeclaresEvent) return null;
   // A22-01 (round 22 C, Ruling 59a draft 3): position may decide the date only
   // when the text offers ONE reading of it. Two or more readings and the
   // snippet is ambiguous, so the item must prove which one is its own — its

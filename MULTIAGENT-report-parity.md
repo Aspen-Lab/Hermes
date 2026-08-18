@@ -81359,3 +81359,159 @@ ago.
 **THE HAND-OFF:** `WHOSE TURN: C — round 29` stands as B wrote it. **C's work list: item 1 per 79a (abstain-on-absence + channel L + item 7's placement, one contract change); items 2, 4, 5, 6 as B designed (the meta-place reroute through the 62a-guarded parser; the structural careers-section-root rule; the trail-count rule; the idempotent second decode); sub-item 8 per 79c (the two-part timeout). A29-03 is NOT C's (79b).** Bank per item. The gate stays `GATE (0%): NOT MET`.
 
 ---
+
+### Round 29 — Agent C — ITEM 1 (A29-01 + A29-07, RULING 79a): **THE ONE CONTRACT CHANGE. LANDED. Abstain-on-absence at BOTH text arms, channel L, and the title-side artefact-head rule — three pieces, one coherent change, one commit.**
+
+**Run by `LAPTOP-3CL10CG5`, 2026-08-18.** Lock claimed after `git pull` and after
+`git branch --show-current` read `feature/summary-report-revamp`; **the claiming
+push was ACCEPTED (`19cb14f..eadcc26`)**, so the race was won rather than assumed.
+No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+**RULING 75 OBEYED: not one Tavily / Adzuna / USAJobs / JSearch call, for any
+purpose.** This item made **no live search call at all** — every figure is unit
+execution against fixtures. **No credential printed, logged, committed or
+written; `.env.local` never `cat`-ed.** No third-party page text pasted.
+
+## **1.0 THE GATE, RE-RUN COLD BEFORE THE FIRST EDIT**
+
+`npx vitest run` gives **98 files / 2208 tests, 2208 passing, ZERO failures**, with
+`benchmark.test.ts` **green on the gemini provider**. `tsc --noEmit` clean.
+`eslint src` exactly the one standing `quiz.tsx:46` error, 0 warnings.
+**Identical to the figures B and the manager closed on**, as it must be since B
+changed nothing.
+
+## **1.1 WHAT SHIPPED, AND WHERE**
+
+| piece | file | what it does |
+|---|---|---|
+| **the contract** | `sources/gemini-search.ts` — `WebResult.pageKind?: "event"` | B item 7 §7.2's **option B**: the adapter passes the page's own declaration along; **the adapter still makes no kind decision** (option A rejected — the paper surface WANTS a repository record) |
+| **channel L's reader** | `sources/gemini-search.ts` — `pageDeclaresEventFromHtml` | reads `schema.org @type` off the **SAME buffer** the title and snippet already come from. **No extra fetch.** |
+| **the wiring** | `searchGemini`'s result construction | sets `pageKind` only when the page declares; **a non-declaring row is byte-identical to before** |
+| **abstain, event** | `events/sources/eventweb.ts` (guard 8) | `!looksLikeEvent(text) && !snippetAbsent && !pageDeclaresEvent` |
+| **abstain, job** | `jobs/sources/jobweb.ts` (the path/text disjunction) | `!snippetAbsent && !JOB_PATH_RE && !JOB_TEXT_RE` |
+| **artefact head (A29-07)** | `events/sources/eventweb.ts` — `isEventArtefactTitle`, called beside `isPaperPageTitle` | B item 7 **option C** |
+
+**`pageSnippetFromHtml` IS BYTE-FOR-BYTE AS SHIPPED**, and its cases in
+`gemini-search.test.ts` are byte-unchanged — B's own stated falsifier for
+"the text channel was widened after all" does not fire.
+
+## **1.2 THE NEGATIVE PROOFS — EVERY CLAUSE REVERTED, RE-RUN, RED COUNT RECORDED**
+
+Each revert run alone; **never concurrent with another vitest run**. Baseline for
+the three files is **850 passing**.
+
+| clause reverted to its shipped form | red | which tests |
+|---|---|---|
+| event abstain (`&& !snippetAbsent` removed) | **2** | `ABSTAINS instead of refusing…`, `does not hand extractEventDate one new character` |
+| channel L at the guard (`&& !pageDeclaresEvent` removed) | **1** | `ADMITS a page that declares @type: Event…` |
+| artefact-head guard call disabled | **1** | `drops the repository slide deck…` |
+| job abstain (`!snippetAbsent &&` removed) | **1** | `ABSTAINS instead of refusing…` (job side) |
+| adapter wiring (`pageKind` forced undefined) | **1** | `sets pageKind from the SAME buffer…` |
+| closed type list swapped for `endsWith("event")` | **2** | `accepts the closed subtype list`, `does NOT match on a substring…` |
+
+**EVERY CLAUSE IS UNIQUELY RED. NONE IS VACUOUS.**
+
+## **1.3 A VACUOUS TEST C WROTE AND CAUGHT, DISCLOSED BEFORE THE FIGURES**
+
+C's first job-side abstain fixture used the URL
+`https://example.org/opportunity/48211`. **`JOB_PATH_RE` matches
+`/opportunity/`**, so that row admits today for reasons that have nothing to do
+with the clause — **the test would have passed with the clause reverted**. It
+was caught by the mandated revert, not by reading. The fixture now uses
+`/listing/`, which matches **neither** `JOB_PATH_RE` nor `NON_JOB_PATH_RE`, with
+a title (`…Technologist 1`) that is **not** in `JOB_TEXT_RE`, so **both arms are
+genuinely silent and only the clause can decide it.** The reason is written into
+the test file so the next agent cannot re-introduce it.
+
+**A second self-caught defect:** C's first "guards do not weaken" fixture used
+`Research Scientist` at `/privacy-policy` — but `JOB_TEXT_RE` contains
+`research scientist` and `NON_JOB_PATH_RE` does **not** contain `privacy`, so the
+row was admitted **before** this item too and the test proved nothing. Replaced
+with two shapes that really are refused by the guards above and below:
+an `indeed.com/jobs` aggregate listing title, and a `/news/` path.
+
+## **1.4 THE BOUNDARIES, HELD AND CHECKED**
+
+- **RULING 62b — ZERO INVENTED DATES, STILL ZERO.** `text` is byte-for-byte what
+  it was; **neither clause adds one character to it**, so `extractEventDate` and
+  `extractDeadline` read exactly the string they always did. **No page furniture
+  can reach them.** Asserted, not claimed: a row that abstains with no date
+  anywhere carries `startDate: ""` and `endDate: undefined`. This is precisely
+  why B's rival "append body text" family was refused (§1.2: it manufactures
+  date evidence and it is non-monotone).
+- **B's adversarial listing shapes still drop.** Job side: `NON_JOB_PATH_RE`
+  above and **both** `isListingPage` arms below are untouched, asserted with an
+  aggregator listing title and a `/news/` path, both with EMPTY snippets. Event
+  side: `isEventIndexResult` and `isEventHubResult` run **above** the abstain
+  clause and are untouched.
+- **"Absent" means EMPTY AFTER TRIM, never "short"** — asserted on both surfaces
+  with an admitted control carrying a present, kind-free description.
+- **The title still votes** — asserted on both surfaces.
+- **`CAREERS_INDEX_TITLE_RE`, `LISTING_URL_RE`, 62a, 63a, 49a, A22-01: not
+  touched by this item.**
+
+## **1.5 THE MUST-KEEP CORPUS — B's STATED ACCEPTANCE, ROW BY ROW**
+
+| row | required | result |
+|---|---|---|
+| `The Battery Show North America` | admit **via channel L** | **ADMITTED** — and the identical row **without** the declaration is still REFUSED, which is what makes the channel the cause |
+| `Nuclear Materials and Molten Salt Technologist 1` (LANL) | must not move | **HELD** — the shipped test at `jobweb.test.ts:2325` is green, unedited |
+| `EUCHEMSIL 2026` at `euchemsil2026.com` | must not move | **HELD** — new explicit control, dateless branch |
+| `Quintus` (A29-02's row) | must still be ADMITTED | **HELD** — new explicit control, the non-monotonicity canary |
+| `The Battery Saloon` | **NAMED COST (79a)** | **NOT RESCUED, ON PURPOSE — see 1.6** |
+
+## **1.6 THE NAMED COST, WRITTEN WHERE THE CHECK LIVES**
+
+**`The Battery Saloon` at `batteryinnovationsummit.com/` IS RECORDED AS LOST.**
+Ruling 79a refused channel H-prime (it admits 2 of 9 adversarial rows — the
+wrong-admission direction). C attempted **no rescue**. The cost is commented **at
+the guard itself** in `eventweb.ts` — why neither clause can reach it (the
+snippet is PRESENT so abstain cannot fire; there is NO JSON-LD so channel L has
+nothing to read), that 79a refused the only measured rescue, and that it is a
+cost of the Ruling 75 provider switch to be re-examined only if the host ever
+publishes structured event data. **It is also a passing test**, so the loss is
+durable rather than a comment that rots: if a later round rescues it honestly,
+that test is **RESTATED with the item named, never deleted.**
+
+## **1.7 DEVIATIONS FROM B's DESIGN — ONE, TRACED, AND IT IS A NARROWING**
+
+**B's item 7 recommends "option C FIRST, with option B as the follow-on".
+C landed BOTH, because 79a ordered them as ONE contract change** and B's own note
+says channel L "has the IDENTICAL placement problem and the IDENTICAL solution,
+so if both land, they should land as one contract change, not two". **That is the
+ruling, not a deviation.** The narrowing is inside option C:
+
+- **The artefact-noun list is held to B's four measured shapes** — `slides`,
+  `proceedings`, `poster`, `presentation`. `talk`, `lecture`, `keynote` and
+  `abstract` are all plausible siblings and **none is implemented**: the escape
+  clause forbids widening a design inline. Recorded as a residual, not as
+  cleared.
+- **ONE optional leading modifier, not two.** The live row needs exactly one
+  (`Instructional Slides from …`). **Two would admit `Call for Posters at …`**,
+  a shape B never measured — so the budget stops at one, and both the wanted and
+  the unwanted case are asserted.
+
+## **1.8 RESIDUALS, RECORDED NOT CLEARED**
+
+- An artefact whose title does **not** announce itself (a deposited deck titled
+  simply `Molten Salt Electrochemistry Symposium 2026`) is invisible to the
+  title-side rule. **B did not sight one.** It would need the page-declared
+  channel, which now exists — a follow-on, not a gap this item claims to close.
+- The abstain clause's real-corpus effect is **A's aggregate counts, carried
+  UNRECHECKED** (109 event / 63 job refusals with an empty snippet; 251 of 716).
+  **A's offered-row table does not exist** (B §1.6), so C cannot re-measure it
+  either. **79e's artefact duty on round 30 A is what closes this.**
+- Channel L is populated **only on the gemini provider**. Tavily and Brave rows
+  carry no `pageKind` and behave exactly as before — deliberate, since neither
+  provider hands Peer the page HTML.
+
+## **1.9 THE GATE, AFTER THIS ITEM**
+
+`npx vitest run` gives **98 files / 2238 tests, 2238 passing, ZERO failures** (30 new
+tests, no test deleted, **no existing test edited** — B's warning that "any
+fixture relying on an EMPTY snippet producing a refusal will flip" turned out to
+have **no such fixture**, which C states rather than claiming credit for a clean
+run). `tsc --noEmit` clean. `eslint src` exactly the one standing `quiz.tsx:46`
+error, 0 warnings. **`enrich.test.ts` SOLO: 56/56.** **`benchmark.test.ts` SOLO:
+1 file, 1 test, PASSED, 22.7 s wall — a live gemini run, GREEN.**
+
+**Turn lock still HELD; item 2 next.**
