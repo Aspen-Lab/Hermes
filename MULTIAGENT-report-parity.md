@@ -275,6 +275,35 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~21:1x UTC — ROUND 31 B
+                  VERIFIED INDEPENDENTLY, RULINGS 84a-84e APPENDED (§4).**
+                  Gate re-run cold by the manager: **99 files / 2293 tests,
+                  2293 passing, zero failures**; B's zero-product-code claim
+                  verified by the manager's own git scope check; five citation
+                  spot-checks all passed (declaredEventName's guard set, the
+                  honest-host lock, NEWS_TITLE_RE's anchor, the zero-coverage
+                  gap, the single jobweb.test.ts "Project" hit). **RULING 84a:
+                  item 1 (A30-01 project-name veto) APPROVED as written.**
+                  **RULING 84b: ornl EXPLAINED (honest-host fallback, joins
+                  the named-cost registry); A30-02's mechanism attribution
+                  CORRECTED (ingestion chain exonerated by structural proof)
+                  but the witness NOT withdrawn — round 31 A carries a
+                  TWO-STAGE name-capture duty (ingestion vs post-enrichment)
+                  to test the declaredEventName hypothesis; if nothing
+                  re-witnesses in five pulls, A30-02 parks as UNREPRODUCED
+                  (reopen: any bare-generic-word name on any census row).**
+                  **RULING 84c: item 3 (A30-03) APPROVED, BOTH designs —
+                  ticker-path + PR-headline; 41c/45a doctrine reading
+                  ratified; C also locks the existing guard's base cases
+                  (zero coverage today).** **RULING 84d: ROUTING —
+                  `WHOSE TURN: C — round 31` (implement items 1 + 3; item 2
+                  ships no code), THEN A — round 31 gate candidate (value +
+                  visual, gemini, artefact duty, pool re-measure) + the 84b(3)
+                  instrument.** **RULING 84e: sonnet fourth data point — the
+                  strongest sonnet turn yet; no 83f recurrence at the B
+                  seat.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 31 B IS COMPLETE @ 2026-08-18 ~21:0x UTC — THREE
                   ITEMS, THREE COMMITS, EACH PUSHED ON LANDING.** Run by
                   `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
@@ -83405,3 +83434,21 @@ Read Rulings 41c and 45a/45b in full (`MULTIAGENT-report-parity.md:16550-16553` 
 **Two independent, bounded, adversarially-tested designs, both clean against round 30 A's own admitted-row corpus and the commission's own named adversarial case ("announcing" already correctly protected).** No `POLICY — manager decides` needed on the MECHANISM question (host-hunting doctrine read and answered within the recorded rulings, §3.4) — recommend BOTH designs ship together as two small, independent, additive disjuncts inside `isNewsArticleTitle`: Design A (path, higher confidence, generalises beyond this one host) and Design B (title, single-witness-derived, named as narrower and residual-watched for its unwitnessed verb siblings the same way round 30 B named its own residuals). If the manager prefers to ship only one, Design A is the stronger standalone signal — it does not depend on this round's one title sample generalising correctly.
 
 Committed and pushed as its own item. §1 close-out follows as a separate commit.
+
+### Round 31 — MANAGER (independent verification of B; RULINGS 84a-84e; C commissioned for items 1 + 3; A commissioned with the two-stage name-capture instrument)
+
+**Verification, run before any ruling:**
+
+- **B changed zero product code** — the manager's own `git log --name-only 9ef8677..42eccf2 -- web/src/` is EMPTY, not taken from B's word. Tree clean, all five commits pushed. Gate re-run cold by the manager at this ruling: **99 files / 2293 tests, 2293 passing, zero failures** (recorded below if it differed — it did not).
+- **Five citation spot-checks, all PASSED:** (1) `extractDeclaredEventName` (`event-details.ts:23-34`) is guarded by exactly `looksLikeEventTitle` + a 160-char cap and NOTHING else — no chrome/generic check; B's unguarded-branch claim verified by the manager's own read. (2) The honest-host lock (`eventweb.test.ts:724-731`) asserts `"ecs.confex.com"` verbatim as B quotes. (3) `NEWS_TITLE_RE` (`eventweb.ts:237-238`) has `announcing\b` INSIDE the start-anchor group, exactly as item 3's §3.1 explains. (4) `isNewsArticleTitle`/`NEWS_TITLE_RE`/`NEWS_HEADLINE_PATH_RE` have ZERO existing test references — the coverage gap is real. (5) `jobweb.test.ts` contains exactly ONE "Project" reference (`:814`, the `isListingPage` matrix row) — item 1's zero-collision claim verified.
+
+**RULING 84a — item 1 (A30-01) APPROVED AS WRITTEN.** C implements §1.2 verbatim: `PROGRAMME_LABEL_TAIL_RE`, `ORG_DESIGNATOR_ANYWHERE_RE` (with its doc comment preserving WHY it is unanchored and why `co`/`as` are excluded — the recorded first-draft false positive is the reason a future reader must not "simplify" it back), and `looksLikeProjectLabelWithDescription` as an additive final clause in the `.find()` predicate. Tests: all five assertion groups from §1.3, including the nine real "Project"-org adversarials and the first-draft regression case (`Genome Research Project (Institute of Genomics)` must SURVIVE).
+
+**RULING 84b — item 2 (A30-02 + ornl), three parts.** (1) **The `events.ornl.gov` secondary witness is EXPLAINED** — B9-04 Fix 1's honest-host fallback working exactly as designed, test-locked five-plus rounds ago; it joins the NAMED-COST REGISTRY (83a's EUCHEMSIL precedent), reopening only if the fallback ever renders where a recoverable real title provably existed at the same stage. The `msrworkshop2025` un-segmentable slug is the same open-class problem the `ORG_DESIGNATOR_RE` doctrine refuses to fake — ratified. (2) **A30-02's mechanism attribution is CORRECTED; the witness itself is NOT withdrawn.** B's structural proof (a closed reading of every return path — no stage of `eventNameFrom` can emit a bare dictionary word, and `classifyEventType`'s "conference" default populates `.type`, not `.name`, and would return "seminar" for this title anyway) exonerates the ingestion chain. The 1-of-5 live render record stands as a witness with an UNKNOWN mechanism. Fairness note under 83f's watch: A's entry both disclaimed stage-level tracing AND named the `eventNameFrom` chain in its mechanism column — half a mis-attribution; recorded as a mechanism-column correction, NOT a third 83d-class defect and NOT a phantom-witness finding. (3) **B's option (2) is ADOPTED: round 31 A carries a targeted re-witness duty with a TWO-STAGE CAPTURE INSTRUMENT** — for every event row in the census (and any `veryst.com` row specifically), record `name` at INGESTION (immediately after `webResultToRawEventItem`) and at POST-ENRICHMENT (what the report renders), same row, same pull. A divergence where enrichment replaced a good ingestion name with a generic word confirms the §2.4 `declaredEventName` hypothesis (the one name-writing branch with no chrome guard — verified by the manager's own read, spot-check 1). If nothing re-witnesses in five pulls, A30-02 PARKS as UNREPRODUCED with the reopen trigger: any bare-generic-word name on any census row.
+
+**RULING 84c — item 3 (A30-03) APPROVED, BOTH DESIGNS.** Design A (`TICKER_NEWS_PATH_RE` reading the RAW un-lowercased path — the all-caps shape IS the signal) and Design B (`PR_ANNOUNCEMENT_HEADLINE_RE`, `plans/schedules`+digit only; the unwitnessed verb siblings — `announces`, `to exhibit at`, `attends` — stay residual-watched by name, per the land-what-is-confirmed practice). **The 41c/45a doctrine reading is RATIFIED**: both are measurement-method rulings binding this loop's agents' own probing, not production-design prohibitions; `DENY_HOSTS`/`PAPER_PAGE_HOSTS` are shipped precedent, and Design A's path-STRUCTURE form generalises across every ticker-convention newswire without naming one host, exactly answering Ruling 32's "stop fixing it one site at a time" complaint. **C additionally adds a minimal base-case lock for the EXISTING guard** (an `announcing`-led title must fire; a mid-sentence "announcing" must not) — the guard has zero coverage today and is about to grow two disjuncts; locking present behaviour first is a test ADDITION, in scope.
+
+**RULING 84d — ROUTING: `WHOSE TURN: C — round 31`** — implements items 1 + 3 (item 2 ships no code), one commit per item, tests as specified, gate must return to all-green with the additions counted. **THEN A — round 31: GATE CANDIDATE ROUND again** (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure after item 1's veto ships per §1.4) **PLUS the 84b(3) two-stage name-capture duty.**
+
+**RULING 84e — sonnet, fourth data point: the strongest sonnet turn yet.** A structural impossibility proof where a lazier turn would have shipped a speculative patch; a doctrine question answered by reading the rulings instead of assuming; two first-draft false positives self-caught, fixed, and RECORDED so they cannot be reintroduced. The 83f watch shows no recurrence at the B seat.
+
