@@ -80550,3 +80550,85 @@ and A23-02's month-year name-strip assertions that read the same function's
 detailed form.
 
 **VERDICT: A's row is real; A's implied separator fix costs 3 of 5 real names; a ≥3 trail-count rule costs 0 of 8. Take the count, not the separator.**
+
+### Round 29 — Agent B — ITEM 6 (A29-06): the double-escaped `og:title`. **IT IS A ONE-SEAM UNESCAPE, AS THE BRIEF GUESSED, AND THE SECOND PASS IS MEASURED IDEMPOTENT ON EVERY ADVERSARIAL CASE B COULD BUILD.**
+
+**B changed no code.** Shipped `cleanDisplayText` and `pageTitleFromHtml`
+executed directly.
+
+## **6.1 THE MECHANISM REPRODUCES EXACTLY AS A FILED IT**
+
+```
+cleanDisplayText("R&amp;amp;D Intern")                          -> "R&amp;D Intern"
+cleanDisplayText(cleanDisplayText("R&amp;amp;D Intern"))        -> "R&D Intern"
+pageTitleFromHtml('<meta property="og:title" content="R&amp;amp;D Intern">') -> "R&amp;D Intern"
+```
+
+**One decode, one entity layer removed, one layer left, and it reaches the card
+literally.** A's withdrawal of its own first draft ("Peer does not decode
+entities") is confirmed correct — the decoder works; it simply runs once against
+a page that escaped twice.
+
+**THE SEAM IS EXACTLY ONE:** `pageTitleFromHtml`
+(`web/src/lib/sources/gemini-search.ts:417-423`), via `metaContent` →
+`cleanDisplayText`. **A's channel note is right and worth keeping on the record:
+no previous provider handed Peer raw page HTML, so this class could not appear
+before round 28.**
+
+## **6.2 THE ADVERSARIAL CASE THAT WOULD KILL A SECOND PASS — B BUILT IT AND IT DOES NOT FIRE**
+
+The danger of decoding twice is a title whose *literal, intended* text contains
+an entity. B ran the four sharpest shapes:
+
+| input | after 1 pass | after 2 passes | second pass changed it? |
+|---|---|---|---|
+| `Writing &amp; in HTML: a guide` | `Writing & in HTML: a guide` | same | **no** |
+| `Ampersand (&amp;) escaping workshop` | `Ampersand (&) escaping workshop` | same | **no** |
+| `R&amp;D Intern` (single-escaped, the common case) | `R&D Intern` | same | **no** |
+| `AT&amp;T Labs Intern` | `AT&T Labs Intern` | same | **no** |
+
+**`cleanDisplayText` is IDEMPOTENT on all four**: once the entity is decoded to a
+bare `&`, a second pass has nothing left to match. **So a bounded second pass
+costs zero on every case B could construct.**
+
+**THE ONE CASE IT WOULD COST, NAMED HONESTLY:** a page whose title is *meant* to
+display the seven characters `&amp;` — i.e. a document about HTML escaping that
+escaped itself correctly as `&amp;amp;`. **That page is indistinguishable from
+this defect by construction**, because the two are byte-identical. **There is no
+signal that separates them and B will not invent one.** The trade is: one
+literal-`&amp;`-displaying title lost, against every double-escaped real title
+recovered. **B recommends taking it, and recommends it be recorded as a NAMED
+COST rather than presented as a clean fix.**
+
+## **6.3 THE PRICE, HONESTLY, AS 78a's SISTER ITEM ASKS**
+
+**Frequency: 1 of 716 offered rows (A's measurement, 0.14%).** This is the
+loop's smallest ranked item and B does not inflate it.
+
+**Recommended shape:** decode **repeatedly until the string stops changing, with
+a hard cap of 2 passes.** Not unbounded — an unbounded loop over attacker-shaped
+input is a cost with no measured benefit, and 2 passes covers every sighting.
+**Not "always decode twice"** either: repeat-until-stable is the same result on
+every measured case and is self-documenting about why it stops.
+
+**Placement: at the ONE seam, `pageTitleFromHtml`.** Not inside
+`cleanDisplayText` — that function is shared by the whole rendering surface and
+changing it would move behaviour on rows this item never measured. **The defect
+is in what the adapter reads out of raw HTML, so the repair belongs where the raw
+HTML is read.**
+
+**Boundary: absent title ⇒ nothing to decode, the row still DROPS on no-title
+exactly as today.** No invention, no new admission.
+
+**VACUITY CHECK: NOT VACUOUS but NEARLY SO, and B says so.** On A's corpus the
+second pass changes exactly **1 row in 716**. **FALSIFIER: if a corpus shows the
+second pass changing 0 rows, the seam was placed wrong — it should still change
+this one.**
+
+**TESTS AT RISK — GREPPED:** `web/src/lib/sources/gemini-search.test.ts` covers
+`pageTitleFromHtml`; `web/src/lib/text/clean.test.ts` (if
+`cleanDisplayText` is touched — it must not be) **must stay byte-unchanged. If
+`clean.test.ts` moves, the repair was made in the shared function instead of at
+the seam.**
+
+**VERDICT: real, tiny, one seam, second pass measured idempotent on 4 of 4 adversarial cases, one indistinguishable-by-construction cost named. 1 of 716.**
