@@ -1640,12 +1640,68 @@ function titleSegments(title: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * A29-05 (round 29 C, item 4). **COUNT THE TRAIL. DO NOT MATCH THE SEPARATOR.**
+ *
+ * `ans.org` returned the title `Molten Salt Fuel Chemistry -- ANS / Conferences
+ * / 2026 ANS Annual Conference / Technical Sessions` and Peer rendered **the
+ * whole string** as the event's name: a navigation menu in the name slot, which
+ * is the least defensible thing that slot can hold. `--` and ` / ` are not in
+ * `titleSegments`' separator set, so no head was ever taken.
+ *
+ * **A's IMPLIED FIX — "add `--` and ` / ` to the separators" — IS REFUTED BY
+ * MEASUREMENT, AND ROUND 29 B DID THE MEASURING. It truncates 3 of 5 real event
+ * names:** `Gordon Research Conference / Batteries` loses its subject,
+ * `Electrochemistry -- Fundamentals and Applications Symposium` loses the kind
+ * word with it, and `R&D / Innovation Summit 2026` renders the two-character
+ * name `R&D`. **A separator rule cannot tell a trail from a name, because ONE
+ * separator is not a trail — it is ordinary punctuation.**
+ *
+ * **A breadcrumb is a PATH, so it has THREE OR MORE chrome separators. A name
+ * has nought or one.** B measured **0 of 8 wrong** on that threshold: both
+ * trails cut correctly, all six real names byte-identical.
+ *
+ * **THE SEPARATORS MUST BE SPACE-DELIMITED.** `AI/ML for Energy Storage
+ * Workshop 2026` has no spaces round its slash and must never count — measured,
+ * and it is the reason the naive rule spared that one row.
+ *
+ * **≥ 3, NOT ≥ 2.** Two is reachable by an ordinary subtitled name
+ * (`Conference / Workshop / 2026` is a real risk at 2). B set the threshold
+ * where the measured corpus separates and **stated plainly that 2 is untested
+ * rather than that it is safe.** C keeps it at 3 for that reason.
+ *
+ * **ABSENT TITLE ⇒ nothing to split; the rule cannot fire. No invention.**
+ */
+const TRAIL_SEPARATOR_RE = /\s(?:\/|--)\s/g;
+const TRAIL_MIN_SEPARATORS = 3;
+
+function breadcrumbTrailHead(title: string): string | undefined {
+  const separators = title.match(TRAIL_SEPARATOR_RE);
+  if (!separators || separators.length < TRAIL_MIN_SEPARATORS) return undefined;
+  const head = title.split(TRAIL_SEPARATOR_RE)[0]?.trim();
+  return head || undefined;
+}
+
 function selectEventTitleSegment(
   title: string,
   url?: string,
   options?: ChromeSegmentOptions,
 ): string | undefined {
-  const segments = titleSegments(title);
+  // A29-05: the trail is cut FIRST, and then the head is handed to the whole
+  // existing pipeline rather than returned straight to a reader.
+  //
+  // **THIS IS B's OWN RESIDUAL, ANSWERED RATHER THAN INHERITED.** B observed
+  // that `Home / Events / 2026 / Battery Summit` is correctly identified as a
+  // trail and yields the head `Home`, which is a WORTHLESS name — "a trail
+  // whose head is chrome should render honest silence rather than `Home`" —
+  // and asked C to pair the rule with the existing name-quality path. Passing
+  // the head through `isChromeSegment` / `looksLikeEventTitle` below IS that
+  // pairing: a chrome head leaves nothing informative, this function returns
+  // undefined, and `eventNameFrom` falls through to the slug and snippet
+  // stages exactly as it does for any all-chrome title. **Nothing new is
+  // invented and `Home` never reaches a card.**
+  const trailHead = breadcrumbTrailHead(title);
+  const segments = titleSegments(trailHead ?? title);
 
   // B5-06/R13 gap 2. host is undefined when eventNameFrom is called without
   // a URL (some tests, and any future caller that doesn't have one) — the

@@ -2660,3 +2660,64 @@ describe("ROUND 29 C, ITEM 1 — the must-keep corpus round 29 B set as the acce
     expect(item).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 4 (A29-05) — count the trail, do not match the separator.
+// Round 29 B's eight-row corpus, run as assertions.
+// ---------------------------------------------------------------------------
+
+describe("A29-05 — a breadcrumb trail is not an event name", () => {
+  const ANS_URL = "https://www.ans.org/meetings/c_1/sessions";
+
+  it("cuts the live ANS trail down to its head", () => {
+    expect(
+      bestEventTitleSegment(
+        "Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS Annual Conference / Technical Sessions",
+        ANS_URL,
+      ),
+    ).toBe("Molten Salt Fuel Chemistry");
+  });
+
+  it("leaves every real name in B's corpus BYTE-IDENTICAL", () => {
+    // The three A's implied separator fix would have truncated, plus the three
+    // it happened to spare. `R&D / Innovation Summit 2026` is the worst case:
+    // a separator rule renders the two-character name `R&D`.
+    for (const name of [
+      "Gordon Research Conference / Batteries",
+      "Electrochemistry -- Fundamentals and Applications Symposium",
+      "R&D / Innovation Summit 2026",
+      "Materials and Chemistry for Molten Salt Systems",
+      "AI/ML for Energy Storage Workshop 2026",
+    ]) {
+      expect(bestEventTitleSegment(name)).toBe(name);
+    }
+  });
+
+  it("requires THREE separators — two is untested, so two does not fire", () => {
+    expect(bestEventTitleSegment("Conference / Workshop / 2026")).toBe(
+      "Conference / Workshop / 2026",
+    );
+  });
+
+  it("counts only SPACE-DELIMITED separators", () => {
+    // `AI/ML` has no spaces round its slash. Three of them still must not count.
+    expect(bestEventTitleSegment("AI/ML and R&D/QA and Test/Dev Summit 2026")).toBe(
+      "AI/ML and R&D/QA and Test/Dev Summit 2026",
+    );
+  });
+
+  it("renders honest SILENCE rather than a chrome head — B's own residual", () => {
+    // `Home / Events / 2026 / Battery Summit` is a real trail whose head is
+    // worthless. The rule identifies the trail; the existing name-quality path
+    // then refuses `Home`, so nothing is returned and `eventNameFrom` falls
+    // through to its slug and snippet stages.
+    expect(bestEventTitleSegment("Home / Events / 2026 / Battery Summit")).toBeUndefined();
+  });
+
+  it("an absent or separator-free title cannot fire the rule", () => {
+    expect(bestEventTitleSegment("")).toBeUndefined();
+    expect(bestEventTitleSegment("Battery Summit 2026 | Register | Home")).toBe(
+      "Battery Summit 2026",
+    );
+  });
+});

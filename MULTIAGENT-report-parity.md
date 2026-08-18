@@ -81717,3 +81717,80 @@ argument stands untouched.
 tests added, **one restated with the item named, none deleted.**
 
 **Turn lock still HELD; item 4 next.**
+
+### Round 29 — Agent C — ITEM 4 (A29-05): **LANDED. Count the trail, do not match the separator. A's implied fix is REFUTED BY EXECUTION, and B's residual is answered rather than inherited.**
+
+**No live call of any kind.** No credential touched. No third-party page text pasted.
+
+## **4.1 WHAT SHIPPED**
+
+`events/sources/eventweb.ts`. `TRAIL_SEPARATOR_RE` + `TRAIL_MIN_SEPARATORS` +
+`breadcrumbTrailHead`, called at the TOP of `selectEventTitleSegment`. When a
+title carries **three or more space-delimited ` / ` or ` -- ` separators** it is
+a breadcrumb path, and the head replaces the title for the rest of the pipeline.
+**`titleSegments`' own separator set is NOT touched**, so every existing split
+behaves byte-identically.
+
+## **4.2 A's IMPLIED FIX IS REFUTED, AND THE REFUTATION IS A TEST RUN, NOT AN ARGUMENT**
+
+Setting the threshold to **1** — which is exactly "add `--` and ` / ` as
+separators" — turns **2 tests RED**, one of them B's five-real-name corpus.
+`Gordon Research Conference / Batteries` loses its subject,
+`Electrochemistry -- Fundamentals and Applications Symposium` loses the kind word
+with it, and `R&D / Innovation Summit 2026` renders the **two-character** name
+`R&D`. **One separator is not a trail; it is ordinary punctuation.**
+
+## **4.3 THE THRESHOLD IS 3 AND THE EVIDENCE FOR 3 RATHER THAN 2 IS RECORDED**
+
+| threshold | red | what breaks |
+|---|---|---|
+| **1** (A's fix) | **2** | B's real-name corpus + the ≥3 boundary case |
+| **2** | **1** | `Conference / Workshop / 2026`, an ordinary subtitled name, gets cut |
+| **3** (shipped) | **0** | both trails cut, all six real names byte-identical |
+
+B set 3 where the measured corpus separates and **stated plainly that 2 is
+untested rather than that it is unsafe.** C keeps 3 for that reason and has now
+shown by execution what 2 costs on the corpus that does exist.
+
+## **4.4 THE NEGATIVE PROOFS**
+
+| clause reverted | red | which |
+|---|---|---|
+| the rule itself (head never taken) | **2** | `cuts the live ANS trail…`, `renders honest SILENCE…` |
+| threshold 3 → 1 | **2** | `leaves every real name … BYTE-IDENTICAL`, `requires THREE separators` |
+| threshold 3 → 2 | **1** | `requires THREE separators` |
+| separators no longer space-delimited | **1** | `counts only SPACE-DELIMITED separators` |
+
+**Every clause uniquely red.** `AI/ML` is the reason the last one exists: three
+non-spaced slashes must not add up to a trail, and they do not.
+
+## **4.5 B's RESIDUAL, ANSWERED — `Home` NEVER REACHES A CARD**
+
+B flagged it precisely: *"A trail whose head is chrome should render honest
+silence rather than `Home`"*, and asked C to pair the rule with the existing
+name-quality path instead of shipping the head raw.
+
+**C did exactly that, and it cost no new code.** The head is not returned; it
+REPLACES the title and then runs the whole existing pipeline —
+`isChromeSegment`, `looksLikeEventTitle`, the slug corroboration, the furniture
+strip. On `Home / Events / 2026 / Battery Summit` the trail is identified
+correctly, `Home` is refused as chrome, nothing informative survives, and
+`bestEventTitleSegment` returns **undefined** — so `eventNameFrom` falls through
+to its slug and snippet stages exactly as it does for any all-chrome title.
+**Asserted.** Nothing is invented and no worthless name is manufactured.
+
+## **4.6 FREQUENCY, HONESTLY**
+
+A recorded this as **EVENT, 2 of 5**; it is **one row**. The fix is small. The
+reason to take it is not the count — it is that the rendered value was a
+navigation menu.
+
+## **4.7 THE GATE, AFTER THIS ITEM**
+
+**98 files / 2255 tests, 2255 passing, ZERO failures.** `tsc --noEmit` clean.
+`eslint src` exactly the one standing `quiz.tsx:46` error, 0 warnings. Six tests
+added, **none edited, none deleted** — no existing `bestEventTitleSegment` or
+`bestEventTitleSegmentDetailed` case moved, including A23-02's month-year
+name-strip assertions that read the same function.
+
+**Turn lock still HELD; item 5 next.**
